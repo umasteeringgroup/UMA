@@ -15,7 +15,7 @@ public class SlotData : ScriptableObject
     public DnaConverterBehaviour slotDNA;
 	public BoneWeight[] boneWeights;
 		
-	public List<OverlayData> overlayList = new List<OverlayData>();
+	private List<OverlayData> overlayList = new List<OverlayData>();
 
     public SlotData Duplicate()
     {
@@ -35,7 +35,7 @@ public class SlotData : ScriptableObject
         //Overlays are duplicated, to lose reference
         for (int i = 0; i < overlayList.Count; i++)
         {
-            tempSlotData.overlayList.Add(overlayList[i].Duplicate());
+            tempSlotData.AddOverlay(overlayList[i].Duplicate());
         }
 
         return tempSlotData;
@@ -70,9 +70,9 @@ public class SlotData : ScriptableObject
 		this.boneWeights = source.boneWeights;
         this.slotDNA = source.slotDNA;
         //Overlays are duplicated, to lose reference
-        for (int i = 0; i < source.overlayList.Count; i++)
+        for (int i = 0; i < source.OverlayCount; i++)
         {
-            this.overlayList.Add(source.overlayList[i].Duplicate());
+            this.AddOverlay(source.overlayList[i].Duplicate());
         }
     }
 
@@ -81,8 +81,8 @@ public class SlotData : ScriptableObject
     {
         var source = _slotLibrary.slotDictionary[elementName];
 
-        this.overlayList[0] = source.overlayList[0].Duplicate();
-        this.overlayList[0].color = color;
+        this.overlayList[0] = source.GetOverlay(0).Duplicate();
+        this.GetOverlay(0).color = color;
     }
 
     internal bool RemoveOverlay(params string[] names)
@@ -133,5 +133,28 @@ public class SlotData : ScriptableObject
             }
         }
         return null;
+    }
+
+    public OverlayData GetOverlay(int index)
+    {
+        if (index < 0 || index >= overlayList.Count) return null;
+        return overlayList[index];
+    }
+
+    public int OverlayCount { get { return overlayList.Count; } }
+
+    public void SetOverlayList(List<OverlayData> overlayList)
+    {
+        this.overlayList = overlayList;
+    }
+
+    public void AddOverlay(OverlayData overlayData)
+    {
+        overlayList.Add(overlayData);
+    }
+
+    internal List<OverlayData> GetOverlayList()
+    {
+        return overlayList;
     }
 }

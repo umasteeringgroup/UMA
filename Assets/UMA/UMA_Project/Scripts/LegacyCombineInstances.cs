@@ -125,8 +125,8 @@ public class LegacyCombineInstances{
 					tempMaterial.name = slots[slotIndex].slotName;
 					for(int textureType = 0; textureType < umaGenerator.textureNameList.Length; textureType++){
 						if(tempMaterial.HasProperty(umaGenerator.textureNameList[textureType])){
-							slots[slotIndex].overlayList[0].textureList[textureType].filterMode = FilterMode.Bilinear;
-							tempMaterial.SetTexture(umaGenerator.textureNameList[textureType],slots[slotIndex].overlayList[0].textureList[textureType]);
+							slots[slotIndex].GetOverlay(0).textureList[textureType].filterMode = FilterMode.Bilinear;
+							tempMaterial.SetTexture(umaGenerator.textureNameList[textureType],slots[slotIndex].GetOverlay(0).textureList[textureType]);
 						}
 					}
 					combinedMaterialList.Add(tempMaterial);
@@ -137,7 +137,7 @@ public class LegacyCombineInstances{
 					for(int slotIndex2 = slotIndex; slotIndex2 < slots.Length; slotIndex2++){
 						if(slots[slotIndex2] != null){
 							if(slotIndex2 != slotIndex && !shareMaterial[slotIndex2]){
-								if(slots[slotIndex].overlayList[0].textureList[0].name == slots[slotIndex2].overlayList[0].textureList[0].name){	
+								if(slots[slotIndex].GetOverlay(0).textureList[0].name == slots[slotIndex2].GetOverlay(0).textureList[0].name){	
 									combineInstance = new CombineInstance();
 						            combineInstance.mesh = slots[slotIndex2].meshRenderer.sharedMesh;
 						            combineInstance.transform = tempMatrix;

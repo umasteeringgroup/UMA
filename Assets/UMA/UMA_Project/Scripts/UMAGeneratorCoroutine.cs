@@ -37,25 +37,25 @@ public class UMAGeneratorCoroutine : WorkerCoroutine
 		for(int i = 0; i < slots.Length; i++){	
 			if(slots[i] != null){
 				tempMaterialDefinition = new UMAData.MaterialDefinition();
-				tempMaterialDefinition.baseTexture = slots[i].overlayList[0].textureList;
-				tempMaterialDefinition.baseColor = slots[i].overlayList[0].color;
+				tempMaterialDefinition.baseTexture = slots[i].GetOverlay(0).textureList;
+				tempMaterialDefinition.baseColor = slots[i].GetOverlay(0).color;
 				tempMaterialDefinition.materialSample = slots[i].materialSample;
-				tempMaterialDefinition.overlays = new UMAData.textureData[slots[i].overlayList.Count -1];
+				tempMaterialDefinition.overlays = new UMAData.textureData[slots[i].OverlayCount -1];
 				tempMaterialDefinition.overlayColors = new Color32[tempMaterialDefinition.overlays.Length];
 	            tempMaterialDefinition.rects = new Rect[tempMaterialDefinition.overlays.Length];
 	            tempMaterialDefinition.channelMask = new Color32[tempMaterialDefinition.overlays.Length+1][];
 	            tempMaterialDefinition.channelAdditiveMask = new Color32[tempMaterialDefinition.overlays.Length+1][];
-	            tempMaterialDefinition.channelMask[0] = slots[i].overlayList[0].channelMask;
-	            tempMaterialDefinition.channelAdditiveMask[0] = slots[i].overlayList[0].channelAdditiveMask;                
+	            tempMaterialDefinition.channelMask[0] = slots[i].GetOverlay(0).channelMask;
+	            tempMaterialDefinition.channelAdditiveMask[0] = slots[i].GetOverlay(0).channelAdditiveMask;                
 				tempMaterialDefinition.slotData = slots[i];
 				
-				for(int overlayID = 0; overlayID < slots[i].overlayList.Count-1; overlayID++){
+				for(int overlayID = 0; overlayID < slots[i].OverlayCount-1; overlayID++){
 					tempMaterialDefinition.overlays[overlayID] = new UMAData.textureData();
-					tempMaterialDefinition.rects[overlayID] = slots[i].overlayList[overlayID+1].rect;
-					tempMaterialDefinition.overlays[overlayID].textureList = slots[i].overlayList[overlayID+1].textureList;
-					tempMaterialDefinition.overlayColors[overlayID] = slots[i].overlayList[overlayID+1].color;
-					tempMaterialDefinition.channelMask[overlayID+1] = slots[i].overlayList[overlayID + 1].channelMask;
-	                tempMaterialDefinition.channelAdditiveMask[overlayID+1] = slots[i].overlayList[overlayID + 1].channelAdditiveMask;
+					tempMaterialDefinition.rects[overlayID] = slots[i].GetOverlay(overlayID+1).rect;
+					tempMaterialDefinition.overlays[overlayID].textureList = slots[i].GetOverlay(overlayID+1).textureList;
+					tempMaterialDefinition.overlayColors[overlayID] = slots[i].GetOverlay(overlayID+1).color;
+					tempMaterialDefinition.channelMask[overlayID+1] = slots[i].GetOverlay(overlayID + 1).channelMask;
+	                tempMaterialDefinition.channelAdditiveMask[overlayID+1] = slots[i].GetOverlay(overlayID + 1).channelAdditiveMask;
 				}
 				
 				materialDefinitionList.Add(tempMaterialDefinition);

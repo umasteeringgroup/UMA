@@ -50,7 +50,7 @@ public class SlotLibrary : MonoBehaviour {
 		}
 	}
 	
-	public SlotData InstantiateSlot(string name,List<OverlayData> overlayList){
+	public SlotData InstantiateSlot(string name, List<OverlayData> overlayList){
 		SlotData source;
         if (!slotDictionary.TryGetValue(name, out source))
         {
@@ -58,7 +58,7 @@ public class SlotLibrary : MonoBehaviour {
 			return null;
         }else{
 			source = source.Duplicate();
-			source.overlayList = overlayList;
+			source.SetOverlayList(overlayList);
 			return source;
 		}
 	}
