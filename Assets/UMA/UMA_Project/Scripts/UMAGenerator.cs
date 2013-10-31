@@ -181,7 +181,7 @@ public class UMAGenerator : MonoBehaviour {
                 {
                     for (int i = 0; i < animator.layerCount; i++)
                     {
-                        animator.GotoState(i, snapshot[i].stateTime, snapshot[i].stateHash);
+                        animator.Play(snapshot[i].stateHash, i, snapshot[i].stateTime);
                     }
                     animator.Update(0);
                 }
