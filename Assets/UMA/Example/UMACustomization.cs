@@ -89,18 +89,6 @@ public class UMACustomization : MonoBehaviour {
 				UMAData tempUMA = hit.collider.GetComponent("UMAData") as UMAData;
 				
 				if(tempUMA){
-                    if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
-                    {
-                        if (umaData)
-                        {
-                            tempUMA.SaveToMemoryStream();
-                            umaData.streamedUMA = tempUMA.streamedUMA;
-                            umaData.LoadFromMemoryStream();
-                            umaData.Dirty(true, true, true);
-                        }
-                        return;
-                    }
-
 					//Clear saved data of old UMA
 					if(umaData){
 						umaData.streamedUMA = null;
