@@ -1,0 +1,2 @@
+		if( dnaType == typeof({0:ClassName}))
+			return {0:ClassName}.SaveInstance(instance as {0:ClassName});

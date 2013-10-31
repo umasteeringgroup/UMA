@@ -1,0 +1,107 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 3
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_Name: TextureMerge
+  m_Shader: {fileID: 4800000, guid: 8179a5383e28f6840a80314368b93979, type: 3}
+  m_ShaderKeywords: []
+  m_CustomRenderQueue: -1
+  m_SavedProperties:
+    serializedVersion: 2
+    m_TexEnvs:
+      data:
+        first:
+          name: _MainTex
+        second:
+          m_Texture: {fileID: 2800000, guid: c1df23e5f4f4b854bb504270e13ef3cf, type: 3}
+          m_Scale: {x: 1, y: 1}
+          m_Offset: {x: 0, y: 0}
+      data:
+        first:
+          name: _ExtraTex
+        second:
+          m_Texture: {fileID: 2800000, guid: c1df23e5f4f4b854bb504270e13ef3cf, type: 3}
+          m_Scale: {x: 1, y: 1}
+          m_Offset: {x: 0, y: 0}
+      data:
+        first:
+          name: _MaskTex
+        second:
+          m_Texture: {fileID: 0}
+          m_Scale: {x: 1, y: 1}
+          m_Offset: {x: 0, y: 0}
+      data:
+        first:
+          name: _Tex2
+        second:
+          m_Texture: {fileID: 0}
+          m_Scale: {x: 1, y: 1}
+          m_Offset: {x: 0, y: 0}
+      data:
+        first:
+          name: _Lightmap
+        second:
+          m_Texture: {fileID: 0}
+          m_Scale: {x: 1, y: 1}
+          m_Offset: {x: 0, y: 0}
+      data:
+        first:
+          name: _Extra
+        second:
+          m_Texture: {fileID: 2800000, guid: 4afde8057c664a043b5294daece18de4, type: 3}
+          m_Scale: {x: 1, y: 1}
+          m_Offset: {x: 0, y: 0}
+      data:
+        first:
+          name: _Mask
+        second:
+          m_Texture: {fileID: 2800000, guid: fa8c80a23d23f764488427ba843bd887, type: 3}
+          m_Scale: {x: 1, y: 1}
+          m_Offset: {x: 0, y: 0}
+      data:
+        first:
+          name: _PathMask
+        second:
+          m_Texture: {fileID: 2800000, guid: fa8c80a23d23f764488427ba843bd887, type: 3}
+          m_Scale: {x: 1, y: 1}
+          m_Offset: {x: 0, y: 0}
+      data:
+        first:
+          name: _PathTex
+        second:
+          m_Texture: {fileID: 2800000, guid: 4afde8057c664a043b5294daece18de4, type: 3}
+          m_Scale: {x: 1, y: 1}
+          m_Offset: {x: 0, y: 0}
+      data:
+        first:
+          name: _AlphaMap
+        second:
+          m_Texture: {fileID: 2800000, guid: fa8c80a23d23f764488427ba843bd887, type: 3}
+          m_Scale: {x: 1, y: 1}
+          m_Offset: {x: 0, y: 0}
+    m_Floats:
+      data:
+        first:
+          name: _Blend
+        second: .5
+    m_Colors:
+      data:
+        first:
+          name: _Color
+        second: {r: .580882311, g: .414305776, b: .414305776, a: 1}
+      data:
+        first:
+          name: _AdditiveColor
+        second: {r: 0, g: 0, b: 0, a: 0}
+      data:
+        first:
+          name: _MainColor
+        second: {r: 0, g: 0, b: 0, a: 1}
+      data:
+        first:
+          name: _Clip
+        second: {r: 0, g: 0, b: 1, a: 1}
