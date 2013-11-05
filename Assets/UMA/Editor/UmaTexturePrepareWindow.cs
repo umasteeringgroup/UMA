@@ -7,6 +7,7 @@
 using UnityEngine;
 using UnityEditor;
 using System.Text;
+using System.IO;
 
 public class UmaTexturePrepareWindow : EditorWindow {
 
@@ -72,7 +73,7 @@ public class UmaTexturePrepareWindow : EditorWindow {
     void OnGUI()
     {
         diffuse = EditorGUILayout.ObjectField("Diffuse Texture", diffuse, typeof(Texture2D), false) as Texture2D;
-        normal = EditorGUILayout.ObjectField("Normal Map", normal, typeof(Texture2D), false) as Texture2D;
+        normal = EditorGUILayout.ObjectField("Normal Map (optional)", normal, typeof(Texture2D), false) as Texture2D;
         if( Event.current.type == EventType.layout && privateNormal != normal )
         {
             normalWarning = null;
@@ -93,7 +94,7 @@ public class UmaTexturePrepareWindow : EditorWindow {
             GUILayout.Label(normalWarning);
             GUI.contentColor = storedColor;
         }
-        specular = EditorGUILayout.ObjectField("Specular Texture", specular, typeof(Texture2D), false) as Texture2D;
+        specular = EditorGUILayout.ObjectField("Specular Texture (optional)", specular, typeof(Texture2D), false) as Texture2D;
 
         materialName = EditorGUILayout.TextField("Element Name", materialName);
         textureFolder = EditorGUILayout.ObjectField("Texture Folder", textureFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
@@ -113,7 +114,8 @@ public class UmaTexturePrepareWindow : EditorWindow {
         }
 
         EditorGUILayout.Space();
-        textureOverride = EditorGUILayout.ObjectField("Texture Source", textureOverride, typeof(OverlayData), false) as OverlayData;
+
+        //textureOverride = EditorGUILayout.ObjectField("Texture Source", textureOverride, typeof(OverlayData), false) as OverlayData;
         overlayFolder = EditorGUILayout.ObjectField("Overlay Folder", overlayFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
         EnforceFolder(ref overlayFolder);
         overlayLibrary = EditorGUILayout.ObjectField("Overlay Library", overlayLibrary, typeof(OverlayLibrary), true) as OverlayLibrary;
@@ -126,7 +128,8 @@ public class UmaTexturePrepareWindow : EditorWindow {
                 Debug.Log("Success.");
             }
         }
-
+        
+        EditorGUILayout.Space();
 
         racePrefab = EditorGUILayout.ObjectField("Race Prefab SkinnedMeshRenderer", racePrefab, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
         slotMesh = EditorGUILayout.ObjectField("Slot Mesh SkinnedMeshRenderer", slotMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
@@ -143,7 +146,7 @@ public class UmaTexturePrepareWindow : EditorWindow {
                 Debug.Log("Success.");
             }
         }
-
+      
         GUILayout.Label("", EditorStyles.boldLabel);
         Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
         GUI.Box(dropArea, "Drag textures and meshes here");
@@ -257,11 +260,21 @@ public class UmaTexturePrepareWindow : EditorWindow {
             Debug.LogError("Texture folder not supplied");
             return false;
         }
-        if (diffuse == null || normal == null || specular == null)
+        if (diffuse == null)
         {
             Debug.LogError("Not all textures present");
             return false;
         }
+		if(normal == null){
+			SaveTexture(ref normal, new Color32(128,128,255,255),AssetDatabase.GetAssetPath(textureFolder) +"/"+ "Base_Normal.png",diffuse.width,diffuse.height);
+			Debug.LogWarning("No NormalMap was provided, creating a neutral one");
+		}
+		
+		if(specular == null){
+			SaveTexture(ref specular, new Color32(64,64,64,32),AssetDatabase.GetAssetPath(textureFolder) +"/"+ "Base_specular.png",diffuse.width,diffuse.height);
+			Debug.LogWarning("No Specular was provided, creating a neutral one");
+		}
+		
         bool res = UMATextureImporterUtil.ConvertDefaultAssets_DiffuseAlpha_Normal_Specular(AssetDatabase.GetAssetPath(diffuse), AssetDatabase.GetAssetPath(normal), AssetDatabase.GetAssetPath(specular), GetAssetFolder(), GetAssetName(), AssetDatabase.GetAssetPath(textureFolder), Shader.Find("UMA/Regular"));
         if (res)
         {
@@ -422,11 +435,39 @@ public class UmaTexturePrepareWindow : EditorWindow {
             materialName = name;
         }
     }
+	
+	void SaveTexture(ref Texture2D dest, Color32 color,string baseTextureName,int width,int height){			
+		Color32[] textureColor = new Color32[width*height]; 
+		for(int i = 0; i < textureColor.Length; i++){
+			textureColor[i] = color;
+		}
+		Texture2D texture = new Texture2D(diffuse.width,diffuse.height,TextureFormat.ARGB32,true);
+		texture.SetPixels32(textureColor);
+		texture.Apply();
+		
+		byte[] bytes = texture.EncodeToPNG();
+		File.WriteAllBytes(baseTextureName, bytes);
+		AssetDatabase.ImportAsset(baseTextureName); 
+		
+		TextureImporter textureImporter = AssetImporter.GetAtPath(baseTextureName) as TextureImporter;
+		var tempimporter = TextureImporter.GetAtPath(AssetDatabase.GetAssetPath(diffuse)) as TextureImporter;
+		
+		var settings = new TextureImporterSettings();
+        tempimporter.ReadTextureSettings(settings);
+        textureImporter.SetTextureSettings(settings);
+		
+		AssetDatabase.WriteImportSettingsIfDirty (baseTextureName);
+		AssetDatabase.ImportAsset(baseTextureName, ImportAssetOptions.ForceUpdate);
+		
+		dest = AssetDatabase.LoadAssetAtPath(baseTextureName, typeof(Texture2D)) as Texture2D;
+		Debug.Log(dest.width);
+	}
 
-    [MenuItem("Window/Uma Material Builder")]
+    [MenuItem("UMA/Material Builder")]
     public static void OpenUmaTexturePrepareWindow()
     {
-        EditorWindow.GetWindow(typeof(UmaTexturePrepareWindow));
+        UmaTexturePrepareWindow window = (UmaTexturePrepareWindow)EditorWindow.GetWindow(typeof(UmaTexturePrepareWindow));
+        window.title = "MaterialBuilder";
     }
 
     [MenuItem("Tools/PNG/Set Alpha Opaque")]
@@ -503,4 +544,5 @@ public class UmaTexturePrepareWindow : EditorWindow {
             }
         }
     }
+
 }
