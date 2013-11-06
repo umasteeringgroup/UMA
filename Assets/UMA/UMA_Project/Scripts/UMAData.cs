@@ -590,6 +590,26 @@ public class UMAData : MonoBehaviour {
 		Destroy(myRenderer.sharedMesh);
 	}
 	
+	
+	public Texture[] backUpTextures(){
+		List<Texture> textureList = new List<Texture>();
+		
+		for(int atlasIndex = 0; atlasIndex < atlasList.atlas.Count; atlasIndex++){
+			if(atlasList.atlas[atlasIndex] != null && atlasList.atlas[atlasIndex].resultingAtlasList != null){
+				for(int textureIndex = 0; textureIndex < atlasList.atlas[atlasIndex].resultingAtlasList.Length; textureIndex++){
+					
+					if(atlasList.atlas[atlasIndex].resultingAtlasList[textureIndex] != null){
+						Texture tempTexture = atlasList.atlas[atlasIndex].resultingAtlasList[textureIndex];
+						textureList.Add(tempTexture);
+						atlasList.atlas[atlasIndex].resultingAtlasList[textureIndex] = null;
+					}				
+				}
+			}
+		}
+		
+		return textureList.ToArray();
+	}
+	
 
     RenderTexture[] ownedRenderTextures;
     internal RenderTexture[] RetrieveRenderTextures()

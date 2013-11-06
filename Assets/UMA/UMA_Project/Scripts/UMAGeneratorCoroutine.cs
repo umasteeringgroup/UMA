@@ -18,6 +18,7 @@ public class UMAGeneratorCoroutine : WorkerCoroutine
 	int mipMapAdjust;
 	
 	UMAGenerator umaGenerator;
+	Texture[] backUpTexture;
 	
     public void Prepare(UMAGenerator _umaGenerator)
     {
@@ -26,7 +27,8 @@ public class UMAGeneratorCoroutine : WorkerCoroutine
 
     protected override void Start()
     {
-		umaGenerator.umaData.cleanTextures();	
+		backUpTexture = umaGenerator.umaData.backUpTextures();
+		umaGenerator.umaData.cleanTextures();
 		
 		materialDefinitionList = new List<UMAData.MaterialDefinition>();
 		
@@ -103,6 +105,8 @@ public class UMAGeneratorCoroutine : WorkerCoroutine
 			yield return textureProcessIndieCoroutine;	
 		}
 		
+		
+		CleanBackUpTextures();
 		UpdateUV();
     }
 
@@ -131,6 +135,22 @@ public class UMAGeneratorCoroutine : WorkerCoroutine
 		}	
 	}
 	
+	private void CleanBackUpTextures(){
+		for(int textureIndex = 0; textureIndex < backUpTexture.Length; textureIndex++){		
+			if(backUpTexture[textureIndex] != null){
+				Texture tempTexture = backUpTexture[textureIndex];
+				if(tempTexture is RenderTexture){
+					RenderTexture tempRenderTexture = tempTexture as RenderTexture;
+					tempRenderTexture.Release();
+					UnityEngine.Object.Destroy(tempRenderTexture);
+					tempRenderTexture = null;
+				}else{
+					UnityEngine.Object.Destroy(tempTexture);
+				}
+				backUpTexture[textureIndex] = null;
+			}				
+		}
+	}
 	
 	private void GenerateAtlasData(){
 		for(int i = 0; i < orderedMaterialDefinition.Length; i++){		
