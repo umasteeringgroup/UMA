@@ -265,7 +265,9 @@ public class UMAGenerator : MonoBehaviour {
 		if( umaData.firstBake )
         {
             umaData.myRenderer.sharedMesh = new Mesh();
-        }
+        }else{
+			umaData.cleanMesh(false);	
+		}
 		
 		var boneMap = new Dictionary<Transform, Transform>();
         SkinnedMeshCombiner.CombineMeshes(umaData.myRenderer, combinedMeshList.ToArray(), boneMap);
@@ -289,7 +291,7 @@ public class UMAGenerator : MonoBehaviour {
 
         umaData.myRenderer.quality = SkinQuality.Bone4;
         umaData.myRenderer.useLightProbes = true;
-        umaData.myRenderer.sharedMaterials = combinedMaterialList.ToArray();
+		umaData.myRenderer.sharedMaterials = combinedMaterialList.ToArray();
 		//umaData.myRenderer.sharedMesh.RecalculateBounds();
         umaData.myRenderer.sharedMesh.name = "UMAMesh";
 

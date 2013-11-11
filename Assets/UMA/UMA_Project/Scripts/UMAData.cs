@@ -197,6 +197,7 @@ public class UMAData : MonoBehaviour {
 
     public bool dirty = false;
     private bool _hasUpdatedBefore = false;
+	private bool onQuit = false;
     public event Action<UMAData> OnUpdated;
     public void FireUpdatedEvent()
     {
@@ -554,13 +555,22 @@ public class UMAData : MonoBehaviour {
 		UnpackRecipe();
 	}
 	
-	void OnDestroy() {
+	void OnApplicationQuit() {
+		onQuit = true;
+	}
+	
+	void OnDestroy(){
 		if(_hasUpdatedBefore){
 			cleanTextures();
-			cleanMesh();
+			if(!onQuit)cleanMesh(true);
+			cleanAvatar();
 		}
 	}
 	
+	public void cleanAvatar(){
+		animationController = null;
+	}
+
 	public void cleanTextures(){
 		for(int atlasIndex = 0; atlasIndex < atlasList.atlas.Count; atlasIndex++){
 			if(atlasList.atlas[atlasIndex] != null && atlasList.atlas[atlasIndex].resultingAtlasList != null){
@@ -583,11 +593,15 @@ public class UMAData : MonoBehaviour {
 		}
 	}
 	
-	public void cleanMesh(){
+	public void cleanMesh(bool destroyRenderer){
 		for(int i = 0; i < myRenderer.sharedMaterials.Length; i++){
-			Destroy(myRenderer.sharedMaterials[i]);
+			if(myRenderer){
+				if(myRenderer.sharedMaterials[i]){
+					DestroyImmediate(myRenderer.sharedMaterials[i]);
+				}
+			}
 		}
-		Destroy(myRenderer.sharedMesh);
+		if(destroyRenderer) Destroy(myRenderer.sharedMesh);
 	}
 	
 	
