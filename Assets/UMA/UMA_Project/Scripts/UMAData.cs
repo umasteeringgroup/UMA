@@ -569,6 +569,9 @@ public class UMAData : MonoBehaviour {
 	
 	public void cleanAvatar(){
 		animationController = null;
+		var animator = GetComponent<Animator>();
+		if (animator.avatar) GameObject.Destroy(animator.avatar);
+		if (animator) GameObject.Destroy(animator);
 	}
 
 	public void cleanTextures(){
