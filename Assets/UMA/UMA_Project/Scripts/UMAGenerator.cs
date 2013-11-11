@@ -170,10 +170,15 @@ public class UMAGenerator : MonoBehaviour {
 		    if (umaData.animationController)
 		    {
                 var animator = umaData.GetComponent<Animator>();
-                if (animator) Object.DestroyImmediate(animator);
+                
+				bool applyRootMotion = animator.applyRootMotion;
+				bool animatePhysics = animator.animatePhysics;
+				AnimatorCullingMode cullingMode = animator.cullingMode;
+	
+				if (animator) Object.DestroyImmediate(animator);
 		        var oldParent = umaData.transform.parent;
                 umaData.transform.parent = null;
-                CreateAnimator(umaData.gameObject, umaData.umaRecipe.raceData.TPose, umaData.animationController);
+                CreateAnimator(umaData.gameObject, umaData.umaRecipe.raceData.TPose, umaData.animationController,applyRootMotion,animatePhysics,cullingMode);
 		        umaData.transform.parent = oldParent;
                 animator = umaData.GetComponent<Animator>();
 #if !UNITY_4_2
@@ -189,16 +194,16 @@ public class UMAGenerator : MonoBehaviour {
 		    }
 		}
 	}
-
-    public static void CreateAnimator(GameObject root, UmaTPose umaTPose, RuntimeAnimatorController controller)
+	
+    public static void CreateAnimator(GameObject root, UmaTPose umaTPose, RuntimeAnimatorController controller,bool applyRootMotion, bool animatePhysics,AnimatorCullingMode cullingMode)
     {
         umaTPose.DeSerialize();
         var animator = root.AddComponent<Animator>();
         animator.avatar = CreateAvatar(root, umaTPose);
         animator.runtimeAnimatorController = controller;
-        animator.applyRootMotion = true;
-        animator.animatePhysics = false;
-        animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+        animator.applyRootMotion = applyRootMotion;
+        animator.animatePhysics = animatePhysics;
+        animator.cullingMode = cullingMode;
     }
 
     public static Avatar CreateAvatar(GameObject root, UmaTPose umaTPose)
