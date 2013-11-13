@@ -139,7 +139,7 @@ internal class BRDFLookupTextureInspector : Editor
 		
 		if (GUI.changed)
 		{
-			Undo.RegisterUndo (l, "BRDFTexture Params Change");
+			Undo.RecordObject (l, "BRDFTexture Params Change");
 			changed = true;
 		}
 				

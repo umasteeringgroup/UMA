@@ -56,7 +56,13 @@ public class LegacyCombineInstances{
 		
 		Mesh newMesh = umaGenerator.umaData.firstBake ? new Mesh() : umaGenerator.umaData.myRenderer.sharedMesh;
 		newMesh.CombineMeshes(combinedGroupedList.ToArray(),false,false);
-        newMesh.boneWeights = boneWeightsArray;
+        
+		for(int i = 0; i < combinedGroupedList.Count; i++){
+			GameObject.DestroyImmediate(combinedGroupedList[i].mesh);
+		}
+
+
+		newMesh.boneWeights = boneWeightsArray;
         newMesh.bindposes = bindposesArray;
         umaGenerator.umaData.myRenderer.sharedMesh = newMesh;
 		
@@ -156,7 +162,7 @@ public class LegacyCombineInstances{
 					tempCombineInstance.transform = tempMatrix;
 					combinedGroupedList.Add(tempCombineInstance);
 					
-					indexCount++;	
+					indexCount++;
 					
 				}
 			}else{
