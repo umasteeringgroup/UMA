@@ -4,7 +4,7 @@ UMA
 Unity Multipurpose Avatar
 
 
-UMA version 1.0.1.0 RC2 - Unity version 4.2
+UMA version 1.0.1.0 R - Unity version 4.3
 
 Changes
 1.0.0.2b - Renamed UMAData.slotData to UMAData.SlotData
@@ -38,8 +38,7 @@ combining head parts (We now have the mighty Elven PigMan on demo scene! Yay).
 1.0.1.0R2 - Included an Example folder, moved assets and scripts specific to example scene to this folder.
 1.0.1.0R2 - UpdateCollider() is now set at UMACrowd, umaData.OnUpdated += myColliderUpdateMethod;
 1.0.1.0R2 - moved RuntimeAnimatorController animationController from UMAGenerator to UMAData.
-1.0.1.0R2 - Included legacy CombineInstances.
-
+1.0.1.0R - UMAMaterialBuilder received changes and has been simplified.
 
 New features
 1.0.0.1b - Slots rig can be different from base rig. Extra bones are included on final mesh.
@@ -79,3 +78,5 @@ atlas creation and all steps of avatar creation proceed with no negative consequ
 1.0.1.0 RC1 - SkinnedMeshCombiner won´t correctly merge Slots with extra bones that provides no influence to any mesh vertice.
 1.0.1.0 RC1 - While working on mobile devices, keep in mind some types of compressions forces square textures, breaking overlay rect settings. As theres still no way to 
 access original texture size, at least for now its recommended using uncompressed lower resolution setting for overlays.
+1.0.1.0 R - On windows builds and for some specific hardware configuration, Unity crashes on application quit. Unity team is 
+already working to fix this bug, following Unity versions might handle that.
