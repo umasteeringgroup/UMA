@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="3.5" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{A96018CD-EEA7-4A97-8FE5-8CC04FD868B5}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>UMA</RootNamespace>
+    <AssemblyName>UMA</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>True</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>False</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>False</ConsolePause>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>none</DebugType>
+    <Optimize>True</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>False</ConsolePause>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="UnityEditor">
+      <HintPath>..\..\..\..\..\..\..\..\Program Files %28x86%29\Unity43\Editor\Data\Managed\UnityEditor.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>..\..\..\..\..\..\..\..\Program Files %28x86%29\Unity43\Editor\Data\Managed\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="LitJson">
+      <HintPath>..\..\..\LitJson.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <Compile Include="UMAGeneratorCoroutine.cs" />
+    <Compile Include="UMAGenerator.cs" />
+    <Compile Include="TextureProcessPROCoroutine.cs" />
+    <Compile Include="TextureProcessIndieCoroutine.cs" />
+    <Compile Include="RaceData.cs" />
+    <Compile Include="LegacyCombineInstances.cs" />
+    <Compile Include="DnaConverterBehaviour.cs" />
+    <Compile Include="UMADnaHumanoid.cs" />
+    <Compile Include="BlendAdditiveTextureRectCoroutine.cs" />
+    <Compile Include="BlendTextureRectCoroutine.cs" />
+    <Compile Include="ColorizeAdditiveTextureRectCoroutine.cs" />
+    <Compile Include="ColorizeTextureRectCoroutine.cs" />
+    <Compile Include="CopyAdditiveTextureRectCoroutine.cs" />
+    <Compile Include="CopyColorizedAdditiveTextureRectCoroutine.cs" />
+    <Compile Include="CopyColorizedTextureRectCoroutine.cs" />
+    <Compile Include="CopyTextureRectCoroutine.cs" />
+    <Compile Include="SeamRemoval.cs" />
+    <Compile Include="SkinnedMeshAligner.cs" />
+    <Compile Include="SkinnedMeshCombiner.cs" />
+    <Compile Include="TextureMerge.cs" />
+    <Compile Include="UMAProcessBones.cs" />
+    <Compile Include="UmaTPose.cs" />
+    <Compile Include="WorkerCoroutine.cs" />
+    <Compile Include="MaxRectsBinPack.cs" />
+    <Compile Include="UMADna_Generated.cs" />
+    <Compile Include="UMADnaHumanoid_Generated.cs" />
+    <Compile Include="UMADna.cs" />
+    <Compile Include="UMAData.cs" />
+    <Compile Include="OverlayData.cs" />
+    <Compile Include="SlotData.cs" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UMA", "UMA\UMA.csproj", "{A96018CD-EEA7-4A97-8FE5-8CC04FD868B5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UMAEditor", "UMAEditor\UMAEditor.csproj", "{1001F80D-CDE5-4BB2-8022-7933CAEF253B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1001F80D-CDE5-4BB2-8022-7933CAEF253B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1001F80D-CDE5-4BB2-8022-7933CAEF253B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1001F80D-CDE5-4BB2-8022-7933CAEF253B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1001F80D-CDE5-4BB2-8022-7933CAEF253B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A96018CD-EEA7-4A97-8FE5-8CC04FD868B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A96018CD-EEA7-4A97-8FE5-8CC04FD868B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A96018CD-EEA7-4A97-8FE5-8CC04FD868B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A96018CD-EEA7-4A97-8FE5-8CC04FD868B5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = UMA\UMA.csproj
+	EndGlobalSection
+EndGlobal
