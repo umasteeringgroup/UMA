@@ -35,9 +35,9 @@ Changes
 1.0.0.7b - Included elven ears and pig nose for male base mesh, as an example of 
 combining head parts (We now have the mighty Elven PigMan on demo scene! Yay).
 1.0.0.7b - From now on, UMAMaterialBuilder normal map textures should NOT be set as normal maps before being converted for UMA standard.
-1.0.1.0R2 - Included an Example folder, moved assets and scripts specific to example scene to this folder.
-1.0.1.0R2 - UpdateCollider() is now set at UMACrowd, umaData.OnUpdated += myColliderUpdateMethod;
-1.0.1.0R2 - moved RuntimeAnimatorController animationController from UMAGenerator to UMAData.
+1.0.1.0RC2 - Included an Example folder, moved assets and scripts specific to example scene to this folder.
+1.0.1.0RC2 - UpdateCollider() is now set at UMACrowd, umaData.OnUpdated += myColliderUpdateMethod;
+1.0.1.0RC2 - moved RuntimeAnimatorController animationController from UMAGenerator to UMAData.
 1.0.1.0R - UMAMaterialBuilder received changes and has been simplified.
 
 New features
@@ -67,8 +67,8 @@ Fixed
 1.0.0.7b - All UMA example shaders had been adjusted to unpack normals following same standard, this corrects normal maps showing incorreclty on 
 Mobile devices.
 1.0.0.7b - Corrected a bug on overlay positioning based on Rect, in case values were fractions and not using PRO.
-1.0.1.0R2 - Removed calling System.IO.File.ReadAllText(path) and LoadFromMemoryStream() twice on Save/Load.
-1.0.1.0R2 - Female Eyelashes was using an old rig data, and has been updated.
+1.0.1.0RC2 - Removed calling System.IO.File.ReadAllText(path) and LoadFromMemoryStream() twice on Save/Load.
+1.0.1.0RC2 - Female Eyelashes was using an old rig data, and has been updated.
 
 Known bugs / limitations 
 1.0.0.0b - Linear Rendering (Unity Pro) is not supported and most likely requires adjustments for the entire project.
