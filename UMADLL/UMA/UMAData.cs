@@ -22,8 +22,6 @@ namespace UMA
 		public bool isShapeDirty;
 		public bool isTextureDirty;
 		
-		public bool useLegacyCombiner;
-		
 		public RuntimeAnimatorController animationController;
 		
 		public Dictionary<string,BoneData> boneList = new Dictionary<string,BoneData>();
@@ -348,7 +346,7 @@ namespace UMA
 			return textureList.ToArray();
 		}
 
-		internal void EnsureBoneData(Transform[] umaBones, Dictionary<Transform, Transform> boneMap)
+		public void EnsureBoneData(Transform[] umaBones, Dictionary<Transform, Transform> boneMap)
 	    {
 	        foreach (var bone in umaBones)
 	        {

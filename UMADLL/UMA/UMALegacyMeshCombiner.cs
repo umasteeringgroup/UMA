@@ -5,18 +5,20 @@ using System.Collections.Generic;
 
 namespace UMA
 {
-	public class LegacyCombineInstances{
-		
-		public UMAGenerator umaGenerator;	
-		public Matrix4x4 tempMatrix;
+    public class UMALegacyMeshCombiner : UMAMeshCombiner
+    {
+		UMAGenerator umaGenerator;	
+		Matrix4x4 tempMatrix;
 		
 		List<CombineInstance> combinedGroupedList;
 		List<CombineInstance> combinedMeshList;
 		List<Material> combinedMaterialList;
 		List<SlotData> combinedSlotList;
-		
-		
-		public virtual void UpdateUMAMesh(bool updatedAtlas){
+
+        public override void UpdateUMAMesh(bool updatedAtlas, UMAGenerator umaGenerator)
+        {
+            this.umaGenerator = umaGenerator;
+
 			combinedGroupedList = new List<CombineInstance>();
 			combinedMeshList = new List<CombineInstance>();
 	        combinedMaterialList = new List<Material>();

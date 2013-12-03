@@ -45,12 +45,13 @@
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
+    <Compile Include="UMADefaultMeshCombiner.cs" />
     <Compile Include="UMAGeneratorCoroutine.cs" />
     <Compile Include="UMAGenerator.cs" />
     <Compile Include="TextureProcessPROCoroutine.cs" />
     <Compile Include="TextureProcessIndieCoroutine.cs" />
     <Compile Include="RaceData.cs" />
-    <Compile Include="LegacyCombineInstances.cs" />
+    <Compile Include="UMALegacyMeshCombiner.cs" />
     <Compile Include="DnaConverterBehaviour.cs" />
     <Compile Include="BlendAdditiveTextureRectCoroutine.cs" />
     <Compile Include="BlendTextureRectCoroutine.cs" />
@@ -64,6 +65,7 @@
     <Compile Include="SkinnedMeshAligner.cs" />
     <Compile Include="SkinnedMeshCombiner.cs" />
     <Compile Include="TextureMerge.cs" />
+    <Compile Include="UMAMeshCombiner.cs" />
     <Compile Include="UMAProcessBones.cs" />
     <Compile Include="UmaTPose.cs" />
     <Compile Include="WorkerCoroutine.cs" />
