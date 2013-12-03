@@ -68,9 +68,8 @@ namespace UMA
 			
 			if(umaData.isMeshDirty){
 				if(!umaData.isTextureDirty){
-                    meshCombiner.UpdateUMAMesh(false, this);
-				}
-				
+                    UpdateUMAMesh(false);
+				}				
 				umaData.isMeshDirty = false;
 			}
 	        if(umaData.isTextureDirty){
@@ -78,8 +77,8 @@ namespace UMA
 
 	            if (umaGeneratorCoroutine.Work())
 	            {
-                    meshCombiner.UpdateUMAMesh(true, this);
-	                umaData.isTextureDirty = false;
+                    UpdateUMAMesh(true);
+                    umaData.isTextureDirty = false;
 	            }
 	            else
 	            {
@@ -97,7 +96,20 @@ namespace UMA
 				
 			}
 				
-		}	
+		}
+
+        private void UpdateUMAMesh(bool updatedAtlas)
+        {
+            if (meshCombiner != null)
+            {
+                meshCombiner.UpdateUMAMesh(updatedAtlas, this);
+            }
+            else
+            {
+                Debug.LogError("UMAGenerator.UpdateUMAMesh, no MeshCombiner specified", gameObject);
+            }
+        }	
+
 		public virtual void addDirtyUMA(UMAData umaToAdd) {	
 			if(umaToAdd){
 				umaDirtyList.Add(umaToAdd);
