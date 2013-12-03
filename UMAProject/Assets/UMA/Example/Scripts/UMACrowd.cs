@@ -437,7 +437,6 @@ public class UMACrowd : MonoBehaviour {
 		
 		umaData = tempUMA.gameObject.GetComponentInChildren<UMAData>();
         umaData.umaRecipe = umaRecipe;
-		umaData.useLegacyCombiner = useLegacyCombiner;
 		SetUMAData();
 		GenerateUMAShapes();
 
