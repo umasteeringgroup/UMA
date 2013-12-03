@@ -1,11 +1,11 @@
-﻿using UnityEngine;
-using System.Collections;
-
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace UMA
 {
-	[System.Serializable]
-	public partial class UMADna{
-		
-	}
+    public partial class UMADna
+    {
+
+    }
 }

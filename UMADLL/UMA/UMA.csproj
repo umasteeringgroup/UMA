@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="3.5" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -31,6 +31,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
     <Reference Include="UnityEditor">
       <HintPath>..\..\..\..\..\..\..\..\Program Files %28x86%29\Unity43\Editor\Data\Managed\UnityEditor.dll</HintPath>
     </Reference>
@@ -43,6 +45,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
+    <Compile Include="UMADna.cs" />
     <Compile Include="UMAGeneratorCoroutine.cs" />
     <Compile Include="UMAGenerator.cs" />
     <Compile Include="TextureProcessPROCoroutine.cs" />
@@ -69,7 +72,7 @@
     <Compile Include="MaxRectsBinPack.cs" />
     <Compile Include="UMADna_Generated.cs" />
     <Compile Include="UMADnaHumanoid_Generated.cs" />
-    <Compile Include="UMADna.cs" />
+    <Compile Include="UMADnaBase.cs" />
     <Compile Include="UMAData.cs" />
     <Compile Include="OverlayData.cs" />
     <Compile Include="SlotData.cs" />
