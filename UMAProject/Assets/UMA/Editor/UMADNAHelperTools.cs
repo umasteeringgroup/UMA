@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEditor;
 using System.Collections;
 using System.Reflection;
@@ -45,13 +45,13 @@ namespace UMAEditor
 	            Directory.CreateDirectory(destDir);
 	        }
 
-	        var baseDnaType = typeof(UMADna);
+            var baseDnaType = typeof(UMADna);
 	        var customData = new Dictionary<string, object>();
 	        customData.Add("ClassName", "");
 	        
 	        foreach(var dnaType in baseDnaType.Assembly.GetTypes())
 	        {
-	            if ( dnaType.BaseType == baseDnaType)
+	            if ( DerivesFrom(dnaType, baseDnaType))
 	            {
 	                customData["ClassName"] = dnaType.Name;
 	                foreach (var template in templates)
@@ -70,6 +70,17 @@ namespace UMAEditor
 	        CreateBaseDNAExtension(destDir, baseTemplate, customData);
 	        AssetDatabase.Refresh();	    
 		}
+
+        private static bool DerivesFrom(Type type, Type baseType)
+        {
+            Type parent = type.BaseType;
+            while (parent != null)
+            {
+                if (parent == baseType) return true;
+                parent = parent.BaseType;
+            }
+            return false;
+        }
 
 	    private static Template[] ParseTemplates(string sourceDir, string pageTemplate)
 	    {

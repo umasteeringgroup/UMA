@@ -48,7 +48,6 @@
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="UmaTexturePrepareWindow.cs" />
     <Compile Include="UMATextureImporterUtil.cs" />
-    <Compile Include="UMADNAHelperTools.cs" />
     <Compile Include="TPoseExtracter.cs" />
     <Compile Include="SlotInspector.cs" />
     <Compile Include="RaceInspector.cs" />

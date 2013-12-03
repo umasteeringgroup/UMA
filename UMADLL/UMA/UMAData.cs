@@ -130,14 +130,14 @@ namespace UMA
 		[System.Serializable]
 		public class UMARecipe{
 			public RaceData raceData;
-			public Dictionary<Type,UMADna> umaDna = new Dictionary<Type,UMADna>();
+            public Dictionary<Type, UMADnaBase> umaDna = new Dictionary<Type, UMADnaBase>();
 			protected Dictionary<Type, Action<UMAData>> umaDnaConverter = new Dictionary<Type, Action<UMAData>>();
 			public SlotData[] slotDataList;
 			
 			public T GetDna<T>()
-				where T : UMADna
+                where T : UMADnaBase
 			{
-				UMADna dna;
+                UMADnaBase dna;
 				if(umaDna.TryGetValue(typeof(T), out dna))
 				{
 					return dna as T;               
@@ -377,7 +377,7 @@ namespace UMA
 	    }
 
 	    public T GetDna<T>()
-	        where T : UMADna
+            where T : UMADnaBase
 	    {
 	        return umaRecipe.GetDna<T>();
 	    }

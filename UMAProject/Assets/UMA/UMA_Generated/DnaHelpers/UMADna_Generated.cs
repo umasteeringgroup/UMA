@@ -65,7 +65,7 @@ namespace UMA
 			return null;
 		}
 
-		public static System.String SaveInstance(UMADna instance)
+		public static System.String SaveInstance(UMADnaBase instance)
 		{
 			System.Type dnaType = instance.GetType();
 			if( dnaType == typeof(UMADnaHumanoid))

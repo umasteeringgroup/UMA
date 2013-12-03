@@ -45,7 +45,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <Compile Include="UMADna.cs" />
     <Compile Include="UMAGeneratorCoroutine.cs" />
     <Compile Include="UMAGenerator.cs" />
     <Compile Include="TextureProcessPROCoroutine.cs" />
@@ -53,7 +52,6 @@
     <Compile Include="RaceData.cs" />
     <Compile Include="LegacyCombineInstances.cs" />
     <Compile Include="DnaConverterBehaviour.cs" />
-    <Compile Include="UMADnaHumanoid.cs" />
     <Compile Include="BlendAdditiveTextureRectCoroutine.cs" />
     <Compile Include="BlendTextureRectCoroutine.cs" />
     <Compile Include="ColorizeAdditiveTextureRectCoroutine.cs" />
@@ -70,11 +68,12 @@
     <Compile Include="UmaTPose.cs" />
     <Compile Include="WorkerCoroutine.cs" />
     <Compile Include="MaxRectsBinPack.cs" />
-    <Compile Include="UMADna_Generated.cs" />
-    <Compile Include="UMADnaHumanoid_Generated.cs" />
     <Compile Include="UMADnaBase.cs" />
     <Compile Include="UMAData.cs" />
     <Compile Include="OverlayData.cs" />
     <Compile Include="SlotData.cs" />
   </ItemGroup>
+  <PropertyGroup>
+    <PostBuildEvent>copy /Y $(TargetPath) $(ProjectDir)..\..\UMAProject\Assets\UMA\UMA_Project\DLL\$(TargetFileName)</PostBuildEvent>
+  </PropertyGroup>
 </Project>
