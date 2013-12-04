@@ -16,7 +16,6 @@ public class UMACrowd : MonoBehaviour {
 	public bool generateLotsUMA;
 	public Vector2 umaCrowdSize;
 	public bool randomDna;
-	public bool useLegacyCombiner;
 	
 	public Transform zeroPoint;
 	
