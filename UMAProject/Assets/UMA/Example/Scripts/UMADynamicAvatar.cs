@@ -92,14 +92,12 @@ public class UMADynamicAvatar : MonoBehaviour {
 		{
 			umaData.cleanMesh(false);
 			umaData.firstBake = true;
-			position = umaChild.transform.position;
-			rotation = umaChild.transform.rotation;
+			position = umaData.umaRoot.transform.position;
+			rotation = umaData.umaRoot.transform.rotation;
 			Destroy(umaChild);
 		}
 		umaChild = Instantiate(umaData.umaRecipe.raceData.racePrefab) as GameObject;
 		umaChild.transform.parent = transform;
-		umaChild.transform.position = position;
-		umaChild.transform.rotation = rotation;
 		UMAData newUMA = umaChild.GetComponentInChildren<UMAData>();
 #if UNITY_EDITOR
 		if (!UnityEditor.EditorApplication.isPlaying)
@@ -113,6 +111,9 @@ public class UMADynamicAvatar : MonoBehaviour {
 		umaData.updateBoneList = newUMA.updateBoneList;
 		umaData.boneList = newUMA.boneList;
 		umaData.umaRoot = newUMA.gameObject;
+		umaData.umaRoot.transform.position = position;
+		umaData.umaRoot.transform.rotation = rotation;
+
 		umaData.animationController = animationController ?? newUMA.animationController;
 
 		newUMA.animator = null;
