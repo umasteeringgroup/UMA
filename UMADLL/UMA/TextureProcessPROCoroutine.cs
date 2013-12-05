@@ -44,7 +44,7 @@ namespace UMA
 				
 				while(umaGenerator.textureMerge.textureModuleList.Count < moduleCount){
 					Transform tempModule = UnityEngine.Object.Instantiate(umaGenerator.textureMerge.textureModule,new Vector3(0,0,3),Quaternion.identity) as Transform;
-					tempModule.gameObject.renderer.material = UnityEngine.Object.Instantiate(umaGenerator.textureMerge.material) as Material;
+					tempModule.gameObject.renderer.sharedMaterial = UnityEngine.Object.Instantiate(umaGenerator.textureMerge.material) as Material;
 					umaGenerator.textureMerge.textureModuleList.Add(tempModule);
 				}
 				
@@ -86,10 +86,10 @@ namespace UMA
 									atlasElement.source.baseTexture[textureType].filterMode = FilterMode.Point;
 									atlasElement.source.baseTexture[0].filterMode = FilterMode.Point;
 								}							
-								textureModuleList[moduleCount].renderer.material.SetTexture("_MainTex",atlasElement.source.baseTexture[textureType]);
-								textureModuleList[moduleCount].renderer.material.SetTexture("_ExtraTex",atlasElement.source.baseTexture[0]);
-			                    textureModuleList[moduleCount].renderer.material.SetColor("_Color", atlasElement.source.GetMultiplier(0, textureType));
-			                    textureModuleList[moduleCount].renderer.material.SetColor("_AdditiveColor", atlasElement.source.GetAdditive(0, textureType));
+								textureModuleList[moduleCount].renderer.sharedMaterial.SetTexture("_MainTex",atlasElement.source.baseTexture[textureType]);
+                                textureModuleList[moduleCount].renderer.sharedMaterial.SetTexture("_ExtraTex", atlasElement.source.baseTexture[0]);
+                                textureModuleList[moduleCount].renderer.sharedMaterial.SetColor("_Color", atlasElement.source.GetMultiplier(0, textureType));
+                                textureModuleList[moduleCount].renderer.sharedMaterial.SetColor("_AdditiveColor", atlasElement.source.GetAdditive(0, textureType));
 								textureModuleList[moduleCount].name = atlasElement.source.baseTexture[textureType].name;
 								
 								Transform tempModule = textureModuleList[moduleCount];
@@ -111,11 +111,11 @@ namespace UMA
 									
 									atlasElement.source.overlays[i2].textureList[textureType].filterMode = FilterMode.Point;
 									atlasElement.source.overlays[i2].textureList[0].filterMode = FilterMode.Point;
-									
-									textureModuleList[moduleCount].renderer.material.SetTexture("_MainTex",atlasElement.source.overlays[i2].textureList[textureType]);
-									textureModuleList[moduleCount].renderer.material.SetTexture("_ExtraTex",atlasElement.source.overlays[i2].textureList[0]);
-			                        textureModuleList[moduleCount].renderer.material.SetColor("_Color", atlasElement.source.GetMultiplier(i2 + 1, textureType));
-			                        textureModuleList[moduleCount].renderer.material.SetColor("_AdditiveColor", atlasElement.source.GetAdditive(i2 + 1, textureType));
+
+                                    textureModuleList[moduleCount].renderer.sharedMaterial.SetTexture("_MainTex", atlasElement.source.overlays[i2].textureList[textureType]);
+                                    textureModuleList[moduleCount].renderer.sharedMaterial.SetTexture("_ExtraTex", atlasElement.source.overlays[i2].textureList[0]);
+                                    textureModuleList[moduleCount].renderer.sharedMaterial.SetColor("_Color", atlasElement.source.GetMultiplier(i2 + 1, textureType));
+                                    textureModuleList[moduleCount].renderer.sharedMaterial.SetColor("_AdditiveColor", atlasElement.source.GetAdditive(i2 + 1, textureType));
 
 									textureModuleList[moduleCount].name = atlasElement.source.overlays[i2].textureList[textureType].name;
 									

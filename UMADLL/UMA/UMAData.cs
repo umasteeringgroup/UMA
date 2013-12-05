@@ -33,8 +33,10 @@ namespace UMA
 		public bool _hasUpdatedBefore = false;
 		public bool onQuit = false;
 		public event Action<UMAData> OnUpdated;
+        public GameObject umaRoot;
 
 		public UMARecipe umaRecipe;
+        public Animator animator;
 
 
 		void Awake () {
@@ -43,15 +45,30 @@ namespace UMA
 			if(!umaGenerator){
 				umaGenerator = GameObject.Find("UMAGenerator").GetComponent("UMAGenerator") as UMAGenerator;	
 			}
-			
-			UpdateBoneData();
+
+            if (umaRecipe == null)
+            {
+                umaRecipe = new UMARecipe();
+                atlasList = new AtlasList();
+            }
+            else
+            {
+                SetupOnAwake();
+            }
 		}
+
+        public void SetupOnAwake()
+        {
+            umaRoot = gameObject;
+            animator = umaRoot.GetComponent<Animator>();
+            UpdateBoneData();
+        }
 
 		
 		[System.Serializable]
 		public class AtlasList
 		{
-			public List<AtlasElement> atlas;
+			public List<AtlasElement> atlas = new List<AtlasElement>();
 		}
 		
 		
@@ -226,7 +243,9 @@ namespace UMA
 	    }
 
 		
-		void UpdateBoneData(){
+		public void UpdateBoneData()
+        {
+            if (tempBoneData == null) return;
 			for(int i = 0; i < tempBoneData.Length; i++){			
 				boneList.Add(tempBoneData[i].boneTransform.gameObject.name,tempBoneData[i]);
 			}
@@ -288,9 +307,11 @@ namespace UMA
 		
 		public void cleanAvatar(){
 			animationController = null;
-			var animator = GetComponent<Animator>();
-			if (animator.avatar) GameObject.Destroy(animator.avatar);
-			if (animator) GameObject.Destroy(animator);
+            if (animator != null)
+            {
+                if (animator.avatar) GameObject.Destroy(animator.avatar);
+                if (animator) GameObject.Destroy(animator);
+            }
 		}
 
 		public void cleanTextures(){

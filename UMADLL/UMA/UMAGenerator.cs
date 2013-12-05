@@ -32,6 +32,19 @@ namespace UMA
 
 		public float unityVersion;
 
+        public void Initialize()
+        {
+			umaGeneratorCoroutine = new UMAGeneratorCoroutine();
+            if (!textureMerge)
+            {
+                Transform tempTextureMerger = Instantiate(textureMergePrefab, Vector3.zero, Quaternion.identity) as Transform;
+                tempTextureMerger.hideFlags = HideFlags.HideAndDontSave;
+                textureMerge = tempTextureMerger.GetComponent("TextureMerge") as TextureMerge;
+                textureMerge.transform.parent = transform;
+                textureMerge.gameObject.SetActive(false);
+            }
+        }
+
 		void Awake () {
 			
 			maxMeshUpdates = 1;
@@ -62,40 +75,54 @@ namespace UMA
 			meshUpdates = 0;	
 		}
 
-		
-		public virtual void OnDirtyUpdate() {
-			umaData = umaDirtyList[0];
-			
-			if(umaData.isMeshDirty){
-				if(!umaData.isTextureDirty){
+        public virtual bool HandleDirtyUpdate(UMAData data)
+        {
+            umaData = data;
+            if (umaData.isMeshDirty)
+            {
+                if (!umaData.isTextureDirty)
+                {
                     UpdateUMAMesh(false);
-				}				
-				umaData.isMeshDirty = false;
-			}
-	        if(umaData.isTextureDirty){
-				umaGeneratorCoroutine.Prepare(this);
+                }
+                umaData.isMeshDirty = false;
+            }
+            if (umaData.isTextureDirty)
+            {
+                umaGeneratorCoroutine.Prepare(this);
 
-	            if (umaGeneratorCoroutine.Work())
-	            {
+                if (umaGeneratorCoroutine.Work())
+                {
                     UpdateUMAMesh(true);
                     umaData.isTextureDirty = false;
-	            }
-	            else
-	            {
-	                return;
-	            }
-			}else if(umaData.isShapeDirty){
-				UpdateUMABody(umaData);
-				umaData.isShapeDirty = false;
-				
-				UMAReady();
-			
-			}else{
-				
-				UMAReady();
-				
-			}
-				
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else if (umaData.isShapeDirty)
+            {
+                UpdateUMABody(umaData);
+                umaData.isShapeDirty = false;
+
+                UMAReady();
+                return true;
+
+            }
+            else
+            {
+                UMAReady();
+                return true;
+            }
+            return false;
+        }
+
+		
+		public virtual void OnDirtyUpdate() {
+            if (HandleDirtyUpdate(umaDirtyList[0]))
+            {
+                umaDirtyList.RemoveAt(0);
+            }			
 		}
 
         private void UpdateUMAMesh(bool updatedAtlas)
@@ -119,7 +146,6 @@ namespace UMA
 		public virtual void UMAReady(){	
 			if(umaData){
 				umaData.myRenderer.enabled = true;
-			    umaDirtyList.RemoveAt(0);
 			    umaData.FireUpdatedEvent(); 
 	        }
 	    }
@@ -137,20 +163,20 @@ namespace UMA
 				AnimationState[] snapshot = null;
 	            if (umaData.animationController)
 	            {
-					if(unityVersion >= 4.3f){
-		                var animator = umaData.GetComponent<Animator>();
-		                if (animator != null)
-		                {
-
-		                    snapshot = new AnimationState[animator.layerCount];
-		                    for (int i = 0; i < animator.layerCount; i++)
-		                    {
-		                        var state = animator.GetCurrentAnimatorStateInfo(i);
-		                        snapshot[i].stateHash = state.nameHash;
-		                        snapshot[i].stateTime = Mathf.Max(0, state.normalizedTime - Time.deltaTime / state.length);
-		                    }
-		                }
-					}
+                    if (unityVersion >= 4.3f)
+                    {
+                        var animator = umaData.animator;
+                        if (animator != null)
+                        {
+                            snapshot = new AnimationState[animator.layerCount];
+                            for (int i = 0; i < animator.layerCount; i++)
+                            {
+                                var state = animator.GetCurrentAnimatorStateInfo(i);
+                                snapshot[i].stateHash = state.nameHash;
+                                snapshot[i].stateTime = Mathf.Max(0, state.normalizedTime - Time.deltaTime / state.length);
+                            }
+                        }
+                    }
 	                foreach (var entry in umaData.boneList)
 	                {
 	                    entry.Value.boneTransform.localPosition = entry.Value.originalBonePosition;
@@ -161,89 +187,91 @@ namespace UMA
 			    umaData.ApplyDNA();
 			    if (umaData.animationController)
 			    {
-	                var animator = umaData.GetComponent<Animator>();
+	                var animator = umaData.animator;
 	                
 					bool applyRootMotion = false;
 					bool animatePhysics = false;
 					AnimatorCullingMode cullingMode = AnimatorCullingMode.AlwaysAnimate;
 
-					if(animator){
+					if(animator)
+                    {
 						applyRootMotion = animator.applyRootMotion;
 						animatePhysics = animator.animatePhysics;
 						cullingMode = animator.cullingMode;
 						Object.DestroyImmediate(animator);
 					}
-					var oldParent = umaData.transform.parent;
-	                umaData.transform.parent = null;
-	                CreateAnimator(umaData.gameObject, umaData.umaRecipe.raceData.TPose, umaData.animationController,applyRootMotion,animatePhysics,cullingMode);
-			        umaData.transform.parent = oldParent;
-	                animator = umaData.GetComponent<Animator>();
-					if(unityVersion >= 4.3f){
-		                if (snapshot != null)
-		                {
-		                    for (int i = 0; i < animator.layerCount; i++)
-		                    {
-		                        animator.Play(snapshot[i].stateHash, i, snapshot[i].stateTime);
-		                    }
-		                    animator.Update(0);
-		                }
-					}
+                    var oldParent = umaData.umaRoot.transform.parent;
+                    umaData.umaRoot.transform.parent = null;
+                    animator = CreateAnimator(umaData, umaData.umaRecipe.raceData.TPose, umaData.animationController, applyRootMotion, animatePhysics, cullingMode);
+                    umaData.animator = animator;
+                    umaData.umaRoot.transform.parent = oldParent;
+                    if (unityVersion >= 4.3f)
+                    {
+                        if (snapshot != null)
+                        {
+                            for (int i = 0; i < animator.layerCount; i++)
+                            {
+                                animator.Play(snapshot[i].stateHash, i, snapshot[i].stateTime);
+                            }
+                            animator.Update(0);
+                        }
+                    }
 			    }
 			}
 		}
-		
-	    public static void CreateAnimator(GameObject root, UmaTPose umaTPose, RuntimeAnimatorController controller,bool applyRootMotion, bool animatePhysics,AnimatorCullingMode cullingMode)
-	    {
-	        umaTPose.DeSerialize();
-	        var animator = root.AddComponent<Animator>();
-	        animator.avatar = CreateAvatar(root, umaTPose);
-	        animator.runtimeAnimatorController = controller;
-	        animator.applyRootMotion = applyRootMotion;
-	        animator.animatePhysics = animatePhysics;
-	        animator.cullingMode = cullingMode;
-	    }
 
-	    public static Avatar CreateAvatar(GameObject root, UmaTPose umaTPose)
-	    {
-	        HumanDescription description = CreateHumanDescription(root, umaTPose);
-	        Avatar res = AvatarBuilder.BuildHumanAvatar(root, description);
-	        return res;
-	    }
+        public static Animator CreateAnimator(UMAData umaData, UmaTPose umaTPose, RuntimeAnimatorController controller, bool applyRootMotion, bool animatePhysics, AnimatorCullingMode cullingMode)
+        {
+            umaTPose.DeSerialize();
+            var animator = umaData.umaRoot.AddComponent<Animator>();
+            animator.avatar = CreateAvatar(umaData, umaTPose);
+            animator.runtimeAnimatorController = controller;
+            animator.applyRootMotion = applyRootMotion;
+            animator.animatePhysics = animatePhysics;
+            animator.cullingMode = cullingMode;
+            return animator;
+        }
 
-	    public static HumanDescription CreateHumanDescription(GameObject root, UmaTPose umaTPose)
-	    {
-	        var res = new HumanDescription();
-	        res.armStretch = 0;
-	        res.feetSpacing = 0;
-	        res.legStretch = 0;
-	        res.lowerArmTwist = 0.2f;
-	        res.lowerLegTwist = 1f;
-	        res.upperArmTwist = 0.5f;
-	        res.upperLegTwist = 0.1f;
+        public static Avatar CreateAvatar(UMAData umaData, UmaTPose umaTPose)
+        {
+            HumanDescription description = CreateHumanDescription(umaData, umaTPose);
+            Avatar res = AvatarBuilder.BuildHumanAvatar(umaData.umaRoot, description);
+            return res;
+        }
 
-	        res.human = umaTPose.humanInfo;
-	        res.skeleton = umaTPose.boneInfo;
-	        res.skeleton[0].name = root.name;
-	        SkeletonModifier(root, ref res.skeleton);
-	        return res;
-	    }
+        public static HumanDescription CreateHumanDescription(UMAData umaData, UmaTPose umaTPose)
+        {
+            var res = new HumanDescription();
+            res.armStretch = 0;
+            res.feetSpacing = 0;
+            res.legStretch = 0;
+            res.lowerArmTwist = 0.2f;
+            res.lowerLegTwist = 1f;
+            res.upperArmTwist = 0.5f;
+            res.upperLegTwist = 0.1f;
 
-	    private static void SkeletonModifier(GameObject root, ref SkeletonBone[] bones)
-	    {
-	        var umaData = root.GetComponent<UMAData>();
-	        for(var i = 0; i < bones.Length; i++)
-	        {
-	            var skeletonbone = bones[i];
-	            UMAData.BoneData entry;
-	            if (umaData.boneList.TryGetValue(skeletonbone.name, out entry))
-	            {
-	                //var entry = umaData.boneList[skeletonbone.name];
-	                skeletonbone.position = entry.boneTransform.localPosition;
-	                //skeletonbone.rotation = entry.boneTransform.localRotation;
-	                skeletonbone.scale = entry.boneTransform.localScale;
-	                bones[i] = skeletonbone;
-	            }
-	        }
-	    }
-	}
+            res.human = umaTPose.humanInfo;
+            res.skeleton = umaTPose.boneInfo;
+            res.skeleton[0].name = umaData.umaRoot.name;
+            SkeletonModifier(umaData, ref res.skeleton);
+            return res;
+        }
+
+        private static void SkeletonModifier(UMAData umaData, ref SkeletonBone[] bones)
+        {
+            for (var i = 0; i < bones.Length; i++)
+            {
+                var skeletonbone = bones[i];
+                UMAData.BoneData entry;
+                if (umaData.boneList.TryGetValue(skeletonbone.name, out entry))
+                {
+                    //var entry = umaData.boneList[skeletonbone.name];
+                    skeletonbone.position = entry.boneTransform.localPosition;
+                    //skeletonbone.rotation = entry.boneTransform.localRotation;
+                    skeletonbone.scale = entry.boneTransform.localScale;
+                    bones[i] = skeletonbone;
+                }
+            }
+        }
+    }
 }

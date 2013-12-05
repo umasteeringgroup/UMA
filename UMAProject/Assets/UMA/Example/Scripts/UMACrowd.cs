@@ -38,9 +38,9 @@ public class UMACrowd : MonoBehaviour {
 				GenerateOneUMA();
 			
 				if(zeroPoint){
-					tempUMA.transform.position = new Vector3(X+zeroPoint.position.x - umaCrowdSize.x*0.5f + 0.5f,zeroPoint.position.y,Y+zeroPoint.position.z - umaCrowdSize.y*0.5f + 0.5f);
+					tempUMA.position = new Vector3(X+zeroPoint.position.x - umaCrowdSize.x*0.5f + 0.5f,zeroPoint.position.y,Y+zeroPoint.position.z - umaCrowdSize.y*0.5f + 0.5f);
 				}else{
-					tempUMA.transform.position = new Vector3(X - umaCrowdSize.x*0.5f + 0.5f,0,Y - umaCrowdSize.y*0.5f + 0.5f);	
+					tempUMA.position = new Vector3(X - umaCrowdSize.x*0.5f + 0.5f,0,Y - umaCrowdSize.y*0.5f + 0.5f);	
 				}
 	
 				X = X + 1;
@@ -421,7 +421,12 @@ public class UMACrowd : MonoBehaviour {
 	}
 	
 	void GenerateOneUMA(){
-		var umaRecipe = new UMAData.UMARecipe();
+		var newGO = new GameObject("Generated Character");
+		newGO.transform.parent = transform;
+		var umaDynamicAvatar = newGO.AddComponent<UMADynamicAvatar>();
+		umaDynamicAvatar.Initialize();
+		umaData = umaDynamicAvatar.umaData;
+		var umaRecipe = umaDynamicAvatar.umaData.umaRecipe;
 		int randomResult = Random.Range(0, 2);
 //		randomResult = 0;
 		
@@ -431,28 +436,25 @@ public class UMACrowd : MonoBehaviour {
 		}else{
 			umaRecipe.SetRace(raceLibrary.GetRace("HumanFemale"));
         }
-          
-    	tempUMA = (Instantiate(umaRecipe.raceData.racePrefab ,Vector3.zero,Quaternion.identity) as GameObject).transform;
-		
-		umaData = tempUMA.gameObject.GetComponentInChildren<UMAData>();
-        umaData.umaRecipe = umaRecipe;
+
 		SetUMAData();
 		GenerateUMAShapes();
-
-		
+	
 		DefineSlots();
-		umaData.myRenderer.enabled = false;
 
-		if(zeroPoint){
-			tempUMA.transform.position = new Vector3(zeroPoint.position.x,zeroPoint.position.y,zeroPoint.position.z);
-		}else{
-			tempUMA.transform.position = new Vector3(0,0,0);	
+		umaDynamicAvatar.UpdateNewRace();
+		umaDynamicAvatar.umaData.myRenderer.enabled = false;
+		tempUMA = umaData.umaRoot.transform;
+
+		if (zeroPoint)
+		{
+			tempUMA.position = new Vector3(zeroPoint.position.x, zeroPoint.position.y, zeroPoint.position.z);
+		}
+		else
+		{
+			tempUMA.position = new Vector3(0, 0, 0);
 		}
 		
-		tempUMA.parent = transform;
-		UMADynamicAvatar umaDynamicAvatar = umaData.gameObject.AddComponent("UMADynamicAvatar") as UMADynamicAvatar;
-		umaDynamicAvatar.Initialize();
 
-		umaData.gameObject.AddComponent("UMASaveTool");
 	}
 }

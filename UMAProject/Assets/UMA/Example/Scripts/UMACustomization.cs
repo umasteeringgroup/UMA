@@ -86,17 +86,11 @@ public class UMACustomization : MonoBehaviour {
 		
 		if(Input.GetMouseButtonDown(1)){
 			if (Physics.Raycast(ray, out hit, 100)){
-				
 
-				UMAData tempUMA = hit.collider.GetComponent("UMAData") as UMAData;
-				umaDynamicAvatar = tempUMA.gameObject.GetComponent("UMADynamicAvatar") as UMADynamicAvatar;
+				UMAData tempUMA = hit.collider.transform.parent.parent.GetComponent<UMAData>();
+				umaDynamicAvatar = tempUMA.gameObject.GetComponent<UMADynamicAvatar>();
 				
 				if(tempUMA){
-					//Clear saved data of old UMA
-					if(umaDynamicAvatar){
-						umaDynamicAvatar.streamedUMA = null;
-					}
-					
 					umaData = tempUMA;
 					if(cameraTrack){
 						cameraTrack.target = umaData.transform;
@@ -104,9 +98,6 @@ public class UMACustomization : MonoBehaviour {
 					
 					umaDna = umaData.umaRecipe.umaDna[typeof(UMADnaHumanoid)] as UMADnaHumanoid;
 					ReceiveValues();
-					
-					//Save functionality
-					umaDynamicAvatar.SaveToMemoryStream();
 				}
 			}
 		}
@@ -118,21 +109,6 @@ public class UMACustomization : MonoBehaviour {
 				if(sliderControlList[i].pressed == true){
 					UpdateUMAShape();
 				}
-			}
-		}
-		
-		//Load functionality
-		if( Input.GetKeyDown(KeyCode.Z) ){
-			if(umaData && umaDynamicAvatar){	
-				//SPOT
-				umaDynamicAvatar.LoadFromMemoryStream();
-				umaData.isShapeDirty = true;
-				umaData.Dirty();
-				
-				umaDna = umaData.umaRecipe.umaDna[typeof(UMADnaHumanoid)] as UMADnaHumanoid;
-				ReceiveValues();
-				//SPOT
-				umaDynamicAvatar.SaveToMemoryStream();
 			}
 		}
 	}

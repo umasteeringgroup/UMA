@@ -42,6 +42,11 @@ public class RaceLibrary : MonoBehaviour {
 
 	public RaceData GetRace(string raceName)
     {
-        return raceDictionary[raceName];
+		RaceData res;
+		if (!raceDictionary.TryGetValue(raceName, out res))
+		{
+			Debug.LogError("Could not find race: " + raceName);
+		}
+        return res;
     }
 }
