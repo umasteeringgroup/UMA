@@ -119,6 +119,8 @@ public class UMADynamicAvatar : MonoBehaviour {
 		newUMA.animator = null;
 		DestroyImmediate(newUMA);
 
+		umaData.myRenderer.enabled = false;
+
 #if UNITY_EDITOR
 		if (UnityEditor.EditorApplication.isPlaying)
 		{
