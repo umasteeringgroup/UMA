@@ -7,17 +7,21 @@ namespace UMA
 {
     public class UMALegacyMeshCombiner : UMAMeshCombiner
     {
-		UMAGenerator umaGenerator;	
 		Matrix4x4 tempMatrix;
 		
 		List<CombineInstance> combinedGroupedList;
 		List<CombineInstance> combinedMeshList;
 		List<Material> combinedMaterialList;
 		List<SlotData> combinedSlotList;
+        UMAData umaData;
+        string[] textureNameList;
+        int atlasResolution;
 
-        public override void UpdateUMAMesh(bool updatedAtlas, UMAGenerator umaGenerator)
+        public override void UpdateUMAMesh(bool updatedAtlas, UMAData umaData, string[] textureNameList, int atlasResolution)
         {
-            this.umaGenerator = umaGenerator;
+            this.umaData = umaData;
+            this.textureNameList = textureNameList;
+            this.atlasResolution = atlasResolution;
 
 			combinedGroupedList = new List<CombineInstance>();
 			combinedMeshList = new List<CombineInstance>();
@@ -34,7 +38,7 @@ namespace UMA
 	        }
 			
 			
-			Matrix4x4[] bindposesArray = umaGenerator.umaData.myRenderer.sharedMesh.bindposes;
+			Matrix4x4[] bindposesArray = umaData.myRenderer.sharedMesh.bindposes;
 			
 			
 			tempMatrix = Matrix4x4.identity;
@@ -59,7 +63,7 @@ namespace UMA
 				}
 			}
 			
-			Mesh newMesh = umaGenerator.umaData.firstBake ? new Mesh() : umaGenerator.umaData.myRenderer.sharedMesh;
+			Mesh newMesh = umaData.firstBake ? new Mesh() : umaData.myRenderer.sharedMesh;
 			newMesh.CombineMeshes(combinedGroupedList.ToArray(),false,false);
 	        
 			for(int i = 0; i < combinedGroupedList.Count; i++){
@@ -69,42 +73,42 @@ namespace UMA
 
 			newMesh.boneWeights = boneWeightsArray;
 	        newMesh.bindposes = bindposesArray;
-	        umaGenerator.umaData.myRenderer.sharedMesh = newMesh;
+	        umaData.myRenderer.sharedMesh = newMesh;
 			
 			if(updatedAtlas){
 				RecalculateUV();
 			}
 			
-			umaGenerator.umaData.umaRecipe.ClearDNAConverters();
-	        for (int i = 0; i < umaGenerator.umaData.umaRecipe.slotDataList.Length; i++)
+			umaData.umaRecipe.ClearDNAConverters();
+	        for (int i = 0; i < umaData.umaRecipe.slotDataList.Length; i++)
 	        {
-	            SlotData slotData = umaGenerator.umaData.umaRecipe.slotDataList[i];
+	            SlotData slotData = umaData.umaRecipe.slotDataList[i];
 				if(slotData != null){
-	            	umaGenerator.umaData.umaRecipe.AddDNAUpdater(slotData.slotDNA);
+	            	umaData.umaRecipe.AddDNAUpdater(slotData.slotDNA);
 				}
 	        }
 			
-			umaGenerator.umaData.myRenderer.quality = SkinQuality.Bone4;
-	        umaGenerator.umaData.myRenderer.useLightProbes = true;
-	        umaGenerator.umaData.myRenderer.sharedMaterials = combinedMaterialList.ToArray();
-			//umaGenerator.umaData.myRenderer.sharedMesh.RecalculateBounds();
-	        umaGenerator.umaData.myRenderer.sharedMesh.name = "UMAMesh";
+			umaData.myRenderer.quality = SkinQuality.Bone4;
+	        umaData.myRenderer.useLightProbes = true;
+	        umaData.myRenderer.sharedMaterials = combinedMaterialList.ToArray();
+			//umaData.myRenderer.sharedMesh.RecalculateBounds();
+	        umaData.myRenderer.sharedMesh.name = "UMAMesh";
 			
-			umaGenerator.umaData.firstBake = false;			
+			umaData.firstBake = false;			
 	    }
 
 		void CombineByShader(){
 			
-			for(int atlasIndex = 0; atlasIndex < umaGenerator.umaData.atlasList.atlas.Count; atlasIndex++){
-				combinedMaterialList.Add(umaGenerator.umaData.atlasList.atlas[atlasIndex].materialSample);
+			for(int atlasIndex = 0; atlasIndex < umaData.atlasList.atlas.Count; atlasIndex++){
+				combinedMaterialList.Add(umaData.atlasList.atlas[atlasIndex].materialSample);
 				combinedMeshList.Clear();
-				for(int materialDefinitionIndex = 0; materialDefinitionIndex < umaGenerator.umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions.Count; materialDefinitionIndex++){
+				for(int materialDefinitionIndex = 0; materialDefinitionIndex < umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions.Count; materialDefinitionIndex++){
 					CombineInstance combineInstance = new CombineInstance();
-					combineInstance.mesh = umaGenerator.umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex].source.slotData.meshRenderer.sharedMesh;
+					combineInstance.mesh = umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex].source.slotData.meshRenderer.sharedMesh;
 					combineInstance.transform = tempMatrix;
 		            combinedMeshList.Add(combineInstance);
 					
-					combinedSlotList.Add(umaGenerator.umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex].source.slotData);
+					combinedSlotList.Add(umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex].source.slotData);
 				}
 				
 				Mesh tempMesh = new Mesh();
@@ -118,7 +122,7 @@ namespace UMA
 
 		void CombineByMaterial()
 	    {		
-	        SlotData[] slots = umaGenerator.umaData.umaRecipe.slotDataList;
+	        SlotData[] slots = umaData.umaRecipe.slotDataList;
 	        bool[] shareMaterial = new bool[slots.Length];
 			
 			int indexCount = 0;
@@ -134,10 +138,10 @@ namespace UMA
 						combinedSlotList.Add(slots[slotIndex]);
 						Material tempMaterial = UnityEngine.Object.Instantiate(slots[slotIndex].materialSample) as Material;
 						tempMaterial.name = slots[slotIndex].slotName;
-						for(int textureType = 0; textureType < umaGenerator.textureNameList.Length; textureType++){
-							if(tempMaterial.HasProperty(umaGenerator.textureNameList[textureType])){
+						for(int textureType = 0; textureType < textureNameList.Length; textureType++){
+							if(tempMaterial.HasProperty(textureNameList[textureType])){
 								slots[slotIndex].GetOverlay(0).textureList[textureType].filterMode = FilterMode.Bilinear;
-								tempMaterial.SetTexture(umaGenerator.textureNameList[textureType],slots[slotIndex].GetOverlay(0).textureList[textureType]);
+								tempMaterial.SetTexture(textureNameList[textureType],slots[slotIndex].GetOverlay(0).textureList[textureType]);
 							}
 						}
 						combinedMaterialList.Add(tempMaterial);
@@ -180,14 +184,14 @@ namespace UMA
 			List<Rect> tempAtlasRect = new List<Rect>();
 			List<int> meshVertexAmount = new List<int>();
 			
-			for(int atlasIndex = 0; atlasIndex < umaGenerator.umaData.atlasList.atlas.Count; atlasIndex++){
-				for(int materialDefinitionIndex = 0; materialDefinitionIndex < umaGenerator.umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions.Count; materialDefinitionIndex++){
-					tempAtlasRect.Add(umaGenerator.umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex].atlasRegion);
-					meshVertexAmount.Add(umaGenerator.umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex].source.slotData.meshRenderer.sharedMesh.vertexCount);
+			for(int atlasIndex = 0; atlasIndex < umaData.atlasList.atlas.Count; atlasIndex++){
+				for(int materialDefinitionIndex = 0; materialDefinitionIndex < umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions.Count; materialDefinitionIndex++){
+					tempAtlasRect.Add(umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex].atlasRegion);
+					meshVertexAmount.Add(umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex].source.slotData.meshRenderer.sharedMesh.vertexCount);
 				}
 			}
 
-			Vector2[] originalUVs = umaGenerator.umaData.myRenderer.sharedMesh.uv;
+			Vector2[] originalUVs = umaData.myRenderer.sharedMesh.uv;
 	        Vector2[] atlasUVs = new Vector2[originalUVs.Length];
 			
 	        int rectIndex = 0;
@@ -195,8 +199,8 @@ namespace UMA
 			
 			for(int i = 0; i < atlasUVs.Length; i++ ) {
 				
-				atlasUVs[i].x = Mathf.Lerp( tempAtlasRect[rectIndex].xMin/umaGenerator.atlasResolution, tempAtlasRect[rectIndex].xMax/umaGenerator.atlasResolution, originalUVs[i].x );
-	            atlasUVs[i].y = Mathf.Lerp( tempAtlasRect[rectIndex].yMin/umaGenerator.atlasResolution, tempAtlasRect[rectIndex].yMax/umaGenerator.atlasResolution, originalUVs[i].y );            
+				atlasUVs[i].x = Mathf.Lerp( tempAtlasRect[rectIndex].xMin/atlasResolution, tempAtlasRect[rectIndex].xMax/atlasResolution, originalUVs[i].x );
+	            atlasUVs[i].y = Mathf.Lerp( tempAtlasRect[rectIndex].yMin/atlasResolution, tempAtlasRect[rectIndex].yMax/atlasResolution, originalUVs[i].y );            
 				
 				if(originalUVs[i].x > 1 || originalUVs[i].y > 1){
 					Debug.Log(i);	
@@ -207,7 +211,7 @@ namespace UMA
 	                rectIndex++;
 	            }
 	        }
-			umaGenerator.umaData.myRenderer.sharedMesh.uv = atlasUVs;	
+			umaData.myRenderer.sharedMesh.uv = atlasUVs;	
 		}
 		
 		

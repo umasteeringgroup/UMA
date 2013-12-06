@@ -3,28 +3,50 @@ using UnityEditor;
 using UMA;
 
 [CustomEditor(typeof(UMADynamicAvatar))]
-public class UMADynamicAvatarEditor : Editor 
+[CanEditMultipleObjects]
+public class UMADynamicAvatarEditor : Editor
 {
+	bool showInEditor = false;
 	public override void OnInspectorGUI()
 	{
-		UMADynamicAvatar umaDynamicAvatar = (UMADynamicAvatar)target;
-		var oldRecipe = umaDynamicAvatar.umaRecipe;
-		base.OnInspectorGUI();
-		if (oldRecipe != umaDynamicAvatar.umaRecipe)
+		var oldRecipes = new UMARecipeBase[targets.Length];
+		var dynamicAvatars = new UMADynamicAvatar[targets.Length];
+		for (int i = 0; i < targets.Length; i++)
 		{
-			if (EditorApplication.isPlaying)
+			dynamicAvatars[i] = targets[i] as UMADynamicAvatar;
+			oldRecipes[i] = dynamicAvatars[i] != null ? dynamicAvatars[i].umaRecipe : null;
+		}
+		base.OnInspectorGUI();
+		for (int i = 0; i < dynamicAvatars.Length; i++)
+		{
+			if (dynamicAvatars[i] != null)
 			{
-				umaDynamicAvatar.Load(umaDynamicAvatar.umaRecipe);
+				if (dynamicAvatars[i].umaRecipe != oldRecipes[i])
+				{
+					if (EditorApplication.isPlaying)
+					{
+						// if in play mode just reload the new recipe
+						dynamicAvatars[i].Load(dynamicAvatars[i].umaRecipe);
+					}
+					else
+					{
+						if (showInEditor)
+						{
+							HideEditorAvatar(dynamicAvatars[i]);
+							ShowEditorAvatar(dynamicAvatars[i]);
+						}
+					}
+				}
 			}
 		}
 
 		if (EditorApplication.isPlaying)
 		{
-			GUILayout.BeginHorizontal();
-			if (GUILayout.Button("Save Avatar Txt"))
+			if (dynamicAvatars.Length == 1 && dynamicAvatars[0] != null && dynamicAvatars[0].umaData != null)
 			{
-
-				if (umaDynamicAvatar)
+				var umaDynamicAvatar = dynamicAvatars[0];
+				GUILayout.BeginHorizontal();
+				if (GUILayout.Button("Save Avatar Txt"))
 				{
 					var path = EditorUtility.SaveFilePanel("Save serialized Avatar", "Assets", target.name + ".txt", "txt");
 					if (path.Length != 0)
@@ -35,11 +57,8 @@ public class UMADynamicAvatarEditor : Editor
 						ScriptableObject.Destroy(asset);
 					}
 				}
-			}
 
-			if (GUILayout.Button("Save Avatar Asset"))
-			{
-				if (umaDynamicAvatar)
+				if (GUILayout.Button("Save Avatar Asset"))
 				{
 					var path = EditorUtility.SaveFilePanelInProject("Save serialized Avatar", target.name + ".asset", "asset", "Message 2");
 					if (path.Length != 0)
@@ -50,13 +69,8 @@ public class UMADynamicAvatarEditor : Editor
 						AssetDatabase.SaveAssets();
 					}
 				}
-			}
 
-			if (GUILayout.Button("Load Avatar Txt"))
-			{
-				UMAData umaData = umaDynamicAvatar.umaData;
-				RaceData umaRace = umaData.umaRecipe.raceData;
-				if (umaData && umaDynamicAvatar)
+				if (GUILayout.Button("Load Avatar Txt"))
 				{
 					var path = EditorUtility.OpenFilePanel("Load serialized Avatar", "Assets", "txt");
 					if (path.Length != 0)
@@ -67,18 +81,13 @@ public class UMADynamicAvatarEditor : Editor
 						Destroy(asset);
 					}
 				}
-			}
-			if (GUILayout.Button("Load Avatar Asset"))
-			{
-				UMAData umaData = umaDynamicAvatar.umaData;
-				RaceData umaRace = umaData.umaRecipe.raceData;
-				if (umaData && umaDynamicAvatar)
+				if (GUILayout.Button("Load Avatar Asset"))
 				{
 					var path = EditorUtility.OpenFilePanel("Load serialized Avatar", "Assets", "asset");
 					if (path.Length != 0)
 					{
 						var index = path.IndexOf("/Assets/");
-						if( index > 0 )
+						if (index > 0)
 						{
 							path = path.Substring(index + 1);
 						}
@@ -89,56 +98,75 @@ public class UMADynamicAvatarEditor : Editor
 						}
 						else
 						{
-							Debug.LogError("Failed To Load Asset \""+path+"\"\nAssets must be inside the project and descend from the UMARecipeBase type");
+							Debug.LogError("Failed To Load Asset \"" + path + "\"\nAssets must be inside the project and descend from the UMARecipeBase type");
+						}
+					}
+				}
+				GUILayout.EndHorizontal();
+			}
+		}
+		else
+		{
+			if (!showInEditor)
+			{
+				if (GUILayout.Button("Show In Editor"))
+				{
+					showInEditor = true;
+					foreach (var da in dynamicAvatars)
+					{
+						if (da != null)
+						{
+							ShowEditorAvatar(da);
 						}
 					}
 				}
 			}
-			GUILayout.EndHorizontal();	
+			else
+			{
+				if (GUILayout.Button("Hide In Editor"))
+				{
+					showInEditor = false;
+					foreach (var da in dynamicAvatars)
+					{
+						if (da != null)
+						{
+							HideEditorAvatar(da);
+						}
+					}
+				}
+			}
 		}
-		//else
-		//{
-		//    var da = target as UMADynamicAvatar;
+	}
 
-		//    if (da.umaData == null || da.umaData.umaRoot == null)
-		//    {
-		//        if (GUILayout.Button("Show In Editor"))
-		//        {
-		//            da.Initialize();
-		//            //da.umaChild.hideFlags = HideFlags.HideAndDontSave;
-		//            //da.umaData.hideFlags = HideFlags.HideAndDontSave;
-		//            var generator = GameObject.Find("UMAGenerator").GetComponent<UMA.UMAGenerator>();
-		//            generator.Initialize();
-		//            da.umaData.firstBake = true;
-		//            da.umaData.isMeshDirty = true;
-		//            da.umaData.isShapeDirty = true;
-		//            da.umaData.isTextureDirty = true;
+	private void ShowEditorAvatar(UMADynamicAvatar da)
+	{
+		da.Initialize();
+		da.context.UpdateDictionaries();
+		da.umaData.firstBake = true;
+		da.Load(da.umaRecipe);
+		da.umaData.firstBake = true;
+		var generator = GameObject.Find("UMAGenerator").GetComponent<UMA.UMAGenerator>();
+		var meshCombiner = da.gameObject.AddComponent<UMADefaultMeshCombiner>();
+		var ourGenerator = new UMAEditorGenerator(generator.textureNameList, meshCombiner);
+		ourGenerator.UpdateUMAMesh(da.umaData);
+		ourGenerator.UpdateUMABody(da.umaData);
+		da.umaData.firstBake = true;
+		da.umaData.myRenderer.enabled = true;
+		DestroyImmediate(meshCombiner);
+	}
 
-		//            while (!generator.HandleDirtyUpdate(da.umaData))
-		//            {
-		//                // keep looping till done
-		//            }
-		//        }
-		//    }
-		//    else
-		//    {
-		//        if (GUILayout.Button("Hide In Editor"))
-		//        {
-		//            DestroyImmediate(da.umaData.umaRoot.transform.parent.gameObject);
-		//            da.umaChild = null;
-		//            if (da.umaData.hideFlags == HideFlags.HideAndDontSave)
-		//            {
-		//                DestroyImmediate(da.umaData);
-		//                da.umaData = null;
-		//            }
-		//            else
-		//            {
-		//                da.umaData.umaRoot = null;
-		//                da.umaData.animator = null;
-		//                da.umaData.myRenderer = null;
-		//            }
-		//        }
-		//    }
-		//}
+	private void HideEditorAvatar(UMADynamicAvatar da)
+	{
+		da.umaChild = null;
+		da.umaData._hasUpdatedBefore = false;
+		DestroyImmediate(da.umaData.umaRoot.transform.parent.gameObject);
+		DestroyImmediate(da.umaData);
+		da.umaData = null;
+	}
+
+	void OnEnable()
+	{
+		var da = target as UMADynamicAvatar;
+		showInEditor = da != null && da.umaData != null;
 	}
 }

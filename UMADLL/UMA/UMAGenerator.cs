@@ -35,14 +35,6 @@ namespace UMA
         public void Initialize()
         {
 			umaGeneratorCoroutine = new UMAGeneratorCoroutine();
-            if (!textureMerge)
-            {
-                Transform tempTextureMerger = Instantiate(textureMergePrefab, Vector3.zero, Quaternion.identity) as Transform;
-                tempTextureMerger.hideFlags = HideFlags.HideAndDontSave;
-                textureMerge = tempTextureMerger.GetComponent("TextureMerge") as TextureMerge;
-                textureMerge.transform.parent = transform;
-                textureMerge.gameObject.SetActive(false);
-            }
         }
 
 		void Awake () {
@@ -129,7 +121,7 @@ namespace UMA
         {
             if (meshCombiner != null)
             {
-                meshCombiner.UpdateUMAMesh(updatedAtlas, this);
+                meshCombiner.UpdateUMAMesh(updatedAtlas, umaData, textureNameList, atlasResolution);
             }
             else
             {

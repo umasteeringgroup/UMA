@@ -32,13 +32,6 @@ public class UMADynamicAvatar : MonoBehaviour {
 			context = UMAContext.FindInstance();
 		}
 		
-		#if UNITY_EDITOR
-			if (!UnityEditor.EditorApplication.isPlaying)
-			{
-				context.UpdateDictionaries();
-			}
-		#endif
-
 		if (umaData == null)
 		{
 			umaData = GetComponent<UMAData>();
