@@ -45,6 +45,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
+    <Compile Include="UMASkeletonDefault.cs" />
     <Compile Include="UMADefaultMeshCombiner.cs" />
     <Compile Include="UMAGeneratorCoroutine.cs" />
     <Compile Include="UMAGenerator.cs" />
@@ -67,6 +68,7 @@
     <Compile Include="TextureMerge.cs" />
     <Compile Include="UMAMeshCombiner.cs" />
     <Compile Include="UMAProcessBones.cs" />
+    <Compile Include="UMASkeleton.cs" />
     <Compile Include="UmaTPose.cs" />
     <Compile Include="WorkerCoroutine.cs" />
     <Compile Include="MaxRectsBinPack.cs" />

@@ -98,15 +98,9 @@ public class UMADynamicAvatar : MonoBehaviour {
 			newUMA.SetupOnAwake();
 		}
 #endif
-		umaData.animator = newUMA.animator;
-		umaData.myRenderer = newUMA.myRenderer;
-		umaData.atlasResolutionScale = 1f;
-		umaData.updateBoneList = newUMA.updateBoneList;
-		umaData.boneList = newUMA.boneList;
-		umaData.umaRoot = newUMA.gameObject;
+		umaData.Assign(newUMA);
 		umaData.umaRoot.transform.position = position;
 		umaData.umaRoot.transform.rotation = rotation;
-
 		umaData.animationController = animationController ?? newUMA.animationController;
 
 		newUMA.animator = null;

@@ -176,6 +176,8 @@ namespace UMA
 	                    entry.Value.boneTransform.localRotation = entry.Value.originalBoneRotation;
 	                }
 	            }
+                umaData.skeleton = new UMASkeletonDefault(umaData.boneHashList);
+
 			    umaData.ApplyDNA();
 			    if (umaData.animationController)
 			    {

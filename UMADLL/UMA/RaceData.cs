@@ -11,7 +11,7 @@ namespace UMA
 	    public GameObject racePrefab;
 	    public DnaConverterBehaviour[] dnaConverterList = new DnaConverterBehaviour[0];
 	    public String[] AnimatedBones = new string[0];
-	    public Dictionary<Type, System.Action<UMAData>> raceDictionary = new Dictionary<Type, System.Action<UMAData>>();
+        public Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate> raceDictionary = new Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate>();
 	    public UmaTPose TPose;
 
 	    void Awake()

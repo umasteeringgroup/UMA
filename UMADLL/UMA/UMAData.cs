@@ -23,8 +23,9 @@ namespace UMA
 		public bool isTextureDirty;
 		
 		public RuntimeAnimatorController animationController;
-		
-		public Dictionary<string,BoneData> boneList = new Dictionary<string,BoneData>();
+
+        public Dictionary<int, BoneData> boneHashList = new Dictionary<int, BoneData>();
+        internal Dictionary<string, BoneData> boneList = new Dictionary<string, BoneData>();
 		public BoneData[] updateBoneList = new BoneData[0];
 		
 		public BoneData[] tempBoneData; //Only while Dictionary can't be serialized
@@ -37,6 +38,7 @@ namespace UMA
 
 		public UMARecipe umaRecipe;
         public Animator animator;
+        public UMASkeleton skeleton;
 
 
 		void Awake () {
@@ -62,6 +64,16 @@ namespace UMA
             umaRoot = gameObject;
             animator = umaRoot.GetComponent<Animator>();
             UpdateBoneData();
+        }
+
+        public void Assign(UMAData other)
+        {
+            animator = other.animator;
+            myRenderer = other.myRenderer;
+            atlasResolutionScale = other.atlasResolutionScale;
+            updateBoneList = other.updateBoneList;
+            boneList = other.boneList;
+            umaRoot = other.umaRoot;
         }
 
 		
@@ -146,7 +158,7 @@ namespace UMA
 		public class UMARecipe{
 			public RaceData raceData;
             public Dictionary<Type, UMADnaBase> umaDna = new Dictionary<Type, UMADnaBase>();
-			protected Dictionary<Type, Action<UMAData>> umaDnaConverter = new Dictionary<Type, Action<UMAData>>();
+            protected Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate> umaDnaConverter = new Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate>();
 			public SlotData[] slotDataList;
 			
 			public T GetDna<T>()
@@ -169,11 +181,11 @@ namespace UMA
 			public void ApplyDNA(UMAData umaData)
 			{
 				foreach (var dnaEntry in umaDna)
-				{            
-					Action<UMAData> dnaConverter;
+				{
+                    DnaConverterBehaviour.DNAConvertDelegate dnaConverter;
 					if (umaDnaConverter.TryGetValue(dnaEntry.Key, out dnaConverter))
 					{
-						dnaConverter(umaData);
+						dnaConverter(umaData, umaData.GetSkeleton());
 					}
 					else
 					{
@@ -248,6 +260,7 @@ namespace UMA
             if (tempBoneData == null) return;
 			for(int i = 0; i < tempBoneData.Length; i++){			
 				boneList.Add(tempBoneData[i].boneTransform.gameObject.name,tempBoneData[i]);
+                boneHashList.Add(UMASkeleton.StringToHash(tempBoneData[i].boneTransform.gameObject.name), tempBoneData[i]);
 			}
 		}
 
@@ -381,6 +394,7 @@ namespace UMA
 					newBoneData.originalBoneScale = umaBone.localScale;
 	                newBoneData.boneTransform = umaBone;
 	                boneList.Add(umaBone.name, newBoneData);
+                    boneHashList.Add(UMASkeleton.StringToHash(umaBone.name), newBoneData);
 	            }
 	        }
 
@@ -429,5 +443,10 @@ namespace UMA
 		public SlotData GetSlot(int index){
 			return umaRecipe.slotDataList[index];	
 		}
-	}
+
+        public UMASkeleton GetSkeleton()
+        {
+            return skeleton;
+        }
+    }
 }

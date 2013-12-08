@@ -7,10 +7,11 @@ namespace UMA
 	public class DnaConverterBehaviour : MonoBehaviour 
 	{
 	    public System.Type DNAType;
-	    public System.Action<UMAData> ApplyDnaAction;
-	    public void ApplyDna(UMAData data)
+        public delegate void DNAConvertDelegate(UMAData data, UMASkeleton skeleton);
+        public DNAConvertDelegate ApplyDnaAction;
+	    public void ApplyDna(UMAData data, UMASkeleton skeleton)
 	    {
-	        ApplyDnaAction(data);
+	        ApplyDnaAction(data, skeleton);
 	    }
 	}
 }
