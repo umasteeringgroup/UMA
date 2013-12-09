@@ -73,6 +73,7 @@ namespace UMA
             atlasResolutionScale = other.atlasResolutionScale;
             updateBoneList = other.updateBoneList;
             boneList = other.boneList;
+			boneHashList = other.boneHashList;
             umaRoot = other.umaRoot;
         }
 
