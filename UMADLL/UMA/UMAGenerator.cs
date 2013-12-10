@@ -169,7 +169,7 @@ namespace UMA
                             }
                         }
                     }
-	                foreach (var entry in umaData.boneList)
+	                foreach (var entry in umaData.boneHashList)
 	                {
 	                    entry.Value.boneTransform.localPosition = entry.Value.originalBonePosition;
 						entry.Value.boneTransform.localScale = entry.Value.originalBoneScale;
@@ -257,7 +257,7 @@ namespace UMA
             {
                 var skeletonbone = bones[i];
                 UMAData.BoneData entry;
-                if (umaData.boneList.TryGetValue(skeletonbone.name, out entry))
+                if (umaData.boneHashList.TryGetValue(UMASkeleton.StringToHash(skeletonbone.name), out entry))
                 {
                     //var entry = umaData.boneList[skeletonbone.name];
                     skeletonbone.position = entry.boneTransform.localPosition;

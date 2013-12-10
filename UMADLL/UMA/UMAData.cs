@@ -25,7 +25,6 @@ namespace UMA
 		public RuntimeAnimatorController animationController;
 
         public Dictionary<int, BoneData> boneHashList = new Dictionary<int, BoneData>();
-        internal Dictionary<string, BoneData> boneList = new Dictionary<string, BoneData>();
 		public BoneData[] updateBoneList = new BoneData[0];
 		
 		public BoneData[] tempBoneData; //Only while Dictionary can't be serialized
@@ -72,8 +71,7 @@ namespace UMA
             myRenderer = other.myRenderer;
             atlasResolutionScale = other.atlasResolutionScale;
             updateBoneList = other.updateBoneList;
-            boneList = other.boneList;
-			boneHashList = other.boneHashList;
+            boneHashList = other.boneHashList;
             umaRoot = other.umaRoot;
         }
 
@@ -260,53 +258,10 @@ namespace UMA
         {
             if (tempBoneData == null) return;
 			for(int i = 0; i < tempBoneData.Length; i++){			
-				boneList.Add(tempBoneData[i].boneTransform.gameObject.name,tempBoneData[i]);
                 boneHashList.Add(UMASkeleton.StringToHash(tempBoneData[i].boneTransform.gameObject.name), tempBoneData[i]);
 			}
 		}
 
-	    public void ChangeBone(string boneName, Vector3 positionToChange, Vector3 scaleToChange)
-	    {
-	        BoneData tempBoneData;
-	        if (boneList.TryGetValue(boneName, out tempBoneData))
-	        {
-	            tempBoneData.actualBoneScale = scaleToChange;
-	            tempBoneData.actualBonePosition = positionToChange;
-	            tempBoneData.boneTransform.localPosition = positionToChange;
-	            tempBoneData.boneTransform.localScale = scaleToChange;
-	        }
-	    }
-		
-		public void ChangeBonePosition(string boneName,Vector3 positionToChange) {
-	        BoneData tempBoneData;
-	        if (boneList.TryGetValue(boneName, out tempBoneData))
-	        {
-	            tempBoneData.actualBonePosition = positionToChange;
-	            tempBoneData.boneTransform.localPosition = positionToChange;
-	        }
-	    }
-
-	    public void ChangeBoneScale(string boneName, Vector3 scaleToChange)
-	    {
-	        BoneData tempBoneData;
-	        if (boneList.TryGetValue(boneName, out tempBoneData))
-	        {
-	            tempBoneData.actualBoneScale = scaleToChange;
-	            tempBoneData.boneTransform.localScale = scaleToChange;
-	        }
-	    }
-
-		public void ChangeBoneMoveRelative(string boneName, Vector3 positionToChange)
-	    {
-	        BoneData tempBoneData;
-	        if (boneList.TryGetValue(boneName, out tempBoneData))
-	        {
-	            tempBoneData.actualBonePosition = tempBoneData.originalBonePosition + positionToChange;
-	            tempBoneData.boneTransform.localPosition = tempBoneData.actualBonePosition;
-	        }
-	    }
-
-		
 		void OnApplicationQuit() {
 			onQuit = true;
 		}
@@ -385,17 +340,17 @@ namespace UMA
 	    {
 	        foreach (var bone in umaBones)
 	        {
-	            var umaBone = boneMap[bone];
-	            if (!boneList.ContainsKey(umaBone.name))
+                int nameHash = UMASkeleton.StringToHash(bone.name);
+                if (!boneHashList.ContainsKey(nameHash))
 	            {
+                    var umaBone = boneMap[bone];
 	                BoneData newBoneData = new BoneData();
 	                newBoneData.actualBonePosition = umaBone.localPosition;
 	                newBoneData.originalBonePosition = umaBone.localPosition;
 	                newBoneData.actualBoneScale = umaBone.localScale;
 					newBoneData.originalBoneScale = umaBone.localScale;
 	                newBoneData.boneTransform = umaBone;
-	                boneList.Add(umaBone.name, newBoneData);
-                    boneHashList.Add(UMASkeleton.StringToHash(umaBone.name), newBoneData);
+	                boneHashList.Add(UMASkeleton.StringToHash(umaBone.name), newBoneData);
 	            }
 	        }
 
@@ -406,7 +361,7 @@ namespace UMA
 	        int i = 0;
 	        foreach (var updateName in umaRecipe.raceData.AnimatedBones)
 	        {
-	            updateBoneList[i++] = boneList[updateName];
+	            updateBoneList[i++] = boneHashList[UMASkeleton.StringToHash(updateName)];
 	        }
 	    }
 

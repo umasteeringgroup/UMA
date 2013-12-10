@@ -16,7 +16,7 @@ namespace UMA
 		void Update () {
 			if(runScript && umaData){
 				
-				umaData.boneList = new Dictionary<string, UMAData.BoneData>();
+				umaData.boneHashList = new Dictionary<int, UMAData.BoneData>();
 						
 				Transform[] umaBones  = boneStructure.gameObject.GetComponentsInChildren<Transform>();
 				umaData.tempBoneData = new UMAData.BoneData[umaBones.Length];
@@ -34,13 +34,13 @@ namespace UMA
 					tempBone.originalBonePosition = umaBones[i].localPosition;
 					tempBone.originalBoneRotation = umaBones[i].localRotation;
 					tempBone.originalBoneScale = umaBones[i].localScale;
-					
-					
-					umaData.boneList.Add(umaBones[i].name,tempBone);
+
+
+                    umaData.boneHashList.Add(UMASkeleton.StringToHash(umaBones[i].name), tempBone);
 					
 					umaData.tempBoneData[i] = tempBone;//Only while Dictionary can't be serialized
 				}
-				Debug.Log(umaData.boneList.Count+" bones have been included");
+                Debug.Log(umaData.boneHashList.Count + " bones have been included");
 			}
 			runScript = false;
 		}
