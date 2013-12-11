@@ -12,6 +12,20 @@ namespace UMA
         {
             this.boneHashData = boneHashData;
         }
+
+		public override bool HasBone(int nameHash)
+		{
+			return boneHashData.ContainsKey(nameHash);
+		}
+
+		protected override IEnumerable<int> GetBoneHashes()
+		{
+			foreach (int hash in boneHashData.Keys)
+			{
+				yield return hash;
+			}
+		}
+
         public override void Set(int nameHash, Vector3 Position, Vector3 scale, Quaternion rotation)
         {
             UMAData.BoneData db;
