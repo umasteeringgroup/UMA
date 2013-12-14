@@ -7,8 +7,6 @@ namespace UMA
 {
     public class UMADefaultMeshCombiner : UMAMeshCombiner
     {
-		Matrix4x4 tempMatrix;
-
         protected List<SkinnedMeshCombiner.CombineInstance> combinedMeshList;
         protected List<Material> combinedMaterialList;
 

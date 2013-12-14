@@ -7,8 +7,7 @@ namespace UMA
 {
 	public class UMAGeneratorCoroutine : WorkerCoroutine
 	{
-		TextureProcessPROCoroutine textureProcessPROCoroutine;
-		TextureProcessIndieCoroutine textureProcessIndieCoroutine;
+		TextureProcessBaseCoroutine textureProcessCoroutine;
 			
 		MaxRectsBinPack packTexture;
 		
@@ -22,10 +21,11 @@ namespace UMA
 		
 		UMAGenerator umaGenerator;
 		Texture[] backUpTexture;
-		
-	    public void Prepare(UMAGenerator _umaGenerator)
+
+        public void Prepare(UMAGenerator _umaGenerator, TextureProcessBaseCoroutine textureProcessCoroutine)
 	    {
-			umaGenerator = _umaGenerator;	
+			umaGenerator = _umaGenerator;
+            this.textureProcessCoroutine = textureProcessCoroutine;
 	   }
 
 	    protected override void Start()
@@ -67,12 +67,6 @@ namespace UMA
 				}
 			}
 			
-			if(umaGenerator.usePRO){
-				textureProcessPROCoroutine = new TextureProcessPROCoroutine();
-			}else{
-				textureProcessIndieCoroutine = new TextureProcessIndieCoroutine();
-			}
-
 			packTexture = new MaxRectsBinPack(umaGenerator.atlasResolution,umaGenerator.atlasResolution,false);
 		}
 
@@ -100,14 +94,8 @@ namespace UMA
 				OptimizeAtlas();		
 			}
 			
-			if(umaGenerator.usePRO){
-				textureProcessPROCoroutine.Prepare(umaGenerator.umaData,umaGenerator);
-				yield return textureProcessPROCoroutine;
-			}else{
-				textureProcessIndieCoroutine.Prepare(umaGenerator.umaData,umaGenerator);
-				yield return textureProcessIndieCoroutine;	
-			}
-			
+            textureProcessCoroutine.Prepare(umaGenerator.umaData, umaGenerator);
+            yield return textureProcessCoroutine;
 			
 			CleanBackUpTextures();
 			UpdateUV();

@@ -6,13 +6,12 @@ using System.Collections.Generic;
 
 namespace UMA
 {
-	public class TextureProcessIndieCoroutine : WorkerCoroutine
-	{
-		
+    public class TextureProcessIndieCoroutine : TextureProcessBaseCoroutine
+	{	
 		UMAData umaData;
 		Texture2D[] resultingTextures;
 		Color32[] destinationColorList;
-		UMAGenerator umaGenerator;
+        UMAGeneratorBase umaGenerator;
 		CopyTextureRectCoroutine copyTextureRectCoroutine;
 	    CopyAdditiveTextureRectCoroutine copyAdditiveTextureRectCoroutine;
 	    CopyColorizedTextureRectCoroutine copyColorizedTextureRectCoroutine;
@@ -21,11 +20,10 @@ namespace UMA
 	    BlendAdditiveTextureRectCoroutine blendAdditiveTextureRectCoroutine;
 	    ColorizeAdditiveTextureRectCoroutine colorizeAdditiveTextureRectCoroutine;
 	    ColorizeTextureRectCoroutine colorizeTextureRectCoroutine;
-		int atlasIndex;
 		float resolutionScale;
 		int mipmapScale;
 		
-	    public void Prepare(UMAData _umaData,UMAGenerator _umaGenerator)
+	    public override void Prepare(UMAData _umaData, UMAGeneratorBase _umaGenerator)
 	    {
 			umaData = _umaData;
 			umaGenerator = _umaGenerator;

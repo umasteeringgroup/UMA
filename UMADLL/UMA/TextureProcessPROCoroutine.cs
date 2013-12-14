@@ -5,19 +5,17 @@ using System.Collections.Generic;
 
 namespace UMA
 {
-	public class TextureProcessPROCoroutine : WorkerCoroutine
+	public class TextureProcessPROCoroutine : TextureProcessBaseCoroutine
 	{
 		Transform[] textureModuleList;
 		UMAData umaData;
 		RenderTexture destinationTexture;
 		Texture[] resultingTextures;
-		Rect[] tempAtlasRect;
-		UMAGenerator umaGenerator;
-		int atlasIndex;
+        UMAGeneratorBase umaGenerator;
 		float resolutionScale;
 		Camera renderCamera;
-		
-	    public void Prepare(UMAData _umaData,UMAGenerator _umaGenerator)
+
+        public override void Prepare(UMAData _umaData, UMAGeneratorBase _umaGenerator)
 	    {
 			umaData = _umaData;
 			umaGenerator = _umaGenerator;

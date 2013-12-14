@@ -9,7 +9,6 @@ namespace UMA
     public class UMAGenerator : UMAGeneratorBase
     {
 		public bool usePRO;
-		public bool convertRenderTexture;
 		public bool fitAtlas;
 		public bool AtlasCrop;
 		public UMAData umaData;
@@ -18,13 +17,10 @@ namespace UMA
 		public int meshUpdates;
 		public int maxMeshUpdates;
 		
-		public int atlasResolution;
 		public UMAGeneratorCoroutine umaGeneratorCoroutine;
 		
 		public Transform textureMergePrefab;
-		public TextureMerge textureMerge;	
 		public Matrix4x4 tempMatrix;
-        public int maxPixels;
 		
         public UMAMeshCombiner meshCombiner;
 
@@ -78,7 +74,17 @@ namespace UMA
             }
             if (umaData.isTextureDirty)
             {
-                umaGeneratorCoroutine.Prepare(this);
+                TextureProcessBaseCoroutine textureProcessCoroutine;
+                if (usePRO)
+                {
+                    textureProcessCoroutine = new TextureProcessPROCoroutine();
+                }
+                else
+                {
+                    textureProcessCoroutine = new TextureProcessIndieCoroutine();
+                }
+
+                umaGeneratorCoroutine.Prepare(this, textureProcessCoroutine);
 
                 if (umaGeneratorCoroutine.Work())
                 {

@@ -316,9 +316,9 @@ public class UMACrowd : MonoBehaviour {
 	
 	void SetUMAData (){
 		umaData.atlasResolutionScale = atlasResolutionScale;
-		umaData.Dirty(true,true,true);
 		umaData.OnUpdated += MyOnUpdateMethod;
 		umaData.OnUpdated += myColliderUpdateMethod;
+		umaData.Dirty(true, true, true);
 	}
 	
 	void MyOnUpdateMethod(UMAData umaData){
