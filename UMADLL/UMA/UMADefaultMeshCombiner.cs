@@ -7,12 +7,10 @@ namespace UMA
 {
     public class UMADefaultMeshCombiner : UMAMeshCombiner
     {
-		UMAGenerator umaGenerator;	
 		Matrix4x4 tempMatrix;
 
         protected List<SkinnedMeshCombiner.CombineInstance> combinedMeshList;
         protected List<Material> combinedMaterialList;
-
 
         UMAData umaData;
         string[] textureNameList;

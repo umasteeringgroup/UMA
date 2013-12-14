@@ -10,8 +10,8 @@ namespace UMA
 	public class UMAData : MonoBehaviour {	
 		public SkinnedMeshRenderer myRenderer;
 		public bool firstBake;
-		
-		public UMAGenerator umaGenerator;
+
+        public UMAGeneratorBase umaGenerator;
 		
 		public AtlasList atlasList;
 		

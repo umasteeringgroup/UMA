@@ -45,6 +45,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
+    <Compile Include="UMAGeneratorBase.cs" />
     <Compile Include="UMASkeletonDefault.cs" />
     <Compile Include="UMADefaultMeshCombiner.cs" />
     <Compile Include="UMAGeneratorCoroutine.cs" />

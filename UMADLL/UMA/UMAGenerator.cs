@@ -6,8 +6,8 @@ using Object = UnityEngine.Object;
 
 namespace UMA
 {
-	public class UMAGenerator : MonoBehaviour {	
-
+    public class UMAGenerator : UMAGeneratorBase
+    {
 		public bool usePRO;
 		public bool convertRenderTexture;
 		public bool fitAtlas;
@@ -15,18 +15,16 @@ namespace UMA
 		public UMAData umaData;
 		public List<UMAData> umaDirtyList;
 		
-		public string[] textureNameList;
-		
 		public int meshUpdates;
 		public int maxMeshUpdates;
 		
 		public int atlasResolution;
-		public int maxPixels;
 		public UMAGeneratorCoroutine umaGeneratorCoroutine;
 		
 		public Transform textureMergePrefab;
 		public TextureMerge textureMerge;	
 		public Matrix4x4 tempMatrix;
+        public int maxPixels;
 		
         public UMAMeshCombiner meshCombiner;
 
@@ -129,7 +127,7 @@ namespace UMA
             }
         }	
 
-		public virtual void addDirtyUMA(UMAData umaToAdd) {	
+		public override void addDirtyUMA(UMAData umaToAdd) {	
 			if(umaToAdd){
 				umaDirtyList.Add(umaToAdd);
 			}
