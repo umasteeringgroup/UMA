@@ -8,9 +8,6 @@ namespace UMA
 {
     public class UMAGenerator : UMAGeneratorBase
     {
-		public bool usePRO;
-		public bool fitAtlas;
-		public bool AtlasCrop;
 		public UMAData umaData;
 		public List<UMAData> umaDirtyList;
 		
@@ -18,6 +15,7 @@ namespace UMA
 		public int maxMeshUpdates;
 		
 		public UMAGeneratorCoroutine umaGeneratorCoroutine;
+        public UMAGeneratorCoroutine activeGeneratorCoroutine;
 		
 		public Transform textureMergePrefab;
 		public Matrix4x4 tempMatrix;
@@ -74,20 +72,25 @@ namespace UMA
             }
             if (umaData.isTextureDirty)
             {
-                TextureProcessBaseCoroutine textureProcessCoroutine;
-                if (usePRO)
+                if( activeGeneratorCoroutine == null )
                 {
-                    textureProcessCoroutine = new TextureProcessPROCoroutine();
+                    activeGeneratorCoroutine = umaGeneratorCoroutine;
+                    TextureProcessBaseCoroutine textureProcessCoroutine;
+                    if (usePRO)
+                    {
+                        textureProcessCoroutine = new TextureProcessPROCoroutine();
+                        textureProcessCoroutine.Prepare(data, this);
+                    }
+                    else
+                    {
+                        textureProcessCoroutine = new TextureProcessIndieCoroutine();
+                    }
+                    activeGeneratorCoroutine.Prepare(this, umaData, textureProcessCoroutine);
                 }
-                else
-                {
-                    textureProcessCoroutine = new TextureProcessIndieCoroutine();
-                }
-
-                umaGeneratorCoroutine.Prepare(this, textureProcessCoroutine);
 
                 if (umaGeneratorCoroutine.Work())
                 {
+                    activeGeneratorCoroutine = null;
                     UpdateUMAMesh(true);
                     umaData.isTextureDirty = false;
                 }
@@ -147,129 +150,14 @@ namespace UMA
 	    }
 
 	
-	    private struct AnimationState
-	    {
-	        public int stateHash;
-	        public float stateTime;
-	    }
-	
 	    public virtual void UpdateUMABody (UMAData umaData){
 			if(umaData)
 	        {
-				AnimationState[] snapshot = null;
-	            if (umaData.animationController)
-	            {
-                    if (unityVersion >= 4.3f)
-                    {
-                        var animator = umaData.animator;
-                        if (animator != null)
-                        {
-                            snapshot = new AnimationState[animator.layerCount];
-                            for (int i = 0; i < animator.layerCount; i++)
-                            {
-                                var state = animator.GetCurrentAnimatorStateInfo(i);
-                                snapshot[i].stateHash = state.nameHash;
-                                snapshot[i].stateTime = Mathf.Max(0, state.normalizedTime - Time.deltaTime / state.length);
-                            }
-                        }
-                    }
-	                foreach (var entry in umaData.boneHashList)
-	                {
-	                    entry.Value.boneTransform.localPosition = entry.Value.originalBonePosition;
-						entry.Value.boneTransform.localScale = entry.Value.originalBoneScale;
-	                    entry.Value.boneTransform.localRotation = entry.Value.originalBoneRotation;
-	                }
-	            }
+                umaData.GotoOriginalPose();
                 umaData.skeleton = new UMASkeletonDefault(umaData.boneHashList);
-
-			    umaData.ApplyDNA();
-			    if (umaData.animationController)
-			    {
-	                var animator = umaData.animator;
-	                
-					bool applyRootMotion = false;
-					bool animatePhysics = false;
-					AnimatorCullingMode cullingMode = AnimatorCullingMode.AlwaysAnimate;
-
-					if(animator)
-                    {
-						applyRootMotion = animator.applyRootMotion;
-						animatePhysics = animator.animatePhysics;
-						cullingMode = animator.cullingMode;
-						Object.DestroyImmediate(animator);
-					}
-                    var oldParent = umaData.umaRoot.transform.parent;
-                    umaData.umaRoot.transform.parent = null;
-                    animator = CreateAnimator(umaData, umaData.umaRecipe.raceData.TPose, umaData.animationController, applyRootMotion, animatePhysics, cullingMode);
-                    umaData.animator = animator;
-                    umaData.umaRoot.transform.parent = oldParent;
-                    if (unityVersion >= 4.3f)
-                    {
-                        if (snapshot != null)
-                        {
-                            for (int i = 0; i < animator.layerCount; i++)
-                            {
-                                animator.Play(snapshot[i].stateHash, i, snapshot[i].stateTime);
-                            }
-                            animator.Update(0);
-                        }
-                    }
-			    }
+                umaData.ApplyDNA();
+                UpdateAvatar(umaData);
 			}
 		}
-
-        public static Animator CreateAnimator(UMAData umaData, UmaTPose umaTPose, RuntimeAnimatorController controller, bool applyRootMotion, bool animatePhysics, AnimatorCullingMode cullingMode)
-        {
-            umaTPose.DeSerialize();
-            var animator = umaData.umaRoot.AddComponent<Animator>();
-            animator.avatar = CreateAvatar(umaData, umaTPose);
-            animator.runtimeAnimatorController = controller;
-            animator.applyRootMotion = applyRootMotion;
-            animator.animatePhysics = animatePhysics;
-            animator.cullingMode = cullingMode;
-            return animator;
-        }
-
-        public static Avatar CreateAvatar(UMAData umaData, UmaTPose umaTPose)
-        {
-            HumanDescription description = CreateHumanDescription(umaData, umaTPose);
-            Avatar res = AvatarBuilder.BuildHumanAvatar(umaData.umaRoot, description);
-            return res;
-        }
-
-        public static HumanDescription CreateHumanDescription(UMAData umaData, UmaTPose umaTPose)
-        {
-            var res = new HumanDescription();
-            res.armStretch = 0;
-            res.feetSpacing = 0;
-            res.legStretch = 0;
-            res.lowerArmTwist = 0.2f;
-            res.lowerLegTwist = 1f;
-            res.upperArmTwist = 0.5f;
-            res.upperLegTwist = 0.1f;
-
-            res.human = umaTPose.humanInfo;
-            res.skeleton = umaTPose.boneInfo;
-            res.skeleton[0].name = umaData.umaRoot.name;
-            SkeletonModifier(umaData, ref res.skeleton);
-            return res;
-        }
-
-        private static void SkeletonModifier(UMAData umaData, ref SkeletonBone[] bones)
-        {
-            for (var i = 0; i < bones.Length; i++)
-            {
-                var skeletonbone = bones[i];
-                UMAData.BoneData entry;
-                if (umaData.boneHashList.TryGetValue(UMASkeleton.StringToHash(skeletonbone.name), out entry))
-                {
-                    //var entry = umaData.boneList[skeletonbone.name];
-                    skeletonbone.position = entry.boneTransform.localPosition;
-                    //skeletonbone.rotation = entry.boneTransform.localRotation;
-                    skeletonbone.scale = entry.boneTransform.localScale;
-                    bones[i] = skeletonbone;
-                }
-            }
-        }
     }
 }

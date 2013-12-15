@@ -3,9 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UMA;
 
-public class UMACrowd : MonoBehaviour {	
-	
-	public UMAGenerator umaGenerator;
+public class UMACrowd : MonoBehaviour {
+
+	public UMAGeneratorBase generator;
 	public UMAData umaData;
 	public SlotLibrary slotLibrary;
 	public OverlayLibrary overlayLibrary;
@@ -28,14 +28,16 @@ public class UMACrowd : MonoBehaviour {
 	void Awake(){
 		string tempVersion = Application.unityVersion;
 		tempVersion = tempVersion.Substring(0,3);
-		umaGenerator.unityVersion = float.Parse(tempVersion);
 	}
 
+	private bool readyForNew = true;
 	void Update () {		
 		if(generateLotsUMA){	
-			umaTimer = umaTimer + Time.deltaTime;
-			if(umaTimer > 0.0f){
+			if( readyForNew )
+			{
+				readyForNew = false;
 				GenerateOneUMA();
+				umaData.OnUpdated += new System.Action<UMAData>(umaData_OnUpdated);
 			
 				if(zeroPoint){
 					tempUMA.position = new Vector3(X+zeroPoint.position.x - umaCrowdSize.x*0.5f + 0.5f,zeroPoint.position.y,Y+zeroPoint.position.z - umaCrowdSize.y*0.5f + 0.5f);
@@ -54,7 +56,6 @@ public class UMACrowd : MonoBehaviour {
 					Y = 0;
 				}
 				
-				umaTimer = 0;
 			}
 		}
 		
@@ -62,6 +63,11 @@ public class UMACrowd : MonoBehaviour {
 			GenerateOneUMA();
 			generateUMA = false;
 		}
+	}
+
+	void umaData_OnUpdated(UMAData obj)
+	{
+		readyForNew = true;
 	}
 	
 	void DefineSlots (){
@@ -426,6 +432,8 @@ public class UMACrowd : MonoBehaviour {
 		var umaDynamicAvatar = newGO.AddComponent<UMADynamicAvatar>();
 		umaDynamicAvatar.Initialize();
 		umaData = umaDynamicAvatar.umaData;
+		umaDynamicAvatar.umaGenerator = generator;
+		umaData.umaGenerator = generator;
 		var umaRecipe = umaDynamicAvatar.umaData.umaRecipe;
 		int randomResult = Random.Range(0, 2);
 //		randomResult = 0;

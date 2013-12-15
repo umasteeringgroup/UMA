@@ -9,11 +9,14 @@ namespace UMA
 {
 	public class UMAData : MonoBehaviour {	
 		public SkinnedMeshRenderer myRenderer;
+        
+        [NonSerialized]
 		public bool firstBake;
 
         public UMAGeneratorBase umaGenerator;
-		
-		public AtlasList atlasList;
+
+        [NonSerialized]
+        public AtlasList atlasList;
 		
 		public float atlasResolutionScale;
 		
@@ -24,14 +27,17 @@ namespace UMA
 		public RuntimeAnimatorController animationController;
 
         public Dictionary<int, BoneData> boneHashList = new Dictionary<int, BoneData>();
-		public BoneData[] updateBoneList = new BoneData[0];
+		public Transform[] animatedBones = new Transform[0];
 		
 		public BoneData[] tempBoneData; //Only while Dictionary can't be serialized
 
-		public bool dirty = false;
-		public bool _hasUpdatedBefore = false;
-		public bool onQuit = false;
-		public event Action<UMAData> OnUpdated;
+        [NonSerialized]
+        public bool dirty = false;
+        [NonSerialized]
+        public bool _hasUpdatedBefore = false;
+        [NonSerialized]
+        public bool onQuit = false;
+        public event Action<UMAData> OnUpdated;
         public GameObject umaRoot;
 
 		public UMARecipe umaRecipe;
@@ -69,7 +75,8 @@ namespace UMA
             animator = other.animator;
             myRenderer = other.myRenderer;
             atlasResolutionScale = other.atlasResolutionScale;
-            updateBoneList = other.updateBoneList;
+            tempBoneData = other.tempBoneData;
+            animatedBones = other.animatedBones;
             boneHashList = other.boneHashList;
             umaRoot = other.umaRoot;
         }
@@ -114,7 +121,7 @@ namespace UMA
 	        public Color32[][] channelAdditiveMask;
 			public SlotData slotData;
 
-	        internal Color32 GetMultiplier(int overlay, int textureType)
+	        public Color32 GetMultiplier(int overlay, int textureType)
 	        {
 				
 	            if (channelMask[overlay] != null && channelMask[overlay].Length > 0)
@@ -128,7 +135,7 @@ namespace UMA
 	                return overlayColors[overlay - 1];
 	            }
 	        }
-	        internal Color32 GetAdditive(int overlay, int textureType)
+	        public Color32 GetAdditive(int overlay, int textureType)
 	        {
 	            if (channelAdditiveMask[overlay] != null && channelAdditiveMask[overlay].Length > 0)
 	            {
@@ -353,14 +360,14 @@ namespace UMA
 	            }
 	        }
 
-	        if (updateBoneList.Length != umaRecipe.raceData.AnimatedBones.Length)
+	        if (animatedBones.Length != umaRecipe.raceData.AnimatedBones.Length)
 	        {
-	            updateBoneList = new BoneData[umaRecipe.raceData.AnimatedBones.Length];
+	            animatedBones = new Transform[umaRecipe.raceData.AnimatedBones.Length];
 	        }
 	        int i = 0;
 	        foreach (var updateName in umaRecipe.raceData.AnimatedBones)
 	        {
-	            updateBoneList[i++] = boneHashList[UMASkeleton.StringToHash(updateName)];
+                animatedBones[i++] = boneHashList[UMASkeleton.StringToHash(updateName)].boneTransform;
 	        }
 	    }
 
@@ -402,6 +409,16 @@ namespace UMA
         public UMASkeleton GetSkeleton()
         {
             return skeleton;
+        }
+
+        public void GotoOriginalPose()
+        {
+            foreach (var entry in boneHashList)
+            {
+                entry.Value.boneTransform.localPosition = entry.Value.originalBonePosition;
+                entry.Value.boneTransform.localScale = entry.Value.originalBoneScale;
+                entry.Value.boneTransform.localRotation = entry.Value.originalBoneRotation;
+            }
         }
     }
 }

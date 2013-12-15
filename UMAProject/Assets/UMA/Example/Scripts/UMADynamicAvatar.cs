@@ -12,6 +12,7 @@ public class UMADynamicAvatar : MonoBehaviour {
 	public UMAContext context;
 	public UMAData umaData;
 	public UMARecipeBase umaRecipe;
+	public UMAGeneratorBase umaGenerator;
 	public bool loadOnStart;
 	public RuntimeAnimatorController animationController;
 	[NonSerialized]
@@ -38,6 +39,7 @@ public class UMADynamicAvatar : MonoBehaviour {
 			if (umaData == null)
 			{
 				umaData = gameObject.AddComponent<UMAData>();
+				umaData.umaGenerator = umaGenerator ?? umaData.umaGenerator;
 
 				#if UNITY_EDITOR
 					if( !UnityEditor.EditorApplication.isPlaying )
@@ -52,6 +54,7 @@ public class UMADynamicAvatar : MonoBehaviour {
 
 	public void Load(UMARecipeBase umaRecipe)
 	{
+		Profiler.BeginSample("Load");
 		var oldRace = umaData.umaRecipe.raceData;
 		this.umaRecipe = umaRecipe;
 		umaRecipe.Load(umaData, context);
@@ -63,6 +66,7 @@ public class UMADynamicAvatar : MonoBehaviour {
 		{
 			UpdateSameRace();
 		}
+		Profiler.EndSample();
 	}
 
 	public void UpdateSameRace()

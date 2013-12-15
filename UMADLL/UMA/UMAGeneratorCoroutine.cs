@@ -18,27 +18,29 @@ namespace UMA
 		
 		float atlasResolutionScale;
 		int mipMapAdjust;
-		
-		UMAGenerator umaGenerator;
+
+        UMAGeneratorBase umaGenerator;
+        UMAData umaData;
 		Texture[] backUpTexture;
 
-        public void Prepare(UMAGenerator _umaGenerator, TextureProcessBaseCoroutine textureProcessCoroutine)
+        public void Prepare(UMAGeneratorBase _umaGenerator, UMAData _umaData, TextureProcessBaseCoroutine textureProcessCoroutine)
 	    {
 			umaGenerator = _umaGenerator;
+            umaData = _umaData;
             this.textureProcessCoroutine = textureProcessCoroutine;
 	   }
 
 	    protected override void Start()
 	    {
-			backUpTexture = umaGenerator.umaData.backUpTextures();
-			umaGenerator.umaData.cleanTextures();
+			backUpTexture = umaData.backUpTextures();
+			umaData.cleanTextures();
 			
 			materialDefinitionList = new List<UMAData.MaterialDefinition>();
 			
 			//Update atlas area can be handled here
 			UMAData.MaterialDefinition tempMaterialDefinition = new UMAData.MaterialDefinition();
 			
-			SlotData[] slots = umaGenerator.umaData.umaRecipe.slotDataList;
+			SlotData[] slots = umaData.umaRecipe.slotDataList;
 			for(int i = 0; i < slots.Length; i++){	
 				if(slots[i] != null){
 					tempMaterialDefinition = new UMAData.MaterialDefinition();
@@ -81,20 +83,21 @@ namespace UMA
 			OrderMaterialDefinition();
 			
 			//resolutionAdjust code
-	        atlasResolutionScale = umaGenerator.umaData.atlasResolutionScale == 0f ? 1f : umaGenerator.umaData.atlasResolutionScale;
+	        atlasResolutionScale = umaData.atlasResolutionScale == 0f ? 1f : umaData.atlasResolutionScale;
 			mipMapAdjust = Mathf.FloorToInt(Mathf.Log(1/(atlasResolutionScale),2));
 		
 			
-			umaGenerator.umaData.atlasList = new UMAData.AtlasList();
-			umaGenerator.umaData.atlasList.atlas = new List<UMAData.AtlasElement>();
+			umaData.atlasList = new UMAData.AtlasList();
+			umaData.atlasList.atlas = new List<UMAData.AtlasElement>();
 
 			GenerateAtlasData();
 			CalculateRects();
 			if(umaGenerator.AtlasCrop){
 				OptimizeAtlas();		
 			}
-			
-            textureProcessCoroutine.Prepare(umaGenerator.umaData, umaGenerator);
+
+            textureProcessCoroutine.Prepare(umaData, umaGenerator);
+            yield return 6;
             yield return textureProcessCoroutine;
 			
 			CleanBackUpTextures();
@@ -175,7 +178,7 @@ namespace UMA
 							atlasElement.shader = atlasMaterialDefinitionList[0].source.materialSample.shader;
 							atlasElement.materialSample = atlasMaterialDefinitionList[0].source.materialSample;
 							
-							umaGenerator.umaData.atlasList.atlas.Add(atlasElement);
+							umaData.atlasList.atlas.Add(atlasElement);
 						}
 					
 					}
@@ -188,7 +191,7 @@ namespace UMA
 		
 		private void CalculateRects(){
 			Rect nullRect = new Rect(0,0,0,0);
-			UMAData.AtlasList umaAtlasList = umaGenerator.umaData.atlasList;
+			UMAData.AtlasList umaAtlasList = umaData.atlasList;
 
 			
 			for(int atlasIndex = 0; atlasIndex < umaAtlasList.atlas.Count; atlasIndex++){
@@ -246,7 +249,7 @@ namespace UMA
 		}
 		
 		private void OptimizeAtlas(){
-			UMAData.AtlasList umaAtlasList = umaGenerator.umaData.atlasList;
+			UMAData.AtlasList umaAtlasList = umaData.atlasList;
 			for(int atlasIndex = 0; atlasIndex < umaAtlasList.atlas.Count; atlasIndex++){
 				Vector2 usedArea = new Vector2(0,0);
 				for(int atlasElementIndex = 0; atlasElementIndex < umaAtlasList.atlas[atlasIndex].atlasMaterialDefinitions.Count; atlasElementIndex++){
@@ -284,10 +287,8 @@ namespace UMA
 			}		
 		}
 		
-		
-		
 		private void UpdateUV(){
-			UMAData.AtlasList umaAtlasList = umaGenerator.umaData.atlasList;
+			UMAData.AtlasList umaAtlasList = umaData.atlasList;
 			
 			for(int atlasIndex = 0; atlasIndex < umaAtlasList.atlas.Count; atlasIndex++){			
 				Vector2 finalAtlasAspect = new Vector2(umaGenerator.atlasResolution/umaAtlasList.atlas[atlasIndex].cropResolution.x,umaGenerator.atlasResolution/umaAtlasList.atlas[atlasIndex].cropResolution.y);

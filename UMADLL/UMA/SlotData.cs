@@ -15,6 +15,7 @@ namespace UMA
 	    public Material materialSample;
 	    public float overlayScale = 1.0f;
 	    public Transform[] umaBoneData;
+        public Transform[] animatedBones = new Transform[0];
 	    public DnaConverterBehaviour slotDNA;
 		public BoneWeight[] boneWeights;
 			
