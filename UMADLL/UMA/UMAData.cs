@@ -16,7 +16,7 @@ namespace UMA
         public UMAGeneratorBase umaGenerator;
 
         [NonSerialized]
-        public AtlasList atlasList;
+        public AtlasList atlasList = new AtlasList();
 		
 		public float atlasResolutionScale;
 		
@@ -55,7 +55,6 @@ namespace UMA
             if (umaRecipe == null)
             {
                 umaRecipe = new UMARecipe();
-                atlasList = new AtlasList();
             }
             else
             {

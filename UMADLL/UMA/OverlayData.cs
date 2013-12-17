@@ -18,6 +18,11 @@ namespace UMA
 	    public Color32[] channelAdditiveMask;
 	    [System.NonSerialized]
 	    public UMAData umaData;
+        /// <summary>
+        /// Use this to identify what kind of overlay this is and what it fits
+        /// Eg. BaseMeshSkin, BaseMeshOverlays, GenericPlateArmor01
+        /// </summary>
+        public string[] tags;
 
 	    public OverlayData Duplicate()
 	    {

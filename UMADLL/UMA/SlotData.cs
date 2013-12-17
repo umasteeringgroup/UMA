@@ -18,7 +18,16 @@ namespace UMA
         public Transform[] animatedBones = new Transform[0];
 	    public DnaConverterBehaviour slotDNA;
 		public BoneWeight[] boneWeights;
-			
+        /// <summary>
+        /// Use this to identify slots that serves the same purpose
+        /// Eg. ChestArmor, Helmet, etc.
+        /// </summary>
+        public string slotGroup;
+        /// <summary>
+        /// Use this to identify what kind of overlays fit this slotData
+        /// Eg. BaseMeshSkin, BaseMeshOverlays, GenericPlateArmor01
+        /// </summary>
+        public string[] tags;
 		private List<OverlayData> overlayList = new List<OverlayData>();
 
 	    public SlotData Duplicate()

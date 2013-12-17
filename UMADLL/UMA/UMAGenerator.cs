@@ -9,7 +9,8 @@ namespace UMA
     public class UMAGenerator : UMAGeneratorBase
     {
 		public UMAData umaData;
-		public List<UMAData> umaDirtyList;
+        [NonSerialized]
+		public List<UMAData> umaDirtyList = new List<UMAData>();
 		
 		public int meshUpdates;
 		public int maxMeshUpdates;
