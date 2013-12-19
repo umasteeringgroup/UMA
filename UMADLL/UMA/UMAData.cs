@@ -274,8 +274,11 @@ namespace UMA
 		void OnDestroy(){
 			if(_hasUpdatedBefore){
 				cleanTextures();
-				if(!onQuit)cleanMesh(true);
-				cleanAvatar();
+                if (!onQuit)
+                {
+                    cleanMesh(true);
+                    cleanAvatar();
+                }   
 			}
 		}
 		
