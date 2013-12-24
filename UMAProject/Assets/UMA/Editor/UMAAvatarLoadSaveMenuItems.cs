@@ -32,7 +32,10 @@ public class UMAAvatarLoadSaveMenuItems : Editor
 	{
 		for (int i = 0; i < Selection.objects.Length; i++)
 		{
-			var avatar = Selection.objects[i] as UMAAvatarBase;
+			var avatarGO = Selection.objects[i] as GameObject;
+			if (avatarGO == null) continue;
+
+			var avatar = avatarGO.GetComponent<UMAAvatarBase>();
 			if (avatar != null)
 			{
 				var path = EditorUtility.SaveFilePanelInProject("Save serialized Avatar", avatar.name + ".asset", "asset", "Message 2");
@@ -52,7 +55,10 @@ public class UMAAvatarLoadSaveMenuItems : Editor
 	{
 		for (int i = 0; i < Selection.objects.Length; i++)
 		{
-			var avatar = Selection.objects[i] as UMAAvatarBase;
+			var avatarGO = Selection.objects[i] as GameObject;
+			if (avatarGO == null) continue;
+
+			var avatar = avatarGO.GetComponent<UMAAvatarBase>();
 			if( avatar != null )
 			{
 				var path = EditorUtility.OpenFilePanel("Load serialized Avatar", "Assets", "txt");
@@ -72,7 +78,10 @@ public class UMAAvatarLoadSaveMenuItems : Editor
 	{
 		for (int i = 0; i < Selection.objects.Length; i++)
 		{
-			var avatar = Selection.objects[i] as UMAAvatarBase;
+			var avatarGO = Selection.objects[i] as GameObject;
+			if (avatarGO == null) continue;
+
+			var avatar = avatarGO.GetComponent<UMAAvatarBase>();
 			if (avatar != null)
 			{
 				var path = EditorUtility.OpenFilePanel("Load serialized Avatar", "Assets", "asset");

@@ -7,7 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UMA;
 
-public class UMAAvatarBase : MonoBehaviour {
+public abstract class UMAAvatarBase : MonoBehaviour {
 
 	public UMAContext context;
 	public UMAData umaData;
