@@ -444,7 +444,7 @@ namespace UMAEditor
 	        window.title = "MaterialBuilder";
 	    }
 
-	    [MenuItem("Tools/PNG/Set Alpha Opaque")]
+	    [MenuItem("UMA/Tools/PNG/Set Alpha Opaque")]
 	    public static void SetAlphaOpaqueMenuItem()
 	    {
 	        foreach (var obj in Selection.GetFiltered(typeof(Texture2D), SelectionMode.Assets))
@@ -490,7 +490,7 @@ namespace UMAEditor
 	            }
 	        }
 	    }
-	    [MenuItem("Tools/Texture/Set Readable")]
+        [MenuItem("UMA/Tools/Texture/Set Readable")]
 	    public static void SetTextureReadableMenuItem()
 	    {
 	        foreach (var obj in Selection.GetFiltered(typeof(Texture2D), SelectionMode.Assets))
@@ -504,7 +504,7 @@ namespace UMAEditor
 	            }
 	        }
 	    }
-	    [MenuItem("Tools/Texture/Clear Readable")]
+        [MenuItem("UMA/Tools/Texture/Clear Readable")]
 	    public static void ClearTextureReadableMenuItem()
 	    {
 	        foreach (var obj in Selection.GetFiltered(typeof(Texture2D), SelectionMode.Assets))

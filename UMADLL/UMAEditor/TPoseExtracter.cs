@@ -47,7 +47,7 @@ namespace UMAEditor
 	//        }
 	//    }
 
-	//    [UnityEditor.MenuItem("Tools/Dump Selected Skeleton")]
+	//    [UnityEditor.MenuItem("UMA/Tools/Dump Selected Skeleton")]
 	//    public static void DumpSelectedSkeleton()
 	//    {
 	//        foreach (var hierarchy in UnityEditor.Selection.transforms)
