@@ -1,0 +1,2 @@
+Full source code of the UMA project, including both this example Unity project and the source for the DLL files can be found at https://github.com/huika/UMA
+Source Code to the 3rd Party open source library LitJson.dll can be found at http://sourceforge.net/projects/litjson/

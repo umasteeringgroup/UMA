@@ -6,7 +6,7 @@ using Object = UnityEngine.Object;
 
 namespace UMA
 {
-    public class UMAGenerator : UMAGeneratorBase
+    public abstract class UMAGeneratorBuiltin : UMAGeneratorBase
     {
 		public UMAData umaData;
         [NonSerialized]
@@ -30,7 +30,7 @@ namespace UMA
 			umaGeneratorCoroutine = new UMAGeneratorCoroutine();
         }
 
-		void Awake () {
+		public virtual void Awake () {
 			
 			maxMeshUpdates = 1;
 			if( atlasResolution == 0 ) atlasResolution = 256;

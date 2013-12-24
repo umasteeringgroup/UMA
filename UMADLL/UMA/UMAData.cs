@@ -49,7 +49,7 @@ namespace UMA
 			firstBake = true;
 			
 			if(!umaGenerator){
-				umaGenerator = GameObject.Find("UMAGenerator").GetComponent("UMAGenerator") as UMAGenerator;	
+				umaGenerator = GameObject.Find("UMAGenerator").GetComponent<UMAGeneratorBase>();	
 			}
 
             if (umaRecipe == null)
@@ -250,7 +250,7 @@ namespace UMA
 	        dirty = true;
 	        if (!umaGenerator)
 	        {
-	            umaGenerator = GameObject.Find("UMAGenerator").GetComponent("UMAGenerator") as UMAGenerator;
+	            umaGenerator = GameObject.Find("UMAGenerator").GetComponent<UMAGeneratorBase>();
 	        }
 	        if (umaGenerator)
 	        {
