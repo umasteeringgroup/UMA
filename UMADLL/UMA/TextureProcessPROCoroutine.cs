@@ -171,14 +171,31 @@ namespace UMA
                             }
                             else
                             {
-                                for (int x = 0; x < xblocks; x++)
+                                // figures that ReadPixels works differently on OpenGL and DirectX, someday this code will break because Unity fixes this bug!
+                                if (IsOpenGL())
                                 {
-                                    for (int y = 0; y < yblocks; y++)
+                                    for (int x = 0; x < xblocks; x++)
                                     {
-                                        RenderTexture.active = destinationTexture;
-                                        tempTexture.ReadPixels(new Rect(x * 512, destinationTexture.height - 512 - y * 512, 512, 512), x * 512, y * 512, umaGenerator.convertMipMaps);
-                                        RenderTexture.active = null;
-                                        yield return 8;
+                                        for (int y = 0; y < yblocks; y++)
+                                        {
+                                            RenderTexture.active = destinationTexture;
+                                            tempTexture.ReadPixels(new Rect(x * 512, y * 512, 512, 512), x * 512, y * 512, umaGenerator.convertMipMaps);
+                                            RenderTexture.active = null;
+                                            yield return 8;
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    for (int x = 0; x < xblocks; x++)
+                                    {
+                                        for (int y = 0; y < yblocks; y++)
+                                        {
+                                            RenderTexture.active = destinationTexture;
+                                            tempTexture.ReadPixels(new Rect(x * 512, destinationTexture.height - 512 - y * 512, 512, 512), x * 512, y * 512, umaGenerator.convertMipMaps);
+                                            RenderTexture.active = null;
+                                            yield return 8;
+                                        }
                                     }
                                 }
                             }
@@ -226,6 +243,12 @@ namespace UMA
                     }
                 }
             }
+        }
+
+        private bool IsOpenGL()
+        {
+            var graphicsDeviceVersion = SystemInfo.graphicsDeviceVersion;
+            return graphicsDeviceVersion.StartsWith("OpenGL");
         }
 
 
