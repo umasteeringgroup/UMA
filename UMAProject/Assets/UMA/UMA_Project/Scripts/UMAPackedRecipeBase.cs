@@ -212,7 +212,13 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 
 						if (umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay].rectList != null)
 						{
+							Rect originalRect = context.overlayLibrary.InstantiateOverlay(umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay].overlayID).rect;
 							tempRect = new Rect(umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay].rectList[0], umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay].rectList[1], umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay].rectList[2], umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay].rectList[3]);
+							
+							Vector2 aspectRatio = new Vector2(tempRect.width/originalRect.width,tempRect.height/originalRect.height);
+							
+							tempRect = new Rect(tempRect.x/aspectRatio.x,tempRect.y/aspectRatio.y,tempRect.width/aspectRatio.x,tempRect.height/aspectRatio.y);
+						
 						}
 						else
 						{
