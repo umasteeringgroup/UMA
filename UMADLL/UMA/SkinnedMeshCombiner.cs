@@ -31,7 +31,7 @@ namespace UMA
 	        {
 	            return res;
 	        }
-	        if (string.Compare("Global", bone.name, true) == 0)
+	        if (string.Compare("Global", bone.name) == 0)
 	        {
 	            boneMap.Add(bone, hierarchyRoot);
 	            return hierarchyRoot;

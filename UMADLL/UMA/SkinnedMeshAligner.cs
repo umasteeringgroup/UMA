@@ -117,7 +117,7 @@ namespace UMA
 	        {
 	            return res;
 	        }
-	        if (string.Compare(hierarchyRoot.name, bone.name, true) == 0)
+	        if (string.Compare(hierarchyRoot.name, bone.name) == 0)
 	        {
 	            boneMap.Add(bone, hierarchyRoot);
 	            return hierarchyRoot;

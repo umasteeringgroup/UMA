@@ -5,20 +5,29 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UMA", "UMA\UMA.csproj", "{A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UMAEditor", "UMAEditor\UMAEditor.csproj", "{1001F80D-CDE5-4BB2-8022-7933CAEF253B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LitJson", "litjson\LitJson.csproj", "{6BBC4E22-94F9-4DFB-B05C-05F3A9A569DE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{1001F80D-CDE5-4BB2-8022-7933CAEF253B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1001F80D-CDE5-4BB2-8022-7933CAEF253B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1001F80D-CDE5-4BB2-8022-7933CAEF253B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1001F80D-CDE5-4BB2-8022-7933CAEF253B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A96018CD-EEA7-4A97-8FE5-8CC04FD868B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A96018CD-EEA7-4A97-8FE5-8CC04FD868B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A96018CD-EEA7-4A97-8FE5-8CC04FD868B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A96018CD-EEA7-4A97-8FE5-8CC04FD868B5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1001F80D-CDE5-4BB2-8022-7933CAEF253B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1001F80D-CDE5-4BB2-8022-7933CAEF253B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1001F80D-CDE5-4BB2-8022-7933CAEF253B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1001F80D-CDE5-4BB2-8022-7933CAEF253B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6BBC4E22-94F9-4DFB-B05C-05F3A9A569DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6BBC4E22-94F9-4DFB-B05C-05F3A9A569DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6BBC4E22-94F9-4DFB-B05C-05F3A9A569DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6BBC4E22-94F9-4DFB-B05C-05F3A9A569DE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		StartupItem = UMA\UMA.csproj

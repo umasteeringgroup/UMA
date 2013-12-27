@@ -31,9 +31,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="LitJson">
-      <HintPath>..\..\..\LitJson.dll</HintPath>
-    </Reference>
     <Reference Include="UnityEditor">
       <HintPath>..\..\..\..\..\..\..\..\Program Files %28x86%29\Unity43\Editor\Data\Managed\UnityEditor.dll</HintPath>
     </Reference>

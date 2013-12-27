@@ -39,9 +39,6 @@
     <Reference Include="UnityEngine">
       <HintPath>..\..\..\..\..\..\..\..\Program Files %28x86%29\Unity43\Editor\Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
-    <Reference Include="LitJson">
-      <HintPath>..\..\..\LitJson.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
