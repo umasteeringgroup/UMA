@@ -93,7 +93,7 @@ public class UMACustomization : MonoBehaviour {
 				if(tempUMA){
 					umaData = tempUMA;
 					if(cameraTrack){
-						cameraTrack.target = umaData.transform;
+						cameraTrack.target = umaData.animator.transform;
 					}
 					
 					umaDna = umaData.umaRecipe.umaDna[typeof(UMADnaHumanoid)] as UMADnaHumanoid;
