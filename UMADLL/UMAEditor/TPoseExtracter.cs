@@ -17,6 +17,8 @@ namespace UMAEditor
 	            if (name.EndsWith("(Clone)"))
 	            {
 	                name = name.Substring(0, name.Length - 7);
+                    asset.boneInfo[0].name = name;
+                    asset.Serialize();
 	            }
 	            if (!System.IO.Directory.Exists("Assets/UMA/Assets/TPoses"))
 	                System.IO.Directory.CreateDirectory("Assets/UMA/UMA_Assets/TPoses");

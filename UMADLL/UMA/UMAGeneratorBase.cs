@@ -11,6 +11,7 @@ namespace UMA
         public bool fitAtlas;
         public bool usePRO;
         public bool AtlasCrop;
+        [NonSerialized]
         public TextureMerge textureMerge;
         public int maxPixels;
         public bool convertRenderTexture;
@@ -88,9 +89,37 @@ namespace UMA
             return animator;
         }
 
+        public static void DebugLogHumanAvatar(GameObject root, HumanDescription description)
+        {
+            Debug.Log("***", root);
+            Dictionary<String, String> bones = new Dictionary<String, String>();
+            foreach (var sb in description.skeleton)
+            {
+                Debug.Log(sb.name);
+                bones[sb.name] = sb.name;
+            }
+            Debug.Log("----");
+            foreach (var hb in description.human)
+            {
+                string boneName;
+                if (bones.TryGetValue(hb.boneName, out boneName))
+                {
+                    Debug.Log(hb.humanName + " -> " + boneName);
+                }
+                else
+                {
+                    Debug.LogWarning(hb.humanName + " !-> " + hb.boneName);
+                }
+            }
+            Debug.Log("++++");
+        }
+
+
         public static Avatar CreateAvatar(UMAData umaData, UmaTPose umaTPose)
         {
+            umaTPose.DeSerialize();
             HumanDescription description = CreateHumanDescription(umaData, umaTPose);
+            //DebugLogHumanAvatar(umaData.umaRoot, description);
             Avatar res = AvatarBuilder.BuildHumanAvatar(umaData.umaRoot, description);
             return res;
         }

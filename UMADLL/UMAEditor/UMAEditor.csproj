@@ -37,9 +37,6 @@
     <Reference Include="UnityEngine">
       <HintPath>..\..\..\..\..\..\..\..\Program Files %28x86%29\Unity43\Editor\Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
-    <Reference Include="UMA">
-      <HintPath>..\UMA\bin\Debug\UMA.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
@@ -51,6 +48,12 @@
     <Compile Include="CustomAssetUtility.cs" />
     <Compile Include="DictionaryCustomFormatter.cs" />
     <Compile Include="OverlayInspector.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\UMA\UMA.csproj">
+      <Project>{A96018CD-EEA7-4A97-8FE5-8CC04FD868B5}</Project>
+      <Name>UMA</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

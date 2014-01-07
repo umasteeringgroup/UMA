@@ -362,15 +362,15 @@ namespace UMA
 	            }
 	        }
 
-	        if (animatedBones.Length != umaRecipe.raceData.AnimatedBones.Length)
-	        {
-	            animatedBones = new Transform[umaRecipe.raceData.AnimatedBones.Length];
-	        }
-	        int i = 0;
-	        foreach (var updateName in umaRecipe.raceData.AnimatedBones)
-	        {
-                animatedBones[i++] = boneHashList[UMASkeleton.StringToHash(updateName)].boneTransform;
-	        }
+            //if (animatedBones.Length != umaRecipe.raceData.AnimatedBones.Length)
+            //{
+            //    animatedBones = new Transform[umaRecipe.raceData.AnimatedBones.Length];
+            //}
+            //int i = 0;
+            //foreach (var updateName in umaRecipe.raceData.AnimatedBones)
+            //{
+            //    animatedBones[i++] = boneHashList[UMASkeleton.StringToHash(updateName)].boneTransform;
+            //}
 	    }
 
 	    public T GetDna<T>()

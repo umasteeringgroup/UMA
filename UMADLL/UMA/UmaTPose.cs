@@ -11,8 +11,10 @@ namespace UMA
 	[System.Serializable]
 	public class UmaTPose : ScriptableObject 
 	{
+        [NonSerialized]
 	    public SkeletonBone[] boneInfo;
-	    public HumanBone[] humanInfo;
+        [NonSerialized]
+        public HumanBone[] humanInfo;
 
 	    public byte[] serializedChunk;
 
