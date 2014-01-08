@@ -34,7 +34,7 @@ namespace UMA
                 if (umaData.animationController)
                 {
                     var animator = umaData.animator;
-                    if (animator != null)
+                    if (animator != null && umaData.animationController == animator.runtimeAnimatorController)
                     {
                         snapshot = new AnimationState[animator.layerCount];
                         for (int i = 0; i < animator.layerCount; i++)
