@@ -5,48 +5,7 @@ using UMA;
 
 public class UMACrowd : MonoBehaviour 
 {
-	[System.Serializable]
-	public class CrowdRaceData
-	{
-		public string raceID;
-		public CrowdSlotElement[] slotElements;
-	}
-
-	[System.Serializable]
-	public class CrowdSlotElement
-	{
-		public string requirement;
-		public CrowdSlotData[] possibleSlots;
-	}
-
-	[System.Serializable]
-	public class CrowdSlotData
-	{
-		public string slotID;
-		public bool useSharedOverlayList;
-		public int overlayListSource;
-		public CrowdOverlayElement[] overlayElements;
-	}
-
-	[System.Serializable]
-	public class CrowdOverlayElement
-	{
-		public CrowdOverlayData[] possibleOverlays;
-	}
-
-	[System.Serializable]
-	public class CrowdOverlayData
-	{
-		public string overlayID;
-		public Color maxRGB;
-		public Color minRGB;
-		public bool useSkinColor;
-		public bool useHairColor;
-		public float hairColorMultiplier;
-	}
-
-
-	public CrowdRaceData[] randomPool;
+	public UMACrowdRandomSet[] randomPool;
 	public UMAGeneratorBase generator;
 	public UMAData umaData;
 	public SlotLibrary slotLibrary;
@@ -112,7 +71,7 @@ public class UMACrowd : MonoBehaviour
 		readyForNew = true;
 	}
 
-	private void DefineSlots(CrowdRaceData race)
+	private void DefineSlots(UMACrowdRandomSet.CrowdRaceData race)
 	{
 		float skinTone = Random.Range(0.1f, 0.6f);
 		Color skinColor = new Color(skinTone + Random.Range(0.35f, 0.4f), skinTone + Random.Range(0.25f, 0.4f), skinTone + Random.Range(0.35f, 0.4f), 1);
@@ -537,12 +496,12 @@ public class UMACrowd : MonoBehaviour
 		umaDynamicAvatar.umaGenerator = generator;
 		umaData.umaGenerator = generator;
 		var umaRecipe = umaDynamicAvatar.umaData.umaRecipe;
-		CrowdRaceData race = null;
+		UMACrowdRandomSet.CrowdRaceData race = null;
 
 		if (randomPool != null && randomPool.Length > 0)
 		{
 			int randomResult = Random.Range(0, randomPool.Length);
-			race = randomPool[randomResult];
+			race = randomPool[randomResult].data;
 			umaRecipe.SetRace(raceLibrary.GetRace(race.raceID));
 		}
 		else
