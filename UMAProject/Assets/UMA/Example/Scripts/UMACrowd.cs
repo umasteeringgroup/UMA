@@ -3,8 +3,50 @@ using System.Collections;
 using System.Collections.Generic;
 using UMA;
 
-public class UMACrowd : MonoBehaviour {
+public class UMACrowd : MonoBehaviour 
+{
+	[System.Serializable]
+	public class CrowdRaceData
+	{
+		public string raceID;
+		public CrowdSlotElement[] slotElements;
+	}
 
+	[System.Serializable]
+	public class CrowdSlotElement
+	{
+		public string requirement;
+		public CrowdSlotData[] possibleSlots;
+	}
+
+	[System.Serializable]
+	public class CrowdSlotData
+	{
+		public string slotID;
+		public bool useSharedOverlayList;
+		public int overlayListSource;
+		public CrowdOverlayElement[] overlayElements;
+	}
+
+	[System.Serializable]
+	public class CrowdOverlayElement
+	{
+		public CrowdOverlayData[] possibleOverlays;
+	}
+
+	[System.Serializable]
+	public class CrowdOverlayData
+	{
+		public string overlayID;
+		public Color maxRGB;
+		public Color minRGB;
+		public bool useSkinColor;
+		public bool useHairColor;
+		public float hairColorMultiplier;
+	}
+
+
+	public CrowdRaceData[] randomPool;
 	public UMAGeneratorBase generator;
 	public UMAData umaData;
 	public SlotLibrary slotLibrary;
@@ -69,8 +111,68 @@ public class UMACrowd : MonoBehaviour {
 	{
 		readyForNew = true;
 	}
-	
-	void DefineSlots (){
+
+	private void DefineSlots(CrowdRaceData race)
+	{
+		float skinTone = Random.Range(0.1f, 0.6f);
+		Color skinColor = new Color(skinTone + Random.Range(0.35f, 0.4f), skinTone + Random.Range(0.25f, 0.4f), skinTone + Random.Range(0.35f, 0.4f), 1);
+		Color HairColor = new Color(Random.Range(0.1f, 0.9f), Random.Range(0.1f, 0.9f), Random.Range(0.1f, 0.9f), 1);
+		var slotParts = new HashSet<string>();
+		umaData.umaRecipe.slotDataList = new SlotData[race.slotElements.Length];
+		for (int i = 0; i < race.slotElements.Length; i++)
+		{
+			var currentElement = race.slotElements[i];
+			if (!string.IsNullOrEmpty(currentElement.requirement) && !slotParts.Contains(currentElement.requirement)) continue;
+			if (currentElement.possibleSlots.Length == 0) continue;
+			int randomResult = Random.Range(0, currentElement.possibleSlots.Length);
+			var slot = currentElement.possibleSlots[randomResult];
+			if (string.IsNullOrEmpty(slot.slotID)) continue;
+			slotParts.Add(slot.slotID);
+			SlotData slotData;
+			if (slot.useSharedOverlayList && slot.overlayListSource >= 0 && slot.overlayListSource < i)
+			{
+				slotData = slotLibrary.InstantiateSlot(slot.slotID, umaData.umaRecipe.slotDataList[slot.overlayListSource].GetOverlayList());
+			}
+			else
+			{
+				if (slot.useSharedOverlayList)
+				{
+					Debug.LogError("UMA Crowd: Invalid overlayListSource for " + slot.slotID);
+				}
+				slotData = slotLibrary.InstantiateSlot(slot.slotID);
+			}
+			umaData.umaRecipe.slotDataList[i] = slotData;
+			for (int overlayIdx = 0; overlayIdx < slot.overlayElements.Length; overlayIdx++)
+			{
+				var currentOverlayElement = slot.overlayElements[overlayIdx];
+				randomResult = Random.Range(0, currentOverlayElement.possibleOverlays.Length);
+				var overlay = currentOverlayElement.possibleOverlays[randomResult];
+				if (string.IsNullOrEmpty(overlay.overlayID)) continue;
+				slotParts.Add(overlay.overlayID);
+				Color overlayColor;
+				if (overlay.useSkinColor)
+				{
+					overlayColor = skinColor + new Color(Random.Range(overlay.minRGB.r, overlay.maxRGB.r), Random.Range(overlay.minRGB.g, overlay.maxRGB.g), Random.Range(overlay.minRGB.b, overlay.maxRGB.b), 1);
+				}
+				else if (overlay.useHairColor)
+				{
+					overlayColor = HairColor * overlay.hairColorMultiplier;
+				}
+				else
+				{
+					overlayColor = new Color(Random.Range(overlay.minRGB.r, overlay.maxRGB.r), Random.Range(overlay.minRGB.g, overlay.maxRGB.g), Random.Range(overlay.minRGB.b, overlay.maxRGB.b), 1);
+				}
+				slotData.AddOverlay(overlayLibrary.InstantiateOverlay(overlay.overlayID, overlayColor));				
+			}
+			if (umaData.umaRecipe.slotDataList[i].GetOverlayList().Count == 0)
+			{
+				Debug.LogError("Slot without overlay: " + umaData.umaRecipe.slotDataList[i].slotName+" at index "+i+" of race: "+race.raceID);
+			}
+		}
+	}
+
+	void DefineSlots()
+	{
 		Color skinColor = new Color(1,1,1,1);
 		float skinTone;
 
@@ -435,20 +537,38 @@ public class UMACrowd : MonoBehaviour {
 		umaDynamicAvatar.umaGenerator = generator;
 		umaData.umaGenerator = generator;
 		var umaRecipe = umaDynamicAvatar.umaData.umaRecipe;
-		int randomResult = Random.Range(0, 2);
-//		randomResult = 0;
-		
-		if(randomResult == 0)
-        {
-			umaRecipe.SetRace(raceLibrary.GetRace("HumanMale"));
-		}else{
-			umaRecipe.SetRace(raceLibrary.GetRace("HumanFemale"));
-        }
+		CrowdRaceData race = null;
+
+		if (randomPool != null && randomPool.Length > 0)
+		{
+			int randomResult = Random.Range(0, randomPool.Length);
+			race = randomPool[randomResult];
+			umaRecipe.SetRace(raceLibrary.GetRace(race.raceID));
+		}
+		else
+		{
+			int randomResult = Random.Range(0, 2);
+			if (randomResult == 0)
+			{
+				umaRecipe.SetRace(raceLibrary.GetRace("HumanMale"));
+			}
+			else
+			{
+				umaRecipe.SetRace(raceLibrary.GetRace("HumanFemale"));
+			}
+		}
 
 		SetUMAData();
 		GenerateUMAShapes();
-	
-		DefineSlots();
+
+		if (race != null && race.slotElements.Length > 0)
+		{
+			DefineSlots(race);
+		}
+		else
+		{
+			DefineSlots();
+		}
 
 		umaDynamicAvatar.UpdateNewRace();
 		umaDynamicAvatar.umaData.myRenderer.enabled = false;
@@ -465,4 +585,5 @@ public class UMACrowd : MonoBehaviour {
 		
 
 	}
+
 }
