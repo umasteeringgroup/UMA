@@ -142,11 +142,16 @@ namespace UMA
 				umaDirtyList.Add(umaToAdd);
 			}
 		}
+
+        public override bool IsIdle()
+        {
+            return umaDirtyList.Count == 0;
+        }
 		
 		public virtual void UMAReady(){	
 			if(umaData){
 				umaData.myRenderer.enabled = true;
-			    umaData.FireUpdatedEvent(); 
+			    umaData.FireUpdatedEvent(false); 
 	        }
 	    }
 
