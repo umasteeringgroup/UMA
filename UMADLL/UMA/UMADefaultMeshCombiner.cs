@@ -83,9 +83,13 @@ namespace UMA
                 {
 
                     combineInstance = new SkinnedMeshCombiner.CombineInstance();
+					combineInstance.mesh = umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex].source.slotData.meshRenderer.sharedMesh;
+					combineInstance.destMesh = new int[combineInstance.mesh.subMeshCount];
+					for (int i = 0; i < combineInstance.mesh.subMeshCount; i++)
+					{
+						combineInstance.destMesh[i] = -1;
+					}
 
-                    combineInstance.destMesh = new int[1];
-                    combineInstance.mesh = umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex].source.slotData.meshRenderer.sharedMesh;
                     combineInstance.bones = umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex].source.slotData.meshRenderer.bones;
 
                     combineInstance.destMesh[0] = atlasIndex;
@@ -109,8 +113,13 @@ namespace UMA
                     if (!shareMaterial[slotIndex])
                     {
                         combineInstance = new SkinnedMeshCombiner.CombineInstance();
-                        combineInstance.destMesh = new int[1];
-                        combineInstance.mesh = slots[slotIndex].meshRenderer.sharedMesh;
+						combineInstance.mesh = slots[slotIndex].meshRenderer.sharedMesh;
+						combineInstance.destMesh = new int[combineInstance.mesh.subMeshCount];
+						for (int i = 0; i < combineInstance.mesh.subMeshCount; i++)
+						{
+							combineInstance.destMesh[i] = -1;
+						}
+
                         combineInstance.bones = slots[slotIndex].meshRenderer.bones;
 
                         combineInstance.destMesh[0] = indexCount;
@@ -140,8 +149,13 @@ namespace UMA
                                     if (slots[slotIndex].GetOverlay(0).textureList[0].name == slots[slotIndex2].GetOverlay(0).textureList[0].name)
                                     {
                                         combineInstance = new SkinnedMeshCombiner.CombineInstance();
-                                        combineInstance.destMesh = new int[1];
-                                        combineInstance.mesh = slots[slotIndex2].meshRenderer.sharedMesh;
+										combineInstance.mesh = slots[slotIndex2].meshRenderer.sharedMesh;
+										combineInstance.destMesh = new int[combineInstance.mesh.subMeshCount];
+										for (int i = 0; i < combineInstance.mesh.subMeshCount; i++)
+										{
+											combineInstance.destMesh[i] = -1;
+										}
+
                                         combineInstance.bones = slots[slotIndex2].meshRenderer.bones;
 
                                         combineInstance.destMesh[0] = indexCount;

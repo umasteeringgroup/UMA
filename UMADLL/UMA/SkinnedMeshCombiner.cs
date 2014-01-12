@@ -111,8 +111,11 @@ namespace UMA
 
 	            for (int i = 0; i < source.mesh.subMeshCount; i++)
 	            {
-	                int triangleLength = sMesh.GetTriangles(i).Length;
-	                subMeshTriangleLength[source.destMesh[i]] += triangleLength;
+					if (source.destMesh[i] >= 0)
+					{
+						int triangleLength = sMesh.GetTriangles(i).Length;
+						subMeshTriangleLength[source.destMesh[i]] += triangleLength;
+					}
 	            }
 	        }
 	        int[][] submeshTriangles = new int[subMeshCount][];
@@ -203,12 +206,15 @@ namespace UMA
 
 	            for (int i = 0; i < source.mesh.subMeshCount; i++)
 	            {
-	                int[] subTriangles = source.mesh.GetTriangles(i);
-	                int triangleLength = subTriangles.Length;
-	                int destMesh = source.destMesh[i];
+					if (source.destMesh[i] >= 0)
+					{
+						int[] subTriangles = source.mesh.GetTriangles(i);
+						int triangleLength = subTriangles.Length;
+						int destMesh = source.destMesh[i];
 
-	                CopyIntArrayAdd(subTriangles, 0, submeshTriangles[destMesh], subMeshTriangleLength[destMesh], triangleLength, vertexIndex);
-	                subMeshTriangleLength[destMesh] += triangleLength;
+						CopyIntArrayAdd(subTriangles, 0, submeshTriangles[destMesh], subMeshTriangleLength[destMesh], triangleLength, vertexIndex);
+						subMeshTriangleLength[destMesh] += triangleLength;
+					}
 	            }
 
 	            vertexIndex += vertexCount;
