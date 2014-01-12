@@ -91,8 +91,7 @@ namespace UMA
 					}
 
                     combineInstance.bones = umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex].source.slotData.meshRenderer.bones;
-
-                    combineInstance.destMesh[0] = atlasIndex;
+                    combineInstance.destMesh[umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex].source.slotData.subMeshIndex] = atlasIndex;
                     combinedMeshList.Add(combineInstance);
                 }
             }
@@ -121,8 +120,7 @@ namespace UMA
 						}
 
                         combineInstance.bones = slots[slotIndex].meshRenderer.bones;
-
-                        combineInstance.destMesh[0] = indexCount;
+                        combineInstance.destMesh[slots[slotIndex].subMeshIndex] = indexCount;
                         combinedMeshList.Add(combineInstance);
 
                         Material tempMaterial = Instantiate(slots[slotIndex].materialSample) as Material;
@@ -158,7 +156,7 @@ namespace UMA
 
                                         combineInstance.bones = slots[slotIndex2].meshRenderer.bones;
 
-                                        combineInstance.destMesh[0] = indexCount;
+                                        combineInstance.destMesh[slots[slotIndex2].subMeshIndex] = indexCount;
                                         combinedMeshList.Add(combineInstance);
 
                                         shareMaterial[slotIndex2] = true;

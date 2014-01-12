@@ -106,6 +106,7 @@ namespace UMA
 					CombineInstance combineInstance = new CombineInstance();
 					combineInstance.mesh = umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex].source.slotData.meshRenderer.sharedMesh;
 					combineInstance.transform = tempMatrix;
+                    combineInstance.subMeshIndex = umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex].source.slotData.subMeshIndex;
 		            combinedMeshList.Add(combineInstance);
 					
 					combinedSlotList.Add(umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex].source.slotData);
@@ -133,6 +134,7 @@ namespace UMA
 					if(!shareMaterial[slotIndex]){
 						CombineInstance combineInstance = new CombineInstance();
 			            combineInstance.mesh = slots[slotIndex].meshRenderer.sharedMesh;
+                        combineInstance.subMeshIndex = slots[slotIndex].subMeshIndex;
 			            combineInstance.transform = tempMatrix;
 			            combinedMeshList.Add(combineInstance);
 						combinedSlotList.Add(slots[slotIndex]);
@@ -155,6 +157,7 @@ namespace UMA
 									if(slots[slotIndex].GetOverlay(0).textureList[0].name == slots[slotIndex2].GetOverlay(0).textureList[0].name){	
 										combineInstance = new CombineInstance();
 							            combineInstance.mesh = slots[slotIndex2].meshRenderer.sharedMesh;
+                                        combineInstance.subMeshIndex = slots[slotIndex2].subMeshIndex;
 							            combineInstance.transform = tempMatrix;
 							            combinedMeshList.Add(combineInstance);
 										combinedSlotList.Add(slots[slotIndex2]);

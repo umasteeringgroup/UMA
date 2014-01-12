@@ -18,6 +18,7 @@ namespace UMA
         public Transform[] animatedBones = new Transform[0];
 	    public DnaConverterBehaviour slotDNA;
 		public BoneWeight[] boneWeights;
+        public int subMeshIndex;
         /// <summary>
         /// Use this to identify slots that serves the same purpose
         /// Eg. ChestArmor, Helmet, etc.
@@ -39,6 +40,7 @@ namespace UMA
 	        tempSlotData.materialSample = materialSample;
 	        tempSlotData.overlayScale = overlayScale;
 	        tempSlotData.slotDNA = slotDNA;
+            tempSlotData.subMeshIndex = subMeshIndex;
 
 	        // All this data is passed as reference
 			tempSlotData.boneWeights = boneWeights;
