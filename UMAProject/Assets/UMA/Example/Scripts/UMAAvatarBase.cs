@@ -41,6 +41,7 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 
 	public void Load(UMARecipeBase umaRecipe)
 	{
+		if (umaRecipe == null) return;
 		Profiler.BeginSample("Load");
 		var oldRace = umaData.umaRecipe.raceData;
 		this.umaRecipe = umaRecipe;

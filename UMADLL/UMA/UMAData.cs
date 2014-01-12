@@ -31,6 +31,7 @@ namespace UMA
 		
 		public BoneData[] tempBoneData; //Only while Dictionary can't be serialized
 
+        public bool cancelled { get; private set; }
         [NonSerialized]
         public bool dirty = false;
         [NonSerialized]
@@ -229,15 +230,19 @@ namespace UMA
 			public Quaternion originalBoneRotation;
 		}
 
-	    public void FireUpdatedEvent()
+        public void FireUpdatedEvent(bool cancelled)
 	    {
+            this.cancelled = cancelled;
 	        if (OnUpdated != null)
 	        {
-	            OnUpdated(this);
+                OnUpdated(this);
 	        }
-			_hasUpdatedBefore = true;
-			dirty = false;
-	    }
+            if (!cancelled)
+            {
+                _hasUpdatedBefore = true;
+            }
+            dirty = false;
+        }
 		
 	    public void ApplyDNA()
 	    {

@@ -31,12 +31,10 @@ public class UMACrowd : MonoBehaviour
 		tempVersion = tempVersion.Substring(0,3);
 	}
 
-	private bool readyForNew = true;
 	void Update () {		
 		if(generateLotsUMA){	
-			if( readyForNew )
+			if( generator.IsIdle() )
 			{
-				readyForNew = false;
 				GenerateOneUMA();
 				umaData.OnUpdated += new System.Action<UMAData>(umaData_OnUpdated);
 			
@@ -68,7 +66,10 @@ public class UMACrowd : MonoBehaviour
 
 	void umaData_OnUpdated(UMAData obj)
 	{
-		readyForNew = true;
+		if (obj.cancelled)
+		{
+			Object.Destroy(obj.gameObject);
+		}
 	}
 
 	private void DefineSlots(UMACrowdRandomSet.CrowdRaceData race)

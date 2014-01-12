@@ -19,6 +19,7 @@ namespace UMA
         public int atlasResolution;
         public string[] textureNameList;
         public abstract void addDirtyUMA(UMAData umaToAdd);
+        public abstract bool IsIdle();
 
         private struct AnimationState
         {
