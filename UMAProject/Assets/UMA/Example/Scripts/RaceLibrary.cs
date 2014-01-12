@@ -12,6 +12,17 @@ public class RaceLibrary : MonoBehaviour {
         UpdateDictionary();
     }
 
+	private void ValidateDictionary()
+	{
+		if (raceDictionary == null)
+		{
+			raceDictionary = new Dictionary<string, RaceData>();
+			UpdateDictionary();
+		}
+	}
+	
+
+
     public void UpdateDictionary(){
         raceDictionary.Clear();
         for (int i = 0; i < raceElementList.Length; i++){
@@ -25,6 +36,7 @@ public class RaceLibrary : MonoBehaviour {
 
     public void AddRace(RaceData race)
     {
+		ValidateDictionary();
         for (int i = 0; i < raceElementList.Length; i++)
         {
             if (raceElementList[i].raceName == race.raceName)
@@ -42,6 +54,7 @@ public class RaceLibrary : MonoBehaviour {
 
 	public RaceData GetRace(string raceName)
     {
+		ValidateDictionary();
 		RaceData res;
 		if (!raceDictionary.TryGetValue(raceName, out res))
 		{

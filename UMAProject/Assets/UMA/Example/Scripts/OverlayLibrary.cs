@@ -28,6 +28,7 @@ public class OverlayLibrary : MonoBehaviour {
 
     public void AddOverlay(string name, OverlayData overlay)
     {
+		ValidateDictionary();
         var list = new OverlayData[overlayElementList.Length + 1];
         for (int i = 0; i < overlayElementList.Length; i++)
         {
@@ -49,6 +50,7 @@ public class OverlayLibrary : MonoBehaviour {
 //	}
 	
 	public OverlayData InstantiateOverlay(string name){
+		ValidateDictionary();
 		OverlayData source;
         if (!overlayDictionary.TryGetValue(name, out source))
         {
@@ -58,8 +60,19 @@ public class OverlayLibrary : MonoBehaviour {
 			return source.Duplicate();
 		}
 	}
+
+	private void ValidateDictionary()
+	{
+		if (overlayDictionary == null)
+		{
+			overlayDictionary = new Dictionary<string, OverlayData>();
+			UpdateDictionary();
+		}
+	}
 	
-	public OverlayData InstantiateOverlay(string name, Color color){
+	public OverlayData InstantiateOverlay(string name, Color color)
+	{
+		ValidateDictionary();
 		OverlayData source;
         if (!overlayDictionary.TryGetValue(name, out source))
         {

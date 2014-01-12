@@ -23,8 +23,20 @@ public class SlotLibrary : MonoBehaviour {
 		}
 	}
 
+	private void ValidateDictionary()
+	{
+		if (slotDictionary == null)
+		{
+			slotDictionary = new Dictionary<string, SlotData>();
+			UpdateDictionary();
+		}
+	}
+	
+
+
     public void AddSlot(string name, SlotData slot)
     {
+		ValidateDictionary();
         var list = new SlotData[slotElementList.Length + 1];
         for (int i = 0; i < slotElementList.Length; i++)
         {
@@ -41,6 +53,7 @@ public class SlotLibrary : MonoBehaviour {
     }
 	
 	public SlotData InstantiateSlot(string name){
+		ValidateDictionary();
 		SlotData source;
         if (!slotDictionary.TryGetValue(name, out source))
         {
@@ -52,6 +65,7 @@ public class SlotLibrary : MonoBehaviour {
 	}
 	
 	public SlotData InstantiateSlot(string name, List<OverlayData> overlayList){
+		ValidateDictionary();
 		SlotData source;
         if (!slotDictionary.TryGetValue(name, out source))
         {
