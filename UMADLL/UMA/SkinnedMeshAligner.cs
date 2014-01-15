@@ -102,7 +102,7 @@ namespace UMA
 	    {
 	        var res = RecursiveFindBoneInHierarchy(bone, hierarchyRoot, boneMap);
 	        int idx;
-	        if (boneIndexes.TryGetValue(res, out idx))
+	        if (res != null && boneIndexes.TryGetValue(res, out idx))
 	        {
 	            return idx;
 	        }
