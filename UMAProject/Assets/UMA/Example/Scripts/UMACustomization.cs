@@ -15,6 +15,8 @@ public class UMACustomization : MonoBehaviour {
 	
 	public SlotLibrary mySlotLibrary;
     public OverlayLibrary myOverlayLibrary;
+
+	public bool editing = false;
 	
 	void Start () {
 		sliderControlList = new SliderControl[46];	
@@ -86,31 +88,35 @@ public class UMACustomization : MonoBehaviour {
 		
 		if(Input.GetMouseButtonDown(1)){
 			if (Physics.Raycast(ray, out hit, 100)){
-
-				UMAData tempUMA = hit.collider.transform.parent.parent.GetComponent<UMAData>();
-				umaDynamicAvatar = tempUMA.gameObject.GetComponent<UMADynamicAvatar>();
 				
-				if(tempUMA){
-					umaData = tempUMA;
-					if(cameraTrack){
-                        cameraTrack.target = umaData.umaRoot.transform;
-					}
-					
-					umaDna = umaData.umaRecipe.umaDna[typeof(UMADnaHumanoid)] as UMADnaHumanoid;
-					ReceiveValues();
+				umaData = hit.collider.transform.parent.parent.GetComponent<UMAData>();
+				if(umaData){
+					AvatarSetup();
 				}
 			}
 		}
 		
 		if(umaData){
 			TransferValues();
-	
+			editing = false;
 			for(int i = 0; i < sliderControlList.Length; i++){
 				if(sliderControlList[i].pressed == true){
+					editing = true;
 					UpdateUMAShape();
 				}
 			}
 		}
+	}
+
+	public void AvatarSetup(){
+		umaDynamicAvatar = umaData.gameObject.GetComponent<UMADynamicAvatar>();
+		
+		if(cameraTrack){
+			cameraTrack.target = umaData.umaRoot.transform;
+		}
+		
+		umaDna = umaData.umaRecipe.umaDna[typeof(UMADnaHumanoid)] as UMADnaHumanoid;
+		ReceiveValues();
 	}
 	
 	public SliderControl InstantiateSlider(string name, int X, int Y){
