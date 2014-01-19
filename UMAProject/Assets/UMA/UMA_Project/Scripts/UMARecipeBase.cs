@@ -7,6 +7,8 @@ public abstract class UMARecipeBase : ScriptableObject
 	public abstract void Load(UMA.UMAData.UMARecipe umaRecipe, UMAContext context);
 	public abstract void Save(UMA.UMAData.UMARecipe umaRecipe, UMAContext context);
 	public abstract string GetInfo();
+	public abstract byte[] GetBytes();
+	public abstract void SetBytes(byte[] data);
 	public override string ToString() { return GetInfo(); }
 	public static Type[] GetRecipeFormats()
 	{

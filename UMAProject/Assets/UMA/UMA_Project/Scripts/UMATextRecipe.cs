@@ -19,4 +19,13 @@ public class UMATextRecipe : UMAPackedRecipeBase
 	{
 		return string.Format("UMATextRecipe, internal storage string Length {0}", recipeString.Length);
 	}
+
+	public override byte[] GetBytes()
+	{
+		return System.Text.Encoding.UTF8.GetBytes (recipeString);
+	}
+	public override void  SetBytes(byte[] data)
+	{
+		recipeString = System.Text.Encoding.UTF8.GetString(data); 	
+	}
 }
