@@ -36,7 +36,7 @@ public class UMASaveToolEditor : Editor {
 				if(path.Length != 0) 
 				{
 					var asset = ScriptableObject.CreateInstance<UMATextRecipe>();
-					asset.Save(umaDynamicAvatar.umaData, umaDynamicAvatar.context);
+					asset.Save(umaDynamicAvatar.umaData.umaRecipe, umaDynamicAvatar.context);
 					System.IO.File.WriteAllText(path, asset.recipeString);
 					ScriptableObject.Destroy(asset);
 				}
@@ -53,7 +53,7 @@ public class UMASaveToolEditor : Editor {
 				if(path.Length != 0) 
 				{
 					var asset = ScriptableObject.CreateInstance<UMATextRecipe>();
-					asset.Save(umaDynamicAvatar.umaData, umaDynamicAvatar.context);
+					asset.Save(umaDynamicAvatar.umaData.umaRecipe, umaDynamicAvatar.context);
 					AssetDatabase.CreateAsset(asset, path);
 					AssetDatabase.SaveAssets();
 				}

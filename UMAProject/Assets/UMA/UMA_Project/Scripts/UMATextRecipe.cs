@@ -14,4 +14,9 @@ public class UMATextRecipe : UMAPackedRecipeBase
 	{
 		recipeString = JsonMapper.ToJson(packedRecipe);
 	}
+
+	public override string GetInfo()
+	{
+		return string.Format("UMATextRecipe, internal storage string Length {0}", recipeString.Length);
+	}
 }

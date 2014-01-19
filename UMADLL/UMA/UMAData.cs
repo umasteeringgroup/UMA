@@ -176,6 +176,31 @@ namespace UMA
 				}
 				return null;
 			}
+
+            public T GetOrCreateDna<T>()
+                where T : UMADnaBase
+            {
+                T res = GetDna<T>();
+                if (res == null)
+                {
+                    res = typeof(T).GetConstructor(System.Type.EmptyTypes).Invoke(null) as T;
+                    umaDna.Add(typeof(T), res);
+                }
+                return res;
+            }
+
+            public UMADnaBase GetOrCreateDna(Type type)
+            {
+                UMADnaBase dna;
+                if (umaDna.TryGetValue(type, out dna))
+                {
+                    return dna;
+                }
+
+                dna = type.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
+                umaDna.Add(type, dna);
+                return dna;
+            }
 			
 			public void SetRace(RaceData raceData)
 			{

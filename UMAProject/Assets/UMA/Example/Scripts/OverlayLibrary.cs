@@ -1,86 +1,131 @@
 using UnityEngine;
 using System.Collections.Generic;
 using UMA;
+using System;
 
-public class OverlayLibrary : MonoBehaviour {
-    public OverlayData[] overlayElementList = new OverlayData[0];
-	public Dictionary<string,OverlayData> overlayDictionary = new Dictionary<string,OverlayData>();
-	
+public class OverlayLibrary : OverlayLibraryBase
+{
+	public OverlayData[] overlayElementList = new OverlayData[0];
+	[NonSerialized]
+	private Dictionary<int, OverlayData> overlayDictionary;
+
 	public int scaleAdjust = 1;
 	public bool readWrite = false;
 	public bool compress = false;
-	
-	void Awake() {
-		UpdateDictionary();
+
+	void Awake()
+	{
+		ValidateDictionary();
 	}
-	
-	public void UpdateDictionary(){
+
+	public void UpdateDictionary()
+	{
+		ValidateDictionary();
 		overlayDictionary.Clear();
-		for(int i = 0; i < overlayElementList.Length; i++){			
-			if(overlayElementList[i]){				
-				if(!overlayDictionary.ContainsKey(overlayElementList[i].overlayName)){
+		for (int i = 0; i < overlayElementList.Length; i++)
+		{
+			if (overlayElementList[i])
+			{
+				var hash = UMASkeleton.StringToHash(overlayElementList[i].overlayName);
+				if (!overlayDictionary.ContainsKey(hash))
+				{
 					overlayElementList[i].listID = i;
-					overlayDictionary.Add(overlayElementList[i].overlayName,overlayElementList[i]);	
+					overlayDictionary.Add(hash, overlayElementList[i]);
 				}
 			}
 		}
 	}
 
-    public void AddOverlay(string name, OverlayData overlay)
-    {
+	public override void AddOverlay(OverlayData overlay)
+	{
 		ValidateDictionary();
-        var list = new OverlayData[overlayElementList.Length + 1];
-        for (int i = 0; i < overlayElementList.Length; i++)
-        {
-            if (overlayElementList[i].overlayName == name)
-            {
-                overlayElementList[i] = overlay;
-                return;
-            }
-            list[i] = overlayElementList[i];
-        }
-        list[list.Length - 1] = overlay;
-        overlayElementList = list;
-        overlayDictionary.Add(name, overlay);
-    }
-
-	//SPOT
-//	public OverlayData GetOverlay(string name){		
-//		return new OverlayData(this, name);
-//	}
-	
-	public OverlayData InstantiateOverlay(string name){
-		ValidateDictionary();
-		OverlayData source;
-        if (!overlayDictionary.TryGetValue(name, out source))
-        {
-            Debug.LogError("Unable to find " + name);
-			return null;
-        }else{
-			return source.Duplicate();
+		var hash = UMASkeleton.StringToHash(overlay.overlayName);
+		if (overlayDictionary.ContainsKey(hash))
+		{
+			for (int i = 0; i < overlayElementList.Length; i++)
+			{
+				if (overlayElementList[i].overlayName == overlay.overlayName)
+				{
+					overlayElementList[i] = overlay;
+					break;
+				}
+			}
 		}
+		else
+		{
+			var list = new OverlayData[overlayElementList.Length + 1];
+			for (int i = 0; i < overlayElementList.Length; i++)
+			{
+				list[i] = overlayElementList[i];
+			}
+			list[list.Length - 1] = overlay;
+			overlayElementList = list;
+		}
+		overlayDictionary.Add(hash, overlay);
 	}
 
 	private void ValidateDictionary()
 	{
 		if (overlayDictionary == null)
 		{
-			overlayDictionary = new Dictionary<string, OverlayData>();
+			overlayDictionary = new Dictionary<int, OverlayData>();
 			UpdateDictionary();
 		}
 	}
-	
-	public OverlayData InstantiateOverlay(string name, Color color)
+
+	public override OverlayData InstantiateOverlay(string name)
+	{
+		var res = Internal_InstantiateOverlay(UMASkeleton.StringToHash(name));
+		if (res == null)
+		{
+			throw new UMAResourceNotFoundException("OverlayLibrary: Unable to find: " + name);
+		}
+		return res;
+	}
+
+	public override OverlayData InstantiateOverlay(int nameHash)
+	{
+		var res = Internal_InstantiateOverlay(nameHash);
+		if (res == null)
+		{
+			throw new UMAResourceNotFoundException("OverlayLibrary: Unable to find hash: " + nameHash);
+		}
+		return res;
+	}
+
+	public override OverlayData InstantiateOverlay(string name, Color color)
+	{
+		var res = Internal_InstantiateOverlay(UMASkeleton.StringToHash(name));
+		if (res == null)
+		{
+			throw new UMAResourceNotFoundException("OverlayLibrary: Unable to find: " + name);
+		}
+		res.color = color;
+		return res;
+	}
+
+	public override OverlayData InstantiateOverlay(int nameHash, Color color)
+	{
+		var res = Internal_InstantiateOverlay(nameHash);
+		if (res == null)
+		{
+			throw new UMAResourceNotFoundException("OverlayLibrary: Unable to find hash: " + nameHash);
+		}
+		res.color = color;
+		return res;
+	}
+
+	private OverlayData Internal_InstantiateOverlay(int nameHash)
 	{
 		ValidateDictionary();
 		OverlayData source;
-        if (!overlayDictionary.TryGetValue(name, out source))
-        {
-            Debug.LogError("Unable to find " + name);
+		if (!overlayDictionary.TryGetValue(nameHash, out source))
+		{
 			return null;
-        }else{
+		}
+		else
+		{
 			source = source.Duplicate();
-			source.color = color;
 			return source;
 		}
 	}

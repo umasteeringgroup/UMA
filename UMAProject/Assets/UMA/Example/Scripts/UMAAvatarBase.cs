@@ -16,6 +16,7 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 	public RuntimeAnimatorController animationController;
 	[NonSerialized]
 	public GameObject umaChild;
+	private RaceData umaRace = null;
 	
 	public virtual void Start()
 	{
@@ -43,10 +44,9 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 	{
 		if (umaRecipe == null) return;
 		Profiler.BeginSample("Load");
-		var oldRace = umaData.umaRecipe.raceData;
 		this.umaRecipe = umaRecipe;
-		umaRecipe.Load(umaData, context);
-		if (oldRace != umaData.umaRecipe.raceData)
+		umaRecipe.Load(umaData.umaRecipe, context);
+		if (umaRace != umaData.umaRecipe.raceData)
 		{
 			UpdateNewRace();
 		}
@@ -64,6 +64,7 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 
 	public void UpdateNewRace()
 	{
+		umaRace = umaData.umaRecipe.raceData;
 		var position = transform.position;
 		var rotation = transform.rotation;
 		if (umaChild != null)
@@ -102,12 +103,26 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 		umaData.boneHashList.Clear();
 		umaData.animatedBones = new Transform[0];
 		umaData.tempBoneData = new UMAData.BoneData[0];
-		umaData.umaRecipe.raceData = null;
+		umaRace = null;
 	}
 
 	public void Show()
 	{
-		Load(umaRecipe);
+		if (umaRecipe != null)
+		{
+			Load(umaRecipe);
+		}
+		else
+		{
+			if (umaRace != umaData.umaRecipe.raceData)
+			{
+				UpdateNewRace();
+			}
+			else
+			{
+				UpdateSameRace();
+			}
+		}
 	}
 
 	void OnDrawGizmosSelected()

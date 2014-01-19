@@ -532,7 +532,7 @@ public class UMACrowd : MonoBehaviour
 
 		umaDynamicAvatar.UpdateNewRace();
 		umaDynamicAvatar.umaData.myRenderer.enabled = false;
-		tempUMA = umaData.umaRoot.transform;
+		tempUMA = newGO.transform;
 
 		if (zeroPoint)
 		{

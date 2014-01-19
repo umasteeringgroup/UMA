@@ -6,11 +6,11 @@ using UMA;
 
 public class RaceLibrary : MonoBehaviour {
     public RaceData[] raceElementList = new RaceData[0];
-    public Dictionary<string, RaceData> raceDictionary = new Dictionary<string, RaceData>();
+    private Dictionary<string, RaceData> raceDictionary;
 
     void Awake(){
-        UpdateDictionary();
-    }
+		ValidateDictionary();
+	}
 
 	private void ValidateDictionary()
 	{
@@ -24,6 +24,7 @@ public class RaceLibrary : MonoBehaviour {
 
 
     public void UpdateDictionary(){
+		ValidateDictionary();
         raceDictionary.Clear();
         for (int i = 0; i < raceElementList.Length; i++){
             if (raceElementList[i]){

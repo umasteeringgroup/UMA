@@ -33,7 +33,7 @@ public class UMAContext : MonoBehaviour
 	}
 #endif
 
-	internal static UMAContext FindInstance()
+	public static UMAContext FindInstance()
 	{
 		return Instance != null ? Instance : GameObject.Find("UMAContext").GetComponent<UMAContext>();	
 	}
