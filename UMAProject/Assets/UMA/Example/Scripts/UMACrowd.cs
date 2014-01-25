@@ -394,7 +394,7 @@ public class UMACrowd : MonoBehaviour
 	}
 	
 	void myColliderUpdateMethod(UMAData umaData){
-		CapsuleCollider tempCollider = umaData.GetComponent("CapsuleCollider") as CapsuleCollider;
+		CapsuleCollider tempCollider = umaData.umaRoot.gameObject.GetComponent("CapsuleCollider") as CapsuleCollider;
 		if(tempCollider){
 			UMADnaHumanoid umaDna = umaData.umaRecipe.umaDna[typeof(UMADnaHumanoid)] as UMADnaHumanoid;
 			tempCollider.height = (umaDna.height + 0.5f)*2 + 0.1f;
