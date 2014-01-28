@@ -247,10 +247,7 @@ namespace UMA
 		[System.Serializable]
 		public class BoneData{
 			public Transform boneTransform;
-			public Vector3 actualBoneScale;
 			public Vector3 originalBoneScale;
-			public Vector3 actualBonePosition;
-			public Quaternion actualBoneRotation;
 	        public Vector3 originalBonePosition;
 			public Quaternion originalBoneRotation;
 		}
@@ -383,9 +380,7 @@ namespace UMA
 	            {
                     var umaBone = boneMap[bone];
 	                BoneData newBoneData = new BoneData();
-	                newBoneData.actualBonePosition = umaBone.localPosition;
 	                newBoneData.originalBonePosition = umaBone.localPosition;
-	                newBoneData.actualBoneScale = umaBone.localScale;
 					newBoneData.originalBoneScale = umaBone.localScale;
 	                newBoneData.boneTransform = umaBone;
 	                boneHashList.Add(UMASkeleton.StringToHash(umaBone.name), newBoneData);

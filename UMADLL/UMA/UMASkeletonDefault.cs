@@ -80,7 +80,22 @@ namespace UMA
             }
         }
 
-        public override Vector3 GetPosition(int nameHash)
+		public override void Reset(int nameHash)
+		{
+			UMAData.BoneData db;
+			if (boneHashData.TryGetValue(nameHash, out db))
+			{
+				db.boneTransform.localPosition = db.originalBonePosition;
+				db.boneTransform.localRotation = db.originalBoneRotation;
+				db.boneTransform.localScale = db.originalBoneScale;
+			}
+			else
+			{
+				throw new Exception("Bone not found.");
+			}
+		}
+		
+		public override Vector3 GetPosition(int nameHash)
         {
             UMAData.BoneData db;
             if (boneHashData.TryGetValue(nameHash, out db))

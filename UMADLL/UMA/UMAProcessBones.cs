@@ -29,12 +29,9 @@ namespace UMA
 					
 					tempBone.boneTransform = umaBones[i];
 					
-					tempBone.actualBonePosition = umaBones[i].localPosition;
-					tempBone.actualBoneScale = umaBones[i].localScale;
 					tempBone.originalBonePosition = umaBones[i].localPosition;
 					tempBone.originalBoneRotation = umaBones[i].localRotation;
 					tempBone.originalBoneScale = umaBones[i].localScale;
-
 
                     umaData.boneHashList.Add(UMASkeleton.StringToHash(umaBones[i].name), tempBone);
 					
