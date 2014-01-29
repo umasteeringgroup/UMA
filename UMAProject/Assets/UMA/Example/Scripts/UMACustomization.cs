@@ -88,8 +88,15 @@ public class UMACustomization : MonoBehaviour {
 		
 		if(Input.GetMouseButtonDown(1)){
 			if (Physics.Raycast(ray, out hit, 100)){
-				
-				umaData = hit.collider.transform.parent.parent.GetComponent<UMAData>();
+				Transform tempTransform = hit.collider.transform;
+
+				//Dont want to use an extra layer or specific tag on UMAs, and since UMAData has moved, Ill keep this for now
+				if(tempTransform.parent){
+					if(tempTransform.parent.parent){
+						umaData = tempTransform.parent.parent.GetComponent<UMAData>();
+					}
+				}
+
 				if(umaData){
 					AvatarSetup();
 				}
