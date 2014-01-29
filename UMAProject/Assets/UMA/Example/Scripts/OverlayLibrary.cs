@@ -61,7 +61,7 @@ public class OverlayLibrary : OverlayLibraryBase
 			list[list.Length - 1] = overlay;
 			overlayElementList = list;
 		}
-		overlayDictionary.Add(hash, overlay);
+		overlayDictionary[hash] = overlay;
 	}
 
 	private void ValidateDictionary()
