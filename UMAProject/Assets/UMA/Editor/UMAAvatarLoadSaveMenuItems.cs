@@ -4,16 +4,20 @@ using UMA;
 
 public class UMAAvatarLoadSaveMenuItems : Editor
 {
-	[MenuItem("UMA/Load and Save/Save Selected Avatar(s) Txt")]
+	[MenuItem("UMA/Load and Save/Save Selected Avatar(s) Txt", priority=1)]
 	public static void SaveSelectedAvatarsTxt()
 	{
-		for (int i = 0; i < Selection.objects.Length; i++)
+		for (int i = 0; i < Selection.gameObjects.Length; i++)
 		{
-			var avatarGO = Selection.objects[i] as GameObject;
-			if (avatarGO == null) continue;
+			var selectedTransform = Selection.gameObjects[i].transform;
+			var avatar = selectedTransform.GetComponent<UMAAvatarBase>();
+			while (avatar == null && selectedTransform.parent != null)
+			{
+				selectedTransform = selectedTransform.parent;
+				avatar = selectedTransform.GetComponent<UMAAvatarBase>();
+			}
 
-			var avatar = avatarGO.GetComponent<UMAAvatarBase>();
-			if( avatar != null )
+			if (avatar != null)
 			{
 				var path = EditorUtility.SaveFilePanel("Save serialized Avatar", "Assets", avatar.name + ".txt", "txt");
 				if (path.Length != 0)
@@ -27,15 +31,18 @@ public class UMAAvatarLoadSaveMenuItems : Editor
 		}
 	}
 
-	[MenuItem("UMA/Load and Save/Save Selected Avatar(s) asset")]
+	[MenuItem("UMA/Load and Save/Save Selected Avatar(s) asset", priority = 1)]
 	public static void SaveSelectedAvatarsAsset()
 	{
-		for (int i = 0; i < Selection.objects.Length; i++)
+		for (int i = 0; i < Selection.gameObjects.Length; i++)
 		{
-			var avatarGO = Selection.objects[i] as GameObject;
-			if (avatarGO == null) continue;
-
-			var avatar = avatarGO.GetComponent<UMAAvatarBase>();
+			var selectedTransform = Selection.gameObjects[i].transform;
+			var avatar = selectedTransform.GetComponent<UMAAvatarBase>();
+			while (avatar == null && selectedTransform.parent != null)
+			{
+				selectedTransform = selectedTransform.parent;
+				avatar = selectedTransform.GetComponent<UMAAvatarBase>();
+			}
 			if (avatar != null)
 			{
 				var path = EditorUtility.SaveFilePanelInProject("Save serialized Avatar", avatar.name + ".asset", "asset", "Message 2");
@@ -54,13 +61,17 @@ public class UMAAvatarLoadSaveMenuItems : Editor
 	[MenuItem("UMA/Load and Save/Load Selected Avatar(s) txt")]
 	public static void LoadSelectedAvatarsTxt()
 	{
-		for (int i = 0; i < Selection.objects.Length; i++)
+		for (int i = 0; i < Selection.gameObjects.Length; i++)
 		{
-			var avatarGO = Selection.objects[i] as GameObject;
-			if (avatarGO == null) continue;
+			var selectedTransform = Selection.gameObjects[i].transform;
+			var avatar = selectedTransform.GetComponent<UMAAvatarBase>();
+			while (avatar == null && selectedTransform.parent != null)
+			{
+				selectedTransform = selectedTransform.parent;
+				avatar = selectedTransform.GetComponent<UMAAvatarBase>();
+			}
 
-			var avatar = avatarGO.GetComponent<UMAAvatarBase>();
-			if( avatar != null )
+			if (avatar != null)
 			{
 				var path = EditorUtility.OpenFilePanel("Load serialized Avatar", "Assets", "txt");
 				if (path.Length != 0)
@@ -77,12 +88,16 @@ public class UMAAvatarLoadSaveMenuItems : Editor
 	[MenuItem("UMA/Load and Save/Load Selected Avatar(s) assets")]
 	public static void LoadSelectedAvatarsAsset()
 	{
-		for (int i = 0; i < Selection.objects.Length; i++)
+		for (int i = 0; i < Selection.gameObjects.Length; i++)
 		{
-			var avatarGO = Selection.objects[i] as GameObject;
-			if (avatarGO == null) continue;
+			var selectedTransform = Selection.gameObjects[i].transform;
+			var avatar = selectedTransform.GetComponent<UMAAvatarBase>();
+			while (avatar == null && selectedTransform.parent != null)
+			{
+				selectedTransform = selectedTransform.parent;
+				avatar = selectedTransform.GetComponent<UMAAvatarBase>();
+			}
 
-			var avatar = avatarGO.GetComponent<UMAAvatarBase>();
 			if (avatar != null)
 			{
 				var path = EditorUtility.OpenFilePanel("Load serialized Avatar", "Assets", "asset");

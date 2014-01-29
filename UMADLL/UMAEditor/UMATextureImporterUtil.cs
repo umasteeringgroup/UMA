@@ -194,8 +194,6 @@ namespace UMAEditor
 
 	    public static SlotData CreateSlotData(string slotFolder, string assetFolder, string assetName, SkinnedMeshRenderer mesh, Material material, SkinnedMeshRenderer prefabMesh)
 	    {		
-			SkinnedMeshRenderer resultingSkinnedMesh = new SkinnedMeshRenderer();
-			
 	        if (!System.IO.Directory.Exists(slotFolder + '/' + assetFolder))
 	        {
 	            System.IO.Directory.CreateDirectory(slotFolder + '/' + assetFolder);
@@ -207,14 +205,18 @@ namespace UMAEditor
 	        }
 			
 			Transform[] tempBoneData;
+
+            GameObject tempGameObject = UnityEngine.Object.Instantiate(mesh.transform.parent.gameObject) as GameObject;
+            PrefabUtility.DisconnectPrefabInstance(tempGameObject);
+            var resultingSkinnedMesh = tempGameObject.GetComponentInChildren<SkinnedMeshRenderer>();
 			
 	        tempBoneData = ExtractNewBones(mesh, prefabMesh);
-			SkinnedMeshAligner.AlignBindPose(prefabMesh, mesh);
-			Mesh resultingMesh = SeamRemoval.PerformSeamRemoval(mesh, prefabMesh, 0.0001f);
+            Mesh resultingMesh = SeamRemoval.PerformSeamRemoval(mesh, prefabMesh, 0.0001f);
+            resultingSkinnedMesh.sharedMesh = resultingMesh;
+            SkinnedMeshAligner.AlignBindPose(prefabMesh, resultingSkinnedMesh);
 			
-			AssetDatabase.CreateAsset(resultingMesh,slotFolder + '/' + assetName + '/' + mesh.name + ".asset");
+			AssetDatabase.CreateAsset(resultingMesh, slotFolder + '/' + assetName + '/' + mesh.name + ".asset");
 					
-			GameObject tempGameObject = UnityEngine.Object.Instantiate(mesh.transform.parent.gameObject) as GameObject;
 			tempGameObject.name = mesh.transform.parent.gameObject.name;
 			Transform[] transformList = tempGameObject.GetComponentsInChildren<Transform>();
 				

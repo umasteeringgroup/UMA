@@ -18,6 +18,16 @@ namespace UMA
 			return boneHashData.ContainsKey(nameHash);
 		}
 
+        internal protected override GameObject GetBoneGameObject(int nameHash)
+        {
+            UMAData.BoneData res;
+            if (boneHashData.TryGetValue(nameHash, out res))
+            {
+                return res.boneTransform.gameObject;
+            }
+            return null;            
+        }
+
 		protected override IEnumerable<int> GetBoneHashes()
 		{
 			foreach (int hash in boneHashData.Keys)

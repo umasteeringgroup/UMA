@@ -53,50 +53,64 @@ namespace UMA
 	        dataMesh.bindposes = destDataBindPoses;
 	        var dataWeights = dataMesh.boneWeights;
 	        var dataVertices = dataMesh.vertices;
-	        sourceIndex = 0;
+            var dataNormals = dataMesh.normals;
+            sourceIndex = 0;
 	//        Vector3 oldPos = Vector3.zero;
 	//        Vector3 oldPosT = Vector3.zero;
 	        foreach (var boneweight in dataWeights)
 	        {
 	            Vector3 oldV = dataVertices[sourceIndex];
 	            Vector3 newV = Vector3.zero;
-	            Matrix4x4 temp;
+                Vector3 oldN = dataNormals[sourceIndex];
+                Vector3 newN = Vector3.zero;
+                Matrix4x4 temp;
 	            if (boneTransforms.TryGetValue(boneweight.boneIndex0, out temp))
 	            {
 	                newV += temp.MultiplyPoint(oldV) * boneweight.weight0;
-	            }
+                    newN += temp.MultiplyVector(oldN) * boneweight.weight0;
+                }
 	            else
 	            {
 	                newV += oldV * boneweight.weight0;
-	            }
+                    newN += oldN * boneweight.weight0;
+                }
 	            if (boneTransforms.TryGetValue(boneweight.boneIndex1, out temp))
 	            {
 	                newV += temp.MultiplyPoint(oldV) * boneweight.weight1;
-	            }
+                    newN += temp.MultiplyVector(oldN) * boneweight.weight1;
+                }
 	            else
 	            {
 	                newV += oldV * boneweight.weight1;
-	            }
+                    newN += oldN * boneweight.weight1;
+                }
 	            if (boneTransforms.TryGetValue(boneweight.boneIndex2, out temp))
 	            {
 	                newV += temp.MultiplyPoint(oldV) * boneweight.weight2;
-	            }
+                    newN += temp.MultiplyVector(oldN) * boneweight.weight2;
+                }
 	            else
 	            {
 	                newV += oldV * boneweight.weight2;
-	            }
+                    newN += oldN * boneweight.weight2;
+                }
 	            if (boneTransforms.TryGetValue(boneweight.boneIndex3, out temp))
 	            {
 	                newV += temp.MultiplyPoint(oldV) * boneweight.weight3;
-	            }
+                    newN += temp.MultiplyVector(oldN) * boneweight.weight3;
+                }
 	            else
 	            {
 	                newV += oldV * boneweight.weight3;
-	            }
-	            dataVertices[sourceIndex++] = newV;
+                    newN += oldN * boneweight.weight3;
+                }
+	            dataVertices[sourceIndex] = newV;
+                dataNormals[sourceIndex] = newN;
+                sourceIndex++;
 	        }
 	        dataMesh.vertices = dataVertices;
-	    }
+            dataMesh.normals = dataNormals;
+        }
 
 	    private static int FindBoneIndexInHierarchy(Transform bone, Transform hierarchyRoot, Dictionary<Transform, Transform> boneMap, Dictionary<Transform, int> boneIndexes)
 	    {

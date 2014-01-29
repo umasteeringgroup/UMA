@@ -36,9 +36,14 @@ namespace UMA
         public bool dirty = false;
         [NonSerialized]
         public bool _hasUpdatedBefore = false;
+        private bool isOfficiallyCreated = false;
         [NonSerialized]
         public bool onQuit = false;
-        public event Action<UMAData> OnUpdated;
+        [Obsolete("UMAData.OnUpdated is deprecated, please use OnCharacterUpdated instead.", false)]
+        public event Action<UMAData> OnUpdated { add { OnCharacterUpdated += value; } remove { OnCharacterUpdated -= value; } }
+        public event Action<UMAData> OnCharacterUpdated;
+        public event Action<UMAData> OnCharacterCreated;
+        public event Action<UMAData> OnCharacterDestroyed;
         public GameObject umaRoot;
 
 		public UMARecipe umaRecipe;
@@ -210,6 +215,7 @@ namespace UMA
 			
 			public void ApplyDNA(UMAData umaData)
 			{
+                EnsureAllDNAPresent();
 				foreach (var dnaEntry in umaDna)
 				{
                     DnaConverterBehaviour.DNAConvertDelegate dnaConverter;
@@ -223,6 +229,17 @@ namespace UMA
 					}
 				}
 			}
+
+            private void EnsureAllDNAPresent()
+            {
+                foreach (var converter in umaDnaConverter)
+                {
+                    if (!umaDna.ContainsKey(converter.Key))
+                    {
+                        umaDna.Add(converter.Key, converter.Key.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase);
+                    }
+                }
+            }
 			
 			public void ClearDNAConverters()
 			{
@@ -247,7 +264,10 @@ namespace UMA
 		[System.Serializable]
 		public class BoneData{
 			public Transform boneTransform;
+			public Vector3 actualBoneScale;
 			public Vector3 originalBoneScale;
+			public Vector3 actualBonePosition;
+			public Quaternion actualBoneRotation;
 	        public Vector3 originalBonePosition;
 			public Quaternion originalBoneRotation;
 		}
@@ -255,9 +275,17 @@ namespace UMA
         public void FireUpdatedEvent(bool cancelled)
 	    {
             this.cancelled = cancelled;
-	        if (OnUpdated != null)
+            if (!this.cancelled && !isOfficiallyCreated)
+            {
+                isOfficiallyCreated = true;
+                if (OnCharacterCreated != null)
+                {
+                    OnCharacterCreated(this);
+                }
+            }
+	        if (OnCharacterUpdated != null)
 	        {
-                OnUpdated(this);
+                OnCharacterUpdated(this);
 	        }
             if (!cancelled)
             {
@@ -299,6 +327,14 @@ namespace UMA
 		}
 		
 		void OnDestroy(){
+            if (isOfficiallyCreated)
+            {
+                if (OnCharacterDestroyed != null)
+                {
+                    OnCharacterDestroyed(this);
+                }
+                isOfficiallyCreated = false;
+            }
 			if(_hasUpdatedBefore){
 				cleanTextures();
                 if (!onQuit)
@@ -371,6 +407,16 @@ namespace UMA
 			return textureList.ToArray();
 		}
 
+        public GameObject GetBoneGameObject(string boneName)
+        {
+            return GetBoneGameObject(UMASkeleton.StringToHash(boneName));
+        }
+
+        public GameObject GetBoneGameObject(int boneHash)
+        {
+            return skeleton.GetBoneGameObject(boneHash);
+        }
+
 		public void EnsureBoneData(Transform[] umaBones, Dictionary<Transform, Transform> boneMap)
 	    {
 	        foreach (var bone in umaBones)
@@ -380,7 +426,9 @@ namespace UMA
 	            {
                     var umaBone = boneMap[bone];
 	                BoneData newBoneData = new BoneData();
+	                newBoneData.actualBonePosition = umaBone.localPosition;
 	                newBoneData.originalBonePosition = umaBone.localPosition;
+	                newBoneData.actualBoneScale = umaBone.localScale;
 					newBoneData.originalBoneScale = umaBone.localScale;
 	                newBoneData.boneTransform = umaBone;
 	                boneHashList.Add(UMASkeleton.StringToHash(umaBone.name), newBoneData);

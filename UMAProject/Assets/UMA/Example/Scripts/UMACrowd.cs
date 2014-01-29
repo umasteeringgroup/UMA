@@ -36,14 +36,8 @@ public class UMACrowd : MonoBehaviour
 			if( generator.IsIdle() )
 			{
 				GenerateOneUMA();
-				umaData.OnUpdated += new System.Action<UMAData>(umaData_OnUpdated);
+				umaData.OnCharacterUpdated += new System.Action<UMAData>(umaData_OnUpdated);
 			
-				if(zeroPoint){
-					tempUMA.position = new Vector3(X+zeroPoint.position.x - umaCrowdSize.x*0.5f + 0.5f,zeroPoint.position.y,Y+zeroPoint.position.z - umaCrowdSize.y*0.5f + 0.5f);
-				}else{
-					tempUMA.position = new Vector3(X - umaCrowdSize.x*0.5f + 0.5f,0,Y - umaCrowdSize.y*0.5f + 0.5f);	
-				}
-	
 				X = X + 1;
 				if(X >= umaCrowdSize.x){
 					X = 0;
@@ -69,6 +63,17 @@ public class UMACrowd : MonoBehaviour
 		if (obj.cancelled)
 		{
 			Object.Destroy(obj.gameObject);
+		}
+		else
+		{
+			if (zeroPoint)
+			{
+				tempUMA.position = new Vector3(X + zeroPoint.position.x - umaCrowdSize.x * 0.5f + 0.5f, zeroPoint.position.y, Y + zeroPoint.position.z - umaCrowdSize.y * 0.5f + 0.5f);
+			}
+			else
+			{
+				tempUMA.position = new Vector3(X - umaCrowdSize.x * 0.5f + 0.5f, 0, Y - umaCrowdSize.y * 0.5f + 0.5f);
+			}
 		}
 	}
 
@@ -384,13 +389,8 @@ public class UMACrowd : MonoBehaviour
 	
 	void SetUMAData (){
 		umaData.atlasResolutionScale = atlasResolutionScale;
-		umaData.OnUpdated += MyOnUpdateMethod;
-		umaData.OnUpdated += myColliderUpdateMethod;
+		umaData.OnCharacterUpdated += myColliderUpdateMethod;
 		umaData.Dirty(true, true, true);
-	}
-	
-	void MyOnUpdateMethod(UMAData umaData){
-		
 	}
 	
 	void myColliderUpdateMethod(UMAData umaData){
