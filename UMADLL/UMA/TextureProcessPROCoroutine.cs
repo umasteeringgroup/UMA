@@ -30,16 +30,18 @@ namespace UMA
         {
             for (int atlasIndex = 0; atlasIndex < umaData.atlasList.atlas.Count; atlasIndex++)
             {
+                var atlas = umaData.atlasList.atlas[atlasIndex];
+
                 //Rendering Atlas
                 int moduleCount = 0;
 
                 //Process all necessary TextureModules
-                for (int i = 0; i < umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions.Count; i++)
+                for (int i = 0; i < atlas.atlasMaterialDefinitions.Count; i++)
                 {
-                    if (!umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[i].isRectShared)
+                    if (!atlas.atlasMaterialDefinitions[i].isRectShared)
                     {
                         moduleCount++;
-                        moduleCount = moduleCount + umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[i].source.overlays.Length;
+                        moduleCount = moduleCount + atlas.atlasMaterialDefinitions[i].source.overlays.Length;
                     }
                 }
 
@@ -61,18 +63,27 @@ namespace UMA
 
                 moduleCount = 0;
 
-                resultingTextures = new Texture[umaGenerator.textureNameList.Length];
+                var slotData = atlas.atlasMaterialDefinitions[0].source.slotData;
+                var textureNameList = umaGenerator.textureNameList;
+                if (slotData.textureNameList != null && slotData.textureNameList.Length > 0)
+                {
+                    textureNameList = slotData.textureNameList;
+                }
+
+
+                resultingTextures = new Texture[textureNameList.Length];
                 Rect nullRect = new Rect(0, 0, 0, 0);
 
-                for (int textureType = 0; textureType < umaGenerator.textureNameList.Length; textureType++)
+                for (int textureType = 0; textureType < textureNameList.Length; textureType++)
                 {
+                    if (string.IsNullOrEmpty(textureNameList[textureType])) continue;
 
-                    if (umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[0].source.materialSample.HasProperty(umaGenerator.textureNameList[textureType]))
+                    if (atlas.atlasMaterialDefinitions[0].source.materialSample.HasProperty(textureNameList[textureType]))
                     {
-                        for (int i = 0; i < umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions.Count; i++)
+                        for (int i = 0; i < atlas.atlasMaterialDefinitions.Count; i++)
                         {
-                            UMAData.AtlasMaterialDefinition atlasElement = umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[i];
-                            resolutionScale = umaData.atlasList.atlas[atlasIndex].resolutionScale * umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[i].source.slotData.overlayScale;
+                            UMAData.AtlasMaterialDefinition atlasElement = atlas.atlasMaterialDefinitions[i];
+                            resolutionScale = atlas.resolutionScale * atlas.atlasMaterialDefinitions[i].source.slotData.overlayScale;
 
                             Vector2 offsetAdjust = new Vector2(umaGenerator.atlasResolution / 1024, umaGenerator.atlasResolution / 1024);
 
@@ -99,12 +110,19 @@ namespace UMA
                                 textureModuleList[moduleCount].renderer.sharedMaterial.SetColor("_Color", atlasElement.source.GetMultiplier(0, textureType));
                                 textureModuleList[moduleCount].renderer.sharedMaterial.SetColor("_AdditiveColor", atlasElement.source.GetAdditive(0, textureType));
                                 textureModuleList[moduleCount].name = atlasElement.source.baseTexture[textureType].name;
+                                textureModuleList[moduleCount].renderer.enabled = true;
 
                                 Transform tempModule = textureModuleList[moduleCount];
                                 moduleCount++;
 
                                 for (int i2 = 0; i2 < atlasElement.source.overlays.Length; i2++)
                                 {
+                                    if (atlasElement.source.overlays[i2].textureList[textureType] == null)
+                                    {
+                                        textureModuleList[moduleCount].renderer.enabled = false;
+                                        moduleCount++;
+                                        continue;
+                                    }
 
                                     if (atlasElement.source.rects[i2] != nullRect)
                                     {
@@ -131,6 +149,7 @@ namespace UMA
 
                                     textureModuleList[moduleCount].name = atlasElement.source.overlays[i2].textureList[textureType].name;
 
+                                    textureModuleList[moduleCount].renderer.enabled = true;
                                     moduleCount++;
                                 }
                                 //							yield return null;
@@ -142,13 +161,13 @@ namespace UMA
 
                         umaGenerator.textureMerge.gameObject.SetActive(true);
 
-                        destinationTexture = new RenderTexture(Mathf.FloorToInt(umaData.atlasList.atlas[atlasIndex].cropResolution.x), Mathf.FloorToInt(umaData.atlasList.atlas[atlasIndex].cropResolution.y), 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
+                        destinationTexture = new RenderTexture(Mathf.FloorToInt(atlas.cropResolution.x), Mathf.FloorToInt(atlas.cropResolution.y), 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
                         destinationTexture.filterMode = FilterMode.Point;
                         renderCamera = umaGenerator.textureMerge.myCamera;
                         Vector3 tempPosition = renderCamera.transform.position;
 
-                        renderCamera.orthographicSize = umaData.atlasList.atlas[atlasIndex].cropResolution.y / umaGenerator.atlasResolution;
-                        renderCamera.transform.position = tempPosition + (-Vector3.right * (1 - umaData.atlasList.atlas[atlasIndex].cropResolution.x / umaGenerator.atlasResolution)) + (-Vector3.up * (1 - renderCamera.orthographicSize));
+                        renderCamera.orthographicSize = atlas.cropResolution.y / umaGenerator.atlasResolution;
+                        renderCamera.transform.position = tempPosition + (-Vector3.right * (1 - atlas.cropResolution.x / umaGenerator.atlasResolution)) + (-Vector3.up * (1 - renderCamera.orthographicSize));
 
                         renderCamera.targetTexture = destinationTexture;
                         renderCamera.Render();
@@ -232,14 +251,15 @@ namespace UMA
                     //				UnityEngine.Object.DestroyImmediate(textureModuleList[textureModuleIndex].gameObject);
                 }
 
-                umaData.atlasList.atlas[atlasIndex].resultingAtlasList = resultingTextures;
-                umaData.atlasList.atlas[atlasIndex].materialSample = UnityEngine.Object.Instantiate(umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[0].source.materialSample) as Material;
-                umaData.atlasList.atlas[atlasIndex].materialSample.name = umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[0].source.materialSample.name;
-                for (int finalTextureType = 0; finalTextureType < umaGenerator.textureNameList.Length; finalTextureType++)
+                atlas.resultingAtlasList = resultingTextures;
+                atlas.materialSample = UnityEngine.Object.Instantiate(atlas.atlasMaterialDefinitions[0].source.materialSample) as Material;
+                atlas.materialSample.name = atlas.atlasMaterialDefinitions[0].source.materialSample.name;
+                for (int finalTextureType = 0; finalTextureType < textureNameList.Length; finalTextureType++)
                 {
-                    if (umaData.atlasList.atlas[atlasIndex].materialSample.HasProperty(umaGenerator.textureNameList[finalTextureType]))
+                    if (string.IsNullOrEmpty(textureNameList[finalTextureType])) continue;
+                    if (atlas.materialSample.HasProperty(umaGenerator.textureNameList[finalTextureType]))
                     {
-                        umaData.atlasList.atlas[atlasIndex].materialSample.SetTexture(umaGenerator.textureNameList[finalTextureType], resultingTextures[finalTextureType]);
+                        atlas.materialSample.SetTexture(umaGenerator.textureNameList[finalTextureType], resultingTextures[finalTextureType]);
                     }
                 }
             }

@@ -104,6 +104,7 @@ namespace UMA
 			public Vector2 cropResolution;
 			public float resolutionScale;
 			public int mipmap;
+            public string[] textureNameList;
 		}
 		
 		[System.Serializable]

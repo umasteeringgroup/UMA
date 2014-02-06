@@ -47,7 +47,13 @@ namespace UMA
 					tempMaterialDefinition.baseTexture = slots[i].GetOverlay(0).textureList;
 					tempMaterialDefinition.baseColor = slots[i].GetOverlay(0).color;
 					tempMaterialDefinition.materialSample = slots[i].materialSample;
-					tempMaterialDefinition.overlays = new UMAData.textureData[slots[i].OverlayCount -1];
+                    int overlays = 0;
+                    for (int overlayCounter = 0; overlayCounter < slots[i].OverlayCount; overlayCounter++)
+                    {
+                        if (slots[i].GetOverlay(overlayCounter) != null) overlays++;
+                    }
+
+                    tempMaterialDefinition.overlays = new UMAData.textureData[overlays - 1];
 					tempMaterialDefinition.overlayColors = new Color32[tempMaterialDefinition.overlays.Length];
 		            tempMaterialDefinition.rects = new Rect[tempMaterialDefinition.overlays.Length];
 		            tempMaterialDefinition.channelMask = new Color32[tempMaterialDefinition.overlays.Length+1][];
@@ -55,14 +61,19 @@ namespace UMA
 		            tempMaterialDefinition.channelMask[0] = slots[i].GetOverlay(0).channelMask;
 		            tempMaterialDefinition.channelAdditiveMask[0] = slots[i].GetOverlay(0).channelAdditiveMask;                
 					tempMaterialDefinition.slotData = slots[i];
-					
-					for(int overlayID = 0; overlayID < slots[i].OverlayCount-1; overlayID++){
+
+                    int overlayID = 0;
+                    for (int overlayCounter = 0; overlayCounter < slots[i].OverlayCount - 1; overlayCounter++)
+                    {
+                        var overlay = slots[i].GetOverlay(overlayCounter + 1);
+                        if (overlay == null) continue;
 						tempMaterialDefinition.overlays[overlayID] = new UMAData.textureData();
-						tempMaterialDefinition.rects[overlayID] = slots[i].GetOverlay(overlayID+1).rect;
-						tempMaterialDefinition.overlays[overlayID].textureList = slots[i].GetOverlay(overlayID+1).textureList;
-						tempMaterialDefinition.overlayColors[overlayID] = slots[i].GetOverlay(overlayID+1).color;
-						tempMaterialDefinition.channelMask[overlayID+1] = slots[i].GetOverlay(overlayID + 1).channelMask;
-		                tempMaterialDefinition.channelAdditiveMask[overlayID+1] = slots[i].GetOverlay(overlayID + 1).channelAdditiveMask;
+						tempMaterialDefinition.rects[overlayID] = overlay.rect;
+						tempMaterialDefinition.overlays[overlayID].textureList = overlay.textureList;
+						tempMaterialDefinition.overlayColors[overlayID] = overlay.color;
+						tempMaterialDefinition.channelMask[overlayID+1] = overlay.channelMask;
+		                tempMaterialDefinition.channelAdditiveMask[overlayID+1] = overlay.channelAdditiveMask;
+                        overlayID++;
 					}
 					
 					materialDefinitionList.Add(tempMaterialDefinition);
@@ -177,7 +188,7 @@ namespace UMA
 							atlasElement.atlasMaterialDefinitions = atlasMaterialDefinitionList;
 							atlasElement.shader = atlasMaterialDefinitionList[0].source.materialSample.shader;
 							atlasElement.materialSample = atlasMaterialDefinitionList[0].source.materialSample;
-							
+                            
 							umaData.atlasList.atlas.Add(atlasElement);
 						}
 					
