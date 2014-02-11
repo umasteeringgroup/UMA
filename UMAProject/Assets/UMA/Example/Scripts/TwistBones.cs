@@ -8,10 +8,12 @@ public class TwistBones : MonoBehaviour {
 	public Transform[] refBone;
 	
 	private float[] originalRefRotation;
+	public float[] twistRotation;
 	private Vector3 rotated;
 	
 	// Use this for initialization
 	void Awake () {
+		twistRotation = new float[twistBone.Length];
 		originalRefRotation = new float[twistBone.Length];
 		for(int i = 0; i < twistBone.Length; i++){
 			rotated = refBone[i].localRotation * Vector3.up;
@@ -23,8 +25,8 @@ public class TwistBones : MonoBehaviour {
 	void LateUpdate () {
 		for(int i = 0; i < twistBone.Length; i++){
 			rotated = refBone[i].localRotation * Vector3.up;
-			twistBone[i].localEulerAngles = Vector3.zero;
-			twistBone[i].Rotate(Vector3.right * twistValue * Mathf.DeltaAngle(originalRefRotation[i], Mathf.Atan2(rotated.z, rotated.y) * Mathf.Rad2Deg));
+			twistRotation[i] = Mathf.DeltaAngle(originalRefRotation[i],Mathf.Atan2(rotated.z, rotated.y) * Mathf.Rad2Deg);
+			twistBone[i].localEulerAngles = Vector3.right * Mathf.Lerp(0.0f, twistRotation[i],twistValue);
 		}
 	}
 }
