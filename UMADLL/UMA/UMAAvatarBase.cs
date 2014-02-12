@@ -2,11 +2,11 @@ using UnityEngine;
 using System;
 using System.IO;
 using System.Runtime.Serialization;
-using LitJson;
 using System.Collections;
 using System.Collections.Generic;
-using UMA;
 
+namespace UMA
+{
 public abstract class UMAAvatarBase : MonoBehaviour {
 
 	public UMAContext context;
@@ -130,4 +130,5 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 		Gizmos.color = Color.white;
 		Gizmos.DrawCube(transform.position, new Vector3(0.6f, 0.2f, 0.6f));
 	}
+}
 }

@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
-using UMA;
 
+namespace UMA {
 public abstract class SlotLibraryBase : MonoBehaviour 
 {	
     public abstract void AddSlot(SlotData slot);
@@ -9,4 +9,7 @@ public abstract class SlotLibraryBase : MonoBehaviour
 	public abstract SlotData InstantiateSlot(int nameHash);
 	public abstract SlotData InstantiateSlot(string name, List<OverlayData> overlayList);
 	public abstract SlotData InstantiateSlot(int nameHash, List<OverlayData> overlayList);
+
+	public abstract void UpdateDictionary();
+}
 }

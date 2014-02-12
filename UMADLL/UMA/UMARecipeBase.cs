@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using System.Collections.Generic;
 
+namespace UMA {
 public abstract class UMARecipeBase : ScriptableObject
 {
 	public abstract void Load(UMA.UMAData.UMARecipe umaRecipe, UMAContext context);
@@ -24,4 +25,5 @@ public abstract class UMARecipeBase : ScriptableObject
 		}
 		return formats.ToArray();
 	}
+}
 }
