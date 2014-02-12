@@ -1,5 +1,5 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
   <MonoDevelop.Ide.Workbench ActiveDocument="UMA/UMAGeneratorBase.cs">
     <Files>
       <File FileName="UMA/UMAGeneratorBase.cs" Line="2" Column="7" />
@@ -29,19 +29,17 @@
       <File FileName="UMA/OverlayLibraryBase.cs" Line="1" Column="1" />
       <File FileName="UMA/SlotLibraryBase.cs" Line="1" Column="1" />
       <File FileName="UMA/UMAContext.cs" Line="1" Column="1" />
-      <File FileName="UMA/RaceLibraryBase.cs" Line="7" Column="46" />
-      <File FileName="UMA/UMARecipeBase.cs" Line="29" Column="2" />
+      <File FileName="UMA/RaceLibraryBase.cs" Line="1" Column="1" />
+      <File FileName="UMA/UMARecipeBase.cs" Line="1" Column="1" />
       <File FileName="UMA/UMADnaBase.cs" Line="1" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
           <Node name="UMA" expanded="True">
-            <Node name="References" expanded="True">
-              <Node name="UnityEngine, Version=0.0.0.0, Culture=neutral" selected="True" />
-            </Node>
+            <Node name="References" expanded="True" />
           </Node>
-          <Node name="UMAEditor" expanded="True" />
+          <Node name="UMAEditor" expanded="True" selected="True" />
         </State>
       </Pad>
     </Pads>
