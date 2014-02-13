@@ -100,9 +100,7 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 		umaData.animator = null;
 		umaData._hasUpdatedBefore = false;
 		umaData.firstBake = true;
-		umaData.boneHashList.Clear();
-		umaData.animatedBones = new Transform[0];
-		umaData.tempBoneData = new UMAData.BoneData[0];
+		umaData.ClearBoneData();
 		umaRace = null;
 	}
 

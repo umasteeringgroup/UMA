@@ -26,9 +26,12 @@ namespace UMA
 		
 		public RuntimeAnimatorController animationController;
 
-        public Dictionary<int, BoneData> boneHashList = new Dictionary<int, BoneData>();
+		[Obsolete("Access to boneHashList will be removed, use BoneData() methods!", false)]
+		public Dictionary<int, BoneData> boneHashList = new Dictionary<int, BoneData>();
+		[Obsolete("Access to animatedBones will be removed, use BoneData() methods!", false)]
 		public Transform[] animatedBones = new Transform[0];
 		
+		[Obsolete("Access to tempBoneData will be removed, use BoneData() methods!", false)]
 		public BoneData[] tempBoneData; //Only while Dictionary can't be serialized
 
         public bool cancelled { get; private set; }
@@ -263,12 +266,9 @@ namespace UMA
 
 
 		[System.Serializable]
-		public class BoneData{
+		public class BoneData {
 			public Transform boneTransform;
-			public Vector3 actualBoneScale;
 			public Vector3 originalBoneScale;
-			public Vector3 actualBonePosition;
-			public Quaternion actualBoneRotation;
 	        public Vector3 originalBonePosition;
 			public Quaternion originalBoneRotation;
 		}
@@ -313,15 +313,6 @@ namespace UMA
 	            umaGenerator.addDirtyUMA(this);
 	        }
 	    }
-
-		
-		public void UpdateBoneData()
-        {
-            if (tempBoneData == null) return;
-			for(int i = 0; i < tempBoneData.Length; i++){			
-                boneHashList.Add(UMASkeleton.StringToHash(tempBoneData[i].boneTransform.gameObject.name), tempBoneData[i]);
-			}
-		}
 
 		void OnApplicationQuit() {
 			onQuit = true;
@@ -427,9 +418,7 @@ namespace UMA
 	            {
                     var umaBone = boneMap[bone];
 	                BoneData newBoneData = new BoneData();
-	                newBoneData.actualBonePosition = umaBone.localPosition;
 	                newBoneData.originalBonePosition = umaBone.localPosition;
-	                newBoneData.actualBoneScale = umaBone.localScale;
 					newBoneData.originalBoneScale = umaBone.localScale;
 	                newBoneData.boneTransform = umaBone;
 	                boneHashList.Add(UMASkeleton.StringToHash(umaBone.name), newBoneData);
@@ -446,6 +435,24 @@ namespace UMA
             //    animatedBones[i++] = boneHashList[UMASkeleton.StringToHash(updateName)].boneTransform;
             //}
 	    }
+
+		public void ClearBoneData()
+		{
+			boneHashList.Clear();
+			animatedBones = new Transform[0];
+			tempBoneData = new UMAData.BoneData[0];
+
+			skeleton = new UMASkeletonDefault(boneHashList);
+		}
+		
+		public void UpdateBoneData()
+		{
+			if (tempBoneData == null) return;
+
+			for (int i = 0; i < tempBoneData.Length; i++) {			
+				boneHashList.Add(UMASkeleton.StringToHash(tempBoneData[i].boneTransform.gameObject.name), tempBoneData[i]);
+			}
+		}
 
 	    public T GetDna<T>()
             where T : UMADnaBase
@@ -489,11 +496,11 @@ namespace UMA
 
         public void GotoOriginalPose()
         {
-            foreach (var entry in boneHashList)
+            foreach (BoneData bone in boneHashList.Values)
             {
-                entry.Value.boneTransform.localPosition = entry.Value.originalBonePosition;
-                entry.Value.boneTransform.localScale = entry.Value.originalBoneScale;
-                entry.Value.boneTransform.localRotation = entry.Value.originalBoneRotation;
+				bone.boneTransform.localPosition = bone.originalBonePosition;
+				bone.boneTransform.localScale = bone.originalBoneScale;
+				bone.boneTransform.localRotation = bone.originalBoneRotation;
             }
         }
     }
