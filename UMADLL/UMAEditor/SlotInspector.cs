@@ -130,11 +130,12 @@ namespace UMAEditor
 
 			slot.slotGroup = EditorGUILayout.TextField("Slot Group", slot.slotGroup);
 
-			SerializedProperty tags = serializedObject.FindProperty ("tags");
+			SerializedProperty tags = serializedObject.FindProperty("tags");
 			EditorGUI.BeginChangeCheck();
 			EditorGUILayout.PropertyField(tags, true);
-			if(EditorGUI.EndChangeCheck())
+			if(EditorGUI.EndChangeCheck()) {
 				serializedObject.ApplyModifiedProperties();
+			}
 
 			EditorGUIUtility.LookLikeControls();
 		}
