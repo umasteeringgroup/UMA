@@ -410,31 +410,45 @@ namespace UMA
         }
 
 		public void EnsureBoneData(Transform[] umaBones, Dictionary<Transform, Transform> boneMap)
-	    {
-	        foreach (var bone in umaBones)
-	        {
-                int nameHash = UMASkeleton.StringToHash(bone.name);
-                if (!boneHashList.ContainsKey(nameHash))
-	            {
-                    var umaBone = boneMap[bone];
-	                BoneData newBoneData = new BoneData();
-	                newBoneData.originalBonePosition = umaBone.localPosition;
+		{
+			EnsureBoneData(umaBones, null, boneMap);
+		}
+		
+		public void EnsureBoneData(Transform[] umaBones, Transform[] animBones, Dictionary<Transform, Transform> boneMap)
+		{
+			foreach (Transform bone in umaBones)
+			{
+				int nameHash = UMASkeleton.StringToHash(bone.name);
+				if (!boneHashList.ContainsKey(nameHash))
+				{
+					Transform umaBone = boneMap[bone];
+					BoneData newBoneData = new BoneData();
+					newBoneData.originalBonePosition = umaBone.localPosition;
 					newBoneData.originalBoneScale = umaBone.localScale;
-	                newBoneData.boneTransform = umaBone;
-	                boneHashList.Add(UMASkeleton.StringToHash(umaBone.name), newBoneData);
-	            }
-	        }
-
-            //if (animatedBones.Length != umaRecipe.raceData.AnimatedBones.Length)
-            //{
-            //    animatedBones = new Transform[umaRecipe.raceData.AnimatedBones.Length];
-            //}
-            //int i = 0;
-            //foreach (var updateName in umaRecipe.raceData.AnimatedBones)
-            //{
-            //    animatedBones[i++] = boneHashList[UMASkeleton.StringToHash(updateName)].boneTransform;
-            //}
-	    }
+					newBoneData.boneTransform = umaBone;
+					boneHashList.Add(UMASkeleton.StringToHash(umaBone.name), newBoneData);
+				}
+			}
+			
+			if (animBones != null) {
+				List<Transform> newBones = new List<Transform>();
+				foreach (Transform bone in animBones)
+				{
+					Transform umaBone = boneMap[bone];
+					if ((umaBone != null) && (System.Array.IndexOf(animatedBones, umaBone) < 0)) {
+						newBones.Add(umaBone);
+					}
+				}
+				
+				if (newBones.Count > 0) {
+					int oldSize = animatedBones.Length;
+					System.Array.Resize<Transform>(ref animatedBones, oldSize + newBones.Count);
+					for (int i = 0; i < newBones.Count; i++) {
+						animatedBones[oldSize + i] = newBones[i];
+					}
+				}
+			}
+		}
 
 		public void ClearBoneData()
 		{

@@ -56,7 +56,7 @@ namespace UMA
                 if (slotData != null)
                 {
 
-                    umaData.EnsureBoneData(slotData.umaBoneData, boneMap);
+                    umaData.EnsureBoneData(slotData.umaBoneData, slotData.animatedBones, boneMap);
 
                     umaData.umaRecipe.AddDNAUpdater(slotData.slotDNA);
                 }
