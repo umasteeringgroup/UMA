@@ -35,7 +35,8 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 			if (umaData == null)
 			{
 				umaData = gameObject.AddComponent<UMAData>();
-				umaData.umaGenerator = umaGenerator ?? umaData.umaGenerator;
+//				umaData.umaGenerator = umaGenerator ?? umaData.umaGenerator;
+				if (umaGenerator != null) umaData.umaGenerator = umaGenerator;
 			}
 		}
 	}
@@ -82,7 +83,9 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 		umaData.umaGenerator = umaGenerator;
 		umaData.umaRoot.transform.position = position;
 		umaData.umaRoot.transform.rotation = rotation;
-		umaData.animationController = animationController ?? newUMA.animationController;
+//		umaData.animationController = animationController ?? newUMA.animationController;
+		umaData.animationController = animationController;
+		if (animationController == null) umaData.animationController = newUMA.animationController;
 
 		newUMA.animator = null;
 		DestroyImmediate(newUMA);
