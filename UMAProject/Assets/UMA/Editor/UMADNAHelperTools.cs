@@ -7,7 +7,6 @@ using System.IO;
 using System.Text;
 using System.Collections.Generic;
 using UMA;
-using UMAEditor;
 
 namespace UMAEditor
 {
