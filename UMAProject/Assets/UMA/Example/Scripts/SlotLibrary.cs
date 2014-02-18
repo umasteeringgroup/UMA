@@ -14,7 +14,7 @@ public class SlotLibrary : SlotLibraryBase
 		ValidateDictionary();
 	}
 
-	public void UpdateDictionary()
+	override public void UpdateDictionary()
 	{
 		ValidateDictionary();
 		slotDictionary.Clear();

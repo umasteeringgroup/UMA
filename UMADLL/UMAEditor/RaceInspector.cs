@@ -44,7 +44,7 @@ namespace UMAEditor
 					if (umaDataSet.Length == 1) {
 						UMAData umaData = umaDataSet[0];
 						SlotData newSlot = ScriptableObject.CreateInstance<SlotData>();
-						newSlot.slotName = race.raceName + " Base";
+						newSlot.slotName = race.raceName + "Base";
 						int boneCount = umaData.tempBoneData.Length;
 						newSlot.umaBoneData = new Transform[boneCount];
 						for (int i = 0; i < boneCount; i++) {

@@ -136,8 +136,31 @@ namespace UMA
             res.upperArmTwist = 0.5f;
             res.upperLegTwist = 0.1f;
 
-            res.human = umaTPose.humanInfo;
+//			List<HumanBone> animatedHuman = new List<HumanBone>();
+//			foreach (HumanBone bone in umaTPose.humanInfo) {
+//				int animIndex = System.Array.IndexOf(umaData.animatedBones, bone.boneName);
+//				if (animIndex > -1) {
+//					animatedHuman.Add(bone);
+//				}
+//				else {
+//					int traitIndex = System.Array.IndexOf(HumanTrait.BoneName, bone.humanName);
+//					if (HumanTrait.RequiredBone(traitIndex)) {
+//						animatedHuman.Add(bone);
+//					}
+//				}
+//			}
+//			List<SkeletonBone> animatedSkeleton = new List<SkeletonBone>();
+//			foreach (SkeletonBone bone in umaTPose.boneInfo) {
+//				int animIndex = System.Array.IndexOf(umaData.animatedBones, bone.name);
+//				if (animIndex > -1) {
+//					animatedSkeleton.Add(bone);
+//				}
+//			}
+//			res.human = animatedHuman.ToArray();
+//			res.skeleton = animatedSkeleton.ToArray();
+			res.human = umaTPose.humanInfo;
             res.skeleton = umaTPose.boneInfo;
+
             res.skeleton[0].name = umaData.umaRoot.name;
             SkeletonModifier(umaData, ref res.skeleton);
             return res;
