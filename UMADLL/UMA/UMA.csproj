@@ -73,6 +73,12 @@
     <Compile Include="UMAData.cs" />
     <Compile Include="OverlayData.cs" />
     <Compile Include="SlotData.cs" />
+    <Compile Include="UMAAvatarBase.cs" />
+    <Compile Include="OverlayLibraryBase.cs" />
+    <Compile Include="SlotLibraryBase.cs" />
+    <Compile Include="UMAContext.cs" />
+    <Compile Include="RaceLibraryBase.cs" />
+    <Compile Include="UMARecipeBase.cs" />
   </ItemGroup>
   <PropertyGroup>
     <PostBuildEvent>copy /Y $(TargetPath) $(ProjectDir)..\..\UMAProject\Assets\UMA\UMA_Project\DLL\$(TargetFileName)</PostBuildEvent>

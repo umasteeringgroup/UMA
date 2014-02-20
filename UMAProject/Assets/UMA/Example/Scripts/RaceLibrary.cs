@@ -4,7 +4,7 @@ using System;
 using UMA;
 
 
-public class RaceLibrary : MonoBehaviour {
+public class RaceLibrary : RaceLibraryBase {
     public RaceData[] raceElementList = new RaceData[0];
     private Dictionary<string, RaceData> raceDictionary;
 
@@ -20,10 +20,9 @@ public class RaceLibrary : MonoBehaviour {
 			UpdateDictionary();
 		}
 	}
-	
 
-
-    public void UpdateDictionary(){
+    override public void UpdateDictionary()
+	{
 		ValidateDictionary();
         raceDictionary.Clear();
         for (int i = 0; i < raceElementList.Length; i++){
@@ -35,7 +34,7 @@ public class RaceLibrary : MonoBehaviour {
         }
     }
 
-    public void AddRace(RaceData race)
+	override public void AddRace(RaceData race)
     {
 		ValidateDictionary();
         for (int i = 0; i < raceElementList.Length; i++)
@@ -53,7 +52,7 @@ public class RaceLibrary : MonoBehaviour {
         raceDictionary.Add(race.raceName, race);
     }
 
-	public RaceData GetRace(string raceName)
+	override public RaceData GetRace(string raceName)
     {
 		ValidateDictionary();
 		RaceData res;
@@ -63,4 +62,20 @@ public class RaceLibrary : MonoBehaviour {
 		}
         return res;
     }
+
+	override public RaceData GetRace(int raceHash)
+	{
+		ValidateDictionary();
+
+		foreach (string name in raceDictionary.Keys) {
+			int hash = UMASkeleton.StringToHash(name);
+
+			if (hash == raceHash) {
+				return raceDictionary[name];
+			}
+		}
+
+		Debug.LogError("Could not find race: " + raceHash);
+		return null;
+	}
 }

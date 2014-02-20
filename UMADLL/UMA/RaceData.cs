@@ -10,8 +10,12 @@ namespace UMA
 	    public string raceName;
 	    public GameObject racePrefab;
 	    public DnaConverterBehaviour[] dnaConverterList = new DnaConverterBehaviour[0];
-	    public String[] AnimatedBones = new string[0];
-        public Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate> raceDictionary = new Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate>();
+
+		[Obsolete("AnimatedBones is deprecated, use animatedBones from baseSlot.", false)]
+		public String[] AnimatedBones = new string[0];
+		public SlotData baseSlot = null;
+
+		public Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate> raceDictionary = new Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate>();
 	    public UmaTPose TPose;
 
 	    void Awake()

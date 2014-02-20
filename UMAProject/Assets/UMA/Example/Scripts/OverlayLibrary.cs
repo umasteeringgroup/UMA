@@ -18,7 +18,7 @@ public class OverlayLibrary : OverlayLibraryBase
 		ValidateDictionary();
 	}
 
-	public void UpdateDictionary()
+	override public void UpdateDictionary()
 	{
 		ValidateDictionary();
 		overlayDictionary.Clear();

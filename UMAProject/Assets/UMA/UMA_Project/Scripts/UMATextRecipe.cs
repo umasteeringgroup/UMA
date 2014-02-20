@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using LitJson;
+using UMA;
 
 public class UMATextRecipe : UMAPackedRecipeBase
 {
