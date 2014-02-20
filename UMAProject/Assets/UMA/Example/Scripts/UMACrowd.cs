@@ -104,8 +104,10 @@ public class UMACrowd : MonoBehaviour
 	
 			umaData.umaRecipe.slotDataList = new SlotData[15];
 
-			umaData.umaRecipe.slotDataList[0] = umaData.umaRecipe.raceData.baseSlot;
-
+			umaData.umaRecipe.slotDataList[0] = slotLibrary.InstantiateSlot("MaleEyes");
+			umaData.umaRecipe.slotDataList[0].AddOverlay(overlayLibrary.InstantiateOverlay("EyeOverlay"));
+			umaData.umaRecipe.slotDataList[0].AddOverlay(overlayLibrary.InstantiateOverlay("EyeOverlayAdjust", new Color(Random.Range(0.1f, 0.9f), Random.Range(0.1f, 0.9f), Random.Range(0.1f, 0.9f), 1)));
+			
 			randomResult = Random.Range(0,2);
 			if(randomResult == 0){
 				umaData.umaRecipe.slotDataList[1] = slotLibrary.InstantiateSlot("MaleFace");
@@ -221,10 +223,6 @@ public class UMACrowd : MonoBehaviour
 			}
 
             umaData.umaRecipe.slotDataList[6] = slotLibrary.InstantiateSlot("MaleFeet", umaData.umaRecipe.slotDataList[2].GetOverlayList());
-
-			umaData.umaRecipe.slotDataList[11] = slotLibrary.InstantiateSlot("MaleEyes");
-			umaData.umaRecipe.slotDataList[11].AddOverlay(overlayLibrary.InstantiateOverlay("EyeOverlay"));
-			umaData.umaRecipe.slotDataList[11].AddOverlay(overlayLibrary.InstantiateOverlay("EyeOverlayAdjust",new Color(Random.Range(0.1f,0.9f) ,Random.Range(0.1f,0.9f),Random.Range(0.1f,0.9f),1)));
 		}
         else if (umaData.umaRecipe.raceData.raceName == "HumanFemale")
         {
@@ -234,8 +232,6 @@ public class UMACrowd : MonoBehaviour
 			//Example of dynamic list
 			List<SlotData> tempSlotList = new List<SlotData>();
 
-			tempSlotList.Add(umaData.umaRecipe.raceData.baseSlot);
-			
 			tempSlotList.Add(slotLibrary.InstantiateSlot("FemaleEyes"));
 			tempSlotList[tempSlotList.Count-1].AddOverlay(overlayLibrary.InstantiateOverlay("EyeOverlay"));
 			tempSlotList[tempSlotList.Count-1].AddOverlay(overlayLibrary.InstantiateOverlay("EyeOverlayAdjust", new Color(Random.Range(0.1f,0.9f) ,Random.Range(0.1f,0.9f),Random.Range(0.1f,0.9f),1)));	

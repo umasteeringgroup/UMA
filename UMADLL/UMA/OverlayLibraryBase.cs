@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
+using UMA;
 
-namespace UMA {
 public abstract class OverlayLibraryBase : MonoBehaviour
 {
 	public abstract void AddOverlay(OverlayData overlay);
@@ -11,5 +11,4 @@ public abstract class OverlayLibraryBase : MonoBehaviour
 	public abstract OverlayData InstantiateOverlay(int nameHash, Color color);
 
 	public abstract void UpdateDictionary();
-}
 }

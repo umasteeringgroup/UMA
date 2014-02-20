@@ -271,6 +271,12 @@ namespace UMA
 			public Vector3 originalBoneScale;
 	        public Vector3 originalBonePosition;
 			public Quaternion originalBoneRotation;
+            [Obsolete("Access to actualBoneScale will be removed, no replacement planned!", false)]
+            public Vector3 actualBoneScale;
+            [Obsolete("Access to actualBonePosition will be removed, no replacement planned!", false)]
+            public Vector3 actualBonePosition;
+            [Obsolete("Access to actualBoneRotation will be removed, no replacement planned!", false)]
+            public Quaternion actualBoneRotation;
 		}
 
         public void FireUpdatedEvent(bool cancelled)
@@ -426,7 +432,9 @@ namespace UMA
 					newBoneData.originalBonePosition = umaBone.localPosition;
 					newBoneData.originalBoneScale = umaBone.localScale;
 					newBoneData.boneTransform = umaBone;
-					boneHashList.Add(UMASkeleton.StringToHash(umaBone.name), newBoneData);
+                    newBoneData.actualBonePosition = umaBone.localPosition;
+                    newBoneData.actualBoneScale = umaBone.localScale;
+                    boneHashList.Add(UMASkeleton.StringToHash(umaBone.name), newBoneData);
 				}
 			}
 			

@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
+using UMA;
 
-namespace UMA {
 public class UMAContext : MonoBehaviour 
 {
 	public static UMAContext Instance;
@@ -36,5 +36,4 @@ public class UMAContext : MonoBehaviour
 	{
 		return Instance != null ? Instance : GameObject.Find("UMAContext").GetComponent<UMAContext>();	
 	}
-}
 }
