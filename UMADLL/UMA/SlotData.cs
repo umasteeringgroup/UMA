@@ -45,6 +45,7 @@ namespace UMA
 
 	        // All this data is passed as reference
 			tempSlotData.boneWeights = boneWeights;
+            tempSlotData.animatedBones = animatedBones;
 	        tempSlotData.meshRenderer = meshRenderer;
 			tempSlotData.boneWeights = boneWeights;
 	        tempSlotData.umaBoneData = umaBoneData;

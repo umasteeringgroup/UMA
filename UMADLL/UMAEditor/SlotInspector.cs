@@ -73,10 +73,6 @@ namespace UMAEditor
 			}
 			showBones = EditorGUILayout.Foldout(showBones, "Bones");
 			if (showBones) {
-				// If there are animated bones make sure the bone data exists
-				if (slot.animatedBones.Length > slot.umaBoneData.Length) {
-					slot.umaBoneData = GetTransformsInPrefab(slot.meshRenderer.rootBone);
-				}
 				EditorGUI.indentLevel++;
 				EditorGUILayout.BeginHorizontal();
 				EditorGUILayout.LabelField("Name");

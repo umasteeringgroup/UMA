@@ -204,14 +204,11 @@ namespace UMAEditor
 	            System.IO.Directory.CreateDirectory(slotFolder + '/' + assetName);
 	        }
 			
-			Transform[] tempBoneData;
-
             GameObject tempGameObject = UnityEngine.Object.Instantiate(mesh.transform.parent.gameObject) as GameObject;
             PrefabUtility.DisconnectPrefabInstance(tempGameObject);
             var resultingSkinnedMesh = tempGameObject.GetComponentInChildren<SkinnedMeshRenderer>();
-			
-	        tempBoneData = ExtractNewBones(mesh, prefabMesh);
-            Mesh resultingMesh = SeamRemoval.PerformSeamRemoval(mesh, prefabMesh, 0.0001f);
+
+            Mesh resultingMesh = SeamRemoval.PerformSeamRemoval(resultingSkinnedMesh, prefabMesh, 0.0001f);
             resultingSkinnedMesh.sharedMesh = resultingMesh;
             SkinnedMeshAligner.AlignBindPose(prefabMesh, resultingSkinnedMesh);
 			
@@ -239,13 +236,16 @@ namespace UMAEditor
 			
 			var skinnedResult = UnityEditor.PrefabUtility.CreatePrefab(slotFolder + '/' + assetName + '/' + assetName + "_Skinned.prefab", newObject);
 	        GameObject.DestroyImmediate(newObject);
-	        var meshgo = skinnedResult.transform.Find(mesh.name);
+
+            var meshgo = skinnedResult.transform.Find(mesh.name);
+            var finalMeshRenderer = meshgo.GetComponent<SkinnedMeshRenderer>();
+            var tempBoneData = ExtractNewBones(finalMeshRenderer, prefabMesh);
 	        
 	        SlotData slot = ScriptableObject.CreateInstance<SlotData>();
 	        slot.slotName = assetName;
 			slot.materialSample = material;
 			slot.umaBoneData = tempBoneData;
-	        slot.meshRenderer = meshgo.GetComponent<SkinnedMeshRenderer>();
+            slot.meshRenderer = finalMeshRenderer;
 	        AssetDatabase.CreateAsset(slot, slotFolder + '/' + assetName + '/' + assetName + "_Slot.asset");
 			AssetDatabase.SaveAssets();
 	        return slot;
@@ -278,8 +278,9 @@ namespace UMAEditor
 	            else
 	            {
 	                Debug.Log(newChildBone);
-	            }
-	            ExtractNewBonesRecursive(newChildBone, oldChildBone, newBones);
+                    newBones.Add(newChildBone);
+                }
+                ExtractNewBonesRecursive(newChildBone, oldChildBone, newBones);
 	        }
 	    }
 	}
