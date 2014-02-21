@@ -11,4 +11,5 @@ public abstract class SlotLibraryBase : MonoBehaviour
 	public abstract SlotData InstantiateSlot(int nameHash, List<OverlayData> overlayList);
 
 	public abstract void UpdateDictionary();
+    public abstract void ValidateDictionary();
 }

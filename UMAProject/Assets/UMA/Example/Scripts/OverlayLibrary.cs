@@ -5,6 +5,7 @@ using System;
 
 public class OverlayLibrary : OverlayLibraryBase
 {
+	[Obsolete("Internal data, use the helper functions. This field will be marked private in a future version.", false)]
 	public OverlayData[] overlayElementList = new OverlayData[0];
 	[NonSerialized]
 	private Dictionary<int, OverlayData> overlayDictionary;
@@ -18,6 +19,7 @@ public class OverlayLibrary : OverlayLibraryBase
 		ValidateDictionary();
 	}
 
+#pragma warning disable 618
 	override public void UpdateDictionary()
 	{
 		ValidateDictionary();
@@ -63,8 +65,9 @@ public class OverlayLibrary : OverlayLibraryBase
 		}
 		overlayDictionary[hash] = overlay;
 	}
+#pragma warning restore 618
 
-	private void ValidateDictionary()
+	public override void ValidateDictionary()
 	{
 		if (overlayDictionary == null)
 		{

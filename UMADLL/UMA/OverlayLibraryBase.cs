@@ -11,4 +11,5 @@ public abstract class OverlayLibraryBase : MonoBehaviour
 	public abstract OverlayData InstantiateOverlay(int nameHash, Color color);
 
 	public abstract void UpdateDictionary();
+    public abstract void ValidateDictionary();
 }

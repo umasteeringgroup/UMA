@@ -5,6 +5,7 @@ using System;
 
 public class SlotLibrary : SlotLibraryBase
 {
+	[Obsolete("Internal data, use the helper functions. This field will be marked private in a future version.", false)]
 	public SlotData[] slotElementList = new SlotData[0];
 	[NonSerialized]
 	private Dictionary<int, SlotData> slotDictionary;
@@ -14,6 +15,7 @@ public class SlotLibrary : SlotLibraryBase
 		ValidateDictionary();
 	}
 
+#pragma warning disable 618
 	override public void UpdateDictionary()
 	{
 		ValidateDictionary();
@@ -33,7 +35,7 @@ public class SlotLibrary : SlotLibraryBase
 		}
 	}
 
-	private void ValidateDictionary()
+	public override void ValidateDictionary()
 	{
 		if (slotDictionary == null)
 		{
@@ -69,6 +71,7 @@ public class SlotLibrary : SlotLibraryBase
 		}
 		slotDictionary[hash] = slot;
 	}
+#pragma warning restore 618
 
 	public override SlotData InstantiateSlot(string name)
 	{

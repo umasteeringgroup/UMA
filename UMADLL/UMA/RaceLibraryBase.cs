@@ -10,5 +10,6 @@ namespace UMA
         public abstract RaceData GetRace(int raceHash);
 
         public abstract void UpdateDictionary();
+        public abstract void ValidateDictionary();
     }
 }

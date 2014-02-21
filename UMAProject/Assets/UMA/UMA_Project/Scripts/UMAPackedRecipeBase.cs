@@ -175,7 +175,7 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 	public static void UnpackRecipe(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContext context)
 	{
 		umaRecipe.slotDataList = new SlotData[umaPackRecipe.packedSlotDataList.Length];
-		umaRecipe.SetRace(context.raceLibrary.GetRace(umaPackRecipe.race));
+		umaRecipe.SetRace(context.GetRace(umaPackRecipe.race));
 
 		umaRecipe.umaDna.Clear();
 		for (int dna = 0; dna < umaPackRecipe.packedDna.Count; dna++)
@@ -189,7 +189,7 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 			if (umaPackRecipe.packedSlotDataList[i] != null && umaPackRecipe.packedSlotDataList[i].slotID != null)
 			{
 				SlotData tempSlotData = SlotData.CreateInstance<SlotData>();
-				tempSlotData = context.slotLibrary.InstantiateSlot(umaPackRecipe.packedSlotDataList[i].slotID);
+				tempSlotData = context.InstantiateSlot(umaPackRecipe.packedSlotDataList[i].slotID);
 				tempSlotData.overlayScale = umaPackRecipe.packedSlotDataList[i].overlayScale * 0.01f;
 				umaRecipe.slotDataList[i] = tempSlotData;
 
@@ -212,7 +212,7 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 
 						if (umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay].rectList != null)
 						{
-							Rect originalRect = context.overlayLibrary.InstantiateOverlay(umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay].overlayID).rect;
+							Rect originalRect = context.InstantiateOverlay(umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay].overlayID).rect;
 							tempRect = new Rect(umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay].rectList[0], umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay].rectList[1], umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay].rectList[2], umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay].rectList[3]);
 							
 							Vector2 aspectRatio = new Vector2(tempRect.width/originalRect.width,tempRect.height/originalRect.height);
@@ -225,7 +225,7 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 							tempRect = new Rect(0, 0, 0, 0);
 						}
 
-						tempSlotData.AddOverlay(context.overlayLibrary.InstantiateOverlay(umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay].overlayID));
+						tempSlotData.AddOverlay(context.InstantiateOverlay(umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay].overlayID));
 						tempSlotData.GetOverlay(tempSlotData.OverlayCount - 1).color = tempColor;
 						tempSlotData.GetOverlay(tempSlotData.OverlayCount - 1).rect = tempRect;
 

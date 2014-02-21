@@ -5,6 +5,7 @@ using UMA;
 
 
 public class RaceLibrary : RaceLibraryBase {
+	[Obsolete("Internal data, use the helper functions. This field will be marked private in a future version.", false)]
     public RaceData[] raceElementList = new RaceData[0];
     private Dictionary<string, RaceData> raceDictionary;
 
@@ -12,7 +13,7 @@ public class RaceLibrary : RaceLibraryBase {
 		ValidateDictionary();
 	}
 
-	private void ValidateDictionary()
+	public override void ValidateDictionary()
 	{
 		if (raceDictionary == null)
 		{
@@ -21,7 +22,8 @@ public class RaceLibrary : RaceLibraryBase {
 		}
 	}
 
-    override public void UpdateDictionary()
+#pragma warning disable 618
+	override public void UpdateDictionary()
 	{
 		ValidateDictionary();
         raceDictionary.Clear();
@@ -51,6 +53,7 @@ public class RaceLibrary : RaceLibraryBase {
         raceElementList = list;
         raceDictionary.Add(race.raceName, race);
     }
+#pragma warning restore 618
 
 	override public RaceData GetRace(string raceName)
     {
