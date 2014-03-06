@@ -1,5 +1,23 @@
 ﻿/*
-UMA version 1.0.1.0 R - Unity version 4.3
+UMA version 1.1.x.x - Unity version 4.3.1 or higher required. UMA requirement will stay at 4.3.1 until there is a compelling reason to upgrade.
+
+Release notes are no longer being maintained. If you want the full history look at the git log. 
+Version numbers signify breaking changes 1.1.0.0 will contains warnings of breaking changes introduced in 1.2.0.0. 
+So if you ever fall multiple version behind updating to each minor version and then removing all warnings is a safe way to get back to speed.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 Changes
 1.0.1.0R - UMAMaterialBuilder received changes and has been simplified.

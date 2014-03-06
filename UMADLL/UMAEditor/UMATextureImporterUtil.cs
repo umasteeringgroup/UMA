@@ -206,7 +206,15 @@ namespace UMAEditor
 			
             GameObject tempGameObject = UnityEngine.Object.Instantiate(mesh.transform.parent.gameObject) as GameObject;
             PrefabUtility.DisconnectPrefabInstance(tempGameObject);
-            var resultingSkinnedMesh = tempGameObject.GetComponentInChildren<SkinnedMeshRenderer>();
+            var resultingSkinnedMeshes = tempGameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
+            SkinnedMeshRenderer resultingSkinnedMesh = null;
+            foreach (var skinnedMesh in resultingSkinnedMeshes)
+            {
+                if (skinnedMesh.name == mesh.name)
+                {
+                    resultingSkinnedMesh = skinnedMesh;
+                }
+            }
 
             Mesh resultingMesh = SeamRemoval.PerformSeamRemoval(resultingSkinnedMesh, prefabMesh, 0.0001f);
             resultingSkinnedMesh.sharedMesh = resultingMesh;

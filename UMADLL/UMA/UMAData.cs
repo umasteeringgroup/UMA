@@ -427,11 +427,18 @@ namespace UMA
 				int nameHash = UMASkeleton.StringToHash(bone.name);
 				if (!boneHashList.ContainsKey(nameHash))
 				{
-					Transform umaBone = boneMap[bone];
+					Transform umaBone;
+                    if( !boneMap.TryGetValue(bone, out umaBone ) )
+                    {
+                        Debug.LogWarning(bone.name, bone.root.gameObject);
+                        continue;
+                    }
+                    
 					BoneData newBoneData = new BoneData();
 					newBoneData.originalBonePosition = umaBone.localPosition;
 					newBoneData.originalBoneScale = umaBone.localScale;
-					newBoneData.boneTransform = umaBone;
+                    newBoneData.originalBoneRotation = umaBone.localRotation;
+                    newBoneData.boneTransform = umaBone;
                     newBoneData.actualBonePosition = umaBone.localPosition;
                     newBoneData.actualBoneScale = umaBone.localScale;
                     boneHashList.Add(UMASkeleton.StringToHash(umaBone.name), newBoneData);

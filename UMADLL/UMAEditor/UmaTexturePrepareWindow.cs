@@ -185,6 +185,7 @@ namespace UMAEditor
 	            Debug.LogError("Slot Mesh not supplied.");
 	            return null;
 	        }
+            Debug.Log("Slot Mesh: " + slotMesh.name, slotMesh.gameObject); 
 	        SlotData slot = UMATextureImporterUtil.CreateSlotData(AssetDatabase.GetAssetPath(slotFolder), GetAssetFolder(), GetAssetName(), slotMesh, material, racePrefab);
 	        return slot;
 	    }

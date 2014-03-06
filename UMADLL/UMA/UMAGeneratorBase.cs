@@ -168,6 +168,12 @@ namespace UMA
 
         private static void SkeletonModifier(UMAData umaData, ref SkeletonBone[] bones)
         {
+            Dictionary<Transform, Transform> animatedBones = new Dictionary<Transform,Transform>();
+            for (var i = 0; i < umaData.animatedBones.Length; i++)
+            {
+                animatedBones.Add(umaData.animatedBones[i], umaData.animatedBones[i]);
+            }
+
             for (var i = 0; i < bones.Length; i++)
             {
                 var skeletonbone = bones[i];
@@ -179,7 +185,27 @@ namespace UMA
                     //skeletonbone.rotation = entry.boneTransform.localRotation;
                     skeletonbone.scale = entry.boneTransform.localScale;
                     bones[i] = skeletonbone;
+                    animatedBones.Remove(entry.boneTransform);
                 }
+            }
+            if (animatedBones.Count > 0)
+            {
+                var newBones = new List<SkeletonBone>(bones);
+                // iterate original list rather than dictionary to ensure that relative order is preserved
+                for (var i = 0; i < umaData.animatedBones.Length; i++)
+                {
+                    var animatedBone = umaData.animatedBones[i];
+                    if (animatedBones.ContainsKey(animatedBone))
+                    {
+                        var newBone = new SkeletonBone();
+                        newBone.name = animatedBone.name;
+                        newBone.position = animatedBone.localPosition;
+                        newBone.rotation = animatedBone.localRotation;
+                        newBone.scale = animatedBone.localScale;
+                        newBones.Add(newBone);
+                    }
+                }
+                bones = newBones.ToArray();
             }
         }
     }
