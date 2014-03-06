@@ -195,6 +195,16 @@ namespace UMA
 				return null;
 			}
 
+			public UMADnaBase GetDna(Type type)
+			{
+				UMADnaBase dna;
+				if(umaDna.TryGetValue(type, out dna))
+				{
+					return dna;               
+				}
+				return null;
+			}
+
             public T GetOrCreateDna<T>()
                 where T : UMADnaBase
             {
@@ -504,6 +514,11 @@ namespace UMA
 			return umaRecipe.GetAllDna();
 		}
 		
+		public UMADnaBase GetDna(Type type)
+		{
+			return umaRecipe.GetDna(type);
+		}
+
 		public T GetDna<T>()
             where T : UMADnaBase
 	    {
