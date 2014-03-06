@@ -171,10 +171,19 @@ namespace UMA
 		[System.Serializable]
 		public class UMARecipe{
 			public RaceData raceData;
-            public Dictionary<Type, UMADnaBase> umaDna = new Dictionary<Type, UMADnaBase>();
+			[Obsolete("UMARecipe.umaDna will be hidden, use access methods instead.", false)]
+			public Dictionary<Type, UMADnaBase> umaDna = new Dictionary<Type, UMADnaBase>();
             protected Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate> umaDnaConverter = new Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate>();
 			public SlotData[] slotDataList;
 			
+			public UMADnaBase[] GetAllDna()
+			{
+				UMADnaBase[] allDNA = new UMADnaBase[umaDna.Values.Count];
+				umaDna.Values.CopyTo(allDNA, 0);
+
+				return allDNA;
+			}
+
 			public T GetDna<T>()
                 where T : UMADnaBase
 			{
@@ -483,7 +492,12 @@ namespace UMA
 			}
 		}
 
-	    public T GetDna<T>()
+		public UMADnaBase[] GetAllDna()
+		{
+			return umaRecipe.GetAllDna();
+		}
+		
+		public T GetDna<T>()
             where T : UMADnaBase
 	    {
 	        return umaRecipe.GetDna<T>();
