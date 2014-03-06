@@ -440,6 +440,13 @@ namespace UMA
                     if( !boneMap.TryGetValue(bone, out umaBone ) )
                     {
                         Debug.LogWarning(bone.name, bone.root.gameObject);
+                        foreach (var knownBone in boneMap.Keys)
+                        {
+                            if (knownBone.name == bone.name)
+                            {
+                                Debug.LogError(knownBone.name, knownBone.root.gameObject);
+                            }
+                        }
                         continue;
                     }
                     
@@ -545,6 +552,27 @@ namespace UMA
 				bone.boneTransform.localScale = bone.originalBoneScale;
 				bone.boneTransform.localRotation = bone.originalBoneRotation;
             }
+        }
+
+        internal int[] GetAnimatedBones()
+        {
+            List<int> res = new List<int>(tempBoneData.Length);
+            Dictionary<int, int> resHash = new Dictionary<int, int>(tempBoneData.Length);
+            for(int slotDataIndex = 0; slotDataIndex < umaRecipe.slotDataList.Length; slotDataIndex++)
+            {
+                var slotData = umaRecipe.slotDataList[slotDataIndex];
+                if( slotData == null ) continue;
+                if (slotData.animatedBones == null || slotData.animatedBones.Length == 0) continue;
+                for (int animatedBoneIndex = 0; animatedBoneIndex < slotData.animatedBones.Length; animatedBoneIndex++)
+                {
+                    var animatedBone = slotData.animatedBones[animatedBoneIndex];
+                    var hashName = UMASkeleton.StringToHash(animatedBone.name);
+                    if( resHash.ContainsKey(hashName) ) continue;
+                    resHash.Add(hashName, hashName);
+                    res.Add(hashName);
+                }
+            }
+            return res.ToArray();
         }
     }
 }

@@ -11,13 +11,15 @@ public class UMACrowd : MonoBehaviour
 	public SlotLibrary slotLibrary;
 	public OverlayLibrary overlayLibrary;
     public RaceLibrary raceLibrary;
+	public RuntimeAnimatorController animationController;
 	
 	public float atlasResolutionScale;
 	public bool generateUMA;
 	public bool generateLotsUMA;
 	public Vector2 umaCrowdSize;
 	public bool randomDna;
-	
+
+	public float space = 1;
 	public Transform zeroPoint;
 	
 	private Transform tempUMA;
@@ -28,6 +30,7 @@ public class UMACrowd : MonoBehaviour
 	
 
 	void Awake(){
+		if (space == 0) space = 1;
 		string tempVersion = Application.unityVersion;
 		tempVersion = tempVersion.Substring(0,3);
 	}
@@ -69,11 +72,11 @@ public class UMACrowd : MonoBehaviour
 		{
 			if (zeroPoint)
 			{
-				tempUMA.position = new Vector3(X + zeroPoint.position.x - umaCrowdSize.x * 0.5f + 0.5f, zeroPoint.position.y, Y + zeroPoint.position.z - umaCrowdSize.y * 0.5f + 0.5f);
+				tempUMA.position = new Vector3(X * space + zeroPoint.position.x - umaCrowdSize.x * space * 0.5f + 0.5f, zeroPoint.position.y, Y * space + zeroPoint.position.z - umaCrowdSize.y * space * 0.5f + 0.5f);
 			}
 			else
 			{
-				tempUMA.position = new Vector3(X - umaCrowdSize.x * 0.5f + 0.5f, 0, Y - umaCrowdSize.y * 0.5f + 0.5f);
+				tempUMA.position = new Vector3(X * space - umaCrowdSize.x * space * 0.5f + 0.5f, 0, Y * space - umaCrowdSize.y * space * 0.5f + 0.5f);
 			}
 		}
 	}
@@ -480,6 +483,10 @@ public class UMACrowd : MonoBehaviour
 			DefineSlots();
 		}
 
+		if (animationController != null)
+		{
+			umaDynamicAvatar.animationController = animationController;
+		}
 		umaDynamicAvatar.UpdateNewRace();
 		umaDynamicAvatar.umaData.myRenderer.enabled = false;
 		tempUMA = newGO.transform;

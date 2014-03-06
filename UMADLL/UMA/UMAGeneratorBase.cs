@@ -136,6 +136,29 @@ namespace UMA
             res.upperArmTwist = 0.5f;
             res.upperLegTwist = 0.1f;
 
+            var animatedBones = umaData.GetAnimatedBones();
+            if (animatedBones.Length > 0)
+            {
+                List<SkeletonBone> animatedSkeleton = new List<SkeletonBone>(umaTPose.boneInfo);
+
+                foreach (var animatedBoneHash in animatedBones)
+                {
+                    var animatedBone = umaData.GetBoneGameObject(animatedBoneHash).transform;
+
+                    var sb = new SkeletonBone();
+                    sb.name = animatedBone.name;
+                    sb.position = animatedBone.localPosition;
+                    sb.rotation = animatedBone.localRotation;
+                    sb.scale = animatedBone.localScale;
+                    animatedSkeleton.Add(sb);
+                }
+                res.skeleton = animatedSkeleton.ToArray();
+            }
+            else
+            {
+                res.skeleton = umaTPose.boneInfo;
+            }
+
 //			List<HumanBone> animatedHuman = new List<HumanBone>();
 //			foreach (HumanBone bone in umaTPose.humanInfo) {
 //				int animIndex = System.Array.IndexOf(umaData.animatedBones, bone.boneName);
@@ -159,7 +182,6 @@ namespace UMA
 //			res.human = animatedHuman.ToArray();
 //			res.skeleton = animatedSkeleton.ToArray();
 			res.human = umaTPose.humanInfo;
-            res.skeleton = umaTPose.boneInfo;
 
             res.skeleton[0].name = umaData.umaRoot.name;
             SkeletonModifier(umaData, ref res.skeleton);
