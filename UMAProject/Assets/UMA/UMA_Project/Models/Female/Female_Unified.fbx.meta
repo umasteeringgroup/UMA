@@ -791,8 +791,8 @@ ModelImporter:
     - boneName: Mandible
       humanName: Jaw
       limit:
-        min: {x: 0, y: 0, z: -5.52396393}
-        max: {x: 0, y: 0, z: 12.5764236}
+        min: {x: 0, y: -10, z: -5.52396393}
+        max: {x: 0, y: 10, z: 12.5764236}
         value: {x: .0114429416, y: 0, z: .00572147081}
         length: .0143036814
         modified: 1
