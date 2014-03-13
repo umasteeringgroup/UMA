@@ -122,7 +122,7 @@ public class UMACustomization : MonoBehaviour {
 			cameraTrack.target = umaData.umaRoot.transform;
 		}
 		
-		umaDna = umaData.umaRecipe.umaDna[typeof(UMADnaHumanoid)] as UMADnaHumanoid;
+		umaDna = umaData.umaRecipe.GetDna<UMADnaHumanoid>();
 		ReceiveValues();
 	}
 	

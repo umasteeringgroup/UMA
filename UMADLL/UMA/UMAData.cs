@@ -184,6 +184,11 @@ namespace UMA
 				return allDNA;
 			}
 
+            public void AddDna(UMADnaBase dna)
+            {
+                umaDna.Add(dna.GetType(), dna);
+            }
+
 			public T GetDna<T>()
                 where T : UMADnaBase
 			{
@@ -194,6 +199,11 @@ namespace UMA
 				}
 				return null;
 			}
+
+            public void ClearDna()
+            {
+                umaDna.Clear();
+            }
 
 			public UMADnaBase GetDna(Type type)
 			{

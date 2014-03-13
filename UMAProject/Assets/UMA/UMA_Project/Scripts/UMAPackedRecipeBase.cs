@@ -71,7 +71,7 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 
 		umaPackRecipe.packedDna.Clear();
 
-		foreach (var dna in umaRecipe.umaDna.Values)
+		foreach (var dna in umaRecipe.GetAllDna())
 		{
 			UMAPackedDna packedDna = new UMAPackedDna();
 			packedDna.dnaType = dna.GetType().Name;
@@ -177,11 +177,11 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 		umaRecipe.slotDataList = new SlotData[umaPackRecipe.packedSlotDataList.Length];
 		umaRecipe.SetRace(context.GetRace(umaPackRecipe.race));
 
-		umaRecipe.umaDna.Clear();
+		umaRecipe.ClearDna();
 		for (int dna = 0; dna < umaPackRecipe.packedDna.Count; dna++)
 		{
 			Type dnaType = UMADna.GetType(umaPackRecipe.packedDna[dna].dnaType);
-			umaRecipe.umaDna.Add(dnaType, UMADna.LoadInstance(dnaType, umaPackRecipe.packedDna[dna].packedDna));
+			umaRecipe.AddDna(UMADna.LoadInstance(dnaType, umaPackRecipe.packedDna[dna].packedDna));
 		}
 
 		for (int i = 0; i < umaPackRecipe.packedSlotDataList.Length; i++)
