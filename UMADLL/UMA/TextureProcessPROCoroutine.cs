@@ -257,9 +257,9 @@ namespace UMA
                 for (int finalTextureType = 0; finalTextureType < textureNameList.Length; finalTextureType++)
                 {
                     if (string.IsNullOrEmpty(textureNameList[finalTextureType])) continue;
-                    if (atlas.materialSample.HasProperty(umaGenerator.textureNameList[finalTextureType]))
+                    if (atlas.materialSample.HasProperty(textureNameList[finalTextureType]))
                     {
-                        atlas.materialSample.SetTexture(umaGenerator.textureNameList[finalTextureType], resultingTextures[finalTextureType]);
+                        atlas.materialSample.SetTexture(textureNameList[finalTextureType], resultingTextures[finalTextureType]);
                     }
                 }
             }

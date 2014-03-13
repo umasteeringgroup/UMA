@@ -32,6 +32,14 @@ public class UMAContext : MonoBehaviour
 		if (Instance == null) Instance = this;
 	}
 
+	[Obsolete("UpdateDictionaries will be removed use ValidateDictionaries instead.", false)]
+	public void UpdateDictionaries()
+	{
+		slotLibrary.UpdateDictionary();
+		raceLibrary.UpdateDictionary();
+		overlayLibrary.UpdateDictionary();
+	}
+
 	public void ValidateDictionaries()
 	{
 		slotLibrary.ValidateDictionary();

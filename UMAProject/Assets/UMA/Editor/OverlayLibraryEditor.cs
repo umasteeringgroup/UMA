@@ -198,8 +198,22 @@ public class OverlayLibraryEditor : Editor {
                         if (tempOverlayData)
                         {
                             AddOverlayData(tempOverlayData);
-                        }
-                    }
+							continue;
+						}
+						var path = AssetDatabase.GetAssetPath(draggedObjects[i]);
+						if (System.IO.Directory.Exists(path))
+						{
+							var assetFiles = System.IO.Directory.GetFiles(path, "*.asset");
+							foreach (var assetFile in assetFiles)
+							{
+								tempOverlayData = AssetDatabase.LoadAssetAtPath(assetFile, typeof(OverlayData)) as OverlayData;
+								if (tempOverlayData)
+								{
+									AddOverlayData(tempOverlayData);
+								}
+							}
+						}
+					}
 				}
 			}
 		}

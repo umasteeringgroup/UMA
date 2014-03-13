@@ -49,6 +49,7 @@ namespace UMA
 	        tempSlotData.meshRenderer = meshRenderer;
 			tempSlotData.boneWeights = boneWeights;
 	        tempSlotData.umaBoneData = umaBoneData;
+            tempSlotData.textureNameList = textureNameList;
 	        //Overlays are duplicated, to lose reference
 	        for (int i = 0; i < overlayList.Count; i++)
 	        {

@@ -139,6 +139,15 @@ namespace UMAEditor
             EditorGUILayout.Space();
 
             slot.slotGroup = EditorGUILayout.TextField("Slot Group", slot.slotGroup);
+            var textureNameList = serializedObject.FindProperty("textureNameList");
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.PropertyField(textureNameList, true);
+            if (EditorGUI.EndChangeCheck())
+            {
+                serializedObject.ApplyModifiedProperties();
+            }
+
+
 
             SerializedProperty tags = serializedObject.FindProperty("tags");
             EditorGUI.BeginChangeCheck();

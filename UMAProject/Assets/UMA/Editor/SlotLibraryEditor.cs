@@ -91,8 +91,23 @@ public class SlotLibraryEditor : Editor {
                         if (tempSlotData)
                         {
                             AddSlotData(tempSlotData);
-                        }
-                    }
+							continue;
+						}
+
+						var path = AssetDatabase.GetAssetPath(draggedObjects[i]);
+						if (System.IO.Directory.Exists(path))
+						{
+							var assetFiles = System.IO.Directory.GetFiles(path, "*.asset");
+							foreach (var assetFile in assetFiles)
+							{
+								tempSlotData = AssetDatabase.LoadAssetAtPath(assetFile, typeof(SlotData)) as SlotData;
+								if (tempSlotData)
+								{
+									AddSlotData(tempSlotData);
+								}
+							}
+						}
+					}
 				}
 			}
 		}
