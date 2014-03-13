@@ -303,7 +303,7 @@ public class OverlayLibraryEditor : Editor {
 		
 		GUILayout.Space(20);
 			Rect dropArea = GUILayoutUtility.GetRect(0.0f,50.0f, GUILayout.ExpandWidth(true));
-			GUI.Box(dropArea,"Drag Slots here");
+			GUI.Box(dropArea,"Drag Overlays here");
 		GUILayout.Space(20);
 		
 
