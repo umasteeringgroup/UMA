@@ -30,14 +30,8 @@ public class CreateCleanAnimationMenu : MonoBehaviour {
 				var folder = System.IO.Path.GetDirectoryName(oldPath);
 
 				AssetDatabase.CreateAsset(newClip, AssetDatabase.GenerateUniqueAssetPath( folder + "/" + anim.name + ".anim"));
-				AssetDatabase.SaveAssets();
-				//var sourceSO = new SerializedObject(anim);
-				//var so = new SerializedObject(newClip);
-				//var clipSettings = so.FindProperty("m_AnimationClipSettings");
-				//clipSettings.objectReferenceValue = sourceSO.FindProperty("m_AnimationClipSettings").objectReferenceValue;
-				//sourceSO.Dispose();
-				//so.Dispose();
 			}
+			AssetDatabase.SaveAssets();
 		}
 	}
 
