@@ -433,7 +433,7 @@ public class UMACrowd : MonoBehaviour
 		}
 	}
 
-	void GenerateUMAShapes()
+	protected virtual void GenerateUMAShapes()
 	{
 		UMADnaHumanoid umaDna = new UMADnaHumanoid();
 		umaData.umaRecipe.AddDna(umaDna);

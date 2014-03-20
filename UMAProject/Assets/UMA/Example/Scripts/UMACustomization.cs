@@ -17,8 +17,9 @@ public class UMACustomization : MonoBehaviour {
     public OverlayLibrary myOverlayLibrary;
 
 	public bool editing = false;
-	
-	void Start () {
+
+	protected virtual void Start()
+	{
 		sliderControlList = new SliderControl[46];	
 		//Changed slider order
 		
@@ -156,8 +157,9 @@ public class UMACustomization : MonoBehaviour {
 		umaData.isShapeDirty = true;
 		umaData.Dirty();
 	}
-	
-	public void ReceiveValues(){
+
+	public virtual void ReceiveValues()
+	{
 		if(umaDna != null){
 			sliderControlList[0].actualValue = umaDna.height;
 			
@@ -229,7 +231,7 @@ public class UMACustomization : MonoBehaviour {
 	}
 	
 	
-	public void TransferValues(){
+	public virtual void TransferValues(){
 		if(umaDna != null){
 			umaDna.height = sliderControlList[0].actualValue;
 			umaDna.headSize = sliderControlList[1].actualValue;
