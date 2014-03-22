@@ -50,7 +50,15 @@ namespace UMA
                     int overlays = 0;
                     for (int overlayCounter = 0; overlayCounter < slots[i].OverlayCount; overlayCounter++)
                     {
-                        if (slots[i].GetOverlay(overlayCounter) != null) overlays++;
+                        var overlay = slots[i].GetOverlay(overlayCounter);
+                        if (overlay != null)
+                        {
+                            overlays++;
+                            if (overlay.useAdvancedMasks)
+                            {
+                                overlay.EnsureChannels(slots[i].textureNameList.Length);
+                            }
+                        }
                     }
 
                     tempMaterialDefinition.overlays = new UMAData.textureData[overlays - 1];

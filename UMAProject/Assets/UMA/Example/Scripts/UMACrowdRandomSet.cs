@@ -46,6 +46,9 @@ public class UMACrowdRandomSet : ScriptableObject
 		public bool useSkinColor;
 		public bool useHairColor;
 		public float hairColorMultiplier;
+		public bool useColorOnChannel;
+		public int colorChannel;
+		public bool invertColorChannel;
 	}
 
 	public static void Apply(UMA.UMAData umaData, CrowdRaceData race, Color skinColor, Color HairColor, HashSet<string> Keywords, SlotLibraryBase slotLibrary, OverlayLibraryBase overlayLibrary)
@@ -104,9 +107,17 @@ public class UMACrowdRandomSet : ScriptableObject
 				}
 				else
 				{
-					overlayColor = new Color(Random.Range(overlay.minRGB.r, overlay.maxRGB.r), Random.Range(overlay.minRGB.g, overlay.maxRGB.g), Random.Range(overlay.minRGB.b, overlay.maxRGB.b), 1);
+					overlayColor = new Color(Random.Range(overlay.minRGB.r, overlay.maxRGB.r), Random.Range(overlay.minRGB.g, overlay.maxRGB.g), Random.Range(overlay.minRGB.b, overlay.maxRGB.b), Random.Range(overlay.minRGB.a, overlay.maxRGB.a));
 				}
-				slotData.AddOverlay(overlayLibrary.InstantiateOverlay(overlay.overlayID, overlayColor));
+				var opaqueOverlayColor = overlayColor;
+				opaqueOverlayColor.a = 1;
+				var overlayData = overlayLibrary.InstantiateOverlay(overlay.overlayID, opaqueOverlayColor);
+				slotData.AddOverlay(overlayData);
+				if (overlay.useColorOnChannel)
+				{
+					overlayColor.a *= overlay.minRGB.a;
+					overlayData.SetColor(overlay.colorChannel, overlayColor);
+				}
 			}
 			if (umaData.umaRecipe.slotDataList[i].GetOverlayList().Count == 0)
 			{

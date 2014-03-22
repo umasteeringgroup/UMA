@@ -91,7 +91,7 @@ public class UMACrowd : MonoBehaviour
 	{
 		float skinTone = Random.Range(0.1f, 0.6f);
 		Color skinColor = new Color(skinTone + Random.Range(0.35f, 0.4f), skinTone + Random.Range(0.25f, 0.4f), skinTone + Random.Range(0.35f, 0.4f), 1);
-		Color HairColor = new Color(Random.Range(0.1f, 0.9f), Random.Range(0.1f, 0.9f), Random.Range(0.1f, 0.9f), 1);
+		Color HairColor = new Color(Random.Range(0.1f, 0.9f), Random.Range(0.1f, 0.9f), Random.Range(0.1f, 0.9f), Random.Range(0.1f, 0.5f));
 		var keywordsLookup = new HashSet<string>(keywords);
 		UMACrowdRandomSet.Apply(umaData, race, skinColor, HairColor, keywordsLookup, slotLibrary, overlayLibrary);
 	}

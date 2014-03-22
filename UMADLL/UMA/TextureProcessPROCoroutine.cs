@@ -77,7 +77,6 @@ namespace UMA
                 for (int textureType = 0; textureType < textureNameList.Length; textureType++)
                 {
                     if (string.IsNullOrEmpty(textureNameList[textureType])) continue;
-
                     if (atlas.atlasMaterialDefinitions[0].source.materialSample.HasProperty(textureNameList[textureType]))
                     {
                         for (int i = 0; i < atlas.atlasMaterialDefinitions.Count; i++)
@@ -100,6 +99,11 @@ namespace UMA
                                 //							Material tempMaterial = UnityEngine.Object.Instantiate(umaGenerator.textureMerge.material) as Material;
                                 //							textureModuleList[moduleCount].renderer.material = tempMaterial;
 
+                                if (atlasElement.source.baseTexture.Length <= textureType)
+                                {
+                                    Debug.LogError(string.Format("UMA Texture Process PRO. Slot: {0} Overlay: {1}, doesn't have enough textures!", atlasElement.source.slotData.slotName, atlasElement.source.baseTexture[0].name));
+                                    yield break;
+                                }
                                 if (atlasElement.source.baseTexture[textureType])
                                 {
                                     atlasElement.source.baseTexture[textureType].filterMode = FilterMode.Point;

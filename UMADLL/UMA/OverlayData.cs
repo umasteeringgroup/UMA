@@ -50,6 +50,7 @@ namespace UMA
 	    {
 	        if (useAdvancedMasks)
 	        {
+                EnsureChannels(overlay+1);
 	            channelMask[overlay] = color;
 	        }
 	        else if (overlay == 0)
@@ -59,7 +60,8 @@ namespace UMA
 	        else
 	        {
 	            AllocateAdvancedMasks();
-	            channelMask[overlay] = color;
+                EnsureChannels(overlay+1);
+                channelMask[overlay] = color;
 	        }
 	        if (umaData != null)
 	        {
@@ -73,7 +75,8 @@ namespace UMA
 	        {
 	            AllocateAdvancedMasks();
 	        }
-	        channelAdditiveMask[overlay] = color;
+            EnsureChannels(overlay+1);
+            channelAdditiveMask[overlay] = color;
 	        if (umaData != null)
 	        {
 	            umaData.Dirty(false, true, false);
@@ -83,16 +86,46 @@ namespace UMA
 	    private void AllocateAdvancedMasks()
 	    {
 	        int channels = umaData != null ? umaData.umaGenerator.textureNameList.Length : 2;
-	        channelMask = new Color32[channels];
-	        channelAdditiveMask = new Color32[channels];
-	        for (int i = 0; i < channels; i++)
-	        {
-	            channelMask[i] = new Color32(255, 255, 255, 255);
-	            channelAdditiveMask[i] = new Color32(0, 0, 0, 0);
-	        }
+            EnsureChannels(channels);
 	        channelMask[0] = color;
 
 	    }
+
+        public void EnsureChannels(int channels)
+        {
+            if (channelMask == null)
+            {
+                channelMask = new Color32[channels];
+                channelAdditiveMask = new Color32[channels];
+                for (int i = 0; i < channels; i++)
+                {
+                    channelMask[i] = new Color32(255, 255, 255, 255);
+                    channelAdditiveMask[i] = new Color32(0, 0, 0, 0);
+                }
+            }
+            else
+            {
+                if( channelMask.Length > channels ) return;
+
+                var oldMask = channelMask;
+                var oldAdditive = channelAdditiveMask;
+                channelMask = new Color32[channels];
+                channelAdditiveMask = new Color32[channels];
+                for (int i = 0; i < channels; i++)
+                {
+                    if (oldMask.Length > i)
+                    {
+                        channelMask[i] = oldMask[i];
+                        channelAdditiveMask[i] = oldAdditive[i];
+                    }
+                    else
+                    {
+                        channelMask[i] = new Color32(255, 255, 255, 255);
+                        channelAdditiveMask[i] = new Color32(0, 0, 0, 0);
+                    }
+                }
+            }
+        }
 
 	}
 }
