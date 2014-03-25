@@ -54,6 +54,10 @@ namespace UMAEditor
 	            if ( DerivesFrom(dnaType, baseDnaType))
 	            {
 	                customData["ClassName"] = dnaType.Name;
+	                foreach (var template in pageTemplates)
+	                {
+	                  template.sb.Length = 0;
+	                }
 	                foreach (var template in templates)
 	                {
 	                    template.Append(customData);
