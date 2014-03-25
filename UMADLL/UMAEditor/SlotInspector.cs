@@ -103,10 +103,12 @@ namespace UMAEditor
                     {
                         if (animated)
                         {
+                            Undo.RecordObject(slot, "Add Animated Bone");
                             ArrayUtility.Add<Transform>(ref slot.animatedBones, bone);
                         }
                         else
                         {
+                            Undo.RecordObject(slot, "Remove Animated Bone");
                             ArrayUtility.Remove<Transform>(ref slot.animatedBones, bone);
                         }
                     }
@@ -119,6 +121,7 @@ namespace UMAEditor
                 }
                 if (deletedBone != null)
                 {
+                    Undo.RecordObject(slot, "Delete Bone");
                     ArrayUtility.Remove<Transform>(ref slot.umaBoneData, deletedBone);
                     ArrayUtility.Remove<Transform>(ref slot.animatedBones, deletedBone);
                 }
@@ -129,6 +132,7 @@ namespace UMAEditor
 
                 if (GUILayout.Button("Reset Bones"))
                 {
+                    Undo.RecordObject(slot, "Reset Bones");
                     slot.umaBoneData = GetTransformsInPrefab(slot.meshRenderer.rootBone);
                     slot.animatedBones = new Transform[0];
                 }
