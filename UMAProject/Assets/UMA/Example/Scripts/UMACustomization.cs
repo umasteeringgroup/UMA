@@ -10,7 +10,8 @@ public class UMACustomization : MonoBehaviour {
 	public UMADynamicAvatar umaDynamicAvatar;
 	public CameraTrack cameraTrack;
 	private UMADnaHumanoid umaDna;
-	
+	private UMADnaTutorial umaTutorialDna;
+
 	public SliderControl[] sliderControlList;
 	
 	public SlotLibrary mySlotLibrary;
@@ -20,7 +21,7 @@ public class UMACustomization : MonoBehaviour {
 
 	protected virtual void Start()
 	{
-		sliderControlList = new SliderControl[46];	
+		sliderControlList = new SliderControl[47];	
 		//Changed slider order
 		
 		sliderControlList[0] = InstantiateSlider("height",0,0);
@@ -80,6 +81,8 @@ public class UMACustomization : MonoBehaviour {
 		sliderControlList[36] = InstantiateSlider("breatsSize",0,11);
 		sliderControlList[41] = InstantiateSlider("belly",1,11);
 		sliderControlList[42] = InstantiateSlider("waist",2,11);
+
+		sliderControlList[46] = InstantiateSlider("Eye Spacing",3,6);
 	}
 	
 
@@ -123,7 +126,8 @@ public class UMACustomization : MonoBehaviour {
 			cameraTrack.target = umaData.umaRoot.transform;
 		}
 		
-		umaDna = umaData.umaRecipe.GetDna<UMADnaHumanoid>();
+		umaDna = umaData.GetDna<UMADnaHumanoid>();
+		umaTutorialDna = umaData.GetDna<UMADnaTutorial>();
 		ReceiveValues();
 	}
 	
@@ -228,6 +232,14 @@ public class UMACustomization : MonoBehaviour {
 //				sliderControlList[i].ForceUpdate();
 //			}
 		}
+
+		if (umaTutorialDna != null) {
+			sliderControlList[46].enabled = true;
+			sliderControlList[46].actualValue = umaTutorialDna.eyeSpacing;
+		}
+		else {
+			sliderControlList[46].enabled = false;
+		}
 	}
 	
 	
@@ -294,6 +306,10 @@ public class UMACustomization : MonoBehaviour {
 			
 			umaDna.belly = sliderControlList[41].actualValue;
 			umaDna.waist = sliderControlList[42].actualValue;
+		}
+
+		if (umaTutorialDna != null) {
+			umaTutorialDna.eyeSpacing = sliderControlList[46].actualValue;
 		}
 	}
 }
