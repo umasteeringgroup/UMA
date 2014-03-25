@@ -16,12 +16,12 @@ public class CreateCleanAnimationMenu : MonoBehaviour {
 				var newClip = Instantiate(anim) as AnimationClip;
 				newClip.ClearCurves();
 				AnimationUtility.SetAnimationType(newClip, ModelImporterAnimationType.Human);
-				var curves = AnimationUtility.GetAllCurves(anim);
-				foreach (var curve in curves)
+				var bindings = AnimationUtility.GetCurveBindings(anim);
+				foreach (var binding in bindings)
 				{
-					if (!curve.propertyName.StartsWith("m_LocalScale") && !curve.propertyName.StartsWith("m_LocalPosition"))
+					if (!binding.propertyName.StartsWith("m_LocalScale") && !binding.propertyName.StartsWith("m_LocalPosition"))
 					{
-						newClip.SetCurve(curve.path, curve.type, curve.propertyName, curve.curve);
+						AnimationUtility.SetEditorCurve(newClip, binding, AnimationUtility.GetEditorCurve(anim, binding));
 					}
 				}
 

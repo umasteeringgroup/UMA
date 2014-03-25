@@ -38,6 +38,8 @@ namespace UMA
 		{
 			if( dnaType == typeof(UMADnaHumanoid) )
 			return UMADnaHumanoid.GetNames();
+		if( dnaType == typeof(UMADnaTutorial) )
+			return UMADnaTutorial.GetNames();
 
 			return new string[0];
 		}
@@ -45,6 +47,8 @@ namespace UMA
 		public static System.Type GetType(System.String className)
 		{
 			if( "UMADnaHumanoid" == className ) return typeof(UMADnaHumanoid);
+				if( "UMADnaTutorial" == className ) return typeof(UMADnaTutorial);
+		
 			return null;
 		}
 
@@ -53,6 +57,8 @@ namespace UMA
 			return new System.Type[]
 			{
 				typeof(UMADnaHumanoid),
+			typeof(UMADnaTutorial),
+
 			};
 		}
 
@@ -60,6 +66,9 @@ namespace UMA
 		{
 			if( dnaType == typeof(UMADnaHumanoid))
 			return UMADnaHumanoid.LoadInstance(data);
+
+		if( dnaType == typeof(UMADnaTutorial))
+			return UMADnaTutorial.LoadInstance(data);
 
 
 			return null;
@@ -70,6 +79,8 @@ namespace UMA
 			System.Type dnaType = instance.GetType();
 			if( dnaType == typeof(UMADnaHumanoid))
 			return UMADnaHumanoid.SaveInstance(instance as UMADnaHumanoid);
+		if( dnaType == typeof(UMADnaTutorial))
+			return UMADnaTutorial.SaveInstance(instance as UMADnaTutorial);
 
 			return null;
 		}
