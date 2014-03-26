@@ -127,4 +127,11 @@ public class SlotLibrary : SlotLibraryBase
 			return source.Duplicate();
 		}
 	}
+
+	public SlotData[] GetAllSlots()
+	{
+#pragma warning disable 618
+		return slotElementList;
+#pragma warning restore 618
+	}
 }

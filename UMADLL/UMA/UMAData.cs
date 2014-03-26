@@ -245,6 +245,20 @@ namespace UMA
 				this.raceData = raceData;
 				ClearDNAConverters();
 			}
+
+            public void SetSlot(int index, SlotData slot)
+            {
+                if (index >= slotDataList.Length)
+                {
+                    SlotData[] tempArray = slotDataList;
+                    slotDataList = new SlotData[index + 1];
+                    for (int i = 0; i < tempArray.Length; i++)
+                    {
+                        slotDataList[i] = tempArray[i];
+                    }
+                }
+                slotDataList[index] = slot;
+            }
 			
 			public void ApplyDNA(UMAData umaData)
 			{

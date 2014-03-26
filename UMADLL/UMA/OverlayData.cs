@@ -69,7 +69,24 @@ namespace UMA
 	        }
 	    }
 
-	    public void SetAdditive(int overlay, Color32 color)
+        public Color32 GetColor(int channel)
+        {
+            if (useAdvancedMasks)
+            {
+                EnsureChannels(channel + 1);
+                return channelMask[channel];
+            }
+            else if (channel == 0)
+            {
+                return this.color;
+            }
+            else
+            {
+                return new Color32(255, 255, 255, 255);
+            }
+        }
+
+        public void SetAdditive(int overlay, Color32 color)
 	    {
 	        if (!useAdvancedMasks)
 	        {
@@ -83,13 +100,43 @@ namespace UMA
 	        }
 	    }
 
-	    private void AllocateAdvancedMasks()
+        public Color32 GetAdditive(int channel)
+        {
+            if (useAdvancedMasks)
+            {
+                EnsureChannels(channel + 1);
+                return channelAdditiveMask[channel];
+            }
+            else
+            {
+                return new Color32(0, 0, 0, 0);
+            }
+        }
+
+        private void AllocateAdvancedMasks()
 	    {
 	        int channels = umaData != null ? umaData.umaGenerator.textureNameList.Length : 2;
             EnsureChannels(channels);
 	        channelMask[0] = color;
 
 	    }
+
+        public void CopyColors(OverlayData overlay)
+        {
+            if (overlay.useAdvancedMasks)
+            {
+                EnsureChannels(overlay.channelAdditiveMask.Length);
+                for (int i = 0; i < overlay.channelAdditiveMask.Length; i++)
+                {
+                    SetColor(i, GetColor(i));
+                    SetAdditive(i, GetAdditive(i));
+                }
+            }
+            else
+            {
+                SetColor(0, overlay.color);
+            }
+        }
 
         public void EnsureChannels(int channels)
         {

@@ -115,6 +115,19 @@ namespace UMA
 	        return null;
 	    }
 
+        public void SetOverlay(int index, OverlayData overlay)
+        {
+            if (index >= overlayList.Count)
+            {
+                overlayList.Capacity = index + 1;
+                while (index >= overlayList.Count)
+                {
+                    overlayList.Add(null);
+                }
+            }
+            overlayList[index] = overlay;
+        }
+
 	    public OverlayData GetOverlay(int index)
 	    {
 	        if (index < 0 || index >= overlayList.Count) return null;

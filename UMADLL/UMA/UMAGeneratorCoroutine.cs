@@ -41,7 +41,8 @@ namespace UMA
 			UMAData.MaterialDefinition tempMaterialDefinition = new UMAData.MaterialDefinition();
 			
 			SlotData[] slots = umaData.umaRecipe.slotDataList;
-			for(int i = 0; i < slots.Length; i++){	
+            if (slots[i] != null && slots[i].GetOverlay(0) != null)
+            {	
 				if(slots[i] != null){
 					tempMaterialDefinition = new UMAData.MaterialDefinition();
 					tempMaterialDefinition.baseTexture = slots[i].GetOverlay(0).textureList;
