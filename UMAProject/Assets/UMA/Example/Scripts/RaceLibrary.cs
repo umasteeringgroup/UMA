@@ -81,4 +81,11 @@ public class RaceLibrary : RaceLibraryBase {
 		Debug.LogError("Could not find race: " + raceHash);
 		return null;
 	}
+
+	public RaceData[] GetAllRaces()
+	{
+#pragma warning disable 618
+		return raceElementList;
+#pragma warning restore 618
+	}
 }

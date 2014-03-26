@@ -178,6 +178,7 @@ namespace UMA
 			
 			public UMADnaBase[] GetAllDna()
 			{
+                EnsureAllDNAPresent();
 				UMADnaBase[] allDNA = new UMADnaBase[umaDna.Values.Count];
 				umaDna.Values.CopyTo(allDNA, 0);
 
@@ -246,6 +247,12 @@ namespace UMA
 				ClearDNAConverters();
 			}
 
+            public RaceData GetRace()
+            {
+                return this.raceData;
+            }
+
+
             public void SetSlot(int index, SlotData slot)
             {
                 if (index >= slotDataList.Length)
@@ -258,6 +265,12 @@ namespace UMA
                     }
                 }
                 slotDataList[index] = slot;
+            }
+            public SlotData GetSlot(int index)
+            {
+                if (index < slotDataList.Length)
+                    return slotDataList[index];
+                return null;
             }
 			
 			public void ApplyDNA(UMAData umaData)
@@ -277,17 +290,29 @@ namespace UMA
 				}
 			}
 
-            private void EnsureAllDNAPresent()
+            public void EnsureAllDNAPresent()
             {
-                foreach (var converter in umaDnaConverter)
+                foreach (var converter in raceData.dnaConverterList)
                 {
-                    if (!umaDna.ContainsKey(converter.Key))
+                    var dnaType = converter.DNAType;
+                    if (!umaDna.ContainsKey(dnaType))
                     {
-                        umaDna.Add(converter.Key, converter.Key.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase);
+                        umaDna.Add(dnaType, dnaType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase);
+                    }
+                }
+                foreach (var slotData in slotDataList)
+                {
+                    if (slotData != null && slotData.slotDNA != null)
+                    {
+                        var dnaType = slotData.slotDNA.DNAType;
+                        if (!umaDna.ContainsKey(dnaType))
+                        {
+                            umaDna.Add(dnaType, dnaType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase);
+                        }
                     }
                 }
             }
-			
+
 			public void ClearDNAConverters()
 			{
 				umaDnaConverter.Clear();
@@ -305,6 +330,11 @@ namespace UMA
 					umaDnaConverter.Add(dnaConverter.DNAType, dnaConverter.ApplyDnaAction);
 				}
 			}
+
+            public SlotData[] GetAllSlots()
+            {
+                return slotDataList;
+            }
 		}
 
 

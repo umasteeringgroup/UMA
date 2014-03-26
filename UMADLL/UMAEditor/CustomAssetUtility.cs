@@ -21,7 +21,7 @@ namespace UMAEditor
 	            path = path.Replace(Path.GetFileName(AssetDatabase.GetAssetPath(Selection.activeObject)), "");
 	        }
 
-	        string assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/New " + typeof(T).ToString() + ".asset");
+	        string assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/New " + typeof(T).Name + ".asset");
 
 	        AssetDatabase.CreateAsset(asset, assetPathAndName);
 
