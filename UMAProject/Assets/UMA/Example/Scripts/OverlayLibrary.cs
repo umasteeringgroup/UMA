@@ -132,4 +132,11 @@ public class OverlayLibrary : OverlayLibraryBase
 			return source;
 		}
 	}
+
+	public OverlayData[]  GetAllOverlays()
+	{
+#pragma warning disable 618
+		return overlayElementList;
+#pragma warning restore 618
+	}
 }
