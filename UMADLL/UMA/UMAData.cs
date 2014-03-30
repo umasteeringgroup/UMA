@@ -206,6 +206,11 @@ namespace UMA
                 umaDna.Clear();
             }
 
+            public void RemoveDna(Type type)
+            {
+                umaDna.Remove(type);
+            }
+
 			public UMADnaBase GetDna(Type type)
 			{
 				UMADnaBase dna;

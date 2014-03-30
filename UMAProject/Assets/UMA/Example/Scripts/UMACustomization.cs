@@ -12,7 +12,7 @@ public class UMACustomization : MonoBehaviour {
 	private UMADnaHumanoid umaDna;
 	private UMADnaTutorial umaTutorialDna;
 
-	public SliderControl[] sliderControlList;
+	public SliderControl[] sliderControlList = new SliderControl[0];
 	
 	public SlotLibrary mySlotLibrary;
     public OverlayLibrary myOverlayLibrary;

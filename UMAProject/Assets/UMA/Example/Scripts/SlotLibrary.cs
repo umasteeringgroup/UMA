@@ -108,6 +108,19 @@ public class SlotLibrary : SlotLibraryBase
 		var res = Internal_InstantiateSlot(nameHash);
 		if (res == null)
 		{
+#if UNITY_EDITOR
+			foreach (var path in UnityEditor.AssetDatabase.GetAllAssetPaths())
+			{
+				if (!path.EndsWith(".asset")) continue;
+				var slot = UnityEditor.AssetDatabase.LoadAssetAtPath(path, typeof(SlotData)) as SlotData;
+				if (slot == null) continue;
+				var hash = UMASkeleton.StringToHash(slot.slotName);
+				if (hash == nameHash)
+				{
+					throw new UMAResourceNotFoundException("SlotLibrary: Unable to find: " + slot.slotName);
+				}
+			}
+#endif
 			throw new UMAResourceNotFoundException("SlotLibrary: Unable to find hash: " + nameHash);
 		}
 		res.SetOverlayList(overlayList);
