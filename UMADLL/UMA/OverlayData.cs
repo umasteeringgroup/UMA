@@ -46,22 +46,22 @@ namespace UMA
 	    }
 
 	    public bool useAdvancedMasks { get { return channelMask != null && channelMask.Length > 0; } }
-	    public void SetColor(int overlay, Color32 color)
+        public void SetColor(int channel, Color32 color)
 	    {
 	        if (useAdvancedMasks)
 	        {
-                EnsureChannels(overlay+1);
-	            channelMask[overlay] = color;
+                EnsureChannels(channel+1);
+	            channelMask[channel] = color;
 	        }
-	        else if (overlay == 0)
+	        else if (channel == 0)
 	        {
 	            this.color = color;
 	        }
 	        else
 	        {
 	            AllocateAdvancedMasks();
-                EnsureChannels(overlay+1);
-                channelMask[overlay] = color;
+                EnsureChannels(channel+1);
+                channelMask[channel] = color;
 	        }
 	        if (umaData != null)
 	        {
@@ -86,6 +86,19 @@ namespace UMA
             }
         }
 
+        public Color32 GetAdditive(int channel)
+        {
+            if (useAdvancedMasks)
+            {
+                EnsureChannels(channel + 1);
+                return channelAdditiveMask[channel];
+            }
+            else
+            {
+                return new Color32(0, 0, 0, 0);
+            }
+        }
+
         public void SetAdditive(int overlay, Color32 color)
 	    {
 	        if (!useAdvancedMasks)
@@ -100,20 +113,7 @@ namespace UMA
 	        }
 	    }
 
-        public Color32 GetAdditive(int channel)
-        {
-            if (useAdvancedMasks)
-            {
-                EnsureChannels(channel + 1);
-                return channelAdditiveMask[channel];
-            }
-            else
-            {
-                return new Color32(0, 0, 0, 0);
-            }
-        }
-
-        private void AllocateAdvancedMasks()
+	    private void AllocateAdvancedMasks()
 	    {
 	        int channels = umaData != null ? umaData.umaGenerator.textureNameList.Length : 2;
             EnsureChannels(channels);
@@ -128,8 +128,8 @@ namespace UMA
                 EnsureChannels(overlay.channelAdditiveMask.Length);
                 for (int i = 0; i < overlay.channelAdditiveMask.Length; i++)
                 {
-                    SetColor(i, GetColor(i));
-                    SetAdditive(i, GetAdditive(i));
+                    SetColor(i, overlay.GetColor(i));
+                    SetAdditive(i, overlay.GetAdditive(i));
                 }
             }
             else

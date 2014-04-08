@@ -233,11 +233,14 @@ namespace UMA
                             yield return 6;
                             tempTexture = resultingTextures[textureType] as Texture2D;
                             tempTexture.Apply();
+                            tempTexture.wrapMode = TextureWrapMode.Repeat;
+                            tempTexture.filterMode = FilterMode.Bilinear;
                             resultingTextures[textureType] = tempTexture;
                         }
                         else
                         {
                             destinationTexture.filterMode = FilterMode.Bilinear;
+                            destinationTexture.wrapMode = TextureWrapMode.Repeat;
                             resultingTextures[textureType] = destinationTexture;
                         }
                         umaGenerator.textureMerge.gameObject.SetActive(false);
