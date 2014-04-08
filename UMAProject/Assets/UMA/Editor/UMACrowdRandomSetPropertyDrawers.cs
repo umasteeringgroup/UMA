@@ -72,7 +72,6 @@ public class CrowdSlotDataEditor : PropertyDrawer
 	public override void OnGUI(Rect position, SerializedProperty prop, GUIContent label)
 	{
 		var height = position.height;
-		var width = position.width;
 
 		position.height = 18;
 		var requirement = prop.FindPropertyRelative("slotID");
