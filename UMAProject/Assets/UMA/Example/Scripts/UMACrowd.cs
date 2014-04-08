@@ -415,7 +415,7 @@ public class UMACrowd : MonoBehaviour
 		}
 	}
 
-	void SetUMAData()
+	protected virtual void SetUMAData()
 	{
 		umaData.atlasResolutionScale = atlasResolutionScale;
 		umaData.OnCharacterUpdated += myColliderUpdateMethod;
@@ -555,7 +555,6 @@ public class UMACrowd : MonoBehaviour
 		}
 
 		SetUMAData();
-		GenerateUMAShapes();
 
 		if (race != null && race.slotElements.Length > 0)
 		{
@@ -565,6 +564,8 @@ public class UMACrowd : MonoBehaviour
 		{
 			DefineSlots();
 		}
+
+		GenerateUMAShapes();
 
 		if (animationController != null)
 		{

@@ -503,14 +503,6 @@ namespace UMA
 					Transform umaBone;
                     if( !boneMap.TryGetValue(bone, out umaBone ) )
                     {
-                        Debug.LogWarning(bone.name, bone.root.gameObject);
-                        foreach (var knownBone in boneMap.Keys)
-                        {
-                            if (knownBone.name == bone.name)
-                            {
-                                Debug.LogError(knownBone.name, knownBone.root.gameObject);
-                            }
-                        }
                         continue;
                     }
                     

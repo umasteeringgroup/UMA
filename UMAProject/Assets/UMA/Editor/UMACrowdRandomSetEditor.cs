@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEditor;
 using UMA;
 using System.Collections.Generic;
@@ -66,9 +66,9 @@ public class UMACrowdRandomSetEditor : Editor
 						}
 						crowdSlotElement.possibleSlots[i] = crowdSlotData;
 					}
-					Undo.RecordObject(randomSet, "Drag and Drop into RandomSet");
 					ArrayUtility.Add(ref randomSet.data.slotElements, crowdSlotElement);
 					EditorUtility.SetDirty(randomSet);
+					AssetDatabase.SaveAssets();
 				}
 			}
 		}

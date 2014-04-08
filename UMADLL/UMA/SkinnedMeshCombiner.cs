@@ -31,27 +31,27 @@ namespace UMA
 	        {
 	            return res;
 	        }
-	        if (string.Compare("Global", bone.name) == 0)
-	        {
-	            boneMap.Add(bone, hierarchyRoot);
-	            return hierarchyRoot;
-	        }
-	        else
-	        {
-	            Transform parent = RecursivelyMapToNewRoot(bone.parent, hierarchyRoot, boneMap);
-	            Transform child = parent.FindChild(bone.name);
-	            if (child == null)
-	            {
-	                child = new GameObject().transform;
-	                child.parent = parent;
-	                child.localPosition = bone.localPosition;
-	                child.localRotation = bone.localRotation;
-	                child.localScale = bone.localScale;
-	                child.name = bone.name;
-	            }
-	            boneMap.Add(bone, child);
-	            return child;
-	        }
+            if (string.Compare("Global", bone.name) == 0 || string.Compare(hierarchyRoot.name, bone.name) == 0)
+            {
+                boneMap.Add(bone, hierarchyRoot);
+                return hierarchyRoot;
+            }
+            else
+            {
+                Transform parent = RecursivelyMapToNewRoot(bone.parent, hierarchyRoot, boneMap);
+                Transform child = parent.FindChild(bone.name);
+                if (child == null)
+                {
+                    child = new GameObject().transform;
+                    child.parent = parent;
+                    child.localPosition = bone.localPosition;
+                    child.localRotation = bone.localRotation;
+                    child.localScale = bone.localScale;
+                    child.name = bone.name;
+                }
+                boneMap.Add(bone, child);
+                return child;
+            }
 	    }
 
 	    public static Transform[] CloneBoneListInNewHierarchy(Transform rootBone, Transform[] bones, Dictionary<Transform, Transform> boneMap)

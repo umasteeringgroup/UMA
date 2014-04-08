@@ -80,9 +80,17 @@ namespace UMA
 
         public static Animator CreateAnimator(UMAData umaData, UmaTPose umaTPose, RuntimeAnimatorController controller, bool applyRootMotion, bool animatePhysics, AnimatorCullingMode cullingMode)
         {
-            umaTPose.DeSerialize();
             var animator = umaData.umaRoot.AddComponent<Animator>();
-            animator.avatar = CreateAvatar(umaData, umaTPose);
+            switch (umaData.umaRecipe.raceData.umaTarget)
+            {
+                case RaceData.UMATarget.Humanoid:
+                    umaTPose.DeSerialize();
+                    animator.avatar = CreateAvatar(umaData, umaTPose);
+                    break;
+                case RaceData.UMATarget.Generic:
+                    animator.avatar = CreateGenericAvatar(umaData);
+                    break;
+            }
             animator.runtimeAnimatorController = controller;
             animator.applyRootMotion = applyRootMotion;
             animator.animatePhysics = animatePhysics;
@@ -122,6 +130,12 @@ namespace UMA
             HumanDescription description = CreateHumanDescription(umaData, umaTPose);
             //DebugLogHumanAvatar(umaData.umaRoot, description);
             Avatar res = AvatarBuilder.BuildHumanAvatar(umaData.umaRoot, description);
+            return res;
+        }
+
+        public static Avatar CreateGenericAvatar(UMAData umaData)
+        {
+            Avatar res = AvatarBuilder.BuildGenericAvatar(umaData.umaRoot, umaData.umaRecipe.GetRace().genericRootMotionTransformName);
             return res;
         }
 

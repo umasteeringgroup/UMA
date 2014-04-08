@@ -22,10 +22,12 @@ namespace UMAEditor
 
 	    public override void OnInspectorGUI()
 	    {
-			EditorGUIUtility.LookLikeControls();
+            EditorGUIUtility.LookLikeControls();
 			
 			race.raceName = EditorGUILayout.TextField("Race Name", race.raceName);
-			race.racePrefab = EditorGUILayout.ObjectField("Prefab", race.racePrefab, typeof(GameObject), false) as GameObject;
+            race.umaTarget = (UMA.RaceData.UMATarget)EditorGUILayout.EnumPopup("UMA Target", race.umaTarget);
+            race.genericRootMotionTransformName = EditorGUILayout.TextField("Root Motion Transform", race.genericRootMotionTransformName);
+            race.racePrefab = EditorGUILayout.ObjectField("Prefab", race.racePrefab, typeof(GameObject), false) as GameObject;
 			race.TPose = EditorGUILayout.ObjectField("TPose", race.TPose, typeof(UmaTPose), false) as UmaTPose;
 
 			if (race.baseSlot != null) {
@@ -86,6 +88,12 @@ namespace UMAEditor
 			}
 			
 			EditorGUIUtility.LookLikeControls();
+
+            if (GUI.changed)
+            {
+                EditorUtility.SetDirty(race);
+                AssetDatabase.SaveAssets();
+            }
 		}
 	    
 	}

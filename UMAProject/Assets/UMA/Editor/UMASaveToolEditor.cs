@@ -3,6 +3,7 @@ using UnityEditor;
 using System.Collections;
 using UMA;
 
+#pragma warning disable 618
 
 [CustomEditor(typeof(UMASaveTool))]
 [CanEditMultipleObjects]
@@ -69,3 +70,4 @@ public class UMASaveToolEditor : Editor {
 	}
 	
 }
+#pragma warning restore 618

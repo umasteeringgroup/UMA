@@ -17,6 +17,14 @@ namespace UMA
 
 		public Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate> raceDictionary = new Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate>();
 	    public UmaTPose TPose;
+        public enum UMATarget
+        {
+            Humanoid,
+            Generic
+        }
+        public UMATarget umaTarget;
+        public string genericRootMotionTransformName;
+
 
 	    void Awake()
 	    {

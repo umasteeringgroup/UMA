@@ -100,6 +100,12 @@ public class UMAContext : MonoBehaviour
 
 	public static UMAContext FindInstance()
 	{
-		return Instance != null ? Instance : GameObject.Find("UMAContext").GetComponent<UMAContext>();	
+		if (Instance == null)
+		{
+			var contextGO = GameObject.Find("UMAContext");
+			if (contextGO != null)
+				Instance = contextGO.GetComponent<UMAContext>();
+		}
+		return Instance;	
 	}
 }

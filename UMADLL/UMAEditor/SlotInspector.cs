@@ -158,6 +158,11 @@ namespace UMAEditor
             }
 
             EditorGUIUtility.LookLikeControls();
+            if (GUI.changed)
+            {
+                EditorUtility.SetDirty(slot);
+                AssetDatabase.SaveAssets();
+            }
         }
     }
 }

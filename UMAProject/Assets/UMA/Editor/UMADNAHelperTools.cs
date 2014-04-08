@@ -12,18 +12,6 @@ namespace UMAEditor
 {
 	public static class UMADNAHelperTools {
 	    static DictionaryCustomFormatter customFormatter;
-	    class Template
-	    {
-	        public String Format;
-	        public StringBuilder sb;
-	        public String Name;
-	        public static IFormatProvider formatter;
-	        public void Append(IDictionary<string, object> data)
-	        {
-	            sb.AppendFormat(formatter, Format, data);
-	        }
-	    }
-
 
 	    [MenuItem("UMA/Create DNA Helper Code")]
 		static void CreateDNAHelperCode() 
@@ -33,11 +21,11 @@ namespace UMAEditor
 	        var baseTemplate = File.ReadAllText(Path.Combine(sourceDir,"UmaDna_Template.cs.txt"));
 	        var pageTemplate = File.ReadAllText(Path.Combine(sourceDir, "UmaDnaChild_Template.cs.txt"));
 
-	        var templates = ParseTemplates(sourceDir, baseTemplate);
-	        var pageTemplates = ParseTemplates(sourceDir, pageTemplate);
+	        var templates = CodeGenTemplate.ParseTemplates(sourceDir, baseTemplate);
+			var pageTemplates = CodeGenTemplate.ParseTemplates(sourceDir, pageTemplate);
 
 	        customFormatter = new DictionaryCustomFormatter();
-	        Template.formatter = customFormatter;
+	        CodeGenTemplate.formatter = customFormatter;
 
 	        if (!Directory.Exists(destDir))
 	        {
@@ -86,34 +74,12 @@ namespace UMAEditor
             return false;
         }
 
-	    private static Template[] ParseTemplates(string sourceDir, string pageTemplate)
-	    {
-	        List<Template> res = new List<Template>();
-	        foreach (var line in pageTemplate.Split('\r', '\n'))
-	        {
-	            if (line.StartsWith("//#TEMPLATE "))
-	            {
-	                var parsedLine = line.Split(' ');
-	                if (parsedLine.Length == 3)
-	                {
-	                    var filename = Path.Combine(sourceDir, parsedLine[2]);
-	                    if (!File.Exists(filename))
-	                    {
-	                        Debug.LogError("File not found: " + filename);
-	                    }
-	                    res.Add(new Template() { Format = File.ReadAllText(filename), sb = new StringBuilder(), Name = parsedLine[1] });
-	                }
-	            }
-	        }
-	        return res.ToArray();
-	    }
-
 	    private static void CreateBaseDNAExtension(string destination, string formatString, Dictionary<string, object> customData)
 	    {
 	        File.WriteAllText(Path.Combine(destination, "UMADna_Generated.cs"), String.Format(customFormatter, formatString, customData));
 	    }
 
-	    private static void CreateDNAHelperCode(Type dnaType, string destination, string formatString, Template[] templates)
+	    private static void CreateDNAHelperCode(Type dnaType, string destination, string formatString, CodeGenTemplate[] templates)
 	    {
 	        var customData = new Dictionary<string, object>();
 	        customData.Add("ClassName", dnaType.Name);
