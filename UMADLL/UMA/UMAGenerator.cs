@@ -160,7 +160,8 @@ namespace UMA
 			if(umaData)
 	        {
                 umaData.GotoOriginalPose();
-                umaData.skeleton = new UMASkeletonDefault(umaData.boneHashList);
+                umaData.skeleton = new UMASkeletonDefault(umaData.myRenderer.rootBone);
+                umaData.GotoTPose();
                 umaData.ApplyDNA();
                 UpdateAvatar(umaData);
 			}

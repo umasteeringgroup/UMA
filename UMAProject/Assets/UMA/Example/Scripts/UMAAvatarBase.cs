@@ -81,8 +81,7 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 		if (newUMA != null)
 		{
 			umaData.Assign(newUMA);
-			umaData.animationController = animationController;
-			if (animationController == null) umaData.animationController = newUMA.animationController;
+			if (animationController != null) umaData.animationController = animationController;
 			newUMA.animator = null;
 			DestroyImmediate(newUMA);
 		}
@@ -90,7 +89,7 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 		{
 			umaData.animator = umaData.GetComponentInChildren<Animator>();
 			umaData.umaRoot = umaData.animator.gameObject;
-			umaData.animationController = animationController;
+			if (animationController != null) umaData.animationController = animationController;
 			umaData.myRenderer = umaData.GetComponentInChildren<SkinnedMeshRenderer>();
 		}
 		umaData.umaGenerator = umaGenerator;

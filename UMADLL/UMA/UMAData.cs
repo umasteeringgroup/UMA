@@ -87,6 +87,10 @@ namespace UMA
             animatedBones = other.animatedBones;
             boneHashList = other.boneHashList;
             umaRoot = other.umaRoot;
+            if (animationController == null)
+            {
+                animationController = other.animationController;
+            }
         }
 
 		
@@ -548,7 +552,7 @@ namespace UMA
 			animatedBones = new Transform[0];
 			tempBoneData = new UMAData.BoneData[0];
 
-			skeleton = new UMASkeletonDefault(boneHashList);
+			skeleton = new UMASkeletonDefault(myRenderer.rootBone);
 		}
 		
 		public void UpdateBoneData()
@@ -619,6 +623,26 @@ namespace UMA
 				bone.boneTransform.localRotation = bone.originalBoneRotation;
             }
         }
+
+        public void GotoTPose()
+        {
+            if (umaRecipe.raceData.TPose != null)
+            {
+                var tpose = umaRecipe.raceData.TPose;
+                tpose.DeSerialize();
+                foreach (var bone in tpose.boneInfo)
+                {
+                    var hash = UMASkeleton.StringToHash(bone.name);
+                    var go = skeleton.GetBoneGameObject(hash);
+                    if (go == null) continue;
+                    var transform = go.transform;
+                    skeleton.SetPosition(hash, bone.position);
+                    skeleton.SetRotation(hash, bone.rotation);
+                    skeleton.SetScale(hash, bone.scale);
+                }
+            }
+        }
+
 
         internal int[] GetAnimatedBones()
         {

@@ -63,7 +63,7 @@ namespace UMA
             }
 
             umaData.myRenderer.quality = SkinQuality.Bone4;
-            umaData.myRenderer.useLightProbes = true;
+            //umaData.myRenderer.useLightProbes = true;
             umaData.myRenderer.sharedMaterials = combinedMaterialList.ToArray();
             //umaData.myRenderer.sharedMesh.RecalculateBounds();
             umaData.myRenderer.sharedMesh.name = "UMAMesh";

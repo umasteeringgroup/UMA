@@ -38,6 +38,7 @@ namespace UMA
 	        {
 	            if (dnaConverterList[i])
 	            {
+                    dnaConverterList[i].Prepare();
 	                if (!raceDictionary.ContainsKey(dnaConverterList[i].DNAType))
 	                {
 	                    raceDictionary.Add(dnaConverterList[i].DNAType, dnaConverterList[i].ApplyDnaAction);

@@ -64,6 +64,7 @@ namespace UMAEditor
                     slot.umaBoneData = GetTransformsInPrefab(slot.meshRenderer.rootBone);
                 }
             }
+            slot.subMeshIndex = EditorGUILayout.IntField("Sub Mesh Index", slot.subMeshIndex);
             Material material = EditorGUILayout.ObjectField("Material", slot.materialSample, typeof(Material), false) as Material;
             if (material != slot.materialSample)
             {

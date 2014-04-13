@@ -32,9 +32,9 @@ namespace UMA
             if (umaData)
             {
                 AnimationState[] snapshot = null;
+                var animator = umaData.animator;
                 if (umaData.animationController)
                 {
-                    var animator = umaData.animator;
                     if (animator != null && umaData.animationController == animator.runtimeAnimatorController)
                     {
                         snapshot = new AnimationState[animator.layerCount];
@@ -46,10 +46,8 @@ namespace UMA
                         }
                     }
                 }
-                if (umaData.animationController)
+                if (animator)
                 {
-                    var animator = umaData.animator;
-
                     bool applyRootMotion = false;
                     bool animatePhysics = false;
                     AnimatorCullingMode cullingMode = AnimatorCullingMode.AlwaysAnimate;
@@ -218,7 +216,7 @@ namespace UMA
                 {
                     //var entry = umaData.boneList[skeletonbone.name];
                     skeletonbone.position = entry.boneTransform.localPosition;
-                    //skeletonbone.rotation = entry.boneTransform.localRotation;
+                    skeletonbone.rotation = entry.boneTransform.localRotation;
                     skeletonbone.scale = entry.boneTransform.localScale;
                     bones[i] = skeletonbone;
                     animatedBones.Remove(entry.boneTransform);

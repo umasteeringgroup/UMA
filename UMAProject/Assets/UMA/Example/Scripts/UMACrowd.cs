@@ -419,7 +419,6 @@ public class UMACrowd : MonoBehaviour
 	{
 		umaData.atlasResolutionScale = atlasResolutionScale;
 		umaData.OnCharacterUpdated += myColliderUpdateMethod;
-		umaData.Dirty(true, true, true);
 	}
 
 	void myColliderUpdateMethod(UMAData umaData)

@@ -29,6 +29,7 @@ public class RaceLibrary : RaceLibraryBase {
         raceDictionary.Clear();
         for (int i = 0; i < raceElementList.Length; i++){
             if (raceElementList[i]){
+				raceElementList[i].UpdateDictionary();
                 if (!raceDictionary.ContainsKey(raceElementList[i].raceName)){
                     raceDictionary.Add(raceElementList[i].raceName, raceElementList[i]);
                 }

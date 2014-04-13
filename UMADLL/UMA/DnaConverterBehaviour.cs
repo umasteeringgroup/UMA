@@ -13,5 +13,9 @@ namespace UMA
 	    {
 	        ApplyDnaAction(data, skeleton);
 	    }
-	}
+
+        public virtual void Prepare()
+        {
+        }
+    }
 }
