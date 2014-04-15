@@ -30,6 +30,17 @@ namespace UMA
 	    {
 	        UpdateDictionary();
 	    }
+	    
+	    public bool Validate()
+	    {
+	    	bool valid = true;
+			if ((umaTarget == UMATarget.Humanoid) && (TPose == null)) {
+				Debug.LogError("Humanoid UMA target missing required TPose data!");
+				valid = false;
+			}
+			
+			return valid;
+		}
 
 	    public void UpdateDictionary()
 	    {

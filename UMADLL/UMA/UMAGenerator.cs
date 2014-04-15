@@ -62,7 +62,15 @@ namespace UMA
 
         public virtual bool HandleDirtyUpdate(UMAData data)
         {
-            umaData = data;
+			if (umaData != data)
+			{
+				umaData = data;
+				if (!umaData.Validate())
+				{
+					return true;
+				}
+			}
+			
             if (umaData.isMeshDirty)
             {
                 if (!umaData.isTextureDirty)
@@ -122,6 +130,7 @@ namespace UMA
             if (HandleDirtyUpdate(umaDirtyList[0]))
             {
                 umaDirtyList.RemoveAt(0);
+                umaData = null;
             }			
 		}
 
