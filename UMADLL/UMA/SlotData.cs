@@ -65,6 +65,21 @@ namespace UMA
 
 	    }
 
+        public int GetTextureChannelCount(UMAGeneratorBase generator)
+        {
+            int res;
+            if (textureNameList != null && textureNameList.Length > 0)
+            {
+                if (string.IsNullOrEmpty(textureNameList[0])) return 0;
+                return textureNameList.Length;
+            }
+            if (generator != null)
+            {
+                return generator.textureNameList.Length;
+            }
+            return 2; // UMA built in default
+        }
+
 		public bool RemoveOverlay(params string[] names)
 	    {
 	        bool changed = false;

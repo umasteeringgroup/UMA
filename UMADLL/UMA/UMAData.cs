@@ -630,8 +630,9 @@ namespace UMA
             {
                 var tpose = umaRecipe.raceData.TPose;
                 tpose.DeSerialize();
-                foreach (var bone in tpose.boneInfo)
+                for (int i = 0; i < tpose.boneInfo.Length; i++)
                 {
+                    var bone = tpose.boneInfo[i];
                     var hash = UMASkeleton.StringToHash(bone.name);
                     var go = skeleton.GetBoneGameObject(hash);
                     if (go == null) continue;
