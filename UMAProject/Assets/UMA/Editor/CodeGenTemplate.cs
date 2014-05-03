@@ -12,9 +12,18 @@ namespace UMA
 		public StringBuilder sb;
 		public String Name;
 		public static IFormatProvider formatter;
+		public string Tag;
 		public void Append(IDictionary<string, object> data)
 		{
-			sb.AppendFormat(formatter, Format, data);
+			try
+			{
+				sb.AppendFormat(formatter, Format, data);
+			}
+			catch (FormatException fe)
+			{
+				Debug.LogError(fe);
+				Debug.Log(Format);
+			}
 		}
 
 		public static CodeGenTemplate[] ParseTemplates(string sourceDir, string pageTemplate)
@@ -25,14 +34,15 @@ namespace UMA
 				if (line.StartsWith("//#TEMPLATE "))
 				{
 					var parsedLine = line.Split(' ');
-					if (parsedLine.Length == 3)
+					if (parsedLine.Length >= 3)
 					{
 						var filename = Path.Combine(sourceDir, parsedLine[2]);
+						var tag = parsedLine.Length > 3 ? parsedLine[3] : "";
 						if (!File.Exists(filename))
 						{
 							Debug.LogError("File not found: " + filename);
 						}
-						res.Add(new CodeGenTemplate() { Format = File.ReadAllText(filename), sb = new StringBuilder(), Name = parsedLine[1] });
+						res.Add(new CodeGenTemplate() { Format = File.ReadAllText(filename), sb = new StringBuilder(), Name = parsedLine[1], Tag = tag });
 					}
 				}
 			}

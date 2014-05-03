@@ -20,7 +20,7 @@ public class UMAGenericCrowd : UMACrowd
 			bc.center = mesh.bounds.center;
 			bc.size = mesh.bounds.size;
 			var posi = obj.myRenderer.transform.parent.localPosition;
-			posi.y = -mesh.bounds.min.y;
+			//posi.y = -mesh.bounds.min.y;
 			obj.myRenderer.transform.parent.localPosition = posi;
 		}
 	}
