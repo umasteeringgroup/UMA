@@ -22,6 +22,8 @@ namespace UMA
         public abstract Vector3 GetScale(int nameHash);
         public abstract Quaternion GetRotation(int nameHash);
 
+        public abstract bool Reset(int nameHash);
+
         public static int StringToHash(string name) { return Animator.StringToHash(name); }
     }
 }

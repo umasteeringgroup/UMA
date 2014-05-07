@@ -5,85 +5,88 @@ using UnityEngine;
 
 namespace UMA
 {
-    public class UMASkeletonDefault : UMASkeleton 
+    public class UMASkeletonDefault : UMASkeleton
     {
-        Dictionary<int, Transform> boneHashData;
+        Dictionary<int, UMAData.BoneData> boneHashData;
+
         [Obsolete("UMASkeletonDefault(Dictionary<int, UMAData.BoneData> boneHashData) is obsolete and will be removed in UMA 1.3", false)]
         public UMASkeletonDefault(Dictionary<int, UMAData.BoneData> boneHashData)
         {
-            this.boneHashData = new Dictionary<int, Transform>();
-            foreach (var entry in boneHashData)
-            {
-                this.boneHashData.Add(entry.Key, entry.Value.boneTransform);
-            }
+            this.boneHashData = boneHashData;
         }
 
         public UMASkeletonDefault(Transform rootBone)
         {
-            this.boneHashData = new Dictionary<int, Transform>();
+            this.boneHashData = new Dictionary<int, UMAData.BoneData>();
             AddBonesRecursive(rootBone);
         }
 
         private void AddBonesRecursive(Transform transform)
         {
             var hash = UMASkeleton.StringToHash(transform.name);
-            boneHashData[hash] = transform;
+            boneHashData[hash] = new UMAData.BoneData()
+            {
+                boneTransform = transform,
+                originalBonePosition = transform.localPosition,
+                originalBoneScale = transform.localScale,
+                originalBoneRotation = transform.localRotation
+            };
             for (int i = 0; i < transform.childCount; i++)
             {
                 var child = transform.GetChild(i);
                 AddBonesRecursive(child);
-            }            
+            }
         }
 
-		public override bool HasBone(int nameHash)
-		{
-			return boneHashData.ContainsKey(nameHash);
-		}
-
-		public override void RemoveBone(int nameHash)
-		{
-			boneHashData.Remove(nameHash);
-		}
-		
-		public override GameObject GetBoneGameObject(int nameHash)
+        public override bool HasBone(int nameHash)
         {
-            Transform res;
+            return boneHashData.ContainsKey(nameHash);
+        }
+
+        public override void RemoveBone(int nameHash)
+        {
+            boneHashData.Remove(nameHash);
+        }
+
+        public override GameObject GetBoneGameObject(int nameHash)
+        {
+            UMAData.BoneData res;
             if (boneHashData.TryGetValue(nameHash, out res))
             {
-                return res.gameObject;
+                return res.boneTransform.gameObject;
             }
-            return null;            
+            return null;
         }
 
-		protected override IEnumerable<int> GetBoneHashes()
-		{
-			foreach (int hash in boneHashData.Keys)
-			{
-				yield return hash;
-			}
-		}
+        protected override IEnumerable<int> GetBoneHashes()
+        {
+            foreach (int hash in boneHashData.Keys)
+            {
+                yield return hash;
+            }
+        }
 
         public override void Set(int nameHash, Vector3 position, Vector3 scale, Quaternion rotation)
         {
-            Transform db;
+            UMAData.BoneData db;
             if (boneHashData.TryGetValue(nameHash, out db))
             {
-                db.localPosition = position;
-                db.localRotation = rotation;
-                db.localScale = scale;
+                db.boneTransform.localPosition = position;
+                db.boneTransform.localRotation = rotation;
+                db.boneTransform.localScale = scale;
             }
             else
             {
-                throw new Exception("Bone not found."); 
+                throw new Exception("Bone not found.");
             }
         }
 
         public override void SetPosition(int nameHash, Vector3 position)
         {
-            Transform db;
+            UMAData.BoneData db;
             if (boneHashData.TryGetValue(nameHash, out db))
             {
-                db.localPosition = position;
+                db.boneTransform.localPosition = position;
             }
             else
             {
@@ -93,10 +96,10 @@ namespace UMA
 
         public override void SetScale(int nameHash, Vector3 scale)
         {
-            Transform db;
+            UMAData.BoneData db;
             if (boneHashData.TryGetValue(nameHash, out db))
             {
-                db.localScale = scale;
+                db.boneTransform.localScale = scale;
             }
             else
             {
@@ -106,10 +109,10 @@ namespace UMA
 
         public override void SetRotation(int nameHash, Quaternion rotation)
         {
-            Transform db;
+            UMAData.BoneData db;
             if (boneHashData.TryGetValue(nameHash, out db))
             {
-                db.localRotation = rotation;
+                db.boneTransform.localRotation = rotation;
             }
             else
             {
@@ -117,12 +120,27 @@ namespace UMA
             }
         }
 
-		public override Vector3 GetPosition(int nameHash)
+        public override bool Reset(int nameHash)
         {
-            Transform db;
+            UMAData.BoneData db;
+            if (boneHashData.TryGetValue(nameHash, out db) && (db.boneTransform != null))
+            {
+                db.boneTransform.localPosition = db.originalBonePosition;
+                db.boneTransform.localRotation = db.originalBoneRotation;
+                db.boneTransform.localScale = db.originalBoneScale;
+
+                return true;
+            }
+
+            return false;
+        }
+
+        public override Vector3 GetPosition(int nameHash)
+        {
+            UMAData.BoneData db;
             if (boneHashData.TryGetValue(nameHash, out db))
             {
-                return db.localPosition;
+                return db.boneTransform.localPosition;
             }
             else
             {
@@ -132,10 +150,10 @@ namespace UMA
 
         public override Vector3 GetScale(int nameHash)
         {
-            Transform db;
+            UMAData.BoneData db;
             if (boneHashData.TryGetValue(nameHash, out db))
             {
-                return db.localScale;
+                return db.boneTransform.localScale;
             }
             else
             {
@@ -145,10 +163,10 @@ namespace UMA
 
         public override Quaternion GetRotation(int nameHash)
         {
-            Transform db;
+            UMAData.BoneData db;
             if (boneHashData.TryGetValue(nameHash, out db))
             {
-                return db.localRotation;
+                return db.boneTransform.localRotation;
             }
             else
             {
