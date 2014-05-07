@@ -11,7 +11,7 @@ using UnityEngine;
 
 using Object = UnityEngine.Object;
 using UMA;
-using UMA.RecipeTools;
+using UMA.Integrations;
 
 namespace UMAEditor
 {
