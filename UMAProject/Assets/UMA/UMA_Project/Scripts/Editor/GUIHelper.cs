@@ -100,7 +100,7 @@ namespace UMAEditor
 		public static bool BeginCollapsableGroup(ref bool show, string text)
 		{
 			GUILayout.BeginHorizontal();
-			show = GUILayout.Toggle(show, show ? "-" : "+", EditorStyles.toolbarButton, GUILayout.ExpandWidth(false));
+			show = GUILayout.Toggle(show, show ? "\u002d" : "\u002b", EditorStyles.toolbarButton, GUILayout.ExpandWidth(false));
 			//GUILayout.Label(text, EditorStyles.toolbarButton, GUILayout.ExpandWidth(false));
 			GUILayout.Label("", EditorStyles.toolbarButton);
 			GUILayout.EndHorizontal();
@@ -125,25 +125,6 @@ namespace UMAEditor
 			GUILayout.EndVertical();
 		}
 
-		public static TResult TestTarget<TResult>(Object target) where TResult : class
-		{
-			#region Get the target, converted to its working form. Return if it can't be done.
-			TResult tresult = target as TResult;
-
-			if (tresult == null)
-			{
-				#region Tell the user that he can only use the following functionality if a terrain actually exists.
-				GUILayout.BeginHorizontal(EditorStyles.textField);
-				GUILayout.Label("", EditorStyles.boldLabel, GUILayout.ExpandWidth(false), GUILayout.MinWidth(192));
-				GUILayout.Label("Oddly, the " + typeof(TResult).ToString() + " object doesn't exist...",
-								EditorStyles.whiteMiniLabel);
-				#endregion
-			}
-
-			return tresult;
-			#endregion
-		}
-
 		public static void BeginObject(string label, int minWidth)
 		{
 			GUILayout.BeginHorizontal();
@@ -160,7 +141,7 @@ namespace UMAEditor
 			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
 			GUILayout.Space(10);
 			foldout = EditorGUILayout.Foldout(foldout, content);
-			delete = GUILayout.Button("×", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
+			delete = GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
 			GUILayout.EndHorizontal();
 		}
 
@@ -171,10 +152,10 @@ namespace UMAEditor
 			foldout = EditorGUILayout.Foldout(foldout, content);
 
 			move = 0;
-			if (GUILayout.Button("▲", EditorStyles.miniButton, GUILayout.ExpandWidth(false))) move--;
-			if (GUILayout.Button("▼", EditorStyles.miniButton, GUILayout.ExpandWidth(false))) move++;
+			if (GUILayout.Button("\u25B2", EditorStyles.miniButton, GUILayout.ExpandWidth(false))) move--;
+			if (GUILayout.Button("\u25BC", EditorStyles.miniButton, GUILayout.ExpandWidth(false))) move++;
 
-			delete = GUILayout.Button("×", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
+			delete = GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
 			GUILayout.EndHorizontal();
 		}
 	}
