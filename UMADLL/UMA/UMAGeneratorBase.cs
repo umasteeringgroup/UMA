@@ -32,9 +32,9 @@ namespace UMA
             if (umaData)
             {
                 AnimationState[] snapshot = null;
-                var animator = umaData.animator;
                 if (umaData.animationController)
                 {
+                    var animator = umaData.animator;
 
 					bool animating = false;
                     bool applyRootMotion = false;
