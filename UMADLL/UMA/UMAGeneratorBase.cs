@@ -35,29 +35,31 @@ namespace UMA
                 var animator = umaData.animator;
                 if (umaData.animationController)
                 {
-                    if (animator != null && umaData.animationController == animator.runtimeAnimatorController)
-                    {
-                        snapshot = new AnimationState[animator.layerCount];
-                        for (int i = 0; i < animator.layerCount; i++)
-                        {
-                            var state = animator.GetCurrentAnimatorStateInfo(i);
-                            snapshot[i].stateHash = state.nameHash;
-                            snapshot[i].stateTime = Mathf.Max(0, state.normalizedTime - Time.deltaTime / state.length);
-                        }
-                    }
-                }
-                if (animator)
-                {
+
+					bool animating = false;
                     bool applyRootMotion = false;
                     bool animatePhysics = false;
                     AnimatorCullingMode cullingMode = AnimatorCullingMode.AlwaysAnimate;
 
                     if (animator)
                     {
+						animating = animator.enabled;
                         applyRootMotion = animator.applyRootMotion;
                         animatePhysics = animator.animatePhysics;
                         cullingMode = animator.cullingMode;
-                        Object.DestroyImmediate(animator);
+                        
+						if (umaData.animationController == animator.runtimeAnimatorController)
+						{
+							snapshot = new AnimationState[animator.layerCount];
+							for (int i = 0; i < animator.layerCount; i++)
+							{
+								var state = animator.GetCurrentAnimatorStateInfo(i);
+								snapshot[i].stateHash = state.nameHash;
+								snapshot[i].stateTime = Mathf.Max(0, state.normalizedTime - Time.deltaTime / state.length);
+							}
+						}
+						
+						Object.DestroyImmediate(animator);
                     }
                     var oldParent = umaData.umaRoot.transform.parent;
                     umaData.umaRoot.transform.parent = null;
@@ -70,7 +72,9 @@ namespace UMA
                         {
                             animator.Play(snapshot[i].stateHash, i, snapshot[i].stateTime);
                         }
+                
                         animator.Update(0);
+                        animator.enabled = animating;
                     }
                 }
             }
@@ -216,7 +220,7 @@ namespace UMA
                 {
                     //var entry = umaData.boneList[skeletonbone.name];
                     skeletonbone.position = entry.boneTransform.localPosition;
-                    skeletonbone.rotation = entry.boneTransform.localRotation;
+                    //skeletonbone.rotation = entry.boneTransform.localRotation;
                     skeletonbone.scale = entry.boneTransform.localScale;
                     bones[i] = skeletonbone;
                     animatedBones.Remove(entry.boneTransform);

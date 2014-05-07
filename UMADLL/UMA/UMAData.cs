@@ -93,6 +93,28 @@ namespace UMA
             }
         }
 
+		public bool Validate()
+		{
+			bool valid = true;
+			if (umaGenerator == null) {
+				Debug.LogError("UMA data missing required generator!");
+				valid = false;
+			}
+			
+			if (umaRecipe == null) {
+				Debug.LogError("UMA data missing required recipe!");
+				valid = false;
+			}
+			else {
+				valid = valid && umaRecipe.Validate();
+			}
+			
+			#if UNITY_EDITOR
+			if (!valid && EditorApplication.isPlaying) EditorApplication.isPaused = true;
+			#endif
+			
+			return valid;
+		}
 		
 		[System.Serializable]
 		public class AtlasList
@@ -179,6 +201,24 @@ namespace UMA
 			public Dictionary<Type, UMADnaBase> umaDna = new Dictionary<Type, UMADnaBase>();
             protected Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate> umaDnaConverter = new Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate>();
 			public SlotData[] slotDataList;
+			
+			public bool Validate() {
+				bool valid = true;
+				if (raceData == null) {
+					Debug.LogError("UMA recipe missing required race!");
+					valid = false;
+				}
+				else {
+					valid = valid && raceData.Validate();
+				}
+				
+				if ((slotDataList == null) || (slotDataList.Length < 1)) {
+					Debug.LogError("UMA recipe slot list is empty!");
+					valid = false;
+				}
+				
+				return valid;
+			}
 			
 			public UMADnaBase[] GetAllDna()
 			{
@@ -552,6 +592,7 @@ namespace UMA
 			animatedBones = new Transform[0];
 			tempBoneData = new UMAData.BoneData[0];
 
+			Debug.Log(myRenderer.rootBone.name, myRenderer.rootBone);
 			skeleton = new UMASkeletonDefault(myRenderer.rootBone);
 		}
 		

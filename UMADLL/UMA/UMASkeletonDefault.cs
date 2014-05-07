@@ -63,27 +63,27 @@ namespace UMA
 			}
 		}
 
-        public override void Set(int nameHash, Vector3 Position, Vector3 scale, Quaternion rotation)
+        public override void Set(int nameHash, Vector3 position, Vector3 scale, Quaternion rotation)
         {
             Transform db;
             if (boneHashData.TryGetValue(nameHash, out db))
             {
-                db.localPosition = Position;
+                db.localPosition = position;
                 db.localRotation = rotation;
                 db.localScale = scale;
             }
             else
             {
-                throw new Exception("Bone not found.");
+                throw new Exception("Bone not found."); 
             }
         }
 
-        public override void SetPosition(int nameHash, Vector3 Position)
+        public override void SetPosition(int nameHash, Vector3 position)
         {
             Transform db;
             if (boneHashData.TryGetValue(nameHash, out db))
             {
-                db.localPosition = Position;
+                db.localPosition = position;
             }
             else
             {
