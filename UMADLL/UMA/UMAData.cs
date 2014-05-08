@@ -222,10 +222,14 @@ namespace UMA
 			
 			public UMADnaBase[] GetAllDna()
 			{
-                EnsureAllDNAPresent();
+				if ((raceData == null) || (slotDataList == null)) {
+					return new UMADnaBase[0];
+				}
+
+				EnsureAllDNAPresent();
 				UMADnaBase[] allDNA = new UMADnaBase[umaDna.Values.Count];
 				umaDna.Values.CopyTo(allDNA, 0);
-
+				
 				return allDNA;
 			}
 

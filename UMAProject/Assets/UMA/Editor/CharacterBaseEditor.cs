@@ -21,7 +21,7 @@ namespace UMAEditor
         private readonly Type[] _dnaTypes;
         private readonly string[] _dnaTypeNames;
 
-        private int _viewDna;
+        private int _viewDna = -1;
 
         public DNAMasterEditor(UMAData.UMARecipe recipe)
         {
@@ -45,13 +45,16 @@ namespace UMAEditor
         {
             _viewDna = EditorGUILayout.Popup("DNA", _viewDna, _dnaTypeNames);
 
-            Type dnaType = _dnaTypes[_viewDna];
+			if (_viewDna >= 0) {
+	            Type dnaType = _dnaTypes[_viewDna];
 
-			if (_dnaValues[dnaType].OnGUI())
-			{
-				_dnaDirty = true;
-				return true;
+				if (_dnaValues[dnaType].OnGUI())
+				{
+					_dnaDirty = true;
+					return true;
+				}
 			}
+
             return false;
         }
     }
@@ -656,8 +659,10 @@ namespace UMAEditor
 
         protected virtual void Rebuild()
         {
-            dnaEditor = new DNAMasterEditor(_recipe);
-            slotEditor = new SlotMasterEditor(_recipe);
+            if (_recipe != null) {
+				dnaEditor = new DNAMasterEditor(_recipe);
+            	slotEditor = new SlotMasterEditor(_recipe);
+			}
         }
 
         private bool ToolbarGUI()
