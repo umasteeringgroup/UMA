@@ -1,1 +1,1 @@
-			case {0:Index}: {0:FieldName} = value; break;
+				case {0:Index}: {0:FieldName} = value; break;
