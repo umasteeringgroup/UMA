@@ -34,6 +34,15 @@ namespace UMA
 				return new string[0];
 			}}
 		}}
+		public virtual float GetValue(int idx)
+		{{
+			throw new System.ArgumentOutOfRangeException("idx", idx, "GetValue invalid index");
+		}}
+		public virtual void SetValue(int idx, float value)
+		{{
+			throw new System.ArgumentOutOfRangeException("idx", idx, "SetValue invalid index");
+		}}
+
 		public static string[] GetNames(System.Type dnaType)
 		{{
 	{0:GetNames}
