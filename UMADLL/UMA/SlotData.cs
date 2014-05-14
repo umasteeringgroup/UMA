@@ -165,5 +165,44 @@ namespace UMA
 	    {
 	        return overlayList;
 	    }
-	}
+
+        internal bool Validate(UMAGeneratorBase generator)
+        {
+            bool valid = true;
+            if( meshRenderer != null )
+            {
+                string[] activeList;
+                if( textureNameList == null || textureNameList.Length == 0 )
+                {
+                    activeList = generator.textureNameList;
+                }
+                else
+                {
+                    activeList = textureNameList;
+                }
+                int count = activeList.Length;
+                while (count > 0 && string.IsNullOrEmpty(activeList[count - 1]))
+                {
+                    count--;
+                }
+                for (int i = 0; i < overlayList.Count; i++)
+                {
+                    var overlayData = overlayList[i];
+                    if (overlayData != null)
+                    {
+                        if (overlayData.textureList.Length != count)
+                        {
+                            Debug.LogError(overlayData.overlayName);
+                            Debug.LogError(overlayData.textureList.Length);
+                            Debug.LogError(slotName);
+                            Debug.LogError(count);
+                            Debug.LogError(string.Format("Overlay '{0]' only have {1} textures, but it is added to SlotData '{2}' which requires {3} textures.", overlayData.overlayName, overlayData.textureList.Length, slotName, count));
+                            valid = false;
+                        }
+                    }
+                }
+            }
+            return valid;
+        }
+    }
 }
