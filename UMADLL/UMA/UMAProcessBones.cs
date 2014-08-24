@@ -38,8 +38,52 @@ namespace UMA
 					umaData.tempBoneData[i] = tempBone;//Only while Dictionary can't be serialized
 				}
                 Debug.Log(umaData.boneHashList.Count + " bones have been included");
+				
+				ReplaceAnimatedBones();
 			}
 			runScript = false;
 		}
+		
+		/// <summary>
+		/// If you create a new Race in UMA, you must set the Animated Bones of UMAData manually. 
+		/// This is described here https://www.youtube.com/watch?v=_pzrU_2G0qs#t=136
+		/// We can automate this partially, if the new race has the same naming schema for the bones.
+		/// In case of the Werewolf race, it will replace all animated bones.
+		/// </summary>
+		public void ReplaceAnimatedBones()
+		{
+			int replacedCount = 0;
+
+			for(int i=0; i < umaData.animatedBones.Length; i++)
+			{
+				Transform boneTransform = umaData.animatedBones[i];
+				Transform newBoneTransform = FindChildRecursive(boneStructure, boneTransform.name);
+				if (newBoneTransform == null)
+				{
+					Debug.LogWarning("You must set the animated bone " + boneTransform.name + " manually");
+				}
+				else
+				{
+					replacedCount++;
+					umaData.animatedBones[i] = newBoneTransform;
+				}
+			}
+
+			Debug.Log(replacedCount + " animated bones have been replaced");
+		}
+
+		public static Transform FindChildRecursive(Transform current, string name)   
+		{
+			if (current.name == name) return current;
+			
+			for (int i = 0; i < current.childCount; ++i)
+			{
+				Transform found = FindChildRecursive(current.GetChild(i), name);
+				if (found != null) return found;
+			}
+			
+			return null;
+		}	
+		
 	}
 }
