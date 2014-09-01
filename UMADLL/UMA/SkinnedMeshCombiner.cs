@@ -31,7 +31,7 @@ namespace UMA
 	        {
 	            return res;
 	        }
-            if (string.Compare("Global", bone.name) == 0 || string.Compare(hierarchyRoot.name, bone.name) == 0)
+			if (string.Compare("Global", bone.name) == 0 || string.Compare(hierarchyRoot.name, bone.name) == 0)
             {
                 boneMap.Add(bone, hierarchyRoot);
                 return hierarchyRoot;
@@ -138,7 +138,7 @@ namespace UMA
 
 	        int vertexIndex = 0;
 
-	        Dictionary<Transform, int> bonesCollection = new Dictionary<Transform, int>(bindPoseCount);
+			var bonesCollection = new Dictionary<Transform, BoneIndexEntry>(bindPoseCount);
 	        List<Matrix4x4> bindPoses = new List<Matrix4x4>(bindPoseCount);
 	        List<Transform> bonesList = new List<Transform>(bindPoseCount);
 
@@ -245,16 +245,15 @@ namespace UMA
 	        target.mesh = dest;
 	    }
 
-	    private static void BuildBoneWeights(BoneWeight[] source, int sourceIndex, BoneWeight[] dest, int destIndex, int count, Transform[] bones, Matrix4x4[] bindPoses, Dictionary<Transform, int> bonesCollection, List<Matrix4x4> bindPosesList, List<Transform> bonesList)
+		private static void BuildBoneWeights(BoneWeight[] source, int sourceIndex, BoneWeight[] dest, int destIndex, int count, Transform[] bones, Matrix4x4[] bindPoses, Dictionary<Transform, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<Transform> bonesList)
 	    {
-
 	        while (count-- > 0)
 	        {
 	            processBoneWeight(ref source[sourceIndex++], ref dest[destIndex++], bones, bindPoses, bonesCollection, bindPosesList, bonesList);
 	        }
 	    }
 
-	    private static void processBoneWeight(ref BoneWeight source, ref BoneWeight dest, Transform[] bones, Matrix4x4[] bindPoses, Dictionary<Transform, int> bonesCollection, List<Matrix4x4> bindPosesList, List<Transform> bonesList)
+		private static void processBoneWeight(ref BoneWeight source, ref BoneWeight dest, Transform[] bones, Matrix4x4[] bindPoses, Dictionary<Transform, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<Transform> bonesList)
 	    {
 	        dest.boneIndex0 = TranslateBoneIndex(source.boneIndex0, bones, bindPoses, bonesCollection, bindPosesList, bonesList);
 	        dest.boneIndex1 = TranslateBoneIndex(source.boneIndex1, bones, bindPoses, bonesCollection, bindPosesList, bonesList);
@@ -266,20 +265,65 @@ namespace UMA
 	        dest.weight3 = source.weight3;
 	    }
 
-	    private static int TranslateBoneIndex(int index, Transform[] bones, Matrix4x4[] bindPoses, Dictionary<Transform, int> bonesCollection, List<Matrix4x4> bindPosesList, List<Transform> bonesList)
+		private struct BoneIndexEntry
+		{
+			public int index;
+			public List<int> indices;
+			public int Count { get { return index >= 0 ? 1 : indices.Count; }}
+			public int this[int idx] 
+			{
+				get 
+				{
+					if( index >= 0 )
+					{
+						if( idx == 0 ) return index;
+						throw new ArgumentOutOfRangeException();
+					}
+					return indices[idx];
+				}
+			}
+
+			internal void AddIndex(int idx)
+			{
+				if (index >= 0)
+				{
+					indices = new List<int>(10);
+					indices.Add(index);
+					index = -1;
+				}
+				indices.Add(idx);
+			}
+		}
+
+		private static int TranslateBoneIndex(int index, Transform[] bones, Matrix4x4[] bindPoses, Dictionary<Transform, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<Transform> bonesList)
 	    {
 	        var boneTransform = bones[index];
-	        int res;
-	        if (bonesCollection.TryGetValue(boneTransform, out res))
-	        {
-	            return res;
-	        }
-	        res = bonesCollection.Count;
-	        bonesCollection.Add(boneTransform, res);
-	        bindPosesList.Add(bindPoses[index]);
-	        bonesList.Add(boneTransform);
-	        return res;
-	    }
+			BoneIndexEntry entry;
+			if (bonesCollection.TryGetValue(boneTransform, out entry))
+			{
+				for (int i = 0; i < entry.Count; i++)
+				{
+					var res = entry[i];
+					if (bindPosesList[res].Equals(bindPoses[index]))
+					{
+						return res;
+					}
+				}
+				var idx = bindPosesList.Count;
+				entry.AddIndex(idx);
+				bindPosesList.Add(bindPoses[index]);
+				bonesList.Add(boneTransform);
+				return idx;
+			}
+			else
+			{
+				var idx = bindPosesList.Count;
+				bonesCollection.Add(boneTransform, new BoneIndexEntry() { index = idx });
+				bindPosesList.Add(bindPoses[index]);
+				bonesList.Add(boneTransform);
+				return idx;
+			}
+		}
 
 	    
 	    private static void CopyColorsToColors32(Color[] source, int sourceIndex, Color32[] dest, int destIndex, int count)
