@@ -160,7 +160,7 @@ namespace UMA
 	            Array.Copy(sMesh.normals, 0, normals, vertexIndex, vertexCount);
 	            if (tangents != null)
 	            {
-	                if( sMesh.tangents != null )
+	                if( sMesh.tangents != null && sMesh.tangents.Length > 0)
 	                {
 	                    Array.Copy(sMesh.tangents, 0, tangents, vertexIndex, vertexCount);
 	                }

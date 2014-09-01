@@ -110,7 +110,7 @@ namespace UMA
 			}
 			
 			#if UNITY_EDITOR
-			if (!valid && EditorApplication.isPlaying) EditorApplication.isPaused = true;
+			if (!valid && UnityEditor.EditorApplication.isPlaying) UnityEditor.EditorApplication.isPaused = true;
 			#endif
 			
 			return valid;
