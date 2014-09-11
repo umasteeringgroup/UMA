@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace UMA
+namespace UMA.Integrations
 {
-	internal static class PowerToolsIntegration
+	public static class PowerToolsIntegration
 	{
 		private static Type powerPackPersistance;
 		private static Type GetPowerPackPersistanceType()

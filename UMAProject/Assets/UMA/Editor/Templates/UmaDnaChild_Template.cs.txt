@@ -6,6 +6,8 @@
 //
 //#TEMPLATE GetValues UmaDnaChild_GetIndex_Fragment.cs.txt
 //#TEMPLATE SetValues UmaDnaChild_SetIndex_Fragment.cs.txt
+//#TEMPLATE GetValue UmaDnaChild_GetValue_Fragment.cs.txt
+//#TEMPLATE SetValue UmaDnaChild_SetValue_Fragment.cs.txt
 //#TEMPLATE GetNames UmaDnaChild_GetNames_Fragment.cs.txt
 //
 // Byte Serialization Handling
@@ -34,6 +36,23 @@ namespace UMA
 	{0:SetValues}
 			}}
 		}}
+		public override float GetValue(int idx)
+		{{
+			switch(idx)
+			{{
+{0:GetValue}
+			}}
+			return base.GetValue(idx);
+		}}
+		public override void SetValue(int idx, float value)
+		{{
+			switch(idx)
+			{{
+{0:SetValue}
+			}}
+			base.SetValue(idx, value);
+		}}
+
 		public static string[] GetNames()
 		{{
 			return new string[]

@@ -30,8 +30,8 @@ namespace UMA
 	    {
 	        UpdateDictionary();
 	    }
-	    
-	    public bool Validate()
+
+        public bool Validate(UMAGeneratorBase generator)
 	    {
 	    	bool valid = true;
 			if ((umaTarget == UMATarget.Humanoid) && (TPose == null)) {

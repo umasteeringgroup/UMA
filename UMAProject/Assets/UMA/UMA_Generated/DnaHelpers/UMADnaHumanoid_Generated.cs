@@ -6,6 +6,8 @@
 //
 //#TEMPLATE GetValues UmaDnaChild_GetIndex_Fragment.cs.txt
 //#TEMPLATE SetValues UmaDnaChild_SetIndex_Fragment.cs.txt
+//#TEMPLATE GetValue UmaDnaChild_GetValue_Fragment.cs.txt
+//#TEMPLATE SetValue UmaDnaChild_SetValue_Fragment.cs.txt
 //#TEMPLATE GetNames UmaDnaChild_GetNames_Fragment.cs.txt
 //
 // Byte Serialization Handling
@@ -126,6 +128,115 @@ namespace UMA
 
 			}
 		}
+		public override float GetValue(int idx)
+		{
+			switch(idx)
+			{
+				case 0: return height;
+				case 1: return headSize;
+				case 2: return headWidth;
+				case 3: return neckThickness;
+				case 4: return armLength;
+				case 5: return forearmLength;
+				case 6: return armWidth;
+				case 7: return forearmWidth;
+				case 8: return handsSize;
+				case 9: return feetSize;
+				case 10: return legSeparation;
+				case 11: return upperMuscle;
+				case 12: return lowerMuscle;
+				case 13: return upperWeight;
+				case 14: return lowerWeight;
+				case 15: return legsSize;
+				case 16: return belly;
+				case 17: return waist;
+				case 18: return gluteusSize;
+				case 19: return earsSize;
+				case 20: return earsPosition;
+				case 21: return earsRotation;
+				case 22: return noseSize;
+				case 23: return noseCurve;
+				case 24: return noseWidth;
+				case 25: return noseInclination;
+				case 26: return nosePosition;
+				case 27: return nosePronounced;
+				case 28: return noseFlatten;
+				case 29: return chinSize;
+				case 30: return chinPronounced;
+				case 31: return chinPosition;
+				case 32: return mandibleSize;
+				case 33: return jawsSize;
+				case 34: return jawsPosition;
+				case 35: return cheekSize;
+				case 36: return cheekPosition;
+				case 37: return lowCheekPronounced;
+				case 38: return lowCheekPosition;
+				case 39: return foreheadSize;
+				case 40: return foreheadPosition;
+				case 41: return lipsSize;
+				case 42: return mouthSize;
+				case 43: return eyeRotation;
+				case 44: return eyeSize;
+				case 45: return breastSize;
+
+			}
+			return base.GetValue(idx);
+		}
+		public override void SetValue(int idx, float value)
+		{
+			switch(idx)
+			{
+			case 0: height = value; return;
+			case 1: headSize = value; return;
+			case 2: headWidth = value; return;
+			case 3: neckThickness = value; return;
+			case 4: armLength = value; return;
+			case 5: forearmLength = value; return;
+			case 6: armWidth = value; return;
+			case 7: forearmWidth = value; return;
+			case 8: handsSize = value; return;
+			case 9: feetSize = value; return;
+			case 10: legSeparation = value; return;
+			case 11: upperMuscle = value; return;
+			case 12: lowerMuscle = value; return;
+			case 13: upperWeight = value; return;
+			case 14: lowerWeight = value; return;
+			case 15: legsSize = value; return;
+			case 16: belly = value; return;
+			case 17: waist = value; return;
+			case 18: gluteusSize = value; return;
+			case 19: earsSize = value; return;
+			case 20: earsPosition = value; return;
+			case 21: earsRotation = value; return;
+			case 22: noseSize = value; return;
+			case 23: noseCurve = value; return;
+			case 24: noseWidth = value; return;
+			case 25: noseInclination = value; return;
+			case 26: nosePosition = value; return;
+			case 27: nosePronounced = value; return;
+			case 28: noseFlatten = value; return;
+			case 29: chinSize = value; return;
+			case 30: chinPronounced = value; return;
+			case 31: chinPosition = value; return;
+			case 32: mandibleSize = value; return;
+			case 33: jawsSize = value; return;
+			case 34: jawsPosition = value; return;
+			case 35: cheekSize = value; return;
+			case 36: cheekPosition = value; return;
+			case 37: lowCheekPronounced = value; return;
+			case 38: lowCheekPosition = value; return;
+			case 39: foreheadSize = value; return;
+			case 40: foreheadPosition = value; return;
+			case 41: lipsSize = value; return;
+			case 42: mouthSize = value; return;
+			case 43: eyeRotation = value; return;
+			case 44: eyeSize = value; return;
+			case 45: breastSize = value; return;
+
+			}
+			base.SetValue(idx, value);
+		}
+
 		public static string[] GetNames()
 		{
 			return new string[]

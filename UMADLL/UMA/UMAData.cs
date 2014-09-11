@@ -106,11 +106,11 @@ namespace UMA
 				valid = false;
 			}
 			else {
-				valid = valid && umaRecipe.Validate();
+				valid = valid && umaRecipe.Validate(umaGenerator);
 			}
 			
 			#if UNITY_EDITOR
-			if (!valid && EditorApplication.isPlaying) EditorApplication.isPaused = true;
+			if (!valid && UnityEditor.EditorApplication.isPlaying) UnityEditor.EditorApplication.isPaused = true;
 			#endif
 			
 			return valid;
@@ -202,30 +202,50 @@ namespace UMA
             protected Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate> umaDnaConverter = new Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate>();
 			public SlotData[] slotDataList;
 			
-			public bool Validate() {
+			public bool Validate(UMAGeneratorBase generator) 
+            {
 				bool valid = true;
 				if (raceData == null) {
 					Debug.LogError("UMA recipe missing required race!");
 					valid = false;
 				}
 				else {
-					valid = valid && raceData.Validate();
+                    valid = valid && raceData.Validate(generator);
 				}
-				
-				if ((slotDataList == null) || (slotDataList.Length < 1)) {
+
+                if (slotDataList == null || slotDataList.Length == 0)
+                {
 					Debug.LogError("UMA recipe slot list is empty!");
 					valid = false;
 				}
-				
+                int slotDataCount = 0;
+                for (int i = 0; i < slotDataList.Length; i++)
+                {
+                    var slotData = slotDataList[i];
+                    if (slotData != null)
+                    {
+                        slotDataCount++;
+                        valid = valid && slotData.Validate(generator);
+                    }
+                }
+                if (slotDataCount < 1)
+                {
+                    Debug.LogError("UMA recipe slot list contains only null objects!");
+                    valid = false;
+                }
 				return valid;
 			}
 			
 			public UMADnaBase[] GetAllDna()
 			{
-                EnsureAllDNAPresent();
+				if ((raceData == null) || (slotDataList == null)) {
+					return new UMADnaBase[0];
+				}
+
+				EnsureAllDNAPresent();
 				UMADnaBase[] allDNA = new UMADnaBase[umaDna.Values.Count];
 				umaDna.Values.CopyTo(allDNA, 0);
-
+				
 				return allDNA;
 			}
 
