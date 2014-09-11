@@ -50,11 +50,19 @@ namespace UMA
 		}}
 		public static {0:ClassName} LoadInstance(string data)
 	    {{
+#if !StripLitJson
 	        return LitJson.JsonMapper.ToObject<{0:ClassName}_Byte>(data).ToDna();
+#else
+			return null;
+#endif
 	    }}
 		public static string SaveInstance({0:ClassName} instance)
 		{{
+#if !StripLitJson
 			return LitJson.JsonMapper.ToJson({0:ClassName}_Byte.FromDna(instance));
+#else
+			return null;
+#endif
 		}}
 	}}
 

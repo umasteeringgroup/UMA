@@ -19,8 +19,18 @@ public class UMAGenericCustomization : MonoBehaviour {
 
 	public bool editing = false;
 
-	protected virtual void Start()
+	void Start()
 	{
+		if (umaDynamicAvatar != null)
+		{
+			umaDynamicAvatar.umaData.OnCharacterCreated += new System.Action<UMAData>(umaData_OnCharacterCreated);
+		}
+	}
+
+	void umaData_OnCharacterCreated(UMAData obj)
+	{
+		SelectUMA(obj);
+		obj.OnCharacterCreated -= new System.Action<UMAData>(umaData_OnCharacterCreated);
 	}
 	
 
@@ -89,6 +99,7 @@ public class UMAGenericCustomization : MonoBehaviour {
 		int row = 0;
 		foreach (var dna in allDna)
 		{
+			if (dna is UMADnaHumanoid) continue;
 			int column = 0;
 			var fields = dna.GetType().GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
 			foreach (var field in fields)
@@ -141,6 +152,7 @@ public class UMAGenericCustomization : MonoBehaviour {
 		var index = 0;
 		foreach (var dna in allDna)
 		{
+			if (dna is UMADnaHumanoid) continue;
 			var fields = dna.GetType().GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
 			foreach (var field in fields)
 			{
@@ -155,6 +167,7 @@ public class UMAGenericCustomization : MonoBehaviour {
 		var index = 0;
 		foreach (var dna in allDna)
 		{
+			if (dna is UMADnaHumanoid) continue;
 			var fields = dna.GetType().GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
 			foreach (var field in fields)
 			{

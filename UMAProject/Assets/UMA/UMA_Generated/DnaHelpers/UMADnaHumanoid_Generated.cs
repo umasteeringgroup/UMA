@@ -188,11 +188,19 @@ namespace UMA
 		}
 		public static UMADnaHumanoid LoadInstance(string data)
 	    {
+#if !StripLitJson
 	        return LitJson.JsonMapper.ToObject<UMADnaHumanoid_Byte>(data).ToDna();
+#else
+			return null;
+#endif
 	    }
 		public static string SaveInstance(UMADnaHumanoid instance)
 		{
+#if !StripLitJson
 			return LitJson.JsonMapper.ToJson(UMADnaHumanoid_Byte.FromDna(instance));
+#else
+			return null;
+#endif
 		}
 	}
 

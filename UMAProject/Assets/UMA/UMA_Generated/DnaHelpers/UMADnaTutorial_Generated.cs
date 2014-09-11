@@ -53,11 +53,19 @@ namespace UMA
 		}
 		public static UMADnaTutorial LoadInstance(string data)
 	    {
-	        return LitJson.JsonMapper.ToObject<UMADnaTutorial_Byte>(data).ToDna();
+#if !StripLitJson
+			return LitJson.JsonMapper.ToObject<UMADnaTutorial_Byte>(data).ToDna();
+#else
+			return null;
+#endif
 	    }
 		public static string SaveInstance(UMADnaTutorial instance)
 		{
+#if !StripLitJson
 			return LitJson.JsonMapper.ToJson(UMADnaTutorial_Byte.FromDna(instance));
+#else
+			return null;
+#endif
 		}
 	}
 

@@ -1,3 +1,4 @@
+#if !StripLitJson
 using UnityEngine;
 using System.Collections;
 using LitJson;
@@ -30,3 +31,4 @@ public class UMATextRecipe : UMAPackedRecipeBase
 		recipeString = System.Text.Encoding.UTF8.GetString(data); 	
 	}
 }
+#endif

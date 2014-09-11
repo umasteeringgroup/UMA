@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEditor;
 
 namespace UMA
 {
@@ -55,7 +54,9 @@ namespace UMA
 			showAvatarMethod.Invoke(instance, new object[] { avatar });
 			ReleasePowerPackPersistanceInstance(instance);
 			SetAvatarDestroyParent(avatar, true);
-			go.transform.position = SceneView.lastActiveSceneView.pivot - new Vector3(0,1,0);
+#if UNITY_EDITOR
+			go.transform.position = UnityEditor.SceneView.lastActiveSceneView.pivot - new Vector3(0,1,0);
+#endif
 		}
 
 		private static void SetAvatarDestroyParent(UMADynamicAvatar avatar, bool destroyParent)

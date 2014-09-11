@@ -46,7 +46,7 @@ namespace UMA
 
 			if (crowd != null && randomSets.Length > 0)
 			{
-#if !UNITY_EDITOR
+#if UNITY_EDITOR
 				UnityEditor.Undo.RecordObject(crowd, "Added Asset Collection");
 #endif
 				var newPool = new UMACrowdRandomSet[crowd.randomPool.Length + randomSets.Length];

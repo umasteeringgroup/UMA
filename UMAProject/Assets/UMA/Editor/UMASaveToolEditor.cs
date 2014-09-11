@@ -7,34 +7,37 @@ using UMA;
 
 [CustomEditor(typeof(UMASaveTool))]
 [CanEditMultipleObjects]
-public class UMASaveToolEditor : Editor {
-	
+public class UMASaveToolEditor : Editor
+{
 	public SerializedProperty avatarName;
 	public SerializedProperty serializedAvatar;
 
-	
-    void OnEnable () {
-        avatarName = serializedObject.FindProperty ("avatarName");
-    }
-	
-	
-	public override void OnInspectorGUI(){	
+	void OnEnable()
+	{
+		avatarName = serializedObject.FindProperty("avatarName");
+	}
+
+	public override void OnInspectorGUI()
+	{
 		serializedObject.Update();
-		
-		GUILayout.Label ("Avatar Name", EditorStyles.boldLabel);
-		avatarName.stringValue = EditorGUILayout.TextArea(avatarName.stringValue);   
-		
+
+		GUILayout.Label("Avatar Name", EditorStyles.boldLabel);
+		avatarName.stringValue = EditorGUILayout.TextArea(avatarName.stringValue);
+
 		GUILayout.Space(20);
-		
+
+#if !StripLitJson
 		GUILayout.BeginHorizontal();
-		if(GUILayout.Button("Save Avatar Txt")){
-			UMASaveTool umaSaveTool = (UMASaveTool)target;    
+		if (GUILayout.Button("Save Avatar Txt"))
+		{
+			UMASaveTool umaSaveTool = (UMASaveTool)target;
 			GameObject gameObject = (GameObject)umaSaveTool.gameObject;
 			UMADynamicAvatar umaDynamicAvatar = gameObject.GetComponent("UMADynamicAvatar") as UMADynamicAvatar;
 
-			if(umaDynamicAvatar){
+			if (umaDynamicAvatar)
+			{
 				var path = EditorUtility.SaveFilePanel("Save serialized Avatar", "Assets", avatarName.stringValue + ".txt", "txt");
-				if(path.Length != 0) 
+				if (path.Length != 0)
 				{
 					var asset = ScriptableObject.CreateInstance<UMATextRecipe>();
 					asset.Save(umaDynamicAvatar.umaData.umaRecipe, umaDynamicAvatar.context);
@@ -44,14 +47,16 @@ public class UMASaveToolEditor : Editor {
 			}
 		}
 
-		if(GUILayout.Button("Save Avatar Asset")){
-			UMASaveTool umaSaveTool = (UMASaveTool)target;    
+		if (GUILayout.Button("Save Avatar Asset"))
+		{
+			UMASaveTool umaSaveTool = (UMASaveTool)target;
 			GameObject gameObject = (GameObject)umaSaveTool.gameObject;
 			UMADynamicAvatar umaDynamicAvatar = gameObject.GetComponent("UMADynamicAvatar") as UMADynamicAvatar;
 
-			if(umaDynamicAvatar){
+			if (umaDynamicAvatar)
+			{
 				var path = EditorUtility.SaveFilePanelInProject("Save serialized Avatar", avatarName.stringValue + ".asset", "asset", "Message 2");
-				if(path.Length != 0) 
+				if (path.Length != 0)
 				{
 					var asset = ScriptableObject.CreateInstance<UMATextRecipe>();
 					asset.Save(umaDynamicAvatar.umaData.umaRecipe, umaDynamicAvatar.context);
@@ -60,14 +65,14 @@ public class UMASaveToolEditor : Editor {
 				}
 			}
 		}
-		
-		GUILayout.EndHorizontal();
-		
-		GUILayout.Space(20);
 
-		
+		GUILayout.EndHorizontal();
+
+		GUILayout.Space(20);
+#endif
+
 		serializedObject.ApplyModifiedProperties();
 	}
-	
+
 }
 #pragma warning restore 618
