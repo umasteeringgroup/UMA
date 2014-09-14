@@ -21,6 +21,8 @@ namespace UMAEditor
 		protected UMAData _umaData;
 		public void OnEnable()
 		{
+			if (!NeedsReenable()) return;
+
 			showBaseEditor = true;
 			_umaData = target as UMAData;
 			_errorMessage = null;
@@ -50,6 +52,7 @@ namespace UMAEditor
 			_dnaDirty = false;
 			_textureDirty = false;
 			_meshDirty = false;
+			Rebuild();
 		}
 
 		protected override void Rebuild()

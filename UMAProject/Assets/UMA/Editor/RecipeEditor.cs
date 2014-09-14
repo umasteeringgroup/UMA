@@ -20,6 +20,8 @@ namespace UMAEditor
 	{
 		public void OnEnable()
 		{
+			if (!NeedsReenable()) return;
+
 			_errorMessage = null;
 			_recipe = new UMAData.UMARecipe();
 			showBaseEditor = false;
@@ -63,10 +65,10 @@ namespace UMAEditor
 			{
 				PowerToolsIntegration.Refresh(recipeBase);
 			}
-			else
-			{
-				PowerToolsIntegration.Show(recipeBase);
-			}
+			//else
+			//{
+			//    PowerToolsIntegration.Show(recipeBase);
+			//}
 		}
 
 		protected override void Rebuild()

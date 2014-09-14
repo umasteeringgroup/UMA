@@ -21,10 +21,12 @@ namespace UMAEditor
         private readonly Type[] _dnaTypes;
         private readonly string[] _dnaTypeNames;
 
-        private int _viewDna = -1;
+        private int _viewDna = 0;
 
+		public UMAData.UMARecipe recipe;
         public DNAMasterEditor(UMAData.UMARecipe recipe)
         {
+			this.recipe = recipe;
             UMADnaBase[] allDna = recipe.GetAllDna();
 
             _dnaTypes = new Type[allDna.Length];
@@ -43,7 +45,12 @@ namespace UMAEditor
 
 		public bool OnGUI(ref bool _dnaDirty, ref bool _textureDirty, ref bool _meshDirty)
         {
-            _viewDna = EditorGUILayout.Popup("DNA", _viewDna, _dnaTypeNames);
+			var newToolBarIndex = EditorGUILayout.Popup("DNA", _viewDna, _dnaTypeNames);
+			if (newToolBarIndex != _viewDna)
+			{
+				_viewDna = newToolBarIndex;
+			}
+			
 
 			if (_viewDna >= 0) {
 	            Type dnaType = _dnaTypes[_viewDna];
@@ -57,7 +64,12 @@ namespace UMAEditor
 
             return false;
         }
-    }
+
+		internal bool NeedsReenable()
+		{
+			return _dnaValues == null;
+		}
+	}
 
     public class DNASingleEditor
     {
@@ -172,7 +184,7 @@ namespace UMAEditor
         private readonly FieldInfo _field;
 
         private readonly string _name;
-        private readonly float _value;
+		private readonly float _value;
 
         public DNAFieldEditor(string name, FieldInfo field, UMADnaBase dna)
         {
@@ -603,6 +615,14 @@ namespace UMAEditor
 		protected DNAMasterEditor dnaEditor;
 		protected SlotMasterEditor slotEditor;
 
+		protected bool NeedsReenable()
+		{
+			if (dnaEditor == null || dnaEditor.NeedsReenable()) return true;
+			if (_oldTarget == target) return false;
+			_oldTarget = target;
+			return true;
+		}
+
         public override void OnInspectorGUI ()
         {
             GUILayout.Label (_description);
@@ -626,7 +646,7 @@ namespace UMAEditor
             {
                 if (target != _oldTarget)
                 {
-                    _rebuildOnLayout = true;
+					_rebuildOnLayout = true;
                     _oldTarget = target;
                 }
 
@@ -659,9 +679,11 @@ namespace UMAEditor
 
         protected virtual void Rebuild()
         {
-            if (_recipe != null) {
+			_rebuildOnLayout = false;
+			if (_recipe != null) 
+			{
 				dnaEditor = new DNAMasterEditor(_recipe);
-            	slotEditor = new SlotMasterEditor(_recipe);
+				slotEditor = new SlotMasterEditor(_recipe);
 			}
         }
 
