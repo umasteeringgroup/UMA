@@ -34,9 +34,17 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 			if (umaData == null)
 			{
 				umaData = gameObject.AddComponent<UMAData>();
-//				umaData.umaGenerator = umaGenerator ?? umaData.umaGenerator;
-				if (umaGenerator != null) umaData.umaGenerator = umaGenerator;
-			}
+                if (umaGenerator.gameObject.activeInHierarchy)
+                {
+                    umaData.umaGenerator = umaGenerator;
+                }
+                else
+                {
+                    Debug.LogError("Invalid UMA Generator on Avatar.", gameObject);
+                    Debug.LogError("UMA generators must be active scene objects!", umaGenerator.gameObject);
+                    umaGenerator = null;
+                }
+            }
 		}
 	}
 
