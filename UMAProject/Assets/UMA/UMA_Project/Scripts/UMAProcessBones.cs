@@ -12,7 +12,8 @@ namespace UMA
 		public bool runScript;
 		public UMAData umaData;
 		public Transform boneStructure;
-		
+
+#pragma warning disable 618
 		void Update () {
 			if(runScript && umaData){
 				
@@ -71,6 +72,7 @@ namespace UMA
 
 			Debug.Log(replacedCount + " animated bones have been replaced");
 		}
+#pragma warning restore 618
 
 		public static Transform FindChildRecursive(Transform current, string name)   
 		{

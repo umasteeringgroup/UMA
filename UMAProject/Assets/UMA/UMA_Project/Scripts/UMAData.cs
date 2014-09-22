@@ -78,7 +78,8 @@ namespace UMA
             UpdateBoneData();
         }
 
-        public void Assign(UMAData other)
+#pragma warning disable 618
+		public void Assign(UMAData other)
         {
             animator = other.animator;
             myRenderer = other.myRenderer;
@@ -92,6 +93,7 @@ namespace UMA
                 animationController = other.animationController;
             }
         }
+#pragma warning restore 618
 
 		public bool Validate()
 		{

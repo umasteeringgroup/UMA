@@ -34,7 +34,7 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 			if (umaData == null)
 			{
 				umaData = gameObject.AddComponent<UMAData>();
-                if (umaGenerator.gameObject.activeInHierarchy)
+				if (umaGenerator == null || umaGenerator.gameObject.activeInHierarchy)
                 {
                     umaData.umaGenerator = umaGenerator;
                 }

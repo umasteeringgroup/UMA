@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -38,14 +38,14 @@ namespace UMA
 
 					bool animating = false;
                     bool applyRootMotion = false;
-                    bool animatePhysics = false;
+                    AnimatorUpdateMode updateMode = AnimatorUpdateMode.Normal;
                     AnimatorCullingMode cullingMode = AnimatorCullingMode.AlwaysAnimate;
 
                     if (animator)
                     {
 						animating = animator.enabled;
                         applyRootMotion = animator.applyRootMotion;
-                        animatePhysics = animator.animatePhysics;
+						updateMode = animator.updateMode;
                         cullingMode = animator.cullingMode;
                         
 						if (umaData.animationController == animator.runtimeAnimatorController)
@@ -63,7 +63,7 @@ namespace UMA
                     }
                     var oldParent = umaData.umaRoot.transform.parent;
                     umaData.umaRoot.transform.parent = null;
-                    animator = CreateAnimator(umaData, umaData.umaRecipe.raceData.TPose, umaData.animationController, applyRootMotion, animatePhysics, cullingMode);
+                    animator = CreateAnimator(umaData, umaData.umaRecipe.raceData.TPose, umaData.animationController, applyRootMotion, updateMode, cullingMode);
                     umaData.animator = animator;
                     umaData.umaRoot.transform.parent = oldParent;
                     if (snapshot != null)
@@ -80,7 +80,7 @@ namespace UMA
             }
         }
 
-        public static Animator CreateAnimator(UMAData umaData, UmaTPose umaTPose, RuntimeAnimatorController controller, bool applyRootMotion, bool animatePhysics, AnimatorCullingMode cullingMode)
+		public static Animator CreateAnimator(UMAData umaData, UmaTPose umaTPose, RuntimeAnimatorController controller, bool applyRootMotion, AnimatorUpdateMode updateMode, AnimatorCullingMode cullingMode)
         {
             var animator = umaData.umaRoot.AddComponent<Animator>();
             switch (umaData.umaRecipe.raceData.umaTarget)
@@ -95,10 +95,33 @@ namespace UMA
             }
             animator.runtimeAnimatorController = controller;
             animator.applyRootMotion = applyRootMotion;
-            animator.animatePhysics = animatePhysics;
+            animator.updateMode = updateMode;
             animator.cullingMode = cullingMode;
             return animator;
         }
+
+		[Obsolete("CreateAnimator(... bool applyRootMotion ...) is obsolete, use CreateAnimator(... AnimatorUpdateMode updateMode ...) instead.", false)]
+		public static Animator CreateAnimator(UMAData umaData, UmaTPose umaTPose, RuntimeAnimatorController controller, bool applyRootMotion, bool animatePhysics, AnimatorCullingMode cullingMode)
+		{
+			var animator = umaData.umaRoot.AddComponent<Animator>();
+			switch (umaData.umaRecipe.raceData.umaTarget)
+			{
+				case RaceData.UMATarget.Humanoid:
+					umaTPose.DeSerialize();
+					animator.avatar = CreateAvatar(umaData, umaTPose);
+					break;
+				case RaceData.UMATarget.Generic:
+					animator.avatar = CreateGenericAvatar(umaData);
+					break;
+			}
+			animator.runtimeAnimatorController = controller;
+			animator.applyRootMotion = applyRootMotion;
+#pragma warning disable 618
+			animator.animatePhysics = animatePhysics;
+#pragma warning restore 618
+			animator.cullingMode = cullingMode;
+			return animator;
+		}
 
         public static void DebugLogHumanAvatar(GameObject root, HumanDescription description)
         {
@@ -204,7 +227,8 @@ namespace UMA
             return res;
         }
 
-        private static void SkeletonModifier(UMAData umaData, ref SkeletonBone[] bones)
+#pragma warning disable 618
+		private static void SkeletonModifier(UMAData umaData, ref SkeletonBone[] bones)
         {
             Dictionary<Transform, Transform> animatedBones = new Dictionary<Transform,Transform>();
             for (var i = 0; i < umaData.animatedBones.Length; i++)
@@ -245,6 +269,7 @@ namespace UMA
                 }
                 bones = newBones.ToArray();
             }
-        }
-    }
+		}
+#pragma warning restore 618
+	}
 }
