@@ -30,6 +30,9 @@ namespace UMA
         /// Eg. BaseMeshSkin, BaseMeshOverlays, GenericPlateArmor01
         /// </summary>
         public string[] tags;
+
+        public UMADataSlotMaterialRectEvent SlotAtlassed;
+
 		private List<OverlayData> overlayList = new List<OverlayData>();
 
 	    public SlotData Duplicate()
@@ -55,6 +58,8 @@ namespace UMA
 	        {
 	            tempSlotData.AddOverlay(overlayList[i].Duplicate());
 	        }
+
+            tempSlotData.SlotAtlassed = SlotAtlassed;
 
 	        return tempSlotData;
 	    }

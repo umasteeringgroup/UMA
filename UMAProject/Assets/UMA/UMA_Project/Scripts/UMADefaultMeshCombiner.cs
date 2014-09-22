@@ -55,7 +55,6 @@ namespace UMA
                 SlotData slotData = umaData.umaRecipe.slotDataList[i];
                 if (slotData != null)
                 {
-
                     umaData.EnsureBoneData(slotData.umaBoneData, slotData.animatedBones, boneMap);
 
                     umaData.umaRecipe.AddDNAUpdater(slotData.slotDNA);
@@ -64,11 +63,30 @@ namespace UMA
 
             umaData.myRenderer.quality = SkinQuality.Bone4;
             //umaData.myRenderer.useLightProbes = true;
-            umaData.myRenderer.sharedMaterials = combinedMaterialList.ToArray();
+            var materials = combinedMaterialList.ToArray();
+            umaData.myRenderer.sharedMaterials = materials;
             //umaData.myRenderer.sharedMesh.RecalculateBounds();
             umaData.myRenderer.sharedMesh.name = "UMAMesh";
 
             umaData.firstBake = false;
+
+            FireSlotAtlasNotification(umaData, materials);
+        }
+
+        private void FireSlotAtlasNotification(UMAData umaData, Material[] materials)
+        {
+            for (int atlasIndex = 0; atlasIndex < umaData.atlasList.atlas.Count; atlasIndex++)
+            {
+                for (int materialDefinitionIndex = 0; materialDefinitionIndex < umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions.Count; materialDefinitionIndex++)
+                {
+                    var materialDefinition = umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex];
+                    var slotData = materialDefinition.source.slotData;
+                    if (slotData.SlotAtlassed != null)
+                    {
+                        slotData.SlotAtlassed.Invoke(umaData, slotData, materials[atlasIndex], materialDefinition.atlasRegion);
+                    }
+                }
+            }
         }
 
         protected void CombineByShader()

@@ -4,6 +4,7 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.Events;
 
 namespace UMA
 {
@@ -44,9 +45,13 @@ namespace UMA
         public bool onQuit = false;
         [Obsolete("UMAData.OnUpdated is deprecated, please use OnCharacterUpdated instead.", false)]
         public event Action<UMAData> OnUpdated { add { OnCharacterUpdated += value; } remove { OnCharacterUpdated -= value; } }
-        public event Action<UMAData> OnCharacterUpdated;
-        public event Action<UMAData> OnCharacterCreated;
-        public event Action<UMAData> OnCharacterDestroyed;
+        public event Action<UMAData> OnCharacterUpdated { add { CharacterUpdated.AddListener(new UnityAction<UMAData>(value)); } remove { CharacterUpdated.RemoveListener(new UnityAction<UMAData>(value)); } }
+        public event Action<UMAData> OnCharacterCreated { add { CharacterCreated.AddListener(new UnityAction<UMAData>(value)); } remove { CharacterCreated.RemoveListener(new UnityAction<UMAData>(value)); } }
+        public event Action<UMAData> OnCharacterDestroyed { add { CharacterDestroyed.AddListener(new UnityAction<UMAData>(value)); } remove { CharacterDestroyed.RemoveListener(new UnityAction<UMAData>(value)); } }
+        public UMADataEvent CharacterCreated;
+        public UMADataEvent CharacterDestroyed;
+        public UMADataEvent CharacterUpdated;
+
         public GameObject umaRoot;
 
 		public UMARecipe umaRecipe;
@@ -431,14 +436,14 @@ namespace UMA
             if (!this.cancelled && !isOfficiallyCreated)
             {
                 isOfficiallyCreated = true;
-                if (OnCharacterCreated != null)
+                if (CharacterCreated != null)
                 {
-                    OnCharacterCreated(this);
+                    CharacterCreated.Invoke(this);
                 }
             }
-	        if (OnCharacterUpdated != null)
+	        if (CharacterUpdated != null)
 	        {
-                OnCharacterUpdated(this);
+                CharacterUpdated.Invoke(this);
 	        }
             if (!cancelled)
             {
@@ -473,9 +478,9 @@ namespace UMA
 		void OnDestroy(){
             if (isOfficiallyCreated)
             {
-                if (OnCharacterDestroyed != null)
+                if (CharacterDestroyed != null)
                 {
-                    OnCharacterDestroyed(this);
+                    CharacterDestroyed.Invoke(this);
                 }
                 isOfficiallyCreated = false;
             }

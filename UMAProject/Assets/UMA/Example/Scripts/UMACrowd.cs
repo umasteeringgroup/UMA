@@ -28,6 +28,9 @@ public class UMACrowd : MonoBehaviour
 	private float umaTimer;
 	public string[] keywords;
 
+	public UMADataEvent CharacterCreated;
+	public UMADataEvent CharacterDestroyed;
+	public UMADataEvent CharacterUpdated;
 
 	void Awake()
 	{
@@ -529,6 +532,9 @@ public class UMACrowd : MonoBehaviour
 		var umaDynamicAvatar = newGO.AddComponent<UMADynamicAvatar>();
 		umaDynamicAvatar.Initialize();
 		umaData = umaDynamicAvatar.umaData;
+		umaData.CharacterCreated = CharacterCreated;
+		umaData.CharacterDestroyed = CharacterDestroyed;
+		umaData.CharacterUpdated = CharacterUpdated;
 		umaDynamicAvatar.umaGenerator = generator;
 		umaData.umaGenerator = generator;
 		var umaRecipe = umaDynamicAvatar.umaData.umaRecipe;
