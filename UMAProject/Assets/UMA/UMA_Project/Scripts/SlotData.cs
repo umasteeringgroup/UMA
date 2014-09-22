@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -67,7 +67,6 @@ namespace UMA
 
         public int GetTextureChannelCount(UMAGeneratorBase generator)
         {
-            int res;
             if (textureNameList != null && textureNameList.Length > 0)
             {
                 if (string.IsNullOrEmpty(textureNameList[0])) return 0;

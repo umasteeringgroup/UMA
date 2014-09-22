@@ -238,6 +238,7 @@ namespace UMA
 				return valid;
 			}
 			
+#pragma warning disable 618
 			public UMADnaBase[] GetAllDna()
 			{
 				if ((raceData == null) || (slotDataList == null)) {
@@ -247,14 +248,13 @@ namespace UMA
 				EnsureAllDNAPresent();
 				UMADnaBase[] allDNA = new UMADnaBase[umaDna.Values.Count];
 				umaDna.Values.CopyTo(allDNA, 0);
-				
 				return allDNA;
 			}
 
             public void AddDna(UMADnaBase dna)
-            {
-                umaDna.Add(dna.GetType(), dna);
-            }
+			{
+				umaDna.Add(dna.GetType(), dna);
+			}
 
 			public T GetDna<T>()
                 where T : UMADnaBase
@@ -311,7 +311,7 @@ namespace UMA
                 umaDna.Add(type, dna);
                 return dna;
             }
-			
+#pragma warning restore 618
 			public void SetRace(RaceData raceData)
 			{
 				this.raceData = raceData;
@@ -344,6 +344,7 @@ namespace UMA
                 return null;
             }
 			
+#pragma warning disable 618
 			public void ApplyDNA(UMAData umaData)
 			{
                 EnsureAllDNAPresent();
@@ -361,7 +362,7 @@ namespace UMA
 				}
 			}
 
-            public void EnsureAllDNAPresent()
+			public void EnsureAllDNAPresent()
             {
                 foreach (var converter in raceData.dnaConverterList)
                 {
@@ -383,6 +384,7 @@ namespace UMA
                     }
                 }
             }
+#pragma warning restore 618
 
 			public void ClearDNAConverters()
 			{
@@ -566,6 +568,7 @@ namespace UMA
 		
 		public void EnsureBoneData(Transform[] umaBones, Transform[] animBones, Dictionary<Transform, Transform> boneMap)
 		{
+#pragma warning disable 618
 			foreach (Transform bone in umaBones)
 			{
 				int nameHash = UMASkeleton.StringToHash(bone.name);
@@ -606,25 +609,29 @@ namespace UMA
 					}
 				}
 			}
+#pragma warning restore 618
 		}
 
 		public void ClearBoneData()
 		{
+#pragma warning disable 618
 			boneHashList.Clear();
 			animatedBones = new Transform[0];
 			tempBoneData = new UMAData.BoneData[0];
-
+#pragma warning restore 618
 			Debug.Log(myRenderer.rootBone.name, myRenderer.rootBone);
 			skeleton = new UMASkeletonDefault(myRenderer.rootBone);
 		}
 		
 		public void UpdateBoneData()
 		{
+#pragma warning disable 618
 			if (tempBoneData == null) return;
 
 			for (int i = 0; i < tempBoneData.Length; i++) {			
 				boneHashList.Add(UMASkeleton.StringToHash(tempBoneData[i].boneTransform.gameObject.name), tempBoneData[i]);
 			}
+#pragma warning restore 618
 		}
 
 		public UMADnaBase[] GetAllDna()
@@ -678,14 +685,16 @@ namespace UMA
         }
 
         public void GotoOriginalPose()
-        {
-            foreach (BoneData bone in boneHashList.Values)
+		{
+#pragma warning disable 618
+			foreach (BoneData bone in boneHashList.Values)
             {
 				bone.boneTransform.localPosition = bone.originalBonePosition;
 				bone.boneTransform.localScale = bone.originalBoneScale;
 				bone.boneTransform.localRotation = bone.originalBoneRotation;
             }
-        }
+#pragma warning restore 618
+		}
 
         public void GotoTPose()
         {
@@ -699,7 +708,6 @@ namespace UMA
                     var hash = UMASkeleton.StringToHash(bone.name);
                     var go = skeleton.GetBoneGameObject(hash);
                     if (go == null) continue;
-                    var transform = go.transform;
                     skeleton.SetPosition(hash, bone.position);
                     skeleton.SetRotation(hash, bone.rotation);
                     skeleton.SetScale(hash, bone.scale);
@@ -709,9 +717,10 @@ namespace UMA
 
 
         internal int[] GetAnimatedBones()
-        {
-            List<int> res = new List<int>(tempBoneData.Length);
-            Dictionary<int, int> resHash = new Dictionary<int, int>(tempBoneData.Length);
+		{
+#pragma warning disable 618
+			List<int> res = new List<int>(tempBoneData.Length);
+			Dictionary<int, int> resHash = new Dictionary<int, int>(tempBoneData.Length);
             for(int slotDataIndex = 0; slotDataIndex < umaRecipe.slotDataList.Length; slotDataIndex++)
             {
                 var slotData = umaRecipe.slotDataList[slotDataIndex];
@@ -727,6 +736,7 @@ namespace UMA
                 }
             }
             return res.ToArray();
-        }
+#pragma warning restore 618
+		}
     }
 }

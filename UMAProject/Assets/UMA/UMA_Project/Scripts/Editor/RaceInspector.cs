@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using UnityEditor;
 using UMA;
@@ -44,6 +44,7 @@ namespace UMAEditor
 					UMAData[] umaDataSet = race.racePrefab.GetComponentsInChildren<UMAData>(true);
 
 					if (umaDataSet.Length == 1) {
+#pragma warning disable 618
 						UMAData umaData = umaDataSet[0];
 						SlotData newSlot = ScriptableObject.CreateInstance<SlotData>();
 						newSlot.slotName = race.raceName + "Base";
@@ -65,6 +66,7 @@ namespace UMAEditor
 						AssetDatabase.SaveAssets();
 
 						race.baseSlot = newSlot;
+#pragma warning restore 618
 					}
 					else if (umaDataSet.Length > 1) {
 						Debug.LogWarning("More than 1 UMAData found in race prefab!");
