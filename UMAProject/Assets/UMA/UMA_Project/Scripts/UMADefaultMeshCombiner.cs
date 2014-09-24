@@ -113,6 +113,56 @@ namespace UMA
                     combinedMeshList.Add(combineInstance);
                 }
             }
+
+
+            SlotData[] slots = umaData.umaRecipe.slotDataList;
+            int indexCount = 0;
+            List<Material> sourceMaterials = null;
+            int atlassedMaterials = combinedMaterialList.Count;
+            for (int slotIndex = 0; slotIndex < slots.Length; slotIndex++)
+            {
+                if (slots[slotIndex].textureNameList.Length == 1 && string.IsNullOrEmpty(slots[slotIndex].textureNameList[0]))
+                {
+                    combineInstance = new SkinnedMeshCombiner.CombineInstance();
+                    combineInstance.mesh = slots[slotIndex].meshRenderer.sharedMesh;
+                    combineInstance.destMesh = new int[combineInstance.mesh.subMeshCount];
+                    for (int i = 0; i < combineInstance.mesh.subMeshCount; i++)
+                    {
+                        combineInstance.destMesh[i] = -1;
+                    }
+
+                    combineInstance.bones = slots[slotIndex].meshRenderer.bones;
+
+                    bool contains = false;
+                    if (sourceMaterials != null)
+                    {
+                        for (int i = 0; i < sourceMaterials.Count; i++)
+                        {
+                            if (slots[slotIndex].materialSample == sourceMaterials[i])
+                            {
+                                combineInstance.destMesh[slots[slotIndex].subMeshIndex] = i+atlassedMaterials;
+                                contains = true;
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        sourceMaterials = new List<Material>(slots.Length);
+                    }
+                    if (!contains)
+                    {
+                        sourceMaterials.Add(slots[slotIndex].materialSample);
+                        combinedMaterialList.Add(new Material (slots[slotIndex].materialSample));
+                        combineInstance.destMesh[slots[slotIndex].subMeshIndex] = combinedMaterialList.Count - 1;
+                    }
+                    combinedMeshList.Add(combineInstance);
+                    indexCount++;
+
+                }
+
+            }
+
         }
 
         protected void CombineByMaterial()
@@ -195,36 +245,42 @@ namespace UMA
 
         protected void RecalculateUV()
         {
-            List<Rect> tempAtlasRect = new List<Rect>();
-            List<int> meshVertexAmount = new List<int>();
+            Vector2[] originalUVs = umaData.myRenderer.sharedMesh.uv;
+            Vector2[] atlasUVs = new Vector2[originalUVs.Length];
 
+            int idx = 0;
+            //Handle Atlassed Verts
             for (int atlasIndex = 0; atlasIndex < umaData.atlasList.atlas.Count; atlasIndex++)
             {
                 for (int materialDefinitionIndex = 0; materialDefinitionIndex < umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions.Count; materialDefinitionIndex++)
                 {
-                    tempAtlasRect.Add(umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex].atlasRegion);
-                    meshVertexAmount.Add(umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex].source.slotData.meshRenderer.sharedMesh.vertexCount);
+                    var tempAtlasRect = umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex].atlasRegion;
+                    int vertexCount = umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex].source.slotData.meshRenderer.sharedMesh.vertexCount;
+                    while (vertexCount-- > 0)
+                    {
+                        atlasUVs[idx].x = Mathf.Lerp(tempAtlasRect.xMin / atlasResolution, tempAtlasRect.xMax / atlasResolution, originalUVs[idx].x);
+                        atlasUVs[idx].y = Mathf.Lerp(tempAtlasRect.yMin / atlasResolution, tempAtlasRect.yMax / atlasResolution, originalUVs[idx].y);
+                        idx++;
+                    }
+
                 }
             }
 
-            Vector2[] originalUVs = umaData.myRenderer.sharedMesh.uv;
-            Vector2[] atlasUVs = new Vector2[originalUVs.Length];
-
-            int rectIndex = 0;
-            int vertTracker = 0;
-
-            for (int i = 0; i < atlasUVs.Length; i++)
+            //Handle Non Atlassed Verts
+            SlotData[] slots = umaData.umaRecipe.slotDataList;
+            for (int slotIndex = 0; slotIndex < slots.Length; slotIndex++)
             {
-
-                atlasUVs[i].x = Mathf.Lerp(tempAtlasRect[rectIndex].xMin / atlasResolution, tempAtlasRect[rectIndex].xMax / atlasResolution, originalUVs[i].x);
-                atlasUVs[i].y = Mathf.Lerp(tempAtlasRect[rectIndex].yMin / atlasResolution, tempAtlasRect[rectIndex].yMax / atlasResolution, originalUVs[i].y);
-
-                if (i >= (meshVertexAmount[rectIndex] + vertTracker) - 1)
+                if (slots[slotIndex].textureNameList.Length == 1 && string.IsNullOrEmpty(slots[slotIndex].textureNameList[0]))
                 {
-                    vertTracker = vertTracker + meshVertexAmount[rectIndex];
-                    rectIndex++;
+                    var vertexCount = slots[slotIndex].meshRenderer.sharedMesh.vertexCount;
+                    while (vertexCount-- > 0)
+                    {
+                        atlasUVs[idx] = originalUVs[idx];
+                        idx++;
+                    }
                 }
             }
+
             umaData.myRenderer.sharedMesh.uv = atlasUVs;
         }	
 

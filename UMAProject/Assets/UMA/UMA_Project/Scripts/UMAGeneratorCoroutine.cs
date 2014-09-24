@@ -43,6 +43,11 @@ namespace UMA
 			SlotData[] slots = umaData.umaRecipe.slotDataList;
             for(int i = 0; i < slots.Length; i++)
             {
+                if (slots[i].textureNameList.Length == 1 && string.IsNullOrEmpty(slots[i].textureNameList[0]))
+                {
+                    continue;
+                }
+
                 if (slots[i] != null && slots[i].GetOverlay(0) != null)
                 {
 					tempMaterialDefinition = new UMAData.MaterialDefinition();
