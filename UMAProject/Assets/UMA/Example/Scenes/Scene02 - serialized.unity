@@ -1374,7 +1374,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fitAtlas: 1
-  usePRO: 0
+  usePRO: 1
   AtlasCrop: 1
   maxPixels: 100000
   convertRenderTexture: 0
