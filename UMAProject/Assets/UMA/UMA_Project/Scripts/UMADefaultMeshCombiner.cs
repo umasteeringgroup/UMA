@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -121,6 +121,7 @@ namespace UMA
             int atlassedMaterials = combinedMaterialList.Count;
             for (int slotIndex = 0; slotIndex < slots.Length; slotIndex++)
             {
+				if (slots[slotIndex] == null) continue;
                 if (slots[slotIndex].textureNameList.Length == 1 && string.IsNullOrEmpty(slots[slotIndex].textureNameList[0]))
                 {
                     combineInstance = new SkinnedMeshCombiner.CombineInstance();
@@ -270,6 +271,7 @@ namespace UMA
             SlotData[] slots = umaData.umaRecipe.slotDataList;
             for (int slotIndex = 0; slotIndex < slots.Length; slotIndex++)
             {
+				if (slots[slotIndex] == null) continue;
                 if (slots[slotIndex].textureNameList.Length == 1 && string.IsNullOrEmpty(slots[slotIndex].textureNameList[0]))
                 {
                     var vertexCount = slots[slotIndex].meshRenderer.sharedMesh.vertexCount;

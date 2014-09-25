@@ -1,18 +1,18 @@
 using UnityEngine;
 using System.Collections;
 
-public class UMATestEventsScript : MonoBehaviour 
+public class UMATestEventsScript : MonoBehaviour
 {
 	public void CreatedEvent(UMA.UMAData data)
 	{
-		Debug.Log("UMA Created", data.gameObject);
+		Debug.Log(data.name + " Created", data.gameObject);
 	}
 	public void DestroyedEvent(UMA.UMAData data)
 	{
-		Debug.Log("UMA Destoyed", data.gameObject);
+		Debug.Log(data.name + " Destoyed", data.gameObject);
 	}
 	public void UpdatedEvent(UMA.UMAData data)
 	{
-		Debug.Log("UMA Updated", data.gameObject);
+		Debug.Log(data.name + " Updated", data.gameObject);
 	}
 }
