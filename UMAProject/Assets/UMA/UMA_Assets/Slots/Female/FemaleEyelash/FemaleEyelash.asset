@@ -14,13 +14,30 @@ MonoBehaviour:
   slotName: FemaleEyelash
   listID: 0
   meshRenderer: {fileID: 13700000, guid: 3924ff435e82eb747833decaaf262fc5, type: 3}
-  materialSample: {fileID: 2100000, guid: e7595f5da8bfd82459de6f91e1a7dcc4, type: 2}
+  materialSample: {fileID: 2100000, guid: 1b62bcfd6bd5cfc498ca8ac795e2724a, type: 2}
   overlayScale: 1
   umaBoneData: []
   animatedBones: []
   textureNameList:
-  - _MainTex
+  - 
   slotDNA: {fileID: 0}
   subMeshIndex: 0
   slotGroup: 
   tags: []
+  SlotAtlassed:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 11400000, guid: 382c2e0c57e3443419f4871073608dee, type: 2}
+        m_MethodName: SlotAtlasEvent
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine, Version=0.0.0.0,
+            Culture=neutral, PublicKeyToken=null
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 1
+    m_TypeName: UMA.UMADataSlotMaterialRectEvent, Assembly-CSharp, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null

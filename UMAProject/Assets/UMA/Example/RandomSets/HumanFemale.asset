@@ -180,7 +180,7 @@ MonoBehaviour:
         - possibleOverlays:
           - overlayID: FemaleEyelash
             maxRGB: {r: 0, g: 0, b: 0, a: 0}
-            minRGB: {r: 0, g: 0, b: 0, a: 0}
+            minRGB: {r: 0, g: 0, b: 0, a: 1}
             useSkinColor: 0
             useHairColor: 0
             hairColorMultiplier: 0

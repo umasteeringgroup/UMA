@@ -70,24 +70,37 @@ namespace UMA
 
             umaData.firstBake = false;
 
-            FireSlotAtlasNotification(umaData, materials);
+            //FireSlotAtlasNotification(umaData, materials);
         }
 
-        private void FireSlotAtlasNotification(UMAData umaData, Material[] materials)
-        {
-            for (int atlasIndex = 0; atlasIndex < umaData.atlasList.atlas.Count; atlasIndex++)
-            {
-                for (int materialDefinitionIndex = 0; materialDefinitionIndex < umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions.Count; materialDefinitionIndex++)
-                {
-                    var materialDefinition = umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex];
-                    var slotData = materialDefinition.source.slotData;
-                    if (slotData.SlotAtlassed != null)
-                    {
-                        slotData.SlotAtlassed.Invoke(umaData, slotData, materials[atlasIndex], materialDefinition.atlasRegion);
-                    }
-                }
-            }
-        }
+		//private void FireSlotAtlasNotification(UMAData umaData, Material[] materials)
+		//{
+		//    for (int atlasIndex = 0; atlasIndex < umaData.atlasList.atlas.Count; atlasIndex++)
+		//    {
+		//        for (int materialDefinitionIndex = 0; materialDefinitionIndex < umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions.Count; materialDefinitionIndex++)
+		//        {
+		//            var materialDefinition = umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex];
+		//            var slotData = materialDefinition.source.slotData;
+		//            if (slotData.SlotAtlassed != null)
+		//            {
+		//                slotData.SlotAtlassed.Invoke(umaData, slotData, materials[atlasIndex], materialDefinition.atlasRegion);
+		//            }
+		//        }
+		//    }
+		//    SlotData[] slots = umaData.umaRecipe.slotDataList;
+		//    for (int slotIndex = 0; slotIndex < slots.Length; slotIndex++)
+		//    {
+		//        var slotData = slots[slotIndex];
+		//        if (slotData == null) continue;
+		//        if (slotData.textureNameList.Length == 1 && string.IsNullOrEmpty(slotData.textureNameList[0]))
+		//        {
+		//            if (slotData.SlotAtlassed != null)
+		//            {
+		//                slotData.SlotAtlassed.Invoke(umaData, slotData, materials[atlasIndex], materialDefinition.atlasRegion);
+		//            }
+		//        }
+		//    }
+		//}
 
         protected void CombineByShader()
         {
@@ -99,18 +112,24 @@ namespace UMA
 
                 for (int materialDefinitionIndex = 0; materialDefinitionIndex < umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions.Count; materialDefinitionIndex++)
                 {
-
+					var materialDefinition = umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex];
+					var slotData = materialDefinition.source.slotData;
                     combineInstance = new SkinnedMeshCombiner.CombineInstance();
-					combineInstance.mesh = umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex].source.slotData.meshRenderer.sharedMesh;
+					combineInstance.mesh = slotData.meshRenderer.sharedMesh;
 					combineInstance.destMesh = new int[combineInstance.mesh.subMeshCount];
 					for (int i = 0; i < combineInstance.mesh.subMeshCount; i++)
 					{
 						combineInstance.destMesh[i] = -1;
 					}
 
-                    combineInstance.bones = umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex].source.slotData.meshRenderer.bones;
-                    combineInstance.destMesh[umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex].source.slotData.subMeshIndex] = atlasIndex;
+					combineInstance.bones = slotData.meshRenderer.bones;
+					combineInstance.destMesh[slotData.subMeshIndex] = atlasIndex;
                     combinedMeshList.Add(combineInstance);
+
+					if (slotData.SlotAtlassed != null)
+					{
+						slotData.SlotAtlassed.Invoke(umaData, slotData, umaData.atlasList.atlas[atlasIndex].materialSample, materialDefinition.atlasRegion);
+					}
                 }
             }
 
@@ -135,12 +154,14 @@ namespace UMA
                     combineInstance.bones = slots[slotIndex].meshRenderer.bones;
 
                     bool contains = false;
+					Material slotMaterial = null;
                     if (sourceMaterials != null)
                     {
                         for (int i = 0; i < sourceMaterials.Count; i++)
                         {
                             if (slots[slotIndex].materialSample == sourceMaterials[i])
                             {
+								slotMaterial = combinedMaterialList[i + atlassedMaterials];
                                 combineInstance.destMesh[slots[slotIndex].subMeshIndex] = i+atlassedMaterials;
                                 contains = true;
                                 break;
@@ -154,9 +175,15 @@ namespace UMA
                     if (!contains)
                     {
                         sourceMaterials.Add(slots[slotIndex].materialSample);
-                        combinedMaterialList.Add(new Material (slots[slotIndex].materialSample));
+						slotMaterial = new Material(slots[slotIndex].materialSample);
+                        combinedMaterialList.Add(slotMaterial);
                         combineInstance.destMesh[slots[slotIndex].subMeshIndex] = combinedMaterialList.Count - 1;
                     }
+					if (slots[slotIndex].SlotAtlassed != null)
+					{
+						slots[slotIndex].SlotAtlassed.Invoke(umaData, slots[slotIndex], slotMaterial, new Rect(0,0,1,1));
+					}
+
                     combinedMeshList.Add(combineInstance);
                     indexCount++;
 

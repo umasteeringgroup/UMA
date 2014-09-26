@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
@@ -37,14 +37,23 @@ namespace UMAEditor
         protected SlotData slot;
         protected bool showBones;
         protected Vector2 boneScroll = new Vector2();
+		protected string assetPath;
 
         public void OnEnable()
         {
             slot = target as SlotData;
+			assetPath = AssetDatabase.GetAssetPath(target);
         }
 
         public override void OnInspectorGUI()
         {
+			if (!string.IsNullOrEmpty(assetPath))
+			{
+				base.OnInspectorGUI();
+				return;
+			}
+
+
             EditorGUIUtility.LookLikeControls();
 
             slot.slotName = EditorGUILayout.TextField("Slot Name", slot.slotName);

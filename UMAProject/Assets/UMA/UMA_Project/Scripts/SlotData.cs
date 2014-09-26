@@ -194,13 +194,9 @@ namespace UMA
                     var overlayData = overlayList[i];
                     if (overlayData != null)
                     {
-                        if (overlayData.textureList.Length != count)
+                        if (overlayData.textureList.Length != count && count != 0)
                         {
-                            Debug.LogError(overlayData.overlayName);
-                            Debug.LogError(overlayData.textureList.Length);
-                            Debug.LogError(slotName);
-                            Debug.LogError(count);
-                            Debug.LogError(string.Format("Overlay '{0]' only have {1} textures, but it is added to SlotData '{2}' which requires {3} textures.", overlayData.overlayName, overlayData.textureList.Length, slotName, count));
+                            Debug.LogError(string.Format("Overlay '{0}' only have {1} textures, but it is added to SlotData '{2}' which requires {3} textures.", overlayData.overlayName, overlayData.textureList.Length, slotName, count));
                             valid = false;
                         }
                     }

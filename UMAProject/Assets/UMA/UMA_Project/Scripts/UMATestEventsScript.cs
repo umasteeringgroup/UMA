@@ -15,4 +15,8 @@ public class UMATestEventsScript : MonoBehaviour
 	{
 		Debug.Log(data.name + " Updated", data.gameObject);
 	}
+	public void SlotAtlasEvent(UMA.UMAData umaData, UMA.SlotData slotData, Material material, Rect atlasRect)
+	{
+		Debug.Log(umaData.name + " got slot " + slotData.slotName);
+	}
 }
