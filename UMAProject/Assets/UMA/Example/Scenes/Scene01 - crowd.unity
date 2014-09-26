@@ -297,7 +297,7 @@ MonoBehaviour:
   atlasResolutionScale: 1
   generateUMA: 0
   generateLotsUMA: 1
-  umaCrowdSize: {x: 2, y: 2}
+  umaCrowdSize: {x: 4, y: 4}
   randomDna: 1
   space: 1
   zeroPoint: {fileID: 0}
@@ -583,11 +583,11 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11400000, guid: f339fe484442bb14a853826f3556fa50, type: 2}
       propertyPath: umaCrowdSize.x
-      value: 2
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 11400000, guid: f339fe484442bb14a853826f3556fa50, type: 2}
       propertyPath: umaCrowdSize.y
-      value: 2
+      value: 4
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: f339fe484442bb14a853826f3556fa50, type: 2}
