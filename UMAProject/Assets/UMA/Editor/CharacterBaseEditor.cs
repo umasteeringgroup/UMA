@@ -50,9 +50,10 @@ namespace UMAEditor
 			{
 				_viewDna = newToolBarIndex;
 			}
-			
 
-			if (_viewDna >= 0) {
+
+			if (_viewDna >= 0 )
+			{
 	            Type dnaType = _dnaTypes[_viewDna];
 
 				if (_dnaValues[dnaType].OnGUI())
@@ -68,6 +69,14 @@ namespace UMAEditor
 		internal bool NeedsReenable()
 		{
 			return _dnaValues == null;
+		}
+
+		public bool IsValid
+		{
+			get
+			{
+				return !(_dnaTypes == null || _dnaTypes.Length == 0);
+			}
 		}
 	}
 
@@ -689,6 +698,7 @@ namespace UMAEditor
 
         private bool ToolbarGUI()
         {
+			if (!dnaEditor.IsValid) return false;
             _toolbarIndex = GUILayout.Toolbar(_toolbarIndex, toolbar);
             switch(_toolbarIndex)
             {
