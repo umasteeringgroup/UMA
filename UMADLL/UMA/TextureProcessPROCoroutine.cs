@@ -176,7 +176,7 @@ namespace UMA
                         renderCamera.targetTexture = destinationTexture;
                         renderCamera.Render();
                         renderCamera.transform.position = tempPosition;
-                        renderCamera.active = false;
+						renderCamera.gameObject.SetActive(false);
                         renderCamera.targetTexture = null;
                         yield return 25;
 
