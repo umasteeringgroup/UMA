@@ -54,7 +54,7 @@ public class HumanFemaleDNAConverterBehaviour : DnaConverterBehaviour
 		//Mathf.Clamp(1 + (umaDna.breastSize - 0.5f) * 1.50f + (umaDna.upperWeight - 0.5f) * 0.10f, 0.6f, 1.5f),
 		//Mathf.Clamp(1 + (umaDna.breastSize - 0.5f) * 1.50f + (umaDna.upperWeight - 0.5f) * 0.10f, 0.6f, 1.5f),
 		//Mathf.Clamp(1 + (umaDna.breastSize - 0.5f) * 1.50f + (umaDna.upperWeight - 0.5f) * 0.10f, 0.6f, 1.5f));
-		
+	
 		skeleton.SetScale(UMASkeleton.StringToHash("LeftEye"), 
 		    new Vector3(
 				Mathf.Clamp(1 + (umaDna.eyeSize - 0.5f) * 0.3f , 0.7f, 1.4f),
@@ -75,10 +75,11 @@ public class HumanFemaleDNAConverterBehaviour : DnaConverterBehaviour
 		//Mathf.Clamp(1 + (umaDna.eyeSize - 0.5f) * 0.3f , 0.7f, 1.4f),
 		//Mathf.Clamp(1 + (umaDna.eyeSize - 0.5f) * 0.3f , 0.7f, 1.4f));     
 
-		skeleton.SetRotation(UMASkeleton.StringToHash("LeftEye"),
-			Quaternion.Euler(new Vector3((umaDna.eyeRotation - 0.5f) * 20, -90, -180)));
-		skeleton.SetRotation(UMASkeleton.StringToHash("RightEye"),
-			Quaternion.Euler(new Vector3(-(umaDna.eyeRotation - 0.5f) * 20, -90, -180)));
+		skeleton.SetRotation(UMASkeleton.StringToHash("LeftEyeAdjust"),
+	    	Quaternion.Euler(new Vector3((umaDna.eyeRotation - 0.5f) * 20f, 0f, 0f)));
+		skeleton.SetRotation(UMASkeleton.StringToHash("RightEyeAdjust"),
+			Quaternion.Euler(new Vector3(-(umaDna.eyeRotation - 0.5f) * 20f, 0f, 0f)));
+		
 
 		//umaData.boneList["LeftEye"].boneTransform.localEulerAngles = new Vector3((umaDna.eyeRotation - 0.5f) * 20, -90, -180);
 		//umaData.boneList["RightEye"].boneTransform.localEulerAngles = new Vector3(-(umaDna.eyeRotation - 0.5f) * 20, -90, -180);
