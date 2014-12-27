@@ -348,6 +348,11 @@ namespace UMA
                     return slotDataList[index];
                 return null;
             }
+
+			public int GetSlotArraySize()
+			{
+				return slotDataList.Length;
+			}
 			
 #pragma warning disable 618
 			public void ApplyDNA(UMAData umaData)
@@ -681,7 +686,12 @@ namespace UMA
 		}
 		
 		public SlotData GetSlot(int index){
-			return umaRecipe.slotDataList[index];	
+			return umaRecipe.GetSlot(index);	
+		}
+
+		public int GetSlotArraySize()
+		{
+			return umaRecipe.GetSlotArraySize();
 		}
 
         public UMASkeleton GetSkeleton()
