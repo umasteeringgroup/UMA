@@ -204,5 +204,9 @@ namespace UMA
             }
             return valid;
         }
+		public override string ToString()
+		{
+			return "SlotData: " + slotName;
+		}
     }
 }

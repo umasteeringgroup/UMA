@@ -218,8 +218,76 @@ public class SlotLibraryEditor : Editor
 			m_SlotDataCount.intValue = 0;
 		}
 
+		if (GUILayout.Button("Remove Invalid Slot Data"))
+		{
+			RemoveInvalidSlotData(slotElementList);
+		}
+
+		if (GUILayout.Button("Validate Texture Name Lists"))
+		{
+			ValidateSlotDataTextureNameLists(slotElementList);
+		}
 
 		m_Object.ApplyModifiedProperties();
 
+	}
+
+	private void ValidateSlotDataTextureNameLists(SlotData[] slotElementList)
+	{
+		var uma = GameObject.Find("UMA");
+		if (uma == null) return;
+		var generators = uma.GetComponentsInChildren<UMAGeneratorBase>();
+		if (generators.Length == 0) return;
+		string[] defaultTextureNameList = generators[0].textureNameList;
+
+		for (int i = m_SlotDataCount.intValue - 1; i >= 0; i--)
+		{
+			if (slotElementList[i])
+			{
+				if (slotElementList[i].textureNameList == null || slotElementList[i].textureNameList.Length == 0)
+				{
+					ValidateSlotDataTextureNameList(defaultTextureNameList, slotElementList[i]);
+				}
+			}
+		}
+	}
+
+	private void ValidateSlotDataTextureNameList(string[] defaultTextureNameList, SlotData slotData)
+	{
+		bool valid = true;
+		for(int i = 0; i < defaultTextureNameList.Length; i++ )
+		{
+			valid = valid && slotData.materialSample.HasProperty(defaultTextureNameList[i]);
+		}
+		if( !valid )
+		{
+			var properties = ShaderUtil.GetPropertyCount(slotData.materialSample.shader);
+			var newTextureNameList = new List<string>(16);
+			for(int i = 0; i < properties; i++ )
+			{
+				if( ShaderUtil.GetPropertyType(slotData.materialSample.shader, i) == ShaderUtil.ShaderPropertyType.TexEnv )
+				{
+					newTextureNameList.Add(ShaderUtil.GetPropertyName(slotData.materialSample.shader, i));
+				}
+			}
+			Debug.LogWarning("Fixed SlotData: " + slotData.slotName);
+			slotData.textureNameList = newTextureNameList.ToArray();
+			EditorUtility.SetDirty(slotData);
+		}
+	}
+
+	private void RemoveInvalidSlotData(SlotData[] slotElementList)
+	{
+		for (int i = m_SlotDataCount.intValue - 1; i >= 0; i--)
+		{
+			if (slotElementList[i])
+			{
+				if (slotElementList[i].meshRenderer == null || slotElementList[i].materialSample == null)
+				{
+					Debug.LogWarning("Removed SlotData: " + slotElementList[i].slotName);
+					RemoveSlotDataAtIndex(i);
+				}
+			}
+		}
 	}
 }

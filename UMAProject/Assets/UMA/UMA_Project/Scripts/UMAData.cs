@@ -45,9 +45,9 @@ namespace UMA
         public bool onQuit = false;
         [Obsolete("UMAData.OnUpdated is deprecated, please use OnCharacterUpdated instead.", false)]
         public event Action<UMAData> OnUpdated { add { OnCharacterUpdated += value; } remove { OnCharacterUpdated -= value; } }
-        public event Action<UMAData> OnCharacterUpdated { add { CharacterUpdated.AddListener(new UnityAction<UMAData>(value)); } remove { CharacterUpdated.RemoveListener(new UnityAction<UMAData>(value)); } }
-        public event Action<UMAData> OnCharacterCreated { add { CharacterCreated.AddListener(new UnityAction<UMAData>(value)); } remove { CharacterCreated.RemoveListener(new UnityAction<UMAData>(value)); } }
-        public event Action<UMAData> OnCharacterDestroyed { add { CharacterDestroyed.AddListener(new UnityAction<UMAData>(value)); } remove { CharacterDestroyed.RemoveListener(new UnityAction<UMAData>(value)); } }
+		public event Action<UMAData> OnCharacterUpdated { add { if (CharacterUpdated == null) CharacterUpdated = new UMADataEvent(); CharacterUpdated.AddListener(new UnityAction<UMAData>(value)); } remove { CharacterUpdated.RemoveListener(new UnityAction<UMAData>(value)); } }
+		public event Action<UMAData> OnCharacterCreated { add { if (CharacterUpdated == null) CharacterUpdated = new UMADataEvent(); CharacterCreated.AddListener(new UnityAction<UMAData>(value)); } remove { CharacterCreated.RemoveListener(new UnityAction<UMAData>(value)); } }
+		public event Action<UMAData> OnCharacterDestroyed { add { if (CharacterUpdated == null) CharacterUpdated = new UMADataEvent(); CharacterDestroyed.AddListener(new UnityAction<UMAData>(value)); } remove { CharacterDestroyed.RemoveListener(new UnityAction<UMAData>(value)); } }
         public UMADataEvent CharacterCreated;
         public UMADataEvent CharacterDestroyed;
         public UMADataEvent CharacterUpdated;

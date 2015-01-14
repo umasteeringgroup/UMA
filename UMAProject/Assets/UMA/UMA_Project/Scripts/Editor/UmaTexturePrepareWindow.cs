@@ -506,7 +506,27 @@ namespace UMAEditor
 	                AssetDatabase.ImportAsset(file);
 	            }
 	        }
-	    }
+			foreach (var obj in Selection.GetFiltered(typeof(OverlayLibrary), SelectionMode.Editable))
+			{
+				var overlays = (obj as OverlayLibrary).GetAllOverlays();
+				foreach (var overlay in overlays)
+				{
+					foreach (var texture in overlay.textureList)
+					{
+						if (texture != null)
+						{
+							string file = AssetDatabase.GetAssetPath(texture);
+							var importer = TextureImporter.GetAtPath(file) as TextureImporter;
+							if (!importer.isReadable)
+							{
+								importer.isReadable = true;
+								AssetDatabase.ImportAsset(file);
+							}
+						}
+					}
+				}
+			}
+		}
         [MenuItem("UMA/Tools/Texture/Clear Readable")]
 	    public static void ClearTextureReadableMenuItem()
 	    {
