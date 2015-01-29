@@ -1,5 +1,5 @@
 ﻿//	============================================================
-//	Name:		ExpressionTargetInspector
+//	Name:		ExpressionPlayerInspector
 //	Author: 	Eli Curtz
 //	Copyright:	(c) 2014 Eli Curtz
 //	============================================================
@@ -19,13 +19,6 @@ public class ExpressionPlayerInspector : Editor {
 	{
 		player = target as ExpressionPlayer;
 	}
-		bool choose = false;
-		public void OnSceneGUI() {
-			if (choose) {
-				EditorGUIUtility.ShowObjectPicker<AnimationClip>(null, false, "", this.GetInstanceID());
-				choose = false;
-			}
-		}
 
 	public override void OnInspectorGUI()
 	{

@@ -45,9 +45,7 @@ public class SliderExpressionTest : MonoBehaviour {
 				player.overrideMecanimEyes = true;
 			}
 
-#if UNITY_4_3
-			player.umaData = umaCreated;
-#else
+#if !UNITY_4_3
 			umaAnimator.Rebind();
 #endif
 		}
@@ -69,11 +67,9 @@ public class SliderExpressionTest : MonoBehaviour {
 			camPos.y = head.transform.position.y;
 			cam.transform.position = camPos;
 			
-			MouseOrbitCollider camScript = cam.GetComponent<MouseOrbitCollider>();
+			CameraTrack camScript = cam.GetComponent<CameraTrack>();
 			if (camScript != null) {
 				camScript.target = head.transform;
-				camScript.targetCollider = gameObject.GetComponentInChildren<CapsuleCollider>();
-				camScript.Reset();
 			}
 		}
 		else {

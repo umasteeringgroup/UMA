@@ -19,6 +19,7 @@ public class UMAExpressionPlayer : ExpressionPlayer {
 	public float minWeight = 0f;
 
 	private UMAData umaData;
+	private int jawHash = 0;
 	private bool initialized = false;
 
 	// Use this for initialization
@@ -43,6 +44,10 @@ public class UMAExpressionPlayer : ExpressionPlayer {
 		}
 
 		if ((expressionSet != null) && (umaData != null) && (umaData.skeleton != null)) {
+			if (umaData.animator != null) {
+				Transform jaw = umaData.animator.GetBoneTransform(HumanBodyBones.Jaw);
+				if (jaw != null) jawHash = UMASkeleton.StringToHash(jaw.name);
+			}
 			initialized = true;
 		}
 		
@@ -80,6 +85,9 @@ public class UMAExpressionPlayer : ExpressionPlayer {
 		if (!overrideMecanimHead) mecanimMask |= MecanimJoint.Head;
 		if (!overrideMecanimJaw) mecanimMask |= MecanimJoint.Jaw;
 		if (!overrideMecanimEyes) mecanimMask |= MecanimJoint.Eye;
+		if (overrideMecanimJaw) {
+			umaData.skeleton.Reset(jawHash);
+		}
 		
 		for (int i = 0; i < values.Length; i++) {
 			if ((MecanimAlternate[i] & mecanimMask) != MecanimJoint.None) {
@@ -97,7 +105,7 @@ public class UMAExpressionPlayer : ExpressionPlayer {
 				weight = -weight;
 				pose = expressionSet.posePairs[i].inverse;
 			}
-
+			
 			if ((weight > minWeight) && (pose != null)) {
 				pose.ApplyPose(umaData.skeleton, weight);
 			}
