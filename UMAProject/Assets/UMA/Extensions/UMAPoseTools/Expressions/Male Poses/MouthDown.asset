@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: MouthDown
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftLipsSuperiorMiddle
+    hash: -1900485368
+    position: {x: .00400839746, y: -.00032268744, z: .00303132832}
+    rotation: {x: -3.57949176e-07, y: 6.06838313e-09, z: 3.95706536e-07, w: 1.00000012}
+    scale: {x: 1.00000012, y: 1.00000024, z: 1.00000012}
+  - bone: LipsSuperior
+    hash: -1089081410
+    position: {x: .00447875075, y: -5.60248736e-10, z: -.000830352306}
+    rotation: {x: -5.76580454e-08, y: 5.93969318e-15, z: -3.22769291e-14, w: 1}
+    scale: {x: .999999881, y: 1.00000012, z: .99999994}
+  - bone: LeftLips
+    hash: 1620479899
+    position: {x: -.00356859714, y: 0, z: -.00588424131}
+    rotation: {x: -8.17004464e-10, y: -2.88643136e-08, z: -1.69556404e-08, w: 1}
+    scale: {x: 1.00000012, y: 1, z: 1.00000012}
+  - bone: LeftLipsInferior
+    hash: -2082379262
+    position: {x: -.0014327094, y: 1.57309696e-05, z: -.00418221764}
+    rotation: {x: -4.98926322e-09, y: -4.45440058e-08, z: -9.27199029e-09, w: 1.00000012}
+    scale: {x: 1.00000012, y: 1.00000012, z: 1}
+  - bone: LipsInferior
+    hash: -499586065
+    position: {x: -.00161273032, y: 2.20019558e-11, z: -.00430982746}
+    rotation: {x: 5.17124456e-14, y: 1.46629917e-08, z: -1.23076039e-14, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLips
+    hash: -1558564409
+    position: {x: -.00356859714, y: 0, z: -.00588424131}
+    rotation: {x: -8.24860535e-09, y: -5.69214933e-08, z: 3.06626613e-10, w: 1}
+    scale: {x: .99999994, y: 1, z: 1}
+  - bone: RightLipsInferior
+    hash: 921042654
+    position: {x: -.0014327094, y: -1.57309696e-05, z: -.00418221764}
+    rotation: {x: 1.03197948e-08, y: -1.54114019e-08, z: -5.51532064e-09, w: 1.00000012}
+    scale: {x: 1, y: 1.00000012, z: 1}
+  - bone: RightLipsSuperiorMiddle
+    hash: -2093673696
+    position: {x: .0040083956, y: .00032268744, z: .00303132832}
+    rotation: {x: 3.38707622e-07, y: -2.44036528e-07, z: 6.28549586e-08, w: 1}
+    scale: {x: .99999994, y: 1.00000012, z: .99999994}
+  - bone: UpperLips
+    hash: 891826736
+    position: {x: .0031975694, y: -3.3469405e-10, z: 7.4505806e-09}
+    rotation: {x: -5.76579033e-08, y: 0, z: 0, w: 1.00000012}
+    scale: {x: 1, y: 1.00000012, z: 1}
+  tweenPoses: []
+  tweenWeights: []

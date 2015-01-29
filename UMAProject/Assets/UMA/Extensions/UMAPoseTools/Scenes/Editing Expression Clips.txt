@@ -1,0 +1,26 @@
+* Open the ExpressionClipEditor scene from UMA/Extensions/PoseTools/Scenes
+
+* Select and enable either the Male_Unified or Female_Unified character
+
+* Arrange the Editor layout so that the Inspector, Animation, and either Scene or Game
+view are all visible
+
+* Use the sliders in the Edit Mode Expression Player component on the character to set up
+a rough version of your expression. Only the sliders with non-zero values will be included
+in the animation clip, but you can always add others later using the Animation view.
+
+* Pressing the Save To Clip button will create a new animation clip of your expression and
+set it as active on the Animation component of the character.
+
+* Select the new clip using the popup menu in the Animation view.
+
+* Using the keyframe and curve tools in the Animation tools and the sliders from the Edit
+Mode Expression Player edit your animation until you're happy with the playback.
+
+* More information on using the Animation view is available here:
+http://docs.unity3d.com/Manual/Animations.html
+
+* Important: This animation clip is set to the Legacy type, which will work for editing
+and the classic Animation component but NOT in the Mecanim Animator component, which
+requires Generic type clips. There is an item in UMA/Pose Tools menu for converting
+animation clips between Legacy and Generic.

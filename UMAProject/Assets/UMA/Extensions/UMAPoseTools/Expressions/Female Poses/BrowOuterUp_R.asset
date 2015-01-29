@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: BrowOuterUp_R
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: NoseMiddle
+    hash: 865884795
+    position: {x: .00014898926, y: -1.59430783e-07, z: -1.40070915e-06}
+    rotation: {x: 4.52952719e-07, y: 1.17586962e-09, z: 7.60592123e-09, w: 1}
+    scale: {x: .999999881, y: .999999881, z: 1}
+  - bone: RightEyebrowMiddle
+    hash: 1695671804
+    position: {x: -1.1920929e-07, y: 0, z: 0}
+    rotation: {x: -3.89595662e-08, y: .0635735393, z: 3.40963635e-09, w: .997977138}
+    scale: {x: .999999523, y: .999999881, z: 1}
+  - bone: RightEyebrowUp
+    hash: 1246724795
+    position: {x: -7.4505806e-09, y: 0, z: 0}
+    rotation: {x: 2.48195384e-08, y: .0787401944, z: -7.80809906e-09, w: .996895194}
+    scale: {x: 1.00000024, y: .99999994, z: .999999762}
+  tweenPoses: []
+  tweenWeights: []
