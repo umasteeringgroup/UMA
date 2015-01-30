@@ -24,30 +24,32 @@ public class UMAExpressionSet : ScriptableObject {
 	public PosePair[] posePairs = new PosePair[UMAExpressionPlayer.PoseCount];
 
 	[System.NonSerialized]
-	private List<int> boneHashes = null;
+	private int[] boneHashes = null;
 
 	public void ResetBones(UMASkeleton umaSkeleton) {
 		if (umaSkeleton == null) return;
 
 		if (boneHashes == null) {
-			boneHashes = new List<int>();
+			List<int> boneHashList = new List<int>();
 
 			foreach(PosePair pair in posePairs) {
 				if (pair.primary != null) {
 					foreach(UMABonePose.PoseBone bone in pair.primary.poses) {
-						if (!boneHashes.Contains(bone.hash)) {
-							boneHashes.Add(bone.hash);
+						if (!boneHashList.Contains(bone.hash)) {
+							boneHashList.Add(bone.hash);
 						}
 					}
 				}
 				if (pair.inverse != null) {
 					foreach(UMABonePose.PoseBone bone in pair.inverse.poses) {
-						if (!boneHashes.Contains(bone.hash)) {
-							boneHashes.Add(bone.hash);
+						if (!boneHashList.Contains(bone.hash)) {
+							boneHashList.Add(bone.hash);
 						}
 					}
 				}
 			}
+
+			boneHashes = boneHashList.ToArray();
 		}
 
 		foreach (int hash in boneHashes) {

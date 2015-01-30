@@ -187,47 +187,48 @@ public class ExpressionPlayer : MonoBehaviour {
 	public float rightBrowUp_Down = 0f;
 	[Range (-1f, 1f)]
 	public float midBrowUp_Down = 0f;
-
+	
+	private float[] valueArray = new float[PoseCount];
 	public float[] Values {
 		get {
-			return new float[] {
-				neckUp_Down,
-				neckLeft_Right,
-				neckTiltLeft_Right,
-				headUp_Down,
-				headLeft_Right,
-				headTiltLeft_Right,
-				jawOpen_Close,
-				jawForward_Back,
-				jawLeft_Right,
-				mouthLeft_Right,
-				mouthUp_Down,
-				mouthNarrow_Pucker,
-				tongueOut,
-				tongueCurl,
-				tongueUp_Down,
-				tongueLeft_Right,
-				tongueWide_Narrow,
-				leftMouthSmile_Frown,
-				rightMouthSmile_Frown,
-				leftLowerLipUp_Down,
-				rightLowerLipUp_Down,
-				leftUpperLipUp_Down,
-				rightUpperLipUp_Down,
-				leftCheekPuff_Squint,
-				rightCheekPuff_Squint,
-				noseSneer,
-				leftEyeOpen_Close,
-				rightEyeOpen_Close,
-				leftEyeUp_Down,
-				rightEyeUp_Down,
-				leftEyeIn_Out,
-				rightEyeIn_Out,
-				browsIn,
-				leftBrowUp_Down,
-				rightBrowUp_Down,
-				midBrowUp_Down
-			};
+			valueArray[0] = neckUp_Down;
+			valueArray[1] = neckLeft_Right;
+			valueArray[2] = neckTiltLeft_Right;
+			valueArray[3] = headUp_Down;
+			valueArray[4] = headLeft_Right;
+			valueArray[5] = headTiltLeft_Right;
+			valueArray[6] = jawOpen_Close;
+			valueArray[7] = jawForward_Back;
+			valueArray[8] = jawLeft_Right;
+			valueArray[9] = mouthLeft_Right;
+			valueArray[10] = mouthUp_Down;
+			valueArray[11] = mouthNarrow_Pucker;
+			valueArray[12] = tongueOut;
+			valueArray[13] = tongueCurl;
+			valueArray[14] = tongueUp_Down;
+			valueArray[15] = tongueLeft_Right;
+			valueArray[16] = tongueWide_Narrow;
+			valueArray[17] = leftMouthSmile_Frown;
+			valueArray[18] = rightMouthSmile_Frown;
+			valueArray[19] = leftLowerLipUp_Down;
+			valueArray[20] = rightLowerLipUp_Down;
+			valueArray[21] = leftUpperLipUp_Down;
+			valueArray[22] = rightUpperLipUp_Down;
+			valueArray[23] = leftCheekPuff_Squint;
+			valueArray[24] = rightCheekPuff_Squint;
+			valueArray[25] = noseSneer;
+			valueArray[26] = leftEyeOpen_Close;
+			valueArray[27] = rightEyeOpen_Close;
+			valueArray[28] = leftEyeUp_Down;
+			valueArray[29] = rightEyeUp_Down;
+			valueArray[30] = leftEyeIn_Out;
+			valueArray[31] = rightEyeIn_Out;
+			valueArray[32] = browsIn;
+			valueArray[33] = leftBrowUp_Down;
+			valueArray[34] = rightBrowUp_Down;
+			valueArray[35] = midBrowUp_Down;
+
+			return valueArray;
 		}
 		set {
 			if (value.Length != PoseCount) return;
