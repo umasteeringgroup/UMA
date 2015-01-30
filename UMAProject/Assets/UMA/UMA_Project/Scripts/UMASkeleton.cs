@@ -17,6 +17,7 @@ namespace UMA
         public abstract void SetPosition(int nameHash, Vector3 Position);
         public abstract void SetScale(int nameHash, Vector3 scale);
         public abstract void SetRotation(int nameHash, Quaternion rotation);
+		public abstract void Lerp(int nameHash, Vector3 Position, Vector3 scale, Quaternion rotation, float weight);
 
         public abstract Vector3 GetPosition(int nameHash);
         public abstract Vector3 GetScale(int nameHash);

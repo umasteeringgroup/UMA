@@ -120,6 +120,18 @@ namespace UMA
             }
         }
 
+		public override void Lerp(int nameHash, Vector3 position, Vector3 scale, Quaternion rotation, float weight)
+		{
+			UMAData.BoneData db;
+			if (boneHashData.TryGetValue(nameHash, out db))
+			{
+				db.boneTransform.localPosition += position * weight;
+				Quaternion fullRotation = db.boneTransform.localRotation * rotation;
+				db.boneTransform.localRotation = Quaternion.Slerp(db.boneTransform.localRotation, fullRotation, weight);
+				db.boneTransform.localScale = Vector3.Lerp(db.boneTransform.localScale, scale, weight);
+			}
+		}
+
         public override bool Reset(int nameHash)
         {
             UMAData.BoneData db;

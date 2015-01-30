@@ -182,6 +182,8 @@ public class UMABonePose : ScriptableObject {
 		}
 
 		foreach (PoseBone pose in poses) {
+			umaSkeleton.Lerp(pose.hash, pose.position, pose.scale, pose.rotation, weight);
+			/*
 			if (umaSkeleton.HasBone(pose.hash)) {
 				Vector3 position = umaSkeleton.GetPosition(pose.hash);
 				Quaternion rotation = umaSkeleton.GetRotation(pose.hash);
@@ -195,6 +197,7 @@ public class UMABonePose : ScriptableObject {
 			else {
 				Debug.Log("Unmatched bone: "+pose.bone);
 			}
+			*/
 		}
 	}
 
