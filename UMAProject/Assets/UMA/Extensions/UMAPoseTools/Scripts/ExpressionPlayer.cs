@@ -301,6 +301,53 @@ namespace UMA.PoseTools
 			int space = name.LastIndexOf(' ', underscore);
 			return name.Substring(0, space + 1) + name.Substring(underscore + 1);
 		}
+
+		public void SaveExpressionClip(string assetPath)
+		{
+			AnimationClip clip = new AnimationClip();
+
+			Animation anim = gameObject.GetComponent<Animation>();
+			bool legacyAnimation = (anim != null);
+
+			if (legacyAnimation)
+			{
+				AnimationUtility.SetAnimationType(clip, ModelImporterAnimationType.Legacy);
+			}
+			else
+			{
+				AnimationUtility.SetAnimationType(clip, ModelImporterAnimationType.Generic);
+			}
+
+			float[] values = Values;
+			for (int i = 0; i < ExpressionPlayer.PoseCount; i++)
+			{
+				string pose = ExpressionPlayer.PoseNames[i];
+				float value = values[i];
+				if (value != 0f)
+				{
+					AnimationCurve curve = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(1f, value), new Keyframe(2f, 0f));
+
+					EditorCurveBinding binding = new EditorCurveBinding();
+					binding.propertyName = pose;
+					binding.type = typeof(ExpressionPlayer);
+					AnimationUtility.SetEditorCurve(clip, binding, curve);
+				}
+			}
+
+			if ((assetPath != null) && (assetPath.EndsWith(".anim")))
+			{
+				AssetDatabase.CreateAsset(clip, assetPath);
+
+				if (legacyAnimation)
+				{
+					anim.AddClip(clip, clip.name);
+					anim.clip = clip;
+				}
+
+				AssetDatabase.SaveAssets();
+			}
+		}
+
 #endif
 
 	}

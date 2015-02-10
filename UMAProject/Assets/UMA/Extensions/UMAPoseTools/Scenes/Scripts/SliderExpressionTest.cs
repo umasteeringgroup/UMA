@@ -184,6 +184,14 @@ namespace UMA.PoseTools
 				}
 			}
 
+#if UNITY_EDITOR
+			if (GUILayout.Button("Save Expression"))
+			{
+				string assetPath = UnityEditor.EditorUtility.SaveFilePanelInProject("Save Expression Clip", "Expression", "anim", null);
+				player.SaveExpressionClip(assetPath);
+			}
+#endif
+
 			setValues = GUI.changed;
 
 			GUILayout.EndArea();
