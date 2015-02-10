@@ -9,8 +9,6 @@ using UnityEditor;
 using System.Text;
 using System.Collections.Generic;
 
-using UMA;
-
 namespace UMA.PoseTools
 {
 	public class UMABonePoseMixerWindow : EditorWindow

@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-using UMA;
 namespace UMA.PoseTools
 {
 	public class SliderExpressionTest : MonoBehaviour

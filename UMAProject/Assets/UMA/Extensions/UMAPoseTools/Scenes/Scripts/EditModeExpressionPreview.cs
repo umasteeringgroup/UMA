@@ -2,8 +2,6 @@
 using UnityEditor;
 using System.Collections;
 
-using UMA;
-
 namespace UMA.PoseTools
 {
 	[ExecuteInEditMode]

@@ -11,8 +11,6 @@ using UnityEditor;
 using System.Collections;
 using System.Collections.Generic;
 
-using UMA;
-
 namespace UMA.PoseTools
 {
 	[System.Serializable]
