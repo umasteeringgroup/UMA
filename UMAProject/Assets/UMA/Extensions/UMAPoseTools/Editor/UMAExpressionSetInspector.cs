@@ -83,45 +83,6 @@ public class UMAExpressionSetInspector : Editor {
 		Selection.activeObject = asset;
 	}
 	
-//	[MenuItem("UMA/Pose Tools/Create Expression Clip")]
-//	static void CreateExpressionClipMenuItem()
-//	{
-//		AnimationClip clip = new AnimationClip();
-//		AnimationUtility.SetAnimationType(clip, ModelImporterAnimationType.Generic);
-//
-//		foreach (string pose in UMAExpressionPlayer.PoseNames) {
-//			AnimationCurve curve = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(10f, 0f));
-//			
-//			EditorCurveBinding binding = new EditorCurveBinding();
-//			binding.propertyName = pose;
-//			binding.type = typeof(ExpressionPlayer);
-//			AnimationUtility.SetEditorCurve(clip, binding, curve);
-//		}
-//
-//		string assetFolder = GetAssetFolder();
-//		AssetDatabase.CreateAsset(clip, AssetDatabase.GenerateUniqueAssetPath(assetFolder + "/Expression.anim"));
-//
-//		AssetDatabase.SaveAssets();
-//		Selection.activeObject = clip;
-//	}
-//
-//	[MenuItem("UMA/Pose Tools/Debug Clip")]
-//	static void DebugClipMenuItem()
-//	{
-//		foreach(var obj in Selection.objects)
-//		{
-//			var anim = obj as AnimationClip;
-//			if (anim != null)
-//			{
-//				Debug.Log (anim.name);
-//				var curves = AnimationUtility.GetAllCurves(anim);
-//				foreach (var curve in curves)
-//				{
-//					Debug.Log (curve.path + ":" + curve.type + ":" + curve.propertyName);
-//				}
-//			}
-//		}
-//	}
 
 }
 

@@ -33,25 +33,6 @@ public class UMABonePose : ScriptableObject {
 	public UMABonePose[] tweenPoses = null;
 	public float[] tweenWeights = null;
 
-	/*
-    public UMABonePose Duplicate()
-    {
-        UMABonePose tempPose = CreateInstance<UMABonePose>();
-
-		tempPose.poses = new UMABonePose.PoseBone[poses.Length];
-
-        for (int i = 0; i < poses.Length; i++)
-        {
-            tempPose.poses[i].bone = poses[i].bone;
-            tempPose.poses[i].position = poses[i].position;
-            tempPose.poses[i].rotation = poses[i].rotation;
-            tempPose.poses[i].scale = poses[i].scale;
-        }
-
-        return tempPose;
-    }
-    */
-
 	void Reset() {
 		poses = new PoseBone[0];
 	}
@@ -89,44 +70,6 @@ public class UMABonePose : ScriptableObject {
 		
 		ArrayUtility.Add(ref poses, pose);
 	}
-	
-	/*
-	public void CalculatePoses() {
-		if (!sourceSkeleton || !poseSkeleton) {
-			Debug.LogError("Missing transform.");
-			return;
-		}
-		
-		List<PoseBone> poseList = new List<PoseBone>();
-		Transform[] sourceBones = GetTransformsInPrefab(sourceSkeleton);
-		Transform[] poseBones = GetTransformsInPrefab(poseSkeleton);
-		
-		foreach (Transform bone in poseBones) {
-			Transform source = System.Array.Find<Transform>(sourceBones, entry => entry.name == bone.name);
-			if (source) {
-				if ((bone.localPosition != source.localPosition) ||
-					(bone.localRotation != source.localRotation) ||
-					(bone.localScale != source.localScale))
-				{
-					PoseBone pose = new PoseBone();
-					pose.bone = bone.name;
-					pose.position = bone.localPosition - source.localPosition;
-					pose.rotation = bone.localRotation * Quaternion.Inverse(source.localRotation);
-					pose.scale = new Vector3(bone.localScale.x / source.localScale.x,
-											bone.localScale.y / source.localScale.y,
-											bone.localScale.z / source.localScale.z);
-					
-					poseList.Add(pose);
-				}
-			}
-			else {
-				Debug.Log("Unmatched bone: "+bone.name);
-			}
-		}
-		
-		poses = poseList.ToArray();
-	}
-	*/
 #endif
 	
 	protected float ApplyPoseTweens(UMASkeleton umaSkeleton, float weight) {
@@ -183,43 +126,9 @@ public class UMABonePose : ScriptableObject {
 
 		foreach (PoseBone pose in poses) {
 			umaSkeleton.Lerp(pose.hash, pose.position, pose.scale, pose.rotation, weight);
-			/*
-			if (umaSkeleton.HasBone(pose.hash)) {
-				Vector3 position = umaSkeleton.GetPosition(pose.hash);
-				Quaternion rotation = umaSkeleton.GetRotation(pose.hash);
-				Vector3 scale = umaSkeleton.GetScale(pose.hash);
-				position += pose.position * weight;
-				Quaternion posedRotation = rotation * pose.rotation;
-				rotation = Quaternion.Slerp(rotation, posedRotation, weight);
-				scale = Vector3.Lerp(scale, pose.scale, weight);
-				umaSkeleton.Set(pose.hash, position, scale, rotation);
-			}
-			else {
-				Debug.Log("Unmatched bone: "+pose.bone);
-			}
-			*/
 		}
 	}
 
-	/*
-	public void ApplyPosesPerBone(Dictionary<string, UMAData.BoneData> boneList, Dictionary<string, float> strengthList) {
-
-		foreach (PoseBone pose in poses) {
-			UMAData.BoneData targetBone;
-			float strength;
-			if (boneList.TryGetValue(pose.bone, out targetBone) && (strengthList.TryGetValue(pose.bone, out strength))) {
-				targetBone.boneTransform.localPosition += pose.position * strength;
-				Quaternion posedRotation = targetBone.boneTransform.localRotation * pose.rotation;
-				targetBone.boneTransform.localRotation = Quaternion.Slerp(targetBone.boneTransform.localRotation, posedRotation, strength);
-				targetBone.boneTransform.localScale = Vector3.Slerp(targetBone.boneTransform.localScale, pose.scale, strength);
-			}
-			else {
-				Debug.Log("Unmatched bone: "+pose.bone);
-			}
-		}
-	}
-	*/
-		
 	static private void RecurseTransformsInPrefab(Transform root, List<Transform> transforms)
 	{
 		for (int i = 0; i < root.childCount; i++) {

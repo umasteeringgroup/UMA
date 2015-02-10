@@ -105,7 +105,6 @@ public class UMABonePoseBuildWindow : EditorWindow {
 
         poseFolder = EditorGUILayout.ObjectField("Pose Folder", poseFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
         EnforceFolder(ref poseFolder);
-//      poseLibrary = EditorGUILayout.ObjectField("Pose Library", poseLibrary, typeof(PoseLibrary), true) as PoseLibrary;
 
 		EditorGUILayout.Space();
 		
