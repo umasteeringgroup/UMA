@@ -2,7 +2,7 @@
 using System.Collections;
 
 using UMA;
-using PoseTools.UMA;
+namespace UMA.PoseTools {
 
 public class SliderExpressionTest : MonoBehaviour {
 
@@ -187,4 +187,5 @@ public class SliderExpressionTest : MonoBehaviour {
 		float sliderVal = GUILayout.HorizontalSlider(sliderValue, -sliderMaxValue, sliderMaxValue);
 		return sliderVal;
 	}
+}
 }

@@ -8,7 +8,7 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections;
 
-namespace PoseTools.UMA {
+namespace UMA.PoseTools {
 
 [CustomEditor(typeof(ExpressionPlayer), true)]
 public class ExpressionPlayerInspector : Editor {

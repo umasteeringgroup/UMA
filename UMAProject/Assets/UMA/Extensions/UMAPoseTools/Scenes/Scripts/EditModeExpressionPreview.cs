@@ -2,8 +2,9 @@
 using UnityEditor;
 using System.Collections;
 
-using PoseTools.UMA;
 using UMA;
+
+namespace UMA.PoseTools {
 
 [ExecuteInEditMode]
 public class EditModeExpressionPreview : MonoBehaviour {
@@ -58,4 +59,5 @@ public class EditModeExpressionPreview : MonoBehaviour {
 		}
 	}
 
+}
 }

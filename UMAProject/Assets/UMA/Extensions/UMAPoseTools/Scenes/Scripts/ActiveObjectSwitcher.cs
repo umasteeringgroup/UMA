@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+namespace UMA.PoseTools {
+
 public class ActiveObjectSwitcher : MonoBehaviour {
 
 	public GameObject[] objects = new GameObject[0];
@@ -42,4 +44,5 @@ public class ActiveObjectSwitcher : MonoBehaviour {
 
 		GUILayout.EndArea();
 	}
+}
 }

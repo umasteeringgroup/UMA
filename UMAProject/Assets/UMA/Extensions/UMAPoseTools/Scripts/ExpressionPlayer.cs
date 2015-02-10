@@ -8,7 +8,7 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections;
 
-namespace PoseTools.UMA {
+namespace UMA.PoseTools {
 
 public class ExpressionPlayer : MonoBehaviour {
 

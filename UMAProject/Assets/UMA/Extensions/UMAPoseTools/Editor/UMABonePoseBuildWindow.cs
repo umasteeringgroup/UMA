@@ -12,7 +12,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml.Serialization;
 
-namespace PoseTools.UMA {
+namespace UMA.PoseTools {
 
 public class UMABonePoseBuildWindow : EditorWindow {
 

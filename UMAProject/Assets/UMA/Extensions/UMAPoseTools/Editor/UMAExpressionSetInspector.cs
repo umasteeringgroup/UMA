@@ -8,7 +8,7 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections;
 
-namespace PoseTools.UMA {
+namespace UMA.PoseTools {
 
 [CustomEditor(typeof(UMAExpressionSet))]
 public class UMAExpressionSetInspector : Editor {

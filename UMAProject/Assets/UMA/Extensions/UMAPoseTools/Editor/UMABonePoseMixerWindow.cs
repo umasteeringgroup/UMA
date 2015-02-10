@@ -11,7 +11,7 @@ using System.Collections.Generic;
 
 using UMA;
 
-namespace PoseTools.UMA {
+namespace UMA.PoseTools {
 
 public class UMABonePoseMixerWindow : EditorWindow {
 

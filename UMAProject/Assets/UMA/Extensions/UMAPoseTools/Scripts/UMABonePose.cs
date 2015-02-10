@@ -13,7 +13,7 @@ using System.Collections.Generic;
 
 using UMA;
 
-namespace PoseTools.UMA {
+namespace UMA.PoseTools {
 
 [System.Serializable]
 public class UMABonePose : ScriptableObject {
