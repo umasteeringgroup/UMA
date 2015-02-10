@@ -31,7 +31,6 @@ namespace UMA.PoseTools
 			player = gameObject.GetComponentInChildren<UMAExpressionPlayer>();
 			if (player == null)
 			{
-				Debug.LogWarning("Couldn't find expression player! Trying to add default.");
 				Animator umaAnimator = GetComponentInChildren<Animator>();
 				if (umaAnimator != null)
 				{
@@ -72,10 +71,6 @@ namespace UMA.PoseTools
 				{
 					camScript.target = head.transform;
 				}
-			}
-			else
-			{
-				Debug.LogWarning("Couldn't find head");
 			}
 		}
 
