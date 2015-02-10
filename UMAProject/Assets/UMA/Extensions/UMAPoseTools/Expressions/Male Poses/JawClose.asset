@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: JawClose
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Mandible
+    hash: 1574626840
+    position: {x: -3.7252903e-09, y: -1.45519152e-11, z: 0}
+    rotation: {x: 7.78538762e-08, y: .0225303117, z: -4.23281783e-08, w: .999741137}
+    scale: {x: .999999881, y: 1.00000012, z: 1}
+  tweenPoses: []
+  tweenWeights: []
