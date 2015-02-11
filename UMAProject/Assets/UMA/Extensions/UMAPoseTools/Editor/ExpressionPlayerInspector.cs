@@ -39,6 +39,7 @@ namespace UMA.PoseTools
 			}
 		}
 
+#if UNITY_4_6
 		[MenuItem("UMA/Pose Tools/Set Clip Generic", true)]
 		static bool ValidateSetClipGeneric()
 		{
@@ -111,5 +112,6 @@ namespace UMA.PoseTools
 				}
 			}
 		}
+#endif
 	}
 }

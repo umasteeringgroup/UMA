@@ -11,10 +11,10 @@ namespace UMA
 		public Material material;
 		public Transform textureModule;
 		public Transform myTransform;
-		public List<Transform> textureModuleList;
+		public List<Renderer> textureModuleList;
 		
 		void Awake () {
-			textureModuleList = new List<Transform>();
+			textureModuleList = new List<Renderer>();
 		}
 	}
 }

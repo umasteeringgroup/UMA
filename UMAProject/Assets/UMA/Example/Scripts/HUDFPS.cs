@@ -20,16 +20,19 @@ public class HUDFPS : MonoBehaviour
 // by accumulating FPS for each frame. This way we end up with
 // correct overall FPS even if the interval renders something like
 // 5.5 frames.
+// Modified to properly support Unity 5 where guiText property has been removed.
  
 public  float updateInterval = 0.5F;
  
 private float accum   = 0; // FPS accumulated over the interval
 private int   frames  = 0; // Frames drawn over the interval
 private float timeleft; // Left time for current interval
+private GUIText _guiText;
  
 void Start()
 {
-    if( !guiText )
+	_guiText = GetComponent<GUIText>();
+    if( !_guiText )
     {
         Debug.Log("UtilityFramesPerSecond needs a GUIText component!");
         enabled = false;
@@ -50,15 +53,15 @@ void Update()
         // display two fractional digits (f2 format)
 	float fps = accum/frames;
 	string format = System.String.Format("{0:F2} FPS",fps);
-	guiText.text = format;
+	_guiText.text = format;
  
 	if(fps < 30)
-		guiText.material.color = Color.yellow;
+		_guiText.material.color = Color.yellow;
 	else 
 		if(fps < 10)
-			guiText.material.color = Color.red;
+			_guiText.material.color = Color.red;
 		else
-			guiText.material.color = Color.green;
+			_guiText.material.color = Color.green;
 	//	DebugConsole.Log(format,level);
         timeleft = updateInterval;
         accum = 0.0F;

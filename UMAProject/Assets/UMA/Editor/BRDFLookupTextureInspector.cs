@@ -62,7 +62,7 @@ internal class BRDFLookupTextureInspector : Editor
 	
 	static Material FindCompatibleMaterial (BRDFLookupTexture l)
 	{
-		Renderer r = l.gameObject.renderer;
+		Renderer r = l.gameObject.GetComponent<Renderer>();
 		if (!r) return null;
 		
 		Material m = r.sharedMaterial;

@@ -308,7 +308,7 @@ namespace UMA.PoseTools
 
 			Animation anim = gameObject.GetComponent<Animation>();
 			bool legacyAnimation = (anim != null);
-
+#if UNITY_4_6
 			if (legacyAnimation)
 			{
 				AnimationUtility.SetAnimationType(clip, ModelImporterAnimationType.Legacy);
@@ -317,7 +317,7 @@ namespace UMA.PoseTools
 			{
 				AnimationUtility.SetAnimationType(clip, ModelImporterAnimationType.Generic);
 			}
-
+#endif
 			float[] values = Values;
 			for (int i = 0; i < ExpressionPlayer.PoseCount; i++)
 			{
