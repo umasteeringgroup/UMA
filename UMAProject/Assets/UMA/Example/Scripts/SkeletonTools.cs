@@ -1,15 +1,15 @@
 ﻿using UnityEngine;
 using System.Collections;
-using UnityEditor;
 
 namespace UMA
 {
 	public static class SkeletonTools
 	{
-		[MenuItem("UMA/Verify Slot Mesh")]
+#if UNITY_EDITOR
+		[UnityEditor.MenuItem("UMA/Verify Slot Mesh")]
 		static void Start()
 		{
-			var transforms = Selection.GetTransforms(SelectionMode.Editable);
+			var transforms = UnityEditor.Selection.GetTransforms(UnityEditor.SelectionMode.Editable);
 			if (transforms.Length != 2)
 			{
 
@@ -22,6 +22,7 @@ namespace UMA
 			int failure = 0;
 			CompareSkeletonRecursive(root1, root2, ref failure);
 		}
+#endif
 
 		private static void CompareSkeletonRecursive(Transform race, Transform slot, ref int failure)
 		{

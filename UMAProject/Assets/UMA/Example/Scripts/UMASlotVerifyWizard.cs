@@ -1,7 +1,10 @@
 ﻿using UnityEngine;
-using UnityEditor;
 using System.Collections;
 using UnityEngine.UI;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace UMA
 {
@@ -34,18 +37,25 @@ namespace UMA
 
 		public void SelectMaleClick()
 		{
+#if UNITY_EDITOR
 			SetBaseMesh("Assets/UMA/UMA_Project/Models/Male/Male_Unified.fbx");
+#endif
 		}
 		public void SelectFemaleClick()
 		{
+#if UNITY_EDITOR
 			SetBaseMesh("Assets/UMA/UMA_Project/Models/Female/Female_Unified.fbx");
+#endif
 		}
 		public void BrowseBaseMeshClick()
 		{
+#if UNITY_EDITOR
 			var assetPath = EditorUtility.OpenFilePanel("Select Asset", "Assets", "fbx");
 			if (string.IsNullOrEmpty(assetPath)) return;
 			SetBaseMesh(assetPath);
+#endif
 		}
+#if UNITY_EDITOR
 		private void SetBaseMesh(string assetPath)
 		{
 			var curDir = System.IO.Directory.GetCurrentDirectory().Replace('\\', '/');
@@ -75,17 +85,21 @@ namespace UMA
 				}
 			}
 		}
+#endif
 		#endregion
 
 		#region Page 2
 
 		public void BrowseSlotMeshClick()
 		{
+#if UNITY_EDITOR
 			var assetPath = EditorUtility.OpenFilePanel("Select Asset", "Assets", "fbx");
 			if (string.IsNullOrEmpty(assetPath)) return;
 			SetSlotMesh(assetPath);
+#endif
 		}
 
+#if UNITY_EDITOR
 		private void SetSlotMesh(string assetPath)
 		{
 			var curDir = System.IO.Directory.GetCurrentDirectory().Replace('\\', '/');
@@ -129,6 +143,7 @@ namespace UMA
 			}
 			SetPage(2);
 		}
+#endif
 		#endregion
 
 		#region Page 3
