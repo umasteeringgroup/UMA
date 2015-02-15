@@ -5,10 +5,10 @@
 //	============================================================
 
 using UnityEngine;
-using System.Collections;
 #if UNITY_EDITOR
 using UnityEditor;
-#endif 
+#endif
+using System.Collections;
 
 namespace UMA.PoseTools
 {
