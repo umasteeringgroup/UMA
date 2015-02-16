@@ -57,7 +57,6 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 		public packedSlotData[] packedSlotDataList;
 		public string race;
 		public Dictionary<Type, UMADna> umaDna = new Dictionary<Type, UMADna>();
-
 		public List<UMAPackedDna> packedDna = new List<UMAPackedDna>();
 	}
 
@@ -83,88 +82,82 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 		{
 			if (umaRecipe.slotDataList[i] != null)
 			{
-				if (umaRecipe.slotDataList[i].listID != -1 && umaPackRecipe.packedSlotDataList[i] == null)
+				packedSlotData tempPackedSlotData;
+
+				tempPackedSlotData = new packedSlotData();
+				umaPackRecipe.packedSlotDataList[i] = tempPackedSlotData;
+
+				tempPackedSlotData.slotID = umaRecipe.slotDataList[i].slotName;
+				tempPackedSlotData.overlayScale = Mathf.FloorToInt(umaRecipe.slotDataList[i].overlayScale * 100);
+
+				bool copiedOverlays = false;
+				for (int i2 = 0; i2 < i; i2++)
 				{
-					packedSlotData tempPackedSlotData;
-
-					tempPackedSlotData = new packedSlotData();
-
-					tempPackedSlotData.slotID = umaRecipe.slotDataList[i].slotName;
-					tempPackedSlotData.overlayScale = Mathf.FloorToInt(umaRecipe.slotDataList[i].overlayScale * 100);
-					tempPackedSlotData.OverlayDataList = new packedOverlayData[umaRecipe.slotDataList[i].OverlayCount];
-
-					for (int overlayID = 0; overlayID < tempPackedSlotData.OverlayDataList.Length; overlayID++)
+					if (umaRecipe.slotDataList[i2] != null && umaPackRecipe.packedSlotDataList[i2] != null)
 					{
-						tempPackedSlotData.OverlayDataList[overlayID] = new packedOverlayData();
-						tempPackedSlotData.OverlayDataList[overlayID].overlayID = umaRecipe.slotDataList[i].GetOverlay(overlayID).overlayName;
-
-						if (umaRecipe.slotDataList[i].GetOverlay(overlayID).color != new Color(1.0f, 1.0f, 1.0f, 1.0f))
+						if (umaRecipe.slotDataList[i].GetOverlayList() == umaRecipe.slotDataList[i2].GetOverlayList())
 						{
-							//Color32 instead of Color?
-							tempPackedSlotData.OverlayDataList[overlayID].colorList = new int[4];
-							tempPackedSlotData.OverlayDataList[overlayID].colorList[0] = Mathf.FloorToInt(umaRecipe.slotDataList[i].GetOverlay(overlayID).color.r * 255.0f);
-							tempPackedSlotData.OverlayDataList[overlayID].colorList[1] = Mathf.FloorToInt(umaRecipe.slotDataList[i].GetOverlay(overlayID).color.g * 255.0f);
-							tempPackedSlotData.OverlayDataList[overlayID].colorList[2] = Mathf.FloorToInt(umaRecipe.slotDataList[i].GetOverlay(overlayID).color.b * 255.0f);
-							tempPackedSlotData.OverlayDataList[overlayID].colorList[3] = Mathf.FloorToInt(umaRecipe.slotDataList[i].GetOverlay(overlayID).color.a * 255.0f);
-						}
-
-						if (umaRecipe.slotDataList[i].GetOverlay(overlayID).rect != new Rect(0, 0, 0, 0))
-						{
-							//Might need float in next version
-							tempPackedSlotData.OverlayDataList[overlayID].rectList = new int[4];
-							tempPackedSlotData.OverlayDataList[overlayID].rectList[0] = (int)umaRecipe.slotDataList[i].GetOverlay(overlayID).rect.x;
-							tempPackedSlotData.OverlayDataList[overlayID].rectList[1] = (int)umaRecipe.slotDataList[i].GetOverlay(overlayID).rect.y;
-							tempPackedSlotData.OverlayDataList[overlayID].rectList[2] = (int)umaRecipe.slotDataList[i].GetOverlay(overlayID).rect.width;
-							tempPackedSlotData.OverlayDataList[overlayID].rectList[3] = (int)umaRecipe.slotDataList[i].GetOverlay(overlayID).rect.height;
-						}
-
-						if (umaRecipe.slotDataList[i].GetOverlay(overlayID).channelMask != null)
-						{
-							tempPackedSlotData.OverlayDataList[overlayID].channelMaskList = new int[umaRecipe.slotDataList[i].GetOverlay(overlayID).channelMask.Length][];
-
-							for (int channelAdjust = 0; channelAdjust < umaRecipe.slotDataList[i].GetOverlay(overlayID).channelMask.Length; channelAdjust++)
-							{
-								tempPackedSlotData.OverlayDataList[overlayID].channelMaskList[channelAdjust] = new int[4];
-								tempPackedSlotData.OverlayDataList[overlayID].channelMaskList[channelAdjust][0] = umaRecipe.slotDataList[i].GetOverlay(overlayID).channelMask[channelAdjust].r;
-								tempPackedSlotData.OverlayDataList[overlayID].channelMaskList[channelAdjust][1] = umaRecipe.slotDataList[i].GetOverlay(overlayID).channelMask[channelAdjust].g;
-								tempPackedSlotData.OverlayDataList[overlayID].channelMaskList[channelAdjust][2] = umaRecipe.slotDataList[i].GetOverlay(overlayID).channelMask[channelAdjust].b;
-								tempPackedSlotData.OverlayDataList[overlayID].channelMaskList[channelAdjust][3] = umaRecipe.slotDataList[i].GetOverlay(overlayID).channelMask[channelAdjust].a;
-							}
-
-						}
-						if (umaRecipe.slotDataList[i].GetOverlay(overlayID).channelAdditiveMask != null)
-						{
-							tempPackedSlotData.OverlayDataList[overlayID].channelAdditiveMaskList = new int[umaRecipe.slotDataList[i].GetOverlay(overlayID).channelAdditiveMask.Length][];
-							for (int channelAdjust = 0; channelAdjust < umaRecipe.slotDataList[i].GetOverlay(overlayID).channelAdditiveMask.Length; channelAdjust++)
-							{
-								tempPackedSlotData.OverlayDataList[overlayID].channelAdditiveMaskList[channelAdjust] = new int[4];
-								tempPackedSlotData.OverlayDataList[overlayID].channelAdditiveMaskList[channelAdjust][0] = umaRecipe.slotDataList[i].GetOverlay(overlayID).channelAdditiveMask[channelAdjust].r;
-								tempPackedSlotData.OverlayDataList[overlayID].channelAdditiveMaskList[channelAdjust][1] = umaRecipe.slotDataList[i].GetOverlay(overlayID).channelAdditiveMask[channelAdjust].g;
-								tempPackedSlotData.OverlayDataList[overlayID].channelAdditiveMaskList[channelAdjust][2] = umaRecipe.slotDataList[i].GetOverlay(overlayID).channelAdditiveMask[channelAdjust].b;
-								tempPackedSlotData.OverlayDataList[overlayID].channelAdditiveMaskList[channelAdjust][3] = umaRecipe.slotDataList[i].GetOverlay(overlayID).channelAdditiveMask[channelAdjust].a;
-							}
-
+							tempPackedSlotData.copyOverlayIndex = i2;
+							copiedOverlays = true;
+							break;
 						}
 					}
+				}
+				if( copiedOverlays ) continue;
 
-					umaPackRecipe.packedSlotDataList[i] = tempPackedSlotData;
+				tempPackedSlotData.OverlayDataList = new packedOverlayData[umaRecipe.slotDataList[i].OverlayCount];
 
-					//Shared overlays wont generate duplicated data
-					for (int i2 = i + 1; i2 < umaRecipe.slotDataList.Length; i2++)
+				for (int overlayID = 0; overlayID < tempPackedSlotData.OverlayDataList.Length; overlayID++)
+				{
+					tempPackedSlotData.OverlayDataList[overlayID] = new packedOverlayData();
+					tempPackedSlotData.OverlayDataList[overlayID].overlayID = umaRecipe.slotDataList[i].GetOverlay(overlayID).overlayName;
+
+					if (umaRecipe.slotDataList[i].GetOverlay(overlayID).color != new Color(1.0f, 1.0f, 1.0f, 1.0f))
 					{
-						if (umaRecipe.slotDataList[i2] != null)
+						//Color32 instead of Color?
+						tempPackedSlotData.OverlayDataList[overlayID].colorList = new int[4];
+						tempPackedSlotData.OverlayDataList[overlayID].colorList[0] = Mathf.FloorToInt(umaRecipe.slotDataList[i].GetOverlay(overlayID).color.r * 255.0f);
+						tempPackedSlotData.OverlayDataList[overlayID].colorList[1] = Mathf.FloorToInt(umaRecipe.slotDataList[i].GetOverlay(overlayID).color.g * 255.0f);
+						tempPackedSlotData.OverlayDataList[overlayID].colorList[2] = Mathf.FloorToInt(umaRecipe.slotDataList[i].GetOverlay(overlayID).color.b * 255.0f);
+						tempPackedSlotData.OverlayDataList[overlayID].colorList[3] = Mathf.FloorToInt(umaRecipe.slotDataList[i].GetOverlay(overlayID).color.a * 255.0f);
+					}
+
+					if (umaRecipe.slotDataList[i].GetOverlay(overlayID).rect != new Rect(0, 0, 0, 0))
+					{
+						//Might need float in next version
+						tempPackedSlotData.OverlayDataList[overlayID].rectList = new int[4];
+						tempPackedSlotData.OverlayDataList[overlayID].rectList[0] = (int)umaRecipe.slotDataList[i].GetOverlay(overlayID).rect.x;
+						tempPackedSlotData.OverlayDataList[overlayID].rectList[1] = (int)umaRecipe.slotDataList[i].GetOverlay(overlayID).rect.y;
+						tempPackedSlotData.OverlayDataList[overlayID].rectList[2] = (int)umaRecipe.slotDataList[i].GetOverlay(overlayID).rect.width;
+						tempPackedSlotData.OverlayDataList[overlayID].rectList[3] = (int)umaRecipe.slotDataList[i].GetOverlay(overlayID).rect.height;
+					}
+
+					if (umaRecipe.slotDataList[i].GetOverlay(overlayID).channelMask != null)
+					{
+						tempPackedSlotData.OverlayDataList[overlayID].channelMaskList = new int[umaRecipe.slotDataList[i].GetOverlay(overlayID).channelMask.Length][];
+
+						for (int channelAdjust = 0; channelAdjust < umaRecipe.slotDataList[i].GetOverlay(overlayID).channelMask.Length; channelAdjust++)
 						{
-							if (umaPackRecipe.packedSlotDataList[i2] == null)
-							{
-								if (umaRecipe.slotDataList[i].GetOverlayList() == umaRecipe.slotDataList[i2].GetOverlayList())
-								{
-									tempPackedSlotData = new packedSlotData();
-									tempPackedSlotData.slotID = umaRecipe.slotDataList[i2].slotName;
-									tempPackedSlotData.copyOverlayIndex = i;
-									//umaPackRecipe.packedSlotDataList[i2] = tempPackedSlotData;
-								}
-							}
+							tempPackedSlotData.OverlayDataList[overlayID].channelMaskList[channelAdjust] = new int[4];
+							tempPackedSlotData.OverlayDataList[overlayID].channelMaskList[channelAdjust][0] = umaRecipe.slotDataList[i].GetOverlay(overlayID).channelMask[channelAdjust].r;
+							tempPackedSlotData.OverlayDataList[overlayID].channelMaskList[channelAdjust][1] = umaRecipe.slotDataList[i].GetOverlay(overlayID).channelMask[channelAdjust].g;
+							tempPackedSlotData.OverlayDataList[overlayID].channelMaskList[channelAdjust][2] = umaRecipe.slotDataList[i].GetOverlay(overlayID).channelMask[channelAdjust].b;
+							tempPackedSlotData.OverlayDataList[overlayID].channelMaskList[channelAdjust][3] = umaRecipe.slotDataList[i].GetOverlay(overlayID).channelMask[channelAdjust].a;
 						}
+
+					}
+					if (umaRecipe.slotDataList[i].GetOverlay(overlayID).channelAdditiveMask != null)
+					{
+						tempPackedSlotData.OverlayDataList[overlayID].channelAdditiveMaskList = new int[umaRecipe.slotDataList[i].GetOverlay(overlayID).channelAdditiveMask.Length][];
+						for (int channelAdjust = 0; channelAdjust < umaRecipe.slotDataList[i].GetOverlay(overlayID).channelAdditiveMask.Length; channelAdjust++)
+						{
+							tempPackedSlotData.OverlayDataList[overlayID].channelAdditiveMaskList[channelAdjust] = new int[4];
+							tempPackedSlotData.OverlayDataList[overlayID].channelAdditiveMaskList[channelAdjust][0] = umaRecipe.slotDataList[i].GetOverlay(overlayID).channelAdditiveMask[channelAdjust].r;
+							tempPackedSlotData.OverlayDataList[overlayID].channelAdditiveMaskList[channelAdjust][1] = umaRecipe.slotDataList[i].GetOverlay(overlayID).channelAdditiveMask[channelAdjust].g;
+							tempPackedSlotData.OverlayDataList[overlayID].channelAdditiveMaskList[channelAdjust][2] = umaRecipe.slotDataList[i].GetOverlay(overlayID).channelAdditiveMask[channelAdjust].b;
+							tempPackedSlotData.OverlayDataList[overlayID].channelAdditiveMaskList[channelAdjust][3] = umaRecipe.slotDataList[i].GetOverlay(overlayID).channelAdditiveMask[channelAdjust].a;
+						}
+
 					}
 				}
 			}
@@ -257,9 +250,7 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 				}
 				else
 				{
-
 					tempSlotData.SetOverlayList(umaRecipe.slotDataList[umaPackRecipe.packedSlotDataList[i].copyOverlayIndex].GetOverlayList());
-
 				}
 			}
 		}
