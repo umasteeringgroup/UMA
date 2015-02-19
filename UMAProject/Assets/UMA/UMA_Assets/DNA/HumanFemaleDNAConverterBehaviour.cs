@@ -75,9 +75,9 @@ public class HumanFemaleDNAConverterBehaviour : DnaConverterBehaviour
 		//Mathf.Clamp(1 + (umaDna.eyeSize - 0.5f) * 0.3f , 0.7f, 1.4f),
 		//Mathf.Clamp(1 + (umaDna.eyeSize - 0.5f) * 0.3f , 0.7f, 1.4f));     
 
-		skeleton.SetRotation(UMASkeleton.StringToHash("LeftEye"),
+		skeleton.SetRotation(UMASkeleton.StringToHash("LeftEyeAdjust"),
 			Quaternion.Euler(new Vector3((umaDna.eyeRotation - 0.5f) * 20, -90, -180)));
-		skeleton.SetRotation(UMASkeleton.StringToHash("RightEye"),
+		skeleton.SetRotation(UMASkeleton.StringToHash("RightEyeAdjust"),
 			Quaternion.Euler(new Vector3(-(umaDna.eyeRotation - 0.5f) * 20, -90, -180)));
 
 		//umaData.boneList["LeftEye"].boneTransform.localEulerAngles = new Vector3((umaDna.eyeRotation - 0.5f) * 20, -90, -180);
