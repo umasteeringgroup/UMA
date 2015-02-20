@@ -28,11 +28,10 @@ public class SlotLibrary : SlotLibraryBase
 				if (!slotDictionary.ContainsKey(hash))
 				{
 					slotElementList[i].listID = i;
-					if (slotElementList[i].meshRenderer == null)
+					if (slotElementList[i].meshRenderer != null)
 					{
-						throw new MissingReferenceException("The variable meshRenderer of SlotData (" + slotElementList[i].slotName + ") doesn't exist anymore. \n You probably need to reassign the meshRenderer variable of the 'SlotData' script in the inspector.");
+						slotElementList[i].boneWeights = slotElementList[i].meshRenderer.sharedMesh.boneWeights;
 					}
-					slotElementList[i].boneWeights = slotElementList[i].meshRenderer.sharedMesh.boneWeights;
 					slotDictionary.Add(hash, slotElementList[i]);
 				}
 			}

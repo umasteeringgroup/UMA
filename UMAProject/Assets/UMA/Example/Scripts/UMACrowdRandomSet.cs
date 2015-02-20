@@ -186,10 +186,6 @@ public class UMACrowdRandomSet : ScriptableObject
 					overlayData.SetColor(overlay.colorChannel, overlayColor);
 				}
 			}
-			if (umaData.umaRecipe.slotDataList[i].GetOverlayList().Count == 0)
-			{
-				Debug.LogError("Slot without overlay: " + umaData.umaRecipe.slotDataList[i].slotName + " at index " + i + " of race: " + race.raceID);
-			}
 		}
 	}
 }

@@ -32,6 +32,7 @@ namespace UMA
         public string[] tags;
 
         public UMADataSlotMaterialRectEvent SlotAtlassed;
+		public UMADataEvent DNAApplied;
 
 		private List<OverlayData> overlayList = new List<OverlayData>();
 
@@ -60,6 +61,7 @@ namespace UMA
 	        }
 
             tempSlotData.SlotAtlassed = SlotAtlassed;
+			tempSlotData.DNAApplied = DNAApplied;
 
 	        return tempSlotData;
 	    }

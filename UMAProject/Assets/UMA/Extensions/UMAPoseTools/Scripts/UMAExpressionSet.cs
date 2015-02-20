@@ -25,10 +25,8 @@ namespace UMA.PoseTools
 		[System.NonSerialized]
 		private int[] boneHashes = null;
 
-		public void ResetBones(UMASkeleton umaSkeleton)
+		private void ValidateBoneHashes()
 		{
-			if (umaSkeleton == null) return;
-
 			if (boneHashes == null)
 			{
 				List<int> boneHashList = new List<int>();
@@ -58,6 +56,13 @@ namespace UMA.PoseTools
 
 				boneHashes = boneHashList.ToArray();
 			}
+		}
+
+		public void ResetBones(UMASkeleton umaSkeleton)
+		{
+			if (umaSkeleton == null) return;
+
+			ValidateBoneHashes();
 
 			foreach (int hash in boneHashes)
 			{
@@ -66,6 +71,20 @@ namespace UMA.PoseTools
 					Debug.LogWarning("Couldn't reset bone!");
 				}
 			}
+		}
+
+		public Transform[] GetAnimatedBones(UMASkeleton umaSkeleton)
+		{
+			if (umaSkeleton == null) return null;
+
+			ValidateBoneHashes();
+
+			var res = new Transform[boneHashes.Length];
+			for(int i = 0; i < boneHashes.Length; i++ )
+			{
+				res[i] = umaSkeleton.GetBoneGameObject(boneHashes[i]).transform;
+			}
+			return res;
 		}
 	}
 }

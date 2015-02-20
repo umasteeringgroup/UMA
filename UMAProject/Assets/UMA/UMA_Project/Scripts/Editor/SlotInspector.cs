@@ -59,10 +59,15 @@ namespace UMAEditor
                 slot.animatedBones = new Transform[0];
 
                 slot.meshRenderer = renderer;
-                if (renderer != null)
-                {
-                    slot.umaBoneData = GetTransformsInPrefab(slot.meshRenderer.rootBone);
-                }
+				if (renderer != null)
+				{
+					slot.umaBoneData = GetTransformsInPrefab(slot.meshRenderer.rootBone);
+				}
+				else
+				{
+					slot.umaBoneData = null;
+					slot.animatedBones = null;
+				}
             }
             slot.subMeshIndex = EditorGUILayout.IntField("Sub Mesh Index", slot.subMeshIndex);
             Material material = EditorGUILayout.ObjectField("Material", slot.materialSample, typeof(Material), false) as Material;
@@ -170,7 +175,15 @@ namespace UMAEditor
 				serializedObject.ApplyModifiedProperties();
 			}
 
-            EditorGUIUtility.LookLikeControls();
+			SerializedProperty dnaAppliedCallback = serializedObject.FindProperty("DNAApplied");
+			EditorGUI.BeginChangeCheck();
+			EditorGUILayout.PropertyField(dnaAppliedCallback, true);
+			if (EditorGUI.EndChangeCheck())
+			{
+				serializedObject.ApplyModifiedProperties();
+			}
+
+			EditorGUIUtility.LookLikeControls();
             if (GUI.changed)
             {
                 EditorUtility.SetDirty(slot);

@@ -29,6 +29,7 @@ namespace UMAEditor
             race.genericRootMotionTransformName = EditorGUILayout.TextField("Root Motion Transform", race.genericRootMotionTransformName);
             race.racePrefab = EditorGUILayout.ObjectField("Prefab", race.racePrefab, typeof(GameObject), false) as GameObject;
 			race.TPose = EditorGUILayout.ObjectField("TPose", race.TPose, typeof(UmaTPose), false) as UmaTPose;
+			race.expressionSet = EditorGUILayout.ObjectField("Expression Set", race.expressionSet, typeof(UMA.PoseTools.UMAExpressionSet), false) as UMA.PoseTools.UMAExpressionSet;
 
 			if (race.baseSlot != null) {
 				race.baseSlot = EditorGUILayout.ObjectField("Base Slot", race.baseSlot, typeof(SlotData), false) as SlotData;

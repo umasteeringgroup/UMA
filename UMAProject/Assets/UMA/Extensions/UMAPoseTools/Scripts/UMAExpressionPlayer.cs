@@ -16,7 +16,8 @@ namespace UMA.PoseTools
 
 		public float minWeight = 0f;
 
-		private UMAData umaData;
+		[System.NonSerialized]
+		public UMAData umaData;
 		private int jawHash = 0;
 		private bool initialized = false;
 
@@ -30,19 +31,22 @@ namespace UMA.PoseTools
 		{
 			blinkDelay = Random.Range(minBlinkDelay, maxBlinkDelay);
 
-			// Find the UMAData, which could be up or down the hierarchy
-			umaData = gameObject.GetComponentInChildren<UMAData>();
 			if (umaData == null)
 			{
+				// Find the UMAData, which could be up or down the hierarchy
+				umaData = gameObject.GetComponentInChildren<UMAData>();
+				if (umaData == null)
+				{
 #if UNITY_4_3
 			umaData = transform.root.GetComponentInChildren<UMAData>();
 #else
-				umaData = gameObject.GetComponentInParent<UMAData>();
+					umaData = gameObject.GetComponentInParent<UMAData>();
 #endif
-			}
-			if (umaData == null)
-			{
-				Debug.LogError("Couldn't locate UMAData component");
+				}
+				if (umaData == null)
+				{
+					Debug.LogError("Couldn't locate UMAData component");
+				}
 			}
 
 			if ((expressionSet != null) && (umaData != null) && (umaData.skeleton != null))

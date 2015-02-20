@@ -752,5 +752,16 @@ namespace UMA
             return res.ToArray();
 #pragma warning restore 618
 		}
-    }
+
+		public void FireDNAAppliedEvents()
+		{
+			foreach (var slotData in umaRecipe.slotDataList)
+			{
+				if (slotData != null && slotData.DNAApplied != null)
+				{
+					slotData.DNAApplied.Invoke(this);
+				}
+			}
+		}
+	}
 }

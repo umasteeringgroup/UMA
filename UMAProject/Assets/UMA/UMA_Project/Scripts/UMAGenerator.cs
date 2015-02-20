@@ -171,6 +171,7 @@ namespace UMA
                 umaData.GotoOriginalPose();
                 umaData.skeleton = new UMASkeletonDefault(umaData.myRenderer.rootBone);
                 umaData.ApplyDNA();
+				umaData.FireDNAAppliedEvents();
                 UpdateAvatar(umaData);
 			}
 		}

@@ -24,7 +24,7 @@ namespace UMA
         }
         public UMATarget umaTarget;
         public string genericRootMotionTransformName;
-
+		public PoseTools.UMAExpressionSet expressionSet;
 
 	    void Awake()
 	    {
@@ -56,11 +56,6 @@ namespace UMA
 	                }
 	            }
 	        }
-	    }
-
-	    internal void UpdateAnimatedBones()
-	    {
-	        throw new NotImplementedException();
 	    }
 	}
 }
