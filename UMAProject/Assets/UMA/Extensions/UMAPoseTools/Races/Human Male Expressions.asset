@@ -9,7 +9,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 83d33591a744673429e1681df5574ac0, type: 3}
-  m_Name: Human Male No Jaw
+  m_Name: Human Male Expressions
   m_EditorClassIdentifier: 
   raceName: HumanMale
   racePrefab: {fileID: 100000, guid: 51951e653a5fb5a46ac725cb24bbb120, type: 2}
