@@ -55,8 +55,9 @@ namespace UMAEditor
 		protected override void DoUpdate()
 		{
 			var recipeBase = (UMARecipeBase)target;
-			Undo.RecordObject(recipeBase, "Recipe Editor");
 			recipeBase.Save(_recipe, UMAContext.FindInstance());
+			EditorUtility.SetDirty(recipeBase);
+			AssetDatabase.SaveAssets();
 			AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(recipeBase));
 			_rebuildOnLayout = true;
 
