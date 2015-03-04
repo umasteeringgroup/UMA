@@ -21,11 +21,26 @@ namespace UMA.PoseTools
 		protected float blinkDelay = 0f;
 
 		public bool enableSaccades = false;
+		protected float saccadeDelay = GaussianRandom(5f, 2f);
+		protected Vector2 saccadeTarget = new Vector2();
+
+		public Vector3 gazeTarget = Vector3.zero;
+		public float gazeWeight = 0f;
+		public GazeMode gazeMode = GazeMode.None;
 
 		public bool overrideMecanimEyes = true;
 		public bool overrideMecanimJaw = true;
 		public bool overrideMecanimNeck = false;
 		public bool overrideMecanimHead = false;
+
+		public enum GazeMode : int
+		{
+			None = 0,
+			Acquiring = 1,
+			Following = 2,
+			Speaking = 3,
+			Listening = 4
+		};
 
 		// Poses names as they appear for animations
 		public const int PoseCount = 36;
@@ -75,7 +90,7 @@ namespace UMA.PoseTools
 			Head = 1,
 			Neck = 2,
 			Jaw = 4,
-			Eye = 4,
+			Eye = 8,
 		};
 
 		static public readonly MecanimJoint[] MecanimAlternate = 
@@ -278,6 +293,16 @@ namespace UMA.PoseTools
 				rightBrowUp_Down = value[i++];
 				midBrowUp_Down = value[i++];
 			}
+		}
+
+		static public float GaussianRandom(float mean, float dev)
+		{
+			float u1 = Random.value;
+			float u2 = Random.value;
+			
+			float rand_std_normal = Mathf.Sqrt(-2.0f * Mathf.Log(u1)) * Mathf.Sin(2.0f * Mathf.PI * u2);
+			
+			return mean + dev * rand_std_normal;
 		}
 
 #if UNITY_EDITOR
