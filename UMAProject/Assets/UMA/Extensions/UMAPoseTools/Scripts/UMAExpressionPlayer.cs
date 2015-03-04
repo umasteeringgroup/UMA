@@ -80,81 +80,10 @@ namespace UMA.PoseTools
 		{
 			if (!initialized) return;
 
-			if (enableSaccades)
-			{
-				saccadeDelay -= Time.deltaTime;
-				if (saccadeDelay < 0f)
-				{
-					int saccadeDirection = Random.Range(0, 4);
-					float saccadeOffset = GaussianRandom(0f, 0.125f);
-					switch (saccadeDirection)
-					{
-					case 0:
-						saccadeTarget.Set(1f - Mathf.Abs(saccadeOffset), saccadeOffset);
-						break;
-					case 1:
-						saccadeTarget.Set(-1f + Mathf.Abs(saccadeOffset), saccadeOffset);
-						break;
-					case 2:
-						saccadeTarget.Set(saccadeOffset, 1f - Mathf.Abs(saccadeOffset));
-						break;
-					default:
-						saccadeTarget.Set(saccadeOffset, -1f + Mathf.Abs(saccadeOffset));
-						break;
-					}
+			if (enableSaccades) UpdateSaccades();
 
-					float saccadeMagnitude = Random.Range(0.01f, 15f);
-					float saccadeDistance = (-6.9f / 40f) * Mathf.Log(saccadeMagnitude/15.7f);
+			if (enableBlinking) UpdateBlinking();
 
-					const float mutualGazeRange = 0.15f;
-					switch (gazeMode)
-					{
-					case GazeMode.Listening:
-						if (Mathf.Abs(saccadeDistance) < mutualGazeRange)
-							saccadeDelay = GaussianRandom(237.5f / 30f, 47.1f / 30f);
-						else
-							saccadeDelay = GaussianRandom(13f / 30f, 7.1f / 30f);
-						break;
-
-					default:
-						if (Mathf.Abs(saccadeDistance) < mutualGazeRange)
-							saccadeDelay = GaussianRandom(93.9f / 30f, 94.9f / 30f);
-						else
-							saccadeDelay = GaussianRandom(27.8f / 30f, 24f / 30f);
-						break;
-					}
-
-					if (saccadeDelay < 0.1f) saccadeDelay = 0.1f;
-
-					saccadeTarget *= saccadeDistance;
-				}
-
-				leftEyeIn_Out = saccadeTarget.x;
-				leftEyeUp_Down = saccadeTarget.y;
-				rightEyeIn_Out = -saccadeTarget.x;
-				rightEyeUp_Down = saccadeTarget.y;
-			}
-
-			if (enableBlinking)
-			{
-				if (leftEyeOpen_Close < -1f) leftEyeOpen_Close = 0f;
-				if (rightEyeOpen_Close < -1f) rightEyeOpen_Close = 0f;
-
-				blinkDelay -= Time.deltaTime;
-				if (blinkDelay < blinkDuration)
-				{
-					if (blinkDelay < 0f)
-					{
-						blinkDelay = Random.Range(minBlinkDelay, maxBlinkDelay);
-					}
-					else
-					{
-						leftEyeOpen_Close = -1.01f;
-						rightEyeOpen_Close = -1.01f;
-					}
-				}
-			}
-			
 			float[] values = Values;
 			MecanimJoint mecanimMask = MecanimJoint.None;
 			if (!overrideMecanimNeck) mecanimMask |= MecanimJoint.Neck;
@@ -193,5 +122,117 @@ namespace UMA.PoseTools
 				}
 			}
 		}
+
+		const float eyeMovementRange = 30f;
+		const float mutualGazeRange = 0.10f;
+		const float MinSaccadeDelay = 0.25f;
+		protected void UpdateSaccades()
+		{
+			saccadeDelay -= Time.deltaTime;
+			if (saccadeDelay < 0f)
+			{
+				saccadeTargetPrev = saccadeTarget;
+				
+				int saccadeDirection = Random.Range(0, 4);
+				float saccadeOffset = GaussianRandom(0f, 0.125f);
+				switch (saccadeDirection)
+				{
+				case 0:
+					saccadeTarget.Set(1f - Mathf.Abs(saccadeOffset), saccadeOffset);
+					break;
+				case 1:
+					saccadeTarget.Set(-1f + Mathf.Abs(saccadeOffset), saccadeOffset);
+					break;
+				case 2:
+					saccadeTarget.Set(saccadeOffset, 1f - Mathf.Abs(saccadeOffset));
+					break;
+				default:
+					saccadeTarget.Set(saccadeOffset, -1f + Mathf.Abs(saccadeOffset));
+					break;
+				}
+				
+				float saccadeMagnitude = Random.Range(0.01f, 15f);
+				float saccadeDistance = (-6.9f / eyeMovementRange) * Mathf.Log(saccadeMagnitude/15.7f);
+				saccadeDuration = 0.021f + 0.0022f * saccadeDistance * eyeMovementRange;
+				saccadeProgress = 0f;
+				
+				switch (gazeMode)
+				{
+				case GazeMode.Listening:
+					if (Mathf.Abs(saccadeDistance) < mutualGazeRange)
+						saccadeDelay = GaussianRandom(237.5f / 30f, 47.1f / 30f);
+					else
+						saccadeDelay = GaussianRandom(13f / 30f, 7.1f / 30f);
+					break;
+					
+				default:
+					if (Mathf.Abs(saccadeDistance) < mutualGazeRange)
+						saccadeDelay = GaussianRandom(93.9f / 30f, 94.9f / 30f);
+					else
+						saccadeDelay = GaussianRandom(27.8f / 30f, 24f / 30f);
+					break;
+				}
+				
+				if (saccadeDelay < MinSaccadeDelay) saccadeDelay = MinSaccadeDelay;
+				
+				saccadeTarget *= saccadeDistance;
+			}
+			
+			if (saccadeProgress < 1f)
+			{
+				float timeProgress = Time.deltaTime / saccadeDuration;
+				float progressRate = 1.5f - 3f * Mathf.Pow(saccadeProgress - 0.5f, 2);
+				saccadeProgress += timeProgress * progressRate;
+				
+				leftEyeIn_Out = Mathf.Lerp(saccadeTargetPrev.x, saccadeTarget.x, saccadeProgress);
+				leftEyeUp_Down = Mathf.Lerp(saccadeTargetPrev.y, saccadeTarget.y, saccadeProgress);
+				rightEyeIn_Out = Mathf.Lerp(-saccadeTargetPrev.x, -saccadeTarget.x, saccadeProgress);
+				rightEyeUp_Down = Mathf.Lerp(saccadeTargetPrev.y, saccadeTarget.y, saccadeProgress);
+			}
+			else
+			{
+				leftEyeIn_Out = saccadeTarget.x;
+				leftEyeUp_Down = saccadeTarget.y;
+				rightEyeIn_Out = -saccadeTarget.x;
+				rightEyeUp_Down = saccadeTarget.y;
+			}
+		}
+
+		protected void UpdateBlinking()
+		{
+			if (leftEyeOpen_Close < -1f) leftEyeOpen_Close = 0f;
+			if (rightEyeOpen_Close < -1f) rightEyeOpen_Close = 0f;
+			
+			blinkDelay -= Time.deltaTime;
+			if (blinkDelay < blinkDuration)
+			{
+				if (blinkDelay < 0f)
+				{
+					switch (gazeMode)
+					{
+					case GazeMode.Speaking:
+					case GazeMode.Listening:
+						blinkDelay = GaussianRandom(2.3f, 1.1f);
+						break;
+
+					case GazeMode.Following:
+						blinkDelay = GaussianRandom(15.4f, 8.2f);
+						break;
+
+					default:
+						blinkDelay = GaussianRandom(3.8f, 1.2f);
+						break;
+					}
+
+					if (blinkDelay < blinkDuration) blinkDelay = blinkDuration;
+				}
+				else
+				{
+					leftEyeOpen_Close = -1.01f;
+					rightEyeOpen_Close = -1.01f;
+				}
+			}
+		}
+
 	}
 }
