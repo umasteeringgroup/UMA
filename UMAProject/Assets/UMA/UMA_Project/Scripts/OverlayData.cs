@@ -5,7 +5,7 @@ using System.Collections;
 namespace UMA
 {
 	[System.Serializable]
-	public class OverlayData : ScriptableObject
+	public partial class OverlayData : ScriptableObject
 	{
 	    public string overlayName;
 	    [System.NonSerialized]

@@ -6,7 +6,7 @@ using System.Collections.Generic;
 namespace UMA
 {
 	[Serializable]
-	public class RaceData : ScriptableObject {
+	public partial class RaceData : ScriptableObject {
 	    public string raceName;
 	    public GameObject racePrefab;
 	    public DnaConverterBehaviour[] dnaConverterList = new DnaConverterBehaviour[0];

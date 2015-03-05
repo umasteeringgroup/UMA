@@ -6,7 +6,7 @@ using System.Collections.Generic;
 namespace UMA
 {
 	[System.Serializable]
-	public class SlotData : ScriptableObject
+	public partial class SlotData : ScriptableObject
 	{
 	    public string slotName;
 	    public int listID = -1;
