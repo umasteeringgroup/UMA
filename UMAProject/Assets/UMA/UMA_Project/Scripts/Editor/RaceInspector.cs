@@ -89,6 +89,25 @@ namespace UMAEditor
 			if(EditorGUI.EndChangeCheck()) {
 				serializedObject.ApplyModifiedProperties();
 			}
+
+			foreach (var field in race.GetType().GetFields())
+			{
+				foreach (var attribute in System.Attribute.GetCustomAttributes(field))
+				{
+					if (attribute is UMAAssetFieldVisible)
+					{
+						SerializedProperty serializedProp = serializedObject.FindProperty(field.Name);
+						EditorGUI.BeginChangeCheck();
+						EditorGUILayout.PropertyField(serializedProp);
+						if (EditorGUI.EndChangeCheck())
+						{
+							serializedObject.ApplyModifiedProperties();
+						}
+						break;
+					}
+				}
+			}
+
 			
 			EditorGUIUtility.LookLikeControls();
 
