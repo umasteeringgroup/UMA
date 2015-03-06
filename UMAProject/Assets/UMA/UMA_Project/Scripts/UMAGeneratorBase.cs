@@ -9,7 +9,6 @@ namespace UMA
     public abstract class UMAGeneratorBase : MonoBehaviour
     {
         public bool fitAtlas;
-        public bool usePRO;
         public bool AtlasCrop;
         [NonSerialized]
         public TextureMerge textureMerge;
