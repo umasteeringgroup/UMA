@@ -5,6 +5,7 @@ public class UMAGenerator : UMAGeneratorBuiltin
 {
 	public override void Awake()
 	{
+#if ! UNITY_5
 		if (usePRO)
 		{
 #if UNITY_EDITOR
@@ -15,6 +16,7 @@ public class UMAGenerator : UMAGeneratorBuiltin
 			}
 #endif
 		}
+#endif
 		base.Awake();
 	}
 

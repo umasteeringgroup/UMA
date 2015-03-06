@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-using UMA.Common;
-
 using UnityEditor;
 
 using UnityEngine;
@@ -15,49 +13,50 @@ using UMA.Integrations;
 
 namespace UMAEditor
 {
-	[CustomEditor(typeof(UMA.UMAData), true)]
-	public class UMADataEditor : CharacterBaseEditor
-	{
-		protected UMAData _umaData;
-		public void OnEnable()
-		{
-			if (!NeedsReenable()) return;
+    [CustomEditor(typeof(UMA.UMAData), true)]
+    public class UMADataEditor : CharacterBaseEditor
+    {
+        protected UMAData _umaData;
 
-			showBaseEditor = true;
-			_umaData = target as UMAData;
-			_errorMessage = null;
-			_recipe = _umaData.umaRecipe;
-			if (_recipe == null)
-			{
-				_errorMessage = "UMA Data not loaded.";
-			}
-			else
-			{
-				dnaEditor = new DNAMasterEditor(_recipe);
-				slotEditor = new SlotMasterEditor(_recipe);
+        public void OnEnable()
+        {
+            if (!NeedsReenable())
+                return;
 
-				_rebuildOnLayout = true;
-			}
-		}
+            showBaseEditor = true;
+            _umaData = target as UMAData;
+            _errorMessage = null;
+            _recipe = _umaData.umaRecipe;
+            if (_recipe == null)
+            {
+                _errorMessage = "UMA Data not loaded.";
+            } else
+            {
+                dnaEditor = new DNAMasterEditor(_recipe);
+                slotEditor = new SlotMasterEditor(_recipe);
 
-		public override void OnInspectorGUI()
-		{
-			base.OnInspectorGUI();
-		}
+                _rebuildOnLayout = true;
+            }
+        }
 
-		protected override void DoUpdate()
-		{
-			_umaData.Dirty(_dnaDirty, _textureDirty, _meshDirty);
-			_needsUpdate = false;
-			_dnaDirty = false;
-			_textureDirty = false;
-			_meshDirty = false;
-			Rebuild();
-		}
+        public override void OnInspectorGUI()
+        {
+            base.OnInspectorGUI();
+        }
 
-		protected override void Rebuild()
-		{
-			base.Rebuild();
-		}
-	}
+        protected override void DoUpdate()
+        {
+            _umaData.Dirty(_dnaDirty, _textureDirty, _meshDirty);
+            _needsUpdate = false;
+            _dnaDirty = false;
+            _textureDirty = false;
+            _meshDirty = false;
+            Rebuild();
+        }
+
+        protected override void Rebuild()
+        {
+            base.Rebuild();
+        }
+    }
 }
