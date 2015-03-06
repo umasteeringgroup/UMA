@@ -175,7 +175,7 @@ namespace UMAEditor
 	        return true;
 	    }
 
-	    public static OverlayData CreateOverlayData(Texture2D[] textures, string assetFolder, string assetName, string overlayFolder)
+	    public static OverlayData CreateOverlayData(Texture[] textures, string assetFolder, string assetName, string overlayFolder)
 	    {
 	        if (!System.IO.Directory.Exists(overlayFolder + '/' + assetFolder))
 	        {

@@ -30,7 +30,7 @@ namespace UMAEditor
 
 	    private string normalWarning;
 	    private Texture2D privateNormal;
-	    private Texture2D[] textures; // reset for each processing
+	    private Texture[] textures; // reset for each processing
 
 	    string GetAssetFolder()
 	    {
@@ -262,10 +262,10 @@ namespace UMAEditor
 	        bool res = UMATextureImporterUtil.ConvertDefaultAssets_DiffuseAlpha_Normal_Specular(AssetDatabase.GetAssetPath(diffuse), AssetDatabase.GetAssetPath(normal), AssetDatabase.GetAssetPath(specular), GetAssetFolder(), GetAssetName(), AssetDatabase.GetAssetPath(overlayFolder), Shader.Find("UMA/Regular"));
 	        if (res)
 	        {
-	            textures = new Texture2D[2] 
+	            textures = new Texture[2] 
 	            { 
-	                AssetDatabase.LoadAssetAtPath(AssetDatabase.GetAssetPath(overlayFolder)+"/"+GetAssetFolder()+GetAssetName()+"_diffuse.png", typeof(Texture2D)) as Texture2D,
-	                AssetDatabase.LoadAssetAtPath(AssetDatabase.GetAssetPath(overlayFolder)+"/"+GetAssetFolder()+GetAssetName()+"_normal.png", typeof(Texture2D)) as Texture2D
+	                AssetDatabase.LoadAssetAtPath(AssetDatabase.GetAssetPath(overlayFolder)+"/"+GetAssetFolder()+GetAssetName()+"_diffuse.png", typeof(Texture)) as Texture,
+	                AssetDatabase.LoadAssetAtPath(AssetDatabase.GetAssetPath(overlayFolder)+"/"+GetAssetFolder()+GetAssetName()+"_normal.png", typeof(Texture)) as Texture
 	            };
 	        }
 	        return res;

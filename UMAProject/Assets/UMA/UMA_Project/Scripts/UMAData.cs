@@ -153,7 +153,7 @@ namespace UMA
 		
 		public class MaterialDefinition
 		{
-			public Texture2D[] baseTexture;
+			public Texture[] baseTexture;
 			public Color32 baseColor;
 	        public Material materialSample;
 			public Rect[] rects;
@@ -192,12 +192,12 @@ namespace UMA
 
 		
 		[System.Serializable]
-		public class textureData{
-			public Texture2D[] textureList;
+		public class textureData {
+			public Texture[] textureList;
 		}
 		
 		[System.Serializable]
-		public class resultAtlasTexture{
+		public class resultAtlasTexture {
 			public Texture[] textureList;
 		}
 

@@ -13,7 +13,7 @@ namespace UMA
 
 	    public Color color = new Color(1, 1, 1, 1);
 	    public Rect rect;
-	    public Texture2D[] textureList;
+	    public Texture[] textureList;
 	    public Color32[] channelMask;
 	    public Color32[] channelAdditiveMask;
 	    [System.NonSerialized]
@@ -31,7 +31,7 @@ namespace UMA
 	        tempOverlay.listID = listID;
 	        tempOverlay.color = color;
 	        tempOverlay.rect = rect;
-	        tempOverlay.textureList = new Texture2D[textureList.Length];
+	        tempOverlay.textureList = new Texture[textureList.Length];
 	        for (int i = 0; i < textureList.Length; i++)
 	        {
 	            tempOverlay.textureList[i] = textureList[i];

@@ -560,9 +560,9 @@ namespace UMAEditor
 
     public class TextureEditor
     {
-        private Texture2D _texture;
+        private Texture _texture;
 
-        public TextureEditor(Texture2D texture)
+        public TextureEditor(Texture texture)
         {
             _texture = texture;
         }
@@ -575,7 +575,7 @@ namespace UMAEditor
             int origIndentLevel = EditorGUI.indentLevel;
             EditorGUI.indentLevel = 0;
             EditorGUIUtility.labelWidth = 0;
-            var newTexture = (Texture2D)EditorGUILayout.ObjectField("", _texture, typeof(Texture2D), false, GUILayout.Width(100));
+            var newTexture = (Texture)EditorGUILayout.ObjectField("", _texture, typeof(Texture), false, GUILayout.Width(100));
             EditorGUI.indentLevel = origIndentLevel;
             EditorGUIUtility.labelWidth = origLabelWidth;
 
