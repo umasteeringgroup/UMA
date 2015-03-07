@@ -8,11 +8,19 @@ namespace UMA
 {
 	public static class SkinnedMeshCombiner
 	{
-		public struct CombineInstance
+		public class CombineInstance
 		{
 			public Mesh mesh { get; set; }
 			public Transform[] bones { get; set; }
 			public int[] destMesh { get; set; }
+			
+			internal Vector3[] normals = null;
+			internal Vector4[] tangents = null;
+			internal Vector2[] uv = null;
+			internal Vector2[] uv2 = null;
+			internal Color32[] colors32 = null;
+			
+			internal Matrix4x4[] binds = null;
 		}
 		
 		public static void CombineMeshes(SkinnedMeshRenderer target, CombineInstance[] sources, Dictionary<Transform, Transform> boneMap)
@@ -38,7 +46,10 @@ namespace UMA
 			}
 			else
 			{
-				Transform parent = RecursivelyMapToNewRoot(bone.parent, hierarchyRoot, boneMap);
+				Transform parent = hierarchyRoot;
+				if (bone.parent != null) {
+					parent = RecursivelyMapToNewRoot(bone.parent, hierarchyRoot, boneMap);
+				}
 				Transform child = parent.FindChild(bone.name);
 				if (child == null)
 				{
@@ -49,9 +60,43 @@ namespace UMA
 					child.localScale = bone.localScale;
 					child.name = bone.name;
 				}
+//				if (child.localToWorldMatrix != bone.localToWorldMatrix)
+//				{
+//					Debug.LogWarning("bone match in name only: " + bone.name);
+//				}
 				boneMap.Add(bone, child);
 				return child;
 			}
+		}
+		
+		public static Transform[] SkinnedBonesInInstance(CombineInstance instance)
+		{
+			BoneWeight[] boneWeights = instance.mesh.boneWeights;
+			Transform[] bones = instance.bones;
+			
+			BitArray skinnedBinds = new BitArray(bones.Length);
+			for (int i = 0; i < boneWeights.Length; i++) {
+				BoneWeight weight = boneWeights[i];
+				skinnedBinds[weight.boneIndex0] = true;
+				skinnedBinds[weight.boneIndex1] = true;
+				skinnedBinds[weight.boneIndex2] = true;
+				skinnedBinds[weight.boneIndex3] = true;
+			}
+			
+			List<Transform> skinnedBones = new List<Transform>();
+			for (int i = 0; i < skinnedBinds.Length; i++) {
+				if (skinnedBinds[i])
+				{
+					Transform skinnedBone = instance.bones[i];
+					while ((skinnedBone != null) && !skinnedBones.Contains(skinnedBone))
+					{
+						skinnedBones.Add(skinnedBone);
+						skinnedBone = skinnedBone.parent;
+					}
+				}
+			}
+			
+			return skinnedBones.ToArray();
 		}
 		
 		public static Transform[] CloneBoneListInNewHierarchy(Transform rootBone, Transform[] bones, Dictionary<Transform, Transform> boneMap)
@@ -60,6 +105,45 @@ namespace UMA
 			for (int i = 0; i < bones.Length; i++)
 			{
 				res[i] = RecursivelyMapToNewRoot(bones[i], rootBone, boneMap);
+			}
+			return res;
+		}
+		
+		public static Transform[] CloneSkinnedBonesInNewHierarchy(Mesh mesh, Transform rootBone, Transform[] bones, Dictionary<Transform, Transform> boneMap)
+		{
+			BoneWeight[] boneWeights = mesh.boneWeights;
+			
+			BitArray skinnedBinds = new BitArray(bones.Length);
+			for (int i = 0; i < boneWeights.Length; i++) {
+				BoneWeight weight = boneWeights[i];
+				skinnedBinds[weight.boneIndex0] = true;
+				skinnedBinds[weight.boneIndex1] = true;
+				skinnedBinds[weight.boneIndex2] = true;
+				skinnedBinds[weight.boneIndex3] = true;
+			}
+			
+			var res = new Transform[bones.Length];
+			for (int i = 0; i < bones.Length; i++)
+			{
+				if (skinnedBinds[i])
+				{
+					res[i] = RecursivelyMapToNewRoot(bones[i], rootBone, boneMap);
+				}
+			}
+			for (int i = 0; i < bones.Length; i++)
+			{
+				if (!skinnedBinds[i])
+				{
+					Transform mappedBone;
+					if ( boneMap.TryGetValue(bones[i], out mappedBone))
+					{
+						res[i] = mappedBone;
+					}
+					else
+					{
+						res[i] = bones[i];
+					}
+				}
 			}
 			return res;
 		}
@@ -73,7 +157,6 @@ namespace UMA
 			bool has_tangents = false;
 			bool has_uv = false;
 			bool has_uv2 = false;
-			bool has_colors = false;
 			bool has_colors32 = false;
 			int subMeshCount = 0;
 			
@@ -100,13 +183,18 @@ namespace UMA
 			{
 				var sMesh = source.mesh;
 				vertexCount += sMesh.vertexCount;
-				bindPoseCount += sMesh.bindposes.Length;
-				has_normals |= sMesh.normals != null && sMesh.normals.Length != 0;
-				has_tangents |= sMesh.tangents != null && sMesh.tangents.Length != 0;
-				has_uv |= sMesh.uv != null && sMesh.uv.Length != 0;
-				has_uv2 |= sMesh.uv2 != null && sMesh.uv2.Length != 0;
-				has_colors |= sMesh.colors != null && sMesh.colors.Length != 0;
-				has_colors32 |= sMesh.colors32 != null && sMesh.colors32.Length != 0;
+				source.binds = sMesh.bindposes;
+				bindPoseCount += source.binds.Length;
+				source.normals = sMesh.normals;
+				has_normals |= source.normals != null && source.normals.Length != 0;
+				source.tangents = sMesh.tangents;
+				has_tangents |= source.tangents != null && source.tangents.Length != 0;
+				source.uv = sMesh.uv;
+				has_uv |= source.uv != null && source.uv.Length != 0;
+				source.uv2 = sMesh.uv2;
+				has_uv2 |= source.uv2 != null && source.uv2.Length != 0;
+				source.colors32 = sMesh.colors32;
+				has_colors32 |= source.colors32 != null && source.colors32.Length != 0;
 				bounds.Encapsulate(sMesh.bounds);
 				
 				for (int i = 0; i < source.mesh.subMeshCount; i++)
@@ -125,15 +213,12 @@ namespace UMA
 				subMeshTriangleLength[i] = 0;
 			}
 			
-			if (has_colors32) has_colors = false;
-			
 			Vector3[] vertices = GetArray(dest.vertices, vertexCount);
 			BoneWeight[] boneWeights = GetArray(dest.boneWeights, vertexCount);
 			Vector3[] normals = has_normals ? GetArray(dest.normals, vertexCount) : null;
 			Vector4[] tangents = has_tangents ? GetArray(dest.tangents, vertexCount) : null;
 			Vector2[] uv = has_uv ? GetArray(dest.uv, vertexCount) : null;
 			Vector2[] uv2 = has_uv2 ? GetArray(dest.uv2, vertexCount) : null;
-			Color[] colors = has_colors ? GetArray(dest.colors, vertexCount) : null;
 			Color32[] colors32 = has_colors32 ? GetArray(dest.colors32, vertexCount) : null;
 			
 			int vertexIndex = 0;
@@ -151,58 +236,68 @@ namespace UMA
 			{
 				var sMesh = source.mesh;
 				vertexCount = sMesh.vertexCount;
-				var sourceBones = rootBone == null ? source.bones : CloneBoneListInNewHierarchy(rootBone, source.bones, boneMap);
+				var sourceBones = rootBone == null ? source.bones : CloneSkinnedBonesInNewHierarchy(sMesh, rootBone, source.bones, boneMap);
 				
-				BuildBoneWeights(sMesh.boneWeights, 0, boneWeights, vertexIndex, vertexCount, sourceBones, sMesh.bindposes, bonesCollection, bindPoses, bonesList);
+				BuildBoneWeights(sMesh.boneWeights, 0, boneWeights, vertexIndex, vertexCount, sourceBones, source.binds, bonesCollection, bindPoses, bonesList);
 				
 				Array.Copy(sMesh.vertices, 0, vertices, vertexIndex, vertexCount);
 				
-				Array.Copy(sMesh.normals, 0, normals, vertexIndex, vertexCount);
-				if (tangents != null)
+				if (has_normals)
 				{
-					if( sMesh.tangents != null && sMesh.tangents.Length > 0)
+					if(source.normals != null && source.normals.Length > 0)
 					{
-						Array.Copy(sMesh.tangents, 0, tangents, vertexIndex, vertexCount);
+						Array.Copy(source.normals, 0, normals, vertexIndex, vertexCount);
+					}
+					else 
+					{
+						FillArray(tangents, vertexIndex, vertexCount, Vector3.zero);
+					}
+				}
+				if (has_tangents)
+				{
+					if(source.tangents != null && source.tangents.Length > 0)
+					{
+						Array.Copy(source.tangents, 0, tangents, vertexIndex, vertexCount);
 					}
 					else 
 					{
 						FillArray(tangents, vertexIndex, vertexCount, Vector4.zero);
 					}
 				}
-				if( uv != null )
+				if (has_uv)
 				{
-					if (sMesh.uv != null)
+					if (source.uv != null)
 					{
-						Array.Copy(sMesh.uv, 0, uv, vertexIndex, vertexCount);
+						Array.Copy(source.uv, 0, uv, vertexIndex, vertexCount);
 					}
 					else 
 					{
 						FillArray(uv, vertexIndex, vertexCount, Vector4.zero);
 					}
 				}
-				if( uv2 != null )
+				if (has_uv2)
 				{
-					if( sMesh.uv2 != null )
+					if (source.uv2 != null)
 					{
-						Array.Copy(sMesh.uv2, 0, uv2, vertexIndex, vertexCount);
+						Array.Copy(source.uv2, 0, uv2, vertexIndex, vertexCount);
 					}
 					else 
 					{
 						FillArray(uv2, vertexIndex, vertexCount, Vector4.zero);
 					}
 				}
-				if( colors != null )
+				if (has_colors32)
 				{
-					if (sMesh.colors != null)
+					if (source.colors32 != null && source.colors32.Length > 0)
 					{
-						Array.Copy(sMesh.colors, 0, colors, vertexIndex, vertexCount);
+						Array.Copy(source.colors32, 0, colors32, vertexIndex, vertexCount);
 					}
 					else 
 					{
-						FillArray(colors, vertexIndex, vertexCount, Vector4.zero);
+						Color32 white32 = Color.white;
+						FillArray(colors32, vertexIndex, vertexCount, white32);
 					}
 				}
-				
 				
 				for (int i = 0; i < source.mesh.subMeshCount; i++)
 				{
@@ -232,7 +327,6 @@ namespace UMA
 			dest.tangents = tangents;
 			dest.uv = uv;
 			dest.uv2 = uv2;
-			dest.colors = colors;
 			dest.colors32 = colors32;
 			
 			dest.subMeshCount = subMeshCount;
@@ -245,15 +339,39 @@ namespace UMA
 			target.mesh = dest;
 		}
 		
+		#if (true)		
+		private static void BuildBoneWeights(BoneWeight[] source, int sourceIndex, BoneWeight[] dest, int destIndex, int count, Transform[] bones, Matrix4x4[] bindPoses, Dictionary<Transform, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<Transform> bonesList)
+		{
+			int[] boneMapping = new int[bones.Length];
+			for (int i = 0; i < boneMapping.Length; i++)
+			{
+				boneMapping[i] = TranslateBoneIndex(i, bones, bindPoses, bonesCollection, bindPosesList, bonesList);
+			}
+			
+			BoneWeight sourceWeight;
+			while (count-- > 0)
+			{
+				sourceWeight = source[sourceIndex++];
+				dest[destIndex].boneIndex0 = boneMapping[sourceWeight.boneIndex0];
+				dest[destIndex].boneIndex1 = boneMapping[sourceWeight.boneIndex1];
+				dest[destIndex].boneIndex2 = boneMapping[sourceWeight.boneIndex2];
+				dest[destIndex].boneIndex3 = boneMapping[sourceWeight.boneIndex3];
+				dest[destIndex].weight0 = sourceWeight.weight0;
+				dest[destIndex].weight1 = sourceWeight.weight1;
+				dest[destIndex].weight2 = sourceWeight.weight2;
+				dest[destIndex++].weight3 = sourceWeight.weight3;
+			}
+		}
+		#else
 		private static void BuildBoneWeights(BoneWeight[] source, int sourceIndex, BoneWeight[] dest, int destIndex, int count, Transform[] bones, Matrix4x4[] bindPoses, Dictionary<Transform, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<Transform> bonesList)
 		{
 			while (count-- > 0)
 			{
-				processBoneWeight(ref source[sourceIndex++], ref dest[destIndex++], bones, bindPoses, bonesCollection, bindPosesList, bonesList);
+				ProcessBoneWeight(ref source[sourceIndex++], ref dest[destIndex++], bones, bindPoses, bonesCollection, bindPosesList, bonesList);
 			}
 		}
 		
-		private static void processBoneWeight(ref BoneWeight source, ref BoneWeight dest, Transform[] bones, Matrix4x4[] bindPoses, Dictionary<Transform, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<Transform> bonesList)
+		private static void ProcessBoneWeight(ref BoneWeight source, ref BoneWeight dest, Transform[] bones, Matrix4x4[] bindPoses, Dictionary<Transform, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<Transform> bonesList)
 		{
 			dest.boneIndex0 = TranslateBoneIndex(source.boneIndex0, bones, bindPoses, bonesCollection, bindPosesList, bonesList);
 			dest.boneIndex1 = TranslateBoneIndex(source.boneIndex1, bones, bindPoses, bonesCollection, bindPosesList, bonesList);
@@ -264,6 +382,7 @@ namespace UMA
 			dest.weight2 = source.weight2;
 			dest.weight3 = source.weight3;
 		}
+		#endif
 		
 		private struct BoneIndexEntry
 		{
@@ -315,7 +434,7 @@ namespace UMA
 			if (Mathf.Abs(m1.m33 - m2.m33) > 0.0001) return false;
 			return true;
 		}
-
+		
 		private static int TranslateBoneIndex(int index, Transform[] bones, Matrix4x4[] bindPoses, Dictionary<Transform, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<Transform> bonesList)
 		{
 			var boneTransform = bones[index];
@@ -330,6 +449,7 @@ namespace UMA
 						return res;
 					}
 				}
+//				Debug.LogWarning("Multiple binds for bone: " + boneTransform.name);
 				var idx = bindPosesList.Count;
 				entry.AddIndex(idx);
 				bindPosesList.Add(bindPoses[index]);
@@ -345,7 +465,6 @@ namespace UMA
 				return idx;
 			}
 		}
-		
 		
 		private static void CopyColorsToColors32(Color[] source, int sourceIndex, Color32[] dest, int destIndex, int count)
 		{
@@ -364,6 +483,14 @@ namespace UMA
 			}
 		}
 		
+		private static void FillArray(Vector3[] array, int index, int count, Vector3 value)
+		{
+			while (count-- > 0)
+			{
+				array[index++] = value;
+			}
+		}
+		
 		private static void FillArray(Vector2[] array, int index, int count, Vector2 value)
 		{
 			while (count-- > 0)
@@ -372,8 +499,15 @@ namespace UMA
 			}
 		}
 		
+		private static void FillArray(Color[] array, int index, int count, Color value)
+		{
+			while (count-- > 0)
+			{
+				array[index++] = value;
+			}
+		}
 		
-		private static void FillArray(Color[] array, int index, int count, Vector4 value)
+		private static void FillArray(Color32[] array, int index, int count, Color32 value)
 		{
 			while (count-- > 0)
 			{
