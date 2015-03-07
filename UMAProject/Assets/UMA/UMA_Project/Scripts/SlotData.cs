@@ -11,24 +11,7 @@ namespace UMA
 		public string slotName;
 		public int listID = -1;
 
-		[FormerlySerializedAs("meshRenderer")]
-		[SerializeField]
-		protected SkinnedMeshRenderer meshRendererRef;
-		public SkinnedMeshRenderer meshRenderer
-		{
-			get { return meshRendererRef; }
-            #if UNITY_EDITOR
-            set
-            {
-                if (meshRendererRef != value)
-                {
-                    meshRendererRef = value;
-                    UpdateBonesFromRenderer();
-                }
-            }
-            #endif
-		}
-
+		public SkinnedMeshRenderer meshRenderer;
 		public Material materialSample;
 		public float overlayScale = 1.0f;
 		public Transform[] umaBoneData;
@@ -63,9 +46,9 @@ namespace UMA
 			tempSlotData.subMeshIndex = subMeshIndex;
             
 			// All this data is passed as reference
+			tempSlotData.meshRenderer = meshRenderer;
 			tempSlotData.boneWeights = boneWeights;
 			tempSlotData.animatedBones = animatedBones;
-			tempSlotData.meshRendererRef = meshRendererRef;
 			tempSlotData.boneWeights = boneWeights;
 			tempSlotData.umaBoneData = umaBoneData;
 			tempSlotData.textureNameList = textureNameList;
@@ -187,48 +170,6 @@ namespace UMA
 		{
 			return overlayList;
 		}
-        
-#if UNITY_EDITOR
-		public void UpdateBonesFromRenderer()
-		{
-            if (meshRendererRef == null)
-            {
-                umaBoneData = null;
-                animatedBones = null;
-            }
-            else
-            {
-	            Debug.Log("Renderer bone count: " + meshRendererRef.bones.Length);
-	            BitArray skinnedBinds = new BitArray(meshRendererRef.bones.Length);
-	            BoneWeight[] boneWeights = meshRendererRef.sharedMesh.boneWeights;
-	            for (int i = 0; i < boneWeights.Length; i++) {
-	                skinnedBinds[boneWeights[i].boneIndex0] = true;
-	                skinnedBinds[boneWeights[i].boneIndex1] = true;
-	                skinnedBinds[boneWeights[i].boneIndex2] = true;
-	                skinnedBinds[boneWeights[i].boneIndex3] = true;
-	            }
-	            
-	            List<Transform> skinnedBones = new List<Transform>();
-	            int bindCount = 0;
-	            for (int i = 0; i < skinnedBinds.Length; i++) {
-	                if (skinnedBinds[i])
-	                {
-	                    Transform skinnedBone = meshRendererRef.bones[i];
-	                    while ((skinnedBone != null) && !skinnedBones.Contains(skinnedBone))
-	                    {
-	                        Debug.Log("Added: "+skinnedBone.name);
-	                        skinnedBones.Add(skinnedBone);
-	                        skinnedBone = skinnedBone.parent;
-	                    }
-	                }
-	            }
-	            
-	            Debug.Log("Skinned bone count: "+skinnedBones.Count);
-	            umaBoneData = skinnedBones.ToArray();
-                animatedBones = new Transform[0];
-            }
-        }
-#endif
         
 		internal bool Validate(UMAGeneratorBase generator)
 		{

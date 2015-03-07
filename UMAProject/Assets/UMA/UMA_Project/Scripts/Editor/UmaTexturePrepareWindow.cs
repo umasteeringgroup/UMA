@@ -447,6 +447,20 @@ namespace UMAEditor
 	        window.title = "MaterialBuilder";
 	    }
 
+		[MenuItem("UMA/Optimize Slot Meshes")]
+		public static void OptimizeSlotMeshes()
+		{
+			foreach (var obj in Selection.objects)
+			{
+				var slotData = obj as SlotData;
+				if (slotData != null)
+				{
+					UMATextureImporterUtil.OptimizeSlotDataMesh(slotData);
+				}
+			}
+			AssetDatabase.SaveAssets();
+		}
+
 	    [MenuItem("UMA/Tools/PNG/Set Alpha Opaque")]
 	    public static void SetAlphaOpaqueMenuItem()
 	    {

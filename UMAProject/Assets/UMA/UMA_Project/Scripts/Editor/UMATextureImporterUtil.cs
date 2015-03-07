@@ -224,11 +224,9 @@ namespace UMAEditor
 				SkinnedMeshAligner.AlignBindPose(prefabMesh, resultingSkinnedMesh);
 			}
 
-			var bones = resultingSkinnedMesh.bones;
 			var usedBonesDictionary = CompileUsedBonesDictionary(resultingMesh);
-			if (usedBonesDictionary.Count != bones.Length)
+			if (usedBonesDictionary.Count != resultingSkinnedMesh.bones.Length)
 			{
-				resultingSkinnedMesh.bones = BuildNewReducedBonesList(bones, usedBonesDictionary);
 				resultingMesh = BuildNewReduceBonesMesh(resultingMesh, usedBonesDictionary);
 			}
 			
@@ -251,6 +249,7 @@ namespace UMAEditor
 			resultingSkinnedMesh = newObject.GetComponentInChildren<SkinnedMeshRenderer>();
 	        if (resultingSkinnedMesh)
 	        {
+				resultingSkinnedMesh.bones = BuildNewReducedBonesList(resultingSkinnedMesh.bones, usedBonesDictionary);
 	            resultingSkinnedMesh.sharedMesh = resultingMesh;
 	        }
 			
@@ -268,6 +267,25 @@ namespace UMAEditor
 			AssetDatabase.SaveAssets();
 	        return slot;
 	    }
+
+		public static void OptimizeSlotDataMesh(SlotData slotData)
+		{
+			var smr = slotData.meshRenderer;
+			if (smr == null) return;
+			var mesh = smr.sharedMesh;
+
+			var usedBonesDictionary = CompileUsedBonesDictionary(mesh);
+			var smrOldBones = smr.bones.Length;
+			if (usedBonesDictionary.Count != smrOldBones)
+			{
+				mesh.boneWeights = BuildNewBoneWeights(mesh.boneWeights, usedBonesDictionary);
+				mesh.bindposes = BuildNewBindPoses(mesh.bindposes, usedBonesDictionary);
+				EditorUtility.SetDirty(mesh);
+				smr.bones = BuildNewReducedBonesList(smr.bones, usedBonesDictionary);
+				EditorUtility.SetDirty(smr);
+				Debug.Log(string.Format("Optimized Mesh {0} from {1} bones to {2} bones.", slotData.slotName, smrOldBones, usedBonesDictionary.Count), slotData);
+			}
+		}
 
 		private static Mesh BuildNewReduceBonesMesh(Mesh sourceMesh, Dictionary<int, int> usedBonesDictionary)
 		{
@@ -327,7 +345,7 @@ namespace UMAEditor
 		{
 			int res;
 			if( usedBonesDictionary.TryGetValue(boneIndex, out res)) return res;
-			return -1;
+			return 0;
 		}
 
 		private static Transform[] BuildNewReducedBonesList(Transform[] bones, Dictionary<int, int> usedBonesDictionary)
