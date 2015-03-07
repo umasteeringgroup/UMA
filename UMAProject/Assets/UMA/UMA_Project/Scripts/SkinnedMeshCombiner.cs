@@ -21,6 +21,7 @@ namespace UMA
 			internal Color32[] colors32 = null;
 			
 			internal Matrix4x4[] binds = null;
+			internal int[][] submeshTris = null;
 		}
 		
 		public static void CombineMeshes(SkinnedMeshRenderer target, CombineInstance[] sources, Dictionary<Transform, Transform> boneMap)
@@ -31,26 +32,27 @@ namespace UMA
 			target.sharedMesh = dest.mesh;
 			target.bones = dest.bones;
 		}
-		
-		private static Transform RecursivelyMapToNewRoot(Transform bone, Transform hierarchyRoot, Dictionary<Transform, Transform> boneMap)
+
+		private static Transform RecursivelyMapToNewRoot(Transform bone, Transform rootBone, string rootName, Dictionary<Transform, Transform> boneMap)
 		{
 			Transform res;
 			if (boneMap.TryGetValue(bone, out res))
 			{
 				return res;
 			}
-			if (string.Compare("Global", bone.name) == 0 || string.Compare(hierarchyRoot.name, bone.name) == 0)
+			string boneName = bone.name;
+			if (boneName == "Global" || boneName == rootName)
 			{
-				boneMap.Add(bone, hierarchyRoot);
-				return hierarchyRoot;
+				boneMap.Add(bone, rootBone);
+				return rootBone;
 			}
 			else
 			{
-				Transform parent = hierarchyRoot;
+				Transform parent = rootBone;
 				if (bone.parent != null) {
-					parent = RecursivelyMapToNewRoot(bone.parent, hierarchyRoot, boneMap);
+					parent = RecursivelyMapToNewRoot(bone.parent, rootBone, rootName, boneMap);
 				}
-				Transform child = parent.FindChild(bone.name);
+				Transform child = parent.FindChild(boneName);
 				if (child == null)
 				{
 					child = new GameObject().transform;
@@ -58,7 +60,7 @@ namespace UMA
 					child.localPosition = bone.localPosition;
 					child.localRotation = bone.localRotation;
 					child.localScale = bone.localScale;
-					child.name = bone.name;
+					child.name = boneName;
 				}
 //				if (child.localToWorldMatrix != bone.localToWorldMatrix)
 //				{
@@ -99,12 +101,22 @@ namespace UMA
 			return skinnedBones.ToArray();
 		}
 		
+		public static void MoveBoneListIntoNewHierarchy(Transform rootBone, Transform[] bones, Dictionary<Transform, Transform> boneMap)
+		{
+			string rootName = rootBone.name;
+			for (int i = 0; i < bones.Length; i++)
+			{
+				bones[i] = RecursivelyMapToNewRoot(bones[i], rootBone, rootName, boneMap);
+			}
+		}
+		
 		public static Transform[] CloneBoneListInNewHierarchy(Transform rootBone, Transform[] bones, Dictionary<Transform, Transform> boneMap)
 		{
+			string rootName = rootBone.name;
 			var res = new Transform[bones.Length];
 			for (int i = 0; i < bones.Length; i++)
 			{
-				res[i] = RecursivelyMapToNewRoot(bones[i], rootBone, boneMap);
+				res[i] = RecursivelyMapToNewRoot(bones[i], rootBone, rootName, boneMap);
 			}
 			return res;
 		}
@@ -122,12 +134,13 @@ namespace UMA
 				skinnedBinds[weight.boneIndex3] = true;
 			}
 			
+			string rootName = rootBone.name;
 			var res = new Transform[bones.Length];
 			for (int i = 0; i < bones.Length; i++)
 			{
 				if (skinnedBinds[i])
 				{
-					res[i] = RecursivelyMapToNewRoot(bones[i], rootBone, boneMap);
+					res[i] = RecursivelyMapToNewRoot(bones[i], rootBone, rootName, boneMap);
 				}
 			}
 			for (int i = 0; i < bones.Length; i++)
@@ -196,12 +209,14 @@ namespace UMA
 				source.colors32 = sMesh.colors32;
 				has_colors32 |= source.colors32 != null && source.colors32.Length != 0;
 				bounds.Encapsulate(sMesh.bounds);
-				
+
+				source.submeshTris = new int[subMeshCount][];
 				for (int i = 0; i < source.mesh.subMeshCount; i++)
 				{
 					if (source.destMesh[i] >= 0)
 					{
-						int triangleLength = sMesh.GetTriangles(i).Length;
+						source.submeshTris[i] = sMesh.GetTriangles(i);
+						int triangleLength = source.submeshTris[i].Length;
 						subMeshTriangleLength[source.destMesh[i]] += triangleLength;
 					}
 				}
@@ -236,8 +251,18 @@ namespace UMA
 			{
 				var sMesh = source.mesh;
 				vertexCount = sMesh.vertexCount;
+#if false
 				var sourceBones = rootBone == null ? source.bones : CloneSkinnedBonesInNewHierarchy(sMesh, rootBone, source.bones, boneMap);
-				
+#elif true
+				var sourceBones = rootBone == null ? source.bones : CloneBoneListInNewHierarchy(rootBone, source.bones, boneMap);
+#elif false
+				if (rootBone != null)
+				{
+					MoveBoneListIntoNewHierarchy(rootBone, source.bones, boneMap);
+				}
+				var sourceBones = source.bones;
+#endif
+
 				BuildBoneWeights(sMesh.boneWeights, 0, boneWeights, vertexIndex, vertexCount, sourceBones, source.binds, bonesCollection, bindPoses, bonesList);
 				
 				Array.Copy(sMesh.vertices, 0, vertices, vertexIndex, vertexCount);
@@ -303,7 +328,7 @@ namespace UMA
 				{
 					if (source.destMesh[i] >= 0)
 					{
-						int[] subTriangles = source.mesh.GetTriangles(i);
+						int[] subTriangles = source.submeshTris[i];
 						int triangleLength = subTriangles.Length;
 						int destMesh = source.destMesh[i];
 						
@@ -339,7 +364,7 @@ namespace UMA
 			target.mesh = dest;
 		}
 		
-		#if (true)		
+#if true		
 		private static void BuildBoneWeights(BoneWeight[] source, int sourceIndex, BoneWeight[] dest, int destIndex, int count, Transform[] bones, Matrix4x4[] bindPoses, Dictionary<Transform, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<Transform> bonesList)
 		{
 			int[] boneMapping = new int[bones.Length];
@@ -348,21 +373,18 @@ namespace UMA
 				boneMapping[i] = TranslateBoneIndex(i, bones, bindPoses, bonesCollection, bindPosesList, bonesList);
 			}
 			
-			BoneWeight sourceWeight;
+			BoneWeight weight;
 			while (count-- > 0)
 			{
-				sourceWeight = source[sourceIndex++];
-				dest[destIndex].boneIndex0 = boneMapping[sourceWeight.boneIndex0];
-				dest[destIndex].boneIndex1 = boneMapping[sourceWeight.boneIndex1];
-				dest[destIndex].boneIndex2 = boneMapping[sourceWeight.boneIndex2];
-				dest[destIndex].boneIndex3 = boneMapping[sourceWeight.boneIndex3];
-				dest[destIndex].weight0 = sourceWeight.weight0;
-				dest[destIndex].weight1 = sourceWeight.weight1;
-				dest[destIndex].weight2 = sourceWeight.weight2;
-				dest[destIndex++].weight3 = sourceWeight.weight3;
+				weight = source[sourceIndex++];
+				weight.boneIndex0 = boneMapping[weight.boneIndex0];
+				weight.boneIndex1 = boneMapping[weight.boneIndex1];
+				weight.boneIndex2 = boneMapping[weight.boneIndex2];
+				weight.boneIndex3 = boneMapping[weight.boneIndex3];
+				dest[destIndex++] = weight;
 			}
 		}
-		#else
+#else
 		private static void BuildBoneWeights(BoneWeight[] source, int sourceIndex, BoneWeight[] dest, int destIndex, int count, Transform[] bones, Matrix4x4[] bindPoses, Dictionary<Transform, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<Transform> bonesList)
 		{
 			while (count-- > 0)
@@ -382,7 +404,7 @@ namespace UMA
 			dest.weight2 = source.weight2;
 			dest.weight3 = source.weight3;
 		}
-		#endif
+#endif
 		
 		private struct BoneIndexEntry
 		{

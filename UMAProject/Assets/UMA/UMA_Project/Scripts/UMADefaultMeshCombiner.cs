@@ -271,10 +271,10 @@ namespace UMA
             }
         }
 
+#if true
         protected void RecalculateUV()
         {
-            Vector2[] originalUVs = umaData.myRenderer.sharedMesh.uv;
-            Vector2[] atlasUVs = new Vector2[originalUVs.Length];
+            Vector2[] uvs = umaData.myRenderer.sharedMesh.uv;
 
             int idx = 0;
             //Handle Atlassed Verts
@@ -284,34 +284,64 @@ namespace UMA
                 {
                     var tempAtlasRect = umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex].atlasRegion;
                     int vertexCount = umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex].source.slotData.meshRenderer.sharedMesh.vertexCount;
-                    while (vertexCount-- > 0)
+					float atlasXMin = tempAtlasRect.xMin / atlasResolution;
+					float atlasXMax = tempAtlasRect.xMax / atlasResolution;
+					float atlasYMin = tempAtlasRect.yMin / atlasResolution;
+					float atlasYMax = tempAtlasRect.yMax / atlasResolution;
+					while (vertexCount-- > 0)
                     {
-                        atlasUVs[idx].x = Mathf.Lerp(tempAtlasRect.xMin / atlasResolution, tempAtlasRect.xMax / atlasResolution, originalUVs[idx].x);
-                        atlasUVs[idx].y = Mathf.Lerp(tempAtlasRect.yMin / atlasResolution, tempAtlasRect.yMax / atlasResolution, originalUVs[idx].y);
+						uvs[idx].x = Mathf.Lerp(atlasXMin, atlasXMax, uvs[idx].x);
+						uvs[idx].y = Mathf.Lerp(atlasYMin, atlasYMax, uvs[idx].y);
                         idx++;
                     }
 
                 }
             }
 
-            //Handle Non Atlassed Verts
-            SlotData[] slots = umaData.umaRecipe.slotDataList;
-            for (int slotIndex = 0; slotIndex < slots.Length; slotIndex++)
-            {
+            umaData.myRenderer.sharedMesh.uv = uvs;
+        }
+#else
+		protected void RecalculateUV()
+		{
+			Vector2[] originalUVs = umaData.myRenderer.sharedMesh.uv;
+			Vector2[] atlasUVs = new Vector2[originalUVs.Length];
+			
+			int idx = 0;
+			//Handle Atlassed Verts
+			for (int atlasIndex = 0; atlasIndex < umaData.atlasList.atlas.Count; atlasIndex++)
+			{
+				for (int materialDefinitionIndex = 0; materialDefinitionIndex < umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions.Count; materialDefinitionIndex++)
+				{
+					var tempAtlasRect = umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex].atlasRegion;
+					int vertexCount = umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex].source.slotData.meshRenderer.sharedMesh.vertexCount;
+					while (vertexCount-- > 0)
+					{
+						atlasUVs[idx].x = Mathf.Lerp(tempAtlasRect.xMin / atlasResolution, tempAtlasRect.xMax / atlasResolution, originalUVs[idx].x);
+						atlasUVs[idx].y = Mathf.Lerp(tempAtlasRect.yMin / atlasResolution, tempAtlasRect.yMax / atlasResolution, originalUVs[idx].y);
+						idx++;
+					}
+					
+				}
+			}
+			
+			//Handle Non Atlassed Verts
+			SlotData[] slots = umaData.umaRecipe.slotDataList;
+			for (int slotIndex = 0; slotIndex < slots.Length; slotIndex++)
+			{
 				if (slots[slotIndex] == null) continue;
-                if (slots[slotIndex].textureNameList.Length == 1 && string.IsNullOrEmpty(slots[slotIndex].textureNameList[0]))
-                {
-                    var vertexCount = slots[slotIndex].meshRenderer.sharedMesh.vertexCount;
-                    while (vertexCount-- > 0)
-                    {
-                        atlasUVs[idx] = originalUVs[idx];
-                        idx++;
-                    }
-                }
-            }
-
-            umaData.myRenderer.sharedMesh.uv = atlasUVs;
-        }	
-
-    }
+				if (slots[slotIndex].textureNameList.Length == 1 && string.IsNullOrEmpty(slots[slotIndex].textureNameList[0]))
+				{
+					var vertexCount = slots[slotIndex].meshRenderer.sharedMesh.vertexCount;
+					while (vertexCount-- > 0)
+					{
+						atlasUVs[idx] = originalUVs[idx];
+						idx++;
+					}
+				}
+			}
+			
+			umaData.myRenderer.sharedMesh.uv = atlasUVs;
+		}	
+#endif
+	}
 }
