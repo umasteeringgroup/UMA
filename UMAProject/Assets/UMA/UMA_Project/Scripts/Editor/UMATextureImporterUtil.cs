@@ -286,7 +286,7 @@ namespace UMAEditor
 			newMesh.bindposes = BuildNewBindPoses(sourceMesh.bindposes, usedBonesDictionary);
 			for (int i = 0; i < sourceMesh.subMeshCount; i++)
 			{
-				newMesh.SetTriangles(i, sourceMesh.GetTriangles(i));
+				newMesh.SetTriangles(sourceMesh.GetTriangles(i), i);
 			}
 			return newMesh;
 		}
@@ -343,10 +343,10 @@ namespace UMAEditor
 		private static Dictionary<int,int> CompileUsedBonesDictionary(Mesh resultingMesh)
 		{
 			var res = new Dictionary<int, int>();
-			var boneWeights = resultingMesh.boneWeights;			
-			foreach (var boneWeight in boneWeights)
+			var boneWeights = resultingMesh.boneWeights;
+			for (int i = 0; i < boneWeights.Length; i++)
 			{
-				AddBoneWeightToUsedBones(res, ref boneWeight);
+				AddBoneWeightToUsedBones(res, ref boneWeights[i]);
 			}
 			return res;			
 		}
