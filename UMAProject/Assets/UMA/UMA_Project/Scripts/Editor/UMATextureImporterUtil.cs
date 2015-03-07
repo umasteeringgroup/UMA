@@ -247,49 +247,14 @@ namespace UMAEditor
 
             var meshgo = skinnedResult.transform.Find(mesh.name);
             var finalMeshRenderer = meshgo.GetComponent<SkinnedMeshRenderer>();
-            var tempBoneData = ExtractNewBones(finalMeshRenderer, prefabMesh);
 	        
 	        SlotData slot = ScriptableObject.CreateInstance<SlotData>();
 	        slot.slotName = assetName;
 			slot.materialSample = material;
-			slot.umaBoneData = tempBoneData;
             slot.meshRenderer = finalMeshRenderer;
 	        AssetDatabase.CreateAsset(slot, slotFolder + '/' + assetName + '/' + assetName + "_Slot.asset");
 			AssetDatabase.SaveAssets();
 	        return slot;
-	    }
-
-	    private static Transform[] ExtractNewBones(SkinnedMeshRenderer newMesh, SkinnedMeshRenderer oldMesh)
-	    {
-	        List<Transform> newBones = new List<Transform>();
-	        ExtractNewBonesRecursive(FindGlobalBone(newMesh.rootBone), FindGlobalBone(oldMesh.rootBone), newBones);
-	        return newBones.ToArray();
-	    }
-
-	    private static Transform FindGlobalBone(Transform bone)
-	    {
-	        if (bone.name == "Global") return bone;
-	        return FindGlobalBone(bone.parent);
-	    }
-
-	    private static void ExtractNewBonesRecursive(Transform newBone, Transform oldBone, List<Transform> newBones)
-	    {
-	        for (int i = 0; i < newBone.childCount; i++)
-	        {
-	            var newChildBone = newBone.GetChild(i);
-	            var oldChildBone = oldBone != null ? oldBone.FindChild(newChildBone.name) : null;
-	            if (oldChildBone == null)
-	            {
-	                Debug.LogWarning(newChildBone);
-	                newBones.Add(newChildBone);
-	            }
-	            else
-	            {
-	                Debug.Log(newChildBone);
-                    newBones.Add(newChildBone);
-                }
-                ExtractNewBonesRecursive(newChildBone, oldChildBone, newBones);
-	        }
 	    }
 	}
 }

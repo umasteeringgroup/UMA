@@ -52,10 +52,11 @@ namespace UMAEditor
 
             EditorGUILayout.Space();
 
-            SkinnedMeshRenderer renderer = EditorGUILayout.ObjectField("Renderer", slot.meshRenderer, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
-            if (renderer != slot.meshRenderer)
-            {
-                slot.umaBoneData = null;
+			SkinnedMeshRenderer currentRenderer = slot.meshRenderer;
+			SkinnedMeshRenderer renderer = EditorGUILayout.ObjectField("Renderer", currentRenderer, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
+			if (renderer != currentRenderer)
+			{
+				slot.umaBoneData = null;
                 slot.animatedBones = new Transform[0];
 
                 slot.meshRenderer = renderer;

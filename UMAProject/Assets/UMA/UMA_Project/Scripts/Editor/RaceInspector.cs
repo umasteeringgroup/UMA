@@ -31,6 +31,9 @@ namespace UMAEditor
 			race.TPose = EditorGUILayout.ObjectField("TPose", race.TPose, typeof(UmaTPose), false) as UmaTPose;
 			race.expressionSet = EditorGUILayout.ObjectField("Expression Set", race.expressionSet, typeof(UMA.PoseTools.UMAExpressionSet), false) as UMA.PoseTools.UMAExpressionSet;
 
+            // Disabled creation of base slot until desired behavior is discussed
+            race.baseSlot = EditorGUILayout.ObjectField("Base Slot", race.baseSlot, typeof(SlotData), false) as SlotData;
+            /*
 			if (race.baseSlot != null) {
 				race.baseSlot = EditorGUILayout.ObjectField("Base Slot", race.baseSlot, typeof(SlotData), false) as SlotData;
 			}
@@ -80,6 +83,7 @@ namespace UMAEditor
 				EditorGUILayout.EndHorizontal();
 				GUI.enabled = true;
 			}
+			*/
 
 			EditorGUILayout.Space();
 
