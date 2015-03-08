@@ -14,7 +14,7 @@ public class UMAAssetCollectionEditor : Editor
 			var slotLibrary = UnityEngine.Object.FindObjectOfType<SlotLibraryBase>();
 			var raceLibrary = UnityEngine.Object.FindObjectOfType<RaceLibraryBase>();
 			var crowd = UnityEngine.Object.FindObjectOfType<UMACrowd>();
-			collection.AddToLibraries(overlayLibrary, slotLibrary, raceLibrary, crowd);
+			collection.AddToLibraries(overlayLibrary, slotLibrary, raceLibrary);
 		}
 		base.OnInspectorGUI();
 	}
