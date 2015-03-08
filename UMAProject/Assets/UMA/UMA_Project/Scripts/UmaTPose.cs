@@ -15,6 +15,23 @@ namespace UMA
 	    public SkeletonBone[] boneInfo;
         [NonSerialized]
         public HumanBone[] humanInfo;
+		[NonSerialized]
+		public float armStretch;
+		[NonSerialized]
+		public float feetSpacing;
+		[NonSerialized]
+		public float legStretch;
+		[NonSerialized]
+		public float lowerArmTwist;
+		[NonSerialized]
+		public float lowerLegTwist;
+		[NonSerialized]
+		public float upperArmTwist;
+		[NonSerialized]
+		public float upperLegTwist;
+		[NonSerialized]
+		public bool extendedInfo;
+
 
 	    public byte[] serializedChunk;
 
@@ -32,28 +49,49 @@ namespace UMA
 	        {
 	            Serialize(bn, hi);
 	        }
+			if (extendedInfo)
+			{
+				bn.Write(armStretch);
+				bn.Write(feetSpacing);
+				bn.Write(legStretch);
+				bn.Write(lowerArmTwist);
+				bn.Write(lowerLegTwist);
+				bn.Write(upperArmTwist);
+				bn.Write(upperLegTwist);
+			}
 	        serializedChunk = ms.ToArray();
 	    }
 
 	    public void DeSerialize()
 	    {
-	        if (boneInfo == null)
-	        {
-	            var ms = new MemoryStream(serializedChunk);
-	            var br = new BinaryReader(ms);
-	            int count = br.ReadInt32();
-	            boneInfo = new SkeletonBone[count];
-	            for (int i = 0; i < count; i++)
-	            {
-	                boneInfo[i] = DeSerializeSkeletonBone(br);
-	            }
-	            count = br.ReadInt32();
-	            humanInfo = new HumanBone[count];
-	            for (int i = 0; i < count; i++)
-	            {
-	                humanInfo[i] = DeSerializeHumanBone(br);
-	            }
-	        }
+			if (boneInfo == null)
+			{
+				var ms = new MemoryStream(serializedChunk);
+				var br = new BinaryReader(ms);
+				int count = br.ReadInt32();
+				boneInfo = new SkeletonBone[count];
+				for (int i = 0; i < count; i++)
+				{
+					boneInfo[i] = DeSerializeSkeletonBone(br);
+				}
+				count = br.ReadInt32();
+				humanInfo = new HumanBone[count];
+				for (int i = 0; i < count; i++)
+				{
+					humanInfo[i] = DeSerializeHumanBone(br);
+				}
+				if (br.PeekChar() >= 0)
+				{
+					extendedInfo = true;
+					armStretch = br.ReadSingle();
+					feetSpacing = br.ReadSingle();
+					legStretch = br.ReadSingle();
+					lowerArmTwist = br.ReadSingle();
+					lowerLegTwist = br.ReadSingle();
+					upperArmTwist = br.ReadSingle();
+					upperLegTwist = br.ReadSingle();
+				}
+			}
 	    }
 
 	    private SkeletonBone DeSerializeSkeletonBone(BinaryReader br)
@@ -146,6 +184,23 @@ namespace UMA
 	        bn.Write(value.z);
 	    }
 
+		public void ReadFromHumanDescription(HumanDescription description)
+		{
+			humanInfo = description.human;
+			boneInfo = description.skeleton;
+			armStretch = description.armStretch;
+			feetSpacing = description.feetSpacing;
+			legStretch = description.legStretch;
+			lowerArmTwist = description.lowerArmTwist;
+			lowerLegTwist = description.lowerLegTwist;
+			upperArmTwist = description.upperArmTwist;
+			upperLegTwist = description.upperLegTwist;
+			extendedInfo = true;
+
+			Serialize();
+			boneInfo = null;
+			humanInfo = null;
+		}
 
 	    public void ReadFromTransform(Animator rootAnimator)
 	    {

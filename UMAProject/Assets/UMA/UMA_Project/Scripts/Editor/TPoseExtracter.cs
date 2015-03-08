@@ -9,6 +9,41 @@ namespace UMAEditor
 	    [MenuItem("UMA/Extract T-Pose")]
 	    static void ExtractTPose()
 	    {
+			var selectedObjects = Selection.objects;
+			if (selectedObjects.Length > 0)
+			{
+				bool extracted = false;
+				foreach (var selectedObject in selectedObjects)
+				{
+					var assetPath = AssetDatabase.GetAssetPath(selectedObject);
+					if (!string.IsNullOrEmpty(assetPath))
+					{
+						var modelImporter = AssetImporter.GetAtPath(assetPath) as ModelImporter;
+						if( modelImporter != null )
+						{
+							var asset = UmaTPose.CreateInstance<UMA.UmaTPose>();
+							asset.ReadFromHumanDescription(modelImporter.humanDescription);
+							var name = selectedObject.name;
+							if (name.EndsWith("(Clone)"))
+							{
+								name = name.Substring(0, name.Length - 7);
+								asset.boneInfo[0].name = name;
+								asset.Serialize();
+							}
+							if (!System.IO.Directory.Exists("Assets/UMA/Assets/TPoses"))
+								System.IO.Directory.CreateDirectory("Assets/UMA/UMA_Assets/TPoses");
+							AssetDatabase.CreateAsset(asset, "Assets/UMA/UMA_Assets/TPoses/" + name + "_TPose.asset");
+							extracted = true;
+						}
+					}
+				}
+				if (extracted)
+				{
+					AssetDatabase.SaveAssets();
+					return;
+				}
+			}
+
 	        foreach (var animator in Transform.FindObjectsOfType(typeof(Animator)) as Animator[])
 	        {
 	            var asset = UmaTPose.CreateInstance<UmaTPose>();
