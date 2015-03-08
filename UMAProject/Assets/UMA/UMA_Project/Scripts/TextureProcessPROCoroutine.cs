@@ -73,7 +73,7 @@ namespace UMA
 
 						int width = Mathf.FloorToInt(atlas.cropResolution.x);
 						int height = Mathf.FloorToInt(atlas.cropResolution.y);
-                        destinationTexture = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
+						destinationTexture = new RenderTexture(Mathf.FloorToInt(atlas.cropResolution.x * umaData.atlasResolutionScale), Mathf.FloorToInt(atlas.cropResolution.y * umaData.atlasResolutionScale), 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
                         destinationTexture.filterMode = FilterMode.Point;
                         renderCamera = umaGenerator.textureMerge.myCamera;
                         renderCamera.targetTexture = destinationTexture;
@@ -85,8 +85,9 @@ namespace UMA
                         renderCamera.gameObject.SetActive(false);
                         renderCamera.targetTexture = null;
 
-                        if (umaGenerator.convertRenderTexture)
+						if (umaGenerator.convertRenderTexture)
                         {
+							#region Convert Render Textures
 							yield return 25;
 							Texture2D tempTexture;
                             tempTexture = new Texture2D(destinationTexture.width, destinationTexture.height, TextureFormat.ARGB32, umaGenerator.convertMipMaps);
@@ -142,7 +143,8 @@ namespace UMA
                             tempTexture.wrapMode = TextureWrapMode.Repeat;
                             tempTexture.filterMode = FilterMode.Bilinear;
                             resultingTextures[textureType] = tempTexture;
-                        }
+							#endregion
+						}
                         else
                         {
                             destinationTexture.filterMode = FilterMode.Bilinear;

@@ -81,7 +81,7 @@ Camera:
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 2147483648
+    m_Bits: 0
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
@@ -102,9 +102,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   myCamera: {fileID: 2000000}
   material: {fileID: 2100000, guid: 9dcf0ea2079905b4eabed17a904b047c, type: 2}
-  textureModule: {fileID: 400000, guid: cb25ee38031e1d340a53479d35818649, type: 2}
-  myTransform: {fileID: 400002}
-  textureModuleList: []
+  textureMergeRectCount: 0
+  textureMergeRects: []
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1
@@ -116,4 +115,3 @@ Prefab:
   m_ParentPrefab: {fileID: 0}
   m_RootGameObject: {fileID: 100002}
   m_IsPrefabParent: 1
-  m_IsExploded: 1

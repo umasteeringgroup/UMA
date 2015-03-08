@@ -88,7 +88,6 @@ namespace UMA
         {
             animator = other.animator;
             myRenderer = other.myRenderer;
-            atlasResolutionScale = other.atlasResolutionScale;
             tempBoneData = other.tempBoneData;
             animatedBones = other.animatedBones;
             boneHashList = other.boneHashList;

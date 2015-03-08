@@ -20,6 +20,7 @@ namespace UMA
         public Matrix4x4 tempMatrix;
         public UMAMeshCombiner meshCombiner;
         public float unityVersion;
+		private bool forceGarbageCollect;
 
         public void Initialize()
         {
@@ -54,6 +55,12 @@ namespace UMA
         
         void Update()
         {
+			if (forceGarbageCollect)
+			{
+				forceGarbageCollect = false;
+				GC.Collect();
+				return;
+			}
             if (umaDirtyList.Count > 0)
             {
                 OnDirtyUpdate();    
@@ -61,11 +68,18 @@ namespace UMA
             meshUpdates = 0;    
         }
 
+		bool wasMeshDirty;
+		bool wasTextureDirty;
+		bool wasShapeDirty;
         public virtual bool HandleDirtyUpdate(UMAData data)
         {
             if (umaData != data)
             {
                 umaData = data;
+				wasMeshDirty = umaData.isMeshDirty;
+				wasTextureDirty = umaData.isTextureDirty;
+				wasShapeDirty = umaData.isShapeDirty;
+
                 if (!umaData.Validate())
                 {
                     return true;
@@ -96,19 +110,24 @@ namespace UMA
 
 				bool workDone = umaGeneratorCoroutine.Work();
 				Profiler.EndSample();
-				if (workDone)
-                {
-					Profiler.BeginSample("Combine Mesh 2");
-					activeGeneratorCoroutine = null;
-                    UpdateUMAMesh(true);
-                    umaData.isTextureDirty = false;
-					Profiler.EndSample();
+				if (wasMeshDirty)
+				{
+					if (workDone)
+					{
+						Profiler.BeginSample("Combine Mesh 2");
+						activeGeneratorCoroutine = null;
+						UpdateUMAMesh(true);
+						umaData.isTextureDirty = false;
+						Profiler.EndSample();
+						return false;
+					}
+					else
+					{
+						return false;
+					}
 				}
-				else
-                {
-                    return false;
-                }
-            } else if (umaData.isShapeDirty)
+            } 
+			if (umaData.isShapeDirty)
             {
 				Profiler.BeginSample("Apply DNA");
 				UpdateUMABody(umaData);
@@ -119,8 +138,8 @@ namespace UMA
 				UMAReady();
 				Profiler.EndSample();
 				return true;
-
-            } else
+            } 
+			else
             {
 				Profiler.BeginSample("UMA Ready");
 				UMAReady();
@@ -160,15 +179,16 @@ namespace UMA
 
         public override bool IsIdle()
         {
-            return umaDirtyList.Count == 0;
+			return umaDirtyList.Count == 0 && !forceGarbageCollect;
         }
         
         public virtual void UMAReady()
         {   
             if (umaData)
             {
+				forceGarbageCollect = true;
                 umaData.myRenderer.enabled = true;
-                umaData.FireUpdatedEvent(false); 
+                umaData.FireUpdatedEvent(false);
             }
         }
     

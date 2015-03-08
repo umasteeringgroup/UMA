@@ -108,8 +108,7 @@ namespace UMA
 			OrderMaterialDefinition();
 			
 			//resolutionAdjust code
-	        atlasResolutionScale = umaData.atlasResolutionScale == 0f ? 1f : umaData.atlasResolutionScale;
-			
+		
 			umaData.atlasList = new UMAData.AtlasList();
 			umaData.atlasList.atlas = new List<UMAData.AtlasElement>();
 
@@ -220,7 +219,7 @@ namespace UMA
 			for(int atlasIndex = 0; atlasIndex < umaAtlasList.atlas.Count; atlasIndex++){
 				
 				umaAtlasList.atlas[atlasIndex].cropResolution = new Vector2(umaGenerator.atlasResolution,umaGenerator.atlasResolution);
-				umaAtlasList.atlas[atlasIndex].resolutionScale = atlasResolutionScale;
+				umaAtlasList.atlas[atlasIndex].resolutionScale = 1f;
 				packTexture.Init(umaGenerator.atlasResolution,umaGenerator.atlasResolution,false);
 				bool textureFit = true;
 				
@@ -228,8 +227,8 @@ namespace UMA
 					UMAData.AtlasMaterialDefinition tempMaterialDef = umaAtlasList.atlas[atlasIndex].atlasMaterialDefinitions[atlasElementIndex];
 					
 					if(tempMaterialDef.atlasRegion == nullRect){
-						
-						tempMaterialDef.atlasRegion = packTexture.Insert(Mathf.FloorToInt(tempMaterialDef.source.baseTexture[0].width*umaAtlasList.atlas[atlasIndex].resolutionScale*tempMaterialDef.source.slotData.overlayScale),Mathf.FloorToInt(tempMaterialDef.source.baseTexture[0].height*umaAtlasList.atlas[atlasIndex].resolutionScale*tempMaterialDef.source.slotData.overlayScale),MaxRectsBinPack.FreeRectChoiceHeuristic.RectBestLongSideFit);
+
+						tempMaterialDef.atlasRegion = packTexture.Insert(Mathf.FloorToInt(tempMaterialDef.source.baseTexture[0].width * umaAtlasList.atlas[atlasIndex].resolutionScale * tempMaterialDef.source.slotData.overlayScale), Mathf.FloorToInt(tempMaterialDef.source.baseTexture[0].height * umaAtlasList.atlas[atlasIndex].resolutionScale * tempMaterialDef.source.slotData.overlayScale), MaxRectsBinPack.FreeRectChoiceHeuristic.RectBestLongSideFit);
 						tempMaterialDef.isRectShared = false;
 						umaAtlasList.atlas[atlasIndex].shader = tempMaterialDef.source.materialSample.shader;
 						

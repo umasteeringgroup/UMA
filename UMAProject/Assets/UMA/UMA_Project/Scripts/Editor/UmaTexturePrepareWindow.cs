@@ -461,7 +461,77 @@ namespace UMAEditor
 			AssetDatabase.SaveAssets();
 		}
 
-	    [MenuItem("UMA/Tools/PNG/Set Alpha Opaque")]
+		[MenuItem("UMA/Optimize Overlay Textures")]
+		public static void OptimizeOverlayTextures()
+		{
+			foreach (var obj in Selection.objects)
+			{
+				var overlayData = obj as OverlayData;
+				if (overlayData != null)
+				{
+					foreach (var textureObj in overlayData.textureList)
+					{
+						if (textureObj == null) continue;
+						string file = AssetDatabase.GetAssetPath(textureObj);
+						var importer = TextureImporter.GetAtPath(file) as TextureImporter;
+						bool changed = false;
+						if (importer.isReadable)
+						{
+							importer.isReadable = false;
+							changed = true;
+						}
+						if (importer.filterMode != FilterMode.Point)
+						{
+							importer.filterMode = FilterMode.Point;
+							changed = true;
+						}
+						if( changed )AssetDatabase.ImportAsset(file);
+					}
+				}
+			}
+			AssetDatabase.SaveAssets();
+		}
+
+		[MenuItem("UMA/Half Selected AtlasScale")]
+		public static void HalfSelectedAtlasScale()
+		{
+			foreach (var obj in Selection.objects)
+			{
+				var go = (obj as GameObject);
+				if (go != null)
+				{
+					var umaData = go.GetComponent<UMAData>();
+					if (umaData != null)
+					{
+						umaData.atlasResolutionScale = umaData.atlasResolutionScale * 0.5f;
+						umaData.Dirty(false, true, false);
+					}
+				}
+			}
+		}
+
+		[MenuItem("UMA/Double Selected AtlasScale")]
+		public static void DoubleSelectedAtlasScale()
+		{
+			foreach (var obj in Selection.objects)
+			{
+				var go = (obj as GameObject);
+				if (go != null)
+				{
+					var umaData = go.GetComponent<UMAData>();
+					if (umaData != null)
+					{
+						if (umaData.atlasResolutionScale < 1f)
+						{
+							umaData.atlasResolutionScale = umaData.atlasResolutionScale * 2f;
+							umaData.Dirty(false, true, false);
+						}
+					}
+				}
+			}
+		}
+
+		[MenuItem("UMA/Tools/PNG/Set Alpha Opaque")]
 	    public static void SetAlphaOpaqueMenuItem()
 	    {
 	        foreach (var obj in Selection.GetFiltered(typeof(Texture2D), SelectionMode.Assets))

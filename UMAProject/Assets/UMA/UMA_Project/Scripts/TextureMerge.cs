@@ -9,9 +9,6 @@ namespace UMA
 	{
 		public Camera myCamera;
 		public Material material;
-		//public Transform textureModule;
-		//public Transform myTransform;
-		//public List<Renderer> textureModuleList;
 		public int textureMergeRectCount;
 
 		public TextureMergeRect[] textureMergeRects;
@@ -25,23 +22,17 @@ namespace UMA
 
 		void OnRenderObject()
 		{
-			//if (Camera.current == myCamera)
+			if (textureMergeRects != null)
 			{
-				if (textureMergeRects != null)
+				for (int i = 0; i < textureMergeRectCount; i++)
 				{
-					for (int i = 0; i < textureMergeRectCount; i++)
-					{
-						DrawRect(ref textureMergeRects[i]);
-					}
+					DrawRect(ref textureMergeRects[i]);
 				}
 			}
 		}
 
 		private void DrawRect(ref TextureMergeRect textureMergeRect)
 		{
-			//Debug.Log(textureMergeRect.rect);
-			//Debug.Log(textureMergeRect.tex);
-			//Debug.Log(textureMergeRect.mat);
 			Graphics.DrawTexture(textureMergeRect.rect, textureMergeRect.tex, textureMergeRect.mat);
 		}
 
@@ -121,12 +112,6 @@ namespace UMA
 
             if (source.rects[i2].width != 0)
 			{
-				//if (textureMergeRectCount == 5)
-				//{
-				//	Debug.Log(atlasRect);
-				//	Debug.Log(source.rects[i2]);
-				//	Debug.Log(resolutionScale);
-				//}
 				overlayRect = new Rect(atlasRect.xMin + source.rects[i2].x * resolutionScale, atlasRect.yMax - source.rects[i2].y * resolutionScale - source.rects[i2].height * resolutionScale, source.rects[i2].width * resolutionScale, source.rects[i2].height * resolutionScale);
             }
             else
