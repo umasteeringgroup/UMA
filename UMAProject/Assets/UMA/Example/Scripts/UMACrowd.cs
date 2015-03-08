@@ -13,7 +13,7 @@ public class UMACrowd : MonoBehaviour
 	public RaceLibrary raceLibrary;
 	public RuntimeAnimatorController animationController;
 
-	public float atlasResolutionScale;
+	public float atlasResolutionScale = 1;
 	public bool generateUMA;
 	public bool generateLotsUMA;
 	public Vector2 umaCrowdSize;
@@ -421,10 +421,6 @@ public class UMACrowd : MonoBehaviour
 	protected virtual void SetUMAData()
 	{
 		umaData.atlasResolutionScale = atlasResolutionScale;
-		if (umaData.atlasResolutionScale <= 0f)
-		{
-			umaData.atlasResolutionScale = 1f;
-		}
 		umaData.OnCharacterUpdated += myColliderUpdateMethod;
 	}
 

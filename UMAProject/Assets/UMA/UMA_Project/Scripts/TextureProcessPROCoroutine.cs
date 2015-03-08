@@ -18,6 +18,7 @@ namespace UMA
 	    {
 			umaData = _umaData;
 			umaGenerator = _umaGenerator;
+			if (umaData.atlasResolutionScale <= 0) umaData.atlasResolutionScale = 1f;
         }
 
 	    protected override void Start()
