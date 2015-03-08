@@ -110,9 +110,9 @@ namespace UMA
 
 				bool workDone = umaGeneratorCoroutine.Work();
 				Profiler.EndSample();
-				if (wasMeshDirty)
+				if (workDone)
 				{
-					if (workDone)
+					if (wasMeshDirty)
 					{
 						Profiler.BeginSample("Combine Mesh 2");
 						activeGeneratorCoroutine = null;
@@ -123,10 +123,22 @@ namespace UMA
 					}
 					else
 					{
-						return false;
+						activeGeneratorCoroutine = null;
+						umaData.isTextureDirty = false;
+
+						var materials = new Material[umaData.atlasList.atlas.Count];
+						for (int atlasIndex = 0; atlasIndex < umaData.atlasList.atlas.Count; atlasIndex++)
+						{
+							materials[atlasIndex] = umaData.atlasList.atlas[atlasIndex].materialSample;
+						}
+						umaData.myRenderer.sharedMaterials = materials;
 					}
 				}
-            } 
+				else
+				{
+					return false;
+				}
+			} 
 			if (umaData.isShapeDirty)
             {
 				Profiler.BeginSample("Apply DNA");

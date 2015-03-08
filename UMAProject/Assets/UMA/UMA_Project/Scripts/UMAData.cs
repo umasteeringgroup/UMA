@@ -559,6 +559,28 @@ namespace UMA
 			return textureList.ToArray();
 		}
 
+		public RenderTexture GetFirstRenderTexture()
+		{
+			for (int atlasIndex = 0; atlasIndex < atlasList.atlas.Count; atlasIndex++)
+			{
+				if (atlasList.atlas[atlasIndex] != null && atlasList.atlas[atlasIndex].resultingAtlasList != null)
+				{
+					for (int textureIndex = 0; textureIndex < atlasList.atlas[atlasIndex].resultingAtlasList.Length; textureIndex++)
+					{
+						if (atlasList.atlas[atlasIndex].resultingAtlasList[textureIndex] != null)
+						{
+							RenderTexture tempTexture = atlasList.atlas[atlasIndex].resultingAtlasList[textureIndex] as RenderTexture;
+							if (tempTexture != null)
+							{
+								return tempTexture;
+							}
+						}
+					}
+				}
+			}
+			return null;
+		}
+
         public GameObject GetBoneGameObject(string boneName)
         {
             return GetBoneGameObject(UMASkeleton.StringToHash(boneName));

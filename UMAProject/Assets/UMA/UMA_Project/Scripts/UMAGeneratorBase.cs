@@ -12,7 +12,6 @@ namespace UMA
         public bool AtlasCrop;
         [NonSerialized]
         public TextureMerge textureMerge;
-        public int maxPixels;
         public bool convertRenderTexture;
         public bool convertMipMaps;
         public int atlasResolution;
