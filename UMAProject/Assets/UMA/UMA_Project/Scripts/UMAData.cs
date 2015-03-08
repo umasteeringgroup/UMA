@@ -580,14 +580,15 @@ namespace UMA
 #pragma warning disable 618
 			foreach (Transform bone in umaBones)
 			{
-				int nameHash = UMASkeleton.StringToHash(bone.name);
+				Transform umaBone;
+				if( !boneMap.TryGetValue(bone, out umaBone ) )
+				{
+					continue;
+				}
+
+				int nameHash = UMASkeleton.StringToHash(umaBone.name);
 				if (!boneHashList.ContainsKey(nameHash))
 				{
-					Transform umaBone;
-                    if( !boneMap.TryGetValue(bone, out umaBone ) )
-                    {
-                        continue;
-                    }
                     
 					BoneData newBoneData = new BoneData();
 					newBoneData.originalBonePosition = umaBone.localPosition;
@@ -596,7 +597,7 @@ namespace UMA
                     newBoneData.boneTransform = umaBone;
                     newBoneData.actualBonePosition = umaBone.localPosition;
                     newBoneData.actualBoneScale = umaBone.localScale;
-                    boneHashList.Add(UMASkeleton.StringToHash(umaBone.name), newBoneData);
+					boneHashList.Add(nameHash, newBoneData);
 				}
 			}
 			
