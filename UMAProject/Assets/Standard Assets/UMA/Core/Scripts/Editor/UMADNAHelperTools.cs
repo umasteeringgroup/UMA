@@ -34,24 +34,28 @@ namespace UMAEditor
 				Directory.CreateDirectory(destDir);
 			}
 
-			var baseDnaType = typeof(UMADna);
+
+			var baseDnaType = typeof(UMADnaBase);
 			var customData = new Dictionary<string, object>();
 			customData.Add("ClassName", "");
 
-			foreach (var dnaType in baseDnaType.Assembly.GetTypes())
+			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
 			{
-				if (DerivesFrom(dnaType, baseDnaType))
+				foreach (var dnaType in assembly.GetTypes())
 				{
-					customData["ClassName"] = dnaType.Name;
-					foreach (var template in pageTemplates)
+					if (DerivesFrom(dnaType, baseDnaType))
 					{
-						template.sb.Length = 0;
+						customData["ClassName"] = dnaType.Name;
+						foreach (var template in pageTemplates)
+						{
+							template.sb.Length = 0;
+						}
+						foreach (var template in templates)
+						{
+							template.Append(customData);
+						}
+						CreateDNAHelperCode(dnaType, destDir, pageTemplate, pageTemplates);
 					}
-					foreach (var template in templates)
-					{
-						template.Append(customData);
-					}
-					CreateDNAHelperCode(dnaType, destDir, pageTemplate, pageTemplates);
 				}
 			}
 
