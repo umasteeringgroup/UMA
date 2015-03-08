@@ -8,26 +8,26 @@ public class UMAContext : MonoBehaviour
 {
 	public static UMAContext Instance;
 	[Obsolete("raceLibrary will change type from RaceLibrary to RaceLibraryBase, use the helper functions while we migrate the type.", false)]
-	public RaceLibrary raceLibrary;
+	public RaceLibraryBase raceLibrary;
 	[Obsolete("slotLibrary will change type from SlotLibrary to SlotLibraryBase, use the helper functions while we migrate the type.", false)]
-	public SlotLibrary slotLibrary;
+	public SlotLibraryBase slotLibrary;
 	[Obsolete("overlayLibrary will change type from OverlayLibrary to OverlayLibraryBase, use the helper functions while we migrate the type.", false)]
-	public OverlayLibrary overlayLibrary;
+	public OverlayLibraryBase overlayLibrary;
 
 #pragma warning disable 618
 	public void Start()
 	{
 		if (!slotLibrary)
 		{
-			slotLibrary = GameObject.Find("SlotLibrary").GetComponent("SlotLibrary") as SlotLibrary;
+			slotLibrary = GameObject.Find("SlotLibrary").GetComponent<SlotLibraryBase>();
 		}
 		if (!raceLibrary)
 		{
-			raceLibrary = GameObject.Find("RaceLibrary").GetComponent("RaceLibrary") as RaceLibrary;
+			raceLibrary = GameObject.Find("RaceLibrary").GetComponent<RaceLibraryBase>();
 		}
 		if (!overlayLibrary)
 		{
-			overlayLibrary = GameObject.Find("OverlayLibrary").GetComponent("OverlayLibrary") as OverlayLibrary;
+			overlayLibrary = GameObject.Find("OverlayLibrary").GetComponent<OverlayLibraryBase>();
 		}
 		if (Instance == null) Instance = this;
 	}

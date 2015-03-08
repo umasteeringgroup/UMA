@@ -133,7 +133,7 @@ public class OverlayLibrary : OverlayLibraryBase
 		}
 	}
 
-	public OverlayData[]  GetAllOverlays()
+	public override OverlayData[] GetAllOverlays()
 	{
 #pragma warning disable 618
 		return overlayElementList;

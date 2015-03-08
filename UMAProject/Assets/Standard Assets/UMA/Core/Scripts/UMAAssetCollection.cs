@@ -8,9 +8,8 @@ namespace UMA
         public RaceData[] raceData;
         public SlotData[] slotData;
         public OverlayData[] overlayData;
-		public UMACrowdRandomSet[] randomSets;
 
-		public virtual void AddToLibraries(OverlayLibraryBase overlayLibrary, SlotLibraryBase slotLibrary, RaceLibraryBase raceLibrary, UMACrowd crowd)
+		public virtual void AddToLibraries(OverlayLibraryBase overlayLibrary, SlotLibraryBase slotLibrary, RaceLibraryBase raceLibrary)
 		{
 			if (overlayLibrary != null && overlayData.Length > 0)
 			{
@@ -41,19 +40,6 @@ namespace UMA
 				for (int i = 0; i < raceData.Length; i++)
 				{
 					raceLibrary.AddRace(raceData[i]);
-				}
-			}
-
-			if (crowd != null && randomSets.Length > 0)
-			{
-#if UNITY_EDITOR
-				UnityEditor.Undo.RecordObject(crowd, "Added Asset Collection");
-#endif
-				var newPool = new UMACrowdRandomSet[crowd.randomPool.Length + randomSets.Length];
-				Array.Copy(crowd.randomPool, newPool, crowd.randomPool.Length);
-				for (int i = 0; i < randomSets.Length; i++)
-				{
-					newPool[crowd.randomPool.Length + i] = randomSets[i];
 				}
 			}
 		}

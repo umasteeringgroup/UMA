@@ -590,9 +590,9 @@ namespace UMAEditor
 	                AssetDatabase.ImportAsset(file);
 	            }
 	        }
-			foreach (var obj in Selection.GetFiltered(typeof(OverlayLibrary), SelectionMode.Editable))
+			foreach (var obj in Selection.GetFiltered(typeof(OverlayLibraryBase), SelectionMode.Editable))
 			{
-				var overlays = (obj as OverlayLibrary).GetAllOverlays();
+				var overlays = (obj as OverlayLibraryBase).GetAllOverlays();
 				foreach (var overlay in overlays)
 				{
 					foreach (var texture in overlay.textureList)
