@@ -421,6 +421,10 @@ public class UMACrowd : MonoBehaviour
 	protected virtual void SetUMAData()
 	{
 		umaData.atlasResolutionScale = atlasResolutionScale;
+		if (umaData.atlasResolutionScale <= 0f)
+		{
+			umaData.atlasResolutionScale = 1f;
+		}
 		umaData.OnCharacterUpdated += myColliderUpdateMethod;
 	}
 

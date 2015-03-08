@@ -19,7 +19,7 @@ namespace UMA
         [NonSerialized]
         public AtlasList atlasList = new AtlasList();
 		
-		public float atlasResolutionScale;
+		public float atlasResolutionScale = 1f;
 		
 		public bool isMeshDirty;
 		public bool isShapeDirty;

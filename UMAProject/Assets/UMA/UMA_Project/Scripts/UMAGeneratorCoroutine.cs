@@ -16,7 +16,7 @@ namespace UMA
 		
 		List<UMAData.AtlasMaterialDefinition> atlasMaterialDefinitionList;
 		
-		float atlasResolutionScale;
+		float atlasResolutionScale = 1f;
 		
         UMAGeneratorBase umaGenerator;
         UMAData umaData;
