@@ -154,6 +154,7 @@ public class UMACustomization : MonoBehaviour {
 	
 	public void UpdateUMAAtlas(){
 		umaData.isTextureDirty = true;
+		umaData.isAtlasDirty = true;
 		umaData.Dirty();	
 	}
 	

@@ -6,214 +6,186 @@ using Object = UnityEngine.Object;
 
 namespace UMA
 {
-    public abstract class UMAGeneratorBuiltin : UMAGeneratorBase
-    {
-        public UMAData umaData;
-        [NonSerialized]
-        public List<UMAData>
-            umaDirtyList = new List<UMAData>();
-        public int meshUpdates;
-        public int maxMeshUpdates;
-        public UMAGeneratorCoroutine umaGeneratorCoroutine;
-        public UMAGeneratorCoroutine activeGeneratorCoroutine;
-        public Transform textureMergePrefab;
-        public Matrix4x4 tempMatrix;
-        public UMAMeshCombiner meshCombiner;
-        public float unityVersion;
+	public abstract class UMAGeneratorBuiltin : UMAGeneratorBase
+	{
+		public UMAData umaData;
+		[NonSerialized]
+		public List<UMAData>
+			umaDirtyList = new List<UMAData>();
+		public int meshUpdates;
+		public int maxMeshUpdates;
+		public UMAGeneratorCoroutine umaGeneratorCoroutine;
+		public UMAGeneratorCoroutine activeGeneratorCoroutine;
+		public Transform textureMergePrefab;
+		public Matrix4x4 tempMatrix;
+		public UMAMeshCombiner meshCombiner;
+		public float unityVersion;
 		private bool forceGarbageCollect;
 
-        public void Initialize()
-        {
-            umaGeneratorCoroutine = new UMAGeneratorCoroutine();
-        }
+		public void Initialize()
+		{
+			umaGeneratorCoroutine = new UMAGeneratorCoroutine();
+		}
 
-        public virtual void Awake()
-        {
+		public virtual void Awake()
+		{
             
-            maxMeshUpdates = 1;
-            if (atlasResolution == 0)
-                atlasResolution = 256;
-            umaGeneratorCoroutine = new UMAGeneratorCoroutine();
+			maxMeshUpdates = 1;
+			if (atlasResolution == 0)
+				atlasResolution = 256;
+			umaGeneratorCoroutine = new UMAGeneratorCoroutine();
             
-            if (!textureMerge)
-            {
-                Transform tempTextureMerger = Instantiate(textureMergePrefab, Vector3.zero, Quaternion.identity) as Transform;
-                textureMerge = tempTextureMerger.GetComponent("TextureMerge") as TextureMerge;
-                textureMerge.transform.parent = transform;
-                textureMerge.gameObject.SetActive(false);
-            }
+			if (!textureMerge)
+			{
+				Transform tempTextureMerger = Instantiate(textureMergePrefab, Vector3.zero, Quaternion.identity) as Transform;
+				textureMerge = tempTextureMerger.GetComponent("TextureMerge") as TextureMerge;
+				textureMerge.transform.parent = transform;
+				textureMerge.gameObject.SetActive(false);
+			}
             
-            //Garbage Collection hack
-            var mb = (System.GC.GetTotalMemory(false) / (1024 * 1024));
-            if (mb < 10)
-            {
-                byte[] data = new byte[10 * 1024 * 1024];
-                data [0] = 0;
-                data [10 * 1024 * 1024 - 1] = 0;
-            }
-        }
+			//Garbage Collection hack
+			var mb = (System.GC.GetTotalMemory(false) / (1024 * 1024));
+			if (mb < 10)
+			{
+				byte[] data = new byte[10 * 1024 * 1024];
+				data [0] = 0;
+				data [10 * 1024 * 1024 - 1] = 0;
+			}
+		}
         
-        void Update()
-        {
+		void Update()
+		{
+			bool didGC = false;
 			if (forceGarbageCollect)
 			{
-				forceGarbageCollect = false;
 				GC.Collect();
-				return;
+				forceGarbageCollect = false;
+				didGC = true;
 			}
-            if (umaDirtyList.Count > 0)
-            {
-                OnDirtyUpdate();    
-            }
-            meshUpdates = 0;    
-        }
+			if (umaDirtyList.Count > 0)
+			{
+				// GC can run with texture preparation, but nothing else
+				if (didGC && !umaDirtyList [0].isTextureDirty)
+					return;
 
-		bool wasMeshDirty;
-		bool wasTextureDirty;
-		bool wasShapeDirty;
-        public virtual bool HandleDirtyUpdate(UMAData data)
-        {
-            if (umaData != data)
-            {
-                umaData = data;
-				wasMeshDirty = umaData.isMeshDirty;
-				wasTextureDirty = umaData.isTextureDirty;
-				wasShapeDirty = umaData.isShapeDirty;
+				OnDirtyUpdate();    
+			}
+			meshUpdates = 0;    
+		}
 
-                if (!umaData.Validate())
-                {
-                    return true;
-                }
-            }
+		public virtual bool HandleDirtyUpdate(UMAData data)
+		{
+			if (umaData != data)
+			{
+				umaData = data;
+
+				if (!umaData.Validate())
+				{
+					return true;
+				}
+			}
             
-            if (umaData.isMeshDirty)
-            {
-				Profiler.BeginSample("Combine Mesh 1");
-                if (!umaData.isTextureDirty)
-                {
-                    UpdateUMAMesh(false);
-                }
-                umaData.isMeshDirty = false;
-				Profiler.EndSample();
-			}
-            if (umaData.isTextureDirty)
-            {
-				Profiler.BeginSample("Combine Texture");
+			if (umaData.isTextureDirty)
+			{
 				if (activeGeneratorCoroutine == null)
-                {
-                    activeGeneratorCoroutine = umaGeneratorCoroutine;
-                    TextureProcessBaseCoroutine textureProcessCoroutine;
-                    textureProcessCoroutine = new TextureProcessPROCoroutine();
-                    textureProcessCoroutine.Prepare(data, this);
-                    activeGeneratorCoroutine.Prepare(this, umaData, textureProcessCoroutine);
-                }
+				{
+					activeGeneratorCoroutine = umaGeneratorCoroutine;
+					TextureProcessBaseCoroutine textureProcessCoroutine;
+					textureProcessCoroutine = new TextureProcessPROCoroutine();
+					textureProcessCoroutine.Prepare(data, this);
+					activeGeneratorCoroutine.Prepare(this, umaData, textureProcessCoroutine);
+				}
 
 				bool workDone = umaGeneratorCoroutine.Work();
-				Profiler.EndSample();
 				if (workDone)
 				{
-					if (wasMeshDirty)
-					{
-						Profiler.BeginSample("Combine Mesh 2");
-						activeGeneratorCoroutine = null;
-						UpdateUMAMesh(true);
-						umaData.isTextureDirty = false;
-						Profiler.EndSample();
-						return false;
-					}
-					else
-					{
-						activeGeneratorCoroutine = null;
-						umaData.isTextureDirty = false;
+					activeGeneratorCoroutine = null;
+					umaData.isTextureDirty = false;
+					umaData.isAtlasDirty = true;
 
+					if (!umaData.isMeshDirty)
+					{
 						var materials = new Material[umaData.atlasList.atlas.Count];
 						for (int atlasIndex = 0; atlasIndex < umaData.atlasList.atlas.Count; atlasIndex++)
 						{
-							materials[atlasIndex] = umaData.atlasList.atlas[atlasIndex].materialSample;
+							materials[atlasIndex] = umaData.atlasList.atlas [atlasIndex].materialSample;
 						}
 						umaData.myRenderer.sharedMaterials = materials;
 					}
 				}
-				else
-				{
-					return false;
-				}
-			} 
+				return false;
+			}
+
+			if (umaData.isMeshDirty)
+			{
+				UpdateUMAMesh(umaData.isAtlasDirty);
+				umaData.isAtlasDirty = false;
+				umaData.isMeshDirty = false;
+				return false;
+			}
+
 			if (umaData.isShapeDirty)
-            {
-				Profiler.BeginSample("Apply DNA");
+			{
 				UpdateUMABody(umaData);
-                umaData.isShapeDirty = false;
-				Profiler.EndSample();
-
-				Profiler.BeginSample("UMA Ready");
-				UMAReady();
-				Profiler.EndSample();
-				return true;
-            } 
-			else
-            {
-				Profiler.BeginSample("UMA Ready");
-				UMAReady();
-				Profiler.EndSample();
-				return true;
-            }
-            return false;
-        }
+				umaData.isShapeDirty = false;
+			}
+			UMAReady();
+			return true;
+		}
         
-        public virtual void OnDirtyUpdate()
-        {
-            if (HandleDirtyUpdate(umaDirtyList [0]))
-            {
-                umaDirtyList.RemoveAt(0);
-                umaData = null;
-            }           
-        }
+		public virtual void OnDirtyUpdate()
+		{
+			if (HandleDirtyUpdate(umaDirtyList [0]))
+			{
+				umaDirtyList.RemoveAt(0);
+				umaData = null;
+			}           
+		}
 
-        private void UpdateUMAMesh(bool updatedAtlas)
-        {
-            if (meshCombiner != null)
-            {
-                meshCombiner.UpdateUMAMesh(updatedAtlas, umaData, textureNameList, atlasResolution);
-            } else
-            {
-                Debug.LogError("UMAGenerator.UpdateUMAMesh, no MeshCombiner specified", gameObject);
-            }
-        }
+		private void UpdateUMAMesh(bool updatedAtlas)
+		{
+			if (meshCombiner != null)
+			{
+				meshCombiner.UpdateUMAMesh(updatedAtlas, umaData, textureNameList, atlasResolution);
+			} else
+			{
+				Debug.LogError("UMAGenerator.UpdateUMAMesh, no MeshCombiner specified", gameObject);
+			}
+		}
 
-        public override void addDirtyUMA(UMAData umaToAdd)
-        {   
-            if (umaToAdd)
-            {
-                umaDirtyList.Add(umaToAdd);
-            }
-        }
+		public override void addDirtyUMA(UMAData umaToAdd)
+		{   
+			if (umaToAdd)
+			{
+				umaDirtyList.Add(umaToAdd);
+			}
+		}
 
-        public override bool IsIdle()
-        {
-			return umaDirtyList.Count == 0 && !forceGarbageCollect;
-        }
+		public override bool IsIdle()
+		{
+			return umaDirtyList.Count == 0;
+		}
         
-        public virtual void UMAReady()
-        {   
-            if (umaData)
-            {
+		public virtual void UMAReady()
+		{   
+			if (umaData)
+			{
 				forceGarbageCollect = true;
-                umaData.myRenderer.enabled = true;
-                umaData.FireUpdatedEvent(false);
-            }
-        }
+				umaData.myRenderer.enabled = true;
+				umaData.FireUpdatedEvent(false);
+			}
+		}
     
-        public virtual void UpdateUMABody(UMAData umaData)
-        {
-            if (umaData)
-            {
-                umaData.GotoOriginalPose();
-                umaData.skeleton = new UMASkeletonDefault(umaData.myRenderer.rootBone);
-                umaData.ApplyDNA();
-                umaData.FireDNAAppliedEvents();
-                UpdateAvatar(umaData);
-            }
-        }
-    }
+		public virtual void UpdateUMABody(UMAData umaData)
+		{
+			if (umaData)
+			{
+				umaData.GotoOriginalPose();
+				umaData.skeleton = new UMASkeletonDefault(umaData.myRenderer.rootBone);
+				umaData.ApplyDNA();
+				umaData.FireDNAAppliedEvents();
+				UpdateAvatar(umaData);
+			}
+		}
+	}
 }

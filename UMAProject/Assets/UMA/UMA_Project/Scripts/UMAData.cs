@@ -24,7 +24,8 @@ namespace UMA
 		public bool isMeshDirty;
 		public bool isShapeDirty;
 		public bool isTextureDirty;
-		
+		public bool isAtlasDirty;
+
 		public RuntimeAnimatorController animationController;
 
 		[Obsolete("Access to boneHashList will be removed, use BoneData() methods!", false)]
@@ -685,7 +686,8 @@ namespace UMA
 	    {
 	        isShapeDirty   |= dnaDirty;
 	        isTextureDirty |= textureDirty;
-	        isMeshDirty    |= meshDirty;
+			isAtlasDirty |= textureDirty;
+			isMeshDirty    |= meshDirty;
 			Dirty();
 	    }
 		

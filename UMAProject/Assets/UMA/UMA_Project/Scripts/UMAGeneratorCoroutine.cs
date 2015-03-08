@@ -119,7 +119,6 @@ namespace UMA
 			}
 
             textureProcessCoroutine.Prepare(umaData, umaGenerator);
-            yield return 6;
             yield return textureProcessCoroutine;
 			
 			CleanBackUpTextures();
