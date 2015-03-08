@@ -16,8 +16,6 @@ namespace UMA
 		
 		List<UMAData.AtlasMaterialDefinition> atlasMaterialDefinitionList;
 		
-		float atlasResolutionScale = 1f;
-		
         UMAGeneratorBase umaGenerator;
         UMAData umaData;
 		Texture[] backUpTexture;

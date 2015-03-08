@@ -69,16 +69,16 @@ namespace UMA
         }
 
 		bool wasMeshDirty;
-		bool wasTextureDirty;
-		bool wasShapeDirty;
+		//bool wasTextureDirty;
+		//bool wasShapeDirty;
         public virtual bool HandleDirtyUpdate(UMAData data)
         {
             if (umaData != data)
             {
                 umaData = data;
 				wasMeshDirty = umaData.isMeshDirty;
-				wasTextureDirty = umaData.isTextureDirty;
-				wasShapeDirty = umaData.isShapeDirty;
+				//wasTextureDirty = umaData.isTextureDirty;
+				//wasShapeDirty = umaData.isShapeDirty;
 
                 if (!umaData.Validate())
                 {
@@ -158,7 +158,6 @@ namespace UMA
 				Profiler.EndSample();
 				return true;
             }
-            return false;
         }
         
         public virtual void OnDirtyUpdate()

@@ -78,13 +78,11 @@ namespace UMA
 		{
 			textureMergeRects[textureMergeRectCount].rect = atlasElement.atlasRegion;
 			textureMergeRects[textureMergeRectCount].rect.y = height - textureMergeRects[textureMergeRectCount].rect.y - textureMergeRects[textureMergeRectCount].rect.height;
-			atlasOffset = textureMergeRects[textureMergeRectCount].rect.min;
 			atlasRect = textureMergeRects[textureMergeRectCount].rect;
 			SetupMaterial(ref textureMergeRects[textureMergeRectCount], atlasElement.source, textureType);
 			textureMergeRectCount++;
 		}
 
-		Vector2 atlasOffset;
 		Rect atlasRect;
 		float resolutionScale;
 		int height;
@@ -93,7 +91,6 @@ namespace UMA
             var atlasElement = atlas.atlasMaterialDefinitions[idx];
             if (atlasElement.isRectShared) return;
 
-			int width = Mathf.FloorToInt(atlas.cropResolution.x);
 			height = Mathf.FloorToInt(atlas.cropResolution.y);
 			SetupModule(atlasElement, textureType);
 			resolutionScale = atlas.resolutionScale * atlasElement.source.slotData.overlayScale;
