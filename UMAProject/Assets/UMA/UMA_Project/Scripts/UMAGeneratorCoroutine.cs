@@ -17,8 +17,7 @@ namespace UMA
 		List<UMAData.AtlasMaterialDefinition> atlasMaterialDefinitionList;
 		
 		float atlasResolutionScale;
-		int mipMapAdjust;
-
+		
         UMAGeneratorBase umaGenerator;
         UMAData umaData;
 		Texture[] backUpTexture;
@@ -110,8 +109,6 @@ namespace UMA
 			
 			//resolutionAdjust code
 	        atlasResolutionScale = umaData.atlasResolutionScale == 0f ? 1f : umaData.atlasResolutionScale;
-			mipMapAdjust = Mathf.FloorToInt(Mathf.Log(1/(atlasResolutionScale),2));
-		
 			
 			umaData.atlasList = new UMAData.AtlasList();
 			umaData.atlasList.atlas = new List<UMAData.AtlasElement>();
@@ -224,7 +221,6 @@ namespace UMA
 				
 				umaAtlasList.atlas[atlasIndex].cropResolution = new Vector2(umaGenerator.atlasResolution,umaGenerator.atlasResolution);
 				umaAtlasList.atlas[atlasIndex].resolutionScale = atlasResolutionScale;
-				umaAtlasList.atlas[atlasIndex].mipmap = mipMapAdjust;
 				packTexture.Init(umaGenerator.atlasResolution,umaGenerator.atlasResolution,false);
 				bool textureFit = true;
 				
@@ -263,7 +259,6 @@ namespace UMA
 						textureFit = true;
 						atlasElementIndex = -1;
 						umaAtlasList.atlas[atlasIndex].resolutionScale = umaAtlasList.atlas[atlasIndex].resolutionScale * 0.5f;
-						umaAtlasList.atlas[atlasIndex].mipmap ++;
 						
 						packTexture.Init(umaGenerator.atlasResolution,umaGenerator.atlasResolution,false);					
 						for(int atlasElementIndex2 = 0; atlasElementIndex2 < umaAtlasList.atlas[atlasIndex].atlasMaterialDefinitions.Count; atlasElementIndex2++){

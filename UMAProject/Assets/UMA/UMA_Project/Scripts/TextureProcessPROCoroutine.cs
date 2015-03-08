@@ -7,7 +7,6 @@ namespace UMA
 {
 	public class TextureProcessPROCoroutine : TextureProcessBaseCoroutine
 	{
-		Renderer[] textureModuleList;
 		UMAData umaData;
 		RenderTexture destinationTexture;
 		Texture[] resultingTextures;
@@ -28,6 +27,7 @@ namespace UMA
 
         protected override IEnumerator workerMethod()
         {
+			var textureMerge = umaGenerator.textureMerge;
             for (int atlasIndex = 0; atlasIndex < umaData.atlasList.atlas.Count; atlasIndex++)
             {
                 var atlas = umaData.atlasList.atlas[atlasIndex];
@@ -45,24 +45,7 @@ namespace UMA
                     }
                 }
 
-                while (umaGenerator.textureMerge.textureModuleList.Count < moduleCount)
-                {
-                    Transform tempModule = UnityEngine.Object.Instantiate(umaGenerator.textureMerge.textureModule, new Vector3(0, 0, 3), Quaternion.identity) as Transform;
-					var moduleRenderer = tempModule.GetComponent<Renderer>();
-					moduleRenderer.sharedMaterial = UnityEngine.Object.Instantiate(umaGenerator.textureMerge.material) as Material;
-					umaGenerator.textureMerge.textureModuleList.Add(moduleRenderer);
-                }
-
-                textureModuleList = umaGenerator.textureMerge.textureModuleList.ToArray();
-                for (int i = 0; i < moduleCount; i++)
-                {
-					textureModuleList[i].transform.localEulerAngles = new Vector3(textureModuleList[i].transform.localEulerAngles.x, 180.0f, textureModuleList[i].transform.localEulerAngles.z);
-					textureModuleList[i].transform.parent = umaGenerator.textureMerge.myTransform;
-                    textureModuleList[i].name = "tempModule";
-                    textureModuleList[i].gameObject.SetActive(true);
-                }
-
-                moduleCount = 0;
+				textureMerge.EnsureCapacity(moduleCount);
 
                 var slotData = atlas.atlasMaterialDefinitions[0].source.slotData;
                 var textureNameList = umaGenerator.textureNameList;
@@ -71,88 +54,16 @@ namespace UMA
                     textureNameList = slotData.textureNameList;
                 }
 
-
                 resultingTextures = new Texture[textureNameList.Length];
-                Rect nullRect = new Rect(0, 0, 0, 0);
-
-                for (int textureType = 0; textureType < textureNameList.Length; textureType++)
+                for (int textureType = textureNameList.Length-1; textureType >= 0; textureType--)
                 {
                     if (string.IsNullOrEmpty(textureNameList[textureType])) continue;
                     if (atlas.atlasMaterialDefinitions[0].source.materialSample.HasProperty(textureNameList[textureType]))
                     {
-                        for (int i = 0; i < atlas.atlasMaterialDefinitions.Count; i++)
+						textureMerge.Reset();
+						for (int i = 0; i < atlas.atlasMaterialDefinitions.Count; i++)
                         {
-                            UMAData.AtlasMaterialDefinition atlasElement = atlas.atlasMaterialDefinitions[i];
-                            resolutionScale = atlas.resolutionScale * atlas.atlasMaterialDefinitions[i].source.slotData.overlayScale;
-
-                            Vector2 offsetAdjust = new Vector2(umaGenerator.atlasResolution / 1024, umaGenerator.atlasResolution / 1024);
-
-                            if (!atlasElement.isRectShared)
-                            {
-                                if (textureType == 0)
-                                {
-									textureModuleList[moduleCount].transform.localScale = new Vector3(atlasElement.atlasRegion.width / umaGenerator.atlasResolution, atlasElement.atlasRegion.height / umaGenerator.atlasResolution, 1);
-
-									textureModuleList[moduleCount].transform.localPosition = new Vector3(Mathf.Lerp(-1, 1, (offsetAdjust.x + atlasElement.atlasRegion.x + atlasElement.atlasRegion.width * 0.5f) / umaGenerator.atlasResolution),
-                                    Mathf.Lerp(-1, 1, (offsetAdjust.y + atlasElement.atlasRegion.y + atlasElement.atlasRegion.height * 0.5f) / umaGenerator.atlasResolution), 3.0f);
-                                }
-
-                                if (atlasElement.source.baseTexture.Length <= textureType)
-                                {
-                                    Debug.LogError(string.Format("UMA Texture Process PRO. Slot: {0} Overlay: {1}, doesn't have enough textures!", atlasElement.source.slotData.slotName, atlasElement.source.baseTexture[0].name));
-                                    yield break;
-                                }
-                                if (atlasElement.source.baseTexture[textureType])
-                                {
-                                    atlasElement.source.baseTexture[textureType].filterMode = FilterMode.Point;
-                                    atlasElement.source.baseTexture[0].filterMode = FilterMode.Point;
-                                }
-                                textureModuleList[moduleCount].sharedMaterial.SetTexture("_MainTex", atlasElement.source.baseTexture[textureType]);
-                                textureModuleList[moduleCount].sharedMaterial.SetTexture("_ExtraTex", atlasElement.source.baseTexture[0]);
-                                textureModuleList[moduleCount].sharedMaterial.SetColor("_Color", atlasElement.source.GetMultiplier(0, textureType));
-                                textureModuleList[moduleCount].sharedMaterial.SetColor("_AdditiveColor", atlasElement.source.GetAdditive(0, textureType));
-                                textureModuleList[moduleCount].name = atlasElement.source.baseTexture[textureType].name;
-                                textureModuleList[moduleCount].enabled = true;
-
-                                var tempModule = textureModuleList[moduleCount];
-                                moduleCount++;
-
-                                for (int i2 = 0; i2 < atlasElement.source.overlays.Length; i2++)
-                                {
-                                    if (atlasElement.source.overlays[i2].textureList[textureType] == null)
-                                    {
-                                        textureModuleList[moduleCount].enabled = false;
-                                        moduleCount++;
-                                        continue;
-                                    }
-
-                                    if (atlasElement.source.rects[i2] != nullRect)
-                                    {
-										textureModuleList[moduleCount].transform.localScale = new Vector3((atlasElement.source.rects[i2].width / umaGenerator.atlasResolution) * resolutionScale, (atlasElement.source.rects[i2].height / umaGenerator.atlasResolution) * resolutionScale, 1);
-										textureModuleList[moduleCount].transform.localPosition = new Vector3(Mathf.Lerp(-1, 1, (offsetAdjust.x + atlasElement.atlasRegion.x + atlasElement.source.rects[i2].x * resolutionScale + atlasElement.source.rects[i2].width * 0.5f * resolutionScale) / umaGenerator.atlasResolution),
-                                        Mathf.Lerp(-1, 1, (offsetAdjust.y + atlasElement.atlasRegion.y + atlasElement.source.rects[i2].y * resolutionScale + atlasElement.source.rects[i2].height * 0.5f * resolutionScale) / umaGenerator.atlasResolution), tempModule.transform.localPosition.z - 0.1f - 0.1f * i2);
-                                    }
-                                    else
-                                    {
-										textureModuleList[moduleCount].transform.localScale = tempModule.transform.localScale;
-										textureModuleList[moduleCount].transform.localPosition = new Vector3(tempModule.transform.localPosition.x, tempModule.transform.localPosition.y, tempModule.transform.localPosition.z - 0.1f - 0.1f * i2);
-                                    }
-
-                                    atlasElement.source.overlays[i2].textureList[textureType].filterMode = FilterMode.Point;
-                                    atlasElement.source.overlays[i2].textureList[0].filterMode = FilterMode.Point;
-
-                                    textureModuleList[moduleCount].sharedMaterial.SetTexture("_MainTex", atlasElement.source.overlays[i2].textureList[textureType]);
-                                    textureModuleList[moduleCount].sharedMaterial.SetTexture("_ExtraTex", atlasElement.source.overlays[i2].textureList[0]);
-                                    textureModuleList[moduleCount].sharedMaterial.SetColor("_Color", atlasElement.source.GetMultiplier(i2 + 1, textureType));
-                                    textureModuleList[moduleCount].sharedMaterial.SetColor("_AdditiveColor", atlasElement.source.GetAdditive(i2 + 1, textureType));
-
-                                    textureModuleList[moduleCount].name = atlasElement.source.overlays[i2].textureList[textureType].name;
-
-                                    textureModuleList[moduleCount].enabled = true;
-                                    moduleCount++;
-                                }
-                                //							yield return null;
-                            }
+							textureMerge.SetupModule(atlas, i, textureType);
                         }
 
                         //last element for this textureType
@@ -160,24 +71,24 @@ namespace UMA
 
                         umaGenerator.textureMerge.gameObject.SetActive(true);
 
-                        destinationTexture = new RenderTexture(Mathf.FloorToInt(atlas.cropResolution.x), Mathf.FloorToInt(atlas.cropResolution.y), 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
+						int width = Mathf.FloorToInt(atlas.cropResolution.x);
+						int height = Mathf.FloorToInt(atlas.cropResolution.y);
+                        destinationTexture = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
                         destinationTexture.filterMode = FilterMode.Point;
                         renderCamera = umaGenerator.textureMerge.myCamera;
-                        Vector3 tempPosition = renderCamera.transform.position;
-
-                        renderCamera.orthographicSize = atlas.cropResolution.y / umaGenerator.atlasResolution;
-                        renderCamera.transform.position = tempPosition + (-Vector3.right * (1 - atlas.cropResolution.x / umaGenerator.atlasResolution)) + (-Vector3.up * (1 - renderCamera.orthographicSize));
-
                         renderCamera.targetTexture = destinationTexture;
-                        renderCamera.Render();
-                        renderCamera.transform.position = tempPosition;
+						renderCamera.orthographicSize = height >> 1;
+						var camTransform = renderCamera.GetComponent<Transform>();
+						camTransform.localPosition = new Vector3(width >> 1, height >> 1, 3);
+						camTransform.localRotation = Quaternion.Euler(0, 180, 180);
+						renderCamera.Render();
                         renderCamera.gameObject.SetActive(false);
                         renderCamera.targetTexture = null;
-                        yield return 25;
 
                         if (umaGenerator.convertRenderTexture)
                         {
-                            Texture2D tempTexture;
+							yield return 25;
+							Texture2D tempTexture;
                             tempTexture = new Texture2D(destinationTexture.width, destinationTexture.height, TextureFormat.ARGB32, umaGenerator.convertMipMaps);
                             int xblocks = destinationTexture.width / 512;
                             int yblocks = destinationTexture.height / 512;
@@ -244,11 +155,6 @@ namespace UMA
                     {
 
                     }
-                }
-
-                for (int textureModuleIndex = 0; textureModuleIndex < textureModuleList.Length; textureModuleIndex++)
-                {
-                    textureModuleList[textureModuleIndex].gameObject.SetActive(false);
                 }
 
                 atlas.resultingAtlasList = resultingTextures;

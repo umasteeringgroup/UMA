@@ -74,15 +74,18 @@ namespace UMA
             
             if (umaData.isMeshDirty)
             {
+				Profiler.BeginSample("Combine Mesh 1");
                 if (!umaData.isTextureDirty)
                 {
                     UpdateUMAMesh(false);
                 }
                 umaData.isMeshDirty = false;
-            }
+				Profiler.EndSample();
+			}
             if (umaData.isTextureDirty)
             {
-                if (activeGeneratorCoroutine == null)
+				Profiler.BeginSample("Combine Texture");
+				if (activeGeneratorCoroutine == null)
                 {
                     activeGeneratorCoroutine = umaGeneratorCoroutine;
                     TextureProcessBaseCoroutine textureProcessCoroutine;
@@ -91,27 +94,38 @@ namespace UMA
                     activeGeneratorCoroutine.Prepare(this, umaData, textureProcessCoroutine);
                 }
 
-                if (umaGeneratorCoroutine.Work())
+				bool workDone = umaGeneratorCoroutine.Work();
+				Profiler.EndSample();
+				if (workDone)
                 {
-                    activeGeneratorCoroutine = null;
+					Profiler.BeginSample("Combine Mesh 2");
+					activeGeneratorCoroutine = null;
                     UpdateUMAMesh(true);
                     umaData.isTextureDirty = false;
-                } else
+					Profiler.EndSample();
+				}
+				else
                 {
                     return false;
                 }
             } else if (umaData.isShapeDirty)
             {
-                UpdateUMABody(umaData);
+				Profiler.BeginSample("Apply DNA");
+				UpdateUMABody(umaData);
                 umaData.isShapeDirty = false;
+				Profiler.EndSample();
 
-                UMAReady();
-                return true;
+				Profiler.BeginSample("UMA Ready");
+				UMAReady();
+				Profiler.EndSample();
+				return true;
 
             } else
             {
-                UMAReady();
-                return true;
+				Profiler.BeginSample("UMA Ready");
+				UMAReady();
+				Profiler.EndSample();
+				return true;
             }
             return false;
         }

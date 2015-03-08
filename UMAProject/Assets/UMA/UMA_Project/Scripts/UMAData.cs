@@ -139,7 +139,6 @@ namespace UMA
 			public Texture[] resultingAtlasList;
 			public Vector2 cropResolution;
 			public float resolutionScale;
-			public int mipmap;
             public string[] textureNameList;
 		}
 		
