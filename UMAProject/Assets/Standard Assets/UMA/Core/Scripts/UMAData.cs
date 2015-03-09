@@ -44,8 +44,6 @@ namespace UMA
         private bool isOfficiallyCreated = false;
         [NonSerialized]
         public bool onQuit = false;
-        [Obsolete("UMAData.OnUpdated is deprecated, please use OnCharacterUpdated instead.", false)]
-        public event Action<UMAData> OnUpdated { add { OnCharacterUpdated += value; } remove { OnCharacterUpdated -= value; } }
 		public event Action<UMAData> OnCharacterUpdated { add { if (CharacterUpdated == null) CharacterUpdated = new UMADataEvent(); CharacterUpdated.AddListener(new UnityAction<UMAData>(value)); } remove { CharacterUpdated.RemoveListener(new UnityAction<UMAData>(value)); } }
 		public event Action<UMAData> OnCharacterCreated { add { if (CharacterUpdated == null) CharacterUpdated = new UMADataEvent(); CharacterCreated.AddListener(new UnityAction<UMAData>(value)); } remove { CharacterCreated.RemoveListener(new UnityAction<UMAData>(value)); } }
 		public event Action<UMAData> OnCharacterDestroyed { add { if (CharacterUpdated == null) CharacterUpdated = new UMADataEvent(); CharacterDestroyed.AddListener(new UnityAction<UMAData>(value)); } remove { CharacterDestroyed.RemoveListener(new UnityAction<UMAData>(value)); } }
@@ -203,8 +201,7 @@ namespace UMA
 		[System.Serializable]
 		public class UMARecipe{
 			public RaceData raceData;
-			[Obsolete("UMARecipe.umaDna will be hidden, use access methods instead.", false)]
-			public Dictionary<Type, UMADnaBase> umaDna = new Dictionary<Type, UMADnaBase>();
+			protected Dictionary<Type, UMADnaBase> umaDna = new Dictionary<Type, UMADnaBase>();
             protected Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate> umaDnaConverter = new Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate>();
 			public SlotData[] slotDataList;
 			
@@ -426,12 +423,6 @@ namespace UMA
 			public Vector3 originalBoneScale;
 	        public Vector3 originalBonePosition;
 			public Quaternion originalBoneRotation;
-            [Obsolete("Access to actualBoneScale will be removed, no replacement planned!", false)]
-            public Vector3 actualBoneScale;
-            [Obsolete("Access to actualBonePosition will be removed, no replacement planned!", false)]
-            public Vector3 actualBonePosition;
-            [Obsolete("Access to actualBoneRotation will be removed, no replacement planned!", false)]
-            public Quaternion actualBoneRotation;
 		}
 
         public void FireUpdatedEvent(bool cancelled)
@@ -617,8 +608,6 @@ namespace UMA
 					newBoneData.originalBoneScale = umaBone.localScale;
                     newBoneData.originalBoneRotation = umaBone.localRotation;
                     newBoneData.boneTransform = umaBone;
-                    newBoneData.actualBonePosition = umaBone.localPosition;
-                    newBoneData.actualBoneScale = umaBone.localScale;
 					boneHashList.Add(nameHash, newBoneData);
 				}
 			}

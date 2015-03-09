@@ -7,11 +7,8 @@ using System.Collections.Generic;
 public class UMAContext : MonoBehaviour 
 {
 	public static UMAContext Instance;
-	[Obsolete("raceLibrary will change type from RaceLibrary to RaceLibraryBase, use the helper functions while we migrate the type.", false)]
 	public RaceLibraryBase raceLibrary;
-	[Obsolete("slotLibrary will change type from SlotLibrary to SlotLibraryBase, use the helper functions while we migrate the type.", false)]
 	public SlotLibraryBase slotLibrary;
-	[Obsolete("overlayLibrary will change type from OverlayLibrary to OverlayLibraryBase, use the helper functions while we migrate the type.", false)]
 	public OverlayLibraryBase overlayLibrary;
 
 #pragma warning disable 618
@@ -30,14 +27,6 @@ public class UMAContext : MonoBehaviour
 			overlayLibrary = GameObject.Find("OverlayLibrary").GetComponent<OverlayLibraryBase>();
 		}
 		if (Instance == null) Instance = this;
-	}
-
-	[Obsolete("UpdateDictionaries will be removed use ValidateDictionaries instead.", false)]
-	public void UpdateDictionaries()
-	{
-		slotLibrary.UpdateDictionary();
-		raceLibrary.UpdateDictionary();
-		overlayLibrary.UpdateDictionary();
 	}
 
 	public void ValidateDictionaries()
