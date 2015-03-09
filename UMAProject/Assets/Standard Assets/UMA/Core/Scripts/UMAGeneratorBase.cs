@@ -55,7 +55,7 @@ namespace UMA
 							for (int i = 0; i < animator.layerCount; i++)
 							{
 								var state = animator.GetCurrentAnimatorStateInfo(i);
-#if UNITY_4
+#if UNITY_4_6
 								snapshot[i].stateHash = state.nameHash;
 #else
 								snapshot[i].stateHash = state.fullPathHash;
