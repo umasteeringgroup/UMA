@@ -39,14 +39,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 25a44095b9abf4cc2a8d09ab8baa307b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sliderPrefab: {fileID: 400006, guid: d47baa2dcaa354dc8ac2f84f1de59ea9, type: 2}
+  sliderPrefab: {fileID: 22436730, guid: 04a60e8a0d623524082de37da6ffe2db, type: 2}
   umaData: {fileID: 0}
   umaDynamicAvatar: {fileID: 0}
   cameraTrack: {fileID: 0}
   sliderControlList: []
   mySlotLibrary: {fileID: 0}
   myOverlayLibrary: {fileID: 0}
-  editing: 0
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1
