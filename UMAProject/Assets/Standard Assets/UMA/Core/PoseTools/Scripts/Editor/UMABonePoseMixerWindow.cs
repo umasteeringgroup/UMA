@@ -3,6 +3,7 @@
 //	Author: 	Eli Curtz
 //	Copyright:	(c) 2013 Eli Curtz
 //	============================================================
+#if UNITY_EDITOR
 
 using UnityEngine;
 using UnityEditor;
@@ -272,3 +273,4 @@ namespace UMA.PoseTools
 		}
 	}
 }
+#endif

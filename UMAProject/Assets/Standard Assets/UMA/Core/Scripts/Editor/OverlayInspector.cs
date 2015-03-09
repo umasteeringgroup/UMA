@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+using UnityEngine;
 using System.Collections;
 using UnityEditor;
 using UMA;
@@ -23,3 +24,4 @@ namespace UMAEditor
 	    
 	}
 }
+#endif

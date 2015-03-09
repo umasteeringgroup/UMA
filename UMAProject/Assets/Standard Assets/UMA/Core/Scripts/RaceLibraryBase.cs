@@ -8,6 +8,7 @@ namespace UMA
         public abstract void AddRace(RaceData race);
         public abstract RaceData GetRace(string raceName);
         public abstract RaceData GetRace(int raceHash);
+		public abstract RaceData[] GetAllRaces();
 
         public abstract void UpdateDictionary();
         public abstract void ValidateDictionary();

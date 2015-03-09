@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
 using System.Collections;
@@ -21,7 +22,6 @@ namespace UMAEditor
 			references.Add(new UnityReference("e20699a64490c4e4284b27a8aeb05666", "-1278852528", FindAssetGuid("SlotData", "cs"), "11500000")); // SlotData.cs
 			references.Add(new UnityReference("e20699a64490c4e4284b27a8aeb05666", "-335686737", FindAssetGuid("RaceData", "cs"), "11500000")); // RaceData.cs
 			references.Add(new UnityReference("e20699a64490c4e4284b27a8aeb05666", "-1571472132", FindAssetGuid("UMADefaultMeshCombiner", "cs"), "11500000")); // UMADefaultMeshCombiner.cs
-			references.Add(new UnityReference("e20699a64490c4e4284b27a8aeb05666", "-946187639", FindAssetGuid("UMALegacyMeshCombiner", "cs"), "11500000")); // UMALegacyMeshCombiner.cs
 			references.Add(new UnityReference("e20699a64490c4e4284b27a8aeb05666", "-1550055707", FindAssetGuid("UMAData", "cs"), "11500000")); // UMAData.cs
 			references.Add(new UnityReference("e20699a64490c4e4284b27a8aeb05666", "-1708169498", FindAssetGuid("UmaTPose", "cs"), "11500000")); // UmaTPose.cs
 			references.Add(new UnityReference("e20699a64490c4e4284b27a8aeb05666", "-1175167296", FindAssetGuid("TextureMerge", "cs"), "11500000")); // TextureMerge.cs
@@ -137,3 +137,4 @@ namespace UMAEditor
 		}
 	}
 }
+#endif
