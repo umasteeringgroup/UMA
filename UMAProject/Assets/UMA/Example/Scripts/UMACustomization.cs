@@ -19,8 +19,12 @@ public class UMACustomization : MonoBehaviour {
 	public SlotLibrary mySlotLibrary;
     public OverlayLibrary myOverlayLibrary;
 
-	protected virtual void Start(){
+	protected virtual void Start() {
 		sliderParent = GameObject.Find("Canvas").transform;
+		if (sliderParent == null)
+		{
+			Debug.LogError("Couldn't locate default Canvas");
+		}
 
 		sliderControlList = new Slider[47];	
 		//Changed slider order
