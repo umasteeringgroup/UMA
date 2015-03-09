@@ -19,6 +19,9 @@ namespace UMA
         public abstract void addDirtyUMA(UMAData umaToAdd);
         public abstract bool IsIdle();
 
+		public abstract int QueueSize();
+
+
         private struct AnimationState
         {
             public int stateHash;

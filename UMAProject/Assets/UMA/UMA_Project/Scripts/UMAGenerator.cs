@@ -165,7 +165,12 @@ namespace UMA
 		{
 			return umaDirtyList.Count == 0;
 		}
-        
+
+		public override int QueueSize()
+		{
+			return umaDirtyList.Count;
+		}
+
 		public virtual void UMAReady()
 		{   
 			if (umaData)
