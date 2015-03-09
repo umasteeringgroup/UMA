@@ -11,7 +11,6 @@ namespace UMA
 		RenderTexture destinationTexture;
 		Texture[] resultingTextures;
         UMAGeneratorBase umaGenerator;
-		float resolutionScale;
 		Camera renderCamera;
 
         public override void Prepare(UMAData _umaData, UMAGeneratorBase _umaGenerator)

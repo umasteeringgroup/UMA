@@ -36,7 +36,8 @@ namespace UMA
 	        {
 	            tempOverlay.textureList[i] = textureList[i];
 	        }
-
+			tempOverlay.channelMask = channelMask;
+			tempOverlay.channelAdditiveMask = channelAdditiveMask;
 	        return tempOverlay;
 	    }
 

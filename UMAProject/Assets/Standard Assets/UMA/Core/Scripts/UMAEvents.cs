@@ -10,7 +10,16 @@ namespace UMA
         public UMADataEvent()
         {
         }
-    }
+
+        public UMADataEvent(UMADataEvent source)
+		{
+			for (int i = 0; i < source.GetPersistentEventCount(); i++)
+			{
+				var target = source.GetPersistentTarget(i);
+				AddListener(target, UnityEventBase.GetValidMethodInfo(target, source.GetPersistentMethodName(i), new Type[] { typeof(UMAData) }));
+			}
+		}
+	}
 
     [Serializable]
     public class UMADataSlotEvent : UnityEvent<UMAData, SlotData>
@@ -18,6 +27,14 @@ namespace UMA
         public UMADataSlotEvent()
         {
         }
+		public UMADataSlotEvent(UMADataSlotEvent source)
+		{
+			for (int i = 0; i < source.GetPersistentEventCount(); i++)
+			{
+				var target = source.GetPersistentTarget(i);
+				AddListener(target, UnityEventBase.GetValidMethodInfo(target, source.GetPersistentMethodName(i), new Type[] { typeof(UMAData), typeof(SlotData) }));
+			}
+		}
     }
 
     [Serializable]
@@ -26,5 +43,13 @@ namespace UMA
         public UMADataSlotMaterialRectEvent()
         {
         }
+		public UMADataSlotMaterialRectEvent(UMADataSlotMaterialRectEvent source)
+		{
+			for (int i = 0; i < source.GetPersistentEventCount(); i++)
+			{
+				var target = source.GetPersistentTarget(i);
+				AddListener(target, UnityEventBase.GetValidMethodInfo(target, source.GetPersistentMethodName(i), new Type[] { typeof(UMAData), typeof(SlotData), typeof(Material), typeof(Rect) }));
+			}
+		}
     }
 }

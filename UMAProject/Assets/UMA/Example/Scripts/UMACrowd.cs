@@ -47,20 +47,6 @@ public class UMACrowd : MonoBehaviour
 			{
 				GenerateOneUMA();
 				umaData.OnCharacterUpdated += new System.Action<UMAData>(umaData_OnUpdated);
-
-				X = X + 1;
-				if (X >= umaCrowdSize.x)
-				{
-					X = 0;
-					Y = Y + 1;
-				}
-				if (Y >= umaCrowdSize.y)
-				{
-					generateLotsUMA = false;
-					X = 0;
-					Y = 0;
-				}
-
 			}
 		}
 
@@ -73,6 +59,7 @@ public class UMACrowd : MonoBehaviour
 
 	void umaData_OnUpdated(UMAData obj)
 	{
+		umaData.OnCharacterUpdated -= new System.Action<UMAData>(umaData_OnUpdated);
 		if (obj.cancelled)
 		{
 			Object.Destroy(obj.gameObject);
@@ -86,6 +73,18 @@ public class UMACrowd : MonoBehaviour
 			else
 			{
 				tempUMA.position = new Vector3(X * space - umaCrowdSize.x * space * 0.5f + 0.5f, 0, Y * space - umaCrowdSize.y * space * 0.5f + 0.5f);
+			}
+			X = X + 1;
+			if (X >= umaCrowdSize.x)
+			{
+				X = 0;
+				Y = Y + 1;
+			}
+			if (Y >= umaCrowdSize.y)
+			{
+				generateLotsUMA = false;
+				X = 0;
+				Y = 0;
 			}
 		}
 	}
@@ -532,9 +531,9 @@ public class UMACrowd : MonoBehaviour
 		var umaDynamicAvatar = newGO.AddComponent<UMADynamicAvatar>();
 		umaDynamicAvatar.Initialize();
 		umaData = umaDynamicAvatar.umaData;
-		umaData.CharacterCreated = CharacterCreated;
-		umaData.CharacterDestroyed = CharacterDestroyed;
-		umaData.CharacterUpdated = CharacterUpdated;
+		umaData.CharacterCreated = new UMADataEvent(CharacterCreated);
+		umaData.CharacterDestroyed = new UMADataEvent(CharacterDestroyed);
+		umaData.CharacterUpdated = new UMADataEvent(CharacterUpdated);
 		umaDynamicAvatar.umaGenerator = generator;
 		umaData.umaGenerator = generator;
 		var umaRecipe = umaDynamicAvatar.umaData.umaRecipe;

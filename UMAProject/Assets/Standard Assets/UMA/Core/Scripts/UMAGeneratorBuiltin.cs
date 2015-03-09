@@ -93,7 +93,7 @@ namespace UMA
 					TextureProcessBaseCoroutine textureProcessCoroutine;
 					textureProcessCoroutine = new TextureProcessPROCoroutine();
 					textureProcessCoroutine.Prepare(data, this);
-					activeGeneratorCoroutine.Prepare(this, umaData, textureProcessCoroutine);
+					activeGeneratorCoroutine.Prepare(this, umaData, textureProcessCoroutine, !umaData.isMeshDirty);
 				}
 
 				bool workDone = umaGeneratorCoroutine.Work();
@@ -102,16 +102,6 @@ namespace UMA
 					activeGeneratorCoroutine = null;
 					umaData.isTextureDirty = false;
 					umaData.isAtlasDirty = true;
-
-					if (!umaData.isMeshDirty)
-					{
-						var materials = new Material[umaData.atlasList.atlas.Count];
-						for (int atlasIndex = 0; atlasIndex < umaData.atlasList.atlas.Count; atlasIndex++)
-						{
-							materials[atlasIndex] = umaData.atlasList.atlas [atlasIndex].materialSample;
-						}
-						umaData.myRenderer.sharedMaterials = materials;
-					}
 				}
 				return false;
 			}

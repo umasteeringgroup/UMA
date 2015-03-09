@@ -414,6 +414,15 @@ namespace UMA
             {
                 return slotDataList;
             }
+
+			public UMARecipe Mirror()
+			{
+				var newRecipe = new UMARecipe();
+				newRecipe.raceData = raceData;
+				newRecipe.umaDna = umaDna;
+				newRecipe.slotDataList = slotDataList;
+				return newRecipe;
+			}
 		}
 
 
