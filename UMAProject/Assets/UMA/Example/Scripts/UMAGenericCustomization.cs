@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using UMA;
 using System.Collections.Generic;
+using UnityEngine.UI;
 
 public class UMAGenericCustomization : MonoBehaviour {
 	
@@ -11,24 +12,24 @@ public class UMAGenericCustomization : MonoBehaviour {
 	public UMADynamicAvatar umaDynamicAvatar;
 	public CameraTrack cameraTrack;
 
-	public SliderControl[] sliderControlList;
+	public Slider[] sliderControlList;
 	public UMADnaBase[] allDna;
 	
 	public SlotLibrary mySlotLibrary;
     public OverlayLibrary myOverlayLibrary;
 
-	public bool editing = false;
+	private Transform sliderParent;
 
 	void Start()
 	{
-		if (umaDynamicAvatar != null)
-		{
+		sliderParent = GameObject.Find("Canvas").transform;
+
+		if (umaDynamicAvatar != null){
 			umaDynamicAvatar.umaData.OnCharacterCreated += new System.Action<UMAData>(umaData_OnCharacterCreated);
 		}
 	}
 
-	void umaData_OnCharacterCreated(UMAData obj)
-	{
+	void umaData_OnCharacterCreated(UMAData obj){
 		SelectUMA(obj);
 		obj.OnCharacterCreated -= new System.Action<UMAData>(umaData_OnCharacterCreated);
 	}
@@ -38,8 +39,7 @@ public class UMAGenericCustomization : MonoBehaviour {
 		Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 		RaycastHit hit;
 
-		if (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1))
-		{
+		if (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1)){
 			if (Physics.Raycast(ray, out hit, 100)){
 				Transform tempTransform = hit.collider.transform;
 
@@ -51,33 +51,25 @@ public class UMAGenericCustomization : MonoBehaviour {
 				}
 			}
 		}
-		
-		if(umaData){
-			TransferValues();
-			editing = false;
-			for(int i = 0; i < sliderControlList.Length; i++){
-				if(sliderControlList[i].pressed == true){
-					editing = true;
-					UpdateUMAShape();
-				}
+	}
+
+	private void SelectUMA(UMAData umaData){
+		if (sliderControlList != null){
+			foreach (var slider in sliderControlList){
+				GameObject.Destroy(slider.gameObject);
 			}
+			sliderControlList = new Slider[0];
+		}
+		this.umaData = umaData;
+		if (umaData){
+			AvatarSetup();
 		}
 	}
 
-	private void SelectUMA(UMAData umaData)
-	{
-		if (sliderControlList != null)
-		{
-			foreach (var slider in sliderControlList)
-			{
-				GameObject.Destroy(slider.gameObject);
-			}
-			sliderControlList = new SliderControl[0];
-		}
-		this.umaData = umaData;
-		if (umaData)
-		{
-			AvatarSetup();
+	private void UpdateUMA(float value){
+		if(umaData){
+			TransferValues();
+			UpdateUMAShape();
 		}
 	}
 
@@ -93,20 +85,16 @@ public class UMAGenericCustomization : MonoBehaviour {
 		ReceiveValues();
 	}
 
-	private void BuildSliders()
-	{
-		var sliders = new List<SliderControl>();
+	private void BuildSliders(){
+		var sliders = new List<Slider>();
 		int row = 0;
-		foreach (var dna in allDna)
-		{
+		foreach (var dna in allDna){
 			if (dna is UMADnaHumanoid) continue;
 			int column = 0;
 			var fields = dna.GetType().GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-			foreach (var field in fields)
-			{
+			foreach (var field in fields){
 				sliders.Add(InstantiateSlider(field.Name, column++, row));
-				if (column > 8)
-				{
+				if (column > 8){
 					column = 0;
 					row++;
 				}
@@ -116,22 +104,33 @@ public class UMAGenericCustomization : MonoBehaviour {
 		sliderControlList = sliders.ToArray();
 	}
 	
-	public SliderControl InstantiateSlider(string name, int X, int Y){
+	public Slider InstantiateSlider(string name, int X, int Y){
 		Transform TempSlider;
 		TempSlider = Instantiate(sliderPrefab,Vector3.zero, Quaternion.identity) as Transform;
-		TempSlider.parent = transform;
+		TempSlider.SetParent(sliderParent);
 		TempSlider.gameObject.name = name;
-		SliderControl tempSlider = TempSlider.GetComponent("SliderControl") as SliderControl;
-		tempSlider.actualValue = 0.5f;
-		tempSlider.descriptionText.text = name;
-		tempSlider.sliderOffset.x = 20 + X*100;
-		tempSlider.sliderOffset.y = -20 - Y*60;
+		Slider tempSlider = TempSlider.GetComponent<Slider>();
+		tempSlider.value = 0.5f;
+		
+		RectTransform myRect = tempSlider.GetComponent<RectTransform>();
+		
+		Vector3 tmpPos = myRect.position;
+		tmpPos.x = 60 + X * 100;
+		tmpPos.y = -40 - Y * 60;
+		myRect.localPosition = tmpPos;
+		
+		myRect.anchorMin = new Vector2(0, 1);
+		myRect.anchorMax = new Vector2(0, 1);
+		
+		tempSlider.transform.FindChild("Text").GetComponent<Text>().text = name;
+		tempSlider.onValueChanged.AddListener(UpdateUMA);
+		
 		return tempSlider;
 	}
 	
-	public SliderControl InstantiateStepSlider(string name, int X, int Y){
-		SliderControl tempSlider = InstantiateSlider(name,X,Y);
-		tempSlider.stepSlider = true;
+	public Slider InstantiateStepSlider(string name, int X, int Y){
+		Slider tempSlider = InstantiateSlider(name,X,Y);
+		tempSlider.wholeNumbers = true;
 		
 		return tempSlider;
 	}
@@ -151,28 +150,22 @@ public class UMAGenericCustomization : MonoBehaviour {
 	public virtual void ReceiveValues()
 	{
 		var index = 0;
-		foreach (var dna in allDna)
-		{
+		foreach (var dna in allDna){
 			if (dna is UMADnaHumanoid) continue;
 			var fields = dna.GetType().GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-			foreach (var field in fields)
-			{
-				sliderControlList[index++].actualValue = (float)field.GetValue(dna);
+			foreach (var field in fields){
+				sliderControlList[index++].value = (float)field.GetValue(dna);
 			}
 		}		
 	}
 	
-	
-	public virtual void TransferValues()
-	{
+	public virtual void TransferValues(){
 		var index = 0;
-		foreach (var dna in allDna)
-		{
+		foreach (var dna in allDna){
 			if (dna is UMADnaHumanoid) continue;
 			var fields = dna.GetType().GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-			foreach (var field in fields)
-			{
-				field.SetValue(dna, sliderControlList[index++].actualValue);
+			foreach (var field in fields){
+				field.SetValue(dna, sliderControlList[index++].value);
 			}
 		}
 	}
