@@ -40,9 +40,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fitAtlas: 1
-  usePRO: 1
   AtlasCrop: 1
-  maxPixels: 100000
   convertRenderTexture: 0
   convertMipMaps: 0
   atlasResolution: 2048
@@ -83,4 +81,3 @@ Prefab:
   m_ParentPrefab: {fileID: 0}
   m_RootGameObject: {fileID: 100000}
   m_IsPrefabParent: 1
-  m_IsExploded: 1
