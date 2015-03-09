@@ -1,4 +1,5 @@
 ﻿// Snippet by Jacob Pennock (www.jacobpennock.com)
+#if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
 using System.IO;
@@ -31,3 +32,4 @@ namespace UMAEditor
 	    }
 	}
 }
+#endif

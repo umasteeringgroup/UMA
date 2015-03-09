@@ -2,7 +2,7 @@
 //	Name:		UmaTexturePrepareWindow
 //	Author: 	Joen Joensen (@UnLogick)
 //	============================================================
-
+#if UNITY_EDITOR
 
 using UnityEngine;
 using UnityEditor;
@@ -628,3 +628,4 @@ namespace UMAEditor
 
 	}
 }
+#endif

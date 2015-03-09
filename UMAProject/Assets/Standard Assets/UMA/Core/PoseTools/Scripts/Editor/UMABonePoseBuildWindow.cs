@@ -4,6 +4,8 @@
 //	Copyright:	(c) 2013 Eli Curtz
 //	============================================================
 
+#if UNITY_EDITOR
+
 using UnityEngine;
 using UnityEditor;
 using System.Text;
@@ -509,3 +511,4 @@ namespace UMA.PoseTools
 		}
 	}
 }
+#endif

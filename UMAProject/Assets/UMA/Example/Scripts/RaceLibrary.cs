@@ -83,7 +83,7 @@ public class RaceLibrary : RaceLibraryBase {
 		return null;
 	}
 
-	public RaceData[] GetAllRaces()
+	public override RaceData[] GetAllRaces()
 	{
 #pragma warning disable 618
 		return raceElementList;

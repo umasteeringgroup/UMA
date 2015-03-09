@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+using UnityEngine;
 using UnityEditor;
 using UMA;
 
@@ -24,3 +25,4 @@ public class UMAAssetCollectionEditor : Editor
 		UMAEditor.CustomAssetUtility.CreateAsset<UMAAssetCollection>();
 	}
 }
+#endif
