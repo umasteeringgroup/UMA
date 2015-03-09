@@ -103,7 +103,9 @@ namespace UMA
 					umaData.isTextureDirty = false;
 					umaData.isAtlasDirty = true;
 				}
-				return false;
+
+				if (!workDone || umaData.isMeshDirty)
+					return false;
 			}
 
 			if (umaData.isMeshDirty)
