@@ -46,7 +46,6 @@ public class UMACrowd : MonoBehaviour
 			if (generator.IsIdle())
 			{
 				GenerateOneUMA();
-				umaData.OnCharacterUpdated += new System.Action<UMAData>(umaData_OnUpdated);
 			}
 		}
 
@@ -56,39 +55,7 @@ public class UMACrowd : MonoBehaviour
 			generateUMA = false;
 		}
 	}
-
-	void umaData_OnUpdated(UMAData obj)
-	{
-		umaData.OnCharacterUpdated -= new System.Action<UMAData>(umaData_OnUpdated);
-		if (obj.cancelled)
-		{
-			Object.Destroy(obj.gameObject);
-		}
-		else
-		{
-			if (zeroPoint)
-			{
-				tempUMA.position = new Vector3(X * space + zeroPoint.position.x - umaCrowdSize.x * space * 0.5f + 0.5f, zeroPoint.position.y, Y * space + zeroPoint.position.z - umaCrowdSize.y * space * 0.5f + 0.5f);
-			}
-			else
-			{
-				tempUMA.position = new Vector3(X * space - umaCrowdSize.x * space * 0.5f + 0.5f, 0, Y * space - umaCrowdSize.y * space * 0.5f + 0.5f);
-			}
-			X = X + 1;
-			if (X >= umaCrowdSize.x)
-			{
-				X = 0;
-				Y = Y + 1;
-			}
-			if (Y >= umaCrowdSize.y)
-			{
-				generateLotsUMA = false;
-				X = 0;
-				Y = 0;
-			}
-		}
-	}
-
+	
 	private void DefineSlots(UMACrowdRandomSet.CrowdRaceData race)
 	{
 		float skinTone = Random.Range(0.1f, 0.6f);
@@ -581,11 +548,23 @@ public class UMACrowd : MonoBehaviour
 
 		if (zeroPoint)
 		{
-			tempUMA.position = new Vector3(zeroPoint.position.x, zeroPoint.position.y, zeroPoint.position.z);
+			tempUMA.position = new Vector3(X * space + zeroPoint.position.x - umaCrowdSize.x * space * 0.5f + 0.5f, zeroPoint.position.y, Y * space + zeroPoint.position.z - umaCrowdSize.y * space * 0.5f + 0.5f);
 		}
 		else
 		{
-			tempUMA.position = new Vector3(0, 0, 0);
+			tempUMA.position = new Vector3(X * space - umaCrowdSize.x * space * 0.5f + 0.5f, 0, Y * space - umaCrowdSize.y * space * 0.5f + 0.5f);
+		}
+		X = X + 1;
+		if (X >= umaCrowdSize.x)
+		{
+			X = 0;
+			Y = Y + 1;
+		}
+		if (Y >= umaCrowdSize.y)
+		{
+			generateLotsUMA = false;
+			X = 0;
+			Y = 0;
 		}
 	}
 }
