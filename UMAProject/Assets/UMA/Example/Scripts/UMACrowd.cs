@@ -387,7 +387,7 @@ public class UMACrowd : MonoBehaviour
 	protected virtual void SetUMAData()
 	{
 		umaData.atlasResolutionScale = atlasResolutionScale;
-		umaData.OnCharacterUpdated += myColliderUpdateMethod;
+		umaData.OnCharacterCreated += myColliderUpdateMethod;
 	}
 
 	void myColliderUpdateMethod(UMAData umaData)
@@ -398,6 +398,12 @@ public class UMACrowd : MonoBehaviour
 			UMADnaHumanoid umaDna = umaData.umaRecipe.GetDna<UMADnaHumanoid>();
 			tempCollider.height = (umaDna.height + 0.5f) * 2 + 0.1f;
 			tempCollider.center = new Vector3(0, tempCollider.height * 0.5f - 0.04f, 0);
+		}
+
+		if (generateLotsUMA)
+		{
+			umaData.animator.enabled = false;
+			umaData.myRenderer.enabled = false;
 		}
 	}
 
@@ -563,6 +569,12 @@ public class UMACrowd : MonoBehaviour
 		if (Y >= umaCrowdSize.y)
 		{
 			generateLotsUMA = false;
+			UMAData[] generatedCrowd = GetComponentsInChildren<UMAData>();
+			foreach (UMAData generatedData in generatedCrowd)
+			{
+				generatedData.myRenderer.enabled = true;
+				generatedData.animator.enabled = true;
+			}
 			X = 0;
 			Y = 0;
 		}
