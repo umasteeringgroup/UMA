@@ -2205,7 +2205,7 @@ RectTransform:
   m_RootOrder: 0
   m_AnchorMin: {x: .5, y: 1}
   m_AnchorMax: {x: .5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -248}
+  m_AnchoredPosition: {x: 0, y: -193.5}
   m_SizeDelta: {x: 175, y: 1800}
   m_Pivot: {x: .5, y: .5}
 --- !u!114 &135944848
@@ -3805,7 +3805,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Right click on a UMA character to adjust their DNA
+  m_Text: Right click on a character to adjust their DNA
 --- !u!222 &259368337
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -6578,9 +6578,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fitAtlas: 1
-  usePRO: 1
   AtlasCrop: 1
-  maxPixels: 100000
   convertRenderTexture: 0
   convertMipMaps: 0
   atlasResolution: 2048
@@ -6609,7 +6607,7 @@ MonoBehaviour:
     e32: 0
     e33: 0
   meshCombiner: {fileID: 2079936343}
-  unityVersion: 0
+  fastGeneration: 1
 --- !u!1 &525079516
 GameObject:
   m_ObjectHideFlags: 0
@@ -9482,7 +9480,7 @@ MonoBehaviour:
   atlasResolutionScale: 1
   generateUMA: 0
   generateLotsUMA: 1
-  umaCrowdSize: {x: 4, y: 4}
+  umaCrowdSize: {x: 6, y: 6}
   randomDna: 1
   space: 1
   zeroPoint: {fileID: 0}
@@ -9490,17 +9488,17 @@ MonoBehaviour:
   CharacterCreated:
     m_PersistentCalls:
       m_Calls: []
-    m_TypeName: UMA.UMADataEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+    m_TypeName: UMA.UMADataEvent, Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   CharacterDestroyed:
     m_PersistentCalls:
       m_Calls: []
-    m_TypeName: UMA.UMADataEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+    m_TypeName: UMA.UMADataEvent, Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   CharacterUpdated:
     m_PersistentCalls:
       m_Calls: []
-    m_TypeName: UMA.UMADataEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+    m_TypeName: UMA.UMADataEvent, Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
 --- !u!1 &797273642
 GameObject:
@@ -10788,7 +10786,6 @@ Transform:
   - {fileID: 1875296714}
   - {fileID: 1951823332}
   - {fileID: 518079763}
-  - {fileID: 1906503672}
   - {fileID: 2054243462}
   - {fileID: 1482350189}
   - {fileID: 2079936342}
@@ -12363,11 +12360,11 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11400000, guid: f339fe484442bb14a853826f3556fa50, type: 2}
       propertyPath: umaCrowdSize.x
-      value: 4
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 11400000, guid: f339fe484442bb14a853826f3556fa50, type: 2}
       propertyPath: umaCrowdSize.y
-      value: 4
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: f339fe484442bb14a853826f3556fa50, type: 2}
@@ -15449,7 +15446,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 2097866488}
   m_Direction: 2
   m_Value: .5
-  m_Size: .275555551
+  m_Size: .215000004
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -20508,7 +20505,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 879538282}
-  m_RootOrder: 7
+  m_RootOrder: 6
 --- !u!1 &1494840925
 GameObject:
   m_ObjectHideFlags: 0
@@ -25392,45 +25389,6 @@ CanvasRenderer:
     type: 2}
   m_PrefabInternal: {fileID: 66079926}
   m_GameObject: {fileID: 1906251514}
---- !u!1 &1906503670
-GameObject:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  serializedVersion: 4
-  m_Component:
-  - 4: {fileID: 1906503672}
-  - 114: {fileID: 1906503671}
-  m_Layer: 0
-  m_Name: UMALegacyMeshCombiner
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1906503671
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1906503670}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0a0f41a4bcdfbc94e81fda5c2d535b6b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!4 &1906503672
-Transform:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1906503670}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 879538282}
-  m_RootOrder: 5
 --- !u!1 &1906566486
 GameObject:
   m_ObjectHideFlags: 0
@@ -27968,7 +27926,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 879538282}
-  m_RootOrder: 6
+  m_RootOrder: 5
 --- !u!1 &2066561970
 GameObject:
   m_ObjectHideFlags: 0
@@ -28198,7 +28156,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 879538282}
-  m_RootOrder: 8
+  m_RootOrder: 7
 --- !u!114 &2079936343
 MonoBehaviour:
   m_ObjectHideFlags: 0
