@@ -11,7 +11,7 @@ namespace UMA
 		public UMAData umaData;
 		[NonSerialized]
 		public List<UMAData>
-			umaDirtyList = new List<UMAData>();
+		umaDirtyList = new List<UMAData>();
 		public int meshUpdates;
 		public int maxMeshUpdates;
 		public UMAGeneratorCoroutine umaGeneratorCoroutine;
@@ -19,7 +19,7 @@ namespace UMA
 		public Transform textureMergePrefab;
 		public Matrix4x4 tempMatrix;
 		public UMAMeshCombiner meshCombiner;
-		public float unityVersion;
+		public bool fastGeneration = true;
 		private bool forceGarbageCollect;
 
 		public void Initialize()
@@ -48,8 +48,8 @@ namespace UMA
 			if (mb < 10)
 			{
 				byte[] data = new byte[10 * 1024 * 1024];
-				data [0] = 0;
-				data [10 * 1024 * 1024 - 1] = 0;
+				data[0] = 0;
+				data[10 * 1024 * 1024 - 1] = 0;
 			}
 		}
         
@@ -64,8 +64,8 @@ namespace UMA
 			}
 			if (umaDirtyList.Count > 0)
 			{
-				// GC can run with texture preparation, but nothing else
-				if (didGC && !umaDirtyList [0].isTextureDirty)
+				// GC can run with texture preparation, but not mesh
+				if (didGC && (!fastGeneration || !umaDirtyList[0].isTextureDirty))
 					return;
 
 				OnDirtyUpdate();    
@@ -80,9 +80,7 @@ namespace UMA
 				umaData = data;
 
 				if (!umaData.Validate())
-				{
 					return true;
-				}
 			}
             
 			if (umaData.isTextureDirty)
@@ -103,7 +101,9 @@ namespace UMA
 					umaData.isTextureDirty = false;
 					umaData.isAtlasDirty = true;
 				}
-				return false;
+
+				if (!workDone || !fastGeneration || umaData.isMeshDirty)
+					return false;
 			}
 
 			if (umaData.isMeshDirty)
@@ -111,7 +111,9 @@ namespace UMA
 				UpdateUMAMesh(umaData.isAtlasDirty);
 				umaData.isAtlasDirty = false;
 				umaData.isMeshDirty = false;
-				return false;
+
+				if (!fastGeneration)
+					return false;
 			}
 
 			if (umaData.isShapeDirty)
@@ -125,7 +127,7 @@ namespace UMA
         
 		public virtual void OnDirtyUpdate()
 		{
-			if (HandleDirtyUpdate(umaDirtyList [0]))
+			if (HandleDirtyUpdate(umaDirtyList[0]))
 			{
 				umaDirtyList.RemoveAt(0);
 				umaData = null;

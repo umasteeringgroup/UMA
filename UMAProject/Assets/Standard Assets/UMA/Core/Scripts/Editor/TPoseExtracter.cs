@@ -6,7 +6,7 @@ using UMA;
 namespace UMAEditor
 {
 	public static class TPoseExtracter  {
-
+#if !UNITY_4_6
 	    [MenuItem("UMA/Extract T-Pose")]
 	    static void ExtractTPose()
 	    {
@@ -63,7 +63,7 @@ namespace UMAEditor
 	            AssetDatabase.SaveAssets();
 	        }
 	    }
-
+#endif
 
 	//    [UnityEditor.MenuItem("UMA/Extract T-Pose")]
 	//    static void ExtractTPose()

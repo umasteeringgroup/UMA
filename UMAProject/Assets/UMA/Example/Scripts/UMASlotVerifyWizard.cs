@@ -38,13 +38,13 @@ namespace UMA
 		public void SelectMaleClick()
 		{
 #if UNITY_EDITOR
-			SetBaseMesh("Assets/UMA/UMA_Project/Models/Male/Male_Unified.fbx");
+			SetBaseMesh("Assets/UMA/UMA_Assets/FBX/Male/Male_Unified.fbx");
 #endif
 		}
 		public void SelectFemaleClick()
 		{
 #if UNITY_EDITOR
-			SetBaseMesh("Assets/UMA/UMA_Project/Models/Female/Female_Unified.fbx");
+			SetBaseMesh("Assets/UMA/UMA_Assets/FBX/Female/Female_Unified.fbx");
 #endif
 		}
 		public void BrowseBaseMeshClick()

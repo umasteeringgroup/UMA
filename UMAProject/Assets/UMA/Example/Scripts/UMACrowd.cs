@@ -45,50 +45,19 @@ public class UMACrowd : MonoBehaviour
 		{
 			if (generator.IsIdle())
 			{
-				GenerateOneUMA();
-				umaData.OnCharacterUpdated += new System.Action<UMAData>(umaData_OnUpdated);
+        int randomResult = Random.Range(0, 2);
+				GenerateOneUMA(randomResult);
 			}
 		}
 
 		if (generateUMA)
 		{
-			GenerateOneUMA();
+      int randomResult = Random.Range(0, 2);
+			GenerateOneUMA(randomResult);
 			generateUMA = false;
 		}
 	}
-
-	void umaData_OnUpdated(UMAData obj)
-	{
-		umaData.OnCharacterUpdated -= new System.Action<UMAData>(umaData_OnUpdated);
-		if (obj.cancelled)
-		{
-			Object.Destroy(obj.gameObject);
-		}
-		else
-		{
-			if (zeroPoint)
-			{
-				tempUMA.position = new Vector3(X * space + zeroPoint.position.x - umaCrowdSize.x * space * 0.5f + 0.5f, zeroPoint.position.y, Y * space + zeroPoint.position.z - umaCrowdSize.y * space * 0.5f + 0.5f);
-			}
-			else
-			{
-				tempUMA.position = new Vector3(X * space - umaCrowdSize.x * space * 0.5f + 0.5f, 0, Y * space - umaCrowdSize.y * space * 0.5f + 0.5f);
-			}
-			X = X + 1;
-			if (X >= umaCrowdSize.x)
-			{
-				X = 0;
-				Y = Y + 1;
-			}
-			if (Y >= umaCrowdSize.y)
-			{
-				generateLotsUMA = false;
-				X = 0;
-				Y = 0;
-			}
-		}
-	}
-
+	
 	private void DefineSlots(UMACrowdRandomSet.CrowdRaceData race)
 	{
 		float skinTone = Random.Range(0.1f, 0.6f);
@@ -420,7 +389,7 @@ public class UMACrowd : MonoBehaviour
 	protected virtual void SetUMAData()
 	{
 		umaData.atlasResolutionScale = atlasResolutionScale;
-		umaData.OnCharacterUpdated += myColliderUpdateMethod;
+		umaData.OnCharacterCreated += myColliderUpdateMethod;
 	}
 
 	void myColliderUpdateMethod(UMAData umaData)
@@ -431,6 +400,12 @@ public class UMACrowd : MonoBehaviour
 			UMADnaHumanoid umaDna = umaData.umaRecipe.GetDna<UMADnaHumanoid>();
 			tempCollider.height = (umaDna.height + 0.5f) * 2 + 0.1f;
 			tempCollider.center = new Vector3(0, tempCollider.height * 0.5f - 0.04f, 0);
+		}
+
+		if (generateLotsUMA)
+		{
+			umaData.animator.enabled = false;
+			umaData.myRenderer.enabled = false;
 		}
 	}
 
@@ -524,7 +499,7 @@ public class UMACrowd : MonoBehaviour
 		}
 	}
 
-	void GenerateOneUMA()
+	public void GenerateOneUMA(int sex)
 	{
 		var newGO = new GameObject("Generated Character");
 		newGO.transform.parent = transform;
@@ -547,8 +522,7 @@ public class UMACrowd : MonoBehaviour
 		}
 		else
 		{
-			int randomResult = Random.Range(0, 2);
-			if (randomResult == 0)
+			if (sex == 0)
 			{
 				umaRecipe.SetRace(raceLibrary.GetRace("HumanMale"));
 			}
@@ -581,11 +555,29 @@ public class UMACrowd : MonoBehaviour
 
 		if (zeroPoint)
 		{
-			tempUMA.position = new Vector3(zeroPoint.position.x, zeroPoint.position.y, zeroPoint.position.z);
+			tempUMA.position = new Vector3(X * space + zeroPoint.position.x - umaCrowdSize.x * space * 0.5f + 0.5f, zeroPoint.position.y, Y * space + zeroPoint.position.z - umaCrowdSize.y * space * 0.5f + 0.5f);
 		}
 		else
 		{
-			tempUMA.position = new Vector3(0, 0, 0);
+			tempUMA.position = new Vector3(X * space - umaCrowdSize.x * space * 0.5f + 0.5f, 0, Y * space - umaCrowdSize.y * space * 0.5f + 0.5f);
+		}
+		X = X + 1;
+		if (X >= umaCrowdSize.x)
+		{
+			X = 0;
+			Y = Y + 1;
+		}
+		if (Y >= umaCrowdSize.y)
+		{
+			generateLotsUMA = false;
+			UMAData[] generatedCrowd = GetComponentsInChildren<UMAData>();
+			foreach (UMAData generatedData in generatedCrowd)
+			{
+				generatedData.myRenderer.enabled = true;
+				generatedData.animator.enabled = true;
+			}
+			X = 0;
+			Y = 0;
 		}
 	}
 }
