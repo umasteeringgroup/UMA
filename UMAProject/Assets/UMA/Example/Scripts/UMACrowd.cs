@@ -45,13 +45,15 @@ public class UMACrowd : MonoBehaviour
 		{
 			if (generator.IsIdle())
 			{
-				GenerateOneUMA();
+        int randomResult = Random.Range(0, 2);
+				GenerateOneUMA(randomResult);
 			}
 		}
 
 		if (generateUMA)
 		{
-			GenerateOneUMA();
+      int randomResult = Random.Range(0, 2);
+			GenerateOneUMA(randomResult);
 			generateUMA = false;
 		}
 	}
@@ -497,7 +499,7 @@ public class UMACrowd : MonoBehaviour
 		}
 	}
 
-	void GenerateOneUMA()
+	public void GenerateOneUMA(int sex)
 	{
 		var newGO = new GameObject("Generated Character");
 		newGO.transform.parent = transform;
@@ -520,8 +522,7 @@ public class UMACrowd : MonoBehaviour
 		}
 		else
 		{
-			int randomResult = Random.Range(0, 2);
-			if (randomResult == 0)
+			if (sex == 0)
 			{
 				umaRecipe.SetRace(raceLibrary.GetRace("HumanMale"));
 			}
