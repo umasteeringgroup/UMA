@@ -78,7 +78,7 @@ public class UMAAvatarLoadSaveMenuItems : Editor
 				if (path.Length != 0)
 				{
 					var asset = ScriptableObject.CreateInstance<UMATextRecipe>();
-					asset.recipeString = System.IO.File.ReadAllText(path);
+					asset.recipeString = FileUtils.ReadAllText(path);
 					avatar.Load(asset);
 					Destroy(asset);
 				}
