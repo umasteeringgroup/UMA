@@ -423,6 +423,23 @@ namespace UMA
 				newRecipe.slotDataList = slotDataList;
 				return newRecipe;
 			}
+
+			public void Merge(UMARecipe additionalRecipe)
+			{
+				foreach (var dnaEntry in additionalRecipe.umaDna)
+				{
+					var destDNA = GetOrCreateDna(dnaEntry.Key);
+					destDNA.Values = dnaEntry.Value.Values;
+				}
+
+				int SlotCount = additionalRecipe.slotDataList == null ? 0 : additionalRecipe.slotDataList.Length;
+				if (SlotCount > 0)
+				{
+					var newSlots = new SlotData[slotDataList.Length + SlotCount];
+					Array.Copy(slotDataList, newSlots, slotDataList.Length);
+					Array.Copy(additionalRecipe.slotDataList, 0, newSlots, slotDataList.Length, SlotCount);
+				}
+			}
 		}
 
 

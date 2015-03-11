@@ -14,7 +14,14 @@ public class UMADynamicAvatar : UMAAvatarBase
 		base.Start();
 		if (loadOnStart)
 		{
-			Load(umaRecipe);
+			if (umaAdditionalRecipes == null || umaAdditionalRecipes.Length == 0)
+			{
+				Load(umaRecipe);
+			}
+			else
+			{
+				Load(umaRecipe, umaAdditionalRecipes);
+			}
 		}
 	}
 #if UNITY_EDITOR

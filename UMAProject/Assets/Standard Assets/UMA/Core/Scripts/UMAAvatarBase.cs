@@ -11,6 +11,7 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 	public UMAContext context;
 	public UMAData umaData;
 	public UMARecipeBase umaRecipe;
+	public UMARecipeBase[] umaAdditionalRecipes;
 	public UMAGeneratorBase umaGenerator;
 	public RuntimeAnimatorController animationController;
 	[NonSerialized]
@@ -57,10 +58,15 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 
 	public virtual void Load(UMARecipeBase umaRecipe)
 	{
+		Load(umaRecipe, null);
+	}
+
+	public virtual void Load(UMARecipeBase umaRecipe, params UMARecipeBase[] umaAdditionalRecipes)
+	{
 		if (umaRecipe == null) return;
 		Profiler.BeginSample("Load");
-		this.umaRecipe = umaRecipe;
-		umaRecipe.Load(umaData.umaRecipe, context);
+		InternalLoad(umaRecipe, umaAdditionalRecipes);
+
 		if (umaRace != umaData.umaRecipe.raceData)
 		{
 			UpdateNewRace();
@@ -70,6 +76,22 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 			UpdateSameRace();
 		}
 		Profiler.EndSample();
+	}
+
+	protected void InternalLoad(UMARecipeBase umaRecipe, UMARecipeBase[] umaAdditionalRecipes)
+	{
+		this.umaRecipe = umaRecipe;
+
+		umaRecipe.Load(umaData.umaRecipe, context);
+		if (umaAdditionalRecipes != null)
+		{
+			var additionalRecipe = new UMAData.UMARecipe();
+			foreach (var umaAdditionalRecipe in umaAdditionalRecipes)
+			{
+				umaAdditionalRecipe.Load(additionalRecipe, context);
+				umaData.umaRecipe.Merge(additionalRecipe);
+			}
+		}
 	}
 
 	public void UpdateSameRace()
