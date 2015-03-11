@@ -27,7 +27,7 @@ MonoBehaviour:
   - primary: {fileID: 11400000, guid: 200184ba683ad46798216c60362b5924, type: 2}
     inverse: {fileID: 11400000, guid: 7c10013c7f6e248308cc7a451557e031, type: 2}
   - primary: {fileID: 11400000, guid: 13e5d3705823e457cacb55686614e810, type: 2}
-    inverse: {fileID: 11400000, guid: 150ecd71183124d9abdd3d8fdb488227, type: 2}
+    inverse: {fileID: 0}
   - primary: {fileID: 11400000, guid: 14c3b42d735f04d3bafbf490f30fe19e, type: 2}
     inverse: {fileID: 11400000, guid: 798d7a5c6521140688c2fbd73a40e114, type: 2}
   - primary: {fileID: 11400000, guid: cc38670f9319a46e0963e19df689e492, type: 2}

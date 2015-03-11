@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Name: ExpressionSlot
   m_EditorClassIdentifier: 
   slotName: Expressions
-  listID: -1
+  listID: 33
   meshRenderer: {fileID: 0}
   materialSample: {fileID: 0}
   overlayScale: 1
@@ -26,7 +26,7 @@ MonoBehaviour:
   SlotAtlassed:
     m_PersistentCalls:
       m_Calls: []
-    m_TypeName: UMA.UMADataSlotMaterialRectEvent, Assembly-CSharp, Version=0.0.0.0,
+    m_TypeName: UMA.UMADataSlotMaterialRectEvent, Assembly-CSharp-firstpass, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   DNAApplied:
     m_PersistentCalls:
@@ -43,5 +43,5 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-    m_TypeName: UMA.UMADataEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+    m_TypeName: UMA.UMADataEvent, Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
