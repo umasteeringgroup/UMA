@@ -65,7 +65,7 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 		UMAPackRecipe umaPackRecipe = new UMAPackRecipe();
 
 		//var umaPackRecipe = new Packed
-		umaPackRecipe.packedSlotDataList = new packedSlotData[umaRecipe.slotDataList.Length];
+		umaPackRecipe.packedSlotDataList = new packedSlotData[umaRecipe.slotDataList.Length - umaRecipe.AdditionalSlots];
 		umaPackRecipe.race = umaRecipe.raceData.raceName;
 
 		umaPackRecipe.packedDna.Clear();
@@ -78,7 +78,7 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 			umaPackRecipe.packedDna.Add(packedDna);
 		}
 
-		for (int i = 0; i < umaRecipe.slotDataList.Length; i++)
+		for (int i = 0; i < umaRecipe.slotDataList.Length-umaRecipe.AdditionalSlots; i++)
 		{
 			if (umaRecipe.slotDataList[i] != null)
 			{

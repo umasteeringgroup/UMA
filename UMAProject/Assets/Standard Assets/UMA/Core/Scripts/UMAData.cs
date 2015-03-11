@@ -206,6 +206,7 @@ namespace UMA
 			protected Dictionary<Type, UMADnaBase> umaDna = new Dictionary<Type, UMADnaBase>();
             protected Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate> umaDnaConverter = new Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate>();
 			public SlotData[] slotDataList;
+			public int AdditionalSlots;
 			
 			public bool Validate(UMAGeneratorBase generator) 
             {
@@ -436,6 +437,7 @@ namespace UMA
 				int SlotCount = additionalRecipe.slotDataList == null ? 0 : additionalRecipe.slotDataList.Length;
 				if (SlotCount > 0)
 				{
+					AdditionalSlots += SlotCount;
 					var newSlots = new SlotData[slotDataList.Length + SlotCount];
 					Array.Copy(slotDataList, newSlots, slotDataList.Length);
 					Array.Copy(additionalRecipe.slotDataList, 0, newSlots, slotDataList.Length, SlotCount);
@@ -800,6 +802,19 @@ namespace UMA
 				if (slotData != null && slotData.DNAApplied != null)
 				{
 					slotData.DNAApplied.Invoke(this);
+				}
+			}
+		}
+
+		public void AddAdditionalRecipes(UMARecipeBase[] umaAdditionalRecipes, UMAContext context)
+		{
+			if (umaAdditionalRecipes != null)
+			{
+				var additionalRecipe = new UMAData.UMARecipe();
+				foreach (var umaAdditionalRecipe in umaAdditionalRecipes)
+				{
+					umaAdditionalRecipe.Load(additionalRecipe, context);
+					umaRecipe.Merge(additionalRecipe);
 				}
 			}
 		}

@@ -63,7 +63,6 @@ namespace UMAEditor
         {
             var recipeBase = (UMARecipeBase)target;
             recipeBase.Save(_recipe, UMAContext.FindInstance());
-			Debug.Log(_recipe.GetAllDna().Length);
             EditorUtility.SetDirty(recipeBase);
             AssetDatabase.SaveAssets();
             AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(recipeBase));

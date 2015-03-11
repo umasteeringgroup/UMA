@@ -12,13 +12,13 @@ public class UMACrowd : MonoBehaviour
 	public OverlayLibrary overlayLibrary;
 	public RaceLibrary raceLibrary;
 	public RuntimeAnimatorController animationController;
-
 	public float atlasResolutionScale = 1;
 	public bool generateUMA;
 	public bool generateLotsUMA;
 	public bool hideWhileGeneratingLots;
 	public Vector2 umaCrowdSize;
 	public bool randomDna;
+	public UMARecipeBase[] additionalRecipes;
 
 	public float space = 1;
 	public Transform zeroPoint;
@@ -395,14 +395,6 @@ public class UMACrowd : MonoBehaviour
 
 	void myColliderUpdateMethod(UMAData umaData)
 	{
-		CapsuleCollider tempCollider = umaData.umaRoot.gameObject.GetComponent("CapsuleCollider") as CapsuleCollider;
-		if (tempCollider)
-		{
-			UMADnaHumanoid umaDna = umaData.umaRecipe.GetDna<UMADnaHumanoid>();
-			tempCollider.height = (umaDna.height + 0.5f) * 2 + 0.1f;
-			tempCollider.center = new Vector3(0, tempCollider.height * 0.5f - 0.04f, 0);
-		}
-
 		if (generateLotsUMA && hideWhileGeneratingLots)
 		{
 			umaData.animator.enabled = false;
@@ -540,6 +532,8 @@ public class UMACrowd : MonoBehaviour
 			DefineSlots();
 		}
 
+		AddAdditionalSlots();
+
 		GenerateUMAShapes();
 
 		if (animationController != null)
@@ -578,5 +572,10 @@ public class UMACrowd : MonoBehaviour
 			Y = 0;
 		}
 		return newGO;
+	}
+
+	private void AddAdditionalSlots()
+	{
+		umaData.AddAdditionalRecipes(additionalRecipes, UMAContext.FindInstance());
 	}
 }

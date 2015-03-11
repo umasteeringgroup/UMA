@@ -65,7 +65,11 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 	{
 		if (umaRecipe == null) return;
 		Profiler.BeginSample("Load");
-		InternalLoad(umaRecipe, umaAdditionalRecipes);
+
+		this.umaRecipe = umaRecipe;
+
+		umaRecipe.Load(umaData.umaRecipe, context);
+		umaData.AddAdditionalRecipes(umaAdditionalRecipes, context);
 
 		if (umaRace != umaData.umaRecipe.raceData)
 		{
@@ -76,22 +80,6 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 			UpdateSameRace();
 		}
 		Profiler.EndSample();
-	}
-
-	protected void InternalLoad(UMARecipeBase umaRecipe, UMARecipeBase[] umaAdditionalRecipes)
-	{
-		this.umaRecipe = umaRecipe;
-
-		umaRecipe.Load(umaData.umaRecipe, context);
-		if (umaAdditionalRecipes != null)
-		{
-			var additionalRecipe = new UMAData.UMARecipe();
-			foreach (var umaAdditionalRecipe in umaAdditionalRecipes)
-			{
-				umaAdditionalRecipe.Load(additionalRecipe, context);
-				umaData.umaRecipe.Merge(additionalRecipe);
-			}
-		}
 	}
 
 	public void UpdateSameRace()
