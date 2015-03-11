@@ -499,11 +499,10 @@ public class UMACrowd : MonoBehaviour
 		}
 	}
 
-	public void GenerateOneUMA(int sex)
-	{
-		var newGO = new GameObject("Generated Character");
+	public GameObject GenerateOneUMA(int sex){
+		GameObject newGO = new GameObject("Generated Character");
 		newGO.transform.parent = transform;
-		var umaDynamicAvatar = newGO.AddComponent<UMADynamicAvatar>();
+		UMADynamicAvatar umaDynamicAvatar = newGO.AddComponent<UMADynamicAvatar>();
 		umaDynamicAvatar.Initialize();
 		umaData = umaDynamicAvatar.umaData;
 		umaData.CharacterCreated = new UMADataEvent(CharacterCreated);
@@ -574,5 +573,6 @@ public class UMACrowd : MonoBehaviour
 			X = 0;
 			Y = 0;
 		}
+		return newGO;
 	}
 }
