@@ -62,7 +62,9 @@ namespace UMA
 			firstBake = true;
 			
 			if(!umaGenerator){
-				umaGenerator = GameObject.Find("UMAGenerator").GetComponent<UMAGeneratorBase>();	
+				var generatorGO = GameObject.Find("UMAGenerator");
+				if (generatorGO == null) return;
+				umaGenerator = generatorGO.GetComponent<UMAGeneratorBase>();
 			}
 
             if (umaRecipe == null)
@@ -246,7 +248,6 @@ namespace UMA
 					return new UMADnaBase[0];
 				}
 
-				EnsureAllDNAPresent();
 				UMADnaBase[] allDNA = new UMADnaBase[umaDna.Values.Count];
 				umaDna.Values.CopyTo(allDNA, 0);
 				return allDNA;
@@ -438,6 +439,7 @@ namespace UMA
 					var newSlots = new SlotData[slotDataList.Length + SlotCount];
 					Array.Copy(slotDataList, newSlots, slotDataList.Length);
 					Array.Copy(additionalRecipe.slotDataList, 0, newSlots, slotDataList.Length, SlotCount);
+					slotDataList = newSlots;
 				}
 			}
 		}

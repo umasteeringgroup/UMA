@@ -782,7 +782,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   context: {fileID: 1875296715}
   umaData: {fileID: 0}
-  umaRecipe: {fileID: 11400000, guid: 593f940b36639014a9f7796d3c54394f, type: 2}
+  umaRecipe: {fileID: 11400000, guid: 6610b58cb8ca50540816c2ec48f2c695, type: 2}
+  umaAdditionalRecipes:
+  - {fileID: 11400000, guid: 920d59ac577b2d9449aa36a4d9e86f10, type: 2}
   umaGenerator: {fileID: 1653576955}
   animationController: {fileID: 9100000, guid: ae859d58fdf844b73863d3833f955cdf, type: 2}
   CharacterCreated:
@@ -947,7 +949,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   context: {fileID: 1875296715}
   umaData: {fileID: 0}
-  umaRecipe: {fileID: 11400000, guid: fc25087a754d5b942a4cd42f80d696b9, type: 2}
+  umaRecipe: {fileID: 11400000, guid: bd40706156d628f458820a504ff35d24, type: 2}
+  umaAdditionalRecipes:
+  - {fileID: 11400000, guid: 920d59ac577b2d9449aa36a4d9e86f10, type: 2}
   umaGenerator: {fileID: 1653576955}
   animationController: {fileID: 9100000, guid: ae859d58fdf844b73863d3833f955cdf, type: 2}
   CharacterCreated:
@@ -1445,7 +1449,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   context: {fileID: 1875296715}
   umaData: {fileID: 0}
-  umaRecipe: {fileID: 11400000, guid: 0bf43eadfd9db494f8313402bb3a1d20, type: 2}
+  umaRecipe: {fileID: 11400000, guid: f76528773bcda734ca665e46fe4fe0b0, type: 2}
+  umaAdditionalRecipes:
+  - {fileID: 11400000, guid: 920d59ac577b2d9449aa36a4d9e86f10, type: 2}
   umaGenerator: {fileID: 1653576955}
   animationController: {fileID: 9100000, guid: ae859d58fdf844b73863d3833f955cdf, type: 2}
   CharacterCreated:
@@ -1541,7 +1547,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   context: {fileID: 1875296715}
   umaData: {fileID: 0}
-  umaRecipe: {fileID: 11400000, guid: 13c45787916d6ac4299a2b8421c2d2a9, type: 2}
+  umaRecipe: {fileID: 11400000, guid: ea2aae2aa955d3248ba5104dc28bf318, type: 2}
+  umaAdditionalRecipes:
+  - {fileID: 11400000, guid: 920d59ac577b2d9449aa36a4d9e86f10, type: 2}
   umaGenerator: {fileID: 1653576955}
   animationController: {fileID: 9100000, guid: ae859d58fdf844b73863d3833f955cdf, type: 2}
   CharacterCreated:
@@ -1637,7 +1645,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   context: {fileID: 1875296715}
   umaData: {fileID: 0}
-  umaRecipe: {fileID: 11400000, guid: 9e416a23fbe8b6548a32ddf108b2cc1c, type: 2}
+  umaRecipe: {fileID: 11400000, guid: 29ed364e1f029024db202d90a5f0f518, type: 2}
+  umaAdditionalRecipes:
+  - {fileID: 11400000, guid: 920d59ac577b2d9449aa36a4d9e86f10, type: 2}
   umaGenerator: {fileID: 1653576955}
   animationController: {fileID: 9100000, guid: ae859d58fdf844b73863d3833f955cdf, type: 2}
   CharacterCreated:

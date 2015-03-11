@@ -31,7 +31,14 @@ namespace UMAEditor
                 var umaRecipeBase = target as UMARecipeBase;
                 if (umaRecipeBase != null)
                 {
-                    umaRecipeBase.Load(_recipe, UMAContext.FindInstance());
+					var context = UMAContext.FindInstance() ;
+					if (context == null)
+					{
+						_recipe = null;
+						return;
+					}
+
+                    umaRecipeBase.Load(_recipe, context);
                     _description = umaRecipeBase.GetInfo();
                 }
             } catch (UMAResourceNotFoundException e)
@@ -47,6 +54,7 @@ namespace UMAEditor
 
         public override void OnInspectorGUI()
         {
+			if (_recipe == null) return;
             PowerToolsGUI();
             base.OnInspectorGUI();
         }
@@ -55,6 +63,7 @@ namespace UMAEditor
         {
             var recipeBase = (UMARecipeBase)target;
             recipeBase.Save(_recipe, UMAContext.FindInstance());
+			Debug.Log(_recipe.GetAllDna().Length);
             EditorUtility.SetDirty(recipeBase);
             AssetDatabase.SaveAssets();
             AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(recipeBase));

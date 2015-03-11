@@ -44,11 +44,27 @@ namespace UMAEditor
 
         public bool OnGUI(ref bool _dnaDirty, ref bool _textureDirty, ref bool _meshDirty)
         {
+			GUILayout.BeginHorizontal();
             var newToolBarIndex = EditorGUILayout.Popup("DNA", viewDna, _dnaTypeNames);
             if (newToolBarIndex != viewDna)
             {
                 viewDna = newToolBarIndex;
             }
+			GUI.enabled = viewDna >= 0;
+			if (GUILayout.Button("X", EditorStyles.miniButton, GUILayout.Width(24)))
+			{
+				if (viewDna >= 0)
+				{
+					recipe.RemoveDna(_dnaTypes[viewDna]);
+					if (viewDna >= _dnaTypes.Length - 1) viewDna--;
+					GUI.enabled = true;
+					GUILayout.EndHorizontal();
+					_dnaDirty = true;
+					return true;
+				}
+			}
+			GUI.enabled = true;
+			GUILayout.EndHorizontal();
 
 
             if (viewDna >= 0)
@@ -642,9 +658,9 @@ namespace UMAEditor
                 GUI.color = Color.red;
                 GUILayout.Label(_errorMessage);
 
-                if (GUILayout.Button("Clear"))
+                if (_recipe != null && GUILayout.Button("Clear"))
                 {
-                    _errorMessage = null;
+				    _errorMessage = null;
                 } else
                 {
                     return;
@@ -703,12 +719,11 @@ namespace UMAEditor
 
         private bool ToolbarGUI()
         {
-            if (!dnaEditor.IsValid)
-                return false;
             _toolbarIndex = GUILayout.Toolbar(_toolbarIndex, toolbar);
             switch (_toolbarIndex)
             {
                 case 0:
+					if (!dnaEditor.IsValid) return false;
                     return dnaEditor.OnGUI(ref _dnaDirty, ref _textureDirty, ref _meshDirty);
                 case 1:
                     return slotEditor.OnGUI(ref _dnaDirty, ref _textureDirty, ref _meshDirty);
