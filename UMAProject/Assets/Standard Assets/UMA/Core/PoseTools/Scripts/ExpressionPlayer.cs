@@ -21,13 +21,13 @@ namespace UMA.PoseTools
 		protected float blinkDelay = 0f;
 
 		public bool enableSaccades = false;
-		protected float saccadeDelay = GaussianRandom(5f, 2f);
+		protected float saccadeDelay = 5f;
 		protected float saccadeDuration = 0f;
 		protected float saccadeProgress = 1f;
-		protected Vector2 saccadeTarget = new Vector2();
-		protected Vector2 saccadeTargetPrev = new Vector2();
+		protected Vector2 saccadeTarget;
+		protected Vector2 saccadeTargetPrev;
 
-		public Vector3 gazeTarget = Vector3.zero;
+		public Vector3 gazeTarget;
 		public float gazeWeight = 0f;
 		public GazeMode gazeMode = GazeMode.None;
 
