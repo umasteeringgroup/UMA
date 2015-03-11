@@ -57,7 +57,7 @@ namespace UMAEditor
 	        var normalTexture = AssetDatabase.LoadAssetAtPath(normalName, typeof(Texture2D)) as Texture2D;
 	        normalTexture.SetPixels32(normals);
 	        normalTexture.Apply();
-	        System.IO.File.WriteAllBytes(normalName, normalTexture.EncodeToPNG());
+			UMA.FileUtils.WriteAllBytes(normalName, normalTexture.EncodeToPNG());
 
 	        AssetDatabase.DeleteAsset(specularName);
 
@@ -139,7 +139,7 @@ namespace UMAEditor
 	                return false;
 	            }
 
-	            System.IO.File.WriteAllBytes(dest, tex.EncodeToPNG());
+	            FileUtils.WriteAllBytes(dest, tex.EncodeToPNG());
 	            AssetDatabase.ImportAsset(dest); 
 
 	            //var destTex = Texture2D.Instantiate(tex) as Texture2D;

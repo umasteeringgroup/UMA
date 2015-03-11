@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+
 using UnityEngine;
 using UnityEditor;
 using System.Collections;
@@ -20,8 +21,8 @@ namespace UMAEditor
 		{
 			var destDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets/UMA/UMA_Generated/DnaHelpers");
 			var sourceDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets/UMA/Editor/Templates");
-			var baseTemplate = File.ReadAllText(Path.Combine(sourceDir, "UmaDna_Template.cs.txt"));
-			var pageTemplate = File.ReadAllText(Path.Combine(sourceDir, "UmaDnaChild_Template.cs.txt"));
+			var baseTemplate = FileUtils.ReadAllText(Path.Combine(sourceDir, "UmaDna_Template.cs.txt"));
+			var pageTemplate = FileUtils.ReadAllText(Path.Combine(sourceDir, "UmaDnaChild_Template.cs.txt"));
 
 			var templates = CodeGenTemplate.ParseTemplates(sourceDir, baseTemplate);
 			var pageTemplates = CodeGenTemplate.ParseTemplates(sourceDir, pageTemplate);
@@ -82,7 +83,7 @@ namespace UMAEditor
 
 		private static void CreateBaseDNAExtension(string destination, string formatString, Dictionary<string, object> customData)
 		{
-			File.WriteAllText(Path.Combine(destination, "UMADna_Generated.cs"), String.Format(customFormatter, formatString, customData));
+			FileUtils.WriteAllText(Path.Combine(destination, "UMADna_Generated.cs"), String.Format(customFormatter, formatString, customData));
 		}
 
 		private static void CreateDNAHelperCode(Type dnaType, string destination, string formatString, CodeGenTemplate[] templates)
@@ -108,7 +109,7 @@ namespace UMAEditor
 			{
 				customData.Add(template.Name, template.sb);
 			}
-			File.WriteAllText(Path.Combine(destination, dnaType.Name + "_Generated.cs"), String.Format(customFormatter, formatString, customData));
+			FileUtils.WriteAllText(Path.Combine(destination, dnaType.Name + "_Generated.cs"), String.Format(customFormatter, formatString, customData));
 		}
 	}
 }

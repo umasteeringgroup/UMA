@@ -42,7 +42,7 @@ namespace UMA
 						{
 							Debug.LogError("File not found: " + filename);
 						}
-						res.Add(new CodeGenTemplate() { Format = File.ReadAllText(filename), sb = new StringBuilder(), Name = parsedLine[1], Tag = tag });
+						res.Add(new CodeGenTemplate() { Format = FileUtils.ReadAllText(filename), sb = new StringBuilder(), Name = parsedLine[1], Tag = tag });
 					}
 				}
 			}

@@ -55,7 +55,9 @@ namespace UMAEditor
 				return;
 			}
 
-			string[] files = Directory.GetFiles(assetFolder, "*", SearchOption.AllDirectories);
+			string[] files = Directory.GetFiles(assetFolder, "*"
+//				, SearchOption.AllDirectories
+				);
 			for (int i = 0; i < files.Length; i++)
 			{
 				string file = files[i];
@@ -78,7 +80,7 @@ namespace UMAEditor
 
 		static void ReplaceReferencesInFile(string filePath, List<UnityReference> references)
 		{
-			var fileContents = System.IO.File.ReadAllText(filePath);
+			var fileContents = UMA.FileUtils.ReadAllText(filePath);
 
 			bool match = false;
 
@@ -95,7 +97,7 @@ namespace UMAEditor
 
 			if (match)
 			{
-				System.IO.File.WriteAllText(filePath, fileContents);
+				UMA.FileUtils.WriteAllText(filePath, fileContents);
 			}
 		}
 
@@ -104,7 +106,7 @@ namespace UMAEditor
 		/// </summary>
 		static void FindNotReplacedReferences(string filePath, string guid)
 		{
-			var fileContents = System.IO.File.ReadAllText(filePath);
+			var fileContents = UMA.FileUtils.ReadAllText(filePath);
 
 			// -?        number can be negative
 			// [0-9]+    1-n numbers

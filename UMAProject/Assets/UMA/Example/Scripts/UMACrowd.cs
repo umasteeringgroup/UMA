@@ -16,6 +16,7 @@ public class UMACrowd : MonoBehaviour
 	public float atlasResolutionScale = 1;
 	public bool generateUMA;
 	public bool generateLotsUMA;
+	public bool hideWhileGeneratingLots;
 	public Vector2 umaCrowdSize;
 	public bool randomDna;
 
@@ -402,7 +403,7 @@ public class UMACrowd : MonoBehaviour
 			tempCollider.center = new Vector3(0, tempCollider.height * 0.5f - 0.04f, 0);
 		}
 
-		if (generateLotsUMA)
+		if (generateLotsUMA && hideWhileGeneratingLots)
 		{
 			umaData.animator.enabled = false;
 			umaData.myRenderer.enabled = false;
@@ -564,11 +565,14 @@ public class UMACrowd : MonoBehaviour
 		if (Y >= umaCrowdSize.y)
 		{
 			generateLotsUMA = false;
-			UMAData[] generatedCrowd = GetComponentsInChildren<UMAData>();
-			foreach (UMAData generatedData in generatedCrowd)
+			if (hideWhileGeneratingLots)
 			{
-				generatedData.myRenderer.enabled = true;
-				generatedData.animator.enabled = true;
+				UMAData[] generatedCrowd = GetComponentsInChildren<UMAData>();
+				foreach (UMAData generatedData in generatedCrowd)
+				{
+					generatedData.myRenderer.enabled = true;
+					generatedData.animator.enabled = true;
+				}
 			}
 			X = 0;
 			Y = 0;

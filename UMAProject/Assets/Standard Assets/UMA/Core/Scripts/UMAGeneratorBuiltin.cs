@@ -21,6 +21,7 @@ namespace UMA
 		public UMAMeshCombiner meshCombiner;
 		public bool fastGeneration = true;
 		private int forceGarbageCollect;
+		private System.Diagnostics.Stopwatch stopWatch = new System.Diagnostics.Stopwatch();
 
 		public void Initialize()
 		{
@@ -55,6 +56,8 @@ namespace UMA
         
 		void Update()
 		{
+			stopWatch.Reset();
+			stopWatch.Start();
 			bool didGC = false;
 			if (forceGarbageCollect > 0)
 			{
@@ -65,12 +68,14 @@ namespace UMA
 			if (umaDirtyList.Count > 0)
 			{
 				// GC can run with texture preparation, but not mesh
-				if (didGC && (!fastGeneration || !umaDirtyList[0].isTextureDirty))
-					return;
-
-				OnDirtyUpdate();    
+				if (!didGC || (fastGeneration && !umaDirtyList[0].isMeshDirty))
+				{
+					OnDirtyUpdate();
+				}
 			}
-			meshUpdates = 0;    
+			meshUpdates = 0;
+			stopWatch.Stop();
+			UMATime.ReportTimeSpendtThisFrameTicks(stopWatch.ElapsedTicks);
 		}
 
 		public virtual bool HandleDirtyUpdate(UMAData data)

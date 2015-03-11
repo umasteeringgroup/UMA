@@ -423,7 +423,7 @@ namespace UMAEditor
 			texture.Apply();
 			
 			byte[] bytes = texture.EncodeToPNG();
-			File.WriteAllBytes(baseTextureName, bytes);
+			FileUtils.WriteAllBytes(baseTextureName, bytes);
 			AssetDatabase.ImportAsset(baseTextureName); 
 			
 			TextureImporter textureImporter = AssetImporter.GetAtPath(baseTextureName) as TextureImporter;
@@ -567,7 +567,7 @@ namespace UMAEditor
 	                    texture.SetPixels(pix);
 	                }
 	                texture.Apply();
-	                System.IO.File.WriteAllBytes(file, texture.EncodeToPNG());
+					FileUtils.WriteAllBytes(file, texture.EncodeToPNG());
 	                if (!wasReadable)
 	                {
 	                    importer = TextureImporter.GetAtPath(file) as TextureImporter;
