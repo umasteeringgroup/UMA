@@ -16,17 +16,6 @@ namespace UMA
 
 	public partial class UMADna
 	{
-		public virtual int Count { get { return 0; } }
-		public virtual float[] Values
-		{ 
-			get 
-			{
-				return new float[0];
-			}
-			set
-			{
-			}
-		}
 		public virtual string[] Names
 		{
 			get
