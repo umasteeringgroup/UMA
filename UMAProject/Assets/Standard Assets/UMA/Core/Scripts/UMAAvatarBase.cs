@@ -121,7 +121,6 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 			if (animationController != null) umaData.animationController = animationController;
 			newUMA.animator = null;
 			DestroyImmediate(newUMA);
-			umaData.animator.enabled = false;
 		}
 		else
 		{
