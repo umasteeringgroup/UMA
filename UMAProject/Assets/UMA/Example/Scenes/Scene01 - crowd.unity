@@ -3805,7 +3805,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Right click on a character to adjust their DNA
+  m_Text: Click on a character to adjust their DNA
 --- !u!222 &259368337
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -13781,6 +13781,10 @@ Prefab:
       propertyPath: meshCombiner
       value: 
       objectReference: {fileID: 2079936343}
+    - target: {fileID: 11400000, guid: f500ac7a6589e8f4199db272256fe996, type: 2}
+      propertyPath: fastGeneration
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: f500ac7a6589e8f4199db272256fe996, type: 2}
   m_RootGameObject: {fileID: 518079762}

@@ -20,7 +20,7 @@ namespace UMA
 		public Matrix4x4 tempMatrix;
 		public UMAMeshCombiner meshCombiner;
 		public bool fastGeneration = true;
-		private bool forceGarbageCollect;
+		private int forceGarbageCollect;
 
 		public void Initialize()
 		{
@@ -56,10 +56,10 @@ namespace UMA
 		void Update()
 		{
 			bool didGC = false;
-			if (forceGarbageCollect)
+			if (forceGarbageCollect > 0)
 			{
 				GC.Collect();
-				forceGarbageCollect = false;
+				forceGarbageCollect = 0;
 				didGC = true;
 			}
 			if (umaDirtyList.Count > 0)
@@ -167,7 +167,7 @@ namespace UMA
 		{   
 			if (umaData)
 			{
-				forceGarbageCollect = true;
+				forceGarbageCollect++;
 				umaData.myRenderer.enabled = true;
 				umaData.FireUpdatedEvent(false);
 			}

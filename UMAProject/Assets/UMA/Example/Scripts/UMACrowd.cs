@@ -45,14 +45,14 @@ public class UMACrowd : MonoBehaviour
 		{
 			if (generator.IsIdle())
 			{
-        int randomResult = Random.Range(0, 2);
+				int randomResult = Random.Range(0, 2);
 				GenerateOneUMA(randomResult);
 			}
 		}
 
 		if (generateUMA)
 		{
-      int randomResult = Random.Range(0, 2);
+			int randomResult = Random.Range(0, 2);
 			GenerateOneUMA(randomResult);
 			generateUMA = false;
 		}
@@ -519,14 +519,12 @@ public class UMACrowd : MonoBehaviour
 			int randomResult = Random.Range(0, randomPool.Length);
 			race = randomPool[randomResult].data;
 			umaRecipe.SetRace(raceLibrary.GetRace(race.raceID));
-		}
-		else
+		} else
 		{
 			if (sex == 0)
 			{
 				umaRecipe.SetRace(raceLibrary.GetRace("HumanMale"));
-			}
-			else
+			} else
 			{
 				umaRecipe.SetRace(raceLibrary.GetRace("HumanFemale"));
 			}
@@ -537,8 +535,7 @@ public class UMACrowd : MonoBehaviour
 		if (race != null && race.slotElements.Length > 0)
 		{
 			DefineSlots(race);
-		}
-		else
+		} else
 		{
 			DefineSlots();
 		}
@@ -550,14 +547,12 @@ public class UMACrowd : MonoBehaviour
 			umaDynamicAvatar.animationController = animationController;
 		}
 		umaDynamicAvatar.UpdateNewRace();
-		umaDynamicAvatar.umaData.myRenderer.enabled = false;
 		tempUMA = newGO.transform;
 
 		if (zeroPoint)
 		{
 			tempUMA.position = new Vector3(X * space + zeroPoint.position.x - umaCrowdSize.x * space * 0.5f + 0.5f, zeroPoint.position.y, Y * space + zeroPoint.position.z - umaCrowdSize.y * space * 0.5f + 0.5f);
-		}
-		else
+		} else
 		{
 			tempUMA.position = new Vector3(X * space - umaCrowdSize.x * space * 0.5f + 0.5f, 0, Y * space - umaCrowdSize.y * space * 0.5f + 0.5f);
 		}
