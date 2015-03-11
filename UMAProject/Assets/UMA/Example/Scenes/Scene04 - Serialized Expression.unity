@@ -1403,7 +1403,7 @@ MonoBehaviour:
     e32: 0
     e33: 0
   meshCombiner: {fileID: 1340020841}
-  unityVersion: 0
+  fastGeneration: 1
 --- !u!1 &1674522186
 GameObject:
   m_ObjectHideFlags: 0
@@ -1825,8 +1825,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   raceElementList:
-  - {fileID: 11400000, guid: 5974c812063d32f448439d13aef78212, type: 2}
-  - {fileID: 11400000, guid: 4c4ceb001d5721443a342f562352f73b, type: 2}
+  - {fileID: 11400000, guid: 62688b7aa02fbc544916e522fcc239c7, type: 2}
+  - {fileID: 11400000, guid: f8fea6f0ee17b3f42a4ae6cfb627bab3, type: 2}
 --- !u!4 &2054243462
 Transform:
   m_ObjectHideFlags: 0
