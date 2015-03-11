@@ -703,6 +703,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 89063da455996304db4c4247dbe0b230, type: 2}
   - {fileID: 11400000, guid: d2a973229c739eb479bab81e5fe450b1, type: 2}
   - {fileID: 11400000, guid: 5bb276810c61d5f4a9e2cadabaad21d5, type: 2}
+  - {fileID: 11400000, guid: 04442629189f10a48bc3238f44aa9856, type: 2}
+  - {fileID: 11400000, guid: edcf92bdef3d2e04c980749f7d702647, type: 2}
+  - {fileID: 11400000, guid: 0fbc0a0bbfb29084bbeafb0876b6e28b, type: 2}
 --- !u!1 &1134028390
 GameObject:
   m_ObjectHideFlags: 0
@@ -808,6 +811,9 @@ MonoBehaviour:
   context: {fileID: 1875296715}
   umaData: {fileID: 0}
   umaRecipe: {fileID: 11400000, guid: 6610b58cb8ca50540816c2ec48f2c695, type: 2}
+  umaAdditionalRecipes:
+  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
+  - {fileID: 11400000, guid: e32a3ba3a6520264e99766273eb44e01, type: 2}
   umaGenerator: {fileID: 1653576955}
   animationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
   CharacterCreated:
@@ -825,7 +831,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 1
-    m_TypeName: UMA.UMADataEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+    m_TypeName: UMA.UMADataEvent, Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   CharacterDestroyed:
     m_PersistentCalls:
@@ -842,7 +848,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 1
-    m_TypeName: UMA.UMADataEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+    m_TypeName: UMA.UMADataEvent, Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   CharacterUpdated:
     m_PersistentCalls:
@@ -859,7 +865,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 1
-    m_TypeName: UMA.UMADataEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+    m_TypeName: UMA.UMADataEvent, Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   loadOnStart: 1
 --- !u!1 &1289554241
@@ -973,6 +979,9 @@ MonoBehaviour:
   context: {fileID: 1875296715}
   umaData: {fileID: 0}
   umaRecipe: {fileID: 11400000, guid: bd40706156d628f458820a504ff35d24, type: 2}
+  umaAdditionalRecipes:
+  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
+  - {fileID: 11400000, guid: e32a3ba3a6520264e99766273eb44e01, type: 2}
   umaGenerator: {fileID: 1653576955}
   animationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
   CharacterCreated:
@@ -990,7 +999,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 1
-    m_TypeName: UMA.UMADataEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+    m_TypeName: UMA.UMADataEvent, Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   CharacterDestroyed:
     m_PersistentCalls:
@@ -1007,7 +1016,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 1
-    m_TypeName: UMA.UMADataEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+    m_TypeName: UMA.UMADataEvent, Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   CharacterUpdated:
     m_PersistentCalls:
@@ -1024,7 +1033,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 1
-    m_TypeName: UMA.UMADataEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+    m_TypeName: UMA.UMADataEvent, Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   loadOnStart: 1
 --- !u!1 &1327886464
@@ -1374,9 +1383,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fitAtlas: 1
-  usePRO: 1
   AtlasCrop: 1
-  maxPixels: 100000
   convertRenderTexture: 0
   convertMipMaps: 0
   atlasResolution: 2048
@@ -1405,7 +1412,7 @@ MonoBehaviour:
     e32: 0
     e33: 0
   meshCombiner: {fileID: 1340020841}
-  unityVersion: 0
+  fastGeneration: 1
 --- !u!1 &1674522186
 GameObject:
   m_ObjectHideFlags: 0
@@ -1448,6 +1455,9 @@ MonoBehaviour:
   context: {fileID: 1875296715}
   umaData: {fileID: 0}
   umaRecipe: {fileID: 11400000, guid: f76528773bcda734ca665e46fe4fe0b0, type: 2}
+  umaAdditionalRecipes:
+  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
+  - {fileID: 11400000, guid: e32a3ba3a6520264e99766273eb44e01, type: 2}
   umaGenerator: {fileID: 1653576955}
   animationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
   CharacterCreated:
@@ -1465,7 +1475,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 1
-    m_TypeName: UMA.UMADataEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+    m_TypeName: UMA.UMADataEvent, Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   CharacterDestroyed:
     m_PersistentCalls:
@@ -1482,7 +1492,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 1
-    m_TypeName: UMA.UMADataEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+    m_TypeName: UMA.UMADataEvent, Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   CharacterUpdated:
     m_PersistentCalls:
@@ -1499,7 +1509,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 1
-    m_TypeName: UMA.UMADataEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+    m_TypeName: UMA.UMADataEvent, Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   loadOnStart: 1
 --- !u!1 &1769365862
@@ -1544,6 +1554,9 @@ MonoBehaviour:
   context: {fileID: 1875296715}
   umaData: {fileID: 0}
   umaRecipe: {fileID: 11400000, guid: ea2aae2aa955d3248ba5104dc28bf318, type: 2}
+  umaAdditionalRecipes:
+  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
+  - {fileID: 11400000, guid: e32a3ba3a6520264e99766273eb44e01, type: 2}
   umaGenerator: {fileID: 1653576955}
   animationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
   CharacterCreated:
@@ -1561,7 +1574,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 1
-    m_TypeName: UMA.UMADataEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+    m_TypeName: UMA.UMADataEvent, Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   CharacterDestroyed:
     m_PersistentCalls:
@@ -1578,7 +1591,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 1
-    m_TypeName: UMA.UMADataEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+    m_TypeName: UMA.UMADataEvent, Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   CharacterUpdated:
     m_PersistentCalls:
@@ -1595,7 +1608,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 1
-    m_TypeName: UMA.UMADataEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+    m_TypeName: UMA.UMADataEvent, Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   loadOnStart: 1
 --- !u!1 &1852474813
@@ -1640,6 +1653,9 @@ MonoBehaviour:
   context: {fileID: 1875296715}
   umaData: {fileID: 0}
   umaRecipe: {fileID: 11400000, guid: 29ed364e1f029024db202d90a5f0f518, type: 2}
+  umaAdditionalRecipes:
+  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
+  - {fileID: 11400000, guid: e32a3ba3a6520264e99766273eb44e01, type: 2}
   umaGenerator: {fileID: 1653576955}
   animationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
   CharacterCreated:
@@ -1657,7 +1673,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 1
-    m_TypeName: UMA.UMADataEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+    m_TypeName: UMA.UMADataEvent, Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   CharacterDestroyed:
     m_PersistentCalls:
@@ -1674,7 +1690,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 1
-    m_TypeName: UMA.UMADataEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+    m_TypeName: UMA.UMADataEvent, Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   CharacterUpdated:
     m_PersistentCalls:
@@ -1691,7 +1707,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 1
-    m_TypeName: UMA.UMADataEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+    m_TypeName: UMA.UMADataEvent, Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   loadOnStart: 1
 --- !u!1 &1875296713
