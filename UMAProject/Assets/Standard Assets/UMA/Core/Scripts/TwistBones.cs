@@ -11,12 +11,8 @@ public class TwistBones : MonoBehaviour {
 	public float[] twistRotation;
 	private Vector3 rotated;
 	
-	// Use this for initialization
-	void Awake () {
-		InitializeBoneRotations();
-	}
-
-	public void InitializeBoneRotations() {
+	void Start()
+	{
 		if ((twistBone != null) && (refBone != null) && (twistBone.Length == refBone.Length))
 		{
 			twistRotation = new float[twistBone.Length];
@@ -30,7 +26,7 @@ public class TwistBones : MonoBehaviour {
 	}
 
 	// LateUpdate is called once per frame
-	void LateUpdate ()
+	void LateUpdate()
 	{
 		for (int i = 0; i < twistBone.Length; i++)
 		{

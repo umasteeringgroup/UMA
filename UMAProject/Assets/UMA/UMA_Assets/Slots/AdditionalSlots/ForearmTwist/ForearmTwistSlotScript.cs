@@ -37,7 +37,6 @@ namespace UMA
 			twist.twistValue = 0.5f;
 			twist.twistBone = new Transform[] {leftTwist.transform, rightTwist.transform};
 			twist.refBone = new Transform[] {leftHand.transform, rightHand.transform};
-			twist.InitializeBoneRotations();
 		}
 	}
 }
