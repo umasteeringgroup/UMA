@@ -101,6 +101,10 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 			Destroy(umaChild);
 		}
 		umaChild = Instantiate(umaData.umaRecipe.raceData.racePrefab) as GameObject;
+		if( umaRecipe != null )
+		{
+			umaChild.name = umaRecipe.name;
+		}
 		umaChild.transform.parent = transform;
 		UMAData newUMA = umaChild.GetComponentInChildren<UMAData>();
 		if (newUMA != null)
