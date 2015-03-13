@@ -42,8 +42,6 @@ namespace UMA
                     AnimatorUpdateMode updateMode = AnimatorUpdateMode.Normal;
                     AnimatorCullingMode cullingMode = AnimatorCullingMode.AlwaysAnimate;
 
-					Debug.Log("In UpdateAvatar");
-
 					if (animator)
                     {
 						animating = animator.enabled;
@@ -74,7 +72,6 @@ namespace UMA
                     animator = CreateAnimator(umaData, umaData.umaRecipe.raceData.TPose, umaData.animationController, applyRootMotion, updateMode, cullingMode);
                     umaData.animator = animator;
                     umaData.umaRoot.transform.parent = oldParent;
-					Debug.Log("UmaRoot: "+umaData.umaRoot.name);
 //					umaData.umaRoot.transform.localRotation = Quaternion.identity;
 					umaData.umaRoot.transform.GetChild(0).localRotation = Quaternion.identity;
                     if (snapshot != null)
@@ -162,7 +159,6 @@ namespace UMA
 
         public static Avatar CreateAvatar(UMAData umaData, UmaTPose umaTPose)
         {
-			Debug.Log("Creating Avatar");
             umaTPose.DeSerialize();
             HumanDescription description = CreateHumanDescription(umaData, umaTPose);
             //DebugLogHumanAvatar(umaData.umaRoot, description);
@@ -275,8 +271,6 @@ namespace UMA
 						newBones.RemoveRange(0, missingBoneCount);
 						var realRootBone = umaData.skeleton.GetBoneGameObject(rootBoneHash).transform;
 						var newBone = newBones[0];
-						Debug.Log("RealRoot Pos:"+realRootBone.localPosition);
-						Debug.Log("RealRoot Rot:"+realRootBone.localRotation.eulerAngles);
 						newBone.position = realRootBone.localPosition;
 						newBone.rotation = realRootBone.localRotation;
 						newBone.scale = realRootBone.localScale;

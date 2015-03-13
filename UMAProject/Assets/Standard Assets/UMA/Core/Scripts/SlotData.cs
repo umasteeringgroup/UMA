@@ -6,7 +6,7 @@ using System.Collections.Generic;
 namespace UMA
 {
 	[System.Serializable]
-	public partial class SlotData : ScriptableObject
+	public partial class SlotData : ScriptableObject, ISerializationCallbackReceiver
 	{
 		public string slotName;
 		public int listID = -1;
@@ -230,5 +230,20 @@ namespace UMA
 		{
 			return "SlotData: " + slotName;
 		}
+
+		#region ISerializationCallbackReceiver Members
+
+		public void OnAfterDeserialize()
+		{
+#if UNITY_EDITOR
+			Debug.Log("De serialize", this);
+#endif
+		}
+
+		public void OnBeforeSerialize()
+		{
+		}
+
+		#endregion
 	}
 }

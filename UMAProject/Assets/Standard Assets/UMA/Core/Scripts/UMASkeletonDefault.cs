@@ -27,12 +27,10 @@ namespace UMA
 
 		public override void BeginSkeletonUpdate()
 		{
-			Debug.Log("BeginSkeletonUpdate");
 		}
 
 		public override void EndSkeletonUpdate()
 		{
-			Debug.Log("EndSkeletonUpdate");
 		}
 		
 		private void AddBonesRecursive(Transform transform)
