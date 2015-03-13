@@ -93,8 +93,6 @@ namespace UMA
 			if (builtHashes)
 				return;
 
-			Debug.Log("Building static bone hashes for DNA converters");
-
 			headAdjustHash = UMASkeleton.StringToHash("HeadAdjust");
 			neckAdjustHash = UMASkeleton.StringToHash("NeckAdjust");
 			leftOuterBreastHash = UMASkeleton.StringToHash("LeftOuterBreast");

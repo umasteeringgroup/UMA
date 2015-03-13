@@ -11,15 +11,21 @@ namespace UMA
 		public string slotName;
 		public int listID = -1;
 
+		[System.Obsolete("SlotData.meshRenderer is obsolete.", false)]
 		public SkinnedMeshRenderer meshRenderer;
+		[System.Obsolete("SlotData.boneNameHashes is obsolete.", false)]
+		public int[] boneNameHashes;
+		[System.Obsolete("SlotData.boneWeights is obsolete.", false)]
+		public BoneWeight[] boneWeights;
+		[System.Obsolete("SlotData.umaBoneData is obsolete.", false)]
+		public Transform[] umaBoneData;
+
 		public Material materialSample;
 		public float overlayScale = 1.0f;
-		public Transform[] umaBoneData;
-		public int[] boneNameHashes;
 		public Transform[] animatedBones = new Transform[0];
 		public string[] textureNameList;
 		public DnaConverterBehaviour slotDNA;
-		public BoneWeight[] boneWeights;
+		public UMAMeshData meshData;
 		public int subMeshIndex;
 		/// <summary>
 		/// Use this to identify slots that serves the same purpose
@@ -48,13 +54,8 @@ namespace UMA
 			tempSlotData.subMeshIndex = subMeshIndex;
             
 			// All this data is passed as reference
-			tempSlotData.meshRenderer = meshRenderer;
-			tempSlotData.boneWeights = boneWeights;
-			EnsureBoneNameHashes();
-			tempSlotData.boneNameHashes = boneNameHashes;
+			tempSlotData.meshData = meshData;
 			tempSlotData.animatedBones = animatedBones;
-			tempSlotData.boneWeights = boneWeights;
-			tempSlotData.umaBoneData = umaBoneData;
 			tempSlotData.textureNameList = textureNameList;
 			//Overlays are duplicated, to lose reference
 			for (int i = 0; i < overlayList.Count; i++)
@@ -74,22 +75,6 @@ namespace UMA
             
 		}
 
-		public void EnsureBoneNameHashes()
-		{
-			if (meshRenderer == null)
-				return;
-
-			if (boneNameHashes == null || boneNameHashes.Length == 0)
-			{
-				var bones = meshRenderer.bones;
-				boneNameHashes = new int[bones.Length];
-				for (int i = 0; i < bones.Length; i++)
-				{
-					boneNameHashes[i] = UMASkeleton.StringToHash(bones[i].name);
-				}
-			}
-		}
-        
 		public int GetTextureChannelCount(UMAGeneratorBase generator)
 		{
 			if (textureNameList != null && textureNameList.Length > 0)
@@ -195,7 +180,7 @@ namespace UMA
 		internal bool Validate(UMAGeneratorBase generator)
 		{
 			bool valid = true;
-			if (meshRenderer != null)
+			if (meshData != null)
 			{
 				string[] activeList;
 				if (textureNameList == null || textureNameList.Length == 0)
@@ -231,12 +216,27 @@ namespace UMA
 			return "SlotData: " + slotName;
 		}
 
+#if UNITY_EDITOR
+		public void UpdateMeshData(SkinnedMeshRenderer meshRenderer)
+		{
+			meshData = new UMAMeshData();
+			meshData.RetrieveDataFromUnityMesh(meshRenderer);
+			UnityEditor.EditorUtility.SetDirty(this);
+		}
+#endif
+
 		#region ISerializationCallbackReceiver Members
 
 		public void OnAfterDeserialize()
 		{
 #if UNITY_EDITOR
-			Debug.Log("De serialize", this);
+			if (meshData == null && meshRenderer != null)
+			{
+				meshData = new UMAMeshData();
+				meshData.RetrieveDataFromUnityMesh(meshRenderer);
+				meshRenderer = null;
+				UnityEditor.EditorUtility.SetDirty(this);
+			}
 #endif
 		}
 

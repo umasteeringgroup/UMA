@@ -185,8 +185,8 @@ namespace UMAEditor
 	            Debug.LogError("Slot Mesh not supplied.");
 	            return null;
 	        }
-            Debug.Log("Slot Mesh: " + slotMesh.name, slotMesh.gameObject); 
-	        SlotData slot = UMATextureImporterUtil.CreateSlotData(AssetDatabase.GetAssetPath(slotFolder), GetAssetFolder(), GetAssetName(), slotMesh, material, racePrefab);
+            Debug.Log("Slot Mesh: " + slotMesh.name, slotMesh.gameObject);
+			SlotData slot = UMASlotProcessingUtil.CreateSlotData(AssetDatabase.GetAssetPath(slotFolder), GetAssetFolder(), GetAssetName(), slotMesh, material, racePrefab);
 	        return slot;
 	    }
 
@@ -455,7 +455,16 @@ namespace UMAEditor
 				var slotData = obj as SlotData;
 				if (slotData != null)
 				{
-					UMATextureImporterUtil.OptimizeSlotDataMesh(slotData);
+#pragma warning disable 618 
+					if (slotData.meshRenderer != null)
+					{
+						UMASlotProcessingUtil.OptimizeSlotDataMesh(slotData.meshRenderer);
+						slotData.UpdateMeshData(slotData.meshRenderer);
+						slotData.meshRenderer = null;
+						EditorUtility.SetDirty(slotData);
+
+					}
+#pragma warning restore 618
 				}
 			}
 			AssetDatabase.SaveAssets();

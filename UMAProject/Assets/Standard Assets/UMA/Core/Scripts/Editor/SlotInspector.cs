@@ -38,11 +38,32 @@ namespace UMAEditor
         protected SlotData slot;
         protected bool showBones;
         protected Vector2 boneScroll = new Vector2();
+		protected Transform[] umaBoneData;
 
         public void OnEnable()
         {
             slot = target as SlotData;
-        }
+#pragma warning disable 618
+			if (slot.meshData != null)
+			{
+				if (slot.meshData.rootBone != null)
+				{
+					umaBoneData = GetTransformsInPrefab(slot.meshData.rootBone);
+				}
+				else
+				{
+					umaBoneData = new Transform[0];
+				}
+			} else  if (slot.meshRenderer != null)
+			{
+				umaBoneData = GetTransformsInPrefab(slot.meshRenderer.rootBone);
+			}
+			else
+			{
+				umaBoneData = new Transform[0];
+			}
+#pragma warning restore 618
+		}
 
         public override void OnInspectorGUI()
         {
@@ -53,34 +74,20 @@ namespace UMAEditor
 
             EditorGUILayout.Space();
 
-			SkinnedMeshRenderer currentRenderer = slot.meshRenderer;
-			SkinnedMeshRenderer renderer = EditorGUILayout.ObjectField("Renderer", currentRenderer, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
-			if (renderer != currentRenderer)
-			{
-				slot.umaBoneData = null;
-                slot.animatedBones = new Transform[0];
-
-                slot.meshRenderer = renderer;
-				if (renderer != null)
-				{
-					slot.umaBoneData = GetTransformsInPrefab(slot.meshRenderer.rootBone);
-				}
-				else
-				{
-					slot.umaBoneData = null;
-					slot.animatedBones = null;
-				}
-            }
             slot.subMeshIndex = EditorGUILayout.IntField("Sub Mesh Index", slot.subMeshIndex);
             Material material = EditorGUILayout.ObjectField("Material", slot.materialSample, typeof(Material), false) as Material;
             if (material != slot.materialSample)
             {
                 slot.materialSample = material;
             }
+			if (GUI.changed)
+			{
+				EditorUtility.SetDirty(slot);
+			}
 
             EditorGUILayout.Space();
 
-            if (slot.umaBoneData == null)
+            if (umaBoneData == null)
             {
                 showBones = false;
                 GUI.enabled = false;
@@ -99,8 +106,7 @@ namespace UMAEditor
                 boneScroll = EditorGUILayout.BeginScrollView(boneScroll);
                 EditorGUILayout.BeginVertical();
 
-                Transform deletedBone = null;
-                foreach (Transform bone in slot.umaBoneData)
+                foreach (Transform bone in umaBoneData)
                 {
                     bool wasAnimated = ArrayUtility.Contains<Transform>(slot.animatedBones, bone);
 
@@ -111,38 +117,26 @@ namespace UMAEditor
                     {
                         if (animated)
                         {
-                            Undo.RecordObject(slot, "Add Animated Bone");
                             ArrayUtility.Add<Transform>(ref slot.animatedBones, bone);
-                        }
+							EditorUtility.SetDirty(slot);
+						}
                         else
                         {
-                            Undo.RecordObject(slot, "Remove Animated Bone");
                             ArrayUtility.Remove<Transform>(ref slot.animatedBones, bone);
-                        }
-                    }
-                    if (GUILayout.Button("-", GUILayout.Width(20f)))
-                    {
-                        deletedBone = bone;
-                        break;
+							EditorUtility.SetDirty(slot);
+						}
                     }
                     EditorGUILayout.EndHorizontal();
-                }
-                if (deletedBone != null)
-                {
-                    Undo.RecordObject(slot, "Delete Bone");
-                    ArrayUtility.Remove<Transform>(ref slot.umaBoneData, deletedBone);
-                    ArrayUtility.Remove<Transform>(ref slot.animatedBones, deletedBone);
                 }
 
                 EditorGUILayout.EndVertical();
                 EditorGUILayout.EndScrollView();
                 EditorGUI.indentLevel--;
 
-                if (GUILayout.Button("Reset Bones"))
+                if (GUILayout.Button("Clear Animated Bones"))
                 {
-                    Undo.RecordObject(slot, "Reset Bones");
-                    slot.umaBoneData = GetTransformsInPrefab(slot.meshRenderer.rootBone);
                     slot.animatedBones = new Transform[0];
+					EditorUtility.SetDirty(slot);
                 }
             }
 

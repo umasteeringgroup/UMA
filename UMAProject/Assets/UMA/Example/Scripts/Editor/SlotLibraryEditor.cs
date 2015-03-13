@@ -280,13 +280,9 @@ public class SlotLibraryEditor : Editor
 	{
 		for (int i = m_SlotDataCount.intValue - 1; i >= 0; i--)
 		{
-			if (slotElementList[i])
+			if (slotElementList[i] == null)
 			{
-				if (slotElementList[i].meshRenderer == null || slotElementList[i].materialSample == null)
-				{
-					Debug.LogWarning("Removed SlotData: " + slotElementList[i].slotName);
-					RemoveSlotDataAtIndex(i);
-				}
+				RemoveSlotDataAtIndex(i);
 			}
 		}
 	}

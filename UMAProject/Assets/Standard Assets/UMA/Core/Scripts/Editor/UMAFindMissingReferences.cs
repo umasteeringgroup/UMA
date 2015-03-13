@@ -17,9 +17,10 @@ namespace UMAEditor
 		static void Replace()
 		{
 			List<UnityReference> references = new List<UnityReference>();
+			var slotFilePaths = new List<string>();
 
 			references.Add(new UnityReference("e20699a64490c4e4284b27a8aeb05666", "1772484567", FindAssetGuid("OverlayData", "cs"), "11500000")); // OverlayData.cs
-			references.Add(new UnityReference("e20699a64490c4e4284b27a8aeb05666", "-1278852528", FindAssetGuid("SlotData", "cs"), "11500000")); // SlotData.cs
+			references.Add(new UnityReference("e20699a64490c4e4284b27a8aeb05666", "-1278852528", FindAssetGuid("SlotData", "cs"), "11500000") { updatedFiles = slotFilePaths }); // SlotData.cs
 			references.Add(new UnityReference("e20699a64490c4e4284b27a8aeb05666", "-335686737", FindAssetGuid("RaceData", "cs"), "11500000")); // RaceData.cs
 			references.Add(new UnityReference("e20699a64490c4e4284b27a8aeb05666", "-1571472132", FindAssetGuid("UMADefaultMeshCombiner", "cs"), "11500000")); // UMADefaultMeshCombiner.cs
 			references.Add(new UnityReference("e20699a64490c4e4284b27a8aeb05666", "-1550055707", FindAssetGuid("UMAData", "cs"), "11500000")); // UMAData.cs
@@ -27,6 +28,22 @@ namespace UMAEditor
 			references.Add(new UnityReference("e20699a64490c4e4284b27a8aeb05666", "-1175167296", FindAssetGuid("TextureMerge", "cs"), "11500000")); // TextureMerge.cs
 
 			ReplaceReferences(Application.dataPath, references);
+
+			foreach (var slotFilePath in slotFilePaths)
+			{
+				var correctedAssetDatabasePath = "Assets"+slotFilePath.Substring(Application.dataPath.Length);
+				AssetDatabase.ImportAsset(correctedAssetDatabasePath);
+				var slotData = AssetDatabase.LoadAssetAtPath(correctedAssetDatabasePath, typeof(UMA.SlotData)) as UMA.SlotData;
+#pragma warning disable 618
+				if (slotData.meshRenderer != null)
+				{
+					UMASlotProcessingUtil.OptimizeSlotDataMesh(slotData.meshRenderer);
+					slotData.UpdateMeshData(slotData.meshRenderer);
+					slotData.meshRenderer = null;
+					EditorUtility.SetDirty(slotData);
+				}
+#pragma warning restore 618
+			}
 		}
 
 		static string FindAssetGuid(string assetName, string assetExtension)
@@ -56,7 +73,7 @@ namespace UMAEditor
 			}
 
 			string[] files = Directory.GetFiles(assetFolder, "*"
-//				, SearchOption.AllDirectories
+				, SearchOption.AllDirectories
 				);
 			for (int i = 0; i < files.Length; i++)
 			{
@@ -89,6 +106,10 @@ namespace UMAEditor
 				Regex regex = new Regex(@"fileID: " + r.srcFileId + ", guid: " + r.srcGuid);
 				if (regex.IsMatch(fileContents))
 				{
+					if (r.updatedFiles != null)
+					{
+						r.updatedFiles.Add(filePath);
+					}
 					fileContents = regex.Replace(fileContents, "fileID: " + r.dstFileId + ", guid: " + r.dstGuid);
 					match = true;
 					Debug.Log("Replaced: " + filePath);
@@ -131,7 +152,7 @@ namespace UMAEditor
 				this.dstGuid = dstGuid;
 				this.dstFileId = dstFileId;
 			}
-
+			public List<string> updatedFiles;
 			public string srcGuid;
 			public string srcFileId;
 			public string dstGuid;

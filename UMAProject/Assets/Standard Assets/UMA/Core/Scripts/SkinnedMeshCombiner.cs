@@ -10,42 +10,27 @@ namespace UMA
 	{
 		public class CombineInstance
 		{
-			public Mesh mesh;
-			public Transform[] bones;
-			public int[] boneNameHashes;
-			public int[] destMesh;
-
-			public InstanceData data = null;
+			public UMAMeshData meshData;
+			public int[] targetSubmeshIndices;
 		}
 
-		public class InstanceData
+		private enum MeshComponents
 		{
-			public Vector3[] normals = null;
-			public Vector4[] tangents = null;
-			public Vector2[] uv = null;
-			public Vector2[] uv2 = null;
-			public Color32[] colors32 = null;
-			
-			public Vector3[] vertices = null;
-			public BoneWeight[] weights = null;
-			public Matrix4x4[] binds = null;
-			public int[][] submeshTris = null;
+			none = 0,
+			has_normals = 1,
+			has_tangents = 2,
+			has_colors32 = 4,
+			has_uv = 8,
+			has_uv2 = 16,
+			has_uv3 = 32,
+			has_uv4 = 64
 		}
 
-		private static Dictionary<int, InstanceData> savedInstanceData = new Dictionary<int, InstanceData>();
-		public static void ReleasedStoredData()
-		{
-			savedInstanceData.Clear();
-			GC.Collect();
-		}
-		
 		public static void CombineMeshes(SkinnedMeshRenderer target, CombineInstance[] sources, UMASkeleton skeleton)
 		{
-			CombineInstance dest = new CombineInstance();
-			dest.mesh = target.sharedMesh;
-			CombineMeshes(ref dest, sources, target.rootBone, skeleton);
-			target.sharedMesh = dest.mesh;
-			target.bones = dest.bones;
+			UMAMeshData dest = new UMAMeshData();
+			CombineMeshes(dest, sources, target.rootBone, skeleton);
+			dest.ApplyDataToUnityMesh(target);
 		}
 
 		private static Transform RecursivelyMapToNewRoot(Transform bone, int hash, Transform rootBone, UMASkeleton skeleton)
@@ -84,212 +69,220 @@ namespace UMA
 			return res;
 		}
 
-		public static void CombineMeshes(ref CombineInstance target, CombineInstance[] sources, Transform rootBone, UMASkeleton skeleton)
+		public static void CombineMeshes(UMAMeshData target, CombineInstance[] sources, Transform rootBone, UMASkeleton skeleton)
 		{
-			Mesh dest = target.mesh;
 			int vertexCount = 0;
 			int bindPoseCount = 0;
-			bool has_normals = false;
-			bool has_tangents = false;
-			bool has_uv = false;
-			bool has_uv2 = false;
-			bool has_colors32 = false;
-			int subMeshCount = 0;
-			
-			foreach (var source in sources)
-			{
-				foreach(var destIndex in source.destMesh)
-				{
-					if( subMeshCount < destIndex )
-					{
-						subMeshCount = destIndex;
-					}
-				}           
-			}
-			subMeshCount++;
-			int[] subMeshTriangleLength = new int[subMeshCount];
-			for(int i=0; i< subMeshTriangleLength.Length; i++)
-			{
-				subMeshTriangleLength[i] = 0;
-			}
-			
-			Bounds bounds = sources[0].mesh.bounds;
-			
-			foreach (var source in sources)
-			{
-				var sMesh = source.mesh;
-				int sourceHash = sMesh.GetHashCode();
-				if (!savedInstanceData.TryGetValue(sourceHash, out source.data))
-				{
-					source.data = new InstanceData();
-					source.data.binds = sMesh.bindposes;
-					source.data.normals = sMesh.normals;
-					source.data.tangents = sMesh.tangents;
-					source.data.uv = sMesh.uv;
-					source.data.uv2 = sMesh.uv2;
-					source.data.colors32 = sMesh.colors32;
 
-					source.data.vertices = sMesh.vertices;
-					source.data.weights = sMesh.boneWeights;
+			MeshComponents meshComponents = MeshComponents.none;
 
-					source.data.submeshTris = new int[subMeshCount][];
-					for (int i = 0; i < source.mesh.subMeshCount; i++)
-					{
-						if (source.destMesh[i] >= 0)
-						{
-							source.data.submeshTris[i] = sMesh.GetTriangles(i);
-						}
-					}
+			int subMeshCount = FindTargetSubMeshCount(sources);
+			var subMeshTriangleLength = new int[subMeshCount];
+			AnalyzeSources(sources, subMeshTriangleLength, ref vertexCount, ref bindPoseCount, ref meshComponents);
 
-					savedInstanceData.Add(sourceHash, source.data);
-				}
-
-				vertexCount += source.data.vertices.Length;
-				bindPoseCount += source.data.binds.Length;
-				has_normals |= source.data.normals != null && source.data.normals.Length != 0;
-				has_tangents |= source.data.tangents != null && source.data.tangents.Length != 0;
-				has_uv |= source.data.uv != null && source.data.uv.Length != 0;
-				has_uv2 |= source.data.uv2 != null && source.data.uv2.Length != 0;
-				has_colors32 |= source.data.colors32 != null && source.data.colors32.Length != 0;
-
-				bounds.Encapsulate(sMesh.bounds);
-				for (int i = 0; i < source.mesh.subMeshCount; i++)
-				{
-					if (source.destMesh[i] >= 0)
-					{
-						int triangleLength = source.data.submeshTris[i].Length;
-						subMeshTriangleLength[source.destMesh[i]] += triangleLength;
-					}
-				}
-
-			}
 			int[][] submeshTriangles = new int[subMeshCount][];
-			for(int i=0; i< subMeshTriangleLength.Length; i++)
+			for (int i = 0; i < subMeshTriangleLength.Length; i++)
 			{
 				submeshTriangles[i] = new int[subMeshTriangleLength[i]];
 				subMeshTriangleLength[i] = 0;
 			}
-			
-			Vector3[] vertices = GetArray(dest.vertices, vertexCount);
-			BoneWeight[] boneWeights = GetArray(dest.boneWeights, vertexCount);
-			Vector3[] normals = has_normals ? GetArray(dest.normals, vertexCount) : null;
-			Vector4[] tangents = has_tangents ? GetArray(dest.tangents, vertexCount) : null;
-			Vector2[] uv = has_uv ? GetArray(dest.uv, vertexCount) : null;
-			Vector2[] uv2 = has_uv2 ? GetArray(dest.uv2, vertexCount) : null;
-			Color32[] colors32 = has_colors32 ? GetArray(dest.colors32, vertexCount) : null;
-			
+
+			Vector3[] vertices = GetArray(target.vertices, vertexCount);
+			BoneWeight[] boneWeights = GetArray(target.boneWeights, vertexCount);
+			Vector3[] normals = (meshComponents & MeshComponents.has_normals) != MeshComponents.none ? GetArray(target.normals, vertexCount) : null;
+			Vector4[] tangents = (meshComponents & MeshComponents.has_tangents) != MeshComponents.none ? GetArray(target.tangents, vertexCount) : null;
+			Vector2[] uv = (meshComponents & MeshComponents.has_uv) != MeshComponents.none ? GetArray(target.uv, vertexCount) : null;
+			Vector2[] uv2 = (meshComponents & MeshComponents.has_uv2) != MeshComponents.none ? GetArray(target.uv2, vertexCount) : null;
+#if !UNITY_4
+			Vector2[] uv3 = (meshComponents & MeshComponents.has_uv3) != MeshComponents.none ? GetArray(target.uv3, vertexCount) : null;
+			Vector2[] uv4 = (meshComponents & MeshComponents.has_uv4) != MeshComponents.none ? GetArray(target.uv4, vertexCount) : null;
+#endif
+			Color32[] colors32 = (meshComponents & MeshComponents.has_colors32) != MeshComponents.none ? GetArray(target.colors32, vertexCount) : null;
+
 			int vertexIndex = 0;
-			
+
 			var bonesCollection = new Dictionary<Transform, BoneIndexEntry>(bindPoseCount);
 			List<Matrix4x4> bindPoses = new List<Matrix4x4>(bindPoseCount);
 			List<Transform> bonesList = new List<Transform>(bindPoseCount);
-			
+
 			foreach (var source in sources)
 			{
-				vertexCount = source.data.vertices.Length;
-				var sourceBones = rootBone == null ? source.bones : CloneBoneListInNewHierarchy(rootBone, source.bones, source.boneNameHashes, skeleton);
+				vertexCount = source.meshData.vertices.Length;
+				var sourceBones = CloneBoneListInNewHierarchy(rootBone, source.meshData.bones, source.meshData.boneNameHashes, skeleton);
 
-				BuildBoneWeights(source.data.weights, 0, boneWeights, vertexIndex, vertexCount, sourceBones, source.data.binds, bonesCollection, bindPoses, bonesList);
-				
-				Array.Copy(source.data.vertices, 0, vertices, vertexIndex, vertexCount);
-				
-				if (has_normals)
+				BuildBoneWeights(source.meshData.boneWeights, 0, boneWeights, vertexIndex, vertexCount, sourceBones, source.meshData.bindPoses, bonesCollection, bindPoses, bonesList);
+
+				Array.Copy(source.meshData.vertices, 0, vertices, vertexIndex, vertexCount);
+
+				if ((meshComponents & MeshComponents.has_normals) != MeshComponents.none)
 				{
-					if(source.data.normals != null && source.data.normals.Length > 0)
+					if (source.meshData.normals != null && source.meshData.normals.Length > 0)
 					{
-						Array.Copy(source.data.normals, 0, normals, vertexIndex, vertexCount);
+						Array.Copy(source.meshData.normals, 0, normals, vertexIndex, vertexCount);
 					}
-					else 
+					else
 					{
 						FillArray(tangents, vertexIndex, vertexCount, Vector3.zero);
 					}
 				}
-				if (has_tangents)
+				if ((meshComponents & MeshComponents.has_tangents) != MeshComponents.none)
 				{
-					if(source.data.tangents != null && source.data.tangents.Length > 0)
+					if (source.meshData.tangents != null && source.meshData.tangents.Length > 0)
 					{
-						Array.Copy(source.data.tangents, 0, tangents, vertexIndex, vertexCount);
+						Array.Copy(source.meshData.tangents, 0, tangents, vertexIndex, vertexCount);
 					}
-					else 
+					else
 					{
 						FillArray(tangents, vertexIndex, vertexCount, Vector4.zero);
 					}
 				}
-				if (has_uv)
+				if ((meshComponents & MeshComponents.has_uv) != MeshComponents.none)
 				{
-					if (source.data.uv != null)
+					if (source.meshData.uv != null)
 					{
-						Array.Copy(source.data.uv, 0, uv, vertexIndex, vertexCount);
+						Array.Copy(source.meshData.uv, 0, uv, vertexIndex, vertexCount);
 					}
-					else 
+					else
 					{
 						FillArray(uv, vertexIndex, vertexCount, Vector4.zero);
 					}
 				}
-				if (has_uv2)
+				if ((meshComponents & MeshComponents.has_uv2) != MeshComponents.none)
 				{
-					if (source.data.uv2 != null)
+					if (source.meshData.uv2 != null)
 					{
-						Array.Copy(source.data.uv2, 0, uv2, vertexIndex, vertexCount);
+						Array.Copy(source.meshData.uv2, 0, uv2, vertexIndex, vertexCount);
 					}
-					else 
+					else
 					{
 						FillArray(uv2, vertexIndex, vertexCount, Vector4.zero);
 					}
 				}
-				if (has_colors32)
+#if !UNITY_4
+				if ((meshComponents & MeshComponents.has_uv3) != MeshComponents.none)
 				{
-					if (source.data.colors32 != null && source.data.colors32.Length > 0)
+					if (source.meshData.uv3 != null)
 					{
-						Array.Copy(source.data.colors32, 0, colors32, vertexIndex, vertexCount);
+						Array.Copy(source.meshData.uv3, 0, uv3, vertexIndex, vertexCount);
 					}
-					else 
+					else
+					{
+						FillArray(uv3, vertexIndex, vertexCount, Vector4.zero);
+					}
+				}
+				if ((meshComponents & MeshComponents.has_uv4) != MeshComponents.none)
+				{
+					if (source.meshData.uv4 != null)
+					{
+						Array.Copy(source.meshData.uv4, 0, uv4, vertexIndex, vertexCount);
+					}
+					else
+					{
+						FillArray(uv4, vertexIndex, vertexCount, Vector4.zero);
+					}
+				}
+#endif
+				if ((meshComponents & MeshComponents.has_colors32) != MeshComponents.none)
+				{
+					if (source.meshData.colors32 != null && source.meshData.colors32.Length > 0)
+					{
+						Array.Copy(source.meshData.colors32, 0, colors32, vertexIndex, vertexCount);
+					}
+					else
 					{
 						Color32 white32 = Color.white;
 						FillArray(colors32, vertexIndex, vertexCount, white32);
 					}
 				}
-				
-				for (int i = 0; i < source.mesh.subMeshCount; i++)
+
+				for (int i = 0; i < source.meshData.subMeshCount; i++)
 				{
-					if (source.destMesh[i] >= 0)
+					if (source.targetSubmeshIndices[i] >= 0)
 					{
-						int[] subTriangles = source.data.submeshTris[i];
+						int[] subTriangles = source.meshData.submeshes[i].triangles;
 						int triangleLength = subTriangles.Length;
-						int destMesh = source.destMesh[i];
-						
+						int destMesh = source.targetSubmeshIndices[i];
+
 						CopyIntArrayAdd(subTriangles, 0, submeshTriangles[destMesh], subMeshTriangleLength[destMesh], triangleLength, vertexIndex);
 						subMeshTriangleLength[destMesh] += triangleLength;
 					}
 				}
-				
+
 				vertexIndex += vertexCount;
 			}
-			
-			// empty destination to avoid conflicts
-			dest.subMeshCount = 1;
-			dest.triangles = new int[0];
-			
+
 			// fill in new values.
-			dest.vertices = vertices;
-			dest.boneWeights = boneWeights;
-			dest.bindposes = bindPoses.ToArray();
-			dest.normals = normals;
-			dest.tangents = tangents;
-			dest.uv = uv;
-			dest.uv2 = uv2;
-			dest.colors32 = colors32;
-			
-			dest.subMeshCount = subMeshCount;
+			target.vertices = vertices;
+			target.boneWeights = boneWeights;
+			target.bindPoses = bindPoses.ToArray();
+			target.normals = normals;
+			target.tangents = tangents;
+			target.uv = uv;
+			target.uv2 = uv2;
+#if !UNITY_4
+			target.uv3 = uv3;
+			target.uv4 = uv4;
+#endif
+			target.colors32 = colors32;
+
+			target.subMeshCount = subMeshCount;
+			target.submeshes = new SubMeshTriangles[subMeshCount];
 			for (int i = 0; i < subMeshCount; i++)
 			{
-				dest.SetTriangles(submeshTriangles[i], i);
+				target.submeshes[i].triangles = submeshTriangles[i];
 			}
-			
 			target.bones = bonesList.ToArray();
-			target.mesh = dest;
 		}
-		
+
+		private static void AnalyzeSources(CombineInstance[] sources, int[] subMeshTriangleLength, ref int vertexCount, ref int bindPoseCount, ref MeshComponents meshComponents)
+		{
+			for (int i = 0; i < subMeshTriangleLength.Length; i++)
+			{
+				subMeshTriangleLength[i] = 0;
+			}
+
+			foreach (var source in sources)
+			{
+				vertexCount += source.meshData.vertices.Length;
+				bindPoseCount += source.meshData.bindPoses.Length;
+				if (source.meshData.normals != null && source.meshData.normals.Length != 0) meshComponents |= MeshComponents.has_normals;
+				if (source.meshData.tangents != null && source.meshData.tangents.Length != 0) meshComponents |= MeshComponents.has_tangents;
+				if (source.meshData.uv != null && source.meshData.uv.Length != 0) meshComponents |= MeshComponents.has_uv;
+				if (source.meshData.uv2 != null && source.meshData.uv2.Length != 0) meshComponents |= MeshComponents.has_uv2;
+#if !UNITY_4
+				if (source.meshData.uv3 != null && source.meshData.uv3.Length != 0) meshComponents |= MeshComponents.has_uv3;
+				if (source.meshData.uv4 != null && source.meshData.uv4.Length != 0) meshComponents |= MeshComponents.has_uv4;
+#endif
+				if (source.meshData.colors32 != null && source.meshData.colors32.Length != 0) meshComponents |= MeshComponents.has_colors32;
+
+				for (int i = 0; i < source.meshData.subMeshCount; i++)
+				{
+					if (source.targetSubmeshIndices[i] >= 0)
+					{
+						int triangleLength = source.meshData.submeshes[i].triangles.Length;
+						subMeshTriangleLength[source.targetSubmeshIndices[i]] += triangleLength;
+					}
+				}
+
+			}
+		}
+
+		private static int FindTargetSubMeshCount(CombineInstance[] sources)
+		{
+			int highestTargetIndex = -1;
+			foreach (var source in sources)
+			{
+				foreach (var targetIndex in source.targetSubmeshIndices)
+				{
+					if (highestTargetIndex < targetIndex)
+					{
+						highestTargetIndex = targetIndex;
+					}
+				}
+			}
+			return highestTargetIndex + 1;
+		}
+
 		private static void BuildBoneWeights(BoneWeight[] source, int sourceIndex, BoneWeight[] dest, int destIndex, int count, Transform[] bones, Matrix4x4[] bindPoses, Dictionary<Transform, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<Transform> bonesList)
 		{
 			int[] boneMapping = new int[bones.Length];
@@ -297,7 +290,7 @@ namespace UMA
 			{
 				boneMapping[i] = TranslateBoneIndex(i, bones, bindPoses, bonesCollection, bindPosesList, bonesList);
 			}
-			
+
 			BoneWeight weight;
 			while (count-- > 0)
 			{
@@ -314,20 +307,20 @@ namespace UMA
 		{
 			public int index;
 			public List<int> indices;
-			public int Count { get { return index >= 0 ? 1 : indices.Count; }}
-			public int this[int idx] 
+			public int Count { get { return index >= 0 ? 1 : indices.Count; } }
+			public int this[int idx]
 			{
-				get 
+				get
 				{
-					if( index >= 0 )
+					if (index >= 0)
 					{
-						if( idx == 0 ) return index;
+						if (idx == 0) return index;
 						throw new ArgumentOutOfRangeException();
 					}
 					return indices[idx];
 				}
 			}
-			
+
 			internal void AddIndex(int idx)
 			{
 				if (index >= 0)
@@ -339,7 +332,7 @@ namespace UMA
 				indices.Add(idx);
 			}
 		}
-		
+
 		private static bool CompareMatrixes(Matrix4x4 m1, ref Matrix4x4 m2)
 		{
 			if (Mathf.Abs(m1.m00 - m2.m00) > 0.0001) return false;
@@ -360,7 +353,7 @@ namespace UMA
 			if (Mathf.Abs(m1.m33 - m2.m33) > 0.0001) return false;
 			return true;
 		}
-		
+
 		private static int TranslateBoneIndex(int index, Transform[] bones, Matrix4x4[] bindPoses, Dictionary<Transform, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<Transform> bonesList)
 		{
 			var boneTransform = bones[index];
@@ -390,7 +383,7 @@ namespace UMA
 				return idx;
 			}
 		}
-		
+
 		private static void CopyColorsToColors32(Color[] source, int sourceIndex, Color32[] dest, int destIndex, int count)
 		{
 			while (count-- > 0)
@@ -399,7 +392,7 @@ namespace UMA
 				dest[destIndex++] = new Color32((byte)Mathf.RoundToInt(sColor.r * 255f), (byte)Mathf.RoundToInt(sColor.g * 255f), (byte)Mathf.RoundToInt(sColor.b * 255f), (byte)Mathf.RoundToInt(sColor.a * 255f));
 			}
 		}
-		
+
 		private static void FillArray(Vector4[] array, int index, int count, Vector4 value)
 		{
 			while (count-- > 0)
@@ -407,7 +400,7 @@ namespace UMA
 				array[index++] = value;
 			}
 		}
-		
+
 		private static void FillArray(Vector3[] array, int index, int count, Vector3 value)
 		{
 			while (count-- > 0)
@@ -415,7 +408,7 @@ namespace UMA
 				array[index++] = value;
 			}
 		}
-		
+
 		private static void FillArray(Vector2[] array, int index, int count, Vector2 value)
 		{
 			while (count-- > 0)
@@ -423,7 +416,7 @@ namespace UMA
 				array[index++] = value;
 			}
 		}
-		
+
 		private static void FillArray(Color[] array, int index, int count, Color value)
 		{
 			while (count-- > 0)
@@ -431,7 +424,7 @@ namespace UMA
 				array[index++] = value;
 			}
 		}
-		
+
 		private static void FillArray(Color32[] array, int index, int count, Color32 value)
 		{
 			while (count-- > 0)
@@ -439,7 +432,7 @@ namespace UMA
 				array[index++] = value;
 			}
 		}
-		
+
 		private static void CopyIntArrayAdd(int[] source, int sourceIndex, int[] dest, int destIndex, int count, int add)
 		{
 			for (int i = 0; i < count; i++)
@@ -447,7 +440,7 @@ namespace UMA
 				dest[destIndex++] = source[sourceIndex++] + add;
 			}
 		}
-		
+
 		private static T[] GetArray<T>(T[] oldArray, int newLength)
 		{
 			return new T[newLength];
