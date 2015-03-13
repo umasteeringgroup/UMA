@@ -2205,7 +2205,7 @@ RectTransform:
   m_RootOrder: 0
   m_AnchorMin: {x: .5, y: 1}
   m_AnchorMax: {x: .5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -273}
+  m_AnchoredPosition: {x: 0, y: -193.5}
   m_SizeDelta: {x: 175, y: 1800}
   m_Pivot: {x: .5, y: .5}
 --- !u!114 &135944848
@@ -9472,23 +9472,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   randomPool:
-  - {fileID: 11400000, guid: 99235657444dbea4080744294ecf2e6d, type: 2}
   - {fileID: 11400000, guid: 3679be70833c6ad4eae237d92af1a2b4, type: 2}
   generator: {fileID: 518079764}
   umaData: {fileID: 0}
   slotLibrary: {fileID: 387696596}
   overlayLibrary: {fileID: 1482350188}
   raceLibrary: {fileID: 2054243461}
-  animationController: {fileID: 0}
+  animationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
   atlasResolutionScale: 1
   generateUMA: 0
   generateLotsUMA: 1
   hideWhileGeneratingLots: 0
-  umaCrowdSize: {x: 6, y: 6}
+  umaCrowdSize: {x: 2, y: 1}
   randomDna: 1
-  additionalRecipes:
-  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
-  - {fileID: 11400000, guid: e32a3ba3a6520264e99766273eb44e01, type: 2}
+  additionalRecipes: []
   space: 1
   zeroPoint: {fileID: 0}
   keywords: []
@@ -12230,8 +12227,12 @@ Prefab:
     m_TransformParent: {fileID: 879538282}
     m_Modifications:
     - target: {fileID: 11400000, guid: f339fe484442bb14a853826f3556fa50, type: 2}
+      propertyPath: randomPool.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11400000, guid: f339fe484442bb14a853826f3556fa50, type: 2}
       propertyPath: additionalRecipes.Array.size
-      value: 2
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 11400000, guid: f339fe484442bb14a853826f3556fa50, type: 2}
       propertyPath: CharacterCreated.m_PersistentCalls.m_Calls.Array.size
@@ -12371,11 +12372,11 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11400000, guid: f339fe484442bb14a853826f3556fa50, type: 2}
       propertyPath: umaCrowdSize.x
-      value: 6
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 11400000, guid: f339fe484442bb14a853826f3556fa50, type: 2}
       propertyPath: umaCrowdSize.y
-      value: 6
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 11400000, guid: f339fe484442bb14a853826f3556fa50, type: 2}
       propertyPath: additionalRecipes.Array.data[0]
@@ -12387,6 +12388,15 @@ Prefab:
       value: 
       objectReference: {fileID: 11400000, guid: e32a3ba3a6520264e99766273eb44e01,
         type: 2}
+    - target: {fileID: 11400000, guid: f339fe484442bb14a853826f3556fa50, type: 2}
+      propertyPath: randomPool.Array.data[0]
+      value: 
+      objectReference: {fileID: 11400000, guid: 3679be70833c6ad4eae237d92af1a2b4,
+        type: 2}
+    - target: {fileID: 11400000, guid: f339fe484442bb14a853826f3556fa50, type: 2}
+      propertyPath: animationController
+      value: 
+      objectReference: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: f339fe484442bb14a853826f3556fa50, type: 2}
   m_RootGameObject: {fileID: 787143592}
@@ -15471,7 +15481,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 2097866488}
   m_Direction: 2
   m_Value: .5
-  m_Size: .303333342
+  m_Size: .215000004
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:

@@ -90,38 +90,13 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 	public void UpdateNewRace()
 	{
 		umaRace = umaData.umaRecipe.raceData;
-		var position = transform.position;
-		var rotation = transform.rotation;
-		if (umaChild != null)
+		if (animationController != null)
 		{
-			umaData.cleanMesh(false);
-			umaData.firstBake = true;
-			position = umaData.umaRoot.transform.position;
-			rotation = umaData.umaRoot.transform.rotation;
-			Destroy(umaChild);
-		}
-		umaChild = Instantiate(umaData.umaRecipe.raceData.racePrefab) as GameObject;
-		umaChild.transform.parent = transform;
-		UMAData newUMA = umaChild.GetComponentInChildren<UMAData>();
-		if (newUMA != null)
-		{
-			umaData.Assign(newUMA);
-			if (animationController != null) umaData.animationController = animationController;
-			newUMA.animator = null;
-			DestroyImmediate(newUMA);
-		}
-		else
-		{
-			umaData.animator = umaData.GetComponentInChildren<Animator>();
-			umaData.umaRoot = umaData.animator.gameObject;
-			if (animationController != null) umaData.animationController = animationController;
-			umaData.myRenderer = umaData.GetComponentInChildren<SkinnedMeshRenderer>();
+			umaData.animationController = animationController;
+//				umaData.animator.runtimeAnimatorController = animationController;
 		}
 		umaData.umaGenerator = umaGenerator;
-		umaData.umaRoot.transform.position = position;
-		umaData.umaRoot.transform.rotation = rotation;
 
-		umaData.myRenderer.enabled = false;
 		umaData.Dirty(true, true, true);
 	}
 

@@ -185,6 +185,14 @@ namespace UMAEditor
 				serializedObject.ApplyModifiedProperties();
 			}
 
+			SerializedProperty characterCompletedCallback = serializedObject.FindProperty("CharacterCompleted");
+			EditorGUI.BeginChangeCheck();
+			EditorGUILayout.PropertyField(characterCompletedCallback, true);
+			if (EditorGUI.EndChangeCheck())
+			{
+				serializedObject.ApplyModifiedProperties();
+			}
+			
 			foreach (var field in slot.GetType().GetFields())
 			{
 				foreach (var attribute in System.Attribute.GetCustomAttributes(field))

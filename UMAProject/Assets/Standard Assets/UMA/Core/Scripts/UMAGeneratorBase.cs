@@ -42,7 +42,9 @@ namespace UMA
                     AnimatorUpdateMode updateMode = AnimatorUpdateMode.Normal;
                     AnimatorCullingMode cullingMode = AnimatorCullingMode.AlwaysAnimate;
 
-                    if (animator)
+					Debug.Log("In UpdateAvatar");
+
+					if (animator)
                     {
 						animating = animator.enabled;
                         applyRootMotion = animator.applyRootMotion;
@@ -68,9 +70,13 @@ namespace UMA
                     }
                     var oldParent = umaData.umaRoot.transform.parent;
                     umaData.umaRoot.transform.parent = null;
+					var originalRot = umaData.umaRoot.transform.localRotation;
                     animator = CreateAnimator(umaData, umaData.umaRecipe.raceData.TPose, umaData.animationController, applyRootMotion, updateMode, cullingMode);
                     umaData.animator = animator;
                     umaData.umaRoot.transform.parent = oldParent;
+					Debug.Log("UmaRoot: "+umaData.umaRoot.name);
+//					umaData.umaRoot.transform.localRotation = Quaternion.identity;
+					umaData.umaRoot.transform.GetChild(0).localRotation = Quaternion.identity;
                     if (snapshot != null)
                     {
                         for (int i = 0; i < animator.layerCount; i++)
@@ -156,6 +162,7 @@ namespace UMA
 
         public static Avatar CreateAvatar(UMAData umaData, UmaTPose umaTPose)
         {
+			Debug.Log("Creating Avatar");
             umaTPose.DeSerialize();
             HumanDescription description = CreateHumanDescription(umaData, umaTPose);
             //DebugLogHumanAvatar(umaData.umaRoot, description);
@@ -203,66 +210,86 @@ namespace UMA
                 res.skeleton = umaTPose.boneInfo;
             }
 
-//			List<HumanBone> animatedHuman = new List<HumanBone>();
-//			foreach (HumanBone bone in umaTPose.humanInfo) {
-//				int animIndex = System.Array.IndexOf(umaData.animatedBones, bone.boneName);
-//				if (animIndex > -1) {
-//					animatedHuman.Add(bone);
-//				}
-//				else {
-//					int traitIndex = System.Array.IndexOf(HumanTrait.BoneName, bone.humanName);
-//					if (HumanTrait.RequiredBone(traitIndex)) {
-//						animatedHuman.Add(bone);
-//					}
-//				}
-//			}
-//			List<SkeletonBone> animatedSkeleton = new List<SkeletonBone>();
-//			foreach (SkeletonBone bone in umaTPose.boneInfo) {
-//				int animIndex = System.Array.IndexOf(umaData.animatedBones, bone.name);
-//				if (animIndex > -1) {
-//					animatedSkeleton.Add(bone);
-//				}
-//			}
-//			res.human = animatedHuman.ToArray();
-//			res.skeleton = animatedSkeleton.ToArray();
 			res.human = umaTPose.humanInfo;
 
-            res.skeleton[0].name = umaData.umaRoot.name;
-            SkeletonModifier(umaData, ref res.skeleton);
+//            res.skeleton[0].name = umaData.umaRoot.name;
+            SkeletonModifier(umaData, ref res.skeleton, res.human);
             return res;
         }
 
 #pragma warning disable 618
-		private static void SkeletonModifier(UMAData umaData, ref SkeletonBone[] bones)
+		private void ModifySkeletonBone(ref SkeletonBone bone, Transform trans)
+		{
+			bone.position = trans.localPosition;
+			bone.rotation = trans.localRotation;
+			bone.scale = trans.localScale;
+		}
+
+		private static void SkeletonModifier(UMAData umaData, ref SkeletonBone[] bones, HumanBone[] human)
         {
-            Dictionary<Transform, Transform> animatedBones = new Dictionary<Transform,Transform>();
-            for (var i = 0; i < umaData.animatedBones.Length; i++)
+//            Dictionary<Transform, Transform> animatedBones = new Dictionary<Transform,Transform>();
+			Dictionary<int, Transform> animatedBones = new Dictionary<int, Transform>();
+			for (var i = 0; i < umaData.animatedBones.Length; i++)
             {
-                animatedBones.Add(umaData.animatedBones[i], umaData.animatedBones[i]);
-            }
+//                animatedBones.Add(umaData.animatedBones[i], umaData.animatedBones[i]);
+				animatedBones.Add(UMASkeleton.StringToHash(umaData.animatedBones[i].name), umaData.animatedBones[i]);
+			}
+
+			for (int i = 0; i < human.Length; i++)
+			{
+				int boneHash = UMASkeleton.StringToHash(human[i].boneName);
+				animatedBones[boneHash] = null;
+			}
 
             for (var i = 0; i < bones.Length; i++)
             {
                 var skeletonbone = bones[i];
                 UMAData.BoneData entry;
-                if (umaData.boneHashList.TryGetValue(UMASkeleton.StringToHash(skeletonbone.name), out entry))
+				int boneHash = UMASkeleton.StringToHash(skeletonbone.name);
+				if (umaData.boneHashList.TryGetValue(boneHash, out entry))
                 {
-                    //var entry = umaData.boneList[skeletonbone.name];
                     skeletonbone.position = entry.boneTransform.localPosition;
                     //skeletonbone.rotation = entry.boneTransform.localRotation;
                     skeletonbone.scale = entry.boneTransform.localScale;
                     bones[i] = skeletonbone;
-                    animatedBones.Remove(entry.boneTransform);
+					animatedBones.Remove(boneHash);
                 }
             }
-            if (animatedBones.Count > 0)
+			bool foundSkelRoot = umaData.skeleton.HasBone(UMASkeleton.StringToHash(bones[0].name));
+			if ((animatedBones.Count > 0) || !foundSkelRoot)
             {
                 var newBones = new List<SkeletonBone>(bones);
+
+				if (!foundSkelRoot)
+				{
+					int missingBoneCount = 0;
+					int rootBoneHash = 0;
+					while (!foundSkelRoot)
+					{
+						missingBoneCount++;
+						rootBoneHash = UMASkeleton.StringToHash(bones[missingBoneCount].name);
+						foundSkelRoot = umaData.skeleton.HasBone(rootBoneHash);
+	                }
+					if (missingBoneCount > 0)
+					{
+						newBones.RemoveRange(0, missingBoneCount);
+						var realRootBone = umaData.skeleton.GetBoneGameObject(rootBoneHash).transform;
+						var newBone = newBones[0];
+						Debug.Log("RealRoot Pos:"+realRootBone.localPosition);
+						Debug.Log("RealRoot Rot:"+realRootBone.localRotation.eulerAngles);
+						newBone.position = realRootBone.localPosition;
+						newBone.rotation = realRootBone.localRotation;
+						newBone.scale = realRootBone.localScale;
+						newBones[0] = newBone;
+					}
+				}
+
                 // iterate original list rather than dictionary to ensure that relative order is preserved
                 for (var i = 0; i < umaData.animatedBones.Length; i++)
                 {
-                    var animatedBone = umaData.animatedBones[i];
-                    if (animatedBones.ContainsKey(animatedBone))
+					var animatedBone = umaData.animatedBones[i];
+					var animatedBoneHash = UMASkeleton.StringToHash(animatedBone.name);
+					if (animatedBones.ContainsKey(animatedBoneHash))
                     {
                         var newBone = new SkeletonBone();
                         newBone.name = animatedBone.name;
@@ -274,6 +301,7 @@ namespace UMA
                 }
                 bones = newBones.ToArray();
             }
+
 		}
 #pragma warning restore 618
 	}

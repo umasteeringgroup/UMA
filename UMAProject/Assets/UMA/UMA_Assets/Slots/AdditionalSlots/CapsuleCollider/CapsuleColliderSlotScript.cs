@@ -14,14 +14,23 @@ namespace UMA
 				return;
 			}
 
-			var rigid = umaData.umaRoot.AddComponent<Rigidbody>();
+			var rigid = umaData.umaRoot.GetComponent<Rigidbody>();
+			if (rigid == null)
+			{
+				rigid = umaData.umaRoot.AddComponent<Rigidbody>();
+			}
 			rigid.constraints = RigidbodyConstraints.FreezeRotation;
 			rigid.mass = 60f;
 
-			var capsule = umaData.umaRoot.AddComponent<CapsuleCollider>();
+			var capsule = umaData.umaRoot.GetComponent<CapsuleCollider>();
+			if (capsule == null)
+			{
+				capsule = umaData.umaRoot.AddComponent<CapsuleCollider>();
+			}
 			capsule.radius = 0.25f;
-			capsule.height = (umaDna.height + 0.5f) * 2f + 0.1f;
 			capsule.center = new Vector3(0, capsule.height * 0.5f - 0.04f, 0);
+			capsule.height = (umaDna.height + 0.5f) * 2f + 0.1f;
+			Debug.Log("CapsulePos:"+umaData.umaRoot.transform.position);
 		}
 	}
 }

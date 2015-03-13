@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Name: CapsuleColliderSlot
   m_EditorClassIdentifier: 
   slotName: CapsuleCollider
-  listID: -1
+  listID: 34
   meshRenderer: {fileID: 0}
   materialSample: {fileID: 0}
   overlayScale: 1
@@ -29,6 +29,11 @@ MonoBehaviour:
     m_TypeName: UMA.UMADataSlotMaterialRectEvent, Assembly-CSharp-firstpass, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   DNAApplied:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: UMA.UMADataEvent, Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  CharacterCompleted:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 11493108, guid: 65cbab4980599e142b1ac6f6dd299e5f, type: 2}

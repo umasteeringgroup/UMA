@@ -175,6 +175,8 @@ namespace UMA
 				forceGarbageCollect++;
 				umaData.myRenderer.enabled = true;
 				umaData.FireUpdatedEvent(false);
+				umaData.FireCharacterCompletedEvents();
+				umaData.skeleton.EndSkeletonUpdate();
 			}
 		}
     
@@ -182,8 +184,10 @@ namespace UMA
 		{
 			if (umaData)
 			{
-				umaData.GotoOriginalPose();
-				umaData.skeleton = new UMASkeletonDefault(umaData.myRenderer.rootBone);
+//				umaData.GotoOriginalPose();
+//				umaData.skeleton = new UMASkeletonDefault(umaData.myRenderer.rootBone);
+				var globalTrans = umaData.umaRoot.transform.GetChild(0);
+				umaData.skeleton.ResetAll();
 				umaData.ApplyDNA();
 				umaData.FireDNAAppliedEvents();
 				UpdateAvatar(umaData);

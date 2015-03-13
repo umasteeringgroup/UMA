@@ -34,7 +34,7 @@ namespace UMA
 		public Transform[] animatedBones = new Transform[0];
 		
 		[Obsolete("Access to tempBoneData will be removed, use BoneData() methods!", false)]
-		public BoneData[] tempBoneData; //Only while Dictionary can't be serialized
+		public BoneData[] tempBoneData = new UMAData.BoneData[0]; //Only while Dictionary can't be serialized
 
         public bool cancelled { get; private set; }
         [NonSerialized]
@@ -550,10 +550,14 @@ namespace UMA
 			}
 		}
 		
-		public void cleanMesh(bool destroyRenderer){
-			for(int i = 0; i < myRenderer.sharedMaterials.Length; i++){
-				if(myRenderer){
-					if(myRenderer.sharedMaterials[i]){
+		public void cleanMesh(bool destroyRenderer)
+		{
+			for(int i = 0; i < myRenderer.sharedMaterials.Length; i++)
+			{
+				if(myRenderer)
+				{
+					if(myRenderer.sharedMaterials[i])
+					{
 						DestroyImmediate(myRenderer.sharedMaterials[i]);
 					}
 				}
@@ -806,6 +810,17 @@ namespace UMA
 			}
 		}
 
+		public void FireCharacterCompletedEvents()
+		{
+			foreach (var slotData in umaRecipe.slotDataList)
+			{
+				if (slotData != null && slotData.CharacterCompleted != null)
+				{
+					slotData.CharacterCompleted.Invoke(this);
+				}
+			}
+		}
+		
 		public void AddAdditionalRecipes(UMARecipeBase[] umaAdditionalRecipes, UMAContext context)
 		{
 			if (umaAdditionalRecipes != null)

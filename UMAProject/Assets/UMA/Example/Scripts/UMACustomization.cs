@@ -155,14 +155,7 @@ public class UMACustomization : MonoBehaviour
 			{
 				Transform tempTransform = hit.collider.transform;
 
-				//Dont want to use an extra layer or specific tag on UMAs, and since UMAData has moved, Ill keep this for now
-				if (tempTransform.parent)
-				{
-					if (tempTransform.parent.parent)
-					{
-						umaData = tempTransform.parent.parent.GetComponent<UMAData>();
-					}
-				}
+				umaData = tempTransform.GetComponent<UMAData>();
 
 				if (umaData)
 				{

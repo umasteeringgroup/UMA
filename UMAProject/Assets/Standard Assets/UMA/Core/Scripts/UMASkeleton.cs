@@ -10,6 +10,10 @@ namespace UMA
 		public IEnumerable<int> BoneHashes { get{ return GetBoneHashes(); } }
 		protected abstract IEnumerable<int> GetBoneHashes();
 		public abstract bool HasBone(int nameHash);
+		public virtual void AddBone(int hash, Transform child)
+		{
+			throw new NotImplementedException();
+		}
 		public abstract void RemoveBone(int nameHash);
 		public abstract GameObject GetBoneGameObject(int nameHash);
 
@@ -24,6 +28,16 @@ namespace UMA
         public abstract Quaternion GetRotation(int nameHash);
 
         public abstract bool Reset(int nameHash);
+		public abstract void ResetAll();
+
+		public virtual void BeginSkeletonUpdate()
+		{
+			throw new System.NotImplementedException();
+		}
+		public virtual void EndSkeletonUpdate()
+		{
+			throw new System.NotImplementedException();
+		}
 
         public static int StringToHash(string name) { return Animator.StringToHash(name); }
     }

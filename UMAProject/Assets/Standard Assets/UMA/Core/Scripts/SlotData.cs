@@ -15,6 +15,7 @@ namespace UMA
 		public Material materialSample;
 		public float overlayScale = 1.0f;
 		public Transform[] umaBoneData;
+		public int[] boneNameHashes;
 		public Transform[] animatedBones = new Transform[0];
 		public string[] textureNameList;
 		public DnaConverterBehaviour slotDNA;
@@ -32,6 +33,7 @@ namespace UMA
 		public string[] tags;
 		public UMADataSlotMaterialRectEvent SlotAtlassed;
 		public UMADataEvent DNAApplied;
+		public UMADataEvent CharacterCompleted;
 		private List<OverlayData> overlayList = new List<OverlayData>();
         
 		public SlotData Duplicate()
@@ -48,6 +50,8 @@ namespace UMA
 			// All this data is passed as reference
 			tempSlotData.meshRenderer = meshRenderer;
 			tempSlotData.boneWeights = boneWeights;
+			EnsureBoneNameHashes();
+			tempSlotData.boneNameHashes = boneNameHashes;
 			tempSlotData.animatedBones = animatedBones;
 			tempSlotData.boneWeights = boneWeights;
 			tempSlotData.umaBoneData = umaBoneData;
@@ -60,13 +64,30 @@ namespace UMA
             
 			tempSlotData.SlotAtlassed = SlotAtlassed;
 			tempSlotData.DNAApplied = DNAApplied;
-            
+			tempSlotData.CharacterCompleted = CharacterCompleted;
+
 			return tempSlotData;
 		}
         
 		public SlotData()
 		{
             
+		}
+
+		public void EnsureBoneNameHashes()
+		{
+			if (meshRenderer == null)
+				return;
+
+			if (boneNameHashes == null || boneNameHashes.Length == 0)
+			{
+				var bones = meshRenderer.bones;
+				boneNameHashes = new int[bones.Length];
+				for (int i = 0; i < bones.Length; i++)
+				{
+					boneNameHashes[i] = UMASkeleton.StringToHash(bones[i].name);
+				}
+			}
 		}
         
 		public int GetTextureChannelCount(UMAGeneratorBase generator)

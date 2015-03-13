@@ -14,6 +14,31 @@ namespace UMA
         string[] textureNameList;
         int atlasResolution;
 
+		protected void EnsureUMADataSetup(UMAData umaData)
+		{
+			if (umaData.firstBake)
+			{
+				GameObject newGlobal = new GameObject("Global");
+				newGlobal.transform.parent = umaData.transform;
+				newGlobal.transform.localPosition = Vector3.zero;
+				newGlobal.transform.localRotation = Quaternion.Euler(0f, 0f, -90f);
+
+				umaData.skeleton = new UMASkeletonDefault(umaData.transform);
+
+				var newRenderer = umaData.gameObject.AddComponent<SkinnedMeshRenderer>();
+				newRenderer.rootBone = newGlobal.transform;
+				umaData.myRenderer = newRenderer;
+				umaData.myRenderer.enabled = false;
+				umaData.myRenderer.sharedMesh = new Mesh();
+
+				umaData.umaRoot = umaData.gameObject;
+			}
+			else
+			{
+				umaData.cleanMesh(false);
+			}
+		}
+
         public override void UpdateUMAMesh(bool updatedAtlas, UMAData umaData, string[] textureNameList, int atlasResolution)
         {
             this.umaData = umaData;
@@ -32,17 +57,11 @@ namespace UMA
                 CombineByMaterial();
             }
 
-            if (umaData.firstBake)
-            {
-                umaData.myRenderer.sharedMesh = new Mesh();
-            }
-            else
-            {
-                umaData.cleanMesh(false);
-            }
+			EnsureUMADataSetup(umaData);
+			umaData.skeleton.BeginSkeletonUpdate();
 
-            var boneMap = new Dictionary<Transform, Transform>();
-            SkinnedMeshCombiner.CombineMeshes(umaData.myRenderer, combinedMeshList.ToArray(), boneMap);
+			//            var boneMap = new Dictionary<Transform, Transform>();
+			SkinnedMeshCombiner.CombineMeshes(umaData.myRenderer, combinedMeshList.ToArray(), umaData.skeleton);
 
             if (updatedAtlas)
             {
@@ -55,7 +74,7 @@ namespace UMA
                 SlotData slotData = umaData.umaRecipe.slotDataList[i];
                 if (slotData != null)
                 {
-                    umaData.EnsureBoneData(slotData.umaBoneData, slotData.animatedBones, boneMap);
+//                    umaData.EnsureBoneData(slotData.umaBoneData, slotData.animatedBones, boneMap);
 
                     umaData.umaRecipe.AddDNAUpdater(slotData.slotDNA);
                 }
@@ -123,6 +142,7 @@ namespace UMA
 					}
 
 					combineInstance.bones = slotData.meshRenderer.bones;
+					combineInstance.boneNameHashes = slotData.boneNameHashes;
 					combineInstance.destMesh[slotData.subMeshIndex] = atlasIndex;
                     combinedMeshList.Add(combineInstance);
 
@@ -152,6 +172,7 @@ namespace UMA
                     }
 
                     combineInstance.bones = slots[slotIndex].meshRenderer.bones;
+					combineInstance.boneNameHashes = slots[slotIndex].boneNameHashes;
 
                     bool contains = false;
 					Material slotMaterial = null;
@@ -216,7 +237,8 @@ namespace UMA
 						}
 
                         combineInstance.bones = slots[slotIndex].meshRenderer.bones;
-                        combineInstance.destMesh[slots[slotIndex].subMeshIndex] = indexCount;
+						combineInstance.boneNameHashes = slots[slotIndex].boneNameHashes;
+						combineInstance.destMesh[slots[slotIndex].subMeshIndex] = indexCount;
                         combinedMeshList.Add(combineInstance);
 
                         Material tempMaterial = Instantiate(slots[slotIndex].materialSample) as Material;
@@ -251,6 +273,7 @@ namespace UMA
 										}
 
                                         combineInstance.bones = slots[slotIndex2].meshRenderer.bones;
+										combineInstance.boneNameHashes = slots[slotIndex2].boneNameHashes;
 
                                         combineInstance.destMesh[slots[slotIndex2].subMeshIndex] = indexCount;
                                         combinedMeshList.Add(combineInstance);

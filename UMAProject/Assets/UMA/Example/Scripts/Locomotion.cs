@@ -10,6 +10,7 @@ public class Locomotion : MonoBehaviour {
 	{
 		animator = GetComponent<Animator>();
 	
+		if (animator == null) return;
 		if(animator.layerCount >= 2)
 			animator.SetLayerWeight(1, 1);
 	}
@@ -23,8 +24,17 @@ public class Locomotion : MonoBehaviour {
 			
 			animator.SetFloat("Speed", h*h+v*v);
             animator.SetFloat("Direction", h, DirectionDampTime, Time.deltaTime);	
-		}else{
+		}
+		else
+		{
 			animator = GetComponent<Animator>();
 		}
 	}
+
+	
+	void OnCollisionEnter(Collision collision)
+	{
+		Debug.Log(collision.collider.name + ":" + name);
+	}
+
 }

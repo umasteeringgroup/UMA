@@ -10,9 +10,10 @@ namespace UMA
 	{
 		public class CombineInstance
 		{
-			public Mesh mesh { get; set; }
-			public Transform[] bones { get; set; }
-			public int[] destMesh { get; set; }
+			public Mesh mesh;
+			public Transform[] bones;
+			public int[] boneNameHashes;
+			public int[] destMesh;
 
 			public InstanceData data = null;
 		}
@@ -38,61 +39,52 @@ namespace UMA
 			GC.Collect();
 		}
 		
-		public static void CombineMeshes(SkinnedMeshRenderer target, CombineInstance[] sources, Dictionary<Transform, Transform> boneMap)
+		public static void CombineMeshes(SkinnedMeshRenderer target, CombineInstance[] sources, UMASkeleton skeleton)
 		{
 			CombineInstance dest = new CombineInstance();
 			dest.mesh = target.sharedMesh;
-			CombineMeshes(ref dest, sources, target.rootBone, boneMap);
+			CombineMeshes(ref dest, sources, target.rootBone, skeleton);
 			target.sharedMesh = dest.mesh;
 			target.bones = dest.bones;
 		}
 
-		private static Transform RecursivelyMapToNewRoot(Transform bone, Transform rootBone, string rootName, Dictionary<Transform, Transform> boneMap)
+		private static Transform RecursivelyMapToNewRoot(Transform bone, int hash, Transform rootBone, UMASkeleton skeleton)
 		{
-			Transform res;
-			if (boneMap.TryGetValue(bone, out res))
+			GameObject go = skeleton.GetBoneGameObject(hash);
+			if (go != null)
 			{
-				return res;
+				return go.transform;
 			}
-			string boneName = bone.name;
-			if (boneName == "Global" || boneName == rootName)
+
+			Transform parent = rootBone;
+			if (bone.parent != null)
 			{
-				boneMap.Add(bone, rootBone);
-				return rootBone;
+				parent = bone.parent;
+				int parentHash = UMASkeleton.StringToHash(parent.name);
+				parent = RecursivelyMapToNewRoot(parent, parentHash, rootBone, skeleton);
 			}
-			else
-			{
-				Transform parent = rootBone;
-				if (bone.parent != null) {
-					parent = RecursivelyMapToNewRoot(bone.parent, rootBone, rootName, boneMap);
-				}
-				Transform child = parent.FindChild(boneName);
-				if (child == null)
-				{
-					child = new GameObject().transform;
-					child.parent = parent;
-					child.localPosition = bone.localPosition;
-					child.localRotation = bone.localRotation;
-					child.localScale = bone.localScale;
-					child.name = boneName;
-				}
-				boneMap.Add(bone, child);
-				return child;
-			}
+
+			Transform child = new GameObject().transform;
+			child.parent = parent;
+			child.localPosition = bone.localPosition;
+			child.localRotation = bone.localRotation;
+			child.localScale = bone.localScale;
+			child.name = bone.name;
+			skeleton.AddBone(hash, child);
+			return child;
 		}
 
-		public static Transform[] CloneBoneListInNewHierarchy(Transform rootBone, Transform[] bones, Dictionary<Transform, Transform> boneMap)
+		public static Transform[] CloneBoneListInNewHierarchy(Transform rootBone, Transform[] bones, int[] hashes, UMASkeleton skeleton)
 		{
-			string rootName = rootBone.name;
 			var res = new Transform[bones.Length];
 			for (int i = 0; i < bones.Length; i++)
 			{
-				res[i] = RecursivelyMapToNewRoot(bones[i], rootBone, rootName, boneMap);
+				res[i] = RecursivelyMapToNewRoot(bones[i], hashes[i], rootBone, skeleton);
 			}
 			return res;
 		}
 
-		public static void CombineMeshes(ref CombineInstance target, CombineInstance[] sources, Transform rootBone, Dictionary<Transform, Transform> boneMap)
+		public static void CombineMeshes(ref CombineInstance target, CombineInstance[] sources, Transform rootBone, UMASkeleton skeleton)
 		{
 			Mesh dest = target.mesh;
 			int vertexCount = 0;
@@ -192,15 +184,10 @@ namespace UMA
 			List<Matrix4x4> bindPoses = new List<Matrix4x4>(bindPoseCount);
 			List<Transform> bonesList = new List<Transform>(bindPoseCount);
 			
-			if (boneMap == null)
-			{
-				boneMap = new Dictionary<Transform, Transform>(bindPoseCount);
-			}
-			
 			foreach (var source in sources)
 			{
 				vertexCount = source.data.vertices.Length;
-				var sourceBones = rootBone == null ? source.bones : CloneBoneListInNewHierarchy(rootBone, source.bones, boneMap);
+				var sourceBones = rootBone == null ? source.bones : CloneBoneListInNewHierarchy(rootBone, source.bones, source.boneNameHashes, skeleton);
 
 				BuildBoneWeights(source.data.weights, 0, boneWeights, vertexIndex, vertexCount, sourceBones, source.data.binds, bonesCollection, bindPoses, bonesList);
 				

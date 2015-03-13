@@ -7,7 +7,9 @@ namespace UMA.PoseTools
 	{
 		public void OnDnaApplied(UMAData umaData)
 		{
-			umaData.umaRoot.AddComponent<Locomotion>();
+			var locomotion = umaData.umaRoot.GetComponent<Locomotion>();
+			if (locomotion == null)
+				umaData.umaRoot.AddComponent<Locomotion>();
 		}
 	}
 }
