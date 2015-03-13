@@ -144,7 +144,7 @@ public class SlotLibrary : SlotLibraryBase
 		}
 	}
 
-	public SlotData[] GetAllSlots()
+	public override SlotData[] GetAllSlots()
 	{
 #pragma warning disable 618
 		return slotElementList;
