@@ -68,10 +68,6 @@ namespace UMA
 			else if (umaDirtyList.Count > 0)
 			{
 				OnDirtyUpdate();
-				if (fastGeneration && umaDirtyList[0].isMeshDirty)
-				{
-					OnDirtyUpdate();
-				}
 			}
 			meshUpdates = 0;
 			stopWatch.Stop();
@@ -136,7 +132,12 @@ namespace UMA
 			{
 				umaDirtyList.RemoveAt(0);
 				umaData = null;
-			}           
+			} 
+			else if (fastGeneration && HandleDirtyUpdate(umaDirtyList[0]))
+			{
+				umaDirtyList.RemoveAt(0);
+				umaData = null;
+			}
 		}
 
 		private void UpdateUMAMesh(bool updatedAtlas)
