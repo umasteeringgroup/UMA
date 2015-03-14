@@ -14,23 +14,22 @@ namespace UMA
 				return;
 			}
 
-			var rigid = umaData.umaRoot.GetComponent<Rigidbody>();
+			var rigid = umaData.gameObject.GetComponent<Rigidbody>();
 			if (rigid == null)
 			{
-				rigid = umaData.umaRoot.AddComponent<Rigidbody>();
+				rigid = umaData.gameObject.AddComponent<Rigidbody>();
 			}
 			rigid.constraints = RigidbodyConstraints.FreezeRotation;
-			rigid.mass = 60f;
+			rigid.mass = umaData.characterMass;
 
-			var capsule = umaData.umaRoot.GetComponent<CapsuleCollider>();
+			var capsule = umaData.gameObject.GetComponent<CapsuleCollider>();
 			if (capsule == null)
 			{
-				capsule = umaData.umaRoot.AddComponent<CapsuleCollider>();
+				capsule = umaData.gameObject.AddComponent<CapsuleCollider>();
 			}
-			capsule.radius = 0.25f;
+			capsule.radius = umaData.characterRadius;
+			capsule.height = umaData.characterHeight;
 			capsule.center = new Vector3(0, capsule.height * 0.5f - 0.04f, 0);
-			capsule.height = (umaDna.height + 0.5f) * 2f + 0.1f;
-			Debug.Log("CapsulePos:"+umaData.umaRoot.transform.position);
 		}
 	}
 }

@@ -58,6 +58,9 @@ namespace UMA
         public Animator animator;
         public UMASkeleton skeleton;
 
+		public float characterHeight = 2f;
+		public float characterRadius = 0.25f;
+		public float characterMass = 50f;
 
 		void Awake () {
 			firstBake = true;
