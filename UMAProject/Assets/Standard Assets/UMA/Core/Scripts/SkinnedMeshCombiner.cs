@@ -88,12 +88,12 @@ namespace UMA
 			}
 
 			Vector3[] vertices = GetArray(target.vertices, vertexCount);
-			BoneWeight[] boneWeights = GetArray(target.boneWeights, vertexCount);
+			BoneWeight[] boneWeights = GetArray(target.unityBoneWeights, vertexCount);
 			Vector3[] normals = (meshComponents & MeshComponents.has_normals) != MeshComponents.none ? GetArray(target.normals, vertexCount) : null;
 			Vector4[] tangents = (meshComponents & MeshComponents.has_tangents) != MeshComponents.none ? GetArray(target.tangents, vertexCount) : null;
 			Vector2[] uv = (meshComponents & MeshComponents.has_uv) != MeshComponents.none ? GetArray(target.uv, vertexCount) : null;
 			Vector2[] uv2 = (meshComponents & MeshComponents.has_uv2) != MeshComponents.none ? GetArray(target.uv2, vertexCount) : null;
-#if !UNITY_4
+#if !UNITY_4_6
 			Vector2[] uv3 = (meshComponents & MeshComponents.has_uv3) != MeshComponents.none ? GetArray(target.uv3, vertexCount) : null;
 			Vector2[] uv4 = (meshComponents & MeshComponents.has_uv4) != MeshComponents.none ? GetArray(target.uv4, vertexCount) : null;
 #endif
@@ -158,7 +158,7 @@ namespace UMA
 						FillArray(uv2, vertexIndex, vertexCount, Vector4.zero);
 					}
 				}
-#if !UNITY_4
+#if !UNITY_4_6
 				if ((meshComponents & MeshComponents.has_uv3) != MeshComponents.none)
 				{
 					if (source.meshData.uv3 != null)
@@ -213,13 +213,13 @@ namespace UMA
 
 			// fill in new values.
 			target.vertices = vertices;
-			target.boneWeights = boneWeights;
+			target.unityBoneWeights = boneWeights;
 			target.bindPoses = bindPoses.ToArray();
 			target.normals = normals;
 			target.tangents = tangents;
 			target.uv = uv;
 			target.uv2 = uv2;
-#if !UNITY_4
+#if !UNITY_4_6
 			target.uv3 = uv3;
 			target.uv4 = uv4;
 #endif
@@ -249,7 +249,7 @@ namespace UMA
 				if (source.meshData.tangents != null && source.meshData.tangents.Length != 0) meshComponents |= MeshComponents.has_tangents;
 				if (source.meshData.uv != null && source.meshData.uv.Length != 0) meshComponents |= MeshComponents.has_uv;
 				if (source.meshData.uv2 != null && source.meshData.uv2.Length != 0) meshComponents |= MeshComponents.has_uv2;
-#if !UNITY_4
+#if !UNITY_4_6
 				if (source.meshData.uv3 != null && source.meshData.uv3.Length != 0) meshComponents |= MeshComponents.has_uv3;
 				if (source.meshData.uv4 != null && source.meshData.uv4.Length != 0) meshComponents |= MeshComponents.has_uv4;
 #endif
@@ -283,7 +283,7 @@ namespace UMA
 			return highestTargetIndex + 1;
 		}
 
-		private static void BuildBoneWeights(BoneWeight[] source, int sourceIndex, BoneWeight[] dest, int destIndex, int count, Transform[] bones, Matrix4x4[] bindPoses, Dictionary<Transform, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<Transform> bonesList)
+		private static void BuildBoneWeights(UMABoneWeight[] source, int sourceIndex, BoneWeight[] dest, int destIndex, int count, Transform[] bones, Matrix4x4[] bindPoses, Dictionary<Transform, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<Transform> bonesList)
 		{
 			int[] boneMapping = new int[bones.Length];
 			for (int i = 0; i < boneMapping.Length; i++)
