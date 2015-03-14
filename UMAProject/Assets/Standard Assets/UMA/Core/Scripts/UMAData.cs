@@ -40,7 +40,8 @@ namespace UMA
         [NonSerialized]
         public bool dirty = false;
         [NonSerialized]
-        public bool _hasUpdatedBefore = false;
+		[Obsolete("UMAData._hasUpdatedBefore is obsolete", false)]
+		public bool _hasUpdatedBefore = false;
         private bool isOfficiallyCreated = false;
         [NonSerialized]
         public bool onQuit = false;
@@ -470,10 +471,6 @@ namespace UMA
 	        {
                 CharacterUpdated.Invoke(this);
 	        }
-            if (!cancelled)
-            {
-                _hasUpdatedBefore = true;
-            }
             dirty = false;
         }
 		
@@ -509,13 +506,12 @@ namespace UMA
                 }
                 isOfficiallyCreated = false;
             }
-			if(_hasUpdatedBefore){
+			if(umaRoot != null)
+			{
 				cleanTextures();
-                if (!onQuit)
-                {
-                    cleanMesh(true);
-                    cleanAvatar();
-                }   
+                cleanMesh(true);
+                cleanAvatar();
+				Destroy(umaRoot);
 			}
 		}
 		
@@ -552,17 +548,22 @@ namespace UMA
 		
 		public void cleanMesh(bool destroyRenderer)
 		{
-			for(int i = 0; i < myRenderer.sharedMaterials.Length; i++)
+			if (myRenderer)
 			{
-				if(myRenderer)
+				var mats = myRenderer.sharedMaterials;
+				for (int i = 0; i < mats.Length; i++)
 				{
-					if(myRenderer.sharedMaterials[i])
+					if (mats[i])
 					{
-						DestroyImmediate(myRenderer.sharedMaterials[i]);
+						Destroy(myRenderer.sharedMaterials[i]);
 					}
 				}
+				if (destroyRenderer)
+				{
+					Destroy(myRenderer.sharedMesh);
+					Destroy(myRenderer);
+				}
 			}
-			if(destroyRenderer) Destroy(myRenderer.sharedMesh);
 		}
 		
 		

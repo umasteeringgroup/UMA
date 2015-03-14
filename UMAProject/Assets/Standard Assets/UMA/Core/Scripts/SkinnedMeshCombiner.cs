@@ -291,16 +291,22 @@ namespace UMA
 				boneMapping[i] = TranslateBoneIndex(i, bones, bindPoses, bonesCollection, bindPosesList, bonesList);
 			}
 
-			BoneWeight weight;
 			while (count-- > 0)
 			{
-				weight = source[sourceIndex++];
-				weight.boneIndex0 = boneMapping[weight.boneIndex0];
-				weight.boneIndex1 = boneMapping[weight.boneIndex1];
-				weight.boneIndex2 = boneMapping[weight.boneIndex2];
-				weight.boneIndex3 = boneMapping[weight.boneIndex3];
-				dest[destIndex++] = weight;
+				TranslateBoneWeight(ref source[sourceIndex++], ref dest[destIndex++], boneMapping);
 			}
+		}
+
+		private static void TranslateBoneWeight(ref UMABoneWeight source, ref BoneWeight dest, int[] boneMapping)
+		{
+			dest.weight0 = source.weight0;
+			dest.weight1 = source.weight1;
+			dest.weight2 = source.weight2;
+			dest.weight3 = source.weight3;
+			dest.boneIndex0 = boneMapping[source.boneIndex0];
+			dest.boneIndex1 = boneMapping[source.boneIndex1];
+			dest.boneIndex2 = boneMapping[source.boneIndex2];
+			dest.boneIndex3 = boneMapping[source.boneIndex3];
 		}
 
 		private struct BoneIndexEntry

@@ -16,22 +16,26 @@ namespace UMA
 
 		protected void EnsureUMADataSetup(UMAData umaData)
 		{
-			if (umaData.firstBake)
+			if (umaData.umaRoot == null)
 			{
+				GameObject newRoot = new GameObject("Root");
+				newRoot.transform.parent = umaData.transform;
+				newRoot.transform.localPosition = Vector3.zero;
+				newRoot.transform.localRotation = Quaternion.Euler(0f, 0, 90f);
+				umaData.umaRoot = newRoot;
+
 				GameObject newGlobal = new GameObject("Global");
-				newGlobal.transform.parent = umaData.transform;
+				newGlobal.transform.parent = newRoot.transform;
 				newGlobal.transform.localPosition = Vector3.zero;
 				newGlobal.transform.localRotation = Quaternion.Euler(0f, 0f, -90f);
 
-				umaData.skeleton = new UMASkeletonDefault(umaData.transform);
+				umaData.skeleton = new UMASkeletonDefault(newGlobal.transform);
 
-				var newRenderer = umaData.gameObject.AddComponent<SkinnedMeshRenderer>();
+				var newRenderer = umaData.umaRoot.AddComponent<SkinnedMeshRenderer>();
 				newRenderer.rootBone = newGlobal.transform;
 				umaData.myRenderer = newRenderer;
 				umaData.myRenderer.enabled = false;
 				umaData.myRenderer.sharedMesh = new Mesh();
-
-				umaData.umaRoot = umaData.gameObject;
 			}
 			else
 			{

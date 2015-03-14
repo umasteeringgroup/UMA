@@ -67,23 +67,28 @@ namespace UMA
 						Object.DestroyImmediate(animator);
                     }
                     var oldParent = umaData.umaRoot.transform.parent;
-                    umaData.umaRoot.transform.parent = null;
 					var originalRot = umaData.umaRoot.transform.localRotation;
-                    animator = CreateAnimator(umaData, umaData.umaRecipe.raceData.TPose, umaData.animationController, applyRootMotion, updateMode, cullingMode);
+					umaData.umaRoot.transform.parent = null;
+					umaData.umaRoot.transform.localRotation = Quaternion.identity;
+					animator = CreateAnimator(umaData, umaData.umaRecipe.raceData.TPose, umaData.animationController, applyRootMotion, updateMode, cullingMode);
                     umaData.animator = animator;
                     umaData.umaRoot.transform.parent = oldParent;
-//					umaData.umaRoot.transform.localRotation = Quaternion.identity;
-					umaData.umaRoot.transform.GetChild(0).localRotation = Quaternion.identity;
-                    if (snapshot != null)
-                    {
-                        for (int i = 0; i < animator.layerCount; i++)
-                        {
-                            animator.Play(snapshot[i].stateHash, i, snapshot[i].stateTime);
-                        }
-                
-                        animator.Update(0);
-                        animator.enabled = animating;
-                    }
+					umaData.umaRoot.transform.localRotation = originalRot;
+					if (snapshot != null)
+					{
+						for (int i = 0; i < animator.layerCount; i++)
+						{
+							animator.Play(snapshot[i].stateHash, i, snapshot[i].stateTime);
+						}
+
+						animator.Update(0);
+						animator.enabled = animating;
+					}
+					else
+					{
+						animator.Update(0);
+						animator.enabled = animating;
+					}
                 }
             }
         }

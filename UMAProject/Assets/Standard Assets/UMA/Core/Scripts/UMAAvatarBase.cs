@@ -15,6 +15,7 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 	public UMAGeneratorBase umaGenerator;
 	public RuntimeAnimatorController animationController;
 	[NonSerialized]
+	[System.Obsolete("UMAAvatarBase.umaChild is obsolete use UMAData.umaRoot instead", false)]
 	public GameObject umaChild;
 	protected RaceData umaRace = null;
 
@@ -102,14 +103,15 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 
 	public virtual void Hide()
 	{
-		Destroy(umaChild);
-		umaChild = null;
 		if (umaData != null)
 		{
+			umaData.cleanTextures();
+			umaData.cleanMesh(true);
+			umaData.cleanAvatar();
+			Destroy(umaData.umaRoot);
 			umaData.umaRoot = null;
 			umaData.myRenderer = null;
 			umaData.animator = null;
-			umaData._hasUpdatedBefore = false;
 			umaData.firstBake = true;
 			umaData.ClearBoneData();
 		}

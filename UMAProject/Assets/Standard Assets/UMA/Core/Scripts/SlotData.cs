@@ -6,7 +6,7 @@ using System.Collections.Generic;
 namespace UMA
 {
 	[System.Serializable]
-	public partial class SlotData : ScriptableObject, ISerializationCallbackReceiver
+	public partial class SlotData : ScriptableObject
 	{
 		public string slotName;
 		public int listID = -1;
@@ -224,26 +224,5 @@ namespace UMA
 			UnityEditor.EditorUtility.SetDirty(this);
 		}
 #endif
-
-		#region ISerializationCallbackReceiver Members
-
-		public void OnAfterDeserialize()
-		{
-#if UNITY_EDITOR
-			if (meshData == null && meshRenderer != null)
-			{
-				meshData = new UMAMeshData();
-				meshData.RetrieveDataFromUnityMesh(meshRenderer);
-				meshRenderer = null;
-				UnityEditor.EditorUtility.SetDirty(this);
-			}
-#endif
-		}
-
-		public void OnBeforeSerialize()
-		{
-		}
-
-		#endregion
 	}
 }
