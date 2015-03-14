@@ -67,11 +67,8 @@ namespace UMA
 			}
 			else if (umaDirtyList.Count > 0)
 			{
-				if (umaDirtyList[0].isTextureDirty)
-				{
-					OnDirtyUpdate();
-				}
-				if (umaDirtyList[0].isMeshDirty)
+				OnDirtyUpdate();
+				if (fastGeneration && umaDirtyList[0].isMeshDirty)
 				{
 					OnDirtyUpdate();
 				}
