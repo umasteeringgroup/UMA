@@ -69,6 +69,9 @@ namespace UMA
 			return res;
 		}
 
+		static Dictionary<Transform, BoneIndexEntry> bonesCollection;
+		static List<Matrix4x4> bindPoses;
+		static List<Transform> bonesList;
 		public static void CombineMeshes(UMAMeshData target, CombineInstance[] sources, Transform rootBone, UMASkeleton skeleton)
 		{
 			int vertexCount = 0;
@@ -101,9 +104,18 @@ namespace UMA
 
 			int vertexIndex = 0;
 
-			var bonesCollection = new Dictionary<Transform, BoneIndexEntry>(bindPoseCount);
-			List<Matrix4x4> bindPoses = new List<Matrix4x4>(bindPoseCount);
-			List<Transform> bonesList = new List<Transform>(bindPoseCount);
+			if (bonesCollection == null)
+				bonesCollection = new Dictionary<Transform, BoneIndexEntry>(bindPoseCount);
+			else
+				bonesCollection.Clear();
+			if (bindPoses == null)
+				bindPoses = new List<Matrix4x4>(bindPoseCount);
+			else
+				bindPoses.Clear();
+			if (bonesList == null)
+				bonesList = new List<Transform>(bindPoseCount);
+			else
+				bonesList.Clear();
 
 			foreach (var source in sources)
 			{
@@ -339,7 +351,7 @@ namespace UMA
 			}
 		}
 
-		private static bool CompareMatrixes(Matrix4x4 m1, ref Matrix4x4 m2)
+		private static bool CompareSkinningMatrices(Matrix4x4 m1, ref Matrix4x4 m2)
 		{
 			if (Mathf.Abs(m1.m00 - m2.m00) > 0.0001) return false;
 			if (Mathf.Abs(m1.m01 - m2.m01) > 0.0001) return false;
@@ -353,10 +365,11 @@ namespace UMA
 			if (Mathf.Abs(m1.m21 - m2.m21) > 0.0001) return false;
 			if (Mathf.Abs(m1.m22 - m2.m22) > 0.0001) return false;
 			if (Mathf.Abs(m1.m23 - m2.m23) > 0.0001) return false;
-			if (Mathf.Abs(m1.m30 - m2.m30) > 0.0001) return false;
-			if (Mathf.Abs(m1.m31 - m2.m31) > 0.0001) return false;
-			if (Mathf.Abs(m1.m32 - m2.m32) > 0.0001) return false;
-			if (Mathf.Abs(m1.m33 - m2.m33) > 0.0001) return false;
+			// These never change in a TRS Matrix4x4
+//			if (Mathf.Abs(m1.m30 - m2.m30) > 0.0001) return false;
+//			if (Mathf.Abs(m1.m31 - m2.m31) > 0.0001) return false;
+//			if (Mathf.Abs(m1.m32 - m2.m32) > 0.0001) return false;
+//			if (Mathf.Abs(m1.m33 - m2.m33) > 0.0001) return false;
 			return true;
 		}
 
@@ -369,7 +382,7 @@ namespace UMA
 				for (int i = 0; i < entry.Count; i++)
 				{
 					var res = entry[i];
-					if (CompareMatrixes(bindPosesList[res], ref bindPoses[index]))
+					if (CompareSkinningMatrices(bindPosesList[res], ref bindPoses[index]))
 					{
 						return res;
 					}
