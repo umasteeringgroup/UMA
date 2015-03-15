@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
-
-// We can dramatically reduce garbage by using shared buffers
+﻿// We can dramatically reduce garbage by using shared buffers
 // on desktop platforms and dynamically adjusting the
 // size which the arrays appear to be to C# code
 // See: http://feedback.unity3d.com/suggestions/allow-mesh-data-to-have-a-length
-#define USE_UNSAFE_CODE 0
+#undef USE_UNSAFE_CODE
+
+using System;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace UMA
 {
