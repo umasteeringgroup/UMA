@@ -566,12 +566,11 @@ public class HumanMaleDNAConverterBehaviour : DnaConverterBehaviour
 		
 		
 		////Bone structure change	
-		skeleton.SetScale(globalHash, 
-		                  new Vector3(
-			Mathf.Clamp(1 + (umaDna.height - 0.5f) * 1.0f + (umaDna.legsSize - 0.5f) * 1.0f, 0.5f, 3.0f),
-			Mathf.Clamp(1 + (umaDna.height - 0.5f) * 1.0f + (umaDna.legsSize - 0.5f) * 1.0f, 0.5f, 3.0f),
-			Mathf.Clamp(1 + (umaDna.height - 0.5f) * 1.0f + (umaDna.legsSize - 0.5f) * 1.0f, 0.5f, 3.0f)));
-		
+		float overallScale = 0.88f + (umaDna.height - 0.5f) * 1.0f + (umaDna.legsSize - 0.5f) * 1.0f;
+		overallScale = Mathf.Clamp(overallScale, 0.5f, 2f);
+
+		skeleton.SetScale(positionHash, new Vector3(overallScale, overallScale, overallScale));
+
 		skeleton.SetPosition(positionHash,
 		                     skeleton.GetPosition(positionHash) +
 		                     new Vector3(
@@ -579,12 +578,9 @@ public class HumanMaleDNAConverterBehaviour : DnaConverterBehaviour
 			Mathf.Clamp(0, -10, 10),
 			Mathf.Clamp(0, -10, 10)));
 		
-		skeleton.SetScale(lowerBackHash, 
-		                  new Vector3(
-			Mathf.Clamp(1 - (umaDna.legsSize - 0.5f) * 1.0f, 0.5f, 3.0f),
-			Mathf.Clamp(1 - (umaDna.legsSize - 0.5f) * 1.0f, 0.5f, 3.0f),
-			Mathf.Clamp(1 - (umaDna.legsSize - 0.5f) * 1.0f, 0.5f, 3.0f)));
-		
+		float lowerBackScale = Mathf.Clamp(1 - (umaDna.legsSize - 0.5f) * 1.0f, 0.5f, 3.0f);
+		skeleton.SetScale(lowerBackHash, new Vector3(lowerBackScale, lowerBackScale, lowerBackScale));
+
 		skeleton.SetScale(headHash, 
 		                  new Vector3(
 			Mathf.Clamp(1 + (umaDna.headSize - 0.5f) * 2.0f, 0.5f, 2),
@@ -666,6 +662,10 @@ public class HumanMaleDNAConverterBehaviour : DnaConverterBehaviour
 			Mathf.Clamp(1 + (umaDna.mandibleSize - 0.5f) * 0.35f, 0.35f, 1.35f),
 			Mathf.Clamp(1 + (umaDna.mandibleSize - 0.5f) * 0.35f, 0.35f, 1.35f),
 			Mathf.Clamp(1 + (umaDna.mandibleSize - 0.5f) * 0.35f, 0.35f, 1.35f)));
+
+		umaData.characterHeight = overallScale * (0.85f + 1.2f * lowerBackScale);
+		umaData.characterRadius = 0.28f * overallScale;
+		umaData.characterMass = 46f * overallScale + 26f * umaDna.upperWeight + 26f * umaDna.lowerWeight;
 	}
 	
 }

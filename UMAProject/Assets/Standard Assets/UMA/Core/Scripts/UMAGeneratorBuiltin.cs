@@ -21,6 +21,7 @@ namespace UMA
 		public UMAMeshCombiner meshCombiner;
 		public bool fastGeneration = true;
 		private int forceGarbageCollect;
+		public int garbageCollectionRate = 8;
 		private System.Diagnostics.Stopwatch stopWatch = new System.Diagnostics.Stopwatch();
 
 		public void Initialize()
@@ -58,20 +59,15 @@ namespace UMA
 		{
 			stopWatch.Reset();
 			stopWatch.Start();
-			bool didGC = false;
-			if (forceGarbageCollect > 0)
+			if (forceGarbageCollect > garbageCollectionRate)
 			{
 				GC.Collect();
 				forceGarbageCollect = 0;
-				didGC = true;
+				if (garbageCollectionRate < 1) garbageCollectionRate = 1;
 			}
-			if (umaDirtyList.Count > 0)
+			else if (umaDirtyList.Count > 0)
 			{
-				// GC can run with texture preparation, but not mesh
-				if (!didGC || (fastGeneration && !umaDirtyList[0].isMeshDirty))
-				{
-					OnDirtyUpdate();
-				}
+				OnDirtyUpdate();
 			}
 			meshUpdates = 0;
 			stopWatch.Stop();
@@ -136,7 +132,12 @@ namespace UMA
 			{
 				umaDirtyList.RemoveAt(0);
 				umaData = null;
-			}           
+			} 
+			else if (fastGeneration && HandleDirtyUpdate(umaDirtyList[0]))
+			{
+				umaDirtyList.RemoveAt(0);
+				umaData = null;
+			}
 		}
 
 		private void UpdateUMAMesh(bool updatedAtlas)
@@ -184,9 +185,6 @@ namespace UMA
 		{
 			if (umaData)
 			{
-//				umaData.GotoOriginalPose();
-//				umaData.skeleton = new UMASkeletonDefault(umaData.myRenderer.rootBone);
-				var globalTrans = umaData.umaRoot.transform.GetChild(0);
 				umaData.skeleton.ResetAll();
 				umaData.ApplyDNA();
 				umaData.FireDNAAppliedEvents();

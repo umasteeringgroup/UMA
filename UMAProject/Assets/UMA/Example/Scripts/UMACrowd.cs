@@ -5,9 +5,6 @@ using UMA;
 
 public class UMACrowd : MonoBehaviour
 {
-	public UMACrowdRandomSet[] randomPool;
-	public UMAGeneratorBase generator;
-	public UMAData umaData;
 	[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
 	[System.Obsolete("Crowd slotLibrary is obsolete, please use the Crowd umaContext", false)]
 	public SlotLibrary slotLibrary;
@@ -17,6 +14,10 @@ public class UMACrowd : MonoBehaviour
 	[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
 	[System.Obsolete("Crowd raceLibrary is obsolete, please use the Crowd umaContext", false)]
 	public RaceLibrary raceLibrary;
+
+	public UMACrowdRandomSet[] randomPool;
+	public UMAGeneratorBase generator;
+	public UMAData umaData;
 	public UMAContext umaContext;
 	public RuntimeAnimatorController animationController;
 	public float atlasResolutionScale = 1;
@@ -29,11 +30,9 @@ public class UMACrowd : MonoBehaviour
 
 	public float space = 1;
 	public Transform zeroPoint;
+	private int spawnX;
+	private int spawnY;
 
-	private Transform tempUMA;
-	private int X;
-	private int Y;
-	private float umaTimer;
 	public string[] keywords;
 
 	public UMADataEvent CharacterCreated;
@@ -42,9 +41,7 @@ public class UMACrowd : MonoBehaviour
 
 	void Awake()
 	{
-		if (space == 0) space = 1;
-		string tempVersion = Application.unityVersion;
-		tempVersion = tempVersion.Substring(0, 3);
+		if (space <= 0) space = 1;
 	}
 
 	void Update()
@@ -397,15 +394,17 @@ public class UMACrowd : MonoBehaviour
 	protected virtual void SetUMAData()
 	{
 		umaData.atlasResolutionScale = atlasResolutionScale;
-		umaData.OnCharacterCreated += myColliderUpdateMethod;
+		umaData.OnCharacterCreated += CharacterCreatedCallback;
 	}
 
-	void myColliderUpdateMethod(UMAData umaData)
+	void CharacterCreatedCallback(UMAData umaData)
 	{
 		if (generateLotsUMA && hideWhileGeneratingLots)
 		{
-			umaData.animator.enabled = false;
-			umaData.myRenderer.enabled = false;
+			if (umaData.animator != null)
+				umaData.animator.enabled = false;
+			if (umaData.myRenderer != null)
+				umaData.myRenderer.enabled = false;
 		}
 	}
 
@@ -499,9 +498,45 @@ public class UMACrowd : MonoBehaviour
 		}
 	}
 
-	public GameObject GenerateOneUMA(int sex){
+	public GameObject GenerateOneUMA(int sex)
+	{
+		Vector3 zeroPos = Vector3.zero;
+		if (zeroPoint != null)
+			zeroPos = zeroPoint.position;
+		Vector3 newPos = zeroPos + new Vector3((spawnX - umaCrowdSize.x / 2f) * space, 0f, (spawnY - umaCrowdSize.y / 2f) * space);
+
+		if (spawnY < umaCrowdSize.y)
+		{
+			spawnX++;
+			if (spawnX >= umaCrowdSize.x)
+			{
+				spawnX = 0;
+				spawnY++;
+			}
+		}
+		else
+		{
+			if (hideWhileGeneratingLots)
+			{
+				UMAData[] generatedCrowd = GetComponentsInChildren<UMAData>();
+				foreach (UMAData generatedData in generatedCrowd)
+				{
+					if (generatedData.animator != null)
+						generatedData.animator.enabled = true;
+					if (generatedData.myRenderer != null)
+						generatedData.myRenderer.enabled = true;
+				}
+			}
+			generateLotsUMA = false;
+			spawnX = 0;
+			spawnY = 0;
+			return null;
+		}
+
 		GameObject newGO = new GameObject("Generated Character");
 		newGO.transform.parent = transform;
+		newGO.transform.position = newPos;
+
 		UMADynamicAvatar umaDynamicAvatar = newGO.AddComponent<UMADynamicAvatar>();
 		umaDynamicAvatar.Initialize();
 		umaData = umaDynamicAvatar.umaData;
@@ -518,12 +553,14 @@ public class UMACrowd : MonoBehaviour
 			int randomResult = Random.Range(0, randomPool.Length);
 			race = randomPool[randomResult].data;
 			umaRecipe.SetRace(GetRaceLibrary().GetRace(race.raceID));
-		} else
+		}
+		else
 		{
 			if (sex == 0)
 			{
 				umaRecipe.SetRace(GetRaceLibrary().GetRace("HumanMale"));
-			} else
+			}
+			else
 			{
 				umaRecipe.SetRace(GetRaceLibrary().GetRace("HumanFemale"));
 			}
@@ -534,7 +571,8 @@ public class UMACrowd : MonoBehaviour
 		if (race != null && race.slotElements.Length > 0)
 		{
 			DefineSlots(race);
-		} else
+		}
+		else
 		{
 			DefineSlots();
 		}
@@ -547,37 +585,8 @@ public class UMACrowd : MonoBehaviour
 		{
 			umaDynamicAvatar.animationController = animationController;
 		}
-		umaDynamicAvatar.UpdateNewRace();
-		tempUMA = newGO.transform;
+		umaDynamicAvatar.Show();
 
-		if (zeroPoint)
-		{
-			tempUMA.position = new Vector3(X * space + zeroPoint.position.x - umaCrowdSize.x * space * 0.5f + 0.5f, zeroPoint.position.y, Y * space + zeroPoint.position.z - umaCrowdSize.y * space * 0.5f + 0.5f);
-		} else
-		{
-			tempUMA.position = new Vector3(X * space - umaCrowdSize.x * space * 0.5f + 0.5f, 0, Y * space - umaCrowdSize.y * space * 0.5f + 0.5f);
-		}
-		X = X + 1;
-		if (X >= umaCrowdSize.x)
-		{
-			X = 0;
-			Y = Y + 1;
-		}
-		if (Y >= umaCrowdSize.y)
-		{
-			generateLotsUMA = false;
-			if (hideWhileGeneratingLots)
-			{
-				UMAData[] generatedCrowd = GetComponentsInChildren<UMAData>();
-				foreach (UMAData generatedData in generatedCrowd)
-				{
-					generatedData.myRenderer.enabled = true;
-					generatedData.animator.enabled = true;
-				}
-			}
-			X = 0;
-			Y = 0;
-		}
 		return newGO;
 	}
 
