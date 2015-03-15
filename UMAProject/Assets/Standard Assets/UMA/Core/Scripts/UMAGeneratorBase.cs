@@ -119,29 +119,6 @@ namespace UMA
 			return animator;
 		}
 
-		[Obsolete("CreateAnimator(... bool applyRootMotion ...) is obsolete, use CreateAnimator(... AnimatorUpdateMode updateMode ...) instead.", false)]
-		public static Animator CreateAnimator(UMAData umaData, UmaTPose umaTPose, RuntimeAnimatorController controller, bool applyRootMotion, bool animatePhysics, AnimatorCullingMode cullingMode)
-		{
-			var animator = umaData.umaRoot.AddComponent<Animator>();
-			switch (umaData.umaRecipe.raceData.umaTarget)
-			{
-				case RaceData.UMATarget.Humanoid:
-					umaTPose.DeSerialize();
-					animator.avatar = CreateAvatar(umaData, umaTPose);
-					break;
-				case RaceData.UMATarget.Generic:
-					animator.avatar = CreateGenericAvatar(umaData);
-					break;
-			}
-			animator.runtimeAnimatorController = controller;
-			animator.applyRootMotion = applyRootMotion;
-#pragma warning disable 618
-			animator.animatePhysics = animatePhysics;
-#pragma warning restore 618
-			animator.cullingMode = cullingMode;
-			return animator;
-		}
-
 		public static void DebugLogHumanAvatar(GameObject root, HumanDescription description)
 		{
 			Debug.Log("***", root);
@@ -304,6 +281,26 @@ namespace UMA
 				bones = newBones.ToArray();
 			}
 
+		}
+		
+		[Obsolete("CreateAnimator(... bool applyRootMotion ...) is obsolete, use CreateAnimator(UMAData, UmaTPose, RuntimeAnimatorController) instead.", false)]
+		public static Animator CreateAnimator(UMAData umaData, UmaTPose umaTPose, RuntimeAnimatorController controller, bool applyRootMotion, AnimatorUpdateMode updateMode, AnimatorCullingMode cullingMode)
+		{
+			var animator = CreateAnimator(umaData, umaTPose, controller);
+			animator.applyRootMotion = applyRootMotion;
+			animator.updateMode = updateMode;
+			animator.cullingMode = cullingMode;
+			return animator;
+		}
+		
+		[Obsolete("CreateAnimator(... bool applyRootMotion, bool animatePhysics ...) is obsolete, use CreateAnimator(... AnimatorUpdateMode updateMode ...) instead.", false)]
+		public static Animator CreateAnimator(UMAData umaData, UmaTPose umaTPose, RuntimeAnimatorController controller, bool applyRootMotion, bool animatePhysics, AnimatorCullingMode cullingMode)
+		{
+			var animator = CreateAnimator(umaData, umaTPose, controller);
+			animator.applyRootMotion = applyRootMotion;
+			animator.animatePhysics = animatePhysics;
+			animator.cullingMode = cullingMode;
+			return animator;
 		}
 #pragma warning restore 618
 	}
