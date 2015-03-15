@@ -16,6 +16,9 @@ namespace UMAEditor
 		[MenuItem("UMA/Find Missing References")]
 		static void Replace()
 		{
+#if UNITY_WEBPLAYER 
+			Debug.LogError("MenuItem - UMA/Find Missing References does not work when the build target is set to Webplayer, we need the full mono framework available.");
+#else
 			List<UnityReference> references = new List<UnityReference>();
 			var slotFilePaths = new List<string>();
 
@@ -44,6 +47,7 @@ namespace UMAEditor
 				}
 #pragma warning restore 618
 			}
+#endif
 		}
 
 		static string FindAssetGuid(string assetName, string assetExtension)
@@ -66,15 +70,14 @@ namespace UMAEditor
 
 		static void ReplaceReferences(string assetFolder, List<UnityReference> r)
 		{
+#if !UNITY_WEBPLAYER 
 			if (EditorSettings.serializationMode != SerializationMode.ForceText)
 			{
 				Debug.LogError("Failed to replace refrences, you must set serialzation mode to text. Edit -> Project Settings -> Editor -> Asset Serialziation = Force Text");
 				return;
 			}
 
-			string[] files = Directory.GetFiles(assetFolder, "*"
-				, SearchOption.AllDirectories
-				);
+			string[] files = Directory.GetFiles(assetFolder, "*", SearchOption.AllDirectories);
 			for (int i = 0; i < files.Length; i++)
 			{
 				string file = files[i];
@@ -93,6 +96,7 @@ namespace UMAEditor
 			}
 
 			EditorUtility.ClearProgressBar();
+#endif
 		}
 
 		static void ReplaceReferencesInFile(string filePath, List<UnityReference> references)

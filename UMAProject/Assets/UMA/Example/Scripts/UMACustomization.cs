@@ -130,7 +130,7 @@ public class UMACustomization : MonoBehaviour
 
         // Find the DNA hide button and hide it for now
         DnaHide = GameObject.Find("MessagePanel").GetComponentInChildren<Button>();
-        DnaHide.active = false;
+        DnaHide.gameObject.SetActive(false);
     }
 
 	protected virtual void Start()
@@ -196,7 +196,7 @@ public class UMACustomization : MonoBehaviour
         {
             Camera.main.rect = ViewPortReduced;
             DnaPanel.SetActive(true);
-            DnaHide.active = true;
+            DnaHide.gameObject.SetActive(true);
         }
 
         else
@@ -204,8 +204,8 @@ public class UMACustomization : MonoBehaviour
             cameraTrack.target = baseTarget;
             Camera.main.rect = ViewPortFull;
             DnaPanel.SetActive(false);
-            DnaHide.active = false;
-        }
+			DnaHide.gameObject.SetActive(false);
+		}
     }
 
     // Button callback to hide slider scroll panel

@@ -93,11 +93,16 @@ namespace UMA
 
 		private bool OwnSharedBuffers()
 		{
+#if !UNITY_WEBPLAYER && !UNITY_WEBGL
 			return (this == bufferLockOwner);
+#else
+			return false;
+#endif
 		}
 
 		public bool ClaimSharedBuffers()
 		{
+#if !UNITY_WEBPLAYER && !UNITY_WEBGL
 			if (bufferLockOwner == null)
 			{
 				bufferLockOwner = this;
@@ -117,11 +122,13 @@ namespace UMA
 			}
 
 			Debug.LogWarning("Unable to claim UMAMeshData global buffers!");
+#endif
 			return false;
 		}
 
 		public void ReleaseSharedBuffers()
 		{
+#if !UNITY_WEBPLAYER && !UNITY_WEBGL
 			if (bufferLockOwner == this)
 			{
 				vertices = null;
@@ -138,6 +145,7 @@ namespace UMA
 				colors32 = null;
 				bufferLockOwner = null;
 			}
+#endif
 		}
 
 		public void RetrieveDataFromUnityMesh(SkinnedMeshRenderer skinnedMeshRenderer)
@@ -218,6 +226,7 @@ namespace UMA
 
 		private void ApplySharedBuffers(Mesh mesh)
 		{
+#if !UNITY_WEBPLAYER && !UNITY_WEBGL
 			unsafe 
 			{
 				UIntPtr* lengthPtr;
@@ -362,6 +371,7 @@ namespace UMA
 					}
 				}
 			}
+#endif
 		}
 
 		private void ComputeBoneNameHashes()
@@ -384,7 +394,8 @@ namespace UMA
 				}
 			}
 		}
-		
+
+#if !UNITY_WEBPLAYER && !UNITY_WEBGL
 		private static UMAMeshData bufferLockOwner = null;
 		const int MAX_VERTEX_COUNT = 65534;
 		static Vector3[] gVertices = new Vector3[MAX_VERTEX_COUNT];
@@ -393,10 +404,11 @@ namespace UMA
 		static Vector4[] gTangents = new Vector4[MAX_VERTEX_COUNT];
 		static Vector2[] gUV = new Vector2[MAX_VERTEX_COUNT];
 		static Vector2[] gUV2 = new Vector2[MAX_VERTEX_COUNT];
-		#if !UNITY_4_6
+#if !UNITY_4_6
 		static Vector2[] gUV3 = new Vector2[MAX_VERTEX_COUNT];
 		static Vector2[] gUV4 = new Vector2[MAX_VERTEX_COUNT];
-		#endif
+#endif
 		static Color32[] gColors32 = new Color32[MAX_VERTEX_COUNT];
+#endif
 	}
 }
