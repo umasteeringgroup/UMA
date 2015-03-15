@@ -4,7 +4,7 @@ using System.Text;
 
 namespace UMA
 {
-    public partial class UMADna : UMADnaBase
+    public abstract partial class UMADna : UMADnaBase
     {
 
     }

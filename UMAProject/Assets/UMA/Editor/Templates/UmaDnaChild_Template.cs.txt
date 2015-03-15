@@ -42,7 +42,7 @@ namespace UMA
 			{{
 {0:GetValue}
 			}}
-			return base.GetValue(idx);
+			throw new System.ArgumentOutOfRangeException();
 		}}
 		public override void SetValue(int idx, float value)
 		{{
@@ -50,7 +50,7 @@ namespace UMA
 			{{
 {0:SetValue}
 			}}
-			base.SetValue(idx, value);
+			throw new System.ArgumentOutOfRangeException();
 		}}
 
 		public static string[] GetNames()

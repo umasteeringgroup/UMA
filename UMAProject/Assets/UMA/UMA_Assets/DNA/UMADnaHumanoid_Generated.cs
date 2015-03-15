@@ -180,61 +180,61 @@ namespace UMA
 				case 45: return breastSize;
 
 			}
-			return base.GetValue(idx);
+			throw new System.ArgumentOutOfRangeException();
 		}
 		public override void SetValue(int idx, float value)
 		{
 			switch(idx)
 			{
-			case 0: height = value; return;
-			case 1: headSize = value; return;
-			case 2: headWidth = value; return;
-			case 3: neckThickness = value; return;
-			case 4: armLength = value; return;
-			case 5: forearmLength = value; return;
-			case 6: armWidth = value; return;
-			case 7: forearmWidth = value; return;
-			case 8: handsSize = value; return;
-			case 9: feetSize = value; return;
-			case 10: legSeparation = value; return;
-			case 11: upperMuscle = value; return;
-			case 12: lowerMuscle = value; return;
-			case 13: upperWeight = value; return;
-			case 14: lowerWeight = value; return;
-			case 15: legsSize = value; return;
-			case 16: belly = value; return;
-			case 17: waist = value; return;
-			case 18: gluteusSize = value; return;
-			case 19: earsSize = value; return;
-			case 20: earsPosition = value; return;
-			case 21: earsRotation = value; return;
-			case 22: noseSize = value; return;
-			case 23: noseCurve = value; return;
-			case 24: noseWidth = value; return;
-			case 25: noseInclination = value; return;
-			case 26: nosePosition = value; return;
-			case 27: nosePronounced = value; return;
-			case 28: noseFlatten = value; return;
-			case 29: chinSize = value; return;
-			case 30: chinPronounced = value; return;
-			case 31: chinPosition = value; return;
-			case 32: mandibleSize = value; return;
-			case 33: jawsSize = value; return;
-			case 34: jawsPosition = value; return;
-			case 35: cheekSize = value; return;
-			case 36: cheekPosition = value; return;
-			case 37: lowCheekPronounced = value; return;
-			case 38: lowCheekPosition = value; return;
-			case 39: foreheadSize = value; return;
-			case 40: foreheadPosition = value; return;
-			case 41: lipsSize = value; return;
-			case 42: mouthSize = value; return;
-			case 43: eyeRotation = value; return;
-			case 44: eyeSize = value; return;
-			case 45: breastSize = value; return;
+                case 0: height = value; return;
+                case 1: headSize = value; return;
+                case 2: headWidth = value; return;
+                case 3: neckThickness = value; return;
+                case 4: armLength = value; return;
+                case 5: forearmLength = value; return;
+                case 6: armWidth = value; return;
+                case 7: forearmWidth = value; return;
+                case 8: handsSize = value; return;
+                case 9: feetSize = value; return;
+                case 10: legSeparation = value; return;
+                case 11: upperMuscle = value; return;
+                case 12: lowerMuscle = value; return;
+                case 13: upperWeight = value; return;
+                case 14: lowerWeight = value; return;
+                case 15: legsSize = value; return;
+                case 16: belly = value; return;
+                case 17: waist = value; return;
+                case 18: gluteusSize = value; return;
+                case 19: earsSize = value; return;
+                case 20: earsPosition = value; return;
+                case 21: earsRotation = value; return;
+                case 22: noseSize = value; return;
+                case 23: noseCurve = value; return;
+                case 24: noseWidth = value; return;
+                case 25: noseInclination = value; return;
+                case 26: nosePosition = value; return;
+                case 27: nosePronounced = value; return;
+                case 28: noseFlatten = value; return;
+                case 29: chinSize = value; return;
+                case 30: chinPronounced = value; return;
+                case 31: chinPosition = value; return;
+                case 32: mandibleSize = value; return;
+                case 33: jawsSize = value; return;
+                case 34: jawsPosition = value; return;
+                case 35: cheekSize = value; return;
+                case 36: cheekPosition = value; return;
+                case 37: lowCheekPronounced = value; return;
+                case 38: lowCheekPosition = value; return;
+                case 39: foreheadSize = value; return;
+                case 40: foreheadPosition = value; return;
+                case 41: lipsSize = value; return;
+                case 42: mouthSize = value; return;
+                case 43: eyeRotation = value; return;
+                case 44: eyeSize = value; return;
+                case 45: breastSize = value; return;
 
 			}
-			base.SetValue(idx, value);
+			throw new System.ArgumentOutOfRangeException();
 		}
 
 		public static string[] GetNames()

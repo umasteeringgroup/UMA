@@ -23,12 +23,18 @@ namespace UMA
 			}
 		}
 
-		internal static void WriteAllBytes(string path, byte[] content)
+		public static void WriteAllBytes(string path, byte[] content)
 		{
 			using (var sw = new System.IO.StreamWriter(path, false))
 			{
 				sw.Write(content);
 			}
+		}
+
+		public static void EnsurePath(string path)
+		{
+			if (System.IO.Directory.Exists(path)) return;
+			System.IO.Directory.CreateDirectory(path);
 		}
 	}
 }

@@ -11,10 +11,29 @@ namespace UMA.Integrations
 		{
 			if (powerPackPersistance == null)
 			{
-				powerPackPersistance = typeof(UMAAvatarBase).Assembly.GetType("UMA.PowerTools.PowerPackPersistance");
+				foreach (var assembly in System.AppDomain.CurrentDomain.GetAssemblies())
+				{
+					powerPackPersistance = assembly.GetType("UMA.PowerTools.PowerPackPersistance");
+					if (powerPackPersistance != null) break;
+				}
 			}
 			return powerPackPersistance;
 		}
+		private static Type umaEditorAvatarType;
+		private static Type GetUMAEditorAvatarType()
+		{
+			if (umaEditorAvatarType == null)
+			{
+				foreach (var assembly in System.AppDomain.CurrentDomain.GetAssemblies())
+				{
+					umaEditorAvatarType = assembly.GetType("UMA.PowerTools.PowerPackPersistance");
+					if (umaEditorAvatarType != null) break;
+				}
+			}
+			return umaEditorAvatarType;
+		}
+
+
 		private static UnityEngine.Object GetPowerPackPersistanceInstance()
 		{
 			var method = GetPowerPackPersistanceType().GetMethod("GetInstance", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
@@ -61,7 +80,7 @@ namespace UMA.Integrations
 
 		private static void SetAvatarDestroyParent(UMADynamicAvatar avatar, bool destroyParent)
 		{
-			var umaEditorAvatarType = typeof(UMAAvatarBase).Assembly.GetType("UMA.PowerTools.UMAEditorAvatar");
+			var umaEditorAvatarType = GetUMAEditorAvatarType();
 			var umaEditorAvatar = avatar.GetComponentInChildren(umaEditorAvatarType);
 			umaEditorAvatarType.GetField("destroyParent").SetValue(umaEditorAvatar, destroyParent);
 		}

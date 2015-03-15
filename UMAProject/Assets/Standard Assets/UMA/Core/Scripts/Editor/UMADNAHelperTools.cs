@@ -30,13 +30,6 @@ namespace UMAEditor
 			customFormatter = new DictionaryCustomFormatter();
 			CodeGenTemplate.formatter = customFormatter;
 
-			if (!Directory.Exists(destDir))
-			{
-				Debug.Log("Creating Directory: " + destDir);
-				Directory.CreateDirectory(destDir);
-			}
-
-
 			var baseDnaType = typeof(UMADnaBase);
 			var customData = new Dictionary<string, object>();
 			customData.Add("ClassName", "");
@@ -47,6 +40,7 @@ namespace UMAEditor
 				{
 					if (DerivesFrom(dnaType, baseDnaType))
 					{
+						if (dnaType.Name == "UMADna") continue;
 						customData["ClassName"] = dnaType.Name;
 						foreach (var template in pageTemplates)
 						{
@@ -83,11 +77,12 @@ namespace UMAEditor
 
 		private static void CreateBaseDNAExtension(string destination, string formatString, Dictionary<string, object> customData)
 		{
-			FileUtils.WriteAllText(Path.Combine(destination, "UMADna_Generated.cs"), String.Format(customFormatter, formatString, customData));
+			FileUtils.WriteAllText(FindPathFor("UMADna", destination), String.Format(customFormatter, formatString, customData));
 		}
 
 		private static void CreateDNAHelperCode(Type dnaType, string destination, string formatString, CodeGenTemplate[] templates)
 		{
+			var scriptPath = FindPathFor(dnaType, destination);
 			var customData = new Dictionary<string, object>();
 			customData.Add("ClassName", dnaType.Name);
 			customData.Add("FieldName", "");
@@ -109,7 +104,31 @@ namespace UMAEditor
 			{
 				customData.Add(template.Name, template.sb);
 			}
-			FileUtils.WriteAllText(Path.Combine(destination, dnaType.Name + "_Generated.cs"), String.Format(customFormatter, formatString, customData));
+			FileUtils.WriteAllText(scriptPath, String.Format(customFormatter, formatString, customData));
+		}
+
+		private static string FindPathFor(Type dnaType, string destination)
+		{
+			return FindPathFor(dnaType.Name, destination);
+		}
+
+		private static string FindPathFor(string dnaTypeName, string destination)
+		{
+			var scriptPath = Path.Combine(destination, dnaTypeName + "_Generated.cs");
+
+			var matchingScripts = AssetDatabase.FindAssets("t:MonoScript " + dnaTypeName);
+			var desiredSuffix = "/" + dnaTypeName + ".cs";
+			foreach (var guid in matchingScripts)
+			{
+				var scripts = AssetDatabase.GUIDToAssetPath(guid);
+				if (scripts.EndsWith(desiredSuffix, StringComparison.InvariantCultureIgnoreCase))
+				{
+					scriptPath = scripts.Insert(scripts.Length - 3, "_Generated");
+					break;
+				}
+			}
+			FileUtils.EnsurePath(Path.GetDirectoryName(scriptPath));
+			return scriptPath;
 		}
 	}
 }

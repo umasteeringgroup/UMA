@@ -14,24 +14,8 @@
 namespace UMA
 {
 
-	public partial class UMADna
+	public abstract partial class UMADna
 	{
-		public virtual string[] Names
-		{
-			get
-			{
-				return new string[0];
-			}
-		}
-		public virtual float GetValue(int idx)
-		{
-			throw new System.ArgumentOutOfRangeException("idx", idx, "GetValue invalid index");
-		}
-		public virtual void SetValue(int idx, float value)
-		{
-			throw new System.ArgumentOutOfRangeException("idx", idx, "SetValue invalid index");
-		}
-
 		public static string[] GetNames(System.Type dnaType)
 		{
 			if( dnaType == typeof(UMADnaHumanoid) )

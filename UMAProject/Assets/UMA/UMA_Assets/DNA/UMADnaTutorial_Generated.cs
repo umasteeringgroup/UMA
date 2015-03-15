@@ -45,16 +45,16 @@ namespace UMA
 				case 0: return eyeSpacing;
 
 			}
-			return base.GetValue(idx);
+			throw new System.ArgumentOutOfRangeException();
 		}
 		public override void SetValue(int idx, float value)
 		{
 			switch(idx)
 			{
-			case 0: eyeSpacing = value; break;
+                case 0: eyeSpacing = value; return;
 
 			}
-			base.SetValue(idx, value);
+			throw new System.ArgumentOutOfRangeException();
 		}
 
 		public static string[] GetNames()
@@ -75,7 +75,7 @@ namespace UMA
 		public static UMADnaTutorial LoadInstance(string data)
 	    {
 #if !StripLitJson
-			return LitJson.JsonMapper.ToObject<UMADnaTutorial_Byte>(data).ToDna();
+	        return LitJson.JsonMapper.ToObject<UMADnaTutorial_Byte>(data).ToDna();
 #else
 			return null;
 #endif
