@@ -89,7 +89,56 @@ namespace UMA
 		public Transform rootBone;
 		public int[] boneNameHashes;
 		public int subMeshCount;
+		public int vertexCount;
 
+		private bool OwnSharedBuffers()
+		{
+			return (this == bufferLockOwner);
+		}
+
+		public bool ClaimSharedBuffers()
+		{
+			if (bufferLockOwner == null)
+			{
+				bufferLockOwner = this;
+				vertices = gVertices;
+				boneWeights = null;
+				unityBoneWeights = gBoneWeights;
+				normals = gNormals;
+				tangents = gTangents;
+				uv = gUV;
+				uv2 = gUV2;
+#if !UNITY_4_6
+				uv3 = gUV3;
+				uv4 = gUV4;
+#endif
+				colors32 = gColors32;
+				return true;
+			}
+
+			Debug.LogWarning("Unable to claim UMAMeshData global buffers!");
+			return false;
+		}
+
+		public void ReleaseSharedBuffers()
+		{
+			if (bufferLockOwner == this)
+			{
+				vertices = null;
+				boneWeights = null;
+				unityBoneWeights = null;
+				normals = null;
+				tangents = null;
+				uv = null;
+				uv2 = null;
+#if !UNITY_4_6
+				uv3 = null;
+				uv4 = null;
+#endif
+				colors32 = null;
+				bufferLockOwner = null;
+			}
+		}
 
 		public void RetrieveDataFromUnityMesh(SkinnedMeshRenderer skinnedMeshRenderer)
 		{
@@ -98,6 +147,7 @@ namespace UMA
 			boneWeights = UMABoneWeight.Convert(sharedMesh.boneWeights);
 			bones = skinnedMeshRenderer.bones;
 			vertices = sharedMesh.vertices;
+			vertexCount = vertices.Length;
 			normals = sharedMesh.normals;
 			tangents = sharedMesh.tangents;
 			colors32 = sharedMesh.colors32;
@@ -124,28 +174,35 @@ namespace UMA
 #if UNITY_EDITOR
 			if (UnityEditor.PrefabUtility.IsComponentAddedToPrefabInstance(renderer))
 			{
-				Debug.LogError("Cannot apply changes to prefab");
+				Debug.LogError("Cannot apply changes to prefab!");
 			}
 			if (UnityEditor.AssetDatabase.IsSubAsset(mesh))
 			{
-				Debug.LogError("Cannot apply changes to asset mesh");
+				Debug.LogError("Cannot apply changes to asset mesh!");
 			}
 #endif
 			mesh.subMeshCount = 1;
 			mesh.triangles = new int[0];
 
-			mesh.vertices = vertices;
-			mesh.boneWeights = unityBoneWeights;
-			mesh.bindposes = bindPoses;
-			mesh.normals = normals;
-			mesh.tangents = tangents;
-			mesh.uv = uv;
-			mesh.uv2 = uv2;
+			if (OwnSharedBuffers())
+			{
+				ApplySharedBuffers(mesh);
+			}
+			else
+			{
+				mesh.vertices = vertices;
+				mesh.boneWeights = unityBoneWeights;
+				mesh.normals = normals;
+				mesh.tangents = tangents;
+				mesh.uv = uv;
+				mesh.uv2 = uv2;
 #if !UNITY_4_6
-			mesh.uv3 = uv3;
-			mesh.uv4 = uv4;
+				mesh.uv3 = uv3;
+				mesh.uv4 = uv4;
 #endif
-			mesh.colors32 = colors32;
+				mesh.colors32 = colors32;
+			}
+			mesh.bindposes = bindPoses;
 
 			var subMeshCount = submeshes.Length;
 			mesh.subMeshCount = subMeshCount;
@@ -157,6 +214,154 @@ namespace UMA
 			mesh.RecalculateBounds();
 			renderer.bones = bones;
 			renderer.sharedMesh = mesh;
+		}
+
+		private void ApplySharedBuffers(Mesh mesh)
+		{
+			unsafe 
+			{
+				UIntPtr* lengthPtr;
+				fixed (void* pVertices = gVertices) 
+				{ 
+					lengthPtr = (UIntPtr*)pVertices - 1; 
+					try 
+					{ 
+						*lengthPtr = (UIntPtr)vertexCount; 
+						mesh.vertices = gVertices; 
+					} 
+					finally 
+					{ 
+						*lengthPtr = (UIntPtr)MAX_VERTEX_COUNT; 
+					} 
+				} 
+				fixed (void* pBoneWeights = gBoneWeights) 
+				{ 
+					lengthPtr = (UIntPtr*)pBoneWeights - 1; 
+					try 
+					{ 
+						*lengthPtr = (UIntPtr)vertexCount; 
+						mesh.boneWeights = gBoneWeights; 
+					} 
+					finally 
+					{ 
+						*lengthPtr = (UIntPtr)MAX_VERTEX_COUNT; 
+					} 
+				}
+				if (normals != null)
+				{
+					fixed (void* pNormals = gNormals) 
+					{ 
+						lengthPtr = (UIntPtr*)pNormals - 1; 
+						try 
+						{ 
+							*lengthPtr = (UIntPtr)vertexCount; 
+							mesh.normals = gNormals; 
+						} 
+						finally 
+						{ 
+							*lengthPtr = (UIntPtr)MAX_VERTEX_COUNT; 
+						} 
+					}
+				}
+				if (tangents != null)
+				{
+					fixed (void* pTangents = gTangents) 
+					{ 
+						lengthPtr = (UIntPtr*)pTangents - 1; 
+						try 
+						{ 
+							*lengthPtr = (UIntPtr)vertexCount; 
+							mesh.tangents = gTangents; 
+						} 
+						finally 
+						{ 
+							*lengthPtr = (UIntPtr)MAX_VERTEX_COUNT; 
+						} 
+					}
+				}
+				if (uv != null)
+				{
+					fixed (void* pUV = gUV) 
+					{ 
+						lengthPtr = (UIntPtr*)pUV - 1; 
+						try 
+						{ 
+							*lengthPtr = (UIntPtr)vertexCount; 
+							mesh.uv = gUV; 
+						} 
+						finally 
+						{ 
+							*lengthPtr = (UIntPtr)MAX_VERTEX_COUNT; 
+						} 
+					}
+				}
+				if (uv2 != null)
+				{
+					fixed (void* pUV2 = gUV2) 
+					{ 
+						lengthPtr = (UIntPtr*)pUV2 - 1; 
+						try 
+						{ 
+							*lengthPtr = (UIntPtr)vertexCount; 
+							mesh.uv2 = gUV2; 
+						} 
+						finally 
+						{ 
+							*lengthPtr = (UIntPtr)MAX_VERTEX_COUNT; 
+						} 
+					}
+				}
+#if !UNITY_4_6
+				if (uv3 != null)
+				{
+					fixed (void* pUV3 = gUV3) 
+					{ 
+						lengthPtr = (UIntPtr*)pUV3 - 1; 
+						try 
+						{ 
+							*lengthPtr = (UIntPtr)vertexCount; 
+							mesh.uv3 = gUV3; 
+						} 
+						finally 
+						{ 
+							*lengthPtr = (UIntPtr)MAX_VERTEX_COUNT; 
+						} 
+					}
+				}
+				if (uv4 != null)
+				{
+					fixed (void* pUV4 = gUV4) 
+					{ 
+						lengthPtr = (UIntPtr*)pUV4 - 1; 
+						try 
+						{ 
+							*lengthPtr = (UIntPtr)vertexCount; 
+							mesh.uv4 = gUV4; 
+						} 
+						finally 
+						{ 
+							*lengthPtr = (UIntPtr)MAX_VERTEX_COUNT; 
+						} 
+					}
+				}
+#endif
+				if (colors32 != null)
+				{
+					fixed (void* pColors32 = gColors32) 
+					{ 
+						lengthPtr = (UIntPtr*)pColors32 - 1; 
+						try 
+						{ 
+							*lengthPtr = (UIntPtr)vertexCount; 
+							mesh.colors32 = gColors32; 
+						} 
+						finally 
+						{ 
+							*lengthPtr = (UIntPtr)MAX_VERTEX_COUNT; 
+						} 
+					}
+				}
+			}
 		}
 
 		private void ComputeBoneNameHashes()
@@ -179,5 +384,19 @@ namespace UMA
 				}
 			}
 		}
+		
+		private static UMAMeshData bufferLockOwner = null;
+		const int MAX_VERTEX_COUNT = 65534;
+		static Vector3[] gVertices = new Vector3[MAX_VERTEX_COUNT];
+		static BoneWeight[] gBoneWeights = new BoneWeight[MAX_VERTEX_COUNT];
+		static Vector3[] gNormals = new Vector3[MAX_VERTEX_COUNT];
+		static Vector4[] gTangents = new Vector4[MAX_VERTEX_COUNT];
+		static Vector2[] gUV = new Vector2[MAX_VERTEX_COUNT];
+		static Vector2[] gUV2 = new Vector2[MAX_VERTEX_COUNT];
+		#if !UNITY_4_6
+		static Vector2[] gUV3 = new Vector2[MAX_VERTEX_COUNT];
+		static Vector2[] gUV4 = new Vector2[MAX_VERTEX_COUNT];
+		#endif
+		static Color32[] gColors32 = new Color32[MAX_VERTEX_COUNT];
 	}
 }
