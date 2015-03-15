@@ -2,16 +2,14 @@
 //	Name:		HUDFPS
 //	Author: 	Aras Pranckevicius (NeARAZ)
 //	============================================================
-
-
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
  
-public class HUDFPS : MonoBehaviour 
+public class HUDFPS : MonoBehaviour
 {
  
-// Attach this to a GUIText to make a frames/second indicator.
+// Attach this to a UI Text to make a frames/second indicator.
 //
 // It calculates frames/second over each updateInterval,
 // so the display does not keep changing wildly.
@@ -23,51 +21,48 @@ public class HUDFPS : MonoBehaviour
 // 5.5 frames.
 // Modified to properly support Unity 5 where guiText property has been removed.
  
-    public  float updateInterval = 0.5F;
-    public Text FpsTextGO;
+	public  float updateInterval = 0.5F;
+	public Text fpsTextOutput;
+	private float accum = 0;  // FPS accumulated over the interval
+	private int   frames = 0;  // Frames drawn over the interval
+	private float timeleft;     // Left time for current interval
  
-    private float accum   = 0;  // FPS accumulated over the interval
-    private int   frames  = 0;  // Frames drawn over the interval
-    private float timeleft;     // Left time for current interval
-    private Text _FpsText;
+	void Start()
+	{
+		if (!fpsTextOutput)
+		{
+			Debug.LogWarning("UtilityFramesPerSecond needs a Text component for output!");
+			enabled = false;
+			return;
+		}
+		timeleft = updateInterval;  
+	}
  
-    void Start()
-    {
-        _FpsText = FpsTextGO.GetComponent<Text>();
-        if (!_FpsText)
-        {
-            Debug.Log("UtilityFramesPerSecond needs a GUIText component!");
-            enabled = false;
-            return;
-        }
-        timeleft = updateInterval;  
-    }
+	void Update()
+	{
+		timeleft -= Time.deltaTime;
+		accum += Time.timeScale / Time.deltaTime;
+		++frames;
  
-    void Update()
-    {
-        timeleft -= Time.deltaTime;
-        accum += Time.timeScale/Time.deltaTime;
-        ++frames;
+		// Interval ended - update GUI text and start new interval
+		if (timeleft <= 0.0)
+		{
+			// display two fractional digits (f2 format)
+			float fps = accum / frames;
+			string format = System.String.Format("{0:F2} FPS", fps);
+			fpsTextOutput.text = format;
  
-        // Interval ended - update GUI text and start new interval
-        if( timeleft <= 0.0 )
-        {
-            // display two fractional digits (f2 format)
-	    float fps = accum/frames;
-	    string format = System.String.Format("{0:F2} FPS",fps);
-        _FpsText.text = format;
- 
-	    if(fps < 30)
-            _FpsText.material.color = Color.yellow;
-	    else 
-		    if(fps < 10)
-                _FpsText.material.color = Color.red;
-		    else
-                _FpsText.material.color = Color.green;
-	    //	DebugConsole.Log(format,level);
-            timeleft = updateInterval;
-            accum = 0.0F;
-            frames = 0;
-        }
-    }
+			if (fps < 30)
+				fpsTextOutput.material.color = Color.yellow;
+			else 
+		    if (fps < 10)
+				fpsTextOutput.material.color = Color.red;
+			else
+				fpsTextOutput.material.color = Color.green;
+			//	DebugConsole.Log(format,level);
+			timeleft = updateInterval;
+			accum = 0.0F;
+			frames = 0;
+		}
+	}
 }
