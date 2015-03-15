@@ -467,6 +467,9 @@ namespace UMA
 
 		private static T[] EnsureArrayLength<T>(T[] oldArray, int newLength)
 		{
+			if (newLength <= 0)
+				return null;
+
 			if (oldArray != null && oldArray.Length >= newLength)
 				return oldArray;
 
