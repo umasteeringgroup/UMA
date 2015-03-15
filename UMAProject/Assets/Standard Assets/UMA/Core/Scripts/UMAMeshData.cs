@@ -2,6 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// We can dramatically reduce garbage by using shared buffers
+// on desktop platforms and dynamically adjusting the
+// size which the arrays appear to be to C# code
+// See: http://feedback.unity3d.com/suggestions/allow-mesh-data-to-have-a-length
+#define USE_UNSAFE_CODE 0
+
 namespace UMA
 {
 	[Serializable]
@@ -93,7 +99,7 @@ namespace UMA
 
 		private bool OwnSharedBuffers()
 		{
-#if !UNITY_WEBPLAYER && !UNITY_WEBGL
+#if USE_UNSAFE_CODE
 			return (this == bufferLockOwner);
 #else
 			return false;
@@ -102,7 +108,7 @@ namespace UMA
 
 		public bool ClaimSharedBuffers()
 		{
-#if !UNITY_WEBPLAYER && !UNITY_WEBGL
+#if USE_UNSAFE_CODE
 			if (bufferLockOwner == null)
 			{
 				bufferLockOwner = this;
@@ -128,7 +134,7 @@ namespace UMA
 
 		public void ReleaseSharedBuffers()
 		{
-#if !UNITY_WEBPLAYER && !UNITY_WEBGL
+#if USE_UNSAFE_CODE
 			if (bufferLockOwner == this)
 			{
 				vertices = null;
@@ -226,7 +232,7 @@ namespace UMA
 
 		private void ApplySharedBuffers(Mesh mesh)
 		{
-#if !UNITY_WEBPLAYER && !UNITY_WEBGL
+#if USE_UNSAFE_CODE
 			unsafe 
 			{
 				UIntPtr* lengthPtr;
@@ -395,7 +401,7 @@ namespace UMA
 			}
 		}
 
-#if !UNITY_WEBPLAYER && !UNITY_WEBGL
+#if USE_UNSAFE_CODE
 		private static UMAMeshData bufferLockOwner = null;
 		const int MAX_VERTEX_COUNT = 65534;
 		static Vector3[] gVertices = new Vector3[MAX_VERTEX_COUNT];
