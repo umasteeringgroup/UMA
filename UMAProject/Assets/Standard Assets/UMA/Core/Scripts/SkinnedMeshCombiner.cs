@@ -28,17 +28,28 @@ namespace UMA
 
 		private static Transform RecursivelyMapToNewRoot(Transform bone, int hash, Transform rootBone, UMASkeleton skeleton)
 		{
-			GameObject go = skeleton.GetBoneGameObject(hash);
-			if (go != null)
-			{
-				return go.transform;
-			}
+			Transform mappedTransform;
+			bool transformDirty;
+			int parentNameHash;
 
+			if (skeleton.TryGetBoneTransform(hash, out mappedTransform, out transformDirty, out parentNameHash))
+			{
+				if (transformDirty)
+				{
+					mappedTransform.localPosition = bone.localPosition;
+					mappedTransform.localRotation= bone.localRotation;
+					mappedTransform.localScale = bone.localScale;
+					RecursivelyUpdateSkeleton(bone.parent, parentNameHash, skeleton);
+				}
+				return mappedTransform;
+			}
+		
 			Transform parent = rootBone;
+			int parentHash = 0;
 			if (bone.parent != null)
 			{
 				parent = bone.parent;
-				int parentHash = UMASkeleton.StringToHash(parent.name);
+				parentHash = UMASkeleton.StringToHash(parent.name);
 				parent = RecursivelyMapToNewRoot(parent, parentHash, rootBone, skeleton);
 			}
 
@@ -48,8 +59,27 @@ namespace UMA
 			child.localRotation = bone.localRotation;
 			child.localScale = bone.localScale;
 			child.name = bone.name;
-			skeleton.AddBone(hash, child);
+			skeleton.AddBone(parentHash, hash, child);
 			return child;
+		}
+
+		private static void RecursivelyUpdateSkeleton(Transform bone, int nameHash, UMASkeleton skeleton)
+		{
+			if (bone == null) return;
+			Transform mappedTransform;
+			bool transformDirty;
+			int parentNameHash;
+
+			if (skeleton.TryGetBoneTransform(nameHash, out mappedTransform, out transformDirty, out parentNameHash))
+			{
+				if (transformDirty)
+				{
+					mappedTransform.localPosition = bone.localPosition;
+					mappedTransform.localRotation = bone.localRotation;
+					mappedTransform.localScale = bone.localScale;
+					RecursivelyUpdateSkeleton(bone.parent, parentNameHash, skeleton);
+				}
+			}			
 		}
 
 		public static Transform[] CloneBoneListInNewHierarchy(Transform rootBone, Transform[] bones, int[] hashes, UMASkeleton skeleton)

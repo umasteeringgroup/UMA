@@ -8,6 +8,8 @@ namespace UMA
     public class UMASkeletonDefault : UMASkeleton
     {
 		public class BoneData {
+			public int boneNameHash;
+			public int parentBoneNameHash;
 			public Transform boneTransform;
 			public Vector3 originalBoneScale;
 			public Vector3 originalBonePosition;
@@ -27,6 +29,7 @@ namespace UMA
 
 		public override void BeginSkeletonUpdate()
 		{
+			frame++;
 		}
 
 		public override void EndSkeletonUpdate()
@@ -36,8 +39,11 @@ namespace UMA
 		private void AddBonesRecursive(Transform transform)
         {
             var hash = UMASkeleton.StringToHash(transform.name);
+			var parentHash = transform.parent != null ? UMASkeleton.StringToHash(transform.parent.name) : 0;
 			boneHashData[hash] = new BoneData()
             {
+				parentBoneNameHash = parentHash,
+				boneNameHash = hash,
                 boneTransform = transform,
                 originalBonePosition = transform.localPosition,
                 originalBoneScale = transform.localScale,
@@ -55,10 +61,12 @@ namespace UMA
             return boneHashData.ContainsKey(nameHash);
         }
 
-		public override void AddBone(int hash, Transform transform)
+		public override void AddBone(int parentHash, int hash, Transform transform)
 		{
 			BoneData newBone = new BoneData()
 			{
+				parentBoneNameHash = parentHash,
+				boneNameHash = hash,
 				boneTransform = transform,
 				originalBonePosition = transform.localPosition,
 				originalBoneScale = transform.localScale,
@@ -73,11 +81,29 @@ namespace UMA
             boneHashData.Remove(nameHash);
         }
 
+		public override bool TryGetBoneTransform(int nameHash, out Transform boneTransform, out bool transformDirty, out int parentBoneNameHash)
+		{
+			BoneData res;
+			if (boneHashData.TryGetValue(nameHash, out res))
+			{
+				transformDirty = res.accessedFrame != frame;
+				res.accessedFrame = frame;
+				boneTransform = res.boneTransform;
+				parentBoneNameHash = res.parentBoneNameHash;
+				return true;
+			}
+			transformDirty = false;
+			boneTransform = null;
+			parentBoneNameHash = 0;
+			return false;
+		}
+
         public override GameObject GetBoneGameObject(int nameHash)
         {
 			BoneData res;
             if (boneHashData.TryGetValue(nameHash, out res))
             {
+				res.accessedFrame = frame;
                 return res.boneTransform.gameObject;
             }
             return null;
@@ -96,6 +122,7 @@ namespace UMA
 			BoneData db;
             if (boneHashData.TryGetValue(nameHash, out db))
             {
+				db.accessedFrame = frame;
                 db.boneTransform.localPosition = position;
                 db.boneTransform.localRotation = rotation;
                 db.boneTransform.localScale = scale;
@@ -111,7 +138,8 @@ namespace UMA
 			BoneData db;
             if (boneHashData.TryGetValue(nameHash, out db))
             {
-                db.boneTransform.localPosition = position;
+				db.accessedFrame = frame;
+				db.boneTransform.localPosition = position;
             }
             else
             {
@@ -124,7 +152,8 @@ namespace UMA
 			BoneData db;
             if (boneHashData.TryGetValue(nameHash, out db))
             {
-                db.boneTransform.localScale = scale;
+				db.accessedFrame = frame;
+				db.boneTransform.localScale = scale;
             }
             else
             {
@@ -137,7 +166,8 @@ namespace UMA
 			BoneData db;
             if (boneHashData.TryGetValue(nameHash, out db))
             {
-                db.boneTransform.localRotation = rotation;
+				db.accessedFrame = frame;
+				db.boneTransform.localRotation = rotation;
             }
             else
             {
@@ -150,6 +180,7 @@ namespace UMA
 			BoneData db;
 			if (boneHashData.TryGetValue(nameHash, out db))
 			{
+				db.accessedFrame = frame;
 				db.boneTransform.localPosition += position * weight;
 				Quaternion fullRotation = db.boneTransform.localRotation * rotation;
 				db.boneTransform.localRotation = Quaternion.Slerp(db.boneTransform.localRotation, fullRotation, weight);
@@ -162,7 +193,8 @@ namespace UMA
 			BoneData db;
             if (boneHashData.TryGetValue(nameHash, out db) && (db.boneTransform != null))
             {
-                db.boneTransform.localPosition = db.originalBonePosition;
+				db.accessedFrame = frame;
+				db.boneTransform.localPosition = db.originalBonePosition;
                 db.boneTransform.localRotation = db.originalBoneRotation;
                 db.boneTransform.localScale = db.originalBoneScale;
 
@@ -185,7 +217,8 @@ namespace UMA
 			BoneData db;
             if (boneHashData.TryGetValue(nameHash, out db))
             {
-                return db.boneTransform.localPosition;
+				db.accessedFrame = frame;
+				return db.boneTransform.localPosition;
             }
             else
             {
@@ -198,7 +231,8 @@ namespace UMA
 			BoneData db;
             if (boneHashData.TryGetValue(nameHash, out db))
             {
-                return db.boneTransform.localScale;
+				db.accessedFrame = frame;
+				return db.boneTransform.localScale;
             }
             else
             {
@@ -211,7 +245,8 @@ namespace UMA
 			BoneData db;
             if (boneHashData.TryGetValue(nameHash, out db))
             {
-                return db.boneTransform.localRotation;
+				db.accessedFrame = frame;
+				return db.boneTransform.localRotation;
             }
             else
             {
