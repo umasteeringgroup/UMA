@@ -46,6 +46,15 @@ public class UMACrowd : MonoBehaviour
 
 	void Update()
 	{
+		if (generateUMA)
+		{
+			umaCrowdSize = Vector2.one;
+			int randomResult = Random.Range(0, 2);
+			GenerateOneUMA(randomResult);
+			generateUMA = false;
+			generateLotsUMA = false;
+		}
+
 		if (generateLotsUMA)
 		{
 			if (generator.IsIdle())
@@ -53,13 +62,6 @@ public class UMACrowd : MonoBehaviour
 				int randomResult = Random.Range(0, 2);
 				GenerateOneUMA(randomResult);
 			}
-		}
-
-		if (generateUMA)
-		{
-			int randomResult = Random.Range(0, 2);
-			GenerateOneUMA(randomResult);
-			generateUMA = false;
 		}
 	}
 
@@ -410,12 +412,15 @@ public class UMACrowd : MonoBehaviour
 
 	protected virtual void GenerateUMAShapes()
 	{
-		UMADnaHumanoid umaDna = new UMADnaHumanoid();
-		umaData.umaRecipe.AddDna(umaDna);
+		UMADnaHumanoid umaDna = umaData.umaRecipe.GetDna<UMADnaHumanoid>();
+		if (umaDna ==  null)
+		{
+			umaDna = new UMADnaHumanoid();
+			umaData.umaRecipe.AddDna(umaDna);
+		}
 
 		if (randomDna)
 		{
-
 			umaDna.height = Random.Range(0.3f, 0.5f);
 			umaDna.headSize = Random.Range(0.485f, 0.515f);
 			umaDna.headWidth = Random.Range(0.4f, 0.6f);
@@ -493,8 +498,6 @@ public class UMACrowd : MonoBehaviour
 			umaDna.eyeRotation = Random.Range(0.3f, 0.8f);
 			umaDna.eyeSize = Random.Range(0.3f, 0.8f);
 			umaDna.breastSize = Random.Range(0.3f, 0.8f);
-
-
 		}
 	}
 
@@ -595,6 +598,90 @@ public class UMACrowd : MonoBehaviour
 		umaData.AddAdditionalRecipes(additionalRecipes, UMAContext.FindInstance());
 	}
 
+	public void ReplaceAll()
+	{
+		if (generateUMA || generateLotsUMA)
+		{
+			Debug.LogWarning("Can't replace while spawning.");
+			return;
+		}
+
+		int childCount = gameObject.transform.childCount;
+		while(--childCount >= 0)
+		{
+			Transform child = gameObject.transform.GetChild(childCount);
+			Destroy(child.gameObject);
+		}
+
+		if (umaCrowdSize.x <= 1 && umaCrowdSize.y <= 1)
+			generateUMA = true;
+		else
+			generateLotsUMA = true;
+	}
+
+	public void RandomizeAll()
+	{
+		if (generateUMA || generateLotsUMA)
+		{
+			Debug.LogWarning("Can't randomize while spawning.");
+			return;
+		}
+		
+		int childCount = gameObject.transform.childCount;
+		for (int i = 0; i < childCount; i++)
+		{
+			Transform child = gameObject.transform.GetChild(i);
+			UMADynamicAvatar umaDynamicAvatar = child.gameObject.GetComponent<UMADynamicAvatar>();
+			if (umaDynamicAvatar == null)
+			{
+				Debug.Log("Couldn't find dynamic avatar on child: " + child.gameObject.name);
+				continue;
+			}
+			umaData = umaDynamicAvatar.umaData;
+			var umaRecipe = umaDynamicAvatar.umaData.umaRecipe;
+			UMACrowdRandomSet.CrowdRaceData race = null;
+			
+			if (randomPool != null && randomPool.Length > 0)
+			{
+				int randomResult = Random.Range(0, randomPool.Length);
+				race = randomPool[randomResult].data;
+				umaRecipe.SetRace(GetRaceLibrary().GetRace(race.raceID));
+			}
+			else
+			{
+				if (Random.value < 0.5f)
+				{
+					umaRecipe.SetRace(GetRaceLibrary().GetRace("HumanMale"));
+				}
+				else
+				{
+					umaRecipe.SetRace(GetRaceLibrary().GetRace("HumanFemale"));
+				}
+			}
+			
+//			SetUMAData();
+			
+			if (race != null && race.slotElements.Length > 0)
+			{
+				DefineSlots(race);
+			}
+			else
+			{
+				DefineSlots();
+			}
+			
+			AddAdditionalSlots();
+
+			GenerateUMAShapes();
+			
+			if (animationController != null)
+			{
+				umaDynamicAvatar.animationController = animationController;
+			}
+			umaDynamicAvatar.Show();
+		}
+	}
+	
 	private RaceLibraryBase GetRaceLibrary()
 	{
 		if (umaContext != null) return umaContext.raceLibrary;
