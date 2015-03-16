@@ -10,7 +10,7 @@ namespace UMA.PoseTools
 		public UMAExpressionSet expressionSet;
 		public Transform skeletonRoot;
 
-		protected UMASkeletonDefault skeleton;
+		protected UMASkeleton skeleton;
 
 		void OnRenderObject()
 		{
@@ -36,7 +36,7 @@ namespace UMA.PoseTools
 
 			if (skeleton == null)
 			{
-				skeleton = new UMASkeletonDefault(skeletonRoot);
+				skeleton = new UMASkeleton(skeletonRoot);
 			}
 
 			expressionSet.ResetBones(skeleton);

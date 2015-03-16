@@ -29,7 +29,7 @@ namespace UMA
 				newGlobal.transform.localPosition = Vector3.zero;
 				newGlobal.transform.localRotation = Quaternion.Euler(0f, 0f, -90f);
 
-				umaData.skeleton = new UMASkeletonDefault(newGlobal.transform);
+				umaData.skeleton = new UMASkeleton(newGlobal.transform);
 
 				var newRenderer = umaData.umaRoot.AddComponent<SkinnedMeshRenderer>();
 				newRenderer.rootBone = newGlobal.transform;
