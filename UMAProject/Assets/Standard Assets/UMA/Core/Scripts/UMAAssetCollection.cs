@@ -6,8 +6,8 @@ namespace UMA
     public class UMAAssetCollection : ScriptableObject
     {
         public RaceData[] raceData;
-        public SlotData[] slotData;
-        public OverlayData[] overlayData;
+        public SlotDataAsset[] slotData;
+        public OverlayDataAsset[] overlayData;
 
 		public virtual void AddToLibraries(OverlayLibraryBase overlayLibrary, SlotLibraryBase slotLibrary, RaceLibraryBase raceLibrary)
 		{
@@ -18,7 +18,7 @@ namespace UMA
 #endif
 				for (int i = 0; i < overlayData.Length; i++)
 				{
-					overlayLibrary.AddOverlay(overlayData[i]);
+					overlayLibrary.AddOverlayAsset(overlayData[i]);
 				}
 			}
 			if (slotLibrary != null && slotData.Length > 0)
@@ -28,7 +28,7 @@ namespace UMA
 #endif
 				for (int i = 0; i < slotData.Length; i++)
 				{
-					slotLibrary.AddSlot(slotData[i]);
+					slotLibrary.AddSlotAsset(slotData[i]);
 				}
 
 			}

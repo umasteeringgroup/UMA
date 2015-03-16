@@ -11,8 +11,6 @@ namespace UMA
 	    public GameObject racePrefab;
 	    public DnaConverterBehaviour[] dnaConverterList = new DnaConverterBehaviour[0];
 
-		public SlotData baseSlot = null;
-
 		public Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate> raceDictionary = new Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate>();
 	    public UmaTPose TPose;
         public enum UMATarget

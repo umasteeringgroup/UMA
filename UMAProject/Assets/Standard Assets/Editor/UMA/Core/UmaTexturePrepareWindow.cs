@@ -148,7 +148,7 @@ namespace UMAEditor
 	        DropAreaGUI(dropArea);
 	    }
 
-	    private SlotData CreateSlot()
+	    private SlotDataAsset CreateSlot()
 	    {
 			if(materialName == null || materialName == ""){
 				Debug.LogError("materialName must be specified.");
@@ -158,7 +158,7 @@ namespace UMAEditor
 	        return CreateSlot_Internal();
 	    }
 
-	    private SlotData CreateSlot_Internal()
+	    private SlotDataAsset CreateSlot_Internal()
 	    {
 //	        var material = slotMaterial ?? AssetDatabase.LoadAssetAtPath("Assets/UMA_Assets/MaterialSamples/UMABaseShaderSample.mat", typeof(Material)) as Material;
 			var material = slotMaterial;
@@ -186,11 +186,11 @@ namespace UMAEditor
 	            return null;
 	        }
             Debug.Log("Slot Mesh: " + slotMesh.name, slotMesh.gameObject);
-			SlotData slot = UMASlotProcessingUtil.CreateSlotData(AssetDatabase.GetAssetPath(slotFolder), GetAssetFolder(), GetAssetName(), slotMesh, material, racePrefab);
+			SlotDataAsset slot = UMASlotProcessingUtil.CreateSlotData(AssetDatabase.GetAssetPath(slotFolder), GetAssetFolder(), GetAssetName(), slotMesh, material, racePrefab);
 	        return slot;
 	    }
 
-	    private OverlayData CreateOverlay()
+		private OverlayDataAsset CreateOverlay()
 	    {
 	        
 			var overlay = CreateOverlay_Internal();
@@ -208,7 +208,7 @@ namespace UMAEditor
 	        return overlay;
 	    }
 
-	    private OverlayData CreateOverlay_Internal()
+		private OverlayDataAsset CreateOverlay_Internal()
 	    {
 			if(materialName == null || materialName == ""){
 				Debug.LogError("materialName must be specified.");
@@ -235,7 +235,7 @@ namespace UMAEditor
 			
 			if (textureOverride != null )
 	        {
-	            textures = textureOverride.textureList;
+				textures = textureOverride.asset.textureList;
 	            return true;
 	        }
 
@@ -452,16 +452,16 @@ namespace UMAEditor
 		{
 			foreach (var obj in Selection.objects)
 			{
-				var slotData = obj as SlotData;
-				if (slotData != null)
+				var SlotDataAsset = obj as SlotDataAsset;
+				if (SlotDataAsset != null)
 				{
 #pragma warning disable 618 
-					if (slotData.meshRenderer != null)
+					if (SlotDataAsset.meshRenderer != null)
 					{
-						UMASlotProcessingUtil.OptimizeSlotDataMesh(slotData.meshRenderer);
-						slotData.UpdateMeshData(slotData.meshRenderer);
-						slotData.meshRenderer = null;
-						EditorUtility.SetDirty(slotData);
+						UMASlotProcessingUtil.OptimizeSlotDataMesh(SlotDataAsset.meshRenderer);
+						SlotDataAsset.UpdateMeshData(SlotDataAsset.meshRenderer);
+						SlotDataAsset.meshRenderer = null;
+						EditorUtility.SetDirty(SlotDataAsset);
 
 					}
 #pragma warning restore 618
@@ -475,7 +475,7 @@ namespace UMAEditor
 		{
 			foreach (var obj in Selection.objects)
 			{
-				var overlayData = obj as OverlayData;
+				var overlayData = obj as OverlayDataAsset;
 				if (overlayData != null)
 				{
 					foreach (var textureObj in overlayData.textureList)
@@ -599,26 +599,6 @@ namespace UMAEditor
 	                AssetDatabase.ImportAsset(file);
 	            }
 	        }
-			foreach (var obj in Selection.GetFiltered(typeof(OverlayLibraryBase), SelectionMode.Editable))
-			{
-				var overlays = (obj as OverlayLibraryBase).GetAllOverlays();
-				foreach (var overlay in overlays)
-				{
-					foreach (var texture in overlay.textureList)
-					{
-						if (texture != null)
-						{
-							string file = AssetDatabase.GetAssetPath(texture);
-							var importer = TextureImporter.GetAtPath(file) as TextureImporter;
-							if (!importer.isReadable)
-							{
-								importer.isReadable = true;
-								AssetDatabase.ImportAsset(file);
-							}
-						}
-					}
-				}
-			}
 		}
         [MenuItem("UMA/Tools/Texture/Clear Readable")]
 	    public static void ClearTextureReadableMenuItem()

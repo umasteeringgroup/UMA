@@ -386,9 +386,9 @@ namespace UMA
                 }
                 foreach (var slotData in slotDataList)
                 {
-                    if (slotData != null && slotData.slotDNA != null)
+					if (slotData != null && slotData.asset.slotDNA != null)
                     {
-                        var dnaType = slotData.slotDNA.DNAType;
+						var dnaType = slotData.asset.slotDNA.DNAType;
                         if (!umaDna.ContainsKey(dnaType))
                         {
                             umaDna.Add(dnaType, dnaType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase);
@@ -789,10 +789,10 @@ namespace UMA
             {
                 var slotData = umaRecipe.slotDataList[slotDataIndex];
                 if( slotData == null ) continue;
-                if (slotData.animatedBones == null || slotData.animatedBones.Length == 0) continue;
-                for (int animatedBoneIndex = 0; animatedBoneIndex < slotData.animatedBones.Length; animatedBoneIndex++)
+				if (slotData.asset.animatedBones == null || slotData.asset.animatedBones.Length == 0) continue;
+				for (int animatedBoneIndex = 0; animatedBoneIndex < slotData.asset.animatedBones.Length; animatedBoneIndex++)
                 {
-                    var animatedBone = slotData.animatedBones[animatedBoneIndex];
+					var animatedBone = slotData.asset.animatedBones[animatedBoneIndex];
                     var hashName = UMASkeleton.StringToHash(animatedBone.name);
                     if( resHash.ContainsKey(hashName) ) continue;
                     resHash.Add(hashName, hashName);
@@ -807,9 +807,9 @@ namespace UMA
 		{
 			foreach (var slotData in umaRecipe.slotDataList)
 			{
-				if (slotData != null && slotData.DNAApplied != null)
+				if (slotData != null && slotData.asset.DNAApplied != null)
 				{
-					slotData.DNAApplied.Invoke(this);
+					slotData.asset.DNAApplied.Invoke(this);
 				}
 			}
 		}
@@ -818,9 +818,9 @@ namespace UMA
 		{
 			foreach (var slotData in umaRecipe.slotDataList)
 			{
-				if (slotData != null && slotData.CharacterCompleted != null)
+				if (slotData != null && slotData.asset.CharacterCompleted != null)
 				{
-					slotData.CharacterCompleted.Invoke(this);
+					slotData.asset.CharacterCompleted.Invoke(this);
 				}
 			}
 		}

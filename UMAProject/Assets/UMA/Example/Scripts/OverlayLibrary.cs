@@ -6,9 +6,9 @@ using System;
 public class OverlayLibrary : OverlayLibraryBase
 {
 	[Obsolete("Internal data, use the helper functions. This field will be marked private in a future version.", false)]
-	public OverlayData[] overlayElementList = new OverlayData[0];
+	public OverlayDataAsset[] overlayElementList = new OverlayDataAsset[0];
 	[NonSerialized]
-	private Dictionary<int, OverlayData> overlayDictionary;
+	private Dictionary<int, OverlayDataAsset> overlayDictionary;
 
 	public int scaleAdjust = 1;
 	public bool readWrite = false;
@@ -31,14 +31,13 @@ public class OverlayLibrary : OverlayLibraryBase
 				var hash = UMASkeleton.StringToHash(overlayElementList[i].overlayName);
 				if (!overlayDictionary.ContainsKey(hash))
 				{
-					overlayElementList[i].listID = i;
 					overlayDictionary.Add(hash, overlayElementList[i]);
 				}
 			}
 		}
 	}
 
-	public override void AddOverlay(OverlayData overlay)
+	public override void AddOverlayAsset(OverlayDataAsset overlay)
 	{
 		ValidateDictionary();
 		var hash = UMASkeleton.StringToHash(overlay.overlayName);
@@ -55,7 +54,7 @@ public class OverlayLibrary : OverlayLibraryBase
 		}
 		else
 		{
-			var list = new OverlayData[overlayElementList.Length + 1];
+			var list = new OverlayDataAsset[overlayElementList.Length + 1];
 			for (int i = 0; i < overlayElementList.Length; i++)
 			{
 				list[i] = overlayElementList[i];
@@ -71,7 +70,7 @@ public class OverlayLibrary : OverlayLibraryBase
 	{
 		if (overlayDictionary == null)
 		{
-			overlayDictionary = new Dictionary<int, OverlayData>();
+			overlayDictionary = new Dictionary<int, OverlayDataAsset>();
 			UpdateDictionary();
 		}
 	}
@@ -121,19 +120,21 @@ public class OverlayLibrary : OverlayLibraryBase
 	private OverlayData Internal_InstantiateOverlay(int nameHash)
 	{
 		ValidateDictionary();
-		OverlayData source;
+		OverlayDataAsset source;
 		if (!overlayDictionary.TryGetValue(nameHash, out source))
 		{
 			return null;
 		}
 		else
 		{
-			source = source.Duplicate();
-			return source;
+			var overlayData = new OverlayData();
+			overlayData.asset = source;
+			overlayData.rect = source.rect;
+			return overlayData;
 		}
 	}
 
-	public override OverlayData[] GetAllOverlays()
+	public override OverlayDataAsset[] GetAllOverlayAssets()
 	{
 #pragma warning disable 618
 		return overlayElementList;

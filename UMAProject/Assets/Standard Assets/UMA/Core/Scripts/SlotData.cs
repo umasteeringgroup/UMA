@@ -6,69 +6,55 @@ using System.Collections.Generic;
 namespace UMA
 {
 	[System.Serializable]
-	public partial class SlotData : ScriptableObject
+	public partial class SlotData
 	{
+		public SlotDataAsset asset;
+		[System.Obsolete("SlotData.slotName is obsolete use asset.slotName!", false)]
 		public string slotName;
+		[System.Obsolete("SlotData.listID is obsolete.", false)]
 		public int listID = -1;
 
-		[System.Obsolete("SlotData.meshRenderer is obsolete.", false)]
+		[System.Obsolete("SlotData.meshRenderer is obsolete.", true)]
 		public SkinnedMeshRenderer meshRenderer;
-		[System.Obsolete("SlotData.boneNameHashes is obsolete.", false)]
+		[System.Obsolete("SlotData.boneNameHashes is obsolete.", true)]
 		public int[] boneNameHashes;
-		[System.Obsolete("SlotData.boneWeights is obsolete.", false)]
+		[System.Obsolete("SlotData.boneWeights is obsolete.", true)]
 		public BoneWeight[] boneWeights;
-		[System.Obsolete("SlotData.umaBoneData is obsolete.", false)]
+		[System.Obsolete("SlotData.umaBoneData is obsolete.", true)]
 		public Transform[] umaBoneData;
 
 		public Material materialSample;
 		public float overlayScale = 1.0f;
+		[System.Obsolete("SlotData.animatedBones is obsolete, use SlotDataAsset.animatedBones.", true)]
 		public Transform[] animatedBones = new Transform[0];
+		[System.Obsolete("SlotData.textureNameList is obsolete, use SlotDataAsset.textureNameList.", true)]
 		public string[] textureNameList;
+		[System.Obsolete("SlotData.slotDNA is obsolete, use SlotDataAsset.slotDNA.", true)]
 		public DnaConverterBehaviour slotDNA;
-		public UMAMeshData meshData;
+		[System.Obsolete("SlotData.subMeshIndex is obsolete, use SlotDataAsset.subMeshIndex.", true)]
 		public int subMeshIndex;
 		/// <summary>
 		/// Use this to identify slots that serves the same purpose
 		/// Eg. ChestArmor, Helmet, etc.
 		/// </summary>
+		[System.Obsolete("SlotData.slotGroup is obsolete, use SlotDataAsset.slotGroup.", false)]
 		public string slotGroup;
 		/// <summary>
 		/// Use this to identify what kind of overlays fit this slotData
 		/// Eg. BaseMeshSkin, BaseMeshOverlays, GenericPlateArmor01
 		/// </summary>
+		[System.Obsolete("SlotData.tags is obsolete, use SlotDataAsset.tags.", false)]
 		public string[] tags;
-		public UMADataSlotMaterialRectEvent SlotAtlassed;
-		public UMADataEvent DNAApplied;
-		public UMADataEvent CharacterCompleted;
-		private List<OverlayData> overlayList = new List<OverlayData>();
-        
-		public SlotData Duplicate()
-		{
-			SlotData tempSlotData = CreateInstance<SlotData>();
-            
-			tempSlotData.slotName = slotName;
-			tempSlotData.listID = listID;
-			tempSlotData.materialSample = materialSample;
-			tempSlotData.overlayScale = overlayScale;
-			tempSlotData.slotDNA = slotDNA;
-			tempSlotData.subMeshIndex = subMeshIndex;
-            
-			// All this data is passed as reference
-			tempSlotData.meshData = meshData;
-			tempSlotData.animatedBones = animatedBones;
-			tempSlotData.textureNameList = textureNameList;
-			//Overlays are duplicated, to lose reference
-			for (int i = 0; i < overlayList.Count; i++)
-			{
-				tempSlotData.AddOverlay(overlayList[i].Duplicate());
-			}
-            
-			tempSlotData.SlotAtlassed = SlotAtlassed;
-			tempSlotData.DNAApplied = DNAApplied;
-			tempSlotData.CharacterCompleted = CharacterCompleted;
 
-			return tempSlotData;
-		}
+		private List<OverlayData> overlayList = new List<OverlayData>();
+
+		public SlotData(SlotDataAsset asset)
+		{
+			this.asset = asset;
+			slotName = asset.slotName;
+			materialSample = asset.materialSample;
+			overlayScale = asset.overlayScale;
+		}	
         
 		public SlotData()
 		{
@@ -77,17 +63,7 @@ namespace UMA
 
 		public int GetTextureChannelCount(UMAGeneratorBase generator)
 		{
-			if (textureNameList != null && textureNameList.Length > 0)
-			{
-				if (string.IsNullOrEmpty(textureNameList[0]))
-					return 0;
-				return textureNameList.Length;
-			}
-			if (generator != null)
-			{
-				return generator.textureNameList.Length;
-			}
-			return 2; // UMA built in default
+			return asset.GetTextureChannelCount(generator);
 		}
         
 		public bool RemoveOverlay(params string[] names)
@@ -97,7 +73,7 @@ namespace UMA
 			{
 				for (int i = 0; i < overlayList.Count; i++)
 				{
-                    if (overlayList[i].overlayName == name)
+					if (overlayList[i].asset.overlayName == name)
 					{
 						overlayList.RemoveAt(i);
 						changed = true;
@@ -115,7 +91,7 @@ namespace UMA
 			{
 				foreach (var overlay in overlayList)
 				{
-					if (overlay.overlayName == name)
+					if (overlay.asset.overlayName == name)
 					{
 						overlay.color = color;
 						changed = true;
@@ -131,7 +107,7 @@ namespace UMA
 			{
 				foreach (var overlay in overlayList)
 				{
-					if (overlay.overlayName == name)
+					if (overlay.asset.overlayName == name)
 					{
 						return overlay;
 					}
@@ -180,15 +156,15 @@ namespace UMA
 		internal bool Validate(UMAGeneratorBase generator)
 		{
 			bool valid = true;
-			if (meshData != null)
+			if (asset.meshData != null)
 			{
 				string[] activeList;
-				if (textureNameList == null || textureNameList.Length == 0)
+				if (asset.textureNameList == null || asset.textureNameList.Length == 0)
 				{
 					activeList = generator.textureNameList;
 				} else
 				{
-					activeList = textureNameList;
+					activeList = asset.textureNameList;
 				}
 				int count = activeList.Length;
 				while (count > 0 && string.IsNullOrEmpty(activeList[count - 1]))
@@ -200,9 +176,9 @@ namespace UMA
                     var overlayData = overlayList[i];
 					if (overlayData != null)
 					{
-						if (overlayData.textureList.Length != count && count != 0)
+						if (overlayData.asset.textureList.Length != count && count != 0)
 						{
-							Debug.LogError(string.Format("Overlay '{0}' only have {1} textures, but it is added to SlotData '{2}' which requires {3} textures.", overlayData.overlayName, overlayData.textureList.Length, slotName, count));
+							Debug.LogError(string.Format("Overlay '{0}' only have {1} textures, but it is added to SlotData '{2}' which requires {3} textures.", overlayData.asset.overlayName, overlayData.asset.textureList.Length, slotName, count));
 							valid = false;
 						}
 					}
@@ -213,16 +189,10 @@ namespace UMA
         
 		public override string ToString()
 		{
-			return "SlotData: " + slotName;
+			return "SlotData: " + asset.slotName;
 		}
 
-#if UNITY_EDITOR
-		public void UpdateMeshData(SkinnedMeshRenderer meshRenderer)
-		{
-			meshData = new UMAMeshData();
-			meshData.RetrieveDataFromUnityMesh(meshRenderer);
-			UnityEditor.EditorUtility.SetDirty(this);
-		}
-#endif
+		public static implicit operator bool(SlotData obj) { return obj != null; }
+
 	}
 }

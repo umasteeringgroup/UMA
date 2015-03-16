@@ -13,7 +13,7 @@ public class SlotLibraryEditor : Editor
 {
 	private SerializedObject m_Object;
 	private SlotLibrary slotLibrary;
-	private SerializedProperty m_SlotDataCount;
+	private SerializedProperty m_SlotDataAssetCount;
 
 	private const string kArraySizePath = "slotElementList.Array.size";
 	private const string kArrayData = "slotElementList.Array.data[{0}]";
@@ -25,54 +25,54 @@ public class SlotLibraryEditor : Editor
 	{
 		m_Object = new SerializedObject(target);
 		slotLibrary = m_Object.targetObject as SlotLibrary;
-		m_SlotDataCount = m_Object.FindProperty(kArraySizePath);
+		m_SlotDataAssetCount = m_Object.FindProperty(kArraySizePath);
 	}
 
 
-	private SlotData[] GetSlotDataArray()
+	private SlotDataAsset[] GetSlotDataAssetArray()
 	{
 
-		int arrayCount = m_SlotDataCount.intValue;
-		SlotData[] SlotDataArray = new SlotData[arrayCount];
+		int arrayCount = m_SlotDataAssetCount.intValue;
+		SlotDataAsset[] SlotDataAssetArray = new SlotDataAsset[arrayCount];
 
 		for (int i = 0; i < arrayCount; i++)
 		{
 
-			SlotDataArray[i] = m_Object.FindProperty(string.Format(kArrayData, i)).objectReferenceValue as SlotData;
+			SlotDataAssetArray[i] = m_Object.FindProperty(string.Format(kArrayData, i)).objectReferenceValue as SlotDataAsset;
 
 		}
-		return SlotDataArray;
+		return SlotDataAssetArray;
 
 	}
 
-	private void SetSlotData(int index, SlotData slotElement)
+	private void SetSlotDataAsset(int index, SlotDataAsset slotElement)
 	{
 		m_Object.FindProperty(string.Format(kArrayData, index)).objectReferenceValue = slotElement;
 		isDirty = true;
 	}
 
-	private SlotData GetSlotDataAtIndex(int index)
+	private SlotDataAsset GetSlotDataAssetAtIndex(int index)
 	{
-		return m_Object.FindProperty(string.Format(kArrayData, index)).objectReferenceValue as SlotData;
+		return m_Object.FindProperty(string.Format(kArrayData, index)).objectReferenceValue as SlotDataAsset;
 	}
 
-	private void AddSlotData(SlotData slotElement)
+	private void AddSlotDataAsset(SlotDataAsset slotElement)
 	{
-		m_SlotDataCount.intValue++;
-		SetSlotData(m_SlotDataCount.intValue - 1, slotElement);
+		m_SlotDataAssetCount.intValue++;
+		SetSlotDataAsset(m_SlotDataAssetCount.intValue - 1, slotElement);
 	}
 
 
-	private void RemoveSlotDataAtIndex(int index)
+	private void RemoveSlotDataAssetAtIndex(int index)
 	{
 
-		for (int i = index; i < m_SlotDataCount.intValue - 1; i++)
+		for (int i = index; i < m_SlotDataAssetCount.intValue - 1; i++)
 		{
 
-			SetSlotData(i, GetSlotDataAtIndex(i + 1));
+			SetSlotDataAsset(i, GetSlotDataAssetAtIndex(i + 1));
 		}
 
-		m_SlotDataCount.intValue--;
+		m_SlotDataAssetCount.intValue--;
 
 	}
 
@@ -100,10 +100,10 @@ public class SlotLibraryEditor : Editor
 				{
 					if (draggedObjects[i])
 					{
-						SlotData tempSlotData = draggedObjects[i] as SlotData;
-						if (tempSlotData)
+						SlotDataAsset tempSlotDataAsset = draggedObjects[i] as SlotDataAsset;
+						if (tempSlotDataAsset)
 						{
-							AddSlotData(tempSlotData);
+							AddSlotDataAsset(tempSlotDataAsset);
 							continue;
 						}
 
@@ -113,10 +113,10 @@ public class SlotLibraryEditor : Editor
 							var assetFiles = System.IO.Directory.GetFiles(path, "*.asset");
 							foreach (var assetFile in assetFiles)
 							{
-								tempSlotData = AssetDatabase.LoadAssetAtPath(assetFile, typeof(SlotData)) as SlotData;
-								if (tempSlotData)
+								tempSlotDataAsset = AssetDatabase.LoadAssetAtPath(assetFile, typeof(SlotDataAsset)) as SlotDataAsset;
+								if (tempSlotDataAsset)
 								{
-									AddSlotData(tempSlotData);
+									AddSlotDataAsset(tempSlotDataAsset);
 								}
 							}
 						}
@@ -132,30 +132,30 @@ public class SlotLibraryEditor : Editor
 
 		GUILayout.Label("slotElementList", EditorStyles.boldLabel);
 
-		SlotData[] slotElementList = GetSlotDataArray();
+		SlotDataAsset[] slotElementList = GetSlotDataAssetArray();
 
 		GUILayout.BeginHorizontal();
 		if (GUILayout.Button("Order by Name"))
 		{
 			canUpdate = false;
 
-			List<SlotData> SlotDataTemp = slotElementList.ToList();
+			List<SlotDataAsset> SlotDataAssetTemp = slotElementList.ToList();
 
 			//Make sure there's no invalid data
-			for (int i = 0; i < SlotDataTemp.Count; i++)
+			for (int i = 0; i < SlotDataAssetTemp.Count; i++)
 			{
-				if (SlotDataTemp[i] == null)
+				if (SlotDataAssetTemp[i] == null)
 				{
-					SlotDataTemp.RemoveAt(i);
+					SlotDataAssetTemp.RemoveAt(i);
 					i--;
 				}
 			}
 
-			SlotDataTemp.Sort((x, y) => x.name.CompareTo(y.name));
+			SlotDataAssetTemp.Sort((x, y) => x.name.CompareTo(y.name));
 
-			for (int i = 0; i < SlotDataTemp.Count; i++)
+			for (int i = 0; i < SlotDataAssetTemp.Count; i++)
 			{
-				SetSlotData(i, SlotDataTemp[i]);
+				SetSlotDataAsset(i, SlotDataAssetTemp[i]);
 			}
 
 		}
@@ -175,26 +175,26 @@ public class SlotLibraryEditor : Editor
 		GUILayout.Space(20);
 
 
-		for (int i = 0; i < m_SlotDataCount.intValue; i++)
+		for (int i = 0; i < m_SlotDataAssetCount.intValue; i++)
 		{
 			GUILayout.BeginHorizontal();
 
-			SlotData result = EditorGUILayout.ObjectField(slotElementList[i], typeof(SlotData), true) as SlotData;
+			SlotDataAsset result = EditorGUILayout.ObjectField(slotElementList[i], typeof(SlotDataAsset), true) as SlotDataAsset;
 
 			if (GUI.changed && canUpdate)
 			{
-				SetSlotData(i, result);
+				SetSlotDataAsset(i, result);
 			}
 
 			if (GUILayout.Button("-", GUILayout.Width(20.0f)))
 			{
 				canUpdate = false;
-				RemoveSlotDataAtIndex(i);
+				RemoveSlotDataAssetAtIndex(i);
 			}
 
 			GUILayout.EndHorizontal();
 
-			if (i == m_SlotDataCount.intValue - 1)
+			if (i == m_SlotDataAssetCount.intValue - 1)
 			{
 				canUpdate = true;
 
@@ -208,31 +208,31 @@ public class SlotLibraryEditor : Editor
 
 		DropAreaGUI(dropArea);
 
-		if (GUILayout.Button("Add SlotData"))
+		if (GUILayout.Button("Add SlotDataAsset"))
 		{
-			AddSlotData(null);
+			AddSlotDataAsset(null);
 		}
 
 		if (GUILayout.Button("Clear List"))
 		{
-			m_SlotDataCount.intValue = 0;
+			m_SlotDataAssetCount.intValue = 0;
 		}
 
 		if (GUILayout.Button("Remove Invalid Slot Data"))
 		{
-			RemoveInvalidSlotData(slotElementList);
+			RemoveInvalidSlotDataAsset(slotElementList);
 		}
 
 		if (GUILayout.Button("Validate Texture Name Lists"))
 		{
-			ValidateSlotDataTextureNameLists(slotElementList);
+			ValidateSlotDataAssetTextureNameLists(slotElementList);
 		}
 
 		m_Object.ApplyModifiedProperties();
 
 	}
 
-	private void ValidateSlotDataTextureNameLists(SlotData[] slotElementList)
+	private void ValidateSlotDataAssetTextureNameLists(SlotDataAsset[] slotElementList)
 	{
 		var uma = GameObject.Find("UMA");
 		if (uma == null) return;
@@ -240,49 +240,49 @@ public class SlotLibraryEditor : Editor
 		if (generators.Length == 0) return;
 		string[] defaultTextureNameList = generators[0].textureNameList;
 
-		for (int i = m_SlotDataCount.intValue - 1; i >= 0; i--)
+		for (int i = m_SlotDataAssetCount.intValue - 1; i >= 0; i--)
 		{
 			if (slotElementList[i])
 			{
 				if (slotElementList[i].textureNameList == null || slotElementList[i].textureNameList.Length == 0)
 				{
-					ValidateSlotDataTextureNameList(defaultTextureNameList, slotElementList[i]);
+					ValidateSlotDataAssetTextureNameList(defaultTextureNameList, slotElementList[i]);
 				}
 			}
 		}
 	}
 
-	private void ValidateSlotDataTextureNameList(string[] defaultTextureNameList, SlotData slotData)
+	private void ValidateSlotDataAssetTextureNameList(string[] defaultTextureNameList, SlotDataAsset SlotDataAsset)
 	{
 		bool valid = true;
 		for(int i = 0; i < defaultTextureNameList.Length; i++ )
 		{
-			valid = valid && slotData.materialSample.HasProperty(defaultTextureNameList[i]);
+			valid = valid && SlotDataAsset.materialSample.HasProperty(defaultTextureNameList[i]);
 		}
 		if( !valid )
 		{
-			var properties = ShaderUtil.GetPropertyCount(slotData.materialSample.shader);
+			var properties = ShaderUtil.GetPropertyCount(SlotDataAsset.materialSample.shader);
 			var newTextureNameList = new List<string>(16);
 			for(int i = 0; i < properties; i++ )
 			{
-				if( ShaderUtil.GetPropertyType(slotData.materialSample.shader, i) == ShaderUtil.ShaderPropertyType.TexEnv )
+				if( ShaderUtil.GetPropertyType(SlotDataAsset.materialSample.shader, i) == ShaderUtil.ShaderPropertyType.TexEnv )
 				{
-					newTextureNameList.Add(ShaderUtil.GetPropertyName(slotData.materialSample.shader, i));
+					newTextureNameList.Add(ShaderUtil.GetPropertyName(SlotDataAsset.materialSample.shader, i));
 				}
 			}
-			Debug.LogWarning("Fixed SlotData: " + slotData.slotName);
-			slotData.textureNameList = newTextureNameList.ToArray();
-			EditorUtility.SetDirty(slotData);
+			Debug.LogWarning("Fixed SlotDataAsset: " + SlotDataAsset.slotName);
+			SlotDataAsset.textureNameList = newTextureNameList.ToArray();
+			EditorUtility.SetDirty(SlotDataAsset);
 		}
 	}
 
-	private void RemoveInvalidSlotData(SlotData[] slotElementList)
+	private void RemoveInvalidSlotDataAsset(SlotDataAsset[] slotElementList)
 	{
-		for (int i = m_SlotDataCount.intValue - 1; i >= 0; i--)
+		for (int i = m_SlotDataAssetCount.intValue - 1; i >= 0; i--)
 		{
 			if (slotElementList[i] == null)
 			{
-				RemoveSlotDataAtIndex(i);
+				RemoveSlotDataAssetAtIndex(i);
 			}
 		}
 	}

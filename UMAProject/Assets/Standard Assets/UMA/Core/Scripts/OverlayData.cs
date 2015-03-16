@@ -5,39 +5,43 @@ using System.Collections;
 namespace UMA
 {
 	[System.Serializable]
-	public partial class OverlayData : ScriptableObject
+	public partial class OverlayData 
 	{
-	    public string overlayName;
-	    [System.NonSerialized]
+		public OverlayDataAsset asset;
+		[System.Obsolete("OverlayData.overlayName is obsolete use asset.overlayName!", false)]
+		public string overlayName;
+
+		[System.Obsolete("OverlayData.listID is obsolete.", false)]
+		[System.NonSerialized]
 	    public int listID;
 
 	    public Color color = new Color(1, 1, 1, 1);
-	    public Rect rect;
-	    public Texture[] textureList;
-	    public Color32[] channelMask;
+		public Rect rect;
+
+		[System.Obsolete("OverlayData.textureList is obsolete. Please refer to the OverlayDataAsset.", false)]
+		public Texture[] textureList;
+		public Color32[] channelMask;
 	    public Color32[] channelAdditiveMask;
-	    [System.NonSerialized]
+
+		[System.Obsolete("OverlayData.umaData is obsolete.", false)]
+		[System.NonSerialized]
 	    public UMAData umaData;
         /// <summary>
         /// Use this to identify what kind of overlay this is and what it fits
         /// Eg. BaseMeshSkin, BaseMeshOverlays, GenericPlateArmor01
         /// </summary>
-        public string[] tags;
+		[System.Obsolete("OverlayData.tags is obsolete use asset.tags!", false)]
+		public string[] tags;
 
-	    public OverlayData Duplicate()
+		public OverlayData Duplicate()
 	    {
-	        OverlayData tempOverlay = CreateInstance<OverlayData>();
-	        tempOverlay.overlayName = overlayName;
-	        tempOverlay.listID = listID;
+	        OverlayData tempOverlay = new OverlayData();
+			tempOverlay.overlayName = overlayName;
+			tempOverlay.asset = asset;
 	        tempOverlay.color = color;
 	        tempOverlay.rect = rect;
-	        tempOverlay.textureList = new Texture[textureList.Length];
-	        for (int i = 0; i < textureList.Length; i++)
-	        {
-	            tempOverlay.textureList[i] = textureList[i];
-	        }
-			tempOverlay.channelMask = channelMask;
-			tempOverlay.channelAdditiveMask = channelAdditiveMask;
+			if( channelMask != null ) tempOverlay.channelMask = (Color32[])channelMask.Clone();
+			if (channelAdditiveMask != null) tempOverlay.channelAdditiveMask = (Color32[])channelAdditiveMask.Clone();
 	        return tempOverlay;
 	    }
 
@@ -45,6 +49,12 @@ namespace UMA
 	    {
 
 	    }
+
+		public OverlayData(OverlayDataAsset asset)
+		{
+			this.asset = asset;
+			rect = asset.rect;			
+		}
 
 	    public bool useAdvancedMasks { get { return channelMask != null && channelMask.Length > 0; } }
         public void SetColor(int channel, Color32 color)
@@ -63,10 +73,6 @@ namespace UMA
 	            AllocateAdvancedMasks();
                 EnsureChannels(channel+1);
                 channelMask[channel] = color;
-	        }
-	        if (umaData != null)
-	        {
-	            umaData.Dirty(false, true, false);
 	        }
 	    }
 
@@ -108,15 +114,12 @@ namespace UMA
 	        }
             EnsureChannels(overlay+1);
             channelAdditiveMask[overlay] = color;
-	        if (umaData != null)
-	        {
-	            umaData.Dirty(false, true, false);
-	        }
 	    }
 
 	    private void AllocateAdvancedMasks()
 	    {
-	        int channels = umaData != null ? umaData.umaGenerator.textureNameList.Length : 2;
+			int channels = asset.textureList.Length;
+			if (channels == 0) return;
             EnsureChannels(channels);
 	        channelMask[0] = color;
 
@@ -174,6 +177,8 @@ namespace UMA
                 }
             }
         }
+
+		public static implicit operator bool(OverlayData obj) { return obj != null; }
 
 	}
 }

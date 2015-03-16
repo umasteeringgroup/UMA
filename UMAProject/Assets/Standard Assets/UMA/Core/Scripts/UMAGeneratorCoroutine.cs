@@ -43,14 +43,14 @@ namespace UMA
 			for (int i = 0; i < slots.Length; i++)
 			{
 				if (slots[i] == null) continue;
-				if (slots[i].textureNameList.Length == 1 && string.IsNullOrEmpty(slots[i].textureNameList[0]))
+				if (slots[i].asset.textureNameList.Length == 1 && string.IsNullOrEmpty(slots[i].asset.textureNameList[0]))
 				{
 					continue;
 				}
 				if (slots[i].GetOverlay(0) != null)
 				{
 					tempMaterialDefinition = new UMAData.MaterialDefinition();
-					tempMaterialDefinition.baseTexture = slots[i].GetOverlay(0).textureList;
+					tempMaterialDefinition.baseTexture = slots[i].GetOverlay(0).asset.textureList;
 					tempMaterialDefinition.baseColor = slots[i].GetOverlay(0).color;
 					tempMaterialDefinition.materialSample = slots[i].materialSample;
 					int overlays = 0;
@@ -62,7 +62,7 @@ namespace UMA
 							overlays++;
 							if (overlay.useAdvancedMasks)
 							{
-								overlay.EnsureChannels(slots[i].textureNameList.Length);
+								overlay.EnsureChannels(slots[i].asset.textureNameList.Length);
 							}
 						}
 					}
@@ -83,7 +83,7 @@ namespace UMA
 						if (overlay == null) continue;
 						tempMaterialDefinition.overlays[overlayID] = new UMAData.textureData();
 						tempMaterialDefinition.rects[overlayID] = overlay.rect;
-						tempMaterialDefinition.overlays[overlayID].textureList = overlay.textureList;
+						tempMaterialDefinition.overlays[overlayID].textureList = overlay.asset.textureList;
 						tempMaterialDefinition.overlayColors[overlayID] = overlay.color;
 						tempMaterialDefinition.channelMask[overlayID + 1] = overlay.channelMask;
 						tempMaterialDefinition.channelAdditiveMask[overlayID + 1] = overlay.channelAdditiveMask;

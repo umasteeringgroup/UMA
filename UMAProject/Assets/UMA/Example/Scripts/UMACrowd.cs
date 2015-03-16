@@ -63,6 +63,11 @@ public class UMACrowd : MonoBehaviour
 				GenerateOneUMA(randomResult);
 			}
 		}
+
+		if (!generateLotsUMA && !generateUMA)
+		{
+			RandomizeAll();
+		}
 	}
 
 	private void DefineSlots(UMACrowdRandomSet.CrowdRaceData race)

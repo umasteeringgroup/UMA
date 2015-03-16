@@ -181,8 +181,7 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 		{
 			if (umaPackRecipe.packedSlotDataList[i] != null && umaPackRecipe.packedSlotDataList[i].slotID != null)
 			{
-				SlotData tempSlotData = SlotData.CreateInstance<SlotData>();
-				tempSlotData = context.InstantiateSlot(umaPackRecipe.packedSlotDataList[i].slotID);
+				var tempSlotData = context.InstantiateSlot(umaPackRecipe.packedSlotDataList[i].slotID);
 				tempSlotData.overlayScale = umaPackRecipe.packedSlotDataList[i].overlayScale * 0.01f;
 				umaRecipe.slotDataList[i] = tempSlotData;
 

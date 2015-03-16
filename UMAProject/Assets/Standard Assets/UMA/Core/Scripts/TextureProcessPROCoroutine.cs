@@ -49,9 +49,9 @@ namespace UMA
 
                 var slotData = atlas.atlasMaterialDefinitions[0].source.slotData;
                 var textureNameList = umaGenerator.textureNameList;
-                if (slotData.textureNameList != null && slotData.textureNameList.Length > 0)
+				if (slotData.asset.textureNameList != null && slotData.asset.textureNameList.Length > 0)
                 {
-                    textureNameList = slotData.textureNameList;
+                    textureNameList = slotData.asset.textureNameList;
                 }
 
                 resultingTextures = new Texture[textureNameList.Length];

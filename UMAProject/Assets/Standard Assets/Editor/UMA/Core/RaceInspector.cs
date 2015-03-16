@@ -32,60 +32,6 @@ namespace UMAEditor
 			race.TPose = EditorGUILayout.ObjectField("TPose", race.TPose, typeof(UmaTPose), false) as UmaTPose;
 			race.expressionSet = EditorGUILayout.ObjectField("Expression Set", race.expressionSet, typeof(UMA.PoseTools.UMAExpressionSet), false) as UMA.PoseTools.UMAExpressionSet;
 
-            // Disabled creation of base slot until desired behavior is discussed
-            race.baseSlot = EditorGUILayout.ObjectField("Base Slot", race.baseSlot, typeof(SlotData), false) as SlotData;
-            /*
-			if (race.baseSlot != null) {
-				race.baseSlot = EditorGUILayout.ObjectField("Base Slot", race.baseSlot, typeof(SlotData), false) as SlotData;
-			}
-			else {
-				EditorGUILayout.BeginHorizontal();
-				EditorGUILayout.LabelField("Base Slot");
-				if (race.racePrefab == null) {
-					GUI.enabled = false;
-				}
-
-				if (GUILayout.Button("Create")) {
-					UMAData[] umaDataSet = race.racePrefab.GetComponentsInChildren<UMAData>(true);
-
-					if (umaDataSet.Length == 1) {
-#pragma warning disable 618
-						UMAData umaData = umaDataSet[0];
-						SlotData newSlot = ScriptableObject.CreateInstance<SlotData>();
-						newSlot.slotName = race.raceName + "Base";
-						int boneCount = umaData.tempBoneData.Length;
-						newSlot.umaBoneData = new Transform[boneCount];
-						for (int i = 0; i < boneCount; i++) {
-							newSlot.umaBoneData[i] = umaData.tempBoneData[i].boneTransform;
-						}
-						boneCount = umaData.animatedBones.Length;
-						newSlot.animatedBones = new Transform[boneCount];
-						System.Array.Copy(umaData.animatedBones, newSlot.animatedBones, boneCount);
-						if (race.AnimatedBones != null) {
-							Debug.LogWarning("AnimatedBones may be missing from base slot!");
-						}
-//						newSlot.meshRenderer = race.racePrefab.GetComponentInChildren<SkinnedMeshRenderer>();
-						string assetPath = AssetDatabase.GetAssetPath(race);
-						string assetFolder = assetPath.Substring(0, assetPath.LastIndexOf('/') + 1);
-						AssetDatabase.CreateAsset(newSlot, assetFolder + race.name + " Base.asset");
-						AssetDatabase.SaveAssets();
-
-						race.baseSlot = newSlot;
-#pragma warning restore 618
-					}
-					else if (umaDataSet.Length > 1) {
-						Debug.LogWarning("More than 1 UMAData found in race prefab!");
-					}
-					else {
-						Debug.LogWarning("No UMAData found in race prefab!");
-					}
-				}
-
-				EditorGUILayout.EndHorizontal();
-				GUI.enabled = true;
-			}
-			*/
-
 			EditorGUILayout.Space();
 
 			SerializedProperty dnaConverters = serializedObject.FindProperty("dnaConverterList");

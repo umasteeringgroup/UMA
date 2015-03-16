@@ -84,7 +84,7 @@ namespace UMA
                 {
 //                    umaData.EnsureBoneData(slotData.umaBoneData, slotData.animatedBones, boneMap);
 
-                    umaData.umaRecipe.AddDNAUpdater(slotData.slotDNA);
+					umaData.umaRecipe.AddDNAUpdater(slotData.asset.slotDNA);
                 }
             }
 
@@ -142,18 +142,18 @@ namespace UMA
 					var materialDefinition = umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex];
 					var slotData = materialDefinition.source.slotData;
                     combineInstance = new SkinnedMeshCombiner.CombineInstance();
-					combineInstance.meshData = slotData.meshData;
+					combineInstance.meshData = slotData.asset.meshData;
 					combineInstance.targetSubmeshIndices = new int[combineInstance.meshData.subMeshCount];
 					for (int i = 0; i < combineInstance.meshData.subMeshCount; i++)
 					{
 						combineInstance.targetSubmeshIndices[i] = -1;
 					}
-					combineInstance.targetSubmeshIndices[slotData.subMeshIndex] = atlasIndex;
+					combineInstance.targetSubmeshIndices[slotData.asset.subMeshIndex] = atlasIndex;
                     combinedMeshList.Add(combineInstance);
 
-					if (slotData.SlotAtlassed != null)
+					if (slotData.asset.SlotAtlassed != null)
 					{
-						slotData.SlotAtlassed.Invoke(umaData, slotData, umaData.atlasList.atlas[atlasIndex].materialSample, materialDefinition.atlasRegion);
+						slotData.asset.SlotAtlassed.Invoke(umaData, slotData, umaData.atlasList.atlas[atlasIndex].materialSample, materialDefinition.atlasRegion);
 					}
                 }
             }
@@ -166,10 +166,10 @@ namespace UMA
             for (int slotIndex = 0; slotIndex < slots.Length; slotIndex++)
             {
 				if (slots[slotIndex] == null) continue;
-                if (slots[slotIndex].textureNameList.Length == 1 && string.IsNullOrEmpty(slots[slotIndex].textureNameList[0]))
+				if (slots[slotIndex].asset.textureNameList.Length == 1 && string.IsNullOrEmpty(slots[slotIndex].asset.textureNameList[0]))
                 {
                     combineInstance = new SkinnedMeshCombiner.CombineInstance();
-                    combineInstance.meshData = slots[slotIndex].meshData;
+					combineInstance.meshData = slots[slotIndex].asset.meshData;
                     combineInstance.targetSubmeshIndices = new int[combineInstance.meshData.subMeshCount];
                     for (int i = 0; i < combineInstance.meshData.subMeshCount; i++)
                     {
@@ -185,7 +185,7 @@ namespace UMA
                             if (slots[slotIndex].materialSample == sourceMaterials[i])
                             {
 								slotMaterial = combinedMaterialList[i + atlassedMaterials];
-                                combineInstance.targetSubmeshIndices[slots[slotIndex].subMeshIndex] = i+atlassedMaterials;
+								combineInstance.targetSubmeshIndices[slots[slotIndex].asset.subMeshIndex] = i + atlassedMaterials;
                                 contains = true;
                                 break;
                             }
@@ -200,11 +200,11 @@ namespace UMA
                         sourceMaterials.Add(slots[slotIndex].materialSample);
 						slotMaterial = new Material(slots[slotIndex].materialSample);
                         combinedMaterialList.Add(slotMaterial);
-                        combineInstance.targetSubmeshIndices[slots[slotIndex].subMeshIndex] = combinedMaterialList.Count - 1;
+						combineInstance.targetSubmeshIndices[slots[slotIndex].asset.subMeshIndex] = combinedMaterialList.Count - 1;
                     }
-					if (slots[slotIndex].SlotAtlassed != null)
+					if (slots[slotIndex].asset.SlotAtlassed != null)
 					{
-						slots[slotIndex].SlotAtlassed.Invoke(umaData, slots[slotIndex], slotMaterial, new Rect(0,0,1,1));
+						slots[slotIndex].asset.SlotAtlassed.Invoke(umaData, slots[slotIndex], slotMaterial, new Rect(0, 0, 1, 1));
 					}
 
                     combinedMeshList.Add(combineInstance);
@@ -231,14 +231,14 @@ namespace UMA
                     if (!shareMaterial[slotIndex])
                     {
                         combineInstance = new SkinnedMeshCombiner.CombineInstance();
-						combineInstance.meshData = slots[slotIndex].meshData;
+						combineInstance.meshData = slots[slotIndex].asset.meshData;
 						combineInstance.targetSubmeshIndices = new int[combineInstance.meshData.subMeshCount];
 						for (int i = 0; i < combineInstance.meshData.subMeshCount; i++)
 						{
 							combineInstance.targetSubmeshIndices[i] = -1;
 						}
 
-						combineInstance.targetSubmeshIndices[slots[slotIndex].subMeshIndex] = indexCount;
+						combineInstance.targetSubmeshIndices[slots[slotIndex].asset.subMeshIndex] = indexCount;
                         combinedMeshList.Add(combineInstance);
 
                         Material tempMaterial = Instantiate(slots[slotIndex].materialSample) as Material;
@@ -247,8 +247,8 @@ namespace UMA
                         {
                             if (tempMaterial.HasProperty(textureNameList[textureType]))
                             {
-                                slots[slotIndex].GetOverlay(0).textureList[textureType].filterMode = FilterMode.Bilinear;
-                                tempMaterial.SetTexture(textureNameList[textureType], slots[slotIndex].GetOverlay(0).textureList[textureType]);
+								slots[slotIndex].GetOverlay(0).asset.textureList[textureType].filterMode = FilterMode.Bilinear;
+								tempMaterial.SetTexture(textureNameList[textureType], slots[slotIndex].GetOverlay(0).asset.textureList[textureType]);
                             }
                         }
                         combinedMaterialList.Add(tempMaterial);
@@ -262,17 +262,17 @@ namespace UMA
                             {
                                 if (slotIndex2 != slotIndex && !shareMaterial[slotIndex2])
                                 {
-                                    if (slots[slotIndex].GetOverlay(0).textureList[0].name == slots[slotIndex2].GetOverlay(0).textureList[0].name)
+									if (slots[slotIndex].GetOverlay(0).asset.textureList[0].name == slots[slotIndex2].GetOverlay(0).asset.textureList[0].name)
                                     {
                                         combineInstance = new SkinnedMeshCombiner.CombineInstance();
-										combineInstance.meshData = slots[slotIndex2].meshData;
+										combineInstance.meshData = slots[slotIndex2].asset.meshData;
 										combineInstance.targetSubmeshIndices = new int[combineInstance.meshData.subMeshCount];
 										for (int i = 0; i < combineInstance.meshData.subMeshCount; i++)
 										{
 											combineInstance.targetSubmeshIndices[i] = -1;
 										}
 
-                                        combineInstance.targetSubmeshIndices[slots[slotIndex2].subMeshIndex] = indexCount;
+										combineInstance.targetSubmeshIndices[slots[slotIndex2].asset.subMeshIndex] = indexCount;
                                         combinedMeshList.Add(combineInstance);
 
                                         shareMaterial[slotIndex2] = true;
@@ -300,7 +300,7 @@ namespace UMA
                 for (int materialDefinitionIndex = 0; materialDefinitionIndex < umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions.Count; materialDefinitionIndex++)
                 {
                     var tempAtlasRect = umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex].atlasRegion;
-                    int vertexCount = umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex].source.slotData.meshData.vertices.Length;
+					int vertexCount = umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex].source.slotData.asset.meshData.vertices.Length;
 					float atlasXMin = tempAtlasRect.xMin / atlasResolution;
 					float atlasXMax = tempAtlasRect.xMax / atlasResolution;
 					float atlasYMin = tempAtlasRect.yMin / atlasResolution;

@@ -175,7 +175,7 @@ namespace UMAEditor
 	        return true;
 	    }
 
-	    public static OverlayData CreateOverlayData(Texture[] textures, string assetFolder, string assetName, string overlayFolder)
+	    public static OverlayDataAsset CreateOverlayData(Texture[] textures, string assetFolder, string assetName, string overlayFolder)
 	    {
 	        if (!System.IO.Directory.Exists(overlayFolder + '/' + assetFolder))
 	        {
@@ -183,7 +183,7 @@ namespace UMAEditor
 	        }
 
 
-	        var overlay = ScriptableObject.CreateInstance<OverlayData>();
+	        var overlay = ScriptableObject.CreateInstance<OverlayDataAsset>();
 	        overlay.overlayName = assetName;
 	        overlay.textureList = textures;
 	        AssetDatabase.CreateAsset(overlay, overlayFolder + '/' + assetFolder + assetName + ".asset");
@@ -194,7 +194,7 @@ namespace UMAEditor
 
 
 		[System.Obsolete("UMATextureImporterUtil.CreateSlotData is obsolete use UMASlotProcessingUtil.CreateSlotData instead.", false)]
-		public static SlotData CreateSlotData(string slotFolder, string assetFolder, string assetName, SkinnedMeshRenderer mesh, Material material, SkinnedMeshRenderer prefabMesh)
+		public static SlotDataAsset CreateSlotData(string slotFolder, string assetFolder, string assetName, SkinnedMeshRenderer mesh, Material material, SkinnedMeshRenderer prefabMesh)
 		{
 			return UMASlotProcessingUtil.CreateSlotData(slotFolder, assetFolder, assetName, mesh, material, prefabMesh);
 		}

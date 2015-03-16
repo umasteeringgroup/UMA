@@ -35,32 +35,36 @@ public class OverlayLibraryEditor : Editor {
 		readWrite = serializedObject.FindProperty ("readWrite");
 		compress = serializedObject.FindProperty ("compress");
 	}
-	
-	
-	private OverlayData[] GetOverlayDataArray(){
+
+
+	private OverlayDataAsset[] GetOverlayDataArray()
+	{
 	
 		int arrayCount = m_OverlayDataCount.intValue;
-		OverlayData[] OverlayDataArray = new OverlayData[arrayCount];
+		OverlayDataAsset[] OverlayDataArray = new OverlayDataAsset[arrayCount];
 		
 		for(int i = 0; i < arrayCount; i++){
 		
-			OverlayDataArray[i] = m_Object.FindProperty(string.Format(kArrayData,i)).objectReferenceValue as OverlayData ;
+			OverlayDataArray[i] = m_Object.FindProperty(string.Format(kArrayData,i)).objectReferenceValue as OverlayDataAsset;
 			
 		}
 		return OverlayDataArray;
 		
 	}
-		
-	private void SetOverlayData (int index,OverlayData overlayElement){
+
+	private void SetOverlayData(int index, OverlayDataAsset overlayElement)
+	{
 		m_Object.FindProperty(string.Format(kArrayData,index)).objectReferenceValue = overlayElement;
 		isDirty = true;
 	}
-	
-	private OverlayData GetOverlayDataAtIndex(int index){
-		return m_Object.FindProperty(string.Format(kArrayData,index)).objectReferenceValue as OverlayData ;
+
+	private OverlayDataAsset GetOverlayDataAtIndex(int index)
+	{
+		return m_Object.FindProperty(string.Format(kArrayData, index)).objectReferenceValue as OverlayDataAsset;
 	}
-	
-	private void AddOverlayData(OverlayData overlayElement){
+
+	private void AddOverlayData(OverlayDataAsset overlayElement)
+	{
 		m_OverlayDataCount.intValue ++;
 		SetOverlayData(m_OverlayDataCount.intValue - 1, overlayElement);
 	}	
@@ -78,8 +82,8 @@ public class OverlayLibraryEditor : Editor {
 	}
 	
 	private void ScaleDownTextures(){
-		
-		OverlayData[] overlayElementList = GetOverlayDataArray();
+
+		OverlayDataAsset[] overlayElementList = GetOverlayDataArray();
 		string path;
 		
 		
@@ -109,8 +113,8 @@ public class OverlayLibraryEditor : Editor {
 	}
 	
 	private void ScaleUpTextures(){
-		
-		OverlayData[] overlayElementList = GetOverlayDataArray();
+
+		OverlayDataAsset[] overlayElementList = GetOverlayDataArray();
 		string path;
 		
 		
@@ -142,8 +146,8 @@ public class OverlayLibraryEditor : Editor {
 	
 	
 	private void ConfigureTextures(){
-		
-		OverlayData[] overlayElementList = GetOverlayDataArray();
+
+		OverlayDataAsset[] overlayElementList = GetOverlayDataArray();
 		string path;
 		
 		
@@ -194,7 +198,7 @@ public class OverlayLibraryEditor : Editor {
 				for(int i = 0; i < draggedObjects.Length; i++){
                     if (draggedObjects[i])
                     {
-                        OverlayData tempOverlayData = draggedObjects[i] as OverlayData;
+						OverlayDataAsset tempOverlayData = draggedObjects[i] as OverlayDataAsset;
                         if (tempOverlayData)
                         {
                             AddOverlayData(tempOverlayData);
@@ -206,7 +210,7 @@ public class OverlayLibraryEditor : Editor {
 							var assetFiles = System.IO.Directory.GetFiles(path, "*.asset");
 							foreach (var assetFile in assetFiles)
 							{
-								tempOverlayData = AssetDatabase.LoadAssetAtPath(assetFile, typeof(OverlayData)) as OverlayData;
+								tempOverlayData = AssetDatabase.LoadAssetAtPath(assetFile, typeof(OverlayDataAsset)) as OverlayDataAsset;
 								if (tempOverlayData)
 								{
 									AddOverlayData(tempOverlayData);
@@ -224,9 +228,9 @@ public class OverlayLibraryEditor : Editor {
 		serializedObject.Update();
 		
 		GUILayout.Label ("overlayList", EditorStyles.boldLabel);
-		
 
-		OverlayData[] overlayElementList = GetOverlayDataArray();
+
+		OverlayDataAsset[] overlayElementList = GetOverlayDataArray();
 		GUILayout.Space(30);
 		GUILayout.Label ("Overlays reduced " + scaleAdjust.intValue +" time(s)");
 		GUILayout.BeginHorizontal();
@@ -277,7 +281,7 @@ public class OverlayLibraryEditor : Editor {
 			if(GUILayout.Button("Order by Name")){
 				canUpdate = false;
 
-				List<OverlayData> OverlayDataTemp = overlayElementList.ToList();  
+				List<OverlayDataAsset> OverlayDataTemp = overlayElementList.ToList();  
 			
 				//Make sure there's no invalid data
 				for(int i = 0; i < OverlayDataTemp.Count; i++){
@@ -309,8 +313,8 @@ public class OverlayLibraryEditor : Editor {
 
 		for(int i = 0; i < m_OverlayDataCount.intValue; i ++){
 			GUILayout.BeginHorizontal();
-			
-				OverlayData result = EditorGUILayout.ObjectField (overlayElementList[i], typeof(OverlayData), true) as OverlayData ;
+
+			var result = EditorGUILayout.ObjectField(overlayElementList[i], typeof(OverlayDataAsset), true) as OverlayDataAsset;
 				
 				if(GUI.changed && canUpdate){
 					SetOverlayData(i,result);

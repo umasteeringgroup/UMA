@@ -25,20 +25,20 @@ public class UMACrowdRandomSetEditor : Editor
 				DragAndDrop.AcceptDrag();
 
 				UnityEngine.Object[] draggedObjects = DragAndDrop.objectReferences as UnityEngine.Object[];
-				var slots = new List<SlotData>();
-				var overlays = new List<OverlayData>();
+				var slots = new List<SlotDataAsset>();
+				var overlays = new List<OverlayDataAsset>();
 
 				for (int i = 0; i < draggedObjects.Length; i++)
 				{
 					if (draggedObjects[i])
 					{
-						SlotData tempSlotData = draggedObjects[i] as SlotData;
-						if (tempSlotData)
+						SlotDataAsset tempSlotDataAsset = draggedObjects[i] as SlotDataAsset;
+						if (tempSlotDataAsset)
 						{
-							slots.Add(tempSlotData);
+							slots.Add(tempSlotDataAsset);
 						}
 
-						OverlayData tempOverlayData = draggedObjects[i] as OverlayData;
+						OverlayDataAsset tempOverlayData = draggedObjects[i] as OverlayDataAsset;
 						if (tempOverlayData)
 						{
 							overlays.Add(tempOverlayData);
@@ -52,9 +52,9 @@ public class UMACrowdRandomSetEditor : Editor
 					crowdSlotElement.possibleSlots = new UMACrowdRandomSet.CrowdSlotData[slots.Count];
 					for (int i = 0; i < slots.Count; i++)
 					{
-						var crowdSlotData = new UMACrowdRandomSet.CrowdSlotData();
-						crowdSlotData.slotID = slots[i].slotName;
-						crowdSlotData.overlayElements = new UMACrowdRandomSet.CrowdOverlayElement[overlays.Count];
+						var crowdSlotDataAsset = new UMACrowdRandomSet.CrowdSlotData();
+						crowdSlotDataAsset.slotID = slots[i].slotName;
+						crowdSlotDataAsset.overlayElements = new UMACrowdRandomSet.CrowdOverlayElement[overlays.Count];
 						for(int j = 0; j < overlays.Count; j++)
 						{
 							var crowdOverlayElement = new UMACrowdRandomSet.CrowdOverlayElement();
@@ -62,9 +62,9 @@ public class UMACrowdRandomSetEditor : Editor
 							{
 								new UMACrowdRandomSet.CrowdOverlayData() { maxRGB = Color.white, minRGB = Color.white, overlayID = overlays[j].overlayName }
 							};
-							crowdSlotData.overlayElements[j] = crowdOverlayElement;
+							crowdSlotDataAsset.overlayElements[j] = crowdOverlayElement;
 						}
-						crowdSlotElement.possibleSlots[i] = crowdSlotData;
+						crowdSlotElement.possibleSlots[i] = crowdSlotDataAsset;
 					}
 					ArrayUtility.Add(ref randomSet.data.slotElements, crowdSlotElement);
 					EditorUtility.SetDirty(randomSet);

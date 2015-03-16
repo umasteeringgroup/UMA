@@ -6,9 +6,9 @@ using System;
 public class SlotLibrary : SlotLibraryBase
 {
 	[Obsolete("Internal data, use the helper functions. This field will be marked private in a future version.", false)]
-	public SlotData[] slotElementList = new SlotData[0];
+	public SlotDataAsset[] slotElementList = new SlotDataAsset[0];
 	[NonSerialized]
-	private Dictionary<int, SlotData> slotDictionary;
+	private Dictionary<int, SlotDataAsset> slotDictionary;
 
 	void Awake()
 	{
@@ -27,7 +27,6 @@ public class SlotLibrary : SlotLibraryBase
 				var hash = UMASkeleton.StringToHash(slotElementList[i].slotName);
 				if (!slotDictionary.ContainsKey(hash))
 				{
-					slotElementList[i].listID = i;
 					slotDictionary.Add(hash, slotElementList[i]);
 				}
 			}
@@ -38,12 +37,12 @@ public class SlotLibrary : SlotLibraryBase
 	{
 		if (slotDictionary == null)
 		{
-			slotDictionary = new Dictionary<int, SlotData>();
+			slotDictionary = new Dictionary<int, SlotDataAsset>();
 			UpdateDictionary();
 		}
 	}
 
-	public override void AddSlot(SlotData slot)
+	public override void AddSlotAsset(SlotDataAsset slot)
 	{
 		ValidateDictionary();
 		var hash = UMASkeleton.StringToHash(slot.slotName);
@@ -60,7 +59,7 @@ public class SlotLibrary : SlotLibraryBase
 		}
 		else
 		{
-			var list = new SlotData[slotElementList.Length + 1];
+			var list = new SlotDataAsset[slotElementList.Length + 1];
 			for (int i = 0; i < slotElementList.Length; i++)
 			{
 				list[i] = slotElementList[i];
@@ -111,7 +110,7 @@ public class SlotLibrary : SlotLibraryBase
 			foreach (var path in UnityEditor.AssetDatabase.GetAllAssetPaths())
 			{
 				if (!path.EndsWith(".asset")) continue;
-				var slot = UnityEditor.AssetDatabase.LoadAssetAtPath(path, typeof(SlotData)) as SlotData;
+				var slot = UnityEditor.AssetDatabase.LoadAssetAtPath(path, typeof(SlotDataAsset)) as SlotDataAsset;
 				if (slot == null) continue;
 				var hash = UMASkeleton.StringToHash(slot.slotName);
 				if (hash == nameHash)
@@ -129,18 +128,18 @@ public class SlotLibrary : SlotLibraryBase
 	private SlotData Internal_InstantiateSlot(int nameHash)
 	{
 		ValidateDictionary();
-		SlotData source;
+		SlotDataAsset source;
 		if (!slotDictionary.TryGetValue(nameHash, out source))
 		{
 			return null;
 		}
 		else
 		{
-			return source.Duplicate();
+			return new SlotData(source);
 		}
 	}
 
-	public override SlotData[] GetAllSlots()
+	public override SlotDataAsset[] GetAllSlotAssets()
 	{
 #pragma warning disable 618
 		return slotElementList;

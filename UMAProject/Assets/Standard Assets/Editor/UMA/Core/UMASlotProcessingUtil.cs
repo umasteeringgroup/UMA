@@ -15,7 +15,7 @@ namespace UMAEditor
 {
 	public static class UMASlotProcessingUtil
 	{
-		public static SlotData CreateSlotData(string slotFolder, string assetFolder, string assetName, SkinnedMeshRenderer mesh, Material material, SkinnedMeshRenderer prefabMesh)
+		public static SlotDataAsset CreateSlotData(string slotFolder, string assetFolder, string assetName, SkinnedMeshRenderer mesh, Material material, SkinnedMeshRenderer prefabMesh)
 		{
 			if (!System.IO.Directory.Exists(slotFolder + '/' + assetFolder))
 			{
@@ -86,7 +86,7 @@ namespace UMAEditor
 			var meshgo = skinnedResult.transform.Find(mesh.name);
 			var finalMeshRenderer = meshgo.GetComponent<SkinnedMeshRenderer>();
 
-			SlotData slot = ScriptableObject.CreateInstance<SlotData>();
+			var slot = ScriptableObject.CreateInstance<SlotDataAsset>();
 			slot.slotName = assetName;
 			slot.materialSample = material;
 			slot.UpdateMeshData(finalMeshRenderer);

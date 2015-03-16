@@ -262,12 +262,13 @@ namespace UMAEditor
         {
             bool changed = false;
 
-            var added = (SlotData)EditorGUILayout.ObjectField("Add Slot", null, typeof(SlotData), false);
+			var added = (SlotDataAsset)EditorGUILayout.ObjectField("Add Slot", null, typeof(SlotDataAsset), false);
 
             if (added != null)
             {
-                _slots.Add(new SlotEditor(added));
-                ArrayUtility.Add(ref _recipe.slotDataList, added);
+				var slot = new SlotData(added);
+				_slots.Add(new SlotEditor(slot));
+				ArrayUtility.Add(ref _recipe.slotDataList, slot);
                 changed = true;
                 _dnaDirty = true;
                 _textureDirty = true;
@@ -342,12 +343,13 @@ namespace UMAEditor
 
             GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
 
-            var added = (OverlayData)EditorGUILayout.ObjectField("Add Overlay", null, typeof(OverlayData), false);
+			var added = (OverlayDataAsset)EditorGUILayout.ObjectField("Add Overlay", null, typeof(OverlayDataAsset), false);
 
             if (added != null)
             {
-                _overlayEditors.Add(new OverlayEditor(_slotData, added));
-                _overlayData.Add(added);
+				var newOverlay = new OverlayData(added);
+				_overlayEditors.Add(new OverlayEditor(_slotData, newOverlay));
+				_overlayData.Add(newOverlay);
                 _dnaDirty = true;
                 _textureDirty = true;
                 _meshDirty = true;
@@ -433,10 +435,10 @@ namespace UMAEditor
             _overlayData = overlayData;
             _slotData = slotData;
 
-            _textures = new TextureEditor[overlayData.textureList.Length];
-            for (int i = 0; i < overlayData.textureList.Length; i++)
+			_textures = new TextureEditor[overlayData.asset.textureList.Length];
+			for (int i = 0; i < overlayData.asset.textureList.Length; i++)
             {
-                _textures [i] = new TextureEditor(overlayData.textureList [i]);
+				_textures[i] = new TextureEditor(overlayData.asset.textureList[i]);
             }
 
             BuildColorEditors();

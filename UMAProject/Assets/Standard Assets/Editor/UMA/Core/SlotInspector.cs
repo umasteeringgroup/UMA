@@ -13,7 +13,7 @@ namespace UMAEditor
         [MenuItem("Assets/Create/UMA Slot")]
         public static void CreateSlotMenuItem()
         {
-            CustomAssetUtility.CreateAsset<SlotData>();
+            CustomAssetUtility.CreateAsset<SlotDataAsset>();
         }
 
         static private void RecurseTransformsInPrefab(Transform root, List<Transform> transforms)
@@ -35,14 +35,14 @@ namespace UMAEditor
             return transforms.ToArray();
         }
 
-        protected SlotData slot;
+		protected SlotDataAsset slot;
         protected bool showBones;
         protected Vector2 boneScroll = new Vector2();
 		protected Transform[] umaBoneData;
 
         public void OnEnable()
         {
-            slot = target as SlotData;
+			slot = target as SlotDataAsset;
 #pragma warning disable 618
 			if (slot.meshData != null)
 			{
