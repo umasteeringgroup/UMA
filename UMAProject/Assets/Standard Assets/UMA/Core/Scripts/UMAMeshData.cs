@@ -2,7 +2,7 @@
 // on desktop platforms and dynamically adjusting the
 // size which the arrays appear to be to C# code
 // See: http://feedback.unity3d.com/suggestions/allow-mesh-data-to-have-a-length
-#undef USE_UNSAFE_CODE
+#undef USE_UNSAFE_CODEA
 
 using System;
 using System.Collections.Generic;
@@ -233,7 +233,7 @@ namespace UMA
 		private void ApplySharedBuffers(Mesh mesh)
 		{
 #if USE_UNSAFE_CODE
-			unsafe 
+			unsafe
 			{
 				UIntPtr* lengthPtr;
 				fixed (void* pVertices = gVertices) 

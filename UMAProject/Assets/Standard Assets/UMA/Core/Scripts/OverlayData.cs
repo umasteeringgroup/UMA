@@ -5,9 +5,16 @@ using System.Collections;
 namespace UMA
 {
 	[System.Serializable]
+#if !UMA_LEAN_AND_CLEAN
 	public partial class OverlayData 
+#else
+	public class OverlayData
+#endif
 	{
 		public OverlayDataAsset asset;
+
+#if !UMA2_LEAN_AND_CLEAN 
+
 		[System.Obsolete("OverlayData.overlayName is obsolete use asset.overlayName!", false)]
 		public string overlayName;
 
@@ -32,17 +39,24 @@ namespace UMA
         /// </summary>
 		[System.Obsolete("OverlayData.tags is obsolete use asset.tags!", false)]
 		public string[] tags;
+#else
+		public string overlayName { get { return asset.overlayName; } }
+		public Color color = new Color(1, 1, 1, 1);
+		public Rect rect;
+		public Color32[] channelMask;
+		public Color32[] channelAdditiveMask;
+#endif
 
+		[System.Obsolete("OverlayData.Duplicate is obsolete.", false)]
 		public OverlayData Duplicate()
 	    {
-	        OverlayData tempOverlay = new OverlayData();
-			tempOverlay.overlayName = overlayName;
-			tempOverlay.asset = asset;
-	        tempOverlay.color = color;
-	        tempOverlay.rect = rect;
-			if( channelMask != null ) tempOverlay.channelMask = (Color32[])channelMask.Clone();
-			if (channelAdditiveMask != null) tempOverlay.channelAdditiveMask = (Color32[])channelAdditiveMask.Clone();
-	        return tempOverlay;
+			var res = new OverlayData();
+			res.asset = asset;
+			res.rect = rect;
+			res.color = color;
+			res.channelMask = channelMask;
+			res.channelAdditiveMask = channelAdditiveMask;
+			return res;
 	    }
 
 	    public OverlayData()

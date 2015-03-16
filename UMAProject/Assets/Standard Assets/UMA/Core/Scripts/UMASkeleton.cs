@@ -48,7 +48,8 @@ namespace UMA
             {
 				parentBoneNameHash = parentHash,
 				boneNameHash = hash,
-                boneTransform = transform,
+				accessedFrame = frame,
+				boneTransform = transform,
                 originalBonePosition = transform.localPosition,
                 originalBoneScale = transform.localScale,
                 originalBoneRotation = transform.localRotation
@@ -69,6 +70,7 @@ namespace UMA
 		{
 			BoneData newBone = new BoneData()
 			{
+				accessedFrame = frame,
 				parentBoneNameHash = parentHash,
 				boneNameHash = hash,
 				boneTransform = transform,

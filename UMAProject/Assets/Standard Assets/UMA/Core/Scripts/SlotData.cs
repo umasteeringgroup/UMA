@@ -6,9 +6,17 @@ using System.Collections.Generic;
 namespace UMA
 {
 	[System.Serializable]
+#if !UMA2_LEAN_AND_CLEAN 
 	public partial class SlotData
+#else
+	public class SlotData
+#endif
 	{
 		public SlotDataAsset asset;
+		public float overlayScale = 1.0f;
+#if !UMA2_LEAN_AND_CLEAN 
+		[System.Obsolete("SlotData.materialSample is obsolete use asset.materialSample!", false)]
+		public Material materialSample;
 		[System.Obsolete("SlotData.slotName is obsolete use asset.slotName!", false)]
 		public string slotName;
 		[System.Obsolete("SlotData.listID is obsolete.", false)]
@@ -23,8 +31,6 @@ namespace UMA
 		[System.Obsolete("SlotData.umaBoneData is obsolete.", true)]
 		public Transform[] umaBoneData;
 
-		public Material materialSample;
-		public float overlayScale = 1.0f;
 		[System.Obsolete("SlotData.animatedBones is obsolete, use SlotDataAsset.animatedBones.", true)]
 		public Transform[] animatedBones = new Transform[0];
 		[System.Obsolete("SlotData.textureNameList is obsolete, use SlotDataAsset.textureNameList.", true)]
@@ -45,14 +51,18 @@ namespace UMA
 		/// </summary>
 		[System.Obsolete("SlotData.tags is obsolete, use SlotDataAsset.tags.", false)]
 		public string[] tags;
-
+#else
+		public string slotName { get { return asset.slotName; } }
+#endif
 		private List<OverlayData> overlayList = new List<OverlayData>();
 
 		public SlotData(SlotDataAsset asset)
 		{
 			this.asset = asset;
+#if !UMA2_LEAN_AND_CLEAN 
 			slotName = asset.slotName;
 			materialSample = asset.materialSample;
+#endif
 			overlayScale = asset.overlayScale;
 		}	
         
@@ -178,7 +188,7 @@ namespace UMA
 					{
 						if (overlayData.asset.textureList.Length != count && count != 0)
 						{
-							Debug.LogError(string.Format("Overlay '{0}' only have {1} textures, but it is added to SlotData '{2}' which requires {3} textures.", overlayData.asset.overlayName, overlayData.asset.textureList.Length, slotName, count));
+							Debug.LogError(string.Format("Overlay '{0}' only have {1} textures, but it is added to SlotData '{2}' which requires {3} textures.", overlayData.asset.overlayName, overlayData.asset.textureList.Length, asset.slotName, count));
 							valid = false;
 						}
 					}

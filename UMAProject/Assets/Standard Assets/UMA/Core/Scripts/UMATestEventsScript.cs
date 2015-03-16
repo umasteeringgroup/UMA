@@ -17,6 +17,6 @@ public class UMATestEventsScript : MonoBehaviour
 	}
 	public void SlotAtlasEvent(UMA.UMAData umaData, UMA.SlotData slotData, Material material, Rect atlasRect)
 	{
-		Debug.Log(umaData.name + " got slot " + slotData.slotName);
+		Debug.Log(umaData.name + " got slot " + slotData.asset.slotName);
 	}
 }

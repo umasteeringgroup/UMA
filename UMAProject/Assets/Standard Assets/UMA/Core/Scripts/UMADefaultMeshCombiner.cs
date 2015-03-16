@@ -58,7 +58,7 @@ namespace UMA
             }
             else
             {
-                CombineByMaterial();
+				CombineByMaterial();
             }
 
 			EnsureUMADataSetup(umaData);
@@ -168,7 +168,7 @@ namespace UMA
 				if (slots[slotIndex] == null) continue;
 				if (slots[slotIndex].asset.textureNameList.Length == 1 && string.IsNullOrEmpty(slots[slotIndex].asset.textureNameList[0]))
                 {
-                    combineInstance = new SkinnedMeshCombiner.CombineInstance();
+					combineInstance = new SkinnedMeshCombiner.CombineInstance();
 					combineInstance.meshData = slots[slotIndex].asset.meshData;
                     combineInstance.targetSubmeshIndices = new int[combineInstance.meshData.subMeshCount];
                     for (int i = 0; i < combineInstance.meshData.subMeshCount; i++)
@@ -182,7 +182,7 @@ namespace UMA
                     {
                         for (int i = 0; i < sourceMaterials.Count; i++)
                         {
-                            if (slots[slotIndex].materialSample == sourceMaterials[i])
+                            if (slots[slotIndex].asset.materialSample == sourceMaterials[i])
                             {
 								slotMaterial = combinedMaterialList[i + atlassedMaterials];
 								combineInstance.targetSubmeshIndices[slots[slotIndex].asset.subMeshIndex] = i + atlassedMaterials;
@@ -197,8 +197,8 @@ namespace UMA
                     }
                     if (!contains)
                     {
-                        sourceMaterials.Add(slots[slotIndex].materialSample);
-						slotMaterial = new Material(slots[slotIndex].materialSample);
+						sourceMaterials.Add(slots[slotIndex].asset.materialSample);
+						slotMaterial = new Material(slots[slotIndex].asset.materialSample);
                         combinedMaterialList.Add(slotMaterial);
 						combineInstance.targetSubmeshIndices[slots[slotIndex].asset.subMeshIndex] = combinedMaterialList.Count - 1;
                     }
@@ -241,8 +241,8 @@ namespace UMA
 						combineInstance.targetSubmeshIndices[slots[slotIndex].asset.subMeshIndex] = indexCount;
                         combinedMeshList.Add(combineInstance);
 
-                        Material tempMaterial = Instantiate(slots[slotIndex].materialSample) as Material;
-                        tempMaterial.name = slots[slotIndex].slotName;
+						Material tempMaterial = Instantiate(slots[slotIndex].asset.materialSample) as Material;
+                        tempMaterial.name = slots[slotIndex].asset.slotName;
                         for (int textureType = 0; textureType < textureNameList.Length; textureType++)
                         {
                             if (tempMaterial.HasProperty(textureNameList[textureType]))

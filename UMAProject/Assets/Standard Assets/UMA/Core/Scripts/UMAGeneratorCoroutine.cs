@@ -52,7 +52,7 @@ namespace UMA
 					tempMaterialDefinition = new UMAData.MaterialDefinition();
 					tempMaterialDefinition.baseTexture = slots[i].GetOverlay(0).asset.textureList;
 					tempMaterialDefinition.baseColor = slots[i].GetOverlay(0).color;
-					tempMaterialDefinition.materialSample = slots[i].materialSample;
+					tempMaterialDefinition.materialSample = slots[i].asset.materialSample;
 					int overlays = 0;
 					for (int overlayCounter = 0; overlayCounter < slots[i].OverlayCount; overlayCounter++)
 					{
