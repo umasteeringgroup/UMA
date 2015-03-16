@@ -76,6 +76,9 @@ namespace UMA
 
 		public virtual bool HandleDirtyUpdate(UMAData data)
 		{
+			if (data == null)
+				return true;
+
 			if (umaData != data)
 			{
 				umaData = data;
