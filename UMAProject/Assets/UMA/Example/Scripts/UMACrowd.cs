@@ -65,7 +65,7 @@ public class UMACrowd : MonoBehaviour
 			}
 		}
 
-		if (stressTest && !generateLotsUMA && !generateUMA)
+		if (stressTest && generator.IsIdle() && !generateLotsUMA && !generateUMA)
 		{
 			RandomizeAll();
 		}
