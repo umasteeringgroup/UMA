@@ -86,8 +86,10 @@ namespace UMA
 							snapshot = new AnimatorState();
 							snapshot.SaveAnimatorState(animator);
 						}
-						
+
+						Avatar avatar = animator.avatar;
 						Object.DestroyImmediate(animator);
+						Object.Destroy(avatar);
 					}
 					var oldParent = umaData.umaRoot.transform.parent;
 					var originalRot = umaData.umaRoot.transform.localRotation;

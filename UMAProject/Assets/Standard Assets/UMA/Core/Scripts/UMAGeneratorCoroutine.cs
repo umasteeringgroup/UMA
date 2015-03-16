@@ -225,7 +225,7 @@ namespace UMA
 							//All slots sharing same shader are on same atlasElement
 							atlasElement.atlasMaterialDefinitions = atlasMaterialDefinitionList;
 							atlasElement.shader = atlasMaterialDefinitionList[0].source.materialSample.shader;
-							atlasElement.materialSample = new Material(atlasMaterialDefinitionList[0].source.materialSample);
+							atlasElement.materialSample = atlasMaterialDefinitionList[0].source.materialSample;
 
 							umaData.atlasList.atlas.Add(atlasElement);
 						}
