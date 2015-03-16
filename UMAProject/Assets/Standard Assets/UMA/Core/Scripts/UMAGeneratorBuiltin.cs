@@ -185,6 +185,7 @@ namespace UMA
 		{
 			if (umaData)
 			{
+				umaData.skeleton.ResetAll();
 				umaData.ApplyDNA();
 				umaData.FireDNAAppliedEvents();
 				UpdateAvatar(umaData);

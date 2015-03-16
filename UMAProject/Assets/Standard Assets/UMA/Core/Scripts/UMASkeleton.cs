@@ -20,11 +20,13 @@ namespace UMA
 		public IEnumerable<int> BoneHashes { get{ return GetBoneHashes(); } }
 
 		int frame;
+		int rootBoneHash;
 
 		Dictionary<int, BoneData> boneHashData;
 
 		public UMASkeleton(Transform rootBone)
         {
+			rootBoneHash = UMASkeleton.StringToHash(rootBone.name);
             this.boneHashData = new Dictionary<int, BoneData>();
             AddBonesRecursive(rootBone);
         }
@@ -82,6 +84,23 @@ namespace UMA
         {
             boneHashData.Remove(nameHash);
         }
+
+		public virtual void UpdateBoneTransform(int nameHash, Transform bone)
+		{
+			if (bone == null || nameHash == rootBoneHash) return;
+			BoneData res;
+			if (boneHashData.TryGetValue(nameHash, out res))
+			{
+				res.accessedFrame = frame;
+				res.originalBonePosition = bone.localPosition;
+				res.boneTransform.localPosition = bone.localPosition;
+				res.originalBoneRotation = bone.localRotation;
+				res.boneTransform.localRotation = bone.localRotation;
+				res.originalBoneScale = bone.localScale;
+				res.boneTransform.localScale = bone.localScale;
+				UpdateBoneTransform(res.parentBoneNameHash, bone.parent);
+			}
+		}
 
 		public virtual bool TryGetBoneTransform(int nameHash, out Transform boneTransform, out bool transformDirty, out int parentBoneNameHash)
 		{

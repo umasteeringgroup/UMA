@@ -36,10 +36,7 @@ namespace UMA
 			{
 				if (transformDirty)
 				{
-					mappedTransform.localPosition = bone.localPosition;
-					mappedTransform.localRotation= bone.localRotation;
-					mappedTransform.localScale = bone.localScale;
-					RecursivelyUpdateSkeleton(bone.parent, parentNameHash, skeleton);
+					skeleton.UpdateBoneTransform(hash, bone);
 				}
 				return mappedTransform;
 			}
@@ -61,25 +58,6 @@ namespace UMA
 			child.name = bone.name;
 			skeleton.AddBone(parentHash, hash, child);
 			return child;
-		}
-
-		private static void RecursivelyUpdateSkeleton(Transform bone, int nameHash, UMASkeleton skeleton)
-		{
-			if (bone == null) return;
-			Transform mappedTransform;
-			bool transformDirty;
-			int parentNameHash;
-
-			if (skeleton.TryGetBoneTransform(nameHash, out mappedTransform, out transformDirty, out parentNameHash))
-			{
-				if (transformDirty)
-				{
-					mappedTransform.localPosition = bone.localPosition;
-					mappedTransform.localRotation = bone.localRotation;
-					mappedTransform.localScale = bone.localScale;
-					RecursivelyUpdateSkeleton(bone.parent, parentNameHash, skeleton);
-				}
-			}			
 		}
 
 		public static Transform[] CloneBoneListInNewHierarchy(Transform rootBone, Transform[] bones, int[] hashes, UMASkeleton skeleton)

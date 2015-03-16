@@ -24,6 +24,7 @@ public class UMACrowd : MonoBehaviour
 	public bool generateUMA;
 	public bool generateLotsUMA;
 	public bool hideWhileGeneratingLots;
+	public bool stressTest;
 	public Vector2 umaCrowdSize;
 	public bool randomDna;
 	public UMARecipeBase[] additionalRecipes;
@@ -64,7 +65,7 @@ public class UMACrowd : MonoBehaviour
 			}
 		}
 
-		if (!generateLotsUMA && !generateUMA)
+		if (stressTest && !generateLotsUMA && !generateUMA)
 		{
 			RandomizeAll();
 		}
