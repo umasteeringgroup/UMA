@@ -6,10 +6,11 @@ using System.Collections.Generic;
 namespace UMA
 {
 	[System.Serializable]
-	public partial class SlotDataAsset : ScriptableObject
+	public partial class SlotDataAsset : ScriptableObject, ISerializationCallbackReceiver
 	{
 		public string slotName;
-		public int slotNameHash;
+		[System.NonSerialized]
+		public int nameHash;
 
 		public SkinnedMeshRenderer meshRenderer;
 
@@ -68,5 +69,10 @@ namespace UMA
 			UnityEditor.EditorUtility.SetDirty(this);
 		}
 #endif
+		public void OnAfterDeserialize()
+		{
+			nameHash = UMASkeleton.StringToHash(slotName);
+		}
+		public void OnBeforeSerialize() { }
 	}
 }

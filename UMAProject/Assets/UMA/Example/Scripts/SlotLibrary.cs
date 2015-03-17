@@ -24,7 +24,7 @@ public class SlotLibrary : SlotLibraryBase
 		{
 			if (slotElementList[i])
 			{
-				var hash = UMASkeleton.StringToHash(slotElementList[i].slotName);
+				var hash = slotElementList[i].nameHash;
 				if (!slotDictionary.ContainsKey(hash))
 				{
 					slotDictionary.Add(hash, slotElementList[i]);
@@ -45,8 +45,7 @@ public class SlotLibrary : SlotLibraryBase
 	public override void AddSlotAsset(SlotDataAsset slot)
 	{
 		ValidateDictionary();
-		var hash = UMASkeleton.StringToHash(slot.slotName);
-		if (slotDictionary.ContainsKey(hash))
+		if (slotDictionary.ContainsKey(slot.nameHash))
 		{
 			for (int i = 0; i < slotElementList.Length; i++)
 			{
@@ -67,7 +66,7 @@ public class SlotLibrary : SlotLibraryBase
 			list[list.Length - 1] = slot;
 			slotElementList = list;
 		}
-		slotDictionary[hash] = slot;
+		slotDictionary[slot.nameHash] = slot;
 	}
 #pragma warning restore 618
 
@@ -112,8 +111,7 @@ public class SlotLibrary : SlotLibraryBase
 				if (!path.EndsWith(".asset")) continue;
 				var slot = UnityEditor.AssetDatabase.LoadAssetAtPath(path, typeof(SlotDataAsset)) as SlotDataAsset;
 				if (slot == null) continue;
-				var hash = UMASkeleton.StringToHash(slot.slotName);
-				if (hash == nameHash)
+				if (slot.nameHash == nameHash)
 				{
 					throw new UMAResourceNotFoundException("SlotLibrary: Unable to find: " + slot.slotName);
 				}
