@@ -47,11 +47,9 @@ namespace UMA
 		public Color32[] channelAdditiveMask;
 #endif
 
-		[System.Obsolete("OverlayData.Duplicate is obsolete.", false)]
 		public OverlayData Duplicate()
 	    {
-			var res = new OverlayData();
-			res.asset = asset;
+			var res = new OverlayData(asset);
 			res.rect = rect;
 			res.color = color;
 			res.channelMask = channelMask;
@@ -59,15 +57,10 @@ namespace UMA
 			return res;
 	    }
 
-	    public OverlayData()
-	    {
-
-	    }
-
 		public OverlayData(OverlayDataAsset asset)
 		{
 			this.asset = asset;
-			rect = asset.rect;			
+			rect = asset.rect;
 		}
 
 	    public bool useAdvancedMasks { get { return channelMask != null && channelMask.Length > 0; } }
@@ -192,7 +185,36 @@ namespace UMA
             }
         }
 
-		public static implicit operator bool(OverlayData obj) { return obj != null; }
+		#region operator ==, != and similar HACKS, seriously.....
+		public static implicit operator bool(OverlayData obj)
+		{
+			return ((System.Object)obj) != null && obj.asset != null;
+		}
+		public static bool operator ==(OverlayData slot, OverlayData obj)
+		{
+			if (slot)
+			{
+				if (obj)
+				{
+					return slot.Equals(obj);
+				}
+				return false;
+			}
+			return !((bool)obj);
+		}
+		public static bool operator !=(OverlayData slot, OverlayData obj)
+		{
+			if (slot)
+			{
+				if (obj)
+				{
+					return !slot.Equals(obj);
+				}
+				return true;
+			}
+			return ((bool)obj);
+		}
+		#endregion
 
 	}
 }

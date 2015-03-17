@@ -127,10 +127,7 @@ public class OverlayLibrary : OverlayLibraryBase
 		}
 		else
 		{
-			var overlayData = new OverlayData();
-			overlayData.asset = source;
-			overlayData.rect = source.rect;
-			return overlayData;
+			return new OverlayData(source);
 		}
 	}
 

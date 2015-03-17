@@ -66,11 +66,6 @@ namespace UMA
 			overlayScale = asset.overlayScale;
 		}	
         
-		public SlotData()
-		{
-            
-		}
-
 		public int GetTextureChannelCount(UMAGeneratorBase generator)
 		{
 			return asset.GetTextureChannelCount(generator);
@@ -202,7 +197,35 @@ namespace UMA
 			return "SlotData: " + asset.slotName;
 		}
 
-		public static implicit operator bool(SlotData obj) { return obj != null; }
-
+		#region operator ==, != and similar HACKS, seriously.....
+		public static implicit operator bool(SlotData obj) 
+		{
+			return ((System.Object)obj) != null && obj.asset != null;
+		}
+		public static bool operator ==(SlotData slot, SlotData obj)
+		{
+			if (slot)
+			{
+				if (obj)
+				{
+					return slot.Equals(obj);
+				}
+				return false;
+			}
+			return !((bool)obj);
+		}
+		public static bool operator !=(SlotData slot, SlotData obj)
+		{
+			if (slot)
+			{
+				if (obj)
+				{
+					return !slot.Equals(obj);
+				}
+				return true;
+			}
+			return ((bool)obj);
+		}
+		#endregion
 	}
 }

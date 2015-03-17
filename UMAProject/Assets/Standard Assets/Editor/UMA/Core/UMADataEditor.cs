@@ -24,7 +24,7 @@ namespace UMAEditor
             if (!NeedsReenable())
                 return;
 
-            showBaseEditor = true;
+            showBaseEditor = false;
             _umaData = target as UMAData;
             _errorMessage = null;
             _recipe = _umaData.umaRecipe;

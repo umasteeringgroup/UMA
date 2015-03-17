@@ -2,7 +2,9 @@
 // on desktop platforms and dynamically adjusting the
 // size which the arrays appear to be to C# code
 // See: http://feedback.unity3d.com/suggestions/allow-mesh-data-to-have-a-length
-#undef USE_UNSAFE_CODEA
+#if !UNITY_STANDALONE
+#undef USE_UNSAFE_CODE
+#endif 
 
 using System;
 using System.Collections.Generic;

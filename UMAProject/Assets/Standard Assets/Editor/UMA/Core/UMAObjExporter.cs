@@ -69,6 +69,7 @@ public static class ObjExporter
 					var staticMesh = new Mesh();
 					avatar.umaData.myRenderer.BakeMesh(staticMesh);
 					FileUtils.WriteAllText(path, MeshToString(staticMesh, avatar.umaData.myRenderer.sharedMaterials));
+					Object.Destroy(staticMesh);
 				}
 			}
 		}
