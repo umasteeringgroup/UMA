@@ -22,6 +22,7 @@ namespace UMAEditor
         private readonly string[] _dnaTypeNames;
         public int viewDna = 0;
         public UMAData.UMARecipe recipe;
+		public static UMAGeneratorBase umaGenerator;
 
         public DNAMasterEditor(UMAData.UMARecipe recipe)
         {
@@ -248,31 +249,45 @@ namespace UMAEditor
         public SlotMasterEditor(UMAData.UMARecipe recipe)
         {
             _recipe = recipe;
-            foreach (var slot in recipe.slotDataList)
-            {
+			for (var i = 0; i < recipe.slotDataList.Length; i++ )
+			{
+				var slot = recipe.slotDataList[i];
 
-                if (slot == null)
-                    continue;
+				if (slot == null)
+					continue;
 
-                _slots.Add(new SlotEditor(slot));
-            }
+				_slots.Add(new SlotEditor(slot, i));
+			}
         }
 
         public bool OnGUI(ref bool _dnaDirty, ref bool _textureDirty, ref bool _meshDirty)
         {
             bool changed = false;
 
+			if (GUILayout.Button("Remove Nulls"))
+			{
+				var newList = new List<SlotData>(_recipe.slotDataList.Length);
+				foreach (var slotData in _recipe.slotDataList)
+				{
+					if (slotData != null) newList.Add(slotData);
+				}
+				_recipe.slotDataList = newList.ToArray();
+				changed |= true;
+				_dnaDirty |= true;
+				_textureDirty |= true;
+				_meshDirty |= true;
+			}
+
 			var added = (SlotDataAsset)EditorGUILayout.ObjectField("Add Slot", null, typeof(SlotDataAsset), false);
 
             if (added != null)
             {
 				var slot = new SlotData(added);
-				_slots.Add(new SlotEditor(slot));
 				ArrayUtility.Add(ref _recipe.slotDataList, slot);
-                changed = true;
-                _dnaDirty = true;
-                _textureDirty = true;
-                _meshDirty = true;
+                changed |= true;
+                _dnaDirty |= true;
+                _textureDirty |= true;
+                _meshDirty |= true;
             }
 
             for (int i = 0; i < _slots.Count; i++)
@@ -294,7 +309,7 @@ namespace UMAEditor
                     _meshDirty = true;
 
                     _slots.RemoveAt(i);
-                    ArrayUtility.RemoveAt<SlotData>(ref _recipe.slotDataList, i);
+                    ArrayUtility.RemoveAt<SlotData>(ref _recipe.slotDataList, slot.idx);
                     i--;
                     changed = true;
                 }
@@ -315,14 +330,15 @@ namespace UMAEditor
         public bool Delete { get; private set; }
 
         private bool _foldout = true;
+		public int idx;
 
-        public SlotEditor(SlotData slotData)
+		public SlotEditor(SlotData slotData, int idx)
         {
             _slotData = slotData;
             _overlayData = slotData.GetOverlayList();
 
-            _name = slotData.slotName;
-
+			this.idx = idx;
+            _name = slotData.asset.slotName;
             for (int i = 0; i < _overlayData.Count; i++)
             {
                 _overlayEditors.Add(new OverlayEditor(slotData, _overlayData [i]));
@@ -555,7 +571,7 @@ namespace UMAEditor
                         _overlayData.channelMask = oldChannelMask;
                         _overlayData.channelAdditiveMask = oldChannelAdditiveMask;
                     }
-                    _overlayData.EnsureChannels(_slotData.GetTextureChannelCount(null));
+					_overlayData.EnsureChannels(_slotData.GetTextureChannelCount(DNAMasterEditor.umaGenerator));
                     if (_overlayData.channelMask.Length > 0)
                     {
                         _overlayData.channelMask [0] = _overlayData.color;

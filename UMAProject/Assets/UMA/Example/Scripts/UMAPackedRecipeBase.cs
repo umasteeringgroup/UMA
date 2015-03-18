@@ -87,7 +87,7 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 				tempPackedSlotData = new packedSlotData();
 				umaPackRecipe.packedSlotDataList[i] = tempPackedSlotData;
 
-				tempPackedSlotData.slotID = umaRecipe.slotDataList[i].slotName;
+				tempPackedSlotData.slotID = umaRecipe.slotDataList[i].asset.slotName;
 				tempPackedSlotData.overlayScale = Mathf.FloorToInt(umaRecipe.slotDataList[i].overlayScale * 100);
 
 				bool copiedOverlays = false;
@@ -110,7 +110,7 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 				for (int overlayID = 0; overlayID < tempPackedSlotData.OverlayDataList.Length; overlayID++)
 				{
 					tempPackedSlotData.OverlayDataList[overlayID] = new packedOverlayData();
-					tempPackedSlotData.OverlayDataList[overlayID].overlayID = umaRecipe.slotDataList[i].GetOverlay(overlayID).overlayName;
+					tempPackedSlotData.OverlayDataList[overlayID].overlayID = umaRecipe.slotDataList[i].GetOverlay(overlayID).asset.overlayName;
 
 					if (umaRecipe.slotDataList[i].GetOverlay(overlayID).color != new Color(1.0f, 1.0f, 1.0f, 1.0f))
 					{

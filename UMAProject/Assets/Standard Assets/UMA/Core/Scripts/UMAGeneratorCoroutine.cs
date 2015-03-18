@@ -12,14 +12,13 @@ namespace UMA
 		MaxRectsBinPack packTexture;
 
 		List<UMAData.MaterialDefinition> materialDefinitionList;
-		UMAData.MaterialDefinition[] orderedMaterialDefinition;
-
 		List<UMAData.AtlasMaterialDefinition> atlasMaterialDefinitionList;
 
 		UMAGeneratorBase umaGenerator;
 		UMAData umaData;
 		Texture[] backUpTexture;
 		bool updateMaterialList;
+		MaterialDefinitionComparer comparer = new MaterialDefinitionComparer();
 
 		public void Prepare(UMAGeneratorBase _umaGenerator, UMAData _umaData, TextureProcessBaseCoroutine textureProcessCoroutine, bool updateMaterialList)
 		{
@@ -47,10 +46,13 @@ namespace UMA
 				{
 					continue;
 				}
+				var requiredTextures = slots[i].asset.textureNameList.Length == 0 ? umaGenerator.textureNameList.Length : slots[i].asset.textureNameList.Length;
+
 				if (slots[i].GetOverlay(0) != null)
 				{
 					tempMaterialDefinition = new UMAData.MaterialDefinition();
 					tempMaterialDefinition.baseTexture = slots[i].GetOverlay(0).asset.textureList;
+					tempMaterialDefinition.size = tempMaterialDefinition.baseTexture[0].width * tempMaterialDefinition.baseTexture[0].height;
 					tempMaterialDefinition.baseColor = slots[i].GetOverlay(0).color;
 					tempMaterialDefinition.materialSample = slots[i].asset.materialSample;
 					int overlays = 0;
@@ -83,7 +85,15 @@ namespace UMA
 						if (overlay == null) continue;
 						tempMaterialDefinition.overlays[overlayID] = new UMAData.textureData();
 						tempMaterialDefinition.rects[overlayID] = overlay.rect;
-						tempMaterialDefinition.overlays[overlayID].textureList = overlay.asset.textureList;
+						if (overlay.asset.textureList.Length >= requiredTextures)
+						{
+							tempMaterialDefinition.overlays[overlayID].textureList = overlay.asset.textureList;
+						}
+						else
+						{
+							tempMaterialDefinition.overlays[overlayID].textureList = new Texture[requiredTextures];
+							System.Array.Copy(overlay.asset.textureList, tempMaterialDefinition.overlays[overlayID].textureList, overlay.asset.textureList.Length);
+						}
 						tempMaterialDefinition.overlayColors[overlayID] = overlay.color;
 						tempMaterialDefinition.channelMask[overlayID + 1] = overlay.channelMask;
 						tempMaterialDefinition.channelAdditiveMask[overlayID + 1] = overlay.channelAdditiveMask;
@@ -97,15 +107,16 @@ namespace UMA
 			packTexture = new MaxRectsBinPack(umaGenerator.atlasResolution, umaGenerator.atlasResolution, false);
 		}
 
+		public class MaterialDefinitionComparer : IComparer<UMAData.MaterialDefinition>
+		{
+			public int Compare (UMAData.MaterialDefinition x, UMAData.MaterialDefinition y)
+			{
+				return y.size - x.size;
+			}
+		}
 		protected override IEnumerator workerMethod()
 		{
-			orderedMaterialDefinition = new UMAData.MaterialDefinition[materialDefinitionList.Count];
-			for (int i = 0; i < materialDefinitionList.Count; i++)
-			{
-				orderedMaterialDefinition[i] = materialDefinitionList[i];
-			}
-
-			OrderMaterialDefinition();
+			materialDefinitionList.Sort(comparer);
 
 			umaData.atlasList = new UMAData.AtlasList();
 			umaData.atlasList.atlas = new List<UMAData.AtlasElement>();
@@ -125,43 +136,20 @@ namespace UMA
 
 			if (updateMaterialList)
 			{
-				var materials = new Material[umaData.atlasList.atlas.Count];
-				for (int atlasIndex = 0; atlasIndex < umaData.atlasList.atlas.Count; atlasIndex++)
+				var mats = umaData.myRenderer.sharedMaterials;
+				var atlasses = umaData.atlasList.atlas;
+				for (int i = 0; i < atlasses.Count; i++)
 				{
-					materials[atlasIndex] = umaData.atlasList.atlas[atlasIndex].materialSample;
+					Object.Destroy(mats[i]);
+					mats[i] = atlasses[i].materialSample;
 				}
-				umaData.myRenderer.sharedMaterials = materials;
+				umaData.myRenderer.sharedMaterials = new List<Material>(mats).ToArray();
 			}
 		}
 
 		protected override void Stop()
 		{
 
-		}
-
-		private void OrderMaterialDefinition()
-		{
-			//Ordering List based on textureSize, for atlas calculation
-			for (int i = 0; i < orderedMaterialDefinition.Length; i++)
-			{
-				int LargestIndex = i;
-
-				for (int i2 = i; i2 < orderedMaterialDefinition.Length; i2++)
-				{
-
-					if (orderedMaterialDefinition[LargestIndex].baseTexture[0].width * orderedMaterialDefinition[LargestIndex].baseTexture[0].height < orderedMaterialDefinition[i2].baseTexture[0].width * orderedMaterialDefinition[i2].baseTexture[0].height)
-					{
-						LargestIndex = i2;
-					}
-
-					if (i2 == orderedMaterialDefinition.Length - 1)
-					{
-						UMAData.MaterialDefinition tempMaterialDefinition = orderedMaterialDefinition[i];
-						orderedMaterialDefinition[i] = orderedMaterialDefinition[LargestIndex];
-						orderedMaterialDefinition[LargestIndex] = tempMaterialDefinition;
-					}
-				}
-			}
 		}
 
 		private void CleanBackUpTextures()
@@ -189,50 +177,38 @@ namespace UMA
 
 		private void GenerateAtlasData()
 		{
-			for (int i = 0; i < orderedMaterialDefinition.Length; i++)
+			for (int i = 0; i < materialDefinitionList.Count; i++)
 			{
-				atlasMaterialDefinitionList = new List<UMAData.AtlasMaterialDefinition>();
-				UMAData.AtlasElement atlasElement = new UMAData.AtlasElement();
-				UMAData.AtlasMaterialDefinition tempAtlasMaterialDefinition = new UMAData.AtlasMaterialDefinition();
-
-				//This guarantee not including on atlas duplicated textures
-				if (orderedMaterialDefinition[i] != null)
+				var materialDefinition = materialDefinitionList[i];
+				if( materialDefinition != null )
 				{
-					tempAtlasMaterialDefinition.source = orderedMaterialDefinition[i];
+					atlasMaterialDefinitionList = new List<UMAData.AtlasMaterialDefinition>();
+					var atlasElement = new UMAData.AtlasElement();
+					atlasElement.materialSample = materialDefinition.materialSample;
+					var tempAtlasMaterialDefinition = new UMAData.AtlasMaterialDefinition();
+					tempAtlasMaterialDefinition.source = materialDefinition;
 					atlasMaterialDefinitionList.Add(tempAtlasMaterialDefinition);
+					//All slots sharing same material are on same atlasElement
+					atlasElement.atlasMaterialDefinitions = atlasMaterialDefinitionList;
 
-					for (int i2 = i; i2 < orderedMaterialDefinition.Length; i2++)
+					umaData.atlasList.atlas.Add(atlasElement);
+
+					for (int i2 = i+1; i2 < materialDefinitionList.Count; i2++)
 					{
-						//Look for same shader
-
-						if (orderedMaterialDefinition[i2] != null)
+						//Look for same material
+						var materialDefinition2 = materialDefinitionList[i2];
+						if (materialDefinition2 != null)
 						{
-							if (i2 != i)
+							if (materialDefinition.materialSample == materialDefinition2.materialSample)
 							{
 								tempAtlasMaterialDefinition = new UMAData.AtlasMaterialDefinition();
-
-								if (orderedMaterialDefinition[i].materialSample.shader == orderedMaterialDefinition[i2].materialSample.shader)
-								{
-									tempAtlasMaterialDefinition.source = orderedMaterialDefinition[i2];
-									atlasMaterialDefinitionList.Add(tempAtlasMaterialDefinition);
-									orderedMaterialDefinition[i2] = null;
-								}
+								tempAtlasMaterialDefinition.source = materialDefinition2;
+								atlasMaterialDefinitionList.Add(tempAtlasMaterialDefinition);
+								materialDefinitionList[i2] = null;
 							}
 						}
-
-						if (i2 == orderedMaterialDefinition.Length - 1 && atlasMaterialDefinitionList.Count > 0)
-						{
-							//All slots sharing same shader are on same atlasElement
-							atlasElement.atlasMaterialDefinitions = atlasMaterialDefinitionList;
-							atlasElement.shader = atlasMaterialDefinitionList[0].source.materialSample.shader;
-							atlasElement.materialSample = atlasMaterialDefinitionList[0].source.materialSample;
-
-							umaData.atlasList.atlas.Add(atlasElement);
-						}
-
 					}
-
-					orderedMaterialDefinition[i] = null;
+					materialDefinitionList[i] = null;
 				}
 			}
 		}
@@ -260,7 +236,6 @@ namespace UMA
 
 						tempMaterialDef.atlasRegion = packTexture.Insert(Mathf.FloorToInt(tempMaterialDef.source.baseTexture[0].width * umaAtlasList.atlas[atlasIndex].resolutionScale * tempMaterialDef.source.slotData.overlayScale), Mathf.FloorToInt(tempMaterialDef.source.baseTexture[0].height * umaAtlasList.atlas[atlasIndex].resolutionScale * tempMaterialDef.source.slotData.overlayScale), MaxRectsBinPack.FreeRectChoiceHeuristic.RectBestLongSideFit);
 						tempMaterialDef.isRectShared = false;
-						umaAtlasList.atlas[atlasIndex].shader = tempMaterialDef.source.materialSample.shader;
 
 						if (tempMaterialDef.atlasRegion == nullRect)
 						{

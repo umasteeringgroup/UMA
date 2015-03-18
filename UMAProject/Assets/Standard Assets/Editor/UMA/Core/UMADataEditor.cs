@@ -33,6 +33,7 @@ namespace UMAEditor
                 _errorMessage = "UMA Data not loaded.";
             } else
             {
+				DNAMasterEditor.umaGenerator = _umaData.umaGenerator;
                 dnaEditor = new DNAMasterEditor(_recipe);
                 slotEditor = new SlotMasterEditor(_recipe);
 

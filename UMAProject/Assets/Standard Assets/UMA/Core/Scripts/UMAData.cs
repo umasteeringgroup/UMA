@@ -139,7 +139,6 @@ namespace UMA
 		{
 			public List<AtlasMaterialDefinition> atlasMaterialDefinitions;
 			public Material materialSample;
-			public Shader shader;
 			public Texture[] resultingAtlasList;
 			public Vector2 cropResolution;
 			public float resolutionScale;
@@ -153,9 +152,11 @@ namespace UMA
 			public Rect atlasRegion;
 			public bool isRectShared;
 		}
-		
+
+		[System.Serializable]
 		public class MaterialDefinition
 		{
+			public int size;
 			public Texture[] baseTexture;
 			public Color32 baseColor;
 	        public Material materialSample;

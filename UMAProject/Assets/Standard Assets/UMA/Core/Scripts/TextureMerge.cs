@@ -9,6 +9,8 @@ namespace UMA
 	{
 		public Camera myCamera;
 		public Material material;
+		public Shader normalShader;
+		public Shader diffuseShader;
 		public int textureMergeRectCount;
 
 		public TextureMergeRect[] textureMergeRects;
@@ -68,6 +70,7 @@ namespace UMA
 		private void SetupMaterial(ref TextureMergeRect textureMergeRect, UMAData.MaterialDefinition source, int textureType)
 		{
 			textureMergeRect.tex = source.baseTexture[textureType];
+			textureMergeRect.mat.shader = (textureType == 1)? normalShader : diffuseShader;
 			textureMergeRect.mat.SetTexture("_MainTex", source.baseTexture[textureType]);
 			textureMergeRect.mat.SetTexture("_ExtraTex", source.baseTexture[0]);
 			textureMergeRect.mat.SetColor("_Color", source.GetMultiplier(0, textureType));
@@ -104,6 +107,7 @@ namespace UMA
 		private void SetupOverlay(UMAData.MaterialDefinition source, int i2, int textureType)
 		{
 			if (source.overlays[i2] == null) return;
+			if (source.overlays[i2].textureList[textureType] == null) return;
 
 			Rect overlayRect;
 
@@ -124,6 +128,7 @@ namespace UMA
 		{
 			textureMergeRect.rect = overlayRect;
 			textureMergeRect.tex = source.overlays[i2].textureList[textureType];
+			textureMergeRect.mat.shader = (textureType == 1) ? normalShader : diffuseShader;
 			textureMergeRect.mat.SetTexture("_MainTex", source.overlays[i2].textureList[textureType]);
 			textureMergeRect.mat.SetTexture("_ExtraTex", source.overlays[i2].textureList[0]);
 			textureMergeRect.mat.SetColor("_Color", source.GetMultiplier(i2 + 1, textureType));

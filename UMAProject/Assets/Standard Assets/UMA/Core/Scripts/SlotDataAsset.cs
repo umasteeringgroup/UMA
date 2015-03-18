@@ -17,6 +17,16 @@ namespace UMA
 		public Material materialSample;
 		public float overlayScale = 1.0f;
 		public Transform[] animatedBones = new Transform[0];
+
+#if THIS_WOULD_BE_COOL
+		public struct ChannelDefinition
+		{
+			public string shaderVariableName;
+			public bool isNormalMap;
+		}
+		public ChannelDefinition[] textureChannels;
+#endif
+
 		public string[] textureNameList;
 		public DnaConverterBehaviour slotDNA;
 		public UMAMeshData meshData;

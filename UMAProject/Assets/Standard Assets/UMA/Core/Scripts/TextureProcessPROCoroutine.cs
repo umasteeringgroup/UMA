@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -28,7 +28,7 @@ namespace UMA
         protected override IEnumerator workerMethod()
         {
 			var textureMerge = umaGenerator.textureMerge;
-            for (int atlasIndex = 0; atlasIndex < umaData.atlasList.atlas.Count; atlasIndex++)
+			for (int atlasIndex = umaData.atlasList.atlas.Count-1; atlasIndex >= 0; atlasIndex--)
             {
                 var atlas = umaData.atlasList.atlas[atlasIndex];
 
@@ -73,7 +73,7 @@ namespace UMA
 
 						int width = Mathf.FloorToInt(atlas.cropResolution.x);
 						int height = Mathf.FloorToInt(atlas.cropResolution.y);
-						destinationTexture = new RenderTexture(Mathf.FloorToInt(atlas.cropResolution.x * umaData.atlasResolutionScale), Mathf.FloorToInt(atlas.cropResolution.y * umaData.atlasResolutionScale), 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
+						destinationTexture = new RenderTexture(Mathf.FloorToInt(atlas.cropResolution.x * umaData.atlasResolutionScale), Mathf.FloorToInt(atlas.cropResolution.y * umaData.atlasResolutionScale), 0, textureType==1 ? RenderTextureFormat.ARGBHalf : RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
                         destinationTexture.filterMode = FilterMode.Point;
                         renderCamera = umaGenerator.textureMerge.myCamera;
                         renderCamera.targetTexture = destinationTexture;
