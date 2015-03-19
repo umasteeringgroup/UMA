@@ -4,7 +4,7 @@ using System.Collections;
 
 namespace UMA
 {
-	public class OverlayColorData
+	public class OverlayColorData : System.IEquatable<OverlayColorData>
 	{
 		public string name;
 		public Color32 color;
@@ -23,6 +23,16 @@ namespace UMA
 		{
 			return ((System.Object)obj) != null;
 		}
+
+		public bool Equals(OverlayColorData other)
+		{
+			return (this == other);
+		}
+		public override bool Equals(object other)
+		{
+			return Equals(other as OverlayColorData);
+		}
+		
 		public static bool operator == (OverlayColorData cd1, OverlayColorData cd2)
 		{
 			if (cd1)
@@ -66,7 +76,6 @@ namespace UMA
 
 			return (!(bool)cd2);
 		}
-		
 		public static bool operator != (OverlayColorData cd1, OverlayColorData cd2)
 		{
 			if (cd1)

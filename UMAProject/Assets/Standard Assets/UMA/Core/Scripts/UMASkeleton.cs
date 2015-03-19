@@ -277,6 +277,6 @@ namespace UMA
             }
         }
 
-        public static int StringToHash(string name) { return Animator.StringToHash(name); }
+        public static int StringToHash(string name) { return UMAUtils.StringToHash(name); }
     }
 }

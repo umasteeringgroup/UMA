@@ -530,7 +530,7 @@ namespace UMAEditor
         public bool OnGUI()
         {
             bool delete;
-            GUIHelper.FoldoutBar(ref _foldout, _overlayData.overlayName, out move, out delete);
+            GUIHelper.FoldoutBar(ref _foldout, _overlayData.asset.overlayName, out move, out delete);
 
             if (!_foldout)
                 return false;
