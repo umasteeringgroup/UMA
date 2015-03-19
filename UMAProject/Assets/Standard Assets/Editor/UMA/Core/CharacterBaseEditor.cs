@@ -244,21 +244,32 @@ namespace UMAEditor
     public class SlotMasterEditor
     {
         private readonly UMAData.UMARecipe _recipe;
-        private readonly List<SlotEditor> _slots = new List<SlotEditor>();
+        private readonly List<SlotEditor> _slotEditors = new List<SlotEditor>();
 
-        public SlotMasterEditor(UMAData.UMARecipe recipe)
+      public SlotMasterEditor(UMAData.UMARecipe recipe)
         {
             _recipe = recipe;
-			for (var i = 0; i < recipe.slotDataList.Length; i++ )
+			for (int i = 0; i < recipe.slotDataList.Length; i++ )
 			{
 				var slot = recipe.slotDataList[i];
 
 				if (slot == null)
 					continue;
 
-				_slots.Add(new SlotEditor(slot, i));
+				_slotEditors.Add(new SlotEditor(slot, i));
 			}
-        }
+
+			_slotEditors.Sort(SlotEditor.comparer);
+			var overlays1 = _slotEditors[0].GetOverlays();
+			var overlays2 = _slotEditors[1].GetOverlays();
+			for (int i = 0; i < _slotEditors.Count - 2; i++ )
+			{
+				if (overlays1 == overlays2)
+					_slotEditors[i].sharedOverlays = true;
+				overlays1 = overlays2;
+				overlays2 = _slotEditors[i + 2].GetOverlays();
+			}
+		}
 
         public bool OnGUI(ref bool _dnaDirty, ref bool _textureDirty, ref bool _meshDirty)
         {
@@ -290,26 +301,26 @@ namespace UMAEditor
                 _meshDirty |= true;
             }
 
-            for (int i = 0; i < _slots.Count; i++)
+            for (int i = 0; i < _slotEditors.Count; i++)
             {
-                var slot = _slots[i];
+                var editor = _slotEditors[i];
 
-                if (slot == null)
+                if (editor == null)
                 {
                     GUILayout.Label("Empty Slot");
                     continue;
                 }
 
-                changed |= slot.OnGUI(ref _dnaDirty, ref _textureDirty, ref _meshDirty);
+                changed |= editor.OnGUI(ref _dnaDirty, ref _textureDirty, ref _meshDirty);
 
-                if (slot.Delete)
+                if (editor.Delete)
                 {
                     _dnaDirty = true;
                     _textureDirty = true;
                     _meshDirty = true;
 
-                    _slots.RemoveAt(i);
-                    ArrayUtility.RemoveAt<SlotData>(ref _recipe.slotDataList, slot.idx);
+                    _slotEditors.RemoveAt(i);
+                    ArrayUtility.RemoveAt<SlotData>(ref _recipe.slotDataList, editor.idx);
                     i--;
                     changed = true;
                 }
@@ -330,20 +341,26 @@ namespace UMAEditor
         public bool Delete { get; private set; }
 
         private bool _foldout = true;
+		public bool sharedOverlays = false;
 		public int idx;
 
-		public SlotEditor(SlotData slotData, int idx)
+		public SlotEditor(SlotData slotData, int index)
         {
             _slotData = slotData;
             _overlayData = slotData.GetOverlayList();
 
-			this.idx = idx;
+			this.idx = index;
             _name = slotData.asset.slotName;
             for (int i = 0; i < _overlayData.Count; i++)
             {
                 _overlayEditors.Add(new OverlayEditor(slotData, _overlayData[i]));
             }
         }
+
+		public List<OverlayData> GetOverlays()
+		{
+			return _overlayData;
+		}
 
         public bool OnGUI(ref bool _dnaDirty, ref bool _textureDirty, ref bool _meshDirty)
         {
@@ -359,82 +376,105 @@ namespace UMAEditor
 
             GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
 
-			var added = (OverlayDataAsset)EditorGUILayout.ObjectField("Add Overlay", null, typeof(OverlayDataAsset), false);
+			if (sharedOverlays)
+			{
+				EditorGUILayout.LabelField("Shared Overlays");
+			}
+			else
+			{
+				var added = (OverlayDataAsset)EditorGUILayout.ObjectField("Add Overlay", null, typeof(OverlayDataAsset), false);
 
-            if (added != null)
-            {
-				var newOverlay = new OverlayData(added);
-				_overlayEditors.Add(new OverlayEditor(_slotData, newOverlay));
-				_overlayData.Add(newOverlay);
-                _dnaDirty = true;
-                _textureDirty = true;
-                _meshDirty = true;
-                changed = true;
-            }
+	            if (added != null)
+	            {
+					var newOverlay = new OverlayData(added);
+					_overlayEditors.Add(new OverlayEditor(_slotData, newOverlay));
+					_overlayData.Add(newOverlay);
+	                _dnaDirty = true;
+	                _textureDirty = true;
+	                _meshDirty = true;
+	                changed = true;
+	            }
 
-            for (int i = 0; i < _overlayEditors.Count; i++)
-            {
-                var overlayEditor = _overlayEditors[i];
+	            for (int i = 0; i < _overlayEditors.Count; i++)
+	            {
+	                var overlayEditor = _overlayEditors[i];
 
-                if (overlayEditor.OnGUI())
-                {
-                    _textureDirty = true;
-                    changed = true;             
-                }
+	                if (overlayEditor.OnGUI())
+	                {
+	                    _textureDirty = true;
+	                    changed = true;             
+	                }
 
-                if (overlayEditor.Delete)
-                {
-                    _overlayEditors.RemoveAt(i);
-                    _overlayData.RemoveAt(i);
-                    _textureDirty = true;
-                    changed = true;
-                    i--;
-                }
-            }
+	                if (overlayEditor.Delete)
+	                {
+	                    _overlayEditors.RemoveAt(i);
+	                    _overlayData.RemoveAt(i);
+	                    _textureDirty = true;
+	                    changed = true;
+	                    i--;
+	                }
+	            }
 
-            for (int i = 0; i < _overlayEditors.Count; i++)
-            {
-                var overlayEditor = _overlayEditors[i];
-                if (overlayEditor.move > 0 && i + 1 < _overlayEditors.Count)
-                {
-                    _overlayEditors[i] = _overlayEditors[i + 1];
-                    _overlayEditors[i + 1] = overlayEditor;
+	            for (int i = 0; i < _overlayEditors.Count; i++)
+	            {
+	                var overlayEditor = _overlayEditors[i];
+	                if (overlayEditor.move > 0 && i + 1 < _overlayEditors.Count)
+	                {
+	                    _overlayEditors[i] = _overlayEditors[i + 1];
+	                    _overlayEditors[i + 1] = overlayEditor;
 
-                    var overlayData = _overlayData[i];
-                    _overlayData[i] = _overlayData[i + 1];
-                    _overlayData[i + 1] = overlayData;
+	                    var overlayData = _overlayData[i];
+	                    _overlayData[i] = _overlayData[i + 1];
+	                    _overlayData[i + 1] = overlayData;
 
-                    overlayEditor.move = 0;
-                    _textureDirty = true;
-                    changed = true;
-                    continue;
-                }
+	                    overlayEditor.move = 0;
+	                    _textureDirty = true;
+	                    changed = true;
+	                    continue;
+	                }
 
-                if (overlayEditor.move < 0 && i > 0)
-                {
-                    _overlayEditors[i] = _overlayEditors[i - 1];
-                    _overlayEditors[i - 1] = overlayEditor;
+	                if (overlayEditor.move < 0 && i > 0)
+	                {
+	                    _overlayEditors[i] = _overlayEditors[i - 1];
+	                    _overlayEditors[i - 1] = overlayEditor;
 
-                    var overlayData = _overlayData[i];
-                    _overlayData[i] = _overlayData[i - 1];
-                    _overlayData[i - 1] = overlayData;
+	                    var overlayData = _overlayData[i];
+	                    _overlayData[i] = _overlayData[i - 1];
+	                    _overlayData[i - 1] = overlayData;
 
-                    overlayEditor.move = 0;
-                    _textureDirty = true;
-                    changed = true;
-                    continue;
-                }
-            }
-
+	                    overlayEditor.move = 0;
+	                    _textureDirty = true;
+	                    changed = true;
+	                    continue;
+	                }
+	            }
+			}
             GUIHelper.EndVerticalPadded(10);
 
             return changed;
         }
-    }
 
-    public class OverlayEditor
-    {
-        private readonly OverlayData _overlayData;
+		public static Comparer comparer = new Comparer();
+		public class Comparer : IComparer <SlotEditor>
+		{
+			public int Compare(SlotEditor x, SlotEditor y)
+			{
+				if (x._overlayData == y._overlayData)
+					return 0;
+
+				if (x._overlayData == null)
+					return 1;
+				if (y._overlayData == null)
+					return -1;
+
+				return x._overlayData.GetHashCode() - y._overlayData.GetHashCode();
+			}
+		}
+	}
+			
+	public class OverlayEditor
+	{
+		private readonly OverlayData _overlayData;
         private readonly SlotData _slotData;
         private  ColorEditor[] _colors;
         private readonly TextureEditor[] _textures;
