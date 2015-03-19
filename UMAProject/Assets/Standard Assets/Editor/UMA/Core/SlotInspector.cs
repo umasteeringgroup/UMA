@@ -163,6 +163,14 @@ namespace UMAEditor
                 serializedObject.ApplyModifiedProperties();
             }
 			
+			SerializedProperty begunCallback = serializedObject.FindProperty("CharacterBegun");
+			EditorGUI.BeginChangeCheck();
+			EditorGUILayout.PropertyField(begunCallback, true);
+			if (EditorGUI.EndChangeCheck())
+			{
+				serializedObject.ApplyModifiedProperties();
+			}
+			
 			SerializedProperty atlasCallback = serializedObject.FindProperty("SlotAtlassed");
 			EditorGUI.BeginChangeCheck();
 			EditorGUILayout.PropertyField(atlasCallback, true);

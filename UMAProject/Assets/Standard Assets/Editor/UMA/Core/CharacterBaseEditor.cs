@@ -260,14 +260,17 @@ namespace UMAEditor
 			}
 
 			_slotEditors.Sort(SlotEditor.comparer);
-			var overlays1 = _slotEditors[0].GetOverlays();
-			var overlays2 = _slotEditors[1].GetOverlays();
-			for (int i = 0; i < _slotEditors.Count - 2; i++ )
+			if (_slotEditors.Count > 1)
 			{
-				if (overlays1 == overlays2)
-					_slotEditors[i].sharedOverlays = true;
-				overlays1 = overlays2;
-				overlays2 = _slotEditors[i + 2].GetOverlays();
+				var overlays1 = _slotEditors[0].GetOverlays();
+				var overlays2 = _slotEditors[1].GetOverlays();
+				for (int i = 0; i < _slotEditors.Count - 2; i++ )
+				{
+					if (overlays1 == overlays2)
+						_slotEditors[i].sharedOverlays = true;
+					overlays1 = overlays2;
+					overlays2 = _slotEditors[i + 2].GetOverlays();
+				}
 			}
 		}
 

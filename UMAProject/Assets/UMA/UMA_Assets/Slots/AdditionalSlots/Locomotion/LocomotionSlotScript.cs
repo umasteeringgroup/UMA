@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-namespace UMA.PoseTools
+namespace UMA
 {
 	public class LocomotionSlotScript : MonoBehaviour 
 	{

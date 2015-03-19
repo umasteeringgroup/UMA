@@ -41,6 +41,7 @@ namespace UMA
 		/// Eg. BaseMeshSkin, BaseMeshOverlays, GenericPlateArmor01
 		/// </summary>
 		public string[] tags;
+		public UMADataEvent CharacterBegun;
 		public UMADataSlotMaterialRectEvent SlotAtlassed;
 		public UMADataEvent DNAApplied;
 		public UMADataEvent CharacterCompleted;

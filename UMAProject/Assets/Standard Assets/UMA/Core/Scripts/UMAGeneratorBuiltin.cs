@@ -85,8 +85,10 @@ namespace UMA
 
 				if (!umaData.Validate())
 					return true;
+				
+				umaData.FireCharacterBegunEvents();
 			}
-            
+
 			if (umaData.isTextureDirty)
 			{
 				if (activeGeneratorCoroutine == null)
