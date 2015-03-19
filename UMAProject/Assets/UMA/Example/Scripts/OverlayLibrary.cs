@@ -102,7 +102,7 @@ public class OverlayLibrary : OverlayLibraryBase
 		{
 			throw new UMAResourceNotFoundException("OverlayLibrary: Unable to find: " + name);
 		}
-		res.color = color;
+		res.colorData.color = color;
 		return res;
 	}
 
@@ -113,7 +113,7 @@ public class OverlayLibrary : OverlayLibraryBase
 		{
 			throw new UMAResourceNotFoundException("OverlayLibrary: Unable to find hash: " + nameHash);
 		}
-		res.color = color;
+		res.colorData.color = color;
 		return res;
 	}
 

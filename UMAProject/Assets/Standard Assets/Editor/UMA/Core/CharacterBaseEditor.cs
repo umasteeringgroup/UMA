@@ -34,12 +34,12 @@ namespace UMAEditor
 
             for (int i = 0; i < allDna.Length; i++)
             {
-                var entry = allDna [i];
+                var entry = allDna[i];
                 var entryType = entry.GetType();
 
-                _dnaTypes [i] = entryType;
-                _dnaTypeNames [i] = entryType.Name;
-                _dnaValues [entryType] = new DNASingleEditor(entry);
+                _dnaTypes[i] = entryType;
+                _dnaTypeNames[i] = entryType.Name;
+                _dnaValues[entryType] = new DNASingleEditor(entry);
             }
         }
 
@@ -70,9 +70,9 @@ namespace UMAEditor
 
             if (viewDna >= 0)
             {
-                Type dnaType = _dnaTypes [viewDna];
+                Type dnaType = _dnaTypes[viewDna];
 
-                if (_dnaValues [dnaType].OnGUI())
+                if (_dnaValues[dnaType].OnGUI())
                 {
                     _dnaDirty = true;
                     return true;
@@ -141,7 +141,7 @@ namespace UMAEditor
             string[] chunks = fieldName.Split(' ');
             if (chunks.Length > 1)
             {
-                groupName = chunks [0];
+                groupName = chunks[0];
                 fieldName = fieldName.Substring(groupName.Length + 1);
             }
         }
@@ -292,7 +292,7 @@ namespace UMAEditor
 
             for (int i = 0; i < _slots.Count; i++)
             {
-                var slot = _slots [i];
+                var slot = _slots[i];
 
                 if (slot == null)
                 {
@@ -341,7 +341,7 @@ namespace UMAEditor
             _name = slotData.asset.slotName;
             for (int i = 0; i < _overlayData.Count; i++)
             {
-                _overlayEditors.Add(new OverlayEditor(slotData, _overlayData [i]));
+                _overlayEditors.Add(new OverlayEditor(slotData, _overlayData[i]));
             }
         }
 
@@ -374,7 +374,7 @@ namespace UMAEditor
 
             for (int i = 0; i < _overlayEditors.Count; i++)
             {
-                var overlayEditor = _overlayEditors [i];
+                var overlayEditor = _overlayEditors[i];
 
                 if (overlayEditor.OnGUI())
                 {
@@ -394,15 +394,15 @@ namespace UMAEditor
 
             for (int i = 0; i < _overlayEditors.Count; i++)
             {
-                var overlayEditor = _overlayEditors [i];
+                var overlayEditor = _overlayEditors[i];
                 if (overlayEditor.move > 0 && i + 1 < _overlayEditors.Count)
                 {
-                    _overlayEditors [i] = _overlayEditors [i + 1];
-                    _overlayEditors [i + 1] = overlayEditor;
+                    _overlayEditors[i] = _overlayEditors[i + 1];
+                    _overlayEditors[i + 1] = overlayEditor;
 
-                    var overlayData = _overlayData [i];
-                    _overlayData [i] = _overlayData [i + 1];
-                    _overlayData [i + 1] = overlayData;
+                    var overlayData = _overlayData[i];
+                    _overlayData[i] = _overlayData[i + 1];
+                    _overlayData[i + 1] = overlayData;
 
                     overlayEditor.move = 0;
                     _textureDirty = true;
@@ -412,12 +412,12 @@ namespace UMAEditor
 
                 if (overlayEditor.move < 0 && i > 0)
                 {
-                    _overlayEditors [i] = _overlayEditors [i - 1];
-                    _overlayEditors [i - 1] = overlayEditor;
+                    _overlayEditors[i] = _overlayEditors[i - 1];
+                    _overlayEditors[i - 1] = overlayEditor;
 
-                    var overlayData = _overlayData [i];
-                    _overlayData [i] = _overlayData [i - 1];
-                    _overlayData [i - 1] = overlayData;
+                    var overlayData = _overlayData[i];
+                    _overlayData[i] = _overlayData[i - 1];
+                    _overlayData[i - 1] = overlayData;
 
                     overlayEditor.move = 0;
                     _textureDirty = true;
@@ -443,8 +443,6 @@ namespace UMAEditor
         public bool Delete { get; private set; }
 
         public int move;
-        private Color32[] oldChannelMask;
-        private Color32[] oldChannelAdditiveMask;
 
         public OverlayEditor(SlotData slotData, OverlayData overlayData)
         {
@@ -464,18 +462,18 @@ namespace UMAEditor
         {
             if (_overlayData.useAdvancedMasks)
             {
-                _colors = new ColorEditor[_overlayData.channelMask.Length * 2];
+                _colors = new ColorEditor[_overlayData.colorData.channelMask.Length * 2];
 
-                for (int i = 0; i < _overlayData.channelMask.Length; i++)
+                for (int i = 0; i < _overlayData.colorData.channelMask.Length; i++)
                 {
-                    _colors [i * 2] = new ColorEditor(
-                        _overlayData.channelMask [i],
+                    _colors[i * 2] = new ColorEditor(
+						_overlayData.colorData.channelMask[i],
                         String.Format(i == 0
                             ? "Color multiplier"
                             : "Texture {0} multiplier", i));
 
-                    _colors [i * 2 + 1] = new ColorEditor(
-                        _overlayData.channelAdditiveMask [i],
+                    _colors[i * 2 + 1] = new ColorEditor(
+						_overlayData.colorData.channelAdditiveMask[i],
                         String.Format(i == 0
                             ? "Color additive"
                             : "Texture {0} additive", i));
@@ -484,7 +482,7 @@ namespace UMAEditor
             {
                 _colors = new[] 
                 { 
-                    new ColorEditor(_overlayData.color, "Color") 
+					new ColorEditor(_overlayData.colorData.color, "Color") 
                 };
             }
         }
@@ -523,41 +521,42 @@ namespace UMAEditor
             bool changed = false;
 
             GUILayout.BeginVertical();
-
-            var useAdvancedMask = EditorGUILayout.Toggle("Use Advanced Color Masks", _overlayData.useAdvancedMasks);
-            if (_overlayData.useAdvancedMasks)
+			GUILayout.BeginHorizontal();
+			EditorGUILayout.LabelField("Use Advanced Color Masks");
+			var useAdvancedMask = EditorGUILayout.Toggle(_overlayData.useAdvancedMasks);
+			GUILayout.EndHorizontal();
+			if (_overlayData.useAdvancedMasks)
             {
                 for (int k = 0; k < _colors.Length; k++)
                 {
-                    Color32 color = EditorGUILayout.ColorField(_colors [k].description,
-                        _colors [k].color);
+                    Color32 color = EditorGUILayout.ColorField(_colors[k].description,
+                        _colors[k].color);
 
-                    if (color.r != _colors [k].color.r ||
-                        color.g != _colors [k].color.g ||
-                        color.b != _colors [k].color.b ||
-                        color.a != _colors [k].color.a)
+                    if (color.r != _colors[k].color.r ||
+                        color.g != _colors[k].color.g ||
+                        color.b != _colors[k].color.b ||
+                        color.a != _colors[k].color.a)
                     {
                         if (k % 2 == 0)
                         {
-                            _overlayData.channelMask [k / 2] = color;
+                            _overlayData.colorData.channelMask[k / 2] = color;
                         } else
                         {
-                            _overlayData.channelAdditiveMask [k / 2] = color;
+                            _overlayData.colorData.channelAdditiveMask[k / 2] = color;
                         }
                         changed = true;
                     }
                 }
             } else
             {
-                Color32 color = EditorGUILayout.ColorField(_colors [0].description,
-                        _colors [0].color);
+                Color32 color = EditorGUILayout.ColorField(_colors[0].description, _colors[0].color);
 
-                if (color.r != _colors [0].color.r ||
-                    color.g != _colors [0].color.g ||
-                    color.b != _colors [0].color.b ||
-                    color.a != _colors [0].color.a)
+                if (color.r != _colors[0].color.r ||
+                    color.g != _colors[0].color.g ||
+                    color.b != _colors[0].color.b ||
+                    color.a != _colors[0].color.a)
                 {
-                    _overlayData.color = color;
+                    _overlayData.colorData.color = color;
                     changed = true;
                 }
             }
@@ -566,24 +565,14 @@ namespace UMAEditor
             {
                 if (useAdvancedMask)
                 {
-                    if (oldChannelMask != null)
-                    {
-                        _overlayData.channelMask = oldChannelMask;
-                        _overlayData.channelAdditiveMask = oldChannelAdditiveMask;
-                    }
 					_overlayData.EnsureChannels(_slotData.GetTextureChannelCount(DNAMasterEditor.umaGenerator));
-                    if (_overlayData.channelMask.Length > 0)
+                    if (_overlayData.colorData.channelMask.Length > 0)
                     {
-                        _overlayData.channelMask [0] = _overlayData.color;
+                        _overlayData.colorData.channelMask[0] = _overlayData.colorData.color;
                     }
                 } else
                 {
-                    _overlayData.color = _overlayData.channelMask [0];
-                    oldChannelMask = _overlayData.channelMask;
-                    oldChannelAdditiveMask = _overlayData.channelAdditiveMask;
-                    _overlayData.color = oldChannelMask [0];
-                    _overlayData.channelMask = null;
-                    _overlayData.channelAdditiveMask = null;
+					_overlayData.RemoveChannels();
                 }
                 BuildColorEditors();             
             }

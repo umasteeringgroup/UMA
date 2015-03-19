@@ -7,9 +7,9 @@ namespace UMA
 {
 	[System.Serializable]
 #if !UMA2_LEAN_AND_CLEAN 
-	public partial class SlotData
+	public partial class SlotData : System.IEquatable<SlotData>
 #else
-	public class SlotData
+	public class SlotData : System.IEquatable<SlotData>
 #endif
 	{
 		public SlotDataAsset asset;
@@ -98,7 +98,7 @@ namespace UMA
 				{
 					if (overlay.asset.overlayName == name)
 					{
-						overlay.color = color;
+						overlay.colorData.color = color;
 						changed = true;
 					}
 				}
@@ -150,7 +150,8 @@ namespace UMA
         
 		public void AddOverlay(OverlayData overlayData)
 		{
-			overlayList.Add(overlayData);
+			if (overlayData)
+				overlayList.Add(overlayData);
 		}
         
 		public List<OverlayData> GetOverlayList()
@@ -202,13 +203,23 @@ namespace UMA
 		{
 			return ((System.Object)obj) != null && obj.asset != null;
 		}
+
+		public bool Equals(SlotData other)
+		{
+			return (this == other);
+		}
+		public override bool Equals(object other)
+		{
+			return Equals(other as SlotData);
+		}
+
 		public static bool operator ==(SlotData slot, SlotData obj)
 		{
 			if (slot)
 			{
 				if (obj)
 				{
-					return slot.Equals(obj);
+					return System.Object.ReferenceEquals(slot, obj);
 				}
 				return false;
 			}
@@ -220,7 +231,7 @@ namespace UMA
 			{
 				if (obj)
 				{
-					return !slot.Equals(obj);
+					return !System.Object.ReferenceEquals(slot, obj);
 				}
 				return true;
 			}

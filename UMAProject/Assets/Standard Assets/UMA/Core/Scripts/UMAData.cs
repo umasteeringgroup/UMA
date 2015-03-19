@@ -206,12 +206,14 @@ namespace UMA
 		}
 
 		[System.Serializable]
-		public class UMARecipe{
+		public class UMARecipe
+		{
 			public RaceData raceData;
 			protected Dictionary<Type, UMADnaBase> umaDna = new Dictionary<Type, UMADnaBase>();
             protected Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate> umaDnaConverter = new Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate>();
 			public SlotData[] slotDataList;
 			public int AdditionalSlots;
+			public OverlayColorData[] sharedColors;
 			
 			public bool Validate(UMAGeneratorBase generator) 
             {
@@ -355,6 +357,58 @@ namespace UMA
 			public int GetSlotArraySize()
 			{
 				return slotDataList.Length;
+			}
+
+			public static bool OverlayListsMatch(List<OverlayData> list1, List<OverlayData> list2)
+			{
+				if ((list1 == null) || (list2 == null))
+					return false;
+				if ((list1.Count == 0) || (list1.Count != list2.Count))
+					return false;
+
+				for (int i = 0; i < list1.Count; i++)
+				{
+					OverlayData overlay1 = list1[i];
+					if (!(overlay1))
+						continue;
+					bool found = false;
+					for (int j = 0; j < list2.Count; j++)
+					{
+						OverlayData overlay2 = list2[i];
+						if (!(overlay2))
+							continue;
+
+						if (OverlayData.Equivalent(overlay1, overlay2))
+						{
+							found = true;
+							break;
+						}
+					}
+					if (!found)
+						return false;
+				}
+
+				return true;
+			}
+
+			public void MergeMatchingOverlays()
+			{
+				for (int i = 0; i < slotDataList.Length; i++)
+				{
+					if (slotDataList[i] == null)
+						continue;
+					List<OverlayData> slotOverlays = slotDataList[i].GetOverlayList();
+					for(int j = i + 1; j < slotDataList.Length; j++)
+					{
+						if (slotDataList[j] == null)
+							continue;
+						List<OverlayData> slot2Overlays = slotDataList[j].GetOverlayList();;
+						if (OverlayListsMatch(slotOverlays, slot2Overlays))
+						{
+							slotDataList[j].SetOverlayList(slotOverlays);
+						}
+					}
+				}
 			}
 			
 #pragma warning disable 618

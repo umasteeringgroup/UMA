@@ -10,7 +10,7 @@ namespace UMA.Assets
 			var overlay = slotData.GetOverlay(0);
 			if (overlay != null)
 			{
-				material.color = overlay.color;
+				material.color = overlay.colorData.color;
 			}
 		}
 	}

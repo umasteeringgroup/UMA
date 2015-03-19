@@ -53,7 +53,7 @@ namespace UMA
 					tempMaterialDefinition = new UMAData.MaterialDefinition();
 					tempMaterialDefinition.baseTexture = slots[i].GetOverlay(0).asset.textureList;
 					tempMaterialDefinition.size = tempMaterialDefinition.baseTexture[0].width * tempMaterialDefinition.baseTexture[0].height;
-					tempMaterialDefinition.baseColor = slots[i].GetOverlay(0).color;
+					tempMaterialDefinition.baseColor = slots[i].GetOverlay(0).colorData.color;
 					tempMaterialDefinition.materialSample = slots[i].asset.materialSample;
 					int overlays = 0;
 					for (int overlayCounter = 0; overlayCounter < slots[i].OverlayCount; overlayCounter++)
@@ -74,8 +74,8 @@ namespace UMA
 					tempMaterialDefinition.rects = new Rect[tempMaterialDefinition.overlays.Length];
 					tempMaterialDefinition.channelMask = new Color32[tempMaterialDefinition.overlays.Length + 1][];
 					tempMaterialDefinition.channelAdditiveMask = new Color32[tempMaterialDefinition.overlays.Length + 1][];
-					tempMaterialDefinition.channelMask[0] = slots[i].GetOverlay(0).channelMask;
-					tempMaterialDefinition.channelAdditiveMask[0] = slots[i].GetOverlay(0).channelAdditiveMask;
+					tempMaterialDefinition.channelMask[0] = slots[i].GetOverlay(0).colorData.channelMask;
+					tempMaterialDefinition.channelAdditiveMask[0] = slots[i].GetOverlay(0).colorData.channelAdditiveMask;
 					tempMaterialDefinition.slotData = slots[i];
 
 					int overlayID = 0;
@@ -94,9 +94,9 @@ namespace UMA
 							tempMaterialDefinition.overlays[overlayID].textureList = new Texture[requiredTextures];
 							System.Array.Copy(overlay.asset.textureList, tempMaterialDefinition.overlays[overlayID].textureList, overlay.asset.textureList.Length);
 						}
-						tempMaterialDefinition.overlayColors[overlayID] = overlay.color;
-						tempMaterialDefinition.channelMask[overlayID + 1] = overlay.channelMask;
-						tempMaterialDefinition.channelAdditiveMask[overlayID + 1] = overlay.channelAdditiveMask;
+						tempMaterialDefinition.overlayColors[overlayID] = overlay.colorData.color;
+						tempMaterialDefinition.channelMask[overlayID + 1] = overlay.colorData.channelMask;
+						tempMaterialDefinition.channelAdditiveMask[overlayID + 1] = overlay.colorData.channelAdditiveMask;
 						overlayID++;
 					}
 
