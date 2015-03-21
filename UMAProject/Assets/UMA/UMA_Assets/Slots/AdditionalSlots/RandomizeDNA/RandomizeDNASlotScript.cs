@@ -7,8 +7,7 @@ namespace UMA
 	{
 		public void OnCharacterBegun(UMAData umaData)
 		{
-			var markerDNA = umaData.GetDna<RandomizeMarkerDNA>();
-			if (markerDNA == null)
+			if (umaData.firstBake)
 			{
 				UMADnaBase[] allDNA = umaData.GetAllDna();
 				for (int i = 0; i < allDNA.Length; i++)
@@ -20,36 +19,8 @@ namespace UMA
 					}
 				}
 
-				umaData.umaRecipe.AddDna(new RandomizeMarkerDNA());
 				umaData.Dirty(true, false, false);
 			}
 		}
 	}
-
-	public class RandomizeMarkerDNA : UMADnaBase
-	{
-		private float randomizedDNA = 1f;
-		public override float GetValue(int idx)
-		{
-			return randomizedDNA;
-		}
-		public override void SetValue(int idx, float value)
-		{
-			randomizedDNA = value;
-		}
-		public override int Count
-		{
-			get {return 1;}
-		}
-		public override float[] Values
-		{
-			get {return new float[] {randomizedDNA};}
-			set {randomizedDNA = value[0];}
-		}
-		public override string[] Names
-		{
-			get {return new string[] {"RandomizedDNA"};}
-		}
-	}
-	
 }

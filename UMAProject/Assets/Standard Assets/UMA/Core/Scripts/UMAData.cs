@@ -212,7 +212,7 @@ namespace UMA
 			protected Dictionary<Type, UMADnaBase> umaDna = new Dictionary<Type, UMADnaBase>();
             protected Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate> umaDnaConverter = new Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate>();
 			public SlotData[] slotDataList;
-			public int AdditionalSlots;
+			public int additionalSlotCount;
 			public OverlayColorData[] sharedColors;
 			
 			public bool Validate(UMAGeneratorBase generator) 
@@ -431,14 +431,17 @@ namespace UMA
 
 			public void EnsureAllDNAPresent()
             {
-                foreach (var converter in raceData.dnaConverterList)
-                {
-                    var dnaType = converter.DNAType;
-                    if (!umaDna.ContainsKey(dnaType))
-                    {
-                        umaDna.Add(dnaType, dnaType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase);
-                    }
-                }
+				if (raceData != null)
+				{
+	                foreach (var converter in raceData.dnaConverterList)
+	                {
+	                    var dnaType = converter.DNAType;
+	                    if (!umaDna.ContainsKey(dnaType))
+	                    {
+	                        umaDna.Add(dnaType, dnaType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase);
+	                    }
+	                }
+				}
                 foreach (var slotData in slotDataList)
                 {
 					if (slotData != null && slotData.asset.slotDNA != null)
@@ -456,9 +459,12 @@ namespace UMA
 			public void ClearDNAConverters()
 			{
 				umaDnaConverter.Clear();
-				foreach (var converter in raceData.dnaConverterList)
+				if (raceData != null)
 				{
-					umaDnaConverter.Add(converter.DNAType, converter.ApplyDnaAction);
+					foreach (var converter in raceData.dnaConverterList)
+					{
+						umaDnaConverter.Add(converter.DNAType, converter.ApplyDnaAction);
+					}
 				}
 			}
 			
@@ -485,21 +491,29 @@ namespace UMA
 				return newRecipe;
 			}
 
-			public void Merge(UMARecipe additionalRecipe)
+			public void Merge(UMARecipe additionalRecipe, bool serializeRecipes)
 			{
+				if ((additionalRecipe.raceData != null) && (additionalRecipe.raceData != raceData))
+				{
+					Debug.LogWarning("Merging recipe with conflicting race data: " + additionalRecipe.raceData.name);
+				}
+
 				foreach (var dnaEntry in additionalRecipe.umaDna)
 				{
 					var destDNA = GetOrCreateDna(dnaEntry.Key);
 					destDNA.Values = dnaEntry.Value.Values;
 				}
 
-				int SlotCount = additionalRecipe.slotDataList == null ? 0 : additionalRecipe.slotDataList.Length;
-				if (SlotCount > 0)
+				int slotCount = additionalRecipe.slotDataList == null ? 0 : additionalRecipe.slotDataList.Length;
+				if (slotCount > 0)
 				{
-					AdditionalSlots += SlotCount;
-					var newSlots = new SlotData[slotDataList.Length + SlotCount];
+					if (slotDataList == null)
+						slotDataList = new SlotData[0];
+					if (!serializeRecipes)
+						additionalSlotCount += slotCount;
+					var newSlots = new SlotData[slotDataList.Length + slotCount];
 					Array.Copy(slotDataList, newSlots, slotDataList.Length);
-					Array.Copy(additionalRecipe.slotDataList, 0, newSlots, slotDataList.Length, SlotCount);
+					Array.Copy(additionalRecipe.slotDataList, 0, newSlots, slotDataList.Length, slotCount);
 					slotDataList = newSlots;
 				}
 			}
@@ -817,7 +831,7 @@ namespace UMA
 
         public void GotoTPose()
         {
-            if (umaRecipe.raceData.TPose != null)
+			if ((umaRecipe.raceData != null) && (umaRecipe.raceData.TPose != null))
             {
                 var tpose = umaRecipe.raceData.TPose;
                 tpose.DeSerialize();
@@ -899,7 +913,7 @@ namespace UMA
 				foreach (var umaAdditionalRecipe in umaAdditionalRecipes)
 				{
 					umaAdditionalRecipe.Load(additionalRecipe, context);
-					umaRecipe.Merge(additionalRecipe);
+					umaRecipe.Merge(additionalRecipe, false);
 				}
 			}
 		}
