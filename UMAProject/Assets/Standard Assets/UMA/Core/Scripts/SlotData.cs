@@ -159,36 +159,64 @@ namespace UMA
 			return overlayList;
 		}
         
-		internal bool Validate(UMAGeneratorBase generator)
+		internal bool Validate()
 		{
 			bool valid = true;
 			if (asset.meshData != null)
 			{
-				string[] activeList;
-				if (asset.textureNameList == null || asset.textureNameList.Length == 0)
+				if (asset.material == null)
 				{
-					activeList = generator.textureNameList;
-				} else
-				{
-					activeList = asset.textureNameList;
+					Debug.LogError(string.Format("Slot '{0}' has a mesh but no material.", asset.slotName), asset);
+					valid = false;
 				}
-				int count = activeList.Length;
-				while (count > 0 && string.IsNullOrEmpty(activeList[count - 1]))
+				else
 				{
-					count--;
+					if (asset.material.material == null)
+					{
+						Debug.LogError(string.Format("Slot '{0}' has an umaMaterial without a material assigned.", asset.slotName), asset);
+						valid = false;
+					}
+					else
+					{
+						for (int i = 0; i < asset.material.channels.Length; i++)
+						{
+							var channel = asset.material.channels[i];
+							if (!asset.material.material.HasProperty(channel.materialPropertyName))
+							{
+								Debug.LogError(string.Format("Slot '{0}' Material Channel {1} refers to material property '{2}' but no such property exists.", asset.slotName, i, channel.materialPropertyName), asset);
+								valid = false;
+							}
+						}
+					}
 				}
 				for (int i = 0; i < overlayList.Count; i++)
 				{
-                    var overlayData = overlayList[i];
+					var overlayData = overlayList[i];
 					if (overlayData != null)
 					{
-						if (overlayData.asset.textureList.Length != count && count != 0)
+						if (overlayData.asset.material != asset.material)
 						{
-							Debug.LogError(string.Format("Overlay '{0}' only have {1} textures, but it is added to SlotData '{2}' which requires {3} textures.", overlayData.asset.overlayName, overlayData.asset.textureList.Length, asset.slotName, count));
+							Debug.LogError(string.Format("Slot '{0}' and Overlay '{1}' doesn't have the same uma material", asset.slotName, overlayData.asset.overlayName));
 							valid = false;
 						}
 					}
 				}
+			}
+			else
+			{
+				if (asset.material != null)
+				{
+					for (int i = 0; i < asset.material.channels.Length; i++)
+					{
+						var channel = asset.material.channels[i];
+						if (!asset.material.material.HasProperty(channel.materialPropertyName))
+						{
+							Debug.LogError(string.Format("Slot '{0}' Material Channel {1} refers to material property '{2}' but no such property exists.", asset.slotName, i, channel.materialPropertyName), asset);
+							valid = false;
+						}
+					}
+				}
+
 			}
 			return valid;
 		}

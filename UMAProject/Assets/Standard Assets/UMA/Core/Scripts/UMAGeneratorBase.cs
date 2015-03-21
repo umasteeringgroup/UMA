@@ -9,13 +9,14 @@ namespace UMA
 	public abstract class UMAGeneratorBase : MonoBehaviour
 	{
 		public bool fitAtlas;
-		public bool AtlasCrop;
 		[NonSerialized]
 		public TextureMerge textureMerge;
 		public bool convertRenderTexture;
 		public bool convertMipMaps;
 		public int atlasResolution;
+#if !UMA2_LEAN_AND_CLEAN 
 		public string[] textureNameList;
+#endif
 		public abstract void addDirtyUMA(UMAData umaToAdd);
 		public abstract bool IsIdle();
 

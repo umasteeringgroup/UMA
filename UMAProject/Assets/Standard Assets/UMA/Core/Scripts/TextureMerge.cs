@@ -67,7 +67,7 @@ namespace UMA
 			}
 		}
 
-		private void SetupMaterial(ref TextureMergeRect textureMergeRect, UMAData.MaterialDefinition source, int textureType)
+		private void SetupMaterial(ref TextureMergeRect textureMergeRect, UMAData.MaterialFragment source, int textureType)
 		{
 			textureMergeRect.tex = source.baseTexture[textureType];
 			textureMergeRect.mat.shader = (textureType == 1)? normalShader : diffuseShader;
@@ -77,34 +77,34 @@ namespace UMA
 			textureMergeRect.mat.SetColor("_AdditiveColor", source.GetAdditive(0, textureType));
 		}
 
-		public void SetupModule(UMAData.AtlasMaterialDefinition atlasElement, int textureType)
+		public void SetupModule(UMAData.MaterialFragment source, int textureType)
 		{
-			textureMergeRects[textureMergeRectCount].rect = atlasElement.atlasRegion;
+			textureMergeRects[textureMergeRectCount].rect = source.atlasRegion;
 			textureMergeRects[textureMergeRectCount].rect.y = height - textureMergeRects[textureMergeRectCount].rect.y - textureMergeRects[textureMergeRectCount].rect.height;
 			atlasRect = textureMergeRects[textureMergeRectCount].rect;
-			SetupMaterial(ref textureMergeRects[textureMergeRectCount], atlasElement.source, textureType);
+			SetupMaterial(ref textureMergeRects[textureMergeRectCount], source, textureType);
 			textureMergeRectCount++;
 		}
 
 		Rect atlasRect;
 		float resolutionScale;
 		int height;
-		public void SetupModule(UMAData.AtlasElement atlas, int idx, int textureType)
+		public void SetupModule(UMAData.GeneratedMaterial atlas, int idx, int textureType)
 		{
-            var atlasElement = atlas.atlasMaterialDefinitions[idx];
+            var atlasElement = atlas.materialFragments[idx];
             if (atlasElement.isRectShared) return;
 
 			height = Mathf.FloorToInt(atlas.cropResolution.y);
 			SetupModule(atlasElement, textureType);
-			resolutionScale = atlas.resolutionScale * atlasElement.source.slotData.overlayScale;
+			resolutionScale = atlas.resolutionScale * atlasElement.slotData.overlayScale;
 
-			for (int i2 = 0; i2 < atlasElement.source.overlays.Length; i2++)
+			for (int i2 = 0; i2 < atlasElement.overlays.Length; i2++)
 			{
-				SetupOverlay(atlasElement.source, i2, textureType);
+				SetupOverlay(atlasElement, i2, textureType);
 			}
 		}
 
-		private void SetupOverlay(UMAData.MaterialDefinition source, int i2, int textureType)
+		private void SetupOverlay(UMAData.MaterialFragment source, int i2, int textureType)
 		{
 			if (source.overlays[i2] == null) return;
 			if (source.overlays[i2].textureList[textureType] == null) return;
@@ -124,11 +124,11 @@ namespace UMA
 			textureMergeRectCount++;
 		}
 
-		private void SetupMaterial(ref TextureMergeRect textureMergeRect, UMAData.MaterialDefinition source, int i2, ref Rect overlayRect, int textureType)
+		private void SetupMaterial(ref TextureMergeRect textureMergeRect, UMAData.MaterialFragment source, int i2, ref Rect overlayRect, int textureType)
 		{
 			textureMergeRect.rect = overlayRect;
 			textureMergeRect.tex = source.overlays[i2].textureList[textureType];
-			textureMergeRect.mat.shader = (textureType == 1) ? normalShader : diffuseShader;
+			textureMergeRect.mat.shader = (source.slotData.asset.material.channels[textureType].channelType == UMAMaterial.ChannelType.NormalMap) ? normalShader : diffuseShader;
 			textureMergeRect.mat.SetTexture("_MainTex", source.overlays[i2].textureList[textureType]);
 			textureMergeRect.mat.SetTexture("_ExtraTex", source.overlays[i2].textureList[0]);
 			textureMergeRect.mat.SetColor("_Color", source.GetMultiplier(i2 + 1, textureType));

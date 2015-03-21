@@ -18,7 +18,14 @@ namespace UMAEditor
 		{
 #if UNITY_WEBPLAYER 
 			Debug.LogError("MenuItem - UMA/Find Missing References does not work when the build target is set to Webplayer, we need the full mono framework available.");
+ #if UMA2_LEAN_AND_CLEAN 
+			Debug.LogError("MenuItem - UMA/Find Missing References does not work with the define UMA2_LEAN_AND_CLEAN, we need all legacy fields available.");
+ #endif
 #else
+ #if UMA2_LEAN_AND_CLEAN 
+			Debug.LogError("MenuItem - UMA/Find Missing References does not work with the define UMA2_LEAN_AND_CLEAN, we need all legacy fields available.");
+ #else
+
 			List<UnityReference> references = new List<UnityReference>();
 			var slotFilePaths = new List<string>();
 
@@ -48,6 +55,7 @@ namespace UMAEditor
 				}
 #pragma warning restore 618
 			}
+ #endif
 #endif
 		}
 

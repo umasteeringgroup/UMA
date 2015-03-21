@@ -1,4 +1,4 @@
-﻿// We can dramatically reduce garbage by using shared buffers
+// We can dramatically reduce garbage by using shared buffers
 // on desktop platforms and dynamically adjusting the
 // size which the arrays appear to be to C# code
 // See: http://feedback.unity3d.com/suggestions/allow-mesh-data-to-have-a-length
@@ -418,5 +418,50 @@ namespace UMA
 #endif
 		static Color32[] gColors32 = new Color32[MAX_VERTEX_COUNT];
 #endif
+
+
+		#region operator ==, != and similar HACKS, seriously.....
+		public static implicit operator bool(UMAMeshData obj)
+		{
+			return ((System.Object)obj) != null && obj.vertexCount != 0;
+		}
+
+		public bool Equals(UMAMeshData other)
+		{
+			return (this == other);
+		}
+		public override bool Equals(object other)
+		{
+			return Equals(other as UMAMeshData);
+		}
+
+		public static bool operator ==(UMAMeshData overlay, UMAMeshData obj)
+		{
+			if (overlay)
+			{
+				if (obj)
+				{
+					return System.Object.ReferenceEquals(overlay, obj);
+				}
+				return false;
+			}
+			return !((bool)obj);
+		}
+
+		public static bool operator !=(UMAMeshData overlay, UMAMeshData obj)
+		{
+			if (overlay)
+			{
+				if (obj)
+				{
+					return !System.Object.ReferenceEquals(overlay, obj);
+				}
+				return true;
+			}
+			return ((bool)obj);
+		}
+		#endregion
+
+
 	}
 }
