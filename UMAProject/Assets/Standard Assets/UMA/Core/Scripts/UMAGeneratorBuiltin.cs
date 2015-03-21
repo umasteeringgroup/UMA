@@ -149,7 +149,7 @@ namespace UMA
 		{
 			if (meshCombiner != null)
 			{
-				meshCombiner.UpdateUMAMesh(updatedAtlas, umaData, textureNameList, atlasResolution);
+				meshCombiner.UpdateUMAMesh(updatedAtlas, umaData, atlasResolution);
 			} else
 			{
 				Debug.LogError("UMAGenerator.UpdateUMAMesh, no MeshCombiner specified", gameObject);

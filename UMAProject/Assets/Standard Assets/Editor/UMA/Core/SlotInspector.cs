@@ -7,7 +7,7 @@ using UMA;
 
 namespace UMAEditor
 {
-    [CustomEditor(typeof(SlotData))]
+	[CustomEditor(typeof(SlotDataAsset))]
     public class SlotInspector : Editor
     {
         [MenuItem("Assets/Create/UMA Slot")]
@@ -54,10 +54,13 @@ namespace UMAEditor
 				{
 					umaBoneData = new Transform[0];
 				}
-			} else  if (slot.meshRenderer != null)
+			} 
+#if !UMA2_LEAN_AND_CLEAN
+			else  if (slot.meshRenderer != null)
 			{
 				umaBoneData = GetTransformsInPrefab(slot.meshRenderer.rootBone);
 			}
+#endif
 			else
 			{
 				umaBoneData = new Transform[0];
@@ -75,11 +78,6 @@ namespace UMAEditor
             EditorGUILayout.Space();
 
             slot.subMeshIndex = EditorGUILayout.IntField("Sub Mesh Index", slot.subMeshIndex);
-            Material material = EditorGUILayout.ObjectField("Material", slot.materialSample, typeof(Material), false) as Material;
-            if (material != slot.materialSample)
-            {
-                slot.materialSample = material;
-            }
 			if (GUI.changed)
 			{
 				EditorUtility.SetDirty(slot);
@@ -152,8 +150,6 @@ namespace UMAEditor
             {
                 serializedObject.ApplyModifiedProperties();
             }
-
-
 
             SerializedProperty tags = serializedObject.FindProperty("tags");
             EditorGUI.BeginChangeCheck();

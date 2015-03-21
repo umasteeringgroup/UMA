@@ -17,7 +17,7 @@ namespace UMA
         public UMAGeneratorBase umaGenerator;
 
         [NonSerialized]
-        public AtlasList atlasList = new AtlasList();
+        public GeneratedMaterials generatedMaterials = new GeneratedMaterials();
 		
 		public float atlasResolutionScale = 1f;
 		
@@ -117,7 +117,7 @@ namespace UMA
 				valid = false;
 			}
 			else {
-				valid = valid && umaRecipe.Validate(umaGenerator);
+				valid = valid && umaRecipe.Validate();
 			}
 			
 			#if UNITY_EDITOR
@@ -128,17 +128,18 @@ namespace UMA
 		}
 		
 		[System.Serializable]
-		public class AtlasList
+		public class GeneratedMaterials
 		{
-			public List<AtlasElement> atlas = new List<AtlasElement>();
+			public List<GeneratedMaterial> materials = new List<GeneratedMaterial>();
 		}
 		
 		
 		[System.Serializable]
-		public class AtlasElement
+		public class GeneratedMaterial
 		{
-			public List<AtlasMaterialDefinition> atlasMaterialDefinitions;
-			public Material materialSample;
+			public UMAMaterial umaMaterial;
+			public Material material;
+			public List<MaterialFragment> materialFragments = new List<MaterialFragment>();
 			public Texture[] resultingAtlasList;
 			public Vector2 cropResolution;
 			public float resolutionScale;
@@ -146,26 +147,23 @@ namespace UMA
 		}
 		
 		[System.Serializable]
-		public class AtlasMaterialDefinition
-		{
-			public MaterialDefinition source;
-			public Rect atlasRegion;
-			public bool isRectShared;
-		}
-
-		[System.Serializable]
-		public class MaterialDefinition
+		public class MaterialFragment
 		{
 			public int size;
 			public Texture[] baseTexture;
 			public Color32 baseColor;
-	        public Material materialSample;
+			public UMAMaterial umaMaterial;
 			public Rect[] rects;
 			public textureData[] overlays;
 			public Color32[] overlayColors;
 	        public Color32[][] channelMask;
 	        public Color32[][] channelAdditiveMask;
 			public SlotData slotData;
+			public OverlayData[] overlayData;
+			public Rect atlasRegion;
+			public bool isRectShared;
+			public List<OverlayData> overlayList;
+			public MaterialFragment rectFragment;
 
 	        public Color32 GetMultiplier(int overlay, int textureType)
 	        {
@@ -215,7 +213,7 @@ namespace UMA
 			public int additionalSlotCount;
 			public OverlayColorData[] sharedColors;
 			
-			public bool Validate(UMAGeneratorBase generator) 
+			public bool Validate() 
             {
 				bool valid = true;
 				if (raceData == null) {
@@ -223,7 +221,7 @@ namespace UMA
 					valid = false;
 				}
 				else {
-                    valid = valid && raceData.Validate(generator);
+                    valid = valid && raceData.Validate();
 				}
 
                 if (slotDataList == null || slotDataList.Length == 0)
@@ -238,7 +236,7 @@ namespace UMA
                     if (slotData != null)
                     {
                         slotDataCount++;
-                        valid = valid && slotData.Validate(generator);
+                        valid = valid && slotData.Validate();
                     }
                 }
                 if (slotDataCount < 1)
@@ -597,12 +595,12 @@ namespace UMA
 		}
 
 		public void cleanTextures(){
-			for(int atlasIndex = 0; atlasIndex < atlasList.atlas.Count; atlasIndex++){
-				if(atlasList.atlas[atlasIndex] != null && atlasList.atlas[atlasIndex].resultingAtlasList != null){
-					for(int textureIndex = 0; textureIndex < atlasList.atlas[atlasIndex].resultingAtlasList.Length; textureIndex++){
+			for(int atlasIndex = 0; atlasIndex < generatedMaterials.materials.Count; atlasIndex++){
+				if(generatedMaterials.materials[atlasIndex] != null && generatedMaterials.materials[atlasIndex].resultingAtlasList != null){
+					for(int textureIndex = 0; textureIndex < generatedMaterials.materials[atlasIndex].resultingAtlasList.Length; textureIndex++){
 						
-						if(atlasList.atlas[atlasIndex].resultingAtlasList[textureIndex] != null){
-							Texture tempTexture = atlasList.atlas[atlasIndex].resultingAtlasList[textureIndex];
+						if(generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex] != null){
+							Texture tempTexture = generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex];
 							if(tempTexture is RenderTexture){
 								RenderTexture tempRenderTexture = tempTexture as RenderTexture;
 								tempRenderTexture.Release();
@@ -611,7 +609,7 @@ namespace UMA
 							}else{
 								Destroy(tempTexture);
 							}
-							atlasList.atlas[atlasIndex].resultingAtlasList[textureIndex] = null;
+							generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex] = null;
 						}				
 					}
 				}
@@ -642,14 +640,14 @@ namespace UMA
 		public Texture[] backUpTextures(){
 			List<Texture> textureList = new List<Texture>();
 			
-			for(int atlasIndex = 0; atlasIndex < atlasList.atlas.Count; atlasIndex++){
-				if(atlasList.atlas[atlasIndex] != null && atlasList.atlas[atlasIndex].resultingAtlasList != null){
-					for(int textureIndex = 0; textureIndex < atlasList.atlas[atlasIndex].resultingAtlasList.Length; textureIndex++){
+			for(int atlasIndex = 0; atlasIndex < generatedMaterials.materials.Count; atlasIndex++){
+				if(generatedMaterials.materials[atlasIndex] != null && generatedMaterials.materials[atlasIndex].resultingAtlasList != null){
+					for(int textureIndex = 0; textureIndex < generatedMaterials.materials[atlasIndex].resultingAtlasList.Length; textureIndex++){
 						
-						if(atlasList.atlas[atlasIndex].resultingAtlasList[textureIndex] != null){
-							Texture tempTexture = atlasList.atlas[atlasIndex].resultingAtlasList[textureIndex];
+						if(generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex] != null){
+							Texture tempTexture = generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex];
 							textureList.Add(tempTexture);
-							atlasList.atlas[atlasIndex].resultingAtlasList[textureIndex] = null;
+							generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex] = null;
 						}				
 					}
 				}
@@ -660,15 +658,15 @@ namespace UMA
 
 		public RenderTexture GetFirstRenderTexture()
 		{
-			for (int atlasIndex = 0; atlasIndex < atlasList.atlas.Count; atlasIndex++)
+			for (int atlasIndex = 0; atlasIndex < generatedMaterials.materials.Count; atlasIndex++)
 			{
-				if (atlasList.atlas[atlasIndex] != null && atlasList.atlas[atlasIndex].resultingAtlasList != null)
+				if (generatedMaterials.materials[atlasIndex] != null && generatedMaterials.materials[atlasIndex].resultingAtlasList != null)
 				{
-					for (int textureIndex = 0; textureIndex < atlasList.atlas[atlasIndex].resultingAtlasList.Length; textureIndex++)
+					for (int textureIndex = 0; textureIndex < generatedMaterials.materials[atlasIndex].resultingAtlasList.Length; textureIndex++)
 					{
-						if (atlasList.atlas[atlasIndex].resultingAtlasList[textureIndex] != null)
+						if (generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex] != null)
 						{
-							RenderTexture tempTexture = atlasList.atlas[atlasIndex].resultingAtlasList[textureIndex] as RenderTexture;
+							RenderTexture tempTexture = generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex] as RenderTexture;
 							if (tempTexture != null)
 							{
 								return tempTexture;

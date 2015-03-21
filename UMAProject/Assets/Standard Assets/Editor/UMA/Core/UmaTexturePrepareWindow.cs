@@ -24,7 +24,7 @@ namespace UMAEditor
 	    public UnityEngine.Object relativeFolder;
 	    public SkinnedMeshRenderer racePrefab;
 	    public SkinnedMeshRenderer slotMesh;
-	    public Material slotMaterial;
+	    public UMAMaterial slotMaterial;
 	    public bool processAutomatically;
 	    public OverlayData textureOverride;
 
@@ -124,7 +124,7 @@ namespace UMAEditor
 
 	        racePrefab = EditorGUILayout.ObjectField("Race Prefab SkinnedMeshRenderer", racePrefab, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
 	        slotMesh = EditorGUILayout.ObjectField("Slot Mesh SkinnedMeshRenderer", slotMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
-	        slotMaterial = EditorGUILayout.ObjectField("MaterialSample", slotMaterial, typeof(Material), false) as Material;
+			slotMaterial = EditorGUILayout.ObjectField("UMAMaterial", slotMaterial, typeof(UMAMaterial), false) as UMAMaterial;
 	        slotFolder = EditorGUILayout.ObjectField("Slot Folder", slotFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
 	        EnforceFolder(ref slotFolder);
 	        
@@ -162,7 +162,7 @@ namespace UMAEditor
 	    {
 //	        var material = slotMaterial ?? AssetDatabase.LoadAssetAtPath("Assets/UMA_Assets/MaterialSamples/UMABaseShaderSample.mat", typeof(Material)) as Material;
 			var material = slotMaterial;
-			if (material == null) material = AssetDatabase.LoadAssetAtPath("Assets/UMA_Assets/MaterialSamples/UMABaseShaderSample.mat", typeof(Material)) as Material;
+			if (material == null) material = AssetDatabase.LoadAssetAtPath("Assets/UMA_Assets/MaterialSamples/DefaultUMAMaterial.asset", typeof(UMAMaterial)) as UMAMaterial;
 			if(materialName == null || materialName == ""){
 				Debug.LogError("materialName must be specified.");
 	            return null;
@@ -450,6 +450,9 @@ namespace UMAEditor
 		[MenuItem("UMA/Optimize Slot Meshes")]
 		public static void OptimizeSlotMeshes()
 		{
+#if UMA2_LEAN_AND_CLEAN 
+			Debug.LogError("MenuItem - UMA/OptimizeSlotMeshes does not work with the define UMA2_LEAN_AND_CLEAN, we need all legacy fields available.");
+#else
 			foreach (var obj in Selection.objects)
 			{
 				var SlotDataAsset = obj as SlotDataAsset;
@@ -468,6 +471,7 @@ namespace UMAEditor
 				}
 			}
 			AssetDatabase.SaveAssets();
+#endif
 		}
 
 		[MenuItem("UMA/Optimize Overlay Textures")]

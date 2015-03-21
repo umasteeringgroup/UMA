@@ -27,7 +27,7 @@ namespace UMA
 	        UpdateDictionary();
 	    }
 
-        public bool Validate(UMAGeneratorBase generator)
+        public bool Validate()
 	    {
 	    	bool valid = true;
 			if ((umaTarget == UMATarget.Humanoid) && (TPose == null)) {
