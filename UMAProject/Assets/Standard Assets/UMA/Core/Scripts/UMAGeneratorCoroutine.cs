@@ -33,7 +33,7 @@ namespace UMA
 			{
 				var res = new UMAData.GeneratedMaterial();
 				res.umaMaterial = umaMaterial;
-				res.material = Object.Instantiate(umaMaterial.material);
+				res.material = Object.Instantiate(umaMaterial.material) as Material;
 				res.material.name = umaMaterial.material.name;
 				generatedMaterials.Add(res);
 				return res;
@@ -53,7 +53,7 @@ namespace UMA
 
 				var res = new UMAData.GeneratedMaterial();
 				res.umaMaterial = umaMaterial;
-				res.material = Object.Instantiate(umaMaterial.material);
+				res.material = Object.Instantiate(umaMaterial.material) as Material;
 				res.material.name = umaMaterial.material.name;
 				atlassedMaterials.Add(res);
 				generatedMaterials.Add(res);

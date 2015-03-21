@@ -12,14 +12,12 @@ MonoBehaviour:
   m_Name: FemaleShortHair01
   m_EditorClassIdentifier: 
   slotName: FemaleShortHair01
-  listID: 3
+  material: {fileID: 11400000, guid: 30f58efe335b9cc419271f828db88622, type: 2}
+  textureNameList: []
   meshRenderer: {fileID: 0}
-  boneNameHashes: 
-  umaBoneData: []
   materialSample: {fileID: 2100000, guid: a1b30327501eda441907cfe7be685bc0, type: 2}
   overlayScale: 1
   animatedBones: []
-  textureNameList: []
   slotDNA: {fileID: 0}
   meshData:
     bindPoses:
@@ -11009,9 +11007,15 @@ MonoBehaviour:
     rootBone: {fileID: 400010, guid: fa4a93a5849e0aa4fa205255c8adcf93, type: 3}
     boneNameHashes: 9209c6e6410eb55f5d43331cf74297520b254bb1f48c2ddfdb06ca5dbc81c9fab61536b3d7237268e88ba77512cbfe490158fdb9
     subMeshCount: 1
+    vertexCount: 0
   subMeshIndex: 0
   slotGroup: 
   tags: []
+  CharacterBegun:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: UMA.UMADataEvent, Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
   SlotAtlassed:
     m_PersistentCalls:
       m_Calls: []

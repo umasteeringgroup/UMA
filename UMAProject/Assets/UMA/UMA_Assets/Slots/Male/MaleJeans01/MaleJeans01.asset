@@ -12,14 +12,12 @@ MonoBehaviour:
   m_Name: MaleJeans01
   m_EditorClassIdentifier: 
   slotName: MaleJeans01
-  listID: 5
+  material: {fileID: 11400000, guid: 30f58efe335b9cc419271f828db88622, type: 2}
+  textureNameList: []
   meshRenderer: {fileID: 0}
-  boneNameHashes: 
-  umaBoneData: []
   materialSample: {fileID: 2100000, guid: a1b30327501eda441907cfe7be685bc0, type: 2}
   overlayScale: 1
   animatedBones: []
-  textureNameList: []
   slotDNA: {fileID: 0}
   meshData:
     bindPoses:
@@ -26983,9 +26981,15 @@ MonoBehaviour:
     rootBone: {fileID: 400018, guid: c617650bd2a2f3145b6fcaf7a5e6a112, type: 3}
     boneNameHashes: 767716c45e90d3e1e37d8835e2b743a8c2713b82fee646abed43d06d2c36149be8ead5797c0aa0cc70889858
     subMeshCount: 1
+    vertexCount: 0
   subMeshIndex: 0
   slotGroup: 
   tags: []
+  CharacterBegun:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: UMA.UMADataEvent, Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
   SlotAtlassed:
     m_PersistentCalls:
       m_Calls: []

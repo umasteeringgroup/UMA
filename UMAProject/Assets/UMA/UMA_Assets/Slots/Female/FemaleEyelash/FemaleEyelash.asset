@@ -12,15 +12,13 @@ MonoBehaviour:
   m_Name: FemaleEyelash
   m_EditorClassIdentifier: 
   slotName: FemaleEyelash
-  listID: 0
+  material: {fileID: 11400000, guid: 60284b52786b9834d92078be876b3253, type: 2}
+  textureNameList:
+  - 
   meshRenderer: {fileID: 0}
-  boneNameHashes: 
-  umaBoneData: []
   materialSample: {fileID: 2100000, guid: 1b62bcfd6bd5cfc498ca8ac795e2724a, type: 2}
   overlayScale: 1
   animatedBones: []
-  textureNameList:
-  - 
   slotDNA: {fileID: 0}
   meshData:
     bindPoses:
@@ -1195,9 +1193,15 @@ MonoBehaviour:
     rootBone: {fileID: 400008, guid: 3924ff435e82eb747833decaaf262fc5, type: 3}
     boneNameHashes: 6a8988dcab186b3be741601460f43ed4e17084e1ad298fce
     subMeshCount: 1
+    vertexCount: 0
   subMeshIndex: 0
   slotGroup: 
   tags: []
+  CharacterBegun:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: UMA.UMADataEvent, Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
   SlotAtlassed:
     m_PersistentCalls:
       m_Calls:

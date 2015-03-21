@@ -7,7 +7,7 @@ using UMA;
 
 namespace UMAEditor
 {
-	[CustomEditor(typeof(SlotDataAsset))]
+	//[CustomEditor(typeof(SlotDataAsset))]
     public class SlotInspector : Editor
     {
         [MenuItem("Assets/Create/UMA Slot")]
