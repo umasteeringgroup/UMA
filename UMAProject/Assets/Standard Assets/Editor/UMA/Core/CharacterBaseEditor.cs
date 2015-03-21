@@ -256,7 +256,7 @@ namespace UMAEditor
 				if (slot == null)
 					continue;
 
-				_slotEditors.Add(new SlotEditor(slot, i));
+				_slotEditors.Add(new SlotEditor(_recipe, slot, i));
 			}
 
 			_slotEditors.Sort(SlotEditor.comparer);
@@ -290,6 +290,50 @@ namespace UMAEditor
 				_dnaDirty |= true;
 				_textureDirty |= true;
 				_meshDirty |= true;
+			}
+			if (GUILayout.Button("Share Matching Colors"))
+			{
+				List<OverlayColorData> matchedColors = new List<OverlayColorData>();
+				List<OverlayColorData> unmatchedColors = new List<OverlayColorData>();
+
+				foreach (SlotData slotData in _recipe.slotDataList)
+				{
+					if (slotData != null)
+					{
+						List<OverlayData> overlays = slotData.GetOverlayList();
+						if (overlays == null) continue;
+						foreach (OverlayData overlay in overlays)
+						{
+							if (overlay.colorData == null) continue;
+							int matchIndex = matchedColors.IndexOf(overlay.colorData);
+							if (matchIndex >= 0)
+							{
+								overlay.colorData = matchedColors[matchIndex];
+							}
+							else
+							{
+								matchIndex = unmatchedColors.IndexOf(overlay.colorData);
+								if (matchIndex >= 0)
+								{
+									OverlayColorData matchedColor = unmatchedColors[matchIndex];
+									if (matchedColor.name == OverlayColorData.UNSHARED)
+									{
+										matchedColor.name = "";
+									}
+									overlay.colorData = matchedColor;
+									unmatchedColors.Remove(matchedColor);
+									matchedColors.Add(matchedColor);
+								}
+								else
+								{
+									unmatchedColors.Add(overlay.colorData);
+								}
+							}
+						}
+					}
+				}
+				_recipe.sharedColors = matchedColors.ToArray();
+				changed |= true;
 			}
 
 			var added = (SlotDataAsset)EditorGUILayout.ObjectField("Add Slot", null, typeof(SlotDataAsset), false);
@@ -336,7 +380,8 @@ namespace UMAEditor
 
     public class SlotEditor
     {
-        private readonly SlotData _slotData;
+		private readonly UMAData.UMARecipe _recipe;
+		private readonly SlotData _slotData;
         private readonly List<OverlayData> _overlayData = new List<OverlayData>();
         private readonly List<OverlayEditor> _overlayEditors = new List<OverlayEditor>();
         private readonly string _name;
@@ -347,8 +392,9 @@ namespace UMAEditor
 		public bool sharedOverlays = false;
 		public int idx;
 
-		public SlotEditor(SlotData slotData, int index)
+		public SlotEditor(UMAData.UMARecipe recipe, SlotData slotData, int index)
         {
+			_recipe = recipe;
             _slotData = slotData;
             _overlayData = slotData.GetOverlayList();
 
@@ -356,7 +402,7 @@ namespace UMAEditor
             _name = slotData.asset.slotName;
             for (int i = 0; i < _overlayData.Count; i++)
             {
-                _overlayEditors.Add(new OverlayEditor(slotData, _overlayData[i]));
+                _overlayEditors.Add(new OverlayEditor(_recipe, slotData, _overlayData[i]));
             }
         }
 
@@ -390,7 +436,7 @@ namespace UMAEditor
 	            if (added != null)
 	            {
 					var newOverlay = new OverlayData(added);
-					_overlayEditors.Add(new OverlayEditor(_slotData, newOverlay));
+					_overlayEditors.Add(new OverlayEditor(_recipe, _slotData, newOverlay));
 					_overlayData.Add(newOverlay);
 	                _dnaDirty = true;
 	                _textureDirty = true;
@@ -477,20 +523,33 @@ namespace UMAEditor
 			
 	public class OverlayEditor
 	{
+		private readonly UMAData.UMARecipe _recipe;
+		private readonly SlotData _slotData;
 		private readonly OverlayData _overlayData;
-        private readonly SlotData _slotData;
         private  ColorEditor[] _colors;
-        private readonly TextureEditor[] _textures;
+		private  bool _sharedColors;
+		private readonly TextureEditor[] _textures;
         private bool _foldout = true;
 
         public bool Delete { get; private set; }
 
         public int move;
 
-        public OverlayEditor(SlotData slotData, OverlayData overlayData)
+		public OverlayEditor(UMAData.UMARecipe recipe, SlotData slotData, OverlayData overlayData)
         {
+			_recipe = recipe;
             _overlayData = overlayData;
             _slotData = slotData;
+
+			_sharedColors = false;
+			if (_recipe.sharedColors != null)
+			{
+				_sharedColors = ArrayUtility.Contains<OverlayColorData>(_recipe.sharedColors, _overlayData.colorData);
+			}
+			if (_sharedColors && (_overlayData.colorData.name == OverlayColorData.UNSHARED))
+			{
+				_sharedColors = false;
+			}
 
 			_textures = new TextureEditor[overlayData.asset.textureList.Length];
 			for (int i = 0; i < overlayData.asset.textureList.Length; i++)
@@ -563,11 +622,36 @@ namespace UMAEditor
         {
             bool changed = false;
 
-            GUILayout.BeginVertical();
+			if (_sharedColors)
+			{
+				GUIHelper.BeginVerticalPadded(2f, new Color(0.75f, 0.875f, 1f));
+				GUILayout.BeginHorizontal();
+				var colorName = EditorGUILayout.TextField("Shared As", _overlayData.colorData.name);
+				if (colorName != _overlayData.colorData.name)
+				{
+					_overlayData.colorData.name = colorName;
+					changed |= true;
+				}
+				if (GUILayout.Button("X", EditorStyles.miniButton, GUILayout.Width(24)))
+				{
+					_overlayData.colorData = _overlayData.colorData.Duplicate();
+					// This is a hack, but it probably won't hurt anything
+					_overlayData.colorData.name = OverlayColorData.UNSHARED;
+					changed |= true;
+				}
+				GUILayout.EndHorizontal();
+			}
+			else
+			{
+				GUILayout.BeginVertical();
+			}
+			
+
 			GUILayout.BeginHorizontal();
 			EditorGUILayout.LabelField("Use Advanced Color Masks");
 			var useAdvancedMask = EditorGUILayout.Toggle(_overlayData.useAdvancedMasks);
 			GUILayout.EndHorizontal();
+
 			if (_overlayData.useAdvancedMasks)
             {
                 for (int k = 0; k < _colors.Length; k++)
@@ -590,7 +674,8 @@ namespace UMAEditor
                         changed = true;
                     }
                 }
-            } else
+            }
+			else
             {
                 Color32 color = EditorGUILayout.ColorField(_colors[0].description, _colors[0].color);
 
@@ -620,7 +705,15 @@ namespace UMAEditor
                 BuildColorEditors();             
             }
 
-            GUILayout.EndVertical();
+			if (_sharedColors)
+			{
+				GUIHelper.EndVerticalPadded(2f);
+			}
+			else
+			{
+				GUILayout.EndVertical();
+			}
+			GUILayout.Space(2f);
 
             return changed;
         }

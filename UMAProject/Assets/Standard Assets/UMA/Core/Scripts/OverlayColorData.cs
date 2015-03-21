@@ -4,21 +4,54 @@ using System.Collections;
 
 namespace UMA
 {
+	[System.Serializable]
 	public class OverlayColorData : System.IEquatable<OverlayColorData>
 	{
+		public const string UNSHARED = "-";
 		public string name;
 		public Color32 color;
 
 		public Color32[] channelMask;
 		public Color32[] channelAdditiveMask;
 
-		private static bool DifferentColor(Color32 color1, Color32 color2)
+		public OverlayColorData Duplicate()
+		{
+			var res = new OverlayColorData();
+			res.color = color;
+			if (channelMask != null)
+			{
+				res.channelMask = new Color32[channelMask.Length];
+				for (int i = 0; i < channelMask.Length; i++)
+				{
+					res.channelMask[i] = channelMask[i];
+				}
+			}
+			if (channelAdditiveMask != null)
+			{
+				res.channelAdditiveMask = new Color32[channelAdditiveMask.Length];
+				for (int i = 0; i < channelAdditiveMask.Length; i++)
+				{
+					res.channelAdditiveMask[i] = channelAdditiveMask[i];
+				}
+			}
+			return res;
+		}
+
+		public static bool SameColor(Color32 color1, Color32 color2)
+		{
+			return ((color1.r == color2.r) &&
+			        (color1.g == color2.g) &&
+			        (color1.b == color2.b) &&
+			        (color1.a == color2.a));
+		}
+		public static bool DifferentColor(Color32 color1, Color32 color2)
 		{
 			return ((color1.r != color2.r) ||
 			        (color1.g != color2.g) ||
 			        (color1.b != color2.b) ||
 			        (color1.a != color2.a));
 		}
+
 		public static implicit operator bool(OverlayColorData obj) 
 		{
 			return ((System.Object)obj) != null;
