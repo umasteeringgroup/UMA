@@ -12,17 +12,41 @@ MonoBehaviour:
   m_Name: ForearmTwistSlot
   m_EditorClassIdentifier: 
   slotName: ForearmTwist
-  listID: -1
+  material: {fileID: 0}
+  textureNameList: []
   meshRenderer: {fileID: 0}
   materialSample: {fileID: 0}
   overlayScale: 1
-  umaBoneData: []
   animatedBones: []
-  textureNameList: []
   slotDNA: {fileID: 0}
+  meshData:
+    bindPoses: []
+    boneWeights: []
+    vertices: []
+    normals: []
+    tangents: []
+    colors32: []
+    uv: []
+    uv2: []
+    uv3: []
+    uv4: []
+    submeshes: []
+    bones: []
+    rootBone: {fileID: 0}
+    umaBones: []
+    umaBoneCount: 0
+    rootBoneHash: 0
+    boneNameHashes: 
+    subMeshCount: 0
+    vertexCount: 0
   subMeshIndex: 0
   slotGroup: 
   tags: []
+  CharacterBegun:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: UMA.UMADataEvent, Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
   SlotAtlassed:
     m_PersistentCalls:
       m_Calls: []
@@ -43,5 +67,10 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+    m_TypeName: UMA.UMADataEvent, Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  CharacterCompleted:
+    m_PersistentCalls:
+      m_Calls: []
     m_TypeName: UMA.UMADataEvent, Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null

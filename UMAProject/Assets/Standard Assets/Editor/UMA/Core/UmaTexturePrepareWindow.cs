@@ -458,14 +458,27 @@ namespace UMAEditor
 				var SlotDataAsset = obj as SlotDataAsset;
 				if (SlotDataAsset != null)
 				{
-#pragma warning disable 618 
+#pragma warning disable 618
 					if (SlotDataAsset.meshRenderer != null)
 					{
 						UMASlotProcessingUtil.OptimizeSlotDataMesh(SlotDataAsset.meshRenderer);
 						SlotDataAsset.UpdateMeshData(SlotDataAsset.meshRenderer);
 						SlotDataAsset.meshRenderer = null;
 						EditorUtility.SetDirty(SlotDataAsset);
-
+					}
+					else
+					{
+						if (SlotDataAsset.meshData != null)
+						{
+							SlotDataAsset.UpdateMeshData();
+						}
+						else
+						{
+							if (SlotDataAsset.meshData.vertices != null)
+							{
+								SlotDataAsset.UpdateMeshData();
+							}
+						}
 					}
 #pragma warning restore 618
 				}

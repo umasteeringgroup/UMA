@@ -12,11 +12,12 @@ MonoBehaviour:
   m_Name: RandomizeDNASlot
   m_EditorClassIdentifier: 
   slotName: RandomizeDNA
+  material: {fileID: 0}
+  textureNameList: []
   meshRenderer: {fileID: 0}
   materialSample: {fileID: 0}
   overlayScale: 1
   animatedBones: []
-  textureNameList: []
   slotDNA: {fileID: 0}
   meshData:
     bindPoses: []
@@ -27,9 +28,14 @@ MonoBehaviour:
     colors32: []
     uv: []
     uv2: []
+    uv3: []
+    uv4: []
     submeshes: []
     bones: []
     rootBone: {fileID: 0}
+    umaBones: []
+    umaBoneCount: 0
+    rootBoneHash: 0
     boneNameHashes: 
     subMeshCount: 0
     vertexCount: 0

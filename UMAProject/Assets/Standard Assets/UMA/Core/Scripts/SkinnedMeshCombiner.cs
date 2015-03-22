@@ -26,63 +26,19 @@ namespace UMA
 			has_uv4 = 64
 		}
 
-		private static Transform RecursivelyMapToNewRoot(Transform bone, int hash, Transform rootBone, UMASkeleton skeleton)
-		{
-			Transform mappedTransform;
-			bool transformDirty;
-			int parentNameHash;
-
-			if (skeleton.TryGetBoneTransform(hash, out mappedTransform, out transformDirty, out parentNameHash))
-			{
-				if (transformDirty)
-				{
-					skeleton.UpdateBoneTransform(hash, bone);
-				}
-				return mappedTransform;
-			}
-		
-			Transform parent = rootBone;
-			int parentHash = 0;
-			if (bone.parent != null)
-			{
-				parent = bone.parent;
-				parentHash = UMASkeleton.StringToHash(parent.name);
-				parent = RecursivelyMapToNewRoot(parent, parentHash, rootBone, skeleton);
-			}
-
-			Transform child = new GameObject().transform;
-			child.parent = parent;
-			child.localPosition = bone.localPosition;
-			child.localRotation = bone.localRotation;
-			child.localScale = bone.localScale;
-			child.name = bone.name;
-			skeleton.AddBone(parentHash, hash, child);
-			return child;
-		}
-
-		public static Transform[] CloneBoneListInNewHierarchy(Transform rootBone, Transform[] bones, int[] hashes, UMASkeleton skeleton)
-		{
-			var res = new Transform[bones.Length];
-			for (int i = 0; i < bones.Length; i++)
-			{
-				res[i] = RecursivelyMapToNewRoot(bones[i], hashes[i], rootBone, skeleton);
-			}
-			return res;
-		}
-
-		static Dictionary<Transform, BoneIndexEntry> bonesCollection;
+		static Dictionary<int, BoneIndexEntry> bonesCollection;
 		static List<Matrix4x4> bindPoses;
-		static List<Transform> bonesList;
-		public static void CombineMeshes(UMAMeshData target, CombineInstance[] sources, Transform rootBone, UMASkeleton skeleton)
+		static List<int> bonesList;
+		public static void CombineMeshes(UMAMeshData target, CombineInstance[] sources)
 		{
 			int vertexCount = 0;
 			int bindPoseCount = 0;
+			int transformHierarchyCount = 0;
 
 			MeshComponents meshComponents = MeshComponents.none;
-
 			int subMeshCount = FindTargetSubMeshCount(sources);
 			var subMeshTriangleLength = new int[subMeshCount];
-			AnalyzeSources(sources, subMeshTriangleLength, ref vertexCount, ref bindPoseCount, ref meshComponents);
+			AnalyzeSources(sources, subMeshTriangleLength, ref vertexCount, ref bindPoseCount, ref transformHierarchyCount, ref meshComponents);
 
 			int[][] submeshTriangles = new int[subMeshCount][];
 			for (int i = 0; i < subMeshTriangleLength.Length; i++)
@@ -113,10 +69,17 @@ namespace UMA
 #endif
 			Color32[] colors32 = has_colors32 ? EnsureArrayLength(target.colors32, vertexCount) : null;
 
+			UMATransform[] umaTransforms = EnsureArrayLength(target.umaBones, transformHierarchyCount);
+
+			int boneCount = 0;
+			foreach (var source in sources)
+			{
+				MergeSortedTransforms(umaTransforms, ref boneCount, source.meshData.umaBones);
+			}
 			int vertexIndex = 0;
 
 			if (bonesCollection == null)
-				bonesCollection = new Dictionary<Transform, BoneIndexEntry>(bindPoseCount);
+				bonesCollection = new Dictionary<int, BoneIndexEntry>(boneCount);
 			else
 				bonesCollection.Clear();
 			if (bindPoses == null)
@@ -124,16 +87,14 @@ namespace UMA
 			else
 				bindPoses.Clear();
 			if (bonesList == null)
-				bonesList = new List<Transform>(bindPoseCount);
+				bonesList = new List<int>(boneCount);
 			else
 				bonesList.Clear();
 
 			foreach (var source in sources)
 			{
 				vertexCount = source.meshData.vertices.Length;
-				var sourceBones = CloneBoneListInNewHierarchy(rootBone, source.meshData.bones, source.meshData.boneNameHashes, skeleton);
-
-				BuildBoneWeights(source.meshData.boneWeights, 0, boneWeights, vertexIndex, vertexCount, sourceBones, source.meshData.bindPoses, bonesCollection, bindPoses, bonesList);
+				BuildBoneWeights(source.meshData.boneWeights, 0, boneWeights, vertexIndex, vertexCount, source.meshData.boneNameHashes, source.meshData.bindPoses, bonesCollection, bindPoses, bonesList);
 
 				Array.Copy(source.meshData.vertices, 0, vertices, vertexIndex, vertexCount);
 
@@ -252,14 +213,77 @@ namespace UMA
 
 			target.subMeshCount = subMeshCount;
 			target.submeshes = new SubMeshTriangles[subMeshCount];
+			target.umaBones = umaTransforms;
+			target.umaBoneCount = boneCount;
 			for (int i = 0; i < subMeshCount; i++)
 			{
 				target.submeshes[i].triangles = submeshTriangles[i];
 			}
-			target.bones = bonesList.ToArray();
+			target.boneNameHashes = bonesList.ToArray();
 		}
 
-		private static void AnalyzeSources(CombineInstance[] sources, int[] subMeshTriangleLength, ref int vertexCount, ref int bindPoseCount, ref MeshComponents meshComponents)
+		private static void MergeSortedTransforms(UMATransform[] mergedTransforms, ref int len1, UMATransform[] umaTransforms)
+		{
+			int newBones = 0;
+			int pos1 = 0;
+			int pos2 = 0;
+			int len2 = umaTransforms.Length;
+
+			while(pos1 < len1 && pos2 < len2 )
+			{
+				long i = ((long)mergedTransforms[pos1].hash) - ((long)umaTransforms[pos2].hash);
+				if (i == 0)
+				{
+					pos1++;
+					pos2++;
+				}
+				else if (i < 0)
+				{
+					pos1++;
+				}
+				else
+				{
+					pos2++;
+					newBones++;
+				}
+			}
+			newBones += len2 - pos2;
+			pos1 = len1 - 1;
+			pos2 = len2 - 1;
+
+			len1 += newBones;
+
+			int dest = len1-1;
+			while (pos1 >= 0 && pos2 >= 0)
+			{
+				long i = mergedTransforms[pos1].hash - umaTransforms[pos2].hash;
+				if (i == 0)
+				{
+					mergedTransforms[dest] = mergedTransforms[pos1];
+					pos1--;
+					pos2--;
+				}
+				else if (i > 0)
+				{
+					mergedTransforms[dest] = mergedTransforms[pos1];
+					pos1--;
+				}
+				else
+				{
+					mergedTransforms[dest] = umaTransforms[pos2];
+					pos2--;
+				}
+				dest--;
+			}
+			while (pos2 >= 0)
+			{
+				mergedTransforms[dest] = umaTransforms[pos2];
+				pos2--;
+				dest--;
+			}
+		}
+
+		private static void AnalyzeSources(CombineInstance[] sources, int[] subMeshTriangleLength, ref int vertexCount, ref int bindPoseCount, ref int transformHierarchyCount, ref MeshComponents meshComponents)
 		{
 			for (int i = 0; i < subMeshTriangleLength.Length; i++)
 			{
@@ -270,6 +294,7 @@ namespace UMA
 			{
 				vertexCount += source.meshData.vertices.Length;
 				bindPoseCount += source.meshData.bindPoses.Length;
+				transformHierarchyCount += source.meshData.umaBones.Length;
 				if (source.meshData.normals != null && source.meshData.normals.Length != 0) meshComponents |= MeshComponents.has_normals;
 				if (source.meshData.tangents != null && source.meshData.tangents.Length != 0) meshComponents |= MeshComponents.has_tangents;
 				if (source.meshData.uv != null && source.meshData.uv.Length != 0) meshComponents |= MeshComponents.has_uv;
@@ -308,7 +333,7 @@ namespace UMA
 			return highestTargetIndex + 1;
 		}
 
-		private static void BuildBoneWeights(UMABoneWeight[] source, int sourceIndex, BoneWeight[] dest, int destIndex, int count, Transform[] bones, Matrix4x4[] bindPoses, Dictionary<Transform, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<Transform> bonesList)
+		private static void BuildBoneWeights(UMABoneWeight[] source, int sourceIndex, BoneWeight[] dest, int destIndex, int count, int[] bones, Matrix4x4[] bindPoses, Dictionary<int, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<int> bonesList)
 		{
 			int[] boneMapping = new int[bones.Length];
 			for (int i = 0; i < boneMapping.Length; i++)
@@ -328,6 +353,7 @@ namespace UMA
 			dest.weight1 = source.weight1;
 			dest.weight2 = source.weight2;
 			dest.weight3 = source.weight3;
+
 			dest.boneIndex0 = boneMapping[source.boneIndex0];
 			dest.boneIndex1 = boneMapping[source.boneIndex1];
 			dest.boneIndex2 = boneMapping[source.boneIndex2];
@@ -386,9 +412,9 @@ namespace UMA
 			return true;
 		}
 
-		private static int TranslateBoneIndex(int index, Transform[] bones, Matrix4x4[] bindPoses, Dictionary<Transform, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<Transform> bonesList)
+		private static int TranslateBoneIndex(int index, int[] bonesHashes, Matrix4x4[] bindPoses, Dictionary<int, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<int> bonesList)
 		{
-			var boneTransform = bones[index];
+			var boneTransform = bonesHashes[index];
 			BoneIndexEntry entry;
 			if (bonesCollection.TryGetValue(boneTransform, out entry))
 			{

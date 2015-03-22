@@ -57,14 +57,15 @@ namespace UMA
 
 			UMAMeshData umaMesh = new UMAMeshData();
 			umaMesh.ClaimSharedBuffers();
-			SkinnedMeshCombiner.CombineMeshes(umaMesh, combinedMeshList.ToArray(), umaData.myRenderer.rootBone, umaData.skeleton);
+
+			SkinnedMeshCombiner.CombineMeshes(umaMesh, combinedMeshList.ToArray());
 
             if (updatedAtlas)
             {
 				RecalculateUV(umaMesh);
             }
 
-			umaMesh.ApplyDataToUnityMesh(umaData.myRenderer);
+			umaMesh.ApplyDataToUnityMesh(umaData.myRenderer, umaData.skeleton);
 			umaMesh.ReleaseSharedBuffers();
 
             umaData.umaRecipe.ClearDNAConverters();

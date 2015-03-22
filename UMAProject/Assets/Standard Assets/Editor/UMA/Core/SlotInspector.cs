@@ -46,14 +46,14 @@ namespace UMAEditor
 #pragma warning disable 618
 			if (slot.meshData != null)
 			{
-				if (slot.meshData.rootBone != null)
-				{
-					umaBoneData = GetTransformsInPrefab(slot.meshData.rootBone);
-				}
-				else
-				{
+				//if (slot.meshData.rootBoneHash != null)
+				//{
+				//    umaBoneData = GetTransformsInPrefab(slot.meshData.rootBone);
+				//}
+				//else
+				//{
 					umaBoneData = new Transform[0];
-				}
+				//}
 			} 
 #if !UMA2_LEAN_AND_CLEAN
 			else  if (slot.meshRenderer != null)

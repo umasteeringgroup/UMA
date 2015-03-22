@@ -65,6 +65,31 @@ namespace UMA
 			meshData.RetrieveDataFromUnityMesh(meshRenderer);
 			UnityEditor.EditorUtility.SetDirty(this);
 		}
+		public void UpdateMeshData()
+		{
+#if !UMA2_LEAN_AND_CLEAN
+			if (meshData.rootBone != null)
+			{
+				var rootBone = meshData.rootBone;
+				while (rootBone.name != "Global")
+				{
+					rootBone = rootBone.parent;
+					if (rootBone == null)
+					{
+						rootBone = meshData.rootBone;
+						break;
+					}
+				}
+				meshData.UpdateBones(meshData.rootBone, meshData.bones);
+				meshData.vertexCount = meshData.vertices.Length;
+			}
+			else
+			{
+				meshData.ReSortUMABones();
+			}
+			UnityEditor.EditorUtility.SetDirty(this);
+#endif
+		}
 #endif
 		public void OnAfterDeserialize()
 		{

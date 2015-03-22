@@ -30,13 +30,15 @@ namespace UMAEditor
 			var slotFilePaths = new List<string>();
 
 			references.Add(new UnityReference("e20699a64490c4e4284b27a8aeb05666", "1772484567", FindAssetGuid("OverlayDataAsset", "cs"), "11500000")); // OverlayData.cs
-			references.Add(new UnityReference("e20699a64490c4e4284b27a8aeb05666", "-1278852528", FindAssetGuid("SlotData", "cs"), "11500000") { updatedFiles = slotFilePaths }); // SlotData.cs
+			references.Add(new UnityReference("e20699a64490c4e4284b27a8aeb05666", "-1278852528", FindAssetGuid("SlotDataAsset", "cs"), "11500000") { updatedFiles = slotFilePaths }); // SlotData.cs
 			references.Add(new UnityReference("e20699a64490c4e4284b27a8aeb05666", "-335686737", FindAssetGuid("RaceData", "cs"), "11500000")); // RaceData.cs
 			references.Add(new UnityReference("e20699a64490c4e4284b27a8aeb05666", "-1571472132", FindAssetGuid("UMADefaultMeshCombiner", "cs"), "11500000")); // UMADefaultMeshCombiner.cs
 			references.Add(new UnityReference("e20699a64490c4e4284b27a8aeb05666", "-1550055707", FindAssetGuid("UMAData", "cs"), "11500000")); // UMAData.cs
 			references.Add(new UnityReference("e20699a64490c4e4284b27a8aeb05666", "-1708169498", FindAssetGuid("UmaTPose", "cs"), "11500000")); // UmaTPose.cs
 			references.Add(new UnityReference("e20699a64490c4e4284b27a8aeb05666", "-1175167296", FindAssetGuid("TextureMerge", "cs"), "11500000")); // TextureMerge.cs
 			references.Add(new UnityReference("7e407fe772026ae4cb2f52b8b5567db5", "11500000", FindAssetGuid("OverlayDataAsset", "cs"), "11500000")); // OverlayData.cs
+			references.Add(new UnityReference("a248d59ac2f3fa14b9c2894f47000560", "11500000", FindAssetGuid("SlotDataAsset", "cs"), "11500000")); // OverlayData.cs
+
 
 			ReplaceReferences(Application.dataPath, references);
 
