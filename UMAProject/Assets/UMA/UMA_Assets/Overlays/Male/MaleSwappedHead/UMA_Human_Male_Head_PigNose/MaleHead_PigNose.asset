@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Name: MaleHead_PigNose
   m_EditorClassIdentifier: 
   overlayName: MaleHead_PigNose
-  color: {r: 1, g: 1, b: 1, a: 1}
   rect:
     serializedVersion: 2
     x: 480
@@ -22,6 +21,5 @@ MonoBehaviour:
   textureList:
   - {fileID: 2800000, guid: 3877d86f02c974945a557ccb9af1c4c9, type: 3}
   - {fileID: 2800000, guid: f1be25e8accc1c94382c36eb45fc16d3, type: 3}
-  channelMask: []
-  channelAdditiveMask: []
   tags: []
+  material: {fileID: 11400000, guid: 30f58efe335b9cc419271f828db88622, type: 2}

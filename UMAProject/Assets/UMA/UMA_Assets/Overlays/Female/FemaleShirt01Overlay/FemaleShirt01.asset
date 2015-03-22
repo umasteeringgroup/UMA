@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Name: FemaleShirt01
   m_EditorClassIdentifier: 
   overlayName: FemaleShirt01
-  color: {r: 1, g: 1, b: 1, a: 1}
   rect:
     serializedVersion: 2
     x: 0
@@ -22,6 +21,5 @@ MonoBehaviour:
   textureList:
   - {fileID: 2800000, guid: 193441d348f21f14ab190a3d9e24f230, type: 3}
   - {fileID: 2800000, guid: 198da2b0d5e00ca4dac5a8cdfe8ed828, type: 3}
-  channelMask: []
-  channelAdditiveMask: []
   tags: []
+  material: {fileID: 11400000, guid: 30f58efe335b9cc419271f828db88622, type: 2}

@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Name: FemaleEyelash
   m_EditorClassIdentifier: 
   overlayName: FemaleEyelash
-  color: {r: 1, g: 1, b: 1, a: 1}
   rect:
     serializedVersion: 2
     x: 0
@@ -21,6 +20,5 @@ MonoBehaviour:
     height: 0
   textureList:
   - {fileID: 2800000, guid: d14a1eb3e96afdb40ba38b22e721b1e9, type: 3}
-  channelMask: []
-  channelAdditiveMask: []
   tags: []
+  material: {fileID: 11400000, guid: 60284b52786b9834d92078be876b3253, type: 2}

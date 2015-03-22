@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Name: MaleHair02
   m_EditorClassIdentifier: 
   overlayName: MaleHair02
-  color: {r: 1, g: 1, b: 1, a: 1}
   rect:
     serializedVersion: 2
     x: 0
@@ -22,6 +21,5 @@ MonoBehaviour:
   textureList:
   - {fileID: 2800000, guid: fe9f9d431916adb4998182e29b217b36, type: 3}
   - {fileID: 2800000, guid: d52829ea03bdad244bcb166ca43dacf2, type: 3}
-  channelMask: []
-  channelAdditiveMask: []
   tags: []
+  material: {fileID: 11400000, guid: 30f58efe335b9cc419271f828db88622, type: 2}

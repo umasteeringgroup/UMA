@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Name: FemaleLongHair01
   m_EditorClassIdentifier: 
   overlayName: FemaleLongHair01
-  color: {r: 1, g: 1, b: 1, a: 1}
   rect:
     serializedVersion: 2
     x: 0
@@ -22,6 +21,5 @@ MonoBehaviour:
   textureList:
   - {fileID: 2800000, guid: 186b587b15f6d9946a0ab1da3465e3a8, type: 3}
   - {fileID: 2800000, guid: 80f95416667c95743bc72d60c5458b88, type: 3}
-  channelMask: []
-  channelAdditiveMask: []
   tags: []
+  material: {fileID: 11400000, guid: 30f58efe335b9cc419271f828db88622, type: 2}

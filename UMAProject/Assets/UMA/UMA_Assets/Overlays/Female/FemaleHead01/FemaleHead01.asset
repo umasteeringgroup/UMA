@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Name: FemaleHead01
   m_EditorClassIdentifier: 
   overlayName: FemaleHead01
-  color: {r: 1, g: 1, b: 1, a: 1}
   rect:
     serializedVersion: 2
     x: 0
@@ -22,6 +21,5 @@ MonoBehaviour:
   textureList:
   - {fileID: 2800000, guid: 43ab9719f00399f47b3c5028bd708459, type: 3}
   - {fileID: 2800000, guid: 83f2b7db1758d274e8f6b09cb3deb50e, type: 3}
-  channelMask: []
-  channelAdditiveMask: []
   tags: []
+  material: {fileID: 11400000, guid: 30f58efe335b9cc419271f828db88622, type: 2}

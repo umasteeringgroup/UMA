@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Name: FemaleUnderwear01
   m_EditorClassIdentifier: 
   overlayName: FemaleUnderwear01
-  color: {r: 1, g: 1, b: 1, a: 1}
   rect:
     serializedVersion: 2
     x: 0
@@ -22,6 +21,5 @@ MonoBehaviour:
   textureList:
   - {fileID: 2800000, guid: 434e8f1b1e0b5ee469b7058b7cc56c85, type: 3}
   - {fileID: 2800000, guid: 73808b121e0e3654a8d23b28a4724790, type: 3}
-  channelMask: []
-  channelAdditiveMask: []
   tags: []
+  material: {fileID: 11400000, guid: 30f58efe335b9cc419271f828db88622, type: 2}
