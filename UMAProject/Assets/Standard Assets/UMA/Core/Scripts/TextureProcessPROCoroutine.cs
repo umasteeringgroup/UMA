@@ -167,6 +167,10 @@ namespace UMA
 									if (fragment.baseTexture[j] != null)
 									{
 										atlas.material.SetTexture(slotData.asset.material.channels[j].materialPropertyName, fragment.baseTexture[j]);
+										if (j == 0)
+										{
+											atlas.material.color = fragment.baseColor;
+										}
 									}
 								}
 								foreach (var overlay in fragment.overlays)
