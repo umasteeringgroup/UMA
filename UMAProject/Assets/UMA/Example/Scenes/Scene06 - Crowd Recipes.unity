@@ -7500,8 +7500,6 @@ MonoBehaviour:
     selectionRule: 0
     recipes:
     - {fileID: 11400000, guid: 19829be854f8d47ad8dbf8fc75582520, type: 2}
-    - {fileID: 11400000, guid: 3a911ef62a49a46b18aab6634d9615da, type: 2}
-    - {fileID: 11400000, guid: d845d7ce127c34805992a6f6e094b2bf, type: 2}
   additionalRecipes:
   - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
 --- !u!1001 &629953165

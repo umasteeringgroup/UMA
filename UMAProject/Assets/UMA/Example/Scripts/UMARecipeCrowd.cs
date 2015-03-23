@@ -116,8 +116,27 @@ public class UMARecipeCrowd : MonoBehaviour
 		umaData.CharacterDestroyed = new UMADataEvent(CharacterDestroyed);
 		umaData.CharacterUpdated = new UMADataEvent(CharacterUpdated);
 
-		int mixer = Random.Range(0, recipeMixers.Length);
-		recipeMixers[mixer].FillUMARecipe(umaData.umaRecipe, context);
+		UMARecipeMixer mixer = recipeMixers[Random.Range(0, recipeMixers.Length)];
+
+		mixer.sharedColors = new OverlayColorData[2];
+		var skinColors = mixer.raceData.sampleSkinColors;
+		if ((skinColors != null) && (skinColors.Length > 0))
+		{
+			mixer.sharedColors[0] = new OverlayColorData();
+			mixer.sharedColors[0].name = "Skin";
+			int index = Random.Range(0, skinColors.Length);
+			mixer.sharedColors[0].color = skinColors[index];
+		}
+		var hairColors = mixer.raceData.sampleHairColors;
+		if ((hairColors != null) && (hairColors.Length > 0))
+		{
+			mixer.sharedColors[1] = new OverlayColorData();
+			mixer.sharedColors[1].name = "Hair";
+			int index = Random.Range(0, hairColors.Length);
+			mixer.sharedColors[1].color = hairColors[index];
+		}
+
+		mixer.FillUMARecipe(umaData.umaRecipe, context);
 
 		if (animationController != null)
 		{

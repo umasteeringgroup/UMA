@@ -209,7 +209,7 @@ namespace UMA
 			public RaceData raceData;
 			protected Dictionary<Type, UMADnaBase> umaDna = new Dictionary<Type, UMADnaBase>();
             protected Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate> umaDnaConverter = new Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate>();
-			protected Dictionary<OverlayColorData, int> mergedSharedColors = new Dictionary<OverlayColorData, int>();
+			protected Dictionary<string, int> mergedSharedColors = new Dictionary<string, int>();
 			public SlotData[] slotDataList;
 			public int additionalSlotCount;
 			public OverlayColorData[] sharedColors;
@@ -351,6 +351,7 @@ namespace UMA
 				if ((slot == null) || (slot.asset == null))
 					return;
 
+				int overlayCount = 0;
 				for (int i = 0; i < slotDataList.Length; i++)
 				{
 					if (slotDataList[i] == null)
@@ -358,22 +359,25 @@ namespace UMA
 					if (slot.asset == slotDataList[i].asset)
 					{
 						SlotData originalSlot = slotDataList[i];
-						int overlayCount = slot.OverlayCount;
+						overlayCount = slot.OverlayCount;
 						for (int j = 0; j < overlayCount; j++)
 						{
 							OverlayData overlay = slot.GetOverlay(j);
 							OverlayData originalOverlay = originalSlot.GetEquivalentOverlay(overlay);
 							if (originalOverlay != null)
 							{
-								originalOverlay.CopyColors(overlay);
+//								originalOverlay.CopyColors(overlay);
 							}
 							else
 							{
-								int sharedIndex;
 								OverlayData overlayCopy = overlay.Copy();
-								if (mergedSharedColors.TryGetValue(overlay.colorData, out sharedIndex))
+								if (overlay.colorData.HasName())
 								{
-									overlayCopy.colorData = sharedColors[sharedIndex];
+									int sharedIndex;
+									if (mergedSharedColors.TryGetValue(overlay.colorData.name, out sharedIndex))
+									{
+										overlayCopy.colorData = sharedColors[sharedIndex];
+									}
 								}
 								originalSlot.AddOverlay(overlayCopy);
 							}
@@ -397,7 +401,21 @@ namespace UMA
 					}
 				}
 			
-				slotDataList[insertIndex] = slot.Copy();
+				SlotData slotCopy = slot.Copy();
+				overlayCount = slotCopy.OverlayCount;
+				for (int j = 0; j < overlayCount; j++)
+				{
+					OverlayData overlay = slotCopy.GetOverlay(j);
+					if (overlay.colorData.HasName())
+					{
+						int sharedIndex;
+						if (mergedSharedColors.TryGetValue(overlay.colorData.name, out sharedIndex))
+						{
+							overlay.colorData = sharedColors[sharedIndex];
+						}
+					}
+				}
+				slotDataList[insertIndex] = slotCopy;
 			}
 
             public SlotData GetSlot(int index)
@@ -562,45 +580,37 @@ namespace UMA
 
 				mergedSharedColors.Clear();
 				if (sharedColors == null)
-				{
 					sharedColors = new OverlayColorData[0];
-				}
-
 				if (recipe.sharedColors != null)
 				{
+					for (int i = 0; i < sharedColors.Length; i++)
+					{
+						if ((sharedColors[i] != null) && sharedColors[i].HasName())
+							mergedSharedColors.Add(sharedColors[i].name, i);
+					}
+
 					for (int i = 0; i < recipe.sharedColors.Length; i++)
 					{
 						OverlayColorData sharedColor = recipe.sharedColors[i];
-						bool found = false;
-						if ((sharedColor.name != null) && (sharedColor.name.Length > 0))
+						if (sharedColor.HasName())
 						{
-							for (int j = 0; j < sharedColors.Length; j++)
+							int sharedIndex;
+							if (!mergedSharedColors.TryGetValue(sharedColor.name, out sharedIndex))
 							{
-								if (sharedColor.name == sharedColors[j].name)
-								{
-									mergedSharedColors.Add(sharedColor, j);
-									found = true;
-									break;
-								}
+								int index = sharedColors.Length;
+								mergedSharedColors.Add(sharedColor.name, index);
+								Array.Resize<OverlayColorData>(ref sharedColors, index + 1);
+								sharedColors[index] = sharedColor.Copy();
 							}
-						}
-
-						if (!found)
-						{
-							int index = sharedColors.Length;
-							mergedSharedColors.Add(sharedColor, index);
-							Array.Resize<OverlayColorData>(ref sharedColors, index + 1);
-							sharedColors[index] = sharedColor.Copy();
 						}
 					}
 				}
 
-				int slotCount = recipe.slotDataList == null ? 0 : recipe.slotDataList.Length;
-				if (slotCount > 0)
+				if (slotDataList == null)
+					slotDataList = new SlotData[0];
+				if (recipe.slotDataList != null)
 				{
-					if (slotDataList == null)
-						slotDataList = new SlotData[0];
-					for (int i = 0; i < slotCount; i++)
+					for (int i = 0; i < recipe.slotDataList.Length; i++)
 					{
 						MergeSlot(recipe.slotDataList[i], additional);
 					}

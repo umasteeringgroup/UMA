@@ -67,6 +67,11 @@ namespace UMA
 			}
 			return res;
 		}
+
+		public bool HasName()
+		{
+			return ((name != null) && (name.Length > 0));
+		}
 		
 		public static bool SameColor(Color32 color1, Color32 color2)
 		{
