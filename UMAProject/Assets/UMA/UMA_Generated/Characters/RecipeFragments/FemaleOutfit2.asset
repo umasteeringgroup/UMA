@@ -1,0 +1,14 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9448878e2e40f1a4c9f8fd2b56832b13, type: 3}
+  m_Name: FemaleOutfit2
+  m_EditorClassIdentifier: 
+  recipeString: '{"version":2,"packedSlotDataList":null,"slotsV2":[{"id":"FemaleLegs","scale":100,"copyIdx":-1,"overlays":[{"id":"FemaleJeans01","colorIdx":0,"rect":[0,0,0,0]}]},{"id":"FemaleTshirt01","scale":100,"copyIdx":-1,"overlays":[{"id":"FemaleTshirt01","colorIdx":1,"rect":[0,0,0,0]}]}],"colors":[{"name":null,"color":[107,85,247,0],"masks":null,"addMasks":null},{"name":null,"color":[133,67,86,0],"masks":null,"addMasks":null}],"sharedColorCount":0,"race":"HumanFemale","umaDna":{},"packedDna":[{"dnaType":"UMADnaHumanoid","packedDna":"{\"height\":125,\"headSize\":130,\"headWidth\":106,\"neckThickness\":128,\"armLength\":129,\"forearmLength\":129,\"armWidth\":105,\"forearmWidth\":190,\"handsSize\":126,\"feetSize\":129,\"legSeparation\":128,\"upperMuscle\":220,\"lowerMuscle\":185,\"upperWeight\":244,\"lowerWeight\":234,\"legsSize\":123,\"belly\":244,\"waist\":127,\"gluteusSize\":142,\"earsSize\":192,\"earsPosition\":84,\"earsRotation\":143,\"noseSize\":164,\"noseCurve\":82,\"noseWidth\":160,\"noseInclination\":164,\"nosePosition\":162,\"nosePronounced\":95,\"noseFlatten\":92,\"chinSize\":159,\"chinPronounced\":200,\"chinPosition\":177,\"mandibleSize\":116,\"jawsSize\":200,\"jawsPosition\":173,\"cheekSize\":101,\"cheekPosition\":101,\"lowCheekPronounced\":151,\"lowCheekPosition\":82,\"foreheadSize\":144,\"foreheadPosition\":103,\"lipsSize\":199,\"mouthSize\":154,\"eyeRotation\":96,\"eyeSize\":172,\"breastSize\":104}"},{"dnaType":"UMADnaTutorial","packedDna":"{\"eyeSpacing\":128}"}]}'
