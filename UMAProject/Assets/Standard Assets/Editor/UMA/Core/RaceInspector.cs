@@ -28,7 +28,6 @@ namespace UMAEditor
 			race.raceName = EditorGUILayout.TextField("Race Name", race.raceName);
             race.umaTarget = (UMA.RaceData.UMATarget)EditorGUILayout.EnumPopup("UMA Target", race.umaTarget);
             race.genericRootMotionTransformName = EditorGUILayout.TextField("Root Motion Transform", race.genericRootMotionTransformName);
-            race.racePrefab = EditorGUILayout.ObjectField("Prefab", race.racePrefab, typeof(GameObject), false) as GameObject;
 			race.TPose = EditorGUILayout.ObjectField("TPose", race.TPose, typeof(UmaTPose), false) as UmaTPose;
 			race.expressionSet = EditorGUILayout.ObjectField("Expression Set", race.expressionSet, typeof(UMA.PoseTools.UMAExpressionSet), false) as UMA.PoseTools.UMAExpressionSet;
 
@@ -37,6 +36,27 @@ namespace UMAEditor
 			SerializedProperty dnaConverters = serializedObject.FindProperty("dnaConverterList");
 			EditorGUI.BeginChangeCheck();
 			EditorGUILayout.PropertyField(dnaConverters, true);
+			if(EditorGUI.EndChangeCheck()) {
+				serializedObject.ApplyModifiedProperties();
+			}
+
+			SerializedProperty skinColors = serializedObject.FindProperty("sampleSkinColors");
+			EditorGUI.BeginChangeCheck();
+			EditorGUILayout.PropertyField(skinColors, true);
+			if(EditorGUI.EndChangeCheck()) {
+				serializedObject.ApplyModifiedProperties();
+			}
+			
+			SerializedProperty hairColors = serializedObject.FindProperty("sampleHairColors");
+			EditorGUI.BeginChangeCheck();
+			EditorGUILayout.PropertyField(hairColors, true);
+			if(EditorGUI.EndChangeCheck()) {
+				serializedObject.ApplyModifiedProperties();
+			}
+			
+			SerializedProperty dnaRanges = serializedObject.FindProperty("dnaRanges");
+			EditorGUI.BeginChangeCheck();
+			EditorGUILayout.PropertyField(dnaRanges, true);
 			if(EditorGUI.EndChangeCheck()) {
 				serializedObject.ApplyModifiedProperties();
 			}

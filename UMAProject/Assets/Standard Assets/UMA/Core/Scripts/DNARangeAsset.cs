@@ -31,7 +31,7 @@ namespace UMA
 				return;
 			}
 
-			if (values == null)
+			if ((values == null) || (values.Length != entryCount))
 				values = new float[entryCount];
 
 			for (int i = 0; i < entryCount; i++)

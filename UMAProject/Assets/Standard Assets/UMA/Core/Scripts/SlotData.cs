@@ -140,7 +140,20 @@ namespace UMA
 				return null;
             return overlayList[index];
 		}
-        
+		
+		public OverlayData GetOverlay(OverlayDataAsset asset)
+		{
+			foreach (var overlay in overlayList)
+			{
+				if (overlay.asset == asset)
+				{
+					return overlay;
+				}
+			}
+
+			return null;
+		}
+
 		public int OverlayCount { get { return overlayList.Count; } }
         
 		public void SetOverlayList(List<OverlayData> overlayList)
