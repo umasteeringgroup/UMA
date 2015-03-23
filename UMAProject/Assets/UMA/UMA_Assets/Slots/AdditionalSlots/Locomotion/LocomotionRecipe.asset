@@ -11,4 +11,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9448878e2e40f1a4c9f8fd2b56832b13, type: 3}
   m_Name: LocomotionRecipe
   m_EditorClassIdentifier: 
-  recipeString: '{"packedSlotDataList":[{"slotID":"Locomotion","overlayScale":100,"copyOverlayIndex":-1,"OverlayDataList":[]}],"umaDna":{},"packedDna":[]}'
+  recipeString: '{"version":2,"packedSlotDataList":null,"slotsV2":[{"id":"Locomotion","scale":100,"copyIdx":-1,"overlays":[]}],"colors":[],"sharedColorCount":0,"race":null,"umaDna":{},"packedDna":[]}'

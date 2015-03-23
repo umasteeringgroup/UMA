@@ -331,26 +331,79 @@ namespace UMA
                 return this.raceData;
             }
 
-
             public void SetSlot(int index, SlotData slot)
             {
                 if (index >= slotDataList.Length)
                 {
-                    SlotData[] tempArray = slotDataList;
-                    slotDataList = new SlotData[index + 1];
-                    for (int i = 0; i < tempArray.Length; i++)
-                    {
-                        slotDataList[i] = tempArray[i];
-                    }
+					System.Array.Resize<SlotData>(ref slotDataList, index + 1);
                 }
                 slotDataList[index] = slot;
             }
+
+			public void SetSlots(SlotData[] slots)
+			{
+				slotDataList = slots;
+			}
+
+			public void MergeSlot(SlotData slot, bool additional)
+			{
+				if ((slot == null) || (slot.asset == null))
+					return;
+
+				for (int i = 0; i < slotDataList.Length; i++)
+				{
+					if (slotDataList[i] == null)
+						continue;
+					if (slot.asset == slotDataList[i].asset)
+					{
+						SlotData originalSlot = slotDataList[i];
+						int overlayCount = slot.OverlayCount;
+						for (int j = 0; j < overlayCount; j++)
+						{
+							OverlayData overlay = slot.GetOverlay(j);
+							OverlayData originalOverlay = originalSlot.GetOverlay(overlay.asset);
+							if (originalOverlay != null)
+							{
+								originalOverlay.CopyColors(overlay);
+							}
+							else
+							{
+								originalSlot.AddOverlay(overlay);
+							}
+						}
+						return;
+					}
+				}
+
+				int insertIndex = slotDataList.Length;
+				System.Array.Resize<SlotData>(ref slotDataList, slotDataList.Length + 1);
+				if (additional)
+				{
+					additionalSlotCount += 1;
+				}
+				else
+				{
+					for (int i = 0; i < additionalSlotCount; i++)
+					{
+						slotDataList[insertIndex] = slotDataList[insertIndex -1];
+						insertIndex--;
+					}
+				}
+			
+				slotDataList[insertIndex] = slot;
+			}
+
             public SlotData GetSlot(int index)
             {
                 if (index < slotDataList.Length)
                     return slotDataList[index];
                 return null;
             }
+			
+			public SlotData[] GetAllSlots()
+			{
+				return slotDataList;
+			}
 
 			public int GetSlotArraySize()
 			{
@@ -475,11 +528,6 @@ namespace UMA
 				}
 			}
 
-            public SlotData[] GetAllSlots()
-            {
-                return slotDataList;
-            }
-
 			public UMARecipe Mirror()
 			{
 				var newRecipe = new UMARecipe();
@@ -489,30 +537,28 @@ namespace UMA
 				return newRecipe;
 			}
 
-			public void Merge(UMARecipe additionalRecipe, bool serializeRecipes)
+			public void Merge(UMARecipe recipe, bool additional)
 			{
-				if ((additionalRecipe.raceData != null) && (additionalRecipe.raceData != raceData))
+				if ((recipe.raceData != null) && (recipe.raceData != raceData))
 				{
-					Debug.LogWarning("Merging recipe with conflicting race data: " + additionalRecipe.raceData.name);
+					Debug.LogWarning("Merging recipe with conflicting race data: " + recipe.raceData.name);
 				}
 
-				foreach (var dnaEntry in additionalRecipe.umaDna)
+				foreach (var dnaEntry in recipe.umaDna)
 				{
 					var destDNA = GetOrCreateDna(dnaEntry.Key);
 					destDNA.Values = dnaEntry.Value.Values;
 				}
 
-				int slotCount = additionalRecipe.slotDataList == null ? 0 : additionalRecipe.slotDataList.Length;
+				int slotCount = recipe.slotDataList == null ? 0 : recipe.slotDataList.Length;
 				if (slotCount > 0)
 				{
 					if (slotDataList == null)
 						slotDataList = new SlotData[0];
-					if (!serializeRecipes)
-						additionalSlotCount += slotCount;
-					var newSlots = new SlotData[slotDataList.Length + slotCount];
-					Array.Copy(slotDataList, newSlots, slotDataList.Length);
-					Array.Copy(additionalRecipe.slotDataList, 0, newSlots, slotDataList.Length, slotCount);
-					slotDataList = newSlots;
+					for (int i = 0; i < slotCount; i++)
+					{
+						MergeSlot(recipe.slotDataList[i], additional);
+					}
 				}
 			}
 		}
@@ -775,7 +821,6 @@ namespace UMA
 	        return umaRecipe.GetDna<T>();
 	    }
 
-
 	    public void Dirty(bool dnaDirty, bool textureDirty, bool meshDirty)
 	    {
 	        isShapeDirty   |= dnaDirty;
@@ -785,23 +830,18 @@ namespace UMA
 			Dirty();
 	    }
 		
-		public void SetSlot(int index, SlotData slot){
-			
-			if(index >= umaRecipe.slotDataList.Length){
-				SlotData[] tempArray = umaRecipe.slotDataList;
-				umaRecipe.slotDataList = new SlotData[index + 1];
-				for(int i = 0; i < tempArray.Length; i++){
-					umaRecipe.slotDataList[i] = tempArray[i];
-				}			
-			}
-			umaRecipe.slotDataList[index] = slot;
+		public void SetSlot(int index, SlotData slot)
+		{
+			umaRecipe.SetSlot(index, slot);
 		}
 		
-		public void SetSlots(SlotData[] slots){
-			umaRecipe.slotDataList = slots;
+		public void SetSlots(SlotData[] slots)
+		{
+			umaRecipe.SetSlots(slots);
 		}
 		
-		public SlotData GetSlot(int index){
+		public SlotData GetSlot(int index)
+		{
 			return umaRecipe.GetSlot(index);	
 		}
 
@@ -911,7 +951,7 @@ namespace UMA
 				foreach (var umaAdditionalRecipe in umaAdditionalRecipes)
 				{
 					umaAdditionalRecipe.Load(additionalRecipe, context);
-					umaRecipe.Merge(additionalRecipe, false);
+					umaRecipe.Merge(additionalRecipe, true);
 				}
 			}
 		}

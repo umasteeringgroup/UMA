@@ -7,7 +7,7 @@ namespace UMA
 	{
 		public void OnDnaApplied(UMAData umaData)
 		{
-			var umaDna = umaData.umaRecipe.GetDna<UMADnaHumanoid>();
+			var umaDna = umaData.GetDna<UMADnaHumanoid>();
 			if (umaDna == null)
 			{
 				Debug.LogError("Failed to add Capsule Collider to: " + umaData.name);

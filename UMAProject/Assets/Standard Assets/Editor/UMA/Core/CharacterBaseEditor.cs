@@ -367,7 +367,9 @@ namespace UMAEditor
                     _meshDirty = true;
 
                     _slotEditors.RemoveAt(i);
-                    ArrayUtility.RemoveAt<SlotData>(ref _recipe.slotDataList, editor.idx);
+					if ((editor.idx + _recipe.additionalSlotCount) >= _recipe.slotDataList.Length)
+						_recipe.additionalSlotCount--;
+					ArrayUtility.RemoveAt<SlotData>(ref _recipe.slotDataList, editor.idx);
                     i--;
                     changed = true;
                 }
