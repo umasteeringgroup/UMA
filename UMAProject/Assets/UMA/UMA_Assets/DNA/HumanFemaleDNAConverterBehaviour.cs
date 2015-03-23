@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections;
 using UMA;
 
-public class HumanFemaleDNAConverterBehaviour : DnaConverterBehaviour
+public class HumanFemaleDNAConverterBehaviour : HumanoidDNAConverterBehaviour
 {
 	public HumanFemaleDNAConverterBehaviour()
 	{
