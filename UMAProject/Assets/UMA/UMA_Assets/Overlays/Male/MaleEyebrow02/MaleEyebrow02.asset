@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Name: MaleEyebrow02
   m_EditorClassIdentifier: 
   overlayName: MaleEyebrow02
-  color: {r: 1, g: 1, b: 1, a: 1}
   rect:
     serializedVersion: 2
     x: 384
@@ -22,6 +21,5 @@ MonoBehaviour:
   textureList:
   - {fileID: 2800000, guid: c2a575cc8a9e34943b7c4a6d518a6e5a, type: 3}
   - {fileID: 2800000, guid: 54b027ab86920d6429af2da8d73f1ac5, type: 3}
-  channelMask: []
-  channelAdditiveMask: []
   tags: []
+  material: {fileID: 11400000, guid: 30f58efe335b9cc419271f828db88622, type: 2}

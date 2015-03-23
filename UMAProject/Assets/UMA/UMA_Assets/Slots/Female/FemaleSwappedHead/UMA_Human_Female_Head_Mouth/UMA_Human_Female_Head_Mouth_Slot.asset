@@ -12,167 +12,12 @@ MonoBehaviour:
   m_Name: UMA_Human_Female_Head_Mouth_Slot
   m_EditorClassIdentifier: 
   slotName: FemaleHead_Mouth
-  listID: -1
+  material: {fileID: 11400000, guid: 30f58efe335b9cc419271f828db88622, type: 2}
+  textureNameList: []
   meshRenderer: {fileID: 0}
-  boneNameHashes: 
-  umaBoneData:
-  - {fileID: 400308, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400306, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400304, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400302, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400300, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400298, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400296, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400294, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400292, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400290, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400288, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400286, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400284, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400282, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400280, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400278, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400276, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400274, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400272, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400270, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400268, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400266, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400264, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400262, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400260, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400258, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400256, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400254, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400252, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400250, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400248, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400246, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400244, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400242, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400240, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400238, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400236, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400234, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400232, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400230, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400228, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400226, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400224, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400222, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400220, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400218, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400216, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400214, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400212, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400210, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400208, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400206, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400204, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400202, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400200, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400198, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400196, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400194, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400192, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400190, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400188, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400186, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400184, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400182, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400180, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400178, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400176, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400174, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400172, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400170, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400168, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400166, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400164, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400162, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400160, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400158, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400156, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400154, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400152, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400150, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400148, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400146, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400144, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400142, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400140, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400138, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400136, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400134, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400132, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400130, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400128, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400126, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400124, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400122, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400120, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400118, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400116, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400114, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400112, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400110, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400108, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400106, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400104, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400102, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400100, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400098, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400096, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400094, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400092, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400090, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400088, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400086, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400084, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400082, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400080, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400078, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400076, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400074, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400072, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400070, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400068, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400066, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400064, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400062, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400060, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400058, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400056, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400054, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400052, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400050, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400048, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400046, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400044, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400042, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400040, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400038, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400036, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400034, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400032, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400030, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400028, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400026, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400024, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400022, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400020, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400018, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400016, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400014, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400012, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400010, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400008, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400006, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-  - {fileID: 400004, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
   materialSample: {fileID: 2100000, guid: a1b30327501eda441907cfe7be685bc0, type: 2}
   overlayScale: 1
   animatedBones: []
-  textureNameList: []
   slotDNA: {fileID: 0}
   meshData:
     bindPoses:
@@ -1675,6 +1520,8 @@ MonoBehaviour:
     - {x: .515175998, y: .424737006}
     - {x: .514226973, y: .420179993}
     uv2: []
+    uv3: []
+    uv4: []
     submeshes:
     - triangles: 0000000001000000020000000300000000000000020000000400000001000000000000000500000004000000000000000400000006000000010000000700000004000000050000000700000008000000040000000800000006000000040000000800000009000000060000000a0000000800000007000000070000000b0000000a0000000b000000070000000c0000000c00000007000000050000000c0000000d0000000b0000000e0000000b0000000d0000000a0000000f000000080000000f000000090000000800000010000000090000000f000000110000000900000010000000120000000d0000000c0000000c00000013000000120000001400000012000000130000000a0000000b00000015000000150000000b0000000e00000015000000160000000a000000160000000f0000000a000000170000000f00000016000000100000000f000000170000000e0000001800000015000000160000001800000017000000180000001600000015000000170000001800000019000000180000001a0000001900000017000000190000001b0000001b000000190000001c0000001c0000001d0000001b0000001e000000170000001b0000001b0000001d0000001e00000010000000170000001e000000100000001e0000001f0000001f000000110000001000000020000000110000001f0000001c000000190000002100000021000000190000001a00000021000000220000001c000000220000001d0000001c0000001f000000230000002000000024000000210000001a00000025000000220000002100000025000000260000002200000022000000260000002700000022000000270000001d0000001d00000027000000280000001d00000028000000290000001e0000001d00000029000000290000002a0000001e0000001f0000001e0000002a0000002a000000230000001f0000002b000000230000002a0000002b0000002a000000290000002c0000002b0000002900000029000000280000002c0000002d0000002b0000002c0000002b0000002d0000002e0000002e000000230000002b00000027000000260000002f0000002f000000260000003000000031000000270000002f00000028000000270000003100000031000000320000002800000028000000320000002c000000330000002c000000320000002d0000002c0000003300000033000000340000002d0000003100000035000000320000003600000035000000310000003100000037000000360000002f00000037000000310000003800000036000000370000002f000000390000003700000037000000390000003800000030000000390000002f0000003a000000320000003500000033000000320000003a0000003b000000330000003a00000034000000330000003b000000350000003c0000003a0000003a0000003c0000003b0000003d0000003c000000350000003d0000003e0000003c0000003d0000003f0000003e00000035000000400000003d0000004000000036000000380000003600000040000000350000004100000040000000380000004100000038000000420000003800000039000000420000003b0000003c000000430000003c0000003e00000043000000390000004400000042000000450000003f0000003d0000003d000000400000004500000045000000400000004600000046000000400000004100000045000000470000003f0000003f0000004700000048000000450000004900000047000000460000004900000045000000460000004a00000049000000410000004a000000460000004b000000490000004a0000004c000000490000004b000000490000004c000000470000004b0000000c0000004c000000470000004c0000004d000000470000004d00000048000000050000004d0000004c0000004c0000000c00000005000000480000004d000000030000004e0000004b0000004a0000004d0000000000000003000000000000004d000000050000004b000000130000000c000000130000004b0000004e0000004f000000130000004e0000004a000000410000004e0000004e000000410000005000000050000000510000004e00000014000000130000004f0000005200000012000000140000005300000012000000520000000d0000001200000053000000540000000d000000530000000e0000000d000000540000000e000000550000005600000056000000180000000e0000002500000057000000580000002100000057000000250000002500000058000000260000002600000058000000590000005a000000260000005900000030000000260000005a0000005b000000300000005a00000039000000300000005b0000005c0000005d0000005e0000005f0000005d000000600000002e0000002d000000610000002d0000003400000061000000620000006300000064000000650000006400000066000000
     bones:
@@ -1694,12 +1541,249 @@ MonoBehaviour:
     - {fileID: 400152, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
     - {fileID: 400086, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
     - {fileID: 400082, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
-    rootBone: {fileID: 400310, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
+    rootBone: {fileID: 400314, guid: 4cd666ba260533a4dbc63931d666d4d2, type: 2}
+    umaBones:
+    - position: {x: -.191012755, y: 1.44210404e-08, z: -7.24358618e-09}
+      rotation: {x: -3.06165447e-07, y: .0907229558, z: -2.6228907e-08, w: .995876193}
+      scale: {x: .99999994, y: 1, z: .99999994}
+      name: Neck
+      hash: -2145158803
+      parent: -1892025778
+    - position: {x: -.0231765136, y: .00964187831, z: .147556707}
+      rotation: {x: .796191335, y: -.0577250943, z: -.601291418, w: .0345807858}
+      scale: {x: .999999881, y: 1.00000012, z: 1}
+      name: RightLipsSuperiorMiddle
+      hash: -2093673696
+      parent: 130111906
+    - position: {x: -.109372519, y: .0101473778, z: .0266780555}
+      rotation: {x: -.020157693, y: .189465359, z: -.103352919, w: .97622472}
+      scale: {x: 1.00000012, y: 1.00000024, z: 1}
+      name: LeftLipsInferior
+      hash: -2082379262
+      parent: 1574626840
+    - position: {x: -.0231765155, y: -.00964183174, z: .147556707}
+      rotation: {x: .796191454, y: .0577250905, z: -.60129118, w: -.0345817655}
+      scale: {x: .999999821, y: 1.00000024, z: 1.00000012}
+      name: LeftLipsSuperiorMiddle
+      hash: -1900485368
+      parent: 130111906
+    - position: {x: -.17041485, y: 1.28751134e-08, z: -1.96695328e-05}
+      rotation: {x: 4.74034408e-07, y: .110715948, z: -5.385285e-10, w: .993852139}
+      scale: {x: 1, y: 1, z: 1}
+      name: Spine1
+      hash: -1892025778
+      parent: 1393476043
+    - position: {x: -.0903432667, y: -.0273152497, z: .0175424237}
+      rotation: {x: .0235412121, y: .268184334, z: .0842154175, w: .959390819}
+      scale: {x: 1, y: 1, z: 1.00000012}
+      name: RightLips
+      hash: -1558564409
+      parent: 1574626840
+    - position: {x: -.0523908325, y: -9.1020891e-05, z: .148498878}
+      rotation: {x: .71245414, y: -1.95795256e-08, z: -.701718688, w: 3.56694123e-08}
+      scale: {x: 1, y: 1, z: .999999881}
+      name: NoseBase
+      hash: -1184023893
+      parent: 130111906
+    - position: {x: -.021108171, y: .0365740806, z: .111145891}
+      rotation: {x: -.659119189, y: .239157379, z: .670225382, w: -.243235722}
+      scale: {x: 1, y: .99999994, z: .999999881}
+      name: RightLowCheek
+      hash: -1122647396
+      parent: 130111906
+    - position: {x: -.0237451419, y: -9.10285889e-05, z: .150587246}
+      rotation: {x: .781971335, y: -5.38841398e-08, z: -.6233145, w: 1.25647874e-08}
+      scale: {x: .99999994, y: 1, z: .99999994}
+      name: LipsSuperior
+      hash: -1089081410
+      parent: 130111906
+    - position: {x: -4.38520997e-10, y: 4.00000001e-15, z: 8.32684766e-09}
+      rotation: {x: -4.94844699e-09, y: 1.83259575e-16, z: -9.94837655e-16, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+      name: Position
+      hash: -1084586333
+      parent: -274100555
+    - position: {x: -1.49011612e-08, y: -3.72529008e-09, z: -9.47550234e-08}
+      rotation: {x: -4.9929622e-07, y: 5.493348e-10, z: -8.8766674e-09, w: 1}
+      scale: {x: 1, y: 1.00000012, z: 1}
+      name: LeftLowCheekAdjust
+      hash: -982498292
+      parent: 1716905425
+    - position: {x: 1.12049703e-09, y: -1.06520019e-08, z: -1.02969352e-07}
+      rotation: {x: 8.84756446e-09, y: 2.63753464e-11, z: 6.36646291e-11, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+      name: RightNoseAdjust
+      hash: -973641869
+      parent: -764976276
+    - position: {x: -.0538786389, y: 4.06771994e-09, z: -1.30385116e-08}
+      rotation: {x: 5.6795912e-08, y: -.0792022794, z: 3.52796548e-08, w: .996858597}
+      scale: {x: 1, y: 1, z: 1}
+      name: LowerBack
+      hash: -919067556
+      parent: -556726767
+    - position: {x: -.0470109805, y: .0272482149, z: .10020972}
+      rotation: {x: .708871067, y: -.00118129607, z: -.705323219, w: -.0044246316}
+      scale: {x: .999999583, y: .99999994, z: .99999994}
+      name: RightNose
+      hash: -764976276
+      parent: 130111906
+    - position: {x: 2.42212757e-08, y: 9.05999993e-13, z: 1.44029769e-07}
+      rotation: {x: 5.64158569e-08, y: -2.13802868e-15, z: -5.21853441e-15, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+      name: UpperLipsAdjust
+      hash: -736966710
+      parent: 891826736
+    - position: {x: -4.99869941e-08, y: -2.30207231e-08, z: 9.29990804e-08}
+      rotation: {x: -3.14862589e-08, y: 2.72271372e-14, z: -4.31096233e-15, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+      name: NoseBaseAdjust
+      hash: -685367200
+      parent: -1184023893
+    - position: {x: -1.48969503e-09, y: -3.29640693e-09, z: 9.54789954e-08}
+      rotation: {x: -1.15004921e-08, y: -2.66162718e-15, z: 2.15548159e-15, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+      name: LeftLipsAdjust
+      hash: -666615888
+      parent: 1620479899
+    - position: {x: -1.09406674, y: 6.2813541e-08, z: -.0208332464}
+      rotation: {x: -3.09400257e-08, y: .0552572049, z: -2.81659833e-08, w: .998472154}
+      scale: {x: 1, y: 1, z: 1}
+      name: Hips
+      hash: -556726767
+      parent: -1084586333
+    - position: {x: -.110424198, y: -4.54926994e-05, z: .0257435702}
+      rotation: {x: .00553508475, y: .168122232, z: -.000944134546, w: .985750198}
+      scale: {x: 1.00000012, y: 1, z: 1}
+      name: LipsInferior
+      hash: -499586065
+      parent: 1574626840
+    - position: {x: -.0567514896, y: 4.28462021e-09, z: -2.98023224e-08}
+      rotation: {x: 1.13376503e-10, y: -8.72664627e-18, z: 2.27765465e-15, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+      name: HeadAdjust
+      hash: -423229038
+      parent: 130111906
+    - position: {x: -.0990980417, y: 7.48167661e-09, z: 1.86264515e-08}
+      rotation: {x: 7.0595199e-08, y: -.0831604674, z: 1.76383086e-08, w: .996536195}
+      scale: {x: 1, y: 1, z: 1}
+      name: Head
+      hash: 130111906
+      parent: -2145158803
+    - position: {x: -.0470109843, y: -.0272481777, z: .10020978}
+      rotation: {x: .708871245, y: .001175054, z: -.7053231, w: .00441869348}
+      scale: {x: .999999821, y: 1.00000024, z: .99999994}
+      name: LeftNose
+      hash: 300670256
+      parent: 130111906
+    - position: {x: -4.28408384e-08, y: 1.3038516e-08, z: 1.94991117e-08}
+      rotation: {x: 2.76289029e-07, y: 6.36646402e-10, z: -2.63244146e-08, w: 1}
+      scale: {x: .99999994, y: 1, z: .99999994}
+      name: RightLowCheekAdjust
+      hash: 530525254
+      parent: -1122647396
+    - position: {x: 4.74537956e-08, y: 1.12777343e-08, z: 4.42378179e-09}
+      rotation: {x: 8.31305513e-08, y: 2.78305406e-10, z: 5.27507031e-11, w: 1}
+      scale: {x: .99999994, y: .99999994, z: .99999994}
+      name: LeftNoseAdjust
+      hash: 623523856
+      parent: 300670256
+    - position: {x: 3.6323673e-08, y: -1.87400009e-12, z: -3.58492152e-08}
+      rotation: {x: -6.39244391e-08, y: -7.45057838e-09, z: 3.50848094e-14, w: 1}
+      scale: {x: 1.00000012, y: 1, z: 1.00000012}
+      name: MandibleAdjust
+      hash: 691264956
+      parent: 1574626840
+    - position: {x: -.0358038619, y: -9.10281015e-05, z: .117584914}
+      rotation: {x: .707106113, y: .000981487217, z: -.707106113, w: .000981487217}
+      scale: {x: 1, y: 1, z: 1}
+      name: UpperLips
+      hash: 891826736
+      parent: 130111906
+    - position: {x: -.109372519, y: -.0103294328, z: .0266780555}
+      rotation: {x: .0201577786, y: .189465553, z: .10335283, w: .97622472}
+      scale: {x: 1.00000012, y: 1.00000012, z: 1.00000012}
+      name: RightLipsInferior
+      hash: 921042654
+      parent: 1574626840
+    - position: {x: 3.68970993e-10, y: 5.68158498e-09, z: 9.07756146e-08}
+      rotation: {x: 7.81456233e-09, y: 3.99680374e-15, z: -5.73340678e-15, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+      name: RightLipsAdjust
+      hash: 949575891
+      parent: -1558564409
+    - position: {x: -1.65891834e-07, y: -9.31323019e-10, z: -6.74190233e-08}
+      rotation: {x: -.663400352, y: -5.78786467e-06, z: 3.05248818e-06, w: .74826473}
+      scale: {x: .99999994, y: .99999994, z: .999999821}
+      name: RightLipsSuperiorMiddleAdjust
+      hash: 1220922885
+      parent: -2093673696
+    - position: {x: 3.25962901e-09, y: -1.86264504e-09, z: 1.48024355e-07}
+      rotation: {x: .000278878346, y: 5.73891323e-10, z: -3.37604544e-09, w: 1}
+      scale: {x: .99999994, y: .999999881, z: .999999881}
+      name: RightLipsInferiorAdjust
+      hash: 1389899872
+      parent: 921042654
+    - position: {x: -.174402967, y: 1.05096909e-08, z: -.000113466755}
+      rotation: {x: -5.4392666e-07, y: -.0868342668, z: 1.42856296e-08, w: .996222794}
+      scale: {x: 1, y: 1, z: 1}
+      name: Spine
+      hash: 1393476043
+      parent: -919067556
+    - position: {x: -.0488973707, y: -9.10292729e-05, z: .0380956754}
+      rotation: {x: -.497236848, y: 7.82135601e-08, z: .867614865, w: 8.35045644e-10}
+      scale: {x: 1.00000024, y: 1, z: 1}
+      name: Mandible
+      hash: 1574626840
+      parent: 130111906
+    - position: {x: 1.21071926e-08, y: 0, z: 6.66220785e-08}
+      rotation: {x: -.000278993975, y: -1.87265004e-09, z: -3.72529074e-09, w: 1}
+      scale: {x: 1, y: .99999994, z: .99999994}
+      name: LeftLipsInferiorAdjust
+      hash: 1599456840
+      parent: -2082379262
+    - position: {x: -.0903432742, y: .027133191, z: .0175424311}
+      rotation: {x: -.0235411301, y: .268184334, z: -.084215425, w: .959390819}
+      scale: {x: 1.00000012, y: 1, z: 1}
+      name: LeftLips
+      hash: 1620479899
+      parent: 1574626840
+    - position: {x: -.0211081803, y: -.036574088, z: .111145929}
+      rotation: {x: -.659119248, y: -.239156961, z: .670225441, w: .243235782}
+      scale: {x: 1, y: 1.00000012, z: .999999881}
+      name: LeftLowCheek
+      hash: 1716905425
+      parent: 130111906
+    - position: {x: -2.23618795e-08, y: -1.27329303e-09, z: 8.83056259e-08}
+      rotation: {x: -.00561527209, y: -1.31314834e-10, z: 8.80742093e-08, w: .999984264}
+      scale: {x: .99999994, y: 1, z: 1}
+      name: LipsInferiorAdjust
+      hash: 1799356466
+      parent: -499586065
+    - position: {x: 2.97958263e-08, y: -7.7569999e-12, z: -4.28283471e-08}
+      rotation: {x: -3.16078342e-07, y: -1.12677989e-14, z: 5.37347597e-12, w: 1}
+      scale: {x: 1, y: .99999994, z: 1}
+      name: LipsSuperiorAdjust
+      hash: 1865332640
+      parent: -1089081410
+    - position: {x: -1.05123036e-07, y: 1.86264504e-09, z: -6.56291377e-08}
+      rotation: {x: .663400114, y: -5.6045883e-06, z: -2.7599956e-06, w: .748264849}
+      scale: {x: 1, y: 1, z: 1}
+      name: LeftLipsSuperiorMiddleAdjust
+      hash: 1940197654
+      parent: -1900485368
+    umaBoneCount: 38
+    rootBoneHash: -274100555
     boneNameHashes: bcdd33293200406b48c6555fb03f44d89209c6e60c4470c56030d8521611a573a0b72e6f602026d710382a25cac712d405cec548d3609938462c9f1f7367f7c5
     subMeshCount: 1
+    vertexCount: 103
   subMeshIndex: 0
   slotGroup: 
   tags: []
+  CharacterBegun:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: UMA.UMADataEvent, Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
   SlotAtlassed:
     m_PersistentCalls:
       m_Calls: []

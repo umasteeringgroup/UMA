@@ -22,12 +22,16 @@ namespace UMA
         public string genericRootMotionTransformName;
 		public PoseTools.UMAExpressionSet expressionSet;
 
+		public Color32[] sampleSkinColors;
+		public Color32[] sampleHairColors;
+		public DNARangeAsset[] dnaRanges;
+
 	    void Awake()
 	    {
 	        UpdateDictionary();
 	    }
 
-        public bool Validate(UMAGeneratorBase generator)
+        public bool Validate()
 	    {
 	    	bool valid = true;
 			if ((umaTarget == UMATarget.Humanoid) && (TPose == null)) {

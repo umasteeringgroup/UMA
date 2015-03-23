@@ -45,6 +45,7 @@ namespace UMA
 		public string overlayName { get { return asset.overlayName; } }
 		public Rect rect;
 #endif
+		[System.NonSerialized]
 		public OverlayColorData colorData;
 
 		public OverlayData Duplicate()

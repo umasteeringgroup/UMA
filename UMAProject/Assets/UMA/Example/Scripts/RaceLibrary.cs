@@ -39,6 +39,8 @@ public class RaceLibrary : RaceLibraryBase {
 
 	override public void AddRace(RaceData race)
     {
+		if (race == null) return;
+
 		ValidateDictionary();
         for (int i = 0; i < raceElementList.Length; i++)
         {
@@ -58,17 +60,23 @@ public class RaceLibrary : RaceLibraryBase {
 
 	override public RaceData GetRace(string raceName)
     {
+		if ((raceName == null) || (raceName.Length == 0))
+			return null;
+
 		ValidateDictionary();
 		RaceData res;
 		if (!raceDictionary.TryGetValue(raceName, out res))
 		{
-			Debug.LogError("Could not find race: " + raceName);
+			return null;
 		}
         return res;
     }
 
 	override public RaceData GetRace(int raceHash)
 	{
+		if (raceHash == 0)
+			return null;
+
 		ValidateDictionary();
 
 		foreach (string name in raceDictionary.Keys) {
@@ -79,7 +87,6 @@ public class RaceLibrary : RaceLibraryBase {
 			}
 		}
 
-		Debug.LogError("Could not find race: " + raceHash);
 		return null;
 	}
 

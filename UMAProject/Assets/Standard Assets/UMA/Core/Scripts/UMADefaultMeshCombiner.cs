@@ -11,7 +11,6 @@ namespace UMA
         protected List<Material> combinedMaterialList;
 
         UMAData umaData;
-        string[] textureNameList;
         int atlasResolution;
 
 		protected void EnsureUMADataSetup(UMAData umaData)
@@ -43,37 +42,30 @@ namespace UMA
 			}
 		}
 
-        public override void UpdateUMAMesh(bool updatedAtlas, UMAData umaData, string[] textureNameList, int atlasResolution)
+        public override void UpdateUMAMesh(bool updatedAtlas, UMAData umaData, int atlasResolution)
         {
             this.umaData = umaData;
-            this.textureNameList = textureNameList;
             this.atlasResolution = atlasResolution;
 
             combinedMeshList = new List<SkinnedMeshCombiner.CombineInstance>();
             combinedMaterialList = new List<Material>();
 
-            if (updatedAtlas)
-            {
-                CombineByShader();
-            }
-            else
-            {
-				CombineByMaterial();
-            }
+            BuildCombineInstances();
 
 			EnsureUMADataSetup(umaData);
 			umaData.skeleton.BeginSkeletonUpdate();
 
 			UMAMeshData umaMesh = new UMAMeshData();
 			umaMesh.ClaimSharedBuffers();
-			SkinnedMeshCombiner.CombineMeshes(umaMesh, combinedMeshList.ToArray(), umaData.myRenderer.rootBone, umaData.skeleton);
+
+			SkinnedMeshCombiner.CombineMeshes(umaMesh, combinedMeshList.ToArray());
 
             if (updatedAtlas)
             {
 				RecalculateUV(umaMesh);
             }
 
-			umaMesh.ApplyDataToUnityMesh(umaData.myRenderer);
+			umaMesh.ApplyDataToUnityMesh(umaData.myRenderer, umaData.skeleton);
 			umaMesh.ReleaseSharedBuffers();
 
             umaData.umaRecipe.ClearDNAConverters();
@@ -129,18 +121,19 @@ namespace UMA
 		//    }
 		//}
 
-        protected void CombineByShader()
+        protected void BuildCombineInstances()
         {
             SkinnedMeshCombiner.CombineInstance combineInstance;
 
-            for (int atlasIndex = 0; atlasIndex < umaData.atlasList.atlas.Count; atlasIndex++)
+            for (int materialIndex = 0; materialIndex < umaData.generatedMaterials.materials.Count; materialIndex++)
             {
-                combinedMaterialList.Add(umaData.atlasList.atlas[atlasIndex].materialSample);
+				var generatedMaterial = umaData.generatedMaterials.materials[materialIndex];
+				combinedMaterialList.Add(generatedMaterial.material);
 
-                for (int materialDefinitionIndex = 0; materialDefinitionIndex < umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions.Count; materialDefinitionIndex++)
+				for (int materialDefinitionIndex = 0; materialDefinitionIndex < generatedMaterial.materialFragments.Count; materialDefinitionIndex++)
                 {
-					var materialDefinition = umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex];
-					var slotData = materialDefinition.source.slotData;
+					var materialDefinition = generatedMaterial.materialFragments[materialDefinitionIndex];
+					var slotData = materialDefinition.slotData;
                     combineInstance = new SkinnedMeshCombiner.CombineInstance();
 					combineInstance.meshData = slotData.asset.meshData;
 					combineInstance.targetSubmeshIndices = new int[combineInstance.meshData.subMeshCount];
@@ -148,145 +141,13 @@ namespace UMA
 					{
 						combineInstance.targetSubmeshIndices[i] = -1;
 					}
-					combineInstance.targetSubmeshIndices[slotData.asset.subMeshIndex] = atlasIndex;
+					combineInstance.targetSubmeshIndices[slotData.asset.subMeshIndex] = materialIndex;
                     combinedMeshList.Add(combineInstance);
 
 					if (slotData.asset.SlotAtlassed != null)
 					{
-						slotData.asset.SlotAtlassed.Invoke(umaData, slotData, umaData.atlasList.atlas[atlasIndex].materialSample, materialDefinition.atlasRegion);
+						slotData.asset.SlotAtlassed.Invoke(umaData, slotData, generatedMaterial.material, materialDefinition.atlasRegion);
 					}
-                }
-            }
-
-
-            SlotData[] slots = umaData.umaRecipe.slotDataList;
-            int indexCount = 0;
-            List<Material> sourceMaterials = null;
-            int atlassedMaterials = combinedMaterialList.Count;
-            for (int slotIndex = 0; slotIndex < slots.Length; slotIndex++)
-            {
-				if (slots[slotIndex] == null) continue;
-				if (slots[slotIndex].asset.textureNameList.Length == 1 && string.IsNullOrEmpty(slots[slotIndex].asset.textureNameList[0]))
-                {
-					combineInstance = new SkinnedMeshCombiner.CombineInstance();
-					combineInstance.meshData = slots[slotIndex].asset.meshData;
-                    combineInstance.targetSubmeshIndices = new int[combineInstance.meshData.subMeshCount];
-                    for (int i = 0; i < combineInstance.meshData.subMeshCount; i++)
-                    {
-                        combineInstance.targetSubmeshIndices[i] = -1;
-                    }
-
-                    bool contains = false;
-					Material slotMaterial = null;
-                    if (sourceMaterials != null)
-                    {
-                        for (int i = 0; i < sourceMaterials.Count; i++)
-                        {
-                            if (slots[slotIndex].asset.materialSample == sourceMaterials[i])
-                            {
-								slotMaterial = combinedMaterialList[i + atlassedMaterials];
-								combineInstance.targetSubmeshIndices[slots[slotIndex].asset.subMeshIndex] = i + atlassedMaterials;
-                                contains = true;
-                                break;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        sourceMaterials = new List<Material>(slots.Length);
-                    }
-                    if (!contains)
-                    {
-						sourceMaterials.Add(slots[slotIndex].asset.materialSample);
-						slotMaterial = new Material(slots[slotIndex].asset.materialSample);
-                        combinedMaterialList.Add(slotMaterial);
-						combineInstance.targetSubmeshIndices[slots[slotIndex].asset.subMeshIndex] = combinedMaterialList.Count - 1;
-                    }
-					if (slots[slotIndex].asset.SlotAtlassed != null)
-					{
-						slots[slotIndex].asset.SlotAtlassed.Invoke(umaData, slots[slotIndex], slotMaterial, new Rect(0, 0, 1, 1));
-					}
-
-                    combinedMeshList.Add(combineInstance);
-                    indexCount++;
-
-                }
-
-            }
-
-        }
-
-        protected void CombineByMaterial()
-        {
-            SlotData[] slots = umaData.umaRecipe.slotDataList;
-            bool[] shareMaterial = new bool[slots.Length];
-
-            SkinnedMeshCombiner.CombineInstance combineInstance;
-
-            int indexCount = 0;
-            for (int slotIndex = 0; slotIndex < slots.Length; slotIndex++)
-            {
-                if (slots[slotIndex] != null)
-                {
-                    if (!shareMaterial[slotIndex])
-                    {
-                        combineInstance = new SkinnedMeshCombiner.CombineInstance();
-						combineInstance.meshData = slots[slotIndex].asset.meshData;
-						combineInstance.targetSubmeshIndices = new int[combineInstance.meshData.subMeshCount];
-						for (int i = 0; i < combineInstance.meshData.subMeshCount; i++)
-						{
-							combineInstance.targetSubmeshIndices[i] = -1;
-						}
-
-						combineInstance.targetSubmeshIndices[slots[slotIndex].asset.subMeshIndex] = indexCount;
-                        combinedMeshList.Add(combineInstance);
-
-						Material tempMaterial = Instantiate(slots[slotIndex].asset.materialSample) as Material;
-                        tempMaterial.name = slots[slotIndex].asset.slotName;
-                        for (int textureType = 0; textureType < textureNameList.Length; textureType++)
-                        {
-                            if (tempMaterial.HasProperty(textureNameList[textureType]))
-                            {
-								slots[slotIndex].GetOverlay(0).asset.textureList[textureType].filterMode = FilterMode.Bilinear;
-								tempMaterial.SetTexture(textureNameList[textureType], slots[slotIndex].GetOverlay(0).asset.textureList[textureType]);
-                            }
-                        }
-                        combinedMaterialList.Add(tempMaterial);
-
-
-                        shareMaterial[slotIndex] = true;
-
-                        for (int slotIndex2 = slotIndex; slotIndex2 < slots.Length; slotIndex2++)
-                        {
-                            if (slots[slotIndex2] != null)
-                            {
-                                if (slotIndex2 != slotIndex && !shareMaterial[slotIndex2])
-                                {
-									if (slots[slotIndex].GetOverlay(0).asset.textureList[0].name == slots[slotIndex2].GetOverlay(0).asset.textureList[0].name)
-                                    {
-                                        combineInstance = new SkinnedMeshCombiner.CombineInstance();
-										combineInstance.meshData = slots[slotIndex2].asset.meshData;
-										combineInstance.targetSubmeshIndices = new int[combineInstance.meshData.subMeshCount];
-										for (int i = 0; i < combineInstance.meshData.subMeshCount; i++)
-										{
-											combineInstance.targetSubmeshIndices[i] = -1;
-										}
-
-										combineInstance.targetSubmeshIndices[slots[slotIndex2].asset.subMeshIndex] = indexCount;
-                                        combinedMeshList.Add(combineInstance);
-
-                                        shareMaterial[slotIndex2] = true;
-                                    }
-                                }
-                            }
-                        }
-                        indexCount++;
-
-                    }
-                }
-                else
-                {
-                    shareMaterial[slotIndex] = true;
                 }
             }
         }
@@ -295,12 +156,16 @@ namespace UMA
         {
             int idx = 0;
             //Handle Atlassed Verts
-            for (int atlasIndex = 0; atlasIndex < umaData.atlasList.atlas.Count; atlasIndex++)
+            for (int materialIndex = 0; materialIndex < umaData.generatedMaterials.materials.Count; materialIndex++)
             {
-                for (int materialDefinitionIndex = 0; materialDefinitionIndex < umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions.Count; materialDefinitionIndex++)
+				var generatedMaterial = umaData.generatedMaterials.materials[materialIndex];
+				if (generatedMaterial.umaMaterial.materialType != UMAMaterial.MaterialType.Atlas) continue;
+
+				for (int materialDefinitionIndex = 0; materialDefinitionIndex < generatedMaterial.materialFragments.Count; materialDefinitionIndex++)
                 {
-                    var tempAtlasRect = umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex].atlasRegion;
-					int vertexCount = umaData.atlasList.atlas[atlasIndex].atlasMaterialDefinitions[materialDefinitionIndex].source.slotData.asset.meshData.vertices.Length;
+					var fragment = generatedMaterial.materialFragments[materialDefinitionIndex];
+					var tempAtlasRect = fragment.atlasRegion;
+					int vertexCount = fragment.slotData.asset.meshData.vertices.Length;
 					float atlasXMin = tempAtlasRect.xMin / atlasResolution;
 					float atlasXMax = tempAtlasRect.xMax / atlasResolution;
 					float atlasYMin = tempAtlasRect.yMin / atlasResolution;

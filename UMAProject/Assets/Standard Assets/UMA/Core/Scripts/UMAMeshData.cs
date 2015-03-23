@@ -1,4 +1,4 @@
-﻿// We can dramatically reduce garbage by using shared buffers
+// We can dramatically reduce garbage by using shared buffers
 // on desktop platforms and dynamically adjusting the
 // size which the arrays appear to be to C# code
 // See: http://feedback.unity3d.com/suggestions/allow-mesh-data-to-have-a-length
@@ -16,6 +16,40 @@ namespace UMA
 	public struct SubMeshTriangles
 	{
 		public int[] triangles;
+	}
+
+	[Serializable]
+	public class UMATransform
+	{
+		public Vector3 position;
+		public Quaternion rotation;
+		public Vector3 scale;
+		public string name;
+		public int hash;
+		public int parent;
+
+		public UMATransform(Transform transform, int nameHash, int parentHash)
+		{
+			this.hash = nameHash;
+			this.parent = parentHash;
+			position = transform.localPosition;
+			rotation = transform.localRotation;
+			scale = transform.localScale;
+			name = transform.name;
+		}
+
+		public static UMATransformComparer TransformComparer = new UMATransformComparer();
+		public class UMATransformComparer : IComparer<UMATransform>
+		{
+			#region IComparer<UMATransform> Members
+
+			public int Compare(UMATransform x, UMATransform y)
+			{
+				return x.hash < y.hash ? -1 : x.hash > y.hash ? 1 : 0;
+			}
+
+			#endregion
+		}
 	}
 
 	[Serializable]
@@ -95,6 +129,9 @@ namespace UMA
 		public SubMeshTriangles[] submeshes;
 		public Transform[] bones;
 		public Transform rootBone;
+		public UMATransform[] umaBones;
+		public int umaBoneCount;
+		public int rootBoneHash;
 		public int[] boneNameHashes;
 		public int subMeshCount;
 		public int vertexCount;
@@ -126,6 +163,7 @@ namespace UMA
 				uv4 = gUV4;
 #endif
 				colors32 = gColors32;
+				boneHierarchy = gUMABones;
 				return true;
 			}
 
@@ -161,7 +199,6 @@ namespace UMA
 			var sharedMesh = skinnedMeshRenderer.sharedMesh;
 			bindPoses = sharedMesh.bindposes;
 			boneWeights = UMABoneWeight.Convert(sharedMesh.boneWeights);
-			bones = skinnedMeshRenderer.bones;
 			vertices = sharedMesh.vertices;
 			vertexCount = vertices.Length;
 			normals = sharedMesh.normals;
@@ -175,17 +212,61 @@ namespace UMA
 #endif
 			subMeshCount = sharedMesh.subMeshCount;
 			submeshes = new SubMeshTriangles[subMeshCount];
-			rootBone = skinnedMeshRenderer.rootBone;
 			for (int i = 0; i < subMeshCount; i++)
 			{
 				submeshes[i].triangles = sharedMesh.GetTriangles(i);
 			}
 
-			ComputeBoneNameHashes();
+			var rootBone = skinnedMeshRenderer.rootBone;
+			while (rootBone.name != "Global")
+			{
+				rootBone = rootBone.parent;
+				if (rootBone == null)
+				{
+					rootBone = skinnedMeshRenderer.rootBone;
+					break;
+				}
+			}
+
+			UpdateBones(rootBone, skinnedMeshRenderer.bones);
 		}
 
-		public void ApplyDataToUnityMesh(SkinnedMeshRenderer renderer)
+		public void UpdateBones(Transform rootBone, Transform[] bones)
 		{
+			var requiredBones = new Dictionary<Transform, UMATransform>();
+			foreach (var bone in bones)
+			{
+				if (requiredBones.ContainsKey(bone)) continue;
+				var boneIterator = bone.parent;
+				var boneIteratorChild = bone;
+				var boneHash = UMAUtils.StringToHash(boneIterator.name);
+				var childHash = UMAUtils.StringToHash(boneIteratorChild.name);
+				while (boneIteratorChild != rootBone)
+				{
+					requiredBones.Add(boneIteratorChild, new UMATransform(boneIteratorChild, childHash, boneHash));
+					if (requiredBones.ContainsKey(boneIterator)) break;
+					boneIteratorChild = boneIterator;
+					boneIterator = boneIterator.parent;
+					childHash = boneHash;
+					boneHash = UMAUtils.StringToHash(boneIterator.name);
+				}
+			}
+
+			var sortedBones = new List<UMATransform>(requiredBones.Values);
+			sortedBones.Sort(UMATransform.TransformComparer);
+			umaBones = sortedBones.ToArray();
+			umaBoneCount = umaBones.Length;
+
+			rootBoneHash = UMAUtils.StringToHash(rootBone.name);
+			ComputeBoneNameHashes(bones);
+			this.rootBone = rootBone;
+			this.bones = bones;
+		}
+
+		public void ApplyDataToUnityMesh(SkinnedMeshRenderer renderer, UMASkeleton skeleton)
+		{
+			CreateTransforms(skeleton);
+
 			Mesh mesh = renderer.sharedMesh;
 #if UNITY_EDITOR
 			if (UnityEditor.PrefabUtility.IsComponentAddedToPrefabInstance(renderer))
@@ -228,8 +309,17 @@ namespace UMA
 			}
 
 			mesh.RecalculateBounds();
-			renderer.bones = bones;
+			renderer.bones = skeleton.HashesToTransforms(boneNameHashes);
 			renderer.sharedMesh = mesh;
+		}
+
+		private void CreateTransforms(UMASkeleton skeleton)
+		{
+			for(int i = 0; i < umaBoneCount; i++ )
+			{
+				skeleton.EnsureBone(umaBones[i]);
+			}
+			skeleton.EnsureBoneHierarchy();
 		}
 
 		private void ApplySharedBuffers(Mesh mesh)
@@ -382,24 +472,12 @@ namespace UMA
 #endif
 		}
 
-		private void ComputeBoneNameHashes()
+		private void ComputeBoneNameHashes(Transform[] bones)
 		{
 			boneNameHashes = new int[bones.Length];
 			for (int i = 0; i < bones.Length; i++)
 			{
 				boneNameHashes[i] = UMASkeleton.StringToHash(bones[i].name);
-			}
-		}
-
-		public void DebugDrawSkeleton(Color color, float duration)
-		{
-			for (int i = 0; i < bones.Length; i++)
-			{
-				var bone = bones[i];
-				for (int j = 0; j < bone.childCount; j++)
-				{
-					Debug.DrawLine(bone.position, bone.GetChild(j).position, color, duration, false);
-				}
 			}
 		}
 
@@ -417,6 +495,57 @@ namespace UMA
 		static Vector2[] gUV4 = new Vector2[MAX_VERTEX_COUNT];
 #endif
 		static Color32[] gColors32 = new Color32[MAX_VERTEX_COUNT];
+		static UMATransform gUMABones = new UMATransform[MAX_VERTEX_COUNT];
 #endif
+
+
+		#region operator ==, != and similar HACKS, seriously.....
+		public static implicit operator bool(UMAMeshData obj)
+		{
+			return ((System.Object)obj) != null && obj.vertexCount != 0;
+		}
+
+		public bool Equals(UMAMeshData other)
+		{
+			return (this == other);
+		}
+		public override bool Equals(object other)
+		{
+			return Equals(other as UMAMeshData);
+		}
+
+		public static bool operator ==(UMAMeshData overlay, UMAMeshData obj)
+		{
+			if (overlay)
+			{
+				if (obj)
+				{
+					return System.Object.ReferenceEquals(overlay, obj);
+				}
+				return false;
+			}
+			return !((bool)obj);
+		}
+
+		public static bool operator !=(UMAMeshData overlay, UMAMeshData obj)
+		{
+			if (overlay)
+			{
+				if (obj)
+				{
+					return !System.Object.ReferenceEquals(overlay, obj);
+				}
+				return true;
+			}
+			return ((bool)obj);
+		}
+		#endregion
+
+		internal void ReSortUMABones()
+		{
+			var newList = new List<UMATransform>(umaBones);
+			newList.Sort(UMATransform.TransformComparer);
+			umaBones = newList.ToArray();
+		}
 	}
 }

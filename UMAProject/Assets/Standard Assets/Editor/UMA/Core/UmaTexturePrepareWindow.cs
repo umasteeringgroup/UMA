@@ -24,7 +24,7 @@ namespace UMAEditor
 	    public UnityEngine.Object relativeFolder;
 	    public SkinnedMeshRenderer racePrefab;
 	    public SkinnedMeshRenderer slotMesh;
-	    public Material slotMaterial;
+	    public UMAMaterial slotMaterial;
 	    public bool processAutomatically;
 	    public OverlayData textureOverride;
 
@@ -124,7 +124,7 @@ namespace UMAEditor
 
 	        racePrefab = EditorGUILayout.ObjectField("Race Prefab SkinnedMeshRenderer", racePrefab, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
 	        slotMesh = EditorGUILayout.ObjectField("Slot Mesh SkinnedMeshRenderer", slotMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
-	        slotMaterial = EditorGUILayout.ObjectField("MaterialSample", slotMaterial, typeof(Material), false) as Material;
+			slotMaterial = EditorGUILayout.ObjectField("UMAMaterial", slotMaterial, typeof(UMAMaterial), false) as UMAMaterial;
 	        slotFolder = EditorGUILayout.ObjectField("Slot Folder", slotFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
 	        EnforceFolder(ref slotFolder);
 	        
@@ -162,8 +162,10 @@ namespace UMAEditor
 	    {
 //	        var material = slotMaterial ?? AssetDatabase.LoadAssetAtPath("Assets/UMA_Assets/MaterialSamples/UMABaseShaderSample.mat", typeof(Material)) as Material;
 			var material = slotMaterial;
-			if (material == null) material = AssetDatabase.LoadAssetAtPath("Assets/UMA_Assets/MaterialSamples/UMABaseShaderSample.mat", typeof(Material)) as Material;
-			if(materialName == null || materialName == ""){
+			if (material == null) material = AssetDatabase.LoadAssetAtPath("Assets/UMA_Assets/MaterialSamples/DefaultUMAMaterial.asset", typeof(UMAMaterial)) as UMAMaterial;
+			if (material == null) material = AssetDatabase.LoadAssetAtPath("Assets/UMA_Assets/MaterialSamples/UMALegacy.asset", typeof(UMAMaterial)) as UMAMaterial;
+			if (materialName == null || materialName == "")
+			{
 				Debug.LogError("materialName must be specified.");
 	            return null;
 			}
@@ -450,24 +452,41 @@ namespace UMAEditor
 		[MenuItem("UMA/Optimize Slot Meshes")]
 		public static void OptimizeSlotMeshes()
 		{
+#if UMA2_LEAN_AND_CLEAN 
+			Debug.LogError("MenuItem - UMA/OptimizeSlotMeshes does not work with the define UMA2_LEAN_AND_CLEAN, we need all legacy fields available.");
+#else
 			foreach (var obj in Selection.objects)
 			{
 				var SlotDataAsset = obj as SlotDataAsset;
 				if (SlotDataAsset != null)
 				{
-#pragma warning disable 618 
+#pragma warning disable 618
 					if (SlotDataAsset.meshRenderer != null)
 					{
 						UMASlotProcessingUtil.OptimizeSlotDataMesh(SlotDataAsset.meshRenderer);
 						SlotDataAsset.UpdateMeshData(SlotDataAsset.meshRenderer);
 						SlotDataAsset.meshRenderer = null;
 						EditorUtility.SetDirty(SlotDataAsset);
-
+					}
+					else
+					{
+						if (SlotDataAsset.meshData != null)
+						{
+							SlotDataAsset.UpdateMeshData();
+						}
+						else
+						{
+							if (SlotDataAsset.meshData.vertices != null)
+							{
+								SlotDataAsset.UpdateMeshData();
+							}
+						}
 					}
 #pragma warning restore 618
 				}
 			}
 			AssetDatabase.SaveAssets();
+#endif
 		}
 
 		[MenuItem("UMA/Optimize Overlay Textures")]

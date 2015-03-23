@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 namespace UMA
@@ -17,6 +17,9 @@ namespace UMA
         /// Eg. BaseMeshSkin, BaseMeshOverlays, GenericPlateArmor01
         /// </summary>
         public string[] tags;
+
+		[UMAAssetFieldVisible]
+		public UMAMaterial material;
 
 		public OverlayDataAsset()
 	    {

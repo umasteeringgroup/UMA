@@ -273,9 +273,12 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 		UMAPackRecipe umaPackRecipe = new UMAPackRecipe();
 		umaPackRecipe.version = 2;
 		
-		int slotCount = umaRecipe.slotDataList.Length - umaRecipe.AdditionalSlots;
+		int slotCount = umaRecipe.slotDataList.Length - umaRecipe.additionalSlotCount;
 		umaPackRecipe.slotsV2 = new PackedSlotDataV2[slotCount];
-		umaPackRecipe.race = umaRecipe.raceData.raceName;
+		if (umaRecipe.raceData != null)
+		{
+			umaPackRecipe.race = umaRecipe.raceData.raceName;
+		}
 		
 		foreach (var dna in umaRecipe.GetAllDna())
 		{

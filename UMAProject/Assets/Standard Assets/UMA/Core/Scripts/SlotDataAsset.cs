@@ -12,22 +12,19 @@ namespace UMA
 		[System.NonSerialized]
 		public int nameHash;
 
-		public SkinnedMeshRenderer meshRenderer;
+		[UMAAssetFieldVisible]
+		public UMAMaterial material;
 
+#if !UMA2_LEAN_AND_CLEAN 
+		public string[] textureNameList;
+		public SkinnedMeshRenderer meshRenderer;
+		[UnityEngine.HideInInspector]
 		public Material materialSample;
+#endif
+
 		public float overlayScale = 1.0f;
 		public Transform[] animatedBones = new Transform[0];
 
-#if THIS_WOULD_BE_COOL
-		public struct ChannelDefinition
-		{
-			public string shaderVariableName;
-			public bool isNormalMap;
-		}
-		public ChannelDefinition[] textureChannels;
-#endif
-
-		public string[] textureNameList;
 		public DnaConverterBehaviour slotDNA;
 		public UMAMeshData meshData;
 		public int subMeshIndex;
@@ -54,17 +51,7 @@ namespace UMA
 
 		public int GetTextureChannelCount(UMAGeneratorBase generator)
 		{
-			if (textureNameList != null && textureNameList.Length > 0)
-			{
-				if (string.IsNullOrEmpty(textureNameList[0]))
-					return 0;
-				return textureNameList.Length;
-			}
-			if (generator != null)
-			{
-				return generator.textureNameList.Length;
-			}
-			return 2; // UMA built in default
+			return material.channels.Length;
 		}
         
 		public override string ToString()
@@ -78,6 +65,31 @@ namespace UMA
 			meshData = new UMAMeshData();
 			meshData.RetrieveDataFromUnityMesh(meshRenderer);
 			UnityEditor.EditorUtility.SetDirty(this);
+		}
+		public void UpdateMeshData()
+		{
+#if !UMA2_LEAN_AND_CLEAN
+			if (meshData.rootBone != null)
+			{
+				var rootBone = meshData.rootBone;
+				while (rootBone.name != "Global")
+				{
+					rootBone = rootBone.parent;
+					if (rootBone == null)
+					{
+						rootBone = meshData.rootBone;
+						break;
+					}
+				}
+				meshData.UpdateBones(meshData.rootBone, meshData.bones);
+				meshData.vertexCount = meshData.vertices.Length;
+			}
+			else
+			{
+				meshData.ReSortUMABones();
+			}
+			UnityEditor.EditorUtility.SetDirty(this);
+#endif
 		}
 #endif
 		public void OnAfterDeserialize()

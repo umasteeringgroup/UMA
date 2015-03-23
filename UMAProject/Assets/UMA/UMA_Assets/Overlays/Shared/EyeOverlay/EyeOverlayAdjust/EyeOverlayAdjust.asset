@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Name: EyeOverlayAdjust
   m_EditorClassIdentifier: 
   overlayName: EyeOverlayAdjust
-  color: {r: 1, g: 1, b: 1, a: 1}
   rect:
     serializedVersion: 2
     x: 64
@@ -22,6 +21,5 @@ MonoBehaviour:
   textureList:
   - {fileID: 2800000, guid: 38a2f89367048ce42bbdf128144151f1, type: 3}
   - {fileID: 2800000, guid: a6d51ed497f16a2428cc85b7da782889, type: 3}
-  channelMask: []
-  channelAdditiveMask: []
   tags: []
+  material: {fileID: 11400000, guid: 30f58efe335b9cc419271f828db88622, type: 2}

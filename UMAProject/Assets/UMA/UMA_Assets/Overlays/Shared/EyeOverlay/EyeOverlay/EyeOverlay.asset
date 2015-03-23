@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Name: EyeOverlay
   m_EditorClassIdentifier: 
   overlayName: EyeOverlay
-  color: {r: 1, g: 1, b: 1, a: 1}
   rect:
     serializedVersion: 2
     x: 0
@@ -22,6 +21,5 @@ MonoBehaviour:
   textureList:
   - {fileID: 2800000, guid: 7dd3e7d857ad36e478b8352c6c54d739, type: 3}
   - {fileID: 2800000, guid: 63af5f0c70ef1b54aa7fb849789dee8b, type: 3}
-  channelMask: []
-  channelAdditiveMask: []
   tags: []
+  material: {fileID: 11400000, guid: 30f58efe335b9cc419271f828db88622, type: 2}

@@ -232,57 +232,7 @@ public class SlotLibraryEditor : Editor
 			RemoveInvalidSlotDataAsset(slotElementList);
 		}
 
-		if (GUILayout.Button("Validate Texture Name Lists"))
-		{
-			ValidateSlotDataAssetTextureNameLists(slotElementList);
-		}
-
 		m_Object.ApplyModifiedProperties();
-
-	}
-
-	private void ValidateSlotDataAssetTextureNameLists(SlotDataAsset[] slotElementList)
-	{
-		var uma = GameObject.Find("UMA");
-		if (uma == null) return;
-		var generators = uma.GetComponentsInChildren<UMAGeneratorBase>();
-		if (generators.Length == 0) return;
-		string[] defaultTextureNameList = generators[0].textureNameList;
-
-		for (int i = m_SlotDataAssetCount.intValue - 1; i >= 0; i--)
-		{
-			if (slotElementList[i])
-			{
-				if (slotElementList[i].textureNameList == null || slotElementList[i].textureNameList.Length == 0)
-				{
-					ValidateSlotDataAssetTextureNameList(defaultTextureNameList, slotElementList[i]);
-				}
-			}
-		}
-	}
-
-	private void ValidateSlotDataAssetTextureNameList(string[] defaultTextureNameList, SlotDataAsset SlotDataAsset)
-	{
-		bool valid = true;
-		for(int i = 0; i < defaultTextureNameList.Length; i++ )
-		{
-			valid = valid && SlotDataAsset.materialSample.HasProperty(defaultTextureNameList[i]);
-		}
-		if( !valid )
-		{
-			var properties = ShaderUtil.GetPropertyCount(SlotDataAsset.materialSample.shader);
-			var newTextureNameList = new List<string>(16);
-			for(int i = 0; i < properties; i++ )
-			{
-				if( ShaderUtil.GetPropertyType(SlotDataAsset.materialSample.shader, i) == ShaderUtil.ShaderPropertyType.TexEnv )
-				{
-					newTextureNameList.Add(ShaderUtil.GetPropertyName(SlotDataAsset.materialSample.shader, i));
-				}
-			}
-			Debug.LogWarning("Fixed SlotDataAsset: " + SlotDataAsset.slotName);
-			SlotDataAsset.textureNameList = newTextureNameList.ToArray();
-			EditorUtility.SetDirty(SlotDataAsset);
-		}
 	}
 
 	private void RemoveInvalidSlotDataAsset(SlotDataAsset[] slotElementList)

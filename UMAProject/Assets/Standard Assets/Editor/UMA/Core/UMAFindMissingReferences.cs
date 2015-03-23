@@ -18,36 +18,60 @@ namespace UMAEditor
 		{
 #if UNITY_WEBPLAYER 
 			Debug.LogError("MenuItem - UMA/Find Missing References does not work when the build target is set to Webplayer, we need the full mono framework available.");
+ #if UMA2_LEAN_AND_CLEAN 
+			Debug.LogError("MenuItem - UMA/Find Missing References does not work with the define UMA2_LEAN_AND_CLEAN, we need all legacy fields available.");
+ #endif
 #else
+ #if UMA2_LEAN_AND_CLEAN 
+			Debug.LogError("MenuItem - UMA/Find Missing References does not work with the define UMA2_LEAN_AND_CLEAN, we need all legacy fields available.");
+ #else
+
 			List<UnityReference> references = new List<UnityReference>();
 			var slotFilePaths = new List<string>();
+			var overlayFilePaths = new List<string>();
 
-			references.Add(new UnityReference("e20699a64490c4e4284b27a8aeb05666", "1772484567", FindAssetGuid("OverlayDataAsset", "cs"), "11500000")); // OverlayData.cs
-			references.Add(new UnityReference("e20699a64490c4e4284b27a8aeb05666", "-1278852528", FindAssetGuid("SlotData", "cs"), "11500000") { updatedFiles = slotFilePaths }); // SlotData.cs
+			references.Add(new UnityReference("e20699a64490c4e4284b27a8aeb05666", "1772484567", FindAssetGuid("OverlayDataAsset", "cs"), "11500000") { updatedFiles = overlayFilePaths }); // OverlayData.cs
+			references.Add(new UnityReference("e20699a64490c4e4284b27a8aeb05666", "-1278852528", FindAssetGuid("SlotDataAsset", "cs"), "11500000") { updatedFiles = slotFilePaths }); // SlotData.cs
 			references.Add(new UnityReference("e20699a64490c4e4284b27a8aeb05666", "-335686737", FindAssetGuid("RaceData", "cs"), "11500000")); // RaceData.cs
 			references.Add(new UnityReference("e20699a64490c4e4284b27a8aeb05666", "-1571472132", FindAssetGuid("UMADefaultMeshCombiner", "cs"), "11500000")); // UMADefaultMeshCombiner.cs
 			references.Add(new UnityReference("e20699a64490c4e4284b27a8aeb05666", "-1550055707", FindAssetGuid("UMAData", "cs"), "11500000")); // UMAData.cs
 			references.Add(new UnityReference("e20699a64490c4e4284b27a8aeb05666", "-1708169498", FindAssetGuid("UmaTPose", "cs"), "11500000")); // UmaTPose.cs
 			references.Add(new UnityReference("e20699a64490c4e4284b27a8aeb05666", "-1175167296", FindAssetGuid("TextureMerge", "cs"), "11500000")); // TextureMerge.cs
-			references.Add(new UnityReference("7e407fe772026ae4cb2f52b8b5567db5", "11500000", FindAssetGuid("OverlayDataAsset", "cs"), "11500000")); // OverlayData.cs
+			references.Add(new UnityReference("7e407fe772026ae4cb2f52b8b5567db5", "11500000", FindAssetGuid("OverlayDataAsset", "cs"), "11500000") { updatedFiles = overlayFilePaths }); // OverlayData.cs
+			references.Add(new UnityReference("a248d59ac2f3fa14b9c2894f47000560", "11500000", FindAssetGuid("SlotDataAsset", "cs"), "11500000") { updatedFiles = slotFilePaths }); // SlotData.cs
 
-			ReplaceReferences(Application.dataPath, references);
 
-			foreach (var slotFilePath in slotFilePaths)
+			if (slotFilePaths.Count > 0 || overlayFilePaths.Count > 0)
 			{
-				var correctedAssetDatabasePath = "Assets"+slotFilePath.Substring(Application.dataPath.Length);
-				AssetDatabase.ImportAsset(correctedAssetDatabasePath);
-				var slotData = AssetDatabase.LoadAssetAtPath(correctedAssetDatabasePath, typeof(UMA.SlotDataAsset)) as UMA.SlotDataAsset;
-#pragma warning disable 618
-				if (slotData.meshRenderer != null)
+				ReplaceReferences(Application.dataPath, references);
+				UMA.UMAMaterial material = AssetDatabase.LoadAssetAtPath("Assets/UMA_Assets/MaterialSamples/DefaultUMAMaterial.asset", typeof(UMA.UMAMaterial)) as UMA.UMAMaterial;
+				if (material == null) material = AssetDatabase.LoadAssetAtPath("Assets/UMA_Assets/MaterialSamples/UMALegacy.asset", typeof(UMA.UMAMaterial)) as UMA.UMAMaterial;
+
+				foreach (var slotFilePath in slotFilePaths)
 				{
-					UMASlotProcessingUtil.OptimizeSlotDataMesh(slotData.meshRenderer);
-					slotData.UpdateMeshData(slotData.meshRenderer);
-					slotData.meshRenderer = null;
-					EditorUtility.SetDirty(slotData);
-				}
+					var correctedAssetDatabasePath = "Assets" + slotFilePath.Substring(Application.dataPath.Length);
+					AssetDatabase.ImportAsset(correctedAssetDatabasePath);
+					var slotData = AssetDatabase.LoadAssetAtPath(correctedAssetDatabasePath, typeof(UMA.SlotDataAsset)) as UMA.SlotDataAsset;
+#pragma warning disable 618
+					if (slotData.meshRenderer != null)
+					{
+						UMASlotProcessingUtil.OptimizeSlotDataMesh(slotData.meshRenderer);
+						slotData.UpdateMeshData(slotData.meshRenderer);
+						slotData.material = material;
+						EditorUtility.SetDirty(slotData);
+					}
 #pragma warning restore 618
+				}
+				foreach (var overlayFilePath in overlayFilePaths)
+				{
+					var correctedAssetDatabasePath = "Assets" + overlayFilePath.Substring(Application.dataPath.Length);
+					AssetDatabase.ImportAsset(correctedAssetDatabasePath);
+					var overlayData = AssetDatabase.LoadAssetAtPath(correctedAssetDatabasePath, typeof(UMA.OverlayDataAsset)) as UMA.OverlayDataAsset;
+					overlayData.material = material;
+					EditorUtility.SetDirty(overlayData);
+				}
 			}
+ #endif
 #endif
 		}
 
