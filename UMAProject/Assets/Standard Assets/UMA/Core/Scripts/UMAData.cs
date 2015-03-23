@@ -992,11 +992,10 @@ namespace UMA
 		{
 			if (umaAdditionalRecipes != null)
 			{
-				var additionalRecipe = new UMAData.UMARecipe();
 				foreach (var umaAdditionalRecipe in umaAdditionalRecipes)
 				{
-					umaAdditionalRecipe.Load(additionalRecipe, context);
-					umaRecipe.Merge(additionalRecipe, true);
+					UMARecipe cachedRecipe = umaAdditionalRecipe.GetCachedRecipe(context);
+					umaRecipe.Merge(cachedRecipe, true);
 				}
 			}
 		}
