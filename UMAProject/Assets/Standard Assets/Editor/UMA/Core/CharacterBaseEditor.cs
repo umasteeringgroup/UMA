@@ -305,6 +305,8 @@ namespace UMAEditor
 						foreach (OverlayData overlay in overlays)
 						{
 							if (overlay.colorData == null) continue;
+							if (overlay.colorData.color == Color.white) continue;
+							if (overlay.colorData.color == Color.black) continue;
 							int matchIndex = matchedColors.IndexOf(overlay.colorData);
 							if (matchIndex >= 0)
 							{
