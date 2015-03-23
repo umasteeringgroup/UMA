@@ -110,19 +110,28 @@ public class SlotLibraryEditor : Editor
 						var path = AssetDatabase.GetAssetPath(draggedObjects[i]);
 						if (System.IO.Directory.Exists(path))
 						{
-							var assetFiles = System.IO.Directory.GetFiles(path, "*.asset");
-							foreach (var assetFile in assetFiles)
-							{
-								tempSlotDataAsset = AssetDatabase.LoadAssetAtPath(assetFile, typeof(SlotDataAsset)) as SlotDataAsset;
-								if (tempSlotDataAsset)
-								{
-									AddSlotDataAsset(tempSlotDataAsset);
-								}
-							}
+							RecursiveScanFoldersForAssets(path);
 						}
 					}
 				}
 			}
+		}
+	}
+
+	private void RecursiveScanFoldersForAssets(string path)
+	{
+		var assetFiles = System.IO.Directory.GetFiles(path, "*.asset");
+		foreach (var assetFile in assetFiles)
+		{
+			var tempSlotDataAsset = AssetDatabase.LoadAssetAtPath(assetFile, typeof(SlotDataAsset)) as SlotDataAsset;
+			if (tempSlotDataAsset)
+			{
+				AddSlotDataAsset(tempSlotDataAsset);
+			}
+		}
+		foreach (var subFolder in System.IO.Directory.GetDirectories(path))
+		{
+			RecursiveScanFoldersForAssets(subFolder.Replace('\\', '/'));
 		}
 	}
 

@@ -207,19 +207,28 @@ public class OverlayLibraryEditor : Editor {
 						var path = AssetDatabase.GetAssetPath(draggedObjects[i]);
 						if (System.IO.Directory.Exists(path))
 						{
-							var assetFiles = System.IO.Directory.GetFiles(path, "*.asset");
-							foreach (var assetFile in assetFiles)
-							{
-								tempOverlayData = AssetDatabase.LoadAssetAtPath(assetFile, typeof(OverlayDataAsset)) as OverlayDataAsset;
-								if (tempOverlayData)
-								{
-									AddOverlayData(tempOverlayData);
-								}
-							}
+							RecursiveScanFoldersForAssets(path);
 						}
 					}
 				}
 			}
+		}
+	}
+
+	private void RecursiveScanFoldersForAssets(string path)
+	{
+		var assetFiles = System.IO.Directory.GetFiles(path, "*.asset");
+		foreach (var assetFile in assetFiles)
+		{
+			var tempOverlayData = AssetDatabase.LoadAssetAtPath(assetFile, typeof(OverlayDataAsset)) as OverlayDataAsset;
+			if (tempOverlayData)
+			{
+				AddOverlayData(tempOverlayData);
+			}
+		}
+		foreach (var subFolder in System.IO.Directory.GetDirectories(path))
+		{
+			RecursiveScanFoldersForAssets(subFolder.Replace('\\', '/'));
 		}
 	}
 	
