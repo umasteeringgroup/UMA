@@ -11,39 +11,10 @@ namespace UMA
 #endif
 	{
 		public OverlayDataAsset asset;
-
-#if !UMA2_LEAN_AND_CLEAN 
-
-		[System.Obsolete("OverlayData.overlayName is obsolete use asset.overlayName!", false)]
-		public string overlayName;
-
-		[System.Obsolete("OverlayData.listID is obsolete.", false)]
-		[System.NonSerialized]
-	    public int listID;
-
-		[System.Obsolete("OverlayData.color is obsolete. Please refer to the OverlayColorData.", false)]
-		public Color color = new Color(1, 1, 1, 1);
 		public Rect rect;
 
-		[System.Obsolete("OverlayData.textureList is obsolete. Please refer to the OverlayDataAsset.", false)]
-		public Texture[] textureList;
-		[System.Obsolete("OverlayData.channelMask is obsolete. Please refer to the OverlayColorData.", false)]
-		public Color32[] channelMask;
-		[System.Obsolete("OverlayData.channelAdditiveMask is obsolete. Please refer to the OverlayColorData.", false)]
-		public Color32[] channelAdditiveMask;
-
-		[System.Obsolete("OverlayData.umaData is obsolete.", false)]
-		[System.NonSerialized]
-	    public UMAData umaData;
-        /// <summary>
-        /// Use this to identify what kind of overlay this is and what it fits
-        /// Eg. BaseMeshSkin, BaseMeshOverlays, GenericPlateArmor01
-        /// </summary>
-		[System.Obsolete("OverlayData.tags is obsolete use asset.tags!", false)]
-		public string[] tags;
-#else
+#if UMA2_LEAN_AND_CLEAN
 		public string overlayName { get { return asset.overlayName; } }
-		public Rect rect;
 #endif
 		[System.NonSerialized]
 		public OverlayColorData colorData;
@@ -58,6 +29,22 @@ namespace UMA
 				res.colorData = new OverlayColorData();
 			return res;
 	    }
+
+		public OverlayData Copy()
+		{
+			var res = new OverlayData();
+			res.asset = asset;
+			res.rect = new Rect(rect);
+			if (colorData != null)
+				res.colorData = colorData.Copy();
+			else
+				res.colorData = new OverlayColorData();
+			return res;
+		}
+		
+		protected OverlayData()
+		{
+		}
 
 		public OverlayData(OverlayDataAsset asset)
 		{
@@ -207,6 +194,37 @@ namespace UMA
 			}
 			return !((bool)overlay2);
 		}
+
+#if !UMA2_LEAN_AND_CLEAN 
+		#region obsolete junk from version 1
+		[System.Obsolete("OverlayData.overlayName is obsolete use asset.overlayName!", false)]
+		public string overlayName;
+		
+		[System.Obsolete("OverlayData.listID is obsolete.", false)]
+		[System.NonSerialized]
+		public int listID;
+		
+		[System.Obsolete("OverlayData.color is obsolete. Please refer to the OverlayColorData.", false)]
+		public Color color = new Color(1, 1, 1, 1);
+
+		[System.Obsolete("OverlayData.textureList is obsolete. Please refer to the OverlayDataAsset.", false)]
+		public Texture[] textureList;
+		[System.Obsolete("OverlayData.channelMask is obsolete. Please refer to the OverlayColorData.", false)]
+		public Color32[] channelMask;
+		[System.Obsolete("OverlayData.channelAdditiveMask is obsolete. Please refer to the OverlayColorData.", false)]
+		public Color32[] channelAdditiveMask;
+		
+		[System.Obsolete("OverlayData.umaData is obsolete.", false)]
+		[System.NonSerialized]
+		public UMAData umaData;
+		/// <summary>
+		/// Use this to identify what kind of overlay this is and what it fits
+		/// Eg. BaseMeshSkin, BaseMeshOverlays, GenericPlateArmor01
+		/// </summary>
+		[System.Obsolete("OverlayData.tags is obsolete use asset.tags!", false)]
+		public string[] tags;
+		#endregion
+#endif
 
 		#region operator ==, != and similar HACKS, seriously.....
 		public static implicit operator bool(OverlayData obj)

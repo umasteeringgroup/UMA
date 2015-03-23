@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections;
 
 
@@ -37,6 +38,33 @@ namespace UMA
 			return res;
 		}
 
+		public OverlayColorData Copy()
+		{
+			var res = new OverlayColorData();
+			res.name = String.Copy(name);
+			res.color = new Color32(color.r, color.g, color.b, color.a);
+			Color32 maskColor;
+			if (channelMask != null)
+			{
+				res.channelMask = new Color32[channelMask.Length];
+				for (int i = 0; i < channelMask.Length; i++)
+				{
+					maskColor = channelMask[i];
+					res.channelMask[i] = new Color32(maskColor.r, maskColor.g, maskColor.b, maskColor.a);
+				}
+			}
+			if (channelAdditiveMask != null)
+			{
+				res.channelAdditiveMask = new Color32[channelAdditiveMask.Length];
+				for (int i = 0; i < channelAdditiveMask.Length; i++)
+				{
+					maskColor = channelMask[i];
+					res.channelAdditiveMask[i] = new Color32(maskColor.r, maskColor.g, maskColor.b, maskColor.a);
+				}
+			}
+			return res;
+		}
+		
 		public static bool SameColor(Color32 color1, Color32 color2)
 		{
 			return ((color1.r == color2.r) &&

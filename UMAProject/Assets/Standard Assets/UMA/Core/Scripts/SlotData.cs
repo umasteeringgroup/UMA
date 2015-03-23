@@ -14,44 +14,7 @@ namespace UMA
 	{
 		public SlotDataAsset asset;
 		public float overlayScale = 1.0f;
-#if !UMA2_LEAN_AND_CLEAN 
-		[System.Obsolete("SlotData.materialSample is obsolete use asset.materialSample!", false)]
-		public Material materialSample;
-		[System.Obsolete("SlotData.slotName is obsolete use asset.slotName!", false)]
-		public string slotName;
-		[System.Obsolete("SlotData.listID is obsolete.", false)]
-		public int listID = -1;
-
-		[System.Obsolete("SlotData.meshRenderer is obsolete.", true)]
-		public SkinnedMeshRenderer meshRenderer;
-		[System.Obsolete("SlotData.boneNameHashes is obsolete.", true)]
-		public int[] boneNameHashes;
-		[System.Obsolete("SlotData.boneWeights is obsolete.", true)]
-		public BoneWeight[] boneWeights;
-		[System.Obsolete("SlotData.umaBoneData is obsolete.", true)]
-		public Transform[] umaBoneData;
-
-		[System.Obsolete("SlotData.animatedBones is obsolete, use SlotDataAsset.animatedBones.", true)]
-		public Transform[] animatedBones = new Transform[0];
-		[System.Obsolete("SlotData.textureNameList is obsolete, use SlotDataAsset.textureNameList.", true)]
-		public string[] textureNameList;
-		[System.Obsolete("SlotData.slotDNA is obsolete, use SlotDataAsset.slotDNA.", true)]
-		public DnaConverterBehaviour slotDNA;
-		[System.Obsolete("SlotData.subMeshIndex is obsolete, use SlotDataAsset.subMeshIndex.", true)]
-		public int subMeshIndex;
-		/// <summary>
-		/// Use this to identify slots that serves the same purpose
-		/// Eg. ChestArmor, Helmet, etc.
-		/// </summary>
-		[System.Obsolete("SlotData.slotGroup is obsolete, use SlotDataAsset.slotGroup.", false)]
-		public string slotGroup;
-		/// <summary>
-		/// Use this to identify what kind of overlays fit this slotData
-		/// Eg. BaseMeshSkin, BaseMeshOverlays, GenericPlateArmor01
-		/// </summary>
-		[System.Obsolete("SlotData.tags is obsolete, use SlotDataAsset.tags.", false)]
-		public string[] tags;
-#else
+#if UMA2_LEAN_AND_CLEAN 
 		public string slotName { get { return asset.slotName; } }
 #endif
 		private List<OverlayData> overlayList = new List<OverlayData>();
@@ -64,7 +27,25 @@ namespace UMA
 			materialSample = asset.materialSample;
 #endif
 			overlayScale = asset.overlayScale;
-		}	
+		}
+
+		public SlotData Copy()
+		{
+			var res = new SlotData(asset);
+
+			int overlayCount = overlayList.Count;
+			res.overlayList = new List<OverlayData>(overlayCount);
+			for (int i = 0; i < overlayCount; i++)
+			{
+				OverlayData overlay = overlayList[i];
+				if (overlay != null)
+				{
+					res.overlayList.Add(overlay.Copy());
+				}
+			}
+
+			return res;
+		}
         
 		public int GetTextureChannelCount(UMAGeneratorBase generator)
 		{
@@ -141,19 +122,19 @@ namespace UMA
             return overlayList[index];
 		}
 		
-		public OverlayData GetOverlay(OverlayDataAsset asset)
+		public OverlayData GetEquivalentOverlay(OverlayData overlay)
 		{
-			foreach (var overlay in overlayList)
+			foreach (OverlayData overlay2 in overlayList)
 			{
-				if (overlay.asset == asset)
+				if (OverlayData.Equivalent(overlay, overlay2))
 				{
-					return overlay;
+					return overlay2;
 				}
 			}
-
+			
 			return null;
 		}
-
+		
 		public int OverlayCount { get { return overlayList.Count; } }
         
 		public void SetOverlayList(List<OverlayData> overlayList)
@@ -243,6 +224,47 @@ namespace UMA
 		{
 			return "SlotData: " + asset.slotName;
 		}
+
+#if !UMA2_LEAN_AND_CLEAN 
+		#region obsolete junk from version 1
+		[System.Obsolete("SlotData.materialSample is obsolete use asset.materialSample!", false)]
+		public Material materialSample;
+		[System.Obsolete("SlotData.slotName is obsolete use asset.slotName!", false)]
+		public string slotName;
+		[System.Obsolete("SlotData.listID is obsolete.", false)]
+		public int listID = -1;
+		
+		[System.Obsolete("SlotData.meshRenderer is obsolete.", true)]
+		public SkinnedMeshRenderer meshRenderer;
+		[System.Obsolete("SlotData.boneNameHashes is obsolete.", true)]
+		public int[] boneNameHashes;
+		[System.Obsolete("SlotData.boneWeights is obsolete.", true)]
+		public BoneWeight[] boneWeights;
+		[System.Obsolete("SlotData.umaBoneData is obsolete.", true)]
+		public Transform[] umaBoneData;
+		
+		[System.Obsolete("SlotData.animatedBones is obsolete, use SlotDataAsset.animatedBones.", true)]
+		public Transform[] animatedBones = new Transform[0];
+		[System.Obsolete("SlotData.textureNameList is obsolete, use SlotDataAsset.textureNameList.", true)]
+		public string[] textureNameList;
+		[System.Obsolete("SlotData.slotDNA is obsolete, use SlotDataAsset.slotDNA.", true)]
+		public DnaConverterBehaviour slotDNA;
+		[System.Obsolete("SlotData.subMeshIndex is obsolete, use SlotDataAsset.subMeshIndex.", true)]
+		public int subMeshIndex;
+		/// <summary>
+		/// Use this to identify slots that serves the same purpose
+		/// Eg. ChestArmor, Helmet, etc.
+		/// </summary>
+		[System.Obsolete("SlotData.slotGroup is obsolete, use SlotDataAsset.slotGroup.", false)]
+		public string slotGroup;
+		/// <summary>
+		/// Use this to identify what kind of overlays fit this slotData
+		/// Eg. BaseMeshSkin, BaseMeshOverlays, GenericPlateArmor01
+		/// </summary>
+		[System.Obsolete("SlotData.tags is obsolete, use SlotDataAsset.tags.", false)]
+		public string[] tags;
+		#endregion
+#endif
 
 		#region operator ==, != and similar HACKS, seriously.....
 
