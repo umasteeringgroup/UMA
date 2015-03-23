@@ -163,7 +163,9 @@ namespace UMAEditor
 //	        var material = slotMaterial ?? AssetDatabase.LoadAssetAtPath("Assets/UMA_Assets/MaterialSamples/UMABaseShaderSample.mat", typeof(Material)) as Material;
 			var material = slotMaterial;
 			if (material == null) material = AssetDatabase.LoadAssetAtPath("Assets/UMA_Assets/MaterialSamples/DefaultUMAMaterial.asset", typeof(UMAMaterial)) as UMAMaterial;
-			if(materialName == null || materialName == ""){
+			if (material == null) material = AssetDatabase.LoadAssetAtPath("Assets/UMA_Assets/MaterialSamples/UMALegacy.asset", typeof(UMAMaterial)) as UMAMaterial;
+			if (materialName == null || materialName == "")
+			{
 				Debug.LogError("materialName must be specified.");
 	            return null;
 			}

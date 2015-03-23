@@ -204,6 +204,11 @@ namespace UMA
 			}
 			else
 			{
+				if (asset.meshRenderer != null)
+				{
+					Debug.LogError(string.Format("Slot '{0}' is a UMA 1x slot... you need to upgrade it by selecting it and using the UMA|Optimize Slot Meshes.", asset.slotName), asset);
+					valid = false;
+				}
 				if (asset.material != null)
 				{
 					for (int i = 0; i < asset.material.channels.Length; i++)
@@ -227,6 +232,13 @@ namespace UMA
 		}
 
 		#region operator ==, != and similar HACKS, seriously.....
+
+		[System.Obsolete("You can no longer cast UnityEngine.Object to SlotData, perhaps you want to cast it into SlotDataAsset instead?", false)]
+		public static implicit operator SlotData(UnityEngine.Object obj)
+		{
+			throw new System.NotImplementedException("You can no longer cast UnityEngine.Object to SlotData, perhaps you want to cast it into SlotDataAsset instead?");
+		}
+
 		public static implicit operator bool(SlotData obj) 
 		{
 			return ((System.Object)obj) != null && obj.asset != null;

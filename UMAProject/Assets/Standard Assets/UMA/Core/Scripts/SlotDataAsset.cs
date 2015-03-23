@@ -18,6 +18,7 @@ namespace UMA
 #if !UMA2_LEAN_AND_CLEAN 
 		public string[] textureNameList;
 		public SkinnedMeshRenderer meshRenderer;
+		[UnityEngine.HideInInspector]
 		public Material materialSample;
 #endif
 

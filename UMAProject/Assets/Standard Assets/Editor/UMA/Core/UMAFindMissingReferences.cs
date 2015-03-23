@@ -40,22 +40,27 @@ namespace UMAEditor
 			references.Add(new UnityReference("a248d59ac2f3fa14b9c2894f47000560", "11500000", FindAssetGuid("SlotDataAsset", "cs"), "11500000")); // OverlayData.cs
 
 
-			ReplaceReferences(Application.dataPath, references);
-
-			foreach (var slotFilePath in slotFilePaths)
+			if (slotFilePaths.Count > 0)
 			{
-				var correctedAssetDatabasePath = "Assets"+slotFilePath.Substring(Application.dataPath.Length);
-				AssetDatabase.ImportAsset(correctedAssetDatabasePath);
-				var slotData = AssetDatabase.LoadAssetAtPath(correctedAssetDatabasePath, typeof(UMA.SlotDataAsset)) as UMA.SlotDataAsset;
-#pragma warning disable 618
-				if (slotData.meshRenderer != null)
+				ReplaceReferences(Application.dataPath, references);
+				UMA.UMAMaterial material = AssetDatabase.LoadAssetAtPath("Assets/UMA_Assets/MaterialSamples/DefaultUMAMaterial.asset", typeof(UMA.UMAMaterial)) as UMA.UMAMaterial;
+				if (material == null) material = AssetDatabase.LoadAssetAtPath("Assets/UMA_Assets/MaterialSamples/UMALegacy.asset", typeof(UMA.UMAMaterial)) as UMA.UMAMaterial;
+
+				foreach (var slotFilePath in slotFilePaths)
 				{
-					UMASlotProcessingUtil.OptimizeSlotDataMesh(slotData.meshRenderer);
-					slotData.UpdateMeshData(slotData.meshRenderer);
-					slotData.meshRenderer = null;
-					EditorUtility.SetDirty(slotData);
-				}
+					var correctedAssetDatabasePath = "Assets" + slotFilePath.Substring(Application.dataPath.Length);
+					AssetDatabase.ImportAsset(correctedAssetDatabasePath);
+					var slotData = AssetDatabase.LoadAssetAtPath(correctedAssetDatabasePath, typeof(UMA.SlotDataAsset)) as UMA.SlotDataAsset;
+#pragma warning disable 618
+					if (slotData.meshRenderer != null)
+					{
+						UMASlotProcessingUtil.OptimizeSlotDataMesh(slotData.meshRenderer);
+						slotData.UpdateMeshData(slotData.meshRenderer);
+						slotData.material = material;
+						EditorUtility.SetDirty(slotData);
+					}
 #pragma warning restore 618
+				}
 			}
  #endif
 #endif
