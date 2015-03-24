@@ -28,7 +28,7 @@ namespace UMA
 
 		public void OnAfterDeserialize()
 		{
-			nameHash = UMASkeleton.StringToHash(overlayName);
+			nameHash = UMAUtils.StringToHash(overlayName);
 		}
 		public void OnBeforeSerialize()	{ }
 	}

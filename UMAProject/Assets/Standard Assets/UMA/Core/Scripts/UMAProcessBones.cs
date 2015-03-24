@@ -34,7 +34,7 @@ namespace UMA
 					tempBone.originalBoneRotation = umaBones[i].localRotation;
 					tempBone.originalBoneScale = umaBones[i].localScale;
 
-                    umaData.boneHashList.Add(UMASkeleton.StringToHash(umaBones[i].name), tempBone);
+                    umaData.boneHashList.Add(UMAUtils.StringToHash(umaBones[i].name), tempBone);
 					
 					umaData.tempBoneData[i] = tempBone;//Only while Dictionary can't be serialized
 				}

@@ -105,9 +105,9 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 	{
 		if (umaData != null)
 		{
-			umaData.cleanTextures();
-			umaData.cleanMesh(true);
-			umaData.cleanAvatar();
+			umaData.CleanTextures();
+			umaData.CleanMesh(true);
+			umaData.CleanAvatar();
 			Destroy(umaData.umaRoot);
 			umaData.umaRoot = null;
 			umaData.myRenderer = null;

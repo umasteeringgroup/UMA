@@ -216,12 +216,12 @@ namespace UMA
 			for (var i = 0; i < umaData.animatedBones.Length; i++)
 			{
 //                animatedBones.Add(umaData.animatedBones[i], umaData.animatedBones[i]);
-				animatedBones.Add(UMASkeleton.StringToHash(umaData.animatedBones[i].name), umaData.animatedBones[i]);
+				animatedBones.Add(UMAUtils.StringToHash(umaData.animatedBones[i].name), umaData.animatedBones[i]);
 			}
 
 			for (int i = 0; i < human.Length; i++)
 			{
-				int boneHash = UMASkeleton.StringToHash(human[i].boneName);
+				int boneHash = UMAUtils.StringToHash(human[i].boneName);
 				animatedBones[boneHash] = null;
 			}
 
@@ -229,7 +229,7 @@ namespace UMA
 			{
 				var skeletonbone = bones[i];
 				UMAData.BoneData entry;
-				int boneHash = UMASkeleton.StringToHash(skeletonbone.name);
+				int boneHash = UMAUtils.StringToHash(skeletonbone.name);
 				if (umaData.boneHashList.TryGetValue(boneHash, out entry))
 				{
 					skeletonbone.position = entry.boneTransform.localPosition;
@@ -239,7 +239,7 @@ namespace UMA
 					animatedBones.Remove(boneHash);
 				}
 			}
-			bool foundSkelRoot = umaData.skeleton.HasBone(UMASkeleton.StringToHash(bones[0].name));
+			bool foundSkelRoot = umaData.skeleton.HasBone(UMAUtils.StringToHash(bones[0].name));
 			if ((animatedBones.Count > 0) || !foundSkelRoot)
 			{
 				var newBones = new List<SkeletonBone>(bones);
@@ -251,7 +251,7 @@ namespace UMA
 					while (!foundSkelRoot)
 					{
 						missingBoneCount++;
-						rootBoneHash = UMASkeleton.StringToHash(bones[missingBoneCount].name);
+						rootBoneHash = UMAUtils.StringToHash(bones[missingBoneCount].name);
 						foundSkelRoot = umaData.skeleton.HasBone(rootBoneHash);
 					}
 					if (missingBoneCount > 0)
@@ -270,7 +270,7 @@ namespace UMA
 				for (var i = 0; i < umaData.animatedBones.Length; i++)
 				{
 					var animatedBone = umaData.animatedBones[i];
-					var animatedBoneHash = UMASkeleton.StringToHash(animatedBone.name);
+					var animatedBoneHash = UMAUtils.StringToHash(animatedBone.name);
 					if (animatedBones.ContainsKey(animatedBoneHash))
 					{
 						var newBone = new SkeletonBone();

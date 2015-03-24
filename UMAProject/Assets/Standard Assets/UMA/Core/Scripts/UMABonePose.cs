@@ -48,7 +48,7 @@ namespace UMA.PoseTools
 			{
 				if (pose.hash == 0)
 				{
-					pose.hash = UMASkeleton.StringToHash(pose.bone);
+					pose.hash = UMAUtils.StringToHash(pose.bone);
 				}
 			}
 		}
@@ -68,7 +68,7 @@ namespace UMA.PoseTools
 		{
 			PoseBone pose = new PoseBone();
 			pose.bone = bone.name;
-			pose.hash = UMASkeleton.StringToHash(bone.name);
+			pose.hash = UMAUtils.StringToHash(bone.name);
 			pose.position = position - bone.localPosition;
 			pose.rotation = Quaternion.Inverse(bone.localRotation) * rotation;
 			pose.scale = new Vector3(scale.x / bone.localScale.x,

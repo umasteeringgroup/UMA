@@ -11,7 +11,7 @@ public abstract class UMARecipeBase : ScriptableObject
 	public abstract byte[] GetBytes();
 	public abstract void SetBytes(byte[] data);
 	public override string ToString() { return GetInfo(); }
-	public virtual int GetTypeNameHash() { return UMASkeleton.StringToHash(GetType().Name); }
+	public virtual int GetTypeNameHash() { return UMAUtils.StringToHash(GetType().Name); }
 
 	protected UMAData.UMARecipe umaRecipe;
 	protected bool cached = false;
@@ -54,7 +54,7 @@ public abstract class UMARecipeBase : ScriptableObject
 	{
 		foreach(var format in GetRecipeFormats())
 		{
-			if (UMASkeleton.StringToHash(format.Name) == typeNameHash) return format;
+			if (UMAUtils.StringToHash(format.Name) == typeNameHash) return format;
 		}
 		return null;
 	}

@@ -477,7 +477,7 @@ namespace UMA
 			boneNameHashes = new int[bones.Length];
 			for (int i = 0; i < bones.Length; i++)
 			{
-				boneNameHashes[i] = UMASkeleton.StringToHash(bones[i].name);
+				boneNameHashes[i] = UMAUtils.StringToHash(bones[i].name);
 			}
 		}
 

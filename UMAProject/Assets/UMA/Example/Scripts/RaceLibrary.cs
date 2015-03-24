@@ -80,7 +80,7 @@ public class RaceLibrary : RaceLibraryBase {
 		ValidateDictionary();
 
 		foreach (string name in raceDictionary.Keys) {
-			int hash = UMASkeleton.StringToHash(name);
+			int hash = UMAUtils.StringToHash(name);
 
 			if (hash == raceHash) {
 				return raceDictionary[name];

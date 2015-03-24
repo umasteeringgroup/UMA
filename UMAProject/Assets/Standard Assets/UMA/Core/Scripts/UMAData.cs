@@ -679,14 +679,14 @@ namespace UMA
             }
 			if(umaRoot != null)
 			{
-				cleanTextures();
-                cleanMesh(true);
-                cleanAvatar();
+				CleanTextures();
+                CleanMesh(true);
+                CleanAvatar();
 				Destroy(umaRoot);
 			}
 		}
 		
-		public void cleanAvatar(){
+		public void CleanAvatar(){
 			animationController = null;
             if (animator != null)
             {
@@ -695,7 +695,7 @@ namespace UMA
             }
 		}
 
-		public void cleanTextures(){
+		public void CleanTextures(){
 			for(int atlasIndex = 0; atlasIndex < generatedMaterials.materials.Count; atlasIndex++){
 				if(generatedMaterials.materials[atlasIndex] != null && generatedMaterials.materials[atlasIndex].resultingAtlasList != null){
 					for(int textureIndex = 0; textureIndex < generatedMaterials.materials[atlasIndex].resultingAtlasList.Length; textureIndex++){
@@ -717,7 +717,7 @@ namespace UMA
 			}
 		}
 		
-		public void cleanMesh(bool destroyRenderer)
+		public void CleanMesh(bool destroyRenderer)
 		{
 			if (myRenderer)
 			{
@@ -781,7 +781,7 @@ namespace UMA
 
         public GameObject GetBoneGameObject(string boneName)
         {
-            return GetBoneGameObject(UMASkeleton.StringToHash(boneName));
+            return GetBoneGameObject(UMAUtils.StringToHash(boneName));
         }
 
         public GameObject GetBoneGameObject(int boneHash)
@@ -805,7 +805,7 @@ namespace UMA
 					continue;
 				}
 
-				int nameHash = UMASkeleton.StringToHash(umaBone.name);
+				int nameHash = UMAUtils.StringToHash(umaBone.name);
 				if (!boneHashList.ContainsKey(nameHash))
 				{
                     
@@ -855,7 +855,7 @@ namespace UMA
 			if (tempBoneData == null) return;
 
 			for (int i = 0; i < tempBoneData.Length; i++) {			
-				boneHashList.Add(UMASkeleton.StringToHash(tempBoneData[i].boneTransform.gameObject.name), tempBoneData[i]);
+				boneHashList.Add(UMAUtils.StringToHash(tempBoneData[i].boneTransform.gameObject.name), tempBoneData[i]);
 			}
 #pragma warning restore 618
 		}
@@ -931,7 +931,7 @@ namespace UMA
                 for (int i = 0; i < tpose.boneInfo.Length; i++)
                 {
                     var bone = tpose.boneInfo[i];
-                    var hash = UMASkeleton.StringToHash(bone.name);
+                    var hash = UMAUtils.StringToHash(bone.name);
                     var go = skeleton.GetBoneGameObject(hash);
                     if (go == null) continue;
                     skeleton.SetPosition(hash, bone.position);
@@ -955,7 +955,7 @@ namespace UMA
 				for (int animatedBoneIndex = 0; animatedBoneIndex < slotData.asset.animatedBones.Length; animatedBoneIndex++)
                 {
 					var animatedBone = slotData.asset.animatedBones[animatedBoneIndex];
-                    var hashName = UMASkeleton.StringToHash(animatedBone.name);
+                    var hashName = UMAUtils.StringToHash(animatedBone.name);
                     if( resHash.ContainsKey(hashName) ) continue;
                     resHash.Add(hashName, hashName);
                     res.Add(hashName);

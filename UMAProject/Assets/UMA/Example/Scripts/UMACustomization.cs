@@ -125,7 +125,7 @@ public class UMACustomization : MonoBehaviour
 
         // Find the panels and hide for now
         DnaPanel = GameObject.Find("DnaEditorPanel");
-        DnaScrollPanel = GameObject.Find("ScrollPanel");
+//        DnaScrollPanel = GameObject.Find("ScrollPanel");
         DnaPanel.SetActive(false);
 
         // Find the DNA hide button and hide it for now
@@ -137,7 +137,7 @@ public class UMACustomization : MonoBehaviour
 	{
         float vpWidth;
 
-        sliders = DnaScrollPanel.GetComponentsInChildren<Slider>();     // Create an array of the sliders to use for initialization
+//        sliders = DnaScrollPanel.GetComponentsInChildren<Slider>();     // Create an array of the sliders to use for initialization
         vpWidth = ((float)Screen.width - 175) / (float)Screen.width;    // Get the width of the screen so that we can adjust the viewport
         ViewPortReduced = new Rect(0, 0, vpWidth, 1);
         Camera.main.rect = ViewPortFull;
@@ -193,7 +193,7 @@ public class UMACustomization : MonoBehaviour
     // Set the camera target and viewport
     private void SetCamera(bool show)
     {
-        Camera cam = cameraTrack.GetComponent<Camera>();
+//        Camera cam = cameraTrack.GetComponent<Camera>();
         if(show)
         {
             Camera.main.rect = ViewPortReduced;
