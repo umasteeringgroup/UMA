@@ -12,7 +12,7 @@ public class UMARecipeCrowd : MonoBehaviour
 	public float atlasScale = 0.5f;
 
 	public bool hideWhileGenerating;
-//	public bool stressTest;
+	public bool stressTest;
 	public Vector2 crowdSize;
 
 	public float space = 1f;
@@ -48,10 +48,10 @@ public class UMARecipeCrowd : MonoBehaviour
 			{
 				GenerateOneCharacter();
 			}
-//			else if (stressTest)
-//			{
-//				RandomizeAll();
-//			}
+			else if (stressTest)
+			{
+				RandomizeAll();
+			}
 		}
 	}
 
@@ -169,6 +169,25 @@ public class UMARecipeCrowd : MonoBehaviour
 		}
 		
 		mixer.FillUMARecipe(umaData.umaRecipe, context);
+
+		// This is a HACK - maybe there should be a clean way
+		// of removing a conflicting slot via the recipe?
+		int maleJeansIndex = -1;
+		int maleLegsIndex = -1;
+		SlotData[] slots = umaData.umaRecipe.GetAllSlots();
+		for (int i = 0; i < slots.Length; i++)
+		{
+			SlotData slot = slots[i];
+			if (slot == null) continue;
+			if (slot.asset.name == null) continue;
+
+			if (slot.asset.slotName == "MaleJeans01") maleJeansIndex = i;
+			else if (slot.asset.slotName == "MaleLegs") maleLegsIndex = i;
+		}
+		if ((maleJeansIndex >= 0) && (maleLegsIndex >= 0))
+		{
+			umaData.umaRecipe.SetSlot(maleLegsIndex, null);
+		}
 	}
 	
 	public virtual void RandomizeDNA(UMAData umaData)
@@ -211,6 +230,7 @@ public class UMARecipeCrowd : MonoBehaviour
 			if (umaAvatar == null) continue;
 
 			UMAData umaData = umaAvatar.umaData;
+			umaData.umaRecipe = new UMAData.UMARecipe();
 
 			RandomizeRecipe(umaData);
 			RandomizeDNA(umaData);

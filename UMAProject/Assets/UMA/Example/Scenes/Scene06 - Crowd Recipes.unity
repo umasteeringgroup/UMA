@@ -18547,7 +18547,8 @@ MonoBehaviour:
   animationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
   atlasScale: .5
   hideWhileGenerating: 1
-  crowdSize: {x: 4, y: 4}
+  stressTest: 0
+  crowdSize: {x: 6, y: 6}
   space: 1
   recipeMixers:
   - {fileID: 612750402}
