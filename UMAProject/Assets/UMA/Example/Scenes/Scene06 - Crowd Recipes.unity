@@ -7496,6 +7496,7 @@ MonoBehaviour:
     selectionRule: 0
     recipes:
     - {fileID: 11400000, guid: a05894b36511040b7a30aa6870edcfe4, type: 2}
+    - {fileID: 11400000, guid: 4dc289b80963c43aca5b96de97aafdd6, type: 2}
   - name: Clothing
     selectionRule: 0
     recipes:
