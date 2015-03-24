@@ -1,0 +1,14 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9448878e2e40f1a4c9f8fd2b56832b13, type: 3}
+  m_Name: MaleBase2
+  m_EditorClassIdentifier: 
+  recipeString: '{"version":2,"packedSlotDataList":null,"slotsV2":[{"id":"MaleEyes","scale":100,"copyIdx":-1,"overlays":[{"id":"EyeOverlay","colorIdx":3,"rect":[0,0,0,0]},{"id":"EyeOverlayAdjust","colorIdx":4,"rect":[64,64,128,128]}]},{"id":"MaleFace","scale":100,"copyIdx":-1,"overlays":[{"id":"MaleHead02","colorIdx":1,"rect":[0,0,0,0]},{"id":"MaleEyebrow02","colorIdx":0,"rect":[384,256,256,64]}]},{"id":"MaleTorso","scale":100,"copyIdx":-1,"overlays":[{"id":"MaleBody02","colorIdx":1,"rect":[0,0,0,0]}]},{"id":"MaleHands","scale":100,"copyIdx":2,"overlays":null},{"id":"MaleInnerMouth","scale":100,"copyIdx":-1,"overlays":[{"id":"InnerMouth","colorIdx":3,"rect":[0,0,0,0]}]},{"id":"MaleLegs","scale":100,"copyIdx":2,"overlays":null},{"id":"MaleFeet","scale":100,"copyIdx":2,"overlays":null}],"colors":[{"name":"Hair","color":[9,7,6,38],"masks":null,"addMasks":null},{"name":"Skin","color":[198,197,199,255],"masks":null,"addMasks":null},{"name":null,"color":[62,177,205,255],"masks":null,"addMasks":null},{"name":null,"color":[255,255,255,255],"masks":null,"addMasks":null},{"name":null,"color":[68,196,37,255],"masks":null,"addMasks":null},{"name":null,"color":[9,6,6,38],"masks":null,"addMasks":null},{"name":null,"color":[3,2,2,12],"masks":null,"addMasks":null}],"sharedColorCount":2,"race":"HumanMale","umaDna":{},"packedDna":[{"dnaType":"UMADnaHumanoid","packedDna":"{\"height\":128,\"headSize\":128,\"headWidth\":128,\"neckThickness\":128,\"armLength\":128,\"forearmLength\":128,\"armWidth\":128,\"forearmWidth\":128,\"handsSize\":128,\"feetSize\":128,\"legSeparation\":128,\"upperMuscle\":128,\"lowerMuscle\":128,\"upperWeight\":128,\"lowerWeight\":128,\"legsSize\":128,\"belly\":128,\"waist\":128,\"gluteusSize\":128,\"earsSize\":128,\"earsPosition\":128,\"earsRotation\":128,\"noseSize\":128,\"noseCurve\":128,\"noseWidth\":128,\"noseInclination\":128,\"nosePosition\":128,\"nosePronounced\":128,\"noseFlatten\":128,\"chinSize\":128,\"chinPronounced\":128,\"chinPosition\":128,\"mandibleSize\":128,\"jawsSize\":128,\"jawsPosition\":128,\"cheekSize\":128,\"cheekPosition\":128,\"lowCheekPronounced\":128,\"lowCheekPosition\":128,\"foreheadSize\":128,\"foreheadPosition\":128,\"lipsSize\":128,\"mouthSize\":128,\"eyeRotation\":128,\"eyeSize\":128,\"breastSize\":128}"},{"dnaType":"UMADnaTutorial","packedDna":"{\"eyeSpacing\":128}"}]}'

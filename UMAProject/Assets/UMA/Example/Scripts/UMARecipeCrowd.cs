@@ -12,7 +12,7 @@ public class UMARecipeCrowd : MonoBehaviour
 	public float atlasScale = 0.5f;
 
 	public bool hideWhileGenerating;
-	public bool stressTest;
+//	public bool stressTest;
 	public Vector2 crowdSize;
 
 	public float space = 1f;
@@ -48,10 +48,10 @@ public class UMARecipeCrowd : MonoBehaviour
 			{
 				GenerateOneCharacter();
 			}
-			else if (stressTest)
-			{
+//			else if (stressTest)
+//			{
 //				RandomizeAll();
-			}
+//			}
 		}
 	}
 
@@ -116,34 +116,13 @@ public class UMARecipeCrowd : MonoBehaviour
 		umaData.CharacterDestroyed = new UMADataEvent(CharacterDestroyed);
 		umaData.CharacterUpdated = new UMADataEvent(CharacterUpdated);
 
-		UMARecipeMixer mixer = recipeMixers[Random.Range(0, recipeMixers.Length)];
-
-		mixer.sharedColors = new OverlayColorData[2];
-		var skinColors = mixer.raceData.sampleSkinColors;
-		if ((skinColors != null) && (skinColors.Length > 0))
-		{
-			mixer.sharedColors[0] = new OverlayColorData();
-			mixer.sharedColors[0].name = "Skin";
-			int index = Random.Range(0, skinColors.Length);
-			mixer.sharedColors[0].color = skinColors[index];
-		}
-		var hairColors = mixer.raceData.sampleHairColors;
-		if ((hairColors != null) && (hairColors.Length > 0))
-		{
-			mixer.sharedColors[1] = new OverlayColorData();
-			mixer.sharedColors[1].name = "Hair";
-			int index = Random.Range(0, hairColors.Length);
-			mixer.sharedColors[1].color = hairColors[index];
-		}
-
-		mixer.FillUMARecipe(umaData.umaRecipe, context);
+		RandomizeRecipe(umaData);
+		RandomizeDNA(umaData);
 
 		if (animationController != null)
 		{
 			umaAvatar.animationController = animationController;
 		}
-
-		RandomizeDNA(umaAvatar);
 		umaAvatar.Show();
 
 		return newGO;
@@ -167,75 +146,80 @@ public class UMARecipeCrowd : MonoBehaviour
 		generating = true;
 	}
 	
-	public virtual void RandomizeDNA(UMADynamicAvatar umaAvatar)
+	public virtual void RandomizeRecipe(UMAData umaData)
 	{
-		RaceData race = umaAvatar.umaData.umaRecipe.GetRace();
+		UMARecipeMixer mixer = recipeMixers[Random.Range(0, recipeMixers.Length)];
+		
+		mixer.sharedColors = new OverlayColorData[2];
+		var skinColors = mixer.raceData.sampleSkinColors;
+		if ((skinColors != null) && (skinColors.Length > 0))
+		{
+			mixer.sharedColors[0] = new OverlayColorData();
+			mixer.sharedColors[0].name = "Skin";
+			int index = Random.Range(0, skinColors.Length);
+			mixer.sharedColors[0].color = skinColors[index];
+		}
+		var hairColors = mixer.raceData.sampleHairColors;
+		if ((hairColors != null) && (hairColors.Length > 0))
+		{
+			mixer.sharedColors[1] = new OverlayColorData();
+			mixer.sharedColors[1].name = "Hair";
+			int index = Random.Range(0, hairColors.Length);
+			mixer.sharedColors[1].color = hairColors[index];
+		}
+		
+		mixer.FillUMARecipe(umaData.umaRecipe, context);
+	}
+	
+	public virtual void RandomizeDNA(UMAData umaData)
+	{
+		RaceData race = umaData.umaRecipe.GetRace();
 		if ((race != null) && (race.dnaRanges != null))
 		{
 			foreach (DNARangeAsset dnaRange in race.dnaRanges)
 			{
-				dnaRange.RandomizeDNA(umaAvatar.umaData);
+				dnaRange.RandomizeDNA(umaData);
 			}
 		}
 	}
 	
-	public virtual void RandomizeDNAGaussian(UMADynamicAvatar umaAvatar)
+	public virtual void RandomizeDNAGaussian(UMAData umaData)
 	{
-		RaceData race = umaAvatar.umaData.umaRecipe.GetRace();
+		RaceData race = umaData.umaRecipe.GetRace();
 		if ((race != null) && (race.dnaRanges != null))
 		{
 			foreach (DNARangeAsset dnaRange in race.dnaRanges)
 			{
-				dnaRange.RandomizeDNAGaussian(umaAvatar.umaData);
+				dnaRange.RandomizeDNAGaussian(umaData);
 			}
 		}
 	}
 
-//	public void RandomizeAll()
-//	{
-//		if (generating)
-//		{
-//			Debug.LogWarning("Can't randomize while generating.");
-//			return;
-//		}
-//		
-//		int childCount = gameObject.transform.childCount;
-//		for (int i = 0; i < childCount; i++)
-//		{
-//			Transform child = gameObject.transform.GetChild(i);
-//			UMADynamicAvatar umaDynamicAvatar = child.gameObject.GetComponent<UMADynamicAvatar>();
-//			if (umaDynamicAvatar == null)
-//			{
-//				Debug.Log("Couldn't find dynamic avatar on child: " + child.gameObject.name);
-//				continue;
-//			}
-//			umaData = umaDynamicAvatar.umaData;
-//			var umaRecipe = umaDynamicAvatar.umaData.umaRecipe;
-//			UMACrowdRandomSet.CrowdRaceData race = null;
-//			
-//			if (randomPool != null && randomPool.Length > 0)
-//			{
-//				int randomResult = Random.Range(0, randomPool.Length);
-//				race = randomPool[randomResult].data;
-//				umaRecipe.SetRace(GetRaceLibrary().GetRace(race.raceID));
-//			}
-//			else
-//			{
-//				if (Random.value < 0.5f)
-//				{
-//					umaRecipe.SetRace(GetRaceLibrary().GetRace("HumanMale"));
-//				}
-//				else
-//				{
-//					umaRecipe.SetRace(GetRaceLibrary().GetRace("HumanFemale"));
-//				}
-//			}
-//			
-//			if (animationController != null)
-//			{
-//				umaDynamicAvatar.animationController = animationController;
-//			}
-//			umaDynamicAvatar.Show();
-//		}
-//	}
+	public void RandomizeAll()
+	{
+		if (generating)
+		{
+			Debug.LogWarning("Can't randomize while generating.");
+			return;
+		}
+		
+		int childCount = gameObject.transform.childCount;
+		for (int i = 0; i < childCount; i++)
+		{
+			Transform child = gameObject.transform.GetChild(i);
+			UMADynamicAvatar umaAvatar = child.gameObject.GetComponent<UMADynamicAvatar>();
+			if (umaAvatar == null) continue;
+
+			UMAData umaData = umaAvatar.umaData;
+
+			RandomizeRecipe(umaData);
+			RandomizeDNA(umaData);
+			
+			if (animationController != null)
+			{
+				umaAvatar.animationController = animationController;
+			}
+			umaAvatar.Show();
+		}
+	}
 }
