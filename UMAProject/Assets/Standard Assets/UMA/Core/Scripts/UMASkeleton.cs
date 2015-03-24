@@ -285,7 +285,13 @@ namespace UMA
 
 		public virtual void EnsureBone(UMATransform umaTransform)
 		{
-			if (!boneHashData.ContainsKey(umaTransform.hash))
+			BoneData res;
+			if (boneHashData.TryGetValue(umaTransform.hash, out res))
+			{
+				res.accessedFrame = frame;
+				res.umaTransform = umaTransform;
+			}
+			else
 			{
 				AddBone(umaTransform);
 			}
@@ -301,6 +307,7 @@ namespace UMA
 					entry.boneTransform.localPosition = entry.umaTransform.position;
 					entry.boneTransform.localRotation = entry.umaTransform.rotation;
 					entry.boneTransform.localScale = entry.umaTransform.scale;
+					entry.accessedFrame = frame;
 				}
 			}
 		}
