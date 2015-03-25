@@ -225,9 +225,12 @@ namespace UMA
 
 		public virtual void ResetAll()
 		{
-			foreach (int hash in boneHashData.Keys)
+			foreach (BoneData db in boneHashData.Values)
 			{
-				Reset(hash);
+				db.accessedFrame = frame;
+				db.boneTransform.localPosition = db.umaTransform.position;
+				db.boneTransform.localRotation = db.umaTransform.rotation;
+				db.boneTransform.localScale = db.umaTransform.scale;
 			}
 		}
 
