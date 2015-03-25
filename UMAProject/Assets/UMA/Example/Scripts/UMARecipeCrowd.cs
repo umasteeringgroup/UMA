@@ -1,4 +1,8 @@
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+using System.IO;
+#endif
 using System.Collections;
 using System.Collections.Generic;
 using UMA;
@@ -19,6 +23,9 @@ public class UMARecipeCrowd : MonoBehaviour
 	private int spawnX;
 	private int spawnY;
 	private bool generating = false;
+	
+	public bool saveCrowd = false;
+	private string saveFolderPath;
 
 	public UMARecipeMixer[] recipeMixers;
 
@@ -38,6 +45,17 @@ public class UMARecipeCrowd : MonoBehaviour
 
 		if ((crowdSize.x > 0) && (crowdSize.y > 0))
 			generating = true;
+
+#if UNITY_EDITOR
+		if (saveCrowd)
+		{
+			saveFolderPath = "Saved Crowd " + System.DateTime.Now.ToString().Replace('/', '_');
+			saveFolderPath = saveFolderPath.Replace(':', '_');
+			string folderGUID = AssetDatabase.CreateFolder("Assets", saveFolderPath);
+			saveFolderPath = AssetDatabase.GUIDToAssetPath(folderGUID);
+			Debug.LogWarning("Saving all generated recipes into: " + saveFolderPath);
+		}
+#endif
 	}
 
 	void Update()
@@ -188,8 +206,26 @@ public class UMARecipeCrowd : MonoBehaviour
 		{
 			umaData.umaRecipe.SetSlot(maleLegsIndex, null);
 		}
+
+#if UNITY_EDITOR
+		if (saveCrowd)
+		{
+			SaveRecipe(umaData, context);
+		}
+#endif
 	}
-	
+
+#if UNITY_EDITOR
+	protected void SaveRecipe(UMAData umaData, UMAContext context)
+	{
+		string assetPath = AssetDatabase.GenerateUniqueAssetPath(Path.Combine(saveFolderPath, umaData.umaRecipe.raceData.raceName + ".asset"));
+		var asset = ScriptableObject.CreateInstance<UMATextRecipe>();
+		asset.Save(umaData.umaRecipe, context);
+		AssetDatabase.CreateAsset(asset, assetPath);
+		AssetDatabase.SaveAssets();
+	}
+#endif
+
 	public virtual void RandomizeDNA(UMAData umaData)
 	{
 		RaceData race = umaData.umaRecipe.GetRace();
