@@ -25,7 +25,7 @@ namespace UMA
 
 		public UMASkeleton(Transform rootBone)
 		{
-			rootBoneHash = UMASkeleton.StringToHash(rootBone.name);
+			rootBoneHash = UMAUtils.StringToHash(rootBone.name);
 			this.boneHashData = new Dictionary<int, BoneData>();
 			AddBonesRecursive(rootBone);
 		}
@@ -42,8 +42,8 @@ namespace UMA
 
 		private void AddBonesRecursive(Transform transform)
 		{
-			var hash = UMASkeleton.StringToHash(transform.name);
-			var parentHash = transform.parent != null ? UMASkeleton.StringToHash(transform.parent.name) : 0;
+			var hash = UMAUtils.StringToHash(transform.name);
+			var parentHash = transform.parent != null ? UMAUtils.StringToHash(transform.parent.name) : 0;
 			boneHashData[hash] = new BoneData()
 			{
 				parentBoneNameHash = parentHash,
@@ -287,7 +287,13 @@ namespace UMA
 
 		public virtual void EnsureBone(UMATransform umaTransform)
 		{
-			if (!boneHashData.ContainsKey(umaTransform.hash))
+			BoneData res;
+			if (boneHashData.TryGetValue(umaTransform.hash, out res))
+			{
+				res.accessedFrame = -1;
+				res.umaTransform = umaTransform;
+			}
+			else
 			{
 				AddBone(umaTransform);
 			}
@@ -303,6 +309,7 @@ namespace UMA
 					entry.boneTransform.localPosition = entry.umaTransform.position;
 					entry.boneTransform.localRotation = entry.umaTransform.rotation;
 					entry.boneTransform.localScale = entry.umaTransform.scale;
+					entry.accessedFrame = frame;
 				}
 			}
 		}

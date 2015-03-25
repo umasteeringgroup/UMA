@@ -72,7 +72,7 @@ public class SlotLibrary : SlotLibraryBase
 
 	public override SlotData InstantiateSlot(string name)
 	{
-		var res = Internal_InstantiateSlot(UMASkeleton.StringToHash(name));
+		var res = Internal_InstantiateSlot(UMAUtils.StringToHash(name));
 		if (res == null)
 		{
 			throw new UMAResourceNotFoundException("SlotLibrary: Unable to find: " + name);
@@ -91,7 +91,7 @@ public class SlotLibrary : SlotLibraryBase
 
 	public override SlotData InstantiateSlot(string name, List<OverlayData> overlayList)
 	{
-		var res = Internal_InstantiateSlot(UMASkeleton.StringToHash(name));
+		var res = Internal_InstantiateSlot(UMAUtils.StringToHash(name));
 		if (res == null)
 		{
 			throw new UMAResourceNotFoundException("SlotLibrary: Unable to find: " + name);

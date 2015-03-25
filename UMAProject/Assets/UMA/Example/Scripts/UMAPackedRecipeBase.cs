@@ -143,6 +143,14 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 			}
 		}
 	}
+	
+	[System.Serializable]
+	public class PackedOverlayColorDataV3
+	{
+		public string name;
+		// Put everything in one array of size 4 + 8 * extra mask count
+		public byte[] colors;
+	}
 
 	[System.Serializable]
 	public class UMAPackedDna

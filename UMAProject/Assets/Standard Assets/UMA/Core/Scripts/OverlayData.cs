@@ -123,19 +123,7 @@ namespace UMA
 
         public void CopyColors(OverlayData overlay)
         {
-            if (overlay.useAdvancedMasks)
-            {
-				EnsureChannels(overlay.colorData.channelAdditiveMask.Length);
-				for (int i = 0; i < overlay.colorData.channelAdditiveMask.Length; i++)
-                {
-                    SetColor(i, overlay.GetColor(i));
-                    SetAdditive(i, overlay.GetAdditive(i));
-                }
-            }
-            else
-            {
-				SetColor(0, overlay.colorData.color);
-            }
+			colorData = overlay.colorData.Copy();
         }
 
         public void EnsureChannels(int channels)

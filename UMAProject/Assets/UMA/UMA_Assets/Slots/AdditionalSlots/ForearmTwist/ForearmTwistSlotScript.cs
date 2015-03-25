@@ -15,10 +15,10 @@ namespace UMA
 		{
 			if (!hashesFound)
 			{
-				leftHandHash = UMASkeleton.StringToHash("LeftHand");
-				rightHandHash = UMASkeleton.StringToHash("RightHand");
-				leftTwistHash = UMASkeleton.StringToHash("LeftForeArmTwist");
-				rightTwistHash = UMASkeleton.StringToHash("RightForeArmTwist");
+				leftHandHash = UMAUtils.StringToHash("LeftHand");
+				rightHandHash = UMAUtils.StringToHash("RightHand");
+				leftTwistHash = UMAUtils.StringToHash("LeftForeArmTwist");
+				rightTwistHash = UMAUtils.StringToHash("RightForeArmTwist");
 				hashesFound = true;
 			}
 

@@ -209,6 +209,7 @@ namespace UMA
 			public RaceData raceData;
 			protected Dictionary<Type, UMADnaBase> umaDna = new Dictionary<Type, UMADnaBase>();
             protected Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate> umaDnaConverter = new Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate>();
+			protected Dictionary<string, int> mergedSharedColors = new Dictionary<string, int>();
 			public SlotData[] slotDataList;
 			public int additionalSlotCount;
 			public OverlayColorData[] sharedColors;
@@ -350,6 +351,7 @@ namespace UMA
 				if ((slot == null) || (slot.asset == null))
 					return;
 
+				int overlayCount = 0;
 				for (int i = 0; i < slotDataList.Length; i++)
 				{
 					if (slotDataList[i] == null)
@@ -357,18 +359,27 @@ namespace UMA
 					if (slot.asset == slotDataList[i].asset)
 					{
 						SlotData originalSlot = slotDataList[i];
-						int overlayCount = slot.OverlayCount;
+						overlayCount = slot.OverlayCount;
 						for (int j = 0; j < overlayCount; j++)
 						{
 							OverlayData overlay = slot.GetOverlay(j);
 							OverlayData originalOverlay = originalSlot.GetEquivalentOverlay(overlay);
 							if (originalOverlay != null)
 							{
-								originalOverlay.CopyColors(overlay);
+//								originalOverlay.CopyColors(overlay);
 							}
 							else
 							{
-								originalSlot.AddOverlay(overlay);
+								OverlayData overlayCopy = overlay.Copy();
+								if (overlay.colorData.HasName())
+								{
+									int sharedIndex;
+									if (mergedSharedColors.TryGetValue(overlay.colorData.name, out sharedIndex))
+									{
+										overlayCopy.colorData = sharedColors[sharedIndex];
+									}
+								}
+								originalSlot.AddOverlay(overlayCopy);
 							}
 						}
 						return;
@@ -390,7 +401,21 @@ namespace UMA
 					}
 				}
 			
-				slotDataList[insertIndex] = slot;
+				SlotData slotCopy = slot.Copy();
+				overlayCount = slotCopy.OverlayCount;
+				for (int j = 0; j < overlayCount; j++)
+				{
+					OverlayData overlay = slotCopy.GetOverlay(j);
+					if (overlay.colorData.HasName())
+					{
+						int sharedIndex;
+						if (mergedSharedColors.TryGetValue(overlay.colorData.name, out sharedIndex))
+						{
+							overlay.colorData = sharedColors[sharedIndex];
+						}
+					}
+				}
+				slotDataList[insertIndex] = slotCopy;
 			}
 
             public SlotData GetSlot(int index)
@@ -453,7 +478,7 @@ namespace UMA
 					{
 						if (slotDataList[j] == null)
 							continue;
-						List<OverlayData> slot2Overlays = slotDataList[j].GetOverlayList();;
+						List<OverlayData> slot2Overlays = slotDataList[j].GetOverlayList();
 						if (OverlayListsMatch(slotOverlays, slot2Overlays))
 						{
 							slotDataList[j].SetOverlayList(slotOverlays);
@@ -539,6 +564,9 @@ namespace UMA
 
 			public void Merge(UMARecipe recipe, bool additional)
 			{
+				if (recipe == null)
+					return;
+
 				if ((recipe.raceData != null) && (recipe.raceData != raceData))
 				{
 					Debug.LogWarning("Merging recipe with conflicting race data: " + recipe.raceData.name);
@@ -550,12 +578,39 @@ namespace UMA
 					destDNA.Values = dnaEntry.Value.Values;
 				}
 
-				int slotCount = recipe.slotDataList == null ? 0 : recipe.slotDataList.Length;
-				if (slotCount > 0)
+				mergedSharedColors.Clear();
+				if (sharedColors == null)
+					sharedColors = new OverlayColorData[0];
+				if (recipe.sharedColors != null)
 				{
-					if (slotDataList == null)
-						slotDataList = new SlotData[0];
-					for (int i = 0; i < slotCount; i++)
+					for (int i = 0; i < sharedColors.Length; i++)
+					{
+						if ((sharedColors[i] != null) && sharedColors[i].HasName())
+							mergedSharedColors.Add(sharedColors[i].name, i);
+					}
+
+					for (int i = 0; i < recipe.sharedColors.Length; i++)
+					{
+						OverlayColorData sharedColor = recipe.sharedColors[i];
+						if (sharedColor.HasName())
+						{
+							int sharedIndex;
+							if (!mergedSharedColors.TryGetValue(sharedColor.name, out sharedIndex))
+							{
+								int index = sharedColors.Length;
+								mergedSharedColors.Add(sharedColor.name, index);
+								Array.Resize<OverlayColorData>(ref sharedColors, index + 1);
+								sharedColors[index] = sharedColor.Copy();
+							}
+						}
+					}
+				}
+
+				if (slotDataList == null)
+					slotDataList = new SlotData[0];
+				if (recipe.slotDataList != null)
+				{
+					for (int i = 0; i < recipe.slotDataList.Length; i++)
 					{
 						MergeSlot(recipe.slotDataList[i], additional);
 					}
@@ -624,14 +679,14 @@ namespace UMA
             }
 			if(umaRoot != null)
 			{
-				cleanTextures();
-                cleanMesh(true);
-                cleanAvatar();
+				CleanTextures();
+                CleanMesh(true);
+                CleanAvatar();
 				Destroy(umaRoot);
 			}
 		}
 		
-		public void cleanAvatar(){
+		public void CleanAvatar(){
 			animationController = null;
             if (animator != null)
             {
@@ -640,7 +695,7 @@ namespace UMA
             }
 		}
 
-		public void cleanTextures(){
+		public void CleanTextures(){
 			for(int atlasIndex = 0; atlasIndex < generatedMaterials.materials.Count; atlasIndex++){
 				if(generatedMaterials.materials[atlasIndex] != null && generatedMaterials.materials[atlasIndex].resultingAtlasList != null){
 					for(int textureIndex = 0; textureIndex < generatedMaterials.materials[atlasIndex].resultingAtlasList.Length; textureIndex++){
@@ -662,7 +717,7 @@ namespace UMA
 			}
 		}
 		
-		public void cleanMesh(bool destroyRenderer)
+		public void CleanMesh(bool destroyRenderer)
 		{
 			if (myRenderer)
 			{
@@ -726,7 +781,7 @@ namespace UMA
 
         public GameObject GetBoneGameObject(string boneName)
         {
-            return GetBoneGameObject(UMASkeleton.StringToHash(boneName));
+            return GetBoneGameObject(UMAUtils.StringToHash(boneName));
         }
 
         public GameObject GetBoneGameObject(int boneHash)
@@ -750,7 +805,7 @@ namespace UMA
 					continue;
 				}
 
-				int nameHash = UMASkeleton.StringToHash(umaBone.name);
+				int nameHash = UMAUtils.StringToHash(umaBone.name);
 				if (!boneHashList.ContainsKey(nameHash))
 				{
                     
@@ -800,7 +855,7 @@ namespace UMA
 			if (tempBoneData == null) return;
 
 			for (int i = 0; i < tempBoneData.Length; i++) {			
-				boneHashList.Add(UMASkeleton.StringToHash(tempBoneData[i].boneTransform.gameObject.name), tempBoneData[i]);
+				boneHashList.Add(UMAUtils.StringToHash(tempBoneData[i].boneTransform.gameObject.name), tempBoneData[i]);
 			}
 #pragma warning restore 618
 		}
@@ -876,7 +931,7 @@ namespace UMA
                 for (int i = 0; i < tpose.boneInfo.Length; i++)
                 {
                     var bone = tpose.boneInfo[i];
-                    var hash = UMASkeleton.StringToHash(bone.name);
+                    var hash = UMAUtils.StringToHash(bone.name);
                     var go = skeleton.GetBoneGameObject(hash);
                     if (go == null) continue;
                     skeleton.SetPosition(hash, bone.position);
@@ -900,7 +955,7 @@ namespace UMA
 				for (int animatedBoneIndex = 0; animatedBoneIndex < slotData.asset.animatedBones.Length; animatedBoneIndex++)
                 {
 					var animatedBone = slotData.asset.animatedBones[animatedBoneIndex];
-                    var hashName = UMASkeleton.StringToHash(animatedBone.name);
+                    var hashName = UMAUtils.StringToHash(animatedBone.name);
                     if( resHash.ContainsKey(hashName) ) continue;
                     resHash.Add(hashName, hashName);
                     res.Add(hashName);
@@ -947,11 +1002,10 @@ namespace UMA
 		{
 			if (umaAdditionalRecipes != null)
 			{
-				var additionalRecipe = new UMAData.UMARecipe();
 				foreach (var umaAdditionalRecipe in umaAdditionalRecipes)
 				{
-					umaAdditionalRecipe.Load(additionalRecipe, context);
-					umaRecipe.Merge(additionalRecipe, true);
+					UMARecipe cachedRecipe = umaAdditionalRecipe.GetCachedRecipe(context);
+					umaRecipe.Merge(cachedRecipe, true);
 				}
 			}
 		}

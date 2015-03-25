@@ -38,7 +38,7 @@ namespace UMA
 			}
 			else
 			{
-				umaData.cleanMesh(false);
+				umaData.CleanMesh(false);
 			}
 		}
 

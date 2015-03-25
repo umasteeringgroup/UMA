@@ -41,7 +41,10 @@ namespace UMA
 		public OverlayColorData Copy()
 		{
 			var res = new OverlayColorData();
-			res.name = String.Copy(name);
+			if (name != null)
+			{
+				res.name = String.Copy(name);
+			}
 			res.color = new Color32(color.r, color.g, color.b, color.a);
 			Color32 maskColor;
 			if (channelMask != null)
@@ -63,6 +66,11 @@ namespace UMA
 				}
 			}
 			return res;
+		}
+
+		public bool HasName()
+		{
+			return ((name != null) && (name.Length > 0));
 		}
 		
 		public static bool SameColor(Color32 color1, Color32 color2)

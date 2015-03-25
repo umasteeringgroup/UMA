@@ -53,7 +53,7 @@ namespace UMA.PoseTools
 				{
 					Transform jaw = umaData.animator.GetBoneTransform(HumanBodyBones.Jaw);
 					if (jaw != null)
-						jawHash = UMASkeleton.StringToHash(jaw.name);
+						jawHash = UMAUtils.StringToHash(jaw.name);
 				}
 				initialized = true;
 			}

@@ -65,7 +65,7 @@ namespace UMA
 		protected override void Start()
 		{
 			backUpTexture = umaData.backUpTextures();
-			umaData.cleanTextures();
+			umaData.CleanTextures();
 			generatedMaterials = new List<UMAData.GeneratedMaterial>(20);
 			atlassedMaterials.Clear();
 

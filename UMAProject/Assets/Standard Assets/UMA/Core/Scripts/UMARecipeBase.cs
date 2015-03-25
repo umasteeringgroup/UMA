@@ -5,13 +5,26 @@ using UMA;
 
 public abstract class UMARecipeBase : ScriptableObject
 {
-	public abstract void Load(UMA.UMAData.UMARecipe umaRecipe, UMAContext context);
-	public abstract void Save(UMA.UMAData.UMARecipe umaRecipe, UMAContext context);
+	public abstract void Load(UMAData.UMARecipe umaRecipe, UMAContext context);
+	public abstract void Save(UMAData.UMARecipe umaRecipe, UMAContext context);
 	public abstract string GetInfo();
 	public abstract byte[] GetBytes();
 	public abstract void SetBytes(byte[] data);
 	public override string ToString() { return GetInfo(); }
-	public virtual int GetTypeNameHash() { return UMASkeleton.StringToHash(GetType().Name); }
+	public virtual int GetTypeNameHash() { return UMAUtils.StringToHash(GetType().Name); }
+
+	protected UMAData.UMARecipe umaRecipe;
+	protected bool cached = false;
+	public UMAData.UMARecipe GetCachedRecipe(UMAContext context)
+	{
+		if (!cached)
+		{
+			umaRecipe = new UMAData.UMARecipe();
+			Load(umaRecipe, context);
+		}
+
+		return umaRecipe;
+	}
 
 	[NonSerialized]
 	private static Type[] recipeFormats;
@@ -41,7 +54,7 @@ public abstract class UMARecipeBase : ScriptableObject
 	{
 		foreach(var format in GetRecipeFormats())
 		{
-			if (UMASkeleton.StringToHash(format.Name) == typeNameHash) return format;
+			if (UMAUtils.StringToHash(format.Name) == typeNameHash) return format;
 		}
 		return null;
 	}

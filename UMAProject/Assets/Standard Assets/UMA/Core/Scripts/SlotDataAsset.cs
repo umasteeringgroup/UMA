@@ -96,7 +96,7 @@ namespace UMA
 #endif
 		public void OnAfterDeserialize()
 		{
-			nameHash = UMASkeleton.StringToHash(slotName);
+			nameHash = UMAUtils.StringToHash(slotName);
 		}
 		public void OnBeforeSerialize() { }
 	}

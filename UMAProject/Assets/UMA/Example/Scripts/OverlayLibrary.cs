@@ -28,7 +28,7 @@ public class OverlayLibrary : OverlayLibraryBase
 		{
 			if (overlayElementList[i])
 			{
-				var hash = UMASkeleton.StringToHash(overlayElementList[i].overlayName);
+				var hash = UMAUtils.StringToHash(overlayElementList[i].overlayName);
 				if (!overlayDictionary.ContainsKey(hash))
 				{
 					overlayDictionary.Add(hash, overlayElementList[i]);
@@ -40,7 +40,7 @@ public class OverlayLibrary : OverlayLibraryBase
 	public override void AddOverlayAsset(OverlayDataAsset overlay)
 	{
 		ValidateDictionary();
-		var hash = UMASkeleton.StringToHash(overlay.overlayName);
+		var hash = UMAUtils.StringToHash(overlay.overlayName);
 		if (overlayDictionary.ContainsKey(hash))
 		{
 			for (int i = 0; i < overlayElementList.Length; i++)
@@ -77,7 +77,7 @@ public class OverlayLibrary : OverlayLibraryBase
 
 	public override OverlayData InstantiateOverlay(string name)
 	{
-		var res = Internal_InstantiateOverlay(UMASkeleton.StringToHash(name));
+		var res = Internal_InstantiateOverlay(UMAUtils.StringToHash(name));
 		if (res == null)
 		{
 			throw new UMAResourceNotFoundException("OverlayLibrary: Unable to find: " + name);
@@ -97,7 +97,7 @@ public class OverlayLibrary : OverlayLibraryBase
 
 	public override OverlayData InstantiateOverlay(string name, Color color)
 	{
-		var res = Internal_InstantiateOverlay(UMASkeleton.StringToHash(name));
+		var res = Internal_InstantiateOverlay(UMAUtils.StringToHash(name));
 		if (res == null)
 		{
 			throw new UMAResourceNotFoundException("OverlayLibrary: Unable to find: " + name);
