@@ -227,10 +227,13 @@ namespace UMA
 		{
 			foreach (BoneData db in boneHashData.Values)
 			{
-				db.accessedFrame = frame;
-				db.boneTransform.localPosition = db.umaTransform.position;
-				db.boneTransform.localRotation = db.umaTransform.rotation;
-				db.boneTransform.localScale = db.umaTransform.scale;
+				if (db.boneTransform != null)
+				{
+					db.accessedFrame = frame;
+					db.boneTransform.localPosition = db.umaTransform.position;
+					db.boneTransform.localRotation = db.umaTransform.rotation;
+					db.boneTransform.localScale = db.umaTransform.scale;
+				}
 			}
 		}
 
