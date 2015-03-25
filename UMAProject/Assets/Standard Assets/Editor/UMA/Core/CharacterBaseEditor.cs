@@ -446,7 +446,20 @@ namespace UMAEditor
 	                changed = true;
 	            }
 
-	            for (int i = 0; i < _overlayEditors.Count; i++)
+				var addedSlot = (SlotDataAsset)EditorGUILayout.ObjectField("Add Slot", null, typeof(SlotDataAsset), false);
+
+				if (addedSlot != null)
+				{
+					var newSlot = new SlotData(addedSlot);
+					newSlot.SetOverlayList(_slotData.GetOverlayList());
+					ArrayUtility.Add(ref _recipe.slotDataList, newSlot);
+					_dnaDirty = true;
+					_textureDirty = true;
+					_meshDirty = true;
+					changed = true;
+				}
+
+				for (int i = 0; i < _overlayEditors.Count; i++)
 	            {
 	                var overlayEditor = _overlayEditors[i];
 

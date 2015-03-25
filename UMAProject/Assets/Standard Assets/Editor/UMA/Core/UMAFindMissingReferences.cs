@@ -40,10 +40,10 @@ namespace UMAEditor
 			references.Add(new UnityReference("7e407fe772026ae4cb2f52b8b5567db5", "11500000", FindAssetGuid("OverlayDataAsset", "cs"), "11500000") { updatedFiles = overlayFilePaths }); // OverlayData.cs
 			references.Add(new UnityReference("a248d59ac2f3fa14b9c2894f47000560", "11500000", FindAssetGuid("SlotDataAsset", "cs"), "11500000") { updatedFiles = slotFilePaths }); // SlotData.cs
 
+			ReplaceReferences(Application.dataPath, references);
 
 			if (slotFilePaths.Count > 0 || overlayFilePaths.Count > 0)
 			{
-				ReplaceReferences(Application.dataPath, references);
 				UMA.UMAMaterial material = AssetDatabase.LoadAssetAtPath("Assets/UMA_Assets/MaterialSamples/DefaultUMAMaterial.asset", typeof(UMA.UMAMaterial)) as UMA.UMAMaterial;
 				if (material == null) material = AssetDatabase.LoadAssetAtPath("Assets/UMA_Assets/MaterialSamples/UMALegacy.asset", typeof(UMA.UMAMaterial)) as UMA.UMAMaterial;
 
@@ -107,7 +107,7 @@ namespace UMAEditor
 			{
 				string file = files[i];
 
-				if (EditorUtility.DisplayCancelableProgressBar("Replace UMA DLL", file, i / (float)files.Length))
+				if (EditorUtility.DisplayCancelableProgressBar("Update to UMA2", file, i / (float)files.Length))
 				{
 					EditorUtility.ClearProgressBar();
 					return;
@@ -122,6 +122,47 @@ namespace UMAEditor
 
 			EditorUtility.ClearProgressBar();
 #endif
+		}
+
+		static bool IsValidHexString(IEnumerable<char> chars)
+		{
+			bool isHex; 
+			foreach(var c in chars)
+			{
+				isHex = ((c >= '0' && c <= '9') || 
+				         (c >= 'a' && c <= 'f') || 
+				         (c >= 'A' && c <= 'F'));
+				
+				if(!isHex)
+					return false;
+			}
+			return true;
+		}
+
+		static bool IsHexJunk(string junk)
+		{
+			if ((junk.Length % 2) == 1)
+			{
+				// can't be an odd number of characters...
+				return false; 
+			}
+			if (IsValidHexString(junk))
+			{
+				return true;
+			}
+			return false;
+		}
+
+		static string HexToString(string hexstr)
+		{ 
+			var sb = new System.Text.StringBuilder(hexstr.Length/2);
+			for (int i=0;i<hexstr.Length;i+=2)
+			{
+				string hex = hexstr.Substring(i,2);
+				int value = System.Convert.ToInt32(hex, 16);
+				sb.Append(System.Char.ConvertFromUtf32(value));
+			}
+			return sb.ToString();
 		}
 
 		static void ReplaceReferencesInFile(string filePath, List<UnityReference> references)
@@ -142,6 +183,25 @@ namespace UMAEditor
 					fileContents = regex.Replace(fileContents, "fileID: " + r.dstFileId + ", guid: " + r.dstGuid);
 					match = true;
 					Debug.Log("Replaced: " + filePath);
+				}
+			}
+
+			// fix name if it's slotdata or overlaydata
+			if (match) {
+				string[] lines = fileContents.Split ('\n');
+				foreach (string line in lines) {
+					string[] l = line.Trim ('\r', '\n', ' ').Split (':');
+
+					if (l.Length > 1) {
+						if (l [0].StartsWith ("overlayName") || l [0].StartsWith ("slotName")) {
+							// is it hex junk?
+							string HexJunk = l [1].Trim ();
+							if (IsHexJunk (HexJunk)) {
+								string NewJunk = HexToString(HexJunk);
+								fileContents = fileContents.Replace(HexJunk,NewJunk);
+							}
+						}
+					}
 				}
 			}
 

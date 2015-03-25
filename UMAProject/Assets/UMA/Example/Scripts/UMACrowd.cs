@@ -5,13 +5,13 @@ using UMA;
 
 public class UMACrowd : MonoBehaviour
 {
-	[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+	[HideInInspector]
 	[System.Obsolete("Crowd slotLibrary is obsolete, please use the Crowd umaContext", false)]
 	public SlotLibrary slotLibrary;
-	[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+	[HideInInspector]
 	[System.Obsolete("Crowd overlayLibrary is obsolete, please use the Crowd umaContext", false)]
 	public OverlayLibrary overlayLibrary;
-	[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+	[HideInInspector]
 	[System.Obsolete("Crowd raceLibrary is obsolete, please use the Crowd umaContext", false)]
 	public RaceLibrary raceLibrary;
 

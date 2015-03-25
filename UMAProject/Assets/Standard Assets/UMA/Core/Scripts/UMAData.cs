@@ -361,7 +361,7 @@ namespace UMA
 						for (int j = 0; j < overlayCount; j++)
 						{
 							OverlayData overlay = slot.GetOverlay(j);
-							OverlayData originalOverlay = originalSlot.GetOverlay(overlay.asset);
+							OverlayData originalOverlay = originalSlot.GetEquivalentOverlay(overlay);
 							if (originalOverlay != null)
 							{
 								originalOverlay.CopyColors(overlay);

@@ -174,6 +174,8 @@ namespace UMA
 			}
 			else
 			{
+				Debug.LogWarning("NameHash not found: "+nameHash);
+				Debug.LogWarning("Skeleton contains: " + boneHashData.Count + " bones");
 				throw new Exception("Bone not found.");
 			}
 		}

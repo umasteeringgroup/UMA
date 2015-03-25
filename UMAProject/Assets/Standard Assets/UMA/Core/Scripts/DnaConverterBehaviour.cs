@@ -6,13 +6,13 @@ namespace UMA
 {
 	public class DnaConverterBehaviour : MonoBehaviour 
 	{
+		public DnaConverterBehaviour()
+		{
+			Prepare();
+		}
 	    public System.Type DNAType;
         public delegate void DNAConvertDelegate(UMAData data, UMASkeleton skeleton);
         public DNAConvertDelegate ApplyDnaAction;
-	    public void ApplyDna(UMAData data, UMASkeleton skeleton)
-	    {
-	        ApplyDnaAction(data, skeleton);
-	    }
 
 		static bool builtHashes = false;
 		static protected int headAdjustHash;
