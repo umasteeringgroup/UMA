@@ -168,25 +168,36 @@ public class UMARecipeCrowd : MonoBehaviour
 	{
 		UMARecipeMixer mixer = recipeMixers[Random.Range(0, recipeMixers.Length)];
 		
-		mixer.sharedColors = new OverlayColorData[2];
-		var skinColors = mixer.raceData.sampleSkinColors;
-		if ((skinColors != null) && (skinColors.Length > 0))
-		{
-			mixer.sharedColors[0] = new OverlayColorData();
-			mixer.sharedColors[0].name = "Skin";
-			int index = Random.Range(0, skinColors.Length);
-			mixer.sharedColors[0].color = skinColors[index];
-		}
-		var hairColors = mixer.raceData.sampleHairColors;
-		if ((hairColors != null) && (hairColors.Length > 0))
-		{
-			mixer.sharedColors[1] = new OverlayColorData();
-			mixer.sharedColors[1].name = "Hair";
-			int index = Random.Range(0, hairColors.Length);
-			mixer.sharedColors[1].color = hairColors[index];
-		}
-		
 		mixer.FillUMARecipe(umaData.umaRecipe, context);
+
+		OverlayColorData[] sharedColors = umaData.umaRecipe.sharedColors;
+		if ((sharedColors != null) && (sharedColors.Length > 0))
+		{
+			var skinColors = mixer.raceData.sampleSkinColors;
+			if ((skinColors != null) && (skinColors.Length > 0))
+			{
+				int index = Random.Range(0, skinColors.Length);
+				for (int i = 0; i < sharedColors.Length; i++)
+				{
+					if (sharedColors[i].name == "Skin")
+					{
+						sharedColors[i].color = skinColors[index];
+					}
+				}
+			}
+			var hairColors = mixer.raceData.sampleHairColors;
+			if ((hairColors != null) && (hairColors.Length > 0))
+			{
+				int index = Random.Range(0, hairColors.Length);
+				for (int i = 0; i < sharedColors.Length; i++)
+				{
+					if (sharedColors[i].name == "Hair")
+					{
+						sharedColors[i].color = hairColors[index];
+					}
+				}
+			}
+		}
 
 		// This is a HACK - maybe there should be a clean way
 		// of removing a conflicting slot via the recipe?

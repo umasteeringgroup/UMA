@@ -22,7 +22,6 @@ public class UMARecipeMixer : MonoBehaviour
 	}
 
 	public RaceData raceData;
-	public OverlayColorData[] sharedColors;
 	public RecipeSection[] recipeSections;
 	public UMARecipeBase[] additionalRecipes;
 
@@ -34,7 +33,6 @@ public class UMARecipeMixer : MonoBehaviour
 			return;
 		}
 		umaRecipe.SetRace(raceData);
-		umaRecipe.sharedColors = sharedColors;
 
 		int sectionCount = (recipeSections == null) ? 0 : recipeSections.Length;
 		for (int i = 0; i < sectionCount; i++)
