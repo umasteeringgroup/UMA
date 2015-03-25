@@ -21,7 +21,7 @@ namespace UMA
 			Texture = 0,
 			NormalMap = 1,
 			MaterialColor = 2,
-			RawTexture = 3,
+			TintedTexture = 3,
 		}
 
 		[Serializable]

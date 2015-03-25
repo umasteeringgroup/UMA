@@ -156,7 +156,7 @@ namespace UMA
 							atlas.material.SetColor(slotData.asset.material.channels[textureType].materialPropertyName, atlas.materialFragments[0].baseColor);
 							break;
 						}
-						case UMAMaterial.ChannelType.RawTexture:
+						case UMAMaterial.ChannelType.TintedTexture:
 						{
 							for (int i = 0; i < atlas.materialFragments.Count; i++)
 							{
