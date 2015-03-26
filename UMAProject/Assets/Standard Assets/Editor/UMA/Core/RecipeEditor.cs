@@ -14,9 +14,60 @@ using UMA.Integrations;
 
 namespace UMAEditor
 {
+	[CanEditMultipleObjects]
     [CustomEditor(typeof(UMARecipeBase), true)]
     public class RecipeEditor : CharacterBaseEditor
     {
+		List<GameObject> draggedObjs;
+		public virtual void OnSceneDrag(SceneView view)
+		{
+			if (Event.current.type == EventType.DragUpdated)
+			{
+				if (Event.current.mousePosition.x < 0 || Event.current.mousePosition.x >= view.position.width ||
+					Event.current.mousePosition.y < 0 || Event.current.mousePosition.y >= view.position.height) return;
+				DragAndDrop.visualMode = DragAndDropVisualMode.Copy; // show a drag-add icon on the mouse cursor
+				Event.current.Use();
+				return;
+			}
+			if (Event.current.type == EventType.DragPerform)
+			{
+				if (Event.current.mousePosition.x < 0 || Event.current.mousePosition.x >= view.position.width ||
+					Event.current.mousePosition.y < 0 || Event.current.mousePosition.y >= view.position.height) return;
+
+				Ray ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
+				RaycastHit hit;
+				Vector3 position = Vector3.zero;
+				if (Physics.Raycast(ray, out hit))
+				{
+					position = hit.point;
+				}
+
+				var newSelection = new List<Object>(DragAndDrop.objectReferences.Length);
+				foreach (var reference in DragAndDrop.objectReferences)
+				{
+				    if (reference is UMARecipeBase)
+				    {
+						var avatarGO = CreateAvatar(reference as UMARecipeBase);
+						avatarGO.GetComponent<Transform>().position = position;
+						position.x = position.x + 1;
+						newSelection.Add(avatarGO);
+				    }
+				}
+				Selection.objects = newSelection.ToArray();
+				DragAndDrop.visualMode = DragAndDropVisualMode.Copy; // show a drag-add icon on the mouse cursor
+				Event.current.Use();
+			}
+		}
+
+		public virtual GameObject CreateAvatar(UMARecipeBase recipe)
+		{
+			var GO = new GameObject(recipe.name);
+			var avatar = GO.AddComponent<UMADynamicAvatar>();
+			avatar.umaRecipe = recipe;
+			avatar.loadOnStart = true;
+			return GO;
+		}
+
         public void OnEnable()
         {
             if (!NeedsReenable())

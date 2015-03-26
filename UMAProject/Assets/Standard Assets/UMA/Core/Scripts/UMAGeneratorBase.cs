@@ -22,6 +22,13 @@ namespace UMA
 
 		public abstract int QueueSize();
 
+		public static UMAGeneratorBase FindInstance()
+		{
+			var generatorGO = GameObject.Find("UMAGenerator");
+			if (generatorGO == null) return null;
+			return generatorGO.GetComponent<UMAGeneratorBase>();
+		}
+
 		public class AnimatorState
 		{
 			private int[] stateHashes = new int[0];
@@ -92,14 +99,18 @@ namespace UMA
 						Object.DestroyImmediate(animator);
 						Object.Destroy(avatar);
 					}
-					var oldParent = umaData.umaRoot.transform.parent;
-					var originalRot = umaData.umaRoot.transform.localRotation;
-					umaData.umaRoot.transform.parent = null;
-					umaData.umaRoot.transform.localRotation = Quaternion.identity;
+					var umaTransform = umaData.transform;
+					var oldParent = umaTransform.parent;
+					var originalRot = umaTransform.localRotation;
+					var originalPos = umaTransform.localPosition;
+					umaTransform.parent = null;
+					umaTransform.localRotation = Quaternion.identity;
+					umaTransform.localPosition = Vector3.zero;
 					animator = CreateAnimator(umaData, umaData.umaRecipe.raceData.TPose, umaData.animationController);
 					umaData.animator = animator;
-					umaData.umaRoot.transform.parent = oldParent;
-					umaData.umaRoot.transform.localRotation = originalRot;
+					umaTransform.parent = oldParent;
+					umaTransform.localRotation = originalRot;
+					umaTransform.localPosition = originalPos;
 					snapshot.RestoreAnimatorState(animator);
 				}
 			}
@@ -107,7 +118,7 @@ namespace UMA
 
 		public static Animator CreateAnimator(UMAData umaData, UmaTPose umaTPose, RuntimeAnimatorController controller)
 		{
-			var animator = umaData.umaRoot.AddComponent<Animator>();
+			var animator = umaData.gameObject.AddComponent<Animator>();
 			switch (umaData.umaRecipe.raceData.umaTarget)
 			{
 				case RaceData.UMATarget.Humanoid:
@@ -150,8 +161,8 @@ namespace UMA
 		{
 			umaTPose.DeSerialize();
 			HumanDescription description = CreateHumanDescription(umaData, umaTPose);
-			//DebugLogHumanAvatar(umaData.umaRoot, description);
-			Avatar res = AvatarBuilder.BuildHumanAvatar(umaData.umaRoot, description);
+			//DebugLogHumanAvatar(umaData.gameObject, description);
+			Avatar res = AvatarBuilder.BuildHumanAvatar(umaData.gameObject, description);
 			return res;
 		}
 
@@ -196,7 +207,6 @@ namespace UMA
 
 			res.human = umaTPose.humanInfo;
 
-//            res.skeleton[0].name = umaData.umaRoot.name;
 			SkeletonModifier(umaData, ref res.skeleton, res.human);
 			return res;
 		}
@@ -256,13 +266,23 @@ namespace UMA
 					}
 					if (missingBoneCount > 0)
 					{
+						missingBoneCount -= 2;
 						newBones.RemoveRange(0, missingBoneCount);
-						var realRootBone = umaData.skeleton.GetBoneGameObject(rootBoneHash).transform;
+						var realRootBone = umaData.transform;
 						var newBone = newBones[0];
 						newBone.position = realRootBone.localPosition;
 						newBone.rotation = realRootBone.localRotation;
 						newBone.scale = realRootBone.localScale;
+						newBone.name = realRootBone.name;
 						newBones[0] = newBone;
+
+						var rootBoneTransform = umaData.umaRoot.transform;
+						newBone = newBones[1];
+						newBone.position = rootBoneTransform.localPosition;
+						newBone.rotation = rootBoneTransform.localRotation;
+						newBone.scale = rootBoneTransform.localScale;
+						newBone.name = rootBoneTransform.name;
+						newBones[1] = newBone;
 					}
 				}
 

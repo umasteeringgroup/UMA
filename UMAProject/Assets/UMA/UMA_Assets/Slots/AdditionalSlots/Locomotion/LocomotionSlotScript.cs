@@ -7,9 +7,9 @@ namespace UMA
 	{
 		public void OnDnaApplied(UMAData umaData)
 		{
-			var locomotion = umaData.umaRoot.GetComponent<Locomotion>();
+			var locomotion = umaData.GetComponent<Locomotion>();
 			if (locomotion == null)
-				umaData.umaRoot.AddComponent<Locomotion>();
+				umaData.gameObject.AddComponent<Locomotion>();
 		}
 	}
 }

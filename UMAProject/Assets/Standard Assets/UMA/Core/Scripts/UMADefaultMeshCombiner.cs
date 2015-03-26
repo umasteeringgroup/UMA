@@ -20,13 +20,13 @@ namespace UMA
 				GameObject newRoot = new GameObject("Root");
 				newRoot.transform.parent = umaData.transform;
 				newRoot.transform.localPosition = Vector3.zero;
-				newRoot.transform.localRotation = Quaternion.Euler(0f, 0, 90f);
+				newRoot.transform.localRotation = Quaternion.Euler(270f, 0, 0f);
 				umaData.umaRoot = newRoot;
 
 				GameObject newGlobal = new GameObject("Global");
 				newGlobal.transform.parent = newRoot.transform;
 				newGlobal.transform.localPosition = Vector3.zero;
-				newGlobal.transform.localRotation = Quaternion.Euler(0f, 0f, -90f);
+				newGlobal.transform.localRotation = Quaternion.Euler(90f, 90f, 0f);
 
 				umaData.skeleton = new UMASkeleton(newGlobal.transform);
 
