@@ -1,4 +1,8 @@
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+using System.IO;
+#endif
 using System.Collections;
 using System.Collections.Generic;
 using UMA;
@@ -19,6 +23,9 @@ public class UMARecipeCrowd : MonoBehaviour
 	private int spawnX;
 	private int spawnY;
 	private bool generating = false;
+	
+	public bool saveCrowd = false;
+	private string saveFolderPath;
 
 	public UMARecipeMixer[] recipeMixers;
 
@@ -38,6 +45,17 @@ public class UMARecipeCrowd : MonoBehaviour
 
 		if ((crowdSize.x > 0) && (crowdSize.y > 0))
 			generating = true;
+
+#if UNITY_EDITOR
+		if (saveCrowd)
+		{
+			saveFolderPath = "Saved Crowd " + System.DateTime.Now.ToString().Replace('/', '_');
+			saveFolderPath = saveFolderPath.Replace(':', '_');
+			string folderGUID = AssetDatabase.CreateFolder("Assets", saveFolderPath);
+			saveFolderPath = AssetDatabase.GUIDToAssetPath(folderGUID);
+			Debug.LogWarning("Saving all generated recipes into: " + saveFolderPath);
+		}
+#endif
 	}
 
 	void Update()
@@ -150,25 +168,36 @@ public class UMARecipeCrowd : MonoBehaviour
 	{
 		UMARecipeMixer mixer = recipeMixers[Random.Range(0, recipeMixers.Length)];
 		
-		mixer.sharedColors = new OverlayColorData[2];
-		var skinColors = mixer.raceData.sampleSkinColors;
-		if ((skinColors != null) && (skinColors.Length > 0))
-		{
-			mixer.sharedColors[0] = new OverlayColorData();
-			mixer.sharedColors[0].name = "Skin";
-			int index = Random.Range(0, skinColors.Length);
-			mixer.sharedColors[0].color = skinColors[index];
-		}
-		var hairColors = mixer.raceData.sampleHairColors;
-		if ((hairColors != null) && (hairColors.Length > 0))
-		{
-			mixer.sharedColors[1] = new OverlayColorData();
-			mixer.sharedColors[1].name = "Hair";
-			int index = Random.Range(0, hairColors.Length);
-			mixer.sharedColors[1].color = hairColors[index];
-		}
-		
 		mixer.FillUMARecipe(umaData.umaRecipe, context);
+
+		OverlayColorData[] sharedColors = umaData.umaRecipe.sharedColors;
+		if ((sharedColors != null) && (sharedColors.Length > 0))
+		{
+			var skinColors = mixer.raceData.sampleSkinColors;
+			if ((skinColors != null) && (skinColors.Length > 0))
+			{
+				int index = Random.Range(0, skinColors.Length);
+				for (int i = 0; i < sharedColors.Length; i++)
+				{
+					if (sharedColors[i].name == "Skin")
+					{
+						sharedColors[i].color = skinColors[index];
+					}
+				}
+			}
+			var hairColors = mixer.raceData.sampleHairColors;
+			if ((hairColors != null) && (hairColors.Length > 0))
+			{
+				int index = Random.Range(0, hairColors.Length);
+				for (int i = 0; i < sharedColors.Length; i++)
+				{
+					if (sharedColors[i].name == "Hair")
+					{
+						sharedColors[i].color = hairColors[index];
+					}
+				}
+			}
+		}
 
 		// This is a HACK - maybe there should be a clean way
 		// of removing a conflicting slot via the recipe?
@@ -188,8 +217,26 @@ public class UMARecipeCrowd : MonoBehaviour
 		{
 			umaData.umaRecipe.SetSlot(maleLegsIndex, null);
 		}
+
+#if UNITY_EDITOR
+		if (saveCrowd)
+		{
+			SaveRecipe(umaData, context);
+		}
+#endif
 	}
-	
+
+#if UNITY_EDITOR
+	protected void SaveRecipe(UMAData umaData, UMAContext context)
+	{
+		string assetPath = AssetDatabase.GenerateUniqueAssetPath(Path.Combine(saveFolderPath, umaData.umaRecipe.raceData.raceName + ".asset"));
+		var asset = ScriptableObject.CreateInstance<UMATextRecipe>();
+		asset.Save(umaData.umaRecipe, context);
+		AssetDatabase.CreateAsset(asset, assetPath);
+		AssetDatabase.SaveAssets();
+	}
+#endif
+
 	public virtual void RandomizeDNA(UMAData umaData)
 	{
 		RaceData race = umaData.umaRecipe.GetRace();
