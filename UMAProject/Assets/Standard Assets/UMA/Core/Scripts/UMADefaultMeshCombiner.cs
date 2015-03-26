@@ -168,13 +168,15 @@ namespace UMA
 					int vertexCount = fragment.slotData.asset.meshData.vertices.Length;
 					float atlasXMin = tempAtlasRect.xMin / atlasResolution;
 					float atlasXMax = tempAtlasRect.xMax / atlasResolution;
+					float atlasXRange = atlasXMax - atlasXMin;
 					float atlasYMin = tempAtlasRect.yMin / atlasResolution;
 					float atlasYMax = tempAtlasRect.yMax / atlasResolution;
+					float atlasYRange = atlasYMax - atlasYMin;
 					while (vertexCount-- > 0)
                     {
-						umaMesh.uv[idx].x = Mathf.Lerp(atlasXMin, atlasXMax, umaMesh.uv[idx].x);
-						umaMesh.uv[idx].y = Mathf.Lerp(atlasYMin, atlasYMax, umaMesh.uv[idx].y);
-                        idx++;
+						umaMesh.uv[idx].x = atlasXMin + atlasXRange * umaMesh.uv[idx].x;
+						umaMesh.uv[idx].y = atlasYMin + atlasYRange * umaMesh.uv[idx].y;
+						idx++;
                     }
 
                 }

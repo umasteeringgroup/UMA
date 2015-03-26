@@ -351,13 +351,18 @@ namespace UMA
 		{
 			dest.weight0 = source.weight0;
 			dest.weight1 = source.weight1;
-			dest.weight2 = source.weight2;
-			dest.weight3 = source.weight3;
-
 			dest.boneIndex0 = boneMapping[source.boneIndex0];
 			dest.boneIndex1 = boneMapping[source.boneIndex1];
-			dest.boneIndex2 = boneMapping[source.boneIndex2];
-			dest.boneIndex3 = boneMapping[source.boneIndex3];
+			if (source.weight2 > 0f)
+			{
+				dest.weight2 = source.weight2;
+				dest.boneIndex2 = boneMapping[source.boneIndex2];
+				if (source.weight3 > 0f)
+				{
+					dest.weight3 = source.weight3;
+					dest.boneIndex3 = boneMapping[source.boneIndex3];
+				}
+			}
 		}
 
 		private struct BoneIndexEntry
