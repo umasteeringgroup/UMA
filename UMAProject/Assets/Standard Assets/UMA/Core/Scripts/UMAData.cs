@@ -151,13 +151,13 @@ namespace UMA
 		{
 			public int size;
 			public Texture[] baseTexture;
-			public Color32 baseColor;
+			public Color baseColor;
 			public UMAMaterial umaMaterial;
 			public Rect[] rects;
 			public textureData[] overlays;
 			public Color32[] overlayColors;
-	        public Color32[][] channelMask;
-	        public Color32[][] channelAdditiveMask;
+	        public Color[][] channelMask;
+	        public Color[][] channelAdditiveMask;
 			public SlotData slotData;
 			public OverlayData[] overlayData;
 			public Rect atlasRegion;
@@ -165,16 +165,15 @@ namespace UMA
 			public List<OverlayData> overlayList;
 			public MaterialFragment rectFragment;
 
-	        public Color32 GetMultiplier(int overlay, int textureType)
-	        {
-				
+	        public Color GetMultiplier(int overlay, int textureType)
+	        {				
 	            if (channelMask[overlay] != null && channelMask[overlay].Length > 0)
 	            {
 	                return channelMask[overlay][textureType];
 	            }
 	            else
 	            {
-	                if (textureType > 0) return new Color32(255, 255, 255, 255);
+	                if (textureType > 0) return Color.white;
 	                if (overlay == 0) return baseColor;
 	                return overlayColors[overlay - 1];
 	            }

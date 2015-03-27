@@ -551,6 +551,7 @@ namespace UMAEditor
         public bool Delete { get; private set; }
 
         public int move;
+		private static OverlayData showExtendedRangeForOverlay;
 
 		public OverlayEditor(UMAData.UMARecipe recipe, SlotData slotData, OverlayData overlayData)
         {
@@ -579,30 +580,21 @@ namespace UMAEditor
 
         private void BuildColorEditors()
         {
-            if (_overlayData.useAdvancedMasks)
-            {
-                _colors = new ColorEditor[_overlayData.colorData.channelMask.Length * 2];
+            _colors = new ColorEditor[_overlayData.colorData.channelMask.Length * 2];
 
-                for (int i = 0; i < _overlayData.colorData.channelMask.Length; i++)
-                {
-                    _colors[i * 2] = new ColorEditor(
-						_overlayData.colorData.channelMask[i],
-                        String.Format(i == 0
-                            ? "Color multiplier"
-                            : "Texture {0} multiplier", i));
-
-                    _colors[i * 2 + 1] = new ColorEditor(
-						_overlayData.colorData.channelAdditiveMask[i],
-                        String.Format(i == 0
-                            ? "Color additive"
-                            : "Texture {0} additive", i));
-                }
-            } else
+            for (int i = 0; i < _overlayData.colorData.channelMask.Length; i++)
             {
-                _colors = new[] 
-                { 
-					new ColorEditor(_overlayData.colorData.color, "Color") 
-                };
+                _colors[i * 2] = new ColorEditor(
+					_overlayData.colorData.channelMask[i],
+                    String.Format(i == 0
+                        ? "Color multiplier"
+                        : "Texture {0} multiplier", i));
+
+                _colors[i * 2 + 1] = new ColorEditor(
+					_overlayData.colorData.channelAdditiveMask[i],
+                    String.Format(i == 0
+                        ? "Color additive"
+                        : "Texture {0} additive", i));
             }
         }
 
@@ -662,66 +654,52 @@ namespace UMAEditor
 			{
 				GUILayout.BeginVertical();
 			}
-			
 
-			GUILayout.BeginHorizontal();
-			EditorGUILayout.LabelField("Use Advanced Color Masks");
-			var useAdvancedMask = EditorGUILayout.Toggle(_overlayData.useAdvancedMasks);
-			GUILayout.EndHorizontal();
 
-			if (_overlayData.useAdvancedMasks)
+			bool showExtendedRanges = showExtendedRangeForOverlay == _overlayData;
+			var newShowExtendedRanges = EditorGUILayout.Toggle("Show Extended Ranges", showExtendedRanges);
+			if (showExtendedRanges != newShowExtendedRanges)
+			{
+				if (newShowExtendedRanges)
+				{
+					showExtendedRangeForOverlay = _overlayData;
+				}
+				else
+				{
+					showExtendedRangeForOverlay = null;
+				}
+			}
+
+            for (int k = 0; k < _colors.Length; k++)
             {
-                for (int k = 0; k < _colors.Length; k++)
-                {
-                    Color32 color = EditorGUILayout.ColorField(_colors[k].description,
-                        _colors[k].color);
+				Color color;
+				if (showExtendedRanges && k % 2 == 0)
+				{
+					Vector4 colorVector = new Vector4(_colors[k].color.r, _colors[k].color.g, _colors[k].color.b, _colors[k].color.a);
+					colorVector = EditorGUILayout.Vector4Field(_colors[k].description, colorVector);
+					color = new Color(colorVector.x, colorVector.y, colorVector.z, colorVector.w);
+				}
+				else
+				{
+					color = EditorGUILayout.ColorField(_colors[k].description, _colors[k].color);
+				}
 
-                    if (color.r != _colors[k].color.r ||
-                        color.g != _colors[k].color.g ||
-                        color.b != _colors[k].color.b ||
-                        color.a != _colors[k].color.a)
+                if (color.r != _colors[k].color.r ||
+                    color.g != _colors[k].color.g ||
+                    color.b != _colors[k].color.b ||
+                    color.a != _colors[k].color.a)
+                {
+                    if (k % 2 == 0)
                     {
-                        if (k % 2 == 0)
-                        {
-                            _overlayData.colorData.channelMask[k / 2] = color;
-                        } else
-                        {
-                            _overlayData.colorData.channelAdditiveMask[k / 2] = color;
-                        }
-                        changed = true;
+                        _overlayData.colorData.channelMask[k / 2] = color;
+                    } else
+                    {
+                        _overlayData.colorData.channelAdditiveMask[k / 2] = color;
                     }
-                }
-            }
-			else
-            {
-                Color32 color = EditorGUILayout.ColorField(_colors[0].description, _colors[0].color);
-
-                if (color.r != _colors[0].color.r ||
-                    color.g != _colors[0].color.g ||
-                    color.b != _colors[0].color.b ||
-                    color.a != _colors[0].color.a)
-                {
-                    _overlayData.colorData.color = color;
                     changed = true;
                 }
             }
-
-            if (useAdvancedMask != _overlayData.useAdvancedMasks)
-            {
-                if (useAdvancedMask)
-                {
-					_overlayData.EnsureChannels(_slotData.GetTextureChannelCount(DNAMasterEditor.umaGenerator));
-                    if (_overlayData.colorData.channelMask.Length > 0)
-                    {
-                        _overlayData.colorData.channelMask[0] = _overlayData.colorData.color;
-                    }
-                } else
-                {
-					_overlayData.RemoveChannels();
-                }
-                BuildColorEditors();             
-            }
-
+           
 			if (_sharedColors)
 			{
 				GUIHelper.EndVerticalPadded(2f);
@@ -769,7 +747,7 @@ namespace UMAEditor
 
     public class ColorEditor
     {
-        public Color32 color;
+        public Color color;
         public string description;
 
         public ColorEditor(Color color, string description)

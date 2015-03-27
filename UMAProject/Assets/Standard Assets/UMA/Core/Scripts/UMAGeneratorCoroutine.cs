@@ -94,8 +94,8 @@ namespace UMA
 					tempMaterialDefinition.overlayColors = new Color32[overlays - 1];
 					tempMaterialDefinition.rects = new Rect[overlays - 1];
 					tempMaterialDefinition.overlayData = new OverlayData[overlays];
-					tempMaterialDefinition.channelMask = new Color32[overlays][];
-					tempMaterialDefinition.channelAdditiveMask = new Color32[overlays][];
+					tempMaterialDefinition.channelMask = new Color[overlays][];
+					tempMaterialDefinition.channelAdditiveMask = new Color[overlays][];
 					tempMaterialDefinition.overlayData[0] = slots[i].GetOverlay(0);
 					tempMaterialDefinition.channelMask[0] = slots[i].GetOverlay(0).colorData.channelMask;
 					tempMaterialDefinition.channelAdditiveMask[0] = slots[i].GetOverlay(0).colorData.channelAdditiveMask;

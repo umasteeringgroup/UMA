@@ -25,20 +25,15 @@ namespace UMA
 			res.rect = rect;
 			if (colorData != null)
 				res.colorData = colorData;
-			else
-				res.colorData = new OverlayColorData();
 			return res;
 	    }
 
 		public OverlayData Copy()
 		{
-			var res = new OverlayData();
-			res.asset = asset;
-			res.rect = new Rect(rect);
+			var res = new OverlayData(asset);
+			res.rect = rect;
 			if (colorData != null)
 				res.colorData = colorData.Copy();
-			else
-				res.colorData = new OverlayColorData();
 			return res;
 		}
 		
@@ -49,76 +44,34 @@ namespace UMA
 		public OverlayData(OverlayDataAsset asset)
 		{
 			this.asset = asset;
-			this.colorData = new OverlayColorData();
+			this.colorData = new OverlayColorData(asset.material.channels.Length);
 			this.rect = asset.rect;
 		}
 
-	    public bool useAdvancedMasks { get { return colorData.channelMask != null && colorData.channelMask.Length > 0; } }
+		[System.Obsolete("useAdvancedMasks is obsolete, from now on we ALWAYS use advanced masks. Reduces code complexity.", false)]
+	    public bool useAdvancedMasks { get { return true; } }
         public void SetColor(int channel, Color32 color)
 	    {
-	        if (useAdvancedMasks)
-	        {
-                EnsureChannels(channel+1);
-				colorData.channelMask[channel] = color;
-	        }
-	        else if (channel == 0)
-	        {
-				colorData.color = color;
-	        }
-	        else
-	        {
-	            AllocateAdvancedMasks();
-                EnsureChannels(channel+1);
-				colorData.channelMask[channel] = color;
-	        }
+            EnsureChannels(channel+1);
+			colorData.channelMask[channel] = color;
 	    }
 
         public Color32 GetColor(int channel)
         {
-            if (useAdvancedMasks)
-            {
-                EnsureChannels(channel + 1);
-				return colorData.channelMask[channel];
-            }
-            else if (channel == 0)
-            {
-				return colorData.color;
-            }
-            else
-            {
-                return new Color32(255, 255, 255, 255);
-            }
+			EnsureChannels(channel + 1);
+			return colorData.channelMask[channel];
         }
 
         public Color32 GetAdditive(int channel)
         {
-            if (useAdvancedMasks)
-            {
-                EnsureChannels(channel + 1);
-				return colorData.channelAdditiveMask[channel];
-            }
-            else
-            {
-                return new Color32(0, 0, 0, 0);
-            }
+            EnsureChannels(channel + 1);
+			return colorData.channelAdditiveMask[channel];
         }
 
         public void SetAdditive(int overlay, Color32 color)
 	    {
-	        if (!useAdvancedMasks)
-	        {
-	            AllocateAdvancedMasks();
-	        }
             EnsureChannels(overlay+1);
 			colorData.channelAdditiveMask[overlay] = color;
-	    }
-
-	    private void AllocateAdvancedMasks()
-	    {
-			int channels = asset.textureList.Length;
-			if (channels == 0) return;
-            EnsureChannels(channels);
-			colorData.channelMask[0] = colorData.color;
 	    }
 
         public void CopyColors(OverlayData overlay)
@@ -130,12 +83,12 @@ namespace UMA
         {
 			if (colorData.channelMask == null)
             {
-				colorData.channelMask = new Color32[channels];
-				colorData.channelAdditiveMask = new Color32[channels];
+				colorData.channelMask = new Color[channels];
+				colorData.channelAdditiveMask = new Color[channels];
                 for (int i = 0; i < channels; i++)
                 {
-					colorData.channelMask[i] = new Color32(255, 255, 255, 255);
-					colorData.channelAdditiveMask[i] = new Color32(0, 0, 0, 0);
+					colorData.channelMask[i] = Color.white;
+					colorData.channelAdditiveMask[i] = new Color(0, 0, 0, 0);
                 }
             }
             else
@@ -143,31 +96,21 @@ namespace UMA
 				if( colorData.channelMask.Length > channels ) return;
 
 				var oldLenth = colorData.channelMask.Length;
-				Color32[] newMask = new Color32[channels];
-				Color32[] newAdditive = new Color32[channels];
-				colorData.channelAdditiveMask = new Color32[channels];
+				var newMask = new Color[channels];
+				var newAdditive = new Color[channels];
+				colorData.channelAdditiveMask = new Color[channels];
 				System.Array.Copy(colorData.channelMask, newMask, oldLenth);
 				System.Array.Copy(colorData.channelAdditiveMask, newAdditive, oldLenth);
 				for (int i = oldLenth; i < channels; i++)
                 {
-					newMask[i] = new Color32(255, 255, 255, 255);
-					newAdditive[i] = new Color32(0, 0, 0, 0);
+					newMask[i] = Color.white;
+					newAdditive[i] = new Color(0, 0, 0, 0);
                 }
 				colorData.channelMask = newMask;
 				colorData.channelAdditiveMask = newAdditive;
             }
         }
 
-		public void RemoveChannels()
-		{
-			if (useAdvancedMasks)
-			{
-				colorData.color = colorData.channelMask[0];
-				colorData.channelMask = null;
-				colorData.channelAdditiveMask = null;
-			}
-		}
-		
 		public static bool Equivalent(OverlayData overlay1, OverlayData overlay2)
 		{
 			if (overlay1)

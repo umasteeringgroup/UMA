@@ -90,10 +90,10 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 		{
 			name = colorData.name;
 			color = new byte[4];
-			color[0] = colorData.color.r;
-			color[1] = colorData.color.g;
-			color[2] = colorData.color.b;
-			color[3] = colorData.color.a;
+			color[0] = (byte)Mathf.FloorToInt(colorData.color.r * 255f);
+			color[1] = (byte)Mathf.FloorToInt(colorData.color.g * 255f);
+			color[2] = (byte)Mathf.FloorToInt(colorData.color.b * 255f);
+			color[3] = (byte)Mathf.FloorToInt(colorData.color.a * 255f);
 			if (colorData.channelMask != null && colorData.channelMask.Length > 0)
 			{
 				int channelCount = colorData.channelMask.Length;
@@ -120,26 +120,28 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 		public void SetOverlayColorData(OverlayColorData overlayColorData)
 		{
 			overlayColorData.name = name;
-			overlayColorData.color.r = color[0];
-			overlayColorData.color.g = color[1];
-			overlayColorData.color.b = color[2];
-			overlayColorData.color.a = color[3];
 			if (masks != null && masks.Length > 0)
 			{
 				int channelCount = masks.Length;
-				overlayColorData.channelMask = new Color32[channelCount];
-				overlayColorData.channelAdditiveMask = new Color32[channelCount];
+				overlayColorData.channelMask = new Color[channelCount];
+				overlayColorData.channelAdditiveMask = new Color[channelCount];
 				for (int channel = 0; channel < channelCount; channel++)
 				{
-					overlayColorData.channelMask[channel].r = masks[channel][0];
-					overlayColorData.channelMask[channel].g = masks[channel][1];
-					overlayColorData.channelMask[channel].b = masks[channel][2];
-					overlayColorData.channelMask[channel].a = masks[channel][3];
+					overlayColorData.channelMask[channel].r = masks[channel][0] / 255f;
+					overlayColorData.channelMask[channel].g = masks[channel][1] / 255f;
+					overlayColorData.channelMask[channel].b = masks[channel][2] / 255f;
+					overlayColorData.channelMask[channel].a = masks[channel][3] / 255f;
 					overlayColorData.channelAdditiveMask[channel].r = addMasks[channel][0];
 					overlayColorData.channelAdditiveMask[channel].g = addMasks[channel][1];
 					overlayColorData.channelAdditiveMask[channel].b = addMasks[channel][2];
 					overlayColorData.channelAdditiveMask[channel].a = addMasks[channel][3];
 				}
+			}
+			else
+			{
+				overlayColorData.channelMask = new Color[1];
+				overlayColorData.channelAdditiveMask = new Color[1];
+				overlayColorData.channelMask[0] = new Color(color[0] / 255f, color[1] / 255f, color[2] / 255f, color[3] / 255f);	
 			}
 		}
 	}
@@ -507,6 +509,7 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 						{
 							overlayData.colorData = colorData[packedOverlay.colorIdx];
 						}
+						overlayData.EnsureChannels(overlayData.asset.material.channels.Length);
 						tempSlotData.AddOverlay(overlayData);
 					}
 				}
