@@ -150,8 +150,60 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 	public class PackedOverlayColorDataV3
 	{
 		public string name;
-		// Put everything in one array of size 4 + 8 * extra mask count
-		public byte[] colors;
+		// Put everything in one array
+		public short[] colors;
+		public PackedOverlayColorDataV3()
+		{
+			name = "";
+			colors = new short[0];
+		}
+		
+		public PackedOverlayColorDataV3(OverlayColorData colorData)
+		{
+			name = colorData.name;
+			if (colorData.channelMask != null)
+			{
+				int channelCount = colorData.channelMask.Length;
+				colors = new short[channelCount * 8];
+				int colorIndex = 0;
+				for (int channel = 0; channel < channelCount; channel++)
+				{
+					Color maskColor = colorData.channelMask[channel];
+					colors[colorIndex++] = (short)Mathf.FloorToInt(maskColor.r * 255f);
+					colors[colorIndex++] = (short)Mathf.FloorToInt(maskColor.g * 255f);
+					colors[colorIndex++] = (short)Mathf.FloorToInt(maskColor.b * 255f);
+					colors[colorIndex++] = (short)Mathf.FloorToInt(maskColor.a * 255f);
+					Color additiveMaskColor = colorData.channelAdditiveMask[channel];
+					colors[colorIndex++] = (short)Mathf.FloorToInt(additiveMaskColor.r * 255f);
+					colors[colorIndex++] = (short)Mathf.FloorToInt(additiveMaskColor.g * 255f);
+					colors[colorIndex++] = (short)Mathf.FloorToInt(additiveMaskColor.b * 255f);
+					colors[colorIndex++] = (short)Mathf.FloorToInt(additiveMaskColor.a * 255f);
+				}
+			}
+		}
+		
+		public void SetOverlayColorData(OverlayColorData overlayColorData)
+		{
+			overlayColorData.name = name;
+			if (colors != null)
+			{
+				int channelCount = colors.Length / 8;
+				overlayColorData.channelMask = new Color[channelCount];
+				overlayColorData.channelAdditiveMask = new Color[channelCount];
+				int colorIndex = 0;
+				for (int channel = 0; channel < channelCount; channel++)
+				{
+					overlayColorData.channelMask[channel].r = colors[colorIndex++] / 255f;
+					overlayColorData.channelMask[channel].g = colors[colorIndex++] / 255f;
+					overlayColorData.channelMask[channel].b = colors[colorIndex++] / 255f;
+					overlayColorData.channelMask[channel].a = colors[colorIndex++] / 255f;
+					overlayColorData.channelAdditiveMask[channel].r = colors[colorIndex++] / 255f;
+					overlayColorData.channelAdditiveMask[channel].g = colors[colorIndex++] / 255f;
+					overlayColorData.channelAdditiveMask[channel].b = colors[colorIndex++] / 255f;
+					overlayColorData.channelAdditiveMask[channel].a = colors[colorIndex++] / 255f;
+				}
+			}
+		}
 	}
 
 	[System.Serializable]
@@ -168,6 +220,7 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 		public packedSlotData[] packedSlotDataList;
 		public PackedSlotDataV2[] slotsV2;
 		public PackedOverlayColorDataV2[] colors;
+		public PackedOverlayColorDataV3[] fColors;
 		public int sharedColorCount;
 		public string race;
 		public Dictionary<Type, UMADna> umaDna = new Dictionary<Type, UMADna>();
@@ -302,11 +355,11 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 		if (umaRecipe.sharedColors != null)
 			umaPackRecipe.sharedColorCount = umaRecipe.sharedColors.Length;
 		List<OverlayColorData> colorEntries = new List<OverlayColorData>(umaPackRecipe.sharedColorCount);
-		List<PackedOverlayColorDataV2> packedColorEntries = new List<PackedOverlayColorDataV2>(umaPackRecipe.sharedColorCount);
+		List<PackedOverlayColorDataV3> packedColorEntries = new List<PackedOverlayColorDataV3>(umaPackRecipe.sharedColorCount);
 		for (int i = 0; i < umaPackRecipe.sharedColorCount; i++)
 		{
 			colorEntries.Add(umaRecipe.sharedColors[i]);
-			packedColorEntries.Add(new PackedOverlayColorDataV2(umaRecipe.sharedColors[i]));
+			packedColorEntries.Add(new PackedOverlayColorDataV3(umaRecipe.sharedColors[i]));
 		}
 
 		for (int i = 0; i < slotCount; i++)
@@ -352,7 +405,7 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 					int colorIndex = colorEntries.IndexOf(colorData);
 					if (colorIndex < 0)
 					{
-						PackedOverlayColorDataV2 newColorEntry = new PackedOverlayColorDataV2(colorData);
+						PackedOverlayColorDataV3 newColorEntry = new PackedOverlayColorDataV3(colorData);
 						packedColorEntries.Add(newColorEntry);
 						colorIndex = colorEntries.Count;
 						colorEntries.Add(colorData);
@@ -364,7 +417,7 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 			}
 		}
 
-		umaPackRecipe.colors = packedColorEntries.ToArray();
+		umaPackRecipe.fColors = packedColorEntries.ToArray();
 		return umaPackRecipe;
 	}
 
@@ -470,11 +523,24 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 			umaRecipe.AddDna(UMADna.LoadInstance(dnaType, umaPackRecipe.packedDna[dna].packedDna));
 		}
 
-		OverlayColorData[] colorData = new OverlayColorData[umaPackRecipe.colors.Length];
-		for (int i = 0; i < colorData.Length; i++)
+		OverlayColorData[] colorData;
+		if ((umaPackRecipe.fColors != null) && (umaPackRecipe.fColors.Length > 0))
 		{
-			colorData[i] = new OverlayColorData();
-			umaPackRecipe.colors[i].SetOverlayColorData(colorData[i]);
+			colorData = new OverlayColorData[umaPackRecipe.fColors.Length];
+			for (int i = 0; i < colorData.Length; i++)
+			{
+				colorData[i] = new OverlayColorData();
+				umaPackRecipe.fColors[i].SetOverlayColorData(colorData[i]);
+			}
+		}
+		else
+		{
+			colorData = new OverlayColorData[umaPackRecipe.colors.Length];
+			for (int i = 0; i < colorData.Length; i++)
+			{
+				colorData[i] = new OverlayColorData();
+				umaPackRecipe.colors[i].SetOverlayColorData(colorData[i]);
+			}
 		}
 		umaRecipe.sharedColors = new OverlayColorData[umaPackRecipe.sharedColorCount];
 		for (int i = 0; i < umaRecipe.sharedColors.Length; i++)
