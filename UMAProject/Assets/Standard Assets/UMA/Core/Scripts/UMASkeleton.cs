@@ -20,6 +20,7 @@ namespace UMA
 
 		int frame;
 		public int rootBoneHash { get; private set; }
+		public int boneCount { get { return boneHashData.Count; } }
 
 		Dictionary<int, BoneData> boneHashData;
 
