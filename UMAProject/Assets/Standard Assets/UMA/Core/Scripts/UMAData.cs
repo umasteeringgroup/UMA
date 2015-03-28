@@ -369,7 +369,7 @@ namespace UMA
 							}
 							else
 							{
-								OverlayData overlayCopy = overlay.Copy();
+								OverlayData overlayCopy = overlay.Duplicate();
 								if (overlay.colorData.HasName())
 								{
 									int sharedIndex;
@@ -599,7 +599,7 @@ namespace UMA
 								int index = sharedColors.Length;
 								mergedSharedColors.Add(sharedColor.name, index);
 								Array.Resize<OverlayColorData>(ref sharedColors, index + 1);
-								sharedColors[index] = sharedColor.Copy();
+								sharedColors[index] = sharedColor.Duplicate();
 							}
 						}
 					}

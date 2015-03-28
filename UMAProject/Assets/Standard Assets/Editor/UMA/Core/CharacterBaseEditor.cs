@@ -291,6 +291,21 @@ namespace UMAEditor
 				_textureDirty |= true;
 				_meshDirty |= true;
 			}
+			if (GUILayout.Button("Make Unique Colors"))
+			{
+				foreach (var slotData in _recipe.slotDataList)
+				{
+					if (slotData != null)
+					{
+						foreach (var overlayData in slotData.GetOverlayList())
+						{
+							overlayData.colorData = overlayData.colorData.Duplicate();
+							overlayData.colorData.name = "";
+						}
+					}
+				}
+				_recipe.sharedColors = new OverlayColorData[0];
+			}
 			if (GUILayout.Button("Share Matching Colors"))
 			{
 				List<OverlayColorData> matchedColors = new List<OverlayColorData>();

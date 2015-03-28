@@ -27,6 +27,8 @@ public class UMARecipeCrowd : MonoBehaviour
 	public bool saveCrowd = false;
 	private string saveFolderPath;
 
+	public SharedColorTable[] sharedColors;
+
 	public UMARecipeMixer[] recipeMixers;
 
 	public UMADataEvent CharacterCreated;
@@ -170,18 +172,18 @@ public class UMARecipeCrowd : MonoBehaviour
 		
 		mixer.FillUMARecipe(umaData.umaRecipe, context);
 
-		OverlayColorData[] sharedColors = umaData.umaRecipe.sharedColors;
-		if ((sharedColors != null) && (sharedColors.Length > 0))
+		OverlayColorData[] recipeColors = umaData.umaRecipe.sharedColors;
+		if ((recipeColors != null) && (recipeColors.Length > 0))
 		{
 			var skinColors = mixer.raceData.sampleSkinColors;
 			if ((skinColors != null) && (skinColors.Length > 0))
 			{
 				int index = Random.Range(0, skinColors.Length);
-				for (int i = 0; i < sharedColors.Length; i++)
+				for (int i = 0; i < recipeColors.Length; i++)
 				{
-					if (sharedColors[i].name == "Skin")
+					if (recipeColors[i].name == "Skin")
 					{
-						sharedColors[i].color = skinColors[index];
+						recipeColors[i].color = skinColors[index];
 					}
 				}
 			}
@@ -189,14 +191,27 @@ public class UMARecipeCrowd : MonoBehaviour
 			if ((hairColors != null) && (hairColors.Length > 0))
 			{
 				int index = Random.Range(0, hairColors.Length);
-				for (int i = 0; i < sharedColors.Length; i++)
+				for (int i = 0; i < recipeColors.Length; i++)
 				{
-					if (sharedColors[i].name == "Hair")
+					if (recipeColors[i].name == "Hair")
 					{
-						sharedColors[i].color = hairColors[index];
+						recipeColors[i].color = hairColors[index];
 					}
 				}
 			}
+
+			foreach (var sharedColor in sharedColors)
+			{
+				int index = Random.Range(0, sharedColor.colors.Length);
+				for (int i = 0; i < recipeColors.Length; i++)
+				{
+					if (recipeColors[i].name == sharedColor.name)
+					{
+						sharedColor.colors[index].AssignTo(recipeColors[i]);
+					}
+				}
+			}
+
 		}
 
 		// This is a HACK - maybe there should be a clean way

@@ -40,7 +40,7 @@ namespace UMA
 				OverlayData overlay = overlayList[i];
 				if (overlay != null)
 				{
-					res.overlayList.Add(overlay.Copy());
+					res.overlayList.Add(overlay.Duplicate());
 				}
 			}
 

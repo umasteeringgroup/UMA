@@ -24,19 +24,10 @@ namespace UMA
 			var res = new OverlayData(asset);
 			res.rect = rect;
 			if (colorData != null)
-				res.colorData = colorData;
+				res.colorData = colorData.Duplicate();
 			return res;
 	    }
 
-		public OverlayData Copy()
-		{
-			var res = new OverlayData(asset);
-			res.rect = rect;
-			if (colorData != null)
-				res.colorData = colorData.Copy();
-			return res;
-		}
-		
 		protected OverlayData()
 		{
 		}
@@ -76,39 +67,12 @@ namespace UMA
 
         public void CopyColors(OverlayData overlay)
         {
-			colorData = overlay.colorData.Copy();
+			colorData = overlay.colorData.Duplicate();
         }
 
         public void EnsureChannels(int channels)
         {
-			if (colorData.channelMask == null)
-            {
-				colorData.channelMask = new Color[channels];
-				colorData.channelAdditiveMask = new Color[channels];
-                for (int i = 0; i < channels; i++)
-                {
-					colorData.channelMask[i] = Color.white;
-					colorData.channelAdditiveMask[i] = new Color(0, 0, 0, 0);
-                }
-            }
-            else
-            {
-				if( colorData.channelMask.Length > channels ) return;
-
-				var oldLenth = colorData.channelMask.Length;
-				var newMask = new Color[channels];
-				var newAdditive = new Color[channels];
-				colorData.channelAdditiveMask = new Color[channels];
-				System.Array.Copy(colorData.channelMask, newMask, oldLenth);
-				System.Array.Copy(colorData.channelAdditiveMask, newAdditive, oldLenth);
-				for (int i = oldLenth; i < channels; i++)
-                {
-					newMask[i] = Color.white;
-					newAdditive[i] = new Color(0, 0, 0, 0);
-                }
-				colorData.channelMask = newMask;
-				colorData.channelAdditiveMask = newAdditive;
-            }
+			colorData.EnsureChannels(channels);
         }
 
 		public static bool Equivalent(OverlayData overlay1, OverlayData overlay2)

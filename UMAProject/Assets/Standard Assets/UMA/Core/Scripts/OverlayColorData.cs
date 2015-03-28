@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System;
 using System.Collections;
 
@@ -30,22 +30,6 @@ namespace UMA
 		}
 
 		public OverlayColorData Duplicate()
-		{
-			var res = new OverlayColorData();
-			res.channelMask = new Color[channelMask.Length];
-			for (int i = 0; i < channelMask.Length; i++)
-			{
-				res.channelMask[i] = channelMask[i];
-			}
-			res.channelAdditiveMask = new Color[channelAdditiveMask.Length];
-			for (int i = 0; i < channelAdditiveMask.Length; i++)
-			{
-				res.channelAdditiveMask[i] = channelAdditiveMask[i];
-			}
-			return res;
-		}
-
-		public OverlayColorData Copy()
 		{
 			var res = new OverlayColorData();
 			if (name != null)
@@ -146,6 +130,56 @@ namespace UMA
 			}
 			
 			return ((bool)cd2);
+		}
+
+        public void EnsureChannels(int channels)
+        {
+			if (channelMask == null)
+            {
+				channelMask = new Color[channels];
+				channelAdditiveMask = new Color[channels];
+                for (int i = 0; i < channels; i++)
+                {
+					channelMask[i] = Color.white;
+					channelAdditiveMask[i] = new Color(0, 0, 0, 0);
+                }
+            }
+            else
+            {
+				if( channelMask.Length > channels ) return;
+
+				var oldLenth = channelMask.Length;
+				var newMask = new Color[channels];
+				var newAdditive = new Color[channels];
+				channelAdditiveMask = new Color[channels];
+				System.Array.Copy(channelMask, newMask, oldLenth);
+				System.Array.Copy(channelAdditiveMask, newAdditive, oldLenth);
+				for (int i = oldLenth; i < channels; i++)
+                {
+					newMask[i] = Color.white;
+					newAdditive[i] = new Color(0, 0, 0, 0);
+                }
+				channelMask = newMask;
+				channelAdditiveMask = newAdditive;
+            }
+        }
+
+		public void AssignTo(OverlayColorData dest)
+		{
+			if (name != null)
+			{
+				dest.name = String.Copy(name);
+			}
+			dest.channelMask = new Color[channelMask.Length];
+			for (int i = 0; i < channelMask.Length; i++)
+			{
+				dest.channelMask[i] = channelMask[i];
+			}
+			dest.channelAdditiveMask = new Color[channelAdditiveMask.Length];
+			for (int i = 0; i < channelAdditiveMask.Length; i++)
+			{
+				dest.channelAdditiveMask[i] = channelAdditiveMask[i];
+			}			
 		}
 	}
 }

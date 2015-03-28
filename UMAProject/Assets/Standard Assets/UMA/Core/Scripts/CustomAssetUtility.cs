@@ -1,4 +1,4 @@
-﻿// Snippet by Jacob Pennock (www.jacobpennock.com)
+// Snippet by Jacob Pennock (www.jacobpennock.com)
 #if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
@@ -19,7 +19,7 @@ namespace UMAEditor
 	        }
 	        else if (File.Exists(path)) // modified this line, folders can have extensions.
 	        {
-	            path = path.Replace(Path.GetFileName(AssetDatabase.GetAssetPath(Selection.activeObject)), "");
+	            path = path.Replace("/" + Path.GetFileName(AssetDatabase.GetAssetPath(Selection.activeObject)), "");
 	        }
 
 	        string assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/New " + typeof(T).Name + ".asset");
