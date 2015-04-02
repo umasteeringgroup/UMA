@@ -126,6 +126,11 @@ namespace UMA
 
 	    private static Transform RecursiveFindBoneInHierarchy(Transform bone, Transform hierarchyRoot, Dictionary<Transform, Transform> boneMap)
 	    {
+			if (bone == null)
+			{
+				return null;
+			}
+
 	        Transform res;
 	        if (boneMap.TryGetValue(bone, out res))
 	        {
@@ -138,13 +143,17 @@ namespace UMA
 	        }
 	        else
 	        {
-	            var parent = RecursiveFindBoneInHierarchy(bone.parent, hierarchyRoot, boneMap);
-	            res = parent != null ? parent.FindChild(bone.name) : null;
+				res = null;
+				var parent = RecursiveFindBoneInHierarchy(bone.parent, hierarchyRoot, boneMap);
+	            if (parent != null)
+				{
+					res = parent.FindChild(bone.name);
+					if (res != null)
+					{
+						boneMap.Add(bone, res);
+					}
+				}
 
-	            if (res != null)
-	            {
-	                boneMap.Add(bone, res);
-	            }
 	            return res;
 	        }
 	    }
