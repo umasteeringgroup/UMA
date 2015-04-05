@@ -343,7 +343,7 @@ namespace UMAEditor
 								}
 								else
 								{
-									unmatchedColors.Add(overlay.colorData);
+									matchedColors.Add(overlay.colorData);
 								}
 							}
 						}

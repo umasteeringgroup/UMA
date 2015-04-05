@@ -28,10 +28,11 @@ namespace UMAEditor
             _umaData = target as UMAData;
             _errorMessage = null;
             _recipe = _umaData.umaRecipe;
-            if (_recipe == null)
-            {
+			if (_recipe == null || _recipe.raceData == null)
+            {				
                 _errorMessage = "UMA Data not loaded.";
-            } else
+            } 
+            else
             {
 				DNAMasterEditor.umaGenerator = _umaData.umaGenerator;
                 dnaEditor = new DNAMasterEditor(_recipe);

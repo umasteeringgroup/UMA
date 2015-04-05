@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System;
 using System.Collections;
 
@@ -32,10 +32,7 @@ namespace UMA
 		public OverlayColorData Duplicate()
 		{
 			var res = new OverlayColorData();
-			if (name != null)
-			{
-				res.name = String.Copy(name);
-			}
+			res.name = name;
 			res.channelMask = new Color[channelMask.Length];
 			for (int i = 0; i < channelMask.Length; i++)
 			{
@@ -56,17 +53,17 @@ namespace UMA
 		
 		public static bool SameColor(Color color1, Color color2)
 		{
-			return ((color1.r == color2.r) &&
-			        (color1.g == color2.g) &&
-			        (color1.b == color2.b) &&
-			        (color1.a == color2.a));
+			return (Mathf.Approximately(color1.r, color2.r) &&
+					Mathf.Approximately(color1.g, color2.g) &&
+					Mathf.Approximately(color1.b, color2.b) &&
+					Mathf.Approximately(color1.a, color2.a));
 		}
 		public static bool DifferentColor(Color color1, Color color2)
 		{
-			return ((color1.r != color2.r) ||
-			        (color1.g != color2.g) ||
-			        (color1.b != color2.b) ||
-			        (color1.a != color2.a));
+			return (!Mathf.Approximately(color1.r, color2.r) ||
+					!Mathf.Approximately(color1.g, color2.g) ||
+					!Mathf.Approximately(color1.b, color2.b) ||
+			        !Mathf.Approximately(color1.a, color2.a));
 		}
 
 		public static implicit operator bool(OverlayColorData obj) 
@@ -89,6 +86,8 @@ namespace UMA
 			{
 				if (cd2)
 				{
+					if (cd2.channelMask.Length != cd1.channelMask.Length) return false;
+						
 					for (int i = 0; i < cd1.channelMask.Length; i++)
 					{
 						if (DifferentColor(cd1.channelMask[i], cd2.channelMask[i]))
@@ -113,6 +112,7 @@ namespace UMA
 			{
 				if (cd2)
 				{
+					if (cd2.channelMask.Length != cd1.channelMask.Length) return true;
 					for (int i = 0; i < cd1.channelMask.Length; i++)
 					{
 						if (DifferentColor(cd1.channelMask[i], cd2.channelMask[i]))
