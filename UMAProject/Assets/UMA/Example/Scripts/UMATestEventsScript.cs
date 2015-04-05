@@ -1,6 +1,9 @@
 using UnityEngine;
 using System.Collections;
 
+/// <summary>
+/// Examples of the character building callbacks.
+/// </summary>
 public class UMATestEventsScript : MonoBehaviour
 {
 	public void CreatedEvent(UMA.UMAData data)
