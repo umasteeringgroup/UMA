@@ -3,6 +3,9 @@ using System.Collections;
 
 namespace UMA.PoseTools
 {
+	/// <summary>
+	/// Auxillary slot which adds an UMAExpressionPlayer to a newly created character.
+	/// </summary>
 	public class ExpressionSlotScript : MonoBehaviour 
 	{
 		public void OnDnaApplied(UMAData umaData)

@@ -3,6 +3,9 @@ using System.Collections;
 
 namespace UMA
 {
+	/// <summary>
+	/// Auxillary slot which adds a TwistBone component for the forearms of a newly created character.
+	/// </summary>
 	public class ForearmTwistSlotScript : MonoBehaviour 
 	{
 		static int leftHandHash;

@@ -12,6 +12,15 @@ using System.Collections;
 
 namespace UMA.PoseTools
 {
+	/// <summary>
+	/// Base class for expression player. Defines animated channels and gaze variables.
+	/// </summary>
+	/// <remarks>
+	/// The expression player channels are based loosely upon those from Jason Osipa's
+	/// Stop Staring: Facial Modeling and Animation Done Right
+	/// ISBN-13: 978-0470609903
+	/// They could be implemented with either bone animation or blendshapes.
+	/// </remarks>
 	public class ExpressionPlayer : MonoBehaviour
 	{
 		public bool enableBlinking = false;
@@ -45,8 +54,10 @@ namespace UMA.PoseTools
 			Listening = 4
 		};
 
-		// Poses names as they appear for animations
 		public const int PoseCount = 36;
+		/// <summary>
+		/// Poses names as they appear for animations.
+		/// </summary>
 		static public readonly string[] PoseNames = 
 		{
 			"neckUp_Down",
@@ -96,6 +107,9 @@ namespace UMA.PoseTools
 			Eye = 8,
 		};
 
+		/// <summary>
+		/// The Mecanim bone equivalent of each expression channel.
+		/// </summary>
 		static public readonly MecanimJoint[] MecanimAlternate = 
 		{
 			MecanimJoint.Neck, // neckUp_Down
@@ -299,6 +313,11 @@ namespace UMA.PoseTools
 		}
 
 #if UNITY_EDITOR
+		/// <summary>
+		/// Name of the primary (positive values) pose. Editor only.
+		/// </summary>
+		/// <returns>The pose name.</returns>
+		/// <param name="index">Index.</param>
 		static public string PrimaryPoseName(int index)
 		{
 			string name = ObjectNames.NicifyVariableName(PoseNames[index]);
@@ -310,6 +329,11 @@ namespace UMA.PoseTools
 			return name.Substring(0, underscore);
 		}
 
+		/// <summary>
+		/// Name of the inverse (negative values) pose. Editor only.
+		/// </summary>
+		/// <returns>The pose name.</returns>
+		/// <param name="index">Index.</param>
 		static public string InversePoseName(int index)
 		{
 			string name = ObjectNames.NicifyVariableName(PoseNames[index]);
@@ -322,6 +346,10 @@ namespace UMA.PoseTools
 			return name.Substring(0, space + 1) + name.Substring(underscore + 1);
 		}
 
+		/// <summary>
+		/// Saves the expression to an animation clip.
+		/// </summary>
+		/// <param name="assetPath">Path for the new animation clip.</param>
 		public void SaveExpressionClip(string assetPath)
 		{
 			AnimationClip clip = new AnimationClip();
