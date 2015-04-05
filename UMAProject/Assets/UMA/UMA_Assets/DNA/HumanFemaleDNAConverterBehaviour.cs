@@ -2,6 +2,14 @@ using UnityEngine;
 using System.Collections;
 using UMA;
 
+/// <summary>
+/// Human female DNA converter behaviour.
+/// </summary>
+/// <remarks>
+/// Although intended for Humans this DNA converter includes ranges
+/// far outside Human norms and can also be used for other Humanoid charatcers
+/// such as Elves, Giants, Halflings, et al.
+/// </remarks>
 public class HumanFemaleDNAConverterBehaviour : HumanoidDNAConverterBehaviour
 {
 	public HumanFemaleDNAConverterBehaviour()
@@ -9,7 +17,18 @@ public class HumanFemaleDNAConverterBehaviour : HumanoidDNAConverterBehaviour
 		this.ApplyDnaAction = UpdateUMAFemaleDNABones;
 		this.DNAType = typeof(UMADnaHumanoid);
 	}
-		
+
+	/// <summary>
+	/// Adjusts a skeleton to reflect the DNA values from UMA character data.
+	/// </summary>
+	/// <remarks>
+	/// This will set the postion, rotation, and scale of the various adjustment
+	/// bones used by the UMA human rigs to generate a unique character shape.
+	/// Also calculates a somewhat realistic mass for the character and the
+	/// height and radius of their default collider.
+	/// </remarks>
+	/// <param name="umaData">UMA data.</param>
+	/// <param name="skeleton">Skeleton.</param>
 	public static void UpdateUMAFemaleDNABones(UMAData umaData, UMASkeleton skeleton)
 	{
 		var umaDna = umaData.GetDna<UMADnaHumanoid>();

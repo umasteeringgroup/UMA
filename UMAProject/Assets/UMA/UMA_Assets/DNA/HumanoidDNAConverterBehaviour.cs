@@ -3,6 +3,12 @@ using System.Collections;
 
 namespace UMA
 {
+	/// <summary>
+	/// Base class for Humanoid DNA converters.
+	/// </summary>
+	/// <remarks>
+	/// Holds hash values for all the bones used in the default UMA humanoid rig.
+	/// </remarks>
 	public class HumanoidDNAConverterBehaviour : DnaConverterBehaviour 
 	{
 		static bool builtHashes = false;

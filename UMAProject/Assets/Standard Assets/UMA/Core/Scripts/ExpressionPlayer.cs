@@ -23,12 +23,28 @@ namespace UMA.PoseTools
 	/// </remarks>
 	public class ExpressionPlayer : MonoBehaviour
 	{
+		/// <summary>
+		/// Enable procedural blinking.
+		/// </summary>
+		/// <remarks>
+		/// Randomly blink at intervals ranging between minBlinkDelay
+		/// and maxBlinkDelay. Only recommended if the animation does
+		/// not already contain blink data.
+		/// </remarks>
 		public bool enableBlinking = false;
 		public float blinkDuration = 0.15f;
 		public float minBlinkDelay = 3f;
 		public float maxBlinkDelay = 15f;
 		protected float blinkDelay = 0f;
 
+		/// <summary>
+		/// Enable procedural saccades.
+		/// </summary>
+		/// <remarks>
+		/// Saccades (tiny rapid eye movements) will be procedurally
+		/// generated. Only recommended if the eyes are being controlled
+		/// by IK or tracking rather than high resolution animated data.
+		/// </remarks>
 		public bool enableSaccades = false;
 		protected float saccadeDelay = 5f;
 		protected float saccadeDuration = 0f;
@@ -36,6 +52,9 @@ namespace UMA.PoseTools
 		protected Vector2 saccadeTarget;
 		protected Vector2 saccadeTargetPrev;
 
+		/// <summary>
+		/// The position which the eyes are focused on or moving toward.
+		/// </summary>
 		public Vector3 gazeTarget;
 		public float gazeWeight = 0f;
 		public GazeMode gazeMode = GazeMode.None;
