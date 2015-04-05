@@ -13,9 +13,20 @@ using System.Collections.Generic;
 
 namespace UMA.PoseTools
 {
+	/// <summary>
+	/// UMA bone pose.
+	/// </summary>
+	/// <remarks>
+	/// A bone pose is a collection of position, rotation, and scale data
+	/// which can be applied to the transforms of a skinned mesh to manipulate
+	/// the mesh shape as an alternative to a vertex based blendshape.
+	/// </remarks>
 	[System.Serializable]
 	public class UMABonePose : ScriptableObject
 	{
+		/// <summary>
+		/// Pose data for a single transform.
+		/// </summary>
 		[System.Serializable]
 		public class PoseBone
 		{
@@ -27,8 +38,20 @@ namespace UMA.PoseTools
 			public Vector3 scale;
 		}
 
+		/// <summary>
+		/// The set of transfrom changes needed for this pose.
+		/// </summary>
 		public PoseBone[] poses;
 
+		/// <summary>
+		/// Extra poses to be used when this pose is partially applied.
+		/// </summary>
+		/// <remarks>
+		/// Tween poses can be required where a linear path from the base
+		/// to the applied pose would cause animation errors.
+		/// For example, the tongue out pose will go through the teeth
+		/// unless there is an additional pose of it partially extended.
+		/// </remarks>
 		public UMABonePose[] tweenPoses = null;
 		public float[] tweenWeights = null;
 
@@ -64,6 +87,13 @@ namespace UMA.PoseTools
 		}
 
 #if UNITY_EDITOR
+		/// <summary>
+		/// Adds a transform into the pose. Editor only.
+		/// </summary>
+		/// <param name="bone">Transform.</param>
+		/// <param name="position">Position.</param>
+		/// <param name="rotation">Rotation.</param>
+		/// <param name="scale">Scale.</param>
 		public void AddBone(Transform bone, Vector3 position, Quaternion rotation, Vector3 scale)
 		{
 			PoseBone pose = new PoseBone();
@@ -123,6 +153,15 @@ namespace UMA.PoseTools
 			}
 		}
 
+		/// <summary>
+		/// Applies the pose to the given skeleton.
+		/// </summary>
+		/// <remarks>
+		/// LERP the pose onto a skeleton at the given strength.
+		/// Weight is normally in the 0-1 range but is not clamped.
+		/// </remarks>
+		/// <param name="umaSkeleton">Skeleton.</param>
+		/// <param name="weight">Weight.</param>
 		public void ApplyPose(UMASkeleton umaSkeleton, float weight)
 		{
 			if ((poses == null) || (umaSkeleton == null))

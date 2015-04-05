@@ -3,6 +3,9 @@ using System.Collections;
 
 namespace UMA
 {
+	/// <summary>
+	/// UMA time utilities.
+	/// </summary>
 	public static class UMATime
 	{
 		private static int frame = -10;

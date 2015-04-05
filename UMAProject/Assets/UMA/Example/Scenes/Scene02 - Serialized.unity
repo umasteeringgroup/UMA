@@ -257,7 +257,6 @@ Transform:
   - {fileID: 1653576954}
   - {fileID: 2054243462}
   - {fileID: 1482350189}
-  - {fileID: 1906503672}
   m_Father: {fileID: 0}
   m_RootOrder: 3
 --- !u!114 &879538283
@@ -1516,7 +1515,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fitAtlas: 1
-  AtlasCrop: 1
   convertRenderTexture: 0
   convertMipMaps: 0
   atlasResolution: 2048
@@ -1949,45 +1947,6 @@ Light:
   m_ShadowAngle: 0
   m_IndirectIntensity: 1
   m_AreaSize: {x: 1, y: 1}
---- !u!1 &1906503670
-GameObject:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  serializedVersion: 4
-  m_Component:
-  - 4: {fileID: 1906503672}
-  - 114: {fileID: 1906503671}
-  m_Layer: 0
-  m_Name: UMALegacyMeshCombiner
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1906503671
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1906503670}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0a0f41a4bcdfbc94e81fda5c2d535b6b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!4 &1906503672
-Transform:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1906503670}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 879538282}
-  m_RootOrder: 11
 --- !u!1 &2054243460
 GameObject:
   m_ObjectHideFlags: 0

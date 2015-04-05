@@ -13,11 +13,17 @@ using UnityEngine;
 namespace UMA
 {
 	[Serializable]
+	/// <summary>
+	/// UMA version of Unity mesh triangle data.
+	/// </summary>
 	public struct SubMeshTriangles
 	{
 		public int[] triangles;
 	}
 
+	/// <summary>
+	/// UMA version of Unity transform data.
+	/// </summary>
 	[Serializable]
 	public class UMATransform
 	{
@@ -52,6 +58,9 @@ namespace UMA
 		}
 	}
 
+	/// <summary>
+	/// UMA version of Unity mesh bone weight.
+	/// </summary>
 	[Serializable]
 	public struct UMABoneWeight
 	{
@@ -110,6 +119,9 @@ namespace UMA
 		}
 	}
 
+	/// <summary>
+	/// UMA version of Unity mesh data.
+	/// </summary>
 	[Serializable]
 	public class UMAMeshData
 	{
@@ -145,6 +157,10 @@ namespace UMA
 #endif
 		}
 
+		/// <summary>
+		/// Claims the static buffers.
+		/// </summary>
+		/// <returns><c>true</c>, if shared buffers was claimed, <c>false</c> otherwise.</returns>
 		public bool ClaimSharedBuffers()
 		{
 #if USE_UNSAFE_CODE
@@ -172,6 +188,9 @@ namespace UMA
 			return false;
 		}
 
+		/// <summary>
+		/// Releases the static buffers.
+		/// </summary>
 		public void ReleaseSharedBuffers()
 		{
 #if USE_UNSAFE_CODE
@@ -194,9 +213,13 @@ namespace UMA
 #endif
 		}
 
-		public void RetrieveDataFromUnityMesh(SkinnedMeshRenderer skinnedMeshRenderer)
+		/// <summary>
+		/// Initialize UMA mesh data from Unity mesh.
+		/// </summary>
+		/// <param name="renderer">Source renderer.</param>
+		public void RetrieveDataFromUnityMesh(SkinnedMeshRenderer renderer)
 		{
-			var sharedMesh = skinnedMeshRenderer.sharedMesh;
+			var sharedMesh = renderer.sharedMesh;
 			bindPoses = sharedMesh.bindposes;
 			boneWeights = UMABoneWeight.Convert(sharedMesh.boneWeights);
 			vertices = sharedMesh.vertices;
@@ -217,20 +240,25 @@ namespace UMA
 				submeshes[i].triangles = sharedMesh.GetTriangles(i);
 			}
 
-			var rootBone = skinnedMeshRenderer.rootBone;
+			var rootBone = renderer.rootBone;
 			while (rootBone.name != "Global")
 			{
 				rootBone = rootBone.parent;
 				if (rootBone == null)
 				{
-					rootBone = skinnedMeshRenderer.rootBone;
+					rootBone = renderer.rootBone;
 					break;
 				}
 			}
 
-			UpdateBones(rootBone, skinnedMeshRenderer.bones);
+			UpdateBones(rootBone, renderer.bones);
 		}
 
+		/// <summary>
+		/// Validates the skinned transform hierarchy.
+		/// </summary>
+		/// <param name="rootBone">Root transform.</param>
+		/// <param name="bones">Transforms.</param>
 		public void UpdateBones(Transform rootBone, Transform[] bones)
 		{
 			var requiredBones = new Dictionary<Transform, UMATransform>();
@@ -263,6 +291,11 @@ namespace UMA
 			this.bones = bones;
 		}
 
+		/// <summary>
+		/// Applies the data to a Unity mesh.
+		/// </summary>
+		/// <param name="renderer">Target renderer.</param>
+		/// <param name="skeleton">Skeleton.</param>
 		public void ApplyDataToUnityMesh(SkinnedMeshRenderer renderer, UMASkeleton skeleton)
 		{
 			CreateTransforms(skeleton);

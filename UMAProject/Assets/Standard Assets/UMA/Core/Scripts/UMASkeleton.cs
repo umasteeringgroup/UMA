@@ -5,8 +5,14 @@ using UnityEngine;
 
 namespace UMA
 {
+	/// <summary>
+	/// Class links UMA's bone data with Unity's transform hierarchy.
+	/// </summary>
 	public class UMASkeleton
 	{
+		/// <summary>
+		/// Internal class for storing bone and transform information.
+		/// </summary>
 		public class BoneData
 		{
 			public int boneNameHash;
@@ -19,10 +25,17 @@ namespace UMA
 		public IEnumerable<int> BoneHashes { get { return GetBoneHashes(); } }
 
 		int frame;
+		/// <value>The hash for the root bone of the skeleton.</value>
 		public int rootBoneHash { get; private set; }
+		/// <value>The bone count.</value>
+		public int boneCount { get { return boneHashData.Count; } }
 
 		Dictionary<int, BoneData> boneHashData;
 
+		/// <summary>
+		/// Initializes a new UMASkeleton from a transform hierarchy.
+		/// </summary>
+		/// <param name="rootBone">Root transform.</param>
 		public UMASkeleton(Transform rootBone)
 		{
 			rootBoneHash = UMAUtils.StringToHash(rootBone.name);
@@ -30,12 +43,18 @@ namespace UMA
 			AddBonesRecursive(rootBone);
 		}
 
+		/// <summary>
+		/// Marks the skeleton as being updated.
+		/// </summary>
 		public virtual void BeginSkeletonUpdate()
 		{
 			frame++;
 			if (frame < 0) frame = 0;
 		}
 
+		/// <summary>
+		/// Marks the skeleton update as complete.
+		/// </summary>
 		public virtual void EndSkeletonUpdate()
 		{
 		}
@@ -59,11 +78,22 @@ namespace UMA
 			}
 		}
 
+		/// <summary>
+		/// Does this skeleton contains bone with specified name hash?
+		/// </summary>
+		/// <returns><c>true</c> if this instance has bone the specified name hash; otherwise, <c>false</c>.</returns>
+		/// <param name="nameHash">Name hash.</param>
 		public virtual bool HasBone(int nameHash)
 		{
 			return boneHashData.ContainsKey(nameHash);
 		}
 
+		/// <summary>
+		/// Adds the transform into the skeleton.
+		/// </summary>
+		/// <param name="parentHash">Hash of parent transform name.</param>
+		/// <param name="hash">Hash of transform name.</param>
+		/// <param name="transform">Transform.</param>
 		public virtual void AddBone(int parentHash, int hash, Transform transform)
 		{
 			BoneData newBone = new BoneData()
@@ -78,6 +108,10 @@ namespace UMA
 			boneHashData.Add(hash, newBone);
 		}
 
+		/// <summary>
+		/// Adds the transform into the skeleton.
+		/// </summary>
+		/// <param name="transform">Transform.</param>
 		public virtual void AddBone(UMATransform transform)
 		{
 			var go = new GameObject(transform.name);
@@ -93,11 +127,23 @@ namespace UMA
 			boneHashData.Add(transform.hash, newBone);
 		}
 
+		/// <summary>
+		/// Removes the bone with the given name hash.
+		/// </summary>
+		/// <param name="nameHash">Name hash.</param>
 		public virtual void RemoveBone(int nameHash)
 		{
 			boneHashData.Remove(nameHash);
 		}
 
+		/// <summary>
+		/// Tries to find bone transform in skeleton.
+		/// </summary>
+		/// <returns><c>true</c>, if transform was found, <c>false</c> otherwise.</returns>
+		/// <param name="nameHash">Name hash.</param>
+		/// <param name="boneTransform">Bone transform.</param>
+		/// <param name="transformDirty">Transform is dirty.</param>
+		/// <param name="parentBoneNameHash">Name hash of parent bone.</param>
 		public virtual bool TryGetBoneTransform(int nameHash, out Transform boneTransform, out bool transformDirty, out int parentBoneNameHash)
 		{
 			BoneData res;
@@ -115,6 +161,11 @@ namespace UMA
 			return false;
 		}
 
+		/// <summary>
+		/// Gets the game object for a transform in the skeleton.
+		/// </summary>
+		/// <returns>The game object or null, if not found.</returns>
+		/// <param name="nameHash">Name hash.</param>
 		public virtual GameObject GetBoneGameObject(int nameHash)
 		{
 			BoneData res;
@@ -150,6 +201,11 @@ namespace UMA
 			}
 		}
 
+		/// <summary>
+		/// Sets the position of a bone.
+		/// </summary>
+		/// <param name="nameHash">Name hash.</param>
+		/// <param name="position">Position.</param>
 		public virtual void SetPosition(int nameHash, Vector3 position)
 		{
 			BoneData db;
@@ -164,6 +220,11 @@ namespace UMA
 			}
 		}
 
+		/// <summary>
+		/// Sets the scale of a bone.
+		/// </summary>
+		/// <param name="nameHash">Name hash.</param>
+		/// <param name="scale">Scale.</param>
 		public virtual void SetScale(int nameHash, Vector3 scale)
 		{
 			BoneData db;
@@ -180,6 +241,11 @@ namespace UMA
 			}
 		}
 
+		/// <summary>
+		/// Sets the rotation of a bone.
+		/// </summary>
+		/// <param name="nameHash">Name hash.</param>
+		/// <param name="rotation">Rotation.</param>
 		public virtual void SetRotation(int nameHash, Quaternion rotation)
 		{
 			BoneData db;
@@ -194,6 +260,14 @@ namespace UMA
 			}
 		}
 
+		/// <summary>
+		/// Lerp the specified bone toward a new position, rotation, and scale.
+		/// </summary>
+		/// <param name="nameHash">Name hash.</param>
+		/// <param name="position">Position.</param>
+		/// <param name="scale">Scale.</param>
+		/// <param name="rotation">Rotation.</param>
+		/// <param name="weight">Weight.</param>
 		public virtual void Lerp(int nameHash, Vector3 position, Vector3 scale, Quaternion rotation, float weight)
 		{
 			BoneData db;
@@ -207,6 +281,10 @@ namespace UMA
 			}
 		}
 
+		/// <summary>
+		/// Reset the specified transform to the default state.
+		/// </summary>
+		/// <param name="nameHash">Name hash.</param>
 		public virtual bool Reset(int nameHash)
 		{
 			BoneData db;
@@ -223,6 +301,9 @@ namespace UMA
 			return false;
 		}
 
+		/// <summary>
+		/// Reset all transforms to the default state.
+		/// </summary>
 		public virtual void ResetAll()
 		{
 			foreach (BoneData db in boneHashData.Values)
@@ -237,6 +318,11 @@ namespace UMA
 			}
 		}
 
+		/// <summary>
+		/// Gets the position of a bone.
+		/// </summary>
+		/// <returns>The position.</returns>
+		/// <param name="nameHash">Name hash.</param>
 		public virtual Vector3 GetPosition(int nameHash)
 		{
 			BoneData db;
@@ -251,6 +337,11 @@ namespace UMA
 			}
 		}
 
+		/// <summary>
+		/// Gets the scale of a bone.
+		/// </summary>
+		/// <returns>The scale.</returns>
+		/// <param name="nameHash">Name hash.</param>
 		public virtual Vector3 GetScale(int nameHash)
 		{
 			BoneData db;
@@ -265,6 +356,11 @@ namespace UMA
 			}
 		}
 
+		/// <summary>
+		/// Gets the rotation of a bone.
+		/// </summary>
+		/// <returns>The rotation.</returns>
+		/// <param name="nameHash">Name hash.</param>
 		public virtual Quaternion GetRotation(int nameHash)
 		{
 			BoneData db;
@@ -291,6 +387,10 @@ namespace UMA
 			return res;
 		}
 
+		/// <summary>
+		/// Ensures the bone exists in the skeleton.
+		/// </summary>
+		/// <param name="umaTransform">UMA transform.</param>
 		public virtual void EnsureBone(UMATransform umaTransform)
 		{
 			BoneData res;
@@ -305,6 +405,9 @@ namespace UMA
 			}
 		}
 
+		/// <summary>
+		/// Ensures all bones are properly initialized and parented.
+		/// </summary>
 		public virtual void EnsureBoneHierarchy()
 		{
 			foreach (var entry in boneHashData.Values)

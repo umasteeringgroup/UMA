@@ -10,16 +10,24 @@ using System.Collections.Generic;
 
 namespace UMA.PoseTools
 {
+	/// <summary>
+	/// UMA expression set. Groups poses for expression player channels.
+	/// </summary>
 	[System.Serializable]
 	public class UMAExpressionSet : ScriptableObject
 	{
-		// Mutually exclusive expressions can share a curve
+		/// <summary>
+		/// Pair of mutually exclusive expressions which can share a curve.
+		/// </summary>
 		[System.Serializable]
 		public class PosePair
 		{
 			public UMABonePose primary = null;
 			public UMABonePose inverse = null;
 		}
+		/// <summary>
+		/// The pose pairs for each expression channel.
+		/// </summary>
 		public PosePair[] posePairs = new PosePair[UMAExpressionPlayer.PoseCount];
 
 		[System.NonSerialized]
@@ -58,6 +66,10 @@ namespace UMA.PoseTools
 			}
 		}
 
+		/// <summary>
+		/// Resets all the bones used by poses in the set to default position.
+		/// </summary>
+		/// <param name="umaSkeleton">Skeleton to be reset.</param>
 		public void ResetBones(UMASkeleton umaSkeleton)
 		{
 			if (umaSkeleton == null) return;
@@ -73,6 +85,11 @@ namespace UMA.PoseTools
 			}
 		}
 
+		/// <summary>
+		/// Gets the transforms for all animated bones.
+		/// </summary>
+		/// <returns>Array of transforms.</returns>
+		/// <param name="umaSkeleton">Skeleton containing transforms.</param>
 		public Transform[] GetAnimatedBones(UMASkeleton umaSkeleton)
 		{
 			if (umaSkeleton == null) return null;

@@ -9,13 +9,19 @@ using System.Collections.Generic;
 
 namespace UMA.PoseTools
 {
+	/// <summary>
+	/// UMA specific expression player.
+	/// </summary>
 	public class UMAExpressionPlayer : ExpressionPlayer
 	{
+		/// <summary>
+		/// The expression set containing poses used for animation.
+		/// </summary>
 		public UMAExpressionSet expressionSet;
 		public float minWeight = 0f;
 		[System.NonSerialized]
-		public UMAData
-			umaData;
+		public UMAData umaData;
+
 		private int jawHash = 0;
 		private bool initialized = false;
 

@@ -183,6 +183,10 @@ namespace UMA
 				umaData.FireUpdatedEvent(false);
 				umaData.FireCharacterCompletedEvents();
 				umaData.skeleton.EndSkeletonUpdate();
+				if (umaData.skeleton.boneCount > 300)
+				{
+					Debug.LogWarning("Skeleton has " + umaData.skeleton.boneCount + " bones, may be an error with slots!");
+				}
 			}
 		}
     

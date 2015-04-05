@@ -3,6 +3,9 @@ using System.Collections;
 
 namespace UMA
 {
+	/// <summary>
+	/// Auxillary slot which adds a Locomotion component to a newly created character.
+	/// </summary>
 	public class LocomotionSlotScript : MonoBehaviour 
 	{
 		public void OnDnaApplied(UMAData umaData)

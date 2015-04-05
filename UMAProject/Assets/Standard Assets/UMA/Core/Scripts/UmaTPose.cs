@@ -8,6 +8,9 @@ using System.Globalization;
 
 namespace UMA
 {
+	/// <summary>
+	/// Utility class for avatar setup definitions.
+	/// </summary>
 	[System.Serializable]
 	public class UmaTPose : ScriptableObject 
 	{
@@ -35,6 +38,9 @@ namespace UMA
 
 	    public byte[] serializedChunk;
 
+		/// <summary>
+		/// Serialize into the binary format used for Mecanim avatars.
+		/// </summary>
 	    public void Serialize()
 	    {
 	        var ms = new MemoryStream();
@@ -62,6 +68,9 @@ namespace UMA
 	        serializedChunk = ms.ToArray();
 	    }
 
+		/// <summary>
+		/// Deserialize from the binary format used by Mecanim avatars.
+		/// </summary>
 	    public void DeSerialize()
 	    {
 			if (boneInfo == null)
@@ -184,6 +193,10 @@ namespace UMA
 	        bn.Write(value.z);
 	    }
 
+		/// <summary>
+		/// Reads from Mecanim human description.
+		/// </summary>
+		/// <param name="description">Human description.</param>
 		public void ReadFromHumanDescription(HumanDescription description)
 		{
 			humanInfo = description.human;
@@ -202,6 +215,10 @@ namespace UMA
 			humanInfo = null;
 		}
 
+		/// <summary>
+		/// Recursively create from animator's transform hierarchy.
+		/// </summary>
+		/// <param name="rootAnimator">Animator.</param>
 	    public void ReadFromTransform(Animator rootAnimator)
 	    {
 	        var boneInfoList = new List<SkeletonBone>();

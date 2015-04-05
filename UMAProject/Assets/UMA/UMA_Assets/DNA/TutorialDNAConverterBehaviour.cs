@@ -2,6 +2,9 @@ using UnityEngine;
 using System.Collections;
 using UMA;
 
+/// <summary>
+/// Example DNA converter behaviour. Only adjusts distance between eyes.
+/// </summary>
 public class TutorialDNAConverterBehaviour : DnaConverterBehaviour
 {
 	public TutorialDNAConverterBehaviour()
@@ -10,6 +13,11 @@ public class TutorialDNAConverterBehaviour : DnaConverterBehaviour
         this.DNAType = typeof(UMADnaTutorial);
     }
 
+	/// <summary>
+	/// Apply the DNA information about eye spacing to a skeleton.
+	/// </summary>
+	/// <param name="umaData">The character data.</param>
+	/// <param name="skeleton">Skeleton.</param>
 	public static void UpdateTutorialBones(UMAData umaData, UMASkeleton skeleton)
     {
 		var umaDna = umaData.GetDna<UMADnaTutorial>();
