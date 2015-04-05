@@ -4,6 +4,9 @@ using System;
 
 namespace UMA
 {
+	/// <summary>
+	/// UMA wrapper for Unity material.
+	/// </summary>
 	public class UMAMaterial : ScriptableObject
 	{
 		public Material material;

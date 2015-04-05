@@ -6,6 +6,9 @@ using UMA;
 
 namespace UMA
 {
+	/// <summary>
+	/// Utility for processing bones.
+	/// </summary>
 	[ExecuteInEditMode]
 	public class UMAProcessBones : MonoBehaviour {	
 		
@@ -74,6 +77,12 @@ namespace UMA
 		}
 #pragma warning restore 618
 
+		/// <summary>
+		/// Recursively search for the named transform.
+		/// </summary>
+		/// <returns>Child transform with given name.</returns>
+		/// <param name="current">Ancestor transform.</param>
+		/// <param name="name">Name.</param>
 		public static Transform FindChildRecursive(Transform current, string name)   
 		{
 			if (current.name == name) return current;

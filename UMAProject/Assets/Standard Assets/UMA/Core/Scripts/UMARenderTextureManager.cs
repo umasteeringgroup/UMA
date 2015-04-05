@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace UMA
 {
+	/// <summary>
+	/// Utility class to aid with DirectX context switching texture losses.
+	/// </summary>
 	public class UMARenderTextureManager : MonoBehaviour 
 	{
 		Dictionary<UMAData, RenderTexture> allUMACharacters;

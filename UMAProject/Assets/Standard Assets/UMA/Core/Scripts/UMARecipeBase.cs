@@ -3,9 +3,22 @@ using UnityEngine;
 using System.Collections.Generic;
 using UMA;
 
+/// <summary>
+/// Base class for serialized UMA recipes.
+/// </summary>
 public abstract class UMARecipeBase : ScriptableObject
 {
+	/// <summary>
+	/// Load data into the specified umaRecipe.
+	/// </summary>
+	/// <param name="umaRecipe">UMA recipe.</param>
+	/// <param name="context">Context.</param>
 	public abstract void Load(UMAData.UMARecipe umaRecipe, UMAContext context);
+	/// <summary>
+	/// Save data from the specified umaRecipe.
+	/// </summary>
+	/// <param name="umaRecipe">UMA recipe.</param>
+	/// <param name="context">Context.</param>
 	public abstract void Save(UMAData.UMARecipe umaRecipe, UMAContext context);
 	public abstract string GetInfo();
 	public abstract byte[] GetBytes();
@@ -15,6 +28,11 @@ public abstract class UMARecipeBase : ScriptableObject
 
 	protected UMAData.UMARecipe umaRecipe;
 	protected bool cached = false;
+	/// <summary>
+	/// Return a cached version of the UMA recipe, Load if required.
+	/// </summary>
+	/// <returns>The cached recipe.</returns>
+	/// <param name="context">Context.</param>
 	public UMAData.UMARecipe GetCachedRecipe(UMAContext context)
 	{
 		if (!cached)
@@ -28,6 +46,10 @@ public abstract class UMARecipeBase : ScriptableObject
 
 	[NonSerialized]
 	private static Type[] recipeFormats;
+	/// <summary>
+	/// Gets the list of all existing recipe formats.
+	/// </summary>
+	/// <returns>The recipe formats.</returns>
 	public static Type[] GetRecipeFormats()
 	{
 		if (recipeFormats == null)
@@ -50,6 +72,12 @@ public abstract class UMARecipeBase : ScriptableObject
 		}
 		return recipeFormats;
 	}
+
+	/// <summary>
+	/// Finds the recipe format for a give name hash.
+	/// </summary>
+	/// <returns>The recipe format.</returns>
+	/// <param name="typeNameHash">Name hash.</param>
 	public static Type FindRecipeFormat(int typeNameHash)
 	{
 		foreach(var format in GetRecipeFormats())
