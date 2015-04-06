@@ -345,6 +345,7 @@ namespace UMA
 
 			public void MergeSlot(SlotData slot, bool additional)
 			{
+				var newOverlays = new List<OverlayData>();
 				if ((slot == null) || (slot.asset == null))
 					return;
 
@@ -368,18 +369,24 @@ namespace UMA
 							else
 							{
 								OverlayData overlayCopy = overlay.Duplicate();
-								if (overlay.colorData.HasName())
-								{
-									int sharedIndex;
-									if (mergedSharedColors.TryGetValue(overlay.colorData.name, out sharedIndex))
-									{
-										overlayCopy.colorData = sharedColors[sharedIndex];
-									}
-								}
+								newOverlays.Add(overlayCopy);
 								originalSlot.AddOverlay(overlayCopy);
 							}
 						}
 						return;
+					}
+				}
+
+				for (int i = 0; i < newOverlays.Count; i++)
+				{
+					var overlay = newOverlays[i];
+					if (overlay.colorData.HasName())
+					{
+						int sharedIndex;
+						if (mergedSharedColors.TryGetValue(overlay.colorData.name, out sharedIndex))
+						{
+							overlay.colorData = sharedColors[sharedIndex];
+						}
 					}
 				}
 
@@ -413,6 +420,7 @@ namespace UMA
 					}
 				}
 				slotDataList[insertIndex] = slotCopy;
+				MergeMatchingOverlays();
 			}
 
             public SlotData GetSlot(int index)

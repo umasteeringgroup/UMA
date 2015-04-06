@@ -29,10 +29,13 @@ public class SharedColorTable : ScriptableObject, ISerializationCallbackReceiver
 
 	public void OnBeforeSerialize()
 	{
-		foreach (var color in colors)
+		if (colors != null)
 		{
-			color.EnsureChannels(channelCount);
-			color.name = name;
+			foreach (var color in colors)
+			{
+				color.EnsureChannels(channelCount);
+				color.name = name;
+			}
 		}
 	}
 
