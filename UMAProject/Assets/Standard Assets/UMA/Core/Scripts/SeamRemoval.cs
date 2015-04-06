@@ -8,6 +8,9 @@ using System.IO;
 
 namespace UMA
 {
+	/// <summary>
+	/// Utility class for fixing normals along meshe seams.
+	/// </summary>
 	[ExecuteInEditMode]
 	public class SeamRemoval : MonoBehaviour
 	{

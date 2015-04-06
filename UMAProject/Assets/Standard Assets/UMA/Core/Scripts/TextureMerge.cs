@@ -5,6 +5,9 @@ using System.Collections.Generic;
 
 namespace UMA
 {
+	/// <summary>
+	/// Utility class that sets up materials for atlasing.
+	/// </summary>
 	public class TextureMerge : MonoBehaviour
 	{
 		public Camera myCamera;

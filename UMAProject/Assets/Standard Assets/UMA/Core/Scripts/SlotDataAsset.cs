@@ -5,6 +5,9 @@ using System.Collections.Generic;
 
 namespace UMA
 {
+	/// <summary>
+	/// Contains the immutable data shared between slots of the same type.
+	/// </summary>
 	[System.Serializable]
 	public partial class SlotDataAsset : ScriptableObject, ISerializationCallbackReceiver
 	{
@@ -12,6 +15,14 @@ namespace UMA
 		[System.NonSerialized]
 		public int nameHash;
 
+		/// <summary>
+		/// The UMA material.
+		/// </summary>
+		/// <remarks>
+		/// The UMA material contains both a reference to the Unity material
+		/// used for drawing and information needed for matching the textures
+		/// and colors to the various material properties.
+		/// </remarks>
 		[UMAAssetFieldVisible]
 		public UMAMaterial material;
 
@@ -24,10 +35,32 @@ namespace UMA
 		public Material materialSample;
 #endif
 
+		/// <summary>
+		/// Default overlay scale for slots using the asset.
+		/// </summary>
 		public float overlayScale = 1.0f;
+		/// <summary>
+		/// The animated transforms.
+		/// </summary>
+		/// <remarks>
+		/// The animated bones array is required for cases where optimizations
+		/// could remove transforms from the rig. Animated bones will always
+		/// be preserved.
+		/// </remarks>
 		public Transform[] animatedBones = new Transform[0];
 
+		/// <summary>
+		/// Optional DNA converter specific to the slot.
+		/// </summary>
 		public DnaConverterBehaviour slotDNA;
+		/// <summary>
+		/// The mesh data.
+		/// </summary>
+		/// <remarks>
+		/// The UMAMeshData contains all of the Unity mesh data and additional
+		/// information needed for mesh manipulation while minimizing overhead
+		/// from accessing Unity's managed memory.
+		/// </remarks>
 		public UMAMeshData meshData;
 		public int subMeshIndex;
 		/// <summary>
@@ -40,9 +73,22 @@ namespace UMA
 		/// Eg. BaseMeshSkin, BaseMeshOverlays, GenericPlateArmor01
 		/// </summary>
 		public string[] tags;
+
+		/// <summary>
+		/// Callback event when character update begins.
+		/// </summary>
 		public UMADataEvent CharacterBegun;
+		/// <summary>
+		/// Callback event when slot overlays are atlased.
+		/// </summary>
 		public UMADataSlotMaterialRectEvent SlotAtlassed;
+		/// <summary>
+		/// Callback event when character DNA is applied.
+		/// </summary>
 		public UMADataEvent DNAApplied;
+		/// <summary>
+		/// Callback event when character update is complete.
+		/// </summary>
 		public UMADataEvent CharacterCompleted;
         
        

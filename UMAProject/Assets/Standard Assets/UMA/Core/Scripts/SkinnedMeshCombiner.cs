@@ -6,8 +6,14 @@ using System.Text;
 
 namespace UMA
 {
+	/// <summary>
+	/// Utility class for merging multiple skinned meshes.
+	/// </summary>
 	public static class SkinnedMeshCombiner
 	{
+		/// <summary>
+		/// Container for source mesh data.
+		/// </summary>
 		public class CombineInstance
 		{
 			public UMAMeshData meshData;
@@ -29,6 +35,11 @@ namespace UMA
 		static Dictionary<int, BoneIndexEntry> bonesCollection;
 		static List<Matrix4x4> bindPoses;
 		static List<int> bonesList;
+		/// <summary>
+		/// Combines a set of meshes into the target mesh.
+		/// </summary>
+		/// <param name="target">Target.</param>
+		/// <param name="sources">Sources.</param>
 		public static void CombineMeshes(UMAMeshData target, CombineInstance[] sources)
 		{
 			int vertexCount = 0;

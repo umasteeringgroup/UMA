@@ -5,6 +5,9 @@ using System;
 
 namespace UMA
 {
+	/// <summary>
+	/// Utility class for aligning meshes with the same rig but different binds.
+	/// </summary>
 	public static class SkinnedMeshAligner
 	{
 	    public static void AlignBindPose(SkinnedMeshRenderer template, SkinnedMeshRenderer data)

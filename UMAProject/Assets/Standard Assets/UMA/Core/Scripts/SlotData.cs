@@ -5,6 +5,9 @@ using System.Collections.Generic;
 
 namespace UMA
 {
+	/// <summary>
+	/// Slot data contains mesh information and overlay references.
+	/// </summary>
 	[System.Serializable]
 #if !UMA2_LEAN_AND_CLEAN 
 	public partial class SlotData : System.IEquatable<SlotData>
@@ -12,13 +15,26 @@ namespace UMA
 	public class SlotData : System.IEquatable<SlotData>
 #endif
 	{
+		/// <summary>
+		/// The asset contains the immutable portions of the slot.
+		/// </summary>
 		public SlotDataAsset asset;
+		/// <summary>
+		/// Adjusts the resolution of slot overlays.
+		/// </summary>
 		public float overlayScale = 1.0f;
 #if UMA2_LEAN_AND_CLEAN 
 		public string slotName { get { return asset.slotName; } }
 #endif
+		/// <summary>
+		/// list of overlays used to texture the slot.
+		/// </summary>
 		private List<OverlayData> overlayList = new List<OverlayData>();
 
+		/// <summary>
+		/// Constructor for slot using the given asset.
+		/// </summary>
+		/// <param name="asset">Asset.</param>
 		public SlotData(SlotDataAsset asset)
 		{
 			this.asset = asset;
@@ -29,6 +45,9 @@ namespace UMA
 			overlayScale = asset.overlayScale;
 		}
 
+		/// <summary>
+		/// Deep copy of the SlotData.
+		/// </summary>
 		public SlotData Copy()
 		{
 			var res = new SlotData(asset);
@@ -121,7 +140,12 @@ namespace UMA
 				return null;
             return overlayList[index];
 		}
-		
+
+		/// <summary>
+		/// Attempts to find an equivalent overlay in the slot.
+		/// </summary>
+		/// <returns>The equivalent overlay (or null, if no equivalent).</returns>
+		/// <param name="overlay">Overlay.</param>
 		public OverlayData GetEquivalentOverlay(OverlayData overlay)
 		{
 			foreach (OverlayData overlay2 in overlayList)
@@ -137,17 +161,29 @@ namespace UMA
 		
 		public int OverlayCount { get { return overlayList.Count; } }
         
+		/// <summary>
+		/// Sets the complete list of overlays.
+		/// </summary>
+		/// <param name="overlayList">The overlay list.</param>
 		public void SetOverlayList(List<OverlayData> overlayList)
 		{
 			this.overlayList = overlayList;
 		}
         
+		/// <summary>
+		/// Add an overlay to the slot.
+		/// </summary>
+		/// <param name="overlayData">Overlay.</param>
 		public void AddOverlay(OverlayData overlayData)
 		{
 			if (overlayData)
 				overlayList.Add(overlayData);
 		}
         
+		/// <summary>
+		/// Gets the complete list of overlays.
+		/// </summary>
+		/// <returns>The overlay list.</returns>
 		public List<OverlayData> GetOverlayList()
 		{
 			return overlayList;
