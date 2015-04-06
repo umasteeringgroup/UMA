@@ -43,8 +43,6 @@ namespace UMA
 		[Obsolete("UMAData._hasUpdatedBefore is obsolete", false)]
 		public bool _hasUpdatedBefore = false;
         private bool isOfficiallyCreated = false;
-        [NonSerialized]
-        public bool onQuit = false;
 		public event Action<UMAData> OnCharacterUpdated { add { if (CharacterUpdated == null) CharacterUpdated = new UMADataEvent(); CharacterUpdated.AddListener(new UnityAction<UMAData>(value)); } remove { CharacterUpdated.RemoveListener(new UnityAction<UMAData>(value)); } }
 		public event Action<UMAData> OnCharacterCreated { add { if (CharacterCreated == null) CharacterCreated = new UMADataEvent(); CharacterCreated.AddListener(new UnityAction<UMAData>(value)); } remove { CharacterCreated.RemoveListener(new UnityAction<UMAData>(value)); } }
 		public event Action<UMAData> OnCharacterDestroyed { add { if (CharacterDestroyed == null) CharacterDestroyed = new UMADataEvent(); CharacterDestroyed.AddListener(new UnityAction<UMAData>(value)); } remove { CharacterDestroyed.RemoveListener(new UnityAction<UMAData>(value)); } }
@@ -663,10 +661,6 @@ namespace UMA
 	        }
 	    }
 
-		void OnApplicationQuit() {
-			onQuit = true;
-		}
-		
 		void OnDestroy(){
             if (isOfficiallyCreated)
             {

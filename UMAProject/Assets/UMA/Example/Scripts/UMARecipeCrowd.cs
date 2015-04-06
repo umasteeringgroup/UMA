@@ -123,7 +123,8 @@ public class UMARecipeCrowd : MonoBehaviour
 
 		GameObject newGO = new GameObject("Generated Character");
 		newGO.transform.parent = transform;
-		newGO.transform.position = umaPos;
+		newGO.transform.localPosition = umaPos;
+		newGO.transform.localRotation = Quaternion.identity;
 
 		UMADynamicAvatar umaAvatar = newGO.AddComponent<UMADynamicAvatar>();
 		umaAvatar.context = context;

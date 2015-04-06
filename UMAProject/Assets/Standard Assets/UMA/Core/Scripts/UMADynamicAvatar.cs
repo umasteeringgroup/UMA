@@ -6,6 +6,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UMA;
 
+/// <summary>
+/// UMA avatar which can automatically load on start.
+/// </summary>
 public class UMADynamicAvatar : UMAAvatarBase
 {
 	public bool loadOnStart;

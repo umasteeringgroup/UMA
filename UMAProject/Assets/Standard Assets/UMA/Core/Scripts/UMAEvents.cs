@@ -4,6 +4,9 @@ using UnityEngine.Events;
 
 namespace UMA
 {
+	/// <summary>
+	/// UMA event occuring on UMA data.
+	/// </summary>
     [Serializable]
     public class UMADataEvent : UnityEvent<UMAData>
     {
@@ -21,7 +24,10 @@ namespace UMA
 		}
 	}
 
-    [Serializable]
+	/// <summary>
+	/// UMA event occuring on slot.
+	/// </summary>
+	[Serializable]
     public class UMADataSlotEvent : UnityEvent<UMAData, SlotData>
     {
         public UMADataSlotEvent()
@@ -37,7 +43,10 @@ namespace UMA
 		}
     }
 
-    [Serializable]
+	/// <summary>
+	/// UMA event occuring on material.
+	/// </summary>
+	[Serializable]
     public class UMADataSlotMaterialRectEvent : UnityEvent<UMAData, SlotData, Material, Rect>
     {
         public UMADataSlotMaterialRectEvent()

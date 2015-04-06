@@ -5,6 +5,9 @@ using System.Collections;
 
 namespace UMA
 {
+	/// <summary>
+	/// Overlay color data.
+	/// </summary>
 	[System.Serializable]
 	public class OverlayColorData : System.IEquatable<OverlayColorData>
 	{
@@ -14,10 +17,17 @@ namespace UMA
 		public Color[] channelAdditiveMask;
 		public Color color { get { return channelMask[0]; } set { channelMask[0] = value; } }
 
+		/// <summary>
+		/// Default constructor
+		/// </summary>
 		public OverlayColorData()
 		{
 		}
 
+		/// <summary>
+		/// Constructor for a given number of channels.
+		/// </summary>
+		/// <param name="channels">Channels.</param>
 		public OverlayColorData(int channels)
 		{
 			channelMask = new Color[channels];
@@ -29,6 +39,9 @@ namespace UMA
 			}
 		}
 
+		/// <summary>
+		/// Deep copy of the OverlayColorData.
+		/// </summary>
 		public OverlayColorData Duplicate()
 		{
 			var res = new OverlayColorData();
@@ -49,11 +62,21 @@ namespace UMA
 			return res;
 		}
 
+		/// <summary>
+		/// Does the OverlayColorData have a valid name?
+		/// </summary>
+		/// <returns><c>true</c> if this instance has a valid name; otherwise, <c>false</c>.</returns>
 		public bool HasName()
 		{
 			return ((name != null) && (name.Length > 0));
 		}
-		
+
+		/// <summary>
+		/// Are two Unity Colors the same?
+		/// </summary>
+		/// <returns><c>true</c>, if colors are identical, <c>false</c> otherwise.</returns>
+		/// <param name="color1">Color1.</param>
+		/// <param name="color2">Color2.</param>
 		public static bool SameColor(Color color1, Color color2)
 		{
 			return ((color1.r == color2.r) &&
@@ -61,6 +84,12 @@ namespace UMA
 			        (color1.b == color2.b) &&
 			        (color1.a == color2.a));
 		}
+		/// <summary>
+		/// Are two Unity Colors different?
+		/// </summary>
+		/// <returns><c>true</c>, if colors are different, <c>false</c> otherwise.</returns>
+		/// <param name="color1">Color1.</param>
+		/// <param name="color2">Color2.</param>
 		public static bool DifferentColor(Color color1, Color color2)
 		{
 			return ((color1.r != color2.r) ||

@@ -6,21 +6,26 @@ using Object = UnityEngine.Object;
 
 namespace UMA
 {
+	/// <summary>
+	/// Default UMA character generator.
+	/// </summary>
 	public abstract class UMAGeneratorBuiltin : UMAGeneratorBase
 	{
 		public UMAData umaData;
 		[NonSerialized]
-		public List<UMAData>
-		umaDirtyList = new List<UMAData>();
-		public int meshUpdates;
-		public int maxMeshUpdates;
+		public List<UMAData> umaDirtyList = new List<UMAData>();
 		public UMAGeneratorCoroutine umaGeneratorCoroutine;
 		public UMAGeneratorCoroutine activeGeneratorCoroutine;
 		public Transform textureMergePrefab;
-		public Matrix4x4 tempMatrix;
 		public UMAMeshCombiner meshCombiner;
+		/// <summary>
+		/// If true, generate in a single update.
+		/// </summary>
 		public bool fastGeneration = true;
 		private int forceGarbageCollect;
+		/// <summary>
+		/// Number of character updates before triggering System garbage collect.
+		/// </summary>
 		public int garbageCollectionRate = 8;
 		private System.Diagnostics.Stopwatch stopWatch = new System.Diagnostics.Stopwatch();
 
@@ -31,9 +36,7 @@ namespace UMA
 
 		public virtual void Awake()
 		{
-            
-			maxMeshUpdates = 1;
-			if (atlasResolution == 0)
+   			if (atlasResolution == 0)
 				atlasResolution = 256;
 			umaGeneratorCoroutine = new UMAGeneratorCoroutine();
             
@@ -69,7 +72,6 @@ namespace UMA
 			{
 				OnDirtyUpdate();
 			}
-			meshUpdates = 0;
 			stopWatch.Stop();
 			UMATime.ReportTimeSpendtThisFrameTicks(stopWatch.ElapsedTicks);
 		}
@@ -156,6 +158,7 @@ namespace UMA
 			}
 		}
 
+		/// <inheritdoc/>
 		public override void addDirtyUMA(UMAData umaToAdd)
 		{   
 			if (umaToAdd)
@@ -164,11 +167,13 @@ namespace UMA
 			}
 		}
 
+		/// <inheritdoc/>
 		public override bool IsIdle()
 		{
 			return umaDirtyList.Count == 0;
 		}
 
+		/// <inheritdoc/>
 		public override int QueueSize()
 		{
 			return umaDirtyList.Count;

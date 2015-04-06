@@ -6,6 +6,9 @@ using System.IO;
 
 namespace UMAEditor
 {
+	/// <summary>
+	/// Utility class for creating scriptable object assets.
+	/// </summary>
 	public static class CustomAssetUtility
 	{
 	    public static void CreateAsset<T>() where T : ScriptableObject

@@ -5,6 +5,9 @@ using System.Collections.Generic;
 
 namespace UMA
 {
+	/// <summary>
+	/// Default mesh combiner for UMA UMAMeshdata from slots.
+	/// </summary>
     public class UMADefaultMeshCombiner : UMAMeshCombiner
     {
         protected List<SkinnedMeshCombiner.CombineInstance> combinedMeshList;
@@ -42,6 +45,12 @@ namespace UMA
 			}
 		}
 
+		/// <summary>
+		/// Updates the UMA mesh and skeleton to match current slots.
+		/// </summary>
+		/// <param name="updatedAtlas">If set to <c>true</c> atlas has changed.</param>
+		/// <param name="umaData">UMA data.</param>
+		/// <param name="atlasResolution">Atlas resolution.</param>
         public override void UpdateUMAMesh(bool updatedAtlas, UMAData umaData, int atlasResolution)
         {
             this.umaData = umaData;

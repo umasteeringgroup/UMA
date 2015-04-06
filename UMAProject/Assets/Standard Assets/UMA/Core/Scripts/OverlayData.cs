@@ -3,6 +3,9 @@ using System.Collections;
 
 namespace UMA
 {
+	/// <summary>
+	/// Overlay data contains the textures and material properties for building atlases.
+	/// </summary>
 	[System.Serializable]
 #if !UMA_LEAN_AND_CLEAN
 	public partial class OverlayData : System.IEquatable<OverlayData>
@@ -10,15 +13,27 @@ namespace UMA
 	public class OverlayData : System.IEquatable<OverlayData>
 #endif
 	{
+		/// <summary>
+		/// The asset contains the immutable portions of the overlay.
+		/// </summary>
 		public OverlayDataAsset asset;
+		/// <summary>
+		/// Destination rectangle for drawing overlay textures.
+		/// </summary>
 		public Rect rect;
 
 #if UMA2_LEAN_AND_CLEAN
 		public string overlayName { get { return asset.overlayName; } }
 #endif
+		/// <summary>
+		/// Color data for material channels.
+		/// </summary>
 		[System.NonSerialized]
 		public OverlayColorData colorData;
 
+		/// <summary>
+		/// Deep copy of the OverlayData.
+		/// </summary>
 		public OverlayData Duplicate()
 	    {
 			var res = new OverlayData(asset);
@@ -32,6 +47,10 @@ namespace UMA
 		{
 		}
 
+		/// <summary>
+		/// Constructor for overlay using the given asset.
+		/// </summary>
+		/// <param name="asset">Asset.</param>
 		public OverlayData(OverlayDataAsset asset)
 		{
 			this.asset = asset;
@@ -41,30 +60,55 @@ namespace UMA
 
 		[System.Obsolete("useAdvancedMasks is obsolete, from now on we ALWAYS use advanced masks. Reduces code complexity.", false)]
 	    public bool useAdvancedMasks { get { return true; } }
+
+		/// <summary>
+		/// Sets the tint color for a channel.
+		/// </summary>
+		/// <param name="channel">Channel.</param>
+		/// <param name="color">Color.</param>
         public void SetColor(int channel, Color32 color)
 	    {
             EnsureChannels(channel+1);
 			colorData.channelMask[channel] = color;
 	    }
 
+		/// <summary>
+		/// Gets the tint color for a channel.
+		/// </summary>
+		/// <returns>The color.</returns>
+		/// <param name="channel">Channel.</param>
         public Color32 GetColor(int channel)
         {
 			EnsureChannels(channel + 1);
 			return colorData.channelMask[channel];
         }
 
+		/// <summary>
+		/// Gets the additive color for a channel.
+		/// </summary>
+		/// <returns>The additive color.</returns>
+		/// <param name="channel">Channel.</param>
         public Color32 GetAdditive(int channel)
         {
             EnsureChannels(channel + 1);
 			return colorData.channelAdditiveMask[channel];
         }
 
-        public void SetAdditive(int overlay, Color32 color)
+		/// <summary>
+		/// Sets the additive color for a channel.
+		/// </summary>
+		/// <param name="channel">Channel.</param>
+		/// <param name="color">Color.</param>
+		public void SetAdditive(int channel, Color32 color)
 	    {
             EnsureChannels(overlay+1);
-			colorData.channelAdditiveMask[overlay] = color;
+			colorData.channelAdditiveMask[channel] = color;
 	    }
 
+		/// <summary>
+		/// Copies the colors from another overlay.
+		/// </summary>
+		/// <param name="overlay">Source overlay.</param>
         public void CopyColors(OverlayData overlay)
         {
 			colorData = overlay.colorData.Duplicate();

@@ -6,6 +6,9 @@ using Object = UnityEngine.Object;
 
 namespace UMA
 {
+	/// <summary>
+	/// Base class for UMA character generators.
+	/// </summary>
 	public abstract class UMAGeneratorBase : MonoBehaviour
 	{
 		public bool fitAtlas;
@@ -17,11 +20,27 @@ namespace UMA
 #if !UMA2_LEAN_AND_CLEAN 
 		public string[] textureNameList;
 #endif
+		/// <summary>
+		/// Adds the dirty UMA to the update queue.
+		/// </summary>
+		/// <param name="umaToAdd">UMA data to add.</param>
 		public abstract void addDirtyUMA(UMAData umaToAdd);
+		/// <summary>
+		/// Is the dirty queue empty?.
+		/// </summary>
+		/// <returns><c>true</c> if dirty queue is empty; otherwise, <c>false</c>.</returns>
 		public abstract bool IsIdle();
 
+		/// <summary>
+		/// Dirty queue size.
+		/// </summary>
+		/// <returns>The number of items in the dirty queue.</returns>
 		public abstract int QueueSize();
 
+		/// <summary>
+		/// Try to finds the static generator in the scene.
+		/// </summary>
+		/// <returns>The instance.</returns>
 		public static UMAGeneratorBase FindInstance()
 		{
 			var generatorGO = GameObject.Find("UMAGenerator");
@@ -29,6 +48,9 @@ namespace UMA
 			return generatorGO.GetComponent<UMAGeneratorBase>();
 		}
 
+		/// <summary>
+		/// Utility class to store data about active animator.
+		/// </summary>
 		public class AnimatorState
 		{
 			private int[] stateHashes = new int[0];
@@ -79,6 +101,10 @@ namespace UMA
 			}
 		}	
 
+		/// <summary>
+		/// Update the avatar of a UMA character.
+		/// </summary>
+		/// <param name="umaData">UMA data.</param>
 		public virtual void UpdateAvatar(UMAData umaData)
 		{
 			if (umaData)
@@ -116,6 +142,13 @@ namespace UMA
 			}
 		}
 
+		/// <summary>
+		/// Creates a new animator for a UMA character.
+		/// </summary>
+		/// <returns>The animator.</returns>
+		/// <param name="umaData">UMA data.</param>
+		/// <param name="umaTPose">UMA TPose.</param>
+		/// <param name="controller">Animation controller.</param>
 		public static Animator CreateAnimator(UMAData umaData, UmaTPose umaTPose, RuntimeAnimatorController controller)
 		{
 			var animator = umaData.gameObject.AddComponent<Animator>();
@@ -157,6 +190,12 @@ namespace UMA
 			Debug.Log("++++");
 		}
 
+		/// <summary>
+		/// Creates a human (biped) avatar for a UMA character.
+		/// </summary>
+		/// <returns>The human avatar.</returns>
+		/// <param name="umaData">UMA data.</param>
+		/// <param name="umaTPose">UMA TPose.</param>
 		public static Avatar CreateAvatar(UMAData umaData, UmaTPose umaTPose)
 		{
 			umaTPose.DeSerialize();
@@ -166,12 +205,23 @@ namespace UMA
 			return res;
 		}
 
+		/// <summary>
+		/// Creates a generic avatar for a UMA character.
+		/// </summary>
+		/// <returns>The generic avatar.</returns>
+		/// <param name="umaData">UMA data.</param>
 		public static Avatar CreateGenericAvatar(UMAData umaData)
 		{
 			Avatar res = AvatarBuilder.BuildGenericAvatar(umaData.umaRoot, umaData.umaRecipe.GetRace().genericRootMotionTransformName);
 			return res;
 		}
 
+		/// <summary>
+		/// Creates a Mecanim human description for a UMA character.
+		/// </summary>
+		/// <returns>The human description.</returns>
+		/// <param name="umaData">UMA data.</param>
+		/// <param name="umaTPose">UMA TPose.</param>
 		public static HumanDescription CreateHumanDescription(UMAData umaData, UmaTPose umaTPose)
 		{
 			var res = new HumanDescription();

@@ -5,6 +5,9 @@ using System.Collections.Generic;
 
 namespace UMA
 {
+	/// <summary>
+	/// Texture processing coroutine using rendertextures for atlas building.
+	/// </summary>
 	public class TextureProcessPROCoroutine : TextureProcessBaseCoroutine
 	{
 		UMAData umaData;
@@ -13,6 +16,11 @@ namespace UMA
         UMAGeneratorBase umaGenerator;
 		Camera renderCamera;
 
+		/// <summary>
+		/// Setup data for atlas building.
+		/// </summary>
+		/// <param name="_umaData">UMA data.</param>
+		/// <param name="_umaGenerator">UMA generator.</param>
         public override void Prepare(UMAData _umaData, UMAGeneratorBase _umaGenerator)
 	    {
 			umaData = _umaData;
@@ -198,9 +206,6 @@ namespace UMA
             return graphicsDeviceVersion.StartsWith("OpenGL");
         }
 
-
-		
-		
 	    protected override void Stop()
 	    {
 			

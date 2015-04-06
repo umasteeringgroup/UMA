@@ -6,11 +6,20 @@ using System.Collections;
 using System.Collections.Generic;
 using UMA;
 
+/// <summary>
+/// Base class for UMA character.
+/// </summary>
 public abstract class UMAAvatarBase : MonoBehaviour {
 
 	public UMAContext context;
 	public UMAData umaData;
+	/// <summary>
+	/// The serialized basic UMA recipe.
+	/// </summary>
 	public UMARecipeBase umaRecipe;
+	/// <summary>
+	/// Additional partial UMA recipes (not serialized).
+	/// </summary>
 	public UMARecipeBase[] umaAdditionalRecipes;
 	public UMAGeneratorBase umaGenerator;
 	public RuntimeAnimatorController animationController;
@@ -19,8 +28,17 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 	public GameObject umaChild;
 	protected RaceData umaRace = null;
 
+	/// <summary>
+	/// Callback event when character is created.
+	/// </summary>
 	public UMADataEvent CharacterCreated;
+	/// <summary>
+	/// Callback event when character is destroyed.
+	/// </summary>
 	public UMADataEvent CharacterDestroyed;
+	/// <summary>
+	/// Callback event when character is updated.
+	/// </summary>
 	public UMADataEvent CharacterUpdated;
 
 	public virtual void Start()
@@ -57,11 +75,19 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 		if (CharacterUpdated != null) umaData.CharacterUpdated = CharacterUpdated;
 	}
 
+	/// <summary>
+	/// Load a UMA recipe into the avatar.
+	/// </summary>
+	/// <param name="umaRecipe">UMA recipe.</param>
 	public virtual void Load(UMARecipeBase umaRecipe)
 	{
 		Load(umaRecipe, null);
 	}
-
+	/// <summary>
+	/// Load a UMA recipe and additional recipes into the avatar.
+	/// </summary>
+	/// <param name="umaRecipe">UMA recipe.</param>
+	/// <param name="umaAdditionalRecipes">Additional recipes.</param>
 	public virtual void Load(UMARecipeBase umaRecipe, params UMARecipeBase[] umaAdditionalRecipes)
 	{
 		if (umaRecipe == null) return;
@@ -101,6 +127,9 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 		umaData.Dirty(true, true, true);
 	}
 
+	/// <summary>
+	/// Hide the avatar and clean up its components.
+	/// </summary>
 	public virtual void Hide()
 	{
 		if (umaData != null)
@@ -118,6 +147,9 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 		umaRace = null;
 	}
 
+	/// <summary>
+	/// Load the avatar recipe and create components.
+	/// </summary>
 	public virtual void Show()
 	{
 		if (umaRecipe != null)

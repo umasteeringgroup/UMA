@@ -10,7 +10,7 @@ namespace UMAEditor
 	//[CustomEditor(typeof(SlotDataAsset))]
     public class SlotInspector : Editor
     {
-        [MenuItem("Assets/Create/UMA Slot")]
+        [MenuItem("Assets/Create/UMA Slot Asset")]
         public static void CreateSlotMenuItem()
         {
             CustomAssetUtility.CreateAsset<SlotDataAsset>();

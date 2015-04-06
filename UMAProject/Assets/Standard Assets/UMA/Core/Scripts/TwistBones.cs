@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/// <summary>
+/// Utility class for enabling twist bones in Unity rig.
+/// </summary>
 public class TwistBones : MonoBehaviour {
 	public float twistValue;
 	

@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace UMA
 {
+	/// <summary>
+	/// Base class for UMA DNA.
+	/// </summary>
 	[System.Serializable]
 	public abstract class UMADnaBase
 	{

@@ -3,6 +3,9 @@ using UnityEngine;
 
 namespace UMA
 {
+	/// <summary>
+	/// A package class holding additional races, slots, and/or overlays.
+	/// </summary>
     public class UMAAssetCollection : ScriptableObject
     {
         public RaceData[] raceData;

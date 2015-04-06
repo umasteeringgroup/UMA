@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using UMA;
 using System;
 
+/// <summary>
+/// Base class for UMA slot libraries.
+/// </summary>
 public abstract class SlotLibraryBase : MonoBehaviour 
 {
 	public virtual void AddSlotAsset(SlotDataAsset slot) { throw new NotFiniteNumberException(); }

@@ -5,6 +5,9 @@ using System.Collections.Generic;
 
 namespace UMA
 {
+	/// <summary>
+	/// Utility class for generating texture atlases
+	/// </summary>
 	public class UMAGeneratorCoroutine : WorkerCoroutine
 	{
 		TextureProcessBaseCoroutine textureProcessCoroutine;
