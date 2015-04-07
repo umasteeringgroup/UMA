@@ -101,7 +101,7 @@ namespace UMA
 		/// <param name="color">Color.</param>
 		public void SetAdditive(int channel, Color32 color)
 	    {
-            EnsureChannels(overlay+1);
+			EnsureChannels(channel+1);
 			colorData.channelAdditiveMask[channel] = color;
 	    }
 

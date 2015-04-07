@@ -17,7 +17,6 @@ public class SharedColorTable : ScriptableObject, ISerializationCallbackReceiver
 		UMAEditor.CustomAssetUtility.CreateAsset<SharedColorTable>();
 	}
 #endif
-	public string name;
 	public int channelCount;
 	public OverlayColorData[] colors;
 
