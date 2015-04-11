@@ -3,9 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UMA;
 
+/// <summary>
+/// Merges multiple recipe fragments into a complete UMA recipe.
+/// </summary>
 public class UMARecipeMixer : MonoBehaviour
 {
-
+	/// <summary>
+	/// Options for recipe fragmentss to include from each section.
+	/// </summary>
 	public enum SelectionType
 	{
 		IncludeOne, 
@@ -13,6 +18,9 @@ public class UMARecipeMixer : MonoBehaviour
 		IncludeAll	
 	}
 
+	/// <summary>
+	/// Set of similar recipe fragments for potentail inclusion.
+	/// </summary>
 	[System.Serializable]
 	public class RecipeSection
 	{
@@ -21,10 +29,24 @@ public class UMARecipeMixer : MonoBehaviour
 		public UMARecipeBase[] recipes;
 	}
 
+	/// <summary>
+	/// The race of the merged recipe.
+	/// </summary>
 	public RaceData raceData;
+	/// <summary>
+	/// The recipe sections.
+	/// </summary>
 	public RecipeSection[] recipeSections;
+	/// <summary>
+	/// Additional non serialized recipe fragments to include in all recipes.
+	/// </summary>
 	public UMARecipeBase[] additionalRecipes;
 
+	/// <summary>
+	/// Fills in a UMA recipe with random partial fragments from the sections.
+	/// </summary>
+	/// <param name="umaRecipe">UMA recipe.</param>
+	/// <param name="context">Context.</param>
 	public void FillUMARecipe(UMAData.UMARecipe umaRecipe, UMAContext context)
 	{
 		if (raceData == null)

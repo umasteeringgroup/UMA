@@ -4,8 +4,16 @@ using System.Collections.Generic;
 using System;
 using UMA;
 
+/// <summary>
+/// Base class for serializing recipes as "packed" int/byte based data.
+/// </summary>
 public abstract class UMAPackedRecipeBase : UMARecipeBase
 {
+	/// <summary>
+	/// Load data into the specified UMA recipe.
+	/// </summary>
+	/// <param name="umaRecipe">UMA recipe.</param>
+	/// <param name="context">Context.</param>
 	public override void Load(UMA.UMAData.UMARecipe umaRecipe, UMAContext context)
 	{
 		var packedRecipe = PackedLoad(context);
@@ -23,6 +31,11 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 		}
 	}
 
+	/// <summary>
+	/// Save data from the specified UMA recipe.
+	/// </summary>
+	/// <param name="umaRecipe">UMA recipe.</param>
+	/// <param name="context">Context.</param>
 	public override void Save(UMA.UMAData.UMARecipe umaRecipe, UMAContext context)
 	{
 		umaRecipe.MergeMatchingOverlays();
@@ -30,7 +43,17 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 		PackedSave(packedRecipe, context);
 	}
 
+	/// <summary>
+	/// Load serialized data into the packed recipe.
+	/// </summary>
+	/// <returns>The UMAPackRecipe.</returns>
+	/// <param name="context">Context.</param>
 	public abstract UMAPackRecipe PackedLoad(UMAContext context);
+	/// <summary>
+	/// Serialize the packed recipe.
+	/// </summary>
+	/// <param name="packedRecipe">Packed recipe.</param>
+	/// <param name="context">Context.</param>
 	public abstract void PackedSave(UMAPackRecipe packedRecipe, UMAContext context);
 
 	#region Packing Related

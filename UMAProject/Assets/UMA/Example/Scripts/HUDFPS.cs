@@ -5,21 +5,24 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
- 
+
+/// <summary>
+/// Attach this to a UI Text to make a frames/second indicator.
+/// </summary>
+/// <remarks>
+/// It calculates frames/second over each updateInterval,
+/// so the display does not keep changing wildly.
+///
+/// It is also fairly accurate at very low FPS counts (<10).
+/// We do this not by simply counting frames per interval, but
+/// by accumulating FPS for each frame. This way we end up with
+/// correct overall FPS even if the interval renders something like
+/// 5.5 frames.
+/// 
+/// Modified to properly support Unity 5 where guiText property has been removed.
+/// </remarks>
 public class HUDFPS : MonoBehaviour
 {
- 
-// Attach this to a UI Text to make a frames/second indicator.
-//
-// It calculates frames/second over each updateInterval,
-// so the display does not keep changing wildly.
-//
-// It is also fairly accurate at very low FPS counts (<10).
-// We do this not by simply counting frames per interval, but
-// by accumulating FPS for each frame. This way we end up with
-// correct overall FPS even if the interval renders something like
-// 5.5 frames.
-// Modified to properly support Unity 5 where guiText property has been removed.
  
 	public  float updateInterval = 0.5F;
 	public Text fpsTextOutput;

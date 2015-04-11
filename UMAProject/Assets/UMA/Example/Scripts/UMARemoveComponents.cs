@@ -3,6 +3,9 @@ using System.Collections;
 
 namespace UMA
 {
+	/// <summary>
+	/// Removes or disables components during character update callback.
+	/// </summary>
 	public class UMARemoveComponents : MonoBehaviour
 	{
 		public string[] removeComponentNames;
@@ -20,9 +23,6 @@ namespace UMA
 				var behavior = (data.animator.GetComponent(componentName) as Behaviour);
 				if (behavior != null) behavior.enabled = false;
 			}
-
-
 		}
-
 	}
 }
