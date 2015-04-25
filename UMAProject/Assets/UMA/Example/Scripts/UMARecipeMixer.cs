@@ -15,7 +15,8 @@ public class UMARecipeMixer : MonoBehaviour
 	{
 		IncludeOne, 
 		IncludeSome,
-		IncludeAll	
+		IncludeAll,
+		IncludeNone
 	}
 
 	/// <summary>
@@ -65,6 +66,8 @@ public class UMARecipeMixer : MonoBehaviour
 
 			switch (section.selectionRule)
 			{
+				case SelectionType.IncludeNone:
+					break;
 				case SelectionType.IncludeAll:
 					for (int j = 0; j < section.recipes.Length; j++)
 					{
