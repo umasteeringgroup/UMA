@@ -176,43 +176,18 @@ public class UMARecipeCrowd : MonoBehaviour
 		OverlayColorData[] recipeColors = umaData.umaRecipe.sharedColors;
 		if ((recipeColors != null) && (recipeColors.Length > 0))
 		{
-			var skinColors = mixer.raceData.sampleSkinColors;
-			if ((skinColors != null) && (skinColors.Length > 0))
-			{
-				int index = Random.Range(0, skinColors.Length);
-				for (int i = 0; i < recipeColors.Length; i++)
-				{
-					if (recipeColors[i].name == "Skin")
-					{
-						recipeColors[i].color = skinColors[index];
-					}
-				}
-			}
-			var hairColors = mixer.raceData.sampleHairColors;
-			if ((hairColors != null) && (hairColors.Length > 0))
-			{
-				int index = Random.Range(0, hairColors.Length);
-				for (int i = 0; i < recipeColors.Length; i++)
-				{
-					if (recipeColors[i].name == "Hair")
-					{
-						recipeColors[i].color = hairColors[index];
-					}
-				}
-			}
-
 			foreach (var sharedColor in sharedColors)
 			{
+				if (sharedColor == null) continue;
 				int index = Random.Range(0, sharedColor.colors.Length);
 				for (int i = 0; i < recipeColors.Length; i++)
 				{
-					if (recipeColors[i].name == sharedColor.name)
+					if (recipeColors[i].name == sharedColor.sharedColorName)
 					{
-						sharedColor.colors[index].AssignTo(recipeColors[i]);
+						recipeColors[i].color = sharedColor.colors[index].color;
 					}
 				}
 			}
-
 		}
 
 		// This is a HACK - maybe there should be a clean way

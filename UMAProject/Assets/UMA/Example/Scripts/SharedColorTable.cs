@@ -18,6 +18,7 @@ public class SharedColorTable : ScriptableObject, ISerializationCallbackReceiver
 	}
 #endif
 	public int channelCount;
+	public string sharedColorName;
 	public OverlayColorData[] colors;
 
 	#region ISerializationCallbackReceiver Members
@@ -33,7 +34,7 @@ public class SharedColorTable : ScriptableObject, ISerializationCallbackReceiver
 			foreach (var color in colors)
 			{
 				color.EnsureChannels(channelCount);
-				color.name = name;
+				color.name = sharedColorName;
 			}
 		}
 	}

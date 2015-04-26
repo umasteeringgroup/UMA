@@ -40,20 +40,6 @@ namespace UMAEditor
 				serializedObject.ApplyModifiedProperties();
 			}
 
-			SerializedProperty skinColors = serializedObject.FindProperty("sampleSkinColors");
-			EditorGUI.BeginChangeCheck();
-			EditorGUILayout.PropertyField(skinColors, true);
-			if(EditorGUI.EndChangeCheck()) {
-				serializedObject.ApplyModifiedProperties();
-			}
-			
-			SerializedProperty hairColors = serializedObject.FindProperty("sampleHairColors");
-			EditorGUI.BeginChangeCheck();
-			EditorGUILayout.PropertyField(hairColors, true);
-			if(EditorGUI.EndChangeCheck()) {
-				serializedObject.ApplyModifiedProperties();
-			}
-			
 			SerializedProperty dnaRanges = serializedObject.FindProperty("dnaRanges");
 			EditorGUI.BeginChangeCheck();
 			EditorGUILayout.PropertyField(dnaRanges, true);
