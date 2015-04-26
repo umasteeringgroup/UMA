@@ -32,7 +32,7 @@ LevelGameManager:
 --- !u!157 &4
 LightmapSettings:
   m_ObjectHideFlags: 0
-  m_LightProbes: {fileID: 0}
+  m_LightProbes: {fileID: 19700000, guid: c09b426d249d5534f9b450c06c034eb9, type: 2}
   m_Lightmaps: []
   m_LightmapsMode: 1
   m_BakedColorSpace: 0
@@ -2160,7 +2160,7 @@ RectTransform:
   m_RootOrder: 0
   m_AnchorMin: {x: .5, y: 1}
   m_AnchorMax: {x: .5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -343.201965}
+  m_AnchoredPosition: {x: 0, y: -238.18634}
   m_SizeDelta: {x: 175, y: 1745}
   m_Pivot: {x: .5, y: .5}
 --- !u!222 &135944850
@@ -15148,7 +15148,7 @@ Light:
   serializedVersion: 3
   m_Type: 1
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 1
+  m_Intensity: .5
   m_Range: 10
   m_SpotAngle: 30
   m_CookieSize: 10
@@ -15449,8 +15449,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2097866489}
   m_HandleRect: {fileID: 2097866488}
   m_Direction: 2
-  m_Value: .531179786
-  m_Size: .353008598
+  m_Value: .531179845
+  m_Size: .22464183
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:

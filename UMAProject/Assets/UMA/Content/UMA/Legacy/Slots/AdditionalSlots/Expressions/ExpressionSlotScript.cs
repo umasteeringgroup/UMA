@@ -16,10 +16,10 @@ namespace UMA.PoseTools
 				Debug.LogError("Couldn't add Expressions to Race: " + umaData.umaRecipe.raceData.raceName, umaData.gameObject);
 				return;
 			}
-			var expressionPlayer = umaData.umaRoot.GetComponent<UMAExpressionPlayer>();
+			var expressionPlayer = umaData.GetComponent<UMAExpressionPlayer>();
 			if (expressionPlayer == null)
 			{
-				expressionPlayer = umaData.umaRoot.gameObject.AddComponent<UMAExpressionPlayer>();
+				expressionPlayer = umaData.gameObject.AddComponent<UMAExpressionPlayer>();
 			}
 			expressionPlayer.expressionSet = expressionSet;
 			expressionPlayer.umaData = umaData;
