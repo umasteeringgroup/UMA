@@ -1,0 +1,141 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 534edf300d8929243a0d291e413e2f0b, type: 3}
+  m_Name: HumanHair
+  m_EditorClassIdentifier: 
+  channelCount: 1
+  sharedColorName: Hair
+  colors:
+  - name: Hair
+    channelMask:
+    - {r: .274509817, g: .0588235334, b: .113725498, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+  - name: Hair
+    channelMask:
+    - {r: .643137276, g: .258823544, b: .129411772, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+  - name: Hair
+    channelMask:
+    - {r: .839215755, g: .400000036, b: .164705887, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+  - name: Hair
+    channelMask:
+    - {r: .82745105, g: .619607866, b: .396078467, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+  - name: Hair
+    channelMask:
+    - {r: .858823597, g: .729411781, b: .53725493, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+  - name: Hair
+    channelMask:
+    - {r: .858823597, g: .741176486, b: .576470613, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+  - name: Hair
+    channelMask:
+    - {r: .819607913, g: .725490212, b: .631372571, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+  - name: Hair
+    channelMask:
+    - {r: .929411829, g: .894117713, b: .854902029, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+  - name: Hair
+    channelMask:
+    - {r: .894117713, g: .807843208, b: .713725507, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+  - name: Hair
+    channelMask:
+    - {r: .854902029, g: .756862819, b: .635294139, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+  - name: Hair
+    channelMask:
+    - {r: .835294187, g: .737254918, b: .619607866, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+  - name: Hair
+    channelMask:
+    - {r: .768627524, g: .631372571, b: .494117677, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+  - name: Hair
+    channelMask:
+    - {r: .733333349, g: .615686297, b: .48627454, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+  - name: Hair
+    channelMask:
+    - {r: .717647076, g: .552941203, b: .435294151, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+  - name: Hair
+    channelMask:
+    - {r: .611764729, g: .43921572, b: .337254912, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+  - name: Hair
+    channelMask:
+    - {r: .521568656, g: .360784322, b: .278431386, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+  - name: Hair
+    channelMask:
+    - {r: .521568656, g: .36470589, b: .250980407, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+  - name: Hair
+    channelMask:
+    - {r: .521568656, g: .349019617, b: .24313727, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+  - name: Hair
+    channelMask:
+    - {r: .470588267, g: .325490206, b: .231372565, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+  - name: Hair
+    channelMask:
+    - {r: .400000036, g: .24313727, b: .141176477, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+  - name: Hair
+    channelMask:
+    - {r: .352941185, g: .215686291, b: .141176477, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+  - name: Hair
+    channelMask:
+    - {r: .176470593, g: .0627451017, b: .0627451017, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+  - name: Hair
+    channelMask:
+    - {r: .13333334, g: .0745098069, b: .0509803966, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+  - name: Hair
+    channelMask:
+    - {r: .129411772, g: .0980392247, b: .0705882385, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+  - name: Hair
+    channelMask:
+    - {r: .0588235334, g: .0588235334, b: .0509803966, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
