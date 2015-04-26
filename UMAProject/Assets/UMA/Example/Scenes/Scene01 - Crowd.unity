@@ -2160,7 +2160,7 @@ RectTransform:
   m_RootOrder: 0
   m_AnchorMin: {x: .5, y: 1}
   m_AnchorMax: {x: .5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -232.082153}
+  m_AnchoredPosition: {x: 0, y: -242.328796}
   m_SizeDelta: {x: 175, y: 1745}
   m_Pivot: {x: .5, y: .5}
 --- !u!222 &135944850
@@ -6672,26 +6672,7 @@ MonoBehaviour:
   - _MainTex
   - _BumpTex
   umaData: {fileID: 0}
-  meshUpdates: 0
-  maxMeshUpdates: 1
   textureMergePrefab: {fileID: 400002, guid: b67c04ae1c362e94e9e8c5505c381525, type: 2}
-  tempMatrix:
-    e00: 0
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 0
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 0
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 0
   meshCombiner: {fileID: 2079936343}
   fastGeneration: 1
   garbageCollectionRate: 8
@@ -13651,7 +13632,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1015185137
 Transform:
   m_ObjectHideFlags: 0
@@ -13670,7 +13651,7 @@ Light:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1015185136}
-  m_Enabled: 0
+  m_Enabled: 1
   serializedVersion: 3
   m_Type: 1
   m_Color: {r: .600000024, g: .752941191, b: .996078432, a: 1}
@@ -15660,7 +15641,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 2097866488}
   m_Direction: 2
   m_Value: .534241557
-  m_Size: .212034389
+  m_Size: .22464183
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -25797,7 +25778,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1885604223
 Transform:
   m_ObjectHideFlags: 0
@@ -25816,7 +25797,7 @@ Light:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1885604222}
-  m_Enabled: 0
+  m_Enabled: 1
   serializedVersion: 3
   m_Type: 1
   m_Color: {r: .905882359, g: .87843138, b: .717647076, a: 1}

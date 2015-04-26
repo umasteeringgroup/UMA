@@ -671,7 +671,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1015185137
 Transform:
   m_ObjectHideFlags: 0
@@ -690,7 +690,7 @@ Light:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1015185136}
-  m_Enabled: 0
+  m_Enabled: 1
   serializedVersion: 3
   m_Type: 1
   m_Color: {r: .600000024, g: .752941191, b: .996078432, a: 1}
@@ -1876,7 +1876,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1885604223
 Transform:
   m_ObjectHideFlags: 0
@@ -1895,7 +1895,7 @@ Light:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1885604222}
-  m_Enabled: 0
+  m_Enabled: 1
   serializedVersion: 3
   m_Type: 1
   m_Color: {r: .905882359, g: .87843138, b: .717647076, a: 1}
