@@ -47,14 +47,6 @@ namespace UMA
 		public PoseTools.UMAExpressionSet expressionSet;
 
 		/// <summary>
-		/// An optional array of typical skin colors.
-		/// </summary>
-		public Color32[] sampleSkinColors;
-		/// <summary>
-		/// An optional array of typical hair colors.
-		/// </summary>
-		public Color32[] sampleHairColors;
-		/// <summary>
 		/// An optional set of DNA ranges.
 		/// </summary>
 		/// <remarks>
