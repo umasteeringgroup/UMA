@@ -545,6 +545,7 @@ public class UMACrowd : MonoBehaviour
 		GameObject newGO = new GameObject("Generated Character");
 		newGO.transform.parent = transform;
 		newGO.transform.position = newPos;
+		newGO.transform.rotation = zeroPoint != null ? zeroPoint.rotation : transform.rotation;
 
 		UMADynamicAvatar umaDynamicAvatar = newGO.AddComponent<UMADynamicAvatar>();
 		umaDynamicAvatar.Initialize();
