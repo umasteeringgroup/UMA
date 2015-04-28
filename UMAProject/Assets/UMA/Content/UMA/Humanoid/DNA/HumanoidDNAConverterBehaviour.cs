@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 namespace UMA
@@ -18,6 +18,8 @@ namespace UMA
 		static protected int rightOuterBreastHash;
 		static protected int leftEyeHash;
 		static protected int rightEyeHash;
+		static protected int leftEyeAdjustHash;
+		static protected int rightEyeAdjustHash;
 		static protected int spine1AdjustHash;
 		static protected int spineAdjustHash;
 		static protected int lowerBackBellyHash;
@@ -96,6 +98,8 @@ namespace UMA
 			rightOuterBreastHash = UMAUtils.StringToHash("RightOuterBreast");
 			leftEyeHash = UMAUtils.StringToHash("LeftEye");
 			rightEyeHash = UMAUtils.StringToHash("RightEye");
+			leftEyeAdjustHash = UMAUtils.StringToHash("LeftEyeAdjust");
+			rightEyeAdjustHash = UMAUtils.StringToHash("RightEyeAdjust");
 			spine1AdjustHash = UMAUtils.StringToHash("Spine1Adjust");
 			spineAdjustHash = UMAUtils.StringToHash("SpineAdjust");
 			lowerBackBellyHash = UMAUtils.StringToHash("LowerBackBelly");
