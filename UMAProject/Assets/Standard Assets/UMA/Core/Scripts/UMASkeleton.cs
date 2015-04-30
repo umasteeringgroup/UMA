@@ -203,6 +203,7 @@ namespace UMA
 
 		/// <summary>
 		/// Sets the position of a bone.
+		/// This method silently fails if the bone doesn't exist! (Desired behaviour in DNA converters due to LOD/Occlusion)
 		/// </summary>
 		/// <param name="nameHash">Name hash.</param>
 		/// <param name="position">Position.</param>
@@ -214,14 +215,27 @@ namespace UMA
 				db.accessedFrame = frame;
 				db.boneTransform.localPosition = position;
 			}
-			else
+		}
+
+		/// <summary>
+		/// Sets the position of a bone relative to it's old position.
+		/// This method silently fails if the bone doesn't exist! (Desired behaviour in DNA converters due to LOD/Occlusion)
+		/// </summary>
+		/// <param name="nameHash">Name hash.</param>
+		/// <param name="delta">Position delta.</param>
+		public virtual void SetPositionRelative(int nameHash, Vector3 delta)
+		{
+			BoneData db;
+			if (boneHashData.TryGetValue(nameHash, out db))
 			{
-				throw new Exception("Bone not found.");
+				db.accessedFrame = frame;
+				db.boneTransform.localPosition = db.boneTransform.localPosition + delta;
 			}
 		}
 
 		/// <summary>
 		/// Sets the scale of a bone.
+		/// This method silently fails if the bone doesn't exist! (Desired behaviour in DNA converters due to LOD/Occlusion)
 		/// </summary>
 		/// <param name="nameHash">Name hash.</param>
 		/// <param name="scale">Scale.</param>
@@ -233,16 +247,11 @@ namespace UMA
 				db.accessedFrame = frame;
 				db.boneTransform.localScale = scale;
 			}
-			else
-			{
-				Debug.LogWarning("NameHash not found: "+nameHash);
-				Debug.LogWarning("Skeleton contains: " + boneHashData.Count + " bones");
-				throw new Exception("Bone not found.");
-			}
 		}
 
 		/// <summary>
 		/// Sets the rotation of a bone.
+		/// This method silently fails if the bone doesn't exist! (Desired behaviour in DNA converters due to LOD/Occlusion)
 		/// </summary>
 		/// <param name="nameHash">Name hash.</param>
 		/// <param name="rotation">Rotation.</param>
@@ -254,14 +263,11 @@ namespace UMA
 				db.accessedFrame = frame;
 				db.boneTransform.localRotation = rotation;
 			}
-			else
-			{
-				throw new Exception("Bone not found.");
-			}
 		}
 
 		/// <summary>
 		/// Lerp the specified bone toward a new position, rotation, and scale.
+		/// This method silently fails if the bone doesn't exist! (Desired behaviour in DNA converters due to LOD/Occlusion)
 		/// </summary>
 		/// <param name="nameHash">Name hash.</param>
 		/// <param name="position">Position.</param>

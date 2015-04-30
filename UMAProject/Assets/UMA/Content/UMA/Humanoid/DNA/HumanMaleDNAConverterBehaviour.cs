@@ -329,14 +329,12 @@ public class HumanMaleDNAConverterBehaviour : HumanoidDNAConverterBehaviour
 		//Mathf.Clamp(1 + (umaDna.earsSize - 0.5f) * 1.0f, 0.75f, 1.5f),
 		//Mathf.Clamp(1 + (umaDna.earsSize - 0.5f) * 1.0f, 0.75f, 1.5f));
 		
-		skeleton.SetPosition(leftEarAdjustHash,
-		                     skeleton.GetPosition(leftEarAdjustHash) +
+		skeleton.SetPositionRelative(leftEarAdjustHash,
 		                     new Vector3(
 			Mathf.Clamp(0 + (umaDna.headWidth - 0.5f) * -0.01f, -0.01f, 0.01f),
 			Mathf.Clamp(0 + (umaDna.headWidth - 0.5f) * -0.03f, -0.03f, 0.03f),
 			Mathf.Clamp(0 + (umaDna.earsPosition - 0.5f) * 0.02f, -0.02f, 0.02f)));
-		skeleton.SetPosition(rightEarAdjustHash,
-		                     skeleton.GetPosition(rightEarAdjustHash) +
+		skeleton.SetPositionRelative(rightEarAdjustHash,
 		                     new Vector3(
 			Mathf.Clamp(0 + (umaDna.headWidth - 0.5f) * -0.01f, -0.01f, 0.01f),
 			Mathf.Clamp(0 + (umaDna.headWidth - 0.5f) * 0.03f, -0.03f, 0.03f),
@@ -368,34 +366,29 @@ public class HumanMaleDNAConverterBehaviour : HumanoidDNAConverterBehaviour
 			Mathf.Clamp(0, -30, 80),
 			Mathf.Clamp((umaDna.noseInclination - 0.5f) * 60, -60, 30),
 			Mathf.Clamp(0, -30, 80))));
-		skeleton.SetPosition(noseBaseAdjustHash,
-		                     skeleton.GetPosition(noseBaseAdjustHash) +
+		skeleton.SetPositionRelative(noseBaseAdjustHash,
 		                     new Vector3(
 			Mathf.Clamp(0 + (umaDna.nosePronounced - 0.5f) * -0.025f, -0.025f, 0.025f),
 			Mathf.Clamp(0, -0.05f, 0.05f),
 			Mathf.Clamp(0 + (umaDna.nosePosition - 0.5f) * 0.025f, -0.025f, 0.025f)));
-		skeleton.SetPosition(noseMiddleAdjustHash,
-		                     skeleton.GetPosition(noseBaseAdjustHash) +
+		skeleton.SetPositionRelative(noseMiddleAdjustHash,
 		                     new Vector3(
 			Mathf.Clamp(0 + (umaDna.nosePronounced - 0.5f) * -0.012f, -0.012f, 0.012f),
 			Mathf.Clamp(0, -0.05f, 0.05f),
 			Mathf.Clamp(0 + (umaDna.nosePosition - 0.5f) * 0.015f, -0.015f, 0.015f)));
 		
-		skeleton.SetPosition(leftNoseAdjustHash,
-		                     skeleton.GetPosition(leftNoseAdjustHash) +
+		skeleton.SetPositionRelative(leftNoseAdjustHash,
 		                     new Vector3(
 			Mathf.Clamp(0 + (umaDna.nosePronounced - 0.5f) * -0.025f, -0.025f, 0.025f),
 			Mathf.Clamp(0, -0.05f, 0.05f),
 			Mathf.Clamp(0 + (umaDna.nosePosition - 0.5f) * 0.025f, -0.025f, 0.025f)));
-		skeleton.SetPosition(rightNoseAdjustHash,
-		                     skeleton.GetPosition(rightNoseAdjustHash) +
+		skeleton.SetPositionRelative(rightNoseAdjustHash,
 		                     new Vector3(
 			Mathf.Clamp(0 + (umaDna.nosePronounced - 0.5f) * -0.025f, -0.025f, 0.025f),
 			Mathf.Clamp(0, -0.05f, 0.05f),
 			Mathf.Clamp(0 + (umaDna.nosePosition - 0.5f) * 0.025f, -0.025f, 0.025f)));
 		
-		skeleton.SetPosition(upperLipsAdjustHash,
-		                     skeleton.GetPosition(upperLipsAdjustHash) +
+		skeleton.SetPositionRelative(upperLipsAdjustHash,
 		                     new Vector3(
 			Mathf.Clamp(0, -0.05f, 0.05f),
 			Mathf.Clamp(0, -0.05f, 0.05f),
@@ -406,21 +399,18 @@ public class HumanMaleDNAConverterBehaviour : HumanoidDNAConverterBehaviour
 			Mathf.Clamp(1 + (umaDna.chinPronounced - 0.5f) * 0.18f, 0.55f, 1.75f),
 			Mathf.Clamp(1 + (umaDna.chinSize - 0.5f) * 1.3f, 0.75f, 1.3f),
 			Mathf.Clamp(1, 0.4f, 1.5f)));
-		skeleton.SetPosition(mandibleAdjustHash,
-		                     skeleton.GetPosition(mandibleAdjustHash) +
+		skeleton.SetPositionRelative(mandibleAdjustHash,
 		                     new Vector3(
 			Mathf.Clamp(0, -0.0125f, 0.0125f),
 			Mathf.Clamp(0, -0.0125f, 0.0125f),
 			Mathf.Clamp(0 + (umaDna.chinPosition - 0.5f) * 0.0075f, -0.0075f, 0.0075f)));
-		
-		skeleton.SetPosition(leftLowMaxilarAdjustHash,
-		                     skeleton.GetPosition(leftLowMaxilarAdjustHash) +
+
+		skeleton.SetPositionRelative(leftLowMaxilarAdjustHash,
 		                     new Vector3(
 			Mathf.Clamp(0, -0.05f, 0.05f),
 			Mathf.Clamp(0 + (umaDna.jawsSize - 0.5f) * 0.025f, -0.025f, 0.025f),
 			Mathf.Clamp(0 + (umaDna.jawsPosition - 0.5f) * 0.03f, -0.03f, 0.03f)));
-		skeleton.SetPosition(rightLowMaxilarAdjustHash,
-		                     skeleton.GetPosition(rightLowMaxilarAdjustHash) +
+		skeleton.SetPositionRelative(rightLowMaxilarAdjustHash,
 		                     new Vector3(
 			Mathf.Clamp(0, -0.05f, 0.05f),
 			Mathf.Clamp(0 + (umaDna.jawsSize - 0.5f) * -0.025f, -0.025f, 0.025f),
@@ -436,72 +426,61 @@ public class HumanMaleDNAConverterBehaviour : HumanoidDNAConverterBehaviour
 			Mathf.Clamp(1 + (umaDna.cheekSize - 0.5f) * 1.05f, 0.35f, 2.05f),
 			Mathf.Clamp(1 + (umaDna.cheekSize - 0.5f) * 1.05f, 0.35f, 2.05f),
 			Mathf.Clamp(1 + (umaDna.cheekSize - 0.5f) * 1.05f, 0.35f, 2.05f)));
-		skeleton.SetPosition(leftCheekAdjustHash,
-		                     skeleton.GetPosition(leftCheekAdjustHash) +
+		skeleton.SetPositionRelative(leftCheekAdjustHash,
 		                     new Vector3(
 			Mathf.Clamp(0, -0.05f, 0.05f),
 			Mathf.Clamp(0, -0.05f, 0.05f),
 			Mathf.Clamp(0 + (umaDna.cheekPosition - 0.5f) * 0.03f, -0.03f, 0.03f)));
-		skeleton.SetPosition(rightCheekAdjustHash,
-		                     skeleton.GetPosition(rightCheekAdjustHash) +
+		skeleton.SetPositionRelative(rightCheekAdjustHash,
 		                     new Vector3(
 			Mathf.Clamp(0, -0.05f, 0.05f),
 			Mathf.Clamp(0, -0.05f, 0.05f),
 			Mathf.Clamp(0 + (umaDna.cheekPosition - 0.5f) * 0.03f, -0.03f, 0.03f)));
-		
-		skeleton.SetPosition(leftLowCheekAdjustHash,
-		                     skeleton.GetPosition(leftLowCheekAdjustHash) +
+
+		skeleton.SetPositionRelative(leftLowCheekAdjustHash,
 		                     new Vector3(
 			Mathf.Clamp(0 + (umaDna.lowCheekPronounced - 0.5f) * -0.07f, -0.07f, 0.07f),
 			Mathf.Clamp(0, -0.05f, 0.05f),
 			Mathf.Clamp(0 + (umaDna.lowCheekPosition - 0.5f) * 0.06f, -0.06f, 0.06f)));
-		skeleton.SetPosition(rightLowCheekAdjustHash,
-		                     skeleton.GetPosition(rightLowCheekAdjustHash) +
+		skeleton.SetPositionRelative(rightLowCheekAdjustHash,
 		                     new Vector3(
 			Mathf.Clamp(0 + (umaDna.lowCheekPronounced - 0.5f) * -0.07f, -0.07f, 0.07f),
 			Mathf.Clamp(0, -0.05f, 0.05f),
 			Mathf.Clamp(0 + (umaDna.lowCheekPosition - 0.5f) * 0.06f, -0.06f, 0.06f)));
-		
-		skeleton.SetPosition(noseTopAdjustHash,
-		                     skeleton.GetPosition(noseTopAdjustHash) +
+
+		skeleton.SetPositionRelative(noseTopAdjustHash,
 		                     new Vector3(
 			Mathf.Clamp(0 + (umaDna.foreheadSize - 0.5f) * -0.015f, -0.025f, 0.005f),
 			Mathf.Clamp(0, -0.05f, 0.05f),
 			Mathf.Clamp(0 + (umaDna.foreheadPosition - 0.5f) * -0.025f + (umaDna.foreheadSize - 0.5f) * -0.0015f, -0.015f, 0.0025f)));
-		
-		skeleton.SetPosition(leftEyebrowLowAdjustHash,
-		                     skeleton.GetPosition(leftEyebrowLowAdjustHash) +
+
+		skeleton.SetPositionRelative(leftEyebrowLowAdjustHash,
 		                     new Vector3(
 			Mathf.Clamp(0 + (umaDna.foreheadSize - 0.5f) * -0.015f, -0.025f, 0.005f),
 			Mathf.Clamp(0, -0.05f, 0.05f),
 			Mathf.Clamp(0 + (umaDna.foreheadPosition - 0.5f) * -0.02f + (umaDna.foreheadSize - 0.5f) * -0.005f, -0.015f, 0.005f)));
-		skeleton.SetPosition(leftEyebrowMiddleAdjustHash,
-		                     skeleton.GetPosition(leftEyebrowMiddleAdjustHash) +
+		skeleton.SetPositionRelative(leftEyebrowMiddleAdjustHash,
 		                     new Vector3(
 			Mathf.Clamp(0 + (umaDna.foreheadSize - 0.5f) * -0.015f, -0.025f, 0.005f),
 			Mathf.Clamp(0, -0.05f, 0.05f),
 			Mathf.Clamp(0 + (umaDna.foreheadPosition - 0.5f) * -0.05f + (umaDna.foreheadSize - 0.5f) * -0.005f, -0.025f, 0.005f)));
-		skeleton.SetPosition(leftEyebrowUpAdjustHash,
-		                     skeleton.GetPosition(leftEyebrowUpAdjustHash) +
+		skeleton.SetPositionRelative(leftEyebrowUpAdjustHash,
 		                     new Vector3(
 			Mathf.Clamp(0 + (umaDna.foreheadSize - 0.5f) * -0.015f, -0.025f, 0.005f),
 			Mathf.Clamp(0, -0.05f, 0.05f),
 			Mathf.Clamp(0 + (umaDna.foreheadPosition - 0.5f) * -0.007f + (umaDna.foreheadSize - 0.5f) * -0.005f, -0.010f, 0.005f)));
-		
-		skeleton.SetPosition(rightEyebrowLowAdjustHash,
-		                     skeleton.GetPosition(rightEyebrowLowAdjustHash) +
+
+		skeleton.SetPositionRelative(rightEyebrowLowAdjustHash,
 		                     new Vector3(
 			Mathf.Clamp(0 + (umaDna.foreheadSize - 0.5f) * -0.015f, -0.025f, 0.005f),
 			Mathf.Clamp(0, -0.05f, 0.05f),
 			Mathf.Clamp(0 + (umaDna.foreheadPosition - 0.5f) * -0.02f + (umaDna.foreheadSize - 0.5f) * -0.005f, -0.015f, 0.005f)));
-		skeleton.SetPosition(rightEyebrowMiddleAdjustHash,
-		                     skeleton.GetPosition(rightEyebrowMiddleAdjustHash) +
+		skeleton.SetPositionRelative(rightEyebrowMiddleAdjustHash,
 		                     new Vector3(
 			Mathf.Clamp(0 + (umaDna.foreheadSize - 0.5f) * -0.015f, -0.025f, 0.005f),
 			Mathf.Clamp(0, -0.05f, 0.05f),
 			Mathf.Clamp(0 + (umaDna.foreheadPosition - 0.5f) * -0.05f + (umaDna.foreheadSize - 0.5f) * -0.005f, -0.025f, 0.005f)));
-		skeleton.SetPosition(rightEyebrowUpAdjustHash,
-		                     skeleton.GetPosition(rightEyebrowUpAdjustHash) +
+		skeleton.SetPositionRelative(rightEyebrowUpAdjustHash,
 		                     new Vector3(
 			Mathf.Clamp(0 + (umaDna.foreheadSize - 0.5f) * -0.015f, -0.025f, 0.005f),
 			Mathf.Clamp(0, -0.05f, 0.05f),
@@ -538,47 +517,40 @@ public class HumanMaleDNAConverterBehaviour : HumanoidDNAConverterBehaviour
 			Mathf.Clamp(1 + (umaDna.lipsSize - 0.5f) * 0.05f, 1.0f, 1.05f),
 			Mathf.Clamp(1 + (umaDna.lipsSize - 0.5f) * 0.9f, 0.65f, 1.5f),
 			Mathf.Clamp(1 + (umaDna.lipsSize - 0.5f) * 0.9f, 0.65f, 1.5f)));
-		
-		skeleton.SetPosition(lipsInferiorAdjustHash,
-		                     skeleton.GetPosition(lipsInferiorAdjustHash) +
+
+		skeleton.SetPositionRelative(lipsInferiorAdjustHash,
 		                     new Vector3(
 			Mathf.Clamp(0, -0.05f, 0.05f),
 			Mathf.Clamp(0, -0.05f, 0.05f),
 			Mathf.Clamp(0 + (umaDna.lipsSize - 0.5f) * -0.008f, -0.1f, 0.1f)));
-		
-		skeleton.SetPosition(leftLipsAdjustHash,
-		                     skeleton.GetPosition(leftLipsAdjustHash) +
+
+		skeleton.SetPositionRelative(leftLipsAdjustHash,
 		                     new Vector3(
 			Mathf.Clamp(0, -0.05f, 0.05f),
 			Mathf.Clamp(0 + (umaDna.mouthSize - 0.5f) * 0.03f, -0.02f, 0.005f),
 			Mathf.Clamp(0, -0.05f, 0.05f)));
-		skeleton.SetPosition(rightLipsAdjustHash,
-		                     skeleton.GetPosition(rightLipsAdjustHash) +
+		skeleton.SetPositionRelative(rightLipsAdjustHash,
 		                     new Vector3(
 			Mathf.Clamp(0, -0.05f, 0.05f),
 			Mathf.Clamp(0 + (umaDna.mouthSize - 0.5f) * -0.03f, -0.005f, 0.02f),
 			Mathf.Clamp(0, -0.05f, 0.05f)));
-		
-		skeleton.SetPosition(leftLipsSuperiorMiddleAdjustHash,
-		                     skeleton.GetPosition(leftLipsSuperiorMiddleAdjustHash) +
+
+		skeleton.SetPositionRelative(leftLipsSuperiorMiddleAdjustHash,
 		                     new Vector3(
 			Mathf.Clamp(0, -0.05f, 0.05f),
 			Mathf.Clamp(0 + (umaDna.mouthSize - 0.5f) * 0.007f, -0.02f, 0.005f),
 			Mathf.Clamp(0, -0.05f, 0.05f)));
-		skeleton.SetPosition(rightLipsSuperiorMiddleAdjustHash,
-		                     skeleton.GetPosition(rightLipsSuperiorMiddleAdjustHash) +
+		skeleton.SetPositionRelative(rightLipsSuperiorMiddleAdjustHash,
 		                     new Vector3(
 			Mathf.Clamp(0, -0.05f, 0.05f),
 			Mathf.Clamp(0 + (umaDna.mouthSize - 0.5f) * -0.007f, -0.005f, 0.02f),
 			Mathf.Clamp(0, -0.05f, 0.05f)));
-		skeleton.SetPosition(leftLipsInferiorAdjustHash,
-		                     skeleton.GetPosition(leftLipsInferiorAdjustHash) +
+		skeleton.SetPositionRelative(leftLipsInferiorAdjustHash,
 		                     new Vector3(
 			Mathf.Clamp(0, -0.05f, 0.05f),
 			Mathf.Clamp(0 + (umaDna.mouthSize - 0.5f) * 0.007f, -0.02f, 0.005f),
 			Mathf.Clamp(0 + (umaDna.lipsSize - 0.5f) * -0.008f, -0.1f, 0.1f)));
-		skeleton.SetPosition(rightLipsInferiorAdjustHash,
-		                     skeleton.GetPosition(rightLipsInferiorAdjustHash) +
+		skeleton.SetPositionRelative(rightLipsInferiorAdjustHash,
 		                     new Vector3(
 			Mathf.Clamp(0, -0.05f, 0.05f),
 			Mathf.Clamp(0 + (umaDna.mouthSize - 0.5f) * -0.007f, -0.005f, 0.02f),
@@ -591,8 +563,7 @@ public class HumanMaleDNAConverterBehaviour : HumanoidDNAConverterBehaviour
 
 		skeleton.SetScale(positionHash, new Vector3(overallScale, overallScale, overallScale));
 
-		skeleton.SetPosition(positionHash,
-		                     skeleton.GetPosition(positionHash) +
+		skeleton.SetPositionRelative(positionHash,
 		                     new Vector3(
 			Mathf.Clamp((umaDna.feetSize - 0.5f) * -0.27f, -0.15f, 0.0675f),
 			Mathf.Clamp(0, -10, 10),
@@ -650,28 +621,24 @@ public class HumanMaleDNAConverterBehaviour : HumanoidDNAConverterBehaviour
 			Mathf.Clamp(1 + (umaDna.feetSize - 0.5f) * 2.0f, 0.5f, 2.0f),
 			Mathf.Clamp(1 + (umaDna.feetSize - 0.5f) * 2.0f, 0.5f, 2.0f),
 			Mathf.Clamp(1 + (umaDna.feetSize - 0.5f) * 2.0f, 0.5f, 2.0f)));
-		
-		skeleton.SetPosition(leftUpLegHash,
-		                     skeleton.GetPosition(leftUpLegHash) +
+
+		skeleton.SetPositionRelative(leftUpLegHash,
 		                     new Vector3(
 			Mathf.Clamp(0, -10, 10),
 			Mathf.Clamp((umaDna.legSeparation - 0.5f) * -0.15f + (umaDna.lowerWeight - 0.5f) * -0.035f + (umaDna.legsSize - 0.5f) * 0.1f, -0.025f, 0.025f),
 			Mathf.Clamp(0, -10, 10)));
-		skeleton.SetPosition(rightUpLegHash,
-		                     skeleton.GetPosition(rightUpLegHash) +
+		skeleton.SetPositionRelative(rightUpLegHash,
 		                     new Vector3(
 			Mathf.Clamp(0, -10, 10),
 			Mathf.Clamp((umaDna.legSeparation - 0.5f) * 0.15f + (umaDna.lowerWeight - 0.5f) * 0.035f + (umaDna.legsSize - 0.5f) * -0.1f, -0.025f, 0.025f),
 			Mathf.Clamp(0, -10, 10)));
-		
-		skeleton.SetPosition(leftShoulderHash,
-		                     skeleton.GetPosition(leftShoulderHash) +
+
+		skeleton.SetPositionRelative(leftShoulderHash,
 		                     new Vector3(
 			Mathf.Clamp(0, -10, 10),
 			Mathf.Clamp(0.003f + (umaDna.upperMuscle - 0.5f) * -0.265f, -0.085f, 0.015f),
 			Mathf.Clamp(0, -10, 10)));
-		skeleton.SetPosition(rightShoulderHash,
-		                     skeleton.GetPosition(rightShoulderHash) +
+		skeleton.SetPositionRelative(rightShoulderHash,
 		                     new Vector3(
 			Mathf.Clamp(0, -10, 10),
 			Mathf.Clamp(0.003f + (umaDna.upperMuscle - 0.5f) * 0.265f, -0.015f, 0.085f),
