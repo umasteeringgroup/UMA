@@ -21,6 +21,7 @@ namespace UMA
 		MaterialDefinitionComparer comparer = new MaterialDefinitionComparer();
 		List<UMAData.GeneratedMaterial> generatedMaterials;
 		List<UMAData.GeneratedMaterial> atlassedMaterials = new List<UMAData.GeneratedMaterial>(20);
+		Dictionary<List<OverlayData>, UMAData.GeneratedMaterial> generatedMaterialLookup;
 
 		public void Prepare(UMAGeneratorBase _umaGenerator, UMAData _umaData, TextureProcessBaseCoroutine textureProcessCoroutine, bool updateMaterialList)
 		{
@@ -43,17 +44,14 @@ namespace UMA
 			}
 			else
 			{
-				if (umaMaterial.materialType == UMAMaterial.MaterialType.Atlas)
+				foreach (var atlassedMaterial in atlassedMaterials)
 				{
-					foreach (var atlassedMaterial in atlassedMaterials)
+					if (atlassedMaterial.umaMaterial == umaMaterial)
 					{
-						if (atlassedMaterial.umaMaterial == umaMaterial)
-						{
-							return atlassedMaterial;
-						}
+						return atlassedMaterial;
 					}
 				}
-
+				
 				var res = new UMAData.GeneratedMaterial();
 				res.umaMaterial = umaMaterial;
 				res.material = Object.Instantiate(umaMaterial.material) as Material;
@@ -67,6 +65,14 @@ namespace UMA
 
 		protected override void Start()
 		{
+			if (generatedMaterialLookup == null)
+			{
+				generatedMaterialLookup = new Dictionary<List<OverlayData>, UMAData.GeneratedMaterial>(20);
+			}
+			else
+			{
+				generatedMaterialLookup.Clear();
+			}
 			backUpTexture = umaData.backUpTextures();
 			umaData.CleanTextures();
 			generatedMaterials = new List<UMAData.GeneratedMaterial>(20);
@@ -75,9 +81,17 @@ namespace UMA
 			SlotData[] slots = umaData.umaRecipe.slotDataList;
 			for (int i = 0; i < slots.Length; i++)
 			{
-				if (slots[i] == null) continue;
-				if (slots[i].asset.material != null && slots[i].GetOverlay(0) != null)
+				var slot = slots[i];
+				if (slot == null) continue;
+				if (slot.asset.material != null && slot.GetOverlay(0) != null)
 				{
+					var overlayList = slot.GetOverlayList();
+					UMAData.GeneratedMaterial generatedMaterial;
+					if (!generatedMaterialLookup.TryGetValue(overlayList, out generatedMaterial))
+					{
+						generatedMaterial = FindOrCreateGeneratedMaterial(slots[i].asset.material);
+						generatedMaterialLookup.Add(overlayList, generatedMaterial);
+					}
 					var tempMaterialDefinition = new UMAData.MaterialFragment();
 					tempMaterialDefinition.baseTexture = slots[i].GetOverlay(0).asset.textureList;
 					tempMaterialDefinition.size = tempMaterialDefinition.baseTexture[0].width * tempMaterialDefinition.baseTexture[0].height;
@@ -119,7 +133,6 @@ namespace UMA
 						overlayID++;
 					}
 
-					var generatedMaterial = FindOrCreateGeneratedMaterial(slots[i].asset.material);
 					tempMaterialDefinition.overlayList = slots[i].GetOverlayList();
 					tempMaterialDefinition.isRectShared = false;
 					for (int j = 0; j < generatedMaterial.materialFragments.Count; j++)
@@ -259,23 +272,20 @@ namespace UMA
 
 		private void OptimizeAtlas()
 		{
-			UMAData.GeneratedMaterials umaAtlasList = umaData.generatedMaterials;
-			for (int atlasIndex = 0; atlasIndex < umaAtlasList.materials.Count; atlasIndex++)
+			for (int atlasIndex = 0; atlasIndex < atlassedMaterials.Count; atlasIndex++)
 			{
-				var material = umaAtlasList.materials[atlasIndex];
-				if( material.umaMaterial.materialType != UMAMaterial.MaterialType.Atlas ) return;
-
+				var material = atlassedMaterials[atlasIndex];
 				Vector2 usedArea = new Vector2(0, 0);
-				for (int atlasElementIndex = 0; atlasElementIndex < umaAtlasList.materials[atlasIndex].materialFragments.Count; atlasElementIndex++)
+				for (int atlasElementIndex = 0; atlasElementIndex < material.materialFragments.Count; atlasElementIndex++)
 				{
-					if (umaAtlasList.materials[atlasIndex].materialFragments[atlasElementIndex].atlasRegion.xMax > usedArea.x)
+					if (material.materialFragments[atlasElementIndex].atlasRegion.xMax > usedArea.x)
 					{
-						usedArea.x = umaAtlasList.materials[atlasIndex].materialFragments[atlasElementIndex].atlasRegion.xMax;
+						usedArea.x = material.materialFragments[atlasElementIndex].atlasRegion.xMax;
 					}
 
-					if (umaAtlasList.materials[atlasIndex].materialFragments[atlasElementIndex].atlasRegion.yMax > usedArea.y)
+					if (material.materialFragments[atlasElementIndex].atlasRegion.yMax > usedArea.y)
 					{
-						usedArea.y = umaAtlasList.materials[atlasIndex].materialFragments[atlasElementIndex].atlasRegion.yMax;
+						usedArea.y = material.materialFragments[atlasElementIndex].atlasRegion.yMax;
 					}
 				}
 
@@ -308,7 +318,7 @@ namespace UMA
 					}
 				}
 
-				umaAtlasList.materials[atlasIndex].cropResolution = tempResolution;
+				material.cropResolution = tempResolution;
 			}
 		}
 
