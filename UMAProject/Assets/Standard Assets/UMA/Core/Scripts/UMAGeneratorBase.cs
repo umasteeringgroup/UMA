@@ -290,11 +290,12 @@ namespace UMA
 				var skeletonbone = bones[i];
 				UMAData.BoneData entry;
 				int boneHash = UMAUtils.StringToHash(skeletonbone.name);
-				if (umaData.boneHashList.TryGetValue(boneHash, out entry))
+				GameObject boneGO = umaData.skeleton.GetBoneGameObject(boneHash);
+				if (boneGO != null)
 				{
-					skeletonbone.position = entry.boneTransform.localPosition;
-					//skeletonbone.rotation = entry.boneTransform.localRotation;
-					skeletonbone.scale = entry.boneTransform.localScale;
+					skeletonbone.position = boneGO.transform.localPosition;
+					//skeletonbone.rotation = boneGO.transform.localRotation;
+					skeletonbone.scale = boneGO.transform.localScale;
 					bones[i] = skeletonbone;
 					animatedBones.Remove(boneHash);
 				}
