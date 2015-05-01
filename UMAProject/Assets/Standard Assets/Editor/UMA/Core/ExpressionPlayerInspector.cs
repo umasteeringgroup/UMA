@@ -40,7 +40,6 @@ namespace UMA.PoseTools
 			}
 		}
 
-#if UNITY_4_6
 		[MenuItem("UMA/Pose Tools/Set Clip Generic", true)]
 		static bool ValidateSetClipGeneric()
 		{
@@ -54,8 +53,15 @@ namespace UMA.PoseTools
 				AnimationClip clip = obj as AnimationClip;
 				if (clip != null)
 				{
+#if UNITY_4_6
 					// There doesn't seem to be a way to check the ModelImporterAnimationType
 					hasLegacyClip = true; break;
+#else
+					if (clip.legacy)
+					{
+						hasLegacyClip = true; break;
+					}
+#endif
 				}
 			}
 			return hasLegacyClip;
@@ -72,7 +78,11 @@ namespace UMA.PoseTools
 				AnimationClip clip = obj as AnimationClip;
 				if (clip != null)
 				{
+#if UNITY_4_6
 					AnimationUtility.SetAnimationType(clip, ModelImporterAnimationType.Generic);
+#else
+					clip.legacy = false;
+#endif
 				}
 			}
 		}
@@ -90,8 +100,15 @@ namespace UMA.PoseTools
 				AnimationClip clip = obj as AnimationClip;
 				if (clip != null)
 				{
+#if UNITY_4_6
 					// There doesn't seem to be a way to check the ModelImporterAnimationType
 					hasGenericClip = true; break;
+#else
+					if (!clip.legacy && !clip.humanMotion)
+					{
+						hasGenericClip = true; break;
+					}
+#endif
 				}
 			}
 
@@ -109,11 +126,14 @@ namespace UMA.PoseTools
 				AnimationClip clip = obj as AnimationClip;
 				if (clip != null)
 				{
+#if UNITY_4_6
 					AnimationUtility.SetAnimationType(clip, ModelImporterAnimationType.Legacy);
+#else
+					clip.legacy = true;
+#endif
 				}
 			}
 		}
-#endif
 	}
 }
 #endif

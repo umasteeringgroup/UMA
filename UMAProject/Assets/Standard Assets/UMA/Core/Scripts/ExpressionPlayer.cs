@@ -384,6 +384,11 @@ namespace UMA.PoseTools
 			{
 				AnimationUtility.SetAnimationType(clip, ModelImporterAnimationType.Generic);
 			}
+#else
+			if (legacyAnimation)
+			{
+				clip.legacy = true;
+			}
 #endif
 			float[] values = Values;
 			for (int i = 0; i < ExpressionPlayer.PoseCount; i++)
