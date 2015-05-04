@@ -267,7 +267,7 @@ namespace UMA
 			int dest = len1-1;
 			while (pos1 >= 0 && pos2 >= 0)
 			{
-				long i = mergedTransforms[pos1].hash - umaTransforms[pos2].hash;
+				long i = ((long)mergedTransforms[pos1].hash) - ((long)umaTransforms[pos2].hash);
 				if (i == 0)
 				{
 					mergedTransforms[dest] = mergedTransforms[pos1];
