@@ -1,7 +1,3 @@
-//	============================================================
-//	Name:		UMATextureImporterUtil
-//	Author: 	Joen Joensen (@UnLogick)
-//	============================================================
 #if UNITY_EDITOR
 
 using UnityEngine;

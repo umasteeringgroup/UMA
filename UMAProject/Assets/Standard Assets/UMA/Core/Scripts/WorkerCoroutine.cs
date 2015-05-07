@@ -1,9 +1,4 @@
-﻿//	============================================================
-//	Name:		WorkerCoroutine
-//	Author: 	Joen Joensen (@UnLogick)
-//	============================================================
-
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 using System;
 
