@@ -9,7 +9,7 @@ namespace UMAEditor
 {
 	public class UmaSlotBuilderWindow : EditorWindow 
 	{
-	    public string materialName;
+	    public string slotName;
 	    public UnityEngine.Object slotFolder;
 	    public UnityEngine.Object relativeFolder;
 	    public SkinnedMeshRenderer normalReferenceMesh;
@@ -18,22 +18,22 @@ namespace UMAEditor
 
 	    string GetAssetFolder()
 	    {
-	        int index = materialName.LastIndexOf('/');
+	        int index = slotName.LastIndexOf('/');
 	        if( index > 0 )
 	        {
-	            return materialName.Substring(0, index+1);
+	            return slotName.Substring(0, index+1);
 	        }
 	        return "";
 	    }
 
 	    string GetAssetName()
 	    {
-	        int index = materialName.LastIndexOf('/');
+	        int index = slotName.LastIndexOf('/');
 	        if (index > 0)
 	        {
-	            return materialName.Substring(index + 1);
+	            return slotName.Substring(index + 1);
 	        }
-	        return materialName;
+	        return slotName;
 	    }
 
 	    public void EnforceFolder(ref UnityEngine.Object folderObject)
@@ -58,12 +58,13 @@ namespace UMAEditor
 	    {
 			GUILayout.Label("UMA Slot Builder");
 			GUILayout.Space(20);
-			normalReferenceMesh = EditorGUILayout.ObjectField("Seams Removal SkinnedMeshRenderer", normalReferenceMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
-	        slotMesh = EditorGUILayout.ObjectField("Slot Mesh SkinnedMeshRenderer", slotMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
+			normalReferenceMesh = EditorGUILayout.ObjectField("Seams Mesh (Optional)", normalReferenceMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
+	        slotMesh = EditorGUILayout.ObjectField("Slot Mesh", slotMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
 			slotMaterial = EditorGUILayout.ObjectField("UMAMaterial", slotMaterial, typeof(UMAMaterial), false) as UMAMaterial;
 	        slotFolder = EditorGUILayout.ObjectField("Slot Destination Folder", slotFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
-	        EnforceFolder(ref slotFolder);
-	        
+			EnforceFolder(ref slotFolder);
+			slotName = EditorGUILayout.TextField("Element Name", slotName);
+			
 	        if (GUILayout.Button("Create Slot"))
 	        {
 	            Debug.Log("Processing...");
@@ -85,8 +86,8 @@ namespace UMAEditor
 
 	    private SlotDataAsset CreateSlot()
 	    {
-			if(materialName == null || materialName == ""){
-				Debug.LogError("materialName must be specified.");
+			if(slotName == null || slotName == ""){
+				Debug.LogError("slotName must be specified.");
 	            return null;
 			}
 			
@@ -96,9 +97,9 @@ namespace UMAEditor
 	    private SlotDataAsset CreateSlot_Internal()
 	    {
 			var material = slotMaterial;
-			if (materialName == null || materialName == "")
+			if (slotName == null || slotName == "")
 			{
-				Debug.LogError("materialName must be specified.");
+				Debug.LogError("slotName must be specified.");
 	            return null;
 			}
 			
@@ -154,7 +155,7 @@ namespace UMAEditor
 						GetMaterialName(mesh.name, mesh);
 						if (CreateSlot() != null)
 						{
-							Debug.Log("Batch importer processed mesh: " + materialName);
+							Debug.Log("Batch importer processed mesh: " + slotName);
 						}
 					}
 	            }
@@ -210,12 +211,12 @@ namespace UMAEditor
 	            {
 	                string temp = assetLocation.Substring(relativeLocation.Length + 1); // remove the prefix
 	                temp = temp.Substring(0, temp.LastIndexOf('/') + 1); // remove the asset name
-	                materialName = temp + name; // add the cleaned name
+	                slotName = temp + name; // add the cleaned name
 	            }
 	        }
 	        else
 	        {
-	            materialName = name;
+	            slotName = name;
 	        }
 	    }
 
