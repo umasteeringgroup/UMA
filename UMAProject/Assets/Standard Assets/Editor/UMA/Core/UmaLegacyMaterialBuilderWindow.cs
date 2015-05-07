@@ -6,7 +6,7 @@ using UMA;
 
 namespace UMAEditor
 {
-	public class UmaTexturePrepareWindow : EditorWindow {
+	public class UmaLegacyMaterialBuilderWindow : EditorWindow {
 
 	    public Texture2D diffuse;
 	    public Texture2D normal;
@@ -241,7 +241,7 @@ namespace UMAEditor
 	    [MenuItem("UMA/Legacy Texture Builder")]
 	    public static void OpenUmaTexturePrepareWindow()
 	    {
-	        UmaTexturePrepareWindow window = (UmaTexturePrepareWindow)EditorWindow.GetWindow(typeof(UmaTexturePrepareWindow));
+	        UmaLegacyMaterialBuilderWindow window = (UmaLegacyMaterialBuilderWindow)EditorWindow.GetWindow(typeof(UmaLegacyMaterialBuilderWindow));
 	        window.title = "UMA Legacy MAterial Builder";
 	    }
 
