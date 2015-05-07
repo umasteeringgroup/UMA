@@ -1,5 +1,3 @@
-#if UNITY_EDITOR
-
 using UnityEngine;
 using UnityEditor;
 using System.Text;
@@ -16,12 +14,8 @@ namespace UMAEditor
 
 	    public string materialName;
 	    public UnityEngine.Object overlayFolder;
-	    public UnityEngine.Object slotFolder;
 	    public UnityEngine.Object relativeFolder;
-	    public SkinnedMeshRenderer racePrefab;
-	    public SkinnedMeshRenderer slotMesh;
 	    public UMAMaterial slotMaterial;
-	    public bool processAutomatically;
 	    public OverlayData textureOverride;
 
 	    private string normalWarning;
@@ -115,77 +109,6 @@ namespace UMAEditor
 					Debug.Log("Success.");
 				}
 	        }
-	        
-	        EditorGUILayout.Space();
-
-	        racePrefab = EditorGUILayout.ObjectField("Race Prefab SkinnedMeshRenderer", racePrefab, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
-	        slotMesh = EditorGUILayout.ObjectField("Slot Mesh SkinnedMeshRenderer", slotMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
-			slotMaterial = EditorGUILayout.ObjectField("UMAMaterial", slotMaterial, typeof(UMAMaterial), false) as UMAMaterial;
-	        slotFolder = EditorGUILayout.ObjectField("Slot Folder", slotFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
-	        EnforceFolder(ref slotFolder);
-	        
-	        if (GUILayout.Button("Create Slot"))
-	        {
-	            Debug.Log("Processing...");
-	            if (CreateSlot() != null)
-	            {
-	                Debug.Log("Success.");
-	            }
-	        }
-	      
-	        GUILayout.Label("", EditorStyles.boldLabel);
-	        Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
-	        GUI.Box(dropArea, "Drag textures and meshes here");
-	        GUILayout.Label("Automatic Drag and Drop processing", EditorStyles.boldLabel);
-	        processAutomatically = EditorGUILayout.Toggle("Process Drops", processAutomatically);
-	        relativeFolder = EditorGUILayout.ObjectField("Relative Folder", relativeFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
-	        EnforceFolder(ref relativeFolder);
-
-	        DropAreaGUI(dropArea);
-	    }
-
-	    private SlotDataAsset CreateSlot()
-	    {
-			if(materialName == null || materialName == ""){
-				Debug.LogError("materialName must be specified.");
-	            return null;
-			}
-			
-	        return CreateSlot_Internal();
-	    }
-
-	    private SlotDataAsset CreateSlot_Internal()
-	    {
-//	        var material = slotMaterial ?? AssetDatabase.LoadAssetAtPath("Assets/UMA_Assets/MaterialSamples/UMABaseShaderSample.mat", typeof(Material)) as Material;
-			var material = slotMaterial;
-			if (material == null) material = AssetDatabase.LoadAssetAtPath("Assets/UMA_Assets/MaterialSamples/DefaultUMAMaterial.asset", typeof(UMAMaterial)) as UMAMaterial;
-			if (material == null) material = AssetDatabase.LoadAssetAtPath("Assets/UMA_Assets/MaterialSamples/UMALegacy.asset", typeof(UMAMaterial)) as UMAMaterial;
-			if (materialName == null || materialName == "")
-			{
-				Debug.LogError("materialName must be specified.");
-	            return null;
-			}
-			
-			if (material == null)
-	        {
-	            Debug.LogError("Couldn't locate default material at Assets/UMA_Assets/MaterialSamples/UMABaseShaderSample.mat and no material specified.");
-	            return null;
-	        }
-
-	        if (slotFolder == null)
-	        {
-	            Debug.LogError("Slot folder not supplied");
-	            return null;
-	        }
-
-	        if (slotMesh == null)
-	        {
-	            Debug.LogError("Slot Mesh not supplied.");
-	            return null;
-	        }
-            Debug.Log("Slot Mesh: " + slotMesh.name, slotMesh.gameObject);
-			SlotDataAsset slot = UMASlotProcessingUtil.CreateSlotData(AssetDatabase.GetAssetPath(slotFolder), GetAssetFolder(), GetAssetName(), slotMesh, material, racePrefab);
-	        return slot;
 	    }
 
 		private OverlayDataAsset CreateOverlay()
@@ -268,112 +191,7 @@ namespace UMAEditor
 	        }
 	        return res;
 	    }
-
-	    private void DropAreaGUI(Rect dropArea)
-	    {
-	        var evt = Event.current;
-
-	        if (evt.type == EventType.DragUpdated)
-	        {
-	            if (dropArea.Contains(evt.mousePosition))
-	            {
-	                DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
-	            }
-	        }
-
-	        if (evt.type == EventType.DragPerform)
-	        {
-	            if (dropArea.Contains(evt.mousePosition))
-	            {
-	                DragAndDrop.AcceptDrag();
-	                int receivedMask = 0;
-	                //string name = "";
-	                StringBuilder errors = new StringBuilder();
-
-	                UnityEngine.Object[] draggedObjects = DragAndDrop.objectReferences as UnityEngine.Object[];
-	                for (int i = 0; i < draggedObjects.Length; i++)
-	                {
-	                    GameObject go = draggedObjects[i] as GameObject;
-	                    Texture2D tex = draggedObjects[i] as Texture2D;
-	                    SkinnedMeshRenderer mesh = draggedObjects[i] as SkinnedMeshRenderer;
-
-	                    if (go != null)
-	                    {
-	                        mesh = go.GetComponent<SkinnedMeshRenderer>();
-	                        if (mesh != null)
-	                        {
-	                            slotMesh = mesh;
-	                            GetMaterialName(go.name, go);
-	                            if (processAutomatically && textureOverride != null)
-	                            {
-	                                receivedMask = receivedMask & 0x000F;
-	                                // we got texture override and we got mesh, go go go.
-	                                if (CreateSlot() != null)
-	                                {
-	                                    mesh = null; // lets not process this one again
-	                                    Debug.Log("Batch importer processed mesh: " + materialName);
-	                                }
-	                            }
-	                            else
-	                            {
-	                                receivedMask = receivedMask | 0x0010;
-	                            }
-	                            continue;
-	                        }
-	                    }
-	                    if (tex != null)
-	                    {
-	                        string textureType = ProcessTextureTypeAndName(tex);
-	                        if (textureType == "_dif")
-	                        {
-	                            // looks like a diffuse texture
-	                            receivedMask = receivedMask | 0x0001;
-	                            diffuse = tex;
-	                        }
-	                        else if (textureType == "_spec")
-	                        {
-	                            // looks like a specular texture
-	                            receivedMask = receivedMask | 0x0002;
-	                            specular = tex;
-	                        }
-	                        else if (textureType == "_nor")
-	                        {
-	                            // looks like a normal map
-	                            receivedMask = receivedMask | 0x0004;
-	                            normal = tex;
-	                        }
-	                        else
-	                        {
-	                            errors.AppendFormat("unrecognizable texture {0}\n", tex.name);
-	                        }
-	                    }
-	                    else if (mesh != null)
-	                    {
-	                        slotMesh = mesh;
-	                        receivedMask = receivedMask | 0x0010;
-	                    }
-	                    else
-	                    {
-	                        errors.AppendFormat("unrecognizable drag and drop object {0}\n", draggedObjects[i]);
-	                    }
-	                }
-	                if (receivedMask == 0x0017 && processAutomatically)
-	                {
-	                    Debug.Log("Drag and Drop initiated processing, Creating Slot...");
-	                    if (CreateSlot() != null)
-	                    {
-	                        Debug.Log("Success.");
-	                    }
-	                }
-	               
-	                if (errors.Length > 0)
-	                {
-	                    Debug.LogError(errors.ToString());
-	                }
-	            }
-	        }
-	    }
-
+		
 	    private string ProcessTextureTypeAndName(Texture2D tex)
 	    {
 	        var suffixes = new string[] { "_dif", "_spec", "_nor" };
@@ -438,52 +256,12 @@ namespace UMAEditor
 			Debug.Log(dest.width);
 		}
 
-	    [MenuItem("UMA/Material Builder")]
+	    [MenuItem("UMA/Legacy Texture Builder")]
 	    public static void OpenUmaTexturePrepareWindow()
 	    {
 	        UmaTexturePrepareWindow window = (UmaTexturePrepareWindow)EditorWindow.GetWindow(typeof(UmaTexturePrepareWindow));
 	        window.title = "MaterialBuilder";
 	    }
-
-		[MenuItem("UMA/Optimize Slot Meshes")]
-		public static void OptimizeSlotMeshes()
-		{
-#if UMA2_LEAN_AND_CLEAN 
-			Debug.LogError("MenuItem - UMA/OptimizeSlotMeshes does not work with the define UMA2_LEAN_AND_CLEAN, we need all legacy fields available.");
-#else
-			foreach (var obj in Selection.objects)
-			{
-				var SlotDataAsset = obj as SlotDataAsset;
-				if (SlotDataAsset != null)
-				{
-#pragma warning disable 618
-					if (SlotDataAsset.meshRenderer != null)
-					{
-						UMASlotProcessingUtil.OptimizeSlotDataMesh(SlotDataAsset.meshRenderer);
-						SlotDataAsset.UpdateMeshData(SlotDataAsset.meshRenderer);
-						SlotDataAsset.meshRenderer = null;
-						EditorUtility.SetDirty(SlotDataAsset);
-					}
-					else
-					{
-						if (SlotDataAsset.meshData != null)
-						{
-							SlotDataAsset.UpdateMeshData();
-						}
-						else
-						{
-							if (SlotDataAsset.meshData.vertices != null)
-							{
-								SlotDataAsset.UpdateMeshData();
-							}
-						}
-					}
-#pragma warning restore 618
-				}
-			}
-			AssetDatabase.SaveAssets();
-#endif
-		}
 
 		[MenuItem("UMA/Optimize Overlay Textures")]
 		public static void OptimizeOverlayTextures()
@@ -632,4 +410,3 @@ namespace UMAEditor
 
 	}
 }
-#endif
