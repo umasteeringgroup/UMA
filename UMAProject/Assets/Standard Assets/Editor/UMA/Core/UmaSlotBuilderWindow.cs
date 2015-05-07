@@ -167,7 +167,7 @@ namespace UMAEditor
 			GameObject go = obj as GameObject;
 			if (go != null)
 			{
-				foreach (var smr in go.GetComponentsInChildren<SkinnedMeshRenderer>())
+				foreach (var smr in go.GetComponentsInChildren<SkinnedMeshRenderer>(true))
 				{
 					meshes.Add(smr);
 				}
