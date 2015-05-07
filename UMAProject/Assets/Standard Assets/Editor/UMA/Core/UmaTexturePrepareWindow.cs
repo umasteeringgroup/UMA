@@ -62,7 +62,9 @@ namespace UMAEditor
 
 	    void OnGUI()
 	    {
-	        diffuse = EditorGUILayout.ObjectField("Diffuse Texture", diffuse, typeof(Texture2D), false) as Texture2D;
+			GUILayout.Label("UMA Legacy Material Builder");
+			GUILayout.Space(20);
+			diffuse = EditorGUILayout.ObjectField("Diffuse Texture", diffuse, typeof(Texture2D), false) as Texture2D;
 	        normal = EditorGUILayout.ObjectField("Normal Map (optional)", normal, typeof(Texture2D), false) as Texture2D;
 	        if( Event.current.type == EventType.layout && privateNormal != normal )
 	        {
@@ -260,7 +262,7 @@ namespace UMAEditor
 	    public static void OpenUmaTexturePrepareWindow()
 	    {
 	        UmaTexturePrepareWindow window = (UmaTexturePrepareWindow)EditorWindow.GetWindow(typeof(UmaTexturePrepareWindow));
-	        window.title = "MaterialBuilder";
+	        window.title = "UMA Legacy MAterial Builder";
 	    }
 
 		[MenuItem("UMA/Optimize Overlay Textures")]

@@ -57,7 +57,9 @@ namespace UMAEditor
 
 	    void OnGUI()
 	    {
-	        normalReferenceMesh = EditorGUILayout.ObjectField("Seams Removal SkinnedMeshRenderer", normalReferenceMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
+			GUILayout.Label("UMA Slot Builder");
+			GUILayout.Space(20);
+			normalReferenceMesh = EditorGUILayout.ObjectField("Seams Removal SkinnedMeshRenderer", normalReferenceMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
 	        slotMesh = EditorGUILayout.ObjectField("Slot Mesh SkinnedMeshRenderer", slotMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
 			slotMaterial = EditorGUILayout.ObjectField("UMAMaterial", slotMaterial, typeof(UMAMaterial), false) as UMAMaterial;
 	        slotFolder = EditorGUILayout.ObjectField("Slot Destination Folder", slotFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
@@ -222,8 +224,8 @@ namespace UMAEditor
 	    [MenuItem("UMA/Slot Builder")]
 	    public static void OpenUmaTexturePrepareWindow()
 	    {
-			UmaTexturePrepareWindow window = (UmaTexturePrepareWindow)EditorWindow.GetWindow(typeof(UmaSlotBuilderWindow));
-	        window.title = "MaterialBuilder";
+			UmaSlotBuilderWindow window = (UmaSlotBuilderWindow)EditorWindow.GetWindow(typeof(UmaSlotBuilderWindow));
+	        window.title = "UMA Slot Builder";
 	    }
 
 		[MenuItem("UMA/Optimize Slot Meshes")]
