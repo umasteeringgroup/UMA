@@ -14,7 +14,6 @@ namespace UMAEditor
 
 	    public string materialName;
 	    public UnityEngine.Object overlayFolder;
-	    public UnityEngine.Object relativeFolder;
 	    public UMAMaterial slotMaterial;
 	    public OverlayData textureOverride;
 
@@ -205,32 +204,13 @@ namespace UMAEditor
 	            if( index > 0 )
 	            {
 	                string name = tex.name.Substring(0,index);
-	                GetMaterialName(name, tex);
+					materialName = name;
 	                return suffix;
 	            }
 	        }
 	        return "";
 	    }
 
-	    private void GetMaterialName(string name, UnityEngine.Object obj)
-	    {
-	        if (relativeFolder != null)
-	        {
-	            var relativeLocation = AssetDatabase.GetAssetPath(relativeFolder);
-	            var assetLocation = AssetDatabase.GetAssetPath(obj);
-	            if (assetLocation.StartsWith(relativeLocation, System.StringComparison.InvariantCultureIgnoreCase))
-	            {
-	                string temp = assetLocation.Substring(relativeLocation.Length + 1); // remove the prefix
-	                temp = temp.Substring(0, temp.LastIndexOf('/') + 1); // remove the asset name
-	                materialName = temp + name; // add the cleaned name
-	            }
-	        }
-	        else
-	        {
-	            materialName = name;
-	        }
-	    }
-		
 		void SaveTexture(ref Texture2D dest, Color32 color,string baseTextureName,int width,int height){			
 			Color32[] textureColor = new Color32[width*height]; 
 			for(int i = 0; i < textureColor.Length; i++){

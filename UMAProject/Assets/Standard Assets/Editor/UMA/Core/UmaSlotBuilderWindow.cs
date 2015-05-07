@@ -15,7 +15,6 @@ namespace UMAEditor
 	    public SkinnedMeshRenderer normalReferenceMesh;
 	    public SkinnedMeshRenderer slotMesh;
 	    public UMAMaterial slotMaterial;
-	    public bool processAutomatically;
 
 	    string GetAssetFolder()
 	    {
@@ -78,7 +77,6 @@ namespace UMAEditor
 	        Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
 	        GUI.Box(dropArea, "Drag meshes here");
 	        GUILayout.Label("Automatic Drag and Drop processing", EditorStyles.boldLabel);
-	        processAutomatically = EditorGUILayout.Toggle("Process Drops", processAutomatically);
 	        relativeFolder = EditorGUILayout.ObjectField("Relative Folder", relativeFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
 	        EnforceFolder(ref relativeFolder);
 
@@ -225,7 +223,7 @@ namespace UMAEditor
 	    public static void OpenUmaTexturePrepareWindow()
 	    {
 			UmaSlotBuilderWindow window = (UmaSlotBuilderWindow)EditorWindow.GetWindow(typeof(UmaSlotBuilderWindow));
-	        window.title = "UMA Slot Builder";
+	        window.title = "Slot Builder";
 	    }
 
 		[MenuItem("UMA/Optimize Slot Meshes")]
