@@ -30,10 +30,15 @@ namespace UMA
 		/// <param name="content">Text.</param>
 		public static void WriteAllText(string path, string content)
 		{
+#if UNITY_WEBPLAYER
+			UnityEngine.Debug.LogWarning("WebPlayer versions of IO methods may be unreliable!");
 			using (var sw = new System.IO.StreamWriter(path, false))
 			{
 				sw.Write(content);
 			}
+#else
+			System.IO.File.WriteAllText(path, content);
+#endif
 		}
 
 		/// <summary>
@@ -43,10 +48,15 @@ namespace UMA
 		/// <param name="content">Data.</param>
 		public static void WriteAllBytes(string path, byte[] content)
 		{
+#if UNITY_WEBPLAYER
+			UnityEngine.Debug.LogWarning("WebPlayer versions of IO methods may be unreliable!");
 			using (var sw = new System.IO.StreamWriter(path, false))
 			{
 				sw.Write(content);
 			}
+#else
+			System.IO.File.WriteAllBytes(path, content);
+#endif
 		}
 
 		/// <summary>
