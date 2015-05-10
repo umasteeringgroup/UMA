@@ -35,12 +35,16 @@ namespace UMAEditor
 				}
 			}
 
-			Mesh resultingMesh = resultingSkinnedMesh.sharedMesh;
+			Mesh resultingMesh;
 			if (prefabMesh != null)
 			{
 				resultingMesh = SeamRemoval.PerformSeamRemoval(resultingSkinnedMesh, prefabMesh, 0.0001f);
 				resultingSkinnedMesh.sharedMesh = resultingMesh;
 				SkinnedMeshAligner.AlignBindPose(prefabMesh, resultingSkinnedMesh);
+			}
+			else
+			{
+				resultingMesh = (Mesh)GameObject.Instantiate(resultingSkinnedMesh.sharedMesh);
 			}
 
 			var usedBonesDictionary = CompileUsedBonesDictionary(resultingMesh);
@@ -126,6 +130,7 @@ namespace UMAEditor
 			newMesh.colors = sourceMesh.colors;
 			newMesh.boneWeights = BuildNewBoneWeights(sourceMesh.boneWeights, usedBonesDictionary);
 			newMesh.bindposes = BuildNewBindPoses(sourceMesh.bindposes, usedBonesDictionary);
+			newMesh.subMeshCount = sourceMesh.subMeshCount;
 			for (int i = 0; i < sourceMesh.subMeshCount; i++)
 			{
 				newMesh.SetTriangles(sourceMesh.GetTriangles(i), i);
