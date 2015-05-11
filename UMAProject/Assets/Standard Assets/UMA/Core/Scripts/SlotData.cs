@@ -226,13 +226,13 @@ namespace UMA
 					{
 						if (overlayData.asset.material != asset.material)
 						{
-							Debug.LogError(string.Format("Slot '{0}' and Overlay '{1}' doesn't have the same uma material", asset.slotName, overlayData.asset.overlayName));
+							Debug.LogError(string.Format("Slot '{0}' and Overlay '{1}' don't have the same UMA Material", asset.slotName, overlayData.asset.overlayName));
 							valid = false;
 						}
 
 						if ((overlayData.asset.textureList == null) || (overlayData.asset.textureList.Length != asset.material.channels.Length))
 						{
-							Debug.LogError(string.Format("Overlay '{0}' missing required channels", overlayData.asset.overlayName));
+							Debug.LogError(string.Format("Overlay '{0}' doesn't have the right number of channels", overlayData.asset.overlayName));
 							valid = false;
 						}
 						else
