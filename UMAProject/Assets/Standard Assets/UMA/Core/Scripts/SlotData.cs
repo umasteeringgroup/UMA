@@ -229,6 +229,29 @@ namespace UMA
 							Debug.LogError(string.Format("Slot '{0}' and Overlay '{1}' doesn't have the same uma material", asset.slotName, overlayData.asset.overlayName));
 							valid = false;
 						}
+
+						if ((overlayData.asset.textureList == null) || (overlayData.asset.textureList.Length != asset.material.channels.Length))
+						{
+							Debug.LogError(string.Format("Overlay '{0}' missing required channels", overlayData.asset.overlayName));
+							valid = false;
+						}
+						else
+						{
+							for (int j = 0; j < asset.material.channels.Length; j++)
+							{
+								if ((overlayData.asset.textureList[j] == null) && (asset.material.channels[j].channelType != UMAMaterial.ChannelType.MaterialColor))
+								{
+									Debug.LogError(string.Format("Overlay '{0}' missing required texture in channel {1}", overlayData.asset.overlayName, j));
+									valid = false;
+								}
+							}
+						}
+
+						if (overlayData.colorData.channelMask.Length < asset.material.channels.Length)
+						{
+							Debug.LogError(string.Format("Overlay '{0}' missing required color data", overlayData.asset.overlayName));
+							valid = false;
+						}
 					}
 				}
 			}
