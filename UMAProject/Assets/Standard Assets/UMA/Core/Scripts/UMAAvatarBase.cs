@@ -91,6 +91,10 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 	public virtual void Load(UMARecipeBase umaRecipe, params UMARecipeBase[] umaAdditionalRecipes)
 	{
 		if (umaRecipe == null) return;
+		if (umaData == null)
+		{
+			Initialize();
+		}
 		Profiler.BeginSample("Load");
 
 		this.umaRecipe = umaRecipe;
