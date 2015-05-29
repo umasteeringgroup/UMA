@@ -1,8 +1,8 @@
 Shader "UMA/Bumped Specular" {
 Properties {
 	_SpecColor ("Specular Color", Color) = (0.5, 0.5, 0.5, 1)
-	_MainTex ("Base (RGB) Gloss (A)", 2D) = "white" {}
-	_BumpTex ("Normalmap", 2D) = "bump" {}
+	_MainTex ("Base (RGB)", 2D) = "white" {}
+	_BumpTex ("Normalmap(GA), Specular (R), Gloss (B)", 2D) = "bump" {}
 	_Gloss ("Gloss", Range (0.03, 4)) = 1.0
 	_Specular ("Specular", Range (0.03, 4)) = 1.0
 }
