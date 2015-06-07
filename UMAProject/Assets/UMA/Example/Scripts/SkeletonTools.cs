@@ -39,7 +39,7 @@ namespace UMA
 			if (race.localRotation != slot.localRotation)
 			{
 				failure++;
-				Debug.LogError("Rotation on " + race.name + " differs by " + Mathf.Rad2Deg * Quaternion.Angle(race.localRotation, slot.localRotation) + " degrees", slot);
+				Debug.LogError("Rotation on " + race.name + " differs by " + Quaternion.Angle(race.localRotation, slot.localRotation) + " degrees", slot);
 			}
 			for (int i = 0; i < race.childCount; i++)
 			{
