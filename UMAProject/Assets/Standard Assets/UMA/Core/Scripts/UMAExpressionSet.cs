@@ -85,6 +85,12 @@ namespace UMA.PoseTools
 			}
 		}
 
+		public int[] GetAnimatedBoneHashes()
+		{
+			ValidateBoneHashes();
+			return boneHashes;
+		}
+
 		/// <summary>
 		/// Gets the transforms for all animated bones.
 		/// </summary>

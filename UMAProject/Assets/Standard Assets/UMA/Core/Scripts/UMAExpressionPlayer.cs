@@ -24,6 +24,8 @@ namespace UMA.PoseTools
 
 		private int jawHash = 0;
 		private bool initialized = false;
+		[System.NonSerialized]
+		public int SlotUpdateVsCharacterUpdate;
 
 		// Use this for initialization
 		void Start()

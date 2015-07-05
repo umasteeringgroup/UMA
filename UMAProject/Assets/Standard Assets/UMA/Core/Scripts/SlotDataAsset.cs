@@ -48,6 +48,25 @@ namespace UMA
 		/// be preserved.
 		/// </remarks>
 		public Transform[] animatedBones = new Transform[0];
+		/// <summary>
+		/// The animated bone names.
+		/// </summary>
+		/// <remarks>
+		/// The animated bones array is required for cases where optimizations
+		/// could remove transforms from the rig. Animated bones will always
+		/// be preserved.
+		/// </remarks>
+		public string[] animatedBoneNames = new string[0];
+		/// <summary>
+		/// The animated bone name hashes.
+		/// </summary>
+		/// <remarks>
+		/// The animated bones array is required for cases where optimizations
+		/// could remove transforms from the rig. Animated bones will always
+		/// be preserved.
+		/// </remarks>
+		[UnityEngine.HideInInspector]
+		public int[] animatedBoneHashes = new int[0];
 
 		/// <summary>
 		/// Optional DNA converter specific to the slot.

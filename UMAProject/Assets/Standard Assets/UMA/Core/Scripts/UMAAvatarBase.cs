@@ -146,7 +146,7 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 			umaData.myRenderer = null;
 			umaData.animator = null;
 			umaData.firstBake = true;
-			umaData.ClearBoneData();
+			umaData.skeleton = null;
 		}
 		umaRace = null;
 	}

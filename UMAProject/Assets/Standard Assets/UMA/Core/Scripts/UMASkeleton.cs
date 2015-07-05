@@ -24,6 +24,7 @@ namespace UMA
 
 		public IEnumerable<int> BoneHashes { get { return GetBoneHashes(); } }
 
+		protected bool updating;
 		protected int frame;
 		/// <value>The hash for the root bone of the skeleton.</value>
 		public int rootBoneHash { get; protected set; }
@@ -55,6 +56,7 @@ namespace UMA
 		{
 			frame++;
 			if (frame < 0) frame = 0;
+			updating = true;
 		}
 
 		/// <summary>
@@ -62,7 +64,19 @@ namespace UMA
 		/// </summary>
 		public virtual void EndSkeletonUpdate()
 		{
+			updating = false;
 		}
+
+		public virtual void SetAnimatedBone(int nameHash)
+		{
+			// The default MeshCombiner is ignoring the animated bones, virtual method added to share common interface.
+		}
+
+		public virtual void SetAnimatedBoneHierachy(int nameHash)
+		{
+			// The default MeshCombiner is ignoring the animated bones, virtual method added to share common interface.
+		}
+
 
 		private void AddBonesRecursive(Transform transform)
 		{
@@ -126,7 +140,7 @@ namespace UMA
 				parentBoneNameHash = transform.parent,
 				boneNameHash = transform.hash,
 				boneTransform = go.transform,
-				umaTransform = transform,
+				umaTransform = transform.Duplicate(),
 			};
 
 			boneHashData.Add(transform.hash, newBone);
@@ -408,7 +422,7 @@ namespace UMA
 			if (boneHashData.TryGetValue(umaTransform.hash, out res))
 			{
 				res.accessedFrame = -1;
-				res.umaTransform = umaTransform;
+				res.umaTransform.Assign(umaTransform);
 			}
 			else
 			{

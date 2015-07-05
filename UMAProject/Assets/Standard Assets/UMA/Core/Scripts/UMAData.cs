@@ -43,13 +43,35 @@ namespace UMA
 		
 		public RuntimeAnimatorController animationController;
 		
-		[Obsolete("Access to boneHashList will be removed, use BoneData() methods!", false)]
-		public Dictionary<int, BoneData> boneHashList = new Dictionary<int, BoneData>();
-		[Obsolete("Access to animatedBones will be removed, use BoneData() methods!", false)]
-		public Transform[] animatedBones = new Transform[0];
-		
-		[Obsolete("Access to tempBoneData will be removed, use BoneData() methods!", false)]
-		public BoneData[] tempBoneData = new UMAData.BoneData[0]; //Only while Dictionary can't be serialized
+		private Dictionary<int, int> animatedBonesTable;
+
+		public void ResetAnimatedBones()
+		{
+			if (animatedBonesTable == null)
+			{
+				animatedBonesTable = new Dictionary<int, int>();
+			}
+			else
+			{
+				animatedBonesTable.Clear();
+			}
+		}
+
+		public void RegisterAnimatedBone(int hash)
+		{
+			if (!animatedBonesTable.ContainsKey(hash))
+			{
+				animatedBonesTable.Add(hash, animatedBonesTable.Count);
+			}
+		}
+
+		public void RegisterAnimatedBoneHierarchy(int hash)
+		{
+			if (!animatedBonesTable.ContainsKey(hash))
+			{
+				animatedBonesTable.Add(hash, animatedBonesTable.Count);
+			}
+		}
 		
 		public bool cancelled { get; private set; }
 		[NonSerialized]
@@ -116,7 +138,6 @@ namespace UMA
 		{
 			umaRoot = gameObject;
 			animator = umaRoot.GetComponent<Animator>();
-			UpdateBoneData();
 		}
 		
 		#pragma warning disable 618
@@ -128,9 +149,6 @@ namespace UMA
 		{
 			animator = other.animator;
 			myRenderer = other.myRenderer;
-			tempBoneData = other.tempBoneData;
-			animatedBones = other.animatedBones;
-			boneHashList = other.boneHashList;
 			umaRoot = other.umaRoot;
 			if (animationController == null)
 			{
@@ -959,9 +977,9 @@ namespace UMA
 		/// </summary>
 		/// <param name="umaBones">UMA bones.</param>
 		/// <param name="boneMap">Bone map.</param>
+		[Obsolete("UMAData.EnsureBoneData has been depricated and will be removed later.", false)]
 		public void EnsureBoneData(Transform[] umaBones, Dictionary<Transform, Transform> boneMap)
 		{
-			EnsureBoneData(umaBones, null, boneMap);
 		}
 		
 		/// <summary>
@@ -970,70 +988,20 @@ namespace UMA
 		/// <param name="umaBones">UMA bones.</param>
 		/// <param name="animBones">Animated bones.</param>
 		/// <param name="boneMap">Bone map.</param>
+		[Obsolete("UMAData.EnsureBoneData has been depricated and will be removed later.", false)]
 		public void EnsureBoneData(Transform[] umaBones, Transform[] animBones, Dictionary<Transform, Transform> boneMap)
 		{
-			#pragma warning disable 618
-			foreach (Transform bone in umaBones)
-			{
-				Transform umaBone;
-				if( !boneMap.TryGetValue(bone, out umaBone ) )
-				{
-					continue;
-				}
-				
-				int nameHash = UMAUtils.StringToHash(umaBone.name);
-				if (!boneHashList.ContainsKey(nameHash))
-				{
-					
-					BoneData newBoneData = new BoneData();
-					newBoneData.originalBonePosition = umaBone.localPosition;
-					newBoneData.originalBoneScale = umaBone.localScale;
-					newBoneData.originalBoneRotation = umaBone.localRotation;
-					newBoneData.boneTransform = umaBone;
-					boneHashList.Add(nameHash, newBoneData);
-				}
-			}
-			
-			if (animBones != null) {
-				List<Transform> newBones = new List<Transform>();
-				foreach (Transform bone in animBones)
-				{
-					Transform umaBone = boneMap[bone];
-					if ((umaBone != null) && (System.Array.IndexOf(animatedBones, umaBone) < 0)) {
-						newBones.Add(umaBone);
-					}
-				}
-				
-				if (newBones.Count > 0) {
-					int oldSize = animatedBones.Length;
-					System.Array.Resize<Transform>(ref animatedBones, oldSize + newBones.Count);
-					for (int i = 0; i < newBones.Count; i++) {
-						animatedBones[oldSize + i] = newBones[i];
-					}
-				}
-			}
-			#pragma warning restore 618
 		}
-		
+
+		[Obsolete("UMAData.ClearBoneData has been depricated and will be removed later.", false)]
 		public void ClearBoneData()
 		{
-			#pragma warning disable 618
-			boneHashList.Clear();
-			animatedBones = new Transform[0];
-			tempBoneData = new UMAData.BoneData[0];
-			#pragma warning restore 618
 			skeleton = null;
 		}
-		
+
+		[Obsolete("UMAData.ClearBoneData has been depricated and will be removed later.", false)]
 		public void UpdateBoneData()
 		{
-			#pragma warning disable 618
-			if (tempBoneData == null) return;
-			
-			for (int i = 0; i < tempBoneData.Length; i++) {			
-				boneHashList.Add(UMAUtils.StringToHash(tempBoneData[i].boneTransform.gameObject.name), tempBoneData[i]);
-			}
-			#pragma warning restore 618
 		}
 		
 		/// <summary>
@@ -1131,16 +1099,9 @@ namespace UMA
 		/// <summary>
 		/// Align skeleton to the default pose.
 		/// </summary>
+		[Obsolete("UMAData.GotoOriginalPose has been depricated and will be removed later, please use the skeleton helper if you want to access the skeleton.", false)]
 		public void GotoOriginalPose()
 		{
-			#pragma warning disable 618
-			foreach (BoneData bone in boneHashList.Values)
-			{
-				bone.boneTransform.localPosition = bone.originalBonePosition;
-				bone.boneTransform.localScale = bone.originalBoneScale;
-				bone.boneTransform.localRotation = bone.originalBoneRotation;
-			}
-			#pragma warning restore 618
 		}
 		
 		/// <summary>
@@ -1164,29 +1125,15 @@ namespace UMA
 				}
 			}
 		}
-		
-		
-		internal int[] GetAnimatedBones()
+
+		public int[] GetAnimatedBones()
 		{
-			#pragma warning disable 618
-			List<int> res = new List<int>(tempBoneData.Length);
-			Dictionary<int, int> resHash = new Dictionary<int, int>(tempBoneData.Length);
-			for(int slotDataIndex = 0; slotDataIndex < umaRecipe.slotDataList.Length; slotDataIndex++)
+			var res = new int[animatedBonesTable.Count];
+			foreach (var entry in animatedBonesTable)
 			{
-				var slotData = umaRecipe.slotDataList[slotDataIndex];
-				if( slotData == null ) continue;
-				if (slotData.asset.animatedBones == null || slotData.asset.animatedBones.Length == 0) continue;
-				for (int animatedBoneIndex = 0; animatedBoneIndex < slotData.asset.animatedBones.Length; animatedBoneIndex++)
-				{
-					var animatedBone = slotData.asset.animatedBones[animatedBoneIndex];
-					var hashName = UMAUtils.StringToHash(animatedBone.name);
-					if( resHash.ContainsKey(hashName) ) continue;
-					resHash.Add(hashName, hashName);
-					res.Add(hashName);
-				}
+				res[entry.Value] = entry.Key;
 			}
-			return res.ToArray();
-			#pragma warning restore 618
+			return res;
 		}
 		
 		/// <summary>

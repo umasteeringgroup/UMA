@@ -34,6 +34,10 @@ namespace UMA
 		public int hash;
 		public int parent;
 
+		public UMATransform()
+		{
+		}
+
 		public UMATransform(Transform transform, int nameHash, int parentHash)
 		{
 			this.hash = nameHash;
@@ -42,6 +46,15 @@ namespace UMA
 			rotation = transform.localRotation;
 			scale = transform.localScale;
 			name = transform.name;
+		}
+
+		/// <summary>
+		/// Get a copy that is not part of an asset, to allow user manipulation.
+		/// </summary>
+		/// <returns>An identical copy</returns>
+		public UMATransform Duplicate()
+		{
+			return new UMATransform() { hash = hash, name = name, parent = parent, position = position, rotation = rotation, scale = scale };
 		}
 
 		public static UMATransformComparer TransformComparer = new UMATransformComparer();
@@ -55,6 +68,16 @@ namespace UMA
 			}
 
 			#endregion
+		}
+
+		public void Assign(UMATransform other)
+		{
+			hash = other.hash;
+			name = other.name;
+			parent = other.parent;
+			position = other.position;
+			rotation = other.rotation;
+			scale = other.scale;
 		}
 	}
 

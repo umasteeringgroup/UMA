@@ -233,27 +233,27 @@ namespace UMA
 			res.upperArmTwist = 0.5f;
 			res.upperLegTwist = 0.1f;
 
-			var animatedBones = umaData.GetAnimatedBones();
-			if (animatedBones.Length > 0)
-			{
-				List<SkeletonBone> animatedSkeleton = new List<SkeletonBone>(umaTPose.boneInfo);
+			//var animatedBones = umaData.GetAnimatedBones();
+			//if (animatedBones.Length > 0)
+			//{
+			//	List<SkeletonBone> animatedSkeleton = new List<SkeletonBone>(umaTPose.boneInfo);
 
-				foreach (var animatedBoneHash in animatedBones)
-				{
-					var animatedBone = umaData.GetBoneGameObject(animatedBoneHash).transform;
+			//	foreach (var animatedBoneHash in animatedBones)
+			//	{
+			//		var animatedBone = umaData.GetBoneGameObject(animatedBoneHash).transform;
 
-					var sb = new SkeletonBone();
-					sb.name = animatedBone.name;
-					sb.position = animatedBone.localPosition;
-					sb.rotation = animatedBone.localRotation;
-					sb.scale = animatedBone.localScale;
-					animatedSkeleton.Add(sb);
-				}
-				res.skeleton = animatedSkeleton.ToArray();
-			} else
-			{
-				res.skeleton = umaTPose.boneInfo;
-			}
+			//		var sb = new SkeletonBone();
+			//		sb.name = animatedBone.name;
+			//		sb.position = animatedBone.localPosition;
+			//		sb.rotation = animatedBone.localRotation;
+			//		sb.scale = animatedBone.localScale;
+			//		animatedSkeleton.Add(sb);
+			//	}
+			//	res.skeleton = animatedSkeleton.ToArray();
+			//} else
+			//{
+			res.skeleton = umaTPose.boneInfo;
+			//}
 
 			res.human = umaTPose.humanInfo;
 
@@ -275,47 +275,45 @@ namespace UMA
 			var newBones = new List<SkeletonBone>(bones.Length);
 
 			while (!umaData.skeleton.HasBone(UMAUtils.StringToHash(bones[missingBoneCount].name)))
-					{
-						missingBoneCount++;
-					}
-					if (missingBoneCount > 0)
-					{
+			{
+				missingBoneCount++;
+			}
+			if (missingBoneCount > 0)
+			{
 				// force the two root transforms, reuse old bones entries to ensure any humanoid identifiers stay intact
-						var realRootBone = umaData.transform;
-				var newBone = bones[missingBoneCount-2];
-						newBone.position = realRootBone.localPosition;
-						newBone.rotation = realRootBone.localRotation;
-						newBone.scale = realRootBone.localScale;
-//				Debug.Log(newBone.name + "<-"+realRootBone.name);
-						newBone.name = realRootBone.name;
+				var realRootBone = umaData.transform;
+				var newBone = bones[missingBoneCount - 2];
+				newBone.position = realRootBone.localPosition;
+				newBone.rotation = realRootBone.localRotation;
+				newBone.scale = realRootBone.localScale;
+				//				Debug.Log(newBone.name + "<-"+realRootBone.name);
+				newBone.name = realRootBone.name;
 				newBones.Add(newBone);
 
-						var rootBoneTransform = umaData.umaRoot.transform;
-				newBone = bones[missingBoneCount-1];
-						newBone.position = rootBoneTransform.localPosition;
-						newBone.rotation = rootBoneTransform.localRotation;
-						newBone.scale = rootBoneTransform.localScale;
-//				Debug.Log(newBone.name + "<-" + rootBoneTransform.name);
-						newBone.name = rootBoneTransform.name;
+				var rootBoneTransform = umaData.umaRoot.transform;
+				newBone = bones[missingBoneCount - 1];
+				newBone.position = rootBoneTransform.localPosition;
+				newBone.rotation = rootBoneTransform.localRotation;
+				newBone.scale = rootBoneTransform.localScale;
+				//				Debug.Log(newBone.name + "<-" + rootBoneTransform.name);
+				newBone.name = rootBoneTransform.name;
 				newBones.Add(newBone);
-				}
+			}
 
 			for (var i = missingBoneCount; i < bones.Length; i++)
-				{
+			{
 				var skeletonbone = bones[i];
 				int boneHash = UMAUtils.StringToHash(skeletonbone.name);
 				GameObject boneGO = umaData.skeleton.GetBoneGameObject(boneHash);
 				if (boneGO != null)
-					{
+				{
 					skeletonbone.position = boneGO.transform.localPosition;
 					skeletonbone.scale = boneGO.transform.localScale;
 					skeletonbone.rotation = umaData.skeleton.GetTPoseCorrectedRotation(boneHash, skeletonbone.rotation);
 					newBones.Add(skeletonbone);
-					}
 				}
-				bones = newBones.ToArray();
-			
-
+			}
+			bones = newBones.ToArray();
 		}
 		
 		[Obsolete("CreateAnimator(... bool applyRootMotion ...) is obsolete, use CreateAnimator(UMAData, UmaTPose, RuntimeAnimatorController) instead.", false)]

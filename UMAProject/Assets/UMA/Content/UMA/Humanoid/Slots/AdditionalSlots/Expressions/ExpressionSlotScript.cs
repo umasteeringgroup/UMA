@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.Events;
 
 namespace UMA.PoseTools
 {
@@ -8,6 +9,15 @@ namespace UMA.PoseTools
 	/// </summary>
 	public class ExpressionSlotScript : MonoBehaviour 
 	{
+		public void OnCharacterBegun(UMAData umaData)
+		{
+			var expressionPlayer = umaData.GetComponent<UMAExpressionPlayer>();
+			if (expressionPlayer != null)
+			{
+				expressionPlayer.SlotUpdateVsCharacterUpdate++;
+			}
+		}
+
 		public void OnDnaApplied(UMAData umaData)
 		{
 			var expressionSet = umaData.umaRecipe.raceData.expressionSet;
@@ -20,12 +30,26 @@ namespace UMA.PoseTools
 			if (expressionPlayer == null)
 			{
 				expressionPlayer = umaData.gameObject.AddComponent<UMAExpressionPlayer>();
+				expressionPlayer.SlotUpdateVsCharacterUpdate++;
+				umaData.CharacterUpdated.AddListener(new UnityAction<UMAData>(umaData_OnCharacterUpdated));
 			}
 			expressionPlayer.expressionSet = expressionSet;
 			expressionPlayer.umaData = umaData;
-#pragma warning disable 618
-			umaData.animatedBones = expressionSet.GetAnimatedBones(umaData.skeleton);
-#pragma warning restore 618
+			foreach (var hash in expressionSet.GetAnimatedBoneHashes())
+			{
+				umaData.skeleton.SetAnimatedBoneHierachy(hash);
+			}
+		}
+
+		void umaData_OnCharacterUpdated(UMAData umaData)
+		{
+			var expressionPlayer = umaData.GetComponent<UMAExpressionPlayer>();
+			if (expressionPlayer.SlotUpdateVsCharacterUpdate-- == 0)
+			{
+				Destroy(expressionPlayer);
+				umaData.CharacterUpdated.RemoveListener(new UnityAction<UMAData>(umaData_OnCharacterUpdated));
+				return;
+			}
 		}
 	}
 }
