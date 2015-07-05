@@ -24,11 +24,11 @@ namespace UMA
 
 		public IEnumerable<int> BoneHashes { get { return GetBoneHashes(); } }
 
-		int frame;
+		protected int frame;
 		/// <value>The hash for the root bone of the skeleton.</value>
-		public int rootBoneHash { get; private set; }
+		public int rootBoneHash { get; protected set; }
 		/// <value>The bone count.</value>
-		public int boneCount { get { return boneHashData.Count; } }
+		public virtual int boneCount { get { return boneHashData.Count; } }
 
 		Dictionary<int, BoneData> boneHashData;
 
@@ -42,6 +42,11 @@ namespace UMA
 			this.boneHashData = new Dictionary<int, BoneData>();
 			AddBonesRecursive(rootBone);
 		}
+
+		protected UMASkeleton()
+		{ 
+		}
+
 
 		/// <summary>
 		/// Marks the skeleton as being updated.
@@ -427,6 +432,11 @@ namespace UMA
 					entry.accessedFrame = frame;
 				}
 			}
+		}
+
+		public virtual Quaternion GetTPoseCorrectedRotation(int nameHash, Quaternion tPoseRotation)
+		{
+			return tPoseRotation;
 		}
 	}
 }

@@ -88,6 +88,10 @@ namespace UMA
 				if (!umaData.Validate())
 					return true;
 				
+				if (meshCombiner != null)
+				{
+					meshCombiner.Preprocess(umaData);
+				}
 				umaData.FireCharacterBegunEvents();
 			}
 

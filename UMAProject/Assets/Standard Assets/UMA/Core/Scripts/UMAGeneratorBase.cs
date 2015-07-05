@@ -271,89 +271,50 @@ namespace UMA
 
 		private static void SkeletonModifier(UMAData umaData, ref SkeletonBone[] bones, HumanBone[] human)
 		{
-//            Dictionary<Transform, Transform> animatedBones = new Dictionary<Transform,Transform>();
-			Dictionary<int, Transform> animatedBones = new Dictionary<int, Transform>();
-			for (var i = 0; i < umaData.animatedBones.Length; i++)
-			{
-//                animatedBones.Add(umaData.animatedBones[i], umaData.animatedBones[i]);
-				animatedBones.Add(UMAUtils.StringToHash(umaData.animatedBones[i].name), umaData.animatedBones[i]);
-			}
+			int missingBoneCount = 0;
+			var newBones = new List<SkeletonBone>(bones.Length);
 
-			for (int i = 0; i < human.Length; i++)
-			{
-				int boneHash = UMAUtils.StringToHash(human[i].boneName);
-				animatedBones[boneHash] = null;
-			}
-
-			for (var i = 0; i < bones.Length; i++)
-			{
-				var skeletonbone = bones[i];
-				UMAData.BoneData entry;
-				int boneHash = UMAUtils.StringToHash(skeletonbone.name);
-				GameObject boneGO = umaData.skeleton.GetBoneGameObject(boneHash);
-				if (boneGO != null)
-				{
-					skeletonbone.position = boneGO.transform.localPosition;
-					//skeletonbone.rotation = boneGO.transform.localRotation;
-					skeletonbone.scale = boneGO.transform.localScale;
-					bones[i] = skeletonbone;
-					animatedBones.Remove(boneHash);
-				}
-			}
-			bool foundSkelRoot = umaData.skeleton.HasBone(UMAUtils.StringToHash(bones[0].name));
-			if ((animatedBones.Count > 0) || !foundSkelRoot)
-			{
-				var newBones = new List<SkeletonBone>(bones);
-
-				if (!foundSkelRoot)
-				{
-					int missingBoneCount = 0;
-					int rootBoneHash = 0;
-					while (!foundSkelRoot)
+			while (!umaData.skeleton.HasBone(UMAUtils.StringToHash(bones[missingBoneCount].name)))
 					{
 						missingBoneCount++;
-						rootBoneHash = UMAUtils.StringToHash(bones[missingBoneCount].name);
-						foundSkelRoot = umaData.skeleton.HasBone(rootBoneHash);
 					}
 					if (missingBoneCount > 0)
 					{
-						missingBoneCount -= 2;
-						newBones.RemoveRange(0, missingBoneCount);
+				// force the two root transforms, reuse old bones entries to ensure any humanoid identifiers stay intact
 						var realRootBone = umaData.transform;
-						var newBone = newBones[0];
+				var newBone = bones[missingBoneCount-2];
 						newBone.position = realRootBone.localPosition;
 						newBone.rotation = realRootBone.localRotation;
 						newBone.scale = realRootBone.localScale;
+//				Debug.Log(newBone.name + "<-"+realRootBone.name);
 						newBone.name = realRootBone.name;
-						newBones[0] = newBone;
+				newBones.Add(newBone);
 
 						var rootBoneTransform = umaData.umaRoot.transform;
-						newBone = newBones[1];
+				newBone = bones[missingBoneCount-1];
 						newBone.position = rootBoneTransform.localPosition;
 						newBone.rotation = rootBoneTransform.localRotation;
 						newBone.scale = rootBoneTransform.localScale;
+//				Debug.Log(newBone.name + "<-" + rootBoneTransform.name);
 						newBone.name = rootBoneTransform.name;
-						newBones[1] = newBone;
-					}
+				newBones.Add(newBone);
 				}
 
-				// iterate original list rather than dictionary to ensure that relative order is preserved
-				for (var i = 0; i < umaData.animatedBones.Length; i++)
+			for (var i = missingBoneCount; i < bones.Length; i++)
 				{
-					var animatedBone = umaData.animatedBones[i];
-					var animatedBoneHash = UMAUtils.StringToHash(animatedBone.name);
-					if (animatedBones.ContainsKey(animatedBoneHash))
+				var skeletonbone = bones[i];
+				int boneHash = UMAUtils.StringToHash(skeletonbone.name);
+				GameObject boneGO = umaData.skeleton.GetBoneGameObject(boneHash);
+				if (boneGO != null)
 					{
-						var newBone = new SkeletonBone();
-						newBone.name = animatedBone.name;
-						newBone.position = animatedBone.localPosition;
-						newBone.rotation = animatedBone.localRotation;
-						newBone.scale = animatedBone.localScale;
-						newBones.Add(newBone);
+					skeletonbone.position = boneGO.transform.localPosition;
+					skeletonbone.scale = boneGO.transform.localScale;
+					skeletonbone.rotation = umaData.skeleton.GetTPoseCorrectedRotation(boneHash, skeletonbone.rotation);
+					newBones.Add(skeletonbone);
 					}
 				}
 				bones = newBones.ToArray();
-			}
+			
 
 		}
 		
