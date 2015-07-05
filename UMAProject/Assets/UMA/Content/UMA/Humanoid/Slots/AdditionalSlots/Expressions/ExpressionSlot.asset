@@ -18,6 +18,8 @@ MonoBehaviour:
   materialSample: {fileID: 0}
   overlayScale: 1
   animatedBones: []
+  animatedBoneNames: []
+  animatedBoneHashes: 
   slotDNA: {fileID: 0}
   meshData:
     bindPoses: []
@@ -28,8 +30,6 @@ MonoBehaviour:
     colors32: []
     uv: []
     uv2: []
-    uv3: []
-    uv4: []
     submeshes: []
     bones: []
     rootBone: {fileID: 0}
@@ -44,7 +44,19 @@ MonoBehaviour:
   tags: []
   CharacterBegun:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 11465632, guid: f56e0ce9132a0624a918d14d6c6cc236, type: 2}
+        m_MethodName: OnCharacterBegun
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine, Version=0.0.0.0,
+            Culture=neutral, PublicKeyToken=null
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
     m_TypeName: UMA.UMADataEvent, Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   SlotAtlassed:
