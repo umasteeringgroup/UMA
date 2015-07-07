@@ -556,7 +556,7 @@ namespace UMAEditor
 	public class OverlayEditor
 	{
 		private readonly UMAData.UMARecipe _recipe;
-		private readonly SlotData _slotData;
+		protected readonly SlotData _slotData;
 		private readonly OverlayData _overlayData;
         private  ColorEditor[] _colors;
 		private  bool _sharedColors;

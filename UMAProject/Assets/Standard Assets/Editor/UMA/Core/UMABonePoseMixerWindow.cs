@@ -269,8 +269,13 @@ namespace UMA.PoseTools
 		public static void OpenUMABonePoseBuildWindow()
 		{
 			EditorWindow win = EditorWindow.GetWindow(typeof(UMABonePoseMixerWindow));
-			win.title = "Pose Mixer";
-		}
+
+#if UNITY_5_1
+            win.titleContent.text = "Pose Mixer";
+#else
+            win.title = "Pose Mixer";
+#endif
+        }
 	}
 }
 #endif

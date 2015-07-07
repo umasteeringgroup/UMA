@@ -57,7 +57,6 @@ namespace UMAEditor
 				if (dropArea.Contains(evt.mousePosition))
 				{
 					DragAndDrop.AcceptDrag();
-					bool changed = false;
 					UnityEngine.Object[] draggedObjects = DragAndDrop.objectReferences;
 					for (int i = 0; i < draggedObjects.Length; i++)
 					{

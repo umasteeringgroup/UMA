@@ -257,12 +257,14 @@ namespace UMA
 			}
 			else
 			{
+#if !UMA2_LEAN_AND_CLEAN 
 				if (asset.meshRenderer != null)
 				{
 					Debug.LogError(string.Format("Slot '{0}' is a UMA 1x slot... you need to upgrade it by selecting it and using the UMA|Optimize Slot Meshes.", asset.slotName), asset);
 					valid = false;
-				}
-				if (asset.material != null)
+                }
+#endif
+                if (asset.material != null)
 				{
 					for (int i = 0; i < asset.material.channels.Length; i++)
 					{
@@ -371,6 +373,10 @@ namespace UMA
 			}
 			return ((bool)obj);
 		}
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
 		#endregion
 	}
 }
