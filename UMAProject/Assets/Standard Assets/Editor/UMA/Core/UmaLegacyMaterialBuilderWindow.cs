@@ -243,9 +243,9 @@ namespace UMAEditor
 	    {
 	        UmaLegacyMaterialBuilderWindow window = (UmaLegacyMaterialBuilderWindow)EditorWindow.GetWindow(typeof(UmaLegacyMaterialBuilderWindow));
 #if !UNITY_4_6 && !UNITY_5_0
-            window.titleContent.text = "UMA Legacy Material Builder";
+			window.titleContent.text = "UMA Legacy Material Builder";
 #else
-            window.title = "UMA Legacy Material Builder";
+			window.title = "UMA Legacy Material Builder";
 #endif
         }
 
