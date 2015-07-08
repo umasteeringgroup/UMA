@@ -161,10 +161,10 @@ namespace UMA
 			return ((bool)cd2);
 		}
 
-        public override int GetHashCode()
-        {
-            return base.GetHashCode();
-        }
+		public override int GetHashCode()
+		{
+			return base.GetHashCode();
+		}
 
         public void EnsureChannels(int channels)
         {

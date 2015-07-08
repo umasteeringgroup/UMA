@@ -262,7 +262,7 @@ namespace UMA
 				{
 					Debug.LogError(string.Format("Slot '{0}' is a UMA 1x slot... you need to upgrade it by selecting it and using the UMA|Optimize Slot Meshes.", asset.slotName), asset);
 					valid = false;
-                }
+				}
 #endif
                 if (asset.material != null)
 				{
