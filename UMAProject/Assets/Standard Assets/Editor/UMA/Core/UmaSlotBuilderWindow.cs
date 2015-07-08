@@ -224,8 +224,13 @@ namespace UMAEditor
 	    public static void OpenUmaTexturePrepareWindow()
 	    {
 			UmaSlotBuilderWindow window = (UmaSlotBuilderWindow)EditorWindow.GetWindow(typeof(UmaSlotBuilderWindow));
-	        window.title = "Slot Builder";
-	    }
+
+#if !UNITY_4_6 && !UNITY_5_0
+			window.titleContent.text = "Slot Builder";
+#else
+			window.title = "Slot Builder";
+#endif
+        }
 
 		[MenuItem("UMA/Optimize Slot Meshes")]
 		public static void OptimizeSlotMeshes()

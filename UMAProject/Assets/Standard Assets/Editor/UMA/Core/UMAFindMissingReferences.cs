@@ -233,7 +233,7 @@ namespace UMAEditor
 		}
 
 
-		class UnityReference
+		public class UnityReference
 		{
 			public UnityReference(string srcGuid, string srcFileId, string dstGuid, string dstFileId)
 			{

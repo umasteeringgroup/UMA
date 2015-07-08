@@ -205,6 +205,10 @@ namespace UMA
 			}
 			return ((bool)obj);
 		}
+		public override int GetHashCode()
+		{
+			return base.GetHashCode();
+		}
 		#endregion
 
 	}

@@ -242,8 +242,12 @@ namespace UMAEditor
 	    public static void OpenUmaTexturePrepareWindow()
 	    {
 	        UmaLegacyMaterialBuilderWindow window = (UmaLegacyMaterialBuilderWindow)EditorWindow.GetWindow(typeof(UmaLegacyMaterialBuilderWindow));
-	        window.title = "UMA Legacy MAterial Builder";
-	    }
+#if !UNITY_4_6 && !UNITY_5_0
+			window.titleContent.text = "UMA Legacy Material Builder";
+#else
+			window.title = "UMA Legacy Material Builder";
+#endif
+        }
 
 		[MenuItem("UMA/Optimize Overlay Textures")]
 		public static void OptimizeOverlayTextures()
