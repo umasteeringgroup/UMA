@@ -225,8 +225,8 @@ namespace UMAEditor
 	    {
 			UmaSlotBuilderWindow window = (UmaSlotBuilderWindow)EditorWindow.GetWindow(typeof(UmaSlotBuilderWindow));
 
-            #if UNITY_5_1
-	            window.titleContent.text = "Slot Builder";
+            #if !UNITY_4_6 && !UNITY_5_0
+                window.titleContent.text = "Slot Builder";
             #else
                 window.title = "Slot Builder";
             #endif
