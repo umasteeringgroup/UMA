@@ -13,7 +13,7 @@ namespace UMA
 	{
 		public UMAData umaData;
 		[NonSerialized] public List<UMAData> umaDirtyList = new List<UMAData>();
-		[SerializeField] private UMAGeneratorCoroutine activeGeneratorCoroutine;
+		private UMAGeneratorCoroutine activeGeneratorCoroutine;
 		public Transform textureMergePrefab;
 		public UMAMeshCombiner meshCombiner;
 		/// <summary>
