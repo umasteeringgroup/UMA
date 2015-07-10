@@ -34,8 +34,31 @@ namespace UMA
 		/// <value>The bone count.</value>
 		public virtual int boneCount { get { return boneHashData.Count; } }
 
-		List<BoneData> boneHashData = new List<BoneData>();
-		Dictionary<int, BoneData> boneHashDataLookup = new Dictionary<int, BoneData>();
+		private List<BoneData> boneHashDataBackup = new List<BoneData>();
+		private Dictionary<int, BoneData> boneHashDataLookup;
+
+		private Dictionary<int, BoneData> boneHashData
+		{
+			get
+			{
+				if (boneHashDataLookup == null)
+				{
+					boneHashDataLookup = new Dictionary<int, BoneData>();
+					foreach (BoneData tData in boneHashDataBackup)
+					{
+						boneHashDataLookup.Add(tData.boneNameHash, tData);
+					}
+				}
+
+				return boneHashDataLookup;
+			}
+
+			set
+			{
+				boneHashDataLookup = value;
+				boneHashDataBackup = new List<BoneData>(value.Values);
+			}
+		}
 
 		/// <summary>
 		/// Initializes a new UMASkeleton from a transform hierarchy.
@@ -95,8 +118,9 @@ namespace UMA
 				umaTransform = new UMATransform(transform, hash, parentHash)
 			};
 
-			boneHashData.Add(data);
-			boneHashDataLookup.Add(hash, data);
+			
+			boneHashData.Add(hash, data);
+			boneHashDataBackup.Add(data);
 
 			for (int i = 0; i < transform.childCount; i++)
 			{
@@ -107,26 +131,8 @@ namespace UMA
 
 		protected virtual BoneData GetBone(int nameHash)
 		{
-			if (boneHashDataLookup == null)
-				boneHashDataLookup = new Dictionary<int,BoneData>();
-
 			BoneData data = null;
-			bool inLookup = boneHashDataLookup.TryGetValue(nameHash, out data);
-
-			if (!inLookup)
-			{
-				// Search the fallback list for the correct hash
-				foreach (BoneData tData in boneHashData)
-				{
-					if (tData.boneNameHash == nameHash)
-					{
-						data = tData;
-						boneHashDataLookup.Add(nameHash, tData);
-						break;
-					}
-				}
-			}
-
+			boneHashData.TryGetValue(nameHash, out data);
 			return data;
 		}
 
@@ -157,8 +163,8 @@ namespace UMA
 				umaTransform = new UMATransform(transform, hash, parentHash),
 			};
 
-			boneHashData.Add(newBone);
-			boneHashDataLookup.Add(hash, newBone);
+			boneHashDataBackup.Add(newBone);
+			boneHashData.Add(hash, newBone);
 		}
 
 		/// <summary>
@@ -177,8 +183,8 @@ namespace UMA
 				umaTransform = transform.Duplicate(),
 			};
 
-			boneHashData.Add(newBone);
-			boneHashDataLookup.Add(transform.hash, newBone);
+			boneHashDataBackup.Add(newBone);
+			boneHashData.Add(transform.hash, newBone);
 		}
 
 		/// <summary>
@@ -190,8 +196,8 @@ namespace UMA
 			BoneData bd = GetBone(nameHash);
 			if (bd != null)
 			{
-				boneHashData.Remove(bd);
-				boneHashDataLookup.Remove(nameHash);
+				boneHashDataBackup.Remove(bd);
+				boneHashData.Remove(nameHash);
 			}
 		}
 
@@ -238,9 +244,9 @@ namespace UMA
 
 		protected virtual IEnumerable<int> GetBoneHashes()
 		{
-			foreach (BoneData data in boneHashData)
+			foreach (int hash in boneHashData.Keys)
 			{
-				yield return data.boneNameHash;
+				yield return hash;
 			}
 		}
 
@@ -371,7 +377,7 @@ namespace UMA
 		/// </summary>
 		public virtual void ResetAll()
 		{
-			foreach (BoneData db in boneHashData)
+			foreach (BoneData db in boneHashData.Values)
 			{
 				if (db.boneTransform != null)
 				{
@@ -476,7 +482,7 @@ namespace UMA
 		/// </summary>
 		public virtual void EnsureBoneHierarchy()
 		{
-			foreach (BoneData entry in boneHashData)
+			foreach (BoneData entry in boneHashData.Values)
 			{
 				if (entry.accessedFrame == -1)
 				{
