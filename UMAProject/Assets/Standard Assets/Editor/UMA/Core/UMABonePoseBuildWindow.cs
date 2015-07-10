@@ -507,8 +507,13 @@ namespace UMA.PoseTools
 		public static void OpenUMABonePoseBuildWindow()
 		{
 			EditorWindow win = EditorWindow.GetWindow(typeof(UMABonePoseBuildWindow));
+
+#if !UNITY_4_6 && !UNITY_5_0
+			win.titleContent.text = "Pose Builder";
+#else
 			win.title = "Pose Builder";
-		}
+#endif
+        }
 	}
 }
 #endif

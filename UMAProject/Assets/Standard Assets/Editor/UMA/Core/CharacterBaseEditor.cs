@@ -358,7 +358,7 @@ namespace UMAEditor
             if (added != null)
             {
 				var slot = new SlotData(added);
-				ArrayUtility.Add(ref _recipe.slotDataList, slot);
+				_recipe.MergeSlot(slot, false);
                 changed |= true;
                 _dnaDirty |= true;
                 _textureDirty |= true;
@@ -384,9 +384,7 @@ namespace UMAEditor
                     _meshDirty = true;
 
                     _slotEditors.RemoveAt(i);
-					if ((editor.idx + _recipe.additionalSlotCount) >= _recipe.slotDataList.Length)
-						_recipe.additionalSlotCount--;
-					ArrayUtility.RemoveAt<SlotData>(ref _recipe.slotDataList, editor.idx);
+					_recipe.SetSlot(editor.idx, null);
                     i--;
                     changed = true;
                 }
@@ -469,7 +467,7 @@ namespace UMAEditor
 				{
 					var newSlot = new SlotData(addedSlot);
 					newSlot.SetOverlayList(_slotData.GetOverlayList());
-					ArrayUtility.Add(ref _recipe.slotDataList, newSlot);
+					_recipe.MergeSlot(newSlot, false);
 					_dnaDirty = true;
 					_textureDirty = true;
 					_meshDirty = true;
@@ -556,7 +554,7 @@ namespace UMAEditor
 	public class OverlayEditor
 	{
 		private readonly UMAData.UMARecipe _recipe;
-		private readonly SlotData _slotData;
+		protected readonly SlotData _slotData;
 		private readonly OverlayData _overlayData;
         private  ColorEditor[] _colors;
 		private  bool _sharedColors;
