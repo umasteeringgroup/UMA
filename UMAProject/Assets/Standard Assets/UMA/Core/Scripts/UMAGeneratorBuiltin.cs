@@ -12,10 +12,9 @@ namespace UMA
 	public abstract class UMAGeneratorBuiltin : UMAGeneratorBase
 	{
 		public UMAData umaData;
-		[NonSerialized]
+		[NonSerialized] 
 		public List<UMAData> umaDirtyList = new List<UMAData>();
-		public UMAGeneratorCoroutine umaGeneratorCoroutine;
-		public UMAGeneratorCoroutine activeGeneratorCoroutine;
+		private UMAGeneratorCoroutine activeGeneratorCoroutine;
 		public Transform textureMergePrefab;
 		public UMAMeshCombiner meshCombiner;
 		/// <summary>
@@ -29,16 +28,17 @@ namespace UMA
 		public int garbageCollectionRate = 8;
 		private System.Diagnostics.Stopwatch stopWatch = new System.Diagnostics.Stopwatch();
 
-		public void Initialize()
+		public virtual void OnEnable()
 		{
-			umaGeneratorCoroutine = new UMAGeneratorCoroutine();
+			activeGeneratorCoroutine = null;
 		}
 
 		public virtual void Awake()
 		{
+			activeGeneratorCoroutine = null;
+
    			if (atlasResolution == 0)
 				atlasResolution = 256;
-			umaGeneratorCoroutine = new UMAGeneratorCoroutine();
             
 			if (!textureMerge)
 			{
@@ -99,14 +99,15 @@ namespace UMA
 			{
 				if (activeGeneratorCoroutine == null)
 				{
-					activeGeneratorCoroutine = umaGeneratorCoroutine;
 					TextureProcessBaseCoroutine textureProcessCoroutine;
 					textureProcessCoroutine = new TextureProcessPROCoroutine();
 					textureProcessCoroutine.Prepare(data, this);
+
+					activeGeneratorCoroutine = new UMAGeneratorCoroutine();
 					activeGeneratorCoroutine.Prepare(this, umaData, textureProcessCoroutine, !umaData.isMeshDirty);
 				}
 
-				bool workDone = umaGeneratorCoroutine.Work();
+				bool workDone = activeGeneratorCoroutine.Work();
 				if (workDone)
 				{
 					activeGeneratorCoroutine = null;

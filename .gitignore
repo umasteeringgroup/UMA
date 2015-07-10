@@ -1,0 +1,8 @@
+Library/
+Temp/
+UnityVS/
+UnityVS.meta
+*.csproj
+*.sln
+*.suo
+*.suo

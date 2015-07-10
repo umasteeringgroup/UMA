@@ -8,11 +8,13 @@ namespace UMA
 	/// <summary>
 	/// Class links UMA's bone data with Unity's transform hierarchy.
 	/// </summary>
+	[Serializable]
 	public class UMASkeleton
 	{
 		/// <summary>
 		/// Internal class for storing bone and transform information.
 		/// </summary>
+		[Serializable]
 		public class BoneData
 		{
 			public int boneNameHash;
@@ -31,7 +33,31 @@ namespace UMA
 		/// <value>The bone count.</value>
 		public virtual int boneCount { get { return boneHashData.Count; } }
 
-		Dictionary<int, BoneData> boneHashData;
+		private List<BoneData> boneHashDataBackup = new List<BoneData>();
+		private Dictionary<int, BoneData> boneHashDataLookup;
+
+		private Dictionary<int, BoneData> boneHashData
+		{
+			get
+			{
+				if (boneHashDataLookup == null)
+				{
+					boneHashDataLookup = new Dictionary<int, BoneData>();
+					foreach (BoneData tData in boneHashDataBackup)
+					{
+						boneHashDataLookup.Add(tData.boneNameHash, tData);
+					}
+				}
+
+				return boneHashDataLookup;
+			}
+
+			set
+			{
+				boneHashDataLookup = value;
+				boneHashDataBackup = new List<BoneData>(value.Values);
+			}
+		}
 
 		/// <summary>
 		/// Initializes a new UMASkeleton from a transform hierarchy.
@@ -82,7 +108,7 @@ namespace UMA
 		{
 			var hash = UMAUtils.StringToHash(transform.name);
 			var parentHash = transform.parent != null ? UMAUtils.StringToHash(transform.parent.name) : 0;
-			boneHashData[hash] = new BoneData()
+			BoneData data = new BoneData()
 			{
 				parentBoneNameHash = parentHash,
 				boneNameHash = hash,
@@ -90,11 +116,22 @@ namespace UMA
 				boneTransform = transform,
 				umaTransform = new UMATransform(transform, hash, parentHash)
 			};
+
+			boneHashData.Add(hash, data);
+			boneHashDataBackup.Add(data);
+
 			for (int i = 0; i < transform.childCount; i++)
 			{
 				var child = transform.GetChild(i);
 				AddBonesRecursive(child);
 			}
+		}
+
+		protected virtual BoneData GetBone(int nameHash)
+		{
+			BoneData data = null;
+			boneHashData.TryGetValue(nameHash, out data);
+			return data;
 		}
 
 		/// <summary>
@@ -124,6 +161,7 @@ namespace UMA
 				umaTransform = new UMATransform(transform, hash, parentHash),
 			};
 
+			boneHashDataBackup.Add(newBone);
 			boneHashData.Add(hash, newBone);
 		}
 
@@ -143,6 +181,7 @@ namespace UMA
 				umaTransform = transform.Duplicate(),
 			};
 
+			boneHashDataBackup.Add(newBone);
 			boneHashData.Add(transform.hash, newBone);
 		}
 
@@ -152,7 +191,12 @@ namespace UMA
 		/// <param name="nameHash">Name hash.</param>
 		public virtual void RemoveBone(int nameHash)
 		{
-			boneHashData.Remove(nameHash);
+			BoneData bd = GetBone(nameHash);
+			if (bd != null)
+			{
+				boneHashDataBackup.Remove(bd);
+				boneHashData.Remove(nameHash);
+			}
 		}
 
 		/// <summary>

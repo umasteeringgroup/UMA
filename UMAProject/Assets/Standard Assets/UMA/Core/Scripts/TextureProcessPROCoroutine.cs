@@ -1,13 +1,14 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-
+using System;
 
 namespace UMA
 {
 	/// <summary>
 	/// Texture processing coroutine using rendertextures for atlas building.
 	/// </summary>
+	[Serializable]
 	public class TextureProcessPROCoroutine : TextureProcessBaseCoroutine
 	{
 		UMAData umaData;
