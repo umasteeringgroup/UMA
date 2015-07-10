@@ -90,6 +90,9 @@ namespace UMA.PoseTools
 			if (!initialized)
 				return;
 
+			if (umaData == null || umaData.skeleton == null)
+				return;
+
 			if (enableSaccades)
 				UpdateSaccades();
 

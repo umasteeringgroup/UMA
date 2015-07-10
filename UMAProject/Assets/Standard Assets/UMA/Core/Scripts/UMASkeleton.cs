@@ -19,6 +19,9 @@ namespace UMA
 			public int parentBoneNameHash;
 			public Transform boneTransform;
 			public UMATransform umaTransform;
+			public Quaternion rotation;
+			public Vector3 position;
+			public Vector3 scale;
 			public int accessedFrame;
 		}
 
@@ -64,6 +67,12 @@ namespace UMA
 		/// </summary>
 		public virtual void EndSkeletonUpdate()
 		{
+			foreach(var bd in boneHashData.Values)
+			{
+				bd.rotation = bd.boneTransform.localRotation;
+				bd.position = bd.boneTransform.localPosition;
+				bd.scale = bd.boneTransform.localScale;
+			}
 			updating = false;
 		}
 
@@ -307,7 +316,7 @@ namespace UMA
 		}
 
 		/// <summary>
-		/// Reset the specified transform to the default state.
+		/// Reset the specified transform to the post dna state.
 		/// </summary>
 		/// <param name="nameHash">Name hash.</param>
 		public virtual bool Reset(int nameHash)
@@ -316,9 +325,9 @@ namespace UMA
 			if (boneHashData.TryGetValue(nameHash, out db) && (db.boneTransform != null))
 			{
 				db.accessedFrame = frame;
-				db.boneTransform.localPosition = db.umaTransform.position;
-				db.boneTransform.localRotation = db.umaTransform.rotation;
-				db.boneTransform.localScale = db.umaTransform.scale;
+				db.boneTransform.localPosition = db.position;
+				db.boneTransform.localRotation = db.rotation;
+				db.boneTransform.localScale = db.scale;
 
 				return true;
 			}
