@@ -12,7 +12,8 @@ namespace UMA
 	public abstract class UMAGeneratorBuiltin : UMAGeneratorBase
 	{
 		public UMAData umaData;
-		[NonSerialized] public List<UMAData> umaDirtyList = new List<UMAData>();
+		[NonSerialized] 
+		public List<UMAData> umaDirtyList = new List<UMAData>();
 		private UMAGeneratorCoroutine activeGeneratorCoroutine;
 		public Transform textureMergePrefab;
 		public UMAMeshCombiner meshCombiner;
