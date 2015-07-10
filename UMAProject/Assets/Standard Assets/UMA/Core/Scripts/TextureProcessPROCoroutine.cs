@@ -79,6 +79,7 @@ namespace UMA
 							int height = Mathf.FloorToInt(atlas.cropResolution.y);
 							destinationTexture = new RenderTexture(Mathf.FloorToInt(atlas.cropResolution.x * umaData.atlasResolutionScale), Mathf.FloorToInt(atlas.cropResolution.y * umaData.atlasResolutionScale), 0, slotData.asset.material.channels[textureType].textureFormat, RenderTextureReadWrite.Linear);
 							destinationTexture.filterMode = FilterMode.Point;
+							destinationTexture.useMipMap = umaGenerator.convertMipMaps && !umaGenerator.convertRenderTexture;
 							renderCamera = umaGenerator.textureMerge.myCamera;
 							renderCamera.targetTexture = destinationTexture;
 							renderCamera.orthographicSize = height >> 1;
