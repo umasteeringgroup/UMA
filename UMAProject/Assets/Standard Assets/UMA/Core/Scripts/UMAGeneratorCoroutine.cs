@@ -11,19 +11,19 @@ namespace UMA
 	[Serializable]
 	public class UMAGeneratorCoroutine : WorkerCoroutine
 	{
-		[SerializeField] private TextureProcessBaseCoroutine textureProcessCoroutine;
+		TextureProcessBaseCoroutine textureProcessCoroutine;
 
-		[SerializeField] private MaxRectsBinPack packTexture;
+		MaxRectsBinPack packTexture;
 
-		[SerializeField] private UMAGeneratorBase umaGenerator;
-		[SerializeField] private UMAData umaData;
-		[SerializeField] private Texture[] backUpTexture;
-		[SerializeField] private bool updateMaterialList;
+		UMAGeneratorBase umaGenerator;
+		UMAData umaData;
+		Texture[] backUpTexture;
+		bool updateMaterialList;
 
-		[SerializeField] private MaterialDefinitionComparer comparer = new MaterialDefinitionComparer();
-		[SerializeField] private List<UMAData.GeneratedMaterial> generatedMaterials;
-		[SerializeField] private List<UMAData.GeneratedMaterial> atlassedMaterials = new List<UMAData.GeneratedMaterial>(20);
-		[SerializeField] private Dictionary<List<OverlayData>, UMAData.GeneratedMaterial> generatedMaterialLookup;
+		MaterialDefinitionComparer comparer = new MaterialDefinitionComparer();
+		List<UMAData.GeneratedMaterial> generatedMaterials;
+		List<UMAData.GeneratedMaterial> atlassedMaterials = new List<UMAData.GeneratedMaterial>(20);
+		Dictionary<List<OverlayData>, UMAData.GeneratedMaterial> generatedMaterialLookup;
 
 		public void Prepare(UMAGeneratorBase _umaGenerator, UMAData _umaData, TextureProcessBaseCoroutine textureProcessCoroutine, bool updateMaterialList)
 		{
