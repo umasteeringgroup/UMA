@@ -1,27 +1,29 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-
+using System;
 
 namespace UMA
 {
 	/// <summary>
 	/// Utility class for generating texture atlases
 	/// </summary>
+	[Serializable]
 	public class UMAGeneratorCoroutine : WorkerCoroutine
 	{
-		TextureProcessBaseCoroutine textureProcessCoroutine;
+		[SerializeField] private TextureProcessBaseCoroutine textureProcessCoroutine;
 
-		MaxRectsBinPack packTexture;
+		[SerializeField] private MaxRectsBinPack packTexture;
 
-		UMAGeneratorBase umaGenerator;
-		UMAData umaData;
-		Texture[] backUpTexture;
-		bool updateMaterialList;
-		MaterialDefinitionComparer comparer = new MaterialDefinitionComparer();
-		List<UMAData.GeneratedMaterial> generatedMaterials;
-		List<UMAData.GeneratedMaterial> atlassedMaterials = new List<UMAData.GeneratedMaterial>(20);
-		Dictionary<List<OverlayData>, UMAData.GeneratedMaterial> generatedMaterialLookup;
+		[SerializeField] private UMAGeneratorBase umaGenerator;
+		[SerializeField] private UMAData umaData;
+		[SerializeField] private Texture[] backUpTexture;
+		[SerializeField] private bool updateMaterialList;
+
+		[SerializeField] private MaterialDefinitionComparer comparer = new MaterialDefinitionComparer();
+		[SerializeField] private List<UMAData.GeneratedMaterial> generatedMaterials;
+		[SerializeField] private List<UMAData.GeneratedMaterial> atlassedMaterials = new List<UMAData.GeneratedMaterial>(20);
+		[SerializeField] private Dictionary<List<OverlayData>, UMAData.GeneratedMaterial> generatedMaterialLookup;
 
 		public void Prepare(UMAGeneratorBase _umaGenerator, UMAData _umaData, TextureProcessBaseCoroutine textureProcessCoroutine, bool updateMaterialList)
 		{
@@ -37,7 +39,7 @@ namespace UMA
 			{
 				var res = new UMAData.GeneratedMaterial();
 				res.umaMaterial = umaMaterial;
-				res.material = Object.Instantiate(umaMaterial.material) as Material;
+				res.material = UnityEngine.Object.Instantiate(umaMaterial.material) as Material;
 				res.material.name = umaMaterial.material.name;
 				generatedMaterials.Add(res);
 				return res;
@@ -54,14 +56,13 @@ namespace UMA
 				
 				var res = new UMAData.GeneratedMaterial();
 				res.umaMaterial = umaMaterial;
-				res.material = Object.Instantiate(umaMaterial.material) as Material;
+				res.material = UnityEngine.Object.Instantiate(umaMaterial.material) as Material;
 				res.material.name = umaMaterial.material.name;
 				atlassedMaterials.Add(res);
 				generatedMaterials.Add(res);
 				return res;
 			}
 		}
-
 
 		protected override void Start()
 		{
@@ -178,7 +179,7 @@ namespace UMA
 				var atlasses = umaData.generatedMaterials.materials;
 				for (int i = 0; i < atlasses.Count; i++)
 				{
-					Object.Destroy(mats[i]);
+					UnityEngine.Object.Destroy(mats[i]);
 					mats[i] = atlasses[i].material;
 				}
 				umaData.myRenderer.sharedMaterials = new List<Material>(mats).ToArray();

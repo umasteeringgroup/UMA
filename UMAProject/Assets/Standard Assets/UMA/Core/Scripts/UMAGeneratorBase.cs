@@ -12,7 +12,6 @@ namespace UMA
 	public abstract class UMAGeneratorBase : MonoBehaviour
 	{
 		public bool fitAtlas;
-		[NonSerialized]
 		public TextureMerge textureMerge;
 		public bool convertRenderTexture;
 		public bool convertMipMaps;
