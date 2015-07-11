@@ -447,6 +447,7 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 	public static void UnpackRecipeVersion1(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContext context)
 	{
 		umaRecipe.slotDataList = new SlotData[umaPackRecipe.packedSlotDataList.Length];
+		umaRecipe.additionalSlotCount = 0;
 		umaRecipe.SetRace(context.GetRace(umaPackRecipe.race));
 
 		umaRecipe.ClearDna();
@@ -537,6 +538,7 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 	public static void UnpackRecipeVersion2(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContext context)
 	{
 		umaRecipe.slotDataList = new SlotData[umaPackRecipe.slotsV2.Length];
+		umaRecipe.additionalSlotCount = 0;
 		umaRecipe.SetRace(context.GetRace(umaPackRecipe.race));
 		
 		umaRecipe.ClearDna();
