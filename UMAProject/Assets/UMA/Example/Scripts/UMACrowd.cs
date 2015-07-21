@@ -507,12 +507,17 @@ public class UMACrowd : MonoBehaviour
 		}
 	}
 
+	public void ResetSpawnPos(){
+		spawnX = 0;
+		spawnY = 0;
+	}
+
 	public GameObject GenerateOneUMA(int sex)
 	{
 		Vector3 zeroPos = Vector3.zero;
 		if (zeroPoint != null)
 			zeroPos = zeroPoint.position;
-		Vector3 newPos = zeroPos + new Vector3((spawnX - umaCrowdSize.x / 2f) * space, 0f, (spawnY - umaCrowdSize.y / 2f) * space);
+		Vector3 newPos = zeroPos + new Vector3((spawnX - umaCrowdSize.x / 2f + 0.5f) * space, 0f, (spawnY - umaCrowdSize.y / 2f + 0.5f) * space);
 
 		if (spawnY < umaCrowdSize.y)
 		{

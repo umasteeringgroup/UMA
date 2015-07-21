@@ -1,2 +1,0 @@
-The HDR sky textures in the package are from NoEmotionHDRs (Peter Sanitra - http://www.psanitra.com/) 
-/ CC BY-ND 4.0 - http://creativecommons.org/licenses/by-nd/4.0/. Used without modification.

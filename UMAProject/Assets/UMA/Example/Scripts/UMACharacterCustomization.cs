@@ -135,6 +135,7 @@ public class UMACharacterCustomization : MonoBehaviour
 	public void ButtonMale()
 	{
 		Destroy(GameObject.Find("UMACrowd").transform.GetChild(0).gameObject);
+		crowdHandle.ResetSpawnPos();
 		GameObject myUma = crowdHandle.GenerateOneUMA(0);
 		myUma.transform.localRotation = Quaternion.Euler(new Vector3(0, 180, 0));
 
@@ -153,6 +154,7 @@ public class UMACharacterCustomization : MonoBehaviour
 	public void ButtonFemale()
 	{
 		Destroy(GameObject.Find("UMACrowd").transform.GetChild(0).gameObject);
+		crowdHandle.ResetSpawnPos();
 		GameObject myUma = crowdHandle.GenerateOneUMA(1);
 		myUma.transform.localRotation = Quaternion.Euler(new Vector3(0, 180, 0));
 
