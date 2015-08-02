@@ -558,7 +558,7 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 				umaPackRecipe.fColors[i].SetOverlayColorData(colorData[i]);
 			}
 		}
-		else
+		else if ((umaPackRecipe.colors != null) && (umaPackRecipe.colors.Length > 0))
 		{
 			colorData = new OverlayColorData[umaPackRecipe.colors.Length];
 			for (int i = 0; i < colorData.Length; i++)
@@ -567,6 +567,10 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 				umaPackRecipe.colors[i].SetOverlayColorData(colorData[i]);
 			}
 		}
+		else {
+			colorData = new OverlayColorData[0];
+		}
+
 		umaRecipe.sharedColors = new OverlayColorData[umaPackRecipe.sharedColorCount];
 		for (int i = 0; i < umaRecipe.sharedColors.Length; i++)
 		{

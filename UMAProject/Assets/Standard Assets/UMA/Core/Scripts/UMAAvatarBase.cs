@@ -176,6 +176,6 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 	void OnDrawGizmosSelected()
 	{
 		Gizmos.color = Color.white;
-		Gizmos.DrawCube(transform.position, new Vector3(0.6f, 0.2f, 0.6f));
+		Gizmos.DrawWireCube(transform.position, new Vector3(0.6f, 0.2f, 0.6f));
 	}
 }

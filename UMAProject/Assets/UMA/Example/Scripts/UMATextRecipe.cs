@@ -21,6 +21,7 @@ public class UMATextRecipe : UMAPackedRecipeBase
 	/// <param name="context">Context.</param>
 	public override UMAPackedRecipeBase.UMAPackRecipe PackedLoad(UMAContext context)
 	{
+		if ((recipeString== null) || (recipeString.Length == 0)) return new UMAPackRecipe();
 		return JsonMapper.ToObject<UMAPackRecipe>(recipeString);
 	}
 
@@ -47,5 +48,14 @@ public class UMATextRecipe : UMAPackedRecipeBase
 	{
 		recipeString = System.Text.Encoding.UTF8.GetString(data); 	
 	}
+	
+	#if UNITY_EDITOR
+	[UnityEditor.MenuItem("Assets/Create/UMA Text Recipe")]
+	public static void CreateTextRecipeAsset()
+	{
+		UMAEditor.CustomAssetUtility.CreateAsset<UMATextRecipe>();
+	}
+	#endif
+
 }
 #endif

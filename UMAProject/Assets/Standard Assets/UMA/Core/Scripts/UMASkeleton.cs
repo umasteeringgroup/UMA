@@ -70,7 +70,9 @@ namespace UMA
 		{
 			rootBoneHash = UMAUtils.StringToHash(rootBone.name);
 			this.boneHashData = new Dictionary<int, BoneData>();
+			BeginSkeletonUpdate();
 			AddBonesRecursive(rootBone);
+			EndSkeletonUpdate();
 		}
 
 		protected UMASkeleton()
