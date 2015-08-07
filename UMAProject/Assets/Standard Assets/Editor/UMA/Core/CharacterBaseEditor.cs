@@ -800,6 +800,14 @@ namespace UMAEditor
             return true;
         }
 
+		/// <summary>
+		/// Override PreInspectorGUI in any derived editors to allow editing of new properties added to recipes.
+		/// </summary>
+		public virtual bool PreInspectorGUI()
+		{
+			return false;
+		}
+
         public override void OnInspectorGUI()
         {
             GUILayout.Label(_description);
@@ -830,6 +838,8 @@ namespace UMAEditor
                 {
                     Rebuild();
                 }
+
+				_needsUpdate = PreInspectorGUI();
 
                 if (ToolbarGUI())
                 {

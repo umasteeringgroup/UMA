@@ -14,9 +14,14 @@ using UMA.Integrations;
 
 namespace UMAEditor
 {
+	/// <summary>
+	/// Recipe editor.
+	/// Class is marked partial so developers can add their own functionality to edit new properties added to 
+	/// UMATextRecipe without changing code delivered with UMA.
+	/// </summary>
 	[CanEditMultipleObjects]
     [CustomEditor(typeof(UMARecipeBase), true)]
-    public class RecipeEditor : CharacterBaseEditor
+    public partial class RecipeEditor : CharacterBaseEditor
     {
 		List<GameObject> draggedObjs;
 		public virtual void OnSceneDrag(SceneView view)

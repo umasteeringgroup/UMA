@@ -6,8 +6,10 @@ using UMA;
 
 /// <summary>
 /// Packed recipe which uses JSON text serialization for storage.
+/// Class is marked partial so the developer can implement their own properties in UMATextRecipe without
+/// changing the distribution code.
 /// </summary>
-public class UMATextRecipe : UMAPackedRecipeBase
+public partial class UMATextRecipe : UMAPackedRecipeBase
 {
 	/// <summary>
 	/// Complete text of recipe.
