@@ -312,6 +312,23 @@ public class OverlayLibraryEditor : Editor {
 				isDirty = true;
 				canUpdate = false;
 			}
+			if (GUILayout.Button("Remove Duplicates"))
+			{
+				HashSet<OverlayDataAsset> Overlays = new HashSet<OverlayDataAsset>();
+				
+				foreach(OverlayDataAsset oda in overlayElementList)
+				{
+				Overlays.Add(oda);
+				}
+
+				m_OverlayDataCount.intValue = Overlays.Count;
+				for(int i=0;i<Overlays.Count;i++)
+				{
+					SetOverlayData(i,Overlays.ElementAt(i));
+				}
+				isDirty = true;
+				canUpdate = false;
+			}
 		GUILayout.EndHorizontal();
 		
 		GUILayout.Space(20);

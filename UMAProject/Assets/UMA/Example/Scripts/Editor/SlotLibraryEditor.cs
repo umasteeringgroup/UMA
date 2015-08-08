@@ -174,7 +174,23 @@ public class SlotLibraryEditor : Editor
 			isDirty = true;
 			canUpdate = false;
 		}
-
+		if (GUILayout.Button("Remove Duplicates"))
+		{
+			HashSet<SlotDataAsset> Slots = new HashSet<SlotDataAsset>();
+			
+			foreach(SlotDataAsset osa in slotElementList)
+			{
+				Slots.Add(osa);
+			}
+			
+			m_SlotDataAssetCount.intValue = Slots.Count;
+			for(int i=0;i<Slots.Count;i++)
+			{
+				SetSlotDataAsset(i,Slots.ElementAt(i));
+			}
+			isDirty = true;
+			canUpdate = false;
+		}
 
 		GUILayout.EndHorizontal();
 
