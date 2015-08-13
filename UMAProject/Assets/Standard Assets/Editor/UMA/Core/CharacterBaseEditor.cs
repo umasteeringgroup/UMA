@@ -241,10 +241,119 @@ namespace UMAEditor
         }
     }
 
+	public class SharedColorsCollectionEditor
+	{
+		private bool _foldout = true;
+		static int selectedChannelCount = 2;
+		String[] names = new string[4] { "1", "2", "3", "4" };
+		int[] channels = new int[4] { 1, 2, 3, 4 };
+		static bool[] _ColorFoldouts = new bool[0];
+
+		public bool OnGUI (UMAData.UMARecipe _recipe)
+		{
+			GUILayout.BeginHorizontal (EditorStyles.toolbarButton);
+			GUILayout.Space (10);
+			_foldout = EditorGUILayout.Foldout (_foldout, "Shared Colors");
+			GUILayout.EndHorizontal ();
+
+			if (_foldout) {
+				bool changed = false;
+				GUIHelper.BeginVerticalPadded (10, new Color (0.75f, 0.875f, 1f));
+
+				EditorGUILayout.BeginHorizontal ();
+				if (_recipe.sharedColors == null)
+					_recipe.sharedColors = new OverlayColorData[0];
+
+				if (_recipe.sharedColors.Length == 0) {
+					selectedChannelCount = EditorGUILayout.IntPopup ("Channels", selectedChannelCount, names, channels);
+				} else {
+					selectedChannelCount = _recipe.sharedColors [0].channelMask.Length;
+				}
+
+				if (GUILayout.Button ("Add Shared Color")) {
+					List<OverlayColorData> sharedColors = new List<OverlayColorData> ();
+					sharedColors.AddRange (_recipe.sharedColors);
+					sharedColors.Add (new OverlayColorData (selectedChannelCount));
+					_recipe.sharedColors = sharedColors.ToArray ();
+					changed = true;
+				}
+
+				if (GUILayout.Button ("Save Collection")) {
+					changed = true;
+				}
+
+				EditorGUILayout.EndHorizontal ();
+
+
+				if (_ColorFoldouts.Length != _recipe.sharedColors.Length) {
+					Array.Resize<bool> (ref _ColorFoldouts, _recipe.sharedColors.Length);
+				}
+
+
+				for (int i = 0; i < _recipe.sharedColors.Length; i++) {
+					bool del = false;
+					OverlayColorData ocd = _recipe.sharedColors [i];
+
+					GUIHelper.FoldoutBar (ref _ColorFoldouts [i], i + ": " + ocd.name, out del);
+					if (del) {
+						List<OverlayColorData> temp = new List<OverlayColorData> ();
+						temp.AddRange (_recipe.sharedColors);
+						temp.RemoveAt (i);
+						_recipe.sharedColors = temp.ToArray ();
+						// TODO: search the overlays and adjust the shared colors
+						break;
+					}
+					if (_ColorFoldouts [i]) {
+						if (ocd.name == null)
+							ocd.name = "";
+
+
+						string NewName = EditorGUILayout.TextField ("Name", ocd.name);
+						if (NewName != ocd.name) {
+							ocd.name = NewName;
+							//changed = true;
+						}
+
+						Color NewChannelMask = EditorGUILayout.ColorField ("Color Multiplier", ocd.channelMask [0]);
+						if (ocd.channelMask [0] != NewChannelMask) {
+							ocd.channelMask [0] = NewChannelMask;
+							changed = true;
+						}
+
+						Color NewChannelAdditiveMask = EditorGUILayout.ColorField ("Color Additive", ocd.channelAdditiveMask [0]);
+						if (ocd.channelAdditiveMask [0] != NewChannelAdditiveMask) {
+							ocd.channelAdditiveMask [0] = NewChannelAdditiveMask;
+							changed = true;
+						}
+
+						for (int j = 1; j < ocd.channelMask.Length; j++) {
+							NewChannelMask = EditorGUILayout.ColorField ("Texture " + j + "multiplier", ocd.channelMask [j]);
+							if (ocd.channelMask [j] != NewChannelMask) {
+								ocd.channelMask [j] = NewChannelMask;
+								changed = true;
+							}
+
+							NewChannelAdditiveMask = EditorGUILayout.ColorField ("Texture " + j + " additive", ocd.channelAdditiveMask [j]);
+							if (ocd.channelAdditiveMask [j] != NewChannelAdditiveMask) {
+								ocd.channelAdditiveMask [j] = NewChannelAdditiveMask;
+								changed = true;
+							}
+						}
+					}
+				}
+				GUIHelper.EndVerticalPadded (10);
+				return changed;
+			}
+			return false;
+		}
+	}
+
+
     public class SlotMasterEditor
     {
         private readonly UMAData.UMARecipe _recipe;
         private readonly List<SlotEditor> _slotEditors = new List<SlotEditor>();
+		private readonly SharedColorsCollectionEditor _sharedColorsEditor = new SharedColorsCollectionEditor ();
 
       public SlotMasterEditor(UMAData.UMARecipe recipe)
         {
@@ -291,66 +400,10 @@ namespace UMAEditor
 				_textureDirty |= true;
 				_meshDirty |= true;
 			}
-			if (GUILayout.Button("Make Unique Colors"))
-			{
-				foreach (var slotData in _recipe.slotDataList)
-				{
-					if (slotData != null)
-					{
-						foreach (var overlayData in slotData.GetOverlayList())
-						{
-							overlayData.colorData = overlayData.colorData.Duplicate();
-							overlayData.colorData.name = "";
-						}
-					}
-				}
-				_recipe.sharedColors = new OverlayColorData[0];
-			}
-			if (GUILayout.Button("Share Matching Colors"))
-			{
-				List<OverlayColorData> matchedColors = new List<OverlayColorData>();
-				List<OverlayColorData> unmatchedColors = new List<OverlayColorData>();
 
-				foreach (SlotData slotData in _recipe.slotDataList)
-				{
-					if (slotData != null)
-					{
-						List<OverlayData> overlays = slotData.GetOverlayList();
-						if (overlays == null) continue;
-						foreach (OverlayData overlay in overlays)
-						{
-							if (overlay.colorData == null) continue;
-							if (overlay.colorData.color == Color.white) continue;
-							if (overlay.colorData.color == Color.black) continue;
-							int matchIndex = matchedColors.IndexOf(overlay.colorData);
-							if (matchIndex >= 0)
-							{
-								overlay.colorData = matchedColors[matchIndex];
-							}
-							else
-							{
-								matchIndex = unmatchedColors.IndexOf(overlay.colorData);
-								if (matchIndex >= 0)
-								{
-									OverlayColorData matchedColor = unmatchedColors[matchIndex];
-									if (matchedColor.name == OverlayColorData.UNSHARED)
-									{
-										matchedColor.name = "";
-									}
-									overlay.colorData = matchedColor;
-									unmatchedColors.Remove(matchedColor);
-									matchedColors.Add(matchedColor);
-								}
-								else
-								{
-									matchedColors.Add(overlay.colorData);
-								}
-							}
-						}
-					}
-				}
-				_recipe.sharedColors = matchedColors.ToArray();
-				changed |= true;
+			if (_sharedColorsEditor.OnGUI (_recipe)) {
+				changed = true;
+				_textureDirty = true;
 			}
 
 			var added = (SlotDataAsset)EditorGUILayout.ObjectField("Add Slot", null, typeof(SlotDataAsset), false);
@@ -640,92 +693,95 @@ namespace UMAEditor
             return changed;
         }
 
-        public bool OnColorGUI()
-        {
-            bool changed = false;
+		public bool OnColorGUI ()
+		{
+			bool changed = false;
+			int currentsharedcol = 0;
+			string[] sharednames = new string[_recipe.sharedColors.Length];
 
-			if (_sharedColors)
-			{
-				GUIHelper.BeginVerticalPadded(2f, new Color(0.75f, 0.875f, 1f));
-				GUILayout.BeginHorizontal();
-				var colorName = EditorGUILayout.TextField("Shared As", _overlayData.colorData.name);
-				if (colorName != _overlayData.colorData.name)
-				{
-					_overlayData.colorData.name = colorName;
-					changed |= true;
-				}
-				if (GUILayout.Button("X", EditorStyles.miniButton, GUILayout.Width(24)))
-				{
-					_overlayData.colorData = _overlayData.colorData.Duplicate();
-					// This is a hack, but it probably won't hurt anything
+			if (_sharedColors) {
+				GUIHelper.BeginVerticalPadded (2f, new Color (0.75f, 0.875f, 1f));
+				GUILayout.BeginHorizontal ();
+				if (GUILayout.Toggle (true, "Use Shared Color") == false) {
+					// Unshare color
+					_overlayData.colorData = _overlayData.colorData.Duplicate ();
 					_overlayData.colorData.name = OverlayColorData.UNSHARED;
-					changed |= true;
+					changed = true;
 				}
-				GUILayout.EndHorizontal();
-			}
-			else
-			{
-				GUILayout.BeginVertical();
+
+
+				for (int i = 0; i < _recipe.sharedColors.Length; i++) {
+					sharednames [i] = i + ": " + _recipe.sharedColors [i].name;
+					if (_overlayData.colorData == _recipe.sharedColors [i]) {
+						currentsharedcol = i;
+					}
+				}
+
+				int newcol = EditorGUILayout.Popup (currentsharedcol, sharednames);
+				if (newcol != currentsharedcol) {
+					changed = true;
+					_overlayData.colorData = _recipe.sharedColors [newcol];
+				}
+				GUILayout.EndHorizontal ();
+				GUIHelper.EndVerticalPadded (2f);
+				GUILayout.Space (2f);
+				return changed;
+			} 
+
+			GUIHelper.BeginVerticalPadded (2f, new Color (0.75f, 0.875f, 1f));
+			GUILayout.BeginHorizontal ();
+
+			if (_recipe.sharedColors.Length > 0) {
+				if (GUILayout.Toggle (false, "Use Shared Color")) {
+					// If we got rid of resetting the name above, we could try to match the last shared color?
+					// Just set to default for now.
+					_overlayData.colorData = _recipe.sharedColors [0];
+					changed = true;
+				}
 			}
 
+			GUILayout.EndHorizontal ();
 
 			bool showExtendedRanges = showExtendedRangeForOverlay == _overlayData;
-			var newShowExtendedRanges = EditorGUILayout.Toggle("Show Extended Ranges", showExtendedRanges);
-			if (showExtendedRanges != newShowExtendedRanges)
-			{
-				if (newShowExtendedRanges)
-				{
+			var newShowExtendedRanges = EditorGUILayout.Toggle ("Show Extended Ranges", showExtendedRanges);
+			if (showExtendedRanges != newShowExtendedRanges) {
+				if (newShowExtendedRanges) {
 					showExtendedRangeForOverlay = _overlayData;
-				}
-				else
-				{
+				} else {
 					showExtendedRangeForOverlay = null;
 				}
 			}
 
-            for (int k = 0; k < _colors.Length; k++)
-            {
+			for (int k = 0; k < _colors.Length; k++) {
 				Color color;
-				if (showExtendedRanges && k % 2 == 0)
-				{
-					Vector4 colorVector = new Vector4(_colors[k].color.r, _colors[k].color.g, _colors[k].color.b, _colors[k].color.a);
-					colorVector = EditorGUILayout.Vector4Field(_colors[k].description, colorVector);
-					color = new Color(colorVector.x, colorVector.y, colorVector.z, colorVector.w);
-				}
-				else
-				{
-					color = EditorGUILayout.ColorField(_colors[k].description, _colors[k].color);
+				if (showExtendedRanges && k % 2 == 0) {
+					Vector4 colorVector = new Vector4 (_colors [k].color.r, _colors [k].color.g, _colors [k].color.b, _colors [k].color.a);
+					colorVector = EditorGUILayout.Vector4Field (_colors [k].description, colorVector);
+					color = new Color (colorVector.x, colorVector.y, colorVector.z, colorVector.w);
+				} else {
+					color = EditorGUILayout.ColorField (_colors [k].description, _colors [k].color);
 				}
 
-                if (color.r != _colors[k].color.r ||
-                    color.g != _colors[k].color.g ||
-                    color.b != _colors[k].color.b ||
-                    color.a != _colors[k].color.a)
-                {
-                    if (k % 2 == 0)
-                    {
-                        _overlayData.colorData.channelMask[k / 2] = color;
-                    } else
-                    {
-                        _overlayData.colorData.channelAdditiveMask[k / 2] = color;
-                    }
-                    changed = true;
-                }
-            }
-           
-			if (_sharedColors)
-			{
-				GUIHelper.EndVerticalPadded(2f);
+				if (color.r != _colors [k].color.r ||
+					color.g != _colors [k].color.g ||
+					color.b != _colors [k].color.b ||
+					color.a != _colors [k].color.a) {
+					if (k % 2 == 0) {
+						_overlayData.colorData.channelMask [k / 2] = color;
+					} else {
+						_overlayData.colorData.channelAdditiveMask [k / 2] = color;
+					}
+					changed = true;
+				}
 			}
-			else
-			{
-				GUILayout.EndVertical();
-			}
-			GUILayout.Space(2f);
 
-            return changed;
-        }
-    }
+			GUIHelper.EndVerticalPadded (2f);
+			GUILayout.Space (2f);
+			return changed;
+		}
+	}
+
+
 
     public class TextureEditor
     {
