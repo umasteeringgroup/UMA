@@ -25,8 +25,10 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 
 			case 1:
 			default:
-				UnpackRecipeVersion1(umaRecipe, packedRecipe, context);
-				umaRecipe.MergeMatchingOverlays();
+				if (UnpackRecipeVersion1 (umaRecipe, packedRecipe, context)) 
+				{
+					umaRecipe.MergeMatchingOverlays ();
+				}
 				break;
 		}
 	}
@@ -444,8 +446,11 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 		return umaPackRecipe;
 	}
 
-	public static void UnpackRecipeVersion1(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContext context)
+	public static bool UnpackRecipeVersion1(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContext context)
 	{
+		if (umaPackRecipe.packedSlotDataList == null)
+			return false;
+		
 		umaRecipe.slotDataList = new SlotData[umaPackRecipe.packedSlotDataList.Length];
 		umaRecipe.additionalSlotCount = 0;
 		umaRecipe.SetRace(context.GetRace(umaPackRecipe.race));
@@ -533,6 +538,7 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 				}
 			}
 		}
+		return true;
 	}
 	
 	public static void UnpackRecipeVersion2(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContext context)
