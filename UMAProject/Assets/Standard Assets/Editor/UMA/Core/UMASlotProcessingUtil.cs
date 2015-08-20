@@ -76,7 +76,11 @@ namespace UMAEditor
 			resultingSkinnedMesh = newObject.GetComponentInChildren<SkinnedMeshRenderer>();
 			if (resultingSkinnedMesh)
 			{
-				resultingSkinnedMesh.bones = BuildNewReducedBonesList(resultingSkinnedMesh.bones, usedBonesDictionary);
+				if (usedBonesDictionary.Count != resultingSkinnedMesh.bones.Length)
+				{
+
+					resultingSkinnedMesh.bones = BuildNewReducedBonesList(resultingSkinnedMesh.bones, usedBonesDictionary);
+				}
 				resultingSkinnedMesh.sharedMesh = resultingMesh;
 			}
 

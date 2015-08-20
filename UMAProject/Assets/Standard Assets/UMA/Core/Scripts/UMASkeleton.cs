@@ -371,9 +371,9 @@ namespace UMA
 			if (boneHashData.TryGetValue(nameHash, out db) && (db.boneTransform != null))
 			{
 				db.accessedFrame = frame;
-				db.boneTransform.localPosition = db.position;
-				db.boneTransform.localRotation = db.rotation;
-				db.boneTransform.localScale = db.scale;
+				db.boneTransform.localPosition = db.umaTransform.position;
+				db.boneTransform.localRotation = db.umaTransform.rotation;
+				db.boneTransform.localScale = db.umaTransform.scale;
 
 				return true;
 			}
