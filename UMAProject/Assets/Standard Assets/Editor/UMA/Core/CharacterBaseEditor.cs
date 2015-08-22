@@ -11,7 +11,7 @@ using UnityEngine;
 
 using Object = UnityEngine.Object;
 using UMA;
-using UMA.Integrations;
+using UMA.Integrations; 
 
 namespace UMAEditor
 {
@@ -358,6 +358,10 @@ namespace UMAEditor
       public SlotMasterEditor(UMAData.UMARecipe recipe)
         {
             _recipe = recipe;
+			if (recipe.slotDataList == null) 
+			{
+				recipe.slotDataList = new SlotData[0];
+			}
 			for (int i = 0; i < recipe.slotDataList.Length; i++ )
 			{
 				var slot = recipe.slotDataList[i];
