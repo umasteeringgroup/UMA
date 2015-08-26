@@ -713,10 +713,9 @@ namespace UMAEditor
 					changed = true;
 				}
 
-
 				for (int i = 0; i < _recipe.sharedColors.Length; i++) {
 					sharednames [i] = i + ": " + _recipe.sharedColors [i].name;
-					if (_overlayData.colorData == _recipe.sharedColors [i]) {
+					if (_overlayData.colorData.GetHashCode () == _recipe.sharedColors [i].GetHashCode ()) {
 						currentsharedcol = i;
 					}
 				}
