@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEditor;
 using UMA;
+using System.IO;
 
 namespace UMAEditor
 {
@@ -17,6 +18,13 @@ namespace UMAEditor
 				foreach (var selectedObject in selectedObjects)
 				{
 					var assetPath = AssetDatabase.GetAssetPath(selectedObject);
+
+                    // Get asset path directory
+                    var assetDirectory = new FileInfo(assetPath).Directory.FullName + Path.DirectorySeparatorChar + "TPoses";
+
+                    // Trim off the path at "Assets" to get the relative path to the assets directory
+                    assetDirectory = assetDirectory.Substring(assetDirectory.IndexOf("Assets"));
+                    
 					if (!string.IsNullOrEmpty(assetPath))
 					{
 						var modelImporter = AssetImporter.GetAtPath(assetPath) as ModelImporter;
@@ -31,9 +39,16 @@ namespace UMAEditor
 								asset.boneInfo[0].name = name;
 								asset.Serialize();
 							}
-							if (!System.IO.Directory.Exists("Assets/UMA/Assets/TPoses"))
-								System.IO.Directory.CreateDirectory("Assets/UMA/UMA_Assets/TPoses");
-							AssetDatabase.CreateAsset(asset, "Assets/UMA/UMA_Assets/TPoses/" + name + "_TPose.asset");
+							if (!Directory.Exists(assetDirectory))
+                                Directory.CreateDirectory(assetDirectory);
+                            try
+                            {
+                                AssetDatabase.CreateAsset(asset, assetDirectory + Path.DirectorySeparatorChar + name + "_TPose.asset");
+                            }
+                            catch (UnityException e)
+                            {
+                                Debug.Log(e.ToString());
+                            }
 							extracted = true;
 						}
 					}
@@ -56,8 +71,8 @@ namespace UMAEditor
                     asset.boneInfo[0].name = name;
                     asset.Serialize();
 	            }
-	            if (!System.IO.Directory.Exists("Assets/UMA/Assets/TPoses"))
-	                System.IO.Directory.CreateDirectory("Assets/UMA/UMA_Assets/TPoses");
+                if (!Directory.Exists("Assets/UMA/UMA_Assets/TPoses"))
+	                Directory.CreateDirectory("Assets/UMA/UMA_Assets/TPoses");
 	            AssetDatabase.CreateAsset(asset, "Assets/UMA/UMA_Assets/TPoses/" + name + "_TPose.asset");
 	            EditorUtility.SetDirty(asset);
 	            AssetDatabase.SaveAssets();
