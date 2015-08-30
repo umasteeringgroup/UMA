@@ -391,6 +391,21 @@ namespace UMAEditor
         {
             bool changed = false;
 
+			// Have to be able to assign a race on a new recipe.
+			RaceData newRace = (RaceData)EditorGUILayout.ObjectField("RaceData",_recipe.raceData,typeof(RaceData),false);
+			if (_recipe.raceData == null) {
+				GUIHelper.BeginVerticalPadded (10, new Color (0.55f, 0.25f, 0.25f));		
+				GUILayout.Label ("Warning: No race data is set!");
+				GUIHelper.EndVerticalPadded (10);
+			}
+			
+			
+			if (_recipe.raceData != newRace)
+			{
+				_recipe.SetRace(newRace);
+				changed = true;
+			}
+
 			if (GUILayout.Button("Remove Nulls"))
 			{
 				var newList = new List<SlotData>(_recipe.slotDataList.Length);

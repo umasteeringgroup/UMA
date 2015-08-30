@@ -14,7 +14,7 @@ public partial class UMATextRecipe : UMAPackedRecipeBase
 	/// <summary>
 	/// Complete text of recipe.
 	/// </summary>
-	public string recipeString;
+	public string recipeString="";
 
 	/// <summary>
 	/// Deserialize recipeString data into packed recipe.

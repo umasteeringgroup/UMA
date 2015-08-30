@@ -249,8 +249,20 @@ namespace UMA
 
 						if (overlayData.colorData.channelMask.Length < asset.material.channels.Length)
 						{
-							Debug.LogError(string.Format("Overlay '{0}' missing required color data", overlayData.asset.overlayName));
-							valid = false;
+							// Fixup colorData if moving from Legacy to PBR materials
+							int oldsize = overlayData.colorData.channelMask.Length;
+							
+							System.Array.Resize (ref overlayData.colorData.channelMask, asset.material.channels.Length);
+							System.Array.Resize (ref overlayData.colorData.channelAdditiveMask, asset.material.channels.Length);
+							
+							for (int j = oldsize; j > asset.material.channels.Length; j++) 
+							{
+								overlayData.colorData.channelMask [j] = Color.white;
+								overlayData.colorData.channelAdditiveMask [j] = Color.black;
+							}
+							
+							
+							Debug.LogWarning (string.Format ("Overlay '{0}' missing required color data on Asset: " + asset.name+" Resizing and adding defaults", overlayData.asset.overlayName));
 						}
 					}
 				}
