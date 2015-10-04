@@ -323,6 +323,18 @@ namespace UMA
 		/// Initialize UMA mesh data from Unity mesh.
 		/// </summary>
 		/// <param name="renderer">Source renderer.</param>
+		public void RetrieveDataFromUnityMesh(SkinnedMeshRenderer renderer)
+		{
+			RetrieveDataFromUnityMesh(renderer.sharedMesh);
+
+			UpdateBones(renderer.rootBone, renderer.bones);
+		}
+
+		
+		/// <summary>
+		/// Initialize UMA mesh data from Unity mesh.
+		/// </summary>
+		/// <param name="renderer">Source renderer.</param>
 		public void RetrieveDataFromUnityMesh(Mesh sharedMesh)
 		{
 			bindPoses = sharedMesh.bindposes;
@@ -347,30 +359,19 @@ namespace UMA
 		}
 
 		/// <summary>
-		/// Initialize UMA mesh data from Unity mesh.
-		/// </summary>
-		/// <param name="renderer">Source renderer.</param>
-		public void RetrieveDataFromUnityMesh(SkinnedMeshRenderer renderer)
-				{
-			RetrieveDataFromUnityMesh(renderer.sharedMesh);
-
-			UpdateBones(renderer.rootBone, renderer.bones);
-		}
-
-		/// <summary>
 		/// Validates the skinned transform hierarchy.
 		/// </summary>
 		/// <param name="rootBone">Root transform.</param>
 		/// <param name="bones">Transforms.</param>
 		public void UpdateBones(Transform rootBone, Transform[] bones)
 		{
-			var storedRoot  = rootBone;
+			var storedRootBone = rootBone;
 			while (rootBone.name != "Global")
 			{
 				rootBone = rootBone.parent;
 				if (rootBone == null)
 				{
-					rootBone = storedRoot;
+					rootBone = storedRootBone;
 					break;
 				}
 			}
@@ -456,7 +457,7 @@ namespace UMA
 			}
 
 			mesh.RecalculateBounds();
-			renderer.bones = bones;// skeleton.HashesToTransforms(boneNameHashes);
+			renderer.bones = bones != null ? bones : skeleton.HashesToTransforms(boneNameHashes);
 			renderer.sharedMesh = mesh;
 			renderer.rootBone = rootBone;
 		}
