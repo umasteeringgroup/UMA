@@ -38,7 +38,8 @@ public class HUDFPS : MonoBehaviour
 			enabled = false;
 			return;
 		}
-		timeleft = updateInterval;  
+		timeleft = updateInterval;
+		fpsTextOutput.material = new Material(fpsTextOutput.material);
 	}
  
 	void Update()

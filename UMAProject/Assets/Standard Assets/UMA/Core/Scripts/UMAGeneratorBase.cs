@@ -96,7 +96,7 @@ namespace UMA
 					}
 				}
 				
-				animator.Update(0);
+				animator.Update(0.00001f);
 				animator.enabled = animating;
 			}
 		}	

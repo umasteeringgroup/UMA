@@ -208,7 +208,7 @@ public class UMACustomization : MonoBehaviour
             Camera.main.rect = ViewPortReduced;
             DnaPanel.SetActive(true);
             DnaHide.gameObject.SetActive(true);
-#if UNITY_5_2	
+#if UNITY_5 && !UNITY_5_1 && !UNITY_5_0
 			// really Unity? Yes we change the value and set it back to trigger a ui recalculation... 
 			// because setting the damn game object active doesn't do that!
 			var rt = DnaPanel.GetComponent<RectTransform>();
