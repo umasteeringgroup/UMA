@@ -8,6 +8,7 @@ namespace UMA
 	/// <summary>
 	/// Utility class that sets up materials for atlasing.
 	/// </summary>
+	[ExecuteInEditMode]
 	public class TextureMerge : MonoBehaviour
 	{
 		public Camera myCamera;

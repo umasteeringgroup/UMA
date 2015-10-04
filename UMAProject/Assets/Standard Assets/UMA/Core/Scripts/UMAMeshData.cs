@@ -95,6 +95,62 @@ namespace UMA
 		public float weight1;
 		public float weight2;
 		public float weight3;
+		public void Set(int index, int bone, float weight)
+		{
+			switch(index)
+			{
+			case 0:
+				boneIndex0 = bone;
+				weight0 = weight;
+				break;
+			case 1:
+				boneIndex1 = bone;
+				weight1 = weight;
+				break;
+			case 2:
+				boneIndex2 = bone;
+				weight2 = weight;
+				break;
+			case 3:
+				boneIndex3 = bone;
+				weight3 = weight;
+				break;
+			default:
+				throw new NotImplementedException();
+			}
+		}
+		public float GetWeight(int index)
+		{
+			switch(index)
+			{
+			case 0:
+				return weight0;
+			case 1:
+				return weight1;
+			case 2:
+				return weight2;
+			case 3:
+				return weight3;
+			default:
+				throw new NotImplementedException();
+			}
+		}
+		public int GetBoneIndex(int index)
+		{
+			switch(index)
+			{
+			case 0:
+				return boneIndex0;
+			case 1:
+				return boneIndex1;
+			case 2:
+				return boneIndex2;
+			case 3:
+				return boneIndex3;
+			default:
+				throw new NotImplementedException();
+			}
+		}		
 		public static implicit operator UMABoneWeight(BoneWeight sourceWeight)
 		{
 			var res = new UMABoneWeight();
@@ -124,8 +180,19 @@ namespace UMA
 
 		public static UMABoneWeight[] Convert(BoneWeight[] boneWeights)
 		{
+			if(boneWeights == null) return null;
 			var res = new UMABoneWeight[boneWeights.Length];
 			for (int i = 0; i < boneWeights.Length; i++)
+			{
+				res[i] = boneWeights[i];
+			}
+			return res;
+		}
+		public static UMABoneWeight[] Convert(List<BoneWeight> boneWeights)
+		{
+			if(boneWeights == null) return null;
+			var res = new UMABoneWeight[boneWeights.Count];
+			for (int i = 0; i < boneWeights.Count; i++)
 			{
 				res[i] = boneWeights[i];
 			}
@@ -236,13 +303,28 @@ namespace UMA
 #endif
 		}
 
+		public void PrepareVertexBuffers(int size)
+		{
+			vertexCount = size;
+			boneWeights = new UMABoneWeight[size];
+			vertices = new Vector3[size];
+			normals = new Vector3[size];
+			tangents = new Vector4[size];
+			colors32 = new Color32[size];
+			uv = new Vector2[size];
+			uv2 = new Vector2[size];
+#if !UNITY_4_6
+			uv3 = new Vector2[size];
+			uv4 = new Vector2[size];
+#endif
+		}
+		
 		/// <summary>
 		/// Initialize UMA mesh data from Unity mesh.
 		/// </summary>
 		/// <param name="renderer">Source renderer.</param>
-		public void RetrieveDataFromUnityMesh(SkinnedMeshRenderer renderer)
+		public void RetrieveDataFromUnityMesh(Mesh sharedMesh)
 		{
-			var sharedMesh = renderer.sharedMesh;
 			bindPoses = sharedMesh.bindposes;
 			boneWeights = UMABoneWeight.Convert(sharedMesh.boneWeights);
 			vertices = sharedMesh.vertices;
@@ -253,8 +335,8 @@ namespace UMA
 			uv = sharedMesh.uv;
 			uv2 = sharedMesh.uv2;
 #if !UNITY_4_6
-			uv3 = sharedMesh.uv4;
-			uv3 = sharedMesh.uv4;
+			uv3 = sharedMesh.uv3;
+			uv4 = sharedMesh.uv4;
 #endif
 			subMeshCount = sharedMesh.subMeshCount;
 			submeshes = new SubMeshTriangles[subMeshCount];
@@ -262,19 +344,17 @@ namespace UMA
 			{
 				submeshes[i].triangles = sharedMesh.GetTriangles(i);
 			}
+		}
 
-			var rootBone = renderer.rootBone;
-			while (rootBone.name != "Global")
-			{
-				rootBone = rootBone.parent;
-				if (rootBone == null)
+		/// <summary>
+		/// Initialize UMA mesh data from Unity mesh.
+		/// </summary>
+		/// <param name="renderer">Source renderer.</param>
+		public void RetrieveDataFromUnityMesh(SkinnedMeshRenderer renderer)
 				{
-					rootBone = renderer.rootBone;
-					break;
-				}
-			}
+			RetrieveDataFromUnityMesh(renderer.sharedMesh);
 
-			UpdateBones(rootBone, renderer.bones);
+			UpdateBones(renderer.rootBone, renderer.bones);
 		}
 
 		/// <summary>
@@ -284,6 +364,17 @@ namespace UMA
 		/// <param name="bones">Transforms.</param>
 		public void UpdateBones(Transform rootBone, Transform[] bones)
 		{
+			var storedRoot  = rootBone;
+			while (rootBone.name != "Global")
+			{
+				rootBone = rootBone.parent;
+				if (rootBone == null)
+				{
+					rootBone = storedRoot;
+					break;
+				}
+			}
+			
 			var requiredBones = new Dictionary<Transform, UMATransform>();
 			foreach (var bone in bones)
 			{
@@ -344,7 +435,7 @@ namespace UMA
 			else
 			{
 				mesh.vertices = vertices;
-				mesh.boneWeights = unityBoneWeights;
+				mesh.boneWeights = unityBoneWeights != null ? unityBoneWeights : UMABoneWeight.Convert(boneWeights);
 				mesh.normals = normals;
 				mesh.tangents = tangents;
 				mesh.uv = uv;
@@ -365,7 +456,45 @@ namespace UMA
 			}
 
 			mesh.RecalculateBounds();
-			renderer.bones = skeleton.HashesToTransforms(boneNameHashes);
+			renderer.bones = bones;// skeleton.HashesToTransforms(boneNameHashes);
+			renderer.sharedMesh = mesh;
+			renderer.rootBone = rootBone;
+		}
+
+		/// <summary>
+		/// Applies the data to a Unity mesh.
+		/// </summary>
+		/// <param name="renderer">Target renderer.</param>
+		/// <param name="skeleton">Skeleton.</param>
+		public void CopyDataToUnityMesh(SkinnedMeshRenderer renderer)
+		{
+			Mesh mesh = renderer.sharedMesh;
+			mesh.subMeshCount = 1;
+			mesh.triangles = new int[0];
+			mesh.vertices = vertices;
+			mesh.boneWeights = UMABoneWeight.Convert(boneWeights);
+			mesh.normals = normals;
+			mesh.tangents = tangents;
+			mesh.uv = uv;
+			mesh.uv2 = uv2;
+#if !UNITY_4_6
+			mesh.uv3 = uv3;
+			mesh.uv4 = uv4;
+#endif
+			mesh.colors32 = colors32;
+			mesh.bindposes = bindPoses;
+			
+			var subMeshCount = submeshes.Length;
+			mesh.subMeshCount = subMeshCount;
+			for (int i = 0; i < subMeshCount; i++)
+			{
+				mesh.SetTriangles(submeshes[i].triangles, i);
+			}
+			
+			renderer.bones = bones;
+			renderer.rootBone = rootBone;
+			
+			mesh.RecalculateBounds();
 			renderer.sharedMesh = mesh;
 		}
 

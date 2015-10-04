@@ -126,13 +126,16 @@ namespace UMA
 			return "SlotData: " + slotName;
 		}
 
-#if UNITY_EDITOR
 		public void UpdateMeshData(SkinnedMeshRenderer meshRenderer)
 		{
 			meshData = new UMAMeshData();
 			meshData.RetrieveDataFromUnityMesh(meshRenderer);
+#if UNITY_EDITOR
 			UnityEditor.EditorUtility.SetDirty(this);
+#endif
 		}
+#if UNITY_EDITOR
+		
 		public void UpdateMeshData()
 		{
 #if !UMA2_LEAN_AND_CLEAN

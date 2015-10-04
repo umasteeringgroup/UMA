@@ -12,7 +12,7 @@ namespace UMA
 #if !UMA2_LEAN_AND_CLEAN 
 	public partial class SlotData : System.IEquatable<SlotData>
 #else
-	public class SlotData : System.IEquatable<SlotData>
+	public class SlotData : System.IEquatable<SlotData>, ISerializationCallbackReceiver
 #endif
 	{
 		/// <summary>
@@ -389,6 +389,19 @@ namespace UMA
         {
             return base.GetHashCode();
         }
+		#endregion
+
+		#region ISerializationCallbackReceiver Members
+
+		public void OnAfterDeserialize()
+		{
+			if (overlayList == null) overlayList = new List<OverlayData>();
+		}
+
+		public void OnBeforeSerialize()
+		{
+		}
+
 		#endregion
 	}
 }
