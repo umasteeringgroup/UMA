@@ -6,3 +6,8 @@ UnityVS.meta
 *.sln
 *.suo
 *.suo
+*.userprefs
+
+UMAProject/ProjectSettings/ProjectSettings.asset
+
+UMAProject/ProjectSettings/GraphicsSettings.asset

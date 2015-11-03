@@ -647,11 +647,12 @@ namespace UMAEditor
 			_sharedColors = false;
 			if (_recipe.sharedColors != null)
 			{
-            foreach(OverlayColorData ocd in _recipe.sharedColors)
-            {
-               if (ocd.GetHashCode() == _overlayData.GetHashCode() _sharedColors = true;
-            }
+            	foreach(OverlayColorData ocd in _recipe.sharedColors)
+            	{
+               		if (ocd.GetHashCode() == _overlayData.colorData.GetHashCode()) _sharedColors = true;
+            	}
 			}
+			
 			if (_sharedColors && (_overlayData.colorData.name == OverlayColorData.UNSHARED))
 			{
 				_sharedColors = false;
