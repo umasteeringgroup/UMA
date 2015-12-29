@@ -427,7 +427,17 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 					tempPackedOverlay.rect[3] = Mathf.FloorToInt(overlayData.rect.height);
 
 					OverlayColorData colorData = overlayData.colorData;
-					int colorIndex = colorEntries.IndexOf(colorData);
+               // Could not use IndexOf to find color, since operator == overriden in OverlayColorData
+               int colorIndex = -1;
+               for (int col=0;col<colorEntries.Count;col++)
+               {
+                  if (colorEntries[col].GetHashCode() == colorData.GetHashCode())
+                  {
+                     colorIndex = col;
+                  }
+               }
+
+
 					if (colorIndex < 0)
 					{
 						PackedOverlayColorDataV3 newColorEntry = new PackedOverlayColorDataV3(colorData);

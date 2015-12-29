@@ -437,6 +437,23 @@ namespace UMAEditor
                 _meshDirty |= true;
             }
 
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Collapse All"))
+            {
+               foreach(SlotEditor se in _slotEditors)
+               {
+                  se.FoldOut = false;
+               }
+            }
+            if (GUILayout.Button("Expand All"))
+            {
+               foreach(SlotEditor se in _slotEditors)
+               {
+                 se.FoldOut = true;
+               }
+            }
+            GUILayout.EndHorizontal();
+
             for (int i = 0; i < _slotEditors.Count; i++)
             {
                 var editor = _slotEditors[i];
@@ -471,13 +488,19 @@ namespace UMAEditor
     {
 		private readonly UMAData.UMARecipe _recipe;
 		private readonly SlotData _slotData;
-        private readonly List<OverlayData> _overlayData = new List<OverlayData>();
-        private readonly List<OverlayEditor> _overlayEditors = new List<OverlayEditor>();
-        private readonly string _name;
+      private readonly List<OverlayData> _overlayData = new List<OverlayData>();
+      private readonly List<OverlayEditor> _overlayEditors = new List<OverlayEditor>();
+      private readonly string _name;
 
-        public bool Delete { get; private set; }
+      public bool Delete { get; private set; }
 
-        private bool _foldout = true;
+      private bool _foldout = true;
+      public bool FoldOut 
+      { 
+            get { return _foldout; } 
+            set {_foldout = value; }
+      }
+
 		public bool sharedOverlays = false;
 		public int idx;
 
