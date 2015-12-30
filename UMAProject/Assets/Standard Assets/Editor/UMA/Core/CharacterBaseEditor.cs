@@ -975,7 +975,8 @@ namespace UMAEditor
       protected bool showBaseEditor;
       protected bool _rebuildOnLayout = false;
       protected UMAData.UMARecipe _recipe;
-      protected int _toolbarIndex = 0;
+      static    int _LastToolBar = 0;
+      protected int _toolbarIndex = _LastToolBar;
       protected DNAMasterEditor dnaEditor;
       protected SlotMasterEditor slotEditor;
 
@@ -1070,6 +1071,7 @@ namespace UMAEditor
       private bool ToolbarGUI()
       {
          _toolbarIndex = GUILayout.Toolbar(_toolbarIndex, toolbar);
+         _LastToolBar = _toolbarIndex;
          switch (_toolbarIndex)
          {
          case 0:
