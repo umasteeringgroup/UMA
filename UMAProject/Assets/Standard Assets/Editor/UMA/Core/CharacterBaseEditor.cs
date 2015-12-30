@@ -384,6 +384,7 @@ namespace UMAEditor
                      if (tempSlotDataAsset)
                      {
                         AddSlotDataAsset(tempSlotDataAsset);
+                        count++;
                         continue;
                      }
 
