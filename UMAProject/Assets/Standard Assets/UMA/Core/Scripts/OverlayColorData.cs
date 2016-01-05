@@ -170,31 +170,36 @@ namespace UMA
         {
 			if (channelMask == null)
             {
-				channelMask = new Color[channels];
-				channelAdditiveMask = new Color[channels];
+				   channelMask = new Color[channels];
+				   channelAdditiveMask = new Color[channels];
                 for (int i = 0; i < channels; i++)
                 {
-					channelMask[i] = Color.white;
-					channelAdditiveMask[i] = new Color(0, 0, 0, 0);
+					   channelMask[i] = Color.white;
+					   channelAdditiveMask[i] = new Color(0, 0, 0, 0);
                 }
             }
             else
             {
-				if( channelMask.Length > channels ) return;
-
-				var oldLenth = channelMask.Length;
-				var newMask = new Color[channels];
-				var newAdditive = new Color[channels];
-				channelAdditiveMask = new Color[channels];
-				System.Array.Copy(channelMask, newMask, oldLenth);
-				System.Array.Copy(channelAdditiveMask, newAdditive, oldLenth);
-				for (int i = oldLenth; i < channels; i++)
-                {
-					newMask[i] = Color.white;
-					newAdditive[i] = new Color(0, 0, 0, 0);
-                }
-				channelMask = newMask;
-				channelAdditiveMask = newAdditive;
+               if (channelMask.Length < channels)
+               {
+                  var newMask = new Color[channels];
+                  System.Array.Copy(channelMask, newMask, channelMask.Length);
+                  for (int i = channelMask.Length; i < channels; i++)
+                  {
+                     newMask[i] = Color.white;
+                  }
+                  channelMask = newMask;
+               }
+               if (channelAdditiveMask.Length < channels)
+               {
+                  var newAdditiveMask = new Color[channels];
+                  System.Array.Copy(channelAdditiveMask, newAdditiveMask, channelAdditiveMask.Length);
+                  for (int i = channelAdditiveMask.Length; i < channels; i++)
+                  {
+                     newAdditiveMask[i] = new Color(0,0,0,0);
+                  }
+                  channelAdditiveMask = newAdditiveMask;
+               }
             }
         }
 
