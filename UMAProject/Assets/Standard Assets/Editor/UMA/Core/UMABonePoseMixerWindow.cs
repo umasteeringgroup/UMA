@@ -40,7 +40,6 @@ namespace UMA.PoseTools
 
 		void OnGUI()
 		{
-			EditorGUIUtility.LookLikeControls();
 			Transform newSkeleton = EditorGUILayout.ObjectField("Rig Prefab", skeleton, typeof(Transform), true) as Transform;
 			if (skeleton != newSkeleton)
 			{

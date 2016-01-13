@@ -22,9 +22,7 @@ namespace UMAEditor
 		}
 
 	    public override void OnInspectorGUI()
-	    {
-            EditorGUIUtility.LookLikeControls();
-			
+	    { 
 			race.raceName = EditorGUILayout.TextField("Race Name", race.raceName);
             race.umaTarget = (UMA.RaceData.UMATarget)EditorGUILayout.EnumPopup("UMA Target", race.umaTarget);
             race.genericRootMotionTransformName = EditorGUILayout.TextField("Root Motion Transform", race.genericRootMotionTransformName);
@@ -66,8 +64,6 @@ namespace UMAEditor
 			}
 
 			
-			EditorGUIUtility.LookLikeControls();
-
             if (GUI.changed)
             {
                 EditorUtility.SetDirty(race);

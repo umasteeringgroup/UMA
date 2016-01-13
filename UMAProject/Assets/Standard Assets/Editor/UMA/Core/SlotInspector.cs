@@ -70,8 +70,6 @@ namespace UMAEditor
 
         public override void OnInspectorGUI()
         {
-            EditorGUIUtility.LookLikeControls();
-
             slot.slotName = EditorGUILayout.TextField("Slot Name", slot.slotName);
             slot.slotDNA = EditorGUILayout.ObjectField("DNA Converter", slot.slotDNA, typeof(DnaConverterBehaviour), false) as DnaConverterBehaviour;
 
@@ -209,7 +207,6 @@ namespace UMAEditor
 				}
 			}
 
-			EditorGUIUtility.LookLikeControls();
             if (GUI.changed)
             {
                 EditorUtility.SetDirty(slot);

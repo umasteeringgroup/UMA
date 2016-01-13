@@ -39,8 +39,10 @@ namespace UMA
 		{
 			this.asset = asset;
 #if !UMA2_LEAN_AND_CLEAN 
+         #pragma warning disable 618
 			slotName = asset.slotName;
 			materialSample = asset.materialSample;
+         #pragma warning restore 618
 #endif
 			overlayScale = asset.overlayScale;
 		}

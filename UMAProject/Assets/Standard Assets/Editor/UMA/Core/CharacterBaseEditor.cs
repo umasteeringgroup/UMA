@@ -628,7 +628,15 @@ namespace UMAEditor
 
          if (sharedOverlays)
          {
-            EditorGUILayout.LabelField("Shared Overlays");
+            List<OverlayData> ovr = GetOverlays();
+
+            EditorGUILayout.LabelField("Shared Overlays:");
+            GUIHelper.BeginVerticalPadded(10, new Color(0.85f, 0.85f, 0.85f));
+            foreach(OverlayData ov in ovr)
+            {
+               EditorGUILayout.LabelField(ov.asset.overlayName);
+            }
+            GUIHelper.EndVerticalPadded(10);
          }
          else
          {
