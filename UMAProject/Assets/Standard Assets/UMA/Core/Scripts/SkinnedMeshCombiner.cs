@@ -133,7 +133,7 @@ namespace UMA
 				}
 				if (has_uv)
 				{
-					if (source.meshData.uv != null)
+               if (source.meshData.uv != null && source.meshData.uv.Length >= vertexCount)
 					{
 						Array.Copy(source.meshData.uv, 0, uv, vertexIndex, vertexCount);
 					}
@@ -144,7 +144,7 @@ namespace UMA
 				}
 				if (has_uv2)
 				{
-					if (source.meshData.uv2 != null)
+               if (source.meshData.uv2 != null && source.meshData.uv2.Length >= vertexCount)
 					{
 						Array.Copy(source.meshData.uv2, 0, uv2, vertexIndex, vertexCount);
 					}
@@ -156,7 +156,7 @@ namespace UMA
 #if !UNITY_4_6
 				if (has_uv3)
 				{
-					if (source.meshData.uv3 != null)
+               if (source.meshData.uv3 != null && source.meshData.uv3.Length >= vertexCount)
 					{
 						Array.Copy(source.meshData.uv3, 0, uv3, vertexIndex, vertexCount);
 					}
@@ -167,7 +167,7 @@ namespace UMA
 				}
 				if (has_uv4)
 				{
-					if (source.meshData.uv4 != null)
+               if (source.meshData.uv4 != null && source.meshData.uv4.Length >= vertexCount)
 					{
 						Array.Copy(source.meshData.uv4, 0, uv4, vertexIndex, vertexCount);
 					}
