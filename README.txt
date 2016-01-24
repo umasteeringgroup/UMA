@@ -1,4 +1,4 @@
-UMA - Unity Multipurpose Avatar
+UMA - Unity Multipurpose Avatar 2.X
 
 Git repo: https://github.com/huika/UMA
 Wiki:     http://uma.unity3d.com/wiki
