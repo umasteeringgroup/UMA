@@ -384,7 +384,7 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 		for (int i = 0; i < umaPackRecipe.sharedColorCount; i++)
 		{
 			colorEntries.Add(umaRecipe.sharedColors[i]);
-			packedColorEntries.Add(new PackedOverlayColorDataV3(umaRecipe.sharedColors[i]));
+            packedColorEntries.Add(new PackedOverlayColorDataV3(umaRecipe.sharedColors[i]));
 		}
 
 		for (int i = 0; i < slotCount; i++)
@@ -427,25 +427,27 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 					tempPackedOverlay.rect[3] = Mathf.FloorToInt(overlayData.rect.height);
 
 					OverlayColorData colorData = overlayData.colorData;
-               // Could not use IndexOf to find color, since operator == overriden in OverlayColorData
-               int colorIndex = -1;
-               for (int col=0;col<colorEntries.Count;col++)
-               {
-                  if (colorEntries[col].GetHashCode() == colorData.GetHashCode())
-                  {
-                     colorIndex = col;
-                  }
-               }
-
-
+                    int colorIndex = -1;
+                    int cIndex = 0;
+                    foreach(OverlayColorData cData in colorEntries)
+                    {
+                        if (cData.name.Equals(colorData.name))
+                        {
+                            colorIndex = cIndex;
+                            break;
+                        }
+                        cIndex++;
+                    }
 					if (colorIndex < 0)
 					{
 						PackedOverlayColorDataV3 newColorEntry = new PackedOverlayColorDataV3(colorData);
 						packedColorEntries.Add(newColorEntry);
 						colorIndex = colorEntries.Count;
 						colorEntries.Add(colorData);
-					}
-					tempPackedOverlay.colorIdx = colorIndex;
+                        
+                    }
+
+                    tempPackedOverlay.colorIdx = colorIndex;
 
 					tempPackedSlotData.overlays[overlayIdx] = tempPackedOverlay;
 				}
