@@ -431,7 +431,7 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
                     int cIndex = 0;
                     foreach(OverlayColorData cData in colorEntries)
                     {
-                        if (cData.name.Equals(colorData.name))
+                        if (cData.name != null && cData.name.Equals(colorData.name))
                         {
                             colorIndex = cIndex;
                             break;
