@@ -7,7 +7,7 @@ using UMA;
 namespace UMAEditor
 {
 	[CustomEditor(typeof(RaceData))]
-	public class RaceInspector : Editor 
+	public partial class RaceInspector : Editor 
 	{
 	    [MenuItem("Assets/Create/UMA Race")]
 	    public static void CreateRaceMenuItem()
@@ -16,10 +16,17 @@ namespace UMAEditor
 	    }
 
 		protected RaceData race;
+        protected bool _needsUpdate;
+        protected string _errorMessage;
 		
 		public void OnEnable() {
 			race = target as RaceData;
 		}
+
+		/// <summary>
+		/// Add to PreInspectorGUI in any derived editors to allow editing of new properties added to races.
+		/// </summary>
+		partial void PreInspectorGUI(ref bool result);
 
 	    public override void OnInspectorGUI()
 	    { 
@@ -63,6 +70,14 @@ namespace UMAEditor
 				}
 			}
 
+            try {
+				PreInspectorGUI(ref _needsUpdate);
+				if(_needsUpdate == true){
+						DoUpdate();
+				}
+			}catch (UMAResourceNotFoundException e){
+				_errorMessage = e.Message;
+			}
 			
             if (GUI.changed)
             {
@@ -70,7 +85,11 @@ namespace UMAEditor
                 AssetDatabase.SaveAssets();
             }
 		}
-	    
+
+	    /// <summary>
+		/// Add to this method in extender editors if you need to do anything extra when updating the data.
+		/// </summary>
+		partial void DoUpdate();
 	}
 }
 #endif
