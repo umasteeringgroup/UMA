@@ -53,8 +53,21 @@ namespace UMA
 		/// <param name="asset">Asset.</param>
 		public OverlayData(OverlayDataAsset asset)
 		{
+			if (asset == null)
+			{
+				Debug.LogError("Overlay Data Asset is NULL!");
+				return;
+			}
+			if (asset.material == null)
+			{
+				Debug.LogError("Error: Materials are missing on Asset: "+asset.name+". Have you imported all packages?");
+				this.colorData = new OverlayColorData(3); // ?? Don't know. Just create it for standard PBR material size. 
+			}
+			else
+			{
+				this.colorData = new OverlayColorData(asset.material.channels.Length);
+			}
 			this.asset = asset;
-			this.colorData = new OverlayColorData(asset.material.channels.Length);
 			this.rect = asset.rect;
 		}
 

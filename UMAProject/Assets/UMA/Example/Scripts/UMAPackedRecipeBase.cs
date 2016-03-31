@@ -622,7 +622,8 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 						{
 							overlayData.colorData = colorData[packedOverlay.colorIdx];
 						}
-						overlayData.EnsureChannels(overlayData.asset.material.channels.Length);
+						if (overlayData.asset.material != null)
+							overlayData.EnsureChannels(overlayData.asset.material.channels.Length);
 						tempSlotData.AddOverlay(overlayData);
 					}
 				}
