@@ -19,14 +19,14 @@ namespace UMAEditor
 				{
 					var assetPath = AssetDatabase.GetAssetPath(selectedObject);
 
-                    // Get asset path directory
-                    var assetDirectory = new FileInfo(assetPath).Directory.FullName + Path.DirectorySeparatorChar + "TPoses";
-
-                    // Trim off the path at "Assets" to get the relative path to the assets directory
-                    assetDirectory = assetDirectory.Substring(assetDirectory.IndexOf("Assets"));
-                    
 					if (!string.IsNullOrEmpty(assetPath))
 					{
+						// Get asset path directory
+						var assetDirectory = new FileInfo(assetPath).Directory.FullName + Path.DirectorySeparatorChar + "TPoses";
+
+						// Trim off the path at "Assets" to get the relative path to the assets directory
+						assetDirectory = assetDirectory.Substring(assetDirectory.IndexOf("Assets"));
+
 						var modelImporter = AssetImporter.GetAtPath(assetPath) as ModelImporter;
 						if( modelImporter != null )
 						{
