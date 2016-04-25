@@ -354,18 +354,41 @@ namespace UMA
 			if (boneHashData.TryGetValue(nameHash, out db))
 			{
 				db.accessedFrame = frame;
-				db.boneTransform.localPosition += position * weight;
-				Quaternion fullRotation = db.boneTransform.localRotation * rotation;
-				db.boneTransform.localRotation = Quaternion.Slerp(db.boneTransform.localRotation, fullRotation, weight);
+				db.boneTransform.localPosition = Vector3.Lerp(db.boneTransform.localPosition, position,  weight);
+				db.boneTransform.localRotation = Quaternion.Slerp(db.boneTransform.localRotation, db.boneTransform.localRotation, weight);
 				db.boneTransform.localScale = Vector3.Lerp(db.boneTransform.localScale, scale, weight);
 			}
 		}
 
-		/// <summary>
-		/// Reset the specified transform to the post dna state.
-		/// </summary>
-		/// <param name="nameHash">Name hash.</param>
-		public virtual bool Reset(int nameHash)
+        /// <summary>
+        /// Lerp the specified bone toward a new position, rotation, and scale.
+        /// This method silently fails if the bone doesn't exist! (Desired behaviour in DNA converters due to LOD/Occlusion)
+        /// </summary>
+        /// <param name="nameHash">Name hash.</param>
+        /// <param name="position">Position.</param>
+        /// <param name="scale">Scale.</param>
+        /// <param name="rotation">Rotation.</param>
+        /// <param name="weight">Weight.</param>
+        public virtual void Morph(int nameHash, Vector3 position, Vector3 scale, Quaternion rotation, float weight)
+        {
+            BoneData db;
+            if (boneHashData.TryGetValue(nameHash, out db))
+            {
+                db.accessedFrame = frame;
+                db.boneTransform.localPosition += position * weight;
+                Quaternion fullRotation = db.boneTransform.localRotation * rotation;
+                db.boneTransform.localRotation = Quaternion.Slerp(db.boneTransform.localRotation, fullRotation, weight);
+                var fullScale = scale;
+                fullScale.Scale(db.boneTransform.localScale);
+                db.boneTransform.localScale = Vector3.Lerp(db.boneTransform.localScale, fullScale, weight);
+            }
+        }
+
+        /// <summary>
+        /// Reset the specified transform to the pre-dna state.
+        /// </summary>
+        /// <param name="nameHash">Name hash.</param>
+        public virtual bool Reset(int nameHash)
 		{
 			BoneData db;
 			if (boneHashData.TryGetValue(nameHash, out db) && (db.boneTransform != null))
@@ -381,10 +404,10 @@ namespace UMA
 			return false;
 		}
 
-		/// <summary>
-		/// Reset all transforms to the default state.
-		/// </summary>
-		public virtual void ResetAll()
+        /// <summary>
+        /// Reset all transforms to the pre-dna state.
+        /// </summary>
+        public virtual void ResetAll()
 		{
 			foreach (BoneData db in boneHashData.Values)
 			{
@@ -398,12 +421,48 @@ namespace UMA
 			}
 		}
 
-		/// <summary>
-		/// Gets the position of a bone.
-		/// </summary>
-		/// <returns>The position.</returns>
-		/// <param name="nameHash">Name hash.</param>
-		public virtual Vector3 GetPosition(int nameHash)
+        /// <summary>
+        /// Restore the specified transform to the post-dna state.
+        /// </summary>
+        /// <param name="nameHash">Name hash.</param>
+        public virtual bool Restore(int nameHash)
+        {
+            BoneData db;
+            if (boneHashData.TryGetValue(nameHash, out db) && (db.boneTransform != null))
+            {
+                db.accessedFrame = frame;
+                db.boneTransform.localPosition = db.position;
+                db.boneTransform.localRotation = db.rotation;
+                db.boneTransform.localScale = db.scale;
+
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Restore all transforms to the post-dna state.
+        /// </summary>
+        public virtual void RestoreAll()
+        {
+            foreach (BoneData db in boneHashData.Values)
+            {
+                if (db.boneTransform != null)
+                {
+                    db.accessedFrame = frame;
+                    db.boneTransform.localPosition = db.position;
+                    db.boneTransform.localRotation = db.rotation;
+                    db.boneTransform.localScale = db.scale;
+                }
+            }
+        }
+        /// <summary>
+        /// Gets the position of a bone.
+        /// </summary>
+        /// <returns>The position.</returns>
+        /// <param name="nameHash">Name hash.</param>
+        public virtual Vector3 GetPosition(int nameHash)
 		{
 			BoneData db;
 			if (boneHashData.TryGetValue(nameHash, out db))
