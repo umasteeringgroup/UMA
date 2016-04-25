@@ -12,7 +12,7 @@ namespace UMA
 	public abstract class UMAGeneratorBuiltin : UMAGeneratorBase
 	{
 		public UMAData umaData;
-		[NonSerialized] 
+		[NonSerialized]
 		public List<UMAData> umaDirtyList = new List<UMAData>();
 		private UMAGeneratorCoroutine activeGeneratorCoroutine;
 		public Transform textureMergePrefab;
@@ -37,9 +37,9 @@ namespace UMA
 		{
 			activeGeneratorCoroutine = null;
 
-   			if (atlasResolution == 0)
+			if (atlasResolution == 0)
 				atlasResolution = 256;
-            
+
 			if (!textureMerge)
 			{
 				Transform tempTextureMerger = Instantiate(textureMergePrefab, Vector3.zero, Quaternion.identity) as Transform;
@@ -47,7 +47,7 @@ namespace UMA
 				textureMerge.transform.parent = transform;
 				textureMerge.gameObject.SetActive(false);
 			}
-            
+
 			//Garbage Collection hack
 			var mb = (System.GC.GetTotalMemory(false) / (1024 * 1024));
 			if (mb < 10)
@@ -57,7 +57,7 @@ namespace UMA
 				data[10 * 1024 * 1024 - 1] = 0;
 			}
 		}
-        
+
 		void Update()
 		{
 			stopWatch.Reset();
@@ -87,7 +87,7 @@ namespace UMA
 
 				if (!umaData.Validate())
 					return true;
-				
+
 				if (meshCombiner != null)
 				{
 					meshCombiner.Preprocess(umaData);
@@ -137,14 +137,14 @@ namespace UMA
 			UMAReady();
 			return true;
 		}
-        
+
 		public virtual void OnDirtyUpdate()
 		{
 			if (HandleDirtyUpdate(umaDirtyList[0]))
 			{
 				umaDirtyList.RemoveAt(0);
 				umaData = null;
-			} 
+			}
 			else if (fastGeneration && HandleDirtyUpdate(umaDirtyList[0]))
 			{
 				umaDirtyList.RemoveAt(0);
@@ -157,7 +157,8 @@ namespace UMA
 			if (meshCombiner != null)
 			{
 				meshCombiner.UpdateUMAMesh(updatedAtlas, umaData, atlasResolution);
-			} else
+			}
+			else
 			{
 				Debug.LogError("UMAGenerator.UpdateUMAMesh, no MeshCombiner specified", gameObject);
 			}
@@ -165,7 +166,7 @@ namespace UMA
 
 		/// <inheritdoc/>
 		public override void addDirtyUMA(UMAData umaToAdd)
-		{   
+		{
 			if (umaToAdd)
 			{
 				umaDirtyList.Add(umaToAdd);
@@ -185,27 +186,27 @@ namespace UMA
 		}
 
 		public virtual void UMAReady()
-		{   
+		{
 			if (umaData)
 			{
 				forceGarbageCollect++;
 				umaData.myRenderer.enabled = true;
 				umaData.FireUpdatedEvent(false);
 				umaData.FireCharacterCompletedEvents();
-				umaData.skeleton.EndSkeletonUpdate();
 				if (umaData.skeleton.boneCount > 300)
 				{
 					Debug.LogWarning("Skeleton has " + umaData.skeleton.boneCount + " bones, may be an error with slots!");
 				}
 			}
 		}
-    
+
 		public virtual void UpdateUMABody(UMAData umaData)
 		{
 			if (umaData)
 			{
 				umaData.skeleton.ResetAll();
 				umaData.ApplyDNA();
+				umaData.skeleton.EndSkeletonUpdate();
 				umaData.FireDNAAppliedEvents();
 				UpdateAvatar(umaData);
 			}
