@@ -111,7 +111,7 @@ namespace UMA.PoseTools
 				mecanimMask |= MecanimJoint.Eye;
 			if (overrideMecanimJaw)
 			{
-				umaData.skeleton.Reset(jawHash);
+				umaData.skeleton.Restore(jawHash);
 			}
 
 			for (int i = 0; i < values.Length; i++)

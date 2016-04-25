@@ -78,7 +78,7 @@ namespace UMA.PoseTools
 
             foreach (int hash in boneHashes)
             {
-                if (!umaSkeleton.Reset(hash))
+                if (!umaSkeleton.Restore(hash))
                 {
                     //Since this generally logs like crazy which screws everything anyway, it might be nice to provide some useful information?
                     string boneName = "";
