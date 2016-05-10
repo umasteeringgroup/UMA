@@ -32,7 +32,7 @@ public partial class UMATextRecipe : UMAPackedRecipeBase
 	/// <param name="context">Context.</param>
 	public override void PackedSave(UMAPackedRecipeBase.UMAPackRecipe packedRecipe, UMAContext context)
 	{
-		recipeString = JsonUtility.ToJson(packedRecipe, true);
+		recipeString = JsonUtility.ToJson(packedRecipe);
 	}
 
 	public override string GetInfo()
