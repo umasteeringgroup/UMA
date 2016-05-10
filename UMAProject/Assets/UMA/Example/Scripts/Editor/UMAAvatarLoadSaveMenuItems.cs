@@ -4,7 +4,6 @@ using UMA;
 
 public class UMAAvatarLoadSaveMenuItems : Editor
 {
-#if !StripLitJson
 	[MenuItem("UMA/Load and Save/Save Selected Avatar(s) Txt", priority=1)]
 	public static void SaveSelectedAvatarsTxt()
 	{
@@ -122,5 +121,4 @@ public class UMAAvatarLoadSaveMenuItems : Editor
 			}
 		}
 	}
-#endif
 }

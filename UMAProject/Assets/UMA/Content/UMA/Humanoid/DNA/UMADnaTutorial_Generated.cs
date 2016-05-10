@@ -74,19 +74,11 @@ namespace UMA
 		}
 		public static UMADnaTutorial LoadInstance(string data)
 	    {
-#if !StripLitJson
-	        return LitJson.JsonMapper.ToObject<UMADnaTutorial_Byte>(data).ToDna();
-#else
-			return null;
-#endif
+	        return UnityEngine.JsonUtility.FromJson<UMADnaTutorial_Byte>(data).ToDna();
 	    }
 		public static string SaveInstance(UMADnaTutorial instance)
 		{
-#if !StripLitJson
-			return LitJson.JsonMapper.ToJson(UMADnaTutorial_Byte.FromDna(instance));
-#else
-			return null;
-#endif
+			return UnityEngine.JsonUtility.ToJson(UMADnaTutorial_Byte.FromDna(instance));
 		}
 	}
 

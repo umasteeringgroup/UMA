@@ -741,14 +741,20 @@ namespace UMA
 				{
 					for (int i = 0; i < sharedColors.Length; i++)
 					{
-						if ((sharedColors[i] != null) && sharedColors[i].HasName())
-							mergedSharedColors.Add(sharedColors[i].name, i);
+						if (sharedColors[i] != null && sharedColors[i].HasName())
+						{
+							while (mergedSharedColors.ContainsKey(sharedColors[i].name))
+							{
+								sharedColors[i].name = sharedColors[i].name + ".";
+							}
+							mergedSharedColors.Add(sharedColors[i].name, i);							
+						}
 					}
 					
 					for (int i = 0; i < recipe.sharedColors.Length; i++)
 					{
 						OverlayColorData sharedColor = recipe.sharedColors[i];
-						if (sharedColor.HasName())
+						if (sharedColor != null && sharedColor.HasName())
 						{
 							int sharedIndex;
 							if (!mergedSharedColors.TryGetValue(sharedColor.name, out sharedIndex))

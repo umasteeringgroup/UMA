@@ -1,7 +1,5 @@
-#if !StripLitJson
 using UnityEngine;
 using System.Collections;
-using LitJson;
 using UMA;
 
 /// <summary>
@@ -24,7 +22,7 @@ public partial class UMATextRecipe : UMAPackedRecipeBase
 	public override UMAPackedRecipeBase.UMAPackRecipe PackedLoad(UMAContext context)
 	{
 		if ((recipeString== null) || (recipeString.Length == 0)) return new UMAPackRecipe();
-		return JsonMapper.ToObject<UMAPackRecipe>(recipeString);
+		return JsonUtility.FromJson<UMAPackRecipe>(recipeString);
 	}
 
 	/// <summary>
@@ -34,7 +32,7 @@ public partial class UMATextRecipe : UMAPackedRecipeBase
 	/// <param name="context">Context.</param>
 	public override void PackedSave(UMAPackedRecipeBase.UMAPackRecipe packedRecipe, UMAContext context)
 	{
-		recipeString = JsonMapper.ToJson(packedRecipe);
+		recipeString = JsonUtility.ToJson(packedRecipe, true);
 	}
 
 	public override string GetInfo()
@@ -60,4 +58,3 @@ public partial class UMATextRecipe : UMAPackedRecipeBase
 	#endif
 
 }
-#endif
