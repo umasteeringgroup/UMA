@@ -43,11 +43,7 @@ namespace UMA.PoseTools
 				umaData = gameObject.GetComponentInChildren<UMAData>();
 				if (umaData == null)
 				{
-#if UNITY_4_3
-					umaData = transform.root.GetComponentInChildren<UMAData>();
-#else
 					umaData = gameObject.GetComponentInParent<UMAData>();
-#endif
 				}
 				if (umaData == null)
 				{

@@ -41,9 +41,7 @@ namespace UMA.PoseTools
 					player.overrideMecanimEyes = true;
 				}
 
-#if !UNITY_4_3
 				umaAnimator.Rebind();
-#endif
 			}
 
 			if (player != null)
