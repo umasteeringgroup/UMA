@@ -55,12 +55,6 @@ namespace UMAEditor
 					umaBoneData = new Transform[0];
 				//}
 			} 
-#if !UMA2_LEAN_AND_CLEAN
-			else  if (slot.meshRenderer != null)
-			{
-				umaBoneData = GetTransformsInPrefab(slot.meshRenderer.rootBone);
-			}
-#endif
 			else
 			{
 				umaBoneData = new Transform[0];
