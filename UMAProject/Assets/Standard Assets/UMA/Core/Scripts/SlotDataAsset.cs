@@ -26,15 +26,6 @@ namespace UMA
 		[UMAAssetFieldVisible]
 		public UMAMaterial material;
 
-#if !UMA2_LEAN_AND_CLEAN 
-		[UnityEngine.HideInInspector]
-		public string[] textureNameList;
-		[UnityEngine.HideInInspector]
-		public SkinnedMeshRenderer meshRenderer;
-		[UnityEngine.HideInInspector]
-		public Material materialSample;
-#endif
-
 		/// <summary>
 		/// Default overlay scale for slots using the asset.
 		/// </summary>
@@ -138,28 +129,6 @@ namespace UMA
 		
 		public void UpdateMeshData()
 		{
-#if !UMA2_LEAN_AND_CLEAN
-			if (meshData.rootBone != null)
-			{
-				var rootBone = meshData.rootBone;
-				while (rootBone.name != "Global")
-				{
-					rootBone = rootBone.parent;
-					if (rootBone == null)
-					{
-						rootBone = meshData.rootBone;
-						break;
-					}
-				}
-				meshData.UpdateBones(meshData.rootBone, meshData.bones);
-				meshData.vertexCount = meshData.vertices.Length;
-			}
-			else
-			{
-				meshData.ReSortUMABones();
-			}
-			UnityEditor.EditorUtility.SetDirty(this);
-#endif
 		}
 #endif
 		public void OnAfterDeserialize()
