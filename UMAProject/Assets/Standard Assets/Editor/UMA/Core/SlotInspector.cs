@@ -43,23 +43,14 @@ namespace UMAEditor
         public void OnEnable()
         {
 			slot = target as SlotDataAsset;
-#pragma warning disable 618
 			if (slot.meshData != null)
 			{
-				//if (slot.meshData.rootBoneHash != null)
-				//{
-				//    umaBoneData = GetTransformsInPrefab(slot.meshData.rootBone);
-				//}
-				//else
-				//{
-					umaBoneData = new Transform[0];
-				//}
+				umaBoneData = new Transform[0];
 			} 
 			else
 			{
 				umaBoneData = new Transform[0];
 			}
-#pragma warning restore 618
 		}
 
         public override void OnInspectorGUI()

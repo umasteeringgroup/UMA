@@ -225,29 +225,7 @@ namespace UMA
 			res.lowerLegTwist = 1f;
 			res.upperArmTwist = 0.5f;
 			res.upperLegTwist = 0.1f;
-
-			//var animatedBones = umaData.GetAnimatedBones();
-			//if (animatedBones.Length > 0)
-			//{
-			//	List<SkeletonBone> animatedSkeleton = new List<SkeletonBone>(umaTPose.boneInfo);
-
-			//	foreach (var animatedBoneHash in animatedBones)
-			//	{
-			//		var animatedBone = umaData.GetBoneGameObject(animatedBoneHash).transform;
-
-			//		var sb = new SkeletonBone();
-			//		sb.name = animatedBone.name;
-			//		sb.position = animatedBone.localPosition;
-			//		sb.rotation = animatedBone.localRotation;
-			//		sb.scale = animatedBone.localScale;
-			//		animatedSkeleton.Add(sb);
-			//	}
-			//	res.skeleton = animatedSkeleton.ToArray();
-			//} else
-			//{
 			res.skeleton = umaTPose.boneInfo;
-			//}
-
 			res.human = umaTPose.humanInfo;
 
 			SkeletonModifier(umaData, ref res.skeleton, res.human);
