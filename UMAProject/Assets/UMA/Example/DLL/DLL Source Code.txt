@@ -1,1 +1,0 @@
-Source Code to the 3rd Party Public Domain LitJson.dll can be found at http://sourceforge.net/projects/litjson/
