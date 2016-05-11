@@ -224,12 +224,7 @@ namespace UMAEditor
 	    public static void OpenUmaTexturePrepareWindow()
 	    {
 			UmaSlotBuilderWindow window = (UmaSlotBuilderWindow)EditorWindow.GetWindow(typeof(UmaSlotBuilderWindow));
-
-#if !UNITY_4_6 && !UNITY_5_0
 			window.titleContent.text = "Slot Builder";
-#else
-			window.title = "Slot Builder";
-#endif
         }
 	}
 }

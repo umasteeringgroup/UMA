@@ -30,11 +30,6 @@ namespace UMAEditor
 	        AssetDatabase.CreateAsset(asset, assetPathAndName);
 
 	        AssetDatabase.SaveAssets();
-           // This line changes the folder in Unity 5.x
-#if UNITY_4_6
-           EditorUtility.FocusProjectWindow();
-#endif
-
 	        Selection.activeObject = asset;
 	    }
 	}

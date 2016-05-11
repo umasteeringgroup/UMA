@@ -123,10 +123,8 @@ namespace UMAEditor
 			newMesh.vertices = sourceMesh.vertices;
 			newMesh.uv = sourceMesh.uv;
 			newMesh.uv2 = sourceMesh.uv2;
-#if !UNITY_4_6
 			newMesh.uv3 = sourceMesh.uv3;
 			newMesh.uv4 = sourceMesh.uv4;
-#endif
 			newMesh.tangents = sourceMesh.tangents;
 			newMesh.normals = sourceMesh.normals;
 			newMesh.name = sourceMesh.name;

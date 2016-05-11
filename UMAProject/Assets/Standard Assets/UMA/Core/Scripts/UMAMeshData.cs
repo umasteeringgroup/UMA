@@ -224,10 +224,8 @@ namespace UMA
 		public Color32[] colors32;
 		public Vector2[] uv;
 		public Vector2[] uv2;
-#if !UNITY_4_6
 		public Vector2[] uv3;
 		public Vector2[] uv4;
-#endif
 		public SubMeshTriangles[] submeshes;
 		public Transform[] bones;
 		public Transform rootBone;
@@ -264,10 +262,8 @@ namespace UMA
 				tangents = gTangents;
 				uv = gUV;
 				uv2 = gUV2;
-#if !UNITY_4_6
 				uv3 = gUV3;
 				uv4 = gUV4;
-#endif
 				colors32 = gColors32;
 				boneHierarchy = gUMABones;
 				return true;
@@ -293,10 +289,8 @@ namespace UMA
 				tangents = null;
 				uv = null;
 				uv2 = null;
-#if !UNITY_4_6
 				uv3 = null;
 				uv4 = null;
-#endif
 				colors32 = null;
 				bufferLockOwner = null;
 			}
@@ -313,10 +307,8 @@ namespace UMA
 			colors32 = new Color32[size];
 			uv = new Vector2[size];
 			uv2 = new Vector2[size];
-#if !UNITY_4_6
 			uv3 = new Vector2[size];
 			uv4 = new Vector2[size];
-#endif
 		}
 		
 		/// <summary>
@@ -346,10 +338,8 @@ namespace UMA
 			colors32 = sharedMesh.colors32;
 			uv = sharedMesh.uv;
 			uv2 = sharedMesh.uv2;
-#if !UNITY_4_6
 			uv3 = sharedMesh.uv3;
 			uv4 = sharedMesh.uv4;
-#endif
 			subMeshCount = sharedMesh.subMeshCount;
 			submeshes = new SubMeshTriangles[subMeshCount];
 			for (int i = 0; i < subMeshCount; i++)
@@ -441,10 +431,8 @@ namespace UMA
 				mesh.tangents = tangents;
 				mesh.uv = uv;
 				mesh.uv2 = uv2;
-#if !UNITY_4_6
 				mesh.uv3 = uv3;
 				mesh.uv4 = uv4;
-#endif
 				mesh.colors32 = colors32;
 			}
 			mesh.bindposes = bindPoses;
@@ -478,10 +466,8 @@ namespace UMA
 			mesh.tangents = tangents;
 			mesh.uv = uv;
 			mesh.uv2 = uv2;
-#if !UNITY_4_6
 			mesh.uv3 = uv3;
 			mesh.uv4 = uv4;
-#endif
 			mesh.colors32 = colors32;
 			mesh.bindposes = bindPoses;
 			
@@ -604,7 +590,6 @@ namespace UMA
 						} 
 					}
 				}
-#if !UNITY_4_6
 				if (uv3 != null)
 				{
 					fixed (void* pUV3 = gUV3) 
@@ -637,7 +622,7 @@ namespace UMA
 						} 
 					}
 				}
-#endif
+
 				if (colors32 != null)
 				{
 					fixed (void* pColors32 = gColors32) 
@@ -676,10 +661,8 @@ namespace UMA
 		static Vector4[] gTangents = new Vector4[MAX_VERTEX_COUNT];
 		static Vector2[] gUV = new Vector2[MAX_VERTEX_COUNT];
 		static Vector2[] gUV2 = new Vector2[MAX_VERTEX_COUNT];
-#if !UNITY_4_6
 		static Vector2[] gUV3 = new Vector2[MAX_VERTEX_COUNT];
 		static Vector2[] gUV4 = new Vector2[MAX_VERTEX_COUNT];
-#endif
 		static Color32[] gColors32 = new Color32[MAX_VERTEX_COUNT];
 		static UMATransform gUMABones = new UMATransform[MAX_VERTEX_COUNT];
 #endif

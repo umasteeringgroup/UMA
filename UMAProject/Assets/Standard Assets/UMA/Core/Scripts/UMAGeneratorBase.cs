@@ -70,11 +70,7 @@ namespace UMA
 				for (int i = 0; i < layerCount; i++)
 				{
 					var state = animator.GetCurrentAnimatorStateInfo(i);
-#if UNITY_4_6
-					stateHashes[i] = state.nameHash;
-#else
 					stateHashes[i] = state.fullPathHash;
-#endif
 					stateTimes[i] = Mathf.Max(0, state.normalizedTime - Time.deltaTime / state.length);
 				}
 			}

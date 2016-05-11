@@ -62,10 +62,8 @@ namespace UMA
 			bool has_tangents = (meshComponents & MeshComponents.has_tangents) != MeshComponents.none;
 			bool has_uv = (meshComponents & MeshComponents.has_uv) != MeshComponents.none;
 			bool has_uv2 = (meshComponents & MeshComponents.has_uv2) != MeshComponents.none;
-#if !UNITY_4_6
 			bool has_uv3 = (meshComponents & MeshComponents.has_uv3) != MeshComponents.none;
 			bool has_uv4 = (meshComponents & MeshComponents.has_uv4) != MeshComponents.none;
-#endif
 			bool has_colors32 = (meshComponents & MeshComponents.has_colors32) != MeshComponents.none;
 
 			Vector3[] vertices = EnsureArrayLength(target.vertices, vertexCount);
@@ -74,10 +72,8 @@ namespace UMA
 			Vector4[] tangents = has_tangents ? EnsureArrayLength(target.tangents, vertexCount) : null;
 			Vector2[] uv = has_uv ? EnsureArrayLength(target.uv, vertexCount) : null;
 			Vector2[] uv2 = has_uv2 ? EnsureArrayLength(target.uv2, vertexCount) : null;
-#if !UNITY_4_6
 			Vector2[] uv3 = has_uv3 ? EnsureArrayLength(target.uv3, vertexCount) : null;
 			Vector2[] uv4 = has_uv4 ? EnsureArrayLength(target.uv4, vertexCount) : null;
-#endif
 			Color32[] colors32 = has_colors32 ? EnsureArrayLength(target.colors32, vertexCount) : null;
 
 			UMATransform[] umaTransforms = EnsureArrayLength(target.umaBones, transformHierarchyCount);
@@ -153,7 +149,6 @@ namespace UMA
 						FillArray(uv2, vertexIndex, vertexCount, Vector4.zero);
 					}
 				}
-#if !UNITY_4_6
 				if (has_uv3)
 				{
                if (source.meshData.uv3 != null && source.meshData.uv3.Length >= vertexCount)
@@ -176,7 +171,7 @@ namespace UMA
 						FillArray(uv4, vertexIndex, vertexCount, Vector4.zero);
 					}
 				}
-#endif
+
 				if (has_colors32)
 				{
 					if (source.meshData.colors32 != null && source.meshData.colors32.Length > 0)
@@ -216,10 +211,8 @@ namespace UMA
 			target.tangents = tangents;
 			target.uv = uv;
 			target.uv2 = uv2;
-#if !UNITY_4_6
 			target.uv3 = uv3;
 			target.uv4 = uv4;
-#endif
 			target.colors32 = colors32;
 
 			target.subMeshCount = subMeshCount;
@@ -310,10 +303,8 @@ namespace UMA
 				if (source.meshData.tangents != null && source.meshData.tangents.Length != 0) meshComponents |= MeshComponents.has_tangents;
 				if (source.meshData.uv != null && source.meshData.uv.Length != 0) meshComponents |= MeshComponents.has_uv;
 				if (source.meshData.uv2 != null && source.meshData.uv2.Length != 0) meshComponents |= MeshComponents.has_uv2;
-#if !UNITY_4_6
 				if (source.meshData.uv3 != null && source.meshData.uv3.Length != 0) meshComponents |= MeshComponents.has_uv3;
 				if (source.meshData.uv4 != null && source.meshData.uv4.Length != 0) meshComponents |= MeshComponents.has_uv4;
-#endif
 				if (source.meshData.colors32 != null && source.meshData.colors32.Length != 0) meshComponents |= MeshComponents.has_colors32;
 
 				for (int i = 0; i < source.meshData.subMeshCount; i++)
