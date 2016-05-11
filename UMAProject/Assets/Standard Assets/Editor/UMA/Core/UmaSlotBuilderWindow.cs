@@ -231,5 +231,45 @@ namespace UMAEditor
 			window.title = "Slot Builder";
 #endif
         }
+
+		[MenuItem("UMA/Optimize Slot Meshes")]
+		public static void OptimizeSlotMeshes()
+		{
+#if UMA2_LEAN_AND_CLEAN 
+			Debug.LogError("MenuItem - UMA/OptimizeSlotMeshes does not work with the define UMA2_LEAN_AND_CLEAN, we need all legacy fields available.");
+#else
+			foreach (var obj in Selection.objects)
+			{
+				var SlotDataAsset = obj as SlotDataAsset;
+				if (SlotDataAsset != null)
+				{
+#pragma warning disable 618
+					if (SlotDataAsset.meshRenderer != null)
+					{
+						UMASlotProcessingUtil.OptimizeSlotDataMesh(SlotDataAsset.meshRenderer);
+						SlotDataAsset.UpdateMeshData(SlotDataAsset.meshRenderer);
+						SlotDataAsset.meshRenderer = null;
+						EditorUtility.SetDirty(SlotDataAsset);
+					}
+					else
+					{
+						if (SlotDataAsset.meshData != null)
+						{
+							SlotDataAsset.UpdateMeshData();
+						}
+						else
+						{
+							if (SlotDataAsset.meshData.vertices != null)
+							{
+								SlotDataAsset.UpdateMeshData();
+							}
+						}
+					}
+#pragma warning restore 618
+				}
+			}
+			AssetDatabase.SaveAssets();
+#endif
+		}
 	}
 }

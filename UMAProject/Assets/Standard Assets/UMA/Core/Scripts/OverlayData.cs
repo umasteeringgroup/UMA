@@ -7,7 +7,11 @@ namespace UMA
 	/// Overlay data contains the textures and material properties for building atlases.
 	/// </summary>
 	[System.Serializable]
+#if !UMA_LEAN_AND_CLEAN
+	public partial class OverlayData : System.IEquatable<OverlayData>
+#else
 	public class OverlayData : System.IEquatable<OverlayData>
+#endif
 	{
 		/// <summary>
 		/// The asset contains the immutable portions of the overlay.
@@ -18,7 +22,9 @@ namespace UMA
 		/// </summary>
 		public Rect rect;
 
+#if UMA2_LEAN_AND_CLEAN
 		public string overlayName { get { return asset.overlayName; } }
+#endif
 		/// <summary>
 		/// Color data for material channels.
 		/// </summary>
@@ -140,6 +146,37 @@ namespace UMA
 			}
 			return !((bool)overlay2);
 		}
+
+#if !UMA2_LEAN_AND_CLEAN 
+		#region obsolete junk from version 1
+		[System.Obsolete("OverlayData.overlayName is obsolete use asset.overlayName!", false)]
+		public string overlayName;
+		
+		[System.Obsolete("OverlayData.listID is obsolete.", false)]
+		[System.NonSerialized]
+		public int listID;
+		
+		[System.Obsolete("OverlayData.color is obsolete. Please refer to the OverlayColorData.", false)]
+		public Color color = new Color(1, 1, 1, 1);
+
+		[System.Obsolete("OverlayData.textureList is obsolete. Please refer to the OverlayDataAsset.", false)]
+		public Texture[] textureList;
+		[System.Obsolete("OverlayData.channelMask is obsolete. Please refer to the OverlayColorData.", false)]
+		public Color32[] channelMask;
+		[System.Obsolete("OverlayData.channelAdditiveMask is obsolete. Please refer to the OverlayColorData.", false)]
+		public Color32[] channelAdditiveMask;
+		
+		[System.Obsolete("OverlayData.umaData is obsolete.", false)]
+		[System.NonSerialized]
+		public UMAData umaData;
+		/// <summary>
+		/// Use this to identify what kind of overlay this is and what it fits
+		/// Eg. BaseMeshSkin, BaseMeshOverlays, GenericPlateArmor01
+		/// </summary>
+		[System.Obsolete("OverlayData.tags is obsolete use asset.tags!", false)]
+		public string[] tags;
+		#endregion
+#endif
 
 		#region operator ==, != and similar HACKS, seriously.....
 		public static implicit operator bool(OverlayData obj)
