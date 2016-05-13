@@ -155,7 +155,6 @@ namespace UMA
 		public static Animator CreateAnimator(UMAData umaData, UmaTPose umaTPose, RuntimeAnimatorController controller, bool hasNetAnim)
 		{
 			var animator = umaData.gameObject.AddComponent<Animator>();
-			Debug.Log(hasNetAnim);
 			if(hasNetAnim)
 			{
 				NetworkAnimator netAnimator = umaData.gameObject.AddComponent<NetworkAnimator>();

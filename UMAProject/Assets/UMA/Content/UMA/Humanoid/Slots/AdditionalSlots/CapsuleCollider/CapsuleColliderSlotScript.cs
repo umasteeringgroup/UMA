@@ -32,7 +32,7 @@ namespace UMA
 			}
 			capsule.radius = umaData.characterRadius;
 			capsule.height = umaData.characterHeight;
-			capsule.center = new Vector3(0, capsule.height * 0.5f - 0.04f, 0);
+			capsule.center = new Vector3(0, capsule.height / 2, 0);
 		}
 	}
 }
