@@ -65,9 +65,6 @@ namespace UMA
 			this.rect = asset.rect;
 		}
 
-		[System.Obsolete("useAdvancedMasks is obsolete, from now on we ALWAYS use advanced masks. Reduces code complexity.", false)]
-	    public bool useAdvancedMasks { get { return true; } }
-
 		/// <summary>
 		/// Sets the tint color for a channel.
 		/// </summary>

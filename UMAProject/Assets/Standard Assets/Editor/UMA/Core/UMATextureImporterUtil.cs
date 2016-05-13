@@ -187,13 +187,6 @@ namespace UMAEditor
 	        return overlay;
 
 	    }
-
-
-		[System.Obsolete("UMATextureImporterUtil.CreateSlotData is obsolete use UMASlotProcessingUtil.CreateSlotData instead.", false)]
-		public static SlotDataAsset CreateSlotData(string slotFolder, string assetFolder, string assetName, SkinnedMeshRenderer mesh, Material material, SkinnedMeshRenderer prefabMesh)
-		{
-			throw new NotImplementedException();
-		}
 	}
 }
 #endif

@@ -18,8 +18,7 @@ namespace UMA
 	public partial class RaceData : ScriptableObject
 	{
 	    public string raceName;
-		[System.Obsolete("RaceData.racePrefab is obsolete. It is no longer used.", false)]
-		public GameObject racePrefab;
+
 		/// <summary>
 		/// The set of DNA converters for modifying characters of this race.
 		/// </summary>

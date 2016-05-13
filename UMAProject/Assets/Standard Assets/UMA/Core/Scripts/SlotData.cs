@@ -286,12 +286,6 @@ namespace UMA
 
         #region operator ==, != and similar HACKS, seriously.....
 
-        [System.Obsolete("You can no longer cast UnityEngine.Object to SlotData, perhaps you want to cast it into SlotDataAsset instead?", false)]
-        public static implicit operator SlotData(UnityEngine.Object obj)
-        {
-            throw new System.NotImplementedException("You can no longer cast UnityEngine.Object to SlotData, perhaps you want to cast it into SlotDataAsset instead?");
-        }
-
         public static implicit operator bool (SlotData obj)
         {
             return ((System.Object)obj) != null && obj.asset != null;

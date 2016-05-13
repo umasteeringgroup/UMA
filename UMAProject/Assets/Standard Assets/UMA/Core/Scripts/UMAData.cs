@@ -76,9 +76,7 @@ namespace UMA
 		public bool cancelled { get; private set; }
 		[NonSerialized]
 		public bool dirty = false;
-		[NonSerialized]
-		[Obsolete("UMAData._hasUpdatedBefore is obsolete", false)]
-		public bool _hasUpdatedBefore = false;
+
 		private bool isOfficiallyCreated = false;
 		/// <summary>
 		/// Callback event when character has been updated.
@@ -979,38 +977,6 @@ namespace UMA
 		}
 		
 		/// <summary>
-		/// Ensures that all required bone transforms exist.
-		/// </summary>
-		/// <param name="umaBones">UMA bones.</param>
-		/// <param name="boneMap">Bone map.</param>
-		[Obsolete("UMAData.EnsureBoneData has been depricated and will be removed later.", false)]
-		public void EnsureBoneData(Transform[] umaBones, Dictionary<Transform, Transform> boneMap)
-		{
-		}
-		
-		/// <summary>
-		/// Ensures that all required bone transforms exist.
-		/// </summary>
-		/// <param name="umaBones">UMA bones.</param>
-		/// <param name="animBones">Animated bones.</param>
-		/// <param name="boneMap">Bone map.</param>
-		[Obsolete("UMAData.EnsureBoneData has been depricated and will be removed later.", false)]
-		public void EnsureBoneData(Transform[] umaBones, Transform[] animBones, Dictionary<Transform, Transform> boneMap)
-		{
-		}
-
-		[Obsolete("UMAData.ClearBoneData has been depricated and will be removed later.", false)]
-		public void ClearBoneData()
-		{
-			skeleton = null;
-		}
-
-		[Obsolete("UMAData.ClearBoneData has been depricated and will be removed later.", false)]
-		public void UpdateBoneData()
-		{
-		}
-		
-		/// <summary>
 		/// Gets the complete DNA array.
 		/// </summary>
 		/// <returns>The DNA array.</returns>
@@ -1100,14 +1066,6 @@ namespace UMA
 		public UMASkeleton GetSkeleton()
 		{
 			return skeleton;
-		}
-		
-		/// <summary>
-		/// Align skeleton to the default pose.
-		/// </summary>
-		[Obsolete("UMAData.GotoOriginalPose has been depricated and will be removed later, please use the skeleton helper if you want to access the skeleton.", false)]
-		public void GotoOriginalPose()
-		{
 		}
 		
 		/// <summary>

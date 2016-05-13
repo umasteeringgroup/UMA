@@ -17,10 +17,4 @@ public abstract class SlotLibraryBase : MonoBehaviour
 
 	public abstract void UpdateDictionary();
     public abstract void ValidateDictionary();
-
-	[Obsolete("SlotLibrary.AddSlot(SlotData slot) is obsolete use SlotLibrary.AddSlotAsset(SlotDataAsset slot) instead", false)]
-	public virtual void AddSlot(SlotData slot) { throw new NotFiniteNumberException(); }
-	[Obsolete("SlotLibrary.GetAllSlots() is obsolete use SlotLibrary.GetAllSlotAssets() instead", false)]
-	public virtual SlotData[] GetAllSlots() { throw new NotFiniteNumberException(); }
-
 }

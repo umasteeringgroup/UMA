@@ -23,9 +23,7 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 	public UMARecipeBase[] umaAdditionalRecipes;
 	public UMAGeneratorBase umaGenerator;
 	public RuntimeAnimatorController animationController;
-	[NonSerialized]
-	[System.Obsolete("UMAAvatarBase.umaChild is obsolete use UMAData.umaRoot instead", false)]
-	public GameObject umaChild;
+
 	protected RaceData umaRace = null;
 
 	/// <summary>

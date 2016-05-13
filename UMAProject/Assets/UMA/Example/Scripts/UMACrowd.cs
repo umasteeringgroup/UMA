@@ -5,16 +5,6 @@ using UMA;
 
 public class UMACrowd : MonoBehaviour
 {
-	[HideInInspector]
-	[System.Obsolete("Crowd slotLibrary is obsolete, please use the Crowd umaContext", false)]
-	public SlotLibrary slotLibrary;
-	[HideInInspector]
-	[System.Obsolete("Crowd overlayLibrary is obsolete, please use the Crowd umaContext", false)]
-	public OverlayLibrary overlayLibrary;
-	[HideInInspector]
-	[System.Obsolete("Crowd raceLibrary is obsolete, please use the Crowd umaContext", false)]
-	public RaceLibrary raceLibrary;
-
 	public UMACrowdRandomSet[] randomPool;
 	public UMAGeneratorBase generator;
 	public UMAData umaData;
@@ -696,26 +686,17 @@ public class UMACrowd : MonoBehaviour
 	
 	private RaceLibraryBase GetRaceLibrary()
 	{
-		if (umaContext != null) return umaContext.raceLibrary;
-#pragma warning disable 618
-		return raceLibrary;
-#pragma warning restore 618
+		return umaContext.raceLibrary;
 	}
 
 	private SlotLibraryBase GetSlotLibrary()
 	{
-		if (umaContext != null) return umaContext.slotLibrary;
-#pragma warning disable 618
-		return slotLibrary;
-#pragma warning restore 618
+		return umaContext.slotLibrary;
 	}
 
 	private OverlayLibraryBase GetOverlayLibrary()
 	{
-		if (umaContext != null) return umaContext.overlayLibrary;
-#pragma warning disable 618
-		return overlayLibrary;
-#pragma warning restore 618
+		return umaContext.overlayLibrary;
 	}
 
 }
