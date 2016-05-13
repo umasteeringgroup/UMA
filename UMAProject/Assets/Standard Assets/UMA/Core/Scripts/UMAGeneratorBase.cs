@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
 using Object = UnityEngine.Object;
@@ -105,6 +106,7 @@ namespace UMA
 				AnimatorState snapshot = new AnimatorState();
 				if(umaData.animationController != null)
 				{
+					bool hasNetAnim = false;
 					var animator = umaData.animator;
 					if(animator != null)
 					{
@@ -115,6 +117,12 @@ namespace UMA
 						}
 
 						Avatar avatar = animator.avatar;
+						NetworkAnimator netAnimator = umaData.gameObject.GetComponent<NetworkAnimator>();
+						if(netAnimator)
+						{
+							Object.DestroyImmediate(netAnimator);
+							hasNetAnim = true;
+						}
 						Object.DestroyImmediate(animator);
 						Object.Destroy(avatar);
 					}
@@ -125,7 +133,7 @@ namespace UMA
 					umaTransform.parent = null;
 					umaTransform.localRotation = Quaternion.identity;
 					umaTransform.localPosition = Vector3.zero;
-					animator = CreateAnimator(umaData, umaData.umaRecipe.raceData.TPose, umaData.animationController);
+					animator = CreateAnimator(umaData, umaData.umaRecipe.raceData.TPose, umaData.animationController, hasNetAnim);
 					umaData.animator = animator;
 					umaTransform.parent = oldParent;
 					umaTransform.localRotation = originalRot;
@@ -144,9 +152,15 @@ namespace UMA
 		/// <param name="umaData">UMA data.</param>
 		/// <param name="umaTPose">UMA TPose.</param>
 		/// <param name="controller">Animation controller.</param>
-		public static Animator CreateAnimator(UMAData umaData, UmaTPose umaTPose, RuntimeAnimatorController controller)
+		public static Animator CreateAnimator(UMAData umaData, UmaTPose umaTPose, RuntimeAnimatorController controller, bool hasNetAnim)
 		{
 			var animator = umaData.gameObject.AddComponent<Animator>();
+			Debug.Log(hasNetAnim);
+			if(hasNetAnim)
+			{
+				NetworkAnimator netAnimator = umaData.gameObject.AddComponent<NetworkAnimator>();
+				netAnimator.animator = animator;
+			}
 			switch (umaData.umaRecipe.raceData.umaTarget)
 			{
 				case RaceData.UMATarget.Humanoid:
@@ -287,26 +301,6 @@ namespace UMA
 				}
 			}
 			bones = newBones.ToArray();
-		}
-		
-		[Obsolete("CreateAnimator(... bool applyRootMotion ...) is obsolete, use CreateAnimator(UMAData, UmaTPose, RuntimeAnimatorController) instead.", false)]
-		public static Animator CreateAnimator(UMAData umaData, UmaTPose umaTPose, RuntimeAnimatorController controller, bool applyRootMotion, AnimatorUpdateMode updateMode, AnimatorCullingMode cullingMode)
-		{
-			var animator = CreateAnimator(umaData, umaTPose, controller);
-			animator.applyRootMotion = applyRootMotion;
-			animator.updateMode = updateMode;
-			animator.cullingMode = cullingMode;
-			return animator;
-		}
-		
-		[Obsolete("CreateAnimator(... bool applyRootMotion, bool animatePhysics ...) is obsolete, use CreateAnimator(... AnimatorUpdateMode updateMode ...) instead.", false)]
-		public static Animator CreateAnimator(UMAData umaData, UmaTPose umaTPose, RuntimeAnimatorController controller, bool applyRootMotion, bool animatePhysics, AnimatorCullingMode cullingMode)
-		{
-			var animator = CreateAnimator(umaData, umaTPose, controller);
-			animator.applyRootMotion = applyRootMotion;
-			animator.animatePhysics = animatePhysics;
-			animator.cullingMode = cullingMode;
-			return animator;
 		}
 #pragma warning restore 618
 	}
