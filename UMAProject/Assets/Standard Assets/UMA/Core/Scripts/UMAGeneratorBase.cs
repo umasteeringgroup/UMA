@@ -103,12 +103,12 @@ namespace UMA
 			if (umaData)
 			{
 				AnimatorState snapshot = new AnimatorState();
-				if (umaData.animationController != null)
+				if(umaData.animationController != null)
 				{
 					var animator = umaData.animator;
-					if (animator != null)
+					if(animator != null)
 					{
-						if (umaData.animationController == animator.runtimeAnimatorController)
+						if(umaData.animationController == animator.runtimeAnimatorController)
 						{
 							snapshot = new AnimatorState();
 							snapshot.SaveAnimatorState(animator);
@@ -132,6 +132,8 @@ namespace UMA
 					umaTransform.localPosition = originalPos;
 					snapshot.RestoreAnimatorState(animator);
 				}
+				else
+					Debug.LogWarning("No animation controller supplied.");
 			}
 		}
 
