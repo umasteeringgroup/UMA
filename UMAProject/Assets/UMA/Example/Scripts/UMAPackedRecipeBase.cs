@@ -620,7 +620,11 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 			colorData = new OverlayColorData[0];
 		}
 
-		umaRecipe.sharedColors = colorData;
+		umaRecipe.sharedColors = new OverlayColorData[umaPackRecipe.sharedColorCount];
+       		for (int i = 0; i < umaRecipe.sharedColors.Length; i++)
+	       	{
+	        	umaRecipe.sharedColors[i] = colorData[i];
+	       	}
 
 		for (int i = 0; i < umaPackRecipe.slotsV2.Length; i++)
 		{
