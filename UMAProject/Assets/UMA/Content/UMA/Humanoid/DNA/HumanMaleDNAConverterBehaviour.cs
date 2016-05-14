@@ -38,25 +38,13 @@ public class HumanMaleDNAConverterBehaviour : HumanoidDNAConverterBehaviour
 			Mathf.Clamp(1, 1, 1),
 			Mathf.Clamp(1 + (umaDna.headWidth - 0.5f) * 0.30f, 0.5f, 1.6f),
 			Mathf.Clamp(1 , 1, 1)));
-		
-		//umaData.boneList["HeadAdjust"].boneTransform.localScale = new Vector3(
-		//Mathf.Clamp(1, 1, 1),
-		//Mathf.Clamp(1 + (umaDna.headWidth - 0.5f) * 0.30f, 0.5f, 1.6f),
-		//Mathf.Clamp(1 , 1, 1));
-		
-		
+
 		skeleton.SetScale(neckAdjustHash, 
 		                  new Vector3(
 			Mathf.Clamp(1, 0.6f, 2),
 			Mathf.Clamp(1 + (umaDna.neckThickness - 0.5f) * 0.80f, 0.5f, 1.6f),
 			Mathf.Clamp(1 + (umaDna.neckThickness - 0.5f) * 1.2f, 0.5f, 1.6f)));
-		
-		//umaData.boneList["NeckAdjust"].boneTransform.localScale = new Vector3(
-		//Mathf.Clamp(1, 0.6f, 2),
-		//Mathf.Clamp(1 + (umaDna.neckThickness - 0.5f) * 0.80f, 0.5f, 1.6f),
-		//Mathf.Clamp(1 + (umaDna.neckThickness - 0.5f) * 1.2f, 0.5f, 1.6f));
-		
-		
+
 		skeleton.SetScale(leftOuterBreastHash, 
 		                  new Vector3(
 			Mathf.Clamp(1 + (umaDna.breastSize - 0.5f) * 1.50f + (umaDna.upperWeight - 0.5f) * 0.10f, 0.6f, 1.5f),
@@ -67,16 +55,7 @@ public class HumanMaleDNAConverterBehaviour : HumanoidDNAConverterBehaviour
 			Mathf.Clamp(1 + (umaDna.breastSize - 0.5f) * 1.50f + (umaDna.upperWeight - 0.5f) * 0.10f, 0.6f, 1.5f),
 			Mathf.Clamp(1 + (umaDna.breastSize - 0.5f) * 1.50f + (umaDna.upperWeight - 0.5f) * 0.10f, 0.6f, 1.5f),
 			Mathf.Clamp(1 + (umaDna.breastSize - 0.5f) * 1.50f + (umaDna.upperWeight - 0.5f) * 0.10f, 0.6f, 1.5f)));
-		
-		//umaData.boneList["LeftOuterBreast"].boneTransform.localScale = new Vector3(
-		//Mathf.Clamp(1 + (umaDna.breastSize - 0.5f) * 1.50f + (umaDna.upperWeight - 0.5f) * 0.10f, 0.6f, 1.5f),
-		//Mathf.Clamp(1 + (umaDna.breastSize - 0.5f) * 1.50f + (umaDna.upperWeight - 0.5f) * 0.10f, 0.6f, 1.5f),
-		//Mathf.Clamp(1 + (umaDna.breastSize - 0.5f) * 1.50f + (umaDna.upperWeight - 0.5f) * 0.10f, 0.6f, 1.5f));
-		//umaData.boneList["RightOuterBreast"].boneTransform.localScale = new Vector3(
-		//Mathf.Clamp(1 + (umaDna.breastSize - 0.5f) * 1.50f + (umaDna.upperWeight - 0.5f) * 0.10f, 0.6f, 1.5f),
-		//Mathf.Clamp(1 + (umaDna.breastSize - 0.5f) * 1.50f + (umaDna.upperWeight - 0.5f) * 0.10f, 0.6f, 1.5f),
-		//Mathf.Clamp(1 + (umaDna.breastSize - 0.5f) * 1.50f + (umaDna.upperWeight - 0.5f) * 0.10f, 0.6f, 1.5f));
-		
+
 		skeleton.SetScale(leftEyeHash, 
 		                  new Vector3(
 			Mathf.Clamp(1 + (umaDna.eyeSize - 0.5f) * 0.3f , 0.7f, 1.4f),
@@ -87,68 +66,36 @@ public class HumanMaleDNAConverterBehaviour : HumanoidDNAConverterBehaviour
 			Mathf.Clamp(1 + (umaDna.eyeSize - 0.5f) * 0.3f , 0.7f, 1.4f),
 			Mathf.Clamp(1 + (umaDna.eyeSize - 0.5f) * 0.3f , 0.7f, 1.4f),
 			Mathf.Clamp(1 + (umaDna.eyeSize - 0.5f) * 0.3f , 0.7f, 1.4f)));
-		
-		//umaData.boneList["LeftEye"].boneTransform.localScale = new Vector3(
-		//Mathf.Clamp(1 + (umaDna.eyeSize - 0.5f) * 0.3f , 0.7f, 1.4f),
-		//Mathf.Clamp(1 + (umaDna.eyeSize - 0.5f) * 0.3f , 0.7f, 1.4f),
-		//Mathf.Clamp(1 + (umaDna.eyeSize - 0.5f) * 0.3f , 0.7f, 1.4f));
-		//umaData.boneList["RightEye"].boneTransform.localScale = new Vector3(
-		//Mathf.Clamp(1 + (umaDna.eyeSize - 0.5f) * 0.3f , 0.7f, 1.4f),
-		//Mathf.Clamp(1 + (umaDna.eyeSize - 0.5f) * 0.3f , 0.7f, 1.4f),
-		//Mathf.Clamp(1 + (umaDna.eyeSize - 0.5f) * 0.3f , 0.7f, 1.4f));     
-		
+
 		skeleton.SetRotation(leftEyeAdjustHash,
 		                     Quaternion.Euler(new Vector3((umaDna.eyeRotation - 0.5f) * 20, 0, 0)));
 		skeleton.SetRotation(rightEyeAdjustHash,
 		                     Quaternion.Euler(new Vector3(-(umaDna.eyeRotation - 0.5f) * 20, 0, 0)));
-		
-		//umaData.boneList["LeftEye"].boneTransform.localEulerAngles = new Vector3((umaDna.eyeRotation - 0.5f) * 20, -90, -180);
-		//umaData.boneList["RightEye"].boneTransform.localEulerAngles = new Vector3(-(umaDna.eyeRotation - 0.5f) * 20, -90, -180);
-		
+
 		skeleton.SetScale(spine1AdjustHash, 
 		                  new Vector3(
 			Mathf.Clamp(1, 0.6f, 2),
 			Mathf.Clamp(0.9f + (umaDna.upperWeight - 0.5f) * 0.10f + (umaDna.upperMuscle - 0.5f) * 0.5f, 0.45f, 1.50f),
 			Mathf.Clamp(0.7f + (umaDna.upperWeight - 0.5f) * 0.45f + (umaDna.upperMuscle - 0.5f) * 0.45f, 0.55f, 1.15f)));
-		
-		//umaData.boneList["Spine1Adjust"].boneTransform.localScale = new Vector3(
-		//Mathf.Clamp(1, 0.6f, 2),
-		//Mathf.Clamp(0.9f + (umaDna.upperWeight - 0.5f) * 0.10f + (umaDna.upperMuscle - 0.5f) * 0.5f, 0.45f, 1.50f),
-		//Mathf.Clamp(0.7f + (umaDna.upperWeight - 0.5f) * 0.45f + (umaDna.upperMuscle - 0.5f) * 0.45f, 0.55f, 1.15f));
-		
+
 		skeleton.SetScale(spineAdjustHash, 
 		                  new Vector3(
 			Mathf.Clamp(1, 0.6f, 2),
 			Mathf.Clamp(0.9f + (umaDna.upperWeight - 0.5f) * 0.35f + (umaDna.upperMuscle - 0.5f) * 0.45f, 0.75f, 1.350f),
 			Mathf.Clamp(0.8f + (umaDna.upperWeight - 0.5f) * 0.35f + (umaDna.upperMuscle - 0.5f) * 0.25f, 0.75f, 1.350f)));
-		
-		//umaData.boneList["SpineAdjust"].boneTransform.localScale = new Vector3(
-		//Mathf.Clamp(1, 0.6f, 2),
-		//Mathf.Clamp(0.9f + (umaDna.upperWeight - 0.5f) * 0.35f + (umaDna.upperMuscle - 0.5f) * 0.45f, 0.75f, 1.350f),
-		//Mathf.Clamp(0.8f + (umaDna.upperWeight - 0.5f) * 0.35f + (umaDna.upperMuscle - 0.5f) * 0.25f, 0.75f, 1.350f));
-		
+
 		skeleton.SetScale(lowerBackBellyHash, 
 		                  new Vector3(
 			Mathf.Clamp(1 + (umaDna.belly - 0.5f) * 1.0f, 0.35f, 1.75f),
 			Mathf.Clamp(1 + (umaDna.belly - 0.5f) * 0.35f, 0.35f, 1.75f),
 			Mathf.Clamp(1 + (umaDna.belly - 0.5f) * 1.25f, 0.35f, 1.75f)));
-		
-		//umaData.boneList["LowerBackBelly"].boneTransform.localScale = new Vector3(
-		//Mathf.Clamp(1 + (umaDna.belly - 0.5f) * 1.0f, 0.35f, 1.75f),
-		//Mathf.Clamp(1 + (umaDna.belly - 0.5f) * 0.35f, 0.35f, 1.75f),
-		//Mathf.Clamp(1 + (umaDna.belly - 0.5f) * 1.25f, 0.35f, 1.75f));
-		
+
 		skeleton.SetScale(lowerBackAdjustHash, 
 		                  new Vector3(
 			Mathf.Clamp(1 + (umaDna.upperWeight - 0.5f) * 0.25f + (umaDna.lowerWeight - 0.5f) * 0.15f, 0.85f, 1.5f),
 			Mathf.Clamp(1 + (umaDna.upperWeight - 0.5f) * 0.25f + (umaDna.lowerWeight - 0.5f) * 0.15f + (umaDna.waist - 0.5f) * 0.45f, 0.65f, 1.75f),
 			Mathf.Clamp(1 + (umaDna.upperWeight - 0.5f) * 0.25f + (umaDna.lowerWeight - 0.5f) * 0.15f, 0.85f, 1.5f)));
-		
-		//umaData.boneList["LowerBackAdjust"].boneTransform.localScale = new Vector3(
-		//Mathf.Clamp(1 + (umaDna.upperWeight - 0.5f) * 0.25f + (umaDna.lowerWeight - 0.5f) * 0.15f, 0.85f, 1.5f),
-		//Mathf.Clamp(1 + (umaDna.upperWeight - 0.5f) * 0.25f + (umaDna.lowerWeight - 0.5f) * 0.15f + (umaDna.waist - 0.5f) * 0.45f, 0.65f, 1.75f),
-		//Mathf.Clamp(1 + (umaDna.upperWeight - 0.5f) * 0.25f + (umaDna.lowerWeight - 0.5f) * 0.15f, 0.85f, 1.5f));
-		
+
 		skeleton.SetScale(leftTrapeziusHash, 
 		                  new Vector3(
 			Mathf.Clamp(1 + (umaDna.upperMuscle - 0.5f) * 1.35f, 0.65f, 1.35f),
@@ -159,16 +106,7 @@ public class HumanMaleDNAConverterBehaviour : HumanoidDNAConverterBehaviour
 			Mathf.Clamp(1 + (umaDna.upperMuscle - 0.5f) * 1.35f, 0.65f, 1.35f),
 			Mathf.Clamp(1 + (umaDna.upperMuscle - 0.5f) * 1.35f, 0.65f, 1.35f),
 			Mathf.Clamp(1 + (umaDna.upperMuscle - 0.5f) * 1.35f, 0.65f, 1.35f)));
-		
-		//umaData.boneList["LeftTrapezius"].boneTransform.localScale = new Vector3(
-		//Mathf.Clamp(1 + (umaDna.upperMuscle - 0.5f) * 1.35f, 0.65f, 1.35f),
-		//Mathf.Clamp(1 + (umaDna.upperMuscle - 0.5f) * 1.35f, 0.65f, 1.35f),
-		//Mathf.Clamp(1 + (umaDna.upperMuscle - 0.5f) * 1.35f, 0.65f, 1.35f));
-		//umaData.boneList["RightTrapezius"].boneTransform.localScale = new Vector3(
-		//Mathf.Clamp(1 + (umaDna.upperMuscle - 0.5f) * 1.35f, 0.65f, 1.35f),
-		//Mathf.Clamp(1 + (umaDna.upperMuscle - 0.5f) * 1.35f, 0.65f, 1.35f),
-		//Mathf.Clamp(1 + (umaDna.upperMuscle - 0.5f) * 1.35f, 0.65f, 1.35f));
-		
+
 		skeleton.SetScale(leftArmAdjustHash, 
 		                  new Vector3(
 			Mathf.Clamp(1, 0.6f, 2),
@@ -179,16 +117,7 @@ public class HumanMaleDNAConverterBehaviour : HumanoidDNAConverterBehaviour
 			Mathf.Clamp(1, 0.6f, 2),
 			Mathf.Clamp(1 + (umaDna.armWidth - 0.5f) * 0.65f, 0.65f, 1.65f),
 			Mathf.Clamp(1 + (umaDna.armWidth - 0.5f) * 0.65f, 0.65f, 1.65f)));
-		
-		//umaData.boneList["LeftArmAdjust"].boneTransform.localScale = new Vector3(
-		//Mathf.Clamp(1, 0.6f, 2),
-		//Mathf.Clamp(1 + (umaDna.armWidth - 0.5f) * 0.65f, 0.65f, 1.65f),
-		//Mathf.Clamp(1 + (umaDna.armWidth - 0.5f) * 0.65f, 0.65f, 1.65f));
-		//umaData.boneList["RightArmAdjust"].boneTransform.localScale = new Vector3(
-		//Mathf.Clamp(1, 0.6f, 2),
-		//Mathf.Clamp(1 + (umaDna.armWidth - 0.5f) * 0.65f, 0.65f, 1.65f),
-		//Mathf.Clamp(1 + (umaDna.armWidth - 0.5f) * 0.65f, 0.65f, 1.65f));
-		
+
 		skeleton.SetScale(leftForeArmAdjustHash, 
 		                  new Vector3(
 			Mathf.Clamp(1, 0.6f, 2),
@@ -199,16 +128,7 @@ public class HumanMaleDNAConverterBehaviour : HumanoidDNAConverterBehaviour
 			Mathf.Clamp(1, 0.6f, 2),
 			Mathf.Clamp(1 + (umaDna.forearmWidth - 0.5f) * 0.65f, 0.75f, 1.25f),
 			Mathf.Clamp(1 + (umaDna.forearmWidth - 0.5f) * 0.65f, 0.75f, 1.25f)));
-		
-		//umaData.boneList["LeftForeArmAdjust"].boneTransform.localScale = new Vector3(
-		//Mathf.Clamp(1, 0.6f, 2),
-		//Mathf.Clamp(1 + (umaDna.forearmWidth - 0.5f) * 0.65f, 0.75f, 1.25f),
-		//Mathf.Clamp(1 + (umaDna.forearmWidth - 0.5f) * 0.65f, 0.75f, 1.25f));
-		//umaData.boneList["RightForeArmAdjust"].boneTransform.localScale = new Vector3(
-		//Mathf.Clamp(1, 0.6f, 2),
-		//Mathf.Clamp(1 + (umaDna.forearmWidth - 0.5f) * 0.65f, 0.75f, 1.25f),
-		//Mathf.Clamp(1 + (umaDna.forearmWidth - 0.5f) * 0.65f, 0.75f, 1.25f));
-		
+
 		skeleton.SetScale(leftForeArmTwistAdjustHash, 
 		                  new Vector3(
 			Mathf.Clamp(1, 0.6f, 2),
@@ -219,16 +139,7 @@ public class HumanMaleDNAConverterBehaviour : HumanoidDNAConverterBehaviour
 			Mathf.Clamp(1, 0.6f, 2),
 			Mathf.Clamp(1 + (umaDna.forearmWidth - 0.5f) * 0.35f, 0.75f, 1.25f),
 			Mathf.Clamp(1 + (umaDna.forearmWidth - 0.5f) * 0.35f, 0.75f, 1.25f)));
-		
-		//umaData.boneList["LeftForeArmTwistAdjust"].boneTransform.localScale = new Vector3(
-		//Mathf.Clamp(1, 0.6f, 2),
-		//Mathf.Clamp(1 + (umaDna.forearmWidth - 0.5f) * 0.35f, 0.75f, 1.25f),
-		//Mathf.Clamp(1 + (umaDna.forearmWidth - 0.5f) * 0.35f, 0.75f, 1.25f));
-		//umaData.boneList["RightForeArmTwistAdjust"].boneTransform.localScale = new Vector3(
-		//Mathf.Clamp(1, 0.6f, 2),
-		//Mathf.Clamp(1 + (umaDna.forearmWidth - 0.5f) * 0.35f, 0.75f, 1.25f),
-		//Mathf.Clamp(1 + (umaDna.forearmWidth - 0.5f) * 0.35f, 0.75f, 1.25f));
-		
+
 		skeleton.SetScale(leftShoulderAdjustHash, 
 		                  new Vector3(
 			Mathf.Clamp(1, 0.6f, 2),
@@ -239,16 +150,7 @@ public class HumanMaleDNAConverterBehaviour : HumanoidDNAConverterBehaviour
 			Mathf.Clamp(1, 0.6f, 2),
 			Mathf.Clamp(1 + (umaDna.upperWeight - 0.5f) * 0.35f + (umaDna.upperMuscle - 0.5f) * 0.55f, 0.75f, 1.25f),
 			Mathf.Clamp(1 + (umaDna.upperWeight - 0.5f) * 0.35f + (umaDna.upperMuscle - 0.5f) * 0.55f, 0.75f, 1.25f)));
-		
-		//umaData.boneList["LeftShoulderAdjust"].boneTransform.localScale = new Vector3(
-		//Mathf.Clamp(1, 0.6f, 2),
-		//Mathf.Clamp(1 + (umaDna.upperWeight - 0.5f) * 0.35f + (umaDna.upperMuscle - 0.5f) * 0.55f, 0.75f, 1.25f),
-		//Mathf.Clamp(1 + (umaDna.upperWeight - 0.5f) * 0.35f + (umaDna.upperMuscle - 0.5f) * 0.55f, 0.75f, 1.25f));
-		//umaData.boneList["RightShoulderAdjust"].boneTransform.localScale = new Vector3(
-		//Mathf.Clamp(1, 0.6f, 2),
-		//Mathf.Clamp(1 + (umaDna.upperWeight - 0.5f) * 0.35f + (umaDna.upperMuscle - 0.5f) * 0.55f, 0.75f, 1.25f),
-		//Mathf.Clamp(1 + (umaDna.upperWeight - 0.5f) * 0.35f + (umaDna.upperMuscle - 0.5f) * 0.55f, 0.75f, 1.25f));
-		
+
 		skeleton.SetScale(leftUpLegAdjustHash, 
 		                  new Vector3(
 			Mathf.Clamp(1, 0.6f, 2),
@@ -259,16 +161,7 @@ public class HumanMaleDNAConverterBehaviour : HumanoidDNAConverterBehaviour
 			Mathf.Clamp(1, 0.6f, 2),
 			Mathf.Clamp(1 + (umaDna.lowerWeight - 0.5f) * 0.45f + (umaDna.lowerMuscle - 0.5f) * 0.15f - (umaDna.legsSize - 0.5f), 0.45f, 1.15f),
 			Mathf.Clamp(1 + (umaDna.lowerWeight - 0.5f) * 0.45f + (umaDna.lowerMuscle - 0.5f) * 0.15f - (umaDna.legsSize - 0.5f), 0.45f, 1.15f)));
-		
-		//umaData.boneList["LeftUpLegAdjust"].boneTransform.localScale = new Vector3(
-		//Mathf.Clamp(1, 0.6f, 2),
-		//Mathf.Clamp(1 + (umaDna.lowerWeight - 0.5f) * 0.45f + (umaDna.lowerMuscle - 0.5f) * 0.15f - (umaDna.legsSize - 0.5f), 0.45f, 1.15f),
-		//Mathf.Clamp(1 + (umaDna.lowerWeight - 0.5f) * 0.45f + (umaDna.lowerMuscle - 0.5f) * 0.15f - (umaDna.legsSize - 0.5f), 0.45f, 1.15f));
-		//umaData.boneList["RightUpLegAdjust"].boneTransform.localScale = new Vector3(
-		//Mathf.Clamp(1, 0.6f, 2),
-		//Mathf.Clamp(1 + (umaDna.lowerWeight - 0.5f) * 0.45f + (umaDna.lowerMuscle - 0.5f) * 0.15f - (umaDna.legsSize - 0.5f), 0.45f, 1.15f),
-		//Mathf.Clamp(1 + (umaDna.lowerWeight - 0.5f) * 0.45f + (umaDna.lowerMuscle - 0.5f) * 0.15f - (umaDna.legsSize - 0.5f), 0.45f, 1.15f));
-		
+
 		skeleton.SetScale(leftLegAdjustHash, 
 		                  new Vector3(
 			Mathf.Clamp(1, 0.6f, 2),
@@ -279,16 +172,7 @@ public class HumanMaleDNAConverterBehaviour : HumanoidDNAConverterBehaviour
 			Mathf.Clamp(1, 0.6f, 2),
 			Mathf.Clamp(1 + (umaDna.lowerWeight - 0.5f) * 0.15f + (umaDna.lowerMuscle - 0.5f) * 0.95f - (umaDna.legsSize - 0.5f), 0.65f, 1.45f),
 			Mathf.Clamp(1 + (umaDna.lowerWeight - 0.5f) * 0.15f + (umaDna.lowerMuscle - 0.5f) * 0.75f - (umaDna.legsSize - 0.5f), 0.65f, 1.45f)));
-		
-		//umaData.boneList["LeftLegAdjust"].boneTransform.localScale = new Vector3(
-		//Mathf.Clamp(1, 0.6f, 2),
-		//Mathf.Clamp(1 + (umaDna.lowerWeight - 0.5f) * 0.15f + (umaDna.lowerMuscle - 0.5f) * 0.95f - (umaDna.legsSize - 0.5f), 0.65f, 1.45f),
-		//Mathf.Clamp(1 + (umaDna.lowerWeight - 0.5f) * 0.15f + (umaDna.lowerMuscle - 0.5f) * 0.75f - (umaDna.legsSize - 0.5f), 0.65f, 1.45f));
-		//umaData.boneList["RightLegAdjust"].boneTransform.localScale = new Vector3(
-		//Mathf.Clamp(1, 0.6f, 2),
-		//Mathf.Clamp(1 + (umaDna.lowerWeight - 0.5f) * 0.15f + (umaDna.lowerMuscle - 0.5f) * 0.95f - (umaDna.legsSize - 0.5f), 0.65f, 1.45f),
-		//Mathf.Clamp(1 + (umaDna.lowerWeight - 0.5f) * 0.15f + (umaDna.lowerMuscle - 0.5f) * 0.75f - (umaDna.legsSize - 0.5f), 0.65f, 1.45f));
-		
+
 		skeleton.SetScale(leftGluteusHash, 
 		                  new Vector3(
 			Mathf.Clamp(1 + (umaDna.gluteusSize - 0.5f) * 1.35f , 0.25f, 2.35f),
@@ -300,15 +184,6 @@ public class HumanMaleDNAConverterBehaviour : HumanoidDNAConverterBehaviour
 			Mathf.Clamp(1 + (umaDna.gluteusSize - 0.5f) * 1.35f , 0.25f, 2.35f),
 			Mathf.Clamp(1 + (umaDna.gluteusSize - 0.5f) * 1.35f , 0.25f, 2.35f)));
 		
-		//umaData.boneList["LeftGluteus"].boneTransform.localScale = new Vector3(
-		//Mathf.Clamp(1 + (umaDna.gluteusSize - 0.5f) * 1.35f , 0.25f, 2.35f),
-		//Mathf.Clamp(1 + (umaDna.gluteusSize - 0.5f) * 1.35f , 0.25f, 2.35f),
-		//Mathf.Clamp(1 + (umaDna.gluteusSize - 0.5f) * 1.35f , 0.25f, 2.35f));
-		//umaData.boneList["RightGluteus"].boneTransform.localScale = new Vector3(
-		//Mathf.Clamp(1 + (umaDna.gluteusSize - 0.5f) * 1.35f , 0.25f, 2.35f),
-		//Mathf.Clamp(1 + (umaDna.gluteusSize - 0.5f) * 1.35f , 0.25f, 2.35f),
-		//Mathf.Clamp(1 + (umaDna.gluteusSize - 0.5f) * 1.35f , 0.25f, 2.35f));
-		
 		skeleton.SetScale(leftEarAdjustHash, 
 		                  new Vector3(
 			Mathf.Clamp(1 + (umaDna.earsSize - 0.5f) * 1.0f, 0.75f, 1.5f),
@@ -319,15 +194,6 @@ public class HumanMaleDNAConverterBehaviour : HumanoidDNAConverterBehaviour
 			Mathf.Clamp(1 + (umaDna.earsSize - 0.5f) * 1.0f, 0.75f, 1.5f),
 			Mathf.Clamp(1 + (umaDna.earsSize - 0.5f) * 1.0f, 0.75f, 1.5f),
 			Mathf.Clamp(1 + (umaDna.earsSize - 0.5f) * 1.0f, 0.75f, 1.5f)));		
-		
-		//umaData.boneList["LeftEarAdjust"].boneTransform.localScale = new Vector3(
-		//Mathf.Clamp(1 + (umaDna.earsSize - 0.5f) * 1.0f, 0.75f, 1.5f),
-		//Mathf.Clamp(1 + (umaDna.earsSize - 0.5f) * 1.0f, 0.75f, 1.5f),
-		//Mathf.Clamp(1 + (umaDna.earsSize - 0.5f) * 1.0f, 0.75f, 1.5f));
-		//umaData.boneList["RightEarAdjust"].boneTransform.localScale = new Vector3(
-		//Mathf.Clamp(1 + (umaDna.earsSize - 0.5f) * 1.0f, 0.75f, 1.5f),
-		//Mathf.Clamp(1 + (umaDna.earsSize - 0.5f) * 1.0f, 0.75f, 1.5f),
-		//Mathf.Clamp(1 + (umaDna.earsSize - 0.5f) * 1.0f, 0.75f, 1.5f));
 		
 		skeleton.SetPositionRelative(leftEarAdjustHash,
 		                     new Vector3(
@@ -565,7 +431,7 @@ public class HumanMaleDNAConverterBehaviour : HumanoidDNAConverterBehaviour
 
 		skeleton.SetPositionRelative(positionHash,
 		                     new Vector3(
-			Mathf.Clamp((umaDna.feetSize - 0.5f) * -0.27f, -0.15f, 0.0675f),
+			Mathf.Clamp((umaDna.feetSize - 0.5f) * -0.20f, -0.15f, 0.0675f),
 			Mathf.Clamp(0, -10, 10),
 			Mathf.Clamp(0, -10, 10)));
 		
@@ -650,9 +516,8 @@ public class HumanMaleDNAConverterBehaviour : HumanoidDNAConverterBehaviour
 			Mathf.Clamp(1 + (umaDna.mandibleSize - 0.5f) * 0.35f, 0.35f, 1.35f),
 			Mathf.Clamp(1 + (umaDna.mandibleSize - 0.5f) * 0.35f, 0.35f, 1.35f)));
 
-		umaData.characterHeight = overallScale * (0.85f + 1.2f * lowerBackScale);
-		umaData.characterRadius = 0.28f * overallScale;
+		umaData.characterHeight = overallScale * (0.85f + 1.2f * lowerBackScale) + ((umaDna.feetSize - 0.5f) * 0.25f);
+		umaData.characterRadius = 0.29f + ((umaDna.height - 0.5f) * 0.35f) + Mathf.Clamp01((umaDna.upperMuscle - 0.5f) * 0.19f);
 		umaData.characterMass = 46f * overallScale + 26f * umaDna.upperWeight + 26f * umaDna.lowerWeight;
 	}
-	
 }
