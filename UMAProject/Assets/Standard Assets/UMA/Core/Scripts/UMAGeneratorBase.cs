@@ -109,7 +109,6 @@ namespace UMA
 					var oldParent = umaTransform.parent;
 					var originalRot = umaTransform.localRotation;
 					var originalPos = umaTransform.localPosition;
-					var umaTPose = umaData.umaRecipe.raceData.TPose;
 
 					umaTransform.parent = null;
 					umaTransform.localRotation = Quaternion.identity;
@@ -118,26 +117,17 @@ namespace UMA
 					var animator = umaData.animator;
 					if(animator == null)
 					{
-						animator = CreateAnimator(umaData, umaTPose, umaData.animationController);
+						animator = umaData.gameObject.AddComponent<Animator>();
+						SetAvatar(umaData, animator);
+						animator.runtimeAnimatorController = umaData.animationController;
 						umaData.animator = animator;
 					}
 					else
 					{
-						Avatar avatar = animator.avatar;
-						Object.Destroy(avatar);
-
-						switch (umaData.umaRecipe.raceData.umaTarget)
-						{
-							case RaceData.UMATarget.Humanoid:
-								umaTPose.DeSerialize();
-								animator.avatar = CreateAvatar(umaData, umaTPose);
-								break;
-							case RaceData.UMATarget.Generic:
-								animator.avatar = CreateGenericAvatar(umaData);
-								break;
-						}
+						Object.Destroy(animator.avatar);
+						SetAvatar(umaData, animator);
 					}
-						
+
 					umaTransform.parent = oldParent;
 					umaTransform.localRotation = originalRot;
 					umaTransform.localPosition = originalPos;
@@ -148,15 +138,13 @@ namespace UMA
 		}
 
 		/// <summary>
-		/// Creates a new animator for a UMA character.
+		/// Creates a new avatar for a UMA character.
 		/// </summary>
-		/// <returns>The animator.</returns>
 		/// <param name="umaData">UMA data.</param>
-		/// <param name="umaTPose">UMA TPose.</param>
-		/// <param name="controller">Animation controller.</param>
-		public static Animator CreateAnimator(UMAData umaData, UmaTPose umaTPose, RuntimeAnimatorController controller)
+		/// <param name="animator>Animator.</param>
+		public static void SetAvatar(UMAData umaData, Animator animator)
 		{
-			var animator = umaData.gameObject.AddComponent<Animator>();
+			var umaTPose = umaData.umaRecipe.raceData.TPose;
 			switch (umaData.umaRecipe.raceData.umaTarget)
 			{
 				case RaceData.UMATarget.Humanoid:
@@ -167,8 +155,6 @@ namespace UMA
 					animator.avatar = CreateGenericAvatar(umaData);
 					break;
 			}
-			animator.runtimeAnimatorController = controller;
-			return animator;
 		}
 
 		public static void DebugLogHumanAvatar(GameObject root, HumanDescription description)
