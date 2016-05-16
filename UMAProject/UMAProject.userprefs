@@ -1,10 +1,8 @@
 ﻿<Properties StartupItem="Assembly-CSharp.csproj">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="Unity.Instance.Unity Editor" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\UMA\Content\UMA\Network_Demo\Scripts\PlayerController.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\UMA\Example\Scripts\Editor\UMAAvatarLoadSaveMenuItems.cs">
     <Files>
-      <File FileName="Assets\UMA\Content\UMA\Network_Demo\Scripts\PlayerSetup.cs" Line="71" Column="24" />
-      <File FileName="Assets\UMA\Content\UMA\Network_Demo\Scripts\MenuScript.cs" Line="36" Column="87" />
-      <File FileName="Assets\UMA\Content\UMA\Network_Demo\Scripts\PlayerController.cs" Line="62" Column="43" />
+      <File FileName="Assets\UMA\Example\Scripts\Editor\UMAAvatarLoadSaveMenuItems.cs" Line="18" Column="5" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

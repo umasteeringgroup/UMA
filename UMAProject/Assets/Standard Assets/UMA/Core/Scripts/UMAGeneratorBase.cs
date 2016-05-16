@@ -124,8 +124,11 @@ namespace UMA
 					}
 					else
 					{
+						AnimatorState snapshot = new AnimatorState();
+						snapshot.SaveAnimatorState(animator);
 						Object.Destroy(animator.avatar);
 						SetAvatar(umaData, animator);
+						snapshot.RestoreAnimatorState(animator);
 					}
 
 					umaTransform.parent = oldParent;
