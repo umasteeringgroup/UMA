@@ -28,6 +28,7 @@ namespace UMA
 
 		void OnRenderObject()
 		{
+			if (Camera.current != myCamera) return;
 			if (textureMergeRects != null)
 			{
 				for (int i = 0; i < textureMergeRectCount; i++)
