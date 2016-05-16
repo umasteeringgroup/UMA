@@ -95,6 +95,15 @@ namespace UMAEditor
 			slot.material = material;
 			slot.UpdateMeshData(finalMeshRenderer);
 			AssetDatabase.CreateAsset(slot, slotFolder + '/' + assetName + '/' + assetName + "_Slot.asset");
+			for(int i = 1; i < slot.meshData.subMeshCount; i++)
+			{
+				var additionalSlot = ScriptableObject.CreateInstance<SlotDataAsset>();
+				additionalSlot.slotName = string.Format("{0}_{1}", assetName, i);
+				additionalSlot.material = material;
+				additionalSlot.UpdateMeshData(finalMeshRenderer);
+				additionalSlot.subMeshIndex = i;
+				AssetDatabase.CreateAsset(additionalSlot, slotFolder + '/' + assetName + '/' + assetName + "_"+ i +"_Slot.asset");
+			}
 			AssetDatabase.SaveAssets();
 			return slot;
 		}
