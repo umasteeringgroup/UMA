@@ -103,42 +103,44 @@ namespace UMA
 		{
 			if (umaData)
 			{
-				AnimatorState snapshot = new AnimatorState();
 				if(umaData.animationController != null)
 				{
-					bool hasNetAnim = false;
-					var animator = umaData.animator;
-					if(animator != null)
-					{
-						if(umaData.animationController == animator.runtimeAnimatorController)
-						{
-							snapshot = new AnimatorState();
-							snapshot.SaveAnimatorState(animator);
-						}
-
-						Avatar avatar = animator.avatar;
-						NetworkAnimator netAnimator = umaData.gameObject.GetComponent<NetworkAnimator>();
-						if(netAnimator)
-						{
-							Object.DestroyImmediate(netAnimator);
-							hasNetAnim = true;
-						}
-						Object.DestroyImmediate(animator);
-						Object.Destroy(avatar);
-					}
 					var umaTransform = umaData.transform;
 					var oldParent = umaTransform.parent;
 					var originalRot = umaTransform.localRotation;
 					var originalPos = umaTransform.localPosition;
+					var umaTPose = umaData.umaRecipe.raceData.TPose;
+
 					umaTransform.parent = null;
 					umaTransform.localRotation = Quaternion.identity;
 					umaTransform.localPosition = Vector3.zero;
-					animator = CreateAnimator(umaData, umaData.umaRecipe.raceData.TPose, umaData.animationController, hasNetAnim);
-					umaData.animator = animator;
+
+					var animator = umaData.animator;
+					if(animator == null)
+					{
+						animator = CreateAnimator(umaData, umaTPose, umaData.animationController);
+						umaData.animator = animator;
+					}
+					else
+					{
+						Avatar avatar = animator.avatar;
+						Object.Destroy(avatar);
+
+						switch (umaData.umaRecipe.raceData.umaTarget)
+						{
+							case RaceData.UMATarget.Humanoid:
+								umaTPose.DeSerialize();
+								animator.avatar = CreateAvatar(umaData, umaTPose);
+								break;
+							case RaceData.UMATarget.Generic:
+								animator.avatar = CreateGenericAvatar(umaData);
+								break;
+						}
+					}
+						
 					umaTransform.parent = oldParent;
 					umaTransform.localRotation = originalRot;
 					umaTransform.localPosition = originalPos;
-					snapshot.RestoreAnimatorState(animator);
 				}
 				else
 					Debug.LogWarning("No animation controller supplied.");
@@ -152,14 +154,9 @@ namespace UMA
 		/// <param name="umaData">UMA data.</param>
 		/// <param name="umaTPose">UMA TPose.</param>
 		/// <param name="controller">Animation controller.</param>
-		public static Animator CreateAnimator(UMAData umaData, UmaTPose umaTPose, RuntimeAnimatorController controller, bool hasNetAnim)
+		public static Animator CreateAnimator(UMAData umaData, UmaTPose umaTPose, RuntimeAnimatorController controller)
 		{
 			var animator = umaData.gameObject.AddComponent<Animator>();
-			if(hasNetAnim)
-			{
-				NetworkAnimator netAnimator = umaData.gameObject.AddComponent<NetworkAnimator>();
-				netAnimator.animator = animator;
-			}
 			switch (umaData.umaRecipe.raceData.umaTarget)
 			{
 				case RaceData.UMATarget.Humanoid:
