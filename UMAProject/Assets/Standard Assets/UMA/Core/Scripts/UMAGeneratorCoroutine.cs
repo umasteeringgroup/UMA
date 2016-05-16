@@ -35,40 +35,31 @@ namespace UMA
 
         private UMAData.GeneratedMaterial FindOrCreateGeneratedMaterial(UMAMaterial umaMaterial)
         {
-            if (umaMaterial.materialType != UMAMaterial.MaterialType.Atlas)
-            {
-                var res = new UMAData.GeneratedMaterial();
-                res.umaMaterial = umaMaterial;
-                res.material = UnityEngine.Object.Instantiate(umaMaterial.material) as Material;
-                res.material.name = umaMaterial.material.name;
-                generatedMaterials.Add(res);
-                return res;
-            }
-            else
-            {
-                foreach (var atlassedMaterial in atlassedMaterials)
-                {
-                    if (atlassedMaterial.umaMaterial == umaMaterial)
-                    {
-                        return atlassedMaterial;
-                    }
-                    else
-                    {
-                        if (atlassedMaterial.umaMaterial.Equals(umaMaterial))
-                        {
-                            return atlassedMaterial;
-                        }
-                    }
-                }
+			if (umaMaterial.materialType == UMAMaterial.MaterialType.Atlas)
+			{
+				foreach (var atlassedMaterial in atlassedMaterials)
+				{
+					if (atlassedMaterial.umaMaterial == umaMaterial)
+					{
+						return atlassedMaterial;
+					}
+					else
+					{
+						if (atlassedMaterial.umaMaterial.Equals(umaMaterial))
+						{
+							return atlassedMaterial;
+						}
+					}
+				}
+			}
 
-                var res = new UMAData.GeneratedMaterial();
-                res.umaMaterial = umaMaterial;
-                res.material = UnityEngine.Object.Instantiate(umaMaterial.material) as Material;
-                res.material.name = umaMaterial.material.name;
-                atlassedMaterials.Add(res);
-                generatedMaterials.Add(res);
-                return res;
-            }
+            var res = new UMAData.GeneratedMaterial();
+            res.umaMaterial = umaMaterial;
+            res.material = UnityEngine.Object.Instantiate(umaMaterial.material) as Material;
+            res.material.name = umaMaterial.material.name;
+            atlassedMaterials.Add(res);
+            generatedMaterials.Add(res);
+            return res;
         }
 
         protected override void Start()
@@ -336,16 +327,19 @@ namespace UMA
 
             for (int atlasIndex = 0; atlasIndex < umaAtlasList.materials.Count; atlasIndex++)
             {
-                Vector2 finalAtlasAspect = new Vector2(umaGenerator.atlasResolution / umaAtlasList.materials[atlasIndex].cropResolution.x, umaGenerator.atlasResolution / umaAtlasList.materials[atlasIndex].cropResolution.y);
+				var material = umaAtlasList.materials[atlasIndex];
+				if (material.umaMaterial.materialType == UMAMaterial.MaterialType.NoAtlas) continue;
 
-                for (int atlasElementIndex = 0; atlasElementIndex < umaAtlasList.materials[atlasIndex].materialFragments.Count; atlasElementIndex++)
+				Vector2 finalAtlasAspect = new Vector2(umaGenerator.atlasResolution / material.cropResolution.x, umaGenerator.atlasResolution / material.cropResolution.y);
+
+                for (int atlasElementIndex = 0; atlasElementIndex < material.materialFragments.Count; atlasElementIndex++)
                 {
-                    Rect tempRect = umaAtlasList.materials[atlasIndex].materialFragments[atlasElementIndex].atlasRegion;
+                    Rect tempRect = material.materialFragments[atlasElementIndex].atlasRegion;
                     tempRect.xMin = tempRect.xMin * finalAtlasAspect.x;
                     tempRect.xMax = tempRect.xMax * finalAtlasAspect.x;
                     tempRect.yMin = tempRect.yMin * finalAtlasAspect.y;
                     tempRect.yMax = tempRect.yMax * finalAtlasAspect.y;
-                    umaAtlasList.materials[atlasIndex].materialFragments[atlasElementIndex].atlasRegion = tempRect;
+					material.materialFragments[atlasElementIndex].atlasRegion = tempRect;
                 }
             }
         }
