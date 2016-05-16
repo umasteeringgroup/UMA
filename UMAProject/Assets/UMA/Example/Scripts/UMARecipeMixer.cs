@@ -98,9 +98,9 @@ public class UMARecipeMixer : MonoBehaviour
 		}
 	}
 
-	private void IncludeRecipe(UMARecipeBase recipe, UMAData.UMARecipe umaRecipe, UMAContext context, bool additional)
+	private void IncludeRecipe(UMARecipeBase recipe, UMAData.UMARecipe umaRecipe, UMAContext context, bool dontSerialize)
 	{
 		UMAData.UMARecipe cachedRecipe = recipe.GetCachedRecipe(context);
-		umaRecipe.Merge(cachedRecipe, additional);
+		umaRecipe.Merge(cachedRecipe, dontSerialize);
 	}
 }

@@ -264,6 +264,7 @@ namespace UMA
 			protected Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate> umaDnaConverter = new Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate>();
 			protected Dictionary<string, int> mergedSharedColors = new Dictionary<string, int>();
 			public SlotData[] slotDataList;
+			[Obsolete("UMA 2.1 - additionalSlotCount has been deprecated, SlotData.dontSerialize now takes care of scene based additonal slots.", false)]
 			public int additionalSlotCount;
 			public OverlayColorData[] sharedColors;
 			
@@ -455,8 +456,8 @@ namespace UMA
 			/// Combine additional slot with current data.
 			/// </summary>
 			/// <param name="slot">Slot.</param>
-			/// <param name="additional">If set to <c>true</c> slot will not be serialized.</param>
-			public void MergeSlot(SlotData slot, bool additional)
+			/// <param name="dontSerialize">If set to <c>true</c> slot will not be serialized.</param>
+			public void MergeSlot(SlotData slot, bool dontSerialize)
 			{
 				if ((slot == null) || (slot.asset == null))
 					return;
@@ -492,26 +493,16 @@ namespace UMA
 								originalSlot.AddOverlay(overlayCopy);
 							}
 						}
+						originalSlot.dontSerialize = dontSerialize;
 						return;
 					}
 				}
 				
 				int insertIndex = slotDataList.Length;
 				System.Array.Resize<SlotData>(ref slotDataList, slotDataList.Length + 1);
-				if (additional)
-				{
-					additionalSlotCount += 1;
-				}
-				else
-				{
-					for (int i = 0; i < additionalSlotCount; i++)
-					{
-						slotDataList[insertIndex] = slotDataList[insertIndex -1];
-						insertIndex--;
-					}
-				}
 				
 				SlotData slotCopy = slot.Copy();
+				slotCopy.dontSerialize = dontSerialize;
 				overlayCount = slotCopy.OverlayCount;
 				for (int j = 0; j < overlayCount; j++)
 				{
@@ -715,8 +706,8 @@ namespace UMA
 			/// Combine additional recipe with current data.
 			/// </summary>
 			/// <param name="recipe">Recipe.</param>
-			/// <param name="additional">If set to <c>true</c> recipe will not be serialized.</param>
-			public void Merge(UMARecipe recipe, bool additional)
+			/// <param name="dontSerialize">If set to <c>true</c> recipe will not be serialized.</param>
+			public void Merge(UMARecipe recipe, bool dontSerialize)
 			{
 				if (recipe == null)
 					return;
@@ -772,7 +763,7 @@ namespace UMA
 				{
 					for (int i = 0; i < recipe.slotDataList.Length; i++)
 					{
-						MergeSlot(recipe.slotDataList[i], additional);
+						MergeSlot(recipe.slotDataList[i], dontSerialize);
 					}
 				}
 			}

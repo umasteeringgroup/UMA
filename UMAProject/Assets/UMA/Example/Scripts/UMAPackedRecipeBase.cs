@@ -391,7 +391,7 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 		UMAPackRecipe umaPackRecipe = new UMAPackRecipe();
 		umaPackRecipe.version = 2;
 		
-		int slotCount = umaRecipe.slotDataList.Length - umaRecipe.additionalSlotCount;
+		int slotCount = umaRecipe.slotDataList.Length;
 		umaPackRecipe.slotsV2 = new PackedSlotDataV2[slotCount];
 		if (UMAPackRecipe.RaceIsValid(umaRecipe.raceData))
 		{
@@ -419,7 +419,7 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 
 		for (int i = 0; i < slotCount; i++)
 		{
-			if (UMAPackRecipe.SlotIsValid(umaRecipe.slotDataList[i]))
+			if (UMAPackRecipe.SlotIsValid(umaRecipe.slotDataList[i]) && !umaRecipe.slotDataList[i].dontSerialize)
 			{
 				PackedSlotDataV2 tempPackedSlotData = new PackedSlotDataV2();
 				umaPackRecipe.slotsV2[i] = tempPackedSlotData;
@@ -494,7 +494,6 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 			return false;
 		
 		umaRecipe.slotDataList = new SlotData[umaPackRecipe.packedSlotDataList.Length];
-		umaRecipe.additionalSlotCount = 0;
 		umaRecipe.SetRace(context.GetRace(umaPackRecipe.race));
 
 		umaRecipe.ClearDna();
@@ -586,7 +585,6 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 	public static void UnpackRecipeVersion2(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContext context)
 	{
 		umaRecipe.slotDataList = new SlotData[umaPackRecipe.slotsV2.Length];
-		umaRecipe.additionalSlotCount = 0;
 		umaRecipe.SetRace(context.GetRace(umaPackRecipe.race));
 		
 		umaRecipe.ClearDna();

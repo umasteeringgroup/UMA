@@ -19,6 +19,10 @@ namespace UMA
         /// Adjusts the resolution of slot overlays.
         /// </summary>
         public float overlayScale = 1.0f;
+		/// <summary>
+		/// When serializing this recipe should this slot be skipped, useful for scene specific "additional slots"
+		/// </summary>
+		public bool dontSerialize;
 		public string slotName { get { return asset.slotName; } }
         /// <summary>
         /// list of overlays used to texture the slot.
