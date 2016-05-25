@@ -502,44 +502,11 @@ public class UMACrowd : MonoBehaviour
 		spawnY = 0;
 	}
 
-	public GameObject GenerateOneUMA(int sex)
+	public GameObject GenerateUMA(int sex, Vector3 position)
 	{
-		Vector3 zeroPos = Vector3.zero;
-		if (zeroPoint != null)
-			zeroPos = zeroPoint.position;
-		Vector3 newPos = zeroPos + new Vector3((spawnX - umaCrowdSize.x / 2f + 0.5f) * space, 0f, (spawnY - umaCrowdSize.y / 2f + 0.5f) * space);
-
-		if (spawnY < umaCrowdSize.y)
-		{
-			spawnX++;
-			if (spawnX >= umaCrowdSize.x)
-			{
-				spawnX = 0;
-				spawnY++;
-			}
-		}
-		else
-		{
-			if (hideWhileGeneratingLots)
-			{
-				UMAData[] generatedCrowd = GetComponentsInChildren<UMAData>();
-				foreach (UMAData generatedData in generatedCrowd)
-				{
-					if (generatedData.animator != null)
-						generatedData.animator.enabled = true;
-					if (generatedData.myRenderer != null)
-						generatedData.myRenderer.enabled = true;
-				}
-			}
-			generateLotsUMA = false;
-			spawnX = 0;
-			spawnY = 0;
-			return null;
-		}
-
 		GameObject newGO = new GameObject("Generated Character");
 		newGO.transform.parent = transform;
-		newGO.transform.position = newPos;
+		newGO.transform.position = position;
 		newGO.transform.rotation = zeroPoint != null ? zeroPoint.rotation : transform.rotation;
 
 		UMADynamicAvatar umaDynamicAvatar = newGO.AddComponent<UMADynamicAvatar>();
@@ -593,6 +560,43 @@ public class UMACrowd : MonoBehaviour
 		umaDynamicAvatar.Show();
 
 		return newGO;
+	}
+
+	public GameObject GenerateOneUMA(int sex)
+	{
+		Vector3 zeroPos = Vector3.zero;
+		if (zeroPoint != null)
+			zeroPos = zeroPoint.position;
+		Vector3 newPos = zeroPos + new Vector3((spawnX - umaCrowdSize.x / 2f + 0.5f) * space, 0f, (spawnY - umaCrowdSize.y / 2f + 0.5f) * space);
+
+		if (spawnY < umaCrowdSize.y)
+		{
+			spawnX++;
+			if (spawnX >= umaCrowdSize.x)
+			{
+				spawnX = 0;
+				spawnY++;
+			}
+		}
+		else
+		{
+			if (hideWhileGeneratingLots)
+			{
+				UMAData[] generatedCrowd = GetComponentsInChildren<UMAData>();
+				foreach (UMAData generatedData in generatedCrowd)
+				{
+					if (generatedData.animator != null)
+						generatedData.animator.enabled = true;
+					if (generatedData.myRenderer != null)
+						generatedData.myRenderer.enabled = true;
+				}
+			}
+			generateLotsUMA = false;
+			spawnX = 0;
+			spawnY = 0;
+			return null;
+		}
+		return GenerateUMA(sex, newPos);
 	}
 
 	private void AddAdditionalSlots()
