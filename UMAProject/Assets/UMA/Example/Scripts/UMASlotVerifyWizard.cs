@@ -174,10 +174,12 @@ namespace UMA
 			forcedSlotBones = true;
 			SkeletonTools.ForceSkeleton(RaceSMR, SlotSMR);
 			ForceButton.gameObject.SetActive(false);
+#if UNITY_EDITOR			
 			if (slotAssetPath.EndsWith(".fbx", System.StringComparison.InvariantCultureIgnoreCase))
 			{
 				PrefabUtility.CreatePrefab(AssetDatabase.GenerateUniqueAssetPath(slotAssetPath.Substring(0, slotAssetPath.Length-4)+".prefab"), SlotGO);
 			}
+#endif
 		}
 		#endregion
 
