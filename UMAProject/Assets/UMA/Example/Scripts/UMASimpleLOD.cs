@@ -36,10 +36,16 @@ namespace UMA.Examples
 				umaData.Dirty(false, true, false);
 			}
 
-			if (lodDisplay != null && lodLevel != currentLevel)
+			if (lodDisplay != null )
 			{
-				lodLevel = currentLevel;
-				lodDisplay.text = "LOD #" + lodLevel.ToString();
+				if (lodLevel != currentLevel)
+				{
+					lodLevel = currentLevel;
+					lodDisplay.text = "LOD #" + lodLevel.ToString();
+				}
+				var delta = transform.position-Camera.main.transform.position;
+				delta.y = 0;
+				lodDisplay.transform.rotation = Quaternion.LookRotation(delta, Vector3.up);
 			}
 		}
 	}

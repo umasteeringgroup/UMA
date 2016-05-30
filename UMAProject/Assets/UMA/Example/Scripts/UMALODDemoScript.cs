@@ -38,7 +38,7 @@ namespace UMA.Examples
 					// Add the display prefab
 					GameObject tm = (GameObject)GameObject.Instantiate(LODDisplayPrefab, go.transform.position, go.transform.rotation);
 					tm.transform.SetParent(go.transform);
-					tm.transform.localPosition = new Vector3(0.35f, 2.2f, 0f);
+					tm.transform.localPosition = new Vector3(0, 2f, 0f);
 					tm.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
 
 					lod.lodDisplay = tm.GetComponent<TextMesh>();
