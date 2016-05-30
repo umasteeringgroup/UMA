@@ -20,6 +20,7 @@ namespace UMA
 		private Object slotAsset;
 		public Button ForceButton;
 		private bool forcedSlotBones;
+		string slotAssetPath;
 
 		private void NextPage()
 		{
@@ -107,6 +108,7 @@ namespace UMA
 			{
 				assetPath = assetPath.Remove(0, curDir.Length+1);
 			}
+			slotAssetPath = assetPath;
 			slotAsset = AssetDatabase.LoadMainAssetAtPath(assetPath);
 			if (slotAsset is GameObject)
 			{
@@ -172,6 +174,10 @@ namespace UMA
 			forcedSlotBones = true;
 			SkeletonTools.ForceSkeleton(RaceSMR, SlotSMR);
 			ForceButton.gameObject.SetActive(false);
+			if (slotAssetPath.EndsWith(".fbx", System.StringComparison.InvariantCultureIgnoreCase))
+			{
+				PrefabUtility.CreatePrefab(AssetDatabase.GenerateUniqueAssetPath(slotAssetPath.Substring(0, slotAssetPath.Length-4)+".prefab"), SlotGO);
+			}
 		}
 		#endregion
 

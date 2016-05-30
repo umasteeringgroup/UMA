@@ -355,16 +355,7 @@ namespace UMA
 		/// <param name="bones">Transforms.</param>
 		public void UpdateBones(Transform rootBone, Transform[] bones)
 		{
-			var storedRootBone = rootBone;
-			while (rootBone.name != "Global")
-			{
-				rootBone = rootBone.parent;
-				if (rootBone == null)
-				{
-					rootBone = storedRootBone;
-					break;
-				}
-			}
+			rootBone = FindRoot(rootBone, bones);
 			
 			var requiredBones = new Dictionary<Transform, UMATransform>();
 			foreach (var bone in bones)
@@ -394,6 +385,38 @@ namespace UMA
 			ComputeBoneNameHashes(bones);
 			this.rootBone = rootBone;
 			this.bones = bones;
+		}
+
+		private static Transform RecursiveFindBone(Transform bone, string raceRoot)
+		{
+			if (bone.name == raceRoot) return bone;
+			for (int i = 0; i < bone.childCount; i++)
+			{
+				var result = RecursiveFindBone(bone.GetChild(i), raceRoot);
+				if (result != null)
+					return result;
+			}
+			return null;
+		}
+
+		private Transform FindRoot(Transform rootBone, Transform[] bones)
+		{
+			if (rootBone == null)
+			{
+				for (int i = 0; i < bones.Length; i++)
+				{
+					if (bones[i] != null)
+					{
+						rootBone = bones[i];
+						break;
+					}
+				}
+			}
+				
+			while (rootBone.parent != null)
+				rootBone = rootBone.parent;
+
+			return RecursiveFindBone(rootBone, "Global");
 		}
 
 		/// <summary>

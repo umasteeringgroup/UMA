@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
 
 namespace UMA
 {
@@ -23,6 +24,32 @@ namespace UMA
 			CompareSkeletonRecursive(root1, root2, ref failure);
 		}
 #endif
+
+		private static void CompareRootBone(Transform raceRoot, Transform slotRoot, ref int failure)
+		{
+			var rootIterator = slotRoot;
+			while (rootIterator.parent != null)
+			{
+				rootIterator = rootIterator.parent;
+			}
+			if (RecursiveFindBone(rootIterator, raceRoot) == null)
+			{
+				Debug.LogError("Race root: " + raceRoot.name + " not found in the slot hierarchy");
+				failure++;
+			}
+		}
+
+		private static Transform RecursiveFindBone(Transform bone, Transform raceRoot)
+		{
+			if (bone.name == raceRoot.name) return bone;
+			for(int i = 0; i < bone.childCount; i++)
+			{
+				var result = RecursiveFindBone(bone.GetChild(i), raceRoot);
+				if (result != null)
+					return result;
+			}
+			return null;
+		}
 
 		private static void CompareSkeletonRecursive(Transform race, Transform slot, ref int failure)
 		{
@@ -89,6 +116,8 @@ namespace UMA
 
 			int failure = 0;
 			CompareSkeletonRecursive(LocateRoot(RaceSMR.transform.parent), LocateRoot(SlotSMR.transform.parent), ref failure);
+			CompareRootBone(RaceSMR.rootBone, SlotSMR.rootBone, ref failure);
+
 			if (failure > 0)
 			{
 				description = "The Skeleton Hierarchy seems off, check the log for more info.";
