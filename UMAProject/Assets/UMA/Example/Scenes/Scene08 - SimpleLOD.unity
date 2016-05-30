@@ -2159,8 +2159,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   raceLibrary: {fileID: 0}
-  slotLibrary: {fileID: 0}
-  overlayLibrary: {fileID: 0}
+  slotLibrary: {fileID: 1955138283}
+  overlayLibrary: {fileID: 95017909}
 --- !u!1 &1871018375
 GameObject:
   m_ObjectHideFlags: 0

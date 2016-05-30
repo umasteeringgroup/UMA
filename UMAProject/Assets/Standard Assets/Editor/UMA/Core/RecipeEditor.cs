@@ -93,6 +93,12 @@ namespace UMAEditor
 						_recipe = null;
 						return;
 					}
+               if (context.raceLibrary == null)
+               {
+                  Debug.LogWarning("Editing a recipe requires a loaded scene with a valid UMAContext with RaceLibrary assigned.");
+                  _recipe = null;
+                  return;
+               }
 
                     umaRecipeBase.Load(_recipe, context);
                     _description = umaRecipeBase.GetInfo();
