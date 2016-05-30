@@ -526,6 +526,16 @@ namespace UMA
 			return res;
 		}
 
+		public virtual Transform[] HashesToTransforms(List<int> boneNameHashes)
+		{
+			Transform[] res = new Transform[boneNameHashes.Count];
+			for (int i = 0; i < boneNameHashes.Count; i++)
+			{
+				res[i] = boneHashData[boneNameHashes[i]].boneTransform;
+			}
+			return res;
+		}
+
 		/// <summary>
 		/// Ensures the bone exists in the skeleton.
 		/// </summary>
