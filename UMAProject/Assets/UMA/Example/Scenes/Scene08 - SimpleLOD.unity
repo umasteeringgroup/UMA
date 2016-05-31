@@ -2129,7 +2129,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c0397d804a50934daade4356186eaf9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  raceLibrary: {fileID: 0}
+  raceLibrary: {fileID: 777543882}
   slotLibrary: {fileID: 1955138283}
   overlayLibrary: {fileID: 95017909}
 --- !u!1 &1871018375

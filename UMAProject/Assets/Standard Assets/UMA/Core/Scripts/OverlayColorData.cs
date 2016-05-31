@@ -59,6 +59,19 @@ namespace UMA
 			return res;
 		}
 
+      /// <summary>
+      /// This needs to be better
+      /// </summary>
+      /// <returns><c>true</c> if this instance is A shared color; otherwise, <c>false</c>.</returns>
+      public bool IsASharedColor
+      {
+         get
+         {
+            if (HasName() && name != UNSHARED) return true;
+            return false;
+         }
+      }
+
 		/// <summary>
 		/// Does the OverlayColorData have a valid name?
 		/// </summary>
