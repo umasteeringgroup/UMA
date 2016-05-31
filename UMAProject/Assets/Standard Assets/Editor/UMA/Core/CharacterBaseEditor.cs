@@ -727,8 +727,8 @@ namespace UMAEditor
       }
 
       public static Comparer comparer = new Comparer();
-      public class Comparer : IComparer <SlotEditor>
-      {
+      public class Comparer : IComparer <SlotEditor>  
+      {  
          public int Compare(SlotEditor x, SlotEditor y)
          {
             if (x._overlayData == y._overlayData)
