@@ -274,6 +274,7 @@ namespace UMAEditor
                List<OverlayColorData> sharedColors = new List<OverlayColorData> ();
                sharedColors.AddRange (_recipe.sharedColors);
                sharedColors.Add (new OverlayColorData (selectedChannelCount));
+               sharedColors[sharedColors.Count-1].name = "Shared Color "+sharedColors.Count;
                _recipe.sharedColors = sharedColors.ToArray ();
                changed = true;
             }
@@ -749,7 +750,6 @@ namespace UMAEditor
       protected readonly SlotData _slotData;
       private readonly OverlayData _overlayData;
       private  ColorEditor[] _colors;
-      private  bool _sharedColors;
       private readonly TextureEditor[] _textures;
       private bool _foldout = true;
 
@@ -764,19 +764,21 @@ namespace UMAEditor
          _overlayData = overlayData;
          _slotData = slotData;
 
-         _sharedColors = false;
-         if (_recipe.sharedColors != null)
+         // Sanity check the colors
+         if (_recipe.sharedColors == null)
+            _recipe.sharedColors = new OverlayColorData[0];
+         else
          {
-            foreach(OverlayColorData ocd in _recipe.sharedColors)
+            for (int i=0;i<_recipe.sharedColors.Length;i++)
             {
-               if (ocd.GetHashCode() == _overlayData.colorData.GetHashCode()) _sharedColors = true;
+               OverlayColorData ocd = _recipe.sharedColors[i];
+               if (!ocd.HasName())
+               {
+                  ocd.name = "Shared Color "+(i+1);          
+               }
             }
          }
-         if (_sharedColors && (_overlayData.colorData.name == OverlayColorData.UNSHARED))
-         {
-            _sharedColors = false;
-         }
-
+            
          _textures = new TextureEditor[overlayData.asset.textureList.Length];
          for (int i = 0; i < overlayData.asset.textureList.Length; i++)
          {
@@ -841,25 +843,34 @@ namespace UMAEditor
          int currentsharedcol = 0;
          string[] sharednames = new string[_recipe.sharedColors.Length];
 
-         if (_sharedColors) {
+
+
+
+         if (_overlayData.colorData.IsASharedColor)
+         {
             GUIHelper.BeginVerticalPadded (2f, new Color (0.75f, 0.875f, 1f));
-            GUILayout.BeginHorizontal ();
-            if (GUILayout.Toggle (true, "Use Shared Color") == false) {
+            GUILayout.BeginHorizontal ();    
+
+            if (GUILayout.Toggle (true, "Use Shared Color") == false)
+            {
                // Unshare color
                _overlayData.colorData = _overlayData.colorData.Duplicate ();
                _overlayData.colorData.name = OverlayColorData.UNSHARED;
                changed = true;
             }
 
-            for (int i = 0; i < _recipe.sharedColors.Length; i++) {
+            for (int i = 0; i < _recipe.sharedColors.Length; i++)
+            {
                sharednames [i] = i + ": " + _recipe.sharedColors [i].name;
-               if (_overlayData.colorData.GetHashCode () == _recipe.sharedColors [i].GetHashCode ()) {
+               if (_overlayData.colorData.GetHashCode () == _recipe.sharedColors [i].GetHashCode ())
+               {
                   currentsharedcol = i;
                }
             }
 
             int newcol = EditorGUILayout.Popup (currentsharedcol, sharednames);
-            if (newcol != currentsharedcol) {
+            if (newcol != currentsharedcol)
+            {
                changed = true;
                _overlayData.colorData = _recipe.sharedColors [newcol];
             }
@@ -867,58 +878,70 @@ namespace UMAEditor
             GUIHelper.EndVerticalPadded (2f);
             GUILayout.Space (2f);
             return changed;
+
          } 
+         else
+         {
+            GUIHelper.BeginVerticalPadded (2f, new Color (0.75f, 0.875f, 1f));
+            GUILayout.BeginHorizontal ();
 
-         GUIHelper.BeginVerticalPadded (2f, new Color (0.75f, 0.875f, 1f));
-         GUILayout.BeginHorizontal ();
-
-         if (_recipe.sharedColors.Length > 0) {
-            if (GUILayout.Toggle (false, "Use Shared Color")) {
-               // If we got rid of resetting the name above, we could try to match the last shared color?
-               // Just set to default for now.
-               _overlayData.colorData = _recipe.sharedColors [0];
-               changed = true;
-            }
-         }
-
-         GUILayout.EndHorizontal ();
-
-         bool showExtendedRanges = showExtendedRangeForOverlay == _overlayData;
-         var newShowExtendedRanges = EditorGUILayout.Toggle ("Show Extended Ranges", showExtendedRanges);
-         if (showExtendedRanges != newShowExtendedRanges) {
-            if (newShowExtendedRanges) {
-               showExtendedRangeForOverlay = _overlayData;
-            } else {
-               showExtendedRangeForOverlay = null;
-            }
-         }
-
-         for (int k = 0; k < _colors.Length; k++) {
-            Color color;
-            if (showExtendedRanges && k % 2 == 0) {
-               Vector4 colorVector = new Vector4 (_colors [k].color.r, _colors [k].color.g, _colors [k].color.b, _colors [k].color.a);
-               colorVector = EditorGUILayout.Vector4Field (_colors [k].description, colorVector);
-               color = new Color (colorVector.x, colorVector.y, colorVector.z, colorVector.w);
-            } else {
-               color = EditorGUILayout.ColorField (_colors [k].description, _colors [k].color);
-            }
-
-            if (color.r != _colors [k].color.r ||
-               color.g != _colors [k].color.g ||
-               color.b != _colors [k].color.b ||
-               color.a != _colors [k].color.a) {
-               if (k % 2 == 0) {
-                  _overlayData.colorData.channelMask [k / 2] = color;
-               } else {
-                  _overlayData.colorData.channelAdditiveMask [k / 2] = color;
+            if (_recipe.sharedColors.Length > 0)
+            {
+               if (GUILayout.Toggle (false, "Use Shared Color"))
+               {
+                  _overlayData.colorData = _recipe.sharedColors [0];
+                  changed = true;
                }
-               changed = true;
             }
-         }
 
-         GUIHelper.EndVerticalPadded (2f);
-         GUILayout.Space (2f);
-         return changed;
+            GUILayout.EndHorizontal ();
+
+            bool showExtendedRanges = showExtendedRangeForOverlay == _overlayData;
+            var newShowExtendedRanges = EditorGUILayout.Toggle ("Show Extended Ranges", showExtendedRanges);
+            if (showExtendedRanges != newShowExtendedRanges)
+            {
+               if (newShowExtendedRanges)
+               {
+                  showExtendedRangeForOverlay = _overlayData;
+               } else
+               {
+                  showExtendedRangeForOverlay = null;
+               }
+            }
+
+            for (int k = 0; k < _colors.Length; k++)
+            {
+               Color color;
+               if (showExtendedRanges && k % 2 == 0)
+               {
+                  Vector4 colorVector = new Vector4 (_colors [k].color.r, _colors [k].color.g, _colors [k].color.b, _colors [k].color.a);
+                  colorVector = EditorGUILayout.Vector4Field (_colors [k].description, colorVector);
+                  color = new Color (colorVector.x, colorVector.y, colorVector.z, colorVector.w);
+               } else
+               {
+                  color = EditorGUILayout.ColorField (_colors [k].description, _colors [k].color);
+               }
+
+               if (color.r != _colors [k].color.r ||
+                color.g != _colors [k].color.g ||
+                color.b != _colors [k].color.b ||
+                color.a != _colors [k].color.a)
+               {
+                  if (k % 2 == 0)
+                  {
+                     _overlayData.colorData.channelMask [k / 2] = color;
+                  } else
+                  {
+                     _overlayData.colorData.channelAdditiveMask [k / 2] = color;
+                  }
+                  changed = true;
+               }
+            }
+
+            GUIHelper.EndVerticalPadded (2f);
+            GUILayout.Space (2f);
+            return changed;
+         }
       }
    }
 

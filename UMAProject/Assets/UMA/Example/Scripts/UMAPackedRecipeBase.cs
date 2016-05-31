@@ -461,13 +461,14 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
                     int cIndex = 0;
                     foreach(OverlayColorData cData in colorEntries)
                     {
-                        if (cData.name != null && cData.name.Equals(colorData.name))
+                  if (cData.name != null && cData.name.Equals(colorData.name) && cData.Equals(colorData))
                         {
                             colorIndex = cIndex;
                             break;
                         }
                         cIndex++;
                     }
+
 					if (colorIndex < 0)
 					{
 						PackedOverlayColorDataV3 newColorEntry = new PackedOverlayColorDataV3(colorData);
@@ -494,6 +495,7 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 			return false;
 		
 		umaRecipe.slotDataList = new SlotData[umaPackRecipe.packedSlotDataList.Length];
+
 		umaRecipe.SetRace(context.GetRace(umaPackRecipe.race));
 
 		umaRecipe.ClearDna();
@@ -649,7 +651,8 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 						}
 						else
 						{
-							overlayData.colorData = colorData[packedOverlay.colorIdx];
+                     overlayData.colorData = colorData[packedOverlay.colorIdx].Duplicate();
+                     overlayData.colorData.name = OverlayColorData.UNSHARED;
 						}
 						if (UMAPackRecipe.MaterialIsValid(overlayData.asset.material))
 							overlayData.EnsureChannels(overlayData.asset.material.channels.Length);
