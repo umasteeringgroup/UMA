@@ -56,7 +56,7 @@ namespace UMA
             this.umaData = umaData;
             this.atlasResolution = atlasResolution;
 
-            combinedMeshList = new List<SkinnedMeshCombiner.CombineInstance>();
+            combinedMeshList = new List<SkinnedMeshCombiner.CombineInstance>(umaData.umaRecipe.slotDataList.Length);
             combinedMaterialList = new List<Material>();
 
             BuildCombineInstances();

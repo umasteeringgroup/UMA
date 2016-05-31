@@ -28,6 +28,15 @@ namespace UMA
 		public int garbageCollectionRate = 8;
 		private System.Diagnostics.Stopwatch stopWatch = new System.Diagnostics.Stopwatch();
 
+		[NonSerialized]
+		public long ElapsedTicks;
+		[NonSerialized]
+		public long DnaChanged;
+		[NonSerialized]
+		public long TextureChanged;
+		[NonSerialized]
+		public long SlotsChanged;
+
 		public virtual void OnEnable()
 		{
 			activeGeneratorCoroutine = null;
@@ -71,6 +80,10 @@ namespace UMA
 			else if (umaDirtyList.Count > 0)
 			{
 				OnDirtyUpdate();
+				ElapsedTicks += stopWatch.ElapsedTicks;
+#if UNITY_EDITOR
+				UnityEditor.EditorUtility.SetDirty(this);
+#endif
 			}
 			stopWatch.Stop();
 			UMATime.ReportTimeSpendtThisFrameTicks(stopWatch.ElapsedTicks);
@@ -113,6 +126,7 @@ namespace UMA
 					activeGeneratorCoroutine = null;
 					umaData.isTextureDirty = false;
 					umaData.isAtlasDirty = true;
+					TextureChanged++;
 				}
 
 				if (!workDone || !fastGeneration || umaData.isMeshDirty)
@@ -124,6 +138,8 @@ namespace UMA
 				UpdateUMAMesh(umaData.isAtlasDirty);
 				umaData.isAtlasDirty = false;
 				umaData.isMeshDirty = false;
+				SlotsChanged++;
+				forceGarbageCollect++;
 
 				if (!fastGeneration)
 					return false;
@@ -133,6 +149,7 @@ namespace UMA
 			{
 				UpdateUMABody(umaData);
 				umaData.isShapeDirty = false;
+				DnaChanged++;
 			}
 			UMAReady();
 			return true;
@@ -189,7 +206,6 @@ namespace UMA
 		{
 			if (umaData)
 			{
-				forceGarbageCollect++;
 				umaData.myRenderer.enabled = true;
 				umaData.FireUpdatedEvent(false);
 				umaData.FireCharacterCompletedEvents();
