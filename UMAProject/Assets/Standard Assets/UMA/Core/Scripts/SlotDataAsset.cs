@@ -31,15 +31,6 @@ namespace UMA
 		/// </summary>
 		public float overlayScale = 1.0f;
 		/// <summary>
-		/// The animated transforms.
-		/// </summary>
-		/// <remarks>
-		/// The animated bones array is required for cases where optimizations
-		/// could remove transforms from the rig. Animated bones will always
-		/// be preserved.
-		/// </remarks>
-		public Transform[] animatedBones = new Transform[0];
-		/// <summary>
 		/// The animated bone names.
 		/// </summary>
 		/// <remarks>
@@ -100,8 +91,12 @@ namespace UMA
 		/// Callback event when character update is complete.
 		/// </summary>
 		public UMADataEvent CharacterCompleted;
-        
-       
+
+		[UnityEngine.HideInInspector]
+		[System.Obsolete("UMA 2.1 - SlotDataAsset.animatedBones array is obsolete use animatedBoneNames or animatedBoneHashes instead", false)]
+		public Transform[] animatedBones = new Transform[0];
+
+
 		public SlotDataAsset()
 		{
             

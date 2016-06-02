@@ -227,7 +227,9 @@ namespace UMA
 		public Vector2[] uv3;
 		public Vector2[] uv4;
 		public SubMeshTriangles[] submeshes;
+		[NonSerialized]
 		public Transform[] bones;
+		[NonSerialized]
 		public Transform rootBone;
 		public UMATransform[] umaBones;
 		public int umaBoneCount;

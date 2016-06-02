@@ -34,7 +34,7 @@ namespace UMAEditor
 
 			GUILayout.Space(20);
 			Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
-			GUI.Box(dropArea, "Drag Overlays here");
+			GUI.Box(dropArea, "Drag Bone Transforms here to add their names to the Animated Bone Names.\nSo the power tools will preserve them!");
 			GUILayout.Space(20);
 
 			DropAreaGUI(dropArea);
