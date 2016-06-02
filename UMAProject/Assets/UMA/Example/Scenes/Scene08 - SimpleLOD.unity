@@ -440,8 +440,7 @@ MonoBehaviour:
   stressTest: 0
   umaCrowdSize: {x: 1, y: 1}
   randomDna: 1
-  additionalRecipes:
-  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
+  additionalRecipes: []
   space: 1
   zeroPoint: {fileID: 0}
   keywords: []

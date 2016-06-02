@@ -114,6 +114,10 @@ namespace UMA
 			// The default MeshCombiner is ignoring the animated bones, virtual method added to share common interface.
 		}
 
+		public virtual void ClearAnimatedBoneHierachy(int nameHash, bool recursive)
+		{
+			// The default MeshCombiner is ignoring the animated bones, virtual method added to share common interface.
+		}
 
 		private void AddBonesRecursive(Transform transform)
 		{
