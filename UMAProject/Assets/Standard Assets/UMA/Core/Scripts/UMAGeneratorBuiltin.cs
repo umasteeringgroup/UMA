@@ -125,7 +125,7 @@ namespace UMA
 				{
 					activeGeneratorCoroutine = null;
 					umaData.isTextureDirty = false;
-					umaData.isAtlasDirty = true;
+					umaData.isAtlasDirty |= umaData.isMeshDirty;
 					TextureChanged++;
 				}
 
