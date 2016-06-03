@@ -28,6 +28,7 @@ namespace UMA.Examples
 					isBuilding = true;
 					crowd.ResetSpawnPos();
 					var go = crowd.GenerateUMA(Random.Range(0, 2), transform.position + new Vector3(Random.Range(-range, range), 0, Random.Range(-range, range)));
+					go.transform.localRotation = Quaternion.Euler(0, Random.Range(0, 360), 0);
 
 					var lod = go.AddComponent<UMASimpleLOD>();
 					lod.lodDistance = lodDistance;
