@@ -11,7 +11,10 @@ namespace UMA
 	/// </summary>
 	public abstract class UMAGeneratorBuiltin : UMAGeneratorBase
 	{
+		[Obsolete("UMA 2.1 - UMAGeneratorBuiltin.umaData is an internal reference that will be hidden in the future.", false)]
+		[NonSerialized]
 		public UMAData umaData;
+		[Obsolete("UMA 2.1 - UMAGeneratorBuiltin.umaDirtyList is an internal list that will be hidden in the future.", false)]
 		[NonSerialized]
 		public List<UMAData> umaDirtyList = new List<UMAData>();
 		private UMAGeneratorCoroutine activeGeneratorCoroutine;
@@ -77,7 +80,7 @@ namespace UMA
 				forceGarbageCollect = 0;
 				if (garbageCollectionRate < 1) garbageCollectionRate = 1;
 			}
-			else if (umaDirtyList.Count > 0)
+			else if (!IsIdle())
 			{
 				OnDirtyUpdate();
 				ElapsedTicks += stopWatch.ElapsedTicks;
@@ -89,6 +92,7 @@ namespace UMA
 			UMATime.ReportTimeSpendtThisFrameTicks(stopWatch.ElapsedTicks);
 		}
 
+#pragma warning disable 618
 		public virtual bool HandleDirtyUpdate(UMAData data)
 		{
 			if (data == null)
@@ -227,5 +231,6 @@ namespace UMA
 				UpdateAvatar(umaData);
 			}
 		}
+#pragma warning restore 618
 	}
 }
