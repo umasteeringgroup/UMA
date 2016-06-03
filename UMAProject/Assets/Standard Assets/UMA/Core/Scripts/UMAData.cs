@@ -1007,7 +1007,6 @@ namespace UMA
 		{
 			isShapeDirty   |= dnaDirty;
 			isTextureDirty |= textureDirty;
-			isAtlasDirty |= textureDirty;
 			isMeshDirty    |= meshDirty;
 			Dirty();
 		}
