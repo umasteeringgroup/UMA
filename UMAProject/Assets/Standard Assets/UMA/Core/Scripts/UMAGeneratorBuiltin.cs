@@ -222,8 +222,8 @@ namespace UMA
 			{
 				umaData.skeleton.ResetAll();
 				umaData.ApplyDNA();
-				umaData.skeleton.EndSkeletonUpdate();
 				umaData.FireDNAAppliedEvents();
+				umaData.skeleton.EndSkeletonUpdate();
 				UpdateAvatar(umaData);
 			}
 		}
