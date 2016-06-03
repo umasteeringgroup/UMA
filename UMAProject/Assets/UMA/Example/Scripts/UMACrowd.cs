@@ -406,6 +406,88 @@ public class UMACrowd : MonoBehaviour
 		}
 	}
 
+	public static void RandomizeShape(UMAData umaData)
+	{
+		UMADnaHumanoid umaDna = umaData.umaRecipe.GetDna<UMADnaHumanoid>();
+		umaDna.height = Random.Range(0.3f, 0.5f);
+		umaDna.headSize = Random.Range(0.485f, 0.515f);
+		umaDna.headWidth = Random.Range(0.4f, 0.6f);
+
+		umaDna.neckThickness = Random.Range(0.495f, 0.51f);
+
+		if (umaData.umaRecipe.raceData.raceName == "HumanMale")
+		{
+			umaDna.handsSize = Random.Range(0.485f, 0.515f);
+			umaDna.feetSize = Random.Range(0.485f, 0.515f);
+			umaDna.legSeparation = Random.Range(0.4f, 0.6f);
+			umaDna.waist = 0.5f;
+		}
+		else
+		{
+			umaDna.handsSize = Random.Range(0.485f, 0.515f);
+			umaDna.feetSize = Random.Range(0.485f, 0.515f);
+			umaDna.legSeparation = Random.Range(0.485f, 0.515f);
+			umaDna.waist = Random.Range(0.3f, 0.8f);
+		}
+
+		umaDna.armLength = Random.Range(0.485f, 0.515f);
+		umaDna.forearmLength = Random.Range(0.485f, 0.515f);
+		umaDna.armWidth = Random.Range(0.3f, 0.8f);
+		umaDna.forearmWidth = Random.Range(0.3f, 0.8f);
+
+		umaDna.upperMuscle = Random.Range(0.0f, 1.0f);
+		umaDna.upperWeight = Random.Range(-0.2f, 0.2f) + umaDna.upperMuscle;
+		if (umaDna.upperWeight > 1.0) { umaDna.upperWeight = 1.0f; }
+		if (umaDna.upperWeight < 0.0) { umaDna.upperWeight = 0.0f; }
+
+		umaDna.lowerMuscle = Random.Range(-0.2f, 0.2f) + umaDna.upperMuscle;
+		if (umaDna.lowerMuscle > 1.0) { umaDna.lowerMuscle = 1.0f; }
+		if (umaDna.lowerMuscle < 0.0) { umaDna.lowerMuscle = 0.0f; }
+
+		umaDna.lowerWeight = Random.Range(-0.1f, 0.1f) + umaDna.upperWeight;
+		if (umaDna.lowerWeight > 1.0) { umaDna.lowerWeight = 1.0f; }
+		if (umaDna.lowerWeight < 0.0) { umaDna.lowerWeight = 0.0f; }
+
+		umaDna.belly = umaDna.upperWeight;
+		umaDna.legsSize = Random.Range(0.4f, 0.6f);
+		umaDna.gluteusSize = Random.Range(0.4f, 0.6f);
+
+		umaDna.earsSize = Random.Range(0.3f, 0.8f);
+		umaDna.earsPosition = Random.Range(0.3f, 0.8f);
+		umaDna.earsRotation = Random.Range(0.3f, 0.8f);
+
+		umaDna.noseSize = Random.Range(0.3f, 0.8f);
+
+		umaDna.noseCurve = Random.Range(0.3f, 0.8f);
+		umaDna.noseWidth = Random.Range(0.3f, 0.8f);
+		umaDna.noseInclination = Random.Range(0.3f, 0.8f);
+		umaDna.nosePosition = Random.Range(0.3f, 0.8f);
+		umaDna.nosePronounced = Random.Range(0.3f, 0.8f);
+		umaDna.noseFlatten = Random.Range(0.3f, 0.8f);
+
+		umaDna.chinSize = Random.Range(0.3f, 0.8f);
+		umaDna.chinPronounced = Random.Range(0.3f, 0.8f);
+		umaDna.chinPosition = Random.Range(0.3f, 0.8f);
+
+		umaDna.mandibleSize = Random.Range(0.45f, 0.52f);
+		umaDna.jawsSize = Random.Range(0.3f, 0.8f);
+		umaDna.jawsPosition = Random.Range(0.3f, 0.8f);
+
+		umaDna.cheekSize = Random.Range(0.3f, 0.8f);
+		umaDna.cheekPosition = Random.Range(0.3f, 0.8f);
+		umaDna.lowCheekPronounced = Random.Range(0.3f, 0.8f);
+		umaDna.lowCheekPosition = Random.Range(0.3f, 0.8f);
+
+		umaDna.foreheadSize = Random.Range(0.3f, 0.8f);
+		umaDna.foreheadPosition = Random.Range(0.15f, 0.65f);
+
+		umaDna.lipsSize = Random.Range(0.3f, 0.8f);
+		umaDna.mouthSize = Random.Range(0.3f, 0.8f);
+		umaDna.eyeRotation = Random.Range(0.3f, 0.8f);
+		umaDna.eyeSize = Random.Range(0.3f, 0.8f);
+		umaDna.breastSize = Random.Range(0.3f, 0.8f);
+	}
+
 	protected virtual void GenerateUMAShapes()
 	{
 		UMADnaHumanoid umaDna = umaData.umaRecipe.GetDna<UMADnaHumanoid>();
@@ -417,83 +499,7 @@ public class UMACrowd : MonoBehaviour
 
 		if (randomDna)
 		{
-			umaDna.height = Random.Range(0.3f, 0.5f);
-			umaDna.headSize = Random.Range(0.485f, 0.515f);
-			umaDna.headWidth = Random.Range(0.4f, 0.6f);
-
-			umaDna.neckThickness = Random.Range(0.495f, 0.51f);
-
-			if (umaData.umaRecipe.raceData.raceName == "HumanMale")
-			{
-				umaDna.handsSize = Random.Range(0.485f, 0.515f);
-				umaDna.feetSize = Random.Range(0.485f, 0.515f);
-				umaDna.legSeparation = Random.Range(0.4f, 0.6f);
-				umaDna.waist = 0.5f;
-			}
-			else
-			{
-				umaDna.handsSize = Random.Range(0.485f, 0.515f);
-				umaDna.feetSize = Random.Range(0.485f, 0.515f);
-				umaDna.legSeparation = Random.Range(0.485f, 0.515f);
-				umaDna.waist = Random.Range(0.3f, 0.8f);
-			}
-
-			umaDna.armLength = Random.Range(0.485f, 0.515f);
-			umaDna.forearmLength = Random.Range(0.485f, 0.515f);
-			umaDna.armWidth = Random.Range(0.3f, 0.8f);
-			umaDna.forearmWidth = Random.Range(0.3f, 0.8f);
-
-			umaDna.upperMuscle = Random.Range(0.0f, 1.0f);
-			umaDna.upperWeight = Random.Range(-0.2f, 0.2f) + umaDna.upperMuscle;
-			if (umaDna.upperWeight > 1.0) { umaDna.upperWeight = 1.0f; }
-			if (umaDna.upperWeight < 0.0) { umaDna.upperWeight = 0.0f; }
-
-			umaDna.lowerMuscle = Random.Range(-0.2f, 0.2f) + umaDna.upperMuscle;
-			if (umaDna.lowerMuscle > 1.0) { umaDna.lowerMuscle = 1.0f; }
-			if (umaDna.lowerMuscle < 0.0) { umaDna.lowerMuscle = 0.0f; }
-
-			umaDna.lowerWeight = Random.Range(-0.1f, 0.1f) + umaDna.upperWeight;
-			if (umaDna.lowerWeight > 1.0) { umaDna.lowerWeight = 1.0f; }
-			if (umaDna.lowerWeight < 0.0) { umaDna.lowerWeight = 0.0f; }
-
-			umaDna.belly = umaDna.upperWeight;
-			umaDna.legsSize = Random.Range(0.4f, 0.6f);
-			umaDna.gluteusSize = Random.Range(0.4f, 0.6f);
-
-			umaDna.earsSize = Random.Range(0.3f, 0.8f);
-			umaDna.earsPosition = Random.Range(0.3f, 0.8f);
-			umaDna.earsRotation = Random.Range(0.3f, 0.8f);
-
-			umaDna.noseSize = Random.Range(0.3f, 0.8f);
-
-			umaDna.noseCurve = Random.Range(0.3f, 0.8f);
-			umaDna.noseWidth = Random.Range(0.3f, 0.8f);
-			umaDna.noseInclination = Random.Range(0.3f, 0.8f);
-			umaDna.nosePosition = Random.Range(0.3f, 0.8f);
-			umaDna.nosePronounced = Random.Range(0.3f, 0.8f);
-			umaDna.noseFlatten = Random.Range(0.3f, 0.8f);
-
-			umaDna.chinSize = Random.Range(0.3f, 0.8f);
-			umaDna.chinPronounced = Random.Range(0.3f, 0.8f);
-			umaDna.chinPosition = Random.Range(0.3f, 0.8f);
-
-			umaDna.mandibleSize = Random.Range(0.45f, 0.52f);
-			umaDna.jawsSize = Random.Range(0.3f, 0.8f);
-			umaDna.jawsPosition = Random.Range(0.3f, 0.8f);
-
-			umaDna.cheekSize = Random.Range(0.3f, 0.8f);
-			umaDna.cheekPosition = Random.Range(0.3f, 0.8f);
-			umaDna.lowCheekPronounced = Random.Range(0.3f, 0.8f);
-			umaDna.lowCheekPosition = Random.Range(0.3f, 0.8f);
-
-			umaDna.foreheadSize = Random.Range(0.3f, 0.8f);
-			umaDna.foreheadPosition = Random.Range(0.15f, 0.65f);
-
-			umaDna.lipsSize = Random.Range(0.3f, 0.8f);
-			umaDna.mouthSize = Random.Range(0.3f, 0.8f);
-			umaDna.eyeRotation = Random.Range(0.3f, 0.8f);
-			umaDna.eyeSize = Random.Range(0.3f, 0.8f);
-			umaDna.breastSize = Random.Range(0.3f, 0.8f);
+			RandomizeShape(umaData);
 		}
 	}
 
@@ -623,6 +629,16 @@ public class UMACrowd : MonoBehaviour
 			generateUMA = true;
 		else
 			generateLotsUMA = true;
+	}
+
+	public void RandomizeAllDna()
+	{
+		for (int i = 0; i < transform.childCount; i++)
+		{
+			var umaData = transform.GetChild(i).GetComponent<UMAData>();
+			UMACrowd.RandomizeShape(umaData);
+			umaData.Dirty(true, false, false);
+		}
 	}
 
 	public void RandomizeAll()
