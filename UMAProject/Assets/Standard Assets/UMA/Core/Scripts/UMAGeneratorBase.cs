@@ -36,6 +36,11 @@ namespace UMA
 		public abstract int QueueSize();
 
 		/// <summary>
+		/// Call this method to force the generator to work right now.
+		/// </summary>
+		public abstract void Work();
+
+		/// <summary>
 		/// Try to finds the static generator in the scene.
 		/// </summary>
 		/// <returns>The instance.</returns>

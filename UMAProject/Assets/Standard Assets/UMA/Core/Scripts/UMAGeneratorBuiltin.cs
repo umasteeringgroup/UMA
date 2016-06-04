@@ -17,6 +17,9 @@ namespace UMA
 		[Obsolete("UMA 2.1 - UMAGeneratorBuiltin.umaDirtyList is an internal list that will be hidden in the future.", false)]
 		[NonSerialized]
 		public List<UMAData> umaDirtyList = new List<UMAData>();
+
+		private LinkedList<UMAData> cleanUmas = new LinkedList<UMAData>();
+		private LinkedList<UMAData> dirtyUmas = new LinkedList<UMAData>();
 		private UMAGeneratorCoroutine activeGeneratorCoroutine;
 		public Transform textureMergePrefab;
 		public UMAMeshCombiner meshCombiner;
@@ -72,24 +75,97 @@ namespace UMA
 
 		void Update()
 		{
-			stopWatch.Reset();
-			stopWatch.Start();
+			if (CheckRenderTextures())
+				return; // if render textures needs rebuild we'll not do anything else
+
 			if (forceGarbageCollect > garbageCollectionRate)
 			{
 				GC.Collect();
 				forceGarbageCollect = 0;
 				if (garbageCollectionRate < 1) garbageCollectionRate = 1;
 			}
-			else if (!IsIdle())
+			else
 			{
+				Work();
+			}
+		}
+
+		private bool CheckRenderTextures()
+		{
+			var rt = FindRenderTexture();
+			if (rt != null && !rt.IsCreated())
+			{
+				RebuildAllRenderTextures();
+				return true;
+			}
+			return false;
+		}
+
+		private void RebuildAllRenderTextures()
+		{
+			Debug.LogFormat("{0:hh}:{0:MM}:{0:ss} Rebuilding all render textures!", DateTime.Now);
+			var activeUmaData = umaData;
+			var storedGeneratorCoroutine = activeGeneratorCoroutine;
+
+
+			var iteratorNode = cleanUmas.First;
+			while (iteratorNode != null)
+			{
+				RebuildRenderTexture(iteratorNode.Value);
+				iteratorNode = iteratorNode.Next;
+			}
+
+			umaData = activeUmaData;
+			activeGeneratorCoroutine = storedGeneratorCoroutine;
+		}
+
+		private void RebuildRenderTexture(UMAData data)
+		{
+			var rt = data.GetFirstRenderTexture();
+			if (rt != null && !rt.IsCreated())
+			{
+				umaData = data;
+				TextureProcessBaseCoroutine textureProcessCoroutine;
+				textureProcessCoroutine = new TextureProcessPROCoroutine();
+				textureProcessCoroutine.Prepare(data, this);
+
+				activeGeneratorCoroutine = new UMAGeneratorCoroutine();
+				activeGeneratorCoroutine.Prepare(this, umaData, textureProcessCoroutine, true);
+
+				while (!activeGeneratorCoroutine.Work()) ;
+
+				activeGeneratorCoroutine = null;
+				TextureChanged++;
+			}
+		}
+
+		private RenderTexture FindRenderTexture()
+		{
+			var iteratorNode = cleanUmas.First;
+			while (iteratorNode != null)
+			{
+				var rt = iteratorNode.Value.GetFirstRenderTexture();
+				if (rt != null)
+					return rt;
+				iteratorNode = iteratorNode.Next;
+			}
+			return null;
+		}
+
+		public override void Work()
+		{
+			if (!IsIdle())
+			{
+				stopWatch.Reset();
+				stopWatch.Start();
 				OnDirtyUpdate();
 				ElapsedTicks += stopWatch.ElapsedTicks;
 #if UNITY_EDITOR
 				UnityEditor.EditorUtility.SetDirty(this);
 #endif
+				stopWatch.Stop();
+				UMATime.ReportTimeSpendtThisFrameTicks(stopWatch.ElapsedTicks);
 			}
-			stopWatch.Stop();
-			UMATime.ReportTimeSpendtThisFrameTicks(stopWatch.ElapsedTicks);
 		}
 
 #pragma warning disable 618
@@ -164,11 +240,13 @@ namespace UMA
 			if (HandleDirtyUpdate(umaDirtyList[0]))
 			{
 				umaDirtyList.RemoveAt(0);
+				umaData.MoveToList(cleanUmas);
 				umaData = null;
 			}
 			else if (fastGeneration && HandleDirtyUpdate(umaDirtyList[0]))
 			{
 				umaDirtyList.RemoveAt(0);
+				umaData.MoveToList(cleanUmas);
 				umaData = null;
 			}
 		}
@@ -191,6 +269,7 @@ namespace UMA
 			if (umaToAdd)
 			{
 				umaDirtyList.Add(umaToAdd);
+				umaToAdd.MoveToList(dirtyUmas);
 			}
 		}
 

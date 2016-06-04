@@ -21,6 +21,17 @@ namespace UMA
 		
 		[NonSerialized]
 		public GeneratedMaterials generatedMaterials = new GeneratedMaterials();
+
+		private LinkedListNode<UMAData> listNode;
+		public void MoveToList(LinkedList<UMAData> list)
+		{
+			if (listNode.List != null)
+			{
+				listNode.List.Remove(listNode);
+			}
+			list.AddLast(listNode);
+		}
+
 		
 		public float atlasResolutionScale = 1f;
 		
@@ -113,6 +124,11 @@ namespace UMA
 		/// </summary>
 		public float characterMass = 50f;
 		
+		public UMAData()
+		{
+			listNode = new LinkedListNode<UMAData>(this);
+		}
+
 		void Awake () {
 			firstBake = true;
 			

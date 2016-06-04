@@ -474,7 +474,6 @@ MonoBehaviour:
   range: 24
   lodDistance: 5
   LODDisplayPrefab: {fileID: 121262, guid: eff4c96d93cf04cdcb2e6cafb3d27b14, type: 2}
-  setDirty: 0
 --- !u!1001 &470279280
 Prefab:
   m_ObjectHideFlags: 0
