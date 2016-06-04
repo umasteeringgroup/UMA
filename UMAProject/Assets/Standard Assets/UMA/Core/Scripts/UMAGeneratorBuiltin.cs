@@ -101,9 +101,39 @@ namespace UMA
 			return false;
 		}
 
+
+		private RenderTexture FindRenderTexture()
+		{
+			var iteratorNode = cleanUmas.First;
+			while (iteratorNode != null)
+			{
+				var rt = iteratorNode.Value.GetFirstRenderTexture();
+				if (rt != null)
+					return rt;
+				iteratorNode = iteratorNode.Next;
+			}
+			return null;
+		}
+
+		public override void Work()
+		{
+			if (!IsIdle())
+			{
+				stopWatch.Reset();
+				stopWatch.Start();
+				OnDirtyUpdate();
+				ElapsedTicks += stopWatch.ElapsedTicks;
+#if UNITY_EDITOR
+				UnityEditor.EditorUtility.SetDirty(this);
+#endif
+				stopWatch.Stop();
+				UMATime.ReportTimeSpendtThisFrameTicks(stopWatch.ElapsedTicks);
+			}
+		}
+
+#pragma warning disable 618
 		private void RebuildAllRenderTextures()
 		{
-			Debug.LogFormat("{0:hh}:{0:MM}:{0:ss} Rebuilding all render textures!", DateTime.Now);
 			var activeUmaData = umaData;
 			var storedGeneratorCoroutine = activeGeneratorCoroutine;
 
@@ -139,36 +169,6 @@ namespace UMA
 			}
 		}
 
-		private RenderTexture FindRenderTexture()
-		{
-			var iteratorNode = cleanUmas.First;
-			while (iteratorNode != null)
-			{
-				var rt = iteratorNode.Value.GetFirstRenderTexture();
-				if (rt != null)
-					return rt;
-				iteratorNode = iteratorNode.Next;
-			}
-			return null;
-		}
-
-		public override void Work()
-		{
-			if (!IsIdle())
-			{
-				stopWatch.Reset();
-				stopWatch.Start();
-				OnDirtyUpdate();
-				ElapsedTicks += stopWatch.ElapsedTicks;
-#if UNITY_EDITOR
-				UnityEditor.EditorUtility.SetDirty(this);
-#endif
-				stopWatch.Stop();
-				UMATime.ReportTimeSpendtThisFrameTicks(stopWatch.ElapsedTicks);
-			}
-		}
-
-#pragma warning disable 618
 		public virtual bool HandleDirtyUpdate(UMAData data)
 		{
 			if (data == null)
