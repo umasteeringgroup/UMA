@@ -70,6 +70,18 @@ public class SlotLibrary : SlotLibraryBase
 	}
 #pragma warning restore 618
 
+	public override bool HasSlot(string name)
+	{
+		ValidateDictionary();
+		return slotDictionary.ContainsKey(UMAUtils.StringToHash(name));
+	}
+
+	public override bool HasSlot(int nameHash)
+	{
+		ValidateDictionary();
+		return slotDictionary.ContainsKey(nameHash);
+	}
+
 	public override SlotData InstantiateSlot(string name)
 	{
 		var res = Internal_InstantiateSlot(UMAUtils.StringToHash(name));
