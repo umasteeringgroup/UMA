@@ -284,11 +284,29 @@ namespace UMA
 		public class UMARecipe
 		{
 			public RaceData raceData;
-			protected Dictionary<Type, UMADnaBase> umaDna = new Dictionary<Type, UMADnaBase>();
-			protected Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate> umaDnaConverter = new Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate>();
+			Dictionary<int, UMADnaBase> _umaDna;
+			protected Dictionary<int, UMADnaBase> umaDna
+			{
+				get
+				{
+					if (_umaDna == null)
+					{
+						_umaDna = new Dictionary<int, UMADnaBase>();
+						for (int i = 0; i < dnaValues.Count; i++)
+							_umaDna.Add(dnaValues[i].GetDnaTypeHash(), dnaValues[i]);
+					}
+					return _umaDna;
+				}
+				set
+				{
+					_umaDna = value;
+				}
+			}
+			protected Dictionary<int, DnaConverterBehaviour.DNAConvertDelegate> umaDnaConverter = new Dictionary<int, DnaConverterBehaviour.DNAConvertDelegate>();
 			protected Dictionary<string, int> mergedSharedColors = new Dictionary<string, int>();
+			public List<UMADnaBase> dnaValues = new List<UMADnaBase>();
 			public SlotData[] slotDataList;
-			[Obsolete("UMA 2.1 - additionalSlotCount has been deprecated, SlotData.dontSerialize now takes care of scene based additonal slots.", false)]
+			[Obsolete("UMA 2.1 - additionalSlotCount has been deprecated, SlotData.dontSerialize now takes care of scene based additonal slots. ", false)]
 			public int additionalSlotCount;
 			public OverlayColorData[] sharedColors;
 
@@ -339,10 +357,7 @@ namespace UMA
 				{
 					return new UMADnaBase[0];
 				}
-
-				UMADnaBase[] allDNA = new UMADnaBase[umaDna.Values.Count];
-				umaDna.Values.CopyTo(allDNA, 0);
-				return allDNA;
+				return dnaValues.ToArray();
 			}
 
 			/// <summary>
@@ -351,7 +366,8 @@ namespace UMA
 			/// <param name="dna">DNA.</param>
 			public void AddDna(UMADnaBase dna)
 			{
-				umaDna.Add(dna.GetType(), dna);
+				umaDna.Add(dna.GetDnaTypeHash(), dna);
+				dnaValues.Add(dna);
 			}
 
 			/// <summary>
@@ -363,7 +379,7 @@ namespace UMA
 				where T : UMADnaBase
 			{
 				UMADnaBase dna;
-				if (umaDna.TryGetValue(typeof(T), out dna))
+				if (umaDna.TryGetValue(UMAUtils.StringToHash(typeof(T).Name), out dna))
 				{
 					return dna as T;
 				}
@@ -376,6 +392,7 @@ namespace UMA
 			public void ClearDna()
 			{
 				umaDna.Clear();
+				dnaValues.Clear();
 			}
 
 			/// <summary>
@@ -384,7 +401,9 @@ namespace UMA
 			/// <param name="type">Type.</param>
 			public void RemoveDna(Type type)
 			{
-				umaDna.Remove(type);
+				int dnaTypeNameHash = UMAUtils.StringToHash(type.Name);
+				dnaValues.Remove(umaDna[dnaTypeNameHash]);
+				umaDna.Remove(dnaTypeNameHash);
 			}
 
 			/// <summary>
@@ -395,7 +414,21 @@ namespace UMA
 			public UMADnaBase GetDna(Type type)
 			{
 				UMADnaBase dna;
-				if (umaDna.TryGetValue(type, out dna))
+				if (umaDna.TryGetValue(UMAUtils.StringToHash(type.Name), out dna))
+				{
+					return dna;
+				}
+				return null;
+			}
+			/// <summary>
+			/// Get DNA of specified type.
+			/// </summary>
+			/// <returns>The DNA (or null if not found).</returns>
+			/// <param name="type">Type.</param>
+			public UMADnaBase GetDna(int dnaTypeNameHash)
+			{
+				UMADnaBase dna;
+				if (umaDna.TryGetValue(dnaTypeNameHash, out dna))
 				{
 					return dna;
 				}
@@ -414,7 +447,8 @@ namespace UMA
 				if (res == null)
 				{
 					res = typeof(T).GetConstructor(System.Type.EmptyTypes).Invoke(null) as T;
-					umaDna.Add(typeof(T), res);
+					umaDna.Add(res.GetDnaTypeHash(), res);
+					dnaValues.Add(res);
 				}
 				return res;
 			}
@@ -427,13 +461,34 @@ namespace UMA
 			public UMADnaBase GetOrCreateDna(Type type)
 			{
 				UMADnaBase dna;
-				if (umaDna.TryGetValue(type, out dna))
+				var typeNameHash = UMAUtils.StringToHash(type.Name);
+				if (umaDna.TryGetValue(typeNameHash, out dna))
 				{
 					return dna;
 				}
 
 				dna = type.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
-				umaDna.Add(type, dna);
+				umaDna.Add(typeNameHash, dna);
+				dnaValues.Add(dna);
+				return dna;
+			}
+			/// <summary>
+			/// Get DNA of specified type, adding if not found.
+			/// </summary>
+			/// <returns>The DNA.</returns>
+			/// <param name="type">Type.</param>
+			public UMADnaBase GetOrCreateDna(Type type, int dnaTypeHash)
+			{
+				UMADnaBase dna;
+				if (umaDna.TryGetValue(dnaTypeHash, out dna))
+				{
+					return dna;
+				}
+
+				dna = type.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
+				dna.dnaTypeHash = dnaTypeHash;
+				umaDna.Add(dnaTypeHash, dna);
+				dnaValues.Add(dna);
 				return dna;
 			}
 #pragma warning restore 618
@@ -655,7 +710,7 @@ namespace UMA
 					}
 					else
 					{
-						Debug.LogWarning("Cannot apply dna: " + dnaEntry.Key);
+						Debug.LogWarning("Cannot apply dna: " + dnaEntry.Value.GetType().Name);
 					}
 				}
 			}
@@ -669,10 +724,13 @@ namespace UMA
 				{
 					foreach (var converter in raceData.dnaConverterList)
 					{
-						var dnaType = converter.DNAType;
-						if (!umaDna.ContainsKey(dnaType))
+						var dnaTypeHash = converter.GetDnaTypeHash();
+						if (!umaDna.ContainsKey(dnaTypeHash))
 						{
-							umaDna.Add(dnaType, dnaType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase);
+							var dna = converter.DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
+							dna.dnaTypeHash = dnaTypeHash;
+							umaDna.Add(dnaTypeHash, dna);
+							dnaValues.Add(dna);
 						}
 					}
 				}
@@ -680,10 +738,13 @@ namespace UMA
 				{
 					if (slotData != null && slotData.asset.slotDNA != null)
 					{
-						var dnaType = slotData.asset.slotDNA.DNAType;
-						if (!umaDna.ContainsKey(dnaType))
+						var dnaTypeHash = slotData.asset.slotDNA.GetDnaTypeHash();
+						if (!umaDna.ContainsKey(dnaTypeHash))
 						{
-							umaDna.Add(dnaType, dnaType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase);
+							var dna = slotData.asset.slotDNA.DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
+							dna.dnaTypeHash = dnaTypeHash;
+							umaDna.Add(dnaTypeHash, dna);
+							dnaValues.Add(dna);
 						}
 					}
 				}
@@ -699,7 +760,7 @@ namespace UMA
 				{
 					foreach (var converter in raceData.dnaConverterList)
 					{
-						umaDnaConverter.Add(converter.DNAType, converter.ApplyDnaAction);
+						umaDnaConverter.Add(UMAUtils.StringToHash(converter.DNAType.Name), converter.ApplyDnaAction);
 					}
 				}
 			}
@@ -711,9 +772,9 @@ namespace UMA
 			public void AddDNAUpdater(DnaConverterBehaviour dnaConverter)
 			{
 				if (dnaConverter == null) return;
-				if (!umaDnaConverter.ContainsKey(dnaConverter.DNAType))
+				if (!umaDnaConverter.ContainsKey(UMAUtils.StringToHash(dnaConverter.DNAType.Name)))
 				{
-					umaDnaConverter.Add(dnaConverter.DNAType, dnaConverter.ApplyDnaAction);
+					umaDnaConverter.Add(UMAUtils.StringToHash(dnaConverter.DNAType.Name), dnaConverter.ApplyDnaAction);
 				}
 			}
 
@@ -725,6 +786,7 @@ namespace UMA
 				var newRecipe = new UMARecipe();
 				newRecipe.raceData = raceData;
 				newRecipe.umaDna = umaDna;
+				newRecipe.dnaValues = dnaValues;
 				newRecipe.slotDataList = slotDataList;
 				return newRecipe;
 			}
@@ -746,7 +808,7 @@ namespace UMA
 
 				foreach (var dnaEntry in recipe.umaDna)
 				{
-					var destDNA = GetOrCreateDna(dnaEntry.Key);
+					var destDNA = GetOrCreateDna(dnaEntry.Value.GetType(), dnaEntry.Key);
 					destDNA.Values = dnaEntry.Value.Values;
 				}
 
