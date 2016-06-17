@@ -11,14 +11,15 @@ namespace UMA
 	/// <summary>
 	/// UMA data holds the recipe for creating a character and skeleton and Unity references for a built character.
 	/// </summary>
-	public class UMAData : MonoBehaviour {	
+	public class UMAData : MonoBehaviour
+	{
 		public SkinnedMeshRenderer myRenderer;
-		
+
 		[NonSerialized]
 		public bool firstBake;
-		
+
 		public UMAGeneratorBase umaGenerator;
-		
+
 		[NonSerialized]
 		public GeneratedMaterials generatedMaterials = new GeneratedMaterials();
 
@@ -32,9 +33,9 @@ namespace UMA
 			list.AddLast(listNode);
 		}
 
-		
+
 		public float atlasResolutionScale = 1f;
-		
+
 		/// <summary>
 		/// Has the character mesh changed?
 		/// </summary>
@@ -51,9 +52,9 @@ namespace UMA
 		/// Have the texture atlases changed?
 		/// </summary>
 		public bool isAtlasDirty;
-		
+
 		public RuntimeAnimatorController animationController;
-		
+
 		private Dictionary<int, int> animatedBonesTable;
 
 		public void ResetAnimatedBones()
@@ -83,7 +84,7 @@ namespace UMA
 				animatedBonesTable.Add(hash, animatedBonesTable.Count);
 			}
 		}
-		
+
 		public bool cancelled { get; private set; }
 		[NonSerialized]
 		public bool dirty = false;
@@ -104,13 +105,13 @@ namespace UMA
 		public UMADataEvent CharacterCreated;
 		public UMADataEvent CharacterDestroyed;
 		public UMADataEvent CharacterUpdated;
-		
+
 		public GameObject umaRoot;
-		
+
 		public UMARecipe umaRecipe;
 		public Animator animator;
 		public UMASkeleton skeleton;
-		
+
 		/// <summary>
 		/// The approximate height of the character. Calculated by DNA converters.
 		/// </summary>
@@ -123,21 +124,23 @@ namespace UMA
 		/// The approximate mass of the character. Calculated by DNA converters.
 		/// </summary>
 		public float characterMass = 50f;
-		
+
 		public UMAData()
 		{
 			listNode = new LinkedListNode<UMAData>(this);
 		}
 
-		void Awake () {
+		void Awake()
+		{
 			firstBake = true;
-			
-			if(!umaGenerator){
+
+			if (!umaGenerator)
+			{
 				var generatorGO = GameObject.Find("UMAGenerator");
 				if (generatorGO == null) return;
 				umaGenerator = generatorGO.GetComponent<UMAGeneratorBase>();
 			}
-			
+
 			if (umaRecipe == null)
 			{
 				umaRecipe = new UMARecipe();
@@ -147,14 +150,14 @@ namespace UMA
 				SetupOnAwake();
 			}
 		}
-		
+
 		public void SetupOnAwake()
 		{
 			umaRoot = gameObject;
 			animator = umaRoot.GetComponent<Animator>();
 		}
-		
-		#pragma warning disable 618
+
+#pragma warning disable 618
 		/// <summary>
 		/// Shallow copy from another UMAData.
 		/// </summary>
@@ -169,38 +172,41 @@ namespace UMA
 				animationController = other.animationController;
 			}
 		}
-		#pragma warning restore 618
-		
+#pragma warning restore 618
+
 		public bool Validate()
 		{
 			bool valid = true;
-			if (umaGenerator == null) {
+			if (umaGenerator == null)
+			{
 				Debug.LogError("UMA data missing required generator!");
 				valid = false;
 			}
-			
-			if (umaRecipe == null) {
+
+			if (umaRecipe == null)
+			{
 				Debug.LogError("UMA data missing required recipe!");
 				valid = false;
 			}
-			else {
+			else
+			{
 				valid = valid && umaRecipe.Validate();
 			}
-			
-			#if UNITY_EDITOR
+
+#if UNITY_EDITOR
 			if (!valid && UnityEditor.EditorApplication.isPlaying) UnityEditor.EditorApplication.isPaused = true;
-			#endif
-			
+#endif
+
 			return valid;
 		}
-		
+
 		[System.Serializable]
 		public class GeneratedMaterials
 		{
 			public List<GeneratedMaterial> materials = new List<GeneratedMaterial>();
 		}
-		
-		
+
+
 		[System.Serializable]
 		public class GeneratedMaterial
 		{
@@ -212,7 +218,7 @@ namespace UMA
 			public float resolutionScale;
 			public string[] textureNameList;
 		}
-		
+
 		[System.Serializable]
 		public class MaterialFragment
 		{
@@ -231,9 +237,9 @@ namespace UMA
 			public bool isRectShared;
 			public List<OverlayData> overlayList;
 			public MaterialFragment rectFragment;
-			
+
 			public Color GetMultiplier(int overlay, int textureType)
-			{				
+			{
 				if (channelMask[overlay] != null && channelMask[overlay].Length > 0)
 				{
 					return channelMask[overlay][textureType];
@@ -257,18 +263,20 @@ namespace UMA
 				}
 			}
 		}
-		
-		
+
+
 		[System.Serializable]
-		public class textureData {
+		public class textureData
+		{
 			public Texture[] textureList;
 		}
-		
+
 		[System.Serializable]
-		public class resultAtlasTexture {
+		public class resultAtlasTexture
+		{
 			public Texture[] textureList;
 		}
-		
+
 		/// <summary>
 		/// The UMARecipe class contains the race, DNA, and color data required to build a UMA character.
 		/// </summary>
@@ -283,18 +291,20 @@ namespace UMA
 			[Obsolete("UMA 2.1 - additionalSlotCount has been deprecated, SlotData.dontSerialize now takes care of scene based additonal slots.", false)]
 			public int additionalSlotCount;
 			public OverlayColorData[] sharedColors;
-			
-			public bool Validate() 
+
+			public bool Validate()
 			{
 				bool valid = true;
-				if (raceData == null) {
+				if (raceData == null)
+				{
 					Debug.LogError("UMA recipe missing required race!");
 					valid = false;
 				}
-				else {
+				else
+				{
 					valid = valid && raceData.Validate();
 				}
-				
+
 				if (slotDataList == null || slotDataList.Length == 0)
 				{
 					Debug.LogError("UMA recipe slot list is empty!");
@@ -317,23 +327,24 @@ namespace UMA
 				}
 				return valid;
 			}
-			
-			#pragma warning disable 618
+
+#pragma warning disable 618
 			/// <summary>
 			/// Gets the DNA array.
 			/// </summary>
 			/// <returns>The DNA array.</returns>
 			public UMADnaBase[] GetAllDna()
 			{
-				if ((raceData == null) || (slotDataList == null)) {
+				if ((raceData == null) || (slotDataList == null))
+				{
 					return new UMADnaBase[0];
 				}
-				
+
 				UMADnaBase[] allDNA = new UMADnaBase[umaDna.Values.Count];
 				umaDna.Values.CopyTo(allDNA, 0);
 				return allDNA;
 			}
-			
+
 			/// <summary>
 			/// Adds the DNA specified.
 			/// </summary>
@@ -342,7 +353,7 @@ namespace UMA
 			{
 				umaDna.Add(dna.GetType(), dna);
 			}
-			
+
 			/// <summary>
 			/// Get DNA of specified type.
 			/// </summary>
@@ -352,13 +363,13 @@ namespace UMA
 				where T : UMADnaBase
 			{
 				UMADnaBase dna;
-				if(umaDna.TryGetValue(typeof(T), out dna))
+				if (umaDna.TryGetValue(typeof(T), out dna))
 				{
-					return dna as T;               
+					return dna as T;
 				}
 				return null;
 			}
-			
+
 			/// <summary>
 			/// Removes all DNA.
 			/// </summary>
@@ -366,7 +377,7 @@ namespace UMA
 			{
 				umaDna.Clear();
 			}
-			
+
 			/// <summary>
 			/// Removes the specified DNA.
 			/// </summary>
@@ -375,7 +386,7 @@ namespace UMA
 			{
 				umaDna.Remove(type);
 			}
-			
+
 			/// <summary>
 			/// Get DNA of specified type.
 			/// </summary>
@@ -384,13 +395,13 @@ namespace UMA
 			public UMADnaBase GetDna(Type type)
 			{
 				UMADnaBase dna;
-				if(umaDna.TryGetValue(type, out dna))
+				if (umaDna.TryGetValue(type, out dna))
 				{
-					return dna;               
+					return dna;
 				}
 				return null;
 			}
-			
+
 			/// <summary>
 			/// Get DNA of specified type, adding if not found.
 			/// </summary>
@@ -407,7 +418,7 @@ namespace UMA
 				}
 				return res;
 			}
-			
+
 			/// <summary>
 			/// Get DNA of specified type, adding if not found.
 			/// </summary>
@@ -420,12 +431,12 @@ namespace UMA
 				{
 					return dna;
 				}
-				
+
 				dna = type.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
 				umaDna.Add(type, dna);
 				return dna;
 			}
-			#pragma warning restore 618
+#pragma warning restore 618
 			/// <summary>
 			/// Sets the race.
 			/// </summary>
@@ -435,7 +446,7 @@ namespace UMA
 				this.raceData = raceData;
 				ClearDNAConverters();
 			}
-			
+
 			/// <summary>
 			/// Gets the race.
 			/// </summary>
@@ -444,7 +455,7 @@ namespace UMA
 			{
 				return this.raceData;
 			}
-			
+
 			/// <summary>
 			/// Sets the slot at a given index.
 			/// </summary>
@@ -458,7 +469,7 @@ namespace UMA
 				}
 				slotDataList[index] = slot;
 			}
-			
+
 			/// <summary>
 			/// Sets the entire slot array.
 			/// </summary>
@@ -467,7 +478,7 @@ namespace UMA
 			{
 				slotDataList = slots;
 			}
-			
+
 			/// <summary>
 			/// Combine additional slot with current data.
 			/// </summary>
@@ -477,7 +488,7 @@ namespace UMA
 			{
 				if ((slot == null) || (slot.asset == null))
 					return;
-				
+
 				int overlayCount = 0;
 				for (int i = 0; i < slotDataList.Length; i++)
 				{
@@ -513,10 +524,10 @@ namespace UMA
 						return;
 					}
 				}
-				
+
 				int insertIndex = slotDataList.Length;
 				System.Array.Resize<SlotData>(ref slotDataList, slotDataList.Length + 1);
-				
+
 				SlotData slotCopy = slot.Copy();
 				slotCopy.dontSerialize = dontSerialize;
 				overlayCount = slotCopy.OverlayCount;
@@ -535,7 +546,7 @@ namespace UMA
 				slotDataList[insertIndex] = slotCopy;
 				MergeMatchingOverlays();
 			}
-			
+
 			/// <summary>
 			/// Gets a slot by index.
 			/// </summary>
@@ -547,7 +558,7 @@ namespace UMA
 					return slotDataList[index];
 				return null;
 			}
-			
+
 			/// <summary>
 			/// Gets the complete array of slots.
 			/// </summary>
@@ -556,7 +567,7 @@ namespace UMA
 			{
 				return slotDataList;
 			}
-			
+
 			/// <summary>
 			/// Gets the number of slots.
 			/// </summary>
@@ -565,7 +576,7 @@ namespace UMA
 			{
 				return slotDataList.Length;
 			}
-			
+
 			/// <summary>
 			/// Are two overlay lists the same?
 			/// </summary>
@@ -578,7 +589,7 @@ namespace UMA
 					return false;
 				if ((list1.Count == 0) || (list1.Count != list2.Count))
 					return false;
-				
+
 				for (int i = 0; i < list1.Count; i++)
 				{
 					OverlayData overlay1 = list1[i];
@@ -590,7 +601,7 @@ namespace UMA
 						OverlayData overlay2 = list2[i];
 						if (!(overlay2))
 							continue;
-						
+
 						if (OverlayData.Equivalent(overlay1, overlay2))
 						{
 							found = true;
@@ -600,10 +611,10 @@ namespace UMA
 					if (!found)
 						return false;
 				}
-				
+
 				return true;
 			}
-			
+
 			/// <summary>
 			/// Ensures slots with matching overlays will share the same references.
 			/// </summary>
@@ -614,7 +625,7 @@ namespace UMA
 					if (slotDataList[i] == null)
 						continue;
 					List<OverlayData> slotOverlays = slotDataList[i].GetOverlayList();
-					for(int j = i + 1; j < slotDataList.Length; j++)
+					for (int j = i + 1; j < slotDataList.Length; j++)
 					{
 						if (slotDataList[j] == null)
 							continue;
@@ -626,8 +637,8 @@ namespace UMA
 					}
 				}
 			}
-			
-			#pragma warning disable 618
+
+#pragma warning disable 618
 			/// <summary>
 			/// Applies each DNA converter to the UMA data and skeleton.
 			/// </summary>
@@ -648,7 +659,7 @@ namespace UMA
 					}
 				}
 			}
-			
+
 			/// <summary>
 			/// Ensures all DNA convertes from slot and race data are defined.
 			/// </summary>
@@ -677,7 +688,7 @@ namespace UMA
 					}
 				}
 			}
-			#pragma warning restore 618
+#pragma warning restore 618
 			/// <summary>
 			/// Resets the DNA converters to those defined in the race.
 			/// </summary>
@@ -692,20 +703,20 @@ namespace UMA
 					}
 				}
 			}
-			
+
 			/// <summary>
 			/// Adds a DNA converter.
 			/// </summary>
 			/// <param name="dnaConverter">DNA converter.</param>
 			public void AddDNAUpdater(DnaConverterBehaviour dnaConverter)
 			{
-				if( dnaConverter == null ) return;
+				if (dnaConverter == null) return;
 				if (!umaDnaConverter.ContainsKey(dnaConverter.DNAType))
 				{
 					umaDnaConverter.Add(dnaConverter.DNAType, dnaConverter.ApplyDnaAction);
 				}
 			}
-			
+
 			/// <summary>
 			/// Shallow copy of UMARecipe.
 			/// </summary>
@@ -717,7 +728,7 @@ namespace UMA
 				newRecipe.slotDataList = slotDataList;
 				return newRecipe;
 			}
-			
+
 			/// <summary>
 			/// Combine additional recipe with current data.
 			/// </summary>
@@ -727,18 +738,18 @@ namespace UMA
 			{
 				if (recipe == null)
 					return;
-				
+
 				if ((recipe.raceData != null) && (recipe.raceData != raceData))
 				{
 					Debug.LogWarning("Merging recipe with conflicting race data: " + recipe.raceData.name);
 				}
-				
+
 				foreach (var dnaEntry in recipe.umaDna)
 				{
 					var destDNA = GetOrCreateDna(dnaEntry.Key);
 					destDNA.Values = dnaEntry.Value.Values;
 				}
-				
+
 				mergedSharedColors.Clear();
 				if (sharedColors == null)
 					sharedColors = new OverlayColorData[0];
@@ -752,10 +763,10 @@ namespace UMA
 							{
 								sharedColors[i].name = sharedColors[i].name + ".";
 							}
-							mergedSharedColors.Add(sharedColors[i].name, i);							
+							mergedSharedColors.Add(sharedColors[i].name, i);
 						}
 					}
-					
+
 					for (int i = 0; i < recipe.sharedColors.Length; i++)
 					{
 						OverlayColorData sharedColor = recipe.sharedColors[i];
@@ -772,7 +783,7 @@ namespace UMA
 						}
 					}
 				}
-				
+
 				if (slotDataList == null)
 					slotDataList = new SlotData[0];
 				if (recipe.slotDataList != null)
@@ -784,16 +795,17 @@ namespace UMA
 				}
 			}
 		}
-		
-		
+
+
 		[System.Serializable]
-		public class BoneData {
+		public class BoneData
+		{
 			public Transform boneTransform;
 			public Vector3 originalBoneScale;
 			public Vector3 originalBonePosition;
 			public Quaternion originalBoneRotation;
 		}
-		
+
 		/// <summary>
 		/// Calls character updated and/or created events.
 		/// </summary>
@@ -814,12 +826,12 @@ namespace UMA
 			}
 			dirty = false;
 		}
-		
+
 		public void ApplyDNA()
 		{
 			umaRecipe.ApplyDNA(this);
 		}
-		
+
 		public virtual void Dirty()
 		{
 			if (dirty) return;
@@ -833,7 +845,7 @@ namespace UMA
 				umaGenerator.addDirtyUMA(this);
 			}
 		}
-		
+
 		void OnDestroy()
 		{
 			if (isOfficiallyCreated)
@@ -844,7 +856,7 @@ namespace UMA
 				}
 				isOfficiallyCreated = false;
 			}
-			if(umaRoot != null)
+			if (umaRoot != null)
 			{
 				CleanTextures();
 				CleanMesh(true);
@@ -852,7 +864,7 @@ namespace UMA
 				Destroy(umaRoot);
 			}
 		}
-		
+
 		/// <summary>
 		/// Destory Mecanim avatar and animator.
 		/// </summary>
@@ -865,22 +877,22 @@ namespace UMA
 				if (animator) GameObject.Destroy(animator);
 			}
 		}
-		
+
 		/// <summary>
 		/// Destroy textures used to render mesh.
 		/// </summary>
 		public void CleanTextures()
 		{
-			for(int atlasIndex = 0; atlasIndex < generatedMaterials.materials.Count; atlasIndex++)
+			for (int atlasIndex = 0; atlasIndex < generatedMaterials.materials.Count; atlasIndex++)
 			{
-				if(generatedMaterials.materials[atlasIndex] != null && generatedMaterials.materials[atlasIndex].resultingAtlasList != null)
+				if (generatedMaterials.materials[atlasIndex] != null && generatedMaterials.materials[atlasIndex].resultingAtlasList != null)
 				{
-					for(int textureIndex = 0; textureIndex < generatedMaterials.materials[atlasIndex].resultingAtlasList.Length; textureIndex++)
+					for (int textureIndex = 0; textureIndex < generatedMaterials.materials[atlasIndex].resultingAtlasList.Length; textureIndex++)
 					{
-						if(generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex] != null)
+						if (generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex] != null)
 						{
 							Texture tempTexture = generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex];
-							if(tempTexture is RenderTexture)
+							if (tempTexture is RenderTexture)
 							{
 								RenderTexture tempRenderTexture = tempTexture as RenderTexture;
 								tempRenderTexture.Release();
@@ -892,12 +904,12 @@ namespace UMA
 								Destroy(tempTexture);
 							}
 							generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex] = null;
-						}				
+						}
 					}
 				}
 			}
 		}
-		
+
 		/// <summary>
 		/// Destroy materials used to render mesh.
 		/// </summary>
@@ -921,26 +933,31 @@ namespace UMA
 				}
 			}
 		}
-		
-		public Texture[] backUpTextures(){
+
+		public Texture[] backUpTextures()
+		{
 			List<Texture> textureList = new List<Texture>();
-			
-			for(int atlasIndex = 0; atlasIndex < generatedMaterials.materials.Count; atlasIndex++){
-				if(generatedMaterials.materials[atlasIndex] != null && generatedMaterials.materials[atlasIndex].resultingAtlasList != null){
-					for(int textureIndex = 0; textureIndex < generatedMaterials.materials[atlasIndex].resultingAtlasList.Length; textureIndex++){
-						
-						if(generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex] != null){
+
+			for (int atlasIndex = 0; atlasIndex < generatedMaterials.materials.Count; atlasIndex++)
+			{
+				if (generatedMaterials.materials[atlasIndex] != null && generatedMaterials.materials[atlasIndex].resultingAtlasList != null)
+				{
+					for (int textureIndex = 0; textureIndex < generatedMaterials.materials[atlasIndex].resultingAtlasList.Length; textureIndex++)
+					{
+
+						if (generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex] != null)
+						{
 							Texture tempTexture = generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex];
 							textureList.Add(tempTexture);
 							generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex] = null;
-						}				
+						}
 					}
 				}
 			}
-			
+
 			return textureList.ToArray();
 		}
-		
+
 		public RenderTexture GetFirstRenderTexture()
 		{
 			for (int atlasIndex = 0; atlasIndex < generatedMaterials.materials.Count; atlasIndex++)
@@ -962,7 +979,7 @@ namespace UMA
 			}
 			return null;
 		}
-		
+
 		/// <summary>
 		/// Gets the game object for a bone by name.
 		/// </summary>
@@ -972,7 +989,7 @@ namespace UMA
 		{
 			return GetBoneGameObject(UMAUtils.StringToHash(boneName));
 		}
-		
+
 		/// <summary>
 		/// Gets the game object for a bone by name hash.
 		/// </summary>
@@ -982,7 +999,7 @@ namespace UMA
 		{
 			return skeleton.GetBoneGameObject(boneHash);
 		}
-		
+
 		/// <summary>
 		/// Gets the complete DNA array.
 		/// </summary>
@@ -991,7 +1008,7 @@ namespace UMA
 		{
 			return umaRecipe.GetAllDna();
 		}
-		
+
 		/// <summary>
 		/// Retrieve DNA by type.
 		/// </summary>
@@ -1001,7 +1018,7 @@ namespace UMA
 		{
 			return umaRecipe.GetDna(type);
 		}
-		
+
 		/// <summary>
 		/// Retrieve DNA by type.
 		/// </summary>
@@ -1012,7 +1029,7 @@ namespace UMA
 		{
 			return umaRecipe.GetDna<T>();
 		}
-		
+
 		/// <summary>
 		/// Marks portions of the UMAData as modified.
 		/// </summary>
@@ -1021,12 +1038,12 @@ namespace UMA
 		/// <param name="meshDirty">If set to <c>true</c> mesh has changed.</param>
 		public void Dirty(bool dnaDirty, bool textureDirty, bool meshDirty)
 		{
-			isShapeDirty   |= dnaDirty;
+			isShapeDirty |= dnaDirty;
 			isTextureDirty |= textureDirty;
-			isMeshDirty    |= meshDirty;
+			isMeshDirty |= meshDirty;
 			Dirty();
 		}
-		
+
 		/// <summary>
 		/// Sets the slot at a given index.
 		/// </summary>
@@ -1036,7 +1053,7 @@ namespace UMA
 		{
 			umaRecipe.SetSlot(index, slot);
 		}
-		
+
 		/// <summary>
 		/// Sets the entire slot array.
 		/// </summary>
@@ -1045,7 +1062,7 @@ namespace UMA
 		{
 			umaRecipe.SetSlots(slots);
 		}
-		
+
 		/// <summary>
 		/// Gets a slot by index.
 		/// </summary>
@@ -1053,9 +1070,9 @@ namespace UMA
 		/// <param name="index">Index.</param>
 		public SlotData GetSlot(int index)
 		{
-			return umaRecipe.GetSlot(index);	
+			return umaRecipe.GetSlot(index);
 		}
-		
+
 		/// <summary>
 		/// Gets the number of slots.
 		/// </summary>
@@ -1064,7 +1081,7 @@ namespace UMA
 		{
 			return umaRecipe.GetSlotArraySize();
 		}
-		
+
 		/// <summary>
 		/// Gets the skeleton.
 		/// </summary>
@@ -1073,7 +1090,7 @@ namespace UMA
 		{
 			return skeleton;
 		}
-		
+
 		/// <summary>
 		/// Align skeleton to the race data TPose.
 		/// </summary>
@@ -1105,7 +1122,7 @@ namespace UMA
 			}
 			return res;
 		}
-		
+
 		/// <summary>
 		/// Calls character begun events on slots.
 		/// </summary>
@@ -1119,7 +1136,7 @@ namespace UMA
 				}
 			}
 		}
-		
+
 		/// <summary>
 		/// Calls DNA applied events on slots.
 		/// </summary>
@@ -1133,7 +1150,7 @@ namespace UMA
 				}
 			}
 		}
-		
+
 		/// <summary>
 		/// Calls character completed events on slots.
 		/// </summary>
@@ -1147,7 +1164,7 @@ namespace UMA
 				}
 			}
 		}
-		
+
 		/// <summary>
 		/// Adds additional, non serialized, recipes.
 		/// </summary>
