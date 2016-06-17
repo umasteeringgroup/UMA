@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using System;
 
 namespace UMA
 {
@@ -22,5 +23,12 @@ namespace UMA
 
 		public abstract float GetValue(int idx);
 		public abstract void SetValue(int idx, float value);
+		public int dnaTypeHash;
+		public int GetDnaTypeHash()
+		{
+			if (dnaTypeHash == 0)
+				dnaTypeHash = UMAUtils.StringToHash(GetType().Name);
+			return dnaTypeHash;
+		}
 	}
 }
