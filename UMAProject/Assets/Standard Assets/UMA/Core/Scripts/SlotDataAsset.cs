@@ -131,5 +131,19 @@ namespace UMA
 			nameHash = UMAUtils.StringToHash(slotName);
 		}
 		public void OnBeforeSerialize() { }
+
+		public void Assign(SlotDataAsset source)
+		{
+			slotName = source.slotName;
+			nameHash = source.nameHash;
+			material = source.material;
+			overlayScale = source.overlayScale;
+			animatedBoneNames = source.animatedBoneNames;
+			animatedBoneHashes = source.animatedBoneHashes;
+			meshData = source.meshData;
+			subMeshIndex = source.subMeshIndex;
+			slotGroup = source.slotGroup;
+			tags = source.tags;
+		}
 	}
 }
