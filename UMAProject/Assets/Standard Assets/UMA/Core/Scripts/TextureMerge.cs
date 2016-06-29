@@ -135,7 +135,7 @@ namespace UMA
 			textureMergeRect.tex = source.overlays[i2].textureList[textureType];
 			textureMergeRect.mat.shader = (source.slotData.asset.material.channels[textureType].channelType == UMAMaterial.ChannelType.NormalMap) ? normalShader : diffuseShader;
 			textureMergeRect.mat.SetTexture("_MainTex", source.overlays[i2].textureList[textureType]);
-			textureMergeRect.mat.SetTexture("_ExtraTex", source.overlays[i2].textureList[0]);
+			textureMergeRect.mat.SetTexture("_ExtraTex", source.overlays[i2].alphaTexture);
 			textureMergeRect.mat.SetColor("_Color", source.GetMultiplier(i2 + 1, textureType));
 			textureMergeRect.mat.SetColor("_AdditiveColor", source.GetAdditive(i2 + 1, textureType));
 		}

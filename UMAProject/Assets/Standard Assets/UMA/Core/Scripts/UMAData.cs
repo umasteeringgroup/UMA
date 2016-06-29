@@ -269,6 +269,7 @@ namespace UMA
 		public class textureData
 		{
 			public Texture[] textureList;
+			public Texture alphaTexture;
 		}
 
 		[System.Serializable]

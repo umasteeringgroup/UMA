@@ -17,7 +17,11 @@ namespace UMA
 		/// Destination rectangle for drawing overlay textures.
 		/// </summary>
 		public Rect rect;
-
+		/// <summary>
+		/// Optional Alpha mask, if alpha mask is not set the texture[0].alpha is used instead.
+		/// Using a alpha mask also allows you to write alpha values from the texture[0] to cut holes
+		/// </summary>
+		public Texture alphaMask;
 		/// <summary>
 		/// Array of textures required for the overlay material.
 		/// </summary>
@@ -49,5 +53,10 @@ namespace UMA
 			nameHash = UMAUtils.StringToHash(overlayName);
 		}
 		public void OnBeforeSerialize()	{ }
+
+		public Texture GetAlphaMask()
+		{
+			return alphaMask != null ? alphaMask : textureList[0];
+		}
 	}
 }
