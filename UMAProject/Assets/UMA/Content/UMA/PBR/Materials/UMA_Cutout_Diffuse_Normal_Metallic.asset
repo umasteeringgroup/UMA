@@ -14,7 +14,7 @@ MonoBehaviour:
   material: {fileID: 2100000, guid: 40307702d879bbd4ab01db8945ade355, type: 2}
   materialType: 1
   channels:
-  - channelType: 0
+  - channelType: 4
     textureFormat: 0
     materialPropertyName: _MainTex
   - channelType: 1

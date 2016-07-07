@@ -103,7 +103,9 @@ MonoBehaviour:
   myCamera: {fileID: 2000000}
   material: {fileID: 2100000, guid: 9dcf0ea2079905b4eabed17a904b047c, type: 2}
   normalShader: {fileID: 4800000, guid: 0c7937a991ef0764fb16577ebf24911e, type: 3}
-  diffuseShader: {fileID: 4800000, guid: 8179a5383e28f6840a80314368b93979, type: 3}
+  diffuseShader: {fileID: 4800000, guid: ae83be5246f311646b3043ed012d9d64, type: 3}
+  dataShader: {fileID: 4800000, guid: 8179a5383e28f6840a80314368b93979, type: 3}
+  cutoutShader: {fileID: 4800000, guid: 6ec55823d603ee4478b56d3f0d7ce6bb, type: 3}
   textureMergeRectCount: 0
   textureMergeRects: []
 --- !u!1001 &100100000

@@ -234,12 +234,26 @@ namespace UMA
                         }
                         else
                         {
-                            for (int j = 0; j < asset.material.channels.Length; j++)
+                            if (i == 0) 
                             {
+                                // all channels must be initialized by the base overlay
+                                for (int j = 0; j < asset.material.channels.Length; j++)
+                                {
+                                    if ((overlayData.asset.textureList[j] == null) && (asset.material.channels[j].channelType != UMAMaterial.ChannelType.MaterialColor))
+                                    {
+                                        Debug.LogError(string.Format("Base Overlay '{0}' missing required texture in channel {1}", overlayData.asset.overlayName, j));
+                                        valid = false;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                // the following overlays just need a main texture
+                                int j = 0;
                                 if ((overlayData.asset.textureList[j] == null) && (asset.material.channels[j].channelType != UMAMaterial.ChannelType.MaterialColor))
                                 {
-                                    Debug.LogError(string.Format("Overlay '{0}' missing required texture in channel {1}", overlayData.asset.overlayName, j));
-                                    valid = false;
+                                   Debug.LogError(string.Format("Overlay '{0}' missing a main texture", overlayData.asset.overlayName, j));
+                                   valid = false;
                                 }
                             }
                         }

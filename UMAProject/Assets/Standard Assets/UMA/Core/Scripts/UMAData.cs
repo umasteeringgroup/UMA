@@ -270,6 +270,7 @@ namespace UMA
 		{
 			public Texture[] textureList;
 			public Texture alphaTexture;
+			public OverlayDataAsset.OverlayType overlayType;
 		}
 
 		[System.Serializable]

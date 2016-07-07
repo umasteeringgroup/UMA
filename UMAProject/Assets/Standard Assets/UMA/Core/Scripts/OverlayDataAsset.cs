@@ -13,6 +13,15 @@ namespace UMA
 		[System.NonSerialized]
 		public int nameHash;
 
+		public enum OverlayType
+		{
+			Normal = 0,
+			Cutout = 1,
+		}
+		/// <summary>
+		/// How should this overlay be processed.
+		/// </summary>
+		public OverlayType overlayType;
 		/// <summary>
 		/// Destination rectangle for drawing overlay textures.
 		/// </summary>

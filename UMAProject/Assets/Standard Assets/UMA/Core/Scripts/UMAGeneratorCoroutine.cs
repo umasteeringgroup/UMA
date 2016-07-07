@@ -128,6 +128,7 @@ namespace UMA
                         tempMaterialDefinition.overlayColors[overlayID] = overlay.colorData.color;
 						tempMaterialDefinition.overlays[overlayID].alphaTexture = overlay.asset.GetAlphaMask();
                         tempMaterialDefinition.channelMask[overlayID + 1] = overlay.colorData.channelMask;
+						tempMaterialDefinition.overlays[overlayID].overlayType = overlay.asset.overlayType;
                         tempMaterialDefinition.channelAdditiveMask[overlayID + 1] = overlay.colorData.channelAdditiveMask;
                         tempMaterialDefinition.overlayData[overlayID + 1] = overlay;
                         overlayID++;

@@ -62,6 +62,7 @@ namespace UMA
 					switch(slotData.asset.material.channels[textureType].channelType )
 					{
 						case UMAMaterial.ChannelType.Texture:
+						case UMAMaterial.ChannelType.DiffuseTexture:
 						case UMAMaterial.ChannelType.NormalMap:
 						{
 							textureMerge.Reset();
