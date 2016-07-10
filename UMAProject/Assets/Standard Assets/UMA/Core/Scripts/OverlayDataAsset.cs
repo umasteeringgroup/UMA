@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System;
 
 namespace UMA
 {
@@ -52,6 +53,61 @@ namespace UMA
 		[UMAAssetFieldVisible]
 		public UMAMaterial material;
 
+		/// <summary>
+		/// Occlusion Entries for occluding triangles, currently only supported by powertools.
+		/// </summary>
+		[System.Serializable]
+		public class OcclusionEntry
+		{
+			/// <summary>
+			/// This entry works only on one particular slot identified by it's hash
+			/// </summary>
+			public int slotNameHash;
+			/// <summary>
+			/// each of the slots submeshes has an array of UInt32 that contains a boolean mask for which triangles this overlay occludes. The triangle masks are ascending (1,2,4...)
+			/// </summary>
+			public SubMeshOcclusion[] occlusion;
+			[System.Serializable]
+			public struct SubMeshOcclusion
+			{
+				public System.Int32[] occlusion;
+			}
+
+			public class OcclusionEntryComparer : IComparer
+			{
+				static OcclusionEntryComparer _instance;
+				private OcclusionEntryComparer() { }
+				public static OcclusionEntryComparer Instance
+				{
+					get
+					{
+						if (_instance == null) _instance = new OcclusionEntryComparer();
+						return _instance;
+					}
+				}
+
+				public int Compare(object x, object y)
+				{
+					var xo = (x as OcclusionEntry);
+					var xv = (xo == null) ? (int)x : xo.slotNameHash;
+
+					var yo = (y as OcclusionEntry);
+					var yv = (yo == null) ? (int)y : yo.slotNameHash;
+
+					if (xv < yv)
+						return -1;
+					if (xv > yv)
+						return 1;
+					return 0;
+				}
+			}
+		}
+		/// <summary>
+		/// Occlusion Entries for occluding triangles, currently only supported by powertools.
+		/// It is important that the OcclusionEntries be sorted by slotNameHash ascending to allow fast binary lookup
+		/// </summary>
+		public OcclusionEntry[] OcclusionEntries;
+
 		public OverlayDataAsset()
 	    {
 
@@ -66,6 +122,17 @@ namespace UMA
 		public Texture GetAlphaMask()
 		{
 			return alphaMask != null ? alphaMask : textureList[0];
+		}
+
+		public void SortOcclusion()
+		{
+			if (OcclusionEntries != null)
+			{
+				System.Array.Sort(OcclusionEntries, OcclusionEntry.OcclusionEntryComparer.Instance);
+#if UNITY_EDITOR
+				UnityEditor.EditorUtility.SetDirty(this);
+#endif
+			}
 		}
 	}
 }
