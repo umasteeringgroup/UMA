@@ -223,7 +223,6 @@ namespace UMA
 		public class MaterialFragment
 		{
 			public int size;
-			public Texture[] baseTexture;
 			public Color baseColor;
 			public UMAMaterial umaMaterial;
 			public Rect[] rects;
@@ -237,6 +236,7 @@ namespace UMA
 			public bool isRectShared;
 			public List<OverlayData> overlayList;
 			public MaterialFragment rectFragment;
+			public textureData baseOverlay;
 
 			public Color GetMultiplier(int overlay, int textureType)
 			{

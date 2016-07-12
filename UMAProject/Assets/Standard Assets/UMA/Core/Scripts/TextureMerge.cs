@@ -76,7 +76,7 @@ namespace UMA
 
 		private void SetupMaterial(ref TextureMergeRect textureMergeRect, UMAData.MaterialFragment source, int textureType)
 		{
-			textureMergeRect.tex = source.baseTexture[textureType];
+			textureMergeRect.tex = source.baseOverlay.textureList[textureType];
 
 			switch (source.slotData.asset.material.channels[textureType].channelType)
 			{
@@ -90,8 +90,8 @@ namespace UMA
 					textureMergeRect.mat.shader = diffuseShader;
 					break;
 			}
-			textureMergeRect.mat.SetTexture("_MainTex", source.baseTexture[textureType]);
-			textureMergeRect.mat.SetTexture("_ExtraTex", source.baseTexture[0]);
+			textureMergeRect.mat.SetTexture("_MainTex", source.baseOverlay.textureList[textureType]);
+			textureMergeRect.mat.SetTexture("_ExtraTex", source.baseOverlay.alphaTexture);
 			textureMergeRect.mat.SetColor("_Color", source.GetMultiplier(0, textureType));
 			textureMergeRect.mat.SetColor("_AdditiveColor", source.GetAdditive(0, textureType));
 		}

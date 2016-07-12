@@ -92,8 +92,12 @@ namespace UMA
                         generatedMaterialLookup.Add(overlayList, generatedMaterial);
                     }
                     var tempMaterialDefinition = new UMAData.MaterialFragment();
-                    tempMaterialDefinition.baseTexture = slots[i].GetOverlay(0).asset.textureList;
-                    tempMaterialDefinition.size = tempMaterialDefinition.baseTexture[0].width * tempMaterialDefinition.baseTexture[0].height;
+					tempMaterialDefinition.baseOverlay = new UMAData.textureData();
+					var overlayAsset = slots[i].GetOverlay(0).asset;
+					tempMaterialDefinition.baseOverlay.textureList = overlayAsset.textureList;
+					tempMaterialDefinition.baseOverlay.alphaTexture = overlayAsset.GetAlphaMask();
+					tempMaterialDefinition.baseOverlay.overlayType = overlayAsset.overlayType;
+					tempMaterialDefinition.size = tempMaterialDefinition.baseOverlay.textureList[0].width * tempMaterialDefinition.baseOverlay.textureList[0].height;
                     tempMaterialDefinition.baseColor = slots[i].GetOverlay(0).colorData.color;
                     tempMaterialDefinition.umaMaterial = slots[i].asset.material;
                     int overlays = 0;
@@ -253,7 +257,7 @@ namespace UMA
                 var tempMaterialDef = material.materialFragments[atlasElementIndex];
                 if (tempMaterialDef.isRectShared) continue;
 
-                tempMaterialDef.atlasRegion = packTexture.Insert(Mathf.FloorToInt(tempMaterialDef.baseTexture[0].width * material.resolutionScale * tempMaterialDef.slotData.overlayScale), Mathf.FloorToInt(tempMaterialDef.baseTexture[0].height * material.resolutionScale * tempMaterialDef.slotData.overlayScale), MaxRectsBinPack.FreeRectChoiceHeuristic.RectBestLongSideFit);
+                tempMaterialDef.atlasRegion = packTexture.Insert(Mathf.FloorToInt(tempMaterialDef.baseOverlay.textureList[0].width * material.resolutionScale * tempMaterialDef.slotData.overlayScale), Mathf.FloorToInt(tempMaterialDef.baseOverlay.textureList[0].height * material.resolutionScale * tempMaterialDef.slotData.overlayScale), MaxRectsBinPack.FreeRectChoiceHeuristic.RectBestLongSideFit);
 
                 if (tempMaterialDef.atlasRegion == nullRect)
                 {
