@@ -115,7 +115,7 @@ namespace UMA
 					var originalRot = umaTransform.localRotation;
 					var originalPos = umaTransform.localPosition;
 
-					umaTransform.parent = null;
+					umaTransform.SetParent(null, false);
 					umaTransform.localRotation = Quaternion.identity;
 					umaTransform.localPosition = Vector3.zero;
 
@@ -136,7 +136,7 @@ namespace UMA
 						snapshot.RestoreAnimatorState(animator);
 					}
 
-					umaTransform.parent = oldParent;
+					umaTransform.SetParent(oldParent, false);
 					umaTransform.localRotation = originalRot;
 					umaTransform.localPosition = originalPos;
 				}
