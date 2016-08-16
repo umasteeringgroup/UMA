@@ -24,6 +24,7 @@ namespace UMA
 				newRoot.transform.parent = umaData.transform;
 				newRoot.transform.localPosition = Vector3.zero;
 				newRoot.transform.localRotation = Quaternion.Euler(270f, 0, 0f);
+				newRoot.transform.localScale = Vector3.one;
 				umaData.umaRoot = newRoot;
 
 				GameObject newGlobal = new GameObject("Global");
