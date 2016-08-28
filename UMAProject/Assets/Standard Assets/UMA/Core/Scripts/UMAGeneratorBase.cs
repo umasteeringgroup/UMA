@@ -94,11 +94,11 @@ namespace UMA
 						animator.Play(stateHashes[i], i, stateTimes[i]);
 					}
 				}
-				
+
 				animator.Update(0.00001f);
 				animator.enabled = animating;
 			}
-		}	
+		}
 
 		/// <summary>
 		/// Update the avatar of a UMA character.
@@ -108,7 +108,7 @@ namespace UMA
 		{
 			if (umaData)
 			{
-				if(umaData.animationController != null)
+				if (umaData.animationController != null)
 				{
 					var umaTransform = umaData.transform;
 					var oldParent = umaTransform.parent;
@@ -120,7 +120,7 @@ namespace UMA
 					umaTransform.localPosition = Vector3.zero;
 
 					var animator = umaData.animator;
-					if(animator == null)
+					if (animator == null)
 					{
 						animator = umaData.gameObject.AddComponent<Animator>();
 						SetAvatar(umaData, animator);
@@ -181,7 +181,8 @@ namespace UMA
 				if (bones.TryGetValue(hb.boneName, out boneName))
 				{
 					Debug.Log(hb.humanName + " -> " + boneName);
-				} else
+				}
+				else
 				{
 					Debug.LogWarning(hb.humanName + " !-> " + hb.boneName);
 				}

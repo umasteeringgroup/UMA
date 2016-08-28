@@ -29,13 +29,13 @@ namespace UMA
 		/// Deep copy of the OverlayData.
 		/// </summary>
 		public OverlayData Duplicate()
-	    {
+		{
 			var res = new OverlayData(asset);
 			res.rect = rect;
 			if (colorData != null)
 				res.colorData = colorData.Duplicate();
 			return res;
-	    }
+		}
 
 		protected OverlayData()
 		{
@@ -54,7 +54,7 @@ namespace UMA
 			}
 			if (asset.material == null)
 			{
-				Debug.LogError("Error: Materials are missing on Asset: "+asset.name+". Have you imported all packages?");
+				Debug.LogError("Error: Materials are missing on Asset: " + asset.name + ". Have you imported all packages?");
 				this.colorData = new OverlayColorData(3); // ?? Don't know. Just create it for standard PBR material size. 
 			}
 			else
@@ -70,33 +70,33 @@ namespace UMA
 		/// </summary>
 		/// <param name="channel">Channel.</param>
 		/// <param name="color">Color.</param>
-        public void SetColor(int channel, Color32 color)
-	    {
-            EnsureChannels(channel+1);
+		public void SetColor(int channel, Color32 color)
+		{
+			EnsureChannels(channel + 1);
 			colorData.channelMask[channel] = color;
-	    }
+		}
 
 		/// <summary>
 		/// Gets the tint color for a channel.
 		/// </summary>
 		/// <returns>The color.</returns>
 		/// <param name="channel">Channel.</param>
-        public Color32 GetColor(int channel)
-        {
+		public Color32 GetColor(int channel)
+		{
 			EnsureChannels(channel + 1);
 			return colorData.channelMask[channel];
-        }
+		}
 
 		/// <summary>
 		/// Gets the additive color for a channel.
 		/// </summary>
 		/// <returns>The additive color.</returns>
 		/// <param name="channel">Channel.</param>
-        public Color32 GetAdditive(int channel)
-        {
-            EnsureChannels(channel + 1);
+		public Color32 GetAdditive(int channel)
+		{
+			EnsureChannels(channel + 1);
 			return colorData.channelAdditiveMask[channel];
-        }
+		}
 
 		/// <summary>
 		/// Sets the additive color for a channel.
@@ -104,24 +104,24 @@ namespace UMA
 		/// <param name="channel">Channel.</param>
 		/// <param name="color">Color.</param>
 		public void SetAdditive(int channel, Color32 color)
-	    {
-			EnsureChannels(channel+1);
+		{
+			EnsureChannels(channel + 1);
 			colorData.channelAdditiveMask[channel] = color;
-	    }
+		}
 
 		/// <summary>
 		/// Copies the colors from another overlay.
 		/// </summary>
 		/// <param name="overlay">Source overlay.</param>
-        public void CopyColors(OverlayData overlay)
-        {
+		public void CopyColors(OverlayData overlay)
+		{
 			colorData = overlay.colorData.Duplicate();
-        }
+		}
 
-        public void EnsureChannels(int channels)
-        {
+		public void EnsureChannels(int channels)
+		{
 			colorData.EnsureChannels(channels);
-        }
+		}
 
 		public static bool Equivalent(OverlayData overlay1, OverlayData overlay2)
 		{
@@ -130,8 +130,8 @@ namespace UMA
 				if (overlay2)
 				{
 					return ((overlay1.asset == overlay2.asset) &&
-					        (overlay1.rect == overlay2.rect) &&
-					        (overlay1.colorData == overlay2.colorData));
+							(overlay1.rect == overlay2.rect) &&
+							(overlay1.colorData == overlay2.colorData));
 				}
 				return false;
 			}

@@ -7,13 +7,13 @@ namespace UMA
 	/// <summary>
 	/// Base class for DNA converters.
 	/// </summary>
-	public class DnaConverterBehaviour : MonoBehaviour 
+	public class DnaConverterBehaviour : MonoBehaviour
 	{
 		public DnaConverterBehaviour()
 		{
 			Prepare();
 		}
-	    public System.Type DNAType;
+		public System.Type DNAType;
 		public int dnaTypeHash;
 		public int GetDnaTypeHash()
 		{
@@ -21,14 +21,14 @@ namespace UMA
 				dnaTypeHash = UMAUtils.StringToHash(DNAType.Name);
 			return dnaTypeHash;
 		}
-        public delegate void DNAConvertDelegate(UMAData data, UMASkeleton skeleton);
+		public delegate void DNAConvertDelegate(UMAData data, UMASkeleton skeleton);
 		/// <summary>
 		/// Called on the DNA converter to adjust avatar from DNA values.
 		/// </summary>
-        public DNAConvertDelegate ApplyDnaAction;
+		public DNAConvertDelegate ApplyDnaAction;
 
-        public virtual void Prepare()
-        {
+		public virtual void Prepare()
+		{
 		}
-    }
+	}
 }

@@ -6,7 +6,7 @@ namespace UMA
 	/// <summary>
 	/// Auxillary slot which adds a CapsuleCollider and Rigidbody to a newly created character.
 	/// </summary>
-	public class CapsuleColliderSlotScript : MonoBehaviour 
+	public class CapsuleColliderSlotScript : MonoBehaviour
 	{
 		public void OnDnaApplied(UMAData umaData)
 		{
