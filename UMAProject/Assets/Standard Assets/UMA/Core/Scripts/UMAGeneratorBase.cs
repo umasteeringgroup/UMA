@@ -101,10 +101,14 @@ namespace UMA
 				{
 					var umaTransform = umaData.transform;
 					var oldParent = umaTransform.parent;
+					var originalRot = umaTransform.localRotation;
+					var originalPos = umaTransform.localPosition;
                     var animator = umaData.animator;
 
                     umaTransform.SetParent(null, false);
-
+					umaTransform.localRotation = Quaternion.identity;
+					umaTransform.localPosition = Vector3.zero;
+					
 					if (animator == null)
 					{
 						animator = umaData.gameObject.AddComponent<Animator>();
@@ -122,6 +126,8 @@ namespace UMA
 					}
 
 					umaTransform.SetParent(oldParent, false);
+					umaTransform.localRotation = originalRot;
+					umaTransform.localPosition = originalPos;
 				}
 				else
 					Debug.LogWarning("No animation controller supplied.");
