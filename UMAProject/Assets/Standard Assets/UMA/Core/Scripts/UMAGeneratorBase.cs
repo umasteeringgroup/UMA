@@ -77,7 +77,7 @@ namespace UMA
 				{
 					var state = animator.GetCurrentAnimatorStateInfo(i);
 					stateHashes[i] = state.fullPathHash;
-					stateTimes[i] = Mathf.Max(0, state.normalizedTime - Time.deltaTime / state.length);
+					stateTimes[i] = Mathf.Max(0, state.normalizedTime + Time.deltaTime / state.length);
 				}
 			}
 
