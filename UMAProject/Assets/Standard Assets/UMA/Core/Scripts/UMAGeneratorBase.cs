@@ -58,18 +58,9 @@ namespace UMA
 		{
 			private int[] stateHashes = new int[0];
 			private float[] stateTimes = new float[0];
-			bool animating = true;
-			bool applyRootMotion = true;
-			AnimatorUpdateMode updateMode = AnimatorUpdateMode.Normal;
-			AnimatorCullingMode cullingMode = AnimatorCullingMode.AlwaysAnimate;
 
 			public void SaveAnimatorState(Animator animator)
 			{
-				animating = animator.enabled;
-				applyRootMotion = animator.applyRootMotion;
-				updateMode = animator.updateMode;
-				cullingMode = animator.cullingMode;
-
 				int layerCount = animator.layerCount;
 				stateHashes = new int[layerCount];
 				stateTimes = new float[layerCount];
@@ -83,10 +74,6 @@ namespace UMA
 
 			public void RestoreAnimatorState(Animator animator)
 			{
-				animator.applyRootMotion = applyRootMotion;
-				animator.updateMode = updateMode;
-				animator.cullingMode = cullingMode;
-
 				if (animator.layerCount == stateHashes.Length)
 				{
 					for (int i = 0; i < animator.layerCount; i++)
@@ -95,9 +82,11 @@ namespace UMA
 					}
 				}
 
-				animator.Update(0.00001f);
-				animator.enabled = animating;
-			}
+                if (animator.enabled == true)
+				    animator.Update(0.00001f);
+                else
+                    animator.Update(0);
+            }
 		}
 
 		/// <summary>
@@ -112,14 +101,10 @@ namespace UMA
 				{
 					var umaTransform = umaData.transform;
 					var oldParent = umaTransform.parent;
-					var originalRot = umaTransform.localRotation;
-					var originalPos = umaTransform.localPosition;
+                    var animator = umaData.animator;
 
-					umaTransform.SetParent(null, false);
-					umaTransform.localRotation = Quaternion.identity;
-					umaTransform.localPosition = Vector3.zero;
+                    umaTransform.SetParent(null, false);
 
-					var animator = umaData.animator;
 					if (animator == null)
 					{
 						animator = umaData.gameObject.AddComponent<Animator>();
@@ -137,8 +122,6 @@ namespace UMA
 					}
 
 					umaTransform.SetParent(oldParent, false);
-					umaTransform.localRotation = originalRot;
-					umaTransform.localPosition = originalPos;
 				}
 				else
 					Debug.LogWarning("No animation controller supplied.");
