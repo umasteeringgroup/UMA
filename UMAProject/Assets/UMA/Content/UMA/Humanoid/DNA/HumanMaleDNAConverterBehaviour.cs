@@ -491,12 +491,12 @@ public class HumanMaleDNAConverterBehaviour : HumanoidDNAConverterBehaviour
 		skeleton.SetPositionRelative(leftUpLegHash,
 		                     new Vector3(
 			Mathf.Clamp(0, -10, 10),
-			Mathf.Clamp((umaDna.legSeparation - 0.5f) * -0.15f + (umaDna.lowerWeight - 0.5f) * -0.035f + (umaDna.legsSize - 0.5f) * 0.1f, -0.025f, 0.025f),
+			Mathf.Clamp((umaDna.legSeparation - 0.5f) * -0.15f + (umaDna.lowerWeight - 0.5f) * -0.035f + (umaDna.legsSize - 0.5f) * 0.1f, -0.055f, 0.055f),
 			Mathf.Clamp(0, -10, 10)));
 		skeleton.SetPositionRelative(rightUpLegHash,
 		                     new Vector3(
 			Mathf.Clamp(0, -10, 10),
-			Mathf.Clamp((umaDna.legSeparation - 0.5f) * 0.15f + (umaDna.lowerWeight - 0.5f) * 0.035f + (umaDna.legsSize - 0.5f) * -0.1f, -0.025f, 0.025f),
+			Mathf.Clamp((umaDna.legSeparation - 0.5f) * 0.15f + (umaDna.lowerWeight - 0.5f) * 0.035f + (umaDna.legsSize - 0.5f) * -0.1f, -0.055f, 0.055f),
 			Mathf.Clamp(0, -10, 10)));
 
 		skeleton.SetPositionRelative(leftShoulderHash,
