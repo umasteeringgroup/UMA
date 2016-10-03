@@ -32,9 +32,15 @@ namespace UMA
 				newGlobal.transform.localPosition = Vector3.zero;
 				newGlobal.transform.localRotation = Quaternion.Euler(90f, 90f, 0f);
 
+				GameObject newSMRGO = new GameObject("UMARenderer");
+				newSMRGO.transform.parent = umaData.transform;
+				newSMRGO.transform.localPosition = Vector3.zero;
+				newSMRGO.transform.localRotation = Quaternion.Euler(0, 0, 0f);
+				newSMRGO.transform.localScale = Vector3.one;
+
 				umaData.skeleton = new UMASkeleton(newGlobal.transform);
 
-				var newRenderer = umaData.umaRoot.AddComponent<SkinnedMeshRenderer>();
+				var newRenderer = newSMRGO.AddComponent<SkinnedMeshRenderer>();
 				newRenderer.rootBone = newGlobal.transform;
 				umaData.myRenderer = newRenderer;
 				umaData.myRenderer.enabled = false;
