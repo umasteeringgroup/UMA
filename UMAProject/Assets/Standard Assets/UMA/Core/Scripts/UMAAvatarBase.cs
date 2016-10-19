@@ -5,6 +5,9 @@ using System.Runtime.Serialization;
 using System.Collections;
 using System.Collections.Generic;
 using UMA;
+#if UNITY_5_5_OR_NEWER
+using UnityEngine.Profiling;
+#endif
 
 /// <summary>
 /// Base class for UMA character.

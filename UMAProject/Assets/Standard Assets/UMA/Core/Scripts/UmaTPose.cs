@@ -5,7 +5,6 @@ using System.IO;
 using System;
 using System.Globalization;
 
-
 namespace UMA
 {
 	/// <summary>
@@ -110,7 +109,7 @@ namespace UMA
 	        res.position = DeserializeVector3(br);
 	        res.rotation = DeSerializeQuaternion(br);
 	        res.scale = DeserializeVector3(br);
-	        res.transformModified = br.ReadInt32();
+	        br.ReadInt32();
 	        return res;
 	    }
 
@@ -175,7 +174,7 @@ namespace UMA
 	        Serialize(bn, bone.position);
 	        Serialize(bn, bone.rotation);
 	        Serialize(bn, bone.scale);
-	        bn.Write(bone.transformModified);
+	        bn.Write(1);
 	    }
 
 	    private void Serialize(BinaryWriter bn, Quaternion value)
@@ -244,7 +243,7 @@ namespace UMA
 
 	    private void AddRecursively(List<SkeletonBone> boneInfoList, Transform root)
 	    {
-	        boneInfoList.Add(new SkeletonBone() { name = root.name, position = root.localPosition, rotation = root.localRotation, scale = root.localScale, transformModified = 1 });
+	        boneInfoList.Add(new SkeletonBone() { name = root.name, position = root.localPosition, rotation = root.localRotation, scale = root.localScale});
 	        for (int i = 0; i < root.childCount; i++)
 	        {
 	            AddRecursively(boneInfoList, root.GetChild(i));
