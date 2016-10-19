@@ -174,7 +174,7 @@ namespace UMA
 	        Serialize(bn, bone.position);
 	        Serialize(bn, bone.rotation);
 	        Serialize(bn, bone.scale);
-	        bn.Write(1);
+	        bn.Write((int)1);
 	    }
 
 	    private void Serialize(BinaryWriter bn, Quaternion value)
