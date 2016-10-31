@@ -111,7 +111,9 @@ namespace UMA
 					
 					if (animator == null)
 					{
-						animator = umaData.gameObject.AddComponent<Animator>();
+						animator = umaData.gameObject.GetComponent<Animator>();
+						if (animator == null)
+							animator = umaData.gameObject.AddComponent<Animator>();
 						SetAvatar(umaData, animator);
 						animator.runtimeAnimatorController = umaData.animationController;
 						umaData.animator = animator;
