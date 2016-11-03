@@ -145,7 +145,9 @@ namespace UMA
 #endif
             // Not found anywhere
             index = new UMAResourcesIndexData();
+#if UNITY_EDITOR
             IndexAllResources();
+#endif
         }
 
         public string GetIndexInfo()

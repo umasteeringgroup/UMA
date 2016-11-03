@@ -10,6 +10,7 @@ namespace UMA
 {
     public class DynamicDNAConverterCustomizer : MonoBehaviour
     {
+		#if UNITY_EDITOR		
         public GameObject dynamicDnaConverterPrefab;//used for saving dnaConverter as new
         public RuntimeAnimatorController TposeAnimatorController;
         public RuntimeAnimatorController AposeAnimatorController;
@@ -711,5 +712,6 @@ namespace UMA
             }
         }
         #endregion
+		#endif
     }
 }
