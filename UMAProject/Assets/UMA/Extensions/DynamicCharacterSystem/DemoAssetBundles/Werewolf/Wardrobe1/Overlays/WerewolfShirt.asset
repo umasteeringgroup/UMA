@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c4834e6077abe64e968f9f87c9ac70a, type: 3}
+  m_Name: WerewolfShirt
+  m_EditorClassIdentifier: 
+  overlayName: WerewolfShirt
+  rect:
+    serializedVersion: 2
+    x: 0
+    y: 512.9
+    width: 1024
+    height: 512
+  textureList:
+  - {fileID: 2800000, guid: d40bec82ad70824478f3cead70f6cfea, type: 3}
+  - {fileID: 2800000, guid: 8e46551b231290e44b00c11543501fd8, type: 3}
+  - {fileID: 2800000, guid: f6107ad9de1e9bb4ea74851d9bca7976, type: 3}
+  tags: []
+  material: {fileID: 11400000, guid: 8e29dbac5d2e82f44a759a7e2cc568ab, type: 2}

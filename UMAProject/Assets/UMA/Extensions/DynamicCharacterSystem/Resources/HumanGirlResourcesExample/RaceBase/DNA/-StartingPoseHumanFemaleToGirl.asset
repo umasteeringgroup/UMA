@@ -1,0 +1,126 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: -StartingPoseHumanFemaleToGirl
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightEye
+    hash: -2120937982
+    position: {x: 0.000000052154064, y: 0.000019621104, z: -0.000000007450581}
+    rotation: {x: -0.00000023352396, y: 0.0000003789908, z: 0.00000021089994, w: 1.0000001}
+    scale: {x: 1.079412, y: 1.0794117, z: 1.0794119}
+  - bone: RightGluteus
+    hash: -2110033470
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.8914704, y: 0.8914706, z: 0.89147073}
+  - bone: LeftForeArm
+    hash: -1984349568
+    position: {x: 0, y: 0.000000010688455, z: -0.0000000015730528}
+    rotation: {x: -0.009562276, y: -0.002849184, z: -0.027160905, w: 0.9995812}
+    scale: {x: 0.88627464, y: 0.8862746, z: 0.8862747}
+  - bone: RightFoot
+    hash: -1693174228
+    position: {x: 0.000000059604645, y: 0.000000004184365, z: -0.0000000113767165}
+    rotation: {x: -0.020821743, y: -0.010970795, z: 0.029780041, w: 0.9992794}
+    scale: {x: 1.1686273, y: 1.1686276, z: 1.1686276}
+  - bone: LowerBackBelly
+    hash: -1421416706
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.3602941, y: 1.3740196, z: 1.6176472}
+  - bone: LeftHand
+    hash: -1233783956
+    position: {x: -0.000000059604645, y: 0.000000082802984, z: -0.000000011061998}
+    rotation: {x: -0.10194419, y: 0.0032525992, z: 0.00023910067, w: 0.9947848}
+    scale: {x: 1.2, y: 1.2, z: 1.2}
+  - bone: Position
+    hash: -1084586333
+    position: {x: 0.0774, y: -0.0000000055879408, z: 4.440892e-15}
+    rotation: {x: 9.2814645e-14, y: 6.922167e-15, z: 9.948377e-16, w: 1}
+    scale: {x: 0.8, y: 0.8, z: 0.8}
+  - bone: RightOuterBreast
+    hash: -1043063424
+    position: {x: -0.00003921613, y: -0.00015686452, z: 0}
+    rotation: {x: -0.0000004692687, y: -0.0006844285, z: 0.0013688973, w: 0.99999887}
+    scale: {x: 0.7, y: 0.5999999, z: 0.5999999}
+  - bone: LowerBack
+    hash: -919067556
+    position: {x: -0.000000007450581, y: 0.000000006291596, z: 8.9366736e-11}
+    rotation: {x: 0.0000000030056224, y: 4.2400835e-15, z: 0.000000072919406, w: 1.0000001}
+    scale: {x: 0.9980392, y: 0.9980392, z: 0.9980392}
+  - bone: LeftEarAdjust
+    hash: -777059916
+    position: {x: -0.00003921628, y: -0.00011764884, z: 0.00007843256}
+    rotation: {x: -6.7203564e-15, y: -1.5554827e-16, z: 0.001368906, w: 0.9999991}
+    scale: {x: 0.9470589, y: 0.94705886, z: 0.9470589}
+  - bone: RightEarAdjust
+    hash: -652641090
+    position: {x: -0.00003921628, y: 0.00011764884, z: 0.00007843256}
+    rotation: {x: 5.97548e-15, y: -2.8412873e-17, z: -0.001368906, w: 0.9999991}
+    scale: {x: 0.94705886, y: 0.94705886, z: 0.94705886}
+  - bone: LeftEye
+    hash: 27653119
+    position: {x: 0.000000067055225, y: -0.000019598752, z: -0.000000007450581}
+    rotation: {x: -0.00000062380946, y: -0.00000012675716, z: 0.00000054541505, w: 1}
+    scale: {x: 1.0794116, y: 1.0794117, z: 1.0794117}
+  - bone: Head
+    hash: 130111906
+    position: {x: 0.000000044703484, y: 0.0000000028979859, z: 0.000000009268909}
+    rotation: {x: 0.000133705, y: -0.00069823733, z: 0.000690623, w: 0.9999996}
+    scale: {x: 1.25, y: 1.25, z: 1.25}
+  - bone: LeftOuterBreast
+    hash: 361754685
+    position: {x: -0.00003921613, y: 0.00015686452, z: 0}
+    rotation: {x: 0.00000046962154, y: -0.0006844286, z: -0.0013688972, w: 0.99999887}
+    scale: {x: 0.7, y: 0.6000001, z: 0.59999996}
+  - bone: LeftFoot
+    hash: 1486391408
+    position: {x: -0.00000017881393, y: -0.000000015373399, z: -0.000000020428422}
+    rotation: {x: 0.020822829, y: -0.010971131, z: -0.029779708, w: 0.9992795}
+    scale: {x: 1.1686275, y: 1.1686275, z: 1.1686279}
+  - bone: RightForeArm
+    hash: 1918345642
+    position: {x: -0.00000014901161, y: 0.0000000070995325, z: -4.556453e-10}
+    rotation: {x: 0.009561386, y: -0.0028499747, z: 0.027162485, w: 0.9995813}
+    scale: {x: 0.8862746, y: 0.8862746, z: 0.8862746}
+  - bone: RightHand
+    hash: 1979272496
+    position: {x: -0.00000008940697, y: -0.00000008491409, z: -0.00000001004816}
+    rotation: {x: 0.101943895, y: 0.0032525081, z: -0.00023920246, w: 0.99478495}
+    scale: {x: 1.2, y: 1.2, z: 1.2}
+  - bone: LeftGluteus
+    hash: 2044062440
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.8914705, y: 0.89147073, z: 0.8914708}
+  - bone: RightInnerBreast
+    hash: -809409229
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: -0.44, y: 1, z: 1}
+  - bone: LeftInnerBreast
+    hash: 463112334
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: -0.44, y: 1, z: 1}
+  - bone: LeftUpLeg
+    hash: 392266736
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.9, y: 0.9, z: 0.9}
+  - bone: RightUpLeg
+    hash: 1971262097
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 0.9, y: 0.9, z: 0.9}
+  tweenPoses: []
+  tweenWeights: []

@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c4834e6077abe64e968f9f87c9ac70a, type: 3}
+  m_Name: FemaleEyebrow01-Res
+  m_EditorClassIdentifier: 
+  overlayName: FemaleEyebrow01-Res
+  rect:
+    serializedVersion: 2
+    x: 384
+    y: 256
+    width: 256
+    height: 64
+  textureList:
+  - {fileID: 2800000, guid: 5140ebec9a0663c409e5d080ab08fdf9, type: 3}
+  - {fileID: 2800000, guid: 5f0587828bacdce408ca70baaa39725c, type: 3}
+  - {fileID: 2800000, guid: 3a4d0d38c4cee4541932dd8809b1f13f, type: 3}
+  tags: []
+  material: {fileID: 11400000, guid: 8e29dbac5d2e82f44a759a7e2cc568ab, type: 2}

@@ -15,7 +15,7 @@ namespace UMA
 		}
 		public System.Type DNAType;
 		public int dnaTypeHash;
-		public int GetDnaTypeHash()
+		public virtual int GetDnaTypeHash()
 		{
 			if (dnaTypeHash == 0)
 				dnaTypeHash = UMAUtils.StringToHash(DNAType.Name);

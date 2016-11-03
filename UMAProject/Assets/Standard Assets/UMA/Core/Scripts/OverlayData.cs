@@ -137,7 +137,25 @@ namespace UMA
 			}
 			return !((bool)overlay2);
 		}
-
+		/// Compares two overlay.assets and overlay.rects to see if they are the same. Mainly for comparing overlays from AssetBundles.
+		/// </summary>
+		/// <param name="overlay1"></param>
+		/// <param name="overlay2"></param>
+		/// <returns></returns>
+		public static bool EquivalentAssetAndUse(OverlayData overlay1, OverlayData overlay2)
+		{
+			if (overlay1)
+			{
+				if (overlay2)
+				{
+					return ((overlay1.asset.overlayName == overlay2.asset.overlayName) &&
+							(overlay1.asset.material.Equals(overlay2.asset.material)) &&
+							(overlay1.rect == overlay2.rect));
+				}
+				return false;
+			}
+			return !((bool)overlay2);
+		}
 		#region operator ==, != and similar HACKS, seriously.....
 		public static implicit operator bool(OverlayData obj)
 		{

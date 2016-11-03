@@ -40,7 +40,7 @@ namespace UMAEditor
 				{
 					if (DerivesFrom(dnaType, baseDnaType))
 					{
-						if (dnaType.Name == "UMADna") continue;
+						if (dnaType.Name == "UMADna" || dnaType.Name == "DynamicUMADna") continue;
 						customData["ClassName"] = dnaType.Name;
 						foreach (var template in pageTemplates)
 						{

@@ -152,6 +152,23 @@ namespace UMA
 
 			return null;
 		}
+		/// <summary>
+		/// Attempts to find an equivalent overlay in the slot, based on the overlay rect and its assets properties.
+		/// </summary>
+		/// <param name="overlay"></param>
+		/// <returns></returns>
+		public OverlayData GetEquivalentUsedOverlay(OverlayData overlay)
+		{
+			foreach (OverlayData overlay2 in overlayList)
+			{
+				if (OverlayData.EquivalentAssetAndUse(overlay, overlay2))
+				{
+					return overlay2;
+				}
+			}
+
+			return null;
+		}
 
 		public int OverlayCount { get { return overlayList.Count; } }
 

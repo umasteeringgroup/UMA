@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: EyeDown_R
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightEyeGlobe
+    hash: 935779410
+    position: {x: -2.18839169e-09, y: 3.90798505e-14, z: 1.13751781e-07}
+    rotation: {x: -1.95403498e-08, y: -.258819163, z: 6.53159371e-14, w: .965925813}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLowerLid
+    hash: -945389519
+    position: {x: -2.18839169e-09, y: 3.90798505e-14, z: 1.13751781e-07}
+    rotation: {x: -9.67001057e-09, y: -.128252089, z: 2.21544796e-11, w: .991741657}
+    scale: {x: .999999881, y: .999999702, z: .999999404}
+  - bone: RightUpperLid
+    hash: 683767470
+    position: {x: -2.18839169e-09, y: 3.90798505e-14, z: 1.13751781e-07}
+    rotation: {x: -9.91895721e-09, y: -.13052614, z: 2.57724137e-11, w: .991444886}
+    scale: {x: 1, y: 1, z: 1.00000012}
+  tweenPoses: []
+  tweenWeights: []

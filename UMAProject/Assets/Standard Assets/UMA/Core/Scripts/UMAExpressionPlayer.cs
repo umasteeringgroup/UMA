@@ -1,4 +1,4 @@
-﻿//	============================================================
+//	============================================================
 //	Name:		UMAExpressionPlayer
 //	Author: 	Eli Curtz
 //	Copyright:	(c) 2013 Eli Curtz
@@ -26,6 +26,8 @@ namespace UMA.PoseTools
 		private bool initialized = false;
 		[System.NonSerialized]
 		public int SlotUpdateVsCharacterUpdate;
+
+		public bool logResetErrors;
 
 		// Use this for initialization
 		void Start()
@@ -69,7 +71,7 @@ namespace UMA.PoseTools
 				return;
 
 			// Need to reset bones here if we want Mecanim animation
-			expressionSet.ResetBones(umaData.skeleton);
+			expressionSet.RestoreBones(umaData.skeleton, logResetErrors);
 
 			if (gazeWeight > 0f)
 			{

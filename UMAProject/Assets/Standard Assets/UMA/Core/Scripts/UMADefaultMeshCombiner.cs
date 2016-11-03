@@ -21,6 +21,8 @@ namespace UMA
 			if (umaData.umaRoot == null)
 			{
 				GameObject newRoot = new GameObject("Root");
+				//make root of the UMAAvatar respect the layer setting of the UMAAvatar so cameras can just target this layer
+				newRoot.layer = umaData.gameObject.layer;
 				newRoot.transform.parent = umaData.transform;
 				newRoot.transform.localPosition = Vector3.zero;
 				newRoot.transform.localRotation = Quaternion.Euler(270f, 0, 0f);

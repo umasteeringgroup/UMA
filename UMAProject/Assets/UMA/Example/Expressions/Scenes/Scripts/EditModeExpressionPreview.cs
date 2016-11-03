@@ -17,7 +17,7 @@ namespace UMA.PoseTools
 			if (expressionSet == null) return;
 			if (skeleton == null) return;
 
-			expressionSet.ResetBones(skeleton);
+			expressionSet.RestoreBones(skeleton);
 		}
 
 		void Update()
@@ -39,7 +39,7 @@ namespace UMA.PoseTools
 				skeleton = new UMASkeleton(skeletonRoot);
 			}
 
-			expressionSet.ResetBones(skeleton);
+			expressionSet.RestoreBones(skeleton);
 
 			float[] values = expressionPlayer.Values;
 

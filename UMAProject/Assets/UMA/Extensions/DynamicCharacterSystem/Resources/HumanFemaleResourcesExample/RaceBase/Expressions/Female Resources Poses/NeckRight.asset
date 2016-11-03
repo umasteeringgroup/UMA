@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: NeckRight
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Neck
+    hash: -2145158803
+    position: {x: 2.38418579e-07, y: 5.32907052e-15, z: 4.87045693e-09}
+    rotation: {x: -.34276855, y: -3.88898371e-08, z: -2.31925572e-08, w: .939809978}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: UpperLips
+    hash: 891826736
+    position: {x: 6.33299351e-08, y: 4.71482053e-09, z: -1.2665987e-07}
+    rotation: {x: .00232163561, y: 0, z: 0, w: .999997377}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []

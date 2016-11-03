@@ -10,13 +10,6 @@ namespace UMA
 	{
 		public void OnDnaApplied(UMAData umaData)
 		{
-			var umaDna = umaData.GetDna<UMADnaHumanoid>();
-			if (umaDna == null)
-			{
-				Debug.LogError("Failed to add Capsule Collider to: " + umaData.name);
-				return;
-			}
-
 			var rigid = umaData.gameObject.GetComponent<Rigidbody>();
 			if (rigid == null)
 			{

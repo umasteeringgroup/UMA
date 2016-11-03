@@ -1,0 +1,743 @@
+fileFormatVersion: 2
+guid: d8b3740bd15071d46acc9e40496da972
+timeCreated: 1467110865
+licenseType: Free
+ModelImporter:
+  serializedVersion: 19
+  fileIDToRecycleName:
+    100000: Global
+    100002: Head
+    100004: HeadAdjust
+    100006: Hips
+    100008: LeftArm
+    100010: LeftArmAdjust
+    100012: LeftCheek
+    100014: LeftCheekAdjust
+    100016: LeftEar
+    100018: LeftEarAdjust
+    100020: LeftEye
+    100022: LeftEyeAdjust
+    100024: LeftEyebrowLow
+    100026: LeftEyebrowLowAdjust
+    100028: LeftEyebrowMiddle
+    100030: LeftEyebrowMiddleAdjust
+    100032: LeftEyebrowUp
+    100034: LeftEyebrowUpAdjust
+    100036: LeftEyeGlobe
+    100038: LeftFoot
+    100040: LeftForeArm
+    100042: LeftForeArmAdjust
+    100044: LeftForeArmTwist
+    100046: LeftForeArmTwistAdjust
+    100048: LeftGluteus
+    100050: LeftHand
+    100052: LeftHandFinger01_01
+    100054: LeftHandFinger01_02
+    100056: LeftHandFinger01_03
+    100058: LeftHandFinger02_01
+    100060: LeftHandFinger02_02
+    100062: LeftHandFinger02_03
+    100064: LeftHandFinger03_01
+    100066: LeftHandFinger03_02
+    100068: LeftHandFinger03_03
+    100070: LeftHandFinger04_01
+    100072: LeftHandFinger04_02
+    100074: LeftHandFinger04_03
+    100076: LeftHandFinger05_01
+    100078: LeftHandFinger05_02
+    100080: LeftHandFinger05_03
+    100082: LeftInnerBreast
+    100084: LeftLeg
+    100086: LeftLegAdjust
+    100088: LeftLips
+    100090: LeftLipsAdjust
+    100092: LeftLipsInferior
+    100094: LeftLipsInferiorAdjust
+    100096: LeftLipsSuperiorMiddle
+    100098: LeftLipsSuperiorMiddleAdjust
+    100100: LeftLowCheek
+    100102: LeftLowCheekAdjust
+    100104: LeftLowerLid
+    100106: LeftLowerLidAdjust
+    100108: LeftLowMaxilar
+    100110: LeftLowMaxilarAdjust
+    100112: LeftNose
+    100114: LeftNoseAdjust
+    100116: LeftOuterBreast
+    100118: LeftShoulder
+    100120: LeftShoulderAdjust
+    100122: LeftToeBase
+    100124: LeftTrapezius
+    100126: LeftUpLeg
+    100128: LeftUpLegAdjust
+    100130: LeftUpperLid
+    100132: LeftUpperLidAdjust
+    100134: LipsInferior
+    100136: LipsInferiorAdjust
+    100138: LipsSuperior
+    100140: LipsSuperiorAdjust
+    100142: LowerBack
+    100144: LowerBackAdjust
+    100146: LowerBackBelly
+    100148: Mandible
+    100150: MandibleAdjust
+    100152: Neck
+    100154: NeckAdjust
+    100156: NoseBase
+    100158: NoseBaseAdjust
+    100160: NoseMiddle
+    100162: NoseMiddleAdjust
+    100164: NoseTop
+    100166: NoseTopAdjust
+    100168: Position
+    100170: RightArm
+    100172: RightArmAdjust
+    100174: RightCheek
+    100176: RightCheekAdjust
+    100178: RightEar
+    100180: RightEarAdjust
+    100182: RightEye
+    100184: RightEyeAdjust
+    100186: RightEyebrowLow
+    100188: RightEyebrowLowAdjust
+    100190: RightEyebrowMiddle
+    100192: RightEyebrowMiddleAdjust
+    100194: RightEyebrowUp
+    100196: RightEyebrowUpAdjust
+    100198: RightEyeGlobe
+    100200: RightFoot
+    100202: RightForeArm
+    100204: RightForeArmAdjust
+    100206: RightForeArmTwist
+    100208: RightForeArmTwistAdjust
+    100210: RightGluteus
+    100212: RightHand
+    100214: RightHandFinger01_01
+    100216: RightHandFinger01_02
+    100218: RightHandFinger01_03
+    100220: RightHandFinger02_01
+    100222: RightHandFinger02_02
+    100224: RightHandFinger02_03
+    100226: RightHandFinger03_01
+    100228: RightHandFinger03_02
+    100230: RightHandFinger03_03
+    100232: RightHandFinger04_01
+    100234: RightHandFinger04_02
+    100236: RightHandFinger04_03
+    100238: RightHandFinger05_01
+    100240: RightHandFinger05_02
+    100242: RightHandFinger05_03
+    100244: RightInnerBreast
+    100246: RightLeg
+    100248: RightLegAdjust
+    100250: RightLips
+    100252: RightLipsAdjust
+    100254: RightLipsInferior
+    100256: RightLipsInferiorAdjust
+    100258: RightLipsSuperiorMiddle
+    100260: RightLipsSuperiorMiddleAdjust
+    100262: RightLowCheek
+    100264: RightLowCheekAdjust
+    100266: RightLowerLid
+    100268: RightLowerLidAdjust
+    100270: RightLowMaxilar
+    100272: RightLowMaxilarAdjust
+    100274: RightNose
+    100276: RightNoseAdjust
+    100278: RightOuterBreast
+    100280: RightShoulder
+    100282: RightShoulderAdjust
+    100284: RightToeBase
+    100286: RightTrapezius
+    100288: RightUpLeg
+    100290: RightUpLegAdjust
+    100292: RightUpperLid
+    100294: RightUpperLidAdjust
+    100296: Spine
+    100298: Spine1
+    100300: Spine1Adjust
+    100302: SpineAdjust
+    100304: Tongue01
+    100306: Tongue02
+    100308: //RootNode
+    100310: UMA_Female_Rig_001
+    100312: UMA_Human_Female_001
+    100314: UpperLips
+    100316: UpperLipsAdjust
+    400000: Global
+    400002: Head
+    400004: HeadAdjust
+    400006: Hips
+    400008: LeftArm
+    400010: LeftArmAdjust
+    400012: LeftCheek
+    400014: LeftCheekAdjust
+    400016: LeftEar
+    400018: LeftEarAdjust
+    400020: LeftEye
+    400022: LeftEyeAdjust
+    400024: LeftEyebrowLow
+    400026: LeftEyebrowLowAdjust
+    400028: LeftEyebrowMiddle
+    400030: LeftEyebrowMiddleAdjust
+    400032: LeftEyebrowUp
+    400034: LeftEyebrowUpAdjust
+    400036: LeftEyeGlobe
+    400038: LeftFoot
+    400040: LeftForeArm
+    400042: LeftForeArmAdjust
+    400044: LeftForeArmTwist
+    400046: LeftForeArmTwistAdjust
+    400048: LeftGluteus
+    400050: LeftHand
+    400052: LeftHandFinger01_01
+    400054: LeftHandFinger01_02
+    400056: LeftHandFinger01_03
+    400058: LeftHandFinger02_01
+    400060: LeftHandFinger02_02
+    400062: LeftHandFinger02_03
+    400064: LeftHandFinger03_01
+    400066: LeftHandFinger03_02
+    400068: LeftHandFinger03_03
+    400070: LeftHandFinger04_01
+    400072: LeftHandFinger04_02
+    400074: LeftHandFinger04_03
+    400076: LeftHandFinger05_01
+    400078: LeftHandFinger05_02
+    400080: LeftHandFinger05_03
+    400082: LeftInnerBreast
+    400084: LeftLeg
+    400086: LeftLegAdjust
+    400088: LeftLips
+    400090: LeftLipsAdjust
+    400092: LeftLipsInferior
+    400094: LeftLipsInferiorAdjust
+    400096: LeftLipsSuperiorMiddle
+    400098: LeftLipsSuperiorMiddleAdjust
+    400100: LeftLowCheek
+    400102: LeftLowCheekAdjust
+    400104: LeftLowerLid
+    400106: LeftLowerLidAdjust
+    400108: LeftLowMaxilar
+    400110: LeftLowMaxilarAdjust
+    400112: LeftNose
+    400114: LeftNoseAdjust
+    400116: LeftOuterBreast
+    400118: LeftShoulder
+    400120: LeftShoulderAdjust
+    400122: LeftToeBase
+    400124: LeftTrapezius
+    400126: LeftUpLeg
+    400128: LeftUpLegAdjust
+    400130: LeftUpperLid
+    400132: LeftUpperLidAdjust
+    400134: LipsInferior
+    400136: LipsInferiorAdjust
+    400138: LipsSuperior
+    400140: LipsSuperiorAdjust
+    400142: LowerBack
+    400144: LowerBackAdjust
+    400146: LowerBackBelly
+    400148: Mandible
+    400150: MandibleAdjust
+    400152: Neck
+    400154: NeckAdjust
+    400156: NoseBase
+    400158: NoseBaseAdjust
+    400160: NoseMiddle
+    400162: NoseMiddleAdjust
+    400164: NoseTop
+    400166: NoseTopAdjust
+    400168: Position
+    400170: RightArm
+    400172: RightArmAdjust
+    400174: RightCheek
+    400176: RightCheekAdjust
+    400178: RightEar
+    400180: RightEarAdjust
+    400182: RightEye
+    400184: RightEyeAdjust
+    400186: RightEyebrowLow
+    400188: RightEyebrowLowAdjust
+    400190: RightEyebrowMiddle
+    400192: RightEyebrowMiddleAdjust
+    400194: RightEyebrowUp
+    400196: RightEyebrowUpAdjust
+    400198: RightEyeGlobe
+    400200: RightFoot
+    400202: RightForeArm
+    400204: RightForeArmAdjust
+    400206: RightForeArmTwist
+    400208: RightForeArmTwistAdjust
+    400210: RightGluteus
+    400212: RightHand
+    400214: RightHandFinger01_01
+    400216: RightHandFinger01_02
+    400218: RightHandFinger01_03
+    400220: RightHandFinger02_01
+    400222: RightHandFinger02_02
+    400224: RightHandFinger02_03
+    400226: RightHandFinger03_01
+    400228: RightHandFinger03_02
+    400230: RightHandFinger03_03
+    400232: RightHandFinger04_01
+    400234: RightHandFinger04_02
+    400236: RightHandFinger04_03
+    400238: RightHandFinger05_01
+    400240: RightHandFinger05_02
+    400242: RightHandFinger05_03
+    400244: RightInnerBreast
+    400246: RightLeg
+    400248: RightLegAdjust
+    400250: RightLips
+    400252: RightLipsAdjust
+    400254: RightLipsInferior
+    400256: RightLipsInferiorAdjust
+    400258: RightLipsSuperiorMiddle
+    400260: RightLipsSuperiorMiddleAdjust
+    400262: RightLowCheek
+    400264: RightLowCheekAdjust
+    400266: RightLowerLid
+    400268: RightLowerLidAdjust
+    400270: RightLowMaxilar
+    400272: RightLowMaxilarAdjust
+    400274: RightNose
+    400276: RightNoseAdjust
+    400278: RightOuterBreast
+    400280: RightShoulder
+    400282: RightShoulderAdjust
+    400284: RightToeBase
+    400286: RightTrapezius
+    400288: RightUpLeg
+    400290: RightUpLegAdjust
+    400292: RightUpperLid
+    400294: RightUpperLidAdjust
+    400296: Spine
+    400298: Spine1
+    400300: Spine1Adjust
+    400302: SpineAdjust
+    400304: Tongue01
+    400306: Tongue02
+    400308: //RootNode
+    400310: UMA_Female_Rig_001
+    400312: UMA_Human_Female_001
+    400314: UpperLips
+    400316: UpperLipsAdjust
+    4300000: UMA_Human_Female_001
+    7400000: Default Take
+    7400002: Female_FacialExpressions
+    7400004: TransToToon
+    7400006: Male_FacialExpressions
+    7400008: UMA_Male_Rig_MidAction
+    9500000: //RootNode
+    13700000: UMA_Human_Female_001
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleRotations: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    clipAnimations:
+    - serializedVersion: 16
+      name: TransToToon
+      takeName: Female_FacialExpressions_001
+      firstFrame: 0
+      lastFrame: 25
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      hasAdditiveReferencePose: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask:
+      - path: 
+        weight: 1
+      - path: UMA_Female_Rig_001
+        weight: 1
+      - path: UMA_Female_Rig_001/Global
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LeftUpLeg
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LeftUpLeg/LeftGluteus
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LeftUpLeg/LeftLeg
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LeftUpLeg/LeftLeg/LeftFoot
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LeftUpLeg/LeftLeg/LeftFoot/LeftToeBase
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LeftUpLeg/LeftLeg/LeftLegAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LeftUpLeg/LeftUpLegAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/LowerBackAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/LowerBackAdjust/LowerBackBelly
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/LeftOuterBreast
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/LeftOuterBreast/LeftInnerBreast
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftArmAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftForeArmAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftForeArmTwist
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftForeArmTwist/LeftForeArmTwistAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger01_01
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger01_01/LeftHandFinger01_02
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger01_01/LeftHandFinger01_02/LeftHandFinger01_03
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger02_01
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger02_01/LeftHandFinger02_02
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger02_01/LeftHandFinger02_02/LeftHandFinger02_03
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger03_01
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger03_01/LeftHandFinger03_02
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger03_01/LeftHandFinger03_02/LeftHandFinger03_03
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger04_01
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger04_01/LeftHandFinger04_02
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger04_01/LeftHandFinger04_02/LeftHandFinger04_03
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger05_01
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger05_01/LeftHandFinger05_02
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger05_01/LeftHandFinger05_02/LeftHandFinger05_03
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftShoulderAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftTrapezius
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/HeadAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftCheek
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftCheek/LeftCheekAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEar
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEar/LeftEarAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEye
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEye/LeftEyeAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEye/LeftEyeGlobe
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEye/LeftLowerLid
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEye/LeftLowerLid/LeftLowerLidAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEye/LeftUpperLid
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEye/LeftUpperLid/LeftUpperLidAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEyebrowLow
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEyebrowLow/LeftEyebrowLowAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEyebrowMiddle
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEyebrowMiddle/LeftEyebrowMiddleAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEyebrowUp
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEyebrowUp/LeftEyebrowUpAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftLipsSuperiorMiddle
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftLipsSuperiorMiddle/LeftLipsSuperiorMiddleAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftLowCheek
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftLowCheek/LeftLowCheekAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftNose
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftNose/LeftNoseAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LipsSuperior
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LipsSuperior/LipsSuperiorAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/LeftLips
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/LeftLips/LeftLipsAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/LeftLipsInferior
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/LeftLipsInferior/LeftLipsInferiorAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/LeftLowMaxilar
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/LeftLowMaxilar/LeftLowMaxilarAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/LipsInferior
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/LipsInferior/LipsInferiorAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/MandibleAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/RightLips
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/RightLips/RightLipsAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/RightLipsInferior
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/RightLipsInferior/RightLipsInferiorAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/RightLowMaxilar
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/RightLowMaxilar/RightLowMaxilarAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/Tongue01
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/Tongue01/Tongue02
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/NoseBase
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/NoseBase/NoseBaseAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/NoseMiddle
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/NoseMiddle/NoseMiddleAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/NoseTop
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/NoseTop/NoseTopAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightCheek
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightCheek/RightCheekAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEar
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEar/RightEarAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEye
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEye/RightEyeAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEye/RightEyeGlobe
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEye/RightLowerLid
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEye/RightLowerLid/RightLowerLidAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEye/RightUpperLid
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEye/RightUpperLid/RightUpperLidAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEyebrowLow
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEyebrowLow/RightEyebrowLowAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEyebrowMiddle
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEyebrowMiddle/RightEyebrowMiddleAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEyebrowUp
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEyebrowUp/RightEyebrowUpAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightLipsSuperiorMiddle
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightLipsSuperiorMiddle/RightLipsSuperiorMiddleAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightLowCheek
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightLowCheek/RightLowCheekAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightNose
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightNose/RightNoseAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/UpperLips
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/UpperLips/UpperLipsAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/NeckAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/RightOuterBreast
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/RightOuterBreast/RightInnerBreast
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightArmAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightForeArmAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightForeArmTwist
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightForeArmTwist/RightForeArmTwistAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger01_01
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger01_01/RightHandFinger01_02
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger01_01/RightHandFinger01_02/RightHandFinger01_03
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger02_01
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger02_01/RightHandFinger02_02
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger02_01/RightHandFinger02_02/RightHandFinger02_03
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger03_01
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger03_01/RightHandFinger03_02
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger03_01/RightHandFinger03_02/RightHandFinger03_03
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger04_01
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger04_01/RightHandFinger04_02
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger04_01/RightHandFinger04_02/RightHandFinger04_03
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger05_01
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger05_01/RightHandFinger05_02
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger05_01/RightHandFinger05_02/RightHandFinger05_03
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightShoulderAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightTrapezius
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/Spine1/Spine1Adjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/LowerBack/Spine/SpineAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/RightUpLeg
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/RightUpLeg/RightGluteus
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/RightUpLeg/RightLeg
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/RightUpLeg/RightLeg/RightFoot
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/RightUpLeg/RightLeg/RightFoot/RightToeBase
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/RightUpLeg/RightLeg/RightLegAdjust
+        weight: 1
+      - path: UMA_Female_Rig_001/Global/Position/Hips/RightUpLeg/RightUpLegAdjust
+        weight: 1
+      - path: UMA_Human_Female_001
+        weight: 1
+      maskType: 0
+      maskSource: {instanceID: 0}
+      additiveReferencePoseFrame: 0
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importBlendShapes: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 2
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

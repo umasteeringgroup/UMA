@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: JawForward
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Mandible
+    hash: 1574626840
+    position: {x: 0.0000000011496013, y: -0.011092415, z: 0.01129809}
+    rotation: {x: 0.0036707257, y: -0.00000003333185, z: 0.000000056728165, w: 1.000006}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftLipsInferior
+    hash: -2082379262
+    position: {x: -0.00024243444, y: 0.0008943975, z: -0.0002790317}
+    rotation: {x: 0.000000043057906, y: 0.000000010073848, z: -1.5719875e-10, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLipsInferior
+    hash: 921042654
+    position: {x: 0.00024243444, y: 0.0008943826, z: -0.00027899444}
+    rotation: {x: 0.0000000010873349, y: 0.00000001029656, z: -0.000000024650035,
+      w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []

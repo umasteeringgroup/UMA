@@ -5,9 +5,9 @@ using UMA;
 using System.Collections.Generic;
 
 /// <summary>
-/// Gloal container for various UMA objects in the scene.
+/// Gloal container for various UMA objects in the scene. Marked as partial so the developer can add to this if necessary
 /// </summary>
-public class UMAContext : MonoBehaviour 
+public partial class UMAContext : MonoBehaviour
 {
 	public static UMAContext Instance;
 	/// <summary>

@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c4834e6077abe64e968f9f87c9ac70a, type: 3}
+  m_Name: FemaleShirt01-Res
+  m_EditorClassIdentifier: 
+  overlayName: FemaleShirt01-Res
+  rect:
+    serializedVersion: 2
+    x: 0
+    y: 512
+    width: 1024
+    height: 512
+  textureList:
+  - {fileID: 2800000, guid: 6b2ebed9fe83e1c49897660a579d833f, type: 3}
+  - {fileID: 2800000, guid: 607bcaa05776ba54da74bb2cc1ad694b, type: 3}
+  - {fileID: 2800000, guid: e9507503af43b3a41b075f1344ac7b89, type: 3}
+  tags: []
+  material: {fileID: 11400000, guid: 8e29dbac5d2e82f44a759a7e2cc568ab, type: 2}

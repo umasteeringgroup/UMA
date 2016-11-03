@@ -85,8 +85,8 @@ namespace UMA
 							renderCamera.targetTexture = destinationTexture;
 							renderCamera.orthographicSize = height >> 1;
 							var camTransform = renderCamera.GetComponent<Transform>();
-							camTransform.localPosition = new Vector3(width >> 1, height >> 1, 3);
-							camTransform.localRotation = Quaternion.Euler(0, 180, 180);
+							camTransform.position = new Vector3(width >> 1, height >> 1, 3);
+							camTransform.rotation = Quaternion.Euler(0, 180, 180);
 							renderCamera.Render();
 							renderCamera.gameObject.SetActive(false);
 							renderCamera.targetTexture = null;
