@@ -10,16 +10,22 @@ public class EnvPreset : MonoBehaviour {
 	public bool 	forceProbes = false;
 
 	void OnEnable() {
+#if UNITY_EDITOR
 		var buildReflectionProbes = false;
+#endif
 
 		if(RenderSettings.skybox != skyboxMaterial) {
 			RenderSettings.skybox = skyboxMaterial;
+#if UNITY_EDITOR
 			buildReflectionProbes = forceProbes;
+#endif
 		}
 
 		if(RenderSettings.ambientIntensity != ambientIntensity) {
 			RenderSettings.ambientIntensity = ambientIntensity;
+#if UNITY_EDITOR
 			buildReflectionProbes = forceProbes;
+#endif
 		}
 
 #if UNITY_EDITOR

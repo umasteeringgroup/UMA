@@ -59,7 +59,9 @@ namespace UMA
 
 		//For SimulationMode in the editor - equivalent of AssetBundleManager.m_downloadedBundles
 		//should persist betweem scene loads but not between plays
+#if UNITY_EDITOR
 		List<string> simulatedDownloadedBundles = new List<string>();
+#endif
 
 		/// <summary>
 		/// Gets the currentBatchID or generates a new one if it is null. Sets the currentBatch ID to a given value

@@ -10,14 +10,14 @@ namespace UMA
 {
 	public class UMASlotVerifyWizard : MonoBehaviour
 	{
-		GameObject RaceGO;
-		SkinnedMeshRenderer RaceSMR;
+		GameObject RaceGO = null;
+		SkinnedMeshRenderer RaceSMR = null;
 		GameObject SlotGO;
 		SkinnedMeshRenderer SlotSMR;
 		public GameObject[] Pages;
 		public int page;
 		public Text resultText;
-		private Object slotAsset;
+		private Object slotAsset = null;
 		public Button ForceButton;
 		private bool forcedSlotBones;
 		string slotAssetPath;
