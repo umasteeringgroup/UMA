@@ -233,6 +233,11 @@ namespace UMACharacterSystem
 			{
 				DynamicAssetLoader.Instance.CurrentBatchID = batchID;
 				SetStartingRace();
+				//If the UmaRecipe is still null, bail - we cant go any further (and SetStartingRace will have shown an error)
+				if (umaRecipe == null)
+				{
+					yield break;
+				}
 				if (requiredAssetsToCheck.Count > 0)
 					mayRequireDownloads = true;
 			}
@@ -293,7 +298,9 @@ namespace UMACharacterSystem
 		/// </summary>
 		void SetStartingRace()
 		{
-			if (activeRace.data != null)//This will get all racedatas in the racelibrary (including ones that are downloading) but NOT cause any raceDatas TO download
+			//calling activeRace.data causes RaceLibrary to gather all racedatas from resources an returns all those along with any temporary assetbundle racedatas that are downloading
+			//It will not cause any races to actually download
+			if (activeRace.data != null)
 			{
 				activeRace.name = activeRace.data.raceName;
 				umaRecipe = activeRace.data.baseRaceRecipe;
@@ -303,9 +310,8 @@ namespace UMACharacterSystem
 			{
 				//This only happens when the Avatar itself has an active race set to be one that is in an assetbundle
 				activeRace.data = context.raceLibrary.GetRace(activeRace.name);// this will trigger a download if the race is in an asset bundle and return a temp asset
-				{
+				if(activeRace.racedata != null)
 					umaRecipe = activeRace.racedata.baseRaceRecipe;
-				}
 			}
 			//Failsafe: if everything else fails we try to do something based on the name of the race that was set
 			if (umaRecipe == null)
@@ -337,6 +343,10 @@ namespace UMACharacterSystem
 						activeRace.data = availableRaces[0];
 						umaRecipe = activeRace.racedata.baseRaceRecipe;
 					}
+				}
+				else
+				{
+					Debug.LogError("[DynamicCharacterAvatar] There were no available racedatas to make an UMA from! Please either put your RaceDatas in a Resources folder or add them to (Dynamic)RaceLibrary directly");
 				}
 			}
 			if (DynamicAssetLoader.Instance.downloadingAssetsContains(activeRace.name))
@@ -1054,6 +1064,11 @@ namespace UMACharacterSystem
 			}
 			DynamicAssetLoader.Instance.CurrentBatchID = batchID;
 			SetStartingRace();
+			//If the UmaRecipe is still null, bail - we cant go any further (and SetStartingRace will have shown an error)
+			if (umaRecipe == null)
+			{
+				yield break;
+			}
 			ClearSlots();
 			if (tempRecipe.wardrobeRecipes != null)
 			{//means we have a characterSystemTextRecipe
