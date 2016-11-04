@@ -554,6 +554,17 @@ namespace UMA
 			//If this assetBundle contains UMATextRecipes we may need to trigger some post processing...
 			//it may have downloaded some dependent bundles too so these may need processing aswell
 			var dependencies = AssetBundleManager.AssetBundleIndexObject.GetAllDependencies(bundle);
+			//DOS 04112016 so maybe what we need to do here is check the dependencies are loaded too
+			if(dependencies.Length > 0)
+			{
+				for(int i = 0; i < dependencies.Length; i++)
+				{
+					while(AssetBundleManager.IsAssetBundleDownloaded(dependencies[i]) == false)
+					{
+						yield return null;
+					}
+				}
+			}
 			UMACharacterSystem.DynamicCharacterSystem thisDCS = null;
 			if (UMAContext.Instance != null)
 			{
