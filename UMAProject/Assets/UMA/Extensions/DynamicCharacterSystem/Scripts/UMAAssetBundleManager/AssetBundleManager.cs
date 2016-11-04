@@ -206,17 +206,6 @@ namespace UMAAssetBundleManager
 		/// <returns></returns>
 		static public LoadedAssetBundle GetLoadedAssetBundle(string assetBundleName, out string error)
 		{
-			return GetLoadedAssetBundle(assetBundleName, false, out error);
-		}
-		/// <summary>
-		/// Retrieves an asset bundle that has previously been requested via LoadAssetBundle.
-		/// Returns null if the asset bundle or one of its dependencies have not been downloaded yet and skipDependencies is false.
-		/// </summary>
-		/// <param name="assetBundleName"></param>
-		/// <param name="error"></param>
-		/// <returns></returns>
-		static public LoadedAssetBundle GetLoadedAssetBundle(string assetBundleName, bool skipDependencies, out string error)
-		{
 			if (m_DownloadingErrors.TryGetValue(assetBundleName, out error))
 			{
 				if (!error.StartsWith("-"))
@@ -260,33 +249,27 @@ namespace UMAAssetBundleManager
 			{
 				return null;
 			}
-			if (skipDependencies == false)
-			{
-				return bundle;
-			}
-			else
-			{
-				// No dependencies are recorded, only the bundle itself is required.
-				string[] dependencies = null;
-				if (!m_Dependencies.TryGetValue(assetBundleName, out dependencies))
-					return bundle;
 
-				// Otherwise Make sure all dependencies are loaded
-				foreach (var dependency in dependencies)
+			// No dependencies are recorded, only the bundle itself is required.
+			string[] dependencies = null;
+			if (!m_Dependencies.TryGetValue(assetBundleName, out dependencies))
+				return bundle;
+
+			// Otherwise Make sure all dependencies are loaded
+			foreach (var dependency in dependencies)
+			{
+
+				if (m_DownloadingErrors.TryGetValue(dependency, out error))
+					return null;
+				// Wait all the dependent assetBundles being loaded.
+				LoadedAssetBundle dependentBundle = null;
+				m_LoadedAssetBundles.TryGetValue(dependency, out dependentBundle);
+				if (dependentBundle == null)
 				{
-
-					if (m_DownloadingErrors.TryGetValue(dependency, out error))
-						return null;
-					// Wait all the dependent assetBundles being loaded.
-					LoadedAssetBundle dependentBundle = null;
-					m_LoadedAssetBundles.TryGetValue(dependency, out dependentBundle);
-					if (dependentBundle == null)
-					{
-						return null;
-					}
+					return null;
 				}
-				return bundle;
 			}
+			return bundle;
 		}
 
 		/// <summary>

@@ -944,8 +944,7 @@ namespace UMA
 					else //we are just loading in all assets of type from the downloaded bundles- only realistically possible when the bundles have been downloaded already because otherwise this would trigger the download of all possible assetbundles that contain anything of type T...
 					{
 						//the problem is that later this asks for get loaded asset bundle and that ALWAYS checks dependencies
-						//so rather than make this break if we dont ask for dependencies, we need a version of GetLoadedAssetBundle that DOESNT check dependencies
-						//03112016 DOS but we need to not be calling this unless .m_AssetBundle is not null
+						//so rather than make this break is we dont ask for dependencies, we need a version of GetLoadedAssetBundle that DOESNT check dependencies
 						if (AssetBundleManager.IsAssetBundleDownloaded(assetBundleNamesArray[i]))
 						{
 							//Debug.LogWarning(typeof(T).ToString() + " asked for all assets of type in " + assetBundleNamesArray[i]);
@@ -958,7 +957,7 @@ namespace UMA
 									T target = null;
 									try
 									{
-										target = (T)AssetBundleManager.GetLoadedAssetBundle(assetBundleNamesArray[i],true, out error).m_AssetBundle.LoadAsset<T>(asset);
+										target = (T)AssetBundleManager.GetLoadedAssetBundle(assetBundleNamesArray[i], out error).m_AssetBundle.LoadAsset<T>(asset);
 									}
 									catch
 									{
@@ -967,7 +966,7 @@ namespace UMA
 										AssetBundleManager.GetLoadedAssetBundle(assetBundleNamesArray[i], out thiserror);
 										if (thiserror != "" && thiserror != null)
 											Debug.LogWarning("GetLoadedAssetBundle error was " + thiserror);
-										else if (AssetBundleManager.GetLoadedAssetBundle(assetBundleNamesArray[i], out thiserror).m_AssetBundle == null)//this causes a null refrence error if its not actually loaded so we need to check that before we call this
+										else if (AssetBundleManager.GetLoadedAssetBundle(assetBundleNamesArray[i], out thiserror).m_AssetBundle == null)
 										{
 											//The problem is here the bundle is downloaded but not LOADED
 											Debug.LogWarning("Bundle was ok but m_AssetBundle was null");
