@@ -317,7 +317,7 @@ namespace UMA
 #if UNITY_EDITOR
 				if (SimpleWebServer.serverStarted)//this is not true in builds no matter what- but we in the editor we need to know
 #endif
-					URLToUse = SimpleWebServer.ServerURL;
+					URLToUse = remoteServerURL = SimpleWebServer.ServerURL;
 				Debug.Log("[DynamicAssetLoader] SimpleWebServer.ServerURL = " + URLToUse);
 			}
 			else
@@ -332,8 +332,12 @@ namespace UMA
 				string errorString = "LocalAssetBundleServer was off and no remoteServerURL was specified. One of these must be set in order to use any AssetBundles!";
 #if UNITY_EDITOR
 				errorString = "Switched to Simulation Mode because LocalAssetBundleServer was off and no remoteServerURL was specified in the Scenes' DynamicAssetLoader. One of these must be set in order to actually use your AssetBundles.";
-				AssetBundleManager.SimulateOverride = true;
+
 #endif
+
+				//DnamicAssetLoader should still say its initialized even if AssetBundleManager should sill say it is initialized even if it wont be possible to use asset bundles because it still needs to get resources from Resources
+				//this may not be the variable to set however
+				//AssetBundleManager.SimulateOverride = true;
 				var context = UMAContext.FindInstance();
 				if (context != null)
 				{
@@ -374,9 +378,26 @@ namespace UMA
 				if (AssetBundleManager.SimulateAssetBundleInEditor)
 				{
 					isInitialized = true;
+					isInitializing = false;
+					yield break;
+				}else
+#endif
+					//DnamicAssetLoader should still say its initialized even no remoteServer URL was set (either manually or by the LocalWebServer)
+					//because we still want to run normally to load assets from Resources
+					if (remoteServerURL == "")
+				{
+					isInitialized = true;
+					isInitializing = false;
+					if (gameObjectsToActivateOnInit.Count > 0)
+					{
+						for (int i = 0; i < gameObjectsToActivateOnInit.Count; i++)
+						{
+							gameObjectsToActivateOnInit[i].SetActive(true);
+						}
+						gameObjectsToActivateOnInit.Clear();
+					}
 					yield break;
 				}
-#endif
 				var request = AssetBundleManager.Initialize(useJsonIndex, remoteServerIndexURL);
 				if (request != null)
 				{
@@ -497,7 +518,6 @@ namespace UMA
 			{
 				if (!isInitializing)
 				{
-					Debug.LogWarning("[DynamicAssetLoader] isInitialized was false");
 					yield return StartCoroutine(Initialize());
 				}
 				else
