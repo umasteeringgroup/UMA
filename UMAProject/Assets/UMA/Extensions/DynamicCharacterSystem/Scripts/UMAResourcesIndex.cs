@@ -136,12 +136,16 @@ namespace UMA
                 return;
             }
 #else
-            TextAsset textIndex = Resources.Load<TextAsset>("UMAResourcesIndex.txt");
+            TextAsset textIndex = Resources.Load<TextAsset>("UMAResourcesIndex");
             if (textIndex != null)
             {
                 index = JsonUtility.FromJson<UMAResourcesIndexData>(textIndex.text);
                 return;
             }
+			else
+			{
+				Debug.LogWarning("No UMAResourcesIndex.txt file was found. Please ensure you have done 'Create/Update Index' in a UMAResourcesIndex gameobject component before you build.");
+			}
 #endif
             // Not found anywhere
             index = new UMAResourcesIndexData();
