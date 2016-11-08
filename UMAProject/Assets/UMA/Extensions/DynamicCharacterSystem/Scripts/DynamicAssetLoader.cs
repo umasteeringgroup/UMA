@@ -545,7 +545,8 @@ namespace UMA
 					if ((bundle == assetBundleName || bundle.IndexOf(assetBundleName + "/") > -1))
 					{
 						Debug.Log("Started loading of " + bundle);
-						AssetBundleLoadingIndicator.Instance.Show(bundle, loadingMsg, "", loadedMsg);
+						if(AssetBundleLoadingIndicator.Instance)
+							AssetBundleLoadingIndicator.Instance.Show(bundle, loadingMsg, "", loadedMsg);
 						StartCoroutine(LoadAssetBundleAsync(bundle));
 					}
 				}

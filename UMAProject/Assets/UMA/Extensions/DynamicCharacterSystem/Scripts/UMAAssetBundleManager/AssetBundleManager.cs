@@ -428,9 +428,10 @@ namespace UMAAssetBundleManager
 
 		static public AssetBundleLoadIndexOperation Initialize(string indexAssetBundleName, bool useJsonIndex, string jsonIndexUrl)
 		{
-			if (BaseDownloadingURL != "")//dont show the indicator if we are not using asset bundles - TODO we need a more comprehensive solution for this scenerio
+			if (!SimulateAssetBundleInEditor)//dont show the indicator if we are not using asset bundles - TODO we need a more comprehensive solution for this scenerio
 			{
-				AssetBundleLoadingIndicator.Instance.Show(indexAssetBundleName.ToLower() + "index", "Initializing...", "", "Initialized");
+				if(AssetBundleLoadingIndicator.Instance)
+					AssetBundleLoadingIndicator.Instance.Show(indexAssetBundleName.ToLower() + "index", "Initializing...", "", "Initialized");
 			}
 #if UNITY_EDITOR
 			Log(LogType.Info, "Simulation Mode: " + (SimulateAssetBundleInEditor ? "Enabled" : "Disabled"));

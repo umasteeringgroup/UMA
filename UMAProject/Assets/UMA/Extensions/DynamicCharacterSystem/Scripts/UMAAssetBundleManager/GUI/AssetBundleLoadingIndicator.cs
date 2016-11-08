@@ -72,7 +72,7 @@ namespace UMAAssetBundleManager
 			if (_instance == null)
 			{
 				AssetBundleLoadingIndicator[] assetBundleLoadingIndicator = FindObjectsOfType(typeof(AssetBundleLoadingIndicator)) as AssetBundleLoadingIndicator[];
-				if (assetBundleLoadingIndicator[0] != null)
+				if (assetBundleLoadingIndicator.Length > 0)
 				{
 					_instance = assetBundleLoadingIndicator[0];
 					if (_instance.dontDestroyOnLoad)
