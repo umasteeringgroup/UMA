@@ -94,7 +94,16 @@ public class UMAAvatarLoadSaveMenuItems : Editor
 				{
 					var asset = ScriptableObject.CreateInstance<UMATextRecipe>();
 					asset.recipeString = FileUtils.ReadAllText(path);
-					avatar.Load(asset);
+					//check if Avatar is DCS
+					if (avatar is UMACharacterSystem.DynamicCharacterAvatar)
+					{
+						(avatar as UMACharacterSystem.DynamicCharacterAvatar).LoadFromRecipeString(asset.recipeString);
+                    }
+					else
+					{
+						avatar.Load(asset);
+					}
+						
 					Destroy(asset);
 				}
 			}
@@ -127,7 +136,15 @@ public class UMAAvatarLoadSaveMenuItems : Editor
 					var asset = AssetDatabase.LoadMainAssetAtPath(path) as UMARecipeBase;
 					if (asset != null)
 					{
-						avatar.Load(asset);
+						//check if Avatar is DCS
+						if (avatar is UMACharacterSystem.DynamicCharacterAvatar)
+						{
+							(avatar as UMACharacterSystem.DynamicCharacterAvatar).LoadFromRecipe(asset);
+						}
+						else
+						{
+							avatar.Load(asset);
+						}
 					}
 					else
 					{

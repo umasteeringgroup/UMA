@@ -233,6 +233,7 @@ namespace UMACharacterSystem
 					mayRequireDownloads = false;
 				}
 			}
+			//bool umaRecipeWasNull = umaRecipe == null ? true : false;
 			if (umaRecipe == null)
 			{
 				DynamicAssetLoader.Instance.CurrentBatchID = batchID;
@@ -248,12 +249,14 @@ namespace UMACharacterSystem
 			else
 			{
 				//we have no choice but to wait for any downloads required by an umaRecipe that the avatar starts with...
-				yield return StartCoroutine(SetStartingRaceFromUmaRecipe());
+				/*yield return StartCoroutine(LoadFromRecipeCO());
 				//I think this deals with its own downloads but for now...
 				if (requiredAssetsToCheck.Count > 0)
-					mayRequireDownloads = true;
+					mayRequireDownloads = true;*/
+				StartCoroutine(LoadFromRecipeCO());
+				yield break;
 			}
-			if (preloadWardrobeRecipes.loadDefaultRecipes && preloadWardrobeRecipes.recipes.Count > 0)
+			if (preloadWardrobeRecipes.loadDefaultRecipes && preloadWardrobeRecipes.recipes.Count > 0 /*&& umaRecipeWasNull*/)
 			{
 				DynamicAssetLoader.Instance.CurrentBatchID = batchID;
 				LoadDefaultWardrobe(true);//this may cause downloads to happen
@@ -286,7 +289,8 @@ namespace UMACharacterSystem
 				}
 				requiredAssetsToCheck.Clear();
 				activeRace.data = context.raceLibrary.GetRace(activeRace.name);
-				umaRecipe = activeRace.data.baseRaceRecipe;
+				//if(!umaRecipeWasNull)
+					umaRecipe = activeRace.data.baseRaceRecipe;
 				//context.dynamicCharacterSystem.Refresh();
 				UpdateSetSlots();
 				BuildCharacter(false);
@@ -360,97 +364,6 @@ namespace UMACharacterSystem
 			}
 		}
 
-		/// <summary>
-		/// the umaRecipe that can be set in the umaRecipe field my also require assets to be downloaded so we need to deal with that
-		/// </summary>
-		/// <returns></returns>
-		IEnumerator SetStartingRaceFromUmaRecipe()
-		{
-			var umaRecipeBU = umaRecipe;
-			//we test load. if racedata is null then we know the recipe triggers downloads so we have to wait until they are done
-			var umaDataRecipeTester = new UMAData.UMARecipe();
-			try
-			{
-				umaRecipe.Load(umaDataRecipeTester, context);
-			}
-			catch { }
-			if (umaDataRecipeTester.raceData == null)
-			{
-				//if AssetBundleManager has not initialized yet trying to get the racedata when unpacking the recipe will not have caused a download
-				if ((AssetBundleManager.AssetBundleIndexObject == null && AssetBundleManager.SimulateOverride == false))
-				{
-					while (AssetBundleManager.AssetBundleIndexObject == null && AssetBundleManager.SimulateOverride == false)
-					{
-						yield return null;
-					}
-					if (AssetBundleManager.SimulateOverride == true)
-					{
-						try
-						{
-							umaRecipe.Load(umaDataRecipeTester, context);
-						}
-						catch { }
-						if (umaDataRecipeTester.raceData != null)
-						{
-							activeRace.data = umaDataRecipeTester.raceData;
-							activeRace.name = umaDataRecipeTester.raceData.raceName;
-							umaRecipe = umaRecipeBU;
-						}
-					}
-					else
-					{
-						//kick off the download of the racedata by requesting it again
-						try
-						{
-							umaRecipe.Load(umaDataRecipeTester, context);
-						}
-						catch { }
-						while (DynamicAssetLoader.Instance.assetBundlesDownloading)
-						{
-							yield return null;
-						}
-						try
-						{
-							umaRecipe.Load(umaDataRecipeTester, context);
-						}
-						catch { }
-						activeRace.data = umaDataRecipeTester.raceData;
-						activeRace.name = umaDataRecipeTester.raceData.raceName;
-						umaRecipe = umaRecipeBU;
-					}
-				}
-				else
-				{
-					//if we are in simulation mode then the recipe cannot have had any racedata
-					if (AssetBundleManager.SimulateOverride != false)
-					{
-						Debug.LogWarning("umaRecipe " + umaRecipe.name + " did not appear to have any RaceData set. Avatar could not load.");
-					}
-					else
-					{
-						//the asset should be downloading so check for the raceData asset to stop being null
-						while (DynamicAssetLoader.Instance.assetBundlesDownloading)//this will wait for all requested asset bundles to download which we dont want really
-						{
-							yield return null;
-						}
-						try
-						{
-							umaRecipe.Load(umaDataRecipeTester, context);
-						}
-						catch { }
-						activeRace.data = umaDataRecipeTester.raceData;
-						activeRace.name = umaDataRecipeTester.raceData.raceName;
-						umaRecipe = umaRecipeBU;
-					}
-				}
-			}
-			else
-			{
-				activeRace.data = umaDataRecipeTester.raceData;
-				activeRace.name = umaDataRecipeTester.raceData.raceName;
-			}
-			yield return true;
-		}
 		/// <summary>
 		/// Loads the default wardobe items set in 'defaultWardrobeRecipes' in the CharacterAvatar itself onto the Avatar's base race recipe. Use this to make a naked avatar always have underwear or a set of clothes for example
 		/// </summary>
@@ -1018,6 +931,30 @@ namespace UMACharacterSystem
 				}
 			}
 		}
+
+		/// <summary>
+		/// Load a DynamicCharacterAvatar from an UMATextRecipe Asset, optionally waiting for any assets that will need to be downloaded (according to the CharacterAvatar 'waitForBundles' setting
+		/// </summary>
+		/// <param name="umaRecipeToLoad"></param>
+		public void LoadFromRecipe(UMARecipeBase umaRecipeToLoad)
+		{
+			umaRecipe = umaRecipeToLoad;
+			StartCoroutine(LoadFromRecipeCO());
+		}
+
+		IEnumerator LoadFromRecipeCO()
+		{
+			if ((AssetBundleManager.AssetBundleIndexObject == null && AssetBundleManager.SimulateOverride == false))
+			{
+				while (AssetBundleManager.AssetBundleIndexObject == null && AssetBundleManager.SimulateOverride == false)
+				{
+					yield return null;
+				}
+			}
+			LoadFromRecipeString((umaRecipe as UMATextRecipe).recipeString);
+			yield break;
+		}
+
 		/// <summary>
 		/// Loads an avatar from a recipe string, optionally waiting for any assets that will need to be downloaded (according to the CharacterAvatar 'waitForBundles' setting
 		/// </summary>
@@ -1360,7 +1297,7 @@ namespace UMACharacterSystem
 			}
 			if (recipeString != "")
 			{
-				StartCoroutine(LoadFromRecipeStringCO(recipeString));
+				LoadFromRecipeString(recipeString);
 				yield break;
 			}
 			else
