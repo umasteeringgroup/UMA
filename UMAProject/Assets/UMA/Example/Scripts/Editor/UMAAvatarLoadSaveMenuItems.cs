@@ -23,7 +23,15 @@ public class UMAAvatarLoadSaveMenuItems : Editor
 				if (path.Length != 0)
 				{
 					var asset = ScriptableObject.CreateInstance<UMATextRecipe>();
-					asset.Save(avatar.umaData.umaRecipe, avatar.context);
+					//check if Avatar is DCS
+					if (avatar is UMACharacterSystem.DynamicCharacterAvatar)
+					{
+						asset.SaveCharacterSystem(avatar.umaData.umaRecipe, avatar.context, (avatar as UMACharacterSystem.DynamicCharacterAvatar).WardrobeRecipes);
+					}
+					else
+					{
+						asset.Save(avatar.umaData.umaRecipe, avatar.context);
+					}				
 					System.IO.File.WriteAllText(path, asset.recipeString);
 					ScriptableObject.Destroy(asset);
 				}
@@ -49,7 +57,15 @@ public class UMAAvatarLoadSaveMenuItems : Editor
 				if (path.Length != 0)
 				{
 					var asset = ScriptableObject.CreateInstance<UMATextRecipe>();
-					asset.Save(avatar.umaData.umaRecipe, avatar.context);
+					//check if Avatar is DCS
+					if (avatar is UMACharacterSystem.DynamicCharacterAvatar)
+					{
+						asset.SaveCharacterSystem(avatar.umaData.umaRecipe, avatar.context, (avatar as UMACharacterSystem.DynamicCharacterAvatar).WardrobeRecipes);
+					}
+					else
+					{
+						asset.Save(avatar.umaData.umaRecipe, avatar.context);
+					}
 					AssetDatabase.CreateAsset(asset, path);
 					AssetDatabase.SaveAssets();
 					Debug.Log("Recipe size: " + asset.recipeString.Length + " chars");
