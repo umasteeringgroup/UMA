@@ -37,11 +37,15 @@ namespace UMA
 		[HideInInspector]
 		[System.NonSerialized]
 		public bool assetBundlesDownloading;
+		[HideInInspector]
+		[System.NonSerialized]
 		public bool canCheckDownloadingBundles;
 		bool isInitializing = false;
 		[HideInInspector]
 		public bool isInitialized = false;
-		//WE DONT NEED THIS- if there is anything in the list its true and afterwards the list should be cleared
+		//WE DONT NEED THIS- if there is anything in the list its true and afterwards the list should be cleared TODO: Confirm
+		[HideInInspector]
+		[System.NonSerialized]
 		public bool gameObjectsActivated;
 		[Space]
 		//Default assets fields
@@ -50,9 +54,9 @@ namespace UMA
 		public UMATextRecipe placeholderWardrobeRecipe;//empty temp wardrobe recipe
 		public SlotDataAsset placeholderSlot;//empty temp slot
 		public OverlayDataAsset placeholderOverlay;//empty temp overlay. Would be nice if there was some way we could have a shader on this that would 'fill up' as assets loaded maybe?
-												   //TODO: Just visible for dev
-												   //[HideInInspector]
-												   //[System.NonSerialized]
+		//TODO: Just visible for dev
+		//[System.NonSerialized]//not sure about this one
+		[ReadOnly]
 		public DownloadingAssetsList downloadingAssets = new DownloadingAssetsList();
 
 		int? _currentBatchID = null;
