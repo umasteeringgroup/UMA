@@ -934,14 +934,14 @@ namespace UMACharacterSystem
 #region LoadSaveFunctions
 
 		/// <summary>
-		/// Returns a Standard UMATextRecipe string that can be used with NON-CharacterAvatar UMAs. For saving a recipe that will also save the Avatars current wardrobe slots (i.e. for use with another CharacterAvatar) use DoSave instead.
+		/// Returns the UMATextRecipe string. This includes data about the current wardrobe for the character but is also backwards compatible with Non-DynamicCharacterAvatarUMAs.
 		/// </summary>
 		/// <returns></returns>
 		public string GetCurrentRecipe()
 		{
 			// save 
 			UMATextRecipe u = new UMATextRecipe();
-			u.Save(umaData.umaRecipe, context);
+			u.SaveCharacterSystem(umaData.umaRecipe, context, WardrobeRecipes);
 			return u.recipeString;
 		}
 
