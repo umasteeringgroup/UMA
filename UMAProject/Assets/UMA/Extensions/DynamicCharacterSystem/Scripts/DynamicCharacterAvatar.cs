@@ -154,7 +154,11 @@ namespace UMACharacterSystem
 		{
 			StopAllCoroutines();
 			base.Start();
-
+			//if the animator has been set the 'old' way respect that...
+			if (raceAnimationControllers.defaultAnimationController == null && animationController != null)
+			{
+				raceAnimationControllers.defaultAnimationController = animationController;
+			}
 			if (loadFilename != "" && loadFileOnStart)
 			{
 				DoLoad();
@@ -534,6 +538,7 @@ namespace UMACharacterSystem
 		/// </summary>
 		public void SetAnimatorController()
 		{
+			
 			int validControllers = raceAnimationControllers.Validate().Count;//triggers resources load or asset bundle download of any animators that are in resources/asset bundles
 
 			RuntimeAnimatorController controllerToUse = raceAnimationControllers.defaultAnimationController;
