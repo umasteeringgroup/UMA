@@ -692,7 +692,7 @@ public class TestCustomizerDD : MonoBehaviour
 		}
 		if (recipeText != "")
 		{
-			StartCoroutine(Avatar.LoadFromRecipeString(recipeText));
+			Avatar.LoadFromRecipeString(recipeText);
 		}
 	}
 

@@ -1023,7 +1023,12 @@ namespace UMACharacterSystem
 		/// </summary>
 		/// <param name="recipeString"></param>
 		/// <returns></returns>
-		public IEnumerator LoadFromRecipeString(string recipeString)
+		public void LoadFromRecipeString(string recipeText)
+		{
+			StartCoroutine(LoadFromRecipeStringCO(recipeText));
+		}
+
+		private IEnumerator LoadFromRecipeStringCO(string recipeString)
 		{
 			//TODO For some reason, sometimes we get an error saying 'UMA data missing required generator!' It seems intermittent and random- Work out what is causing it
 			//For now specify the generator...
@@ -1355,7 +1360,7 @@ namespace UMACharacterSystem
 			}
 			if (recipeString != "")
 			{
-				StartCoroutine(LoadFromRecipeString(recipeString));
+				StartCoroutine(LoadFromRecipeStringCO(recipeString));
 				yield break;
 			}
 			else
