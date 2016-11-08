@@ -333,15 +333,12 @@ namespace UMA
 				AssetBundleManager.SetSourceAssetBundleURL(URLToUse);
 			else
 			{
-				string errorString = "LocalAssetBundleServer was off and no remoteServerURL was specified. One of these must be set in order to use any AssetBundles!";
+                string errorString = "LocalAssetBundleServer was off and no remoteServerURL was specified. One of these must be set in order to use any AssetBundles!";
 #if UNITY_EDITOR
 				errorString = "Switched to Simulation Mode because LocalAssetBundleServer was off and no remoteServerURL was specified in the Scenes' DynamicAssetLoader. One of these must be set in order to actually use your AssetBundles.";
 
 #endif
-
-				//DnamicAssetLoader should still say its initialized even if AssetBundleManager should sill say it is initialized even if it wont be possible to use asset bundles because it still needs to get resources from Resources
-				//this may not be the variable to set however
-				//AssetBundleManager.SimulateOverride = true;
+				AssetBundleManager.SimulateOverride = true;
 				var context = UMAContext.FindInstance();
 				if (context != null)
 				{
@@ -383,6 +380,14 @@ namespace UMA
 				{
 					isInitialized = true;
 					isInitializing = false;
+					if (gameObjectsToActivateOnInit.Count > 0)
+					{
+						for (int i = 0; i < gameObjectsToActivateOnInit.Count; i++)
+						{
+							gameObjectsToActivateOnInit[i].SetActive(true);
+						}
+						gameObjectsToActivateOnInit.Clear();
+					}
 					yield break;
 				}else
 #endif
