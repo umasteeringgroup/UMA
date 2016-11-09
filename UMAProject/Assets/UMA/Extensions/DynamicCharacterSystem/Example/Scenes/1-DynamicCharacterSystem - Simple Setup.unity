@@ -271,18 +271,6 @@ Prefab:
       propertyPath: m_RootOrder
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 11459230, guid: dd6cb213acde6d64eba2639afddcff23, type: 2}
-      propertyPath: dynamicallyAddFromResources
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 11485782, guid: dd6cb213acde6d64eba2639afddcff23, type: 2}
-      propertyPath: dynamicallyAddFromResources
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 11440484, guid: dd6cb213acde6d64eba2639afddcff23, type: 2}
-      propertyPath: m_Enabled
-      value: 1
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: dd6cb213acde6d64eba2639afddcff23, type: 2}
   m_IsPrefabParent: 0
@@ -2078,8 +2066,8 @@ MonoBehaviour:
       PublicKeyToken=null
   hide: 0
   activeRace:
-    name: HumanMale
-    _data: {fileID: 11400000, guid: 62688b7aa02fbc544916e522fcc239c7, type: 2}
+    name: HumanFemaleResources
+    _data: {fileID: 11400000, guid: 92f8416dee5a3f043a417078fa29c476, type: 2}
     _cachedRaceDatas: []
   preloadWardrobeRecipes:
     loadDefaultRecipes: 1

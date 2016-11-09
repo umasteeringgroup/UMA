@@ -698,7 +698,7 @@ MonoBehaviour:
   initializeOnAwake: 1
   dynamicallyAddFromResources: 1
   resourcesCharactersFolder: CharacterRecipes
-  resourcesRecipesFolder: WardrobeRecipes
+  resourcesRecipesFolder: 
   dynamicallyAddFromAssetBundles: 0
   assetBundlesForCharactersToSearch: 
   assetBundlesForRecipesToSearch: 

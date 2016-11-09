@@ -756,7 +756,34 @@ namespace UMACharacterSystem
 			}
 		}
 
-		public void ChangeRace(string racename)
+        public UMATextRecipe FindSlotRecipe(string Slotname, string Recipename)
+        {
+            var recipes = AvailableRecipes;
+
+            if (recipes.ContainsKey(Slotname) != true) return null;
+
+            List<UMATextRecipe> SlotRecipes = recipes[Slotname];
+
+            for(int i=0;i<recipes.Count;i++)
+            {
+                UMATextRecipe utr = SlotRecipes[i];
+                if (utr.name == Recipename)
+                    return utr;
+            }
+            return null;
+        }
+
+        public void SetSlot(string Slotname, string Recipename)
+        {
+            UMATextRecipe utr = FindSlotRecipe(Slotname, Recipename);
+            if (!utr)
+            {
+                throw new Exception("Unable to find slot or recipe");
+            }
+            SetSlot(utr);
+        }
+
+        public void ChangeRace(string racename)
 		{
 			ChangeRace((context.raceLibrary as DynamicRaceLibrary).GetRace(racename));
 		}
