@@ -254,14 +254,13 @@ namespace UMA
 							thisHash = UMAUtils.StringToHash(thisName);
 						}
 						index.AddPath(tempObj, thisHash);
-						if (tempObj.GetType() != typeof(UnityEngine.GameObject))
-							Resources.UnloadAsset(tempObj);//TODO check if this is safe to do...
 					}
 				}
 			}
 			Debug.Log("[UMAResourcesIndex] Added/Updated " + index.Count() + " assets in the Index");
 			Save();
-		}
+			Resources.UnloadUnusedAssets();
+        }
 #endif
 	}
 }
