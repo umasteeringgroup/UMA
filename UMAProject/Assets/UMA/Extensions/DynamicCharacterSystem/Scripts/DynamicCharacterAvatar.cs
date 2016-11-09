@@ -756,6 +756,22 @@ namespace UMACharacterSystem
 			}
 		}
 
+        /// <summary>
+        /// Returns the name for any wardrobe item at that wardrobeslot.
+        /// otherwise, returns an empty string;
+        /// </summary>
+        /// <param name="SlotName"></param>
+        /// <returns></returns>
+        public string GetWardrobeItemName(string SlotName)
+        {
+            if (WardrobeRecipes.ContainsKey(SlotName))
+            {
+                UMATextRecipe utr = WardrobeRecipes[SlotName];
+                if (utr != null) return utr.name;
+            }
+            return "";
+        }
+
         public UMATextRecipe FindSlotRecipe(string Slotname, string Recipename)
         {
             var recipes = AvailableRecipes;
