@@ -1038,6 +1038,11 @@ namespace UMACharacterSystem
 				Debug.LogWarning("[CharacterAvatar.LoadFromRecipeString] Exception: " + e);
 				yield break;
 			}
+            if (tempRecipe.raceData == null)
+            {
+                Debug.LogError("Race "+raceString+" not found in RaceLibrary");
+                yield break;
+            }
 			activeRace.name = tempRecipe.raceData.raceName;
 			activeRace.data = tempRecipe.raceData;
 			//as in change race above the incoming downloaded slots might not have the same materials as the existing placeholder ones so there is no choice but to wait
