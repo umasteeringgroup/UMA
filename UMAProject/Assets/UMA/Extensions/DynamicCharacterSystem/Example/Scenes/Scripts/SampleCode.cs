@@ -17,6 +17,7 @@ public class SampleCode : MonoBehaviour {
     public GameObject WardrobeHelpText;
     public GameObject ColorsHelpText;
     public GameObject DnaHelpText;
+    public GameObject AvatarPrefab;
 
     /// <summary>
     /// Remove any controls from the panels
@@ -153,6 +154,18 @@ public class SampleCode : MonoBehaviour {
 
     public SharedColorTable SkinColors;
     public SharedColorTable HairColors;
+
+    public void DynamicCreateClick()
+    {
+        string[] files = { "Fram", "Bob", "Gobs" };
+        float x = Random.Range(-4.0f, 4.0f);
+        float z = Random.Range(1.0f, 8.0f);
+        GameObject go = GameObject.Instantiate(AvatarPrefab);
+        DynamicCharacterAvatar dca = go.GetComponent<DynamicCharacterAvatar>();
+        dca.loadFilename = files[Random.Range(0, 3)];
+        go.transform.localPosition = new Vector3(x, 0, z);
+        go.SetActive(true);
+    }
 
     public void RandomClick()
     {
