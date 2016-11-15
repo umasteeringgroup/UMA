@@ -15,6 +15,7 @@ MonoBehaviour:
   wardrobeSlots:
   - None
   - Face
+  - Eyes
   - Hair
   - Complexion
   - Eyebrows
