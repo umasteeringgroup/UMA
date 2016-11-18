@@ -14,6 +14,9 @@ public partial class UMATextRecipe : UMAPackedRecipeBase
     public UMACharacterSystem.Sex Sex;
 
     [SerializeField]
+    public string DisplayValue; // some sort of text value.
+
+    [SerializeField]
     public List<string> compatibleRaces = new List<string>();
 
     [SerializeField]

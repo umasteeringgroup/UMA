@@ -220,6 +220,7 @@ namespace UMAEditor
 
 			if (TargetType.ToString() == "UMATextRecipe")
 			{
+                FieldInfo DisplayValueField;
                 FieldInfo RecipeTypeField;
 				FieldInfo CompatibleRacesField;
                 FieldInfo WardrobeRecipeThumbsField;
@@ -417,20 +418,24 @@ namespace UMAEditor
                     }
                 }
                 //TODO Test the consequences of wardrobe slots having DNA when perhaps they should not
-				if (rt == "Wardrobe") {				
+				if (rt == "Wardrobe") {		
+                    		
 					CompatibleRacesField = TargetType.GetField ("compatibleRaces", BindingFlags.Public | BindingFlags.Instance);
                     WardrobeRecipeThumbsField = TargetType.GetField("wardrobeRecipeThumbs", BindingFlags.Public | BindingFlags.Instance);
                     WardrobeSlotField = TargetType.GetField ("wardrobeSlot", BindingFlags.Public | BindingFlags.Instance);
 					SuppressWardrobeSlotField = TargetType.GetField ("suppressWardrobeSlots", BindingFlags.Public | BindingFlags.Instance);
 					HidesField = TargetType.GetField("Hides", BindingFlags.Public | BindingFlags.Instance);
+                    DisplayValueField = TargetType.GetField("DisplayValue",BindingFlags.Public | BindingFlags.Instance);
 
-					List<string> crf = (List<string>)CompatibleRacesField.GetValue (target);
+                    List<string> crf = (List<string>)CompatibleRacesField.GetValue (target);
                     List<WardrobeRecipeThumb> wardrobeThumbs = (List<WardrobeRecipeThumb>)WardrobeRecipeThumbsField.GetValue(target);
                     string wsl = (string)WardrobeSlotField.GetValue (target);
 					List<string> swsl2 = (List<string>)SuppressWardrobeSlotField.GetValue (target);
                     List<string> hidesList2 = (List<string>)HidesField.GetValue(target);
                     List<WardrobeRecipeThumb> newWardrobeThumbs = new List<WardrobeRecipeThumb>();
                     List<string> wrtdd = new List<string>();
+                    string DisplayValue = (string)DisplayValueField.GetValue(target);
+
                     if (crf.Count > 0)
                     {
                         foreach (string cr in crf)
@@ -542,6 +547,16 @@ namespace UMAEditor
 							newwsl = generatedWardrobeSlotOptions.Count > 0 ? generatedWardrobeSlotOptions [selectedWardrobeSlotIndex] : "None";
 						}
                         //
+                        string PreviousValue = DisplayValue;
+                           
+                        DisplayValue = EditorGUILayout.TextField("Display Value", DisplayValue);
+                        if (DisplayValue != PreviousValue)
+                        {
+                            DisplayValueField.SetValue(target, DisplayValue);
+                            doUpdate = true;
+                        }
+
+
                         int suppressFlags = 0;
                         for (int i=0; i < generatedWardrobeSlotOptions.Count; i++)
                         {

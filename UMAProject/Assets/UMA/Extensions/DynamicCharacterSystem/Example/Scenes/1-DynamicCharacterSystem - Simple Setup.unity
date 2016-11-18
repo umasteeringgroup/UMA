@@ -369,6 +369,10 @@ Prefab:
       value: 
       objectReference: {fileID: 11400000, guid: 10d1e2ac030a2d54e8dffe526204097f,
         type: 2}
+    - target: {fileID: 11453434, guid: dd6cb213acde6d64eba2639afddcff23, type: 2}
+      propertyPath: fitAtlas
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: dd6cb213acde6d64eba2639afddcff23, type: 2}
   m_IsPrefabParent: 0
@@ -891,6 +895,10 @@ MonoBehaviour:
   ColorsHelpText: {fileID: 823496008}
   DnaHelpText: {fileID: 1770519436}
   AvatarPrefab: {fileID: 113804, guid: 7f689a8cb2842194d800a9947e0373ad, type: 2}
+  HairColor: {fileID: 11400000, guid: 919f053338460244f8cad6f535b25680, type: 2}
+  SkinColor: {fileID: 11400000, guid: acbc1db84c5027b4bafb18d920c6b420, type: 2}
+  EyesColor: {fileID: 11400000, guid: 352924d338ca78841832986636fbf5d4, type: 2}
+  ClothingColor: {fileID: 11400000, guid: 9d6638c0673482444a53d5dd707c3acc, type: 2}
   SkinColors: {fileID: 11400000, guid: 77bea8d4eaa1f0b47acb6086897c8337, type: 2}
   HairColors: {fileID: 11400000, guid: 898c61493a044a84b8c916c7d4f12480, type: 2}
 --- !u!4 &222486132

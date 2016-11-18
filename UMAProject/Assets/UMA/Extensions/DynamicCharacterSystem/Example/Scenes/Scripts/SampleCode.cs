@@ -18,6 +18,10 @@ public class SampleCode : MonoBehaviour {
     public GameObject ColorsHelpText;
     public GameObject DnaHelpText;
     public GameObject AvatarPrefab;
+    public SharedColorTable HairColor;
+    public SharedColorTable SkinColor;
+    public SharedColorTable EyesColor;
+    public SharedColorTable ClothingColor;
 
     /// <summary>
     /// Remove any controls from the panels
@@ -116,15 +120,23 @@ public class SampleCode : MonoBehaviour {
     /// </summary>
     public void ColorsClick()
     {
-        // get all the shared colors.
-        // get 
         Cleanup();
 
         foreach(UMA.OverlayColorData ocd in Avatar.CurrentSharedColors )
         {
             GameObject go = GameObject.Instantiate(ColorPrefab);
             AvailableColorsHandler ch = go.GetComponent<AvailableColorsHandler>();
-            ch.Setup(Avatar, ocd.name, WardrobePanel);
+
+            SharedColorTable currColors = ClothingColor;
+
+            if (ocd.name.ToLower() == "skin")
+                currColors = SkinColor;
+            else if (ocd.name.ToLower() == "hair")
+                currColors = HairColor;
+            else if (ocd.name.ToLower() == "eyes")
+                currColors = EyesColor;
+
+            ch.Setup(Avatar, ocd.name, WardrobePanel,currColors);
 
             Text txt = go.GetComponentInChildren<Text>();
             txt.text = ocd.name;

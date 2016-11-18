@@ -33,8 +33,13 @@ public class SlotHandler : MonoBehaviour
         // Find all the wardrobe items for the current slot, and create a button for them.
         foreach (UMATextRecipe utr in SlotRecipes)
         {
-            
-            AddButton(utr.name, SlotName, utr);
+            string name;
+            if (string.IsNullOrEmpty(utr.DisplayValue))
+                name = utr.name;
+            else
+                name = utr.DisplayValue;
+
+            AddButton(name, SlotName, utr);
         }
     }
 

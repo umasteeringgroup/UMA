@@ -14,6 +14,7 @@ MonoBehaviour:
   recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"MaleFace","scale":100,"copyIdx":-1,"overlays":[{"id":"MaleBeard02","colorIdx":0,"rect":[256,0,512,256]}]}],"colors":[],"fColors":[{"name":"Hair","colors":[106,79,54,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"HumanMale","packedDna":[]}'
   recipeType: Wardrobe
   Sex: 1
+  DisplayValue: Bum Beard
   compatibleRaces:
   - HumanMale
   wardrobeRecipeThumbs:

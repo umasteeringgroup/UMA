@@ -8,42 +8,35 @@ public class AvailableColorsHandler : MonoBehaviour
 {
     public DynamicCharacterAvatar Avatar;
 
-    List<OverlayColorData> Colors = new List<OverlayColorData>();
+    // List<OverlayColorData> Colors = new List<OverlayColorData>();
+    public SharedColorTable Colors;
     public GameObject ColorPanel;
     public GameObject ColorButtonPrefab;
     public string ColorName;
     public GameObject LabelPrefab;
 
-    public void Setup(DynamicCharacterAvatar avatar, string colorName, GameObject colorPanel)
+    public void Setup(DynamicCharacterAvatar avatar, string colorName, GameObject colorPanel, SharedColorTable colorTable)
     {
         ColorName = colorName;
         Avatar = avatar;
         ColorPanel = colorPanel;
-        Colors.Add(GetColor(Color.white, Color.white));
-        Colors.Add(GetColor(Color.red, Color.white));
-        Colors.Add(GetColor(Color.yellow, Color.white));
-        Colors.Add(GetColor(Color.magenta, Color.white));
-        Colors.Add(GetColor(Color.grey, Color.white));
-        Colors.Add(GetColor(Color.green, Color.white));
-        Colors.Add(GetColor(Color.cyan, Color.white));
-        Colors.Add(GetColor(Color.blue, Color.white));
-        Colors.Add(GetColor(Color.black, Color.white));
+        Colors = colorTable;
     }
 
-    public OverlayColorData GetColor(Color c, Color additive)
+  /*  public OverlayColorData GetColor(Color c, Color additive)
     {
         OverlayColorData ocd = new OverlayColorData(3);
         ocd.channelMask[0] = c;
         ocd.channelAdditiveMask[0] = additive;
         return ocd;
-    }
+    }*/
 
     public void OnClick()
     {
         Cleanup();
 
         AddLabel(ColorName);
-        foreach(OverlayColorData ocd in Colors)
+        foreach(OverlayColorData ocd in Colors.colors)
         {
             AddButton(ocd);
         }
