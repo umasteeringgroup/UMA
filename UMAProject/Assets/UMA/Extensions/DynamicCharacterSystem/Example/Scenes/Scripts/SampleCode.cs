@@ -174,7 +174,14 @@ public class SampleCode : MonoBehaviour {
         float z = Random.Range(1.0f, 8.0f);
         GameObject go = GameObject.Instantiate(AvatarPrefab);
         DynamicCharacterAvatar dca = go.GetComponent<DynamicCharacterAvatar>();
+#if false
+        // this shows how to load it from a string at initialization
+        TextAsset t = Resources.Load<TextAsset>("CharacterRecipes/Bob");
+        dca.Preload(t.text);
+#else
+        // this shows how to load it from a resource file at initialization
         dca.loadFilename = files[Random.Range(0, 3)];
+#endif
         go.transform.localPosition = new Vector3(x, 0, z);
         go.SetActive(true);
     }

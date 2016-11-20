@@ -82,11 +82,12 @@ namespace UMACharacterSystem
 			}
 		}
 		//load/save fields
-		public enum loadPathTypes { persistentDataPath, streamingAssetsPath, Resources, FileSystem, CharacterSystem };
+		public enum loadPathTypes { persistentDataPath, streamingAssetsPath, Resources, FileSystem, CharacterSystem, String };
 		public enum savePathTypes { persistentDataPath, streamingAssetsPath, Resources, FileSystem };
 		public loadPathTypes loadPathType;
 		public string loadPath;
 		public string loadFilename;
+        public string loadString;
 		public bool loadFileOnStart;
 		[Tooltip("If true if a loaded recipe requires assetBundles to download the Avatar will wait until they are downloaded before creating itself. Otherwise a temporary character will be shown.")]
 		public bool waitForBundles;
@@ -150,6 +151,8 @@ namespace UMACharacterSystem
             }
         }
 
+
+
         public override void Start()
 		{
 			StopAllCoroutines();
@@ -159,7 +162,7 @@ namespace UMACharacterSystem
 			{
 				raceAnimationControllers.defaultAnimationController = animationController;
 			}
-			if (loadFilename != "" && loadFileOnStart)
+			if ((loadFilename != "" && loadFileOnStart) || (loadPathType == loadPathTypes.String))
 			{
 				DoLoad();
 			}
@@ -906,6 +909,13 @@ namespace UMACharacterSystem
 			return u.recipeString;
 		}
 
+        public void Preload(string Recipe)
+        {
+            loadString = Recipe;
+            loadPathType = loadPathTypes.String;
+            loadFileOnStart = true;
+        }
+
 		/// <summary>
 		/// Loads the Avatar from the given recipe and additional recipe. 
 		/// Has additional functions for removing any slots that should be hidden by any 'wardrobe Recipes' that are in the additional recipes array.
@@ -1000,6 +1010,8 @@ namespace UMACharacterSystem
 
 		/// <summary>
 		/// Loads an avatar from a recipe string, optionally waiting for any assets that will need to be downloaded (according to the CharacterAvatar 'waitForBundles' setting
+        /// This cannot be called before initialization. 
+        /// Use PreloadRecipe when calling before Initialization.
 		/// </summary>
 		/// <param name="recipeString"></param>
 		/// <returns></returns>
@@ -1010,9 +1022,14 @@ namespace UMACharacterSystem
 
 		private IEnumerator LoadFromRecipeStringCO(string recipeString)
 		{
-			//TODO For some reason, sometimes we get an error saying 'UMA data missing required generator!' It seems intermittent and random- Work out what is causing it
-			//For now specify the generator...
-			umaGenerator = UMAGenerator.FindInstance();
+            //TODO For some reason, sometimes we get an error saying 'UMA data missing required generator!' It seems intermittent and random- Work out what is causing it
+            //For now specify the generator...
+            if (umaData == null)
+            {
+                Initialize();
+                context.dynamicCharacterSystem.Refresh();
+            }
+            umaGenerator = UMAGenerator.FindInstance();
 			var umaTextRecipe = ScriptableObject.CreateInstance<UMATextRecipe>();
 			umaTextRecipe.name = loadFilename;
 			umaTextRecipe.recipeString = recipeString;
@@ -1271,8 +1288,13 @@ namespace UMACharacterSystem
 			yield return null;
 			string path = "";
 			string recipeString = "";
+
+            if (!string.IsNullOrEmpty(loadString)&&loadPathType == loadPathTypes.String)
+            {
+                recipeString = loadString;
+            }
 #if UNITY_EDITOR
-			if (loadFilename == "" && Application.isEditor)
+			if (loadFilename == "" && Application.isEditor && loadPathType != loadPathTypes.String)
 			{
 				loadPathType = loadPathTypes.FileSystem;
 			}

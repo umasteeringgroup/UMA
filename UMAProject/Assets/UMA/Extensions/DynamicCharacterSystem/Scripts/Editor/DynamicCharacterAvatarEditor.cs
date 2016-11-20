@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UMA;
 using UMACharacterSystem;
+using System;
 
 [CustomEditor(typeof(DynamicCharacterAvatar), true)]
 public partial class DynamicCharacterAvatarEditor : Editor
@@ -71,6 +72,7 @@ public partial class DynamicCharacterAvatarEditor : Editor
         loadPathType.isExpanded = EditorGUILayout.Foldout(loadPathType.isExpanded, "Load/Save Options");
         if (loadPathType.isExpanded)
         {
+            SerializedProperty loadString = serializedObject.FindProperty("loadString");
             SerializedProperty loadPath = serializedObject.FindProperty("loadPath");
             SerializedProperty loadFilename = serializedObject.FindProperty("loadFilename");
             SerializedProperty loadFileOnStart = serializedObject.FindProperty("loadFileOnStart");
@@ -80,10 +82,20 @@ public partial class DynamicCharacterAvatarEditor : Editor
             SerializedProperty saveFilename = serializedObject.FindProperty("saveFilename");
             SerializedProperty makeUnique = serializedObject.FindProperty("makeUnique");
             EditorGUILayout.PropertyField(loadPathType);
-            if (loadPathType.enumValueIndex <= 2)
+
+
+            if (loadPathType.enumValueIndex == Convert.ToInt32(DynamicCharacterAvatar.loadPathTypes.String))
             {
-                EditorGUILayout.PropertyField(loadPath);
+                EditorGUILayout.PropertyField(loadString);
             }
+            else
+            {
+                if (loadPathType.enumValueIndex <= 2)
+                {
+                    EditorGUILayout.PropertyField(loadPath);
+                }
+            }
+
             EditorGUILayout.PropertyField(loadFilename);
             if (loadFilename.stringValue != "")
             {
