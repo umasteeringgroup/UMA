@@ -2717,7 +2717,7 @@ Transform:
   - {fileID: 1385428173}
   - {fileID: 1136855226}
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 5
 --- !u!1 &337879489
 GameObject:
   m_ObjectHideFlags: 0
@@ -3480,6 +3480,7 @@ MonoBehaviour:
   loadPathType: 2
   loadPath: CharacterRecipes
   loadFilename: 
+  loadString: 
   loadFileOnStart: 1
   waitForBundles: 0
   savePathType: 0
@@ -6839,8 +6840,8 @@ Transform:
   - {fileID: 1875296714}
   - {fileID: 518079763}
   - {fileID: 2079936342}
-  - {fileID: 237597474}
   - {fileID: 1218724556}
+  - {fileID: 237597474}
   m_Father: {fileID: 0}
   m_RootOrder: 2
 --- !u!1 &930765367
@@ -6880,9 +6881,8 @@ RectTransform:
   - {fileID: 2111217992}
   - {fileID: 1047957238}
   - {fileID: 1326423179}
-  - {fileID: 1940350896}
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 4
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
@@ -7933,6 +7933,39 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1058202275}
+--- !u!1 &1063556316
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 4
+  m_Component:
+  - 224: {fileID: 1063556317}
+  m_Layer: 5
+  m_Name: OverviewTarget
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1063556317
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1063556316}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: -2.44}
+  m_LocalScale: {x: 0.80476826, y: 0.80476826, z: 1}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 3
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 1.18}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1088986308
 GameObject:
   m_ObjectHideFlags: 0
@@ -8465,6 +8498,7 @@ MonoBehaviour:
   loadPathType: 2
   loadPath: CharacterRecipes
   loadFilename: 
+  loadString: 
   loadFileOnStart: 1
   waitForBundles: 0
   savePathType: 0
@@ -8911,7 +8945,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children: []
   m_Father: {fileID: 879538282}
-  m_RootOrder: 9
+  m_RootOrder: 8
 --- !u!1 &1221327291
 GameObject:
   m_ObjectHideFlags: 0
@@ -10596,6 +10630,7 @@ MonoBehaviour:
   loadPathType: 2
   loadPath: CharacterRecipes
   loadFilename: 
+  loadString: 
   loadFileOnStart: 1
   waitForBundles: 1
   savePathType: 0
@@ -11442,7 +11477,7 @@ MonoBehaviour:
         m_MethodName: SetAvatar
         m_Mode: 2
         m_Arguments:
-          m_ObjectArgument: {fileID: 1940350895}
+          m_ObjectArgument: {fileID: 1063556316}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.GameObject, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
@@ -14383,39 +14418,6 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1928994779}
---- !u!1 &1940350895
-GameObject:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  serializedVersion: 4
-  m_Component:
-  - 224: {fileID: 1940350896}
-  m_Layer: 5
-  m_Name: OverviewTarget
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &1940350896
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1940350895}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -0.6}
-  m_LocalScale: {x: 1.1410099, y: 1.1410099, z: 1}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_Children: []
-  m_Father: {fileID: 930765368}
-  m_RootOrder: 8
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -419.13315, y: -289.1882}
-  m_SizeDelta: {x: 100, y: 100}
-  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1945017569
 GameObject:
   m_ObjectHideFlags: 0
