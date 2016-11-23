@@ -2508,14 +2508,6 @@ Prefab:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 11499482, guid: 7f689a8cb2842194d800a9947e0373ad, type: 2}
-      propertyPath: preloadWardrobeRecipes.recipes.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 11499482, guid: 7f689a8cb2842194d800a9947e0373ad, type: 2}
-      propertyPath: preloadWardrobeRecipes.recipes.Array.data[1]._compatibleRaces.Array.size
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 485902, guid: 7f689a8cb2842194d800a9947e0373ad, type: 2}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -2547,23 +2539,6 @@ Prefab:
     - target: {fileID: 485902, guid: 7f689a8cb2842194d800a9947e0373ad, type: 2}
       propertyPath: m_RootOrder
       value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 11499482, guid: 7f689a8cb2842194d800a9947e0373ad, type: 2}
-      propertyPath: preloadWardrobeRecipes.recipes.Array.data[1]._recipeName
-      value: MrHandy
-      objectReference: {fileID: 0}
-    - target: {fileID: 11499482, guid: 7f689a8cb2842194d800a9947e0373ad, type: 2}
-      propertyPath: preloadWardrobeRecipes.recipes.Array.data[1]._recipe
-      value: 
-      objectReference: {fileID: 11400000, guid: 2f30175d2217c274998e0d7b42cd7578,
-        type: 2}
-    - target: {fileID: 11499482, guid: 7f689a8cb2842194d800a9947e0373ad, type: 2}
-      propertyPath: preloadWardrobeRecipes.recipes.Array.data[1]._compatibleRaces.Array.data[0]
-      value: HumanMale
-      objectReference: {fileID: 0}
-    - target: {fileID: 11499482, guid: 7f689a8cb2842194d800a9947e0373ad, type: 2}
-      propertyPath: loadFilename
-      value: HandsGuy
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 7f689a8cb2842194d800a9947e0373ad, type: 2}

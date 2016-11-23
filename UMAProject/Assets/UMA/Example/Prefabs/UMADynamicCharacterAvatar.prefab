@@ -190,6 +190,7 @@ MonoBehaviour:
   loadPathType: 2
   loadPath: CharacterRecipes
   loadFilename: 
+  loadString: 
   loadFileOnStart: 1
   waitForBundles: 0
   savePathType: 0
