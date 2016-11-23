@@ -2510,7 +2510,7 @@ Prefab:
     m_Modifications:
     - target: {fileID: 11499482, guid: 7f689a8cb2842194d800a9947e0373ad, type: 2}
       propertyPath: preloadWardrobeRecipes.recipes.Array.size
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 11499482, guid: 7f689a8cb2842194d800a9947e0373ad, type: 2}
       propertyPath: preloadWardrobeRecipes.recipes.Array.data[1]._compatibleRaces.Array.size
