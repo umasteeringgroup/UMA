@@ -38,7 +38,10 @@ public partial class UMAContext : MonoBehaviour
 		{
 			overlayLibrary = GameObject.Find("OverlayLibrary").GetComponent<OverlayLibraryBase>();
 		}
-		if (Instance == null) Instance = this;
+        // Note: Removed null check so that this is always assigned if you have a UMAContext in your scene
+        // This will avoid those occasions where someone drops in a bogus context in a test scene, and then 
+        // later loads a valid scene (and everything breaks)
+		Instance = this;
 	}
 
 	/// <summary>

@@ -53,7 +53,7 @@ namespace UMACharacterSystem
 
         //This will generate itself from a list available Races and set itself to the current value of activeRace.name
         [Tooltip("Selects the race to used. When initialized, the Avatar will use the base recipe from the RaceData selected.")]
-        public RaceSetter activeRace;
+        public RaceSetter activeRace = new RaceSetter();
 
 		//bool flagForRebuild = false;
 		//bool flagForReload = false;
@@ -61,10 +61,10 @@ namespace UMACharacterSystem
 		public Dictionary<string, UMATextRecipe> WardrobeRecipes = new Dictionary<string, UMATextRecipe>();
 
 		[Tooltip("You can add wardrobe recipes for many races in here and only the ones that apply to the active race will be applied to the Avatar")]
-		public WardrobeRecipeList preloadWardrobeRecipes;
+		public WardrobeRecipeList preloadWardrobeRecipes = new WardrobeRecipeList();
 
 		[Tooltip("Add animation controllers here for specific races. If no Controller is found for the active race, the Default Animation Controller is used")]
-		public RaceAnimatorList raceAnimationControllers;
+		public RaceAnimatorList raceAnimationControllers= new RaceAnimatorList();
 
 		[Tooltip("Any colors here are set when the Avatar is first generated and updated as the values are changed using the color sliders")]
 		public ColorValueList characterColors = new ColorValueList();
@@ -73,8 +73,8 @@ namespace UMACharacterSystem
 		Dictionary<string, CacheStateInfo> cacheStates = new Dictionary<string, CacheStateInfo>();
 		class CacheStateInfo
 		{
-			public Dictionary<string, UMATextRecipe> wardrobeCache;
-			public List<ColorValue> colorCache;
+			public Dictionary<string, UMATextRecipe> wardrobeCache = new Dictionary<string, UMATextRecipe>();
+			public List<ColorValue> colorCache = new List<ColorValue>();
 			public CacheStateInfo(Dictionary<string, UMATextRecipe> _wardrobeCache, List<ColorValue> _colorCache)
 			{
 				wardrobeCache = _wardrobeCache;
