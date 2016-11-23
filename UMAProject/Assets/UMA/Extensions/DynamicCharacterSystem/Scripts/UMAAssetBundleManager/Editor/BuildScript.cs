@@ -274,20 +274,6 @@ namespace UMAAssetBundleManager
 			var currentEnvironment = Application.platform.ToString();
 			switch (target)
 			{
-				case BuildTarget.Android:
-				case BuildTarget.iOS:
-				case BuildTarget.Nintendo3DS:
-				case BuildTarget.PS3:
-				case BuildTarget.PS4:
-				case BuildTarget.PSM:
-				case BuildTarget.PSP2:
-				case BuildTarget.SamsungTV:
-				case BuildTarget.Tizen:
-				case BuildTarget.tvOS:
-				case BuildTarget.WiiU:
-				case BuildTarget.XBOX360:
-				case BuildTarget.XboxOne:
-					return false;
 				case BuildTarget.StandaloneLinux:
 				case BuildTarget.StandaloneLinux64:
 				case BuildTarget.StandaloneLinuxUniversal:
@@ -316,7 +302,6 @@ namespace UMAAssetBundleManager
 #endif
 					return true;
 				default:
-					Debug.Log("Target not implemented.");
 					return false;
 			}
 
