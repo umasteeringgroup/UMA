@@ -12,15 +12,18 @@ MonoBehaviour:
   m_Name: M_Bod smooth
   m_EditorClassIdentifier: 
   overlayName: M_Bod smooth
+  overlayType: 0
   rect:
     serializedVersion: 2
     x: 0
     y: 0
     width: 0
     height: 0
+  alphaMask: {fileID: 0}
   textureList:
-  - {fileID: 2800000, guid: 06e6580850a0f414d95a4613b9cc4055, type: 3}
-  - {fileID: 2800000, guid: 56f0555aeb5c0a44a96111595b07cb12, type: 3}
-  - {fileID: 2800000, guid: 8c5496f9ff37891498a437f3713d1d97, type: 3}
+  - {fileID: 2800000, guid: e80c1728672cedb40b826db367f9b933, type: 3}
+  - {fileID: 2800000, guid: 497b22f911e03044abee6dac0652bead, type: 3}
+  - {fileID: 2800000, guid: 42871f0d9cd6cf446b9ea9f83c729e2e, type: 3}
   tags: []
   material: {fileID: 11400000, guid: 8e29dbac5d2e82f44a759a7e2cc568ab, type: 2}
+  OcclusionEntries: []

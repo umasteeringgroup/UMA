@@ -12,15 +12,18 @@ MonoBehaviour:
   m_Name: Skin patches Face
   m_EditorClassIdentifier: 
   overlayName: Skin patches Face
+  overlayType: 0
   rect:
     serializedVersion: 2
     x: 0
     y: 0
     width: 0
     height: 0
+  alphaMask: {fileID: 0}
   textureList:
-  - {fileID: 2800000, guid: 2ab1404f8089c0c4091accb6f5036309, type: 3}
-  - {fileID: 2800000, guid: 630284bc97ebbe748b03a7e516c2a9ff, type: 3}
-  - {fileID: 2800000, guid: 468409dc3fa4a5443aefd3594aed1efd, type: 3}
+  - {fileID: 2800000, guid: 7847a7f5177106945834e3af7dfa9673, type: 3}
+  - {fileID: 2800000, guid: 37043a752819f6846aaccb9a23a78823, type: 3}
+  - {fileID: 2800000, guid: aa7958646928732448f9a22343f46a09, type: 3}
   tags: []
   material: {fileID: 11400000, guid: 8e29dbac5d2e82f44a759a7e2cc568ab, type: 2}
+  OcclusionEntries: []

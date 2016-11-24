@@ -12,13 +12,16 @@ MonoBehaviour:
   m_Name: F_H_Eyelash
   m_EditorClassIdentifier: 
   overlayName: F_H_Eyelash
+  overlayType: 0
   rect:
     serializedVersion: 2
     x: 0
     y: 0
     width: 0
     height: 0
+  alphaMask: {fileID: 0}
   textureList:
-  - {fileID: 2800000, guid: 80afa5bfc3b29844b97e98b41e19d06e, type: 3}
+  - {fileID: 2800000, guid: 0c6a5636b3b61dd46ba8f713ff20390c, type: 3}
   tags: []
   material: {fileID: 11400000, guid: 6abfc90b9b48ae840bdfb91516b32b91, type: 2}
+  OcclusionEntries: []

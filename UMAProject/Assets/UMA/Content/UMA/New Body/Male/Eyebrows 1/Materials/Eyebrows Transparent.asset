@@ -11,7 +11,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac718b8ce852d1445b8fbe5c323134ac, type: 3}
   m_Name: Eyebrows Transparent
   m_EditorClassIdentifier: 
-  material: {fileID: 2100000, guid: 1d4dbe8ca772e974885edf9d32cfa9ad, type: 2}
+  material: {fileID: 2100000, guid: 0ef6f9decdc3afb4c8c48dfc2d99713e, type: 2}
   materialType: 1
   channels:
   - channelType: 0

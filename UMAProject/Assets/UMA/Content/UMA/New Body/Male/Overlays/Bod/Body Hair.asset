@@ -12,15 +12,18 @@ MonoBehaviour:
   m_Name: Body Hair
   m_EditorClassIdentifier: 
   overlayName: Body Hair
+  overlayType: 0
   rect:
     serializedVersion: 2
     x: 0
     y: 0
     width: 0
     height: 0
+  alphaMask: {fileID: 0}
   textureList:
-  - {fileID: 2800000, guid: 2e01bf96cedda1045bd24185e031b37d, type: 3}
-  - {fileID: 2800000, guid: e738bea0c10247c4a8573ee1830e0ba4, type: 3}
-  - {fileID: 2800000, guid: 7f8d136e9be604c4b9a309619f04c24c, type: 3}
+  - {fileID: 2800000, guid: 832fe43c24d66244ea8d04b9c8a7c880, type: 3}
+  - {fileID: 2800000, guid: fe72f1b4921bbb247aa905618b7be809, type: 3}
+  - {fileID: 2800000, guid: 08c7a7b531f3a164db98ce42b977e5aa, type: 3}
   tags: []
   material: {fileID: 11400000, guid: 8e29dbac5d2e82f44a759a7e2cc568ab, type: 2}
+  OcclusionEntries: []
