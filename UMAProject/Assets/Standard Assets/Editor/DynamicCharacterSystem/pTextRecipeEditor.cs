@@ -386,7 +386,7 @@ namespace UMAEditor
                             }
                         }
                         //Finally if there are more DNA sets than there are converters we need to remove the dna that should not be there
-                        if(currentDNA.Length != thisDNAConverterList.Length)
+                        if(currentDNA.Length > thisDNAConverterList.Length)
                         {
                             Debug.Log("There were more dna sets in the recipe than converters. Removing unused Dna...");
                             List<UMADnaBase> newCurrentDna = new List<UMADnaBase>();
