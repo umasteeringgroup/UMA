@@ -1082,7 +1082,8 @@ namespace UMACharacterSystem
 				yield break;
 			}
 			ClearSlots();
-			if (tempRecipe.wardrobeRecipes != null)
+			//if (tempRecipe.wardrobeRecipes != null)//this is never null because we do LoadCharacterSystem so we will search the string directly
+			if(recipeString.IndexOf("wardrobeRecipesJson") != -1)
 			{//means we have a characterSystemTextRecipe
 				if (tempRecipe.wardrobeRecipes.Count > 0)
 				{
@@ -1129,6 +1130,7 @@ namespace UMACharacterSystem
 			}
 			else
 			{
+				Debug.Log("Recipe was not DCS- performing standard load");
 				//if its a standard UmaTextRecipe load it directly into UMAData since there wont be any wardrobe slots...
 				umaData.umaRecipe.sharedColors = tempRecipe.sharedColors;
 				umaTextRecipe.Load(umaData.umaRecipe, context);

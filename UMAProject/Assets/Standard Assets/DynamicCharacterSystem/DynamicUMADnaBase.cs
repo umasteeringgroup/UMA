@@ -67,7 +67,7 @@ namespace UMA
             0.5f,
             0.5f,
             0.5f,
-            0.5f
+			0.5f
         };
         protected static string[] _fallbackNames = new string[] //fallback to UMADnaHumanoid
             {

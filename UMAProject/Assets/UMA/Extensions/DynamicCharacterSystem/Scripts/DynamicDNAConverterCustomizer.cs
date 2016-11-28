@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -82,11 +82,13 @@ namespace UMA
             }
             if (activeUMA != null)
                 if(activeUMA.umaData != null)
-                    if (activeUMA.umaData.umaRecipe.raceData.raceName != activeUMARace)
-                    {
-                        activeUMARace = activeUMA.umaData.umaRecipe.raceData.raceName;
-                        SetAvailableConverters(activeUMA.umaData);
-                    }
+					if(activeUMA.umaData.umaRecipe != null)
+						if (activeUMA.umaData.umaRecipe.raceData != null)
+							if (activeUMA.umaData.umaRecipe.raceData.raceName != activeUMARace)
+							{
+								activeUMARace = activeUMA.umaData.umaRecipe.raceData.raceName;
+								SetAvailableConverters(activeUMA.umaData);
+							}
             //TODO make the guide /target semi transparent...
             /*if(guideUMA != null)
             {
