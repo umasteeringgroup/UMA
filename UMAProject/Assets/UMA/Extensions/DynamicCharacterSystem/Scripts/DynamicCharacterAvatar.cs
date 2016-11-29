@@ -869,7 +869,7 @@ namespace UMACharacterSystem
 			if (Application.isPlaying)
 			{
 				umaRecipe = activeRace.racedata.baseRaceRecipe;
-				ClearSlots();
+				//ClearSlots();
 				DynamicAssetLoader.Instance.CurrentBatchID = batchID;
 				LoadDefaultWardrobe(true);//load defaultWardrobe will add anything it downloads to requiredAssetsToCheck
 										  //context.dynamicCharacterSystem.Refresh();
