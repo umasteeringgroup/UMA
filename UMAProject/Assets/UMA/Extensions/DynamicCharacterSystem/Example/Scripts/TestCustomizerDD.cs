@@ -53,6 +53,38 @@ public class TestCustomizerDD : MonoBehaviour
 	public List<string> hideWardrobeOptions = new List<string>();
 
 	public MouseOrbitImproved Orbitor;
+	//Loading options when loading a recipe from a text file
+	public bool loadRace = true;
+	public bool loadDNA = true;
+	public bool loadWardrobe = true;
+	public bool loadBodyColors = true;
+	public bool loadWardrobeColors = true;
+
+	public bool LoadRace
+	{
+		get { return loadRace; }
+		set { loadRace = value; }
+	}
+	public bool LoadDNA
+	{
+		get { return loadDNA; }
+		set { loadDNA = value; }
+	}
+	public bool LoadWardrobe
+	{
+		get { return loadWardrobe; }
+		set { loadWardrobe = value; }
+	}
+	public bool LoadBodyColors
+	{
+		get { return loadBodyColors; }
+		set { loadBodyColors = value; }
+	}
+	public bool LoadWardrobeColors
+	{
+		get { return loadWardrobeColors; }
+		set { loadWardrobeColors = value; }
+	}
 
 	string thisRace;
 
@@ -692,7 +724,7 @@ public class TestCustomizerDD : MonoBehaviour
 		}
 		if (recipeText != "")
 		{
-			Avatar.LoadFromRecipeString(recipeText);
+			Avatar.LoadFromRecipeString(recipeText, loadRace, loadDNA, loadWardrobe, loadBodyColors, loadWardrobeColors);
 		}
 	}
 
