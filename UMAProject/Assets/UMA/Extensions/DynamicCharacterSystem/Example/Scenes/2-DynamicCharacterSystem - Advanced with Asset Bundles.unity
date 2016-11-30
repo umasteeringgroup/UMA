@@ -2313,8 +2313,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 734fcc8a0fd1912478c8566fc6eceda7, type: 2}
   - {fileID: 11400000, guid: 809c22fcd6389e742a62ec4905d1a101, type: 2}
   - {fileID: 11400000, guid: a04e469a0d80a6742a85658cd80912ab, type: 2}
-  - {fileID: 11400000, guid: e9aa623a48440f041897b607ad42697a, type: 2}
-  - {fileID: 11400000, guid: 4e13917020edab945a827ea1ed1d947b, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 11400000, guid: 28864c26b3f4bea4bb382e8ca1b60565, type: 2}
   - {fileID: 11400000, guid: faede5ef802a4d04080266de31601bc8, type: 2}
   - {fileID: 11400000, guid: a5cb9c792e8a0684da24546a08a4ab2a, type: 2}
@@ -3943,10 +3943,6 @@ MonoBehaviour:
   preloadWardrobeRecipes:
     loadDefaultRecipes: 1
     recipes:
-    - _recipeName: StarCasterFemale
-      _recipe: {fileID: 11400000, guid: cdbf7f62635f0294a991e2894fdbeb9e, type: 2}
-      _compatibleRaces:
-      - ToonFemale
     - _recipeName: ToonHair1
       _recipe: {fileID: 11400000, guid: 8431fa862e3eba44a9887cf282f4a223, type: 2}
       _compatibleRaces:
@@ -4410,10 +4406,6 @@ MonoBehaviour:
   preloadWardrobeRecipes:
     loadDefaultRecipes: 1
     recipes:
-    - _recipeName: StarCasterFemale
-      _recipe: {fileID: 11400000, guid: cdbf7f62635f0294a991e2894fdbeb9e, type: 2}
-      _compatibleRaces:
-      - ToonFemale
     - _recipeName: ToonHair1
       _recipe: {fileID: 11400000, guid: 8431fa862e3eba44a9887cf282f4a223, type: 2}
       _compatibleRaces:
@@ -8534,10 +8526,6 @@ MonoBehaviour:
   preloadWardrobeRecipes:
     loadDefaultRecipes: 1
     recipes:
-    - _recipeName: StarCasterFemale
-      _recipe: {fileID: 11400000, guid: cdbf7f62635f0294a991e2894fdbeb9e, type: 2}
-      _compatibleRaces:
-      - ToonFemale
     - _recipeName: ToonHair1
       _recipe: {fileID: 11400000, guid: 8431fa862e3eba44a9887cf282f4a223, type: 2}
       _compatibleRaces:
@@ -13776,11 +13764,11 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 073bb8d1e3dc03140ada534c06d42dff, type: 2}
   - {fileID: 11400000, guid: 5dcb82ea78983cf4da0c206fc9de96ae, type: 2}
   - {fileID: 11400000, guid: 863f68599d8ad8b4989c7724bb3b8dd1, type: 2}
-  - {fileID: 11400000, guid: 946b55bc89dac694b8124109eb5afe45, type: 2}
-  - {fileID: 11400000, guid: 4018b3a4d477356459b746878771d9b9, type: 2}
-  - {fileID: 11400000, guid: 21e822d7b52f53a4ca5b31b7f633d283, type: 2}
-  - {fileID: 11400000, guid: 9635b2d2bb76ac44f96fe0b00339ff00, type: 2}
-  - {fileID: 11400000, guid: 50fec4ad6b583ed4890bf149f97b1ee1, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 11400000, guid: 1d5b18e80d2535844879d53c43fe72ef, type: 2}
   - {fileID: 11400000, guid: e3c19ea60a30aca45aabae54d1068387, type: 2}
   - {fileID: 11400000, guid: ca20f7bc9c16c314991839b46ccfd3f4, type: 2}

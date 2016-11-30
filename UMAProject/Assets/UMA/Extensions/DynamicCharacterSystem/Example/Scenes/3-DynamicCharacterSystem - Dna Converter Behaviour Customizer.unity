@@ -1989,8 +1989,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 734fcc8a0fd1912478c8566fc6eceda7, type: 2}
   - {fileID: 11400000, guid: 809c22fcd6389e742a62ec4905d1a101, type: 2}
   - {fileID: 11400000, guid: a04e469a0d80a6742a85658cd80912ab, type: 2}
-  - {fileID: 11400000, guid: e9aa623a48440f041897b607ad42697a, type: 2}
-  - {fileID: 11400000, guid: 4e13917020edab945a827ea1ed1d947b, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 11400000, guid: 28864c26b3f4bea4bb382e8ca1b60565, type: 2}
   - {fileID: 11400000, guid: faede5ef802a4d04080266de31601bc8, type: 2}
   - {fileID: 11400000, guid: a5cb9c792e8a0684da24546a08a4ab2a, type: 2}
@@ -3432,6 +3432,10 @@ MonoBehaviour:
     name: HumanFemaleResources
     _data: {fileID: 11400000, guid: 92f8416dee5a3f043a417078fa29c476, type: 2}
     _cachedRaceDatas: []
+    keepDNA: 0
+    keepWardrobe: 0
+    keepBodyColors: 1
+    cacheCurrentState: 1
   preloadWardrobeRecipes:
     loadDefaultRecipes: 1
     recipes:
@@ -3449,10 +3453,6 @@ MonoBehaviour:
       - ToonFemale
     - _recipeName: ToonFemaleUnderwear1
       _recipe: {fileID: 11400000, guid: 7d854ee186b4cb8499257fc6c7433be0, type: 2}
-      _compatibleRaces:
-      - ToonFemale
-    - _recipeName: StarCasterFemale
-      _recipe: {fileID: 11400000, guid: cdbf7f62635f0294a991e2894fdbeb9e, type: 2}
       _compatibleRaces:
       - ToonFemale
   raceAnimationControllers:
@@ -3482,11 +3482,17 @@ MonoBehaviour:
   loadFilename: 
   loadString: 
   loadFileOnStart: 1
-  waitForBundles: 0
   savePathType: 0
   savePath: CharacterRecipes
   saveFilename: 
   makeUnique: 0
+  loadOptions:
+    waitForBundles: 1
+    loadRace: 1
+    loadDNA: 1
+    loadWardrobe: 1
+    loadBodyColors: 1
+    loadWardrobeColors: 1
   BoundsOffset: {x: 0, y: 0, z: 0}
   assetBundlesUsedbyCharacter:
   - uma/toonshared/racebase
@@ -8450,6 +8456,10 @@ MonoBehaviour:
     name: ToonFemale
     _data: {fileID: 11400000, guid: 7e7237ce6bc9c6946b66dde98daa310b, type: 2}
     _cachedRaceDatas: []
+    keepDNA: 0
+    keepWardrobe: 0
+    keepBodyColors: 1
+    cacheCurrentState: 1
   preloadWardrobeRecipes:
     loadDefaultRecipes: 1
     recipes:
@@ -8463,10 +8473,6 @@ MonoBehaviour:
       - HumanFemaleResources
     - _recipeName: ToonFemaleUnderwear1
       _recipe: {fileID: 11400000, guid: 7d854ee186b4cb8499257fc6c7433be0, type: 2}
-      _compatibleRaces:
-      - ToonFemale
-    - _recipeName: StarCasterFemale
-      _recipe: {fileID: 11400000, guid: cdbf7f62635f0294a991e2894fdbeb9e, type: 2}
       _compatibleRaces:
       - ToonFemale
     - _recipeName: ToonHair1
@@ -8500,11 +8506,17 @@ MonoBehaviour:
   loadFilename: 
   loadString: 
   loadFileOnStart: 1
-  waitForBundles: 0
   savePathType: 0
   savePath: CharacterRecipes
   saveFilename: 
   makeUnique: 0
+  loadOptions:
+    waitForBundles: 1
+    loadRace: 1
+    loadDNA: 1
+    loadWardrobe: 1
+    loadBodyColors: 1
+    loadWardrobeColors: 1
   BoundsOffset: {x: 0, y: 0, z: 0}
   assetBundlesUsedbyCharacter:
   - uma/toonshared/racebase
@@ -9853,6 +9865,14 @@ MonoBehaviour:
   - ToonFemale:Face
   - ToonMale:Face
   Orbitor: {fileID: 1378902866}
+  loadRace: 1
+  loadDNA: 1
+  loadWardrobe: 1
+  loadBodyColors: 1
+  loadWardrobeColors: 1
+  keepDNA: 0
+  keepWardrobe: 0
+  keepBodyColors: 1
 --- !u!1 &1327886464
 GameObject:
   m_ObjectHideFlags: 0
@@ -10582,6 +10602,10 @@ MonoBehaviour:
     name: HumanGirl
     _data: {fileID: 11400000, guid: 8f9fc622c08165a4297be9de525ccd1b, type: 2}
     _cachedRaceDatas: []
+    keepDNA: 0
+    keepWardrobe: 0
+    keepBodyColors: 1
+    cacheCurrentState: 1
   preloadWardrobeRecipes:
     loadDefaultRecipes: 1
     recipes:
@@ -10599,10 +10623,6 @@ MonoBehaviour:
       - ToonFemale
     - _recipeName: ToonHair1
       _recipe: {fileID: 11400000, guid: 8431fa862e3eba44a9887cf282f4a223, type: 2}
-      _compatibleRaces:
-      - ToonFemale
-    - _recipeName: StarCasterFemale
-      _recipe: {fileID: 11400000, guid: cdbf7f62635f0294a991e2894fdbeb9e, type: 2}
       _compatibleRaces:
       - ToonFemale
   raceAnimationControllers:
@@ -10632,11 +10652,17 @@ MonoBehaviour:
   loadFilename: 
   loadString: 
   loadFileOnStart: 1
-  waitForBundles: 1
   savePathType: 0
   savePath: CharacterRecipes
   saveFilename: 
   makeUnique: 0
+  loadOptions:
+    waitForBundles: 1
+    loadRace: 1
+    loadDNA: 1
+    loadWardrobe: 1
+    loadBodyColors: 1
+    loadWardrobeColors: 1
   BoundsOffset: {x: 0, y: 0, z: 0}
   assetBundlesUsedbyCharacter:
   - uma/toonshared/racebase
@@ -11888,11 +11914,11 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 073bb8d1e3dc03140ada534c06d42dff, type: 2}
   - {fileID: 11400000, guid: 5dcb82ea78983cf4da0c206fc9de96ae, type: 2}
   - {fileID: 11400000, guid: 863f68599d8ad8b4989c7724bb3b8dd1, type: 2}
-  - {fileID: 11400000, guid: 946b55bc89dac694b8124109eb5afe45, type: 2}
-  - {fileID: 11400000, guid: 4018b3a4d477356459b746878771d9b9, type: 2}
-  - {fileID: 11400000, guid: 21e822d7b52f53a4ca5b31b7f633d283, type: 2}
-  - {fileID: 11400000, guid: 9635b2d2bb76ac44f96fe0b00339ff00, type: 2}
-  - {fileID: 11400000, guid: 50fec4ad6b583ed4890bf149f97b1ee1, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 11400000, guid: 1d5b18e80d2535844879d53c43fe72ef, type: 2}
   - {fileID: 11400000, guid: e3c19ea60a30aca45aabae54d1068387, type: 2}
   - {fileID: 11400000, guid: ca20f7bc9c16c314991839b46ccfd3f4, type: 2}
