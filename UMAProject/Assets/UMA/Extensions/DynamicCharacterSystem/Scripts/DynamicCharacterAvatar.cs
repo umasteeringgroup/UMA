@@ -103,12 +103,12 @@ namespace UMACharacterSystem
 		[System.Serializable]
 		public class LoadOptions
 		{
-			[Tooltip("If true if a loaded recipe requires assetBundles to download the Avatar will wait until they are downloaded before creating itself. Otherwise a temporary character will be shown.")]
+			[Tooltip("If true, if a loaded recipe requires assetBundles to download, the Avatar will wait until they are downloaded before creating itself. Otherwise a temporary character will be shown.")]
 			public bool waitForBundles = true;
 			public bool loadRace = true;
 			public bool loadDNA = true;
 			public bool loadWardrobe = true;
-			[Tooltip("If true and the loaded recipe has shared colors that match any of the active race baseRaceRecipe shared colors these will be loaded")]
+			[Tooltip("If true and the loaded recipe has shared colors that match any of the active race baseRaceRecipe shared colors, these will be loaded")]
 			public bool loadBodyColors = true;
 			public bool loadWardrobeColors = true;
         }
@@ -118,6 +118,7 @@ namespace UMACharacterSystem
 		public string savePath;
 		public string saveFilename;
 		public bool makeUnique;
+		[Tooltip("The default options for when a character is loaded from an UMATextRecipe asset or a recipe string. Can be overidden when calling 'LoadFromRecipe' or 'LoadFromString' directly.")]
 		public LoadOptions loadOptions = new LoadOptions();
 		public Vector3 BoundsOffset;
 
