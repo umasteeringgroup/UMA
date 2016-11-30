@@ -86,6 +86,29 @@ public class TestCustomizerDD : MonoBehaviour
 		set { loadWardrobeColors = value; }
 	}
 
+	//Loading options when Changing Race
+	public bool keepDNA = false;
+	public bool keepWardrobe = false;
+	public bool keepBodyColors = true;
+
+	public bool KeepDNA
+	{
+		get { return keepDNA; }
+		set { keepDNA = value; }
+	}
+	public bool KeepWardrobe
+	{
+		get { return keepWardrobe; }
+		set { keepWardrobe = value; }
+	}
+	public bool KeepBodyColors
+	{
+		get { return keepBodyColors; }
+		set { keepBodyColors = value; }
+	}
+
+
+
 	string thisRace;
 
 	public void Start()
@@ -191,7 +214,7 @@ public class TestCustomizerDD : MonoBehaviour
 		else
 		{
 			//this must be a newly Downloaded Race so just let CharacterAvatar deal with it...
-			Avatar.ChangeRace(racename);
+			Avatar.ChangeRace(racename,keepDNA, keepWardrobe, keepBodyColors);
 		}
 	}
 	public void ChangeRace(int raceId)
@@ -203,7 +226,7 @@ public class TestCustomizerDD : MonoBehaviour
 			thisRace = RaceToSet;
 			//Force CharacterSystem to find the new race
 			UMAContext.Instance.raceLibrary.GetRace(RaceToSet);
-			Avatar.ChangeRace(RaceToSet);
+			Avatar.ChangeRace(RaceToSet, keepDNA, keepWardrobe, keepBodyColors);
 		}
 	}
 
