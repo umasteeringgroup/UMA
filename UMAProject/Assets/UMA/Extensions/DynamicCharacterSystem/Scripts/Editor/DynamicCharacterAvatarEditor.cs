@@ -29,7 +29,7 @@ public partial class DynamicCharacterAvatarEditor : Editor
     protected bool characterAvatarLoadSaveOpen;
     public override void OnInspectorGUI()
     {
-        Editor.DrawPropertiesExcluding(serializedObject, new string[] { "activeRace","preloadWardrobeRecipes", "raceAnimationControllers", "characterColors", "loadFileOnStart", "loadPathType", "loadPath", "loadFilename","waitForBundles", "savePathType", "savePath", "saveFilename", "makeUnique", "BoundsOffset" });
+        Editor.DrawPropertiesExcluding(serializedObject, new string[] { "activeRace","preloadWardrobeRecipes", "raceAnimationControllers", "characterColors", "loadFileOnStart", "loadPathType", "loadPath", "loadFilename","waitForBundles", "savePathType", "savePath", "saveFilename", "makeUnique", "BoundsOffset", "umaRecipe" });
         serializedObject.ApplyModifiedProperties();
         SerializedProperty thisRaceSetter = serializedObject.FindProperty("activeRace");
         Rect currentRect = EditorGUILayout.GetControlRect(false, _racePropDrawer.GetPropertyHeight(thisRaceSetter, GUIContent.none));

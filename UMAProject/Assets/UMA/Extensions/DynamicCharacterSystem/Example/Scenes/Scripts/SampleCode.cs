@@ -18,6 +18,7 @@ public class SampleCode : MonoBehaviour {
     public GameObject ColorsHelpText;
     public GameObject DnaHelpText;
     public GameObject AvatarPrefab;
+    public MouseOrbitImproved Orbiter;
     public SharedColorTable HairColor;
     public SharedColorTable SkinColor;
     public SharedColorTable EyesColor;
@@ -184,6 +185,11 @@ public class SampleCode : MonoBehaviour {
 #endif
         go.transform.localPosition = new Vector3(x, 0, z);
         go.SetActive(true);
+    }
+
+    public void CenterCam()
+    {
+        Orbiter.Reset();
     }
 
     public void RandomClick()
