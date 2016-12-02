@@ -43,6 +43,8 @@ public class MouseOrbitImproved : MonoBehaviour
     bool switchingTarget = false;
     float smoothing = 7f;
 
+
+    float defaultx, defaulty, defaultdistance;
     float x = 0.0f;
     float y = 0.0f;
 
@@ -57,6 +59,9 @@ public class MouseOrbitImproved : MonoBehaviour
         Vector3 angles = transform.eulerAngles;
         x = angles.y;
         y = angles.x;
+        defaultx = x;
+        defaulty = y;
+        defaultdistance = distance;
 
         _rigidbody = GetComponent<Rigidbody>();
 
@@ -65,6 +70,13 @@ public class MouseOrbitImproved : MonoBehaviour
         {
             _rigidbody.freezeRotation = true;
         }
+    }
+
+    public void Reset()
+    {
+        x = defaultx;
+        y = defaulty;
+        distance = defaultdistance;
     }
 
     public void SwitchTarget(Transform _dstTarget)

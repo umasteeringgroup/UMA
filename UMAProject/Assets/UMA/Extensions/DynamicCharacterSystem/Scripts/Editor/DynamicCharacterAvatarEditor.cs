@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
@@ -29,7 +29,7 @@ public partial class DynamicCharacterAvatarEditor : Editor
     protected bool characterAvatarLoadSaveOpen;
     public override void OnInspectorGUI()
     {
-        Editor.DrawPropertiesExcluding(serializedObject, new string[] { "activeRace","preloadWardrobeRecipes", "raceAnimationControllers", "characterColors", "loadFileOnStart", "loadPathType", "loadPath","loadString", "loadFilename",/*"waitForBundles",*/"loadOptions", "savePathType", "savePath", "saveFilename", "makeUnique", "BoundsOffset" });
+        Editor.DrawPropertiesExcluding(serializedObject, new string[] { "activeRace","preloadWardrobeRecipes", "raceAnimationControllers", "characterColors", "loadFileOnStart", "loadPathType", "loadPath", "loadFilename","waitForBundles", "savePathType", "savePath", "saveFilename", "makeUnique", "BoundsOffset", "umaRecipe" });
         serializedObject.ApplyModifiedProperties();
         SerializedProperty thisRaceSetter = serializedObject.FindProperty("activeRace");
         Rect currentRect = EditorGUILayout.GetControlRect(false, _racePropDrawer.GetPropertyHeight(thisRaceSetter, GUIContent.none));
@@ -76,8 +76,7 @@ public partial class DynamicCharacterAvatarEditor : Editor
             SerializedProperty loadPath = serializedObject.FindProperty("loadPath");
             SerializedProperty loadFilename = serializedObject.FindProperty("loadFilename");
             SerializedProperty loadFileOnStart = serializedObject.FindProperty("loadFileOnStart");
-            //SerializedProperty waitForBundles = serializedObject.FindProperty("waitForBundles");
-			SerializedProperty loadOptions = serializedObject.FindProperty("loadOptions");
+            SerializedProperty waitForBundles = serializedObject.FindProperty("waitForBundles");
             SerializedProperty savePathType = serializedObject.FindProperty("savePathType");
             SerializedProperty savePath = serializedObject.FindProperty("savePath");
             SerializedProperty saveFilename = serializedObject.FindProperty("saveFilename");
@@ -102,11 +101,8 @@ public partial class DynamicCharacterAvatarEditor : Editor
             {
                 EditorGUILayout.PropertyField(loadFileOnStart);
             }
-            //EditorGUILayout.PropertyField(waitForBundles);
-			EditorGUI.indentLevel = EditorGUI.indentLevel + 1;
-			EditorGUILayout.PropertyField(loadOptions,true);
-			EditorGUI.indentLevel = EditorGUI.indentLevel - 1;
-			if (Application.isPlaying)
+            EditorGUILayout.PropertyField(waitForBundles);
+            if (Application.isPlaying)
             {
                 if (GUILayout.Button("Perform Load"))
                 {
