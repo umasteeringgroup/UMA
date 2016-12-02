@@ -1623,11 +1623,14 @@ namespace UMACharacterSystem
 			}
 			if (path != "")
 			{
-				if (!Directory.Exists(path))
+				if (savePathType != savePathTypes.FileSystem)
 				{
-					Directory.CreateDirectory(path);
+					if (!Directory.Exists(path))
+					{
+						Directory.CreateDirectory(path);
+					}
 				}
-				if (makeUnique || saveFilename == "")
+				if (makeUnique || (saveFilename == "" && savePathType != savePathTypes.FileSystem))
 				{
 					saveFilename = saveFilename + Guid.NewGuid().ToString();
 				}
@@ -1644,6 +1647,7 @@ namespace UMACharacterSystem
 				var asset = ScriptableObject.CreateInstance<UMATextRecipe>();
 				asset.SaveCharacterSystem(umaData.umaRecipe, context, WardrobeRecipes);
 				FileUtils.WriteAllText(filePath, asset.recipeString);
+				Debug.Log("Recipe saved to " + filePath);
 				if (savePathType == savePathTypes.Resources || savePathType == savePathTypes.streamingAssetsPath)
 				{
 #if UNITY_EDITOR
