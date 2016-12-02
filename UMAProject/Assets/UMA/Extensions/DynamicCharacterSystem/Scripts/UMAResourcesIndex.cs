@@ -133,22 +133,31 @@ namespace UMA
             {
                 var rawData = FileUtils.ReadAllText(dataAssetPath);
                 index = JsonUtility.FromJson<UMAResourcesIndexData>(rawData);
-                return;
+				//this can happen because of the domain reload bug that blanks the index somehow
+				if (index == null)
+				{
+					Debug.Log("Index was blanked after domain reload bug. Rebuilding...");
+					index = new UMAResourcesIndexData();
+					IndexAllResources();
+				}
+				return;
             }
 #else
             TextAsset textIndex = Resources.Load<TextAsset>("UMAResourcesIndex");
             if (textIndex != null)
             {
                 index = JsonUtility.FromJson<UMAResourcesIndexData>(textIndex.text);
-                return;
+				if(index == null)
+					index = new UMAResourcesIndexData();    
+				return;
             }
 			else
 			{
 				Debug.LogWarning("No UMAResourcesIndex.txt file was found. Please ensure you have done 'Create/Update Index' in a UMAResourcesIndex gameobject component before you build.");
 			}
 #endif
-            // Not found anywhere
-            index = new UMAResourcesIndexData();
+			// Not found anywhere
+			index = new UMAResourcesIndexData();
 #if UNITY_EDITOR
             IndexAllResources();
 #endif
