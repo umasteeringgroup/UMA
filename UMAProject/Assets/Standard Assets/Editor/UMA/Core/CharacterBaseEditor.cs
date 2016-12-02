@@ -1145,20 +1145,17 @@ namespace UMAEditor
 		{
 			GUILayout.Label(_description);
 
+			bool endDisabledGroup = false;
+
 			if (_errorMessage != null)
 			{
-				GUI.color = Color.red;
-				GUILayout.Label(_errorMessage);
-
-				if (_recipe != null && GUILayout.Button("Clear"))
-				{
-					_errorMessage = null;
-				}
-				else
-				{
-					return;
-				}
-			}
+				EditorGUILayout.HelpBox("The Recipe Editor could not be drawn correctly because the libraries could not find some of the required Assets. The error message was...", MessageType.Warning);
+				EditorGUILayout.HelpBox(_errorMessage, MessageType.Error);
+				EditorGUILayout.Space();
+				//we dont want the user to edit the recipe at all in this case because if they do it will be saved incompletely 
+				EditorGUI.BeginDisabledGroup(true);
+				endDisabledGroup = true;
+            }
 
 			try
 			{
@@ -1192,6 +1189,10 @@ namespace UMAEditor
 			if (showBaseEditor)
 			{
 				base.OnInspectorGUI();
+			}
+			if (endDisabledGroup)
+			{
+				EditorGUI.EndDisabledGroup();
 			}
 		}
 

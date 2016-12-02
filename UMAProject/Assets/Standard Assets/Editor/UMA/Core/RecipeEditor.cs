@@ -90,12 +90,15 @@ namespace UMAEditor
 					var context = UMAContext.FindInstance() ;
 					if (context == null)
 					{
+						_errorMessage = "Editing a recipe requires a loaded scene with a valid UMAContext.";
+                        Debug.LogWarning(_errorMessage);
 						_recipe = null;
 						return;
 					}
                if (context.raceLibrary == null)
                {
-                  Debug.LogWarning("Editing a recipe requires a loaded scene with a valid UMAContext with RaceLibrary assigned.");
+						_errorMessage = "Editing a recipe requires a loaded scene with a valid UMAContext with RaceLibrary assigned.";
+						Debug.LogWarning(_errorMessage);
                   _recipe = null;
                   return;
                }
