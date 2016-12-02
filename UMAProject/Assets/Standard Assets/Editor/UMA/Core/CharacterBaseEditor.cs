@@ -1201,7 +1201,7 @@ namespace UMAEditor
 		protected virtual void Rebuild()
 		{
 			_rebuildOnLayout = false;
-			if (_recipe != null)
+			if (_recipe != null && dnaEditor != null)
 			{
 				int oldViewDNA = dnaEditor.viewDna;
 				UMAData.UMARecipe oldRecipe = dnaEditor.recipe;
@@ -1218,6 +1218,7 @@ namespace UMAEditor
 		{
 			_toolbarIndex = GUILayout.Toolbar(_toolbarIndex, toolbar);
 			_LastToolBar = _toolbarIndex;
+			if (dnaEditor != null && slotEditor != null)
 			switch (_toolbarIndex)
 			{
 				case 0:
