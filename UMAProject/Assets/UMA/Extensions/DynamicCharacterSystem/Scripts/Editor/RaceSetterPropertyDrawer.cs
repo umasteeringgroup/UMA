@@ -120,7 +120,7 @@ public class RaceSetterPropertyDrawer : PropertyDrawer
 			}
 		}
 		EditorGUI.indentLevel = EditorGUI.indentLevel + 1;
-		keepDNAValue.isExpanded = EditorGUILayout.Foldout(keepDNAValue.isExpanded, new GUIContent("On Change Race","When the race is changed the following rules will be applied by default. You can override these by calling the ChangeRace method and setting the params directly"));
+		keepDNAValue.isExpanded = EditorGUILayout.Foldout(keepDNAValue.isExpanded, new GUIContent("Change Race Options","When the race is changed the following rules will be applied by default. You can override these by calling the ChangeRace method and setting the params directly"));
 		if (keepDNAValue.isExpanded)
 		{
 			
