@@ -1192,7 +1192,13 @@ namespace UMACharacterSystem
 				}
 			}
 			if (recipeString.IndexOf("wardrobeRecipesJson") != -1)//means we have a characterSystemTextRecipe
-			{			
+			{
+				//if we are not waiting for asset bundles we can build the placeholder avatar
+				if (loadOptions.waitForBundles == false)
+				{
+					BuildCharacter(false);
+				}
+				//if we are loading wardrobe override everything thats already there
 				if (loadWardrobe == true)
 				{
 					DynamicAssetLoader.Instance.CurrentBatchID = batchID;
@@ -1215,10 +1221,45 @@ namespace UMACharacterSystem
 						}
 					}
 				}
-				if (loadOptions.waitForBundles == false)
+				//otherwise its a bit more complicated
+				else
 				{
-					BuildCharacter(false);//if we are not waiting for asset bundles we can build the placeholder avatar
+					//if loading this recipe has changed the race the character may end up not wearing anything even if there is defaultWardrobe set up for this race
+					//So we need to check for this by getting the default recipies for this race and overriding those slots if anything in the existing wardrobe is overriding those slots
+					//So get the valid default recipes for this race
+					List<WardrobeRecipeListItem> validDefaultRecipes = preloadWardrobeRecipes.Validate(true, tempRecipe.raceData.raceName);
+					//then add these to a new WardrobeRecipes dict
+					var newWardrobeRecipes = new Dictionary<string, UMATextRecipe>();
+					for (int i = 0; i < validDefaultRecipes.Count; i++)
+					{
+						if (validDefaultRecipes[i]._recipe.compatibleRaces.Contains(tempRecipe.raceData.raceName))
+						{
+							newWardrobeRecipes.Add(validDefaultRecipes[i]._recipe.wardrobeSlot, validDefaultRecipes[i]._recipe);
+						}
+					}
+					//then if there are recipes already check if any of them will match the new race and if they do let them override the defaults
+					if (WardrobeRecipes.Count > 0)
+					{
+						var newNewWardrobeRecipes = new Dictionary<string, UMATextRecipe>(newWardrobeRecipes);
+						foreach (KeyValuePair<string, UMATextRecipe> kp in WardrobeRecipes)
+						{
+							if (kp.Value.compatibleRaces.Contains(tempRecipe.raceData.raceName))
+							{
+								foreach (KeyValuePair<string, UMATextRecipe> kp2 in newWardrobeRecipes)
+								{
+									if (kp2.Value.wardrobeSlot == kp.Value.wardrobeSlot)
+									{
+										newNewWardrobeRecipes[kp2.Key] = kp.Value;
+									}
+								}
+							}
+						}
+						newWardrobeRecipes = newNewWardrobeRecipes;
+					}
+					//then set thos lot to WardrobeRecipes
+					WardrobeRecipes = newWardrobeRecipes;
 				}
+				//all that might have cause downloads
 				//before we can serarate the body colors from everything else we must have the actual base recipe downloaded
 				while (DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
 				{
