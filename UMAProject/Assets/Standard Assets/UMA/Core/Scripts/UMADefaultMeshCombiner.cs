@@ -35,6 +35,8 @@ namespace UMA
 				newGlobal.transform.localRotation = Quaternion.Euler(90f, 90f, 0f);
 
 				GameObject newSMRGO = new GameObject("UMARenderer");
+				//make UMARenderer GO respect the layer setting of the UMAAvatar so cameras can just target this layer
+				newSMRGO.layer = umaData.gameObject.layer;
 				newSMRGO.transform.parent = umaData.transform;
 				newSMRGO.transform.localPosition = Vector3.zero;
 				newSMRGO.transform.localRotation = Quaternion.Euler(0, 0, 0f);
