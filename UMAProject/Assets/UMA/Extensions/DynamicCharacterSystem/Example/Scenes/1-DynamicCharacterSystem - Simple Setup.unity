@@ -340,17 +340,9 @@ Prefab:
       propertyPath: m_RootOrder
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 11485782, guid: dd6cb213acde6d64eba2639afddcff23, type: 2}
-      propertyPath: scaleAdjust
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 11453434, guid: dd6cb213acde6d64eba2639afddcff23, type: 2}
-      propertyPath: atlasResolution
-      value: 2048
-      objectReference: {fileID: 0}
     - target: {fileID: 11453434, guid: dd6cb213acde6d64eba2639afddcff23, type: 2}
       propertyPath: InitialScaleFactor
-      value: 32
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: dd6cb213acde6d64eba2639afddcff23, type: 2}

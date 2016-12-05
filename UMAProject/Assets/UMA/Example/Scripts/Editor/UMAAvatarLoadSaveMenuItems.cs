@@ -39,7 +39,8 @@ public class UMAAvatarLoadSaveMenuItems : Editor
 		}
 	}
 
-	[MenuItem("UMA/Load and Save/Save Selected Avatar(s) asset", priority = 1)]
+ 
+    [MenuItem("UMA/Load and Save/Save Selected Avatar(s) asset", priority = 1)]
 	public static void SaveSelectedAvatarsAsset()
 	{
 		for (int i = 0; i < Selection.gameObjects.Length; i++)
@@ -110,7 +111,8 @@ public class UMAAvatarLoadSaveMenuItems : Editor
 		}
 	}
 
-	[MenuItem("UMA/Load and Save/Load Selected Avatar(s) assets")]
+
+    [MenuItem("UMA/Load and Save/Load Selected Avatar(s) assets")]
 	public static void LoadSelectedAvatarsAsset()
 	{
 		for (int i = 0; i < Selection.gameObjects.Length; i++)
@@ -154,4 +156,56 @@ public class UMAAvatarLoadSaveMenuItems : Editor
 			}
 		}
 	}
+
+
+    [MenuItem("UMA/Load and Save/Save Dynamic Character Avatar to JSON", priority = 1)]
+    public static void SaveSelectedAvatarsJSON()
+    {
+        if (!Application.isPlaying)
+        {
+            EditorUtility.DisplayDialog("Notice", "This function is only available at runtime", "Got it");
+            return;
+        }
+
+        for (int i = 0; i < Selection.gameObjects.Length; i++)
+        {
+            var selectedTransform = Selection.gameObjects[i].transform;
+            var avatar = selectedTransform.GetComponent<UMACharacterSystem.DynamicCharacterAvatar>();
+
+            if (avatar != null)
+            {
+                var path = EditorUtility.SaveFilePanel("Save DynamicCharacterAvatar to JSON Text", "Assets", avatar.name + ".json", "json");
+                if (path.Length != 0)
+                {
+                    string json = avatar.ToJson();
+                    System.IO.File.WriteAllText(path, json);
+                }
+            }
+        }
+    }
+
+    [MenuItem("UMA/Load and Save/Load Dynamic Character Avatar From JSON", priority = 1)]
+    public static void LoadSelectedAvatarsJSON()
+    {
+        if (!Application.isPlaying)
+        {
+            EditorUtility.DisplayDialog("Notice", "This function is only available at runtime", "Got it");
+            return;
+        }
+
+        for (int i = 0; i < Selection.gameObjects.Length; i++)
+        {
+            var selectedTransform = Selection.gameObjects[i].transform;
+            var avatar = selectedTransform.GetComponent<UMACharacterSystem.DynamicCharacterAvatar>();
+
+            if (avatar != null)
+            {
+                var path = EditorUtility.OpenFilePanel("Load DynamicCharacterAvatar from JSON Text", "Assets", "json");
+                if (path.Length != 0)
+                {
+                    avatar.FromJson(System.IO.File.ReadAllText(path));
+                }
+            }
+        }
+    }
 }

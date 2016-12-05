@@ -34,7 +34,16 @@ MonoBehaviour:
     - {r: 0.111, g: 0.055, b: 0.055, a: 0.197}
   - name: Skin
     channelMask:
-    - {r: 0.8014706, g: 0.79179764, b: 0.76021844, a: 1}
+    - {r: 0.833, g: 0.78, b: 0.76021844, a: 1}
+    - {r: 1, g: 1, b: 1, a: 1}
+    - {r: 1, g: 1, b: 1, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0.07352942, g: 0.07298876, b: 0.07298876, a: 0.172}
+  - name: Skin
+    channelMask:
+    - {r: 0.892, g: 0.757, b: 0.64186853, a: 1}
     - {r: 1, g: 1, b: 1, a: 1}
     - {r: 1, g: 1, b: 1, a: 1}
     channelAdditiveMask:
@@ -43,7 +52,7 @@ MonoBehaviour:
     - {r: 0, g: 0, b: 0, a: 0}
   - name: Skin
     channelMask:
-    - {r: 0.8235294, g: 0.78845006, b: 0.64186853, a: 1}
+    - {r: 0.869, g: 0.7608728, b: 0.62251294, a: 1}
     - {r: 1, g: 1, b: 1, a: 1}
     - {r: 1, g: 1, b: 1, a: 1}
     channelAdditiveMask:
@@ -52,7 +61,7 @@ MonoBehaviour:
     - {r: 0, g: 0, b: 0, a: 0}
   - name: Skin
     channelMask:
-    - {r: 0.6691177, g: 0.63735837, b: 0.580558, a: 1}
+    - {r: 0.74264705, g: 0.6603986, b: 0.5133002, a: 1}
     - {r: 1, g: 1, b: 1, a: 1}
     - {r: 1, g: 1, b: 1, a: 1}
     channelAdditiveMask:
@@ -61,7 +70,25 @@ MonoBehaviour:
     - {r: 0, g: 0, b: 0, a: 0}
   - name: Skin
     channelMask:
-    - {r: 0.5661765, g: 0.5512469, b: 0.52454585, a: 1}
+    - {r: 0.414, g: 0.28734636, b: 0.24459344, a: 1}
+    - {r: 1, g: 1, b: 1, a: 1}
+    - {r: 1, g: 1, b: 1, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0.14705884, g: 0.14705884, b: 0.14705884, a: 0.147}
+  - name: Skin
+    channelMask:
+    - {r: 0.21323532, g: 0.14407445, b: 0.09093859, a: 1}
+    - {r: 1, g: 1, b: 1, a: 1}
+    - {r: 1, g: 1, b: 1, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0.1397059, g: 0.1397059, b: 0.1397059, a: 0.128}
+  - name: Skin
+    channelMask:
+    - {r: 1, g: 0.393, b: 0.45588237, a: 1}
     - {r: 1, g: 1, b: 1, a: 1}
     - {r: 1, g: 1, b: 1, a: 1}
     channelAdditiveMask:
@@ -70,7 +97,7 @@ MonoBehaviour:
     - {r: 0, g: 0, b: 0, a: 0}
   - name: Skin
     channelMask:
-    - {r: 0.4044118, g: 0.31827945, b: 0.27951992, a: 1}
+    - {r: 0.627, g: 0.9191176, b: 0.62128997, a: 1}
     - {r: 1, g: 1, b: 1, a: 1}
     - {r: 1, g: 1, b: 1, a: 1}
     channelAdditiveMask:
@@ -79,7 +106,7 @@ MonoBehaviour:
     - {r: 0, g: 0, b: 0, a: 0}
   - name: Skin
     channelMask:
-    - {r: 0.25735295, g: 0.1867245, b: 0.13246109, a: 1}
+    - {r: 0.541, g: 0.7727374, b: 0.9632353, a: 1}
     - {r: 1, g: 1, b: 1, a: 1}
     - {r: 1, g: 1, b: 1, a: 1}
     channelAdditiveMask:
@@ -88,34 +115,7 @@ MonoBehaviour:
     - {r: 0, g: 0, b: 0, a: 0}
   - name: Skin
     channelMask:
-    - {r: 1, g: 0.4044118, b: 0.4044118, a: 1}
-    - {r: 1, g: 1, b: 1, a: 1}
-    - {r: 1, g: 1, b: 1, a: 1}
-    channelAdditiveMask:
-    - {r: 0, g: 0, b: 0, a: 0}
-    - {r: 0, g: 0, b: 0, a: 0}
-    - {r: 0, g: 0, b: 0, a: 0}
-  - name: Skin
-    channelMask:
-    - {r: 0.43928415, g: 0.9191176, b: 0.62128997, a: 1}
-    - {r: 1, g: 1, b: 1, a: 1}
-    - {r: 1, g: 1, b: 1, a: 1}
-    channelAdditiveMask:
-    - {r: 0, g: 0, b: 0, a: 0}
-    - {r: 0, g: 0, b: 0, a: 0}
-    - {r: 0, g: 0, b: 0, a: 0}
-  - name: Skin
-    channelMask:
-    - {r: 0.40235728, g: 0.6923546, b: 0.89705884, a: 1}
-    - {r: 1, g: 1, b: 1, a: 1}
-    - {r: 1, g: 1, b: 1, a: 1}
-    channelAdditiveMask:
-    - {r: 0, g: 0, b: 0, a: 0}
-    - {r: 0, g: 0, b: 0, a: 0}
-    - {r: 0, g: 0, b: 0, a: 0}
-  - name: Skin
-    channelMask:
-    - {r: 0.7747825, g: 0.374, b: 0.89705884, a: 1}
+    - {r: 0.8804436, g: 0.56087804, b: 0.97794116, a: 1}
     - {r: 1, g: 1, b: 1, a: 1}
     - {r: 1, g: 1, b: 1, a: 1}
     channelAdditiveMask:

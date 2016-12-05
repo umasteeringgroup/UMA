@@ -15,8 +15,11 @@ namespace UMA
 		public bool fitAtlas;
 		[HideInInspector]
 		public TextureMerge textureMerge;
+        [Tooltip("Convert this to a normal texture.")]
 		public bool convertRenderTexture;
+        [Tooltip("Create Mipmaps for the generated texture. Checking this is a good idea.")]
 		public bool convertMipMaps;
+        [Tooltip("Initial size of the texture atlas (square)")]
 		public int atlasResolution;
 		/// <summary>
 		/// Adds the dirty UMA to the update queue.

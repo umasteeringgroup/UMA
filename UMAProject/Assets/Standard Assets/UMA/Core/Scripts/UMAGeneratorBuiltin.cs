@@ -23,15 +23,24 @@ namespace UMA
 		private UMAGeneratorCoroutine activeGeneratorCoroutine;
 		public Transform textureMergePrefab;
 		public UMAMeshCombiner meshCombiner;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        [Tooltip("Increase scale factor to decrease texture usage. A value of 1 means the textures will not be downsampled. Values greater than 1 will result in texture savings. The size of the texture is divided by this value.")]
+        public int InitialScaleFactor = 1;
+
 		/// <summary>
 		/// If true, generate in a single update.
 		/// </summary>
+        [Tooltip("Set Fast Generation to true to have the UMA Avatar generated in a single update. Otherwise, generation can span multiple frames.")]
 		public bool fastGeneration = true;
 		private int forceGarbageCollect;
-		/// <summary>
-		/// Number of character updates before triggering System garbage collect.
-		/// </summary>
-		public int garbageCollectionRate = 8;
+        /// <summary>
+        /// Number of character updates before triggering System garbage collect.
+        /// </summary>
+        [Tooltip("Number of character updates before triggering garbage collection.")]
+        public int garbageCollectionRate = 8;
 		private System.Diagnostics.Stopwatch stopWatch = new System.Diagnostics.Stopwatch();
 
 		[NonSerialized]
@@ -160,7 +169,7 @@ namespace UMA
 				textureProcessCoroutine.Prepare(data, this);
 
 				activeGeneratorCoroutine = new UMAGeneratorCoroutine();
-				activeGeneratorCoroutine.Prepare(this, umaData, textureProcessCoroutine, true);
+				activeGeneratorCoroutine.Prepare(this, umaData, textureProcessCoroutine, true, InitialScaleFactor);
 
 				while (!activeGeneratorCoroutine.Work()) ;
 
@@ -197,7 +206,7 @@ namespace UMA
 					textureProcessCoroutine.Prepare(data, this);
 
 					activeGeneratorCoroutine = new UMAGeneratorCoroutine();
-					activeGeneratorCoroutine.Prepare(this, umaData, textureProcessCoroutine, !umaData.isMeshDirty);
+					activeGeneratorCoroutine.Prepare(this, umaData, textureProcessCoroutine, !umaData.isMeshDirty, InitialScaleFactor);
 				}
 
 				bool workDone = activeGeneratorCoroutine.Work();

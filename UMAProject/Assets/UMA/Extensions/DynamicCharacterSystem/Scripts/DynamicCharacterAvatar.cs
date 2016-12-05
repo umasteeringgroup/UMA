@@ -998,6 +998,56 @@ namespace UMACharacterSystem
 #region LoadSaveFunctions
 
 		/// <summary>
+        /// Save the character to a lightweight JSON string
+        /// </summary>
+        /// <param name="IncludeDNA"></param>
+        /// <returns></returns>
+        public string ToJson(bool IncludeDNA = true)
+        {
+            DynamicCharacterModel dcm = new DynamicCharacterModel(this, IncludeDNA);
+            return JsonUtility.ToJson(dcm);
+        }
+
+        /// <summary>
+        /// Load the character from the lightweight JSON string
+        /// </summary>
+        /// <param name="json"></param>
+        public void FromJson(string json)
+        {
+            // Initialize the avatar if it has not already been initialized.
+            if (umaData == null)
+            {
+                Initialize();
+            }
+
+            // Load the model from the JSON
+            DynamicCharacterModel dcm = JsonUtility.FromJson<DynamicCharacterModel>(json);
+            name = dcm.Name;
+            // Load the colors
+            characterColors = dcm.Colors;
+            // Load the race
+            RacePreset = dcm.Race;
+            SetStartingRace();
+            // TODO: could we load at design time without this?
+            // Load the wardrobe
+            DynamicCharacterSystem dcs = context.dynamicCharacterSystem as DynamicCharacterSystem;
+            foreach (string WardrobeRecipeName in dcm.Wardrobe)
+            {
+                SetRecipe(dcs, WardrobeRecipeName);
+            }
+            // Load the DNA
+            umaData.umaRecipe.ClearDna();
+            List<UMADnaBase> packedDna = UMAPackedRecipeBase.UnPackDNA(dcm.DNA);
+
+            foreach (UMADnaBase umd in packedDna)
+            {
+                umaData.umaRecipe.AddDna(umd);
+            }
+            // cleanup
+            BuildCharacter(true);
+        }
+
+		/// <summary>
 		/// Returns the UMATextRecipe string. This includes data about the current wardrobe for the character but is also backwards compatible with Non-DynamicCharacterAvatarUMAs.
 		/// </summary>
 		/// <returns></returns>
@@ -1389,6 +1439,20 @@ namespace UMACharacterSystem
 			Destroy(umaTextRecipe);
 			yield break;//never sure if we need to do this?
 		}
+
+        private void SetRecipe(DynamicCharacterSystem thisDCS, string WardrobeRecipeName)
+        {
+            if (thisDCS.GetRecipe(WardrobeRecipeName) != null)
+            {
+                UMATextRecipe utr = thisDCS.GetRecipe(WardrobeRecipeName);
+                SetSlot(utr);
+                if (DynamicAssetLoader.Instance.downloadingAssetsContains(utr.name))
+                {
+                    requiredAssetsToCheck.Add(utr.name);
+                }
+            }
+        }
+
 		/// <summary>
 		/// Checks what assetBundles (if any) were used in the creation of this Avatar. NOTE: Query this UMA's AssetBundlesUsedbyCharacterUpToDate field before calling this function
 		/// </summary>
@@ -1623,6 +1687,9 @@ namespace UMACharacterSystem
 			yield return null;
 			string path = "";
 			string filePath = "";
+
+            // update the shared colors on the character
+            umaData.umaRecipe.sharedColors = characterColors.ToOverlayColors();
 #if UNITY_EDITOR
 			if (saveFilename == "" && Application.isEditor)
 			{
@@ -2007,10 +2074,29 @@ namespace UMACharacterSystem
 
 			public List<ColorValue> Colors = new List<ColorValue>();
 
+            public OverlayColorData[] ToOverlayColors()
+            {
+                List<OverlayColorData> overlayColors = new List<OverlayColorData>();
+                foreach(ColorValue c in Colors)
+                {
+                    overlayColors.Add(ToOverlayColorData(c));
+                }
+                return overlayColors.ToArray();
+            }
+
 			public ColorValueList()
 			{
 				//
 			}
+
+            public ColorValueList(OverlayColorData[] colors)
+            {
+                foreach(OverlayColorData ocd in colors)
+                {
+                    SetColor(ocd.name, ocd);
+                }
+            }
+
 			public ColorValueList(List<ColorValue> colorValueList)
 			{
 				Colors = colorValueList;
@@ -2038,15 +2124,21 @@ namespace UMACharacterSystem
 				return false;
 			}
 
+            public OverlayColorData ToOverlayColorData(ColorValue cv)
+            {
+
+                OverlayColorData c = new OverlayColorData(3);
+                c.name = cv.Name;
+                c.color = cv.Color;
+                c.channelAdditiveMask[2] = cv.MetallicGloss;
+                return c;
+            }
 			public bool GetColor(string Name, out OverlayColorData c)
 			{
 				ColorValue cv = GetColorValue(Name);
 				if (cv != null)
 				{
-					c = new OverlayColorData(3);
-					c.name = cv.Name;
-					c.color = cv.Color;
-					c.channelAdditiveMask[2] = cv.MetallicGloss;
+                    c = ToOverlayColorData(cv);
 					return true;
 				}
 				c = new OverlayColorData(3);
@@ -2095,6 +2187,36 @@ namespace UMACharacterSystem
 
 #endregion
 	}
+
+    /// <summary>
+    /// Lightweight class for serializing/deserializing and network transmission.
+    /// </summary>
+    [Serializable]
+    public class DynamicCharacterModel
+    {
+        public string Race;
+        public string Name;
+        public List<UMAPackedRecipeBase.UMAPackedDna> DNA;
+        public DynamicCharacterAvatar.ColorValueList Colors;
+        public string[] Wardrobe;
+
+        public DynamicCharacterModel(DynamicCharacterAvatar dca, bool includeDNA)
+        {
+            Colors = dca.characterColors;
+            Race = dca.activeRace.name;
+            Name = dca.name;
+            if (includeDNA)
+            {
+                DNA = UMAPackedRecipeBase.GetPackedDNA(dca.umaData.umaRecipe);
+            }
+            List<string> WardrobeSTR = new List<string>();
+            foreach(UMATextRecipe utr in dca.WardrobeRecipes.Values)
+            {
+                WardrobeSTR.Add(utr.name);
+            }
+            Wardrobe = WardrobeSTR.ToArray();
+        }
+    }
 
     /// <summary>
     /// A DnaSetter is used to set a specific piece of DNA on the avatar

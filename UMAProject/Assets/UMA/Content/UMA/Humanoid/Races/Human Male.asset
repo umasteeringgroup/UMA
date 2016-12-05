@@ -11,7 +11,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83d33591a744673429e1681df5574ac0, type: 3}
   m_Name: Human Male
   m_EditorClassIdentifier: 
-  baseRaceRecipe: {fileID: 11400000, guid: 137e978d950d24974999ac8e4307e298, type: 2}
+  baseRaceRecipe: {fileID: 11400000, guid: 5d792fc321b26d84c8402ae347b28062, type: 2}
   wardrobeSlots:
   - None
   - Face

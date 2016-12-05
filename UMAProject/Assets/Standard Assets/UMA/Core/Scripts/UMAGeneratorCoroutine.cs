@@ -19,18 +19,19 @@ namespace UMA
         UMAData umaData;
         Texture[] backUpTexture;
         bool updateMaterialList;
-
+        int scaleFactor;
         MaterialDefinitionComparer comparer = new MaterialDefinitionComparer();
         List<UMAData.GeneratedMaterial> generatedMaterials;
         List<UMAData.GeneratedMaterial> atlassedMaterials = new List<UMAData.GeneratedMaterial>(20);
         Dictionary<List<OverlayData>, UMAData.GeneratedMaterial> generatedMaterialLookup;
 
-        public void Prepare(UMAGeneratorBase _umaGenerator, UMAData _umaData, TextureProcessBaseCoroutine textureProcessCoroutine, bool updateMaterialList)
+        public void Prepare(UMAGeneratorBase _umaGenerator, UMAData _umaData, TextureProcessBaseCoroutine textureProcessCoroutine, bool updateMaterialList, int InitialScaleFactor)
         {
             umaGenerator = _umaGenerator;
             umaData = _umaData;
             this.textureProcessCoroutine = textureProcessCoroutine;
             this.updateMaterialList = updateMaterialList;
+            scaleFactor = InitialScaleFactor;
         }
 
         private UMAData.GeneratedMaterial FindOrCreateGeneratedMaterial(UMAMaterial umaMaterial)
@@ -220,11 +221,12 @@ namespace UMA
 
         private void GenerateAtlasData()
         {
+            float StartScale = 1.0f / (float)scaleFactor;
             for (int i = 0; i < atlassedMaterials.Count; i++)
             {
                 var generatedMaterial = atlassedMaterials[i];
                 generatedMaterial.materialFragments.Sort(comparer);
-                generatedMaterial.resolutionScale = 1f;
+                generatedMaterial.resolutionScale = StartScale;
                 generatedMaterial.cropResolution = new Vector2(umaGenerator.atlasResolution, umaGenerator.atlasResolution);
                 while (!CalculateRects(generatedMaterial))
                 {
