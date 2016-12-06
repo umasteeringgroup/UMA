@@ -2209,6 +2209,11 @@ namespace UMACharacterSystem
             {
                 DNA = UMAPackedRecipeBase.GetPackedDNA(dca.umaData.umaRecipe);
             }
+            else
+            {
+                // just generate an empty DNA
+                DNA = new List<UMAPackedRecipeBase.UMAPackedDna>();
+            }
             List<string> WardrobeSTR = new List<string>();
             foreach(UMATextRecipe utr in dca.WardrobeRecipes.Values)
             {
