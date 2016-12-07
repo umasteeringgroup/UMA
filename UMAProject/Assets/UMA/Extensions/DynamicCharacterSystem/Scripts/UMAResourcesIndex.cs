@@ -48,9 +48,10 @@ namespace UMA
 			else if (Instance != this)
 			{
 				if (Instance.makePersistent && Application.isPlaying)
-					Destroy(gameObject);
-				else
-					Instance = this;
+                {
+                    Destroy(Instance.gameObject);
+                    Instance = this;
+                }
 			}
 			else if (Instance == this)//OnAfterDeserialize() gets called in the editor but doesn't do anything with the makePersistent value
 			{

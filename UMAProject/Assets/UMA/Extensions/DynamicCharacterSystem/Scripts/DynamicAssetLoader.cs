@@ -838,7 +838,10 @@ namespace UMA
 					}
                     if (found)
                     {
-                        UMAResourcesIndex.Instance.Save();
+                        if (UMAResourcesIndex.Instance != null)
+                        {
+                            UMAResourcesIndex.Instance.Save();
+                        }
                     }
 				}
 			}
