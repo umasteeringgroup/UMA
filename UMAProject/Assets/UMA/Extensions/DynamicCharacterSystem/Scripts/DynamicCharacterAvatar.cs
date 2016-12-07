@@ -312,7 +312,7 @@ namespace UMACharacterSystem
 				if (requiredAssetsToCheck.Count > 0)
 					mayRequireDownloads = true;
 			}
-			if(!loadOptions.waitForBundles && requiredAssetsToCheck.Count > 0)
+			if(!loadOptions.waitForBundles && DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
 			{
 				BuildCharacter(false);//if we are not waiting for bundles before building, build the placeholder avatar now
 			}
@@ -945,7 +945,7 @@ namespace UMACharacterSystem
 					DynamicAssetLoader.Instance.CurrentBatchID = batchID;
 					LoadDefaultWardrobe(true);//load defaultWardrobe will add anything it downloads to requiredAssetsToCheck
 				}
-				if(!loadOptions.waitForBundles && requiredAssetsToCheck.Count > 0)
+				if(!loadOptions.waitForBundles && DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
 				{
 					BuildCharacter(false);//if we are not waiting for bundles before building, build the placeholder avatar now
 				}
@@ -1242,7 +1242,7 @@ namespace UMACharacterSystem
 			if (recipeString.IndexOf("wardrobeRecipesJson") != -1)//means we have a characterSystemTextRecipe
 			{
 				//if we are not waiting for asset bundles we can build the placeholder avatar
-				if (loadOptions.waitForBundles == false)
+				if (loadOptions.waitForBundles == false && DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
 				{
 					BuildCharacter(false);
 				}
@@ -1378,8 +1378,8 @@ namespace UMACharacterSystem
 			else
 			{
 				Debug.Log("Recipe was not DCS- performing standard load");
-				//old style recipes may still have had assets in an asset bundle so...
-				if (loadOptions.waitForBundles == false)
+				//old style recipes may still have had assets in an asset bundle. So if we are showing a plaeholder rather than waiting...
+				if (loadOptions.waitForBundles == false && DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
 				{
 					BuildCharacter(false);
 				}
