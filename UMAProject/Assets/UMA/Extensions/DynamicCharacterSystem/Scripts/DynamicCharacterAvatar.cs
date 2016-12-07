@@ -1295,7 +1295,6 @@ namespace UMACharacterSystem
 					{
 						//No existing clothing fitted so get the valid default recipes for this race
 						List<WardrobeRecipeListItem> validDefaultRecipes = preloadWardrobeRecipes.Validate(true, raceToCheck);
-						var compatibleDefaultRecipes = new Dictionary<string, UMATextRecipe>();
 						for (int i = 0; i < validDefaultRecipes.Count; i++)
 						{
 							if (validDefaultRecipes[i]._recipe.compatibleRaces.Contains(raceToCheck))
