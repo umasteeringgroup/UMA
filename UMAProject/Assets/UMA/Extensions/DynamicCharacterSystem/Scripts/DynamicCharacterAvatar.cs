@@ -1227,12 +1227,10 @@ namespace UMACharacterSystem
 			{
 				activeRace.name = tempRecipe.raceData.raceName;
 				activeRace.data = tempRecipe.raceData;
-				if (loadOptions.waitForBundles == false)
-				{
-					if (DynamicAssetLoader.Instance.downloadingAssetsContains(activeRace.name)){
+
+				if (DynamicAssetLoader.Instance.downloadingAssetsContains(activeRace.name)){
 						requiredAssetsToCheck.Add(activeRace.name);
-					}
-                }
+
 				DynamicAssetLoader.Instance.CurrentBatchID = batchID;
 				SetStartingRace();
 				//If the UmaRecipe is still null, bail - we cant go any further (and SetStartingRace will have shown an error)
