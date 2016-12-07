@@ -1228,8 +1228,8 @@ namespace UMACharacterSystem
 				activeRace.name = tempRecipe.raceData.raceName;
 				activeRace.data = tempRecipe.raceData;
 
-				if (DynamicAssetLoader.Instance.downloadingAssetsContains(activeRace.name)){
-						requiredAssetsToCheck.Add(activeRace.name);
+				if (DynamicAssetLoader.Instance.downloadingAssetsContains(activeRace.name))
+					requiredAssetsToCheck.Add(activeRace.name);
 
 				DynamicAssetLoader.Instance.CurrentBatchID = batchID;
 				SetStartingRace();
@@ -1249,7 +1249,6 @@ namespace UMACharacterSystem
 				//if we are loading wardrobe override everything thats already there
 				if (loadWardrobe == true)
 				{
-					DynamicAssetLoader.Instance.CurrentBatchID = batchID;
 					ClearSlots();
 					if (tempRecipe.wardrobeRecipes.Count > 0)
 					{
