@@ -151,7 +151,7 @@ namespace UMACharacterSystem
             }
         }
 
-        public List<string> CurrentWardrobeSlots
+		public List<string> CurrentWardrobeSlots
         {
             get
             {
@@ -195,14 +195,15 @@ namespace UMACharacterSystem
 			{
 				raceAnimationControllers.defaultAnimationController = animationController;
 			}
-			if ((loadFilename != "" && loadFileOnStart) || (loadPathType == loadPathTypes.String))
+			//We still need to run this from the coroutine since we cannot get anthing until DynamicAssetLoader is ready- if using asset bundles this will be once the index has downloaded otherwise immediate.
+			/*if ((loadFilename != "" && loadFileOnStart) || (loadPathType == loadPathTypes.String))
 			{
 				DoLoad();
 			}
 			else
-			{
-				StartCoroutine(StartStartCoroutine());
-			}
+			{*/
+				StartCoroutine(StartCO());
+			//}
 		}
 
 		public void Update()
@@ -227,7 +228,7 @@ namespace UMACharacterSystem
 					}
 				}
 			}
-			//This hardly ever happens now since the changeRace/LoadFromString/StartStarCoRoutine methods all yield themselves until asset bundles have been downloaded
+			//This hardly ever happens now since the changeRace/LoadFromString/StartCO methods all yield themselves until asset bundles have been downloaded
 			if (requiredAssetsToCheck.Count > 0 && loadOptions.waitForBundles == false)
 			{
 				if (DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck) == false)
@@ -238,83 +239,91 @@ namespace UMACharacterSystem
 					umaRecipe = activeRace.data.baseRaceRecipe;
 					UpdateSetSlots();
 					//actually we dont know in this case if we are restoring DNA or not
-					//and a placeholder race should only have been used if loadOptions.waitForBundles is false
+					//but a placeholder race should only have been used if loadOptions.waitForBundles is false
+					//so we can atleast assume we dont want to restore the dna from that
 					BuildCharacter(loadOptions.waitForBundles);
 				}
 			}
 		}
 
-		IEnumerator StartStartCoroutine()
+		IEnumerator StartCO()
 		{
-			if(umaRecipe != null)
+			//we cannot do anthing until this is DynamicAssetLoader.Instance.isInitialized, otherwise the dynamicLibraries will not find anything from AssetBundles
+			//if you are not using assetbundles, this wait will be non-existant otherwise it will be until the AssetBundleIndex has downloaded
+			while (!DynamicAssetLoader.Instance.isInitialized)
+			{
+				yield return null;
+			}
+			//because external scripts may have also been waiting for DynamicAssetLoader before doing things they needed to do to set up this avatar (check if something will be in the libraries for example)
+			//and because we need to be sure that the uma is generated after any such things have happenned we need to also yield one frame here. 
+			//Please be sure to subscribe to CharacterCreated when want to do something immediately after the Avatar is created.
+			yield return null;
+			//if there was a file set to load or a recipe string set directly...
+			if ((loadFilename != "" && loadFileOnStart) || (loadPathType == loadPathTypes.String))
+			{
+				DoLoad();
+				yield break;
+			}
+			//if there was a recipe set in the old style UMARecipe field...
+			if (umaRecipe != null)
 			{
 				StartCoroutine(LoadFromRecipeCO());
 				yield break;
 			}
-			bool mayRequireDownloads = false;
-			//calling activeRace.data checks the actual RaceLibrary to see if the raceData is in there since in the editor the asset may still be there even if it shouldn't be (i.e. is in an asset bundle)
-
-			var batchID = DynamicAssetLoader.Instance.GenerateBatchID();
-			if (activeRace.data == null)//activeRace.data will get the asset from the library OR add it from Resources so if it's null it means its going to be downloaded from an asset bundle OR is just wrong
+			//bool mayRequireDownloads = false;
+			
+			//calling activeRace.data checks the actual RaceLibrary to see if the raceData is in there since in the editor the asset may still be refrenced directly if it shouldn't be (i.e. its in an asset bundle)
+			if (activeRace.data == null)//activeRace.data will get the asset from the library OR add it from Resources but if it in an assetBundle it wont trigger a download
 			{
-				mayRequireDownloads = true;//but we dont know if its wrong until the index is downloaded so we have to wait for that
-				if (DynamicAssetLoader.Instance.downloadingAssetsContains(activeRace.name))
-				{
-					requiredAssetsToCheck.Add(activeRace.name);
-				}
+				//mayRequireDownloads = true;//but we dont know if its wrong until the index is downloaded so we have to wait for that
 			}
-			if (mayRequireDownloads)
+			//if (mayRequireDownloads)
+			//{
+			//done above now
+			/*while (!DynamicAssetLoader.Instance.isInitialized)
 			{
-				while (!DynamicAssetLoader.Instance.isInitialized)
-				{
-					yield return null;
-				}
-				//if we are in the editor SimulateOverride will becme true if we go into SimulationMode. This happens when the localAssetBundleServer is off
-				if (AssetBundleManager.SimulateOverride == true)
-				{
-					mayRequireDownloads = false;
-				}
-			}
+				yield return null;
+			}*/
+			//}
 			if (umaRecipe == null)
 			{
-				DynamicAssetLoader.Instance.CurrentBatchID = batchID;
 				SetStartingRace();
 				//If the UmaRecipe is still null, bail - we cant go any further (and SetStartingRace will have shown an error)
 				if (umaRecipe == null)
 				{
 					yield break;
 				}
-				if (requiredAssetsToCheck.Count > 0)
-					mayRequireDownloads = true;
+				/*if (requiredAssetsToCheck.Count > 0)
+					mayRequireDownloads = true;*/
 			}
-			if (preloadWardrobeRecipes.loadDefaultRecipes && preloadWardrobeRecipes.recipes.Count > 0 /*&& umaRecipeWasNull*/)
+			if (DynamicAssetLoader.Instance.downloadingAssetsContains(activeRace.name))
 			{
-				DynamicAssetLoader.Instance.CurrentBatchID = batchID;
+				requiredAssetsToCheck.Add(activeRace.name);
+			}
+			if (preloadWardrobeRecipes.loadDefaultRecipes && preloadWardrobeRecipes.recipes.Count > 0 )
+			{
 				LoadDefaultWardrobe(true);//this may cause downloads to happen
-				if (requiredAssetsToCheck.Count > 0)
-					mayRequireDownloads = true;
+				/*if (requiredAssetsToCheck.Count > 0)
+					mayRequireDownloads = true;*/
 			}
 			if (raceAnimationControllers.animators.Count > 0)
 			{
-				DynamicAssetLoader.Instance.CurrentBatchID = batchID;
 				var animators = raceAnimationControllers.Validate();//this may cause downloads to happen
 				if (animators.Count > 0)
 				{
 					for (int i = 0; i < animators.Count; i++)
 					{
-						if (!requiredAssetsToCheck.Contains(animators[i]))
-						{
-							if (DynamicAssetLoader.Instance.downloadingAssetsContains(animators[i]))
-								requiredAssetsToCheck.Add(animators[i]);
-						}
+						if (DynamicAssetLoader.Instance.downloadingAssetsContains(animators[i]))
+							requiredAssetsToCheck.Add(animators[i]);
 					}
 				}
-				if (requiredAssetsToCheck.Count > 0)
-					mayRequireDownloads = true;
+				/*if (requiredAssetsToCheck.Count > 0)
+					mayRequireDownloads = true;*/
 			}
-			if(!loadOptions.waitForBundles && DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
+			//if we are not waiting for bundles before building, build the placeholder avatar now
+			if (!loadOptions.waitForBundles && DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
 			{
-				BuildCharacter(false);//if we are not waiting for bundles before building, build the placeholder avatar now
+				BuildCharacter(false);
 			}
 			if (requiredAssetsToCheck.Count > 0)
 			{
@@ -324,14 +333,16 @@ namespace UMACharacterSystem
 				}
 			}
 			requiredAssetsToCheck.Clear();
+			//we do these extra steps here to replace any refrences that were set pointing to a placeholder asset (because the asset was donloading) to now point to the downloaded asset
 			activeRace.data = context.raceLibrary.GetRace(activeRace.name);
 			umaRecipe = activeRace.data.baseRaceRecipe;
 			UpdateSetSlots();
+			//Now we have everything, lets go!
 			BuildCharacter(false);
 		}
 
 		/// <summary>
-		/// Sets the starting race of the avatar based on the value of the 'activeRace' dropdown
+		/// Sets the starting race of the avatar based on the value of the 'activeRace' dropdown. If it is in an assetbundle it will be downloaded and the placeholder race will be returned while the asset is downloading.
 		/// </summary>
 		void SetStartingRace()
 		{
@@ -627,20 +638,14 @@ namespace UMACharacterSystem
 				}
 			}
 
-			// Load all the recipes
-			/*if (!flagForReload)
-            {
-                if (flagForRebuild)
-                {
-                    flagForReload = true;
-                    flagForRebuild = false;
-                }*/
 			//set the expression set to match the new character- needs to happen before load...
 			if (activeRace.racedata != null && !RestoreDNA)
 			{
 				SetAnimatorController();
 				SetExpressionSet();
 			}
+
+			// Load all the recipes
 			Load(umaRecipe, Recipes.ToArray());
 
 			// Add saved DNA
@@ -653,14 +658,6 @@ namespace UMACharacterSystem
 				}
 			}
 			return null;
-			//}
-			/*else
-            {
-                //CONFIRM THIS IS NOT NEEDED ANY MORE
-                flagForReload = false;
-                //this is used by the load function in the case where an umaRecipe is directly defined since in this case we dont know what the race of that recipe is until its loaded
-                return Recipes.ToArray();
-            }*/
 		}
 
 		void RemoveHiddenSlots()
@@ -923,7 +920,6 @@ namespace UMACharacterSystem
 					yield break;
 				}
 			}
-			var batchID = DynamicAssetLoader.Instance.GenerateBatchID();
 			activeRace.name = race.raceName;
 			activeRace.data = race;
 			if (DynamicAssetLoader.Instance.downloadingAssetsContains(race.raceName))
@@ -942,7 +938,6 @@ namespace UMACharacterSystem
 				if (keepWardrobe == false || (WardrobeRecipes.Count == 0 && preloadWardrobeRecipes.loadDefaultRecipes == true))
 				{
 					ClearSlots();
-					DynamicAssetLoader.Instance.CurrentBatchID = batchID;
 					LoadDefaultWardrobe(true);//load defaultWardrobe will add anything it downloads to requiredAssetsToCheck
 				}
 				if(!loadOptions.waitForBundles && DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
@@ -958,7 +953,6 @@ namespace UMACharacterSystem
 				umaRecipe = activeRace.data.baseRaceRecipe;
 				if(keepWardrobe == false)
 					UpdateSetSlots();
-
 				//if we are not keeping the body colors that have been set we reset them to the colors set in the avatar component itself
 				if (keepBodyColors == false)
 				{
@@ -1093,14 +1087,6 @@ namespace UMACharacterSystem
 
 			umaRecipe.Load(umaData.umaRecipe, context);
 
-			/*if (flagForReload)
-            {
-                activeRace.data = umaData.umaRecipe.raceData;
-                activeRace.name = activeRace.racedata.raceName;
-                SetAnimatorController();
-                umaAdditionalSerializedRecipes = BuildCharacter();
-            }*/
-
 			umaData.AddAdditionalRecipes(umaAdditionalRecipes, context);
 			AddAdditionalSerializedRecipes(umaAdditionalSerializedRecipes);
 
@@ -1150,6 +1136,7 @@ namespace UMACharacterSystem
 			StartCoroutine(LoadFromRecipeCO(loadRace,loadDNA, loadWardrobe, loadBodyColors, loadWardrobeColors));
 		}
 
+		//shouldn't need to do this now because the startCO method does it
 		IEnumerator LoadFromRecipeCO(bool? loadRace = null, bool? loadDNA = null, bool? loadWardrobe = null, bool? loadBodyColors = null, bool? loadWardrobeColors = null)
 		{
 			while (!DynamicAssetLoader.Instance.isInitialized)
@@ -1191,7 +1178,7 @@ namespace UMACharacterSystem
 			var umaTextRecipe = ScriptableObject.CreateInstance<UMATextRecipe>();
 			umaTextRecipe.name = loadFilename;
 			umaTextRecipe.recipeString = recipeString;
-			var batchID = DynamicAssetLoader.Instance.GenerateBatchID();
+
 			UMADataCharacterSystem.UMACharacterSystemRecipe tempRecipe = new UMADataCharacterSystem.UMACharacterSystemRecipe();
 			var prevDna = new UMADnaBase[0];
 			//Before we actually call Load we need to know the race so that any wardrobe recipes can be assigned to it in CharacterSystem.
@@ -1231,7 +1218,6 @@ namespace UMACharacterSystem
 				if (DynamicAssetLoader.Instance.downloadingAssetsContains(activeRace.name))
 					requiredAssetsToCheck.Add(activeRace.name);
 
-				DynamicAssetLoader.Instance.CurrentBatchID = batchID;
 				SetStartingRace();
 				//If the UmaRecipe is still null, bail - we cant go any further (and SetStartingRace will have shown an error)
 				if (umaRecipe == null)
@@ -1989,7 +1975,7 @@ namespace UMACharacterSystem
 				DynamicAssetLoader.Instance.AddAssets<RuntimeAnimatorController>(ref assetBundlesUsedDict, true, true, false, "", "", null, animatorName, SetFoundAnimators);
 
 			}
-			//This function is probablt redundant since animators from this class should never cause assetbundles to download
+			//This function is probably redundant since animators from this class should never cause assetbundles to download
 			//and therefore there should never be any 'temp' assets that need to be replaced
 			public void SetAnimator(RuntimeAnimatorController controller)
 			{
