@@ -11,9 +11,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9448878e2e40f1a4c9f8fd2b56832b13, type: 3}
   m_Name: Eye1
   m_EditorClassIdentifier: 
-  recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"MaleEyes","scale":100,"copyIdx":-1,"overlays":[{"id":"Alligator_eye_adjust","colorIdx":0,"rect":[32,32,64,64]}]}],"colors":[],"fColors":[{"name":"Eyes","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"HumanMale","packedDna":[]}'
+  recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"MaleEyes","scale":100,"copyIdx":-1,"overlays":[{"id":"Alligator_eye_adjust","colorIdx":0,"rect":[64,64,128,128]}]}],"colors":[],"fColors":[{"name":"Eyes","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"HumanMale","packedDna":[]}'
   recipeType: Wardrobe
   Sex: 0
+  DisplayValue: Alligator Eyes
   compatibleRaces:
   - HumanMale
   wardrobeRecipeThumbs:

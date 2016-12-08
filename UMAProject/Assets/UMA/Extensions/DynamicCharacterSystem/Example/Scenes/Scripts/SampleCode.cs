@@ -233,4 +233,9 @@ public class SampleCode : MonoBehaviour {
         Avatar.BuildCharacter();
         Avatar.ForceUpdate(true,true,true);
     }
+
+    public void LinkToAssets()
+    {
+        Application.OpenURL("https://www.assetstore.unity3d.com/en/#!/search/page=1/sortby=popularity/query=publisher:5619");
+    }
 }

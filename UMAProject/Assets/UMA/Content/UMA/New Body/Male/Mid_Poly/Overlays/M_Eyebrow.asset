@@ -12,15 +12,18 @@ MonoBehaviour:
   m_Name: M_Eyebrow
   m_EditorClassIdentifier: 
   overlayName: M_Eyebrow
+  overlayType: 0
   rect:
     serializedVersion: 2
     x: 0
     y: 0
     width: 0
     height: 0
+  alphaMask: {fileID: 0}
   textureList:
   - {fileID: 2800000, guid: 033b20b2f16543449a2e6636a66e6dc1, type: 3}
   - {fileID: 2800000, guid: 3b39ab24062e3f74082e45caa31b78d6, type: 3}
   - {fileID: 2800000, guid: 19c95d72fb241f848b9d3097557edbaa, type: 3}
   tags: []
-  material: {fileID: 11400000, guid: 5b112eb59f279ce49a718737b5dfde81, type: 2}
+  material: {fileID: 11400000, guid: c5c1d525787351f44b5b0291bc2cfb2c, type: 2}
+  OcclusionEntries: []
