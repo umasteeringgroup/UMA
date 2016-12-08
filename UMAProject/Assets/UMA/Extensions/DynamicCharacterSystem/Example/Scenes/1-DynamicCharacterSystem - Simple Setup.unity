@@ -344,6 +344,10 @@ Prefab:
       propertyPath: InitialScaleFactor
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 11456608, guid: dd6cb213acde6d64eba2639afddcff23, type: 2}
+      propertyPath: enableDynamicIndexing
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: dd6cb213acde6d64eba2639afddcff23, type: 2}
   m_IsPrefabParent: 0
@@ -2512,6 +2516,15 @@ Prefab:
       propertyPath: m_RootOrder
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 11499482, guid: 7f689a8cb2842194d800a9947e0373ad, type: 2}
+      propertyPath: activeRace.name
+      value: HumanFemale
+      objectReference: {fileID: 0}
+    - target: {fileID: 11499482, guid: 7f689a8cb2842194d800a9947e0373ad, type: 2}
+      propertyPath: activeRace._data
+      value: 
+      objectReference: {fileID: 11400000, guid: f8fea6f0ee17b3f42a4ae6cfb627bab3,
+        type: 2}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 7f689a8cb2842194d800a9947e0373ad, type: 2}
   m_IsPrefabParent: 0
