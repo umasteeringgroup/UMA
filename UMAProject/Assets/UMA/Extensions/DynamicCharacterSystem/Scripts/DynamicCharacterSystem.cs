@@ -156,8 +156,12 @@ namespace UMACharacterSystem
 		{
             // JRRM - find slowdown
 			var assetBundleToGather = bundleToGather != "" ? bundleToGather : assetBundlesForCharactersToSearch;
-           if (DynamicAssetLoader.Instance != null)
-			    DynamicAssetLoader.Instance.AddAssets<TextAsset>(ref assetBundlesUsedDict, dynamicallyAddFromResources, dynamicallyAddFromAssetBundles, downloadAssetsEnabled, assetBundleToGather, resourcesCharactersFolder, null, filename, AddCharacterRecipes);
+			//DCS may do this before DAL has downloaded the AssetBundleIndex so in that case we want to turn 'downloadAssetsEnabled' off 
+			if (DynamicAssetLoader.Instance != null)
+			{
+				bool downloadAssetsEnabledNow = DynamicAssetLoader.Instance.isInitialized ? downloadAssetsEnabled : false;
+                DynamicAssetLoader.Instance.AddAssets<TextAsset>(ref assetBundlesUsedDict, dynamicallyAddFromResources, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesCharactersFolder, null, filename, AddCharacterRecipes);
+			}
 		}
 
 		private void AddCharacterRecipes(TextAsset[] characterRecipes)
@@ -169,7 +173,7 @@ namespace UMACharacterSystem
 				else
 					CharacterRecipes[characterRecipe.name] = characterRecipe.text;
 			}
-			//This doesn't actually seem to do anything apart from slow things down
+			//This doesn't actually seem to do anything apart from slow things down- maybe we can hook into the UMAGarbage collection rate and do this at the same time? Or just after?
 			//StartCoroutine(CleanFilesFromResourcesAndBundles());
 		}
 
@@ -177,8 +181,12 @@ namespace UMACharacterSystem
 		{
             // JRRM
 			var assetBundleToGather = bundleToGather != "" ? bundleToGather : assetBundlesForRecipesToSearch;
-            if (DynamicAssetLoader.Instance != null)
-			    DynamicAssetLoader.Instance.AddAssets<UMATextRecipe>(ref assetBundlesUsedDict, dynamicallyAddFromResources, dynamicallyAddFromAssetBundles, downloadAssetsEnabled, assetBundleToGather, resourcesRecipesFolder, null, filename, AddRecipesFromAB);
+			//DCS may do this before DAL has downloaded the AssetBundleIndex so in that case we want to turn 'downloadAssetsEnabled' off 
+			if (DynamicAssetLoader.Instance != null)
+			{
+				bool downloadAssetsEnabledNow = DynamicAssetLoader.Instance.isInitialized ? downloadAssetsEnabled : false;
+				DynamicAssetLoader.Instance.AddAssets<UMATextRecipe>(ref assetBundlesUsedDict, dynamicallyAddFromResources, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesRecipesFolder, null, filename, AddRecipesFromAB);
+			}
 		}
 
 		/*IEnumerator CleanFilesFromResourcesAndBundles()
