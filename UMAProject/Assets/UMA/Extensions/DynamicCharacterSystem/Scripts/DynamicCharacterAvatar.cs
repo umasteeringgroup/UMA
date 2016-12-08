@@ -1577,7 +1577,6 @@ namespace UMACharacterSystem
 		}
 		IEnumerator DoLoadCoroutine()
 		{
-			yield return null;
 			string path = "";
 			string recipeString = "";
 
