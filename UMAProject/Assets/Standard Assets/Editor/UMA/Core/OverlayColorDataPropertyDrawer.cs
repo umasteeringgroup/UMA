@@ -39,7 +39,12 @@ namespace UMAEditor
 			EditorGUILayout.Space();
 		}
 
-		private Color ToColor(Vector4 colorVector)
+        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+        {
+            return -2.0f;
+        }
+
+        private Color ToColor(Vector4 colorVector)
 		{
 			return new Color(colorVector.x, colorVector.y, colorVector.z, colorVector.w);
 		}
