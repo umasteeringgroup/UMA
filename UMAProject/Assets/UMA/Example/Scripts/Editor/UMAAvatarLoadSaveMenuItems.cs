@@ -1,10 +1,102 @@
 using UnityEngine;
 using UnityEditor;
 using UMA;
+using System;
 
 public class UMAAvatarLoadSaveMenuItems : Editor
 {
-	[MenuItem("UMA/Load and Save/Save Selected Avatar(s) Txt", priority=1)]
+    [MenuItem("UMA/Runtime/Save Selected Avatars generated textures to PNG")]
+    public static void SaveSelectedAvatarsPNG()
+    {
+        if (!Application.isPlaying)
+        {
+            EditorUtility.DisplayDialog("Notice", "This function is only available at runtime", "Got it");
+            return;
+        }
+
+        if (Selection.gameObjects.Length != 1)
+        {
+            EditorUtility.DisplayDialog("Notice", "Only one Avatar can be selected.", "OK");
+            return;
+        }
+
+        var selectedTransform = Selection.gameObjects[0].transform;
+        var avatar = selectedTransform.GetComponent<UMAAvatarBase>();
+
+        if (avatar == null)
+        {
+            EditorUtility.DisplayDialog("Notice", "An Avatar must be selected to use this function", "OK");
+            return;
+        }
+
+        SkinnedMeshRenderer smr = avatar.gameObject.GetComponentInChildren<SkinnedMeshRenderer>();
+        if (smr == null) 
+        {
+            EditorUtility.DisplayDialog("Warning", "Could not find SkinnedMeshRenderer in Avatar hierarchy", "OK");
+            return;
+        }
+
+        string path = EditorUtility.SaveFilePanelInProject("Save Texture(s)", "Texture.png", "png", "Base Filename to save PNG files to.");
+        if (!string.IsNullOrEmpty(path))
+        {
+            string basename = System.IO.Path.GetFileNameWithoutExtension(path);
+            string pathname = System.IO.Path.GetDirectoryName(path);
+            // save the diffuse texture
+            for (int i=0;i<smr.materials.Length;i++)
+            {
+                string PathBase = System.IO.Path.Combine(pathname, basename + "_material_" + i.ToString());
+                string DiffuseName = PathBase + "_Diffuse.PNG";
+                SaveTexture(smr.materials[i].GetTexture("_MainTex"), DiffuseName);
+            }
+        }
+    }
+
+    private static void SaveTexture(Texture texture, string diffuseName)
+    {
+        if (texture is RenderTexture)
+        {
+            SaveRenderTexture(texture as RenderTexture, diffuseName);
+            return;
+        }
+        else if (texture is Texture2D)
+        {
+            SaveTexture2D(texture as Texture2D, diffuseName);
+            return;
+        }
+        EditorUtility.DisplayDialog("Error", "Texture is not RenderTexture or Texture2D", "OK");
+    }
+
+    static public Texture2D GetRTPixels(RenderTexture rt)
+    {
+
+        // Remember currently active render texture
+        RenderTexture currentActiveRT = RenderTexture.active;
+
+        // Set the supplied RenderTexture as the active one
+        RenderTexture.active = rt;
+
+        // Create a new Texture2D and read the RenderTexture image into it
+        Texture2D tex = new Texture2D(rt.width, rt.height);
+        tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
+
+        // Restorie previously active render texture
+        RenderTexture.active = currentActiveRT;
+        return tex;
+    }
+
+    private static void SaveRenderTexture(RenderTexture texture, string textureName)
+    {
+        Texture2D tex = GetRTPixels(texture);
+        SaveTexture2D(tex, textureName);
+    }
+
+    private static void SaveTexture2D(Texture2D texture, string textureName)
+    {
+        byte[] data = texture.EncodeToPNG();
+        System.IO.File.WriteAllBytes(textureName, data);
+    }
+
+    [MenuItem("UMA/Load and Save/Save Selected Avatar(s) Txt", priority=1)]
 	public static void SaveSelectedAvatarsTxt()
 	{
 		for (int i = 0; i < Selection.gameObjects.Length; i++)
