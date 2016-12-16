@@ -443,12 +443,16 @@ namespace UMAEditor
 
 	public class SlotMasterEditor
 	{
-		private readonly UMAData.UMARecipe _recipe;
-		private readonly List<SlotEditor> _slotEditors = new List<SlotEditor>();
-		private readonly SharedColorsCollectionEditor _sharedColorsEditor = new SharedColorsCollectionEditor();
+		//DOS Changed this to protected so childs can inherit
+		protected readonly UMAData.UMARecipe _recipe;
+		//DOS Changed this to protected so childs can inherit
+		protected readonly List<SlotEditor> _slotEditors = new List<SlotEditor>();
+		//DOS Changed this to protected so childs can inherit
+		protected readonly SharedColorsCollectionEditor _sharedColorsEditor = new SharedColorsCollectionEditor();
 
 
-		private bool DropAreaGUI(Rect dropArea)
+		//DOS Changed this to protected so childs can inherit
+		protected bool DropAreaGUI(Rect dropArea)
 		{
 			int count = 0;
 			var evt = Event.current;
@@ -497,13 +501,14 @@ namespace UMAEditor
 			return false;
 		}
 
-		private void AddSlotDataAsset(SlotDataAsset added)
+		//DOS Changed this to protected so childs can inherit
+		protected void AddSlotDataAsset(SlotDataAsset added)
 		{
 			var slot = new SlotData(added);
 			_recipe.MergeSlot(slot, false);
 		}
-
-		private void RecursiveScanFoldersForAssets(string path, ref int count)
+		//DOS Changed this to protected so childs can inherit
+		protected void RecursiveScanFoldersForAssets(string path, ref int count)
 		{
 			var assetFiles = System.IO.Directory.GetFiles(path, "*.asset");
 			foreach (var assetFile in assetFiles)
@@ -552,8 +557,8 @@ namespace UMAEditor
 				}
 			}
 		}
-
-		public bool OnGUI(ref bool _dnaDirty, ref bool _textureDirty, ref bool _meshDirty)
+		//DOS made this virtual so children can override
+		public virtual bool OnGUI(ref bool _dnaDirty, ref bool _textureDirty, ref bool _meshDirty)
 		{
 			bool changed = false;
 
@@ -576,6 +581,13 @@ namespace UMAEditor
 				changed = true;
 			}
 
+			if (_sharedColorsEditor.OnGUI(_recipe))
+			{
+				changed = true;
+				_textureDirty = true;
+			}
+
+			GUILayout.Space(20);
 			if (GUILayout.Button("Remove Nulls"))
 			{
 				var newList = new List<SlotData>(_recipe.slotDataList.Length);
@@ -589,15 +601,6 @@ namespace UMAEditor
 				_textureDirty |= true;
 				_meshDirty |= true;
 			}
-
-
-
-			if (_sharedColorsEditor.OnGUI(_recipe))
-			{
-				changed = true;
-				_textureDirty = true;
-			}
-
 
 			GUILayout.Space(20);
 			Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
