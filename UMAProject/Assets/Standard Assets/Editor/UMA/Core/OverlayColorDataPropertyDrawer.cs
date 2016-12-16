@@ -5,46 +5,74 @@ using UMA;
 
 namespace UMAEditor
 {
-	[CustomPropertyDrawer(typeof(OverlayColorData))]
+	[CustomPropertyDrawer(typeof(OverlayColorData),true)]
 	public class OverlayColorDataPropertyDrawer : PropertyDrawer
 	{
 		bool showAdvanced;
 
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
-			EditorGUILayout.PropertyField(property.FindPropertyRelative("name"));
-
-			showAdvanced = EditorGUILayout.Toggle("Show Extended Ranges", showAdvanced);
+			EditorGUI.BeginProperty(position, label, property);
+			var name = property.FindPropertyRelative("name");
 			var mask = property.FindPropertyRelative("channelMask");
 			var additive = property.FindPropertyRelative("channelAdditiveMask");
-			for (int i = 0; i < mask.arraySize; i++)
+			EditorGUILayout.BeginHorizontal();
+			name.isExpanded = EditorGUILayout.Foldout(name.isExpanded, label);
+			if (!name.isExpanded)
+				name.stringValue = EditorGUILayout.TextField(new GUIContent(""), name.stringValue);
+			EditorGUILayout.EndHorizontal();
+			if (name.isExpanded)
 			{
-				if (showAdvanced)
+				EditorGUILayout.PropertyField(property.FindPropertyRelative("name"));
+
+				showAdvanced = EditorGUILayout.Toggle("Show Extended Ranges", showAdvanced);
+				//var mask = property.FindPropertyRelative("channelMask");
+				//var additive = property.FindPropertyRelative("channelAdditiveMask");
+				for (int i = 0; i < mask.arraySize; i++)
 				{
-					var channelMask = mask.GetArrayElementAtIndex(i);
-					var channelColor = ToVector4(channelMask.colorValue);
-					channelColor = EditorGUILayout.Vector4Field("Multiplier", channelColor);
-					if (GUI.changed)
+					if (showAdvanced)
 					{
-						channelMask.colorValue = ToColor(channelColor);
+						var channelMask = mask.GetArrayElementAtIndex(i);
+						var channelColor = ToVector4(channelMask.colorValue);
+						channelColor = EditorGUILayout.Vector4Field("Multiplier", channelColor);
+						if (GUI.changed)
+						{
+							channelMask.colorValue = ToColor(channelColor);
+						}
 					}
+					else
+					{
+						EditorGUILayout.PropertyField(mask.GetArrayElementAtIndex(i));
+					}
+
+					EditorGUILayout.PropertyField(additive.GetArrayElementAtIndex(i));
 				}
+			}
+			else
+			{
+				EditorGUILayout.PropertyField(mask.GetArrayElementAtIndex(0),new GUIContent("BaseColor"));
+				if(additive.arraySize >= 3)
+					EditorGUILayout.PropertyField(additive.GetArrayElementAtIndex(2),new GUIContent("Metallic/Gloss", "Color is metallicness (Black is not metallic), Alpha is glossiness (Black is not glossy)"));
 				else
 				{
-					EditorGUILayout.PropertyField(mask.GetArrayElementAtIndex(i));
+					//color didn't have a metallic gloss channel so show button to add one?
 				}
-
-				EditorGUILayout.PropertyField(additive.GetArrayElementAtIndex(i));
 			}
 			EditorGUILayout.Space();
+			EditorGUI.EndProperty();
+		}
+		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+		{
+			/*var name = property.FindPropertyRelative("name");
+			if (!name.isExpanded)
+			{
+				return (EditorGUIUtility.singleLineHeight * 3f) - 2f;
+			}*/
+			return -2f;
 		}
 
-        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
-        {
-            return -2.0f;
-        }
 
-        private Color ToColor(Vector4 colorVector)
+		private Color ToColor(Vector4 colorVector)
 		{
 			return new Color(colorVector.x, colorVector.y, colorVector.z, colorVector.w);
 		}
