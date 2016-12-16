@@ -18117,7 +18117,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 643ec75e219b576489dae73d4e805742, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  remoteServerURL: https://s3.amazonaws.com/umaassetbundletest/unity540f3/
+  remoteServerURL: 
   useJsonIndex: 1
   remoteServerIndexURL: 
   makePersistent: 0
