@@ -10,6 +10,8 @@ namespace UMA
 	[System.Serializable]
 	public class DownloadingAssetsList
 	{
+
+
 		public List<DownloadingAssetItem> downloadingItems = new List<DownloadingAssetItem>();
 		public bool areDownloadedItemsReady = true;
 
