@@ -279,7 +279,13 @@ namespace UMACharacterSystem
 			//StartCoroutine(CleanFilesFromResourcesAndBundles());
 		}
 
-		public virtual UMATextRecipe GetRecipe(string filename, bool dynamicallyAdd = true)
+		//this has to be here so recipe editor (which is in standardAssets) can use it
+		public override UMARecipeBase GetBaseRecipe(string filename, bool dynamicallyAdd = true)
+		{
+			return GetRecipe(filename, dynamicallyAdd);
+		}
+
+		public UMATextRecipe GetRecipe(string filename, bool dynamicallyAdd = true)
 		{
 			UMATextRecipe foundRecipe = null;
 			if (RecipeIndex.ContainsKey(filename))
