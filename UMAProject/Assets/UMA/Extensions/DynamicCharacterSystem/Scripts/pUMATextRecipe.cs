@@ -402,7 +402,7 @@ public partial class UMATextRecipe : UMAPackedRecipeBase
 		/// <param name="recipeType"></param>
 		public DCSUniversalPackRecipe(UMAPackRecipe umaPackRecipe, string pRecipeType = "Standard")
 		{
-			Debug.Log("Created universal model from UMAPackRecipe");
+			//Debug.Log("Created universal model from UMAPackRecipe");
 			packedRecipeType = pRecipeType;
 			version = umaPackRecipe.version;
 			packedSlotDataList = umaPackRecipe.packedSlotDataList;

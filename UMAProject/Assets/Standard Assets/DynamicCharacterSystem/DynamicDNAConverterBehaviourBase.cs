@@ -19,8 +19,6 @@ namespace UMA
 
         public static void FixUpUMADnaToDynamicUMADna(UMAData.UMARecipe _recipe)
         {
-            Debug.Log("Converting UMADnaHumanoid/Tutorial to DynamicUMADna");
-			//I think the reason this is not working right is that the Tutorial values are getting removed when the converter that takes the Humanoid values does its thing...
 			 int thisUMADnaHumanoid = -1;
 			 int thisUMADnaTutorial = -1;
 			 bool needsHumanoidDnaUpdate = false;
@@ -97,7 +95,7 @@ namespace UMA
 					//remove the UMADnaHumanoid from the recipe
 					if (humanoidDnaImported > 0)
 					{//we say greater than 0 because we want to get rid of Humanoid even if all the values did not cross over
-						Debug.Log("UMADnaHumanoid imported successfully");
+						//Debug.Log("UMADnaHumanoid imported successfully");
 						_recipe.RemoveDna(UMAUtils.StringToHash("UMADnaHumanoid"));
 					}
 					//else
@@ -110,7 +108,7 @@ namespace UMA
 					 if (tutorialDnaImported > 0)//we say greater than 0 because we want to get rid of Tutorial even if all the values did not cross over
 					 {
 						 _recipe.RemoveDna(UMAUtils.StringToHash("UMADnaTutorial"));
-						 Debug.Log("UMATutorial imported successfully");
+						 //Debug.Log("UMATutorial imported successfully");
 					 }
 					 //else
 						 //Debug.Log("UMATutorial Import Failed.");

@@ -1289,7 +1289,6 @@ namespace UMACharacterSystem
 		/// <returns></returns>
 		public List<OverlayColorData> LoadWardrobeColors(UMATextRecipe.DCSUniversalPackRecipe recipeToLoad, bool apply = false)
 		{
-			Debug.Log("Did LoadWardrobe colors");
 			return LoadBodyOrWardrobeColors(recipeToLoad, false, apply);
 		}
 		private List<OverlayColorData> LoadBodyOrWardrobeColors(UMATextRecipe.DCSUniversalPackRecipe recipeToLoad, bool loadingBody = true, bool apply = false)
