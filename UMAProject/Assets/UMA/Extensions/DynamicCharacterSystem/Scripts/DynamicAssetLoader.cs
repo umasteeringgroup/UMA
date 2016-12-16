@@ -472,7 +472,7 @@ namespace UMA
 			}
 			canCheckDownloadingBundles = true;
 			assetBundlesDownloading = true;
-			yield return null;
+			//yield return null;
 		}
 		/// <summary>
 		/// Loads an asset bundle and its dependencies asynchroniously
@@ -498,8 +498,9 @@ namespace UMA
 			if (error != null)
 			{
 				Debug.LogError("[DynamicAssetLoader] Bundle Load Error: " + error);
+				yield break;
 			}
-			yield return true;
+			//yield return true;13/12/2016 not sure why this is here? I think it should be break above
 			//If this assetBundle contains UMATextRecipes we may need to trigger some post processing...
 			//it may have downloaded some dependent bundles too so these may need processing aswell
 			var dependencies = AssetBundleManager.AssetBundleIndexObject.GetAllDependencies(bundle);
@@ -888,7 +889,7 @@ namespace UMA
 								{
 									assetNameHash = AssetBundleManager.AssetBundleIndexObject.GetAssetHashFromName(assetBundleNamesArray[i], assetName, typeString);
 								}
-								T target = downloadingAssets.AddDownloadItem<T>(/*CurrentBatchID,*/ assetName, assetNameHash, assetBundleNamesArray[i], callback/*, requestingUMA*/);
+								T target = downloadingAssets.AddDownloadItem<T>(assetName, assetNameHash, assetBundleNamesArray[i], callback);
 								if (target != null)
 								{
 									assetFound = true;

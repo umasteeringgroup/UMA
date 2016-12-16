@@ -18,5 +18,8 @@ namespace UMACharacterSystem
 
 		public virtual void Init() { }
 		//Unfortunately we cant do anything useful that uses UMATextRecipe because that doesn't exist here
-	}
+		//but we can define some methods that can be overidden so they can be used
+		//except we BLOODY CANT because  UMATextRecipe doesn't exist at this point
+		public virtual UMARecipeBase GetBaseRecipe(string filename, bool dynamicallyAdd = true) { return null; }
+    }
 }

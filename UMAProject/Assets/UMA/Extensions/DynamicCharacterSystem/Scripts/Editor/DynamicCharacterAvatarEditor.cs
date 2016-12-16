@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UMA;
 using UMACharacterSystem;
 using System;
@@ -12,7 +13,7 @@ public partial class DynamicCharacterAvatarEditor : Editor
     protected DynamicCharacterAvatar thisDCA;
     private RaceSetterPropertyDrawer _racePropDrawer = new RaceSetterPropertyDrawer();
 
-    public void OnEnable()
+	public void OnEnable()
     {
         thisDCA = target as DynamicCharacterAvatar;
         //Set this DynamicCharacterAvatar for RaceSetter so if the user chages the race dropdown the race changes
@@ -26,18 +27,67 @@ public partial class DynamicCharacterAvatarEditor : Editor
         }
     }
 
-    protected bool characterAvatarLoadSaveOpen;
-    public override void OnInspectorGUI()
+	/*public void SetColorCount(int colorCount)
+	{
+		var newavatarColors = new List<OverlayColorData>();
+		for(int i = 0; i < colorCount; i++)
+		{
+			if (thisDCA.avatarColors.Count > i)
+			{
+				newavatarColors.Add(thisDCA.avatarColors[i]);
+			}
+			else
+			{
+				newavatarColors.Add(new OverlayColorData(3));
+			}
+		}
+		thisDCA.avatarColors = newavatarColors;
+	}*/
+	public void SetNewColorCount(int colorCount)
+	{
+		var newcharacterColors = new List<DynamicCharacterAvatar.ColorValue>();
+		for (int i = 0; i < colorCount; i++)
+		{
+			if (thisDCA.characterColors.Colors.Count > i)
+			{
+				newcharacterColors.Add(thisDCA.characterColors.Colors[i]);
+			}
+			else
+			{
+				newcharacterColors.Add(new DynamicCharacterAvatar.ColorValue(3));
+			}
+		}
+		thisDCA.characterColors.Colors = newcharacterColors;
+	}
+
+	protected bool characterAvatarLoadSaveOpen;
+
+	public override void OnInspectorGUI()
     {
-        Editor.DrawPropertiesExcluding(serializedObject, new string[] { "activeRace","preloadWardrobeRecipes", "raceAnimationControllers",
-			"characterColors", "loadString", "loadFileOnStart", "loadPathType", "loadPath", "loadFilename","loadOptions", "savePathType",
-			"savePath", "saveFilename", "makeUnique", "BoundsOffset",
+        Editor.DrawPropertiesExcluding(serializedObject, new string[] { "activeRace","defaultChangeRaceOptions","preloadWardrobeRecipes", "raceAnimationControllers",
+			"characterColors","BoundsOffset",
+			/*LoadOtions fields*/ "defaultLoadOptions", "loadPathType", "loadPath", "loadFilename", "loadString", "loadFileOnStart", "waitForBundles", "buildAfterLoad",
+			/*SaveOptions fields*/ "defaultSaveOptions", "savePathType","savePath", "saveFilename", "makeUniqueFilename","ensureSharedColors", 
 			/*Moved into AdvancedOptions*/"context","umaData","umaRecipe", "umaAdditionalRecipes","umaGenerator", "animationController",
 			/*Moved into CharacterEvents*/"CharacterCreated", "CharacterUpdated", "CharacterDestroyed", "RecipeUpdated" });
-        serializedObject.ApplyModifiedProperties();
-        SerializedProperty thisRaceSetter = serializedObject.FindProperty("activeRace");
+		serializedObject.Update();
+		SerializedProperty thisRaceSetter = serializedObject.FindProperty("activeRace");
         Rect currentRect = EditorGUILayout.GetControlRect(false, _racePropDrawer.GetPropertyHeight(thisRaceSetter, GUIContent.none));
 		_racePropDrawer.OnGUI(currentRect, thisRaceSetter, new GUIContent(thisRaceSetter.displayName));
+		//the ChangeRaceOptions
+		SerializedProperty defaultChangeRaceOptions = serializedObject.FindProperty("defaultChangeRaceOptions");
+		EditorGUI.indentLevel++;
+		defaultChangeRaceOptions.isExpanded = EditorGUILayout.Foldout(defaultChangeRaceOptions.isExpanded, new GUIContent("Race Change Options", "The default options for when the Race is changed. These can be overidden when calling 'ChangeRace' directly."));
+		if (defaultChangeRaceOptions.isExpanded)
+		{
+			EditorGUI.BeginChangeCheck();
+			EditorGUILayout.PropertyField(defaultChangeRaceOptions, GUIContent.none);
+			if (EditorGUI.EndChangeCheck())
+			{
+				serializedObject.ApplyModifiedProperties();
+			}
+		}
+		EditorGUI.indentLevel--;
 		//Other DCA propertyDrawers
 		GUILayout.Space(2f);
 		EditorGUI.BeginChangeCheck();
@@ -63,14 +113,36 @@ public partial class DynamicCharacterAvatarEditor : Editor
 				thisDCA.SetAnimatorController();
 			}
 		}
-		//GUILayout.Space(1f);
-		EditorGUI.BeginChangeCheck();
+		GUILayout.Space(2f);
+		//NewCharacterColors
 		SerializedProperty characterColors = serializedObject.FindProperty("characterColors");
-		//Rect charColsRect = EditorGUILayout.GetControlRect();
-		//EditorGUI.PropertyField(charColsRect,characterColors.FindPropertyRelative("Colors"), new GUIContent("Character Colors"),true);
-		EditorGUILayout.PropertyField(characterColors.FindPropertyRelative("Colors"), new GUIContent("Character Colors"), true);
+		SerializedProperty newCharacterColors = characterColors.FindPropertyRelative("_colors");
+		//for ColorValues as OverlayColorDatas we need to outout something that looks like a list but actully uses a method to add/remove colors because we need the new OverlayColorData to have 3 channels	
+		newCharacterColors.isExpanded = EditorGUILayout.Foldout(newCharacterColors.isExpanded, new GUIContent("Character Colors"));
+		var n_origArraySize = newCharacterColors.arraySize;
+		var n_newArraySize = n_origArraySize;
+		EditorGUI.BeginChangeCheck();
+		if (newCharacterColors.isExpanded)
+		{
+			n_newArraySize = EditorGUILayout.DelayedIntField(new GUIContent("Size"), n_origArraySize);
+			EditorGUILayout.Space();
+			EditorGUI.indentLevel++;
+			if (n_origArraySize > 0)
+			{
+				for(int i = 0; i < n_origArraySize; i++)
+				{
+					EditorGUILayout.PropertyField(newCharacterColors.GetArrayElementAtIndex(i));
+				}
+			}
+			EditorGUI.indentLevel--;
+		}
 		if (EditorGUI.EndChangeCheck())
 		{
+			if (n_newArraySize != n_origArraySize)
+			{
+				SetNewColorCount(n_newArraySize);//this is not prompting a save so mark the scene dirty...
+				EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+			}
 			serializedObject.ApplyModifiedProperties();
 			if (Application.isPlaying)
 				thisDCA.UpdateColors(true);
@@ -86,11 +158,17 @@ public partial class DynamicCharacterAvatarEditor : Editor
             SerializedProperty loadPath = serializedObject.FindProperty("loadPath");
             SerializedProperty loadFilename = serializedObject.FindProperty("loadFilename");
             SerializedProperty loadFileOnStart = serializedObject.FindProperty("loadFileOnStart");
-            SerializedProperty loadOptions = serializedObject.FindProperty("loadOptions");
             SerializedProperty savePathType = serializedObject.FindProperty("savePathType");
             SerializedProperty savePath = serializedObject.FindProperty("savePath");
             SerializedProperty saveFilename = serializedObject.FindProperty("saveFilename");
-            SerializedProperty makeUnique = serializedObject.FindProperty("makeUnique");
+			//LoadSave Flags
+			SerializedProperty defaultLoadOptions = serializedObject.FindProperty("defaultLoadOptions");
+			SerializedProperty defaultSaveOptions = serializedObject.FindProperty("defaultSaveOptions");
+			//extra LoadSave Options in addition to flags
+			SerializedProperty waitForBundles = serializedObject.FindProperty("waitForBundles");
+			SerializedProperty buildAfterLoad = serializedObject.FindProperty("buildAfterLoad");
+			SerializedProperty makeUniqueFilename = serializedObject.FindProperty("makeUniqueFilename");
+			SerializedProperty ensureSharedColors = serializedObject.FindProperty("ensureSharedColors");
 
 			EditorGUILayout.PropertyField(loadPathType);
 
@@ -100,9 +178,10 @@ public partial class DynamicCharacterAvatarEditor : Editor
             }
             else
             {
-                if (loadPathType.enumValueIndex <= 2)
+                if (loadPathType.enumValueIndex <= 1)
                 {
                     EditorGUILayout.PropertyField(loadPath);
+
                 }
             }
 
@@ -112,8 +191,17 @@ public partial class DynamicCharacterAvatarEditor : Editor
                 EditorGUILayout.PropertyField(loadFileOnStart);
             }
 			EditorGUI.indentLevel++;
-            EditorGUILayout.PropertyField(loadOptions, true);
-			EditorGUI.indentLevel--;
+			//LoadOptionsFlags
+			defaultLoadOptions.isExpanded = EditorGUILayout.Foldout(defaultLoadOptions.isExpanded, new GUIContent("Load Options", "The default options for when a character is loaded from an UMATextRecipe asset or a recipe string. Can be overidden when calling 'LoadFromRecipe' or 'LoadFromString' directly."));
+			if (defaultLoadOptions.isExpanded)
+			{
+				EditorGUILayout.PropertyField(defaultLoadOptions, GUIContent.none);
+				EditorGUI.indentLevel++;
+				waitForBundles.boolValue = EditorGUILayout.ToggleLeft(new GUIContent(waitForBundles.displayName, waitForBundles.tooltip), waitForBundles.boolValue);
+				buildAfterLoad.boolValue = EditorGUILayout.ToggleLeft(new GUIContent(buildAfterLoad.displayName, buildAfterLoad.tooltip), buildAfterLoad.boolValue);
+				EditorGUI.indentLevel--;
+			}
+            EditorGUI.indentLevel--;
             if (Application.isPlaying)
             {
                 if (GUILayout.Button("Perform Load"))
@@ -128,8 +216,19 @@ public partial class DynamicCharacterAvatarEditor : Editor
                 EditorGUILayout.PropertyField(savePath);
             }
             EditorGUILayout.PropertyField(saveFilename);
-            EditorGUILayout.PropertyField(makeUnique);
-            if (Application.isPlaying)
+			//EditorGUILayout.PropertyField(makeUnique);
+			EditorGUI.indentLevel++;
+			defaultSaveOptions.isExpanded = EditorGUILayout.Foldout(defaultSaveOptions.isExpanded, new GUIContent("Save Options", "The default options for when a character is save to UMATextRecipe asset or a txt. Can be overidden when calling 'DoSave' directly."));
+			if (defaultSaveOptions.isExpanded)
+			{
+				EditorGUILayout.PropertyField(defaultSaveOptions, GUIContent.none);
+				EditorGUI.indentLevel++;
+				ensureSharedColors.boolValue = EditorGUILayout.ToggleLeft(new GUIContent(ensureSharedColors.displayName, ensureSharedColors.tooltip), ensureSharedColors.boolValue);
+				makeUniqueFilename.boolValue = EditorGUILayout.ToggleLeft(new GUIContent(makeUniqueFilename.displayName, makeUniqueFilename.tooltip), makeUniqueFilename.boolValue);
+				EditorGUI.indentLevel--;
+			}
+			EditorGUI.indentLevel--;
+			if (Application.isPlaying)
             {
                 if (GUILayout.Button("Perform Save"))
                 {
@@ -188,13 +287,6 @@ public partial class DynamicCharacterAvatarEditor : Editor
 		{
 			serializedObject.ApplyModifiedProperties();
 		}
-
-		/*EditorGUI.BeginChangeCheck();
-        
-        if (EditorGUI.EndChangeCheck())
-        {
-            serializedObject.ApplyModifiedProperties();
-        }*/
 		GUILayout.Space(2f);
 		if (Application.isPlaying)
         {

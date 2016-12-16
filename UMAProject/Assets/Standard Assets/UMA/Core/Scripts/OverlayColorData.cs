@@ -233,5 +233,21 @@ namespace UMA
 				dest.channelAdditiveMask[i] = channelAdditiveMask[i];
 			}			
 		}
+		public void AssignFrom(OverlayColorData src)
+		{
+			if (src.name != null)
+			{
+				name = String.Copy(src.name);
+			}
+			EnsureChannels(src.channelMask.Length);
+			for (int i = 0; i < src.channelMask.Length; i++)
+			{
+				channelMask[i] = src.channelMask[i];
+			}
+			for (int i = 0; i < src.channelAdditiveMask.Length; i++)
+			{
+				channelAdditiveMask[i] = src.channelAdditiveMask[i];
+			}
+		}
 	}
 }

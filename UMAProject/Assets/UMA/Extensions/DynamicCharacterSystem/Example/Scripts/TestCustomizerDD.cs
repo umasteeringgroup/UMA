@@ -54,57 +54,78 @@ public class TestCustomizerDD : MonoBehaviour
 
 	public MouseOrbitImproved Orbitor;
 	//Loading options when loading a recipe from a text file
-	public bool loadRace = true;
-	public bool loadDNA = true;
-	public bool loadWardrobe = true;
-	public bool loadBodyColors = true;
-	public bool loadWardrobeColors = true;
+	public bool _loadRace = true;
+	public bool _loadDNA = true;
+	public bool _loadWardrobe = true;
+	public bool _loadBodyColors = true;
+	public bool _loadWardrobeColors = true;
 
 	public bool LoadRace
 	{
-		get { return loadRace; }
-		set { loadRace = value; }
+		get { return _loadRace; }
+		set { _loadRace = value; }
 	}
 	public bool LoadDNA
 	{
-		get { return loadDNA; }
-		set { loadDNA = value; }
+		get { return _loadDNA; }
+		set { _loadDNA = value; }
 	}
 	public bool LoadWardrobe
 	{
-		get { return loadWardrobe; }
-		set { loadWardrobe = value; }
+		get { return _loadWardrobe; }
+		set { _loadWardrobe = value; }
 	}
 	public bool LoadBodyColors
 	{
-		get { return loadBodyColors; }
-		set { loadBodyColors = value; }
+		get { return _loadBodyColors; }
+		set { _loadBodyColors = value; }
 	}
 	public bool LoadWardrobeColors
 	{
-		get { return loadWardrobeColors; }
-		set { loadWardrobeColors = value; }
+		get { return _loadWardrobeColors; }
+		set { _loadWardrobeColors = value; }
 	}
 
 	//Loading options when Changing Race
-	public bool keepDNA = false;
-	public bool keepWardrobe = false;
-	public bool keepBodyColors = true;
+	bool _keepDNA = false;
+	bool _keepWardrobe = false;
+	bool _keepBodyColors = true;
 
 	public bool KeepDNA
 	{
-		get { return keepDNA; }
-		set { keepDNA = value; }
+		get { return _keepDNA; }
+		set { _keepDNA = value; }
 	}
 	public bool KeepWardrobe
 	{
-		get { return keepWardrobe; }
-		set { keepWardrobe = value; }
+		get { return _keepWardrobe; }
+		set { _keepWardrobe = value; }
 	}
 	public bool KeepBodyColors
 	{
-		get { return keepBodyColors; }
-		set { keepBodyColors = value; }
+		get { return _keepBodyColors; }
+		set { _keepBodyColors = value; }
+	}
+
+	//Loading options when Changing Race
+	bool _saveDNA = true;
+	bool _saveWardrobe = true;
+	bool _saveColors = true;
+
+	public bool SaveDNA
+	{
+		get { return _saveDNA; }
+		set { _saveDNA = value; }
+	}
+	public bool SaveWardrobe
+	{
+		get { return _saveWardrobe; }
+		set { _saveWardrobe = value; }
+	}
+	public bool SaveColors
+	{
+		get { return _saveColors; }
+		set { _saveColors = value; }
 	}
 
 
@@ -193,7 +214,23 @@ public class TestCustomizerDD : MonoBehaviour
 				changeRaceDropdown.value = i;
 			}
 		}
-		changeRaceDropdown.onValueChanged.AddListener(ChangeRace);
+		// we also need to make the raceChangeOptions toggles match the settings in the component
+		Toggle[] thisChangeRaceToggles = null;
+		if(changeRaceDropdown.template.FindChild("ChangeRaceOptsHolder") != null)
+			if(changeRaceDropdown.template.FindChild("ChangeRaceOptsHolder").FindChild("ChangeRaceToggles") != null)
+				if(changeRaceDropdown.template.FindChild("ChangeRaceOptsHolder").FindChild("ChangeRaceToggles").GetComponentsInChildren<Toggle>().Length != 0)
+					thisChangeRaceToggles = changeRaceDropdown.template.FindChild("ChangeRaceOptsHolder").FindChild("ChangeRaceToggles").GetComponentsInChildren<Toggle>();
+		if(thisChangeRaceToggles != null)
+		for(int i = 0; i < thisChangeRaceToggles.Length; i++)
+		{
+			if (thisChangeRaceToggles[i].gameObject.name == "KeepDNA")
+				thisChangeRaceToggles[i].isOn = _keepDNA;
+			else if (thisChangeRaceToggles[i].gameObject.name == "KeepWardrobe")
+				thisChangeRaceToggles[i].isOn = _keepWardrobe;
+			else if (thisChangeRaceToggles[i].gameObject.name == "KeepBodyColors")
+				thisChangeRaceToggles[i].isOn = _keepBodyColors;
+		}
+        changeRaceDropdown.onValueChanged.AddListener(ChangeRace);
 	}
 	public void ChangeRace(string racename)
 	{
@@ -214,7 +251,19 @@ public class TestCustomizerDD : MonoBehaviour
 		else
 		{
 			//this must be a newly Downloaded Race so just let CharacterAvatar deal with it...
-			Avatar.ChangeRace(racename,keepDNA, keepWardrobe, keepBodyColors);
+			DynamicCharacterAvatar.ChangeRaceOptions thisLoadOptions = DynamicCharacterAvatar.ChangeRaceOptions.useDefaults;
+			if (_keepDNA || _keepWardrobe || _keepBodyColors)
+			{
+				if (_keepDNA)
+					thisLoadOptions |= DynamicCharacterAvatar.ChangeRaceOptions.keepDNA;
+				if (_keepWardrobe)
+					thisLoadOptions |= DynamicCharacterAvatar.ChangeRaceOptions.keepWardrobe;
+				if (_keepBodyColors)
+					thisLoadOptions |= DynamicCharacterAvatar.ChangeRaceOptions.keepBodyColors;
+
+				thisLoadOptions &= ~DynamicCharacterAvatar.ChangeRaceOptions.useDefaults;
+			}
+			Avatar.ChangeRace(racename, thisLoadOptions);
 		}
 	}
 	public void ChangeRace(int raceId)
@@ -226,7 +275,19 @@ public class TestCustomizerDD : MonoBehaviour
 			thisRace = RaceToSet;
 			//Force CharacterSystem to find the new race
 			UMAContext.Instance.raceLibrary.GetRace(RaceToSet);
-			Avatar.ChangeRace(RaceToSet, keepDNA, keepWardrobe, keepBodyColors);
+			DynamicCharacterAvatar.ChangeRaceOptions thisLoadOptions = DynamicCharacterAvatar.ChangeRaceOptions.useDefaults;
+			if (_keepDNA || _keepWardrobe || _keepBodyColors)
+			{
+				if (_keepDNA)
+					thisLoadOptions |= DynamicCharacterAvatar.ChangeRaceOptions.keepDNA;
+				if (_keepWardrobe)
+					thisLoadOptions |= DynamicCharacterAvatar.ChangeRaceOptions.keepWardrobe;
+				if (_keepBodyColors)
+					thisLoadOptions |= DynamicCharacterAvatar.ChangeRaceOptions.keepBodyColors;
+
+				thisLoadOptions &= ~DynamicCharacterAvatar.ChangeRaceOptions.useDefaults;
+			}
+			Avatar.ChangeRace(RaceToSet, thisLoadOptions);
 		}
 	}
 
@@ -371,13 +432,15 @@ public class TestCustomizerDD : MonoBehaviour
 		thisRace = Avatar.activeRace.name;
 		var currentColorDropdowns = colorDropdownPanel.transform.GetComponentsInChildren<CSColorChangerDD>(true);
 		List<string> activeColorDropdowns = new List<string>();
-		foreach (DynamicCharacterAvatar.ColorValue colorType in Avatar.characterColors.Colors)
+		//foreach (DynamicCharacterAvatar.ColorValue colorType in Avatar.characterColors.Colors)
+		//using new colorvaluestuff
+		foreach (OverlayColorData colorType in Avatar.characterColors.Colors)
 		{
-			activeColorDropdowns.Add(colorType.Name);
+			activeColorDropdowns.Add(colorType.name);
 			bool dropdownExists = false;
 			foreach (CSColorChangerDD colorDropdown in currentColorDropdowns)
 			{
-				if (colorDropdown.colorToChange == colorType.Name)
+				if (colorDropdown.colorToChange == colorType.name)
 				{
 					dropdownExists = true;
 					colorDropdown.gameObject.SetActive(true);
@@ -390,9 +453,9 @@ public class TestCustomizerDD : MonoBehaviour
 				GameObject thisColorDropdown = Instantiate(colorDropdownPrefab) as GameObject;
 				thisColorDropdown.transform.SetParent(colorDropdownPanel.transform, false);
 				thisColorDropdown.GetComponent<CSColorChangerDD>().customizerScript = this;
-				thisColorDropdown.GetComponent<CSColorChangerDD>().colorToChange = colorType.Name;
-				thisColorDropdown.name = colorType.Name + "DropdownHolder";
-				thisColorDropdown.transform.FindChild("SlotLabel").GetComponent<Text>().text = colorType.Name + " Color";
+				thisColorDropdown.GetComponent<CSColorChangerDD>().colorToChange = colorType.name;
+				thisColorDropdown.name = colorType.name + "DropdownHolder";
+				thisColorDropdown.transform.FindChild("SlotLabel").GetComponent<Text>().text = colorType.name + " Color";
 				thisColorDropdown.GetComponent<DropdownWithColor>().onValueChanged.AddListener(thisColorDropdown.GetComponent<CSColorChangerDD>().ChangeColor);
 				SetUpColorDropdownValue(thisColorDropdown.GetComponent<CSColorChangerDD>(), colorType);
 			}
@@ -414,7 +477,7 @@ public class TestCustomizerDD : MonoBehaviour
 			}
 		}
 	}
-	public void SetUpColorDropdownValue(CSColorChangerDD colorDropdown, DynamicCharacterAvatar.ColorValue colorType)
+	public void SetUpColorDropdownValue(CSColorChangerDD colorDropdown, OverlayColorData colorType)
 	{
 		if (GenericColorList == null)
 		{
@@ -423,17 +486,17 @@ public class TestCustomizerDD : MonoBehaviour
 		}
 		int colorTableSelected = -1;
 		SharedColorTable thisColorTable = null;
-		if (sharedColorTables.FindIndex(s => s.name == colorType.Name) > -1)
+		if (sharedColorTables.FindIndex(s => s.name == colorType.name) > -1)
 		{
-			thisColorTable = sharedColorTables[sharedColorTables.FindIndex(s => s.name == colorType.Name)].sharedColorTable;
+			thisColorTable = sharedColorTables[sharedColorTables.FindIndex(s => s.name == colorType.name)].sharedColorTable;
 			if (thisColorTable == null)
 			{
-				Debug.LogWarning("[TestCustomizerDD] the colorList for " + colorType.Name + " was null or missing, please set this or remove it from the list.");
+				Debug.LogWarning("[TestCustomizerDD] the colorList for " + colorType.name + " was null or missing, please set this or remove it from the list.");
 				return;
 			}
 			for (int i = 0; i < thisColorTable.colors.Length; i++)
 			{
-				if (ColorToHex(thisColorTable.colors[i].color) == ColorToHex(colorType.Color))
+				if (ColorToHex(thisColorTable.colors[i].color) == ColorToHex(colorType.color))
 				{
 					colorTableSelected = i;
 					break;
@@ -445,7 +508,7 @@ public class TestCustomizerDD : MonoBehaviour
 			thisColorTable = GenericColorList;
 			for (int i = 0; i < GenericColorList.colors.Length; i++)
 			{
-				if (ColorToHex(GenericColorList.colors[i].color) == ColorToHex(colorType.Color))
+				if (ColorToHex(GenericColorList.colors[i].color) == ColorToHex(colorType.color))
 				{
 					colorTableSelected = i;
 					break;
@@ -455,12 +518,12 @@ public class TestCustomizerDD : MonoBehaviour
 		SetUpColorDropdownOptions(colorDropdown, thisColorTable, colorTableSelected, colorType);
 	}
 
-	public void SetUpColorDropdownOptions(CSColorChangerDD colorDropdown, SharedColorTable colorTable, int colorTableSelected, DynamicCharacterAvatar.ColorValue activeColor)
+	public void SetUpColorDropdownOptions(CSColorChangerDD colorDropdown, SharedColorTable colorTable, int colorTableSelected, OverlayColorData activeColor)
 	{
 		var thisDD = colorDropdown.gameObject.GetComponent<DropdownWithColor>();
 		thisDD.ClearOptions();
 		thisDD.onValueChanged.RemoveAllListeners();
-		Color selectedColor = activeColor.Color;
+		Color selectedColor = activeColor.color;
 		var colorBlack = new Color(0, 0, 0, 0);
 		bool selectedColorFound = false;
 		for (int i = 0; i < colorTable.colors.Length; i++)
@@ -494,9 +557,14 @@ public class TestCustomizerDD : MonoBehaviour
 		{
 			var thisddOption = new DropdownWithColor.OptionData();
 			thisddOption.text = colorTable.colors[0].name;
-			thisddOption.color = activeColor.Color;
+			thisddOption.color = activeColor.color;
 			Sprite spriteToUse = genericColorSwatch;
-			if (activeColor.MetallicGloss != colorBlack)
+			/*if (activeColor.MetallicGloss != colorBlack)
+			{
+				spriteToUse = genericColorSwatchMetallic;
+			}*/
+			if (activeColor.channelAdditiveMask.Length >= 3)
+			//if (activeColor.MetallicGloss != colorBlack)
 			{
 				spriteToUse = genericColorSwatchMetallic;
 			}
@@ -747,7 +815,24 @@ public class TestCustomizerDD : MonoBehaviour
 		}
 		if (recipeText != "")
 		{
-			Avatar.LoadFromRecipeString(recipeText, loadRace, loadDNA, loadWardrobe, loadBodyColors, loadWardrobeColors);
+			DynamicCharacterAvatar.LoadOptions thisLoadOptions = DynamicCharacterAvatar.LoadOptions.useDefaults;
+			if (_loadRace || _loadDNA || _loadWardrobe || _loadBodyColors || _loadWardrobeColors)
+			{
+				if(_loadRace)
+					thisLoadOptions |= DynamicCharacterAvatar.LoadOptions.loadRace;
+				if (_loadDNA)
+					thisLoadOptions |= DynamicCharacterAvatar.LoadOptions.loadDNA;
+				if (_loadWardrobe)
+					thisLoadOptions |= DynamicCharacterAvatar.LoadOptions.loadWardrobe;
+				if (_loadBodyColors)
+					thisLoadOptions |= DynamicCharacterAvatar.LoadOptions.loadBodyColors;
+				if (_loadWardrobeColors)
+					thisLoadOptions |= DynamicCharacterAvatar.LoadOptions.loadWardrobeColors;
+
+				thisLoadOptions &= ~DynamicCharacterAvatar.LoadOptions.useDefaults;
+            }
+
+			Avatar.LoadFromRecipeString(recipeText, thisLoadOptions);
 		}
 	}
 
@@ -759,7 +844,21 @@ public class TestCustomizerDD : MonoBehaviour
 			thisFilename = Path.GetFileNameWithoutExtension(thisFilename.Replace(" ", ""));
 			Debug.Log("Saved File with filename " + thisFilename);
 			Avatar.saveFilename = thisFilename;
-			Avatar.DoSave();
+
+			DynamicCharacterAvatar.SaveOptions thisSaveOptions = DynamicCharacterAvatar.SaveOptions.useDefaults;
+			if (_saveDNA || _saveWardrobe || _saveColors)
+			{
+				if (_saveDNA)
+					thisSaveOptions |= DynamicCharacterAvatar.SaveOptions.saveDNA;
+				if (_saveWardrobe)
+					thisSaveOptions |= DynamicCharacterAvatar.SaveOptions.saveWardrobe;
+				if (_saveColors)
+					thisSaveOptions |= DynamicCharacterAvatar.SaveOptions.saveColors;
+
+				thisSaveOptions &= ~DynamicCharacterAvatar.SaveOptions.useDefaults;
+			}
+
+			Avatar.DoSave(false,"", thisSaveOptions);
 		}
 		StartCoroutine(FinishSaveFile());
 	}

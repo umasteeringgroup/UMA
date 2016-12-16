@@ -1,17 +1,15 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-
-//This adds two wardrobeRecipes field to UMARecipe for use with dynamic character System so we can save like a standard txt asset but with this extra field
-namespace UMA
+using UMACharacterSystem;
+//we still need to add a field here so a UMATextRecipe of recipeType DynamicCharacterAsset or WardrobeCollection does not loose its wardrobeSet when its edited in the inspector
+//But this needs to be in StandardAssets if we do it this way
+/*namespace UMA
 {
-    public class UMADataCharacterSystem : UMAData
+    [System.Serializable]
+    public class UMADCSRecipe : UMAData.UMARecipe
     {
-        [System.Serializable]
-        public class UMACharacterSystemRecipe : UMARecipe
-        {
-            public Dictionary<string, string> wardrobeRecipes = new Dictionary<string, string>();
-        }
-
+        public List<WardrobeSettings> wardrobeSet;
     }
-}
+
+}*/

@@ -1,7 +1,8 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace UMACharacterSystem
 {
+	//ALL MOVED TO DCSStandardTypes
 /*	public enum CharacterSlot
 	{
 		Head =0,  
@@ -17,7 +18,7 @@ namespace UMACharacterSystem
 		Wings
 	} */
 
-	public enum WardrobeSlot
+	/*public enum WardrobeSlot
 	{
 		None = 0,
 		Face=1,
@@ -64,5 +65,5 @@ namespace UMACharacterSystem
             filename = n_thumb.name;
             thumb = n_thumb;
         }
-    }
+    }*/
 }

@@ -21,8 +21,17 @@ public partial class UMATextRecipe : UMAPackedRecipeBase
 	/// <param name="context">Context.</param>
 	public override UMAPackedRecipeBase.UMAPackRecipe PackedLoad(UMAContext context)
 	{
-		if ((recipeString== null) || (recipeString.Length == 0)) return new UMAPackRecipe();
-		return JsonUtility.FromJson<UMAPackRecipe>(recipeString);
+		if ((recipeString == null) || (recipeString.Length == 0)) return new UMAPackRecipe();
+		/*Un-necessary change now because we now override load
+		//DOS since we *know* that UMA53 will have pUMATextRecipe we can use it but maybe just wrap in try catch anyway
+		try
+		{
+			return PackedLoadDCS(context, recipeString);
+		}
+		catch
+		{*/
+			return JsonUtility.FromJson<UMAPackRecipe>(recipeString);
+		//}
 	}
 
 	/// <summary>

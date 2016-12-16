@@ -73,10 +73,10 @@ public class RaceSetterPropertyDrawer : PropertyDrawer
 		}
 		var RaceName = property.FindPropertyRelative("name");
 		var RaceValue = property.FindPropertyRelative("_data");
-		var keepDNAValue = property.FindPropertyRelative("keepDNA");
-		var keepWardrobeValue = property.FindPropertyRelative("keepWardrobe");
-		var keepBodyColorsValue = property.FindPropertyRelative("keepBodyColors");
-		var cacheCurrentStateValue = property.FindPropertyRelative("cacheCurrentState");
+		//var keepDNAValue = property.FindPropertyRelative("keepDNA");
+		//var keepWardrobeValue = property.FindPropertyRelative("keepWardrobe");
+		//var keepBodyColorsValue = property.FindPropertyRelative("keepBodyColors");
+		//var cacheCurrentStateValue = property.FindPropertyRelative("cacheCurrentState");
 		
 		string rn = RaceName.stringValue;
 		RaceData rv = (RaceData)RaceValue.objectReferenceValue;
@@ -119,7 +119,7 @@ public class RaceSetterPropertyDrawer : PropertyDrawer
 				RaceName.serializedObject.ApplyModifiedProperties();
 			}
 		}
-		EditorGUI.indentLevel = EditorGUI.indentLevel + 1;
+		/*EditorGUI.indentLevel = EditorGUI.indentLevel + 1;
 		keepDNAValue.isExpanded = EditorGUILayout.Foldout(keepDNAValue.isExpanded, new GUIContent("Change Race Options","When the race is changed the following rules will be applied by default. You can override these by calling the ChangeRace method and setting the params directly"));
 		if (keepDNAValue.isExpanded)
 		{
@@ -144,7 +144,7 @@ public class RaceSetterPropertyDrawer : PropertyDrawer
 			}
 			
 		}
-		EditorGUI.indentLevel = EditorGUI.indentLevel - 1;
+		EditorGUI.indentLevel = EditorGUI.indentLevel - 1;*/
 		//EditorGUILayout.EndHorizontal();
 
 		EditorGUI.EndProperty();

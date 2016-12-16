@@ -210,10 +210,198 @@ namespace UMAEditor
             return true;
         }
 
-        public string[] recipeTypeOpts = new string[]{"Standard", "Wardrobe"};
+		//we dont want people to 'create' a recipe of type "DynamicCharacterAvatar" or "WardrobeCollection" (right now)- but if the recipe is one of these we want to show it is
+		//when we do have decent UI for the latter two options we will use the recipeTypeOpts enum- till then...
+        public List<string> recipeTypeOpts = new List<string>(new string[]{"Standard", "Wardrobe"});
         int wrdSelected = 0;
 
-        private bool TextRecipeGUI()
+		//we need a different kind of 'Slot' editor for recipeTypes of "DynamicCharacterAvatar" and "WardrobeSet" that just shows a list of the wardrobe slots for the set race and the recipes that have been assigned to those slots
+		public class WardrobeSetMasterEditor : SlotMasterEditor
+		{
+			private readonly List<WardrobeSettings> _wardrobeSet;
+			private bool _foldout = true;
+
+			public WardrobeSetMasterEditor(UMAData.UMARecipe recipe, List<WardrobeSettings> wardrobeSet) : base(recipe)
+			{
+				_wardrobeSet = wardrobeSet;
+			}
+			public override bool OnGUI(ref bool _dnaDirty, ref bool _textureDirty, ref bool _meshDirty)
+			{
+				bool changed = false;
+
+				RaceData newRace = (RaceData)EditorGUILayout.ObjectField("RaceData", _recipe.raceData, typeof(RaceData), false);
+				if (_recipe.raceData != newRace)
+				{
+					_recipe.SetRace(newRace);
+					changed = true;
+				}
+				GUILayout.Space(20);
+				if (_sharedColorsEditor.OnGUI(_recipe))
+				{
+					changed = true;
+				}
+				//now we need a UI that shows all the wardrobe slots the given race has as object fields that can have a *compatible* wardrobe Recipe dragged into them
+				if(_recipe.raceData.wardrobeSlots.Count > 0)
+				{
+					var context = UMAContext.FindInstance();
+					if (context == null)
+					{
+						var _errorMessage = "Editing a recipe requires a loaded scene with a valid UMAContext.";
+						Debug.LogWarning(_errorMessage);
+					}
+					GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
+					GUILayout.Space(10);
+					_foldout = EditorGUILayout.Foldout(_foldout, "Assigned Wardrobe Recipes");
+					GUILayout.EndHorizontal();
+					if (_foldout)
+					{
+						GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+						EditorGUILayout.HelpBox("We will make this so you can edit directly in here in future. But for now...", MessageType.Info);
+						EditorGUI.BeginDisabledGroup(true);
+						foreach (string wsl in _recipe.raceData.wardrobeSlots)
+						{
+							UMARecipeBase thisAssignedRecipe = null;
+							if (_wardrobeSet != null && context != null)
+							{
+								foreach (WardrobeSettings ws in _wardrobeSet)
+								{
+									if (ws.slot == wsl)
+									{
+										thisAssignedRecipe = context.dynamicCharacterSystem.GetBaseRecipe(ws.recipe, true);
+									}
+								}
+							}
+							EditorGUILayout.ObjectField(wsl, thisAssignedRecipe, typeof(UMARecipeBase), false);
+						}
+						EditorGUI.EndDisabledGroup();
+						GUIHelper.EndVerticalPadded(10);
+					}
+				}
+
+				return changed;
+			}
+		}
+
+		public class WardrobeItemMasterEditor : SlotMasterEditor
+		{
+            public WardrobeItemMasterEditor(UMAData.UMARecipe recipe): base(recipe)
+			{
+				
+			}
+			public override bool OnGUI(ref bool _dnaDirty, ref bool _textureDirty, ref bool _meshDirty)
+			{
+				bool changed = false;
+
+				//DynamicCharacterSystem:: Wardrobe recipes dont need a race set here as they have their own list of compatible races
+				/*RaceData newRace = (RaceData)EditorGUILayout.ObjectField("RaceData", _recipe.raceData, typeof(RaceData), false);
+				if (_recipe.raceData == null)
+				{
+					GUIHelper.BeginVerticalPadded(10, new Color(0.55f, 0.25f, 0.25f));
+					GUILayout.Label("Warning: No race data is set!");
+					GUIHelper.EndVerticalPadded(10);
+				}
+
+
+				if (_recipe.raceData != newRace)
+				{
+					_recipe.SetRace(newRace);
+					changed = true;
+				}*/
+				GUILayout.Space(20);
+
+				if (_sharedColorsEditor.OnGUI(_recipe))
+				{
+					changed = true;
+					_textureDirty = true;
+				}
+
+				if (GUILayout.Button("Remove Nulls"))//this button should probably be after shared colors no?
+				{
+					var newList = new List<SlotData>(_recipe.slotDataList.Length);
+					foreach (var slotData in _recipe.slotDataList)
+					{
+						if (slotData != null) newList.Add(slotData);
+					}
+					_recipe.slotDataList = newList.ToArray();
+					changed |= true;
+					_dnaDirty |= true;
+					_textureDirty |= true;
+					_meshDirty |= true;
+				}
+
+				GUILayout.Space(20);
+				Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
+				GUI.Box(dropArea, "Drag Slots here");
+				GUILayout.Space(20);
+
+
+				if (DropAreaGUI(dropArea))
+				{
+					changed |= true;
+					_dnaDirty |= true;
+					_textureDirty |= true;
+					_meshDirty |= true;
+				}
+
+				var added = (SlotDataAsset)EditorGUILayout.ObjectField("Add Slot", null, typeof(SlotDataAsset), false);
+
+				if (added != null)
+				{
+					var slot = new SlotData(added);
+					_recipe.MergeSlot(slot, false);
+					changed |= true;
+					_dnaDirty |= true;
+					_textureDirty |= true;
+					_meshDirty |= true;
+				}
+
+				GUILayout.BeginHorizontal();
+				if (GUILayout.Button("Collapse All"))
+				{
+					foreach (SlotEditor se in _slotEditors)
+					{
+						se.FoldOut = false;
+					}
+				}
+				if (GUILayout.Button("Expand All"))
+				{
+					foreach (SlotEditor se in _slotEditors)
+					{
+						se.FoldOut = true;
+					}
+				}
+				GUILayout.EndHorizontal();
+
+				for (int i = 0; i < _slotEditors.Count; i++)
+				{
+					var editor = _slotEditors[i];
+
+					if (editor == null)
+					{
+						GUILayout.Label("Empty Slot");
+						continue;
+					}
+
+					changed |= editor.OnGUI(ref _dnaDirty, ref _textureDirty, ref _meshDirty);
+
+					if (editor.Delete)
+					{
+						_dnaDirty = true;
+						_textureDirty = true;
+						_meshDirty = true;
+
+						_slotEditors.RemoveAt(i);
+						_recipe.SetSlot(editor.idx, null);
+						i--;
+						changed = true;
+					}
+				}
+
+				return changed;
+			}
+		}
+
+		private bool TextRecipeGUI()
 		{
             float padding = 2f;
 			Type TargetType = target.GetType();
@@ -222,26 +410,42 @@ namespace UMAEditor
 			{
                 FieldInfo DisplayValueField;
                 FieldInfo RecipeTypeField;
+				//get the RecipeTypeField now
+				//the Recipe Type field defines whether the extra wardrobe recipe fields show and whether we are overriding the SlotMasterEditor with WardrobeSetMasterEditor
+				RecipeTypeField = TargetType.GetField("recipeType", BindingFlags.Public | BindingFlags.Instance);
+				string recipeType = (string)RecipeTypeField.GetValue(target);
 				FieldInfo CompatibleRacesField;
                 FieldInfo WardrobeRecipeThumbsField;
 				FieldInfo WardrobeSlotField;
 				FieldInfo SuppressWardrobeSlotField;
                 FieldInfo HidesField;
-
-                bool doUpdate = false;
+				FieldInfo ActiveWardrobeSetField;
+				//Do we have an activeWardrobeSet?
+				ActiveWardrobeSetField = TargetType.GetField("activeWardrobeSet", BindingFlags.Public | BindingFlags.Instance);
+				List<WardrobeSettings> activeWardrobeSettings = (List<WardrobeSettings>)ActiveWardrobeSetField.GetValue(target);
+				//if we did and the recipe is not "Standard" we dont want to show the slots editor
+				//if it is Standard we DO want to show the slots and stuff because thats what Stock UMA will actually load
+				if (activeWardrobeSettings.Count > 0  && recipeType != "Standard")
+				{
+					slotEditor = new WardrobeSetMasterEditor(_recipe, activeWardrobeSettings);
+				}
+				//else if its a wrdrobe recipe we dont want to show the 'race' section because we want that to be based on the 'compatible races' the user has set above
+				else if(recipeType == "Wardrobe" || recipeType == "WardrobeItem")
+				{
+					slotEditor = new WardrobeItemMasterEditor(_recipe);
+				}
+				bool doUpdate = false;
 
                 RaceData standardRaceData = null;
                 if(_recipe != null)
                 {
                     standardRaceData = _recipe.raceData;
                 }
-
-                //the Recipe Type field defines whether the extra wardrobe recipe fields show.
-                RecipeTypeField = TargetType.GetField("recipeType", BindingFlags.Public|BindingFlags.Instance);
-
-				string rt = (string)RecipeTypeField.GetValue (target);
-				int rtIndex = rt == "Standard" ? 0 : 1;
-                int newrtIndex = EditorGUILayout.Popup ("Recipe Type", rtIndex, recipeTypeOpts);
+				//Here if the recipeType is DynamicCharacterAvatar we want to show that option- but we dont want (yet) for people to make DynamicCharacterAvatar recipes from scratch
+				if (!recipeTypeOpts.Contains(recipeType))
+					recipeTypeOpts.Add(recipeType);
+				int rtIndex = recipeTypeOpts.IndexOf(recipeType);
+                int newrtIndex = EditorGUILayout.Popup ("Recipe Type", rtIndex, recipeTypeOpts.ToArray());
 
                 if (newrtIndex != rtIndex)
                     {
@@ -250,7 +454,7 @@ namespace UMAEditor
                     }
 
 
-                if(rt == "Standard" && standardRaceData != null)
+                if(recipeType == "Standard" && standardRaceData != null)
                 {
                     //This enables us to create a new recipe using the Editor menu command but also add DNA to it based on the set race's converters
                     var currentDNA = _recipe.GetAllDna();
@@ -463,7 +667,7 @@ namespace UMAEditor
                     }
                 }
                 //TODO Test the consequences of wardrobe slots having DNA when perhaps they should not
-				if (rt == "Wardrobe") {		
+				if (recipeType == "Wardrobe") {		
                     		
 					CompatibleRacesField = TargetType.GetField ("compatibleRaces", BindingFlags.Public | BindingFlags.Instance);
                     WardrobeRecipeThumbsField = TargetType.GetField("wardrobeRecipeThumbs", BindingFlags.Public | BindingFlags.Instance);
@@ -472,7 +676,7 @@ namespace UMAEditor
 					HidesField = TargetType.GetField("Hides", BindingFlags.Public | BindingFlags.Instance);
                     DisplayValueField = TargetType.GetField("DisplayValue",BindingFlags.Public | BindingFlags.Instance);
 
-                    List<string> crf = (List<string>)CompatibleRacesField.GetValue (target);
+					List<string> crf = (List<string>)CompatibleRacesField.GetValue (target);
                     List<WardrobeRecipeThumb> wardrobeThumbs = (List<WardrobeRecipeThumb>)WardrobeRecipeThumbsField.GetValue(target);
                     string wsl = (string)WardrobeSlotField.GetValue (target);
 					List<string> swsl2 = (List<string>)SuppressWardrobeSlotField.GetValue (target);
@@ -481,7 +685,7 @@ namespace UMAEditor
                     List<string> wrtdd = new List<string>();
                     string DisplayValue = (string)DisplayValueField.GetValue(target);
 
-                    if (crf.Count > 0)
+					if (crf.Count > 0)
                     {
                         foreach (string cr in crf)
                         {
