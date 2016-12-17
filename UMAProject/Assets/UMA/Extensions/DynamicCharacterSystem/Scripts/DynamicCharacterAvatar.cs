@@ -2367,7 +2367,8 @@ namespace UMACharacterSystem
 			public ColorValueList()
 			{
 #if UNITY_EDITOR
-				EditorApplication.update += CheckValuesConverted;
+				if(!Application.isPlaying)
+					EditorApplication.update += CheckValuesConverted;
 #endif
 			}
 
