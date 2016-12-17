@@ -197,8 +197,11 @@ public partial class DynamicCharacterAvatarEditor : Editor
 			{
 				EditorGUILayout.PropertyField(defaultLoadOptions, GUIContent.none);
 				EditorGUI.indentLevel++;
-				waitForBundles.boolValue = EditorGUILayout.ToggleLeft(new GUIContent(waitForBundles.displayName, waitForBundles.tooltip), waitForBundles.boolValue);
-				buildAfterLoad.boolValue = EditorGUILayout.ToggleLeft(new GUIContent(buildAfterLoad.displayName, buildAfterLoad.tooltip), buildAfterLoad.boolValue);
+				//waitForBundles.boolValue = EditorGUILayout.ToggleLeft(new GUIContent(waitForBundles.displayName, waitForBundles.tooltip), waitForBundles.boolValue);
+				//buildAfterLoad.boolValue = EditorGUILayout.ToggleLeft(new GUIContent(buildAfterLoad.displayName, buildAfterLoad.tooltip), buildAfterLoad.boolValue);
+				//just drawing these as propertyFields because the toolTip on toggle left doesn't work
+				EditorGUILayout.PropertyField(waitForBundles);
+				EditorGUILayout.PropertyField(buildAfterLoad);
 				EditorGUI.indentLevel--;
 			}
             EditorGUI.indentLevel--;
@@ -223,8 +226,11 @@ public partial class DynamicCharacterAvatarEditor : Editor
 			{
 				EditorGUILayout.PropertyField(defaultSaveOptions, GUIContent.none);
 				EditorGUI.indentLevel++;
-				ensureSharedColors.boolValue = EditorGUILayout.ToggleLeft(new GUIContent(ensureSharedColors.displayName, ensureSharedColors.tooltip), ensureSharedColors.boolValue);
-				makeUniqueFilename.boolValue = EditorGUILayout.ToggleLeft(new GUIContent(makeUniqueFilename.displayName, makeUniqueFilename.tooltip), makeUniqueFilename.boolValue);
+				//ensureSharedColors.boolValue = EditorGUILayout.ToggleLeft(new GUIContent(ensureSharedColors.displayName, ensureSharedColors.tooltip), ensureSharedColors.boolValue);
+				//makeUniqueFilename.boolValue = EditorGUILayout.ToggleLeft(new GUIContent(makeUniqueFilename.displayName, makeUniqueFilename.tooltip), makeUniqueFilename.boolValue);
+				//just drawing these as propertyFields because the toolTip on toggle left doesn't work
+				EditorGUILayout.PropertyField(ensureSharedColors);
+				EditorGUILayout.PropertyField(makeUniqueFilename);
 				EditorGUI.indentLevel--;
 			}
 			EditorGUI.indentLevel--;

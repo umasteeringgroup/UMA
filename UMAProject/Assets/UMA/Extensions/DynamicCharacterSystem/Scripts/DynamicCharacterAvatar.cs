@@ -2228,7 +2228,7 @@ namespace UMACharacterSystem
 			{
 				get {
 					if (_name != null)
-						convertOldFieldsToNew();
+						ConvertOldFieldsToNew();
                     return name; }
 				set { name = value; }
 			}
@@ -2237,7 +2237,7 @@ namespace UMACharacterSystem
 			{
 				get {
 					if (_name != null)
-						convertOldFieldsToNew();
+						ConvertOldFieldsToNew();
 					return color; }
 				set { color = value; }
 			}
@@ -2246,7 +2246,7 @@ namespace UMACharacterSystem
 			{
 				get {
 					if (_name != null)
-						convertOldFieldsToNew();
+						ConvertOldFieldsToNew();
 					return channelAdditiveMask[2];
 					}
 				set {
@@ -2304,21 +2304,19 @@ namespace UMACharacterSystem
 			}
 			public void OnAfterDeserialize()
 			{
-				convertOldFieldsToNew();
+				ConvertOldFieldsToNew();
 			}
 #endregion
 			/// <summary>
 			/// This will be called to convert an old style ColorValue to a new style ColorValue based on whether name is null
 			/// </summary>
-			private void convertOldFieldsToNew()
+			private void ConvertOldFieldsToNew()
 			{
 				if (!String.IsNullOrEmpty(_name))
 				{
 					EnsureChannels(3);
 					name = _name;
 					color = _color;
-					//if (channelAdditiveMask.Length < 3)
-						//EnsureChannels(3);
 					channelAdditiveMask[2] = _metallicGloss;
 					//marking _name as ull ensures this doesn't happen again. Color doesn't have a null value
 					_name = null;
