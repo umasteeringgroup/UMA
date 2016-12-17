@@ -2314,10 +2314,11 @@ namespace UMACharacterSystem
 			{
 				if (!String.IsNullOrEmpty(_name))
 				{
+					EnsureChannels(3);
 					name = _name;
 					color = _color;
-					if (channelAdditiveMask.Length < 3)
-						EnsureChannels(3);
+					//if (channelAdditiveMask.Length < 3)
+						//EnsureChannels(3);
 					channelAdditiveMask[2] = _metallicGloss;
 					//marking _name as ull ensures this doesn't happen again. Color doesn't have a null value
 					_name = null;
