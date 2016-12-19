@@ -85,7 +85,7 @@ namespace UMA
         }*/
 		void Awake()
 		{
-			if(!isInitialized)
+			if(!isInitialized && Application.isPlaying)
 			StartCoroutine(StartCO());
 		}
 
