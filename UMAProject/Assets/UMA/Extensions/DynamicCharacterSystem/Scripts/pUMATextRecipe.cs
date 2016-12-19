@@ -29,8 +29,8 @@ public partial class UMATextRecipe : UMAPackedRecipeBase
     public List<string> suppressWardrobeSlots = new List<string>();
 
 	[SerializeField]
-	public List<WardrobeSettings> activeWardrobeSet = null;//used in the editor to draw 'DynamicCharacterSystem' type recipe assets, in a different way to 'Standard' or 'Wardrobe' assets
-	 
+	public List<WardrobeSettings> activeWardrobeSet = new List<WardrobeSettings>();//used in the editor to draw 'DynamicCharacterSystem' type recipe assets, in a different way to 'Standard' or 'Wardrobe' assets
+
 	/// <summary>
 	/// Gets the thumbnail for this WardrobeRecipe filtered by racename
 	/// </summary>
@@ -261,6 +261,8 @@ public partial class UMATextRecipe : UMAPackedRecipeBase
 	/// <returns></returns>
 	public static string GetRecipesType(string recipeString)
 	{
+		if (String.IsNullOrEmpty(recipeString))
+			return "Standard";
 		return JsonUtility.FromJson<DCSRecipeChecker>(recipeString).packedRecipeType;
 	}
 	/// <summary>
@@ -270,6 +272,8 @@ public partial class UMATextRecipe : UMAPackedRecipeBase
 	/// <returns></returns>
 	public static bool RecipeHasWardrobeSet(string recipeString)
 	{
+		if (String.IsNullOrEmpty(recipeString))
+			return false;
 		return JsonUtility.FromJson<DCSRecipeChecker>(recipeString).checkedWardrobeSet.Count > 0;
 	}
 	/// <summary>
@@ -279,6 +283,8 @@ public partial class UMATextRecipe : UMAPackedRecipeBase
 	/// <returns></returns>
 	public static List<WardrobeSettings> GetRecipesWardrobeSet(string recipeString)
 	{
+		if (String.IsNullOrEmpty(recipeString))
+			return null;
 		return JsonUtility.FromJson<DCSRecipeChecker>(recipeString).checkedWardrobeSet;
 	}
 

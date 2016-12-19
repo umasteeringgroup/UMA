@@ -647,10 +647,10 @@ namespace UMACharacterSystem
 		/// <param name="RestoreDNA">If updating the same race set this to true to restore the current DNA.</param>
 		/// <param name="prioritySlot">Priority slot- use this to make slots lower down the wardrobe slot list suppress ones that are higher.</param>
 		/// <param name="prioritySlotOver">a list of slots the priority slot overrides</param>
-		public UMARecipeBase[] BuildCharacter(bool RestoreDNA = true, string prioritySlot = "", List<string> prioritySlotOver = default(List<string>))
+		public UMARecipeBase[] BuildCharacter(bool RestoreDNA = true/*, string prioritySlot = "", List<string> prioritySlotOver = default(List<string>)*/)
 		{
-			if (prioritySlotOver == default(List<string>))
-				prioritySlotOver = new List<string>();
+			/*if (prioritySlotOver == default(List<string>))
+				prioritySlotOver = new List<string>();*/
 
 			HiddenSlots.Clear();
 
@@ -676,7 +676,7 @@ namespace UMACharacterSystem
 					{
 						if (activeRace.name == "" || ((utr.compatibleRaces.Count == 0 || utr.compatibleRaces.Contains(activeRace.name)) || (activeRace.racedata.findBackwardsCompatibleWith(utr.compatibleRaces) && activeRace.racedata.wardrobeSlots.Contains(utr.wardrobeSlot))))
 						{
-							if (prioritySlotOver.Count > 0)
+							/*if (prioritySlotOver.Count > 0)
 							{
 								foreach (string suppressedSlot in prioritySlotOver)
 								{
@@ -685,12 +685,12 @@ namespace UMACharacterSystem
 										SuppressSlotsStrings.Add(suppressedSlot);
 									}
 								}
-							}
+							}*/
 							if (!SuppressSlotsStrings.Contains(utr.wardrobeSlot))
 							{
 								foreach (string suppressedSlot in utr.suppressWardrobeSlots)
 								{
-									if (prioritySlot == "" || prioritySlot != suppressedSlot)
+									//if (prioritySlot == "" || prioritySlot != suppressedSlot)
 										SuppressSlotsStrings.Add(suppressedSlot);
 								}
 							}
@@ -2367,8 +2367,7 @@ namespace UMACharacterSystem
 			public ColorValueList()
 			{
 #if UNITY_EDITOR
-				if(!Application.isPlaying)
-					EditorApplication.update += CheckValuesConverted;
+				EditorApplication.update += CheckValuesConverted;
 #endif
 			}
 
@@ -2393,7 +2392,7 @@ namespace UMACharacterSystem
 			/// </summary>
 			private void CheckValuesConverted()
 			{
-				if (HasConvertedValues)
+				if (HasConvertedValues && !Application.isPlaying)
 				{
 					if (EditorSceneManager.GetActiveScene().IsValid())
 					{
@@ -2401,10 +2400,15 @@ namespace UMACharacterSystem
 						{
 							Debug.LogWarning("Some of the characterColors in your DynamicCharacterAvatars were updated from the old format to the new format. Make sure you save the scene when you are done ;)");
 						}
+
 						EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
 						HasConvertedValues = false;
 						EditorApplication.update -= CheckValuesConverted;
 					}
+				}
+				else
+				{
+					HasConvertedValues = false;
 				}
 			}
 #endif
