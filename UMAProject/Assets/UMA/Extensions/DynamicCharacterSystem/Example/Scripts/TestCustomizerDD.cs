@@ -604,21 +604,21 @@ public class TestCustomizerDD : MonoBehaviour
 	{
 		var thisRace = Avatar.activeRace.name;
 		int slotNumber = (int)fSlotNumber;
-		string prioritySlot = "";
-		List<string> prioritySlotOver = new List<string>();
+		//string prioritySlot = "";
+		//List<string> prioritySlotOver = new List<string>();
 		UMATextRecipe tr = null;
 		if (slotNumber >= 0)
 		{
 			tr = characterSystem.Recipes[thisRace][slotToChange][slotNumber];
-			prioritySlot = tr.wardrobeSlot;
-			prioritySlotOver = tr.suppressWardrobeSlots;
+			//prioritySlot = tr.wardrobeSlot;
+			//prioritySlotOver = tr.suppressWardrobeSlots;
 			Avatar.SetSlot(tr);
 		}
 		else
 		{
 			Avatar.ClearSlot(slotToChange);
 		}
-		if (prioritySlotOver.Count > 0)
+		/*if (prioritySlotOver.Count > 0)
 		{
 			foreach (Transform child in wardrobeDropdownPanel.transform)
 			{
@@ -632,8 +632,8 @@ public class TestCustomizerDD : MonoBehaviour
 					}
 				}
 			}
-		}
-		Avatar.BuildCharacter(true, prioritySlot, prioritySlotOver);
+		}*/
+		Avatar.BuildCharacter(true/*, prioritySlot, prioritySlotOver*/);
 	}
 
 	public void CloseAllPanels()
