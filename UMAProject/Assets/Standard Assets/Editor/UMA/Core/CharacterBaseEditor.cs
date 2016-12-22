@@ -716,7 +716,7 @@ namespace UMAEditor
 		public bool OnGUI(ref bool _dnaDirty, ref bool _textureDirty, ref bool _meshDirty)
 		{
 			bool delete;
-			GUIHelper.FoldoutBar(ref _foldout, _name, out delete);
+			GUIHelper.FoldoutBar(ref _foldout, _name + "      (" + _slotData.asset.name + ")", out delete);
 
 			if (!_foldout)
 				return false;
