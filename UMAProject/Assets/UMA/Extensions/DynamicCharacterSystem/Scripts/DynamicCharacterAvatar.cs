@@ -140,10 +140,10 @@ namespace UMACharacterSystem
 		private List<string> HiddenSlots = new List<string>();//why was this HashSet list is faster for our purposes (http://stackoverflow.com/questions/150750/hashset-vs-list-performance)
 															  //a list of downloading assets that the avatar can check the download status of.
 		private List<string> requiredAssetsToCheck = new List<string>();
-		//This is so we know if the current building process for the Avatar will *result* in it being built so that we dont trigger multiple
-		//Builds when the Component Starts if one has already triggered via scripting before the component is started
-		//also changes the way some methods like 'SetLoadString' work
-		private bool _isFirstBuild = true;
+		//This is so we know if whether to use the 'default' settings as set in the componnt by colors/defaultRecipes/loadString/umaRecipe
+		//or if an external script has already overridden these and so we should just build with the settings as they are (i.e. just call BuildCharacter)
+		//Should be set to FALSE by any method that actually changes settings without calling ImportSettings
+		private bool _isFirstSettingsBuild = true;
 
 		#endregion
 
@@ -232,16 +232,16 @@ namespace UMACharacterSystem
 					_buildCharacterEnabled = value;
 					if (Application.isPlaying)
 					{
-						if (_isFirstBuild)
+						if (_isFirstSettingsBuild)
 						{
 							if (BuildUsingComponentSettings)
 							{
-								_isFirstBuild = false;
+								_isFirstSettingsBuild = false;
 								StartCoroutine(BuildFromComponentSettingsCO());
 							}
 							else //we have an umaRecipe set or a text string set or a file defined to load
 							{
-								_isFirstBuild = false;
+								_isFirstSettingsBuild = false;
 								BuildFromStartingFileOrRecipe();
 							}
 						}
@@ -291,16 +291,16 @@ namespace UMACharacterSystem
 			//
 			if (BuildCharacterEnabled == false)
 				return;
-			if (_isFirstBuild)
+			if (_isFirstSettingsBuild)
 			{
 				if (BuildUsingComponentSettings)
 				{
-					_isFirstBuild = false;
+					_isFirstSettingsBuild = false;
 					StartCoroutine(BuildFromComponentSettingsCO());
 				}
 				else //we have an umaRecipe set or a text string set or a file defined to load
 				{
-					_isFirstBuild = false;
+					_isFirstSettingsBuild = false;
 					BuildFromStartingFileOrRecipe();
 				}
 			}
@@ -324,7 +324,7 @@ namespace UMACharacterSystem
 					//actually we dont know in this case if we are restoring DNA or not
 					//but a placeholder race should only have been used if defaultLoadOptions.waitForBundles is false
 					//so we can atleast assume we dont want to restore the dna from that
-					_isFirstBuild = false;
+					_isFirstSettingsBuild = false;
 					BuildCharacter(waitForBundles);
 				}
 			}
@@ -777,6 +777,7 @@ namespace UMACharacterSystem
 		/// <param name="wardrobeSet"></param>
 		public void LoadWardrobeSet(List<WardrobeSettings> wardrobeSet, bool clearExisting = false)
 		{
+			_isFirstSettingsBuild = false;
 			if (clearExisting)
 				WardrobeRecipes.Clear();
 			if (wardrobeSet.Count > 0)
@@ -1353,7 +1354,7 @@ namespace UMACharacterSystem
 		/// </summary>
 		/// <param name="Recipe"></param>
 		//DONT LIKE THIS - this is only usable if the character hasn't been build already- 
-		//but we can check the _isFirstBuild value and if its false call LoadFromRecipeString instead (see next method)
+		//but we can check the _isFirstSettingsBuild value and if its false call LoadFromRecipeString instead (see next method)
 		public void Preload(string Recipe)
 		{
 			Debug.LogWarning("DEPRICATED please use SetLoadString instead");
@@ -1367,7 +1368,7 @@ namespace UMACharacterSystem
 		/// <param name="recipeString"></param>
 		public void SetLoadString(string recipeString)
 		{
-			if (_isFirstBuild)
+			if (_isFirstSettingsBuild)
 			{
 				loadString = recipeString;
 				loadPathType = loadPathTypes.String;
@@ -1429,7 +1430,7 @@ namespace UMACharacterSystem
 			}
 			//we only want to know the value of BuildCharacter at the time this recipe was sent- not what it may have been changed to over the process of the coroutine
 			var wasBuildCharacterEnabled = _buildCharacterEnabled;
-			_isFirstBuild = _buildCharacterEnabled ? false : _isFirstBuild;
+			_isFirstSettingsBuild = false;
 			var prevDna = new UMADnaBase[0];
 			bool needsUpdate = false;//gets set to true if anything caused downloads that we actually waited for
 			while (!DynamicAssetLoader.Instance.isInitialized)
@@ -1572,6 +1573,7 @@ namespace UMACharacterSystem
 		/// <returns></returns>
 		IEnumerator ImportOldUma(UMATextRecipe.DCSUniversalPackRecipe settingsToLoad, LoadOptions thisLoadOptions, bool wasBuildCharacterEnabled = true)
 		{
+			_isFirstSettingsBuild = false;
 			var prevDna = new UMADnaBase[0];
 			if ((!thisLoadOptions.HasFlag(LoadOptions.loadDNA) || settingsToLoad.packedDna.Count == 0) && activeRace.racedata != null)
 			{
@@ -1758,8 +1760,7 @@ namespace UMACharacterSystem
 		{
 			if (!_buildCharacterEnabled)
 				return;
-			else
-				_isFirstBuild = false;
+			_isFirstSettingsBuild = false;
 			if (!DynamicAssetLoader.Instance.isInitialized)
 			{
 				StartCoroutine(BuildCharacterWhenReady(RestoreDNA));
