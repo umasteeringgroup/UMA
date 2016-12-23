@@ -251,8 +251,8 @@ public class TestCustomizerDD : MonoBehaviour
 		else
 		{
 			//this must be a newly Downloaded Race so just let CharacterAvatar deal with it...
-			DynamicCharacterAvatar.ChangeRaceOptions thisLoadOptions = DynamicCharacterAvatar.ChangeRaceOptions.useDefaults;
-			if (_keepDNA || _keepWardrobe || _keepBodyColors)
+			DynamicCharacterAvatar.ChangeRaceOptions thisLoadOptions = DynamicCharacterAvatar.ChangeRaceOptions.none;
+            if (_keepDNA || _keepWardrobe || _keepBodyColors)
 			{
 				if (_keepDNA)
 					thisLoadOptions |= DynamicCharacterAvatar.ChangeRaceOptions.keepDNA;
@@ -261,8 +261,8 @@ public class TestCustomizerDD : MonoBehaviour
 				if (_keepBodyColors)
 					thisLoadOptions |= DynamicCharacterAvatar.ChangeRaceOptions.keepBodyColors;
 
-				thisLoadOptions &= ~DynamicCharacterAvatar.ChangeRaceOptions.useDefaults;
-			}
+				thisLoadOptions &= ~DynamicCharacterAvatar.ChangeRaceOptions.none;
+            }
 			Avatar.ChangeRace(racename, thisLoadOptions);
 		}
 	}
@@ -275,7 +275,7 @@ public class TestCustomizerDD : MonoBehaviour
 			thisRace = RaceToSet;
 			//Force CharacterSystem to find the new race
 			UMAContext.Instance.raceLibrary.GetRace(RaceToSet);
-			DynamicCharacterAvatar.ChangeRaceOptions thisLoadOptions = DynamicCharacterAvatar.ChangeRaceOptions.useDefaults;
+			DynamicCharacterAvatar.ChangeRaceOptions thisLoadOptions = DynamicCharacterAvatar.ChangeRaceOptions.none;
 			if (_keepDNA || _keepWardrobe || _keepBodyColors)
 			{
 				if (_keepDNA)
@@ -285,7 +285,7 @@ public class TestCustomizerDD : MonoBehaviour
 				if (_keepBodyColors)
 					thisLoadOptions |= DynamicCharacterAvatar.ChangeRaceOptions.keepBodyColors;
 
-				thisLoadOptions &= ~DynamicCharacterAvatar.ChangeRaceOptions.useDefaults;
+				thisLoadOptions &= ~DynamicCharacterAvatar.ChangeRaceOptions.none;
 			}
 			Avatar.ChangeRace(RaceToSet, thisLoadOptions);
 		}
@@ -604,21 +604,19 @@ public class TestCustomizerDD : MonoBehaviour
 	{
 		var thisRace = Avatar.activeRace.name;
 		int slotNumber = (int)fSlotNumber;
-		//string prioritySlot = "";
-		//List<string> prioritySlotOver = new List<string>();
+		List<string> prioritySlotOver = new List<string>();
 		UMATextRecipe tr = null;
 		if (slotNumber >= 0)
 		{
 			tr = characterSystem.Recipes[thisRace][slotToChange][slotNumber];
-			//prioritySlot = tr.wardrobeSlot;
-			//prioritySlotOver = tr.suppressWardrobeSlots;
+			prioritySlotOver = tr.suppressWardrobeSlots;
 			Avatar.SetSlot(tr);
 		}
 		else
 		{
 			Avatar.ClearSlot(slotToChange);
 		}
-		/*if (prioritySlotOver.Count > 0)
+		if (prioritySlotOver.Count > 0)
 		{
 			foreach (Transform child in wardrobeDropdownPanel.transform)
 			{
@@ -628,12 +626,11 @@ public class TestCustomizerDD : MonoBehaviour
 					if (prioritySlotOver.Contains(thisSlot))
 					{
 						child.GetComponent<Dropdown>().value = 0;
-						Avatar.ClearSlot(thisSlot);
 					}
 				}
 			}
-		}*/
-		Avatar.BuildCharacter(true/*, prioritySlot, prioritySlotOver*/);
+		}
+		Avatar.BuildCharacter(true);
 	}
 
 	public void CloseAllPanels()

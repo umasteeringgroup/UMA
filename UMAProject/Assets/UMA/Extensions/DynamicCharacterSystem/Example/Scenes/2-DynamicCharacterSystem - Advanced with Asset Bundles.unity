@@ -628,8 +628,8 @@ RectTransform:
   m_RootOrder: 1
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 197.1919, y: -14.529335}
-  m_SizeDelta: {x: 128.12793, y: 23.05867}
+  m_AnchoredPosition: {x: 271, y: -18.200005}
+  m_SizeDelta: {x: 177.33333, y: 30.40001}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &89796739
 MonoBehaviour:
@@ -840,8 +840,8 @@ RectTransform:
   m_RootOrder: 0
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 69.063965, y: -14.529335}
-  m_SizeDelta: {x: 128.12793, y: 23.05867}
+  m_AnchoredPosition: {x: 93.666664, y: -18.200005}
+  m_SizeDelta: {x: 177.33333, y: 30.40001}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &98464980
 MonoBehaviour:
@@ -1525,10 +1525,10 @@ RectTransform:
   - {fileID: 707760219}
   m_Father: {fileID: 564266366}
   m_RootOrder: 5
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0.000061035156, y: -20.97501}
-  m_SizeDelta: {x: -470, y: -374.75}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0.000061035156, y: -20.975006}
+  m_SizeDelta: {x: 572, y: 189.6}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &165878813
 MonoBehaviour:
@@ -1543,9 +1543,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_IgnoreLayout: 0
   m_MinWidth: 425
-  m_MinHeight: -1
+  m_MinHeight: 300.34
   m_PreferredWidth: 425
-  m_PreferredHeight: 200
+  m_PreferredHeight: 207.75
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
 --- !u!114 &165878814
@@ -4189,7 +4189,8 @@ MonoBehaviour:
     name: HumanFemaleResources
     _data: {fileID: 11400000, guid: 92f8416dee5a3f043a417078fa29c476, type: 2}
     _cachedRaceDatas: []
-  defaultChangeRaceOptions: 9
+  defaultChangeRaceOptions: 4
+  cacheCurrentState: 1
   preloadWardrobeRecipes:
     loadDefaultRecipes: 1
     recipes:
@@ -4289,20 +4290,18 @@ MonoBehaviour:
   loadString: 
   loadFileOnStart: 1
   waitForBundles: 1
-  buildAfterLoad: 1
   defaultLoadOptions: 63
   savePathType: 0
   savePath: CharacterRecipes
   saveFilename: 
   makeUniqueFilename: 0
   ensureSharedColors: 0
-  defaultSaveOptions: 30
+  defaultSaveOptions: 15
   BoundsOffset: {x: 0, y: 0, z: 0}
   assetBundlesUsedbyCharacter:
   - uma/toonshared/racebase
   - uma/toonfemale/racebase
-  AssetBundlesUsedbyCharacterUpToDate: 1
-  requiredAssetsToCheck: []
+  _buildCharacterEnabled: 1
 --- !u!4 &363062548
 Transform:
   m_ObjectHideFlags: 0
@@ -4756,7 +4755,8 @@ MonoBehaviour:
     name: HumanGirl
     _data: {fileID: 11400000, guid: 8f9fc622c08165a4297be9de525ccd1b, type: 2}
     _cachedRaceDatas: []
-  defaultChangeRaceOptions: 9
+  defaultChangeRaceOptions: 4
+  cacheCurrentState: 1
   preloadWardrobeRecipes:
     loadDefaultRecipes: 1
     recipes:
@@ -4856,20 +4856,18 @@ MonoBehaviour:
   loadString: 
   loadFileOnStart: 1
   waitForBundles: 1
-  buildAfterLoad: 1
   defaultLoadOptions: 63
   savePathType: 0
   savePath: CharacterRecipes
   saveFilename: 
   makeUniqueFilename: 0
   ensureSharedColors: 0
-  defaultSaveOptions: 30
+  defaultSaveOptions: 15
   BoundsOffset: {x: 0, y: 0, z: 0}
   assetBundlesUsedbyCharacter:
   - uma/toonshared/racebase
   - uma/toonfemale/racebase
-  AssetBundlesUsedbyCharacterUpToDate: 1
-  requiredAssetsToCheck: []
+  _buildCharacterEnabled: 1
 --- !u!4 &385653673
 Transform:
   m_ObjectHideFlags: 0
@@ -5940,8 +5938,8 @@ RectTransform:
   m_RootOrder: 0
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 197.1919, y: -13.029335}
-  m_SizeDelta: {x: 394.3838, y: 26.05867}
+  m_AnchoredPosition: {x: 271, y: -16.700005}
+  m_SizeDelta: {x: 542, y: 33.40001}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &556039361
 MonoBehaviour:
@@ -9145,7 +9143,8 @@ MonoBehaviour:
     name: HumanMaleDCS
     _data: {fileID: 11400000, guid: 5ed11744a54425247b40c4f8967bdcbd, type: 2}
     _cachedRaceDatas: []
-  defaultChangeRaceOptions: 9
+  defaultChangeRaceOptions: 4
+  cacheCurrentState: 1
   preloadWardrobeRecipes:
     loadDefaultRecipes: 1
     recipes:
@@ -9189,7 +9188,7 @@ MonoBehaviour:
     _colors:
     - name: Hair
       channelMask:
-      - {r: 0.3529412, g: 0.21568629, b: 0.14117648, a: 1}
+      - {r: 0.3529412, g: 0.21568629, b: 0.14117648, a: 0.978}
       - {r: 1, g: 1, b: 1, a: 1}
       - {r: 1, g: 1, b: 1, a: 1}
       channelAdditiveMask:
@@ -9245,7 +9244,6 @@ MonoBehaviour:
   loadString: 
   loadFileOnStart: 1
   waitForBundles: 1
-  buildAfterLoad: 1
   defaultLoadOptions: 31
   savePathType: 2
   savePath: CharacterRecipes
@@ -9257,8 +9255,7 @@ MonoBehaviour:
   assetBundlesUsedbyCharacter:
   - uma/toonshared/racebase
   - uma/toonfemale/racebase
-  AssetBundlesUsedbyCharacterUpToDate: 1
-  requiredAssetsToCheck: []
+  _buildCharacterEnabled: 1
 --- !u!4 &893401643
 Transform:
   m_ObjectHideFlags: 0
@@ -14260,8 +14257,8 @@ RectTransform:
   m_RootOrder: 2
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 325.31982, y: -14.529335}
-  m_SizeDelta: {x: 128.12793, y: 23.05867}
+  m_AnchoredPosition: {x: 448.3333, y: -18.200005}
+  m_SizeDelta: {x: 177.33333, y: 30.40001}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1520529001
 MonoBehaviour:

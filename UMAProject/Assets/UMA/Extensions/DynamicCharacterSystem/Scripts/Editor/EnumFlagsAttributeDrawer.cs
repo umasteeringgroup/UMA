@@ -12,8 +12,11 @@ namespace UMACharacterSystem
 
 		public override void OnGUI(Rect pos, SerializedProperty prop, GUIContent label)
 		{
-
-			bool[] buttons = new bool[prop.enumNames.Length - 1];
+			int namesIntModifier = 1;
+			//check if there is a 'none' value at the second position too because we dont want that either- not a very elegant solution...
+			if (prop.enumNames[1] == "none")
+				namesIntModifier = 2;
+			bool[] buttons = new bool[prop.enumNames.Length - namesIntModifier];
 			
 			if (label != GUIContent.none)
 			{
@@ -33,7 +36,7 @@ namespace UMACharacterSystem
 					buttons[i] = true;
 				}
 				
-				buttons[i] = EditorGUILayout.ToggleLeft(prop.enumNames[i + 1].BreakupCamelCase(), buttons[i]);
+				buttons[i] = EditorGUILayout.ToggleLeft(prop.enumNames[i + namesIntModifier].BreakupCamelCase(), buttons[i]);
 				if (buttons[i])
 				{
 					buttonsValue += 1 << i;

@@ -44,7 +44,8 @@ public partial class UMATextRecipe : UMAPackedRecipeBase
             foreach (WardrobeRecipeThumb wdt in wardrobeRecipeThumbs)
             {
                 //Set a default when the first option with a value is found
-                if (foundSprite == null && wdt.thumb != null){
+                if (foundSprite == null && wdt.thumb != null)
+				{
                     foundSprite = wdt.thumb;
                 }
                 //Override that if there is a specific one is found for this race
@@ -299,6 +300,36 @@ public partial class UMATextRecipe : UMAPackedRecipeBase
 		public List<WardrobeSettings> wardrobeSet;
 		public string raceAnimatorController;
 
+		private OverlayColorData[] _sharedColors = null;
+
+		#region PUBLIC PROPERTIES
+
+		public OverlayColorData[] sharedColors
+		{
+			get
+			{
+				if (_sharedColors == null)
+				{
+					if (characterColors.Count > 0)
+					{
+						var colorData = new OverlayColorData[characterColors.Count];
+						for (int i = 0; i < colorData.Length; i++)
+						{
+							colorData[i] = new OverlayColorData();
+							characterColors[i].SetOverlayColorData(colorData[i]);
+						}
+						_sharedColors = colorData;
+					}
+					else
+					{
+						_sharedColors = new OverlayColorData[0];
+					}
+				}
+				return _sharedColors;
+			}
+		}
+
+		#endregion
 		#region CONSTRUCTOR
 		/// <summary>
 		/// This is the main DCS Data model now. When a DCS is saved it is saved using this
@@ -377,15 +408,36 @@ public partial class UMATextRecipe : UMAPackedRecipeBase
 			{
 				if (_sharedColors == null)
 				{
-					if (fColors.Length > 0)
+					//PackedOverlayColorDataV3
+					if (fColors != null)
 					{
-						var colorData = new OverlayColorData[fColors.Length];
-						for (int i = 0; i < colorData.Length; i++)
+						if (fColors.Length > 0)
 						{
-							colorData[i] = new OverlayColorData();
-							fColors[i].SetOverlayColorData(colorData[i]);
+							var colorData = new OverlayColorData[fColors.Length];
+							for (int i = 0; i < colorData.Length; i++)
+							{
+								colorData[i] = new OverlayColorData();
+								fColors[i].SetOverlayColorData(colorData[i]);
+							}
+							_sharedColors = colorData;
 						}
-						_sharedColors = colorData;
+						else
+							_sharedColors = new OverlayColorData[0];
+					}//PackedOverlayColorDataV2
+					else if (colors != null)
+					{
+						if (colors.Length > 0)
+						{
+							var colorData = new OverlayColorData[colors.Length];
+							for (int i = 0; i < colorData.Length; i++)
+							{
+								colorData[i] = new OverlayColorData();
+								colors[i].SetOverlayColorData(colorData[i]);
+							}
+							_sharedColors = colorData;
+						}
+						else
+							_sharedColors = new OverlayColorData[0];
 					}
 					else
 					{
@@ -437,7 +489,7 @@ public partial class UMATextRecipe : UMAPackedRecipeBase
 			wardrobeSet = dcsPackRecipe.wardrobeSet;
 		}
 		/// <summary>
-		/// This is used to save a DCS avatar to a 'backwards compatible' UMA model but which only contains DCS data- probably not needed
+		/// This is used to save a DCS avatar to a 'backwards compatible' UMA model
 		/// </summary>
 		/// <param name="recipeToSave"></param>
 		/// <param name="wardrobeRecipes"></param>
@@ -445,26 +497,17 @@ public partial class UMATextRecipe : UMAPackedRecipeBase
 		public DCSUniversalPackRecipe(UMAData.UMARecipe recipeToSave, Dictionary<string, UMATextRecipe> wardrobeRecipes = null, string pRecipeType = "DynamicCharacterAvatar")
         {
 			///Debug.Log("Created universal model from Avatar");
+			var packedRecipe = PackRecipeV2(recipeToSave);
 			packedRecipeType = pRecipeType;
-            version = 2;
-            race = recipeToSave.raceData.raceName;
-			//colors
-			if(recipeToSave.sharedColors.Length > 0)
-			{
-				List<PackedOverlayColorDataV3> packedColorEntries = new List<PackedOverlayColorDataV3>();
-
-				for (int i = 0; i < recipeToSave.sharedColors.Length; i++)
-				{
-					packedColorEntries.Add(new PackedOverlayColorDataV3(recipeToSave.sharedColors[i]));
-				}
-
-				fColors = packedColorEntries.ToArray();
-			}
-
-			sharedColorCount = recipeToSave.sharedColors.Length;   
-
-            packedDna = UMAPackedRecipeBase.GetPackedDNA(recipeToSave);
-			//wardrobe
+			version = packedRecipe.version;
+			packedSlotDataList = packedRecipe.packedSlotDataList;
+			slotsV2 = packedRecipe.slotsV2;
+			colors = packedRecipe.colors;
+			fColors = packedRecipe.fColors;
+			sharedColorCount = packedRecipe.sharedColorCount;
+			race = packedRecipe.race;
+			umaDna = packedRecipe.umaDna;
+			packedDna = packedRecipe.packedDna;
 			wardrobeSet = GenerateWardrobeSet(wardrobeRecipes);
 		}
 		#endregion

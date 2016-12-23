@@ -27,22 +27,6 @@ public partial class DynamicCharacterAvatarEditor : Editor
         }
     }
 
-	/*public void SetColorCount(int colorCount)
-	{
-		var newavatarColors = new List<OverlayColorData>();
-		for(int i = 0; i < colorCount; i++)
-		{
-			if (thisDCA.avatarColors.Count > i)
-			{
-				newavatarColors.Add(thisDCA.avatarColors[i]);
-			}
-			else
-			{
-				newavatarColors.Add(new OverlayColorData(3));
-			}
-		}
-		thisDCA.avatarColors = newavatarColors;
-	}*/
 	public void SetNewColorCount(int colorCount)
 	{
 		var newcharacterColors = new List<DynamicCharacterAvatar.ColorValue>();
@@ -64,13 +48,30 @@ public partial class DynamicCharacterAvatarEditor : Editor
 
 	public override void OnInspectorGUI()
     {
-        Editor.DrawPropertiesExcluding(serializedObject, new string[] { "activeRace","defaultChangeRaceOptions","preloadWardrobeRecipes", "raceAnimationControllers",
-			"characterColors","BoundsOffset",
-			/*LoadOtions fields*/ "defaultLoadOptions", "loadPathType", "loadPath", "loadFilename", "loadString", "loadFileOnStart", "waitForBundles", "buildAfterLoad",
+		serializedObject.Update();
+		Editor.DrawPropertiesExcluding(serializedObject, new string[] { "hide","activeRace","defaultChangeRaceOptions","cacheCurrentState","preloadWardrobeRecipes", "raceAnimationControllers",
+			"characterColors","BoundsOffset","_buildCharacterEnabled",
+			/*LoadOtions fields*/ "defaultLoadOptions", "loadPathType", "loadPath", "loadFilename", "loadString", "loadFileOnStart", "waitForBundles", /*"buildAfterLoad",*/
 			/*SaveOptions fields*/ "defaultSaveOptions", "savePathType","savePath", "saveFilename", "makeUniqueFilename","ensureSharedColors", 
 			/*Moved into AdvancedOptions*/"context","umaData","umaRecipe", "umaAdditionalRecipes","umaGenerator", "animationController",
 			/*Moved into CharacterEvents*/"CharacterCreated", "CharacterUpdated", "CharacterDestroyed", "RecipeUpdated" });
-		serializedObject.Update();
+		EditorGUI.BeginChangeCheck();
+		EditorGUILayout.PropertyField(serializedObject.FindProperty("hide"));
+		if (EditorGUI.EndChangeCheck())
+		{
+			serializedObject.ApplyModifiedProperties();
+		}
+		//for _buildCharacterEnabled we want to set the value using the DCS BuildCharacterEnabled property because this actually triggers BuildCharacter
+		var buildCharacterEnabled = serializedObject.FindProperty("_buildCharacterEnabled");
+		var buildCharacterEnabledValue = buildCharacterEnabled.boolValue;
+		EditorGUI.BeginChangeCheck();
+		var buildCharacterEnabledNewValue = EditorGUILayout.Toggle(new GUIContent(buildCharacterEnabled.displayName, buildCharacterEnabled.tooltip), buildCharacterEnabledValue);
+		if (EditorGUI.EndChangeCheck())
+		{
+			if (buildCharacterEnabledNewValue != buildCharacterEnabledValue)
+				thisDCA.BuildCharacterEnabled = buildCharacterEnabledNewValue;
+			serializedObject.ApplyModifiedProperties();
+		}
 		SerializedProperty thisRaceSetter = serializedObject.FindProperty("activeRace");
         Rect currentRect = EditorGUILayout.GetControlRect(false, _racePropDrawer.GetPropertyHeight(thisRaceSetter, GUIContent.none));
 		_racePropDrawer.OnGUI(currentRect, thisRaceSetter, new GUIContent(thisRaceSetter.displayName));
@@ -82,6 +83,9 @@ public partial class DynamicCharacterAvatarEditor : Editor
 		{
 			EditorGUI.BeginChangeCheck();
 			EditorGUILayout.PropertyField(defaultChangeRaceOptions, GUIContent.none);
+			EditorGUI.indentLevel++;
+			EditorGUILayout.PropertyField(serializedObject.FindProperty("cacheCurrentState"));
+			EditorGUI.indentLevel--;
 			if (EditorGUI.EndChangeCheck())
 			{
 				serializedObject.ApplyModifiedProperties();
@@ -141,7 +145,8 @@ public partial class DynamicCharacterAvatarEditor : Editor
 			if (n_newArraySize != n_origArraySize)
 			{
 				SetNewColorCount(n_newArraySize);//this is not prompting a save so mark the scene dirty...
-				EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+				if (!Application.isPlaying)
+					EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
 			}
 			serializedObject.ApplyModifiedProperties();
 			if (Application.isPlaying)
@@ -166,7 +171,6 @@ public partial class DynamicCharacterAvatarEditor : Editor
 			SerializedProperty defaultSaveOptions = serializedObject.FindProperty("defaultSaveOptions");
 			//extra LoadSave Options in addition to flags
 			SerializedProperty waitForBundles = serializedObject.FindProperty("waitForBundles");
-			SerializedProperty buildAfterLoad = serializedObject.FindProperty("buildAfterLoad");
 			SerializedProperty makeUniqueFilename = serializedObject.FindProperty("makeUniqueFilename");
 			SerializedProperty ensureSharedColors = serializedObject.FindProperty("ensureSharedColors");
 
@@ -201,7 +205,6 @@ public partial class DynamicCharacterAvatarEditor : Editor
 				//buildAfterLoad.boolValue = EditorGUILayout.ToggleLeft(new GUIContent(buildAfterLoad.displayName, buildAfterLoad.tooltip), buildAfterLoad.boolValue);
 				//just drawing these as propertyFields because the toolTip on toggle left doesn't work
 				EditorGUILayout.PropertyField(waitForBundles);
-				EditorGUILayout.PropertyField(buildAfterLoad);
 				EditorGUI.indentLevel--;
 			}
             EditorGUI.indentLevel--;
@@ -219,7 +222,6 @@ public partial class DynamicCharacterAvatarEditor : Editor
                 EditorGUILayout.PropertyField(savePath);
             }
             EditorGUILayout.PropertyField(saveFilename);
-			//EditorGUILayout.PropertyField(makeUnique);
 			EditorGUI.indentLevel++;
 			defaultSaveOptions.isExpanded = EditorGUILayout.Foldout(defaultSaveOptions.isExpanded, new GUIContent("Save Options", "The default options for when a character is save to UMATextRecipe asset or a txt. Can be overidden when calling 'DoSave' directly."));
 			if (defaultSaveOptions.isExpanded)

@@ -65,57 +65,80 @@ namespace UMAEditor
 		//THIS only happens in the editor- at runtime the values are never changed
 		//BUT it could still be an issue if multiple developers are working on slots, but they dont all have all the races those slots are compatible with...
 		//So if the current value is not found because we could not find all the compatible races DISABLE the dropdown so that the value cannot be changed and show a warning...
-		private int GenerateWardrobeSlotsEnum(string selectedOption, List<string> compatibleRaces = null, bool forceUpdate = false){
+		private int GenerateWardrobeSlotsEnum(string selectedOption, List<string> compatibleRaces = null, bool forceUpdate = false)
+		{
 			int selectedIndex = 0;
-			if (compatibleRaces == null) {
+			if (compatibleRaces == null)
+			{
 				selectedIndex = -1;
 				generatedWardrobeSlotOptions = new List<string> (){"None","Face","Hair","Complexion","Eyebrows","Beard","Ears","Helmet","Shoulders","Chest","Arms","Hands","Waist","Legs","Feet"};
-			} else {
-				if (compatibleRaces.Count == 0) {
+			}
+			else
+			{
+				if (compatibleRaces.Count == 0)
+				{
 					//show the default list? Or say that a compatible race needs to be added?
 					selectedIndex = -1;
 					generatedWardrobeSlotOptions = new List<string> (){"None","Face","Hair","Complexion","Eyebrows","Beard","Ears","Helmet","Shoulders","Chest","Arms","Hands","Waist","Legs","Feet"};
-				} else if (generatedWardrobeSlotOptions.Count == 0 || forceUpdate) {
+				}
+				else if (generatedWardrobeSlotOptions.Count == 0 || forceUpdate)
+				{
 					List<RaceData> thisRaceDatas = new List<RaceData>();
-					for (int i = 0; i < compatibleRaces.Count; i++) {
+					for (int i = 0; i < compatibleRaces.Count; i++)
+					{
 						thisRaceDatas.Add(GetCompatibleRaceData (compatibleRaces [i]));
 					}
-					for (int i = 0; i < thisRaceDatas.Count; i++) {
-						if (thisRaceDatas[i] != null) {
+					for (int i = 0; i < thisRaceDatas.Count; i++)
+					{
+						if (thisRaceDatas[i] != null)
+						{
 							List<string> thisWardrobeSlots = thisRaceDatas[i].wardrobeSlots;
-							for (int wi = 0; wi < thisWardrobeSlots.Count; wi++) {
+							for (int wi = 0; wi < thisWardrobeSlots.Count; wi++)
+							{
 								//Slots display as 'Hair (FemaleOnly)' (for example) if the wardrobe slot is only available for one of the compatible races
 								//This gets handled below
-								if (compatibleRaces.Count > 1 && i > 0) {
-									if (!generatedWardrobeSlotOptions.Contains (thisWardrobeSlots [wi])) {
+								if (compatibleRaces.Count > 1 && i > 0)
+								{
+									if (!generatedWardrobeSlotOptions.Contains (thisWardrobeSlots [wi]))
+									{
 										generatedWardrobeSlotOptions.Insert (wi, thisWardrobeSlots [wi]);
 									}
-								} else {
+								}
+								else
+								{
 									generatedWardrobeSlotOptions.Add (thisWardrobeSlots [wi]);
 								}
 							}
-						} else {
+						}
+						else
+						{
 							//Compatible Race is missing
 							thisRaceDatas.RemoveAt(i);
 							selectedIndex = -2;
 						}
 					}
-					for (int i = 0; i < generatedWardrobeSlotOptions.Count; i++) {
+					for (int i = 0; i < generatedWardrobeSlotOptions.Count; i++)
+					{
 						List<string> onlyIn = new List<string> ();
-						for (int ii = 0; ii < thisRaceDatas.Count; ii++) {
-							if (thisRaceDatas [ii].wardrobeSlots.Contains (generatedWardrobeSlotOptions [i])) {
+						for (int ii = 0; ii < thisRaceDatas.Count; ii++)
+						{
+							if (thisRaceDatas [ii].wardrobeSlots.Contains (generatedWardrobeSlotOptions [i]))
+							{
 								onlyIn.Add (thisRaceDatas [ii].raceName);
 							}
 						}
-						if (onlyIn.Count < thisRaceDatas.Count) {
+						if (onlyIn.Count < thisRaceDatas.Count)
+						{
 							//its not in all of them
 							generatedWardrobeSlotOptions[i] = generatedWardrobeSlotOptions[i] + "  ("+ String.Join(", ",onlyIn.ToArray())+" only)";
 						}
 					}
 				}
 			}
-			if (generatedWardrobeSlotOptions.Count > 0) {
-				for (int i = 0; i < generatedWardrobeSlotOptions.Count; i++) {
+			if (generatedWardrobeSlotOptions.Count > 0)
+			{
+				for (int i = 0; i < generatedWardrobeSlotOptions.Count; i++)
+				{
 					if (generatedWardrobeSlotOptions [i] == selectedOption)
 						selectedIndex = i;
 				}
@@ -161,26 +184,33 @@ namespace UMAEditor
              }
         }
 
-        private RaceData GetCompatibleRaceData(string raceName){
+        private RaceData GetCompatibleRaceData(string raceName)
+		{
 			RaceData foundRace = null;
 			RaceData[] foundRaces;
 			string[] foundRacesStrings = AssetDatabase.FindAssets ("t:RaceData");
-			for (int i = 0; i < foundRacesStrings.Length; i++) {
+			for (int i = 0; i < foundRacesStrings.Length; i++)
+			{
 				RaceData thisFoundRace = AssetDatabase.LoadAssetAtPath<RaceData> (AssetDatabase.GUIDToAssetPath (foundRacesStrings [i]));
-				if (thisFoundRace.raceName == raceName) {
+				if (thisFoundRace.raceName == raceName)
+				{
 					foundRace = thisFoundRace;
 					break;
 				}
 			}
-			if (foundRace == null) {
+			if (foundRace == null)
+			{
 				foundRaces = Resources.LoadAll<RaceData> ("");
-				for (int i = 0; i < foundRaces.Length; i++) {
-					if (foundRaces [i].raceName == raceName) {
+				for (int i = 0; i < foundRaces.Length; i++)
+				{
+					if (foundRaces [i].raceName == raceName)
+					{
 						foundRace = foundRaces [i];
 					}
 				}
 			}
-			if (foundRace == null) {
+			if (foundRace == null)
+			{
 				//TODO: try looking in assetBundles- But I think this is covered now by DynamicRaceLibrary
 			}
 			return foundRace;
@@ -667,7 +697,8 @@ namespace UMAEditor
                     }
                 }
                 //TODO Test the consequences of wardrobe slots having DNA when perhaps they should not
-				if (recipeType == "Wardrobe") {		
+				if (recipeType == "Wardrobe")
+				{		
                     		
 					CompatibleRacesField = TargetType.GetField ("compatibleRaces", BindingFlags.Public | BindingFlags.Instance);
                     WardrobeRecipeThumbsField = TargetType.GetField("wardrobeRecipeThumbs", BindingFlags.Public | BindingFlags.Instance);
@@ -726,8 +757,10 @@ namespace UMAEditor
                         dropAreaBox = dropArea;
                     }
                     GUI.Box (dropAreaBox, "Drag Races compatible with this slot here");
-					if (newcrf.Count > 0) {
-						for (int i = 0; i < newcrf.Count; i++) {
+					if (newcrf.Count > 0)
+					{
+						for (int i = 0; i < newcrf.Count; i++)
+						{
 							GUI.enabled = false; //we readonly to prevent typos
                             Rect crfRect = GUILayoutUtility.GetRect(0.0f, EditorGUIUtility.singleLineHeight + padding, GUILayout.ExpandWidth(true));
                             crfRect.y = i == 0 ? crfRect.y + padding : crfRect.y + padding + padding;
@@ -737,7 +770,8 @@ namespace UMAEditor
                             crfDelRect.x = crfRect.width + 20f + padding;
                             EditorGUI.TextField (crfRect,newcrf[i]);
 							GUI.enabled = true;
-							if (GUI.Button (crfDelRect, "X")) {
+							if (GUI.Button (crfDelRect, "X"))
+							{
 								newcrf.RemoveAt (i);
 							}
 						}
@@ -770,26 +804,35 @@ namespace UMAEditor
                                 doUpdate = true;
                             }
                         }
-                    } else {
+                    }
+					else
+					{
 						EditorGUILayout.LabelField ("No Compatible Races set. This wardrobe slot will be available to ALL races.");
 					}
 					DropAreaGUI (dropArea, newcrf);
 					GUILayout.Space (10);
 					//
-					if (newcrf.Count > 0) {
+					if (newcrf.Count > 0)
+					{
 						int selectedWardrobeSlotIndex = GenerateWardrobeSlotsEnum (wsl, crf, false);
 						string newwsl;
 						int newSuppressFlags = 0;
 						List<string> newswsl2 = new List<string> ();
-						if (selectedWardrobeSlotIndex == -1) {
+						if (selectedWardrobeSlotIndex == -1)
+						{
 							EditorGUILayout.LabelField ("No Compatible Races set. You need to select a compatible race in order to set a wardrobe slot");
 							newwsl = "None";
-						} else if (selectedWardrobeSlotIndex == -2) {
+						}
+						else if (selectedWardrobeSlotIndex == -2)
+						{
 							EditorGUILayout.LabelField ("Not all compatible races found. Do you have the all correct Race(s) available Locally?");
 							newwsl = "None";
-						} else {
+						}
+						else
+						{
 							int newSelectedWardrobeSlotIndex = EditorGUILayout.Popup ("Wardrobe Slot", selectedWardrobeSlotIndex, generatedWardrobeSlotOptions.ToArray ());
-							if (newSelectedWardrobeSlotIndex != selectedWardrobeSlotIndex) {
+							if (newSelectedWardrobeSlotIndex != selectedWardrobeSlotIndex)
+							{
 								WardrobeSlotField.SetValue (target, generatedWardrobeSlotOptions [newSelectedWardrobeSlotIndex]);
                                 doUpdate = true;
                             }
@@ -815,8 +858,10 @@ namespace UMAEditor
                             }
                         }
                         newSuppressFlags = EditorGUILayout.MaskField ("Suppress Wardrobe Slot(s)", suppressFlags, generatedWardrobeSlotOptions.ToArray ());
-                        for (int i = 0; i < generatedWardrobeSlotOptions.Count; i++) {
-							if ((newSuppressFlags & (1 << i)) == (1 << i)) {
+                        for (int i = 0; i < generatedWardrobeSlotOptions.Count; i++)
+						{
+							if ((newSuppressFlags & (1 << i)) == (1 << i))
+							{
 								newswsl2.Add (generatedWardrobeSlotOptions [i]);
 							}
 						}
@@ -858,23 +903,28 @@ namespace UMAEditor
                             GUI.enabled = true;
                         }
                         //
-                        if (newcrf != crf) {
+                        if (newcrf != crf)
+						{
 							CompatibleRacesField.SetValue (target, newcrf);
 							doUpdate = true;
 						}
-                        if(!AreListsEqual<WardrobeRecipeThumb>(newWardrobeThumbs, wardrobeThumbs)){
+                        if(!AreListsEqual<WardrobeRecipeThumb>(newWardrobeThumbs, wardrobeThumbs))
+						{
                             WardrobeRecipeThumbsField.SetValue(target, newWardrobeThumbs);
                             doUpdate = true;
                         }
-                        if (newwsl != wsl) {
+                        if (newwsl != wsl)
+						{
 							WardrobeSlotField.SetValue (target, newwsl);
 							doUpdate = true;
 						}
-                        if (!AreListsEqual<string>(newswsl2, swsl2)) {
+                        if (!AreListsEqual<string>(newswsl2, swsl2))
+						{
 							SuppressWardrobeSlotField.SetValue (target, newswsl2);
 							doUpdate = true;
 						}
-                        if (!AreListsEqual<string>(newhidesList2, hidesList2)) {
+                        if (!AreListsEqual<string>(newhidesList2, hidesList2))
+						{
                             HidesField.SetValue(target, newhidesList2);
                             doUpdate = true;
                         }
