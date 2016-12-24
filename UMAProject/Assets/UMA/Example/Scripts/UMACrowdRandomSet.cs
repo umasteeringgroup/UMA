@@ -157,6 +157,7 @@ public class UMACrowdRandomSet : ScriptableObject
 						break;
 					case UMACrowdRandomSet.OverlayType.Hair:
 						overlayColor = HairColor * overlay.hairColorMultiplier;
+                        overlayColor.a = 1.0f;
 						break;
 					case UMACrowdRandomSet.OverlayType.Skin:
 						overlayColor = skinColor + new Color(Random.Range(overlay.minRGB.r, overlay.maxRGB.r), Random.Range(overlay.minRGB.g, overlay.maxRGB.g), Random.Range(overlay.minRGB.b, overlay.maxRGB.b), 1);

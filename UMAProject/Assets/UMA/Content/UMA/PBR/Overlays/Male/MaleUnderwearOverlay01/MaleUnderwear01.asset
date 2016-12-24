@@ -12,15 +12,18 @@ MonoBehaviour:
   m_Name: MaleUnderwear01
   m_EditorClassIdentifier: 
   overlayName: MaleUnderwear01
+  overlayType: 0
   rect:
     serializedVersion: 2
     x: 0
-    y: 459
-    width: 1024
-    height: 256
+    y: 918
+    width: 2048
+    height: 512
+  alphaMask: {fileID: 0}
   textureList:
   - {fileID: 2800000, guid: 6c28ac0bb8720487d809016aba0fec2b, type: 3}
   - {fileID: 2800000, guid: b8e56af9c8f384fef8e5a1adc1d1df8c, type: 3}
   - {fileID: 2800000, guid: 687094bd323754d0d831e78ebb58962e, type: 3}
   tags: []
   material: {fileID: 11400000, guid: 8e29dbac5d2e82f44a759a7e2cc568ab, type: 2}
+  OcclusionEntries: []

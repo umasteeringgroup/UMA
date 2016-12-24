@@ -13,7 +13,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"MaleHands","scale":100,"copyIdx":-1,"overlays":[{"id":"MaleBody01","colorIdx":0,"rect":[0,0,0,0]}]}],"colors":[],"fColors":[{"name":"Skin","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"HumanMale","packedDna":[]}'
   recipeType: Wardrobe
-  Sex: 0
   DisplayValue: 
   compatibleRaces:
   - HumanMale
@@ -24,9 +23,9 @@ MonoBehaviour:
   wardrobeSlot: Hands
   Hides:
   - MaleEyes
-  - MaleFace
-  - MaleTorso
   - MaleInnerMouth
-  - MaleLegs
+  - MaleTorso
   - MaleFeet
+  - MaleLegs
   suppressWardrobeSlots: []
+  activeWardrobeSet: []
