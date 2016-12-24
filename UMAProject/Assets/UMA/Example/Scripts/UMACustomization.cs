@@ -144,12 +144,12 @@ public class UMACustomization : MonoBehaviour
 
 	protected virtual void Start()
 	{
-        float vpWidth;
+        //float vpWidth;
 
 //        sliders = DnaScrollPanel.GetComponentsInChildren<Slider>();     // Create an array of the sliders to use for initialization
-        vpWidth = ((float)Screen.width - 175) / (float)Screen.width;    // Get the width of the screen so that we can adjust the viewport
-        ViewPortReduced = new Rect(0, 0, vpWidth, 1);
-        Camera.main.rect = ViewPortFull;
+        //vpWidth = ((float)Screen.width - 175) / (float)Screen.width;    // Get the width of the screen so that we can adjust the viewport
+        //ViewPortReduced = new Rect(0, 0, vpWidth, 1);
+        //Camera.main.rect = ViewPortFull;
         baseTarget = GameObject.Find("UMACrowd").transform;             // Get the transform of the UMA Crown GO to use when retargeting the camera
 	}
 
@@ -205,7 +205,7 @@ public class UMACustomization : MonoBehaviour
 //        Camera cam = cameraTrack.GetComponent<Camera>();
         if(show)
         {
-            Camera.main.rect = ViewPortReduced;
+            //Camera.main.rect = ViewPortReduced;
             DnaPanel.SetActive(true);
             DnaHide.gameObject.SetActive(true);
 #if UNITY_5 && !UNITY_5_1 && !UNITY_5_0
@@ -220,7 +220,7 @@ public class UMACustomization : MonoBehaviour
         else
         {
             cameraTrack.target = baseTarget;
-            Camera.main.rect = ViewPortFull;
+            //Camera.main.rect = ViewPortFull;
             DnaPanel.SetActive(false);
 			DnaHide.gameObject.SetActive(false);
 			umaData = null;

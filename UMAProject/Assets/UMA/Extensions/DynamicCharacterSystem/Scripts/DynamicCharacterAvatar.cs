@@ -1203,7 +1203,8 @@ namespace UMACharacterSystem
 				var asset = ScriptableObject.CreateInstance<UMATextRecipe>();
 				var recipeName = saveFilename != "" ? saveFilename : gameObject.name + "_DCSRecipe";
 				asset.SaveDCS(this, recipeName, saveOptionsToUse);
-				if (!saveAsAsset)
+#if UNITY_EDITOR
+                if (!saveAsAsset)
 					FileUtils.WriteAllText(filePath, asset.recipeString);
 				else
 				{
@@ -1212,8 +1213,10 @@ namespace UMACharacterSystem
 					AssetDatabase.CreateAsset(asset, filePath);
 					AssetDatabase.SaveAssets();
 				}
-
-				Debug.Log("Recipe saved to " + filePath);
+#else
+				FileUtils.WriteAllText(filePath, asset.recipeString);
+#endif
+                Debug.Log("Recipe saved to " + filePath);
 				if (savePathType == savePathTypes.Resources)
 				{
 #if UNITY_EDITOR
@@ -1306,13 +1309,13 @@ namespace UMACharacterSystem
 				return "";
 			}
 		}
-		#endregion
+#endregion
 
-		#endregion
+#endregion
 
-		#region SETTINGS IMPORT (LOAD)
+#region SETTINGS IMPORT (LOAD)
 
-		#region PARTIAL IMPORT - HelperMethods
+#region PARTIAL IMPORT - HelperMethods
 
 		public void LoadWardrobeFromRecipeString(string recipeString, bool loadColors = true)
 		{
@@ -1344,9 +1347,9 @@ namespace UMACharacterSystem
 			LoadFromRecipeString(recipeString, thisLoadOpts);
 		}
 
-		#endregion
+#endregion
 
-		#region FULL CHARACTER IMPORT
+#region FULL CHARACTER IMPORT
 
 		/// <summary>
 		/// Sets the recipe string that will be loaded when the Avatar starts. If trying to load a recipe after the character has been created use 'LoadFromRecipeString'
@@ -1728,11 +1731,11 @@ namespace UMACharacterSystem
 			}
 			yield break;
 		}
-		#endregion
+#endregion
 
-		#endregion
+#endregion
 
-		#region CHARACTER FINAL ASSEMBLY
+#region CHARACTER FINAL ASSEMBLY
 
 		IEnumerator BuildCharacterWhenReady(bool RestoreDNA = true)
 		{
@@ -2023,9 +2026,9 @@ namespace UMACharacterSystem
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region ASSETBUNDLES RELATED
+#region ASSETBUNDLES RELATED
 
 		/// <summary>
 		/// Use when temporary wardrobe recipes have been used while the real ones have been downloading. Will replace the temp textrecipes with the downloaded ones.
@@ -2168,11 +2171,11 @@ namespace UMACharacterSystem
 			}
 		}
 
-		#endregion
+#endregion
 
-		#endregion
+#endregion
 
-		#region SPECIALTYPES // these types should only be needed by DynamicCharacterAvatar
+#region SPECIALTYPES // these types should only be needed by DynamicCharacterAvatar
 
 		[Serializable]
 		public class RaceSetter
@@ -2489,7 +2492,7 @@ namespace UMACharacterSystem
 			{
 				AssignFrom(col);
 			}
-			#region ISerializationCallbackReceiver Implimentation
+#region ISerializationCallbackReceiver Implimentation
 			public void OnBeforeSerialize()
 			{
 
@@ -2498,7 +2501,7 @@ namespace UMACharacterSystem
 			{
 				ConvertOldFieldsToNew();
 			}
-			#endregion
+#endregion
 			/// <summary>
 			/// This will be called to convert an old style ColorValue to a new style ColorValue based on whether name is null
 			/// </summary>
@@ -2551,7 +2554,7 @@ namespace UMACharacterSystem
 					}
 				}
 			}
-			#region CONSTRUCTOR
+#region CONSTRUCTOR
 
 			/// <summary>
 			/// The default Constructor adds a delegate to EditorApplication.update which checks if any of the ColorValues were updated from old values to new values and marks the scene as dirty
@@ -2576,7 +2579,7 @@ namespace UMACharacterSystem
 				Colors = colorValueList;
 			}
 
-			#endregion
+#endregion
 
 #if UNITY_EDITOR
 			/// <summary>
@@ -2691,9 +2694,9 @@ namespace UMACharacterSystem
 		}
 	}
 
-	#endregion
+#endregion
 
-	#region DNASETTER
+#region DNASETTER
 	/// <summary>
 	/// A DnaSetter is used to set a specific piece of DNA on the avatar
 	/// that it is pulled from.
@@ -2748,5 +2751,5 @@ namespace UMACharacterSystem
 			return Owner.GetValue(OwnerIndex);
 		}
 	}
-	#endregion
+#endregion
 }
