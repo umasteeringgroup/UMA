@@ -402,3 +402,24 @@ MonoBehaviour:
         overlayElements: []
       requirement: MaleHead_Head
       condition: 
+    - possibleSlots:
+      - slotID: MaleHead_PigNose
+        useSharedOverlayList: 1
+        overlayListSource: 1
+        overlayElements:
+        - possibleOverlays:
+          - overlayID: MaleHead_PigNose
+            maxRGB: {r: 0, g: 0, b: 0, a: 1}
+            minRGB: {r: 0, g: 0, b: 0, a: 1}
+            useSkinColor: 1
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 4
+      - slotID: 
+        useSharedOverlayList: 0
+        overlayListSource: 1
+        overlayElements: []
+      requirement: 
+      condition: 
