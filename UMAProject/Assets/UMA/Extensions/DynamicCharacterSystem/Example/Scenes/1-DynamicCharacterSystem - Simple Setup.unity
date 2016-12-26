@@ -712,6 +712,10 @@ Prefab:
       value: 
       objectReference: {fileID: 11400000, guid: 088b7bacf9ee7af4983a17d21445c80f,
         type: 2}
+    - target: {fileID: 11453434, guid: dd6cb213acde6d64eba2639afddcff23, type: 2}
+      propertyPath: convertMipMaps
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: dd6cb213acde6d64eba2639afddcff23, type: 2}
   m_IsPrefabParent: 0
@@ -2994,12 +2998,12 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11499482, guid: 7f689a8cb2842194d800a9947e0373ad, type: 2}
       propertyPath: activeRace.name
-      value: HumanFemale
+      value: HumanMale
       objectReference: {fileID: 0}
     - target: {fileID: 11499482, guid: 7f689a8cb2842194d800a9947e0373ad, type: 2}
       propertyPath: activeRace._data
       value: 
-      objectReference: {fileID: 11400000, guid: f8fea6f0ee17b3f42a4ae6cfb627bab3,
+      objectReference: {fileID: 11400000, guid: 62688b7aa02fbc544916e522fcc239c7,
         type: 2}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 7f689a8cb2842194d800a9947e0373ad, type: 2}
