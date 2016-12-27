@@ -103,7 +103,7 @@ MonoBehaviour:
             colorChannelUse: 0
             colorChannel: 0
             overlayType: 5
-          - overlayID: MaleBeard03
+          - overlayID: Beard-1
             maxRGB: {r: 0, g: 0, b: 0, a: 1}
             minRGB: {r: 0, g: 0, b: 0, a: 1}
             useSkinColor: 0
@@ -140,7 +140,7 @@ MonoBehaviour:
             colorChannelUse: 0
             colorChannel: 0
             overlayType: 5
-          - overlayID: MaleBeard03
+          - overlayID: Beard-2
             maxRGB: {r: 0, g: 0, b: 0, a: 1}
             minRGB: {r: 0, g: 0, b: 0, a: 1}
             useSkinColor: 0
@@ -149,7 +149,7 @@ MonoBehaviour:
             colorChannelUse: 0
             colorChannel: 0
             overlayType: 5
-          - overlayID: 
+          - overlayID: Beard-3
             maxRGB: {r: 0, g: 0, b: 0, a: 1}
             minRGB: {r: 0, g: 0, b: 0, a: 1}
             useSkinColor: 1

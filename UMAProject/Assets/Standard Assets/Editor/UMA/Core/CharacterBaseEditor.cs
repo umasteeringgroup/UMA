@@ -641,18 +641,10 @@ namespace UMAEditor
             if (GUILayout.Button("Collapse All"))
             {
                 CollapseAll();
-                //foreach (SlotEditor se in _slotEditors)
-                //{
-                //    se.FoldOut = false;
-                //}
             }
             if (GUILayout.Button("Expand All"))
             {
                 ExpandAll();
-                //foreach (SlotEditor se in _slotEditors)
-                //{
-                //    se.FoldOut = true;
-                //}
             }
             GUILayout.EndHorizontal();
 
@@ -742,13 +734,7 @@ namespace UMAEditor
                 SlotMasterEditor.OpenSlots[_slotData.slotName] = value;
             }
         }
-		/*public bool FoldOut
-		{
-			get { return _foldout; }
-			set { _foldout = value; }
-		}
 
-		private bool _foldout = true; */
 		public bool sharedOverlays = false;
 		public int idx;
 
