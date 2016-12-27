@@ -6,13 +6,12 @@ Material:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_Name: MairMat
-  m_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
+  m_Name: HairMat
+  m_Shader: {fileID: 10601, guid: 0000000000000000f000000000000000, type: 0}
   m_ShaderKeywords: _ALPHATEST_ON _NORMALMAP
   m_LightmapFlags: 5
-  m_CustomRenderQueue: 2450
-  stringTagMap:
-    RenderType: TransparentCutout
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
   m_SavedProperties:
     serializedVersion: 2
     m_TexEnvs:
@@ -20,14 +19,14 @@ Material:
         first:
           name: _MainTex
         second:
-          m_Texture: {fileID: 2800000, guid: 92914de304309e747853a495770218e9, type: 3}
+          m_Texture: {fileID: 2800000, guid: ab52eb4fcaaf5a143a58773649302510, type: 3}
           m_Scale: {x: 1, y: 1}
           m_Offset: {x: 0, y: 0}
       data:
         first:
           name: _BumpMap
         second:
-          m_Texture: {fileID: 2800000, guid: 58dd27014d7068843ab43bc57b2b80a9, type: 3}
+          m_Texture: {fileID: 2800000, guid: 1d257cd28b69a37439387e8442c63e74, type: 3}
           m_Scale: {x: 1, y: 1}
           m_Offset: {x: 0, y: 0}
       data:
@@ -79,6 +78,27 @@ Material:
           m_Texture: {fileID: 0}
           m_Scale: {x: 1, y: 1}
           m_Offset: {x: 0, y: 0}
+      data:
+        first:
+          name: _GlossMap
+        second:
+          m_Texture: {fileID: 0}
+          m_Scale: {x: 1, y: 1}
+          m_Offset: {x: 0, y: 0}
+      data:
+        first:
+          name: _TranslucencyMap
+        second:
+          m_Texture: {fileID: 0}
+          m_Scale: {x: 1, y: 1}
+          m_Offset: {x: 0, y: 0}
+      data:
+        first:
+          name: _ShadowOffset
+        second:
+          m_Texture: {fileID: 0}
+          m_Scale: {x: 1, y: 1}
+          m_Offset: {x: 0, y: 0}
     m_Floats:
       data:
         first:
@@ -91,7 +111,11 @@ Material:
       data:
         first:
           name: _Cutoff
-        second: 0.5
+        second: 0.735
+      data:
+        first:
+          name: _Shininess
+        second: 0.078125
       data:
         first:
           name: _Parallax
@@ -103,7 +127,7 @@ Material:
       data:
         first:
           name: _Glossiness
-        second: 0.5
+        second: 0.237
       data:
         first:
           name: _BumpScale
@@ -127,7 +151,11 @@ Material:
       data:
         first:
           name: _Metallic
-        second: 0
+        second: 0.788
+      data:
+        first:
+          name: _SquashAmount
+        second: 1
     m_Colors:
       data:
         first:
@@ -136,4 +164,12 @@ Material:
       data:
         first:
           name: _Color
+        second: {r: 1, g: 1, b: 1, a: 1}
+      data:
+        first:
+          name: _TreeInstanceColor
+        second: {r: 1, g: 1, b: 1, a: 1}
+      data:
+        first:
+          name: _TreeInstanceScale
         second: {r: 1, g: 1, b: 1, a: 1}

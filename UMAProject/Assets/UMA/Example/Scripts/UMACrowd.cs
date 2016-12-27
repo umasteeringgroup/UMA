@@ -24,7 +24,12 @@ public class UMACrowd : MonoBehaviour
 	private int spawnX;
 	private int spawnY;
 
-	public string[] keywords;
+    public SharedColorTable SkinColors;
+    public SharedColorTable HairColors;
+    // public SharedColorTable EyeColors; TODO: Add support for eye colors
+    // public SharedColorTable ClothesColors; TODO: Add support for clothes colors
+
+    public string[] keywords;
 
 	public UMADataEvent CharacterCreated;
 	public UMADataEvent CharacterDestroyed;
@@ -63,10 +68,29 @@ public class UMACrowd : MonoBehaviour
 
 	private void DefineSlots(UMACrowdRandomSet.CrowdRaceData race)
 	{
-		float skinTone = Random.Range(0.1f, 0.6f);
-		Color skinColor = new Color(skinTone + Random.Range(0.35f, 0.4f), skinTone + Random.Range(0.25f, 0.4f), skinTone + Random.Range(0.35f, 0.4f), 1);
-		Color HairColor = new Color(Random.Range(0.1f, 0.9f), Random.Range(0.1f, 0.9f), Random.Range(0.1f, 0.9f), 1.0f);
-		var keywordsLookup = new HashSet<string>(keywords);
+        Color skinColor;
+        Color HairColor;
+
+
+        if (SkinColors != null)
+        {
+            skinColor = SkinColors.colors[Random.Range(0, SkinColors.colors.Length)].color;
+        }
+        else
+        {
+            float skinTone = Random.Range(0.1f, 0.6f);
+            skinColor = new Color(skinTone + Random.Range(0.35f, 0.4f), skinTone + Random.Range(0.25f, 0.4f), skinTone + Random.Range(0.35f, 0.4f), 1);
+        }
+        if (HairColors != null)
+        {
+            HairColor = HairColors.colors[Random.Range(0, HairColors.colors.Length)].color;
+        }
+        else
+        { 
+            HairColor = new Color(Random.Range(0.1f, 0.9f), Random.Range(0.1f, 0.9f), Random.Range(0.1f, 0.9f), 1.0f);
+        }
+
+        var keywordsLookup = new HashSet<string>(keywords);
 		UMACrowdRandomSet.Apply(umaData, race, skinColor, HairColor, keywordsLookup, GetSlotLibrary(), GetOverlayLibrary());
 	}
 

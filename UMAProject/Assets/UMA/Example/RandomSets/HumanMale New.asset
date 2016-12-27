@@ -47,15 +47,6 @@ MonoBehaviour:
         overlayListSource: 0
         overlayElements:
         - possibleOverlays:
-          - overlayID: M_Face
-            maxRGB: {r: 0, g: 0, b: 0, a: 1}
-            minRGB: {r: 0, g: 0, b: 0, a: 1}
-            useSkinColor: 1
-            useHairColor: 0
-            hairColorMultiplier: 0
-            colorChannelUse: 0
-            colorChannel: 0
-            overlayType: 4
           - overlayID: M_Face New
             maxRGB: {r: 0, g: 0, b: 0, a: 1}
             minRGB: {r: 0, g: 0, b: 0, a: 1}
@@ -403,12 +394,12 @@ MonoBehaviour:
       requirement: MaleHead_Head
       condition: 
     - possibleSlots:
-      - slotID: MaleHead_PigNose
-        useSharedOverlayList: 1
+      - slotID: MaleHair1
+        useSharedOverlayList: 0
         overlayListSource: 1
         overlayElements:
         - possibleOverlays:
-          - overlayID: MaleHead_PigNose
+          - overlayID: MeshHair
             maxRGB: {r: 0, g: 0, b: 0, a: 1}
             minRGB: {r: 0, g: 0, b: 0, a: 1}
             useSkinColor: 1
