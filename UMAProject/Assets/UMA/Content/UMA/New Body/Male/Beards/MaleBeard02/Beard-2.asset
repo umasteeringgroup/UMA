@@ -11,7 +11,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c4834e6077abe64e968f9f87c9ac70a, type: 3}
   m_Name: Beard-2
   m_EditorClassIdentifier: 
-  overlayName: MaleBeard02
+  overlayName: Beard-2
   overlayType: 0
   rect:
     serializedVersion: 2
