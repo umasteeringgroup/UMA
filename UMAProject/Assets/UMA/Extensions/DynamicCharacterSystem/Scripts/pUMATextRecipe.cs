@@ -310,7 +310,7 @@ public partial class UMATextRecipe : UMAPackedRecipeBase
 			{
 				if (_sharedColors == null)
 				{
-					if (characterColors.Count > 0)
+					if (characterColors != null && characterColors.Count > 0)
 					{
 						var colorData = new OverlayColorData[characterColors.Count];
 						for (int i = 0; i < colorData.Length; i++)
