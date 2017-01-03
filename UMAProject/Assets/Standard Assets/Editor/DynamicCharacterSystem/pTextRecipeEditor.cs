@@ -49,14 +49,42 @@ namespace UMAEditor
 							RaceData tempRaceDataAsset = draggedObjects[i] as RaceData;
 							if (tempRaceDataAsset)
 							{
-                                if(!newcrf.Contains(tempRaceDataAsset.raceName))
-								newcrf.Add(tempRaceDataAsset.raceName);
+								AddRaceDataAsset (tempRaceDataAsset, newcrf);
 								continue;
+							}
+
+							var path = AssetDatabase.GetAssetPath (draggedObjects [i]);
+							if (System.IO.Directory.Exists (path)) 
+							{
+								RecursiveScanFoldersForAssets (path, newcrf);
 							}
 						}
 					}
 				}
 			}
+		}
+
+		private void RecursiveScanFoldersForAssets(string path, List<string> newcrf)
+		{
+			var assetFiles = System.IO.Directory.GetFiles (path, "*.asset");
+			foreach (var assetFile in assetFiles) 
+			{
+				var tempRaceDataAsset = AssetDatabase.LoadAssetAtPath (assetFile, typeof(RaceData)) as RaceData;
+				if (tempRaceDataAsset) 
+				{
+					AddRaceDataAsset (tempRaceDataAsset, newcrf);
+				}
+			}
+			foreach (var subFolder in System.IO.Directory.GetDirectories(path)) 
+			{
+				RecursiveScanFoldersForAssets (subFolder.Replace ('\\', '/'), newcrf);
+			}
+		}
+
+		private void AddRaceDataAsset(RaceData raceDataAsset, List<string> newcrf)
+		{
+			if(!newcrf.Contains(raceDataAsset.raceName))
+				newcrf.Add (raceDataAsset.raceName);
 		}
 
 		List<string> generatedWardrobeSlotOptions = new List<string> ();
