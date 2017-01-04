@@ -317,9 +317,6 @@ namespace UMACharacterSystem
 				if (DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck) == false)
 				{
 					Debug.Log("Update did build");
-					requiredAssetsToCheck.Clear();
-					activeRace.data = context.raceLibrary.GetRace(activeRace.name);
-					umaRecipe = activeRace.data.baseRaceRecipe;
 					UpdateAfterDownload();
 					//actually we dont know in this case if we are restoring DNA or not
 					//but a placeholder race should only have been used if defaultLoadOptions.waitForBundles is false
@@ -581,7 +578,7 @@ namespace UMACharacterSystem
 						if (activeRace.name == "")//should never happen TODO: Check if it does
 						{
 							SetSlot(recipe._recipe);
-							if (!requiredAssetsToCheck.Contains(recipe._recipeName))
+							if (!requiredAssetsToCheck.Contains(recipe._recipeName) && DynamicAssetLoader.Instance.downloadingAssetsContains(recipe._recipeName))
 							{
 								requiredAssetsToCheck.Add(recipe._recipeName);
 							}
@@ -597,7 +594,7 @@ namespace UMACharacterSystem
 								if (!WardrobeRecipes.ContainsKey(recipe._recipe.wardrobeSlot))
 								{
 									SetSlot(recipe._recipe);
-									if (!requiredAssetsToCheck.Contains(recipe._recipeName))
+									if (!requiredAssetsToCheck.Contains(recipe._recipeName) && DynamicAssetLoader.Instance.downloadingAssetsContains(recipe._recipeName))
 									{
 										requiredAssetsToCheck.Add(recipe._recipeName);
 									}
@@ -606,7 +603,7 @@ namespace UMACharacterSystem
 							else
 							{
 								SetSlot(recipe._recipe);
-								if (!requiredAssetsToCheck.Contains(recipe._recipeName))
+								if (!requiredAssetsToCheck.Contains(recipe._recipeName) && DynamicAssetLoader.Instance.downloadingAssetsContains(recipe._recipeName))
 								{
 									requiredAssetsToCheck.Add(recipe._recipeName);
 								}
@@ -694,7 +691,7 @@ namespace UMACharacterSystem
 				Debug.LogWarning("Unable to find slot or recipe for Slotname " + Slotname + " Recipename " + Recipename);
 			}
 			// if the requested recipe ended up being downloaded add it to the requiredAssetsToCheck- this is what we use when waiting for bundles to check if we have everything we need
-			if (DynamicAssetLoader.Instance.downloadingAssetsContains(utr.name))
+			if (!requiredAssetsToCheck.Contains(utr.name) && DynamicAssetLoader.Instance.downloadingAssetsContains(utr.name))
 			{
 				requiredAssetsToCheck.Add(utr.name);
 			}
@@ -743,7 +740,7 @@ namespace UMACharacterSystem
 					{
 						newWardrobeRecipes.Add(kp.Key, kp.Value);
 						//DOS if the requested recipe ended up being downloaded add it to the requiredAssetsToCheck- this is what we use when waiting for bundles to check if we have everything we need
-						if (DynamicAssetLoader.Instance.downloadingAssetsContains(kp.Value.name))
+						if (!requiredAssetsToCheck.Contains(kp.Value.name) && DynamicAssetLoader.Instance.downloadingAssetsContains(kp.Value.name))
 						{
 							requiredAssetsToCheck.Add(kp.Value.name);
 						}
@@ -760,7 +757,7 @@ namespace UMACharacterSystem
 					{
 						newWardrobeRecipes.Add(validDefaultRecipes[i]._recipe.wardrobeSlot, validDefaultRecipes[i]._recipe);
 						//DOS if the requested recipe ended up being downloaded add it to the requiredAssetsToCheck- this is what we use when waiting for bundles to check if we have everything we need
-						if (DynamicAssetLoader.Instance.downloadingAssetsContains(validDefaultRecipes[i]._recipe.name))
+						if (!requiredAssetsToCheck.Contains(validDefaultRecipes[i]._recipe.name) && DynamicAssetLoader.Instance.downloadingAssetsContains(validDefaultRecipes[i]._recipe.name))
 						{
 							requiredAssetsToCheck.Add(validDefaultRecipes[i]._recipe.name);
 						}
@@ -1115,7 +1112,7 @@ namespace UMACharacterSystem
 				}
 				animationController = controllerToUse;
 				thisAnimator.runtimeAnimatorController = controllerToUse;
-				if (!requiredAssetsToCheck.Contains(controllerToUse.name))
+				if (!requiredAssetsToCheck.Contains(controllerToUse.name) && DynamicAssetLoader.Instance.downloadingAssetsContains(controllerToUse.name))
 				{
 					requiredAssetsToCheck.Add(controllerToUse.name);
 				}
@@ -1768,7 +1765,7 @@ namespace UMACharacterSystem
 			{
 				StartCoroutine(BuildCharacterWhenReady(RestoreDNA));
 			}
-			if (!waitForBundles && DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
+			if (waitForBundles && DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
 			{
 				StartCoroutine(BuildCharacterWhenReady(RestoreDNA));
 				return;
@@ -2053,7 +2050,6 @@ namespace UMACharacterSystem
 
 		void UpdateAfterDownload()
 		{
-			requiredAssetsToCheck.Clear();
 			activeRace.data = context.raceLibrary.GetRace(activeRace.name);
 			umaRecipe = activeRace.data.baseRaceRecipe;
 			UpdateSetSlots();
@@ -2062,6 +2058,7 @@ namespace UMACharacterSystem
 				SetExpressionSet(true);
 				SetAnimatorController(true);
 			}
+			requiredAssetsToCheck.Clear();
 		}
 		/// <summary>
 		/// Checks what assetBundles (if any) were used in the creation of this Avatar. NOTE: Query this UMA's AssetBundlesUsedbyCharacterUpToDate field before calling this function
