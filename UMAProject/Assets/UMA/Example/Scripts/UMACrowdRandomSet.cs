@@ -149,11 +149,13 @@ public class UMACrowdRandomSet : ScriptableObject
                 Color overlayColor = Color.black;
                 var overlayData = overlayLibrary.InstantiateOverlay(overlay.overlayID, overlayColor);
 
+
                 switch (overlay.overlayType)
 				{
 					case UMACrowdRandomSet.OverlayType.Color:
 						overlayColor = overlay.minRGB;
                         overlayData.colorData.color = overlayColor;
+
 						break;
 					case UMACrowdRandomSet.OverlayType.Texture:
 						overlayColor = Color.white;
@@ -170,8 +172,17 @@ public class UMACrowdRandomSet : ScriptableObject
                         overlayData.colorData.channelAdditiveMask[2] = Shine;
                         break;
 					case UMACrowdRandomSet.OverlayType.Random:
-						overlayColor = new Color(Random.Range(overlay.minRGB.r, overlay.maxRGB.r), Random.Range(overlay.minRGB.g, overlay.maxRGB.g), Random.Range(overlay.minRGB.b, overlay.maxRGB.b), Random.Range(overlay.minRGB.a, overlay.maxRGB.a));
-                        overlayData.colorData.color = overlayColor;
+                        {
+                            float randomShine = Random.Range(0.05f, 0.25f);
+                            float randomMetal = Random.Range(0.1f, 0.3f);
+
+                            overlayColor = new Color(Random.Range(overlay.minRGB.r, overlay.maxRGB.r), Random.Range(overlay.minRGB.g, overlay.maxRGB.g), Random.Range(overlay.minRGB.b, overlay.maxRGB.b), Random.Range(overlay.minRGB.a, overlay.maxRGB.a));
+                            overlayData.colorData.color = overlayColor;
+                            if (overlayData.colorData.channelAdditiveMask.Length > 2)
+                            {
+                                overlayData.colorData.channelAdditiveMask[2] = new Color(randomMetal, randomMetal, randomMetal, randomShine);
+                            }
+                        }
                         break;
 					default:
 						Debug.LogError("Unknown RandomSet overlayType: "+((int)overlay.overlayType));

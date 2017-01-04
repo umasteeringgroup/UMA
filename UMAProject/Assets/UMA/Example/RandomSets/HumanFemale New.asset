@@ -191,7 +191,7 @@ MonoBehaviour:
       requirement: FemaleHead_Head
       condition: 
     - possibleSlots:
-      - slotID: FemaleEyelash
+      - slotID: FemaleEyelashfix
         useSharedOverlayList: 0
         overlayListSource: 0
         overlayElements:
@@ -272,6 +272,15 @@ MonoBehaviour:
         overlayElements:
         - possibleOverlays:
           - overlayID: FemaleJeans01
+            maxRGB: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 1}
+            minRGB: {r: 0.8862745, g: 0.8862745, b: 0.8862745, a: 1}
+            useSkinColor: 0
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 1
+          - overlayID: FemaleJeans-2
             maxRGB: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 1}
             minRGB: {r: 0.8862745, g: 0.8862745, b: 0.8862745, a: 1}
             useSkinColor: 0

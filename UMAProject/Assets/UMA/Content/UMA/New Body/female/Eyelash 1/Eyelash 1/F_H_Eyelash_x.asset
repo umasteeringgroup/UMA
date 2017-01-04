@@ -9,9 +9,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c4834e6077abe64e968f9f87c9ac70a, type: 3}
-  m_Name: F_H_Eyelash
+  m_Name: F_H_Eyelash_x
   m_EditorClassIdentifier: 
-  overlayName: F_H_Eyelash
+  overlayName: F_H_Eyelash_x
   overlayType: 0
   rect:
     serializedVersion: 2
@@ -21,7 +21,7 @@ MonoBehaviour:
     height: 0
   alphaMask: {fileID: 0}
   textureList:
-  - {fileID: 2800000, guid: 41bd5bbb52b70824aa7a14bea935c953, type: 3}
+  - {fileID: 2800000, guid: 611561a1ac4afcf4f8daebb01a17f069, type: 3}
   tags: []
   material: {fileID: 11400000, guid: 6abfc90b9b48ae840bdfb91516b32b91, type: 2}
   OcclusionEntries: []
