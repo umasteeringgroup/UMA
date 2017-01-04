@@ -155,7 +155,7 @@ MonoBehaviour:
             colorChannel: 0
             overlayType: 4
         - possibleOverlays:
-          - overlayID: MaleEyebrow01
+          - overlayID: MaleBrow-1
             maxRGB: {r: 0, g: 0, b: 0, a: 1}
             minRGB: {r: 0, g: 0, b: 0, a: 1}
             useSkinColor: 0
@@ -164,7 +164,7 @@ MonoBehaviour:
             colorChannelUse: 0
             colorChannel: 0
             overlayType: 5
-          - overlayID: MaleEyebrow02
+          - overlayID: MaleBrow-2
             maxRGB: {r: 0, g: 0, b: 0, a: 1}
             minRGB: {r: 0, g: 0, b: 0, a: 1}
             useSkinColor: 0
@@ -353,7 +353,7 @@ MonoBehaviour:
         overlayListSource: 1
         overlayElements:
         - possibleOverlays:
-          - overlayID: MeshHair
+          - overlayID: MeshHairStd
             maxRGB: {r: 0, g: 0, b: 0, a: 1}
             minRGB: {r: 0, g: 0, b: 0, a: 1}
             useSkinColor: 0

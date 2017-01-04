@@ -410,20 +410,6 @@ MonoBehaviour:
             colorChannelUse: 0
             colorChannel: 0
             overlayType: 5
-      - slotID: FemHair1
-        useSharedOverlayList: 0
-        overlayListSource: 1
-        overlayElements:
-        - possibleOverlays:
-          - overlayID: MeshHair
-            maxRGB: {r: 1, g: 1, b: 1, a: 1}
-            minRGB: {r: 1, g: 1, b: 1, a: 1}
-            useSkinColor: 0
-            useHairColor: 1
-            hairColorMultiplier: 1
-            colorChannelUse: 0
-            colorChannel: 0
-            overlayType: 5
       requirement: 
       condition: 
     - possibleSlots:

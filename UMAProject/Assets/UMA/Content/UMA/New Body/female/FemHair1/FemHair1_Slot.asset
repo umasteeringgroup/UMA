@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Name: FemHair1_Slot
   m_EditorClassIdentifier: 
   slotName: FemHair1
-  material: {fileID: 11400000, guid: 8765ee5c978a30f419d61cd86885196a, type: 2}
+  material: {fileID: 11400000, guid: 872de57b1179c1348bbbab6b3168adbf, type: 2}
   overlayScale: 1
   animatedBoneNames: []
   animatedBoneHashes: 

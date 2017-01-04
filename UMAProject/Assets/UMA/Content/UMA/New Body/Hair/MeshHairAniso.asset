@@ -9,7 +9,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c4834e6077abe64e968f9f87c9ac70a, type: 3}
-  m_Name: MeshHair Overlay
+  m_Name: MeshHairAniso
   m_EditorClassIdentifier: 
   overlayName: MeshHair
   overlayType: 0
