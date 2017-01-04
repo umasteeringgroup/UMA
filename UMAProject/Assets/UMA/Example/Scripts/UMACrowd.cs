@@ -70,11 +70,14 @@ public class UMACrowd : MonoBehaviour
 	{
         Color skinColor;
         Color HairColor;
-
+        Color Shine = Color.black;
 
         if (SkinColors != null)
         {
-            skinColor = SkinColors.colors[Random.Range(0, SkinColors.colors.Length)].color;
+            OverlayColorData ocd = SkinColors.colors[Random.Range(0, SkinColors.colors.Length)];
+
+            skinColor = ocd.color;
+            Shine = ocd.channelAdditiveMask[2];
         }
         else
         {
@@ -91,7 +94,7 @@ public class UMACrowd : MonoBehaviour
         }
 
         var keywordsLookup = new HashSet<string>(keywords);
-		UMACrowdRandomSet.Apply(umaData, race, skinColor, HairColor, keywordsLookup, GetSlotLibrary(), GetOverlayLibrary());
+		UMACrowdRandomSet.Apply(umaData, race, skinColor, HairColor, Shine, keywordsLookup, GetSlotLibrary(), GetOverlayLibrary());
 	}
 
 	void DefineSlots()

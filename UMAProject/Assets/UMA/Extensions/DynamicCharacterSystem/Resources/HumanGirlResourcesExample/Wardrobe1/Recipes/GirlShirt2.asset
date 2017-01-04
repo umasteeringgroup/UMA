@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9448878e2e40f1a4c9f8fd2b56832b13, type: 3}
+  m_Name: GirlShirt2
+  m_EditorClassIdentifier: 
+  recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"FemaleTshirt01-Res","scale":100,"copyIdx":-1,"overlays":[{"id":"FemaleTshirt01-Res","colorIdx":2,"rect":[0,0,0,0]},{"id":"GirlShirt01Color","colorIdx":1,"rect":[0,0,0,0]}]}],"colors":[],"fColors":[{"name":"Shirt","colors":[211,29,191,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"Shirt2","colors":[255,200,200,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"-","colors":[55,176,111,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":2,"race":"","packedDna":[]}'
+  recipeType: Wardrobe
+  DisplayValue: 
+  compatibleRaces:
+  - HumanGirl
+  wardrobeRecipeThumbs:
+  - race: HumanGirl
+    filename: 
+    thumb: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  wardrobeSlot: Chest
+  Hides: []
+  suppressWardrobeSlots: []
+  activeWardrobeSet: []

@@ -310,10 +310,6 @@ Prefab:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 11485782, guid: dd6cb213acde6d64eba2639afddcff23, type: 2}
-      propertyPath: overlayElementList.Array.size
-      value: 67
-      objectReference: {fileID: 0}
     - target: {fileID: 433544, guid: dd6cb213acde6d64eba2639afddcff23, type: 2}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -346,21 +342,6 @@ Prefab:
       propertyPath: m_RootOrder
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 11485782, guid: dd6cb213acde6d64eba2639afddcff23, type: 2}
-      propertyPath: overlayElementList.Array.data[64]
-      value: 
-      objectReference: {fileID: 11400000, guid: 44e342e2ea8d58d49b851a45ab634f19,
-        type: 2}
-    - target: {fileID: 11485782, guid: dd6cb213acde6d64eba2639afddcff23, type: 2}
-      propertyPath: overlayElementList.Array.data[65]
-      value: 
-      objectReference: {fileID: 11400000, guid: 8ee83c9d89cf4104897f8f25014b406d,
-        type: 2}
-    - target: {fileID: 11485782, guid: dd6cb213acde6d64eba2639afddcff23, type: 2}
-      propertyPath: overlayElementList.Array.data[66]
-      value: 
-      objectReference: {fileID: 11400000, guid: 4b34f94e11082c247a23f6168ededbe6,
-        type: 2}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: dd6cb213acde6d64eba2639afddcff23, type: 2}
   m_IsPrefabParent: 0
@@ -3333,7 +3314,7 @@ RectTransform:
   m_LocalRotation: {x: 0.13052621, y: 0, z: 0, w: 0.9914449}
   m_LocalPosition: {x: 0, y: 0, z: -2.37}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 15, y: 0, z: 0}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 4

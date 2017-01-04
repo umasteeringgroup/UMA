@@ -122,7 +122,7 @@ MonoBehaviour:
             colorChannel: 0
             overlayType: 4
         - possibleOverlays:
-          - overlayID: MaleBeard01
+          - overlayID: MaleBrow-1
             maxRGB: {r: 0, g: 0, b: 0, a: 1}
             minRGB: {r: 0, g: 0, b: 0, a: 1}
             useSkinColor: 0
@@ -131,49 +131,12 @@ MonoBehaviour:
             colorChannelUse: 0
             colorChannel: 0
             overlayType: 5
-          - overlayID: MaleBeard02
+          - overlayID: MaleBrow-2
             maxRGB: {r: 0, g: 0, b: 0, a: 1}
             minRGB: {r: 0, g: 0, b: 0, a: 1}
             useSkinColor: 0
             useHairColor: 1
             hairColorMultiplier: 0.15
-            colorChannelUse: 0
-            colorChannel: 0
-            overlayType: 5
-          - overlayID: Beard-2
-            maxRGB: {r: 0, g: 0, b: 0, a: 1}
-            minRGB: {r: 0, g: 0, b: 0, a: 1}
-            useSkinColor: 0
-            useHairColor: 1
-            hairColorMultiplier: 0.15
-            colorChannelUse: 0
-            colorChannel: 0
-            overlayType: 5
-          - overlayID: Beard-3
-            maxRGB: {r: 0, g: 0, b: 0, a: 1}
-            minRGB: {r: 0, g: 0, b: 0, a: 1}
-            useSkinColor: 1
-            useHairColor: 0
-            hairColorMultiplier: 0
-            colorChannelUse: 0
-            colorChannel: 0
-            overlayType: 4
-        - possibleOverlays:
-          - overlayID: MaleEyebrow01
-            maxRGB: {r: 0, g: 0, b: 0, a: 1}
-            minRGB: {r: 0, g: 0, b: 0, a: 1}
-            useSkinColor: 0
-            useHairColor: 1
-            hairColorMultiplier: 0.05
-            colorChannelUse: 0
-            colorChannel: 0
-            overlayType: 5
-          - overlayID: MaleEyebrow02
-            maxRGB: {r: 0, g: 0, b: 0, a: 1}
-            minRGB: {r: 0, g: 0, b: 0, a: 1}
-            useSkinColor: 0
-            useHairColor: 1
-            hairColorMultiplier: 0.05
             colorChannelUse: 0
             colorChannel: 0
             overlayType: 5
@@ -183,15 +146,6 @@ MonoBehaviour:
         overlayElements:
         - possibleOverlays:
           - overlayID: M_Face New
-            maxRGB: {r: 0, g: 0, b: 0, a: 1}
-            minRGB: {r: 0, g: 0, b: 0, a: 1}
-            useSkinColor: 1
-            useHairColor: 0
-            hairColorMultiplier: 0
-            colorChannelUse: 0
-            colorChannel: 0
-            overlayType: 4
-          - overlayID: M_Face
             maxRGB: {r: 0, g: 0, b: 0, a: 1}
             minRGB: {r: 0, g: 0, b: 0, a: 1}
             useSkinColor: 1
@@ -350,7 +304,7 @@ MonoBehaviour:
         overlayListSource: 0
         overlayElements:
         - possibleOverlays:
-          - overlayID: ElvenEars
+          - overlayID: ElvenEars-1
             maxRGB: {r: 0, g: 0, b: 0, a: 1}
             minRGB: {r: 0, g: 0, b: 0, a: 1}
             useSkinColor: 1
@@ -378,7 +332,7 @@ MonoBehaviour:
         overlayListSource: 1
         overlayElements:
         - possibleOverlays:
-          - overlayID: MaleHead_PigNose
+          - overlayID: Male-PigNose
             maxRGB: {r: 0, g: 0, b: 0, a: 1}
             minRGB: {r: 0, g: 0, b: 0, a: 1}
             useSkinColor: 1

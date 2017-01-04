@@ -35,7 +35,11 @@ internal class BRDFLookupTextureInspector : Editor
 			AssetDatabase.ImportAsset (assetPath, ImportAssetOptions.ForceUpdate);
 			texSettings = AssetImporter.GetAtPath (assetPath) as TextureImporter;
 		}
-		texSettings.textureFormat = TextureImporterFormat.AutomaticTruecolor;
+#if UNITY_5_5_OR_NEWER
+        texSettings.textureCompression = TextureImporterCompression.Uncompressed;                             
+#else
+        texSettings.textureFormat = TextureImporterFormat.AutomaticTruecolor;
+#endif
 		texSettings.wrapMode = TextureWrapMode.Clamp;
 		if (newAsset)
 			AssetDatabase.ImportAsset (assetPath, ImportAssetOptions.ForceUpdate);

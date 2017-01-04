@@ -179,7 +179,13 @@ namespace UMA
             for (int materialIndex = 0; materialIndex < umaData.generatedMaterials.materials.Count; materialIndex++)
             {
 				var generatedMaterial = umaData.generatedMaterials.materials[materialIndex];
-				if (generatedMaterial.umaMaterial.materialType != UMAMaterial.MaterialType.Atlas) continue;
+				if (generatedMaterial.umaMaterial.materialType != UMAMaterial.MaterialType.Atlas)
+                {
+                    var fragment = generatedMaterial.materialFragments[0];
+                    int vertexCount = fragment.slotData.asset.meshData.vertices.Length;
+                    idx += vertexCount;
+                    continue;
+                }
 
 				for (int materialDefinitionIndex = 0; materialDefinitionIndex < generatedMaterial.materialFragments.Count; materialDefinitionIndex++)
                 {

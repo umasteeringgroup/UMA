@@ -11,16 +11,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c4834e6077abe64e968f9f87c9ac70a, type: 3}
   m_Name: F_eyebrows
   m_EditorClassIdentifier: 
-  overlayName: F_Face 2 eyebrows
+  overlayName: F_eyebrows
+  overlayType: 0
   rect:
     serializedVersion: 2
     x: 0
     y: 0
     width: 0
     height: 0
+  alphaMask: {fileID: 0}
   textureList:
   - {fileID: 2800000, guid: c5b319b083ec542438161cce17f06c35, type: 3}
   - {fileID: 2800000, guid: 74f9ba6cca0ac9a4da4c7565fa6c7f3e, type: 3}
   - {fileID: 2800000, guid: c1adb078c8bbd6c4aa242f29a28a0802, type: 3}
   tags: []
   material: {fileID: 11400000, guid: 8e29dbac5d2e82f44a759a7e2cc568ab, type: 2}
+  OcclusionEntries: []

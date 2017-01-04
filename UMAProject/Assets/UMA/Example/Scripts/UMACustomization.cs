@@ -12,6 +12,8 @@ public class UMACustomization : MonoBehaviour
 	public UMAData umaData;
 	public UMADynamicAvatar umaDynamicAvatar;
 	public CameraTrack cameraTrack;
+    public MouseOrbitImproved orbitor;
+
 	private UMADnaHumanoid umaDna;
 	private UMADnaTutorial umaTutorialDna;
 
@@ -67,7 +69,6 @@ public class UMACustomization : MonoBehaviour
     private Slider LowCheekPosSlider;
     private Slider HeadWidthSlider;
     private Slider[] sliders;
-    private Rect ViewPortFull = new Rect(0, 0, 1, 1);
     private Rect ViewPortReduced;
     private Transform baseTarget;
     private Button DnaHide;
@@ -191,6 +192,10 @@ public class UMACustomization : MonoBehaviour
 		if(cameraTrack){
 			cameraTrack.target = umaData.umaRoot.transform;
 		}
+        if (orbitor)
+        {
+            orbitor.target=umaData.umaRoot.transform;
+        }
 		
 		umaDna = umaData.GetDna<UMADnaHumanoid>();
 		umaTutorialDna = umaData.GetDna<UMADnaTutorial>();
@@ -202,10 +207,8 @@ public class UMACustomization : MonoBehaviour
     // Set the camera target and viewport
     private void SetCamera(bool show)
     {
-//        Camera cam = cameraTrack.GetComponent<Camera>();
         if(show)
         {
-            //Camera.main.rect = ViewPortReduced;
             DnaPanel.SetActive(true);
             DnaHide.gameObject.SetActive(true);
 #if UNITY_5 && !UNITY_5_1 && !UNITY_5_0
@@ -219,8 +222,10 @@ public class UMACustomization : MonoBehaviour
 		}
         else
         {
-            cameraTrack.target = baseTarget;
-            //Camera.main.rect = ViewPortFull;
+            if (cameraTrack != null)
+                cameraTrack.target = baseTarget;
+            if (orbitor != null)
+                orbitor.target = baseTarget; 
             DnaPanel.SetActive(false);
 			DnaHide.gameObject.SetActive(false);
 			umaData = null;

@@ -1,0 +1,399 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba3ff33ba1151314faeee9a805122e49, type: 3}
+  m_Name: HumanFemale Old
+  m_EditorClassIdentifier: 
+  data:
+    raceID: HumanFemale
+    slotElements:
+    - possibleSlots:
+      - slotID: FemaleEyes
+        useSharedOverlayList: 0
+        overlayListSource: 0
+        overlayElements:
+        - possibleOverlays:
+          - overlayID: EyeOverlay
+            maxRGB: {r: 1, g: 1, b: 1, a: 1}
+            minRGB: {r: 1, g: 1, b: 1, a: 1}
+            useSkinColor: 0
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 3
+        - possibleOverlays:
+          - overlayID: EyeOverlayAdjust
+            maxRGB: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 1}
+            minRGB: {r: 0.8862745, g: 0.8862745, b: 0.8862745, a: 1}
+            useSkinColor: 0
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 1
+      requirement: 
+      condition: 
+    - possibleSlots:
+      - slotID: FemaleFace
+        useSharedOverlayList: 0
+        overlayListSource: 0
+        overlayElements:
+        - possibleOverlays:
+          - overlayID: FemaleHead01
+            maxRGB: {r: 0, g: 0, b: 0, a: 1}
+            minRGB: {r: 0, g: 0, b: 0, a: 1}
+            useSkinColor: 1
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 4
+        - possibleOverlays:
+          - overlayID: FemaleEyebrow01
+            maxRGB: {r: 0.1254902, g: 0.05882353, b: 0.05882353, a: 1}
+            minRGB: {r: 0.1254902, g: 0.05882353, b: 0.05882353, a: 1}
+            useSkinColor: 0
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 3
+        - possibleOverlays:
+          - overlayID: FemaleLipstick01
+            maxRGB: {r: 0.29803923, g: 0.2, b: 0.2, a: 1}
+            minRGB: {r: 0.29803923, g: 0.2, b: 0.2, a: 1}
+            useSkinColor: 1
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 4
+          - overlayID: 
+            maxRGB: {r: 0.1254902, g: 0.05882353, b: 0.05882353, a: 1}
+            minRGB: {r: 0.1254902, g: 0.05882353, b: 0.05882353, a: 1}
+            useSkinColor: 0
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 3
+      - slotID: FemaleHead_Head
+        useSharedOverlayList: 0
+        overlayListSource: 0
+        overlayElements:
+        - possibleOverlays:
+          - overlayID: FemaleHead01
+            maxRGB: {r: 0, g: 0, b: 0, a: 1}
+            minRGB: {r: 0, g: 0, b: 0, a: 1}
+            useSkinColor: 1
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 4
+        - possibleOverlays:
+          - overlayID: FemaleEyebrow01
+            maxRGB: {r: 0.1254902, g: 0.05882353, b: 0.05882353, a: 1}
+            minRGB: {r: 0.1254902, g: 0.05882353, b: 0.05882353, a: 1}
+            useSkinColor: 0
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 3
+        - possibleOverlays:
+          - overlayID: FemaleLipstick01
+            maxRGB: {r: 0.29803923, g: 0.2, b: 0.2, a: 1}
+            minRGB: {r: 0.29803923, g: 0.2, b: 0.2, a: 1}
+            useSkinColor: 1
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 4
+          - overlayID: 
+            maxRGB: {r: 0.1254902, g: 0.05882353, b: 0.05882353, a: 1}
+            minRGB: {r: 0.1254902, g: 0.05882353, b: 0.05882353, a: 1}
+            useSkinColor: 0
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 3
+      requirement: 
+      condition: 
+    - possibleSlots:
+      - slotID: FemaleHead_Mouth
+        useSharedOverlayList: 1
+        overlayListSource: 1
+        overlayElements: []
+      requirement: FemaleHead_Head
+      condition: 
+    - possibleSlots:
+      - slotID: FemaleHead_Eyes
+        useSharedOverlayList: 1
+        overlayListSource: 1
+        overlayElements: []
+      requirement: FemaleHead_Head
+      condition: 
+    - possibleSlots:
+      - slotID: FemaleHead_Nose
+        useSharedOverlayList: 1
+        overlayListSource: 1
+        overlayElements: []
+      requirement: FemaleHead_Head
+      condition: 
+    - possibleSlots:
+      - slotID: FemaleHead_ElvenEars
+        useSharedOverlayList: 0
+        overlayListSource: 0
+        overlayElements:
+        - possibleOverlays:
+          - overlayID: ElvenEars
+            maxRGB: {r: 0, g: 0, b: 0, a: 1}
+            minRGB: {r: 0, g: 0, b: 0, a: 1}
+            useSkinColor: 1
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 4
+      - slotID: FemaleHead_Ears
+        useSharedOverlayList: 1
+        overlayListSource: 1
+        overlayElements: []
+      requirement: FemaleHead_Head
+      condition: 
+    - possibleSlots:
+      - slotID: FemaleEyelash
+        useSharedOverlayList: 0
+        overlayListSource: 0
+        overlayElements:
+        - possibleOverlays:
+          - overlayID: FemaleEyelash
+            maxRGB: {r: 0, g: 0, b: 0, a: 1}
+            minRGB: {r: 0, g: 0, b: 0, a: 1}
+            useSkinColor: 0
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 3
+      requirement: 
+      condition: 
+    - possibleSlots:
+      - slotID: FemaleTorso
+        useSharedOverlayList: 0
+        overlayListSource: 0
+        overlayElements:
+        - possibleOverlays:
+          - overlayID: FemaleBody01
+            maxRGB: {r: 0, g: 0, b: 0, a: 1}
+            minRGB: {r: 0, g: 0, b: 0, a: 1}
+            useSkinColor: 1
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 4
+          - overlayID: FemaleBody02
+            maxRGB: {r: 0, g: 0, b: 0, a: 1}
+            minRGB: {r: 0, g: 0, b: 0, a: 1}
+            useSkinColor: 1
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 4
+        - possibleOverlays:
+          - overlayID: FemaleUnderwear01
+            maxRGB: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 1}
+            minRGB: {r: 0.8862745, g: 0.8862745, b: 0.8862745, a: 1}
+            useSkinColor: 0
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 1
+      requirement: 
+      condition: 
+    - possibleSlots:
+      - slotID: FemaleHands
+        useSharedOverlayList: 1
+        overlayListSource: 7
+        overlayElements: []
+      requirement: 
+      condition: 
+    - possibleSlots:
+      - slotID: FemaleFeet
+        useSharedOverlayList: 1
+        overlayListSource: 7
+        overlayElements: []
+      requirement: 
+      condition: 
+    - possibleSlots:
+      - slotID: FemaleInnerMouth
+        useSharedOverlayList: 0
+        overlayListSource: 0
+        overlayElements:
+        - possibleOverlays:
+          - overlayID: InnerMouth
+            maxRGB: {r: 1, g: 1, b: 1, a: 1}
+            minRGB: {r: 1, g: 1, b: 1, a: 1}
+            useSkinColor: 0
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 3
+      requirement: 
+      condition: 
+    - possibleSlots:
+      - slotID: FemaleLegs
+        useSharedOverlayList: 1
+        overlayListSource: 7
+        overlayElements:
+        - possibleOverlays:
+          - overlayID: FemaleJeans01
+            maxRGB: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 1}
+            minRGB: {r: 0.8862745, g: 0.8862745, b: 0.8862745, a: 1}
+            useSkinColor: 0
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 1
+        - possibleOverlays:
+          - overlayID: FemaleShirt01
+            maxRGB: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 1}
+            minRGB: {r: 0.8862745, g: 0.8862745, b: 0.8862745, a: 1}
+            useSkinColor: 0
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 1
+          - overlayID: FemaleShirt02
+            maxRGB: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 1}
+            minRGB: {r: 0.8862745, g: 0.8862745, b: 0.8862745, a: 1}
+            useSkinColor: 0
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 1
+          - overlayID: 
+            maxRGB: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 1}
+            minRGB: {r: 0.8862745, g: 0.8862745, b: 0.8862745, a: 1}
+            useSkinColor: 0
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 1
+          - overlayID: 
+            maxRGB: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 1}
+            minRGB: {r: 0.8862745, g: 0.8862745, b: 0.8862745, a: 1}
+            useSkinColor: 0
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 1
+      requirement: 
+      condition: '!noPants'
+    - possibleSlots:
+      - slotID: FemaleTshirt01
+        useSharedOverlayList: 0
+        overlayListSource: 0
+        overlayElements:
+        - possibleOverlays:
+          - overlayID: FemaleTshirt01
+            maxRGB: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 1}
+            minRGB: {r: 0.88235295, g: 0.88235295, b: 0.88235295, a: 1}
+            useSkinColor: 0
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 1
+      - slotID: 
+        useSharedOverlayList: 0
+        overlayListSource: 0
+        overlayElements: []
+      requirement: FemaleJeans01
+      condition: 
+    - possibleSlots:
+      - slotID: FemaleShortHair01
+        useSharedOverlayList: 1
+        overlayListSource: 1
+        overlayElements:
+        - possibleOverlays:
+          - overlayID: FemaleShortHair01
+            maxRGB: {r: 1, g: 1, b: 1, a: 1}
+            minRGB: {r: 1, g: 1, b: 1, a: 1}
+            useSkinColor: 0
+            useHairColor: 1
+            hairColorMultiplier: 1
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 5
+      - slotID: FemaleLongHair01
+        useSharedOverlayList: 1
+        overlayListSource: 1
+        overlayElements:
+        - possibleOverlays:
+          - overlayID: FemaleLongHair01
+            maxRGB: {r: 1, g: 1, b: 1, a: 1}
+            minRGB: {r: 1, g: 1, b: 1, a: 1}
+            useSkinColor: 0
+            useHairColor: 1
+            hairColorMultiplier: 1
+            colorChannelUse: 1
+            colorChannel: 2
+            overlayType: 5
+      - slotID: FemaleLongHair01
+        useSharedOverlayList: 1
+        overlayListSource: 1
+        overlayElements:
+        - possibleOverlays:
+          - overlayID: FemaleLongHair01
+            maxRGB: {r: 1, g: 1, b: 1, a: 1}
+            minRGB: {r: 1, g: 1, b: 1, a: 1}
+            useSkinColor: 0
+            useHairColor: 1
+            hairColorMultiplier: 1
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 5
+      requirement: 
+      condition: 
+    - possibleSlots:
+      - slotID: FemaleLongHair01_Module
+        useSharedOverlayList: 0
+        overlayListSource: 0
+        overlayElements:
+        - possibleOverlays:
+          - overlayID: FemaleLongHair01_Module
+            maxRGB: {r: 1, g: 1, b: 1, a: 1}
+            minRGB: {r: 1, g: 1, b: 1, a: 1}
+            useSkinColor: 0
+            useHairColor: 1
+            hairColorMultiplier: 1
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 5
+      - slotID: 
+        useSharedOverlayList: 0
+        overlayListSource: 0
+        overlayElements: []
+      requirement: FemaleLongHair01
+      condition: 

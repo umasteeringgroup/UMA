@@ -11,9 +11,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9448878e2e40f1a4c9f8fd2b56832b13, type: 3}
   m_Name: Shorts
   m_EditorClassIdentifier: 
-  recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"MaleLegs","scale":100,"copyIdx":-1,"overlays":[{"id":"MaleUnderwear01","colorIdx":0,"rect":[0,459,1024,256]}]}],"colors":[],"fColors":[{"name":"Pants","colors":[48,59,108,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"HumanMale","packedDna":[]}'
+  recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"MaleLegs","scale":100,"copyIdx":-1,"overlays":[{"id":"MaleUnderwear01","colorIdx":0,"rect":[0,918,2048,512]}]}],"colors":[],"fColors":[{"name":"Pants","colors":[48,59,108,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"HumanMale","packedDna":[]}'
   recipeType: Wardrobe
-  Sex: 0
+  DisplayValue: 
   compatibleRaces:
   - HumanMale
   wardrobeRecipeThumbs:
@@ -23,3 +23,4 @@ MonoBehaviour:
   wardrobeSlot: Legs
   Hides: []
   suppressWardrobeSlots: []
+  activeWardrobeSet: []

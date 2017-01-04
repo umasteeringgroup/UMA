@@ -12,15 +12,17 @@ MonoBehaviour:
   m_Name: FemaleLongHair01_Module
   m_EditorClassIdentifier: 
   overlayName: FemaleLongHair01_Module
+  overlayType: 0
   rect:
     serializedVersion: 2
     x: 0
     y: 0
     width: 0
     height: 0
+  alphaMask: {fileID: 0}
   textureList:
   - {fileID: 2800000, guid: 1728ae09e26524f7ea24cc5be258747e, type: 3}
   - {fileID: 2800000, guid: 733a92cc8c2044955930cab23410903a, type: 3}
-  - {fileID: 2800000, guid: 6074832fa0b664f3c8aa1b13208f2bfa, type: 3}
   tags: []
-  material: {fileID: 11400000, guid: 8e29dbac5d2e82f44a759a7e2cc568ab, type: 2}
+  material: {fileID: 11400000, guid: 8765ee5c978a30f419d61cd86885196a, type: 2}
+  OcclusionEntries: []

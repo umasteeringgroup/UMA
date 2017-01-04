@@ -28,6 +28,7 @@ MonoBehaviour:
   - Arms
   - Hands
   - Waist
+  - Cape
   - Legs
   - Feet
   backwardsCompatibleWith: []

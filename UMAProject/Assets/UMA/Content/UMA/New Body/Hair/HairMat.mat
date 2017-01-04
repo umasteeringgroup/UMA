@@ -7,7 +7,7 @@ Material:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_Name: HairMat
-  m_Shader: {fileID: 10601, guid: 0000000000000000f000000000000000, type: 0}
+  m_Shader: {fileID: 4800000, guid: 44f169f79640e461bbd623fd5e142047, type: 3}
   m_ShaderKeywords: _ALPHATEST_ON _NORMALMAP
   m_LightmapFlags: 5
   m_CustomRenderQueue: -1
@@ -75,7 +75,14 @@ Material:
         first:
           name: _MetallicGlossMap
         second:
-          m_Texture: {fileID: 0}
+          m_Texture: {fileID: 2800000, guid: ee65380e19fdd504a9289b08a200da55, type: 3}
+          m_Scale: {x: 1, y: 1}
+          m_Offset: {x: 0, y: 0}
+      data:
+        first:
+          name: _TangentDir
+        second:
+          m_Texture: {fileID: 2800000, guid: 395774a457a5bf443bdbb9ebca220b4f, type: 3}
           m_Scale: {x: 1, y: 1}
           m_Offset: {x: 0, y: 0}
       data:
@@ -111,7 +118,7 @@ Material:
       data:
         first:
           name: _Cutoff
-        second: 0.715
+        second: 0.4
       data:
         first:
           name: _Shininess
@@ -127,7 +134,7 @@ Material:
       data:
         first:
           name: _Glossiness
-        second: 0.237
+        second: 0.46
       data:
         first:
           name: _BumpScale
@@ -151,7 +158,35 @@ Material:
       data:
         first:
           name: _Metallic
-        second: 0.788
+        second: 0.822
+      data:
+        first:
+          name: _EnableDitheredOpacity
+        second: 0
+      data:
+        first:
+          name: _EnableMetallGlossMap
+        second: 0
+      data:
+        first:
+          name: _VertexOcclusionStrength
+        second: 0
+      data:
+        first:
+          name: _TangentDirStrength
+        second: 0.687
+      data:
+        first:
+          name: _Translucency
+        second: 0
+      data:
+        first:
+          name: _DiffuseScatteringBias
+        second: 0.063
+      data:
+        first:
+          name: _DiffuseScatteringContraction
+        second: 10
       data:
         first:
           name: _SquashAmount
@@ -165,6 +200,14 @@ Material:
         first:
           name: _Color
         second: {r: 1, g: 1, b: 1, a: 1}
+      data:
+        first:
+          name: _BaseTangentDir
+        second: {r: 0, g: 1, b: 0, a: 0}
+      data:
+        first:
+          name: _DiffuseScatteringCol
+        second: {r: 0.6838235, g: 0.6838235, b: 0.6838235, a: 1}
       data:
         first:
           name: _TreeInstanceColor

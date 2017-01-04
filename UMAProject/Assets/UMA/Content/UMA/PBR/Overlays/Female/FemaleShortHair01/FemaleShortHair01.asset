@@ -12,15 +12,17 @@ MonoBehaviour:
   m_Name: FemaleShortHair01
   m_EditorClassIdentifier: 
   overlayName: FemaleShortHair01
+  overlayType: 0
   rect:
     serializedVersion: 2
     x: 0
     y: 0
     width: 0
     height: 0
+  alphaMask: {fileID: 0}
   textureList:
   - {fileID: 2800000, guid: 8e3e85822505e47619ce96f92fcdb1d0, type: 3}
   - {fileID: 2800000, guid: f8f534d6cc7e94676b6d85fb0b9c3360, type: 3}
-  - {fileID: 2800000, guid: 451a1a952265b4789b12a998234a8a47, type: 3}
   tags: []
-  material: {fileID: 11400000, guid: 8e29dbac5d2e82f44a759a7e2cc568ab, type: 2}
+  material: {fileID: 11400000, guid: 8765ee5c978a30f419d61cd86885196a, type: 2}
+  OcclusionEntries: []

@@ -100,7 +100,7 @@ public class UMACrowdRandomSet : ScriptableObject
 		}
 	}
 
-	public static void Apply(UMA.UMAData umaData, CrowdRaceData race, Color skinColor, Color HairColor, HashSet<string> Keywords, SlotLibraryBase slotLibrary, OverlayLibraryBase overlayLibrary)
+	public static void Apply(UMA.UMAData umaData, CrowdRaceData race, Color skinColor, Color HairColor, Color Shine, HashSet<string> Keywords, SlotLibraryBase slotLibrary, OverlayLibraryBase overlayLibrary)
 	{
 		var slotParts = new HashSet<string>();
 		umaData.umaRecipe.slotDataList = new SlotData[race.slotElements.Length];
@@ -146,31 +146,40 @@ public class UMACrowdRandomSet : ScriptableObject
 				if (string.IsNullOrEmpty(overlay.overlayID)) continue;
 				overlay.UpdateVersion();
 				slotParts.Add(overlay.overlayID);
-				Color overlayColor;
-				switch (overlay.overlayType)
+                Color overlayColor = Color.black;
+                var overlayData = overlayLibrary.InstantiateOverlay(overlay.overlayID, overlayColor);
+
+                switch (overlay.overlayType)
 				{
 					case UMACrowdRandomSet.OverlayType.Color:
 						overlayColor = overlay.minRGB;
+                        overlayData.colorData.color = overlayColor;
 						break;
 					case UMACrowdRandomSet.OverlayType.Texture:
 						overlayColor = Color.white;
-						break;
+                        overlayData.colorData.color = overlayColor;
+                        break;
 					case UMACrowdRandomSet.OverlayType.Hair:
 						overlayColor = HairColor * overlay.hairColorMultiplier;
                         overlayColor.a = 1.0f;
-						break;
+                        overlayData.colorData.color = overlayColor;
+                        break;
 					case UMACrowdRandomSet.OverlayType.Skin:
-						overlayColor = skinColor + new Color(Random.Range(overlay.minRGB.r, overlay.maxRGB.r), Random.Range(overlay.minRGB.g, overlay.maxRGB.g), Random.Range(overlay.minRGB.b, overlay.maxRGB.b), 1);
-						break;
+                        overlayColor = skinColor;//  + new Color(Random.Range(overlay.minRGB.r, overlay.maxRGB.r), Random.Range(overlay.minRGB.g, overlay.maxRGB.g), Random.Range(overlay.minRGB.b, overlay.maxRGB.b), 1);
+                        overlayData.colorData.color = overlayColor;
+                        overlayData.colorData.channelAdditiveMask[2] = Shine;
+                        break;
 					case UMACrowdRandomSet.OverlayType.Random:
 						overlayColor = new Color(Random.Range(overlay.minRGB.r, overlay.maxRGB.r), Random.Range(overlay.minRGB.g, overlay.maxRGB.g), Random.Range(overlay.minRGB.b, overlay.maxRGB.b), Random.Range(overlay.minRGB.a, overlay.maxRGB.a));
-						break;
+                        overlayData.colorData.color = overlayColor;
+                        break;
 					default:
 						Debug.LogError("Unknown RandomSet overlayType: "+((int)overlay.overlayType));
 						overlayColor = overlay.minRGB;
-						break;
+                        overlayData.colorData.color = overlayColor;
+                        break;
 				}
-				var overlayData = overlayLibrary.InstantiateOverlay(overlay.overlayID, overlayColor);
+      
 				slotData.AddOverlay(overlayData);
 				if (overlay.colorChannelUse != ChannelUse.None)
 				{

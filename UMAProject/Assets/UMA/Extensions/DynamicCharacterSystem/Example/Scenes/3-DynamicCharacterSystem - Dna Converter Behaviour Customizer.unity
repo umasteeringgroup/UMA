@@ -13,7 +13,7 @@ SceneSettings:
 --- !u!104 &2
 RenderSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 7
+  serializedVersion: 6
   m_Fog: 0
   m_FogColor: {r: 0.6, g: 0.7529412, b: 0.99607843, a: 1}
   m_FogMode: 2
@@ -37,12 +37,12 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 166765684}
-  m_IndirectSpecularColor: {r: 0.34601545, g: 0.35387874, b: 0.37315515, a: 1}
 --- !u!157 &4
 LightmapSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 7
+  serializedVersion: 6
   m_GIWorkflowMode: 0
+  m_LightmapsMode: 1
   m_GISettings:
     serializedVersion: 2
     m_BounceScale: 1
@@ -53,22 +53,17 @@ LightmapSettings:
     m_EnableBakedLightmaps: 1
     m_EnableRealtimeLightmaps: 1
   m_LightmapEditorSettings:
-    serializedVersion: 4
+    serializedVersion: 3
     m_Resolution: 1
     m_BakeResolution: 50
     m_TextureWidth: 1024
     m_TextureHeight: 1024
-    m_AO: 0
     m_AOMaxDistance: 1
-    m_CompAOExponent: 0
-    m_CompAOExponentDirect: 0
     m_Padding: 2
+    m_CompAOExponent: 0
     m_LightmapParameters: {fileID: 0}
-    m_LightmapsBakeMode: 1
     m_TextureCompression: 0
-    m_DirectLightInLightProbes: 1
     m_FinalGather: 0
-    m_FinalGatherFiltering: 1
     m_FinalGatherRayCount: 1024
     m_ReflectionCompression: 2
   m_LightingDataAsset: {fileID: 112000001, guid: f915f805ca0c04f489a36663c0a93567,
@@ -1171,7 +1166,7 @@ Light:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 152714819}
   m_Enabled: 1
-  serializedVersion: 7
+  serializedVersion: 6
   m_Type: 1
   m_Color: {r: 0.6, g: 0.7529412, b: 0.99607843, a: 1}
   m_Intensity: 0.2
@@ -1181,7 +1176,6 @@ Light:
   m_Shadows:
     m_Type: 0
     m_Resolution: 3
-    m_CustomResolution: -1
     m_Strength: 1
     m_Bias: 0.1
     m_NormalBias: 0.4
@@ -1194,10 +1188,10 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_Lightmapping: 4
-  m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+  m_AreaSize: {x: 1, y: 1}
 --- !u!1 &165878811
 GameObject:
   m_ObjectHideFlags: 0
@@ -1327,7 +1321,7 @@ Light:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 166765682}
   m_Enabled: 1
-  serializedVersion: 7
+  serializedVersion: 6
   m_Type: 1
   m_Color: {r: 0.9338235, g: 0.9185755, b: 0.88575906, a: 1}
   m_Intensity: 1
@@ -1337,7 +1331,6 @@ Light:
   m_Shadows:
     m_Type: 2
     m_Resolution: -1
-    m_CustomResolution: -1
     m_Strength: 0.858
     m_Bias: 0.034
     m_NormalBias: 0.4
@@ -1350,10 +1343,10 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_Lightmapping: 4
-  m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+  m_AreaSize: {x: 1, y: 1}
 --- !u!1 &167269312
 GameObject:
   m_ObjectHideFlags: 0
@@ -3432,10 +3425,8 @@ MonoBehaviour:
     name: HumanFemaleResources
     _data: {fileID: 11400000, guid: 92f8416dee5a3f043a417078fa29c476, type: 2}
     _cachedRaceDatas: []
-    keepDNA: 0
-    keepWardrobe: 0
-    keepBodyColors: 1
-    cacheCurrentState: 1
+  defaultChangeRaceOptions: 8
+  cacheCurrentState: 1
   preloadWardrobeRecipes:
     loadDefaultRecipes: 1
     recipes:
@@ -3464,41 +3455,77 @@ MonoBehaviour:
     dynamicallyAddFromAssetBundles: 1
     assetBundleNames: 
   characterColors:
-    Colors:
-    - Name: Hair
-      Color: {r: 0.3529412, g: 0.21568629, b: 0.14117648, a: 1}
-      MetallicGloss: {r: 0, g: 0, b: 0, a: 0}
-    - Name: Eyes
-      Color: {r: 0.28627452, g: 0.40784317, b: 1, a: 1}
-      MetallicGloss: {r: 0, g: 0, b: 0, a: 0}
-    - Name: Skin
-      Color: {r: 0.9450981, g: 0.91372555, b: 0.7686275, a: 1}
-      MetallicGloss: {r: 0, g: 0, b: 0, a: 0}
-    - Name: Pants1
-      Color: {r: 0.3529412, g: 0.4156863, b: 0.6392157, a: 1}
-      MetallicGloss: {r: 0, g: 0, b: 0, a: 0}
+    _colors:
+    - name: Hair
+      channelMask:
+      - {r: 0.3529412, g: 0.21568629, b: 0.14117648, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      channelAdditiveMask:
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      _name: 
+      _color: {r: 0.3529412, g: 0.21568629, b: 0.14117648, a: 1}
+      _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      valuesConverted: 0
+    - name: Eyes
+      channelMask:
+      - {r: 0.28627452, g: 0.40784317, b: 1, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      channelAdditiveMask:
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      _name: 
+      _color: {r: 0.28627452, g: 0.40784317, b: 1, a: 1}
+      _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      valuesConverted: 0
+    - name: Skin
+      channelMask:
+      - {r: 0.9450981, g: 0.91372555, b: 0.7686275, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      channelAdditiveMask:
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      _name: 
+      _color: {r: 0.9450981, g: 0.91372555, b: 0.7686275, a: 1}
+      _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      valuesConverted: 0
+    - name: Pants1
+      channelMask:
+      - {r: 0.3529412, g: 0.4156863, b: 0.6392157, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      channelAdditiveMask:
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      _name: 
+      _color: {r: 0.3529412, g: 0.4156863, b: 0.6392157, a: 1}
+      _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      valuesConverted: 0
   loadPathType: 2
   loadPath: CharacterRecipes
   loadFilename: 
   loadString: 
   loadFileOnStart: 1
+  waitForBundles: 1
+  defaultLoadOptions: 31
   savePathType: 0
   savePath: CharacterRecipes
   saveFilename: 
-  makeUnique: 0
-  loadOptions:
-    waitForBundles: 1
-    loadRace: 1
-    loadDNA: 1
-    loadWardrobe: 1
-    loadBodyColors: 1
-    loadWardrobeColors: 1
+  makeUniqueFilename: 0
+  ensureSharedColors: 0
+  defaultSaveOptions: 15
   BoundsOffset: {x: 0, y: 0, z: 0}
   assetBundlesUsedbyCharacter:
   - uma/toonshared/racebase
   - uma/toonfemale/racebase
-  AssetBundlesUsedbyCharacterUpToDate: 1
-  requiredAssetsToCheck: []
+  _buildCharacterEnabled: 1
 --- !u!4 &363062548
 Transform:
   m_ObjectHideFlags: 0
@@ -5771,7 +5798,7 @@ Light:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 709798930}
   m_Enabled: 1
-  serializedVersion: 7
+  serializedVersion: 6
   m_Type: 1
   m_Color: {r: 0.9632353, g: 0.9508408, b: 0.878244, a: 1}
   m_Intensity: 0.3
@@ -5781,7 +5808,6 @@ Light:
   m_Shadows:
     m_Type: 0
     m_Resolution: 3
-    m_CustomResolution: -1
     m_Strength: 0.59
     m_Bias: 0.1
     m_NormalBias: 0.4
@@ -5794,10 +5820,10 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_Lightmapping: 4
-  m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+  m_AreaSize: {x: 1, y: 1}
 --- !u!1 &727029868
 GameObject:
   m_ObjectHideFlags: 0
@@ -8456,10 +8482,8 @@ MonoBehaviour:
     name: ToonFemale
     _data: {fileID: 11400000, guid: 7e7237ce6bc9c6946b66dde98daa310b, type: 2}
     _cachedRaceDatas: []
-    keepDNA: 0
-    keepWardrobe: 0
-    keepBodyColors: 1
-    cacheCurrentState: 1
+  defaultChangeRaceOptions: 8
+  cacheCurrentState: 1
   preloadWardrobeRecipes:
     loadDefaultRecipes: 1
     recipes:
@@ -8488,41 +8512,77 @@ MonoBehaviour:
     dynamicallyAddFromAssetBundles: 1
     assetBundleNames: 
   characterColors:
-    Colors:
-    - Name: Hair
-      Color: {r: 0.3529412, g: 0.21568629, b: 0.14117648, a: 1}
-      MetallicGloss: {r: 0, g: 0, b: 0, a: 0}
-    - Name: Eyes
-      Color: {r: 0.28627452, g: 0.40784317, b: 1, a: 1}
-      MetallicGloss: {r: 0, g: 0, b: 0, a: 0}
-    - Name: Skin
-      Color: {r: 0.9450981, g: 0.91372555, b: 0.7686275, a: 1}
-      MetallicGloss: {r: 0, g: 0, b: 0, a: 0}
-    - Name: Pants1
-      Color: {r: 0.3529412, g: 0.4156863, b: 0.6392157, a: 1}
-      MetallicGloss: {r: 0, g: 0, b: 0, a: 0}
+    _colors:
+    - name: Hair
+      channelMask:
+      - {r: 0.3529412, g: 0.21568629, b: 0.14117648, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      channelAdditiveMask:
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      _name: 
+      _color: {r: 0.3529412, g: 0.21568629, b: 0.14117648, a: 1}
+      _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      valuesConverted: 0
+    - name: Eyes
+      channelMask:
+      - {r: 0.28627452, g: 0.40784317, b: 1, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      channelAdditiveMask:
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      _name: 
+      _color: {r: 0.28627452, g: 0.40784317, b: 1, a: 1}
+      _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      valuesConverted: 0
+    - name: Skin
+      channelMask:
+      - {r: 0.9450981, g: 0.91372555, b: 0.7686275, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      channelAdditiveMask:
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      _name: 
+      _color: {r: 0.9450981, g: 0.91372555, b: 0.7686275, a: 1}
+      _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      valuesConverted: 0
+    - name: Pants1
+      channelMask:
+      - {r: 0.3529412, g: 0.4156863, b: 0.6392157, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      channelAdditiveMask:
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      _name: 
+      _color: {r: 0.3529412, g: 0.4156863, b: 0.6392157, a: 1}
+      _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      valuesConverted: 0
   loadPathType: 2
   loadPath: CharacterRecipes
   loadFilename: 
   loadString: 
   loadFileOnStart: 1
+  waitForBundles: 1
+  defaultLoadOptions: 31
   savePathType: 0
   savePath: CharacterRecipes
   saveFilename: 
-  makeUnique: 0
-  loadOptions:
-    waitForBundles: 1
-    loadRace: 1
-    loadDNA: 1
-    loadWardrobe: 1
-    loadBodyColors: 1
-    loadWardrobeColors: 1
+  makeUniqueFilename: 0
+  ensureSharedColors: 0
+  defaultSaveOptions: 15
   BoundsOffset: {x: 0, y: 0, z: 0}
   assetBundlesUsedbyCharacter:
   - uma/toonshared/racebase
   - uma/toonfemale/racebase
-  AssetBundlesUsedbyCharacterUpToDate: 1
-  requiredAssetsToCheck: []
+  _buildCharacterEnabled: 1
 --- !u!1 &1155800161
 GameObject:
   m_ObjectHideFlags: 0
@@ -9587,20 +9647,17 @@ MeshRenderer:
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
   m_Materials:
   - {fileID: 2100000, guid: 411da2e7323235d4fabbb4c5ac71d378, type: 2}
   m_SubsetIndices: 
   m_StaticBatchRoot: {fileID: 0}
+  m_UseLightProbes: 1
+  m_ReflectionProbeUsage: 1
   m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
-  m_SelectedWireframeHidden: 0
   m_MinimumChartSize: 4
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
@@ -9865,14 +9922,11 @@ MonoBehaviour:
   - ToonFemale:Face
   - ToonMale:Face
   Orbitor: {fileID: 1378902866}
-  loadRace: 1
-  loadDNA: 1
-  loadWardrobe: 1
-  loadBodyColors: 1
-  loadWardrobeColors: 1
-  keepDNA: 0
-  keepWardrobe: 0
-  keepBodyColors: 1
+  _loadRace: 1
+  _loadDNA: 1
+  _loadWardrobe: 1
+  _loadBodyColors: 1
+  _loadWardrobeColors: 1
 --- !u!1 &1327886464
 GameObject:
   m_ObjectHideFlags: 0
@@ -10602,10 +10656,8 @@ MonoBehaviour:
     name: HumanGirl
     _data: {fileID: 11400000, guid: 8f9fc622c08165a4297be9de525ccd1b, type: 2}
     _cachedRaceDatas: []
-    keepDNA: 0
-    keepWardrobe: 0
-    keepBodyColors: 1
-    cacheCurrentState: 1
+  defaultChangeRaceOptions: 8
+  cacheCurrentState: 1
   preloadWardrobeRecipes:
     loadDefaultRecipes: 1
     recipes:
@@ -10634,41 +10686,77 @@ MonoBehaviour:
     dynamicallyAddFromAssetBundles: 1
     assetBundleNames: 
   characterColors:
-    Colors:
-    - Name: Hair
-      Color: {r: 0.3529412, g: 0.21568629, b: 0.14117648, a: 1}
-      MetallicGloss: {r: 0, g: 0, b: 0, a: 0}
-    - Name: Eyes
-      Color: {r: 0.28627452, g: 0.40784317, b: 1, a: 1}
-      MetallicGloss: {r: 0, g: 0, b: 0, a: 0}
-    - Name: Skin
-      Color: {r: 0.9450981, g: 0.91372555, b: 0.7686275, a: 1}
-      MetallicGloss: {r: 0, g: 0, b: 0, a: 0}
-    - Name: Pants1
-      Color: {r: 0.3529412, g: 0.4156863, b: 0.6392157, a: 1}
-      MetallicGloss: {r: 0, g: 0, b: 0, a: 0}
+    _colors:
+    - name: Hair
+      channelMask:
+      - {r: 0.3529412, g: 0.21568629, b: 0.14117648, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      channelAdditiveMask:
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      _name: 
+      _color: {r: 0.3529412, g: 0.21568629, b: 0.14117648, a: 1}
+      _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      valuesConverted: 0
+    - name: Eyes
+      channelMask:
+      - {r: 0.28627452, g: 0.40784317, b: 1, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      channelAdditiveMask:
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      _name: 
+      _color: {r: 0.28627452, g: 0.40784317, b: 1, a: 1}
+      _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      valuesConverted: 0
+    - name: Skin
+      channelMask:
+      - {r: 0.9450981, g: 0.91372555, b: 0.7686275, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      channelAdditiveMask:
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      _name: 
+      _color: {r: 0.9450981, g: 0.91372555, b: 0.7686275, a: 1}
+      _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      valuesConverted: 0
+    - name: Pants1
+      channelMask:
+      - {r: 0.3529412, g: 0.4156863, b: 0.6392157, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      channelAdditiveMask:
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      _name: 
+      _color: {r: 0.3529412, g: 0.4156863, b: 0.6392157, a: 1}
+      _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      valuesConverted: 0
   loadPathType: 2
   loadPath: CharacterRecipes
   loadFilename: 
   loadString: 
   loadFileOnStart: 1
+  waitForBundles: 1
+  defaultLoadOptions: 31
   savePathType: 0
   savePath: CharacterRecipes
   saveFilename: 
-  makeUnique: 0
-  loadOptions:
-    waitForBundles: 1
-    loadRace: 1
-    loadDNA: 1
-    loadWardrobe: 1
-    loadBodyColors: 1
-    loadWardrobeColors: 1
+  makeUniqueFilename: 0
+  ensureSharedColors: 0
+  defaultSaveOptions: 15
   BoundsOffset: {x: 0, y: 0, z: 0}
   assetBundlesUsedbyCharacter:
   - uma/toonshared/racebase
   - uma/toonfemale/racebase
-  AssetBundlesUsedbyCharacterUpToDate: 1
-  requiredAssetsToCheck: []
+  _buildCharacterEnabled: 1
 --- !u!4 &1385428173
 Transform:
   m_ObjectHideFlags: 0
@@ -12007,12 +12095,12 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 3a2c1f4009edc2343a2e2da1342f64e2, type: 2}
   - {fileID: 11400000, guid: 917d126d626e02c408f7cb57bd44e83b, type: 2}
   - {fileID: 11400000, guid: 46906d9a196de0a4c88a8fe830ab7aed, type: 2}
-  - {fileID: 11400000, guid: 23763cef4a01fe84eb975e52c5178b53, type: 2}
-  - {fileID: 11400000, guid: 201fa2e55837bc647b73dcac0e42e34d, type: 2}
-  - {fileID: 11400000, guid: b2792d2adce163d49be23b3abfe72cbb, type: 2}
-  - {fileID: 11400000, guid: da5a6e39bb3e5254ca70e57455bca42f, type: 2}
-  - {fileID: 11400000, guid: 17ec0fb9faee1e1449b755819753e94c, type: 2}
-  - {fileID: 11400000, guid: 15635d5e38ec6ab41922735c50840533, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
 --- !u!4 &1545467459
 Transform:
   m_ObjectHideFlags: 0
@@ -15322,6 +15410,7 @@ ReflectionProbe:
   m_TimeSlicingMode: 0
   m_Resolution: 128
   m_UpdateFrequency: 0
+  m_Importance: 1
   m_BoxSize: {x: 10, y: 10, z: 10}
   m_BoxOffset: {x: 0, y: 0, z: 0}
   m_NearClip: 0.3
@@ -15338,7 +15427,6 @@ ReflectionProbe:
   m_BoxProjection: 0
   m_RenderDynamicObjects: 0
   m_UseOcclusionCulling: 1
-  m_Importance: 1
   m_CustomBakedTexture: {fileID: 0}
 --- !u!1 &2079936341
 GameObject:

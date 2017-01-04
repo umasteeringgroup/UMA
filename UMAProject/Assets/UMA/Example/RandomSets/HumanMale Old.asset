@@ -1,0 +1,407 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba3ff33ba1151314faeee9a805122e49, type: 3}
+  m_Name: HumanMale Old
+  m_EditorClassIdentifier: 
+  data:
+    raceID: HumanMale
+    slotElements:
+    - possibleSlots:
+      - slotID: MaleEyes
+        useSharedOverlayList: 0
+        overlayListSource: 0
+        overlayElements:
+        - possibleOverlays:
+          - overlayID: EyeOverlay
+            maxRGB: {r: 1, g: 1, b: 1, a: 1}
+            minRGB: {r: 1, g: 1, b: 1, a: 1}
+            useSkinColor: 0
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 3
+        - possibleOverlays:
+          - overlayID: EyeOverlayAdjust
+            maxRGB: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 1}
+            minRGB: {r: 0.8862745, g: 0.8862745, b: 0.8862745, a: 1}
+            useSkinColor: 0
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 1
+      requirement: 
+      condition: 
+    - possibleSlots:
+      - slotID: MaleFace
+        useSharedOverlayList: 0
+        overlayListSource: 0
+        overlayElements:
+        - possibleOverlays:
+          - overlayID: MaleHead01
+            maxRGB: {r: 0, g: 0, b: 0, a: 1}
+            minRGB: {r: 0, g: 0, b: 0, a: 1}
+            useSkinColor: 1
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 4
+          - overlayID: MaleHead02
+            maxRGB: {r: 0, g: 0, b: 0, a: 1}
+            minRGB: {r: 0, g: 0, b: 0, a: 1}
+            useSkinColor: 1
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 4
+        - possibleOverlays:
+          - overlayID: MaleHair01
+            maxRGB: {r: 0, g: 0, b: 0, a: 1}
+            minRGB: {r: 0, g: 0, b: 0, a: 1}
+            useSkinColor: 0
+            useHairColor: 1
+            hairColorMultiplier: 0.25
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 5
+          - overlayID: MaleHair02
+            maxRGB: {r: 0, g: 0, b: 0, a: 1}
+            minRGB: {r: 0, g: 0, b: 0, a: 1}
+            useSkinColor: 0
+            useHairColor: 1
+            hairColorMultiplier: 0.25
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 5
+          - overlayID: 
+            maxRGB: {r: 0, g: 0, b: 0, a: 1}
+            minRGB: {r: 0, g: 0, b: 0, a: 1}
+            useSkinColor: 0
+            useHairColor: 1
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 5
+        - possibleOverlays:
+          - overlayID: MaleBeard01
+            maxRGB: {r: 0, g: 0, b: 0, a: 1}
+            minRGB: {r: 0, g: 0, b: 0, a: 1}
+            useSkinColor: 0
+            useHairColor: 1
+            hairColorMultiplier: 0.15
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 5
+          - overlayID: MaleBeard02
+            maxRGB: {r: 0, g: 0, b: 0, a: 1}
+            minRGB: {r: 0, g: 0, b: 0, a: 1}
+            useSkinColor: 0
+            useHairColor: 1
+            hairColorMultiplier: 0.15
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 5
+          - overlayID: MaleBeard03
+            maxRGB: {r: 0, g: 0, b: 0, a: 1}
+            minRGB: {r: 0, g: 0, b: 0, a: 1}
+            useSkinColor: 0
+            useHairColor: 1
+            hairColorMultiplier: 0.15
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 5
+          - overlayID: 
+            maxRGB: {r: 0, g: 0, b: 0, a: 1}
+            minRGB: {r: 0, g: 0, b: 0, a: 1}
+            useSkinColor: 1
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 4
+        - possibleOverlays:
+          - overlayID: MaleBeard01
+            maxRGB: {r: 0, g: 0, b: 0, a: 1}
+            minRGB: {r: 0, g: 0, b: 0, a: 1}
+            useSkinColor: 0
+            useHairColor: 1
+            hairColorMultiplier: 0.15
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 5
+          - overlayID: MaleBeard02
+            maxRGB: {r: 0, g: 0, b: 0, a: 1}
+            minRGB: {r: 0, g: 0, b: 0, a: 1}
+            useSkinColor: 0
+            useHairColor: 1
+            hairColorMultiplier: 0.15
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 5
+          - overlayID: MaleBeard03
+            maxRGB: {r: 0, g: 0, b: 0, a: 1}
+            minRGB: {r: 0, g: 0, b: 0, a: 1}
+            useSkinColor: 0
+            useHairColor: 1
+            hairColorMultiplier: 0.15
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 5
+          - overlayID: 
+            maxRGB: {r: 0, g: 0, b: 0, a: 1}
+            minRGB: {r: 0, g: 0, b: 0, a: 1}
+            useSkinColor: 1
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 4
+        - possibleOverlays:
+          - overlayID: MaleEyebrow01
+            maxRGB: {r: 0, g: 0, b: 0, a: 1}
+            minRGB: {r: 0, g: 0, b: 0, a: 1}
+            useSkinColor: 0
+            useHairColor: 1
+            hairColorMultiplier: 0.05
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 5
+          - overlayID: MaleEyebrow02
+            maxRGB: {r: 0, g: 0, b: 0, a: 1}
+            minRGB: {r: 0, g: 0, b: 0, a: 1}
+            useSkinColor: 0
+            useHairColor: 1
+            hairColorMultiplier: 0.05
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 5
+      - slotID: MaleHead_Head
+        useSharedOverlayList: 0
+        overlayListSource: 0
+        overlayElements:
+        - possibleOverlays:
+          - overlayID: MaleHead01
+            maxRGB: {r: 0, g: 0, b: 0, a: 1}
+            minRGB: {r: 0, g: 0, b: 0, a: 1}
+            useSkinColor: 1
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 4
+          - overlayID: MaleHead02
+            maxRGB: {r: 0, g: 0, b: 0, a: 1}
+            minRGB: {r: 0, g: 0, b: 0, a: 1}
+            useSkinColor: 1
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 4
+        - possibleOverlays:
+          - overlayID: MaleEyebrow01
+            maxRGB: {r: 0, g: 0, b: 0, a: 1}
+            minRGB: {r: 0, g: 0, b: 0, a: 1}
+            useSkinColor: 0
+            useHairColor: 1
+            hairColorMultiplier: 0.05
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 5
+          - overlayID: MaleEyebrow02
+            maxRGB: {r: 0, g: 0, b: 0, a: 1}
+            minRGB: {r: 0, g: 0, b: 0, a: 1}
+            useSkinColor: 0
+            useHairColor: 1
+            hairColorMultiplier: 0.05
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 5
+      requirement: 
+      condition: 
+    - possibleSlots:
+      - slotID: MaleTorso
+        useSharedOverlayList: 0
+        overlayListSource: 0
+        overlayElements:
+        - possibleOverlays:
+          - overlayID: MaleBody01
+            maxRGB: {r: 0, g: 0, b: 0, a: 1}
+            minRGB: {r: 0, g: 0, b: 0, a: 1}
+            useSkinColor: 1
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 4
+          - overlayID: MaleBody02
+            maxRGB: {r: 0, g: 0, b: 0, a: 1}
+            minRGB: {r: 0, g: 0, b: 0, a: 1}
+            useSkinColor: 1
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 4
+        - possibleOverlays:
+          - overlayID: MaleShirt01
+            maxRGB: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 1}
+            minRGB: {r: 0.8862745, g: 0.8862745, b: 0.8862745, a: 1}
+            useSkinColor: 0
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 1
+          - overlayID: 
+            maxRGB: {r: 0, g: 0, b: 0, a: 1}
+            minRGB: {r: 0, g: 0, b: 0, a: 1}
+            useSkinColor: 1
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 4
+      requirement: 
+      condition: 
+    - possibleSlots:
+      - slotID: MaleHands
+        useSharedOverlayList: 1
+        overlayListSource: 2
+        overlayElements: []
+      requirement: 
+      condition: 
+    - possibleSlots:
+      - slotID: MaleInnerMouth
+        useSharedOverlayList: 0
+        overlayListSource: 0
+        overlayElements:
+        - possibleOverlays:
+          - overlayID: InnerMouth
+            maxRGB: {r: 1, g: 1, b: 1, a: 1}
+            minRGB: {r: 1, g: 1, b: 1, a: 1}
+            useSkinColor: 0
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 3
+      requirement: 
+      condition: 
+    - possibleSlots:
+      - slotID: MaleLegs
+        useSharedOverlayList: 1
+        overlayListSource: 2
+        overlayElements:
+        - possibleOverlays:
+          - overlayID: MaleUnderwear01
+            maxRGB: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 1}
+            minRGB: {r: 0.8862745, g: 0.8862745, b: 0.8862745, a: 1}
+            useSkinColor: 0
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 1
+      - slotID: MaleJeans01
+        useSharedOverlayList: 0
+        overlayListSource: 0
+        overlayElements:
+        - possibleOverlays:
+          - overlayID: MaleJeans01
+            maxRGB: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 1}
+            minRGB: {r: 0.88235295, g: 0.88235295, b: 0.88235295, a: 1}
+            useSkinColor: 0
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 1
+      requirement: 
+      condition: 
+    - possibleSlots:
+      - slotID: MaleFeet
+        useSharedOverlayList: 1
+        overlayListSource: 2
+        overlayElements: []
+      requirement: 
+      condition: 
+    - possibleSlots:
+      - slotID: MaleHead_Eyes
+        useSharedOverlayList: 1
+        overlayListSource: 1
+        overlayElements: []
+      requirement: MaleHead_Head
+      condition: 
+    - possibleSlots:
+      - slotID: MaleHead_ElvenEars
+        useSharedOverlayList: 0
+        overlayListSource: 0
+        overlayElements:
+        - possibleOverlays:
+          - overlayID: ElvenEars
+            maxRGB: {r: 0, g: 0, b: 0, a: 1}
+            minRGB: {r: 0, g: 0, b: 0, a: 1}
+            useSkinColor: 1
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 4
+      - slotID: MaleHead_Ears
+        useSharedOverlayList: 1
+        overlayListSource: 1
+        overlayElements: []
+      requirement: MaleHead_Head
+      condition: 
+    - possibleSlots:
+      - slotID: MaleHead_Mouth
+        useSharedOverlayList: 1
+        overlayListSource: 1
+        overlayElements: []
+      requirement: MaleHead_Head
+      condition: 
+    - possibleSlots:
+      - slotID: MaleHead_PigNose
+        useSharedOverlayList: 1
+        overlayListSource: 1
+        overlayElements:
+        - possibleOverlays:
+          - overlayID: MaleHead_PigNose
+            maxRGB: {r: 0, g: 0, b: 0, a: 1}
+            minRGB: {r: 0, g: 0, b: 0, a: 1}
+            useSkinColor: 1
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 4
+      - slotID: MaleHead_Nose
+        useSharedOverlayList: 1
+        overlayListSource: 1
+        overlayElements: []
+      requirement: MaleHead_Head
+      condition: 
+    - possibleSlots: []
+      requirement: 
+      condition: 
+    - possibleSlots: []
+      requirement: 
+      condition: 
+    - possibleSlots: []
+      requirement: 
+      condition: 
+    - possibleSlots: []
+      requirement: 
+      condition: 
