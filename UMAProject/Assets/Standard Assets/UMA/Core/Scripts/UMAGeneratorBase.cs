@@ -1,7 +1,5 @@
 using System;
 using UnityEngine;
-using UnityEngine.Networking;
-using System.Collections;
 using System.Collections.Generic;
 using Object = UnityEngine.Object;
 
@@ -61,17 +59,38 @@ namespace UMA
 		{
 			private int[] stateHashes = new int[0];
 			private float[] stateTimes = new float[0];
+			AnimatorControllerParameter[] parameters;
 
 			public void SaveAnimatorState(Animator animator)
 			{
 				int layerCount = animator.layerCount;
 				stateHashes = new int[layerCount];
 				stateTimes = new float[layerCount];
+				parameters = new AnimatorControllerParameter[animator.parameterCount];
+
 				for (int i = 0; i < layerCount; i++)
 				{
 					var state = animator.GetCurrentAnimatorStateInfo(i);
 					stateHashes[i] = state.fullPathHash;
 					stateTimes[i] = Mathf.Max(0, state.normalizedTime + Time.deltaTime / state.length);
+				}
+
+				Array.Copy(animator.parameters, parameters, animator.parameterCount);
+
+				foreach(AnimatorControllerParameter param in parameters)
+				{
+					switch(param.type)
+					{
+						case AnimatorControllerParameterType.Bool:
+							param.defaultBool = animator.GetBool(param.nameHash);
+							break;
+						case AnimatorControllerParameterType.Float:
+							param.defaultFloat = animator.GetFloat(param.nameHash);
+							break;
+						case AnimatorControllerParameterType.Int:
+							param.defaultInt = animator.GetInteger(param.nameHash);
+							break;
+					}
 				}
 			}
 
@@ -82,6 +101,22 @@ namespace UMA
 					for (int i = 0; i < animator.layerCount; i++)
 					{
 						animator.Play(stateHashes[i], i, stateTimes[i]);
+					}
+				}
+
+				foreach(AnimatorControllerParameter param in parameters)
+				{
+					switch(param.type)
+					{
+						case AnimatorControllerParameterType.Bool:
+							animator.SetBool(param.nameHash, param.defaultBool);
+							break;
+						case AnimatorControllerParameterType.Float:
+							animator.SetFloat(param.nameHash, param.defaultFloat);
+							break;
+						case AnimatorControllerParameterType.Int:
+							animator.SetInteger(param.nameHash, param.defaultInt);
+							break;
 					}
 				}
 
