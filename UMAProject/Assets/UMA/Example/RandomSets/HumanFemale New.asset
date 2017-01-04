@@ -223,7 +223,16 @@ MonoBehaviour:
             colorChannel: 0
             overlayType: 4
         - possibleOverlays:
-          - overlayID: Underwear 2
+          - overlayID: FemaleUnderwear-1
+            maxRGB: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 1}
+            minRGB: {r: 0.8862745, g: 0.8862745, b: 0.8862745, a: 1}
+            useSkinColor: 0
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 1
+          - overlayID: FemaleUnderwear-2
             maxRGB: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 1}
             minRGB: {r: 0.8862745, g: 0.8862745, b: 0.8862745, a: 1}
             useSkinColor: 0
@@ -290,7 +299,7 @@ MonoBehaviour:
             colorChannel: 0
             overlayType: 1
         - possibleOverlays:
-          - overlayID: FemaleShirt01
+          - overlayID: FemaleShirt-1
             maxRGB: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 1}
             minRGB: {r: 0.8862745, g: 0.8862745, b: 0.8862745, a: 1}
             useSkinColor: 0
@@ -299,7 +308,7 @@ MonoBehaviour:
             colorChannelUse: 0
             colorChannel: 0
             overlayType: 1
-          - overlayID: FemaleShirt02
+          - overlayID: FemaleShirt-2
             maxRGB: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 1}
             minRGB: {r: 0.8862745, g: 0.8862745, b: 0.8862745, a: 1}
             useSkinColor: 0
@@ -335,6 +344,15 @@ MonoBehaviour:
         overlayElements:
         - possibleOverlays:
           - overlayID: FemaleTshirt01
+            maxRGB: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 1}
+            minRGB: {r: 0.88235295, g: 0.88235295, b: 0.88235295, a: 1}
+            useSkinColor: 0
+            useHairColor: 0
+            hairColorMultiplier: 0
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 1
+          - overlayID: FemaleTshirt-2
             maxRGB: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 1}
             minRGB: {r: 0.88235295, g: 0.88235295, b: 0.88235295, a: 1}
             useSkinColor: 0
@@ -384,6 +402,20 @@ MonoBehaviour:
         overlayElements:
         - possibleOverlays:
           - overlayID: FemaleLongHair01
+            maxRGB: {r: 1, g: 1, b: 1, a: 1}
+            minRGB: {r: 1, g: 1, b: 1, a: 1}
+            useSkinColor: 0
+            useHairColor: 1
+            hairColorMultiplier: 1
+            colorChannelUse: 0
+            colorChannel: 0
+            overlayType: 5
+      - slotID: FemHair1
+        useSharedOverlayList: 0
+        overlayListSource: 1
+        overlayElements:
+        - possibleOverlays:
+          - overlayID: MeshHair
             maxRGB: {r: 1, g: 1, b: 1, a: 1}
             minRGB: {r: 1, g: 1, b: 1, a: 1}
             useSkinColor: 0

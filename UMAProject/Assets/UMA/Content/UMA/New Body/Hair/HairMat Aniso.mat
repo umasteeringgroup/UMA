@@ -6,7 +6,7 @@ Material:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_Name: HairMat
+  m_Name: HairMat Aniso
   m_Shader: {fileID: 4800000, guid: 44f169f79640e461bbd623fd5e142047, type: 3}
   m_ShaderKeywords: _ALPHATEST_ON _NORMALMAP
   m_LightmapFlags: 5
@@ -34,6 +34,20 @@ Material:
           name: _DetailNormalMap
         second:
           m_Texture: {fileID: 0}
+          m_Scale: {x: 1, y: 1}
+          m_Offset: {x: 0, y: 0}
+      data:
+        first:
+          name: _MetallicGlossMap
+        second:
+          m_Texture: {fileID: 2800000, guid: ee65380e19fdd504a9289b08a200da55, type: 3}
+          m_Scale: {x: 1, y: 1}
+          m_Offset: {x: 0, y: 0}
+      data:
+        first:
+          name: _TangentDir
+        second:
+          m_Texture: {fileID: 2800000, guid: 395774a457a5bf443bdbb9ebca220b4f, type: 3}
           m_Scale: {x: 1, y: 1}
           m_Offset: {x: 0, y: 0}
       data:
@@ -69,20 +83,6 @@ Material:
           name: _DetailAlbedoMap
         second:
           m_Texture: {fileID: 0}
-          m_Scale: {x: 1, y: 1}
-          m_Offset: {x: 0, y: 0}
-      data:
-        first:
-          name: _MetallicGlossMap
-        second:
-          m_Texture: {fileID: 2800000, guid: ee65380e19fdd504a9289b08a200da55, type: 3}
-          m_Scale: {x: 1, y: 1}
-          m_Offset: {x: 0, y: 0}
-      data:
-        first:
-          name: _TangentDir
-        second:
-          m_Texture: {fileID: 2800000, guid: 395774a457a5bf443bdbb9ebca220b4f, type: 3}
           m_Scale: {x: 1, y: 1}
           m_Offset: {x: 0, y: 0}
       data:
@@ -125,40 +125,16 @@ Material:
         second: 0.078125
       data:
         first:
-          name: _Parallax
-        second: 0.02
-      data:
-        first:
-          name: _ZWrite
-        second: 1
-      data:
-        first:
           name: _Glossiness
         second: 0.46
       data:
         first:
-          name: _BumpScale
-        second: 1
-      data:
-        first:
-          name: _OcclusionStrength
-        second: 1
-      data:
-        first:
-          name: _DetailNormalMapScale
-        second: 1
-      data:
-        first:
-          name: _UVSec
-        second: 0
-      data:
-        first:
-          name: _Mode
-        second: 1
-      data:
-        first:
           name: _Metallic
         second: 0.822
+      data:
+        first:
+          name: _ZWrite
+        second: 1
       data:
         first:
           name: _EnableDitheredOpacity
@@ -187,6 +163,30 @@ Material:
         first:
           name: _DiffuseScatteringContraction
         second: 10
+      data:
+        first:
+          name: _Parallax
+        second: 0.02
+      data:
+        first:
+          name: _BumpScale
+        second: 1
+      data:
+        first:
+          name: _OcclusionStrength
+        second: 1
+      data:
+        first:
+          name: _DetailNormalMapScale
+        second: 1
+      data:
+        first:
+          name: _UVSec
+        second: 0
+      data:
+        first:
+          name: _Mode
+        second: 1
       data:
         first:
           name: _SquashAmount

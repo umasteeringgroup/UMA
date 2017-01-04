@@ -203,7 +203,7 @@ MonoBehaviour:
           - overlayID: Body Freckles
             maxRGB: {r: 0, g: 0, b: 0, a: 1}
             minRGB: {r: 0, g: 0, b: 0, a: 1}
-            useSkinColor: 1
+            useSkinColor: 0
             useHairColor: 0
             hairColorMultiplier: 0
             colorChannelUse: 0
@@ -221,7 +221,7 @@ MonoBehaviour:
           - overlayID: Skin Patches
             maxRGB: {r: 0, g: 0, b: 0, a: 1}
             minRGB: {r: 0, g: 0, b: 0, a: 1}
-            useSkinColor: 1
+            useSkinColor: 0
             useHairColor: 0
             hairColorMultiplier: 1
             colorChannelUse: 0
@@ -356,12 +356,12 @@ MonoBehaviour:
           - overlayID: MeshHair
             maxRGB: {r: 0, g: 0, b: 0, a: 1}
             minRGB: {r: 0, g: 0, b: 0, a: 1}
-            useSkinColor: 1
-            useHairColor: 0
-            hairColorMultiplier: 0
+            useSkinColor: 0
+            useHairColor: 1
+            hairColorMultiplier: 1
             colorChannelUse: 0
             colorChannel: 0
-            overlayType: 4
+            overlayType: 5
       - slotID: 
         useSharedOverlayList: 0
         overlayListSource: 1

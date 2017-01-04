@@ -9,18 +9,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c4834e6077abe64e968f9f87c9ac70a, type: 3}
-  m_Name: Underwear 2
+  m_Name: FemaleUnderwear-1
   m_EditorClassIdentifier: 
-  overlayName: Underwear 2
+  overlayName: FemaleUnderwear-1
+  overlayType: 0
   rect:
     serializedVersion: 2
     x: 0
-    y: 0
-    width: 0
-    height: 0
+    y: 1024
+    width: 2048
+    height: 1024
+  alphaMask: {fileID: 0}
   textureList:
-  - {fileID: 2800000, guid: 20eaabf82d293b24aa43ed6158eccaf9, type: 3}
-  - {fileID: 2800000, guid: 9c28bce4cfe17d2459e624dab391651b, type: 3}
-  - {fileID: 2800000, guid: 41afbaffc53c61b408de64cbcd28a90f, type: 3}
+  - {fileID: 2800000, guid: 37b88890478ef4d08b54beb0ff34b132, type: 3}
+  - {fileID: 2800000, guid: fc479bbdb9be64a1bb711bd9e259ba5a, type: 3}
+  - {fileID: 2800000, guid: 612aa5b72e1204f9292868e1a30c7654, type: 3}
   tags: []
   material: {fileID: 11400000, guid: 8e29dbac5d2e82f44a759a7e2cc568ab, type: 2}
+  OcclusionEntries: []

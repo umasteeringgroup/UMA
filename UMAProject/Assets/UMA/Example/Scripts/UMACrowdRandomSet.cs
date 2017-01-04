@@ -169,7 +169,14 @@ public class UMACrowdRandomSet : ScriptableObject
 					case UMACrowdRandomSet.OverlayType.Skin:
                         overlayColor = skinColor;//  + new Color(Random.Range(overlay.minRGB.r, overlay.maxRGB.r), Random.Range(overlay.minRGB.g, overlay.maxRGB.g), Random.Range(overlay.minRGB.b, overlay.maxRGB.b), 1);
                         overlayData.colorData.color = overlayColor;
-                        overlayData.colorData.channelAdditiveMask[2] = Shine;
+                        if (overlayData.colorData.channelAdditiveMask.Length > 2)
+                        {
+                            overlayData.colorData.channelAdditiveMask[2] = Shine;
+                        }
+                        else
+                        {
+                            break;
+                        }
                         break;
 					case UMACrowdRandomSet.OverlayType.Random:
                         {
