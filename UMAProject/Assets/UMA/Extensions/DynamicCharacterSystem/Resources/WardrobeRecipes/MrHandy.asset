@@ -23,9 +23,15 @@ MonoBehaviour:
   wardrobeSlot: Hands
   Hides:
   - MaleEyes
+  - MaleHead_Head
   - MaleInnerMouth
+  - MaleHead_Eyes
+  - MaleHead_Mouth
+  - MaleHead_Nose
+  - MaleHead_Ears
   - MaleTorso
   - MaleFeet
   - MaleLegs
+  - MaleHair1
   suppressWardrobeSlots: []
   activeWardrobeSet: []
