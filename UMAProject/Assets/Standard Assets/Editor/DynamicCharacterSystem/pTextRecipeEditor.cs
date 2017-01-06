@@ -23,11 +23,33 @@ namespace UMAEditor
 		{
 			return TextRecipeGUI();
 		}
+
+		int compatibleRacePickerID = -1;
 		// Drop area for compatible Races
 		private void DropAreaGUI(Rect dropArea, List<string> newcrf)
 		{
 			Event evt = Event.current;
-
+			//make the box clickable so that the user can select raceData assets from the asset selection window
+			if (evt.type == EventType.MouseUp)
+			{
+				if (dropArea.Contains(evt.mousePosition))
+				{
+					compatibleRacePickerID = EditorGUIUtility.GetControlID(new GUIContent("crfObjectPicker"), FocusType.Passive);
+					EditorGUIUtility.ShowObjectPicker<RaceData>(null, false, "", compatibleRacePickerID);
+					Event.current.Use();//stops the Mismatched LayoutGroup errors
+					return;
+				}
+			}
+			if (evt.commandName == "ObjectSelectorUpdated" && EditorGUIUtility.GetObjectPickerControlID() == compatibleRacePickerID)
+			{
+				RaceData tempRaceDataAsset = EditorGUIUtility.GetObjectPickerObject() as RaceData;
+				if (tempRaceDataAsset)
+				{
+					AddRaceDataAsset(tempRaceDataAsset, newcrf);
+				}
+				Event.current.Use();//stops the Mismatched LayoutGroup errors
+				return;
+			}
 			if (evt.type == EventType.DragUpdated)
 			{
 				if (dropArea.Contains(evt.mousePosition))
@@ -88,11 +110,6 @@ namespace UMAEditor
 		}
 
 		List<string> generatedWardrobeSlotOptions = new List<string> ();
-		//generate new wardrobeSlots dropdown based on Compatible Races
-		//what happens if the slot already has a value from when it is created but the end user does not have the appropriate race downloaded?
-		//THIS only happens in the editor- at runtime the values are never changed
-		//BUT it could still be an issue if multiple developers are working on slots, but they dont all have all the races those slots are compatible with...
-		//So if the current value is not found because we could not find all the compatible races DISABLE the dropdown so that the value cannot be changed and show a warning...
 		private int GenerateWardrobeSlotsEnum(string selectedOption, List<string> compatibleRaces = null, bool forceUpdate = false)
 		{
 			int selectedIndex = 0;
@@ -105,12 +122,16 @@ namespace UMAEditor
 			{
 				if (compatibleRaces.Count == 0)
 				{
-					//show the default list? Or say that a compatible race needs to be added?
 					selectedIndex = -1;
 					generatedWardrobeSlotOptions = new List<string> (){"None","Face","Hair","Complexion","Eyebrows","Beard","Ears","Helmet","Shoulders","Chest","Arms","Hands","Waist","Legs","Feet"};
 				}
 				else if (generatedWardrobeSlotOptions.Count == 0 || forceUpdate)
 				{
+					//Clear the list if we are forcing update
+					if (forceUpdate)
+					{
+						generatedWardrobeSlotOptions = new List<string>();
+					}
 					List<RaceData> thisRaceDatas = new List<RaceData>();
 					for (int i = 0; i < compatibleRaces.Count; i++)
 					{
@@ -123,8 +144,7 @@ namespace UMAEditor
 							List<string> thisWardrobeSlots = thisRaceDatas[i].wardrobeSlots;
 							for (int wi = 0; wi < thisWardrobeSlots.Count; wi++)
 							{
-								//Slots display as 'Hair (FemaleOnly)' (for example) if the wardrobe slot is only available for one of the compatible races
-								//This gets handled below
+								//WardrobeSlots display as 'Hair (FemaleOnly)' (for example) if the wardrobe slot is only available for one of the compatible races
 								if (compatibleRaces.Count > 1 && i > 0)
 								{
 									if (!generatedWardrobeSlotOptions.Contains (thisWardrobeSlots [wi]))
@@ -158,7 +178,7 @@ namespace UMAEditor
 						if (onlyIn.Count < thisRaceDatas.Count)
 						{
 							//its not in all of them
-							generatedWardrobeSlotOptions[i] = generatedWardrobeSlotOptions[i] + "  ("+ String.Join(", ",onlyIn.ToArray())+" only)";
+							generatedWardrobeSlotOptions[i] = generatedWardrobeSlotOptions[i] + "  ("+ String.Join(", ",onlyIn.ToArray())+" Only)";
 						}
 					}
 				}
@@ -180,8 +200,15 @@ namespace UMAEditor
         {
             if (generatedBaseSlotOptions.Count == 0 || forceUpdate)
             {
-                List<UMARecipeBase> thisBaseRecipes = new List<UMARecipeBase>();
-                for (int i = 0; i < compatibleRaces.Count; i++)
+				//clear the lists if we are forcing update
+				if (forceUpdate)
+				{
+					generatedBaseSlotOptions = new List<string>();
+					generatedBaseSlotOptionsLabels = new List<string>();
+				}
+				List<UMARecipeBase> thisBaseRecipes = new List<UMARecipeBase>();
+				Dictionary<string, List<string>> slotsRacesDict = new Dictionary<string, List<string>>();
+				for (int i = 0; i < compatibleRaces.Count; i++)
                 {
                     thisBaseRecipes.Add(GetCompatibleRaceData(compatibleRaces[i]).baseRaceRecipe);
                 }
@@ -189,33 +216,41 @@ namespace UMAEditor
                 {
                     if (thisBaseRecipes[i] != null)
                     {
-                        UMAData.UMARecipe thisBaseRecipe = thisBaseRecipes[i].GetCachedRecipe(UMAContext.Instance);
-                        SlotData[] thisSlots = thisBaseRecipe.GetAllSlots();
+						UMAData.UMARecipe thisBaseRecipe = thisBaseRecipes[i].GetCachedRecipe(UMAContext.Instance);
+						SlotData[] thisSlots = thisBaseRecipe.GetAllSlots();
                         foreach(SlotData slot in thisSlots)
                         {
-                            if(slot != null)
-                            if (!generatedBaseSlotOptions.Contains(slot.asset.slotName))
-                            {
-                                generatedBaseSlotOptions.Add(slot.asset.slotName);
-                                if(compatibleRaces.Count > 1)
-                                {
-                                    generatedBaseSlotOptionsLabels.Add(slot.asset.slotName +" ("+ thisBaseRecipes[i].name+")");
-                                }
-                                else
-                                {
-                                    generatedBaseSlotOptionsLabels.Add(slot.asset.slotName);
-                                }
-                            }
-                        }
+							if (slot != null)
+							{
+								if (!generatedBaseSlotOptions.Contains(slot.asset.slotName))
+								{
+									generatedBaseSlotOptions.Add(slot.asset.slotName);
+								}
+								if (!slotsRacesDict.ContainsKey(slot.asset.slotName))
+								{
+									slotsRacesDict.Add(slot.asset.slotName, new List<string>());
+								}
+								slotsRacesDict[slot.asset.slotName].Add(compatibleRaces[i]);
+							}
+						}
                     }
                 }
-             }
+				//sort out the labels showing which race(s) the base slots are for if there is more than one compatible race
+				foreach (KeyValuePair<string, List<string>> kp in slotsRacesDict)
+				{
+					string compatibleRaceNames = "";
+					if (compatibleRaces.Count > 1)
+					{
+						compatibleRaceNames = " (" + String.Join(", ", kp.Value.ToArray()) + ")";
+					}
+					generatedBaseSlotOptionsLabels.Add(kp.Key + compatibleRaceNames);
+				}
+			}
         }
 
         private RaceData GetCompatibleRaceData(string raceName)
 		{
 			RaceData foundRace = null;
-			RaceData[] foundRaces;
 			string[] foundRacesStrings = AssetDatabase.FindAssets ("t:RaceData");
 			for (int i = 0; i < foundRacesStrings.Length; i++)
 			{
@@ -225,21 +260,6 @@ namespace UMAEditor
 					foundRace = thisFoundRace;
 					break;
 				}
-			}
-			if (foundRace == null)
-			{
-				foundRaces = Resources.LoadAll<RaceData> ("");
-				for (int i = 0; i < foundRaces.Length; i++)
-				{
-					if (foundRaces [i].raceName == raceName)
-					{
-						foundRace = foundRaces [i];
-					}
-				}
-			}
-			if (foundRace == null)
-			{
-				//TODO: try looking in assetBundles- But I think this is covered now by DynamicRaceLibrary
 			}
 			return foundRace;
 		}
@@ -350,21 +370,6 @@ namespace UMAEditor
 			{
 				bool changed = false;
 
-				//DynamicCharacterSystem:: Wardrobe recipes dont need a race set here as they have their own list of compatible races
-				/*RaceData newRace = (RaceData)EditorGUILayout.ObjectField("RaceData", _recipe.raceData, typeof(RaceData), false);
-				if (_recipe.raceData == null)
-				{
-					GUIHelper.BeginVerticalPadded(10, new Color(0.55f, 0.25f, 0.25f));
-					GUILayout.Label("Warning: No race data is set!");
-					GUIHelper.EndVerticalPadded(10);
-				}
-
-
-				if (_recipe.raceData != newRace)
-				{
-					_recipe.SetRace(newRace);
-					changed = true;
-				}*/
 				GUILayout.Space(20);
 
 				if (_sharedColorsEditor.OnGUI(_recipe))
@@ -464,7 +469,7 @@ namespace UMAEditor
             float padding = 2f;
 			Type TargetType = target.GetType();
 
-			if (TargetType.ToString() == "UMATextRecipe")
+			if (TargetType.ToString() == "UMATextRecipe" || TargetType.ToString() == "UMAWardrobeRecipe" || TargetType.ToString() == "UMAWardrobeCollection")
 			{
                 FieldInfo DisplayValueField;
                 FieldInfo RecipeTypeField;
@@ -483,7 +488,7 @@ namespace UMAEditor
 				List<WardrobeSettings> activeWardrobeSettings = (List<WardrobeSettings>)ActiveWardrobeSetField.GetValue(target);
 				//if we did and the recipe is not "Standard" we dont want to show the slots editor
 				//if it is Standard we DO want to show the slots and stuff because thats what Stock UMA will actually load
-				if (activeWardrobeSettings.Count > 0  && recipeType != "Standard")
+				if ((activeWardrobeSettings.Count > 0  && recipeType != "Standard") || recipeType == "WardrobeCollection")
 				{
 					slotEditor = new WardrobeSetMasterEditor(_recipe, activeWardrobeSettings);
 				}
@@ -654,10 +659,6 @@ namespace UMAEditor
 									_recipe.RemoveDna(UMAUtils.StringToHash("UMADnaHumanoid"));
 									DNAConvertersAdded = true;
 								}
-								//else
-								//{
-								//	Debug.Log("UMADnaHumanoid Import Failed.");
-								//}
 							}
 							if (needsTutorialDnaUpdate)
 							{
@@ -686,10 +687,6 @@ namespace UMAEditor
 									_recipe.RemoveDna(UMAUtils.StringToHash("UMADnaTutorial"));
 									DNAConvertersAdded = true;
 								}
-								//else
-								//{
-								//	Debug.Log("UMADnaTutorial Import Failed.");
-								//}
 							}
 							currentDNA = newCurrentDna.ToArray();
 						}
@@ -724,10 +721,10 @@ namespace UMAEditor
                         return true;
                     }
                 }
-                //TODO Test the consequences of wardrobe slots having DNA when perhaps they should not
-				if (recipeType == "Wardrobe")
-				{		
-                    		
+				//TODO Test the consequences of wardrobe slots having DNA when perhaps they should not
+				if (recipeType == "Wardrobe" || recipeType == "WardrobeCollection")
+				{
+
 					CompatibleRacesField = TargetType.GetField ("compatibleRaces", BindingFlags.Public | BindingFlags.Instance);
                     WardrobeRecipeThumbsField = TargetType.GetField("wardrobeRecipeThumbs", BindingFlags.Public | BindingFlags.Instance);
                     WardrobeSlotField = TargetType.GetField ("wardrobeSlot", BindingFlags.Public | BindingFlags.Instance);
@@ -767,11 +764,11 @@ namespace UMAEditor
                             wrtdd.Add(wrt.race);
                         }
                     }
-                    List<string> newcrf = (List<string>)CompatibleRacesField.GetValue (target);
-                    GUILayout.Space (10);
+					List<string> newcrf = new List<string>(crf);
+					GUILayout.Space (10);
                     Rect dropArea = new Rect();
                     Rect dropAreaBox = new Rect();
-                    if (newcrf.Count > 0)
+                    if (crf.Count > 0)
                     {
                         dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f + EditorGUIUtility.singleLineHeight, GUILayout.ExpandWidth(true));
                         dropArea.width = dropArea.width - 85f;
@@ -784,19 +781,19 @@ namespace UMAEditor
                         dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
                         dropAreaBox = dropArea;
                     }
-                    GUI.Box (dropAreaBox, "Drag Races compatible with this slot here");
-					if (newcrf.Count > 0)
+                    GUI.Box (dropAreaBox, "Drag Races compatible with this Recipe here. Click to pick.");
+					if (crf.Count > 0)
 					{
-						for (int i = 0; i < newcrf.Count; i++)
+						for (int i = 0; i < crf.Count; i++)
 						{
+							GUILayout.Space(padding);
 							GUI.enabled = false; //we readonly to prevent typos
-                            Rect crfRect = GUILayoutUtility.GetRect(0.0f, EditorGUIUtility.singleLineHeight + padding, GUILayout.ExpandWidth(true));
-                            crfRect.y = i == 0 ? crfRect.y + padding : crfRect.y + padding + padding;
+                            Rect crfRect = GUILayoutUtility.GetRect(0.0f, EditorGUIUtility.singleLineHeight, GUILayout.ExpandWidth(true));
                             Rect crfDelRect = crfRect;
                             crfRect.width = crfRect.width - 75f - 20f -20f;
                             crfDelRect.width = 20f + padding;
                             crfDelRect.x = crfRect.width + 20f + padding;
-                            EditorGUI.TextField (crfRect,newcrf[i]);
+                            EditorGUI.TextField (crfRect, crf[i]);
 							GUI.enabled = true;
 							if (GUI.Button (crfDelRect, "X"))
 							{
@@ -813,12 +810,12 @@ namespace UMAEditor
                         EditorGUI.LabelField(thumbnailRect, "Thumbnail");
                         thumbnailDDRect.y = thumbnailDDRect.y + EditorGUIUtility.singleLineHeight;
                         thumbnailThumbRect.y = thumbnailThumbRect.y + EditorGUIUtility.singleLineHeight;
-                        if (newcrf.Count > 1)
+                        if (crf.Count > 1)
                         {
                             thumbnailThumbRect.y = thumbnailThumbRect.y + EditorGUIUtility.singleLineHeight + padding;
                             wrdSelected = EditorGUI.Popup(thumbnailDDRect,wrdSelected, wrtdd.ToArray());
                         }
-                        if(newWardrobeThumbs.Count != newcrf.Count)
+                        if(newWardrobeThumbs.Count != crf.Count)
                         {
                             wrdSelected = 0;
                         }
@@ -839,8 +836,8 @@ namespace UMAEditor
 					}
 					DropAreaGUI (dropArea, newcrf);
 					GUILayout.Space (10);
-					//
-					if (newcrf.Count > 0)
+					//Wardrobe only fields
+					if (crf.Count > 0 && recipeType == "Wardrobe")
 					{
 						int selectedWardrobeSlotIndex = GenerateWardrobeSlotsEnum (wsl, crf, false);
 						string newwsl;
@@ -930,17 +927,6 @@ namespace UMAEditor
                             EditorGUILayout.TextField(newhidesList2Result);
                             GUI.enabled = true;
                         }
-                        //
-                        if (newcrf != crf)
-						{
-							CompatibleRacesField.SetValue (target, newcrf);
-							doUpdate = true;
-						}
-                        if(!AreListsEqual<WardrobeRecipeThumb>(newWardrobeThumbs, wardrobeThumbs))
-						{
-                            WardrobeRecipeThumbsField.SetValue(target, newWardrobeThumbs);
-                            doUpdate = true;
-                        }
                         if (newwsl != wsl)
 						{
 							WardrobeSlotField.SetValue (target, newwsl);
@@ -956,12 +942,34 @@ namespace UMAEditor
                             HidesField.SetValue(target, newhidesList2);
                             doUpdate = true;
                         }
+						//if the compatible races has changed we need to regenerate the enums
+						if (!AreListsEqual<string>(newcrf, crf))
+						{
+							//If the libraries cannot load the raceBaseRecipe because of missing slots/overlays
+							//we dont want to actually change anything and need to show an error- but still show the recipe as it was
+							try
+							{
+								GenerateBaseSlotsEnum(newcrf, true);
+							}
+							catch (UMAResourceNotFoundException e)
+							{
+								newcrf = new List<string>(crf);
+								Debug.LogError("The Recipe Editor could not add the selected compatible race because some required assets could not be found: " + e.Message);
+							}
+							GenerateWardrobeSlotsEnum(newwsl, newcrf, true);
+						}
 					}
-
-                    /*if (GUILayout.Button ("Save Asset")) { //Not needed now
-						return true;
-					}*/
-                    EditorGUILayout.Space();
+					if (!AreListsEqual<string>(newcrf, crf))
+					{
+						CompatibleRacesField.SetValue(target, newcrf);
+						doUpdate = true;
+					}
+					if (!AreListsEqual<WardrobeRecipeThumb>(newWardrobeThumbs, wardrobeThumbs))
+					{
+						WardrobeRecipeThumbsField.SetValue(target, newWardrobeThumbs);
+						doUpdate = true;
+					}
+					EditorGUILayout.Space();
 				}
                 if (doUpdate == true)
                 {
