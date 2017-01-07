@@ -1131,21 +1131,21 @@ namespace UMACharacterSystem
 			SaveOptions thisSaveOpts = SaveOptions.saveWardrobe;
 			if (includeColors)
 				thisSaveOpts |= SaveOptions.saveColors;
-			var DCSModel = new UMATextRecipe.DCSPackRecipe(this, recipeName, "DynmicCharacterAvatar", thisSaveOpts, slotsToSave);
+			var DCSModel = new UMATextRecipe.DCSPackRecipe(this, recipeName, "DynamicCharacterAvatar", thisSaveOpts, slotsToSave);
 			return JsonUtility.ToJson(DCSModel);
 		}
 
 		public string GetCurrentColorsRecipe(string recipeName = "")
 		{
 			SaveOptions thisSaveOpts = SaveOptions.saveColors;
-			var DCSModel = new UMATextRecipe.DCSPackRecipe(this, recipeName, "DynmicCharacterAvatar", thisSaveOpts, null);
+			var DCSModel = new UMATextRecipe.DCSPackRecipe(this, recipeName, "DynamicCharacterAvatar", thisSaveOpts, null);
 			return JsonUtility.ToJson(DCSModel);
 		}
 
 		public string GetCurrentDNARecipe(string recipeName = "")
 		{
 			SaveOptions thisSaveOpts = SaveOptions.saveDNA;
-			var DCSModel = new UMATextRecipe.DCSPackRecipe(this, recipeName, "DynmicCharacterAvatar", thisSaveOpts, null);
+			var DCSModel = new UMATextRecipe.DCSPackRecipe(this, recipeName, "DynamicCharacterAvatar", thisSaveOpts, null);
 			return JsonUtility.ToJson(DCSModel);
 		}
 
@@ -1764,6 +1764,7 @@ namespace UMACharacterSystem
 			if (!DynamicAssetLoader.Instance.isInitialized)
 			{
 				StartCoroutine(BuildCharacterWhenReady(RestoreDNA));
+				return;
 			}
 			if (waitForBundles && DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
 			{
