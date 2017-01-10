@@ -196,6 +196,8 @@ public class TestCustomizerDD : MonoBehaviour
 		changeRaceDropdown.onValueChanged.RemoveListener(ChangeRace);
 		var raceDropdownOptionsArray = (Avatar.context.raceLibrary as DynamicRaceLibrary).GetAllRacesBase();
 		raceDropdownOptions = new List<string>();
+		//add the 'NoneSet'
+		raceDropdownOptions.Add("None Set");
 		foreach (RaceData r in raceDropdownOptionsArray)
 		{
 			if (r.raceName != "PlaceholderRace")

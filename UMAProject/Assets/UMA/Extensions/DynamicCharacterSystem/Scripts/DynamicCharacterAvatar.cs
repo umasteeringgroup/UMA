@@ -123,6 +123,7 @@ namespace UMACharacterSystem
 		public Vector3 BoundsOffset;
 		//
 		[HideInInspector]
+		[System.NonSerialized]
 		public List<string> assetBundlesUsedbyCharacter = new List<string>();
 
 		#endregion
@@ -383,6 +384,12 @@ namespace UMACharacterSystem
 		/// </summary>
 		void SetActiveRace(bool allowGenderFallback = false)
 		{
+			if (activeRace.name == "" || activeRace.name == "None Set")
+			{
+				activeRace.data = null;
+				Debug.LogWarning("No activeRace set. Aborting build");
+				return;
+			}
 			//calling activeRace.data causes RaceLibrary to gather all racedatas from resources an returns all those along with any temporary assetbundle racedatas that are downloading
 			//It will not cause any races to actually download
 			if (activeRace.data != null)
@@ -391,7 +398,7 @@ namespace UMACharacterSystem
 				umaRecipe = activeRace.racedata.baseRaceRecipe;
 			}
 			//otherwise...
-			else if (activeRace.name != null)
+			else if (activeRace.name != "")
 			{
 				//This only happens when the Avatar itself has an active race set to be one that is in an assetbundle
 				activeRace.data = context.raceLibrary.GetRace(activeRace.name);// this will trigger a download if the race is in an asset bundle and return a temp asset
@@ -480,6 +487,7 @@ namespace UMACharacterSystem
 		{
 			ChangeRace((context.raceLibrary as DynamicRaceLibrary).GetRace(racename), customChangeRaceOptions);
 		}
+
 		/// <summary>
 		/// Change the race of the Avatar, optionally overriding the 'onChangeRace' settings in the avatar component itself
 		/// </summary>
@@ -488,6 +496,21 @@ namespace UMACharacterSystem
 		public void ChangeRace(RaceData race, ChangeRaceOptions customChangeRaceOptions = ChangeRaceOptions.useDefaults)
 		{
 			bool actuallyChangeRace = false;
+			if (race == null)
+			{
+				if (Application.isPlaying)
+				{
+					if (cacheCurrentState && BuildCharacterEnabled && activeRace.racedata != null)
+					{
+						AddCharacterStateCache();
+					}
+					//so do we need to make this actually destroy the Avatar? I guess we do...
+					UnloadAvatar();
+				}
+				activeRace.data = null;
+				activeRace.name = "";
+				return;
+			}
 			if (activeRace.racedata == null)
 				actuallyChangeRace = true;
 			else if (activeRace.name != race.raceName)
@@ -506,15 +529,16 @@ namespace UMACharacterSystem
 			//if keepWardrobe then dont load wardrobe from the racebaserecipe == keep current wardrobe
 			//if keepBodyColors then dont load body colors from the racebaserecipen == keep current bodyColors
 			LoadOptions thisLoadFlags = LoadOptions.loadRace | LoadOptions.loadDNA | LoadOptions.loadWardrobe | LoadOptions.loadWardrobeColors | LoadOptions.loadBodyColors;
-			if (thisChangeRaceOpts.HasFlag(ChangeRaceOptions.keepBodyColors))
+			//we wont be able to keep anything is the race is currently null so dont change the flags in that case
+			if (thisChangeRaceOpts.HasFlag(ChangeRaceOptions.keepBodyColors) && activeRace.racedata != null)
 			{
-				thisLoadFlags &= ~LoadOptions.loadBodyColors;//Keep BodyColors is true- Dont load them from the recipe
+				thisLoadFlags &= ~LoadOptions.loadBodyColors;//Dont load body colors - keep what we have
 			}
-			if (thisChangeRaceOpts.HasFlag(ChangeRaceOptions.keepDNA))
+			if (thisChangeRaceOpts.HasFlag(ChangeRaceOptions.keepDNA) && activeRace.racedata != null)
 			{
 				thisLoadFlags &= ~LoadOptions.loadDNA;//dont load dna keep what we have
 			}
-			if (thisChangeRaceOpts.HasFlag(ChangeRaceOptions.keepWardrobe))
+			if (thisChangeRaceOpts.HasFlag(ChangeRaceOptions.keepWardrobe) && activeRace.racedata != null)
 			{
 				thisLoadFlags &= ~LoadOptions.loadWardrobe;//dont load wardrobe- try to keep what we have
 				thisLoadFlags &= ~LoadOptions.loadWardrobeColors;
@@ -522,12 +546,13 @@ namespace UMACharacterSystem
 			if (Application.isPlaying)
 			{
 				//If BuildCharacterEnabled is false dont cache because the end user will have never made this version of the character
-				if (cacheCurrentState && BuildCharacterEnabled)
+				if (cacheCurrentState && BuildCharacterEnabled && activeRace.racedata != null)
 				{
 					AddCharacterStateCache();
 				}
 				if (cacheStates.ContainsKey(race.raceName))//we want to IMPORT these cached settings-cache states could now be DCS nodels
 				{
+					Debug.Log("cacheStates.ContainsKey(" + race.raceName + ") recipe was " + cacheStates[race.raceName]);
 					activeRace.name = race.raceName;
 					activeRace.data = race;
 					LoadFromRecipeString(cacheStates[race.raceName], thisLoadFlags);
@@ -566,8 +591,12 @@ namespace UMACharacterSystem
 		/// <param name="allowDownloadables">Optionally allow this function to trigger downloads of wardrobe recipes in an asset bundle</param>
 		public void LoadDefaultWardrobe(bool allowDownloadables = false)
 		{
+			if (activeRace.name == "" || activeRace.name == "None Set")
+				return;
+
 			if (!preloadWardrobeRecipes.loadDefaultRecipes && preloadWardrobeRecipes.recipes.Count == 0)
 				return;
+
 			List<WardrobeRecipeListItem> validRecipes = preloadWardrobeRecipes.Validate(allowDownloadables, activeRace.name);
 			if (validRecipes.Count > 0)
 			{
@@ -575,15 +604,7 @@ namespace UMACharacterSystem
 				{
 					if (recipe._recipe != null)
 					{
-						if (activeRace.name == "")//should never happen TODO: Check if it does
-						{
-							SetSlot(recipe._recipe);
-							if (!requiredAssetsToCheck.Contains(recipe._recipeName) && DynamicAssetLoader.Instance.downloadingAssetsContains(recipe._recipeName))
-							{
-								requiredAssetsToCheck.Add(recipe._recipeName);
-							}
-						}
-						else if (((recipe._recipe.compatibleRaces.Count == 0 || recipe._recipe.compatibleRaces.Contains(activeRace.name)) || (activeRace.racedata.findBackwardsCompatibleWith(recipe._recipe.compatibleRaces) && activeRace.racedata.wardrobeSlots.Contains(recipe._recipe.wardrobeSlot))))
+						if (((recipe._recipe.compatibleRaces.Count == 0 || recipe._recipe.compatibleRaces.Contains(activeRace.name)) || (activeRace.racedata.findBackwardsCompatibleWith(recipe._recipe.compatibleRaces) && activeRace.racedata.wardrobeSlots.Contains(recipe._recipe.wardrobeSlot))))
 						{
 							//the check activeRace.data.wardrobeSlots.Contains(recipe._recipe.wardrobeSlot) makes sure races that are backwards compatible 
 							//with another race but which dont have all of that races wardrobeslots, dont try to load things they dont have wardrobeslots for
@@ -679,6 +700,11 @@ namespace UMACharacterSystem
 				{
 					_wardrobeRecipes.Add(utr.wardrobeSlot, utr);
 				}
+				// if the requested recipe ended up being downloaded add it to the requiredAssetsToCheck- this is what we use when waiting for bundles to check if we have everything we need
+				if (!requiredAssetsToCheck.Contains(utr.name) && DynamicAssetLoader.Instance.downloadingAssetsContains(utr.name))
+				{
+					requiredAssetsToCheck.Add(utr.name);
+				}
 			}
 		}
 		public void SetSlot(string Slotname, string Recipename)
@@ -689,11 +715,6 @@ namespace UMACharacterSystem
 				//throw new Exception("Unable to find slot or recipe for Slotname "+ Slotname+" Recipename "+ Recipename);
 				//it may just be that the race has changed and the current wardrobe didn't fit? If so we dont want to stop everything.
 				Debug.LogWarning("Unable to find slot or recipe for Slotname " + Slotname + " Recipename " + Recipename);
-			}
-			// if the requested recipe ended up being downloaded add it to the requiredAssetsToCheck- this is what we use when waiting for bundles to check if we have everything we need
-			if (!requiredAssetsToCheck.Contains(utr.name) && DynamicAssetLoader.Instance.downloadingAssetsContains(utr.name))
-			{
-				requiredAssetsToCheck.Add(utr.name);
 			}
 			SetSlot(utr);
 		}
@@ -1450,13 +1471,13 @@ namespace UMACharacterSystem
 			{
 				prevDna = umaData.umaRecipe.GetAllDna();
 			}
-			if (settingsToLoad.race == null || settingsToLoad.race == "")
-			{
-				Debug.LogError("The sent recipe did not have an assigned Race. Avatar could not be created from the recipe");
-				yield break;
-			}
 			if (thisLoadOptions.HasFlag(LoadOptions.loadRace))
 			{
+				if (settingsToLoad.race == null || settingsToLoad.race == "")
+				{
+					Debug.LogError("The sent recipe did not have an assigned Race. Avatar could not be created from the recipe");
+					yield break;
+				}
 				activeRace.name = settingsToLoad.race;
 				SetActiveRace(true);
 				//If the UmaRecipe is still after that null, bail - we cant go any further (and SetStartingRace will have shown an error)
@@ -1925,6 +1946,42 @@ namespace UMACharacterSystem
 
 			UpdateAssetBundlesUsedbyCharacter();
 		}
+
+		/// <summary>
+		/// Called when setting activeRace.data or name to null- destroys the generated renderer and bone game objects and sets the recipe and umaData to null
+		/// </summary>
+		private void UnloadAvatar()
+		{
+			if (!Application.isPlaying)
+				return;
+
+			foreach (Transform child in gameObject.transform)
+			{
+				Destroy(child.gameObject);
+			}
+			ClearSlots();
+			umaRecipe = null;
+			umaData.umaRecipe = null;
+			animationController = null;
+			if (gameObject.GetComponent<Animator>())
+			{
+				gameObject.GetComponent<Animator>().runtimeAnimatorController = null;
+			}
+			if (gameObject.GetComponent<UMAExpressionPlayer>())
+			{
+				gameObject.GetComponent<UMAExpressionPlayer>().expressionSet = null;
+				gameObject.GetComponent<UMAExpressionPlayer>().enabled = false;
+
+				UnityEngine.Events.UnityAction<UMAData> EnableExPlayer = null;
+				EnableExPlayer = delegate (UMAData data)
+				{
+					gameObject.GetComponent<UMAExpressionPlayer>().enabled = true;
+					CharacterUpdated.RemoveListener(EnableExPlayer);//cant work out how to make it remove itself
+				};
+				CharacterUpdated.AddListener(EnableExPlayer);
+			}
+		}
+
 		//I think this is a helper method for umaData.AddAdditionalRecipes
 		public void AddAdditionalSerializedRecipes(UMARecipeBase[] umaAdditionalSerializedRecipes)
 		{
@@ -1953,8 +2010,7 @@ namespace UMACharacterSystem
 			umaData.umaRecipe.slotDataList = NewSlots.ToArray();
 		}
 
-		//@jaimi Not sure what this is for- should it be public?
-		protected void UpdateUMA()
+		public void UpdateUMA()
 		{
 			if (umaRace != umaData.umaRecipe.raceData)
 			{

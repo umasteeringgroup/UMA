@@ -55,6 +55,15 @@ public partial class DynamicCharacterAvatarEditor : Editor
 			/*SaveOptions fields*/ "defaultSaveOptions", "savePathType","savePath", "saveFilename", "makeUniqueFilename","ensureSharedColors", 
 			/*Moved into AdvancedOptions*/"context","umaData","umaRecipe", "umaAdditionalRecipes","umaGenerator", "animationController",
 			/*Moved into CharacterEvents*/"CharacterCreated", "CharacterUpdated", "CharacterDestroyed", "RecipeUpdated" });
+
+		//The base DynamicAvatar properties- get these early because changing the race changes someof them
+		SerializedProperty context = serializedObject.FindProperty("context");
+		SerializedProperty umaData = serializedObject.FindProperty("umaData");
+		SerializedProperty umaGenerator = serializedObject.FindProperty("umaGenerator");
+		SerializedProperty umaRecipe = serializedObject.FindProperty("umaRecipe");
+		SerializedProperty umaAdditionalRecipes = serializedObject.FindProperty("umaAdditionalRecipes");
+		SerializedProperty animationController = serializedObject.FindProperty("animationController");
+
 		EditorGUI.BeginChangeCheck();
 		EditorGUILayout.PropertyField(serializedObject.FindProperty("hide"));
 		if (EditorGUI.EndChangeCheck())
@@ -74,7 +83,16 @@ public partial class DynamicCharacterAvatarEditor : Editor
 		}
 		SerializedProperty thisRaceSetter = serializedObject.FindProperty("activeRace");
         Rect currentRect = EditorGUILayout.GetControlRect(false, _racePropDrawer.GetPropertyHeight(thisRaceSetter, GUIContent.none));
+		EditorGUI.BeginChangeCheck();
 		_racePropDrawer.OnGUI(currentRect, thisRaceSetter, new GUIContent(thisRaceSetter.displayName));
+		if (EditorGUI.EndChangeCheck())
+		{
+			thisDCA.ChangeRace((RaceData)thisRaceSetter.FindPropertyRelative("_data").objectReferenceValue);
+			//Changing the race may cause umaRecipe, animationController to so forcefully update these too
+			umaRecipe.objectReferenceValue = thisDCA.umaRecipe;
+			animationController.objectReferenceValue = thisDCA.animationController;
+			serializedObject.ApplyModifiedProperties();
+		}
 		//the ChangeRaceOptions
 		SerializedProperty defaultChangeRaceOptions = serializedObject.FindProperty("defaultChangeRaceOptions");
 		EditorGUI.indentLevel++;
@@ -272,16 +290,9 @@ public partial class DynamicCharacterAvatarEditor : Editor
 		GUILayout.Space(2f);
 		//for AdvancedOptions
 		EditorGUI.BeginChangeCheck();
-		SerializedProperty context = serializedObject.FindProperty("context");
 		context.isExpanded = EditorGUILayout.Foldout(context.isExpanded, "Advanced Options");
 		if (context.isExpanded)
 		{
-			SerializedProperty umaData = serializedObject.FindProperty("umaData");
-			SerializedProperty umaGenerator = serializedObject.FindProperty("umaGenerator");
-			SerializedProperty umaRecipe = serializedObject.FindProperty("umaRecipe");
-			SerializedProperty umaAdditionalRecipes = serializedObject.FindProperty("umaAdditionalRecipes");
-			SerializedProperty animationController = serializedObject.FindProperty("animationController");
-
 			EditorGUILayout.PropertyField(context);
 			EditorGUILayout.PropertyField(umaData);
 			EditorGUILayout.PropertyField(umaGenerator);
@@ -299,18 +310,17 @@ public partial class DynamicCharacterAvatarEditor : Editor
 		if (Application.isPlaying)
         {
             EditorGUILayout.LabelField("AssetBundles used by Avatar");
-            SerializedProperty assetBundlesUsedbyCharacter = serializedObject.FindProperty("assetBundlesUsedbyCharacter");
             string assetBundlesUsed = "";
-            if (assetBundlesUsedbyCharacter.arraySize == 0)
+            if (thisDCA.assetBundlesUsedbyCharacter.Count == 0)
             {
                 assetBundlesUsed = "None";
             }
             else
             {
-                for (int i = 0; i < assetBundlesUsedbyCharacter.arraySize; i++)
+                for (int i = 0; i < thisDCA.assetBundlesUsedbyCharacter.Count; i++)
                 {
-                    assetBundlesUsed = assetBundlesUsed + assetBundlesUsedbyCharacter.GetArrayElementAtIndex(i).stringValue;
-                    if (i < (assetBundlesUsedbyCharacter.arraySize - 1))
+                    assetBundlesUsed = assetBundlesUsed + thisDCA.assetBundlesUsedbyCharacter[i];
+					if (i < (thisDCA.assetBundlesUsedbyCharacter.Count - 1))
                         assetBundlesUsed = assetBundlesUsed + "\n";
                 }
             }

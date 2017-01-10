@@ -185,7 +185,9 @@ namespace UMACharacterSystem
 			if (DynamicAssetLoader.Instance != null)
 			{
 				bool downloadAssetsEnabledNow = DynamicAssetLoader.Instance.isInitialized ? downloadAssetsEnabled : false;
-				DynamicAssetLoader.Instance.AddAssets<UMATextRecipe>(ref assetBundlesUsedDict, dynamicallyAddFromResources, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesRecipesFolder, null, filename, AddRecipesFromAB);
+				//if we are only adding stuff from a downloaded assetbundle, dont search resources
+				bool dynamicallyAddFromResourcesNow = bundleToGather == "" ? dynamicallyAddFromResources : false;
+				DynamicAssetLoader.Instance.AddAssets<UMATextRecipe>(ref assetBundlesUsedDict, dynamicallyAddFromResourcesNow, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesRecipesFolder, null, filename, AddRecipesFromAB);
 			}
 		}
 
@@ -278,7 +280,24 @@ namespace UMACharacterSystem
 			//This doesn't actually seem to do anything apart from slow things down
 			//StartCoroutine(CleanFilesFromResourcesAndBundles());
 		}
-
+		//so that Recipe editor can get some info from Recipes
+		public override List<string> GetRecipeNamesForRaceSlot(string race, string slot)
+		{
+			//we may need to do Init here...
+			Refresh();
+			List<string> recipeNamesForRaceSlot = new List<string>();
+			if (Recipes.ContainsKey(race))
+			{
+				if (Recipes[race].ContainsKey(slot))
+				{
+					foreach (UMATextRecipe utr in Recipes[race][slot])
+					{
+						recipeNamesForRaceSlot.Add(utr.name);
+					}
+				}
+			}
+			return recipeNamesForRaceSlot;
+		}
 		//this has to be here so recipe editor (which is in standardAssets) can use it
 		public override UMARecipeBase GetBaseRecipe(string filename, bool dynamicallyAdd = true)
 		{

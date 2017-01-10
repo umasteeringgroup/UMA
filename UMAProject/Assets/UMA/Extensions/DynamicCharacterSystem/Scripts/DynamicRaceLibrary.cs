@@ -152,9 +152,10 @@ public class DynamicRaceLibrary : RaceLibrary
 	{
 		DynamicAssetLoader.Instance.AddAssets<RaceData>(ref assetBundlesUsedDict, dynamicallyAddFromResources, dynamicallyAddFromAssetBundles, downloadAssetsEnabled, assetBundleNamesToSearch, resourcesFolderPath, null, raceName, AddRaces);
 	}
-
+#pragma warning disable 618
 	private void AddRaces(RaceData[] races)
 	{
+		int currentNumRaces = raceElementList.Length;
 		foreach (RaceData race in races)
 		{
 #if UNITY_EDITOR
@@ -175,10 +176,19 @@ public class DynamicRaceLibrary : RaceLibrary
 #endif
 				AddRace(race);
 		}
+		if (currentNumRaces != raceElementList.Length && Application.isPlaying)
+		{
+			if (UMAContext.Instance == null)
+				UMAContext.FindInstance();
+			if (UMAContext.Instance != null && UMAContext.Instance.dynamicCharacterSystem != null)
+			{
+				(UMAContext.Instance.dynamicCharacterSystem as UMACharacterSystem.DynamicCharacterSystem).Refresh(false);
+			}
+		}
 		//This doesn't actually seem to do anything apart from slow things down
 		//StartCoroutine(CleanRacesFromResourcesAndBundles());
 	}
-
+#pragma warning restore 618
 	/*IEnumerator CleanRacesFromResourcesAndBundles()
     {
         yield return null;
@@ -193,7 +203,6 @@ public class DynamicRaceLibrary : RaceLibrary
 		if (race == null)
 			return;
 		race.UpdateDictionary();
-		int currentNumRaces = raceElementList.Length;
 		try
 		{
 			base.AddRace(race);
@@ -212,15 +221,6 @@ public class DynamicRaceLibrary : RaceLibrary
 			}
 			raceElementList = newRaceElementList.ToArray();
 			base.AddRace(race);
-		}
-		if (currentNumRaces != raceElementList.Length)
-		{
-			if (UMAContext.Instance == null)
-				UMAContext.FindInstance();
-			if (UMAContext.Instance != null && UMAContext.Instance.dynamicCharacterSystem != null)
-			{
-				(UMAContext.Instance.dynamicCharacterSystem as UMACharacterSystem.DynamicCharacterSystem).Refresh(false);
-			}
 		}
 	}
 #pragma warning restore 618

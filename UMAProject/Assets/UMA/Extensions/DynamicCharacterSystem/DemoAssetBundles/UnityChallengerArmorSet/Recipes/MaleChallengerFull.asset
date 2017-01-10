@@ -13,7 +13,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"MaleChallengerBoots","scale":100,"copyIdx":-1,"overlays":[{"id":"ChallengerBootsLeather","colorIdx":0,"rect":[0,0,0,0]},{"id":"ChallengerBootsMetal","colorIdx":1,"rect":[0,0,0,0]}]},{"id":"MaleChallengerGloves","scale":100,"copyIdx":-1,"overlays":[{"id":"ChallengerGlovesLeather","colorIdx":0,"rect":[0,0,0,0]},{"id":"ChallengerGlovesMetal","colorIdx":1,"rect":[0,0,0,0]}]},{"id":"MaleChallengerShouderPads","scale":100,"copyIdx":-1,"overlays":[{"id":"ChallengerShoulderPadsLeather","colorIdx":0,"rect":[0,0,0,0]},{"id":"ChallengerShoulderPadsMetal","colorIdx":1,"rect":[0,0,0,0]}]},{"id":"MaleChallengerTorsoArmor","scale":100,"copyIdx":-1,"overlays":[{"id":"ChallengerTorsoArmorLeather","colorIdx":0,"rect":[0,0,0,0]},{"id":"ChallengerTorsoArmorMetal","colorIdx":1,"rect":[0,0,0,0]}]},{"id":"MaleLegs","scale":100,"copyIdx":-1,"overlays":[{"id":"MaleBody02","colorIdx":2,"rect":[0,0,0,0]},{"id":"MaleUnderwear01","colorIdx":3,"rect":[0,459,1024,256]}]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]}],"colors":[],"fColors":[{"name":"Leather","colors":[56,30,8,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"Metal","colors":[238,238,238,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,255,255,255,133]},{"name":"Skin","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"-","colors":[0,0,0,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":3,"race":"","packedDna":[]}'
   recipeType: Wardrobe
-  Sex: 0
+  DisplayValue: 
   compatibleRaces:
   - HumanMaleDCS
   wardrobeRecipeThumbs:
@@ -21,8 +21,7 @@ MonoBehaviour:
     filename: 
     thumb: {fileID: 21300000, guid: fab6a422313ad1e488c9e96d2417075a, type: 3}
   wardrobeSlot: FullOutfit
-  Hides:
-  - MaleFeet
+  Hides: []
   suppressWardrobeSlots:
   - Shoulders
   - Chest
@@ -30,3 +29,4 @@ MonoBehaviour:
   - Hands
   - Legs
   - Feet
+  activeWardrobeSet: []
