@@ -2,38 +2,47 @@
 using System.Collections;
 using System.Linq;
 
-public class EnvPresetChooser : MonoBehaviour {
-	public Transform[] presets { get { return transform.Cast<Transform>().ToArray(); } }
+namespace UMA.Examples
+{
+    public class EnvPresetChooser : MonoBehaviour
+    {
+        public Transform[] presets { get { return transform.Cast<Transform>().ToArray(); } }
 
-	public int GetActivePreset() {
-		for(int i = 0, n = transform.childCount; i < n; ++i)
-			if(transform.GetChild(i).gameObject.activeSelf)
-				return i;
+        public int GetActivePreset()
+        {
+            for (int i = 0, n = transform.childCount; i < n; ++i)
+                if (transform.GetChild(i).gameObject.activeSelf)
+                    return i;
 
-		return -1;
-	}
+            return -1;
+        }
 
-	public void SetActivePreset(int index) {
-		if(index < 0 || index >= transform.childCount) {
-			Debug.LogWarning("Invalid index in SetActivePreset");
-			return;
-		}
+        public void SetActivePreset(int index)
+        {
+            if (index < 0 || index >= transform.childCount)
+            {
+                Debug.LogWarning("Invalid index in SetActivePreset");
+                return;
+            }
 
-		for(int i = 0, n = transform.childCount; i < n; ++i)
-			transform.GetChild(i).gameObject.SetActive(false);
-		
-		transform.GetChild(index).gameObject.SetActive(true);
-	}
+            for (int i = 0, n = transform.childCount; i < n; ++i)
+                transform.GetChild(i).gameObject.SetActive(false);
 
-	public void DumpAllScreens() {
-		StartCoroutine(DoDumpAllScreens());
-	}
+            transform.GetChild(index).gameObject.SetActive(true);
+        }
 
-	IEnumerator DoDumpAllScreens() {
-		yield return null;
+        public void DumpAllScreens()
+        {
+            StartCoroutine(DoDumpAllScreens());
+        }
 
-		var oldActive = GetActivePreset();
+        IEnumerator DoDumpAllScreens()
+        {
+            yield return null;
 
-		SetActivePreset(oldActive);
-	}
+            var oldActive = GetActivePreset();
+
+            SetActivePreset(oldActive);
+        }
+    }
 }

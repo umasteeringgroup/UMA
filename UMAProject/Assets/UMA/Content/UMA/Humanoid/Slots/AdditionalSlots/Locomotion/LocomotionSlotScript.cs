@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UMA;
 
-namespace UMA
+namespace UMA.Examples
 {
 	/// <summary>
 	/// Auxillary slot which adds a Locomotion component to a newly created character.
