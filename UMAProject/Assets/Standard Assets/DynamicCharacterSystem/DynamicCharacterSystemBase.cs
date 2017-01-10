@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace UMACharacterSystem
 {
@@ -21,5 +22,8 @@ namespace UMACharacterSystem
 		//but we can define some methods that can be overidden so they can be used
 		//except we BLOODY CANT because  UMATextRecipe doesn't exist at this point
 		public virtual UMARecipeBase GetBaseRecipe(string filename, bool dynamicallyAdd = true) { return null; }
-    }
+
+		//Again for RecipeEditor to be able to get usable info
+		public virtual List<string> GetRecipeNamesForRaceSlot(string race, string slot) { return null; }
+	}
 }
