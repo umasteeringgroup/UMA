@@ -407,12 +407,13 @@ namespace UMACharacterSystem
 					umaRecipe = activeRace.racedata.baseRaceRecipe;
 				}
 			}
-			if (umaRecipe == null)
+			//if we are loading an old UMARecipe from the recipe field and the old race is not in resources the race will be null but the recipe wont be 
+			if (umaRecipe == null || activeRace.racedata == null)
 			{
 				Debug.LogWarning("[SetActiveRace] could not find baseRaceRecipe for the race " + activeRace.name + ". Have you set one in the raceData?");
 			}
 			//fallback: if enabled we try to find a race that has the same gender based on the name of activeRace.name
-			if (umaRecipe == null && allowGenderFallback)
+			if ((umaRecipe == null || activeRace.racedata == null) && allowGenderFallback)
 			{
 				Debug.Log("[SetActiveRace] searching for alternative based on gender...");
 				var availableRaces = context.raceLibrary.GetAllRaces();
@@ -552,7 +553,6 @@ namespace UMACharacterSystem
 				}
 				if (cacheStates.ContainsKey(race.raceName))//we want to IMPORT these cached settings-cache states could now be DCS nodels
 				{
-					Debug.Log("cacheStates.ContainsKey(" + race.raceName + ") recipe was " + cacheStates[race.raceName]);
 					activeRace.name = race.raceName;
 					activeRace.data = race;
 					LoadFromRecipeString(cacheStates[race.raceName], thisLoadFlags);
@@ -902,6 +902,36 @@ namespace UMACharacterSystem
 			umaData.umaRecipe.sharedColors = newSharedColors.ToArray();
 		}
 
+		private OverlayColorData[] ImportSharedColors(OverlayColorData[] colorsToLoad, LoadOptions thisLoadOptions )
+		{
+			List<OverlayColorData> newSharedColors = new List<OverlayColorData>();
+			if (thisLoadOptions.HasFlag(LoadOptions.loadBodyColors) && thisLoadOptions.HasFlag(LoadOptions.loadWardrobeColors) && colorsToLoad.Length > 0)
+			{
+				characterColors.Colors.Clear();
+			}
+			if (thisLoadOptions.HasFlag(LoadOptions.loadBodyColors) && colorsToLoad.Length > 0)
+			{
+				newSharedColors.AddRange(LoadBodyColors(colorsToLoad, false));
+			}
+			if (thisLoadOptions.HasFlag(LoadOptions.loadWardrobeColors) && colorsToLoad.Length > 0)
+			{
+				newSharedColors.AddRange(LoadWardrobeColors(colorsToLoad, false));
+			}
+			//if we were not loading both things then we want to restore any colors that were set in the Avatar settings if the characterColors does not already contain a color for that name
+			if (!thisLoadOptions.HasFlag(LoadOptions.loadBodyColors) || !thisLoadOptions.HasFlag(LoadOptions.loadWardrobeColors) || colorsToLoad.Length == 0)
+			{
+				if (!thisLoadOptions.HasFlag(LoadOptions.loadBodyColors) || colorsToLoad.Length == 0)
+				{
+					newSharedColors.AddRange(RestoreCachedBodyColors(false));
+				}
+				if (!thisLoadOptions.HasFlag(LoadOptions.loadWardrobeColors) || colorsToLoad.Length == 0)
+				{
+					newSharedColors.AddRange(RestoreCachedWardrobeColors(false));
+				}
+			}
+			return newSharedColors.ToArray();
+		}
+
 		/// <summary>
 		/// Gets the shared colornames in the Avatars current race base recipe
 		/// </summary>
@@ -922,9 +952,9 @@ namespace UMACharacterSystem
 		/// <param name="recipeToLoad"></param>
 		/// <param name="apply"></param>
 		/// <returns></returns>
-		public List<OverlayColorData> LoadBodyColors(UMATextRecipe.DCSUniversalPackRecipe recipeToLoad, bool apply = false)
+		public List<OverlayColorData> LoadBodyColors(OverlayColorData[] colorsToLoad, bool apply = false)
 		{
-			return LoadBodyOrWardrobeColors(recipeToLoad, true, apply);
+			return LoadBodyOrWardrobeColors(colorsToLoad, true, apply);
 		}
 		/// <summary>
 		/// Loads any shared colors from the given recipe to the CharacterColors List, only if they are NOT defined in the current baseRaceRecipe, optionally applying then to the current UMAData.UMARecipe
@@ -932,17 +962,17 @@ namespace UMACharacterSystem
 		/// <param name="recipeToLoad"></param>
 		/// <param name="apply"></param>
 		/// <returns></returns>
-		public List<OverlayColorData> LoadWardrobeColors(UMATextRecipe.DCSUniversalPackRecipe recipeToLoad, bool apply = false)
+		public List<OverlayColorData> LoadWardrobeColors(OverlayColorData[] colorsToLoad, bool apply = false)
 		{
-			return LoadBodyOrWardrobeColors(recipeToLoad, false, apply);
+			return LoadBodyOrWardrobeColors(colorsToLoad, false, apply);
 		}
 
-		private List<OverlayColorData> LoadBodyOrWardrobeColors(UMATextRecipe.DCSUniversalPackRecipe recipeToLoad, bool loadingBody = true, bool apply = false)
+		private List<OverlayColorData> LoadBodyOrWardrobeColors(OverlayColorData[] colorsToLoad, bool loadingBody = true, bool apply = false)
 		{
 			List<string> bodyColorNames = GetBodyColorNames();
 			List<OverlayColorData> newSharedColors = new List<OverlayColorData>();
 			if (loadingBody)
-				foreach (OverlayColorData col in recipeToLoad.sharedColors)
+				foreach (OverlayColorData col in colorsToLoad)
 				{
 					if (bodyColorNames.Contains(col.name))
 					{
@@ -952,7 +982,7 @@ namespace UMACharacterSystem
 					}
 				}
 			else if (!loadingBody)
-				foreach (OverlayColorData col in recipeToLoad.sharedColors)
+				foreach (OverlayColorData col in colorsToLoad)
 				{
 					if (!bodyColorNames.Contains(col.name))
 					{
@@ -1374,8 +1404,6 @@ namespace UMACharacterSystem
 		/// [DEPRICATED] Please use SetLoadString instead, this will work regardless of whether the character has been created or not.
 		/// </summary>
 		/// <param name="Recipe"></param>
-		//DONT LIKE THIS - this is only usable if the character hasn't been build already- 
-		//but we can check the _isFirstSettingsBuild value and if its false call LoadFromRecipeString instead (see next method)
 		public void Preload(string Recipe)
 		{
 			Debug.LogWarning("DEPRICATED please use SetLoadString instead");
@@ -1531,35 +1559,8 @@ namespace UMACharacterSystem
 				if (needsUpdate)
 					UpdateAfterDownload();
 				//Sort out colors
-				List<OverlayColorData> newSharedColors = new List<OverlayColorData>();
-				//if we are loading BOTH BodyColors and WardrobeColors clear the colorList so we only have those colors in it
-				//Only do this if there are shared colors to use
-				if (thisLoadOptions.HasFlag(LoadOptions.loadBodyColors) && thisLoadOptions.HasFlag(LoadOptions.loadWardrobeColors) && settingsToLoad.sharedColors.Length > 0)
-				{
-					characterColors.Colors.Clear();
-				}
-				if (thisLoadOptions.HasFlag(LoadOptions.loadBodyColors) && settingsToLoad.sharedColors.Length > 0)
-				{
-					newSharedColors.AddRange(LoadBodyColors(settingsToLoad, false));
-				}
-				if (thisLoadOptions.HasFlag(LoadOptions.loadWardrobeColors) && settingsToLoad.sharedColors.Length > 0)
-				{
-					newSharedColors.AddRange(LoadWardrobeColors(settingsToLoad, false));
-				}
-				//if we were not loading both things then we want to restore any colors that were set in the Avatar settings if the characterColors does not already contain a color for that name
-				if (!thisLoadOptions.HasFlag(LoadOptions.loadBodyColors) || !thisLoadOptions.HasFlag(LoadOptions.loadWardrobeColors) || settingsToLoad.sharedColors.Length == 0)
-				{
-					if (!thisLoadOptions.HasFlag(LoadOptions.loadBodyColors) || settingsToLoad.sharedColors.Length == 0)
-					{
-						newSharedColors.AddRange(RestoreCachedBodyColors(false));
-					}
-					if (!thisLoadOptions.HasFlag(LoadOptions.loadWardrobeColors) || settingsToLoad.sharedColors.Length == 0)
-					{
-						newSharedColors.AddRange(RestoreCachedWardrobeColors(false));
-					}
-				}
-				umaData.umaRecipe.sharedColors = newSharedColors.ToArray();
-				UpdateColors();//updateColors is called by LoadCharacter which is called by BuildCharacter- but we may not be Building
+				umaData.umaRecipe.sharedColors = ImportSharedColors(settingsToLoad.sharedColors, thisLoadOptions);
+                UpdateColors();//updateColors is called by LoadCharacter which is called by BuildCharacter- but we may not be Building
 
 				if (wasBuildCharacterEnabled)
 				{
@@ -1601,6 +1602,8 @@ namespace UMACharacterSystem
 				prevDna = umaData.umaRecipe.GetAllDna();
 			}
 			//if its a standard UmaTextRecipe load it directly into UMAData since there wont be any wardrobe slots...
+			//but make sure settingsToLoad race is the race that was actually used by SetStartingRace
+			settingsToLoad.race = activeRace.name;
 			if (settingsToLoad.version == 2)
 				UMATextRecipe.UnpackRecipeVersion2(umaData.umaRecipe, settingsToLoad, context);
 			else
@@ -1625,7 +1628,7 @@ namespace UMACharacterSystem
 			if (needsUpdate)
 				UpdateAfterDownload();
 			//shared colors
-			umaData.umaRecipe.sharedColors = settingsToLoad.sharedColors;
+			umaData.umaRecipe.sharedColors = ImportSharedColors(settingsToLoad.sharedColors, thisLoadOptions);
 			UpdateColors();
 			//additionalRecipes
 			umaData.AddAdditionalRecipes(umaAdditionalRecipes, context);
