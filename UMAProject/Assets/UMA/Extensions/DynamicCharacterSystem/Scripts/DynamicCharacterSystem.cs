@@ -5,7 +5,6 @@ using UnityEditor;
 using System.Collections;
 using System.Collections.Generic;
 using System;
-/*using System.IO;*/
 using UMA;
 using UMAAssetBundleManager;
 
@@ -34,7 +33,8 @@ namespace UMACharacterSystem
 		public string assetBundlesForCharactersToSearch;
 		[Tooltip("Limit the AssetBundles search to the following bundles (no starting slash and seperate multiple entries with a comma)")]
 		public string assetBundlesForRecipesToSearch;
-
+		[Tooltip("If true will automatically scan and add all UMATextRecipes from any downloaded bundles.")]
+		public bool addAllRecipesFromDownloadedBundles = true;
 		[HideInInspector]
 		public UMAContext context;
 		//This is a ditionary of asset bundles that were loaded into the library. This can be queried to store a list of active assetBundles that might be useful to preload etc
@@ -43,9 +43,7 @@ namespace UMACharacterSystem
 		[HideInInspector]
 		public bool downloadAssetsEnabled = true;
 
-		//bool updatedThisFrame = false;
-		//Removed becuase they slow down loadSceneAsync- checks added to Refresh instead
-		/*public override void Awake()
+		public override void Awake()
         {
             if (initializeOnAwake)
             {
@@ -54,22 +52,7 @@ namespace UMACharacterSystem
                     Init();
                 }
             }
-        }*/
-
-		/*public override void OnEnable()
-        {
-            if (!initialized || refresh)
-            {
-                if (refresh)
-                {
-                    Refresh();
-                }
-                else
-                {
-                    Init();
-                }
-            }
-        }*/
+        }
 
 		public override void Start()
 		{
@@ -78,14 +61,6 @@ namespace UMACharacterSystem
 				Init();
 			}
 
-		}
-
-		public override void Update()
-		{
-			if (!initialized)
-			{
-				Init();
-			}
 		}
 
 		public override void Init()
@@ -117,10 +92,56 @@ namespace UMACharacterSystem
 			initialized = true;
 			isInitializing = false;
 		}
-
-		//Refresh just adds to what is there rather than clearing it all
-		//used after asset bundles have been loaded to add any new recipes to the dictionaries
-		//This is slow and should only be called when you know something has been added
+		/// <summary>
+		/// Ensures DCS has a race key for the given race in its dictionaries. Use when you want to add recipes to DCS before the actual racedata has been downloaded
+		/// </summary>
+		public void EnsureRaceKey(string race)
+		{
+			if (!Recipes.ContainsKey(race))
+			{
+				Recipes.Add(race, new Dictionary<string, List<UMATextRecipe>>());
+			}
+		}
+		/// <summary>
+		/// Refreshes DCS Dictionaries based on the current races in the RaceLibrary. Ensures any newly added races get backwards compatible recipes assigned to them
+		/// </summary>
+		public void RefreshRaceKeys()
+		{
+			if (!initialized)
+			{
+				Init();
+				return;
+			}
+			if (addAllRecipesFromDownloadedBundles)
+			{
+				Refresh(false, "");
+				return;
+			}
+			var possibleRaces = (context.raceLibrary as DynamicRaceLibrary).GetAllRacesBase();
+			for (int i = 0; i < possibleRaces.Length; i++)
+			{
+				if (!Recipes.ContainsKey(possibleRaces[i].raceName) && possibleRaces[i].raceName != DynamicAssetLoader.Instance.placeholderRace.raceName)
+				{
+					Recipes.Add(possibleRaces[i].raceName, new Dictionary<string, List<UMATextRecipe>>());
+					//then make sure any currently added recipes are also assigned to this race if they are compatible
+					foreach (string race in Recipes.Keys)
+					{
+						if (race != possibleRaces[i].raceName)
+						{
+							foreach (KeyValuePair<string, List<UMATextRecipe>> kp in Recipes[race])
+							{
+								AddRecipes(kp.Value.ToArray());
+							}
+						}
+					}
+				}
+			}
+		}
+		/// <summary>
+		/// Forces DCS to update its recipes to include all recipes that are in Resources or in downloaded assetBundles (optionally filtering by assetBundle name)
+		/// </summary>
+		/// <param name="forceUpdateRaceLibrary">If true will force RaceLibrary to add any races that were in any downloaded assetBundles and then call this Refresh again.</param>
+		/// <param name="bundleToGather">Limit the recipes found tto a defined asset bundle</param>
 		public override void Refresh(bool forceUpdateRaceLibrary = true, string bundleToGather = "")
 		{
 			if (!initialized)
@@ -154,7 +175,6 @@ namespace UMACharacterSystem
 
 		private void GatherCharacterRecipes(string filename = "", string bundleToGather = "")
 		{
-            // JRRM - find slowdown
 			var assetBundleToGather = bundleToGather != "" ? bundleToGather : assetBundlesForCharactersToSearch;
 			//DCS may do this before DAL has downloaded the AssetBundleIndex so in that case we want to turn 'downloadAssetsEnabled' off 
 			if (DynamicAssetLoader.Instance != null)
@@ -179,7 +199,6 @@ namespace UMACharacterSystem
 
 		private void GatherRecipeFiles(string filename = "", string bundleToGather = "")
 		{
-            // JRRM
 			var assetBundleToGather = bundleToGather != "" ? bundleToGather : assetBundlesForRecipesToSearch;
 			//DCS may do this before DAL has downloaded the AssetBundleIndex so in that case we want to turn 'downloadAssetsEnabled' off 
 			if (DynamicAssetLoader.Instance != null)
@@ -187,7 +206,10 @@ namespace UMACharacterSystem
 				bool downloadAssetsEnabledNow = DynamicAssetLoader.Instance.isInitialized ? downloadAssetsEnabled : false;
 				//if we are only adding stuff from a downloaded assetbundle, dont search resources
 				bool dynamicallyAddFromResourcesNow = bundleToGather == "" ? dynamicallyAddFromResources : false;
-				DynamicAssetLoader.Instance.AddAssets<UMATextRecipe>(ref assetBundlesUsedDict, dynamicallyAddFromResourcesNow, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesRecipesFolder, null, filename, AddRecipesFromAB);
+				bool found = false;
+				found = DynamicAssetLoader.Instance.AddAssets<UMATextRecipe>(ref assetBundlesUsedDict, dynamicallyAddFromResourcesNow, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesRecipesFolder, null, filename, AddRecipesFromAB);
+				if (!found || filename != "")
+					DynamicAssetLoader.Instance.AddAssets<UMAWardrobeCollection>(ref assetBundlesUsedDict, dynamicallyAddFromResourcesNow, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesRecipesFolder, null, filename, AddRecipesFromAB);
 			}
 		}
 
@@ -222,55 +244,71 @@ namespace UMACharacterSystem
 					{
 						RecipeIndex[u.name] = u;
 					}
+					var thisWardrobeSlot = u.wardrobeSlot;
+					if (u.GetType() == typeof(UMAWardrobeCollection))
+					{
+						Debug.Log(u.name + " was typeof(UMAWardrobeCollection)");
+						thisWardrobeSlot = "FullOutfit";
+					}
 					for (int i = 0; i < u.compatibleRaces.Count; i++)
 					{
+						//When races that are compatible with multiple races are downloaded we may not have all the races actually downloaded
+						//but that should not stop DCS making an index of recipes that are compatible with that race for when it becomes available
+						if (!Recipes.ContainsKey(u.compatibleRaces[i]))
+						{
+							Recipes.Add(u.compatibleRaces[i], new Dictionary<string, List<UMATextRecipe>>());
+						}
 						if (Recipes.ContainsKey(u.compatibleRaces[i]))
 						{
 							Dictionary<string, List<UMATextRecipe>> RaceRecipes = Recipes[u.compatibleRaces[i]];
 
-							if (!RaceRecipes.ContainsKey(u.wardrobeSlot))
+							if (!RaceRecipes.ContainsKey(thisWardrobeSlot))
 							{
-								RaceRecipes.Add(u.wardrobeSlot, new List<UMATextRecipe>());
+								RaceRecipes.Add(thisWardrobeSlot, new List<UMATextRecipe>());
 							}
 							//we might be refreshing so replace anything that is already there with the downloaded versions- else add
 							bool added = false;
-							for (int ir = 0; ir < RaceRecipes[u.wardrobeSlot].Count; ir++)
+							for (int ir = 0; ir < RaceRecipes[thisWardrobeSlot].Count; ir++)
 							{
-								if (RaceRecipes[u.wardrobeSlot][ir].name == u.name)
+								if (RaceRecipes[thisWardrobeSlot][ir].name == u.name)
 								{
-									RaceRecipes[u.wardrobeSlot][ir] = u;
+									RaceRecipes[thisWardrobeSlot][ir] = u;
 									added = true;
 								}
 							}
 							if (!added)
 							{
-								RaceRecipes[u.wardrobeSlot].Add(u);
+								RaceRecipes[thisWardrobeSlot].Add(u);
 							}
 						}
 						//backwards compatible race slots
 						foreach (string racekey in Recipes.Keys)
 						{
-							//here we also need to check that the race itself has a wardrobe slot that matches the one i the compatible race
-							if ((context.raceLibrary as DynamicRaceLibrary).GetRace(racekey).backwardsCompatibleWith.Contains(u.compatibleRaces[i]) && (context.raceLibrary as DynamicRaceLibrary).GetRace(racekey).wardrobeSlots.Contains(u.wardrobeSlot))
+							//here we also need to check that the race itself has a wardrobe slot that matches the one in the compatible race
+							//11012017 Dont trigger backwards compatible races to download
+							RaceData raceKeyRace = (context.raceLibrary as DynamicRaceLibrary).GetRace(racekey, false);
+							if (raceKeyRace == null)
+								continue;
+							if (raceKeyRace.backwardsCompatibleWith.Contains(u.compatibleRaces[i]) && raceKeyRace.wardrobeSlots.Contains(thisWardrobeSlot))
 							{
 								Dictionary<string, List<UMATextRecipe>> RaceRecipes = Recipes[racekey];
-								if (!RaceRecipes.ContainsKey(u.wardrobeSlot))
+								if (!RaceRecipes.ContainsKey(thisWardrobeSlot))
 								{
-									RaceRecipes.Add(u.wardrobeSlot, new List<UMATextRecipe>());
+									RaceRecipes.Add(thisWardrobeSlot, new List<UMATextRecipe>());
 								}
 								//we might be refreshing so replace anything that is already there with the downloaded versions- else add
 								bool added = false;
-								for (int ir = 0; ir < RaceRecipes[u.wardrobeSlot].Count; ir++)
+								for (int ir = 0; ir < RaceRecipes[thisWardrobeSlot].Count; ir++)
 								{
-									if (RaceRecipes[u.wardrobeSlot][ir].name == u.name)
+									if (RaceRecipes[thisWardrobeSlot][ir].name == u.name)
 									{
-										RaceRecipes[u.wardrobeSlot][ir] = u;
+										RaceRecipes[thisWardrobeSlot][ir] = u;
 										added = true;
 									}
 								}
 								if (!added)
 								{
-									RaceRecipes[u.wardrobeSlot].Add(u);
+									RaceRecipes[thisWardrobeSlot].Add(u);
 								}
 							}
 						}
@@ -283,7 +321,6 @@ namespace UMACharacterSystem
 		//so that Recipe editor can get some info from Recipes
 		public override List<string> GetRecipeNamesForRaceSlot(string race, string slot)
 		{
-			//we may need to do Init here...
 			Refresh();
 			List<string> recipeNamesForRaceSlot = new List<string>();
 			if (Recipes.ContainsKey(race))

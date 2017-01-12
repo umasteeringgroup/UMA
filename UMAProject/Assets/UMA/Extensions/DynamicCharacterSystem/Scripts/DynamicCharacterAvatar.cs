@@ -276,7 +276,7 @@ namespace UMACharacterSystem
 
 		#endregion
 
-		#region METHODS //Method names start with an uppercase letter
+		#region METHODS 
 
 		#region Start Update and Inititalization
 		// Use this for initialization
@@ -408,7 +408,7 @@ namespace UMACharacterSystem
 				}
 			}
 			//if we are loading an old UMARecipe from the recipe field and the old race is not in resources the race will be null but the recipe wont be 
-			if (umaRecipe == null || activeRace.racedata == null)
+			if (umaRecipe == null)
 			{
 				Debug.LogWarning("[SetActiveRace] could not find baseRaceRecipe for the race " + activeRace.name + ". Have you set one in the raceData?");
 			}
@@ -1175,6 +1175,34 @@ namespace UMACharacterSystem
 
 		#region SETTINGS EXPORT (SAVE)
 
+		/// <summary>
+		/// Helper method for getting the required DCA.SaveOptions flags. Set all to false for DCA.SaveOptions.UseDefaults
+		/// </summary>
+		public static SaveOptions GetSaveOptionsFlags( bool saveDNA, bool saveWardrobe, bool saveColors/*, bool saveAnimator*/)//not using saveAnimator yet
+		{
+			if (saveDNA && !saveWardrobe && !saveColors /*&& !saveAnimator*/)
+			{
+				SaveOptions thisDCASA = SaveOptions.useDefaults;
+				return thisDCASA;
+			}
+			else
+			{
+				SaveOptions thisDCASA = SaveOptions.useDefaults;
+				if (saveDNA)
+					thisDCASA |= SaveOptions.saveDNA;
+				if (saveWardrobe)
+					thisDCASA |= SaveOptions.saveWardrobe;
+				if (saveColors)
+					thisDCASA |= SaveOptions.saveColors;
+				/*if (saveAnimator)
+					thisDCASA|= SaveOptions.saveAnimator;*/
+
+				thisDCASA &= ~SaveOptions.useDefaults;
+
+				return thisDCASA;
+			}
+		}
+
 		#region PARTIAL EXPORT - HelperMethods
 
 		public string GetCurrentWardrobeRecipe(string recipeName = "", bool includeColors = false, params string[] slotsToSave)
@@ -1357,47 +1385,65 @@ namespace UMACharacterSystem
 				return "";
 			}
 		}
-#endregion
+		#endregion
 
-#endregion
+		#endregion
 
-#region SETTINGS IMPORT (LOAD)
+		#region SETTINGS IMPORT (LOAD)
 
-#region PARTIAL IMPORT - HelperMethods
-
-		public void LoadWardrobeFromRecipeString(string recipeString, bool loadColors = true)
+		/// <summary>
+		/// Helper method for getting the required DCA.LoadOptions flags. Set all to false for DCA.LoadOptions.UseDefaults
+		/// </summary>
+		public static LoadOptions GetLoadOptionsFlags(bool loadRace, bool loadDNA, bool loadWardrobe, bool loadBodyColors, bool loadWardrobeColors)
 		{
-			LoadOptions thisLoadOpts = LoadOptions.loadRace | LoadOptions.loadWardrobe;
-			if (loadColors)
+			if (!loadRace && !loadDNA && !loadWardrobe && !loadBodyColors && !loadWardrobeColors)
 			{
-				thisLoadOpts |= LoadOptions.loadWardrobeColors;
+				LoadOptions thisDCALO = LoadOptions.useDefaults;
+				return thisDCALO;
 			}
-			LoadFromRecipeString(recipeString, thisLoadOpts);
+			else
+			{
+				LoadOptions thisDCALO = LoadOptions.useDefaults;
+				if (loadRace)
+					thisDCALO |= LoadOptions.loadRace;
+				if (loadDNA)
+					thisDCALO |= LoadOptions.loadDNA;
+				if (loadWardrobe)
+					thisDCALO |= LoadOptions.loadWardrobe;
+				if (loadBodyColors)
+					thisDCALO |= LoadOptions.loadBodyColors;
+				if (loadWardrobeColors)
+					thisDCALO |= LoadOptions.loadWardrobeColors;
+
+				thisDCALO &= ~LoadOptions.useDefaults;
+
+				return thisDCALO;
+			}
+		}
+
+		#region PARTIAL IMPORT - HelperMethods
+
+		//DOS 11012017 changed the following so that they dont load race- if you want to load the race call LoadFromRecipeString directly with the appropriate flags
+		public void LoadWardrobeFromRecipeString(string recipeString, bool loadColors = true, bool clearExisting = false)
+		{
+			if (clearExisting)
+				ClearSlots();
+			LoadFromRecipeString(recipeString, GetLoadOptionsFlags(false, false, true, false, loadColors));
 		}
 
 		public void LoadColorsFromRecipeString(string recipeString, bool loadBodyColors = true, bool loadWardrobeColors = true)
 		{
-			LoadOptions thisLoadOpts = LoadOptions.loadRace;
-			if (loadBodyColors)
-			{
-				thisLoadOpts |= LoadOptions.loadBodyColors;
-			}
-			if (loadWardrobeColors)
-			{
-				thisLoadOpts |= LoadOptions.loadWardrobeColors;
-			}
-			LoadFromRecipeString(recipeString, thisLoadOpts);
+			LoadFromRecipeString(recipeString, GetLoadOptionsFlags(false, false, false, loadBodyColors, loadWardrobeColors));
 		}
 
 		public void LoadDNAFromRecipeString(string recipeString)
 		{
-			LoadOptions thisLoadOpts = LoadOptions.loadRace | LoadOptions.loadDNA;
-			LoadFromRecipeString(recipeString, thisLoadOpts);
+			LoadFromRecipeString(recipeString, GetLoadOptionsFlags(false, true, false, false, false));
 		}
 
-#endregion
+		#endregion
 
-#region FULL CHARACTER IMPORT
+		#region FULL CHARACTER IMPORT
 
 		/// <summary>
 		/// Sets the recipe string that will be loaded when the Avatar starts. If trying to load a recipe after the character has been created use 'LoadFromRecipeString'
@@ -1532,17 +1578,17 @@ namespace UMACharacterSystem
 				if (needsUpdate)
 					UpdateAfterDownload();
 				//if we are loading wardrobe override everything that was previously set (by the default wardrobe or any previous user modifications)
-				if (thisLoadOptions.HasFlag(LoadOptions.loadWardrobe) && settingsToLoad.wardrobeSet.Count > 0)//but maybe we want to force there to be no wardrobe?
+				if (thisLoadOptions.HasFlag(LoadOptions.loadWardrobe))//sending an empty wardrobe set will clear the current wardrobe
 				{
-					ClearSlots();
-					if (settingsToLoad.wardrobeSet.Count > 0)
-					{
-						LoadWardrobeSet(settingsToLoad.wardrobeSet);
-					}
+					_buildCharacterEnabled = false;
+					LoadWardrobeSet(settingsToLoad.wardrobeSet);
+					_buildCharacterEnabled = wasBuildCharacterEnabled;
 				}
 				else
 				{
+					_buildCharacterEnabled = false;
 					ApplyCurrentWardrobeToNewRace();
+					_buildCharacterEnabled = wasBuildCharacterEnabled;
 				}
 				if (wasBuildCharacterEnabled)
 				{
@@ -1558,6 +1604,7 @@ namespace UMACharacterSystem
 				}
 				if (needsUpdate)
 					UpdateAfterDownload();
+				
 				//Sort out colors
 				umaData.umaRecipe.sharedColors = ImportSharedColors(settingsToLoad.sharedColors, thisLoadOptions);
                 UpdateColors();//updateColors is called by LoadCharacter which is called by BuildCharacter- but we may not be Building
@@ -1609,17 +1656,15 @@ namespace UMACharacterSystem
 			else
 				UMATextRecipe.UnpackRecipeVersion1(umaData.umaRecipe, settingsToLoad, context);
 			//
-			bool needsUpdate = false;
 			ClearSlots();//old umas dont have any wardrobe
-						 //old style recipes may still have had assets in an asset bundle. So if we are showing a placeholder rather than waiting...
-						 //can we build a placeholder tho?
+			//old style recipes may still have had assets in an asset bundle. So if we are showing a placeholder rather than waiting...
 			if (!waitForBundles && DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
 			{
 				BuildCharacter(false);
 			}
 			SetAnimatorController(true);//may cause downloads to happen
 			SetExpressionSet(true);
-			needsUpdate = false;
+			var needsUpdate = false;
 			while (DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
 			{
 				needsUpdate = true;
@@ -1632,7 +1677,6 @@ namespace UMACharacterSystem
 			UpdateColors();
 			//additionalRecipes
 			umaData.AddAdditionalRecipes(umaAdditionalRecipes, context);
-
 			//UMAs unpacking sets the DNA
 			//but we can still try to set it back if thats what we want
 			if (prevDna.Length > 0 && !thisLoadOptions.HasFlag(LoadOptions.loadDNA) && wasBuildCharacterEnabled)
