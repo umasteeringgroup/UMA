@@ -45,7 +45,7 @@ v2f vert (appdata_base v)
 
 half4 frag (v2f i) : COLOR
 {
-    return (0,0,0, 1-tex2D(_MainTex, i.uv).r);
+    return half4(0, 0, 0, 1 - tex2D(_MainTex, i.uv).r);
 }
 ENDCG
 	}

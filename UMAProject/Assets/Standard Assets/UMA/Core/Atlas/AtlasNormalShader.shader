@@ -50,7 +50,7 @@ half4 frag (v2f i) : COLOR
 {
     half4 maskcol = tex2D (_ExtraTex, i.uv);
 	float value = 1 - maskcol.a;
-    return (value,value,value, value);
+    return half4(value, value, value, value);
 }
 ENDCG
 	}
