@@ -762,7 +762,7 @@ namespace UMA
 							var dna = converter.DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
 							dna.dnaTypeHash = dnaTypeHash;
 							//DynamicUMADna:: needs the DNAasset from the converter
-							if (converter.GetType().ToString().IndexOf("DynamicDNAConverterBehaviour") > -1)
+							if (converter is DynamicDNAConverterBehaviourBase)
 							{
 								((DynamicUMADnaBase)dna).dnaAsset = ((DynamicDNAConverterBehaviourBase)converter).dnaAsset;
 							}
@@ -781,7 +781,7 @@ namespace UMA
 							var dna = slotData.asset.slotDNA.DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
 							dna.dnaTypeHash = dnaTypeHash;
 							//DynamicUMADna:: needs the DNAasset from the converter TODO are there other places where I heed to sort out this slotDNA?
-							if (slotData.asset.slotDNA.GetType().ToString().IndexOf("DynamicDNAConverterBehaviour") > -1)
+							if (slotData.asset.slotDNA is DynamicDNAConverterBehaviourBase)
 							{
 								((DynamicUMADnaBase)dna).dnaAsset = ((DynamicDNAConverterBehaviourBase)slotData.asset.slotDNA).dnaAsset;
 							}

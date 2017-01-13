@@ -95,51 +95,21 @@ namespace UMA
         public override int ImportUMADnaValues(UMADnaBase umaDna)
         {
             int dnaImported = 0;
-            if (umaDna.GetType().ToString() == "UMA.UMADnaHumanoid")
+			string[] dnaNames = umaDna.Names;
+
+			for (int i = 0; i < umaDna.Count; i++)
             {
-                for (int i = 0; i < umaDna.Values.Length; i++)
+				var thisValueName = dnaNames[i];
+                for (int ii = 0; ii < Names.Length; ii++)
                 {
-                    var thisValueName = _fallbackNames[i];
-                    for (int ii = 0; ii < Names.Length; ii++)
-                    {
-						if (Names[ii].Equals(thisValueName, StringComparison.OrdinalIgnoreCase))
-						{
-                            Values[ii] = umaDna.Values[i];
-                            dnaImported++;
-                        }
+					if (Names[ii].Equals(thisValueName, StringComparison.OrdinalIgnoreCase))
+					{
+                        Values[ii] = umaDna.Values[i];
+                        dnaImported++;
                     }
                 }
             }
-			else if (umaDna.GetType().ToString() == "UMA.UMADnaTutorial")
-			{
-				var thisValueName = "eyeSpacing";
-				for (int i = 0; i < umaDna.Values.Length; i++)
-				{			
-					for (int ii = 0; ii < Names.Length; ii++)
-					{
-						if (Names[ii].Equals(thisValueName, StringComparison.OrdinalIgnoreCase))
-						{
-							Values[ii] = umaDna.Values[i];
-							dnaImported++;
-						}
-					}
-				}
-			}
-			else if (umaDna.GetType().ToString() == "UMA.DynamicUMADna")
-            {
-                var inNames = umaDna.Names;//DynamicUMADna has Names
-                for(int i = 0; i < inNames.Length; i++)
-                {
-                    for(int ii = 0; ii < Names.Length; ii++)
-                    {
-                        if(Names[ii] == inNames[i])
-                        {
-                            Values[ii] = umaDna.Values[i];
-                            dnaImported++;
-                        }
-                    }
-                }
-			}
+
             return dnaImported;
         }
         /// <summary>
