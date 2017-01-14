@@ -76,5 +76,120 @@ namespace UMACharacterSystem
 			recipe = _recipe;
 		}
 	}
-	
+	[System.Serializable]
+	public class WardrobeSet
+	{
+		public string targetRace = "";
+		public List<WardrobeSettings> wardrobeSet = new List<WardrobeSettings>();
+
+		public WardrobeSet() { }
+		public WardrobeSet(string race)
+		{
+			targetRace = race;
+			wardrobeSet = new List<WardrobeSettings>();
+		}
+		public WardrobeSet(string race, List<WardrobeSettings> settings)
+		{
+			targetRace = race;
+			wardrobeSet = settings;
+		}
+	}
+
+	[System.Serializable]
+	public class WardrobeCollectionList
+	{
+		public List<WardrobeSet> sets = new List<WardrobeSet>();
+
+		public List<WardrobeSettings> this[string key]
+		{
+			get
+			{
+				return GetValue(key);
+			}
+			set
+			{
+				SetValue(key, value);
+			}
+		}
+
+
+		public bool Contains(string race)
+		{
+			bool contained = false;
+			for (int i = 0; i < sets.Count; i++)
+			{
+				if (sets[i].targetRace == race)
+				{
+					contained = true;
+					break;
+				}
+			}
+			return contained;
+		}
+		public void Add(string race)
+		{
+			if (!Contains(race))
+				sets.Add(new WardrobeSet(race));
+		}
+		public void Add(string race, List<WardrobeSettings> settings)
+		{
+			if (!Contains(race))
+				sets.Add(new WardrobeSet(race, settings));
+		}
+		public void Remove(string race)
+		{
+			if (Contains(race))
+			{
+				var newSets = new List<WardrobeSet>(sets.Count - 1);
+				for (int i = 0; i < sets.Count; i++)
+				{
+					if (sets[i].targetRace != race)
+					{
+						newSets.Add(new WardrobeSet(sets[i].targetRace, sets[i].wardrobeSet));
+					}
+				}
+				sets = newSets;
+			}
+		}
+		public List<string> GetAllRecipeNamesInCollection(string forRace = "")
+		{
+			var collectionNames = new List<string>();
+			for (int i = 0; i < sets.Count; i++)
+			{
+				if (forRace != "" && sets[i].targetRace != forRace)
+					continue;
+				for (int si = 0; si < sets[i].wardrobeSet.Count; si++)
+				{
+					if (sets[i].wardrobeSet[si].recipe != "")
+					{
+						collectionNames.Add(sets[i].wardrobeSet[si].recipe);
+					}
+				}
+			}
+			return collectionNames;
+		}
+
+		protected List<WardrobeSettings> GetValue(string key)
+		{
+			for (int i = 0; i < sets.Count; i++)
+			{
+				if (sets[i].targetRace == key)
+				{
+					return sets[i].wardrobeSet;
+				}
+			}
+			return new List<WardrobeSettings>();
+		}
+
+		protected void SetValue(string key, List<WardrobeSettings> value)
+		{
+			for (int i = 0; i < sets.Count; i++)
+			{
+				if (sets[i].targetRace == key)
+				{
+					sets[i].wardrobeSet = value;
+				}
+			}
+		}
+	}
 }

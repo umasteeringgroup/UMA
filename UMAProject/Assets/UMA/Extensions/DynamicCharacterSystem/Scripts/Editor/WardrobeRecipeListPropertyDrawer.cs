@@ -1,4 +1,4 @@
-﻿#if UNITY_EDITOR
+#if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
 using UMACharacterSystem;
@@ -31,7 +31,7 @@ public class WardrobeRecipeListPropertyDrawer : PropertyDrawer {
 					if (draggedObjects[i])
 					{
 						UMATextRecipe tempRecipeAsset = draggedObjects[i] as UMATextRecipe;
-						if (tempRecipeAsset && tempRecipeAsset.recipeType == "Wardrobe")
+						if (tempRecipeAsset && (tempRecipeAsset.recipeType == "Wardrobe" || tempRecipeAsset.recipeType == "WardrobeCollection"))
 						{
 							bool needToAddNew = true;
 							for (int ii = 0; ii < thisRecipesProp.arraySize; ii++) {

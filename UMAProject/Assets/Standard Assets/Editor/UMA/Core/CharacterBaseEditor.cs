@@ -343,6 +343,9 @@ namespace UMAEditor
 				if (_recipe.sharedColors.Length == 0)
 				{
 					selectedChannelCount = EditorGUILayout.IntPopup("Channels", selectedChannelCount, names, channels);
+					//DOS these buttons all in a row pushes the UI too wide
+					EditorGUILayout.EndHorizontal();
+					EditorGUILayout.BeginHorizontal();
 				}
 				else
 				{
@@ -385,7 +388,10 @@ namespace UMAEditor
 						temp.AddRange(_recipe.sharedColors);
 						temp.RemoveAt(i);
 						_recipe.sharedColors = temp.ToArray();
-						// TODO: search the overlays and adjust the shared colors
+						//DOS this wasn't setting changed = true
+						changed = true;
+						// TODO: if all the shared colors are deleted anything that was set to use them
+						//fixed @1022 by checking the shared color still exists
 						break;
 					}
 					if (_ColorFoldouts[i])
@@ -1010,11 +1016,10 @@ namespace UMAEditor
 			bool changed = false;
 			int currentsharedcol = 0;
 			string[] sharednames = new string[_recipe.sharedColors.Length];
-
-
-
-
-			if (_overlayData.colorData.IsASharedColor)
+			
+			//DOS 13012016 if we also check here that _recipe.sharedColors still contains 
+			//the desired ocd then we can save the collection when colors are deleted
+			if (_overlayData.colorData.IsASharedColor && _recipe.sharedColors.Contains(_overlayData.colorData))
 			{
 				GUIHelper.BeginVerticalPadded(2f, new Color(0.75f, 0.875f, 1f));
 				GUILayout.BeginHorizontal();
@@ -1177,7 +1182,8 @@ namespace UMAEditor
 		protected bool showBaseEditor;
 		protected bool _rebuildOnLayout = false;
 		protected UMAData.UMARecipe _recipe;
-		static int _LastToolBar = 0;
+		//DOS made protected so childs can override
+		protected static int _LastToolBar = 0;
 		protected int _toolbarIndex = _LastToolBar;
 		protected DNAMasterEditor dnaEditor;
 		protected SlotMasterEditor slotEditor;
@@ -1266,7 +1272,8 @@ namespace UMAEditor
 			}
 		}
 
-		private bool ToolbarGUI()
+		//DOS Changed Toolbar to be protected virtual so children can override
+		protected virtual bool ToolbarGUI()
 		{
 			_toolbarIndex = GUILayout.Toolbar(_toolbarIndex, toolbar);
 			_LastToolBar = _toolbarIndex;

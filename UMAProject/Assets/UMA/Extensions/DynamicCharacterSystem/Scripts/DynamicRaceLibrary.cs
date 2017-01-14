@@ -114,37 +114,27 @@ public class DynamicRaceLibrary : RaceLibrary
 		return foundRaceData;
 	}
 #endif
-	//Loading speed issue does not seem to be related to this since commenting the AddAssets calls out makes no difference!?!
 	public void UpdateDynamicRaceLibrary(bool downloadAssets, int? raceHash = null)
 	{
-		//Debug.LogWarning("[DynamicRaceLibrary] UpdateDynamicRaceLibrary called");
 		if (allStartingAssetsAdded && raceHash == null)
-		{
-			//Debug.Log("[DynamicRaceLibrary] Did not do a search for everything again because allStartingAssetsAdded was true");
 			return;
-		}
-		//Making the race library scan everything should only happen once- at all other times a specific race should have been requested (and been added by dynamic asset loader) so it should already be here if it needs to be.
+
+		//Making the race library scan everything (by sending raceHash = null) only needs to happen once- at all other times a specific race will have been requested (and been added by dynamic asset loader) so it will already be here if it needs to be.
 		if (raceHash == null && Application.isPlaying && allStartingAssetsAdded == false && UMAResourcesIndex.Instance != null && UMAResourcesIndex.Instance.enableDynamicIndexing == false)
-		{
-			//Debug.LogWarning("[DynamicRaceLibrary] UpdateDynamicRaceLibrary searched for everything- This should only happen ONCE");
 			allStartingAssetsAdded = true;
-		}
+
 #if UNITY_EDITOR
 		if (allAssetsAddedInEditor && raceHash == null)
-		{
-			//Debug.Log("[DynamicRaceLibrary] Did not update because allAssetsAddedInEditor was true");
 			return;
-		}
+
 #endif
-        if (DynamicAssetLoader.Instance != null)
-		DynamicAssetLoader.Instance.AddAssets<RaceData>(ref assetBundlesUsedDict, dynamicallyAddFromResources, dynamicallyAddFromAssetBundles, downloadAssets, assetBundleNamesToSearch, resourcesFolderPath, raceHash, "", AddRaces);
+		if (DynamicAssetLoader.Instance != null)
+			DynamicAssetLoader.Instance.AddAssets<RaceData>(ref assetBundlesUsedDict, dynamicallyAddFromResources, dynamicallyAddFromAssetBundles, downloadAssets, assetBundleNamesToSearch, resourcesFolderPath, raceHash, "", AddRaces);
 
 #if UNITY_EDITOR
 		if (raceHash == null && !Application.isPlaying)
-		{
-			//Debug.LogWarning("I DEFINED allAssetsAddedInEditor AS TRUE");
 			allAssetsAddedInEditor = true;
-		}
+
 #endif
 	}
 
@@ -176,13 +166,14 @@ public class DynamicRaceLibrary : RaceLibrary
 #endif
 				AddRace(race);
 		}
+		//Ensure the new races have keys in the DCS dictionary
 		if (currentNumRaces != raceElementList.Length && Application.isPlaying)
 		{
 			if (UMAContext.Instance == null)
 				UMAContext.FindInstance();
 			if (UMAContext.Instance != null && UMAContext.Instance.dynamicCharacterSystem != null)
 			{
-				(UMAContext.Instance.dynamicCharacterSystem as UMACharacterSystem.DynamicCharacterSystem).Refresh(false);
+				(UMAContext.Instance.dynamicCharacterSystem as UMACharacterSystem.DynamicCharacterSystem).RefreshRaceKeys();
 			}
 		}
 		//This doesn't actually seem to do anything apart from slow things down

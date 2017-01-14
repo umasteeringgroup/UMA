@@ -23,7 +23,7 @@ RenderSettings:
   m_AmbientSkyColor: {r: 0.09968737, g: 0.12511392, b: 0.13740693, a: 0.4734968}
   m_AmbientEquatorColor: {r: 0.09968737, g: 0.12511392, b: 0.13740693, a: 0.4734968}
   m_AmbientGroundColor: {r: 0.09968737, g: 0.12511392, b: 0.13740693, a: 0.4734968}
-  m_AmbientIntensity: 0.83
+  m_AmbientIntensity: 1
   m_AmbientMode: 0
   m_SkyboxMaterial: {fileID: 2100000, guid: 11b30e62ce68af4478c801d9ca4e972b, type: 2}
   m_HaloStrength: 0.5
@@ -37,7 +37,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 166765684}
-  m_IndirectSpecularColor: {r: 0.34601545, g: 0.35387874, b: 0.37315515, a: 1}
+  m_IndirectSpecularColor: {r: 0.1419074, g: 0.14897406, b: 0.16846019, a: 1}
 --- !u!157 &4
 LightmapSettings:
   m_ObjectHideFlags: 0
@@ -71,7 +71,7 @@ LightmapSettings:
     m_FinalGatherFiltering: 1
     m_FinalGatherRayCount: 1024
     m_ReflectionCompression: 2
-  m_LightingDataAsset: {fileID: 112000001, guid: f915f805ca0c04f489a36663c0a93567,
+  m_LightingDataAsset: {fileID: 112000001, guid: b8d9dd17fe6ad174ca1988e1c5da4233,
     type: 2}
   m_RuntimeCPUUsage: 25
 --- !u!196 &5
@@ -165,6 +165,12 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 6084247}
+--- !u!114 &36656879 stripped
+MonoBehaviour:
+  m_PrefabParentObject: {fileID: 11400000, guid: f500ac7a6589e8f4199db272256fe996,
+    type: 2}
+  m_PrefabInternal: {fileID: 1038058017}
+  m_Script: {fileID: 11500000, guid: b41d019fd27682f4fa2cadfe47b38e0a, type: 3}
 --- !u!1 &51934109
 GameObject:
   m_ObjectHideFlags: 0
@@ -1005,7 +1011,7 @@ RectTransform:
   - {fileID: 482513340}
   - {fileID: 698825848}
   m_Father: {fileID: 930765368}
-  m_RootOrder: 2
+  m_RootOrder: 3
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: -50}
@@ -1095,7 +1101,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &146165254
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1112,7 +1118,7 @@ RectTransform:
   m_RootOrder: 2
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 440.25, y: -45.2}
+  m_AnchoredPosition: {x: 267.15002, y: -45.2}
   m_SizeDelta: {x: 168.1, y: 70.4}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &146165255
@@ -1348,7 +1354,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &152714820
 Transform:
   m_ObjectHideFlags: 0
@@ -1620,7 +1626,7 @@ Light:
   serializedVersion: 7
   m_Type: 1
   m_Color: {r: 0.9338235, g: 0.9185755, b: 0.88575906, a: 1}
-  m_Intensity: 1
+  m_Intensity: 1.14
   m_Range: 10
   m_SpotAngle: 30
   m_CookieSize: 10
@@ -1628,10 +1634,10 @@ Light:
     m_Type: 2
     m_Resolution: -1
     m_CustomResolution: -1
-    m_Strength: 0.858
-    m_Bias: 0.034
-    m_NormalBias: 0.4
-    m_NearPlane: 0.2
+    m_Strength: 1
+    m_Bias: 0.02
+    m_NormalBias: 1
+    m_NearPlane: 0.37
   m_Cookie: {fileID: 0}
   m_DrawHalo: 0
   m_Flare: {fileID: 0}
@@ -1680,7 +1686,7 @@ RectTransform:
   m_RootOrder: 2
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 300.56308, y: -120.03755}
+  m_AnchoredPosition: {x: 300.56308, y: -99.883705}
   m_SizeDelta: {x: 561.12616, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &167269314
@@ -2542,6 +2548,11 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 5a63f3d521484f345b330eaa6ddd496e, type: 2}
   - {fileID: 11400000, guid: 5746c09014733de4bbf208291c61aaea, type: 2}
   - {fileID: 11400000, guid: e2224fed494e9d943be557109e679173, type: 2}
+  - {fileID: 11400000, guid: d3aed0339ec3f39418d0a2dde99b9917, type: 2}
+  - {fileID: 11400000, guid: 1320201c90abfb148ba70377406b5dc4, type: 2}
+  - {fileID: 11400000, guid: 7d8313c93b135224b806c1f92f4ccf6e, type: 2}
+  - {fileID: 11400000, guid: 03e5bfa4f7f2fd445974ed61bdf5d9cf, type: 2}
+  - {fileID: 11400000, guid: a209ee514b60b9044bdef1bcbf69967d, type: 2}
   scaleAdjust: 1
   readWrite: 0
   compress: 0
@@ -2744,8 +2755,8 @@ RectTransform:
   m_RootOrder: 0
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 300.56308, y: -31.257042}
-  m_SizeDelta: {x: 561.12616, y: 22.514084}
+  m_AnchoredPosition: {x: 300.56308, y: -30.935856}
+  m_SizeDelta: {x: 561.12616, y: 21.87171}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &279435284
 MonoBehaviour:
@@ -3028,7 +3039,7 @@ MonoBehaviour:
           m_FloatArgument: 0
           m_StringArgument: ToonFemale
           m_BoolArgument: 0
-        m_CallState: 2
+        m_CallState: 0
       - m_Target: {fileID: 1367749205}
         m_MethodName: Refresh
         m_Mode: 1
@@ -3039,7 +3050,7 @@ MonoBehaviour:
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
-        m_CallState: 2
+        m_CallState: 0
       - m_Target: {fileID: 1326423181}
         m_MethodName: ChangeRace
         m_Mode: 5
@@ -3414,6 +3425,7 @@ GameObject:
   - 222: {fileID: 337879492}
   - 114: {fileID: 337879491}
   - 114: {fileID: 337879490}
+  - 114: {fileID: 337879494}
   m_Layer: 5
   m_Name: ClothingPanel
   m_TagString: Untagged
@@ -3440,7 +3452,7 @@ MonoBehaviour:
   m_ChildAlignment: 0
   m_StartCorner: 0
   m_StartAxis: 0
-  m_CellSize: {x: 168.1, y: 70.4}
+  m_CellSize: {x: 168.1, y: 137.6}
   m_Spacing: {x: 5, y: 5}
   m_Constraint: 0
   m_ConstraintCount: 2
@@ -3498,6 +3510,48 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: -37.98}
   m_SizeDelta: {x: 0, y: 164.7}
   m_Pivot: {x: 0.5, y: 1}
+--- !u!114 &337879494
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 337879489}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 12963954f316381439aeab156e4ba9d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  thisCustomizer: {fileID: 1326423181}
+  collectionButtonPrefab: {fileID: 1000013047580728, guid: faba9b7c95d879647a1d94beee743300,
+    type: 2}
+  coverImageIndex: 0
+  onLoadCollection:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 338520190}
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 564266365}
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
 --- !u!1 &338520190
 GameObject:
   m_ObjectHideFlags: 0
@@ -3640,7 +3694,7 @@ RectTransform:
   - {fileID: 866091343}
   - {fileID: 285705272}
   m_Father: {fileID: 930765368}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
   m_AnchoredPosition: {x: 0, y: 14.999998}
@@ -4260,13 +4314,13 @@ MonoBehaviour:
       valuesConverted: 0
     - name: Skin
       channelMask:
-      - {r: 0.9450981, g: 0.91372555, b: 0.7686275, a: 1}
+      - {r: 0.9044118, g: 0.85653114, b: 0.7847102, a: 1}
       - {r: 1, g: 1, b: 1, a: 1}
       - {r: 1, g: 1, b: 1, a: 1}
       channelAdditiveMask:
       - {r: 0, g: 0, b: 0, a: 0}
       - {r: 0, g: 0, b: 0, a: 0}
-      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0.2205882, g: 0.2205882, b: 0.2205882, a: 0.072}
       _name: 
       _color: {r: 0.9450981, g: 0.91372555, b: 0.7686275, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
@@ -4298,9 +4352,6 @@ MonoBehaviour:
   ensureSharedColors: 0
   defaultSaveOptions: 15
   BoundsOffset: {x: 0, y: 0, z: 0}
-  assetBundlesUsedbyCharacter:
-  - uma/toonshared/racebase
-  - uma/toonfemale/racebase
   _buildCharacterEnabled: 1
 --- !u!4 &363062548
 Transform:
@@ -4826,13 +4877,13 @@ MonoBehaviour:
       valuesConverted: 0
     - name: Skin
       channelMask:
-      - {r: 0.9450981, g: 0.91372555, b: 0.7686275, a: 1}
+      - {r: 0.9044118, g: 0.85653114, b: 0.7847102, a: 1}
       - {r: 1, g: 1, b: 1, a: 1}
       - {r: 1, g: 1, b: 1, a: 1}
       channelAdditiveMask:
       - {r: 0, g: 0, b: 0, a: 0}
       - {r: 0, g: 0, b: 0, a: 0}
-      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0.2205882, g: 0.2205882, b: 0.2205882, a: 0.072}
       _name: 
       _color: {r: 0.9450981, g: 0.91372555, b: 0.7686275, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
@@ -4864,9 +4915,6 @@ MonoBehaviour:
   ensureSharedColors: 0
   defaultSaveOptions: 15
   BoundsOffset: {x: 0, y: 0, z: 0}
-  assetBundlesUsedbyCharacter:
-  - uma/toonshared/racebase
-  - uma/toonfemale/racebase
   _buildCharacterEnabled: 1
 --- !u!4 &385653673
 Transform:
@@ -5103,6 +5151,60 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 411649823}
+--- !u!1 &412821920
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 4
+  m_Component:
+  - 224: {fileID: 412821921}
+  - 114: {fileID: 412821922}
+  m_Layer: 5
+  m_Name: WardrobeCollectionLibrary
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &412821921
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 412821920}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_Children: []
+  m_Father: {fileID: 930765368}
+  m_RootOrder: 0
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &412821922
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 412821920}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72c0d56c6c61f114e99ee58ea66cba3f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  collectionList: []
+  initializeOnAwake: 1
+  makePersistent: 0
+  dynamicallyAddFromResources: 1
+  resourcesCollectionsFolder: 
+  dynamicallyAddFromAssetBundles: 1
+  assetBundlesForCollectionsToSearch: 
+  storeDownloadedStatus: 0
+  context: {fileID: 0}
 --- !u!1 &439435780
 GameObject:
   m_ObjectHideFlags: 0
@@ -5121,7 +5223,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &439435781
 RectTransform:
   m_ObjectHideFlags: 0
@@ -6029,7 +6131,7 @@ RectTransform:
   - {fileID: 935605450}
   - {fileID: 165878812}
   m_Father: {fileID: 930765368}
-  m_RootOrder: 4
+  m_RootOrder: 5
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
@@ -9105,7 +9207,7 @@ MonoBehaviour:
   umaRecipe: {fileID: 0}
   umaAdditionalRecipes:
   - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
-  umaGenerator: {fileID: 0}
+  umaGenerator: {fileID: 36656879}
   animationController: {fileID: 0}
   CharacterCreated:
     m_PersistentCalls:
@@ -9140,10 +9242,10 @@ MonoBehaviour:
       PublicKeyToken=null
   hide: 0
   activeRace:
-    name: HumanMaleDCS
-    _data: {fileID: 11400000, guid: 5ed11744a54425247b40c4f8967bdcbd, type: 2}
+    name: ToonFemale
+    _data: {fileID: 11400000, guid: 7e7237ce6bc9c6946b66dde98daa310b, type: 2}
     _cachedRaceDatas: []
-  defaultChangeRaceOptions: 4
+  defaultChangeRaceOptions: 6
   cacheCurrentState: 1
   preloadWardrobeRecipes:
     loadDefaultRecipes: 1
@@ -9214,13 +9316,13 @@ MonoBehaviour:
       valuesConverted: 0
     - name: Skin
       channelMask:
-      - {r: 0.9450981, g: 0.91372555, b: 0.7686275, a: 1}
+      - {r: 0.9044118, g: 0.85653114, b: 0.7847102, a: 1}
       - {r: 1, g: 1, b: 1, a: 1}
       - {r: 1, g: 1, b: 1, a: 1}
       channelAdditiveMask:
       - {r: 0, g: 0, b: 0, a: 0}
       - {r: 0, g: 0, b: 0, a: 0}
-      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0.2205882, g: 0.2205882, b: 0.2205882, a: 0.072}
       _name: 
       _color: {r: 0.9450981, g: 0.91372555, b: 0.7686275, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
@@ -9252,9 +9354,6 @@ MonoBehaviour:
   ensureSharedColors: 0
   defaultSaveOptions: 15
   BoundsOffset: {x: 0, y: 0, z: 0}
-  assetBundlesUsedbyCharacter:
-  - uma/toonshared/racebase
-  - uma/toonfemale/racebase
   _buildCharacterEnabled: 1
 --- !u!4 &893401643
 Transform:
@@ -9373,6 +9472,7 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children:
+  - {fileID: 412821921}
   - {fileID: 339957138}
   - {fileID: 1566076950}
   - {fileID: 114539210}
@@ -10500,8 +10600,8 @@ RectTransform:
   m_RootOrder: 1
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 300.56308, y: -81.27582}
-  m_SizeDelta: {x: 561.12616, y: 37.52347}
+  m_AnchoredPosition: {x: 300.56308, y: -70.87771}
+  m_SizeDelta: {x: 561.12616, y: 18.011995}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1058202277
 MonoBehaviour:
@@ -12938,6 +13038,7 @@ MonoBehaviour:
   dynamicallyAddFromAssetBundles: 1
   assetBundlesForCharactersToSearch: 
   assetBundlesForRecipesToSearch: 
+  addAllRecipesFromDownloadedBundles: 0
   context: {fileID: 1875296715}
 --- !u!4 &1367749206
 Transform:
@@ -15033,7 +15134,7 @@ RectTransform:
   - {fileID: 1529638126}
   - {fileID: 1286333946}
   m_Father: {fileID: 930765368}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
@@ -15731,7 +15832,7 @@ RectTransform:
   - {fileID: 1526319211}
   - {fileID: 1188966355}
   m_Father: {fileID: 930765368}
-  m_RootOrder: 3
+  m_RootOrder: 4
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
   m_AnchoredPosition: {x: 0, y: 15}
@@ -17666,8 +17767,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   raceElementList:
   - {fileID: 11400000, guid: 5ed11744a54425247b40c4f8967bdcbd, type: 2}
-  - {fileID: 11400000, guid: 62688b7aa02fbc544916e522fcc239c7, type: 2}
-  - {fileID: 11400000, guid: f8fea6f0ee17b3f42a4ae6cfb627bab3, type: 2}
   dynamicallyAddFromResources: 1
   resourcesFolderPath: 
   dynamicallyAddFromAssetBundles: 1
@@ -19358,7 +19457,7 @@ RectTransform:
   - {fileID: 1519036268}
   - {fileID: 453045764}
   m_Father: {fileID: 930765368}
-  m_RootOrder: 5
+  m_RootOrder: 6
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: -0.000030517578}

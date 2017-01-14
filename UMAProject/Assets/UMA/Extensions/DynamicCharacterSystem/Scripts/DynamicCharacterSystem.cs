@@ -43,6 +43,7 @@ namespace UMACharacterSystem
 		[HideInInspector]
 		public bool downloadAssetsEnabled = true;
 
+		//make private?
 		public override void Awake()
         {
             if (initializeOnAwake)
@@ -53,7 +54,7 @@ namespace UMACharacterSystem
                 }
             }
         }
-
+		//make private?
 		public override void Start()
 		{
 			if (!initialized)
@@ -62,7 +63,7 @@ namespace UMACharacterSystem
 			}
 
 		}
-
+		//make private?
 		public override void Init()
 		{
 			if (initialized || isInitializing)
@@ -123,15 +124,15 @@ namespace UMACharacterSystem
 				if (!Recipes.ContainsKey(possibleRaces[i].raceName) && possibleRaces[i].raceName != DynamicAssetLoader.Instance.placeholderRace.raceName)
 				{
 					Recipes.Add(possibleRaces[i].raceName, new Dictionary<string, List<UMATextRecipe>>());
-					//then make sure any currently added recipes are also assigned to this race if they are compatible
-					foreach (string race in Recipes.Keys)
+				}
+				//then make sure any currently added recipes are also assigned to this race if they are compatible
+				foreach (string race in Recipes.Keys)
+				{
+					if (race != possibleRaces[i].raceName)
 					{
-						if (race != possibleRaces[i].raceName)
+						foreach (KeyValuePair<string, List<UMATextRecipe>> kp in Recipes[race])
 						{
-							foreach (KeyValuePair<string, List<UMATextRecipe>> kp in Recipes[race])
-							{
-								AddRecipes(kp.Value.ToArray());
-							}
+							AddRecipes(kp.Value.ToArray());
 						}
 					}
 				}
@@ -206,10 +207,13 @@ namespace UMACharacterSystem
 				bool downloadAssetsEnabledNow = DynamicAssetLoader.Instance.isInitialized ? downloadAssetsEnabled : false;
 				//if we are only adding stuff from a downloaded assetbundle, dont search resources
 				bool dynamicallyAddFromResourcesNow = bundleToGather == "" ? dynamicallyAddFromResources : false;
+				//Diasbling UMAWardrobeCollection search for now until its finished
 				bool found = false;
-				found = DynamicAssetLoader.Instance.AddAssets<UMATextRecipe>(ref assetBundlesUsedDict, dynamicallyAddFromResourcesNow, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesRecipesFolder, null, filename, AddRecipesFromAB);
-				if (!found || filename != "")
-					DynamicAssetLoader.Instance.AddAssets<UMAWardrobeCollection>(ref assetBundlesUsedDict, dynamicallyAddFromResourcesNow, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesRecipesFolder, null, filename, AddRecipesFromAB);
+				found = DynamicAssetLoader.Instance.AddAssets<UMATextRecipe>(ref assetBundlesUsedDict, dynamicallyAddFromResourcesNow, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesRecipesFolder, null, filename, AddRecipesFromAB, false, false);
+				if (!found && filename != "")
+					found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeCollection>(ref assetBundlesUsedDict, dynamicallyAddFromResourcesNow, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesRecipesFolder, null, filename, AddRecipesFromAB, false, false);
+				if (!found && filename != "")
+					Debug.LogWarning("[DynamicCharacterSystem] could not find " + filename + " in Resources or any AssetBundles. Do you need to rebuild your UMAResources Index or AssetBundles?");
 			}
 		}
 
@@ -230,7 +234,7 @@ namespace UMACharacterSystem
 			if (upart != null)
 				AddRecipes(new UMATextRecipe[] { upart });
 		}
-
+		//This could be private I think- TODO confirm
 		public void AddRecipes(UMATextRecipe[] uparts, string filename = "")
 		{
 			foreach (UMATextRecipe u in uparts)
@@ -247,7 +251,6 @@ namespace UMACharacterSystem
 					var thisWardrobeSlot = u.wardrobeSlot;
 					if (u.GetType() == typeof(UMAWardrobeCollection))
 					{
-						Debug.Log(u.name + " was typeof(UMAWardrobeCollection)");
 						thisWardrobeSlot = "FullOutfit";
 					}
 					for (int i = 0; i < u.compatibleRaces.Count; i++)
@@ -318,7 +321,9 @@ namespace UMACharacterSystem
 			//This doesn't actually seem to do anything apart from slow things down
 			//StartCoroutine(CleanFilesFromResourcesAndBundles());
 		}
-		//so that Recipe editor can get some info from Recipes
+		/// <summary>
+		/// Gets the recipe names in the DynamicCharacterSystem libraries for the given race and slot
+		/// </summary>
 		public override List<string> GetRecipeNamesForRaceSlot(string race, string slot)
 		{
 			Refresh();
@@ -335,12 +340,16 @@ namespace UMACharacterSystem
 			}
 			return recipeNamesForRaceSlot;
 		}
-		//this has to be here so recipe editor (which is in standardAssets) can use it
+		/// <summary>
+		/// Use GetRecipe unless your calling script resides in StandardAssets. Returns the recipe of the given filename from the dictionary as an UMARecipeBase
+		/// </summary>
 		public override UMARecipeBase GetBaseRecipe(string filename, bool dynamicallyAdd = true)
 		{
 			return GetRecipe(filename, dynamicallyAdd);
 		}
-
+		/// <summary>
+		/// Get a recipe from the DCS dictionary, optionally 'dynamicallyAdding' it from Resources/AssetBundles if the component is set up to do this.
+		/// </summary>
 		public UMATextRecipe GetRecipe(string filename, bool dynamicallyAdd = true)
 		{
 			UMATextRecipe foundRecipe = null;

@@ -163,7 +163,7 @@ public partial class UMATextRecipe : UMAPackedRecipeBase
 		}
 		//Right now the only recipeType that uses the DCSModel is "DynamicCharacterAvatar"
 		DCSUniversalPackRecipe thisUnpackedUniversal = null;
-		if(targetRecipeType == "DynamicCharacterAvatar")
+		if(targetRecipeType == "DynamicCharacterAvatar" || targetRecipeType == "WardrobeCollection")
 		{
 			var thisUnpacked = JsonUtility.FromJson<DCSPackRecipe>(recipeToUnpack);
 			thisUnpackedUniversal = new DCSUniversalPackRecipe(thisUnpacked);

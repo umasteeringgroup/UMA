@@ -1,10 +1,164 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
+using UMA;
+using UMACharacterSystem;
 
-public class UMAWardrobeCollection : UMATextRecipe {
+//Because this is a class for user generated content it is marked as partial so it can be extended without modifying the underlying code
+public partial class UMAWardrobeCollection : UMATextRecipe {
+
+	[Tooltip("Cover images for the collection as a whole. Use these for a promotional images for this collection, presenting the goodies inside.")]
+	public List<Sprite> coverImages = new List<Sprite>();
+	public WardrobeCollectionList wardrobeCollection = new WardrobeCollectionList();
+	[Tooltip("WardrobeCollections can also contain an arbitrary list of wardrobeRecipes, not associated with any particular race.You can use this to make a 'hairStyles' pack or a 'tattoos' pack for example")]
+	public List<string> arbitraryRecipes = new List<string>();
+
+	#region CONSTRUCTOR
+	//if we get sent an UMATextRecipe that has a recipe type of Wardrobe then we create a new asset that has that assets properties
+	//save that asset and rename the asset to be the name of the asset we deleted and maybe show a message saying 'Please update your AssetBundles'
+	public UMAWardrobeCollection()
+	{
+		recipeType = "WardrobeCollection";
+		wardrobeSlot = "FullOutfit";//TODO make this slot mandatory for all races like "None" is
+	}
+
+	#endregion
+
+	#region PUBLIC METHODS
+	/// <summary>
+	/// Gets the CoverImage for the collection at the desired index (if set) if none is set falls back to the first wardrobeThumb (if set)
+	/// </summary>
+	public Sprite GetCoverImage(int desiredIndex = 0)
+	{
+		if (coverImages.Count > desiredIndex)
+		{
+			return coverImages[desiredIndex];
+		}
+		else if (coverImages.Count > 0)
+		{
+			return coverImages[0];
+		}
+		else if (wardrobeRecipeThumbs.Count > 0)
+		{
+			return wardrobeRecipeThumbs[0].thumb;
+		}
+		else
+		{
+			return null;
+		}
+	}
+	/// <summary>
+	/// Requests each recipe in the Collection from DynamnicCharacterSystem which will trigger the download of the recipes if they are in asset bundles.
+	/// </summary>
+	/// <param name="dcs"></param>
+	//TODO TODO TODO TODO make all races have a slot for fullOutfit that cant be removed
+	public void EnsureLocalAvailability(string forRace = "")
+	{
+		var thisDCS = (UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem);
+		if (thisDCS == null)
+			return;
+			
+		//Ensure WardrobeCollection items
+		var thisRecipeNames = wardrobeCollection.GetAllRecipeNamesInCollection(forRace);
+		if (thisRecipeNames.Count > 0)
+		{
+			//we maybe adding recipes for races we have not downloaded yet so make sure DCS has a place for them in its index
+			if (forRace != "")
+				thisDCS.EnsureRaceKey(forRace);
+			else
+				foreach (string race in compatibleRaces)
+				{
+					thisDCS.EnsureRaceKey(race);
+				}
+
+			for (int i = 0; i < thisRecipeNames.Count; i++)
+			{
+				thisDCS.GetRecipe(thisRecipeNames[i], true);
+			}
+		}
+		//Ensure Arbitrary Items
+		if(arbitraryRecipes.Count > 0)
+		{
+			for (int i = 0; i < arbitraryRecipes.Count; i++)
+			{
+				thisDCS.GetRecipe(arbitraryRecipes[i], true);
+			}
+		}
+	}
+	/// <summary>
+	/// Gets the recipe names for the given race from the WardrobeCollection
+	/// </summary>
+	public List<string> GetRacesRecipeNames(string race, DynamicCharacterSystem dcs)
+	{
+		var recipesToGet = wardrobeCollection[race];
+		List<string> recipesWeGot = new List<string>();
+		for (int i = 0; i < recipesToGet.Count; i++)
+		{
+			recipesWeGot.Add(recipesToGet[i].recipe);
+		}
+		return recipesWeGot;
+	}
+	/// <summary>
+	/// Gets the wardrobeRecipes for the given race from the WardrobeCollection
+	/// </summary>
+	public List<UMATextRecipe> GetRacesRecipes(string race, DynamicCharacterSystem dcs)
+	{
+		var recipesToGet = wardrobeCollection[race];
+		List<UMATextRecipe> recipesWeGot = new List<UMATextRecipe>();
+		for (int i = 0; i < recipesToGet.Count; i++)
+		{
+			recipesWeGot.Add(dcs.GetRecipe(recipesToGet[i].recipe, true));
+		}
+		return recipesWeGot;
+	}
+	/// <summary>
+	/// Gets the recipe names from this collections arbitrary recipes list
+	/// </summary>
+	public List<string> GetArbitraryRecipesNames()
+	{
+		return arbitraryRecipes;
+	}
+	/// <summary>
+	/// Gets the wardrobeRecipes from this collections arbitrary recipes list
+	/// </summary>
+	public List<UMATextRecipe> GetArbitraryRecipes(DynamicCharacterSystem dcs)
+	{
+		List<UMATextRecipe> recipesWeGot = new List<UMATextRecipe>();
+		for (int i = 0; i < arbitraryRecipes.Count; i++)
+		{
+			recipesWeGot.Add(dcs.GetRecipe(arbitraryRecipes[i], true));
+		}
+		return recipesWeGot;
+	}
+
+	/// <summary>
+	/// Gets a DCSUnversalPackRecipeModel that has the wardrobeSet set to be the set in this collection for the given race of the sent avatar
+	/// </summary>
+	public DCSUniversalPackRecipe GetUniversalPackRecipe(DynamicCharacterAvatar dca, UMAContext context)
+	{
+		var thisPackRecipe = PackedLoadDCSInternal(context);
+		thisPackRecipe.wardrobeSet = wardrobeCollection[dca.activeRace.name];
+		thisPackRecipe.race = dca.activeRace.name;
+		return thisPackRecipe;
+	}
+
+	//Override Load from PackedRecipeBase
+	/// <summary>
+	/// NOTE: Use GetUniversalPackRecipe to get a recipe that includes a wardrobeSet. Load this Recipe's recipeString into the specified UMAData.UMARecipe.
+	/// </summary>
+	public override void Load(UMA.UMAData.UMARecipe umaRecipe, UMAContext context)
+	{
+		if ((recipeString != null) && (recipeString.Length > 0))
+		{
+			var packedRecipe = PackedLoadDCSInternal(context);
+			if(packedRecipe != null)
+				UnpackRecipeVersion2(umaRecipe, packedRecipe, context);
+		}
+	}
+	#endregion
 
 #if UNITY_EDITOR
-	[UnityEditor.MenuItem("Assets/Create/UMA Wardrobe Collection Recipe")]
+	[UnityEditor.MenuItem("Assets/Create/UMA Wardrobe Collection")]
 	public static void CreateWardrobeCollectionAsset()
 	{
 		UMAEditor.CustomAssetUtility.CreateAsset<UMAWardrobeCollection>();

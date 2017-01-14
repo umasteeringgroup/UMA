@@ -606,12 +606,14 @@ public class TestCustomizerDD : MonoBehaviour
 	{
 		var thisRace = Avatar.activeRace.name;
 		int slotNumber = (int)fSlotNumber;
+		string prioritySlot = "";
 		List<string> prioritySlotOver = new List<string>();
 		UMATextRecipe tr = null;
 		if (slotNumber >= 0)
 		{
 			tr = characterSystem.Recipes[thisRace][slotToChange][slotNumber];
 			prioritySlotOver = tr.suppressWardrobeSlots;
+			prioritySlot = tr.wardrobeSlot;
 			Avatar.SetSlot(tr);
 		}
 		else
@@ -628,11 +630,14 @@ public class TestCustomizerDD : MonoBehaviour
 					if (prioritySlotOver.Contains(thisSlot))
 					{
 						child.GetComponent<Dropdown>().value = 0;
+						child.GetComponent<Dropdown>().CancelInvoke();
 					}
 				}
 			}
 		}
-		Avatar.BuildCharacter(true);
+		Avatar.BuildCharacter(true, prioritySlot, prioritySlotOver);
+		//Update the dropdowns to reflect any changes
+		SetUpWardrobeDropdowns();
 	}
 
 	public void CloseAllPanels()

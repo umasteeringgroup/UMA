@@ -25,6 +25,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -40,7 +41,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dnaTypeHash: 156414067
-  dnaAsset: {fileID: 0}
+  dnaAsset: {fileID: 11400000, guid: ccb8ec1df66b34e40b792c32aaeb996e, type: 2}
   hashList:
   - hashName: HeadAdjust
     hash: -423229038
@@ -3671,7 +3672,7 @@ MonoBehaviour:
   lastKnownAssetPath: Assets/UMA/Extensions/DynamicCharacterSystem/DemoAssetBundles/ToonShared/RaceBase/DNA/ToonSerializedDNAConverterBehaviour.prefab
   lastKnownDuplicateAssetPath: Assets/UMA/Extensions/DynamicCharacterSystem/DemoAssetBundles/ToonShared/RaceBase/DNA/ToonSerializedDNAConverterBehaviour
     1.prefab
-  lastKnownInstanceID: 13866
+  lastKnownInstanceID: 16680
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1
