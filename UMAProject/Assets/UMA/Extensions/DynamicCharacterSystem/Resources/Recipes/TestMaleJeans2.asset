@@ -13,7 +13,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"MaleJeans02","scale":100,"copyIdx":-1,"overlays":[{"id":"MaleJeans02","colorIdx":0,"rect":[0,0,0,0]}]}],"colors":[],"fColors":[{"name":"Pants1","colors":[165,37,232,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"","packedDna":[]}'
   recipeType: Wardrobe
-  Sex: 1
+  DisplayValue: 
   compatibleRaces:
   - HumanMaleDCS
   wardrobeRecipeThumbs:
@@ -23,5 +23,5 @@ MonoBehaviour:
   wardrobeSlot: Legs
   Hides:
   - MaleLegs
-  suppressWardrobeSlots:
-  - FullOutfit
+  suppressWardrobeSlots: []
+  activeWardrobeSet: []

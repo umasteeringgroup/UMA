@@ -3525,6 +3525,10 @@ MonoBehaviour:
   collectionButtonPrefab: {fileID: 1000013047580728, guid: faba9b7c95d879647a1d94beee743300,
     type: 2}
   coverImageIndex: 0
+  dialogBoxes: {fileID: 564266365}
+  messageBox: {fileID: 1945924957}
+  messageHeader: {fileID: 1513973788}
+  messageBody: {fileID: 1110864510}
   onLoadCollection:
     m_PersistentCalls:
       m_Calls:
@@ -9242,18 +9246,14 @@ MonoBehaviour:
       PublicKeyToken=null
   hide: 0
   activeRace:
-    name: ToonFemale
-    _data: {fileID: 11400000, guid: 7e7237ce6bc9c6946b66dde98daa310b, type: 2}
+    name: HumanMaleDCS
+    _data: {fileID: 11400000, guid: 5ed11744a54425247b40c4f8967bdcbd, type: 2}
     _cachedRaceDatas: []
   defaultChangeRaceOptions: 6
   cacheCurrentState: 1
   preloadWardrobeRecipes:
     loadDefaultRecipes: 1
     recipes:
-    - _recipeName: ToonHair1
-      _recipe: {fileID: 11400000, guid: 8431fa862e3eba44a9887cf282f4a223, type: 2}
-      _compatibleRaces:
-      - ToonFemale
     - _recipeName: ToonFemaleUnderwear1
       _recipe: {fileID: 11400000, guid: 7d854ee186b4cb8499257fc6c7433be0, type: 2}
       _compatibleRaces:
@@ -9266,6 +9266,10 @@ MonoBehaviour:
       _recipe: {fileID: 11400000, guid: a19b584280d31644785d5f56713e4149, type: 2}
       _compatibleRaces:
       - HumanFemaleResources
+    - _recipeName: ToonHair1
+      _recipe: {fileID: 11400000, guid: 8431fa862e3eba44a9887cf282f4a223, type: 2}
+      _compatibleRaces:
+      - ToonFemale
   raceAnimationControllers:
     defaultAnimationController: {fileID: 9100000, guid: ae859d58fdf844b73863d3833f955cdf,
       type: 2}

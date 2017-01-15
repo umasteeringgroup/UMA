@@ -16,7 +16,6 @@ using UMACharacterSystem;
 
 namespace UMAEditor
 {
-	//because this bloody thing is in standard assets UMADCSRecipe cant have its own editor
 	public partial class RecipeEditor
 	{
 		/// <summary>

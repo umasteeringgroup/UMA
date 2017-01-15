@@ -168,7 +168,7 @@ namespace UMACharacterSystem
 		{
 			foreach (UMAWardrobeCollection uwc in uwcs)
 			{
-				if (filename == "" || (filename != "" && filename.Trim() == uwc.name))
+                if (filename == "" || (filename != "" && filename.Trim() == uwc.name))
 				{
 					if (!collectionIndex.ContainsKey(uwc.name)){
 						collectionIndex.Add(uwc.name, uwc);
@@ -186,6 +186,7 @@ namespace UMACharacterSystem
 				collectionList.Add(kp.Value);
 			}
 			//TODO if the collection is 'unlocked/downloaded' add its contents to DCS
+			//for this though we would need to maintain a list in player prefs so I'm not going to do that in this demo
 		}
     }
 }

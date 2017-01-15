@@ -13,7 +13,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"MaleChallengerShouderPads","scale":100,"copyIdx":-1,"overlays":[{"id":"ChallengerShoulderPadsLeather","colorIdx":0,"rect":[0,0,0,0]},{"id":"ChallengerShoulderPadsMetal","colorIdx":1,"rect":[0,0,0,0]}]}],"colors":[],"fColors":[{"name":"Leather","colors":[56,30,8,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"Metal","colors":[238,238,238,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,255,255,255,133]}],"sharedColorCount":2,"race":"","packedDna":[]}'
   recipeType: Wardrobe
-  Sex: 0
+  DisplayValue: 
   compatibleRaces:
   - HumanMaleDCS
   wardrobeRecipeThumbs:
@@ -22,5 +22,5 @@ MonoBehaviour:
     thumb: {fileID: 21300000, guid: 39bd6533e85a6c74a83d49c4fd1f34e8, type: 3}
   wardrobeSlot: Shoulders
   Hides: []
-  suppressWardrobeSlots:
-  - FullOutfit
+  suppressWardrobeSlots: []
+  activeWardrobeSet: []

@@ -251,10 +251,18 @@ namespace UMACharacterSystem
 					var thisWardrobeSlot = u.wardrobeSlot;
 					if (u.GetType() == typeof(UMAWardrobeCollection))
 					{
+						if ((u as UMAWardrobeCollection).wardrobeCollection.sets.Count == 0)
+							continue;
 						thisWardrobeSlot = "FullOutfit";
 					}
 					for (int i = 0; i < u.compatibleRaces.Count; i++)
 					{
+						if (u.GetType() == typeof(UMAWardrobeCollection))
+						{
+							//if the collection doesn't have a fulloutfit for this race continue
+							if ((u as UMAWardrobeCollection).wardrobeCollection[u.compatibleRaces[i]].Count == 0)
+								continue;
+						}
 						//When races that are compatible with multiple races are downloaded we may not have all the races actually downloaded
 						//but that should not stop DCS making an index of recipes that are compatible with that race for when it becomes available
 						if (!Recipes.ContainsKey(u.compatibleRaces[i]))

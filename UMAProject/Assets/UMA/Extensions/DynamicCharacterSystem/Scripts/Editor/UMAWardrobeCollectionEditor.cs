@@ -91,6 +91,7 @@ namespace UMAEditor
 			private List<string> _arbitraryRecipes = new List<string>();
 			private bool forceGUIUpdate = false;
 			private static string recipesAddErrMsg = "";
+			int recipePickerID = -1;
 
 			public WardrobeCollectionMasterEditor(UMAData.UMARecipe recipe, List<string> compatibleRaces, WardrobeCollectionList wardrobeCollection, List<string> arbitraryRecipes) : base(recipe)
 			{
@@ -105,16 +106,9 @@ namespace UMAEditor
 			{
 				forceGUIUpdate = false;
 				_wardrobeCollection = wardrobeCollection;
-				foreach (string race in compatibleRaces)
-				{
-					if (!_compatibleRaces.Contains(race))
-					{
-						_wardrobeCollection.Remove(race);
-						forceGUIUpdate = true;
-					}
-				}
 				_compatibleRaces = compatibleRaces;
-				UpdateFoldouts();
+				forceGUIUpdate = UpdateCollectionRaces();
+                UpdateFoldouts();
 			}
 
 			private void UpdateFoldouts()
@@ -132,6 +126,36 @@ namespace UMAEditor
 						OpenSlots.Add(_compatibleRaces[i], open);
 					}
 				}
+			}
+			private bool UpdateCollectionRaces()
+			{
+				bool changed = false;
+				if (_compatibleRaces.Count == 0 && _wardrobeCollection.sets.Count > 0)
+				{
+					_wardrobeCollection.Clear();
+					changed = true;
+				}
+				else
+				{
+					for(int i = 0; i < _compatibleRaces.Count; i++)
+					{
+						if (!_wardrobeCollection.Contains(_compatibleRaces[i]))
+						{
+							_wardrobeCollection.Add(_compatibleRaces[i]);
+							changed = true;
+						}
+					}
+					var collectionNames = _wardrobeCollection.GetAllRacesInCollection();
+					for(int i = 0; i < collectionNames.Count; i++)
+					{
+						if (!_compatibleRaces.Contains(collectionNames[i]))
+						{
+							_wardrobeCollection.Remove(collectionNames[i]);
+							changed = true;
+                        }
+					}			
+				}
+				return changed;
 			}
 
 			public override bool OnGUI(ref bool _dnaDirty, ref bool _textureDirty, ref bool _meshDirty)
@@ -169,11 +193,6 @@ namespace UMAEditor
 							var thisRace = context.raceLibrary.GetRace(_compatibleRaces[i]);
 							if (thisRace != null)
 							{
-								if (!_wardrobeCollection.Contains(thisRace.raceName))
-								{
-									_wardrobeCollection.Add(thisRace.raceName);
-								}
-								//Do the foldout thing
 								GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
 								GUILayout.Space(10);
 								bool foldoutOpen = OpenSlots[_compatibleRaces[i]];
@@ -255,7 +274,6 @@ namespace UMAEditor
 				}
 				return changed;
 			}
-			int recipePickerID = -1;
 			// Drop area for Arbitrary Wardrobe recipes
 			private bool AddRecipesDropAreaGUI(ref string errorMsg, Rect dropArea, List<string> recipes)
 			{

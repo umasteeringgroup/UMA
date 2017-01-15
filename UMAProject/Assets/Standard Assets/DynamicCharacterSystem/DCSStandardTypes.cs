@@ -112,6 +112,10 @@ namespace UMACharacterSystem
 			}
 		}
 
+		public void Clear()
+		{
+            sets = new List<WardrobeSet>();
+		}
 
 		public bool Contains(string race)
 		{
@@ -136,6 +140,7 @@ namespace UMACharacterSystem
 			if (!Contains(race))
 				sets.Add(new WardrobeSet(race, settings));
 		}
+
 		public void Remove(string race)
 		{
 			if (Contains(race))
@@ -151,6 +156,17 @@ namespace UMACharacterSystem
 				sets = newSets;
 			}
 		}
+
+		public List<string> GetAllRacesInCollection()
+		{
+			List<string> ret = new List<string>();
+			for (int i = 0; i < sets.Count; i++)
+			{
+				ret.Add(sets[i].targetRace);
+			}
+			return ret;
+		}
+
 		public List<string> GetAllRecipeNamesInCollection(string forRace = "")
 		{
 			var collectionNames = new List<string>();

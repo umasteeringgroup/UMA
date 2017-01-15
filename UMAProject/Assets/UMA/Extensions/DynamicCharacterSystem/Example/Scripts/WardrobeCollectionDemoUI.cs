@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.Events;
 using System.Collections;
 using UMA;
@@ -10,10 +11,15 @@ namespace UMACharacterSystem
 	{
 
 		public TestCustomizerDD thisCustomizer;
-
 		public GameObject collectionButtonPrefab;
-
 		public int coverImageIndex = 0;
+
+		//You would probably have some messageBox system in your actual app but for demo purposes I'll just specify some GameObjects
+		public GameObject dialogBoxes;
+		public GameObject messageBox;
+		public Text messageHeader;
+		public Text messageBody;
+
 
 		public UnityEvent onLoadCollection;
 
@@ -38,7 +44,7 @@ namespace UMACharacterSystem
             foreach (UMAWardrobeCollection uwc in WardrobeCollectionLibrary.Instance.collectionList)
 			{
 				//dont create a button if the collection is not compatible with the currentAvatar Race
-				if (uwc.compatibleRaces.Contains(currentAvatarRace) || currentAvatarRace == "")
+				if (uwc.compatibleRaces.Contains(currentAvatarRace) || currentAvatarRace == "" || uwc.compatibleRaces.Count == 0)
 				{
 					var thisBtn = GameObject.Instantiate(collectionButtonPrefab);
 					var thisBtnCtrl = thisBtn.GetComponent<WardrobeCollectionDemoBtn>();
@@ -47,7 +53,7 @@ namespace UMACharacterSystem
 				}
 			}
 		}
-		//TODO TODO TODO when the collection is for races that we dont have yet the race gets downloaded- I dont want that- I just want the recipes added to DCS for that race but the race should not itself be in racelibrary
+
 		public void LoadSelectedCollection(string collectionName)
 		{
 			var thisUWC = WardrobeCollectionLibrary.Instance.collectionIndex[collectionName];
@@ -59,25 +65,33 @@ namespace UMACharacterSystem
 			if(thisCustomizer.Avatar != null)
 			{
 				//is this UWC compatible with the current race of the avatar?
-				//even if its not it should be made available to races that are?
-				if (!thisUWC.compatibleRaces.Contains(thisCustomizer.Avatar.activeRace.name))
+				if (!thisUWC.compatibleRaces.Contains(thisCustomizer.Avatar.activeRace.name) && thisUWC.compatibleRaces.Count > 0)
 				{
 					//show a messagebox- but for now
 					Debug.LogWarning("This wardrobe collection was not compatible with that avatar");
 					return;
 				}
-				//if not show a message otherwise load the recipe
 				var thisContext = thisCustomizer.Avatar.context != null ? thisCustomizer.Avatar.context : UMAContext.FindInstance();
 				if(thisContext != null)
 				{
-					var thisDCA = (thisContext.dynamicCharacterSystem as DynamicCharacterSystem);
-					if(thisDCA != null)
+					var thisDCS = (thisContext.dynamicCharacterSystem as DynamicCharacterSystem);
+					if(thisDCS != null)
 					{
-						thisDCA.GetRecipe(collectionName);
-						thisCustomizer.Avatar.SetSlot(thisUWC);
+						thisDCS.GetRecipe(collectionName);
+						//if there is actually a 'FullOutfit' defined for the current avatar(i.e. the WardrobeSet for this race is not empty) load it
+						if(thisUWC.wardrobeCollection[thisCustomizer.Avatar.activeRace.name].Count > 0)
+							thisCustomizer.Avatar.SetSlot(thisUWC);
 					}
 				}
 				onLoadCollection.Invoke();
+				//if this was not a recipe that will actually load a FullOutfit onto this race, show a message saying the assets have been added to the library
+				if(thisUWC.wardrobeCollection[thisCustomizer.Avatar.activeRace.name].Count == 0 && thisUWC.arbitraryRecipes.Count > 0)
+				{
+					dialogBoxes.SetActive(true);
+					messageBox.SetActive(true);
+					messageHeader.text = thisUWC.name + " Loaded!";
+					messageBody.text = "The wardrobe recipes in "+thisUWC.name+" have been added to the DCS libraries. Compatible recipes can now be applied to your character using the 'Wardrobe' section of the UI.";
+				}
             }
 		}
 	}
