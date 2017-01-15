@@ -13,7 +13,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"Tops_Female_Halter_Neck_1","scale":100,"copyIdx":-1,"overlays":[{"id":"Halter_Neck_1","colorIdx":2,"rect":[0,0,0,0]},{"id":"Halter_Neck_1_detail","colorIdx":1,"rect":[0,0,0,0]}]},{"id":"Tops_Female_Halter_Neck_1_TORSO","scale":100,"copyIdx":-1,"overlays":[{"id":"UMA_Toon_F_Body","colorIdx":0,"rect":[0,0,0,0]}]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]}],"colors":[],"fColors":[{"name":"Skin","colors":[255,166,166,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"SharedColor1","colors":[8,225,90,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"SharedColor2","colors":[170,30,126,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"SharedColor3","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":4,"race":"","packedDna":[]}'
   recipeType: Wardrobe
-  Sex: 2
+  DisplayValue: 
   compatibleRaces:
   - ToonFemale
   wardrobeRecipeThumbs:
@@ -24,4 +24,6 @@ MonoBehaviour:
   Hides:
   - UMA_Toon_TORSO-Female
   suppressWardrobeSlots:
+  - FullOutfit
   - Underwear
+  activeWardrobeSet: []
