@@ -248,8 +248,6 @@ namespace UMAEditor
 					EditorGUILayout.HelpBox("Drop recipes in to this area to create a collection that is not a full outfit or connected to any given race, for example a 'Hair Styles' pack or 'Tattoos' pack.", MessageType.Info);
 					dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
 					GUI.Box(dropArea, "Drag WardrobeRecipes here. " + recipesAddErrMsg);
-					if (AddRecipesDropAreaGUI(ref recipesAddErrMsg, dropArea, _arbitraryRecipes))
-						changed = true;
 					if (_arbitraryRecipes.Count > 0)
 					{
 						for (int i = 0; i < _arbitraryRecipes.Count; i++)
@@ -271,6 +269,8 @@ namespace UMAEditor
 						}
 					}
 					GUIHelper.EndVerticalPadded(10);
+					if (AddRecipesDropAreaGUI(ref recipesAddErrMsg, dropArea, _arbitraryRecipes))
+						changed = true;
 				}
 				return changed;
 			}
@@ -280,8 +280,8 @@ namespace UMAEditor
 				Event evt = Event.current;
 				bool changed = false;
 				//make the box clickable so that the user can select raceData assets from the asset selection window
-				//TODO: This only works the first time. Anyone know fix that
-				if (evt.type == EventType.MouseUp)
+				//TODO: cant make this work without layout errors. Anyone know how to fix?
+				/*if (evt.type == EventType.MouseUp)
 				{
 					if (dropArea.Contains(evt.mousePosition))
 					{
@@ -303,7 +303,7 @@ namespace UMAEditor
 							errorMsg = "That recipe was not a Wardrobe recipe";
 
 					}
-				}
+				}*/
 				if (evt.type == EventType.DragUpdated)
 				{
 					if (dropArea.Contains(evt.mousePosition))
