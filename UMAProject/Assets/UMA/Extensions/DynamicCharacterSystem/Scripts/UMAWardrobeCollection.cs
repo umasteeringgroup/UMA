@@ -14,8 +14,7 @@ public partial class UMAWardrobeCollection : UMATextRecipe {
 	public List<string> arbitraryRecipes = new List<string>();
 
 	#region CONSTRUCTOR
-	//if we get sent an UMATextRecipe that has a recipe type of Wardrobe then we create a new asset that has that assets properties
-	//save that asset and rename the asset to be the name of the asset we deleted and maybe show a message saying 'Please update your AssetBundles'
+
 	public UMAWardrobeCollection()
 	{
 		recipeType = "WardrobeCollection";
@@ -48,10 +47,8 @@ public partial class UMAWardrobeCollection : UMATextRecipe {
 		}
 	}
 	/// <summary>
-	/// Requests each recipe in the Collection from DynamnicCharacterSystem which will trigger the download of the recipes if they are in asset bundles.
+	/// Requests each recipe in the Collection from DynamicCharacterSystem (optionally limited by race) which will trigger the download of the recipes if they are in asset bundles.
 	/// </summary>
-	/// <param name="dcs"></param>
-	//TODO TODO TODO TODO make all races have a slot for fullOutfit that cant be removed
 	public void EnsureLocalAvailability(string forRace = "")
 	{
 		var thisDCS = (UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem);
