@@ -1972,7 +1972,7 @@ namespace UMACharacterSystem
 
 			List<UMARecipeBase> Recipes = new List<UMARecipeBase>();
 			List<string> SuppressSlotsStrings = new List<string>();
-			var wardrobeRecipiesToRender = new Dictionary<string, UMATextRecipe>();
+			var wardrobeRecipesToRender = new Dictionary<string, UMATextRecipe>();
 			if (WardrobeRecipes.Count > 0)
 			{
 				//Dont add the WardrobeCollection to the recipes to render- they doesn't render directly and will have already set their actual wardrobeRecipe slots SetSlot
@@ -1980,20 +1980,20 @@ namespace UMACharacterSystem
 				{
 					if (kp.Value.GetType() != typeof(UMAWardrobeCollection))
 					{
-						if (!wardrobeRecipiesToRender.ContainsKey(kp.Key))
+						if (!wardrobeRecipesToRender.ContainsKey(kp.Key))
 						{
-							wardrobeRecipiesToRender.Add(kp.Key, kp.Value);
+							wardrobeRecipesToRender.Add(kp.Key, kp.Value);
 						}
 						else
 						{
-							wardrobeRecipiesToRender[kp.Key] = kp.Value;
+							wardrobeRecipesToRender[kp.Key] = kp.Value;
 						}
 					}
 				}
 			}
-			if ((preloadWardrobeRecipes.loadDefaultRecipes || wardrobeRecipiesToRender.Count > 0) && activeRace.racedata != null)
+			if ((preloadWardrobeRecipes.loadDefaultRecipes || wardrobeRecipesToRender.Count > 0) && activeRace.racedata != null)
 			{
-				foreach (UMATextRecipe utr in wardrobeRecipiesToRender.Values)
+				foreach (UMATextRecipe utr in wardrobeRecipesToRender.Values)
 				{
 					if (utr.suppressWardrobeSlots != null)
 					{
@@ -2027,9 +2027,9 @@ namespace UMACharacterSystem
 					{
 						continue;
 					}
-					if (wardrobeRecipiesToRender.ContainsKey(ws))
+					if (wardrobeRecipesToRender.ContainsKey(ws))
 					{
-						UMATextRecipe utr = wardrobeRecipiesToRender[ws];
+						UMATextRecipe utr = wardrobeRecipesToRender[ws];
 						//we can use the race data here to filter wardrobe slots
 						//if checking a backwards compatible race we also need to check the race has a compatible wardrobe slot, 
 						//since while a race can be backwards compatible it does not *have* to have all the same wardrobeslots as the race it is compatible with
