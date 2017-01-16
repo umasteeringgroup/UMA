@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -27,6 +27,14 @@ namespace UMAAssetBundleManager
 							assetWardrobeSlot = (obj as UMATextRecipe).wardrobeSlot;
 							assetWardrobeHides = (obj as UMATextRecipe).Hides;
 						}
+					}
+				}
+				else if (assetType == "UMAWardrobeCollection")
+				{
+					assetWardrobeCompatibleWith = (obj as UMAWardrobeCollection).compatibleRaces;
+					if (assetWardrobeCompatibleWith.Count > 0)
+					{
+						assetWardrobeSlot = "FullOutfit";
 					}
 				}
 			}
