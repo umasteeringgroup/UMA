@@ -88,14 +88,9 @@ public partial class UMAWardrobeRecipe : UMATextRecipe
             var thisUTR = AssetDatabase.LoadAssetAtPath<UMATextRecipe>(thisUTRPath);
 			if (thisUTR.recipeType != "Wardrobe" || (thisUTR.GetType() == typeof(UMAWardrobeRecipe)))
 				continue;
-			Debug.Log("UMAWardrobeRecipe would convert " + thisUTR.name);
-			//test converting a recipe called TestConvertRecipe
-			if (thisUTR.name == "TestConvertWardrobeRecipe")
-			{
-				Debug.Log("UMAWardrobeRecipe did conversion of TestConvertRecipe");
-				var thisUWR = ScriptableObject.CreateInstance<UMAWardrobeRecipe>();
-				thisUWR.ConvertFromUTR(thisUTR);
-			}
+			Debug.Log("UMAWardrobeRecipe did conversion of TestConvertRecipe");
+			var thisUWR = ScriptableObject.CreateInstance<UMAWardrobeRecipe>();
+			thisUWR.ConvertFromUTR(thisUTR);
 		}
 		EditorPrefs.SetBool("UMAWardrobeRecipesUpdated", true);
 		Resources.UnloadUnusedAssets();

@@ -104,14 +104,9 @@ public partial class UMADynamicCharacterAvatarRecipe : UMATextRecipe
 			var thisUTR = AssetDatabase.LoadAssetAtPath<UMATextRecipe>(thisUTRPath);
 			if (thisUTR.recipeType != "DynamicCharacterAvatar" || (thisUTR.GetType() == typeof(UMADynamicCharacterAvatarRecipe)))
 				continue;
-			Debug.Log("UMADynamicCharacterAvatarRecipe would convert " + thisUTR.name);
-			//test converting a recipe called TestConvertRecipe
-			if (thisUTR.name == "TestConvertDCARecipe")
-			{
-				Debug.Log("UMADynamicCharacterAvatarRecipe did conversion of TestConvertRecipe");
-				var thisDCS = ScriptableObject.CreateInstance<UMADynamicCharacterAvatarRecipe>();
-				thisDCS.ConvertFromUTR(thisUTR);
-			}
+			Debug.Log("UMADynamicCharacterAvatarRecipe did conversion of TestConvertRecipe");
+			var thisDCS = ScriptableObject.CreateInstance<UMADynamicCharacterAvatarRecipe>();
+			thisDCS.ConvertFromUTR(thisUTR);
 		}
 		Resources.UnloadUnusedAssets();
 	}
