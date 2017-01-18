@@ -242,7 +242,8 @@ namespace UMA
 		/// <param name="umaData">UMA data.</param>
 		public static Avatar CreateGenericAvatar(UMAData umaData)
 		{
-			Avatar res = AvatarBuilder.BuildGenericAvatar(umaData.umaRoot, umaData.umaRecipe.GetRace().genericRootMotionTransformName);
+			//Avatar res = AvatarBuilder.BuildGenericAvatar(umaData.umaRoot, umaData.umaRecipe.GetRace().genericRootMotionTransformName);
+			Avatar res = AvatarBuilder.BuildGenericAvatar(umaData.umaRoot.transform.root.gameObject, umaData.umaRecipe.GetRace().genericRootMotionTransformName);
 			return res;
 		}
 
