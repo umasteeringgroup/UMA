@@ -162,7 +162,8 @@ namespace UMA
 						snapshot.SaveAnimatorState(animator);
 						Object.Destroy(animator.avatar);
 						SetAvatar(umaData, animator);
-						snapshot.RestoreAnimatorState(animator);
+						if(animator.runtimeAnimatorController != null)
+							snapshot.RestoreAnimatorState(animator);
 					}
 
 					umaTransform.SetParent(oldParent, false);

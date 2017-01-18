@@ -367,7 +367,10 @@ public partial class UMATextRecipe : UMAPackedRecipeBase
 			if (saveOptions.HasFlag(DynamicCharacterAvatar.SaveOptions.saveWardrobe))
 				wardrobeSet = GenerateWardrobeSet(dcaToSave.WardrobeRecipes, slotsToSave);
 			if (saveOptions.HasFlag(DynamicCharacterAvatar.SaveOptions.saveAnimator))
+			{
+				if(dcaToSave.animationController != null)
 				raceAnimatorController = (dcaToSave.animationController.name);
+			}
 		}
 		/// <summary>
 		/// Converts standard UMA Pack Recipe data into this data model, either when loading an old recipe, or when the RecipeEditor is saving a DCS recipe asset

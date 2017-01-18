@@ -1245,30 +1245,41 @@ namespace UMACharacterSystem
 		/// </summary>
 		public void SetAnimatorController(bool addAnimator = false)
 		{
-			var thisAnimator = gameObject.GetComponent<Animator>();
-			if (thisAnimator == null && addAnimator)
-				thisAnimator = gameObject.AddComponent<Animator>();
-			if (thisAnimator != null)
-			{
-				int validControllers = raceAnimationControllers.Validate().Count;//triggers resources load or asset bundle download of any animators that are in resources/asset bundles
+			int validControllers = raceAnimationControllers.Validate().Count;//triggers resources load or asset bundle download of any animators that are in resources/asset bundles
 
-				RuntimeAnimatorController controllerToUse = raceAnimationControllers.defaultAnimationController;
-				if (validControllers > 0)
+			RuntimeAnimatorController controllerToUse = raceAnimationControllers.defaultAnimationController;
+			if (validControllers > 0)
+			{
+				foreach (RaceAnimator raceAnimator in raceAnimationControllers.animators)
 				{
-					foreach (RaceAnimator raceAnimator in raceAnimationControllers.animators)
+					if (raceAnimator.raceName == activeRace.name && raceAnimator.animatorController != null)
 					{
-						if (raceAnimator.raceName == activeRace.name && raceAnimator.animatorController != null)
-						{
-							controllerToUse = raceAnimator.animatorController;
-							break;
-						}
+						controllerToUse = raceAnimator.animatorController;
+						break;
 					}
 				}
-				animationController = controllerToUse;
-				thisAnimator.runtimeAnimatorController = controllerToUse;
-				if (!requiredAssetsToCheck.Contains(controllerToUse.name) && DynamicAssetLoader.Instance.downloadingAssetsContains(controllerToUse.name))
+			}
+			animationController = controllerToUse;
+			var thisAnimator = gameObject.GetComponent<Animator>();
+			if (controllerToUse != null)
+			{
+				if (thisAnimator == null && addAnimator)
+					thisAnimator = gameObject.AddComponent<Animator>();
+				if (thisAnimator != null)
 				{
-					requiredAssetsToCheck.Add(controllerToUse.name);
+
+					thisAnimator.runtimeAnimatorController = controllerToUse;
+					if (!requiredAssetsToCheck.Contains(controllerToUse.name) && DynamicAssetLoader.Instance.downloadingAssetsContains(controllerToUse.name))
+					{
+						requiredAssetsToCheck.Add(controllerToUse.name);
+					}
+				}
+			}
+			else
+			{
+				if(thisAnimator != null)
+				{
+					thisAnimator.runtimeAnimatorController = null;
 				}
 			}
 		}
