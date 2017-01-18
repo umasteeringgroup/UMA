@@ -128,7 +128,7 @@ namespace UMACharacterSystem
 
 		IEnumerator StartGatherCoroutine()
 		{
-			if(DynamicAssetLoader.Instance == null)
+			if (DynamicAssetLoader.Instance == null)
 			{
 				Debug.LogWarning("WardrobeCollectionLibrary requires an instance of DynamicAssetLoader to gather collection assets");
 				yield break;
@@ -138,7 +138,7 @@ namespace UMACharacterSystem
 				yield return null;
 			}
 			GatherCollections();
-        }
+		}
 
 		/// <summary>
 		/// Gets ALL the Wardrobe collections that are listed in the AssetBundleIndex (if dynamicallyAddFromAssetbundles), regardless of whether the bundles has been downloaded yet or not
@@ -149,6 +149,11 @@ namespace UMACharacterSystem
 		{
 			if (allResourcesScanned && filename == "" && bundleToGather == "")
 				return;
+
+			if (filename != "")
+				Debug.Log("WCL searched for " + filename);
+			else
+				Debug.Log("WCL searched for EVERYTHING in bundle " + bundleToGather);
 
 			if (bundleToGather == "" && filename == "")
 				allResourcesScanned = true;
@@ -168,9 +173,10 @@ namespace UMACharacterSystem
 		{
 			foreach (UMAWardrobeCollection uwc in uwcs)
 			{
-                if (filename == "" || (filename != "" && filename.Trim() == uwc.name))
+				if (filename == "" || (filename != "" && filename.Trim() == uwc.name))
 				{
-					if (!collectionIndex.ContainsKey(uwc.name)){
+					if (!collectionIndex.ContainsKey(uwc.name))
+					{
 						collectionIndex.Add(uwc.name, uwc);
 					}
 					else
@@ -181,12 +187,12 @@ namespace UMACharacterSystem
 			}
 			//sync up the list
 			collectionList.Clear();
-			foreach(KeyValuePair<string, UMAWardrobeCollection> kp in collectionIndex)
+			foreach (KeyValuePair<string, UMAWardrobeCollection> kp in collectionIndex)
 			{
 				collectionList.Add(kp.Value);
 			}
 			//TODO if the collection is 'unlocked/downloaded' add its contents to DCS
 			//for this though we would need to maintain a list in player prefs so I'm not going to do that in this demo
 		}
-    }
+	}
 }

@@ -549,7 +549,9 @@ namespace UMA
 
 		#region LOAD ASSETS METHODS
 		List<Type> deepResourcesScanned = new List<Type>();
-		public bool AddAssets<T>(ref Dictionary<string, List<string>> assetBundlesUsedDict, bool searchResources, bool searchBundles, bool downloadAssetsEnabled, string bundlesToSearch = "", string resourcesFolderPath = "", int? assetNameHash = null, string assetName = "", Action<T[]> callback = null, bool forceDownloadAll = false, bool debugOnFail = true) where T : UnityEngine.Object
+		[HideInInspector]
+		public bool debugOnFail = true;
+		public bool AddAssets<T>(ref Dictionary<string, List<string>> assetBundlesUsedDict, bool searchResources, bool searchBundles, bool downloadAssetsEnabled, string bundlesToSearch = "", string resourcesFolderPath = "", int? assetNameHash = null, string assetName = "", Action<T[]> callback = null, bool forceDownloadAll = false) where T : UnityEngine.Object
 		{
 			if(isInitialized == false && Application.isPlaying && (searchBundles && downloadAssetsEnabled))
 			{
@@ -579,7 +581,7 @@ namespace UMA
 			if ((AssetBundleManager.AssetBundleIndexObject != null || AssetBundleManager.SimulateAssetBundleInEditor == true) || Application.isPlaying == false)
 				if (searchBundles && (found == false || (assetName == "" && assetNameHash == null)))
 				{
-					bool foundHere = AddAssetsFromAssetBundles<T>(ref assetBundlesUsedDict, ref assetsToReturn, downloadAssetsEnabled, bundlesToSearchArray, assetNameHash, assetName, callback, forceDownloadAll, debugOnFail);
+					bool foundHere = AddAssetsFromAssetBundles<T>(ref assetBundlesUsedDict, ref assetsToReturn, downloadAssetsEnabled, bundlesToSearchArray, assetNameHash, assetName, callback, forceDownloadAll);
 					found = foundHere == true ? true : found;
 					if ((assetName != "" || assetNameHash != null) && found)
 						doDeepSearch = false;
@@ -784,7 +786,7 @@ namespace UMA
 		/// <param name="assetNameHash"></param>
 		/// <param name="assetName"></param>
 		/// <param name="callback"></param>
-		public bool AddAssetsFromAssetBundles<T>(ref Dictionary<string, List<string>> assetBundlesUsedDict, ref List<T> assetsToReturn, bool downloadAssetsEnabled, string[] bundlesToSearchArray, int? assetNameHash = null, string assetName = "", Action<T[]> callback = null, bool forceDownloadAll = false, bool debugOnFail = true) where T : UnityEngine.Object
+		public bool AddAssetsFromAssetBundles<T>(ref Dictionary<string, List<string>> assetBundlesUsedDict, ref List<T> assetsToReturn, bool downloadAssetsEnabled, string[] bundlesToSearchArray, int? assetNameHash = null, string assetName = "", Action<T[]> callback = null, bool forceDownloadAll = false) where T : UnityEngine.Object
 		{
 #if UNITY_EDITOR
 			if (AssetBundleManager.SimulateAssetBundleInEditor)

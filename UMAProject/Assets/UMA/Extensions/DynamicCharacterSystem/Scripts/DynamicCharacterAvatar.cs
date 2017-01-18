@@ -139,7 +139,7 @@ namespace UMACharacterSystem
 		private Dictionary<string, string> cacheStates = new Dictionary<string, string>();
 		//the wardrobe slots that are hidden by the avatars current wardrobe
 		private List<string> HiddenSlots = new List<string>();//why was this HashSet list is faster for our purposes (http://stackoverflow.com/questions/150750/hashset-vs-list-performance)
-															  //a list of downloading assets that the avatar can check the download status of.
+		//a list of downloading assets that the avatar can check the download status of.
 		private List<string> requiredAssetsToCheck = new List<string>();
 		//This is so we know if whether to use the 'default' settings as set in the componnt by colors/defaultRecipes/loadString/umaRecipe
 		//or if an external script has already overridden these and so we should just build with the settings as they are (i.e. just call BuildCharacter)
@@ -352,11 +352,7 @@ namespace UMACharacterSystem
 			{
 				BuildCharacter(false);
 			}
-			while (DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
-			{
-				yield return null;
-			}
-			UpdateAfterDownload();
+			yield return StartCoroutine(UpdateAfterDownloads());
 			//Now we have everything, lets go!
 			BuildCharacter(false);
 		}
@@ -691,11 +687,32 @@ namespace UMACharacterSystem
 		public void SetSlot(UMATextRecipe utr)
 		{
 			var thisRecipeSlot = utr.wardrobeSlot;
-			if (utr.GetType() == typeof(UMAWardrobeCollection))//load like a DCA recipe so colors are imported too and any downloaded assets are waited for
+			if (utr.GetType() == typeof(UMAWardrobeCollection))
 			{
-				thisRecipeSlot = "FullOutfit";
-				ImportSettings((utr as UMAWardrobeCollection).GetUniversalPackRecipe(this, context), LoadOptions.loadWardrobe | LoadOptions.loadWardrobeColors);
-
+				//only process WardrobeCollections if they are actually downloaded otherwise we wont have the data we need
+				if (!DynamicAssetLoader.Instance.downloadingAssetsContains(utr.name))
+				{
+					var thisSettings = (utr as UMAWardrobeCollection).GetUniversalPackRecipe(this, context);
+					//if there is a wardrobe set for this race treat this like a 'FullOutfit'
+					if (thisSettings.wardrobeSet.Count > 0)
+					{
+						thisRecipeSlot = "FullOutfit";
+						LoadWardrobeSet(thisSettings.wardrobeSet, false);
+						if (thisSettings.sharedColorCount > 0)
+						{
+							ImportSharedColors(thisSettings.sharedColors, LoadOptions.loadWardrobeColors);
+						}
+					}
+					//otherwise if this got added because it was downloading but its not actually a "FullOutfit" remove it
+					else
+					{
+						if (_wardrobeRecipes.ContainsKey("FullOutfit"))
+						{
+							if (_wardrobeRecipes["FullOutfit"] == utr)
+								ClearSlot("FullOutfit");
+						}
+					}
+				}
 			}
 
 			if (thisRecipeSlot != "" && thisRecipeSlot != "None")
@@ -713,13 +730,7 @@ namespace UMACharacterSystem
 					requiredAssetsToCheck.Add(utr.name);
 				}
 			}
-
-			if (utr.GetType() != typeof(UMAWardrobeCollection))
-			{
-				UpdateWardrobeCollections();
-			}
 		}
-
 		public void SetSlot(string Slotname, string Recipename)
 		{
 			UMATextRecipe utr = FindSlotRecipe(Slotname, Recipename);
@@ -738,15 +749,12 @@ namespace UMACharacterSystem
 		/// Clears the given wardrobe slot of any recipes that have been set on the Avatar
 		/// </summary>
 		/// <param name="ws"></param>
-		/// <param name="updateCollections">If true will also remove any currently set collection if the avatars recipes no longer contain all the recipes in the collection</param>
-		public void ClearSlot(string ws, bool updateCollections = true)
+		public void ClearSlot(string ws)
 		{
 			if (_wardrobeRecipes.ContainsKey(ws))
 			{
 				_wardrobeRecipes.Remove(ws);
 			}
-			if (updateCollections)
-				UpdateWardrobeCollections();
 		}
 
 		/// <summary>
@@ -854,26 +862,35 @@ namespace UMACharacterSystem
 				}
 			}
 		}
-
 		/// <summary>
-		/// Checks that the recipes set by any set WardrobeCollection are all also active. If they are not removes the collection
+		/// Checks that any wardrobe collections that were applied a 'FullOutfits' are still fully applied. If they are not the 'fullOutfit' recipe is removed
 		/// </summary>
-		/// <param name="forSave">If true removes the recipes set by the collection so that only the collection itself (plus any extra set recipes) are saved to the resulting recipes 'wardrobeSet'</param>
+		/// <param name="forSave">If true and the collection is fully applied, removes any slots the collection set, so that only the collection itself is saved</param>
 		private void UpdateWardrobeCollections(bool forSave = false)
 		{
 			if (WardrobeRecipes.ContainsKey("FullOutfit"))
 			{
 				if (WardrobeRecipes["FullOutfit"].GetType() == typeof(UMAWardrobeCollection))
 				{
+					//dont do anything to collections that are downloading
+					if (DynamicAssetLoader.Instance.downloadingAssetsContains(WardrobeRecipes["FullOutfit"].name))
+						return;
 					bool removeCollection = false;
 					//we need to know if all this collections recipes are active- if they arent unset the collection
 					var collectionRecipes = (WardrobeRecipes["FullOutfit"] as UMAWardrobeCollection).wardrobeCollection[activeRace.name];
-					foreach (WardrobeSettings ws in collectionRecipes)
+					if (collectionRecipes != null)
 					{
-						if (!WardrobeRecipes.ContainsKey(ws.slot))
-							removeCollection = true;
-						else if (WardrobeRecipes[ws.slot].name != ws.recipe)
-							removeCollection = true;
+						foreach (WardrobeSettings ws in collectionRecipes)
+						{
+							if (!WardrobeRecipes.ContainsKey(ws.slot))
+								removeCollection = true;
+							else if (WardrobeRecipes[ws.slot].name != ws.recipe)
+								removeCollection = true;
+						}
+					}
+					else
+					{
+						removeCollection = true;
 					}
 					if (removeCollection)
 					{
@@ -886,7 +903,7 @@ namespace UMACharacterSystem
 						{
 							if (WardrobeRecipes.ContainsKey(ws.slot))
 								if (WardrobeRecipes[ws.slot].name == ws.recipe)
-									ClearSlot(ws.slot, false);
+									ClearSlot(ws.slot);
 						}
 					}
 				}
@@ -1418,7 +1435,6 @@ namespace UMACharacterSystem
 				}
 				_wardrobeRecipes = wardrobeCache;
 			}
-
 		}
 
 		string GetSavePath(string extension)
@@ -1678,16 +1694,20 @@ namespace UMACharacterSystem
 				{
 					BuildCharacter(false);
 				}
-				//before we can check if any of the existing wardrobe or any existing colors are compatible we need to have the actual racedata downloaded
+				//before we can do anything with wardrobe we need to have the actual racedata downloaded so we know the wardrobe slots
 				needsUpdate = false;
-				while (DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
+				while (DynamicAssetLoader.Instance.downloadingAssetsContains(activeRace.name))
 				{
 					needsUpdate = true;
 					yield return null;
 				}
 				if (needsUpdate)
-					UpdateAfterDownload();
+				{
+					activeRace.data = context.raceLibrary.GetRace(activeRace.name);
+					umaRecipe = activeRace.data.baseRaceRecipe;
+				}
 				//if we are loading wardrobe override everything that was previously set (by the default wardrobe or any previous user modifications)
+				//sending an empty wardrobe set will clear the current wardrobe. If preLoadDefaultWardrobe is true and the wardrobe is empty LoadDefaultWardrobe gets called
 				if (thisLoadOptions.HasFlag(LoadOptions.loadWardrobe))//sending an empty wardrobe set will clear the current wardrobe
 				{
 					_buildCharacterEnabled = false;
@@ -1708,15 +1728,9 @@ namespace UMACharacterSystem
 					SetExpressionSet(true);
 				}
 				//loading new wardrobe items and animation controllers may have also caused downloads so wait for those- if we are not waiting we will have already created the placeholder avatar above
-				needsUpdate = false;
-				while (DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
-				{
-					needsUpdate = true;
-					yield return null;
-				}
-				if (needsUpdate)
-					UpdateAfterDownload();
-				
+				yield return StartCoroutine(UpdateAfterDownloads());
+				//update any wardrobe collections so if they are no longer active they dont show as active
+				UpdateWardrobeCollections();
 				//Sort out colors
 				umaData.umaRecipe.sharedColors = ImportSharedColors(settingsToLoad.sharedColors, thisLoadOptions);
                 UpdateColors();//updateColors is called by LoadCharacter which is called by BuildCharacter- but we may not be Building
@@ -1776,14 +1790,8 @@ namespace UMACharacterSystem
 			}
 			SetAnimatorController(true);//may cause downloads to happen
 			SetExpressionSet(true);
-			var needsUpdate = false;
-			while (DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
-			{
-				needsUpdate = true;
-				yield return null;
-			}
-			if (needsUpdate)
-				UpdateAfterDownload();
+			//wait for any downloading assets
+			yield return StartCoroutine(UpdateAfterDownloads());
 			//shared colors
 			umaData.umaRecipe.sharedColors = ImportSharedColors(settingsToLoad.sharedColors, thisLoadOptions);
 			UpdateColors();
@@ -1920,14 +1928,7 @@ namespace UMACharacterSystem
 			{
 				yield return null;
 			}
-			bool needsUpdate = false;
-			while (DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
-			{
-				needsUpdate = true;
-				yield return null;
-			}
-			if (needsUpdate)
-				UpdateAfterDownload();
+			yield return StartCoroutine(UpdateAfterDownloads());
 			BuildCharacter(RestoreDNA);
 		}
 
@@ -1953,7 +1954,6 @@ namespace UMACharacterSystem
 				StartCoroutine(BuildCharacterWhenReady(RestoreDNA));
 				return;
 			}
-
 			if (prioritySlotOver == default(List<string>))
 				prioritySlotOver = new List<string>();
 
@@ -1991,7 +1991,7 @@ namespace UMACharacterSystem
 					}
 				}
 			}
-			if ((preloadWardrobeRecipes.loadDefaultRecipes || wardrobeRecipesToRender.Count > 0) && activeRace.racedata != null)
+			if ((wardrobeRecipesToRender.Count > 0) && activeRace.racedata != null)
 			{
 				foreach (UMATextRecipe utr in wardrobeRecipesToRender.Values)
 				{
@@ -2175,7 +2175,6 @@ namespace UMACharacterSystem
 			}
 		}
 
-		//I think this is a helper method for umaData.AddAdditionalRecipes
 		public void AddAdditionalSerializedRecipes(UMARecipeBase[] umaAdditionalSerializedRecipes)
 		{
 			if (umaAdditionalSerializedRecipes != null)
@@ -2272,20 +2271,21 @@ namespace UMACharacterSystem
 			}
 		}
 
-#endregion
+		#endregion
 
-#region ASSETBUNDLES RELATED
+		#region ASSETBUNDLES RELATED
 
 		/// <summary>
 		/// Use when temporary wardrobe recipes have been used while the real ones have been downloading. Will replace the temp textrecipes with the downloaded ones.
 		/// </summary>
-		void UpdateSetSlots(string recipeToUpdate = "")
+		void UpdateSetSlots()
 		{
 			Dictionary<string, UMATextRecipe> newWardrobeRecipes = new Dictionary<string, UMATextRecipe>();
 			var thisDCS = context.dynamicCharacterSystem as DynamicCharacterSystem;
+			//because of WardrobeCollections we may need a more robust system here? maybe a 'placeholder' bool?
 			foreach (KeyValuePair<string, UMATextRecipe> kp in _wardrobeRecipes)
 			{
-				if (thisDCS.GetRecipe(kp.Value.name, false) != null)
+				if (thisDCS.GetRecipe(kp.Value.name, false) != null)// will it ever be null nowadays? I dont think so, in order for the recipe to be there DCS has to have it (or a placeholder for it)
 				{
 					newWardrobeRecipes.Add(kp.Key, thisDCS.GetRecipe(kp.Value.name, false));
 				}
@@ -2295,10 +2295,51 @@ namespace UMACharacterSystem
 				}
 			}
 			_wardrobeRecipes = newWardrobeRecipes;
+			//if there was a wardrobe collection in the downloaded assets and its contents have not been added yet add them
+			if (_wardrobeRecipes.ContainsKey("FullOutfit"))
+			{
+				if (_wardrobeRecipes["FullOutfit"].GetType() == typeof(UMAWardrobeCollection))
+				{
+					bool addCollection = false;
+					var collectionRecipes = (WardrobeRecipes["FullOutfit"] as UMAWardrobeCollection).wardrobeCollection[activeRace.name];
+					if (collectionRecipes != null)
+					{
+						foreach (WardrobeSettings ws in collectionRecipes)
+						{
+							if (!WardrobeRecipes.ContainsKey(ws.slot))
+								addCollection = true;
+							else if (WardrobeRecipes[ws.slot].name != ws.recipe)
+								addCollection = true;
+						}
+					}
+					if (addCollection)
+						SetSlot(_wardrobeRecipes["FullOutfit"]);
+				}
+			}
+		}
+
+		IEnumerator UpdateAfterDownloads()
+		{
+			bool needsUpdate = false;
+			while (DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
+			{
+				needsUpdate = true;
+				yield return null;
+			}
+			if (needsUpdate)
+			{
+				UpdateAfterDownload();
+			}
+			// UpdateAfterDownload.UpdateSetSlots might have also caused downloads to happen so if it did do this again
+			if (requiredAssetsToCheck.Count > 0)
+			{
+				yield return StartCoroutine(UpdateAfterDownloads());
+			}
 		}
 
 		void UpdateAfterDownload()
 		{
+			requiredAssetsToCheck.Clear();
 			activeRace.data = context.raceLibrary.GetRace(activeRace.name);
 			umaRecipe = activeRace.data.baseRaceRecipe;
 			UpdateSetSlots();
@@ -2307,8 +2348,8 @@ namespace UMACharacterSystem
 				SetExpressionSet(true);
 				SetAnimatorController(true);
 			}
-			requiredAssetsToCheck.Clear();
 		}
+
 		/// <summary>
 		/// Checks what assetBundles (if any) were used in the creation of this Avatar. NOTE: Query this UMA's AssetBundlesUsedbyCharacterUpToDate field before calling this function
 		/// </summary>

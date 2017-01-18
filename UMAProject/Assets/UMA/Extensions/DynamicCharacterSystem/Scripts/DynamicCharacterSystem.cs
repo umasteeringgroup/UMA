@@ -43,7 +43,6 @@ namespace UMACharacterSystem
 		[HideInInspector]
 		public bool downloadAssetsEnabled = true;
 
-		//make private?
 		public override void Awake()
         {
             if (initializeOnAwake)
@@ -54,7 +53,7 @@ namespace UMACharacterSystem
                 }
             }
         }
-		//make private?
+
 		public override void Start()
 		{
 			if (!initialized)
@@ -63,7 +62,7 @@ namespace UMACharacterSystem
 			}
 
 		}
-		//make private?
+
 		public override void Init()
 		{
 			if (initialized || isInitializing)
@@ -207,13 +206,14 @@ namespace UMACharacterSystem
 				bool downloadAssetsEnabledNow = DynamicAssetLoader.Instance.isInitialized ? downloadAssetsEnabled : false;
 				//if we are only adding stuff from a downloaded assetbundle, dont search resources
 				bool dynamicallyAddFromResourcesNow = bundleToGather == "" ? dynamicallyAddFromResources : false;
-				//Diasbling UMAWardrobeCollection search for now until its finished
 				bool found = false;
-				found = DynamicAssetLoader.Instance.AddAssets<UMATextRecipe>(ref assetBundlesUsedDict, dynamicallyAddFromResourcesNow, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesRecipesFolder, null, filename, AddRecipesFromAB, false, false);
+				DynamicAssetLoader.Instance.debugOnFail = false;
+				found = DynamicAssetLoader.Instance.AddAssets<UMATextRecipe>(ref assetBundlesUsedDict, dynamicallyAddFromResourcesNow, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesRecipesFolder, null, filename, AddRecipesFromAB);
 				if (!found && filename != "")
-					found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeCollection>(ref assetBundlesUsedDict, dynamicallyAddFromResourcesNow, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesRecipesFolder, null, filename, AddRecipesFromAB, false, false);
+					found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeCollection>(ref assetBundlesUsedDict, dynamicallyAddFromResourcesNow, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesRecipesFolder, null, filename, AddRecipesFromAB);
 				if (!found && filename != "")
 					Debug.LogWarning("[DynamicCharacterSystem] could not find " + filename + " in Resources or any AssetBundles. Do you need to rebuild your UMAResources Index or AssetBundles?");
+				DynamicAssetLoader.Instance.debugOnFail = true;
 			}
 		}
 
@@ -241,6 +241,25 @@ namespace UMACharacterSystem
 			{
 				if (filename == "" || (filename != "" && filename.Trim() == u.name))
 				{
+					var thisWardrobeSlot = u.wardrobeSlot;
+					if (u.GetType() == typeof(UMAWardrobeCollection))
+					{
+						//we have a problem here because when the placeholder asset is returned its wardrobeCollection.sets.Count == 0
+						//so we need to do it the other way round i.e. add it when its downloading but if the libraries contain it when its downloaded and the sets count is 0 remove it
+						if ((u as UMAWardrobeCollection).wardrobeCollection.sets.Count == 0)
+						{
+							if (RecipeIndex.ContainsKey(u.name))
+							{
+								Debug.LogWarning("DCS removed " + u.name + " from RecipeIndex");
+								RecipeIndex.Remove(u.name);
+							}
+							else if (!DynamicAssetLoader.Instance.downloadingAssetsContains(u.name))
+							{
+								continue;
+							}
+						}
+						thisWardrobeSlot = "FullOutfit";
+					}
 					//we might be refreshing so check its not already there
 					if (!RecipeIndex.ContainsKey(u.name))
 						RecipeIndex.Add(u.name, u);
@@ -248,20 +267,36 @@ namespace UMACharacterSystem
 					{
 						RecipeIndex[u.name] = u;
 					}
-					var thisWardrobeSlot = u.wardrobeSlot;
-					if (u.GetType() == typeof(UMAWardrobeCollection))
-					{
-						if ((u as UMAWardrobeCollection).wardrobeCollection.sets.Count == 0)
-							continue;
-						thisWardrobeSlot = "FullOutfit";
-					}
 					for (int i = 0; i < u.compatibleRaces.Count; i++)
 					{
-						if (u.GetType() == typeof(UMAWardrobeCollection))
+						if (u.GetType() == typeof(UMAWardrobeCollection) && (u as UMAWardrobeCollection).wardrobeCollection.sets.Count > 0)
 						{
 							//if the collection doesn't have a fulloutfit for this race continue
+							//again when its downloading this data isn't there
 							if ((u as UMAWardrobeCollection).wardrobeCollection[u.compatibleRaces[i]].Count == 0)
-								continue;
+							{
+								if (Recipes.ContainsKey(u.compatibleRaces[i]))
+								{
+									if (Recipes[u.compatibleRaces[i]].ContainsKey("FullOutfit"))
+									{
+										if (Recipes[u.compatibleRaces[i]]["FullOutfit"].Contains(u))
+										{
+											Debug.LogWarning("DCS removed " + u.name + " from Recipes");
+											Recipes[u.compatibleRaces[i]]["FullOutfit"].Remove(u);
+											if (RecipeIndex.ContainsKey(u.name))
+											{
+												Debug.LogWarning("DCS removed " + u.name + " from RecipeIndex");
+												RecipeIndex.Remove(u.name);
+											}
+											continue;
+										}
+									}
+								}
+								if (!DynamicAssetLoader.Instance.downloadingAssetsContains(u.name))
+								{
+									continue;
+								}
+							}
 						}
 						//When races that are compatible with multiple races are downloaded we may not have all the races actually downloaded
 						//but that should not stop DCS making an index of recipes that are compatible with that race for when it becomes available
