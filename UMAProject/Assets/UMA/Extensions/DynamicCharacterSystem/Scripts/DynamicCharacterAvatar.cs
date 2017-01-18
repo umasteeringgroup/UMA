@@ -482,7 +482,10 @@ namespace UMACharacterSystem
 		/// <param name="customChangeRaceOptions">flags for the race change options</param>
 		public void ChangeRace(string racename, ChangeRaceOptions customChangeRaceOptions = ChangeRaceOptions.useDefaults)
 		{
-			ChangeRace((context.raceLibrary as DynamicRaceLibrary).GetRace(racename), customChangeRaceOptions);
+			RaceData thisRace = null;
+			if (racename != "None Set")
+				thisRace = (context.raceLibrary as DynamicRaceLibrary).GetRace(racename);
+            ChangeRace(thisRace, customChangeRaceOptions);
 		}
 
 		/// <summary>

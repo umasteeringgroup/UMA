@@ -275,8 +275,9 @@ public class TestCustomizerDD : MonoBehaviour
 		{
 			CloseAllPanels();
 			thisRace = RaceToSet;
-			//Force CharacterSystem to find the new race
-			UMAContext.Instance.raceLibrary.GetRace(RaceToSet);
+			//Force CharacterSystem to find the new race - unless its None Set
+			if(RaceToSet != "None Set")
+				UMAContext.Instance.raceLibrary.GetRace(RaceToSet);
 			DynamicCharacterAvatar.ChangeRaceOptions thisLoadOptions = DynamicCharacterAvatar.ChangeRaceOptions.none;
 			if (_keepDNA || _keepWardrobe || _keepBodyColors)
 			{
