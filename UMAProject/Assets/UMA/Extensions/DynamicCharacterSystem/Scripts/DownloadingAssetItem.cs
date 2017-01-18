@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UMAAssetBundleManager;
 
 namespace UMA
@@ -15,7 +16,7 @@ namespace UMA
 		public string requiredAssetName;
 		public UnityEngine.Object tempAsset;
 		public string containingBundle;
-		public Delegate dynamicCallback;
+		public List<Delegate> dynamicCallback = new List<Delegate>();
 		[Range(0, 1f)]
 		public float _progress = 0;
 		public bool flagForRemoval = false;
@@ -31,7 +32,7 @@ namespace UMA
 			tempAsset = _tempAsset;
 			containingBundle = _containingBundle;
 			if (callback != null)
-				dynamicCallback = callback;
+				dynamicCallback.Add(callback);
 		}
 		#endregion
 

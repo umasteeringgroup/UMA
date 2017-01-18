@@ -90,6 +90,15 @@ namespace UMA
 					}
 					thisTempAsset.name = requiredAssetName;
 				}
+				else if (typeof(T) == typeof(UMAWardrobeCollection))
+				{
+					thisTempAsset = ScriptableObject.CreateInstance(typeof(T)) as T;
+					(thisTempAsset as UMAWardrobeCollection).recipeType = "WardrobeCollection";
+					(thisTempAsset as UMAWardrobeCollection).wardrobeSlot = AssetBundleManager.AssetBundleIndexObject.AssetWardrobeCollectionSlot(containingBundle, requiredAssetName);
+					(thisTempAsset as UMAWardrobeCollection).compatibleRaces = AssetBundleManager.AssetBundleIndexObject.AssetWardrobeCollectionCompatibleWith(containingBundle, requiredAssetName);
+					thisTempAsset.name = requiredAssetName;
+
+				}
 				else if (typeof(T) == typeof(RuntimeAnimatorController))//Possibly can be removed- just here because we may need to do something else with animators...
 				{
 					thisTempAsset = (T)Activator.CreateInstance(typeof(T));
@@ -118,6 +127,10 @@ namespace UMA
 					dlItem = downloadingItems.Find(item => item.requiredAssetName == requiredAssetName);
 				if (dlItem != null)
 				{
+					Debug.LogWarning("DownloadingAssetsList already had entry for " + requiredAssetName + " as type " + dlItem.tempAsset.GetType().ToString() + " new request wanted it as type " + typeof(T) + " and its callback was " + dlItem.dynamicCallback[0].Method.Name);
+					if (callback != null)
+						if (!dlItem.dynamicCallback.Contains(callback))
+							dlItem.dynamicCallback.Add(callback);
 					thisTempAsset = dlItem.tempAsset as T;
 				}
 				else
@@ -216,15 +229,17 @@ namespace UMA
 						UMATextRecipe downloadedRecipe = loadedBundleAB.LoadAsset<UMATextRecipe>(item.requiredAssetName);
 						(UMAContext.Instance.dynamicCharacterSystem as UMACharacterSystem.DynamicCharacterSystem).AddRecipe(downloadedRecipe);
 					}
-					else if (item.dynamicCallback != null)
+					else if (item.dynamicCallback.Count > 0)
 					{
 						//get the asset as whatever the type of the tempAsset is
 						//send this as an array to the dynamicCallback
-						//Debug.LogWarning("[DynamicAssetList] used item.DynamicCallback - item.tempAsset.GetType() was " + item.tempAsset.GetType());
 						var downloadedAsset = loadedBundleAB.LoadAsset(item.requiredAssetName, item.tempAsset.GetType());
 						var downloadedAssetArray = Array.CreateInstance(item.tempAsset.GetType(), 1);
 						downloadedAssetArray.SetValue(downloadedAsset, 0);
-						item.dynamicCallback.DynamicInvoke(downloadedAssetArray);
+						for (int i = 0; i < item.dynamicCallback.Count; i++)
+						{
+							item.dynamicCallback[i].DynamicInvoke(downloadedAssetArray);
+						}
 					}
 					if (error != "" && error != null)
 					{
