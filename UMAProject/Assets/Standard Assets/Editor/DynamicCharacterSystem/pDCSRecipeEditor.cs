@@ -16,6 +16,8 @@ using UMACharacterSystem;
 
 namespace UMAEditor
 {
+	//unfortunately this needs to be here if we are going to make it possible to have 'Backewards Compatible' DCA recipes (i.e. saved as 'Standard' but with a wardrobeSet)
+	//if we removed that functionality this could all go into UMADynamicCharacterAvatarRecipeEditor
 	public partial class RecipeEditor
 	{
 		/// <summary>
@@ -189,14 +191,61 @@ namespace UMAEditor
 					}
 				return changed;
 			}
+			/// <summary>
+			/// Adds the shared colors from a given recipe name into the target recipe
+			/// </summary>
+			/// <param name="sourceRecipeName"></param>
+			protected virtual bool AddSharedColorsFromRecipe(string sourceRecipeName, UMAData.UMARecipe targetRecipe)
+			{
+				bool changed = false;
+				var thisUmaDataRecipe = new UMAData.UMARecipe();
+				var context = UMAContext.FindInstance();
+				if (context == null)
+					return false;
+				var thisWardrobeRecipe = context.dynamicCharacterSystem.GetBaseRecipe(sourceRecipeName);
+				if (thisWardrobeRecipe == null)
+					return false;
+				try
+				{
+					thisWardrobeRecipe.Load(thisUmaDataRecipe, context);
+				}
+				catch
+				{
+					return false;
+				}
+				if (thisUmaDataRecipe.sharedColors.Length > 0)
+				{
+					List<OverlayColorData> newSharedColors = new List<OverlayColorData>();
+					newSharedColors.AddRange(targetRecipe.sharedColors);
+					for (int i = 0; i < thisUmaDataRecipe.sharedColors.Length; i++)
+					{
+						bool existed = false;
+						for (int ii = 0; ii < newSharedColors.Count; ii++)
+							if (newSharedColors[ii].name == thisUmaDataRecipe.sharedColors[i].name)
+							{
+								existed = true;
+								break;
+							}
+						if (!existed)
+						{
+							newSharedColors.Add(thisUmaDataRecipe.sharedColors[i]);
+							changed = true;
+						}
+					}
+					if (changed)
+						targetRecipe.sharedColors = newSharedColors.ToArray();
+				}
+				return changed;
+			}
 		}
+
 		/// <summary>
 		/// Replaces the standard 'Slot' editor in a DynamicCharacterAvatar type of recipe with one that shows the assigned wardrobe recipes in its wardrobe set
 		/// </summary>
 		public class WardrobeSetMasterEditor : SlotMasterEditor
 		{
 			private List<WardrobeSettings> _wardrobeSet;
-			private bool _foldout = true;
+			//private bool _foldout = true;
 
 			public WardrobeSetMasterEditor(UMAData.UMARecipe recipe, List<WardrobeSettings> wardrobeSet) : base(recipe)
 			{
@@ -214,15 +263,18 @@ namespace UMAEditor
 				}
 				//if this is a backwards compatible DCS recipe (i.e. has SlotData AND a Wardrobe set) we need to show BOTH things
 				//for this to really work youd need to be able to edit the WardrobeSet and have that modify the slotDataList
-				//and to do that correctly we would need to use DynamicCharacterAvatars SetSlot and BuildCharacter methods!
-				//really Standard recipes should NOT have any WardrobeSet data- they only do because there used to be no other way of saving them as assets
+				//Hence the epic UpdateBackwardsCompatibleData method
 				if (_recipe.slotDataList.Length > 0)
 				{
-					EditorGUILayout.HelpBox("This is a 'Backwards Compatible' DynamicCharacterAvatar recipe. It is recommended that you edit the following by loading the recipe into a DynamicCharacterAvatar and saving it from there", MessageType.Warning);
+					EditorGUILayout.HelpBox("This is a 'Backwards Compatible' DynamicCharacterAvatar recipe. The slots and overlays in the 'BackwardsCompatibleData' section will update as you change the items in the WardrobeSet.", MessageType.Info);
 				}
 				if (DrawWardrobeSetUI())
 				{
 					changed = true;
+					if (_recipe.slotDataList.Length > 0)
+					{
+						UpdateBackwardsCompatibleData();
+					}
 				}
 				if (_recipe.slotDataList.Length > 0)
 				{
@@ -236,6 +288,7 @@ namespace UMAEditor
 					GUILayout.EndHorizontal();
 					if (bcdfoldoutOpen)
 					{
+						EditorGUI.BeginDisabledGroup(true);
 						GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
 						for (int i = 0; i < _slotEditors.Count; i++)
 						{
@@ -261,6 +314,8 @@ namespace UMAEditor
 								changed = true;
 							}
 						}
+						GUIHelper.EndVerticalPadded(10);
+						EditorGUI.EndDisabledGroup();
 					}
 				}
 				return changed;
@@ -272,12 +327,6 @@ namespace UMAEditor
 				{
 					if (_recipe.raceData.wardrobeSlots.Count > 0)
 					{
-						var context = UMAContext.FindInstance();
-						if (context == null)
-						{
-							var _errorMessage = "Editing a recipe requires a loaded scene with a valid UMAContext.";
-							Debug.LogWarning(_errorMessage);
-						}
 						GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
 						GUILayout.Space(10);
 						bool wsfoldoutOpen = OpenSlots["wardrobeSet"];
@@ -286,7 +335,7 @@ namespace UMAEditor
 						GUILayout.EndHorizontal();
 						if (wsfoldoutOpen)
 						{
-							if (_wardrobeSet == null || context == null)
+							if (_wardrobeSet == null)
 								return false;
 							var thisWardrobeSetEditor = new WardrobeSetEditor(_recipe.raceData, _wardrobeSet, _recipe, true);
 							if (thisWardrobeSetEditor.OnGUI())
@@ -298,6 +347,191 @@ namespace UMAEditor
 					}
 				}
 				return changed;
+			}
+			private void UpdateBackwardsCompatibleData()
+			{
+				var context = UMAContext.FindInstance();
+				if (context == null)
+				{
+					var _errorMessage = "Editing a recipe requires a loaded scene with a valid UMAContext.";
+					Debug.LogWarning(_errorMessage);
+				}
+				//reset the recipe to the raceBase recipe
+				//this screws up if this actual recipe IS the baseRaceRecipe
+				//But you simply cant create a race that way. You HAVE to make a recipe from scratch, so I dont think its an issue
+				var thisBaseRecipe = _recipe.raceData.baseRaceRecipe;
+				thisBaseRecipe.Load(_recipe, context);
+				if (_wardrobeSet.Count > 0)
+				{
+					var thisDCS = context.dynamicCharacterSystem;
+					if (thisDCS == null)
+					{
+						var _errorMessage = "Editing a recipe requires a loaded scene with a valid UMAContext.";
+						Debug.LogWarning(_errorMessage);
+					}
+					List<UMARecipeBase> Recipes = new List<UMARecipeBase>();
+					List<string> SuppressSlotsStrings = new List<string>();
+					List<string> HiddenSlots = new List<string>();
+					var wardrobeRecipesToRender = new Dictionary<string, UMARecipeBase>();
+					var activeRace = _recipe.raceData.name;
+					//Dont add the WardrobeCollection to the recipes to render- they doesn't render directly and will have already set their actual wardrobeRecipe slots SetSlot
+					foreach (WardrobeSettings set in _wardrobeSet)
+					{
+						var thisRecipe = thisDCS.GetBaseRecipe(set.recipe);
+						if (thisRecipe == null)
+						{
+							continue;
+						}
+						if (thisRecipe.GetType().ToString() == "UMAWardrobeCollection")
+						{
+							var TargetType = thisRecipe.GetType();
+							FieldInfo WardrobeCollectionField = TargetType.GetField("wardrobeCollection", BindingFlags.Public | BindingFlags.Instance);
+							WardrobeCollectionList wardrobeCollection = (WardrobeCollectionList)WardrobeCollectionField.GetValue(thisRecipe);
+							if (wardrobeCollection[activeRace] != null)
+							{
+								foreach (WardrobeSettings ws in wardrobeCollection[activeRace])
+								{
+									var wsRecipe = thisDCS.GetBaseRecipe(ws.recipe);
+									if (wsRecipe != null)
+									{
+										if (wardrobeRecipesToRender.ContainsKey(ws.slot))
+											wardrobeRecipesToRender[ws.slot] = wsRecipe;
+										else
+											wardrobeRecipesToRender.Add(ws.slot, wsRecipe);
+									}
+								}
+							}
+						}
+						else
+						{
+							//_recipe.Merge(thisRecipe.GetCachedRecipe(context), true);
+							if (wardrobeRecipesToRender.ContainsKey(set.slot))
+								wardrobeRecipesToRender[set.slot] = thisRecipe;
+							else
+								wardrobeRecipesToRender.Add(set.slot, thisRecipe);
+						}
+					}
+					if (wardrobeRecipesToRender.Count > 0)
+					{
+						foreach (UMARecipeBase utr in wardrobeRecipesToRender.Values)
+						{
+							var TargetType = utr.GetType();
+							FieldInfo CompatibleRacesField = TargetType.GetField("compatibleRaces", BindingFlags.Public | BindingFlags.Instance);
+							FieldInfo WardrobeSlotField = TargetType.GetField("wardrobeSlot", BindingFlags.Public | BindingFlags.Instance);
+							FieldInfo SuppressWardrobeSlotField = TargetType.GetField("suppressWardrobeSlots", BindingFlags.Public | BindingFlags.Instance);
+							FieldInfo HidesField = TargetType.GetField("Hides", BindingFlags.Public | BindingFlags.Instance);
+							FieldInfo DisplayValueField = TargetType.GetField("DisplayValue", BindingFlags.Public | BindingFlags.Instance);
+
+							//field values
+							List<string> compatibleRaces = (List<string>)CompatibleRacesField.GetValue(utr);
+							string wardrobeSlot = (string)WardrobeSlotField.GetValue(utr);
+							List<string> suppressWardrobeSlot = (List<string>)SuppressWardrobeSlotField.GetValue(utr);
+							List<string> hides = (List<string>)HidesField.GetValue(utr);
+
+							if (suppressWardrobeSlot != null)
+							{
+								if (activeRace == "" || ((compatibleRaces.Count == 0 || compatibleRaces.Contains(activeRace)) || (_recipe.raceData.findBackwardsCompatibleWith(compatibleRaces) && _recipe.raceData.wardrobeSlots.Contains(wardrobeSlot))))
+								{
+									if (!SuppressSlotsStrings.Contains(wardrobeSlot))
+									{
+										foreach (string suppressedSlot in suppressWardrobeSlot)
+										{
+											SuppressSlotsStrings.Add(suppressedSlot);
+										}
+									}
+								}
+							}
+						}
+					}
+					foreach (string ws in _recipe.raceData.wardrobeSlots)//this doesn't need to validate racedata- we wouldn't be here if it was null
+					{
+						if (SuppressSlotsStrings.Contains(ws))
+						{
+							continue;
+						}
+						if (wardrobeRecipesToRender.ContainsKey(ws))
+						{
+							UMARecipeBase utr = wardrobeRecipesToRender[ws];
+							var TargetType = utr.GetType();
+							FieldInfo CompatibleRacesField = TargetType.GetField("compatibleRaces", BindingFlags.Public | BindingFlags.Instance);
+							FieldInfo WardrobeSlotField = TargetType.GetField("wardrobeSlot", BindingFlags.Public | BindingFlags.Instance);
+							FieldInfo SuppressWardrobeSlotField = TargetType.GetField("suppressWardrobeSlots", BindingFlags.Public | BindingFlags.Instance);
+							FieldInfo HidesField = TargetType.GetField("Hides", BindingFlags.Public | BindingFlags.Instance);
+							FieldInfo DisplayValueField = TargetType.GetField("DisplayValue", BindingFlags.Public | BindingFlags.Instance);
+
+							//field values
+							List<string> compatibleRaces = (List<string>)CompatibleRacesField.GetValue(utr);
+							string wardrobeSlot = (string)WardrobeSlotField.GetValue(utr);
+							List<string> suppressWardrobeSlot = (List<string>)SuppressWardrobeSlotField.GetValue(utr);
+							List<string> hides = (List<string>)HidesField.GetValue(utr);
+
+							if (activeRace == "" || ((compatibleRaces.Count == 0 || compatibleRaces.Contains(activeRace)) || (_recipe.raceData.findBackwardsCompatibleWith(compatibleRaces) && _recipe.raceData.wardrobeSlots.Contains(wardrobeSlot))))
+							{
+								Recipes.Add(utr);
+								if (hides.Count > 0)
+								{
+									foreach (string s in hides)
+									{
+										HiddenSlots.Add(s);
+									}
+								}
+							}
+						}
+					}
+					//merge them in
+					foreach (var additionalRecipe in Recipes)
+					{
+						_recipe.Merge(additionalRecipe.GetCachedRecipe(context), true);
+					}
+					if (HiddenSlots.Count > 0)
+					{
+						List<SlotData> NewSlots = new List<SlotData>();
+						foreach (SlotData sd in _recipe.slotDataList)
+						{
+							if (sd == null)
+								continue;
+							if (!HiddenSlots.Contains(sd.asset.slotName))
+							{
+								NewSlots.Add(sd);
+							}
+						}
+						_recipe.slotDataList = NewSlots.ToArray();
+					}
+					ResetSlotEditors();
+				}
+			}
+			private void ResetSlotEditors()
+			{
+				if (_recipe.slotDataList == null)
+				{
+					_recipe.slotDataList = new SlotData[0];
+				}
+				for (int i = 0; i < _recipe.slotDataList.Length; i++)
+				{
+					var slot = _recipe.slotDataList[i];
+
+					if (slot == null)
+						continue;
+
+					_slotEditors.Add(new SlotEditor(_recipe, slot, i));
+				}
+
+				if (_slotEditors.Count > 1)
+				{
+					// Don't juggle the order - this way, they're in the order they're in the file, or dropped in.
+					List<SlotEditor> sortedSlots = new List<SlotEditor>(_slotEditors);
+					sortedSlots.Sort(SlotEditor.comparer);
+
+					var overlays1 = sortedSlots[0].GetOverlays();
+					var overlays2 = sortedSlots[1].GetOverlays();
+					for (int i = 0; i < sortedSlots.Count - 2; i++)
+					{
+						if (overlays1 == overlays2)
+							sortedSlots[i].sharedOverlays = true;
+						overlays1 = overlays2;
+						overlays2 = sortedSlots[i + 2].GetOverlays();
+					}
+				}
 			}
 		}
 	}

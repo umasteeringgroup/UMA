@@ -1201,7 +1201,15 @@ namespace UMAEditor
 		/// <summary>
 		/// Override PreInspectorGUI in any derived editors to allow editing of new properties added to recipes.
 		/// </summary>
-		public virtual bool PreInspectorGUI()
+		protected virtual bool PreInspectorGUI()
+		{
+			return false;
+		}
+
+		/// <summary>
+		/// Override PostInspectorGUI in any derived editors to allow editing of new properties added to recipes AFTER the slots/dna section.
+		/// </summary>
+		protected virtual bool PostInspectorGUI()
 		{
 			return false;
 		}
@@ -1235,6 +1243,11 @@ namespace UMAEditor
 				_needsUpdate = PreInspectorGUI();
 
 				if (ToolbarGUI())
+				{
+					_needsUpdate = true;
+				}
+
+				if (PostInspectorGUI())
 				{
 					_needsUpdate = true;
 				}

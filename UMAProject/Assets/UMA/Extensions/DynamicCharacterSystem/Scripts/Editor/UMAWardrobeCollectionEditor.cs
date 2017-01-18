@@ -22,11 +22,27 @@ namespace UMAEditor
 
 		static bool coverImagesIsExpanded = false;
 
-		public override bool PreInspectorGUI()
+		protected override bool PreInspectorGUI()
 		{
 			hideToolBar = true;
 			hideRaceField = true;
 			return TextRecipeGUI();
+		}
+
+		/// <summary>
+		/// Impliment this method to output any extra GUI for any extra fields you have added to UMAWardrobeCollection before the main RecipeGUI
+		/// </summary>
+		partial void PreRecipeGUI(ref bool changed);
+		/// <summary>
+		/// Impliment this method to output any extra GUI for any extra fields you have added to UMAWardrobeCollection after the main RecipeGUI
+		/// </summary>
+		partial void PostRecipeGUI(ref bool changed);
+
+		protected override bool PostInspectorGUI()
+		{
+			bool changed = false;
+			PostRecipeGUI(ref changed);
+			return changed;
 		}
 
 		//draws the coverImages foldout
@@ -91,7 +107,7 @@ namespace UMAEditor
 			private List<string> _arbitraryRecipes = new List<string>();
 			private bool forceGUIUpdate = false;
 			private static string recipesAddErrMsg = "";
-			int recipePickerID = -1;
+			//int recipePickerID = -1; This is needed if we can make the recipe drop area work with 'Click To Pick'
 
 			public WardrobeCollectionMasterEditor(UMAData.UMARecipe recipe, List<string> compatibleRaces, WardrobeCollectionList wardrobeCollection, List<string> arbitraryRecipes) : base(recipe)
 			{
@@ -387,7 +403,7 @@ namespace UMAEditor
 			}
 		}
 
-		private bool TextRecipeGUI()
+		protected virtual bool TextRecipeGUI()
 		{
 			Type TargetType = target.GetType();
 			bool doUpdate = false;
@@ -395,6 +411,8 @@ namespace UMAEditor
 			EditorGUI.BeginDisabledGroup(true);
 			EditorGUILayout.Popup("Recipe Type", 0, new string[] { "WardrobeCollection"});
 			EditorGUI.EndDisabledGroup();
+
+			PreRecipeGUI(ref doUpdate);
 
 			FieldInfo CompatibleRacesField = TargetType.GetField("compatibleRaces", BindingFlags.Public | BindingFlags.Instance);
 			List<string> compatibleRaces = (List<string>)CompatibleRacesField.GetValue(target);

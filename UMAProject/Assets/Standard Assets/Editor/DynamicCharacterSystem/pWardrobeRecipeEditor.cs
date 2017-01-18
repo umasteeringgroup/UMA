@@ -108,14 +108,14 @@ namespace UMAEditor
 			if (compatibleRaces == null)
 			{
 				selectedIndex = -1;
-				generatedWardrobeSlotOptions = new List<string>() { "None", "Face", "Hair", "Complexion", "Eyebrows", "Beard", "Ears", "Helmet", "Shoulders", "Chest", "Arms", "Hands", "Waist", "Legs", "Feet" };
+				generatedWardrobeSlotOptionsLabels = generatedWardrobeSlotOptions = new List<string>() { "None", "Face", "Hair", "Complexion", "Eyebrows", "Beard", "Ears", "Helmet", "Shoulders", "Chest", "Arms", "Hands", "Waist", "Legs", "Feet" };
 			}
 			else
 			{
 				if (compatibleRaces.Count == 0)
 				{
 					selectedIndex = -1;
-					generatedWardrobeSlotOptions = new List<string>() { "None", "Face", "Hair", "Complexion", "Eyebrows", "Beard", "Ears", "Helmet", "Shoulders", "Chest", "Arms", "Hands", "Waist", "Legs", "Feet" };
+					generatedWardrobeSlotOptionsLabels = generatedWardrobeSlotOptions = new List<string>() { "None", "Face", "Hair", "Complexion", "Eyebrows", "Beard", "Ears", "Helmet", "Shoulders", "Chest", "Arms", "Hands", "Waist", "Legs", "Feet" };
 				}
 				else if (generatedWardrobeSlotOptions.Count == 0 || forceUpdate)
 				{
@@ -123,6 +123,7 @@ namespace UMAEditor
 					if (forceUpdate)
 					{
 						generatedWardrobeSlotOptions = new List<string>();
+						generatedWardrobeSlotOptionsLabels = new List<string>();
 					}
 					List<RaceData> thisRaceDatas = new List<RaceData>();
 					for (int i = 0; i < compatibleRaces.Count; i++)
@@ -142,11 +143,13 @@ namespace UMAEditor
 									if (!generatedWardrobeSlotOptions.Contains(thisWardrobeSlots[wi]))
 									{
 										generatedWardrobeSlotOptions.Insert(wi, thisWardrobeSlots[wi]);
-									}
+										generatedWardrobeSlotOptionsLabels.Insert(wi, thisWardrobeSlots[wi]);
+                                    }
 								}
 								else
 								{
 									generatedWardrobeSlotOptions.Add(thisWardrobeSlots[wi]);
+									generatedWardrobeSlotOptionsLabels.Add(thisWardrobeSlots[wi]);
 								}
 							}
 						}
@@ -170,7 +173,8 @@ namespace UMAEditor
 						if (onlyIn.Count < thisRaceDatas.Count)
 						{
 							//its not in all of them
-							generatedWardrobeSlotOptions[i] = generatedWardrobeSlotOptions[i] + "  (" + String.Join(", ", onlyIn.ToArray()) + " Only)";
+							//generatedWardrobeSlotOptions[i] = generatedWardrobeSlotOptions[i] + "  (" + String.Join(", ", onlyIn.ToArray()) + " Only)";
+							generatedWardrobeSlotOptionsLabels[i] = generatedWardrobeSlotOptionsLabels[i] + "  (" + String.Join(", ", onlyIn.ToArray()) + " Only)";
 						}
 					}
 				}
@@ -439,7 +443,7 @@ namespace UMAEditor
 			}
 			else
 			{
-				int newSelectedWardrobeSlotIndex = EditorGUILayout.Popup("Wardrobe Slot", selectedWardrobeSlotIndex, generatedWardrobeSlotOptions.ToArray());
+				int newSelectedWardrobeSlotIndex = EditorGUILayout.Popup("Wardrobe Slot", selectedWardrobeSlotIndex, generatedWardrobeSlotOptionsLabels.ToArray());
 				if (newSelectedWardrobeSlotIndex != selectedWardrobeSlotIndex)
 				{
 					WardrobeSlotField.SetValue(target, generatedWardrobeSlotOptions[newSelectedWardrobeSlotIndex]);
@@ -457,7 +461,7 @@ namespace UMAEditor
 					suppressFlags |= 0x1 << i;
 				}
 			}
-			newSuppressFlags = EditorGUILayout.MaskField("Suppress Wardrobe Slot(s)", suppressFlags, generatedWardrobeSlotOptions.ToArray());
+			newSuppressFlags = EditorGUILayout.MaskField("Suppress Wardrobe Slot(s)", suppressFlags, generatedWardrobeSlotOptionsLabels.ToArray());
 			for (int i = 0; i < generatedWardrobeSlotOptions.Count; i++)
 			{
 				if ((newSuppressFlags & (1 << i)) == (1 << i))

@@ -22,7 +22,7 @@ namespace UMAEditor
 		//if we move to having different types for the different kinds of UMATextRecipe (UMAWardrobeRecipe, UMAWardrobeCollection etc) then we will stop displaying this UI element (and just use the value when saving txt recipes)
 		public List<string> recipeTypeOpts = new List<string>(new string[] { "Standard", "Wardrobe" });
 		protected bool hideToolBar = false;
-		protected bool hideRaceField = true;//actually I want this to be false but for that we need to move the racedata field out of the slotMasterGUI too
+		protected bool hideRaceField = true;//if true hides the extra race field that we draw *above* the toolbar
 		int compatibleRacePickerID = -1;
 		int selectedWardrobeThumb = 0;
 		List<string> generatedWardrobeSlotOptions = new List<string>();
@@ -30,7 +30,7 @@ namespace UMAEditor
 		List<string> generatedBaseSlotOptions = new List<string>();
 		List<string> generatedBaseSlotOptionsLabels = new List<string>();
 
-		public override bool PreInspectorGUI()
+		protected override bool PreInspectorGUI()
 		{
 			return TextRecipeGUI();
 		}
@@ -71,53 +71,6 @@ namespace UMAEditor
 						else
 							return changed;
 				}
-			return changed;
-		}
-
-		/// <summary>
-		/// Adds the shared colors from a given recipe name into the target recipe
-		/// </summary>
-		/// <param name="sourceRecipeName"></param>
-		private static bool AddSharedColorsFromRecipe(string sourceRecipeName, UMAData.UMARecipe targetRecipe)
-		{
-			bool changed = false;
-			var thisUmaDataRecipe = new UMAData.UMARecipe();
-			var context = UMAContext.FindInstance();
-			if (context == null)
-				return false;
-			var thisWardrobeRecipe = context.dynamicCharacterSystem.GetBaseRecipe(sourceRecipeName);
-			if (thisWardrobeRecipe == null)
-				return false;
-			try
-			{
-				thisWardrobeRecipe.Load(thisUmaDataRecipe, context);
-			}
-			catch
-			{
-				return false;
-			}
-			if (thisUmaDataRecipe.sharedColors.Length > 0)
-			{
-				List<OverlayColorData> newSharedColors = new List<OverlayColorData>();
-				newSharedColors.AddRange(targetRecipe.sharedColors);
-				for (int i = 0; i < thisUmaDataRecipe.sharedColors.Length; i++)
-				{
-					bool existed = false;
-					for (int ii = 0; ii < newSharedColors.Count; ii++)
-						if (newSharedColors[ii].name == thisUmaDataRecipe.sharedColors[i].name)
-						{
-							existed = true;
-							break;
-						}
-					if (!existed)
-					{
-						newSharedColors.Add(thisUmaDataRecipe.sharedColors[i]);
-						changed = true;
-					}
-				}
-				if (changed)
-					targetRecipe.sharedColors = newSharedColors.ToArray();
-			}
 			return changed;
 		}
 
@@ -380,11 +333,45 @@ namespace UMAEditor
 			Type TargetType = target.GetType();
 			bool doUpdate = false;
 
-			if (TargetType.ToString() == "UMATextRecipe" || TargetType.ToString() == "UMAWardrobeRecipe" || TargetType.ToString() == "UMADCSRecipe")
+			if (TargetType.ToString() == "UMATextRecipe" /*|| TargetType.ToString() == "UMAWardrobeRecipe" || TargetType.ToString() == "UMADCSRecipe"*/)
 			{
 				FieldInfo RecipeTypeField = TargetType.GetField("recipeType", BindingFlags.Public | BindingFlags.Instance);
 				//the Recipe Type field defines whether the extra wardrobe recipe fields show and whether we are overriding the SlotMasterEditor with WardrobeSetMasterEditor
 				string recipeType = (string)RecipeTypeField.GetValue(target);
+
+				FieldInfo ActiveWardrobeSetField = TargetType.GetField("activeWardrobeSet", BindingFlags.Public | BindingFlags.Instance);
+				List<WardrobeSettings> activeWardrobeSet = (List<WardrobeSettings>)ActiveWardrobeSetField.GetValue(target);
+
+				//if this recipeType == WardrobeCollection or DynamicCharacterAvatar or Wardrobe show a 'ConvertRecipe' button and bail/make the recipe uneditable?
+				//DISABLED FOR NOW- I want to push this but not have people convert yet
+				/*if (recipeType == "WardrobeCollection" || recipeType == "DynamicCharacterAvatar" || recipeType == "Wardrobe")
+				{
+					//we want this button to convert the UMATextRecipe to the type it should be
+					//and then for the resulting asset to be inspected
+					MethodInfo ConvertMethod = TargetType.GetMethod("ConvertToType");
+					string typeToConvertTo = "";
+					if (recipeType == "WardrobeCollection")
+					{
+						typeToConvertTo = "UMAWardrobeCollection";
+					}
+					else if (recipeType == "DynamicCharacterAvatar")
+					{
+						typeToConvertTo = "UMADynamicCharacterAvatarRecipe";
+					}
+					else if (recipeType == "Wardrobe")
+					{
+						typeToConvertTo = "UMAWardrobeRecipe";
+					}
+					//I know this is messy but we can get rid of all of this in the actual release since people wont have made stuff that is wrong
+					if (ConvertMethod != null && typeToConvertTo != "")
+					{
+						EditorGUILayout.HelpBox("Please convert this recipe", MessageType.Warning);
+						if (GUILayout.Button("Convert"))
+						{
+							ConvertMethod.Invoke(target, new object[] { typeToConvertTo });
+						}
+					}
+				}*/
 
 				//Draw the recipe type dropdown for the time being but disable it for types that cant be changed
 				if (recipeType == "DynamicCharacterAvatar")
@@ -423,13 +410,10 @@ namespace UMAEditor
 					}
 				}
 
-				//Because there used to be no other way of saving DynamicCharacterAvatars as assets other than as 'Standard' recipes with a wardrobeSet
-				//Some 'Standard' recipes may have WardrobeSet data even though they shouldn't. 
-				//So we need to check if there is an 'activeWardrobeSet' rather than just checking if the type is "DynamicCharacterAvatar"
-				FieldInfo ActiveWardrobeSetField = TargetType.GetField("activeWardrobeSet", BindingFlags.Public | BindingFlags.Instance);
-				List<WardrobeSettings> activeWardrobeSet = (List<WardrobeSettings>)ActiveWardrobeSetField.GetValue(target);
-				//if the recipe has an activeWardrobe set override the slotEditor
-				if ((activeWardrobeSet.Count > 0 /*&& recipeType != "Standard"*/))
+				//When recipes are saved from a DynamicCharacterAvatar as a 'Standard' rather than 'Optimized' recipe they are saved as 'BackwardsCompatible'
+				//This means they have slots/overlay data AND a wardrobeSet. In this case we need to draw the "DynamicCharacterAvatarRecipe' slot editor
+				//and this will show an editable Wardrobe set which will update an (uneditable) slot/overlay list
+				if ((activeWardrobeSet.Count > 0))
 				{
 					hideRaceField = false;
 					slotEditor = new WardrobeSetMasterEditor(_recipe, activeWardrobeSet);
@@ -441,18 +425,14 @@ namespace UMAEditor
 					hideToolBar = true;
 					slotEditor = new WardrobeRecipeMasterEditor(_recipe);
 
-					FieldInfo CompatibleRacesField = TargetType.GetField("compatibleRaces", BindingFlags.Public | BindingFlags.Instance);
-					List<string> compatibleRaces = (List<string>)CompatibleRacesField.GetValue(target);
-
 					//CompatibleRaces drop area
 					if (DrawCompatibleRacesUI(TargetType))
 						doUpdate = true;
 
-					if (compatibleRaces.Count > 0 && recipeType == "Wardrobe")
-					{
-						if (DrawWardrobeSlotsFields(TargetType))
-							doUpdate = true;
-					}
+					//Wardrobe slots dropdowns
+					if (DrawWardrobeSlotsFields(TargetType))
+						doUpdate = true;
+
 					EditorGUILayout.Space();
 				}
 			}
