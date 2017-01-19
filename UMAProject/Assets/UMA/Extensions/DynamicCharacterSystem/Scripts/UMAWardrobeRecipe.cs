@@ -30,7 +30,7 @@ public partial class UMAWardrobeRecipe : UMATextRecipe
 #if UNITY_EDITOR
 	private bool CopyFromUTR(UMATextRecipe recipeToCopyFrom)
 	{
-		if (recipeType != "Wardrobe")
+		if (recipeToCopyFrom.recipeType != "Wardrobe" || recipeToCopyFrom.GetType() != typeof(UMATextRecipe))
 			return false;
 		recipeType = "Wardrobe";
 		recipeString = recipeToCopyFrom.recipeString;
@@ -86,7 +86,8 @@ public partial class UMAWardrobeRecipe : UMATextRecipe
 		{
 			var thisUTRPath = AssetDatabase.GUIDToAssetPath(allTextRecipeGUIDs[i]);
             var thisUTR = AssetDatabase.LoadAssetAtPath<UMATextRecipe>(thisUTRPath);
-			if (thisUTR.recipeType != "Wardrobe" || (thisUTR.GetType() == typeof(UMAWardrobeRecipe)))
+			//if its not a Wardrobe recipe or its actual type is anything other than UMATextRecipe
+			if (thisUTR.recipeType != "Wardrobe" || thisUTR.GetType() != typeof(UMATextRecipe))
 				continue;
 			Debug.Log("UMAWardrobeRecipe did conversion of TestConvertRecipe");
 			var thisUWR = ScriptableObject.CreateInstance<UMAWardrobeRecipe>();

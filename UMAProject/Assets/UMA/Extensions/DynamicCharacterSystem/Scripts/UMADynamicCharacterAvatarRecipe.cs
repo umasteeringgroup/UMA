@@ -51,7 +51,7 @@ public partial class UMADynamicCharacterAvatarRecipe : UMATextRecipe
 	/// <returns></returns>
 	private bool CopyFromUTR(UMATextRecipe recipeToCopyFrom)
 	{
-		if (recipeType != "DynamicCharacterAvatar")
+		if (recipeToCopyFrom.recipeType != "DynamicCharacterAvatar" || recipeToCopyFrom.GetType() != typeof(UMATextRecipe))
 			return false;
 		recipeType = "DynamicCharacterAvatar";
 		var recipeModel = JsonUtility.FromJson<DCSPackRecipe>(recipeToCopyFrom.recipeString);
@@ -102,9 +102,9 @@ public partial class UMADynamicCharacterAvatarRecipe : UMATextRecipe
 		{
 			var thisUTRPath = AssetDatabase.GUIDToAssetPath(allTextRecipeGUIDs[i]);
 			var thisUTR = AssetDatabase.LoadAssetAtPath<UMATextRecipe>(thisUTRPath);
-			if (thisUTR.recipeType != "DynamicCharacterAvatar" || (thisUTR.GetType() == typeof(UMADynamicCharacterAvatarRecipe)))
+			//if its not a DCA recipe or its actual type is anything other than UMATextRecipe
+			if (thisUTR.recipeType != "DynamicCharacterAvatar" || thisUTR.GetType() != typeof(UMATextRecipe))
 				continue;
-			Debug.Log("UMADynamicCharacterAvatarRecipe did conversion of TestConvertRecipe");
 			var thisDCS = ScriptableObject.CreateInstance<UMADynamicCharacterAvatarRecipe>();
 			thisDCS.ConvertFromUTR(thisUTR);
 		}
