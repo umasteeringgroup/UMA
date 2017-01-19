@@ -81,6 +81,8 @@ namespace UMACharacterSystem
 		public ChangeRaceOptions defaultChangeRaceOptions = ChangeRaceOptions.keepBodyColors;
 		[Tooltip("When changing the race of the Avatar, cache the current state?")]
 		public bool cacheCurrentState = true;
+		[Tooltip("If true the existing skeleton is cleared and then rebuilt when the race is changed. Turn this off if you experience animation issues.")]
+		public bool rebuildSkeleton = false;
 
 		//the dictionary of active recipes this character is using to create itself
 		public Dictionary<string, UMATextRecipe> _wardrobeRecipes = new Dictionary<string, UMATextRecipe>();
@@ -2144,6 +2146,13 @@ namespace UMACharacterSystem
 
 			if (umaRace != umaData.umaRecipe.raceData)
 			{
+				if (rebuildSkeleton)
+				{
+					foreach (Transform child in gameObject.transform)
+					{
+						Destroy(child.gameObject);
+					}
+				}
 				UpdateNewRace();
 			}
 			else

@@ -13,16 +13,16 @@ SceneSettings:
 --- !u!104 &2
 RenderSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 6
+  serializedVersion: 7
   m_Fog: 0
   m_FogColor: {r: 0.6, g: 0.7529412, b: 0.99607843, a: 1}
   m_FogMode: 2
   m_FogDensity: 0.01
   m_LinearFogStart: 50
   m_LinearFogEnd: 250
-  m_AmbientSkyColor: {r: 0.14470515, g: 0.18161406, b: 0.19945845, a: 0.68732303}
-  m_AmbientEquatorColor: {r: 0.14470515, g: 0.18161406, b: 0.19945845, a: 0.68732303}
-  m_AmbientGroundColor: {r: 0.14470515, g: 0.18161406, b: 0.19945845, a: 0.68732303}
+  m_AmbientSkyColor: {r: 0.12010527, g: 0.15073967, b: 0.16555052, a: 0.5704781}
+  m_AmbientEquatorColor: {r: 0.12010527, g: 0.15073967, b: 0.16555052, a: 0.5704781}
+  m_AmbientGroundColor: {r: 0.12010527, g: 0.15073967, b: 0.16555052, a: 0.5704781}
   m_AmbientIntensity: 0.83
   m_AmbientMode: 0
   m_SkyboxMaterial: {fileID: 2100000, guid: 11b30e62ce68af4478c801d9ca4e972b, type: 2}
@@ -37,12 +37,12 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 166765684}
+  m_IndirectSpecularColor: {r: 0.111557774, g: 0.11456066, b: 0.120600566, a: 1}
 --- !u!157 &4
 LightmapSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 6
+  serializedVersion: 7
   m_GIWorkflowMode: 0
-  m_LightmapsMode: 1
   m_GISettings:
     serializedVersion: 2
     m_BounceScale: 1
@@ -53,17 +53,22 @@ LightmapSettings:
     m_EnableBakedLightmaps: 1
     m_EnableRealtimeLightmaps: 1
   m_LightmapEditorSettings:
-    serializedVersion: 3
+    serializedVersion: 4
     m_Resolution: 1
     m_BakeResolution: 50
     m_TextureWidth: 1024
     m_TextureHeight: 1024
+    m_AO: 0
     m_AOMaxDistance: 1
-    m_Padding: 2
     m_CompAOExponent: 0
+    m_CompAOExponentDirect: 0
+    m_Padding: 2
     m_LightmapParameters: {fileID: 0}
+    m_LightmapsBakeMode: 1
     m_TextureCompression: 0
+    m_DirectLightInLightProbes: 1
     m_FinalGather: 0
+    m_FinalGatherFiltering: 1
     m_FinalGatherRayCount: 1024
     m_ReflectionCompression: 2
   m_LightingDataAsset: {fileID: 112000001, guid: f915f805ca0c04f489a36663c0a93567,
@@ -1166,7 +1171,7 @@ Light:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 152714819}
   m_Enabled: 1
-  serializedVersion: 6
+  serializedVersion: 7
   m_Type: 1
   m_Color: {r: 0.6, g: 0.7529412, b: 0.99607843, a: 1}
   m_Intensity: 0.2
@@ -1176,6 +1181,7 @@ Light:
   m_Shadows:
     m_Type: 0
     m_Resolution: 3
+    m_CustomResolution: -1
     m_Strength: 1
     m_Bias: 0.1
     m_NormalBias: 0.4
@@ -1188,10 +1194,10 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_Lightmapping: 4
+  m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
-  m_AreaSize: {x: 1, y: 1}
 --- !u!1 &165878811
 GameObject:
   m_ObjectHideFlags: 0
@@ -1321,7 +1327,7 @@ Light:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 166765682}
   m_Enabled: 1
-  serializedVersion: 6
+  serializedVersion: 7
   m_Type: 1
   m_Color: {r: 0.9338235, g: 0.9185755, b: 0.88575906, a: 1}
   m_Intensity: 1
@@ -1331,6 +1337,7 @@ Light:
   m_Shadows:
     m_Type: 2
     m_Resolution: -1
+    m_CustomResolution: -1
     m_Strength: 0.858
     m_Bias: 0.034
     m_NormalBias: 0.4
@@ -1343,10 +1350,10 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_Lightmapping: 4
+  m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
-  m_AreaSize: {x: 1, y: 1}
 --- !u!1 &167269312
 GameObject:
   m_ObjectHideFlags: 0
@@ -3427,6 +3434,7 @@ MonoBehaviour:
     _cachedRaceDatas: []
   defaultChangeRaceOptions: 8
   cacheCurrentState: 1
+  rebuildSkeleton: 1
   preloadWardrobeRecipes:
     loadDefaultRecipes: 1
     recipes:
@@ -3522,9 +3530,6 @@ MonoBehaviour:
   ensureSharedColors: 0
   defaultSaveOptions: 15
   BoundsOffset: {x: 0, y: 0, z: 0}
-  assetBundlesUsedbyCharacter:
-  - uma/toonshared/racebase
-  - uma/toonfemale/racebase
   _buildCharacterEnabled: 1
 --- !u!4 &363062548
 Transform:
@@ -5798,7 +5803,7 @@ Light:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 709798930}
   m_Enabled: 1
-  serializedVersion: 6
+  serializedVersion: 7
   m_Type: 1
   m_Color: {r: 0.9632353, g: 0.9508408, b: 0.878244, a: 1}
   m_Intensity: 0.3
@@ -5808,6 +5813,7 @@ Light:
   m_Shadows:
     m_Type: 0
     m_Resolution: 3
+    m_CustomResolution: -1
     m_Strength: 0.59
     m_Bias: 0.1
     m_NormalBias: 0.4
@@ -5820,10 +5826,10 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_Lightmapping: 4
+  m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
-  m_AreaSize: {x: 1, y: 1}
 --- !u!1 &727029868
 GameObject:
   m_ObjectHideFlags: 0
@@ -8484,6 +8490,7 @@ MonoBehaviour:
     _cachedRaceDatas: []
   defaultChangeRaceOptions: 8
   cacheCurrentState: 1
+  rebuildSkeleton: 1
   preloadWardrobeRecipes:
     loadDefaultRecipes: 1
     recipes:
@@ -8579,9 +8586,6 @@ MonoBehaviour:
   ensureSharedColors: 0
   defaultSaveOptions: 15
   BoundsOffset: {x: 0, y: 0, z: 0}
-  assetBundlesUsedbyCharacter:
-  - uma/toonshared/racebase
-  - uma/toonfemale/racebase
   _buildCharacterEnabled: 1
 --- !u!1 &1155800161
 GameObject:
@@ -9647,17 +9651,20 @@ MeshRenderer:
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
   m_Materials:
   - {fileID: 2100000, guid: 411da2e7323235d4fabbb4c5ac71d378, type: 2}
   m_SubsetIndices: 
   m_StaticBatchRoot: {fileID: 0}
-  m_UseLightProbes: 1
-  m_ReflectionProbeUsage: 1
   m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
+  m_SelectedWireframeHidden: 0
   m_MinimumChartSize: 4
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
@@ -10248,6 +10255,7 @@ MonoBehaviour:
   dynamicallyAddFromAssetBundles: 1
   assetBundlesForCharactersToSearch: 
   assetBundlesForRecipesToSearch: 
+  addAllRecipesFromDownloadedBundles: 1
   context: {fileID: 1875296715}
 --- !u!4 &1367749206
 Transform:
@@ -10658,6 +10666,7 @@ MonoBehaviour:
     _cachedRaceDatas: []
   defaultChangeRaceOptions: 8
   cacheCurrentState: 1
+  rebuildSkeleton: 1
   preloadWardrobeRecipes:
     loadDefaultRecipes: 1
     recipes:
@@ -10753,9 +10762,6 @@ MonoBehaviour:
   ensureSharedColors: 0
   defaultSaveOptions: 15
   BoundsOffset: {x: 0, y: 0, z: 0}
-  assetBundlesUsedbyCharacter:
-  - uma/toonshared/racebase
-  - uma/toonfemale/racebase
   _buildCharacterEnabled: 1
 --- !u!4 &1385428173
 Transform:
@@ -14652,6 +14658,7 @@ MonoBehaviour:
   downloadingAssets:
     downloadingItems: []
     areDownloadedItemsReady: 1
+  debugOnFail: 1
 --- !u!4 &1945811234
 Transform:
   m_ObjectHideFlags: 0
@@ -15410,7 +15417,6 @@ ReflectionProbe:
   m_TimeSlicingMode: 0
   m_Resolution: 128
   m_UpdateFrequency: 0
-  m_Importance: 1
   m_BoxSize: {x: 10, y: 10, z: 10}
   m_BoxOffset: {x: 0, y: 0, z: 0}
   m_NearClip: 0.3
@@ -15427,6 +15433,7 @@ ReflectionProbe:
   m_BoxProjection: 0
   m_RenderDynamicObjects: 0
   m_UseOcclusionCulling: 1
+  m_Importance: 1
   m_CustomBakedTexture: {fileID: 0}
 --- !u!1 &2079936341
 GameObject:
