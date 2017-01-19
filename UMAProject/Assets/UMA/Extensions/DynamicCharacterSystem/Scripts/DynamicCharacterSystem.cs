@@ -208,8 +208,12 @@ namespace UMACharacterSystem
 				bool dynamicallyAddFromResourcesNow = bundleToGather == "" ? dynamicallyAddFromResources : false;
 				bool found = false;
 				DynamicAssetLoader.Instance.debugOnFail = false;
-				found = DynamicAssetLoader.Instance.AddAssets<UMATextRecipe>(ref assetBundlesUsedDict, dynamicallyAddFromResourcesNow, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesRecipesFolder, null, filename, AddRecipesFromAB);
-				if (!found && filename != "")
+				//if the user has updated their wardrobe recipes
+				if (EditorPrefs.GetBool("UMAWardrobeRecipesUpdated"))
+					found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeRecipe>(ref assetBundlesUsedDict, dynamicallyAddFromResourcesNow, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesRecipesFolder, null, filename, AddRecipesFromAB);
+				else
+					found = DynamicAssetLoader.Instance.AddAssets<UMATextRecipe>(ref assetBundlesUsedDict, dynamicallyAddFromResourcesNow, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesRecipesFolder, null, filename, AddRecipesFromAB);
+				if ((!found && filename != "") || (filename == "" && (Application.isPlaying == false || addAllRecipesFromDownloadedBundles)))//The WardrobeSetMasterEditor asks DCS to get all collections, but normally collections are only requested by name
 					found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeCollection>(ref assetBundlesUsedDict, dynamicallyAddFromResourcesNow, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesRecipesFolder, null, filename, AddRecipesFromAB);
 				if (!found && filename != "")
 					Debug.LogWarning("[DynamicCharacterSystem] could not find " + filename + " in Resources or any AssetBundles. Do you need to rebuild your UMAResources Index or AssetBundles?");
