@@ -1417,7 +1417,8 @@ namespace UMACharacterSystem
 			savePathType = origSaveType;
 			if (filePath != "")
 			{
-				var asset = ScriptableObject.CreateInstance<UMATextRecipe>();
+				//var asset = ScriptableObject.CreateInstance<UMATextRecipe>();
+				var asset = ScriptableObject.CreateInstance<UMADynamicCharacterAvatarRecipe>();
 				var recipeName = saveFilename != "" ? saveFilename : gameObject.name + "_DCSRecipe";
 				asset.SaveDCS(this, recipeName, saveOptionsToUse);
 #if UNITY_EDITOR
