@@ -1,3 +1,5 @@
+// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+
 Shader "Hidden/Lux Pro Internal-DeferredShading" {
 Properties {
 	_LightTexture0 ("", any) = "" {}
@@ -90,7 +92,7 @@ half4 CalculateLight (unity_v2f_deferred i)
 //	Lux: Area lights
 	#if defined(LUX_AREALIGHTS)
 		// NOTE: Deferred needs other inputs than forward
-		float3 lightPos = float3(_Object2World[0][3], _Object2World[1][3], _Object2World[2][3]);
+		float3 lightPos = float3(unity_ObjectToWorld[0][3], unity_ObjectToWorld[1][3], unity_ObjectToWorld[2][3]);
 		Lux_AreaLight (light, specularIntensity, diffuseLightDir, ndotlDiffuse, light.dir, _LightColor.a, lightPos, wpos, eyeVec, normalWorld, diffuseNormalWorld, 1.0 - oneMinusRoughness);
 	#else
 		light.ndotl = LambertTerm (normalWorld, light.dir);

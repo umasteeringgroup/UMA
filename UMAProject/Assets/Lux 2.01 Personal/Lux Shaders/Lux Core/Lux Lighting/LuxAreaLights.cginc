@@ -1,3 +1,5 @@
+// Upgrade NOTE: replaced '_LightMatrix0' with 'unity_WorldToLight'
+
 #ifndef LUX_AREALIGHTS_INCLUDED
 #define LUX_AREALIGHTS_INCLUDED
 
@@ -142,7 +144,7 @@ void Lux_AreaLight (
 				//	Tube Light			
 				UNITY_BRANCH
 				if(lightLength > 0) {
-					float3 lightAxisX = normalize(_LightMatrix0[1].xyz);
+					float3 lightAxisX = normalize(unity_WorldToLight[1].xyz);
 					Lux_CalcTubeLightToLight(areaLight, worldPos, lightPos, viewDir, normal, lightRadius, lightLength, lightDir, lightAxisX, roughness);
 				}
 				//	Sphere Light

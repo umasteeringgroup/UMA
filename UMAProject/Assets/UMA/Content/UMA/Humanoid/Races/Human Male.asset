@@ -19,6 +19,8 @@ MonoBehaviour:
   - Hair
   - Body
   - Complexion
+  - Tattoo
+  - Underwear
   - Eyebrows
   - Beard
   - Ears

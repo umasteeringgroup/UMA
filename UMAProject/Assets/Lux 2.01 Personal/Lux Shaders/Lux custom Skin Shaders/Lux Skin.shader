@@ -1,4 +1,6 @@
-﻿Shader "Lux/Human/Skin" {
+﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+
+Shader "Lux/Human/Skin" {
 	Properties {
 		_Color ("Color", Color) = (1,1,1,1)
 		_MainTex ("Albedo (RGB) Smoothness (A)", 2D) = "white" {}
@@ -73,7 +75,7 @@
 			UNITY_INITIALIZE_OUTPUT(Input,o);
 			// Store blendState
 			#if defined (LUX_LIGHTINGFADE)
-				float3 worldPosition = mul(_Object2World, v.vertex);
+				float3 worldPosition = mul(unity_ObjectToWorld, v.vertex);
 				o.blendState = distance(_WorldSpaceCameraPos, worldPosition);
 				o.blendState = saturate( (_Lux_Skin_DistanceRange.x - o.blendState) / _Lux_Skin_DistanceRange.y);
 			#endif

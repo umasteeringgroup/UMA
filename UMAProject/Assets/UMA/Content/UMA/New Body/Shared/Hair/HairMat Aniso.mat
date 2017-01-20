@@ -118,7 +118,7 @@ Material:
       data:
         first:
           name: _Cutoff
-        second: 0.4
+        second: 0.467
       data:
         first:
           name: _Shininess
@@ -130,7 +130,7 @@ Material:
       data:
         first:
           name: _Metallic
-        second: 0.822
+        second: 0.771
       data:
         first:
           name: _ZWrite

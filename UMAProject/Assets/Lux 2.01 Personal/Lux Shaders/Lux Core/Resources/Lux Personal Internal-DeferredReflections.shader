@@ -1,3 +1,5 @@
+// Upgrade NOTE: replaced '_CameraToWorld' with 'unity_CameraToWorld'
+
 Shader "Hidden/Lux Pro Internal-DeferredReflections" {
 Properties {
 	_SrcBlend ("", Float) = 1
@@ -43,7 +45,7 @@ half4 frag (unity_v2f_deferred i) : SV_Target
 	float depth = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, uv);
 	depth = Linear01Depth (depth);
 	float4 viewPos = float4(i.ray * depth,1);
-	float3 worldPos = mul (_CameraToWorld, viewPos).xyz;
+	float3 worldPos = mul (unity_CameraToWorld, viewPos).xyz;
 
 	half4 gbuffer0 = tex2D (_CameraGBufferTexture0, uv);
 	half4 gbuffer1 = tex2D (_CameraGBufferTexture1, uv);

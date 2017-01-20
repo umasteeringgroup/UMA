@@ -17,7 +17,10 @@ MonoBehaviour:
   - Face
   - Eyes
   - Hair
+  - Body
   - Complexion
+  - Tattoo
+  - Underwear
   - Eyebrows
   - Beard
   - Ears
@@ -27,6 +30,7 @@ MonoBehaviour:
   - Arms
   - Hands
   - Waist
+  - Cape
   - Legs
   - Feet
   backwardsCompatibleWith: []
