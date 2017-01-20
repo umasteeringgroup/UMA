@@ -295,7 +295,7 @@ namespace UMA
 					{
 						_umaDna = new Dictionary<int, UMADnaBase>();
 						for (int i = 0; i < dnaValues.Count; i++)
-							_umaDna.Add(dnaValues[i].GetDnaTypeHash(), dnaValues[i]);
+							_umaDna.Add(dnaValues[i].DNATypeHash, dnaValues[i]);
 					}
 					return _umaDna;
 				}
@@ -368,7 +368,7 @@ namespace UMA
 			/// <param name="dna">DNA.</param>
 			public void AddDna(UMADnaBase dna)
 			{
-				umaDna.Add(dna.GetDnaTypeHash(), dna);
+				umaDna.Add(dna.DNATypeHash, dna);
 				dnaValues.Add(dna);
 			}
 
@@ -457,7 +457,7 @@ namespace UMA
 				if (res == null)
 				{
 					res = typeof(T).GetConstructor(System.Type.EmptyTypes).Invoke(null) as T;
-					umaDna.Add(res.GetDnaTypeHash(), res);
+					umaDna.Add(res.DNATypeHash, res);
 					dnaValues.Add(res);
 				}
 				return res;
@@ -496,7 +496,7 @@ namespace UMA
 				}
 
 				dna = type.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
-				dna.dnaTypeHash = dnaTypeHash;
+				dna.DNATypeHash = dnaTypeHash;
 				umaDna.Add(dnaTypeHash, dna);
 				dnaValues.Add(dna);
 				return dna;
@@ -756,11 +756,11 @@ namespace UMA
 				{
 					foreach (var converter in raceData.dnaConverterList)
 					{
-						var dnaTypeHash = converter.GetDnaTypeHash();
+						var dnaTypeHash = converter.DNATypeHash;
 						if (!umaDna.ContainsKey(dnaTypeHash))
 						{
 							var dna = converter.DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
-							dna.dnaTypeHash = dnaTypeHash;
+							dna.DNATypeHash = dnaTypeHash;
 							//DynamicUMADna:: needs the DNAasset from the converter
 							if (converter is DynamicDNAConverterBehaviourBase)
 							{
@@ -775,11 +775,11 @@ namespace UMA
 				{
 					if (slotData != null && slotData.asset.slotDNA != null)
 					{
-						var dnaTypeHash = slotData.asset.slotDNA.GetDnaTypeHash();
+						var dnaTypeHash = slotData.asset.slotDNA.DNATypeHash;
 						if (!umaDna.ContainsKey(dnaTypeHash))
 						{
 							var dna = slotData.asset.slotDNA.DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
-							dna.dnaTypeHash = dnaTypeHash;
+							dna.DNATypeHash = dnaTypeHash;
 							//DynamicUMADna:: needs the DNAasset from the converter TODO are there other places where I heed to sort out this slotDNA?
 							if (slotData.asset.slotDNA is DynamicDNAConverterBehaviourBase)
 							{
@@ -804,7 +804,7 @@ namespace UMA
 					{
 						//DynamicDNAConverter:: We need to SET these values using the TypeHash since 
 						//just getting the hash of the DNAType will set the same value for all instance of a DynamicDNAConverter
-						umaDnaConverter.Add(converter.GetDnaTypeHash(), converter.ApplyDnaAction);
+						umaDnaConverter.Add(converter.DNATypeHash, converter.ApplyDnaAction);
 					}
 				}
 			}
@@ -818,9 +818,9 @@ namespace UMA
 				if (dnaConverter == null) return;
 				//DynamicDNAConverter:: We need to SET these values using the TypeHash since 
 				//just getting the hash of the DNAType will set the same value for all instance of a DynamicDNAConverter
-				if (!umaDnaConverter.ContainsKey(dnaConverter.GetDnaTypeHash()))
+				if (!umaDnaConverter.ContainsKey(dnaConverter.DNATypeHash))
 				{
-					umaDnaConverter.Add(dnaConverter.GetDnaTypeHash(), dnaConverter.ApplyDnaAction);
+					umaDnaConverter.Add(dnaConverter.DNATypeHash, dnaConverter.ApplyDnaAction);
 				}
 			}
 

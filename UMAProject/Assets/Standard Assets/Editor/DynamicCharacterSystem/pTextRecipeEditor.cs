@@ -138,7 +138,7 @@ namespace UMAEditor
 								Type thisType = DnaConverter.DNAType;
 								if (DnaConverter.GetType().ToString().IndexOf("DynamicDNAConverterBehaviour") > -1)
 								{
-									var dna = _recipe.GetOrCreateDna(thisType, DnaConverter.GetDnaTypeHash());
+									var dna = _recipe.GetOrCreateDna(thisType, DnaConverter.DNATypeHash);
 									if (((DynamicDNAConverterBehaviourBase)DnaConverter).dnaAsset != null)
 									{
 										((DynamicUMADnaBase)dna).dnaAsset = ((DynamicDNAConverterBehaviourBase)DnaConverter).dnaAsset;
@@ -146,7 +146,7 @@ namespace UMAEditor
 								}
 								else
 								{
-									_recipe.GetOrCreateDna(thisType, DnaConverter.GetDnaTypeHash());
+									_recipe.GetOrCreateDna(thisType, DnaConverter.DNATypeHash);
 								}
 							}
 						}
@@ -179,7 +179,7 @@ namespace UMAEditor
 					if (DnaConverter.GetType().ToString().IndexOf("DynamicDNAConverterBehaviour") > -1)
 					{
 						var thisDnaAsset = ((DynamicDNAConverterBehaviourBase)DnaConverter).dnaAsset;
-						var dna = _recipe.GetOrCreateDna(DnaConverter.DNAType, DnaConverter.GetDnaTypeHash());
+						var dna = _recipe.GetOrCreateDna(DnaConverter.DNAType, DnaConverter.DNATypeHash);
 						if (((DynamicUMADnaBase)dna).dnaAsset != thisDnaAsset || ((DynamicUMADnaBase)dna).didDnaAssetUpdate)
 						{
 							if (((DynamicUMADnaBase)dna).didDnaAssetUpdate)
@@ -195,10 +195,10 @@ namespace UMAEditor
 								DNAConvertersModified = true;
 							}
 						}
-						if (((DynamicUMADnaBase)dna).dnaTypeHash != DnaConverter.GetDnaTypeHash())
+						if (((DynamicUMADnaBase)dna).DNATypeHash != DnaConverter.DNATypeHash)
 						{
 							Debug.Log("Updated DNA's typeHash to match DnaConverter " + DnaConverter.name + "'s dnaTypeHash");
-							((DynamicUMADnaBase)dna).SetDnaTypeHash(DnaConverter.GetDnaTypeHash());
+							((DynamicUMADnaBase)dna).SetDnaTypeHash(DnaConverter.DNATypeHash);
 							DNAConvertersModified = true;
 						}
 					}
@@ -309,7 +309,7 @@ namespace UMAEditor
 						bool foundMatch = false;
 						for (int ii = 0; ii < thisDNAConverterList.Length; ii++)
 						{
-							if (thisDNAConverterList[ii].GetDnaTypeHash() == currentDNA[i].GetDnaTypeHash())
+							if (thisDNAConverterList[ii].DNATypeHash == currentDNA[i].DNATypeHash)
 							{
 								newCurrentDna.Add(currentDNA[i]);
 								foundMatch = true;
@@ -318,7 +318,7 @@ namespace UMAEditor
 						if (!foundMatch)
 						{
 							if (_recipe.dnaValues.Contains(currentDNA[i]))
-								_recipe.RemoveDna(currentDNA[i].GetDnaTypeHash());
+								_recipe.RemoveDna(currentDNA[i].DNATypeHash);
 						}
 					}
 					currentDNA = newCurrentDna.ToArray();

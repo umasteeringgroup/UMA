@@ -50,7 +50,7 @@ namespace UMA
 			if (dnaConverter == null)
 				return;
 			
-			UMADnaBase dna = data.GetDna(dnaConverter.DNAType);
+			UMADnaBase dna = data.GetDna(dnaConverter.DNATypeHash);
 			if (dna == null)
 				return;
 
@@ -81,7 +81,7 @@ namespace UMA
 			if (dnaConverter == null)
 				return;
 
-			UMADnaBase dna = data.GetDna(dnaConverter.DNAType);
+			UMADnaBase dna = data.GetDna(dnaConverter.DNATypeHash);
 			if (dna == null)
 				return;
 			

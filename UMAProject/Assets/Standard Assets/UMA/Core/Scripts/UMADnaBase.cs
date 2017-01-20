@@ -23,12 +23,19 @@ namespace UMA
 
 		public abstract float GetValue(int idx);
 		public abstract void SetValue(int idx, float value);
-		public int dnaTypeHash;
-		public int GetDnaTypeHash()
+
+		[SerializeField]
+		protected int dnaTypeHash;
+		public virtual int DNATypeHash
 		{
-			if (dnaTypeHash == 0)
-				dnaTypeHash = UMAUtils.StringToHash(GetType().Name);
-			return dnaTypeHash;
+			set {
+					dnaTypeHash = value;
+				}
+			get {
+					if (dnaTypeHash == 0)
+						dnaTypeHash = UMAUtils.StringToHash(GetType().Name);
+					return dnaTypeHash;
+				}
 		}
 	}
 }

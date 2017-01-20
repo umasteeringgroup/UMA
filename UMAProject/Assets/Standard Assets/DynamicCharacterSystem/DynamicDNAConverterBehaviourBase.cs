@@ -10,14 +10,9 @@ namespace UMA
     /// </summary>
     public abstract class DynamicDNAConverterBehaviourBase : DnaConverterBehaviour
     {
-        public DynamicUMADnaAsset dnaAsset;
+    	public DynamicUMADnaAsset dnaAsset;
 
-        public override int GetDnaTypeHash()
-        {
-            return base.GetDnaTypeHash();
-        }
-
-        public static void FixUpUMADnaToDynamicUMADna(UMAData.UMARecipe _recipe)
+    	public static void FixUpUMADnaToDynamicUMADna(UMAData.UMARecipe _recipe)
         {
 			var recipeDNA = _recipe.GetAllDna();
 

@@ -396,13 +396,15 @@ namespace UMA
         /// Returns the set dnaTypeHash or generates one if not set
         /// </summary>
         /// <returns></returns>
-        public override int GetDnaTypeHash()//we may not need this override since dnaTypeHash might never be 0
+        public override int DNATypeHash //we may not need this override since dnaTypeHash might never be 0
         {
-            if(dnaTypeHash == 0)
-            {
-                dnaTypeHash = GenerateUniqueDnaTypeHash();
-            }
-            return dnaTypeHash;
+			get {
+				if(dnaTypeHash == 0)
+            	{
+                	dnaTypeHash = GenerateUniqueDnaTypeHash();
+            	}
+            	return dnaTypeHash;
+			}
         }
 
         public void ApplyDynamicDnaAction(UMAData umaData, UMASkeleton skeleton)
@@ -414,7 +416,7 @@ namespace UMA
         {
             UMADnaBase umaDna;
             //need to use the typehash
-            umaDna = umaData.GetDna(GetDnaTypeHash());
+            umaDna = umaData.GetDna(DNATypeHash);
 
             if (umaDna == null || asReset == true)
             {

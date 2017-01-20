@@ -43,7 +43,7 @@ namespace UMAEditor
 
 				_dnaTypes[i] = entryType;
 				//DynamicUMADna:: we need to use typehashes now
-				_dnaTypeHashes[i] = entry.GetDnaTypeHash();
+				_dnaTypeHashes[i] = entry.DNATypeHash;
 				if (entry is DynamicUMADnaBase)
 				{
 					var dynamicDna = entry as DynamicUMADnaBase;
@@ -60,7 +60,7 @@ namespace UMAEditor
 				{
 					_dnaTypeNames[i] = entryType.Name;
 				}
-				_dnaValues[entry.GetDnaTypeHash()] = new DNASingleEditor(entry);
+				_dnaValues[entry.DNATypeHash] = new DNASingleEditor(entry);
 			}
 		}
 

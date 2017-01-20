@@ -14,13 +14,21 @@ namespace UMA
 			Prepare();
 		}
 		public System.Type DNAType;
-		public int dnaTypeHash;
-		public virtual int GetDnaTypeHash()
+
+		[SerializeField]
+		protected int dnaTypeHash;
+		public virtual int DNATypeHash
 		{
-			if (dnaTypeHash == 0)
-				dnaTypeHash = UMAUtils.StringToHash(DNAType.Name);
-			return dnaTypeHash;
+			set {
+				dnaTypeHash = value;
+			}
+			get {
+				if (dnaTypeHash == 0)
+					dnaTypeHash = UMAUtils.StringToHash(DNAType.Name);
+				return dnaTypeHash;
+			}
 		}
+
 		public delegate void DNAConvertDelegate(UMAData data, UMASkeleton skeleton);
 		/// <summary>
 		/// Called on the DNA converter to adjust avatar from DNA values.
