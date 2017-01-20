@@ -94,7 +94,7 @@ public class MouseOrbitImproved : MonoBehaviour
         {
             transform.position = Vector3.Lerp(transform.position, UpdatePos(_dstTarget).position, smoothing * Time.deltaTime);
             transform.rotation = Quaternion.Lerp(transform.rotation, UpdatePos(_dstTarget).rotation, smoothing * Time.deltaTime);
-
+            
             yield return null;
         }
         switchingTarget = false;
@@ -116,9 +116,25 @@ public class MouseOrbitImproved : MonoBehaviour
             if (t == null)
             {
                 if (dstTarget != null)
-                    t = dstTarget;
+                {
+                    Transform rendTrans = dstTarget.FindChild("UMARenderer");
+                    if(rendTrans == null)
+                        return dstTarget.position;
+                    Renderer rend = rendTrans.GetComponent<Renderer>();
+                    float height = rend.bounds.size.y;
+                    distance = (height / 2) * 1.75f;
+                    return dstTarget.FindChild("Root").position + new Vector3(0, height / 2, 0);
+                }
                 else
-                    t = target;
+                {
+                    Transform rendTrans = target.FindChild("UMARenderer");
+                    if(rendTrans == null)
+                        return target.position;
+                    Renderer rend = rendTrans.GetComponent<Renderer>();
+                    float height = rend.bounds.size.y;
+                    distance = (height / 2) * 1.75f;
+                    return target.FindChild("Root").position + new Vector3(0, height / 2, 0);
+                }
             }
         }
 

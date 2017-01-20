@@ -121,7 +121,7 @@ namespace UMA
 				}
 
                 if (animator.enabled == true)
-				    animator.Update(0.00001f);
+				    animator.Update(Time.deltaTime);
                 else
                     animator.Update(0);
             }
