@@ -2178,7 +2178,9 @@ namespace UMACharacterSystem
 			}
 			ClearSlots();
 			umaRecipe = null;
-			umaData.umaRecipe = null;
+			umaData.umaRecipe.ClearDna();
+			umaData.umaRecipe.SetSlots(new SlotData[0]);
+			umaData.umaRecipe.sharedColors = new OverlayColorData[0];
 			animationController = null;
 			if (gameObject.GetComponent<Animator>())
 			{
