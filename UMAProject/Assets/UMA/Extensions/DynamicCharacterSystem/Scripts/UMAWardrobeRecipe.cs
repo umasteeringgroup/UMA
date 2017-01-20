@@ -96,6 +96,27 @@ public partial class UMAWardrobeRecipe : UMATextRecipe
 		EditorPrefs.SetBool("UMAWardrobeRecipesUpdated", true);
 		Resources.UnloadUnusedAssets();
 	}
+
+	/// <summary>
+	/// Checks to see if any UMATextRecipes require converting to UMAWardrobeRecipes and returns the number that do
+	/// </summary>
+	/// <returns></returns>
+	public static int TestForOldRecipes()
+	{
+		int oldRecipesFound = 0;
+		var allTextRecipeGUIDs = AssetDatabase.FindAssets("t:UMATextRecipe");
+		for (int i = 0; i < allTextRecipeGUIDs.Length; i++)
+		{
+			var thisUTRPath = AssetDatabase.GUIDToAssetPath(allTextRecipeGUIDs[i]);
+			var thisUTR = AssetDatabase.LoadAssetAtPath<UMATextRecipe>(thisUTRPath);
+			//if its not a Wardrobe recipe or its actual type is anything other than UMATextRecipe
+			if (thisUTR.recipeType == "Wardrobe" && thisUTR.GetType() == typeof(UMATextRecipe))
+				oldRecipesFound++;
+		}
+		Debug.Log(oldRecipesFound + " UMATextRecipes require converting to UMAWardrobeRecipes.");
+		Resources.UnloadUnusedAssets();
+		return oldRecipesFound;
+	}
 #endif
 
 	#endregion
