@@ -419,14 +419,11 @@ namespace UMAEditor
 							FieldInfo CompatibleRacesField = TargetType.GetField("compatibleRaces", BindingFlags.Public | BindingFlags.Instance);
 							FieldInfo WardrobeSlotField = TargetType.GetField("wardrobeSlot", BindingFlags.Public | BindingFlags.Instance);
 							FieldInfo SuppressWardrobeSlotField = TargetType.GetField("suppressWardrobeSlots", BindingFlags.Public | BindingFlags.Instance);
-							FieldInfo HidesField = TargetType.GetField("Hides", BindingFlags.Public | BindingFlags.Instance);
-							FieldInfo DisplayValueField = TargetType.GetField("DisplayValue", BindingFlags.Public | BindingFlags.Instance);
 
 							//field values
 							List<string> compatibleRaces = (List<string>)CompatibleRacesField.GetValue(utr);
 							string wardrobeSlot = (string)WardrobeSlotField.GetValue(utr);
 							List<string> suppressWardrobeSlot = (List<string>)SuppressWardrobeSlotField.GetValue(utr);
-							List<string> hides = (List<string>)HidesField.GetValue(utr);
 
 							if (suppressWardrobeSlot != null)
 							{
@@ -455,14 +452,11 @@ namespace UMAEditor
 							var TargetType = utr.GetType();
 							FieldInfo CompatibleRacesField = TargetType.GetField("compatibleRaces", BindingFlags.Public | BindingFlags.Instance);
 							FieldInfo WardrobeSlotField = TargetType.GetField("wardrobeSlot", BindingFlags.Public | BindingFlags.Instance);
-							FieldInfo SuppressWardrobeSlotField = TargetType.GetField("suppressWardrobeSlots", BindingFlags.Public | BindingFlags.Instance);
 							FieldInfo HidesField = TargetType.GetField("Hides", BindingFlags.Public | BindingFlags.Instance);
-							FieldInfo DisplayValueField = TargetType.GetField("DisplayValue", BindingFlags.Public | BindingFlags.Instance);
 
 							//field values
 							List<string> compatibleRaces = (List<string>)CompatibleRacesField.GetValue(utr);
 							string wardrobeSlot = (string)WardrobeSlotField.GetValue(utr);
-							List<string> suppressWardrobeSlot = (List<string>)SuppressWardrobeSlotField.GetValue(utr);
 							List<string> hides = (List<string>)HidesField.GetValue(utr);
 
 							if (activeRace == "" || ((compatibleRaces.Count == 0 || compatibleRaces.Contains(activeRace)) || (_recipe.raceData.findBackwardsCompatibleWith(compatibleRaces) && _recipe.raceData.wardrobeSlots.Contains(wardrobeSlot))))
