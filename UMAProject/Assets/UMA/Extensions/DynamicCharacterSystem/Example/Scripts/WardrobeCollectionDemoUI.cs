@@ -29,7 +29,6 @@ namespace UMACharacterSystem
 
 		public void GenerateCollectionButtons()
 		{
-			Debug.Log("[[WardrobeCollectionDemoUI]  GenerateCollectionButtons()");
 			if (WardrobeCollectionLibrary.Instance == null)
 				return;
 

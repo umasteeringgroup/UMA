@@ -150,11 +150,6 @@ namespace UMACharacterSystem
 			if (allResourcesScanned && filename == "" && bundleToGather == "")
 				return;
 
-			if (filename != "")
-				Debug.Log("WCL searched for " + filename);
-			else
-				Debug.Log("WCL searched for EVERYTHING in bundle " + bundleToGather);
-
 			if (bundleToGather == "" && filename == "")
 				allResourcesScanned = true;
 
