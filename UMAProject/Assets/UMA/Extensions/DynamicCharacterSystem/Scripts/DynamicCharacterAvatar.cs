@@ -2182,11 +2182,16 @@ namespace UMACharacterSystem
 			umaData.umaRecipe.SetSlots(new SlotData[0]);
 			umaData.umaRecipe.sharedColors = new OverlayColorData[0];
 			animationController = null;
-			if (gameObject.GetComponent<Animator>())
-			{
-				gameObject.GetComponent<Animator>().runtimeAnimatorController = null;
-			}
-			if (gameObject.GetComponent<UMAExpressionPlayer>())
+
+            /*
+            *For now, we are not going to clean this up as it resets the avatar rotation, but only in Unity 5.5 +
+            if (gameObject.GetComponent<Animator>())
+            {
+                gameObject.GetComponent<Animator>().runtimeAnimatorController = null;
+            }
+            */
+
+            if (gameObject.GetComponent<UMAExpressionPlayer>())
 			{
 				gameObject.GetComponent<UMAExpressionPlayer>().expressionSet = null;
 				gameObject.GetComponent<UMAExpressionPlayer>().enabled = false;
