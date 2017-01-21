@@ -32,6 +32,5 @@ MonoBehaviour:
   - MaleTorso
   - MaleFeet
   - MaleLegs
-  - MaleHair1
   suppressWardrobeSlots: []
   activeWardrobeSet: []
