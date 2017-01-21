@@ -1,5 +1,4 @@
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -54,7 +53,8 @@ public partial class DynamicCharacterAvatarEditor : Editor
 			/*LoadOtions fields*/ "defaultLoadOptions", "loadPathType", "loadPath", "loadFilename", "loadString", "loadFileOnStart", "waitForBundles", /*"buildAfterLoad",*/
 			/*SaveOptions fields*/ "defaultSaveOptions", "savePathType","savePath", "saveFilename", "makeUniqueFilename","ensureSharedColors", 
 			/*Moved into AdvancedOptions*/"context","umaData","umaRecipe", "umaAdditionalRecipes","umaGenerator", "animationController",
-			/*Moved into CharacterEvents*/"CharacterCreated", "CharacterUpdated", "CharacterDestroyed", "RecipeUpdated" });
+			/*Moved into CharacterEvents*/"CharacterCreated", "CharacterUpdated", "CharacterDestroyed", "RecipeUpdated",
+			/*PlaceholderOptions fields*/"showPlaceholder", "previewModel", "previewColor"});
 
 		//The base DynamicAvatar properties- get these early because changing the race changes someof them
 		SerializedProperty context = serializedObject.FindProperty("context");
@@ -308,6 +308,31 @@ public partial class DynamicCharacterAvatarEditor : Editor
 			serializedObject.ApplyModifiedProperties();
 		}
 		GUILayout.Space(2f);
+		//for PlaceholderOptions
+		EditorGUI.BeginChangeCheck();
+		SerializedProperty gizmo = serializedObject.FindProperty("showPlaceholder");
+		SerializedProperty enableGizmo = serializedObject.FindProperty("showPlaceholder");
+		SerializedProperty previewModel = serializedObject.FindProperty("previewModel");
+		SerializedProperty customModel = serializedObject.FindProperty("customModel");
+		SerializedProperty customRotation = serializedObject.FindProperty("customRotation");
+		SerializedProperty previewColor = serializedObject.FindProperty("previewColor");
+		gizmo.isExpanded = EditorGUILayout.Foldout(gizmo.isExpanded, "Placeholder Options");
+		if (gizmo.isExpanded)
+		{
+			EditorGUILayout.PropertyField(enableGizmo);
+			EditorGUILayout.PropertyField(previewModel);
+			if(previewModel.enumValueIndex == 2)
+			{
+				EditorGUILayout.PropertyField(customModel);
+				EditorGUILayout.PropertyField(customRotation);
+			}
+			EditorGUILayout.PropertyField(previewColor);
+		}
+		if (EditorGUI.EndChangeCheck())
+		{
+			serializedObject.ApplyModifiedProperties();
+		}
+
 		if (Application.isPlaying)
         {
             EditorGUILayout.LabelField("AssetBundles used by Avatar");
