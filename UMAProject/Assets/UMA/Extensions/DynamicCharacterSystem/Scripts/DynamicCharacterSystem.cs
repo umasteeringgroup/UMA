@@ -84,7 +84,14 @@ namespace UMACharacterSystem
                     continue;
                 if (DynamicAssetLoader.Instance != null && possibleRaces[i].raceName == DynamicAssetLoader.Instance.placeholderRace.raceName)
                     continue;
-                Recipes.Add(possibleRaces[i].raceName, new Dictionary<string, List<UMATextRecipe>>());
+                if (Recipes.ContainsKey(possibleRaces[i].raceName))
+                {
+                    Debug.LogWarning("Warning: multiple races found for key:" + possibleRaces[i].raceName);
+                }
+                else
+                {
+                    Recipes.Add(possibleRaces[i].raceName, new Dictionary<string, List<UMATextRecipe>>());
+                }
             }
 
             GatherCharacterRecipes();
