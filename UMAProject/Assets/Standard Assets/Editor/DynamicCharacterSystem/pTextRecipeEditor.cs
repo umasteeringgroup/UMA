@@ -344,7 +344,7 @@ namespace UMAEditor
 
 				//if this recipeType == WardrobeCollection or DynamicCharacterAvatar or Wardrobe show a 'ConvertRecipe' button and bail/make the recipe uneditable?
 				//show this if people have already run the full conversion from the nagger
-				if (EditorPrefs.GetBool("UMADCARecipesUpdated") && EditorPrefs.GetBool("UMAWardrobeRecipesUpdated"))
+				if (EditorPrefs.GetBool(Application.dataPath + ":UMADCARecipesUpdated") && EditorPrefs.GetBool(Application.dataPath + ":UMAWardrobeRecipesUpdated"))
 				{
 					if (recipeType == "WardrobeCollection" || recipeType == "DynamicCharacterAvatar" || recipeType == "Wardrobe")
 					{
@@ -378,7 +378,7 @@ namespace UMAEditor
 
 				//Draw the recipe type dropdown for the time being but disable it for types that cant be changed
 				//if people have run the converter from the nagger stop them making UMATextRecipes that are WardrobeRecipes
-				if (recipeType == "DynamicCharacterAvatar" || (EditorPrefs.GetBool("UMADCARecipesUpdated") && EditorPrefs.GetBool("UMAWardrobeRecipesUpdated")))
+				if (recipeType == "DynamicCharacterAvatar" || (EditorPrefs.GetBool(Application.dataPath + ":UMADCARecipesUpdated") && EditorPrefs.GetBool(Application.dataPath + ":UMAWardrobeRecipesUpdated")))
 				EditorGUI.BeginDisabledGroup(true);
 
 				if (!recipeTypeOpts.Contains(recipeType))
@@ -393,7 +393,7 @@ namespace UMAEditor
 					doUpdate = true;
 				}
 
-				if (recipeType == "DynamicCharacterAvatar" || (EditorPrefs.GetBool("UMADCARecipesUpdated") && EditorPrefs.GetBool("UMAWardrobeRecipesUpdated")))
+				if (recipeType == "DynamicCharacterAvatar" || (EditorPrefs.GetBool(Application.dataPath + ":UMADCARecipesUpdated") && EditorPrefs.GetBool(Application.dataPath + ":UMAWardrobeRecipesUpdated")))
 					EditorGUI.EndDisabledGroup();
 
 				//If this is a Standard recipe or a DynamicCharacterAvatar we may need to fix or update the DNA converters
