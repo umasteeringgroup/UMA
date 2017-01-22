@@ -216,7 +216,7 @@ namespace UMACharacterSystem
 				bool found = false;
 				DynamicAssetLoader.Instance.debugOnFail = false;
 				//if the user has updated their wardrobe recipes
-				if (EditorPrefs.GetBool("UMAWardrobeRecipesUpdated"))
+				if (EditorPrefs.GetBool(Application.dataPath + ":UMAWardrobeRecipesUpdated"))
 					found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeRecipe>(ref assetBundlesUsedDict, dynamicallyAddFromResourcesNow, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesRecipesFolder, null, filename, AddRecipesFromAB);
 				else
 					found = DynamicAssetLoader.Instance.AddAssets<UMATextRecipe>(ref assetBundlesUsedDict, dynamicallyAddFromResourcesNow, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesRecipesFolder, null, filename, AddRecipesFromAB);

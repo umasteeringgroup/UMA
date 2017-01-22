@@ -93,7 +93,7 @@ public partial class UMAWardrobeRecipe : UMATextRecipe
 			var thisUWR = ScriptableObject.CreateInstance<UMAWardrobeRecipe>();
 			thisUWR.ConvertFromUTR(thisUTR);
 		}
-		EditorPrefs.SetBool("UMAWardrobeRecipesUpdated", true);
+		EditorPrefs.SetBool(Application.dataPath + ":UMAWardrobeRecipesUpdated", true);
 		Resources.UnloadUnusedAssets();
 	}
 

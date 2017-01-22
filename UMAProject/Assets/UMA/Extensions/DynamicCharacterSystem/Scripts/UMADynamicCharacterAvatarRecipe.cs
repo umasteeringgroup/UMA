@@ -96,7 +96,6 @@ public partial class UMADynamicCharacterAvatarRecipe : UMATextRecipe
 		*/
 	public static void ConvertOldDCARecipes()
 	{
-		EditorPrefs.SetBool("UMADCARecipesUpdated", true);
 		var allTextRecipeGUIDs = AssetDatabase.FindAssets("t:UMATextRecipe");
 		for (int i = 0; i < allTextRecipeGUIDs.Length; i++)
 		{
@@ -108,6 +107,7 @@ public partial class UMADynamicCharacterAvatarRecipe : UMATextRecipe
 			var thisDCS = ScriptableObject.CreateInstance<UMADynamicCharacterAvatarRecipe>();
 			thisDCS.ConvertFromUTR(thisUTR);
 		}
+		EditorPrefs.SetBool(Application.dataPath + ":UMADCARecipesUpdated", true);
 		Resources.UnloadUnusedAssets();
 	}
 
