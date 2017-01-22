@@ -9,9 +9,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c4834e6077abe64e968f9f87c9ac70a, type: 3}
-  m_Name: ElvenEars-1
+  m_Name: TheRebel
   m_EditorClassIdentifier: 
-  overlayName: ElvenEars-1
+  overlayName: MaleHair03
   overlayType: 0
   rect:
     serializedVersion: 2
@@ -21,9 +21,9 @@ MonoBehaviour:
     height: 0
   alphaMask: {fileID: 0}
   textureList:
-  - {fileID: 2800000, guid: a9078ecde5d32ff4ea9686f5a144824c, type: 3}
-  - {fileID: 2800000, guid: d16ec5fe9c1737247ab92186f0f25818, type: 3}
-  - {fileID: 2800000, guid: 278ad2a5235c1214e92ef8ac78b2b7a5, type: 3}
+  - {fileID: 2800000, guid: 979181a2b2de334479a3285106b06ef3, type: 3}
+  - {fileID: 2800000, guid: 6f78237dc19a0174f8056d8b8295fd92, type: 3}
+  - {fileID: 2800000, guid: 06483677f981a4d16ad4c6f4a8fd0eff, type: 3}
   tags: []
   material: {fileID: 11400000, guid: 8e29dbac5d2e82f44a759a7e2cc568ab, type: 2}
   OcclusionEntries: []

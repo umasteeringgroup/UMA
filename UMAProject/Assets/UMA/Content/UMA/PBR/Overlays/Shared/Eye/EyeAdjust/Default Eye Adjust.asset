@@ -9,9 +9,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c4834e6077abe64e968f9f87c9ac70a, type: 3}
-  m_Name: MaleHair03
+  m_Name: Default Eye Adjust
   m_EditorClassIdentifier: 
-  overlayName: MaleHair03
+  overlayName: Default Eye Adjust
   overlayType: 0
   rect:
     serializedVersion: 2
@@ -21,9 +21,9 @@ MonoBehaviour:
     height: 0
   alphaMask: {fileID: 0}
   textureList:
-  - {fileID: 2800000, guid: 68ff7549b6d390546b0855a7861d9a09, type: 3}
-  - {fileID: 2800000, guid: 6f78237dc19a0174f8056d8b8295fd92, type: 3}
-  - {fileID: 2800000, guid: 06483677f981a4d16ad4c6f4a8fd0eff, type: 3}
+  - {fileID: 2800000, guid: c0e5deae8a268a8468ef816cb746d8ee, type: 3}
+  - {fileID: 2800000, guid: 87d999979ace13749a6d20c588d07c6d, type: 3}
+  - {fileID: 2800000, guid: 77984210ff457ff4f8f1e083bf3e0cbe, type: 3}
   tags: []
   material: {fileID: 11400000, guid: 8e29dbac5d2e82f44a759a7e2cc568ab, type: 2}
   OcclusionEntries: []
