@@ -999,6 +999,24 @@ namespace UMACharacterSystem
 			return null;
 		}
 
+        /// <summary>
+        /// Sets a color given the base parameters.
+        /// Does not update the color if you don't pass the "updateTexture = true" -- Call UpdateColors() when you are done updating the colors table
+        /// </summary>
+        /// <param name="SharedColorName"></param>
+        /// <param name="AlbedoColor"></param>
+        /// <param name="MetallicRGB"></param>
+        /// <param name="Gloss"></param>
+        /// <param name="UpdateTexture"></param>
+        public void SetColor(string SharedColorName, Color AlbedoColor, Color MetallicRGB=new Color(), float Gloss=0.0f, bool UpdateTexture = false)
+        {
+            OverlayColorData ocd = new OverlayColorData(3);
+            MetallicRGB.a = Gloss;
+            ocd.channelMask[0] = AlbedoColor;
+            ocd.channelAdditiveMask[2] = MetallicRGB;
+            SetColor(SharedColorName, ocd, UpdateTexture);
+        }
+
 		/// <summary>
 		/// Sets the given color name to the given OverlayColorData optionally updating the texture (default:true)
 		/// </summary>

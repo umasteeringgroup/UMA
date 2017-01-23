@@ -514,8 +514,11 @@ public class HumanFemaleDNAConverterBehaviour : HumanoidDNAConverterBehaviour
 			Mathf.Clamp(1 + (umaDna.mandibleSize - 0.5f) * 0.35f, 0.35f, 1.35f),
 			Mathf.Clamp(1 + (umaDna.mandibleSize - 0.5f) * 0.35f, 0.35f, 1.35f)));
 
-		umaData.characterHeight = overallScale * (0.85f + 1.2f * lowerBackScale) + ((umaDna.feetSize - 0.5f) * 0.20f);
-		umaData.characterRadius = 0.24f + ((umaDna.height - 0.5f) * 0.32f) + ((umaDna.upperMuscle - 0.5f) * 0.01f);
-		umaData.characterMass = 42f * overallScale + 28f * umaDna.upperWeight + 22f * umaDna.lowerWeight;
+		float raceHeight = umaData.umaRecipe.raceData.raceHeight;
+		float raceRadius = umaData.umaRecipe.raceData.raceRadius;
+		float raceMass = umaData.umaRecipe.raceData.raceMass;
+		umaData.characterHeight = raceHeight * overallScale * (0.425f + 0.6f * lowerBackScale) + ((umaDna.feetSize - 0.5f) * 0.20f);
+		umaData.characterRadius = raceRadius + ((umaDna.height - 0.5f) * 0.32f) + ((umaDna.upperMuscle - 0.5f) * 0.01f);
+		umaData.characterMass = raceMass * overallScale + 28f * umaDna.upperWeight + 22f * umaDna.lowerWeight;
 	}
 }
