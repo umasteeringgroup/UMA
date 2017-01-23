@@ -9,21 +9,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c4834e6077abe64e968f9f87c9ac70a, type: 3}
-  m_Name: M_Bod Overlay 1
+  m_Name: MaleUnderwear02
   m_EditorClassIdentifier: 
-  overlayName: M_Bod Overlay 1
+  overlayName: MaleUnderwear_hearts
   overlayType: 0
   rect:
     serializedVersion: 2
     x: 0
-    y: 0
-    width: 0
-    height: 0
+    y: 918
+    width: 2048
+    height: 512
   alphaMask: {fileID: 0}
   textureList:
-  - {fileID: 2800000, guid: 0c364f0b6be16594ea951195997acf56, type: 3}
-  - {fileID: 2800000, guid: 8f8c3898e8d67ac4e80a52b9842e8d62, type: 3}
-  - {fileID: 2800000, guid: 42871f0d9cd6cf446b9ea9f83c729e2e, type: 3}
+  - {fileID: 2800000, guid: 6e0514a9d08816744abcfaee972e3c6e, type: 3}
+  - {fileID: 2800000, guid: b8e56af9c8f384fef8e5a1adc1d1df8c, type: 3}
+  - {fileID: 2800000, guid: 687094bd323754d0d831e78ebb58962e, type: 3}
   tags: []
   material: {fileID: 11400000, guid: 8e29dbac5d2e82f44a759a7e2cc568ab, type: 2}
   OcclusionEntries: []
