@@ -46,7 +46,7 @@ namespace UMA
 		public PoseTools.UMAExpressionSet expressionSet;
 
 		/// <summary>
-		/// An optional set of DNA ranges.
+		/// An (optional) set of DNA ranges.
 		/// </summary>
 		/// <remarks>
 		/// DNA range assets are needed when multiple races share the
@@ -55,6 +55,19 @@ namespace UMA
 		/// humans on many entries may be only 0.4-0.6 rather than 0-1.
 		/// </remarks>
 		public DNARangeAsset[] dnaRanges;
+
+		/// <summary>
+		/// The height of the generic base mesh of the race. Adjusted by DNA converters.
+		/// </summary>
+		public float raceHeight = 2f;
+		/// <summary>
+		/// The radius of the generic base mesh of the race. Adjusted by DNA converters.
+		/// </summary>
+		public float raceRadius = 0.25f;
+		/// <summary>
+		/// The mass of a generic member of the race. Adjusted by DNA converters.
+		/// </summary>
+		public float raceMass = 50f;
 
 	    void Awake()
 	    {
