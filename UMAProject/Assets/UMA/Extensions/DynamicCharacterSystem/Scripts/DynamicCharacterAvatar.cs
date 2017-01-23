@@ -2318,13 +2318,22 @@ namespace UMACharacterSystem
 		}
 
 		//@jaimi not sure what calls this. Generator maybe?
-		public void AvatarCreated()
+		public void AvatarCreated(UMAData umaData)
 		{
+			CharacterUpdated.RemoveListener(AvatarCreated);
 			ApplyBounds();
 		}
 		public void ApplyBounds()
 		{
 			SkinnedMeshRenderer smr = this.gameObject.GetComponentInChildren<SkinnedMeshRenderer>();
+			if (!smr.updateWhenOffscreen)
+			{
+				var wasSmrUpdateWhenOffScreen = smr.updateWhenOffscreen;
+                smr.updateWhenOffscreen = true;
+				Bounds updatedBounds = smr.localBounds;
+				smr.updateWhenOffscreen = wasSmrUpdateWhenOffScreen;
+				smr.localBounds = updatedBounds;
+			}
 			smr.localBounds = new Bounds(smr.localBounds.center + BoundsOffset, smr.localBounds.size);
 		}
 
