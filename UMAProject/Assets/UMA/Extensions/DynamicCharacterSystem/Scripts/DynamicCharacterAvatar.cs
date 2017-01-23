@@ -1011,9 +1011,9 @@ namespace UMACharacterSystem
         public void SetColor(string SharedColorName, Color AlbedoColor, Color MetallicRGB=new Color(), float Gloss=0.0f, bool UpdateTexture = false)
         {
             OverlayColorData ocd = new OverlayColorData(3);
-            Color MetallicGloss = new Color(MetallicRGB.r, MetallicRGB.g, MetallicRGB.b, Gloss);
+            MetallicRGB.a = Gloss;
             ocd.channelMask[0] = AlbedoColor;
-            ocd.channelMask[2] = MetallicGloss;
+            ocd.channelMask[2] = MetallicRGB;
             SetColor(SharedColorName, ocd, UpdateTexture);
         }
 
