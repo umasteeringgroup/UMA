@@ -999,6 +999,16 @@ namespace UMACharacterSystem
 			return null;
 		}
 
+
+        public void SetColor(string SharedColorName, Color AlbedoColor, Color MetallicRGB=Color.black, float Gloss=0.0f, bool UpdateTexture = false)
+        {
+            OverlayColorData ocd = new OverlayColorData(3);
+            MetallicRGB.a = Gloss;
+            ocd.channelMask[0] = AlbedoColor;
+            ocd.channelMask[2] = MetallicRGB;
+            SetColor(SharedColorName, ocd, UpdateTexture);
+        }
+
 		/// <summary>
 		/// Sets the given color name to the given OverlayColorData optionally updating the texture (default:true)
 		/// </summary>
