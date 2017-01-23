@@ -1013,7 +1013,7 @@ namespace UMACharacterSystem
             OverlayColorData ocd = new OverlayColorData(3);
             MetallicRGB.a = Gloss;
             ocd.channelMask[0] = AlbedoColor;
-            ocd.channelMask[2] = MetallicRGB;
+            ocd.channelAdditiveMask[2] = MetallicRGB;
             SetColor(SharedColorName, ocd, UpdateTexture);
         }
 
