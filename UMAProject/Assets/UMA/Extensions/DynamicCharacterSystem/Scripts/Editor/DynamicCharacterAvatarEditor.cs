@@ -54,7 +54,7 @@ public partial class DynamicCharacterAvatarEditor : Editor
 			/*SaveOptions fields*/ "defaultSaveOptions", "savePathType","savePath", "saveFilename", "makeUniqueFilename","ensureSharedColors", 
 			/*Moved into AdvancedOptions*/"context","umaData","umaRecipe", "umaAdditionalRecipes","umaGenerator", "animationController",
 			/*Moved into CharacterEvents*/"CharacterCreated", "CharacterUpdated", "CharacterDestroyed", "RecipeUpdated",
-			/*PlaceholderOptions fields*/"showPlaceholder", "previewModel", "previewColor"});
+			/*PlaceholderOptions fields*/"showPlaceholder", "previewModel", "customModel", "customRotation", "previewColor"});
 
 		//The base DynamicAvatar properties- get these early because changing the race changes someof them
 		SerializedProperty context = serializedObject.FindProperty("context");
