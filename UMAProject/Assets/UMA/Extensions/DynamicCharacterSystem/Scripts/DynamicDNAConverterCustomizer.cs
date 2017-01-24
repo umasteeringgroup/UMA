@@ -243,9 +243,9 @@ namespace UMA
             {
                 foreach (UMADnaBase dna in activeUmaDNA)
                 {
-                    if (dna.GetType().ToString().IndexOf("DynamicUMADna") > -1)
+					if (dna is DynamicUMADnaBase)
                     {
-                        ((DynamicUMADna)dna).ImportUMADnaValues(gdna);
+						((DynamicUMADnaBase)dna).ImportUMADnaValues(gdna);
                     }
                 }
             }

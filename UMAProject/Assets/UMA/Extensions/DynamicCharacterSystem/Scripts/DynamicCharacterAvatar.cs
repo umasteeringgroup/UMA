@@ -1262,7 +1262,7 @@ namespace UMACharacterSystem
 			var activeDNA = umaData.umaRecipe.GetAllDna();
 			for (int i = 0; i < activeDNA.Length; i++)
 			{
-				if (activeDNA[i].GetType().ToString().IndexOf("DynamicUMADna") > -1)
+				if (activeDNA[i] is DynamicUMADnaBase)
 				{
 					//iterate over each dna in prev dna and try to apply its values to this dna
 					foreach (UMADnaBase dna in prevDna)

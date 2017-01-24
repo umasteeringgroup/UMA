@@ -136,7 +136,7 @@ namespace UMAEditor
 								DNAConvertersAdded = true;
 								_recipe.AddDNAUpdater(DnaConverter);
 								Type thisType = DnaConverter.DNAType;
-								if (DnaConverter.GetType().ToString().IndexOf("DynamicDNAConverterBehaviour") > -1)
+								if (DnaConverter is DynamicDNAConverterBehaviourBase)
 								{
 									var dna = _recipe.GetOrCreateDna(thisType, DnaConverter.DNATypeHash);
 									if (((DynamicDNAConverterBehaviourBase)DnaConverter).dnaAsset != null)
@@ -176,7 +176,7 @@ namespace UMAEditor
 				var thisDNAConverterList = standardRaceData.dnaConverterList;
 				foreach (DnaConverterBehaviour DnaConverter in thisDNAConverterList)
 				{
-					if (DnaConverter.GetType().ToString().IndexOf("DynamicDNAConverterBehaviour") > -1)
+					if (DnaConverter is DynamicDNAConverterBehaviourBase)
 					{
 						var thisDnaAsset = ((DynamicDNAConverterBehaviourBase)DnaConverter).dnaAsset;
 						var dna = _recipe.GetOrCreateDna(DnaConverter.DNAType, DnaConverter.DNATypeHash);
@@ -247,7 +247,7 @@ namespace UMAEditor
 						int dnaImported = 0;
 						for (int i = 0; i < currentDNA.Length; i++)
 						{
-							if (currentDNA[i].GetType().ToString().IndexOf("DynamicUMADna") > -1)
+							if (currentDNA[i] is DynamicUMADnaBase)
 							{
 								//keep trying to find a new home for dnavalues until they have all been set
 								dnaImported += ((DynamicUMADnaBase)currentDNA[i]).ImportUMADnaValues(currentDNA[thisUMADnaHumanoid]);
@@ -275,7 +275,7 @@ namespace UMAEditor
 						int dnaImported = 0;
 						for (int i = 0; i < currentDNA.Length; i++)
 						{
-							if (currentDNA[i].GetType().ToString().IndexOf("DynamicUMADna") > -1)
+							if (currentDNA[i] is DynamicUMADnaBase)
 							{
 								//keep trying to find a new home for dnavalues until they have all been set
 								dnaImported += ((DynamicUMADnaBase)currentDNA[i]).ImportUMADnaValues(currentDNA[thisUMADnaTutorial]);

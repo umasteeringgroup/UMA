@@ -125,7 +125,7 @@ namespace UMAEditor
 		public DNASingleEditor(UMADnaBase dna)
 		{
 			//DynamicUMADna:: needs a different set up
-			if (dna.GetType().ToString().IndexOf("DynamicUMADna") > -1)
+			if (dna is DynamicUMADnaBase)
 			{
 				string[] dnaNames = ((DynamicUMADnaBase)dna).Names;
 				for (int i = 0; i < dnaNames.Length; i++)
@@ -293,7 +293,7 @@ namespace UMAEditor
 			if (newValue != _value)
 			{
 				//DynamicUmaDna:: we need a different setter
-				if (_dna.GetType().ToString().IndexOf("DynamicUMADna") > -1)
+				if (_dna is DynamicUMADnaBase)
 				{
 					((DynamicUMADnaBase)_dna).SetValue(_realName, newValue);
 				}
