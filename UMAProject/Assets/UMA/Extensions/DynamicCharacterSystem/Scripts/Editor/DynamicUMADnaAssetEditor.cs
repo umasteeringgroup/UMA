@@ -21,6 +21,14 @@ namespace UMAEditor
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
+			SerializedProperty dnaTypeHash = serializedObject.FindProperty ("dnaTypeHash");
+			EditorGUI.BeginChangeCheck();
+			EditorGUILayout.PropertyField(dnaTypeHash, new GUIContent ("DNA Type Hash"));
+			if (EditorGUI.EndChangeCheck())
+			{
+				serializedObject.ApplyModifiedProperties();
+			}
+
             SerializedProperty Names = serializedObject.FindProperty("Names");
             Names.isExpanded = EditorGUILayout.Foldout(Names.isExpanded, "DNA Slider Names ("+ Names.arraySize+")");
             if (Names.isExpanded)
