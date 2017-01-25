@@ -85,6 +85,17 @@ namespace UMA
                 }
             }
         }
+
+		/// <summary>
+		/// This is a placeholder method to conform to the requirements for the DNA template code, results are not valid
+		/// </summary>
+		public static string[] GetNames()
+		{
+			Debug.LogWarning("Calling the static GetNames() method of Dynamic DNA, result will be empty");
+
+			return new string[0];
+		}
+
         #endregion
 
         #region Methods
@@ -206,9 +217,9 @@ namespace UMA
             }
         }
 
-        public static DynamicUMADna LoadInstance(string data, int typehash)
+        public static DynamicUMADna LoadInstance(string data)
         {
-            return UnityEngine.JsonUtility.FromJson<DynamicUMADna_Byte>(data).ToDna(typehash);
+            return UnityEngine.JsonUtility.FromJson<DynamicUMADna_Byte>(data).ToDna();
         }
         public static string SaveInstance(DynamicUMADnaBase instance)
         {
@@ -240,9 +251,9 @@ namespace UMA
         public string bDnaAssetName;
         public DNASettings[] bDnaSettings;
 
-        public DynamicUMADna ToDna(int typeHash)
+        public DynamicUMADna ToDna()
         {
-            var res = new DynamicUMADna(typeHash);
+			var res = new DynamicUMADna();
             //Do names and values first
             res._names = new string[bDnaSettings.Length];
             for (int i = 0; i < bDnaSettings.Length; i++)
@@ -264,7 +275,17 @@ namespace UMA
             else
             {
                 res.dnaAsset = bDnaAsset;
-            }       
+            }
+
+			if (res.dnaAsset != null)
+			{
+				res.SetDnaTypeHash(res.dnaAsset.dnaTypeHash);
+			}
+			else
+			{
+				Debug.LogWarning("Deserialized DynamicUMADna with no matching asset!");
+			}
+
             return res;
         }
         public static DynamicUMADna_Byte FromDna(DynamicUMADnaBase dna )
