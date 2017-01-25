@@ -8,12 +8,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9448878e2e40f1a4c9f8fd2b56832b13, type: 3}
+  m_Script: {fileID: 11500000, guid: f0188188c253e0c4bb9b46e19fa7312e, type: 3}
   m_Name: Eye5
   m_EditorClassIdentifier: 
   recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"MaleEyes","scale":100,"copyIdx":-1,"overlays":[{"id":"Eye_Large_Adjust","colorIdx":0,"rect":[64,64,128,128]}]}],"colors":[],"fColors":[{"name":"Eyes","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"HumanMale","packedDna":[]}'
   recipeType: Wardrobe
-  Sex: 0
   DisplayValue: large Eyes
   compatibleRaces:
   - HumanMale
@@ -24,3 +23,4 @@ MonoBehaviour:
   wardrobeSlot: Eyes
   Hides: []
   suppressWardrobeSlots: []
+  activeWardrobeSet: []
