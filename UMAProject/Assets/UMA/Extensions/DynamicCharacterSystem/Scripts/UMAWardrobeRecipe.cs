@@ -16,7 +16,7 @@ public partial class UMAWardrobeRecipe : UMATextRecipe
 	{
 		recipeType = "Wardrobe";
 	}
-
+#if UNITY_EDITOR
 	public UMAWardrobeRecipe(UMATextRecipe recipeToCopyFrom)
 	{
 		if(recipeToCopyFrom.recipeType == "Wardrobe")
@@ -24,6 +24,7 @@ public partial class UMAWardrobeRecipe : UMATextRecipe
 			CopyFromUTR(recipeToCopyFrom);
 		}
 	}
+#endif
 	#endregion
 
 	#region EDITOR ONLY METHODS

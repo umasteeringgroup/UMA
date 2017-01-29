@@ -14,13 +14,19 @@ namespace UMA
 	{
 		static DynamicAssetLoader _instance;
 
+		public bool makePersistent;
+		[Space]
 		[Tooltip("Set the server URL that assetbundles can be loaded from. Used in a live build and when the LocalAssetServer is turned off. Requires trailing slash but NO platform name")]
 		public string remoteServerURL = "";
 		[Tooltip("Use the JSON version of the assetBundleIndex rather than the assetBundleVersion.")]
 		public bool useJsonIndex = false;
 		[Tooltip("Set the server URL for the AssetBundleIndex json data. You can use this to make a server request that could generate an index on the fly for example. Used in a live build and when the LocalAssetServer is turned off. TIP use [PLATFORM] to use the current platform name in the URL")]
 		public string remoteServerIndexURL = "";
-		public bool makePersistent;
+		[Space]
+		//EncryptedAssetBundles
+		public bool useEncryptedBundles = false;
+		public string bundleEncryptionPassword = "";
+		[Space]
 		[Tooltip("A list of assetbundles to preload when the game starts. After these have completed loading any GameObject in the gameObjectsToActivate field will be activated.")]
 		public List<string> assetBundlesToPreLoad = new List<string>();
 		[Tooltip("GameObjects that will be activated after the list of assetBundlesToPreLoad has finished downloading.")]
@@ -302,6 +308,42 @@ namespace UMA
 			if (isInitializing == false)
 			{
 				isInitializing = true;
+				//If we are using encryption set the encryption key in AssetBundleManager
+				if (useEncryptedBundles)
+				{
+					if (bundleEncryptionPassword != "")
+					{
+#if UNITY_EDITOR
+						//if the set password and the UMAAssetBundleManagerSettings Passwords dont match and we are in the editor warn the user
+						if (bundleEncryptionPassword != UMAABMSettings.GetEncryptionPassword())
+							Debug.LogWarning("The bundle encryption password set in this scenes DynamicAssetLoader did not match the one set in UMAAssetBundleManagerSettings. You can fix this by inspecting the DynamicAssetLoader component. It will update automatically.");
+#endif
+						AssetBundleManager.BundleEncryptionKey = bundleEncryptionPassword;
+					}
+#if UNITY_EDITOR
+					else
+					{
+						//if an encryption key has been generated but it has not been assigned to this DAL show a warning that it needs to be assigned but assign it anyway
+						if (UMAABMSettings.GetEncryptionPassword() != "")
+						{
+							AssetBundleManager.BundleEncryptionKey = UMAABMSettings.GetEncryptionPassword();
+							Debug.LogWarning("You are using encrypted asset bundles but you have not assigned the encryption key to this scenes DynamicAssetLoader, you need to do this before you build your game or your bundles will not be decrypted!");
+						}
+						//if an encryption key has NOT been generated show a warnining that the user need to generate one in the UMAAssetBundleManager window
+						else
+						{
+							Debug.LogWarning("The DynamicAssetLoader in this scene is set to use encrypted bundles but you have not generated an encryption key yet. Please go to UMAAssetBundleManager to generate one, then assign it to your DynamicAssetLoader components in your scene.");
+						}
+					}
+#endif
+				}
+				else
+				{
+#if UNITY_EDITOR
+					if (UMAABMSettings.GetEncryptionEnabled())
+					Debug.LogWarning("You have AssetBunlde Encryption turned ON in UMAAssetBundleManager but have not enabled it in this scenes Dynamic AssetLoader. Please do this in the inspector for the DynamicAssetLoader component.");
+#endif
+				}
 				InitializeSourceURL();//in the editor this might set AssetBundleManager.SimulateAssetBundleInEditor to be true aswell so check that
 #if UNITY_EDITOR
 				if (AssetBundleManager.SimulateAssetBundleInEditor)
@@ -500,7 +542,6 @@ namespace UMA
 				Debug.LogError("[DynamicAssetLoader] Bundle Load Error: " + error);
 				yield break;
 			}
-			//yield return true;13/12/2016 not sure why this is here? I think it should be break above
 			//If this assetBundle contains UMATextRecipes we may need to trigger some post processing...
 			//it may have downloaded some dependent bundles too so these may need processing aswell
 			var dependencies = AssetBundleManager.AssetBundleIndexObject.GetAllDependencies(bundle);

@@ -22,6 +22,7 @@ public partial class UMADynamicCharacterAvatarRecipe : UMATextRecipe
 		recipeType = "DynamicCharacterAvatar";
 	}
 
+#if UNITY_EDITOR
 	public UMADynamicCharacterAvatarRecipe(UMATextRecipe recipeToCopyFrom)
 	{
 		if (recipeToCopyFrom.recipeType == "DynamicCharacterAvatar")
@@ -29,6 +30,7 @@ public partial class UMADynamicCharacterAvatarRecipe : UMATextRecipe
 			CopyFromUTR(recipeToCopyFrom);
 		}
 	}
+#endif
 
 	public UMADynamicCharacterAvatarRecipe(DynamicCharacterAvatar dca, string recipeName = "", DynamicCharacterAvatar.SaveOptions customSaveOptions = DynamicCharacterAvatar.SaveOptions.useDefaults)
 	{

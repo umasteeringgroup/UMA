@@ -92,10 +92,16 @@ namespace UMAAssetBundleManager
 			public string[] allDependencies;
 			public string[] directDependencies;
 			public string assetBundleHash;
+			public string encryptedName = "";
 
 			public AssetBundleIndexList(string _assetBundleName)
 			{
 				assetBundleName = _assetBundleName;
+			}
+			public AssetBundleIndexList(string _assetBundleName, string _encryptedName)
+			{
+				assetBundleName = _assetBundleName;
+				encryptedName = _encryptedName;
 			}
 			/// <summary>
 			/// Adds an AssetBundleIndexItem to the list of assetBundleAssets with the given filename.
@@ -119,6 +125,33 @@ namespace UMAAssetBundleManager
 		public AssetBundleIndex()
 		{
 
+		}
+
+		public AssetBundleIndexList GetIndexItem(string assetBundleName)
+		{
+			for (int i = 0; i < bundlesIndex.Count; i++)
+			{
+				if (bundlesIndex[i].assetBundleName == assetBundleName)
+				{
+					return bundlesIndex[i];
+                }
+			}
+			return null;
+		}
+
+		public string GetAssetBundleEncryptedName(string assetBundleName)
+		{
+			for (int i = 0; i < bundlesIndex.Count; i++)
+			{
+				if (bundlesIndex[i].assetBundleName == assetBundleName)
+				{
+					if (bundlesIndex[i].encryptedName != "")
+						return bundlesIndex[i].encryptedName;
+					else
+						return bundlesIndex[i].assetBundleName;//do we do that?
+                }
+			}
+			return null;
 		}
 
 		#region AssetBundleManifest clone methods

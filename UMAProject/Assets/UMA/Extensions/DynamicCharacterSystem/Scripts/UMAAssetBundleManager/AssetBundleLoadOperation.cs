@@ -1,5 +1,8 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+#if UNITY_5_4_OR_NEWER
+using UnityEngine.Networking;
+#endif
 #if ENABLE_IOS_ON_DEMAND_RESOURCES
 using UnityEngine.iOS;
 #endif
@@ -39,6 +42,9 @@ namespace UMAAssetBundleManager
 		public LoadedAssetBundle assetBundle { get; protected set; }
 		public string error { get; protected set; }
 
+		protected AssetBundle bundle;
+		protected AssetBundleLoadDecrypted decryptedLoadOperation = null;
+
 		protected abstract bool downloadIsDone { get; }
 		protected abstract void FinishDownload();
 
@@ -58,6 +64,29 @@ namespace UMAAssetBundleManager
 			return done;
 		}
 
+		protected virtual bool WasBundleEncrypted()
+		{
+			if (AssetBundleManager.BundleEncryptionKey != "")
+			{
+				var encryptedAsset = bundle.LoadAsset<UMAEncryptedBundle>("EncryptedData");
+				if (encryptedAsset)
+				{
+					byte[] decryptedData = new byte[0];
+					try {
+						decryptedData = EncryptionUtil.Decrypt(encryptedAsset.data, AssetBundleManager.BundleEncryptionKey, encryptedAsset.IV);
+					}
+					catch
+					{
+						Debug.LogError("[AssetBundleLoadOperation] could not decrypt " + assetBundleName);
+						return false;
+					}
+					decryptedLoadOperation = new AssetBundleLoadDecrypted(decryptedData, assetBundleName);
+					return true;
+				}
+			}
+			return false;
+		}
+
 		public abstract string GetSourceURL();
 
 		public AssetBundleDownloadOperation(string assetBundleName)
@@ -67,20 +96,54 @@ namespace UMAAssetBundleManager
 	}
 
 #if ENABLE_IOS_ON_DEMAND_RESOURCES
-    // Read asset bundle asynchronously from iOS / tvOS asset catalog that is downloaded
-    // using on demand resources functionality.
-    //TODO Make this set its progress in Update aswell
-    public class AssetBundleDownloadFromODROperation : AssetBundleDownloadOperation
+	/// <summary>
+	/// Read asset bundle asynchronously from iOS / tvOS asset catalog that is downloaded
+	// using on demand resources functionality.
+	/// </summary>
+	public class AssetBundleDownloadFromODROperation : AssetBundleDownloadOperation
     {
         OnDemandResourcesRequest request;
-
-        public AssetBundleDownloadFromODROperation(string assetBundleName)
+		public AssetBundleDownloadFromODROperation(string assetBundleName)
         : base(assetBundleName)
         {
-            request = OnDemandResources.PreloadAsync(new string[] { assetBundleName });
-        }
+			// Work around Xcode crash when opening Resources tab when a 
+			// resource name contains slash character
+			request = OnDemandResources.PreloadAsync(new string[] { assetBundleName.Replace('/', '>') });
+		}
 
-        protected override bool downloadIsDone { get { return (request == null) || request.isDone; } }
+		public override bool Update()
+		{
+			if (decryptedLoadOperation != null)
+			{
+				decryptedLoadOperation.Update();
+				if (decryptedLoadOperation.IsDone())
+				{
+					assetBundle = decryptedLoadOperation.assetBundle;
+					downloadProgress = 1f;
+					return false;
+				}
+				else //keep updating
+				{
+					downloadProgress = 0.9f + (decryptedLoadOperation.progress / 100);
+					return true;
+				}
+			}
+			else
+			{
+				return base.Update();
+			}
+		}
+		protected override bool downloadIsDone
+		{
+			get
+			{
+				if (decryptedLoadOperation != null)
+				{
+					return decryptedLoadOperation.assetBundle == null ? false : true;
+				}
+				return (request == null) || request.isDone;
+			}
+		}
 
         public override string GetSourceURL()
         {
@@ -94,7 +157,7 @@ namespace UMAAssetBundleManager
                 return;
 
             var path = "res://" + assetBundleName;
-            var bundle = AssetBundle.CreateFromFile(path);
+            bundle = AssetBundle.LoadFromFile(path);
             if (bundle == null)
             {
                 error = string.Format("Failed to load {0}", path);
@@ -102,14 +165,17 @@ namespace UMAAssetBundleManager
             }
             else
             {
-                assetBundle = new LoadedAssetBundle(bundle);
-                // At the time of unload request is already set to null, so capture it to local variable.
-                var localRequest = request;
-                // Dispose of request only when bundle is unloaded to keep the ODR pin alive.
-                assetBundle.unload += () =>
-                {
-                    localRequest.Dispose();
-                };
+				if (!WasBundleEncrypted())
+				{
+					assetBundle = new LoadedAssetBundle(bundle);
+					// At the time of unload request is already set to null, so capture it to local variable.
+					var localRequest = request;
+					// Dispose of request only when bundle is unloaded to keep the ODR pin alive.
+					assetBundle.unload += () =>
+					{
+						localRequest.Dispose();
+					};
+				}
             }
 
             request = null;
@@ -118,24 +184,57 @@ namespace UMAAssetBundleManager
 #endif
 
 #if ENABLE_IOS_APP_SLICING
-    // Read asset bundle synchronously from an iOS / tvOS asset catalog
-    //TODO Make this set its progress in Update aswell
-    public class AssetBundleOpenFromAssetCatalogOperation : AssetBundleDownloadOperation
+	/// <summary>
+	/// Read asset bundle synchronously from an iOS / tvOS asset catalog
+	/// </summary>
+	public class AssetBundleOpenFromAssetCatalogOperation : AssetBundleDownloadOperation
     {
         public AssetBundleOpenFromAssetCatalogOperation(string assetBundleName)
         : base(assetBundleName)
         {
             var path = "res://" + assetBundleName;
-            var bundle = AssetBundle.CreateFromFile(path);
-            if (bundle == null)
+            bundle = AssetBundle.LoadFromFile(path);
+			if (bundle == null)
                 error = string.Format("Failed to load {0}", path);
             else
+				if(!WasBundleEncrypted())
                 assetBundle = new LoadedAssetBundle(bundle);
         }
-
-        protected override bool downloadIsDone { get { return true; } }
-
-        protected override void FinishDownload() { }
+		public override bool Update()
+		{
+			if (decryptedLoadOperation != null)
+			{
+				decryptedLoadOperation.Update();
+				if (decryptedLoadOperation.IsDone())
+				{
+					assetBundle = decryptedLoadOperation.assetBundle;
+					downloadProgress = 1f;
+					return false;
+				}
+				else //keep updating
+				{
+					downloadProgress = 0.9f + (decryptedLoadOperation.progress / 100);
+					return true;
+				}
+			}
+			else
+			{
+				downloadProgress = 1f;
+				return base.Update();
+			}
+		}
+        protected override bool downloadIsDone
+		{
+			get
+			{
+				if (decryptedLoadOperation != null)
+				{
+					return decryptedLoadOperation.assetBundle == null ? false : true;
+				}
+				return true;
+			}
+		}
+		protected override void FinishDownload() { }
 
         public override string GetSourceURL()
         {
@@ -150,6 +249,7 @@ namespace UMAAssetBundleManager
 		string m_Url;
 		int zeroDownload = 0;
 		bool m_isJsonIndex = false;
+
 		public AssetBundleDownloadFromWebOperation(string assetBundleName, WWW www, bool isJsonIndex = false)
 			: base(assetBundleName)
 		{
@@ -157,19 +257,42 @@ namespace UMAAssetBundleManager
 				throw new System.ArgumentNullException("www");
 			m_Url = www.url;
 			m_isJsonIndex = isJsonIndex;
-			this.m_WWW = www;
+			m_WWW = www;
 		}
 
 		public override bool Update()
 		{
+			if (decryptedLoadOperation != null)
+			{
+				decryptedLoadOperation.Update();
+				if (decryptedLoadOperation.IsDone())
+				{
+					assetBundle = decryptedLoadOperation.assetBundle;
+					downloadProgress = 1f;
+					m_WWW.Dispose();
+					m_WWW = null;
+					return false;
+				}
+				else //keep updating
+				{
+					downloadProgress = 0.9f + (decryptedLoadOperation.progress / 100);
+					return true;
+				}
+			}
+			else
+			{
 			base.Update();
+			}
+            
 			// TODO: When can check iOS copy this into the iOS functions above
+			// This checks that the download is actually happening and restarts it if it is not
+			//fixes a bug in SimpleWebServer where it would randomly stop working for some reason
 			if (!downloadIsDone)
 			{
 				downloadProgress = m_WWW.progress;
 				if (!string.IsNullOrEmpty(m_WWW.error))
 				{
-					Debug.Log("[AssetBundleLoadOperation] download error: " + m_WWW.error);
+					Debug.Log("[AssetBundleLoadOperation] download error for "+ m_WWW.url+" : " + m_WWW.error);
 				}
 				else
 				{
@@ -177,36 +300,42 @@ namespace UMAAssetBundleManager
 					{
 						zeroDownload++;
 					}
-					if (zeroDownload == 150)
-					{
-						Debug.Log("[AssetBundleLoadOperation] progress was zero for 150 frames restarting dowload AssetBundleManager.SimulateOverride was " + AssetBundleManager.SimulateOverride + " SimpleWebServer.serverStarted was " + SimpleWebServer.serverStarted);
-						m_WWW.Dispose();//sometimes makes a difference when the download fails
-						m_WWW = null;
-						m_WWW = new WWW(m_Url);
-#if !UNITY_EDITOR
-                        zeroDownload = 0;
-#endif
-					}
 #if UNITY_EDITOR
-					if (zeroDownload == 300)//If we are in the editor we can restart the Server and this will make it work
+					//Sometimes SimpleWebServer randomly looses it port connection
+					//Sometimes restarting the download helps, sometimes it needs to be completely restarted
+					if (SimpleWebServer.Instance != null)
 					{
-						Debug.LogWarning("[AssetBundleLoadOperation] progress was zero for 300 frames restarting the server");
-						//we wont be able to do the following from a build
-						if (SimpleWebServer.Instance == null)
+						if (zeroDownload == 150)
 						{
-							Debug.Log("[AssetBundleLoadOperation] SimpleWebServer was Null!!");
+							Debug.Log("[AssetBundleLoadOperation] progress was zero for 150 frames restarting dowload");
+							m_WWW.Dispose();//sometimes makes a difference when the download fails
+							m_WWW = null;
+							m_WWW = new WWW(m_Url);
 						}
-						else
+
+						if (zeroDownload == 300)//If we are in the editor we can restart the Server and this will make it work
 						{
+							Debug.LogWarning("[AssetBundleLoadOperation] progress was zero for 300 frames restarting the server");
+							//we wont be able to do the following from a build
 							int port = SimpleWebServer.Instance.Port;
 							SimpleWebServer.Start(port);
 							m_WWW.Dispose();
 							m_WWW = null;
 							m_WWW = new WWW(m_Url);
+							zeroDownload = 0;
 						}
+					}
+					else
+#endif
+					if(zeroDownload == 500)
+					{
+						Debug.Log("[AssetBundleLoadOperation] progress was zero for 500 frames restarting dowload");
+						m_WWW.Dispose();
+						m_WWW = null;
+						m_WWW = new WWW(m_Url);
 						zeroDownload = 0;
 					}
-#endif
+
 				}
 				return true;
 			}
@@ -221,16 +350,11 @@ namespace UMAAssetBundleManager
 		{
 			get
 			{
-				bool ret = false;
-				try
+				if(decryptedLoadOperation != null)
 				{
-					ret = (m_WWW == null) || m_WWW.isDone;
+					return decryptedLoadOperation.assetBundle == null ? false : true;
 				}
-				catch
-				{
-					Debug.LogError("[AssetBundleLoadOperation] ERROR: m_WWW was not null or isDone");
-				}
-				return ret;
+				return (m_WWW == null) || m_WWW.isDone;
 			}
 		}
 
@@ -239,22 +363,24 @@ namespace UMAAssetBundleManager
 			error = m_WWW.error;
 			if (!string.IsNullOrEmpty(error))
 			{
-				if (error != null)
-					Debug.LogWarning("[AssetBundleLoadOperation.AssetBundleDownloadFromWebOperation] " + error);
+				Debug.LogWarning("[AssetBundleLoadOperation.AssetBundleDownloadFromWebOperation] URL was "+ m_WWW.url+" error was " + error);
 				return;
 			}
 
 			if (!m_isJsonIndex)
 			{
-				AssetBundle bundle = m_WWW.assetBundle;
+				bundle = m_WWW.assetBundle;
 				if (bundle == null)
 				{
-					error = string.Format("{0} is not a valid asset bundle.", assetBundleName);
-					Debug.LogWarning(error);
+					Debug.LogWarning("[AssetBundleLoadOperation.AssetBundleDownloadFromWebOperation] "+assetBundleName+" was not a valid assetBundle");
+					m_WWW.Dispose();
+					m_WWW = null;
 				}
-				else
+				else if (!WasBundleEncrypted())
 				{
 					assetBundle = new LoadedAssetBundle(m_WWW.assetBundle);
+					m_WWW.Dispose();
+					m_WWW = null;
 				}
 			}
 			else
@@ -262,20 +388,73 @@ namespace UMAAssetBundleManager
 				string indexData = m_WWW.text;
 				if (indexData == "")
 				{
-					Debug.LogWarning("The JSON AssetBundleIndex was empty");
+					Debug.LogWarning("[AssetBundleLoadOperation.AssetBundleDownloadFromWebOperation] The JSON AssetBundleIndex was empty");
 				}
 				else
 				{
 					assetBundle = new LoadedAssetBundle(m_WWW.text);
 				}
-			}
-			m_WWW.Dispose();
-			m_WWW = null;
+				m_WWW.Dispose();
+				m_WWW = null;
+			}	
 		}
 
 		public override string GetSourceURL()
 		{
 			return m_Url;
+		}
+	}
+
+	/// <summary>
+	/// Loads the bytes of a decrypted asset bundle from memory asynchroniously;
+	/// </summary>
+	public class AssetBundleLoadDecrypted : AssetBundleDownloadOperation
+	{
+		AssetBundleCreateRequest m_Operation = null;
+		public float progress;
+
+		public AssetBundleLoadDecrypted(byte[] decryptedData, string assetBundleName) : base(assetBundleName)
+		{
+           m_Operation = AssetBundle.LoadFromMemoryAsync(decryptedData);
+		}
+		protected override bool downloadIsDone
+		{
+			get { return true; }
+		}
+		//update needs to return true if more updates are required
+		public override bool Update()
+		{
+			progress = m_Operation.progress;
+			if (progress == 1)
+			{
+				FinishDownload();
+				return false;
+			}
+			progress = m_Operation.progress;
+			return true;
+		}
+
+		protected override void FinishDownload()
+		{
+            bundle = m_Operation.assetBundle;
+			if (bundle == null)
+				Debug.LogWarning("[AssetBundleLoadOperation.AssetBundleLoadDecrypted] could not create bundle from decrypted bytes for " + assetBundleName);
+			else
+			{
+				//Debug.Log("[AssetBundleLoadOperation.AssetBundleLoadEncrypted] " + assetBundleName+" loaded from decrypted bytes successfully");
+				assetBundle = new LoadedAssetBundle(bundle);
+			}
+			m_Operation = null;
+		}
+
+		public override bool IsDone()
+		{
+			return m_Operation == null || m_Operation.isDone;
+		}
+		//just inherited junk
+		public override string GetSourceURL()
+		{
+			return "";
 		}
 	}
 
@@ -334,8 +513,8 @@ namespace UMAAssetBundleManager
 			if (m_Request != null)
 				return false;
 
-			LoadedAssetBundle bundle = AssetBundleManager.GetLoadedAssetBundle(m_AssetBundleName, out m_DownloadingError);
-			if (bundle != null)
+			LoadedAssetBundle loadedBundle = AssetBundleManager.GetLoadedAssetBundle(m_AssetBundleName, out m_DownloadingError);
+			if (loadedBundle != null)
 			{
 				m_Request = SceneManager.LoadSceneAsync(m_LevelName, m_IsAdditive ? LoadSceneMode.Additive : LoadSceneMode.Single);
 				return false;
@@ -417,11 +596,11 @@ namespace UMAAssetBundleManager
 			if (m_Request != null)
 				return false;
 
-			LoadedAssetBundle bundle = AssetBundleManager.GetLoadedAssetBundle(m_AssetBundleName, out m_DownloadingError);
-			if (bundle != null)
+			LoadedAssetBundle loadedBundle = AssetBundleManager.GetLoadedAssetBundle(m_AssetBundleName, out m_DownloadingError);
+			if (loadedBundle != null)
 			{
 				///@TODO: When asset bundle download fails this throws an exception...
-				m_Request = bundle.m_AssetBundle.LoadAssetAsync(m_AssetName, m_Type);
+				m_Request = loadedBundle.m_AssetBundle.LoadAssetAsync(m_AssetName, m_Type);
 				return false;
 			}
 			else
@@ -461,29 +640,22 @@ namespace UMAAssetBundleManager
 			//base.Update();
 			if (m_Request == null)
 			{
-				LoadedAssetBundle bundle = AssetBundleManager.GetLoadedAssetBundle(m_AssetBundleName, out m_DownloadingError);
-				if (bundle != null)
+				LoadedAssetBundle loadedBundle = AssetBundleManager.GetLoadedAssetBundle(m_AssetBundleName, out m_DownloadingError);
+				if (loadedBundle != null)
 				{
-					//TODO Ideally we want to use the following async request but it doesn't work... see here (http://forum.unity3d.com/threads/assetbundles-do-you-have-to-use-the-assetbundlemanifest-with-assetbundlerequest.423197/)
-					//m_Request = bundle.m_AssetBundle.LoadAssetAsync<AssetBundleIndex>(m_AssetName);
-					//so instead
-					if (_isJsonIndex)
+					if (loadedBundle.m_AssetBundle == null)
 					{
-						AssetBundleManager.AssetBundleIndexObject = ScriptableObject.CreateInstance<AssetBundleIndex>();
-						JsonUtility.FromJsonOverwrite(bundle.m_data, AssetBundleManager.AssetBundleIndexObject);
+						Debug.LogWarning("AssetBundle was null for " + m_AssetBundleName);
+                        return false;
 					}
-					else
-					{
-						AssetBundleManager.AssetBundleIndexObject = bundle.m_AssetBundle.LoadAsset<AssetBundleIndex>(m_AssetName);
-					}
+					m_Request = loadedBundle.m_AssetBundle.LoadAssetAsync<AssetBundleIndex>(m_AssetName);
 				}
 			}
-			//TODO ideally we want to use the async request but it doesn't work so we cant until I sus out why
-			/*if (m_Request != null && m_Request.isDone)
+			if (m_Request != null && m_Request.isDone)
             {
                 AssetBundleManager.AssetBundleIndexObject = GetAsset<AssetBundleIndex>();
                 return false;
-            }*/
+            }
 			if (AssetBundleManager.AssetBundleIndexObject != null)
 			{
 				return false;

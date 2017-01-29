@@ -40,15 +40,16 @@ namespace UMAEditor
 				{
 					if (DerivesFrom(dnaType, baseDnaType))
 					{
-						if (dnaType.Name == "UMADna" || dnaType.Name == "DynamicUMADna") continue;
+						if (dnaType.Name == "UMADna" || dnaType.Name == "DynamicUMADnaBase") continue;
 						customData["ClassName"] = dnaType.Name;
-						foreach (var template in pageTemplates)
-						{
-							template.sb.Length = 0;
-						}
 						foreach (var template in templates)
 						{
 							template.Append(customData);
+						}
+						if (dnaType.Name == "DynamicUMADna") continue;
+						foreach (var template in pageTemplates)
+						{
+							template.sb.Length = 0;
 						}
 						CreateDNAHelperCode(dnaType, destDir, pageTemplate, pageTemplates);
 					}
