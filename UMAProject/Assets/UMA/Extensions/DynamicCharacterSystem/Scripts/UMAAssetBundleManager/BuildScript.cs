@@ -183,6 +183,8 @@ namespace UMAAssetBundleManager
 
 		public static void BuildAndRunPlayer(bool developmentBuild)
 		{
+			//This should ask where people want to build the player
+			//
 			string outputPath = EditorUserBuildSettings.activeBuildTarget == BuildTarget.WebGL ? Utility.AssetBundlesOutputPath : (EditorUserBuildSettings.activeBuildTarget.ToString().IndexOf("Standalone") > -1 ? "Builds-Standalone" : "Builds-Devices");
 			if (!Directory.Exists(outputPath))
 				Directory.CreateDirectory(outputPath);

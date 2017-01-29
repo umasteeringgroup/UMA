@@ -95,7 +95,8 @@ namespace UMAAssetBundleManager
 				}
 			}
 		}
-
+		//we dont want this editor only
+#if UNITY_EDITOR
 		//used in the editor to encrypt assetbundles
 		public static byte[] Encrypt(byte[] value, ref byte[] IVout)
 		{
@@ -110,6 +111,7 @@ namespace UMAAssetBundleManager
 			ICryptoTransform transform = algorithm.CreateEncryptor(thisKey, IVout);
 			return CryptoTransform(transform, value);
 		}
+#endif
 
 		public static string Encrypt(byte[] value, byte[] Key, byte[] IV)
 		{
