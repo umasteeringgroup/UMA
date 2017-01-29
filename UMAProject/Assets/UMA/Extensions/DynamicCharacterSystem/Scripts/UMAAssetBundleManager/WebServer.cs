@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net;
 using System.IO;
 using UnityEngine;
@@ -8,8 +8,6 @@ using UnityEditor;
 
 namespace UMAAssetBundleManager
 {
-    //@joen Its absolutely VITAL that this can be restarted from other scripts because for some unknown reason it very often stops working- usually the second time you play the application in the editor
-    //Jack and I spent literally a whole week solid trying to solve this and this was the ONLY solution we could find. It seems to be to do with the listener no getting released by Unity when you stop playing.
     public class SimpleWebServer
     {
         HttpListener _listener = new HttpListener();
@@ -32,8 +30,6 @@ namespace UMAAssetBundleManager
             }
         }
         public static SimpleWebServer Instance;
-        //DOS MODIFIED
-        //the Editor Prefs variable LocalAssetBundleServerEnabled persists across sessions of Unity but this does not start itself without being called so we need a server started variable
         public static bool serverStarted = false;
         public int Port { get; private set; }
         public SimpleWebServer(int port)
@@ -104,7 +100,6 @@ namespace UMAAssetBundleManager
                     {
                         context.Response.StatusCode = 404;
                         UnityEngine.Debug.LogErrorFormat("Url not served. Have you built your Asset Bundles? Url not served from: {0} '{1}'", context.Request.RawUrl, filePath);
-                        //DOS MODIFIED So if we want this 'just work' in the editor we need to re-initialize AssetBundleManager in Simulation mode
 #if UNITY_EDITOR
                         AssetBundleManager.SimulateOverride = true;
                         context.Response.OutputStream.Close();
@@ -119,7 +114,6 @@ namespace UMAAssetBundleManager
                     _requestLog.Add(string.Format("{0} {1}", context.Response.StatusCode, context.Request.Url));
                 }
                 context.Response.OutputStream.Close();
-                //Tried adding response close aswell like in Adamas original
                 context.Response.Close();
             }
             catch (HttpListenerException e)
@@ -128,18 +122,15 @@ namespace UMAAssetBundleManager
                 {
                     // shutdown, terminate silently
                     Debug.LogWarning("[Web Server] ErrorCode -2147467259: terminate silently");
-                    //Tried adding response close aswell like in Adamas original
                     context.Response.Abort();
                     return;
                 }
                 UnityEngine.Debug.LogException(e);
-                //Tried adding response close aswell like in Adamas original
                 context.Response.Abort();
             }
             catch (Exception e)
             {
                 UnityEngine.Debug.LogException(e);
-                //Tried adding response close aswell like in Adamas original
                 context.Response.Abort();
             }
         }
@@ -175,7 +166,7 @@ namespace UMAAssetBundleManager
         {
             if(_serverURL != "")
             {
-                string serverResourcesDirectory = "Assets/UMA/Extensions/CharacterSystem/UMAAssetBundleManager/Resources";
+                string serverResourcesDirectory = "Assets/UMA/Extensions/DynamicCharacterSystem/UMAAssetBundleManager/Resources";
                 string serverUrlPath = Path.Combine(serverResourcesDirectory, "localServerURL.bytes");
                 Directory.CreateDirectory(serverResourcesDirectory);
                 UMA.FileUtils.WriteAllText(serverUrlPath, _serverURL);
@@ -185,7 +176,7 @@ namespace UMAAssetBundleManager
         //but we dont want it hanging around afterwards
         public static void DestroyServerURLFile()
         {
-            string serverResourcesDirectory = "Assets/UMA/Extensions/CharacterSystem/UMAAssetBundleManager/Resources";
+            string serverResourcesDirectory = "Assets/UMA/Extensions/DynamicCharacterSystem/UMAAssetBundleManager/Resources";
             string serverUrlPath = Path.Combine(serverResourcesDirectory, "localServerURL.bytes");
             File.Delete(serverUrlPath);
             AssetDatabase.Refresh();

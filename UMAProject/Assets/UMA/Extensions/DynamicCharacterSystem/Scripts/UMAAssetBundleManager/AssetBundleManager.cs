@@ -73,6 +73,10 @@ namespace UMAAssetBundleManager
 
 		static LogMode m_LogMode = LogMode.All;
 		static string m_BaseDownloadingURL = "";
+
+		//If we are using Encrypted Bundles DynamicAssetLoader will set the encryption key here.
+		static string m_BundleEncryptionKey = "";
+
 		static string[] m_ActiveVariants = { };
 		static AssetBundleIndex m_AssetBundleIndex = null;
 #if UNITY_EDITOR
@@ -95,26 +99,43 @@ namespace UMAAssetBundleManager
 			set { m_LogMode = value; }
 		}
 
-		// The base downloading url which is used to generate the full downloading url with the assetBundle names.
+		/// <summary>
+        /// The base downloading url which is used to generate the full
+        /// downloading url with the assetBundle names.
+        /// </summary>
 		public static string BaseDownloadingURL
 		{
 			get { return m_BaseDownloadingURL; }
 			set { m_BaseDownloadingURL = value; }
 		}
 
+		public static string BundleEncryptionKey
+		{
+			get { return m_BundleEncryptionKey; }
+			set { m_BundleEncryptionKey = value; }
+		}
+
 		public delegate string OverrideBaseDownloadingURLDelegate(string bundleName);
 
-		// Implements per-bundle base downloading URL override. The subscribers must return
-		// null values for unknown bundle names;
+		/// <summary>
+		/// Implements per-bundle base downloading URL override.
+		/// The subscribers must return null values for unknown bundle names;
+		/// </summary>
 		public static event OverrideBaseDownloadingURLDelegate overrideBaseDownloadingURL;
 
-		// Variants which is used to define the active variants.
+		/// <summary>
+		/// Variants which is used to define the active variants.
+		/// </summary>
 		public static string[] ActiveVariants
 		{
 			get { return m_ActiveVariants; }
 			set { m_ActiveVariants = value; }
 		}
-		// AssetBundleIndex object which can be used to check the contents of any asset bundle without having to download it first. 
+
+		/// <summary>
+		/// AssetBundleIndex object which can be used to check the contents of
+	   ///  any asset bundle without having to download it first. 
+		/// </summary>
 		public static AssetBundleIndex AssetBundleIndexObject
 		{
 			get { return m_AssetBundleIndex; }
@@ -177,7 +198,6 @@ namespace UMAAssetBundleManager
 		/// <summary>
 		/// Sets base downloading URL to a directory relative to the streaming assets directory.Asset bundles are loaded from a local directory.
 		/// </summary>
-		/// <param name="relativePath"></param>
 		public static void SetSourceAssetBundleDirectory(string relativePath)
 		{
 			BaseDownloadingURL = GetStreamingAssetsPath() + relativePath;
@@ -188,13 +208,19 @@ namespace UMAAssetBundleManager
 		/// on the web-server should have the same structure as the AssetBundles directory
 		/// in the demo project root. For example, AssetBundles/iOS/xyz-scene must map to
 		/// absolutePath/iOS/xyz-scene.
+		/// If you are using assetBundle encryption this should be absolutePath/Encrypted/iOS/xyz-scene
 		/// </summary>
 		/// <param name="absolutePath"></param>
 		public static void SetSourceAssetBundleURL(string absolutePath)
 		{
-			Debug.Log("[AssetBundleManager] SetSourceAssetBundleURL to " + absolutePath + Utility.GetPlatformName() + "/");
+			string encryptedSuffix = m_BundleEncryptionKey != "" ? "Encrypted/" : "";
 			if (absolutePath != "")
-				BaseDownloadingURL = absolutePath + Utility.GetPlatformName() + "/";
+			{
+				if (!absolutePath.EndsWith("/"))
+					absolutePath += "/";
+				Debug.Log("[AssetBundleManager] SetSourceAssetBundleURL to " + absolutePath + encryptedSuffix + Utility.GetPlatformName() + "/");
+				BaseDownloadingURL = absolutePath + encryptedSuffix + Utility.GetPlatformName() + "/";
+			}
 		}
 
 		/// <summary>
@@ -214,7 +240,7 @@ namespace UMAAssetBundleManager
 #if UNITY_EDITOR
 					if (assetBundleName == Utility.GetPlatformName().ToLower() + "index")
 					{
-						if (EditorPrefs.GetBool("LocalAssetBundleServerEnabled") == false || SimpleWebServer.serverStarted == false)//when the user restarts Unity this might be true even if the server has not actually been started
+						if (EditorPrefs.GetBool(Application.dataPath+"LocalAssetBundleServerEnabled") == false || SimpleWebServer.serverStarted == false)//when the user restarts Unity this might be true even if the server has not actually been started
 						{
 							if (SimulateAssetBundleInEditor)
 							{
@@ -246,9 +272,7 @@ namespace UMAAssetBundleManager
 			LoadedAssetBundle bundle = null;
 			m_LoadedAssetBundles.TryGetValue(assetBundleName, out bundle);
 			if (bundle == null)
-			{
 				return null;
-			}
 
 			// No dependencies are recorded, only the bundle itself is required.
 			string[] dependencies = null;
@@ -265,19 +289,14 @@ namespace UMAAssetBundleManager
 				LoadedAssetBundle dependentBundle = null;
 				m_LoadedAssetBundles.TryGetValue(dependency, out dependentBundle);
 				if (dependentBundle == null)
-				{
 					return null;
-				}
 			}
 			return bundle;
 		}
 
 		/// <summary>
-		/// returns the download progress of an assetbundle, optionally including any bundles it is dependent on
+		/// Returns the download progress of an assetbundle, optionally including any bundles it is dependent on
 		/// </summary>
-		/// <param name="operation"></param>
-		/// <param name="andDependencies"></param>
-		/// <returns></returns>
 		static public float GetBundleDownloadProgress(string assetBundleName, bool andDependencies)
 		{
 			float overallProgress = 0;
@@ -344,7 +363,6 @@ namespace UMAAssetBundleManager
 		/// <summary>
 		/// Returns the current LoadedAssetBundlesDictionary
 		/// </summary>
-		/// <returns></returns>
 		static public Dictionary<string, LoadedAssetBundle> GetLoadedAssetBundles()
 		{
 			return m_LoadedAssetBundles;
@@ -354,8 +372,6 @@ namespace UMAAssetBundleManager
 		/// Returns true if certain asset bundle has been downloaded regardless of whether its 
 		/// whether it's dependencies have been loaded.
 		/// </summary>
-		/// <param name="assetBundleName"></param>
-		/// <returns></returns>
 		static public bool IsAssetBundleDownloaded(string assetBundleName)
 		{
 			return m_LoadedAssetBundles.ContainsKey(assetBundleName);
@@ -364,8 +380,6 @@ namespace UMAAssetBundleManager
 		/// <summary>
 		/// Returns true if any asset bundles are still downloading optionally filtered by name.
 		/// </summary>
-		/// <param name="assetBundleName"></param>
-		/// <returns></returns>
 		static public bool AreBundlesDownloading(string assetBundleName = "")
 		{
 			if (assetBundleName == "")
@@ -395,13 +409,9 @@ namespace UMAAssetBundleManager
 		static public bool IsOperationInProgress(AssetBundleLoadOperation operation)
 		{
 			if (m_InProgressOperations.Contains(operation))
-			{
 				return true;
-			}
 			else
-			{
 				return false;
-			}
 		}
 
 		/// <summary>
@@ -452,16 +462,25 @@ namespace UMAAssetBundleManager
 			return operation;
 		}
 
+		// Temporarily work around a il2cpp bug
+		static protected void LoadAssetBundle(string assetBundleName)
+		{
+			LoadAssetBundle(assetBundleName, false);
+		}
+
 		/// <summary>
 		/// Starts the download of the asset bundle identified by the given name. Also downloads any asset bundles the given asset bundle is dependent on.
 		/// </summary>
-		/// <param name="assetBundleName"></param>
-		/// <param name="isLoadingAssetBundleIndex"></param>
+		/// <param name="assetBundleName">The bundle to load- if bundles are encrypted this should be the name of the UNENCRYPTED bundle.</param>
+		/// <param name="isLoadingAssetBundleIndex">If true does not check for the existance of the assetBundleIndex. This should be false unless you ARE downloading the index</param>
+		/// <param name="useJsonIndex">if true will attempt to download an asset called [platformname]index.json unless a specific json Url is supplied in the following param</param>
+		/// <param name="jsonIndexUrl">provides a specific url to download a json index from</param>
 		public static void LoadAssetBundle(string assetBundleName, bool isLoadingAssetBundleIndex = false, bool useJsonIndex = false, string jsonIndexUrl = "")
 		{
 #if UNITY_EDITOR
-			string fromLocalServer = (EditorPrefs.GetBool("LocalAssetBundleServerEnabled") && SimpleWebServer.serverStarted) ? "from LocalServer " : "";
-			Log(LogType.Info, "Loading Asset Bundle " + fromLocalServer + (isLoadingAssetBundleIndex ? "Index: " : ": ") + assetBundleName);
+			string fromLocalServer = (EditorPrefs.GetBool(Application.dataPath+"LocalAssetBundleServerEnabled") && SimpleWebServer.serverStarted) ? "from LocalServer " : "";
+			string encrypted = BundleEncryptionKey != "" ? " (Encrypted)" : "";
+			Log(LogType.Info, "Loading Asset Bundle " + fromLocalServer + (isLoadingAssetBundleIndex ? "Index: " : ": ") + assetBundleName + encrypted);
 
 			// If we're in Editor simulation mode, we don't have to really load the assetBundle and its dependencies.
 			if (SimulateAssetBundleInEditor)
@@ -489,8 +508,6 @@ namespace UMAAssetBundleManager
 		/// Returns base downloading URL for the given asset bundle.
 		/// This URL may be overridden on per-bundle basis via overrideBaseDownloadingURL event.
 		/// </summary>
-		/// <param name="bundleName"></param>
-		/// <returns></returns>
 		protected static string GetAssetBundleBaseDownloadingURL(string bundleName)
 		{
 			if (overrideBaseDownloadingURL != null)
@@ -514,8 +531,6 @@ namespace UMAAssetBundleManager
 		/// name (without the variant tag) as the bundle identifier. The platform-specific 
 		/// code is responsible for correctly loading the bundle.
 		/// </summary>
-		/// <param name="baseAssetBundleName"></param>
-		/// <returns></returns>
 		static protected bool UsesExternalBundleVariantResolutionMechanism(string baseAssetBundleName)
 		{
 #if ENABLE_IOS_APP_SLICING
@@ -530,8 +545,6 @@ namespace UMAAssetBundleManager
 		/// <summary>
 		/// Remaps the asset bundle name to the best fitting asset bundle variant.
 		/// </summary>
-		/// <param name="assetBundleName"></param>
-		/// <returns></returns>
 		static protected string RemapVariantName(string assetBundleName)
 		{
 			string[] bundlesWithVariant = m_AssetBundleIndex.GetAllAssetBundlesWithVariant();
@@ -569,7 +582,7 @@ namespace UMAAssetBundleManager
 
 			if (bestFit == int.MaxValue - 1)
 			{
-				Debug.LogWarning("Ambigious asset bundle variant chosen because there was no matching active variant: " + bundlesWithVariant[bestFitIndex]);
+				Log(LogType.Warning, "Ambigious asset bundle variant chosen because there was no matching active variant: " + bundlesWithVariant[bestFitIndex]);
 			}
 
 			if (bestFitIndex != -1)
@@ -585,14 +598,24 @@ namespace UMAAssetBundleManager
 		/// <summary>
 		/// Sets up download operation for the given asset bundle if it's not downloaded already.
 		/// </summary>
-		/// <param name="assetBundleName"></param>
-		/// <param name="isLoadingAssetBundleIndex"></param>
-		/// <returns></returns>
-		static protected bool LoadAssetBundleInternal(string assetBundleName, bool isLoadingAssetBundleIndex = false, bool useJsonIndex = false, string jsonIndexUrl = "")
+		static protected bool LoadAssetBundleInternal(string assetBundleToFind, bool isLoadingAssetBundleIndex = false, bool useJsonIndex = false, string jsonIndexUrl = "")
 		{
+			//encrypted bundles have the suffix 'encrypted' appended to the name TODO this should probably go in the index though and be settable in the UMAAssetBundleManagerSettings window
+			//string encryptedSuffix = BundleEncryptionKey != "" ? "encrypted" : "";
+			string assetBundleToGet = assetBundleToFind;
+			if(BundleEncryptionKey != "" && m_AssetBundleIndex != null)
+			{
+				assetBundleToGet = m_AssetBundleIndex.GetAssetBundleEncryptedName(assetBundleToFind);
+				Debug.Log("assetBundleToFind was " + assetBundleToFind + " assetBundleToGet was " + assetBundleToGet);
+            }
+			else if(BundleEncryptionKey != "" && m_AssetBundleIndex == null)
+			{
+				assetBundleToGet = assetBundleToFind + "encrypted";
+			}
+
 			// Already loaded.
 			LoadedAssetBundle bundle = null;
-			m_LoadedAssetBundles.TryGetValue(assetBundleName, out bundle);
+			m_LoadedAssetBundles.TryGetValue(assetBundleToFind, out bundle);//encrypted or not this will have the assetbundlename without the 'encrypted' suffix
 			if (bundle != null && bundle.m_AssetBundle != null)
 			{
 				bundle.m_ReferencedCount++;
@@ -600,35 +623,38 @@ namespace UMAAssetBundleManager
 			}
 
 			// @TODO: Do we need to consider the referenced count of WWWs?
-			// In the demo, we never have duplicate WWWs as we wait LoadAssetAsync()/LoadLevelAsync() to be finished before calling another LoadAssetAsync()/LoadLevelAsync().
-			// But in the real case, users can call LoadAssetAsync()/LoadLevelAsync() several times then wait them to be finished which might have duplicate WWWs.
-			if (m_DownloadingBundles.Contains(assetBundleName))
+			// users can call LoadAssetAsync()/LoadLevelAsync() several times then wait them to be finished which might have duplicate WWWs.
+			if (m_DownloadingBundles.Contains(assetBundleToFind))
 				return true;
 
-			string bundleBaseDownloadingURL = GetAssetBundleBaseDownloadingURL(assetBundleName);
+			string bundleBaseDownloadingURL = GetAssetBundleBaseDownloadingURL(assetBundleToFind);
 
+			//TODO These dont support encrypted bundles yet
 			if (bundleBaseDownloadingURL.ToLower().StartsWith("odr://"))
 			{
 #if ENABLE_IOS_ON_DEMAND_RESOURCES
                 Log(LogType.Info, "Requesting bundle " + assetBundleName + " through ODR");
-                m_InProgressOperations.Add(new AssetBundleDownloadFromODROperation(assetBundleName));
+                m_InProgressOperations.Add(new AssetBundleDownloadFromODROperation(assetBundleToGet));
 #else
-				new ApplicationException("Can't load bundle " + assetBundleName + " through ODR: this Unity version or build target doesn't support it.");
+				new ApplicationException("Can't load bundle " + assetBundleToFind + " through ODR: this Unity version or build target doesn't support it.");
 #endif
 			}
 			else if (bundleBaseDownloadingURL.ToLower().StartsWith("res://"))
 			{
 #if ENABLE_IOS_APP_SLICING
                 Log(LogType.Info, "Requesting bundle " + assetBundleName + " through asset catalog");
-                m_InProgressOperations.Add(new AssetBundleOpenFromAssetCatalogOperation(assetBundleName));
+                m_InProgressOperations.Add(new AssetBundleOpenFromAssetCatalogOperation(assetBundleToGet));
 #else
-				new ApplicationException("Can't load bundle " + assetBundleName + " through asset catalog: this Unity version or build target doesn't support it.");
+				new ApplicationException("Can't load bundle " + assetBundleToFind + " through asset catalog: this Unity version or build target doesn't support it.");
 #endif
 			}
 			else
 			{
 				WWW download = null;
-				string url = bundleBaseDownloadingURL + assetBundleName;
+				if (!bundleBaseDownloadingURL.EndsWith("/"))
+					bundleBaseDownloadingURL += "/";
+
+				string url = bundleBaseDownloadingURL + assetBundleToGet;
 				// For index assetbundle, always download it as we don't have hash for it.
 				//TODO make something to test if there is and internet connection and if not try to get a cached version of this so we can still access the stuff that has been previously cached
 				//TODO2 Make the index cache somewhere when it is downloaded.
@@ -640,24 +666,29 @@ namespace UMAAssetBundleManager
 					}
 					else if (useJsonIndex)
 					{
-						url = url + ".json";
+						url = url+ ".json";
 					}
+					/*else
+					{
+						url = url + encryptedSuffix;
+                    }*/
 					download = new WWW(url);
 					if (download.error != null || download == null)
 					{
 						if (download.error != null)
-							Debug.LogWarning("[AssetBundleManager] " + download.error);
+							Log(LogType.Warning, download.error);
 						else
-							Debug.LogWarning("[AssetBundleManager] index new WWW(url) was NULL");
+							Log(LogType.Warning, " index new WWW(url) was NULL");
 					}
 				}
 				else
 				{
-					download = WWW.LoadFromCacheOrDownload(url, m_AssetBundleIndex.GetAssetBundleHash(assetBundleName), 0);
+					download = WWW.LoadFromCacheOrDownload(url/* + encryptedSuffix*/, m_AssetBundleIndex.GetAssetBundleHash(assetBundleToFind), 0);
 				}
-				m_InProgressOperations.Add(new AssetBundleDownloadFromWebOperation(assetBundleName, download, useJsonIndex));
+				m_InProgressOperations.Add(new AssetBundleDownloadFromWebOperation(assetBundleToFind/* + encryptedSuffix*/, download, useJsonIndex));
 			}
-			m_DownloadingBundles.Add(assetBundleName);
+
+			m_DownloadingBundles.Add(assetBundleToFind);
 
 			return false;
 		}
@@ -670,7 +701,7 @@ namespace UMAAssetBundleManager
 		{
 			if (m_AssetBundleIndex == null)
 			{
-				Debug.LogError("Please initialize AssetBundleIndex by calling AssetBundleManager.Initialize()");
+				Log(LogType.Error, "Please initialize AssetBundleIndex by calling AssetBundleManager.Initialize()");
 				return;
 			}
 
@@ -692,6 +723,11 @@ namespace UMAAssetBundleManager
 		/// </summary>
 		static public void UnloadAllAssetBundles()
 		{
+#if UNITY_EDITOR
+			// If we're in Editor simulation mode, we don't have to load the manifest assetBundle.
+			if (SimulateAssetBundleInEditor)
+				return;
+#endif
 			List<string> bundlesToUnload = new List<string>();
 			foreach (KeyValuePair<string, LoadedAssetBundle> kp in m_LoadedAssetBundles)
 			{
@@ -701,6 +737,7 @@ namespace UMAAssetBundleManager
 			foreach (string bundleName in bundlesToUnload)
 			{
 				UnloadAssetBundleInternal(bundleName);
+				UnloadDependencies(bundleName);//I think its unloading dependencies thats causing an issue with UMA
 			}
 
 		}
@@ -715,8 +752,6 @@ namespace UMAAssetBundleManager
 			if (SimulateAssetBundleInEditor)
 				return;
 #endif
-
-
 			UnloadAssetBundleInternal(assetBundleName);
 			UnloadDependencies(assetBundleName);
 
@@ -775,9 +810,7 @@ namespace UMAAssetBundleManager
 		{
 			AssetBundleDownloadOperation download = operation as AssetBundleDownloadOperation;
 			if (download == null)
-			{
 				return;
-			}
 
 			if (download.error == null)
 				m_LoadedAssetBundles.Add(download.assetBundleName, download.assetBundle);
@@ -793,10 +826,6 @@ namespace UMAAssetBundleManager
 		/// <summary>
 		/// Starts a load operation for an asset from the given asset bundle.
 		/// </summary>
-		/// <param name="assetBundleName"></param>
-		/// <param name="assetName"></param>
-		/// <param name="type"></param>
-		/// <returns></returns>
 		static public AssetBundleLoadAssetOperation LoadAssetAsync(string assetBundleName, string assetName, System.Type type)
 		{
 			Log(LogType.Info, "Loading " + assetName + " from " + assetBundleName + " bundle");
@@ -820,7 +849,7 @@ namespace UMAAssetBundleManager
 #endif
 			{
 				assetBundleName = RemapVariantName(assetBundleName);
-				LoadAssetBundle(assetBundleName);
+				LoadAssetBundle(assetBundleName, false);
 				operation = new AssetBundleLoadAssetOperationFull(assetBundleName, assetName, type);
 
 				m_InProgressOperations.Add(operation);
@@ -832,10 +861,6 @@ namespace UMAAssetBundleManager
 		/// <summary>
 		/// Starts a load operation for a level from the given asset bundle.
 		/// </summary>
-		/// <param name="assetBundleName"></param>
-		/// <param name="levelName"></param>
-		/// <param name="isAdditive"></param>
-		/// <returns></returns>
 		static public AssetBundleLoadOperation LoadLevelAsync(string assetBundleName, string levelName, bool isAdditive)
 		{
 			Log(LogType.Info, "Loading " + levelName + " from " + assetBundleName + " bundle");
@@ -850,7 +875,7 @@ namespace UMAAssetBundleManager
 #endif
 			{
 				assetBundleName = RemapVariantName(assetBundleName);
-				LoadAssetBundle(assetBundleName);
+				LoadAssetBundle(assetBundleName, false);
 				operation = new AssetBundleLoadLevelOperation(assetBundleName, levelName, isAdditive);
 
 				m_InProgressOperations.Add(operation);
