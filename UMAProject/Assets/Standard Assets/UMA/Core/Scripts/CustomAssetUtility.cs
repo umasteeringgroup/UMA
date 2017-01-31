@@ -11,7 +11,35 @@ namespace UMAEditor
 	/// </summary>
 	public static class CustomAssetUtility
 	{
-	    public static void CreateAsset<T>() where T : ScriptableObject
+        public static void CreatePrefab<T>()
+        {
+            CreatePrefab(typeof(T).Name, typeof(T));
+        }
+
+        public static void CreatePrefab(string name, params System.Type[] types)
+        {
+             string path = AssetDatabase.GetAssetPath(Selection.activeObject);
+            if (path == "")
+            {
+                path = "Assets";
+            }
+            else if (File.Exists(path))    
+            {
+                path = path.Replace("/" + Path.GetFileName(AssetDatabase.GetAssetPath(Selection.activeObject)), "");
+            }
+
+            string assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/New "+name+".prefab");
+
+            GameObject go = new GameObject(name);
+            foreach (System.Type t in types)
+            {
+                go.AddComponent(t);
+            }
+            PrefabUtility.CreatePrefab(assetPathAndName, go);
+            GameObject.DestroyImmediate(go,false);
+        }
+
+        public static void CreateAsset<T>() where T : ScriptableObject
 	    {
 	        T asset = ScriptableObject.CreateInstance<T>();
 
