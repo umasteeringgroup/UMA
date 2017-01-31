@@ -9,18 +9,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c4834e6077abe64e968f9f87c9ac70a, type: 3}
-  m_Name: MaleHair02
+  m_Name: MaleHair-1
   m_EditorClassIdentifier: 
-  overlayName: MaleHair02
+  overlayName: MaleHair-1
+  overlayType: 0
   rect:
     serializedVersion: 2
     x: 0
     y: 0
     width: 0
     height: 0
+  alphaMask: {fileID: 0}
   textureList:
-  - {fileID: 2800000, guid: 6caa7868d69c641039cd32dade8ebe16, type: 3}
-  - {fileID: 2800000, guid: 1da6e6cb0fd024049ba71421f80dd4b9, type: 3}
-  - {fileID: 2800000, guid: 06483677f981a4d16ad4c6f4a8fd0eff, type: 3}
+  - {fileID: 2800000, guid: b35ed6417921b8b4094821073059859a, type: 3}
+  - {fileID: 2800000, guid: 29a15421ab69bf84c950f2126b1cfe1c, type: 3}
+  - {fileID: 2800000, guid: fabb708a050ad5640b89586f035d9249, type: 3}
   tags: []
   material: {fileID: 11400000, guid: 8e29dbac5d2e82f44a759a7e2cc568ab, type: 2}
+  OcclusionEntries: []

@@ -25,6 +25,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -39,6 +40,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2323fdffbbd0f51409581a5ae1bab046, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  DisplayValue: 
   dnaTypeHash: 601756857
   dnaAsset: {fileID: 11400000, guid: e4fd7b2e35b82274a8ea5d4d756ca476, type: 2}
   hashList:
@@ -3534,7 +3536,7 @@ MonoBehaviour:
   lastKnownAssetPath: Assets/UMA/Extensions/DynamicCharacterSystem/Example/Humanoid/Races/DNA/HumanMaleDynamicDNAConverterBehaviour.prefab
   lastKnownDuplicateAssetPath: Assets/UMA/Extensions/DynamicCharacterSystem/Example/Humanoid/Races/DNA/HumanMaleDynamicDNAConverterBehaviour
     1.prefab
-  lastKnownInstanceID: 19472
+  lastKnownInstanceID: 23774
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1

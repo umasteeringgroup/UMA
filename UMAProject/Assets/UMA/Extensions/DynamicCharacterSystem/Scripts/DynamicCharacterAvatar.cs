@@ -1284,9 +1284,17 @@ namespace UMACharacterSystem
 
 			foreach (UMADnaBase db in umaData.GetAllDna())
 			{
+                string Category = db.GetType().ToString();
+
+                DnaConverterBehaviour dcb = activeRace.racedata.GetConverter(db);
+                if (dcb != null && (!string.IsNullOrEmpty(dcb.DisplayValue)))
+                {
+                    Category = dcb.DisplayValue;
+                }
+                
 				for (int i = 0; i < db.Count; i++)
 				{
-					dna.Add(db.Names[i], new DnaSetter(db.Names[i], db.Values[i], i, db));
+					dna.Add(db.Names[i], new DnaSetter(db.Names[i], db.Values[i], i, db, Category));
 				}
 			}
 			return dna;
@@ -3108,6 +3116,7 @@ namespace UMACharacterSystem
 	{
 		public string Name; // The name of the DNA.
 		public float Value; // Current value of the DNA.
+        public string Category;
 
 		protected int OwnerIndex;    // position of DNA in index, created at initialization
 		protected UMADnaBase Owner;  // owning DNA class. Used to set the DNA by index
@@ -3119,12 +3128,13 @@ namespace UMACharacterSystem
 		/// <param name="value"></param>
 		/// <param name="ownerIndex"></param>
 		/// <param name="owner"></param>
-		public DnaSetter(string name, float value, int ownerIndex, UMADnaBase owner)
+		public DnaSetter(string name, float value, int ownerIndex, UMADnaBase owner, string category)
 		{
 			Name = name;
 			Value = value;
 			OwnerIndex = ownerIndex;
 			Owner = owner;
+            Category = category;
 		}
 
 		/// <summary>
