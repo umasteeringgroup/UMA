@@ -136,7 +136,7 @@ namespace UMAEditor
 								DNAConvertersAdded = true;
 								_recipe.AddDNAUpdater(DnaConverter);
 								Type thisType = DnaConverter.DNAType;
-								if (DnaConverter.GetType().ToString().IndexOf("DynamicDNAConverterBehaviour") > -1)
+								if (DnaConverter is DynamicDNAConverterBehaviourBase)
 								{
 									var dna = _recipe.GetOrCreateDna(thisType, DnaConverter.DNATypeHash);
 									if (((DynamicDNAConverterBehaviourBase)DnaConverter).dnaAsset != null)
@@ -176,7 +176,7 @@ namespace UMAEditor
 				var thisDNAConverterList = standardRaceData.dnaConverterList;
 				foreach (DnaConverterBehaviour DnaConverter in thisDNAConverterList)
 				{
-					if (DnaConverter.GetType().ToString().IndexOf("DynamicDNAConverterBehaviour") > -1)
+					if (DnaConverter is DynamicDNAConverterBehaviourBase)
 					{
 						var thisDnaAsset = ((DynamicDNAConverterBehaviourBase)DnaConverter).dnaAsset;
 						var dna = _recipe.GetOrCreateDna(DnaConverter.DNAType, DnaConverter.DNATypeHash);
@@ -247,7 +247,7 @@ namespace UMAEditor
 						int dnaImported = 0;
 						for (int i = 0; i < currentDNA.Length; i++)
 						{
-							if (currentDNA[i].GetType().ToString().IndexOf("DynamicUMADna") > -1)
+							if (currentDNA[i] is DynamicUMADnaBase)
 							{
 								//keep trying to find a new home for dnavalues until they have all been set
 								dnaImported += ((DynamicUMADnaBase)currentDNA[i]).ImportUMADnaValues(currentDNA[thisUMADnaHumanoid]);
@@ -275,7 +275,7 @@ namespace UMAEditor
 						int dnaImported = 0;
 						for (int i = 0; i < currentDNA.Length; i++)
 						{
-							if (currentDNA[i].GetType().ToString().IndexOf("DynamicUMADna") > -1)
+							if (currentDNA[i] is DynamicUMADnaBase)
 							{
 								//keep trying to find a new home for dnavalues until they have all been set
 								dnaImported += ((DynamicUMADnaBase)currentDNA[i]).ImportUMADnaValues(currentDNA[thisUMADnaTutorial]);
@@ -342,43 +342,39 @@ namespace UMAEditor
 				FieldInfo ActiveWardrobeSetField = TargetType.GetField("activeWardrobeSet", BindingFlags.Public | BindingFlags.Instance);
 				List<WardrobeSettings> activeWardrobeSet = (List<WardrobeSettings>)ActiveWardrobeSetField.GetValue(target);
 
-				//if this recipeType == WardrobeCollection or DynamicCharacterAvatar or Wardrobe show a 'ConvertRecipe' button and bail/make the recipe uneditable?
-				//show this if people have already run the full conversion from the nagger
-				if (EditorPrefs.GetBool(Application.dataPath + ":UMADCARecipesUpdated") && EditorPrefs.GetBool(Application.dataPath + ":UMAWardrobeRecipesUpdated"))
+				//if this recipeType == WardrobeCollection or DynamicCharacterAvatar or Wardrobe show a 'ConvertRecipe' button
+				if (recipeType == "WardrobeCollection" || recipeType == "DynamicCharacterAvatar" || recipeType == "Wardrobe")
 				{
-					if (recipeType == "WardrobeCollection" || recipeType == "DynamicCharacterAvatar" || recipeType == "Wardrobe")
+					//we want this button to convert the UMATextRecipe to the type it should be
+					//and then for the resulting asset to be inspected
+					MethodInfo ConvertMethod = TargetType.GetMethod("ConvertToType");
+					string typeToConvertTo = "";
+					if (recipeType == "WardrobeCollection")
 					{
-						//we want this button to convert the UMATextRecipe to the type it should be
-						//and then for the resulting asset to be inspected
-						MethodInfo ConvertMethod = TargetType.GetMethod("ConvertToType");
-						string typeToConvertTo = "";
-						if (recipeType == "WardrobeCollection")
+						typeToConvertTo = "UMAWardrobeCollection";
+					}
+					else if (recipeType == "DynamicCharacterAvatar")
+					{
+						typeToConvertTo = "UMADynamicCharacterAvatarRecipe";
+					}
+					else if (recipeType == "Wardrobe")
+					{
+						typeToConvertTo = "UMAWardrobeRecipe";
+					}
+					//I know this is messy but we can get rid of all of this in the actual release since people wont have made stuff that is wrong
+					if (ConvertMethod != null && typeToConvertTo != "")
+					{
+						EditorGUILayout.HelpBox("Please convert this recipe", MessageType.Warning);
+						if (GUILayout.Button("Convert"))
 						{
-							typeToConvertTo = "UMAWardrobeCollection";
-						}
-						else if (recipeType == "DynamicCharacterAvatar")
-						{
-							typeToConvertTo = "UMADynamicCharacterAvatarRecipe";
-						}
-						else if (recipeType == "Wardrobe")
-						{
-							typeToConvertTo = "UMAWardrobeRecipe";
-						}
-						//I know this is messy but we can get rid of all of this in the actual release since people wont have made stuff that is wrong
-						if (ConvertMethod != null && typeToConvertTo != "")
-						{
-							EditorGUILayout.HelpBox("Please convert this recipe", MessageType.Warning);
-							if (GUILayout.Button("Convert"))
-							{
-								ConvertMethod.Invoke(target, new object[] { typeToConvertTo });
-							}
+							ConvertMethod.Invoke(target, new object[] { typeToConvertTo });
 						}
 					}
 				}
 
 				//Draw the recipe type dropdown for the time being but disable it for types that cant be changed
 				//if people have run the converter from the nagger stop them making UMATextRecipes that are WardrobeRecipes
-				if (recipeType == "DynamicCharacterAvatar" || (EditorPrefs.GetBool(Application.dataPath + ":UMADCARecipesUpdated") && EditorPrefs.GetBool(Application.dataPath + ":UMAWardrobeRecipesUpdated")))
+				if (recipeType == "DynamicCharacterAvatar" || (EditorPrefs.GetBool(Application.dataPath + ":UMADCARecipesUpToDate") && EditorPrefs.GetBool(Application.dataPath + ":UMAWardrobeRecipesUpToDate")))
 				EditorGUI.BeginDisabledGroup(true);
 
 				if (!recipeTypeOpts.Contains(recipeType))
@@ -393,7 +389,7 @@ namespace UMAEditor
 					doUpdate = true;
 				}
 
-				if (recipeType == "DynamicCharacterAvatar" || (EditorPrefs.GetBool(Application.dataPath + ":UMADCARecipesUpdated") && EditorPrefs.GetBool(Application.dataPath + ":UMAWardrobeRecipesUpdated")))
+				if (recipeType == "DynamicCharacterAvatar" || (EditorPrefs.GetBool(Application.dataPath + ":UMADCARecipesUpToDate") && EditorPrefs.GetBool(Application.dataPath + ":UMAWardrobeRecipesUpToDate")))
 					EditorGUI.EndDisabledGroup();
 
 				//If this is a Standard recipe or a DynamicCharacterAvatar we may need to fix or update the DNA converters

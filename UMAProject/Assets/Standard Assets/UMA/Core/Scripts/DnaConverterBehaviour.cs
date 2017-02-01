@@ -15,6 +15,10 @@ namespace UMA
 		}
 		public System.Type DNAType;
 
+        [SerializeField]
+        public string DisplayValue;
+
+
 		[SerializeField]
 		protected int dnaTypeHash;
 		public virtual int DNATypeHash

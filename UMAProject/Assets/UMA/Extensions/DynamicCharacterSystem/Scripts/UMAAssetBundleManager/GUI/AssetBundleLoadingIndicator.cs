@@ -23,6 +23,7 @@ namespace UMAAssetBundleManager
 		public GameObject indicatorObject;
 		public Text indicatorText;
 		public Slider indicatorBar;
+		public Text indicatorBarText;
 
 		public string loadingText = "Loading AssetBundles...";
 		public string unpackingText = "Unpacking AssetBundles...";
@@ -139,6 +140,10 @@ namespace UMAAssetBundleManager
 			{
 				indicatorBar.value = percentDone;
 			}
+			if (indicatorBarText != null)
+			{
+				indicatorBarText.text = donePercent + "%";
+			}
 		}
 		public void Show(string bundleToCheck, string loadingMessage = "", string unpackingMessage = "", string loadedMessage = "")
 		{
@@ -189,6 +194,10 @@ namespace UMAAssetBundleManager
 			{
 				indicatorBar.value = 1f;
 			}
+			if (indicatorBarText != null)
+			{
+				indicatorBarText.text = "100%";
+			}
 			yield return new WaitForSeconds(delayHideWhenDone);
 			ResetAndHide();
 		}
@@ -202,6 +211,10 @@ namespace UMAAssetBundleManager
 			if (indicatorText != null)
 			{
 				indicatorText.text = "";
+			}
+			if (indicatorBarText != null)
+			{
+				indicatorBarText.text = "0%";
 			}
 			if (indicatorObject != null)
 			{

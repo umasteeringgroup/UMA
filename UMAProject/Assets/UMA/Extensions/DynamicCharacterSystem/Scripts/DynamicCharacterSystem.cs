@@ -42,6 +42,8 @@ namespace UMACharacterSystem
 		[System.NonSerialized]
 		[HideInInspector]
 		public bool downloadAssetsEnabled = true;
+		//only perform the recipe check once when we gather all the recipes
+		private bool? wardrobeRecipesUpToDate = null;
 
 		public override void Awake()
         {
@@ -215,10 +217,27 @@ namespace UMACharacterSystem
 				bool dynamicallyAddFromResourcesNow = bundleToGather == "" ? dynamicallyAddFromResources : false;
 				bool found = false;
 				DynamicAssetLoader.Instance.debugOnFail = false;
-				//if the user has updated their wardrobe recipes
-				if (EditorPrefs.GetBool(Application.dataPath + ":UMAWardrobeRecipesUpdated"))
-					found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeRecipe>(ref assetBundlesUsedDict, dynamicallyAddFromResourcesNow, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesRecipesFolder, null, filename, AddRecipesFromAB);
+#if UNITY_EDITOR
+				//Doing this here takes about 20ms but I cant see any other way to reliably let the user know if they need to update any recipes
+				//because they may have added some since the last check, so setting a value in EditorPrefs is pointless.
+				if (Application.isEditor)
+				{
+					if (filename == "" && wardrobeRecipesUpToDate == null)
+					{
+						System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+						stopwatch.Start();
+						wardrobeRecipesUpToDate = UMAWardrobeRecipe.TestForOldRecipes(filename) > 0 ? false : true;
+						stopwatch.Stop();
+						Debug.Log("[DynamicCharacterSystem] Time taken for recipe check: " + (stopwatch.ElapsedMilliseconds) + "ms");
+						stopwatch.Reset();
+					}
+				}
 				else
+#endif
+				wardrobeRecipesUpToDate = true;
+
+				found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeRecipe>(ref assetBundlesUsedDict, dynamicallyAddFromResourcesNow, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesRecipesFolder, null, filename, AddRecipesFromAB);
+				if (wardrobeRecipesUpToDate == false && (!found || filename == ""))
 					found = DynamicAssetLoader.Instance.AddAssets<UMATextRecipe>(ref assetBundlesUsedDict, dynamicallyAddFromResourcesNow, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesRecipesFolder, null, filename, AddRecipesFromAB);
 				if ((!found && filename != "") || (filename == "" && (Application.isPlaying == false || addAllRecipesFromDownloadedBundles)))//The WardrobeSetMasterEditor asks DCS to get all collections, but normally collections are only requested by name
 					found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeCollection>(ref assetBundlesUsedDict, dynamicallyAddFromResourcesNow, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesRecipesFolder, null, filename, AddRecipesFromAB);

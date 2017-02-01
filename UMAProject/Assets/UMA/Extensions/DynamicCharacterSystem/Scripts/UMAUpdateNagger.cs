@@ -10,38 +10,25 @@ namespace UMAEditor
 	/// Use this to nag users to perform certain actions when the latest UMA updates require it
 	/// </summary>
 	[InitializeOnLoad]
-	public class UMAUpdateNagger
+	public class UMAUpdateNagger : UnityEditor.AssetModificationProcessor
 	{
-		static bool naggerEnabled = false;
+		static bool naggerEnabled = true;
+		static int wardrobeToUpdate = 0;
+		static int dcaToUpdate = 0;
 
 		static UMAUpdateNagger()
 		{
 			bool showNagger = false;
-			if (!EditorPrefs.GetBool(Application.dataPath + ":UMADCARecipesUpdated") || !EditorPrefs.GetBool(Application.dataPath + ":UMAWardrobeRecipesUpdated"))
-			{
-				if (!EditorPrefs.GetBool(Application.dataPath + ":UMADCARecipesUpdated"))
-				{
-					//Debug.Log("[UMAUpdateNagger] UMADCARecipesUpdated was false");
-					showNagger = true;
-				}
-				if (!EditorPrefs.GetBool(Application.dataPath + ":UMAWardrobeRecipesUpdated"))
-				{
-					//Debug.Log("[UMAUpdateNagger] UMADCARecipesUpdated was false");
-					showNagger = true;
-				}
-			}
-			else
-			{
-				var wardrobeToUpdate = UMAWardrobeRecipe.TestForOldRecipes();
-				var dcsToUpdate = UMADynamicCharacterAvatarRecipe.TestForOldRecipes();
-				if (wardrobeToUpdate > 0 || dcsToUpdate > 0)
-					showNagger = true;
-			}
+			wardrobeToUpdate = UMAWardrobeRecipe.TestForOldRecipes();
+			dcaToUpdate = UMADynamicCharacterAvatarRecipe.TestForOldRecipes();
+			if (wardrobeToUpdate > 0 || dcaToUpdate > 0)
+				showNagger = true;
 			if (showNagger && naggerEnabled)
 			{
 				EditorApplication.delayCall += ShowAfterCompile;
            }
 		}
+	
 
 		static void ShowAfterCompile()
 		{
@@ -52,7 +39,11 @@ namespace UMAEditor
 			}
 			else
 			{
-				UMANagWindow.ShowWindow();
+				UMANagWindow.wardrobeToUpdate = wardrobeToUpdate;
+				UMANagWindow.dcaToUpdate = dcaToUpdate;
+                UMANagWindow.ShowWindow();
+				dcaToUpdate = 0;
+				wardrobeToUpdate = 0;
 			}
 		}
 
@@ -60,8 +51,8 @@ namespace UMAEditor
 	}
 	public class UMANagWindow : EditorWindow
 	{
-		static int wardrobeToUpdate = 0;
-		static int dcsToUpdate = 0;
+		public static int wardrobeToUpdate = 0;
+		public static int dcaToUpdate = 0;
 
 		[UnityEditor.MenuItem("UMA/Utilities/Check Recipes Up To Date")]
 		public static void TestAndShowWindow()
@@ -70,7 +61,7 @@ namespace UMAEditor
 				return;
 
 			wardrobeToUpdate = UMAWardrobeRecipe.TestForOldRecipes();
-			dcsToUpdate = UMADynamicCharacterAvatarRecipe.TestForOldRecipes();
+			dcaToUpdate = UMADynamicCharacterAvatarRecipe.TestForOldRecipes();
 
 			EditorWindow.GetWindowWithRect<UMANagWindow>(new Rect(0f, 0f, 400f, 300f), true, "UMA Updater");
 		}
@@ -86,65 +77,27 @@ namespace UMAEditor
 		public void OnGUI()
 		{
 			bool didUpdate = false;
-			if (!EditorPrefs.GetBool(Application.dataPath + ":UMADCARecipesUpdated") || !EditorPrefs.GetBool(Application.dataPath + ":UMAWardrobeRecipesUpdated"))
+			if(wardrobeToUpdate > 0 || dcaToUpdate > 0)
 			{
 				GUILayout.Label("Please update your UMA Recipes", EditorStyles.boldLabel);
-				EditorGUILayout.HelpBox("We have updated UMA and some of your recipes need updating. Please click the button below to update your recipes", MessageType.Warning);
-				EditorGUILayout.HelpBox("Please backup your project first!", MessageType.Warning);
-				if (GUILayout.Button("Update Recipes"))
-				{
-					if (!EditorPrefs.GetBool(Application.dataPath + ":UMADCARecipesUpdated"))
-					{
-						UMADynamicCharacterAvatarRecipe.ConvertOldDCARecipes();
-						didUpdate = true;
-					}
-					if (!EditorPrefs.GetBool(Application.dataPath + ":UMAWardrobeRecipesUpdated"))
-					{
-						UMAWardrobeRecipe.ConvertOldWardrobeRecipes();
-						didUpdate = true;
-					}
-				}
-				if (didUpdate)
-				{
-					string postUpdateMessage = "All Recipes Updated! ";
-					if (UMAResourcesIndex.Instance != null)
-					{
-						UMAResourcesIndex.Instance.ClearIndex();
-						UMAResourcesIndex.Instance.IndexAllResources();
-						Debug.Log("Updated UmaResourcesIndex with new assets");
-					}
-					else
-					{
-						postUpdateMessage += "You MUST update your UMAResourcesIndex and, ";
-					}
-					postUpdateMessage += "If you are using AssetBundles, you MUST rebuild your assetBundles ";
-					postUpdateMessage += "in order for everything to work properly.";
-					EditorUtility.DisplayDialog("Recipes updated!", postUpdateMessage, "OK");
-					EditorWindow.GetWindow<UMANagWindow>().Close();
-					wardrobeToUpdate = 0;
-					dcsToUpdate = 0;
-				}
-				EditorGUILayout.Space();
-				EditorGUILayout.Space();
-				EditorGUILayout.Space();
-			}
-			else if(wardrobeToUpdate > 0 || dcsToUpdate > 0)
-			{
-				GUILayout.Label("Please update your UMA Recipes", EditorStyles.boldLabel);
-				EditorGUILayout.HelpBox(wardrobeToUpdate+" Wardrobe Recipes need updating.", MessageType.Warning);
-				EditorGUILayout.HelpBox(dcsToUpdate +" DynamicCharacterAvatar Recipes need updating.", MessageType.Warning);
-				EditorGUILayout.HelpBox("Please backup your project first!", MessageType.Warning);
+				if(wardrobeToUpdate > 0)
+					EditorGUILayout.HelpBox(wardrobeToUpdate+" Wardrobe Recipes need updating.", MessageType.Warning);
+				if(dcaToUpdate > 0)
+					EditorGUILayout.HelpBox(dcaToUpdate +" DynamicCharacterAvatar Recipes need updating.", MessageType.Warning);
+				EditorGUILayout.HelpBox("Please backup your project first.", MessageType.Info);
 				if (GUILayout.Button("Update Recipes"))
 				{
 					if (wardrobeToUpdate > 0)
 					{
-						UMADynamicCharacterAvatarRecipe.ConvertOldDCARecipes();
-						didUpdate = true;
-					}
-					if (dcsToUpdate > 0)
-					{
 						UMAWardrobeRecipe.ConvertOldWardrobeRecipes();
 						didUpdate = true;
+						wardrobeToUpdate = 0;
+					}
+					if (dcaToUpdate > 0)
+					{
+						UMADynamicCharacterAvatarRecipe.ConvertOldDCARecipes();
+						didUpdate = true;
+						dcaToUpdate = 0;
 					}
 				}
 				if (didUpdate)
@@ -172,12 +125,12 @@ namespace UMAEditor
 			else
 			{
 				EditorGUILayout.HelpBox("No Recipes needed to be updated.", MessageType.Info);
-				EditorGUILayout.HelpBox("Just for testing. Click the button below so that the 'Update Recipes' button shows again.", MessageType.Warning);
+				/*EditorGUILayout.HelpBox("Just for testing. Click the button below so that the 'Update Recipes' button shows again.", MessageType.Warning);
 				if (GUILayout.Button("ResetPrefs"))
 				{
 					EditorPrefs.SetBool(Application.dataPath + ":UMADCARecipesUpdated", false);
 					EditorPrefs.SetBool(Application.dataPath + ":UMAWardrobeRecipesUpdated", false);
-				}
+				}*/
 			}
 		}
 	}

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -398,8 +398,13 @@ namespace UMA
         /// <returns></returns>
         public override int DNATypeHash //we may not need this override since dnaTypeHash might never be 0
         {
-			get {
-				if(dnaTypeHash == 0)
+			get
+			{
+				if (dnaAsset != null)
+				{
+					return dnaAsset.dnaTypeHash;
+				}
+				else if (dnaTypeHash == 0)
             	{
                 	dnaTypeHash = GenerateUniqueDnaTypeHash();
             	}

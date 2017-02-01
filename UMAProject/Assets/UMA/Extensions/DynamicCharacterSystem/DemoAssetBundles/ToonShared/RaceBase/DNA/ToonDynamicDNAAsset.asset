@@ -11,6 +11,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 28add7ad4625f8748a81d045544985b2, type: 3}
   m_Name: ToonDynamicDNAAsset
   m_EditorClassIdentifier: 
+  dnaTypeHash: 156414067
   Names:
   - height
   - headSize

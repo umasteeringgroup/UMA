@@ -1,1 +1,2 @@
-			typeof({0:ClassName}),
+
+				typeof({0:ClassName}),

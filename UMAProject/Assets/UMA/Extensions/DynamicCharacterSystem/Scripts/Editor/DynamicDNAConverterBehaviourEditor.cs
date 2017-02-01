@@ -5,11 +5,20 @@ using System.Reflection;
 using System.Collections.Generic;
 using UnityEditor;
 using UMA;
+using UMAEditor;
+using System.IO;
 
 [CustomEditor(typeof(DynamicDNAConverterBehaviour), true)]
 public class DynamicDNAConverterBehaviourEditor : Editor
 {
-	private DynamicDNAConverterBehaviour thisDDCB;
+
+    [MenuItem("Assets/Create/UMA Dynamic DNA Converter Behavior")]
+    public static void CreateDynamicDNAConverterBehaviour()
+    {
+        CustomAssetUtility.CreatePrefab("DynamicDNAConverterBehaviour", typeof(DynamicDNAConverterBehaviour));
+    }
+
+    private DynamicDNAConverterBehaviour thisDDCB;
 	private SkeletonModifierPropertyDrawer _skelModPropDrawer = null;
 	private List<string> hashNames = new List<string>();
 	private List<int> hashes = new List<int>();

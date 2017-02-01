@@ -48,3 +48,6 @@ MonoBehaviour:
   expressionSet: {fileID: 11400000, guid: 3ed354ee89bd94ac895fe6e0e73bcf86, type: 2}
   dnaRanges:
   - {fileID: 11400000, guid: 71e836c192d6b46edbdd9cdd89da143e, type: 2}
+  raceHeight: 2
+  raceRadius: 0.25
+  raceMass: 50

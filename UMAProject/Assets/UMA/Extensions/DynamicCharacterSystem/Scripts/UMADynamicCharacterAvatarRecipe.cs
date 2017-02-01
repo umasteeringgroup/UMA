@@ -22,6 +22,7 @@ public partial class UMADynamicCharacterAvatarRecipe : UMATextRecipe
 		recipeType = "DynamicCharacterAvatar";
 	}
 
+#if UNITY_EDITOR
 	public UMADynamicCharacterAvatarRecipe(UMATextRecipe recipeToCopyFrom)
 	{
 		if (recipeToCopyFrom.recipeType == "DynamicCharacterAvatar")
@@ -29,6 +30,7 @@ public partial class UMADynamicCharacterAvatarRecipe : UMATextRecipe
 			CopyFromUTR(recipeToCopyFrom);
 		}
 	}
+#endif
 
 	public UMADynamicCharacterAvatarRecipe(DynamicCharacterAvatar dca, string recipeName = "", DynamicCharacterAvatar.SaveOptions customSaveOptions = DynamicCharacterAvatar.SaveOptions.useDefaults)
 	{
@@ -44,6 +46,7 @@ public partial class UMADynamicCharacterAvatarRecipe : UMATextRecipe
 
 	#region EDITOR ONLY METHODS
 #if UNITY_EDITOR	
+	
 	/// <summary>
 	/// If the given UMATextRecipe was of recipeType "DynamicCharacterAvatar", copies its to this UMADynamicCharacterAvatarRecipe, otherwise returns false.
 	/// </summary>
@@ -90,10 +93,6 @@ public partial class UMADynamicCharacterAvatarRecipe : UMATextRecipe
 
 #if UNITY_EDITOR
 
-	//DISABLED FOR NOW - I want to push this but not have people convert their recipes yet
-	/*
-		[UnityEditor.MenuItem("UMA/Utilities/Convert Old DynamicCharacterAvatar Recipes")]
-		*/
 	public static void ConvertOldDCARecipes()
 	{
 		var allTextRecipeGUIDs = AssetDatabase.FindAssets("t:UMATextRecipe");
@@ -107,7 +106,7 @@ public partial class UMADynamicCharacterAvatarRecipe : UMATextRecipe
 			var thisDCS = ScriptableObject.CreateInstance<UMADynamicCharacterAvatarRecipe>();
 			thisDCS.ConvertFromUTR(thisUTR);
 		}
-		EditorPrefs.SetBool(Application.dataPath + ":UMADCARecipesUpdated", true);
+		EditorPrefs.SetBool(Application.dataPath + ":UMADCARecipesUpToDate", true);
 		Resources.UnloadUnusedAssets();
 	}
 
@@ -127,7 +126,15 @@ public partial class UMADynamicCharacterAvatarRecipe : UMATextRecipe
 			if (thisUTR.recipeType == "DynamicCharacterAvatar" && thisUTR.GetType() == typeof(UMATextRecipe))
 				oldRecipesFound++;
 		}
-		Debug.Log(oldRecipesFound + " UMATextRecipes require converting to UMADynamicCharacterAvatarRecipes.");
+		if (oldRecipesFound > 0)
+		{
+			Debug.LogWarning(oldRecipesFound + " UMATextRecipes require converting to UMADynamicCjaracterAvatarRecipes. Please go to UMA > Utilities > Convert Old Recipes to update them");
+			EditorPrefs.SetBool(Application.dataPath + ":UMADCARecipesUpToDate", false);
+		}
+		else
+		{
+			EditorPrefs.SetBool(Application.dataPath + ":UMADCARecipesUpToDate", true);
+		}
 		Resources.UnloadUnusedAssets();
 		return oldRecipesFound;
 	}

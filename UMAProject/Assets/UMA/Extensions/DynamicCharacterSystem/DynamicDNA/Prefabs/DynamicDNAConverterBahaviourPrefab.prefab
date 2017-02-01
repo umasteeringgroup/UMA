@@ -25,6 +25,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -40,6 +41,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dnaTypeHash: 642525823
+  dnaAsset: {fileID: 0}
   hashList:
   - hashName: HeadAdjust
     hash: -423229038
@@ -191,16 +193,16 @@ MonoBehaviour:
     hash: 1574626840
   skeletonModifiers: []
   overallModifiersEnabled: 1
+  overallScale: 1
   heightModifiers: {x: 0.85, y: 1.2}
   radiusModifier: 0.28
   massModifiers: {x: 46, y: 26, z: 26}
-  dnaAsset: {fileID: 0}
   startingPose: {fileID: 0}
   startingPoseWeight: 1
   lastKnownAssetPath: Assets/UMA/Extensions/DynamicCharacterSystem/DynamicDNA/Prefabs/DynamicDNAConverterBahaviourPrefab.prefab
   lastKnownDuplicateAssetPath: Assets/UMA/Extensions/DynamicCharacterSystem/DynamicDNA/Prefabs/DynamicDNAConverterBahaviourPrefab
     1.prefab
-  lastKnownInstanceID: 13912
+  lastKnownInstanceID: 24964
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1

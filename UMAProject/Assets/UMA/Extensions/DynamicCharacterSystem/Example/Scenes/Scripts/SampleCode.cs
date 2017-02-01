@@ -171,8 +171,8 @@ public class SampleCode : MonoBehaviour {
     public void DynamicCreateClick()
     {
         string[] files = { "Fram", "Bob", "Gobs" };
-        float x = Random.Range(-4.0f, 4.0f);
-        float z = Random.Range(1.0f, 8.0f);
+        float x = Random.Range(-8.0f, 8.0f);
+        float z = Random.Range(1.0f, 12.0f);
         GameObject go = GameObject.Instantiate(AvatarPrefab);
         DynamicCharacterAvatar dca = go.GetComponent<DynamicCharacterAvatar>();
 #if false
@@ -181,6 +181,7 @@ public class SampleCode : MonoBehaviour {
         dca.Preload(t.text);
 #else
         // this shows how to load it from a resource file at initialization
+        dca.loadPathType = DynamicCharacterAvatar.loadPathTypes.CharacterSystem;
         dca.loadFilename = files[Random.Range(0, 3)];
 #endif
         go.transform.localPosition = new Vector3(x, 0, z);
@@ -192,14 +193,28 @@ public class SampleCode : MonoBehaviour {
         Orbiter.Reset();
     }
 
+    public void ToggleUpdateBounds()
+    {
+        SkinnedMeshRenderer[] sm = FindObjectsOfType<SkinnedMeshRenderer>();
+        foreach(SkinnedMeshRenderer smr in sm)
+        {
+            smr.updateWhenOffscreen = !smr.updateWhenOffscreen;
+        }
+    }
+
     public void RandomClick()
+    {
+        RandomizeAvatar(Avatar);
+    }
+
+    private void RandomizeAvatar(DynamicCharacterAvatar Avatar)
     {
         Dictionary<string, List<UMATextRecipe>> recipes = Avatar.AvailableRecipes;
 
         // Set random wardrobe slots.
-        foreach(string SlotName in recipes.Keys)
+        foreach (string SlotName in recipes.Keys)
         {
-            int cnt = recipes[SlotName].Count; 
+            int cnt = recipes[SlotName].Count;
             if (cnt > 0)
             {
                 //Get a random recipe from the slot, and apply it
@@ -218,8 +233,8 @@ public class SampleCode : MonoBehaviour {
         }
 
         // Set Random DNA 
-        Dictionary<string,DnaSetter> setters = Avatar.GetDNA();
-        foreach(KeyValuePair<string, DnaSetter> dna in setters)
+        Dictionary<string, DnaSetter> setters = Avatar.GetDNA();
+        foreach (KeyValuePair<string, DnaSetter> dna in setters)
         {
             dna.Value.Set(0.35f + (Random.value * 0.3f));
         }
@@ -231,7 +246,7 @@ public class SampleCode : MonoBehaviour {
         Avatar.SetColor("Hair", HairColors.colors[RandHair]);
         Avatar.SetColor("Skin", SkinColors.colors[RandSkin]);
         Avatar.BuildCharacter();
-        Avatar.ForceUpdate(true,true,true);
+        Avatar.ForceUpdate(true, true, true);
     }
 
     public void LinkToAssets()

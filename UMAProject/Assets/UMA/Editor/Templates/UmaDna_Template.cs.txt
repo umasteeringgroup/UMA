@@ -18,13 +18,14 @@ namespace UMA
 	{{
 		public static string[] GetNames(System.Type dnaType)
 		{{
-	{0:GetNames}
+{0:GetNames}
 			return new string[0];
 		}}
 
 		public static System.Type GetType(System.String className)
 		{{
-	{0:GetType}
+{0:GetType}
+
 			return null;
 		}}
 
@@ -32,20 +33,22 @@ namespace UMA
 		{{
 			return new System.Type[]
 			{{
-	{0:GetTypes}
+{0:GetTypes}
 			}};
 		}}
 
-		public static UMADna LoadInstance(System.Type dnaType, System.String data)
+		public static UMADnaBase LoadInstance(System.Type dnaType, System.String data)
 		{{
-	{0:Load}
+{0:Load}
+
 			return null;
 		}}
 
 		public static System.String SaveInstance(UMADnaBase instance)
 		{{
 			System.Type dnaType = instance.GetType();
-	{0:Save}
+{0:Save}
+
 			return null;
 		}}
 

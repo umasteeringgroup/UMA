@@ -26,6 +26,16 @@ namespace UMA
 
 		public Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate> raceDictionary = new Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate>();
 	    
+        public DnaConverterBehaviour GetConverter(UMADnaBase DNA)
+        {
+            foreach (DnaConverterBehaviour dcb in dnaConverterList)
+            {
+                if (dcb.DNATypeHash == DNA.DNATypeHash)
+                    return dcb;
+            }
+            return null;
+        }
+
 		/// <summary>
 		/// The TPose data for the race rig.
 		/// </summary>
