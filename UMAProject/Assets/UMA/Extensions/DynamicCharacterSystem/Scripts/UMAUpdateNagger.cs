@@ -80,9 +80,11 @@ namespace UMAEditor
 			if(wardrobeToUpdate > 0 || dcaToUpdate > 0)
 			{
 				GUILayout.Label("Please update your UMA Recipes", EditorStyles.boldLabel);
-				EditorGUILayout.HelpBox(wardrobeToUpdate+" Wardrobe Recipes need updating.", MessageType.Warning);
-				EditorGUILayout.HelpBox(dcaToUpdate +" DynamicCharacterAvatar Recipes need updating.", MessageType.Warning);
-				EditorGUILayout.HelpBox("Please backup your project first!", MessageType.Warning);
+				if(wardrobeToUpdate > 0)
+					EditorGUILayout.HelpBox(wardrobeToUpdate+" Wardrobe Recipes need updating.", MessageType.Warning);
+				if(dcaToUpdate > 0)
+					EditorGUILayout.HelpBox(dcaToUpdate +" DynamicCharacterAvatar Recipes need updating.", MessageType.Warning);
+				EditorGUILayout.HelpBox("Please backup your project first.", MessageType.Info);
 				if (GUILayout.Button("Update Recipes"))
 				{
 					if (wardrobeToUpdate > 0)
@@ -123,12 +125,12 @@ namespace UMAEditor
 			else
 			{
 				EditorGUILayout.HelpBox("No Recipes needed to be updated.", MessageType.Info);
-				EditorGUILayout.HelpBox("Just for testing. Click the button below so that the 'Update Recipes' button shows again.", MessageType.Warning);
+				/*EditorGUILayout.HelpBox("Just for testing. Click the button below so that the 'Update Recipes' button shows again.", MessageType.Warning);
 				if (GUILayout.Button("ResetPrefs"))
 				{
 					EditorPrefs.SetBool(Application.dataPath + ":UMADCARecipesUpdated", false);
 					EditorPrefs.SetBool(Application.dataPath + ":UMAWardrobeRecipesUpdated", false);
-				}
+				}*/
 			}
 		}
 	}

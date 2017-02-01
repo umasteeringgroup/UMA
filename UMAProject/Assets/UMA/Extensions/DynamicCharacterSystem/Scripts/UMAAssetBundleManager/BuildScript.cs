@@ -174,6 +174,9 @@ namespace UMAAssetBundleManager
 					//and build the bundle
                     BuildPipeline.BuildAssetBundles(encryptedOutputPath, encryptedBuildMap, BuildAssetBundleOptions.None, EditorUserBuildSettings.activeBuildTarget);
 				}
+				//save a json index in there too
+				var thisIndexJsonEncPath = Path.Combine(encryptedOutputPath, Utility.GetPlatformName().ToLower()) + "indexencrypted.json";
+				File.WriteAllText(thisIndexJsonEncPath, thisIndexJson);
 				AssetDatabase.DeleteAsset(thisEncryptionAssetPath);
 			}
 			//Now we can remove the temp Index item from the assetDatabase
