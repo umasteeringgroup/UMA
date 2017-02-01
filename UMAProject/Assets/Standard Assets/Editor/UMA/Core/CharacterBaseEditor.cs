@@ -1223,9 +1223,11 @@ namespace UMAEditor
 				EditorGUILayout.HelpBox("The Recipe Editor could not be drawn correctly because the libraries could not find some of the required Assets. The error message was...", MessageType.Warning);
 				EditorGUILayout.HelpBox(_errorMessage, MessageType.Error);
 				EditorGUILayout.Space();
-				//we dont want the user to edit the recipe at all in this case because if they do it will be saved incompletely 
-				return;
-            }
+				//we dont want the user to edit the recipe at all in this case because if they do it will be saved incompletely
+				//010212016 BUT we do need to output something else it looks like it doesn't work and you CAN still legitimately make NEW recipes even if the scene has no UMAContext
+				//return;
+				//TODO If we can find out if the recipe has a string and we DONT have an UMAContext we could disable editing (so the user doesn't screw up their recipes
+			}
 
 			try
 			{
