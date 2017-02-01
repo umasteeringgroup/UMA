@@ -1215,7 +1215,7 @@ namespace UMA
 					}
 				}
 			}
-			if (!assetFound && assetName != "")
+			if (!assetFound && assetName != "" && debugOnFail)
 			{
 				Debug.LogWarning("Dynamic" + typeString + "Library could not simulate the loading of " + assetName + " from any AssetBundles");
 				return assetFound;
