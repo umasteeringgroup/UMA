@@ -258,7 +258,10 @@ namespace UMAAssetBundleManager
 				{
 					if (currentEncryptionPassword == "")
 					{
-						currentEncryptionPassword = EncryptionUtil.GenerateRandomPW();
+						if (UMAABMSettings.GetEncryptionPassword() != "")
+							currentEncryptionPassword = UMAABMSettings.GetEncryptionPassword();
+						else
+							currentEncryptionPassword = EncryptionUtil.GenerateRandomPW();
 					}
 					UMAABMSettings.SetEncryptionPassword(currentEncryptionPassword);
 					buildBundlesMsg = "You have turned on encryption and need to Rebuild your bundles to encrypt them.";
