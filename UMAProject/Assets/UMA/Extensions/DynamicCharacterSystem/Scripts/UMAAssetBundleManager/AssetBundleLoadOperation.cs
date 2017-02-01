@@ -643,12 +643,20 @@ namespace UMAAssetBundleManager
 				LoadedAssetBundle loadedBundle = AssetBundleManager.GetLoadedAssetBundle(m_AssetBundleName, out m_DownloadingError);
 				if (loadedBundle != null)
 				{
-					if (loadedBundle.m_AssetBundle == null)
+					if (_isJsonIndex)
 					{
-						Debug.LogWarning("AssetBundle was null for " + m_AssetBundleName);
-                        return false;
+						AssetBundleManager.AssetBundleIndexObject = ScriptableObject.CreateInstance<AssetBundleIndex>();
+						JsonUtility.FromJsonOverwrite(loadedBundle.m_data, AssetBundleManager.AssetBundleIndexObject);
 					}
-					m_Request = loadedBundle.m_AssetBundle.LoadAssetAsync<AssetBundleIndex>(m_AssetName);
+					else
+					{
+						if (loadedBundle.m_AssetBundle == null)
+						{
+							Debug.LogWarning("AssetBundle was null for " + m_AssetBundleName);
+							return false;
+						}
+						m_Request = loadedBundle.m_AssetBundle.LoadAssetAsync<AssetBundleIndex>(m_AssetName);
+					}
 				}
 			}
 			if (m_Request != null && m_Request.isDone)
