@@ -12,9 +12,8 @@ public static class DatabaseInterface : object
 	public static IEnumerator DbRequest(WWWForm form, MyDelegate myFunction)
     {
         string result;
-
         WWW w = new WWW(URL, form);
-
+        
         yield return w;
 
         if (!String.IsNullOrEmpty(w.error))// || String.IsNullOrEmpty(w.text))

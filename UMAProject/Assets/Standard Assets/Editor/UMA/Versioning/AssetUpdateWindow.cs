@@ -20,7 +20,7 @@ namespace kode80.Versioning
 		[MenuItem( "UMA/Check for Asset Updates")]
 		public static void Init()
 		{
-			filePath = Application.dataPath + "/" + "test.unitypackage";
+			filePath = Application.dataPath + "/" + "Update.unitypackage";
 			AssetUpdateWindow win = EditorWindow.GetWindow( typeof( AssetUpdateWindow)) as AssetUpdateWindow;
 			win.titleContent = new GUIContent( "Asset Updater");
 			win.Show();
