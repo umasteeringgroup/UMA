@@ -57,6 +57,29 @@ public partial class UMATextRecipe : UMAPackedRecipeBase
 	protected virtual void ConvertFromUTR(UMATextRecipe sourceUTR, bool andSelect = false) { }
 #endif
 
+#if UNITY_EDITOR
+	/// <summary>
+	/// Creates a temporary UMAContext for use when editing recipes when the open Scene does not have an UMAContext or libraries set up
+	/// </summary>
+	public override UMAContext CreateEditorContext()
+	{
+		var EditorUMAContext = new GameObject();
+		EditorUMAContext.name = "UMAEditorContext";
+		//Make this GameObject not show up in the scene
+		EditorUMAContext.hideFlags = HideFlags.HideInHierarchy;
+		var thisUMAContext = EditorUMAContext.AddComponent<UMAContext>();
+		UMAContext.Instance = thisUMAContext;
+		//we need to add the libraries as components of the game object too
+		//and then set THOSE components to the umaContext component
+		thisUMAContext.raceLibrary = EditorUMAContext.AddComponent<DynamicRaceLibrary>();
+		thisUMAContext.overlayLibrary = EditorUMAContext.AddComponent<DynamicOverlayLibrary>();
+		thisUMAContext.slotLibrary = EditorUMAContext.AddComponent<DynamicSlotLibrary>();
+		thisUMAContext.dynamicCharacterSystem = EditorUMAContext.AddComponent<UMACharacterSystem.DynamicCharacterSystem>();
+		return EditorUMAContext.GetComponent<UMAContext>();
+	}
+#endif
+
+
 	/// <summary>
 	/// Gets the thumbnail for this WardrobeRecipe filtered by racename
 	/// </summary>
@@ -125,7 +148,7 @@ public partial class UMATextRecipe : UMAPackedRecipeBase
 	/// </summary>
 	/// <param name="umaRecipe">UMA recipe.</param>
 	/// <param name="context">Context.</param>
-	public override void Load(UMA.UMAData.UMARecipe umaRecipe, UMAContext context)
+	public override void Load(UMA.UMAData.UMARecipe umaRecipe, UMAContext context = null)
 	{
 		//This check can be removed in future- If we set the recipeType properly from now on we should not need to do this check
 		var typeInRecipe = GetRecipesType(recipeString);

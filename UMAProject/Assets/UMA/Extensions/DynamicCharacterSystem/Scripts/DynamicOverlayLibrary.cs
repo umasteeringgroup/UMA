@@ -94,15 +94,44 @@ public class DynamicOverlayLibrary : OverlayLibrary
 
     public void UpdateDynamicOverlayLibrary(int? nameHash = null)
     {
-        DynamicAssetLoader.Instance.AddAssets<OverlayDataAsset>(ref assetBundlesUsedDict, dynamicallyAddFromResources, dynamicallyAddFromAssetBundles, downloadAssetsEnabled, assetBundleNamesToSearch, resourcesFolderPath, nameHash, "", AddOverlayAssets);
+#if UNITY_EDITOR
+		//if we are in the editor and the application is not playing (i.e. we are editing recipes) just load all races
+		if (!Application.isPlaying && nameHash == null)
+			GetAllAssetsFromAssetDB();
+		else
+#endif
+			DynamicAssetLoader.Instance.AddAssets<OverlayDataAsset>(ref assetBundlesUsedDict, dynamicallyAddFromResources, dynamicallyAddFromAssetBundles, downloadAssetsEnabled, assetBundleNamesToSearch, resourcesFolderPath, nameHash, "", AddOverlayAssets);
     }
 
     public void UpdateDynamicOverlayLibrary(string overlayName)
     {
-        DynamicAssetLoader.Instance.AddAssets<OverlayDataAsset>(ref assetBundlesUsedDict, dynamicallyAddFromResources, dynamicallyAddFromAssetBundles, downloadAssetsEnabled, assetBundleNamesToSearch, resourcesFolderPath, null, overlayName, AddOverlayAssets);
+#if UNITY_EDITOR
+		//if we are in the editor and the application is not playing (i.e. we are editing recipes) just load all races
+		if (!Application.isPlaying /*&& overlayName == ""*/)
+			GetAllAssetsFromAssetDB();
+		else
+#endif
+			DynamicAssetLoader.Instance.AddAssets<OverlayDataAsset>(ref assetBundlesUsedDict, dynamicallyAddFromResources, dynamicallyAddFromAssetBundles, downloadAssetsEnabled, assetBundleNamesToSearch, resourcesFolderPath, null, overlayName, AddOverlayAssets);
     }
 
-    private void AddOverlayAssets(OverlayDataAsset[] overlays)
+#if UNITY_EDITOR
+	public void GetAllAssetsFromAssetDB()
+	{
+		var allOverlays = new List<OverlayDataAsset>();
+		var allOverlayGUIDs = AssetDatabase.FindAssets("t:OverlayDataAsset");
+		for (int i = 0; i < allOverlayGUIDs.Length; i++)
+		{
+			var thisOLPath = AssetDatabase.GUIDToAssetPath(allOverlayGUIDs[i]);
+			var thisOL = AssetDatabase.LoadAssetAtPath<OverlayDataAsset>(thisOLPath);
+			allOverlays.Add(thisOL);
+		}
+		AddOverlayAssets(allOverlays.ToArray());
+		//This just makes it super slow *every* time a recipe is loaded
+		//Resources.UnloadUnusedAssets();
+	}
+#endif
+
+	private void AddOverlayAssets(OverlayDataAsset[] overlays)
     {
         foreach (OverlayDataAsset overlay in overlays)
         {

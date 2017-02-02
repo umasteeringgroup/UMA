@@ -28,6 +28,15 @@ public abstract class UMARecipeBase : ScriptableObject
 
 	protected UMAData.UMARecipe umaRecipe;
 	protected bool cached = false;
+
+#if UNITY_EDITOR
+
+	//This is used as a base for UMATextRecipe to override, because we cannt get what we need from this assembly- but the method needs to exist here to work in RecipeEditor
+	public virtual UMAContext CreateEditorContext()
+	{
+		return null;
+	}
+#endif
 	/// <summary>
 	/// Return a cached version of the UMA recipe, Load if required.
 	/// </summary>

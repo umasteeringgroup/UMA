@@ -1,4 +1,7 @@
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -209,7 +212,28 @@ namespace UMA
         /// <param name="dynamicallyAddFromAssetBundles"></param>
         public override void FindMissingDnaAsset(string _dnaAssetName, bool dynamicallyAddFromResources = true, bool dynamicallyAddFromAssetBundles = false)
         {
-            didDnaAssetUpdate = false;
+			//if we are in the editor and the application is not running find the Asset using AssetDatabase
+#if UNITY_EDITOR
+			if (!Application.isPlaying)
+			{
+				var allDNAAssetsGUIDs = AssetDatabase.FindAssets("t:DynamicUMADnaAsset");
+				for (int i = 0; i < allDNAAssetsGUIDs.Length; i++)
+				{
+					var thisDNAPath = AssetDatabase.GUIDToAssetPath(allDNAAssetsGUIDs[i]);
+					var thisDNA = AssetDatabase.LoadAssetAtPath<DynamicUMADnaAsset>(thisDNAPath);
+					if(thisDNA.name == _dnaAssetName)
+					{
+						//Debug.Log("DynamicUMADna found  " + _dnaAssetName + " from AssetDatabase");
+						SetMissingDnaAsset(new DynamicUMADnaAsset[1] { thisDNA });
+						break;
+                    }
+				}
+				//This just makes it super slow *every* time a recipe is loaded
+				//Resources.UnloadUnusedAssets();
+				return;
+			}
+#endif
+			didDnaAssetUpdate = false;
             didDnaAssetUpdate = DynamicAssetLoader.Instance.AddAssets <UMA.DynamicUMADnaAsset > (true, true, true, "", "", null, _dnaAssetName, SetMissingDnaAsset);
             if (didDnaAssetUpdate == false)
             {
