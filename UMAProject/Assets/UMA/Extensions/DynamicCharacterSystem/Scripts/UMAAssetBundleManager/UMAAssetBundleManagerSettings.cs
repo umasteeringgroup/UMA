@@ -276,6 +276,8 @@ namespace UMAAssetBundleManager
 			if (encryptionKeysEnabled)
 			{
 				BeginVerticalIndented(10, new Color(0.75f, 0.875f, 1f));
+				//tip
+				EditorGUILayout.HelpBox("Make sure you turn on 'Use Encrypted Bundles' in the 'DynamicAssetLoader' components in your scenes.", MessageType.Info);
 				//Encryption key
 				//If we can work out a way for people to download a key we can use this tip and the 'EncryptionKeyURL' field
 				//string encryptionKeyToolTip = "This key is used to generate the required encryption keys used when encrypting your bundles. If you change this key you will need to rebuild your bundles otherwise they wont decrypt. If you use the 'Encryption Key URL' field below you MUST ensure this field is set to the same key the url will return.";
@@ -367,7 +369,7 @@ namespace UMAAssetBundleManager
 				//Encode Bundle Names
 				string encodeBundleNamesTooltip = "If true encrypted bundle names will be base64 encoded";
 				EditorGUI.BeginChangeCheck();
-				newEncodeNamesSetting = EditorGUILayout.ToggleLeft(new GUIContent("Encode Bundle Names", encodeBundleNamesTooltip), newEncodeNamesSetting);
+				newEncodeNamesSetting = EditorGUILayout.ToggleLeft(new GUIContent("Encode Bundle Names", encodeBundleNamesTooltip), currentEncodeNamesSetting);
 				if (EditorGUI.EndChangeCheck())
 				{
 					currentEncodeNamesSetting = newEncodeNamesSetting;

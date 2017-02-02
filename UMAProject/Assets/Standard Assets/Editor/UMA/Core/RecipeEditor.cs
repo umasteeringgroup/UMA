@@ -87,26 +87,30 @@ namespace UMAEditor
                 var umaRecipeBase = target as UMARecipeBase;
                 if (umaRecipeBase != null)
                 {
+					//if we dont have an umaContext the recipe wont actually load and we dont want people to edit it because it wont save properly
+					//01022016 BUT we do still ned to output the inspector or else people cant make new recipes when they have a scene open with no UMAContext
+					//TODO work out a way of editing recipes when there ISNT an UMA Context
 					var context = UMAContext.FindInstance() ;
 					if (context == null)
 					{
 						_errorMessage = "Editing a recipe requires a loaded scene with a valid UMAContext.";
                         Debug.LogWarning(_errorMessage);
-						_recipe = null;
-						return;
+						//_recipe = null;
+						//return;
 					}
-               if (context.raceLibrary == null)
-               {
+				   else if (context.raceLibrary == null)
+				   {
 						_errorMessage = "Editing a recipe requires a loaded scene with a valid UMAContext with RaceLibrary assigned.";
 						Debug.LogWarning(_errorMessage);
-                  _recipe = null;
-                  return;
-               }
+					  //_recipe = null;
+					  //return;
+				   }
 
                     umaRecipeBase.Load(_recipe, context);
                     _description = umaRecipeBase.GetInfo();
                 }
-            } catch (UMAResourceNotFoundException e)
+            }
+			catch (UMAResourceNotFoundException e)
             {
                 _errorMessage = e.Message;
             }
