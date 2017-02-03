@@ -18,6 +18,10 @@ namespace UMA
 		public bool enableDynamicIndexing = false;
 		public bool makePersistent = false;
 
+		//when generating the index this is used to warn the user of any assets that have duplicate names
+		//These will need to be made unique because the libraries ask for assets by name (because they dont know the path)
+		public UMAResourcesIndexData duplicateNamesIndex = null;
+
 		//Index (with a capital I) need to be a property that calls LoadOrCreateData if this is not initialized
 		public UMAResourcesIndexData Index
 		{
@@ -223,15 +227,20 @@ namespace UMA
 		public void IndexAllResources()
 		{
             Debug.Log("Indexing all resources");
-			if (Application.isPlaying)
+			//02022016 Make sure the index is always cleared first because sometimes the type of the asset may have changed and we dont want the old index any more
+			index = new UMAResourcesIndexData();
+			duplicateNamesIndex = new UMAResourcesIndexData();
+            if (Application.isPlaying)
 			{
 				Debug.Log("You can only create a full Resources index while the application is not playing.");
 				return;
 			}
 			var paths = AssetDatabase.GetAllAssetPaths();
 			int pathsAdded = 0;
+			string existingAsset = "";
 			for (int i = 0; i < paths.Length; i++)
 			{
+				existingAsset = "";
 				if (paths[i].IndexOf("Resources/") > -1)
 				{
 					//we need to split the path and only use the part after resources
@@ -263,11 +272,29 @@ namespace UMA
 							thisName = ((RaceData)tempObj).raceName;
 							thisHash = UMAUtils.StringToHash(thisName);
 						}
-						index.AddPath(tempObj, thisHash);
+						//Is there already an asset with this name?
+						//duplicate names only matters if they are things that will be got by the libraries BY NAME and these things currently are
+						//SlotDataAsset, OverlayDataAsset, RaceDataAsset, Maybe UMATextRecipe (and Descendents) and RuntimeAnimationControllers
+						if(tempObj.GetType() == typeof(RaceData) || tempObj.GetType() == typeof(SlotDataAsset) || tempObj.GetType() == typeof(OverlayDataAsset) || tempObj.GetType() == typeof(RuntimeAnimatorController) || tempObj.GetType() == typeof(UMATextRecipe))
+							existingAsset = index.GetPath(tempObj.GetType().ToString(), thisHash);
+						if (existingAsset != "")
+						{
+							Debug.LogWarning("had existing asset for " + thisName);
+							duplicateNamesIndex.AddPath(tempObj, thisHash);
+						}
+						else
+							index.AddPath(tempObj, thisHash);
 					}
 				}
 			}
-			Debug.Log("[UMAResourcesIndex] Added/Updated " + index.Count() + " assets in the Index");
+			var msg = "[UMAResourcesIndex] Added/Updated " + index.Count() + " assets in the Index.";
+			if(duplicateNamesIndex.Count() > 0)
+			{
+				msg += " There were also " + duplicateNamesIndex.Count() + " duplicate assets. See the UMAResourcesIndex component for details.";
+				Debug.LogWarning(msg);
+            }
+			else
+				Debug.Log(msg);
 			Save();
 			Resources.UnloadUnusedAssets();
         }

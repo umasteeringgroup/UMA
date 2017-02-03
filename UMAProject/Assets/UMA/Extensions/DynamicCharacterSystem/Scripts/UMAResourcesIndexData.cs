@@ -24,11 +24,11 @@ namespace UMA
 
 			public TypeIndex() { }
 
-			public TypeIndex(string _type, int _nameHash, string _path = "")
+			public TypeIndex(string _type, int _nameHash, string _path = "", string _fullPath = "")
 			{
 				type = _type;
 				typeFiles = new NameIndex[1];
-				typeFiles[0] = new NameIndex(_nameHash, _path);
+				typeFiles[0] = new NameIndex(_nameHash, _path, _fullPath);
 			}
 
 			public int Count()
@@ -36,7 +36,7 @@ namespace UMA
 				return typeFiles.Length;
 			}
 
-			public void Add(int nameHash, string path)
+			public void Add(int nameHash, string path, string fullPath)
 			{
 				bool found = false;
 				for (int i = 0; i < typeFiles.Length; i++)
@@ -44,6 +44,7 @@ namespace UMA
 					if (typeFiles[i].nameHash == nameHash)
 					{
 						typeFiles[i].path = path;
+						typeFiles[i].fullPath = fullPath;
 						found = true;
 					}
 				}
@@ -51,7 +52,7 @@ namespace UMA
 				{
 					var list = new NameIndex[typeFiles.Length + 1];
 					Array.Copy(typeFiles, list, typeFiles.Length);
-					list[typeFiles.Length] = new NameIndex(nameHash, path);
+					list[typeFiles.Length] = new NameIndex(nameHash, path, fullPath);
 					typeFiles = list;
 				}
 			}
@@ -71,13 +72,16 @@ namespace UMA
 				typeFiles = list;
 			}
 
-			public string Get(int nameHash)
+			public string Get(int nameHash, bool fullPath = false)
 			{
 				for (int i = 0; i < typeFiles.Length; i++)
 				{
 					if (typeFiles[i].nameHash == nameHash)
 					{
-						return typeFiles[i].path;
+						if (fullPath == true)
+							return typeFiles[i].fullPath;
+						else
+							return typeFiles[i].path;
 					}
 				}
 				return "";
@@ -89,15 +93,18 @@ namespace UMA
 		{
 			public int nameHash;
 			public string path;
+			//this is the full path rather than the resources path
+			public string fullPath;
 
 			public NameIndex()
 			{
 
 			}
-			public NameIndex(int _nameHash, string _path)
+			public NameIndex(int _nameHash, string _path, string _fullPath = "")
 			{
 				nameHash = _nameHash;
 				path = _path;
+				fullPath = _fullPath;
 			}
 
 		}
@@ -146,7 +153,7 @@ namespace UMA
 			{
 				if (data[i].type == obj.GetType().ToString())
 				{
-					data[i].Add(objNameHash, objResourcesPath);
+					data[i].Add(objNameHash, objResourcesPath, objFullPath);
 					hadType = true;
 				}
 			}
@@ -154,7 +161,7 @@ namespace UMA
 			{
 				var list = new TypeIndex[data.Length + 1];
 				Array.Copy(data, list, data.Length);
-				list[data.Length] = new TypeIndex(obj.GetType().ToString(), objNameHash, objResourcesPath);
+				list[data.Length] = new TypeIndex(obj.GetType().ToString(), objNameHash, objResourcesPath, objFullPath);
 				data = list;
 			}
 		}
@@ -190,23 +197,50 @@ namespace UMA
 			}
 		}
 		/// <summary>
-		/// Get a path out of the index, optionally filtering result based on specified folders
+		/// Get a path for the given type and name out of the index, optionally filtering result based on specified folders
 		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="thisName"></param>
-		/// <param name="foldersToSearch"></param>
-		/// <returns></returns>
-		public string GetPath<T>(string thisName, string[] foldersToSearch = null) where T : UnityEngine.Object
+		public string GetPath(string type, string nameToFind, bool fullPath = false, string[] foldersToSearch = null)
 		{
-			return GetPath<T>(UMAUtils.StringToHash(thisName), foldersToSearch);
+			return GetPath(type, UMAUtils.StringToHash(nameToFind), fullPath, foldersToSearch);
 		}
 		/// <summary>
-		/// Get a path out of the index, optionally filtering result based on specified folders
+		/// Get a path for the given type and namehash  out of the index, optionally filtering result based on specified folders
 		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="nameHash"></param>
-		/// <param name="foldersToSearch"></param>
-		/// <returns></returns>
+		public string GetPath(string type, int nameHash, bool fullPath = false, string[] foldersToSearch = null)
+		{
+			for (int i = 0; i < data.Length; i++)
+			{
+				if (data[i].type == type)
+				{
+					var foundPath = data[i].Get(nameHash, fullPath);
+					if (foldersToSearch != null && foldersToSearch.Length > 0)
+					{
+						for (int ii = 0; ii < foldersToSearch.Length; ii++)
+						{
+							if (foundPath.IndexOf(foldersToSearch[ii]) > -1)
+							{
+								return foundPath;
+							}
+						}
+					}
+					else
+					{
+						return foundPath;
+					}
+				}
+			}
+			return "";
+		}
+		/// <summary>
+		/// Get a path out of the index for the given name, optionally filtering result based on specified folders
+		/// </summary>
+		public string GetPath<T>(string nameToFind, string[] foldersToSearch = null) where T : UnityEngine.Object
+		{
+			return GetPath<T>(UMAUtils.StringToHash(nameToFind), foldersToSearch);
+		}
+		/// <summary>
+		/// Get a path out of the index for the given nameHash, optionally filtering result based on specified folders
+		/// </summary>
 		public string GetPath<T>(int nameHash, string[] foldersToSearch = null) where T : UnityEngine.Object
 		{
 			for (int i = 0; i < data.Length; i++)
@@ -232,6 +266,9 @@ namespace UMA
 			}
 			return "";
 		}
+		/// <summary>
+		/// Get all the paths for a given type out of the index, optionally filtering result based on specified folders
+		/// </summary>
 		public string[] GetPaths<T>(string[] foldersToSearch = null) where T : UnityEngine.Object
 		{
 			List<string> foundPaths = new List<string>();
