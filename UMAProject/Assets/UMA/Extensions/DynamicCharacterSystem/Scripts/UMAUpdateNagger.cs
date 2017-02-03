@@ -110,9 +110,9 @@ namespace UMAEditor
 					}
 					else
 					{
-						postUpdateMessage += "You MUST update your UMAResourcesIndex and, ";
+						postUpdateMessage += "You will need to update your UMAResourcesIndex and, ";
 					}
-					postUpdateMessage += "If you are using AssetBundles, you MUST rebuild your assetBundles ";
+					postUpdateMessage += "If you are using AssetBundles, you may need to rebuild your assetBundles ";
 					postUpdateMessage += "in order for everything to work properly.";
 					EditorUtility.DisplayDialog("Recipes updated!", postUpdateMessage, "OK");
 					EditorWindow.GetWindow<UMANagWindow>().Close();
