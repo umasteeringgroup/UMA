@@ -118,17 +118,17 @@ namespace UMAEditor
 				   }
 					//when the recipe loads it can be really slow the first time can we show a notification?
 					//this doesn't bloody show quick enough though
-					var editorAssembly = typeof(Editor).Assembly;
-					var inspectorWindowType = editorAssembly.GetType("UnityEditor.InspectorWindow");
-					inspectorWindow = EditorWindow.GetWindow(inspectorWindowType);
-					if(inspectorWindow != null)
-					inspectorWindow.ShowNotification(new GUIContent("UMA is gathering Data.."));
+					//var editorAssembly = typeof(Editor).Assembly;
+					//var inspectorWindowType = editorAssembly.GetType("UnityEditor.InspectorWindow");
+					//inspectorWindow = EditorWindow.GetWindow(inspectorWindowType);
+					//if(inspectorWindow != null)
+					//inspectorWindow.ShowNotification(new GUIContent("UMA is gathering Data.."));
 					//this is where we are waiting, but the notification does not show before this starts
                     umaRecipeBase.Load(_recipe, context);
                     _description = umaRecipeBase.GetInfo();
 
-					if (inspectorWindow != null)
-						inspectorWindow.RemoveNotification();
+					//if (inspectorWindow != null)
+					//	inspectorWindow.RemoveNotification();
                 }
             }
 			catch (UMAResourceNotFoundException e)
