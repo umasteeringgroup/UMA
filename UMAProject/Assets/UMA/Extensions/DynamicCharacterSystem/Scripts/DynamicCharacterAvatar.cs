@@ -1331,6 +1331,7 @@ namespace UMACharacterSystem
 					//set the expression set and reset all the values
 					thisExpressionPlayer.expressionSet = expressionSetToUse;
 					thisExpressionPlayer.Values = new float[thisExpressionPlayer.Values.Length];
+					thisExpressionPlayer.Initialize();
 				}
 			}
 		}
