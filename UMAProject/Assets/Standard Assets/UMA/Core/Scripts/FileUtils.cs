@@ -1,7 +1,9 @@
-﻿using System;
+using UnityEngine;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 
 namespace UMA
 {
@@ -67,6 +69,33 @@ namespace UMA
 		{
 			if (System.IO.Directory.Exists(path)) return;
 			System.IO.Directory.CreateDirectory(path);
+		}
+
+		/// <summary>
+		/// Returns the UMAInternalDataStore folder path. Use this to store generated data files that UMA needs, to make it less likely they will be deleted or moved by users.
+		/// </summary>
+		/// <param name="fullPath">if true returns the full system path, otherwise returns path starting with "Assets/"</param>
+		/// <param name="editorOnly">if false the path will be the Resources folder inside "UMAInternalDataStore" and will be included in the game.</param>
+		public static string GetInternalDataStoreFolder(bool fullPath = false, bool editorOnly = true)
+		{
+			var settingsFolderPath = "";
+			if (fullPath)
+				settingsFolderPath = Path.Combine(Application.dataPath, Path.Combine("UMA", "UMAInternalDataStore"));
+			else
+				settingsFolderPath = Path.Combine("Assets", Path.Combine("UMA", "UMAInternalDataStore"));
+			if (editorOnly)
+			{
+				settingsFolderPath = Path.Combine(settingsFolderPath, "InEditor");
+			}
+			else
+			{
+				settingsFolderPath = Path.Combine(settingsFolderPath, Path.Combine("InGame", "Resources"));
+			}
+			if (!Directory.Exists(settingsFolderPath))
+				Directory.CreateDirectory(settingsFolderPath);
+			if (fullPath)
+				settingsFolderPath = Path.GetFullPath(settingsFolderPath);
+			return settingsFolderPath;
 		}
 	}
 }

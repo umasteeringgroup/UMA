@@ -183,19 +183,20 @@ namespace UMA
 					totalIndexedFiles += index.data[i].typeFiles.Length;
 				}
 			}
-			string info = "Total files indexed: " + totalIndexedFiles + " in " + totalIndexedTypes + " Types"/*.\nIndexed Types: \n" + String.Join(", ", typeNames.ToArray())*/;
+			string info = "Total files indexed: " + totalIndexedFiles + " in " + totalIndexedTypes + " Types";
 			return info;
 		}
 #if UNITY_EDITOR
 
         private string GetIndexPath()
         {
-            if (!string.IsNullOrEmpty(dataAssetPath))
+			/*if (!string.IsNullOrEmpty(dataAssetPath))
             {
                 return dataAssetPath;
             }
-            return AssetDatabase.GetAssetPath(Resources.Load("UMAResourcesIndex"));
-        }
+            return AssetDatabase.GetAssetPath(Resources.Load("UMAResourcesIndex"));*/
+			return Path.Combine(FileUtils.GetInternalDataStoreFolder(false, false), "UMAResourcesIndex.txt");
+		}
 #endif
 
         /// <summary>
@@ -275,7 +276,7 @@ namespace UMA
 						//Is there already an asset with this name?
 						//duplicate names only matters if they are things that will be got by the libraries BY NAME and these things currently are
 						//SlotDataAsset, OverlayDataAsset, RaceDataAsset, Maybe UMATextRecipe (and Descendents) and RuntimeAnimationControllers
-						if(tempObj.GetType() == typeof(RaceData) || tempObj.GetType() == typeof(SlotDataAsset) || tempObj.GetType() == typeof(OverlayDataAsset) || tempObj.GetType() == typeof(RuntimeAnimatorController) || tempObj.GetType() == typeof(UMATextRecipe))
+						if(tempObj.GetType() == typeof(RaceData) || tempObj.GetType() == typeof(SlotDataAsset) || tempObj.GetType() == typeof(OverlayDataAsset) || tempObj.GetType() == typeof(RuntimeAnimatorController))
 							existingAsset = index.GetPath(tempObj.GetType().ToString(), thisHash);
 						if (existingAsset != "")
 						{

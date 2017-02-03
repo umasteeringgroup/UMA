@@ -166,19 +166,21 @@ namespace UMAAssetBundleManager
         {
             if(_serverURL != "")
             {
-                string serverResourcesDirectory = "Assets/UMA/Extensions/DynamicCharacterSystem/UMAAssetBundleManager/Resources";
-                string serverUrlPath = Path.Combine(serverResourcesDirectory, "localServerURL.bytes");
-                Directory.CreateDirectory(serverResourcesDirectory);
-                UMA.FileUtils.WriteAllText(serverUrlPath, _serverURL);
+				//string serverResourcesDirectory = "Assets/UMA/Extensions/DynamicCharacterSystem/UMAAssetBundleManager/Resources";
+				//string serverUrlPath = Path.Combine(serverResourcesDirectory, "localServerURL.bytes");
+				// Directory.CreateDirectory(serverResourcesDirectory);
+				string serverUrlPath = Path.Combine(UMA.FileUtils.GetInternalDataStoreFolder(false, true), "localServerURL.bytes");
+				UMA.FileUtils.WriteAllText(serverUrlPath, _serverURL);
                 AssetDatabase.Refresh();
             }
         }
         //but we dont want it hanging around afterwards
         public static void DestroyServerURLFile()
         {
-            string serverResourcesDirectory = "Assets/UMA/Extensions/DynamicCharacterSystem/UMAAssetBundleManager/Resources";
-            string serverUrlPath = Path.Combine(serverResourcesDirectory, "localServerURL.bytes");
-            File.Delete(serverUrlPath);
+			//string serverResourcesDirectory = "Assets/UMA/Extensions/DynamicCharacterSystem/UMAAssetBundleManager/Resources";
+			//string serverUrlPath = Path.Combine(serverResourcesDirectory, "localServerURL.bytes");
+			string serverUrlPath = Path.Combine(UMA.FileUtils.GetInternalDataStoreFolder(false, true), "localServerURL.bytes");
+			File.Delete(serverUrlPath);
             AssetDatabase.Refresh();
         }
 #endif

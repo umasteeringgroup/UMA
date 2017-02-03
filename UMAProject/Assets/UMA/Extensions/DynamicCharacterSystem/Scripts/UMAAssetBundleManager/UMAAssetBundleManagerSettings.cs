@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using System.Text.RegularExpressions;
 using UMAEditor;
+using UMA;
 
 namespace UMAAssetBundleManager
 {
@@ -647,10 +648,7 @@ namespace UMAAssetBundleManager
 
 		private static string GetSettingsFolderPath()
 		{
-			var settingsFolderPath = Path.Combine(Application.dataPath, Path.Combine("UMA", "UMAEncryptionSettings"));
-			if (!Directory.Exists(settingsFolderPath))
-				Directory.CreateDirectory(settingsFolderPath);
-			return settingsFolderPath;
+			return FileUtils.GetInternalDataStoreFolder(false,true);
 		}
 
 		//we are saving the encryptions settings to a text file so that teams working on the same project/ github etc/ can all use the same settings
