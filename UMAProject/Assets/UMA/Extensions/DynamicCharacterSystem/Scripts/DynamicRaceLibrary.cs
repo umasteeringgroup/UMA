@@ -181,6 +181,18 @@ public class DynamicRaceLibrary : RaceLibrary
 #if UNITY_EDITOR
 			if (!Application.isPlaying)
 			{
+				bool alreadyExisted = false;
+
+				foreach(RaceData addedRace in raceElementList)
+				{
+					if (addedRace == race)
+					{
+						alreadyExisted = true;
+						break;
+					}
+				}
+				if (alreadyExisted)
+					continue;
 				if (!editorAddedAssets.Contains(race))
 				{
 					editorAddedAssets.Add(race);

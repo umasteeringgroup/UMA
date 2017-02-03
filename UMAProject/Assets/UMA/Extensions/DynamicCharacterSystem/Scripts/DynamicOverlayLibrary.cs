@@ -131,6 +131,7 @@ public class DynamicOverlayLibrary : OverlayLibrary
 	}
 #endif
 
+#pragma warning disable 618
 	private void AddOverlayAssets(OverlayDataAsset[] overlays)
     {
         foreach (OverlayDataAsset overlay in overlays)
@@ -138,7 +139,18 @@ public class DynamicOverlayLibrary : OverlayLibrary
 #if UNITY_EDITOR
             if (!Application.isPlaying)
             {
-                if(!editorAddedAssets.Contains(overlay))
+				bool alreadyExisted = false;
+				foreach (OverlayDataAsset addedOverlay in overlayElementList)
+				{
+					if (addedOverlay == overlay)
+					{
+						alreadyExisted = true;
+						break;
+					}
+				}
+				if (alreadyExisted)
+					continue;
+				if (!editorAddedAssets.Contains(overlay))
                     editorAddedAssets.Add(overlay);
             }
             else
@@ -148,6 +160,7 @@ public class DynamicOverlayLibrary : OverlayLibrary
 		//This doesn't actually seem to do anything apart from slow things down
 		//StartCoroutine(CleanOverlaysFromResourcesAndBundles());
 	}
+#pragma warning restore 618
 
 	/*IEnumerator CleanOverlaysFromResourcesAndBundles()
     {
@@ -156,7 +169,7 @@ public class DynamicOverlayLibrary : OverlayLibrary
         yield break;
     }*/
 
-    public override OverlayData InstantiateOverlay(string name)
+	public override OverlayData InstantiateOverlay(string name)
     {
         OverlayData res;
         try

@@ -34,7 +34,6 @@ namespace UMAEditor
 				if (duplicateNamesIndex.isExpanded)
 				{
 					EditorGUI.indentLevel++;
-					var MaxWidth = EditorGUIUtility.currentViewWidth;
 					//do we have UMA asset duplicate names- if we do show the umaAsset duplicate names info box
 					bool haveUMADupes = false;
 					for(int i = 0; i < duplicateNamesData.arraySize; i++)

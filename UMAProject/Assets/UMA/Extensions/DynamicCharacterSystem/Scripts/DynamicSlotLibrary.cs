@@ -136,7 +136,9 @@ public class DynamicSlotLibrary : SlotLibrary
 #if UNITY_EDITOR
             if (!Application.isPlaying)
             {
-                if(!editorAddedAssets.Contains(slot))
+				if (HasSlot(slot.nameHash))
+					continue;
+				if (!editorAddedAssets.Contains(slot))
                     editorAddedAssets.Add(slot);
             }
             else
