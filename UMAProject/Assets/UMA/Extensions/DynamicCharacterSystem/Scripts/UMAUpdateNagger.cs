@@ -10,23 +10,16 @@ namespace UMAEditor
 	/// Use this to nag users to perform certain actions when the latest UMA updates require it
 	/// </summary>
 	[InitializeOnLoad]
-	public class UMAUpdateNagger : UnityEditor.AssetModificationProcessor
+	public class UMAUpdateNagger
 	{
 		static bool naggerEnabled = true;
-		static int wardrobeToUpdate = 0;
-		static int dcaToUpdate = 0;
 
 		static UMAUpdateNagger()
 		{
-			bool showNagger = false;
-			wardrobeToUpdate = UMAWardrobeRecipe.TestForOldRecipes();
-			dcaToUpdate = UMADynamicCharacterAvatarRecipe.TestForOldRecipes();
-			if (wardrobeToUpdate > 0 || dcaToUpdate > 0)
-				showNagger = true;
-			if (showNagger && naggerEnabled)
+			if (!Application.isPlaying && naggerEnabled)
 			{
 				EditorApplication.delayCall += ShowAfterCompile;
-           }
+			}
 		}
 	
 
@@ -39,11 +32,17 @@ namespace UMAEditor
 			}
 			else
 			{
-				UMANagWindow.wardrobeToUpdate = wardrobeToUpdate;
-				UMANagWindow.dcaToUpdate = dcaToUpdate;
-                UMANagWindow.ShowWindow();
-				dcaToUpdate = 0;
-				wardrobeToUpdate = 0;
+				if (!Application.isPlaying)
+				{
+					var wardrobeToUpdate = UMAWardrobeRecipe.TestForOldRecipes();
+					var dcaToUpdate = UMADynamicCharacterAvatarRecipe.TestForOldRecipes();
+					if (wardrobeToUpdate > 0 || dcaToUpdate > 0)
+					{
+						UMANagWindow.wardrobeToUpdate = wardrobeToUpdate;
+						UMANagWindow.dcaToUpdate = dcaToUpdate;
+						UMANagWindow.ShowWindow();
+					}
+				}
 			}
 		}
 
@@ -57,7 +56,7 @@ namespace UMAEditor
 		[UnityEditor.MenuItem("UMA/Utilities/Check Recipes Up To Date")]
 		public static void TestAndShowWindow()
 		{
-			if (BuildPipeline.isBuildingPlayer || UnityEditorInternal.InternalEditorUtility.inBatchMode)
+			if (BuildPipeline.isBuildingPlayer || UnityEditorInternal.InternalEditorUtility.inBatchMode || Application.isPlaying)
 				return;
 
 			wardrobeToUpdate = UMAWardrobeRecipe.TestForOldRecipes();
@@ -68,7 +67,7 @@ namespace UMAEditor
 
 		public static void ShowWindow()
 		{
-			if (BuildPipeline.isBuildingPlayer || UnityEditorInternal.InternalEditorUtility.inBatchMode)
+			if (BuildPipeline.isBuildingPlayer || UnityEditorInternal.InternalEditorUtility.inBatchMode || Application.isPlaying)
 				return;
 
 			EditorWindow.GetWindowWithRect<UMANagWindow>(new Rect(0f, 0f, 400f, 300f), true, "UMA Updater");
