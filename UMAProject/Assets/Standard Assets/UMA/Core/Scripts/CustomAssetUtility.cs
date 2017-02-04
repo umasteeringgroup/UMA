@@ -39,7 +39,7 @@ namespace UMAEditor
             GameObject.DestroyImmediate(go,false);
         }
 
-        public static void CreateAsset<T>() where T : ScriptableObject
+        public static T CreateAsset<T>(bool selectCreatedAsset = true, string newAssetName = "") where T : ScriptableObject
 	    {
 	        T asset = ScriptableObject.CreateInstance<T>();
 
@@ -53,12 +53,18 @@ namespace UMAEditor
 	            path = path.Replace("/" + Path.GetFileName(AssetDatabase.GetAssetPath(Selection.activeObject)), "");
 	        }
 
-	        string assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/New " + typeof(T).Name + ".asset");
+			var assetName = newAssetName == "" ? "New " + typeof(T).Name : newAssetName;
 
-	        AssetDatabase.CreateAsset(asset, assetPathAndName);
+			string assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/" + assetName + ".asset");
+
+			var uniqueAssetNameAndPath = AssetDatabase.GenerateUniqueAssetPath(assetPathAndName);
+
+	        AssetDatabase.CreateAsset(asset, uniqueAssetNameAndPath);
 
 	        AssetDatabase.SaveAssets();
-	        Selection.activeObject = asset;
+			if(selectCreatedAsset)
+				Selection.activeObject = asset;
+			return asset;
 	    }
 	}
 }
