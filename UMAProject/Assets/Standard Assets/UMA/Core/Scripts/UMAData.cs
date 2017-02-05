@@ -752,22 +752,33 @@ namespace UMA
 			/// </summary>
 			public void EnsureAllDNAPresent()
 			{
+				List<int> requiredDnas = new List<int>();
 				if (raceData != null)
 				{
 					foreach (var converter in raceData.dnaConverterList)
 					{
 						var dnaTypeHash = converter.DNATypeHash;
-						if (!umaDna.ContainsKey(dnaTypeHash))
+						//'old' dna converters return a typehash based on the type name. 
+						//Dynamic DNA Converters return the typehash of their dna asset or 0 if none is assigned- we dont want to include those
+						if (dnaTypeHash == 0)
+						continue;
+						requiredDnas.Add(dnaTypeHash);
+                        if (!umaDna.ContainsKey(dnaTypeHash))
 						{
 							var dna = converter.DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
 							dna.DNATypeHash = dnaTypeHash;
-							//DynamicUMADna:: needs the DNAasset from the converter
+							//DynamicUMADna:: needs the DNAasset from the converter - moved because this might change
 							if (converter is DynamicDNAConverterBehaviourBase)
 							{
 								((DynamicUMADnaBase)dna).dnaAsset = ((DynamicDNAConverterBehaviourBase)converter).dnaAsset;
 							}
 							umaDna.Add(dnaTypeHash, dna);
 							dnaValues.Add(dna);
+						}
+						else if (converter is DynamicDNAConverterBehaviourBase)
+						{
+							var dna = umaDna[dnaTypeHash];
+							((DynamicUMADnaBase)dna).dnaAsset = ((DynamicDNAConverterBehaviourBase)converter).dnaAsset;
 						}
 					}
 				}
@@ -776,6 +787,11 @@ namespace UMA
 					if (slotData != null && slotData.asset.slotDNA != null)
 					{
 						var dnaTypeHash = slotData.asset.slotDNA.DNATypeHash;
+						//'old' dna converters return a typehash based on the type name. 
+						//Dynamic DNA Converters return the typehash of their dna asset or 0 if none is assigned- we dont want to include those
+						if (dnaTypeHash == 0)
+							continue;
+						requiredDnas.Add(dnaTypeHash);
 						if (!umaDna.ContainsKey(dnaTypeHash))
 						{
 							var dna = slotData.asset.slotDNA.DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
@@ -788,8 +804,25 @@ namespace UMA
 							umaDna.Add(dnaTypeHash, dna);
 							dnaValues.Add(dna);
 						}
-					}
+						else if (slotData.asset.slotDNA is DynamicDNAConverterBehaviourBase)
+						{
+							var dna = umaDna[dnaTypeHash];
+							((DynamicUMADnaBase)dna).dnaAsset = ((DynamicDNAConverterBehaviourBase)slotData.asset.slotDNA).dnaAsset;
+						}
+                    }
 				}
+				//now remove any we no longer need
+				var keysToRemove = new List<int>();
+				foreach(var kvp in umaDna)
+				{
+					if (!requiredDnas.Contains(kvp.Key))
+						keysToRemove.Add(kvp.Key);
+				}
+				for(int i = 0; i < keysToRemove.Count; i++)
+				{
+					RemoveDna(keysToRemove[i]);
+				}
+				
 			}
 #pragma warning restore 618
 			/// <summary>
@@ -802,9 +835,18 @@ namespace UMA
 				{
 					foreach (var converter in raceData.dnaConverterList)
 					{
-						//DynamicDNAConverter:: We need to SET these values using the TypeHash since 
-						//just getting the hash of the DNAType will set the same value for all instance of a DynamicDNAConverter
-						umaDnaConverter.Add(converter.DNATypeHash, converter.ApplyDnaAction);
+						//'old' dna converters return a typehash based on the type name. 
+						//Dynamic DNA Converters return the typehash of their dna asset or 0 if none is assigned- we dont want to include those
+						if (converter.DNATypeHash == 0)
+							continue;
+						if (!umaDnaConverter.ContainsKey(converter.DNATypeHash))
+						{
+							umaDnaConverter.Add(converter.DNATypeHash, converter.ApplyDnaAction);
+						}
+						else
+						{
+							Debug.Log(raceData.raceName + " has multiple dna converters that are trying to use the same dna (" + converter.DNATypeHash + "). This is not allowed.");
+						}
 					}
 				}
 			}
@@ -821,6 +863,10 @@ namespace UMA
 				if (!umaDnaConverter.ContainsKey(dnaConverter.DNATypeHash))
 				{
 					umaDnaConverter.Add(dnaConverter.DNATypeHash, dnaConverter.ApplyDnaAction);
+				}
+				else
+				{
+					Debug.Log(raceData.raceName + " has multiple dna converters that are trying to use the same dna ("+ dnaConverter.DNATypeHash+"). This is not allowed.");
 				}
 			}
 

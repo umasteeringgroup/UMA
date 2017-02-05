@@ -51,10 +51,6 @@ namespace UMAEditor
 					{
 						_dnaTypeNames[i] = dynamicDna.dnaAsset.name + " (DynamicUMADna)";
 					}
-					else
-					{
-						_dnaTypeNames[i] = "Default " + i + " (DynamicUMADna)";
-					}
 				}
 				else
 				{

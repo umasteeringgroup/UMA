@@ -276,7 +276,7 @@ namespace UMA
 						//Is there already an asset with this name?
 						//duplicate names only matters if they are things that will be got by the libraries BY NAME and these things currently are
 						//SlotDataAsset, OverlayDataAsset, RaceDataAsset, Maybe UMATextRecipe (and Descendents) and RuntimeAnimationControllers
-						if(tempObj.GetType() == typeof(RaceData) || tempObj.GetType() == typeof(SlotDataAsset) || tempObj.GetType() == typeof(OverlayDataAsset) || tempObj.GetType() == typeof(RuntimeAnimatorController))
+						if(tempObj.GetType() == typeof(RaceData) || tempObj.GetType() == typeof(SlotDataAsset) || tempObj.GetType() == typeof(OverlayDataAsset) || tempObj.GetType() == typeof(UMATextRecipe) || tempObj.GetType() == typeof(UMAWardrobeRecipe) || tempObj.GetType() == typeof(RuntimeAnimatorController))
 							existingAsset = index.GetPath(tempObj.GetType().ToString(), thisHash);
 						if (existingAsset != "")
 						{

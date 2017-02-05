@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Reflection;
 using System.Collections.Generic;
 using UnityEngine;
@@ -172,7 +172,8 @@ namespace UMAEditor
                     thisDDCC.SaveChangesAsNew();
                 }
                 GUIHelper.EndVerticalPadded(10);
-			}else
+			}
+			else
 			{
 				thisDDCC.StopListeningForUndo();
 			}

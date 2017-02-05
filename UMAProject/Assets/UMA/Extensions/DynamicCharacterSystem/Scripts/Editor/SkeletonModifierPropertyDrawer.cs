@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEditor;
 using System.Collections;
 using System.Collections.Generic;
@@ -242,31 +242,38 @@ public class spValModifierPropertyDrawer : PropertyDrawer
         if (modifieri > 3)
         {
             string currentVal = property.FindPropertyRelative("DNATypeName").stringValue;
-            if(dnaNames == null)
-            {
-                dnaNames = DynamicDNAConverterBehaviour.SkeletonModifier.spVal.spValValue.spValModifier.spValDNATypeFallback;
-            }
-            int selectedIndex = -1;
-            string[] niceDnaNames = new string[dnaNames.Length +1];
-            niceDnaNames[0] = "None";
-            for(int i = 0; i < dnaNames.Length; i++)
-            {
-                niceDnaNames[i+1] = dnaNames[i].BreakupCamelCase();
-                if (dnaNames[i] == currentVal)
-                {
-                    selectedIndex = i;
-                }
-            }
-            int newSelectedIndex = selectedIndex == -1 ? 0 : selectedIndex +1;
-            EditorGUI.BeginChangeCheck();
-            newSelectedIndex = EditorGUI.Popup(ddTwo, newSelectedIndex, niceDnaNames);
-            if (EditorGUI.EndChangeCheck())
-            {
-                if(newSelectedIndex != selectedIndex +1)
-                {
-                    property.FindPropertyRelative("DNATypeName").stringValue = dnaNames[newSelectedIndex -1];
-                }
-            }
+			if (dnaNames == null)
+			{
+				//TODO If there are no names show a field with the dna name in it with a warning tooltip
+				//dnaNames = DynamicDNAConverterBehaviour.SkeletonModifier.spVal.spValValue.spValModifier.spValDNATypeFallback;
+				EditorGUI.BeginDisabledGroup(true);
+				EditorGUI.TextField(ddTwo, new GUIContent("","These modifiers have no DNA they can modify because you do not have any DNA Names set up!"), property.FindPropertyRelative("DNATypeName").stringValue);
+				EditorGUI.EndDisabledGroup();
+			}
+			else
+			{
+				int selectedIndex = -1;
+				string[] niceDnaNames = new string[dnaNames.Length + 1];
+				niceDnaNames[0] = "None";
+				for (int i = 0; i < dnaNames.Length; i++)
+				{
+					niceDnaNames[i + 1] = dnaNames[i]/*.BreakupCamelCase()*/;
+					if (dnaNames[i] == currentVal)
+					{
+						selectedIndex = i;
+					}
+				}
+				int newSelectedIndex = selectedIndex == -1 ? 0 : selectedIndex + 1;
+				EditorGUI.BeginChangeCheck();
+				newSelectedIndex = EditorGUI.Popup(ddTwo, newSelectedIndex, niceDnaNames);
+				if (EditorGUI.EndChangeCheck())
+				{
+					if (newSelectedIndex != selectedIndex + 1)
+					{
+						property.FindPropertyRelative("DNATypeName").stringValue = dnaNames[newSelectedIndex - 1];
+					}
+				}
+			}
         }
         else
         {

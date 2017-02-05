@@ -18,10 +18,11 @@ namespace UMA
         {
             base.dnaTypeHash = typeHash;
         }
-        #endregion
+		#endregion
 
-        #region Properties
-        public override DynamicUMADnaAsset dnaAsset
+		#region Properties
+
+		public override DynamicUMADnaAsset dnaAsset
         {
             get { return _dnaAsset; }
             set
@@ -55,8 +56,7 @@ namespace UMA
                     return _values;
                 else
                 {
-                    _values = _fallbackValues;
-                    return _values;
+					return new float[0];
                 }
                     
             }
@@ -74,6 +74,7 @@ namespace UMA
                 {
                     if(dnaAsset != null)
                     {
+						//this just checks if the names have changed while the game is actually running
                         if(_names.Length != dnaAsset.Names.Length)
                         {
                             ValidateValues(dnaAsset.Names);
@@ -83,8 +84,7 @@ namespace UMA
                 }
                 else
                 {
-                    _names = _fallbackNames;
-                    return _names;
+					return new string[0];
                 }
             }
         }
@@ -136,8 +136,8 @@ namespace UMA
             for (int i = 0; i < requiredNames.Length; i++)
             {
                 bool valueFound = false;
-                var currentNames = _names.Length > 0 ? _names : _fallbackNames;
-                for (int ii = 0; ii < currentNames.Length; ii++)
+				var currentNames = _names.Length > 0 ? _names : new string[0];
+				for (int ii = 0; ii < currentNames.Length; ii++)
                 {
                     if (currentNames[ii] == requiredNames[i])
                     {
@@ -158,14 +158,14 @@ namespace UMA
         public override float GetValue(string dnaName, bool failSilently = false)
         {
             int idx = -1;
-
-            for (int i = 0; i < Names.Length; i++)
-            {
-                if (Names[i] == dnaName)
-                {
-                    idx = i;
-                }
-            }
+			if(Names.Length > 0 && dnaName != "")
+				for (int i = 0; i < Names.Length; i++)
+				{
+					if (Names[i] == dnaName)
+					{
+						idx = i;
+					}
+				}
             if (idx == -1 && failSilently == false)
                 throw new System.ArgumentOutOfRangeException();
             else if (idx == -1 && failSilently == true)

@@ -123,7 +123,10 @@ namespace UMAEditor
 				foreach (DnaConverterBehaviour DnaConverter in thisDNAConverterList)
 				{
 					if (DnaConverter != null)
-						couldAddDNA = true;
+					{
+						if(DnaConverter.DNATypeHash != 0)
+							couldAddDNA = true;
+					}
 				}
 				if (couldAddDNA)
 				{
@@ -176,6 +179,11 @@ namespace UMAEditor
 				var thisDNAConverterList = standardRaceData.dnaConverterList;
 				foreach (DnaConverterBehaviour DnaConverter in thisDNAConverterList)
 				{
+					//'Old' UMA DNA will have a typehash based on its type name (never 0) 
+					//DynamicDNA will only be zero if the converter does not have a DNA asset assigned (and will show a warning)
+					//so if the typeHash is 0 bail
+					if (DnaConverter.DNATypeHash == 0)
+						continue;
 					if (DnaConverter is DynamicDNAConverterBehaviourBase)
 					{
 						var thisDnaAsset = ((DynamicDNAConverterBehaviourBase)DnaConverter).dnaAsset;

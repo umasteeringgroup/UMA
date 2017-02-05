@@ -38,28 +38,43 @@ namespace UMAEditor
             PrefabUtility.CreatePrefab(assetPathAndName, go);
             GameObject.DestroyImmediate(go,false);
         }
-
-        public static T CreateAsset<T>(bool selectCreatedAsset = true, string newAssetName = "") where T : ScriptableObject
+		/// <summary>
+		/// Creates a new asset of the type T
+		/// </summary>
+		/// <param name="newAssetPath">The full path relative to 'Assets' (including extension) where the file should be saved. If empty the path and name are based on the currently selected object and desired type.</param>
+		/// <param name="selectCreatedAsset">If true the created asset will be selected after it is created (and show in the inspector)</param>
+		/// <returns>t</returns>
+		public static T CreateAsset<T>(string newAssetPath = "", bool selectCreatedAsset = true) where T : ScriptableObject
 	    {
 	        T asset = ScriptableObject.CreateInstance<T>();
 
-	        string path = AssetDatabase.GetAssetPath(Selection.activeObject);
-	        if (path == "")
-	        {
-	            path = "Assets";
-	        }
-	        else if (File.Exists(path)) // modified this line, folders can have extensions.
-	        {
-	            path = path.Replace("/" + Path.GetFileName(AssetDatabase.GetAssetPath(Selection.activeObject)), "");
-	        }
+			string assetPathAndName = "";
+			if (newAssetPath != "")
+			{
+				assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(newAssetPath);
+				//make sure the user hasn't send a path that includes the desired filename
+				var dir = Path.GetDirectoryName(assetPathAndName);
+				//make sure the directory exists
+				Directory.CreateDirectory(dir);
+			}
+			else
+			{
+				var path = AssetDatabase.GetAssetPath(Selection.activeObject);
+				if (path == "")
+				{
+					path = "Assets";
+				}
+				else if (File.Exists(path)) // modified this line, folders can have extensions.
+				{
+					path = path.Replace("/" + Path.GetFileName(AssetDatabase.GetAssetPath(Selection.activeObject)), "");
+				}
 
-			var assetName = newAssetName == "" ? "New " + typeof(T).Name : newAssetName;
+				var assetName = "New " + typeof(T).Name;
 
-			string assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/" + assetName + ".asset");
+				assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/" + assetName + ".asset");
+			}
 
-			var uniqueAssetNameAndPath = AssetDatabase.GenerateUniqueAssetPath(assetPathAndName);
-
-	        AssetDatabase.CreateAsset(asset, uniqueAssetNameAndPath);
+	        AssetDatabase.CreateAsset(asset, assetPathAndName);
 
 	        AssetDatabase.SaveAssets();
 			if(selectCreatedAsset)

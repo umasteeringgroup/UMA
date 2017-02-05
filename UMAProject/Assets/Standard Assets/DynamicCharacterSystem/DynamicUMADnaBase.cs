@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 namespace UMA
@@ -20,106 +20,8 @@ namespace UMA
 
         public float[] _values = new float[0];
         public string[] _names = new string[0];
-
-        protected static float[] _fallbackValues = new float[] { //fallback to UMADnaHumanoid
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-            0.5f,
-			0.5f
-        };
-        protected static string[] _fallbackNames = new string[] //fallback to UMADnaHumanoid
-            {
-            "height",
-            "headSize",
-            "headWidth",
-            "neckThickness",
-            "armLength",
-            "forearmLength",
-            "armWidth",
-            "forearmWidth",
-            "handsSize",
-            "feetSize",
-            "legSeparation",
-            "upperMuscle",
-            "lowerMuscle",
-            "upperWeight",
-            "lowerWeight",
-            "legsSize",
-            "belly",
-            "waist",
-            "gluteusSize",
-            "earsSize",
-            "earsPosition",
-            "earsRotation",
-            "noseSize",
-            "noseCurve",
-            "noseWidth",
-            "noseInclination",
-            "nosePosition",
-            "nosePronounced",
-            "noseFlatten",
-            "chinSize",
-            "chinPronounced",
-            "chinPosition",
-            "mandibleSize",
-            "jawsSize",
-            "jawsPosition",
-            "cheekSize",
-            "cheekPosition",
-            "lowCheekPronounced",
-            "lowCheekPosition",
-            "foreheadSize",
-            "foreheadPosition",
-            "lipsSize",
-            "mouthSize",
-            "eyeRotation",
-            "eyeSize",
-            "breastSize"
-            };
-
         #endregion
+
         #region Properties
         public abstract DynamicUMADnaAsset dnaAsset { get; set; }
 
@@ -133,7 +35,9 @@ namespace UMA
         {
             get;
         }
-        public abstract float GetValue(string dnaName, bool failSilently = false);
+		#endregion
+		#region METHODS
+		public abstract float GetValue(string dnaName, bool failSilently = false);
         public abstract override float GetValue(int idx);
         public abstract void SetValue(string name, float value);
         public abstract override void SetValue(int idx, float value);
@@ -173,6 +77,6 @@ namespace UMA
             if(foundAssets.Length > 0)
             dnaAsset = foundAssets[0];
         }
-        #endregion
-    }
+		#endregion
+	}
 }
