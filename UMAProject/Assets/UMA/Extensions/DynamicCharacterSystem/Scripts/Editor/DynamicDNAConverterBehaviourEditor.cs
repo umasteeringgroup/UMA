@@ -18,7 +18,6 @@ public class DynamicDNAConverterBehaviourEditor : Editor
         CustomAssetUtility.CreatePrefab("DynamicDNAConverterBehaviour", typeof(DynamicDNAConverterBehaviour));
     }
 
-    private DynamicDNAConverterBehaviour thisDDCB;
 	private SkeletonModifierPropertyDrawer _skelModPropDrawer = null;
 	private List<string> hashNames = new List<string>();
 	private List<int> hashes = new List<int>();
@@ -69,7 +68,6 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 
 	private void Init()
 	{
-		thisDDCB = target as DynamicDNAConverterBehaviour;
 		if (_skelModPropDrawer == null)
 			_skelModPropDrawer = new SkeletonModifierPropertyDrawer();
 
@@ -542,9 +540,7 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 				}
 			}
 			//SKELETON MODIFIERS SECTION
-			int skeletonModifiersCount = skeletonModifiers.arraySize;
 			skeletonModifiers.isExpanded = EditorGUILayout.Foldout(skeletonModifiers.isExpanded, "Skeleton Modifiers");
-
 			if (skeletonModifiers.isExpanded)
 			{
 				//If dnaNames is null or empty show a warning

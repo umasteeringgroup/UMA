@@ -36,7 +36,6 @@ namespace UMAEditor
 
 		public void Init()
 		{
-			Debug.Log("DNA Asset Init happenned");
 			thisDUDA = target as DynamicUMADnaAsset;
 			//check the ID and paths
 			bool doUpdate = thisDUDA.SetCurrentAssetPath();
@@ -245,7 +244,6 @@ namespace UMAEditor
 			}
 			//ADD NEW NAME BUTTON
 			EditorGUILayout.BeginHorizontal();
-			var buttonDisabled = newDNAName == "";
 			bool canAdd = true;
 			EditorGUI.BeginChangeCheck();
 			newDNAName = EditorGUILayout.TextField(newDNAName);//this wont bloody clear after the name is added
@@ -261,7 +259,6 @@ namespace UMAEditor
 					if (Names.GetArrayElementAtIndex(ni).stringValue == newDNAName)
 					{
 						canAdd = false;
-						buttonDisabled = true;
 					}
 				}
 			}
