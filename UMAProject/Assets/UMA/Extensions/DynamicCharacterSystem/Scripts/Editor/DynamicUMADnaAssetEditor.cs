@@ -234,12 +234,13 @@ namespace UMAEditor
 				{
 					AddDefaultNames();
 				}
+				EditorGUI.BeginDisabledGroup(Names.arraySize == 0);
 				if (GUI.Button(clearButRect, new GUIContent("Clear All Names", "Clears the current names. Cannot be undone.")))
 				{
 					if (EditorUtility.DisplayDialog("Really Clear All Names?", "This will delete all the names in the list and cannot be undone. Are you sure?", "Yes", "Cancel"))
 						(target as DynamicUMADnaAsset).Names = new string[0];
 				}
-
+				EditorGUI.EndDisabledGroup();
 				EditorGUILayout.Space();
 			}
 			//ADD NEW NAME BUTTON
@@ -273,6 +274,7 @@ namespace UMAEditor
 					Names.GetArrayElementAtIndex(0).stringValue = newDNAName;
 					Names.serializedObject.ApplyModifiedProperties();
 					newDNAName = "";
+					EditorGUIUtility.keyboardControl = 0;
 				}
 			}
 			EditorGUILayout.EndHorizontal();

@@ -309,10 +309,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 643ec75e219b576489dae73d4e805742, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  makePersistent: 0
   remoteServerURL: 
   useJsonIndex: 0
   remoteServerIndexURL: 
-  makePersistent: 0
+  useEncryptedBundles: 0
+  bundleEncryptionPassword: 
   assetBundlesToPreLoad: []
   gameObjectsToActivate: []
   gameObjectsToActivateOnInit: []
@@ -321,13 +323,14 @@ MonoBehaviour:
   loadingMessage: Loading Assets...
   isInitialized: 0
   placeholderRace: {fileID: 11400000, guid: 8182baefc34d4474b939b341f9c3a712, type: 2}
-  placeholderWardrobeRecipe: {fileID: 11400000, guid: 772c88d15402a8441b564c236b3b7729,
+  placeholderWardrobeRecipe: {fileID: 11400000, guid: dc9b2ee309a14484aaf8f4c83614e499,
     type: 2}
   placeholderSlot: {fileID: 11400000, guid: 1793ec477efd5b643a2a938a41cbd8f7, type: 2}
   placeholderOverlay: {fileID: 11400000, guid: 331efa6bce027af46ae666095da5f511, type: 2}
   downloadingAssets:
     downloadingItems: []
     areDownloadedItemsReady: 1
+  debugOnFail: 1
 --- !u!114 &11453434
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -373,6 +376,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enableDynamicIndexing: 1
   makePersistent: 0
+  duplicateNamesIndex:
+    data: []
 --- !u!114 &11459230
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -749,6 +754,7 @@ MonoBehaviour:
   dynamicallyAddFromAssetBundles: 0
   assetBundlesForCharactersToSearch: 
   assetBundlesForRecipesToSearch: 
+  addAllRecipesFromDownloadedBundles: 1
   context: {fileID: 11470452}
 --- !u!1001 &100100000
 Prefab:

@@ -3439,19 +3439,19 @@ MonoBehaviour:
     loadDefaultRecipes: 1
     recipes:
     - _recipeName: FemaleHair1-Res
-      _recipe: {fileID: 11400000, guid: c80ee805aa5b13c4bb0eb211433f2fba, type: 2}
+      _recipe: {fileID: 0}
       _compatibleRaces:
       - HumanFemaleResources
     - _recipeName: FemaleUndies-Res
-      _recipe: {fileID: 11400000, guid: a19b584280d31644785d5f56713e4149, type: 2}
+      _recipe: {fileID: 0}
       _compatibleRaces:
       - HumanFemaleResources
     - _recipeName: ToonHair1
-      _recipe: {fileID: 11400000, guid: 8431fa862e3eba44a9887cf282f4a223, type: 2}
+      _recipe: {fileID: 0}
       _compatibleRaces:
       - ToonFemale
     - _recipeName: ToonFemaleUnderwear1
-      _recipe: {fileID: 11400000, guid: 7d854ee186b4cb8499257fc6c7433be0, type: 2}
+      _recipe: {fileID: 0}
       _compatibleRaces:
       - ToonFemale
   raceAnimationControllers:
@@ -3530,6 +3530,11 @@ MonoBehaviour:
   ensureSharedColors: 0
   defaultSaveOptions: 15
   BoundsOffset: {x: 0, y: 0, z: 0}
+  showPlaceholder: 1
+  previewModel: 0
+  customModel: {fileID: 0}
+  customRotation: {x: 0, y: 0, z: 0}
+  previewColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   _buildCharacterEnabled: 1
 --- !u!4 &363062548
 Transform:
@@ -8495,19 +8500,19 @@ MonoBehaviour:
     loadDefaultRecipes: 1
     recipes:
     - _recipeName: FemaleHair1-Res
-      _recipe: {fileID: 11400000, guid: c80ee805aa5b13c4bb0eb211433f2fba, type: 2}
+      _recipe: {fileID: 0}
       _compatibleRaces:
       - HumanFemaleResources
     - _recipeName: FemaleUndies-Res
-      _recipe: {fileID: 11400000, guid: a19b584280d31644785d5f56713e4149, type: 2}
+      _recipe: {fileID: 0}
       _compatibleRaces:
       - HumanFemaleResources
     - _recipeName: ToonFemaleUnderwear1
-      _recipe: {fileID: 11400000, guid: 7d854ee186b4cb8499257fc6c7433be0, type: 2}
+      _recipe: {fileID: 0}
       _compatibleRaces:
       - ToonFemale
     - _recipeName: ToonHair1
-      _recipe: {fileID: 11400000, guid: 8431fa862e3eba44a9887cf282f4a223, type: 2}
+      _recipe: {fileID: 0}
       _compatibleRaces:
       - ToonFemale
   raceAnimationControllers:
@@ -8586,6 +8591,11 @@ MonoBehaviour:
   ensureSharedColors: 0
   defaultSaveOptions: 15
   BoundsOffset: {x: 0, y: 0, z: 0}
+  showPlaceholder: 1
+  previewModel: 0
+  customModel: {fileID: 0}
+  customRotation: {x: 0, y: 0, z: 0}
+  previewColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   _buildCharacterEnabled: 1
 --- !u!1 &1155800161
 GameObject:
@@ -9009,6 +9019,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enableDynamicIndexing: 0
   makePersistent: 0
+  duplicateNamesIndex:
+    data: []
 --- !u!4 &1218724556
 Transform:
   m_ObjectHideFlags: 0
@@ -10671,19 +10683,19 @@ MonoBehaviour:
     loadDefaultRecipes: 1
     recipes:
     - _recipeName: FemaleUndies-Res
-      _recipe: {fileID: 11400000, guid: a19b584280d31644785d5f56713e4149, type: 2}
+      _recipe: {fileID: 0}
       _compatibleRaces:
       - HumanFemaleResources
     - _recipeName: FemaleHair1-Res
-      _recipe: {fileID: 11400000, guid: c80ee805aa5b13c4bb0eb211433f2fba, type: 2}
+      _recipe: {fileID: 0}
       _compatibleRaces:
       - HumanFemaleResources
     - _recipeName: ToonFemaleUnderwear1
-      _recipe: {fileID: 11400000, guid: 7d854ee186b4cb8499257fc6c7433be0, type: 2}
+      _recipe: {fileID: 0}
       _compatibleRaces:
       - ToonFemale
     - _recipeName: ToonHair1
-      _recipe: {fileID: 11400000, guid: 8431fa862e3eba44a9887cf282f4a223, type: 2}
+      _recipe: {fileID: 0}
       _compatibleRaces:
       - ToonFemale
   raceAnimationControllers:
@@ -10762,6 +10774,11 @@ MonoBehaviour:
   ensureSharedColors: 0
   defaultSaveOptions: 15
   BoundsOffset: {x: 0, y: 0, z: 0}
+  showPlaceholder: 1
+  previewModel: 0
+  customModel: {fileID: 0}
+  customRotation: {x: 0, y: 0, z: 0}
+  previewColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   _buildCharacterEnabled: 1
 --- !u!4 &1385428173
 Transform:
@@ -14639,10 +14656,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 643ec75e219b576489dae73d4e805742, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  makePersistent: 0
   remoteServerURL: 
   useJsonIndex: 0
   remoteServerIndexURL: 
-  makePersistent: 0
+  useEncryptedBundles: 0
+  bundleEncryptionPassword: 
   assetBundlesToPreLoad: []
   gameObjectsToActivate: []
   gameObjectsToActivateOnInit: []
@@ -14651,7 +14670,7 @@ MonoBehaviour:
   loadingMessage: Loading Assets...
   isInitialized: 0
   placeholderRace: {fileID: 11400000, guid: 8182baefc34d4474b939b341f9c3a712, type: 2}
-  placeholderWardrobeRecipe: {fileID: 11400000, guid: 772c88d15402a8441b564c236b3b7729,
+  placeholderWardrobeRecipe: {fileID: 11400000, guid: dc9b2ee309a14484aaf8f4c83614e499,
     type: 2}
   placeholderSlot: {fileID: 11400000, guid: 1793ec477efd5b643a2a938a41cbd8f7, type: 2}
   placeholderOverlay: {fileID: 11400000, guid: 331efa6bce027af46ae666095da5f511, type: 2}

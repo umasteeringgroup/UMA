@@ -12,7 +12,7 @@ using System.IO;
 public class DynamicDNAConverterBehaviourEditor : Editor
 {
 
-    [MenuItem("Assets/Create/UMA Dynamic DNA Converter Behavior")]
+    [MenuItem("Assets/Create/UMA Dynamic DNA Converter")]
     public static void CreateDynamicDNAConverterBehaviour()
     {
         CustomAssetUtility.CreatePrefab("DynamicDNAConverterBehaviour", typeof(DynamicDNAConverterBehaviour));
@@ -23,6 +23,9 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 	private List<int> hashes = new List<int>();
 	private string newHashName = "";
 	private int selectedAddHash = 0;
+
+	private List<string> bonesInSkeleton = new List<string>();
+
 	private string addSkelBoneName = "";
 	private int addSkelBoneHash = 0;
 	private int selectedAddProp = 0;
@@ -178,6 +181,7 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 
 	private void AddDNAConverterHashes(DynamicDNAConverterBehaviour tempDNAAsset, int addMethod)
 	{
+		bool addedHashes = false;
 		var currentHashes = addMethod == 0 ? (target as DynamicDNAConverterBehaviour).hashList : new List<DynamicDNAConverterBehaviour.HashListItem>();
 		for(int i = 0; i < tempDNAAsset.hashList.Count; i++)
 		{
@@ -192,15 +196,27 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 			}
 			if (!existed)
 			{
-				currentHashes.Add(new DynamicDNAConverterBehaviour.HashListItem(tempDNAAsset.hashList[i].hashName, tempDNAAsset.hashList[i].hash));
+				var canAdd = !minimalMode ? true : (bonesInSkeleton.Contains(tempDNAAsset.hashList[i].hashName) ? true : false);
+				if (canAdd)
+				{
+					addedHashes = true;
+					currentHashes.Add(new DynamicDNAConverterBehaviour.HashListItem(tempDNAAsset.hashList[i].hashName, tempDNAAsset.hashList[i].hash));
+				}
 			}
 		}
 		(target as DynamicDNAConverterBehaviour).hashList = currentHashes;
 		serializedObject.Update();
+		if (addedHashes)
+			UpdateHashNames();
+
 	}
 
 	private void AddDNAConverterModifiers(DynamicDNAConverterBehaviour tempDNAAsset, int addMethod)
 	{
+		//Do we need to make sure the dna names are there as well? What is there is no dna asset?
+		//Make sure all the bone hashes are there
+		AddDNAConverterHashes(tempDNAAsset, 0);
+		//now add the modifiers
 		var currentModifiers = addMethod == 0 ? (target as DynamicDNAConverterBehaviour).skeletonModifiers : new List<DynamicDNAConverterBehaviour.SkeletonModifier>();
 		for(int i = 0; i < tempDNAAsset.skeletonModifiers.Count; i++)
 		{
@@ -233,7 +249,7 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 		foldoutTipStyle.fontStyle = FontStyle.Bold;
 		//
 		//=============DNA ASSET AND EDITOR============//
-		dnaAssetExpanded = EditorGUILayout.Foldout(dnaAssetExpanded, "Dynamic DNA Names", foldoutTipStyle);
+		dnaAssetExpanded = EditorGUILayout.Foldout(dnaAssetExpanded, "Dynamic DNA", foldoutTipStyle);
 		if (dnaAssetExpanded)
 		{
 			GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
@@ -388,6 +404,7 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 							serializedObject.Update();
 							UpdateHashNames();
 						}
+						EditorGUI.BeginDisabledGroup(hashList.arraySize == 0);
 						if (GUI.Button(clearButRect, new GUIContent("Clear All Bone Hashes", "Clears the current Bone Hashes. Cannot be undone.")))
 						{
 							bool proceed = true;
@@ -402,11 +419,12 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 								UpdateHashNames();
 							}
 						}
+						EditorGUI.EndDisabledGroup();
 						EditorGUILayout.Space();
 					}
 					//create an add field for adding new hashes
 					EditorGUILayout.BeginHorizontal();
-					var buttonDisabled = newHashName == "";
+					//var buttonDisabled = newHashName == "";
 					bool canAdd = true;
 					bool notFoundInSkeleton = false;
 					bool didAdd = false;
@@ -416,7 +434,7 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 					{
 						if (newHashName != "" && canAdd)
 						{
-							buttonDisabled = false;
+							//buttonDisabled = false;
 						}
 					}
 					if (newHashName != "")
@@ -426,7 +444,7 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 							if (hashList.GetArrayElementAtIndex(ni).FindPropertyRelative("hashName").stringValue == newHashName)
 							{
 								canAdd = false;
-								buttonDisabled = true;
+								//buttonDisabled = true;
 							}
 						}
 						//if we have a skeleton available we can also check that the bone the user is trying to add exists
@@ -436,15 +454,16 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 								if (umaData.skeleton.HasBone(UMAUtils.StringToHash(newHashName)) == false)
 								{
 									canAdd = false;
-									buttonDisabled = true;
+									//buttonDisabled = true;
 									notFoundInSkeleton = true;
 								}
 							}
 					}
-					if (buttonDisabled)
+					//Dont disable because it stops looking like what you want to do, just make it do nothing if nothing is entered
+					/*if (buttonDisabled)
 					{
 						EditorGUI.BeginDisabledGroup(true);
-					}
+					}*/
 
 					if (GUILayout.Button("Add Bone Hash"))
 					{
@@ -456,12 +475,14 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 							serializedObject.Update();
 							didAdd = true;
 							UpdateHashNames();
+							//reset the bloody text field!
+							EditorGUIUtility.keyboardControl = 0;
 						}
 					}
-					if (buttonDisabled)
+					/*if (buttonDisabled)
 					{
 						EditorGUI.EndDisabledGroup();
-					}
+					}*/
 					EditorGUILayout.EndHorizontal();
 					if (canAdd == false)
 					{
@@ -551,6 +572,9 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 					showDNANamesWarning = true;
 				if(showDNANamesWarning)
 					EditorGUILayout.HelpBox("You need to have your DNA Names set up above in order for the Skeleton Modifiers to make any modifications", MessageType.Warning);
+				//If bone hashes is empty show a warning
+				if(hashList.arraySize == 0 && !minimalMode)
+					EditorGUILayout.HelpBox("You need to add the bones you want the Skeleton Modifiers to be able to modify to the 'Bone Hashes' section above.", MessageType.Warning);
 
 				EditorGUI.indentLevel++;
 				extraSkelAddDelOptsExpanded = EditorGUILayout.Foldout(extraSkelAddDelOptsExpanded, "Add/Delete Modifier Options");
@@ -575,6 +599,7 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 					//Clear all button
 					GUILayout.BeginHorizontal();
 					GUILayout.Space(EditorGUI.indentLevel * 15);
+					EditorGUI.BeginDisabledGroup(skeletonModifiers.arraySize == 0);
 					if (GUILayout.Button("Clear All Modifiers"))
 					{
 						if (EditorUtility.DisplayDialog("Really Clear All Modifiers?", "This will delete all the skeleton modifiers in the list and cannot be undone. Are you sure?", "Yes", "Cancel"))
@@ -584,6 +609,7 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 							serializedObject.Update();
 						}
 					}
+					EditorGUI.EndDisabledGroup();
 					GUILayout.EndHorizontal();
 					EditorGUILayout.Space();
 				}
@@ -605,18 +631,18 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 				EditorGUI.indentLevel--;
 				List<string> thisBoneNames = new List<string>(0);
 				EditorGUI.BeginChangeCheck();
-				string[] boneNames = new string[0];
+				//string[] boneNames = new string[0];
 				if(minimalMode == false)
 				{
-					boneNames = hashNames.ToArray();
+					bonesInSkeleton = new List<string>( hashNames.ToArray());
                 }
 				else
 				{
-					boneNames = umaData.skeleton.BoneNames;
+					bonesInSkeleton = new List<string>(umaData.skeleton.BoneNames);
 				}
-
-				Array.Sort(boneNames);
-				thisBoneNames = new List<string>(boneNames);
+				bonesInSkeleton.Sort();
+                //Array.Sort(boneNames);
+				thisBoneNames = new List<string>(bonesInSkeleton);
 				thisBoneNames.Insert(0, "Choose Bone");
 				selectedAddHash = EditorGUI.Popup(addSkelBone, selectedAddHash, thisBoneNames.ToArray());
 
@@ -673,7 +699,8 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 					addSkelBoneHash = 0;
 					addSkelBoneName = "";
 					selectedAddHash = 0;
-                }
+					EditorGUIUtility.keyboardControl = 0;
+				}
 				if (canAddSkel == false)
 				{
 					EditorGUI.EndDisabledGroup();
