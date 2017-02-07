@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83d33591a744673429e1681df5574ac0, type: 3}
+  m_Name: Human Female
+  m_EditorClassIdentifier: 
+  baseRaceRecipe: {fileID: 11400000, guid: 1ac4994352c303b4ab12614c1918034f, type: 2}
+  wardrobeSlots:
+  - None
+  - Face
+  - Eyes
+  - Hair
+  - Body
+  - Complexion
+  - Tattoo
+  - Underwear
+  - Eyebrows
+  - Beard
+  - Ears
+  - Helmet
+  - Shoulders
+  - Chest
+  - Arms
+  - Hands
+  - Waist
+  - Cape
+  - Legs
+  - Feet
+  backwardsCompatibleWith: []
+  raceThumbnails:
+    fullThumb: {fileID: 0}
+    faceThumb: {fileID: 0}
+    wardrobeSlotThumbs: []
+  raceName: HumanFemale
+  dnaConverterList:
+  - {fileID: 11400000, guid: 9e2e0dcce00983248a5c1b8107cb1b1d, type: 2}
+  - {fileID: 11400000, guid: 2a5c36ccd1f394ff3b7aac62b5d1e308, type: 2}
+  TPose: {fileID: 11400000, guid: 2329cbcce463cce4684e8efa7fdbff2c, type: 2}
+  umaTarget: 0
+  genericRootMotionTransformName: 
+  expressionSet: {fileID: 11400000, guid: 5912431641bbc4d858ffd8e14168c56a, type: 2}
+  dnaRanges:
+  - {fileID: 11400000, guid: e98d105c42d0f4a1f89444516e0a93b3, type: 2}
+  raceHeight: 2
+  raceRadius: 0.25
+  raceMass: 50

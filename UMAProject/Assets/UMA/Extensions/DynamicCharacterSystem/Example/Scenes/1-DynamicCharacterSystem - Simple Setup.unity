@@ -373,10 +373,6 @@ Prefab:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 11485782, guid: dd6cb213acde6d64eba2639afddcff23, type: 2}
-      propertyPath: overlayElementList.Array.size
-      value: 73
-      objectReference: {fileID: 0}
     - target: {fileID: 433544, guid: dd6cb213acde6d64eba2639afddcff23, type: 2}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -409,25 +405,6 @@ Prefab:
       propertyPath: m_RootOrder
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 11485782, guid: dd6cb213acde6d64eba2639afddcff23, type: 2}
-      propertyPath: overlayElementList.Array.data[70]
-      value: 
-      objectReference: {fileID: 11400000, guid: f0bcd19507f7b524faee4d30b08d9feb,
-        type: 2}
-    - target: {fileID: 11453434, guid: dd6cb213acde6d64eba2639afddcff23, type: 2}
-      propertyPath: InitialScaleFactor
-      value: 4
-      objectReference: {fileID: 0}
-    - target: {fileID: 11485782, guid: dd6cb213acde6d64eba2639afddcff23, type: 2}
-      propertyPath: overlayElementList.Array.data[71]
-      value: 
-      objectReference: {fileID: 11400000, guid: d47532369a4a15345b40868e9d023c64,
-        type: 2}
-    - target: {fileID: 11485782, guid: dd6cb213acde6d64eba2639afddcff23, type: 2}
-      propertyPath: overlayElementList.Array.data[72]
-      value: 
-      objectReference: {fileID: 11400000, guid: ab24e4b4070139046a99cff9a4d88fa7,
-        type: 2}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: dd6cb213acde6d64eba2639afddcff23, type: 2}
   m_IsPrefabParent: 0
