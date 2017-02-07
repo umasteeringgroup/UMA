@@ -242,35 +242,50 @@ public class spValModifierPropertyDrawer : PropertyDrawer
         if (modifieri > 3)
         {
             string currentVal = property.FindPropertyRelative("DNATypeName").stringValue;
-			if (dnaNames == null)
+			if (dnaNames == null || dnaNames.Length == 0)
 			{
-				//TODO If there are no names show a field with the dna name in it with a warning tooltip
-				//dnaNames = DynamicDNAConverterBehaviour.SkeletonModifier.spVal.spValValue.spValModifier.spValDNATypeFallback;
+				//If there are no names show a field with the dna name in it with a warning tooltip
 				EditorGUI.BeginDisabledGroup(true);
-				EditorGUI.TextField(ddTwo, new GUIContent("","These modifiers have no DNA they can modify because you do not have any DNA Names set up!"), property.FindPropertyRelative("DNATypeName").stringValue);
+				EditorGUI.LabelField(ddTwo, new GUIContent(property.FindPropertyRelative("DNATypeName").stringValue, "You do not have any DNA Names set up in your DNA asset. Add some names for the Skeleton Modifiers to use."), EditorStyles.textField);
 				EditorGUI.EndDisabledGroup();
 			}
 			else
 			{
 				int selectedIndex = -1;
-				string[] niceDnaNames = new string[dnaNames.Length + 1];
-				niceDnaNames[0] = "None";
+				List<GUIContent> niceDNANames = new List<GUIContent>();
+				niceDNANames.Add(new GUIContent("None"));
+                bool missing = true;
 				for (int i = 0; i < dnaNames.Length; i++)
 				{
-					niceDnaNames[i + 1] = dnaNames[i]/*.BreakupCamelCase()*/;
+					niceDNANames.Add(new GUIContent(dnaNames[i]));
 					if (dnaNames[i] == currentVal)
 					{
 						selectedIndex = i;
+						missing = false;
 					}
+				}
+				if (missing)
+				{
+					niceDNANames[0].text = "(missing) " + currentVal;
+                    niceDNANames[0].tooltip = currentVal+ " was not in the DNAAssets names list. This modifier wont do anything until you change the dna name it uses or you add this name to your DNA Asset names.";
 				}
 				int newSelectedIndex = selectedIndex == -1 ? 0 : selectedIndex + 1;
 				EditorGUI.BeginChangeCheck();
-				newSelectedIndex = EditorGUI.Popup(ddTwo, newSelectedIndex, niceDnaNames);
+				newSelectedIndex = EditorGUI.Popup(ddTwo, newSelectedIndex,  niceDNANames.ToArray());
 				if (EditorGUI.EndChangeCheck())
 				{
+					//if its actually changed
 					if (newSelectedIndex != selectedIndex + 1)
 					{
-						property.FindPropertyRelative("DNATypeName").stringValue = dnaNames[newSelectedIndex - 1];
+						if (newSelectedIndex == 0)
+						{
+							if(niceDNANames[0].text.IndexOf("(missing) ") < 0)
+								property.FindPropertyRelative("DNATypeName").stringValue = "";
+						}
+						else
+						{
+							property.FindPropertyRelative("DNATypeName").stringValue = dnaNames[newSelectedIndex - 1];
+						}
 					}
 				}
 			}

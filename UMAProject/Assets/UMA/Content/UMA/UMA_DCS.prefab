@@ -323,7 +323,12 @@ MonoBehaviour:
   loadingMessage: Loading Assets...
   isInitialized: 0
   placeholderRace: {fileID: 11400000, guid: 8182baefc34d4474b939b341f9c3a712, type: 2}
+<<<<<<< HEAD
   placeholderWardrobeRecipe: {fileID: 0}
+=======
+  placeholderWardrobeRecipe: {fileID: 11400000, guid: dc9b2ee309a14484aaf8f4c83614e499,
+    type: 2}
+>>>>>>> 0fec87d137267fdba7823aaabb99ca7b2534630e
   placeholderSlot: {fileID: 11400000, guid: 1793ec477efd5b643a2a938a41cbd8f7, type: 2}
   placeholderOverlay: {fileID: 11400000, guid: 331efa6bce027af46ae666095da5f511, type: 2}
   downloadingAssets:
@@ -376,6 +381,7 @@ MonoBehaviour:
   enableDynamicIndexing: 1
   makePersistent: 0
   duplicateNamesIndex:
+<<<<<<< HEAD
     data:
     - type: UMA.OverlayDataAsset
       typeFiles:
@@ -400,6 +406,9 @@ MonoBehaviour:
         path: Human/Male/Hair Male/Hair Slots Male/M_Eyebrow/M_Eyebrow_Slot
         fullPath: Assets/UMA/Content/UMA/Humanoid/UMA/Resources/Human/Male/Hair Male/Hair
           Slots Male/M_Eyebrow/M_Eyebrow_Slot.asset
+=======
+    data: []
+>>>>>>> 0fec87d137267fdba7823aaabb99ca7b2534630e
 --- !u!114 &11459230
 MonoBehaviour:
   m_ObjectHideFlags: 1

@@ -85,7 +85,7 @@ namespace UMACharacterSystem
 		public bool rebuildSkeleton = false;
 
 		//the dictionary of active recipes this character is using to create itself
-		public Dictionary<string, UMATextRecipe> _wardrobeRecipes = new Dictionary<string, UMATextRecipe>();
+		private Dictionary<string, UMATextRecipe> _wardrobeRecipes = new Dictionary<string, UMATextRecipe>();
 
 		//a list of wardrobe recipes the avatar will fall back to if no other recipes are loaded in to 'WardrobeRecipes'
 		[Tooltip("You can add wardrobe recipes for many races in here and only the ones that apply to the active race will be applied to the Avatar")]
@@ -2410,7 +2410,7 @@ namespace UMACharacterSystem
 			//because of WardrobeCollections we may need a more robust system here? maybe a 'placeholder' bool?
 			foreach (KeyValuePair<string, UMATextRecipe> kp in _wardrobeRecipes)
 			{
-				if (thisDCS.GetRecipe(kp.Value.name, false) != null)// will it ever be null nowadays? I dont think so, in order for the recipe to be there DCS has to have it (or a placeholder for it)
+                if (thisDCS.GetRecipe(kp.Value.name, false) != null)// will it ever be null nowadays? I dont think so, in order for the recipe to be there DCS has to have it (or a placeholder for it)
 				{
 					newWardrobeRecipes.Add(kp.Key, thisDCS.GetRecipe(kp.Value.name, false));
 				}
