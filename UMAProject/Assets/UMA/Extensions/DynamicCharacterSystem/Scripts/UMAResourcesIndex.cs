@@ -248,7 +248,7 @@ namespace UMA
 					var objResourcesPathArray = paths[i].Split(new string[] { "Resources/" }, StringSplitOptions.RemoveEmptyEntries);
 					var extension = Path.GetExtension(objResourcesPathArray[1]);
 					var objResourcesPath = objResourcesPathArray[1];
-					if (extension != "")
+                    if (extension != "")
 					{
 						objResourcesPath = objResourcesPath.Replace(extension, "");
 					}
@@ -276,12 +276,29 @@ namespace UMA
 						//Is there already an asset with this name?
 						//duplicate names only matters if they are things that will be got by the libraries BY NAME and these things currently are
 						//SlotDataAsset, OverlayDataAsset, RaceDataAsset, Maybe UMATextRecipe (and Descendents) and RuntimeAnimationControllers
-						if(tempObj.GetType() == typeof(RaceData) || tempObj.GetType() == typeof(SlotDataAsset) || tempObj.GetType() == typeof(OverlayDataAsset) || tempObj.GetType() == typeof(UMATextRecipe) || tempObj.GetType() == typeof(UMAWardrobeRecipe) || tempObj.GetType() == typeof(RuntimeAnimatorController))
-							existingAsset = index.GetPath(tempObj.GetType().ToString(), thisHash);
-						if (existingAsset != "")
+						if (tempObj.GetType() == typeof(RaceData) || tempObj.GetType() == typeof(SlotDataAsset) || tempObj.GetType() == typeof(OverlayDataAsset) || tempObj.GetType() == typeof(UMATextRecipe) || tempObj.GetType() == typeof(UMAWardrobeRecipe) || tempObj.GetType() == typeof(RuntimeAnimatorController))
 						{
-							Debug.LogWarning("had existing asset for " + thisName);
-							duplicateNamesIndex.AddPath(tempObj, thisHash);
+							//when you have two different types of assets with the same name in the same place we get a false positive						 
+							var existingAssetFullPath = index.GetPath(tempObj.GetType().ToString(), thisHash, true);
+							if (existingAssetFullPath != "")
+							{
+								var existingAssetFullPathArray = existingAssetFullPath.Split(new string[] { "Resources/" }, StringSplitOptions.RemoveEmptyEntries);
+								var existingAssetExtension = Path.GetExtension(existingAssetFullPathArray[1]);
+								var existingAssetPath = existingAssetFullPathArray[1];
+								if (existingAssetExtension != "")
+								{
+									existingAssetPath = existingAssetPath.Replace(existingAssetExtension, "");
+                                }
+								//if existingAssetPath != objResourcesPath then its another slot/overlay that has the same name as one in the index
+                                existingAsset = existingAssetPath != objResourcesPath ? existingAssetPath : "";
+							}
+                            if (existingAsset != "")
+							{
+								Debug.LogWarning("had existing asset for " + thisName +" type of "+ tempObj.GetType().ToString());
+								duplicateNamesIndex.AddPath(tempObj, thisHash);
+							}
+							else
+								index.AddPath(tempObj, thisHash);
 						}
 						else
 							index.AddPath(tempObj, thisHash);
