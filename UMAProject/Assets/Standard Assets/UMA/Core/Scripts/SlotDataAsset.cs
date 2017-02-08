@@ -112,7 +112,17 @@ namespace UMA
 			return "SlotData: " + slotName;
 		}
 
-		public void UpdateMeshData(SkinnedMeshRenderer meshRenderer)
+        public void UpdateMeshData(SkinnedMeshRenderer meshRenderer, string rootBoneName)
+        {
+            meshData = new UMAMeshData();
+            meshData.RootBoneName = rootBoneName;
+            meshData.RetrieveDataFromUnityMesh(meshRenderer);
+#if UNITY_EDITOR
+            UnityEditor.EditorUtility.SetDirty(this);
+#endif
+        }
+
+        public void UpdateMeshData(SkinnedMeshRenderer meshRenderer)
 		{
 			meshData = new UMAMeshData();
 			meshData.RetrieveDataFromUnityMesh(meshRenderer);

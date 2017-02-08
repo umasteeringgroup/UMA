@@ -11,7 +11,7 @@ namespace UMAEditor
 {
 	public static class UMASlotProcessingUtil
 	{
-		public static SlotDataAsset CreateSlotData(string slotFolder, string assetFolder, string assetName, SkinnedMeshRenderer mesh, UMAMaterial material, SkinnedMeshRenderer prefabMesh)
+		public static SlotDataAsset CreateSlotData(string slotFolder, string assetFolder, string assetName, SkinnedMeshRenderer mesh, UMAMaterial material, SkinnedMeshRenderer prefabMesh, string rootBone)
 		{
 			if (!System.IO.Directory.Exists(slotFolder + '/' + assetFolder))
 			{
@@ -62,7 +62,7 @@ namespace UMAEditor
 
 			for (int i = 0; i < transformList.Length; i++)
 			{
-				if (transformList[i].name == "Global")
+				if (transformList[i].name == rootBone)
 				{
 					transformList[i].parent = newObject.transform;
 				}
@@ -93,14 +93,14 @@ namespace UMAEditor
 			var slot = ScriptableObject.CreateInstance<SlotDataAsset>();
 			slot.slotName = assetName;
 			slot.material = material;
-			slot.UpdateMeshData(finalMeshRenderer);
+			slot.UpdateMeshData(finalMeshRenderer,rootBone);
 			AssetDatabase.CreateAsset(slot, slotFolder + '/' + assetName + '/' + assetName + "_Slot.asset");
 			for(int i = 1; i < slot.meshData.subMeshCount; i++)
 			{
 				var additionalSlot = ScriptableObject.CreateInstance<SlotDataAsset>();
 				additionalSlot.slotName = string.Format("{0}_{1}", assetName, i);
 				additionalSlot.material = material;
-				additionalSlot.UpdateMeshData(finalMeshRenderer);
+				additionalSlot.UpdateMeshData(finalMeshRenderer,rootBone);
 				additionalSlot.subMeshIndex = i;
 				AssetDatabase.CreateAsset(additionalSlot, slotFolder + '/' + assetName + '/' + assetName + "_"+ i +"_Slot.asset");
 			}

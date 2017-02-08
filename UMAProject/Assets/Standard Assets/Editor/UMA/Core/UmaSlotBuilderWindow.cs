@@ -10,6 +10,7 @@ namespace UMAEditor
 	public class UmaSlotBuilderWindow : EditorWindow 
 	{
 	    public string slotName;
+        public string RootBone = "Global";
 	    public UnityEngine.Object slotFolder;
 	    public UnityEngine.Object relativeFolder;
 	    public SkinnedMeshRenderer normalReferenceMesh;
@@ -58,11 +59,12 @@ namespace UMAEditor
 	    {
 			GUILayout.Label("UMA Slot Builder");
 			GUILayout.Space(20);
-			normalReferenceMesh = EditorGUILayout.ObjectField("Seams Mesh (Optional)", normalReferenceMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
-	        slotMesh = EditorGUILayout.ObjectField("Slot Mesh", slotMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
-			slotMaterial = EditorGUILayout.ObjectField("UMAMaterial", slotMaterial, typeof(UMAMaterial), false) as UMAMaterial;
-	        slotFolder = EditorGUILayout.ObjectField("Slot Destination Folder", slotFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
+			normalReferenceMesh = EditorGUILayout.ObjectField("Seams Mesh (Optional)  ", normalReferenceMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
+	        slotMesh = EditorGUILayout.ObjectField("Slot Mesh  ", slotMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
+			slotMaterial = EditorGUILayout.ObjectField("UMAMaterial  ", slotMaterial, typeof(UMAMaterial), false) as UMAMaterial;
+	        slotFolder = EditorGUILayout.ObjectField("Slot Destination Folder"  , slotFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
 			EnforceFolder(ref slotFolder);
+            RootBone = EditorGUILayout.TextField("Root Bone (ex:'Global')", RootBone);
 			slotName = EditorGUILayout.TextField("Element Name", slotName);
 			
 	        if (GUILayout.Button("Create Slot"))
@@ -121,7 +123,7 @@ namespace UMAEditor
 	            return null;
 	        }
             Debug.Log("Slot Mesh: " + slotMesh.name, slotMesh.gameObject);
-			SlotDataAsset slot = UMASlotProcessingUtil.CreateSlotData(AssetDatabase.GetAssetPath(slotFolder), GetAssetFolder(), GetAssetName(), slotMesh, material, normalReferenceMesh);
+			SlotDataAsset slot = UMASlotProcessingUtil.CreateSlotData(AssetDatabase.GetAssetPath(slotFolder), GetAssetFolder(), GetAssetName(), slotMesh, material, normalReferenceMesh,RootBone);
 	        return slot;
 	    }
 

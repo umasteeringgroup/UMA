@@ -237,6 +237,7 @@ namespace UMA
 		public int[] boneNameHashes;
 		public int subMeshCount;
 		public int vertexCount;
+        public string RootBoneName = "Global";
 
 		private bool OwnSharedBuffers()
 		{
@@ -418,7 +419,7 @@ namespace UMA
 			while (rootBone.parent != null)
 				rootBone = rootBone.parent;
 
-			return RecursiveFindBone(rootBone, "Global");
+			return RecursiveFindBone(rootBone, RootBoneName);
 		}
 
 		/// <summary>
