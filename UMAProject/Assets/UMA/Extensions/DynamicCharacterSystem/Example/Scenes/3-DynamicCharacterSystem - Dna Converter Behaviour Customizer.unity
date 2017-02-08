@@ -3470,10 +3470,6 @@ MonoBehaviour:
       _recipe: {fileID: 0}
       _compatibleRaces:
       - HumanFemaleResources
-    - _recipeName: FemaleUndies-Res
-      _recipe: {fileID: 0}
-      _compatibleRaces:
-      - HumanFemaleResources
     - _recipeName: ToonHair1
       _recipe: {fileID: 0}
       _compatibleRaces:
@@ -4707,10 +4703,6 @@ MonoBehaviour:
     loadDefaultRecipes: 1
     recipes:
     - _recipeName: FemaleHair1-Res
-      _recipe: {fileID: 0}
-      _compatibleRaces:
-      - HumanFemaleResources
-    - _recipeName: FemaleUndies-Res
       _recipe: {fileID: 0}
       _compatibleRaces:
       - HumanFemaleResources
@@ -7185,7 +7177,7 @@ Light:
   serializedVersion: 7
   m_Type: 1
   m_Color: {r: 0.9632353, g: 0.9508408, b: 0.878244, a: 1}
-  m_Intensity: 0.45
+  m_Intensity: 0.33
   m_Range: 10
   m_SpotAngle: 30
   m_CookieSize: 10
@@ -11102,10 +11094,6 @@ MonoBehaviour:
       _recipe: {fileID: 0}
       _compatibleRaces:
       - HumanFemaleResources
-    - _recipeName: FemaleUndies-Res
-      _recipe: {fileID: 0}
-      _compatibleRaces:
-      - HumanFemaleResources
     - _recipeName: ToonFemaleUnderwear1
       _recipe: {fileID: 0}
       _compatibleRaces:
@@ -12552,7 +12540,7 @@ Light:
   serializedVersion: 7
   m_Type: 1
   m_Color: {r: 0.9338235, g: 0.9185755, b: 0.88575906, a: 1}
-  m_Intensity: 1.4
+  m_Intensity: 1.2
   m_Range: 10
   m_SpotAngle: 30
   m_CookieSize: 10
@@ -13806,10 +13794,6 @@ MonoBehaviour:
   preloadWardrobeRecipes:
     loadDefaultRecipes: 1
     recipes:
-    - _recipeName: FemaleUndies-Res
-      _recipe: {fileID: 0}
-      _compatibleRaces:
-      - HumanFemaleResources
     - _recipeName: FemaleHair1-Res
       _recipe: {fileID: 0}
       _compatibleRaces:
@@ -14545,17 +14529,17 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1470974982
 Transform:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1470974981}
-  m_LocalRotation: {x: -0.22156721, y: -0.34938297, z: 0.61559784, w: 0.67073005}
-  m_LocalPosition: {x: 0.7235021, y: 1.8364667, z: -0.7303822}
+  m_LocalRotation: {x: 0.2320956, y: 0.17086801, z: 0.6117065, w: 0.73671633}
+  m_LocalPosition: {x: -0.8, y: 1.8364667, z: -1.285}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 7.5870004, y: 32.846, z: 81.874}
   m_Children: []
   m_Father: {fileID: 1952710213}
   m_RootOrder: 0
@@ -14569,7 +14553,7 @@ Light:
   serializedVersion: 7
   m_Type: 1
   m_Color: {r: 0.6, g: 0.7529412, b: 0.99607843, a: 1}
-  m_Intensity: 0.2
+  m_Intensity: 0.4
   m_Range: 10
   m_SpotAngle: 30
   m_CookieSize: 10
