@@ -116,7 +116,9 @@ namespace UMA
 				var thisValueName = dnaNames[i];
                 for (int ii = 0; ii < Names.Length; ii++)
                 {
-					if (Names[ii].Equals(thisValueName, StringComparison.OrdinalIgnoreCase))
+					//if (Names[ii].Equals(thisValueName, StringComparison.OrdinalIgnoreCase))
+					//actually I think they should be exactly equal
+					if (Names[ii] == thisValueName)
 					{
                         Values[ii] = umaDna.Values[i];
                         dnaImported++;

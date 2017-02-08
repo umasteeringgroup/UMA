@@ -751,7 +751,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 305676970}
   m_Direction: 0
   m_Value: 0
-  m_Size: 0.99999994
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -1354,17 +1354,17 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &152714820
 Transform:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 152714819}
-  m_LocalRotation: {x: -0.22156721, y: -0.34938297, z: 0.61559784, w: 0.67073005}
-  m_LocalPosition: {x: 0.7235021, y: 1.8364667, z: -0.7303822}
+  m_LocalRotation: {x: 0.2039189, y: 0.13704616, z: 0.6216679, w: 0.7437503}
+  m_LocalPosition: {x: -0.662, y: 1.8364667, z: -1.431}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 7.5870004, y: 27.399002, z: 81.874}
   m_Children: []
   m_Father: {fileID: 1327886465}
   m_RootOrder: 0
@@ -1378,7 +1378,7 @@ Light:
   serializedVersion: 7
   m_Type: 1
   m_Color: {r: 0.6, g: 0.7529412, b: 0.99607843, a: 1}
-  m_Intensity: 0.2
+  m_Intensity: 0.4
   m_Range: 10
   m_SpotAngle: 30
   m_CookieSize: 10
@@ -1626,7 +1626,7 @@ Light:
   serializedVersion: 7
   m_Type: 1
   m_Color: {r: 0.9338235, g: 0.9185755, b: 0.88575906, a: 1}
-  m_Intensity: 1.4
+  m_Intensity: 1.2
   m_Range: 10
   m_SpotAngle: 30
   m_CookieSize: 10
@@ -1811,7 +1811,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 431424, guid: e4c9215b3e1d0b841900ba25c3907b6b, type: 2}
       propertyPath: m_RootOrder
-      value: 11
+      value: 10
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: e4c9215b3e1d0b841900ba25c3907b6b, type: 2}
@@ -2548,9 +2548,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 5a63f3d521484f345b330eaa6ddd496e, type: 2}
   - {fileID: 11400000, guid: 5746c09014733de4bbf208291c61aaea, type: 2}
   - {fileID: 11400000, guid: e2224fed494e9d943be557109e679173, type: 2}
-  - {fileID: 11400000, guid: d3aed0339ec3f39418d0a2dde99b9917, type: 2}
+  - {fileID: 0}
   - {fileID: 11400000, guid: 1320201c90abfb148ba70377406b5dc4, type: 2}
-  - {fileID: 11400000, guid: 7d8313c93b135224b806c1f92f4ccf6e, type: 2}
+  - {fileID: 0}
   - {fileID: 11400000, guid: 03e5bfa4f7f2fd445974ed61bdf5d9cf, type: 2}
   - {fileID: 11400000, guid: a209ee514b60b9044bdef1bcbf69967d, type: 2}
   - {fileID: 11400000, guid: b0ed3771a80364c45bd224aee6ac2837, type: 2}
@@ -2612,7 +2612,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 11400000, guid: 25df90b5e017453499c48fdb9051267c, type: 2}
   - {fileID: 11400000, guid: 335dc3fe2bdb9a24ea853d1023a2ab3e, type: 2}
-  - {fileID: 11400000, guid: bc97a0ea4a9277443a7680b85479aa32, type: 2}
+  - {fileID: 0}
   - {fileID: 11400000, guid: 3e2301213b719e549ad53ae013abcde2, type: 2}
   - {fileID: 11400000, guid: 7175f4c977569f748a2c19a6c9f2ab10, type: 2}
   - {fileID: 11400000, guid: a61b80b3ef057274e93e5d8c6a2aacec, type: 2}
@@ -2643,46 +2643,46 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 7c7d4dd46aadf264ca87a97b357a238e, type: 2}
   - {fileID: 11400000, guid: 331efa6bce027af46ae666095da5f511, type: 2}
   - {fileID: 0}
-  - {fileID: 11400000, guid: 3880bf2d170a8694ebb51f988296508f, type: 2}
+  - {fileID: 0}
   - {fileID: 11400000, guid: bc845162d92a43f4ea04d9bece6f503f, type: 2}
   - {fileID: 11400000, guid: 19656603ac354ad4aa0dee0018f7f6d5, type: 2}
-  - {fileID: 11400000, guid: 378b8e8cdb606dd4b96b67b8a683d45f, type: 2}
-  - {fileID: 11400000, guid: 4cd443ef8291c5743a4745aaa3a80126, type: 2}
-  - {fileID: 11400000, guid: 3ba6c8632e4da524c871514b156caa05, type: 2}
-  - {fileID: 11400000, guid: f669c77c686a8884cb928fddcc315274, type: 2}
-  - {fileID: 11400000, guid: bae73e43dfcd95c4c91699e887e18ef6, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 11400000, guid: fcd8d6062a368b1468c653298da45409, type: 2}
-  - {fileID: 11400000, guid: 03590a844f5d73445be1eb7a93fe69f3, type: 2}
-  - {fileID: 11400000, guid: 7be73e94fe0016747abc71eb7a67b0a5, type: 2}
-  - {fileID: 11400000, guid: 7b9b868ed3676044a971258d58d04dde, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 11400000, guid: d813f8755f9fdee489b781e0d5e404c5, type: 2}
   - {fileID: 11400000, guid: 8c7ae3373990f264199c4839d6bf678c, type: 2}
-  - {fileID: 11400000, guid: 4e702507354356448a6a918038a9615c, type: 2}
-  - {fileID: 11400000, guid: ebc969538d6cdb348aad76fd47051510, type: 2}
-  - {fileID: 11400000, guid: d874703b297df7d458977be6d8b6ec63, type: 2}
-  - {fileID: 11400000, guid: 7d8313c93b135224b806c1f92f4ccf6e, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 11400000, guid: f40bf2e2d4087954bb4d86d0c4aa290f, type: 2}
-  - {fileID: 11400000, guid: 44e342e2ea8d58d49b851a45ab634f19, type: 2}
-  - {fileID: 11400000, guid: 8ee83c9d89cf4104897f8f25014b406d, type: 2}
-  - {fileID: 11400000, guid: 4b34f94e11082c247a23f6168ededbe6, type: 2}
-  - {fileID: 11400000, guid: 2df979c861bc0524cac7b23c3e02ef8b, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 11400000, guid: 4559a01221d4aa540bb720979b99c28f, type: 2}
   - {fileID: 11400000, guid: 060710660a79b9549b07a47ba0c1fbe2, type: 2}
-  - {fileID: 11400000, guid: dd2e99545d401954fb5035a2b95743dc, type: 2}
+  - {fileID: 0}
   - {fileID: 11400000, guid: a209ee514b60b9044bdef1bcbf69967d, type: 2}
   - {fileID: 11400000, guid: f57c699e06562b84fb91461077d470a9, type: 2}
-  - {fileID: 11400000, guid: ba81e8422cafd4b4282f0b6bce9ae727, type: 2}
-  - {fileID: 11400000, guid: d3aed0339ec3f39418d0a2dde99b9917, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 11400000, guid: 1320201c90abfb148ba70377406b5dc4, type: 2}
-  - {fileID: 11400000, guid: ab24e4b4070139046a99cff9a4d88fa7, type: 2}
-  - {fileID: 11400000, guid: d47532369a4a15345b40868e9d023c64, type: 2}
-  - {fileID: 11400000, guid: 665fb6ba04aaf7443a9542528642da19, type: 2}
-  - {fileID: 11400000, guid: 062a7192ade2b4d4188debb536e6c68b, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 11400000, guid: 4e3423fc7dbaee44397ec91baa5ce828, type: 2}
   - {fileID: 11400000, guid: 75fc3e08dcfd73e4fbdd25a78eacf0a7, type: 2}
   - {fileID: 11400000, guid: f3ed1216fb09ee24f83e35b72805413f, type: 2}
   - {fileID: 11400000, guid: 03e5bfa4f7f2fd445974ed61bdf5d9cf, type: 2}
-  - {fileID: 11400000, guid: b4a3c0f568d4cba40a5f979e57ec82dd, type: 2}
+  - {fileID: 0}
   - {fileID: 11400000, guid: 8598e407f98b3b745980a5ade46c86ab, type: 2}
   - {fileID: 11400000, guid: 19ca51fa9b344074ebeaad4c873fd125, type: 2}
   - {fileID: 11400000, guid: a60d5c517fee0ce48b5b59b9ed45861e, type: 2}
@@ -4346,18 +4346,14 @@ MonoBehaviour:
       _recipe: {fileID: 0}
       _compatibleRaces:
       - ToonFemale
-    - _recipeName: ToonFemaleUnderwear1
-      _recipe: {fileID: 0}
-      _compatibleRaces:
-      - ToonFemale
     - _recipeName: FemaleHair1-Res
       _recipe: {fileID: 0}
       _compatibleRaces:
       - HumanFemaleResources
-    - _recipeName: FemaleUndies-Res
-      _recipe: {fileID: 0}
+    - _recipeName: ToonFemaleUnderwear1
+      _recipe: {fileID: 11400000, guid: ea281ac1676c4374783d2104f659f68d, type: 2}
       _compatibleRaces:
-      - HumanFemaleResources
+      - ToonFemale
   raceAnimationControllers:
     defaultAnimationController: {fileID: 9100000, guid: ae859d58fdf844b73863d3833f955cdf,
       type: 2}
@@ -4920,10 +4916,6 @@ MonoBehaviour:
       _compatibleRaces:
       - ToonFemale
     - _recipeName: FemaleHair1-Res
-      _recipe: {fileID: 0}
-      _compatibleRaces:
-      - HumanFemaleResources
-    - _recipeName: FemaleUndies-Res
       _recipe: {fileID: 0}
       _compatibleRaces:
       - HumanFemaleResources
@@ -7770,7 +7762,7 @@ Light:
   serializedVersion: 7
   m_Type: 1
   m_Color: {r: 0.9632353, g: 0.9508408, b: 0.878244, a: 1}
-  m_Intensity: 0.45
+  m_Intensity: 0.33
   m_Range: 10
   m_SpotAngle: 30
   m_CookieSize: 10
@@ -9212,6 +9204,7 @@ Transform:
   - {fileID: 1875296714}
   - {fileID: 518079763}
   - {fileID: 2079936342}
+  - {fileID: 1705365350}
   m_Father: {fileID: 0}
   m_RootOrder: 1
 --- !u!1 &893401640
@@ -9357,10 +9350,6 @@ MonoBehaviour:
     loadDefaultRecipes: 1
     recipes:
     - _recipeName: FemaleHair1-Res
-      _recipe: {fileID: 0}
-      _compatibleRaces:
-      - HumanFemaleResources
-    - _recipeName: FemaleUndies-Res
       _recipe: {fileID: 0}
       _compatibleRaces:
       - HumanFemaleResources
@@ -14989,7 +14978,7 @@ MonoBehaviour:
   slotElementList:
   - {fileID: 11400000, guid: 04442629189f10a48bc3238f44aa9856, type: 2}
   - {fileID: 11400000, guid: 0fbc0a0bbfb29084bbeafb0876b6e28b, type: 2}
-  - {fileID: 11400000, guid: 39326b41d79ca32499386b857d3e8894, type: 2}
+  - {fileID: 0}
   - {fileID: 11400000, guid: db59a2fec12e144498fed4c62c157859, type: 2}
   - {fileID: 11400000, guid: 96efa554e673f0c40ba212cde7477926, type: 2}
   - {fileID: 11400000, guid: 2ea0c2632af00954d80449e69aae3961, type: 2}
@@ -16023,13 +16012,13 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1705365348}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 10
+  m_Father: {fileID: 879538282}
+  m_RootOrder: 8
 --- !u!1 &1708827405
 GameObject:
   m_ObjectHideFlags: 0

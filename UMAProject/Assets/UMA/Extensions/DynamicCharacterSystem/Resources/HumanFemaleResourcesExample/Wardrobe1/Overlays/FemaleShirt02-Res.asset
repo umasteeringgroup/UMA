@@ -12,15 +12,18 @@ MonoBehaviour:
   m_Name: FemaleShirt02-Res
   m_EditorClassIdentifier: 
   overlayName: FemaleShirt02-Res
+  overlayType: 0
   rect:
     serializedVersion: 2
     x: 0
-    y: 512
-    width: 1024
-    height: 512
+    y: 1024
+    width: 2048
+    height: 1024
+  alphaMask: {fileID: 0}
   textureList:
   - {fileID: 2800000, guid: 3cc3d963d4726c442b20c017e73b8d1d, type: 3}
   - {fileID: 2800000, guid: 55c1ee588b904fd43a484f8634d0b382, type: 3}
   - {fileID: 2800000, guid: 3df49f322743df94d99612f102874de3, type: 3}
   tags: []
   material: {fileID: 11400000, guid: 8e29dbac5d2e82f44a759a7e2cc568ab, type: 2}
+  OcclusionEntries: []

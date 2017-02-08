@@ -18,7 +18,9 @@ namespace UMA
 
 			for (int i = 0; i < recipeDNA.Length; i++)
 			{
-				if (!_recipe.raceData.raceDictionary.ContainsKey(recipeDNA[i].GetType()))
+				//if (!_recipe.raceData.raceDictionary.ContainsKey(recipeDNA[i].GetType()))
+				//A RaceData may contain multiple DynamicDnaConverters use GetConverter instead and use the hash
+				if (_recipe.raceData.GetConverter(recipeDNA[i]) == null)
 				{
 					int dnaToImport = recipeDNA[i].Count;
 					int dnaImported = 0;
@@ -36,7 +38,8 @@ namespace UMA
 
 					if (dnaImported > 0)
 					{
-						_recipe.RemoveDna(recipeDNA[i].GetType());
+						if(_recipe.GetDna(recipeDNA[i].DNATypeHash) != null)
+							_recipe.RemoveDna(recipeDNA[i].DNATypeHash);
 					}
 				}
 			 }

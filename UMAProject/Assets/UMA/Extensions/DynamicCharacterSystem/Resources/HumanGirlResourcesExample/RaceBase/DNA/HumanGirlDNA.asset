@@ -12,6 +12,10 @@ MonoBehaviour:
   m_Name: HumanGirlDNA
   m_EditorClassIdentifier: 
   dnaTypeHash: 642525823
+  lastKnownAssetPath: Assets/UMA/Extensions/DynamicCharacterSystem/Resources/HumanGirlResourcesExample/RaceBase/DNA/HumanGirlDNA.asset
+  lastKnownDuplicateAssetPath: Assets/UMA/Extensions/DynamicCharacterSystem/Resources/HumanGirlResourcesExample/RaceBase/DNA/HumanGirlDNA
+    1.asset
+  lastKnownInstanceID: 12466
   Names:
   - height
   - headSize

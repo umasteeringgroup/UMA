@@ -11,7 +11,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83d33591a744673429e1681df5574ac0, type: 3}
   m_Name: Human Girl
   m_EditorClassIdentifier: 
-  baseRaceRecipe: {fileID: 11400000, guid: ed68fd1a8a486ad4eaebaa45e11ccd38, type: 2}
+  baseRaceRecipe: {fileID: 11400000, guid: b24ba5dfb8159b944a1d9a37c8ce65d8, type: 2}
   wardrobeSlots:
   - None
   - Face
@@ -57,3 +57,6 @@ MonoBehaviour:
   expressionSet: {fileID: 11400000, guid: 5912431641bbc4d858ffd8e14168c56a, type: 2}
   dnaRanges:
   - {fileID: 11400000, guid: d063b7dc51fb8fa47bb3de0c72e67ef3, type: 2}
+  raceHeight: 2
+  raceRadius: 0.25
+  raceMass: 50

@@ -11,7 +11,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83d33591a744673429e1681df5574ac0, type: 3}
   m_Name: Human MaleDCS
   m_EditorClassIdentifier: 
-  baseRaceRecipe: {fileID: 11400000, guid: 1ef5a40b32d2742a09fde46d76deef1a, type: 2}
+  baseRaceRecipe: {fileID: 11400000, guid: cbe7b8858a7c17a4d9a80380b49cce27, type: 2}
   wardrobeSlots:
   - None
   - FullOutfit
@@ -58,3 +58,6 @@ MonoBehaviour:
   expressionSet: {fileID: 11400000, guid: 3ed354ee89bd94ac895fe6e0e73bcf86, type: 2}
   dnaRanges:
   - {fileID: 11400000, guid: 71e836c192d6b46edbdd9cdd89da143e, type: 2}
+  raceHeight: 2
+  raceRadius: 0.25
+  raceMass: 50

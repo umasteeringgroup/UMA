@@ -12,6 +12,9 @@ MonoBehaviour:
   m_Name: ToonDynamicDNAAsset
   m_EditorClassIdentifier: 
   dnaTypeHash: 156414067
+  lastKnownAssetPath: 
+  lastKnownDuplicateAssetPath: 
+  lastKnownInstanceID: 0
   Names:
   - height
   - headSize

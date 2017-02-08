@@ -177,9 +177,9 @@ namespace UMAEditor
 			{
 				//check if any DynamicDNA needs its DynamicDNAAsset updating
 				var thisDNAConverterList = standardRaceData.dnaConverterList;
-				foreach (DnaConverterBehaviour DnaConverter in thisDNAConverterList)
+				for(int i = 0; i < thisDNAConverterList.Length; i++) /*DnaConverterBehaviour DnaConverter in thisDNAConverterList)*/
 				{
-					if(DnaConverter == null)
+					if(thisDNAConverterList[i] == null)
 					{
 						Debug.LogWarning(standardRaceData.raceName + " RaceData has a missing DNA Converter");
 						continue;
@@ -187,12 +187,21 @@ namespace UMAEditor
 					//'Old' UMA DNA will have a typehash based on its type name (never 0) 
 					//DynamicDNA will only be zero if the converter does not have a DNA asset assigned (and will show a warning)
 					//so if the typeHash is 0 bail
-					if (DnaConverter.DNATypeHash == 0)
-						continue;
-					if (DnaConverter is DynamicDNAConverterBehaviourBase)
+					if (thisDNAConverterList[i].DNATypeHash == 0)
 					{
-						var thisDnaAsset = ((DynamicDNAConverterBehaviourBase)DnaConverter).dnaAsset;
-						var dna = _recipe.GetOrCreateDna(DnaConverter.DNAType, DnaConverter.DNATypeHash);
+						Debug.LogWarning("Dynamic DNA Converter "+ thisDNAConverterList[i].name+" needs a DNA Asset assigned to it");
+                        continue;
+					}
+					var dna = _recipe.GetOrCreateDna(thisDNAConverterList[i].DNAType, thisDNAConverterList[i].DNATypeHash);
+					if (thisDNAConverterList[i] is DynamicDNAConverterBehaviourBase)
+					{
+						var thisDnaAsset = ((DynamicDNAConverterBehaviourBase)thisDNAConverterList[i]).dnaAsset;
+						//var dna = _recipe.GetOrCreateDna(DnaConverter.DNAType, DnaConverter.DNATypeHash);
+						//if the dynamic dna has the same hash as "UMADnaHumanoid" or "UMADnaTutorial" and the recipe is an old one this will blow up
+						//THIS SHOULD NEVER HAPPEN the user should not be able to set the hashes to be either of those hashes now
+						//Debug.Log("This Hash was "+ dna.DNATypeHash+ " UMADnaHumanoid hash is " + UMAUtils.StringToHash("UMADnaHumanoid") + " UMADnaTutorial hash is " + UMAUtils.StringToHash("UMADnaTutorial"));
+                        //if (dna.DNATypeHash == UMAUtils.StringToHash("UMADnaHumanoid") || dna.DNATypeHash == UMAUtils.StringToHash("UMADnaTutorial"))
+						//	continue;
 						if (((DynamicUMADnaBase)dna).dnaAsset != thisDnaAsset || ((DynamicUMADnaBase)dna).didDnaAssetUpdate)
 						{
 							if (((DynamicUMADnaBase)dna).didDnaAssetUpdate)
@@ -203,22 +212,61 @@ namespace UMAEditor
 							}
 							else
 							{
-								Debug.Log("Updated DNA to match DnaConverter " + DnaConverter.name + "'s dna asset");
-								((DynamicUMADnaBase)dna).dnaAsset = ((DynamicDNAConverterBehaviourBase)DnaConverter).dnaAsset;
+								//When this happens the values get lost
+								((DynamicUMADnaBase)dna).dnaAsset = thisDnaAsset;
+								//so we need to try to add any existing dna values to this dna
+								int imported = 0;
+								for (int j = 0; j < currentDNA.Length; j++)
+								{
+									if (currentDNA[j].DNATypeHash != dna.DNATypeHash)
+									{
+										imported += ((DynamicUMADnaBase)dna).ImportUMADnaValues(currentDNA[j]);
+                                    }
+								}
+								Debug.Log("Updated DNA to match DnaConverter " + thisDNAConverterList[i].name + "'s dna asset and imported "+imported+" values from previous dna");
 								DNAConvertersModified = true;
 							}
 						}
-						if (((DynamicUMADnaBase)dna).DNATypeHash != DnaConverter.DNATypeHash)
+						//DynamicDNAConverter does not have a type hash any more
+						/*if (((DynamicUMADnaBase)dna).DNATypeHash != DnaConverter.DNATypeHash)
 						{
 							Debug.Log("Updated DNA's typeHash to match DnaConverter " + DnaConverter.name + "'s dnaTypeHash");
 							((DynamicUMADnaBase)dna).SetDnaTypeHash(DnaConverter.DNATypeHash);
 							DNAConvertersModified = true;
+						}*/
+					}
+				}
+				//Try elis way
+				for (int i = 0; i < currentDNA.Length; i++)
+				{
+					if (_recipe.raceData.GetConverter(currentDNA[i]) == null)
+					{
+						int dnaToImport = currentDNA[i].Count;
+						int dnaImported = 0;
+
+						for (int j = 0; j < currentDNA.Length; j++)
+						{
+							if (currentDNA[j] is DynamicUMADnaBase)
+							{
+								// Keep trying to find a new home for DNA values until they have all been set
+								dnaImported += ((DynamicUMADnaBase)currentDNA[j]).ImportUMADnaValues(currentDNA[i]);
+								if (dnaImported >= dnaToImport)
+									break;
+							}
+						}
+
+						if (dnaImported > 0)
+						{
+							if(_recipe.GetDna(currentDNA[i].DNATypeHash) != null)
+								_recipe.RemoveDna(currentDNA[i].DNATypeHash);
+							DNAConvertersModified = true;
 						}
 					}
 				}
+				currentDNA = _recipe.GetAllDna();
 				//Also if the user has switched a race to use DynamicConverter/DynamicDNA the recipe will contain DNA values for UMADNAHumanoid
 				//In that case these values need to be converted to DynamicDna values
-				int thisUMADnaHumanoid = -1;
+				/*int thisUMADnaHumanoid = -1;
 				int thisUMADnaTutorial = -1;
 				bool needsHumanoidDnaUpdate = false;
 				bool needsTutorialDnaUpdate = false;
@@ -311,7 +359,8 @@ namespace UMAEditor
 						}
 					}
 					currentDNA = newCurrentDna.ToArray();
-				}
+				}*/
+
 				//Finally if there are more DNA sets than there are converters we need to remove the dna that should not be there
 				if (currentDNA.Length > thisDNAConverterList.Length)
 				{

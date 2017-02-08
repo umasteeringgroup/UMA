@@ -50,7 +50,6 @@ MonoBehaviour:
     - thumbIsFor: Face,Complexion
       thumb: {fileID: 21300000, guid: e8246c94f2a830349a241ed3730f4d46, type: 3}
   raceName: ToonFemale
-  racePrefab: {fileID: 0}
   dnaConverterList:
   - {fileID: 11432742, guid: c82265195e2de574d968d7bb7a845927, type: 2}
   TPose: {fileID: 11400000, guid: 6709cc593c8096a4e9d1e8f21cfcacf5, type: 2}
@@ -59,3 +58,6 @@ MonoBehaviour:
   expressionSet: {fileID: 11400000, guid: 42ef5a61b54e53a4a8cec7410e1e8d3c, type: 2}
   dnaRanges:
   - {fileID: 11400000, guid: 91e2cbe585e0f6145b24d5c6aaf13e1c, type: 2}
+  raceHeight: 2
+  raceRadius: 0.25
+  raceMass: 50
