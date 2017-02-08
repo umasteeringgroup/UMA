@@ -11,7 +11,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 28add7ad4625f8748a81d045544985b2, type: 3}
   m_Name: HumanMaleDynamicDnaAsset
   m_EditorClassIdentifier: 
-  dnaTypeHash: -212795365
+  dnaTypeHash: 815443803
+  lastKnownAssetPath: Assets/UMA/Extensions/DynamicCharacterSystem/Resources/HumanMaleDna/HumanMaleDynamicDnaAsset.asset
+  lastKnownDuplicateAssetPath: Assets/UMA/Extensions/DynamicCharacterSystem/Resources/HumanMaleDna/HumanMaleDynamicDnaAsset
+    1.asset
+  lastKnownInstanceID: 58384
   Names:
   - height
   - headSize

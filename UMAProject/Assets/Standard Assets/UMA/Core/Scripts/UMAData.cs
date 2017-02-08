@@ -850,6 +850,7 @@ namespace UMA
 						}
 						else
 						{
+							//We MUST NOT give DynamicDNA the same hash a UMADnaHumanoid or else we loose the values
 							Debug.Log(raceData.raceName + " has multiple dna converters that are trying to use the same dna (" + converter.DNATypeHash + "). This is not allowed.");
 						}
 					}

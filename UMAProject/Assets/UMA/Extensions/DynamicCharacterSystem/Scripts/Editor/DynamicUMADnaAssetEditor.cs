@@ -165,11 +165,21 @@ namespace UMAEditor
 				if(GUI.Button(hashBtnRect,"Save")){
 					editTypeHashEnabled = false;
                 }
+				var originalDnaTypeHash = dnaTypeHash;
 				EditorGUI.BeginChangeCheck();
 				EditorGUI.PropertyField(hashFieldRect, dnaTypeHash, new GUIContent(""));
 				if (EditorGUI.EndChangeCheck())
 				{
-					serializedObject.ApplyModifiedProperties();
+					//we MUST NOT let this have the same TypeHash as UMADnaHumanoid or UMADnaTutorial, so if people randomly choose that value- dont assign it
+					if(dnaTypeHash.intValue == UMAUtils.StringToHash("UMADnaHumanoid") || dnaTypeHash.intValue == UMAUtils.StringToHash("UMADnaTutorial"))
+					{
+						Debug.LogWarning("You are trying to set a DynamicDNA to the same hash as a UMADnaHumanoid or UMADnaTutorial dna- this is not allowed");
+						dnaTypeHash = originalDnaTypeHash;
+					}
+					else
+					{
+						serializedObject.ApplyModifiedProperties();
+					}
 				}
 				//EditorGUILayout.EndHorizontal();
 			}

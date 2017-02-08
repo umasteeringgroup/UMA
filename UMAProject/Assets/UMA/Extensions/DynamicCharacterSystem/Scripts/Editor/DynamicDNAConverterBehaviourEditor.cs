@@ -54,7 +54,6 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 	public bool initialized = false;
 
 	//Foldouts Expanded bools
-	bool dnaAssetExpanded = true;
 	bool dnaAssetInfoExpanded = false;
 	bool skeletonModifiersExpanded = true;
 	bool skeletonModifiersInfoExpanded = false;
@@ -247,18 +246,19 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 		//Style for Tips
 		var foldoutTipStyle = new GUIStyle(EditorStyles.foldout);
 		foldoutTipStyle.fontStyle = FontStyle.Bold;
+		//DISPLAY VALUE
+		EditorGUILayout.PropertyField(serializedObject.FindProperty("DisplayValue"));
 		//
 		//=============DNA ASSET AND EDITOR============//
-		dnaAssetExpanded = EditorGUILayout.Foldout(dnaAssetExpanded, "Dynamic DNA", foldoutTipStyle);
-		if (dnaAssetExpanded)
+		SerializedProperty dnaAsset = serializedObject.FindProperty("dnaAsset");
+		dnaAsset.isExpanded = EditorGUILayout.Foldout(dnaAsset.isExpanded, "Dynamic DNA", foldoutTipStyle);
+		if (dnaAsset.isExpanded)
 		{
 			GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
 			EditorGUI.indentLevel++;
 			dnaAssetInfoExpanded = EditorGUILayout.Foldout(dnaAssetInfoExpanded, "INFO");
 			if (dnaAssetInfoExpanded)
 				EditorGUILayout.HelpBox("The DynmicDNAAsset is the DNA this converter will apply to the skeleton. The DNA consists of names and associated values. Often you display these names as 'sliders'. The values set by these sliders change an Avatar's body proportions by modifying its skeleton bones by the dna value, according to the 'DNA Converter Settings' you set in the 'DNA Converter Settings' section.", MessageType.Info);
-
-			SerializedProperty dnaAsset = serializedObject.FindProperty("dnaAsset");
 			
 			if(dnaAsset.objectReferenceValue == null)
 			{
@@ -864,10 +864,17 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 			bool overallModifiersEnabled = overallModifiersEnabledProp.boolValue;
 			if (overallModifiersEnabled)
 			{
+				EditorGUI.BeginChangeCheck();
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("overallScale"));
-				EditorGUILayout.PropertyField(serializedObject.FindProperty("heightModifiers"));
-				EditorGUILayout.PropertyField(serializedObject.FindProperty("radiusModifier"));
+				EditorGUILayout.PropertyField(serializedObject.FindProperty("tightenBounds"));
+				EditorGUILayout.PropertyField(serializedObject.FindProperty("boundsAdjust"));
+				//EditorGUILayout.PropertyField(serializedObject.FindProperty("heightModifiers"));
+				EditorGUILayout.PropertyField(serializedObject.FindProperty("radiusAdjust"));
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("massModifiers"));
+				if (EditorGUI.EndChangeCheck())
+				{
+					serializedObject.ApplyModifiedProperties();
+				}
 			}
 			EditorGUI.indentLevel--;
 			GUIHelper.EndVerticalPadded(3);

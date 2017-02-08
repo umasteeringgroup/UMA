@@ -11,7 +11,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f0188188c253e0c4bb9b46e19fa7312e, type: 3}
   m_Name: MaleBeard3
   m_EditorClassIdentifier: 
-  recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"MaleHead_Head","scale":100,"copyIdx":-1,"overlays":[{"id":"MaleBeard03","colorIdx":0,"rect":[256,0,512,256]}]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]}],"colors":[],"fColors":[{"name":"Hair","colors":[106,79,54,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"","packedDna":[]}'
+  recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"MaleHead_Head","scale":100,"copyIdx":-1,"overlays":[{"id":"MaleBeard03","colorIdx":0,"rect":[512,0,1024,512]}]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]}],"colors":[],"fColors":[{"name":"Hair","colors":[106,79,54,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"","packedDna":[]}'
   recipeType: Wardrobe
   DisplayValue: 
   compatibleRaces:

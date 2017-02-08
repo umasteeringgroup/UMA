@@ -25,6 +25,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -39,6 +40,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2323fdffbbd0f51409581a5ae1bab046, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  DisplayValue: 
   dnaTypeHash: 642525823
   dnaAsset: {fileID: 11400000, guid: 567b7e29bb88a444b93fc37aab9e3daa, type: 2}
   hashList:
@@ -2914,8 +2916,8 @@ MonoBehaviour:
         - modifier: 2
           DNATypeName: feetSize
           modifierValue: -0.17
-      min: -0.15
-      max: 0.0675
+      min: -0.06
+      max: 0.03
     valuesY:
       val:
         value: 0
@@ -3683,12 +3685,10 @@ MonoBehaviour:
   heightModifiers: {x: 0.85, y: 1.2}
   radiusModifier: 0.24
   massModifiers: {x: 42, y: 28, z: 22}
+  tightenBounds: 1
+  boundsPadding: {x: -0.07, y: 0.15, z: 0}
   startingPose: {fileID: 11400000, guid: 5ab2d970de3c3bf4d9062517fe98093e, type: 2}
   startingPoseWeight: 1
-  lastKnownAssetPath: Assets/UMA/Extensions/DynamicCharacterSystem/Resources/HumanGirlResourcesExample/RaceBase/DNA/HumanGirlFromFemale.prefab
-  lastKnownDuplicateAssetPath: Assets/UMA/Extensions/DynamicCharacterSystem/Resources/HumanGirlResourcesExample/RaceBase/DNA/HumanGirlFromFemale
-    1.prefab
-  lastKnownInstanceID: 18394
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1

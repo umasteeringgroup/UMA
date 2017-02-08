@@ -18,12 +18,19 @@ namespace UMA
         public List<SkeletonModifier> skeletonModifiers = new List<SkeletonModifier>();
 
         public bool overallModifiersEnabled = true;
-        public float overallScale = 1f;
-        public Vector2 heightModifiers = new Vector2(0.85f, 1.2f);
-        public float radiusModifier = 0.28f;
-        public Vector3 massModifiers = new Vector3(46f, 26f, 26f);
 
-        public UMABonePose startingPose = null;
+        public float overallScale = 1f;
+        //public Vector2 heightModifiers = new Vector2(0.85f, 1.2f);
+		[Tooltip("When Unity calculates the bounds it uses bounds based on the animation included when the mesh was exported. This can mean the bounds are not very 'tight' or go below the characters feet. Checking this will make the bounds tight to the characters head/feet. You can then use the 'BoundsPadding' option below to add extra space.")]
+		public bool tightenBounds = true;
+		[Tooltip("You can pad or tighten your bounds with these controls")]
+		public Vector3 boundsAdjust = Vector3.zero;
+		[Tooltip("The character Radius is used to calculate the fitting of the collider.")]
+		public Vector2 radiusAdjust = new Vector2(0.23f,0);
+
+		public Vector3 massModifiers = new Vector3(46f, 26f, 26f);
+
+		public UMABonePose startingPose = null;
         [Range(0f,1f)]
         [Tooltip("Adjust the influence the StartingPose has on the mesh. Tip: This can be animated to morph your character!")]
         public float startingPoseWeight = 1f;
@@ -88,30 +95,33 @@ namespace UMA
                 ((DynamicUMADnaBase)umaDna).dnaAsset = dnaAsset;
             }
             float overallScaleCalc = 0;
-            float lowerBackScale = 0;
-            bool overallScaleFound = false;
-            bool lowerBackScaleFound = false;
+            //float lowerBackScale = 0;
+            //bool overallScaleFound = false;
+            //bool lowerBackScaleFound = false;
 
             for (int i = 0; i < skeletonModifiers.Count; i++)
             {
                 skeletonModifiers[i].umaDNA = umaDna;
                 var thisHash = (skeletonModifiers[i].hash != 0) ? skeletonModifiers[i].hash : GetHash(skeletonModifiers[i].hashName);
+				//With these ValueX.x is the calculated value and ValueX.y is min and ValueX.z is max
                 var thisValueX = skeletonModifiers[i].ValueX;
                 var thisValueY = skeletonModifiers[i].ValueY;
                 var thisValueZ = skeletonModifiers[i].ValueZ;
                 if (skeletonModifiers[i].hashName == "Position" && skeletonModifiers[i].property == SkeletonModifier.SkeletonPropType.Scale)
                 {
+					//TODO eli added something for overall scale to RaceData- whats that supposed to do?
                     var calcVal = thisValueX.x - skeletonModifiers[i].valuesX.val.value + overallScale;
                     overallScaleCalc = Mathf.Clamp(calcVal, thisValueX.y, thisValueX.z);
                     skeleton.SetScale(skeletonModifiers[i].hash, new Vector3(overallScaleCalc, overallScaleCalc, overallScaleCalc));
-                    overallScaleFound = true;
+                    //overallScaleFound = true;
+					//Debug.Log("overallScaleCalc was " + overallScaleCalc);
                 }
-                else if (skeletonModifiers[i].hashName == "LowerBack" && skeletonModifiers[i].property == SkeletonModifier.SkeletonPropType.Scale)
+                /*else if (skeletonModifiers[i].hashName == "LowerBack" && skeletonModifiers[i].property == SkeletonModifier.SkeletonPropType.Scale)
                 {
                     lowerBackScale = Mathf.Clamp(thisValueX.x, thisValueX.y, thisValueX.z);
                     skeleton.SetScale(skeletonModifiers[i].hash, new Vector3(lowerBackScale, lowerBackScale, lowerBackScale));
                     lowerBackScaleFound = true;
-                }
+                }*/
                 else if (skeletonModifiers[i].property == SkeletonModifier.SkeletonPropType.Position)
                 {
                     skeleton.SetPositionRelative(thisHash,
@@ -138,23 +148,23 @@ namespace UMA
                 }
 
             }
-            //overall modifiers
-            if (overallScaleFound && lowerBackScaleFound && overallModifiersEnabled)
+            /*if (overallScaleFound && lowerBackScaleFound && overallModifiersEnabled)
             {
                 
                 if(umaDna == null)
                 {
-                    umaData.characterHeight = overallScaleCalc * (heightModifiers.x + heightModifiers.y * lowerBackScale);
+                    //umaData.characterHeight = overallScaleCalc * (heightModifiers.x + heightModifiers.y * lowerBackScale);
                     umaData.characterMass = massModifiers.x * overallScaleCalc + massModifiers.y + massModifiers.z;
-                    umaData.characterRadius = radiusModifier * overallScaleCalc;
-                }
+					//umaData.characterRadius = radiusAdjust * overallScaleCalc;
+				}
                 else
                 {
-                    umaData.characterHeight = overallScaleCalc * (heightModifiers.x + heightModifiers.y * lowerBackScale) + ((((DynamicUMADnaBase)umaDna).GetValue("feetSize",true) - 0.5f) * 0.20f);
+                    //umaData.characterHeight = overallScaleCalc * (heightModifiers.x + heightModifiers.y * lowerBackScale) + ((((DynamicUMADnaBase)umaDna).GetValue("feetSize",true) - 0.5f) * 0.20f);
                     umaData.characterMass = massModifiers.x * overallScaleCalc + massModifiers.y * ((DynamicUMADnaBase)umaDna).GetValue("upperWeight",true) + massModifiers.z * ((DynamicUMADnaBase)umaDna).GetValue("lowerWeight",true);
-                    umaData.characterRadius = 0.24f + ((((DynamicUMADnaBase)umaDna).GetValue("height",true) - 0.5f) * 0.32f) + ((((DynamicUMADnaBase)umaDna).GetValue("upperMuscle",true) - 0.5f) * 0.01f);
+					//umaData.characterRadius = 0.24f + ((((DynamicUMADnaBase)umaDna).GetValue("height",true) - 0.5f) * 0.32f) + ((((DynamicUMADnaBase)umaDna).GetValue("upperMuscle",true) - 0.5f) * 0.01f);
+					Debug.Log("Mass with Lowerback = " + umaData.characterMass);
                 }
-            }
+            }*/
             if (startingPose != null && asReset == false)
             {
                 for (int i = 0; i < startingPose.poses.Length; i++)
@@ -162,7 +172,50 @@ namespace UMA
 					skeleton.Morph(startingPose.poses[i].hash, startingPose.poses[i].position, startingPose.poses[i].scale, startingPose.poses[i].rotation, startingPoseWeight);
 				}
             }
-        }
+			//overall modifiers
+			//Try to use updated Bounds to set the height.
+			if (overallModifiersEnabled && umaData.myRenderer != null)
+			{
+				if(umaData.myRenderer.localBounds.size.y == 0)
+					return;
+				var currentSMROffscreenSetting = umaData.myRenderer.updateWhenOffscreen;
+				Bounds newBounds;
+				umaData.myRenderer.updateWhenOffscreen = true;
+				newBounds = new Bounds(umaData.myRenderer.localBounds.center, umaData.myRenderer.localBounds.size);
+                umaData.myRenderer.updateWhenOffscreen = currentSMROffscreenSetting;
+				//somehow the bounds end up beneath the floor i.e. newBounds.center.y - newBounds.extents.y is actually a minus number
+				//tighten bounds fixes this
+				if (tightenBounds)
+				{
+					Vector3 newCenter = new Vector3(newBounds.center.x, newBounds.center.y, newBounds.center.z);
+					Vector3 newSize = new Vector3(newBounds.size.x, newBounds.size.y, newBounds.size.z);
+					if (newBounds.center.y - newBounds.extents.y < 0)
+					{
+						var underAmount = newBounds.center.y - newBounds.extents.y;
+						newSize.y = (newBounds.center.y * 2) - underAmount;
+                        newCenter.y = newSize.y / 2;
+                    }
+					Bounds modifiedBounds = new Bounds(newCenter, newSize);
+					newBounds = modifiedBounds;
+				}
+				//character height can be based on the resulting height
+                umaData.characterHeight = newBounds.size.y * (1 + radiusAdjust.y);
+				//radius could be based on the resulting width
+				umaData.characterRadius = (newBounds.size.x * (radiusAdjust.x/*/2*/) + newBounds.size.z * (radiusAdjust.x /*/ 2*/)) /2;
+				//then base the mass on a compond of those two modified by the mass modifiers values
+				var radiusAsDNA = (umaData.characterRadius * 2) * overallScaleCalc;
+				var radiusYAsDNA = ((1 + radiusAdjust.y) * 0.5f) * overallScaleCalc;
+				umaData.characterMass = (massModifiers.x * overallScaleCalc) + massModifiers.y * radiusYAsDNA + massModifiers.z * radiusAsDNA;
+                //Debug.Log("umaData.characterRadius was "+ umaData.characterRadius+ " radiusAsDNA was "+ radiusAsDNA + " radiusYAsDNA was " + radiusYAsDNA + " Mass without Lowerback = " + umaData.characterMass);
+				//add bounds padding if any was set
+				if (boundsAdjust != Vector3.zero)
+				{
+					newBounds.Expand(boundsAdjust);
+				}
+				//set the padded bounds
+				umaData.myRenderer.localBounds = newBounds;
+			}
+		}
 
         /// <summary>
         /// Method to temporarily remove any dna from a Skeleton. Useful for getting bone values for pre and post dna (since the skeletons own unmodified values often dont *quite* match for some reason- I think because a recipes 0.5 values end up as 0.5019608 when they come out of binary)
@@ -171,6 +224,7 @@ namespace UMA
         /// <param name="umaData"></param>
         public void RemoveDNAChangesFromSkeleton(UMAData umaData)
         {
+			//sending true makes all the starting values set to zero
             UpdateDynamicUMADnaBones(umaData, umaData.skeleton, true);
         }
 
@@ -423,6 +477,8 @@ namespace UMA
                     }
                     public float GetUmaDNAValue(string DNATypeName, UMADnaBase umaDnaIn)
                     {
+						if (umaDnaIn == null)
+							return 0.5f;
                         DynamicUMADnaBase umaDna = (DynamicUMADnaBase)umaDnaIn;
                         float val = 0.5f;
                         if (DNATypeName == "None" || umaDna == null)

@@ -12,15 +12,18 @@ MonoBehaviour:
   m_Name: FemaleJeans01-Res
   m_EditorClassIdentifier: 
   overlayName: FemaleJeans01-Res
+  overlayType: 0
   rect:
     serializedVersion: 2
     x: 0
     y: 0
     width: 0
     height: 0
+  alphaMask: {fileID: 0}
   textureList:
   - {fileID: 2800000, guid: 5f2fe43b74acc73418551af0b5766753, type: 3}
   - {fileID: 2800000, guid: 7b5214cf7c962d5468ee699d92342bf0, type: 3}
   - {fileID: 2800000, guid: b23003eb8ef49d34a98d2be565b351a7, type: 3}
   tags: []
   material: {fileID: 11400000, guid: 8e29dbac5d2e82f44a759a7e2cc568ab, type: 2}
+  OcclusionEntries: []
