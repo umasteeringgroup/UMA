@@ -13,7 +13,7 @@ SceneSettings:
 --- !u!104 &2
 RenderSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 6
+  serializedVersion: 7
   m_Fog: 0
   m_FogColor: {r: 0.6, g: 0.7529412, b: 0.99607843, a: 1}
   m_FogMode: 2
@@ -37,12 +37,12 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 166765684}
+  m_IndirectSpecularColor: {r: 0.1419074, g: 0.14897406, b: 0.16846019, a: 1}
 --- !u!157 &4
 LightmapSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 6
+  serializedVersion: 7
   m_GIWorkflowMode: 1
-  m_LightmapsMode: 1
   m_GISettings:
     serializedVersion: 2
     m_BounceScale: 1
@@ -53,17 +53,22 @@ LightmapSettings:
     m_EnableBakedLightmaps: 1
     m_EnableRealtimeLightmaps: 1
   m_LightmapEditorSettings:
-    serializedVersion: 3
+    serializedVersion: 4
     m_Resolution: 1
     m_BakeResolution: 50
     m_TextureWidth: 1024
     m_TextureHeight: 1024
+    m_AO: 0
     m_AOMaxDistance: 1
-    m_Padding: 2
     m_CompAOExponent: 0
+    m_CompAOExponentDirect: 0
+    m_Padding: 2
     m_LightmapParameters: {fileID: 0}
+    m_LightmapsBakeMode: 1
     m_TextureCompression: 0
+    m_DirectLightInLightProbes: 1
     m_FinalGather: 0
+    m_FinalGatherFiltering: 1
     m_FinalGatherRayCount: 1024
     m_ReflectionCompression: 2
   m_LightingDataAsset: {fileID: 112000001, guid: 44832b671251fcd45b0864e699a30c3d,
@@ -746,7 +751,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 305676970}
   m_Direction: 0
   m_Value: 0
-  m_Size: 0.99999994
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -1349,17 +1354,17 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &152714820
 Transform:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 152714819}
-  m_LocalRotation: {x: -0.22156721, y: -0.34938297, z: 0.61559784, w: 0.67073005}
-  m_LocalPosition: {x: 0.7235021, y: 1.8364667, z: -0.7303822}
+  m_LocalRotation: {x: 0.2039189, y: 0.13704616, z: 0.6216679, w: 0.7437503}
+  m_LocalPosition: {x: -0.662, y: 1.8364667, z: -1.431}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 7.5870004, y: 27.399002, z: 81.874}
   m_Children: []
   m_Father: {fileID: 1327886465}
   m_RootOrder: 0
@@ -1370,16 +1375,17 @@ Light:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 152714819}
   m_Enabled: 1
-  serializedVersion: 6
+  serializedVersion: 7
   m_Type: 1
   m_Color: {r: 0.6, g: 0.7529412, b: 0.99607843, a: 1}
-  m_Intensity: 0.2
+  m_Intensity: 0.4
   m_Range: 10
   m_SpotAngle: 30
   m_CookieSize: 10
   m_Shadows:
     m_Type: 0
     m_Resolution: 3
+    m_CustomResolution: -1
     m_Strength: 1
     m_Bias: 0.1
     m_NormalBias: 0.4
@@ -1392,10 +1398,10 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_Lightmapping: 4
+  m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
-  m_AreaSize: {x: 1, y: 1}
 --- !u!1 &160583029
 GameObject:
   m_ObjectHideFlags: 0
@@ -1617,16 +1623,17 @@ Light:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 166765682}
   m_Enabled: 1
-  serializedVersion: 6
+  serializedVersion: 7
   m_Type: 1
   m_Color: {r: 0.9338235, g: 0.9185755, b: 0.88575906, a: 1}
-  m_Intensity: 1.4
+  m_Intensity: 1.2
   m_Range: 10
   m_SpotAngle: 30
   m_CookieSize: 10
   m_Shadows:
     m_Type: 2
     m_Resolution: -1
+    m_CustomResolution: -1
     m_Strength: 1
     m_Bias: 0.02
     m_NormalBias: 1
@@ -1639,10 +1646,10 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_Lightmapping: 4
+  m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
-  m_AreaSize: {x: 1, y: 1}
 --- !u!1 &167269312
 GameObject:
   m_ObjectHideFlags: 0
@@ -1804,7 +1811,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 431424, guid: e4c9215b3e1d0b841900ba25c3907b6b, type: 2}
       propertyPath: m_RootOrder
-      value: 11
+      value: 10
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: e4c9215b3e1d0b841900ba25c3907b6b, type: 2}
@@ -2541,11 +2548,12 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 5a63f3d521484f345b330eaa6ddd496e, type: 2}
   - {fileID: 11400000, guid: 5746c09014733de4bbf208291c61aaea, type: 2}
   - {fileID: 11400000, guid: e2224fed494e9d943be557109e679173, type: 2}
-  - {fileID: 11400000, guid: d3aed0339ec3f39418d0a2dde99b9917, type: 2}
+  - {fileID: 0}
   - {fileID: 11400000, guid: 1320201c90abfb148ba70377406b5dc4, type: 2}
-  - {fileID: 11400000, guid: 7d8313c93b135224b806c1f92f4ccf6e, type: 2}
+  - {fileID: 0}
   - {fileID: 11400000, guid: 03e5bfa4f7f2fd445974ed61bdf5d9cf, type: 2}
   - {fileID: 11400000, guid: a209ee514b60b9044bdef1bcbf69967d, type: 2}
+  - {fileID: 11400000, guid: b0ed3771a80364c45bd224aee6ac2837, type: 2}
   scaleAdjust: 1
   readWrite: 0
   compress: 0
@@ -2604,7 +2612,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 11400000, guid: 25df90b5e017453499c48fdb9051267c, type: 2}
   - {fileID: 11400000, guid: 335dc3fe2bdb9a24ea853d1023a2ab3e, type: 2}
-  - {fileID: 11400000, guid: bc97a0ea4a9277443a7680b85479aa32, type: 2}
+  - {fileID: 0}
   - {fileID: 11400000, guid: 3e2301213b719e549ad53ae013abcde2, type: 2}
   - {fileID: 11400000, guid: 7175f4c977569f748a2c19a6c9f2ab10, type: 2}
   - {fileID: 11400000, guid: a61b80b3ef057274e93e5d8c6a2aacec, type: 2}
@@ -2634,7 +2642,95 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 43055205c612ebf4d9f96f0d2818e641, type: 2}
   - {fileID: 11400000, guid: 7c7d4dd46aadf264ca87a97b357a238e, type: 2}
   - {fileID: 11400000, guid: 331efa6bce027af46ae666095da5f511, type: 2}
-  - {fileID: 11400000, guid: 73cf00c391282944c8251cee30c6cb68, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 11400000, guid: bc845162d92a43f4ea04d9bece6f503f, type: 2}
+  - {fileID: 11400000, guid: 19656603ac354ad4aa0dee0018f7f6d5, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 11400000, guid: fcd8d6062a368b1468c653298da45409, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 11400000, guid: d813f8755f9fdee489b781e0d5e404c5, type: 2}
+  - {fileID: 11400000, guid: 8c7ae3373990f264199c4839d6bf678c, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 11400000, guid: f40bf2e2d4087954bb4d86d0c4aa290f, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 11400000, guid: 4559a01221d4aa540bb720979b99c28f, type: 2}
+  - {fileID: 11400000, guid: 060710660a79b9549b07a47ba0c1fbe2, type: 2}
+  - {fileID: 0}
+  - {fileID: 11400000, guid: a209ee514b60b9044bdef1bcbf69967d, type: 2}
+  - {fileID: 11400000, guid: f57c699e06562b84fb91461077d470a9, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 11400000, guid: 1320201c90abfb148ba70377406b5dc4, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 11400000, guid: 4e3423fc7dbaee44397ec91baa5ce828, type: 2}
+  - {fileID: 11400000, guid: 75fc3e08dcfd73e4fbdd25a78eacf0a7, type: 2}
+  - {fileID: 11400000, guid: f3ed1216fb09ee24f83e35b72805413f, type: 2}
+  - {fileID: 11400000, guid: 03e5bfa4f7f2fd445974ed61bdf5d9cf, type: 2}
+  - {fileID: 0}
+  - {fileID: 11400000, guid: 8598e407f98b3b745980a5ade46c86ab, type: 2}
+  - {fileID: 11400000, guid: 19ca51fa9b344074ebeaad4c873fd125, type: 2}
+  - {fileID: 11400000, guid: a60d5c517fee0ce48b5b59b9ed45861e, type: 2}
+  - {fileID: 11400000, guid: 5485425746189d647a627abc4e2f06e9, type: 2}
+  - {fileID: 11400000, guid: 80ee1b872a449f044bc52611682b7698, type: 2}
+  - {fileID: 11400000, guid: 1233ce5e6d66f7043ae6942431739351, type: 2}
+  - {fileID: 11400000, guid: 35d1a43e1188bc94a9fe409bcecaa203, type: 2}
+  - {fileID: 11400000, guid: 0c49ebdd154238b45bb1a3338a613193, type: 2}
+  - {fileID: 11400000, guid: c4542d0190eae184d8f1e1e277208fd7, type: 2}
+  - {fileID: 11400000, guid: 0f78229f3dbb8e34f904840f3db74e72, type: 2}
+  - {fileID: 11400000, guid: 77a1606bb44cacf46b25dcf362209aa5, type: 2}
+  - {fileID: 11400000, guid: eea2e3c934a89a549bcc3dc6427c16ad, type: 2}
+  - {fileID: 11400000, guid: 10329f729c6ed4b4795e6c1986c8a496, type: 2}
+  - {fileID: 11400000, guid: 434a9341d6f18de4cbe5a6bff89d3f0d, type: 2}
+  - {fileID: 11400000, guid: f0bcd19507f7b524faee4d30b08d9feb, type: 2}
+  - {fileID: 11400000, guid: 65887f0e5072b8b499a7760e4392741d, type: 2}
+  - {fileID: 11400000, guid: 43b1b1d7ba147c648a052d284467dcf7, type: 2}
+  - {fileID: 11400000, guid: 4e443d543c17d314984f1bf934677b05, type: 2}
+  - {fileID: 11400000, guid: 7c94cdeabfed7814d9717b1f8b5a49ba, type: 2}
+  - {fileID: 11400000, guid: afecbdb8f051eff408e0749bb6a44bf1, type: 2}
+  - {fileID: 11400000, guid: 3693609360e037e40a7784ab3308e7c0, type: 2}
+  - {fileID: 11400000, guid: 98b05b17b4e8ff142b1f16df2ef2315b, type: 2}
+  - {fileID: 11400000, guid: 79fb331967188a048837288f16dbc006, type: 2}
+  - {fileID: 11400000, guid: b50b1d40e34242d4da5d97c1e5f8804e, type: 2}
+  - {fileID: 11400000, guid: 40b53c0fadbef334ca1842707ed2929a, type: 2}
+  - {fileID: 11400000, guid: cda7e080be988c44ab8341720f86d6cd, type: 2}
+  - {fileID: 11400000, guid: 2c830213a9d6eef409a4b7ce0e388acf, type: 2}
+  - {fileID: 11400000, guid: 76a2d7b941eeeda4ba2df5ea0e2fb266, type: 2}
+  - {fileID: 11400000, guid: 31b625579c8744547b02bdd5c42c557e, type: 2}
+  - {fileID: 11400000, guid: 10d1e2ac030a2d54e8dffe526204097f, type: 2}
+  - {fileID: 11400000, guid: 5a63f3d521484f345b330eaa6ddd496e, type: 2}
+  - {fileID: 11400000, guid: eec31456f04efc743a680d6caf7207e6, type: 2}
+  - {fileID: 11400000, guid: 475458bd3c70c4148997ace0f6619dbb, type: 2}
+  - {fileID: 11400000, guid: 5746c09014733de4bbf208291c61aaea, type: 2}
+  - {fileID: 11400000, guid: bb14bc6aea3a71844b8dd956db35ce75, type: 2}
+  - {fileID: 11400000, guid: dad7820865c0d3c4a8eac0d511fd9655, type: 2}
+  - {fileID: 11400000, guid: 2d98d624c8a1ae94f985efa88d23998c, type: 2}
+  - {fileID: 11400000, guid: 3040d0ba6d7b36040913ae2c9dac9852, type: 2}
+  - {fileID: 11400000, guid: a97f7b1d9168ddc45b0479097ad7ea09, type: 2}
+  - {fileID: 11400000, guid: 65954fc26eb12744384e91567ad69e60, type: 2}
+  - {fileID: 11400000, guid: 07908c48b4fc24542bd91f7d94e4a4f7, type: 2}
+  - {fileID: 11400000, guid: 2fabb22c68734124da7743790db325e3, type: 2}
+  - {fileID: 11400000, guid: e2224fed494e9d943be557109e679173, type: 2}
+  - {fileID: 11400000, guid: d0f7dbe2fc5d2564e903f99bd19fa89b, type: 2}
+  - {fileID: 11400000, guid: bc78262a19833744f9ee5b3389aec814, type: 2}
+  - {fileID: 11400000, guid: ba24e8be4887b3a42848c15bcfdbef39, type: 2}
+  - {fileID: 11400000, guid: b0ed3771a80364c45bd224aee6ac2837, type: 2}
+  - {fileID: 0}
 --- !u!4 &269104743
 Transform:
   m_ObjectHideFlags: 0
@@ -4247,21 +4343,17 @@ MonoBehaviour:
     loadDefaultRecipes: 1
     recipes:
     - _recipeName: ToonHair1
-      _recipe: {fileID: 11400000, guid: 8431fa862e3eba44a9887cf282f4a223, type: 2}
-      _compatibleRaces:
-      - ToonFemale
-    - _recipeName: ToonFemaleUnderwear1
-      _recipe: {fileID: 11400000, guid: 7d854ee186b4cb8499257fc6c7433be0, type: 2}
+      _recipe: {fileID: 0}
       _compatibleRaces:
       - ToonFemale
     - _recipeName: FemaleHair1-Res
-      _recipe: {fileID: 11400000, guid: c80ee805aa5b13c4bb0eb211433f2fba, type: 2}
+      _recipe: {fileID: 0}
       _compatibleRaces:
       - HumanFemaleResources
-    - _recipeName: FemaleUndies-Res
-      _recipe: {fileID: 11400000, guid: a19b584280d31644785d5f56713e4149, type: 2}
+    - _recipeName: ToonFemaleUnderwear1
+      _recipe: {fileID: 11400000, guid: ea281ac1676c4374783d2104f659f68d, type: 2}
       _compatibleRaces:
-      - HumanFemaleResources
+      - ToonFemale
   raceAnimationControllers:
     defaultAnimationController: {fileID: 9100000, guid: ae859d58fdf844b73863d3833f955cdf,
       type: 2}
@@ -4816,19 +4908,15 @@ MonoBehaviour:
     loadDefaultRecipes: 1
     recipes:
     - _recipeName: ToonHair1
-      _recipe: {fileID: 11400000, guid: 8431fa862e3eba44a9887cf282f4a223, type: 2}
+      _recipe: {fileID: 0}
       _compatibleRaces:
       - ToonFemale
     - _recipeName: ToonFemaleUnderwear1
-      _recipe: {fileID: 11400000, guid: 7d854ee186b4cb8499257fc6c7433be0, type: 2}
+      _recipe: {fileID: 0}
       _compatibleRaces:
       - ToonFemale
     - _recipeName: FemaleHair1-Res
-      _recipe: {fileID: 11400000, guid: c80ee805aa5b13c4bb0eb211433f2fba, type: 2}
-      _compatibleRaces:
-      - HumanFemaleResources
-    - _recipeName: FemaleUndies-Res
-      _recipe: {fileID: 11400000, guid: a19b584280d31644785d5f56713e4149, type: 2}
+      _recipe: {fileID: 0}
       _compatibleRaces:
       - HumanFemaleResources
   raceAnimationControllers:
@@ -7671,16 +7759,17 @@ Light:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 709798930}
   m_Enabled: 1
-  serializedVersion: 6
+  serializedVersion: 7
   m_Type: 1
   m_Color: {r: 0.9632353, g: 0.9508408, b: 0.878244, a: 1}
-  m_Intensity: 0.45
+  m_Intensity: 0.33
   m_Range: 10
   m_SpotAngle: 30
   m_CookieSize: 10
   m_Shadows:
     m_Type: 0
     m_Resolution: 3
+    m_CustomResolution: -1
     m_Strength: 0.59
     m_Bias: 0.1
     m_NormalBias: 0.4
@@ -7693,10 +7782,10 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_Lightmapping: 4
+  m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
-  m_AreaSize: {x: 1, y: 1}
 --- !u!1 &727029868
 GameObject:
   m_ObjectHideFlags: 0
@@ -9115,6 +9204,7 @@ Transform:
   - {fileID: 1875296714}
   - {fileID: 518079763}
   - {fileID: 2079936342}
+  - {fileID: 1705365350}
   m_Father: {fileID: 0}
   m_RootOrder: 1
 --- !u!1 &893401640
@@ -9259,20 +9349,20 @@ MonoBehaviour:
   preloadWardrobeRecipes:
     loadDefaultRecipes: 1
     recipes:
+    - _recipeName: FemaleHair1-Res
+      _recipe: {fileID: 0}
+      _compatibleRaces:
+      - HumanFemaleResources
+    - _recipeName: MaleBeard3
+      _recipe: {fileID: 11400000, guid: 1df4eb647357a74498fa7e6b4672ad8d, type: 2}
+      _compatibleRaces:
+      - HumanMaleDCS
     - _recipeName: ToonFemaleUnderwear1
-      _recipe: {fileID: 11400000, guid: 7d854ee186b4cb8499257fc6c7433be0, type: 2}
+      _recipe: {fileID: 11400000, guid: ea281ac1676c4374783d2104f659f68d, type: 2}
       _compatibleRaces:
       - ToonFemale
-    - _recipeName: FemaleHair1-Res
-      _recipe: {fileID: 11400000, guid: c80ee805aa5b13c4bb0eb211433f2fba, type: 2}
-      _compatibleRaces:
-      - HumanFemaleResources
-    - _recipeName: FemaleUndies-Res
-      _recipe: {fileID: 11400000, guid: a19b584280d31644785d5f56713e4149, type: 2}
-      _compatibleRaces:
-      - HumanFemaleResources
     - _recipeName: ToonHair1
-      _recipe: {fileID: 11400000, guid: 8431fa862e3eba44a9887cf282f4a223, type: 2}
+      _recipe: {fileID: 11400000, guid: 7208f8cc5e698b74ca3fc08abfb29cc6, type: 2}
       _compatibleRaces:
       - ToonFemale
   raceAnimationControllers:
@@ -12219,17 +12309,20 @@ MeshRenderer:
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
   m_Materials:
   - {fileID: 2100000, guid: 411da2e7323235d4fabbb4c5ac71d378, type: 2}
   m_SubsetIndices: 
   m_StaticBatchRoot: {fileID: 0}
-  m_UseLightProbes: 1
-  m_ReflectionProbeUsage: 1
   m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
+  m_SelectedWireframeHidden: 0
   m_MinimumChartSize: 4
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
@@ -14885,7 +14978,7 @@ MonoBehaviour:
   slotElementList:
   - {fileID: 11400000, guid: 04442629189f10a48bc3238f44aa9856, type: 2}
   - {fileID: 11400000, guid: 0fbc0a0bbfb29084bbeafb0876b6e28b, type: 2}
-  - {fileID: 11400000, guid: 39326b41d79ca32499386b857d3e8894, type: 2}
+  - {fileID: 0}
   - {fileID: 11400000, guid: db59a2fec12e144498fed4c62c157859, type: 2}
   - {fileID: 11400000, guid: 96efa554e673f0c40ba212cde7477926, type: 2}
   - {fileID: 11400000, guid: 2ea0c2632af00954d80449e69aae3961, type: 2}
@@ -15911,19 +16004,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enableDynamicIndexing: 0
   makePersistent: 0
+  duplicateNamesIndex:
+    data: []
 --- !u!4 &1705365350
 Transform:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1705365348}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 10
+  m_Father: {fileID: 879538282}
+  m_RootOrder: 8
 --- !u!1 &1708827405
 GameObject:
   m_ObjectHideFlags: 0
@@ -18224,10 +18319,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 643ec75e219b576489dae73d4e805742, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  remoteServerURL: 
-  useJsonIndex: 1
-  remoteServerIndexURL: 
   makePersistent: 0
+  remoteServerURL: 
+  useJsonIndex: 0
+  remoteServerIndexURL: 
+  useEncryptedBundles: 0
+  bundleEncryptionPassword: BBf1/JYc0HCqpZMuyp0Ddw==
   assetBundlesToPreLoad: []
   gameObjectsToActivate: []
   gameObjectsToActivateOnInit: []
@@ -18236,7 +18333,7 @@ MonoBehaviour:
   loadingMessage: Loading Assets...
   isInitialized: 0
   placeholderRace: {fileID: 11400000, guid: 8182baefc34d4474b939b341f9c3a712, type: 2}
-  placeholderWardrobeRecipe: {fileID: 11400000, guid: 772c88d15402a8441b564c236b3b7729,
+  placeholderWardrobeRecipe: {fileID: 11400000, guid: dc9b2ee309a14484aaf8f4c83614e499,
     type: 2}
   placeholderSlot: {fileID: 11400000, guid: 1793ec477efd5b643a2a938a41cbd8f7, type: 2}
   placeholderOverlay: {fileID: 11400000, guid: 331efa6bce027af46ae666095da5f511, type: 2}
@@ -19273,7 +19370,6 @@ ReflectionProbe:
   m_TimeSlicingMode: 0
   m_Resolution: 128
   m_UpdateFrequency: 0
-  m_Importance: 1
   m_BoxSize: {x: 10, y: 10, z: 10}
   m_BoxOffset: {x: 0, y: 0, z: 0}
   m_NearClip: 0.3
@@ -19290,6 +19386,7 @@ ReflectionProbe:
   m_BoxProjection: 0
   m_RenderDynamicObjects: 0
   m_UseOcclusionCulling: 1
+  m_Importance: 1
   m_CustomBakedTexture: {fileID: 0}
 --- !u!1 &2079936341
 GameObject:

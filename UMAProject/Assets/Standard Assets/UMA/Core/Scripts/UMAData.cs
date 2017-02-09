@@ -835,6 +835,11 @@ namespace UMA
 				{
 					foreach (var converter in raceData.dnaConverterList)
 					{
+						if(converter == null)
+						{
+							Debug.LogWarning("RaceData " + raceData.raceName + " has a missing DNAConverter");
+							continue;
+						}
 						//'old' dna converters return a typehash based on the type name. 
 						//Dynamic DNA Converters return the typehash of their dna asset or 0 if none is assigned- we dont want to include those
 						if (converter.DNATypeHash == 0)
@@ -845,6 +850,7 @@ namespace UMA
 						}
 						else
 						{
+							//We MUST NOT give DynamicDNA the same hash a UMADnaHumanoid or else we loose the values
 							Debug.Log(raceData.raceName + " has multiple dna converters that are trying to use the same dna (" + converter.DNATypeHash + "). This is not allowed.");
 						}
 					}

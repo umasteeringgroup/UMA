@@ -17,6 +17,7 @@ public class UMACrowdRandomSet : ScriptableObject
 	[System.Serializable]
 	public class CrowdSlotElement
 	{
+        public string Info;
 		public CrowdSlotData[] possibleSlots;
 		public string requirement;
 		public string condition;

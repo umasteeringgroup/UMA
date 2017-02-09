@@ -12,15 +12,18 @@ MonoBehaviour:
   m_Name: FemaleUnderwear01-Res
   m_EditorClassIdentifier: 
   overlayName: FemaleUnderwear01-Res
+  overlayType: 0
   rect:
     serializedVersion: 2
     x: 0
-    y: 512
-    width: 1024
-    height: 512
+    y: 1024
+    width: 2048
+    height: 1024
+  alphaMask: {fileID: 0}
   textureList:
   - {fileID: 2800000, guid: 7dafca6ba8e72824280f4a8eec53ad3d, type: 3}
   - {fileID: 2800000, guid: df436beb9fc16474ba1ec164ff6fd639, type: 3}
   - {fileID: 2800000, guid: e5377253b1332484a8d207b517788dec, type: 3}
   tags: []
   material: {fileID: 11400000, guid: 8e29dbac5d2e82f44a759a7e2cc568ab, type: 2}
+  OcclusionEntries: []

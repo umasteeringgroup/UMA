@@ -29,6 +29,15 @@ namespace UMAAssetBundleManager
 						}
 					}
 				}
+				else if (assetType == "UMAWardrobeRecipe")
+				{
+					assetWardrobeCompatibleWith = (obj as UMAWardrobeRecipe).compatibleRaces;
+					if ((obj as UMAWardrobeRecipe).wardrobeSlot != "None")
+					{
+						assetWardrobeSlot = (obj as UMAWardrobeRecipe).wardrobeSlot;
+						assetWardrobeHides = (obj as UMAWardrobeRecipe).Hides;
+					}
+				}
 				else if (assetType == "UMAWardrobeCollection")
 				{
 					assetWardrobeCompatibleWith = (obj as UMAWardrobeCollection).compatibleRaces;
@@ -48,30 +57,48 @@ namespace UMAAssetBundleManager
 		//Wardrobe recipe specific data search functions...
 		public bool IsAssetWardrobeRecipe(string assetBundleName, string assetName)
 		{
-			var thisIndexAsset = GetAssetBundleIndexItem(assetBundleName, assetName, "UMATextRecipe");
-			if (thisIndexAsset.assetWardrobeSlot != "" || thisIndexAsset.assetWardrobeHides.Count > 0)
-			{
+			var thisIndexAsset = GetAssetBundleIndexItem(assetBundleName, assetName, "UMAWardrobeRecipe");
+			if (thisIndexAsset != null)
 				return true;
-			}
 			else
 			{
-				return false;
+				thisIndexAsset = GetAssetBundleIndexItem(assetBundleName, assetName, "UMATextRecipe");
+				if (thisIndexAsset.assetWardrobeSlot != "" || thisIndexAsset.assetWardrobeHides.Count > 0)
+				{
+					return true;
+				}
+				else
+				{
+					return false;
+				}
 			}
 		}
 
 		public string AssetWardrobeSlot(string assetBundleName, string assetName)
 		{
-			var thisIndexAsset = GetAssetBundleIndexItem(assetBundleName, assetName, "UMATextRecipe");
+			var thisIndexAsset = GetAssetBundleIndexItem(assetBundleName, assetName, "UMAWardrobeRecipe");
+			if(thisIndexAsset == null)
+				thisIndexAsset = GetAssetBundleIndexItem(assetBundleName, assetName, "UMATextRecipe");
+			if (thisIndexAsset == null)
+				return "";
 			return thisIndexAsset.assetWardrobeSlot;
 		}
 		public List<string> AssetWardrobeHides(string assetBundleName, string assetName)
 		{
-			var thisIndexAsset = GetAssetBundleIndexItem(assetBundleName, assetName, "UMATextRecipe");
+			var thisIndexAsset = GetAssetBundleIndexItem(assetBundleName, assetName, "UMAWardrobeRecipe");
+			if (thisIndexAsset == null)
+				thisIndexAsset = GetAssetBundleIndexItem(assetBundleName, assetName, "UMATextRecipe");
+			if (thisIndexAsset == null)
+				return null;
 			return thisIndexAsset.assetWardrobeHides;
 		}
 		public List<string> AssetWardrobeCompatibleWith(string assetBundleName, string assetName)
 		{
-			var thisIndexAsset = GetAssetBundleIndexItem(assetBundleName, assetName, "UMATextRecipe");
+			var thisIndexAsset = GetAssetBundleIndexItem(assetBundleName, assetName, "UMAWardrobeRecipe");
+			if (thisIndexAsset == null)
+				thisIndexAsset = GetAssetBundleIndexItem(assetBundleName, assetName, "UMATextRecipe");
+			if (thisIndexAsset == null)
+				return null;
 			return thisIndexAsset.assetWardrobeCompatibleWith;
 		}
 		//Wardrobe Collection specific data search functions...

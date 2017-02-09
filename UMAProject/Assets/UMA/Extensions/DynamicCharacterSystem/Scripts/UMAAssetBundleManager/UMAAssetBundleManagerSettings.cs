@@ -298,7 +298,7 @@ namespace UMAAssetBundleManager
 				else
 				{
                     EditorGUI.BeginChangeCheck();
-					newEncryptionPassword = EditorGUILayout.TextArea(UMAABMSettings.GetEncryptionPassword());
+					newEncryptionPassword = EditorGUILayout.TextArea(newEncryptionPassword);
 					if (EditorGUI.EndChangeCheck())
 					{
 						encryptionSaveButEnabled = EncryptionUtil.PasswordValid(newEncryptionPassword);
@@ -309,6 +309,7 @@ namespace UMAAssetBundleManager
 						{
 							currentEncryptionPassword = newEncryptionPassword;
 							UMAABMSettings.SetEncryptionPassword(newEncryptionPassword);
+							EditorGUIUtility.keyboardControl = 0;
 							manualEditEncryptionKey = false;
 						}
 					}
@@ -326,10 +327,8 @@ namespace UMAAssetBundleManager
 						manualEditEncryptionKey = false;
 						newEncryptionPassword = currentEncryptionPassword = UMAABMSettings.GetEncryptionPassword();
 						encryptionSaveButEnabled = false;
-						//This is literally the ONLY bloody way I can make the key field update. If anyone knows how to fix this that would be great!
-						Close();
-						GetWindow<UMAAssetBundleManagerSettings>("UMA AssetBundle Manager");
-						
+						EditorGUIUtility.keyboardControl = 0;
+
 					}
 				}
 				
@@ -361,6 +360,7 @@ namespace UMAAssetBundleManager
 							var suffixToSend = rgx.Replace(newEncryptionSuffix, "");
 							currentEncryptionSuffix = suffixToSend;
 							UMAABMSettings.SetEncryptionSuffix(suffixToSend.ToLower());
+							EditorGUIUtility.keyboardControl = 0;
 							manualEditEncryptionSuffix = false;
 						}
 					}
@@ -729,8 +729,10 @@ namespace UMAAssetBundleManager
 		/// </summary>
 		public static void SetEncryptionPassword(string encryptionPassword)
 		{
-			if(encryptionPassword != "")
-			SetEncryptionSettings(true, encryptionPassword);
+			if (encryptionPassword != "")
+			{
+                SetEncryptionSettings(true, encryptionPassword);
+			}
 		}
 		/// <summary>
 		/// Turns encryption OFF ands unsets any existing password
@@ -751,7 +753,9 @@ namespace UMAAssetBundleManager
 		public static void SetEncryptionSuffix(string encryptionSuffix)
 		{
 			if (encryptionSuffix != "")
-				SetEncryptionSettings(true,"", encryptionSuffix);
+			{
+				SetEncryptionSettings(true, "", encryptionSuffix);
+			}
 		}
 		/// <summary>
 		/// Turns encryption ON ands sets the encode names setting

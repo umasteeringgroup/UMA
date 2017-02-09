@@ -14,7 +14,8 @@ MonoBehaviour:
   data:
     raceID: HumanFemale
     slotElements:
-    - possibleSlots:
+    - Info: Eyeballs
+      possibleSlots:
       - slotID: FemaleEyes
         useSharedOverlayList: 0
         overlayListSource: 0
@@ -41,7 +42,8 @@ MonoBehaviour:
             overlayType: 1
       requirement: 
       condition: 
-    - possibleSlots:
+    - Info: Head And Face
+      possibleSlots:
       - slotID: FemaleFace
         useSharedOverlayList: 0
         overlayListSource: 0
@@ -66,7 +68,7 @@ MonoBehaviour:
             colorChannel: 0
             overlayType: 4
         - possibleOverlays:
-          - overlayID: F_eyebrows
+          - overlayID: FemaleEyebrow01
             maxRGB: {r: 0.1254902, g: 0.05882353, b: 0.05882353, a: 1}
             minRGB: {r: 0.1254902, g: 0.05882353, b: 0.05882353, a: 1}
             useSkinColor: 0
@@ -76,7 +78,7 @@ MonoBehaviour:
             colorChannel: 0
             overlayType: 3
         - possibleOverlays:
-          - overlayID: FemaleLipstick
+          - overlayID: FemaleLipstick01
             maxRGB: {r: 0.77205884, g: 0, b: 0, a: 1}
             minRGB: {r: 0.31617647, g: 0.11856618, b: 0.11856618, a: 1}
             useSkinColor: 0
@@ -118,7 +120,7 @@ MonoBehaviour:
             colorChannel: 0
             overlayType: 4
         - possibleOverlays:
-          - overlayID: F_eyebrows
+          - overlayID: FemaleEyebrow01
             maxRGB: {r: 0.1254902, g: 0.05882353, b: 0.05882353, a: 1}
             minRGB: {r: 0.1254902, g: 0.05882353, b: 0.05882353, a: 1}
             useSkinColor: 0
@@ -128,7 +130,7 @@ MonoBehaviour:
             colorChannel: 0
             overlayType: 3
         - possibleOverlays:
-          - overlayID: FemaleLipstick
+          - overlayID: FemaleLipstick01
             maxRGB: {r: 0.2794118, g: 0, b: 0, a: 1}
             minRGB: {r: 0.2352941, g: 0, b: 0, a: 1}
             useSkinColor: 1
@@ -148,28 +150,32 @@ MonoBehaviour:
             overlayType: 3
       requirement: 
       condition: 
-    - possibleSlots:
+    - Info: Mouth
+      possibleSlots:
       - slotID: FemaleHead_Mouth
         useSharedOverlayList: 1
         overlayListSource: 1
         overlayElements: []
       requirement: FemaleHead_Head
       condition: 
-    - possibleSlots:
+    - Info: Eye Area
+      possibleSlots:
       - slotID: FemaleHead_Eyes
         useSharedOverlayList: 1
         overlayListSource: 1
         overlayElements: []
       requirement: FemaleHead_Head
       condition: 
-    - possibleSlots:
+    - Info: Nose Area
+      possibleSlots:
       - slotID: FemaleHead_Nose
         useSharedOverlayList: 1
         overlayListSource: 1
         overlayElements: []
       requirement: FemaleHead_Head
       condition: 
-    - possibleSlots:
+    - Info: Ears
+      possibleSlots:
       - slotID: FemaleHead_ElvenEars
         useSharedOverlayList: 0
         overlayListSource: 0
@@ -190,13 +196,14 @@ MonoBehaviour:
         overlayElements: []
       requirement: FemaleHead_Head
       condition: 
-    - possibleSlots:
+    - Info: Eyelashes
+      possibleSlots:
       - slotID: FemaleEyelashfix
         useSharedOverlayList: 0
         overlayListSource: 0
         overlayElements:
         - possibleOverlays:
-          - overlayID: F_H_Eyelash
+          - overlayID: FemaleEyelash
             maxRGB: {r: 0, g: 0, b: 0, a: 1}
             minRGB: {r: 0, g: 0, b: 0, a: 1}
             useSkinColor: 0
@@ -207,7 +214,8 @@ MonoBehaviour:
             overlayType: 3
       requirement: 
       condition: 
-    - possibleSlots:
+    - Info: Torso
+      possibleSlots:
       - slotID: FemaleTorso
         useSharedOverlayList: 0
         overlayListSource: 0
@@ -223,7 +231,7 @@ MonoBehaviour:
             colorChannel: 0
             overlayType: 4
         - possibleOverlays:
-          - overlayID: FemaleUnderwear-1
+          - overlayID: FemaleUnderwear01
             maxRGB: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 1}
             minRGB: {r: 0.8862745, g: 0.8862745, b: 0.8862745, a: 1}
             useSkinColor: 0
@@ -243,21 +251,24 @@ MonoBehaviour:
             overlayType: 1
       requirement: 
       condition: 
-    - possibleSlots:
+    - Info: Hands
+      possibleSlots:
       - slotID: FemaleHands
         useSharedOverlayList: 1
         overlayListSource: 7
         overlayElements: []
       requirement: 
       condition: 
-    - possibleSlots:
+    - Info: Feet
+      possibleSlots:
       - slotID: FemaleFeet
         useSharedOverlayList: 1
         overlayListSource: 7
         overlayElements: []
       requirement: 
       condition: 
-    - possibleSlots:
+    - Info: Inner Mouth
+      possibleSlots:
       - slotID: FemaleInnerMouth
         useSharedOverlayList: 0
         overlayListSource: 0
@@ -274,7 +285,8 @@ MonoBehaviour:
             overlayType: 3
       requirement: 
       condition: 
-    - possibleSlots:
+    - Info: Legs
+      possibleSlots:
       - slotID: FemaleLegs
         useSharedOverlayList: 1
         overlayListSource: 7
@@ -289,17 +301,8 @@ MonoBehaviour:
             colorChannelUse: 0
             colorChannel: 0
             overlayType: 1
-          - overlayID: FemaleJeans-2
-            maxRGB: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 1}
-            minRGB: {r: 0.8862745, g: 0.8862745, b: 0.8862745, a: 1}
-            useSkinColor: 0
-            useHairColor: 0
-            hairColorMultiplier: 0
-            colorChannelUse: 0
-            colorChannel: 0
-            overlayType: 1
         - possibleOverlays:
-          - overlayID: FemaleShirt-1
+          - overlayID: FemaleShirt01
             maxRGB: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 1}
             minRGB: {r: 0.8862745, g: 0.8862745, b: 0.8862745, a: 1}
             useSkinColor: 0
@@ -308,7 +311,7 @@ MonoBehaviour:
             colorChannelUse: 0
             colorChannel: 0
             overlayType: 1
-          - overlayID: FemaleShirt-2
+          - overlayID: FemaleShirt02
             maxRGB: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 1}
             minRGB: {r: 0.8862745, g: 0.8862745, b: 0.8862745, a: 1}
             useSkinColor: 0
@@ -337,7 +340,8 @@ MonoBehaviour:
             overlayType: 1
       requirement: 
       condition: '!noPants'
-    - possibleSlots:
+    - Info: Shirts
+      possibleSlots:
       - slotID: FemaleTshirt01
         useSharedOverlayList: 0
         overlayListSource: 0
@@ -352,22 +356,14 @@ MonoBehaviour:
             colorChannelUse: 0
             colorChannel: 0
             overlayType: 1
-          - overlayID: FemaleTshirt-2
-            maxRGB: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 1}
-            minRGB: {r: 0.88235295, g: 0.88235295, b: 0.88235295, a: 1}
-            useSkinColor: 0
-            useHairColor: 0
-            hairColorMultiplier: 0
-            colorChannelUse: 0
-            colorChannel: 0
-            overlayType: 1
       - slotID: 
         useSharedOverlayList: 0
         overlayListSource: 0
         overlayElements: []
       requirement: FemaleJeans01
       condition: 
-    - possibleSlots:
+    - Info: Hair
+      possibleSlots:
       - slotID: FemaleShortHair01
         useSharedOverlayList: 0
         overlayListSource: 1
@@ -412,7 +408,8 @@ MonoBehaviour:
             overlayType: 5
       requirement: 
       condition: 
-    - possibleSlots:
+    - Info: Hair Addons
+      possibleSlots:
       - slotID: FemaleLongHair01_Module
         useSharedOverlayList: 0
         overlayListSource: 0

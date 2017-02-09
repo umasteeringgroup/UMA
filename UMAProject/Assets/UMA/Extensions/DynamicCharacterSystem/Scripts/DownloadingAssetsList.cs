@@ -90,6 +90,16 @@ namespace UMA
 					}
 					thisTempAsset.name = requiredAssetName;
 				}
+				else if (typeof(T) == typeof(UMAWardrobeRecipe))
+				{
+					thisTempAsset = ScriptableObject.Instantiate(DynamicAssetLoader.Instance.placeholderWardrobeRecipe) as T;
+					(thisTempAsset as UMAWardrobeRecipe).recipeType = "Wardrobe";
+					(thisTempAsset as UMAWardrobeRecipe).wardrobeSlot = AssetBundleManager.AssetBundleIndexObject.AssetWardrobeSlot(containingBundle, requiredAssetName);
+					(thisTempAsset as UMAWardrobeRecipe).Hides = AssetBundleManager.AssetBundleIndexObject.AssetWardrobeHides(containingBundle, requiredAssetName);
+					(thisTempAsset as UMAWardrobeRecipe).compatibleRaces = AssetBundleManager.AssetBundleIndexObject.AssetWardrobeCompatibleWith(containingBundle, requiredAssetName);
+					thisTempAsset.name = requiredAssetName;
+
+				}
 				else if (typeof(T) == typeof(UMAWardrobeCollection))
 				{
 					thisTempAsset = ScriptableObject.CreateInstance(typeof(T)) as T;
@@ -229,6 +239,11 @@ namespace UMA
 						UMATextRecipe downloadedRecipe = loadedBundleAB.LoadAsset<UMATextRecipe>(item.requiredAssetName);
 						(UMAContext.Instance.dynamicCharacterSystem as UMACharacterSystem.DynamicCharacterSystem).AddRecipe(downloadedRecipe);
 					}
+					else if (item.tempAsset.GetType() == typeof(UMAWardrobeRecipe))
+					{
+						UMAWardrobeRecipe downloadedRecipe = loadedBundleAB.LoadAsset<UMAWardrobeRecipe>(item.requiredAssetName);
+						(UMAContext.Instance.dynamicCharacterSystem as UMACharacterSystem.DynamicCharacterSystem).AddRecipe(downloadedRecipe);
+					}
 					else if (item.dynamicCallback.Count > 0)
 					{
 						//get the asset as whatever the type of the tempAsset is
@@ -249,7 +264,10 @@ namespace UMA
 				downloadingItems.Remove(item);
 			}
 			if (downloadingItems.Count == 0)
+			{
 				areDownloadedItemsReady = true;
+				//AssetBundleManager.UnloadAllAssetBundles();//we cant do this yet
+			}
 			//yield break;
 		}
 
@@ -296,10 +314,6 @@ namespace UMA
 					else
 					{
 						canProcessBatch = false;
-					}
-					if (error != "")//May need to check if error != null too
-					{
-						//AssetBundleManager already logs the error
 					}
 					if (canProcessBatch)
 					{

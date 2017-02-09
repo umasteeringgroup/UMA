@@ -36,7 +36,6 @@ namespace UMAEditor
 
 		public void Init()
 		{
-			Debug.Log("DNA Asset Init happenned");
 			thisDUDA = target as DynamicUMADnaAsset;
 			//check the ID and paths
 			bool doUpdate = thisDUDA.SetCurrentAssetPath();
@@ -166,11 +165,21 @@ namespace UMAEditor
 				if(GUI.Button(hashBtnRect,"Save")){
 					editTypeHashEnabled = false;
                 }
+				var originalDnaTypeHash = dnaTypeHash;
 				EditorGUI.BeginChangeCheck();
 				EditorGUI.PropertyField(hashFieldRect, dnaTypeHash, new GUIContent(""));
 				if (EditorGUI.EndChangeCheck())
 				{
-					serializedObject.ApplyModifiedProperties();
+					//we MUST NOT let this have the same TypeHash as UMADnaHumanoid or UMADnaTutorial, so if people randomly choose that value- dont assign it
+					if(dnaTypeHash.intValue == UMAUtils.StringToHash("UMADnaHumanoid") || dnaTypeHash.intValue == UMAUtils.StringToHash("UMADnaTutorial"))
+					{
+						Debug.LogWarning("You are trying to set a DynamicDNA to the same hash as a UMADnaHumanoid or UMADnaTutorial dna- this is not allowed");
+						dnaTypeHash = originalDnaTypeHash;
+					}
+					else
+					{
+						serializedObject.ApplyModifiedProperties();
+					}
 				}
 				//EditorGUILayout.EndHorizontal();
 			}
@@ -235,17 +244,17 @@ namespace UMAEditor
 				{
 					AddDefaultNames();
 				}
+				EditorGUI.BeginDisabledGroup(Names.arraySize == 0);
 				if (GUI.Button(clearButRect, new GUIContent("Clear All Names", "Clears the current names. Cannot be undone.")))
 				{
 					if (EditorUtility.DisplayDialog("Really Clear All Names?", "This will delete all the names in the list and cannot be undone. Are you sure?", "Yes", "Cancel"))
 						(target as DynamicUMADnaAsset).Names = new string[0];
 				}
-
+				EditorGUI.EndDisabledGroup();
 				EditorGUILayout.Space();
 			}
 			//ADD NEW NAME BUTTON
 			EditorGUILayout.BeginHorizontal();
-			var buttonDisabled = newDNAName == "";
 			bool canAdd = true;
 			EditorGUI.BeginChangeCheck();
 			newDNAName = EditorGUILayout.TextField(newDNAName);//this wont bloody clear after the name is added
@@ -261,7 +270,6 @@ namespace UMAEditor
 					if (Names.GetArrayElementAtIndex(ni).stringValue == newDNAName)
 					{
 						canAdd = false;
-						buttonDisabled = true;
 					}
 				}
 			}
@@ -276,6 +284,7 @@ namespace UMAEditor
 					Names.GetArrayElementAtIndex(0).stringValue = newDNAName;
 					Names.serializedObject.ApplyModifiedProperties();
 					newDNAName = "";
+					EditorGUIUtility.keyboardControl = 0;
 				}
 			}
 			EditorGUILayout.EndHorizontal();

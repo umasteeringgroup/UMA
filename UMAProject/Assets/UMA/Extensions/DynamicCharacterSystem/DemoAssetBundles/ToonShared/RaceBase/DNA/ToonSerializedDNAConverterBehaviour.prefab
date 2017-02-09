@@ -3666,14 +3666,12 @@ MonoBehaviour:
   overallModifiersEnabled: 1
   overallScale: 1
   heightModifiers: {x: 0.85, y: 1.2}
-  radiusModifier: 0.26
+  radiusModifier: 0.37
   massModifiers: {x: 42, y: 28, z: 22}
+  tightenBounds: 1
+  boundsPadding: {x: 0, y: 0, z: 0}
   startingPose: {fileID: 0}
   startingPoseWeight: 1
-  lastKnownAssetPath: Assets/UMA/Extensions/DynamicCharacterSystem/DemoAssetBundles/ToonShared/RaceBase/DNA/ToonSerializedDNAConverterBehaviour.prefab
-  lastKnownDuplicateAssetPath: Assets/UMA/Extensions/DynamicCharacterSystem/DemoAssetBundles/ToonShared/RaceBase/DNA/ToonSerializedDNAConverterBehaviour
-    1.prefab
-  lastKnownInstanceID: 24948
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1

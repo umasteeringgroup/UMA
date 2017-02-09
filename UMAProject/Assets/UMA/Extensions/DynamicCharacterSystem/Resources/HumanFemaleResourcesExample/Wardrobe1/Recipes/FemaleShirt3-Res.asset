@@ -11,7 +11,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f0188188c253e0c4bb9b46e19fa7312e, type: 3}
   m_Name: FemaleShirt3-Res
   m_EditorClassIdentifier: 
-  recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"FemaleTorsoRes","scale":100,"copyIdx":-1,"overlays":[{"id":"FemaleShirt02-Res","colorIdx":0,"rect":[0,512,1024,512]}]}],"colors":[],"fColors":[{"name":"Shirt","colors":[54,146,97,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"","packedDna":[]}'
+  recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"FemaleTorso","scale":100,"copyIdx":-1,"overlays":[{"id":"FemaleShirt02-Res","colorIdx":0,"rect":[0,1024,2048,1024]}]}],"colors":[],"fColors":[{"name":"Shirt","colors":[54,146,97,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"","packedDna":[]}'
   recipeType: Wardrobe
   DisplayValue: 
   compatibleRaces:

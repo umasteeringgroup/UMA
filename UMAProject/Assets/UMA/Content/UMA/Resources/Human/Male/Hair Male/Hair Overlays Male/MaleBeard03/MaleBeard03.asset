@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c4834e6077abe64e968f9f87c9ac70a, type: 3}
+  m_Name: MaleBeard03
+  m_EditorClassIdentifier: 
+  overlayName: MaleBeard03
+  overlayType: 0
+  rect:
+    serializedVersion: 2
+    x: 512
+    y: 0
+    width: 1024
+    height: 512
+  alphaMask: {fileID: 0}
+  textureList:
+  - {fileID: 2800000, guid: c822ebdcf1e9f4ea3ba74f8d9103876b, type: 3}
+  - {fileID: 2800000, guid: 09a1dfc8fbb1147c2afb36b5c2ba8ebd, type: 3}
+  - {fileID: 2800000, guid: b01f10afaca2142209e116e496a8d621, type: 3}
+  tags: []
+  material: {fileID: 11400000, guid: 8e29dbac5d2e82f44a759a7e2cc568ab, type: 2}
+  OcclusionEntries: []

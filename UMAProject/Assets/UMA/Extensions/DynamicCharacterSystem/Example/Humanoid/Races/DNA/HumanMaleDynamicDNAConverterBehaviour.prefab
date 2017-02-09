@@ -42,7 +42,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   DisplayValue: 
   dnaTypeHash: 601756857
-  dnaAsset: {fileID: 11400000, guid: e4fd7b2e35b82274a8ea5d4d756ca476, type: 2}
+  dnaAsset: {fileID: 11400000, guid: 17b4ec3db2a10e04d8909cc9932562b5, type: 2}
   hashList:
   - hashName: HeadAdjust
     hash: -423229038
@@ -609,7 +609,7 @@ MonoBehaviour:
         value: 1
         modifiers:
         - modifier: 4
-          DNATypeName: waist
+          DNATypeName: belly
           modifierValue: 0
         - modifier: 2
           DNATypeName: 
@@ -3290,8 +3290,8 @@ MonoBehaviour:
         - modifier: 2
           DNATypeName: 
           modifierValue: 0.1
-      min: -0.025
-      max: 0.025
+      min: -0.055
+      max: 0.055
     valuesZ:
       val:
         value: 0
@@ -3329,8 +3329,8 @@ MonoBehaviour:
         - modifier: 2
           DNATypeName: 
           modifierValue: -0.1
-      min: -0.025
-      max: 0.025
+      min: -0.055
+      max: 0.055
     valuesZ:
       val:
         value: 0
@@ -3529,14 +3529,12 @@ MonoBehaviour:
   overallModifiersEnabled: 1
   overallScale: 0.88
   heightModifiers: {x: 0.85, y: 1.2}
-  radiusModifier: 0.29
-  massModifiers: {x: 46, y: 26, z: 26}
+  tightenBounds: 1
+  boundsAdjust: {x: -0.36, y: 0.06, z: 0}
+  radiusAdjust: {x: 0.23, y: 0.02}
+  massModifiers: {x: 42, y: 28, z: 22}
   startingPose: {fileID: 0}
   startingPoseWeight: 1
-  lastKnownAssetPath: Assets/UMA/Extensions/DynamicCharacterSystem/Example/Humanoid/Races/DNA/HumanMaleDynamicDNAConverterBehaviour.prefab
-  lastKnownDuplicateAssetPath: Assets/UMA/Extensions/DynamicCharacterSystem/Example/Humanoid/Races/DNA/HumanMaleDynamicDNAConverterBehaviour
-    1.prefab
-  lastKnownInstanceID: 23774
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1

@@ -40,6 +40,8 @@ namespace UMA
         Dictionary<string, string[]> dnaAssetNamesBackups = new Dictionary<string, string[]>();
         Dictionary<string, UMABonePose.PoseBone[]> poseBonesBackups = new Dictionary<string, UMABonePose.PoseBone[]>();
 
+		public bool drawBoundsGizmo = true;
+
 		//UndoRedoDelegate
 		void OnUndo()
 		{
@@ -78,8 +80,11 @@ namespace UMA
             if (activeUMA != targetUMA)
             {
                 activeUMA = targetUMA;
-                SetAvailableConverters(activeUMA.umaData);
-            }
+				if(activeUMA.umaData != null)
+					SetAvailableConverters(activeUMA.umaData);
+				else
+					availableConverters.Clear();
+			}
             if (activeUMA != null)
                 if(activeUMA.umaData != null)
 					if(activeUMA.umaData.umaRecipe != null)
@@ -115,7 +120,7 @@ namespace UMA
                 //reset guide transparency one we have sussed out how to do this
                 guideUMA = null;
             }
-            if (newAvatarObject != targetUMA.gameObject)
+            if (targetUMA == null || newAvatarObject != targetUMA.gameObject)
             {
                 if (newAvatarObject.GetComponent<UMAAvatarBase>() != null)
                 {
@@ -123,9 +128,16 @@ namespace UMA
                     activeUMA = newAvatarObject.GetComponent<UMAAvatarBase>();
                     SetAvailableConverters(activeUMA.umaData);
                     selectedConverter = null;
-                }
-            }
-        }
+				}
+				else
+				{
+					targetUMA = null;
+					activeUMA = null;
+					availableConverters.Clear();
+					selectedConverter = null;
+				}
+			}
+		}
 
         void OnApplicationQuit()
         {
@@ -212,6 +224,17 @@ namespace UMA
             UpdateUMA();
         }
 
+		void OnDrawGizmos()
+		{
+			if (drawBoundsGizmo && activeUMA != null)
+			{
+				if (activeUMA.umaData == null || activeUMA.umaData.myRenderer == null)
+					return;
+				Gizmos.color = Color.white;
+				Gizmos.DrawWireCube(activeUMA.umaData.myRenderer.bounds.center, activeUMA.umaData.myRenderer.bounds.size);
+			}
+		}
+
         /// <summary>
         /// Aligns the guide UMA to the Target UMA's position
         /// </summary>
@@ -274,8 +297,8 @@ namespace UMA
             selectedConverter.skeletonModifiers = converterToImport.skeletonModifiers;
             selectedConverter.hashList = converterToImport.hashList;
             selectedConverter.overallModifiersEnabled = converterToImport.overallModifiersEnabled;
-            selectedConverter.heightModifiers = converterToImport.heightModifiers;
-            selectedConverter.radiusModifier = converterToImport.radiusModifier;
+            //.heightModifiers = converterToImport.heightModifiers;
+            selectedConverter.radiusAdjust = converterToImport.radiusAdjust;
             selectedConverter.massModifiers = converterToImport.massModifiers;
             Debug.Log("Imported " + converterToImport.name + " settings into " + selectedConverter.name);
             return true;
@@ -287,8 +310,11 @@ namespace UMA
         /// </summary>
         public bool CreateBonePosesFromCurrentDna(string createdAssetName = "")
         {
-            if ( activeUMA == null || selectedConverter == null)
+			if (activeUMA == null || selectedConverter == null)
+			{
+				Debug.LogWarning("activeUMA == null || selectedConverter == null");
                 return false;
+			}
             //make a list of poses based on the current dna settings and reset all the dna values to zero.
             //overwrite the existing Assets poses with these if there is an asset or create a new asset with these settings.
             Vector3[] dnaAffectedPositions = new Vector3[activeUMA.umaData.skeleton.BoneNames.Length];
@@ -298,6 +324,8 @@ namespace UMA
             Dictionary<int, Vector3> scalesToAdd = new Dictionary<int, Vector3>();
             Dictionary<int, Quaternion> rotationsToAdd = new Dictionary<int, Quaternion>();
             //We need to set the 'overallScale' modifier to 1f before we do anything since this messes everything up
+			//07022016 does it though? It seems to be that the resetting of the scale makes it actually DO something, but its not what we WANT it to do
+			//actually its more like we need to modify the resulting values by the overall scale or something
             var currentOverallScale = 1f;
             foreach(DynamicDNAConverterBehaviour converter in availableConverters)
             {
@@ -308,6 +336,7 @@ namespace UMA
                     converter.ApplyDynamicDnaAction(activeUMA.umaData, activeUMA.umaData.skeleton);
                 }
             }
+			//Get the positions when the scale is normalized but dna is applied
             var skeleton = activeUMA.umaData.skeleton;
             var index = 0;
             foreach (int boneHash in skeleton.BoneHashes)
@@ -317,15 +346,17 @@ namespace UMA
                 dnaAffectedRotations[index] = skeleton.GetRotation(boneHash);
                 index++;
             }
+			//Reset the bones to their pre dna state
             //umaData.skeleton.ResetAll();//this does not give us the right results, the differences are still significant enough that many bones dont say they are equal.
-            //this method does work but I am not sure whether this means I need to make the converter calculate values more accurately or if this is a float precision issue or a conversion from binary issue or somethomg else
-            foreach(DynamicDNAConverterBehaviour converter in availableConverters)//this wont remove any dna from non dynamicDNAConverters tho...
+            foreach(DynamicDNAConverterBehaviour converter in availableConverters)
             {
                 converter.RemoveDNAChangesFromSkeleton(activeUMA.umaData);
             }
+			//if any bones have different positions, we know dna moved them, so these bones are the ones we want to add to the bone pose
             index = 0;
             foreach (int boneHash in skeleton.BoneHashes)
             {
+				//07022016 just putting them ALL in gives a WORSE result than being selective?!
                 //we always need position and lower back I think- still not right though really...
                 if(skeleton.BoneNames[index] == "Position" || skeleton.BoneNames[index] == "LowerBack")
                 {
@@ -366,7 +397,7 @@ namespace UMA
                 {
                     bonePose = selectedConverter.startingPose;
                 }
-                skeleton.ResetAll();//seems to mean the settings when the pose gets added are more accurate...
+                //skeleton.ResetAll();//seems to mean the settings when the pose gets added are more accurate... 07022016 actually it doesn't
                 if (bonePose.poses.Length > 0)//we want to remove any bones we are going to add again
                 {
                     List<UMA.PoseTools.UMABonePose.PoseBone> unaffectedBones = new List<UMA.PoseTools.UMABonePose.PoseBone>();
@@ -413,7 +444,7 @@ namespace UMA
                     if (converter.overallModifiersEnabled)
                     {
                         converter.overallScale = currentOverallScale;
-                    }
+					}
                 }
                 activeUMA.umaData.Dirty(true, false, false);
                 return true;
@@ -512,9 +543,13 @@ namespace UMA
                             availableConverters[i].skeletonModifiers = buConverter.skeletonModifiers;
                             availableConverters[i].hashList = buConverter.hashList;
                             availableConverters[i].overallModifiersEnabled = buConverter.overallModifiersEnabled;
+							//new
+							availableConverters[i].tightenBounds = buConverter.tightenBounds;
+							availableConverters[i].boundsAdjust = buConverter.boundsAdjust;
+							//end new
                             availableConverters[i].overallScale = buConverter.overallScale;
-                            availableConverters[i].heightModifiers = buConverter.heightModifiers;
-                            availableConverters[i].radiusModifier = buConverter.radiusModifier;
+                            //availableConverters[i].heightModifiers = buConverter.heightModifiers;
+                            availableConverters[i].radiusAdjust = buConverter.radiusAdjust;
                             availableConverters[i].massModifiers = buConverter.massModifiers;
                         }
                     }
@@ -625,8 +660,8 @@ namespace UMA
                 newPrefabConverter.hashList = selectedConverter.hashList;
                 newPrefabConverter.overallModifiersEnabled = selectedConverter.overallModifiersEnabled;
                 newPrefabConverter.overallScale = selectedConverter.overallScale;
-                newPrefabConverter.heightModifiers = selectedConverter.heightModifiers;
-                newPrefabConverter.radiusModifier = selectedConverter.radiusModifier;
+                //newPrefabConverter.heightModifiers = selectedConverter.heightModifiers;
+                newPrefabConverter.radiusAdjust = selectedConverter.radiusAdjust;
                 newPrefabConverter.massModifiers = selectedConverter.massModifiers;
             }
             var newPrefab = PrefabUtility.CreatePrefab(path, thisNewPrefabGO);//couldn't create asset try instantiating first
