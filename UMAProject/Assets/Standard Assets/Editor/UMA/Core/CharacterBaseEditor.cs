@@ -1210,6 +1210,8 @@ namespace UMAEditor
 			return false;
 		}
 
+		bool? editBustedRecipe = null;
+
 		public override void OnInspectorGUI()
 		{
 			GUILayout.Label(_description);
@@ -1219,11 +1221,20 @@ namespace UMAEditor
 				EditorGUILayout.HelpBox("The Recipe Editor could not be drawn correctly because the libraries could not find some of the required Assets. The error message was...", MessageType.Warning);
 				EditorGUILayout.HelpBox(_errorMessage, MessageType.Error);
 				EditorGUILayout.Space();
+				EditorGUILayout.HelpBox("You can either continue editing this recipe (in which case it will only contain the slots and overlays you see below) or you can fix the missing asset and come back to this recipe after (in which case it will contain everything the recipe had originally)", MessageType.Info);
+				EditorGUILayout.Space();
+				editBustedRecipe = editBustedRecipe == null ? false : editBustedRecipe;
+				if(GUILayout.Button("Enable Editing"))
+				{
+					editBustedRecipe = true;
+				}
+				EditorGUILayout.Space();
 				//we dont want the user to edit the recipe at all in this case because if they do it will be saved incompletely
 				//010212016 BUT we do need to output something else it looks like it doesn't work and you CAN still legitimately make NEW recipes even if the scene has no UMAContext
 				//return;
 				//TODO If we can find out if the recipe has a string and we DONT have an UMAContext we could disable editing (so the user doesn't screw up their recipes
 			}
+			EditorGUI.BeginDisabledGroup((editBustedRecipe == false ? true : false));
 
 			try
 			{
@@ -1263,6 +1274,8 @@ namespace UMAEditor
 			{
 				base.OnInspectorGUI();
 			}
+			//end the busted Recipe disabled group if we had it
+			EditorGUI.EndDisabledGroup();
 		}
 
 		protected abstract void DoUpdate();
