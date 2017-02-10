@@ -47,7 +47,7 @@ namespace UMAEditor
 					}
 					if (haveUMADupes)
 					{
-						EditorGUILayout.HelpBox("With UMA assets (RaceData/Slots/Overlays) you *can* give assets the same name but you need to ensure that the 'Racename/SlotName/OverlayName', that you see when you inspect those assets, is unique", MessageType.Info);
+						EditorGUILayout.HelpBox("With UMA RaceData/Slot/Overlay assets you *can* give assets the same name but you need to ensure that the 'Racename/SlotName/OverlayName', that you see when you inspect those assets, is unique. Recipes need unique asset names.", MessageType.Info);
 					}
 					//then show the path to each of the assets that have an issue
 					for (int i = 0; i < duplicateNamesData.arraySize; i++)
@@ -56,7 +56,7 @@ namespace UMAEditor
 						//type 
                         string thisType = (string)thisDuplicateNamesData.FindPropertyRelative("type").stringValue;
 						string thisTypeLabel = thisType;
-						string namePrefix = "";
+						string namePrefix = "asset ";
 						if (haveUMADupes)
 						{
 							if (thisType.IndexOf("RaceData")>-1)
@@ -75,7 +75,7 @@ namespace UMAEditor
 								namePrefix = "overlay";
 							}
 						}
-                        EditorGUILayout.LabelField(thisTypeLabel + " duplicated names:");
+                        EditorGUILayout.LabelField(thisTypeLabel + " duplicated "+namePrefix+"names:");
 						//now we need typeFiles
 						for (int ti = 0; ti < thisDuplicateNamesData.FindPropertyRelative("typeFiles").arraySize; ti++)
 						{
@@ -91,7 +91,7 @@ namespace UMAEditor
 							EditorGUILayout.LabelField("Has the same "+namePrefix+"name as");
 							//we cant get this info
 							var dupePath = (target as UMAResourcesIndex).Index.GetPath(thisType, thisNameHash, true);
-							EditorGUILayout.HelpBox(dupePath, MessageType.None);
+							EditorGUILayout.HelpBox(dupePath +" (wont be used)", MessageType.None);
 							EditorStyles.label.wordWrap = origWordWrap;
                             GUIHelper.EndVerticalPadded(5);
 							GUILayout.EndHorizontal();

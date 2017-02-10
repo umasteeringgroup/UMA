@@ -12,7 +12,13 @@ namespace UMAEditor
     {
         public override void OnInspectorGUI()
         {
+			EditorGUI.BeginChangeCheck();
 			base.OnInspectorGUI();
+			if (EditorGUI.EndChangeCheck())
+			{
+				EditorUtility.SetDirty(target);
+				AssetDatabase.SaveAssets();
+			}
 
 			foreach (var t in targets)
 			{
