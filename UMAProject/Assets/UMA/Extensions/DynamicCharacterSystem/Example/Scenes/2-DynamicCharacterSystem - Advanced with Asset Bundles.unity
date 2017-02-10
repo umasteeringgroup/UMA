@@ -37,7 +37,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 166765684}
-  m_IndirectSpecularColor: {r: 0.1419074, g: 0.14897406, b: 0.16846019, a: 1}
+  m_IndirectSpecularColor: {r: 0.14216504, g: 0.1493004, b: 0.1682245, a: 1}
 --- !u!157 &4
 LightmapSettings:
   m_ObjectHideFlags: 0
@@ -2548,9 +2548,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 5a63f3d521484f345b330eaa6ddd496e, type: 2}
   - {fileID: 11400000, guid: 5746c09014733de4bbf208291c61aaea, type: 2}
   - {fileID: 11400000, guid: e2224fed494e9d943be557109e679173, type: 2}
-  - {fileID: 0}
   - {fileID: 11400000, guid: 1320201c90abfb148ba70377406b5dc4, type: 2}
-  - {fileID: 0}
   - {fileID: 11400000, guid: 03e5bfa4f7f2fd445974ed61bdf5d9cf, type: 2}
   - {fileID: 11400000, guid: a209ee514b60b9044bdef1bcbf69967d, type: 2}
   - {fileID: 11400000, guid: b0ed3771a80364c45bd224aee6ac2837, type: 2}
@@ -14978,7 +14976,6 @@ MonoBehaviour:
   slotElementList:
   - {fileID: 11400000, guid: 04442629189f10a48bc3238f44aa9856, type: 2}
   - {fileID: 11400000, guid: 0fbc0a0bbfb29084bbeafb0876b6e28b, type: 2}
-  - {fileID: 0}
   - {fileID: 11400000, guid: db59a2fec12e144498fed4c62c157859, type: 2}
   - {fileID: 11400000, guid: 96efa554e673f0c40ba212cde7477926, type: 2}
   - {fileID: 11400000, guid: 2ea0c2632af00954d80449e69aae3961, type: 2}
@@ -16006,6 +16003,7 @@ MonoBehaviour:
   makePersistent: 0
   duplicateNamesIndex:
     data: []
+    _currentPaths: []
 --- !u!4 &1705365350
 Transform:
   m_ObjectHideFlags: 0

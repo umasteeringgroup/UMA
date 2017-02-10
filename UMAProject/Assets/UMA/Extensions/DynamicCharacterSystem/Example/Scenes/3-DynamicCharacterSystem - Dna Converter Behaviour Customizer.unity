@@ -11797,21 +11797,14 @@ MonoBehaviour:
   makePersistent: 0
   duplicateNamesIndex:
     data:
-    - type: UMA.OverlayDataAsset
-      typeFiles:
-      - nameHash: 1367393677
-        path: Human/Male/Hair Male/Hair Overlays Male/MaleEyelash/M_Eyelash
-        fullPath: Assets/UMA/Content/UMA/Resources/Human/Male/Hair Male/Hair Overlays
-          Male/MaleEyelash/M_Eyelash.asset
-      - nameHash: -1033316622
-        path: Human/Shared/Eye/Eye/Eye Overlay
-        fullPath: Assets/UMA/Content/UMA/Resources/Human/Shared/Eye/Eye/Eye Overlay.asset
     - type: UMA.SlotDataAsset
       typeFiles:
       - nameHash: -1002373313
         path: Human/Male/Hair Male/Hair Slots Male/M_Eyebrow/M_Eyebrow_Slot
         fullPath: Assets/UMA/Content/UMA/Resources/Human/Male/Hair Male/Hair Slots
           Male/M_Eyebrow/M_Eyebrow_Slot.asset
+    _currentPaths:
+    - Assets/UMA/Content/UMA/Resources/Human/Male/Hair Male/Hair Slots Male/M_Eyebrow/M_Eyebrow_Slot.asset
 --- !u!4 &1218724556
 Transform:
   m_ObjectHideFlags: 0
