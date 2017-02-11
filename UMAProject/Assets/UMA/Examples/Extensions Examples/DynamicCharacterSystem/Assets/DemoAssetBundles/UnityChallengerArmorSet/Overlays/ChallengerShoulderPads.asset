@@ -9,9 +9,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c4834e6077abe64e968f9f87c9ac70a, type: 3}
-  m_Name: ChallengerTorsoArmorLeather
+  m_Name: ChallengerShoulderPads
   m_EditorClassIdentifier: 
-  overlayName: ChallengerTorsoArmorLeather
+  overlayName: ChallengerShoulderPads
+  overlayType: 0
   rect:
     serializedVersion: 2
     x: 0
@@ -20,8 +21,9 @@ MonoBehaviour:
     height: 0
   alphaMask: {fileID: 0}
   textureList:
-  - {fileID: 2800000, guid: 5e0d6fd5a419c024abb998898b6bce79, type: 3}
-  - {fileID: 2800000, guid: 60d0a4f3a2fd41c4eb6136053eeefc44, type: 3}
-  - {fileID: 2800000, guid: 88748dee7076a594da2220b822ce685a, type: 3}
+  - {fileID: 2800000, guid: 6140842e8055c424c8cdb1c3c66edf36, type: 3}
+  - {fileID: 2800000, guid: 31551ac088496c44e9f4ed99f3cde8e2, type: 3}
+  - {fileID: 2800000, guid: 2c589544d3fa460468f7e50c3a0d8c27, type: 3}
   tags: []
   material: {fileID: 11400000, guid: 8e29dbac5d2e82f44a759a7e2cc568ab, type: 2}
+  OcclusionEntries: []
