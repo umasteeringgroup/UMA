@@ -75,6 +75,11 @@ public partial class UMATextRecipe : UMAPackedRecipeBase
 		thisUMAContext.overlayLibrary = EditorUMAContext.AddComponent<DynamicOverlayLibrary>();
 		thisUMAContext.slotLibrary = EditorUMAContext.AddComponent<DynamicSlotLibrary>();
 		thisUMAContext.dynamicCharacterSystem = EditorUMAContext.AddComponent<UMACharacterSystem.DynamicCharacterSystem>();
+		//make sure there is a UMAResourcesIndex too
+		if(UMAResourcesIndex.Instance == null)
+		{
+			EditorUMAContext.AddComponent<UMAResourcesIndex>();
+		}
 		return EditorUMAContext.GetComponent<UMAContext>();
 	}
 #endif
