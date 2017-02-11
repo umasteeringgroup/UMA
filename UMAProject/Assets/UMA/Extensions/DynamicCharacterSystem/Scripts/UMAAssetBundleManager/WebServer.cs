@@ -169,7 +169,7 @@ namespace UMAAssetBundleManager
 				//string serverResourcesDirectory = "Assets/UMA/Extensions/DynamicCharacterSystem/UMAAssetBundleManager/Resources";
 				//string serverUrlPath = Path.Combine(serverResourcesDirectory, "localServerURL.bytes");
 				// Directory.CreateDirectory(serverResourcesDirectory);
-				string serverUrlPath = Path.Combine(UMA.FileUtils.GetInternalDataStoreFolder(false, true), "localServerURL.bytes");
+				string serverUrlPath = Path.Combine(UMA.FileUtils.GetInternalDataStoreFolder(false, false), "localServerURL.bytes");
 				UMA.FileUtils.WriteAllText(serverUrlPath, _serverURL);
                 AssetDatabase.Refresh();
             }
@@ -179,7 +179,7 @@ namespace UMAAssetBundleManager
         {
 			//string serverResourcesDirectory = "Assets/UMA/Extensions/DynamicCharacterSystem/UMAAssetBundleManager/Resources";
 			//string serverUrlPath = Path.Combine(serverResourcesDirectory, "localServerURL.bytes");
-			string serverUrlPath = Path.Combine(UMA.FileUtils.GetInternalDataStoreFolder(false, true), "localServerURL.bytes");
+			string serverUrlPath = Path.Combine(UMA.FileUtils.GetInternalDataStoreFolder(false, false), "localServerURL.bytes");
 			File.Delete(serverUrlPath);
             AssetDatabase.Refresh();
         }
