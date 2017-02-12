@@ -349,7 +349,7 @@ MonoBehaviour:
   atlasResolution: 4096
   textureMergePrefab: {fileID: 400002, guid: b67c04ae1c362e94e9e8c5505c381525, type: 2}
   meshCombiner: {fileID: 11456094}
-  InitialScaleFactor: 1
+  InitialScaleFactor: 2
   fastGeneration: 1
   garbageCollectionRate: 8
 --- !u!114 &11456094
