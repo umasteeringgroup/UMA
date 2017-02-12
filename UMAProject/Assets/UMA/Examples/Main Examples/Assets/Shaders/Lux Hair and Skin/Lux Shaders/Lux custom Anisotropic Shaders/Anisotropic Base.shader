@@ -69,7 +69,7 @@ Shader "Lux/Anisotropic Lighting/Base" {
 			// v.normal = normalize(v.normal);
 			// v.tangent.xyz = normalize(v.tangent.xyz);
 
-			float3 worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
+			float3 worldPos = mul(_Object2World, v.vertex).xyz;
 			fixed3 worldNormal = UnityObjectToWorldNormal(v.normal);
 			fixed3 worldTangent = UnityObjectToWorldDir(v.tangent.xyz);
 			  

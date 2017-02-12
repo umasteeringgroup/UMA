@@ -2,7 +2,7 @@
 #define LUX_STANDARD_BRDF_INCLUDED
 
 #include "UnityCG.cginc"
-#include "UnityStandardConfig.cginc"
+#include "UnityStandardConfig.cginc" 
 #include "UnityLightingCommon.cginc"
 
 //-------------------------------------------------------------------------------------
@@ -92,7 +92,7 @@
 	#if LUX_LAZAROV_ENVIRONMENTAL_BRDF
 		const half4 c0 = { -1, -0.0275, -0.572, 0.022 };
 		const half4 c1 = { 1, 0.0425, 1.04, -0.04 };
-		half4 r = (1-oneMinusRoughness) * c0 + c1;
+		half4 r = (1-smoothness) * c0 + c1;
 		half a004 = min( r.x * r.x, exp2( -9.28 * nv ) ) * r.x + r.y;
 		half2 AB = half2( -1.04, 1.04 ) * a004 + r.zw;
 		half3 F_L = specColor * AB.x + AB.y;
