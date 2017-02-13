@@ -200,11 +200,17 @@ namespace UMA
 			{
 				objResourcesPath = objResourcesPath.Replace(extension, "");
 			}
+			//deal with RuntimeAnimatorController Type craziness
+			var objTypeString = obj.GetType().ToString();
+            if (objTypeString == "UnityEditor.Animations.AnimatorController")
+			{
+				objTypeString = "UnityEngine.RuntimeAnimatorController";
+			}
 			//bool addedPath = false;
-			bool hadType = false;
+				bool hadType = false;
 			for (int i = 0; i < data.Length; i++)
 			{
-				if (data[i].type == obj.GetType().ToString())
+				if (data[i].type == objTypeString)
 				{
 					if (data[i].Add(objNameHash, objResourcesPath, objFullPath))
 					{
@@ -225,7 +231,7 @@ namespace UMA
 				//Debug.Log("No index for Type " + obj.GetType().ToString());
 				var list = new TypeIndex[data.Length + 1];
 				Array.Copy(data, list, data.Length);
-				list[data.Length] = new TypeIndex(obj.GetType().ToString(), objNameHash, objResourcesPath, objFullPath);
+				list[data.Length] = new TypeIndex(objTypeString, objNameHash, objResourcesPath, objFullPath);
 				if (!_currentPaths.Contains(objFullPath))
 				{
 					_currentPaths.Add(objFullPath);

@@ -8,6 +8,7 @@ using UMACharacterSystem;
 public class WardrobeRecipeListPropertyDrawer : PropertyDrawer {
 
 	float padding = 2f;
+	public DynamicCharacterSystem thisDCS;
 	//Make a drop area for wardrobe recipes
 	private void DropAreaGUI(Rect dropArea, SerializedProperty thisRecipesProp)
 	{
@@ -82,6 +83,7 @@ public class WardrobeRecipeListPropertyDrawer : PropertyDrawer {
 		}
 		return h;
 	}
+	//TODO this needs to know its DCA
 	public override void OnGUI(Rect position, SerializedProperty property, GUIContent label){
 		EditorGUI.BeginProperty (position, label, property);
 		var r0 = new Rect (position.xMin, position.yMin, position.width, EditorGUIUtility.singleLineHeight);
@@ -145,16 +147,26 @@ public class WardrobeRecipeListPropertyDrawer : PropertyDrawer {
 	/// <returns></returns>
 	private bool CheckRecipeAvailability(string recipeName)
 	{
-		//with wardobeRecipes, DynamicCharacterSystem does not have a list of refrenced recipes like the other libraries
-		//so the only way to get them is from DynamicAssetLoader (which is how DCS gets them) 
-		//so the MUST be in an assetBundle or in Resources or there is no way of finding them
+		if (Application.isPlaying)
+			return true;
+		bool searchResources = true;
+		bool searchAssetBundles = true;
+		string resourcesFolderPath = "";
+		string assetBundlesToSearch = "";
+		if(thisDCS != null)
+		{
+			searchResources = thisDCS.dynamicallyAddFromResources;
+			searchAssetBundles = thisDCS.dynamicallyAddFromAssetBundles;
+			resourcesFolderPath = thisDCS.resourcesRecipesFolder;
+			assetBundlesToSearch = thisDCS.assetBundlesForRecipesToSearch;
+		}
 		bool found = false;
 		DynamicAssetLoader.Instance.debugOnFail = false;
-		found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeRecipe>(true, true, true, "", "", null, recipeName, null);
+		found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeRecipe>(searchResources, searchAssetBundles, true, assetBundlesToSearch, resourcesFolderPath, null, recipeName, null);
 		if (!found)
-			found = DynamicAssetLoader.Instance.AddAssets<UMATextRecipe>(true, true, true, "","", null, recipeName, null);
+			found = DynamicAssetLoader.Instance.AddAssets<UMATextRecipe>(searchResources, searchAssetBundles, true, assetBundlesToSearch, resourcesFolderPath, null, recipeName, null);
 		if (!found)
-			found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeCollection>(true, true, true, "", "", null, recipeName, null);
+			found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeCollection>(searchResources, searchAssetBundles, true, assetBundlesToSearch, resourcesFolderPath, null, recipeName, null);
 		DynamicAssetLoader.Instance.debugOnFail = true;
 		return found;
 	}

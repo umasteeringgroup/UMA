@@ -10,21 +10,38 @@ using System;
 public partial class DynamicCharacterAvatarEditor : Editor
 {
     protected DynamicCharacterAvatar thisDCA;
-    private RaceSetterPropertyDrawer _racePropDrawer = new RaceSetterPropertyDrawer();
+    protected RaceSetterPropertyDrawer _racePropDrawer = new RaceSetterPropertyDrawer();
+	protected WardrobeRecipeListPropertyDrawer _wardrobePropDrawer = new WardrobeRecipeListPropertyDrawer();
+	protected RaceAnimatorListPropertyDrawer _animatorPropDrawer = new RaceAnimatorListPropertyDrawer();
 
 	public void OnEnable()
     {
         thisDCA = target as DynamicCharacterAvatar;
-        //Set this DynamicCharacterAvatar for RaceSetter so if the user chages the race dropdown the race changes
-        if(_racePropDrawer.thisDCA == null)
+		var context = UMAContext.FindInstance();
+		//Set this DynamicCharacterAvatar for RaceSetter so if the user chages the race dropdown the race changes
+		if (_racePropDrawer.thisDCA == null)
         {
             _racePropDrawer.thisDCA = thisDCA;
-            //Set the raceLibrary for the race setter
-            var context = UMAContext.FindInstance();
-            var dynamicRaceLibrary = (DynamicRaceLibrary)context.raceLibrary as DynamicRaceLibrary;
-            _racePropDrawer.thisDynamicRaceLibrary = dynamicRaceLibrary;
+			//Set the raceLibrary for the race setter
+			if (context)
+			{
+				var dynamicRaceLibrary = (DynamicRaceLibrary)context.raceLibrary as DynamicRaceLibrary;
+				_racePropDrawer.thisDynamicRaceLibrary = dynamicRaceLibrary;
+			}
         }
-    }
+		if(_wardrobePropDrawer.thisDCS == null)
+		{
+			if (context)
+			{
+				var dynamicCharacterSystem = (DynamicCharacterSystem)context.dynamicCharacterSystem as DynamicCharacterSystem;
+				_wardrobePropDrawer.thisDCS = dynamicCharacterSystem;
+			}
+		}
+		if (_animatorPropDrawer.thisDCA == null)
+		{
+			_animatorPropDrawer.thisDCA = thisDCA;
+		}
+	}
 
 	public void SetNewColorCount(int colorCount)
 	{
@@ -112,9 +129,17 @@ public partial class DynamicCharacterAvatarEditor : Editor
 		}
 		EditorGUI.indentLevel--;
 		//Other DCA propertyDrawers
+		//in order for the "preloadWardrobeRecipes" prop to properly check if it can load the recipies it gets assigned to it
+		//it needs to know that its part of this DCA
 		GUILayout.Space(2f);
+		SerializedProperty thisPreloadWardrobeRecipes = serializedObject.FindProperty("preloadWardrobeRecipes");
+		Rect pwrCurrentRect = EditorGUILayout.GetControlRect(false, _wardrobePropDrawer.GetPropertyHeight(thisPreloadWardrobeRecipes, GUIContent.none));
 		EditorGUI.BeginChangeCheck();
-		EditorGUILayout.PropertyField(serializedObject.FindProperty("preloadWardrobeRecipes"));
+		_wardrobePropDrawer.OnGUI(pwrCurrentRect, thisPreloadWardrobeRecipes, new GUIContent(thisPreloadWardrobeRecipes.displayName));
+		//if (EditorGUI.EndChangeCheck())
+		//{
+		//	EditorGUI.BeginChangeCheck();
+		//EditorGUILayout.PropertyField(serializedObject.FindProperty("preloadWardrobeRecipes"));
 		if (EditorGUI.EndChangeCheck())
 		{
 			serializedObject.ApplyModifiedProperties();
@@ -125,8 +150,12 @@ public partial class DynamicCharacterAvatarEditor : Editor
 				thisDCA.BuildCharacter();
 			}
 		}
+		SerializedProperty thisRaceAnimationControllers = serializedObject.FindProperty("raceAnimationControllers");
+		Rect racCurrentRect = EditorGUILayout.GetControlRect(false, _animatorPropDrawer.GetPropertyHeight(thisRaceAnimationControllers, GUIContent.none));
 		EditorGUI.BeginChangeCheck();
-		EditorGUILayout.PropertyField(serializedObject.FindProperty("raceAnimationControllers"));
+		_animatorPropDrawer.OnGUI(racCurrentRect, thisRaceAnimationControllers, new GUIContent(thisRaceAnimationControllers.displayName));
+		//EditorGUI.BeginChangeCheck();
+		//EditorGUILayout.PropertyField(serializedObject.FindProperty("raceAnimationControllers"));
 		if (EditorGUI.EndChangeCheck())
 		{
 			serializedObject.ApplyModifiedProperties();

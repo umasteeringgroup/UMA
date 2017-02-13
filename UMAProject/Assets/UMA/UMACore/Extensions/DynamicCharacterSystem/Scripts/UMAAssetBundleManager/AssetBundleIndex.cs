@@ -36,6 +36,11 @@ namespace UMAAssetBundleManager
 			{
 				AddDataPreProcess(_filename, obj);
 				assetType = obj.GetType().ToString();
+				//deal with RuntimeAnimatorController Type craziness
+				if (assetType == "UnityEditor.Animations.AnimatorController")
+				{
+					assetType = "UnityEngine.RuntimeAnimatorController";
+				}
 				filename = _filename;
 				if (assetType == "UMA.OverlayDataAsset" || assetType == "UMA.SlotDataAsset" || assetType == "UMA.RaceData" || assetType == "UMATextRecipe")
 				{

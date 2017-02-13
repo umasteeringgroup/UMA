@@ -1,4 +1,4 @@
-﻿#if UNITY_EDITOR
+#if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
 using System.Collections;
@@ -8,12 +8,16 @@ using UMACharacterSystem;
 
 [CustomPropertyDrawer (typeof(DynamicCharacterAvatar.RaceAnimatorList))]
 public class RaceAnimatorListPropertyDrawer : PropertyDrawer {
+
 	float padding = 2f;
+	public DynamicCharacterAvatar thisDCA;
+
 	public override void OnGUI(Rect position, SerializedProperty property, GUIContent label){
 		EditorGUI.BeginProperty (position, label, property);
 		var r0 = new Rect (position.xMin, position.yMin, position.width, EditorGUIUtility.singleLineHeight);
 		SerializedProperty foldoutProp1 = property.FindPropertyRelative ("defaultAnimationController");
 		foldoutProp1.isExpanded = EditorGUI.Foldout (r0, foldoutProp1.isExpanded, "Race Animation Controllers");
+
 		if (foldoutProp1.isExpanded) {
 			EditorGUI.indentLevel++;
 			var valR = r0;
@@ -24,10 +28,15 @@ public class RaceAnimatorListPropertyDrawer : PropertyDrawer {
 			foldoutProp2.isExpanded = EditorGUI.Foldout (valR, foldoutProp2.isExpanded, "Race Animators");
 			//we cant delete elements in the loop so ...
 			List<int> willDeleteArrayElementAtIndex = new List<int> ();
+
 			if (foldoutProp2.isExpanded) {
 				EditorGUI.indentLevel++;
 				var thisAnimatorsProp = property.FindPropertyRelative ("animators");
 				var numAnimators = thisAnimatorsProp.arraySize;
+				var warningStyle = new GUIStyle(EditorStyles.miniButton);
+				warningStyle.contentOffset = new Vector2(0f, 0f);
+				warningStyle.fontStyle = FontStyle.Bold;
+				var currentTint = GUI.color;
 				for (int i = 0; i < numAnimators; i++) {
 					var thisAnimtorProp = thisAnimatorsProp.GetArrayElementAtIndex (i);
 					valR = new Rect (valR.xMin, valR.yMax + padding, valR.width, EditorGUIUtility.singleLineHeight);
@@ -88,6 +97,16 @@ public class RaceAnimatorListPropertyDrawer : PropertyDrawer {
 						EditorGUI.BeginDisabledGroup (true);
 						EditorGUI.TextField (aFieldR, thisAnimtorProp.FindPropertyRelative ("animatorControllerName").stringValue);
 						EditorGUI.EndDisabledGroup ();
+						if (DynamicAssetLoader.Instance)
+						{
+							if (!CheckAnimatorAvailability(thisAnimtorProp.FindPropertyRelative("animatorControllerName").stringValue))
+							{
+								var warningRect = new Rect((removeR.xMin - 20f), removeR.yMin, 20f, removeR.height);
+								GUI.color = new Color(255, 200, 0);
+								GUI.Box(warningRect, new GUIContent("!", thisAnimtorProp.FindPropertyRelative("animatorControllerName").stringValue + " was not in a Resources folder or an asset bundle. You need to add it to one of these to make it 'LIVE'"), warningStyle);
+								GUI.color = currentTint;
+							}
+						}
 					}
 					if(GUI.Button(removeR,"X")){
 						willDeleteArrayElementAtIndex.Add(i);
@@ -157,6 +176,39 @@ public class RaceAnimatorListPropertyDrawer : PropertyDrawer {
 			h += 10 + (extraLines * padding);
 		}
 		return h;
+	}
+	/// <summary>
+	/// with RuntimeAnimatorControllers, DynamicCharacterAvatar ony has a direct refrence for the default animator
+	/// (so that other animators can be assigned that can exist in asset bundles). The only way to get the others is from DynamicAssetLoader
+	/// so they MUST be in an assetBundle or in Resources or there is no way of finding them, if they are not, show a warning.
+	/// </summary>
+	/// <param name="recipeName"></param>
+	/// <returns></returns>
+	private bool CheckAnimatorAvailability(string racName/*, DynamicCharacterAvatar thisDCA = null*/)
+	{
+		if (Application.isPlaying)
+			return true;
+		bool found = false;
+		bool searchResources = true;
+		bool searchAssetBundles = true;
+		string resourcesFolderPath = "";
+		string assetBundlesToSearch = "";
+		RuntimeAnimatorController defaultController = null;
+		if (thisDCA != null)
+		{
+			searchResources = thisDCA.raceAnimationControllers.dynamicallyAddFromResources;
+			searchAssetBundles = thisDCA.raceAnimationControllers.dynamicallyAddFromAssetBundles;
+			resourcesFolderPath = thisDCA.raceAnimationControllers.resourcesFolderPath;
+			assetBundlesToSearch = thisDCA.raceAnimationControllers.assetBundleNames;
+			defaultController = thisDCA.raceAnimationControllers.defaultAnimationController != null ? thisDCA.raceAnimationControllers.defaultAnimationController : (thisDCA.animationController != null ? thisDCA.animationController : null);
+		}
+		if (defaultController)
+			if (defaultController.name == racName)
+				return true;
+		DynamicAssetLoader.Instance.debugOnFail = false;
+		found = DynamicAssetLoader.Instance.AddAssets<RuntimeAnimatorController>(searchResources, searchAssetBundles, true, assetBundlesToSearch, resourcesFolderPath, null, racName, null);
+		DynamicAssetLoader.Instance.debugOnFail = true;
+		return found;
 	}
 }
 #endif
