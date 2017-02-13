@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Name: M_Eyebrow_Slot
   m_EditorClassIdentifier: 
   slotName: M_Eyebrow
-  material: {fileID: 0}
+  material: {fileID: 11400000, guid: c5c1d525787351f44b5b0291bc2cfb2c, type: 2}
   overlayScale: 1
   animatedBoneNames: []
   animatedBoneHashes: 
