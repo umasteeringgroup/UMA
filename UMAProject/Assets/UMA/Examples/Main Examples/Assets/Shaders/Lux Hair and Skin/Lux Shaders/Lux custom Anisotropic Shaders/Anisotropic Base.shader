@@ -1,5 +1,7 @@
 ﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
 
+// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+
 Shader "Lux/Anisotropic Lighting/Base" {
 	Properties {
 		_Color ("Color", Color) = (1,1,1,1)
@@ -69,7 +71,7 @@ Shader "Lux/Anisotropic Lighting/Base" {
 			// v.normal = normalize(v.normal);
 			// v.tangent.xyz = normalize(v.tangent.xyz);
 
-			float3 worldPos = mul(_Object2World, v.vertex).xyz;
+			float3 worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
 			fixed3 worldNormal = UnityObjectToWorldNormal(v.normal);
 			fixed3 worldTangent = UnityObjectToWorldDir(v.tangent.xyz);
 			  
