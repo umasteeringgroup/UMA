@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Name: EyeSpacing
   m_EditorClassIdentifier: 
   dnaTypeHash: 2094876586
-  lastKnownAssetPath: Assets/UMA/Content/UMA/Humanoid/HumanFemale/DNA/DynamicDNA/Resources/EyeSpacing.asset
-  lastKnownDuplicateAssetPath: Assets/UMA/Content/UMA/Humanoid/HumanFemale/DNA/DynamicDNA/Resources/EyeSpacing
+  lastKnownAssetPath: Assets/UMA/Content/UMA/HumanFemale/DNA/DynamicDNA/Resources/EyeSpacing.asset
+  lastKnownDuplicateAssetPath: Assets/UMA/Content/UMA/HumanFemale/DNA/DynamicDNA/Resources/EyeSpacing
     1.asset
-  lastKnownInstanceID: 17862
+  lastKnownInstanceID: 19998
   Names:
   - EyeSpacing
   - EyeSymmetry
