@@ -18,6 +18,10 @@ public partial class DynamicCharacterAvatarEditor : Editor
     {
         thisDCA = target as DynamicCharacterAvatar;
 		var context = UMAContext.FindInstance();
+		if(context == null)
+		{
+			context = thisDCA.CreateEditorContext();
+		}
 		//Set this DynamicCharacterAvatar for RaceSetter so if the user chages the race dropdown the race changes
 		if (_racePropDrawer.thisDCA == null)
         {

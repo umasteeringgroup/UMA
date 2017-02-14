@@ -160,7 +160,9 @@ namespace UMACharacterSystem
 		//or if an external script has already overridden these and so we should just build with the settings as they are (i.e. just call BuildCharacter)
 		//Should be set to FALSE by any method that actually changes settings without calling ImportSettings
 		private bool _isFirstSettingsBuild = true;
-#if UNITY_EDITOR	
+#if UNITY_EDITOR
+		private GameObject EditorUMAContext = null;
+			
 		private PreviewModel lastPreviewModel;
 		private GameObject lastCustomModel;
 		private Material mat;
@@ -299,6 +301,34 @@ namespace UMACharacterSystem
 		#region METHODS 
 
 		#region Start Update and Inititalization
+
+		/*void OnEnable()
+		{
+#if UNITY_EDITOR
+			if (!Application.isPlaying)
+			{
+				Debug.Log("Awake Happens");
+				if (UMAContext.FindInstance() == null)
+				{
+					context = EditorUMAContext = CreateEditorContext();
+				}
+			}
+#endif
+		}
+		void Awake()
+		{
+#if UNITY_EDITOR
+			if (!Application.isPlaying)
+			{
+				Debug.Log("Awake Happens");
+				if(UMAContext.FindInstance() == null)
+				{
+					context = EditorUMAContext = CreateEditorContext();
+                }
+			}
+#endif
+		}*/
+
 		// Use this for initialization
 		public override void Start()
 		{
@@ -440,6 +470,25 @@ namespace UMACharacterSystem
 			{
 				LoadFromRecipe(umaRecipe);
 			}
+		}
+
+		void OnDisable()
+		{
+#if UNITY_EDITOR
+			Debug.Log("OnDisable Happens");
+			if (EditorUMAContext != null)
+			{
+				Destroy(EditorUMAContext);
+			}
+#endif
+		}
+
+		void OnDestroy()
+		{
+#if UNITY_EDITOR
+			Debug.Log("Destroy Happens");
+			EditorApplication.update -= CheckEditorContextNeeded;
+#endif
 		}
 
 		#endregion
@@ -2399,6 +2448,72 @@ namespace UMACharacterSystem
 				ensureSharedColors = wasEnsureSharedColors;
 			}
 		}
+
+		#endregion
+
+		#region UMACONTEXT RELATED
+
+		//If the user inspects a DCA when there is no UMAContext in the scene it will blow up because RaceSetter needs one in order to find all the available races
+		//and the Default Wardrobe and Race animators need one in order to assess whether the assets will be available at run time so create one on the fly like UMATextRecipe does
+#if UNITY_EDITOR
+		/// <summary>
+		/// Creates a temporary UMAContext for use when editing DynamicCharacterAvatars when the open Scene does not have an UMAContext or libraries set up
+		/// </summary>
+		public UMAContext CreateEditorContext()
+		{
+			EditorUMAContext = new GameObject();
+			EditorUMAContext.name = "UMAEditorContext";
+			//Make this GameObject not show up in the scene
+			EditorUMAContext.hideFlags = HideFlags.HideInHierarchy;
+			var thisUMAContext = EditorUMAContext.AddComponent<UMAContext>();
+			UMAContext.Instance = thisUMAContext;
+			//we need to add the libraries as components of the game object too
+			//and then set THOSE components to the umaContext component
+			thisUMAContext.raceLibrary = EditorUMAContext.AddComponent<DynamicRaceLibrary>();
+			thisUMAContext.overlayLibrary = EditorUMAContext.AddComponent<DynamicOverlayLibrary>();
+			thisUMAContext.slotLibrary = EditorUMAContext.AddComponent<DynamicSlotLibrary>();
+			thisUMAContext.dynamicCharacterSystem = EditorUMAContext.AddComponent<UMACharacterSystem.DynamicCharacterSystem>();
+			//make sure there is a UMAResourcesIndex too
+			if (UMAResourcesIndex.Instance == null)
+			{
+				EditorUMAContext.AddComponent<UMAResourcesIndex>();
+			}
+			//add an event to EditorApplication so that this context gets destroyed when this game object is no longer being inspected
+			EditorApplication.update -= CheckEditorContextNeeded;
+			EditorApplication.update += CheckEditorContextNeeded;
+			return EditorUMAContext.GetComponent<UMAContext>();
+		}
+
+		public void CheckEditorContextNeeded()
+		{
+			Debug.Log("CheckEditorContextNeeded");
+			if (EditorUMAContext != null)
+			{
+				if (EditorUMAContext.GetComponent<UMAContext>() != null)
+				{
+					if (this == null)
+					{
+						DestroyImmediate(EditorUMAContext);
+						EditorApplication.update -= CheckEditorContextNeeded;
+					}
+					else if (gameObject == null || Selection.activeGameObject == null)
+					{
+						DestroyImmediate(EditorUMAContext);
+						EditorApplication.update -= CheckEditorContextNeeded;
+					}
+					else if (Selection.activeGameObject != gameObject)
+					{
+						DestroyImmediate(EditorUMAContext);
+						EditorApplication.update -= CheckEditorContextNeeded;
+					}
+				}
+			}
+			else
+			{
+				EditorApplication.update -= CheckEditorContextNeeded;
+			}
+		}
+#endif
 
 		#endregion
 
