@@ -19,7 +19,7 @@ namespace UMAEditor
 	/// Class is marked partial so developers can add their own functionality to edit new properties added to 
 	/// UMATextRecipe without changing code delivered with UMA.
 	/// </summary>
-	[CanEditMultipleObjects]
+	//[CanEditMultipleObjects]
     [CustomEditor(typeof(UMARecipeBase), true)]
     public partial class RecipeEditor : CharacterBaseEditor
     {
