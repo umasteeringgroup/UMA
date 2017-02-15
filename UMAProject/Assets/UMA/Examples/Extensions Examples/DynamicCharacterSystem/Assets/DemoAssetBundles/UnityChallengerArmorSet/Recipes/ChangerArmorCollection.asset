@@ -11,12 +11,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6ae7341e07d1b8f41aa37f5e2c910168, type: 3}
   m_Name: ChangerArmorCollection
   m_EditorClassIdentifier: 
-  recipeString: '{"packedRecipeType":"WardrobeCollection","name":"ChangerArmorCollection","race":"","dna":[],"characterColors":[{"name":"Leather","colors":[56,30,8,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"Metal","colors":[238,238,238,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,255,255,255,133]}],"wardrobeSet":[],"raceAnimatorController":""}'
   recipeType: WardrobeCollection
   DisplayValue: 
   compatibleRaces:
   - HumanMaleDCS
   - Werewolf
+  - HumanMale
   wardrobeRecipeThumbs:
   - race: HumanMaleDCS
     filename: 
@@ -24,12 +24,15 @@ MonoBehaviour:
   - race: Werewolf
     filename: 
     thumb: {fileID: 21300000, guid: fab6a422313ad1e488c9e96d2417075a, type: 3}
+  - race: HumanMale
+    filename: 
+    thumb: {fileID: 0}
   wardrobeSlot: FullOutfit
   Hides: []
   suppressWardrobeSlots: []
   activeWardrobeSet: []
+  recipeString: '{"packedRecipeType":"WardrobeCollection","name":"ChangerArmorCollection","race":"","dna":[],"characterColors":[{"name":"Leather","colors":[56,30,8,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"Metal","colors":[238,238,238,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,255,255,255,133]}],"wardrobeSet":[],"raceAnimatorController":""}'
   coverImages: []
-  coverImagesIsExpanded: 0
   wardrobeCollection:
     sets:
     - targetRace: HumanMaleDCS
@@ -48,3 +51,6 @@ MonoBehaviour:
         recipe: MaleChallengerTorso
       - slot: Shoulders
         recipe: MaleChallengerShouderPads
+    - targetRace: HumanMale
+      wardrobeSet: []
+  arbitraryRecipes: []
