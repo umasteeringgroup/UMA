@@ -37,7 +37,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 166765684}
-  m_IndirectSpecularColor: {r: 0.34520072, g: 0.3528661, b: 0.37242794, a: 1}
+  m_IndirectSpecularColor: {r: 0.09543266, g: 0.09999044, b: 0.1127162, a: 1}
 --- !u!157 &4
 LightmapSettings:
   m_ObjectHideFlags: 0
@@ -7141,7 +7141,6 @@ MonoBehaviour:
   slotElementList:
   - {fileID: 11400000, guid: 04442629189f10a48bc3238f44aa9856, type: 2}
   - {fileID: 11400000, guid: 0fbc0a0bbfb29084bbeafb0876b6e28b, type: 2}
-  - {fileID: 0}
   - {fileID: 11400000, guid: db59a2fec12e144498fed4c62c157859, type: 2}
   - {fileID: 11400000, guid: 96efa554e673f0c40ba212cde7477926, type: 2}
   - {fileID: 11400000, guid: 2ea0c2632af00954d80449e69aae3961, type: 2}
