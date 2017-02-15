@@ -475,7 +475,6 @@ namespace UMACharacterSystem
 		void OnDisable()
 		{
 #if UNITY_EDITOR
-			Debug.Log("OnDisable Happens");
 			if (EditorUMAContext != null)
 			{
 				Destroy(EditorUMAContext);
@@ -486,7 +485,6 @@ namespace UMACharacterSystem
 		void OnDestroy()
 		{
 #if UNITY_EDITOR
-			Debug.Log("Destroy Happens");
 			EditorApplication.update -= CheckEditorContextNeeded;
 #endif
 		}
