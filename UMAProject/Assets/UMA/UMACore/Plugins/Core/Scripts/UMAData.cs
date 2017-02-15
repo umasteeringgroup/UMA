@@ -528,6 +528,11 @@ namespace UMA
 			/// <param name="slot">Slot.</param>
 			public void SetSlot(int index, SlotData slot)
 			{
+				if (slotDataList == null)
+				{
+					slotDataList = new SlotData[1];
+				}
+
 				if (index >= slotDataList.Length)
 				{
 					System.Array.Resize<SlotData>(ref slotDataList, index + 1);
