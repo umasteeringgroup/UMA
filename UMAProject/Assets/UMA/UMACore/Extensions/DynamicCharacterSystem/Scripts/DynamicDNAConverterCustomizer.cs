@@ -42,6 +42,10 @@ namespace UMA
 
 		public bool drawBoundsGizmo = true;
 
+		private string bonePoseSaveName;
+		private GameObject tempAvatarPreDNA;
+		private GameObject tempAvatarPostDNA;
+
 		//UndoRedoDelegate
 		void OnUndo()
 		{
@@ -304,6 +308,73 @@ namespace UMA
             return true;
         }
 
+		private float positionEpsilon = 0.001f;
+		private float scaleEpsilon = 0.001f;
+		private bool LocalTransformsMatch(Transform t1, Transform t2)
+		{
+			if ((t1.localPosition - t2.localPosition).sqrMagnitude > positionEpsilon) return false;
+			if ((t1.localScale - t2.localScale).sqrMagnitude > scaleEpsilon) return false;
+			if (t1.localRotation != t2.localRotation) return false;
+
+			return true;
+		}
+
+		protected void CreateBonePoseCallback(UMAData umaData)
+		{
+			UMA.PoseTools.UMABonePose bonePose = null;
+			if (selectedConverter.startingPose == null)
+			{
+				bonePose = CreatePoseAsset("", bonePoseSaveName);
+			}
+			else
+			{
+				bonePose = selectedConverter.startingPose;
+				bonePose.poses = new UMABonePose.PoseBone[1];
+			}
+
+			UMASkeleton skeletonPreDNA = tempAvatarPreDNA.GetComponent<UMADynamicAvatar>().umaData.skeleton;
+			UMASkeleton skeletonPostDNA = tempAvatarPostDNA.GetComponent<UMADynamicAvatar>().umaData.skeleton;
+
+			Transform transformPreDNA;
+			Transform transformPostDNA;
+			bool transformDirty;
+			int parentHash;
+			foreach (int boneHash in skeletonPreDNA.BoneHashes)
+			{
+				skeletonPreDNA.TryGetBoneTransform(boneHash, out transformPreDNA, out transformDirty, out parentHash);
+				skeletonPostDNA.TryGetBoneTransform(boneHash, out transformPostDNA, out transformDirty, out parentHash);
+
+				if ((transformPreDNA == null) || (transformPostDNA == null))
+				{
+					Debug.LogWarning("Bad bone hash in skeleton: " + boneHash);
+					continue;
+				}
+
+				if (!LocalTransformsMatch(transformPreDNA, transformPostDNA))
+				{
+					bonePose.AddBone(transformPreDNA, transformPostDNA.localPosition, transformPostDNA.localRotation, transformPostDNA.localScale);
+				}
+			}
+
+			Destroy(tempAvatarPreDNA);
+			Destroy(tempAvatarPostDNA);
+
+			EditorUtility.SetDirty(bonePose);
+			AssetDatabase.SaveAssets();
+			// Set this asset as the converters pose asset
+			selectedConverter.startingPose = bonePose;
+
+			// Reset all the DNA values for target Avatar to default
+			UMADnaBase[] targetDNA = activeUMA.umaData.GetAllDna();
+			foreach (UMADnaBase dnaEntry in targetDNA)
+			{
+				for (int i = 0; i < dnaEntry.Values.Length; i++)
+				{
+					dnaEntry.SetValue(i, 0.5f);
+				}
+			}
+		}
+
         /// <summary>
         /// Calculates the required poses necessary for an UMABonePose asset to render the Avatar in its current post DNA state, 
         /// adds these to the selected converters 'Starting Pose' asset- creating one if necessary and resets current Dna values to 0.
@@ -315,145 +386,56 @@ namespace UMA
 				Debug.LogWarning("activeUMA == null || selectedConverter == null");
                 return false;
 			}
-            //make a list of poses based on the current dna settings and reset all the dna values to zero.
-            //overwrite the existing Assets poses with these if there is an asset or create a new asset with these settings.
-            Vector3[] dnaAffectedPositions = new Vector3[activeUMA.umaData.skeleton.BoneNames.Length];
-            Vector3[] dnaAffectedScales = new Vector3[activeUMA.umaData.skeleton.BoneNames.Length];
-            Quaternion[] dnaAffectedRotations = new Quaternion[activeUMA.umaData.skeleton.BoneNames.Length];
-            Dictionary<int, Vector3> positionsToAdd = new Dictionary<int, Vector3>();
-            Dictionary<int, Vector3> scalesToAdd = new Dictionary<int, Vector3>();
-            Dictionary<int, Quaternion> rotationsToAdd = new Dictionary<int, Quaternion>();
-            //We need to set the 'overallScale' modifier to 1f before we do anything since this messes everything up
-			//07022016 does it though? It seems to be that the resetting of the scale makes it actually DO something, but its not what we WANT it to do
-			//actually its more like we need to modify the resulting values by the overall scale or something
-            var currentOverallScale = 1f;
-            foreach(DynamicDNAConverterBehaviour converter in availableConverters)
-            {
-                if (converter.overallModifiersEnabled)
-                {
-                    currentOverallScale = converter.overallScale;
-                    converter.overallScale = 1f;
-                    converter.ApplyDynamicDnaAction(activeUMA.umaData, activeUMA.umaData.skeleton);
-                }
-            }
-			//Get the positions when the scale is normalized but dna is applied
-            var skeleton = activeUMA.umaData.skeleton;
-            var index = 0;
-            foreach (int boneHash in skeleton.BoneHashes)
-            {
-                dnaAffectedPositions[index] = skeleton.GetPosition(boneHash);
-                dnaAffectedScales[index] = skeleton.GetScale(boneHash);
-                dnaAffectedRotations[index] = skeleton.GetRotation(boneHash);
-                index++;
-            }
-			//Reset the bones to their pre dna state
-            //umaData.skeleton.ResetAll();//this does not give us the right results, the differences are still significant enough that many bones dont say they are equal.
-            foreach(DynamicDNAConverterBehaviour converter in availableConverters)
-            {
-                converter.RemoveDNAChangesFromSkeleton(activeUMA.umaData);
-            }
-			//if any bones have different positions, we know dna moved them, so these bones are the ones we want to add to the bone pose
-            index = 0;
-            foreach (int boneHash in skeleton.BoneHashes)
-            {
-				//07022016 just putting them ALL in gives a WORSE result than being selective?!
-                //we always need position and lower back I think- still not right though really...
-                if(skeleton.BoneNames[index] == "Position" || skeleton.BoneNames[index] == "LowerBack")
-                {
-                    scalesToAdd.Add(boneHash, dnaAffectedScales[index]);
-                    positionsToAdd.Add(boneHash, dnaAffectedPositions[index]);
-                    rotationsToAdd.Add(boneHash, dnaAffectedRotations[index]);
-                }
-                //position equality is not sensitive enough and scale equality is too sensitive
-                //cant get this to work 100% not sure if its an issue with the comparing or things not getting reset right
-                else if ((skeleton.GetPosition(boneHash)) != (dnaAffectedPositions[index]) || (Vector3.SqrMagnitude(skeleton.GetPosition(boneHash) - dnaAffectedPositions[index]) > 0.00000001) || skeleton.GetRotation(boneHash) != dnaAffectedRotations[index] || skeleton.GetScale(boneHash) != dnaAffectedScales[index])
-                {
-                    if (skeleton.GetScale(boneHash) != dnaAffectedScales[index])
-                    {
-                        if (Vector3.SqrMagnitude(skeleton.GetScale(boneHash) - dnaAffectedScales[index]) > 0.0001)//we need to be a little less sensitive with scale
-                        {
-                            scalesToAdd.Add(boneHash, dnaAffectedScales[index]);
-                            positionsToAdd.Add(boneHash, dnaAffectedPositions[index]);
-                            rotationsToAdd.Add(boneHash, dnaAffectedRotations[index]);
-                        }
-                    }
-                    else
-                    {
-                        scalesToAdd.Add(boneHash, dnaAffectedScales[index]);
-                        positionsToAdd.Add(boneHash, dnaAffectedPositions[index]);
-                        rotationsToAdd.Add(boneHash, dnaAffectedRotations[index]);
-                    }
-                }
-                index++;
-            }
-            if (positionsToAdd.Count > 0)
-            {
-                UMA.PoseTools.UMABonePose bonePose = null;
-                if (selectedConverter.startingPose == null)
-                {
-                    bonePose = CreatePoseAsset("", createdAssetName);//UMA.PoseTools.UMABonePoseBuildWindow is not available because its Editor Only...
-                }
-                else
-                {
-                    bonePose = selectedConverter.startingPose;
-                }
-                //skeleton.ResetAll();//seems to mean the settings when the pose gets added are more accurate... 07022016 actually it doesn't
-                if (bonePose.poses.Length > 0)//we want to remove any bones we are going to add again
-                {
-                    List<UMA.PoseTools.UMABonePose.PoseBone> unaffectedBones = new List<UMA.PoseTools.UMABonePose.PoseBone>();
-                    for (int i = 0; i < bonePose.poses.Length; i++)
-                    {
-                        if (!positionsToAdd.ContainsKey(bonePose.poses[i].hash))
-                        {
-                            unaffectedBones.Add(bonePose.poses[i]);
-                        }
-                    }
-                    bonePose.poses = unaffectedBones.ToArray();
-                }
-                List<Transform> trashTransforms = new List<Transform>();
-                foreach (KeyValuePair<int, Vector3> kp in positionsToAdd)
-                {
-                    Transform thisBoneTransform = new GameObject().transform;
-                    thisBoneTransform.localPosition = skeleton.GetPosition(kp.Key);
-                    thisBoneTransform.localScale = skeleton.GetScale(kp.Key);
-                    thisBoneTransform.localRotation = skeleton.GetRotation(kp.Key);
-                    thisBoneTransform.name = skeleton.GetBoneGameObject(kp.Key).name;
-                    trashTransforms.Add(thisBoneTransform);
-                    bonePose.AddBone(skeleton.GetBoneGameObject(kp.Key).transform, positionsToAdd[kp.Key], rotationsToAdd[kp.Key], scalesToAdd[kp.Key]);
-                }
-                foreach (Transform trash in trashTransforms)
-                {
-                    Destroy(trash.gameObject);
-                }
-                EditorUtility.SetDirty(bonePose);
-                AssetDatabase.SaveAssets();
-                //then set this asset as the converters pose asset
-                selectedConverter.startingPose = bonePose;
-                //and reset all the dna Values for this Avatar to zero (aka 0.5f)
-                UMADnaBase[] DNA = activeUMA.umaData.GetAllDna();
-                foreach (UMADnaBase d in DNA)
-                {
-                    for (int i = 0; i < d.Values.Length; i++)
-                    {
-                        d.SetValue(i, 0.5f);
-                    }
-                }
-                //reset the overallscale to the converter that had it
-                foreach (DynamicDNAConverterBehaviour converter in availableConverters)
-                {
-                    if (converter.overallModifiersEnabled)
-                    {
-                        converter.overallScale = currentOverallScale;
-					}
-                }
-                activeUMA.umaData.Dirty(true, false, false);
-                return true;
-            }
-            else
-            {
-                Debug.LogWarning("No differences between the unmodified model an the DNA modified model were found to convert. No asset created.");
-            }
-            return false;
+
+			bonePoseSaveName = createdAssetName;
+
+			// Build a temporary version of the Avatar with no DNA to get original state
+			UMADnaBase[] activeDNA = activeUMA.umaData.umaRecipe.GetAllDna();
+			SlotData[] activeSlots = activeUMA.umaData.umaRecipe.GetAllSlots();
+			int slotIndex;
+
+			tempAvatarPreDNA = new GameObject("Temp Raw Avatar");
+			tempAvatarPreDNA.transform.parent = activeUMA.transform.parent;
+			tempAvatarPreDNA.transform.localPosition = Vector3.zero;
+			tempAvatarPreDNA.transform.localRotation = activeUMA.transform.localRotation;
+
+			UMADynamicAvatar tempAvatar = tempAvatarPreDNA.AddComponent<UMADynamicAvatar>();
+			tempAvatar.umaGenerator = activeUMA.umaGenerator;
+			tempAvatar.Initialize();
+			tempAvatar.umaData.umaRecipe = new UMAData.UMARecipe();
+			tempAvatar.umaData.umaRecipe.raceData = activeUMA.umaData.umaRecipe.raceData;
+			slotIndex = 0;
+			foreach (SlotData slotEntry in activeSlots) {
+				if ((slotEntry == null) || slotEntry.dontSerialize) continue;
+				tempAvatar.umaData.umaRecipe.SetSlot(slotIndex++, slotEntry);
+			} 
+			tempAvatar.Show();
+
+			tempAvatarPostDNA = new GameObject("Temp DNA Avatar");
+			tempAvatarPostDNA.transform.parent = activeUMA.transform.parent;
+			tempAvatarPostDNA.transform.localPosition = Vector3.zero;
+			tempAvatarPostDNA.transform.localRotation = activeUMA.transform.localRotation;
+
+			UMADynamicAvatar tempAvatar2 = tempAvatarPostDNA.AddComponent<UMADynamicAvatar>();
+			tempAvatar2.umaGenerator = activeUMA.umaGenerator;
+			tempAvatar2.Initialize();
+			tempAvatar2.umaData.umaRecipe = new UMAData.UMARecipe();
+			tempAvatar2.umaData.umaRecipe.raceData = activeUMA.umaData.umaRecipe.raceData;
+			tempAvatar2.umaData.umaRecipe.slotDataList = activeUMA.umaData.umaRecipe.slotDataList;
+			slotIndex = 0;
+			foreach (SlotData slotEntry in activeSlots) {
+				if ((slotEntry == null) || slotEntry.dontSerialize) continue;
+				tempAvatar2.umaData.umaRecipe.SetSlot(slotIndex++, slotEntry);
+			} 
+			foreach (UMADnaBase dnaEntry in activeDNA) {
+				tempAvatar2.umaData.umaRecipe.AddDna(dnaEntry);
+			}
+
+			tempAvatar2.umaData.OnCharacterCreated += CreateBonePoseCallback;
+			tempAvatar2.Show();
+
+			return true;
+
         }
         #endregion
 
