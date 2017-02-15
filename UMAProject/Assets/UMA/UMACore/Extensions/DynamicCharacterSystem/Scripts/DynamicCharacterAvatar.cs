@@ -424,7 +424,8 @@ namespace UMACharacterSystem
 				string modelPath = "HumanMale/FBX/Male_Unified.fbx";
 				if (previewModel == PreviewModel.Female)
 					modelPath = "HumanFemale/FBX/Female_Unified.fbx";
-				model = UnityEditor.AssetDatabase.LoadAssetAtPath("Assets/UMA/Content/UMA/Humanoid/" + modelPath, typeof(GameObject)) as GameObject;
+				//model = UnityEditor.AssetDatabase.LoadAssetAtPath("Assets/UMA/Content/UMA/Humanoid/" + modelPath, typeof(GameObject)) as GameObject;
+				model = UnityEditor.AssetDatabase.LoadAssetAtPath("Assets/UMA/Content/UMA/" + modelPath, typeof(GameObject)) as GameObject;
 			}
 			if(model != null)
 				previewMesh = model.GetComponentInChildren<SkinnedMeshRenderer>().sharedMesh;
