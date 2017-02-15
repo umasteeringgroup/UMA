@@ -456,14 +456,46 @@ namespace UMAEditor
 		protected readonly List<SlotEditor> _slotEditors = new List<SlotEditor>();
 		//DOS Changed this to protected so childs can inherit
 		protected readonly SharedColorsCollectionEditor _sharedColorsEditor = new SharedColorsCollectionEditor();
-
+		//an Id for the 'ClickToPick' slot picker
+		protected static int _slotPickerID = -1;
 
 		//DOS Changed this to protected so childs can inherit
 		protected bool DropAreaGUI(Rect dropArea)
 		{
 			int count = 0;
 			var evt = Event.current;
-
+			int pickedCount = 0;
+			//make the box clickable so that the user can select slotData assets from the asset selection window
+			//TODO if we can make this so you can click multiple slots to add them make this the only option and get rid of the object selection 'field'
+			if (evt.type == EventType.MouseUp)
+			{
+				if (dropArea.Contains(evt.mousePosition))
+				{
+					Debug.Log("Show Slot Picker window");
+					_slotPickerID = EditorGUIUtility.GetControlID(new GUIContent("slotObjectPicker"), FocusType.Passive);
+					EditorGUIUtility.ShowObjectPicker<SlotDataAsset>(null, false, "", _slotPickerID);
+					Event.current.Use();//stops the Mismatched LayoutGroup errors
+					//return false;//true/false notsure
+				}
+			}
+			if (evt.commandName == "ObjectSelectorUpdated" && EditorGUIUtility.GetObjectPickerControlID() == _slotPickerID)
+			{
+				SlotDataAsset tempSlotDataAsset = EditorGUIUtility.GetObjectPickerObject() as SlotDataAsset;
+				if (tempSlotDataAsset)
+				{
+					Debug.Log("Slot Picked " + tempSlotDataAsset.slotName);
+					LastSlot = tempSlotDataAsset.slotName;
+					AddSlotDataAsset(tempSlotDataAsset);
+					pickedCount++;
+					Event.current.Use();//stops the Mismatched LayoutGroup errors
+										//return true;
+				}
+				else
+				{
+					Event.current.Use();//stops the Mismatched LayoutGroup errors
+				}
+				//return false;//true/false notsure
+			}
 			if (evt.type == EventType.DragUpdated)
 			{
 				if (dropArea.Contains(evt.mousePosition))
@@ -505,7 +537,8 @@ namespace UMAEditor
 					}
 				}
 			}
-
+			if (pickedCount > 0)
+				return true;
 			return false;
 		}
 
@@ -537,6 +570,7 @@ namespace UMAEditor
 		public SlotMasterEditor(UMAData.UMARecipe recipe)
 		{
 			_recipe = recipe;
+
 			if (recipe.slotDataList == null)
 			{
 				recipe.slotDataList = new SlotData[0];
@@ -569,14 +603,10 @@ namespace UMAEditor
 			}
 		}
         //DOS made this virtual so children can override
-        public virtual bool OnGUI(ref bool _dnaDirty, ref bool _textureDirty, ref bool _meshDirty)
+        public virtual bool OnGUI(string targetName, ref bool _dnaDirty, ref bool _textureDirty, ref bool _meshDirty)
         {
             bool changed = false;
 
-            //DynamicCharacterSystem:: Wardrobe recipes dont need a race set here as they have their own list of compatible races
-            //Its also better if a race IS NOT SET so that we dont get warnings when rendering about things being incompatible
-            //It would be great to disable the following in that case but unfortunately _recipe is UMAData.UMARecipe - so we cant fix this right now...
-            // Have to be able to assign a race on a new recipe.
             RaceData newRace = (RaceData)EditorGUILayout.ObjectField("RaceData", _recipe.raceData, typeof(RaceData), false);
             if (_recipe.raceData == null)
             {
@@ -599,26 +629,8 @@ namespace UMAEditor
             }
 
             GUILayout.Space(20);
-            if (GUILayout.Button("Remove Nulls"))
-            {
-                var newList = new List<SlotData>(_recipe.slotDataList.Length);
-                foreach (var slotData in _recipe.slotDataList)
-                {
-                    if (slotData != null) newList.Add(slotData);
-                }
-                _recipe.slotDataList = newList.ToArray();
-                changed |= true;
-                _dnaDirty |= true;
-                _textureDirty |= true;
-                _meshDirty |= true;
-            }
-
-            GUILayout.Space(20);
             Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
-            GUI.Box(dropArea, "Drag Slots here");
-            GUILayout.Space(20);
-
-
+            GUI.Box(dropArea, "Drag Slots here. Click to Pick");
             if (DropAreaGUI(dropArea))
             {
                 changed |= true;
@@ -626,12 +638,57 @@ namespace UMAEditor
                 _textureDirty |= true;
                 _meshDirty |= true;
             }
+			GUILayout.Space(10);
 
-            var added = (SlotDataAsset)EditorGUILayout.ObjectField("Add Slot", null, typeof(SlotDataAsset), false);
+			var baseSlotsList = new List<SlotData>();
+			var baseSlotsNamesList = new List<string>() { "None" };
+			if (_recipe.raceData != null)
+			{
+				if(_recipe.raceData.baseRaceRecipe != null)
+				{
+					//check this recipe is NOT the actual race base recipe
+					if (_recipe.raceData.baseRaceRecipe.name != targetName)
+					{
+						//we dont want to show this if this IS the base recipe
+						UMAData.UMARecipe thisBaseRecipe = _recipe.raceData.baseRaceRecipe.GetCachedRecipe(UMAContext.Instance);
+						SlotData[] thisBaseSlots = thisBaseRecipe.GetAllSlots();
+						foreach (SlotData slot in thisBaseSlots)
+						{
+							if (slot != null)
+							{
+								baseSlotsList.Add(slot);
+								baseSlotsNamesList.Add(slot.slotName);
+							}
+						}
+					}
+				}
+				if (baseSlotsNamesList.Count > 1)
+				{
+					EditorGUI.BeginChangeCheck();
+					var baseAdded = EditorGUILayout.Popup("Add Base Slot", 0, baseSlotsNamesList.ToArray());
+					if (EditorGUI.EndChangeCheck())
+					{
+						if (baseAdded != 0)
+						{
+							var slot = baseSlotsList[baseAdded - 1];
+							LastSlot = slot.asset.slotName;
+							var slotToAdd = new SlotData(slot.asset);
+							_recipe.MergeSlot(slotToAdd, false);
+							changed |= true;
+							_dnaDirty |= true;
+							_textureDirty |= true;
+							_meshDirty |= true;
+						}
+					}
+				}
+			}
+
+			var added = (SlotDataAsset)EditorGUILayout.ObjectField("Add Slot", null, typeof(SlotDataAsset), false);
 
             if (added != null)
             {
-                var slot = new SlotData(added);
+				LastSlot = added.slotName;
+				var slot = new SlotData(added);
                 _recipe.MergeSlot(slot, false);
                 changed |= true;
                 _dnaDirty |= true;
@@ -639,7 +696,23 @@ namespace UMAEditor
                 _meshDirty |= true;
             }
 
-            GUILayout.BeginHorizontal();
+			GUILayout.Space(20);
+
+			if (GUILayout.Button("Remove Nulls"))
+			{
+				var newList = new List<SlotData>(_recipe.slotDataList.Length);
+				foreach (var slotData in _recipe.slotDataList)
+				{
+					if (slotData != null) newList.Add(slotData);
+				}
+				_recipe.slotDataList = newList.ToArray();
+				changed |= true;
+				_dnaDirty |= true;
+				_textureDirty |= true;
+				_meshDirty |= true;
+			}
+
+			GUILayout.BeginHorizontal();
             if (GUILayout.Button("Collapse All"))
             {
                 CollapseAll();
@@ -1308,7 +1381,7 @@ namespace UMAEditor
 					if (!dnaEditor.IsValid) return false;
 					return dnaEditor.OnGUI(ref _dnaDirty, ref _textureDirty, ref _meshDirty);
 				case 1:
-					return slotEditor.OnGUI(ref _dnaDirty, ref _textureDirty, ref _meshDirty);
+					return slotEditor.OnGUI(target.name, ref _dnaDirty, ref _textureDirty, ref _meshDirty);
 			}
 
 			return false;

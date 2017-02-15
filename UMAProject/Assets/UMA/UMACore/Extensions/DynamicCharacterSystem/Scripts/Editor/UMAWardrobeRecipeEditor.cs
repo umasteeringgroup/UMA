@@ -54,7 +54,7 @@ namespace UMAEditor
 
 			hideRaceField = true;
 			hideToolBar = true;
-			slotEditor = new WardrobeRecipeMasterEditor(_recipe);
+			//slotEditor = new WardrobeRecipeMasterEditor(_recipe, target);
 
 
 			//CompatibleRaces drop area
@@ -64,6 +64,9 @@ namespace UMAEditor
 			//wardrobeSlots fields
 			if (DrawWardrobeSlotsFields(TargetType))
 				doUpdate = true;
+
+			//Set this up after the other so we can send the popup data with it
+			slotEditor = new WardrobeRecipeMasterEditor(_recipe, generatedBaseSlotOptions, generatedBaseSlotOptionsLabels);
 
 			EditorGUILayout.Space();
 			return doUpdate;

@@ -251,7 +251,7 @@ namespace UMAEditor
 			{
 				_wardrobeSet = wardrobeSet;
 			}
-			public override bool OnGUI(ref bool _dnaDirty, ref bool _textureDirty, ref bool _meshDirty)
+			public override bool OnGUI(string targetName, ref bool _dnaDirty, ref bool _textureDirty, ref bool _meshDirty)
 			{
 				bool changed = false;
 				if (!OpenSlots.ContainsKey("wardrobeSet"))

@@ -174,7 +174,7 @@ namespace UMAEditor
 				return changed;
 			}
 
-			public override bool OnGUI(ref bool _dnaDirty, ref bool _textureDirty, ref bool _meshDirty)
+			public override bool OnGUI(string targetName, ref bool _dnaDirty, ref bool _textureDirty, ref bool _meshDirty)
 			{
 				var context = UMAContext.FindInstance();
 				if (context == null)

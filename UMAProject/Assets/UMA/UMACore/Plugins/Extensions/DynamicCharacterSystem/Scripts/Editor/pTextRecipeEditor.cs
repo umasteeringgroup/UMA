@@ -27,8 +27,8 @@ namespace UMAEditor
 		int selectedWardrobeThumb = 0;
 		List<string> generatedWardrobeSlotOptions = new List<string>();
 		List<string> generatedWardrobeSlotOptionsLabels = new List<string>();
-		List<string> generatedBaseSlotOptions = new List<string>();
-		List<string> generatedBaseSlotOptionsLabels = new List<string>();
+		protected List<string> generatedBaseSlotOptions = new List<string>();
+		protected List<string> generatedBaseSlotOptionsLabels = new List<string>();
 
 		protected override bool PreInspectorGUI()
 		{
@@ -40,7 +40,7 @@ namespace UMAEditor
 			//hide the toolbar when its a recipe type that doesn't use DNA (like wardrobe or wardrobeCollection)
 			if (hideToolBar)
 			{
-				return slotEditor.OnGUI(ref _dnaDirty, ref _textureDirty, ref _meshDirty);
+				return slotEditor.OnGUI(target.name, ref _dnaDirty, ref _textureDirty, ref _meshDirty);
 			}
 			bool changed = false;
 			//the raceData field should really be ABOVE the toolbar, since it defines what the dna will be
@@ -66,7 +66,7 @@ namespace UMAEditor
 						else
 							return changed;
 					case 1:
-						if (slotEditor.OnGUI(ref _dnaDirty, ref _textureDirty, ref _meshDirty))
+						if (slotEditor.OnGUI(target.name, ref _dnaDirty, ref _textureDirty, ref _meshDirty))
 							return true;
 						else
 							return changed;
@@ -196,12 +196,6 @@ namespace UMAEditor
 					if (thisDNAConverterList[i] is DynamicDNAConverterBehaviourBase)
 					{
 						var thisDnaAsset = ((DynamicDNAConverterBehaviourBase)thisDNAConverterList[i]).dnaAsset;
-						//var dna = _recipe.GetOrCreateDna(DnaConverter.DNAType, DnaConverter.DNATypeHash);
-						//if the dynamic dna has the same hash as "UMADnaHumanoid" or "UMADnaTutorial" and the recipe is an old one this will blow up
-						//THIS SHOULD NEVER HAPPEN the user should not be able to set the hashes to be either of those hashes now
-						//Debug.Log("This Hash was "+ dna.DNATypeHash+ " UMADnaHumanoid hash is " + UMAUtils.StringToHash("UMADnaHumanoid") + " UMADnaTutorial hash is " + UMAUtils.StringToHash("UMADnaTutorial"));
-                        //if (dna.DNATypeHash == UMAUtils.StringToHash("UMADnaHumanoid") || dna.DNATypeHash == UMAUtils.StringToHash("UMADnaTutorial"))
-						//	continue;
 						if (((DynamicUMADnaBase)dna).dnaAsset != thisDnaAsset || ((DynamicUMADnaBase)dna).didDnaAssetUpdate)
 						{
 							if (((DynamicUMADnaBase)dna).didDnaAssetUpdate)
@@ -227,16 +221,8 @@ namespace UMAEditor
 								DNAConvertersModified = true;
 							}
 						}
-						//DynamicDNAConverter does not have a type hash any more
-						/*if (((DynamicUMADnaBase)dna).DNATypeHash != DnaConverter.DNATypeHash)
-						{
-							Debug.Log("Updated DNA's typeHash to match DnaConverter " + DnaConverter.name + "'s dnaTypeHash");
-							((DynamicUMADnaBase)dna).SetDnaTypeHash(DnaConverter.DNATypeHash);
-							DNAConvertersModified = true;
-						}*/
 					}
 				}
-				//Try elis way
 				for (int i = 0; i < currentDNA.Length; i++)
 				{
 					if (_recipe.raceData.GetConverter(currentDNA[i]) == null)
@@ -264,102 +250,6 @@ namespace UMAEditor
 					}
 				}
 				currentDNA = _recipe.GetAllDna();
-				//Also if the user has switched a race to use DynamicConverter/DynamicDNA the recipe will contain DNA values for UMADNAHumanoid
-				//In that case these values need to be converted to DynamicDna values
-				/*int thisUMADnaHumanoid = -1;
-				int thisUMADnaTutorial = -1;
-				bool needsHumanoidDnaUpdate = false;
-				bool needsTutorialDnaUpdate = false;
-				//first test if there is any UMADnaHumanoid dna
-				for (int i = 0; i < currentDNA.Length; i++)
-				{
-					if (currentDNA[i].GetType().ToString() == "UMA.UMADnaHumanoid")
-					{
-						thisUMADnaHumanoid = i;
-						needsHumanoidDnaUpdate = true;
-					}
-					if (currentDNA[i].GetType().ToString() == "UMA.UMADnaTutorial")
-					{
-						thisUMADnaTutorial = i;
-						needsTutorialDnaUpdate = true;
-					}
-				}
-				if (thisUMADnaHumanoid != -1 || thisUMADnaTutorial != -1)
-				{
-					//If there actually still is a 'old style' converter in the race we dont need to update to dynamicDNA
-					foreach (DnaConverterBehaviour DnaConverter in thisDNAConverterList)
-					{
-						if (DnaConverter.DNAType.ToString() == "UMA.UMADnaHumanoid")
-						{
-							needsHumanoidDnaUpdate = false;
-						}
-						if (DnaConverter.DNAType.ToString() == "UMA.UMADnaTutorial")
-						{
-							needsTutorialDnaUpdate = false;
-						}
-					}
-				}
-				if (needsHumanoidDnaUpdate || needsTutorialDnaUpdate)
-				{
-					List<UMADnaBase> newCurrentDna = new List<UMADnaBase>();
-					if (needsHumanoidDnaUpdate)
-					{
-						//find each DynamicUMADna and try adding the UMADnaHumnoid values to it
-						int dnaImported = 0;
-						for (int i = 0; i < currentDNA.Length; i++)
-						{
-							if (currentDNA[i] is DynamicUMADnaBase)
-							{
-								//keep trying to find a new home for dnavalues until they have all been set
-								dnaImported += ((DynamicUMADnaBase)currentDNA[i]).ImportUMADnaValues(currentDNA[thisUMADnaHumanoid]);
-								if (dnaImported >= currentDNA[thisUMADnaHumanoid].Values.Length)
-									break;
-							}
-						}
-						if (dnaImported > 0)//we say greater than 0 because we want to get rid of Humanoid even if all the values did not cross over
-						{
-							Debug.Log("UMADnaHumanoid imported successfully");
-							//remove the UMADnaHumanoid from current DNA
-							for (int i = 0; i < currentDNA.Length; i++)
-							{
-								if (i != thisUMADnaHumanoid)
-									newCurrentDna.Add(currentDNA[i]);
-							}
-							//remove the UMADnaHumanoid from the recipe
-							_recipe.RemoveDna(UMAUtils.StringToHash("UMADnaHumanoid"));
-							DNAConvertersModified = true;
-						}
-					}
-					if (needsTutorialDnaUpdate)
-					{
-						//find each DynamicUMADna and try adding the UMADnaHumnoid values to it
-						int dnaImported = 0;
-						for (int i = 0; i < currentDNA.Length; i++)
-						{
-							if (currentDNA[i] is DynamicUMADnaBase)
-							{
-								//keep trying to find a new home for dnavalues until they have all been set
-								dnaImported += ((DynamicUMADnaBase)currentDNA[i]).ImportUMADnaValues(currentDNA[thisUMADnaTutorial]);
-								if (dnaImported >= currentDNA[thisUMADnaTutorial].Values.Length)
-									break;
-							}
-						}
-						if (dnaImported > 0)//we say greater than 0 because we want to get rid of Tutorial even if all the values did not cross over
-						{
-							Debug.Log("UMADnaTutorial imported successfully");
-							//remove the UMADnaHumanoid from current DNA
-							for (int i = 0; i < currentDNA.Length; i++)
-							{
-								if (i != thisUMADnaTutorial)
-									newCurrentDna.Add(currentDNA[i]);
-							}
-							//remove the UMADnaTutorial from the recipe
-							_recipe.RemoveDna(UMAUtils.StringToHash("UMADnaTutorial"));
-							DNAConvertersModified = true;
-						}
-					}
-					currentDNA = newCurrentDna.ToArray();
-				}*/
 
 				//Finally if there are more DNA sets than there are converters we need to remove the dna that should not be there
 				if (currentDNA.Length > thisDNAConverterList.Length)
@@ -485,7 +375,6 @@ namespace UMAEditor
 				{
 					hideRaceField = true;
 					hideToolBar = true;
-					slotEditor = new WardrobeRecipeMasterEditor(_recipe);
 
 					//CompatibleRaces drop area
 					if (DrawCompatibleRacesUI(TargetType))
@@ -494,6 +383,9 @@ namespace UMAEditor
 					//Wardrobe slots dropdowns
 					if (DrawWardrobeSlotsFields(TargetType))
 						doUpdate = true;
+
+					//assign the slotEditor after the others so we have the SlotOptions created
+					slotEditor = new WardrobeRecipeMasterEditor(_recipe, generatedBaseSlotOptions, generatedBaseSlotOptionsLabels);
 
 					EditorGUILayout.Space();
 				}
