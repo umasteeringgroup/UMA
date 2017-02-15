@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Name: HumanMaleDynamicDnaAsset
   m_EditorClassIdentifier: 
   dnaTypeHash: 815443803
-  lastKnownAssetPath: Assets/UMA/Content/UMA/Humanoid/HumanMale/DNA/DynamicDNA/Resources/HumanMaleDynamicDnaAsset.asset
-  lastKnownDuplicateAssetPath: Assets/UMA/Content/UMA/Humanoid/HumanMale/DNA/DynamicDNA/Resources/HumanMaleDynamicDnaAsset
+  lastKnownAssetPath: Assets/UMA/Resources/UMA/HumanMale/DynamicDNA/HumanMaleDynamicDnaAsset.asset
+  lastKnownDuplicateAssetPath: Assets/UMA/Resources/UMA/HumanMale/DynamicDNA/HumanMaleDynamicDnaAsset
     1.asset
-  lastKnownInstanceID: 20086
+  lastKnownInstanceID: 11512
   Names:
   - height
   - headSize

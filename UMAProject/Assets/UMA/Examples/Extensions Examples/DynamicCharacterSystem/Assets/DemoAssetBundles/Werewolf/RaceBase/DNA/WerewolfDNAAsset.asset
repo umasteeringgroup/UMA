@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Name: WerewolfDNAAsset
   m_EditorClassIdentifier: 
   dnaTypeHash: 2079441459
-  lastKnownAssetPath: Assets/UMA/Extensions/DynamicCharacterSystem/DemoAssetBundles/Werewolf/RaceBase/DNA/WerewolfDNAAsset.asset
-  lastKnownDuplicateAssetPath: Assets/UMA/Extensions/DynamicCharacterSystem/DemoAssetBundles/Werewolf/RaceBase/DNA/WerewolfDNAAsset
+  lastKnownAssetPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DemoAssetBundles/Werewolf/RaceBase/DNA/WerewolfDNAAsset.asset
+  lastKnownDuplicateAssetPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DemoAssetBundles/Werewolf/RaceBase/DNA/WerewolfDNAAsset
     1.asset
-  lastKnownInstanceID: -519862
+  lastKnownInstanceID: 12210
   Names:
   - height
   - headSize

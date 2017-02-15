@@ -6,16 +6,27 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/UMA/Example/Scenes/Scene01 - Crowd - PBR 1.unity
+    path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Scenes/1-DynamicCharacterSystem
+      - Simple Setup.unity
   - enabled: 1
-    path: Assets/UMA/Example/Scenes/Scene07 - NetworkingGame.unity
+    path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Scenes/2-DynamicCharacterSystem
+      - Advanced with Asset Bundles.unity
   - enabled: 1
-    path: Assets/UMA/Example/Scenes/Scene07 - NetworkingMenu.unity
+    path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Scenes/3-DynamicCharacterSystem
+      - Dna Converter Behaviour Customizer.unity
   - enabled: 1
-    path: Assets/UMA/Example/Scenes/Scene02 - Serialize - PBR.unity
+    path: Assets/UMA/Examples/Main Examples/Scenes/Scene01 - Crowd - PBR 1.unity
   - enabled: 1
-    path: Assets/UMA/Example/Scenes/Scene03 - Verify Slot Meshes - PBR.unity
+    path: Assets/UMA/Examples/Main Examples/Scenes/Scene02 - Serialize - PBR.unity
   - enabled: 1
-    path: Assets/UMA/Example/Scenes/Scene04 - Serialized Expression - PBR.unity
+    path: Assets/UMA/Examples/Main Examples/Scenes/Scene03 - Verify Slot Meshes -
+      PBR.unity
   - enabled: 1
-    path: Assets/UMA/Example/Scenes/Scene06 - Crowd Recipes - PBR.unity
+    path: Assets/UMA/Examples/Main Examples/Scenes/Scene04 - Serialized Expression
+      - PBR.unity
+  - enabled: 1
+    path: Assets/UMA/Examples/Main Examples/Scenes/Scene06 - Crowd Recipes - PBR.unity
+  - enabled: 1
+    path: Assets/UMA/Examples/Main Examples/Scenes/Scene07 - NetworkingMenu.unity
+  - enabled: 1
+    path: Assets/UMA/Examples/Main Examples/Scenes/Scene08 - SimpleLOD.unity

@@ -1,8 +1,8 @@
-﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+﻿// Upgrade NOTE: replaced '_Object2World' with '_Object2World'
 
-// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+// Upgrade NOTE: replaced '_Object2World' with '_Object2World'
 
-// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+// Upgrade NOTE: replaced '_Object2World' with '_Object2World'
 
 Shader "Lux/Anisotropic Lighting/Hair" {
 	Properties {
@@ -101,7 +101,7 @@ Shader "Lux/Anisotropic Lighting/Hair" {
 			v.normal = normalize(v.normal);
 			v.tangent.xyz = normalize(v.tangent.xyz);
 
-			float3 worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
+			float3 worldPos = mul(_Object2World, v.vertex).xyz;
 			fixed3 worldNormal = UnityObjectToWorldNormal(v.normal);
 			fixed3 worldTangent = UnityObjectToWorldDir(v.tangent.xyz);
 		  
