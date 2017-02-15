@@ -25,5 +25,5 @@ MonoBehaviour:
   - {fileID: 2800000, guid: 37b21ad4181b04663a487f015301ffb8, type: 3}
   - {fileID: 2800000, guid: 35e12337b6ca744e195cc19adc2fb8bf, type: 3}
   tags: []
-  material: {fileID: 11400000, guid: c5c1d525787351f44b5b0291bc2cfb2c, type: 2}
+  material: {fileID: 11400000, guid: 8e29dbac5d2e82f44a759a7e2cc568ab, type: 2}
   OcclusionEntries: []
