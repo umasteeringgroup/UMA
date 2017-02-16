@@ -892,7 +892,7 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 			EditorGUI.indentLevel++;
 			startingPoseInfoExpanded = EditorGUILayout.Foldout(startingPoseInfoExpanded, "INFO");
 			if (startingPoseInfoExpanded)
-				EditorGUILayout.HelpBox("The 'Starting Pose'is the initial position/rotation/scale of all the bones in this Avatar's skeleton. Use this to completely transform the mesh of your character. You could (for example) transform standard UMA characters into a backwards compatible 'Short Squat Dwarf' or a 'Bobble- headded Toon'. Optionally, you can create an UMABonePose asset from an FBX model using the UMA > Pose Tools > Bone Pose Builder and add the resulting asset here. After you have added or created a UMABonePose asset, you can add and edit the position, rotation and scale settings for any bone in the active character's skeleton in the 'Bone Poses' section. You can also create bone poses automatically from the Avatar's current dna modified state using the 'Create poses from Current DNA state button'.", MessageType.Info);
+				EditorGUILayout.HelpBox("The 'Starting Pose'is the initial position/rotation/scale of all the bones in this Avatar's skeleton. Use this to completely transform the mesh of your character. You could (for example) transform standard UMA characters into a backwards compatible 'Short Squat Dwarf' or a 'Bobble- headded Toon'. Optionally, you can create an UMABonePose asset from an FBX model using the UMA > Pose Tools > Bone Pose Builder and add the resulting asset here. After you have added or created a UMABonePose asset, you can add and edit the position, rotation and scale settings for any bone in the active character's skeleton in the 'Bone Poses' section.'.", MessageType.Info);
 			EditorGUI.BeginChangeCheck();
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("startingPose"), new GUIContent("Starting UMABonePose", "Define an asset that will set the starting bone poses of any Avatar using this converter"));
 			if (EditorGUI.EndChangeCheck())
@@ -941,7 +941,7 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 					createPoseAssetRField.width = ((createPoseAssetRField.width / 3) * 2) - 82;
 					createPoseAssetRField.x = createPoseAssetRLabel.xMax;
 					createPoseAssetRButton.x = createPoseAssetRField.xMax + 5;
-					EditorGUI.LabelField(createPoseAssetRLabel, new GUIContent("Create BonePose Asset", "Create a new empty UMABonePose with the name of your choosing."));
+					EditorGUI.LabelField(createPoseAssetRLabel, new GUIContent("New BonePose Asset", "Create a new empty UMABonePose with the name of your choosing."));
 					createBonePoseAssetName = EditorGUI.TextField(createPoseAssetRField, createBonePoseAssetName);
 					if (GUI.Button(createPoseAssetRButton, "Create It"))//need to do the button enabled thing here
 					{
@@ -960,10 +960,25 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 					EditorGUILayout.HelpBox("Edit a character that uses this converter in the 'DynamicDna Converter Behaviour Customizer' scene and you can create a StartingPoseAsset automatically here", MessageType.Info);
 				}
 			}
-			if (minimalMode && umaData.skeleton != null)
+			if (minimalMode && umaData.skeleton != null && bonePoseAsset.objectReferenceValue == null)
 			{
-				var createFromDnaButR = EditorGUILayout.GetControlRect(false);
-				if (GUI.Button(createFromDnaButR, "Create poses from Current DNA state"))
+				EditorGUILayout.Space();
+				EditorGUILayout.LabelField("Create Poses from Current DNA state");
+				EditorGUILayout.HelpBox("Create bone poses from Avatar's current dna modified state. Applies the pose and sets DNA values back to 0. Smaller margin of error equals greater accuracy but more poses to apply on DNA Update.", MessageType.Info);
+				if (thisDDCC != null)
+				{
+					//[Range(0.000005f, 0.0005f)]
+					EditorGUI.BeginChangeCheck();
+					var thisAccuracy = EditorGUILayout.Slider(new GUIContent("Margin Of Error","The smaller the margin of error, the more accurate the Pose will be, but it will also have more bonePoses to apply when DNA is updated"), thisDDCC.bonePoseAccuracy * 1000, 0.5f, 0.005f);
+					if (EditorGUI.EndChangeCheck())
+					{
+						thisDDCC.bonePoseAccuracy = thisAccuracy / 1000;
+						GUI.changed = false;
+					}
+				}
+				GUILayout.BeginHorizontal();
+				GUILayout.Space(EditorGUI.indentLevel * 20);
+				if (GUILayout.Button(/*createFromDnaButR, */"Create Poses"))
 				{
 					if (thisDDCC != null)
 					{
@@ -973,6 +988,7 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 						}
 					}
 				}
+				GUILayout.EndHorizontal();
 
 			}
 			EditorGUI.indentLevel--;

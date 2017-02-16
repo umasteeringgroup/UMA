@@ -45,6 +45,9 @@ namespace UMA
 		private string bonePoseSaveName;
 		private GameObject tempAvatarPreDNA;
 		private GameObject tempAvatarPostDNA;
+		//used as the 'epsilon' value when comparing bones during a 'create starting Pose from Current DNA' operation
+		//decent values are between around 0.000005f and 0.0005f
+		public float bonePoseAccuracy = 0.00005f;
 
 		//UndoRedoDelegate
 		void OnUndo()
@@ -308,12 +311,10 @@ namespace UMA
             return true;
         }
 
-		private float positionEpsilon = 0.0005f;
-		private float scaleEpsilon = 0.0005f;
 		private bool LocalTransformsMatch(Transform t1, Transform t2)
 		{
-			if ((t1.localPosition - t2.localPosition).sqrMagnitude > positionEpsilon) return false;
-			if ((t1.localScale - t2.localScale).sqrMagnitude > scaleEpsilon) return false;
+			if ((t1.localPosition - t2.localPosition).sqrMagnitude > bonePoseAccuracy) return false;
+			if ((t1.localScale - t2.localScale).sqrMagnitude > bonePoseAccuracy) return false;
 			if (t1.localRotation != t2.localRotation) return false;
 
 			return true;
@@ -368,6 +369,8 @@ namespace UMA
 			AssetDatabase.SaveAssets();
 			// Set this asset as the converters pose asset
 			selectedConverter.startingPose = bonePose;
+			//make sure its fully applied
+			selectedConverter.startingPoseWeight = 1f;
 
 			// Reset all the DNA values for target Avatar to default
 			UMADnaBase[] targetDNA = activeUMA.umaData.GetAllDna();
