@@ -31,7 +31,7 @@ MonoBehaviour:
   Hides: []
   suppressWardrobeSlots: []
   activeWardrobeSet: []
-  recipeString: '{"packedRecipeType":"WardrobeCollection","name":"ChangerArmorCollection","race":"","dna":[],"characterColors":[{"name":"Leather","colors":[56,30,8,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"Metal","colors":[238,238,238,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,255,255,255,133]}],"wardrobeSet":[],"raceAnimatorController":""}'
+  recipeString: '{"packedRecipeType":"WardrobeCollection","name":"ChangerArmorCollection","race":"","dna":[],"characterColors":[{"name":"Leather","colors":[56,30,8,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"Metal","colors":[238,238,238,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,255,255,255,133]},{"name":"Pants","colors":[48,35,24,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"wardrobeSet":[],"raceAnimatorController":""}'
   coverImages: []
   wardrobeCollection:
     sets:
@@ -45,6 +45,8 @@ MonoBehaviour:
         recipe: MaleChallengerGloves
       - slot: Feet
         recipe: MaleChallengerBoots
+      - slot: Legs
+        recipe: Shorts
     - targetRace: Werewolf
       wardrobeSet:
       - slot: Chest
@@ -52,5 +54,15 @@ MonoBehaviour:
       - slot: Shoulders
         recipe: MaleChallengerShouderPads
     - targetRace: HumanMale
-      wardrobeSet: []
+      wardrobeSet:
+      - slot: Shoulders
+        recipe: MaleChallengerShouderPads
+      - slot: Chest
+        recipe: MaleChallengerTorso
+      - slot: Hands
+        recipe: MaleChallengerGloves
+      - slot: Legs
+        recipe: Shorts
+      - slot: Feet
+        recipe: MaleChallengerBoots
   arbitraryRecipes: []
