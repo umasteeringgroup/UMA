@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Events;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -35,7 +36,9 @@ namespace UMA
         [Tooltip("Adjust the influence the StartingPose has on the mesh. Tip: This can be animated to morph your character!")]
         public float startingPoseWeight = 1f;
 
-        public DynamicDNAConverterBehaviour()
+		private Dictionary<string, List<UnityAction<string, float>>> _dnaCallbackDelegates = new Dictionary<string, List<UnityAction<string, float>>>();
+
+		public DynamicDNAConverterBehaviour()
         {
             ApplyDnaAction = ApplyDynamicDnaAction;
             DNAType = typeof(DynamicUMADna);
@@ -73,14 +76,78 @@ namespace UMA
 			}
         }
 
-        public void ApplyDynamicDnaAction(UMAData umaData, UMASkeleton skeleton)
+		public bool AddDnaCallbackDelegate(UnityAction<string, float> callback, string targetDnaName)
+		{
+			bool added = false;
+
+			if (!_dnaCallbackDelegates.ContainsKey(targetDnaName))
+			{
+				_dnaCallbackDelegates.Add(targetDnaName, new List<UnityAction<string, float>>());
+				_dnaCallbackDelegates[targetDnaName].Add(callback);
+				added = true;
+			}
+			else
+			{
+				bool found = false;
+				for(int i = 0; i < _dnaCallbackDelegates[targetDnaName].Count; i++)
+				{
+					if(_dnaCallbackDelegates[targetDnaName][i] == callback)
+					{
+						found = true;
+						break;
+					}
+				}
+				if (!found)
+				{
+					_dnaCallbackDelegates[targetDnaName].Add(callback);
+					added = true;
+				}
+			}
+			return added;
+		}
+
+		public bool RemoveDnaCallbackDelegate(UnityAction<string, float> callback, string targetDnaName)
+		{
+			bool removed = false;
+
+			if (!_dnaCallbackDelegates.ContainsKey(targetDnaName))
+			{
+				removed = true;
+			}
+			else
+			{
+				int removeIndex = -1;
+				for (int i = 0; i < _dnaCallbackDelegates[targetDnaName].Count; i++)
+				{
+					if (_dnaCallbackDelegates[targetDnaName][i] == callback)
+					{
+						removeIndex = i;
+						break;
+					}
+				}
+				if (removeIndex > -1)
+				{
+					_dnaCallbackDelegates[targetDnaName].RemoveAt(removeIndex);
+					if(_dnaCallbackDelegates[targetDnaName].Count == 0)
+					{
+						_dnaCallbackDelegates.Remove(targetDnaName);
+					}
+					removed = true;
+				}
+			}
+			return removed;
+		}
+
+		public void ApplyDynamicDnaAction(UMAData umaData, UMASkeleton skeleton)
         {
             UpdateDynamicUMADnaBones(umaData, skeleton, false);
+			ApplyDnaCallbackDelegates(umaData);
         }
 
         public void UpdateDynamicUMADnaBones(UMAData umaData, UMASkeleton skeleton, bool asReset = false)
         {
             UMADnaBase umaDna;
+
             //need to use the typehash
             umaDna = umaData.GetDna(DNATypeHash);
 
@@ -148,23 +215,6 @@ namespace UMA
                 }
 
             }
-            /*if (overallScaleFound && lowerBackScaleFound && overallModifiersEnabled)
-            {
-                
-                if(umaDna == null)
-                {
-                    //umaData.characterHeight = overallScaleCalc * (heightModifiers.x + heightModifiers.y * lowerBackScale);
-                    umaData.characterMass = massModifiers.x * overallScaleCalc + massModifiers.y + massModifiers.z;
-					//umaData.characterRadius = radiusAdjust * overallScaleCalc;
-				}
-                else
-                {
-                    //umaData.characterHeight = overallScaleCalc * (heightModifiers.x + heightModifiers.y * lowerBackScale) + ((((DynamicUMADnaBase)umaDna).GetValue("feetSize",true) - 0.5f) * 0.20f);
-                    umaData.characterMass = massModifiers.x * overallScaleCalc + massModifiers.y * ((DynamicUMADnaBase)umaDna).GetValue("upperWeight",true) + massModifiers.z * ((DynamicUMADnaBase)umaDna).GetValue("lowerWeight",true);
-					//umaData.characterRadius = 0.24f + ((((DynamicUMADnaBase)umaDna).GetValue("height",true) - 0.5f) * 0.32f) + ((((DynamicUMADnaBase)umaDna).GetValue("upperMuscle",true) - 0.5f) * 0.01f);
-					Debug.Log("Mass with Lowerback = " + umaData.characterMass);
-                }
-            }*/
             if (startingPose != null && asReset == false)
             {
                 for (int i = 0; i < startingPose.poses.Length; i++)
@@ -206,7 +256,6 @@ namespace UMA
 				var radiusAsDNA = (umaData.characterRadius * 2) * overallScaleCalc;
 				var radiusYAsDNA = ((1 + radiusAdjust.y) * 0.5f) * overallScaleCalc;
 				umaData.characterMass = (massModifiers.x * overallScaleCalc) + massModifiers.y * radiusYAsDNA + massModifiers.z * radiusAsDNA;
-                //Debug.Log("umaData.characterRadius was "+ umaData.characterRadius+ " radiusAsDNA was "+ radiusAsDNA + " radiusYAsDNA was " + radiusYAsDNA + " Mass without Lowerback = " + umaData.characterMass);
 				//add bounds padding if any was set
 				if (boundsAdjust != Vector3.zero)
 				{
@@ -217,12 +266,30 @@ namespace UMA
 			}
 		}
 
-        /// <summary>
-        /// Method to temporarily remove any dna from a Skeleton. Useful for getting bone values for pre and post dna (since the skeletons own unmodified values often dont *quite* match for some reason- I think because a recipes 0.5 values end up as 0.5019608 when they come out of binary)
-        /// Or it could be that I need to change the way this outputs values maybe?
-        /// </summary>
-        /// <param name="umaData"></param>
-        public void RemoveDNAChangesFromSkeleton(UMAData umaData)
+		public void ApplyDnaCallbackDelegates(UMAData umaData)
+		{
+			if (_dnaCallbackDelegates.Count == 0)
+				return;
+			UMADnaBase umaDna;
+			//need to use the typehash
+			umaDna = umaData.GetDna(DNATypeHash);
+			if (umaDna.Count == 0)
+				return;
+			foreach(KeyValuePair<string, List<UnityAction<string, float>>> kp in _dnaCallbackDelegates)
+			{
+				for(int i = 0; i < kp.Value.Count; i++)
+				{
+					kp.Value[i].Invoke(kp.Key, (umaDna as DynamicUMADna).GetValue(kp.Key, true));
+				}
+			}
+		}
+
+		/// <summary>
+		/// Method to temporarily remove any dna from a Skeleton. Useful for getting bone values for pre and post dna (since the skeletons own unmodified values often dont *quite* match for some reason- I think because a recipes 0.5 values end up as 0.5019608 when they come out of binary)
+		/// Or it could be that I need to change the way this outputs values maybe?
+		/// </summary>
+		/// <param name="umaData"></param>
+		public void RemoveDNAChangesFromSkeleton(UMAData umaData)
         {
 			//sending true makes all the starting values set to zero
             UpdateDynamicUMADnaBones(umaData, umaData.skeleton, true);
@@ -485,7 +552,7 @@ namespace UMA
                         {
                             return val;
                         }
-						val = umaDna.GetValue(DNATypeName,true);//implimented a 'failSilently' option here- but that may not be a good idea?
+						val = umaDna.GetValue(DNATypeName,true);//implimented a 'failSilently' option here because recipes may have dna in that the dna asset no longer has
                         return val;
                     }
 

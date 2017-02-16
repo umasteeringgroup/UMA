@@ -15,8 +15,11 @@ MonoBehaviour:
   lastKnownAssetPath: Assets/UMA/Resources/UMA/HumanMale/DynamicDNA/HumanMaleDynamicDnaAsset.asset
   lastKnownDuplicateAssetPath: Assets/UMA/Resources/UMA/HumanMale/DynamicDNA/HumanMaleDynamicDnaAsset
     1.asset
-  lastKnownInstanceID: 11512
+  lastKnownInstanceID: 22444
   Names:
+  - skinGreenness
+  - skinBlueness
+  - skinRedness
   - height
   - headSize
   - headWidth
