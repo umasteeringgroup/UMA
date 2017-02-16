@@ -302,33 +302,6 @@ namespace UMACharacterSystem
 
 		#region Start Update and Inititalization
 
-		/*void OnEnable()
-		{
-#if UNITY_EDITOR
-			if (!Application.isPlaying)
-			{
-				Debug.Log("Awake Happens");
-				if (UMAContext.FindInstance() == null)
-				{
-					context = EditorUMAContext = CreateEditorContext();
-				}
-			}
-#endif
-		}
-		void Awake()
-		{
-#if UNITY_EDITOR
-			if (!Application.isPlaying)
-			{
-				Debug.Log("Awake Happens");
-				if(UMAContext.FindInstance() == null)
-				{
-					context = EditorUMAContext = CreateEditorContext();
-                }
-			}
-#endif
-		}*/
-
 		// Use this for initialization
 		public override void Start()
 		{
