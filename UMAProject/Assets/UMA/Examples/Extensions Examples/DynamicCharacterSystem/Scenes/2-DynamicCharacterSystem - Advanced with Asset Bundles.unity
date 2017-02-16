@@ -751,7 +751,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 305676970}
   m_Direction: 0
   m_Value: 0
-  m_Size: 1
+  m_Size: 0.99999994
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -18384,8 +18384,8 @@ MonoBehaviour:
   remoteServerURL: 
   useJsonIndex: 0
   remoteServerIndexURL: 
-  useEncryptedBundles: 1
-  bundleEncryptionPassword: eZkrCq/2FHrcwXtHyHzLnw==
+  useEncryptedBundles: 0
+  bundleEncryptionPassword: 
   assetBundlesToPreLoad: []
   gameObjectsToActivate: []
   gameObjectsToActivateOnInit: []
