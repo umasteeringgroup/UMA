@@ -308,8 +308,8 @@ namespace UMA
             return true;
         }
 
-		private float positionEpsilon = 0.001f;
-		private float scaleEpsilon = 0.001f;
+		private float positionEpsilon = 0.0005f;
+		private float scaleEpsilon = 0.0005f;
 		private bool LocalTransformsMatch(Transform t1, Transform t2)
 		{
 			if ((t1.localPosition - t2.localPosition).sqrMagnitude > positionEpsilon) return false;
@@ -358,6 +358,11 @@ namespace UMA
 
 			Destroy(tempAvatarPreDNA);
 			Destroy(tempAvatarPostDNA);
+
+			// This can be very helpful for testing
+			/*
+			bonePose.ApplyPose(skeletonPreDNA, 1.0f);
+			*/
 
 			EditorUtility.SetDirty(bonePose);
 			AssetDatabase.SaveAssets();
