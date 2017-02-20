@@ -651,8 +651,33 @@ namespace UMA
 		public bool AddAssetsFromResourcesIndex<T>(ref List<T> assetsToReturn, string[] resourcesFolderPathArray, int? assetNameHash = null, string assetName = "") where T : UnityEngine.Object
 		{
 			bool found = false;
-			if (UMAResourcesIndex.Instance == null)
+			//use new UMAAssetIndex
+			if (UMAAssetIndex.Instance == null)
 				return found;
+			if (assetNameHash != null || assetName != "")
+			{
+				T foundAsset = null;
+				if (assetNameHash != null)
+				{
+					foundAsset = (UMAAssetIndex.Instance.LoadAsset<T>((int)assetNameHash) as T);
+				}
+				else if (assetName != "")
+				{
+					foundAsset = (UMAAssetIndex.Instance.LoadAsset<T>(assetName) as T);
+				}
+				if (foundAsset != null)
+				{
+					assetsToReturn.Add(foundAsset);
+					found = true;
+				}
+			}
+			else if (assetNameHash == null && assetName == "")
+			{
+				assetsToReturn.AddRange(UMAAssetIndex.Instance.LoadAllAssetsOfType<T>() as List<T>);
+				found = assetsToReturn.Count > 0;
+			}
+			/*if (UMAResourcesIndex.Instance == null)
+			return found;
 			if (assetNameHash != null || assetName != "")
 			{
 				string foundAssetPath = "";
@@ -673,8 +698,8 @@ namespace UMA
 						found = true;
 					}
 				}
-			}
-			else if (assetNameHash == null && assetName == "")
+			}*/
+			/*else if (assetNameHash == null && assetName == "")
 			{
 				if (UMAResourcesIndex.Instance == null)
 					Debug.Log("UMAResourcesIndex.Instance WAS NULL");
@@ -691,7 +716,7 @@ namespace UMA
 						found = true;
 					}
 				}
-			}
+			}*/
 			return found;
 		}
 

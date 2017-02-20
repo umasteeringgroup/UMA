@@ -14,9 +14,19 @@ namespace UMAEditor
 
 		string info;
 
+		//Temporarily show The UMAAssetIndex in here
+		Editor UAIE;
+		UMAAssetIndex UAI;
+
 		public override void OnInspectorGUI()
 		{
-			thisURI = target as UMAResourcesIndex;
+			EditorGUILayout.HelpBox("TEMPORARY: For the time being I am showing the UMAAssetIndex in here. Once we have confirmed we want to use this, I will replace the UMAResourcesIndex MB with a UMAAssetIndexViewer or similar", MessageType.Warning);
+			if (UAI == null)
+				UAI = UMAAssetIndex.Instance;
+			Editor.CreateCachedEditor(UAI, typeof(UMAAssetIndexEditor), ref UAIE);
+			UAIE.OnInspectorGUI();
+
+			/*thisURI = target as UMAResourcesIndex;
 			//we need to get the inspector to update to show any data that was added while the game was running?
 			thisURI.LoadOrCreateData();
 			serializedObject.Update();
@@ -118,13 +128,13 @@ namespace UMAEditor
 				info = thisURI.GetIndexInfo();
 				GUI.changed = true;
 			}
-			/*if (GUILayout.Button("Clear Index"))
-			{
-				thisURI.ClearIndex();
-				serializedObject.Update();
-				info = thisURI.GetIndexInfo();
-				GUI.changed = true;
-			}*/
+			//if (GUILayout.Button("Clear Index"))
+			//{
+			//	thisURI.ClearIndex();
+			//	serializedObject.Update();
+			//	info = thisURI.GetIndexInfo();
+			//	GUI.changed = true;
+			//}
 			if (EditorGUI.EndChangeCheck())
 			{
 				serializedObject.ApplyModifiedProperties();
@@ -137,6 +147,7 @@ namespace UMAEditor
 				EditorUtility.SetDirty(target);
 				//serializedObject.ApplyModifiedProperties();
 			}
+			*/
 		}
 	}
 }

@@ -117,17 +117,17 @@ public class WardrobeRecipeListPropertyDrawer : PropertyDrawer {
                         compatibleRaces = compatibleRaces + ", ";
                     }
                 }
-                EditorGUI.TextField(valR,thisElement.FindPropertyRelative("_recipeName").stringValue + " ("+compatibleRaces+")");
-				EditorGUI.EndDisabledGroup ();
+				var recipeIsLive = true;
 				if (DynamicAssetLoader.Instance)
+					recipeIsLive = CheckRecipeAvailability(thisElement.FindPropertyRelative("_recipeName").stringValue);
+                EditorGUI.TextField(valR ,thisElement.FindPropertyRelative("_recipeName").stringValue + " ("+compatibleRaces+")");
+				EditorGUI.EndDisabledGroup ();
+				if (!recipeIsLive)
 				{
-					if (!CheckRecipeAvailability(thisElement.FindPropertyRelative("_recipeName").stringValue))
-					{
-						var warningRect = new Rect((valRBut.xMin - 25f),valRBut.yMin,20f,valRBut.height);
-						GUI.color = new Color(255, 200, 0);
-                        GUI.Box(warningRect, new GUIContent("!", thisElement.FindPropertyRelative("_recipeName").stringValue + " was not in a Resources folder or an asset bundle. You need to add it to one of these to make it 'LIVE'"), warningStyle);
-						GUI.color = currentTint;
-					}
+					var warningRect = new Rect((valRBut.xMin - 25f),valRBut.yMin,20f,valRBut.height);
+					GUI.color = new Color(255, 200, 0);
+                    GUI.Box(warningRect, new GUIContent("!", thisElement.FindPropertyRelative("_recipeName").stringValue + " was not Live. You can make it live by checking it on in the UMA/UMA Asset Index window."), warningStyle);
+					GUI.color = currentTint;
 				}
 				if (GUI.Button (valRBut, "X")) {
 					thisRecipesProp.DeleteArrayElementAtIndex(i);
