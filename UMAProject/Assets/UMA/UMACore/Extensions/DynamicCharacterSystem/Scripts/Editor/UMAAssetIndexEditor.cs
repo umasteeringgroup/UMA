@@ -498,8 +498,8 @@ namespace UMAEditor
 				EditorApplication.update -= SaveOnUpdate;
 				EditorApplication.update += SaveOnUpdate;
 			}
-
-			EditorGUILayout.PropertyField(serializedObject.FindProperty("_buildIndex"),true);
+			//Uncomment to see the actual serialized data the index is saving
+			//EditorGUILayout.PropertyField(serializedObject.FindProperty("_buildIndex"),true);
 		}
 		
 		public void SaveOnUpdate()

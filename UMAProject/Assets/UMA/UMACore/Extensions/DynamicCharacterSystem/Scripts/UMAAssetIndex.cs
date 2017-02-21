@@ -94,9 +94,13 @@ namespace UMA
 #if UNITY_EDITOR
 					if (_instance == null)
 					{
-						CreateUMAAssetIndex();
-						_instance = (UMAAssetIndex) Resources.Load("UMAAssetIndex-DONOTDELETE");
-						_instance.GenerateLists();
+						//I think maybe this needs to not do anything if the editor is compiling too?
+						if (!EditorApplication.isCompiling && !EditorApplication.isUpdating)
+						{
+							CreateUMAAssetIndex();
+							_instance = (UMAAssetIndex)Resources.Load("UMAAssetIndex-DONOTDELETE");
+							_instance.GenerateLists();
+						}
                     }
 #endif
 				}
@@ -173,19 +177,13 @@ namespace UMA
 				{
 					var prevPath = AssetDatabase.GUIDToAssetPath(thisFolderContentsUGUIDS[i]);
 					var newPath = prevPath.Replace(assetPrevPath, assetNewPath);
-					var extension = Path.GetExtension(prevPath);
-					//skip some known extensions we will never index ("" means its a folder)
-					bool extensionOk = (extension == ".meta" || extension == ".cs" || extension == "" || extension == ".js") ? false : true;
-					if (extensionOk)
-					{
-						if(!AMPMovedAssetsContains(prevPath, newPath))
-							AMPMovedAssets.Add(new AMPMovedAsset(prevPath, newPath));
-					}
+					if(PathIsValid(prevPath) && !AMPMovedAssetsContains(prevPath, newPath))
+						AMPMovedAssets.Add(new AMPMovedAsset(prevPath, newPath));
 				}
 			}
 			else
 			{
-				if (!AMPMovedAssetsContains(assetPrevPath, assetNewPath))
+				if (PathIsValid(assetPrevPath) && !AMPMovedAssetsContains(assetPrevPath, assetNewPath))
 					AMPMovedAssets.Add(new AMPMovedAsset(assetPrevPath, assetNewPath));
 			}
 			if (AMPMovedAssets.Count > 0)
@@ -211,13 +209,13 @@ namespace UMA
 				for (int i = 0; i < thisFolderContentsUGUIDS.Length; i++)
 				{
 					var delPath = AssetDatabase.GUIDToAssetPath(thisFolderContentsUGUIDS[i]);
-					if(!AMPDeletedAssets.Contains(delPath))
+					if(PathIsValid(delPath) && !AMPDeletedAssets.Contains(delPath))
 						AMPDeletedAssets.Add(delPath);
 				}
 			}
 			else
 			{
-				if(!AMPDeletedAssets.Contains(assetToDelete))
+				if(PathIsValid(assetToDelete) && !AMPDeletedAssets.Contains(assetToDelete))
 					AMPDeletedAssets.Add(assetToDelete);
 			}
 			if (AMPDeletedAssets.Count > 0)
@@ -235,10 +233,8 @@ namespace UMA
 		{
 			if (BuildPipeline.isBuildingPlayer || UnityEditorInternal.InternalEditorUtility.inBatchMode || Application.isPlaying)
 				return;
-			var extension = Path.GetExtension(createdAsset);
-			//skip some known extensions we will never index ("" means its a folder)
-			bool extensionOk = (extension == ".meta" || extension == ".cs" || extension == "" || extension == ".js") ? false : true;
-			if (createdAsset.IndexOf("ProjectSettings.asset") == -1 && AMPCreatedAssets.Contains(createdAsset) == false && extensionOk)
+
+			if (PathIsValid(createdAsset) && AMPCreatedAssets.Contains(createdAsset) == false)
 				AMPCreatedAssets.Add(createdAsset);
 			if (AMPCreatedAssets.Count > 0)
 			{
@@ -257,7 +253,7 @@ namespace UMA
 				return;
 			for (int i = 0; i < assetsToSave.Length; i++)
 			{
-				if (assetsToSave[i].IndexOf("ProjectSettings.asset") == -1 && AMPSavedAssets.Contains(assetsToSave[i]) == false)
+				if (PathIsValid(assetsToSave[i]) && AMPSavedAssets.Contains(assetsToSave[i]) == false)
 				{
 					AMPSavedAssets.Add(assetsToSave[i]);
 				}
@@ -268,7 +264,6 @@ namespace UMA
 				EditorApplication.update += DoSavedAssets;
 			}
 		}
-
 		/// <summary>
 		/// Callback for UMAAssetPostProcessor that is triggered when assets are imported OR when an asset is Duplucated using "Edit/Duplicate".
 		/// Adds the assets to the AMPCreatedAssets list and and sets up DoCreatedAsset to process the list when the assetPostProcessor is finished
@@ -280,10 +275,7 @@ namespace UMA
 			//we need to loop this- Project settings is still getting through
 			for (int i = 0; i < importedAssets.Length; i++)
 			{
-				var extension = Path.GetExtension(importedAssets[i]);
-				//skip some known extensions we will never index ("" means its a folder)
-				bool extensionOk = (extension == ".meta" || extension == ".cs" || extension == "" || extension == ".js") ? false : true;
-				if (importedAssets[i].IndexOf("ProjectSettings.asset") == -1 && AMPCreatedAssets.Contains(importedAssets[i]) == false && extensionOk)
+				if (PathIsValid(importedAssets[i]) && AMPCreatedAssets.Contains(importedAssets[i]) == false)
 				{
 					AMPCreatedAssets.Add(importedAssets[i]);
 				}
@@ -293,6 +285,16 @@ namespace UMA
 				EditorApplication.update -= DoEditorDuplicatedAssets;
 				EditorApplication.update += DoEditorDuplicatedAssets;
 			}
+		}
+
+		private bool PathIsValid(string path)
+		{
+			var extension = Path.GetExtension(path);
+			if (extension == ".meta" || extension == ".cs" || extension == "" || extension == ".js")
+				return false;
+			if (path.IndexOf("ProjectSettings.asset") > -1 || path.IndexOf("UMAAssetIndex-DONOTDELETE") > -1 || path.IndexOf("Assets/") == -1)
+				return false;
+			return true;
 		}
 		#endregion
 
@@ -393,6 +395,8 @@ namespace UMA
 			AMPMovedAssets.Clear();
 			SortIndexes();
 			CheckAndUpdateWindow();
+			EditorUtility.SetDirty(this);
+			AssetDatabase.SaveAssets();
 		}
 
 		/// <summary>
@@ -413,6 +417,8 @@ namespace UMA
 			AMPDeletedAssets.Clear();
 			SortIndexes();
 			CheckAndUpdateWindow();
+			EditorUtility.SetDirty(this);
+			AssetDatabase.SaveAssets();
 		}
 
 		private void DoEditorDuplicatedAssets()
@@ -455,6 +461,8 @@ namespace UMA
 			AMPCreatedAssets.Clear();
 			SortIndexes();
 			CheckAndUpdateWindow();
+			EditorUtility.SetDirty(this);
+			AssetDatabase.SaveAssets();
 		}
 
 		/// <summary>
@@ -501,6 +509,8 @@ namespace UMA
 			AMPSavedAssets.Clear();
 			SortIndexes();
 			CheckAndUpdateWindow();
+			EditorUtility.SetDirty(this);
+			AssetDatabase.SaveAssets();
 		}
 		#endregion
 
@@ -587,22 +597,6 @@ namespace UMA
 						int thisAssetHash = -1;
 						string thisAssetName = "";
 						GetAssetHashAndNames(thisAsset, ref thisAssetHash, ref thisAssetName);
-						/*if (thisAsset is SlotDataAsset)
-						{
-							thisAssetName = (thisAsset as SlotDataAsset).slotName;
-							thisAssetHash = (thisAsset as SlotDataAsset).nameHash;
-						}
-						else if (thisAsset is OverlayDataAsset)
-						{
-							thisAssetName = (thisAsset as OverlayDataAsset).overlayName;
-							thisAssetHash = (thisAsset as OverlayDataAsset).nameHash;
-						}
-						else if (thisAsset is RaceData)
-						{
-							thisAssetName = (thisAsset as RaceData).raceName;
-							thisAssetHash = UMAUtils.StringToHash((thisAsset as RaceData).raceName);
-						}*/
-						//
 						if (InAssetBundle(thisPath, thisAsset.name))
 						{
 							_assetBundleIndex.AddPath(thisAsset, thisAssetHash, thisAssetName);
@@ -682,22 +676,6 @@ namespace UMA
 					int thisAssetHash = -1;
 					string thisAssetName = "";
 					GetAssetHashAndNames(thisAsset, ref thisAssetHash, ref thisAssetName);
-					/*if (thisAsset is SlotDataAsset)
-					{
-						thisAssetName = (thisAsset as SlotDataAsset).slotName;
-						thisAssetHash = (thisAsset as SlotDataAsset).nameHash;
-					}
-					else if (thisAsset is OverlayDataAsset)
-					{
-						thisAssetName = (thisAsset as OverlayDataAsset).overlayName;
-						thisAssetHash = (thisAsset as OverlayDataAsset).nameHash;
-					}
-					else if (thisAsset is RaceData)
-					{
-						thisAssetName = (thisAsset as RaceData).raceName;
-						thisAssetHash = UMAUtils.StringToHash((thisAsset as RaceData).raceName);
-					}*/
-					//
 					_buildIndex.AddPath(thisAsset, thisAssetHash, thisAssetName, true);
 				}
 			}
@@ -748,7 +726,6 @@ namespace UMA
 					if (foundType == null)
 						Debug.LogWarning("Type not found in types to index for " + typesToIndex[sti]);
 				}
-				//Debug.Log("foundType was " + foundType.ToString() + " and assetType was " + assetToTest.GetType().ToString());
 				if (foundType != null)
 				{
 					//this works but includes child types- which we dont want
