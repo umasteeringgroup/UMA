@@ -659,11 +659,11 @@ namespace UMA
 				T foundAsset = null;
 				if (assetNameHash != null)
 				{
-					foundAsset = (UMAAssetIndex.Instance.LoadAsset<T>((int)assetNameHash) as T);
+					foundAsset = (UMAAssetIndex.Instance.LoadAsset<T>((int)assetNameHash, resourcesFolderPathArray) as T);
 				}
 				else if (assetName != "")
 				{
-					foundAsset = (UMAAssetIndex.Instance.LoadAsset<T>(assetName) as T);
+					foundAsset = (UMAAssetIndex.Instance.LoadAsset<T>(assetName, resourcesFolderPathArray) as T);
 				}
 				if (foundAsset != null)
 				{
@@ -673,7 +673,7 @@ namespace UMA
 			}
 			else if (assetNameHash == null && assetName == "")
 			{
-				assetsToReturn.AddRange(UMAAssetIndex.Instance.LoadAllAssetsOfType<T>() as List<T>);
+				assetsToReturn.AddRange(UMAAssetIndex.Instance.LoadAllAssetsOfType<T>(resourcesFolderPathArray) as List<T>);
 				found = assetsToReturn.Count > 0;
 			}
 			/*if (UMAResourcesIndex.Instance == null)

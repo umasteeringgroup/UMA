@@ -159,6 +159,8 @@ namespace UMA
 		/// <param name="path"></param>
 		public bool RemovePath(string path)
 		{
+			if (String.IsNullOrEmpty(path))
+				return false;
 			var removed = false;
 			for (int i = 0; i < data.Length; i++)
 			{
@@ -219,30 +221,30 @@ namespace UMA
 			data = list;
 		}
 
-		public T Get<T>(int umaNameHash) where T : UnityEngine.Object
+		public T Get<T>(int umaNameHash, string[] foldersToSearch = null) where T : UnityEngine.Object
 		{
 			for (int i = 0; i < data.Length; i++)
 			{
 				if (data[i].type == typeof(T).ToString())
 				{
-					return data[i].Get(umaNameHash) as T;
+					return data[i].Get(umaNameHash, foldersToSearch) as T;
 				}
 			}
 			return null;
 		}
-		public T Get<T>(string umaName) where T : UnityEngine.Object
+		public T Get<T>(string umaName, string[] foldersToSearch = null) where T : UnityEngine.Object
 		{
 			for (int i = 0; i < data.Length; i++)
 			{
 				if (data[i].type == typeof(T).ToString())
 				{
-					return data[i].Get(umaName) as T;
+					return data[i].Get(umaName, foldersToSearch) as T;
 				}
 			}
 			return null;
 		}
 
-		public List<T> GetAll<T>() where T : UnityEngine.Object
+		public List<T> GetAll<T>(string[] foldersToSearch = null) where T : UnityEngine.Object
 		{
 			List<T> allAssets = new List<T>();
 			for (int ti = 0; ti < data.Length; ti++)
@@ -252,11 +254,28 @@ namespace UMA
 					for(int i = 0; i < data[ti].typeIndex.Length; i++)
 					{
 						if (data[ti].typeIndex[i].fileReference != null)
-							allAssets.Add(data[ti].typeIndex[i].fileReference as T);
+						{
+							if(WasEntryInFolders(data[ti].typeIndex[i], foldersToSearch))
+								allAssets.Add(data[ti].typeIndex[i].fileReference as T);
+						}
 					}
 				}
 			}
 			return allAssets;
+		}
+
+		protected static bool WasEntryInFolders(IndexData data, string[] foldersToSearch = null)
+		{
+			if (foldersToSearch == null)
+				return true;
+			if (foldersToSearch.Length == 0)
+				return true;
+			for (int fi = 0; fi < foldersToSearch.Length; fi++)
+			{
+				if (data.fullPath.IndexOf(foldersToSearch[fi]) > -1)
+					return true;
+			}
+			return false;
 		}
 		
 		public IndexData GetEntryFromPath(string path)
@@ -366,22 +385,22 @@ namespace UMA
 				typeIndex = list;
 			}
 
-			public UnityEngine.Object Get(string name)
+			public UnityEngine.Object Get(string name, string[] foldersToSearch = null)
 			{
 				for (int i = 0; i < typeIndex.Length; i++)
 				{
-					if (typeIndex[i].name == name)
+					if (typeIndex[i].name == name && WasEntryInFolders(typeIndex[i], foldersToSearch))
 					{
 						return typeIndex[i].fileReference;
 					}
 				}
 				return null;
 			}
-			public UnityEngine.Object Get(int nameHash)
+			public UnityEngine.Object Get(int nameHash, string[] foldersToSearch = null)
 			{
 				for (int i = 0; i < typeIndex.Length; i++)
 				{
-					if (typeIndex[i].nameHash == nameHash)
+					if (typeIndex[i].nameHash == nameHash && WasEntryInFolders(typeIndex[i], foldersToSearch))
 					{
 						return typeIndex[i].fileReference;
 					}

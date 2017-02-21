@@ -159,7 +159,7 @@ namespace UMA
 
 		/// <summary>
 		/// Callback for UMAAssetModificationProcessor that is triggered when Assets or folders are moved in the project. 
-		/// Assigns paths to the AMPMovedAssets list and sets up DoMoveAsset to process the list when the assetModificationProcessor is finished
+		/// Assigns paths to the AMPMovedAssets list and sets up DoMovedAssets to process the list when the assetModificationProcessor is finished
 		/// </summary>
 		public void OnMoveAsset(string assetPrevPath, string assetNewPath)
 		{
@@ -190,14 +190,14 @@ namespace UMA
 			}
 			if (AMPMovedAssets.Count > 0)
 			{
-				EditorApplication.update -= DoMoveAsset;
-				EditorApplication.update += DoMoveAsset;
+				EditorApplication.update -= DoMovedAssets;
+				EditorApplication.update += DoMovedAssets;
 			}
 		}
 
 		/// <summary>
 		/// Callback for UMAAssetModificationProcessor that is triggered when Assets or folders are deleted in the project. 
-		/// Assigns paths to the AMPDeletedAssets list and sets up DoDeleteAsset to process the list when the assetModificationProcessor is finished
+		/// Assigns paths to the AMPDeletedAssets list and sets up DoDeletedAsset to process the list when the assetModificationProcessor is finished
 		/// </summary>
 		public void OnDeleteAsset(string assetToDelete)
 		{
@@ -222,14 +222,14 @@ namespace UMA
 			}
 			if (AMPDeletedAssets.Count > 0)
 			{
-				EditorApplication.update -= DoDeleteAsset;
-				EditorApplication.update += DoDeleteAsset;
+				EditorApplication.update -= DoDeletedAsset;
+				EditorApplication.update += DoDeletedAsset;
 			}
 		}
 
 		/// <summary>
 		/// Callback for UMAAssetModificationProcessor that is triggered when Assets are created from the 'Create' menu in the project. 
-		/// Assigns paths to the AMPCreatedAssets list and sets up DoCreateAsset to process the list when the assetModificationProcessor is finished 
+		/// Assigns paths to the AMPCreatedAssets list and sets up DoCreatedAsset to process the list when the assetModificationProcessor is finished 
 		/// </summary>
 		public void OnCreateAsset(string createdAsset)
 		{
@@ -242,14 +242,14 @@ namespace UMA
 				AMPCreatedAssets.Add(createdAsset);
 			if (AMPCreatedAssets.Count > 0)
 			{
-				EditorApplication.update -= DoCreateAsset;
-				EditorApplication.update += DoCreateAsset;
+				EditorApplication.update -= DoCreatedAsset;
+				EditorApplication.update += DoCreatedAsset;
 			}
 		}
 
 		/// <summary>
 		/// Callback for UMAAssetModificationProcessor that is triggered when Assets are edited and saved in the project. 
-		/// Assigns paths to the AMPSavedAssets list and sets up DoSaveAssets to process the list when the assetModificationProcessor is finished 
+		/// Assigns paths to the AMPSavedAssets list and sets up DoSavedAssets to process the list when the assetModificationProcessor is finished 
 		/// </summary>
 		public void OnSaveAssets(string[] assetsToSave)
 		{
@@ -264,14 +264,14 @@ namespace UMA
 			}
 			if (AMPSavedAssets.Count > 0)
 			{
-				EditorApplication.update -= DoSaveAssets;
-				EditorApplication.update += DoSaveAssets;
+				EditorApplication.update -= DoSavedAssets;
+				EditorApplication.update += DoSavedAssets;
 			}
 		}
 
 		/// <summary>
 		/// Callback for UMAAssetPostProcessor that is triggered when assets are imported OR when an asset is Duplucated using "Edit/Duplicate".
-		/// Adds the assets to the AMPCreatedAssets list and and sets up DoCreateAsset to process the list when the assetPostProcessor is finished
+		/// Adds the assets to the AMPCreatedAssets list and and sets up DoCreatedAsset to process the list when the assetPostProcessor is finished
 		/// </summary>
 		public void OnEditorDuplicatedAsset(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
 		{
@@ -290,8 +290,8 @@ namespace UMA
 			}
 			if (AMPCreatedAssets.Count > 0)
 			{
-				EditorApplication.update -= DoCreateAsset;
-				EditorApplication.update += DoCreateAsset;
+				EditorApplication.update -= DoEditorDuplicatedAssets;
+				EditorApplication.update += DoEditorDuplicatedAssets;
 			}
 		}
 		#endregion
@@ -301,11 +301,11 @@ namespace UMA
 		/// <summary>
 		/// Processers the AMPMovedAssets after AssetModificationProcessor has finished moving assets
 		/// </summary>
-		private void DoMoveAsset()
+		private void DoMovedAssets()
 		{
 			if (EditorApplication.isCompiling || EditorApplication.isUpdating)
 				return;
-			EditorApplication.update -= DoMoveAsset;
+			EditorApplication.update -= DoMovedAssets;
 			//assets have moved.
 			foreach (AMPMovedAsset path in AMPMovedAssets)
 			{
@@ -398,11 +398,11 @@ namespace UMA
 		/// <summary>
 		/// Processers the AMPDeletedAssets after AssetModificationProcessor has finished moving assets 
 		/// </summary>
-		private void DoDeleteAsset()
+		private void DoDeletedAsset()
 		{
 			if (EditorApplication.isCompiling || EditorApplication.isUpdating)
 				return;
-			EditorApplication.update -= DoDeleteAsset;
+			EditorApplication.update -= DoDeletedAsset;
 			//Remove the asset from all indexes
 			foreach (string path in AMPDeletedAssets)
 			{
@@ -415,14 +415,22 @@ namespace UMA
 			CheckAndUpdateWindow();
 		}
 
-		/// <summary>
-		/// Processers the AMPCreatedAssets after AssetModificationProcessor has finished moving assets or AssetPostProcessor has finished creating or importing
-		/// </summary>
-		private void DoCreateAsset()
+		private void DoEditorDuplicatedAssets()
 		{
 			if (EditorApplication.isCompiling || EditorApplication.isUpdating)
 				return;
-			EditorApplication.update -= DoCreateAsset;
+			EditorApplication.update -= DoEditorDuplicatedAssets;
+			DoCreatedAsset();
+		}
+
+		/// <summary>
+		/// Processers the AMPCreatedAssets after AssetModificationProcessor has finished moving assets or AssetPostProcessor has finished creating or importing
+		/// </summary>
+		private void DoCreatedAsset()
+		{
+			if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+				return;
+			EditorApplication.update -= DoCreatedAsset;
 			foreach (string path in AMPCreatedAssets)
 			{
 				var thisAsset = AssetDatabase.LoadMainAssetAtPath(path);
@@ -453,11 +461,11 @@ namespace UMA
 		/// Processers the AMPSavedAssets after AssetModificationProcessor has finished saving assets. 
 		/// This also updates the Asset Names and hashes refrenced in the index (in the case of slot/overlay/race these are the slotname/overlayname/racename) 
 		/// </summary>
-		private void DoSaveAssets()
+		private void DoSavedAssets()
 		{
 			if (EditorApplication.isCompiling || EditorApplication.isUpdating)
 				return;
-			EditorApplication.update -= DoSaveAssets;
+			EditorApplication.update -= DoSavedAssets;
 			//assets were saved
 			foreach (string path in AMPSavedAssets)
 			{
@@ -866,23 +874,23 @@ namespace UMA
 		/// <summary>
 		/// Returns a List of the given Type containing all the assets that have been made Live in the BuildIndex, the list is empty if not assets of the requested type are found.
 		/// </summary>
-		public List<T> LoadAllAssetsOfType<T>() where T : UnityEngine.Object
+		public List<T> LoadAllAssetsOfType<T>(string[] foldersToSearch = null) where T : UnityEngine.Object
 		{
-				return _buildIndex.GetAll<T>();
+				return _buildIndex.GetAll<T>(foldersToSearch);
 		}
 		/// <summary>
 		/// Returns the asset of the given Type and uma name if it has been added to the BuildIndex, null if not found
 		/// </summary>
-		public UnityEngine.Object LoadAsset<T>(string umaName) where T : UnityEngine.Object
+		public UnityEngine.Object LoadAsset<T>(string umaName, string[] foldersToSearch = null) where T : UnityEngine.Object
 		{
-				return _buildIndex.Get<T>(umaName);
+				return _buildIndex.Get<T>(umaName, foldersToSearch);
 		}
 		/// <summary>
 		/// Returns the asset of the given Type and uma nameHash if it has been added to the BuildIndex, null if not found 
 		/// </summary>
-		public UnityEngine.Object LoadAsset<T>(int umaNameHash) where T : UnityEngine.Object
+		public UnityEngine.Object LoadAsset<T>(int umaNameHash, string[] foldersToSearch = null) where T : UnityEngine.Object
 		{
-			return _buildIndex.Get<T>(umaNameHash);
+			return _buildIndex.Get<T>(umaNameHash, foldersToSearch);
 		}
 		/// <summary>
 		/// Loads an asset at the given path from the BuildIndex and returns it as UnityEngine.Object. Null if no object can be found.
