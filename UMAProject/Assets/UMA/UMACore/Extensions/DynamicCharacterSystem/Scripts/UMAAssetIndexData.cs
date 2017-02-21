@@ -355,7 +355,13 @@ namespace UMA
 				int listi = 0;
 				for (int i = 0; i < typeIndex.Length; i++)
 				{
-					if (typeIndex[i].nameHash != nameHash)
+					if(typeIndex[i].nameHash == nameHash)
+					{
+						//try removing the refrence to the resources to stop the build thinking the file is still referenced
+						typeIndex[i].fileReference = null;
+					}
+					//if (typeIndex[i].nameHash != nameHash)
+					else
 					{
 						list[listi] = new IndexData(typeIndex[i].fileReference, typeIndex[i].nameHash, typeIndex[i].fullPath, typeIndex[i].name);
 						listi++;
@@ -376,7 +382,13 @@ namespace UMA
 
 				for (int i = 0; i < typeIndex.Length; i++)
 				{
-					if (typeIndex[i].fullPath != path)
+					if (typeIndex[i].fullPath == path)
+					{
+						//try removing the refrence to the resources to stop the build thinking the file is still referenced
+						typeIndex[i].fileReference = null;
+                    } 
+					// (typeIndex[i].fullPath != path)
+					else
 					{
 						list[listi] = new IndexData(typeIndex[i].fileReference, typeIndex[i].nameHash, typeIndex[i].fullPath, typeIndex[i].name);
 						listi++;

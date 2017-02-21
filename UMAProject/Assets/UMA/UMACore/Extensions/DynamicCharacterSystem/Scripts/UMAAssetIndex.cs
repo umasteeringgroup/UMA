@@ -75,6 +75,7 @@ namespace UMA
 
 		List<AMPMovedAsset> AMPMovedAssets = new List<AMPMovedAsset>();
 
+		string folderToSelectAfterMove = "";
 
 		//The windowInstance is assigned when the index is viewed in a window, this is so we can refresh the view when this script modifies the index
 		[System.NonSerialized]
@@ -94,7 +95,7 @@ namespace UMA
 #if UNITY_EDITOR
 					if (_instance == null)
 					{
-						//I think maybe this needs to not do anything if the editor is compiling too?
+						//Sometimes when the editor is compiling multiple versions of this get generated
 						if (!EditorApplication.isCompiling && !EditorApplication.isUpdating)
 						{
 							CreateUMAAssetIndex();
@@ -141,7 +142,8 @@ namespace UMA
 
 		public UMAAssetIndex()
 		{
-			//_instance = this;
+			//Did have this commented out but not sure if its helping or not
+			_instance = this;
         }
 
 		public void OnEnable()
@@ -172,6 +174,7 @@ namespace UMA
 			//We need to check if this is a folder because if it is then its the contents rather than the folder itself that we want
 			if (!Path.HasExtension(assetPrevPath))
 			{
+				folderToSelectAfterMove = assetNewPath;
 				var thisFolderContentsUGUIDS = AssetDatabase.FindAssets("t:Object", new string[1] { assetPrevPath });
 				for (int i = 0; i < thisFolderContentsUGUIDS.Length; i++)
 				{
@@ -308,6 +311,7 @@ namespace UMA
 			if (EditorApplication.isCompiling || EditorApplication.isUpdating)
 				return;
 			EditorApplication.update -= DoMovedAssets;
+			UnityEngine.Object lastMovedObject = null;
 			//assets have moved.
 			foreach (AMPMovedAsset path in AMPMovedAssets)
 			{
@@ -318,6 +322,8 @@ namespace UMA
 				{
 					if (!IsAssetATrackedType(thisAsset))
 						continue;
+
+					lastMovedObject = thisAsset;
 
 					int thisAssetHash = -1;
 					string thisAssetName = "";
@@ -390,14 +396,41 @@ namespace UMA
 							_assetBundleIndex.RemovePath(assetBundleIndexData.fullPath);
 						}
 					}
+					//actually looks like we can get a folder using  AssetDatabase.LoadAssetAtPath for a folder TODO check
 				}
 			}
 			AMPMovedAssets.Clear();
 			SortIndexes();
 			CheckAndUpdateWindow();
+			//AssetDatabase.Refresh();
 			EditorUtility.SetDirty(this);
 			AssetDatabase.SaveAssets();
+			EditorApplication.delayCall -= CleanUnusedAssets;
+			EditorApplication.delayCall += CleanUnusedAssets;
+			//sort out the selected object
+			if(folderToSelectAfterMove != "")
+			{
+				var folderObject = AssetDatabase.LoadAssetAtPath(folderToSelectAfterMove, typeof(UnityEngine.Object));
+				if (folderObject != null)
+					Selection.activeObject = folderObject;
+				folderToSelectAfterMove = "";
+			}
+			else
+			{
+				if(lastMovedObject != null)
+					Selection.activeObject = lastMovedObject;
+			}
 		}
+
+		private void CleanUnusedAssets()
+		{
+			EditorApplication.delayCall -= CleanUnusedAssets;
+			AssetDatabase.Refresh();//apparently this also calls the following
+			Resources.UnloadUnusedAssets();
+			//we could also try the following - where true will unload assets even if they are refrenced by scripts
+			//But we need to be very careful that this does not make the normal libraries (and other things) not work
+			//EditorUtility.UnloadUnusedAssetsImmediate(true);
+        }
 
 		/// <summary>
 		/// Processers the AMPDeletedAssets after AssetModificationProcessor has finished moving assets 
@@ -419,6 +452,8 @@ namespace UMA
 			CheckAndUpdateWindow();
 			EditorUtility.SetDirty(this);
 			AssetDatabase.SaveAssets();
+			EditorApplication.delayCall -= CleanUnusedAssets;
+			EditorApplication.delayCall += CleanUnusedAssets;
 		}
 
 		private void DoEditorDuplicatedAssets()
@@ -463,6 +498,8 @@ namespace UMA
 			CheckAndUpdateWindow();
 			EditorUtility.SetDirty(this);
 			AssetDatabase.SaveAssets();
+			EditorApplication.delayCall -= CleanUnusedAssets;
+			EditorApplication.delayCall += CleanUnusedAssets;
 		}
 
 		/// <summary>
@@ -511,6 +548,8 @@ namespace UMA
 			CheckAndUpdateWindow();
 			EditorUtility.SetDirty(this);
 			AssetDatabase.SaveAssets();
+			EditorApplication.delayCall -= CleanUnusedAssets;
+			EditorApplication.delayCall += CleanUnusedAssets;
 		}
 		#endregion
 
@@ -681,6 +720,8 @@ namespace UMA
 			}
 			//SortIndexes();
 			CheckAndUpdateWindow();
+			EditorApplication.delayCall -= CleanUnusedAssets;
+			EditorApplication.delayCall += CleanUnusedAssets;
 		}
 
 		/// <summary>
@@ -693,6 +734,8 @@ namespace UMA
 			_buildIndex.RemovePath(fullIndexData.fullPath);
 			//SortIndexes();
 			CheckAndUpdateWindow();
+			EditorApplication.delayCall -= CleanUnusedAssets;
+			EditorApplication.delayCall += CleanUnusedAssets;
 		}
 
 		#endregion

@@ -370,7 +370,9 @@ namespace UMAEditor
 											else
 											{
 												assetIsLive = false;
-												UAI.MakeAssetNotLive(entry, typeString);
+												//make sure we no longer reference it so it gets garbage collected
+												liveAsset = null;
+                                                UAI.MakeAssetNotLive(entry, typeString);
 											}
 											//serializedObject.Update();
 											serializedObject.ApplyModifiedProperties();
@@ -499,7 +501,7 @@ namespace UMAEditor
 				EditorApplication.update += SaveOnUpdate;
 			}
 			//Uncomment to see the actual serialized data the index is saving
-			//EditorGUILayout.PropertyField(serializedObject.FindProperty("_buildIndex"),true);
+			EditorGUILayout.PropertyField(serializedObject.FindProperty("_buildIndex"),true);
 		}
 		
 		public void SaveOnUpdate()

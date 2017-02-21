@@ -15,8 +15,8 @@ namespace UMAEditor
 		string info;
 
 		//Temporarily show The UMAAssetIndex in here
-		Editor UAIE;
-		UMAAssetIndex UAI;
+		Editor UAIE = null;
+		UMAAssetIndex UAI = null;
 
 		public override void OnInspectorGUI()
 		{
