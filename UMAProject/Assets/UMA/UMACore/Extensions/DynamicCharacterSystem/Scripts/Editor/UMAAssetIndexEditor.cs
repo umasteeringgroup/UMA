@@ -156,28 +156,7 @@ namespace UMAEditor
 				}
 			}
 		}
-		/*private string[] GetFolderSortedArray(UMAAssetIndexData.IndexData[] indexToSort)
-		{
-			Dictionary<string, List<string>> folderSortedPathsDict = new Dictionary<string, List<string>>();
-			List<string> folderSortedPathsList = new List<string>();
-			for(int i = 0; i < indexToSort.Length; i++)
-			{
-				var thisDir = Path.GetDirectoryName(indexToSort[i].fullPath);
-				if (!folderSortedPathsDict.ContainsKey(thisDir))
-				{
-					folderSortedPathsDict.Add(thisDir, new List<string>());
-                }
-				folderSortedPathsDict[thisDir].Add(indexToSort[i].fullPath);
-			}
-			foreach(KeyValuePair<string, List<string>> kp in folderSortedPathsDict)
-			{
-				for(int i = 0; i < kp.Value.Count; i++)
-				{
-					folderSortedPathsList.Add(kp.Value[i]);
-				}
-            }
-			return folderSortedPathsList.ToArray();
-		}*/
+		
 		int selectedFilter = 0;
 		string[] filterOptions = new string[] { "All", "Enabled", "Disabled", "AssetName or Path", "UMAName" };
 		string stringFilter = "";
@@ -393,7 +372,8 @@ namespace UMAEditor
 												assetIsLive = false;
 												UAI.MakeAssetNotLive(entry, typeString);
 											}
-											serializedObject.Update();
+											//serializedObject.Update();
+											serializedObject.ApplyModifiedProperties();
 										}
 										changed = true;
                                     }
@@ -513,12 +493,21 @@ namespace UMAEditor
 			serializedObject.ApplyModifiedProperties();
 			if (changed)
 			{
-				EditorUtility.SetDirty(target);
-				AssetDatabase.SaveAssets();
+				//EditorUtility.SetDirty(target);
+				//AssetDatabase.SaveAssets();
+				EditorApplication.update -= SaveOnUpdate;
+				EditorApplication.update += SaveOnUpdate;
 			}
 
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("_buildIndex"),true);
 		}
-
+		
+		public void SaveOnUpdate()
+		{
+			EditorApplication.update -= SaveOnUpdate;
+			//EditorApplication.update += DoDeleteAsset;
+			EditorUtility.SetDirty(target);
+			AssetDatabase.SaveAssets();
+		}
 	}
 }

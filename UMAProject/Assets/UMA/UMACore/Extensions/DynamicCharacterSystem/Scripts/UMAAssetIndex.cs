@@ -38,18 +38,19 @@ namespace UMA
 
 		[Tooltip("Set the types you wish to track in the index in here.")]
 		public List<string> typesToIndex = new List<string>() { "SlotDataAsset", "OverlayDataAsset", "RaceData", "UMATextRecipe", "UMAWardrobeRecipe", "UMAWardrobeCollection", "RuntimeAnimatorController","DynamicUMADnaAsset" };
-		//the index of all the possible assets you could have (excluding those in AssetBundles)
-		//Used to generate the list in the Editor where you assign/unassign assets to the serialized _buildIndex
-		private UMAAssetIndexData _fullIndex = new UMAAssetIndexData();
 		//the index of all the assets you have selected to include
 		//This is the only index that gets 'Saved' into the game
 		[SerializeField]
 		private UMAAssetIndexData _buildIndex = new UMAAssetIndexData();
+
+#if UNITY_EDITOR
+		//the index of all the possible assets you could have (excluding those in AssetBundles)
+		//Used to generate the list in the Editor where you assign/unassign assets to the serialized _buildIndex
+		private UMAAssetIndexData _fullIndex = new UMAAssetIndexData();
 		//This list is not serialized.
 		//BUT it would be nice if we could use this when we simulateAssetBundles in the editor (because it would be quicker)
 		private UMAAssetIndexData _assetBundleIndex = new UMAAssetIndexData();
 
-#if UNITY_EDITOR
 		//UMA Asset Modification Processor Lists
 		//These lists are populated each time AssetModificationProcessor does anything with any assets
 		List<string> AMPDeletedAssets = new List<string>();
@@ -76,6 +77,7 @@ namespace UMA
 
 
 		//The windowInstance is assigned when the index is viewed in a window, this is so we can refresh the view when this script modifies the index
+		[System.NonSerialized]
 		public EditorWindow windowInstance = null;
 #endif
 
@@ -110,6 +112,8 @@ namespace UMA
 		{
 			get { return _buildIndex; }
 		}
+
+#if UNITY_EDITOR
 		/// <summary>
 		/// The Full Index contains a list of all the assets you *could* make live in your game (but not refrences) 
 		/// this is not serialized and should only be used to find assets to add to Build Index
@@ -129,19 +133,22 @@ namespace UMA
 			//That way we could use this instead of searching AssetDatabase when we are Simulating AssetBundles in the Edior?
 			get { return _assetBundleIndex; }
 		}
+#endif
 
 		public UMAAssetIndex()
 		{
-			_instance = this;
+			//_instance = this;
         }
-
-#if UNITY_EDITOR
 
 		public void OnEnable()
 		{
 			_instance = this;
+#if UNITY_EDITOR
 			GenerateLists();
-        }
+#endif
+		}
+
+#if UNITY_EDITOR
 
 		private void GenerateLists()
 		{
@@ -296,6 +303,8 @@ namespace UMA
 		/// </summary>
 		private void DoMoveAsset()
 		{
+			if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+				return;
 			EditorApplication.update -= DoMoveAsset;
 			//assets have moved.
 			foreach (AMPMovedAsset path in AMPMovedAssets)
@@ -391,6 +400,8 @@ namespace UMA
 		/// </summary>
 		private void DoDeleteAsset()
 		{
+			if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+				return;
 			EditorApplication.update -= DoDeleteAsset;
 			//Remove the asset from all indexes
 			foreach (string path in AMPDeletedAssets)
@@ -409,6 +420,8 @@ namespace UMA
 		/// </summary>
 		private void DoCreateAsset()
 		{
+			if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+				return;
 			EditorApplication.update -= DoCreateAsset;
 			foreach (string path in AMPCreatedAssets)
 			{
@@ -442,6 +455,8 @@ namespace UMA
 		/// </summary>
 		private void DoSaveAssets()
 		{
+			if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+				return;
 			EditorApplication.update -= DoSaveAssets;
 			//assets were saved
 			foreach (string path in AMPSavedAssets)
@@ -561,9 +576,10 @@ namespace UMA
 					}
 					if (thisAsset)
 					{
-						int thisAssetHash = UMAUtils.StringToHash(thisAsset.name);
-						string thisAssetName = thisAsset.name;
-						if (thisAsset is SlotDataAsset)
+						int thisAssetHash = -1;
+						string thisAssetName = "";
+						GetAssetHashAndNames(thisAsset, ref thisAssetHash, ref thisAssetName);
+						/*if (thisAsset is SlotDataAsset)
 						{
 							thisAssetName = (thisAsset as SlotDataAsset).slotName;
 							thisAssetHash = (thisAsset as SlotDataAsset).nameHash;
@@ -577,7 +593,7 @@ namespace UMA
 						{
 							thisAssetName = (thisAsset as RaceData).raceName;
 							thisAssetHash = UMAUtils.StringToHash((thisAsset as RaceData).raceName);
-						}
+						}*/
 						//
 						if (InAssetBundle(thisPath, thisAsset.name))
 						{
@@ -655,9 +671,10 @@ namespace UMA
 				}
 				if (thisAsset)
 				{
-					int thisAssetHash = UMAUtils.StringToHash(thisAsset.name);
-					string thisAssetName = thisAsset.name;
-					if (thisAsset is SlotDataAsset)
+					int thisAssetHash = -1;
+					string thisAssetName = "";
+					GetAssetHashAndNames(thisAsset, ref thisAssetHash, ref thisAssetName);
+					/*if (thisAsset is SlotDataAsset)
 					{
 						thisAssetName = (thisAsset as SlotDataAsset).slotName;
 						thisAssetHash = (thisAsset as SlotDataAsset).nameHash;
@@ -671,12 +688,12 @@ namespace UMA
 					{
 						thisAssetName = (thisAsset as RaceData).raceName;
 						thisAssetHash = UMAUtils.StringToHash((thisAsset as RaceData).raceName);
-					}
+					}*/
 					//
 					_buildIndex.AddPath(thisAsset, thisAssetHash, thisAssetName, true);
 				}
 			}
-			SortIndexes();
+			//SortIndexes();
 			CheckAndUpdateWindow();
 		}
 
@@ -688,7 +705,7 @@ namespace UMA
 		public void MakeAssetNotLive(UMAAssetIndexData.IndexData fullIndexData, string assetType)
 		{
 			_buildIndex.RemovePath(fullIndexData.fullPath);
-			SortIndexes();
+			//SortIndexes();
 			CheckAndUpdateWindow();
 		}
 
@@ -745,10 +762,10 @@ namespace UMA
 		{
 			for (int ti = 0; ti < _fullIndex.data.Length; ti++)
 				Array.Sort(_fullIndex.data[ti].typeIndex, CompareByFolderName);
-			for (int ti = 0; ti < _buildIndex.data.Length; ti++)
+			/*for (int ti = 0; ti < _buildIndex.data.Length; ti++)
 				Array.Sort(_buildIndex.data[ti].typeIndex, CompareByFolderName);
 			for (int ti = 0; ti < _assetBundleIndex.data.Length; ti++)
-				Array.Sort(_assetBundleIndex.data[ti].typeIndex, CompareByFolderName);
+				Array.Sort(_assetBundleIndex.data[ti].typeIndex, CompareByFolderName);*/
 		}
 
 		/// <summary>

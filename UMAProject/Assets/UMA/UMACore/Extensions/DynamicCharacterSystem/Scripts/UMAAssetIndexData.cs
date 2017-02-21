@@ -118,11 +118,7 @@ namespace UMA
 				return;
 			}
 			var objFullPath = AssetDatabase.GetAssetPath(obj);
-			/*var extension = Path.GetExtension(objFullPath);
-			if (extension != "")
-			{
-				objFullPath = objFullPath.Replace(extension, "");
-			}*/
+
 			//deal with RuntimeAnimatorController Type craziness
 			var objTypeString = obj.GetType().ToString();
 			if (objTypeString == "UnityEditor.Animations.AnimatorController")
@@ -141,17 +137,11 @@ namespace UMA
 							_currentPaths.Add(objFullPath);
 						}
 					}
-					else
-					{
-						//data[i].Add returns false if the asset was already in the index
-						//Debug.Log("data[i].Add Didn't add " + objFullPath+" to type "+ obj.GetType().ToString());
-					}
 					hadType = true;
 				}
 			}
 			if (!hadType)
 			{
-				//Debug.Log("No index for Type " + obj.GetType().ToString());
 				var list = new TypeIndex[data.Length + 1];
 				Array.Copy(data, list, data.Length);
 				list[data.Length] = new TypeIndex(objTypeString, objNameHash, objFullPath, objName, addObject ? obj : null);
@@ -268,70 +258,7 @@ namespace UMA
 			}
 			return allAssets;
 		}
-		/*public void RemoveAsset<T>(string thisName) string umaName
-		{
-			RemoveAsset<T>(UMAUtils.StringToHash(thisName));
-		}*/
-		/*public void RemoveAsset<T>(int nameHash) where T : UnityEngine.Object
-		{
-			for (int i = 0; i < data.Length; i++)
-			{
-				if (data[i].type == typeof(T).ToString())
-				{
-					var thisFullPath = data[i].Get(nameHash);
-					if (thisFullPath != "")
-						if (_currentPaths.Contains(thisFullPath))
-							_currentPaths.Remove(thisFullPath);
-					data[i].Remove(nameHash);
-					if (data[i].Count() == 0)
-						RemoveTypeFromIndex(typeof(T));
-				}
-			}
-		}*/
-		/*
-		/// <summary>
-		/// Finds an item in the index by its type and path and updates its hash to the given hash. Use when Updating UMA Assets whose slot/overlay/race names have changed
-		/// </summary>
-		/// <param name="type"></param>
-		/// <param name="hash"></param>
-		/// <param name="fullPath"></param>
-		/// <returns>whether the hash could be added. False if another asset of the given type with the same slot/overlay/racename existed</returns>
-		public bool UpdateHashByPath(string type, int hash, string fullPath)
-		{
-			bool succeeded = false;
-			for (int i = 0; i < data.Length; i++)
-			{
-				if (data[i].type == type)
-				{
-					for (int ii = 0; ii < data[i].typeIndex.Length; ii++)
-					{
-						if (data[i].typeIndex[ii].fullPath == fullPath)
-						{
-							bool collision = false;
-							for (int iii = 0; iii < data[i].typeIndex.Length; iii++)
-							{
-								if (data[i].typeIndex[iii].fullPath != fullPath && data[i].typeIndex[iii].nameHash == hash)
-								{
-									collision = true; break;
-								}
-							}
-							if (!collision)
-							{
-								data[i].typeIndex[ii].nameHash = hash;
-								succeeded = true;
-							}
-							else
-							{
-								//Debug.LogWarning("Changing the slot/overlay/race name of would have caused a duplicate asset for " + fullPath);
-							}
-							break;
-						}
-					}
-					break;
-				}
-			}
-			return succeeded;
-		}*/
+		
 		public IndexData GetEntryFromPath(string path)
 		{
 			for (int i = 0; i < data.Length; i++)
@@ -346,114 +273,6 @@ namespace UMA
 			}
 			return null;
 		}
-		/*
-		/// <summary>
-		/// Get a path for the given type and name out of the index, optionally filtering result based on specified folders
-		/// </summary>
-		public string GetPath(string type, string nameToFind, bool fullPath = false, string[] foldersToSearch = null)
-		{
-			return GetPath(type, UMAUtils.StringToHash(nameToFind), fullPath, foldersToSearch);
-		}*/
-
-		/*
-		/// <summary>
-		/// Get a path for the given type and namehash  out of the index, optionally filtering result based on specified folders
-		/// </summary>
-		public string GetPath(string type, int nameHash, bool fullPath = false, string[] foldersToSearch = null)
-		{
-			for (int i = 0; i < data.Length; i++)
-			{
-				if (data[i].type == type)
-				{
-					var foundPath = data[i].Get(nameHash);
-					if (foldersToSearch != null && foldersToSearch.Length > 0)
-					{
-						for (int ii = 0; ii < foldersToSearch.Length; ii++)
-						{
-							if (foundPath.IndexOf(foldersToSearch[ii]) > -1)
-							{
-								return foundPath;
-							}
-						}
-					}
-					else
-					{
-						return foundPath;
-					}
-				}
-			}
-			return "";
-		}*/
-		/*
-		/// <summary>
-		/// Get a path out of the index for the given name, optionally filtering result based on specified folders
-		/// </summary>
-		public string GetPath<T>(string nameToFind, string[] foldersToSearch = null) where T : UnityEngine.Object
-		{
-			return GetPath<T>(UMAUtils.StringToHash(nameToFind), foldersToSearch);
-		}
-		*/
-		/*/// <summary>
-		/// Get a path out of the index for the given nameHash, optionally filtering result based on specified folders
-		/// </summary>
-		public string GetPath<T>(int nameHash, string[] foldersToSearch = null) where T : UnityEngine.Object
-		{
-			for (int i = 0; i < data.Length; i++)
-			{
-				if (data[i].type == typeof(T).ToString())
-				{
-					var foundPath = data[i].Get(nameHash);
-					if (foldersToSearch != null && foldersToSearch.Length > 0)
-					{
-						for (int ii = 0; ii < foldersToSearch.Length; ii++)
-						{
-							if (foundPath.IndexOf(foldersToSearch[ii]) > -1)
-							{
-								return foundPath;
-							}
-						}
-					}
-					else
-					{
-						return foundPath;
-					}
-				}
-			}
-			return "";
-		}*/
-		/*
-		/// <summary>
-		/// Get all the paths for a given type out of the index, optionally filtering result based on specified folders
-		/// </summary>
-		public string[] GetPaths<T>(string[] foldersToSearch = null) where T : UnityEngine.Object
-		{
-			List<string> foundPaths = new List<string>();
-			for (int i = 0; i < data.Length; i++)
-			{
-				if (data[i].type == typeof(T).ToString())
-				{
-					for (int ii = 0; ii < data[i].typeIndex.Length; ii++)
-					{
-						if (foldersToSearch != null && foldersToSearch.Length > 0)
-						{
-							for (int iii = 0; iii < foldersToSearch.Length; iii++)
-							{
-								if (data[i].typeIndex[ii].fullPath.IndexOf(foldersToSearch[iii]) > -1)
-								{
-									foundPaths.Add(data[i].typeIndex[ii].fullPath);
-									break;
-								}
-							}
-						}
-						else
-						{
-							foundPaths.Add(data[i].typeIndex[ii].fullPath);
-						}
-					}
-				}
-			}
-			return foundPaths.ToArray();
-		}*/
 
 		#region SPECIAL TYPES
 		[System.Serializable]
@@ -463,12 +282,6 @@ namespace UMA
 			public IndexData[] typeIndex = new IndexData[0];
 
 			public TypeIndex() { }
-
-			/*public TypeIndex(string _type)
-			{
-				type = _type;
-				typeIndex = new IndexData[0];
-			}*/
 
 			public TypeIndex(string _type, int _nameHash, string _fullPath = "", string _name = "", UnityEngine.Object _obj = null)
 			{
@@ -506,7 +319,7 @@ namespace UMA
 				if (!found)
 				{
 					var list = new IndexData[typeIndex.Length + 1];
-					Array.Copy(typeIndex, list, typeIndex.Length);
+					Array.Copy(typeIndex, list, typeIndex.Length);//the crashing issue could be to do with this array copy- or ANY of the array copies because they are shallow
 					if (obj != null)
 						list[typeIndex.Length] = new IndexData(obj, nameHash, fullPath, objName);
 					else
@@ -552,7 +365,7 @@ namespace UMA
 				}
 				typeIndex = list;
 			}
-			//NEW==== NEW === NEW
+
 			public UnityEngine.Object Get(string name)
 			{
 				for (int i = 0; i < typeIndex.Length; i++)
@@ -575,17 +388,6 @@ namespace UMA
 				}
 				return null;
 			}
-			/*public string Get(int nameHash)
-			{
-				for (int i = 0; i < typeIndex.Length; i++)
-				{
-					if (typeIndex[i].nameHash == nameHash)
-					{
-						return typeIndex[i].fullPath;
-					}
-				}
-				return "";
-			}*/
 		}
 
 		[System.Serializable]
