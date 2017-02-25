@@ -502,7 +502,7 @@ namespace UMA.PoseTools
 			return asset;
 		}
 
-		[MenuItem("UMA/Pose Tools/UMA Bone Pose Builder")]
+		[MenuItem("UMA/Pose Tools/Bone Pose Builder")]
 		public static void OpenUMABonePoseBuildWindow()
 		{
 			EditorWindow win = EditorWindow.GetWindow(typeof(UMABonePoseBuildWindow));

@@ -264,7 +264,7 @@ namespace UMA.PoseTools
 			return asset;
 		}
 
-		[MenuItem("UMA/Pose Tools/UMA Bone Pose Mixer")]
+		[MenuItem("UMA/Pose Tools/Bone Pose Mixer")]
 		public static void OpenUMABonePoseBuildWindow()
 		{
 			EditorWindow win = EditorWindow.GetWindow(typeof(UMABonePoseMixerWindow));
