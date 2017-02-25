@@ -3348,7 +3348,7 @@ MonoBehaviour:
       max: 10
     valuesY:
       val:
-        value: 0.003
+        value: -0.003
         modifiers:
         - modifier: 4
           DNATypeName: upperMuscle

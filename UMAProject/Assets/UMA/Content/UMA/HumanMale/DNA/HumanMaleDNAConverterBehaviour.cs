@@ -502,7 +502,7 @@ public class HumanMaleDNAConverterBehaviour : HumanoidDNAConverterBehaviour
 		skeleton.SetPositionRelative(leftShoulderHash,
 		                     new Vector3(
 			Mathf.Clamp(0, -10, 10),
-			Mathf.Clamp(0.003f + (umaDna.upperMuscle - 0.5f) * -0.265f, -0.085f, 0.015f),
+			Mathf.Clamp(-0.003f + (umaDna.upperMuscle - 0.5f) * -0.265f, -0.085f, 0.015f),
 			Mathf.Clamp(0, -10, 10)));
 		skeleton.SetPositionRelative(rightShoulderHash,
 		                     new Vector3(
