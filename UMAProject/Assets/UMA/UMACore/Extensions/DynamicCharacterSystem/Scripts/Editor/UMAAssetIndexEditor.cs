@@ -540,10 +540,10 @@ namespace UMAEditor
 			serializedObject.ApplyModifiedProperties();
 			if (changed)
 			{
-				//EditorUtility.SetDirty(target);
-				//AssetDatabase.SaveAssets();
-				EditorApplication.update -= SaveOnUpdate;
-				EditorApplication.update += SaveOnUpdate;
+				EditorUtility.SetDirty(target);
+				AssetDatabase.SaveAssets();
+				//EditorApplication.update -= SaveOnUpdate;
+				//EditorApplication.update += SaveOnUpdate;
 			}
 		}
 		

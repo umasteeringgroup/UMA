@@ -179,17 +179,18 @@ namespace UMA
 			if (BuildPipeline.isBuildingPlayer || UnityEditorInternal.InternalEditorUtility.inBatchMode || Application.isPlaying)
 				return;
 			//We need to check if this is a folder because if it is then its the contents rather than the folder itself that we want
+			//HOWEVER Moving assets actually works- just not folders
 			if (!Path.HasExtension(assetPrevPath))
 			{
 				folderToSelectAfterMove = assetNewPath;
-				var thisFolderContentsUGUIDS = AssetDatabase.FindAssets("t:Object", new string[1] { assetPrevPath });
+				/*var thisFolderContentsUGUIDS = AssetDatabase.FindAssets("t:Object", new string[1] { assetPrevPath });
 				for (int i = 0; i < thisFolderContentsUGUIDS.Length; i++)
 				{
 					var prevPath = AssetDatabase.GUIDToAssetPath(thisFolderContentsUGUIDS[i]);
 					var newPath = prevPath.Replace(assetPrevPath, assetNewPath);
 					if(PathIsValid(prevPath) && !AMPMovedAssetsContains(prevPath, newPath))
 						AMPMovedAssets.Add(new AMPMovedAsset(prevPath, newPath));
-				}
+				}*/
 			}
 			else
 			{
@@ -200,7 +201,7 @@ namespace UMA
 			{
 				//Try removing assets that were live but which are now going to be saved in Resources
 				//This means assets DO move BUTAssetDatabase still gets shafted and builds crash.
-				MakeAssetsMovingIntoResourcesNotLive();
+				//MakeAssetsMovingIntoResourcesNotLive();
 				//I dont think we can save the Index tho because this will involve modifying AssetDatabase
 				//so if this doesn't work (which I dont think it will) the only thing we can do is store these assets
 				//and move them ourselves after they have been removed from the index
@@ -331,12 +332,14 @@ namespace UMA
 				bool ampMovedAssetsContains = false;
 				for(int i = 0; i < movedAssets.Length; i++)
 				{
-					if (AMPMovedAssetsContains("", movedAssets[i]))
-						ampMovedAssetsContains = true;
-				}
-				if (ampMovedAssetsContains)
+					Debug.Log("MOVED ASSET " + i + ": FROM " + movedFromAssetPaths[i] + " TO " + movedAssets[i]);
+					if (PathIsValid(movedFromAssetPaths[i]) && !AMPMovedAssetsContains(movedFromAssetPaths[i], movedAssets[i]))
+						AMPMovedAssets.Add(new AMPMovedAsset(movedFromAssetPaths[i], movedAssets[i]));
+                }
+				if (AMPMovedAssets.Count > 0)
 				{
-					//THIS STILL FUCKING FU*CKING FUCKING STILL TRASHES THE LIBRARY
+					MakeAssetsMovingIntoResourcesNotLive();
+					//THIS STILL TRASHES THE LIBRARY
 					//AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);//makes no difference
 					//
 					//CAUSES CRASH
@@ -375,26 +378,31 @@ namespace UMA
 			madeAssetsMovingIntoResourcesNotLive = true;
 			foreach (AMPMovedAsset path in AMPMovedAssets)
 			{
+				//If the asset has moved into Resources
 				if (!InResources(path.prevPath) && InResources(path.newPath))
 				{
+					//And was previously manually live
 					if (_buildIndex.Contains(path.prevPath))
 					{
+						//Remove it so it looses its Resources refrence
 						Debug.Log("MakeAssetsMovingIntoResourcesNotLive for path " + path.prevPath);
 						_buildIndex.RemovePath(path.prevPath);
 						changed = true;
                     }
 				}
 			}
-			/*if (changed)
+			if (changed)
 			{
 				EditorUtility.SetDirty(this);
 				AssetDatabase.SaveAssets();
 				//put this in here directly since maybe removing the delay call also removes the update call?
-				EditorUtility.UnloadUnusedAssetsImmediate(true);
+				//Possibly the following causes a CRASH when moving the folder
+				//EditorUtility.UnloadUnusedAssetsImmediate(true);
+
 				//EditorApplication.update -= DoMovedAssets;
 				//EditorApplication.update += DoMovedAssets;
-				AMPMovedAssets.Clear();//wah?!? Doing this made it work!!!??? Well made the folder move ok- still wouldn't build
-			}*/
+				//AMPMovedAssets.Clear();//wah?!? Doing this made it work!!!??? Well made the folder move ok- still wouldn't build- actually dont think it was this
+			}
 			return changed;
         }
 		/// <summary>
@@ -436,6 +444,7 @@ namespace UMA
 			{
 				madeAssetsMovingIntoResourcesNotLive = false;
             }*/
+
 			for (int i = 0; i < AMPMovedAssets.Count; i++)
 			{
 				//if the asset is NOT slot/overlay/race its asset hash may have also changed (because its previous hash was based on its asset name and that might be what has changed)
@@ -443,6 +452,11 @@ namespace UMA
 				var thisAsset = AssetDatabase.LoadMainAssetAtPath(AMPMovedAssets[i].newPath);
 				if (thisAsset)
 				{
+					var currentDeps = AssetDatabase.GetDependencies(AMPMovedAssets[i].newPath);
+					for(int di = 0; di < currentDeps.Length; di++)
+					{
+						Debug.Log(AMPMovedAssets[i].newPath + " had DEPENDENCY on " + currentDeps[di]);
+					}
 					if (!IsAssetATrackedType(thisAsset))
 						continue;
 
@@ -521,7 +535,7 @@ namespace UMA
 						}
 					}
 					//actually looks like we can get a folder using  AssetDatabase.LoadAssetAtPath for a folder TODO check
-					Resources.UnloadAsset(thisAsset);
+					//Resources.UnloadAsset(thisAsset);
 				}
 			}
 			AMPMovedAssets.Clear();
@@ -545,6 +559,8 @@ namespace UMA
 				if(lastMovedObject != null)
 					Selection.activeObject = lastMovedObject;
 			}*/
+			//Elis suggestion to actually unload the asset
+			//Resources.UnloadAsset(this);
 		}
 
 		private void CleanUnusedAssets()
