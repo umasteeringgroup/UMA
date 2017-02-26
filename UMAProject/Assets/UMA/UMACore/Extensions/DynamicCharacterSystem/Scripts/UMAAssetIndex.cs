@@ -158,7 +158,14 @@ namespace UMA
 
 		private void GenerateLists()
 		{
+			//Saving the lists causes a Crash on startup!!! But we dont seem to need to save ?!?
+			//bool saveAfter = _buildIndex.Count() == 0 ? true : false;
 			GetAllAvailableUMAAssets();
+			//if (saveAfter)
+			//{
+			//	EditorUtility.SetDirty(this);
+			//	AssetDatabase.SaveAssets();
+			//}
 		}
 
 		#region ASSET MODIFICATION PROCESSOR CALLBACKS
@@ -191,9 +198,25 @@ namespace UMA
 			}
 			if (AMPMovedAssets.Count > 0)
 			{
-				EditorApplication.update -= DoMovedAssets;
-				EditorApplication.update += DoMovedAssets;
+				//Try removing assets that were live but which are now going to be saved in Resources
+				//This means assets DO move BUTAssetDatabase still gets shafted and builds crash.
+				MakeAssetsMovingIntoResourcesNotLive();
+				//I dont think we can save the Index tho because this will involve modifying AssetDatabase
+				//so if this doesn't work (which I dont think it will) the only thing we can do is store these assets
+				//and move them ourselves after they have been removed from the index
+				//this will involved moving EVERYTHING we were told about though because we can only return AssetMoveResult.DidMove;
+				//and that will cover all the assets in the array
+				//
+				//so maybe we log the moved assets but DONT process until they come into OnEditorDuplicatedAsset
+				//MAKES NO DIFFERENCE
+				//EditorApplication.update -= DoMovedAssets;
+				//EditorApplication.update += DoMovedAssets;
 			}
+		}
+
+		public void OnAssetBundleNameChange(string assetPath, string previousAssetBundleName, string newAssetBundleName)
+		{
+			Debug.Log("assetBundleNmeChange from " + previousAssetBundleName + " to " + newAssetBundleName + " for path " + assetPath);
 		}
 
 		/// <summary>
@@ -258,7 +281,8 @@ namespace UMA
 			{
 				if (PathIsValid(assetsToSave[i]) && AMPSavedAssets.Contains(assetsToSave[i]) == false)
 				{
-					AMPSavedAssets.Add(assetsToSave[i]);
+					Debug.Log("AMPSavedAssets added " + assetsToSave[i]);
+                    AMPSavedAssets.Add(assetsToSave[i]);
 				}
 			}
 			if (AMPSavedAssets.Count > 0)
@@ -275,18 +299,58 @@ namespace UMA
 		{
 			if (BuildPipeline.isBuildingPlayer || UnityEditorInternal.InternalEditorUtility.inBatchMode || Application.isPlaying)
 				return;
-			//we need to loop this- Project settings is still getting through
-			for (int i = 0; i < importedAssets.Length; i++)
+
+			Debug.Log("OnEditorDuplicatedAsset happens with "+ importedAssets.Length+ " importedAssets "+ deletedAssets.Length+ " deletedAssets "+ movedAssets.Length+ " movedAssets "+ movedFromAssetPaths.Length+ " movedFromAssetPaths");
+			//saved assets are considered imported but are also saved before here (and not picked up by the IF in here)- so they get handled twice
+			if (importedAssets.Length > 0)
 			{
-				if (PathIsValid(importedAssets[i]) && AMPCreatedAssets.Contains(importedAssets[i]) == false)
+				for (int i = 0; i < importedAssets.Length; i++)
 				{
-					AMPCreatedAssets.Add(importedAssets[i]);
+					if (PathIsValid(importedAssets[i]) && AMPCreatedAssets.Contains(importedAssets[i]) == false && AMPSavedAssets.Contains(importedAssets[i]) == false)
+					{
+						AMPCreatedAssets.Add(importedAssets[i]);
+					}
+					else
+					{
+						if (!PathIsValid(importedAssets[i]))
+							Debug.Log("OnEditorDuplicatedAsset invalid imported asset path " + importedAssets[i]);
+						if (AMPCreatedAssets.Contains(importedAssets[i]))//it knows about these
+							Debug.Log("OnEditorDuplicatedAsset AMPCreatedAssets.Contains already had path " + importedAssets[i]);
+						if (AMPSavedAssets.Contains(importedAssets[i]))//but not these
+							Debug.Log("OnEditorDuplicatedAsset AMPCreatedAssets.Contains already had path " + importedAssets[i]);
+					}
+				}
+				if (AMPCreatedAssets.Count > 0)
+				{
+					EditorApplication.update -= DoEditorDuplicatedAssets;
+					EditorApplication.update += DoEditorDuplicatedAssets;
 				}
 			}
-			if (AMPCreatedAssets.Count > 0)
+			if(movedAssets.Length > 0)
 			{
-				EditorApplication.update -= DoEditorDuplicatedAssets;
-				EditorApplication.update += DoEditorDuplicatedAssets;
+				bool ampMovedAssetsContains = false;
+				for(int i = 0; i < movedAssets.Length; i++)
+				{
+					if (AMPMovedAssetsContains("", movedAssets[i]))
+						ampMovedAssetsContains = true;
+				}
+				if (ampMovedAssetsContains)
+				{
+					//THIS STILL FUCKING FU*CKING FUCKING STILL TRASHES THE LIBRARY
+					//AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);//makes no difference
+					//
+					//CAUSES CRASH
+					/*EditorUtility.SetDirty(this);
+					AssetDatabase.SaveAssets();
+					EditorUtility.UnloadUnusedAssetsImmediate(true);*/
+					//
+					//Makes no difference
+					/*EditorUtility.SetDirty(this);
+					AssetDatabase.SaveAssets();*/
+					EditorApplication.update -= DoMovedAssets;
+					EditorApplication.update += DoMovedAssets;
+				}
+
 			}
 		}
 
@@ -303,6 +367,36 @@ namespace UMA
 
 		#region ASSET MODIFICATION PROCESSOR METHODS
 
+		bool madeAssetsMovingIntoResourcesNotLive = false;
+
+		private bool MakeAssetsMovingIntoResourcesNotLive()
+		{
+			bool changed = false;
+			madeAssetsMovingIntoResourcesNotLive = true;
+			foreach (AMPMovedAsset path in AMPMovedAssets)
+			{
+				if (!InResources(path.prevPath) && InResources(path.newPath))
+				{
+					if (_buildIndex.Contains(path.prevPath))
+					{
+						Debug.Log("MakeAssetsMovingIntoResourcesNotLive for path " + path.prevPath);
+						_buildIndex.RemovePath(path.prevPath);
+						changed = true;
+                    }
+				}
+			}
+			/*if (changed)
+			{
+				EditorUtility.SetDirty(this);
+				AssetDatabase.SaveAssets();
+				//put this in here directly since maybe removing the delay call also removes the update call?
+				EditorUtility.UnloadUnusedAssetsImmediate(true);
+				//EditorApplication.update -= DoMovedAssets;
+				//EditorApplication.update += DoMovedAssets;
+				AMPMovedAssets.Clear();//wah?!? Doing this made it work!!!??? Well made the folder move ok- still wouldn't build
+			}*/
+			return changed;
+        }
 		/// <summary>
 		/// Processers the AMPMovedAssets after AssetModificationProcessor has finished moving assets
 		/// </summary>
@@ -310,46 +404,76 @@ namespace UMA
 		{
 			if (EditorApplication.isCompiling || EditorApplication.isUpdating)
 				return;
+
 			EditorApplication.update -= DoMovedAssets;
-			UnityEngine.Object lastMovedObject = null;
-			//assets have moved.
-			foreach (AMPMovedAsset path in AMPMovedAssets)
+			//the thinking here was that we needed to wait but maybe we dont have to
+			//OR maybe we need to wait for the serialized object in the window to update
+			//closing the window itself should test this
+			/*if (madeAssetsMovingIntoResourcesNotLive == false)
+			{
+				//Do the following and come back after
+				//Doing this makes things never complete
+				//folder moves ok- but then we crash
+				//maybe because its in the middle of an async operation?
+				MakeAssetsMovingIntoResourcesNotLive();
+				return;
+			}
+			else
+			{
+				madeAssetsMovingIntoResourcesNotLive = false;
+            }*/
+			//MakeAssetsMovingIntoResourcesNotLive returns true if it changed anything and needs the asset to refresh before we continue -currently causes loop
+			//NONE OF THE FOLLOWING HELPS SO DONT BOTHER
+			/*if (madeAssetsMovingIntoResourcesNotLive == false)
+			{
+				if (MakeAssetsMovingIntoResourcesNotLive())
+				{
+					Debug.Log("MakeAssetsMovingIntoResourcesNotLive required waiting");
+					return;
+				}
+			}
+			else
+			{
+				madeAssetsMovingIntoResourcesNotLive = false;
+            }*/
+			for (int i = 0; i < AMPMovedAssets.Count; i++)
 			{
 				//if the asset is NOT slot/overlay/race its asset hash may have also changed (because its previous hash was based on its asset name and that might be what has changed)
 				//But to determine that we need to load the asset, because we dont know if its slot/overlay/race until we do
-				var thisAsset = AssetDatabase.LoadMainAssetAtPath(path.newPath);
+				var thisAsset = AssetDatabase.LoadMainAssetAtPath(AMPMovedAssets[i].newPath);
 				if (thisAsset)
 				{
 					if (!IsAssetATrackedType(thisAsset))
 						continue;
 
-					lastMovedObject = thisAsset;
+					//this refrencing the object too
+					//lastMovedObject = thisAsset;
 
 					int thisAssetHash = -1;
 					string thisAssetName = "";
 					GetAssetHashAndNames(thisAsset, ref thisAssetHash, ref thisAssetName);
 					//find the asset in the index using the prev path
-					var fullIndexData = _fullIndex.GetEntryFromPath(path.prevPath);
+					var fullIndexData = _fullIndex.GetEntryFromPath(AMPMovedAssets[i].prevPath);
 					if (fullIndexData != null)
 					{
 						//If the asset has been moved INTO an assetbundle, we need to remove it from the FullIndex and the Build Index (if it was in there)
 						//and add the new path to the assetBundleIndex
-						if (InAssetBundle(path.newPath, thisAsset.name))
+						if (InAssetBundle(AMPMovedAssets[i].newPath, thisAsset.name))
 						{
-							_fullIndex.RemovePath(path.prevPath);
-							if (_buildIndex.Contains(path.prevPath))
-								_buildIndex.RemovePath(path.prevPath);
+							_fullIndex.RemovePath(AMPMovedAssets[i].prevPath);
+							if (_buildIndex.Contains(AMPMovedAssets[i].prevPath))
+								_buildIndex.RemovePath(AMPMovedAssets[i].prevPath);
 							_assetBundleIndex.AddPath(thisAsset, thisAssetHash, thisAssetName);
 						}
 						else
 						{
 							//set the path for the asset to be the new path
 							//and update the name/hash stuff
-							fullIndexData.fullPath = path.newPath;
+							fullIndexData.fullPath = AMPMovedAssets[i].newPath;
 							fullIndexData.name = thisAssetName;
 							fullIndexData.nameHash = thisAssetHash;
 							//THEN check if the asset was in the BuildList
-							var buildIndexData = _buildIndex.GetEntryFromPath(path.prevPath);
+							var buildIndexData = _buildIndex.GetEntryFromPath(AMPMovedAssets[i].prevPath);
 							if (buildIndexData != null)
 							{
 								buildIndexData.fullPath = fullIndexData.fullPath;
@@ -357,12 +481,12 @@ namespace UMA
 								buildIndexData.nameHash = fullIndexData.nameHash;
 							}
 							//Then check if it was moved in or out of Resources
-							if (InResources(path.prevPath) && !InResources(path.newPath))
+							if (InResources(AMPMovedAssets[i].prevPath) && !InResources(AMPMovedAssets[i].newPath))
 							{
 								//remove from build index
 								MakeAssetNotLive(fullIndexData, thisAsset.GetType().ToString());
 							}
-							else if (!InResources(path.prevPath) && InResources(path.newPath))
+							else if (!InResources(AMPMovedAssets[i].prevPath) && InResources(AMPMovedAssets[i].newPath))
 							{
 								//add to build index
 								MakeAssetLive(fullIndexData, thisAsset.GetType().ToString());
@@ -372,21 +496,21 @@ namespace UMA
 					else
 					{
 						//if fullIndexData is null it will mean the asset was previously in an asset bundle but now is not
-						if (!InAssetBundle(path.newPath, thisAsset.name))
+						if (!InAssetBundle(AMPMovedAssets[i].newPath, thisAsset.name))
 						{
 							_fullIndex.AddPath(thisAsset, thisAssetHash, thisAssetName);
 							//Automatically add anything in a Resources folder because it will already be included in the game
-							if (InResources(path.newPath))
-								_buildIndex.AddPath(thisAsset, thisAssetHash, thisAssetName, true);
+							if (InResources(AMPMovedAssets[i].newPath))
+								_buildIndex.AddPath(thisAsset, thisAssetHash, thisAssetName, false);
 						}
 					}
-					var assetBundleIndexData = _assetBundleIndex.GetEntryFromPath(path.prevPath);
+					var assetBundleIndexData = _assetBundleIndex.GetEntryFromPath(AMPMovedAssets[i].prevPath);
 					if (assetBundleIndexData != null)
 					{
-						if (InAssetBundle(path.newPath, thisAsset.name))
+						if (InAssetBundle(AMPMovedAssets[i].newPath, thisAsset.name))
 						{
 							//if the asset is still in an assetBundle update its path
-							assetBundleIndexData.fullPath = path.newPath;
+							assetBundleIndexData.fullPath = AMPMovedAssets[i].newPath;
 							assetBundleIndexData.name = thisAssetName;
 							assetBundleIndexData.nameHash = thisAssetHash;
 						}
@@ -397,6 +521,7 @@ namespace UMA
 						}
 					}
 					//actually looks like we can get a folder using  AssetDatabase.LoadAssetAtPath for a folder TODO check
+					Resources.UnloadAsset(thisAsset);
 				}
 			}
 			AMPMovedAssets.Clear();
@@ -415,21 +540,24 @@ namespace UMA
 					Selection.activeObject = folderObject;
 				folderToSelectAfterMove = "";
 			}
-			else
+			/*else
 			{
 				if(lastMovedObject != null)
 					Selection.activeObject = lastMovedObject;
-			}
+			}*/
 		}
 
 		private void CleanUnusedAssets()
 		{
 			EditorApplication.delayCall -= CleanUnusedAssets;
-			AssetDatabase.Refresh();//apparently this also calls the following
-			Resources.UnloadUnusedAssets();
+			Debug.Log("CleanUnusedAssets");
+			//AssetDatabase.Refresh();//apparently this also calls the following
+			//Resources.UnloadUnusedAssets();
 			//we could also try the following - where true will unload assets even if they are refrenced by scripts
 			//But we need to be very careful that this does not make the normal libraries (and other things) not work
-			//EditorUtility.UnloadUnusedAssetsImmediate(true);
+			//
+			//
+			EditorUtility.UnloadUnusedAssetsImmediate(true);
         }
 
 		/// <summary>
@@ -448,7 +576,8 @@ namespace UMA
 				_assetBundleIndex.RemovePath(path);
 			}
 			AMPDeletedAssets.Clear();
-			SortIndexes();
+			//Dont need sort here because we wont have changed 
+			//SortIndexes();
 			CheckAndUpdateWindow();
 			EditorUtility.SetDirty(this);
 			AssetDatabase.SaveAssets();
@@ -490,7 +619,7 @@ namespace UMA
 					_fullIndex.AddPath(thisAsset, thisAssetHash, thisAssetName);
 					//Automatically add anything in a Resources folder because it will already be included in the game
 					if (InResources(path))
-						_buildIndex.AddPath(thisAsset, thisAssetHash, thisAssetName, true);
+						_buildIndex.AddPath(thisAsset, thisAssetHash, thisAssetName, false);
 				}
 			}
 			AMPCreatedAssets.Clear();
@@ -514,8 +643,8 @@ namespace UMA
 			//assets were saved
 			foreach (string path in AMPSavedAssets)
 			{
-				if (path.IndexOf(".meta") > -1)
-					continue;
+				//if (path.IndexOf(".meta") > -1)
+				//	continue;
 				var thisAsset = AssetDatabase.LoadMainAssetAtPath(path);
 				int thisAssetHash = -1;
 				string thisAssetName = "";
@@ -544,7 +673,8 @@ namespace UMA
 				}
 			}
 			AMPSavedAssets.Clear();
-			SortIndexes();
+			//We dont need to sort here really because the folder structure wont have changed
+			//SortIndexes();
 			CheckAndUpdateWindow();
 			EditorUtility.SetDirty(this);
 			AssetDatabase.SaveAssets();
@@ -566,6 +696,8 @@ namespace UMA
 				_buildIndex = new UMAAssetIndexData();
 			_assetBundleIndex = new UMAAssetIndexData();
 			GenerateLists();
+			EditorUtility.SetDirty(this);
+			AssetDatabase.SaveAssets();
 		}
 
 		/// <summary>
@@ -645,7 +777,10 @@ namespace UMA
 							_fullIndex.AddPath(thisAsset, thisAssetHash, thisAssetName);
 							//Automatically add anything in a Resources folder because it will already be included in the game
 							if (InResources(thisPath))
-								_buildIndex.AddPath(thisAsset, thisAssetHash, thisAssetName, true);
+							{
+								//Dont add refrences to assets in Resources
+								_buildIndex.AddPath(thisAsset, thisAssetHash, thisAssetName, false);
+							}
 						}
 					}
 				}
@@ -715,7 +850,11 @@ namespace UMA
 					int thisAssetHash = -1;
 					string thisAssetName = "";
 					GetAssetHashAndNames(thisAsset, ref thisAssetHash, ref thisAssetName);
-					_buildIndex.AddPath(thisAsset, thisAssetHash, thisAssetName, true);
+					//we dont want a file ref if the object is live because it was moved into Resources
+					if(InResources(fullIndexData.fullPath))
+						_buildIndex.AddPath(thisAsset, thisAssetHash, thisAssetName, false);
+					else
+						_buildIndex.AddPath(thisAsset, thisAssetHash, thisAssetName, true);
 				}
 			}
 			//SortIndexes();
@@ -742,12 +881,25 @@ namespace UMA
 
 		#region INDEX MODIFICATION HELPER METHODS
 
-		private bool AMPMovedAssetsContains(string ppath, string npath)
+		private bool AMPMovedAssetsContains(string ppath = "", string npath = "")
 		{
 			for(int i = 0; i < AMPMovedAssets.Count; i++)
 			{
-				if (AMPMovedAssets[i].prevPath == ppath && AMPMovedAssets[i].newPath == npath)
-					return true;
+				if (ppath != "" && npath != "")
+				{
+					if (AMPMovedAssets[i].prevPath == ppath && AMPMovedAssets[i].newPath == npath)
+						return true;
+				}
+				else if(ppath != "")
+				{
+					if (AMPMovedAssets[i].prevPath == ppath)
+						return true;
+                }
+				else if(npath != "")
+				{
+					if (AMPMovedAssets[i].newPath == npath)
+						return true;
+				}
 			}
 			return false;
 		}

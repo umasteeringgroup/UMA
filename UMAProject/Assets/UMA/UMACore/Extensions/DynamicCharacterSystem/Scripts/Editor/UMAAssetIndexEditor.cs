@@ -156,6 +156,27 @@ namespace UMAEditor
 				}
 			}
 		}
+
+		private UnityEngine.Object GetSerializedObjectRef(string path, string type)
+		{
+			var thisBuildIndex = serializedObject.FindProperty("_buildIndex");
+			var thisBuildIndexData = thisBuildIndex.FindPropertyRelative("data");
+			for(int i = 0; i < thisBuildIndexData.arraySize; i++)
+			{
+				if(thisBuildIndexData.GetArrayElementAtIndex(i).FindPropertyRelative("type").stringValue == type)
+				{
+					var thisTypeIndex = thisBuildIndexData.GetArrayElementAtIndex(i);
+					var thisTypeIndexDataArray = thisTypeIndex.FindPropertyRelative("typeIndex");
+					for(int ti = 0; ti < thisTypeIndexDataArray.arraySize; ti++)
+					{
+						var thisIndexData = thisTypeIndexDataArray.GetArrayElementAtIndex(ti);
+						if (thisIndexData.FindPropertyRelative("fullPath").stringValue == path)
+							return thisIndexData.FindPropertyRelative("fileReference").objectReferenceValue;
+                    }
+                }
+			}
+			return null;
+		}
 		
 		int selectedFilter = 0;
 		string[] filterOptions = new string[] { "All", "Enabled", "Disabled", "AssetName or Path", "UMAName" };
@@ -175,6 +196,8 @@ namespace UMAEditor
 			var miniInfoBut = new GUIStyle(EditorStyles.miniButton);
 			miniInfoBut.contentOffset = new Vector2(0f, 0f);
 			miniInfoBut.fontStyle = FontStyle.Bold;
+			GUIStyle italicLabel = new GUIStyle(EditorStyles.label);
+			italicLabel.fontStyle = FontStyle.Italic;
 			var currentTint = GUI.color;
 			var currenTextTint = GUI.contentColor;
 			//--TYPES TO INDEX--//
@@ -279,7 +302,6 @@ namespace UMAEditor
 							//Array.Sort(UAI.FullIndex.data[ti].typeIndex, CompareByFolderName);
                             for (int i = 0; i < UAI.FullIndex.data[ti].typeIndex.Length; i++)
 							{
-								bool assetIsLive = false;
 								//entry in the fullIndex
 								var entry = UAI.FullIndex.data[ti].typeIndex[i];
 								//check its not a duplicate
@@ -289,9 +311,26 @@ namespace UMAEditor
 								else
 									isDuplicate = true;
 								//This is the liveEntry that is actually serialized (if the asset is live)
-								var liveAsset = UAI.LoadAssetAtPath(entry.fullPath);
-								if (liveAsset != null)
+								//do we need to get the actual serialized property here maybe?
+								//var liveAsset = UAI.LoadAssetAtPath(entry.fullPath);
+								//FIND UI SLOWDOWN
+								/*var liveAsset = GetSerializedObjectRef(entry.fullPath, UAI.FullIndex.data[ti].type);
+								if (liveAsset != null || UMAAssetIndexData.GetResourcesPath(entry.fullPath) != "")
+									assetIsLive = true;*/
+								bool assetIsLive = false;
+								bool assetIsResources = false;
+								UnityEngine.Object liveAsset = null;
+								if (entry.fullPath.IndexOf("/Resources/") > -1)
+								{
 									assetIsLive = true;
+									assetIsResources = true;
+                                }
+								else
+								{
+									liveAsset = GetSerializedObjectRef(entry.fullPath, UAI.FullIndex.data[ti].type);
+									if (liveAsset != null)
+										assetIsLive = true;
+								}
 
 								//deal with filters
 								if (selectedFilter == 1 && !assetIsLive)//filter for enabled
@@ -336,7 +375,7 @@ namespace UMAEditor
 									thisFieldRect.xMin = thisToggleRect.width + thisNameRect.width;
 									thisFieldRect.width = ((itemRect.width - 30f) / 2f) - 5f;
 								}
-								if (liveAsset != null)
+								if (assetIsLive)
 									EditorGUI.DrawRect(itemRect, new Color(0.75f, 0.875f, 1f));
 								else
 									EditorGUI.DrawRect(itemRect, new Color(0.75f, 0.875f, 1f, 0.45f));
@@ -375,7 +414,7 @@ namespace UMAEditor
                                                 UAI.MakeAssetNotLive(entry, typeString);
 											}
 											//serializedObject.Update();
-											serializedObject.ApplyModifiedProperties();
+											//serializedObject.ApplyModifiedProperties();
 										}
 										changed = true;
                                     }
@@ -398,7 +437,11 @@ namespace UMAEditor
 								}
 								//we dont allow users to drop the asset in here, this is just to show it IS referenced (I might hide this)
 								EditorGUI.BeginDisabledGroup(true);
-								EditorGUI.ObjectField(thisFieldRect, liveAsset, thisType, false);
+								//Display assets in Resources with out the object preview field
+								if(assetIsResources)
+									EditorGUI.LabelField(thisFieldRect, "Asset is in Resources", italicLabel);
+								else
+									EditorGUI.ObjectField(thisFieldRect, liveAsset, thisType, false);
 								EditorGUI.EndDisabledGroup();
 							}
 						}
@@ -492,6 +535,8 @@ namespace UMAEditor
 					GUILayout.Space(vPadding);
 				}
 			}
+			//Uncomment to see the actual serialized data the index is saving
+			EditorGUILayout.PropertyField(serializedObject.FindProperty("_buildIndex"), true);
 			serializedObject.ApplyModifiedProperties();
 			if (changed)
 			{
@@ -500,8 +545,6 @@ namespace UMAEditor
 				EditorApplication.update -= SaveOnUpdate;
 				EditorApplication.update += SaveOnUpdate;
 			}
-			//Uncomment to see the actual serialized data the index is saving
-			EditorGUILayout.PropertyField(serializedObject.FindProperty("_buildIndex"),true);
 		}
 		
 		public void SaveOnUpdate()

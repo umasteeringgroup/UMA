@@ -44,6 +44,21 @@ namespace UMA
 				}
 			}
 		}
+
+		public UMAAssetIndexData Clone(UMAAssetIndexData dataToClone, bool cloneIndexedNames, bool cloneIndexedHashes, bool cloneIndexedPaths, bool cloneIndexedFileRefs)
+		{
+			var thisClone = new UMAAssetIndexData();
+			for (int i = 0; i < dataToClone.data.Length; i++)
+			{
+				thisClone.data[i] = new TypeIndex(dataToClone.data[i], cloneIndexedNames, cloneIndexedHashes, cloneIndexedPaths, cloneIndexedFileRefs);
+				for (int ii = 0; ii < thisClone.data[i].typeIndex.Length; ii++)
+				{
+					if (!_currentPaths.Contains(data[i].typeIndex[ii].fullPath))
+						_currentPaths.Add(data[i].typeIndex[ii].fullPath);
+				}
+			}
+			return thisClone;
+		}
 		/// <summary>
 		/// Returns the total number of indexed assets in all the indexed Types
 		/// </summary>
@@ -227,18 +242,19 @@ namespace UMA
 			{
 				if (data[i].type == typeof(T).ToString())
 				{
-					return data[i].Get(umaNameHash, foldersToSearch) as T;
+					return data[i].Get<T>(umaNameHash, foldersToSearch);
 				}
 			}
 			return null;
 		}
+
 		public T Get<T>(string umaName, string[] foldersToSearch = null) where T : UnityEngine.Object
 		{
 			for (int i = 0; i < data.Length; i++)
 			{
 				if (data[i].type == typeof(T).ToString())
 				{
-					return data[i].Get(umaName, foldersToSearch) as T;
+					return data[i].Get<T>(umaName, foldersToSearch);
 				}
 			}
 			return null;
@@ -253,15 +269,61 @@ namespace UMA
 				{
 					for(int i = 0; i < data[ti].typeIndex.Length; i++)
 					{
-						if (data[ti].typeIndex[i].fileReference != null)
+						if (WasEntryInFolders(data[ti].typeIndex[i], foldersToSearch))
 						{
-							if(WasEntryInFolders(data[ti].typeIndex[i], foldersToSearch))
+							if (data[ti].typeIndex[i].fileReference != null)
+							{
 								allAssets.Add(data[ti].typeIndex[i].fileReference as T);
+							}
+							else
+							{
+								var resourcesPath = GetResourcesPath(data[ti].typeIndex[i].fullPath);
+                                if (String.IsNullOrEmpty(resourcesPath))
+								{
+									Debug.LogWarning("No Resources path or fileReference was found for Index entry at path " + data[ti].typeIndex[i].fullPath);
+									continue;
+								}
+								else
+								{
+									var thisAsset = Resources.Load<T>(resourcesPath);
+									if(thisAsset == null)
+									{
+										Debug.Log("Resources could not load an asset of type " + typeof(T).ToString() + " from path " + resourcesPath);
+									}
+									else
+									{
+										allAssets.Add(thisAsset as T);
+                                    }
+								}
+							}
 						}
 					}
 				}
 			}
 			return allAssets;
+		}
+
+		/// <summary>
+		/// Gets a resources path for use with Resources.Load froma given full path. Returns an empty string if no Resources relative path was found
+		/// </summary>
+		/// <param name="fullPath">The full path relative to and including the 'Assets/' folder</param>
+		/// <returns></returns>
+		public static string GetResourcesPath(string fullPath)
+		{
+			string resourcesPath = "";
+			var resourcesPathArray = fullPath.Split(new string[] { "Resources/" }, StringSplitOptions.RemoveEmptyEntries);
+			if (resourcesPathArray.Length != 2)
+			{
+				//Debug.LogWarning("Full path given did not contain a Resources path");
+				return "";
+			}
+			var extension = Path.GetExtension(resourcesPathArray[1]);
+			resourcesPath = resourcesPathArray[1];
+			if (extension != "")
+			{
+				resourcesPath = resourcesPath.Replace(extension, "");
+			}
+			return resourcesPath;
 		}
 
 		protected static bool WasEntryInFolders(IndexData data, string[] foldersToSearch = null)
@@ -302,6 +364,30 @@ namespace UMA
 
 			public TypeIndex() { }
 
+			public TypeIndex(string _type)
+			{
+				type = _type;
+				typeIndex = new IndexData[0];
+			}
+
+			public TypeIndex(TypeIndex typeIndexToClone, bool cloneIndexNames = true, bool cloneIndexHashes = true, bool cloneIndexPaths = true, bool cloneIndexRefs = true)
+			{
+				type = typeIndexToClone.type;
+				typeIndex = new IndexData[typeIndexToClone.typeIndex.Length];
+				for(int i = 0; i < typeIndexToClone.typeIndex.Length; i++)
+				{
+					typeIndex[i] = new IndexData();
+					if (cloneIndexNames)
+						typeIndex[i].name = typeIndexToClone.typeIndex[i].name;
+					if (cloneIndexHashes)
+						typeIndex[i].nameHash = typeIndexToClone.typeIndex[i].nameHash;
+					if (cloneIndexPaths)
+						typeIndex[i].fullPath = typeIndexToClone.typeIndex[i].fullPath;
+					if (cloneIndexRefs)
+						typeIndex[i].fileReference = typeIndexToClone.typeIndex[i].fileReference;
+				}
+			}
+
 			public TypeIndex(string _type, int _nameHash, string _fullPath = "", string _name = "", UnityEngine.Object _obj = null)
 			{
 				type = _type;
@@ -331,7 +417,9 @@ namespace UMA
 				{
 					if (typeIndex[i].nameHash == nameHash && typeIndex[i].fullPath == fullPath)
 					{
-						found = true;
+						//this will make the file ref null if this indexData was previously NOT in Resources and live and then moved INTO Resources
+						typeIndex[i].fileReference = obj;
+                        found = true;
 						break;
 					}
 				}
@@ -358,6 +446,8 @@ namespace UMA
 					if(typeIndex[i].nameHash == nameHash)
 					{
 						//try removing the refrence to the resources to stop the build thinking the file is still referenced
+						//probably not needed since refs in the old list SHOULD be garbage collected once the list is set to the new list
+						//but just in case...
 						typeIndex[i].fileReference = null;
 					}
 					//if (typeIndex[i].nameHash != nameHash)
@@ -385,7 +475,10 @@ namespace UMA
 					if (typeIndex[i].fullPath == path)
 					{
 						//try removing the refrence to the resources to stop the build thinking the file is still referenced
-						typeIndex[i].fileReference = null;
+						//Resources.UnloadAsset(typeIndex[i].fileReference);//not sure this will help because
+						//typeIndex[i].fileReference = null;//Im not sure whether simply accessing this will load it back into memory
+						//I'll try a property
+						typeIndex[i].TheFileReference = null;
                     } 
 					// (typeIndex[i].fullPath != path)
 					else
@@ -399,22 +492,80 @@ namespace UMA
 
 			public UnityEngine.Object Get(string name, string[] foldersToSearch = null)
 			{
+				return Get<UnityEngine.Object>(name, foldersToSearch);
+			}
+
+			public T Get<T>(string name, string[] foldersToSearch = null) where T : UnityEngine.Object
+			{
 				for (int i = 0; i < typeIndex.Length; i++)
 				{
 					if (typeIndex[i].name == name && WasEntryInFolders(typeIndex[i], foldersToSearch))
 					{
-						return typeIndex[i].fileReference;
+						if (typeIndex[i].fileReference != null)
+						{
+							return (typeIndex[i].fileReference as T);
+						}
+						else
+						{
+							var resourcesPath = GetResourcesPath(typeIndex[i].fullPath);
+							if (String.IsNullOrEmpty(resourcesPath))
+							{
+								Debug.LogWarning("No Resources path or fileReference was found for Index entry at path " + typeIndex[i].fullPath);
+								return null;
+							}
+							else
+							{
+								var thisAsset = Resources.Load<T>(resourcesPath);
+								if (thisAsset == null)
+								{
+									Debug.Log("Resources could not load an asset from path " + resourcesPath);
+								}
+								else
+								{
+									return (thisAsset as T);
+								}
+							}
+						}
 					}
 				}
 				return null;
 			}
+
 			public UnityEngine.Object Get(int nameHash, string[] foldersToSearch = null)
+			{
+				return Get<UnityEngine.Object>(nameHash, foldersToSearch);
+			}
+            public T Get<T>(int nameHash, string[] foldersToSearch = null) where T : UnityEngine.Object
 			{
 				for (int i = 0; i < typeIndex.Length; i++)
 				{
 					if (typeIndex[i].nameHash == nameHash && WasEntryInFolders(typeIndex[i], foldersToSearch))
 					{
-						return typeIndex[i].fileReference;
+						if (typeIndex[i].fileReference != null)
+						{
+							return (typeIndex[i].fileReference as T);
+						}
+						else
+						{
+							var resourcesPath = GetResourcesPath(typeIndex[i].fullPath);
+							if (String.IsNullOrEmpty(resourcesPath))
+							{
+								Debug.LogWarning("No Resources path or fileReference was found for Index entry at path " + typeIndex[i].fullPath);
+								return null;
+							}
+							else
+							{
+								var thisAsset = Resources.Load<T>(resourcesPath);
+								if (thisAsset == null)
+								{
+									Debug.Log("Resources could not load an asset from path " + resourcesPath);
+								}
+								else
+								{
+									return (thisAsset as T);
+								}
+							}
+						}
 					}
 				}
 				return null;
@@ -429,6 +580,12 @@ namespace UMA
 			//someType of GUID we all agree on- I'd say a short GUID since this is a good balance between global uniueness and shortness
 			public string fullPath; //this is the full path rather than the resources path
 			public UnityEngine.Object fileReference;
+
+			public UnityEngine.Object TheFileReference
+			{
+				get { return fileReference; }
+				set { fileReference = value; }
+			}
 
 			public IndexData()
 			{
