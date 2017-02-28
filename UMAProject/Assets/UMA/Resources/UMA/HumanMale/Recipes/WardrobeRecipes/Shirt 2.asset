@@ -27,4 +27,4 @@ MonoBehaviour:
   Hides: []
   suppressWardrobeSlots: []
   activeWardrobeSet: []
-  recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"MaleTorso","scale":100,"copyIdx":-1,"overlays":[{"id":"MaleShirt01","colorIdx":0,"rect":[0,1024,2048,1024]},{"id":"MaleShirt01Color","colorIdx":1,"rect":[0,1024,2048,1024]}]}],"colors":[],"fColors":[{"name":"Shirt","colors":[106,4,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"ShirtAccent","colors":[232,8,8,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":2,"race":"HumanMale","packedDna":[]}'
+  recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"MaleTorso","scale":100,"copyIdx":-1,"overlays":[{"id":"MaleShirt01","colorIdx":0,"rect":[0,1024,2048,1024]},{"id":"MaleShirt01Color","colorIdx":1,"rect":[0,1024,2048,1024]}]}],"colors":[],"fColors":[{"name":"Shirt","colors":[106,4,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"ShirtAccent","colors":[232,8,8,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":2,"race":"","packedDna":[]}'

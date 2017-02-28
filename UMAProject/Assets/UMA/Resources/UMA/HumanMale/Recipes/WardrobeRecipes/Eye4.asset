@@ -27,4 +27,4 @@ MonoBehaviour:
   Hides: []
   suppressWardrobeSlots: []
   activeWardrobeSet: []
-  recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"MaleEyes","scale":100,"copyIdx":-1,"overlays":[{"id":"Cat_eye_Alternate_adjust","colorIdx":0,"rect":[64,64,128,128]}]}],"colors":[],"fColors":[{"name":"Eyes","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"HumanMale","packedDna":[]}'
+  recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"MaleEyes","scale":100,"copyIdx":-1,"overlays":[{"id":"Cat_eye_Alternate_adjust","colorIdx":0,"rect":[64,64,128,128]}]}],"colors":[],"fColors":[{"name":"Eyes","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"","packedDna":[]}'
