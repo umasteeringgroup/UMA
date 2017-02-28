@@ -26,6 +26,7 @@ namespace UMAEditor
 			{"UMAAssetsInBuildInfo", false },
 			{"UMAAssetBundleAssets", false },
 			{"UMAAssetBundleAssetsInfo", false },
+			{ "IndexMaintenance", false }
 		};
 		private static Dictionary<string, bool> expandedBuildTypes = new Dictionary<string, bool>();
 		private static Dictionary<string, bool> expandedBundleTypes = new Dictionary<string, bool>();
@@ -191,7 +192,7 @@ namespace UMAEditor
 			infoPara.margin = new RectOffset(infoPara.margin.left, infoPara.margin.right, 0, 0);
 			GUIStyle infoParaSoft = new GUIStyle(infoPara);
 			infoParaSoft.normal.textColor = new Color(infoParaSoft.normal.textColor.r, infoParaSoft.normal.textColor.g, infoParaSoft.normal.textColor.b, 0.5f);
-            GUIStyle boldFoldout = new GUIStyle(EditorStyles.foldout);
+			GUIStyle boldFoldout = new GUIStyle(EditorStyles.foldout);
 			boldFoldout.fontStyle = FontStyle.Bold;
 			var miniInfoBut = new GUIStyle(EditorStyles.miniButton);
 			miniInfoBut.contentOffset = new Vector2(0f, 0f);
@@ -300,7 +301,11 @@ namespace UMAEditor
 							List<string> uniqueNames = new List<string>();
 							//Id really like to sort this array by path but cant work out how to do it
 							//Array.Sort(UAI.FullIndex.data[ti].typeIndex, CompareByFolderName);
-                            for (int i = 0; i < UAI.FullIndex.data[ti].typeIndex.Length; i++)
+							bool wholeFolderLive = true;
+							int countInFolder = 0;
+							Rect folderRect = new Rect();
+							Rect folderToggleRect = new Rect();
+							for (int i = 0; i < UAI.FullIndex.data[ti].typeIndex.Length; i++)
 							{
 								//entry in the fullIndex
 								var entry = UAI.FullIndex.data[ti].typeIndex[i];
@@ -310,13 +315,7 @@ namespace UMAEditor
 									uniqueNames.Add(entry.name);
 								else
 									isDuplicate = true;
-								//This is the liveEntry that is actually serialized (if the asset is live)
-								//do we need to get the actual serialized property here maybe?
-								//var liveAsset = UAI.LoadAssetAtPath(entry.fullPath);
-								//FIND UI SLOWDOWN
-								/*var liveAsset = GetSerializedObjectRef(entry.fullPath, UAI.FullIndex.data[ti].type);
-								if (liveAsset != null || UMAAssetIndexData.GetResourcesPath(entry.fullPath) != "")
-									assetIsLive = true;*/
+
 								bool assetIsLive = false;
 								bool assetIsResources = false;
 								UnityEngine.Object liveAsset = null;
@@ -332,7 +331,8 @@ namespace UMAEditor
 									if (liveAsset != null)
 										assetIsLive = true;
 								}
-
+								wholeFolderLive = wholeFolderLive == false ? false : assetIsLive;
+								countInFolder++;
 								//deal with filters
 								if (selectedFilter == 1 && !assetIsLive)//filter for enabled
 									continue;
@@ -343,10 +343,34 @@ namespace UMAEditor
 								else if (selectedFilter == 4 && stringFilter.Length >= 3 && entry.name.IndexOf(stringFilter) == -1)
 									continue;
 								//otherwise we are good to go
+								//if the NEXT folder is going to be a different one output the toggle if the folder contained more than two things
+								if((i+1) != UAI.FullIndex.data[ti].typeIndex.Length)
+								{
+									if(lastFolder != Path.GetDirectoryName(UAI.FullIndex.data[ti].typeIndex[i + 1].fullPath) && countInFolder >= 2)
+									{
+										if (lastFolder.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).IndexOf("/Resources/") == -1)
+										{
+											EditorGUI.BeginChangeCheck();
+											var newWholeFolderLive = EditorGUI.Toggle(folderToggleRect, new GUIContent("","Make all assets in this folder live"), wholeFolderLive);
+											if (EditorGUI.EndChangeCheck())
+											{
+												UAI.ToggleFolderAssets(lastFolder, UAI.FullIndex.data[ti].type, newWholeFolderLive);
+												changed = true;
+											}
+										}
+									}
+								}
 								if (lastFolder != Path.GetDirectoryName(UAI.FullIndex.data[ti].typeIndex[i].fullPath))
 								{
-									EditorGUILayout.TextArea(Path.GetDirectoryName(UAI.FullIndex.data[ti].typeIndex[i].fullPath), infoParaSoft);
 									lastFolder = Path.GetDirectoryName(UAI.FullIndex.data[ti].typeIndex[i].fullPath);
+									wholeFolderLive = true;
+									countInFolder = 0;
+                                    EditorGUI.indentLevel++;
+									EditorGUILayout.TextArea(lastFolder, infoParaSoft);
+									folderRect = GUILayoutUtility.GetLastRect();
+									folderToggleRect = new Rect(folderRect.x, folderRect.y + (vPadding / 2), folderRect.width, folderRect.height - vPadding);
+									folderToggleRect.width = 30f;
+									EditorGUI.indentLevel--;
 								}
 								var itemRect = EditorGUILayout.GetControlRect(false, EditorGUIUtility.singleLineHeight + vPadding);
 								var thisToggleRect = new Rect(itemRect.x, itemRect.y + (vPadding / 2), itemRect.width, itemRect.height - vPadding);
@@ -451,17 +475,6 @@ namespace UMAEditor
 					EditorGUI.indentLevel--;
 					GUILayout.Space(vPadding);
 				}
-				GUILayout.BeginHorizontal();
-				if (GUILayout.Button("ReIndex"))
-				{
-					UAI.ClearAndReIndex();
-				}
-				if (GUILayout.Button("Clear and ReIndex"))
-				{
-					if (EditorUtility.DisplayDialog("Really Clear Indexes?", "This will also clear any assets you made live manually by checking its checkbox. Continue?", "Ok", "Cancel"))
-						UAI.ClearAndReIndex(true);
-				}
-				GUILayout.EndHorizontal();
 			}
 			EditorGUILayout.Space();
 			//--ASSET BUNDLE ASSETS LIST--//
@@ -535,6 +548,22 @@ namespace UMAEditor
 					EditorGUI.indentLevel--;
 					GUILayout.Space(vPadding);
 				}
+			}
+			//INDEX CLEARING AND REINDEXING//
+			mainExpanded["IndexMaintenance"] = EditorGUILayout.Foldout(mainExpanded["IndexMaintenance"], new GUIContent("Index Maintenance"), boldFoldout);
+			if (mainExpanded["IndexMaintenance"])
+			{
+				GUILayout.BeginHorizontal();
+				if (GUILayout.Button("ReIndex"))
+				{
+					UAI.ClearAndReIndex();
+				}
+				if (GUILayout.Button("Clear and ReIndex"))
+				{
+					if (EditorUtility.DisplayDialog("Really Clear Indexes?", "This will also clear any assets you made live manually by checking its checkbox. Continue?", "Ok", "Cancel"))
+						UAI.ClearAndReIndex(true);
+				}
+				GUILayout.EndHorizontal();
 			}
 			//Uncomment to see the actual serialized data the index is saving
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("_buildIndex"), true);

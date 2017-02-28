@@ -676,7 +676,7 @@ namespace UMA
 						var thisFileRefObj = Resources.Load<UMAAssetIndexFileRef>(fileRefPath);
 						if (thisFileRefObj)
 						{
-							Debug.Log("TheFileReference.get loaded file ref was " + thisFileRefObj+" object ref was "+ thisFileRefObj.objectRef);
+							//Debug.Log("TheFileReference.get loaded file ref was " + thisFileRefObj+" object ref was "+ thisFileRefObj.objectRef);
 							return thisFileRefObj.objectRef;
 						}
 						else
@@ -696,19 +696,19 @@ namespace UMA
 					{
 						if(String.IsNullOrEmpty(fileRefPath))
 						{
-							Debug.Log("TheFileReference.set fileRefPath was empty. Creating...");
+							//Debug.Log("TheFileReference.set fileRefPath was empty. Creating...");
                             var fileRefFullPath = Path.Combine(UMA.FileUtils.GetInternalDataStoreFolder(false, false), value.name + "-fileRef.asset");
 							fileRefPath = GetResourcesPath(fileRefFullPath);
 							thisFileRefObj = UMAEditor.CustomAssetUtility.CreateAsset<UMAAssetIndexFileRef>(fileRefFullPath, false);			
                         }
                         else
 						{
-							Debug.Log("TheFileReference.set fileRefPath was NOT empty.");
+							//Debug.Log("TheFileReference.set fileRefPath was NOT empty.");
 							thisFileRefObj = Resources.Load<UMAAssetIndexFileRef>(fileRefPath);
 						}
 						if (thisFileRefObj)
 						{
-							Debug.Log("TheFileReference.set set value to "+value);
+							//Debug.Log("TheFileReference.set set value to "+value);
 							thisFileRefObj.objectRef = value;
 							EditorUtility.SetDirty(thisFileRefObj);
 						}

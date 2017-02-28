@@ -283,7 +283,7 @@ namespace UMA
 			var extension = Path.GetExtension(path);
 			if (extension == ".meta" || extension == ".cs" || extension == "" || extension == ".js")
 				return false;
-			if (path.IndexOf("ProjectSettings.asset") > -1 || path.IndexOf("__DELETED_GUID_Trash") > -1 || path.IndexOf("UMAAssetIndex-DONOTDELETE") > -1 || path.IndexOf("Assets/") == -1)
+			if (path.IndexOf("ProjectSettings.asset") > -1 || path.IndexOf("-fileRef.asset") > -1 || path.IndexOf("__DELETED_GUID_Trash") > -1 || path.IndexOf("UMAAssetIndex-DONOTDELETE") > -1 || path.IndexOf("Assets/") == -1)
 				return false;
 			return true;
 		}
@@ -695,12 +695,34 @@ namespace UMA
 			Resources.UnloadUnusedAssets();
 		}
 
+		public void ToggleFolderAssets(string path, string assetType, bool live)
+		{
+			for(int ti = 0; ti < _fullIndex.data.Length; ti++)
+			{
+				if(_fullIndex.data[ti].type == assetType)
+				{
+					for(int i = 0; i < _fullIndex.data[ti].typeIndex.Length; i++)
+					{
+						if(path == Path.GetDirectoryName(_fullIndex.data[ti].typeIndex[i].fullPath))
+						{
+							if (live)
+								MakeAssetLive(_fullIndex.data[ti].typeIndex[i], assetType, false);
+							else
+								MakeAssetNotLive(_fullIndex.data[ti].typeIndex[i], assetType, false);
+						}
+					}
+				}
+			}
+			CheckAndUpdateWindow();
+			EditorApplication.delayCall -= CleanUnusedAssets;
+			EditorApplication.delayCall += CleanUnusedAssets;
+		}
 		/// <summary>
 		/// Adds the given indexed item to the 'BuildIndex' by finding its referenced asset and adding an entry to the Build index that references this asset.
 		/// </summary>
 		/// <param name="fullIndexData"></param>
 		/// <param name="assetType"></param>
-		public void MakeAssetLive(UMAAssetIndexData.IndexData fullIndexData, string assetType)
+		public void MakeAssetLive(UMAAssetIndexData.IndexData fullIndexData, string assetType, bool andUpdate = true)
 		{
 			if (fullIndexData != null)
 			{
@@ -728,9 +750,12 @@ namespace UMA
 				}
 			}
 			//SortIndexes();
-			CheckAndUpdateWindow();
-			EditorApplication.delayCall -= CleanUnusedAssets;
-			EditorApplication.delayCall += CleanUnusedAssets;
+			if (andUpdate)
+			{
+				CheckAndUpdateWindow();
+				EditorApplication.delayCall -= CleanUnusedAssets;
+				EditorApplication.delayCall += CleanUnusedAssets;
+			}
 		}
 
 		/// <summary>
@@ -738,13 +763,16 @@ namespace UMA
 		/// </summary>
 		/// <param name="fullIndexData"></param>
 		/// <param name="assetType"></param>
-		public void MakeAssetNotLive(UMAAssetIndexData.IndexData fullIndexData, string assetType)
+		public void MakeAssetNotLive(UMAAssetIndexData.IndexData fullIndexData, string assetType, bool andUpdate = true)
 		{
 			_buildIndex.RemovePath(fullIndexData.fullPath);
 			//SortIndexes();
-			CheckAndUpdateWindow();
-			EditorApplication.delayCall -= CleanUnusedAssets;
-			EditorApplication.delayCall += CleanUnusedAssets;
+			if (andUpdate)
+			{
+				CheckAndUpdateWindow();
+				EditorApplication.delayCall -= CleanUnusedAssets;
+				EditorApplication.delayCall += CleanUnusedAssets;
+			}
 		}
 
 		public void GenerateFullIndex(List<string> typesToAdd)
