@@ -28,7 +28,10 @@ namespace UMA.PoseTools
 					activeTransChanged = true;
 					activeTrans = value;
 					activeMirror = new MirrorData();
-					mirrors.TryGetValue(activeTrans, out activeMirror);
+					if (activeTrans != null)
+					{
+						mirrors.TryGetValue(activeTrans, out activeMirror);
+					}
 				}
 			}
 		}
@@ -38,7 +41,7 @@ namespace UMA.PoseTools
 			get { return activeMirror.plane; }
 		}
 
-		public EditorTool activeTool = EditorTool.Tool_None;
+		public EditorTool activeTool = EditorTool.Tool_Position;
 
 		public Transform mirrorTransform
 		{

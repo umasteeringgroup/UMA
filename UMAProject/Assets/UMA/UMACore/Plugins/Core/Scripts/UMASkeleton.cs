@@ -242,6 +242,22 @@ namespace UMA
 		}
 
 		/// <summary>
+		/// Gets the transform for a bone in the skeleton.
+		/// </summary>
+		/// <returns>The transform or null, if not found.</returns>
+		/// <param name="nameHash">Name hash.</param>
+		public virtual Transform GetBoneTransform(int nameHash)
+		{
+			BoneData res;
+			if (boneHashData.TryGetValue(nameHash, out res))
+			{
+				res.accessedFrame = frame;
+				return res.boneTransform;
+			}
+			return null;
+		}
+
+		/// <summary>
 		/// Gets the game object for a transform in the skeleton.
 		/// </summary>
 		/// <returns>The game object or null, if not found.</returns>
