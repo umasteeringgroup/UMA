@@ -31,7 +31,7 @@ namespace UMACharacterSystem
 			{
 
 				// Check if the button is/was pressed 
-				if ((prop.intValue & (1 << i)) == (1 << i))
+				if ((prop.intValue & (namesIntModifier << i)) == (namesIntModifier << i))
 				{
 					buttons[i] = true;
 				}
@@ -39,7 +39,7 @@ namespace UMACharacterSystem
 				buttons[i] = EditorGUILayout.ToggleLeft(prop.enumNames[i + namesIntModifier].BreakupCamelCase(), buttons[i]);
 				if (buttons[i])
 				{
-					buttonsValue += 1 << i;
+					buttonsValue += namesIntModifier << i;
 				}			
 			}
 
