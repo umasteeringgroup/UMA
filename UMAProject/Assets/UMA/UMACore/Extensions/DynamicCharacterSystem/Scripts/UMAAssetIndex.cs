@@ -168,6 +168,19 @@ namespace UMA
 
 		#region ASSET MODIFICATION PROCESSOR CALLBACKS
 
+		public void OnCreateAsset(string createdAsset)
+		{
+			if (BuildPipeline.isBuildingPlayer || UnityEditorInternal.InternalEditorUtility.inBatchMode || Application.isPlaying)
+				return;
+			if (PathIsValid(createdAsset) && !AMPCreatedAssets.Contains(createdAsset))
+				AMPCreatedAssets.Add(createdAsset);
+			if(AMPCreatedAssets.Count > 0)
+			{
+				EditorApplication.update -= DoCreatedAsset;
+				EditorApplication.update += DoCreatedAsset;
+			}
+		}
+
 		/// <summary>
 		/// Callback for UMAAssetPostProcessor that is triggered when assets are imported OR when an asset is Duplucated using "Edit/Duplicate".
 		/// Adds the assets to the AMPCreatedAssets list and and sets up DoCreatedAsset to process the list when the assetPostProcessor is finished
@@ -421,12 +434,12 @@ namespace UMA
 			EditorApplication.delayCall -= CleanUnusedAssets;
 			//Debug.Log("CleanUnusedAssets");
 			//AssetDatabase.Refresh();//apparently this also calls the following
-			//Resources.UnloadUnusedAssets();
+			Resources.UnloadUnusedAssets();
 			//we could also try the following - where true will unload assets even if they are refrenced by scripts
 			//But we need to be very careful that this does not make the normal libraries (and other things) not work
 			//
 			//Do we need to go back to Resources.UnloadUnusedAssets(); ?
-			EditorUtility.UnloadUnusedAssetsImmediate(true);
+			//EditorUtility.UnloadUnusedAssetsImmediate(true);
         }
 
 		/// <summary>

@@ -82,10 +82,10 @@ namespace UMA
 			{
 				UMAResourcesIndex.Instance.DoIndexUpdate();
 			}*/
-			/*if (UMAAssetIndex.Instance != null)
+			if (UMAAssetIndex.Instance != null)
 			{
 				UMAAssetIndex.Instance.OnCreateAsset(createdAsset);
-			}*/
+			}
 			return createdAsset;
 		}
 
