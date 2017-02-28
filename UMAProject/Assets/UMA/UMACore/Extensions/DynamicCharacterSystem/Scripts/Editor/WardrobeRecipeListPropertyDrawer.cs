@@ -9,6 +9,7 @@ public class WardrobeRecipeListPropertyDrawer : PropertyDrawer {
 
 	float padding = 2f;
 	public DynamicCharacterSystem thisDCS;
+	public DynamicCharacterAvatar thisDCA;
 	//Make a drop area for wardrobe recipes
 	private void DropAreaGUI(Rect dropArea, SerializedProperty thisRecipesProp)
 	{
@@ -102,6 +103,8 @@ public class WardrobeRecipeListPropertyDrawer : PropertyDrawer {
 			warningStyle.contentOffset = new Vector2(0f, 0f);
 			warningStyle.fontStyle = FontStyle.Bold;
 			var currentTint = GUI.color;
+			//can we make these validate to the compatible races is upto date?
+			thisDCA.preloadWardrobeRecipes.Validate();
 			for (int i = 0; i < thisRecipesProp.arraySize; i++) {
 				var valRBut = new Rect((textFieldWidth + 18f),(valR.yMax + padding), 20f, EditorGUIUtility.singleLineHeight);
 				valR = new Rect (valR.xMin, (valR.yMax + padding), textFieldWidth, EditorGUIUtility.singleLineHeight);

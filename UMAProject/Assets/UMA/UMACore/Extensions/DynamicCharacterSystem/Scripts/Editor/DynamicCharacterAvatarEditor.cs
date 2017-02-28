@@ -33,9 +33,10 @@ public partial class DynamicCharacterAvatarEditor : Editor
 				_racePropDrawer.thisDynamicRaceLibrary = dynamicRaceLibrary;
 			}
         }
-		if(_wardrobePropDrawer.thisDCS == null)
+		if (_wardrobePropDrawer.thisDCS == null)
 		{
-			if (context)
+			_wardrobePropDrawer.thisDCA = thisDCA;
+            if (context)
 			{
 				var dynamicCharacterSystem = (DynamicCharacterSystem)context.dynamicCharacterSystem as DynamicCharacterSystem;
 				_wardrobePropDrawer.thisDCS = dynamicCharacterSystem;

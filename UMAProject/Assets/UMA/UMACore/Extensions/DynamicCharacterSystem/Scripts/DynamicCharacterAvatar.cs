@@ -2754,7 +2754,7 @@ namespace UMACharacterSystem
 			{
 				_recipeName = recipe.name;
 				_recipe = recipe;
-				_compatibleRaces = recipe.compatibleRaces;
+				_compatibleRaces = new List<string>(recipe.compatibleRaces);
 			}
 		}
 
@@ -2771,27 +2771,28 @@ namespace UMACharacterSystem
 				var thisDCS = UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem;
 				if (thisDCS != null)
 				{
-					foreach (WardrobeRecipeListItem recipe in recipes)
+					foreach (WardrobeRecipeListItem WLIRecipe in recipes)
 					{
-						if (allowDownloadables && (raceName == "" || recipe._compatibleRaces.Contains(raceName)))
+						if (allowDownloadables && (raceName == "" || WLIRecipe._compatibleRaces.Contains(raceName)))
 						{
-							if (thisDCS.GetRecipe(recipe._recipeName, true) != null)
+							if (thisDCS.GetRecipe(WLIRecipe._recipeName, true) != null)
 							{
-								recipe._recipe = thisDCS.GetRecipe(recipe._recipeName);
-								validRecipes.Add(recipe);
+								WLIRecipe._recipe = thisDCS.GetRecipe(WLIRecipe._recipeName);
+								WLIRecipe._compatibleRaces = new List<string>(WLIRecipe._recipe.compatibleRaces);
+								validRecipes.Add(WLIRecipe);
 							}
 
 						}
 						else
 						{
-							if (thisDCS.RecipeIndex.ContainsKey(recipe._recipeName))
+							if (thisDCS.RecipeIndex.ContainsKey(WLIRecipe._recipeName))
 							{
 								bool recipeFound = false;
-								recipeFound = thisDCS.RecipeIndex.TryGetValue(recipe._recipeName, out recipe._recipe);
+								recipeFound = thisDCS.RecipeIndex.TryGetValue(WLIRecipe._recipeName, out WLIRecipe._recipe);
 								if (recipeFound)
 								{
-									recipe._compatibleRaces = recipe._recipe.compatibleRaces;
-									validRecipes.Add(recipe);
+									WLIRecipe._compatibleRaces = new List<string>(WLIRecipe._recipe.compatibleRaces);
+									validRecipes.Add(WLIRecipe);
 								}
 
 							}
