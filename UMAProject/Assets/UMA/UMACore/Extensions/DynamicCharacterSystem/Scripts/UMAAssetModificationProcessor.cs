@@ -7,7 +7,7 @@ namespace UMA
 {
 	public class UMAAssetPostProcessor : AssetPostprocessor
 	{
-		public void OnPostprocessAssetbundleNameChanged(string assetPath, string previousAssetBundleName, string newAssetBundleName)
+		/*public void OnPostprocessAssetbundleNameChanged(string assetPath, string previousAssetBundleName, string newAssetBundleName)
 		{
 			if (BuildPipeline.isBuildingPlayer || UnityEditorInternal.InternalEditorUtility.inBatchMode || Application.isPlaying)
 				return;
@@ -15,14 +15,14 @@ namespace UMA
 			{
 				UMAAssetIndex.Instance.OnAssetBundleNameChange(assetPath, previousAssetBundleName, newAssetBundleName);
 			}
-		}
+		}*/
         static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
 		{
 			if (BuildPipeline.isBuildingPlayer || UnityEditorInternal.InternalEditorUtility.inBatchMode || Application.isPlaying)
 				return;
 			if (UMAAssetIndex.Instance != null)
 			{
-				UMAAssetIndex.Instance.OnEditorDuplicatedAsset(importedAssets, deletedAssets, movedAssets, movedFromAssetPaths);
+				UMAAssetIndex.Instance.OnPostprocessAllAssets(importedAssets, deletedAssets, movedAssets, movedFromAssetPaths);
 			}
 		}
     }
@@ -47,10 +47,10 @@ namespace UMA
 			{
 				UMAResourcesIndex.Instance.DoIndexUpdate();
             }*/
-			if (UMAAssetIndex.Instance != null)
+			/*if (UMAAssetIndex.Instance != null)
 			{
 				UMAAssetIndex.Instance.OnMoveAsset(assetPrevPath, assetNewPath);
-			}
+			}*/
 			return AssetMoveResult.DidNotMove;
 		}
 
@@ -64,10 +64,10 @@ namespace UMA
 			{
 				UMAResourcesIndex.Instance.DoIndexUpdate();
 			}*/
-			if (UMAAssetIndex.Instance != null)
+			/*if (UMAAssetIndex.Instance != null)
 			{
 				UMAAssetIndex.Instance.OnDeleteAsset(assetToDelete);
-            }
+            }*/
 			return AssetDeleteResult.DidNotDelete;
 		}
 
@@ -82,10 +82,10 @@ namespace UMA
 			{
 				UMAResourcesIndex.Instance.DoIndexUpdate();
 			}*/
-			if (UMAAssetIndex.Instance != null)
+			/*if (UMAAssetIndex.Instance != null)
 			{
 				UMAAssetIndex.Instance.OnCreateAsset(createdAsset);
-			}
+			}*/
 			return createdAsset;
 		}
 
@@ -102,10 +102,10 @@ namespace UMA
 			{
 				UMAResourcesIndex.Instance.DoModifiedUMAAssets(assetsToSave);
 			}*/
-			if (UMAAssetIndex.Instance != null)
+			/*if (UMAAssetIndex.Instance != null)
 			{
 				UMAAssetIndex.Instance.OnSaveAssets(assetsToSave);
-			}
+			}*/
 			return assetsToSave;
 		}
 

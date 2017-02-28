@@ -126,7 +126,7 @@ namespace UMA
 		/// <param name="objNameHash"></param>
 		/// <param name="objName">The name of the asset. If this is a SlotDataAsset/OverlayDataAsset/RaceData asset this should be the slotName/overlayName/raceName. If no name is given the asset name is used.</param>
 		/// <param name="addObject">If true a reference to the object is added to the created indexItem. This will mean the asset gets included in the build.</param>
-		public void AddPath(UnityEngine.Object obj, int objNameHash, string objName = "", bool addObject = false)
+		public void AddPath(UnityEngine.Object obj, int objNameHash, string objName = "", bool addObject = false, bool compareFullPaths = true)
 		{
 			if (obj == null)
 			{
@@ -145,7 +145,7 @@ namespace UMA
 			{
 				if (data[i].type == objTypeString)
 				{
-					if (data[i].Add(objNameHash, objFullPath, objName, addObject ? obj : null))
+					if (data[i].Add(objNameHash, objFullPath, objName, addObject ? obj : null, compareFullPaths))
 					{
 						if (!_currentPaths.Contains(objFullPath))
 						{
@@ -236,6 +236,18 @@ namespace UMA
 			data = list;
 		}
 
+		public UnityEngine.Object Get(int nameHash, string type, string[] foldersToSearch = null)
+		{
+			for (int i = 0; i < data.Length; i++)
+			{
+				if (data[i].type == type)
+				{
+					return data[i].Get(nameHash, foldersToSearch);
+				}
+			}
+			return null;
+		}
+
 		public T Get<T>(int umaNameHash, string[] foldersToSearch = null) where T : UnityEngine.Object
 		{
 			for (int i = 0; i < data.Length; i++)
@@ -248,6 +260,17 @@ namespace UMA
 			return null;
 		}
 
+		public UnityEngine.Object Get(string name, string type, string[] foldersToSearch = null)
+		{
+			for (int i = 0; i < data.Length; i++)
+			{
+				if (data[i].type == type)
+				{
+					return data[i].Get(name, foldersToSearch);
+				}
+			}
+			return null;
+		}
 		public T Get<T>(string umaName, string[] foldersToSearch = null) where T : UnityEngine.Object
 		{
 			for (int i = 0; i < data.Length; i++)
@@ -271,9 +294,9 @@ namespace UMA
 					{
 						if (WasEntryInFolders(data[ti].typeIndex[i], foldersToSearch))
 						{
-							if (data[ti].typeIndex[i].fileReference != null)
+							if (!String.IsNullOrEmpty(data[ti].typeIndex[i].fileRefPath))
 							{
-								allAssets.Add(data[ti].typeIndex[i].fileReference as T);
+								allAssets.Add(data[ti].typeIndex[i].TheFileReference as T);
 							}
 							else
 							{
@@ -310,11 +333,13 @@ namespace UMA
 		/// <returns></returns>
 		public static string GetResourcesPath(string fullPath)
 		{
+			//fullPath may have slashes going the wrong way
+			fullPath = fullPath.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 			string resourcesPath = "";
 			var resourcesPathArray = fullPath.Split(new string[] { "Resources/" }, StringSplitOptions.RemoveEmptyEntries);
 			if (resourcesPathArray.Length != 2)
 			{
-				//Debug.LogWarning("Full path given did not contain a Resources path");
+				Debug.LogWarning("Full path given did not contain a Resources path for "+fullPath);
 				return "";
 			}
 			var extension = Path.GetExtension(resourcesPathArray[1]);
@@ -339,7 +364,37 @@ namespace UMA
 			}
 			return false;
 		}
-		
+
+		public IndexData GetEntryFromNameHash(int nameHash)
+		{
+			for (int i = 0; i < data.Length; i++)
+			{
+				for (int di = 0; di < data[i].typeIndex.Length; di++)
+				{
+					if (data[i].typeIndex[di].nameHash == nameHash)
+					{
+						return data[i].typeIndex[di];
+					}
+				}
+			}
+			return null;
+		}
+
+		public IndexData GetEntryFromName(string name)
+		{
+			for (int i = 0; i < data.Length; i++)
+			{
+				for (int di = 0; di < data[i].typeIndex.Length; di++)
+				{
+					if (data[i].typeIndex[di].name == name)
+					{
+						return data[i].typeIndex[di];
+					}
+				}
+			}
+			return null;
+		}
+
 		public IndexData GetEntryFromPath(string path)
 		{
 			for (int i = 0; i < data.Length; i++)
@@ -384,7 +439,7 @@ namespace UMA
 					if (cloneIndexPaths)
 						typeIndex[i].fullPath = typeIndexToClone.typeIndex[i].fullPath;
 					if (cloneIndexRefs)
-						typeIndex[i].fileReference = typeIndexToClone.typeIndex[i].fileReference;
+						typeIndex[i].fileRefPath = typeIndexToClone.typeIndex[i].fileRefPath;
 				}
 			}
 
@@ -410,16 +465,22 @@ namespace UMA
 			/// <param name="objName"></param>
 			/// <param name="obj"></param>
 			/// <returns>True if asset was added or false if it already existed in the index</returns>
-			public bool Add(int nameHash, string fullPath, string objName = "", UnityEngine.Object obj = null)
+			public bool Add(int nameHash, string fullPath, string objName = "", UnityEngine.Object obj = null, bool compareFullPaths = true)
 			{
 				bool found = false;
 				for (int i = 0; i < typeIndex.Length; i++)
 				{
-					if (typeIndex[i].nameHash == nameHash && typeIndex[i].fullPath == fullPath)
+					//we want these to get added if the full path is different (so we display duplicated assets) 
+					if (typeIndex[i].nameHash == nameHash && (compareFullPaths ? typeIndex[i].fullPath == fullPath : true))
 					{
 						//this will make the file ref null if this indexData was previously NOT in Resources and live and then moved INTO Resources
-						typeIndex[i].fileReference = obj;
-                        found = true;
+						//THESE ADD METHODS NEED TO BE FULLY EDITOR ONLY BUT FOR NOW
+#if UNITY_EDITOR
+						//I want it to add another one if the full paths are different, so that we can see duplicated assets
+						//BUT I dont want it do do this when stuff has been moved out side of Unity
+						typeIndex[i].TheFileReference = obj;
+#endif
+						found = true;
 						break;
 					}
 				}
@@ -448,12 +509,15 @@ namespace UMA
 						//try removing the refrence to the resources to stop the build thinking the file is still referenced
 						//probably not needed since refs in the old list SHOULD be garbage collected once the list is set to the new list
 						//but just in case...
-						typeIndex[i].fileReference = null;
+						//THESE ADD METHODS NEED TO BE FULLY EDITOR ONLY BUT FOR NOW
+#if UNITY_EDITOR
+						typeIndex[i].TheFileReference = null;
+#endif
 					}
 					//if (typeIndex[i].nameHash != nameHash)
 					else
 					{
-						list[listi] = new IndexData(typeIndex[i].fileReference, typeIndex[i].nameHash, typeIndex[i].fullPath, typeIndex[i].name);
+						list[listi] = new IndexData(typeIndex[i].fileRefPath, typeIndex[i].nameHash, typeIndex[i].fullPath, typeIndex[i].name);
 						listi++;
 					}
 				}
@@ -478,12 +542,15 @@ namespace UMA
 						//Resources.UnloadAsset(typeIndex[i].fileReference);//not sure this will help because
 						//typeIndex[i].fileReference = null;//Im not sure whether simply accessing this will load it back into memory
 						//I'll try a property
+						//THESE ADD METHODS NEED TO BE FULLY EDITOR ONLY BUT FOR NOW
+#if UNITY_EDITOR
 						typeIndex[i].TheFileReference = null;
-                    } 
+#endif
+					} 
 					// (typeIndex[i].fullPath != path)
 					else
 					{
-						list[listi] = new IndexData(typeIndex[i].fileReference, typeIndex[i].nameHash, typeIndex[i].fullPath, typeIndex[i].name);
+						list[listi] = new IndexData(typeIndex[i].fileRefPath, typeIndex[i].nameHash, typeIndex[i].fullPath, typeIndex[i].name);
 						listi++;
 					}
 				}
@@ -501,9 +568,9 @@ namespace UMA
 				{
 					if (typeIndex[i].name == name && WasEntryInFolders(typeIndex[i], foldersToSearch))
 					{
-						if (typeIndex[i].fileReference != null)
+						if (!String.IsNullOrEmpty(typeIndex[i].fileRefPath))
 						{
-							return (typeIndex[i].fileReference as T);
+							return (typeIndex[i].TheFileReference as T);
 						}
 						else
 						{
@@ -541,9 +608,9 @@ namespace UMA
 				{
 					if (typeIndex[i].nameHash == nameHash && WasEntryInFolders(typeIndex[i], foldersToSearch))
 					{
-						if (typeIndex[i].fileReference != null)
+						if (!String.IsNullOrEmpty(typeIndex[i].fileRefPath))
 						{
-							return (typeIndex[i].fileReference as T);
+							return (typeIndex[i].TheFileReference as T);
 						}
 						else
 						{
@@ -579,12 +646,74 @@ namespace UMA
 			public int nameHash;
 			//someType of GUID we all agree on- I'd say a short GUID since this is a good balance between global uniueness and shortness
 			public string fullPath; //this is the full path rather than the resources path
-			public UnityEngine.Object fileReference;
+			//public UnityEngine.Object fileReference;
+			//public UMAAssetIndexFileRef fileRefObj = null;
+			public string fileRefPath = "";
 
 			public UnityEngine.Object TheFileReference
 			{
-				get { return fileReference; }
-				set { fileReference = value; }
+				get {
+					if(!String.IsNullOrEmpty(fileRefPath))
+					{
+						var thisFileRefObj = Resources.Load<UMAAssetIndexFileRef>(fileRefPath);
+						if (thisFileRefObj)
+						{
+							Debug.Log("TheFileReference.get loaded file ref was " + thisFileRefObj+" object ref was "+ thisFileRefObj.objectRef);
+							return thisFileRefObj.objectRef;
+						}
+						else
+							fileRefPath = "";
+					}
+					/*if (fileRefObj)
+					{
+						return fileRefObj.objectRef;
+					}*/
+					return null;
+				}
+#if UNITY_EDITOR
+				set
+				{
+					UMAAssetIndexFileRef thisFileRefObj = null;
+					if (value != null)
+					{
+						if(String.IsNullOrEmpty(fileRefPath))
+						{
+							Debug.Log("TheFileReference.set fileRefPath was empty. Creating...");
+                            var fileRefFullPath = Path.Combine(UMA.FileUtils.GetInternalDataStoreFolder(false, false), value.name + "-fileRef.asset");
+							fileRefPath = GetResourcesPath(fileRefFullPath);
+							thisFileRefObj = UMAEditor.CustomAssetUtility.CreateAsset<UMAAssetIndexFileRef>(fileRefFullPath, false);			
+                        }
+                        else
+						{
+							Debug.Log("TheFileReference.set fileRefPath was NOT empty.");
+							thisFileRefObj = Resources.Load<UMAAssetIndexFileRef>(fileRefPath);
+						}
+						if (thisFileRefObj)
+						{
+							Debug.Log("TheFileReference.set set value to "+value);
+							thisFileRefObj.objectRef = value;
+							EditorUtility.SetDirty(thisFileRefObj);
+						}
+						else
+							fileRefPath = "";
+					}
+					else
+					{
+						if(!String.IsNullOrEmpty(fileRefPath))
+						{
+							thisFileRefObj = Resources.Load<UMAAssetIndexFileRef>(fileRefPath);
+						}
+						if(thisFileRefObj != null)
+						{
+							var fileRefObjPath = AssetDatabase.GetAssetPath(thisFileRefObj);
+							//EditorUtility.SetDirty(fileRefObj);
+                            ScriptableObject.DestroyImmediate(thisFileRefObj, true);
+							fileRefPath = null;
+							AssetDatabase.DeleteAsset(fileRefObjPath);
+						}
+					}
+				}
+#endif
 			}
 
 			public IndexData()
@@ -596,13 +725,48 @@ namespace UMA
 				name = _name;
 				nameHash = _nameHash;
 				fullPath = _fullPath;
-			}
-			public IndexData(UnityEngine.Object _fileReference, int _nameHash, string _fullPath = "", string _name = "")
+				fileRefPath = "";
+            }
+			public IndexData(string _fileRefPath, int _nameHash, string _fullPath = "", string _name = "")
 			{
 				name = _name;
 				nameHash = _nameHash;
 				fullPath = _fullPath;
-				fileReference = _fileReference;
+				fileRefPath = String.IsNullOrEmpty(_fileRefPath) ? "" : _fileRefPath;
+            }
+            public IndexData(UnityEngine.Object _fileReference, int _nameHash, string _fullPath = "", string _name = "")
+			{
+				name = _name;
+				nameHash = _nameHash;
+				fullPath = _fullPath;
+				//fileReference = _fileReference;
+#if UNITY_EDITOR
+				if (_fileReference != null)
+				{
+					/*if (_fileReference.GetType() == typeof(UMAAssetIndexFileRef))
+					{
+						fileRefObj = _fileReference as UMAAssetIndexFileRef;
+					}
+					else
+					{*/
+					UMAAssetIndexFileRef thisFileRefObj = null;
+					var fileRefFullPath = Path.Combine(UMA.FileUtils.GetInternalDataStoreFolder(false, false), _fileReference.name + "-fileRef.asset");
+					fileRefPath = GetResourcesPath(fileRefFullPath);
+					thisFileRefObj = Resources.Load<UMAAssetIndexFileRef>(fileRefPath);
+					if(thisFileRefObj == null)
+						thisFileRefObj = UMAEditor.CustomAssetUtility.CreateAsset<UMAAssetIndexFileRef>(fileRefFullPath, false);
+					//set the ref to the actual object
+					thisFileRefObj.objectRef = _fileReference;
+					EditorUtility.SetDirty(thisFileRefObj);
+					//fileRefObj = UMAEditor.CustomAssetUtility.CreateAsset<UMAAssetIndexFileRef>(Path.Combine(UMA.FileUtils.GetInternalDataStoreFolder(false, false), _fileReference.name + "-fileRef.asset"), false);
+					//	fileRefObj.objectRef = _fileReference;
+					//}
+				}
+				else
+				{
+					fileRefPath = "";
+                }
+#endif
 			}
 
 		}

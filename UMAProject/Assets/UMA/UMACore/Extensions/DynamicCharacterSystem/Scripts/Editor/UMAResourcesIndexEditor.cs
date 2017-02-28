@@ -15,16 +15,17 @@ namespace UMAEditor
 		string info;
 
 		//Temporarily show The UMAAssetIndex in here
-		Editor UAIE = null;
-		UMAAssetIndex UAI = null;
+		//Editor UAIE = null;
+		//UMAAssetIndex UAI = null;
 
 		public override void OnInspectorGUI()
 		{
 			EditorGUILayout.HelpBox("TEMPORARY: For the time being I am showing the UMAAssetIndex in here. Once we have confirmed we want to use this, I will replace the UMAResourcesIndex MB with a UMAAssetIndexViewer or similar", MessageType.Warning);
-			if (UAI == null)
+			//Maybge this is messing things up? NOPE MAKES NO DIFFERENCE
+			/*if (UAI == null)
 				UAI = UMAAssetIndex.Instance;
 			Editor.CreateCachedEditor(UAI, typeof(UMAAssetIndexEditor), ref UAIE);
-			UAIE.OnInspectorGUI();
+			UAIE.OnInspectorGUI();*/
 
 			/*thisURI = target as UMAResourcesIndex;
 			//we need to get the inspector to update to show any data that was added while the game was running?

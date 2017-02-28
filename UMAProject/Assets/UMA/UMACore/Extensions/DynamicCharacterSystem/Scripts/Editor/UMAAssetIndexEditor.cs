@@ -327,7 +327,8 @@ namespace UMAEditor
                                 }
 								else
 								{
-									liveAsset = GetSerializedObjectRef(entry.fullPath, UAI.FullIndex.data[ti].type);
+									liveAsset = UAI.LoadAssetAtPath(entry.fullPath);
+									//liveAsset = GetSerializedObjectRef(entry.fullPath, UAI.FullIndex.data[ti].type);
 									if (liveAsset != null)
 										assetIsLive = true;
 								}
