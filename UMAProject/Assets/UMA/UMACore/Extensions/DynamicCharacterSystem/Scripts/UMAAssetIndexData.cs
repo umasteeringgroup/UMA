@@ -184,7 +184,22 @@ namespace UMA
 				removed = false;
 				for (int ii = 0; ii < data[i].typeIndex.Length; ii++)
 				{
-					if (data[i].typeIndex[ii].fullPath == path)
+					var fileRefPath = GetResourcesPath(path);
+					if (fileRefPath != "")
+					{
+						if (data[i].typeIndex[ii].fileRefPath == fileRefPath)
+						{
+							data[i].Remove(path);
+							removed = true;
+							if (removed)
+							{
+								if (_currentPaths.Contains(data[i].typeIndex[ii].fullPath))
+									_currentPaths.Remove(data[i].typeIndex[ii].fullPath);
+							}
+							break;
+						}
+					}
+                    if (data[i].typeIndex[ii].fullPath == path)
 					{
 						data[i].Remove(path);//we still dont know if this actually happenned, but...
 						removed = true;
@@ -339,7 +354,7 @@ namespace UMA
 			var resourcesPathArray = fullPath.Split(new string[] { "Resources/" }, StringSplitOptions.RemoveEmptyEntries);
 			if (resourcesPathArray.Length != 2)
 			{
-				Debug.LogWarning("Full path given did not contain a Resources path for "+fullPath);
+				//Debug.LogWarning("Full path given did not contain a Resources path for "+fullPath);
 				return "";
 			}
 			var extension = Path.GetExtension(resourcesPathArray[1]);
@@ -550,7 +565,10 @@ namespace UMA
 					// (typeIndex[i].fullPath != path)
 					else
 					{
-						list[listi] = new IndexData(typeIndex[i].fileRefPath, typeIndex[i].nameHash, typeIndex[i].fullPath, typeIndex[i].name);
+						var thisFileRefPath = typeIndex[i].fileRefPath;
+						if (thisFileRefPath == null)
+							thisFileRefPath = "";
+						list[listi] = new IndexData(thisFileRefPath, typeIndex[i].nameHash, typeIndex[i].fullPath, typeIndex[i].name);
 						listi++;
 					}
 				}

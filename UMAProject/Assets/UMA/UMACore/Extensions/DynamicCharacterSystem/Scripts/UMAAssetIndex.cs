@@ -236,12 +236,12 @@ namespace UMA
 					}
 					else
 					{
-						if (!PathIsValid(importedAssets[i]))
+						/*if (!PathIsValid(importedAssets[i]))
 							Debug.Log("OnPostprocessAllAssets invalid imported asset path " + importedAssets[i]);
 						if (AMPCreatedAssets.Contains(importedAssets[i]))//it knows about these
 							Debug.Log("OnPostprocessAllAssets AMPCreatedAssets.Contains already had path " + importedAssets[i]);
 						if (AMPSavedAssets.Contains(importedAssets[i]))//but not these
-							Debug.Log("OnPostprocessAllAssets AMPSavedAssets.Contains already had path " + importedAssets[i]);
+							Debug.Log("OnPostprocessAllAssets AMPSavedAssets.Contains already had path " + importedAssets[i]);*/
 					}
 				}
 				if (AMPCreatedAssets.Count > 0 && addedCreatedAssets)
@@ -419,7 +419,7 @@ namespace UMA
 		private void CleanUnusedAssets()
 		{
 			EditorApplication.delayCall -= CleanUnusedAssets;
-			Debug.Log("CleanUnusedAssets");
+			//Debug.Log("CleanUnusedAssets");
 			//AssetDatabase.Refresh();//apparently this also calls the following
 			//Resources.UnloadUnusedAssets();
 			//we could also try the following - where true will unload assets even if they are refrenced by scripts
