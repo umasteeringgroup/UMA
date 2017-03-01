@@ -13,7 +13,7 @@ SceneSettings:
 --- !u!104 &2
 RenderSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 7
+  serializedVersion: 6
   m_Fog: 0
   m_FogColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   m_FogMode: 3
@@ -37,12 +37,12 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.10232166, g: 0.1399219, b: 0.19281282, a: 1}
 --- !u!157 &4
 LightmapSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 7
+  serializedVersion: 6
   m_GIWorkflowMode: 0
+  m_LightmapsMode: 1
   m_GISettings:
     serializedVersion: 2
     m_BounceScale: 1
@@ -53,22 +53,17 @@ LightmapSettings:
     m_EnableBakedLightmaps: 0
     m_EnableRealtimeLightmaps: 1
   m_LightmapEditorSettings:
-    serializedVersion: 4
+    serializedVersion: 3
     m_Resolution: 2
     m_BakeResolution: 40
     m_TextureWidth: 1024
     m_TextureHeight: 1024
-    m_AO: 0
     m_AOMaxDistance: 1
-    m_CompAOExponent: 0
-    m_CompAOExponentDirect: 0
     m_Padding: 2
+    m_CompAOExponent: 0
     m_LightmapParameters: {fileID: 0}
-    m_LightmapsBakeMode: 1
     m_TextureCompression: 1
-    m_DirectLightInLightProbes: 1
     m_FinalGather: 0
-    m_FinalGatherFiltering: 1
     m_FinalGatherRayCount: 1024
     m_ReflectionCompression: 2
   m_LightingDataAsset: {fileID: 112000000, guid: 30bbe1c5b74c1d0408734f5868c0f155,
@@ -128,7 +123,7 @@ Light:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 31771677}
   m_Enabled: 1
-  serializedVersion: 7
+  serializedVersion: 6
   m_Type: 1
   m_Color: {r: 1, g: 0.8535498, b: 0.7205882, a: 1}
   m_Intensity: 1
@@ -138,7 +133,6 @@ Light:
   m_Shadows:
     m_Type: 2
     m_Resolution: -1
-    m_CustomResolution: -1
     m_Strength: 1
     m_Bias: 0.01
     m_NormalBias: 0.2
@@ -151,10 +145,10 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_Lightmapping: 4
-  m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1.7
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+  m_AreaSize: {x: 1, y: 1}
 --- !u!1 &67364031
 GameObject:
   m_ObjectHideFlags: 0
@@ -198,6 +192,7 @@ ReflectionProbe:
   m_TimeSlicingMode: 0
   m_Resolution: 256
   m_UpdateFrequency: 0
+  m_Importance: 1
   m_BoxSize: {x: 50, y: 5, z: 50}
   m_BoxOffset: {x: 0, y: 0, z: 0}
   m_NearClip: 0.3
@@ -214,7 +209,6 @@ ReflectionProbe:
   m_BoxProjection: 0
   m_RenderDynamicObjects: 0
   m_UseOcclusionCulling: 1
-  m_Importance: 1
   m_CustomBakedTexture: {fileID: 8900000, guid: 92f9e3e20c8f65d49ad2df67ec586b3e,
     type: 3}
 --- !u!1 &382601258
@@ -260,6 +254,7 @@ ReflectionProbe:
   m_TimeSlicingMode: 0
   m_Resolution: 256
   m_UpdateFrequency: 0
+  m_Importance: 1
   m_BoxSize: {x: 50, y: 5, z: 50}
   m_BoxOffset: {x: 0, y: 0, z: 0}
   m_NearClip: 0.3
@@ -276,7 +271,6 @@ ReflectionProbe:
   m_BoxProjection: 0
   m_RenderDynamicObjects: 0
   m_UseOcclusionCulling: 1
-  m_Importance: 1
   m_CustomBakedTexture: {fileID: 8900000, guid: 251ddc633ea20db46a3628b2b36a9d8d,
     type: 3}
 --- !u!1 &457605287
@@ -413,7 +407,7 @@ Light:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 529888549}
   m_Enabled: 1
-  serializedVersion: 7
+  serializedVersion: 6
   m_Type: 1
   m_Color: {r: 1, g: 0.9448276, b: 0.875, a: 1}
   m_Intensity: 1.2
@@ -423,7 +417,6 @@ Light:
   m_Shadows:
     m_Type: 2
     m_Resolution: -1
-    m_CustomResolution: -1
     m_Strength: 1
     m_Bias: 0.01
     m_NormalBias: 0.2
@@ -436,10 +429,10 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_Lightmapping: 4
-  m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1.3
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+  m_AreaSize: {x: 1, y: 1}
 --- !u!1 &563841792
 GameObject:
   m_ObjectHideFlags: 0
@@ -506,7 +499,7 @@ Light:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 618574440}
   m_Enabled: 1
-  serializedVersion: 7
+  serializedVersion: 6
   m_Type: 1
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 0.4
@@ -516,7 +509,6 @@ Light:
   m_Shadows:
     m_Type: 2
     m_Resolution: 0
-    m_CustomResolution: -1
     m_Strength: 1
     m_Bias: 0.01
     m_NormalBias: 0.2
@@ -529,10 +521,10 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_Lightmapping: 4
-  m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+  m_AreaSize: {x: 1, y: 1}
 --- !u!1 &693533875
 GameObject:
   m_ObjectHideFlags: 0
@@ -673,6 +665,7 @@ ReflectionProbe:
   m_TimeSlicingMode: 0
   m_Resolution: 256
   m_UpdateFrequency: 0
+  m_Importance: 1
   m_BoxSize: {x: 50, y: 5, z: 50}
   m_BoxOffset: {x: 0, y: 0, z: 0}
   m_NearClip: 0.3
@@ -689,7 +682,6 @@ ReflectionProbe:
   m_BoxProjection: 0
   m_RenderDynamicObjects: 0
   m_UseOcclusionCulling: 1
-  m_Importance: 1
   m_CustomBakedTexture: {fileID: 8900000, guid: 251ddc633ea20db46a3628b2b36a9d8d,
     type: 3}
 --- !u!1 &805291268
@@ -1085,7 +1077,7 @@ Light:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 808263735}
   m_Enabled: 1
-  serializedVersion: 7
+  serializedVersion: 6
   m_Type: 1
   m_Color: {r: 1, g: 0.9448276, b: 0.875, a: 1}
   m_Intensity: 1.4
@@ -1095,7 +1087,6 @@ Light:
   m_Shadows:
     m_Type: 2
     m_Resolution: -1
-    m_CustomResolution: -1
     m_Strength: 1
     m_Bias: 0.01
     m_NormalBias: 0.2
@@ -1108,10 +1099,10 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_Lightmapping: 4
-  m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1.5
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+  m_AreaSize: {x: 1, y: 1}
 --- !u!1 &1043113339
 GameObject:
   m_ObjectHideFlags: 0
@@ -1155,6 +1146,7 @@ ReflectionProbe:
   m_TimeSlicingMode: 0
   m_Resolution: 256
   m_UpdateFrequency: 0
+  m_Importance: 1
   m_BoxSize: {x: 50, y: 5, z: 50}
   m_BoxOffset: {x: 0, y: 0, z: 0}
   m_NearClip: 0.3
@@ -1171,7 +1163,6 @@ ReflectionProbe:
   m_BoxProjection: 0
   m_RenderDynamicObjects: 0
   m_UseOcclusionCulling: 1
-  m_Importance: 1
   m_CustomBakedTexture: {fileID: 8900000, guid: 93e76ab820b451547b0637a6df7b1fec,
     type: 3}
 --- !u!1 &1063853699
@@ -1314,6 +1305,7 @@ ReflectionProbe:
   m_TimeSlicingMode: 0
   m_Resolution: 256
   m_UpdateFrequency: 0
+  m_Importance: 1
   m_BoxSize: {x: 50, y: 5, z: 50}
   m_BoxOffset: {x: 0, y: 0, z: 0}
   m_NearClip: 0.3
@@ -1330,7 +1322,6 @@ ReflectionProbe:
   m_BoxProjection: 0
   m_RenderDynamicObjects: 0
   m_UseOcclusionCulling: 1
-  m_Importance: 1
   m_CustomBakedTexture: {fileID: 8900000, guid: 740caf694c995c442a325d68cb54313e,
     type: 3}
 --- !u!1 &1213789514
@@ -1443,7 +1434,7 @@ Light:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1276232531}
   m_Enabled: 1
-  serializedVersion: 7
+  serializedVersion: 6
   m_Type: 1
   m_Color: {r: 1, g: 0.9448276, b: 0.875, a: 1}
   m_Intensity: 1.45
@@ -1453,7 +1444,6 @@ Light:
   m_Shadows:
     m_Type: 2
     m_Resolution: -1
-    m_CustomResolution: -1
     m_Strength: 1
     m_Bias: 0.01
     m_NormalBias: 0.2
@@ -1466,10 +1456,10 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_Lightmapping: 4
-  m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1.5
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+  m_AreaSize: {x: 1, y: 1}
 --- !u!1 &1309742427
 GameObject:
   m_ObjectHideFlags: 0
@@ -1653,6 +1643,7 @@ ReflectionProbe:
   m_TimeSlicingMode: 0
   m_Resolution: 256
   m_UpdateFrequency: 0
+  m_Importance: 1
   m_BoxSize: {x: 50, y: 5, z: 50}
   m_BoxOffset: {x: 0, y: 0, z: 0}
   m_NearClip: 0.3
@@ -1669,7 +1660,6 @@ ReflectionProbe:
   m_BoxProjection: 0
   m_RenderDynamicObjects: 0
   m_UseOcclusionCulling: 1
-  m_Importance: 1
   m_CustomBakedTexture: {fileID: 8900000, guid: 10dd0410a37550f4eb5c424507a8f978,
     type: 3}
 --- !u!1 &1570223346
@@ -1877,8 +1867,9 @@ MonoBehaviour:
   umaAdditionalRecipes:
   - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
   - {fileID: 11400000, guid: e32a3ba3a6520264e99766273eb44e01, type: 2}
+  - {fileID: 11400000, guid: 920d59ac577b2d9449aa36a4d9e86f10, type: 2}
   umaGenerator: {fileID: 0}
-  animationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
+  animationController: {fileID: 9100000, guid: ae859d58fdf844b73863d3833f955cdf, type: 2}
   CharacterCreated:
     m_PersistentCalls:
       m_Calls:
@@ -1967,20 +1958,17 @@ MeshRenderer:
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
-  m_MotionVectors: 1
-  m_LightProbeUsage: 0
-  m_ReflectionProbeUsage: 1
   m_Materials:
   - {fileID: 2100000, guid: 411da2e7323235d4fabbb4c5ac71d378, type: 2}
   m_SubsetIndices: 
   m_StaticBatchRoot: {fileID: 0}
+  m_UseLightProbes: 1
+  m_ReflectionProbeUsage: 1
   m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
-  m_SelectedWireframeHidden: 0
   m_MinimumChartSize: 4
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
@@ -2102,8 +2090,9 @@ MonoBehaviour:
   umaAdditionalRecipes:
   - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
   - {fileID: 11400000, guid: e32a3ba3a6520264e99766273eb44e01, type: 2}
+  - {fileID: 11400000, guid: 920d59ac577b2d9449aa36a4d9e86f10, type: 2}
   umaGenerator: {fileID: 0}
-  animationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
+  animationController: {fileID: 9100000, guid: ae859d58fdf844b73863d3833f955cdf, type: 2}
   CharacterCreated:
     m_PersistentCalls:
       m_Calls:
@@ -2190,7 +2179,7 @@ Light:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1968739346}
   m_Enabled: 1
-  serializedVersion: 7
+  serializedVersion: 6
   m_Type: 1
   m_Color: {r: 1, g: 0.8503043, b: 0.7352941, a: 1}
   m_Intensity: 1.5
@@ -2200,7 +2189,6 @@ Light:
   m_Shadows:
     m_Type: 2
     m_Resolution: -1
-    m_CustomResolution: -1
     m_Strength: 1
     m_Bias: 0.01
     m_NormalBias: 0.2
@@ -2213,7 +2201,7 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_Lightmapping: 4
-  m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 2
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+  m_AreaSize: {x: 1, y: 1}
