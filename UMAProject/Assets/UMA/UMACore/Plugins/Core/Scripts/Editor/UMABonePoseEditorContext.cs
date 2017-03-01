@@ -18,6 +18,8 @@ namespace UMA.PoseTools
 
 		public UMABonePose startingPose;
 
+		public string[] boneList = null;
+
 		public Transform activeTransform
 		{
 			get { return activeTrans; }
@@ -68,7 +70,16 @@ namespace UMA.PoseTools
 		public UMAData activeUMA
 		{
 			get { return umaData; }
-			set { if (umaData != value) { umaData = value; UpdateMirrors(); } }
+			set
+			{
+				if (umaData != value)
+				{
+					umaData = value;
+					UpdateMirrors();
+					boneList = umaData.skeleton.BoneNames;
+					Array.Sort(boneList);
+				}
+			}
 		}
 
 		public enum MirrorPlane

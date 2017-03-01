@@ -907,7 +907,6 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 				if (thisUBP == null)
 				{
 					thisUBP = Editor.CreateEditor((UMA.PoseTools.UMABonePose)bonePoseAsset.objectReferenceValue, typeof(UMA.PoseTools.UMABonePoseEditor));
-					((UMA.PoseTools.UMABonePoseEditor)thisUBP).minimalMode = true;
 					if (umaData != null)
 					{
 						((UMA.PoseTools.UMABonePoseEditor)thisUBP).context = new UMA.PoseTools.UMABonePoseEditorContext();
@@ -917,7 +916,6 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 				else if (thisUBP.target != (UMA.PoseTools.UMABonePose)bonePoseAsset.objectReferenceValue)
 				{
 					thisUBP = Editor.CreateEditor((UMA.PoseTools.UMABonePose)bonePoseAsset.objectReferenceValue, typeof(UMA.PoseTools.UMABonePoseEditor));
-					((UMA.PoseTools.UMABonePoseEditor)thisUBP).minimalMode = true;
 					if (umaData != null)
 					{
 						((UMA.PoseTools.UMABonePoseEditor)thisUBP).context = new UMA.PoseTools.UMABonePoseEditorContext();
