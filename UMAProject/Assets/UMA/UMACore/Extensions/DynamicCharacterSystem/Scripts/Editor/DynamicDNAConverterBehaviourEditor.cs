@@ -907,18 +907,22 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 				if (thisUBP == null)
 				{
 					thisUBP = Editor.CreateEditor((UMA.PoseTools.UMABonePose)bonePoseAsset.objectReferenceValue, typeof(UMA.PoseTools.UMABonePoseEditor));
-					((UMA.PoseTools.UMABonePoseEditor)thisUBP).Init();
 					((UMA.PoseTools.UMABonePoseEditor)thisUBP).minimalMode = true;
 					if (umaData != null)
-						((UMA.PoseTools.UMABonePoseEditor)thisUBP).umaData = umaData;
+					{
+						((UMA.PoseTools.UMABonePoseEditor)thisUBP).context = new UMA.PoseTools.UMABonePoseEditorContext();
+						((UMA.PoseTools.UMABonePoseEditor)thisUBP).context.activeUMA = umaData;
+					}
 				}
 				else if (thisUBP.target != (UMA.PoseTools.UMABonePose)bonePoseAsset.objectReferenceValue)
 				{
 					thisUBP = Editor.CreateEditor((UMA.PoseTools.UMABonePose)bonePoseAsset.objectReferenceValue, typeof(UMA.PoseTools.UMABonePoseEditor));
-					((UMA.PoseTools.UMABonePoseEditor)thisUBP).Init();
 					((UMA.PoseTools.UMABonePoseEditor)thisUBP).minimalMode = true;
 					if (umaData != null)
-						((UMA.PoseTools.UMABonePoseEditor)thisUBP).umaData = umaData;
+					{
+						((UMA.PoseTools.UMABonePoseEditor)thisUBP).context = new UMA.PoseTools.UMABonePoseEditorContext();
+						((UMA.PoseTools.UMABonePoseEditor)thisUBP).context.activeUMA = umaData;
+					}
 				}
 				EditorGUI.BeginChangeCheck();
 				thisUBP.OnInspectorGUI();
