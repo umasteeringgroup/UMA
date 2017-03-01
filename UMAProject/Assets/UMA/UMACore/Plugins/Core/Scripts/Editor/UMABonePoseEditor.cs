@@ -11,32 +11,41 @@ namespace UMA.PoseTools
     [CustomEditor(typeof(UMABonePose),true)]
     public class UMABonePoseEditor : Editor
     {
+		// HACK for testing
+		public UMAData sourceUMA;
+
 		UMABonePose targetPose = null;
 		public UMABonePoseEditorContext context = null;
+
+		const int BAD_INDEX = -1;
 		public bool haveValidContext
 		{
 			get { return ((context != null) && (context.activeUMA != null)); }
 		}
+		public bool haveEditTarget
+		{
+			get { return (editBoneIndex != BAD_INDEX); }
+		}
 
-		private int drawBoneIndex = -1;
-		private int editBoneIndex = -1;
-		private int contextBoneIndex = -1;
-		private int mirrorBoneIndex = -1;
+		private float previewWeight = 1.0f;
+
+		const float addRemovePadding = 20f;
+		const float buttonVerticalOffset = 4f; // Can't be calculated because button layout is weird.
+
+		private int drawBoneIndex = BAD_INDEX;
+		private int editBoneIndex = BAD_INDEX;
+		private int activeBoneIndex = BAD_INDEX;
+		private int mirrorBoneIndex = BAD_INDEX;
 		private bool mirrorActive = true;
-
-		// HACK for testing
-		public UMAData sourceUMA;
 
 //		private bool inspectorLocked = false;
 
 		private bool doBoneAdd = false;
 		private bool doBoneRemove = false;
-		private int removeBoneIndex = -1;
-		private int addBoneIndex = -1;
+		private int removeBoneIndex = BAD_INDEX;
+		private int addBoneIndex = BAD_INDEX;
 		const int minBoneNameLength = 4;
 		private string addBoneName = "";
-		private string[] removeBoneOptions;
-		private string[] addBoneOptions;
 
 		private static Texture warningIcon;
 //		private static Texture trashIcon;
@@ -61,12 +70,16 @@ namespace UMA.PoseTools
 		private static GUIContent addBoneGUIContent = new GUIContent(
 			LocalizationDatabase.GetLocalizedString("Add Bone"),
 			LocalizationDatabase.GetLocalizedString("Add the selected bone into the pose."));
+		private static GUIContent previewGUIContent = new GUIContent(
+			LocalizationDatabase.GetLocalizedString("Preview Weight"),
+			LocalizationDatabase.GetLocalizedString("Amount to apply bone pose to preview model. Inactive while editing."));
 		
 		public void OnEnable()
 		{
 			targetPose = target as UMABonePose;
 //			inspectorLocked = ActiveEditorTracker.sharedTracker.isLocked;
 //			ActiveEditorTracker.sharedTracker.isLocked = true;
+			EditorApplication.update += this.OnUpdate;
 			SceneView.onSceneGUIDelegate += this.OnSceneGUI;
 
 			if (warningIcon == null)
@@ -82,24 +95,26 @@ namespace UMA.PoseTools
 		public void OnDisable()
 		{
 			SceneView.onSceneGUIDelegate -= this.OnSceneGUI;
+			EditorApplication.update -= this.OnUpdate;
 //			ActiveEditorTracker.sharedTracker.isLocked = inspectorLocked;
 		}
 
-		void OnSceneGUI(SceneView scene)
+		void OnUpdate()
 		{
 			if (haveValidContext)
 			{
-				if (contextBoneIndex != editBoneIndex)
+
+				if (activeBoneIndex != editBoneIndex)
 				{
-					contextBoneIndex = -1;
-					mirrorBoneIndex = -1;
-					if ((editBoneIndex >= 0) && (editBoneIndex < targetPose.poses.Length))
+					activeBoneIndex = BAD_INDEX;
+					mirrorBoneIndex = BAD_INDEX;
+					if (editBoneIndex != BAD_INDEX)
 					{
 						int boneHash = targetPose.poses[editBoneIndex].hash;
 						context.activeTransform = context.activeUMA.skeleton.GetBoneTransform(boneHash);
 						if (context.activeTransform != null)
 						{
-							contextBoneIndex = editBoneIndex;
+							activeBoneIndex = editBoneIndex;
 						}
 
 						if (context.mirrorTransform != null)
@@ -119,12 +134,45 @@ namespace UMA.PoseTools
 					{
 						context.activeTransform = null;
 					}
-
 				}
+
+				context.activeUMA.skeleton.ResetAll();
+				if (context.startingPose != null)
+				{
+					context.startingPose.ApplyPose(context.activeUMA.skeleton, 1f);
+				}
+
+				if (haveEditTarget)
+				{
+					targetPose.ApplyPose(context.activeUMA.skeleton, 1f);
+				}
+				else
+				{
+					targetPose.ApplyPose(context.activeUMA.skeleton, previewWeight);
+				}
+			}
+		}
+
+		void OnSceneGUI(SceneView scene)
+		{
+			if (haveValidContext && haveEditTarget)
+			{
+				serializedObject.Update();
+				SerializedProperty poses = serializedObject.FindProperty("poses");
+				SerializedProperty activePose = null;
+				SerializedProperty mirrorPose = null;
+
+				if (activeBoneIndex != BAD_INDEX) activePose = poses.GetArrayElementAtIndex(activeBoneIndex);
+				if (mirrorBoneIndex != BAD_INDEX) mirrorPose = poses.GetArrayElementAtIndex(mirrorBoneIndex);
 
 //				EditorGUI.BeginChangeCheck( );
 				Transform activeTrans = context.activeTransform;
 				Transform mirrorTrans = context.mirrorTransform;
+				if (!mirrorActive || (mirrorBoneIndex == BAD_INDEX))
+				{
+					mirrorTrans = null;
+				}
+
 				if (activeTrans != null)
 				{
 					if (context.activeTransChanged)
@@ -142,6 +190,11 @@ namespace UMA.PoseTools
 							Vector3 deltaPos = newLocalPos - activeTrans.localPosition;
 	//						Debug.Log("Moved active bone by: " + localDelta);
 							activeTrans.localPosition += deltaPos;
+							if (activePose != null)
+							{
+								SerializedProperty position = activePose.FindPropertyRelative("position");
+								position.vector3Value = position.vector3Value + deltaPos;
+							}
 
 							if (mirrorTrans != null)
 							{
@@ -159,6 +212,11 @@ namespace UMA.PoseTools
 								}
 
 								mirrorTrans.localPosition += deltaPos;
+								if (mirrorPose != null)
+								{
+									SerializedProperty position = mirrorPose.FindPropertyRelative("position");
+									position.vector3Value = position.vector3Value + deltaPos;
+								}
 							}
 						}
 					}
@@ -170,6 +228,11 @@ namespace UMA.PoseTools
 						{
 							Quaternion deltaRot = Quaternion.Inverse(activeTrans.rotation) * newRotation;
 							activeTrans.localRotation *= deltaRot;
+							if (activePose != null)
+							{
+								SerializedProperty rotation = activePose.FindPropertyRelative("rotation");
+								rotation.quaternionValue = rotation.quaternionValue * deltaRot;
+							}
 
 							if (mirrorTrans != null)
 							{
@@ -190,6 +253,11 @@ namespace UMA.PoseTools
 								}
 
 								mirrorTrans.localRotation *= deltaRot;
+								if (mirrorPose != null)
+								{
+									SerializedProperty rotation = mirrorPose.FindPropertyRelative("rotation");
+									rotation.quaternionValue = rotation.quaternionValue * deltaRot;
+								}
 							}
 						}
 					}
@@ -200,24 +268,27 @@ namespace UMA.PoseTools
 						if (newScale != activeTrans.localScale)
 						{
 							activeTrans.localScale = newScale;
+							if (activePose != null)
+							{
+								SerializedProperty scale = activePose.FindPropertyRelative("scale");
+								scale.vector3Value = newScale;
+							}
 
 							if (mirrorTrans != null)
 							{
 								mirrorTrans.localScale = activeTrans.localScale;
+								if (mirrorPose != null)
+								{
+									SerializedProperty scale = mirrorPose.FindPropertyRelative("scale");
+									scale.vector3Value = newScale;
+								}
 							}
 						}
 					}
 				}
-
-//				if( EditorGUI.EndChangeCheck( ) )
-//				{
-//					Undo.RecordObject( target, "Changed Look Target" );
-//					t.lookTarget = lookTarget;
-//					t.Update( );
-//				}
+					
+				serializedObject.ApplyModifiedProperties();
 			}
-
-
 		}
 
         public override void OnInspectorGUI()
@@ -239,18 +310,20 @@ namespace UMA.PoseTools
 				SerializedProperty scale = pose.FindPropertyRelative("scale");
 				scale.vector3Value = Vector3.one;
 
-				if (haveValidContext)
-				{
-					ArrayUtility.Remove(ref addBoneOptions, addBoneName);
-				}
-				ArrayUtility.Add(ref removeBoneOptions, addBoneName);
-
+				activeBoneIndex = BAD_INDEX;
+				editBoneIndex = BAD_INDEX;
+				mirrorBoneIndex = BAD_INDEX;
 				addBoneIndex = 0;
 				addBoneName = "";
 				doBoneAdd = false;
 			}
 			if (doBoneRemove)
 			{
+				poses.DeleteArrayElementAtIndex(removeBoneIndex - 1);
+
+				activeBoneIndex = BAD_INDEX;
+				editBoneIndex = BAD_INDEX;
+				mirrorBoneIndex = BAD_INDEX;
 				removeBoneIndex = 0;
 				doBoneRemove = false;
 			}
@@ -268,22 +341,33 @@ namespace UMA.PoseTools
 				}
 			}
 
+			// Weight of pose on preview model
+			if (haveValidContext)
+			{
+				EditorGUILayout.BeginHorizontal();
+				GUILayout.Space(addRemovePadding);
+				EditorGUI.BeginDisabledGroup(haveEditTarget);
+				previewWeight = EditorGUILayout.Slider(previewGUIContent, previewWeight, 0f, 1f);
+				EditorGUI.EndDisabledGroup();
+				GUILayout.Space(addRemovePadding);
+				EditorGUILayout.EndHorizontal();
+			}
+
+			GUILayout.Space(EditorGUIUtility.singleLineHeight / 2f);
+
 //			string controlName = GUI.GetNameOfFocusedControl();
 //			if ((controlName != null) && (controlName.Length > 0))
 //				Debug.Log(controlName);
 
-			if (removeBoneOptions == null)
+			// These can get corrupted by undo, so just rebuild them
+			string[] removeBoneOptions = new string[targetPose.poses.Length + 1];
+			removeBoneOptions[0] = " ";
+			for (int i = 0; i < targetPose.poses.Length; i++)
 			{
-				List<string> removeList = new List<string>(targetPose.poses.Length + 1);
-				removeList.Add(" ");
-				for (int i = 0; i < targetPose.poses.Length; i++)
-				{
-					removeList.Add(targetPose.poses[i].bone);
-				}
-
-				removeBoneOptions = removeList.ToArray();
+				removeBoneOptions[i + 1] = targetPose.poses[i].bone;
 			}
-			if (haveValidContext && (addBoneOptions == null))
+			string[] addBoneOptions = new string[1];
+			if (haveValidContext)
 			{
 				List<string> addList = new List<string>(context.boneList);
 				addList.Insert(0, " ");
@@ -301,22 +385,20 @@ namespace UMA.PoseTools
 			{
 				for (int i = 0; i < poses.arraySize; i++)
 				{
-					var pose = poses.GetArrayElementAtIndex(i);
+					SerializedProperty pose = poses.GetArrayElementAtIndex(i);
 					drawBoneIndex = i;
 					PoseBoneDrawer(pose);
 				}
 			}
 
 			GUILayout.Space(EditorGUIUtility.singleLineHeight);
-			const float addRemovePadding = 20f;
-			const float buttonVerticalOffset = 4f; // Can't be calculated because button layout is weird.
 
 			// Controls for adding a new bone
 			EditorGUILayout.BeginHorizontal();
 			GUILayout.Space(addRemovePadding);
 			if (haveValidContext)
 			{
-				EditorGUI.BeginDisabledGroup(addBoneIndex <= 0);
+				EditorGUI.BeginDisabledGroup(addBoneIndex < 1);
 				if (GUILayout.Button(addBoneGUIContent, GUILayout.Width(90f)))
 				{
 					addBoneName = addBoneOptions[addBoneIndex];
@@ -349,7 +431,7 @@ namespace UMA.PoseTools
 			// Controls for removing existing bone
 			EditorGUILayout.BeginHorizontal();
 			GUILayout.Space(addRemovePadding);
-			EditorGUI.BeginDisabledGroup(removeBoneIndex <= 0);
+			EditorGUI.BeginDisabledGroup(removeBoneIndex < 1);
 			if (GUILayout.Button(removeBoneGUIContent, GUILayout.Width(90f)))
 			{
 				doBoneRemove = true;
@@ -381,7 +463,8 @@ namespace UMA.PoseTools
 				GUI.color = Color.green;
 				if (GUILayout.Button(LocalizationDatabase.GetLocalizedString("Editing"), EditorStyles.miniButton, GUILayout.Width(60f)))
 				{
-					editBoneIndex = -1;
+					editBoneIndex = BAD_INDEX;
+					mirrorBoneIndex = BAD_INDEX;
 				}
 			}
 			else if (drawBoneIndex == mirrorBoneIndex)

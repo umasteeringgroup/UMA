@@ -229,15 +229,18 @@ namespace UMA.PoseTools
 						Vector3 childBpos = childB.localPosition;
 						MirrorPlane plane = MirrorPlane.Mirror_None;
 
-						if (childApos == new Vector3(-childBpos.x, childBpos.y, childBpos.z))
+						if /*(!Mathf.Approximately(childApos.x, 0f) && */
+							(childApos == new Vector3(-childBpos.x, childBpos.y, childBpos.z))
 						{
 							plane = MirrorPlane.Mirror_X;
 						}
-						if (childApos == new Vector3(childBpos.x, -childBpos.y, childBpos.z))
+						if /*(!Mathf.Approximately(childApos.y, 0f) && */
+							(childApos == new Vector3(childBpos.x, -childBpos.y, childBpos.z))
 						{
 							plane = MirrorPlane.Mirror_Y;
 						}
-						if (childApos == new Vector3(childBpos.x, childBpos.y, -childBpos.z))
+						if /*(!Mathf.Approximately(childApos.z, 0f) && */
+							(childApos == new Vector3(childBpos.x, childBpos.y, -childBpos.z))
 						{
 							plane = MirrorPlane.Mirror_Z;
 						}
