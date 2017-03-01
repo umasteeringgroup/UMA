@@ -12,7 +12,7 @@ namespace UMAEditor
 		private Editor UAIE;
 		private UMAAssetIndex UAI;
 		Vector2 scrollPos;
-
+		bool needsReenable = false;
 
 		[MenuItem("UMA/Show UMAAssetIndexWindow")]
 		static void Init()
@@ -23,17 +23,41 @@ namespace UMAEditor
 
 		void OnEnable()
 		{
-			UAI = UMAAssetIndex.Instance;
-			UAI.windowInstance = this;
-		}
+			GetUAI();
+        }
 
 		void OnDestroy()
 		{
-			UAI.windowInstance = null;
+			if(UAI != null)
+				UAI.windowInstance = null;
+			needsReenable = false;
         }
+
+		void GetUAI()
+		{
+			UAI = UMAAssetIndex.Instance;
+			if (UAI != null)
+			{
+				UAI.windowInstance = this;
+				needsReenable = false;
+			}
+			else
+			{
+				needsReenable = true;
+			}
+		}
 
 		void OnGUI()
 		{
+			if (needsReenable)
+			{
+				GetUAI();
+				//If we are still waiting
+				if (needsReenable)
+				{
+					return;
+				}
+			}
 			scrollPos = EditorGUILayout.BeginScrollView(scrollPos, false, true);
 			EditorGUILayout.BeginVertical(GUILayout.Width(EditorGUIUtility.currentViewWidth - 20f));
 			EditorGUILayout.Space();

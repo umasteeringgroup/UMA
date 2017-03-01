@@ -11,7 +11,7 @@ using UMAEditor;
 
 namespace UMA
 {
-	
+
 	/// <summary>
 	/// Contains Refrences for all UMA Assets that you want to be included in the build and accessed by any Libraries in your project. Also includes a list of AssetBundle assets, BUT THESE ARE NOT INCLUDED IN YOUR BUILD.
 	/// The list is just here for 'simulation mode in the editor. But It could potentially in future be used to assign things to bundles (watch this space)
@@ -26,19 +26,19 @@ namespace UMA
 		//UMAAssetIndex creates this itself if Instance is null and no Index exists (or was deleted) in Resources
 		public static void CreateUMAAssetIndex()
 		{
-            if (Resources.Load("UMAAssetIndex-DONOTDELETE") != null)
+			if (Resources.Load("UMAAssetIndex-DONOTDELETE") != null)
 			{
 				EditorUtility.DisplayDialog("UMA Asset Index Already Exists", "You dont need to create a new UMA Asset Index because one already exists in " + UMA.FileUtils.GetInternalDataStoreFolder(false, false) + ". If you want to update your index please go to UMA/Utilities/UMA Asset Index or delete the existing index first", "OK");
 				return;
 			}
 			//This needs to be created in our internal data store folder (so *hopefully* people dont delete it)
-			UMAEditor.CustomAssetUtility.CreateAsset<UMAAssetIndex>(Path.Combine(UMA.FileUtils.GetInternalDataStoreFolder(false, false), "UMAAssetIndex-DONOTDELETE.asset"));
+			UMAEditor.CustomAssetUtility.CreateAsset<UMAAssetIndex>(Path.Combine(UMA.FileUtils.GetInternalDataStoreFolder(false, false), "UMAAssetIndex-DONOTDELETE.asset"),false);
 		}
 #endif
 		static UMAAssetIndex _instance;
 
 		[Tooltip("Set the types you wish to track in the index in here.")]
-		public List<string> typesToIndex = new List<string>() { "SlotDataAsset", "OverlayDataAsset", "RaceData", "UMATextRecipe", "UMAWardrobeRecipe", "UMAWardrobeCollection", "RuntimeAnimatorController","DynamicUMADnaAsset" };
+		public List<string> typesToIndex = new List<string>() { "SlotDataAsset", "OverlayDataAsset", "RaceData", "UMATextRecipe", "UMAWardrobeRecipe", "UMAWardrobeCollection", "RuntimeAnimatorController", "DynamicUMADnaAsset" };
 		//the index of all the assets you have selected to include
 		//This is the only index that gets 'Saved' into the game
 		[SerializeField]
@@ -65,7 +65,7 @@ namespace UMA
 		{
 			public string prevPath = "";
 			public string newPath = "";
-			
+
 			public AMPMovedAsset() { }
 			public AMPMovedAsset(string _prevPath, string _newPath)
 			{
@@ -90,9 +90,9 @@ namespace UMA
 		{
 			get
 			{
-				if(_instance == null)
+				if (_instance == null)
 				{
-					_instance = (UMAAssetIndex) Resources.Load("UMAAssetIndex-DONOTDELETE");
+					_instance = (UMAAssetIndex)Resources.Load("UMAAssetIndex-DONOTDELETE");
 #if UNITY_EDITOR
 					if (_instance == null)
 					{
@@ -103,7 +103,7 @@ namespace UMA
 							_instance = (UMAAssetIndex)Resources.Load("UMAAssetIndex-DONOTDELETE");
 							_instance.GenerateLists();//does not allow duplicate assets
 						}
-                    }
+					}
 					else
 					{
 						_instance.ValidateBuildIndex();
@@ -149,7 +149,7 @@ namespace UMA
 		{
 			//Did have this commented out but not sure if its helping or not
 			_instance = this;
-        }
+		}
 
 		public void OnEnable()
 		{
@@ -174,7 +174,7 @@ namespace UMA
 				return;
 			if (PathIsValid(createdAsset) && !AMPCreatedAssets.Contains(createdAsset))
 				AMPCreatedAssets.Add(createdAsset);
-			if(AMPCreatedAssets.Count > 0)
+			if (AMPCreatedAssets.Count > 0)
 			{
 				EditorApplication.update -= DoCreatedAsset;
 				EditorApplication.update += DoCreatedAsset;
@@ -200,10 +200,10 @@ namespace UMA
 					{
 						AMPMovedAssets.Add(new AMPMovedAsset(movedFromAssetPaths[i], movedAssets[i]));
 						addedMovedAssets = true;
-                    }
+					}
 				}
 				if (AMPMovedAssets.Count > 0 && addedMovedAssets)
-				{			
+				{
 					MakeAssetsMovingIntoResourcesNotLive();
 					EditorApplication.update -= DoMovedAssets;
 					EditorApplication.update += DoMovedAssets;
@@ -219,32 +219,32 @@ namespace UMA
 			{
 				for (int i = 0; i < importedAssets.Length; i++)
 				{
-					if (PathIsValid(importedAssets[i]) && !AMPCreatedAssets.Contains(importedAssets[i]) && !AMPSavedAssets.Contains(importedAssets[i]) && !AMPMovedAssetsContains("",importedAssets[i]))
+					if (PathIsValid(importedAssets[i]) && !AMPCreatedAssets.Contains(importedAssets[i]) && !AMPSavedAssets.Contains(importedAssets[i]) && !AMPMovedAssetsContains("", importedAssets[i]))
 					{
 						//if the path does not already exist in _fullIndex its a created asset- but it could also be an asset whose name has changed
 						//check what happens there
 						//If an asset is DUPLICATED it will also be an entry for __DELETED_GUID_Trash in the deletedAssets array (so we can know it was CREATED)
-						if(deletedAssets.Length > 0)
+						if (deletedAssets.Length > 0)
 						{
-							if(deletedAssets[i] != null)
+							if (deletedAssets[i] != null)
 							{
-								Debug.Log("OnPostprocessAllAssets CREATED ASSET " + importedAssets[i]);
+								//Debug.Log("OnPostprocessAllAssets CREATED ASSET " + importedAssets[i]);
 								AMPCreatedAssets.Add(importedAssets[i]);
 								addedCreatedAssets = true;
-                            }
+							}
 							else
 							{
 								//Debug.Log("OnPostprocessAllAssets IMPORTED ASSET " + importedAssets[i]);
 								AMPSavedAssets.Add(importedAssets[i]);
 								addedSavedAssets = true;
-                            }
+							}
 						}
 						else
 						{
 							//Debug.Log("OnPostprocessAllAssets IMPORTED ASSET " + importedAssets[i]);
 							AMPSavedAssets.Add(importedAssets[i]);
 							addedSavedAssets = true;
-                        }
+						}
 						//Otherwise it was saved
 					}
 					else
@@ -281,9 +281,9 @@ namespace UMA
 						//Debug.Log("OnPostprocessAllAssets DELETED ASSET " + deletedAssets[i]);
 						AMPDeletedAssets.Add(deletedAssets[i]);
 						addedDeletedAssets = true;
-                    }
+					}
 				}
-				if(AMPDeletedAssets.Count > 0 && addedDeletedAssets)
+				if (AMPDeletedAssets.Count > 0 && addedDeletedAssets)
 				{
 					EditorApplication.update -= DoDeletedAsset;
 					EditorApplication.update += DoDeletedAsset;
@@ -315,10 +315,10 @@ namespace UMA
 					if (_buildIndex.Contains(path.prevPath))
 					{
 						_buildIndex.RemovePath(path.prevPath);
-                    }
+					}
 				}
 			}
-        }
+		}
 		/// <summary>
 		/// Processers the AMPMovedAssets after AssetModificationProcessor has finished moving assets
 		/// </summary>
@@ -420,7 +420,7 @@ namespace UMA
 			EditorApplication.delayCall -= CleanUnusedAssets;
 			EditorApplication.delayCall += CleanUnusedAssets;
 			//sort out the selected object
-			if(folderToSelectAfterMove != "")
+			if (folderToSelectAfterMove != "")
 			{
 				var folderObject = AssetDatabase.LoadAssetAtPath(folderToSelectAfterMove, typeof(UnityEngine.Object));
 				if (folderObject != null)
@@ -440,7 +440,7 @@ namespace UMA
 			//
 			//Do we need to go back to Resources.UnloadUnusedAssets(); ?
 			//EditorUtility.UnloadUnusedAssetsImmediate(true);
-        }
+		}
 
 		/// <summary>
 		/// Processers the AMPDeletedAssets after AssetModificationProcessor has finished moving assets 
@@ -506,7 +506,7 @@ namespace UMA
 						_buildIndex.AddPath(thisAsset, thisAssetHash, thisAssetName, false);
 				}
 			}
-            EditorUtility.SetDirty(this);
+			EditorUtility.SetDirty(this);
 			AssetDatabase.SaveAssets();
 			AMPCreatedAssets.Clear();
 			SortIndexes();
@@ -560,7 +560,7 @@ namespace UMA
 			AssetDatabase.SaveAssets();
 			AMPSavedAssets.Clear();
 			CheckAndUpdateWindow();
-			
+
 			EditorApplication.delayCall -= CleanUnusedAssets;
 			EditorApplication.delayCall += CleanUnusedAssets;
 		}
@@ -710,13 +710,13 @@ namespace UMA
 
 		public void ToggleFolderAssets(string path, string assetType, bool live)
 		{
-			for(int ti = 0; ti < _fullIndex.data.Length; ti++)
+			for (int ti = 0; ti < _fullIndex.data.Length; ti++)
 			{
-				if(_fullIndex.data[ti].type == assetType)
+				if (_fullIndex.data[ti].type == assetType)
 				{
-					for(int i = 0; i < _fullIndex.data[ti].typeIndex.Length; i++)
+					for (int i = 0; i < _fullIndex.data[ti].typeIndex.Length; i++)
 					{
-						if(path == Path.GetDirectoryName(_fullIndex.data[ti].typeIndex[i].fullPath))
+						if (path == Path.GetDirectoryName(_fullIndex.data[ti].typeIndex[i].fullPath))
 						{
 							if (live)
 								MakeAssetLive(_fullIndex.data[ti].typeIndex[i], assetType, false);
@@ -726,6 +726,8 @@ namespace UMA
 					}
 				}
 			}
+			EditorUtility.SetDirty(this);
+			AssetDatabase.SaveAssets();
 			CheckAndUpdateWindow();
 			EditorApplication.delayCall -= CleanUnusedAssets;
 			EditorApplication.delayCall += CleanUnusedAssets;
@@ -756,7 +758,7 @@ namespace UMA
 					string thisAssetName = "";
 					GetAssetHashAndNames(thisAsset, ref thisAssetHash, ref thisAssetName);
 					//we dont want a file ref if the object is live because it was moved into Resources
-					if(InResources(fullIndexData.fullPath))
+					if (InResources(fullIndexData.fullPath))
 						_buildIndex.AddPath(thisAsset, thisAssetHash, thisAssetName, false);
 					else
 						_buildIndex.AddPath(thisAsset, thisAssetHash, thisAssetName, true);
@@ -835,7 +837,7 @@ namespace UMA
 			//we need to know if any anything has changed since the index was last open in Unity
 			for (int ti = 0; ti < _buildIndex.data.Length; ti++)
 			{
-				for(int i = 0; i < _buildIndex.data[ti].typeIndex.Length; i++)
+				for (int i = 0; i < _buildIndex.data[ti].typeIndex.Length; i++)
 				{
 					//have any assets moved in or out of Resources
 					//something like
@@ -877,7 +879,7 @@ namespace UMA
 									if (!String.IsNullOrEmpty(_buildIndex.data[ti].typeIndex[i].fileRefPath))
 										_buildIndex.data[ti].typeIndex[i].TheFileReference = null;
 									//update the path
-                                    _buildIndex.data[ti].typeIndex[i].fullPath = fullIndexItem.fullPath;
+									_buildIndex.data[ti].typeIndex[i].fullPath = fullIndexItem.fullPath;
 								}
 							}
 						}
@@ -892,7 +894,7 @@ namespace UMA
 							changed = true;
 						}
 					}
-                }
+				}
 			}
 			if (changed)
 			{
@@ -907,19 +909,19 @@ namespace UMA
 
 		private bool AMPMovedAssetsContains(string ppath = "", string npath = "")
 		{
-			for(int i = 0; i < AMPMovedAssets.Count; i++)
+			for (int i = 0; i < AMPMovedAssets.Count; i++)
 			{
 				if (ppath != "" && npath != "")
 				{
 					if (AMPMovedAssets[i].prevPath == ppath && AMPMovedAssets[i].newPath == npath)
 						return true;
 				}
-				else if(ppath != "")
+				else if (ppath != "")
 				{
 					if (AMPMovedAssets[i].prevPath == ppath)
 						return true;
-                }
-				else if(npath != "")
+				}
+				else if (npath != "")
 				{
 					if (AMPMovedAssets[i].newPath == npath)
 						return true;
@@ -1072,14 +1074,14 @@ namespace UMA
 		/// </summary>
 		public List<T> LoadAllAssetsOfType<T>(string[] foldersToSearch = null) where T : UnityEngine.Object
 		{
-				return _buildIndex.GetAll<T>(foldersToSearch);
+			return _buildIndex.GetAll<T>(foldersToSearch);
 		}
 		/// <summary>
 		/// Returns the asset of the given Type and uma name if it has been added to the BuildIndex, null if not found
 		/// </summary>
 		public UnityEngine.Object LoadAsset<T>(string umaName, string[] foldersToSearch = null) where T : UnityEngine.Object
 		{
-				return _buildIndex.Get<T>(umaName, foldersToSearch);
+			return _buildIndex.Get<T>(umaName, foldersToSearch);
 		}
 		/// <summary>
 		/// Returns the asset of the given Type and uma nameHash if it has been added to the BuildIndex, null if not found 
@@ -1094,16 +1096,16 @@ namespace UMA
 		public UnityEngine.Object LoadAssetAtPath(string path)
 		{
 			UnityEngine.Object foundObj = null;
-			for(int i = 0; i < _buildIndex.data.Length; i++)
+			for (int i = 0; i < _buildIndex.data.Length; i++)
 			{
-				for(int ti = 0; ti < _buildIndex.data[i].typeIndex.Length; ti++)
+				for (int ti = 0; ti < _buildIndex.data[i].typeIndex.Length; ti++)
 				{
 					if (_buildIndex.data[i].typeIndex[ti].fullPath == path)
 						return _buildIndex.data[i].typeIndex[ti].TheFileReference;
-                }
+				}
 			}
 			return foundObj;
-        }
+		}
 
 		#endregion
 	}

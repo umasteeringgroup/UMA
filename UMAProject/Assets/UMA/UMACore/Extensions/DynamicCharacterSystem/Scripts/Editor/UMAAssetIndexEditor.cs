@@ -355,7 +355,7 @@ namespace UMAEditor
 											if (EditorGUI.EndChangeCheck())
 											{
 												UAI.ToggleFolderAssets(lastFolder, UAI.FullIndex.data[ti].type, newWholeFolderLive);
-												changed = true;
+												//changed = true;
 											}
 										}
 									}
