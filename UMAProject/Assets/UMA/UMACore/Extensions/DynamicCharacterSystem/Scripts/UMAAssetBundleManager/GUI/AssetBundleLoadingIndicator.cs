@@ -99,21 +99,24 @@ namespace UMAAssetBundleManager
 				_bundlesToCheck.Clear();
 				Hide();
 			}
-			if (_bundlesToCheck.Count > 0)
+			if (status == statusOpts.Downloading || status == statusOpts.Unpacking)
 			{
-				float overallProgress = 0;
-				//var newBundlesToCheck = new List<string>();
-				for (int i = 0; i < _bundlesToCheck.Count; i++)
+				if (_bundlesToCheck.Count > 0)
 				{
-					var thisProgress = AssetBundleManager.GetBundleDownloadProgress(_bundlesToCheck[i], true);
-					/*if(thisProgress != 1f)
-                    {
-                        newBundlesToCheck.Add(_bundlesToCheck[i]);
-                    }*/
-					overallProgress += thisProgress;
+					float overallProgress = 0;
+					//var newBundlesToCheck = new List<string>();
+					for (int i = 0; i < _bundlesToCheck.Count; i++)
+					{
+						var thisProgress = AssetBundleManager.GetBundleDownloadProgress(_bundlesToCheck[i], true);
+						/*if(thisProgress != 1f)
+						{
+							newBundlesToCheck.Add(_bundlesToCheck[i]);
+						}*/
+						overallProgress += thisProgress;
+					}
+					percentDone = overallProgress / _bundlesToCheck.Count;
+					//_bundlesToCheck = newBundlesToCheck;
 				}
-				percentDone = overallProgress / _bundlesToCheck.Count;
-				//_bundlesToCheck = newBundlesToCheck;
 				UpdateProgress();
 			}
 		}
@@ -169,6 +172,38 @@ namespace UMAAssetBundleManager
 				indicatorObject.SetActive(true);
 			}
 			status = statusOpts.Downloading;
+		}
+
+		public void ShowManual(float thisPercentDone, string loadingMessage = "", string unpackingMessage = "", string loadedMessage = "")
+		{
+			//if we are not showing a status
+			if (_bundlesToCheck.Count == 0)
+			{
+				StopCoroutine("DelayedHide");
+				ResetAndHide();
+				_loadingMessage = loadingMessage != "" ? loadingMessage : loadingText;
+				_unpackingMessage = unpackingMessage != "" ? unpackingMessage : unpackingText;
+				_loadedMessage = loadedMessage != "" ? loadedMessage : loadedText;
+				percentDone = thisPercentDone;
+				string donePercent = Mathf.Round(percentDone * 100).ToString();
+				if (indicatorText != null)
+				{
+					indicatorText.text = _loadingMessage + "(" + donePercent + "%)";
+				}
+				if (indicatorObject != null)
+				{
+					indicatorObject.SetActive(true);
+				}
+				if (indicatorBar != null)
+				{
+					indicatorBar.value = percentDone;
+				}
+				if (indicatorBarText != null)
+				{
+					indicatorBarText.text = donePercent + "%";
+				}
+				status = statusOpts.Downloading;
+			}
 		}
 
 		public void Hide()
