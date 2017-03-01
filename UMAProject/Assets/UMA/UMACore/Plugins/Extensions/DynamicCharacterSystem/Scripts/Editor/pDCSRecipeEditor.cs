@@ -42,6 +42,37 @@ namespace UMAEditor
 				_wsSlot = slot;
 				_wsRecipeName = recipeName;
 			}
+
+			private bool CheckRecipeAvailability(string recipeName)
+			{
+				if (Application.isPlaying)
+					return true;
+				bool searchResources = true;
+				bool searchAssetBundles = true;
+				string resourcesFolderPath = "";
+				string assetBundlesToSearch = "";
+				var context = UMAContext.FindInstance();
+				DynamicCharacterSystem thisDCS = null;
+				if (context != null)
+					thisDCS = (context.dynamicCharacterSystem as DynamicCharacterSystem);
+				if (thisDCS != null)
+				{
+					searchResources = thisDCS.dynamicallyAddFromResources;
+					searchAssetBundles = thisDCS.dynamicallyAddFromAssetBundles;
+					resourcesFolderPath = thisDCS.resourcesRecipesFolder;
+					assetBundlesToSearch = thisDCS.assetBundlesForRecipesToSearch;
+				}
+				bool found = false;
+				DynamicAssetLoader.Instance.debugOnFail = false;
+				found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeRecipe>(searchResources, searchAssetBundles, true, assetBundlesToSearch, resourcesFolderPath, null, recipeName, null);
+				if (!found)
+					found = DynamicAssetLoader.Instance.AddAssets<UMATextRecipe>(searchResources, searchAssetBundles, true, assetBundlesToSearch, resourcesFolderPath, null, recipeName, null);
+				if (!found)
+					found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeCollection>(searchResources, searchAssetBundles, true, assetBundlesToSearch, resourcesFolderPath, null, recipeName, null);
+				DynamicAssetLoader.Instance.debugOnFail = true;
+				return found;
+			}
+
 			public bool OnGUI()
 			{
 				bool changed = false;
@@ -56,8 +87,16 @@ namespace UMAEditor
 				thisPopupVals.Add("None");
 				thisPopupVals.AddRange(recipesForRaceSlot);
 				var selected = 0;
+				var recipeIsLive = true;
+				Rect valRBut = new Rect();
+				var warningStyle = new GUIStyle(EditorStyles.miniButton);
+				warningStyle.contentOffset = new Vector2(0f, 0f);
+				warningStyle.fontStyle = FontStyle.Bold;
+				var currentTint = GUI.color;
 				if (_wsRecipeName != "")
 				{
+					if (DynamicAssetLoader.Instance)
+						recipeIsLive = CheckRecipeAvailability(_wsRecipeName);
 					selected = thisPopupVals.IndexOf(_wsRecipeName);
 					if (selected == -1)
 					{
@@ -69,8 +108,15 @@ namespace UMAEditor
 					}
 				}
 				var newSelected = selected;
+				if (!recipeIsLive)
+					EditorGUI.indentLevel++;
 				EditorGUI.BeginChangeCheck();
 				newSelected = EditorGUILayout.Popup(_wsSlot, selected, thisPopupVals.ToArray());
+				if (!recipeIsLive)
+				{
+					EditorGUI.indentLevel--;
+					valRBut = GUILayoutUtility.GetLastRect();
+				}
 				if (EditorGUI.EndChangeCheck())
 				{
 					if (newSelected != selected)
@@ -78,6 +124,13 @@ namespace UMAEditor
 						changed = true;
 						_wsRecipeName = (thisPopupVals[newSelected].IndexOf("(missing)") == -1 && thisPopupVals[newSelected].IndexOf("(incompatible)") == -1) ? (thisPopupVals[newSelected] != "None" ? thisPopupVals[newSelected] : "") : _wsRecipeName.Replace("(missing)", "").Replace("(incompatible)", "");
 					}
+				}
+				if (!recipeIsLive)
+				{
+					var warningRect = new Rect((valRBut.xMin - 5f), valRBut.yMin, 20f, valRBut.height);
+					GUI.color = new Color(255, 200, 0);
+					GUI.Box(warningRect, new GUIContent("!", _wsRecipeName + " was not Live. You can make it live by checking it on in the UMA/UMA Asset Index window."), warningStyle);
+					GUI.color = currentTint;
 				}
 				return changed;
 			}
