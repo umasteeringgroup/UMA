@@ -434,12 +434,9 @@ namespace UMA
 			EditorApplication.delayCall -= CleanUnusedAssets;
 			//Debug.Log("CleanUnusedAssets");
 			//AssetDatabase.Refresh();//apparently this also calls the following
-			Resources.UnloadUnusedAssets();
-			//we could also try the following - where true will unload assets even if they are refrenced by scripts
-			//But we need to be very careful that this does not make the normal libraries (and other things) not work
-			//
-			//Do we need to go back to Resources.UnloadUnusedAssets(); ?
-			//EditorUtility.UnloadUnusedAssetsImmediate(true);
+			//Resources.UnloadUnusedAssets();
+			//we seem to actually need to use this
+			EditorUtility.UnloadUnusedAssetsImmediate(true);
 		}
 
 		/// <summary>
