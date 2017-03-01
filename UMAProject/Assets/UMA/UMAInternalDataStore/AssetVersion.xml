@@ -5,5 +5,5 @@
     <notes>UPDATE THIS!
 </notes>
     <package-uri>http://umawiki.secretanorak.com/Updates/Update.unitypackage</package-uri>
-    <version-uri>https://raw.githubusercontent.com/huika/UMA/autoUpdate_b/UMAProject/Assets/UMA/AssetVersion.xml</version-uri>
+    <version-uri>https://raw.githubusercontent.com/huika/UMA/unity53/UMAProject/Assets/UMA/UMAInternalDataStore/AssetVersion.xml</version-uri>
 </asset>
