@@ -234,14 +234,14 @@ namespace UMA
                             }
 							else
 							{
-								Debug.Log("OnPostprocessAllAssets IMPORTED ASSET " + importedAssets[i]);
+								//Debug.Log("OnPostprocessAllAssets IMPORTED ASSET " + importedAssets[i]);
 								AMPSavedAssets.Add(importedAssets[i]);
 								addedSavedAssets = true;
                             }
 						}
 						else
 						{
-							Debug.Log("OnPostprocessAllAssets IMPORTED ASSET " + importedAssets[i]);
+							//Debug.Log("OnPostprocessAllAssets IMPORTED ASSET " + importedAssets[i]);
 							AMPSavedAssets.Add(importedAssets[i]);
 							addedSavedAssets = true;
                         }
@@ -278,7 +278,7 @@ namespace UMA
 					//Assets/__DELETED_GUID_Trash/919fa5a19165e484b838bc2732aabcb2
 					if (PathIsValid(deletedAssets[i]) && !AMPDeletedAssets.Contains(deletedAssets[i]))
 					{
-						Debug.Log("OnPostprocessAllAssets DELETED ASSET " + deletedAssets[i]);
+						//Debug.Log("OnPostprocessAllAssets DELETED ASSET " + deletedAssets[i]);
 						AMPDeletedAssets.Add(deletedAssets[i]);
 						addedDeletedAssets = true;
                     }
@@ -451,7 +451,7 @@ namespace UMA
 				return;
 			EditorApplication.update -= DoDeletedAsset;
 
-			Debug.Log("DoDeletedAsset");
+			//Debug.Log("DoDeletedAsset");
 			//Remove the asset from all indexes
 			foreach (string path in AMPDeletedAssets)
 			{
@@ -484,7 +484,7 @@ namespace UMA
 				return;
 			EditorApplication.update -= DoCreatedAsset;
 
-			Debug.Log("DoCreatedAsset");
+			//Debug.Log("DoCreatedAsset");
 			foreach (string path in AMPCreatedAssets)
 			{
 				var thisAsset = AssetDatabase.LoadMainAssetAtPath(path);
@@ -525,7 +525,7 @@ namespace UMA
 				return;
 			EditorApplication.update -= DoSavedAssets;
 
-			Debug.Log("DoSavedAssets");
+			//Debug.Log("DoSavedAssets");
 			//assets were saved
 			foreach (string path in AMPSavedAssets)
 			{

@@ -362,6 +362,7 @@ namespace UMAEditor
 								}
 								if (lastFolder != Path.GetDirectoryName(UAI.FullIndex.data[ti].typeIndex[i].fullPath))
 								{
+									GUILayout.Space(5f);
 									lastFolder = Path.GetDirectoryName(UAI.FullIndex.data[ti].typeIndex[i].fullPath);
 									wholeFolderLive = true;
 									countInFolder = 0;
