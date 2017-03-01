@@ -230,9 +230,41 @@ namespace UMA
 					return;
 				var currentSMROffscreenSetting = umaData.myRenderer.updateWhenOffscreen;
 				Bounds newBounds;
+
+				//for this to properly calculate if the character is in a scaled game object it needs to be moved into the root
+				var umaTransform = umaData.transform;
+				var oldParent = umaTransform.parent;
+				var originalRot = umaTransform.localRotation;
+				var originalPos = umaTransform.localPosition;
+
+				//we also need to disable any collider that is on it so it doesn't hit anything when its moved
+				var thisCollider = umaData.gameObject.GetComponent<Collider>();
+				bool thisColliderEnabled = false;
+				if (thisCollider)
+				{
+					thisColliderEnabled = thisCollider.enabled;
+					thisCollider.enabled = false;
+				}
+
+				//Now move into the root
+				umaTransform.SetParent(null, false);
+				umaTransform.localRotation = Quaternion.identity;
+				umaTransform.localPosition = Vector3.zero;
+
+				//Do the calculations
 				umaData.myRenderer.updateWhenOffscreen = true;
 				newBounds = new Bounds(umaData.myRenderer.localBounds.center, umaData.myRenderer.localBounds.size);
                 umaData.myRenderer.updateWhenOffscreen = currentSMROffscreenSetting;
+
+				//move it back
+				umaTransform.SetParent(oldParent, false);
+				umaTransform.localRotation = originalRot;
+				umaTransform.localPosition = originalPos;
+
+				//set any collider to its original setting
+				if (thisCollider)
+					thisCollider.enabled = thisColliderEnabled;
+
 				//somehow the bounds end up beneath the floor i.e. newBounds.center.y - newBounds.extents.y is actually a minus number
 				//tighten bounds fixes this
 				if (tightenBounds)
