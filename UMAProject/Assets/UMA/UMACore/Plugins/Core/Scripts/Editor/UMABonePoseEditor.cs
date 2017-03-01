@@ -303,6 +303,8 @@ namespace UMA.PoseTools
 				var pose = poses.GetArrayElementAtIndex(addedIndex);
 				SerializedProperty bone = pose.FindPropertyRelative("bone");
 				bone.stringValue = addBoneName;
+				SerializedProperty hash = pose.FindPropertyRelative("hash");
+				hash.intValue = UMASkeleton.StringToHash(addBoneName);
 				SerializedProperty position = pose.FindPropertyRelative("position");
 				position.vector3Value = Vector3.zero;
 				SerializedProperty rotation = pose.FindPropertyRelative("rotation");
