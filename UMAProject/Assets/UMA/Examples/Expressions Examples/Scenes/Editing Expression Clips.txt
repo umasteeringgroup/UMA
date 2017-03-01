@@ -1,4 +1,4 @@
-* Open the ExpressionClipEditor scene from UMA/Extensions/PoseTools/Scenes
+* Open the "UMA Core Tool - ExpressionClipEditor" scene
 
 * Select and enable either the Male_Unified or Female_Unified character
 
