@@ -167,7 +167,6 @@ namespace UMA
 				data = list;
 			}
 		}
-#endif
 		/// <summary>
 		/// Removes an Indexes asset at the given full path from the index
 		/// </summary>
@@ -201,7 +200,7 @@ namespace UMA
 					}
 					if (data[i].typeIndex[ii].fullPath == path)
 					{
-						data[i].Remove(path);//we still dont know if this actually happenned, but...
+						data[i].Remove(path);
 						removed = true;
 						if (removed)
 						{
@@ -212,7 +211,8 @@ namespace UMA
 					}
 				}
 			}
-			return removed;
+			CleanEmptyTypes();
+            return removed;
 		}
 
 		/// <summary>
@@ -236,6 +236,29 @@ namespace UMA
 			}
 		}
 
+		private void CleanEmptyTypes()
+		{
+			bool needsCleaning = false;
+			for (int i = 0; i < data.Length; i++)
+			{
+				if (data[i].typeIndex.Length == 0)
+				{
+					needsCleaning = true;
+				}
+			}
+			if (!needsCleaning)
+				return;
+			List<TypeIndex> cleanedTypeIndexes = new List<TypeIndex>();
+			for (int i = 0; i < data.Length; i++)
+			{
+				if (data[i].typeIndex.Length > 0)
+				{
+					cleanedTypeIndexes.Add(data[i]);
+                }
+			}
+			data = cleanedTypeIndexes.ToArray();
+		}
+
 		private void RemoveTypeFromIndex(System.Type type)
 		{
 			var list = new TypeIndex[data.Length - 1];
@@ -250,6 +273,8 @@ namespace UMA
 			}
 			data = list;
 		}
+
+#endif
 
 		public UnityEngine.Object Get(int nameHash, string type, string[] foldersToSearch = null)
 		{
@@ -472,6 +497,8 @@ namespace UMA
 			{
 				return typeIndex.Length;
 			}
+
+#if UNITY_EDITOR
 			/// <summary>
 			/// Adds an asset to the index's data if it is not there already
 			/// </summary>
@@ -488,13 +515,9 @@ namespace UMA
 					//we want these to get added if the full path is different (so we display duplicated assets) 
 					if (typeIndex[i].nameHash == nameHash && (compareFullPaths ? typeIndex[i].fullPath == fullPath : true))
 					{
-						//this will make the file ref null if this indexData was previously NOT in Resources and live and then moved INTO Resources
-						//THESE ADD METHODS NEED TO BE FULLY EDITOR ONLY BUT FOR NOW
-#if UNITY_EDITOR
-						//I want it to add another one if the full paths are different, so that we can see duplicated assets
-						//BUT I dont want it do do this when stuff has been moved out side of Unity
+
 						typeIndex[i].TheFileReference = obj;
-#endif
+
 						found = true;
 						break;
 					}
@@ -502,7 +525,7 @@ namespace UMA
 				if (!found)
 				{
 					var list = new IndexData[typeIndex.Length + 1];
-					Array.Copy(typeIndex, list, typeIndex.Length);//the crashing issue could be to do with this array copy- or ANY of the array copies because they are shallow
+					Array.Copy(typeIndex, list, typeIndex.Length);
 					if (obj != null)
 						list[typeIndex.Length] = new IndexData(obj, nameHash, fullPath, objName);
 					else
@@ -511,6 +534,7 @@ namespace UMA
 				}
 				return !found;
 			}
+
 			public void Remove(int nameHash)
 			{
 				if (typeIndex.Length == 0)
@@ -521,15 +545,8 @@ namespace UMA
 				{
 					if (typeIndex[i].nameHash == nameHash)
 					{
-						//try removing the refrence to the resources to stop the build thinking the file is still referenced
-						//probably not needed since refs in the old list SHOULD be garbage collected once the list is set to the new list
-						//but just in case...
-						//THESE ADD METHODS NEED TO BE FULLY EDITOR ONLY BUT FOR NOW
-#if UNITY_EDITOR
 						typeIndex[i].TheFileReference = null;
-#endif
 					}
-					//if (typeIndex[i].nameHash != nameHash)
 					else
 					{
 						list[listi] = new IndexData(typeIndex[i].fileRefPath, typeIndex[i].nameHash, typeIndex[i].fullPath, typeIndex[i].name);
@@ -553,16 +570,9 @@ namespace UMA
 				{
 					if (typeIndex[i].fullPath == path)
 					{
-						//try removing the refrence to the resources to stop the build thinking the file is still referenced
-						//Resources.UnloadAsset(typeIndex[i].fileReference);//not sure this will help because
-						//typeIndex[i].fileReference = null;//Im not sure whether simply accessing this will load it back into memory
-						//I'll try a property
 						//THESE ADD METHODS NEED TO BE FULLY EDITOR ONLY BUT FOR NOW
-#if UNITY_EDITOR
 						typeIndex[i].TheFileReference = null;
-#endif
 					}
-					// (typeIndex[i].fullPath != path)
 					else
 					{
 						var thisFileRefPath = typeIndex[i].fileRefPath;
@@ -574,6 +584,8 @@ namespace UMA
 				}
 				typeIndex = list;
 			}
+
+#endif
 
 			public UnityEngine.Object Get(string name, string[] foldersToSearch = null)
 			{
@@ -698,7 +710,10 @@ namespace UMA
 						if (String.IsNullOrEmpty(fileRefPath))
 						{
 							//Debug.Log("TheFileReference.set fileRefPath was empty. Creating...");
-							var fileRefFullPath = Path.Combine(UMA.FileUtils.GetInternalDataStoreFolder(false, false), value.name + "-fileRef.asset");
+							var fileRefsPath = Path.Combine(UMA.FileUtils.GetInternalDataStoreFolder(false, false), "UMAAssetIndexRefs-DONOTDELETE");
+							var fileRefsTypePath = Path.Combine(fileRefsPath,value.GetType().ToString().Replace(".", "_"));
+							Directory.CreateDirectory(fileRefsTypePath);
+							var fileRefFullPath = Path.Combine(fileRefsTypePath, value.name + "-fileRef.asset");
 							fileRefPath = GetResourcesPath(fileRefFullPath);
 							thisFileRefObj = UMAEditor.CustomAssetUtility.CreateAsset<UMAAssetIndexFileRef>(fileRefFullPath, false);
 						}
@@ -769,7 +784,11 @@ namespace UMA
 					else
 					{*/
 					UMAAssetIndexFileRef thisFileRefObj = null;
-					var fileRefFullPath = Path.Combine(UMA.FileUtils.GetInternalDataStoreFolder(false, false), _fileReference.name + "-fileRef.asset");
+					var fileRefsPath = Path.Combine(UMA.FileUtils.GetInternalDataStoreFolder(false, false), "UMAAssetIndexRefs-DONOTDELETE");
+					var fileRefsTypePath = Path.Combine(fileRefsPath, _fileReference.GetType().ToString().Replace(".", "_"));
+					Directory.CreateDirectory(fileRefsTypePath);
+					var fileRefFullPath = Path.Combine(fileRefsTypePath, _fileReference.name + "-fileRef.asset");
+					//var fileRefFullPath = Path.Combine(UMA.FileUtils.GetInternalDataStoreFolder(false, false), _fileReference.name + "-fileRef.asset");
 					fileRefPath = GetResourcesPath(fileRefFullPath);
 					thisFileRefObj = Resources.Load<UMAAssetIndexFileRef>(fileRefPath);
 					if (thisFileRefObj == null)
