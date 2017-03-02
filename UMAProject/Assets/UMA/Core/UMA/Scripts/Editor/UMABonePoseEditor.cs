@@ -50,8 +50,6 @@ namespace UMA.PoseTools
 		private static Texture warningIcon;
 //		private static Texture trashIcon;
 
-        private string bonePoseFilter = "";
-
 		private static GUIContent positionGUIContent = new GUIContent(
 			"Position",
 			"The change in this bone's local position when pose is applied.");
