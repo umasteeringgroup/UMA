@@ -1,3 +1,5 @@
+// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+
 // Upgrade NOTE: replaced '_Object2World' with '_Object2World'
 // Upgrade NOTE: replaced '_World2Object' with 'unity_WorldToObject'
 
@@ -22,9 +24,9 @@
 
 float4 LuxTessEdge (appdata v0, appdata v1, appdata v2)
 {
-    float3 wpos0 = mul(_Object2World, v0.vertex).xyz;
-    float3 wpos1 = mul(_Object2World, v1.vertex).xyz;
-    float3 wpos2 = mul(_Object2World, v2.vertex).xyz;
+    float3 wpos0 = mul(unity_ObjectToWorld, v0.vertex).xyz;
+    float3 wpos1 = mul(unity_ObjectToWorld, v1.vertex).xyz;
+    float3 wpos2 = mul(unity_ObjectToWorld, v2.vertex).xyz;
 
     // distance to edge center
     float3 dist = float3 ( distance(0.5 * (wpos1+wpos2), _WorldSpaceCameraPos), distance(0.5 * (wpos0+wpos2), _WorldSpaceCameraPos), distance(0.5 * (wpos0+wpos1), _WorldSpaceCameraPos));
@@ -47,7 +49,7 @@ void LuxTessellationDisplace (inout appdata v)
     float d = tex2Dlod(_ParallaxMap, float4( v.texcoord.xy * _ParallaxToBaseRatio,0,0)).g * 2.0 - 1.0;
 
     // Unfortunately we have to calculate distance based attenuation again
-    float3 wpos = mul(_Object2World, v.vertex).xyz;
+    float3 wpos = mul(unity_ObjectToWorld, v.vertex).xyz;
     float dist = distance (wpos, _WorldSpaceCameraPos);
     float f = saturate(1.0 - (dist - _MinDist) / (_MaxDist - _MinDist));
     v.vertex.xyz += v.normal * d * _Parallax * f;
@@ -86,7 +88,7 @@ void LuxTessellationDisplaceMixMapped (inout appdata v)
     //v.vertex.xyz -= v.normal * d * _Parallax; // * (UnityCalcDistanceTessFactor(v.vertex, _MinDist, _MaxDist, _Tess) / _Tess );
     
     // Unfortunately we have to calculate distance based attenuation again
-    float3 wpos = mul(_Object2World, v.vertex).xyz;
+    float3 wpos = mul(unity_ObjectToWorld, v.vertex).xyz;
     float dist = distance (wpos, _WorldSpaceCameraPos);
     float f = saturate(1.0 - (dist - _MinDist) / (_MaxDist - _MinDist));
     v.vertex.xyz += v.normal * d * _Parallax * f;

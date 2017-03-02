@@ -1,3 +1,5 @@
+// Upgrade NOTE: replaced 'unity_World2Shadow' with 'unity_WorldToShadow'
+
 // Upgrade NOTE: commented out 'float4x4 _CameraToWorld', a built-in variable
 // Upgrade NOTE: replaced '_CameraToWorld' with 'unity_CameraToWorld'
 // Upgrade NOTE: replaced '_LightMatrix0' with 'unity_WorldToLight'
@@ -86,7 +88,7 @@ half UnityDeferredComputeShadow(float3 vec, float fadeDist, float2 uv)
 	
 	#if defined(SPOT)
 	#if defined(SHADOWS_DEPTH)
-	float4 shadowCoord = mul (unity_World2Shadow[0], float4(vec,1));
+	float4 shadowCoord = mul (unity_WorldToShadow[0], float4(vec,1));
 	return saturate(UnitySampleShadowmap (shadowCoord) + fade);
 	#endif //SHADOWS_DEPTH
 	#endif
