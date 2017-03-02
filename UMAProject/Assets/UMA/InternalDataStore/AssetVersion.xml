@@ -2,7 +2,21 @@
     <name>UMA 2</name>
     <author>UMA Steering Group</author>
     <version>2.1.0</version>
-    <notes>UPDATE THIS!
+    <notes>-DynamicCharacterAvatar - advanced avatar and clothing system
+--Loading from Asset Bundles and Resources
+--Asset bundle encryption
+--Parameterized DNA for Races
+-Upgraded base avatars
+-Unity 5.5 compatibility
+-Improved custom inspectors for objects in Unity Editor
+-Expression editor
+-Placed UMA representation in Edit mode
+-Alpha Cutout system
+-Global texture scaler
+-Animator dont get rebuilt on UMA update
+-New scenes - New avatars, Networking, LOD
+-General speed up.
+-Lots of general fixes.
 </notes>
     <package-uri>http://umawiki.secretanorak.com/Updates/Update.unitypackage</package-uri>
     <version-uri>https://raw.githubusercontent.com/huika/UMA/unity53/UMAProject/Assets/UMA/InternalDataStore/AssetVersion.xml</version-uri>
