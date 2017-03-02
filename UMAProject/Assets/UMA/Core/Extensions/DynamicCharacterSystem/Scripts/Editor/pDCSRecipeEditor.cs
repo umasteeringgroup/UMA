@@ -97,7 +97,6 @@ namespace UMAEditor
 				var warningStyle = new GUIStyle(EditorStyles.label);
 				warningStyle.fixedHeight = warningIcon.height + 4f;
 				warningStyle.contentOffset = new Vector2(0, -2f);
-				var currentTint = GUI.color;
 				if (_wsRecipeName != "")
 				{
 					if (DynamicAssetLoader.Instance)

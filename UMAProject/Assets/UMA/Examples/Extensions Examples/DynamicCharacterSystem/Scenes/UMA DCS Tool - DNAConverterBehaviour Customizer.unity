@@ -37,7 +37,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.111557774, g: 0.11456066, b: 0.120600566, a: 1}
+  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
 --- !u!157 &4
 LightmapSettings:
   m_ObjectHideFlags: 0
@@ -3464,16 +3464,16 @@ MonoBehaviour:
     _cachedRaceDatas: []
   defaultChangeRaceOptions: 8
   cacheCurrentState: 1
-  rebuildSkeleton: 1
+  rebuildSkeleton: 0
   preloadWardrobeRecipes:
     loadDefaultRecipes: 1
     recipes:
     - _recipeName: ToonHair1
-      _recipe: {fileID: 0}
+      _recipe: {fileID: 11400000, guid: 7208f8cc5e698b74ca3fc08abfb29cc6, type: 2}
       _compatibleRaces:
       - ToonFemale
     - _recipeName: ToonFemaleUnderwear1
-      _recipe: {fileID: 0}
+      _recipe: {fileID: 11400000, guid: ea281ac1676c4374783d2104f659f68d, type: 2}
       _compatibleRaces:
       - ToonFemale
     - _recipeName: FemaleHair1
@@ -3816,6 +3816,7 @@ MonoBehaviour:
   selectedConverter: {fileID: 0}
   converterToImport: {fileID: 0}
   drawBoundsGizmo: 1
+  bonePoseAccuracy: 0.00005
 --- !u!4 &331623066
 Transform:
   m_ObjectHideFlags: 0
@@ -4169,16 +4170,16 @@ MonoBehaviour:
     _cachedRaceDatas: []
   defaultChangeRaceOptions: 8
   cacheCurrentState: 1
-  rebuildSkeleton: 1
+  rebuildSkeleton: 0
   preloadWardrobeRecipes:
     loadDefaultRecipes: 1
     recipes:
     - _recipeName: ToonHair1
-      _recipe: {fileID: 0}
+      _recipe: {fileID: 11400000, guid: 7208f8cc5e698b74ca3fc08abfb29cc6, type: 2}
       _compatibleRaces:
       - ToonFemale
     - _recipeName: ToonFemaleUnderwear1
-      _recipe: {fileID: 0}
+      _recipe: {fileID: 11400000, guid: ea281ac1676c4374783d2104f659f68d, type: 2}
       _compatibleRaces:
       - ToonFemale
     - _recipeName: FemaleHair1
@@ -4700,16 +4701,16 @@ MonoBehaviour:
     _cachedRaceDatas: []
   defaultChangeRaceOptions: 8
   cacheCurrentState: 1
-  rebuildSkeleton: 1
+  rebuildSkeleton: 0
   preloadWardrobeRecipes:
     loadDefaultRecipes: 1
     recipes:
     - _recipeName: ToonHair1
-      _recipe: {fileID: 0}
+      _recipe: {fileID: 11400000, guid: 7208f8cc5e698b74ca3fc08abfb29cc6, type: 2}
       _compatibleRaces:
       - ToonFemale
     - _recipeName: ToonFemaleUnderwear1
-      _recipe: {fileID: 0}
+      _recipe: {fileID: 11400000, guid: ea281ac1676c4374783d2104f659f68d, type: 2}
       _compatibleRaces:
       - ToonFemale
     - _recipeName: FemaleHair1
@@ -11088,16 +11089,16 @@ MonoBehaviour:
     _cachedRaceDatas: []
   defaultChangeRaceOptions: 8
   cacheCurrentState: 1
-  rebuildSkeleton: 1
+  rebuildSkeleton: 0
   preloadWardrobeRecipes:
     loadDefaultRecipes: 1
     recipes:
     - _recipeName: ToonFemaleUnderwear1
-      _recipe: {fileID: 0}
+      _recipe: {fileID: 11400000, guid: ea281ac1676c4374783d2104f659f68d, type: 2}
       _compatibleRaces:
       - ToonFemale
     - _recipeName: ToonHair1
-      _recipe: {fileID: 0}
+      _recipe: {fileID: 11400000, guid: 7208f8cc5e698b74ca3fc08abfb29cc6, type: 2}
       _compatibleRaces:
       - ToonFemale
     - _recipeName: FemaleHair1
@@ -13778,16 +13779,16 @@ MonoBehaviour:
     _cachedRaceDatas: []
   defaultChangeRaceOptions: 8
   cacheCurrentState: 1
-  rebuildSkeleton: 1
+  rebuildSkeleton: 0
   preloadWardrobeRecipes:
     loadDefaultRecipes: 1
     recipes:
     - _recipeName: ToonFemaleUnderwear1
-      _recipe: {fileID: 0}
+      _recipe: {fileID: 11400000, guid: ea281ac1676c4374783d2104f659f68d, type: 2}
       _compatibleRaces:
       - ToonFemale
     - _recipeName: ToonHair1
-      _recipe: {fileID: 0}
+      _recipe: {fileID: 11400000, guid: 7208f8cc5e698b74ca3fc08abfb29cc6, type: 2}
       _compatibleRaces:
       - ToonFemale
     - _recipeName: FemaleHair1

@@ -37,7 +37,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 166765684}
-  m_IndirectSpecularColor: {r: 0.1419074, g: 0.14897406, b: 0.16846019, a: 1}
+  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
 --- !u!157 &4
 LightmapSettings:
   m_ObjectHideFlags: 0
@@ -751,7 +751,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 305676970}
   m_Direction: 0
   m_Value: 0
-  m_Size: 0.99999994
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -4342,14 +4342,14 @@ MonoBehaviour:
     name: HumanFemaleResources
     _data: {fileID: 11400000, guid: 92f8416dee5a3f043a417078fa29c476, type: 2}
     _cachedRaceDatas: []
-  defaultChangeRaceOptions: 4
+  defaultChangeRaceOptions: 8
   cacheCurrentState: 1
   rebuildSkeleton: 0
   preloadWardrobeRecipes:
     loadDefaultRecipes: 1
     recipes:
     - _recipeName: ToonHair1
-      _recipe: {fileID: 0}
+      _recipe: {fileID: 11400000, guid: 7208f8cc5e698b74ca3fc08abfb29cc6, type: 2}
       _compatibleRaces:
       - ToonFemale
     - _recipeName: ToonFemaleUnderwear1
@@ -4907,18 +4907,18 @@ MonoBehaviour:
     name: HumanGirl
     _data: {fileID: 11400000, guid: 8f9fc622c08165a4297be9de525ccd1b, type: 2}
     _cachedRaceDatas: []
-  defaultChangeRaceOptions: 4
+  defaultChangeRaceOptions: 8
   cacheCurrentState: 1
   rebuildSkeleton: 0
   preloadWardrobeRecipes:
     loadDefaultRecipes: 1
     recipes:
     - _recipeName: ToonHair1
-      _recipe: {fileID: 0}
+      _recipe: {fileID: 11400000, guid: 7208f8cc5e698b74ca3fc08abfb29cc6, type: 2}
       _compatibleRaces:
       - ToonFemale
     - _recipeName: ToonFemaleUnderwear1
-      _recipe: {fileID: 0}
+      _recipe: {fileID: 11400000, guid: ea281ac1676c4374783d2104f659f68d, type: 2}
       _compatibleRaces:
       - ToonFemale
     - _recipeName: FemaleHair1
@@ -9349,7 +9349,7 @@ MonoBehaviour:
     name: HumanMaleDCS
     _data: {fileID: 11400000, guid: 5ed11744a54425247b40c4f8967bdcbd, type: 2}
     _cachedRaceDatas: []
-  defaultChangeRaceOptions: 6
+  defaultChangeRaceOptions: 8
   cacheCurrentState: 1
   rebuildSkeleton: 0
   preloadWardrobeRecipes:
@@ -9359,6 +9359,7 @@ MonoBehaviour:
       _recipe: {fileID: 11400000, guid: 1df4eb647357a74498fa7e6b4672ad8d, type: 2}
       _compatibleRaces:
       - HumanMaleDCS
+      - HumanMale
     - _recipeName: ToonFemaleUnderwear1
       _recipe: {fileID: 11400000, guid: ea281ac1676c4374783d2104f659f68d, type: 2}
       _compatibleRaces:

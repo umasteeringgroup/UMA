@@ -107,7 +107,6 @@ public class WardrobeRecipeListPropertyDrawer : PropertyDrawer {
 			var warningStyle = new GUIStyle(EditorStyles.label);
 			warningStyle.fixedHeight = warningIcon.height + 4f;
 			warningStyle.contentOffset = new Vector2(0, -2f);
-			var currentTint = GUI.color;
 			//can we make these validate to the compatible races is upto date?
 			thisDCA.preloadWardrobeRecipes.Validate();
 			for (int i = 0; i < thisRecipesProp.arraySize; i++) {

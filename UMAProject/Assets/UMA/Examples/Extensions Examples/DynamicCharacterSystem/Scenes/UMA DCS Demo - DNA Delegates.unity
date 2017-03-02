@@ -37,7 +37,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 166765684}
-  m_IndirectSpecularColor: {r: 0.1419074, g: 0.14897406, b: 0.16846019, a: 1}
+  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
 --- !u!157 &4
 LightmapSettings:
   m_ObjectHideFlags: 0
@@ -9179,7 +9179,7 @@ MonoBehaviour:
     name: HumanMaleDCS
     _data: {fileID: 11400000, guid: 5ed11744a54425247b40c4f8967bdcbd, type: 2}
     _cachedRaceDatas: []
-  defaultChangeRaceOptions: 6
+  defaultChangeRaceOptions: 8
   cacheCurrentState: 1
   rebuildSkeleton: 0
   preloadWardrobeRecipes:
@@ -9189,6 +9189,7 @@ MonoBehaviour:
       _recipe: {fileID: 11400000, guid: 1df4eb647357a74498fa7e6b4672ad8d, type: 2}
       _compatibleRaces:
       - HumanMaleDCS
+      - HumanMale
     - _recipeName: ToonFemaleUnderwear1
       _recipe: {fileID: 11400000, guid: ea281ac1676c4374783d2104f659f68d, type: 2}
       _compatibleRaces:
@@ -11577,7 +11578,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 409490924}
   m_HandleRect: {fileID: 409490923}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
