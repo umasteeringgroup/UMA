@@ -53,26 +53,26 @@ namespace UMA.PoseTools
         private string bonePoseFilter = "";
 
 		private static GUIContent positionGUIContent = new GUIContent(
-			LocalizationDatabase.GetLocalizedString("Position"),
-			LocalizationDatabase.GetLocalizedString("The change in this bone's local position when pose is applied."));
+			"Position",
+			"The change in this bone's local position when pose is applied.");
 		private static GUIContent rotationGUIContent = new GUIContent(
-			LocalizationDatabase.GetLocalizedString("Rotation"),
-			LocalizationDatabase.GetLocalizedString("The change in this bone's local rotation when pose is applied."));
+			"Rotation",
+			"The change in this bone's local rotation when pose is applied.");
 		private static GUIContent scaleGUIContent = new GUIContent(
-			LocalizationDatabase.GetLocalizedString("Scale"),
-			LocalizationDatabase.GetLocalizedString("The change in this bone's local scale when pose is applied."));
+			"Scale",
+			"The change in this bone's local scale when pose is applied.");
 		private static GUIContent scaleWarningGUIContent = new GUIContent(
-			LocalizationDatabase.GetLocalizedString("WARNING: Non-uniform scale."),
-			LocalizationDatabase.GetLocalizedString("Non-uniform scaling can cause errors on bones that are animated. Use only with adjustment bones."));
+			"WARNING: Non-uniform scale.",
+			"Non-uniform scaling can cause errors on bones that are animated. Use only with adjustment bones.");
 		private static GUIContent removeBoneGUIContent = new GUIContent(
-			LocalizationDatabase.GetLocalizedString("Remove Bone"),
-			LocalizationDatabase.GetLocalizedString("Remove the selected bone from the pose."));
+			"Remove Bone",
+			"Remove the selected bone from the pose.");
 		private static GUIContent addBoneGUIContent = new GUIContent(
-			LocalizationDatabase.GetLocalizedString("Add Bone"),
-			LocalizationDatabase.GetLocalizedString("Add the selected bone into the pose."));
+			"Add Bone",
+			"Add the selected bone into the pose.");
 		private static GUIContent previewGUIContent = new GUIContent(
-			LocalizationDatabase.GetLocalizedString("Preview Weight"),
-			LocalizationDatabase.GetLocalizedString("Amount to apply bone pose to preview model. Inactive while editing."));
+			"Preview Weight",
+			"Amount to apply bone pose to preview model. Inactive while editing.");
 		
 		public void OnEnable()
 		{
@@ -139,7 +139,7 @@ namespace UMA.PoseTools
 				context.activeUMA.skeleton.ResetAll();
 				if (context.startingPose != null)
 				{
-					context.startingPose.ApplyPose(context.activeUMA.skeleton, 1f);
+					context.startingPose.ApplyPose(context.activeUMA.skeleton, context.startingPoseWeight);
 				}
 
 				if (haveEditTarget)
@@ -456,14 +456,14 @@ namespace UMA.PoseTools
 			SerializedProperty bone = property.FindPropertyRelative("bone");
 			GUIContent boneGUIContent = new GUIContent(
 				bone.stringValue,
-				LocalizationDatabase.GetLocalizedString("The name of the bone being modified by pose."));
+				"The name of the bone being modified by pose.");
 			EditorGUILayout.BeginHorizontal();
 			bone.isExpanded = EditorGUILayout.Foldout(bone.isExpanded, boneGUIContent);
 			Color currentColor = GUI.color;
 			if (drawBoneIndex == editBoneIndex)
 			{
 				GUI.color = Color.green;
-				if (GUILayout.Button(LocalizationDatabase.GetLocalizedString("Editing"), EditorStyles.miniButton, GUILayout.Width(60f)))
+				if (GUILayout.Button("Editing", EditorStyles.miniButton, GUILayout.Width(60f)))
 				{
 					editBoneIndex = BAD_INDEX;
 					mirrorBoneIndex = BAD_INDEX;
@@ -475,7 +475,7 @@ namespace UMA.PoseTools
 				if (mirrorActive)
 				{
 					GUI.color = lightBlue;
-					if (GUILayout.Button(LocalizationDatabase.GetLocalizedString("Mirroring"), EditorStyles.miniButton, GUILayout.Width(60f)))
+					if (GUILayout.Button("Mirroring", EditorStyles.miniButton, GUILayout.Width(60f)))
 					{
 						mirrorActive = false;
 					}
@@ -483,7 +483,7 @@ namespace UMA.PoseTools
 				else
 				{
 					GUI.color = Color.Lerp(lightBlue, Color.white, 0.66f);
-					if (GUILayout.Button(LocalizationDatabase.GetLocalizedString("Mirror"), EditorStyles.miniButton, GUILayout.Width(60f)))
+					if (GUILayout.Button("Mirror", EditorStyles.miniButton, GUILayout.Width(60f)))
 					{
 						mirrorActive = true;
 					}
@@ -491,7 +491,7 @@ namespace UMA.PoseTools
 			}
 			else
 			{
-				if (GUILayout.Button(LocalizationDatabase.GetLocalizedString("Edit"), EditorStyles.miniButton, GUILayout.Width(60f)))
+				if (GUILayout.Button("Edit", EditorStyles.miniButton, GUILayout.Width(60f)))
 				{
 					editBoneIndex = drawBoneIndex;
 				}
@@ -503,8 +503,8 @@ namespace UMA.PoseTools
 			{
 				EditorGUI.BeginDisabledGroup(drawBoneIndex != editBoneIndex);
 				EditorGUI.indentLevel++;
-//				GUI.SetNextControlName(bone.stringValue + "_position");
 				int controlIDLow = GUIUtility.GetControlID(0, FocusType.Passive);
+//				GUI.SetNextControlName("position_" + drawBoneIndex);
 				EditorGUILayout.PropertyField(property.FindPropertyRelative("position"), positionGUIContent);
 				int controlIDHigh = GUIUtility.GetControlID(0, FocusType.Passive);
 				if ((GUIUtility.keyboardControl > controlIDLow) && (GUIUtility.keyboardControl < controlIDHigh))
@@ -521,8 +521,8 @@ namespace UMA.PoseTools
 				Vector3 currentRotationEuler = ((Quaternion)rotation.quaternionValue).eulerAngles;
 				Vector3 newRotationEuler = currentRotationEuler;
 				EditorGUI.BeginChangeCheck();
-//				GUI.SetNextControlName(bone.stringValue + "_rotation");
 				controlIDLow = GUIUtility.GetControlID(0, FocusType.Passive);
+//				GUI.SetNextControlName("rotation_" + drawBoneIndex);
 				newRotationEuler = EditorGUILayout.Vector3Field(rotationGUIContent, newRotationEuler);
 				controlIDHigh = GUIUtility.GetControlID(0, FocusType.Passive);
 				if ((GUIUtility.keyboardControl > controlIDLow) && (GUIUtility.keyboardControl < controlIDHigh))
@@ -539,9 +539,9 @@ namespace UMA.PoseTools
 				}
 				EditorGUI.EndProperty();
 
-//				GUI.SetNextControlName(property.FindPropertyRelative("scale").displayName);
 				SerializedProperty scaleProperty = property.FindPropertyRelative("scale");
 				controlIDLow = GUIUtility.GetControlID(0, FocusType.Passive);
+//				GUI.SetNextControlName("scale_" + drawBoneIndex);
 				EditorGUILayout.PropertyField(scaleProperty, scaleGUIContent);
 				controlIDHigh = GUIUtility.GetControlID(0, FocusType.Passive);
 				if ((GUIUtility.keyboardControl > controlIDLow) && (GUIUtility.keyboardControl < controlIDHigh))

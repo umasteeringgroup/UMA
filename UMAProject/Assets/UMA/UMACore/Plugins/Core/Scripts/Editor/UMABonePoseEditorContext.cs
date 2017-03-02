@@ -17,6 +17,7 @@ namespace UMA.PoseTools
 		private Dictionary<Transform, MirrorData> mirrors = new Dictionary<Transform, MirrorData>();
 
 		public UMABonePose startingPose;
+		public float startingPoseWeight = 1.0f;
 
 		public string[] boneList = null;
 
