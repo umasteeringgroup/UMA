@@ -3,7 +3,7 @@
 -Play the scene, add correct version in the field and click the checkbox, you should get "Row added." response in the console.
 -Click the checkbox again and you should get the "Row already exists." message to confirm everythings working.
 -Close Unity.
--Open the file UMAProject\Assets\UMA\UMAInternalDataStore\AssetVersion.xml.
+-Open the file UMAProject\Assets\UMA\InternalDataStore\AssetVersion.xml.
 -Edit the "version" and "notes" sections with the relevant information, dont push yet.
 -Build the release package.
 -Updoad the package file to: http://umawiki.secretanorak.com/Updates/Update.unitypackage.
