@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9448878e2e40f1a4c9f8fd2b56832b13, type: 3}
+  m_Name: Shelly
+  m_EditorClassIdentifier: 
+  recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"FemaleEyes","scale":100,"copyIdx":-1,"overlays":[{"id":"Eye
+    Overlay","colorIdx":2,"rect":[0,0,0,0]},{"id":"Default Eye Adjust","colorIdx":3,"rect":[0,0,0,0]}]},{"id":"FemaleHead_Head","scale":100,"copyIdx":-1,"overlays":[{"id":"F_H_Head","colorIdx":0,"rect":[0,0,0,0]},{"id":"FemaleEyebrow01","colorIdx":1,"rect":[768,512,512,128]}]},{"id":"FemaleHead_Mouth","scale":100,"copyIdx":1,"overlays":[]},{"id":"FemaleHead_Eyes","scale":100,"copyIdx":1,"overlays":[]},{"id":"FemaleHead_Nose","scale":100,"copyIdx":1,"overlays":[]},{"id":"FemaleHead_ElvenEars","scale":100,"copyIdx":-1,"overlays":[{"id":"ElvenEars-1","colorIdx":0,"rect":[0,0,0,0]}]},{"id":"FemaleEyelashfix","scale":100,"copyIdx":-1,"overlays":[{"id":"FemaleEyelash","colorIdx":4,"rect":[0,0,0,0]}]},{"id":"FemaleTorso","scale":100,"copyIdx":-1,"overlays":[{"id":"F_H_Bod","colorIdx":0,"rect":[0,0,0,0]},{"id":"FemaleUnderwear02","colorIdx":5,"rect":[0,1024,2048,2048]},{"id":"FemaleJeans01","colorIdx":6,"rect":[0,0,0,0]},{"id":"FemaleShirt01","colorIdx":7,"rect":[0,1024,2048,1024]}]},{"id":"FemaleHands","scale":100,"copyIdx":7,"overlays":[]},{"id":"FemaleFeet","scale":100,"copyIdx":7,"overlays":[]},{"id":"FemaleInnerMouth","scale":100,"copyIdx":-1,"overlays":[{"id":"InnerMouth","colorIdx":2,"rect":[0,0,0,0]}]},{"id":"FemaleLegs","scale":100,"copyIdx":7,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"FemaleShortHair01","scale":100,"copyIdx":-1,"overlays":[{"id":"FemaleShortHair01","colorIdx":8,"rect":[0,0,0,0]}]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]}],"colors":[],"fColors":[{"name":"Skin","colors":[75,42,27,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,134,134,145,29]},{"name":"Hair","colors":[18,11,2,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"-","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"-","colors":[223,75,171,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,37,37,37,21]},{"name":"-","colors":[0,0,0,255,0,0,0,0]},{"name":"-","colors":[0,0,0,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,62,62,62,34]},{"name":"-","colors":[49,57,112,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,73,73,73,47]},{"name":"-","colors":[169,62,54,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,51,51,51,25]},{"name":"-","colors":[37,21,2,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":2,"race":"HumanFemale","packedDna":[{"dnaType":"UMADnaHumanoid","dnaTypeHash":-212795365,"packedDna":"{\"height\":126,\"headSize\":129,\"headWidth\":133,\"neckThickness\":128,\"armLength\":129,\"forearmLength\":125,\"armWidth\":163,\"forearmWidth\":193,\"handsSize\":128,\"feetSize\":126,\"legSeparation\":129,\"upperMuscle\":116,\"lowerMuscle\":147,\"upperWeight\":137,\"lowerWeight\":129,\"legsSize\":133,\"belly\":26,\"waist\":202,\"gluteusSize\":149,\"earsSize\":171,\"earsPosition\":188,\"earsRotation\":144,\"noseSize\":155,\"noseCurve\":186,\"noseWidth\":117,\"noseInclination\":129,\"nosePosition\":167,\"nosePronounced\":174,\"noseFlatten\":148,\"chinSize\":80,\"chinPronounced\":135,\"chinPosition\":193,\"mandibleSize\":132,\"jawsSize\":100,\"jawsPosition\":183,\"cheekSize\":150,\"cheekPosition\":118,\"lowCheekPronounced\":199,\"lowCheekPosition\":199,\"foreheadSize\":127,\"foreheadPosition\":95,\"lipsSize\":201,\"mouthSize\":171,\"eyeRotation\":178,\"eyeSize\":78,\"breastSize\":98}"},{"dnaType":"UMADnaTutorial","dnaTypeHash":-1679007774,"packedDna":"{\"eyeSpacing\":128}"}],"wardrobeSet":[],"packedRecipeType":"Standard"}'
+  recipeType: Standard
+  DisplayValue: 
+  compatibleRaces: []
+  wardrobeRecipeThumbs: []
+  wardrobeSlot: None
+  Hides: []
+  suppressWardrobeSlots: []
+  activeWardrobeSet: []

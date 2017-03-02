@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c4834e6077abe64e968f9f87c9ac70a, type: 3}
+  m_Name: FemaleLipstick01
+  m_EditorClassIdentifier: 
+  overlayName: FemaleLipstick01
+  overlayType: 0
+  rect:
+    serializedVersion: 2
+    x: 480
+    y: 203.5
+    width: 64
+    height: 32
+  alphaMask: {fileID: 0}
+  textureList:
+  - {fileID: 2800000, guid: 37b2f1c9a46954b6ba54d1d8eed46c72, type: 3}
+  - {fileID: 2800000, guid: 80d4afcf85a004dd79839a02960813a7, type: 3}
+  - {fileID: 2800000, guid: db33892a815794c3b8b84adeb8b84bbd, type: 3}
+  tags: []
+  material: {fileID: 11400000, guid: 8e29dbac5d2e82f44a759a7e2cc568ab, type: 2}
+  OcclusionEntries: []
