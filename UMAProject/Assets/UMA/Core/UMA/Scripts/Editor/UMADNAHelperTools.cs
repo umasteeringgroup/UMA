@@ -19,8 +19,8 @@ namespace UMAEditor
 		[MenuItem("UMA/Create DNA Helper Code")]
 		static void CreateDNAHelperCode()
 		{
-			var destDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets/UMA/UMA_Generated/DnaHelpers");
-			var sourceDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets/UMA/UMACore/Scripts/Editor/Templates");
+			var destDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets/UMA/Generated/DNAHelpers");
+			var sourceDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets/UMA/Core/Scripts/Editor/Templates");
 			var baseTemplate = FileUtils.ReadAllText(Path.Combine(sourceDir, "UmaDna_Template.cs.txt"));
 			var pageTemplate = FileUtils.ReadAllText(Path.Combine(sourceDir, "UmaDnaChild_Template.cs.txt"));
 
