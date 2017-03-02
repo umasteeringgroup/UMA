@@ -132,7 +132,7 @@ namespace UMAEditor
 				if (!recipeIsLive)
 				{
 					var warningRect = new Rect((valRBut.xMin - 5f), valRBut.yMin, 20f, valRBut.height);
-					var warningGUIContent = new GUIContent("", _wsRecipeName + " was not Live. You can make it live by checking it on in the UMA/UMA Asset Index window.");
+					var warningGUIContent = new GUIContent("", _wsRecipeName + " was not Live. You can make it live by checking it on in the UMA/UMA Global Library window.");
 					warningGUIContent.image = warningIcon;
 					//Id like this to be a button that opens the window, opens the recipe section and ideally highlights the asset that needs to be made live
                     if(GUI.Button(warningRect, warningGUIContent, warningStyle))
