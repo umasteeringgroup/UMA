@@ -268,9 +268,10 @@ namespace UMA
 			else
 			{
                 string errorString = "LocalAssetBundleServer was off and no remoteServerURL was specified. One of these must be set in order to use any AssetBundles!";
+				var warningType = "warning";
 #if UNITY_EDITOR
 				errorString = "Switched to Simulation Mode because LocalAssetBundleServer was off and no remoteServerURL was specified in the Scenes' DynamicAssetLoader. One of these must be set in order to actually use your AssetBundles.";
-
+				warningType = "info";
 #endif
 				AssetBundleManager.SimulateOverride = true;
 				var context = UMAContext.FindInstance();
@@ -281,12 +282,18 @@ namespace UMA
 						|| (context.slotLibrary != null && (context.slotLibrary as DynamicSlotLibrary).dynamicallyAddFromAssetBundles)
 						|| (context.overlayLibrary != null && (context.overlayLibrary as DynamicOverlayLibrary).dynamicallyAddFromAssetBundles))
 					{
-						Debug.LogWarning(errorString);
-					}
+						if(warningType == "warning")
+							Debug.LogWarning(errorString);
+						else
+							Debug.Log(errorString);
+                    }
 				}
 				else //if you are just using dynamicassetLoader independently of UMA then you may still want this message
 				{
-					Debug.LogWarning(errorString);
+					if (warningType == "warning")
+						Debug.LogWarning(errorString);
+					else
+						Debug.Log(errorString);
 				}
 			}
 			return;
