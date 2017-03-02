@@ -178,6 +178,7 @@ namespace UMAEditor
 			mainExpanded["typesToIndex"] = EditorGUILayout.Foldout(mainExpanded["typesToIndex"], new GUIContent("Types To Index", serializedObject.FindProperty("typesToIndex").tooltip), boldFoldout);
 			if (mainExpanded["typesToIndex"])
 			{
+				EditorGUILayout.HelpBox("These types will be indexed in the Global Library.", MessageType.Info);
 				if (typesToIndexList == null)
 				{
 					InitTypesToIndexList();
@@ -199,9 +200,10 @@ namespace UMAEditor
 			mainExpanded["UMAAssetsInBuild"] = EditorGUILayout.Foldout(mainExpanded["UMAAssetsInBuild"], new GUIContent("UMA Assets in Build"), boldFoldout);
 			if (mainExpanded["UMAAssetsInBuild"])
 			{
+				EditorGUILayout.HelpBox("Assets that are checked 'on' in the sections below are included in your build and anailable to all 'Dynamic' Libraries in your game.", MessageType.Info);
 				//INFO
 				EditorGUI.indentLevel++;
-				mainExpanded["UMAAssetsInBuildInfo"] = EditorGUILayout.Foldout(mainExpanded["UMAAssetsInBuildInfo"], "info");
+				mainExpanded["UMAAssetsInBuildInfo"] = EditorGUILayout.Foldout(mainExpanded["UMAAssetsInBuildInfo"], "More Info");
 				EditorGUI.indentLevel--;
 				if (mainExpanded["UMAAssetsInBuildInfo"])
 				{
@@ -211,7 +213,7 @@ namespace UMAEditor
 					//This is a list of all the assets in the project as filtered by the typesToIndex List. This does NOT include assets in AssetBundles
 					EditorGUILayout.TextArea("This is a list of all the assets in the project as filtered by the typesToIndex List. This does NOT include assets in AssetBundles", infoPara);
 					//Toggle the checkbox next to the asset name, to include it in your build and make it accessible to the Dynamic Libraries
-					EditorGUILayout.TextArea("Toggle the checkbox next to the asset name, to include it in your build and make it accessible to the Dynamic Libraries", infoPara);
+					EditorGUILayout.TextArea("Assets with an 'R' next to them are in a Resources folder and are included automatically by Unity.", infoPara);
 					//The displayed AssetNames are the slot/overlay/racenames (for UMA Assets) or the asset name (for UMAtextRecipes or other asset types)
 					EditorGUILayout.TextArea("The displayed AssetNames are the slot/overlay/racenames (for UMA Assets) or the asset name (for UMAtextRecipes or other asset types)", infoPara);
 					//Hover Asset names for the asset path in the project
@@ -464,7 +466,7 @@ namespace UMAEditor
 				//INFO
 				EditorGUILayout.HelpBox("ASSET BUNDLE ASSETS ARE NOT INCLUDED IN YOUR BUILD.", MessageType.Warning);
 				EditorGUI.indentLevel++;
-				mainExpanded["UMAAssetBundleAssetsInfo"] = EditorGUILayout.Foldout(mainExpanded["UMAAssetBundleAssetsInfo"], "info");
+				mainExpanded["UMAAssetBundleAssetsInfo"] = EditorGUILayout.Foldout(mainExpanded["UMAAssetBundleAssetsInfo"], "More Info");
 				EditorGUI.indentLevel--;
 				if (mainExpanded["UMAAssetBundleAssetsInfo"])
 				{
@@ -544,9 +546,9 @@ namespace UMAEditor
 						UAI.ClearAndReIndex(true);
 				}
 				GUILayout.EndHorizontal();
+				//Uncomment to see the actual serialized data the index is saving
+				EditorGUILayout.PropertyField(serializedObject.FindProperty("_buildIndex"), new GUIContent("Raw Index Data", "This is the raw data the index is actually saving for use in the game"), true);
 			}
-			//Uncomment to see the actual serialized data the index is saving
-			EditorGUILayout.PropertyField(serializedObject.FindProperty("_buildIndex"), true);
 			serializedObject.ApplyModifiedProperties();
 			if (changed)
 			{

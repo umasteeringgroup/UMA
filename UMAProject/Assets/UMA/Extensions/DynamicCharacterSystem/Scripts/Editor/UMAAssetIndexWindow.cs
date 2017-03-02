@@ -14,10 +14,10 @@ namespace UMAEditor
 		Vector2 scrollPos;
 		bool needsReenable = false;
 
-		[MenuItem("UMA/Show UMAAssetIndexWindow")]
+		[MenuItem("UMA/Show UMA Global Library")]
 		public static void Init()
 		{
-			var window = (UMAAssetIndexWindow)EditorWindow.GetWindow<UMAAssetIndexWindow>("UMA Asset Index");
+			var window = (UMAAssetIndexWindow)EditorWindow.GetWindow<UMAAssetIndexWindow>("UMA Global Library");
 			window.Show();
 		}
 
@@ -61,7 +61,11 @@ namespace UMAEditor
 			scrollPos = EditorGUILayout.BeginScrollView(scrollPos, false, true);
 			EditorGUILayout.BeginVertical(GUILayout.Width(EditorGUIUtility.currentViewWidth - 20f));
 			EditorGUILayout.Space();
-			GUILayout.Label("UMA Asset Index", EditorStyles.boldLabel);
+			var BoldCenteredHelpBox = new GUIStyle(EditorStyles.helpBox);
+			BoldCenteredHelpBox.fontSize = EditorStyles.boldLabel.fontSize;
+			BoldCenteredHelpBox.fontStyle = FontStyle.Bold;
+			BoldCenteredHelpBox.alignment = TextAnchor.MiddleCenter;
+			GUILayout.Label("UMA Global Library", BoldCenteredHelpBox);
 			Editor.CreateCachedEditor(UAI, typeof(UMAAssetIndexEditor), ref UAIE);
 			UAIE.OnInspectorGUI();
 			EditorGUILayout.EndVertical();
