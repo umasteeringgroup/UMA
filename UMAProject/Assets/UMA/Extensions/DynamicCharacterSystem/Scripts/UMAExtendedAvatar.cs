@@ -52,9 +52,9 @@ public class UMAExtendedAvatar : UMADynamicAvatar
 	
 	void LoadMesh()
 	{
-		string modelPath = "Male/Male_Unified.fbx";
-		if(previewModel == PreviewModel.Female) modelPath = "Female/Female_Unified.fbx";
-		GameObject model = UnityEditor.AssetDatabase.LoadAssetAtPath("Assets/UMA/Content/UMA/Humanoid/FBX/" + modelPath, typeof(GameObject)) as GameObject;
+		string modelPath = "HumanMale/FBX/Male_Unified.fbx";
+		if(previewModel == PreviewModel.Female) modelPath = "HumanFemale/FBX/Female_Unified.fbx";
+		GameObject model = UnityEditor.AssetDatabase.LoadAssetAtPath("Assets/UMA/Content/UMA/" + modelPath, typeof(GameObject)) as GameObject;
 		previewMesh = model.GetComponentInChildren<SkinnedMeshRenderer>().sharedMesh;
 	}
 #endif
