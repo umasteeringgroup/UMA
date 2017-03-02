@@ -24,89 +24,45 @@ MonoBehaviour:
     data:
     - type: UMA.SlotDataAsset
       typeIndex:
-      - name: FemaleEyelashGuide
-        nameHash: 1656125228
-        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/FemaleEyelashGuide.asset
-        fileRefPath: 
       - name: UMA_Toon_EYES_Guide
         nameHash: 1462808544
         fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/Toon/UMA_Toon_EYES_Guide.asset
-        fileRefPath: 
-      - name: UMA_Toon_FACE-Female-Guide
-        nameHash: -414131903
-        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/Toon/UMA_Toon_FACE-Female_Guide.asset
         fileRefPath: 
       - name: UMA_Toon_FEET_Guide
         nameHash: 861182728
         fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/Toon/UMA_Toon_FEET_Guide.asset
         fileRefPath: 
-      - name: UMA_Toon_HANDS_Guide
-        nameHash: -1131820760
-        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/Toon/UMA_Toon_HANDS_Guide.asset
-        fileRefPath: 
       - name: UMA_Toon_INNERMOUTH_Guide
         nameHash: 1063560695
         fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/Toon/UMA_Toon_INNERMOUTH_Guide.asset
-        fileRefPath: 
-      - name: UMA_Toon_LASHES-Female-Guide
-        nameHash: 688492029
-        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/Toon/UMA_Toon_LASHES-Female_Guide.asset
         fileRefPath: 
       - name: UMA_Toon_LEGS-Female-Guide
         nameHash: 356603942
         fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/Toon/UMA_Toon_LEGS-Female_Guide.asset
         fileRefPath: 
-      - name: UMA_Toon_TORSO-Female-Guide
-        nameHash: 31267853
-        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/Toon/UMA_Toon_TORSO-Female_Guide.asset
-        fileRefPath: 
       - name: FemaleEyesGuide
         nameHash: 517722962
         fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/UMA_Human_Female_Eyes_SlotGuide.asset
-        fileRefPath: 
-      - name: FemaleFaceGuide
-        nameHash: 1045893557
-        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/UMA_Human_Female_Face_SlotGuide.asset
         fileRefPath: 
       - name: FemaleFeetGuide
         nameHash: 289930059
         fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/UMA_Human_Female_Feet_SlotGuide.asset
         fileRefPath: 
-      - name: FemaleHandsGuide
-        nameHash: 944939254
-        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/UMA_Human_Female_Hands_SlotGuide.asset
-        fileRefPath: 
       - name: FemaleInnerMouthGuide
         nameHash: -1841619697
         fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/UMA_Human_Female_InnerMouth_SlotGuide.asset
-        fileRefPath: 
-      - name: FemaleLegsGuide
-        nameHash: 250826820
-        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/UMA_Human_Female_Legs_SlotGuide.asset
         fileRefPath: 
       - name: FemaleTorsoGuide
         nameHash: 813391558
         fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/UMA_Human_Female_Torso_SlotGuide.asset
         fileRefPath: 
-      - name: PlaceholderFace
-        nameHash: -1269395592
-        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Slots/PlaceholderFace.asset
-        fileRefPath: 
       - name: PlaceholderFeet
         nameHash: -1883922224
         fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Slots/PlaceholderFeet.asset
         fileRefPath: 
-      - name: PlaceholderHands
-        nameHash: -342393607
-        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Slots/PlaceholderHands.asset
-        fileRefPath: 
       - name: PlaceholderLegs
         nameHash: 1281013653
         fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Slots/PlaceholderLegs.asset
-        fileRefPath: 
-      - name: PlaceholderSlot
-        nameHash: 491574392
-        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Slots/PlaceholderSlot.asset
         fileRefPath: 
       - name: PlaceholderTorso
         nameHash: -1427704956
@@ -297,19 +253,55 @@ MonoBehaviour:
         fullPath: Assets/UMA/Content/UMA/HumanMale/Slots/Mid Poly Head/M_High poly
           Head_Slot.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/M_High poly Head_Slot-fileRef
+      - name: FemaleEyelashGuide
+        nameHash: 1656125228
+        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/FemaleEyelashGuide.asset
+        fileRefPath: 
+      - name: UMA_Toon_FACE-Female-Guide
+        nameHash: -414131903
+        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/Toon/UMA_Toon_FACE-Female_Guide.asset
+        fileRefPath: 
+      - name: UMA_Toon_HANDS_Guide
+        nameHash: -1131820760
+        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/Toon/UMA_Toon_HANDS_Guide.asset
+        fileRefPath: 
+      - name: UMA_Toon_LASHES-Female-Guide
+        nameHash: 688492029
+        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/Toon/UMA_Toon_LASHES-Female_Guide.asset
+        fileRefPath: 
+      - name: UMA_Toon_TORSO-Female-Guide
+        nameHash: 31267853
+        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/Toon/UMA_Toon_TORSO-Female_Guide.asset
+        fileRefPath: 
+      - name: FemaleFaceGuide
+        nameHash: 1045893557
+        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/UMA_Human_Female_Face_SlotGuide.asset
+        fileRefPath: 
+      - name: FemaleHandsGuide
+        nameHash: 944939254
+        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/UMA_Human_Female_Hands_SlotGuide.asset
+        fileRefPath: 
+      - name: FemaleLegsGuide
+        nameHash: 250826820
+        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/UMA_Human_Female_Legs_SlotGuide.asset
+        fileRefPath: 
+      - name: PlaceholderFace
+        nameHash: -1269395592
+        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Slots/PlaceholderFace.asset
+        fileRefPath: 
+      - name: PlaceholderHands
+        nameHash: -342393607
+        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Slots/PlaceholderHands.asset
+        fileRefPath: 
+      - name: PlaceholderSlot
+        nameHash: 491574392
+        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Slots/PlaceholderSlot.asset
+        fileRefPath: 
     - type: UMA.OverlayDataAsset
       typeIndex:
-      - name: GuideMeshOverlay
-        nameHash: 1573650394
-        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Overlays/GuideMeshOverlay.asset
-        fileRefPath: 
       - name: GuideMeshOverlay-Trans
         nameHash: -1042588210
         fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Overlays/GuideMeshOverlayTrans.asset
-        fileRefPath: 
-      - name: PlaceholderOverlay
-        nameHash: 1183308871
-        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Overlays/PlaceholderOverlay.asset
         fileRefPath: 
       - name: F_H_Bod
         nameHash: 1730585316
@@ -615,12 +607,16 @@ MonoBehaviour:
         nameHash: 94076350
         fullPath: Assets/UMA/Content/UMA/HumanShared/Overlays/Hair/MeshHairStd.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/MeshHairStd-fileRef
+      - name: GuideMeshOverlay
+        nameHash: 1573650394
+        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Overlays/GuideMeshOverlay.asset
+        fileRefPath: 
+      - name: PlaceholderOverlay
+        nameHash: 1183308871
+        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Overlays/PlaceholderOverlay.asset
+        fileRefPath: 
     - type: UMA.RaceData
       typeIndex:
-      - name: PlaceholderRace
-        nameHash: 1798131632
-        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Race/PlaceholderRace.asset
-        fileRefPath: 
       - name: HumanFemaleResources
         nameHash: -459586661
         fullPath: Assets/UMA/Content/UMA/HumanFemale/RaceData/Human Female w DynamicDNA.asset
@@ -641,12 +637,12 @@ MonoBehaviour:
         nameHash: -1128037832
         fullPath: Assets/UMA/Content/UMA/HumanMale/RaceData/Human Male.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_RaceData/Human Male-fileRef
+      - name: PlaceholderRace
+        nameHash: 1798131632
+        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Race/PlaceholderRace.asset
+        fileRefPath: 
     - type: UMATextRecipe
       typeIndex:
-      - name: PlaceholderBase
-        nameHash: 1911949950
-        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Recipes/PlaceholderBase.asset
-        fileRefPath: 
       - name: HumanFemale Base Recipe
         nameHash: -1093080114
         fullPath: Assets/UMA/Content/UMA/HumanFemale/Recipes/Base Recipes/HumanFemale
@@ -676,12 +672,12 @@ MonoBehaviour:
           w DynamicDNA.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/HumanMale Base w
           DynamicDNA-fileRef
+      - name: PlaceholderBase
+        nameHash: 1911949950
+        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Recipes/PlaceholderBase.asset
+        fileRefPath: 
     - type: UMAWardrobeRecipe
       typeIndex:
-      - name: PlaceholderWardrobeRecipe
-        nameHash: 63281865
-        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Recipes/PlaceholderWardrobeRecipe.asset
-        fileRefPath: 
       - name: FemaleHair1
         nameHash: 658422741
         fullPath: Assets/UMA/Content/UMA/HumanFemale/Recipes/Wardrobe Recipes/HumanFemale/FemaleHair1.asset
@@ -809,10 +805,6 @@ MonoBehaviour:
         nameHash: -1248700003
         fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleShirt1.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/MaleShirt1-fileRef
-      - name: MrHandy
-        nameHash: 2135057906
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MrHandy.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/MrHandy-fileRef
       - name: Shirt 1
         nameHash: -1455409060
         fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/Shirt 1.asset
@@ -830,14 +822,10 @@ MonoBehaviour:
         nameHash: 620044393
         fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/Shorts.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/Shorts-fileRef
-      - name: TestMaleJeans2
-        nameHash: 1836987894
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/TestMaleJeans2.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/TestMaleJeans2-fileRef
-      - name: TestMaleJeansAndShirt
-        nameHash: -1481707651
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/TestMaleJeansAndShirt.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/TestMaleJeansAndShirt-fileRef
+      - name: PlaceholderWardrobeRecipe
+        nameHash: 63281865
+        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Recipes/PlaceholderWardrobeRecipe.asset
+        fileRefPath: 
     - type: UMA.DynamicUMADnaAsset
       typeIndex:
       - name: EyeSpacing
@@ -859,34 +847,18 @@ MonoBehaviour:
         fullPath: Assets/UMA/Content/UMA/HumanMale/DNA/DynamicDNA/HumanMaleDynamicDnaAsset.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_DynamicUMADnaAsset/HumanMaleDynamicDnaAsset-fileRef
     _currentPaths:
-    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/FemaleEyelashGuide.asset
     - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/Toon/UMA_Toon_EYES_Guide.asset
-    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/Toon/UMA_Toon_FACE-Female_Guide.asset
     - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/Toon/UMA_Toon_FEET_Guide.asset
-    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/Toon/UMA_Toon_HANDS_Guide.asset
     - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/Toon/UMA_Toon_INNERMOUTH_Guide.asset
-    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/Toon/UMA_Toon_LASHES-Female_Guide.asset
     - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/Toon/UMA_Toon_LEGS-Female_Guide.asset
-    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/Toon/UMA_Toon_TORSO-Female_Guide.asset
     - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/UMA_Human_Female_Eyes_SlotGuide.asset
-    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/UMA_Human_Female_Face_SlotGuide.asset
     - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/UMA_Human_Female_Feet_SlotGuide.asset
-    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/UMA_Human_Female_Hands_SlotGuide.asset
     - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/UMA_Human_Female_InnerMouth_SlotGuide.asset
-    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/UMA_Human_Female_Legs_SlotGuide.asset
     - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/UMA_Human_Female_Torso_SlotGuide.asset
-    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Slots/PlaceholderFace.asset
     - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Slots/PlaceholderFeet.asset
-    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Slots/PlaceholderHands.asset
     - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Slots/PlaceholderLegs.asset
-    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Slots/PlaceholderSlot.asset
     - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Slots/PlaceholderTorso.asset
-    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Overlays/GuideMeshOverlay.asset
     - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Overlays/GuideMeshOverlayTrans.asset
-    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Overlays/PlaceholderOverlay.asset
-    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Race/PlaceholderRace.asset
-    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Recipes/PlaceholderBase.asset
-    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Recipes/PlaceholderWardrobeRecipe.asset
     - Assets/UMA/Content/UMA/HumanFemale/Slots/Body/UMA_Human_Female_Eyes_Slot.asset
     - Assets/UMA/Content/UMA/HumanFemale/Slots/Body/UMA_Human_Female_Face_Slot.asset
     - Assets/UMA/Content/UMA/HumanFemale/Slots/Body/UMA_Human_Female_Feet_Slot.asset
@@ -1077,10 +1049,23 @@ MonoBehaviour:
     - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleHair 2.asset
     - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleHair 3.asset
     - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleShirt1.asset
-    - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MrHandy.asset
     - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/Shirt 1.asset
     - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/Shirt 2.asset
     - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/Shorts 2.asset
     - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/Shorts.asset
-    - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/TestMaleJeans2.asset
-    - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/TestMaleJeansAndShirt.asset
+    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/FemaleEyelashGuide.asset
+    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/Toon/UMA_Toon_FACE-Female_Guide.asset
+    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/Toon/UMA_Toon_HANDS_Guide.asset
+    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/Toon/UMA_Toon_LASHES-Female_Guide.asset
+    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/Toon/UMA_Toon_TORSO-Female_Guide.asset
+    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/UMA_Human_Female_Face_SlotGuide.asset
+    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/UMA_Human_Female_Hands_SlotGuide.asset
+    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/UMA_Human_Female_Legs_SlotGuide.asset
+    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Slots/PlaceholderFace.asset
+    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Slots/PlaceholderHands.asset
+    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Slots/PlaceholderSlot.asset
+    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Overlays/GuideMeshOverlay.asset
+    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Overlays/PlaceholderOverlay.asset
+    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Race/PlaceholderRace.asset
+    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Recipes/PlaceholderBase.asset
+    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Recipes/PlaceholderWardrobeRecipe.asset

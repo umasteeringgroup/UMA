@@ -80,9 +80,9 @@ namespace UMA
 		{
 			var settingsFolderPath = "";
 			if (fullPath)
-				settingsFolderPath = Path.Combine(Application.dataPath, Path.Combine("UMA", "UMAInternalDataStore"));
+				settingsFolderPath = Path.Combine(Application.dataPath, Path.Combine("UMA", "InternalDataStore"));
 			else
-				settingsFolderPath = Path.Combine("Assets", Path.Combine("UMA", "UMAInternalDataStore"));
+				settingsFolderPath = Path.Combine("Assets", Path.Combine("UMA", "InternalDataStore"));
 			if (editorOnly)
 			{
 				settingsFolderPath = Path.Combine(settingsFolderPath, "InEditor");
