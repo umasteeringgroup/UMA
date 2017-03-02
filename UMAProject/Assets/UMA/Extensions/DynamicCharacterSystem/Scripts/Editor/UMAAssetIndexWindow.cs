@@ -14,7 +14,7 @@ namespace UMAEditor
 		Vector2 scrollPos;
 		bool needsReenable = false;
 
-		[MenuItem("UMA/Show UMA Global Library")]
+		[MenuItem("UMA/UMA Global Library")]
 		public static void Init()
 		{
 			var window = (UMAAssetIndexWindow)EditorWindow.GetWindow<UMAAssetIndexWindow>("UMA Global Library");
