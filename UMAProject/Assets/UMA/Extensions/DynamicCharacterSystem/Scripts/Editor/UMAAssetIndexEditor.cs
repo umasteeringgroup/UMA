@@ -476,7 +476,7 @@ namespace UMAEditor
 					//This is a list of all the UMA assets in your AssetBundles as filtered by the typesToIndex List
 					EditorGUILayout.TextArea("This is a list of all the UMA assets in your AssetBundles as filtered by the typesToIndex List", infoPara);
 					//Asset Bundle Assets are NOT included in your build. You build them as seperate packages that you download into your game using Assets/AssetBundles/Build AssetBundles
-					EditorGUILayout.TextArea("You build your asset bundles as seperate packages that you download into your game using Assets/AssetBundles/Build AssetBundles", infoPara);
+					EditorGUILayout.TextArea("You build your asset bundles as seperate packages that you download into your game using the '(Re)Build AssetBundles' button in the 'UMA/UMA AssetBundle Manager' window", infoPara);
 					//You cannot add or disable these from here (yet). You need to do this in the Project window, by assigning or un-assigning the folders/assets to an asset bundle.
 					EditorGUILayout.TextArea("You cannot add or disable these from here (yet). You need to do this in the Project window, by assigning or un-assigning the folders/assets to an asset bundle.", infoPara);
 					//Click the asset name to highlight the asset in the project
