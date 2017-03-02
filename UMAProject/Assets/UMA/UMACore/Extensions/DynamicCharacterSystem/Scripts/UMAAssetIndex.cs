@@ -28,7 +28,6 @@ namespace UMA
 		{
 			if (Resources.Load("UMAAssetIndex-DONOTDELETE") != null)
 			{
-				EditorUtility.DisplayDialog("UMA Asset Index Already Exists", "You dont need to create a new UMA Asset Index because one already exists in " + UMA.FileUtils.GetInternalDataStoreFolder(false, false) + ". If you want to update your index please go to UMA/Utilities/UMA Asset Index or delete the existing index first", "OK");
 				return;
 			}
 			//This needs to be created in our internal data store folder (so *hopefully* people dont delete it)
@@ -829,10 +828,12 @@ namespace UMA
 		}
 		private void ValidateBuildIndex()
 		{
+			//we need the _fullIndex to compare against
+			GenerateFullIndex(typesToIndex);
+
 			if (_buildIndex.Count() == 0)
 				return;
-			//otherwise we are going to need the _fullIndex to compare against
-			GenerateFullIndex(typesToIndex);
+			
 			var changed = false;
 			//we need to know if any anything has changed since the index was last open in Unity
 			for (int ti = 0; ti < _buildIndex.data.Length; ti++)
