@@ -70,9 +70,9 @@ namespace UMAEditor
                     asset.boneInfo[0].name = name;
                     asset.Serialize();
 	            }
-                if (!Directory.Exists("Assets/UMA/UMA_Assets/TPoses"))
-	                Directory.CreateDirectory("Assets/UMA/UMA_Assets/TPoses");
-	            AssetDatabase.CreateAsset(asset, "Assets/UMA/UMA_Assets/TPoses/" + name + "_TPose.asset");
+                if (!Directory.Exists("Assets/UMA/Content/Generated/TPoses"))
+					Directory.CreateDirectory("Assets/UMA/Content/Generated/TPoses");
+				AssetDatabase.CreateAsset(asset, "Assets/UMA/Content/Generated/TPoses/" + name + "_TPose.asset");
 	            EditorUtility.SetDirty(asset);
 	            AssetDatabase.SaveAssets();
 	        }
