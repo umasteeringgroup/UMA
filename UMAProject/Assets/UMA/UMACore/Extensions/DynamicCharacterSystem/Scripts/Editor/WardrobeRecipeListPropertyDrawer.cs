@@ -10,6 +10,7 @@ public class WardrobeRecipeListPropertyDrawer : PropertyDrawer {
 	float padding = 2f;
 	public DynamicCharacterSystem thisDCS;
 	public DynamicCharacterAvatar thisDCA;
+	Texture warningIcon;
 	//Make a drop area for wardrobe recipes
 	private void DropAreaGUI(Rect dropArea, SerializedProperty thisRecipesProp)
 	{
@@ -86,6 +87,10 @@ public class WardrobeRecipeListPropertyDrawer : PropertyDrawer {
 	}
 	//TODO this needs to know its DCA
 	public override void OnGUI(Rect position, SerializedProperty property, GUIContent label){
+		if (warningIcon == null)
+		{
+			warningIcon = EditorGUIUtility.FindTexture("console.warnicon.sml");
+		}
 		EditorGUI.BeginProperty (position, label, property);
 		var r0 = new Rect (position.xMin, position.yMin, position.width, EditorGUIUtility.singleLineHeight);
 		SerializedProperty foldoutProp1 = property.FindPropertyRelative ("loadDefaultRecipes");
@@ -99,9 +104,9 @@ public class WardrobeRecipeListPropertyDrawer : PropertyDrawer {
 			valR = new Rect (valR.xMin, (valR.yMin + 50f +padding), valR.width, EditorGUIUtility.singleLineHeight);
 			var thisRecipesProp = property.FindPropertyRelative ("recipes");
 			float textFieldWidth = (valR.width - 20f);
-			var warningStyle = new GUIStyle(EditorStyles.miniButton);
-			warningStyle.contentOffset = new Vector2(0f, 0f);
-			warningStyle.fontStyle = FontStyle.Bold;
+			var warningStyle = new GUIStyle(EditorStyles.label);
+			warningStyle.fixedHeight = warningIcon.height + 4f;
+			warningStyle.contentOffset = new Vector2(0, -2f);
 			var currentTint = GUI.color;
 			//can we make these validate to the compatible races is upto date?
 			thisDCA.preloadWardrobeRecipes.Validate();
@@ -127,10 +132,14 @@ public class WardrobeRecipeListPropertyDrawer : PropertyDrawer {
 				EditorGUI.EndDisabledGroup ();
 				if (!recipeIsLive)
 				{
-					var warningRect = new Rect((valRBut.xMin - 25f),valRBut.yMin,20f,valRBut.height);
-					GUI.color = new Color(255, 200, 0);
-                    GUI.Box(warningRect, new GUIContent("!", thisElement.FindPropertyRelative("_recipeName").stringValue + " was not Live. You can make it live by checking it on in the UMA/UMA Asset Index window."), warningStyle);
-					GUI.color = currentTint;
+					var warningRect = new Rect((valRBut.xMin - 25f), valRBut.yMin, 20f, valRBut.height);
+					var warningGUIContent = new GUIContent("", thisElement.FindPropertyRelative("_recipeName").stringValue + " was not Live. You can make it live by checking it on in the UMA/UMA Asset Index window.");
+					warningGUIContent.image = warningIcon;
+					//Id like this to be a button that opens the window, opens the recipe section and ideally highlights the asset that needs to be made live
+					if (GUI.Button(warningRect, warningGUIContent, warningStyle))
+					{
+						UMAEditor.UMAAssetIndexWindow.Init();
+					}
 				}
 				if (GUI.Button (valRBut, "X")) {
 					thisRecipesProp.DeleteArrayElementAtIndex(i);

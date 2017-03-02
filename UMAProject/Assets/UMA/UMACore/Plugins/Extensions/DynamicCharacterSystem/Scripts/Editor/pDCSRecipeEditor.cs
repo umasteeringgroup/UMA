@@ -28,6 +28,7 @@ namespace UMAEditor
 			private string _wsRace;
 			private string _wsSlot;
 			private string _wsRecipeName;
+			Texture warningIcon;
 
 			public string RecipeName
 			{
@@ -75,6 +76,10 @@ namespace UMAEditor
 
 			public bool OnGUI()
 			{
+				if (warningIcon == null)
+				{
+					warningIcon = EditorGUIUtility.FindTexture("console.warnicon.sml");
+				}
 				bool changed = false;
 				var context = UMAContext.FindInstance();
 				if (context == null)
@@ -89,9 +94,9 @@ namespace UMAEditor
 				var selected = 0;
 				var recipeIsLive = true;
 				Rect valRBut = new Rect();
-				var warningStyle = new GUIStyle(EditorStyles.miniButton);
-				warningStyle.contentOffset = new Vector2(0f, 0f);
-				warningStyle.fontStyle = FontStyle.Bold;
+				var warningStyle = new GUIStyle(EditorStyles.label);
+				warningStyle.fixedHeight = warningIcon.height + 4f;
+				warningStyle.contentOffset = new Vector2(0, -2f);
 				var currentTint = GUI.color;
 				if (_wsRecipeName != "")
 				{
@@ -128,9 +133,13 @@ namespace UMAEditor
 				if (!recipeIsLive)
 				{
 					var warningRect = new Rect((valRBut.xMin - 5f), valRBut.yMin, 20f, valRBut.height);
-					GUI.color = new Color(255, 200, 0);
-					GUI.Box(warningRect, new GUIContent("!", _wsRecipeName + " was not Live. You can make it live by checking it on in the UMA/UMA Asset Index window."), warningStyle);
-					GUI.color = currentTint;
+					var warningGUIContent = new GUIContent("", _wsRecipeName + " was not Live. You can make it live by checking it on in the UMA/UMA Asset Index window.");
+					warningGUIContent.image = warningIcon;
+					//Id like this to be a button that opens the window, opens the recipe section and ideally highlights the asset that needs to be made live
+                    if(GUI.Button(warningRect, warningGUIContent, warningStyle))
+					{
+						UMAAssetIndexWindow.Init();
+					}
 				}
 				return changed;
 			}

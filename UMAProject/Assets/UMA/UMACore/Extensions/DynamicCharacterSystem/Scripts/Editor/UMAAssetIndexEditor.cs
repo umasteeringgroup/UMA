@@ -130,33 +130,6 @@ namespace UMAEditor
 
 			return null;
 		}
-		//doing this here is too slow- do it when we modify the index in any way
-		private int CompareByFolderName(UMAAssetIndexData.IndexData obj1, UMAAssetIndexData.IndexData obj2)
-		{
-			if (obj1 == null)
-			{
-				if (obj2 == null) return 0;
-				else return -1;
-			}
-			else
-			{
-				if (obj2 == null)
-				{
-					return 1;
-				}
-				else
-				{
-					string folder1 = System.IO.Path.GetDirectoryName(obj1.fullPath);
-					string folder2 = System.IO.Path.GetDirectoryName(obj2.fullPath);
-					int folderCompare = String.Compare(folder1, folder2);
-					if (folderCompare != 0) return folderCompare;
-					string file1 = System.IO.Path.GetFileName(obj1.fullPath);
-					string file2 = System.IO.Path.GetFileName(obj2.fullPath);
-					int fileCompare = String.Compare(file1, file2);
-					return fileCompare;
-				}
-			}
-		}
 
 		private UnityEngine.Object GetSerializedObjectRef(string path, string type)
 		{

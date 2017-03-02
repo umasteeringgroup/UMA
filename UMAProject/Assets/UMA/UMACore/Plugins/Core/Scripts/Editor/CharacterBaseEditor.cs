@@ -315,7 +315,7 @@ namespace UMAEditor
 	public class SharedColorsCollectionEditor
 	{
 		private bool _foldout = true;
-		static int selectedChannelCount = 2;
+		static int selectedChannelCount = 3;//DOS MODIFIED made this three so colors by default have the channels for Gloss/Metallic
 		String[] names = new string[4] { "1", "2", "3", "4" };
 		int[] channels = new int[4] { 1, 2, 3, 4 };
 		static bool[] _ColorFoldouts = new bool[0];

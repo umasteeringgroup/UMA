@@ -15,7 +15,7 @@ namespace UMAEditor
 		bool needsReenable = false;
 
 		[MenuItem("UMA/Show UMAAssetIndexWindow")]
-		static void Init()
+		public static void Init()
 		{
 			var window = (UMAAssetIndexWindow)EditorWindow.GetWindow<UMAAssetIndexWindow>("UMA Asset Index");
 			window.Show();
