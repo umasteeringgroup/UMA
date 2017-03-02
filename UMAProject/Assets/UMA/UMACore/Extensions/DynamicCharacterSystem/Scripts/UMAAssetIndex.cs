@@ -499,8 +499,11 @@ namespace UMA
 				{
 					_fullIndex.AddPath(thisAsset, thisAssetHash, thisAssetName);
 					//Automatically add anything in a Resources folder because it will already be included in the game
+					//else make assets the user has created live by default
 					if (InResources(path))
 						_buildIndex.AddPath(thisAsset, thisAssetHash, thisAssetName, false);
+					else
+						_buildIndex.AddPath(thisAsset, thisAssetHash, thisAssetName, true);
 				}
 			}
 			EditorUtility.SetDirty(this);
