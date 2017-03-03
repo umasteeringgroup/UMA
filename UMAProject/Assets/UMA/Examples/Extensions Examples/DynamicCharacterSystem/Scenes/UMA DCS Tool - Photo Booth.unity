@@ -3802,7 +3802,6 @@ Transform:
   - {fileID: 1875296714}
   - {fileID: 518079763}
   - {fileID: 2079936342}
-  - {fileID: 940287898}
   m_Father: {fileID: 0}
   m_RootOrder: 1
 --- !u!1 &893401640
@@ -3945,11 +3944,11 @@ MonoBehaviour:
     loadDefaultRecipes: 1
     recipes:
     - _recipeName: ToonHair1
-      _recipe: {fileID: 0}
+      _recipe: {fileID: 11400000, guid: 7208f8cc5e698b74ca3fc08abfb29cc6, type: 2}
       _compatibleRaces:
       - ToonFemale
     - _recipeName: ToonFemaleUnderwear1
-      _recipe: {fileID: 0}
+      _recipe: {fileID: 11400000, guid: ea281ac1676c4374783d2104f659f68d, type: 2}
       _compatibleRaces:
       - ToonFemale
   raceAnimationControllers:
@@ -4253,51 +4252,6 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 935605449}
---- !u!1 &940287897
-GameObject:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  serializedVersion: 4
-  m_Component:
-  - 4: {fileID: 940287898}
-  - 114: {fileID: 940287899}
-  m_Layer: 0
-  m_Name: UMAResourcesIndex
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &940287898
-Transform:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 940287897}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_Children: []
-  m_Father: {fileID: 879538282}
-  m_RootOrder: 8
---- !u!114 &940287899
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 940287897}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e1204365021c0c848882e62d0caf1ce6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  enableDynamicIndexing: 0
-  makePersistent: 0
-  duplicateNamesIndex:
-    data: []
-    _currentPaths: []
 --- !u!1 &955836146
 GameObject:
   m_ObjectHideFlags: 0
@@ -8850,10 +8804,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c0397d804a50934daade4356186eaf9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  dynamicCharacterSystem: {fileID: 1367749205}
   raceLibrary: {fileID: 1884177990}
   slotLibrary: {fileID: 1545467458}
   overlayLibrary: {fileID: 269104742}
-  dynamicCharacterSystem: {fileID: 1367749205}
 --- !u!1 &1884177989
 GameObject:
   m_ObjectHideFlags: 0
@@ -9038,7 +8992,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 102905478}
   m_HandleRect: {fileID: 102905476}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:

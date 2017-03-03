@@ -154,7 +154,8 @@ namespace UMA
 		{
 			_instance = this;
 #if UNITY_EDITOR
-			GenerateLists();//does not allow duplicate assets
+			if(!Application.isPlaying)
+				GenerateLists();//does not allow duplicate assets
 #endif
 		}
 
@@ -172,7 +173,10 @@ namespace UMA
 			if (BuildPipeline.isBuildingPlayer || UnityEditorInternal.InternalEditorUtility.inBatchMode || Application.isPlaying)
 				return;
 			if (PathIsValid(createdAsset) && !AMPCreatedAssets.Contains(createdAsset))
-				AMPCreatedAssets.Add(createdAsset);
+			{
+				//Debug.Log("OnCreateAsset created " + createdAsset);
+                AMPCreatedAssets.Add(createdAsset);
+			}
 			if (AMPCreatedAssets.Count > 0)
 			{
 				EditorApplication.update -= DoCreatedAsset;
@@ -197,6 +201,7 @@ namespace UMA
 				{
 					if (PathIsValid(movedFromAssetPaths[i]) && !AMPMovedAssetsContains(movedFromAssetPaths[i], movedAssets[i]) && !AMPSavedAssets.Contains(movedAssets[i]))
 					{
+						//Debug.Log("OnPostprocessAllAssets MOVED ASSET " + movedAssets[i]);
 						AMPMovedAssets.Add(new AMPMovedAsset(movedFromAssetPaths[i], movedAssets[i]));
 						addedMovedAssets = true;
 					}
@@ -447,7 +452,6 @@ namespace UMA
 				return;
 			EditorApplication.update -= DoDeletedAsset;
 
-			//Debug.Log("DoDeletedAsset");
 			//Remove the asset from all indexes
 			foreach (string path in AMPDeletedAssets)
 			{
@@ -478,9 +482,12 @@ namespace UMA
 		{
 			if (EditorApplication.isCompiling || EditorApplication.isUpdating)
 				return;
+
+			//created happens BEFORE deleted when the item that was created came via AssetModificationProcessor so if the deleted list is not clear wait until it is
+			if (AMPDeletedAssets.Count > 0)
+				return;
 			EditorApplication.update -= DoCreatedAsset;
 
-			//Debug.Log("DoCreatedAsset");
 			foreach (string path in AMPCreatedAssets)
 			{
 				var thisAsset = AssetDatabase.LoadMainAssetAtPath(path);

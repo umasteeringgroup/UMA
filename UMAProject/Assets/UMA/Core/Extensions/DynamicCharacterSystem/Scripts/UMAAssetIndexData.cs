@@ -199,7 +199,7 @@ namespace UMA
 							break;
 						}
 					}
-					if (data[i].typeIndex[ii].fullPath == path)
+					else if (data[i].typeIndex[ii].fullPath == path)
 					{
 						data[i].Remove(path);
 						removed = true;
@@ -344,7 +344,7 @@ namespace UMA
 								var resourcesPath = GetResourcesPath(data[ti].typeIndex[i].fullPath);
 								if (String.IsNullOrEmpty(resourcesPath))
 								{
-									Debug.LogWarning("No Resources path or fileReference was found for Index entry at path " + data[ti].typeIndex[i].fullPath);
+									//Debug.LogWarning("No Resources path or fileReference was found for Index entry at path " + data[ti].typeIndex[i].fullPath);
 									continue;
 								}
 								else
@@ -516,7 +516,6 @@ namespace UMA
 					//we want these to get added if the full path is different (so we display duplicated assets) 
 					if (typeIndex[i].nameHash == nameHash && (compareFullPaths ? typeIndex[i].fullPath == fullPath : true))
 					{
-
 						typeIndex[i].TheFileReference = obj;
 
 						found = true;
