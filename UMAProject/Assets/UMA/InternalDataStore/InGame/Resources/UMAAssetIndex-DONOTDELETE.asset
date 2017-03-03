@@ -240,18 +240,15 @@ MonoBehaviour:
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/MaleHair1_Slot-fileRef
       - name: M_High poly Eyebrows
         nameHash: 278239952
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Slots/Mid Poly Head/M_High poly
-          Eyebrows_Slot.asset
+        fullPath: Assets/UMA/Content/UMA/HumanMale/Slots/Body/MidPoly/UMA_Human_Male_Eyebrows_Mid_Slot.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/M_High poly Eyebrows_Slot-fileRef
       - name: M_High poly Eyelash
         nameHash: -716521347
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Slots/Mid Poly Head/M_High poly
-          Eyelash_Slot.asset
+        fullPath: Assets/UMA/Content/UMA/HumanMale/Slots/Body/MidPoly/UMA_Human_Male_Eyelash_Mid_Slot.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/M_High poly Eyelash_Slot-fileRef
       - name: M_High poly Head
         nameHash: 1838133986
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Slots/Mid Poly Head/M_High poly
-          Head_Slot.asset
+        fullPath: Assets/UMA/Content/UMA/HumanMale/Slots/Body/MidPoly/UMA_Human_Male_Head_Mid_Slot.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/M_High poly Head_Slot-fileRef
       - name: FemaleEyelashGuide
         nameHash: 1656125228
@@ -297,6 +294,10 @@ MonoBehaviour:
         nameHash: 491574392
         fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Slots/PlaceholderSlot.asset
         fileRefPath: 
+      - name: UMA_Human_Male_Hands_HQ
+        nameHash: 1817972240
+        fullPath: Assets/UMA/Content/UMA/HumanMale/Slots/Body/MidPoly/UMA_Human_Male_Hands_Mid_Slot.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/UMA_Human_Male_Hands_HQ_Slot-fileRef
     - type: UMA.OverlayDataAsset
       typeIndex:
       - name: GuideMeshOverlay-Trans
@@ -722,53 +723,41 @@ MonoBehaviour:
         nameHash: -440332922
         fullPath: Assets/UMA/Content/UMA/HumanFemale/Recipes/Wardrobe Recipes/HumanGirl/GirlShirt1.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/GirlShirt1-fileRef
-      - name: Beard1
-        nameHash: 639660088
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/Beard1.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/Beard1-fileRef
-      - name: Beard2
-        nameHash: -1087823486
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/Beard2.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/Beard2-fileRef
-      - name: Beard3
-        nameHash: -936505068
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/Beard3.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/Beard3-fileRef
-      - name: Brow01
-        nameHash: -870115806
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/Brow01.asset
+      - name: MaleBrow01
+        nameHash: -520286026
+        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleBrow01.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/Brow01-fileRef
-      - name: Brow02
-        nameHash: 1428834200
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/Brow02.asset
+      - name: MaleBrow02
+        nameHash: 2046050572
+        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleBrow02.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/Brow02-fileRef
-      - name: BrowHR
-        nameHash: -8465090
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/BrowHR.asset
+      - name: MaleBrowHR
+        nameHash: -744434774
+        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleBrowHR.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/BrowHR-fileRef
-      - name: Eye1
-        nameHash: -1610958060
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/Eye1.asset
+      - name: MaleEye1
+        nameHash: 1780554768
+        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleEye1.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/Eye1-fileRef
-      - name: Eye2
-        nameHash: 116648622
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/Eye2.asset
+      - name: MaleEye2
+        nameHash: -215462486
+        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleEye2.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/Eye2-fileRef
-      - name: Eye3
-        nameHash: 1911872056
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/Eye3.asset
+      - name: MaleEye3
+        nameHash: -2077262532
+        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleEye3.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/Eye3-fileRef
-      - name: Eye4
-        nameHash: -275755109
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/Eye4.asset
+      - name: MaleEye4
+        nameHash: 441182367
+        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleEye4.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/Eye4-fileRef
-      - name: Eye5
-        nameHash: -1734902003
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/Eye5.asset
+      - name: MaleEye5
+        nameHash: 1833752585
+        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleEye5.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/Eye5-fileRef
-      - name: Jeans
-        nameHash: -1543604356
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/Jeans.asset
+      - name: MaleJeans
+        nameHash: -1536792382
+        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleJeans.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/Jeans-fileRef
       - name: MaleBeard1
         nameHash: 184448684
@@ -786,46 +775,46 @@ MonoBehaviour:
         nameHash: 1358787421
         fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleFace.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/MaleFace-fileRef
-      - name: MaleHair 1
-        nameHash: 256135652
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleHair
-          1.asset
+      - name: MaleHair1
+        nameHash: 561152172
+        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleHair1.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/MaleHair 1-fileRef
-      - name: MaleHair 2
-        nameHash: -1773338530
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleHair
-          2.asset
+      - name: MaleHair2
+        nameHash: -1199845098
+        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleHair2.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/MaleHair 2-fileRef
-      - name: MaleHair 3
-        nameHash: -515231544
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleHair
-          3.asset
+      - name: MaleHair3
+        nameHash: -813899392
+        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleHair3.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/MaleHair 3-fileRef
       - name: MaleShirt1
         nameHash: -1248700003
         fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleShirt1.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/MaleShirt1-fileRef
-      - name: Shirt 1
-        nameHash: -1455409060
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/Shirt 1.asset
+      - name: MaleShirt2
+        nameHash: 748357671
+        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleShirt2.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/Shirt 1-fileRef
-      - name: Shirt 2
-        nameHash: 810117606
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/Shirt 2.asset
+      - name: MaleShirt3
+        nameHash: 1536964785
+        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleShirt3.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/Shirt 2-fileRef
-      - name: Shorts 2
-        nameHash: -1814318322
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/Shorts
-          2.asset
+      - name: MaleShorts2
+        nameHash: -640607350
+        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleShorts2.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/Shorts 2-fileRef
-      - name: Shorts
-        nameHash: 620044393
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/Shorts.asset
+      - name: MaleShorts1
+        nameHash: 1087916592
+        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleShorts1.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/Shorts-fileRef
       - name: PlaceholderWardrobeRecipe
         nameHash: 63281865
         fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Recipes/PlaceholderWardrobeRecipe.asset
         fileRefPath: 
+      - name: MaleHandsHQ
+        nameHash: 1045654234
+        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleHandsHQ.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/New UMAWardrobeRecipe-fileRef
     - type: UMA.DynamicUMADnaAsset
       typeIndex:
       - name: EyeSpacing
@@ -1029,9 +1018,6 @@ MonoBehaviour:
     - Assets/UMA/Resources/UMA/HumanMale/WardrobeRecipes/Eye4.asset
     - Assets/UMA/Resources/UMA/HumanMale/WardrobeRecipes/TestMaleJeans2.asset
     - Assets/UMA/Resources/UMA/HumanMale/WardrobeRecipes/Jeans.asset
-    - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/Beard1.asset
-    - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/Beard2.asset
-    - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/Beard3.asset
     - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/Brow01.asset
     - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/Brow02.asset
     - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/BrowHR.asset
@@ -1069,3 +1055,5 @@ MonoBehaviour:
     - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Race/PlaceholderRace.asset
     - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Recipes/PlaceholderBase.asset
     - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Recipes/PlaceholderWardrobeRecipe.asset
+    - Assets/UMA/Content/UMA/HumanMale/Slots/UMA_Human_Male_Hands_HQ/UMA_Human_Male_Hands_HQ_Slot.asset
+    - Assets/UMA/Content/UMA/HumanMale/Slots/UMA_Human_Male_Hands_HQ/New UMAWardrobeRecipe.asset

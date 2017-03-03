@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Name: MaleFace
   m_EditorClassIdentifier: 
   recipeType: Wardrobe
-  DisplayValue: 
+  DisplayValue: Face
   compatibleRaces:
   - HumanMale
   - HumanMaleDCS
