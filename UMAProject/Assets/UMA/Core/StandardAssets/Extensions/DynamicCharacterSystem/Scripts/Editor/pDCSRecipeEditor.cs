@@ -44,36 +44,6 @@ namespace UMAEditor
 				_wsRecipeName = recipeName;
 			}
 
-			private bool CheckRecipeAvailability(string recipeName)
-			{
-				if (Application.isPlaying)
-					return true;
-				bool searchResources = true;
-				bool searchAssetBundles = true;
-				string resourcesFolderPath = "";
-				string assetBundlesToSearch = "";
-				var context = UMAContext.FindInstance();
-				DynamicCharacterSystem thisDCS = null;
-				if (context != null)
-					thisDCS = (context.dynamicCharacterSystem as DynamicCharacterSystem);
-				if (thisDCS != null)
-				{
-					searchResources = thisDCS.dynamicallyAddFromResources;
-					searchAssetBundles = thisDCS.dynamicallyAddFromAssetBundles;
-					resourcesFolderPath = thisDCS.resourcesRecipesFolder;
-					assetBundlesToSearch = thisDCS.assetBundlesForRecipesToSearch;
-				}
-				bool found = false;
-				DynamicAssetLoader.Instance.debugOnFail = false;
-				found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeRecipe>(searchResources, searchAssetBundles, true, assetBundlesToSearch, resourcesFolderPath, null, recipeName, null);
-				if (!found)
-					found = DynamicAssetLoader.Instance.AddAssets<UMATextRecipe>(searchResources, searchAssetBundles, true, assetBundlesToSearch, resourcesFolderPath, null, recipeName, null);
-				if (!found)
-					found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeCollection>(searchResources, searchAssetBundles, true, assetBundlesToSearch, resourcesFolderPath, null, recipeName, null);
-				DynamicAssetLoader.Instance.debugOnFail = true;
-				return found;
-			}
-
 			public bool OnGUI()
 			{
 				if (warningIcon == null)
@@ -99,8 +69,7 @@ namespace UMAEditor
 				warningStyle.contentOffset = new Vector2(0, -2f);
 				if (_wsRecipeName != "")
 				{
-					if (DynamicAssetLoader.Instance)
-						recipeIsLive = CheckRecipeAvailability(_wsRecipeName);
+					recipeIsLive = context.dynamicCharacterSystem.CheckRecipeAvailability(_wsRecipeName);
 					selected = thisPopupVals.IndexOf(_wsRecipeName);
 					if (selected == -1)
 					{
@@ -134,11 +103,12 @@ namespace UMAEditor
 					var warningRect = new Rect((valRBut.xMin - 5f), valRBut.yMin, 20f, valRBut.height);
 					var warningGUIContent = new GUIContent("", _wsRecipeName + " was not Live. You can make it live by checking it on in the UMA/UMA Global Library window.");
 					warningGUIContent.image = warningIcon;
+					GUI.Button(warningRect, warningGUIContent, warningStyle);
 					//Id like this to be a button that opens the window, opens the recipe section and ideally highlights the asset that needs to be made live
-                    if(GUI.Button(warningRect, warningGUIContent, warningStyle))
+					/*if(GUI.Button(warningRect, warningGUIContent, warningStyle))
 					{
 						UMAAssetIndexWindow.Init();
-					}
+                    }*/
 				}
 				return changed;
 			}

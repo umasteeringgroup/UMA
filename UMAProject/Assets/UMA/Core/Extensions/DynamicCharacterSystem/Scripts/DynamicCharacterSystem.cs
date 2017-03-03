@@ -443,32 +443,7 @@ namespace UMACharacterSystem
 			//This doesn't actually seem to do anything apart from slow things down
 			//StartCoroutine(CleanFilesFromResourcesAndBundles());
 		}
-		/// <summary>
-		/// Gets the recipe names in the DynamicCharacterSystem libraries for the given race and slot
-		/// </summary>
-		public override List<string> GetRecipeNamesForRaceSlot(string race, string slot)
-		{
-			Refresh();
-			List<string> recipeNamesForRaceSlot = new List<string>();
-			if (Recipes.ContainsKey(race))
-			{
-				if (Recipes[race].ContainsKey(slot))
-				{
-					foreach (UMATextRecipe utr in Recipes[race][slot])
-					{
-						recipeNamesForRaceSlot.Add(utr.name);
-					}
-				}
-			}
-			return recipeNamesForRaceSlot;
-		}
-		/// <summary>
-		/// Use GetRecipe unless your calling script resides in StandardAssets. Returns the recipe of the given filename from the dictionary as an UMARecipeBase
-		/// </summary>
-		public override UMARecipeBase GetBaseRecipe(string filename, bool dynamicallyAdd = true)
-		{
-			return GetRecipe(filename, dynamicallyAdd);
-		}
+		
 		/// <summary>
 		/// Get a recipe from the DCS dictionary, optionally 'dynamicallyAdding' it from Resources/AssetBundles if the component is set up to do this.
 		/// </summary>
@@ -523,5 +498,69 @@ namespace UMACharacterSystem
 			}
 			return originatingAssetBundle;
 		}
+
+		#region OVERRIDES FROM BASE - REQUIRED BY RECIPE EDITOR IF IT IS IN STANDARD ASSETS
+		/// <summary>
+		/// Gets the recipe names in the DynamicCharacterSystem libraries for the given race and slot (used by RecipeEditor because of StandardAssets)
+		/// </summary>
+		public override List<string> GetRecipeNamesForRaceSlot(string race, string slot)
+		{
+			Refresh();
+			List<string> recipeNamesForRaceSlot = new List<string>();
+			if (Recipes.ContainsKey(race))
+			{
+				if (Recipes[race].ContainsKey(slot))
+				{
+					foreach (UMATextRecipe utr in Recipes[race][slot])
+					{
+						recipeNamesForRaceSlot.Add(utr.name);
+					}
+				}
+			}
+			return recipeNamesForRaceSlot;
+		}
+
+		/// <summary>
+		/// Checks if a given recipe name is available from the dynamic libraries (used by Recipe Editor because of Standard Assets)
+		/// </summary>
+		/// <param name="recipeName"></param>
+		/// <returns></returns>
+		public override bool CheckRecipeAvailability(string recipeName)
+		{
+			if (Application.isPlaying)
+				return true;
+			bool searchResources = true;
+			bool searchAssetBundles = true;
+			string resourcesFolderPath = "";
+			string assetBundlesToSearch = "";
+			var context = UMAContext.FindInstance();
+			DynamicCharacterSystem thisDCS = null;
+			if (context != null)
+				thisDCS = (context.dynamicCharacterSystem as DynamicCharacterSystem);
+			if (thisDCS != null)
+			{
+				searchResources = thisDCS.dynamicallyAddFromResources;
+				searchAssetBundles = thisDCS.dynamicallyAddFromAssetBundles;
+				resourcesFolderPath = thisDCS.resourcesRecipesFolder;
+				assetBundlesToSearch = thisDCS.assetBundlesForRecipesToSearch;
+			}
+			bool found = false;
+			DynamicAssetLoader.Instance.debugOnFail = false;
+			found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeRecipe>(searchResources, searchAssetBundles, true, assetBundlesToSearch, resourcesFolderPath, null, recipeName, null);
+			if (!found)
+				found = DynamicAssetLoader.Instance.AddAssets<UMATextRecipe>(searchResources, searchAssetBundles, true, assetBundlesToSearch, resourcesFolderPath, null, recipeName, null);
+			if (!found)
+				found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeCollection>(searchResources, searchAssetBundles, true, assetBundlesToSearch, resourcesFolderPath, null, recipeName, null);
+			DynamicAssetLoader.Instance.debugOnFail = true;
+			return found;
+		}
+		/// <summary>
+		/// Use GetRecipe unless your calling script resides in StandardAssets. Returns the recipe of the given filename from the dictionary as an UMARecipeBase
+		/// </summary>
+		public override UMARecipeBase GetBaseRecipe(string filename, bool dynamicallyAdd = true)
+		{
+			return GetRecipe(filename, dynamicallyAdd);
+		}
+		#endregion
 	}
 }
