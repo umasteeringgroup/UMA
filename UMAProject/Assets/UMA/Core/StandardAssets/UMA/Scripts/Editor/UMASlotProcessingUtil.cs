@@ -1,4 +1,4 @@
-﻿#if UNITY_EDITOR
+#if UNITY_EDITOR
 
 using UnityEngine;
 using UnityEditor;
@@ -92,6 +92,8 @@ namespace UMAEditor
 
 			var slot = ScriptableObject.CreateInstance<SlotDataAsset>();
 			slot.slotName = assetName;
+			//Make sure slots get created with a name hash
+			slot.nameHash = UMAUtils.StringToHash(slot.slotName);
 			slot.material = material;
 			slot.UpdateMeshData(finalMeshRenderer,rootBone);
 			AssetDatabase.CreateAsset(slot, slotFolder + '/' + assetName + '/' + assetName + "_Slot.asset");
