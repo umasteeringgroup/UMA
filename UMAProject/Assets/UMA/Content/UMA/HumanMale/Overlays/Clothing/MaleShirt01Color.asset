@@ -21,7 +21,7 @@ MonoBehaviour:
     height: 512
   alphaMask: {fileID: 0}
   textureList:
-  - {fileID: 2800000, guid: 285826d71ab423c4281c40c420843584, type: 3}
+  - {fileID: 2800000, guid: 7e921b7c55c83334d8e40a5114831db1, type: 3}
   - {fileID: 2800000, guid: f8cf9468b3cf148148dd1f220bda6c17, type: 3}
   - {fileID: 2800000, guid: 1f1dcad09715f4c269eeb34c63889148, type: 3}
   tags: []
