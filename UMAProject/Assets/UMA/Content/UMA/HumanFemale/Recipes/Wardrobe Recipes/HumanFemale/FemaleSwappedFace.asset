@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Name: FemaleSwappedFace
   m_EditorClassIdentifier: 
   recipeType: Wardrobe
-  DisplayValue: 
+  DisplayValue: Swapped face
   compatibleRaces:
   - HumanFemaleResources
   wardrobeRecipeThumbs:

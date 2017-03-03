@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Name: FemaleUndies
   m_EditorClassIdentifier: 
   recipeType: Wardrobe
-  DisplayValue: 
+  DisplayValue: Undies
   compatibleRaces:
   - HumanFemaleResources
   wardrobeRecipeThumbs:
@@ -23,4 +23,4 @@ MonoBehaviour:
   Hides: []
   suppressWardrobeSlots: []
   activeWardrobeSet: []
-  recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"FemaleTorso","scale":100,"copyIdx":-1,"overlays":[{"id":"FemaleUnderwear02","colorIdx":0,"rect":[0,1024,2048,1024]}]}],"colors":[],"fColors":[{"name":"","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":0,"race":"","packedDna":[]}'
+  recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"FemaleTorso","scale":100,"copyIdx":-1,"overlays":[{"id":"FemaleUnderwear02","colorIdx":0,"rect":[0,1024,2048,1024]}]}],"colors":[],"fColors":[{"name":"-","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":0,"race":"","packedDna":[]}'

@@ -9,7 +9,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d6ce19a51999011448644fc01e9cec03, type: 3}
-  m_Name: F_High poly head_Slot
+  m_Name: UMA_Human_Female_Head_Mid_Slot
   m_EditorClassIdentifier: 
   slotName: F_High poly head
   material: {fileID: 11400000, guid: 8e29dbac5d2e82f44a759a7e2cc568ab, type: 2}

@@ -9,24 +9,23 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f0188188c253e0c4bb9b46e19fa7312e, type: 3}
-  m_Name: MaleHandsHQ
+  m_Name: FemaleHandsMid
   m_EditorClassIdentifier: 
   recipeType: Wardrobe
-  DisplayValue: Hands high quality
+  DisplayValue: 
   compatibleRaces:
-  - HumanMaleDCS
-  - HumanMale
+  - HumanFemale
+  - HumanFemaleResources
   wardrobeRecipeThumbs:
-  - race: HumanMaleDCS
+  - race: HumanFemale
     filename: 
     thumb: {fileID: 21300000, guid: 8c3e3ce58fbff8a4a8b7a48b10244577, type: 3}
-  - race: HumanMale
+  - race: HumanFemaleResources
     filename: 
     thumb: {fileID: 0}
   wardrobeSlot: Hands
   Hides:
-  - MaleHands
+  - FemaleHands
   suppressWardrobeSlots: []
   activeWardrobeSet: []
-  recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"UMA_Human_Male_Hands_HQ","scale":100,"copyIdx":-1,"overlays":[{"id":"M_Bod
-    Overlay 1","colorIdx":0,"rect":[0,0,0,0]}]}],"colors":[],"fColors":[{"name":"Skin","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"","packedDna":[]}'
+  recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"UMA_Human_Female_Hands_HQ","scale":100,"copyIdx":-1,"overlays":[{"id":"F_H_Bod","colorIdx":0,"rect":[0,0,0,0]}]}],"colors":[],"fColors":[{"name":"Skin","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"","packedDna":[]}'

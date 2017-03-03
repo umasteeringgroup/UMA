@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Name: FemaleShirt4
   m_EditorClassIdentifier: 
   recipeType: Wardrobe
-  DisplayValue: 
+  DisplayValue: Shirt 4
   compatibleRaces:
   - HumanFemaleResources
   wardrobeRecipeThumbs:
