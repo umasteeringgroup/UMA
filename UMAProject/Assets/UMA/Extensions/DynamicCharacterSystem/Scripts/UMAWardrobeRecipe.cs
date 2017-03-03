@@ -61,6 +61,22 @@ public partial class UMAWardrobeRecipe : UMATextRecipe
 			AssetDatabase.SaveAssets();
 			if (andSelect)
 				Selection.activeObject = this;
+			//remove the old UTR from UMAAssetIndex and add the new one
+			if(UMAAssetIndex.Instance != null)
+			{
+				UMAAssetIndex.Instance.FullIndex.RemovePath(thisUTRPath);
+				UMAAssetIndex.Instance.BuildIndex.RemovePath(thisUTRPath);
+				UMAAssetIndex.Instance.AssetBundleIndex.RemovePath(thisUTRPath);
+				UMAAssetIndex.Instance.FullIndex.AddPath(this,this.name);
+				if (!UMAAssetIndex.Instance.InAssetBundle(thisUTRPath, this.name))
+				{
+					UMAAssetIndex.Instance.BuildIndex.AddPath(this, this.name);
+				}
+				else
+				{
+					UMAAssetIndex.Instance.AssetBundleIndex.AddPath(this, this.name);
+				}
+			}
 		}
 		else
 		{

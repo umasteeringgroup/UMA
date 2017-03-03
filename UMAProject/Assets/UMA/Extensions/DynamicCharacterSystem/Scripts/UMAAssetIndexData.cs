@@ -126,6 +126,7 @@ namespace UMA
 		/// <param name="objNameHash"></param>
 		/// <param name="objName">The name of the asset. If this is a SlotDataAsset/OverlayDataAsset/RaceData asset this should be the slotName/overlayName/raceName. If no name is given the asset name is used.</param>
 		/// <param name="addObject">If true a reference to the object is added to the created indexItem. This will mean the asset gets included in the build.</param>
+		/// <param name="compareFullPaths">If true the full path for the asset will be taken into account aswell. i.e. if an asset with the same slot/overlay/race name exists this asset will still be added even though its a duplicate asset</param>
 		public void AddPath(UnityEngine.Object obj, int objNameHash, string objName = "", bool addObject = false, bool compareFullPaths = true)
 		{
 			if (obj == null)

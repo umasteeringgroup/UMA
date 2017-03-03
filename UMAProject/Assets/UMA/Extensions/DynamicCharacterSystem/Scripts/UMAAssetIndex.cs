@@ -529,14 +529,20 @@ namespace UMA
 			foreach (string path in AMPSavedAssets)
 			{
 				var thisAsset = AssetDatabase.LoadMainAssetAtPath(path);
+
+				if (!IsAssetATrackedType(thisAsset))
+					continue;
+
 				int thisAssetHash = -1;
 				string thisAssetName = "";
+				bool existed = false;
 				if (thisAsset)
 				{
 					GetAssetHashAndNames(thisAsset, ref thisAssetHash, ref thisAssetName);
 					var fullIndexData = _fullIndex.GetEntryFromPath(path);
 					if (fullIndexData != null)
 					{
+						existed = true;
 						fullIndexData.name = thisAssetName;
 						fullIndexData.nameHash = thisAssetHash;
 						//it will only be in the build index if its also in Full Index
@@ -550,8 +556,27 @@ namespace UMA
 					var assetBundleIndexData = _assetBundleIndex.GetEntryFromPath(path);
 					if (assetBundleIndexData != null)
 					{
+						existed = true;
 						assetBundleIndexData.name = thisAssetName;
 						assetBundleIndexData.nameHash = thisAssetHash;
+					}
+					if (!existed)
+					{
+						//Unity considers assets pasted in from outside Unity to be 'saved' rather than created (wtf!!??)
+						//so
+						GetAssetHashAndNames(thisAsset, ref thisAssetHash, ref thisAssetName);
+						if (InAssetBundle(path, thisAsset.name))
+						{
+							_assetBundleIndex.AddPath(thisAsset, thisAssetHash, thisAssetName);
+						}
+						else
+						{
+							_fullIndex.AddPath(thisAsset, thisAssetHash, thisAssetName);
+							//Automatically add anything in a Resources folder because it will already be included in the game
+							//else make assets the user has created live by default
+							if (InResources(path))
+								_buildIndex.AddPath(thisAsset, thisAssetHash, thisAssetName, false);
+						}
 					}
 				}
 			}
@@ -621,7 +646,6 @@ namespace UMA
 			}
 			typesToIndex = new List<string>(newTypesToIndex);
 		}
-
 		/// <summary>
 		/// Adds assets for the given types to the indexes
 		/// </summary>
@@ -950,10 +974,16 @@ namespace UMA
 				}
 				if (foundType != null)
 				{
-					//this works but includes child types- which we dont want
-					//But I dont think it matters because the next step sorts it out
-					if (assetToTest.GetType().IsAssignableFrom(foundType) || assetToTest.GetType() == foundType)
+					Type typeToCompare = assetToTest.GetType();
+					//sortout animation controller funkiness
+					if (typeToCompare == typeof(UnityEditor.Animations.AnimatorController))
 					{
+						typeToCompare = typeof(UnityEngine.RuntimeAnimatorController);
+					}
+					if (typeToCompare == foundType)
+					{
+						//this seems to always say System.monotype == System.MonoType when the types match but it seems to work anyways. What gives?
+						//Debug.Log(typeToCompare.GetType().ToString() + " == " + foundType.GetType().ToString());
 						isTypeTracked = true;
 						break;
 					}
@@ -1046,12 +1076,12 @@ namespace UMA
 			return null;
 		}
 
-		private bool InResources(string path)
+		public bool InResources(string path)
 		{
 			return (path.IndexOf("/Resources/") > -1 || path.IndexOf("\\Resources\\") > -1);
 		}
 
-		private bool InAssetBundle(string path, string assetName)
+		public bool InAssetBundle(string path, string assetName)
 		{
 			string[] assetBundleNames = AssetDatabase.GetAllAssetBundleNames();
 			List<string> pathsInBundle;

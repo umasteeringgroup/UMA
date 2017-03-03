@@ -2445,11 +2445,6 @@ namespace UMACharacterSystem
 			thisUMAContext.overlayLibrary = EditorUMAContext.AddComponent<DynamicOverlayLibrary>();
 			thisUMAContext.slotLibrary = EditorUMAContext.AddComponent<DynamicSlotLibrary>();
 			thisUMAContext.dynamicCharacterSystem = EditorUMAContext.AddComponent<UMACharacterSystem.DynamicCharacterSystem>();
-			//make sure there is a UMAResourcesIndex too
-			if (UMAResourcesIndex.Instance == null)
-			{
-				EditorUMAContext.AddComponent<UMAResourcesIndex>();
-			}
 			//add an event to EditorApplication so that this context gets destroyed when this game object is no longer being inspected
 			EditorApplication.update -= CheckEditorContextNeeded;
 			EditorApplication.update += CheckEditorContextNeeded;

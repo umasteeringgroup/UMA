@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections;
+using System.Collections.Generic;
 using UMA;
 
 namespace UMAEditor
@@ -102,15 +103,13 @@ namespace UMAEditor
 				if (didUpdate)
 				{
 					string postUpdateMessage = "All Recipes Updated! ";
-					if (UMAResourcesIndex.Instance != null)
+					if(UMAAssetIndex.Instance != null)
 					{
-						UMAResourcesIndex.Instance.ClearIndex();
-						UMAResourcesIndex.Instance.IndexAllResources();
-						Debug.Log("Updated UmaResourcesIndex with new assets");
+						Debug.Log("Updated UMA Global Library with new assets");
 					}
 					else
 					{
-						postUpdateMessage += "You will need to update your UMAResourcesIndex and, ";
+						postUpdateMessage += "You will need to update your UMA Global Library and, ";
 					}
 					postUpdateMessage += "If you are using AssetBundles, you may need to rebuild your assetBundles ";
 					postUpdateMessage += "in order for everything to work properly.";

@@ -596,7 +596,6 @@ namespace UMA
 		#endregion
 
 		#region LOAD ASSETS METHODS
-		List<Type> deepResourcesScanned = new List<Type>();
 		[HideInInspector]
 		public bool debugOnFail = true;
 		public bool AddAssets<T>(ref Dictionary<string, List<string>> assetBundlesUsedDict, bool searchResources, bool searchBundles, bool downloadAssetsEnabled, string bundlesToSearch = "", string resourcesFolderPath = "", int? assetNameHash = null, string assetName = "", Action<T[]> callback = null, bool forceDownloadAll = false) where T : UnityEngine.Object
@@ -609,16 +608,12 @@ namespace UMA
 			List<T> assetsToReturn = new List<T>();
 			string[] resourcesFolderPathArray = SearchStringToArray(resourcesFolderPath);
 			string[] bundlesToSearchArray = SearchStringToArray(bundlesToSearch);
-			bool doDeepSearch = (assetName == "" && assetNameHash == null && deepResourcesScanned.Contains(typeof(T)) == false);
-			//first do the quick resourcesIndex search if searchResources and we have either a name or a hash
+			//search UMA AssetIndex
 			if (searchResources)
 			{
-				if (UMAResourcesIndex.Instance != null)
+				if (UMAAssetIndex.Instance != null)
 				{
-					doDeepSearch = doDeepSearch == true ? UMAResourcesIndex.Instance.enableDynamicIndexing : doDeepSearch;
 					found = AddAssetsFromResourcesIndex<T>(ref assetsToReturn, resourcesFolderPathArray, assetNameHash, assetName);
-					if ((assetName != "" || assetNameHash != null) && found)
-						doDeepSearch = false;
 				}
 				else
 				{
@@ -631,17 +626,7 @@ namespace UMA
 				{
 					bool foundHere = AddAssetsFromAssetBundles<T>(ref assetBundlesUsedDict, ref assetsToReturn, downloadAssetsEnabled, bundlesToSearchArray, assetNameHash, assetName, callback, forceDownloadAll);
 					found = foundHere == true ? true : found;
-					if ((assetName != "" || assetNameHash != null) && found)
-						doDeepSearch = false;
 				}
-			//if enabled and we have not found anything yet or we are getting all items of a type do a deep resources search (slow)
-			if (searchResources && ((found == false && doDeepSearch) || doDeepSearch == true))
-			{
-				bool foundHere = AddAssetsFromResources<T>(ref assetsToReturn, resourcesFolderPathArray, assetNameHash, assetName);
-				found = foundHere == true ? true : found;
-				if (assetName == "" && assetNameHash == null && deepResourcesScanned.Contains(typeof(T)) == false)
-					deepResourcesScanned.Add(typeof(T));
-			}
 			if (callback != null)
 			{
 				callback(assetsToReturn.ToArray());
@@ -682,169 +667,6 @@ namespace UMA
 			{
 				assetsToReturn.AddRange(UMAAssetIndex.Instance.LoadAllAssetsOfType<T>(resourcesFolderPathArray) as List<T>);
 				found = assetsToReturn.Count > 0;
-			}
-			/*if (UMAResourcesIndex.Instance == null)
-			return found;
-			if (assetNameHash != null || assetName != "")
-			{
-				string foundAssetPath = "";
-				if (assetNameHash != null)
-				{
-					foundAssetPath = UMAResourcesIndex.Instance.Index.GetPath<T>((int)assetNameHash, resourcesFolderPathArray);
-				}
-				else if (assetName != "")
-				{
-					foundAssetPath = UMAResourcesIndex.Instance.Index.GetPath<T>(assetName, resourcesFolderPathArray);
-				}
-				if (foundAssetPath != "")
-				{
-					T foundAsset = Resources.Load<T>(foundAssetPath);
-					if (foundAsset != null)
-					{
-						assetsToReturn.Add(foundAsset);
-						found = true;
-					}
-				}
-			}*/
-			/*else if (assetNameHash == null && assetName == "")
-			{
-				if (UMAResourcesIndex.Instance == null)
-					Debug.Log("UMAResourcesIndex.Instance WAS NULL");
-				else if (UMAResourcesIndex.Instance.Index == null)
-					Debug.Log("UMAResourcesIndex.Instance.Index WAS NULL");
-				else if (resourcesFolderPathArray == null)
-					Debug.Log("resourcesFolderPathArray WAS NULL");
-				foreach (string path in UMAResourcesIndex.Instance.Index.GetPaths<T>(resourcesFolderPathArray))
-				{
-					T foundAsset = Resources.Load<T>(path);
-					if (foundAsset != null)
-					{
-						assetsToReturn.Add(foundAsset);
-						found = true;
-					}
-				}
-			}*/
-			return found;
-		}
-
-		/// <summary>
-		/// Generic Library function to search Resources for a type of asset, optionally filtered by folderpath and asset assetNameHash or assetName. 
-		/// Optionally sends the found assets to the supplied callback for processing.
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="resourcesFolderPath"></param>
-		/// <param name="assetNameHash"></param>
-		/// <param name="assetName"></param>
-		/// <param name="callback"></param>
-		/// <returns>Returns true if a assetNameHash or assetName were specified and an asset with that assetNameHash or assetName is found. Else returns false.</returns>
-		public bool AddAssetsFromResources<T>(ref List<T> assetsToReturn, string[] resourcesFolderPathArray, int? assetNameHash = null, string assetName = "") where T : UnityEngine.Object
-		{
-			bool found = false;
-			foreach (string path in resourcesFolderPathArray)
-			{
-				T[] foundAssets = new T[0];
-				var pathPrefix = path == "" ? "" : path + "/";
-				if ((typeof(T) == typeof(SlotDataAsset)) || (typeof(T) == typeof(OverlayDataAsset)) || (typeof(T) == typeof(RaceData)))
-				{
-					//This is hugely expensive but we have to do this as we dont know the asset name, only the race/slot/overlayName which may not be the same. 
-					//This will only happen once now that I added the UMAResourceIndex
-					foundAssets = Resources.LoadAll<T>(path);
-				}
-				else
-				{
-					if (assetName == "")
-						foundAssets = Resources.LoadAll<T>(path);
-					else
-					{
-						if (pathPrefix != "")
-						{
-							T foundAsset = Resources.Load<T>(pathPrefix + assetName);
-							if (foundAsset != null)
-							{
-								if (UMAResourcesIndex.Instance != null)
-									UMAResourcesIndex.Instance.Add(foundAsset);
-								assetsToReturn.Add(foundAsset);
-								found = true;
-							}
-							else
-							{
-								foundAssets = Resources.LoadAll<T>(path);
-							}
-						}
-						else
-						{
-							foundAssets = Resources.LoadAll<T>(path);
-						}
-					}
-				}
-				if (found == false)
-				{
-                    
-					for (int i = 0; i < foundAssets.Length; i++)
-					{
-						if (assetNameHash != null)
-						{
-							int foundHash = UMAUtils.StringToHash(foundAssets[i].name);
-							if (typeof(T) == typeof(SlotDataAsset))
-							{
-								foundHash = (foundAssets[i] as SlotDataAsset).nameHash;
-							}
-							if (typeof(T) == typeof(OverlayDataAsset))
-							{
-								foundHash = (foundAssets[i] as OverlayDataAsset).nameHash;
-							}
-							if (typeof(T) == typeof(RaceData))
-							{
-								foundHash = UMAUtils.StringToHash((foundAssets[i] as RaceData).raceName);
-							}
-							if (foundHash == assetNameHash)
-							{
-								if (UMAResourcesIndex.Instance != null)
-									UMAResourcesIndex.Instance.Add(foundAssets[i], foundHash, true);
-								assetsToReturn.Add(foundAssets[i]); 
-								found = true;
-							}
-						}
-						else if (assetName != "")
-						{
-							string foundName = foundAssets[i].name;
-							if (typeof(T) == typeof(OverlayDataAsset))
-							{
-								foundName = (foundAssets[i] as OverlayDataAsset).overlayName;
-							}
-							if (typeof(T) == typeof(SlotDataAsset))
-							{
-								foundName = (foundAssets[i] as SlotDataAsset).slotName;
-							}
-							if (typeof(T) == typeof(RaceData))
-							{
-								foundName = (foundAssets[i] as RaceData).raceName;
-							}
-							if (foundName == assetName)
-							{
-								if (UMAResourcesIndex.Instance != null)
-									UMAResourcesIndex.Instance.Add(foundAssets[i], foundName, true);
-								assetsToReturn.Add(foundAssets[i]);
-								found = true;
-							}
-
-						}
-						else
-						{
-							if (UMAResourcesIndex.Instance != null)
-								UMAResourcesIndex.Instance.Add(foundAssets[i], true);
-							assetsToReturn.Add(foundAssets[i]);
-							found = true;
-						}
-					}
-                    if (found)
-                    {
-                        if (UMAResourcesIndex.Instance != null)
-                        {
-                            UMAResourcesIndex.Instance.Save();
-                        }
-                    }
-				}
 			}
 			return found;
 		}
