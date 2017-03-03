@@ -508,6 +508,27 @@ namespace UMAAssetBundleManager
 			m_IsAdditive = isAdditive;
 		}
 
+		public float Progress
+		{
+			get
+			{
+				float progress = 0;
+				if (m_Request != null)
+				{
+					if (m_Request.isDone)
+					{
+						progress = 1f;
+					}
+					else
+					{
+						//asyncOperation progress shows 99% when the scene is loaded but not activated which is not very helpful since this is what takes the time!
+						progress = Mathf.Clamp01(m_Request.progress / 0.9f);
+					}
+				}
+				return progress;
+			}
+		}
+
 		public override bool Update()
 		{
 			if (m_Request != null)

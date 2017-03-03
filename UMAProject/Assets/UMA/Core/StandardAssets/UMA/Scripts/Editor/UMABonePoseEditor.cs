@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -28,6 +28,8 @@ namespace UMA.PoseTools
 		}
 
 		private float previewWeight = 1.0f;
+
+		public bool dynamicDNAConverterMode = false;
 
 		const float addRemovePadding = 20f;
 		const float buttonVerticalOffset = 4f; // Can't be calculated because button layout is weird.
@@ -133,20 +135,22 @@ namespace UMA.PoseTools
 						context.activeTransform = null;
 					}
 				}
+				if (!dynamicDNAConverterMode)
+				{
+					context.activeUMA.skeleton.ResetAll();
+					if (context.startingPose != null)
+					{
+						context.startingPose.ApplyPose(context.activeUMA.skeleton, context.startingPoseWeight);
+					}
 
-				context.activeUMA.skeleton.ResetAll();
-				if (context.startingPose != null)
-				{
-					context.startingPose.ApplyPose(context.activeUMA.skeleton, context.startingPoseWeight);
-				}
-
-				if (haveEditTarget)
-				{
-					targetPose.ApplyPose(context.activeUMA.skeleton, 1f);
-				}
-				else
-				{
-					targetPose.ApplyPose(context.activeUMA.skeleton, previewWeight);
+					if (haveEditTarget)
+					{
+						targetPose.ApplyPose(context.activeUMA.skeleton, 1f);
+					}
+					else
+					{
+						targetPose.ApplyPose(context.activeUMA.skeleton, previewWeight);
+					}
 				}
 			}
 		}
@@ -329,20 +333,24 @@ namespace UMA.PoseTools
 			}
 
 			// HACK
-			sourceUMA = EditorGUILayout.ObjectField("Source UMA", sourceUMA, typeof(UMAData), true) as UMAData;
-			if (sourceUMA != null)
+			if (!dynamicDNAConverterMode)
 			{
-				if (context == null) {
-					context = new UMABonePoseEditorContext();
-				}
-				if (context.activeUMA != sourceUMA)
+				sourceUMA = EditorGUILayout.ObjectField("Source UMA", sourceUMA, typeof(UMAData), true) as UMAData;
+				if (sourceUMA != null)
 				{
-					context.activeUMA = sourceUMA;
+					if (context == null)
+					{
+						context = new UMABonePoseEditorContext();
+					}
+					if (context.activeUMA != sourceUMA)
+					{
+						context.activeUMA = sourceUMA;
+					}
 				}
 			}
 
 			// Weight of pose on preview model
-			if (haveValidContext)
+			if (haveValidContext && !dynamicDNAConverterMode)
 			{
 				EditorGUILayout.BeginHorizontal();
 				GUILayout.Space(addRemovePadding);

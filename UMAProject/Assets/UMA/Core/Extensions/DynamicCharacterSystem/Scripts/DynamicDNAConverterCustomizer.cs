@@ -470,17 +470,17 @@ namespace UMA
                     var thisConverterBackup = Instantiate<DynamicDNAConverterBehaviour>(converterToBU);
                     thisConverterBackup.transform.parent = converterBackupsFolder.transform;
                     converterBackups[converterToBU.name] = thisConverterBackup;
-                    if(converterToBU.dnaAsset != null)
-                    {
-                        dnaAssetNamesBackups[converterToBU.dnaAsset.name] = (string[])converterToBU.dnaAsset.Names.Clone();
-                    }
-                    if (converterToBU.startingPose != null)
-                    {
-                        poseBonesBackups[converterToBU.startingPose.name] = DeepPoseBoneClone(converterToBU.startingPose.poses);
-                    }
-                }  
-            }
-        }
+				}
+				if (converterToBU.dnaAsset != null)
+				{
+					dnaAssetNamesBackups[converterToBU.dnaAsset.name] = (string[])converterToBU.dnaAsset.Names.Clone();
+				}
+				if (converterToBU.startingPose != null)
+				{
+					poseBonesBackups[converterToBU.startingPose.name] = DeepPoseBoneClone(converterToBU.startingPose.poses);
+				}
+			}
+		}
 
         private UMABonePose.PoseBone[] DeepPoseBoneClone(UMABonePose.PoseBone[] posesToCopy)
         {
@@ -490,9 +490,9 @@ namespace UMA
                 poseBonesCopy[i] = new UMABonePose.PoseBone();
                 poseBonesCopy[i].bone = posesToCopy[i].bone;
                 poseBonesCopy[i].hash = posesToCopy[i].hash;
-                poseBonesCopy[i].position = posesToCopy[i].position;
-                poseBonesCopy[i].rotation = posesToCopy[i].rotation;
-                poseBonesCopy[i].scale = posesToCopy[i].scale;
+                poseBonesCopy[i].position = new Vector3(posesToCopy[i].position.x, posesToCopy[i].position.y, posesToCopy[i].position.z);
+                poseBonesCopy[i].rotation = new Quaternion(posesToCopy[i].rotation.x, posesToCopy[i].rotation.y, posesToCopy[i].rotation.z, posesToCopy[i].rotation.w);
+                poseBonesCopy[i].scale = new Vector3(posesToCopy[i].scale.x, posesToCopy[i].scale.y, posesToCopy[i].scale.z);
             }
             return poseBonesCopy;
         }
@@ -521,15 +521,19 @@ namespace UMA
                                     availableConverters[i].dnaAsset.Names = buNames;
                                 }
                             }
-                            availableConverters[i].startingPose = buConverter.startingPose;
-                            if(availableConverters[i].startingPose != null)
-                            {
-                                UMABonePose.PoseBone[] buPoses;
-                                if (poseBonesBackups.TryGetValue(availableConverters[i].startingPose.name, out buPoses))
-                                {
-                                    availableConverters[i].startingPose.poses = buPoses;
-                                }
-                            }
+							//we need to restore these regardless of whether the converter had a startingPose or not when we started playing
+							if (availableConverters[i].startingPose != null)
+							{
+								UMABonePose.PoseBone[] buPoses;
+								if (poseBonesBackups.TryGetValue(availableConverters[i].startingPose.name, out buPoses))
+								{
+									availableConverters[i].startingPose.poses = buPoses;
+									EditorUtility.SetDirty(availableConverters[i].startingPose);
+									AssetDatabase.SaveAssets();
+								}
+							}
+							availableConverters[i].startingPose = buConverter.startingPose;
+                            //
                             availableConverters[i].skeletonModifiers = buConverter.skeletonModifiers;
                             availableConverters[i].hashList = buConverter.hashList;
                             availableConverters[i].overallModifiersEnabled = buConverter.overallModifiersEnabled;
@@ -569,7 +573,7 @@ namespace UMA
                         }
                         if (kp.Value.startingPose != null && poseBonesBackups.ContainsKey(kp.Value.startingPose.name))
                         {
-                            EditorUtility.SetDirty(kp.Value.dnaAsset);
+                            EditorUtility.SetDirty(kp.Value.startingPose);
                             poseBonesBackups.Remove(kp.Value.startingPose.name);
                         }
                     }
@@ -607,7 +611,7 @@ namespace UMA
                             }
                             if (converterBackups[selectedConverter.name].startingPose != null)
                             {
-                                EditorUtility.SetDirty(converterBackups[selectedConverter.name].startingPose);
+								EditorUtility.SetDirty(converterBackups[selectedConverter.name].startingPose);
                                 poseBonesBackups.Remove(converterBackups[selectedConverter.name].startingPose.name);
                             }
                             EditorUtility.SetDirty(selectedConverter);

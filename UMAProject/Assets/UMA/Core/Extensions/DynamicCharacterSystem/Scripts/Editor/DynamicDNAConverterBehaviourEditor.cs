@@ -898,6 +898,8 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 			if (EditorGUI.EndChangeCheck())
 			{
 				serializedObject.ApplyModifiedProperties();
+				//If this gets set we need to back it up
+				thisDDCC.BackupConverter();
 			}
 			//Draw the poses array from the Asset if set or show controls to create a new asset.
 			SerializedProperty bonePoseAsset = serializedObject.FindProperty("startingPose");
@@ -907,6 +909,7 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 				if (thisUBP == null)
 				{
 					thisUBP = Editor.CreateEditor((UMA.PoseTools.UMABonePose)bonePoseAsset.objectReferenceValue, typeof(UMA.PoseTools.UMABonePoseEditor));
+					((UMA.PoseTools.UMABonePoseEditor)thisUBP).dynamicDNAConverterMode = true;
 					if (umaData != null)
 					{
 						((UMA.PoseTools.UMABonePoseEditor)thisUBP).context = new UMA.PoseTools.UMABonePoseEditorContext();
@@ -916,6 +919,7 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 				else if (thisUBP.target != (UMA.PoseTools.UMABonePose)bonePoseAsset.objectReferenceValue)
 				{
 					thisUBP = Editor.CreateEditor((UMA.PoseTools.UMABonePose)bonePoseAsset.objectReferenceValue, typeof(UMA.PoseTools.UMABonePoseEditor));
+					((UMA.PoseTools.UMABonePoseEditor)thisUBP).dynamicDNAConverterMode = true;
 					if (umaData != null)
 					{
 						((UMA.PoseTools.UMABonePoseEditor)thisUBP).context = new UMA.PoseTools.UMABonePoseEditorContext();
