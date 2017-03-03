@@ -9210,7 +9210,6 @@ Transform:
   - {fileID: 1875296714}
   - {fileID: 518079763}
   - {fileID: 2079936342}
-  - {fileID: 1705365350}
   m_Father: {fileID: 0}
   m_RootOrder: 1
 --- !u!1 &893401640
@@ -15137,6 +15136,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 2efa54ed9091b2045a5d323cec2550cc, type: 2}
   - {fileID: 11400000, guid: edcf92bdef3d2e04c980749f7d702647, type: 2}
   - {fileID: 11400000, guid: 98c6dc40a5e2e4f3f92aabfafaf67c78, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
 --- !u!4 &1545467459
 Transform:
   m_ObjectHideFlags: 0
@@ -16024,63 +16026,6 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1693580477}
---- !u!1 &1705365348
-GameObject:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  serializedVersion: 4
-  m_Component:
-  - 4: {fileID: 1705365350}
-  - 114: {fileID: 1705365349}
-  m_Layer: 0
-  m_Name: UMAResourcesIndex
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1705365349
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1705365348}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e1204365021c0c848882e62d0caf1ce6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  enableDynamicIndexing: 0
-  makePersistent: 0
-  duplicateNamesIndex:
-    data:
-    - type: UMA.SlotDataAsset
-      typeFiles:
-      - nameHash: -1002373313
-        path: Hair/M_Eyebrow_Slot
-        fullPath: Assets/UMA/Content/UMA/Humanoid/HumanMale/Slots/Resources/Hair/M_Eyebrow_Slot.asset
-    - type: UMA.OverlayDataAsset
-      typeFiles:
-      - nameHash: -1271093857
-        path: Face/Eye/EyeOverlay-nonReflective
-        fullPath: Assets/UMA/Content/UMA/Humanoid/HumanShared/Overlays/Resources/Face/Eye/EyeOverlay-nonReflective.asset
-    _currentPaths:
-    - Assets/UMA/Content/UMA/Humanoid/HumanMale/Slots/Resources/Hair/M_Eyebrow_Slot.asset
-    - Assets/UMA/Content/UMA/Humanoid/HumanShared/Overlays/Resources/Face/Eye/EyeOverlay-nonReflective.asset
---- !u!4 &1705365350
-Transform:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1705365348}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_Children: []
-  m_Father: {fileID: 879538282}
-  m_RootOrder: 8
 --- !u!1 &1708827405
 GameObject:
   m_ObjectHideFlags: 0
@@ -17902,10 +17847,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c0397d804a50934daade4356186eaf9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  dynamicCharacterSystem: {fileID: 1367749205}
   raceLibrary: {fileID: 1884177990}
   slotLibrary: {fileID: 1545467458}
   overlayLibrary: {fileID: 269104742}
-  dynamicCharacterSystem: {fileID: 1367749205}
 --- !u!1 &1884177989
 GameObject:
   m_ObjectHideFlags: 0
