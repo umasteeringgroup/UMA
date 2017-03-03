@@ -77,6 +77,8 @@ public static class ProjectUtility
                 {
                     
                     oda.textureList[i] = NewTex;
+					//if this changed then set the overlay as dirty so it gets saved later
+					EditorUtility.SetDirty(oda);
                 }
             }
         }
