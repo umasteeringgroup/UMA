@@ -9,6 +9,6 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c6e6730190779284dad66870e92bdc9f, type: 3}
-  m_Name: UMA_Human_Male_Hands_HQ_Slot-fileRef
+  m_Name: UMA_Human_Male_Hands_Mid_Slot-fileRef
   m_EditorClassIdentifier: 
-  objectRef: {fileID: 11400000, guid: 3154307516d5eac43ae62f4169a48576, type: 2}
+  objectRef: {fileID: 11400000, guid: 1cb8a895dbe7af3499df9ad078311653, type: 2}

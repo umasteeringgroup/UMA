@@ -292,14 +292,18 @@ MonoBehaviour:
         nameHash: 491574392
         fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Slots/PlaceholderSlot.asset
         fileRefPath: 
-      - name: UMA_Human_Male_Hands_HQ
-        nameHash: 1817972240
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Slots/Body/MidPoly/UMA_Human_Male_Hands_Mid_Slot.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/UMA_Human_Male_Hands_HQ_Slot-fileRef
       - name: UMA_Human_Female_Hands_HQ
         nameHash: 357768886
         fullPath: Assets/UMA/Content/UMA/HumanFemale/Slots/Body/MidPoly/UMA_Human_Female_Hands_Mid_Slot.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/UMA_Human_Female_Hands_HQ_Slot-fileRef
+      - name: 
+        nameHash: 0
+        fullPath: 
+        fileRefPath: 
+      - name: UMA_Human_Male_Hands_HQ
+        nameHash: 1817972240
+        fullPath: Assets/UMA/Content/UMA/HumanMale/Slots/Body/MidPoly/UMA_Human_Male_Hands_Mid_Slot.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/UMA_Human_Male_Hands_Mid_Slot-fileRef
     - type: UMA.OverlayDataAsset
       typeIndex:
       - name: GuideMeshOverlay-Trans
@@ -813,14 +817,14 @@ MonoBehaviour:
         nameHash: 63281865
         fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Recipes/PlaceholderWardrobeRecipe.asset
         fileRefPath: 
-      - name: MaleHandsHQ
-        nameHash: 1045654234
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleHandsHQ.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/New UMAWardrobeRecipe-fileRef
+      - name: MaleHandsMid
+        nameHash: -273589124
+        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleHandsMid.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/MaleHandsHQ-fileRef
       - name: FemaleHandsMid
         nameHash: -146150106
         fullPath: Assets/UMA/Content/UMA/HumanFemale/Recipes/Wardrobe Recipes/HumanFemale/FemaleHandsMid.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/New UMAWardrobeRecipe-fileRef
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/FemaleHandsMid-fileRef
     - type: UMA.DynamicUMADnaAsset
       typeIndex:
       - name: EyeSpacing
@@ -1066,3 +1070,4 @@ MonoBehaviour:
     - Assets/UMA/Content/UMA/HumanFemale/Slots/UMA_Human_Female_Hands_HQ/UMA_Human_Female_Hands_HQ_Slot.asset
     - Assets/UMA/Content/UMA/HumanFemale/Recipes/Wardrobe Recipes/HumanFemale/New
       UMAWardrobeRecipe.asset
+    - Assets/UMA/Content/UMA/HumanMale/Slots/Body/MidPoly/UMA_Human_Male_Hands_Mid_Slot.asset
