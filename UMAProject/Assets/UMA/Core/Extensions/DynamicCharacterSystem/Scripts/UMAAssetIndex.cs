@@ -228,7 +228,7 @@ namespace UMA
 						//if the path does not already exist in _fullIndex its a created asset- but it could also be an asset whose name has changed
 						//check what happens there
 						//If an asset is DUPLICATED it will also be an entry for __DELETED_GUID_Trash in the deletedAssets array (so we can know it was CREATED)
-						if (deletedAssets.Length > 0)
+						if (deletedAssets.Length > i)
 						{
 							if (deletedAssets[i] != null)
 							{
@@ -346,6 +346,8 @@ namespace UMA
 					int thisAssetHash = -1;
 					string thisAssetName = "";
 					GetAssetHashAndNames(thisAsset, ref thisAssetHash, ref thisAssetName);
+					if ((thisAssetHash == 0 || thisAssetHash == -1) || thisAssetName == "")
+						continue;
 					//find the asset in the index using the prev path
 					var fullIndexData = _fullIndex.GetEntryFromPath(AMPMovedAssets[i].prevPath);
 					if (fullIndexData != null)
@@ -494,9 +496,12 @@ namespace UMA
 				if (!IsAssetATrackedType(thisAsset))
 					continue;
 				//then add it
-				int thisAssetHash = UMAUtils.StringToHash(thisAsset.name);
-				string thisAssetName = thisAsset.name;
+				int thisAssetHash = -1;
+				string thisAssetName = "";
 				GetAssetHashAndNames(thisAsset, ref thisAssetHash, ref thisAssetName);
+				if ((thisAssetHash == 0 || thisAssetHash == -1) || thisAssetName == "")
+					continue;
+
 				if (InAssetBundle(path, thisAsset.name))
 				{
 					_assetBundleIndex.AddPath(thisAsset, thisAssetHash, thisAssetName);
@@ -546,6 +551,8 @@ namespace UMA
 				if (thisAsset)
 				{
 					GetAssetHashAndNames(thisAsset, ref thisAssetHash, ref thisAssetName);
+					if ((thisAssetHash == 0 || thisAssetHash == -1) || thisAssetName == "")
+						continue;
 					var fullIndexData = _fullIndex.GetEntryFromPath(path);
 					if (fullIndexData != null)
 					{
@@ -572,6 +579,8 @@ namespace UMA
 						//Unity considers assets pasted in from outside Unity to be 'saved' rather than created (wtf!!??)
 						//so
 						GetAssetHashAndNames(thisAsset, ref thisAssetHash, ref thisAssetName);
+						if ((thisAssetHash == 0 || thisAssetHash == -1) || thisAssetName == "")
+							continue;
 						if (InAssetBundle(path, thisAsset.name))
 						{
 							_assetBundleIndex.AddPath(thisAsset, thisAssetHash, thisAssetName);
@@ -681,6 +690,8 @@ namespace UMA
 						int thisAssetHash = -1;
 						string thisAssetName = "";
 						GetAssetHashAndNames(thisAsset, ref thisAssetHash, ref thisAssetName);
+						if ((thisAssetHash == 0 || thisAssetHash == -1) || thisAssetName == "")
+							continue;
 						if (InAssetBundle(thisPath, thisAsset.name))
 						{
 							_assetBundleIndex.AddPath(thisAsset, thisAssetHash, thisAssetName);
@@ -787,6 +798,8 @@ namespace UMA
 					int thisAssetHash = -1;
 					string thisAssetName = "";
 					GetAssetHashAndNames(thisAsset, ref thisAssetHash, ref thisAssetName);
+					if ((thisAssetHash == 0 || thisAssetHash == -1) || thisAssetName == "")
+						return;
 					//we dont want a file ref if the object is live because it was moved into Resources
 					if (InResources(fullIndexData.fullPath))
 						_buildIndex.AddPath(thisAsset, thisAssetHash, thisAssetName, false);
@@ -845,6 +858,8 @@ namespace UMA
 						int thisAssetHash = -1;
 						string thisAssetName = "";
 						GetAssetHashAndNames(thisAsset, ref thisAssetHash, ref thisAssetName);
+						if ((thisAssetHash == 0 || thisAssetHash == -1) || thisAssetName == "")
+							continue;
 						if (InAssetBundle(thisPath, thisAsset.name))
 						{
 							_assetBundleIndex.AddPath(thisAsset, thisAssetHash, thisAssetName);
