@@ -359,6 +359,7 @@ public class TestCustomizerDD : MonoBehaviour
 				for (int i = 0; i < wardrobeOptions.Count; i++)
 				{
 					var thisddOption = new Dropdown.OptionData();
+					thisddOption.text = wardrobeOptions[i].DisplayValue != "" ? wardrobeOptions[i].DisplayValue : wardrobeOptions[i].name;
 					thisddOption.image = wardrobeOptions[i].GetWardrobeRecipeThumbFor(thisRace);
 					thisDD.options.Add(thisddOption);
 				}
