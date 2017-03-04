@@ -228,7 +228,6 @@ namespace UMA
 						//if the path does not already exist in _fullIndex its a created asset- but it could also be an asset whose name has changed
 						//check what happens there
 						//If an asset is DUPLICATED it will also be an entry for __DELETED_GUID_Trash in the deletedAssets array (so we can know it was CREATED)
-						if (deletedAssets.Length > 0)
 						{
 							if (deletedAssets[i] != null)
 							{
@@ -494,8 +493,8 @@ namespace UMA
 				if (!IsAssetATrackedType(thisAsset))
 					continue;
 				//then add it
-				int thisAssetHash = UMAUtils.StringToHash(thisAsset.name);
-				string thisAssetName = thisAsset.name;
+				int thisAssetHash = -1;
+				string thisAssetName = "";
 				GetAssetHashAndNames(thisAsset, ref thisAssetHash, ref thisAssetName);
 				if (InAssetBundle(path, thisAsset.name))
 				{
