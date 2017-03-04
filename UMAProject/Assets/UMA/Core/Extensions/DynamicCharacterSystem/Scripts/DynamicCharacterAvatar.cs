@@ -2897,7 +2897,7 @@ namespace UMACharacterSystem
 
 		//ColorValue is now a child class of OverlayColorData with extra properties that return the values ColorValue previously had, I did it like this so we dont break backwards compatibility for people
 		[Serializable]
-		public class ColorValue : OverlayColorData, ISerializationCallbackReceiver
+		public class ColorValue : OverlayColorData
 		{
 			[FormerlySerializedAs("Name")]
 			[SerializeField]
@@ -2991,16 +2991,7 @@ namespace UMACharacterSystem
 			{
 				AssignFrom(col);
 			}
-#region ISerializationCallbackReceiver Implimentation
-			public void OnBeforeSerialize()
-			{
 
-			}
-			public void OnAfterDeserialize()
-			{
-				ConvertOldFieldsToNew();
-			}
-#endregion
 			/// <summary>
 			/// This will be called to convert an old style ColorValue to a new style ColorValue based on whether name is null
 			/// </summary>
@@ -3033,26 +3024,7 @@ namespace UMACharacterSystem
 				get { return _colors; }
 				set { _colors = value; }
 			}
-
-			public bool HasConvertedValues
-			{
-				get
-				{
-					foreach (ColorValue col in _colors)
-					{
-						if (col.valuesConverted)
-							return true;
-					}
-					return false;
-				}
-				set
-				{
-					foreach (ColorValue col in _colors)
-					{
-						col.valuesConverted = false;
-					}
-				}
-			}
+				
 #region CONSTRUCTOR
 
 			/// <summary>
@@ -3060,9 +3032,7 @@ namespace UMACharacterSystem
 			/// </summary>
 			public ColorValueList()
 			{
-#if UNITY_EDITOR
-				EditorApplication.update += CheckValuesConverted;
-#endif
+
 			}
 
 			public ColorValueList(OverlayColorData[] colors)
@@ -3079,33 +3049,6 @@ namespace UMACharacterSystem
 			}
 
 #endregion
-
-#if UNITY_EDITOR
-			/// <summary>
-			/// If any of the ColorValues were 'old' ColorValues (i.e. were not OverlayColorDatas) and were converted to 'new' ColorValues this method marks the scene as 'dirty' prompting the user to save
-			/// </summary>
-			private void CheckValuesConverted()
-			{
-				if (HasConvertedValues && !Application.isPlaying)
-				{
-					if (EditorSceneManager.GetActiveScene().IsValid())
-					{
-						if (!EditorSceneManager.GetActiveScene().isDirty)
-						{
-							Debug.LogWarning("Some of the characterColors in your DynamicCharacterAvatars were updated from the old format to the new format. Make sure you save the scene when you are done ;)");
-						}
-
-						EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
-						HasConvertedValues = false;
-						EditorApplication.update -= CheckValuesConverted;
-					}
-				}
-				else
-				{
-					HasConvertedValues = false;
-				}
-			}
-#endif
 
 
 			private ColorValue GetColorValue(string name)

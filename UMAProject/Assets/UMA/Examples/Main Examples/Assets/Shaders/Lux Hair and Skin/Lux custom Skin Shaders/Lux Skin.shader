@@ -1,4 +1,4 @@
-﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+﻿// Upgrade NOTE: replaced '_Object2World' with '_Object2World'
 
 // Upgrade NOTE: replaced '_Object2World' with '_Object2World'
 
@@ -77,7 +77,7 @@ Shader "Lux/Human/Skin" {
 			UNITY_INITIALIZE_OUTPUT(Input,o);
 			// Store blendState
 			#if defined (LUX_LIGHTINGFADE)
-				float3 worldPosition = mul(unity_ObjectToWorld, v.vertex);
+				float3 worldPosition = mul(_Object2World, v.vertex);
 				o.blendState = distance(_WorldSpaceCameraPos, worldPosition);
 				o.blendState = saturate( (_Lux_Skin_DistanceRange.x - o.blendState) / _Lux_Skin_DistanceRange.y);
 			#endif
