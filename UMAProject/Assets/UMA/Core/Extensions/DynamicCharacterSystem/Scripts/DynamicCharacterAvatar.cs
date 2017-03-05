@@ -73,6 +73,9 @@ namespace UMACharacterSystem
 		[Tooltip("If checked will turn off the SkinnedMeshRenderer after the character has been created to hide it. If not checked will turn it on again.")]
 		public bool hide = false;
 
+		[Tooltip("If true, then the meshcombiner will merge blendshapes found on slots that are part of this umaData")]
+		public bool loadBlendShapes = true;
+
 		//This will generate itself from a list available Races and set itself to the current value of activeRace.name
 		[Tooltip("Selects the race to used. When initialized, the Avatar will use the base recipe from the RaceData selected.")]
 		public RaceSetter activeRace = new RaceSetter();
@@ -307,6 +310,9 @@ namespace UMACharacterSystem
 		{
 			AddCharacterStateCache("NULL");
 			base.Start();
+
+			umaData.ignoreBlendShapes = !loadBlendShapes;
+
 			//if the animator has been set the 'old' way respect that...
 			if (raceAnimationControllers.defaultAnimationController == null && animationController != null)
 			{
@@ -332,9 +338,13 @@ namespace UMACharacterSystem
 
 		void Update() //WAS PUBLIC - but I dont think anything *should* call DCA.Update - also dont think they should call start but thats an override so we are stuck with it
 		{
-			if (umaData != null)
+			if (umaData != null) 
+			{
+				umaData.ignoreBlendShapes = !loadBlendShapes;
+
 				if (umaData.myRenderer != null)
 					umaData.myRenderer.enabled = !hide;
+			}
 			//This hardly ever happens now since the changeRace/LoadFromString/StartCO methods all yield themselves until asset bundles have been downloaded
 			if (requiredAssetsToCheck.Count > 0 && !waitForBundles && BuildCharacterEnabled)
 			{

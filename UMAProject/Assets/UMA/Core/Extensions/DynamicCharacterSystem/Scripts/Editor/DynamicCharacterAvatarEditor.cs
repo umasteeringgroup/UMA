@@ -70,7 +70,7 @@ public partial class DynamicCharacterAvatarEditor : Editor
 	public override void OnInspectorGUI()
     {
 		serializedObject.Update();
-		Editor.DrawPropertiesExcluding(serializedObject, new string[] { "hide","activeRace","defaultChangeRaceOptions","cacheCurrentState", "rebuildSkeleton", "preloadWardrobeRecipes", "raceAnimationControllers",
+		Editor.DrawPropertiesExcluding(serializedObject, new string[] { "hide", "loadBlendShapes","activeRace","defaultChangeRaceOptions","cacheCurrentState", "rebuildSkeleton", "preloadWardrobeRecipes", "raceAnimationControllers",
 			"characterColors","BoundsOffset","_buildCharacterEnabled",
 			/*LoadOtions fields*/ "defaultLoadOptions", "loadPathType", "loadPath", "loadFilename", "loadString", "loadFileOnStart", "waitForBundles", /*"buildAfterLoad",*/
 			/*SaveOptions fields*/ "defaultSaveOptions", "savePathType","savePath", "saveFilename", "makeUniqueFilename","ensureSharedColors", 
@@ -88,6 +88,7 @@ public partial class DynamicCharacterAvatarEditor : Editor
 
 		EditorGUI.BeginChangeCheck();
 		EditorGUILayout.PropertyField(serializedObject.FindProperty("hide"));
+		EditorGUILayout.PropertyField(serializedObject.FindProperty("loadBlendShapes"));
 		if (EditorGUI.EndChangeCheck())
 		{
 			serializedObject.ApplyModifiedProperties();
