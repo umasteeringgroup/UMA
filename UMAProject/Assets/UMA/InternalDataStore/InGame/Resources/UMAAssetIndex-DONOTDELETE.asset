@@ -304,6 +304,14 @@ MonoBehaviour:
         nameHash: 1817972240
         fullPath: Assets/UMA/Content/UMA/HumanMale/Slots/Body/MidPoly/UMA_Human_Male_Hands_Mid_Slot.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/UMA_Human_Male_Hands_Mid_Slot-fileRef
+      - name: CapsuleCollider
+        nameHash: -258706064
+        fullPath: Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/CapsuleCollider/CapsuleColliderSlot.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/CapsuleColliderSlot-fileRef
+      - name: UMA_Human_Female_Hands_HQ
+        nameHash: 357768886
+        fullPath: Assets/UMA/Content/UMA/HumanFemale/Slots/Body/MidPoly/UMA_Human_Female_Hands_Mid_Slot.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/UMA_Human_Female_Hands_HQ_Slot-fileRef
     - type: UMA.OverlayDataAsset
       typeIndex:
       - name: GuideMeshOverlay-Trans
@@ -683,6 +691,10 @@ MonoBehaviour:
         nameHash: 1911949950
         fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Recipes/PlaceholderBase.asset
         fileRefPath: 
+      - name: CapsuleColliderRecipe
+        nameHash: 1624429404
+        fullPath: Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/CapsuleCollider/CapsuleColliderRecipe.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/CapsuleColliderRecipe-fileRef
     - type: UMAWardrobeRecipe
       typeIndex:
       - name: FemaleHair1
@@ -1071,3 +1083,5 @@ MonoBehaviour:
     - Assets/UMA/Content/UMA/HumanFemale/Recipes/Wardrobe Recipes/HumanFemale/New
       UMAWardrobeRecipe.asset
     - Assets/UMA/Content/UMA/HumanMale/Slots/Body/MidPoly/UMA_Human_Male_Hands_Mid_Slot.asset
+    - Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/CapsuleCollider/CapsuleColliderRecipe.asset
+    - Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/CapsuleCollider/CapsuleColliderSlot.asset
