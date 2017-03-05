@@ -5,7 +5,8 @@ using System;
 
 public class SlotLibrary : SlotLibraryBase
 {
-	protected SlotDataAsset[] slotElementList = new SlotDataAsset[0];
+	[HideInInspector]
+	public SlotDataAsset[] slotElementList = new SlotDataAsset[0];
 	[NonSerialized]
 	private Dictionary<int, SlotDataAsset> slotDictionary;
 
