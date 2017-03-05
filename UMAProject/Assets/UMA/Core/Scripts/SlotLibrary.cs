@@ -5,6 +5,7 @@ using System;
 
 public class SlotLibrary : SlotLibraryBase
 {
+	[SerializeField]
 	protected SlotDataAsset[] slotElementList = new SlotDataAsset[0];
 	[NonSerialized]
 	private Dictionary<int, SlotDataAsset> slotDictionary;

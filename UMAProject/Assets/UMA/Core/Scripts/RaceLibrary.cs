@@ -5,6 +5,7 @@ using UMA;
 
 
 public class RaceLibrary : RaceLibraryBase {
+	[SerializeField]
     protected RaceData[] raceElementList = new RaceData[0];
     private Dictionary<string, RaceData> raceDictionary;
 

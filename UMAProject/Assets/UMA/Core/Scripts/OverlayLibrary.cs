@@ -5,6 +5,7 @@ using System;
 
 public class OverlayLibrary : OverlayLibraryBase
 {
+	[SerializeField]
 	protected OverlayDataAsset[] overlayElementList = new OverlayDataAsset[0];
 	[NonSerialized]
 	private Dictionary<int, OverlayDataAsset> overlayDictionary;
