@@ -209,6 +209,30 @@ namespace UMA
 		}
 	}
 
+	[Serializable]
+	public class UMABlendFrame
+	{
+		public float frameWeight; //should be 100% for one frame
+		public Vector3[] deltaVertices;
+		public Vector3[] deltaNormals;
+		public Vector3[] deltaTangents;
+
+		public UMABlendFrame(int vertexCount)
+		{
+			frameWeight = 100.0f;
+			deltaVertices = new Vector3[vertexCount];
+			deltaNormals = new Vector3[vertexCount];
+			deltaTangents = new Vector3[vertexCount];
+		}
+	}
+
+	[Serializable]
+	public class UMABlendShape
+	{
+		public string shapeName;
+		public UMABlendFrame[] frames;
+	}
+
 	/// <summary>
 	/// UMA version of Unity mesh data.
 	/// </summary>
@@ -226,6 +250,7 @@ namespace UMA
 		public Vector2[] uv2;
 		public Vector2[] uv3;
 		public Vector2[] uv4;
+		public UMABlendShape[] blendShapes;
 		public SubMeshTriangles[] submeshes;
 		[NonSerialized]
 		public Transform[] bones;
@@ -349,6 +374,29 @@ namespace UMA
 			{
 				submeshes[i].triangles = sharedMesh.GetTriangles(i);
 			}
+
+			//Create the blendshape data on the slot asset from the unity mesh
+			#region Blendshape
+			blendShapes = new UMABlendShape[sharedMesh.blendShapeCount];
+			for (int shapeIndex = 0; shapeIndex < sharedMesh.blendShapeCount; shapeIndex++) 
+			{
+				blendShapes [shapeIndex] = new UMABlendShape ();
+				blendShapes [shapeIndex].shapeName = sharedMesh.GetBlendShapeName (shapeIndex);
+
+				int frameCount = sharedMesh.GetBlendShapeFrameCount (shapeIndex);
+				blendShapes [shapeIndex].frames = new UMABlendFrame[frameCount];
+
+				for (int frameIndex = 0; frameIndex < frameCount; frameIndex++) 
+				{
+					blendShapes [shapeIndex].frames [frameIndex] = new UMABlendFrame (sharedMesh.vertexCount);
+					blendShapes[shapeIndex].frames[frameIndex].frameWeight = sharedMesh.GetBlendShapeFrameWeight( shapeIndex, frameIndex );
+					sharedMesh.GetBlendShapeFrameVertices (shapeIndex, frameIndex, 
+						blendShapes [shapeIndex].frames [frameIndex].deltaVertices,
+						blendShapes [shapeIndex].frames [frameIndex].deltaNormals,
+						blendShapes [shapeIndex].frames [frameIndex].deltaTangents);
+				}
+			}
+			#endregion
 		}
 
 		/// <summary>
@@ -469,6 +517,33 @@ namespace UMA
 			{
 				mesh.SetTriangles(submeshes[i].triangles, i);
 			}
+
+			//Apply the blendshape data from the slot asset back to the combined UMA unity mesh.
+			#region Blendshape
+			mesh.ClearBlendShapes();
+			if (blendShapes != null && blendShapes.Length > 0 ) 
+			{
+				for (int shapeIndex = 0; shapeIndex < blendShapes.Length; shapeIndex++) 
+				{
+					if (blendShapes [shapeIndex] == null) 
+					{
+						Debug.LogError ("blendShapes [shapeIndex] == null!");
+						break;
+					}
+
+					for( int frameIndex = 0; frameIndex < blendShapes[shapeIndex].frames.Length; frameIndex++)
+					{
+						//There might be an extreme edge case where someone has the same named blendshapes on different meshes that end up on different renderers.
+						string name = blendShapes [shapeIndex].shapeName; 
+						mesh.AddBlendShapeFrame (name,
+							blendShapes [shapeIndex].frames [frameIndex].frameWeight,
+							blendShapes [shapeIndex].frames [frameIndex].deltaVertices,
+							blendShapes [shapeIndex].frames [frameIndex].deltaNormals,
+							blendShapes [shapeIndex].frames [frameIndex].deltaTangents);
+					}
+				}
+			}
+			#endregion
 
 			mesh.RecalculateBounds();
 			renderer.bones = bones != null ? bones : skeleton.HashesToTransforms(boneNameHashes);
