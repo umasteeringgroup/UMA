@@ -5,8 +5,7 @@ using System;
 
 public class SlotLibrary : SlotLibraryBase
 {
-	[Obsolete("Internal data, use the helper functions. This field will be marked private in a future version.", false)]
-	public SlotDataAsset[] slotElementList = new SlotDataAsset[0];
+	protected SlotDataAsset[] slotElementList = new SlotDataAsset[0];
 	[NonSerialized]
 	private Dictionary<int, SlotDataAsset> slotDictionary;
 

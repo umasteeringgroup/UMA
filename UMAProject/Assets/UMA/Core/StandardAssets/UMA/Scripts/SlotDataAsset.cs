@@ -92,11 +92,6 @@ namespace UMA
 		/// </summary>
 		public UMADataEvent CharacterCompleted;
 
-		[UnityEngine.HideInInspector]
-		[System.Obsolete("UMA 2.1 - SlotDataAsset.animatedBones array is obsolete use animatedBoneNames or animatedBoneHashes instead", false)]
-		public Transform[] animatedBones = new Transform[0];
-
-
 		public SlotDataAsset()
 		{
             

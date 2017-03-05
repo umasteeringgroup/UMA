@@ -308,8 +308,6 @@ namespace UMA
 			protected Dictionary<string, int> mergedSharedColors = new Dictionary<string, int>();
 			public List<UMADnaBase> dnaValues = new List<UMADnaBase>();
 			public SlotData[] slotDataList;
-			[Obsolete("UMA 2.1 - additionalSlotCount has been deprecated, SlotData.dontSerialize now takes care of scene based additonal slots. ", false)]
-			public int additionalSlotCount;
 			public OverlayColorData[] sharedColors;
 
 			public bool Validate()

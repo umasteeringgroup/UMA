@@ -11,12 +11,10 @@ namespace UMA
 	/// </summary>
 	public abstract class UMAGeneratorBuiltin : UMAGeneratorBase
 	{
-		[Obsolete("UMA 2.1 - UMAGeneratorBuiltin.umaData is an internal reference that will be hidden in the future.", false)]
 		[NonSerialized]
-		public UMAData umaData;
-		[Obsolete("UMA 2.1 - UMAGeneratorBuiltin.umaDirtyList is an internal list that will be hidden in the future.", false)]
+		protected UMAData umaData;
 		[NonSerialized]
-		public List<UMAData> umaDirtyList = new List<UMAData>();
+		protected List<UMAData> umaDirtyList = new List<UMAData>();
 
 		private LinkedList<UMAData> cleanUmas = new LinkedList<UMAData>();
 		private LinkedList<UMAData> dirtyUmas = new LinkedList<UMAData>();

@@ -5,8 +5,7 @@ using System;
 
 public class OverlayLibrary : OverlayLibraryBase
 {
-	[Obsolete("Internal data, use the helper functions. This field will be marked private in a future version.", false)]
-	public OverlayDataAsset[] overlayElementList = new OverlayDataAsset[0];
+	protected OverlayDataAsset[] overlayElementList = new OverlayDataAsset[0];
 	[NonSerialized]
 	private Dictionary<int, OverlayDataAsset> overlayDictionary;
 

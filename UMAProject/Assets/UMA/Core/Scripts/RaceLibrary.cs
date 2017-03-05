@@ -5,8 +5,7 @@ using UMA;
 
 
 public class RaceLibrary : RaceLibraryBase {
-	[Obsolete("Internal data, use the helper functions. This field will be marked private in a future version.", false)]
-    public RaceData[] raceElementList = new RaceData[0];
+    protected RaceData[] raceElementList = new RaceData[0];
     private Dictionary<string, RaceData> raceDictionary;
 
     void Awake(){
