@@ -14,6 +14,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml.Serialization;
 
+using UMA;
+
 namespace UMA.PoseTools
 {
 	public class UMADNAToBonePoseWindow : EditorWindow
@@ -117,7 +119,7 @@ namespace UMA.PoseTools
 
 			if (poseSaveIndex < 0)
 			{
-				poseSaveName = "StartingPose";
+				poseSaveName = "Starting Pose";
 
 				// Now that StartingPose has been generated
 				// add the active DNA to the pre DNA avatar
@@ -179,6 +181,38 @@ namespace UMA.PoseTools
 			{
 				Destroy(tempAvatarPreDNA);
 				Destroy(tempAvatarPostDNA);
+
+				// Build a prefab DNA Converter and populate it with the poses
+				string prefabName = "Converter Prefab";
+				string prefabPath = AssetDatabase.GenerateUniqueAssetPath(folderPath + "/" + prefabName + ".prefab");
+
+				GameObject tempConverterPrefab = new GameObject(prefabName);
+				BonePoseDnaConverterBehaviour converter = tempConverterPrefab.AddComponent<BonePoseDnaConverterBehaviour>();
+				SerializedObject serializedConverter = new SerializedObject(converter);
+
+				SerializedProperty startingPose = serializedConverter.FindProperty("startingPose");
+				startingPose.objectReferenceValue = AssetDatabase.LoadAssetAtPath<UMABonePose>(folderPath + "/" + "Starting Pose" + ".asset");
+
+				SerializedProperty posePairArray = serializedConverter.FindProperty("dnaPoses");
+				posePairArray.ClearArray();
+				for (int i = 0; i < activeDNACount; i++)
+				{
+					string posePairName = activeDNA.Names[i];
+
+					posePairArray.InsertArrayElementAtIndex(i);
+					SerializedProperty posePair = posePairArray.GetArrayElementAtIndex(i);
+
+					SerializedProperty dnaEntryName = posePair.FindPropertyRelative("dnaEntryName");
+					dnaEntryName.stringValue = posePairName;
+					SerializedProperty zeroPose = posePair.FindPropertyRelative("poseZero");
+					zeroPose.objectReferenceValue = AssetDatabase.LoadAssetAtPath<UMABonePose>(folderPath + "/" + posePairName + "_0.asset");
+					SerializedProperty onePose = posePair.FindPropertyRelative("poseOne");
+					onePose.objectReferenceValue = AssetDatabase.LoadAssetAtPath<UMABonePose>(folderPath + "/" + posePairName + "_1.asset");
+				}
+
+				serializedConverter.ApplyModifiedPropertiesWithoutUndo();
+				PrefabUtility.CreatePrefab(prefabPath, tempConverterPrefab);
+				DestroyImmediate(tempConverterPrefab, false);
 			}
 		}
 

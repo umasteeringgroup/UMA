@@ -18,7 +18,7 @@ namespace UMAEditor
 
         public static void CreatePrefab(string name, params System.Type[] types)
         {
-             string path = AssetDatabase.GetAssetPath(Selection.activeObject);
+            string path = AssetDatabase.GetAssetPath(Selection.activeObject);
             if (path == "")
             {
                 path = "Assets";
@@ -38,6 +38,7 @@ namespace UMAEditor
             PrefabUtility.CreatePrefab(assetPathAndName, go);
             GameObject.DestroyImmediate(go,false);
         }
+
 		/// <summary>
 		/// Creates a new asset of the type T
 		/// </summary>
