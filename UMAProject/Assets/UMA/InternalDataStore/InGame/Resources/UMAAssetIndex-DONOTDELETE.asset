@@ -312,6 +312,10 @@ MonoBehaviour:
         nameHash: 357768886
         fullPath: Assets/UMA/Content/UMA/HumanFemale/Slots/Body/MidPoly/UMA_Human_Female_Hands_Mid_Slot.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/UMA_Human_Female_Hands_HQ_Slot-fileRef
+      - name: UMA_fem_hair_1_005
+        nameHash: 1515873655
+        fullPath: Assets/UMA/Content/UMA/HumanFemale/Slots/Hair/FemaleHighPolyHair.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/UMA_fem_hair_1_005_Slot-fileRef
     - type: UMA.OverlayDataAsset
       typeIndex:
       - name: GuideMeshOverlay-Trans
@@ -837,6 +841,10 @@ MonoBehaviour:
         nameHash: -146150106
         fullPath: Assets/UMA/Content/UMA/HumanFemale/Recipes/Wardrobe Recipes/HumanFemale/FemaleHandsMid.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/FemaleHandsMid-fileRef
+      - name: FemaleHair3
+        nameHash: -919545095
+        fullPath: Assets/UMA/Content/UMA/HumanFemale/Recipes/Wardrobe Recipes/HumanFemale/FemaleHair3.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/New UMAWardrobeRecipe-fileRef
     - type: UMA.DynamicUMADnaAsset
       typeIndex:
       - name: EyeSpacing
@@ -1085,3 +1093,5 @@ MonoBehaviour:
     - Assets/UMA/Content/UMA/HumanMale/Slots/Body/MidPoly/UMA_Human_Male_Hands_Mid_Slot.asset
     - Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/CapsuleCollider/CapsuleColliderRecipe.asset
     - Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/CapsuleCollider/CapsuleColliderSlot.asset
+    - Assets/UMA/Content/UMA/HumanMale/Slots/Plane_000/Plane_000_Slot.asset
+    - Assets/UMA/Content/UMA/HumanFemale/Slots/UMA_fem_hair_1_005/UMA_fem_hair_1_005_Slot.asset
