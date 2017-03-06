@@ -381,6 +381,20 @@ namespace UMA
 					dnaEntry.SetValue(i, 0.5f);
 				}
 			}
+
+			// Optionally clear the DNA from the base recipe,
+			// since it's now included in the new starting pose
+			UMARecipeBase baseRaceRecipe = activeUMA.umaData.umaRecipe.GetRace().baseRaceRecipe;
+			if (baseRaceRecipe != null)
+			{
+				if (EditorUtility.DisplayDialog("Base Recipe Cleanup", "Starting Pose created. Remove DNA from base recipe of active race?", "Remove DNA", "Keep DNA"))
+				{
+					UMAData.UMARecipe baseRecipeData = new UMAData.UMARecipe();
+					baseRaceRecipe.Load(baseRecipeData, activeUMA.context);
+					baseRecipeData.ClearDna();
+					baseRaceRecipe.Save(baseRecipeData, activeUMA.context);
+				}
+			}
 		}
 
         /// <summary>
