@@ -7,7 +7,7 @@ internal class BRDFLookupTextureInspector : Editor
 	private bool changed = false;
 	private bool previewRGB = true;
 	
-	private static string kDirectoryName = "Assets/GeneratedTextures";
+	private static string kDirectoryName = "Assets/UMA/Content/UMA/Textures/GeneratedTextures";
 	private static string kExtensionName = "png";
 	private static string kLookupTexturePropertyName = "_BRDFTex";
 	
