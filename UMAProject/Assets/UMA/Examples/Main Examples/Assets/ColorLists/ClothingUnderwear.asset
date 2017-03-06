@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 534edf300d8929243a0d291e413e2f0b, type: 3}
+  m_Name: ClothingUnderwear
+  m_EditorClassIdentifier: 
+  channelCount: 1
+  sharedColorName: Underwear
+  colors:
+  - name: Underwear
+    channelMask:
+    - {r: 1, g: 1, b: 1, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+  - name: Underwear
+    channelMask:
+    - {r: 0.45008057, g: 0.44961074, b: 0.46323532, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+  - name: Underwear
+    channelMask:
+    - {r: 0.43598613, g: 0.70321566, b: 0.9264706, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+  - name: Underwear
+    channelMask:
+    - {r: 0.9191176, g: 0.15543899, b: 0.3028598, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}

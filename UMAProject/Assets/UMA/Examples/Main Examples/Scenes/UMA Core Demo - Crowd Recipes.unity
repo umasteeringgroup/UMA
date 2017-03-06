@@ -1557,6 +1557,9 @@ MonoBehaviour:
   sharedColors:
   - {fileID: 11400000, guid: 898c61493a044a84b8c916c7d4f12480, type: 2}
   - {fileID: 11400000, guid: 77bea8d4eaa1f0b47acb6086897c8337, type: 2}
+  - {fileID: 11400000, guid: cefd0c20c262a4d2fa73e0f127b41431, type: 2}
+  - {fileID: 11400000, guid: c767f9efa84cf40269e4475b89bb952d, type: 2}
+  - {fileID: 11400000, guid: 395ac4e6df33b4902af0e087630972de, type: 2}
   recipeMixers:
   - {fileID: 1090187017}
   - {fileID: 1940450801}

@@ -11,4 +11,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9448878e2e40f1a4c9f8fd2b56832b13, type: 3}
   m_Name: MaleUnderwear
   m_EditorClassIdentifier: 
-  recipeString: '{"version":2,"packedSlotDataList":null,"slotsV2":[{"id":"MaleTorso","scale":100,"copyIdx":-1,"overlays":[{"id":"MaleUnderwear01","colorIdx":0,"rect":[0,459,1024,256]}]},{"id":"MaleLegs","scale":100,"copyIdx":0,"overlays":null}],"colors":[{"name":null,"color":[62,177,205,255],"masks":null,"addMasks":null}],"sharedColorCount":0,"race":"HumanMale","umaDna":{},"packedDna":[]}'
+  recipeType: Standard
+  DisplayValue: 
+  compatibleRaces: []
+  wardrobeRecipeThumbs: []
+  wardrobeSlot: None
+  Hides: []
+  suppressWardrobeSlots: []
+  activeWardrobeSet: []
+  recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"MaleTorso","scale":100,"copyIdx":-1,"overlays":[{"id":"MaleUnderwear01","colorIdx":0,"rect":[0,459,1024,256]}]},{"id":"MaleLegs","scale":100,"copyIdx":0,"overlays":[]}],"colors":[],"fColors":[{"name":"Underwear","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"HumanMale","packedDna":[],"wardrobeSet":[],"packedRecipeType":"Standard"}'
