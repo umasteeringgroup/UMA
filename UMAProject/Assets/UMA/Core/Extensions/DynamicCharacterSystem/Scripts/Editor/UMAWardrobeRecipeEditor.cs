@@ -1,5 +1,5 @@
 #if UNITY_EDITOR
-using System;
+using System; 
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -18,6 +18,8 @@ namespace UMAEditor
 	[CustomEditor(typeof(UMAWardrobeRecipe), true)]
 	public partial class UMAWardrobeRecipeEditor : RecipeEditor
 	{
+        public static bool ShowHelp = false;
+
 		protected override bool PreInspectorGUI()
 		{
 			hideToolBar = false;
@@ -50,22 +52,26 @@ namespace UMAEditor
 			EditorGUILayout.Popup("Recipe Type", 0, new string[] { "Wardrobe" });
 			EditorGUI.EndDisabledGroup();
 
+
+
 			PreRecipeGUI(ref doUpdate);
 
 			hideRaceField = true;
 			hideToolBar = true;
-			//slotEditor = new WardrobeRecipeMasterEditor(_recipe, target);
+            //slotEditor = new WardrobeRecipeMasterEditor(_recipe, target);
 
+            ShowHelp = EditorGUILayout.Toggle("Show Help", ShowHelp);
 
-			//CompatibleRaces drop area
-			if (DrawCompatibleRacesUI(TargetType))
+            //CompatibleRaces drop area
+            if (DrawCompatibleRacesUI(TargetType, ShowHelp)) 
 				doUpdate = true;
 
 			//wardrobeSlots fields
-			if (DrawWardrobeSlotsFields(TargetType))
+			if (DrawWardrobeSlotsFields(TargetType, ShowHelp))
 				doUpdate = true;
 
-			//Set this up after the other so we can send the popup data with it
+            
+            //Set this up after the other so we can send the popup data with it
 			slotEditor = new WardrobeRecipeMasterEditor(_recipe, generatedBaseSlotOptions, generatedBaseSlotOptionsLabels);
 
 			EditorGUILayout.Space();

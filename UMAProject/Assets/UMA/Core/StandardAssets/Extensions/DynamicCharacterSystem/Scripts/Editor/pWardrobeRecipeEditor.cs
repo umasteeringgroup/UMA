@@ -13,7 +13,7 @@ using UMA;
 using UMA.Integrations;
 using UMACharacterSystem;
 
-
+ 
 namespace UMAEditor
 {
 	public partial class RecipeEditor
@@ -260,7 +260,7 @@ namespace UMAEditor
 			}
 			return foundRace;
 		}
-		protected virtual bool DrawCompatibleRacesUI(Type TargetType)
+		protected virtual bool DrawCompatibleRacesUI(Type TargetType, bool ShowHelp = false)
 		{
 			bool doUpdate = false;
 			float padding = 2f;
@@ -373,6 +373,7 @@ namespace UMAEditor
 			}
 			CompatibleRacesDropArea(dropArea, newCompatibleRaces);
 
+
 			//update values
 			if (!AreListsEqual<string>(newCompatibleRaces, compatibleRaces))
 			{
@@ -397,21 +398,35 @@ namespace UMAEditor
 				WardrobeRecipeThumbsField.SetValue(target, newWardrobeThumbs);
 				doUpdate = true;
 			}
-			return doUpdate;
+            if (ShowHelp)
+            {
+                EditorGUILayout.HelpBox("Compatible races are used to assign this recipe to a race or races. Recipes are restricted to the races to which they are assigned - you cannot assign wardrobe items to races that are not compatible. Thumbnails can be used to attach sprites to the recipe for use in UI design.", MessageType.Info);
+            }
+            return doUpdate;
 		}
 
-		protected virtual bool DrawWardrobeSlotsFields(Type TargetType)
+		protected virtual bool DrawWardrobeSlotsFields(Type TargetType, bool ShowHelp = false)
 		{
 			bool doUpdate = false;
-			//Field Infos
-			FieldInfo CompatibleRacesField = TargetType.GetField("compatibleRaces", BindingFlags.Public | BindingFlags.Instance);
+            //Field Infos
+            FieldInfo ReplacesField = TargetType.GetField("replaces", BindingFlags.Public | BindingFlags.Instance);
+            FieldInfo CompatibleRacesField = TargetType.GetField("compatibleRaces", BindingFlags.Public | BindingFlags.Instance);
 			FieldInfo WardrobeSlotField = TargetType.GetField("wardrobeSlot", BindingFlags.Public | BindingFlags.Instance);
 			FieldInfo SuppressWardrobeSlotField = TargetType.GetField("suppressWardrobeSlots", BindingFlags.Public | BindingFlags.Instance);
 			FieldInfo HidesField = TargetType.GetField("Hides", BindingFlags.Public | BindingFlags.Instance);
 			FieldInfo DisplayValueField = TargetType.GetField("DisplayValue", BindingFlags.Public | BindingFlags.Instance);
 
-			//field values
-			List<string> compatibleRaces = (List<string>)CompatibleRacesField.GetValue(target);
+            // ************************************
+            // field values
+            // ************************************
+            string replaces = "";
+            object o = ReplacesField.GetValue(target);
+            if (o != null)
+            {
+                replaces = (string)ReplacesField.GetValue(target);
+            }
+
+            List<string> compatibleRaces = (List<string>)CompatibleRacesField.GetValue(target);
 			string wardrobeSlot = (string)WardrobeSlotField.GetValue(target);
 			List<string> suppressWardrobeSlot = (List<string>)SuppressWardrobeSlotField.GetValue(target);
 			List<string> hides = (List<string>)HidesField.GetValue(target);
@@ -425,6 +440,10 @@ namespace UMAEditor
 				DisplayValueField.SetValue(target, displayValue);
 				doUpdate = true;
 			}
+            if (ShowHelp)
+            {
+                EditorGUILayout.HelpBox("Display Value can be used to store a user-friendly name for this item. It's not used for constructing the character, but it can be used in UI design by accessing the .DisplayValue field on the recipe.", MessageType.Info);
+            }
 
 			//wardrobeSlot UI
 			int selectedWardrobeSlotIndex = GenerateWardrobeSlotsEnum(wardrobeSlot, compatibleRaces, false);
@@ -451,9 +470,14 @@ namespace UMAEditor
 				}
 				newWardrobeSlot = generatedWardrobeSlotOptions.Count > 0 ? generatedWardrobeSlotOptions[selectedWardrobeSlotIndex] : "None";
 			}
+            if (ShowHelp)
+            {
+                EditorGUILayout.HelpBox("Wardrobe Slot: This assigns the recipe to a Wardrobe Slot. The wardrobe slots are defined on the race. Characters can have only one wardrobe slot at a time, so for example, adding a 'beard' recipe to a character will replace the existing 'beard' if there is one", MessageType.Info);
+            }
 
-			//SuppressedSlots UI
-			int suppressFlags = 0;
+
+            //SuppressedSlots UI
+            int suppressFlags = 0;
 			for (int i = 0; i < generatedWardrobeSlotOptions.Count; i++)
 			{
 				if (suppressWardrobeSlot.Contains(generatedWardrobeSlotOptions[i]))
@@ -476,9 +500,14 @@ namespace UMAEditor
 				EditorGUILayout.TextField(swsl2Result);
 				GUI.enabled = true;
 			}
+            if (ShowHelp)
+            {
+                EditorGUILayout.HelpBox("Suppress: This will stop a different wardrobe slot from displaying. For example, if you have a full-length robe assigned to a 'chest' wardrobe slot, you would want to suppress whatever is assigned to the 'legss' wardrobe slot, so they don't poke through. This is typically used for dresses, robes, and other items that cover multiple body areas.", MessageType.Info);
+            }
 
-			//Hides UI
-			GenerateBaseSlotsEnum(compatibleRaces, false);
+
+            //Hides UI
+            GenerateBaseSlotsEnum(compatibleRaces, false);
 			int hiddenBaseFlags = 0;
 			List<string> newHides = new List<string>();
 			for (int i = 0; i < generatedBaseSlotOptions.Count; i++)
@@ -504,9 +533,30 @@ namespace UMAEditor
 				EditorGUILayout.TextField(newHidesResult);
 				GUI.enabled = true;
 			}
+            if (ShowHelp)
+            {
+                EditorGUILayout.HelpBox("Hides: This is used to hide parts of the base recipe. For example, if you create gloves, you may want to hide the 'hands', so you don't get poke-through", MessageType.Info);
+            }
 
-			//Update the values
-			if (newWardrobeSlot != wardrobeSlot)
+
+            #region Replaces UI
+
+            List<string> ReplacesSlots = new List<string>(generatedBaseSlotOptions);
+            ReplacesSlots.Insert(0, "Nothing");
+            int selectedIndex = ReplacesSlots.IndexOf(replaces);
+            if (selectedIndex < 0) selectedIndex = 0; // not found, point at "nothing"
+
+            selectedIndex = EditorGUILayout.Popup("Replaces", selectedIndex, ReplacesSlots.ToArray());
+
+            ReplacesField.SetValue(target, ReplacesSlots[selectedIndex]);
+            #endregion
+            if (ShowHelp)
+            {
+                EditorGUILayout.HelpBox("Replaces: This is used to replace part of the base recipe, but keeping it's overlays. For example, if you want to replace the head from the base race recipe with a High Poly head, you would want to replace the head, not hide it.", MessageType.Info);
+            }
+
+            //Update the values
+            if (newWardrobeSlot != wardrobeSlot)
 			{
 				WardrobeSlotField.SetValue(target, newWardrobeSlot);
 				doUpdate = true;
@@ -521,6 +571,8 @@ namespace UMAEditor
 				HidesField.SetValue(target, newHides);
 				doUpdate = true;
 			}
+
+
 			return doUpdate;
 		}
 		/// <summary>

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Name: MaleBeard2
   m_EditorClassIdentifier: 
   recipeType: Wardrobe
-  DisplayValue: Beard 2
+  DisplayValue: Bums Beard
   compatibleRaces:
   - HumanMaleDCS
   - HumanMale
@@ -29,3 +29,4 @@ MonoBehaviour:
   activeWardrobeSet: []
   recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"M_High
     poly Head","scale":100,"copyIdx":-1,"overlays":[{"id":"MaleBeard02","colorIdx":0,"rect":[512,0,1024,512]}]}],"colors":[],"fColors":[{"name":"Hair","colors":[106,79,54,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"","packedDna":[]}'
+  replaces: Nothing

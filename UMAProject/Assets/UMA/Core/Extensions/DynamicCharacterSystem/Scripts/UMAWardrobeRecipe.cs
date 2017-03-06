@@ -1,4 +1,4 @@
-using UnityEngine;
+using UnityEngine; 
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -8,11 +8,15 @@ using UMA;
 
 public partial class UMAWardrobeRecipe : UMATextRecipe
 {
+    #region FIELDS
+    [SerializeField]
+    public string replaces;
 
-	#region CONSTRUCTOR
-	//if we get sent an UMATextRecipe that has a recipe type of Wardrobe then we create a new asset that has that assets properties
-	//save that asset and rename the asset to be the name of the asset we deleted and maybe show a message saying 'Please update your AssetBundles'
-	public UMAWardrobeRecipe()
+    #endregion
+    #region CONSTRUCTOR
+    //if we get sent an UMATextRecipe that has a recipe type of Wardrobe then we create a new asset that has that assets properties
+    //save that asset and rename the asset to be the name of the asset we deleted and maybe show a message saying 'Please update your AssetBundles'
+    public UMAWardrobeRecipe()
 	{
 		recipeType = "Wardrobe";
 	}
@@ -61,22 +65,6 @@ public partial class UMAWardrobeRecipe : UMATextRecipe
 			AssetDatabase.SaveAssets();
 			if (andSelect)
 				Selection.activeObject = this;
-			//remove the old UTR from UMAAssetIndex and add the new one
-			if(UMAAssetIndex.Instance != null)
-			{
-				UMAAssetIndex.Instance.FullIndex.RemovePath(thisUTRPath);
-				UMAAssetIndex.Instance.BuildIndex.RemovePath(thisUTRPath);
-				UMAAssetIndex.Instance.AssetBundleIndex.RemovePath(thisUTRPath);
-				UMAAssetIndex.Instance.FullIndex.AddPath(this,this.name);
-				if (!UMAAssetIndex.Instance.InAssetBundle(thisUTRPath, this.name))
-				{
-					UMAAssetIndex.Instance.BuildIndex.AddPath(this, this.name);
-				}
-				else
-				{
-					UMAAssetIndex.Instance.AssetBundleIndex.AddPath(this, this.name);
-				}
-			}
 		}
 		else
 		{
