@@ -2095,6 +2095,8 @@ namespace UMACharacterSystem
 
 			HiddenSlots.Clear();
 
+        
+
 			UMADnaBase[] CurrentDNA = null;
 			if (umaData != null)
 			{
