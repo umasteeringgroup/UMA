@@ -78,7 +78,7 @@ namespace UMA
 			UMAMeshData umaMesh = new UMAMeshData();
 			umaMesh.ClaimSharedBuffers();
 
-			SkinnedMeshCombiner.CombineMeshes(umaMesh, combinedMeshList.ToArray());
+			SkinnedMeshCombiner.CombineMeshes(umaMesh, combinedMeshList.ToArray(),umaData.ignoreBlendShapes);
 
             if (updatedAtlas)
             {
