@@ -19,4 +19,4 @@ MonoBehaviour:
   Hides: []
   suppressWardrobeSlots: []
   activeWardrobeSet: []
-  recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"FemaleTorso","scale":100,"copyIdx":-1,"overlays":[{"id":"FemaleUnderwear01","colorIdx":0,"rect":[0,1024,2048,1024]}]},{"id":"FemaleLegs","scale":100,"copyIdx":0,"overlays":[]}],"colors":[],"fColors":[{"name":"Underwear","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"HumanFemale","packedDna":[],"wardrobeSet":[],"packedRecipeType":"Standard"}'
+  recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"FemaleTorso","scale":100,"copyIdx":-1,"overlays":[{"id":"FemaleUnderwear-2","colorIdx":0,"rect":[0,0,0,0]}]},{"id":"FemaleLegs","scale":100,"copyIdx":0,"overlays":[]}],"colors":[],"fColors":[{"name":"Underwear","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"HumanFemale","packedDna":[],"wardrobeSet":[],"packedRecipeType":"Standard"}'
