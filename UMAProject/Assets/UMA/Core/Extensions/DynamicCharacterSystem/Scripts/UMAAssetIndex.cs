@@ -154,8 +154,10 @@ namespace UMA
 		{
 			_instance = this;
 #if UNITY_EDITOR
-			if(!Application.isPlaying)
-				GenerateLists();//does not allow duplicate assets
+            if (!UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                GenerateLists();
+            }
 #endif
 		}
 
