@@ -841,8 +841,6 @@ namespace UMA
 			{
 				//with this search when it is t:UMATextRecipe it DOES load Child classes too
 				var typeGUIDs = AssetDatabase.FindAssets("t:" + typesToAdd[i]);
-				if (typeGUIDs != null)
-					Debug.Log("FOUND " + typeGUIDs.Length + " OF TYPE " + typesToAdd[i]);
 				for (int tid = 0; tid < typeGUIDs.Length; tid++)
 				{
 					UnityEngine.Object thisAsset = null;
@@ -864,7 +862,6 @@ namespace UMA
 						GetAssetHashAndNames(thisAsset, ref thisAssetHash, ref thisAssetName);
 						if ((thisAssetHash == 0 || thisAssetHash == -1) || thisAssetName == "")
 						{
-							Debug.LogWarning(thisAsset.name + " had an assetHash of " + thisAssetHash + " and assetName of " + thisAssetName);
 							continue;
 						}
 						if (InAssetBundle(thisPath, thisAsset.name))
