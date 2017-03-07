@@ -751,7 +751,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 305676970}
   m_Direction: 0
   m_Value: 0
-  m_Size: 0.99999994
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -15139,7 +15139,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
-  - {fileID: 11400000, guid: 98824b5fcf73db147ac3f3e0509e232d, type: 2}
+  - {fileID: 0}
   - {fileID: 11400000, guid: 1cb8a895dbe7af3499df9ad078311653, type: 2}
 --- !u!4 &1545467459
 Transform:

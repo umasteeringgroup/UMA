@@ -15,16 +15,17 @@ MonoBehaviour:
   DisplayValue: Hair 3
   compatibleRaces:
   - HumanFemale
-  - HumanFemaleResources
+  - HumanFemaleDCS
   wardrobeRecipeThumbs:
   - race: HumanFemale
     filename: 
     thumb: {fileID: 21300000, guid: 1daa9b20b431b164ca35fc614c9fca1d, type: 3}
-  - race: HumanFemaleResources
+  - race: HumanFemaleDCS
     filename: 
-    thumb: {fileID: 21300000, guid: 700870015a5fd7b4ea871015b63eda46, type: 3}
+    thumb: {fileID: 21300000, guid: 1daa9b20b431b164ca35fc614c9fca1d, type: 3}
   wardrobeSlot: Hair
   Hides: []
   suppressWardrobeSlots: []
   activeWardrobeSet: []
   recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"UMA_fem_hair_1_005","scale":100,"copyIdx":-1,"overlays":[{"id":"MeshHairStd","colorIdx":0,"rect":[0,0,0,0]}]}],"colors":[],"fColors":[{"name":"Hair","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"","packedDna":[]}'
+  replaces: Nothing

@@ -9,39 +9,32 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 83d33591a744673429e1681df5574ac0, type: 3}
-  m_Name: Human Female w DynamicDNA
+  m_Name: Human Female DCS
   m_EditorClassIdentifier: 
-  raceName: HumanFemaleResources
-  dnaConverterList:
-  - {fileID: 11454462, guid: 56437cbda0654ed4b88e3994ee15f97d, type: 2}
-  - {fileID: 11454462, guid: 9efe180755b707445b849673890646fb, type: 2}
-  TPose: {fileID: 11400000, guid: 2329cbcce463cce4684e8efa7fdbff2c, type: 2}
-  umaTarget: 0
-  genericRootMotionTransformName: 
-  expressionSet: {fileID: 11400000, guid: 5912431641bbc4d858ffd8e14168c56a, type: 2}
-  dnaRanges:
-  - {fileID: 11400000, guid: e98d105c42d0f4a1f89444516e0a93b3, type: 2}
-  raceHeight: 2
-  raceRadius: 0.25
-  raceMass: 50
   baseRaceRecipe: {fileID: 11400000, guid: 88524e288a09d9944b8e1a0416010469, type: 2}
   wardrobeSlots:
   - None
   - Face
+  - Eyes
   - Hair
-  - FemaleHair
+  - Body
   - Complexion
+  - Tattoo
+  - Underwear
   - Eyebrows
+  - Beard
   - Ears
   - Helmet
   - Shoulders
   - Chest
-  - Underwear
   - Arms
   - Hands
   - Waist
+  - Cape
   - Legs
   - Feet
+  - AlternateHead
+  - AlternateHands
   backwardsCompatibleWith: []
   raceThumbnails:
     fullThumb: {fileID: 21300000, guid: 0960bf37021a1a7429ade3f60120b82c, type: 3}
@@ -59,3 +52,16 @@ MonoBehaviour:
       thumb: {fileID: 21300000, guid: 836042b9488a339419e7497c1ee9d33f, type: 3}
     - thumbIsFor: Face,Complexion
       thumb: {fileID: 21300000, guid: ecadaada9dd71a946923ce1576e25862, type: 3}
+  raceName: HumanFemaleDCS
+  dnaConverterList:
+  - {fileID: 11454462, guid: 56437cbda0654ed4b88e3994ee15f97d, type: 2}
+  - {fileID: 11454462, guid: 9efe180755b707445b849673890646fb, type: 2}
+  TPose: {fileID: 11400000, guid: 2329cbcce463cce4684e8efa7fdbff2c, type: 2}
+  umaTarget: 0
+  genericRootMotionTransformName: 
+  expressionSet: {fileID: 11400000, guid: 5912431641bbc4d858ffd8e14168c56a, type: 2}
+  dnaRanges:
+  - {fileID: 11400000, guid: e98d105c42d0f4a1f89444516e0a93b3, type: 2}
+  raceHeight: 2
+  raceRadius: 0.25
+  raceMass: 50

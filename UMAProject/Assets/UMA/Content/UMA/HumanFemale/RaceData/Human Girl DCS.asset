@@ -9,21 +9,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 83d33591a744673429e1681df5574ac0, type: 3}
-  m_Name: Human Girl w DynamicDNA
+  m_Name: Human Girl DCS
   m_EditorClassIdentifier: 
-  raceName: HumanGirl
-  dnaConverterList:
-  - {fileID: 11488588, guid: a9c1f99593395274ab1618966152953b, type: 2}
-  - {fileID: 11400000, guid: 2a5c36ccd1f394ff3b7aac62b5d1e308, type: 2}
-  TPose: {fileID: 11400000, guid: 2329cbcce463cce4684e8efa7fdbff2c, type: 2}
-  umaTarget: 0
-  genericRootMotionTransformName: 
-  expressionSet: {fileID: 11400000, guid: 5912431641bbc4d858ffd8e14168c56a, type: 2}
-  dnaRanges:
-  - {fileID: 11400000, guid: e98d105c42d0f4a1f89444516e0a93b3, type: 2}
-  raceHeight: 2
-  raceRadius: 0.25
-  raceMass: 50
   baseRaceRecipe: {fileID: 11400000, guid: b24ba5dfb8159b944a1d9a37c8ce65d8, type: 2}
   wardrobeSlots:
   - None
@@ -43,7 +30,7 @@ MonoBehaviour:
   - Legs
   - Feet
   backwardsCompatibleWith:
-  - HumanFemaleResources
+  - HumanFemaleDCS
   raceThumbnails:
     fullThumb: {fileID: 21300000, guid: 50e3801fc7aefb24583de1c1625c8277, type: 3}
     faceThumb: {fileID: 21300000, guid: 1550614af86fead4b9d72c0eea8235ef, type: 3}
@@ -60,3 +47,16 @@ MonoBehaviour:
       thumb: {fileID: 21300000, guid: ad4a350da2cf28a43ab13c45b5fb2c4b, type: 3}
     - thumbIsFor: Face,Complexion
       thumb: {fileID: 21300000, guid: 1550614af86fead4b9d72c0eea8235ef, type: 3}
+  raceName: HumanGirlDCS
+  dnaConverterList:
+  - {fileID: 11488588, guid: a9c1f99593395274ab1618966152953b, type: 2}
+  - {fileID: 11400000, guid: 2a5c36ccd1f394ff3b7aac62b5d1e308, type: 2}
+  TPose: {fileID: 11400000, guid: 2329cbcce463cce4684e8efa7fdbff2c, type: 2}
+  umaTarget: 0
+  genericRootMotionTransformName: 
+  expressionSet: {fileID: 11400000, guid: 5912431641bbc4d858ffd8e14168c56a, type: 2}
+  dnaRanges:
+  - {fileID: 11400000, guid: e98d105c42d0f4a1f89444516e0a93b3, type: 2}
+  raceHeight: 2
+  raceRadius: 0.25
+  raceMass: 50
