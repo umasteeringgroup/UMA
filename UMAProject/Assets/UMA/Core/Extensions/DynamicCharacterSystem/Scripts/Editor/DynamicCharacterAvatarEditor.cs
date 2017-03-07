@@ -9,6 +9,8 @@ using System;
 [CustomEditor(typeof(DynamicCharacterAvatar), true)]
 public partial class DynamicCharacterAvatarEditor : Editor
 {
+    public bool showHelp = false;
+
     protected DynamicCharacterAvatar thisDCA;
     protected RaceSetterPropertyDrawer _racePropDrawer = new RaceSetterPropertyDrawer();
 	protected WardrobeRecipeListPropertyDrawer _wardrobePropDrawer = new WardrobeRecipeListPropertyDrawer();
@@ -87,18 +89,27 @@ public partial class DynamicCharacterAvatarEditor : Editor
 		SerializedProperty animationController = serializedObject.FindProperty("animationController");
 
 		EditorGUI.BeginChangeCheck();
+        showHelp = EditorGUILayout.Toggle("Show Help", showHelp);
 		EditorGUILayout.PropertyField(serializedObject.FindProperty("hide"));
 		EditorGUILayout.PropertyField(serializedObject.FindProperty("loadBlendShapes"));
 		if (EditorGUI.EndChangeCheck())
 		{
 			serializedObject.ApplyModifiedProperties();
 		}
-		//for _buildCharacterEnabled we want to set the value using the DCS BuildCharacterEnabled property because this actually triggers BuildCharacter
-		var buildCharacterEnabled = serializedObject.FindProperty("_buildCharacterEnabled");
+        if (showHelp)
+        {
+            EditorGUILayout.HelpBox("Hide: This disables the display of the Avatar without disabling the GameObject.", MessageType.Info);
+        }
+        //for _buildCharacterEnabled we want to set the value using the DCS BuildCharacterEnabled property because this actually triggers BuildCharacter
+        var buildCharacterEnabled = serializedObject.FindProperty("_buildCharacterEnabled");
 		var buildCharacterEnabledValue = buildCharacterEnabled.boolValue;
 		EditorGUI.BeginChangeCheck();
 		var buildCharacterEnabledNewValue = EditorGUILayout.Toggle(new GUIContent(buildCharacterEnabled.displayName, buildCharacterEnabled.tooltip), buildCharacterEnabledValue);
-		if (EditorGUI.EndChangeCheck())
+        if (showHelp)
+        {
+            EditorGUILayout.HelpBox("Build Character Enabled: Builds the character on load or race changed. By default this should be true.", MessageType.Info);
+        }
+        if (EditorGUI.EndChangeCheck())
 		{
 			if (buildCharacterEnabledNewValue != buildCharacterEnabledValue)
 				thisDCA.BuildCharacterEnabled = buildCharacterEnabledNewValue;
@@ -116,8 +127,12 @@ public partial class DynamicCharacterAvatarEditor : Editor
 			animationController.objectReferenceValue = thisDCA.animationController;
 			serializedObject.ApplyModifiedProperties();
 		}
-		//the ChangeRaceOptions
-		SerializedProperty defaultChangeRaceOptions = serializedObject.FindProperty("defaultChangeRaceOptions");
+        if (showHelp)
+        {
+            EditorGUILayout.HelpBox("Active Race: Sets the race of the character, which defines the base recipe to build the character, the available DNA, and the available wardrobe.", MessageType.Info);
+        }
+        //the ChangeRaceOptions
+        SerializedProperty defaultChangeRaceOptions = serializedObject.FindProperty("defaultChangeRaceOptions");
 		EditorGUI.indentLevel++;
 		defaultChangeRaceOptions.isExpanded = EditorGUILayout.Foldout(defaultChangeRaceOptions.isExpanded, new GUIContent("Race Change Options", "The default options for when the Race is changed. These can be overidden when calling 'ChangeRace' directly."));
 		if (defaultChangeRaceOptions.isExpanded)
@@ -142,11 +157,15 @@ public partial class DynamicCharacterAvatarEditor : Editor
 		Rect pwrCurrentRect = EditorGUILayout.GetControlRect(false, _wardrobePropDrawer.GetPropertyHeight(thisPreloadWardrobeRecipes, GUIContent.none));
 		EditorGUI.BeginChangeCheck();
 		_wardrobePropDrawer.OnGUI(pwrCurrentRect, thisPreloadWardrobeRecipes, new GUIContent(thisPreloadWardrobeRecipes.displayName));
-		//if (EditorGUI.EndChangeCheck())
-		//{
-		//	EditorGUI.BeginChangeCheck();
-		//EditorGUILayout.PropertyField(serializedObject.FindProperty("preloadWardrobeRecipes"));
-		if (EditorGUI.EndChangeCheck())
+        if (showHelp)
+        {
+            EditorGUILayout.HelpBox("Preload Wardrobe: Sets the default wardrobe recipes to use on the Avatar. This is useful when creating specific Avatar prefabs.", MessageType.Info);
+        }
+        //if (EditorGUI.EndChangeCheck())
+        //{
+        //	EditorGUI.BeginChangeCheck();
+        //EditorGUILayout.PropertyField(serializedObject.FindProperty("preloadWardrobeRecipes"));
+        if (EditorGUI.EndChangeCheck())
 		{
 			serializedObject.ApplyModifiedProperties();
 			if (Application.isPlaying)
@@ -160,9 +179,13 @@ public partial class DynamicCharacterAvatarEditor : Editor
 		Rect racCurrentRect = EditorGUILayout.GetControlRect(false, _animatorPropDrawer.GetPropertyHeight(thisRaceAnimationControllers, GUIContent.none));
 		EditorGUI.BeginChangeCheck();
 		_animatorPropDrawer.OnGUI(racCurrentRect, thisRaceAnimationControllers, new GUIContent(thisRaceAnimationControllers.displayName));
-		//EditorGUI.BeginChangeCheck();
-		//EditorGUILayout.PropertyField(serializedObject.FindProperty("raceAnimationControllers"));
-		if (EditorGUI.EndChangeCheck())
+        if (showHelp)
+        {
+            EditorGUILayout.HelpBox("Race Animation Controllers: This sets the animation controllers used for each race. When changing the race, the animation controller for the active race will be used by default.", MessageType.Info);
+        }
+        //EditorGUI.BeginChangeCheck();
+        //EditorGUILayout.PropertyField(serializedObject.FindProperty("raceAnimationControllers"));
+        if (EditorGUI.EndChangeCheck())
 		{
 			serializedObject.ApplyModifiedProperties();
 			if (Application.isPlaying)
@@ -194,7 +217,11 @@ public partial class DynamicCharacterAvatarEditor : Editor
 			}
 			EditorGUI.indentLevel--;
 		}
-		if (EditorGUI.EndChangeCheck())
+        if (showHelp)
+        {
+            EditorGUILayout.HelpBox("Character Colors: This lets you set predefined colors to be used when building the Avatar. The colors will be assigned to the Shared Colors on the overlays as they are applied to the Avatar.", MessageType.Info);
+        }
+        if (EditorGUI.EndChangeCheck())
 		{
 			if (n_newArraySize != n_origArraySize)
 			{
