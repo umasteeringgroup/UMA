@@ -16,8 +16,12 @@ MonoBehaviour:
   - None
   - FullOutfit
   - Face
+  - Eyes
   - Hair
+  - Body
   - Complexion
+  - Tattoo
+  - Underwear
   - Eyebrows
   - Beard
   - Ears
@@ -27,8 +31,11 @@ MonoBehaviour:
   - Arms
   - Hands
   - Waist
+  - Cape
   - Legs
   - Feet
+  - AlternateHead
+  - AlternateHands
   backwardsCompatibleWith: []
   raceThumbnails:
     fullThumb: {fileID: 21300000, guid: 388c87ca440d1fc4ba07c69318fdd99c, type: 3}

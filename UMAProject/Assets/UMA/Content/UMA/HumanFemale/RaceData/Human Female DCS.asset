@@ -14,6 +14,7 @@ MonoBehaviour:
   baseRaceRecipe: {fileID: 11400000, guid: 88524e288a09d9944b8e1a0416010469, type: 2}
   wardrobeSlots:
   - None
+  - FullOutfit
   - Face
   - Eyes
   - Hair

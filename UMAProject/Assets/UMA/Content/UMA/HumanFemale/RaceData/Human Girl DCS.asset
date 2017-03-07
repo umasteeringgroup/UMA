@@ -29,6 +29,7 @@ MonoBehaviour:
   - Waist
   - Legs
   - Feet
+  - FullOutfit
   backwardsCompatibleWith:
   - HumanFemaleDCS
   raceThumbnails:
