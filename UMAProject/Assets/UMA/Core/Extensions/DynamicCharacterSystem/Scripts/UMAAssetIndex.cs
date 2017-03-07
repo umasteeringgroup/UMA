@@ -841,6 +841,8 @@ namespace UMA
 			{
 				//with this search when it is t:UMATextRecipe it DOES load Child classes too
 				var typeGUIDs = AssetDatabase.FindAssets("t:" + typesToAdd[i]);
+				if (typeGUIDs != null)
+					Debug.Log("FOUND " + typeGUIDs.Length + " OF TYPE " + typesToAdd[i]);
 				for (int tid = 0; tid < typeGUIDs.Length; tid++)
 				{
 					UnityEngine.Object thisAsset = null;
@@ -861,7 +863,10 @@ namespace UMA
 						string thisAssetName = "";
 						GetAssetHashAndNames(thisAsset, ref thisAssetHash, ref thisAssetName);
 						if ((thisAssetHash == 0 || thisAssetHash == -1) || thisAssetName == "")
+						{
+							Debug.LogWarning(thisAsset.name + " had an assetHash of " + thisAssetHash + " and assetName of " + thisAssetName);
 							continue;
+						}
 						if (InAssetBundle(thisPath, thisAsset.name))
 						{
 							_assetBundleIndex.AddPath(thisAsset, thisAssetHash, thisAssetName);
@@ -874,6 +879,7 @@ namespace UMA
 				}
 			}
 		}
+
 		private void ValidateBuildIndex()
 		{
 			//we need the _fullIndex to compare against
@@ -881,15 +887,14 @@ namespace UMA
 
 			if (_buildIndex.Count() == 0)
 				return;
-			
+
 			var changed = false;
+			var pathsToRemove = new List<string>();
 			//we need to know if any anything has changed since the index was last open in Unity
 			for (int ti = 0; ti < _buildIndex.data.Length; ti++)
 			{
 				for (int i = 0; i < _buildIndex.data[ti].typeIndex.Length; i++)
 				{
-					//have any assets moved in or out of Resources
-					//something like
 					//if this item fullpath is not in _fullIndex
 					if (!_fullIndex.Contains(_buildIndex.data[ti].typeIndex[i].fullPath))
 					{
@@ -899,7 +904,7 @@ namespace UMA
 						//if not remove it from the buildIndex and delete the reference asset if there was one
 						if (fullIndexItem == null)
 						{
-							_buildIndex.RemovePath(_buildIndex.data[ti].typeIndex[i].fullPath);//this should delete the file ref asset too
+							pathsToRemove.Add(_buildIndex.data[ti].typeIndex[i].fullPath);
 						}
 						else
 						{
@@ -912,7 +917,7 @@ namespace UMA
 									_buildIndex.data[ti].typeIndex[i].fullPath = fullIndexItem.fullPath;
 								else
 									//the asset is no longer in resources so we need to remove it from the index
-									_buildIndex.RemovePath(_buildIndex.data[ti].typeIndex[i].fullPath);
+									pathsToRemove.Add(_buildIndex.data[ti].typeIndex[i].fullPath);
 							}
 							else
 							{
@@ -924,32 +929,58 @@ namespace UMA
 								}
 								else
 								{
-									//delete the asset
+									//it is now in Resources so we no longer need the 'little asset' and need to update the path
 									if (!String.IsNullOrEmpty(_buildIndex.data[ti].typeIndex[i].fileRefPath))
 										_buildIndex.data[ti].typeIndex[i].TheFileReference = null;
-									//update the path
 									_buildIndex.data[ti].typeIndex[i].fullPath = fullIndexItem.fullPath;
 								}
 							}
 						}
 					}
-					//Lastly have any 'live assets' had their refrence objects deleted
+				}
+			}
+			//loop over any removed paths and remove them
+			if (pathsToRemove.Count > 0)
+			{
+				for (int i = 0; i < pathsToRemove.Count; i++)
+				{
+					_buildIndex.RemovePath(pathsToRemove[i]);
+				}
+				changed = true;
+				pathsToRemove.Clear();
+			}
+			//Lastly have any 'live assets' had their refrence objects deleted
+			for (int ti = 0; ti < _buildIndex.data.Length; ti++)
+			{
+				for (int i = 0; i < _buildIndex.data[ti].typeIndex.Length; i++)
+				{
 					if (!String.IsNullOrEmpty(_buildIndex.data[ti].typeIndex[i].fileRefPath))
 					{
 						var thisFileRef = _buildIndex.data[ti].typeIndex[i].TheFileReference;//getting the file ref also makes it null if it no longer exists
 						if (thisFileRef == null)
 						{
-							_buildIndex.RemovePath(_buildIndex.data[ti].typeIndex[i].fullPath);
-							changed = true;
+							pathsToRemove.Add(_buildIndex.data[ti].typeIndex[i].fullPath);
 						}
 					}
 				}
 			}
+			//loop over any removed paths and remove them
+			if (pathsToRemove.Count > 0)
+			{
+				for (int i = 0; i < pathsToRemove.Count; i++)
+				{
+					_buildIndex.RemovePath(pathsToRemove[i]);
+				}
+				changed = true;
+				pathsToRemove.Clear();
+			}
 			if (changed)
 			{
+				SortIndexes();
 				EditorUtility.SetDirty(this);
 				AssetDatabase.SaveAssets();
 			}
+			//updated = true;
 		}
 
 		#endregion
