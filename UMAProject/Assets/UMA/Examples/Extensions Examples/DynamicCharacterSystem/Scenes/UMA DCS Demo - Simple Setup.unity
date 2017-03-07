@@ -845,6 +845,7 @@ MonoBehaviour:
     m_TypeName: UMA.UMADataEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   hide: 0
+  loadBlendShapes: 1
   activeRace:
     name: HumanMale
     _data: {fileID: 11400000, guid: 62688b7aa02fbc544916e522fcc239c7, type: 2}
@@ -854,12 +855,7 @@ MonoBehaviour:
   rebuildSkeleton: 0
   preloadWardrobeRecipes:
     loadDefaultRecipes: 1
-    recipes:
-    - _recipeName: Shorts
-      _recipe: {fileID: 11400000, guid: 5bbd4dc2ec713f24a84512ef4f9ffe00, type: 2}
-      _compatibleRaces:
-      - HumanMale
-      - HumanMaleDCS
+    recipes: []
   raceAnimationControllers:
     defaultAnimationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343,
       type: 2}
