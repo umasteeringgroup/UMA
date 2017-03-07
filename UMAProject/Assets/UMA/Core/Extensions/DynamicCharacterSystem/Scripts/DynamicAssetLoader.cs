@@ -536,11 +536,11 @@ namespace UMA
 		{
 			float startTime = Time.realtimeSinceStartup;
 			AssetBundleManager.LoadAssetBundle(bundle, false);
-			while (AssetBundleManager.IsAssetBundleDownloaded(bundle) == false)
+			string error = null;
+			while (AssetBundleManager.GetLoadedAssetBundle(bundle, out error) == null)
 			{
 				yield return null;
 			}
-			string error = null;
 			LoadedAssetBundle loadedBundle = AssetBundleManager.GetLoadedAssetBundle(bundle, out error);
 			float elapsedTime = Time.realtimeSinceStartup - startTime;
 			Debug.Log(bundle + (error != null ? " was not" : " was") + " loaded successfully in " + elapsedTime + " seconds");
@@ -736,20 +736,12 @@ namespace UMA
 							continue;
 						}
 						bool assetBundleContains = AssetBundleManager.AssetBundleIndexObject.AssetBundleContains(assetBundleNamesArray[i], assetName, typeString);
-						if (!assetBundleContains && typeof(T) == typeof(SlotDataAsset))
-						{
-							//try the '_Slot' version
-							assetBundleContains = AssetBundleManager.AssetBundleIndexObject.AssetBundleContains(assetBundleNamesArray[i], assetName + "_Slot", typeString);
-						}
 						if (assetBundleContains)
 						{
-							if (AssetBundleManager.IsAssetBundleDownloaded(assetBundleNamesArray[i]))
+							if (AssetBundleManager.GetLoadedAssetBundle(assetBundleNamesArray[i], out error) != null)
 							{
-								T target = (T)AssetBundleManager.GetLoadedAssetBundle(assetBundleNamesArray[i], out error).m_AssetBundle.LoadAsset<T>(assetName);
-								if (target == null && typeof(T) == typeof(SlotDataAsset))
-								{
-									target = (T)AssetBundleManager.GetLoadedAssetBundle(assetBundleNamesArray[i], out error).m_AssetBundle.LoadAsset<T>(assetName + "_Slot");
-								}
+								var assetFilename = AssetBundleManager.AssetBundleIndexObject.GetFilenameFromAssetName(assetBundleNamesArray[i], assetName, typeString);
+                                T target = (T)AssetBundleManager.GetLoadedAssetBundle(assetBundleNamesArray[i], out error).m_AssetBundle.LoadAsset<T>(assetFilename);
 								if (target != null)
 								{
 									assetFound = true;
@@ -767,7 +759,7 @@ namespace UMA
 								}
 								else
 								{
-									if (error != "" || error != null)
+									if (!String.IsNullOrEmpty(error))
 									{
 										Debug.LogWarning(error);
 									}
@@ -810,7 +802,7 @@ namespace UMA
 					}
 					else //we are just loading in all assets of type from the downloaded bundles- if you are happy to trigger the download of all possible assetbundles that contain anything of type T set forceDownloadAll to be true
 					{
-						if (AssetBundleManager.IsAssetBundleDownloaded(assetBundleNamesArray[i]))
+						if (AssetBundleManager.GetLoadedAssetBundle(assetBundleNamesArray[i], out error) != null)
 						{
 							string[] assetsInBundle = AssetBundleManager.AssetBundleIndexObject.GetAllAssetsOfTypeInBundle(assetBundleNamesArray[i], typeString);
 							if (assetsInBundle.Length > 0)
@@ -818,10 +810,11 @@ namespace UMA
 								foreach (string asset in assetsInBundle)
 								{
 									//sometimes this errors out if the bundle is downloaded but not LOADED
+									var assetFilename = AssetBundleManager.AssetBundleIndexObject.GetFilenameFromAssetName(assetBundleNamesArray[i], asset, typeString);
 									T target = null;
 									try
 									{
-										target = (T)AssetBundleManager.GetLoadedAssetBundle(assetBundleNamesArray[i], out error).m_AssetBundle.LoadAsset<T>(asset);
+										target = (T)AssetBundleManager.GetLoadedAssetBundle(assetBundleNamesArray[i], out error).m_AssetBundle.LoadAsset<T>(assetFilename);
 									}
 									catch
 									{
@@ -840,11 +833,11 @@ namespace UMA
 											Debug.LogWarning("Load Asset could not get a " + typeof(T).ToString() + " asset called " + asset+ " from " + assetBundleNamesArray[i]);
 										}
 									}
-									if (target == null && typeof(T) == typeof(SlotDataAsset))
+									/*if (target == null && typeof(T) == typeof(SlotDataAsset))
 									{
 										//08122016 DOS NOTES now the assetBundleIndex records the 'slotname' for slots rather than just the asset name we should not need to try this any more. TODO Confirm
 										target = (T)AssetBundleManager.GetLoadedAssetBundle(assetBundleNamesArray[i], out error).m_AssetBundle.LoadAsset<T>(asset + "_Slot");
-									}
+									}*/
 									if (target != null)
 									{
 										assetFound = true;
@@ -860,7 +853,7 @@ namespace UMA
 									}
 									else
 									{
-										if (error != "" || error != null)
+										if (!String.IsNullOrEmpty(error))
 										{
 											Debug.LogWarning(error);
 										}

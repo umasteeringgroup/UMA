@@ -415,6 +415,13 @@ namespace UMAAssetBundleManager
 			}
 			return indexAsset;
 		}
+
+		public string GetFilenameFromAssetName(string assetBundleName, string assetname, string type = "")
+		{
+			return GetAssetBundleIndexItem(assetBundleName, assetname, type).filename;
+		}
+
+
 		public string GetAssetNameFromFilename(string filename, string type = "")
 		{
 			string assetName = "";

@@ -169,7 +169,7 @@ namespace UMA
 				//we need to check everyitem in this batch belongs to an asset bundle that has actually been loaded
 				LoadedAssetBundle loadedBundleTest = AssetBundleManager.GetLoadedAssetBundle(item.containingBundle, out error);
 				AssetBundle loadedBundleABTest = loadedBundleTest.m_AssetBundle;
-				if (loadedBundleABTest == null && (error == null || error == ""))
+				if (loadedBundleABTest == null && (String.IsNullOrEmpty(error)))
 				{
 					while (loadedBundleTest.m_AssetBundle == null)
 					{
@@ -177,7 +177,7 @@ namespace UMA
 						yield return null;
 					}
 				}
-				if ((error != null && error != ""))
+				if (!String.IsNullOrEmpty(error))
 				{
 					Debug.LogError(error);
 					yield break;
@@ -191,27 +191,22 @@ namespace UMA
 					string error = "";
 					var loadedBundle = AssetBundleManager.GetLoadedAssetBundle(item.containingBundle, out error);
 					var loadedBundleAB = loadedBundle.m_AssetBundle;
-					if ((error != null && error != ""))
+					if (!String.IsNullOrEmpty(error))
 					{
 						Debug.LogError(error);
 						yield break;
 					}
+					var itemFilename = AssetBundleManager.AssetBundleIndexObject.GetFilenameFromAssetName(item.containingBundle, item.requiredAssetName, item.tempAsset.GetType().ToString());
 					if (item.tempAsset.GetType() == typeof(RaceData))
 					{
-						RaceData actualRace = loadedBundleAB.LoadAsset<RaceData>(item.requiredAssetName);
+						RaceData actualRace = loadedBundleAB.LoadAsset<RaceData>(itemFilename);
 						UMAContext.Instance.raceLibrary.AddRace(actualRace);
 						UMAContext.Instance.raceLibrary.UpdateDictionary();
 					}
 					else if (item.tempAsset.GetType() == typeof(SlotDataAsset))
 					{
 						SlotDataAsset thisSlot = null;
-						thisSlot = loadedBundleAB.LoadAsset<SlotDataAsset>(item.requiredAssetName);
-						if (thisSlot == null)
-						{
-							//check for item.requiredAssetName + "_Slot" here since we cant get SlotDataAsset.slotName 
-							//unless the asset is actually loaded and we can only load from an asset bundle by file name
-							thisSlot = loadedBundleAB.LoadAsset<SlotDataAsset>(item.requiredAssetName + "_Slot");
-						}
+						thisSlot = loadedBundleAB.LoadAsset<SlotDataAsset>(itemFilename);
 						if (thisSlot != null)
 						{
 							UMAContext.Instance.slotLibrary.AddSlotAsset(thisSlot);
@@ -224,7 +219,7 @@ namespace UMA
 					else if (item.tempAsset.GetType() == typeof(OverlayDataAsset))
 					{
 						OverlayDataAsset thisOverlay = null;
-						thisOverlay = loadedBundleAB.LoadAsset<OverlayDataAsset>(item.requiredAssetName);
+						thisOverlay = loadedBundleAB.LoadAsset<OverlayDataAsset>(itemFilename);
 						if (thisOverlay != null)
 						{
 							UMAContext.Instance.overlayLibrary.AddOverlayAsset(thisOverlay);
@@ -236,19 +231,19 @@ namespace UMA
 					}
 					else if (item.tempAsset.GetType() == typeof(UMATextRecipe))
 					{
-						UMATextRecipe downloadedRecipe = loadedBundleAB.LoadAsset<UMATextRecipe>(item.requiredAssetName);
+						UMATextRecipe downloadedRecipe = loadedBundleAB.LoadAsset<UMATextRecipe>(itemFilename);
 						(UMAContext.Instance.dynamicCharacterSystem as UMACharacterSystem.DynamicCharacterSystem).AddRecipe(downloadedRecipe);
 					}
 					else if (item.tempAsset.GetType() == typeof(UMAWardrobeRecipe))
 					{
-						UMAWardrobeRecipe downloadedRecipe = loadedBundleAB.LoadAsset<UMAWardrobeRecipe>(item.requiredAssetName);
+						UMAWardrobeRecipe downloadedRecipe = loadedBundleAB.LoadAsset<UMAWardrobeRecipe>(itemFilename);
 						(UMAContext.Instance.dynamicCharacterSystem as UMACharacterSystem.DynamicCharacterSystem).AddRecipe(downloadedRecipe);
 					}
 					else if (item.dynamicCallback.Count > 0)
 					{
 						//get the asset as whatever the type of the tempAsset is
 						//send this as an array to the dynamicCallback
-						var downloadedAsset = loadedBundleAB.LoadAsset(item.requiredAssetName, item.tempAsset.GetType());
+						var downloadedAsset = loadedBundleAB.LoadAsset(itemFilename, item.tempAsset.GetType());
 						var downloadedAssetArray = Array.CreateInstance(item.tempAsset.GetType(), 1);
 						downloadedAssetArray.SetValue(downloadedAsset, 0);
 						for (int i = 0; i < item.dynamicCallback.Count; i++)
@@ -256,7 +251,7 @@ namespace UMA
 							item.dynamicCallback[i].DynamicInvoke(downloadedAssetArray);
 						}
 					}
-					if (error != "" && error != null)
+					if (!String.IsNullOrEmpty(error))
 					{
 						Debug.LogError(error);
 					}

@@ -2058,14 +2058,14 @@ namespace UMACharacterSystem
 
 #region CHARACTER FINAL ASSEMBLY
 
-		IEnumerator BuildCharacterWhenReady(bool RestoreDNA = true)
+		IEnumerator BuildCharacterWhenReady(bool RestoreDNA = true, string prioritySlot = "", List<string> prioritySlotOver = default(List<string>))
 		{
 			while (!DynamicAssetLoader.Instance.isInitialized)
 			{
 				yield return null;
 			}
 			yield return StartCoroutine(UpdateAfterDownloads());
-			BuildCharacter(RestoreDNA);
+			BuildCharacter(RestoreDNA, prioritySlot, prioritySlotOver);
 		}
 
 		/// <summary>
@@ -2082,12 +2082,12 @@ namespace UMACharacterSystem
 			_isFirstSettingsBuild = false;
 			if (!DynamicAssetLoader.Instance.isInitialized)
 			{
-				StartCoroutine(BuildCharacterWhenReady(RestoreDNA));
+				StartCoroutine(BuildCharacterWhenReady(RestoreDNA, prioritySlot, prioritySlotOver));
 				return;
 			}
 			if (waitForBundles && DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
 			{
-				StartCoroutine(BuildCharacterWhenReady(RestoreDNA));
+				StartCoroutine(BuildCharacterWhenReady(RestoreDNA, prioritySlot, prioritySlotOver));
 				return;
 			}
 			if (prioritySlotOver == default(List<string>))
@@ -2218,8 +2218,12 @@ namespace UMACharacterSystem
 				SetExpressionSet();
 			}
 
-			// Load all the recipes
-			LoadCharacter(umaRecipe, ReplaceRecipes, Recipes.ToArray());
+			// Load all the recipes- if LoadCharacter returns true then loading the recipes caused assets to download- we need to wait and try again after they have finished
+			if(LoadCharacter(umaRecipe, ReplaceRecipes, Recipes.ToArray()))
+			{
+				StartCoroutine(BuildCharacterWhenReady(RestoreDNA, prioritySlot, prioritySlotOver));
+				return;
+			}
 
 			// Add saved DNA
 			if (RestoreDNA)
@@ -2249,11 +2253,12 @@ namespace UMACharacterSystem
 		/// </summary>
 		/// <param name="umaRecipe"></param>
 		/// <param name="umaAdditionalRecipes"></param>
-		void LoadCharacter(UMARecipeBase umaRecipe, List<UMAWardrobeRecipe> Replaces, params UMARecipeBase[] umaAdditionalSerializedRecipes)
+		/// <returns>Returns true if the final recipe load caused more assets to download</returns>
+		bool LoadCharacter(UMARecipeBase umaRecipe, List<UMAWardrobeRecipe> Replaces, params UMARecipeBase[] umaAdditionalSerializedRecipes)
 		{
 			if (umaRecipe == null)
 			{
-				return;
+				return false;
 			}
 			if (umaData == null)
 			{
@@ -2285,6 +2290,13 @@ namespace UMACharacterSystem
 			//New event that allows for tweaking the resulting recipe before the character is actually generated
 			RecipeUpdated.Invoke(umaData);
 
+			//Did doing any of that cause more downloads?
+			if (FinalRecipeAssetsDownloading())
+			{
+				Profiler.EndSample();
+				return true;
+			}
+
 			if (umaRace != umaData.umaRecipe.raceData)
 			{
 				if (rebuildSkeleton)
@@ -2303,6 +2315,42 @@ namespace UMACharacterSystem
 			Profiler.EndSample();
 
 			UpdateAssetBundlesUsedbyCharacter();
+
+			return false;
+		}
+
+		bool FinalRecipeAssetsDownloading()
+		{
+			bool requiresWaiting = false;
+			if (DynamicAssetLoader.Instance.downloadingAssets.downloadingItems.Count > 0)
+			{
+				var finalSlots = umaData.umaRecipe.GetAllSlots();
+
+				for (int i = 0; i < finalSlots.Length; i++)
+				{
+					if (DynamicAssetLoader.Instance.downloadingAssetsContains(finalSlots[i].slotName))
+					{
+						if (!requiredAssetsToCheck.Contains(finalSlots[i].slotName))
+						{
+							requiredAssetsToCheck.Add(finalSlots[i].slotName);
+							requiresWaiting = true;
+						}
+					}
+					var thisSlotsOverlays = finalSlots[i].GetOverlayList();
+					for (int oi = 0; oi < thisSlotsOverlays.Count; oi++)
+					{
+						if (DynamicAssetLoader.Instance.downloadingAssetsContains(thisSlotsOverlays[oi].overlayName))
+						{
+							if (!requiredAssetsToCheck.Contains(thisSlotsOverlays[oi].overlayName))
+							{
+								requiredAssetsToCheck.Add(thisSlotsOverlays[oi].overlayName);
+								requiresWaiting = true;
+							}
+						}
+					}
+				}
+			}
+			return requiresWaiting;
 		}
 
 		/// <summary>
