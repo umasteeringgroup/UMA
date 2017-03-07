@@ -3532,7 +3532,7 @@ MonoBehaviour:
   boundsAdjust: {x: -0.36, y: 0.06, z: 0}
   radiusAdjust: {x: 0.23, y: 0.02}
   massModifiers: {x: 42, y: 28, z: 22}
-  startingPose: {fileID: 0}
+  startingPose: {fileID: 11400000, guid: 5ae99fcc22c8dc84fb9af444f4831a53, type: 2}
   startingPoseWeight: 1
 --- !u!1001 &100100000
 Prefab:
