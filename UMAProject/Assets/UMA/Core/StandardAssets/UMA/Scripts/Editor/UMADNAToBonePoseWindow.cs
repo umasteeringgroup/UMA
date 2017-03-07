@@ -32,7 +32,8 @@ namespace UMA.PoseTools
 		private int selectedDNAHash = 0;
 
 		private int poseSaveIndex = -1;
-		private string poseSaveName = "StartingPose";
+		const string startingPoseName = "StartingPose";
+		private string poseSaveName = startingPoseName;
 
 		private static GUIContent sourceGUIContent = new GUIContent(
 			"Source UMA",
@@ -119,7 +120,7 @@ namespace UMA.PoseTools
 
 			if (poseSaveIndex < 0)
 			{
-				poseSaveName = "Starting Pose";
+				poseSaveName = startingPoseName;
 
 				// Now that StartingPose has been generated
 				// add the active DNA to the pre DNA avatar
@@ -191,7 +192,7 @@ namespace UMA.PoseTools
 				SerializedObject serializedConverter = new SerializedObject(converter);
 
 				SerializedProperty startingPose = serializedConverter.FindProperty("startingPose");
-				startingPose.objectReferenceValue = AssetDatabase.LoadAssetAtPath<UMABonePose>(folderPath + "/" + "Starting Pose" + ".asset");
+				startingPose.objectReferenceValue = AssetDatabase.LoadAssetAtPath<UMABonePose>(folderPath + "/" + startingPoseName + ".asset");
 
 				SerializedProperty posePairArray = serializedConverter.FindProperty("dnaPoses");
 				posePairArray.ClearArray();
