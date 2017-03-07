@@ -14,9 +14,9 @@ MonoBehaviour:
   recipeType: Wardrobe
   DisplayValue: Swapped face
   compatibleRaces:
-  - HumanFemaleResources
+  - HumanFemaleDCS
   wardrobeRecipeThumbs:
-  - race: HumanFemaleResources
+  - race: HumanFemaleDCS
     filename: 
     thumb: {fileID: 21300000, guid: 28a455e10b4569f45b780b004fa33b90, type: 3}
   wardrobeSlot: Face
@@ -27,3 +27,4 @@ MonoBehaviour:
   activeWardrobeSet: []
   recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"FemaleHead_ElvenEars","scale":100,"copyIdx":-1,"overlays":[{"id":"F_H_Head","colorIdx":0,"rect":[0,0,0,0]}]},{"id":"FemaleHead_Eyes","scale":100,"copyIdx":13,"overlays":[]},{"id":"FemaleHead_Head","scale":100,"copyIdx":13,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"FemaleHead_Nose","scale":100,"copyIdx":13,"overlays":[]},{"id":"F_High
     poly Eyebrows","scale":100,"copyIdx":-1,"overlays":[{"id":"F_HighPoly_EyeBrow","colorIdx":1,"rect":[0,0,0,0]}]},{"id":"FemaleHead_Mouth","scale":100,"copyIdx":13,"overlays":[]},{"id":"FemaleInnerMouth","scale":100,"copyIdx":-1,"overlays":[{"id":"InnerMouth","colorIdx":3,"rect":[0,0,0,0]}]}],"colors":[],"fColors":[{"name":"Skin","colors":[240,190,190,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"Hair","colors":[106,70,6,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"Eyes","colors":[71,71,136,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"-","colors":[198,198,198,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":3,"race":"","packedDna":[]}'
+  replaces: Nothing

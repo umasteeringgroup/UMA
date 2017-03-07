@@ -14,9 +14,9 @@ MonoBehaviour:
   recipeType: Wardrobe
   DisplayValue: Shirt 2
   compatibleRaces:
-  - HumanFemaleResources
+  - HumanFemaleDCS
   wardrobeRecipeThumbs:
-  - race: HumanFemaleResources
+  - race: HumanFemaleDCS
     filename: 
     thumb: {fileID: 21300000, guid: 7d62e9fe46bc2694fb5c5d5d3371180f, type: 3}
   wardrobeSlot: Chest
@@ -25,3 +25,4 @@ MonoBehaviour:
   - Underwear
   activeWardrobeSet: []
   recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"FemaleTorso","scale":100,"copyIdx":-1,"overlays":[{"id":"FemaleShirt01","colorIdx":0,"rect":[0,1024,2048,1024]}]}],"colors":[],"fColors":[{"name":"Shirt","colors":[54,146,97,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"","packedDna":[]}'
+  replaces: Nothing

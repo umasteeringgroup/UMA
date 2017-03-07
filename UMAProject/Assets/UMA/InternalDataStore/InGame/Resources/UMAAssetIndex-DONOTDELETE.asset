@@ -636,22 +636,10 @@ MonoBehaviour:
         fileRefPath: 
     - type: UMA.RaceData
       typeIndex:
-      - name: HumanFemaleResources
-        nameHash: -459586661
-        fullPath: Assets/UMA/Content/UMA/HumanFemale/RaceData/Human Female w DynamicDNA.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_RaceData/Human Female w DynamicDNA-fileRef
       - name: HumanFemale
         nameHash: -2121082867
         fullPath: Assets/UMA/Content/UMA/HumanFemale/RaceData/Human Female.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_RaceData/Human Female-fileRef
-      - name: HumanGirl
-        nameHash: 1894823071
-        fullPath: Assets/UMA/Content/UMA/HumanFemale/RaceData/Human Girl w DynamicDNA.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_RaceData/Human Girl w DynamicDNA-fileRef
-      - name: HumanMaleDCS
-        nameHash: -2143011375
-        fullPath: Assets/UMA/Content/UMA/HumanMale/RaceData/Human Male w DynamicDNA.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_RaceData/Human Male w DynamicDNA-fileRef
       - name: HumanMale
         nameHash: -1128037832
         fullPath: Assets/UMA/Content/UMA/HumanMale/RaceData/Human Male.asset
@@ -660,6 +648,18 @@ MonoBehaviour:
         nameHash: 1798131632
         fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Race/PlaceholderRace.asset
         fileRefPath: 
+      - name: HumanFemaleDCS
+        nameHash: -19083733
+        fullPath: Assets/UMA/Content/UMA/HumanFemale/RaceData/Human Female DCS.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_RaceData/Human Female DCS-fileRef
+      - name: HumanGirlDCS
+        nameHash: 1790936731
+        fullPath: Assets/UMA/Content/UMA/HumanFemale/RaceData/Human Girl DCS.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_RaceData/Human Girl DCS-fileRef
+      - name: HumanMaleDCS
+        nameHash: -2143011375
+        fullPath: Assets/UMA/Content/UMA/HumanMale/RaceData/Human Male DCS.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_RaceData/Human Male DCS-fileRef
     - type: UMATextRecipe
       typeIndex:
       - name: HumanFemale Base Recipe
@@ -668,16 +668,16 @@ MonoBehaviour:
           Base Recipe.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/HumanFemale Base
           Recipe-fileRef
-      - name: HumanFemale Base w DynamicDNA
-        nameHash: 1138706838
-        fullPath: Assets/UMA/Content/UMA/HumanFemale/Recipes/Base Recipes/HumanFemale
-          Base w DynamicDNA.asset
+      - name: HumanFemaleDCS Base Recipe
+        nameHash: -1593925559
+        fullPath: Assets/UMA/Content/UMA/HumanFemale/Recipes/Base Recipes/HumanFemaleDCS
+          Base Recipe.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/HumanFemale Base
           w DynamicDNA-fileRef
-      - name: HumanGirl Base w DynamicDNA
-        nameHash: 1879047880
-        fullPath: Assets/UMA/Content/UMA/HumanFemale/Recipes/Base Recipes/HumanGirl
-          Base w DynamicDNA.asset
+      - name: HumanGirlDCS Base Recipe
+        nameHash: 355642694
+        fullPath: Assets/UMA/Content/UMA/HumanFemale/Recipes/Base Recipes/HumanGirlDCS
+          Base Recipe.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/HumanGirl Base w
           DynamicDNA-fileRef
       - name: HumanMale Base Recipe
@@ -685,10 +685,10 @@ MonoBehaviour:
         fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/BaseRecipes/HumanMale Base
           Recipe.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/HumanMale Base Recipe-fileRef
-      - name: HumanMale Base w DynamicDNA
-        nameHash: -94149215
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/BaseRecipes/HumanMale Base
-          w DynamicDNA.asset
+      - name: HumanMaleDCS Base Recipe
+        nameHash: -193431797
+        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/BaseRecipes/HumanMaleDCS
+          Base Recipe.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/HumanMale Base w
           DynamicDNA-fileRef
       - name: PlaceholderBase
@@ -1100,3 +1100,6 @@ MonoBehaviour:
     - Assets/UMA/Content/UMA/HumanMale/Slots/Plane_000/Plane_000_Slot.asset
     - Assets/UMA/Content/UMA/HumanFemale/Slots/UMA_fem_hair_1_005/UMA_fem_hair_1_005_Slot.asset
     - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleLowPolyHead.asset
+    - Assets/UMA/Content/UMA/HumanFemale/RaceData/Human Female DCS.asset
+    - Assets/UMA/Content/UMA/HumanFemale/RaceData/Human Girl DCS.asset
+    - Assets/UMA/Content/UMA/HumanMale/RaceData/Human Male DCS.asset

@@ -14,9 +14,9 @@ MonoBehaviour:
   recipeType: Wardrobe
   DisplayValue: Shirt 1
   compatibleRaces:
-  - HumanGirl
+  - HumanGirlDCS
   wardrobeRecipeThumbs:
-  - race: HumanGirl
+  - race: HumanGirlDCS
     filename: 
     thumb: {fileID: 21300000, guid: 25657247638d7fc47b8cf3271c22e405, type: 3}
   wardrobeSlot: Chest
@@ -24,3 +24,4 @@ MonoBehaviour:
   suppressWardrobeSlots: []
   activeWardrobeSet: []
   recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"FemaleTshirt01","scale":100,"copyIdx":-1,"overlays":[{"id":"FemaleTshirt01","colorIdx":0,"rect":[0,0,0,0]},{"id":"GirlShirt01Color","colorIdx":1,"rect":[0,0,0,0]}]}],"colors":[],"fColors":[{"name":"Shirt","colors":[211,29,191,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"Shirt2","colors":[255,200,200,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":2,"race":"","packedDna":[]}'
+  replaces: Nothing

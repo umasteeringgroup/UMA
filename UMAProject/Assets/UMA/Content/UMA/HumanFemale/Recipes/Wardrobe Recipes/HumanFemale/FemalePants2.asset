@@ -14,9 +14,9 @@ MonoBehaviour:
   recipeType: Wardrobe
   DisplayValue: Pants 2
   compatibleRaces:
-  - HumanFemaleResources
+  - HumanFemaleDCS
   wardrobeRecipeThumbs:
-  - race: HumanFemaleResources
+  - race: HumanFemaleDCS
     filename: 
     thumb: {fileID: 21300000, guid: 4d03d3c3c1a8a1b42a7fc3b1e7257673, type: 3}
   wardrobeSlot: Legs
@@ -24,3 +24,4 @@ MonoBehaviour:
   suppressWardrobeSlots: []
   activeWardrobeSet: []
   recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"FemaleLegs","scale":100,"copyIdx":-1,"overlays":[{"id":"FemaleJeans02","colorIdx":0,"rect":[0,0,0,0]}]}],"colors":[],"fColors":[{"name":"Pants1","colors":[84,82,129,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"","packedDna":[]}'
+  replaces: Nothing
