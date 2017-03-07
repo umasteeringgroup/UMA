@@ -29,7 +29,8 @@ namespace UMA
 			has_uv = 8,
 			has_uv2 = 16,
 			has_uv3 = 32,
-			has_uv4 = 64
+			has_uv4 = 64,
+			has_blendShapes = 128, //this will conflict with future cloth flag, change to 256 when cloth gets merged
 		}
 
 		static Dictionary<int, BoneIndexEntry> bonesCollection;
@@ -40,16 +41,17 @@ namespace UMA
 		/// </summary>
 		/// <param name="target">Target.</param>
 		/// <param name="sources">Sources.</param>
-		public static void CombineMeshes(UMAMeshData target, CombineInstance[] sources)
+		public static void CombineMeshes(UMAMeshData target, CombineInstance[] sources, bool ignoreBlendShapes = false)
 		{
 			int vertexCount = 0;
 			int bindPoseCount = 0;
 			int transformHierarchyCount = 0;
+			int blendShapeCount = 0;
 
 			MeshComponents meshComponents = MeshComponents.none;
 			int subMeshCount = FindTargetSubMeshCount(sources);
 			var subMeshTriangleLength = new int[subMeshCount];
-			AnalyzeSources(sources, subMeshTriangleLength, ref vertexCount, ref bindPoseCount, ref transformHierarchyCount, ref meshComponents);
+			AnalyzeSources(sources, subMeshTriangleLength, ref vertexCount, ref bindPoseCount, ref transformHierarchyCount, ref meshComponents, ref blendShapeCount);
 
 			int[][] submeshTriangles = new int[subMeshCount][];
 			for (int i = 0; i < subMeshTriangleLength.Length; i++)
@@ -65,6 +67,8 @@ namespace UMA
 			bool has_uv3 = (meshComponents & MeshComponents.has_uv3) != MeshComponents.none;
 			bool has_uv4 = (meshComponents & MeshComponents.has_uv4) != MeshComponents.none;
 			bool has_colors32 = (meshComponents & MeshComponents.has_colors32) != MeshComponents.none;
+			bool has_blendShapes = (meshComponents & MeshComponents.has_blendShapes) != MeshComponents.none;
+			if (ignoreBlendShapes) has_blendShapes = false;
 
 			Vector3[] vertices = EnsureArrayLength(target.vertices, vertexCount);
 			BoneWeight[] boneWeights = EnsureArrayLength(target.unityBoneWeights, vertexCount);
@@ -75,6 +79,8 @@ namespace UMA
 			Vector2[] uv3 = has_uv3 ? EnsureArrayLength(target.uv3, vertexCount) : null;
 			Vector2[] uv4 = has_uv4 ? EnsureArrayLength(target.uv4, vertexCount) : null;
 			Color32[] colors32 = has_colors32 ? EnsureArrayLength(target.colors32, vertexCount) : null;
+
+			UMABlendShape[] blendShapes = has_blendShapes ? new UMABlendShape[blendShapeCount] : null;
 
 			UMATransform[] umaTransforms = EnsureArrayLength(target.umaBones, transformHierarchyCount);
 
@@ -97,6 +103,8 @@ namespace UMA
 				bonesList = new List<int>(boneCount);
 			else
 				bonesList.Clear();
+
+			int blendShapeIndex = 0;
 
 			foreach (var source in sources)
 			{
@@ -185,6 +193,56 @@ namespace UMA
 					}
 				}
 
+				if (has_blendShapes) 
+				{
+					if (source.meshData.blendShapes != null && source.meshData.blendShapes.Length > 0) 
+					{
+						for (int shapeIndex = 0; shapeIndex < source.meshData.blendShapes.Length; shapeIndex++)
+						{
+							bool nameAlreadyExists = false;
+							int i = 0;
+							//Probably this would be better with a dictionary
+							for (i = 0; i < blendShapeIndex; i++) 
+							{
+								if (blendShapes [i].shapeName == source.meshData.blendShapes [shapeIndex].shapeName) 
+								{
+									nameAlreadyExists = true;
+									break;
+								}
+							}
+
+							if (nameAlreadyExists)//Lets add the vertices data to the existing blendShape
+							{ 
+								if (blendShapes [i].frames.Length != source.meshData.blendShapes [shapeIndex].frames.Length) 
+								{
+									Debug.LogError ("SkinnedMeshCombiner: mesh blendShape frame counts don't match!");
+									break;
+								}
+								for (int frameIndex = 0; frameIndex < source.meshData.blendShapes [shapeIndex].frames.Length; frameIndex++) {
+									Array.Copy (source.meshData.blendShapes [shapeIndex].frames [frameIndex].deltaVertices, 0, blendShapes [i].frames [frameIndex].deltaVertices, vertexIndex, vertexCount);
+									Array.Copy (source.meshData.blendShapes [shapeIndex].frames [frameIndex].deltaNormals, 0, blendShapes [i].frames [frameIndex].deltaNormals, vertexIndex, vertexCount);
+									Array.Copy (source.meshData.blendShapes [shapeIndex].frames [frameIndex].deltaTangents, 0, blendShapes [i].frames [frameIndex].deltaTangents, vertexIndex, vertexCount);
+								}
+							} 
+							else
+							{
+								blendShapes [blendShapeIndex] = new UMABlendShape ();
+								blendShapes [blendShapeIndex].shapeName = source.meshData.blendShapes [shapeIndex].shapeName;
+								blendShapes [blendShapeIndex].frames = new UMABlendFrame[source.meshData.blendShapes [shapeIndex].frames.Length];
+
+								for (int frameIndex = 0; frameIndex < source.meshData.blendShapes [shapeIndex].frames.Length; frameIndex++) {
+									blendShapes [blendShapeIndex].frames [frameIndex] = new UMABlendFrame (vertices.Length); 
+									blendShapes [blendShapeIndex].frames [frameIndex].frameWeight = source.meshData.blendShapes [shapeIndex].frames [frameIndex].frameWeight;
+									Array.Copy (source.meshData.blendShapes [shapeIndex].frames [frameIndex].deltaVertices, 0, blendShapes [blendShapeIndex].frames [frameIndex].deltaVertices, vertexIndex, vertexCount);
+									Array.Copy (source.meshData.blendShapes [shapeIndex].frames [frameIndex].deltaNormals, 0, blendShapes [blendShapeIndex].frames [frameIndex].deltaNormals, vertexIndex, vertexCount);
+									Array.Copy (source.meshData.blendShapes [shapeIndex].frames [frameIndex].deltaTangents, 0, blendShapes [blendShapeIndex].frames [frameIndex].deltaTangents, vertexIndex, vertexCount);
+								}
+								blendShapeIndex++;
+							}
+						}
+					}
+				}
+
 				for (int i = 0; i < source.meshData.subMeshCount; i++)
 				{
 					if (source.targetSubmeshIndices[i] >= 0)
@@ -214,6 +272,9 @@ namespace UMA
 			target.uv3 = uv3;
 			target.uv4 = uv4;
 			target.colors32 = colors32;
+
+			if (has_blendShapes) 
+				target.blendShapes = blendShapes;
 
 			target.subMeshCount = subMeshCount;
 			target.submeshes = new SubMeshTriangles[subMeshCount];
@@ -287,8 +348,10 @@ namespace UMA
 			}
 		}
 
-		private static void AnalyzeSources(CombineInstance[] sources, int[] subMeshTriangleLength, ref int vertexCount, ref int bindPoseCount, ref int transformHierarchyCount, ref MeshComponents meshComponents)
+		private static void AnalyzeSources(CombineInstance[] sources, int[] subMeshTriangleLength, ref int vertexCount, ref int bindPoseCount, ref int transformHierarchyCount, ref MeshComponents meshComponents, ref int blendShapeCount)
 		{
+			HashSet<string> blendShapeNames = new HashSet<string> (); //Hash to find all the unique blendshape names
+
 			for (int i = 0; i < subMeshTriangleLength.Length; i++)
 			{
 				subMeshTriangleLength[i] = 0;
@@ -307,6 +370,13 @@ namespace UMA
 				if (source.meshData.uv4 != null && source.meshData.uv4.Length != 0) meshComponents |= MeshComponents.has_uv4;
 				if (source.meshData.colors32 != null && source.meshData.colors32.Length != 0) meshComponents |= MeshComponents.has_colors32;
 
+				//If we find a blendshape on this mesh then lets add it to the blendShapeNames hash to get all the unique names
+				if (source.meshData.blendShapes != null && source.meshData.blendShapes.Length != 0)
+				{
+					for (int shapeIndex = 0; shapeIndex < source.meshData.blendShapes.Length; shapeIndex++)
+						blendShapeNames.Add (source.meshData.blendShapes [shapeIndex].shapeName);
+				}
+
 				for (int i = 0; i < source.meshData.subMeshCount; i++)
 				{
 					if (source.targetSubmeshIndices[i] >= 0)
@@ -315,7 +385,13 @@ namespace UMA
 						subMeshTriangleLength[source.targetSubmeshIndices[i]] += triangleLength;
 					}
 				}
+			}
 
+			//If our blendshape hash has at least 1 name, then we have a blendshape!
+			if (blendShapeNames.Count > 0) 
+			{
+				blendShapeCount = blendShapeNames.Count;
+				meshComponents |= MeshComponents.has_blendShapes;
 			}
 		}
 

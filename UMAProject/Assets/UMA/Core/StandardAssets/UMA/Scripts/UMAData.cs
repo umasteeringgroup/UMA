@@ -53,6 +53,8 @@ namespace UMA
 		/// </summary>
 		public bool isAtlasDirty;
 
+		public bool ignoreBlendShapes = false;
+
 		public RuntimeAnimatorController animationController;
 
 		private Dictionary<int, int> animatedBonesTable;
@@ -1354,5 +1356,131 @@ namespace UMA
 				}
 			}
 		}
+
+		#region BlendShape Support
+		//For future multiple renderer support
+		public struct BlendShapeLocation
+		{
+			public int shapeIndex;
+			public int rendererIndex;
+		}
+
+		/// <summary>
+		/// Sets the blendshape by index and renderer.
+		/// </summary>
+		/// <param name="shapeIndex">Name of the blendshape.</param>
+		/// <param name="weight">Weight(float) to set this blendshape to.</param>
+		/// <param name="rIndex">index (default first) of the renderer this blendshape is on.</param>
+		public void SetBlendShape(int shapeIndex, float weight, int rIndex = 0)
+		{
+			/*if (rIndex >= rendererCount) //for multi-renderer support
+			{
+				Debug.LogError ("SetBlendShape: This renderer doesn't exist!");
+				return;
+			}*/
+
+			if (shapeIndex < 0) 
+			{
+				Debug.LogError ("SetBlendShape: Index is less than zero!");
+				return;
+			}
+
+			if (shapeIndex >= myRenderer.sharedMesh.blendShapeCount /*renderers [rIndex].sharedMesh.blendShapeCount*/) //for multi-renderer support
+			{
+				Debug.LogError ("SetBlendShape: Index is greater than blendShapeCount!");
+				return;
+			}
+
+			if (weight < 0.0f || weight > 1.0f)
+				Debug.LogError ("SetBlendShape: Weight is out of range, clamping...");
+
+			weight = Mathf.Clamp01 (weight);
+			weight *= 100.0f; //Scale up to 1-100 for SetBlendShapeWeight.
+
+			//renderers [rIndex].SetBlendShapeWeight (shapeIndex, weight);//for multi-renderer support
+			myRenderer.SetBlendShapeWeight(shapeIndex,weight);
+		}
+
+		/// <summary>
+		/// Set the blendshape by it's name.
+		/// </summary>
+		/// <param name="name">Name of the blendshape.</param
+		/// <param name="weight">Weight(float) to set this blendshape to.</param>
+		public void SetBlendShape(string name, float weight)
+		{
+			BlendShapeLocation loc = GetBlendShapeIndex (name);
+			if (loc.shapeIndex < 0)
+				return;
+
+			if (weight < 0.0f || weight > 1.0f)
+				Debug.LogError ("SetBlendShape: Weight is out of range, clamping...");
+
+			weight = Mathf.Clamp01 (weight);
+			weight *= 100.0f; //Scale up to 1-100 for SetBlendShapeWeight.
+
+			//renderers [loc.rendererIndex].SetBlendShapeWeight (loc.shapeIndex, weight);//for multi-renderer support
+			myRenderer.SetBlendShapeWeight(loc.shapeIndex,weight);
+		}
+		/// <summary>
+		/// Gets the first found index of the blendshape by name in the renderers
+		/// </summary>
+		/// <param name="name">Name of the blendshape.</param>
+		public BlendShapeLocation GetBlendShapeIndex(string name)
+		{
+			BlendShapeLocation loc = new BlendShapeLocation ();
+			loc.shapeIndex = -1;
+			loc.rendererIndex = -1;
+
+			/*for (int i = 0; i < rendererCount; i++) //for multi-renderer support
+			{
+				int index = renderers [i].sharedMesh.GetBlendShapeIndex (name);
+				if (index >= 0) 
+				{
+					loc.shapeIndex = index;
+					loc.rendererIndex = i;
+					return loc;
+				}
+			}*/
+
+			loc.shapeIndex = myRenderer.sharedMesh.GetBlendShapeIndex (name);
+			if (loc.shapeIndex >= 0) 
+			{
+				loc.rendererIndex = 0;
+				return loc;
+			}
+
+			Debug.LogError ("GetBlendShapeIndex: blendshape " + name + " not found!");
+			return loc;
+		}
+		/// <summary>
+		/// Gets the name of the blendshape by index and renderer
+		/// </summary>
+		/// <param name="shapeIndex">Index of the blendshape.</param>
+		/// <param name="rendererIndex">Index of the renderer (default = 0).</param>
+		public string GetBlendShapeName(int shapeIndex, int rendererIndex = 0)
+		{
+			if (shapeIndex < 0) 
+			{
+				Debug.LogError ("GetBlendShapeName: Index is less than zero!");
+				return "";
+			}
+
+			/*
+			if (rendererIndex >= rendererCount) //for multi-renderer support
+			{
+				Debug.LogError ("GetBlendShapeName: This renderer doesn't exist!");
+				return "";
+			}*/
+
+			//for multi-renderer support
+			/*if( shapeIndex < renderers [rendererIndex].sharedMesh.blendShapeCount )
+				return renderers [rendererIndex].sharedMesh.GetBlendShapeName (shapeIndex);*/
+
+			return myRenderer.sharedMesh.GetBlendShapeName (shapeIndex);
+
+			/*Debug.LogError ("GetBlendShapeName: no blendshape at index " + shapeIndex + "!");
+			return "";*/
+		}
+		#endregion
 	}
 }
