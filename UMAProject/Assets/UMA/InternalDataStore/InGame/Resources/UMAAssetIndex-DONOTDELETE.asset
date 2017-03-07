@@ -640,10 +640,6 @@ MonoBehaviour:
         nameHash: -2121082867
         fullPath: Assets/UMA/Content/UMA/HumanFemale/RaceData/Human Female.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_RaceData/Human Female-fileRef
-      - name: HumanMaleDCS
-        nameHash: -2143011375
-        fullPath: Assets/UMA/Content/UMA/HumanMale/RaceData/Human Male w DynamicDNA.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_RaceData/Human Male w DynamicDNA-fileRef
       - name: HumanMale
         nameHash: -1128037832
         fullPath: Assets/UMA/Content/UMA/HumanMale/RaceData/Human Male.asset
@@ -660,6 +656,10 @@ MonoBehaviour:
         nameHash: 1790936731
         fullPath: Assets/UMA/Content/UMA/HumanFemale/RaceData/Human Girl DCS.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_RaceData/Human Girl DCS-fileRef
+      - name: HumanMaleDCS
+        nameHash: -2143011375
+        fullPath: Assets/UMA/Content/UMA/HumanMale/RaceData/Human Male DCS.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_RaceData/Human Male DCS-fileRef
     - type: UMATextRecipe
       typeIndex:
       - name: HumanFemale Base Recipe
@@ -685,10 +685,10 @@ MonoBehaviour:
         fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/BaseRecipes/HumanMale Base
           Recipe.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/HumanMale Base Recipe-fileRef
-      - name: HumanMale Base w DynamicDNA
-        nameHash: -94149215
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/BaseRecipes/HumanMale Base
-          w DynamicDNA.asset
+      - name: HumanMaleDCS Base Recipe
+        nameHash: -193431797
+        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/BaseRecipes/HumanMaleDCS
+          Base Recipe.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/HumanMale Base w
           DynamicDNA-fileRef
       - name: PlaceholderBase
@@ -1102,3 +1102,4 @@ MonoBehaviour:
     - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleLowPolyHead.asset
     - Assets/UMA/Content/UMA/HumanFemale/RaceData/Human Female DCS.asset
     - Assets/UMA/Content/UMA/HumanFemale/RaceData/Human Girl DCS.asset
+    - Assets/UMA/Content/UMA/HumanMale/RaceData/Human Male DCS.asset
