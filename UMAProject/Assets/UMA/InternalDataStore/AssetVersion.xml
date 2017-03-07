@@ -1,7 +1,7 @@
 <asset>
     <name>UMA 2</name>
     <author>UMA Steering Group</author>
-    <version>2.1.0</version>
+    <version>2.5.0</version>
     <notes>-DynamicCharacterAvatar - advanced avatar and clothing system
 --Loading from Asset Bundles and Resources
 --Asset bundle encryption
@@ -20,5 +20,5 @@
 -Lots of general fixes
 </notes>
     <package-uri>http://umawiki.secretanorak.com/Updates/Update.unitypackage</package-uri>
-    <version-uri>https://raw.githubusercontent.com/huika/UMA/unity53/UMAProject/Assets/UMA/InternalDataStore/AssetVersion.xml</version-uri>
+    <version-uri>https://raw.githubusercontent.com/huika/UMA/master/UMAProject/Assets/UMA/InternalDataStore/AssetVersion.xml</version-uri>
 </asset>
