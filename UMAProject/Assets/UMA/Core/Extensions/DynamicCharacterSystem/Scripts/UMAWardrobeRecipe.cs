@@ -12,6 +12,18 @@ public partial class UMAWardrobeRecipe : UMATextRecipe
     [SerializeField]
     public string replaces;
 
+    public bool HasReplaces
+    {
+        get
+        {
+            if (string.IsNullOrEmpty(replaces))
+                return false;
+            if (replaces.ToLower() == "nothing")
+                return false;
+            return true;
+        }
+    }
+
     #endregion
     #region CONSTRUCTOR
     //if we get sent an UMATextRecipe that has a recipe type of Wardrobe then we create a new asset that has that assets properties

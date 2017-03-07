@@ -2108,6 +2108,7 @@ namespace UMACharacterSystem
 			if (CurrentDNA == null)
 				RestoreDNA = false;
 
+            List<UMAWardrobeRecipe> ReplaceRecipes = new List<UMAWardrobeRecipe>();
 			List<UMARecipeBase> Recipes = new List<UMARecipeBase>();
 			List<string> SuppressSlotsStrings = new List<string>();
 			var wardrobeRecipesToRender = new Dictionary<string, UMATextRecipe>();
@@ -2168,12 +2169,25 @@ namespace UMACharacterSystem
 					if (wardrobeRecipesToRender.ContainsKey(ws))
 					{
 						UMATextRecipe utr = wardrobeRecipesToRender[ws];
-						//we can use the race data here to filter wardrobe slots
-						//if checking a backwards compatible race we also need to check the race has a compatible wardrobe slot, 
-						//since while a race can be backwards compatible it does not *have* to have all the same wardrobeslots as the race it is compatible with
-						if (activeRace.name == "" || ((utr.compatibleRaces.Count == 0 || utr.compatibleRaces.Contains(activeRace.name)) || (activeRace.racedata.findBackwardsCompatibleWith(utr.compatibleRaces) && activeRace.racedata.wardrobeSlots.Contains(utr.wardrobeSlot))))
+                        //we can use the race data here to filter wardrobe slots
+                        //if checking a backwards compatible race we also need to check the race has a compatible wardrobe slot, 
+                        //since while a race can be backwards compatible it does not *have* to have all the same wardrobeslots as the race it is compatible with
+
+
+
+                        if (activeRace.name == "" || ((utr.compatibleRaces.Count == 0 || utr.compatibleRaces.Contains(activeRace.name)) || (activeRace.racedata.findBackwardsCompatibleWith(utr.compatibleRaces) && activeRace.racedata.wardrobeSlots.Contains(utr.wardrobeSlot))))
 						{
-							Recipes.Add(utr);
+                            UMAWardrobeRecipe umr = (utr as UMAWardrobeRecipe);
+
+                            if (umr != null && umr.HasReplaces)
+                            {
+                                ReplaceRecipes.Add(umr);
+                            }
+                            else
+                            {
+                                Recipes.Add(utr);
+                            }
+
 							if (utr.Hides.Count > 0)
 							{
 								foreach (string s in utr.Hides)
@@ -2205,7 +2219,7 @@ namespace UMACharacterSystem
 			}
 
 			// Load all the recipes
-			LoadCharacter(umaRecipe, Recipes.ToArray());
+			LoadCharacter(umaRecipe, ReplaceRecipes, Recipes.ToArray());
 
 			// Add saved DNA
 			if (RestoreDNA)
@@ -2235,7 +2249,7 @@ namespace UMACharacterSystem
 		/// </summary>
 		/// <param name="umaRecipe"></param>
 		/// <param name="umaAdditionalRecipes"></param>
-		void LoadCharacter(UMARecipeBase umaRecipe, params UMARecipeBase[] umaAdditionalSerializedRecipes)
+		void LoadCharacter(UMARecipeBase umaRecipe, List<UMAWardrobeRecipe> Replaces, params UMARecipeBase[] umaAdditionalSerializedRecipes)
 		{
 			if (umaRecipe == null)
 			{
@@ -2260,6 +2274,12 @@ namespace UMACharacterSystem
 			AddAdditionalSerializedRecipes(umaAdditionalSerializedRecipes);
 
 			RemoveHiddenSlots();
+            
+            foreach(UMAWardrobeRecipe umr in Replaces)
+            {
+                ReplaceSlot(umr);
+            }
+
 			UpdateColors();
 
 			//New event that allows for tweaking the resulting recipe before the character is actually generated
@@ -2339,7 +2359,36 @@ namespace UMACharacterSystem
 			}
 		}
 
-		void RemoveHiddenSlots()
+
+        void ReplaceSlot(UMAWardrobeRecipe Replacer)
+        {
+            for(int i=0;i<umaData.umaRecipe.slotDataList.Length;i++)
+            {
+                SlotData sd = umaData.umaRecipe.slotDataList[i];
+                if (sd == null)
+                    continue;
+                if (sd.slotName == Replacer.replaces)
+                {
+                    UMAPackedRecipeBase.UMAPackRecipe PackRecipe = Replacer.PackedLoad(context);
+                    UMAData.UMARecipe TempRecipe = UMATextRecipe.UnpackRecipeVersion2(PackRecipe, context);
+                    if (TempRecipe.slotDataList.Length > 0)
+                    {
+                        List<OverlayData> Overlays = sd.GetOverlayList();
+                        foreach(SlotData tsd in TempRecipe.slotDataList)
+                        {
+                            if (tsd != null)
+                            {
+                                tsd.SetOverlayList(Overlays);
+                                umaData.umaRecipe.slotDataList[i] = tsd;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        void RemoveHiddenSlots()
 		{
 			List<SlotData> NewSlots = new List<SlotData>();
 			foreach (SlotData sd in umaData.umaRecipe.slotDataList)

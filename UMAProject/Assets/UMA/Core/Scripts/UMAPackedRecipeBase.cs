@@ -625,7 +625,14 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
         return UnpackedDNA;
     }
 
-	public static void UnpackRecipeVersion2(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContext context)
+    public static UMAData.UMARecipe UnpackRecipeVersion2(UMAPackRecipe umaPackRecipe, UMAContext context)
+    {
+        UMAData.UMARecipe umaRecipe = new UMAData.UMARecipe();
+        UnpackRecipeVersion2(umaRecipe, umaPackRecipe, context);
+        return umaRecipe;
+    }
+
+    public static void UnpackRecipeVersion2(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContext context)
 	{
 		umaRecipe.slotDataList = new SlotData[umaPackRecipe.slotsV2.Length];
 		umaRecipe.SetRace(context.GetRace(umaPackRecipe.race));

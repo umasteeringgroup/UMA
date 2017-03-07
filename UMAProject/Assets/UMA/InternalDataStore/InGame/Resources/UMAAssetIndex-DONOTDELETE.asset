@@ -845,6 +845,10 @@ MonoBehaviour:
         nameHash: -919545095
         fullPath: Assets/UMA/Content/UMA/HumanFemale/Recipes/Wardrobe Recipes/HumanFemale/FemaleHair3.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/New UMAWardrobeRecipe-fileRef
+      - name: MaleLowPolyHead
+        nameHash: 966353494
+        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleLowPolyHead.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/MaleLowPolyHead-fileRef
     - type: UMA.DynamicUMADnaAsset
       typeIndex:
       - name: EyeSpacing
@@ -1095,3 +1099,4 @@ MonoBehaviour:
     - Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/CapsuleCollider/CapsuleColliderSlot.asset
     - Assets/UMA/Content/UMA/HumanMale/Slots/Plane_000/Plane_000_Slot.asset
     - Assets/UMA/Content/UMA/HumanFemale/Slots/UMA_fem_hair_1_005/UMA_fem_hair_1_005_Slot.asset
+    - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleLowPolyHead.asset

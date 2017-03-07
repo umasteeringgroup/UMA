@@ -11,19 +11,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83d33591a744673429e1681df5574ac0, type: 3}
   m_Name: Human Male
   m_EditorClassIdentifier: 
-  raceName: HumanMale
-  dnaConverterList:
-  - {fileID: 11400000, guid: 82b31de417945d14aa3ed485fe933c5d, type: 2}
-  - {fileID: 11400000, guid: 2a5c36ccd1f394ff3b7aac62b5d1e308, type: 2}
-  TPose: {fileID: 11400000, guid: 11004785bcad24f4b8c044781277380a, type: 2}
-  umaTarget: 0
-  genericRootMotionTransformName: 
-  expressionSet: {fileID: 11400000, guid: 3ed354ee89bd94ac895fe6e0e73bcf86, type: 2}
-  dnaRanges:
-  - {fileID: 11400000, guid: 71e836c192d6b46edbdd9cdd89da143e, type: 2}
-  raceHeight: 2
-  raceRadius: 0.25
-  raceMass: 50
   baseRaceRecipe: {fileID: 11400000, guid: aa8318164d3d68540a71451b136fd489, type: 2}
   wardrobeSlots:
   - None
@@ -47,6 +34,8 @@ MonoBehaviour:
   - Cape
   - Legs
   - Feet
+  - AlternateHead
+  - AlternateHands
   backwardsCompatibleWith: []
   raceThumbnails:
     fullThumb: {fileID: 21300000, guid: 388c87ca440d1fc4ba07c69318fdd99c, type: 3}
@@ -66,3 +55,16 @@ MonoBehaviour:
       thumb: {fileID: 21300000, guid: 213ebaef158497e479134d517b92d9cf, type: 3}
     - thumbIsFor: Face,Complexion
       thumb: {fileID: 21300000, guid: 9176b48a2857c364280b4f5b9d620852, type: 3}
+  raceName: HumanMale
+  dnaConverterList:
+  - {fileID: 11400000, guid: 82b31de417945d14aa3ed485fe933c5d, type: 2}
+  - {fileID: 11400000, guid: 2a5c36ccd1f394ff3b7aac62b5d1e308, type: 2}
+  TPose: {fileID: 11400000, guid: 11004785bcad24f4b8c044781277380a, type: 2}
+  umaTarget: 0
+  genericRootMotionTransformName: 
+  expressionSet: {fileID: 11400000, guid: 3ed354ee89bd94ac895fe6e0e73bcf86, type: 2}
+  dnaRanges:
+  - {fileID: 11400000, guid: 71e836c192d6b46edbdd9cdd89da143e, type: 2}
+  raceHeight: 2
+  raceRadius: 0.25
+  raceMass: 50
