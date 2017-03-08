@@ -14,17 +14,11 @@ namespace UMA
 
 	/// <summary>
 	/// Contains Refrences for all UMA Assets that you want to be included in the build and accessed by any Libraries in your project. Also includes a list of AssetBundle assets, BUT THESE ARE NOT INCLUDED IN YOUR BUILD.
-	/// The list is just here for 'simulation mode in the editor. But It could potentially in future be used to assign things to bundles (watch this space)
+	/// The list is just here for reference in the editor. But It could potentially in future be used to assign things to bundles (watch this space)
 	/// </summary>
-	//NOTES With this, there is no need for ahything to get the path, all this needs to serve up its the assets.
-	//so we have an equivalents  for Resources.Load that deliver the ref'd asset. We can do that because this asset ITSELF will be included in Resources
-	//and will cause any assets it refs to also be included in Resources whether they are or not. Its a really clever solution thumbs way, way up to joen for coming up with it!
 	public partial class UMAAssetIndex : ScriptableObject
 	{
 
-		//When Instance is first requested or if _instance is null Initialize
-		//Initialize Loads the stored UTA or creates a new one
-		//generates the FullIndex and if this index HAS a buildIndex validates it
 
 #if UNITY_EDITOR
 		//UMAAssetIndex creates this itself if Instance is null and no Index exists (or was deleted) in Resources
@@ -56,8 +50,8 @@ namespace UMA
 		//the index of all the possible assets you could have (excluding those in AssetBundles)
 		//Used to generate the list in the Editor where you assign/unassign assets to the serialized _buildIndex
 		private UMAAssetIndexData _fullIndex = new UMAAssetIndexData();
-		//This list is not serialized.
-		//BUT it would be nice if we could use this when we simulateAssetBundles in the editor (because it would be quicker)
+		//A non serialized index of assets in the project that are assigned to AssetBundles
+		//In future we could use this when we simulateAssetBundles in the editor (because it would be quicker)
 		private UMAAssetIndexData _assetBundleIndex = new UMAAssetIndexData();
 
 		//UMA Asset Modification Processor Lists
@@ -104,12 +98,12 @@ namespace UMA
 #if UNITY_EDITOR
 					if (_instance == null)
 					{
-						//Sometimes when the editor is compiling multiple versions of this get generated
+						//Sometimes when the editor is compiling and this is missing multiple versions of this get generated so dont do anything while that is happening
 						if (!EditorApplication.isCompiling && !EditorApplication.isUpdating)
 						{
 							CreateUMAAssetIndex();
 							_instance = (UMAAssetIndex)Resources.Load("UMAAssetIndex-DONOTDELETE");
-							_instance.GenerateLists();//does not allow duplicate assets
+							_instance.GenerateLists();
 						}
 					}
 					else
@@ -172,45 +166,15 @@ namespace UMA
 		/// </summary>
 		public UMAAssetIndexData AssetBundleIndex
 		{
-			//Possibly if this is empty in the editor (because we dont serialize it) we could load the last data from a file
-			//That way we could use this instead of searching AssetDatabase when we are Simulating AssetBundles in the Edior?
 			get { return _assetBundleIndex; }
 		}
 #endif
 
 		public UMAAssetIndex()
 		{
-			//Did have this commented out but not sure if its helping or not
-			//if (_instance == null)
-			//{
-			//	_instance = Instance;
-			//}
+			
 		}
 
-		public void OnEnable()
-		{
-			//if (_instance == null)
-			//{
-			//	_instance = Instance;
-			//}
-#if UNITY_EDITOR
-			/*if (!UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
-			{
-				if (_instance._buildIndex.Count() > 0 && !_instance.initialized)
-				{
-					_instance.ValidateBuildIndex();
-				}
-				else if(!_instance.initialized)
-				{
-					_instance.GenerateLists();
-				}
-				else
-				{
-					Debug.Log("UPDATED WAS TRUE SOMEHOW");
-				}
-			}*/
-#endif
-		}
 
 #if UNITY_EDITOR
 
@@ -231,6 +195,9 @@ namespace UMA
 			initialized = true;
 		}
 
+		/// <summary>
+		/// Generates the full Index when Unity is started and the UMAAssetIndex scriptable object exists. Validates its existing BuildIndex against the assets that are available in the project
+		/// </summary>
 		private void ValidateBuildIndex()
 		{
 			//we need the _fullIndex to compare against
@@ -314,16 +281,17 @@ namespace UMA
 				{
 					if (_buildIndex.RemovePath(pathsToRemove[i]))
 					{
-						Debug.Log("UMA Global Library Deleted " + pathsToRemove[i]);
+						Debug.Log("UMA Global Library removed index for " + pathsToRemove[i]);
 						changed = true;
 					}
 					else
 					{
-						Debug.Log("UMA Global Library failed to delete " + pathsToRemove[i]);
+						Debug.Log("UMA Global Library failed to removed index for " + pathsToRemove[i]);
 					}
 				}
 				pathsToRemove.Clear();
 			}
+			//Removes any entries that have 0 or -1 as their nameHash and or an empty filePath entry
 			if (hadInvalidEntries)
 			{
 				Debug.Log("UMA Global Library had some invalid entries. Removing...");
@@ -351,7 +319,6 @@ namespace UMA
 				return;
 			if (PathIsValid(createdAsset) && !AMPCreatedAssets.Contains(createdAsset))
 			{
-				//Debug.Log("OnCreateAsset created " + createdAsset);
 				AMPCreatedAssets.Add(createdAsset);
 			}
 			if (AMPCreatedAssets.Count > 0)
@@ -378,7 +345,6 @@ namespace UMA
 				{
 					if (PathIsValid(movedFromAssetPaths[i]) && !AMPMovedAssetsContains(movedFromAssetPaths[i], movedAssets[i]) && !AMPSavedAssets.Contains(movedAssets[i]))
 					{
-						//Debug.Log("OnPostprocessAllAssets MOVED ASSET " + movedAssets[i]);
 						AMPMovedAssets.Add(new AMPMovedAsset(movedFromAssetPaths[i], movedAssets[i]));
 						addedMovedAssets = true;
 					}
@@ -391,9 +357,9 @@ namespace UMA
 				}
 
 			}
-			//EDITED assets (internal values changes) are is ONLY sent as imported
-			//RENAMED assets are FIRST sent as moved and then send as imported
-			//DUPLICATED assets - how do we determine these?
+			//EDITED assets (internal values changes) are ONLY sent as imported
+			//RENAMED assets are FIRST sent as moved and then sent as imported
+			//DUPLICATED assets are snt as imported and have a corresponding 'deleted' asset for its __DELETED_GUID_Trash
 			bool addedCreatedAssets = false;
 			bool addedSavedAssets = false;
 			if (importedAssets.Length > 0)
@@ -409,33 +375,20 @@ namespace UMA
 						{
 							if (deletedAssets[i] != null)
 							{
-								//Debug.Log("OnPostprocessAllAssets CREATED ASSET " + importedAssets[i]);
 								AMPCreatedAssets.Add(importedAssets[i]);
 								addedCreatedAssets = true;
 							}
 							else
 							{
-								//Debug.Log("OnPostprocessAllAssets IMPORTED ASSET " + importedAssets[i]);
 								AMPSavedAssets.Add(importedAssets[i]);
 								addedSavedAssets = true;
 							}
 						}
 						else
 						{
-							//Debug.Log("OnPostprocessAllAssets IMPORTED ASSET " + importedAssets[i]);
 							AMPSavedAssets.Add(importedAssets[i]);
 							addedSavedAssets = true;
 						}
-						//Otherwise it was saved
-					}
-					else
-					{
-						/*if (!PathIsValid(importedAssets[i]))
-							Debug.Log("OnPostprocessAllAssets invalid imported asset path " + importedAssets[i]);
-						if (AMPCreatedAssets.Contains(importedAssets[i]))//it knows about these
-							Debug.Log("OnPostprocessAllAssets AMPCreatedAssets.Contains already had path " + importedAssets[i]);
-						if (AMPSavedAssets.Contains(importedAssets[i]))//but not these
-							Debug.Log("OnPostprocessAllAssets AMPSavedAssets.Contains already had path " + importedAssets[i]);*/
 					}
 				}
 				if (AMPCreatedAssets.Count > 0 && addedCreatedAssets)
@@ -449,17 +402,13 @@ namespace UMA
 					EditorApplication.update += DoSavedAssets;
 				}
 			}
-			//DUPLICATED assets also have an entry like 'Assets/__DELETED_GUID_Trash/919fa5a19165e484b838bc2732aabcb2' in the 'deletedAssets' array
 			bool addedDeletedAssets = false;
 			if (deletedAssets.Length > 0)
 			{
 				for (int i = 0; i < deletedAssets.Length; i++)
 				{
-					//when an asset is duplicated there is an entry like this:-
-					//Assets/__DELETED_GUID_Trash/919fa5a19165e484b838bc2732aabcb2
 					if (PathIsValid(deletedAssets[i]) && !AMPDeletedAssets.Contains(deletedAssets[i]))
 					{
-						//Debug.Log("OnPostprocessAllAssets DELETED ASSET " + deletedAssets[i]);
 						AMPDeletedAssets.Add(deletedAssets[i]);
 						addedDeletedAssets = true;
 					}
@@ -703,7 +652,6 @@ namespace UMA
 				return;
 			EditorApplication.update -= DoSavedAssets;
 
-			//Debug.Log("DoSavedAssets");
 			//assets were saved
 			foreach (string path in AMPSavedAssets)
 			{
@@ -796,8 +744,6 @@ namespace UMA
 				_buildIndex = new UMAAssetIndexData();
 			_assetBundleIndex = new UMAAssetIndexData();
 			GenerateLists();//also does save
-			//EditorUtility.SetDirty(this);
-			//AssetDatabase.SaveAssets();
 		}
 
 		/// <summary>
@@ -904,10 +850,6 @@ namespace UMA
 					}
 				}
 			}
-			//this needs to be done by the calling method
-			/*SortIndexes();
-			CheckAndUpdateWindow();
-			Resources.UnloadUnusedAssets();*/
 			return buildIndexModified;
 		}
 
@@ -944,10 +886,6 @@ namespace UMA
 					_assetBundleIndex.RemoveType(thisType);
 				}
 			}
-			//the calling method needs to do this
-			//SortIndexes();
-			//CheckAndUpdateWindow();
-			//Resources.UnloadUnusedAssets();
 			return buildIndexChanged;
 		}
 
@@ -1009,7 +947,6 @@ namespace UMA
 						_buildIndex.AddPath(thisAsset, thisAssetHash, thisAssetName, true);
 				}
 			}
-			//SortIndexes();
 			if (andUpdate)
 			{
 				CheckAndUpdateWindow();
@@ -1026,7 +963,6 @@ namespace UMA
 		public void MakeAssetNotLive(UMAAssetIndexData.IndexData fullIndexData, string assetType, bool andUpdate = true)
 		{
 			_buildIndex.RemovePath(fullIndexData.fullPath);
-			//SortIndexes();
 			if (andUpdate)
 			{
 				CheckAndUpdateWindow();
@@ -1089,8 +1025,6 @@ namespace UMA
 					}
 					if (typeToCompare == foundType)
 					{
-						//this seems to always say System.monotype == System.MonoType when the types match but it seems to work anyways. What gives?
-						//Debug.Log(typeToCompare.GetType().ToString() + " == " + foundType.GetType().ToString());
 						isTypeTracked = true;
 						break;
 					}
@@ -1106,10 +1040,6 @@ namespace UMA
 		{
 			for (int ti = 0; ti < _fullIndex.data.Length; ti++)
 				Array.Sort(_fullIndex.data[ti].typeIndex, CompareByFolderName);
-			/*for (int ti = 0; ti < _buildIndex.data.Length; ti++)
-				Array.Sort(_buildIndex.data[ti].typeIndex, CompareByFolderName);
-			for (int ti = 0; ti < _assetBundleIndex.data.Length; ti++)
-				Array.Sort(_assetBundleIndex.data[ti].typeIndex, CompareByFolderName);*/
 		}
 
 		/// <summary>
