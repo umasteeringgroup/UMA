@@ -116,14 +116,17 @@ namespace UMA
 					}
 #endif
 				}
+#if UNITY_EDITOR
 				else if (!_instance.initialized)
 				{
 					_instance.Initialize();
 				}
+#endif
 				return _instance;
 			}
 		}
 
+#if UNITY_EDITOR
 		private void Initialize()
 		{
 			if (initialized)
@@ -140,6 +143,7 @@ namespace UMA
 				}
 			}
 		}
+#endif
 
 		/// <summary>
 		/// The Build Index contains refrences to all the assets you have made live in the game using the UMAAssetIndex, 
