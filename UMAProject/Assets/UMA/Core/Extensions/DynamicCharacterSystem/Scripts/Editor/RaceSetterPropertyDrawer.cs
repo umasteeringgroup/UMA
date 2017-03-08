@@ -109,6 +109,7 @@ public class RaceSetterPropertyDrawer : PropertyDrawer
 			{
 				RaceValue.objectReferenceValue = foundRaces[newrIndex];
 				RaceName.stringValue = foundRaceNames[newrIndex];
+				property.serializedObject.ApplyModifiedProperties();
 			}
 		}
 
