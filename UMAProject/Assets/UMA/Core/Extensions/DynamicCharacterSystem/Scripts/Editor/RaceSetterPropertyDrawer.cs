@@ -109,7 +109,9 @@ public class RaceSetterPropertyDrawer : PropertyDrawer
 			{
 				RaceValue.objectReferenceValue = foundRaces[newrIndex];
 				RaceName.stringValue = foundRaceNames[newrIndex];
-				property.serializedObject.ApplyModifiedProperties();
+				//somehow if the app is playing this already works- and doing it here makes it not work
+				if (!EditorApplication.isPlaying)
+					property.serializedObject.ApplyModifiedProperties();
 			}
 		}
 
