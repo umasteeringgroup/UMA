@@ -12,7 +12,7 @@ public class DynamicRaceLibrary : RaceLibrary
 
 	//extra fields for Dynamic Version
 	public bool dynamicallyAddFromResources;
-	[Tooltip("Limit the Resources search to the following folders (no starting slash and seperate multiple entries with a comma)")]
+	[Tooltip("Limit the Global Library search to the following folders (no starting slash and seperate multiple entries with a comma)")]
 	public string resourcesFolderPath = "";
 	public bool dynamicallyAddFromAssetBundles;
 	[Tooltip("Limit the AssetBundles search to the following bundles (no starting slash and seperate multiple entries with a comma)")]

@@ -139,13 +139,13 @@ public class RaceAnimatorListPropertyDrawer : PropertyDrawer {
 			valR = new Rect (valR.xMin, valR.yMax + padding, valR.width, EditorGUIUtility.singleLineHeight);
 			var dynamicallyAddFromResources = property.FindPropertyRelative ("dynamicallyAddFromResources").boolValue;
 			EditorGUI.BeginChangeCheck();
-			dynamicallyAddFromResources = EditorGUI.ToggleLeft(valR,"Dynamically Add from Resources", dynamicallyAddFromResources);
+			dynamicallyAddFromResources = EditorGUI.ToggleLeft(valR,"Dynamically Add from Global Library", dynamicallyAddFromResources);
 			if(EditorGUI.EndChangeCheck()){
 				property.FindPropertyRelative ("dynamicallyAddFromResources").boolValue = dynamicallyAddFromResources;
 				property.serializedObject.ApplyModifiedProperties ();
 			}
 			valR = new Rect (valR.xMin, valR.yMax + padding, valR.width, EditorGUIUtility.singleLineHeight);
-			EditorGUI.PropertyField (valR,property.FindPropertyRelative ("resourcesFolderPath"));
+			EditorGUI.PropertyField (valR,property.FindPropertyRelative ("resourcesFolderPath"), new GUIContent("Global Library Folder Filter"));
 			valR = new Rect (valR.xMin, valR.yMax + padding, valR.width, EditorGUIUtility.singleLineHeight);
 			var dynamicallyAddFromAssetBundles = property.FindPropertyRelative ("dynamicallyAddFromAssetBundles").boolValue;
 			EditorGUI.BeginChangeCheck();
@@ -155,7 +155,7 @@ public class RaceAnimatorListPropertyDrawer : PropertyDrawer {
 				property.serializedObject.ApplyModifiedProperties ();
 			}
 			valR = new Rect (valR.xMin, valR.yMax + padding, valR.width, EditorGUIUtility.singleLineHeight);
-			EditorGUI.PropertyField (valR,property.FindPropertyRelative ("assetBundleNames"));
+			EditorGUI.PropertyField (valR,property.FindPropertyRelative ("assetBundleNames"), new GUIContent("AssetBundles to Search"));
 			EditorGUI.indentLevel--;
 		}
 		EditorGUI.EndProperty ();

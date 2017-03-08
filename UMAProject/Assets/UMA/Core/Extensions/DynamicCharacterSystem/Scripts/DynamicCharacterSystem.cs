@@ -24,10 +24,10 @@ namespace UMACharacterSystem
 		private bool isInitializing = false;
 
 		public bool dynamicallyAddFromResources;
-		[Tooltip("Limit the Resources search to the following folders (no starting slash and seperate multiple entries with a comma)")]
-		public string resourcesCharactersFolder = "CharacterRecipes";
-		[Tooltip("Limit the Resources search to the following folders (no starting slash and seperate multiple entries with a comma)")]
-		public string resourcesRecipesFolder = "Recipes";
+		[Tooltip("Limit the Global Library search to the following folders (no starting slash and seperate multiple entries with a comma)")]
+		public string resourcesCharactersFolder = "";
+		[Tooltip("Limit the Global Library search to the following folders (no starting slash and seperate multiple entries with a comma)")]
+		public string resourcesRecipesFolder = "";
 		public bool dynamicallyAddFromAssetBundles;
 		[Tooltip("Limit the AssetBundles search to the following bundles (no starting slash and seperate multiple entries with a comma)")]
 		public string assetBundlesForCharactersToSearch;

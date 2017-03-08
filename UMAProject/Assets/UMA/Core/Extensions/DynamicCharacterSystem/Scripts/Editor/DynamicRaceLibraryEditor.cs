@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEditor;
 
 [CustomEditor(typeof(DynamicRaceLibrary))]
@@ -22,10 +22,10 @@ public class DynamicRaceLibraryEditor : Editor
         serializedObject.ApplyModifiedProperties();
         SerializedProperty dynamicallyAddFromResources = serializedObject.FindProperty("dynamicallyAddFromResources");
         SerializedProperty dynamicallyAddFromAssetBundles = serializedObject.FindProperty("dynamicallyAddFromAssetBundles");
-        dynamicallyAddFromResources.boolValue = EditorGUILayout.ToggleLeft("Dynamically Add From Resources", dynamicallyAddFromResources.boolValue);
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("resourcesFolderPath"));
-        dynamicallyAddFromAssetBundles.boolValue = EditorGUILayout.ToggleLeft("Dynamically Add From Asset Bundles", dynamicallyAddFromAssetBundles.boolValue);
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("assetBundleNamesToSearch"));
+        dynamicallyAddFromResources.boolValue = EditorGUILayout.ToggleLeft(new GUIContent(" Dynamically add from Global Library", "If true this library will dynamically add any assets you have checked on in the UMA Global Library or which you have put in a Resources folder"), dynamicallyAddFromResources.boolValue);
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("resourcesFolderPath"), new GUIContent("Global Library Folder Filter", "Limit the Global Library search to the following folders (no starting slash and seperate multiple entries with a comma)"));
+        dynamicallyAddFromAssetBundles.boolValue = EditorGUILayout.ToggleLeft(" Dynamically Add From Asset Bundles", dynamicallyAddFromAssetBundles.boolValue);
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("assetBundleNamesToSearch"), new GUIContent("AssetBundles to Search"));
         serializedObject.ApplyModifiedProperties();
         if (Application.isPlaying && dynamicallyAddFromAssetBundles.boolValue)
         {
