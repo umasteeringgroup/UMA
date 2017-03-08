@@ -208,12 +208,134 @@ namespace UMA
 
 #if UNITY_EDITOR
 
+		#region INITIALIZATION AND VALIDATION
+		/// <summary>
+		/// Generates the initial lists when an UMAAssetIndex scriptableObject is created for the first time
+		/// </summary>
 		private void GenerateLists()
 		{
-			Debug.Log("GENERATE LISTS");
-			GetAllAvailableUMAAssets();//does not allow duplicate assets
+			if (AddTypesToIndex(typesToIndex))
+			{
+				EditorUtility.SetDirty(this);
+				AssetDatabase.SaveAssets();
+			}
+			SortIndexes();
+			CheckAndUpdateWindow();
+			Resources.UnloadUnusedAssets();
 			initialized = true;
 		}
+
+		private void ValidateBuildIndex()
+		{
+			//we need the _fullIndex to compare against
+			var changed = AddTypesToIndex(typesToIndex);
+
+			if (_buildIndex.Count() == 0)
+				return;
+
+			var pathsToRemove = new List<string>();
+			bool hadInvalidEntries = false;
+			//we need to know if any anything has changed since the index was last open in Unity
+			for (int ti = 0; ti < _buildIndex.data.Length; ti++)
+			{
+				for (int i = 0; i < _buildIndex.data[ti].typeIndex.Length; i++)
+				{
+					//if any indexes have 0 or -1 as their hash or an empty fullPath flag for UMAAssetIndexData to scan and remove them
+					if ((_buildIndex.data[ti].typeIndex[i].nameHash == 0 || _buildIndex.data[ti].typeIndex[i].nameHash == -1) || String.IsNullOrEmpty(_buildIndex.data[ti].typeIndex[i].fullPath))
+					{
+						hadInvalidEntries = true;
+						continue;
+					}
+					//if this item fullpath is not in _fullIndex
+					if (!_fullIndex.Contains(_buildIndex.data[ti].typeIndex[i].fullPath))
+					{
+						//then the asset has been moved outside of Unity
+						//does it still exist?
+						var fullIndexItem = _fullIndex.GetEntryFromNameHash(_buildIndex.data[ti].typeIndex[i].nameHash);
+						//if not remove it from the buildIndex and delete the reference asset if there was one
+						if (fullIndexItem == null)
+						{
+							pathsToRemove.Add(_buildIndex.data[ti].typeIndex[i].fullPath);
+						}
+						else
+						{
+							//if it was in Resources we need to know if it still is
+							if (InResources(_buildIndex.data[ti].typeIndex[i].fullPath))
+							{
+								//the asset still exists but in a different place
+								//if the asset is still in Resources we need to update the full path
+								if (InResources(fullIndexItem.fullPath))
+									_buildIndex.data[ti].typeIndex[i].fullPath = fullIndexItem.fullPath;
+								else
+									//the asset is no longer in resources so we need to remove it from the index
+									pathsToRemove.Add(_buildIndex.data[ti].typeIndex[i].fullPath);
+							}
+							else
+							{
+								//if it wasn't in Resources it will only be here because it was manually made live
+								//in that case if it is still NOT in Resources we dont need to do anything (update the path)
+								if (!InResources(fullIndexItem.fullPath))
+								{
+									_buildIndex.data[ti].typeIndex[i].fullPath = fullIndexItem.fullPath;
+								}
+								else
+								{
+									//it is now in Resources so we no longer need the 'little asset' and need to update the path
+									if (!String.IsNullOrEmpty(_buildIndex.data[ti].typeIndex[i].fileRefPath))
+										_buildIndex.data[ti].typeIndex[i].TheFileReference = null;
+									_buildIndex.data[ti].typeIndex[i].fullPath = fullIndexItem.fullPath;
+								}
+							}
+						}
+					}
+					//Lastly remove any 'live assets' had their refrence objects deleted
+					if (!String.IsNullOrEmpty(_buildIndex.data[ti].typeIndex[i].fileRefPath))
+					{
+						var thisFileRef = _buildIndex.data[ti].typeIndex[i].TheFileReference;//getting the file ref also makes it null if it no longer exists
+						if (thisFileRef == null)
+						{
+							if (!pathsToRemove.Contains(_buildIndex.data[ti].typeIndex[i].fullPath))
+								pathsToRemove.Add(_buildIndex.data[ti].typeIndex[i].fullPath);
+						}
+					}
+				}
+			}
+			//loop over any removed paths and remove them
+			if (pathsToRemove.Count > 0)
+			{
+				Debug.Log("UMA Global Library had " + pathsToRemove.Count + " entries for assets that no longer exist. Removing...");
+				for (int i = 0; i < pathsToRemove.Count; i++)
+				{
+					if (_buildIndex.RemovePath(pathsToRemove[i]))
+					{
+						Debug.Log("UMA Global Library Deleted " + pathsToRemove[i]);
+						changed = true;
+					}
+					else
+					{
+						Debug.Log("UMA Global Library failed to delete " + pathsToRemove[i]);
+					}
+				}
+				pathsToRemove.Clear();
+			}
+			if (hadInvalidEntries)
+			{
+				Debug.Log("UMA Global Library had some invalid entries. Removing...");
+				_buildIndex.RemoveInvalidEntries();
+				Debug.Log("Removed :)");
+			}
+			SortIndexes();
+			CheckAndUpdateWindow();
+			if (changed)
+			{
+				EditorUtility.SetDirty(this);
+				AssetDatabase.SaveAssets();
+			}
+			Resources.UnloadUnusedAssets();
+			initialized = true;
+		}
+
+		#endregion
 
 		#region ASSET MODIFICATION PROCESSOR CALLBACKS
 
@@ -484,16 +606,6 @@ namespace UMA
 			}
 		}
 
-		private void CleanUnusedAssets()
-		{
-			EditorApplication.delayCall -= CleanUnusedAssets;
-			//Debug.Log("CleanUnusedAssets");
-			//AssetDatabase.Refresh();//apparently this also calls the following
-			//Resources.UnloadUnusedAssets();
-			//we seem to actually need to use this
-			EditorUtility.UnloadUnusedAssetsImmediate(true);
-		}
-
 		/// <summary>
 		/// Processers the AMPDeletedAssets after AssetModificationProcessor has finished moving assets 
 		/// </summary>
@@ -653,6 +765,16 @@ namespace UMA
 			EditorApplication.delayCall -= CleanUnusedAssets;
 			EditorApplication.delayCall += CleanUnusedAssets;
 		}
+
+		private void CleanUnusedAssets()
+		{
+			EditorApplication.delayCall -= CleanUnusedAssets;
+			//Debug.Log("CleanUnusedAssets");
+			//AssetDatabase.Refresh();//apparently this also calls the following
+			//Resources.UnloadUnusedAssets();
+			//we seem to actually need to use this
+			EditorUtility.UnloadUnusedAssetsImmediate(true);
+		}
 		#endregion
 
 		#region ADD/REMOVE ASSETS FROM INDEXES METHODS
@@ -667,17 +789,9 @@ namespace UMA
 			if (clearBuildIndex)
 				_buildIndex = new UMAAssetIndexData();
 			_assetBundleIndex = new UMAAssetIndexData();
-			GenerateLists();//does not allow duplicate assets
-			EditorUtility.SetDirty(this);
-			AssetDatabase.SaveAssets();
-		}
-
-		/// <summary>
-		/// Called onEnable to generate the initial Lists
-		/// </summary>
-		private void GetAllAvailableUMAAssets()
-		{
-			AddTypesToIndex(typesToIndex, false);//problem is we still need duplicate assets to show when we close Unity and open it again
+			GenerateLists();//also does save
+			//EditorUtility.SetDirty(this);
+			//AssetDatabase.SaveAssets();
 		}
 
 		/// <summary>
@@ -685,10 +799,12 @@ namespace UMA
 		/// Finds the assets for newly added types removes the assets for any types that are no longer tracked
 		/// </summary>
 		/// <param name="newTypesToIndex"></param>
-		public void UpdateIndexedTypes(List<string> newTypesToIndex)
+		/// <param name="doUpdate">If true saves the index when the operation is complete</param>
+		public void UpdateIndexedTypes(List<string> newTypesToIndex, bool doUpdate = true)
 		{
 			List<string> typesToAdd = new List<string>();
 			List<string> typesToRemove = new List<string>();
+			bool buildIndexModified = false;
 			//add types that are not there
 			for (int i = 0; i < newTypesToIndex.Count; i++)
 			{
@@ -703,19 +819,35 @@ namespace UMA
 			}
 			if (typesToAdd.Count > 0)
 			{
-				AddTypesToIndex(typesToAdd);
-			}
+				if (AddTypesToIndex(typesToAdd))
+                    buildIndexModified = true;
+            }
 			if (typesToRemove.Count > 0)
 			{
-				RemoveTypesFromIndex(typesToRemove);
+				if(RemoveTypesFromIndex(typesToRemove))
+					buildIndexModified = true;
 			}
 			typesToIndex = new List<string>(newTypesToIndex);
+			if (buildIndexModified && doUpdate)
+			{
+				EditorUtility.SetDirty(this);
+				AssetDatabase.SaveAssets();
+				SortIndexes();
+				//update the window
+				CheckAndUpdateWindow();
+				Resources.UnloadUnusedAssets();
+			}
 		}
 		/// <summary>
 		/// Adds assets for the given types to the indexes
 		/// </summary>
-		public void AddTypesToIndex(List<string> typesToAdd, bool compareFullPaths = true)
+		/// <param name="typesToAdd">a list of types to add to the index</param>
+		/// <param name="compareFullPaths">If true, the path of an asset will also be taken into consideration when the index decides if a given asset is already indexed. 
+		/// Setting this to FALSE prevents duplicate assets from being added BUT usually you DO want them added so the user can see them and fix them</param>
+		/// <returns>true if anything was added to the BuildIndex. false otherwise</returns>
+		private bool AddTypesToIndex(List<string> typesToAdd, bool compareFullPaths = true)
 		{
+			bool buildIndexModified = false;
 			for (int i = 0; i < typesToAdd.Count; i++)
 			{
 				//with this search when it is t:UMATextRecipe it DOES load Child classes too
@@ -724,6 +856,13 @@ namespace UMA
 				{
 					UnityEngine.Object thisAsset = null;
 					var thisPath = AssetDatabase.GUIDToAssetPath(typeGUIDs[tid]);
+					//TextAsset gets scripts and Shaders too we dont want that
+					if(typesToAdd[i] == "TextAsset")
+					{
+						var extension = Path.GetExtension(thisPath);
+						if (extension == ".meta" || extension == ".cs" || extension == "" || extension == ".js" || extension == ".shader" || thisPath.IndexOf(".cs.txt") > -1)
+							continue;
+					}
 					thisAsset = AssetDatabase.LoadAssetAtPath(thisPath, Type.GetType(typesToAdd[i], false, true));
 					//if we didn't get anything its probably because Type.GetType didn't return anything because it wants the assembly qualified name
 					if (thisAsset == null)
@@ -751,23 +890,28 @@ namespace UMA
 							//Automatically add anything in a Resources folder because it will already be included in the game
 							if (InResources(thisPath))
 							{
-								//Dont add refrences to assets in Resources
-								_buildIndex.AddPath(thisAsset, thisAssetHash, thisAssetName, false, compareFullPaths);
+								//Index assets in resources but without adding a refrence to the asset
+								if(_buildIndex.AddPath(thisAsset, thisAssetHash, thisAssetName, false, compareFullPaths))
+									buildIndexModified = true;
 							}
 						}
 					}
 				}
 			}
-			SortIndexes();
+			//this needs to be done by the calling method
+			/*SortIndexes();
 			CheckAndUpdateWindow();
-			Resources.UnloadUnusedAssets();
+			Resources.UnloadUnusedAssets();*/
+			return buildIndexModified;
 		}
 
 		/// <summary>
 		/// Removes Assets of the given types from the indexes
 		/// </summary>
-		public void RemoveTypesFromIndex(List<string> typesToRemove)
+		/// <returns>true if anything was removed from the BuildIndex. false otherwise</returns>
+		private bool RemoveTypesFromIndex(List<string> typesToRemove)
 		{
+			bool buildIndexChanged = false;
 			for (int i = 0; i < typesToRemove.Count; i++)
 			{
 				Type thisType = Type.GetType(typesToRemove[i]);
@@ -787,15 +931,18 @@ namespace UMA
 				if (_buildIndex.ContainsType(thisType.ToString()))
 				{
 					_buildIndex.RemoveType(thisType);
-				}
+					buildIndexChanged = true;
+                }
 				if (_assetBundleIndex.ContainsType(thisType.ToString()))
 				{
 					_assetBundleIndex.RemoveType(thisType);
 				}
 			}
-			SortIndexes();
-			CheckAndUpdateWindow();
-			Resources.UnloadUnusedAssets();
+			//the calling method needs to do this
+			//SortIndexes();
+			//CheckAndUpdateWindow();
+			//Resources.UnloadUnusedAssets();
+			return buildIndexChanged;
 		}
 
 		public void ToggleFolderAssets(string path, string assetType, bool live)
@@ -880,157 +1027,6 @@ namespace UMA
 				EditorApplication.delayCall -= CleanUnusedAssets;
 				EditorApplication.delayCall += CleanUnusedAssets;
 			}
-		}
-
-		public void GenerateFullIndex(List<string> typesToAdd)
-		{
-			for (int i = 0; i < typesToAdd.Count; i++)
-			{
-				//with this search when it is t:UMATextRecipe it DOES load Child classes too
-				var typeGUIDs = AssetDatabase.FindAssets("t:" + typesToAdd[i]);
-				for (int tid = 0; tid < typeGUIDs.Length; tid++)
-				{
-					UnityEngine.Object thisAsset = null;
-					var thisPath = AssetDatabase.GUIDToAssetPath(typeGUIDs[tid]);
-					thisAsset = AssetDatabase.LoadAssetAtPath(thisPath, Type.GetType(typesToAdd[i], false, true));
-					//if we didn't get anything its probably because Type.GetType didn't return anything because it wants the assembly qualified name
-					if (thisAsset == null)
-					{
-						var typeToFind = GetTypeByName(typesToAdd[i]);
-						if (typeToFind != null)
-							thisAsset = AssetDatabase.LoadAssetAtPath(thisPath, typeToFind);
-						else
-							Debug.LogWarning("[UMAAssetIndex] Could not determine the System Type for the given type name " + typesToIndex[i]);
-					}
-					if (thisAsset)
-					{
-						int thisAssetHash = -1;
-						string thisAssetName = "";
-						GetAssetHashAndNames(thisAsset, ref thisAssetHash, ref thisAssetName);
-						if ((thisAssetHash == 0 || thisAssetHash == -1) || thisAssetName == "")
-						{
-							Debug.LogWarning(thisAsset.name + " had an assetHash of " + thisAssetHash + " and assetName of " + thisAssetName);
-							continue;
-						}
-						if (InAssetBundle(thisPath, thisAsset.name))
-						{
-							_assetBundleIndex.AddPath(thisAsset, thisAssetHash, thisAssetName);
-						}
-						else
-						{
-							_fullIndex.AddPath(thisAsset, thisAssetHash, thisAssetName);
-						}
-					}
-				}
-			}
-		}
-		private void ValidateBuildIndex()
-		{
-			//we need the _fullIndex to compare against
-			GenerateFullIndex(typesToIndex);
-
-			if (_buildIndex.Count() == 0)
-				return;
-
-			var changed = false;
-			var pathsToRemove = new List<string>();
-			bool hadInvalidEntries = false;
-			//we need to know if any anything has changed since the index was last open in Unity
-			for (int ti = 0; ti < _buildIndex.data.Length; ti++)
-			{
-				for (int i = 0; i < _buildIndex.data[ti].typeIndex.Length; i++)
-				{
-					//if any indexes have 0 or -1 as their hash or an empty fullPath flag for UMAAssetIndexData to scan and remove them
-					if ((_buildIndex.data[ti].typeIndex[i].nameHash == 0 || _buildIndex.data[ti].typeIndex[i].nameHash == -1) || String.IsNullOrEmpty(_buildIndex.data[ti].typeIndex[i].fullPath))
-					{
-						hadInvalidEntries = true;
-						continue;
-					}
-					//if this item fullpath is not in _fullIndex
-					if (!_fullIndex.Contains(_buildIndex.data[ti].typeIndex[i].fullPath))
-					{
-						//then the asset has been moved outside of Unity
-						//does it still exist?
-						var fullIndexItem = _fullIndex.GetEntryFromNameHash(_buildIndex.data[ti].typeIndex[i].nameHash);
-						//if not remove it from the buildIndex and delete the reference asset if there was one
-						if (fullIndexItem == null)
-						{
-							pathsToRemove.Add(_buildIndex.data[ti].typeIndex[i].fullPath);
-						}
-						else
-						{
-							//if it was in Resources we need to know if it still is
-							if (InResources(_buildIndex.data[ti].typeIndex[i].fullPath))
-							{
-								//the asset still exists but in a different place
-								//if the asset is still in Resources we need to update the full path
-								if (InResources(fullIndexItem.fullPath))
-									_buildIndex.data[ti].typeIndex[i].fullPath = fullIndexItem.fullPath;
-								else
-									//the asset is no longer in resources so we need to remove it from the index
-									pathsToRemove.Add(_buildIndex.data[ti].typeIndex[i].fullPath);
-							}
-							else
-							{
-								//if it wasn't in Resources it will only be here because it was manually made live
-								//in that case if it is still NOT in Resources we dont need to do anything (update the path)
-								if (!InResources(fullIndexItem.fullPath))
-								{
-									_buildIndex.data[ti].typeIndex[i].fullPath = fullIndexItem.fullPath;
-								}
-								else
-								{
-									//it is now in Resources so we no longer need the 'little asset' and need to update the path
-									if (!String.IsNullOrEmpty(_buildIndex.data[ti].typeIndex[i].fileRefPath))
-										_buildIndex.data[ti].typeIndex[i].TheFileReference = null;
-									_buildIndex.data[ti].typeIndex[i].fullPath = fullIndexItem.fullPath;
-								}
-							}
-						}
-					}
-					//Lastly remove any 'live assets' had their refrence objects deleted
-					if (!String.IsNullOrEmpty(_buildIndex.data[ti].typeIndex[i].fileRefPath))
-					{
-						var thisFileRef = _buildIndex.data[ti].typeIndex[i].TheFileReference;//getting the file ref also makes it null if it no longer exists
-						if (thisFileRef == null)
-						{
-							if (!pathsToRemove.Contains(_buildIndex.data[ti].typeIndex[i].fullPath))
-								pathsToRemove.Add(_buildIndex.data[ti].typeIndex[i].fullPath);
-						}
-					}
-				}
-			}
-			//loop over any removed paths and remove them
-			if (pathsToRemove.Count > 0)
-			{
-				Debug.Log("UMA Global Library had " + pathsToRemove.Count + " entries for assets that no longer exist. Removing...");
-				for (int i = 0; i < pathsToRemove.Count; i++)
-				{
-					if (_buildIndex.RemovePath(pathsToRemove[i]))
-					{
-						Debug.Log("UMA Global Library Deleted " + pathsToRemove[i]);
-						changed = true;
-					}
-					else
-					{
-						Debug.Log("UMA Global Library failed to delete " + pathsToRemove[i]);
-					}
-				}
-				pathsToRemove.Clear();
-			}
-			if (hadInvalidEntries)
-			{
-				Debug.Log("UMA Global Library had some invalid entries. Removing...");
-				_buildIndex.RemoveInvalidEntries();
-				Debug.Log("Removed :)");
-			}
-			if (changed)
-			{
-				SortIndexes();
-				EditorUtility.SetDirty(this);
-				AssetDatabase.SaveAssets();
-			}
-			initialized = true;
 		}
 
 		#endregion

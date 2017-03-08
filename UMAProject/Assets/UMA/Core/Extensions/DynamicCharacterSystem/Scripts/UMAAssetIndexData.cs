@@ -115,9 +115,9 @@ namespace UMA
 		/// </summary>
 		/// <param name="obj"></param>
 		/// <param name="objName"></param>
-		public void AddPath(UnityEngine.Object obj, string objName)
+		public bool AddPath(UnityEngine.Object obj, string objName)
 		{
-			AddPath(obj, UMAUtils.StringToHash(objName), objName);
+			return AddPath(obj, UMAUtils.StringToHash(objName), objName);
 		}
 		/// <summary>
 		/// Adds an Asset to the index. If addObject is true a refrence to the object to index is also added
@@ -127,11 +127,12 @@ namespace UMA
 		/// <param name="objName">The name of the asset. If this is a SlotDataAsset/OverlayDataAsset/RaceData asset this should be the slotName/overlayName/raceName. If no name is given the asset name is used.</param>
 		/// <param name="addObject">If true a reference to the object is added to the created indexItem. This will mean the asset gets included in the build.</param>
 		/// <param name="compareFullPaths">If true the full path for the asset will be taken into account aswell. i.e. if an asset with the same slot/overlay/race name exists this asset will still be added even though its a duplicate asset</param>
-		public void AddPath(UnityEngine.Object obj, int objNameHash, string objName = "", bool addObject = false, bool compareFullPaths = true)
+		public bool AddPath(UnityEngine.Object obj, int objNameHash, string objName = "", bool addObject = false, bool compareFullPaths = true)
 		{
+			bool pathAdded = false;
 			if (obj == null)
 			{
-				return;
+				return pathAdded;
 			}
 			var objFullPath = AssetDatabase.GetAssetPath(obj);
 
@@ -148,6 +149,7 @@ namespace UMA
 				{
 					if (data[i].Add(objNameHash, objFullPath, objName, addObject ? obj : null, compareFullPaths))
 					{
+						pathAdded = true;
 						if (!_currentPaths.Contains(objFullPath))
 						{
 							_currentPaths.Add(objFullPath);
@@ -165,8 +167,10 @@ namespace UMA
 				{
 					_currentPaths.Add(objFullPath);
 				}
+				pathAdded = true;
 				data = list;
 			}
+			return pathAdded;
 		}
 		/// <summary>
 		/// Removes any entries in the index that have 0 or -1 as their hash or a null or empty string as their fullPath
@@ -241,9 +245,9 @@ namespace UMA
 				{
 					for (int ti = 0; ti < data[i].typeIndex.Length; ti++)
 					{
-						data[i].Remove(data[i].typeIndex[ti].fullPath);
 						if (_currentPaths.Contains(data[i].typeIndex[ti].fullPath))
 							_currentPaths.Remove(data[i].typeIndex[ti].fullPath);
+						data[i].Remove(data[i].typeIndex[ti].fullPath);
 					}
 					RemoveTypeFromIndex(type);
 				}
@@ -522,13 +526,20 @@ namespace UMA
 			/// <param name="fullPath"></param>
 			/// <param name="objName"></param>
 			/// <param name="obj"></param>
+			/// <param name="compareFullPaths">if compareFullPaths is true any existsing indexed item is only considered to be the same 
+			/// as the one being requested to add if its nameHash AND its fullpath are the same</param>
 			/// <returns>True if asset was added or false if it already existed in the index</returns>
 			public bool Add(int nameHash, string fullPath, string objName = "", UnityEngine.Object obj = null, bool compareFullPaths = true)
 			{
 				bool found = false;
 				for (int i = 0; i < typeIndex.Length; i++)
 				{
-					//we want these to get added if the full path is different (so we display duplicated assets) 
+					//if the given namehash == this items name hash then dont add a new entry just update its fileRefrence to the obj (which can also be null)
+					//if compareFullPaths is true the indexed item is only considered to be the same if its nameHash AND its fullpath are the same
+					//the result if compareFullPaths is true, is, if the fullPaths are NOT the same 
+					//the existing index item is NOT considered to be the same as the requested one to be added
+					//and so a DUPLICATE asset with the same hash but a different path is added 
+					//- this wont get loaded but is used by the UI to show the user they have a duplicate asset
 					if (typeIndex[i].nameHash == nameHash && (compareFullPaths ? typeIndex[i].fullPath == fullPath : true))
 					{
 						typeIndex[i].TheFileReference = obj;

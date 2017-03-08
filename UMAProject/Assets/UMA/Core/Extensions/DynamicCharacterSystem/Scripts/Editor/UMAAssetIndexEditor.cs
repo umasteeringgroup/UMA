@@ -187,7 +187,7 @@ namespace UMAEditor
 				typesToIndexList.DoLayoutList();
 				if(GUILayout.Button("Update Indexed Types"))
 				{
-                    UAI.UpdateIndexedTypes(newTypesToIndex);
+                    UAI.UpdateIndexedTypes(newTypesToIndex, false);
 					serializedObject.Update();
 					UpdateCurrentTypesToIndex();
 					InitTypesToIndexList();
