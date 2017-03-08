@@ -74,7 +74,7 @@ namespace UMACharacterSystem
 		public bool hide = false;
 
 		[Tooltip("If true, then the meshcombiner will merge blendshapes found on slots that are part of this umaData")]
-		public bool loadBlendShapes = true;
+		public bool loadBlendShapes = false;
 
 		//This will generate itself from a list available Races and set itself to the current value of activeRace.name
 		[Tooltip("Selects the race to used. When initialized, the Avatar will use the base recipe from the RaceData selected.")]
@@ -150,7 +150,7 @@ namespace UMACharacterSystem
 		//Is building the character enabled? Disable this to make multiple changes to the avatar that will be built
 		//without creating multiple build calls. when you are finished set it to true and the character will build
 		[SerializeField]
-		[Tooltip("Is building the character enabled? While this is False you can make multiple changes to the avatar that are not actually rendered/generated until you set this to True.")]
+		[Tooltip("Builds the character on recipe load or race changed. If you want to load multiple recipes into a character you can disable this and enable it when you are done. By default this should be true.")]
 		private bool _buildCharacterEnabled = true;
 		//everytime an avatar changes race a cache state can (optionally) be created so that when the user 
 		//switches between races they do not loose their previous changes to the avatar when it was set to be that race

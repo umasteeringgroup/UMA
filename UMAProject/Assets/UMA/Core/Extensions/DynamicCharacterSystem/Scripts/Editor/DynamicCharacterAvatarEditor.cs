@@ -90,29 +90,8 @@ public partial class DynamicCharacterAvatarEditor : Editor
 
 		EditorGUI.BeginChangeCheck();
         showHelp = EditorGUILayout.Toggle("Show Help", showHelp);
-		EditorGUILayout.PropertyField(serializedObject.FindProperty("hide"));
-		EditorGUILayout.PropertyField(serializedObject.FindProperty("loadBlendShapes"));
 		if (EditorGUI.EndChangeCheck())
 		{
-			serializedObject.ApplyModifiedProperties();
-		}
-        if (showHelp)
-        {
-            EditorGUILayout.HelpBox("Hide: This disables the display of the Avatar without disabling the GameObject.", MessageType.Info);
-        }
-        //for _buildCharacterEnabled we want to set the value using the DCS BuildCharacterEnabled property because this actually triggers BuildCharacter
-        var buildCharacterEnabled = serializedObject.FindProperty("_buildCharacterEnabled");
-		var buildCharacterEnabledValue = buildCharacterEnabled.boolValue;
-		EditorGUI.BeginChangeCheck();
-		var buildCharacterEnabledNewValue = EditorGUILayout.Toggle(new GUIContent(buildCharacterEnabled.displayName, buildCharacterEnabled.tooltip), buildCharacterEnabledValue);
-        if (showHelp)
-        {
-            EditorGUILayout.HelpBox("Build Character Enabled: Builds the character on load or race changed. By default this should be true.", MessageType.Info);
-        }
-        if (EditorGUI.EndChangeCheck())
-		{
-			if (buildCharacterEnabledNewValue != buildCharacterEnabledValue)
-				thisDCA.BuildCharacterEnabled = buildCharacterEnabledNewValue;
 			serializedObject.ApplyModifiedProperties();
 		}
 		SerializedProperty thisRaceSetter = serializedObject.FindProperty("activeRace");
@@ -356,6 +335,32 @@ public partial class DynamicCharacterAvatarEditor : Editor
 		context.isExpanded = EditorGUILayout.Foldout(context.isExpanded, "Advanced Options");
 		if (context.isExpanded)
 		{
+			EditorGUI.BeginChangeCheck();
+			EditorGUILayout.PropertyField(serializedObject.FindProperty("hide"));
+			if (EditorGUI.EndChangeCheck())
+			{
+				serializedObject.ApplyModifiedProperties();
+			}
+			if (showHelp)
+			{
+				EditorGUILayout.HelpBox("Hide: This disables the display of the Avatar without preventing it from being generated. If you want to prevent the character from being generated at all disable the DynamicCharacterAvatar component itself.", MessageType.Info);
+			}
+			//for _buildCharacterEnabled we want to set the value using the DCS BuildCharacterEnabled property because this actually triggers BuildCharacter
+			var buildCharacterEnabled = serializedObject.FindProperty("_buildCharacterEnabled");
+			var buildCharacterEnabledValue = buildCharacterEnabled.boolValue;
+			EditorGUI.BeginChangeCheck();
+			var buildCharacterEnabledNewValue = EditorGUILayout.Toggle(new GUIContent(buildCharacterEnabled.displayName, "Builds the character on recipe load or race changed. If you want to load multiple recipes into a character you can disable this and enable it when you are done. By default this should be true."), buildCharacterEnabledValue);
+			if (EditorGUI.EndChangeCheck())
+			{
+				if (buildCharacterEnabledNewValue != buildCharacterEnabledValue)
+					thisDCA.BuildCharacterEnabled = buildCharacterEnabledNewValue;
+				serializedObject.ApplyModifiedProperties();
+			}
+			if (showHelp)
+			{
+				EditorGUILayout.HelpBox("Build Character Enabled: Builds the character on recipe load or race changed. If you want to load multiple recipes into a character you can disable this and enable it when you are done. By default this should be true.", MessageType.Info);
+			}
+			EditorGUILayout.PropertyField(serializedObject.FindProperty("loadBlendShapes"), new GUIContent("Load BlendShapes (experimental)"));
 			EditorGUILayout.PropertyField(context);
 			EditorGUILayout.PropertyField(umaData);
 			EditorGUILayout.PropertyField(umaGenerator);

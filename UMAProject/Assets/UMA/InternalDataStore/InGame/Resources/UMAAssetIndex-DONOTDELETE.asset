@@ -296,10 +296,6 @@ MonoBehaviour:
         nameHash: 357768886
         fullPath: Assets/UMA/Content/UMA/HumanFemale/Slots/Body/MidPoly/UMA_Human_Female_Hands_Mid_Slot.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/UMA_Human_Female_Hands_HQ_Slot-fileRef
-      - name: 
-        nameHash: 0
-        fullPath: 
-        fileRefPath: 
       - name: UMA_Human_Male_Hands_HQ
         nameHash: 1817972240
         fullPath: Assets/UMA/Content/UMA/HumanMale/Slots/Body/MidPoly/UMA_Human_Male_Hands_Mid_Slot.asset
