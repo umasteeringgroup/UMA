@@ -40,8 +40,10 @@ namespace UMA
 #endif
 		static UMAAssetIndex _instance;
 
+#if UNITY_EDITOR
 		[System.NonSerialized]
 		bool initialized = false;
+#endif
 
 		[Tooltip("Set the types you wish to track in the index in here.")]
 		public List<string> typesToIndex = new List<string>() { "SlotDataAsset", "OverlayDataAsset", "RaceData", "UMATextRecipe", "UMAWardrobeRecipe", "UMAWardrobeCollection", "RuntimeAnimatorController", "DynamicUMADnaAsset" };
