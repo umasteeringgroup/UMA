@@ -22,6 +22,10 @@ namespace UMA
 	public partial class UMAAssetIndex : ScriptableObject
 	{
 
+		//When Instance is first requested or if _instance is null Initialize
+		//Initialize Loads the stored UTA or creates a new one
+		//generates the FullIndex and if this index HAS a buildIndex validates it
+
 #if UNITY_EDITOR
 		//UMAAssetIndex creates this itself if Instance is null and no Index exists (or was deleted) in Resources
 		public static void CreateUMAAssetIndex()
@@ -31,10 +35,13 @@ namespace UMA
 				return;
 			}
 			//This needs to be created in our internal data store folder (so *hopefully* people dont delete it)
-			UMAEditor.CustomAssetUtility.CreateAsset<UMAAssetIndex>(Path.Combine(UMA.FileUtils.GetInternalDataStoreFolder(false, false), "UMAAssetIndex-DONOTDELETE.asset"),false);
+			UMAEditor.CustomAssetUtility.CreateAsset<UMAAssetIndex>(Path.Combine(UMA.FileUtils.GetInternalDataStoreFolder(false, false), "UMAAssetIndex-DONOTDELETE.asset"), false);
 		}
 #endif
 		static UMAAssetIndex _instance;
+
+		[System.NonSerialized]
+		bool initialized = false;
 
 		[Tooltip("Set the types you wish to track in the index in here.")]
 		public List<string> typesToIndex = new List<string>() { "SlotDataAsset", "OverlayDataAsset", "RaceData", "UMATextRecipe", "UMAWardrobeRecipe", "UMAWardrobeCollection", "RuntimeAnimatorController", "DynamicUMADnaAsset" };
@@ -105,11 +112,32 @@ namespace UMA
 					}
 					else
 					{
-						_instance.ValidateBuildIndex();
+						_instance.Initialize();
 					}
 #endif
 				}
+				else if (!_instance.initialized)
+				{
+					_instance.Initialize();
+				}
 				return _instance;
+			}
+		}
+
+		private void Initialize()
+		{
+			if (initialized)
+				return;
+			if (!UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+			{
+				if (_buildIndex.Count() > 0 && !initialized)
+				{
+					ValidateBuildIndex();
+				}
+				else if (!initialized)
+				{
+					GenerateLists();
+				}
 			}
 		}
 
@@ -147,17 +175,34 @@ namespace UMA
 		public UMAAssetIndex()
 		{
 			//Did have this commented out but not sure if its helping or not
-			_instance = this;
+			//if (_instance == null)
+			//{
+			//	_instance = Instance;
+			//}
 		}
 
 		public void OnEnable()
 		{
-			_instance = this;
+			//if (_instance == null)
+			//{
+			//	_instance = Instance;
+			//}
 #if UNITY_EDITOR
-            if (!UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
-            {
-                GenerateLists();
-            }
+			/*if (!UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+			{
+				if (_instance._buildIndex.Count() > 0 && !_instance.initialized)
+				{
+					_instance.ValidateBuildIndex();
+				}
+				else if(!_instance.initialized)
+				{
+					_instance.GenerateLists();
+				}
+				else
+				{
+					Debug.Log("UPDATED WAS TRUE SOMEHOW");
+				}
+			}*/
 #endif
 		}
 
@@ -165,7 +210,9 @@ namespace UMA
 
 		private void GenerateLists()
 		{
+			Debug.Log("GENERATE LISTS");
 			GetAllAvailableUMAAssets();//does not allow duplicate assets
+			initialized = true;
 		}
 
 		#region ASSET MODIFICATION PROCESSOR CALLBACKS
@@ -177,7 +224,7 @@ namespace UMA
 			if (PathIsValid(createdAsset) && !AMPCreatedAssets.Contains(createdAsset))
 			{
 				//Debug.Log("OnCreateAsset created " + createdAsset);
-                AMPCreatedAssets.Add(createdAsset);
+				AMPCreatedAssets.Add(createdAsset);
 			}
 			if (AMPCreatedAssets.Count > 0)
 			{
@@ -330,7 +377,7 @@ namespace UMA
 		/// </summary>
 		private void DoMovedAssets()
 		{
-			if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+			if (EditorApplication.isCompiling || EditorApplication.isUpdating || !initialized)
 				return;
 
 			EditorApplication.update -= DoMovedAssets;
@@ -452,7 +499,7 @@ namespace UMA
 		/// </summary>
 		private void DoDeletedAsset()
 		{
-			if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+			if (EditorApplication.isCompiling || EditorApplication.isUpdating || !initialized)
 				return;
 			EditorApplication.update -= DoDeletedAsset;
 
@@ -473,7 +520,7 @@ namespace UMA
 
 		private void DoEditorDuplicatedAssets()
 		{
-			if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+			if (EditorApplication.isCompiling || EditorApplication.isUpdating || !initialized)
 				return;
 			EditorApplication.update -= DoEditorDuplicatedAssets;
 			DoCreatedAsset();
@@ -484,7 +531,7 @@ namespace UMA
 		/// </summary>
 		private void DoCreatedAsset()
 		{
-			if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+			if (EditorApplication.isCompiling || EditorApplication.isUpdating || !initialized)
 				return;
 
 			//created happens BEFORE deleted when the item that was created came via AssetModificationProcessor so if the deleted list is not clear wait until it is
@@ -534,7 +581,7 @@ namespace UMA
 		/// </summary>
 		private void DoSavedAssets()
 		{
-			if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+			if (EditorApplication.isCompiling || EditorApplication.isUpdating || !initialized)
 				return;
 			EditorApplication.update -= DoSavedAssets;
 
@@ -862,6 +909,7 @@ namespace UMA
 						GetAssetHashAndNames(thisAsset, ref thisAssetHash, ref thisAssetName);
 						if ((thisAssetHash == 0 || thisAssetHash == -1) || thisAssetName == "")
 						{
+							Debug.LogWarning(thisAsset.name + " had an assetHash of " + thisAssetHash + " and assetName of " + thisAssetName);
 							continue;
 						}
 						if (InAssetBundle(thisPath, thisAsset.name))
@@ -876,7 +924,6 @@ namespace UMA
 				}
 			}
 		}
-
 		private void ValidateBuildIndex()
 		{
 			//we need the _fullIndex to compare against
@@ -887,11 +934,18 @@ namespace UMA
 
 			var changed = false;
 			var pathsToRemove = new List<string>();
+			bool hadInvalidEntries = false;
 			//we need to know if any anything has changed since the index was last open in Unity
 			for (int ti = 0; ti < _buildIndex.data.Length; ti++)
 			{
 				for (int i = 0; i < _buildIndex.data[ti].typeIndex.Length; i++)
 				{
+					//if any indexes have 0 or -1 as their hash or an empty fullPath flag for UMAAssetIndexData to scan and remove them
+					if ((_buildIndex.data[ti].typeIndex[i].nameHash == 0 || _buildIndex.data[ti].typeIndex[i].nameHash == -1) || String.IsNullOrEmpty(_buildIndex.data[ti].typeIndex[i].fullPath))
+					{
+						hadInvalidEntries = true;
+						continue;
+					}
 					//if this item fullpath is not in _fullIndex
 					if (!_fullIndex.Contains(_buildIndex.data[ti].typeIndex[i].fullPath))
 					{
@@ -934,29 +988,14 @@ namespace UMA
 							}
 						}
 					}
-				}
-			}
-			//loop over any removed paths and remove them
-			if (pathsToRemove.Count > 0)
-			{
-				for (int i = 0; i < pathsToRemove.Count; i++)
-				{
-					_buildIndex.RemovePath(pathsToRemove[i]);
-				}
-				changed = true;
-				pathsToRemove.Clear();
-			}
-			//Lastly have any 'live assets' had their refrence objects deleted
-			for (int ti = 0; ti < _buildIndex.data.Length; ti++)
-			{
-				for (int i = 0; i < _buildIndex.data[ti].typeIndex.Length; i++)
-				{
+					//Lastly remove any 'live assets' had their refrence objects deleted
 					if (!String.IsNullOrEmpty(_buildIndex.data[ti].typeIndex[i].fileRefPath))
 					{
 						var thisFileRef = _buildIndex.data[ti].typeIndex[i].TheFileReference;//getting the file ref also makes it null if it no longer exists
 						if (thisFileRef == null)
 						{
-							pathsToRemove.Add(_buildIndex.data[ti].typeIndex[i].fullPath);
+							if (!pathsToRemove.Contains(_buildIndex.data[ti].typeIndex[i].fullPath))
+								pathsToRemove.Add(_buildIndex.data[ti].typeIndex[i].fullPath);
 						}
 					}
 				}
@@ -964,12 +1003,26 @@ namespace UMA
 			//loop over any removed paths and remove them
 			if (pathsToRemove.Count > 0)
 			{
+				Debug.Log("UMA Global Library had " + pathsToRemove.Count + " entries for assets that no longer exist. Removing...");
 				for (int i = 0; i < pathsToRemove.Count; i++)
 				{
-					_buildIndex.RemovePath(pathsToRemove[i]);
+					if (_buildIndex.RemovePath(pathsToRemove[i]))
+					{
+						Debug.Log("UMA Global Library Deleted " + pathsToRemove[i]);
+						changed = true;
+					}
+					else
+					{
+						Debug.Log("UMA Global Library failed to delete " + pathsToRemove[i]);
+					}
 				}
-				changed = true;
 				pathsToRemove.Clear();
+			}
+			if (hadInvalidEntries)
+			{
+				Debug.Log("UMA Global Library had some invalid entries. Removing...");
+				_buildIndex.RemoveInvalidEntries();
+				Debug.Log("Removed :)");
 			}
 			if (changed)
 			{
@@ -977,7 +1030,7 @@ namespace UMA
 				EditorUtility.SetDirty(this);
 				AssetDatabase.SaveAssets();
 			}
-			//updated = true;
+			initialized = true;
 		}
 
 		#endregion

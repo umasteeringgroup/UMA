@@ -169,14 +169,30 @@ namespace UMA
 			}
 		}
 		/// <summary>
+		/// Removes any entries in the index that have 0 or -1 as their hash or a null or empty string as their fullPath
+		/// </summary>
+		public void RemoveInvalidEntries()
+		{
+			for (int i = 0; i < data.Length; i++)
+			{
+				data[i].Remove(0);
+				data[i].Remove(-1);
+				data[i].Remove("");
+			}
+			CleanEmptyTypes();
+		}
+		/// <summary>
 		/// Removes an Indexes asset at the given full path from the index
 		/// </summary>
 		/// <param name="path"></param>
 		public bool RemovePath(string path)
 		{
 			if (String.IsNullOrEmpty(path))
+			{
 				return false;
+			}
 			var removed = false;
+			var fileRefPath = GetResourcesPath(path, true);
 			for (int i = 0; i < data.Length; i++)
 			{
 				if (removed == true)
@@ -184,36 +200,33 @@ namespace UMA
 				removed = false;
 				for (int ii = 0; ii < data[i].typeIndex.Length; ii++)
 				{
-					var fileRefPath = GetResourcesPath(path);
 					if (fileRefPath != "")
 					{
 						if (data[i].typeIndex[ii].fileRefPath == fileRefPath)
 						{
-							data[i].Remove(path);
-							removed = true;
+							removed = data[i].Remove(path);
 							if (removed)
 							{
 								if (_currentPaths.Contains(data[i].typeIndex[ii].fullPath))
 									_currentPaths.Remove(data[i].typeIndex[ii].fullPath);
+								break;
 							}
-							break;
 						}
 					}
-					else if (data[i].typeIndex[ii].fullPath == path)
+					if (data[i].typeIndex[ii].fullPath == path)
 					{
-						data[i].Remove(path);
-						removed = true;
+						removed = data[i].Remove(path);
 						if (removed)
 						{
 							if (_currentPaths.Contains(path))
 								_currentPaths.Remove(path);
+							break;
 						}
-						break;
 					}
 				}
 			}
 			CleanEmptyTypes();
-            return removed;
+			return removed;
 		}
 
 		/// <summary>
@@ -255,7 +268,7 @@ namespace UMA
 				if (data[i].typeIndex.Length > 0)
 				{
 					cleanedTypeIndexes.Add(data[i]);
-                }
+				}
 			}
 			data = cleanedTypeIndexes.ToArray();
 		}
@@ -341,7 +354,7 @@ namespace UMA
 							}
 							else
 							{
-								var resourcesPath = GetResourcesPath(data[ti].typeIndex[i].fullPath);
+								var resourcesPath = GetResourcesPath(data[ti].typeIndex[i].fullPath, true);
 								if (String.IsNullOrEmpty(resourcesPath))
 								{
 									//Debug.LogWarning("No Resources path or fileReference was found for Index entry at path " + data[ti].typeIndex[i].fullPath);
@@ -372,11 +385,13 @@ namespace UMA
 		/// </summary>
 		/// <param name="fullPath">The full path relative to and including the 'Assets/' folder</param>
 		/// <returns></returns>
-		public static string GetResourcesPath(string fullPath)
+		public static string GetResourcesPath(string fullPath, bool confirmResources = false)
 		{
 			//fullPath may have slashes going the wrong way
 			fullPath = fullPath.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 			string resourcesPath = "";
+			if (confirmResources && fullPath.IndexOf("Resources/") == -1)
+				return resourcesPath;
 			var resourcesPathArray = fullPath.Split(new string[] { "Resources/" }, StringSplitOptions.RemoveEmptyEntries);
 			if (resourcesPathArray.Length != 2)
 			{
@@ -535,54 +550,54 @@ namespace UMA
 				return !found;
 			}
 
-			public void Remove(int nameHash)
+			public bool Remove(int nameHash)
 			{
 				if (typeIndex.Length == 0)
-					return;
-				var list = new IndexData[typeIndex.Length - 1];
-				int listi = 0;
+					return false;
+				var list = new List<IndexData>();
+				bool removed = false;
 				for (int i = 0; i < typeIndex.Length; i++)
 				{
 					if (typeIndex[i].nameHash == nameHash)
 					{
-						typeIndex[i].TheFileReference = null;
+						typeIndex[i].TheFileReference = null;//delete the fileRefrence object and DONT add this entry to the new list
+						removed = true;
 					}
 					else
 					{
-						list[listi] = new IndexData(typeIndex[i].fileRefPath, typeIndex[i].nameHash, typeIndex[i].fullPath, typeIndex[i].name);
-						listi++;
+						list.Add(new IndexData(typeIndex[i].fileRefPath, typeIndex[i].nameHash, typeIndex[i].fullPath, typeIndex[i].name));
 					}
 				}
-				typeIndex = list;
+				typeIndex = list.ToArray();
+				return removed;
 			}
 			/// <summary>
 			/// Remove a path from the index must be the full path, not the resources path
 			/// </summary>
 			/// <param name="path"></param>
-			public void Remove(string path)
+			public bool Remove(string path)
 			{
 				if (typeIndex.Length == 0)
-					return;
-				var list = new IndexData[typeIndex.Length - 1];
-				int listi = 0;
-
+					return false;
+				var list = new List<IndexData>();
+				bool removed = false;
 				for (int i = 0; i < typeIndex.Length; i++)
 				{
-					if (typeIndex[i].fullPath == path)
+					if (typeIndex[i].fullPath == path)//delete the fileRefrence object and DONT add this entry to the new list
 					{
-						//THESE ADD METHODS NEED TO BE FULLY EDITOR ONLY BUT FOR NOW
 						typeIndex[i].TheFileReference = null;
+						removed = true;
 					}
 					else
 					{
 						var thisFileRefPath = typeIndex[i].fileRefPath;
 						if (thisFileRefPath == null)
 							thisFileRefPath = "";
-						list[listi] = new IndexData(thisFileRefPath, typeIndex[i].nameHash, typeIndex[i].fullPath, typeIndex[i].name);
-						listi++;
+						list.Add(new IndexData(thisFileRefPath, typeIndex[i].nameHash, typeIndex[i].fullPath, typeIndex[i].name));
 					}
 				}
-				typeIndex = list;
+				typeIndex = list.ToArray();
+				return removed;
 			}
 
 #endif
@@ -604,10 +619,10 @@ namespace UMA
 						}
 						else
 						{
-							var resourcesPath = GetResourcesPath(typeIndex[i].fullPath);
+							var resourcesPath = GetResourcesPath(typeIndex[i].fullPath, true);
 							if (String.IsNullOrEmpty(resourcesPath))
 							{
-								Debug.LogWarning("No Resources path or fileReference was found for Index entry at path " + typeIndex[i].fullPath);
+								//Debug.LogWarning("No Resources path or fileReference was found for Index entry at path " + typeIndex[i].fullPath);
 								return null;
 							}
 							else
@@ -644,10 +659,10 @@ namespace UMA
 						}
 						else
 						{
-							var resourcesPath = GetResourcesPath(typeIndex[i].fullPath);
+							var resourcesPath = GetResourcesPath(typeIndex[i].fullPath, true);
 							if (String.IsNullOrEmpty(resourcesPath))
 							{
-								Debug.LogWarning("No Resources path or fileReference was found for Index entry at path " + typeIndex[i].fullPath);
+								//Debug.LogWarning("No Resources path or fileReference was found for Index entry at path " + typeIndex[i].fullPath);
 								return null;
 							}
 							else
@@ -711,7 +726,7 @@ namespace UMA
 						{
 							//Debug.Log("TheFileReference.set fileRefPath was empty. Creating...");
 							var fileRefsPath = Path.Combine(UMA.FileUtils.GetInternalDataStoreFolder(false, false), "UMAAssetIndexRefs-DONOTDELETE");
-							var fileRefsTypePath = Path.Combine(fileRefsPath,value.GetType().ToString().Replace(".", "_"));
+							var fileRefsTypePath = Path.Combine(fileRefsPath, value.GetType().ToString().Replace(".", "_"));
 							Directory.CreateDirectory(fileRefsTypePath);
 							var fileRefFullPath = Path.Combine(fileRefsTypePath, value.name + "-fileRef.asset");
 							fileRefPath = GetResourcesPath(fileRefFullPath);
