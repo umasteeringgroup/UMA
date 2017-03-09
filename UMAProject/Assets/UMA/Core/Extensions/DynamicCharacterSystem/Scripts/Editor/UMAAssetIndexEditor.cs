@@ -157,7 +157,16 @@ namespace UMAEditor
 		string stringFilter = "";
 		public override void OnInspectorGUI()
 		{
-			serializedObject.Update();
+            Color ColorLive   = new Color(0.75f, 0.875f, 1f);
+            Color ColorUndead = new Color(0.75f, 0.875f, 1f, 0.45f);
+
+            if (EditorGUIUtility.isProSkin)
+            {
+                ColorLive = new Color(0.30f, 0.30f, 0.3f, 1.0f);
+                ColorUndead = new Color32(56, 56, 56, 255);
+                   // ; new Color(0.15f, 0.15f, 0.15f, 1.0f);
+            }
+            serializedObject.Update();
 			bool changed = false;
 
 			//GUI STYLES
@@ -383,9 +392,9 @@ namespace UMAEditor
 									thisFieldRect.width = ((itemRect.width - 30f) / 2f) - 5f;
 								}
 								if (assetIsLive)
-									EditorGUI.DrawRect(itemRect, new Color(0.75f, 0.875f, 1f));
+									EditorGUI.DrawRect(itemRect, ColorLive);
 								else
-									EditorGUI.DrawRect(itemRect, new Color(0.75f, 0.875f, 1f, 0.45f));
+									EditorGUI.DrawRect(itemRect, ColorUndead);
 
 								if (entry.fullPath.IndexOf("/Resources/") > -1)
 								{
