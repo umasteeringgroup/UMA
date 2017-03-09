@@ -7082,7 +7082,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 109731252}
   m_Direction: 0
   m_Value: 0
-  m_Size: 1
+  m_Size: 0.9999999
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -13198,7 +13198,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   initializeOnAwake: 1
   dynamicallyAddFromResources: 1
-  resourcesCharactersFolder: CharacterRecipes
+  resourcesCharactersFolder: 
   resourcesRecipesFolder: 
   dynamicallyAddFromAssetBundles: 1
   assetBundlesForCharactersToSearch: 

@@ -198,7 +198,7 @@ RectTransform:
   m_RootOrder: 0
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.000022888184, y: 0}
+  m_AnchoredPosition: {x: 20.000036, y: 0}
   m_SizeDelta: {x: -20, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &32637369
@@ -9174,6 +9174,7 @@ MonoBehaviour:
     m_TypeName: UMA.UMADataEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   hide: 0
+  loadBlendShapes: 0
   activeRace:
     name: HumanMaleDCS
     _data: {fileID: 11400000, guid: 5ed11744a54425247b40c4f8967bdcbd, type: 2}
@@ -11577,7 +11578,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 409490924}
   m_HandleRect: {fileID: 409490923}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -13398,7 +13399,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   initializeOnAwake: 1
   dynamicallyAddFromResources: 1
-  resourcesCharactersFolder: CharacterRecipes
+  resourcesCharactersFolder: 
   resourcesRecipesFolder: 
   dynamicallyAddFromAssetBundles: 1
   assetBundlesForCharactersToSearch: 
