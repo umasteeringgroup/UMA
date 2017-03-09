@@ -733,15 +733,18 @@ namespace UMA
 					UMAAssetIndexFileRef thisFileRefObj = null;
 					if (value != null)
 					{
+						var fileRefsPath = Path.Combine(UMA.FileUtils.GetInternalDataStoreFolder(false, false), "UMAAssetIndexRefs-DONOTDELETE");
+						var fileRefsTypePath = Path.Combine(fileRefsPath, value.GetType().ToString().Replace(".", "_"));
+						Directory.CreateDirectory(fileRefsTypePath);
+						var fileRefFullPath = Path.Combine(fileRefsTypePath, value.name + "-fileRef.asset");
 						if (String.IsNullOrEmpty(fileRefPath))
 						{
 							//Debug.Log("TheFileReference.set fileRefPath was empty. Creating...");
-							var fileRefsPath = Path.Combine(UMA.FileUtils.GetInternalDataStoreFolder(false, false), "UMAAssetIndexRefs-DONOTDELETE");
-							var fileRefsTypePath = Path.Combine(fileRefsPath, value.GetType().ToString().Replace(".", "_"));
-							Directory.CreateDirectory(fileRefsTypePath);
-							var fileRefFullPath = Path.Combine(fileRefsTypePath, value.name + "-fileRef.asset");
 							fileRefPath = GetResourcesPath(fileRefFullPath);
-							thisFileRefObj = UMAEditor.CustomAssetUtility.CreateAsset<UMAAssetIndexFileRef>(fileRefFullPath, false);
+							//we need to check if there is an object hanging around with this name
+							thisFileRefObj = Resources.Load<UMAAssetIndexFileRef>(fileRefPath);
+							if(thisFileRefObj == null)
+								thisFileRefObj = UMAEditor.CustomAssetUtility.CreateAsset<UMAAssetIndexFileRef>(fileRefFullPath, false);
 						}
 						else
 						{

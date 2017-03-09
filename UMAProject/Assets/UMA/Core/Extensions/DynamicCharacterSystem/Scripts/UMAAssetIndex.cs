@@ -736,7 +736,16 @@ namespace UMA
 		{
 			_fullIndex = new UMAAssetIndexData();
 			if (clearBuildIndex)
+			{
+				for(int ti = 0; ti < _buildIndex.data.Length; ti++)
+				{
+					for(int i = 0; i < _buildIndex.data[ti].typeIndex.Length; i++)
+					{
+						_buildIndex.data[ti].typeIndex[i].TheFileReference = null;
+                    }
+				}
 				_buildIndex = new UMAAssetIndexData();
+			}
 			_assetBundleIndex = new UMAAssetIndexData();
 			GenerateLists();//also does save
 		}
