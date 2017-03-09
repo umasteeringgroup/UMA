@@ -308,6 +308,34 @@ MonoBehaviour:
         nameHash: 561152172
         fullPath: Assets/UMA/Content/UMA/HumanMale/Slots/Hair/MaleHair1_Slot.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/MaleHair1_Slot-fileRef
+      - name: M_Gloves of Hammer
+        nameHash: 480778712
+        fullPath: Assets/UMA/Content/Contrib/Gloves_of_Hammer/UMA/Slot/M_Gloves of
+          Hammer/M_Gloves of Hammer_Slot.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/M_Gloves of Hammer_Slot-fileRef
+      - name: M_Freebie Robeset Boots_Slot
+        nameHash: -710651841
+        fullPath: Assets/UMA/Content/Contrib/Monthly_freebie_Robe set/Slots/M_Freebie
+          Robeset Boots/M_Freebie Robeset Boots_Slot.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/M_Freebie Robeset
+          Boots_Slot-fileRef
+      - name: M_Freebie Robeset Hood_Slot
+        nameHash: -1659148726
+        fullPath: Assets/UMA/Content/Contrib/Monthly_freebie_Robe set/Slots/M_Freebie
+          Robeset Hood/M_Freebie Robeset Hood_Slot.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/M_Freebie Robeset
+          Hood_Slot-fileRef
+      - name: M_Freebie Robeset Robe_Slot
+        nameHash: 243145920
+        fullPath: Assets/UMA/Content/Contrib/Monthly_freebie_Robe set/Slots/M_Freebie
+          Robeset Robe/M_Freebie Robeset Robe_Slot.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/M_Freebie Robeset
+          Robe_Slot-fileRef
+      - name: M_Wrapped Pants
+        nameHash: 541111014
+        fullPath: Assets/UMA/Content/Contrib/Wrapped Pants March/UMA/Slots/M_Wrapped
+          Pants/M_Wrapped Pants_Slot.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/M_Wrapped Pants_Slot-fileRef
     - type: UMA.OverlayDataAsset
       typeIndex:
       - name: GuideMeshOverlay-Trans
@@ -630,6 +658,35 @@ MonoBehaviour:
         nameHash: 1730585316
         fullPath: Assets/UMA/Content/UMA/HumanFemale/Overlays/Body/F_H_bod.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/F_H_bod-fileRef
+      - name: Gloves of Hammer Overlay
+        nameHash: 1370351515
+        fullPath: Assets/UMA/Content/Contrib/Gloves_of_Hammer/UMA/Overlay/Gloves of
+          Hammer Overlay.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/Gloves of
+          Hammer Overlay-fileRef
+      - name: M_Freebie Robeset Boots
+        nameHash: 1064080667
+        fullPath: Assets/UMA/Content/Contrib/Monthly_freebie_Robe set/Overlays/M_Freebie
+          Robeset Boots.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/M_Freebie
+          Robeset Boots-fileRef
+      - name: M_Freebie Robeset Hood
+        nameHash: -1527560461
+        fullPath: Assets/UMA/Content/Contrib/Monthly_freebie_Robe set/Overlays/M_Freebie
+          Robeset Hood.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/M_Freebie
+          Robeset Hood-fileRef
+      - name: M_Freebie Robeset Robe
+        nameHash: 1509867475
+        fullPath: Assets/UMA/Content/Contrib/Monthly_freebie_Robe set/Overlays/M_Freebie
+          Robeset Robe.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/M_Freebie
+          Robeset Robe-fileRef
+      - name: Wrapped Pants
+        nameHash: -1081245287
+        fullPath: Assets/UMA/Content/Contrib/Wrapped Pants March/UMA/Overlays/Wrapped
+          Pants.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/Wrapped Pants-fileRef
     - type: UMA.RaceData
       typeIndex:
       - name: HumanFemale
@@ -1136,3 +1193,21 @@ MonoBehaviour:
     - Assets/UMA/Content/UMA/HumanMale/Recipes/BaseRecipes/HumanMale Base Recipe.asset
     - Assets/UMA/Content/UMA/HumanMale/Recipes/BaseRecipes/HumanMaleDCS Base Recipe.asset
     - Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/CapsuleCollider/CapsuleColliderRecipe.asset
+    - Assets/UMA/Content/Contrib/Gloves_of_Hammer/UMA/Slot/M_Gloves of Hammer/M_Gloves
+      of Hammer_Slot.asset
+    - Assets/UMA/Content/Contrib/Monthly_freebie_Robe set/Slots/M_Freebie Robeset
+      Boots/M_Freebie Robeset Boots_Slot.asset
+    - Assets/UMA/Content/Contrib/Monthly_freebie_Robe set/Slots/M_Freebie Robeset
+      Hood/M_Freebie Robeset Hood_Slot.asset
+    - Assets/UMA/Content/Contrib/Monthly_freebie_Robe set/Slots/M_Freebie Robeset
+      Robe/M_Freebie Robeset Robe_Slot.asset
+    - Assets/UMA/Content/Contrib/Wrapped Pants March/UMA/Slots/M_Wrapped Pants/M_Wrapped
+      Pants_Slot.asset
+    - Assets/UMA/Content/Contrib/Gloves_of_Hammer/UMA/Overlay/Gloves of Hammer Overlay.asset
+    - Assets/UMA/Content/Contrib/Monthly_freebie_Robe set/Overlays/M_Freebie Robeset
+      Boots.asset
+    - Assets/UMA/Content/Contrib/Monthly_freebie_Robe set/Overlays/M_Freebie Robeset
+      Hood.asset
+    - Assets/UMA/Content/Contrib/Monthly_freebie_Robe set/Overlays/M_Freebie Robeset
+      Robe.asset
+    - Assets/UMA/Content/Contrib/Wrapped Pants March/UMA/Overlays/Wrapped Pants.asset
