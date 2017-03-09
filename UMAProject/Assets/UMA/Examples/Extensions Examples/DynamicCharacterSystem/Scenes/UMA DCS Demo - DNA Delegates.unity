@@ -198,7 +198,7 @@ RectTransform:
   m_RootOrder: 0
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 20.000036, y: 0}
+  m_AnchoredPosition: {x: -0.000009536743, y: 0}
   m_SizeDelta: {x: -20, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &32637369
@@ -15900,7 +15900,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   targetAvatar: {fileID: 893401642}
-  targetDNAConverter: {fileID: 0}
+  targetDNAConverter: {fileID: 11465070, guid: e011721dd653f0248a069d207f1595b2, type: 2}
   delegateDNAEditor: {fileID: 902787428}
 --- !u!4 &1618009285
 Transform:

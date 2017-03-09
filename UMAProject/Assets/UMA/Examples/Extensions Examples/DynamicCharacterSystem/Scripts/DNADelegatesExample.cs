@@ -21,7 +21,7 @@ namespace UMACharacterSystem
 		{
 			if (targetAvatar)
 			{
-				targetAvatar.RecipeUpdated.AddListener(SetUpDNADelegates);
+				targetAvatar.CharacterCreated.AddListener(SetUpDNADelegates);
 				targetAvatar.CharacterUpdated.AddListener(CheckRaceChange);
 			}
 		}
