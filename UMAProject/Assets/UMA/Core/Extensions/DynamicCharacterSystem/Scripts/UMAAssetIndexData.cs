@@ -802,6 +802,8 @@ namespace UMA
 				}
 #endif
 			}
+
+#if UNITY_EDITOR
 			/// <summary>
 			/// Creates the fileRef asset and sets the fileRefPath to the path of the created asset
 			/// </summary>
@@ -871,6 +873,7 @@ namespace UMA
 					name = _name;
 				}
 			}
+#endif
 
 		}
 		#endregion

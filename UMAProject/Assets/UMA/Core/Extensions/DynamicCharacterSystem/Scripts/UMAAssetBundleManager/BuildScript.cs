@@ -24,17 +24,20 @@ namespace UMAAssetBundleManager
 
 		public static void BuildAssetBundles()
 		{
-			// Choose the output path according to the build target.
-			string outputPath = CreateAssetBundleDirectory();
+			var thisIndexAssetPath = "";
+			var thisEncryptionAssetPath = "";
+            try {
+				// Choose the output path according to the build target.
+				string outputPath = CreateAssetBundleDirectory();
 
-			var options = BuildAssetBundleOptions.None;
+				var options = BuildAssetBundleOptions.None;
 
-			bool shouldCheckODR = EditorUserBuildSettings.activeBuildTarget == BuildTarget.iOS;
+				bool shouldCheckODR = EditorUserBuildSettings.activeBuildTarget == BuildTarget.iOS;
 #if UNITY_TVOS
             shouldCheckODR |= EditorUserBuildSettings.activeBuildTarget == BuildTarget.tvOS;
 #endif
-			if (shouldCheckODR)
-			{
+				if (shouldCheckODR)
+				{
 #if ENABLE_IOS_ON_DEMAND_RESOURCES
                 if (PlayerSettings.iOS.useOnDemandResources)
                     options |= BuildAssetBundleOptions.UncompressedAssetBundle;
@@ -44,143 +47,163 @@ namespace UMAAssetBundleManager
 #if ENABLE_IOS_APP_SLICING
                 options |= BuildAssetBundleOptions.UncompressedAssetBundle;
 #endif
-			}
-			if (UMAABMSettings.GetEncryptionPassword() != "")
-			{
-				if(!shouldCheckODR)
-					options |= BuildAssetBundleOptions.ChunkBasedCompression;
-				options |= BuildAssetBundleOptions.ForceRebuildAssetBundle;
-			}
-
-			//AssetBundleIndex
-			AssetBundleIndex thisIndex = ScriptableObject.CreateInstance<AssetBundleIndex>();
-
-			string[] assetBundleNamesArray = AssetDatabase.GetAllAssetBundleNames();
-
-			//Generate a buildmap as we go
-			AssetBundleBuild[] buildMap = new AssetBundleBuild[assetBundleNamesArray.Length + 1];//+1 for the index bundle
-			for (int i = 0; i < assetBundleNamesArray.Length; i++)
-			{
-				string bundleName = assetBundleNamesArray[i];
-				thisIndex.bundlesIndex.Add(new AssetBundleIndex.AssetBundleIndexList(bundleName));
-
-				if (bundleName.IndexOf('.') > -1)
-				{
-					buildMap[i].assetBundleName = bundleName.Split('.')[0];
-					buildMap[i].assetBundleVariant = bundleName.Split('.')[1];
 				}
-				else
+				if (UMAABMSettings.GetEncryptionPassword() != "")
 				{
-					buildMap[i].assetBundleName = bundleName;
+					if (!shouldCheckODR)
+						options |= BuildAssetBundleOptions.ChunkBasedCompression;
+					options |= BuildAssetBundleOptions.ForceRebuildAssetBundle;
 				}
 
-				string[] assetBundleAssetsArray = AssetDatabase.GetAssetPathsFromAssetBundle(bundleName);
-				buildMap[i].assetNames = assetBundleAssetsArray;
+				//AssetBundleIndex
+				AssetBundleIndex thisIndex = ScriptableObject.CreateInstance<AssetBundleIndex>();
 
-				foreach (string path in assetBundleAssetsArray)
+				string[] assetBundleNamesArray = AssetDatabase.GetAllAssetBundleNames();
+
+				//Generate a buildmap as we go
+				AssetBundleBuild[] buildMap = new AssetBundleBuild[assetBundleNamesArray.Length + 1];//+1 for the index bundle
+				for (int i = 0; i < assetBundleNamesArray.Length; i++)
 				{
-					var sysPath = Path.Combine(Application.dataPath, path);
-					var filename = Path.GetFileNameWithoutExtension(sysPath);
-					var tempObj = AssetDatabase.LoadMainAssetAtPath(path);
-					thisIndex.bundlesIndex[i].AddItem(filename, tempObj);
-				}
-			}
+					string bundleName = assetBundleNamesArray[i];
 
-			var thisIndexAssetPath = "Assets/" + Utility.GetPlatformName() + "Index.asset";
-			thisIndex.name = "AssetBundleIndex";
-			AssetDatabase.CreateAsset(thisIndex, thisIndexAssetPath);
-			AssetImporter thisIndexAsset = AssetImporter.GetAtPath(thisIndexAssetPath);
-			thisIndexAsset.assetBundleName = Utility.GetPlatformName() + "index";
-			buildMap[assetBundleNamesArray.Length].assetBundleName = Utility.GetPlatformName() + "index";
-			buildMap[assetBundleNamesArray.Length].assetNames = new string[1] { "Assets/" + Utility.GetPlatformName() + "Index.asset" };
+					string[] assetBundleAssetsArray = AssetDatabase.GetAssetPathsFromAssetBundle(bundleName);
+					//If there are no assets added to this bundle continue because it wont be in the resulting assetBundleManifest
+					if (assetBundleAssetsArray == null)
+						continue;
 
-			//Build the current state so we can get the AssetBundleManifest object and add its values to OUR index
-			var assetBundleManifest = BuildPipeline.BuildAssetBundles(outputPath, buildMap, options, EditorUserBuildSettings.activeBuildTarget);
-			//reload the saved index (TODO may not be necessary)
-			thisIndex = AssetDatabase.LoadAssetAtPath<AssetBundleIndex>("Assets/" + Utility.GetPlatformName() + "Index.asset");
-			//Get any bundles with variants
-			string[] bundlesWithVariant = assetBundleManifest.GetAllAssetBundlesWithVariant();
-			thisIndex.bundlesWithVariant = bundlesWithVariant;
-			//then loop over each bundle in the bundle names and get the bundle specific data
-			for (int i = 0; i < assetBundleNamesArray.Length; i++)
-			{
-				string assetBundleHash = assetBundleManifest.GetAssetBundleHash(assetBundleNamesArray[i]).ToString();
-				string[] allDependencies = assetBundleManifest.GetAllDependencies(assetBundleNamesArray[i]);
-				string[] directDependencies = assetBundleManifest.GetDirectDependencies(assetBundleNamesArray[i]);
-				thisIndex.bundlesIndex[i].assetBundleHash = assetBundleHash;
-				thisIndex.bundlesIndex[i].allDependencies = allDependencies;
-				thisIndex.bundlesIndex[i].directDependencies = directDependencies;
-				//Add suffixed names to the index if enabled and we are using encrption
-				//we cant append the suffix to the index file because when we are loading we dont know the set suffix or suffixed names until we have the index
-				//it also cant be the same as the unencrypted name because it needs a different memory address, so its going to have to be name + "encrypted"
-				if (UMAABMSettings.GetEncryptionEnabled())
-				{
-					var encryptedBundleName = assetBundleNamesArray[i] == Utility.GetPlatformName() + "index" ? assetBundleNamesArray[i] + "encrypted" : assetBundleNamesArray[i] + UMAABMSettings.GetEncryptionSuffix();
-					if (UMAABMSettings.GetEncodeNames() && assetBundleNamesArray[i] != Utility.GetPlatformName() + "index")
-						encryptedBundleName = EncryptionUtil.EncodeFileName(encryptedBundleName);
-					thisIndex.bundlesIndex[i].encryptedName = encryptedBundleName;
-                }
-			}
-			//TODO is this it for encrypted bundles?
-			var relativeAssetBundlesOutputPathForPlatform = Path.Combine(Utility.AssetBundlesOutputPath, Utility.GetPlatformName());
-			//Update and Save the index asset and build again. This will store the updated asset in the windowsindex asset bundle
-			EditorUtility.SetDirty(thisIndex);
-			AssetDatabase.SaveAssets();
-			//Build the Index AssetBundle
-			var indexBuildMap = new AssetBundleBuild[1];
-			indexBuildMap[0] = buildMap[assetBundleNamesArray.Length];
-			Debug.LogWarning("indexBuildMap[0] was " + indexBuildMap[0].assetBundleName);
-			BuildPipeline.BuildAssetBundles(outputPath, indexBuildMap, options, EditorUserBuildSettings.activeBuildTarget);
+					thisIndex.bundlesIndex.Add(new AssetBundleIndex.AssetBundleIndexList(bundleName));
 
-			//Save a json version of the data- this can be used for uploading to a server to update a database or something
-			string thisIndexJson = JsonUtility.ToJson(thisIndex);
-			var thisIndexJsonPath = Path.Combine(relativeAssetBundlesOutputPathForPlatform, Utility.GetPlatformName().ToLower()) + "index.json";
-			File.WriteAllText(thisIndexJsonPath, thisIndexJson);
-			//Build Encrypted Bundles
-			if (UMAABMSettings.GetEncryptionEnabled())
-			{
-				var encryptedBuildMap = new AssetBundleBuild[1];
-				var EncryptionAsset = ScriptableObject.CreateInstance<UMAEncryptedBundle>();
-				EncryptionAsset.name = "EncryptedData";
-				var thisEncryptionAssetPath = "Assets/EncryptedData.asset";
-				AssetDatabase.CreateAsset(EncryptionAsset, thisEncryptionAssetPath);
-				//var encryptedOutputPath = Path.Combine(outputPath, "Encrypted");
-				var encryptedOutputPath = Path.Combine(Utility.AssetBundlesOutputPath, Path.Combine("Encrypted", Utility.GetPlatformName()));
-                if (!Directory.Exists(encryptedOutputPath))
-					Directory.CreateDirectory(encryptedOutputPath);
-				for (int bmi = 0; bmi < buildMap.Length; bmi++)//-1 to not include the index bundle (or maybe we do encrypt the index bundle?)
-				{
-					var thisEncryptionAsset = AssetDatabase.LoadAssetAtPath<UMAEncryptedBundle>(thisEncryptionAssetPath);
-					Debug.Log("Built EncryptedBundle for " + buildMap[bmi].assetBundleName);
-					//get the data from the unencrypted bundle and encrypt it into the EncryptedData asset
-					thisEncryptionAsset.GenerateData(buildMap[bmi].assetBundleName, Path.Combine(relativeAssetBundlesOutputPathForPlatform, buildMap[bmi].assetBundleName));
-					EditorUtility.SetDirty(thisEncryptionAsset);
-					AssetDatabase.SaveAssets();
-					//Sort out the name of this encrypted bundle
-					var encryptedBundleName = "";
-                    if (buildMap[bmi].assetBundleName != Utility.GetPlatformName() + "index")
+					if (bundleName.IndexOf('.') > -1)
 					{
-						encryptedBundleName = buildMap[bmi].assetBundleName + UMAABMSettings.GetEncryptionSuffix();
-						if (UMAABMSettings.GetEncodeNames() && buildMap[bmi].assetBundleName != Utility.GetPlatformName() + "index")
-							encryptedBundleName = EncryptionUtil.EncodeFileName(encryptedBundleName);
+						buildMap[i].assetBundleName = bundleName.Split('.')[0];
+						buildMap[i].assetBundleVariant = bundleName.Split('.')[1];
 					}
 					else
 					{
-						encryptedBundleName = buildMap[bmi].assetBundleName + "encrypted";
-                    }
-					//set the Build map value
-					encryptedBuildMap[0].assetBundleName = encryptedBundleName;
-					encryptedBuildMap[0].assetNames = new string[1] { "Assets/EncryptedData.asset" };
-					//and build the bundle
-                    BuildPipeline.BuildAssetBundles(encryptedOutputPath, encryptedBuildMap, BuildAssetBundleOptions.None, EditorUserBuildSettings.activeBuildTarget);
+						buildMap[i].assetBundleName = bundleName;
+					}
+
+					buildMap[i].assetNames = assetBundleAssetsArray;
+
+					foreach (string path in assetBundleAssetsArray)
+					{
+						var sysPath = Path.Combine(Application.dataPath, path);
+						var filename = Path.GetFileNameWithoutExtension(sysPath);
+						var tempObj = AssetDatabase.LoadMainAssetAtPath(path);
+						thisIndex.bundlesIndex[i].AddItem(filename, tempObj);
+					}
 				}
-				//save a json index in there too
-				var thisIndexJsonEncPath = Path.Combine(encryptedOutputPath, Utility.GetPlatformName().ToLower()) + "indexencrypted.json";
-				File.WriteAllText(thisIndexJsonEncPath, thisIndexJson);
-				AssetDatabase.DeleteAsset(thisEncryptionAssetPath);
+
+				thisIndexAssetPath = "Assets/" + Utility.GetPlatformName() + "Index.asset";
+				thisIndex.name = "AssetBundleIndex";
+				AssetDatabase.CreateAsset(thisIndex, thisIndexAssetPath);
+				AssetImporter thisIndexAsset = AssetImporter.GetAtPath(thisIndexAssetPath);
+				thisIndexAsset.assetBundleName = Utility.GetPlatformName() + "index";
+				buildMap[assetBundleNamesArray.Length].assetBundleName = Utility.GetPlatformName() + "index";
+				buildMap[assetBundleNamesArray.Length].assetNames = new string[1] { "Assets/" + Utility.GetPlatformName() + "Index.asset" };
+
+				//Build the current state so we can get the AssetBundleManifest object and add its values to OUR index
+				var assetBundleManifest = BuildPipeline.BuildAssetBundles(outputPath, buildMap, options, EditorUserBuildSettings.activeBuildTarget);
+				if (assetBundleManifest == null)
+				{
+					throw new System.Exception("Your assetBundles did not build properly.");
+				}
+				//reload the saved index (TODO may not be necessary)
+				thisIndex = AssetDatabase.LoadAssetAtPath<AssetBundleIndex>("Assets/" + Utility.GetPlatformName() + "Index.asset");
+				//Get any bundles with variants
+				string[] bundlesWithVariant = assetBundleManifest.GetAllAssetBundlesWithVariant();
+				thisIndex.bundlesWithVariant = bundlesWithVariant;
+				//then loop over each bundle in the bundle names and get the bundle specific data
+				for (int i = 0; i < assetBundleNamesArray.Length; i++)
+				{
+					string[] assetBundleAssetsArray = AssetDatabase.GetAssetPathsFromAssetBundle(assetBundleNamesArray[i]);
+					//If there are no assets added to this bundle continue because it wont be in the resulting assetBundleManifest
+					if (assetBundleAssetsArray == null)
+						continue;
+					string assetBundleHash = assetBundleManifest.GetAssetBundleHash(assetBundleNamesArray[i]).ToString();
+					string[] allDependencies = assetBundleManifest.GetAllDependencies(assetBundleNamesArray[i]);
+					string[] directDependencies = assetBundleManifest.GetDirectDependencies(assetBundleNamesArray[i]);
+					thisIndex.bundlesIndex[i].assetBundleHash = assetBundleHash;
+					thisIndex.bundlesIndex[i].allDependencies = allDependencies;
+					thisIndex.bundlesIndex[i].directDependencies = directDependencies;
+					//Add suffixed names to the index if enabled and we are using encrption
+					//we cant append the suffix to the index file because when we are loading we dont know the set suffix or suffixed names until we have the index
+					//it also cant be the same as the unencrypted name because it needs a different memory address, so its going to have to be name + "encrypted"
+					if (UMAABMSettings.GetEncryptionEnabled())
+					{
+						var encryptedBundleName = assetBundleNamesArray[i] == Utility.GetPlatformName() + "index" ? assetBundleNamesArray[i] + "encrypted" : assetBundleNamesArray[i] + UMAABMSettings.GetEncryptionSuffix();
+						if (UMAABMSettings.GetEncodeNames() && assetBundleNamesArray[i] != Utility.GetPlatformName() + "index")
+							encryptedBundleName = EncryptionUtil.EncodeFileName(encryptedBundleName);
+						thisIndex.bundlesIndex[i].encryptedName = encryptedBundleName;
+					}
+				}
+				//TODO is this it for encrypted bundles?
+				var relativeAssetBundlesOutputPathForPlatform = Path.Combine(Utility.AssetBundlesOutputPath, Utility.GetPlatformName());
+				//Update and Save the index asset and build again. This will store the updated asset in the windowsindex asset bundle
+				EditorUtility.SetDirty(thisIndex);
+				AssetDatabase.SaveAssets();
+				//Build the Index AssetBundle
+				var indexBuildMap = new AssetBundleBuild[1];
+				indexBuildMap[0] = buildMap[assetBundleNamesArray.Length];
+				BuildPipeline.BuildAssetBundles(outputPath, indexBuildMap, options, EditorUserBuildSettings.activeBuildTarget);
+
+				//Save a json version of the data- this can be used for uploading to a server to update a database or something
+				string thisIndexJson = JsonUtility.ToJson(thisIndex);
+				var thisIndexJsonPath = Path.Combine(relativeAssetBundlesOutputPathForPlatform, Utility.GetPlatformName().ToLower()) + "index.json";
+				File.WriteAllText(thisIndexJsonPath, thisIndexJson);
+				//Build Encrypted Bundles
+				if (UMAABMSettings.GetEncryptionEnabled())
+				{
+					var encryptedBuildMap = new AssetBundleBuild[1];
+					var EncryptionAsset = ScriptableObject.CreateInstance<UMAEncryptedBundle>();
+					EncryptionAsset.name = "EncryptedData";
+					thisEncryptionAssetPath = "Assets/EncryptedData.asset";
+					AssetDatabase.CreateAsset(EncryptionAsset, thisEncryptionAssetPath);
+					//var encryptedOutputPath = Path.Combine(outputPath, "Encrypted");
+					var encryptedOutputPath = Path.Combine(Utility.AssetBundlesOutputPath, Path.Combine("Encrypted", Utility.GetPlatformName()));
+					if (!Directory.Exists(encryptedOutputPath))
+						Directory.CreateDirectory(encryptedOutputPath);
+					for (int bmi = 0; bmi < buildMap.Length; bmi++)//-1 to not include the index bundle (or maybe we do encrypt the index bundle?)
+					{
+						var thisEncryptionAsset = AssetDatabase.LoadAssetAtPath<UMAEncryptedBundle>(thisEncryptionAssetPath);
+						//get the data from the unencrypted bundle and encrypt it into the EncryptedData asset
+						thisEncryptionAsset.GenerateData(buildMap[bmi].assetBundleName, Path.Combine(relativeAssetBundlesOutputPathForPlatform, buildMap[bmi].assetBundleName));
+						EditorUtility.SetDirty(thisEncryptionAsset);
+						AssetDatabase.SaveAssets();
+						//Sort out the name of this encrypted bundle
+						var encryptedBundleName = "";
+						if (buildMap[bmi].assetBundleName != Utility.GetPlatformName() + "index")
+						{
+							encryptedBundleName = buildMap[bmi].assetBundleName + UMAABMSettings.GetEncryptionSuffix();
+							if (UMAABMSettings.GetEncodeNames() && buildMap[bmi].assetBundleName != Utility.GetPlatformName() + "index")
+								encryptedBundleName = EncryptionUtil.EncodeFileName(encryptedBundleName);
+						}
+						else
+						{
+							encryptedBundleName = buildMap[bmi].assetBundleName + "encrypted";
+						}
+						//set the Build map value
+						encryptedBuildMap[0].assetBundleName = encryptedBundleName;
+						encryptedBuildMap[0].assetNames = new string[1] { "Assets/EncryptedData.asset" };
+						//and build the bundle
+						BuildPipeline.BuildAssetBundles(encryptedOutputPath, encryptedBuildMap, BuildAssetBundleOptions.None, EditorUserBuildSettings.activeBuildTarget);
+					}
+					//save a json index in there too
+					var thisIndexJsonEncPath = Path.Combine(encryptedOutputPath, Utility.GetPlatformName().ToLower()) + "indexencrypted.json";
+					File.WriteAllText(thisIndexJsonEncPath, thisIndexJson);
+					AssetDatabase.DeleteAsset(thisEncryptionAssetPath);
+				}
+				//Now we can remove the temp Index item from the assetDatabase
+				AssetDatabase.DeleteAsset(thisIndexAssetPath);
 			}
-			//Now we can remove the temp Index item from the assetDatabase
-			AssetDatabase.DeleteAsset(thisIndexAssetPath);
+			catch (System.Exception e)
+			{
+				if(thisIndexAssetPath != "")
+					AssetDatabase.DeleteAsset(thisIndexAssetPath);
+				if(thisEncryptionAssetPath != "")
+					AssetDatabase.DeleteAsset(thisEncryptionAssetPath);
+				Debug.LogError("Your AssetBundles did not build properly. Error Message: " + e.Message+" Error Exception: "+e.InnerException+" Error StackTrace: "+e.StackTrace);
+			}
 		}
 
 
