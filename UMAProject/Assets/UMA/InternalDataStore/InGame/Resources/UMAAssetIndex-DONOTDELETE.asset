@@ -630,6 +630,10 @@ MonoBehaviour:
         nameHash: 1183308871
         fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Overlays/PlaceholderOverlay.asset
         fileRefPath: 
+      - name: M_Face
+        nameHash: 1009118030
+        fullPath: Assets/UMA/Content/UMA/HumanMale/Overlays/Face/M_Face_BW_Compatible.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/M_Face_BW_Compatible-fileRef
     - type: UMA.RaceData
       typeIndex:
       - name: HumanFemale
@@ -845,6 +849,11 @@ MonoBehaviour:
         nameHash: 966353494
         fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleLowPolyHead.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/MaleLowPolyHead-fileRef
+      - name: MaleFace Old
+        nameHash: -594611129
+        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleFace
+          Old.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/MaleFace Old-fileRef
     - type: UMA.DynamicUMADnaAsset
       typeIndex:
       - name: EyeSpacing
@@ -1099,3 +1108,5 @@ MonoBehaviour:
     - Assets/UMA/Content/UMA/HumanFemale/RaceData/Human Female DCS.asset
     - Assets/UMA/Content/UMA/HumanFemale/RaceData/Human Girl DCS.asset
     - Assets/UMA/Content/UMA/HumanMale/RaceData/Human Male DCS.asset
+    - Assets/UMA/Content/UMA/HumanMale/Overlays/Face/M_Face_BW_Compatible.asset
+    - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleFace Old.asset

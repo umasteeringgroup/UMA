@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Name: MaleFace
   m_EditorClassIdentifier: 
   recipeType: Wardrobe
-  DisplayValue: Face
+  DisplayValue: Tired Face
   compatibleRaces:
   - HumanMale
   - HumanMaleDCS
@@ -28,4 +28,5 @@ MonoBehaviour:
   suppressWardrobeSlots: []
   activeWardrobeSet: []
   recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"M_High
-    poly Head","scale":100,"copyIdx":-1,"overlays":[{"id":"M_Face_Old","colorIdx":0,"rect":[0,0,0,0]}]}],"colors":[],"fColors":[{"name":"Skin","colors":[248,208,183,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"","packedDna":[]}'
+    poly Head","scale":100,"copyIdx":-1,"overlays":[{"id":"M_Face_02","colorIdx":0,"rect":[0,0,0,0]}]}],"colors":[],"fColors":[{"name":"Skin","colors":[248,208,183,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"","packedDna":[]}'
+  replaces: Nothing

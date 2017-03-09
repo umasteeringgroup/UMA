@@ -30,7 +30,7 @@ public class DynamicCharacterSystemEditor : Editor
         dynamicallyAddFromResources.boolValue = EditorGUILayout.ToggleLeft(new GUIContent(" Dynamically add from Global Library", "If true this library will dynamically add any assets you have checked on in the UMA Global Library or which you have put in a Resources folder"), dynamicallyAddFromResources.boolValue);
 		EditorGUILayout.PropertyField(serializedObject.FindProperty("resourcesCharactersFolder"), new GUIContent("Global Library Characters Folder Filter", "Limit the Global Library search to the following folders (no starting slash and seperate multiple entries with a comma)"));
 		EditorGUILayout.PropertyField(serializedObject.FindProperty("resourcesRecipesFolder"), new GUIContent("Global Library Recipes Folder Filter", "Limit the Global Library search to the following folders (no starting slash and seperate multiple entries with a comma)"));
-		dynamicallyAddFromResources.boolValue = EditorGUILayout.ToggleLeft(" Dynamically add from AssetBundles", dynamicallyAddFromAssetBundles.boolValue);
+		dynamicallyAddFromAssetBundles.boolValue = EditorGUILayout.ToggleLeft(" Dynamically add from AssetBundles", dynamicallyAddFromAssetBundles.boolValue);
         EditorGUILayout.PropertyField(serializedObject.FindProperty("assetBundlesForCharactersToSearch"));
 		EditorGUILayout.PropertyField(serializedObject.FindProperty("assetBundlesForRecipesToSearch"));
 		addAllRecipesFromDownloadedBundles.boolValue = EditorGUILayout.ToggleLeft(new GUIContent(" Add all recipes from downloaded bundles", "If true will automatically scan and add all Recipes from any downloaded bundles."), addAllRecipesFromDownloadedBundles.boolValue);
