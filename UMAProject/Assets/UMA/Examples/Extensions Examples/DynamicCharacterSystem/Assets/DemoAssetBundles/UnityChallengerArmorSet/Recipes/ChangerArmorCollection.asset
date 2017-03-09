@@ -46,7 +46,7 @@ MonoBehaviour:
       - slot: Feet
         recipe: MaleChallengerBoots
       - slot: Legs
-        recipe: Shorts
+        recipe: MaleShorts2
     - targetRace: Werewolf
       wardrobeSet:
       - slot: Chest
@@ -62,7 +62,7 @@ MonoBehaviour:
       - slot: Hands
         recipe: MaleChallengerGloves
       - slot: Legs
-        recipe: Shorts
+        recipe: MaleShorts2
       - slot: Feet
         recipe: MaleChallengerBoots
   arbitraryRecipes: []
