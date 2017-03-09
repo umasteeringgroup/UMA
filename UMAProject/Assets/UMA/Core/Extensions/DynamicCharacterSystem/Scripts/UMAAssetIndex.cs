@@ -498,9 +498,7 @@ namespace UMA
 							var buildIndexData = _buildIndex.GetEntryFromPath(AMPMovedAssets[i].prevPath);
 							if (buildIndexData != null)
 							{
-								buildIndexData.fullPath = fullIndexData.fullPath;
-								buildIndexData.name = fullIndexData.name;
-								buildIndexData.nameHash = fullIndexData.nameHash;
+								buildIndexData.UpdateIndexData(fullIndexData.nameHash, fullIndexData.fullPath, fullIndexData.name);
 							}
 							//Then check if it was moved in or out of Resources
 							if (InResources(AMPMovedAssets[i].prevPath) && !InResources(AMPMovedAssets[i].newPath))
@@ -531,10 +529,7 @@ namespace UMA
 					{
 						if (InAssetBundle(AMPMovedAssets[i].newPath, thisAsset.name))
 						{
-							//if the asset is still in an assetBundle update its path
-							assetBundleIndexData.fullPath = AMPMovedAssets[i].newPath;
-							assetBundleIndexData.name = thisAssetName;
-							assetBundleIndexData.nameHash = thisAssetHash;
+							assetBundleIndexData.UpdateIndexData(thisAssetHash, AMPMovedAssets[i].newPath, thisAssetName);
 						}
 						else
 						{

@@ -759,18 +759,7 @@ namespace UMA
 					}
 					else
 					{
-						if (!String.IsNullOrEmpty(fileRefPath))
-						{
-							thisFileRefObj = Resources.Load<UMAAssetIndexFileRef>(fileRefPath);
-						}
-						if (thisFileRefObj != null)
-						{
-							var fileRefObjPath = AssetDatabase.GetAssetPath(thisFileRefObj);
-							//EditorUtility.SetDirty(fileRefObj);
-							ScriptableObject.DestroyImmediate(thisFileRefObj, true);
-							fileRefPath = null;
-							AssetDatabase.DeleteAsset(fileRefObjPath);
-						}
+						DeleteFileRefAsset();
 					}
 				}
 #endif
@@ -799,38 +788,85 @@ namespace UMA
 				name = _name;
 				nameHash = _nameHash;
 				fullPath = _fullPath;
-				//fileReference = _fileReference;
 #if UNITY_EDITOR
 				if (_fileReference != null)
 				{
-					/*if (_fileReference.GetType() == typeof(UMAAssetIndexFileRef))
-					{
-						fileRefObj = _fileReference as UMAAssetIndexFileRef;
-					}
-					else
-					{*/
-					UMAAssetIndexFileRef thisFileRefObj = null;
-					var fileRefsPath = Path.Combine(UMA.FileUtils.GetInternalDataStoreFolder(false, false), "UMAAssetIndexRefs-DONOTDELETE");
-					var fileRefsTypePath = Path.Combine(fileRefsPath, _fileReference.GetType().ToString().Replace(".", "_"));
-					Directory.CreateDirectory(fileRefsTypePath);
-					var fileRefFullPath = Path.Combine(fileRefsTypePath, _fileReference.name + "-fileRef.asset");
-					//var fileRefFullPath = Path.Combine(UMA.FileUtils.GetInternalDataStoreFolder(false, false), _fileReference.name + "-fileRef.asset");
-					fileRefPath = GetResourcesPath(fileRefFullPath);
-					thisFileRefObj = Resources.Load<UMAAssetIndexFileRef>(fileRefPath);
-					if (thisFileRefObj == null)
-						thisFileRefObj = UMAEditor.CustomAssetUtility.CreateAsset<UMAAssetIndexFileRef>(fileRefFullPath, false);
-					//set the ref to the actual object
-					thisFileRefObj.objectRef = _fileReference;
-					EditorUtility.SetDirty(thisFileRefObj);
-					//fileRefObj = UMAEditor.CustomAssetUtility.CreateAsset<UMAAssetIndexFileRef>(Path.Combine(UMA.FileUtils.GetInternalDataStoreFolder(false, false), _fileReference.name + "-fileRef.asset"), false);
-					//	fileRefObj.objectRef = _fileReference;
-					//}
+					CreateFileRefAsset(_fileReference);//creates the fileref asset and sets the fileRefPath
 				}
 				else
 				{
 					fileRefPath = "";
 				}
 #endif
+			}
+			/// <summary>
+			/// Creates the fileRef asset and sets the fileRefPath to the path of the created asset
+			/// </summary>
+			/// <param name="fileToRef">The file the FileRefAsset should reference</param>
+			public void CreateFileRefAsset(UnityEngine.Object fileToRef)
+			{
+				UMAAssetIndexFileRef thisFileRefObj = null;
+				var fileRefsPath = Path.Combine(UMA.FileUtils.GetInternalDataStoreFolder(false, false), "UMAAssetIndexRefs-DONOTDELETE");
+				var fileRefsTypePath = Path.Combine(fileRefsPath, fileToRef.GetType().ToString().Replace(".", "_"));
+				Directory.CreateDirectory(fileRefsTypePath);
+				var fileRefFullPath = Path.Combine(fileRefsTypePath, fileToRef.name + "-fileRef.asset");
+				fileRefPath = GetResourcesPath(fileRefFullPath);
+				thisFileRefObj = Resources.Load<UMAAssetIndexFileRef>(fileRefPath);
+				if (thisFileRefObj == null)
+					thisFileRefObj = UMAEditor.CustomAssetUtility.CreateAsset<UMAAssetIndexFileRef>(fileRefFullPath, false);
+				//set the ref to the actual object
+				thisFileRefObj.objectRef = fileToRef;
+				EditorUtility.SetDirty(thisFileRefObj);
+			}
+			/// <summary>
+			/// Deletes the fileRef asset if it exists and sets the fileRefPath to empty
+			/// </summary>
+			public void DeleteFileRefAsset()
+			{
+				UMAAssetIndexFileRef thisFileRefObj = null;
+                if (!String.IsNullOrEmpty(fileRefPath))
+				{
+					thisFileRefObj = Resources.Load<UMAAssetIndexFileRef>(fileRefPath);
+				}
+				if (thisFileRefObj != null)
+				{
+					var fileRefObjPath = AssetDatabase.GetAssetPath(thisFileRefObj);
+					ScriptableObject.DestroyImmediate(thisFileRefObj, true);
+					fileRefPath = "";
+					AssetDatabase.DeleteAsset(fileRefObjPath);
+				}
+			}
+
+			public void UpdateIndexData(int _nameHash, string _fullPath, string _name)
+			{
+				nameHash = _nameHash;
+				fullPath = _fullPath;
+				if(_name != name)
+				{
+					//we need to delete the fileRef asset if there is one nad make a new one with the new name
+					if(!String.IsNullOrEmpty(fileRefPath))
+					{
+						var thisRefAsset = Resources.Load<UMAAssetIndexFileRef>(fileRefPath);
+						if(thisRefAsset != null)
+						{
+							var thisAssetRef = thisRefAsset.objectRef;
+							if(thisAssetRef != null)
+							{
+								DeleteFileRefAsset();
+								CreateFileRefAsset(thisAssetRef);
+							}
+							else
+							{
+								fileRefPath = "";
+							}
+						}
+						else
+						{
+							fileRefPath = "";
+						}
+					}
+					name = _name;
+				}
 			}
 
 		}
