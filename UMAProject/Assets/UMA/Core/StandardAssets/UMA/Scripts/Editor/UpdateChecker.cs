@@ -15,7 +15,7 @@ public class UpdateChecker
         
         if(startupTime < 90)
             startupTime = 90;
-        Debug.Log(startupTime + " / " + EditorApplication.timeSinceStartup);
+            
         if(startupTime > EditorApplication.timeSinceStartup)
         {
             EditorPrefs.SetFloat("UMA_EditorTime", (float)EditorApplication.timeSinceStartup);
