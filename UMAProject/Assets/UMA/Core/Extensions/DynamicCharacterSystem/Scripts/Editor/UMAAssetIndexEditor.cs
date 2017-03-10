@@ -561,8 +561,11 @@ namespace UMAEditor
 			serializedObject.ApplyModifiedProperties();
 			if (changed)
 			{
-				EditorUtility.SetDirty(target);
-				AssetDatabase.SaveAssets();
+				if (target)//how the hell this cant exist when this only edxists because it does I dont know, but we get editor errors none the less
+				{
+					EditorUtility.SetDirty(target);
+					AssetDatabase.SaveAssets();
+				}
 				//EditorApplication.update -= SaveOnUpdate;
 				//EditorApplication.update += SaveOnUpdate;
 			}
