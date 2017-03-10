@@ -675,6 +675,24 @@ MonoBehaviour:
         nameHash: -1081245287
         fullPath: Assets/UMA/Content/Contrib/Wrapped Pants/Overlays/Wrapped Pants.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/Wrapped Pants-fileRef
+      - name: FemaleLongHair01
+        nameHash: 1354908994
+        fullPath: Assets/UMA/Content/UMA/HumanFemale/Overlays/Hair/FemaleLongHair01.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/FemaleLongHair01-fileRef
+      - name: Skin patches Face
+        nameHash: 1313202359
+        fullPath: Assets/UMA/Content/UMA/HumanMale/Overlays/Complexion/Skin patches
+          Face.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/Skin patches
+          Face-fileRef
+      - name: ElvenEars
+        nameHash: 890332972
+        fullPath: Assets/UMA/Content/UMA/HumanShared/Overlays/Face/ElvenEars.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/ElvenEars-fileRef
+      - name: Alligator_eye_adjust
+        nameHash: 670934223
+        fullPath: Assets/UMA/Content/UMA/HumanShared/Overlays/Face/Eye/EyeAdjust/Alligator_eye_adjust.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/Alligator_eye_adjust-fileRef
     - type: UMA.RaceData
       typeIndex:
       - name: PlaceholderRace
@@ -1304,3 +1322,7 @@ MonoBehaviour:
       Head.controller
     - Assets/UMA/Examples/Main Examples/Assets/Animation/Animators/Locomotion.controller
     - Assets/UMA/Content/UMA/HumanFemale/DNA/DynamicDNA/HumanFemaleDNA 1.asset
+    - Assets/UMA/Content/UMA/HumanFemale/Overlays/Hair/FemaleLongHair01.asset
+    - Assets/UMA/Content/UMA/HumanMale/Overlays/Complexion/Skin patches Face.asset
+    - Assets/UMA/Content/UMA/HumanShared/Overlays/Face/ElvenEars.asset
+    - Assets/UMA/Content/UMA/HumanShared/Overlays/Face/Eye/EyeAdjust/Alligator_eye_adjust.asset

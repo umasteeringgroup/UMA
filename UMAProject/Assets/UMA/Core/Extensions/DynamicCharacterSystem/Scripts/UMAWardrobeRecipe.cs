@@ -62,28 +62,6 @@ public partial class UMAWardrobeRecipe : UMATextRecipe
 		return true;
 	}
 
-	protected override void ConvertFromUTR(UMATextRecipe sourceUTR, bool andSelect = false)
-	{
-		var thisUTRPath = AssetDatabase.GetAssetPath(sourceUTR);
-		//copy the settings from UMATextRecipe to UMADynamicCharacterAvatarRecipe
-		if (CopyFromUTR(sourceUTR))
-		{
-			Debug.Log("Converted " + sourceUTR.name + " to an UMAWardrobeRecipe");
-			//rename old UMATextRecipe recipe to *name*_old
-			AssetDatabase.RenameAsset(thisUTRPath, sourceUTR.name + "_old");
-			AssetDatabase.CreateAsset(this, thisUTRPath);
-			//Delete the old Asset
-			AssetDatabase.DeleteAsset(Path.Combine(Path.GetDirectoryName(thisUTRPath), (Path.GetFileNameWithoutExtension(thisUTRPath) + "_old" + Path.GetExtension(thisUTRPath))));
-			AssetDatabase.SaveAssets();
-			if (andSelect)
-				Selection.activeObject = this;
-		}
-		else
-		{
-			Debug.Log("Conversion of " + sourceUTR.name + " to an UMAWardrobeRecipe failed. Was the recipeType 'Wardrobe'?");
-			ScriptableObject.Destroy(this);
-		}
-	}
 #endif
 	#endregion
 
