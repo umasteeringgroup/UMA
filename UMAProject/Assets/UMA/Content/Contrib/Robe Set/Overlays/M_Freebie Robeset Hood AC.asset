@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c4834e6077abe64e968f9f87c9ac70a, type: 3}
+  m_Name: M_Freebie Robeset Hood AC
+  m_EditorClassIdentifier: 
+  overlayName: M_Freebie Robeset Hood AC
+  overlayType: 0
+  rect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
+  alphaMask: {fileID: 0}
+  textureList:
+  - {fileID: 2800000, guid: 3994de13deb5d5a409b414a7c747d4e3, type: 3}
+  - {fileID: 2800000, guid: ac8ad506ee5f8984d9591dd715ea545f, type: 3}
+  - {fileID: 2800000, guid: 14a815c7716781843bb171b88a227cf4, type: 3}
+  tags: []
+  material: {fileID: 11400000, guid: 8e29dbac5d2e82f44a759a7e2cc568ab, type: 2}
+  OcclusionEntries: []

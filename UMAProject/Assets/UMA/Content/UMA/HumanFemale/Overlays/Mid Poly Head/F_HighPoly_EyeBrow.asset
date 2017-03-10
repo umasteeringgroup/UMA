@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c4834e6077abe64e968f9f87c9ac70a, type: 3}
+  m_Name: F_HighPoly_EyeBrow
+  m_EditorClassIdentifier: 
+  overlayName: F_HighPoly_EyeBrow
+  overlayType: 0
+  rect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
+  alphaMask: {fileID: 0}
+  textureList:
+  - {fileID: 2800000, guid: ca5524875bc901b419962c4d50420f2b, type: 3}
+  - {fileID: 2800000, guid: 6eccaa33eeb95784cb7384cd762a1d87, type: 3}
+  - {fileID: 2800000, guid: cee8d3f18a3209a4695ef7f0185e176a, type: 3}
+  tags: []
+  material: {fileID: 11400000, guid: 5b112eb59f279ce49a718737b5dfde81, type: 2}
+  OcclusionEntries: []

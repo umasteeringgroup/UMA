@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0188188c253e0c4bb9b46e19fa7312e, type: 3}
+  m_Name: MaleEye1
+  m_EditorClassIdentifier: 
+  recipeType: Wardrobe
+  DisplayValue: Alligator Eyes
+  compatibleRaces:
+  - HumanMale
+  - HumanMaleDCS
+  wardrobeRecipeThumbs:
+  - race: HumanMale
+    filename: 
+    thumb: {fileID: 21300000, guid: c13828597679d0b48bdf3f20d5462564, type: 3}
+  - race: HumanMaleDCS
+    filename: 
+    thumb: {fileID: 0}
+  wardrobeSlot: Eyes
+  Hides: []
+  suppressWardrobeSlots: []
+  activeWardrobeSet: []
+  recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"MaleEyes","scale":100,"copyIdx":-1,"overlays":[{"id":"Alligator_eye_adjust","colorIdx":0,"rect":[64,64,128,128]}]}],"colors":[],"fColors":[{"name":"Eyes","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"","packedDna":[]}'

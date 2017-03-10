@@ -6,16 +6,26 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/UMA/Example/Scenes/Scene01 - Crowd - PBR 1.unity
+    path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Scenes/UMA
+      DCS Demo - Simple Setup.unity
   - enabled: 1
-    path: Assets/UMA/Example/Scenes/Scene07 - NetworkingGame.unity
+    path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Scenes/UMA
+      DCS Demo - Using Asset Bundles.unity
   - enabled: 1
-    path: Assets/UMA/Example/Scenes/Scene07 - NetworkingMenu.unity
+    path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Scenes/UMA
+      DCS Tool - DNAConverterBehaviour Customizer.unity
   - enabled: 1
-    path: Assets/UMA/Example/Scenes/Scene02 - Serialize - PBR.unity
+    path: Assets/UMA/Examples/Main Examples/Scenes/UMA Core Demo - Crowd.unity
   - enabled: 1
-    path: Assets/UMA/Example/Scenes/Scene03 - Verify Slot Meshes - PBR.unity
+    path: Assets/UMA/Examples/Main Examples/Scenes/UMA Core Demo - Serialized Characters.unity
   - enabled: 1
-    path: Assets/UMA/Example/Scenes/Scene04 - Serialized Expression - PBR.unity
+    path: Assets/UMA/Examples/Main Examples/Scenes/UMA Core Tool - Verify Slot Meshes.unity
   - enabled: 1
-    path: Assets/UMA/Example/Scenes/Scene06 - Crowd Recipes - PBR.unity
+    path: Assets/UMA/Examples/Main Examples/Scenes/Scene04 - Serialized Expression
+      - PBR.unity
+  - enabled: 1
+    path: Assets/UMA/Examples/Main Examples/Scenes/UMA Core Demo - Crowd Recipes.unity
+  - enabled: 1
+    path: Assets/UMA/Examples/Main Examples/Scenes/UMA Core Demo - Networking Menu.unity
+  - enabled: 1
+    path: Assets/UMA/Examples/Main Examples/Scenes/UMA Core Demo - Texture LOD.unity

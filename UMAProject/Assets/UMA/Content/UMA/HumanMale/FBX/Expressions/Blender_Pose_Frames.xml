@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<ArrayOfAnimationPose xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <AnimationPose ID="MouthWide">
+    <frame>10</frame>
+  </AnimationPose>
+  <AnimationPose ID="MouthPucker">
+    <frame>30</frame>
+  </AnimationPose>
+  <AnimationPose ID="UpperLipUp">
+    <frame>50</frame>
+  </AnimationPose>
+  <AnimationPose ID="UpperLipDown">
+    <frame>70</frame>
+  </AnimationPose>
+  <AnimationPose ID="LowerLipDown">
+    <frame>90</frame>
+  </AnimationPose>
+  <AnimationPose ID="LowerLipUp">
+    <frame>110</frame>
+  </AnimationPose>
+  <AnimationPose ID="MouthFrown">
+    <frame>130</frame>
+  </AnimationPose>
+  <AnimationPose ID="NoseSneer">
+    <frame>150</frame>
+  </AnimationPose>
+  <AnimationPose ID="BrowOuterUp">
+    <frame>170</frame>
+  </AnimationPose>
+  <AnimationPose ID="BrowOuterDown">
+    <frame>190</frame>
+  </AnimationPose>
+  <AnimationPose ID="BrowInnerUp">
+    <frame>210</frame>
+  </AnimationPose>
+  <AnimationPose ID="BrowInnerDown">
+    <frame>230</frame>
+  </AnimationPose>
+  <AnimationPose ID="BrowIn">
+    <frame>250</frame>
+  </AnimationPose>
+  <AnimationPose ID="EyesSquint">
+    <frame>270</frame>
+  </AnimationPose>
+  <AnimationPose ID="EyesClose">
+    <frame>290</frame>
+  </AnimationPose>
+  <AnimationPose ID="EyesOpen">
+    <frame>310</frame>
+  </AnimationPose>
+  <AnimationPose ID="EyesUp">
+    <frame>330</frame>
+  </AnimationPose>
+  <AnimationPose ID="EyesDown">
+    <frame>350</frame>
+  </AnimationPose>
+  <AnimationPose ID="EyesIn">
+    <frame>370</frame>
+  </AnimationPose>
+  <AnimationPose ID="EyesOut">
+    <frame>390</frame>
+  </AnimationPose>
+  <AnimationPose ID="JawOpen">
+    <frame>410</frame>
+  </AnimationPose>
+  <AnimationPose ID="JawForward">
+    <frame>430</frame>
+  </AnimationPose>
+  <AnimationPose ID="JawLeft">
+    <frame>450</frame>
+  </AnimationPose>
+  <AnimationPose ID="JawRight">
+    <frame>470</frame>
+  </AnimationPose>
+  <AnimationPose ID="MouthLeft">
+    <frame>490</frame>
+  </AnimationPose>
+  <AnimationPose ID="MouthRight">
+    <frame>510</frame>
+  </AnimationPose>
+  <AnimationPose ID="CheeksPuff">
+    <frame>530</frame>
+  </AnimationPose>
+  <AnimationPose ID="TongueOut_Partial">
+    <frame>545</frame>
+  </AnimationPose>
+  <AnimationPose ID="TongueOut">
+    <frame>550</frame>
+  </AnimationPose>
+  <AnimationPose ID="TongueDown">
+    <frame>570</frame>
+  </AnimationPose>
+  <AnimationPose ID="TongueUp">
+    <frame>590</frame>
+  </AnimationPose>
+  <AnimationPose ID="TongueLeft">
+    <frame>610</frame>
+  </AnimationPose>
+  <AnimationPose ID="TongueRight">
+    <frame>630</frame>
+  </AnimationPose>
+  <AnimationPose ID="NeckLeft">
+    <frame>650</frame>
+  </AnimationPose>
+  <AnimationPose ID="NeckRight">
+    <frame>670</frame>
+  </AnimationPose>
+  <AnimationPose ID="NeckDown">
+    <frame>690</frame>
+  </AnimationPose>
+  <AnimationPose ID="NeckUp">
+    <frame>710</frame>
+  </AnimationPose>
+  <AnimationPose ID="NeckTiltLeft">
+    <frame>730</frame>
+  </AnimationPose>
+  <AnimationPose ID="NeckTiltRight">
+    <frame>750</frame>
+  </AnimationPose>
+  <AnimationPose ID="HeadLeft">
+    <frame>770</frame>
+  </AnimationPose>
+  <AnimationPose ID="HeadRight">
+    <frame>790</frame>
+  </AnimationPose>
+  <AnimationPose ID="HeadDown">
+    <frame>810</frame>
+  </AnimationPose>
+  <AnimationPose ID="HeadUp">
+    <frame>830</frame>
+  </AnimationPose>
+  <AnimationPose ID="HeadTiltLeft">
+    <frame>850</frame>
+  </AnimationPose>
+  <AnimationPose ID="HeadTiltRight">
+    <frame>870</frame>
+  </AnimationPose>
+  <AnimationPose ID="JawClose">
+    <frame>890</frame>
+  </AnimationPose>
+  <AnimationPose ID="MouthUp">
+    <frame>910</frame>
+  </AnimationPose>
+  <AnimationPose ID="MouthDown">
+    <frame>930</frame>
+  </AnimationPose>
+  <AnimationPose ID="MouthNarrow">
+    <frame>950</frame>
+  </AnimationPose>
+  <AnimationPose ID="TongueWide">
+    <frame>970</frame>
+  </AnimationPose>
+  <AnimationPose ID="TongueNarrow">
+    <frame>989</frame>
+  </AnimationPose>
+</ArrayOfAnimationPose>
