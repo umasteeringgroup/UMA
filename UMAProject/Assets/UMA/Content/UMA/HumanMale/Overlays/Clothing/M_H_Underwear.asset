@@ -22,7 +22,7 @@ MonoBehaviour:
   alphaMask: {fileID: 0}
   textureList:
   - {fileID: 2800000, guid: 42a14c30761d02648aee3c20858ffdae, type: 3}
-  - {fileID: 2800000, guid: e4ad8f2fd2835dd44a82065d7c918327, type: 3}
+  - {fileID: 2800000, guid: 32afddac09b8ce5479274e5822dbb54d, type: 3}
   - {fileID: 2800000, guid: 0b387c31f41888947aa0ffb2fbbd848b, type: 3}
   tags: []
   material: {fileID: 11400000, guid: 8e29dbac5d2e82f44a759a7e2cc568ab, type: 2}

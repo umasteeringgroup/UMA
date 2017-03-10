@@ -112,32 +112,6 @@ MonoBehaviour:
         nameHash: -1427704956
         fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Slots/PlaceholderTorso.asset
         fileRefPath: 
-      - name: M_Gloves of Hammer
-        nameHash: 480778712
-        fullPath: Assets/UMA/Content/Contrib/Gloves_of_Hammer/Slot/M_Gloves of Hammer_Slot.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/M_Gloves of Hammer_Slot-fileRef
-      - name: M_Freebie Robeset Boots_Slot
-        nameHash: -710651841
-        fullPath: Assets/UMA/Content/Contrib/Robe Set/Slots/M_Freebie Robeset Boots/M_Freebie
-          Robeset Boots_Slot.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/M_Freebie Robeset
-          Boots_Slot-fileRef
-      - name: M_Freebie Robeset Hood_Slot
-        nameHash: -1659148726
-        fullPath: Assets/UMA/Content/Contrib/Robe Set/Slots/M_Freebie Robeset Hood/M_Freebie
-          Robeset Hood_Slot.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/M_Freebie Robeset
-          Hood_Slot-fileRef
-      - name: M_Freebie Robeset Robe_Slot
-        nameHash: 243145920
-        fullPath: Assets/UMA/Content/Contrib/Robe Set/Slots/M_Freebie Robeset Robe/M_Freebie
-          Robeset Robe_Slot.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/M_Freebie Robeset
-          Robe_Slot-fileRef
-      - name: M_Wrapped Pants
-        nameHash: 541111014
-        fullPath: Assets/UMA/Content/Contrib/Wrapped Pants/Slots/M_Wrapped Pants_Slot.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/M_Wrapped Pants_Slot-fileRef
       - name: FemaleEyes
         nameHash: 142433001
         fullPath: Assets/UMA/Content/UMA/HumanFemale/Slots/Body/UMA_Human_Female_Eyes_Slot.asset
@@ -154,10 +128,6 @@ MonoBehaviour:
         nameHash: -1506068421
         fullPath: Assets/UMA/Content/UMA/HumanFemale/Slots/Body/UMA_Human_Female_Hands_Slot.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/UMA_Human_Female_Hands_Slot-fileRef
-      - name: FemaleInnerMouth
-        nameHash: 827934634
-        fullPath: Assets/UMA/Content/UMA/HumanFemale/Slots/Body/UMA_Human_Female_InnerMouth_Slot.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/UMA_Human_Female_InnerMouth_Slot-fileRef
       - name: FemaleLegs
         nameHash: 1384066549
         fullPath: Assets/UMA/Content/UMA/HumanFemale/Slots/Body/UMA_Human_Female_Legs_Slot.asset
@@ -166,10 +136,6 @@ MonoBehaviour:
         nameHash: -414533818
         fullPath: Assets/UMA/Content/UMA/HumanFemale/Slots/Body/UMA_Human_Female_Torso_Slot.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/UMA_Human_Female_Torso_Slot-fileRef
-      - name: FemaleHead_Ears
-        nameHash: 1761112973
-        fullPath: Assets/UMA/Content/UMA/HumanFemale/Slots/Body/FemaleSwappedHead/UMA_Human_Female_Head_Ears_Slot.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/UMA_Human_Female_Head_Ears_Slot-fileRef
       - name: FemaleHead_ElvenEars
         nameHash: 1295016969
         fullPath: Assets/UMA/Content/UMA/HumanFemale/Slots/Body/FemaleSwappedHead/UMA_Human_Female_Head_ElvenEars_Slot.asset
@@ -186,10 +152,6 @@ MonoBehaviour:
         nameHash: -1733575239
         fullPath: Assets/UMA/Content/UMA/HumanFemale/Slots/Body/FemaleSwappedHead/UMA_Human_Female_Head_Mouth_Slot.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/UMA_Human_Female_Head_Mouth_Slot-fileRef
-      - name: FemaleHead_Nose
-        nameHash: 1487429014
-        fullPath: Assets/UMA/Content/UMA/HumanFemale/Slots/Body/FemaleSwappedHead/UMA_Human_Female_Head_Nose_Slot.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/UMA_Human_Female_Head_Nose_Slot-fileRef
       - name: UMA_Human_Female_Head_AnimeElvenEars
         nameHash: 1229021077
         fullPath: Assets/UMA/Content/UMA/HumanFemale/Slots/Body/FemaleSwappedHead/FemaleAnimeElvenEars/UMA_Human_Female_Head_AnimeElvenEars_Slot.asset
@@ -218,18 +180,10 @@ MonoBehaviour:
         nameHash: 830910443
         fullPath: Assets/UMA/Content/UMA/HumanFemale/Slots/Hair/FemaleEyelash.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/FemaleEyelash-fileRef
-      - name: FemaleEyelashfix
-        nameHash: -787874269
-        fullPath: Assets/UMA/Content/UMA/HumanFemale/Slots/Hair/FemaleEyelashfix_Slot.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/FemaleEyelashfix_Slot-fileRef
       - name: UMA_fem_hair_1_005
         nameHash: 1515873655
         fullPath: Assets/UMA/Content/UMA/HumanFemale/Slots/Hair/FemaleHighPolyHair.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/FemaleHighPolyHair-fileRef
-      - name: FemaleLongHair01
-        nameHash: 1354908994
-        fullPath: Assets/UMA/Content/UMA/HumanFemale/Slots/Hair/FemaleLongHair01.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/FemaleLongHair01-fileRef
       - name: FemaleLongHair01_Module
         nameHash: 643993355
         fullPath: Assets/UMA/Content/UMA/HumanFemale/Slots/Hair/FemaleLongHair01_Module.asset
@@ -326,14 +280,60 @@ MonoBehaviour:
         nameHash: -1002373313
         fullPath: Assets/UMA/Content/UMA/HumanMale/Slots/Hair/M_Eyebrow_Slot.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/M_Eyebrow_Slot-fileRef
-      - name: MaleHair1
-        nameHash: 561152172
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Slots/Hair/MaleHair1_Slot.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/MaleHair1_Slot-fileRef
       - name: CapsuleCollider
         nameHash: -258706064
         fullPath: Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/CapsuleCollider/CapsuleColliderSlot.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/CapsuleColliderSlot-fileRef
+      - name: M_Gloves of Hammer
+        nameHash: 480778712
+        fullPath: Assets/UMA/Content/Contrib/Gloves_of_Hammer/Slot/M_Gloves of Hammer_Slot.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/M_Gloves of Hammer_Slot-fileRef
+      - name: M_Freebie Robeset Boots_Slot
+        nameHash: -710651841
+        fullPath: Assets/UMA/Content/Contrib/Robe Set/Slots/M_Freebie Robeset Boots/M_Freebie
+          Robeset Boots_Slot.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/M_Freebie Robeset
+          Boots_Slot-fileRef
+      - name: M_Freebie Robeset Hood_Slot
+        nameHash: -1659148726
+        fullPath: Assets/UMA/Content/Contrib/Robe Set/Slots/M_Freebie Robeset Hood/M_Freebie
+          Robeset Hood_Slot.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/M_Freebie Robeset
+          Hood_Slot-fileRef
+      - name: M_Freebie Robeset Robe_Slot
+        nameHash: 243145920
+        fullPath: Assets/UMA/Content/Contrib/Robe Set/Slots/M_Freebie Robeset Robe/M_Freebie
+          Robeset Robe_Slot.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/M_Freebie Robeset
+          Robe_Slot-fileRef
+      - name: M_Wrapped Pants
+        nameHash: 541111014
+        fullPath: Assets/UMA/Content/Contrib/Wrapped Pants/Slots/M_Wrapped Pants_Slot.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/M_Wrapped Pants_Slot-fileRef
+      - name: FemaleInnerMouth
+        nameHash: 827934634
+        fullPath: Assets/UMA/Content/UMA/HumanFemale/Slots/Body/UMA_Human_Female_InnerMouth_Slot.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/UMA_Human_Female_InnerMouth_Slot-fileRef
+      - name: FemaleHead_Ears
+        nameHash: 1761112973
+        fullPath: Assets/UMA/Content/UMA/HumanFemale/Slots/Body/FemaleSwappedHead/UMA_Human_Female_Head_Ears_Slot.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/UMA_Human_Female_Head_Ears_Slot-fileRef
+      - name: FemaleHead_Nose
+        nameHash: 1487429014
+        fullPath: Assets/UMA/Content/UMA/HumanFemale/Slots/Body/FemaleSwappedHead/UMA_Human_Female_Head_Nose_Slot.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/UMA_Human_Female_Head_Nose_Slot-fileRef
+      - name: FemaleLongHair01
+        nameHash: 1354908994
+        fullPath: Assets/UMA/Content/UMA/HumanFemale/Slots/Hair/FemaleLongHair01.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/FemaleLongHair01-fileRef
+      - name: FemaleEyelashfix
+        nameHash: -787874269
+        fullPath: Assets/UMA/Content/UMA/HumanFemale/Slots/Hair/FemaleEyelashfix_Slot.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/FemaleEyelashfix_Slot-fileRef
+      - name: MaleHair1
+        nameHash: 561152172
+        fullPath: Assets/UMA/Content/UMA/HumanMale/Slots/Hair/MaleHair1_Slot.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_SlotDataAsset/MaleHair1_Slot-fileRef
     - type: UMA.OverlayDataAsset
       typeIndex:
       - name: GuideMeshOverlay
@@ -348,43 +348,6 @@ MonoBehaviour:
         nameHash: 1183308871
         fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Overlays/PlaceholderOverlay.asset
         fileRefPath: 
-      - name: Gloves of Hammer Overlay
-        nameHash: 1370351515
-        fullPath: Assets/UMA/Content/Contrib/Gloves_of_Hammer/Overlay/Gloves of Hammer
-          Overlay.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/Gloves of
-          Hammer Overlay-fileRef
-      - name: M_Freebie Robeset Boots
-        nameHash: 1064080667
-        fullPath: Assets/UMA/Content/Contrib/Robe Set/Overlays/M_Freebie Robeset Boots.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/M_Freebie
-          Robeset Boots-fileRef
-      - name: M_Freebie Robeset Hood AC
-        nameHash: -189892716
-        fullPath: Assets/UMA/Content/Contrib/Robe Set/Overlays/M_Freebie Robeset Hood
-          AC.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/M_Freebie
-          Robeset Hood AC-fileRef
-      - name: M_Freebie Robeset Hood
-        nameHash: -1527560461
-        fullPath: Assets/UMA/Content/Contrib/Robe Set/Overlays/M_Freebie Robeset Hood.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/M_Freebie
-          Robeset Hood-fileRef
-      - name: M_Freebie Robeset Robe AC
-        nameHash: 1999378368
-        fullPath: Assets/UMA/Content/Contrib/Robe Set/Overlays/M_Freebie Robeset Robe
-          AC.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/M_Freebie
-          Robeset Robe AC-fileRef
-      - name: M_Freebie Robeset Robe
-        nameHash: 1509867475
-        fullPath: Assets/UMA/Content/Contrib/Robe Set/Overlays/M_Freebie Robeset Robe.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/M_Freebie
-          Robeset Robe-fileRef
-      - name: Wrapped Pants
-        nameHash: -1081245287
-        fullPath: Assets/UMA/Content/Contrib/Wrapped Pants/Overlays/Wrapped Pants.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/Wrapped Pants-fileRef
       - name: F_H_Bod
         nameHash: 1730585316
         fullPath: Assets/UMA/Content/UMA/HumanFemale/Overlays/Body/F_H_bod.asset
@@ -470,10 +433,6 @@ MonoBehaviour:
         nameHash: -1644975596
         fullPath: Assets/UMA/Content/UMA/HumanFemale/Overlays/Hair/FemaleLongHair_Cap.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/FemaleLongHair_Cap-fileRef
-      - name: FemaleLongHair01
-        nameHash: 1354908994
-        fullPath: Assets/UMA/Content/UMA/HumanFemale/Overlays/Hair/FemaleLongHair01.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/FemaleLongHair01-fileRef
       - name: FemaleLongHair01_Module
         nameHash: 643993355
         fullPath: Assets/UMA/Content/UMA/HumanFemale/Overlays/Hair/FemaleLongHair01_Module.asset
@@ -548,12 +507,6 @@ MonoBehaviour:
         nameHash: -1875736584
         fullPath: Assets/UMA/Content/UMA/HumanMale/Overlays/Complexion/Body Hair.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/Body Hair-fileRef
-      - name: Skin patches Face
-        nameHash: 1313202359
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Overlays/Complexion/Skin patches
-          Face.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/Skin patches
-          Face-fileRef
       - name: Skin Patches
         nameHash: 1360938595
         fullPath: Assets/UMA/Content/UMA/HumanMale/Overlays/Complexion/Skin Patches.asset
@@ -633,10 +586,6 @@ MonoBehaviour:
           1.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/ElvenEars-
           Body 1-fileRef
-      - name: ElvenEars
-        nameHash: 890332972
-        fullPath: Assets/UMA/Content/UMA/HumanShared/Overlays/Face/ElvenEars.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/ElvenEars-fileRef
       - name: InnerMouth
         nameHash: -693639259
         fullPath: Assets/UMA/Content/UMA/HumanShared/Overlays/Face/InnerMouth.asset
@@ -655,10 +604,6 @@ MonoBehaviour:
           Eye Adjust.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/FP Default
           Eye Adjust-fileRef
-      - name: Alligator_eye_adjust
-        nameHash: 670934223
-        fullPath: Assets/UMA/Content/UMA/HumanShared/Overlays/Face/Eye/EyeAdjust/Alligator_eye_adjust.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/Alligator_eye_adjust-fileRef
       - name: Alligator_eye_Alternate_adjust
         nameHash: -1889819273
         fullPath: Assets/UMA/Content/UMA/HumanShared/Overlays/Face/Eye/EyeAdjust/Alligator_eye_Alternate_adjust.asset
@@ -693,6 +638,43 @@ MonoBehaviour:
         nameHash: 94076350
         fullPath: Assets/UMA/Content/UMA/HumanShared/Overlays/Hair/MeshHairStd.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/MeshHairStd-fileRef
+      - name: Gloves of Hammer Overlay
+        nameHash: 1370351515
+        fullPath: Assets/UMA/Content/Contrib/Gloves_of_Hammer/Overlay/Gloves of Hammer
+          Overlay.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/Gloves of
+          Hammer Overlay-fileRef
+      - name: M_Freebie Robeset Boots
+        nameHash: 1064080667
+        fullPath: Assets/UMA/Content/Contrib/Robe Set/Overlays/M_Freebie Robeset Boots.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/M_Freebie
+          Robeset Boots-fileRef
+      - name: M_Freebie Robeset Hood AC
+        nameHash: -189892716
+        fullPath: Assets/UMA/Content/Contrib/Robe Set/Overlays/M_Freebie Robeset Hood
+          AC.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/M_Freebie
+          Robeset Hood AC-fileRef
+      - name: M_Freebie Robeset Hood
+        nameHash: -1527560461
+        fullPath: Assets/UMA/Content/Contrib/Robe Set/Overlays/M_Freebie Robeset Hood.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/M_Freebie
+          Robeset Hood-fileRef
+      - name: M_Freebie Robeset Robe AC
+        nameHash: 1999378368
+        fullPath: Assets/UMA/Content/Contrib/Robe Set/Overlays/M_Freebie Robeset Robe
+          AC.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/M_Freebie
+          Robeset Robe AC-fileRef
+      - name: M_Freebie Robeset Robe
+        nameHash: 1509867475
+        fullPath: Assets/UMA/Content/Contrib/Robe Set/Overlays/M_Freebie Robeset Robe.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/M_Freebie
+          Robeset Robe-fileRef
+      - name: Wrapped Pants
+        nameHash: -1081245287
+        fullPath: Assets/UMA/Content/Contrib/Wrapped Pants/Overlays/Wrapped Pants.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_OverlayDataAsset/Wrapped Pants-fileRef
     - type: UMA.RaceData
       typeIndex:
       - name: PlaceholderRace
@@ -707,14 +689,14 @@ MonoBehaviour:
         nameHash: -2121082867
         fullPath: Assets/UMA/Content/UMA/HumanFemale/RaceData/Human Female.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_RaceData/Human Female-fileRef
-      - name: HumanGirlDCS
-        nameHash: 1790936731
-        fullPath: Assets/UMA/Content/UMA/HumanFemale/RaceData/Human Girl DCS.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_RaceData/Human Girl DCS-fileRef
       - name: HumanMaleDCS
         nameHash: -2143011375
         fullPath: Assets/UMA/Content/UMA/HumanMale/RaceData/Human Male DCS.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_RaceData/Human Male DCS-fileRef
+      - name: HumanGirlDCS
+        nameHash: 1790936731
+        fullPath: Assets/UMA/Content/UMA/HumanFemale/RaceData/Human Girl DCS.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_RaceData/Human Girl DCS-fileRef
       - name: HumanMale
         nameHash: -1128037832
         fullPath: Assets/UMA/Content/UMA/HumanMale/RaceData/Human Male.asset
@@ -758,6 +740,98 @@ MonoBehaviour:
         nameHash: 1624429404
         fullPath: Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/CapsuleCollider/CapsuleColliderRecipe.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/CapsuleColliderRecipe-fileRef
+      - name: FemaleToonBaseGuide
+        nameHash: -885237026
+        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Recipes/FemaleToonBaseGuide.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/FemaleToonBaseGuide-fileRef
+      - name: GirlBaseAsDNA
+        nameHash: 2060656581
+        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Recipes/GirlBaseAsDNA.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/GirlBaseAsDNA-fileRef
+      - name: GirlBaseGuide
+        nameHash: -1291499277
+        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Recipes/GirlBaseGuide.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/GirlBaseGuide-fileRef
+      - name: ExpressionsRecipe
+        nameHash: 1019804478
+        fullPath: Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/Expressions/ExpressionsRecipe.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/ExpressionsRecipe-fileRef
+      - name: ForearmTwistRecipe
+        nameHash: 1213837382
+        fullPath: Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/ForearmTwist/ForearmTwistRecipe.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/ForearmTwistRecipe-fileRef
+      - name: LocomotionRecipe
+        nameHash: 1853472904
+        fullPath: Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/Locomotion/LocomotionRecipe.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/LocomotionRecipe-fileRef
+      - name: Harold
+        nameHash: -139390273
+        fullPath: Assets/UMA/Examples/Main Examples/Assets/Characters/Harold.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/Harold-fileRef
+      - name: KimCardassian
+        nameHash: 1093180919
+        fullPath: Assets/UMA/Examples/Main Examples/Assets/Characters/KimCardassian.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/KimCardassian-fileRef
+      - name: Shelly
+        nameHash: 1061044016
+        fullPath: Assets/UMA/Examples/Main Examples/Assets/Characters/Shelly.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/Shelly-fileRef
+      - name: Sven
+        nameHash: 436254735
+        fullPath: Assets/UMA/Examples/Main Examples/Assets/Characters/Sven.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/Sven-fileRef
+      - name: Troll
+        nameHash: 71332804
+        fullPath: Assets/UMA/Examples/Main Examples/Assets/Characters/Troll.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/Troll-fileRef
+      - name: FemaleHair
+        nameHash: 865079142
+        fullPath: Assets/UMA/Examples/Main Examples/Assets/RecipeFragments/FemaleHair.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/FemaleHair-fileRef
+      - name: FemaleHairLong
+        nameHash: 1076167352
+        fullPath: Assets/UMA/Examples/Main Examples/Assets/RecipeFragments/FemaleHairLong.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/FemaleHairLong-fileRef
+      - name: FemaleHairShort
+        nameHash: 159445213
+        fullPath: Assets/UMA/Examples/Main Examples/Assets/RecipeFragments/FemaleHairShort.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/FemaleHairShort-fileRef
+      - name: FemaleOutfit2
+        nameHash: 451219741
+        fullPath: Assets/UMA/Examples/Main Examples/Assets/RecipeFragments/FemaleOutfit2.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/FemaleOutfit2-fileRef
+      - name: FemaleUnderwear
+        nameHash: -2081737544
+        fullPath: Assets/UMA/Examples/Main Examples/Assets/RecipeFragments/FemaleUnderwear.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/FemaleUnderwear-fileRef
+      - name: MaleBase
+        nameHash: -1789004197
+        fullPath: Assets/UMA/Examples/Main Examples/Assets/RecipeFragments/MaleBase.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/MaleBase-fileRef
+      - name: FemaleOutfit1
+        nameHash: -2081668953
+        fullPath: Assets/UMA/Examples/Main Examples/Assets/RecipeFragments/FemaleOutfit1.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/FemaleOutfit1-fileRef
+      - name: MaleBase2
+        nameHash: -419861625
+        fullPath: Assets/UMA/Examples/Main Examples/Assets/RecipeFragments/MaleBase2.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/MaleBase2-fileRef
+      - name: MaleBeard
+        nameHash: -239928423
+        fullPath: Assets/UMA/Examples/Main Examples/Assets/RecipeFragments/MaleBeard.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/MaleBeard-fileRef
+      - name: MaleHair
+        nameHash: -920753885
+        fullPath: Assets/UMA/Examples/Main Examples/Assets/RecipeFragments/MaleHair.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/MaleHair-fileRef
+      - name: MaleOutfit1
+        nameHash: -870683280
+        fullPath: Assets/UMA/Examples/Main Examples/Assets/RecipeFragments/MaleOutfit1.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/MaleOutfit1-fileRef
+      - name: MaleUnderwear
+        nameHash: 139293923
+        fullPath: Assets/UMA/Examples/Main Examples/Assets/RecipeFragments/MaleUnderwear.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMATextRecipe/MaleUnderwear-fileRef
     - type: UMAWardrobeRecipe
       typeIndex:
       - name: PlaceholderWardrobeRecipe
@@ -784,10 +858,6 @@ MonoBehaviour:
         nameHash: -1043194323
         fullPath: Assets/UMA/Content/UMA/HumanFemale/Recipes/Wardrobe Recipes/HumanFemale/FemalePants1.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/FemalePants1-fileRef
-      - name: FemalePants2
-        nameHash: 1490767767
-        fullPath: Assets/UMA/Content/UMA/HumanFemale/Recipes/Wardrobe Recipes/HumanFemale/FemalePants2.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/FemalePants2-fileRef
       - name: FemaleShirt1
         nameHash: -1672618946
         fullPath: Assets/UMA/Content/UMA/HumanFemale/Recipes/Wardrobe Recipes/HumanFemale/FemaleShirt1.asset
@@ -848,10 +918,6 @@ MonoBehaviour:
         nameHash: -215462486
         fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleEye2.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/MaleEye2-fileRef
-      - name: MaleEye3
-        nameHash: -2077262532
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleEye3.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/MaleEye3-fileRef
       - name: MaleEye4
         nameHash: 441182367
         fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleEye4.asset
@@ -906,10 +972,6 @@ MonoBehaviour:
         nameHash: -1248700003
         fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleShirt1.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/MaleShirt1-fileRef
-      - name: MaleShirt2
-        nameHash: 748357671
-        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleShirt2.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/MaleShirt2-fileRef
       - name: MaleShirt3
         nameHash: 1536964785
         fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleShirt3.asset
@@ -922,18 +984,24 @@ MonoBehaviour:
         nameHash: -640607350
         fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleShorts2.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/MaleShorts2-fileRef
+      - name: FemalePants2
+        nameHash: 1490767767
+        fullPath: Assets/UMA/Content/UMA/HumanFemale/Recipes/Wardrobe Recipes/HumanFemale/FemalePants2.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/FemalePants2-fileRef
+      - name: MaleEye3
+        nameHash: -2077262532
+        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleEye3.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/MaleEye3-fileRef
+      - name: MaleShirt2
+        nameHash: 748357671
+        fullPath: Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleShirt2.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMAWardrobeRecipe/MaleShirt2-fileRef
     - type: UMA.DynamicUMADnaAsset
       typeIndex:
       - name: EyeSpacing
         nameHash: -1537030843
         fullPath: Assets/UMA/Content/UMA/HumanFemale/DNA/DynamicDNA/EyeSpacing.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_DynamicUMADnaAsset/EyeSpacing-fileRef
-      - name: HumanFemaleDNA 1
-        nameHash: 1659336102
-        fullPath: Assets/UMA/Content/UMA/HumanFemale/DNA/DynamicDNA/HumanFemaleDNA
-          1.asset
-        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_DynamicUMADnaAsset/HumanFemaleDNA
-          1-fileRef
       - name: HumanGirlDNA
         nameHash: 749242782
         fullPath: Assets/UMA/Content/UMA/HumanFemale/DNA/DynamicDNA/HumanGirl/HumanGirlDNA.asset
@@ -942,6 +1010,32 @@ MonoBehaviour:
         nameHash: 1200865674
         fullPath: Assets/UMA/Content/UMA/HumanMale/DNA/DynamicDNA/HumanMaleDynamicDnaAsset.asset
         fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_DynamicUMADnaAsset/HumanMaleDynamicDnaAsset-fileRef
+      - name: HumanFemaleDNA 1
+        nameHash: 1659336102
+        fullPath: Assets/UMA/Content/UMA/HumanFemale/DNA/DynamicDNA/HumanFemaleDNA
+          1.asset
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UMA_DynamicUMADnaAsset/HumanFemaleDNA
+          1-fileRef
+    - type: UnityEngine.RuntimeAnimatorController
+      typeIndex:
+      - name: UMA_APose_Controller
+        nameHash: 979542625
+        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Animation/UMA_APose_Controller.controller
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UnityEditor_Animations_AnimatorController/UMA_APose_Controller-fileRef
+      - name: UMA_TPose_Controller
+        nameHash: -1508097559
+        fullPath: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Animation/UMA_TPose_Controller.controller
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UnityEditor_Animations_AnimatorController/UMA_TPose_Controller-fileRef
+      - name: Locomotion with Head
+        nameHash: 1923176077
+        fullPath: Assets/UMA/Examples/Main Examples/Assets/Animation/Animators/Locomotion
+          with Head.controller
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UnityEditor_Animations_AnimatorController/Locomotion
+          with Head-fileRef
+      - name: Locomotion
+        nameHash: -2089788878
+        fullPath: Assets/UMA/Examples/Main Examples/Assets/Animation/Animators/Locomotion.controller
+        fileRefPath: UMAAssetIndexRefs-DONOTDELETE/UnityEditor_Animations_AnimatorController/Locomotion-fileRef
     _currentPaths:
     - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/FemaleEyelashGuide.asset
     - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/Toon/UMA_Toon_EYES_Guide.asset
@@ -985,15 +1079,12 @@ MonoBehaviour:
     - Assets/UMA/Content/UMA/HumanFemale/Slots/Body/UMA_Human_Female_Face_Slot.asset
     - Assets/UMA/Content/UMA/HumanFemale/Slots/Body/UMA_Human_Female_Feet_Slot.asset
     - Assets/UMA/Content/UMA/HumanFemale/Slots/Body/UMA_Human_Female_Hands_Slot.asset
-    - Assets/UMA/Content/UMA/HumanFemale/Slots/Body/UMA_Human_Female_InnerMouth_Slot.asset
     - Assets/UMA/Content/UMA/HumanFemale/Slots/Body/UMA_Human_Female_Legs_Slot.asset
     - Assets/UMA/Content/UMA/HumanFemale/Slots/Body/UMA_Human_Female_Torso_Slot.asset
-    - Assets/UMA/Content/UMA/HumanFemale/Slots/Body/FemaleSwappedHead/UMA_Human_Female_Head_Ears_Slot.asset
     - Assets/UMA/Content/UMA/HumanFemale/Slots/Body/FemaleSwappedHead/UMA_Human_Female_Head_ElvenEars_Slot.asset
     - Assets/UMA/Content/UMA/HumanFemale/Slots/Body/FemaleSwappedHead/UMA_Human_Female_Head_Eyes_Slot.asset
     - Assets/UMA/Content/UMA/HumanFemale/Slots/Body/FemaleSwappedHead/UMA_Human_Female_Head_Head_Slot.asset
     - Assets/UMA/Content/UMA/HumanFemale/Slots/Body/FemaleSwappedHead/UMA_Human_Female_Head_Mouth_Slot.asset
-    - Assets/UMA/Content/UMA/HumanFemale/Slots/Body/FemaleSwappedHead/UMA_Human_Female_Head_Nose_Slot.asset
     - Assets/UMA/Content/UMA/HumanFemale/Slots/Body/FemaleSwappedHead/FemaleAnimeElvenEars/UMA_Human_Female_Head_AnimeElvenEars_Slot.asset
     - Assets/UMA/Content/UMA/HumanFemale/Slots/Body/MidPoly/UMA_Human_Female_Eyebrows_Mid_Slot.asset
     - Assets/UMA/Content/UMA/HumanFemale/Slots/Body/MidPoly/UMA_Human_Female_Hands_Mid_Slot.asset
@@ -1001,9 +1092,7 @@ MonoBehaviour:
     - Assets/UMA/Content/UMA/HumanFemale/Slots/Clothing/FemaleTshirt01.asset
     - Assets/UMA/Content/UMA/HumanFemale/Slots/Hair/F_Eyebrow_Slot.asset
     - Assets/UMA/Content/UMA/HumanFemale/Slots/Hair/FemaleEyelash.asset
-    - Assets/UMA/Content/UMA/HumanFemale/Slots/Hair/FemaleEyelashfix_Slot.asset
     - Assets/UMA/Content/UMA/HumanFemale/Slots/Hair/FemaleHighPolyHair.asset
-    - Assets/UMA/Content/UMA/HumanFemale/Slots/Hair/FemaleLongHair01.asset
     - Assets/UMA/Content/UMA/HumanFemale/Slots/Hair/FemaleLongHair01_Module.asset
     - Assets/UMA/Content/UMA/HumanFemale/Slots/Hair/FemaleShortHair01.asset
     - Assets/UMA/Content/UMA/HumanMale/Slots/Body/UMA_Human_Male_Eyes_Slot.asset
@@ -1028,7 +1117,6 @@ MonoBehaviour:
     - Assets/UMA/Content/UMA/HumanMale/Slots/Clothing/MaleJeans01.asset
     - Assets/UMA/Content/UMA/HumanMale/Slots/Clothing/MaleJeans02.asset
     - Assets/UMA/Content/UMA/HumanMale/Slots/Hair/M_Eyebrow_Slot.asset
-    - Assets/UMA/Content/UMA/HumanMale/Slots/Hair/MaleHair1_Slot.asset
     - Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/CapsuleCollider/CapsuleColliderSlot.asset
     - Assets/UMA/Content/Contrib/Gloves_of_Hammer/UMA/Overlay/Gloves of Hammer Overlay.asset
     - Assets/UMA/Content/Contrib/Monthly_freebie_Robe set/Overlays/M_Freebie Robeset
@@ -1063,7 +1151,6 @@ MonoBehaviour:
     - Assets/UMA/Content/UMA/HumanFemale/Overlays/Hair/FemaleEyebrow01.asset
     - Assets/UMA/Content/UMA/HumanFemale/Overlays/Hair/FemaleEyelash.asset
     - Assets/UMA/Content/UMA/HumanFemale/Overlays/Hair/FemaleLongHair_Cap.asset
-    - Assets/UMA/Content/UMA/HumanFemale/Overlays/Hair/FemaleLongHair01.asset
     - Assets/UMA/Content/UMA/HumanFemale/Overlays/Hair/FemaleLongHair01_Module.asset
     - Assets/UMA/Content/UMA/HumanFemale/Overlays/Hair/FemaleShortHair01.asset
     - Assets/UMA/Content/UMA/HumanFemale/Overlays/Mid Poly Head/F_HighPoly_EyeBrow.asset
@@ -1082,7 +1169,6 @@ MonoBehaviour:
     - Assets/UMA/Content/UMA/HumanMale/Overlays/Clothing/MaleUnderwear02.asset
     - Assets/UMA/Content/UMA/HumanMale/Overlays/Complexion/Body Freckles.asset
     - Assets/UMA/Content/UMA/HumanMale/Overlays/Complexion/Body Hair.asset
-    - Assets/UMA/Content/UMA/HumanMale/Overlays/Complexion/Skin patches Face.asset
     - Assets/UMA/Content/UMA/HumanMale/Overlays/Complexion/Skin Patches.asset
     - Assets/UMA/Content/UMA/HumanMale/Overlays/Face/M_Face_01.asset
     - Assets/UMA/Content/UMA/HumanMale/Overlays/Face/M_Face_02.asset
@@ -1102,12 +1188,10 @@ MonoBehaviour:
     - Assets/UMA/Content/UMA/HumanMale/Overlays/Hair/MaleHair02.asset
     - Assets/UMA/Content/UMA/HumanMale/Overlays/Hair/TheRebel.asset
     - Assets/UMA/Content/UMA/HumanShared/Overlays/Face/ElvenEars- Body 1.asset
-    - Assets/UMA/Content/UMA/HumanShared/Overlays/Face/ElvenEars.asset
     - Assets/UMA/Content/UMA/HumanShared/Overlays/Face/InnerMouth.asset
     - Assets/UMA/Content/UMA/HumanShared/Overlays/Face/Eye/Eye Overlay.asset
     - Assets/UMA/Content/UMA/HumanShared/Overlays/Face/Eye/EyeOverlay.asset
     - Assets/UMA/Content/UMA/HumanShared/Overlays/Face/Eye/FP Default Eye Adjust.asset
-    - Assets/UMA/Content/UMA/HumanShared/Overlays/Face/Eye/EyeAdjust/Alligator_eye_adjust.asset
     - Assets/UMA/Content/UMA/HumanShared/Overlays/Face/Eye/EyeAdjust/Alligator_eye_Alternate_adjust.asset
     - Assets/UMA/Content/UMA/HumanShared/Overlays/Face/Eye/EyeAdjust/Cat_eye_adjust.asset
     - Assets/UMA/Content/UMA/HumanShared/Overlays/Face/Eye/EyeAdjust/Cat_eye_Alternate_adjust.asset
@@ -1118,9 +1202,7 @@ MonoBehaviour:
     - Assets/UMA/Content/UMA/HumanShared/Overlays/Hair/MeshHairStd.asset
     - Assets/UMA/Content/UMA/HumanFemale/RaceData/Human Female DCS.asset
     - Assets/UMA/Content/UMA/HumanFemale/RaceData/Human Female.asset
-    - Assets/UMA/Content/UMA/HumanFemale/RaceData/Human Girl DCS.asset
     - Assets/UMA/Content/UMA/HumanMale/RaceData/Human Male DCS.asset
-    - Assets/UMA/Content/UMA/HumanMale/RaceData/Human Male.asset
     - Assets/UMA/Content/UMA/HumanFemale/Recipes/Base Recipes/HumanFemale Base Recipe.asset
     - Assets/UMA/Content/UMA/HumanFemale/Recipes/Base Recipes/HumanFemaleDCS Base
       Recipe.asset
@@ -1133,7 +1215,6 @@ MonoBehaviour:
     - Assets/UMA/Content/UMA/HumanFemale/Recipes/Wardrobe Recipes/HumanFemale/FemaleHair3.asset
     - Assets/UMA/Content/UMA/HumanFemale/Recipes/Wardrobe Recipes/HumanFemale/FemaleHandsMid.asset
     - Assets/UMA/Content/UMA/HumanFemale/Recipes/Wardrobe Recipes/HumanFemale/FemalePants1.asset
-    - Assets/UMA/Content/UMA/HumanFemale/Recipes/Wardrobe Recipes/HumanFemale/FemalePants2.asset
     - Assets/UMA/Content/UMA/HumanFemale/Recipes/Wardrobe Recipes/HumanFemale/FemaleShirt1.asset
     - Assets/UMA/Content/UMA/HumanFemale/Recipes/Wardrobe Recipes/HumanFemale/FemaleShirt2.asset
     - Assets/UMA/Content/UMA/HumanFemale/Recipes/Wardrobe Recipes/HumanFemale/FemaleShirt3.asset
@@ -1149,7 +1230,6 @@ MonoBehaviour:
     - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleBrowHR.asset
     - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleEye1.asset
     - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleEye2.asset
-    - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleEye3.asset
     - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleEye4.asset
     - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleEye5.asset
     - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleFace Old.asset
@@ -1163,11 +1243,64 @@ MonoBehaviour:
     - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleRobe Hood.asset
     - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleRobe.asset
     - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleShirt1.asset
-    - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleShirt2.asset
     - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleShirt3.asset
     - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleShorts1.asset
     - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleShorts2.asset
     - Assets/UMA/Content/UMA/HumanFemale/DNA/DynamicDNA/EyeSpacing.asset
-    - Assets/UMA/Content/UMA/HumanFemale/DNA/DynamicDNA/HumanFemaleDNA 1.asset
     - Assets/UMA/Content/UMA/HumanFemale/DNA/DynamicDNA/HumanGirl/HumanGirlDNA.asset
     - Assets/UMA/Content/UMA/HumanMale/DNA/DynamicDNA/HumanMaleDynamicDnaAsset.asset
+    - Assets/UMA/Content/Contrib/Gloves_of_Hammer/Slot/M_Gloves of Hammer_Slot.asset
+    - Assets/UMA/Content/Contrib/Robe Set/Slots/M_Freebie Robeset Boots/M_Freebie
+      Robeset Boots_Slot.asset
+    - Assets/UMA/Content/Contrib/Robe Set/Slots/M_Freebie Robeset Hood/M_Freebie Robeset
+      Hood_Slot.asset
+    - Assets/UMA/Content/Contrib/Robe Set/Slots/M_Freebie Robeset Robe/M_Freebie Robeset
+      Robe_Slot.asset
+    - Assets/UMA/Content/Contrib/Wrapped Pants/Slots/M_Wrapped Pants_Slot.asset
+    - Assets/UMA/Content/UMA/HumanFemale/Slots/Body/UMA_Human_Female_InnerMouth_Slot.asset
+    - Assets/UMA/Content/UMA/HumanFemale/Slots/Body/FemaleSwappedHead/UMA_Human_Female_Head_Ears_Slot.asset
+    - Assets/UMA/Content/UMA/HumanFemale/Slots/Body/FemaleSwappedHead/UMA_Human_Female_Head_Nose_Slot.asset
+    - Assets/UMA/Content/UMA/HumanFemale/Slots/Hair/FemaleLongHair01.asset
+    - Assets/UMA/Content/UMA/HumanFemale/Slots/Hair/FemaleEyelashfix_Slot.asset
+    - Assets/UMA/Content/UMA/HumanMale/Slots/Hair/MaleHair1_Slot.asset
+    - Assets/UMA/Content/Contrib/Gloves_of_Hammer/Overlay/Gloves of Hammer Overlay.asset
+    - Assets/UMA/Content/Contrib/Robe Set/Overlays/M_Freebie Robeset Boots.asset
+    - Assets/UMA/Content/Contrib/Robe Set/Overlays/M_Freebie Robeset Hood AC.asset
+    - Assets/UMA/Content/Contrib/Robe Set/Overlays/M_Freebie Robeset Hood.asset
+    - Assets/UMA/Content/Contrib/Robe Set/Overlays/M_Freebie Robeset Robe AC.asset
+    - Assets/UMA/Content/Contrib/Robe Set/Overlays/M_Freebie Robeset Robe.asset
+    - Assets/UMA/Content/Contrib/Wrapped Pants/Overlays/Wrapped Pants.asset
+    - Assets/UMA/Content/UMA/HumanFemale/RaceData/Human Girl DCS.asset
+    - Assets/UMA/Content/UMA/HumanMale/RaceData/Human Male.asset
+    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Recipes/FemaleToonBaseGuide.asset
+    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Recipes/GirlBaseAsDNA.asset
+    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Recipes/GirlBaseGuide.asset
+    - Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/Expressions/ExpressionsRecipe.asset
+    - Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/ForearmTwist/ForearmTwistRecipe.asset
+    - Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/Locomotion/LocomotionRecipe.asset
+    - Assets/UMA/Examples/Main Examples/Assets/Characters/Harold.asset
+    - Assets/UMA/Examples/Main Examples/Assets/Characters/KimCardassian.asset
+    - Assets/UMA/Examples/Main Examples/Assets/Characters/Shelly.asset
+    - Assets/UMA/Examples/Main Examples/Assets/Characters/Sven.asset
+    - Assets/UMA/Examples/Main Examples/Assets/Characters/Troll.asset
+    - Assets/UMA/Examples/Main Examples/Assets/RecipeFragments/FemaleHair.asset
+    - Assets/UMA/Examples/Main Examples/Assets/RecipeFragments/FemaleHairLong.asset
+    - Assets/UMA/Examples/Main Examples/Assets/RecipeFragments/FemaleHairShort.asset
+    - Assets/UMA/Examples/Main Examples/Assets/RecipeFragments/FemaleOutfit2.asset
+    - Assets/UMA/Examples/Main Examples/Assets/RecipeFragments/FemaleUnderwear.asset
+    - Assets/UMA/Examples/Main Examples/Assets/RecipeFragments/MaleBase.asset
+    - Assets/UMA/Examples/Main Examples/Assets/RecipeFragments/FemaleOutfit1.asset
+    - Assets/UMA/Examples/Main Examples/Assets/RecipeFragments/MaleBase2.asset
+    - Assets/UMA/Examples/Main Examples/Assets/RecipeFragments/MaleBeard.asset
+    - Assets/UMA/Examples/Main Examples/Assets/RecipeFragments/MaleHair.asset
+    - Assets/UMA/Examples/Main Examples/Assets/RecipeFragments/MaleOutfit1.asset
+    - Assets/UMA/Examples/Main Examples/Assets/RecipeFragments/MaleUnderwear.asset
+    - Assets/UMA/Content/UMA/HumanFemale/Recipes/Wardrobe Recipes/HumanFemale/FemalePants2.asset
+    - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleEye3.asset
+    - Assets/UMA/Content/UMA/HumanMale/Recipes/WardrobeRecipes/MaleShirt2.asset
+    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Animation/UMA_APose_Controller.controller
+    - Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Animation/UMA_TPose_Controller.controller
+    - Assets/UMA/Examples/Main Examples/Assets/Animation/Animators/Locomotion with
+      Head.controller
+    - Assets/UMA/Examples/Main Examples/Assets/Animation/Animators/Locomotion.controller
+    - Assets/UMA/Content/UMA/HumanFemale/DNA/DynamicDNA/HumanFemaleDNA 1.asset
