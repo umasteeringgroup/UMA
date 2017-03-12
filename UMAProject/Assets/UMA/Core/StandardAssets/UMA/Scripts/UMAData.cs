@@ -1,8 +1,5 @@
 using UnityEngine;
 using System;
-using System.IO;
-using System.Runtime.Serialization;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.Events;
 
@@ -13,7 +10,29 @@ namespace UMA
 	/// </summary>
 	public class UMAData : MonoBehaviour
 	{
+		[Obsolete("UMA 2.5 myRenderer is now obsolete, an uma can have multiple renderers. Use int rendererCount { get; } and GetRenderer(int) instead.", false)]
 		public SkinnedMeshRenderer myRenderer;
+
+		private SkinnedMeshRenderer[] renderers;
+		public int rendererCount { get { return renderers == null ? 0 : renderers.Length; } }
+
+		public SkinnedMeshRenderer GetRenderer(int idx)
+		{
+			return renderers[idx];
+		}
+
+		public SkinnedMeshRenderer[] GetRenderers()
+		{
+			return renderers;
+		}
+
+		public void SetRenderers(SkinnedMeshRenderer[] renderers)
+		{
+#pragma warning disable 618
+			myRenderer = (renderers != null && renderers.Length > 0) ? renderers[0] : null;
+#pragma warning restore 618
+			this.renderers = renderers;
+		}
 
 		[NonSerialized]
 		public bool firstBake;
@@ -77,6 +96,11 @@ namespace UMA
 			{
 				animatedBonesTable.Add(hash, animatedBonesTable.Count);
 			}
+		}
+
+		public Transform GetGlobalTransform()
+		{
+			return (renderers != null && renderers.Length > 0) ? renderers[0].rootBone : umaRoot.transform.FindChild("Global");
 		}
 
 		public void RegisterAnimatedBoneHierarchy(int hash)
@@ -206,6 +230,7 @@ namespace UMA
 		public class GeneratedMaterials
 		{
 			public List<GeneratedMaterial> materials = new List<GeneratedMaterial>();
+			public int rendererCount;
 		}
 
 
@@ -219,6 +244,7 @@ namespace UMA
 			public Vector2 cropResolution;
 			public float resolutionScale;
 			public string[] textureNameList;
+			public int renderer;
 		}
 
 		[System.Serializable]
@@ -266,6 +292,17 @@ namespace UMA
 			}
 		}
 
+		public void Show()
+		{
+			for (int i = 0; i < rendererCount; i++)
+				GetRenderer(i).enabled = true;
+		}
+
+		public void Hide()
+		{
+			for (int i = 0; i < rendererCount; i++)
+				GetRenderer(i).enabled = false;
+		}
 
 		[System.Serializable]
 		public class textureData
@@ -1081,20 +1118,21 @@ namespace UMA
 		/// <param name="destroyRenderer">If set to <c>true</c> destroy mesh renderer.</param>
 		public void CleanMesh(bool destroyRenderer)
 		{
-			if (myRenderer)
+			for(int j = 0; j < rendererCount; j++)
 			{
-				var mats = myRenderer.sharedMaterials;
+				var renderer = GetRenderer(j);
+				var mats = renderer.sharedMaterials;
 				for (int i = 0; i < mats.Length; i++)
 				{
 					if (mats[i])
 					{
-						Destroy(myRenderer.sharedMaterials[i]);
+						Destroy(mats[i]);
 					}
 				}
 				if (destroyRenderer)
 				{
-					Destroy(myRenderer.sharedMesh);
-					Destroy(myRenderer);
+					Destroy(renderer.sharedMesh);
+					Destroy(renderer);
 				}
 			}
 		}

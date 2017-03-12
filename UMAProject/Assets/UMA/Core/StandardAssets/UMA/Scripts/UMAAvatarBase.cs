@@ -1,9 +1,4 @@
 using UnityEngine;
-using System;
-using System.IO;
-using System.Runtime.Serialization;
-using System.Collections;
-using System.Collections.Generic;
 using UMA;
 #if UNITY_5_5_OR_NEWER
 using UnityEngine.Profiling;
@@ -144,7 +139,7 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 			umaData.CleanAvatar();
 			Destroy(umaData.umaRoot);
 			umaData.umaRoot = null;
-			umaData.myRenderer = null;
+			umaData.SetRenderers(null);
 			umaData.animator = null;
 			umaData.firstBake = true;
 			umaData.skeleton = null;

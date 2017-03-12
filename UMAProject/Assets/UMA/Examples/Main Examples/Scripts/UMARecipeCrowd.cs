@@ -3,8 +3,6 @@ using UnityEngine;
 using UnityEditor;
 using System.IO;
 #endif
-using System.Collections;
-using System.Collections.Generic;
 using UMA;
 
 public class UMARecipeCrowd : MonoBehaviour
@@ -81,8 +79,7 @@ public class UMARecipeCrowd : MonoBehaviour
 		{
 			if (umaData.animator != null)
 				umaData.animator.enabled = false;
-			if (umaData.myRenderer != null)
-				umaData.myRenderer.enabled = false;
+			umaData.Show();
 		}
 	}
 	
@@ -111,8 +108,7 @@ public class UMARecipeCrowd : MonoBehaviour
 				{
 					if (generatedData.animator != null)
 						generatedData.animator.enabled = true;
-					if (generatedData.myRenderer != null)
-						generatedData.myRenderer.enabled = true;
+					generatedData.Show();
 				}
 			}
 			spawnX = 0;
