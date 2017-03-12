@@ -80,7 +80,7 @@ namespace UMA.PoseTools
 			return assetFolder;
 		}
 
-		[MenuItem("Assets/Create/UMA Expression Set")]
+		[MenuItem("Assets/Create/UMA/Misc/Expression Set")]
 		static void CreateExpressionSetMenuItem()
 		{
 			UMAExpressionSet asset = ScriptableObject.CreateInstance<UMAExpressionSet>();
