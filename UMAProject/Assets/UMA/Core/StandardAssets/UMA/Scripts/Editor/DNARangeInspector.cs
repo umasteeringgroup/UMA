@@ -10,7 +10,7 @@ namespace UMAEditor
 	[CustomEditor(typeof(DNARangeAsset))]
 	public class DNARangeInspector : Editor 
 	{
-	    [MenuItem("Assets/Create/UMA DNA Range Asset")]
+	    [MenuItem("Assets/Create/UMA/DNA/DNA Range Asset")]
 	    public static void CreateOverlayMenuItem()
 	    {
 			CustomAssetUtility.CreateAsset<DNARangeAsset>();

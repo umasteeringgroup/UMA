@@ -50,7 +50,7 @@ public partial class UMATextRecipe : UMAPackedRecipeBase
 	}
 	
 	#if UNITY_EDITOR
-	[UnityEditor.MenuItem("Assets/Create/UMA Text Recipe")]
+	[UnityEditor.MenuItem("Assets/Create/UMA/Core/Text Recipe")]
 	public static void CreateTextRecipeAsset()
 	{
 		UMAEditor.CustomAssetUtility.CreateAsset<UMATextRecipe>();
