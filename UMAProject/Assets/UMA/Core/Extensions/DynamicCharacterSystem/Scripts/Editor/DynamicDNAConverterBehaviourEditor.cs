@@ -12,7 +12,7 @@ using System.IO;
 public class DynamicDNAConverterBehaviourEditor : Editor
 {
 
-    [MenuItem("Assets/Create/UMA Dynamic DNA Converter")]
+    [MenuItem("Assets/Create/UMA/DNA/Dynamic DNA Converter")]
     public static void CreateDynamicDNAConverterBehaviour()
     {
         CustomAssetUtility.CreatePrefab("DynamicDNAConverterBehaviour", typeof(DynamicDNAConverterBehaviour));

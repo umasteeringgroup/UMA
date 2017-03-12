@@ -108,7 +108,7 @@ namespace UMA.PoseTools
 			ArrayUtility.Add(ref poses, pose);
 		}
 
-		[UnityEditor.MenuItem("Assets/Create/UMA Bone Pose")]
+		[UnityEditor.MenuItem("Assets/Create/UMA/DNA/Bone Pose")]
 		public static void CreateBonePoseAsset()
 		{
 			UMAEditor.CustomAssetUtility.CreateAsset<UMABonePose>();

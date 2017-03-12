@@ -11,7 +11,7 @@ using UMA;
 public class SharedColorTable : ScriptableObject, ISerializationCallbackReceiver
 {
 #if UNITY_EDITOR
-	[MenuItem("Assets/Create/Shared Color List")]
+	[MenuItem("Assets/Create/UMA/Core/Shared Color List")]
 	public static void CreateSharedColor()
 	{
 		UMAEditor.CustomAssetUtility.CreateAsset<SharedColorTable>();

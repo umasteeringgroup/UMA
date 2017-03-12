@@ -19,7 +19,7 @@ public class UMAAssetCollectionEditor : Editor
 		base.OnInspectorGUI();
 	}
 
-	[MenuItem("Assets/Create/UMA Asset Collection")]
+	[MenuItem("Assets/Create/UMA/Core/Asset Collection")]
 	public static void CreateUMAAssetCollection()
 	{
 		UMAEditor.CustomAssetUtility.CreateAsset<UMAAssetCollection>();

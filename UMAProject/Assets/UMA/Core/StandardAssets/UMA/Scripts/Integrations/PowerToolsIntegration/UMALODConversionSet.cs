@@ -14,7 +14,7 @@ namespace UMA.Integration.PowerTools
 		public UMALODConversionEntry[] Conversions = new UMALODConversionEntry[0];
 	
 #if UNITY_EDITOR
-		[MenuItem("Assets/Create/UMA LOD Conversion Set")]
+		[MenuItem("Assets/Create/UMA/Misc/LOD Conversion Set")]
 		public static void CreateUMALODConversion()
 		{
 			var asset = ScriptableObject.CreateInstance<UMALODConversionSet>();
