@@ -1,7 +1,6 @@
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
-using UnityEditor.SceneManagement;//for marking converted colors as needing saving
 #endif
 using UnityEngine.Serialization;//for converting old characterColors.Colors to new colors
 
@@ -342,8 +341,10 @@ namespace UMACharacterSystem
 			{
 				umaData.ignoreBlendShapes = !loadBlendShapes;
 
-				if (umaData.myRenderer != null)
-					umaData.myRenderer.enabled = !hide;
+				if (hide)
+					umaData.Hide();
+				else
+					umaData.Show();
 			}
 			//This hardly ever happens now since the changeRace/LoadFromString/StartCO methods all yield themselves until asset bundles have been downloaded
 			if (requiredAssetsToCheck.Count > 0 && !waitForBundles && BuildCharacterEnabled)

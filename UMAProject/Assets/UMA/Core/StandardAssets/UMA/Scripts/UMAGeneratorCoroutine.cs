@@ -22,6 +22,7 @@ namespace UMA
         int scaleFactor;
         MaterialDefinitionComparer comparer = new MaterialDefinitionComparer();
         List<UMAData.GeneratedMaterial> generatedMaterials;
+        int rendererCount;
         List<UMAData.GeneratedMaterial> atlassedMaterials = new List<UMAData.GeneratedMaterial>(20);
         Dictionary<List<OverlayData>, UMAData.GeneratedMaterial> generatedMaterialLookup;
 
@@ -55,7 +56,11 @@ namespace UMA
 			}
 
             var res = new UMAData.GeneratedMaterial();
-            res.umaMaterial = umaMaterial;
+			if (umaMaterial.RequireSeperateRenderer)
+			{
+				res.renderer = rendererCount++;
+			}
+			res.umaMaterial = umaMaterial;
             res.material = UnityEngine.Object.Instantiate(umaMaterial.material) as Material;
             res.material.name = umaMaterial.material.name;
             atlassedMaterials.Add(res);
@@ -77,8 +82,25 @@ namespace UMA
             umaData.CleanTextures();
             generatedMaterials = new List<UMAData.GeneratedMaterial>(20);
             atlassedMaterials.Clear();
+            rendererCount = 0;
 
-            SlotData[] slots = umaData.umaRecipe.slotDataList;
+			SlotData[] slots = umaData.umaRecipe.slotDataList;
+
+			for (int i = 0; i < slots.Length; i++)
+			{
+				var slot = slots[i];
+				if (slot == null) continue;
+				if (slot.asset.material != null && slot.GetOverlay(0) != null)
+				{
+					if (!slot.asset.material.RequireSeperateRenderer)
+					{
+						// at least one slot that doesn't require a seperate renderer, so we reserve renderer 0 for those.
+						rendererCount = 1;
+						break;
+					}
+				}
+			}
+
             for (int i = 0; i < slots.Length; i++)
             {
                 var slot = slots[i];
@@ -166,8 +188,8 @@ namespace UMA
         }
         protected override IEnumerator workerMethod()
         {
-            umaData.generatedMaterials = new UMAData.GeneratedMaterials();
-            umaData.generatedMaterials.materials = generatedMaterials;
+            umaData.generatedMaterials.rendererCount = rendererCount;
+			umaData.generatedMaterials.materials = generatedMaterials;
 
             GenerateAtlasData();
             OptimizeAtlas();
@@ -180,16 +202,26 @@ namespace UMA
 
             if (updateMaterialList)
             {
-                var mats = umaData.myRenderer.sharedMaterials;
-                var atlasses = umaData.generatedMaterials.materials;
-                for (int i = 0; i < atlasses.Count; i++)
-                {
-                    UnityEngine.Object.Destroy(mats[i]);
-                    mats[i] = atlasses[i].material;
-                }
-                umaData.myRenderer.sharedMaterials = new List<Material>(mats).ToArray();
-            }
-        }
+                for(int j = 0; j < umaData.rendererCount; j++)
+				{
+					var renderer = umaData.GetRenderer(j);
+					var mats = renderer.sharedMaterials;
+					var newMats = new Material[mats.Length];
+					var atlasses = umaData.generatedMaterials.materials;
+					int materialIndex = 0;
+					for (int i = 0; i < atlasses.Count; i++)
+					{
+						if (atlasses[i].renderer == j)
+						{
+							UnityEngine.Object.Destroy(mats[materialIndex]);
+							newMats[materialIndex] = atlasses[i].material;
+							materialIndex++;
+						}
+					}
+					renderer.sharedMaterials = newMats;
+				}
+			}
+		}
 
         protected override void Stop()
         {

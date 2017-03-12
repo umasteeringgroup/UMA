@@ -96,6 +96,11 @@ namespace UMAEditor
 			slot.nameHash = UMAUtils.StringToHash(slot.slotName);
 			slot.material = material;
 			slot.UpdateMeshData(finalMeshRenderer,rootBone);
+			var cloth = mesh.GetComponent<Cloth>();
+			if (cloth != null)
+			{
+				slot.meshData.RetrieveDataFromUnityCloth(cloth);
+			}
 			AssetDatabase.CreateAsset(slot, slotFolder + '/' + assetName + '/' + assetName + "_Slot.asset");
 			for(int i = 1; i < slot.meshData.subMeshCount; i++)
 			{
