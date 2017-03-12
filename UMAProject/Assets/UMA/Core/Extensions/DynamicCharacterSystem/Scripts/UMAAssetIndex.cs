@@ -92,7 +92,12 @@ namespace UMA
 		{
 			get
 			{
-				if (_instance == null)
+#if UNITY_EDITOR
+				//this does seem to help the issue where the editor wont start some times if a Github update has trashed things
+				if (BuildPipeline.isBuildingPlayer || UnityEditorInternal.InternalEditorUtility.inBatchMode || EditorApplication.isCompiling /*|| EditorApplication.isUpdating*/ || EditorApplication.timeSinceStartup < 25)
+					return _instance;
+#endif
+                if (_instance == null)
 				{
 					_instance = (UMAAssetIndex)Resources.Load("UMAAssetIndex-DONOTDELETE");
 #if UNITY_EDITOR

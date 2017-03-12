@@ -1,5 +1,5 @@
 // Upgrade NOTE: replaced '_Object2World' with '_Object2World'
-// Upgrade NOTE: replaced 'unity_World2Shadow' with 'unity_WorldToShadow'
+// Upgrade NOTE: replaced 'unity_World2Shadow' with 'unity_World2Shadow'
 
 // Upgrade NOTE: replaced '_LightMatrix0' with 'unity_WorldToLight'
 // Upgrade NOTE: replaced '_Object2World' with '_Object2World'
@@ -53,7 +53,7 @@
 #if defined(UNITY_NO_SCREENSPACE_SHADOWS)
 
 UNITY_DECLARE_SHADOWMAP(_ShadowMapTexture);
-#define TRANSFER_SHADOW(a) a._ShadowCoord = mul( unity_WorldToShadow[0], mul( _Object2World, v.vertex ) );
+#define TRANSFER_SHADOW(a) a._ShadowCoord = mul( unity_World2Shadow[0], mul( _Object2World, v.vertex ) );
 
 inline fixed unitySampleShadow (unityShadowCoord4 shadowCoord)
 {
@@ -96,7 +96,7 @@ inline fixed unitySampleShadow (unityShadowCoord4 shadowCoord)
 // ---- Spot light shadows
 #if defined (SHADOWS_DEPTH) && defined (SPOT)
 	#define SHADOW_COORDS(idx1) unityShadowCoord4 _ShadowCoord : TEXCOORD##idx1;
-	#define TRANSFER_SHADOW(a) a._ShadowCoord = mul (unity_WorldToShadow[0], mul(_Object2World,v.vertex));
+	#define TRANSFER_SHADOW(a) a._ShadowCoord = mul (unity_World2Shadow[0], mul(_Object2World,v.vertex));
 	#define SHADOW_ATTENUATION(a) UnitySampleShadowmap(a._ShadowCoord)
 #endif
 

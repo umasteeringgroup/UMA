@@ -106,59 +106,6 @@ public partial class UMADynamicCharacterAvatarRecipe : UMATextRecipe
 #endif
 	#endregion
 
-	#region STATIC METHODS
-
-#if UNITY_EDITOR
-
-	public static void ConvertOldDCARecipes()
-	{
-		var allTextRecipeGUIDs = AssetDatabase.FindAssets("t:UMATextRecipe");
-		for (int i = 0; i < allTextRecipeGUIDs.Length; i++)
-		{
-			var thisUTRPath = AssetDatabase.GUIDToAssetPath(allTextRecipeGUIDs[i]);
-			var thisUTR = AssetDatabase.LoadAssetAtPath<UMATextRecipe>(thisUTRPath);
-			//if its not a DCA recipe or its actual type is anything other than UMATextRecipe
-			if (thisUTR.recipeType != "DynamicCharacterAvatar" || thisUTR.GetType() != typeof(UMATextRecipe))
-				continue;
-			var thisDCS = ScriptableObject.CreateInstance<UMADynamicCharacterAvatarRecipe>();
-			thisDCS.ConvertFromUTR(thisUTR);
-		}
-		EditorPrefs.SetBool(Application.dataPath + ":UMADCARecipesUpToDate", true);
-		Resources.UnloadUnusedAssets();
-	}
-
-	/// <summary>
-	/// Checks to see if any UMATextRecipes require converting to UMADynamicCharacterAvatarRecipes and returns the number that do
-	/// </summary>
-	/// <returns></returns>
-	public static int TestForOldRecipes()
-	{
-		int oldRecipesFound = 0;
-		var allTextRecipeGUIDs = AssetDatabase.FindAssets("t:UMATextRecipe");
-		for (int i = 0; i < allTextRecipeGUIDs.Length; i++)
-		{
-			var thisUTRPath = AssetDatabase.GUIDToAssetPath(allTextRecipeGUIDs[i]);
-			var thisUTR = AssetDatabase.LoadAssetAtPath<UMATextRecipe>(thisUTRPath);
-			//if its not a Wardrobe recipe or its actual type is anything other than UMATextRecipe
-			if (thisUTR.recipeType == "DynamicCharacterAvatar" && thisUTR.GetType() == typeof(UMATextRecipe))
-				oldRecipesFound++;
-		}
-		if (oldRecipesFound > 0)
-		{
-			Debug.LogWarning(oldRecipesFound + " UMATextRecipes require converting to UMADynamicCjaracterAvatarRecipes. Please go to UMA > Utilities > Convert Old Recipes to update them");
-			EditorPrefs.SetBool(Application.dataPath + ":UMADCARecipesUpToDate", false);
-		}
-		else
-		{
-			EditorPrefs.SetBool(Application.dataPath + ":UMADCARecipesUpToDate", true);
-		}
-		Resources.UnloadUnusedAssets();
-		return oldRecipesFound;
-	}
-#endif
-
-	#endregion
-
 	//Override Load from PackedRecipeBase
 	/// <summary>
 	/// NOTE: Use GetUniversalPackRecipe to get a recipe that includes a wardrobeSet. Load this Recipe's recipeString into the specified UMAData.UMARecipe.

@@ -743,8 +743,15 @@ namespace UMA
 							fileRefPath = GetResourcesPath(fileRefFullPath);
 							//we need to check if there is an object hanging around with this name
 							thisFileRefObj = Resources.Load<UMAAssetIndexFileRef>(fileRefPath);
-							if(thisFileRefObj == null)
+							if (thisFileRefObj == null)
+							{
+								//sometimes because of github there is junk data here so delete that first
+								if (File.Exists(fileRefFullPath))
+								{
+									File.Delete(fileRefFullPath);
+								}
 								thisFileRefObj = UMAEditor.CustomAssetUtility.CreateAsset<UMAAssetIndexFileRef>(fileRefFullPath, false);
+							}
 						}
 						else
 						{
@@ -818,7 +825,14 @@ namespace UMA
 				fileRefPath = GetResourcesPath(fileRefFullPath);
 				thisFileRefObj = Resources.Load<UMAAssetIndexFileRef>(fileRefPath);
 				if (thisFileRefObj == null)
+				{
+					//sometimes because of github there is junk data here so delete that first
+					if (File.Exists(fileRefFullPath))
+					{
+						File.Delete(fileRefFullPath);
+					}
 					thisFileRefObj = UMAEditor.CustomAssetUtility.CreateAsset<UMAAssetIndexFileRef>(fileRefFullPath, false);
+				}
 				//set the ref to the actual object
 				thisFileRefObj.objectRef = fileToRef;
 				EditorUtility.SetDirty(thisFileRefObj);
