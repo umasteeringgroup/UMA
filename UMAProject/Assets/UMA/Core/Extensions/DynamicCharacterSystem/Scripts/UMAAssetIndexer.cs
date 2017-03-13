@@ -244,9 +244,16 @@ public class UMAAssetIndexer : MonoBehaviour, ISerializationCallbackReceiver
         {
             if (ItemsByPath.ContainsKey(importedAssets[i]))
             {
-                AssetItem ai = ItemsByPath[importedAssets[i]];
-                ai._Name = ai.EvilName;
-                changed = true;
+                try
+                {
+                    AssetItem ai = ItemsByPath[importedAssets[i]];
+                    ai._Name = ai.EvilName;
+                    changed = true;
+                }
+                finally
+                {
+
+                }
             }
         }
 
