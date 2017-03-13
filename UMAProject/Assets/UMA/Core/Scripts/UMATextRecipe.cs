@@ -14,12 +14,12 @@ public partial class UMATextRecipe : UMAPackedRecipeBase
 	/// </summary>
 	public string recipeString="";
 
-	/// <summary>
-	/// Deserialize recipeString data into packed recipe.
-	/// </summary>
-	/// <returns>The packed recipe.</returns>
-	/// <param name="context">Context.</param>
-	public override UMAPackedRecipeBase.UMAPackRecipe PackedLoad(UMAContext context)
+    /// <summary>
+    /// Deserialize recipeString data into packed recipe.
+    /// </summary>
+    /// <returns>The packed recipe.</returns>
+    /// <param name="context">Context.</param>
+    public override UMAPackedRecipeBase.UMAPackRecipe PackedLoad(UMAContext context)
 	{
 		if ((recipeString == null) || (recipeString.Length == 0)) return new UMAPackRecipe();
 			return JsonUtility.FromJson<UMAPackRecipe>(recipeString);

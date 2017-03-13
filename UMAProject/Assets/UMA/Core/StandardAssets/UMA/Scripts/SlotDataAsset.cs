@@ -9,21 +9,33 @@ namespace UMA
 	/// Contains the immutable data shared between slots of the same type.
 	/// </summary>
 	[System.Serializable]
-	public partial class SlotDataAsset : ScriptableObject, ISerializationCallbackReceiver
-	{
+	public partial class SlotDataAsset : ScriptableObject, ISerializationCallbackReceiver, INameProvider
+    {
 		public string slotName;
 		[System.NonSerialized]
 		public int nameHash;
 
-		/// <summary>
-		/// The UMA material.
-		/// </summary>
-		/// <remarks>
-		/// The UMA material contains both a reference to the Unity material
-		/// used for drawing and information needed for matching the textures
-		/// and colors to the various material properties.
-		/// </remarks>
-		[UMAAssetFieldVisible]
+        #region INameProvider
+
+        public string GetAssetName()
+        {
+            return slotName;
+        }
+        public int GetNameHash()
+        {
+            return nameHash;
+        }
+
+        #endregion
+        /// <summary>
+        /// The UMA material.
+        /// </summary>
+        /// <remarks>
+        /// The UMA material contains both a reference to the Unity material
+        /// used for drawing and information needed for matching the textures
+        /// and colors to the various material properties.
+        /// </remarks>
+        [UMAAssetFieldVisible]
 		public UMAMaterial material;
 
 		/// <summary>

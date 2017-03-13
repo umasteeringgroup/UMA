@@ -120,7 +120,7 @@ public class DynamicRaceLibrary : RaceLibrary
 			return;
 
 		//Making the race library scan everything (by sending raceHash = null) only needs to happen once- at all other times a specific race will have been requested (and been added by dynamic asset loader) so it will already be here if it needs to be.
-		if (raceHash == null && Application.isPlaying && allStartingAssetsAdded == false && UMAAssetIndex.Instance != null)
+		if (raceHash == null && Application.isPlaying && allStartingAssetsAdded == false)
 				allStartingAssetsAdded = true;
 
 #if UNITY_EDITOR

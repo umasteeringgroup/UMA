@@ -11,7 +11,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d6ce19a51999011448644fc01e9cec03, type: 3}
   m_Name: M_Gloves of Hammer_Slot
   m_EditorClassIdentifier: 
-  slotName: M_Gloves of Hammer
+  slotName: _Gloves of Hammer
   material: {fileID: 11400000, guid: 8e29dbac5d2e82f44a759a7e2cc568ab, type: 2}
   overlayScale: 1
   animatedBoneNames: []

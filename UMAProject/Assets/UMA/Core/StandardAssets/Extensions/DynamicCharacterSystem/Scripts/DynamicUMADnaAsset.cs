@@ -8,7 +8,7 @@ using System.Collections.Generic;
 namespace UMA
 {
     [System.Serializable]
-    public class DynamicUMADnaAsset : ScriptableObject
+    public class DynamicUMADnaAsset : ScriptableObject, INameProvider
     {
 		public int dnaTypeHash;
 
@@ -22,8 +22,18 @@ namespace UMA
 		[SerializeField]
 		protected int lastKnownInstanceID = 0;
 
-		//falls back to UMADnaHumanoid
-		public string[] Names = {};
+        #region INameProvider
+        public string GetAssetName()
+        {
+            return this.name;
+        }
+        public int GetNameHash()
+        {
+            return 0;
+        }
+        #endregion
+        //falls back to UMADnaHumanoid
+        public string[] Names = {};
 
         public DynamicUMADnaAsset() {
 			dnaTypeHash = GenerateUniqueDnaTypeHash();

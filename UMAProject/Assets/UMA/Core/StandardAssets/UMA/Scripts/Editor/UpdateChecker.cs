@@ -46,6 +46,6 @@ public class UpdateChecker
     {
         AssetUpdater.Instance.remoteVersionDownloadFinished -= RemoteVersionDownloadFinished;
         AssetUpdater.Instance.remoteVersionDownloadFailed -= RemoteVersionDownloadFailed;
-        Debug.Log("Failed to get remote UMA version.");
+        //Debug.Log("Failed to get remote UMA version.");
     }
 }

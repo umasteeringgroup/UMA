@@ -15,14 +15,25 @@ namespace UMA
 	/// specific DNA converters, despite sharing the same DNA types.
 	/// </remarks>
 	[Serializable]
-	public partial class RaceData : ScriptableObject
+	public partial class RaceData : ScriptableObject, INameProvider
 	{
 	    public string raceName;
 
-		/// <summary>
-		/// The set of DNA converters for modifying characters of this race.
-		/// </summary>
-	    public DnaConverterBehaviour[] dnaConverterList = new DnaConverterBehaviour[0];
+        #region INameProvider
+        public string GetAssetName()
+        {
+            return raceName;
+        }
+        public int GetNameHash()
+        {
+            return 0;
+        }
+        #endregion
+
+        /// <summary>
+        /// The set of DNA converters for modifying characters of this race.
+        /// </summary>
+        public DnaConverterBehaviour[] dnaConverterList = new DnaConverterBehaviour[0];
 
 		[System.Obsolete("UMA 2.2+ - RaceData.raceDictionary is obsolete use GetConverter or dnaConverterList instead", false)]
 		public Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate> raceDictionary = new Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate>();
