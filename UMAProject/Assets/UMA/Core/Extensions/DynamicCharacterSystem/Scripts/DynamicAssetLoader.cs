@@ -1160,7 +1160,7 @@ namespace UMA
         string[] SearchStringToArray(string searchString = "")
         {
             string[] searchArray;
-            if (searchString == "")
+            if (String.IsNullOrEmpty(searchString))
             {
                 searchArray = new string[] { "" };
             }
