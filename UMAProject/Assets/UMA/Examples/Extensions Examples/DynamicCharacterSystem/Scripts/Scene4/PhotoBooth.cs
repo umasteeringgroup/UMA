@@ -49,11 +49,16 @@ public class PhotoBooth : MonoBehaviour
 	bool canTakePhoto = true;
 
 	RenderTexture renderTextureToUse;
-	UMATextRecipe wardrobeRecipeToPhoto;
+	List<UMATextRecipe> wardrobeRecipeToPhoto = new List<UMATextRecipe>();
 	Dictionary<int, Dictionary<int, Color>> originalColors = new Dictionary<int, Dictionary<int, Color>>();
 
 	DynamicCharacterSystem dcs;
 	bool basePhotoTaken;
+
+	void Start()
+	{
+		destinationFolder = "";
+    }
 
 	public void TakePhotos()
 	{
@@ -100,7 +105,7 @@ public class PhotoBooth : MonoBehaviour
 	IEnumerator TakePhotosCoroutine(Dictionary<string, List<UMATextRecipe>> recipesToPhoto)
 	{
 		yield return null;
-		wardrobeRecipeToPhoto = null;
+		wardrobeRecipeToPhoto.Clear();
 		if (!basePhotoTaken)
 		{
 			Debug.Log("Gonna take base Photo...");
@@ -196,7 +201,8 @@ public class PhotoBooth : MonoBehaviour
 						Debug.Log("Photo already existed for " + photoName + ". Turn on overwrite photos to replace existig ones");
 						continue;
 					}
-					wardrobeRecipeToPhoto = wardrobeRecipe;
+					wardrobeRecipeToPhoto.Clear();
+					wardrobeRecipeToPhoto.Add(wardrobeRecipe);
 					avatarToPhoto.ClearSlots();
 					if (addUnderwearToBasePhoto)
 					{
@@ -224,26 +230,31 @@ public class PhotoBooth : MonoBehaviour
 				slotsDone++;
 				if (slotsDone == numKeys)
 				{
-					Debug.Log("Doing Final Reset");
-					if (originalColors.Count > 0)
-					{
-						avatarToPhoto.CharacterUpdated.RemoveListener(SetCharacterReadyAfterColorChange);
-						UndoDimmingAnNeutralizing();
-					}
-					if (freezeAnimation)
-					{
-						avatarToPhoto.umaData.animator.speed = 1f;
-						avatarToPhoto.umaData.gameObject.GetComponent<UMA.PoseTools.UMAExpressionPlayer>().enableBlinking = true;
-						avatarToPhoto.umaData.gameObject.GetComponent<UMA.PoseTools.UMAExpressionPlayer>().enableSaccades = true;
-					}
-					avatarToPhoto.LoadDefaultWardrobe();
-					avatarToPhoto.BuildCharacter(true);
+					ResetCharacter();
 					doingTakePhoto = false;
 					StopAllCoroutines();
 					yield break;
 				}
 			}
 		}
+	}
+
+	private void ResetCharacter()
+	{
+		Debug.Log("Doing Final Reset");
+		if (originalColors.Count > 0)
+		{
+			avatarToPhoto.CharacterUpdated.RemoveListener(SetCharacterReadyAfterColorChange);
+			UndoDimmingAnNeutralizing();
+		}
+		if (freezeAnimation)
+		{
+			avatarToPhoto.umaData.animator.speed = 1f;
+			avatarToPhoto.umaData.gameObject.GetComponent<UMA.PoseTools.UMAExpressionPlayer>().enableBlinking = true;
+			avatarToPhoto.umaData.gameObject.GetComponent<UMA.PoseTools.UMAExpressionPlayer>().enableSaccades = true;
+		}
+		avatarToPhoto.LoadDefaultWardrobe();
+		avatarToPhoto.BuildCharacter(true);
 	}
 
 	public void SetCharacterReady(UMAData umaData)
@@ -278,7 +289,7 @@ public class PhotoBooth : MonoBehaviour
 		canTakePhoto = true;
 	}
 
-	public void SetAnimationFrame()
+	private void SetAnimationFrame()
 	{
 		var thisAnimatonClip = avatarToPhoto.umaData.animationController.animationClips[0];
 		avatarToPhoto.umaData.animator.Play(thisAnimatonClip.name, 0, animationFreezeFrame);
@@ -291,11 +302,34 @@ public class PhotoBooth : MonoBehaviour
 	{
 		canTakePhoto = false;
 		Debug.Log("Taking Photo...");
+		if (!autoPhotosEnabled)
+		{
+			if (dimAllButTarget && neutralizeTargetColors)
+			{
+				canTakePhoto = false;
+				avatarToPhoto.CharacterUpdated.AddListener(SetCharacterReadyAfterColorChange);
+				wardrobeRecipeToPhoto.Clear();
+                foreach (KeyValuePair<string, UMATextRecipe> kp in avatarToPhoto.WardrobeRecipes)
+				{
+					wardrobeRecipeToPhoto.Add(kp.Value);
+                }
+				DoDimmingAndNeutralizing();
+				while (!canTakePhoto)
+				{
+					yield return new WaitForSeconds(1f);
+				}
+			}
+		}
 		var path = destinationFolder + "/" + photoName + ".png";
-		if (!overwriteExistingPhotos && File.Exists(Application.dataPath + "/" + path))
+		if (!overwriteExistingPhotos && File.Exists(path))
 		{
 			Debug.Log("could not overwrite existing Photo. Turn on Overwrite Existing Photos if you want to allow this");
 			canTakePhoto = true;
+			doingTakePhoto = false;
+			if (!autoPhotosEnabled)
+			{
+				ResetCharacter();
+			}
 			yield return true;
 		}
 		else
@@ -307,20 +341,30 @@ public class PhotoBooth : MonoBehaviour
 			texToSave.Apply();
 			byte[] texToSavePNG = texToSave.EncodeToPNG();
 			//path must be inside assets
-			File.WriteAllBytes(Application.dataPath + "/" + path, texToSavePNG);
+			File.WriteAllBytes(path, texToSavePNG);
 			RenderTexture.active = prev;
-			AssetDatabase.ImportAsset("Assets/" + path, ImportAssetOptions.ForceUncompressedImport);
-			TextureImporter textureImporter = AssetImporter.GetAtPath("Assets/" + path) as TextureImporter;
+			var relativePath = path;
+			if (path.StartsWith(Application.dataPath))
+			{
+				relativePath = "Assets" + path.Substring(Application.dataPath.Length);
+			}
+			AssetDatabase.ImportAsset(relativePath, ImportAssetOptions.ForceUncompressedImport);
+			TextureImporter textureImporter = AssetImporter.GetAtPath(relativePath) as TextureImporter;
 			textureImporter.textureType = TextureImporterType.Sprite;
 			textureImporter.mipmapEnabled = false;
 			textureImporter.maxTextureSize = 256;
-			AssetDatabase.ImportAsset("Assets/" + path, ImportAssetOptions.ForceUpdate);
+			AssetDatabase.ImportAsset(relativePath, ImportAssetOptions.ForceUpdate);
 			canTakePhoto = true;
+			doingTakePhoto = false;
+			if (!autoPhotosEnabled)
+			{
+				ResetCharacter();
+			}
 			yield return true;
 		}
 	}
 
-	public void UndoDimmingAnNeutralizing()
+	private void UndoDimmingAnNeutralizing()
 	{
 		int numSlots = avatarToPhoto.umaData.GetSlotArraySize();
 		for (int i = 0; i < numSlots; i++)
@@ -343,20 +387,20 @@ public class PhotoBooth : MonoBehaviour
 		}
 	}
 
-	public void DoDimmingAndNeutralizing()
+	private void DoDimmingAndNeutralizing()
 	{
-		if (wardrobeRecipeToPhoto != null)
-			Debug.Log("Doing Dimming And Neutralizing for " + wardrobeRecipeToPhoto.name);
+		if (wardrobeRecipeToPhoto.Count > 0)
+			Debug.Log("Doing Dimming And Neutralizing for " + wardrobeRecipeToPhoto[0].name);
 		else
 			Debug.Log("Doing Dimming And Neutralizing for Body shots");
 		int numAvatarSlots = avatarToPhoto.umaData.GetSlotArraySize();
-		UMAData.UMARecipe tempLoadedRecipe = new UMAData.UMARecipe();
-		if (wardrobeRecipeToPhoto != null)
-			wardrobeRecipeToPhoto.Load(tempLoadedRecipe, avatarToPhoto.context);
 		originalColors.Clear();
 		List<string> slotsInRecipe = new List<string>();
 		List<string> overlaysInRecipe = new List<string>();
-		if (wardrobeRecipeToPhoto != null)
+		foreach (UMATextRecipe utr in wardrobeRecipeToPhoto)
+		{
+			UMAData.UMARecipe tempLoadedRecipe = new UMAData.UMARecipe();
+			utr.Load(tempLoadedRecipe, avatarToPhoto.context);
 			foreach (SlotData slot in tempLoadedRecipe.slotDataList)
 			{
 				if (slot != null)
@@ -369,6 +413,7 @@ public class PhotoBooth : MonoBehaviour
 					}
 				}
 			}
+		}
 		//Deal with skin color first if we are dimming
 		if (dimAllButTarget)
 		{
@@ -469,12 +514,11 @@ public class PhotoBooth : MonoBehaviour
 				}
 			}
 		}
-		tempLoadedRecipe = null;
 		avatarToPhoto.umaData.dirty = false;
 		avatarToPhoto.umaData.Dirty(false, true, false);
 	}
 
-	public bool SetBestRenderTexture(string wardrobeSlot = "")
+	private bool SetBestRenderTexture(string wardrobeSlot = "")
 	{
 		if (wardrobeSlot == "Body" || (!autoPhotosEnabled && textureToPhoto == renderTextureOpts.BodyRenderTexture))
 		{
@@ -586,16 +630,9 @@ public class PhotoBooth : MonoBehaviour
 		}
 		else
 		{
-			if (!autoPhotosEnabled && bodyRenderTexture != null)
-			{
-				renderTextureToUse = bodyRenderTexture;
-				return true;
-			}
-			else
-			{
-				Debug.Log("No appropriate RenderTexture found for " + wardrobeSlot);
-				return false;
-			}
+			Debug.Log("No suitable render texture found for " + wardrobeSlot + " using Body rendertexture");
+			renderTextureToUse = bodyRenderTexture;
+			return true;
 		}
 
 	}
