@@ -81,6 +81,15 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 			hashNames.Add(hashList.GetArrayElementAtIndex(i).FindPropertyRelative("hashName").stringValue);
 			hashes.Add(hashList.GetArrayElementAtIndex(i).FindPropertyRelative("hash").intValue);
 		}
+		if (minimalMode == false)
+		{
+			bonesInSkeleton = new List<string>(hashNames.ToArray());
+		}
+		else
+		{
+			bonesInSkeleton = new List<string>(umaData.skeleton.BoneNames);
+		}
+		bonesInSkeleton.Sort();
 		UpdateDnaNames();
 		initialized = true;
 	}
@@ -113,7 +122,8 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 		{
 			_skelModPropDrawer.Init(hashNames, hashes, dnaNames);
 		}
-
+		if (minimalMode)
+        _skelModPropDrawer.bonesInSkeleton = bonesInSkeleton;
 	}
 
 	//drop area for importing from another DynamicUMADnaConverterBehaviour
@@ -630,9 +640,8 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 				EditorGUI.LabelField(addSkelLabel, new GUIContent("Add Modifier", "Add a modifier for the selected bone in the skeleton, that will modify its 'Position', 'Rotation' or 'Scale'"));
 				EditorGUI.indentLevel--;
 				List<string> thisBoneNames = new List<string>(0);
-				EditorGUI.BeginChangeCheck();
 				//string[] boneNames = new string[0];
-				if(minimalMode == false)
+				/*if(minimalMode == false)
 				{
 					bonesInSkeleton = new List<string>( hashNames.ToArray());
                 }
@@ -640,12 +649,13 @@ public class DynamicDNAConverterBehaviourEditor : Editor
 				{
 					bonesInSkeleton = new List<string>(umaData.skeleton.BoneNames);
 				}
-				bonesInSkeleton.Sort();
+				bonesInSkeleton.Sort();*/
                 //Array.Sort(boneNames);
 				thisBoneNames = new List<string>(bonesInSkeleton);
 				thisBoneNames.Insert(0, "Choose Bone");
-				selectedAddHash = EditorGUI.Popup(addSkelBone, selectedAddHash, thisBoneNames.ToArray());
 
+				EditorGUI.BeginChangeCheck();
+				selectedAddHash = EditorGUI.Popup(addSkelBone, selectedAddHash, thisBoneNames.ToArray());
 				string[] propertyArray = new string[] { "Position", "Rotation", "Scale" };
 				selectedAddProp = EditorGUI.Popup(addSkelProp, selectedAddProp, propertyArray);
 				if (EditorGUI.EndChangeCheck())
