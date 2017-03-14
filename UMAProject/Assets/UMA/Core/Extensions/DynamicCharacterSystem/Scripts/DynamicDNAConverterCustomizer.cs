@@ -235,10 +235,10 @@ namespace UMA
 		{
 			if (drawBoundsGizmo && activeUMA != null)
 			{
-				if (activeUMA.umaData == null || activeUMA.umaData.myRenderer == null)
+				if (activeUMA.umaData == null || activeUMA.umaData.GetRenderer(0) == null)
 					return;
 				Gizmos.color = Color.white;
-				Gizmos.DrawWireCube(activeUMA.umaData.myRenderer.bounds.center, activeUMA.umaData.myRenderer.bounds.size);
+				Gizmos.DrawWireCube(activeUMA.umaData.GetRenderer(0).bounds.center, activeUMA.umaData.GetRenderer(0).bounds.size);
 			}
 		}
 
