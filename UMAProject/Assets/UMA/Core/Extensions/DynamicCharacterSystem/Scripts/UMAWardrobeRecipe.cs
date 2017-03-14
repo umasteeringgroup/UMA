@@ -122,7 +122,7 @@ public partial class UMAWardrobeRecipe : UMATextRecipe
 	#endregion
 
 #if UNITY_EDITOR
-	[UnityEditor.MenuItem("Assets/Create/UMA Wardrobe Recipe")]
+	[UnityEditor.MenuItem("Assets/Create/UMA/DCS/Wardrobe Recipe")]
 	public static void CreateWardrobeRecipeAsset()
 	{
 		UMAEditor.CustomAssetUtility.CreateAsset<UMAWardrobeRecipe>();

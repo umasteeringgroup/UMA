@@ -191,7 +191,8 @@ namespace UMA
 		public void Assign(UMAData other)
 		{
 			animator = other.animator;
-			myRenderer = other.myRenderer;
+			//myRenderer = other.myRenderer;
+			renderers = other.renderers;
 			umaRoot = other.umaRoot;
 			if (animationController == null)
 			{
@@ -1411,11 +1412,11 @@ namespace UMA
 		/// <param name="rIndex">index (default first) of the renderer this blendshape is on.</param>
 		public void SetBlendShape(int shapeIndex, float weight, int rIndex = 0)
 		{
-			/*if (rIndex >= rendererCount) //for multi-renderer support
+			if (rIndex >= rendererCount) //for multi-renderer support
 			{
 				Debug.LogError ("SetBlendShape: This renderer doesn't exist!");
 				return;
-			}*/
+			}
 
 			if (shapeIndex < 0) 
 			{
@@ -1423,7 +1424,7 @@ namespace UMA
 				return;
 			}
 
-			if (shapeIndex >= myRenderer.sharedMesh.blendShapeCount /*renderers [rIndex].sharedMesh.blendShapeCount*/) //for multi-renderer support
+			if (shapeIndex >= renderers [rIndex].sharedMesh.blendShapeCount) //for multi-renderer support
 			{
 				Debug.LogError ("SetBlendShape: Index is greater than blendShapeCount!");
 				return;
@@ -1435,8 +1436,7 @@ namespace UMA
 			weight = Mathf.Clamp01 (weight);
 			weight *= 100.0f; //Scale up to 1-100 for SetBlendShapeWeight.
 
-			//renderers [rIndex].SetBlendShapeWeight (shapeIndex, weight);//for multi-renderer support
-			myRenderer.SetBlendShapeWeight(shapeIndex,weight);
+			renderers [rIndex].SetBlendShapeWeight (shapeIndex, weight);//for multi-renderer support
 		}
 
 		/// <summary>
@@ -1456,8 +1456,7 @@ namespace UMA
 			weight = Mathf.Clamp01 (weight);
 			weight *= 100.0f; //Scale up to 1-100 for SetBlendShapeWeight.
 
-			//renderers [loc.rendererIndex].SetBlendShapeWeight (loc.shapeIndex, weight);//for multi-renderer support
-			myRenderer.SetBlendShapeWeight(loc.shapeIndex,weight);
+			renderers [loc.rendererIndex].SetBlendShapeWeight (loc.shapeIndex, weight);//for multi-renderer support
 		}
 		/// <summary>
 		/// Gets the first found index of the blendshape by name in the renderers
@@ -1469,7 +1468,7 @@ namespace UMA
 			loc.shapeIndex = -1;
 			loc.rendererIndex = -1;
 
-			/*for (int i = 0; i < rendererCount; i++) //for multi-renderer support
+			for (int i = 0; i < rendererCount; i++) //for multi-renderer support
 			{
 				int index = renderers [i].sharedMesh.GetBlendShapeIndex (name);
 				if (index >= 0) 
@@ -1478,13 +1477,6 @@ namespace UMA
 					loc.rendererIndex = i;
 					return loc;
 				}
-			}*/
-
-			loc.shapeIndex = myRenderer.sharedMesh.GetBlendShapeIndex (name);
-			if (loc.shapeIndex >= 0) 
-			{
-				loc.rendererIndex = 0;
-				return loc;
 			}
 
 			Debug.LogError ("GetBlendShapeIndex: blendshape " + name + " not found!");
@@ -1502,22 +1494,19 @@ namespace UMA
 				Debug.LogError ("GetBlendShapeName: Index is less than zero!");
 				return "";
 			}
-
-			/*
+				
 			if (rendererIndex >= rendererCount) //for multi-renderer support
 			{
 				Debug.LogError ("GetBlendShapeName: This renderer doesn't exist!");
 				return "";
-			}*/
+			}
 
 			//for multi-renderer support
-			/*if( shapeIndex < renderers [rendererIndex].sharedMesh.blendShapeCount )
-				return renderers [rendererIndex].sharedMesh.GetBlendShapeName (shapeIndex);*/
+			if( shapeIndex < renderers [rendererIndex].sharedMesh.blendShapeCount )
+				return renderers [rendererIndex].sharedMesh.GetBlendShapeName (shapeIndex);
 
-			return myRenderer.sharedMesh.GetBlendShapeName (shapeIndex);
-
-			/*Debug.LogError ("GetBlendShapeName: no blendshape at index " + shapeIndex + "!");
-			return "";*/
+			Debug.LogError ("GetBlendShapeName: no blendshape at index " + shapeIndex + "!");
+			return "";
 		}
 		#endregion
 	}

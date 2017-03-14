@@ -67,8 +67,8 @@ public static class ObjExporter
 				if (path.Length != 0)
 				{
 					var staticMesh = new Mesh();
-					avatar.umaData.myRenderer.BakeMesh(staticMesh);
-					FileUtils.WriteAllText(path, MeshToString(staticMesh, avatar.umaData.myRenderer.sharedMaterials));
+					avatar.umaData.GetRenderer(0).BakeMesh(staticMesh);
+					FileUtils.WriteAllText(path, MeshToString(staticMesh, avatar.umaData.GetRenderer(0).sharedMaterials));
 					Object.Destroy(staticMesh);
 				}
 			}

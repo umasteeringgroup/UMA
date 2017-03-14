@@ -412,7 +412,6 @@ namespace UMA
 		public void RetrieveDataFromUnityCloth(Cloth cloth)
 		{
 			clothSkinning = cloth.coefficients;
-			Debug.Log(clothSkinning.Length);
 			clothSkinningSerialized = new Vector2[clothSkinning.Length];
 			for (int i = 0; i < clothSkinning.Length; i++)
 				SkinnedMeshCombiner.ConvertData(ref clothSkinning[i], ref clothSkinningSerialized[i]);

@@ -136,7 +136,7 @@ namespace UMA
 				combinedMaterialList.Clear();
 				clothProperties = null;
 
-            	BuildCombineInstances();
+				BuildCombineInstances();
 
 				if (combinedMeshList.Count == 1)
 				{
@@ -234,6 +234,10 @@ namespace UMA
             for (int materialIndex = 0; materialIndex < umaData.generatedMaterials.materials.Count; materialIndex++)
             {
 				var generatedMaterial = umaData.generatedMaterials.materials[materialIndex];
+
+				if (generatedMaterial.renderer != currentRendererIndex)
+					continue;
+				
 				if (generatedMaterial.umaMaterial.materialType != UMAMaterial.MaterialType.Atlas)
                 {
                     var fragment = generatedMaterial.materialFragments[0];
