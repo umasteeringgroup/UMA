@@ -456,6 +456,7 @@ MonoBehaviour:
     _Name: M_Bod Overlay 1
     _Item: {fileID: 11400000, guid: 03e5bfa4f7f2fd445974ed61bdf5d9cf, type: 2}
     _Path: Assets/UMA/Content/UMA_Core/HumanMale/Overlays/Body/M_Bod Overlay 1.asset
+<<<<<<< HEAD
     IsResource: 0
     IsAssetBundle: 0
   - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
@@ -635,10 +636,194 @@ MonoBehaviour:
     _Name: Eye_Large_Adjust
     _Item: {fileID: 11400000, guid: 10d1e2ac030a2d54e8dffe526204097f, type: 2}
     _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Face/Eye/EyeAdjust/Eye_Large_Adjust.asset
+=======
+>>>>>>> origin/unity53
     IsResource: 0
     IsAssetBundle: 0
   - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
+<<<<<<< HEAD
+=======
+    _Name: M_Bod Overlay 2
+    _Item: {fileID: 11400000, guid: d9dc97ec6d7fc0f46ae9f479ce051897, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Overlays/Body/M_Bod Overlay 2.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: M_Bod smooth
+    _Item: {fileID: 11400000, guid: f57c699e06562b84fb91461077d470a9, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Overlays/Body/M_Bod smooth.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: Body Freckles
+    _Item: {fileID: 11400000, guid: 4559a01221d4aa540bb720979b99c28f, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Overlays/Complexion/Body Freckles.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: Body Hair
+    _Item: {fileID: 11400000, guid: 060710660a79b9549b07a47ba0c1fbe2, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Overlays/Complexion/Body Hair.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: Skin patches Face
+    _Item: {fileID: 11400000, guid: 1320201c90abfb148ba70377406b5dc4, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Overlays/Complexion/Skin patches
+      Face.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: Skin Patches
+    _Item: {fileID: 11400000, guid: a209ee514b60b9044bdef1bcbf69967d, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Overlays/Complexion/Skin Patches.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: M_Face_01
+    _Item: {fileID: 11400000, guid: 19ca51fa9b344074ebeaad4c873fd125, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Overlays/Face/M_Face_01.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: M_Face_02
+    _Item: {fileID: 11400000, guid: fc8edf8b232d0644094d369024be6706, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Overlays/Face/M_Face_02.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: M_Face
+    _Item: {fileID: 11400000, guid: 51e6a9b14fc064715bc8f3e5038ab6f4, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Overlays/Face/M_Face_BW_Compatible.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: M_Face_Old
+    _Item: {fileID: 11400000, guid: 74fbe497c697690488fbdfeee0fae3d6, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Overlays/Face/M_Face_Old.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleHead01
+    _Item: {fileID: 11400000, guid: a60d5c517fee0ce48b5b59b9ed45861e, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Overlays/Face/SwappedHead/MaleFace01.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleHead_PigNose
+    _Item: {fileID: 11400000, guid: 5485425746189d647a627abc4e2f06e9, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Overlays/Face/SwappedHead/Human Male
+      PigNose/MaleHead_PigNose.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: ElvenEars-1
+    _Item: {fileID: 11400000, guid: 3693609360e037e40a7784ab3308e7c0, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Face/ElvenEars- Body 1.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: ElvenEars
+    _Item: {fileID: 11400000, guid: afecbdb8f051eff408e0749bb6a44bf1, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Face/ElvenEars.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: InnerMouth
+    _Item: {fileID: 11400000, guid: 5746c09014733de4bbf208291c61aaea, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Face/InnerMouth.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: Eye Overlay
+    _Item: {fileID: 11400000, guid: 98b05b17b4e8ff142b1f16df2ef2315b, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Face/Eye/Eye Overlay.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: EyeOverlay
+    _Item: {fileID: 11400000, guid: 79fb331967188a048837288f16dbc006, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Face/Eye/EyeOverlay.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FP Default Eye Adjust
+    _Item: {fileID: 11400000, guid: b50b1d40e34242d4da5d97c1e5f8804e, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Face/Eye/FP Default Eye
+      Adjust.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: Alligator_eye_adjust
+    _Item: {fileID: 11400000, guid: 40b53c0fadbef334ca1842707ed2929a, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Face/Eye/EyeAdjust/Alligator_eye_adjust.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: Alligator_eye_Alternate_adjust
+    _Item: {fileID: 11400000, guid: cda7e080be988c44ab8341720f86d6cd, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Face/Eye/EyeAdjust/Alligator_eye_Alternate_adjust.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: Cat_eye_adjust
+    _Item: {fileID: 11400000, guid: 2c830213a9d6eef409a4b7ce0e388acf, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Face/Eye/EyeAdjust/Cat_eye_adjust.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: Cat_eye_Alternate_adjust
+    _Item: {fileID: 11400000, guid: 76a2d7b941eeeda4ba2df5ea0e2fb266, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Face/Eye/EyeAdjust/Cat_eye_Alternate_adjust.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: Default Eye Adjust
+    _Item: {fileID: 11400000, guid: 31b625579c8744547b02bdd5c42c557e, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Face/Eye/EyeAdjust/Default
+      Eye Adjust.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: EyeOverlayAdjust
+    _Item: {fileID: 11400000, guid: 5a63f3d521484f345b330eaa6ddd496e, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Face/Eye/EyeAdjust/EyeOverlayAdjust.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: Eye_Large_Adjust
+    _Item: {fileID: 11400000, guid: 10d1e2ac030a2d54e8dffe526204097f, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Face/Eye/EyeAdjust/Eye_Large_Adjust.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+>>>>>>> origin/unity53
     _Name: MeshHair
     _Item: {fileID: 11400000, guid: eec31456f04efc743a680d6caf7207e6, type: 2}
     _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Hair/MeshHairAniso.asset
@@ -1263,6 +1448,16 @@ MonoBehaviour:
     _Name: MaleFace
     _Item: {fileID: 11400000, guid: 2059a38eee267f6458c7f4de066df8ad, type: 2}
     _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleFace.asset
+<<<<<<< HEAD
+=======
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleGloves
+    _Item: {fileID: 11400000, guid: 3371b0b14f340764c88dc58574e73393, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleGloves.asset
+>>>>>>> origin/unity53
     IsResource: 0
     IsAssetBundle: 0
   - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
@@ -1291,6 +1486,16 @@ MonoBehaviour:
     _Name: MaleJeans
     _Item: {fileID: 11400000, guid: ed308ddf64a50d74aae73e4097381fc1, type: 2}
     _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleJeans.asset
+<<<<<<< HEAD
+=======
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MalePants
+    _Item: {fileID: 11400000, guid: 8ea3bcf334fb01b4ebab82092aa4ff46, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MalePants.asset
+>>>>>>> origin/unity53
     IsResource: 0
     IsAssetBundle: 0
   - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
@@ -1299,6 +1504,17 @@ MonoBehaviour:
     _Item: {fileID: 11400000, guid: 8b7b033a94e0a9f4dbdded4f45aea63a, type: 2}
     _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleRobe
       Hood.asset
+<<<<<<< HEAD
+=======
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleRobe Shoes
+    _Item: {fileID: 11400000, guid: 28f0400d1cc90bf4888a2561c3a1146e, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleRobe
+      Shoes.asset
+>>>>>>> origin/unity53
     IsResource: 0
     IsAssetBundle: 0
   - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
