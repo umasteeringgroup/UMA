@@ -248,6 +248,7 @@ public class UMAAssetIndexer : MonoBehaviour, ISerializationCallbackReceiver
                 {
                     AssetItem ai = ItemsByPath[importedAssets[i]];
                     ai._Name = ai.EvilName;
+                    ai._Path = AssetDatabase.GetAssetPath(ai._Item.GetInstanceID());
                     changed = true;
                 }
                 finally
