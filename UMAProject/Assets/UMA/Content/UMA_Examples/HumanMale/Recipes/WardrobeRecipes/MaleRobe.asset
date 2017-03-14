@@ -19,7 +19,7 @@ MonoBehaviour:
   wardrobeRecipeThumbs:
   - race: HumanMale
     filename: 
-    thumb: {fileID: 0}
+    thumb: {fileID: 21300000, guid: 50f0c9e3f781e814781bc106cd94c672, type: 3}
   - race: HumanMaleDCS
     filename: 
     thumb: {fileID: 0}

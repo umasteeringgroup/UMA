@@ -19,7 +19,7 @@ MonoBehaviour:
   wardrobeRecipeThumbs:
   - race: HumanMale
     filename: 
-    thumb: {fileID: 0}
+    thumb: {fileID: 21300000, guid: acd2947ccc12f0b41aaef2fc727dece4, type: 3}
   - race: HumanMaleDCS
     filename: 
     thumb: {fileID: 0}
@@ -29,5 +29,5 @@ MonoBehaviour:
   suppressWardrobeSlots: []
   activeWardrobeSet: []
   recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"_Gloves of
-    Hammer","scale":100,"copyIdx":-1,"overlays":[{"id":"Gloves of Hammer Overlay","colorIdx":0,"rect":[0,0,0,0]}]}],"colors":[],"fColors":[{"name":"","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":0,"race":"","packedDna":[]}'
+    Hammer","scale":100,"copyIdx":-1,"overlays":[{"id":"Gloves of Hammer Overlay","colorIdx":0,"rect":[0,0,0,0]}]}],"colors":[],"fColors":[{"name":"-","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":0,"race":"","packedDna":[]}'
   replaces: Nothing

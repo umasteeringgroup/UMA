@@ -19,7 +19,7 @@ MonoBehaviour:
   wardrobeRecipeThumbs:
   - race: HumanMale
     filename: 
-    thumb: {fileID: 0}
+    thumb: {fileID: 21300000, guid: 3bf66d8c0065b514ebe9298633431da9, type: 3}
   - race: HumanMaleDCS
     filename: 
     thumb: {fileID: 0}
@@ -29,5 +29,5 @@ MonoBehaviour:
   suppressWardrobeSlots: []
   activeWardrobeSet: []
   recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"M_Wrapped
-    Pants","scale":100,"copyIdx":-1,"overlays":[{"id":"Wrapped Pants","colorIdx":0,"rect":[0,0,0,0]}]}],"colors":[],"fColors":[{"name":"","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":0,"race":"","packedDna":[]}'
+    Pants","scale":100,"copyIdx":-1,"overlays":[{"id":"Wrapped Pants","colorIdx":0,"rect":[0,0,0,0]}]}],"colors":[],"fColors":[{"name":"-","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":0,"race":"","packedDna":[]}'
   replaces: Nothing
