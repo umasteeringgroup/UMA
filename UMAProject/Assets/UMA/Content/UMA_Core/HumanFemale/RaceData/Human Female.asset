@@ -1,0 +1,68 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83d33591a744673429e1681df5574ac0, type: 3}
+  m_Name: Human Female
+  m_EditorClassIdentifier: 
+  baseRaceRecipe: {fileID: 11400000, guid: 1ac4994352c303b4ab12614c1918034f, type: 2}
+  wardrobeSlots:
+  - None
+  - FullOutfit
+  - Face
+  - Eyes
+  - Hair
+  - Body
+  - Complexion
+  - Tattoo
+  - Underwear
+  - Eyebrows
+  - Beard
+  - Ears
+  - Helmet
+  - Shoulders
+  - Chest
+  - Arms
+  - Hands
+  - Waist
+  - Cape
+  - Legs
+  - Feet
+  - AlternateHead
+  - AlternateHands
+  backwardsCompatibleWith: []
+  raceThumbnails:
+    fullThumb: {fileID: 21300000, guid: 0960bf37021a1a7429ade3f60120b82c, type: 3}
+    faceThumb: {fileID: 21300000, guid: ecadaada9dd71a946923ce1576e25862, type: 3}
+    wardrobeSlotThumbs:
+    - thumbIsFor: Hair,FemaleHair,Eyebrows,Ears
+      thumb: {fileID: 21300000, guid: 700870015a5fd7b4ea871015b63eda46, type: 3}
+    - thumbIsFor: Shoulders,Chest,Arms
+      thumb: {fileID: 21300000, guid: 42de8aac87304e146a188c779e2968b4, type: 3}
+    - thumbIsFor: Hands
+      thumb: {fileID: 21300000, guid: 8292b70d54e5a23498806f2ee4214b60, type: 3}
+    - thumbIsFor: Waist,Legs
+      thumb: {fileID: 21300000, guid: ad3e4c3bd35e9984e8b951d0549bac80, type: 3}
+    - thumbIsFor: Feet
+      thumb: {fileID: 21300000, guid: 836042b9488a339419e7497c1ee9d33f, type: 3}
+    - thumbIsFor: Face,Complexion
+      thumb: {fileID: 21300000, guid: ecadaada9dd71a946923ce1576e25862, type: 3}
+  raceName: HumanFemale
+  dnaConverterList:
+  - {fileID: 11400000, guid: 9e2e0dcce00983248a5c1b8107cb1b1d, type: 2}
+  - {fileID: 11400000, guid: 2a5c36ccd1f394ff3b7aac62b5d1e308, type: 2}
+  TPose: {fileID: 11400000, guid: 2329cbcce463cce4684e8efa7fdbff2c, type: 2}
+  umaTarget: 0
+  genericRootMotionTransformName: 
+  expressionSet: {fileID: 11400000, guid: 5912431641bbc4d858ffd8e14168c56a, type: 2}
+  dnaRanges:
+  - {fileID: 11400000, guid: e98d105c42d0f4a1f89444516e0a93b3, type: 2}
+  raceHeight: 2
+  raceRadius: 0.25
+  raceMass: 50

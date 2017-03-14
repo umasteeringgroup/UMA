@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0188188c253e0c4bb9b46e19fa7312e, type: 3}
+  m_Name: ToonCapriPants1
+  m_EditorClassIdentifier: 
+  recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"Bottoms_Female_Capri_Pants_1_LEGS","scale":100,"copyIdx":-1,"overlays":[{"id":"UMA_Toon_F_Body","colorIdx":0,"rect":[0,0,0,0]}]},{"id":"Bottoms_Female_Capri_Pants_1","scale":100,"copyIdx":-1,"overlays":[{"id":"Smart_Pants_1","colorIdx":1,"rect":[0,0,0,0]},{"id":"Smart_Pants_1_detail","colorIdx":2,"rect":[0,0,0,0]}]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]}],"colors":[],"fColors":[{"name":"Skin","colors":[255,166,166,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"SharedColor1","colors":[8,225,90,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"SharedColor2","colors":[170,30,126,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"SharedColor3","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":4,"race":"","packedDna":[]}'
+  recipeType: Wardrobe
+  DisplayValue: 
+  compatibleRaces:
+  - ToonFemale
+  wardrobeRecipeThumbs:
+  - race: ToonFemale
+    filename: 
+    thumb: {fileID: 21300000, guid: f16dc3a7915fa6c48a87359b3d96fa43, type: 3}
+  wardrobeSlot: Legs
+  Hides:
+  - UMA_Toon_LEGS-Female
+  suppressWardrobeSlots:
+  - FullOutfit
+  activeWardrobeSet: []

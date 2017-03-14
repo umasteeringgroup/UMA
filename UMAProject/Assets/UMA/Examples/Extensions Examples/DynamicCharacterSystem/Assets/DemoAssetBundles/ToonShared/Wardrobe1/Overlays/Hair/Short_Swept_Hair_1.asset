@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c4834e6077abe64e968f9f87c9ac70a, type: 3}
+  m_Name: Short_Swept_Hair_1
+  m_EditorClassIdentifier: 
+  overlayName: Short_Swept_Hair_1
+  rect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
+  textureList:
+  - {fileID: 2800000, guid: d4fb8d53824407942854d19715bfaf8c, type: 3}
+  - {fileID: 2800000, guid: 1188b9293fdf97e4db4453188e96af2c, type: 3}
+  tags: []
+  material: {fileID: 11400000, guid: 96ac729ef584939418efbabb91653390, type: 2}

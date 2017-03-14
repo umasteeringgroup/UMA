@@ -1,0 +1,216 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &176158
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 4
+  m_Component:
+  - 4: {fileID: 447748}
+  - 114: {fileID: 11418790}
+  m_Layer: 0
+  m_Name: DynamicDNAConverterBahaviourPrefab
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &447748
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 176158}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+--- !u!114 &11418790
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 176158}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2323fdffbbd0f51409581a5ae1bab046, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dnaTypeHash: 642525823
+  dnaAsset: {fileID: 0}
+  hashList:
+  - hashName: HeadAdjust
+    hash: -423229038
+  - hashName: NeckAdjust
+    hash: 1605701185
+  - hashName: LeftOuterBreast
+    hash: 361754685
+  - hashName: RightOuterBreast
+    hash: -1043063424
+  - hashName: LeftEye
+    hash: 27653119
+  - hashName: RightEye
+    hash: -2120937982
+  - hashName: LeftEyeAdjust
+    hash: -595031702
+  - hashName: RightEyeAdjust
+    hash: -734071712
+  - hashName: Spine1Adjust
+    hash: 473121629
+  - hashName: SpineAdjust
+    hash: 1842365421
+  - hashName: LowerBackBelly
+    hash: -1421416706
+  - hashName: LowerBackAdjust
+    hash: -1471957022
+  - hashName: LeftTrapezius
+    hash: -1320475381
+  - hashName: RightTrapezius
+    hash: -1174579199
+  - hashName: LeftArmAdjust
+    hash: -270431657
+  - hashName: RightArmAdjust
+    hash: -413665443
+  - hashName: LeftForeArmAdjust
+    hash: 923803339
+  - hashName: RightForeArmAdjust
+    hash: -1195342688
+  - hashName: LeftForeArmTwistAdjust
+    hash: 547566030
+  - hashName: RightForeArmTwistAdjust
+    hash: 758040550
+  - hashName: LeftShoulderAdjust
+    hash: -1372013129
+  - hashName: RightShoulderAdjust
+    hash: 1960302077
+  - hashName: LeftUpLegAdjust
+    hash: 898137571
+  - hashName: RightUpLegAdjust
+    hash: -506228642
+  - hashName: LeftLegAdjust
+    hash: -861926788
+  - hashName: RightLegAdjust
+    hash: -1005160586
+  - hashName: LeftGluteus
+    hash: 2044062440
+  - hashName: RightGluteus
+    hash: -2110033470
+  - hashName: LeftEarAdjust
+    hash: -777059916
+  - hashName: RightEarAdjust
+    hash: -652641090
+  - hashName: NoseBaseAdjust
+    hash: -685367200
+  - hashName: NoseMiddleAdjust
+    hash: -1907186538
+  - hashName: LeftNoseAdjust
+    hash: 623523856
+  - hashName: RightNoseAdjust
+    hash: -973641869
+  - hashName: UpperLipsAdjust
+    hash: -736966710
+  - hashName: MandibleAdjust
+    hash: 691264956
+  - hashName: LeftLowMaxilarAdjust
+    hash: 1385644791
+  - hashName: RightLowMaxilarAdjust
+    hash: 459855613
+  - hashName: LeftCheekAdjust
+    hash: -1371476741
+  - hashName: RightCheekAdjust
+    hash: 2048590150
+  - hashName: LeftLowCheekAdjust
+    hash: -982498292
+  - hashName: RightLowCheekAdjust
+    hash: 530525254
+  - hashName: NoseTopAdjust
+    hash: 1973914600
+  - hashName: LeftEyebrowLowAdjust
+    hash: -87457348
+  - hashName: RightEyebrowLowAdjust
+    hash: -1288301130
+  - hashName: LeftEyebrowMiddleAdjust
+    hash: 1573521115
+  - hashName: RightEyebrowMiddleAdjust
+    hash: 1752310743
+  - hashName: LeftEyebrowUpAdjust
+    hash: -550662924
+  - hashName: RightEyebrowUpAdjust
+    hash: 1241434898
+  - hashName: LipsSuperiorAdjust
+    hash: 1865332640
+  - hashName: LipsInferiorAdjust
+    hash: 1799356466
+  - hashName: LeftLipsSuperiorMiddleAdjust
+    hash: 1940197654
+  - hashName: RightLipsSuperiorMiddleAdjust
+    hash: 1220922885
+  - hashName: LeftLipsInferiorAdjust
+    hash: 1599456840
+  - hashName: RightLipsInferiorAdjust
+    hash: 1389899872
+  - hashName: LeftLipsAdjust
+    hash: -666615888
+  - hashName: RightLipsAdjust
+    hash: 949575891
+  - hashName: Global
+    hash: -274100555
+  - hashName: Position
+    hash: -1084586333
+  - hashName: LowerBack
+    hash: -919067556
+  - hashName: Head
+    hash: 130111906
+  - hashName: LeftArm
+    hash: -343733542
+  - hashName: RightArm
+    hash: 1806956327
+  - hashName: LeftForeArm
+    hash: -1984349568
+  - hashName: RightForeArm
+    hash: 1918345642
+  - hashName: LeftHand
+    hash: -1233783956
+  - hashName: RightHand
+    hash: 1979272496
+  - hashName: LeftFoot
+    hash: 1486391408
+  - hashName: RightFoot
+    hash: -1693174228
+  - hashName: LeftUpLeg
+    hash: 392266736
+  - hashName: RightUpLeg
+    hash: 1971262097
+  - hashName: LeftShoulder
+    hash: 759586984
+  - hashName: RightShoulder
+    hash: -167360539
+  - hashName: Mandible
+    hash: 1574626840
+  skeletonModifiers: []
+  overallModifiersEnabled: 1
+  overallScale: 1
+  heightModifiers: {x: 0.85, y: 1.2}
+  radiusModifier: 0.28
+  massModifiers: {x: 46, y: 26, z: 26}
+  startingPose: {fileID: 0}
+  startingPoseWeight: 1
+  lastKnownAssetPath: Assets/UMA/Extensions/DynamicCharacterSystem/DynamicDNA/Prefabs/DynamicDNAConverterBahaviourPrefab.prefab
+  lastKnownDuplicateAssetPath: Assets/UMA/Extensions/DynamicCharacterSystem/DynamicDNA/Prefabs/DynamicDNAConverterBahaviourPrefab
+    1.prefab
+  lastKnownInstanceID: 24964
+--- !u!1001 &100100000
+Prefab:
+  m_ObjectHideFlags: 1
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications: []
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 0}
+  m_RootGameObject: {fileID: 176158}
+  m_IsPrefabParent: 1

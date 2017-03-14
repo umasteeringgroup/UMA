@@ -1,0 +1,13 @@
+-Open Unity and create a new empty object anywhere.
+-Add the "Database Debugger" script.
+-Play the scene, add correct version in the field and click the checkbox, you should get "Row added." response in the console.
+-Click the checkbox again and you should get the "Row already exists." message to confirm everythings working.
+-Close Unity.
+-Open the file UMAProject\Assets\UMA\InternalDataStore\AssetVersion.xml.
+-Edit the "version" and "notes" sections with the relevant information, dont push yet.
+-Build the release package.
+-Updoad the package file to: http://umawiki.secretanorak.com/Updates/Update.unitypackage.
+-Push the changes to the AssetVersion.xml.
+-Reset the version number in the local AssetVersion.xml, do not push this!
+-Open UMA project in Unity.
+-You should now get a prompt that a new update is availible to download.

@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &1
+MonoBehaviour:
+  m_ObjectHideFlags: 61
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff2bc95c59012e44ab0a0752c4622453, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  projectItems:
+  - unityObject: {fileID: 102900000, guid: 43ce2d3e5bdfc924b84fc85a02c01ca0, type: 3}
+    sceneObjectId: -1
+    unityObjectName: 1-DynamicCharacterSystem - Simple Setup
+    customName: 
+  - unityObject: {fileID: 11400000, guid: 4336d3ff5c1716d4caf03877c7945a05, type: 2}
+    sceneObjectId: -1
+    unityObjectName: HumanFemale New
+    customName: 
+  - unityObject: {fileID: 11400000, guid: 45b4b04b28ddc034c8654606ed39ad54, type: 2}
+    sceneObjectId: -1
+    unityObjectName: Human Female Base Recipe
+    customName: 
+  - unityObject: {fileID: 11400000, guid: 8765ee5c978a30f419d61cd86885196a, type: 2}
+    sceneObjectId: -1
+    unityObjectName: UMA_Hair_Aniso
+    customName: 
+  - unityObject: {fileID: 11400000, guid: d440c1731c681494f91616a7a1a9ca5d, type: 2}
+    sceneObjectId: -1
+    unityObjectName: HumanMale New
+    customName: 
+  - unityObject: {fileID: 146930, guid: 0b5dc331dbed04241969ac6fbf0b5301, type: 2}
+    sceneObjectId: -1
+    unityObjectName: UMA-DemoBase
+    customName: 
+  - unityObject: {fileID: 102900000, guid: 9b44dc91378f85c44903d70e9b805efe, type: 3}
+    sceneObjectId: -1
+    unityObjectName: Scene01 - Crowd - PBR 1
+    customName: 
+  - unityObject: {fileID: 11400000, guid: 62688b7aa02fbc544916e522fcc239c7, type: 2}
+    sceneObjectId: -1
+    unityObjectName: Human Male
+    customName: 
+  - unityObject: {fileID: 11400000, guid: 5d792fc321b26d84c8402ae347b28062, type: 2}
+    sceneObjectId: -1
+    unityObjectName: Human Male Base Recipe
+    customName: 
+  - unityObject: {fileID: 102330, guid: fd997af858792f24bb98c944c66d1083, type: 2}
+    sceneObjectId: -1
+    unityObjectName: Environment-Demobase
+    customName: 
+  scenes: []

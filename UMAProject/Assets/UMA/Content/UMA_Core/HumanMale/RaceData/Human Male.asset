@@ -1,0 +1,70 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83d33591a744673429e1681df5574ac0, type: 3}
+  m_Name: Human Male
+  m_EditorClassIdentifier: 
+  baseRaceRecipe: {fileID: 11400000, guid: aa8318164d3d68540a71451b136fd489, type: 2}
+  wardrobeSlots:
+  - None
+  - FullOutfit
+  - Face
+  - Eyes
+  - Hair
+  - Body
+  - Complexion
+  - Tattoo
+  - Underwear
+  - Eyebrows
+  - Beard
+  - Ears
+  - Helmet
+  - Shoulders
+  - Chest
+  - Arms
+  - Hands
+  - Waist
+  - Cape
+  - Legs
+  - Feet
+  - AlternateHead
+  - AlternateHands
+  backwardsCompatibleWith: []
+  raceThumbnails:
+    fullThumb: {fileID: 21300000, guid: 388c87ca440d1fc4ba07c69318fdd99c, type: 3}
+    faceThumb: {fileID: 21300000, guid: 9176b48a2857c364280b4f5b9d620852, type: 3}
+    wardrobeSlotThumbs:
+    - thumbIsFor: Hair,Eyebrows,Beard,Ears,Helmet
+      thumb: {fileID: 21300000, guid: 4d52ce3fee5a5b840832cdfe4c1aafda, type: 3}
+    - thumbIsFor: Shoulders,Chest,Arms
+      thumb: {fileID: 21300000, guid: f512b2c1b019cd040846e63bc0f88687, type: 3}
+    - thumbIsFor: Hands
+      thumb: {fileID: 21300000, guid: 8c3e3ce58fbff8a4a8b7a48b10244577, type: 3}
+    - thumbIsFor: Waist,Legs
+      thumb: {fileID: 21300000, guid: 6dfeb8ef7d6d5d8489aaf06f2240e07a, type: 3}
+    - thumbIsFor: Feet
+      thumb: {fileID: 21300000, guid: 93324663ca07afb4bacb65a20307d67b, type: 3}
+    - thumbIsFor: FullOutfit
+      thumb: {fileID: 21300000, guid: 213ebaef158497e479134d517b92d9cf, type: 3}
+    - thumbIsFor: Face,Complexion
+      thumb: {fileID: 21300000, guid: 9176b48a2857c364280b4f5b9d620852, type: 3}
+  raceName: HumanMale
+  dnaConverterList:
+  - {fileID: 11400000, guid: 82b31de417945d14aa3ed485fe933c5d, type: 2}
+  - {fileID: 11400000, guid: 2a5c36ccd1f394ff3b7aac62b5d1e308, type: 2}
+  TPose: {fileID: 11400000, guid: 11004785bcad24f4b8c044781277380a, type: 2}
+  umaTarget: 0
+  genericRootMotionTransformName: 
+  expressionSet: {fileID: 11400000, guid: 3ed354ee89bd94ac895fe6e0e73bcf86, type: 2}
+  dnaRanges:
+  - {fileID: 11400000, guid: 71e836c192d6b46edbdd9cdd89da143e, type: 2}
+  raceHeight: 2
+  raceRadius: 0.25
+  raceMass: 50

@@ -1,0 +1,62 @@
+
+//-------------------------------------------------------------------------------------
+// Lux simple POM properties
+[Header(Simple POM)]
+[Space(4)]
+_ParallaxMap ("Height (G)", 2D) = "white" {}
+_Parallax ("Height Scale", Range (0.005, 0.1)) = 0.02
+_LinearSteps ("Linear Steps", Range(4,40)) = 20
+
+
+//-------------------------------------------------------------------------------------
+// Lux dynamic weather properties
+
+[Space(4)]
+[Header(Dynamic Snow ______________________________________________________ )]
+[Space(4)]
+_SnowSlopeDamp("Snow Slope Damp", Range (0.0, 8.0)) = 1.0
+[Lux_SnowAccumulationDrawer] _SnowAccumulation("Snow Accumulation", Vector) = (0,1,0,0)
+[Space(4)]
+[Lux_TextureTilingDrawer] _SnowTiling ("Snow Tiling", Vector) = (2,2,0,0)
+_SnowNormalStrength ("Snow Normal Strength", Range (0.0, 2.0)) = 1.0
+[Lux_TextureTilingDrawer] _SnowMaskTiling ("Snow Mask Tiling", Vector) = (0.3,0.3,0,0)
+[Lux_TextureTilingDrawer] _SnowDetailTiling ("Snow Detail Tiling", Vector) = (4.0,4.0,0,0)
+_SnowDetailStrength ("Snow Detail Strength", Range (0.0, 1.0)) = 0.5
+_SnowOpacity("Snow Opacity", Range (0.0, 1.0)) = 0.5
+
+[Space(4)]
+[Header(Dynamic Wetness ______________________________________________________ )]
+[Space(4)]
+_WaterSlopeDamp("Water Slope Damp", Range (0.0, 1.0)) = 0.5
+[Toggle(LOD_FADE_CROSSFADE)] _EnableIndependentPuddleMaskTiling("Enable independent Puddle Mask Tiling", Float) = 0.0
+_PuddleMaskTiling ("- Puddle Mask Tiling", Float) = 1
+
+[Header(Texture Set 1)]
+_WaterColor("Water Color (RGB) Opacity (A)", Color) = (0,0,0,0)
+[Lux_WaterAccumulationDrawer] _WaterAccumulationCracksPuddles("Water Accumulation in Cracks and Puddles", Vector) = (0,1,0,1)
+// Mix mapping enabled so we need a 2nd Input
+[Header(Texture Set 2)]
+_WaterColor2("Water Color (RGB) Opacity (A)", Color) = (0,0,0,0)
+[Lux_WaterAccumulationDrawer] _WaterAccumulationCracksPuddles2("Water Accumulation in Cracks and Puddles", Vector) = (0,1,0,1)
+
+_Lux_FlowNormalTiling("Flow Normal Tiling", Float) = 2.0
+_Lux_FlowSpeed("Flow Speed", Range (0.0, 2.0)) = 0.05
+_Lux_FlowInterval("Flow Interval", Range (0.0, 8.0)) = 1
+_Lux_FlowRefraction("Flow Refraction", Range (0.0, 0.1)) = 0.02
+_Lux_FlowNormalStrength("Flow Normal Strength", Range (0.0, 2.0)) = 1.0
+
+
+//-------------------------------------------------------------------------------------
+// Lux diffuse Scattering properties
+
+[Header(Diffuse Scattering Texture Set 1 ______________________________________ )]
+[Space(4)]
+_DiffuseScatteringCol("Diffuse Scattering Color", Color) = (0,0,0,1)
+_DiffuseScatteringBias("Scatter Bias", Range(0.0, 0.5)) = 0.0
+_DiffuseScatteringContraction("Scatter Contraction", Range(1.0, 10.0)) = 8.0
+
+[Header(Diffuse Scattering Texture Set 2 ______________________________________ )]
+[Space(4)]
+_DiffuseScatteringCol2("Diffuse Scattering Color", Color) = (0,0,0,1)
+_DiffuseScatteringBias2("Scatter Bias", Range(0.0, 0.5)) = 0.0
+_DiffuseScatteringContraction2("Scatter Contraction", Range(1.0, 10.0)) = 8.0

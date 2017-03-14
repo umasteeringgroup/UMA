@@ -1,0 +1,1 @@
+Placeholder assets are used inplace of the actual required assets when the required asset is in an assetbundle that needs to be downloaded

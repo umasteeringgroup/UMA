@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83d33591a744673429e1681df5574ac0, type: 3}
+  m_Name: ToonFemale
+  m_EditorClassIdentifier: 
+  baseRaceRecipe: {fileID: 11400000, guid: 992f821034971c942b94f8ee7bdf311a, type: 2}
+  wardrobeSlots:
+  - None
+  - FullOutfit
+  - Face
+  - Hair
+  - Complexion
+  - Makeup
+  - Eyebrows
+  - Ears
+  - Helmet
+  - Shoulders
+  - Chest
+  - Underwear
+  - Arms
+  - Hands
+  - Waist
+  - Legs
+  - Feet
+  backwardsCompatibleWith: []
+  raceThumbnails:
+    fullThumb: {fileID: 21300000, guid: dbb32fec54702ff4ea19bf72301f81e9, type: 3}
+    faceThumb: {fileID: 21300000, guid: e8246c94f2a830349a241ed3730f4d46, type: 3}
+    wardrobeSlotThumbs:
+    - thumbIsFor: Hair,Eyebrows,Ears,Helmet
+      thumb: {fileID: 21300000, guid: 148c34019fcd2624f8c0c477844cdca8, type: 3}
+    - thumbIsFor: Chest,Shoulders,Arms
+      thumb: {fileID: 21300000, guid: 1e61bd0784d7bf54285144463dae8a43, type: 3}
+    - thumbIsFor: Hands
+      thumb: {fileID: 21300000, guid: 931079e0d599ab64881ddfe02608d0fd, type: 3}
+    - thumbIsFor: Waist,Legs
+      thumb: {fileID: 21300000, guid: 4764780170198534da28345affcd9941, type: 3}
+    - thumbIsFor: Feet
+      thumb: {fileID: 21300000, guid: 878a264f74c65ca42a0931cdc9a75bc7, type: 3}
+    - thumbIsFor: FullOutfit
+      thumb: {fileID: 21300000, guid: 806b904c74d42ed42841288f771a92f3, type: 3}
+    - thumbIsFor: Face,Complexion
+      thumb: {fileID: 21300000, guid: e8246c94f2a830349a241ed3730f4d46, type: 3}
+  raceName: ToonFemale
+  dnaConverterList:
+  - {fileID: 11432742, guid: c82265195e2de574d968d7bb7a845927, type: 2}
+  TPose: {fileID: 11400000, guid: 6709cc593c8096a4e9d1e8f21cfcacf5, type: 2}
+  umaTarget: 0
+  genericRootMotionTransformName: 
+  expressionSet: {fileID: 11400000, guid: 42ef5a61b54e53a4a8cec7410e1e8d3c, type: 2}
+  dnaRanges:
+  - {fileID: 11400000, guid: 91e2cbe585e0f6145b24d5c6aaf13e1c, type: 2}
+  raceHeight: 2
+  raceRadius: 0.25
+  raceMass: 50

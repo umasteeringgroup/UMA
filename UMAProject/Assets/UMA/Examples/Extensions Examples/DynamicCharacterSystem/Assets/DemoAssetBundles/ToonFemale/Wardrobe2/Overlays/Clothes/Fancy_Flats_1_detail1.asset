@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c4834e6077abe64e968f9f87c9ac70a, type: 3}
+  m_Name: Fancy_Flats_1_detail1
+  m_EditorClassIdentifier: 
+  overlayName: Fancy_Flats_1_detail1
+  rect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
+  textureList:
+  - {fileID: 2800000, guid: bbcc9fcf1f8a6354d8f7efba8212910c, type: 3}
+  - {fileID: 2800000, guid: 3c98e6b60315fce40802977b5cd2817f, type: 3}
+  - {fileID: 2800000, guid: df3452a6006a2d54fb0587d4b2cad909, type: 3}
+  tags: []
+  material: {fileID: 11400000, guid: 02fccf236847a8943ba8fa448bc93ef8, type: 2}

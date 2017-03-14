@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: TongueDown
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Tongue02
+    hash: -718215880
+    position: {x: 2.5710278e-10, y: -0.0000000037252903, z: 0.0000000038874752}
+    rotation: {x: 0.24985859, y: -0.00000043621102, z: -0.0000016686079, w: 0.96828234}
+    scale: {x: 1.0045767, y: 1.0000001, z: 0.9999999}
+  tweenPoses: []
+  tweenWeights: []

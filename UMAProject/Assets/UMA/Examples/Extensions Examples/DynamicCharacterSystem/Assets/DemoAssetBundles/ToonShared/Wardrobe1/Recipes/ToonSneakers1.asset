@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0188188c253e0c4bb9b46e19fa7312e, type: 3}
+  m_Name: ToonSneakers1
+  m_EditorClassIdentifier: 
+  recipeString: '{"version":2,"packedSlotDataList":null,"slotsV2":[null,null,null,null,null,null,{"id":"Shoes_Sneakers_1","scale":100,"copyIdx":-1,"overlays":[{"id":"Sneakers_1","colorIdx":3,"rect":[0,0,0,0]},{"id":"Sneakers_1_detail","colorIdx":1,"rect":[0,0,0,0]}]}],"colors":null,"fColors":[{"name":"Skin","colors":[255,166,166,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"SharedColor1","colors":[8,225,90,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"SharedColor2","colors":[170,30,126,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"SharedColor3","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":4,"race":null,"umaDna":{},"packedDna":[]}'
+  recipeType: Wardrobe
+  DisplayValue: 
+  compatibleRaces:
+  - ToonFemale
+  - ToonMale
+  wardrobeRecipeThumbs:
+  - race: ToonFemale
+    filename: 
+    thumb: {fileID: 21300000, guid: aed4742a93f4a7c42812545a05bf3fd8, type: 3}
+  - race: ToonMale
+    filename: 
+    thumb: {fileID: 21300000, guid: aed4742a93f4a7c42812545a05bf3fd8, type: 3}
+  wardrobeSlot: Feet
+  Hides: []
+  suppressWardrobeSlots:
+  - FullOutfit
+  activeWardrobeSet: []

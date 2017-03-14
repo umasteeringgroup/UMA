@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c4834e6077abe64e968f9f87c9ac70a, type: 3}
+  m_Name: MaleShirt01
+  m_EditorClassIdentifier: 
+  overlayName: MaleShirt01
+  overlayType: 0
+  rect:
+    serializedVersion: 2
+    x: 0
+    y: 1025.8
+    width: 2048
+    height: 1024
+  alphaMask: {fileID: 0}
+  textureList:
+  - {fileID: 2800000, guid: f81cce6b25bb84582870e7d712d68918, type: 3}
+  - {fileID: 2800000, guid: f8cf9468b3cf148148dd1f220bda6c17, type: 3}
+  - {fileID: 2800000, guid: 1f1dcad09715f4c269eeb34c63889148, type: 3}
+  tags: []
+  material: {fileID: 11400000, guid: 8e29dbac5d2e82f44a759a7e2cc568ab, type: 2}
+  OcclusionEntries: []

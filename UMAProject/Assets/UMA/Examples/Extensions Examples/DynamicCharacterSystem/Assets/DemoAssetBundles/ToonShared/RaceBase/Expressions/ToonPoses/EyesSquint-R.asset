@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: EyesSquint-R
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightCheek
+    hash: 827866759
+    position: {x: -0.00006316602, y: 0.014782593, z: -0.00018967688}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.9999999, z: 1}
+  - bone: RightEye
+    hash: -2120937982
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.9999995, y: 0.99999964, z: 0.9130449}
+  - bone: RightLowerLid
+    hash: -945389519
+    position: {x: 0.000000002566427, y: -5.960459e-10, z: 0.00000006164424}
+    rotation: {x: 0.053125437, y: -0.0000000014870862, z: 0.0000000067730244, w: 0.99858797}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightUpperLid
+    hash: 683767470
+    position: {x: 0.000000002566427, y: -5.960459e-10, z: 0.00000006164424}
+    rotation: {x: -0.06165054, y: 3.5767025e-10, z: 0.0000000010557147, w: 0.9980978}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  - bone: RightEyebrowLow
+    hash: -1640515339
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.014791443, y: 1.1698736e-10, z: -2.24026e-11, w: 0.9998906}
+    scale: {x: 1, y: 1.0000002, z: 1}
+  - bone: RightEyebrowMiddle
+    hash: 1695671804
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.025332335, y: 4.885495e-12, z: 1.9486454e-10, w: 0.999679}
+    scale: {x: 1.0000001, y: 1.0000001, z: 1}
+  - bone: RightEyebrowUp
+    hash: 1246724795
+    position: {x: 0.0000029355288, y: -0.0024870485, z: 0.0000910908}
+    rotation: {x: -0.033298314, y: 1.3729219e-10, z: 4.4190873e-11, w: 0.99944556}
+    scale: {x: 1.0000001, y: 0.9999995, z: 1}
+  tweenPoses: []
+  tweenWeights: []

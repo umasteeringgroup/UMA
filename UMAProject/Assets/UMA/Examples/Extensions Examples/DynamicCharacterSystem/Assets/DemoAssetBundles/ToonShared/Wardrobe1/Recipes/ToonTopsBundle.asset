@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ae7341e07d1b8f41aa37f5e2c910168, type: 3}
+  m_Name: ToonTopsBundle
+  m_EditorClassIdentifier: 
+  recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[],"colors":[],"fColors":[{"name":"Hair","colors":[179,21,21,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"Skin","colors":[255,166,166,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"SharedColor1","colors":[8,225,90,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"SharedColor2","colors":[170,30,126,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"SharedColor3","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":5,"race":"","packedDna":[]}'
+  recipeType: Wardrobe
+  DisplayValue: 
+  compatibleRaces:
+  - ToonFemale
+  wardrobeRecipeThumbs:
+  - race: ToonFemale
+    filename: 
+    thumb: {fileID: 0}
+  wardrobeSlot: None
+  Hides: []
+  suppressWardrobeSlots: []
+  activeWardrobeSet: []
+  coverImages:
+  - {fileID: 21300000, guid: 62a1872587a7aa04eab1c4eb9b178386, type: 3}
+  wardrobeCollection:
+    sets:
+    - targetRace: ToonFemale
+      wardrobeSet: []
+  arbitraryRecipes:
+  - ToonHalterNeck1
+  - ToonCropTShirt1

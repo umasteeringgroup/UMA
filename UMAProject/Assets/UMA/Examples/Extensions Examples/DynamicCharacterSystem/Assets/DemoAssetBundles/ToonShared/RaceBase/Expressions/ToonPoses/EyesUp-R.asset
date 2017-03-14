@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: EyesUp-R
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightEyeGlobe
+    hash: 935779410
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.123866916, y: -1.7739896e-10, z: -5.6142685e-10, w: 0.99229884}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLowerLid
+    hash: -945389519
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.100088276, y: 0.0000000013891618, z: 0.0000000012872211, w: 0.9949786}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightMaskEyeGlobe
+    hash: -1579608369
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.2496572, y: 5.676642e-10, z: -0.000000003149018, w: 0.9683343}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightUpperLid
+    hash: 683767470
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.047935825, y: 1.01689164e-10, z: 0.0000000012968838, w: 0.99885046}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  tweenPoses: []
+  tweenWeights: []

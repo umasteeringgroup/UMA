@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c4834e6077abe64e968f9f87c9ac70a, type: 3}
+  m_Name: FemaleShortHair01
+  m_EditorClassIdentifier: 
+  overlayName: FemaleShortHair01
+  overlayType: 0
+  rect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
+  alphaMask: {fileID: 0}
+  textureList:
+  - {fileID: 2800000, guid: 8e3e85822505e47619ce96f92fcdb1d0, type: 3}
+  - {fileID: 2800000, guid: f8f534d6cc7e94676b6d85fb0b9c3360, type: 3}
+  tags: []
+  material: {fileID: 11400000, guid: 8765ee5c978a30f419d61cd86885196a, type: 2}
+  OcclusionEntries: []

@@ -1,0 +1,155 @@
+{
+	"version": 2,
+	"packedSlotDataList": [],
+	"slotsV2": [{
+		"id": "UMA_Toon_EYES",
+		"scale": 100,
+		"copyIdx": -1,
+		"overlays": [{
+			"id": "UMA_Toon_Eyes",
+			"colorIdx": 2,
+			"rect": [0, 0, 0, 0]
+		}]
+	}, {
+		"id": "UMA_Toon_INNERMOUTH",
+		"scale": 100,
+		"copyIdx": -1,
+		"overlays": [{
+			"id": "UMA_Toon_InnerMouth",
+			"colorIdx": 2,
+			"rect": [0, 0, 0, 0]
+		}]
+	}, {
+		"id": "UMA_Toon_HANDS",
+		"scale": 100,
+		"copyIdx": -1,
+		"overlays": [{
+			"id": "UMA_Toon_F_Body",
+			"colorIdx": 0,
+			"rect": [0, 0, 0, 0]
+		}]
+	}, {
+		"id": "UMA_Toon_FEET",
+		"scale": 100,
+		"copyIdx": 2,
+		"overlays": []
+	}, {
+		"id": "UMA_Toon_LASHES-Female",
+		"scale": 100,
+		"copyIdx": -1,
+		"overlays": [{
+			"id": "UMA_Toon_F_Lashes",
+			"colorIdx": 2,
+			"rect": [0, 0, 0, 0]
+		}]
+	}, {
+		"id": "",
+		"scale": 1,
+		"copyIdx": -1,
+		"overlays": []
+	}, {
+		"id": "Hair_Long_Braided_Hair_1",
+		"scale": 100,
+		"copyIdx": -1,
+		"overlays": [{
+			"id": "Long_Braided_Hair_1",
+			"colorIdx": 1,
+			"rect": [0, 0, 0, 0]
+		}]
+	}, {
+		"id": "Tops_Female_Halter_Neck_1",
+		"scale": 100,
+		"copyIdx": -1,
+		"overlays": [{
+			"id": "Halter_Neck_1",
+			"colorIdx": 5,
+			"rect": [0, 0, 0, 0]
+		}, {
+			"id": "Halter_Neck_1_detail",
+			"colorIdx": 4,
+			"rect": [0, 0, 0, 0]
+		}]
+	}, {
+		"id": "Tops_Female_Halter_Neck_1_TORSO",
+		"scale": 100,
+		"copyIdx": 2,
+		"overlays": []
+	}, {
+		"id": "Bottoms_Female_Hot_Pants_1_LEGS",
+		"scale": 100,
+		"copyIdx": 2,
+		"overlays": []
+	}, {
+		"id": "Bottoms_Female_Hot_Pants_1",
+		"scale": 100,
+		"copyIdx": -1,
+		"overlays": [{
+			"id": "Jeans_1",
+			"colorIdx": 4,
+			"rect": [0, 0, 0, 0]
+		}, {
+			"id": "Jeans_1_detail",
+			"colorIdx": 5,
+			"rect": [0, 0, 0, 0]
+		}]
+	}, {
+		"id": "Shoes_Fancy_Flats_1",
+		"scale": 100,
+		"copyIdx": -1,
+		"overlays": [{
+			"id": "Fancy_Flats_1",
+			"colorIdx": 6,
+			"rect": [0, 0, 0, 0]
+		}, {
+			"id": "Fancy_Flats_1_detail",
+			"colorIdx": 4,
+			"rect": [0, 0, 0, 0]
+		}, {
+			"id": "Fancy_Flats_1_detail1",
+			"colorIdx": 5,
+			"rect": [0, 0, 0, 0]
+		}]
+	}],
+	"colors": [],
+	"fColors": [{
+		"name": "Skin",
+		"colors": [255, 249, 226, 255, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0]
+	}, {
+		"name": "Hair",
+		"colors": [33, 25, 18, 255, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0]
+	}, {
+		"name": "",
+		"colors": [255, 255, 255, 0, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 255, 255, 255, 255, 16, 16, 16, 83]
+	}, {
+		"name": "",
+		"colors": [255, 255, 255, 255, 0, 0, 0, 0]
+	}, {
+		"name": "SharedColor1",
+		"colors": [8, 225, 90, 255, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0]
+	}, {
+		"name": "SharedColor2",
+		"colors": [170, 30, 126, 255, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0]
+	}, {
+		"name": "SharedColor3",
+		"colors": [255, 255, 255, 255, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0]
+	}],
+	"sharedColorCount": 7,
+	"race": "ToonFemale",
+	"packedDna": [{
+		"dnaType": "UMADnaHumanoid",
+		"packedDna": "{\"height\":172,\"headSize\":128,\"headWidth\":128,\"neckThickness\":128,\"armLength\":128,\"forearmLength\":128,\"armWidth\":255,\"forearmWidth\":153,\"handsSize\":136,\"feetSize\":128,\"legSeparation\":118,\"upperMuscle\":255,\"lowerMuscle\":255,\"upperWeight\":255,\"lowerWeight\":255,\"legsSize\":124,\"belly\":255,\"waist\":255,\"gluteusSize\":255,\"earsSize\":128,\"earsPosition\":128,\"earsRotation\":128,\"noseSize\":128,\"noseCurve\":128,\"noseWidth\":128,\"noseInclination\":128,\"nosePosition\":128,\"nosePronounced\":128,\"noseFlatten\":128,\"chinSize\":128,\"chinPronounced\":128,\"chinPosition\":128,\"mandibleSize\":128,\"jawsSize\":101,\"jawsPosition\":132,\"cheekSize\":128,\"cheekPosition\":128,\"lowCheekPronounced\":128,\"lowCheekPosition\":128,\"foreheadSize\":128,\"foreheadPosition\":128,\"lipsSize\":128,\"mouthSize\":128,\"eyeRotation\":128,\"eyeSize\":128,\"breastSize\":255}"
+	}],
+	"wardrobeRecipesJson": [{
+		"slot": "Hair",
+		"recipe": "ToonHair1"
+	}, {
+		"slot": "Feet",
+		"recipe": "ToonFancyFlats1"
+	}, {
+		"slot": "Legs",
+		"recipe": "ToonHotPants1"
+	}, {
+		"slot": "Chest",
+		"recipe": "ToonHalterNeck1"
+	}]
+}

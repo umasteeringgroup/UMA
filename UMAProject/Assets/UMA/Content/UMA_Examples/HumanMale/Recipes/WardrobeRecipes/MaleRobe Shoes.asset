@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0188188c253e0c4bb9b46e19fa7312e, type: 3}
+  m_Name: MaleRobe Shoes
+  m_EditorClassIdentifier: 
+  recipeType: Wardrobe
+  DisplayValue: Mystic Robe Shoes
+  compatibleRaces:
+  - HumanMale
+  - HumanMaleDCS
+  wardrobeRecipeThumbs:
+  - race: HumanMale
+    filename: 
+    thumb: {fileID: 21300000, guid: 5ba8be9f4723c964e9937c9ea7d657ea, type: 3}
+  - race: HumanMaleDCS
+    filename: 
+    thumb: {fileID: 0}
+  wardrobeSlot: Feet
+  Hides:
+  - MaleFeet
+  suppressWardrobeSlots: []
+  activeWardrobeSet: []
+  recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"M_Freebie
+    Robeset Boots_Slot","scale":100,"copyIdx":-1,"overlays":[{"id":"M_Freebie Robeset
+    Boots","colorIdx":2,"rect":[0,0,0,0]}]}],"colors":[],"fColors":[{"name":"Shirt","colors":[106,4,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"ShirtAccent","colors":[232,8,8,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"-","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":2,"race":"","packedDna":[]}'
+  replaces: Nothing

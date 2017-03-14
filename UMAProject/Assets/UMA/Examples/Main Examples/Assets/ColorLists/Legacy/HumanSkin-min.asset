@@ -1,0 +1,106 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 534edf300d8929243a0d291e413e2f0b, type: 3}
+  m_Name: HumanSkin-min
+  m_EditorClassIdentifier: 
+  channelCount: 3
+  sharedColorName: Skin
+  colors:
+  - name: Skin
+    channelMask:
+    - {r: 0.97, g: 0.872724, b: 0.77660036, a: 1}
+    - {r: 1, g: 1, b: 1, a: 1}
+    - {r: 1, g: 1, b: 1, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0.019607844, g: 0.019607844, b: 0.019607844, a: 0.07058824}
+  - name: Skin
+    channelMask:
+    - {r: 0.85294116, g: 0.7393792, b: 0.6271626, a: 1}
+    - {r: 1, g: 1, b: 1, a: 1}
+    - {r: 1, g: 1, b: 1, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0.019607844, g: 0.019607844, b: 0.019607844, a: 0.07058824}
+  - name: Skin
+    channelMask:
+    - {r: 0.8161765, g: 0.6320462, b: 0.45009732, a: 1}
+    - {r: 1, g: 1, b: 1, a: 1}
+    - {r: 1, g: 1, b: 1, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0.053, g: 0.028, b: 0.028, a: 0.0627451}
+  - name: Skin
+    channelMask:
+    - {r: 0.60294116, g: 0.4423881, b: 0.283737, a: 1}
+    - {r: 1, g: 1, b: 1, a: 1}
+    - {r: 1, g: 1, b: 1, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0.019607844, g: 0.019607844, b: 0.019607844, a: 0.053}
+  - name: Skin
+    channelMask:
+    - {r: 0.52205884, g: 0.4008893, b: 0.25719076, a: 1}
+    - {r: 1, g: 1, b: 1, a: 1}
+    - {r: 1, g: 1, b: 1, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0.019607844, g: 0.019607844, b: 0.019607844, a: 0.053}
+  - name: Skin
+    channelMask:
+    - {r: 0.384, g: 0.26909873, b: 0.1278655, a: 1}
+    - {r: 1, g: 1, b: 1, a: 1}
+    - {r: 1, g: 1, b: 1, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0.019607844, g: 0.019607844, b: 0.019607844, a: 0.053}
+  - name: Skin
+    channelMask:
+    - {r: 0.3602941, g: 0.2596356, b: 0.1112673, a: 1}
+    - {r: 1, g: 1, b: 1, a: 1}
+    - {r: 1, g: 1, b: 1, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0.019607844, g: 0.019607844, b: 0.019607844, a: 0.045}
+  - name: Skin
+    channelMask:
+    - {r: 0.2352941, g: 0.13281874, b: 0.044982698, a: 1}
+    - {r: 1, g: 1, b: 1, a: 1}
+    - {r: 1, g: 1, b: 1, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0.019607844, g: 0.019607844, b: 0.019607844, a: 0.041}
+  - name: Skin
+    channelMask:
+    - {r: 0.16911763, g: 0.10992646, b: 0.021139704, a: 1}
+    - {r: 1, g: 1, b: 1, a: 1}
+    - {r: 1, g: 1, b: 1, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0.019607844, g: 0.019607844, b: 0.019607844, a: 0.041}
+  - name: Skin
+    channelMask:
+    - {r: 0.08088237, g: 0.05138409, b: 0.0071366816, a: 1}
+    - {r: 1, g: 1, b: 1, a: 1}
+    - {r: 1, g: 1, b: 1, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0.019607844, g: 0.019607844, b: 0.019607844, a: 0.041}

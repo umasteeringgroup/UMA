@@ -1,0 +1,1406 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &155698
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 4
+  m_Component:
+  - 4: {fileID: 422758}
+  - 114: {fileID: 11432240}
+  m_Layer: 0
+  m_Name: AssetIndexer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &422758
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 155698}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 3.4409695, y: 0.96156013, z: 2.617393}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+--- !u!114 &11432240
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 155698}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d395228424b033644afbc403aecfe647, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  IndexedTypeNames: []
+  Items:
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleEyes
+    _Item: {fileID: 11400000, guid: 1e7ddc02cd51b41488288a4982ca4274, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Slots/Body/UMA_Human_Female_Eyes_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleFace
+    _Item: {fileID: 11400000, guid: 8c601176f98bef942b8787fe6421b0f4, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Slots/Body/UMA_Human_Female_Face_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleFeet
+    _Item: {fileID: 11400000, guid: 4f8b15f6d0318a24cb5264f835574c0c, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Slots/Body/UMA_Human_Female_Feet_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleHands
+    _Item: {fileID: 11400000, guid: 4755d55edbb90be4f9de4b4081105c55, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Slots/Body/UMA_Human_Female_Hands_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleInnerMouth
+    _Item: {fileID: 11400000, guid: 1ce0f12b23c3c9941a8f257ae9ddd78f, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Slots/Body/UMA_Human_Female_InnerMouth_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleLegs
+    _Item: {fileID: 11400000, guid: e40f405bbd058a0419b3d09cf94ee7de, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Slots/Body/UMA_Human_Female_Legs_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleTorso
+    _Item: {fileID: 11400000, guid: 4e9cc6816f5c700409fef511dd2dd2d1, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Slots/Body/UMA_Human_Female_Torso_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleHead_Ears
+    _Item: {fileID: 11400000, guid: 912fd0e5c933c3f4e9e2540607fd730b, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Slots/Body/FemaleSwappedHead/UMA_Human_Female_Head_Ears_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleHead_ElvenEars
+    _Item: {fileID: 11400000, guid: 6a82f5f7511df8940a287c5d1d34e6ef, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Slots/Body/FemaleSwappedHead/UMA_Human_Female_Head_ElvenEars_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleHead_Eyes
+    _Item: {fileID: 11400000, guid: bdb13e3982c3e4644b863ae1c9bdafe1, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Slots/Body/FemaleSwappedHead/UMA_Human_Female_Head_Eyes_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleHead_Head
+    _Item: {fileID: 11400000, guid: 47737e92a689d49489b317bdd98ff50c, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Slots/Body/FemaleSwappedHead/UMA_Human_Female_Head_Head_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleHead_Mouth
+    _Item: {fileID: 11400000, guid: 25c63a2415552414fbc33e7a48efc961, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Slots/Body/FemaleSwappedHead/UMA_Human_Female_Head_Mouth_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleHead_Nose
+    _Item: {fileID: 11400000, guid: 9ddf3b23c4342294988947a71af2d7ab, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Slots/Body/FemaleSwappedHead/UMA_Human_Female_Head_Nose_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: UMA_Human_Female_Head_AnimeElvenEars
+    _Item: {fileID: 11400000, guid: 31a3361c6d7b5464c9f17bf3bc570852, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Slots/Body/FemaleSwappedHead/FemaleAnimeElvenEars/UMA_Human_Female_Head_AnimeElvenEars_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: F_High poly Eyebrows
+    _Item: {fileID: 11400000, guid: 407823accaae39a4a902c6e4b2bfa383, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Slots/Body/MidPoly/UMA_Human_Female_Eyebrows_Mid_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: UMA_Human_Female_Hands_HQ
+    _Item: {fileID: 11400000, guid: 869cee25167e44f42907bc39ae048a4a, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Slots/Body/MidPoly/UMA_Human_Female_Hands_Mid_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: F_High poly head
+    _Item: {fileID: 11400000, guid: 72d68f914034a9c4f94c733168884070, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Slots/Body/MidPoly/UMA_Human_Female_Head_Mid_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleEyes
+    _Item: {fileID: 11400000, guid: 0b7ed825e2431f54c9f786a489da80bc, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Slots/Body/UMA_Human_Male_Eyes_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleFace
+    _Item: {fileID: 11400000, guid: b37930fc892ea8f4aa5316c99ad405cd, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Slots/Body/UMA_Human_Male_Face_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleFeet
+    _Item: {fileID: 11400000, guid: e7c8290369e5f724e8e185a77240e37e, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Slots/Body/UMA_Human_Male_Feet_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleHands
+    _Item: {fileID: 11400000, guid: 881f10d72572db34cb1150ac3df21a97, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Slots/Body/UMA_Human_Male_Hands_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleInnerMouth
+    _Item: {fileID: 11400000, guid: cc6c17656f669be4bbb2e21d48e57a45, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Slots/Body/UMA_Human_Male_InnerMouth_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleLegs
+    _Item: {fileID: 11400000, guid: 2041a0dad0ad3894ea9590072acacf65, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Slots/Body/UMA_Human_Male_Legs_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleTorso
+    _Item: {fileID: 11400000, guid: 78bcc1abec57f9c409e43c37c84b131e, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Slots/Body/UMA_Human_Male_Torso_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleHead_Ears
+    _Item: {fileID: 11400000, guid: 96efa554e673f0c40ba212cde7477926, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Slots/Body/MaleSwappedHead/UMA_Human_Male_Head_Ears_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleHead_ElvenEars
+    _Item: {fileID: 11400000, guid: 2ea0c2632af00954d80449e69aae3961, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Slots/Body/MaleSwappedHead/UMA_Human_Male_Head_ElvenEars_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleHead_Eyes
+    _Item: {fileID: 11400000, guid: 8a26b0d5108b3df40afa563c81076268, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Slots/Body/MaleSwappedHead/UMA_Human_Male_Head_Eyes_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleHead_Head
+    _Item: {fileID: 11400000, guid: 158625e1782339b47ab36baa044aa6bb, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Slots/Body/MaleSwappedHead/UMA_Human_Male_Head_Head_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleHead_Mouth
+    _Item: {fileID: 11400000, guid: 498d55a6668af824ca9b8a1fab1764da, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Slots/Body/MaleSwappedHead/UMA_Human_Male_Head_Mouth_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleHead_Nose
+    _Item: {fileID: 11400000, guid: 66dc6991ea490104ca812bba7bae9524, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Slots/Body/MaleSwappedHead/UMA_Human_Male_Head_Nose_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleHead_PigNose
+    _Item: {fileID: 11400000, guid: 0a848c42aaac21043a766fd934b4fc81, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Slots/Body/MaleSwappedHead/UMA_Human_Male_Head_PigNose_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: UMA_Human_Male_Head_AnimeElvenEars
+    _Item: {fileID: 11400000, guid: 563e0d9cf832d4d459ec52136266e236, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Slots/Body/MaleSwappedHead/MaleAnimeElvenEars/UMA_Human_Male_Head_AnimeElvenEars_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: M_High poly Eyebrows
+    _Item: {fileID: 11400000, guid: b1b568e08910dda4a914ad64a0fa75c8, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Slots/Body/MidPoly/UMA_Human_Male_Eyebrows_Mid_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: M_High poly Eyelash
+    _Item: {fileID: 11400000, guid: b520f86d1223e3b4999507cee7b6958c, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Slots/Body/MidPoly/UMA_Human_Male_Eyelash_Mid_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: UMA_Human_Male_Hands_HQ
+    _Item: {fileID: 11400000, guid: 1cb8a895dbe7af3499df9ad078311653, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Slots/Body/MidPoly/UMA_Human_Male_Hands_Mid_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: M_High poly Head
+    _Item: {fileID: 11400000, guid: fe973a02183b3894296cc24e40283fde, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Slots/Body/MidPoly/UMA_Human_Male_Head_Mid_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleTshirt01
+    _Item: {fileID: 11400000, guid: 664ce06cddaec764a95d67b79505d8dc, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Slots/Clothing/FemaleTshirt01.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleEyelash
+    _Item: {fileID: 11400000, guid: fecb11cda78ad5743a2886ebc787630e, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Slots/Hair/FemaleEyelash.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleEyelashfix
+    _Item: {fileID: 11400000, guid: 0bfd4db5ca8f3f44e912a809539ed57c, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Slots/Hair/FemaleEyelashfix_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: UMA_fem_hair_1_005
+    _Item: {fileID: 11400000, guid: 911a7511737178d4dbfe1ab52a2d8887, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Slots/Hair/FemaleHighPolyHair.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleLongHair01
+    _Item: {fileID: 11400000, guid: 0dfbf95a2c3548040a6cc23330e64d76, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Slots/Hair/FemaleLongHair01.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleLongHair01_Module
+    _Item: {fileID: 11400000, guid: ce2cca2d60a3a964e96c77683b6263db, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Slots/Hair/FemaleLongHair01_Module.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleShortHair01
+    _Item: {fileID: 11400000, guid: 5baae6388af63c0448e6d614fa7586b3, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Slots/Hair/FemaleShortHair01.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: F_Eyebrow
+    _Item: {fileID: 11400000, guid: 63c0b935ac8c08347abf9159124d3cc7, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Slots/Hair/F_Eyebrow_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleJeans01
+    _Item: {fileID: 11400000, guid: 2efa54ed9091b2045a5d323cec2550cc, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Slots/Clothing/MaleJeans01.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleJeans02
+    _Item: {fileID: 11400000, guid: db59a2fec12e144498fed4c62c157859, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Slots/Clothing/MaleJeans02.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: _Gloves of Hammer
+    _Item: {fileID: 11400000, guid: 2bdd7530c4c3080479f05405559b6f67, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Slots/Clothing/M_Gloves of Hammer_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: M_Wrapped Pants
+    _Item: {fileID: 11400000, guid: 8af4a60576514c7478104a0a50713222, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Slots/Clothing/M_Wrapped Pants_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: M_Freebie Robeset Boots_Slot
+    _Item: {fileID: 11400000, guid: a0554501454a6ba40a5eff3443477dc4, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Slots/Clothing/M_Freebie Robeset
+      Boots/M_Freebie Robeset Boots_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: M_Freebie Robeset Hood_Slot
+    _Item: {fileID: 11400000, guid: 356925f858219b04797c21d4cb7a43f4, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Slots/Clothing/M_Freebie Robeset
+      Hood/M_Freebie Robeset Hood_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: M_Freebie Robeset Robe_Slot
+    _Item: {fileID: 11400000, guid: 8aae7e72162c0c74b9326dbca416651a, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Slots/Clothing/M_Freebie Robeset
+      Robe/M_Freebie Robeset Robe_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleHair1
+    _Item: {fileID: 11400000, guid: b5a79dacb1617ae44a91c53832515bbb, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Slots/Hair/MaleHair1_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: M_Eyebrow
+    _Item: {fileID: 11400000, guid: 8b232fbd9c99b3149bc6c4f6cb7afb7d, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Slots/Hair/M_Eyebrow_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: F_H_Bod
+    _Item: {fileID: 11400000, guid: 19656603ac354ad4aa0dee0018f7f6d5, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Overlays/Body/F_H_bod.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleLipstick01
+    _Item: {fileID: 11400000, guid: 7175f4c977569f748a2c19a6c9f2ab10, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Overlays/Complexion/FemaleLipstick01.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: F_H_Head 2
+    _Item: {fileID: 11400000, guid: 8c7ae3373990f264199c4839d6bf678c, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Overlays/Face/F_H_Head 2.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: F_H_Head
+    _Item: {fileID: 11400000, guid: d813f8755f9fdee489b781e0d5e404c5, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Overlays/Face/F_H_Head.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: F_HighPoly_EyeBrow
+    _Item: {fileID: 11400000, guid: bc845162d92a43f4ea04d9bece6f503f, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Overlays/Mid Poly Head/F_HighPoly_EyeBrow.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: M_Bod Overlay 1
+    _Item: {fileID: 11400000, guid: 03e5bfa4f7f2fd445974ed61bdf5d9cf, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Overlays/Body/M_Bod Overlay 1.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: M_Bod Overlay 2
+    _Item: {fileID: 11400000, guid: d9dc97ec6d7fc0f46ae9f479ce051897, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Overlays/Body/M_Bod Overlay 2.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: M_Bod smooth
+    _Item: {fileID: 11400000, guid: f57c699e06562b84fb91461077d470a9, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Overlays/Body/M_Bod smooth.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: Body Freckles
+    _Item: {fileID: 11400000, guid: 4559a01221d4aa540bb720979b99c28f, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Overlays/Complexion/Body Freckles.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: Body Hair
+    _Item: {fileID: 11400000, guid: 060710660a79b9549b07a47ba0c1fbe2, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Overlays/Complexion/Body Hair.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: Skin patches Face
+    _Item: {fileID: 11400000, guid: 1320201c90abfb148ba70377406b5dc4, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Overlays/Complexion/Skin patches
+      Face.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: Skin Patches
+    _Item: {fileID: 11400000, guid: a209ee514b60b9044bdef1bcbf69967d, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Overlays/Complexion/Skin Patches.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: M_Face_01
+    _Item: {fileID: 11400000, guid: 19ca51fa9b344074ebeaad4c873fd125, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Overlays/Face/M_Face_01.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: M_Face_02
+    _Item: {fileID: 11400000, guid: fc8edf8b232d0644094d369024be6706, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Overlays/Face/M_Face_02.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: M_Face
+    _Item: {fileID: 11400000, guid: 51e6a9b14fc064715bc8f3e5038ab6f4, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Overlays/Face/M_Face_BW_Compatible.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: M_Face_Old
+    _Item: {fileID: 11400000, guid: 74fbe497c697690488fbdfeee0fae3d6, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Overlays/Face/M_Face_Old.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleHead01
+    _Item: {fileID: 11400000, guid: a60d5c517fee0ce48b5b59b9ed45861e, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Overlays/Face/SwappedHead/MaleFace01.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleHead_PigNose
+    _Item: {fileID: 11400000, guid: 5485425746189d647a627abc4e2f06e9, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Overlays/Face/SwappedHead/Human Male
+      PigNose/MaleHead_PigNose.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: ElvenEars-1
+    _Item: {fileID: 11400000, guid: 3693609360e037e40a7784ab3308e7c0, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Face/ElvenEars- Body 1.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: ElvenEars
+    _Item: {fileID: 11400000, guid: afecbdb8f051eff408e0749bb6a44bf1, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Face/ElvenEars.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: InnerMouth
+    _Item: {fileID: 11400000, guid: 5746c09014733de4bbf208291c61aaea, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Face/InnerMouth.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: Eye Overlay
+    _Item: {fileID: 11400000, guid: 98b05b17b4e8ff142b1f16df2ef2315b, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Face/Eye/Eye Overlay.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: EyeOverlay
+    _Item: {fileID: 11400000, guid: 79fb331967188a048837288f16dbc006, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Face/Eye/EyeOverlay.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FP Default Eye Adjust
+    _Item: {fileID: 11400000, guid: b50b1d40e34242d4da5d97c1e5f8804e, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Face/Eye/FP Default Eye
+      Adjust.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: Alligator_eye_adjust
+    _Item: {fileID: 11400000, guid: 40b53c0fadbef334ca1842707ed2929a, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Face/Eye/EyeAdjust/Alligator_eye_adjust.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: Alligator_eye_Alternate_adjust
+    _Item: {fileID: 11400000, guid: cda7e080be988c44ab8341720f86d6cd, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Face/Eye/EyeAdjust/Alligator_eye_Alternate_adjust.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: Cat_eye_adjust
+    _Item: {fileID: 11400000, guid: 2c830213a9d6eef409a4b7ce0e388acf, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Face/Eye/EyeAdjust/Cat_eye_adjust.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: Cat_eye_Alternate_adjust
+    _Item: {fileID: 11400000, guid: 76a2d7b941eeeda4ba2df5ea0e2fb266, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Face/Eye/EyeAdjust/Cat_eye_Alternate_adjust.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: Default Eye Adjust
+    _Item: {fileID: 11400000, guid: 31b625579c8744547b02bdd5c42c557e, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Face/Eye/EyeAdjust/Default
+      Eye Adjust.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: EyeOverlayAdjust
+    _Item: {fileID: 11400000, guid: 5a63f3d521484f345b330eaa6ddd496e, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Face/Eye/EyeAdjust/EyeOverlayAdjust.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: Eye_Large_Adjust
+    _Item: {fileID: 11400000, guid: 10d1e2ac030a2d54e8dffe526204097f, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Face/Eye/EyeAdjust/Eye_Large_Adjust.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MeshHair
+    _Item: {fileID: 11400000, guid: eec31456f04efc743a680d6caf7207e6, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Hair/MeshHairAniso.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MeshHairStd
+    _Item: {fileID: 11400000, guid: 475458bd3c70c4148997ace0f6619dbb, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Hair/MeshHairStd.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleBody01
+    _Item: {fileID: 11400000, guid: d4273edae79407845a44418e0f50809d, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Overlays/Body/Alternate Bodies/FemaleBody01.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleBody02
+    _Item: {fileID: 11400000, guid: 75fc3e08dcfd73e4fbdd25a78eacf0a7, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Overlays/Body/Alternate Bodies/FemaleBody02.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleJeans01
+    _Item: {fileID: 11400000, guid: b6b6f8e091fafc644b63f4064102382a, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Overlays/Clothing/FemaleJeans01.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleJeans02
+    _Item: {fileID: 11400000, guid: 959afba629a4847498616df7ba10a543, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Overlays/Clothing/FemaleJeans02.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleShirt01
+    _Item: {fileID: 11400000, guid: 2ef21f95dae467b4788ba5a084b94b9d, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Overlays/Clothing/FemaleShirt01.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleShirt02
+    _Item: {fileID: 11400000, guid: 61ff84e89ca1f5c41856a75449025092, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Overlays/Clothing/FemaleShirt02.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleTshirt01
+    _Item: {fileID: 11400000, guid: 63212701cc50fca4eac77618947eb849, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Overlays/Clothing/FemaleTshirt01.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleTshirt02
+    _Item: {fileID: 11400000, guid: 7c7d4dd46aadf264ca87a97b357a238e, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Overlays/Clothing/FemaleTshirt02.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleUnderwear01
+    _Item: {fileID: 11400000, guid: f3ed1216fb09ee24f83e35b72805413f, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Overlays/Clothing/FemaleUnderwear01.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleUnderwear02
+    _Item: {fileID: 11400000, guid: 73cf00c391282944c8251cee30c6cb68, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Overlays/Clothing/FemaleUnderwear02.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleUnderwear-2
+    _Item: {fileID: 11400000, guid: 8a43aa28029a29d42954e05d04d1bec3, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Overlays/Clothing/NewFemaleUnderwear.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: GirlShirt01Color
+    _Item: {fileID: 11400000, guid: 2c4ecf1627276e74292e6455114acb04, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Overlays/Clothing/HumanGirl/GirlShirt01Color.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleEyebrow01
+    _Item: {fileID: 11400000, guid: 3e2301213b719e549ad53ae013abcde2, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Overlays/Hair/FemaleEyebrow01.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleEyelash
+    _Item: {fileID: 11400000, guid: a61b80b3ef057274e93e5d8c6a2aacec, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Overlays/Hair/FemaleEyelash.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleLongHair01
+    _Item: {fileID: 11400000, guid: 25df90b5e017453499c48fdb9051267c, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Overlays/Hair/FemaleLongHair01.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleLongHair01_Module
+    _Item: {fileID: 11400000, guid: 335dc3fe2bdb9a24ea853d1023a2ab3e, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Overlays/Hair/FemaleLongHair01_Module.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleLongHair_Cap
+    _Item: {fileID: 11400000, guid: ce42e52cde1fa497a9cefe4127e2b5b8, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Overlays/Hair/FemaleLongHair_Cap.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleShortHair01
+    _Item: {fileID: 11400000, guid: 30819781a55e5b540abd5f8a35901ca2, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Overlays/Hair/FemaleShortHair01.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: F_Eyebrow 3
+    _Item: {fileID: 11400000, guid: 6eda48a7b8e7b6a4eb0d46220ebc2c6b, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Overlays/Hair/F_Eyebrow 3.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: F_H_Eyelash
+    _Item: {fileID: 11400000, guid: 3107dc56c4709a244b17c122736cf126, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Overlays/Hair/F_H_Eyelash.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleBody01
+    _Item: {fileID: 11400000, guid: 35d1a43e1188bc94a9fe409bcecaa203, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Body/Alternate Bodies/MaleBody01.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleBody02
+    _Item: {fileID: 11400000, guid: 80ee1b872a449f044bc52611682b7698, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Body/Alternate Bodies/MaleBody02.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleHead02
+    _Item: {fileID: 11400000, guid: 1233ce5e6d66f7043ae6942431739351, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Body/Alternate Bodies/MaleFace02.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: Gloves of Hammer Overlay
+    _Item: {fileID: 11400000, guid: 8583b6d72b2766c40a789f2f24e2de26, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Clothing/Gloves of Hammer
+      Overlay.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleJeans01
+    _Item: {fileID: 11400000, guid: 65887f0e5072b8b499a7760e4392741d, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Clothing/MaleJeans01.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleJeans02
+    _Item: {fileID: 11400000, guid: d0f7dbe2fc5d2564e903f99bd19fa89b, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Clothing/MaleJeans02.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleShirt01
+    _Item: {fileID: 11400000, guid: 43b1b1d7ba147c648a052d284467dcf7, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Clothing/MaleShirt01.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleShirt01Color
+    _Item: {fileID: 11400000, guid: bc78262a19833744f9ee5b3389aec814, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Clothing/MaleShirt01Color.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleUnderwear01
+    _Item: {fileID: 11400000, guid: 4e443d543c17d314984f1bf934677b05, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Clothing/MaleUnderwear01.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleUnderwear_hearts
+    _Item: {fileID: 11400000, guid: 7c94cdeabfed7814d9717b1f8b5a49ba, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Clothing/MaleUnderwear02.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: M_Freebie Robeset Boots
+    _Item: {fileID: 11400000, guid: 4708a9c854404ac48b9f7e39847a91db, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Clothing/M_Freebie Robeset
+      Boots.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: M_Freebie Robeset Hood AC
+    _Item: {fileID: 11400000, guid: e37a792c969bb454c804c435f8c1c285, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Clothing/M_Freebie Robeset
+      Hood AC.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: M_Freebie Robeset Hood
+    _Item: {fileID: 11400000, guid: 33cad728009b0ab439083a8ddf6a92ba, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Clothing/M_Freebie Robeset
+      Hood.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: M_Freebie Robeset Robe AC
+    _Item: {fileID: 11400000, guid: 42352aba049ed6d4494cafe7e3bbadc0, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Clothing/M_Freebie Robeset
+      Robe AC.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: M_Freebie Robeset Robe
+    _Item: {fileID: 11400000, guid: c901b9f1e6dc2dd4190fe7ae4272a633, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Clothing/M_Freebie Robeset
+      Robe.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: M_Underwear
+    _Item: {fileID: 11400000, guid: 4e3423fc7dbaee44397ec91baa5ce828, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Clothing/M_H_Underwear.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: Wrapped Pants
+    _Item: {fileID: 11400000, guid: 161a5c050c3f1f74fb47075770f15450, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Clothing/Wrapped Pants.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleBeard01
+    _Item: {fileID: 11400000, guid: 0c49ebdd154238b45bb1a3338a613193, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Hair/MaleBeard01.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleBeard02
+    _Item: {fileID: 11400000, guid: c4542d0190eae184d8f1e1e277208fd7, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Hair/MaleBeard02.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleBeard03
+    _Item: {fileID: 11400000, guid: 0f78229f3dbb8e34f904840f3db74e72, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Hair/MaleBeard03.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleEyebrow01
+    _Item: {fileID: 11400000, guid: 77a1606bb44cacf46b25dcf362209aa5, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Hair/MaleEyebrow01.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleEyebrow02
+    _Item: {fileID: 11400000, guid: eea2e3c934a89a549bcc3dc6427c16ad, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Hair/MaleEyebrow02.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleHair01
+    _Item: {fileID: 11400000, guid: 10329f729c6ed4b4795e6c1986c8a496, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Hair/MaleHair01.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleHair02
+    _Item: {fileID: 11400000, guid: 434a9341d6f18de4cbe5a6bff89d3f0d, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Hair/MaleHair02.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: M_Eyebrow
+    _Item: {fileID: 11400000, guid: 29a929c318e07dd409a59412bc7d4cdc, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Hair/M_Eyebrow.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: M_Eyelash
+    _Item: {fileID: 11400000, guid: 8598e407f98b3b745980a5ade46c86ab, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Hair/M_Eyelash.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: M_Face 1 eyebrows
+    _Item: {fileID: 11400000, guid: f40bf2e2d4087954bb4d86d0c4aa290f, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Hair/M_Face 1 eyebrows.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleHair03
+    _Item: {fileID: 11400000, guid: f0bcd19507f7b524faee4d30b08d9feb, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Hair/TheRebel.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.RaceData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: HumanFemaleDCS
+    _Item: {fileID: 11400000, guid: 92f8416dee5a3f043a417078fa29c476, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/RaceData/Human Female DCS.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.RaceData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: HumanFemale
+    _Item: {fileID: 11400000, guid: f8fea6f0ee17b3f42a4ae6cfb627bab3, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/RaceData/Human Female.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.RaceData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: HumanGirlDCS
+    _Item: {fileID: 11400000, guid: 8f9fc622c08165a4297be9de525ccd1b, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/RaceData/Human Girl DCS.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.RaceData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: HumanMaleDCS
+    _Item: {fileID: 11400000, guid: 5ed11744a54425247b40c4f8967bdcbd, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/RaceData/Human Male DCS.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.RaceData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: HumanMale
+    _Item: {fileID: 11400000, guid: 62688b7aa02fbc544916e522fcc239c7, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/RaceData/Human Male.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMATextRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: HumanFemale Base Recipe
+    _Item: {fileID: 11400000, guid: 1ac4994352c303b4ab12614c1918034f, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Recipes/Base Recipes/HumanFemale
+      Base Recipe.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMATextRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: HumanFemaleDCS Base Recipe
+    _Item: {fileID: 11400000, guid: 88524e288a09d9944b8e1a0416010469, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Recipes/Base Recipes/HumanFemaleDCS
+      Base Recipe.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMATextRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: HumanGirlDCS Base Recipe
+    _Item: {fileID: 11400000, guid: b24ba5dfb8159b944a1d9a37c8ce65d8, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Recipes/Base Recipes/HumanGirlDCS
+      Base Recipe.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMATextRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: HumanMale Base Recipe
+    _Item: {fileID: 11400000, guid: aa8318164d3d68540a71451b136fd489, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Recipes/BaseRecipes/HumanMale Base
+      Recipe.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMATextRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: HumanMaleDCS Base Recipe
+    _Item: {fileID: 11400000, guid: cbe7b8858a7c17a4d9a80380b49cce27, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Recipes/BaseRecipes/HumanMaleDCS
+      Base Recipe.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleHandsMid
+    _Item: {fileID: 11400000, guid: 00ebafe9f3edb334db9f8a3c83242429, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Recipes/Wardrobe Recipes/HumanFemale/FemaleHandsMid.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleSwappedFace
+    _Item: {fileID: 11400000, guid: 01c906b0561bd394393d49b516a4f863, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Recipes/Wardrobe Recipes/HumanFemale/FemaleSwappedFace.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleHandsMid
+    _Item: {fileID: 11400000, guid: 08d38a4fd7bb29642a9e0048e9ccaf79, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Recipes/WardrobeRecipes/MaleHandsMid.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleLowPolyHead
+    _Item: {fileID: 11400000, guid: 7356d4035c83d294a923daa7e8155670, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Recipes/WardrobeRecipes/MaleLowPolyHead.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleHair1
+    _Item: {fileID: 11400000, guid: 53a236a7ccb00374dbbed2f13dc8509d, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Recipes/WardrobeRecipes/HumanFemale/FemaleHair1.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleHair2
+    _Item: {fileID: 11400000, guid: 967f84b71a1548d4580a76c279ec5389, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Recipes/WardrobeRecipes/HumanFemale/FemaleHair2.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleHair3
+    _Item: {fileID: 11400000, guid: bdae23dff0f3d3648882f2f087840fef, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Recipes/WardrobeRecipes/HumanFemale/FemaleHair3.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemalePants1
+    _Item: {fileID: 11400000, guid: 20c9259364a58404eb9049b15587fbcd, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Recipes/WardrobeRecipes/HumanFemale/FemalePants1.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemalePants2
+    _Item: {fileID: 11400000, guid: 30e281266b43fb3488fed1067f6e21f8, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Recipes/WardrobeRecipes/HumanFemale/FemalePants2.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleShirt1
+    _Item: {fileID: 11400000, guid: 2f138c428389dac489ae6bd6303bf89f, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Recipes/WardrobeRecipes/HumanFemale/FemaleShirt1.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleShirt2
+    _Item: {fileID: 11400000, guid: 11f0bbd571f26364eb2d7adfa0f7da7b, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Recipes/WardrobeRecipes/HumanFemale/FemaleShirt2.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleShirt3
+    _Item: {fileID: 11400000, guid: 482902fa7ec699847b936bfbab3a8181, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Recipes/WardrobeRecipes/HumanFemale/FemaleShirt3.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleShirt4
+    _Item: {fileID: 11400000, guid: 559b2b2430ebcd74b9c9c25f0341d887, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Recipes/WardrobeRecipes/HumanFemale/FemaleShirt4.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: FemaleUndies
+    _Item: {fileID: 11400000, guid: d40e65714e237a3499a2eada8f3411c6, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Recipes/WardrobeRecipes/HumanFemale/FemaleUndies.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: GirlShirt1
+    _Item: {fileID: 11400000, guid: 4a77ece175d9dc642925064e62fd7001, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Recipes/WardrobeRecipes/HumanGirl/GirlShirt1.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleBeard1
+    _Item: {fileID: 11400000, guid: a2b1f4c9b2ad40f4b8a68144700342f8, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleBeard1.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleBeard2
+    _Item: {fileID: 11400000, guid: 506e811243229714bb4e2386dcbc08d3, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleBeard2.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleBeard3
+    _Item: {fileID: 11400000, guid: 1df4eb647357a74498fa7e6b4672ad8d, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleBeard3.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleBrow01
+    _Item: {fileID: 11400000, guid: 1d55460160bc861428e67152c0019388, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleBrow01.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleBrow02
+    _Item: {fileID: 11400000, guid: 9d8d16d74d7897e4caae12ca4d56f223, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleBrow02.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleBrowHR
+    _Item: {fileID: 11400000, guid: 3a1edb5d395b68f4089d59c1f1217d81, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleBrowHR.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleEye1
+    _Item: {fileID: 11400000, guid: 518535e4bd613dc458a460be75d97327, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleEye1.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleEye2
+    _Item: {fileID: 11400000, guid: 99f3dbcab03fba24badff7354f6f90c9, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleEye2.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleEye3
+    _Item: {fileID: 11400000, guid: 8ea99475ea1aac141b787fc5dc6cc824, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleEye3.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleEye4
+    _Item: {fileID: 11400000, guid: 3735845fb23f58b4a8d264c47ca602dc, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleEye4.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleEye5
+    _Item: {fileID: 11400000, guid: 667840f679650844dbfbd6f3a4134998, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleEye5.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleFace Old
+    _Item: {fileID: 11400000, guid: 4d1e2980034c61e4197e51e6d5d2b2fc, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleFace
+      Old.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleFace
+    _Item: {fileID: 11400000, guid: 2059a38eee267f6458c7f4de066df8ad, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleFace.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleGloves
+    _Item: {fileID: 11400000, guid: 3371b0b14f340764c88dc58574e73393, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleGloves.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleHair1
+    _Item: {fileID: 11400000, guid: 4acc51a73e0e5884eb7e770d8f803e81, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleHair1.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleHair2
+    _Item: {fileID: 11400000, guid: bc2ac8c776a97fa46a5a1a9455599f2c, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleHair2.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleHair3
+    _Item: {fileID: 11400000, guid: cbac10d2bc6792c43b0d89e71534cf77, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleHair3.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleJeans
+    _Item: {fileID: 11400000, guid: ed308ddf64a50d74aae73e4097381fc1, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleJeans.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MalePants
+    _Item: {fileID: 11400000, guid: 8ea3bcf334fb01b4ebab82092aa4ff46, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MalePants.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleRobe Hood
+    _Item: {fileID: 11400000, guid: 8b7b033a94e0a9f4dbdded4f45aea63a, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleRobe
+      Hood.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleRobe Shoes
+    _Item: {fileID: 11400000, guid: 28f0400d1cc90bf4888a2561c3a1146e, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleRobe
+      Shoes.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleRobe
+    _Item: {fileID: 11400000, guid: 1ca738b353812974b9fb17357f844bbb, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleRobe.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleShirt1
+    _Item: {fileID: 11400000, guid: 5abbc2ec892f7cf478a31da209981941, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleShirt1.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleShirt2
+    _Item: {fileID: 11400000, guid: 08ee8add251c0604787435e6e676f3db, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleShirt2.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleShirt3
+    _Item: {fileID: 11400000, guid: f47ce9b8a0d9ecd48a39ef3f5c2447a6, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleShirt3.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleShorts1
+    _Item: {fileID: 11400000, guid: 5bbd4dc2ec713f24a84512ef4f9ffe00, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleShorts1.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleShorts2
+    _Item: {fileID: 11400000, guid: 71e3ef35d8b941d4ab538b01f57dbb79, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleShorts2.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.DynamicUMADnaAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: EyeSpacing
+    _Item: {fileID: 11400000, guid: 1ea7a98b5dc54124e89f8ea3297ed602, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/DNA/DynamicDNA/EyeSpacing.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.DynamicUMADnaAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: HumanFemaleDNA 1
+    _Item: {fileID: 11400000, guid: a1502ce9ef533aa42a647fe4052e15f8, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/DNA/DynamicDNA/HumanFemaleDNA 1.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.DynamicUMADnaAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: HumanGirlDNA
+    _Item: {fileID: 11400000, guid: 567b7e29bb88a444b93fc37aab9e3daa, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/DNA/DynamicDNA/HumanGirl/HumanGirlDNA.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.DynamicUMADnaAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: HumanMaleDynamicDnaAsset
+    _Item: {fileID: 11400000, guid: 17b4ec3db2a10e04d8909cc9932562b5, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/DNA/DynamicDNA/HumanMaleDynamicDnaAsset.asset
+    IsResource: 0
+    IsAssetBundle: 0
+--- !u!1001 &100100000
+Prefab:
+  m_ObjectHideFlags: 1
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications: []
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 0}
+  m_RootGameObject: {fileID: 155698}
+  m_IsPrefabParent: 1
