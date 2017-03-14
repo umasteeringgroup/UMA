@@ -9,12 +9,16 @@ public class SkeletonModifierPropertyDrawer : PropertyDrawer
 {
     float padding = 2f;
     public List<string> hashNames = new List<string>();
+	//used when editing in playmode has the actual boneHashes from the avatars skeleton
+	public List<string> bonesInSkeleton = null;
     public List<int> hashes = new List<int>();
     public string[] dnaNames;
     public bool enableSkelModValueEditing = false;
     spValModifierPropertyDrawer thisSpValDrawer = null;
+	Texture warningIcon;
+	GUIStyle warningStyle;
 
-    public void Init(List<string> _hashNames, List<int> _hashes, string[] _dnaNames = null)
+	public void Init(List<string> _hashNames, List<int> _hashes, string[] _dnaNames = null)
     {
         hashNames = _hashNames;
         hashes = _hashes;
@@ -22,7 +26,14 @@ public class SkeletonModifierPropertyDrawer : PropertyDrawer
         if(thisSpValDrawer == null)
             thisSpValDrawer = new spValModifierPropertyDrawer();
         thisSpValDrawer.dnaNames = dnaNames;
-    }
+		if (warningIcon == null)
+		{
+			warningIcon = EditorGUIUtility.FindTexture("console.warnicon.sml");
+			warningStyle = new GUIStyle(EditorStyles.label);
+			warningStyle.fixedHeight = warningIcon.height + 4f;
+			warningStyle.contentOffset = new Vector2(0, -2f);
+		}
+	}
 
     public void UpdateHashNames(List<string> _hashNames, List<int> _hashes)
     {
@@ -45,25 +56,44 @@ public class SkeletonModifierPropertyDrawer : PropertyDrawer
         {
             betterLabel += " (" + property.FindPropertyRelative("property").enumDisplayNames[property.FindPropertyRelative("property").enumValueIndex] + ")";
         }
-        property.isExpanded = EditorGUI.Foldout(valR, property.isExpanded, betterLabel, true);
+		List<string> boneNames = new List<string>();
+		if (bonesInSkeleton != null)
+		{
+			boneNames = new List<string>(bonesInSkeleton);
+		}
+		else
+		{
+			boneNames = new List<string>(hashNames);
+		}
+		string thisHashName = property.FindPropertyRelative("hashName").stringValue;
+		int hashNameIndex = boneNames.IndexOf(thisHashName);
+		if (hashNameIndex == -1 && bonesInSkeleton != null)
+		{
+			boneNames.Insert(0, thisHashName + " (missing)");
+			hashNameIndex = 0;
+			var warningRect = new Rect((valR.xMin), valR.yMin, 20f, valR.height);
+			var warningIconGUI = new GUIContent("", thisHashName + " was not a bone in the Avatars Skeleton. Please choose another bone for this modifier or delete it.");
+			warningIconGUI.image = warningIcon;
+			betterLabel += " (missing)";
+			GUI.Label(warningRect, warningIconGUI, warningStyle);
+		}
+		property.isExpanded = EditorGUI.Foldout(valR, property.isExpanded, betterLabel, true);
         if (property.isExpanded)
         {
             EditorGUI.indentLevel++;
             valR = new Rect(valR.xMin, valR.yMax + padding, valR.width, EditorGUIUtility.singleLineHeight);
-            if (hashNames.Count > 0)
+			if (boneNames.Count > 0)
             {
-                string thisHashName = property.FindPropertyRelative("hashName").stringValue;
-                int hashNameIndex = hashNames.IndexOf(thisHashName);
-                int newHashNameIndex = hashNameIndex;
-                EditorGUI.BeginChangeCheck();
-                newHashNameIndex = EditorGUI.Popup(valR, "Hash Name", hashNameIndex, hashNames.ToArray());
+				int newHashNameIndex = hashNameIndex;
+				EditorGUI.BeginChangeCheck();
+				newHashNameIndex = EditorGUI.Popup(valR, "Hash Name", hashNameIndex, boneNames.ToArray());
                 if (EditorGUI.EndChangeCheck())
                 {
                     if (newHashNameIndex != hashNameIndex)
                     {
-                        property.FindPropertyRelative("hashName").stringValue = hashNames[newHashNameIndex];
-                        property.FindPropertyRelative("hash").intValue = hashes[newHashNameIndex];
-                        property.serializedObject.ApplyModifiedProperties();
+						property.FindPropertyRelative("hashName").stringValue = boneNames[newHashNameIndex];
+						property.FindPropertyRelative("hash").intValue = UMAUtils.StringToHash(boneNames[newHashNameIndex]);
+						property.serializedObject.ApplyModifiedProperties();
                     }
                 }
             }
@@ -254,7 +284,7 @@ public class spValModifierPropertyDrawer : PropertyDrawer
 				int selectedIndex = -1;
 				List<GUIContent> niceDNANames = new List<GUIContent>();
 				niceDNANames.Add(new GUIContent("None"));
-                bool missing = true;
+				bool missing = currentVal != "";
 				for (int i = 0; i < dnaNames.Length; i++)
 				{
 					niceDNANames.Add(new GUIContent(dnaNames[i]));
@@ -266,7 +296,7 @@ public class spValModifierPropertyDrawer : PropertyDrawer
 				}
 				if (missing)
 				{
-					niceDNANames[0].text = "(missing) " + currentVal;
+					niceDNANames[0].text = currentVal+" (missing)";
                     niceDNANames[0].tooltip = currentVal+ " was not in the DNAAssets names list. This modifier wont do anything until you change the dna name it uses or you add this name to your DNA Asset names.";
 				}
 				int newSelectedIndex = selectedIndex == -1 ? 0 : selectedIndex + 1;
