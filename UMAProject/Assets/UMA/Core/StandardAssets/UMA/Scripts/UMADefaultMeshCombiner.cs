@@ -136,7 +136,7 @@ namespace UMA
 				combinedMaterialList.Clear();
 				clothProperties = null;
 
-            	BuildCombineInstances();
+				BuildCombineInstances();
 
 				if (combinedMeshList.Count == 1)
 				{
