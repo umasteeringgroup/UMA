@@ -96,7 +96,7 @@ namespace kode80.Versioning
 			{
                 if( e.Error != null)
                 {
-                    Debug.Log("dl complete error: " + e.Error);
+                    //Debug.Log("dl complete error: " + e.Error);
                 }
 				HandleFailedDownload();
 			}

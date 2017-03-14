@@ -183,7 +183,7 @@ public class UMAAssetIndexer : MonoBehaviour, ISerializationCallbackReceiver
     // The names of the fully qualified types.
     public List<string> IndexedTypeNames = new List<string>();
     // These list is used so Unity will serialize the data
-    public List<AssetItem> Items;
+    public List<AssetItem> Items = new List<AssetItem>();
     // This is really where we keep the data.
     private Dictionary<System.Type, Dictionary<string, AssetItem>> TypeLookup = new Dictionary<System.Type, Dictionary<string, AssetItem>>();
     // This list tracks the types for use in iterating through the dictionaries
@@ -216,7 +216,15 @@ public class UMAAssetIndexer : MonoBehaviour, ISerializationCallbackReceiver
             {
 #if UNITY_EDITOR
                 theIndex = Resources.Load("AssetIndexer") as GameObject;
+                if (theIndex == null)
+                {
+                    return null;
+                }
                 theIndexer = theIndex.GetComponent<UMAAssetIndexer>();
+                if (theIndexer == null)
+                {
+                    return null;
+                }
 #else
                 theIndex = GameObject.Instantiate(Resources.Load<GameObject>("AssetIndexer")) as GameObject;
                 theIndex.hideFlags = HideFlags.HideAndDontSave;
