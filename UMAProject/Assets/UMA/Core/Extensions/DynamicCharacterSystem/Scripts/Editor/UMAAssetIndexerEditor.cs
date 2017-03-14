@@ -211,8 +211,6 @@ public class UMAAssetIndexerEditor : Editor
         }
         GUILayout.EndHorizontal();
 
-
-        GUILayoutUtility.BeginGroup("IndexedItems");
         foreach (System.Type t in Types)
         {
             if (t != typeof(AnimatorController)) // Somewhere, a kitten died because I typed that.
@@ -220,7 +218,6 @@ public class UMAAssetIndexerEditor : Editor
                 ShowArray(t);
             }
         }
-        GUILayoutUtility.EndGroup("IndexedItems");
     }
 
     public void ShowArray(System.Type CurrentType)
