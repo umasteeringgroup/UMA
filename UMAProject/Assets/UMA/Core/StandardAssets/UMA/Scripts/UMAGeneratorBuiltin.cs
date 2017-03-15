@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 using Object = UnityEngine.Object;
 
@@ -296,7 +295,7 @@ namespace UMA
 		{
 			if (umaData)
 			{
-				umaData.myRenderer.enabled = true;
+				umaData.Show();
 				umaData.FireUpdatedEvent(false);
 				umaData.FireCharacterCompletedEvents();
 				if (umaData.skeleton.boneCount > 300)

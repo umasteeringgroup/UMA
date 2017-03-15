@@ -1,7 +1,6 @@
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
-using UnityEditor.SceneManagement;//for marking converted colors as needing saving
 #endif
 using UnityEngine.Serialization;//for converting old characterColors.Colors to new colors
 
@@ -342,24 +341,26 @@ namespace UMACharacterSystem
             {
                 umaData.ignoreBlendShapes = !loadBlendShapes;
 
-                if (umaData.myRenderer != null)
-                    umaData.myRenderer.enabled = !hide;
-            }
-            //This hardly ever happens now since the changeRace/LoadFromString/StartCO methods all yield themselves until asset bundles have been downloaded
-            if (requiredAssetsToCheck.Count > 0 && !waitForBundles && BuildCharacterEnabled)
-            {
-                if (DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck) == false)
-                {
-                    Debug.Log("Update did build");
-                    UpdateAfterDownload();
-                    //actually we dont know in this case if we are restoring DNA or not
-                    //but a placeholder race should only have been used if defaultLoadOptions.waitForBundles is false
-                    //so we can atleast assume we dont want to restore the dna from that
-                    _isFirstSettingsBuild = false;
-                    BuildCharacter(waitForBundles);
-                }
-            }
-        }
+				if (hide)
+					umaData.Hide();
+				else
+					umaData.Show();
+			}
+			//This hardly ever happens now since the changeRace/LoadFromString/StartCO methods all yield themselves until asset bundles have been downloaded
+			if (requiredAssetsToCheck.Count > 0 && !waitForBundles && BuildCharacterEnabled)
+			{
+				if (DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck) == false)
+				{
+					Debug.Log("Update did build");
+					UpdateAfterDownload();
+					//actually we dont know in this case if we are restoring DNA or not
+					//but a placeholder race should only have been used if defaultLoadOptions.waitForBundles is false
+					//so we can atleast assume we dont want to restore the dna from that
+					_isFirstSettingsBuild = false;
+					BuildCharacter(waitForBundles);
+				}
+			}
+		}
 
 #if UNITY_EDITOR
         void OnDrawGizmos()
