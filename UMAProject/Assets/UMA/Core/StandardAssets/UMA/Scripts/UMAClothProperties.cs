@@ -4,9 +4,16 @@ using System;
 namespace UMA
 {
 	[Serializable]
-	[CreateAssetMenu()]
 	public class UMAClothProperties : ScriptableObject
 	{
+		#if UNITY_EDITOR
+		[UnityEditor.MenuItem("Assets/Create/UMA/Misc/Cloth Properties")]
+		public static void CreateClothPropertiesAsset()
+		{
+			UMAEditor.CustomAssetUtility.CreateAsset<UMAClothProperties>();
+		}
+		#endif
+
 		public float bendingStiffness;
 		//public float clothSolverFrequency;
 		public float collisionMassScale;
