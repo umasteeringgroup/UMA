@@ -366,7 +366,6 @@ namespace UMACharacterSystem
         void OnDrawGizmos()
         {
             // Build Shader
-            mat = null;
             if (!mat)
             {
                 Shader shader = Shader.Find("Hidden/Internal-Colored");
