@@ -1434,9 +1434,24 @@ namespace UMACharacterSystem
 					//set the expression set and reset all the values
 					thisExpressionPlayer.expressionSet = expressionSetToUse;
 					thisExpressionPlayer.Values = new float[thisExpressionPlayer.Values.Length];
-					thisExpressionPlayer.Initialize();
 				}
 			}
+		}
+		private void InitializeExpressionPlayer(UMAData umaData)
+		{
+			this.CharacterUpdated.RemoveListener(InitializeExpressionPlayer);
+			InitializeExpressionPlayer();
+        }
+
+		private void InitializeExpressionPlayer()
+		{
+			var thisExpressionPlayer = gameObject.GetComponent<UMAExpressionPlayer>();
+			if (thisExpressionPlayer == null)
+				return;
+			if (thisExpressionPlayer.expressionSet == null)
+				return;
+			Debug.Log("InitializeExpressionPlayer");
+			thisExpressionPlayer.Initialize();
 		}
 
 		/// <summary>
@@ -2303,6 +2318,12 @@ namespace UMACharacterSystem
 			{
 				StartCoroutine(BuildCharacterWhenReady(RestoreDNA, prioritySlot, prioritySlotOver));
 				return;
+			}
+
+			//But the ExpressionPlayer needs to be Initialized AFTER Load
+			if (activeRace.racedata != null && !RestoreDNA)
+			{
+				this.CharacterUpdated.AddListener(InitializeExpressionPlayer);
 			}
 
 			// Add saved DNA
