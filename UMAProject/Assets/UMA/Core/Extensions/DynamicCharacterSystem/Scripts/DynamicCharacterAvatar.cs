@@ -1450,7 +1450,6 @@ namespace UMACharacterSystem
 				return;
 			if (thisExpressionPlayer.expressionSet == null)
 				return;
-			Debug.Log("InitializeExpressionPlayer");
 			thisExpressionPlayer.Initialize();
 		}
 
