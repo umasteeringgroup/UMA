@@ -1479,7 +1479,7 @@ namespace UMA
 				}
 			}
 
-			Debug.LogError ("GetBlendShapeIndex: blendshape " + name + " not found!");
+			//Debug.LogError ("GetBlendShapeIndex: blendshape " + name + " not found!");
 			return loc;
 		}
 		/// <summary>
