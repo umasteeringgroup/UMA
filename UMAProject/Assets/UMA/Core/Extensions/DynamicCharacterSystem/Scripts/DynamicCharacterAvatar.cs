@@ -351,7 +351,7 @@ namespace UMACharacterSystem
 			{
 				umaData.ignoreBlendShapes = !loadBlendShapes;
 
-				if (umaData.GetRenderer(0) != null)
+				if (umaData.rendererCount > 0)
 					umaData.GetRenderer(0).enabled = !hide;
 			}
 			//This hardly ever happens now since the changeRace/LoadFromString/StartCO methods all yield themselves until asset bundles have been downloaded
