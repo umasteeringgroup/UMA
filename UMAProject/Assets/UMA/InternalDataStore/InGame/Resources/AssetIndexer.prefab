@@ -5,10 +5,10 @@ GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Component:
-  - 4: {fileID: 422758}
-  - 114: {fileID: 11432240}
+  - component: {fileID: 422758}
+  - component: {fileID: 11432240}
   m_Layer: 0
   m_Name: AssetIndexer
   m_TagString: Untagged
@@ -25,10 +25,10 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 3.4409695, y: 0.96156013, z: 2.617393}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &11432240
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -317,13 +317,6 @@ MonoBehaviour:
     IsAssetBundle: 0
   - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
-    _Name: UMA_fem_hair_1_005
-    _Item: {fileID: 11400000, guid: 911a7511737178d4dbfe1ab52a2d8887, type: 2}
-    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Slots/Hair/FemaleHighPolyHair.asset
-    IsResource: 0
-    IsAssetBundle: 0
-  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
     _Name: FemaleLongHair01
     _Item: {fileID: 11400000, guid: 0dfbf95a2c3548040a6cc23330e64d76, type: 2}
     _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Slots/Hair/FemaleLongHair01.asset
@@ -414,6 +407,27 @@ MonoBehaviour:
     _Name: M_Eyebrow
     _Item: {fileID: 11400000, guid: 8b232fbd9c99b3149bc6c4f6cb7afb7d, type: 2}
     _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Slots/Hair/M_Eyebrow_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleEarsMorph
+    _Item: {fileID: 11400000, guid: 36832eb4f58c963418b5be22d9a7eafb, type: 2}
+    _Path: Assets/UMA/Examples/Blendshape Examples/Assets/Slots/MaleEarsMorph/MaleEarsMorph_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: PhysicsStandard
+    _Item: {fileID: 11400000, guid: 515a46b056a0d8d4d8fc2de3b7f58d29, type: 2}
+    _Path: Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/Physics/Standard/PhysicsStandardSlot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: PhysicsHD
+    _Item: {fileID: 11400000, guid: bc5ef2dcc0274644bb1733e78ad1514d, type: 2}
+    _Path: Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/Physics/HD/PhysicsHDSlot.asset
     IsResource: 0
     IsAssetBundle: 0
   - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
@@ -1363,6 +1377,13 @@ MonoBehaviour:
     _Name: MaleShorts2
     _Item: {fileID: 11400000, guid: 71e3ef35d8b941d4ab538b01f57dbb79, type: 2}
     _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleShorts2.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: BlendShapeRecipe
+    _Item: {fileID: 11400000, guid: 79f076bff9f0ea840abbeda53d42de10, type: 2}
+    _Path: Assets/UMA/Examples/Blendshape Examples/Assets/Recipe/BlendShapeRecipe.asset
     IsResource: 0
     IsAssetBundle: 0
   - _QualifiedName: UMA.DynamicUMADnaAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
