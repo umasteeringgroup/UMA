@@ -4,10 +4,7 @@ using UnityEngine;
 
 namespace UMA
 {
-	/// <summary>
-	/// Change this soon to play nice with the other create asset menu items
-	/// </summary>
-	[CreateAssetMenu(fileName = "NewUMAPhysicsElement", menuName = "Physics Element", order = 1)]
+	[System.Serializable]
 	public class UMAPhysicsElement : ScriptableObject 
 	{
 		[Tooltip("Set to true for root hip definition only")]
@@ -30,5 +27,13 @@ namespace UMA
 		public float swing1Limit;
 		public float swing2Limit;
 		public bool enablePreprocessing;
+
+		#if UNITY_EDITOR
+		[UnityEditor.MenuItem("Assets/Create/UMA/Misc/Physics Element")]
+		public static void CreatePhysicsElementAsset()
+		{
+			UMAEditor.CustomAssetUtility.CreateAsset<UMAPhysicsElement>();
+		}
+		#endif
 	}
 }
