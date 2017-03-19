@@ -10,7 +10,7 @@ using UMAAssetBundleManager;
 public class DynamicSlotLibrary : SlotLibrary
 {
 
-    public bool dynamicallyAddFromResources;
+    public bool dynamicallyAddFromResources = true;
 	[Tooltip("Limit the Resources search to the following folders (no starting slash and seperate multiple entries with a comma)")]
 	public string resourcesFolderPath = "";
     public bool dynamicallyAddFromAssetBundles;
@@ -92,42 +92,14 @@ public class DynamicSlotLibrary : SlotLibrary
 
     public void UpdateDynamicSlotLibrary(int? nameHash = null)
     {
-#if UNITY_EDITOR
-		//if we are in the editor and the application is not playing (i.e. we are editing recipes) just load all races
-		if (!Application.isPlaying && nameHash == null)
-			GetAllAssetsFromAssetDB();
-		else
-#endif
 			DynamicAssetLoader.Instance.AddAssets<SlotDataAsset>(ref assetBundlesUsedDict, dynamicallyAddFromResources, dynamicallyAddFromAssetBundles, downloadAssetsEnabled, assetBundleNamesToSearch, resourcesFolderPath, nameHash, "", AddSlotAssets);
     }
 
     public void UpdateDynamicSlotLibrary(string slotName)
     {
-#if UNITY_EDITOR
-		//if we are in the editor and the application is not playing (i.e. we are editing recipes) just load all races
-		if (!Application.isPlaying)
-			GetAllAssetsFromAssetDB();
-		else
-#endif
 			DynamicAssetLoader.Instance.AddAssets<SlotDataAsset>(ref assetBundlesUsedDict, dynamicallyAddFromResources, dynamicallyAddFromAssetBundles, downloadAssetsEnabled, assetBundleNamesToSearch, resourcesFolderPath, null, slotName, AddSlotAssets);
     }
 
-#if UNITY_EDITOR
-	public void GetAllAssetsFromAssetDB()
-	{
-		var allSlots = new List<SlotDataAsset>();
-		var allSlotGUIDs = AssetDatabase.FindAssets("t:SlotDataAsset");
-		for (int i = 0; i < allSlotGUIDs.Length; i++)
-		{
-			var thisSLPath = AssetDatabase.GUIDToAssetPath(allSlotGUIDs[i]);
-			var thisSL = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(thisSLPath);
-			allSlots.Add(thisSL);
-		}
-		AddSlotAssets(allSlots.ToArray());
-		//This just makes it super slow *every* time a recipe is loaded
-		//Resources.UnloadUnusedAssets();
-	}
-#endif
 
 	private void AddSlotAssets(SlotDataAsset[] slots)
     {

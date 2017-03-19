@@ -92,18 +92,16 @@ namespace UMAEditor
                 var umaRecipeBase = target as UMARecipeBase;
                 if (umaRecipeBase != null)
                 {
-					//if we dont have an umaContext the recipe wont actually load and we dont want people to edit it because it wont save properly
-					//01022016 BUT we do still ned to output the inspector or else people cant make new recipes when they have a scene open with no UMAContext
-					//TODO work out a way of editing recipes when there ISNT an UMA Context
 					var context = UMAContext.FindInstance();
+					//create a virtual UMAContext if we dont have one and we have DCS
 					if (context == null)
 					{
 						context = umaRecipeBase.CreateEditorContext();
 						generatedContext = context.gameObject;
 					}
+					//legacy checks for context
 					if (context == null)
 					{
-						context = umaRecipeBase.CreateEditorContext();
 						_errorMessage = "Editing a recipe requires a loaded scene with a valid UMAContext.";
                         Debug.LogWarning(_errorMessage);
 						//_recipe = null;
@@ -116,19 +114,8 @@ namespace UMAEditor
 					  //_recipe = null;
 					  //return;
 				   }
-					//when the recipe loads it can be really slow the first time can we show a notification?
-					//this doesn't bloody show quick enough though
-					//var editorAssembly = typeof(Editor).Assembly;
-					//var inspectorWindowType = editorAssembly.GetType("UnityEditor.InspectorWindow");
-					//inspectorWindow = EditorWindow.GetWindow(inspectorWindowType);
-					//if(inspectorWindow != null)
-					//inspectorWindow.ShowNotification(new GUIContent("UMA is gathering Data.."));
-					//this is where we are waiting, but the notification does not show before this starts
                     umaRecipeBase.Load(_recipe, context);
                     _description = umaRecipeBase.GetInfo();
-
-					//if (inspectorWindow != null)
-					//	inspectorWindow.RemoveNotification();
                 }
             }
 			catch (UMAResourceNotFoundException e)

@@ -83,8 +83,9 @@ namespace UMAEditor
 				var newSelected = selected;
 				if (!recipeIsLive)
 					EditorGUI.indentLevel++;
+				var label = _wsSlot == "WardrobeCollection" ? " " : _wsSlot;
 				EditorGUI.BeginChangeCheck();
-				newSelected = EditorGUILayout.Popup(_wsSlot, selected, thisPopupVals.ToArray());
+				newSelected = EditorGUILayout.Popup(label, selected, thisPopupVals.ToArray());
 				if (!recipeIsLive)
 				{
 					EditorGUI.indentLevel--;
@@ -101,9 +102,10 @@ namespace UMAEditor
 				if (!recipeIsLive)
 				{
 					var warningRect = new Rect((valRBut.xMin - 5f), valRBut.yMin, 20f, valRBut.height);
-					var warningGUIContent = new GUIContent("", _wsRecipeName + " was not Live. You can make it live by checking it on in the UMA/UMA Global Library window.");
+					var warningGUIContent = new GUIContent("", _wsRecipeName + " was not Live. You can make it live by adding it to the UMA/UMA Global Library.");
 					warningGUIContent.image = warningIcon;
 					GUI.Button(warningRect, warningGUIContent, warningStyle);
+					//TODO we can probably use AssetIndexer.AddEvilAsset here so it gets added without having to go there
 					//Id like this to be a button that opens the window, opens the recipe section and ideally highlights the asset that needs to be made live
 					/*if(GUI.Button(warningRect, warningGUIContent, warningStyle))
 					{
@@ -154,6 +156,79 @@ namespace UMAEditor
 						if (_wardrobeSet == null || context == null)
 							return false;
 						GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+						if (_allowWardrobeCollectionSlot)
+						{
+							var wcRecipesForRace = context.dynamicCharacterSystem.GetRecipesForRaceSlot(_race.raceName, "WardrobeCollection");
+							var wcGroupDict = new Dictionary<string, List<string>>();
+							//for 'Standard Assets' we need to do some kind of get Types thing I think because we then need to use reflection to get the wardrobeSlot field
+							//how can we get what we want here when WardrobeCollections dont exist in Standard Assets (if 'StandardAssets' has been moved there)
+							for (int i = 0; i < wcRecipesForRace.Count; i++)
+							{
+								Type wcType = wcRecipesForRace[i].GetType();
+								if (wcType.ToString() == "UMAWardrobeCollection")
+								{
+									FieldInfo wcRecipeSlotField = wcType.GetField("wardrobeSlot", BindingFlags.Public | BindingFlags.Instance);
+									var wcRecipeSlot = (string)wcRecipeSlotField.GetValue(wcRecipesForRace[i]);
+									if (!wcGroupDict.ContainsKey(wcRecipeSlot))
+									{
+										wcGroupDict.Add(wcRecipeSlot, new List<string>());
+									}
+									wcGroupDict[wcRecipeSlot].Add(wcRecipesForRace[i].name);
+								}
+							}
+							if (wcGroupDict.Count > 0)
+							{
+								EditorGUILayout.LabelField("WardrobeCollections");
+								EditorGUI.indentLevel++;
+								foreach (KeyValuePair<string, List<string>> kp in wcGroupDict)
+								{
+									var thisPopupVals = new List<string>();
+									thisPopupVals.Add("None");
+									thisPopupVals.AddRange(kp.Value);
+									var selected = 0;
+									var prevRecipe = "";
+									//if one of the recipes in the wardrobe set is one of these then its selected
+									for (int pvi = 0; pvi < thisPopupVals.Count; pvi++)
+									{
+										for (int wsi = 0; wsi < _wardrobeSet.Count; wsi++)
+										{
+											if (thisPopupVals[pvi] == _wardrobeSet[wsi].recipe)
+											{
+												prevRecipe = _wardrobeSet[wsi].recipe;
+												selected = pvi;
+												break;
+											}
+										}
+									}
+									EditorGUI.BeginChangeCheck();
+									var newSelected = EditorGUILayout.Popup(kp.Key, selected, thisPopupVals.ToArray());
+									if (EditorGUI.EndChangeCheck())
+									{
+										for (int wsi = 0; wsi < _wardrobeSet.Count; wsi++)
+										{
+											if (_wardrobeSet[wsi].recipe == prevRecipe)
+											{
+												//we need to remove the wardrobeSettings that has prevRecipe as its value from _wardrobeSettings
+												if (newSelected == 0)
+												{
+													_wardrobeSet.RemoveAt(wsi);
+												}
+												else
+												{
+													//we need to make wardrobeSettings that has prevRecipe have the new value
+													_wardrobeSet[wsi].recipe = thisPopupVals[newSelected];
+												}
+											}
+										}
+										changed = true;
+									}
+								}
+								EditorGUI.indentLevel--;
+								EditorGUILayout.Space();
+								EditorGUILayout.LabelField("WardrobeSlots");
+								EditorGUI.indentLevel++;
+							}
+						}
 						foreach (string wsl in _race.wardrobeSlots)
 						{
 							if (wsl == "None")
@@ -208,8 +283,13 @@ namespace UMAEditor
 								}
 							}
 						}
+						if (_allowWardrobeCollectionSlot)
+						{
+							EditorGUI.indentLevel--;
+						}
 						if (WardrobeSet.Count > 0)
 						{
+							EditorGUILayout.Space();
 							if (GUILayout.Button(new GUIContent("UpdateSharedColors", "Automatically adds any shared colors defined in the selected recipes to this recipes SharedColors")))
 							{
 								for (int i = 0; i < _wardrobeSet.Count; i++)
@@ -368,7 +448,9 @@ namespace UMAEditor
 						{
 							if (_wardrobeSet == null)
 								return false;
-							var thisWardrobeSetEditor = new WardrobeSetEditor(_recipe.raceData, _wardrobeSet, _recipe, true);
+							//if this is a 'backwards compatible' recipe dont show the 'wardrobeCollections' bit
+							bool showWardrobeCollections = _recipe.slotDataList.Length > 0 ? false : true;
+                            var thisWardrobeSetEditor = new WardrobeSetEditor(_recipe.raceData, _wardrobeSet, _recipe, showWardrobeCollections);
 							if (thisWardrobeSetEditor.OnGUI())
 							{
 								_wardrobeSet = thisWardrobeSetEditor.WardrobeSet;
@@ -388,8 +470,6 @@ namespace UMAEditor
 					Debug.LogWarning(_errorMessage);
 				}
 				//reset the recipe to the raceBase recipe
-				//this screws up if this actual recipe IS the baseRaceRecipe
-				//But you simply cant create a race that way. You HAVE to make a recipe from scratch, so I dont think its an issue
 				var thisBaseRecipe = _recipe.raceData.baseRaceRecipe;
 				thisBaseRecipe.Load(_recipe, context);
 				if (_wardrobeSet.Count > 0)
@@ -404,7 +484,7 @@ namespace UMAEditor
 					List<string> SuppressSlotsStrings = new List<string>();
 					List<string> HiddenSlots = new List<string>();
 					var wardrobeRecipesToRender = new Dictionary<string, UMARecipeBase>();
-					var activeRace = _recipe.raceData.name;
+					var activeRace = _recipe.raceData.raceName;
 					//Dont add the WardrobeCollection to the recipes to render- they doesn't render directly and will have already set their actual wardrobeRecipe slots SetSlot
 					foreach (WardrobeSettings set in _wardrobeSet)
 					{
@@ -471,17 +551,17 @@ namespace UMAEditor
 							}
 						}
 					}
-					foreach (string ws in _recipe.raceData.wardrobeSlots)//this doesn't need to validate racedata- we wouldn't be here if it was null
+					foreach (string ws in _recipe.raceData.wardrobeSlots)
 					{
-						if (SuppressSlotsStrings.Contains(ws))
+                        if (SuppressSlotsStrings.Contains(ws))
 						{
 							continue;
 						}
 						if (wardrobeRecipesToRender.ContainsKey(ws))
 						{
 							UMARecipeBase utr = wardrobeRecipesToRender[ws];
-							var TargetType = utr.GetType();
-							FieldInfo CompatibleRacesField = TargetType.GetField("compatibleRaces", BindingFlags.Public | BindingFlags.Instance);
+							var TargetType = wardrobeRecipesToRender[ws].GetType();
+                            FieldInfo CompatibleRacesField = TargetType.GetField("compatibleRaces", BindingFlags.Public | BindingFlags.Instance);
 							FieldInfo WardrobeSlotField = TargetType.GetField("wardrobeSlot", BindingFlags.Public | BindingFlags.Instance);
 							FieldInfo HidesField = TargetType.GetField("Hides", BindingFlags.Public | BindingFlags.Instance);
 

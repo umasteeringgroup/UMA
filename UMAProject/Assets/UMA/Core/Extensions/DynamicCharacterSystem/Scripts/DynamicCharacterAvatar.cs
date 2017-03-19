@@ -2707,16 +2707,26 @@ namespace UMACharacterSystem
 		{
 			EditorUMAContext = new GameObject();
 			EditorUMAContext.name = "UMAEditorContext";
-			//Make this GameObject not show up in the scene
-			EditorUMAContext.hideFlags = HideFlags.HideInHierarchy;
+			//Make this GameObject not show up in the scene or save
+			EditorUMAContext.hideFlags = HideFlags.HideInHierarchy | HideFlags.DontSave;
 			var thisUMAContext = EditorUMAContext.AddComponent<UMAContext>();
 			UMAContext.Instance = thisUMAContext;
 			//we need to add the libraries as components of the game object too
 			//and then set THOSE components to the umaContext component
 			thisUMAContext.raceLibrary = EditorUMAContext.AddComponent<DynamicRaceLibrary>();
+			(thisUMAContext.raceLibrary as DynamicRaceLibrary).dynamicallyAddFromResources = true;
+			(thisUMAContext.raceLibrary as DynamicRaceLibrary).dynamicallyAddFromAssetBundles = true;
 			thisUMAContext.overlayLibrary = EditorUMAContext.AddComponent<DynamicOverlayLibrary>();
+			(thisUMAContext.overlayLibrary as DynamicOverlayLibrary).dynamicallyAddFromResources = true;
+			(thisUMAContext.overlayLibrary as DynamicOverlayLibrary).dynamicallyAddFromAssetBundles = true;
 			thisUMAContext.slotLibrary = EditorUMAContext.AddComponent<DynamicSlotLibrary>();
+			(thisUMAContext.slotLibrary as DynamicSlotLibrary).dynamicallyAddFromResources = true;
+			(thisUMAContext.slotLibrary as DynamicSlotLibrary).dynamicallyAddFromAssetBundles = true;
 			thisUMAContext.dynamicCharacterSystem = EditorUMAContext.AddComponent<UMACharacterSystem.DynamicCharacterSystem>();
+			(thisUMAContext.dynamicCharacterSystem as DynamicCharacterSystem).dynamicallyAddFromResources = true;
+			(thisUMAContext.dynamicCharacterSystem as DynamicCharacterSystem).dynamicallyAddFromAssetBundles = true;
+			var thisDAL = EditorUMAContext.AddComponent<DynamicAssetLoader>();
+			DynamicAssetLoader.Instance = thisDAL;
 			//add an event to EditorApplication so that this context gets destroyed when this game object is no longer being inspected
 			EditorApplication.update -= CheckEditorContextNeeded;
 			EditorApplication.update += CheckEditorContextNeeded;
@@ -2797,41 +2807,8 @@ namespace UMACharacterSystem
 						}
 					}
 				}
-				/*for (int i = 0; i < _wardrobeCollections.Count; i++)
-				{
-					newWardrobeCollections.Add((thisDCS.GetRecipe(_wardrobeCollections[i].name, false) as UMAWardrobeCollection));
-					var collectionRecipes = newWardrobeCollections[i].wardrobeCollection[activeRace.name];
-					if (collectionRecipes != null && collectionRecipes.Count > 0)
-					{
-						foreach (WardrobeSettings ws in collectionRecipes)
-						{
-							if (!WardrobeRecipes.ContainsKey(ws.slot))
-								SetSlot(ws.slot, ws.recipe);
-						}
-					}
-				}*/
 				_wardrobeCollections = newWardrobeCollections;
 			}
-			/*if (_wardrobeRecipes.ContainsKey("WardrobeCollection"))
-            {
-                if (_wardrobeRecipes["WardrobeCollection"].GetType() == typeof(UMAWardrobeCollection))
-                {
-                    bool addCollection = false;
-                    var collectionRecipes = (WardrobeRecipes["WardrobeCollection"] as UMAWardrobeCollection).wardrobeCollection[activeRace.name];
-                    if (collectionRecipes != null)
-                    {
-                        foreach (WardrobeSettings ws in collectionRecipes)
-                        {
-                            if (!WardrobeRecipes.ContainsKey(ws.slot))
-                                addCollection = true;
-                            else if (WardrobeRecipes[ws.slot].name != ws.recipe)
-                                addCollection = true;
-                        }
-                    }
-                    if (addCollection)
-                        SetSlot(_wardrobeRecipes["WardrobeCollection"]);
-                }
-            }*/
 		}
 
 		IEnumerator UpdateAfterDownloads()

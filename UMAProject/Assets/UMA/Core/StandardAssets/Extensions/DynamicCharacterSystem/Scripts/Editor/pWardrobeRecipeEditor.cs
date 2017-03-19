@@ -420,11 +420,14 @@ namespace UMAEditor
             // field values
             // ************************************
             string replaces = "";
-            object o = ReplacesField.GetValue(target);
-            if (o != null)
-            {
-                replaces = (string)ReplacesField.GetValue(target);
-            }
+			if (ReplacesField != null)
+			{
+				object o = ReplacesField.GetValue(target);
+				if (o != null)
+				{
+					replaces = (string)ReplacesField.GetValue(target);
+				}
+			}
 
             List<string> compatibleRaces = (List<string>)CompatibleRacesField.GetValue(target);
 			string wardrobeSlot = (string)WardrobeSlotField.GetValue(target);
@@ -539,16 +542,18 @@ namespace UMAEditor
             }
 
 
-            #region Replaces UI
+			#region Replaces UI
+			if (ReplacesField != null)
+			{
+				List<string> ReplacesSlots = new List<string>(generatedBaseSlotOptions);
+				ReplacesSlots.Insert(0, "Nothing");
+				int selectedIndex = ReplacesSlots.IndexOf(replaces);
+				if (selectedIndex < 0) selectedIndex = 0; // not found, point at "nothing"
 
-            List<string> ReplacesSlots = new List<string>(generatedBaseSlotOptions);
-            ReplacesSlots.Insert(0, "Nothing");
-            int selectedIndex = ReplacesSlots.IndexOf(replaces);
-            if (selectedIndex < 0) selectedIndex = 0; // not found, point at "nothing"
+				selectedIndex = EditorGUILayout.Popup("Replaces", selectedIndex, ReplacesSlots.ToArray());
 
-            selectedIndex = EditorGUILayout.Popup("Replaces", selectedIndex, ReplacesSlots.ToArray());
-
-            ReplacesField.SetValue(target, ReplacesSlots[selectedIndex]);
+				ReplacesField.SetValue(target, ReplacesSlots[selectedIndex]);
+			}
             #endregion
             if (ShowHelp)
             {

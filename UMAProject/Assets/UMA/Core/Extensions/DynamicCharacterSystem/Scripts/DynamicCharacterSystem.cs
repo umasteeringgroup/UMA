@@ -206,75 +206,26 @@ namespace UMACharacterSystem
 
 		private void GatherRecipeFiles(string filename = "", string bundleToGather = "")
 		{
-
-#if UNITY_EDITOR
-			//In the editor when the game is not running get everything
-			if (!Application.isPlaying)
+			var assetBundleToGather = bundleToGather != "" ? bundleToGather : assetBundlesForRecipesToSearch;
+			//DCS may do this before DAL has downloaded the AssetBundleIndex so in that case we want to turn 'downloadAssetsEnabled' off 
+			if (DynamicAssetLoader.Instance != null)
 			{
-				GetAllRecipeAssetsFromAssetDB();
-			}
-			else
-			{
-#endif
-				//Otherwise run it normally
-				var assetBundleToGather = bundleToGather != "" ? bundleToGather : assetBundlesForRecipesToSearch;
-				//DCS may do this before DAL has downloaded the AssetBundleIndex so in that case we want to turn 'downloadAssetsEnabled' off 
-				if (DynamicAssetLoader.Instance != null)
-				{
-					bool downloadAssetsEnabledNow = DynamicAssetLoader.Instance.isInitialized ? downloadAssetsEnabled : false;
-					//if we are only adding stuff from a downloaded assetbundle, dont search resources
-					bool dynamicallyAddFromResourcesNow = bundleToGather == "" ? dynamicallyAddFromResources : false;
-					bool found = false;
-					DynamicAssetLoader.Instance.debugOnFail = false;
+				bool downloadAssetsEnabledNow = DynamicAssetLoader.Instance.isInitialized ? downloadAssetsEnabled : false;
+				//if we are only adding stuff from a downloaded assetbundle, dont search resources
+				bool dynamicallyAddFromResourcesNow = bundleToGather == "" ? dynamicallyAddFromResources : false;
+				bool found = false;
+				DynamicAssetLoader.Instance.debugOnFail = false;
 
-					found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeRecipe>(ref assetBundlesUsedDict, dynamicallyAddFromResourcesNow, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesRecipesFolder, null, filename, AddRecipesFromAB);
-					if ((!found && filename != "") || (filename == "" && (Application.isPlaying == false || addAllRecipesFromDownloadedBundles)))//The WardrobeSetMasterEditor asks DCS to get all collections, but normally collections are only requested by name
-						found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeCollection>(ref assetBundlesUsedDict, dynamicallyAddFromResourcesNow, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesRecipesFolder, null, filename, AddRecipesFromAB);
-					if (!found && filename != "")
-						Debug.LogWarning("[DynamicCharacterSystem] could not find " + filename + " in Resources or any AssetBundles. Do you need to rebuild your UMAResources Index or AssetBundles?");
-					DynamicAssetLoader.Instance.debugOnFail = true;
+				found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeRecipe>(ref assetBundlesUsedDict, dynamicallyAddFromResourcesNow, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesRecipesFolder, null, filename, AddRecipesFromAB);
+				if ((!found && filename != "") || (filename == "" && (Application.isPlaying == false || addAllRecipesFromDownloadedBundles || bundleToGather == "")))//The WardrobeSetMasterEditor asks DCS to get all collections, but normally collections are only requested by name
+					found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeCollection>(ref assetBundlesUsedDict, dynamicallyAddFromResourcesNow, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesRecipesFolder, null, filename, AddRecipesFromAB);
+				if (!found && filename != "")
+					Debug.LogWarning("[DynamicCharacterSystem] could not find " + filename + " in Resources or any AssetBundles. Do you need to rebuild your UMAResources Index or AssetBundles?");
+				DynamicAssetLoader.Instance.debugOnFail = true;
 
-				}
-#if UNITY_EDITOR
 			}
-#endif
 		}
 
-#if UNITY_EDITOR
-		public void GetAllRecipeAssetsFromAssetDB()
-		{
-			//Get ALL Recipes -add them if they are the correct type
-			var allRecipes = new List<UMATextRecipe>();
-			var allTextRecipeGUIDs = AssetDatabase.FindAssets("t:UMATextRecipe");
-			int recipesToUpdate = 0;
-			for (int i = 0; i < allTextRecipeGUIDs.Length; i++)
-			{
-				var thisUTRPath = AssetDatabase.GUIDToAssetPath(allTextRecipeGUIDs[i]);
-				var thisUTR = AssetDatabase.LoadAssetAtPath<UMATextRecipe>(thisUTRPath);
-				if (thisUTR.recipeType == "Wardrobe" && thisUTR.GetType() == typeof(UMATextRecipe))
-				{
-					allRecipes.Add(thisUTR);
-					recipesToUpdate++;
-				}
-				else if (thisUTR.GetType() == typeof(UMAWardrobeRecipe) || thisUTR.GetType() == typeof(UMAWardrobeCollection))
-				{
-					allRecipes.Add(thisUTR);
-				}
-			}
-			if (recipesToUpdate > 0)
-			{
-				Debug.LogWarning(recipesToUpdate + " UMATextRecipes require converting to UMAWardrobeRecipes. Please go to UMA > Utilities > Convert Old Recipes to update them");
-				EditorPrefs.SetBool(Application.dataPath + ":UMAWardrobeRecipesUpToDate", false);
-			}
-			if (allRecipes.Count > 0)
-			{
-				//Debug.Log("[DCS] " + allRecipes.Count + " added from AssetDatabase scan.");
-				AddRecipes(allRecipes.ToArray());
-			}
-			//This just makes it super slow *every* time a recipe is loaded
-			//Resources.UnloadUnusedAssets();
-		}
-#endif
 
 		/*IEnumerator CleanFilesFromResourcesAndBundles()
         {
@@ -500,6 +451,25 @@ namespace UMACharacterSystem
 			}
 			return recipeNamesForRaceSlot;
 		}
+		/// <summary>
+		/// Gets the recipes in the DynamicCharacterSystem libraries for the given race and slot (used by RecipeEditor because of StandardAssets)
+		/// </summary>
+		public override List<UMARecipeBase> GetRecipesForRaceSlot(string race, string slot)
+		{
+			Refresh();
+			List<UMARecipeBase> recipesForRaceSlot = new List<UMARecipeBase>();
+			if (Recipes.ContainsKey(race))
+			{
+				if (Recipes[race].ContainsKey(slot))
+				{
+					foreach (UMATextRecipe utr in Recipes[race][slot])
+					{
+						recipesForRaceSlot.Add(utr);
+					}
+				}
+			}
+			return recipesForRaceSlot;
+		}
 
 		/// <summary>
 		/// Checks if a given recipe name is available from the dynamic libraries (used by Recipe Editor because of Standard Assets)
@@ -514,17 +484,6 @@ namespace UMACharacterSystem
 			bool searchAssetBundles = true;
 			string resourcesFolderPath = "";
 			string assetBundlesToSearch = "";
-			var context = UMAContext.FindInstance();
-			DynamicCharacterSystem thisDCS = null;
-			if (context != null)
-				thisDCS = (context.dynamicCharacterSystem as DynamicCharacterSystem);
-			if (thisDCS != null)
-			{
-				searchResources = thisDCS.dynamicallyAddFromResources;
-				searchAssetBundles = thisDCS.dynamicallyAddFromAssetBundles;
-				resourcesFolderPath = thisDCS.resourcesRecipesFolder;
-				assetBundlesToSearch = thisDCS.assetBundlesForRecipesToSearch;
-			}
 			bool found = false;
 			DynamicAssetLoader.Instance.debugOnFail = false;
 			found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeRecipe>(searchResources, searchAssetBundles, true, assetBundlesToSearch, resourcesFolderPath, null, recipeName, null);

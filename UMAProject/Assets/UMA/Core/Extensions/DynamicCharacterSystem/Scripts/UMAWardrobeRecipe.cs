@@ -48,6 +48,7 @@ public partial class UMAWardrobeRecipe : UMATextRecipe
 #if UNITY_EDITOR
 	private bool CopyFromUTR(UMATextRecipe recipeToCopyFrom)
 	{
+		Debug.Log("WardrobeConverts");
 		if (recipeToCopyFrom.recipeType != "Wardrobe" || recipeToCopyFrom.GetType() != typeof(UMATextRecipe))
 			return false;
 		recipeType = "Wardrobe";
@@ -63,62 +64,6 @@ public partial class UMAWardrobeRecipe : UMATextRecipe
 	}
 
 #endif
-	#endregion
-
-	#region STATIC METHODS
-
-	//So this conversion would work but changing all refs to UMAWardrobeRecipe rather than UMATextRecipe will be a huge pain- 
-	//and will break any existing code that refrences UMATextRecipe.compatibleRaces for example (unless we leave the fields in UMATextRecipe which kind of defeats the purpose)
-#if UNITY_EDITOR
-
-	public static void ConvertOldWardrobeRecipes()
-	{
-		var allTextRecipeGUIDs = AssetDatabase.FindAssets("t:UMATextRecipe");
-		for(int i = 0; i < allTextRecipeGUIDs.Length; i++)
-		{
-			var thisUTRPath = AssetDatabase.GUIDToAssetPath(allTextRecipeGUIDs[i]);
-            var thisUTR = AssetDatabase.LoadAssetAtPath<UMATextRecipe>(thisUTRPath);
-			//if its not a Wardrobe recipe or its actual type is anything other than UMATextRecipe
-			if (thisUTR.recipeType != "Wardrobe" || thisUTR.GetType() != typeof(UMATextRecipe))
-				continue;
-			var thisUWR = ScriptableObject.CreateInstance<UMAWardrobeRecipe>();
-			thisUWR.ConvertFromUTR(thisUTR);
-		}
-		EditorPrefs.SetBool(Application.dataPath + ":UMAWardrobeRecipesUpToDate", true);
-		Resources.UnloadUnusedAssets();
-	}
-
-	/// <summary>
-	/// Checks to see if any UMATextRecipes require converting to UMAWardrobeRecipes and returns the number that do
-	/// </summary>
-	/// <returns></returns>
-	public static int TestForOldRecipes(string recipeToTest = "")
-	{
-		int oldRecipesFound = 0;
-		var allTextRecipeGUIDs = AssetDatabase.FindAssets("t:UMATextRecipe");
-		for (int i = 0; i < allTextRecipeGUIDs.Length; i++)
-		{
-			var thisUTRPath = AssetDatabase.GUIDToAssetPath(allTextRecipeGUIDs[i]);
-			if (recipeToTest != "" && thisUTRPath.IndexOf(recipeToTest) == -1)
-				continue;
-			var thisUTR = AssetDatabase.LoadAssetAtPath<UMATextRecipe>(thisUTRPath); 
-			if (thisUTR.recipeType == "Wardrobe" && thisUTR.GetType() == typeof(UMATextRecipe))
-				oldRecipesFound++;
-		}
-		if (oldRecipesFound > 0)
-		{
-			Debug.LogWarning(oldRecipesFound + " UMATextRecipes require converting to UMAWardrobeRecipes. Please go to UMA > Utilities > Convert Old Recipes to update them");
-			EditorPrefs.SetBool(Application.dataPath + ":UMAWardrobeRecipesUpToDate", false);
-		}
-		else
-		{
-			EditorPrefs.SetBool(Application.dataPath + ":UMAWardrobeRecipesUpToDate", true);
-		}
-		Resources.UnloadUnusedAssets();
-		return oldRecipesFound;
-	}
-#endif
-
 	#endregion
 
 #if UNITY_EDITOR

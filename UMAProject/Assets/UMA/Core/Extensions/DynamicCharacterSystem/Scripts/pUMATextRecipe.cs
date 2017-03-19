@@ -43,18 +43,23 @@ public partial class UMATextRecipe : UMAPackedRecipeBase
 		{
 			if (t.Name == typeName)
 			{
+				Debug.Log("found matching type");
 				MethodInfo ConvertMethod = t.GetMethod("ConvertFromUTR", BindingFlags.Instance | BindingFlags.NonPublic);
 				if (ConvertMethod != null)
 				{
+					Debug.Log("Found Convert method");
 					var newT = ScriptableObject.CreateInstance(t);
 					ConvertMethod.Invoke(newT, new object[] { this, true });
 					break;
 				}
+				else
+				{
+					Debug.Log("No convert method found in type " + t.Name);
+				}
 			}
 		}
 	}
-	//cant do static virtual in c# so we cant make child classes have their own static version of this- you have to create an instance first which is a pain
-	protected virtual void ConvertFromUTR(UMATextRecipe sourceUTR, bool andSelect = false) { }
+	
 #endif
 
 #if UNITY_EDITOR
@@ -65,16 +70,26 @@ public partial class UMATextRecipe : UMAPackedRecipeBase
 	{
 		var EditorUMAContext = new GameObject();
 		EditorUMAContext.name = "UMAEditorContext";
-		//Make this GameObject not show up in the scene
-		EditorUMAContext.hideFlags = HideFlags.HideInHierarchy;
+		//Make this GameObject not show up in the scene or save
+		EditorUMAContext.hideFlags = HideFlags.HideInHierarchy | HideFlags.DontSave;
 		var thisUMAContext = EditorUMAContext.AddComponent<UMAContext>();
 		UMAContext.Instance = thisUMAContext;
 		//we need to add the libraries as components of the game object too
 		//and then set THOSE components to the umaContext component
 		thisUMAContext.raceLibrary = EditorUMAContext.AddComponent<DynamicRaceLibrary>();
+		(thisUMAContext.raceLibrary as DynamicRaceLibrary).dynamicallyAddFromResources = true;
+		(thisUMAContext.raceLibrary as DynamicRaceLibrary).dynamicallyAddFromAssetBundles = true;
 		thisUMAContext.overlayLibrary = EditorUMAContext.AddComponent<DynamicOverlayLibrary>();
+		(thisUMAContext.overlayLibrary as DynamicOverlayLibrary).dynamicallyAddFromResources = true;
+		(thisUMAContext.overlayLibrary as DynamicOverlayLibrary).dynamicallyAddFromAssetBundles = true;
 		thisUMAContext.slotLibrary = EditorUMAContext.AddComponent<DynamicSlotLibrary>();
+		(thisUMAContext.slotLibrary as DynamicSlotLibrary).dynamicallyAddFromResources = true;
+		(thisUMAContext.slotLibrary as DynamicSlotLibrary).dynamicallyAddFromAssetBundles = true;
 		thisUMAContext.dynamicCharacterSystem = EditorUMAContext.AddComponent<UMACharacterSystem.DynamicCharacterSystem>();
+		(thisUMAContext.dynamicCharacterSystem as DynamicCharacterSystem).dynamicallyAddFromResources = true;
+		(thisUMAContext.dynamicCharacterSystem as DynamicCharacterSystem).dynamicallyAddFromAssetBundles = true;
+		var thisDAL = EditorUMAContext.AddComponent<DynamicAssetLoader>();
+		DynamicAssetLoader.Instance = thisDAL;
 		return EditorUMAContext.GetComponent<UMAContext>();
 	}
 #endif
