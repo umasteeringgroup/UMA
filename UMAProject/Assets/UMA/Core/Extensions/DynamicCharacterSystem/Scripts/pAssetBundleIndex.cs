@@ -48,7 +48,9 @@ namespace UMAAssetBundleManager
 							if ((obj as UMAWardrobeCollection).wardrobeCollection[assetWardrobeCompatibleWith[i]].Count > 0)
 								hasActiveSets = true;
 						if (hasActiveSets)
-							assetWardrobeSlot = "WardrobeCollection";
+							assetWardrobeSlot = (obj as UMAWardrobeCollection).wardrobeSlot;
+						else
+							assetWardrobeSlot = "None";
 					}
 				}
 			}

@@ -294,55 +294,23 @@ namespace UMAEditor
 				FieldInfo ActiveWardrobeSetField = TargetType.GetField("activeWardrobeSet", BindingFlags.Public | BindingFlags.Instance);
 				List<WardrobeSettings> activeWardrobeSet = (List<WardrobeSettings>)ActiveWardrobeSetField.GetValue(target);
 
-				//if this recipeType == WardrobeCollection or DynamicCharacterAvatar or Wardrobe show a 'ConvertRecipe' button
+				//if this recipeType == Wardrobe the recipe is old, i.e. from before they were seperate type, so show a warning
 				if (recipeType == "WardrobeCollection" || recipeType == "DynamicCharacterAvatar" || recipeType == "Wardrobe")
 				{
-					//we want this button to convert the UMATextRecipe to the type it should be
-					//and then for the resulting asset to be inspected
-					MethodInfo ConvertMethod = TargetType.GetMethod("ConvertToType");
-					string typeToConvertTo = "";
-					if (recipeType == "WardrobeCollection")
-					{
-						typeToConvertTo = "UMAWardrobeCollection";
-					}
-					else if (recipeType == "DynamicCharacterAvatar")
-					{
-						typeToConvertTo = "UMADynamicCharacterAvatarRecipe";
-					}
-					else if (recipeType == "Wardrobe")
-					{
-						typeToConvertTo = "UMAWardrobeRecipe";
-					}
-					//I know this is messy but we can get rid of all of this in the actual release since people wont have made stuff that is wrong
-					if (ConvertMethod != null && typeToConvertTo != "")
-					{
-						EditorGUILayout.HelpBox("Please convert this recipe", MessageType.Warning);
-						if (GUILayout.Button("Convert"))
-						{
-							ConvertMethod.Invoke(target, new object[] { typeToConvertTo });
-						}
-					}
+					EditorGUILayout.HelpBox("This is an out of date " + recipeType + " recipe. Please recreate it by creating a new one from the 'Create/UMA/DCS' menu", MessageType.Warning);
+					hideRaceField = true;
+					hideToolBar = true;
 				}
 
-				//Draw the recipe type dropdown for the time being but disable it for types that cant be changed
-				//if people have run the converter from the nagger stop them making UMATextRecipes that are WardrobeRecipes
-				if (recipeType == "DynamicCharacterAvatar" || (EditorPrefs.GetBool(Application.dataPath + ":UMADCARecipesUpToDate") && EditorPrefs.GetBool(Application.dataPath + ":UMAWardrobeRecipesUpToDate")))
 				EditorGUI.BeginDisabledGroup(true);
 
 				if (!recipeTypeOpts.Contains(recipeType))
 					recipeTypeOpts.Add(recipeType);
 
 				int rtIndex = recipeTypeOpts.IndexOf(recipeType);
-				int newrtIndex = EditorGUILayout.Popup("Recipe Type", rtIndex, recipeTypeOpts.ToArray());
+				EditorGUILayout.Popup("Recipe Type", rtIndex, recipeTypeOpts.ToArray());
 
-				if (newrtIndex != rtIndex)
-				{
-					RecipeTypeField.SetValue(target, recipeTypeOpts[newrtIndex]);
-					doUpdate = true;
-				}
-
-				if (recipeType == "DynamicCharacterAvatar" || (EditorPrefs.GetBool(Application.dataPath + ":UMADCARecipesUpToDate") && EditorPrefs.GetBool(Application.dataPath + ":UMAWardrobeRecipesUpToDate")))
-					EditorGUI.EndDisabledGroup();
+				EditorGUI.EndDisabledGroup();
 
 				//If this is a Standard recipe or a DynamicCharacterAvatar we may need to fix or update the DNA converters
 				//This happens when the race the recipe uses has a DNA converter that has been changed from UMADNAHumanoid to DynamicDNA
@@ -370,25 +338,7 @@ namespace UMAEditor
 					hideRaceField = false;
 					slotEditor = new WardrobeSetMasterEditor(_recipe, activeWardrobeSet);
 				}
-				//else if its a wardrobe recipe override the slot editor
-				else if (recipeType == "Wardrobe")
-				{
-					hideRaceField = true;
-					hideToolBar = true;
-
-					//CompatibleRaces drop area
-					if (DrawCompatibleRacesUI(TargetType))
-						doUpdate = true;
-
-					//Wardrobe slots dropdowns
-					if (DrawWardrobeSlotsFields(TargetType))
-						doUpdate = true;
-
-					//assign the slotEditor after the others so we have the SlotOptions created
-					slotEditor = new WardrobeRecipeMasterEditor(_recipe, generatedBaseSlotOptions, generatedBaseSlotOptionsLabels);
-
-					EditorGUILayout.Space();
-				}
+				
 			}
 			return doUpdate;
 		}

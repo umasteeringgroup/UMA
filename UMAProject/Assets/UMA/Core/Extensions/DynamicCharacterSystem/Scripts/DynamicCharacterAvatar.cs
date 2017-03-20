@@ -66,7 +66,7 @@ namespace UMACharacterSystem
 
 		#endregion
 
-		#region PUBLIC FIELDS //Can we use the convention of strting these with a lower case letter
+		#region PUBLIC FIELDS
 
 		//because the character might be loaded from an asset bundle, we may want everything required to create it to happen
 		//but for it to still not be shown immediately or you may want to hide it anyway
@@ -90,7 +90,7 @@ namespace UMACharacterSystem
 		//the dictionary of active recipes this character is using to create itself
 		private Dictionary<string, UMATextRecipe> _wardrobeRecipes = new Dictionary<string, UMATextRecipe>();
 		//a list of active wardrobe collections on the avatar. If the collection has a wardrobe set for the active race these are loaded into _wardrobeRecipes
-		private List<UMAWardrobeCollection> _wardrobeCollections = new List<UMAWardrobeCollection>();
+		private Dictionary<string, UMAWardrobeCollection> _wardrobeCollections = new Dictionary<string, UMAWardrobeCollection>();
 
 		//a list of wardrobe recipes the avatar will fall back to if no other recipes are loaded in to 'WardrobeRecipes'
 		[Tooltip("You can add wardrobe recipes for many races in here and only the ones that apply to the active race will be applied to the Avatar")]
@@ -148,7 +148,7 @@ namespace UMACharacterSystem
 #endif
 		#endregion
 
-		#region PRIVATE FIELDS //Can we use the convention of starting these with a lower case letter
+		#region PRIVATE FIELDS 
 		//Is building the character enabled? Disable this to make multiple changes to the avatar that will be built
 		//without creating multiple build calls. when you are finished set it to true and the character will build
 		[SerializeField]
@@ -175,7 +175,7 @@ namespace UMACharacterSystem
 #endif
 		#endregion
 
-		#region PROPERTIES //Can we use the convention of strting these with an uppercase letter
+		#region PROPERTIES 
 		//this previously get/set the base.umaRace value - but we dont want anyone to do that. because set wont actually change the race of the avatar 
 		//and the value for get is only correct after the avatar has been built- not while we are generating the actual settings before we call 'Load'
 		//If the want to set the Race when the avatar has built they should use ChangeRace. If they want to set it before they should use RacePreset
@@ -247,7 +247,7 @@ namespace UMACharacterSystem
 				return _wardrobeRecipes;
 			}
 		}
-		public List<UMAWardrobeCollection> WardrobeCollections
+		public Dictionary<string, UMAWardrobeCollection> WardrobeCollections
 		{
 			get
 			{
@@ -848,17 +848,21 @@ namespace UMACharacterSystem
 		{
 			if (!DynamicAssetLoader.Instance.downloadingAssetsContains(uwr.name))
 			{
-				//if this WardrobeCollection contains wardrobe sets add it to the _wardrobeCollections List otherwise remove it
+				//if this WardrobeCollection was added when it was downloading, checdk it actually has sets, otherwise it shouldn't be here- TODO check if this ever happens
 				if (uwr.wardrobeCollection.sets.Count == 0)
 				{
-					_wardrobeCollections.Remove(uwr);
+					if (_wardrobeCollections.ContainsValue(uwr))
+					{
+						_wardrobeCollections.Remove(uwr.wardrobeSlot);
+					}
 					return;
 				}
-
-				if (!_wardrobeCollections.Contains(uwr))
+				//If there is already a WardrobeCollection belonging to this group applied to the Avatar, unload and remove it
+				if (_wardrobeCollections.ContainsKey(uwr.wardrobeSlot))
 				{
-					_wardrobeCollections.Add(uwr);
+					UnloadWardrobeCollectionGroup(uwr.wardrobeSlot);
 				}
+				_wardrobeCollections.Add(uwr.wardrobeSlot, uwr);
 				var thisSettings = uwr.GetUniversalPackRecipe(this, context);
 				//if there is a wardrobe set for this race treat this like a 'FullOutfit'
 				if (thisSettings.wardrobeSet.Count > 0)
@@ -898,20 +902,21 @@ namespace UMACharacterSystem
 		{
 			WardrobeRecipes.Clear();
 		}
+
 		/// <summary>
-		/// Removes the wardrobe collection from the avatars WardrobeCollection list and clears any recipes it loaded into the avatars wardrobe slots
+		/// Removes the wardrobe collection of the given group from the avatars WardrobeCollection list and clears any recipes it loaded into the avatars wardrobe slots
 		/// </summary>
 		public void UnloadWardrobeCollection(string collectionToUnload)
 		{
-			for (int i = 0; i < _wardrobeCollections.Count; i++)
+			foreach (KeyValuePair<string, UMAWardrobeCollection> kp in _wardrobeCollections)
 			{
-				if (_wardrobeCollections[i].name == collectionToUnload)
+				if (kp.Value.name == collectionToUnload)
 				{
-					var thisSettings = _wardrobeCollections[i].GetUniversalPackRecipe(this, context);
+					var thisSettings = kp.Value.GetUniversalPackRecipe(this, context);
 					//if there is a wardrobe set for this race treat this like a 'FullOutfit'
 					if (thisSettings.wardrobeSet.Count > 0)
 					{
-						for (int si = 0; si < thisSettings.wardrobeSet.Count; i++)
+						for (int si = 0; si < thisSettings.wardrobeSet.Count; si++)
 						{
 							if (_wardrobeRecipes.ContainsKey(thisSettings.wardrobeSet[si].slot))
 							{
@@ -920,7 +925,34 @@ namespace UMACharacterSystem
 							}
 						}
 					}
-					_wardrobeCollections.RemoveAt(i);
+					_wardrobeCollections.Remove(kp.Value.wardrobeSlot);
+					break;
+				}
+			}
+		}
+		/// <summary>
+		/// Removes the wardrobe collection of the given group from the avatars WardrobeCollection list and clears any recipes it loaded into the avatars wardrobe slots
+		/// </summary>
+		public void UnloadWardrobeCollectionGroup(string collectionGroupToUnload)
+		{
+			foreach(KeyValuePair<string, UMAWardrobeCollection> kp in _wardrobeCollections)
+			{
+				if(kp.Key == collectionGroupToUnload)
+				{
+					var thisSettings = kp.Value.GetUniversalPackRecipe(this, context);
+					//if there is a wardrobe set for this race treat this like a 'FullOutfit'
+					if (thisSettings.wardrobeSet.Count > 0)
+					{
+						for (int si = 0; si < thisSettings.wardrobeSet.Count; si++)
+						{
+							if (_wardrobeRecipes.ContainsKey(thisSettings.wardrobeSet[si].slot))
+							{
+								if (_wardrobeRecipes[thisSettings.wardrobeSet[si].slot].name == thisSettings.wardrobeSet[si].recipe)
+									ClearSlot(thisSettings.wardrobeSet[si].slot);
+							}
+						}
+					}
+					_wardrobeCollections.Remove(collectionGroupToUnload);
 					break;
 				}
 			}
@@ -997,7 +1029,19 @@ namespace UMACharacterSystem
 			//now load any wardrobeCollections slots if they are not already taken
 			if (_wardrobeCollections.Count > 0)
 			{
-				for (int i = 0; i < _wardrobeCollections.Count; i++)
+				foreach(KeyValuePair<string, UMAWardrobeCollection> kp in _wardrobeCollections)
+				{
+					var collectionRecipes = kp.Value.wardrobeCollection[activeRace.name];
+					if (collectionRecipes != null && collectionRecipes.Count > 0)
+					{
+						foreach (WardrobeSettings ws in collectionRecipes)
+						{
+							if (!WardrobeRecipes.ContainsKey(ws.slot))
+								SetSlot(ws.slot, ws.recipe);
+						}
+					}
+				}
+				/*for (int i = 0; i < _wardrobeCollections.Count; i++)
 				{
 					var collectionRecipes = _wardrobeCollections[i].wardrobeCollection[activeRace.name];
 					if (collectionRecipes != null && collectionRecipes.Count > 0)
@@ -1008,7 +1052,7 @@ namespace UMACharacterSystem
 								SetSlot(ws.slot, ws.recipe);
 						}
 					}
-				}
+				}*/
 			}
 		}
 
@@ -1032,14 +1076,22 @@ namespace UMACharacterSystem
 							continue;
 						}
 						bool found = false;
-						for (int i = 0; i < _wardrobeCollections.Count; i++)
+						foreach (UMAWardrobeCollection uwr in _wardrobeCollections.Values)
+						{
+							if (uwr.name == ws.recipe)
+							{
+								found = true;
+								break;
+							}
+						}
+						/*for (int i = 0; i < _wardrobeCollections.Count; i++)
 						{
 							if (_wardrobeCollections[i].name == ws.recipe)
 							{
 								found = true;
 								break;
 							}
-						}
+						}*/
 						if (!found)
 						{
 							LoadWardrobeCollection(ws.recipe);
@@ -1062,7 +1114,27 @@ namespace UMACharacterSystem
 		{
 			if (_wardrobeCollections.Count > 0)
 			{
-				for (int i = 0; i < _wardrobeCollections.Count; i++)
+				foreach (UMAWardrobeCollection uwr in _wardrobeCollections.Values)
+				{
+					//dont do anything to collections that are downloading
+					if (DynamicAssetLoader.Instance.downloadingAssetsContains(uwr.name))
+						continue;
+					var collectionRecipes = uwr.wardrobeCollection[activeRace.name];
+					if (collectionRecipes != null)
+					{
+						foreach (WardrobeSettings ws in collectionRecipes)
+						{
+							if (_wardrobeRecipes.ContainsKey(ws.slot))
+							{
+								if (_wardrobeRecipes[ws.slot].name == ws.recipe)
+								{
+									ClearSlot(ws.slot);
+								}
+							}
+						}
+					}
+				}
+				/*for (int i = 0; i < _wardrobeCollections.Count; i++)
 				{
 					//dont do anything to collections that are downloading
 					if (DynamicAssetLoader.Instance.downloadingAssetsContains(_wardrobeCollections[i].name))
@@ -1081,7 +1153,7 @@ namespace UMACharacterSystem
 							}
 						}
 					}
-				}
+				}*/
 			}
 		}
 
@@ -1434,9 +1506,23 @@ namespace UMACharacterSystem
 					//set the expression set and reset all the values
 					thisExpressionPlayer.expressionSet = expressionSetToUse;
 					thisExpressionPlayer.Values = new float[thisExpressionPlayer.Values.Length];
-					thisExpressionPlayer.Initialize();
 				}
 			}
+		}
+		private void InitializeExpressionPlayer(UMAData umaData)
+		{
+			this.CharacterUpdated.RemoveListener(InitializeExpressionPlayer);
+			InitializeExpressionPlayer();
+        }
+
+		private void InitializeExpressionPlayer()
+		{
+			var thisExpressionPlayer = gameObject.GetComponent<UMAExpressionPlayer>();
+			if (thisExpressionPlayer == null)
+				return;
+			if (thisExpressionPlayer.expressionSet == null)
+				return;
+			thisExpressionPlayer.Initialize();
 		}
 
 		/// <summary>
@@ -2191,7 +2277,7 @@ namespace UMACharacterSystem
 			List<UMARecipeBase> Recipes = new List<UMARecipeBase>();
 			List<string> SuppressSlotsStrings = new List<string>();
 			//THIS WONT BE NEEDED WHEN COLLECTIONS ARE IN THEIR OWN LIST
-			var wardrobeRecipesToRender = new Dictionary<string, UMATextRecipe>();
+			/*var wardrobeRecipesToRender = new Dictionary<string, UMATextRecipe>();
 			if (WardrobeRecipes.Count > 0)
 			{
 				//Dont add the WardrobeCollection to the recipes to render- they doesn't render directly and will have already set their actual wardrobeRecipe slots SetSlot
@@ -2209,10 +2295,10 @@ namespace UMACharacterSystem
 						}
 					}
 				}
-			}
-			if ((wardrobeRecipesToRender.Count > 0) && activeRace.racedata != null)
+			}*/
+			if ((WardrobeRecipes.Count > 0) && activeRace.racedata != null)
 			{
-				foreach (UMATextRecipe utr in wardrobeRecipesToRender.Values)
+				foreach (UMATextRecipe utr in WardrobeRecipes.Values)
 				{
 					if (utr.suppressWardrobeSlots != null)
 					{
@@ -2246,9 +2332,9 @@ namespace UMACharacterSystem
 					{
 						continue;
 					}
-					if (wardrobeRecipesToRender.ContainsKey(ws))
+					if (WardrobeRecipes.ContainsKey(ws))
 					{
-						UMATextRecipe utr = wardrobeRecipesToRender[ws];
+						UMATextRecipe utr = WardrobeRecipes[ws];
 						//we can use the race data here to filter wardrobe slots
 						//if checking a backwards compatible race we also need to check the race has a compatible wardrobe slot, 
 						//since while a race can be backwards compatible it does not *have* to have all the same wardrobeslots as the race it is compatible with
@@ -2303,6 +2389,12 @@ namespace UMACharacterSystem
 			{
 				StartCoroutine(BuildCharacterWhenReady(RestoreDNA, prioritySlot, prioritySlotOver));
 				return;
+			}
+
+			//But the ExpressionPlayer needs to be Initialized AFTER Load
+			if (activeRace.racedata != null && !RestoreDNA)
+			{
+				this.CharacterUpdated.AddListener(InitializeExpressionPlayer);
 			}
 
 			// Add saved DNA
@@ -2460,7 +2552,8 @@ namespace UMACharacterSystem
             }
             */
 
-			if (gameObject.GetComponent<UMAExpressionPlayer>())
+			//Not needed now the Expression Player Initializes at the correct time
+			/*if (gameObject.GetComponent<UMAExpressionPlayer>())
 			{
 				gameObject.GetComponent<UMAExpressionPlayer>().expressionSet = null;
 				gameObject.GetComponent<UMAExpressionPlayer>().enabled = false;
@@ -2472,7 +2565,7 @@ namespace UMACharacterSystem
 					CharacterUpdated.RemoveListener(EnableExPlayer);//cant work out how to make it remove itself
 				};
 				CharacterUpdated.AddListener(EnableExPlayer);
-			}
+			}*/
 		}
 
 		public void AddAdditionalSerializedRecipes(UMARecipeBase[] umaAdditionalSerializedRecipes)
@@ -2614,16 +2707,26 @@ namespace UMACharacterSystem
 		{
 			EditorUMAContext = new GameObject();
 			EditorUMAContext.name = "UMAEditorContext";
-			//Make this GameObject not show up in the scene
-			EditorUMAContext.hideFlags = HideFlags.HideInHierarchy;
+			//Make this GameObject not show up in the scene or save
+			EditorUMAContext.hideFlags = HideFlags.HideInHierarchy | HideFlags.DontSave;
 			var thisUMAContext = EditorUMAContext.AddComponent<UMAContext>();
 			UMAContext.Instance = thisUMAContext;
 			//we need to add the libraries as components of the game object too
 			//and then set THOSE components to the umaContext component
 			thisUMAContext.raceLibrary = EditorUMAContext.AddComponent<DynamicRaceLibrary>();
+			(thisUMAContext.raceLibrary as DynamicRaceLibrary).dynamicallyAddFromResources = true;
+			(thisUMAContext.raceLibrary as DynamicRaceLibrary).dynamicallyAddFromAssetBundles = true;
 			thisUMAContext.overlayLibrary = EditorUMAContext.AddComponent<DynamicOverlayLibrary>();
+			(thisUMAContext.overlayLibrary as DynamicOverlayLibrary).dynamicallyAddFromResources = true;
+			(thisUMAContext.overlayLibrary as DynamicOverlayLibrary).dynamicallyAddFromAssetBundles = true;
 			thisUMAContext.slotLibrary = EditorUMAContext.AddComponent<DynamicSlotLibrary>();
+			(thisUMAContext.slotLibrary as DynamicSlotLibrary).dynamicallyAddFromResources = true;
+			(thisUMAContext.slotLibrary as DynamicSlotLibrary).dynamicallyAddFromAssetBundles = true;
 			thisUMAContext.dynamicCharacterSystem = EditorUMAContext.AddComponent<UMACharacterSystem.DynamicCharacterSystem>();
+			(thisUMAContext.dynamicCharacterSystem as DynamicCharacterSystem).dynamicallyAddFromResources = true;
+			(thisUMAContext.dynamicCharacterSystem as DynamicCharacterSystem).dynamicallyAddFromAssetBundles = true;
+			var thisDAL = EditorUMAContext.AddComponent<DynamicAssetLoader>();
+			DynamicAssetLoader.Instance = thisDAL;
 			//add an event to EditorApplication so that this context gets destroyed when this game object is no longer being inspected
 			EditorApplication.update -= CheckEditorContextNeeded;
 			EditorApplication.update += CheckEditorContextNeeded;
@@ -2688,13 +2791,13 @@ namespace UMACharacterSystem
 			}
 			_wardrobeRecipes = newWardrobeRecipes;
 			//if there was a wardrobe collection in the downloaded assets and its contents have not been added yet add them- if the slots are empty
-			List<UMAWardrobeCollection> newWardrobeCollections = new List<UMAWardrobeCollection>();
 			if (_wardrobeCollections.Count > 0)
 			{
-				for (int i = 0; i < _wardrobeCollections.Count; i++)
+				Dictionary<string, UMAWardrobeCollection> newWardrobeCollections = new Dictionary<string, UMAWardrobeCollection>();
+				foreach(UMAWardrobeCollection uwr in _wardrobeCollections.Values)
 				{
-					newWardrobeCollections.Add((thisDCS.GetRecipe(_wardrobeCollections[i].name, false) as UMAWardrobeCollection));
-					var collectionRecipes = newWardrobeCollections[i].wardrobeCollection[activeRace.name];
+					newWardrobeCollections.Add(uwr.wardrobeSlot, (thisDCS.GetRecipe(uwr.name, false) as UMAWardrobeCollection));
+					var collectionRecipes = newWardrobeCollections[uwr.wardrobeSlot].wardrobeCollection[activeRace.name];
 					if (collectionRecipes != null && collectionRecipes.Count > 0)
 					{
 						foreach (WardrobeSettings ws in collectionRecipes)
@@ -2704,28 +2807,8 @@ namespace UMACharacterSystem
 						}
 					}
 				}
+				_wardrobeCollections = newWardrobeCollections;
 			}
-			_wardrobeCollections = newWardrobeCollections;
-			/*if (_wardrobeRecipes.ContainsKey("WardrobeCollection"))
-            {
-                if (_wardrobeRecipes["WardrobeCollection"].GetType() == typeof(UMAWardrobeCollection))
-                {
-                    bool addCollection = false;
-                    var collectionRecipes = (WardrobeRecipes["WardrobeCollection"] as UMAWardrobeCollection).wardrobeCollection[activeRace.name];
-                    if (collectionRecipes != null)
-                    {
-                        foreach (WardrobeSettings ws in collectionRecipes)
-                        {
-                            if (!WardrobeRecipes.ContainsKey(ws.slot))
-                                addCollection = true;
-                            else if (WardrobeRecipes[ws.slot].name != ws.recipe)
-                                addCollection = true;
-                        }
-                    }
-                    if (addCollection)
-                        SetSlot(_wardrobeRecipes["WardrobeCollection"]);
-                }
-            }*/
 		}
 
 		IEnumerator UpdateAfterDownloads()

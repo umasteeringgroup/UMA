@@ -11,7 +11,7 @@ public class DynamicRaceLibrary : RaceLibrary
 {
 
 	//extra fields for Dynamic Version
-	public bool dynamicallyAddFromResources;
+	public bool dynamicallyAddFromResources = true;
 	[Tooltip("Limit the Global Library search to the following folders (no starting slash and seperate multiple entries with a comma)")]
 	public string resourcesFolderPath = "";
 	public bool dynamicallyAddFromAssetBundles;
@@ -128,12 +128,6 @@ public class DynamicRaceLibrary : RaceLibrary
 			return;
 
 #endif
-#if UNITY_EDITOR
-		//if we are in the editor and the application is not playing (i.e. we are editing recipes) just load all races
-		if(!Application.isPlaying)
-		GetAllAssetsFromAssetDB();
-		else
-#endif
 		if (DynamicAssetLoader.Instance != null)
 			DynamicAssetLoader.Instance.AddAssets<RaceData>(ref assetBundlesUsedDict, dynamicallyAddFromResources, dynamicallyAddFromAssetBundles, downloadAssets, assetBundleNamesToSearch, resourcesFolderPath, raceHash, "", AddRaces);
 
@@ -146,31 +140,8 @@ public class DynamicRaceLibrary : RaceLibrary
 
 	public void UpdateDynamicRaceLibrary(string raceName)
 	{
-#if UNITY_EDITOR
-		//if we are in the editor and the application is not playing (i.e. we are editing recipes) just load all races
-		if (!Application.isPlaying /*&& raceName == ""*/)
-			GetAllAssetsFromAssetDB();
-		else
-#endif
 			DynamicAssetLoader.Instance.AddAssets<RaceData>(ref assetBundlesUsedDict, dynamicallyAddFromResources, dynamicallyAddFromAssetBundles, downloadAssetsEnabled, assetBundleNamesToSearch, resourcesFolderPath, null, raceName, AddRaces);
 	}
-
-#if UNITY_EDITOR
-	public void GetAllAssetsFromAssetDB()
-	{
-		var allRaces = new List<RaceData>();
-		var allRaceDataGUIDs = AssetDatabase.FindAssets("t:RaceData");
-		for (int i = 0; i < allRaceDataGUIDs.Length; i++)
-		{
-			var thisRDPath = AssetDatabase.GUIDToAssetPath(allRaceDataGUIDs[i]);
-			var thisRD = AssetDatabase.LoadAssetAtPath<RaceData>(thisRDPath);
-			allRaces.Add(thisRD);
-		}
-		AddRaces(allRaces.ToArray());
-		//This just makes it super slow *every* time a recipe is loaded
-		//Resources.UnloadUnusedAssets();
-	}
-#endif
 
 #pragma warning disable 618
 	private void AddRaces(RaceData[] races)
