@@ -5,17 +5,17 @@ GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 5
+  serializedVersion: 4
   m_Component:
-  - component: {fileID: 422758}
-  - component: {fileID: 11432240}
+  - 4: {fileID: 422758}
+  - 114: {fileID: 11432240}
   m_Layer: 0
   m_Name: AssetIndexer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &422758
 Transform:
   m_ObjectHideFlags: 1
@@ -25,10 +25,10 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 3.4409695, y: 0.96156013, z: 2.617393}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &11432240
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -428,6 +428,13 @@ MonoBehaviour:
     _Name: PhysicsHD
     _Item: {fileID: 11400000, guid: bc5ef2dcc0274644bb1733e78ad1514d, type: 2}
     _Path: Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/Physics/HD/PhysicsHDSlot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: ClothRobe
+    _Item: {fileID: 11400000, guid: 6b8d84d3d68be9146899e780a8c296fb, type: 2}
+    _Path: Assets/UMA/Examples/Physics Examples/Assets/Slots/ClothRobe/ClothRobe_Slot.asset
     IsResource: 0
     IsAssetBundle: 0
   - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
@@ -1007,6 +1014,13 @@ MonoBehaviour:
     _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Hair/TheRebel.asset
     IsResource: 0
     IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: ClothRobe
+    _Item: {fileID: 11400000, guid: e06be47adf242924c9fff2c65c65ad5c, type: 2}
+    _Path: Assets/UMA/Examples/Physics Examples/Assets/Overlays/ClothRobeOverlay.asset
+    IsResource: 0
+    IsAssetBundle: 0
   - _QualifiedName: UMA.RaceData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
     _Name: HumanFemaleDCS
@@ -1384,6 +1398,13 @@ MonoBehaviour:
     _Name: BlendShapeRecipe
     _Item: {fileID: 11400000, guid: 79f076bff9f0ea840abbeda53d42de10, type: 2}
     _Path: Assets/UMA/Examples/Blendshape Examples/Assets/Recipe/BlendShapeRecipe.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: ClothRobeRecipe
+    _Item: {fileID: 11400000, guid: be7c02d6f94052348a3fc382a4ff26dc, type: 2}
+    _Path: Assets/UMA/Examples/Physics Examples/Assets/Recipe/ClothRobeRecipe.asset
     IsResource: 0
     IsAssetBundle: 0
   - _QualifiedName: UMA.DynamicUMADnaAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,

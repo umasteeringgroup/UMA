@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ddb1fd334280b740a705893f5ac019c, type: 3}
+  m_Name: UMAClothPropertiesExample
+  m_EditorClassIdentifier: 
+  bendingStiffness: 0.2
+  collisionMassScale: 0
+  damping: 0.2
+  friction: 0
+  sleepThreshold: 0
+  stretchingStiffness: 0.9
+  useGravity: 1
+  useVirtualParticles: 0
+  worldAccelerationScale: 0
+  worldVelocityScale: 0
