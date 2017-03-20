@@ -65,16 +65,6 @@ namespace UMA.PhysicsAvatar
 			}
 		}
 
-		/*void OnCollisionEnter(Collision col)
-		{
-			Debug.Log ("OnCollisionEnter");
-		}*/
-
-		/*void OnTriggerEnter(Collider other )
-		{
-			Debug.Log ("OnTriggerEnter");
-		}*/
-
 		public void CreatePhysicsObjects( List<UMAPhysicsElement> elements )
 		{
 			if( _umaData == null )
@@ -119,20 +109,17 @@ namespace UMA.PhysicsAvatar
 							BoxCollider boxCollider = bone.AddComponent<BoxCollider> ();
 							boxCollider.center = collider.colliderCentre;
 							boxCollider.size = collider.boxDimensions;
-							//boxCollider.isTrigger = true;
 							_BoxColliders.Add (boxCollider);
 						} else if (collider.colliderType == ColliderDefinition.ColliderType.Sphere) {
 							SphereCollider sphereCollider = bone.AddComponent<SphereCollider> ();
 							sphereCollider.center = collider.colliderCentre;
 							sphereCollider.radius = collider.sphereRadius;
-							//sphereCollider.isTrigger = true;
 							_SphereColliders.Add (sphereCollider);
 						} else if (collider.colliderType == ColliderDefinition.ColliderType.Capsule) {
 							CapsuleCollider capsuleCollider = bone.AddComponent<CapsuleCollider> ();
 							capsuleCollider.center = collider.colliderCentre;
 							capsuleCollider.radius = collider.capsuleRadius;
 							capsuleCollider.height = collider.capsuleHeight;
-							//capsuleCollider.isTrigger = true;
 							switch (collider.capsuleAlignment) {
 							case(ColliderDefinition.Direction.X):
 								capsuleCollider.direction = 0;
@@ -248,6 +235,7 @@ namespace UMA.PhysicsAvatar
 			// iterate through all rigidbodies and switch kinematic mode on/off
 			//Set all rigidbodies.isKinematic to opposite of ragdolled state
 			SetAllKinematic( !ragdollState );
+			SetBodyColliders( !ragdollState );
 				
 			// switch animator on/off
 			GetComponent<Animator>().enabled = !ragdollState;	
@@ -278,20 +266,29 @@ namespace UMA.PhysicsAvatar
 			foreach (Rigidbody rigidbody in _rigidbodies)
 			{
 				rigidbody.isKinematic = flag;
-				rigidbody.detectCollisions = !flag;
+				//rigidbody.detectCollisions = !flag;
 			}
 		}
 
 		private void SetBodyColliders(bool flag)
 		{
 			foreach (BoxCollider collider in _BoxColliders) 
-				collider.enabled = flag;
+			{
+				collider.isTrigger = flag;
+				//collider.enabled = flag;
+			}
 
-			foreach (SphereCollider collider in _SphereColliders)
-				collider.enabled = flag;
+			foreach (SphereCollider collider in _SphereColliders) 
+			{
+				collider.isTrigger = flag;
+				//collider.enabled = flag;
+			}
 			
-			foreach (CapsuleCollider collider in _CapsuleColliders)
-				collider.enabled = flag;
+			foreach (CapsuleCollider collider in _CapsuleColliders) 
+			{
+				collider.isTrigger = flag;
+				//collider.enabled = flag;
+			}
 		}
 
 		private void SetUpdateWhenOffscreen(bool flag)
