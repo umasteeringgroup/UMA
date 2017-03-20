@@ -18,7 +18,7 @@ public partial class UMAWardrobeCollection : UMATextRecipe {
 	public UMAWardrobeCollection()
 	{
 		recipeType = "WardrobeCollection";
-		wardrobeSlot = "WardrobeCollection";
+		wardrobeSlot = "FullOutfit";
 	}
 
 	#endregion

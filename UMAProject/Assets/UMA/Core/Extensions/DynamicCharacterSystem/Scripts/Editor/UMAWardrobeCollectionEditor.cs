@@ -195,7 +195,7 @@ namespace UMAEditor
 				{
 					GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
 
-					EditorGUILayout.HelpBox("Wardrobe Sets are added for each 'Compatible Race' assigned above. They can be assigned to an avatar of that race in its 'FullOutfit' slot. 'SharedColors' in this section will be applied to the Avatar when the 'FullOutfit' recipe is applied to the character", MessageType.Info);
+					EditorGUILayout.HelpBox("Wardrobe Sets are added for each 'Compatible Race' assigned above. 'SharedColors' in this section are derived from all the recipes assigned in the set and are will be applied to the Avatar when the wardrobe sets recipes are added.", MessageType.Info);
 					if (_compatibleRaces.Count > 0)
 					{
 						//dont show shared colors unless there are 'FullOutfits' to apply them to
@@ -415,6 +415,9 @@ namespace UMAEditor
 			PreRecipeGUI(ref doUpdate);
 
 			FieldInfo CompatibleRacesField = TargetType.GetField("compatibleRaces", BindingFlags.Public | BindingFlags.Instance);
+			//WardrobeCollections use the WardrobeSlot field to allow the user to define a Collection Group
+			FieldInfo WardrobeSlotField = TargetType.GetField("wardrobeSlot", BindingFlags.Public | BindingFlags.Instance);
+			string wardrobeSlot = (string)WardrobeSlotField.GetValue(target);
 			List<string> compatibleRaces = (List<string>)CompatibleRacesField.GetValue(target);
 		
 			//FieldInfos
@@ -439,6 +442,16 @@ namespace UMAEditor
 			//CompatibleRaces drop area
 			if (DrawCompatibleRacesUI(TargetType))
 				doUpdate = true;
+
+			EditorGUILayout.Space();
+			//Draw the Wardrobe slot field as a WardrobeCollection Group text field.
+			EditorGUILayout.HelpBox("When a collection is placed on an avatar it replaces any other collections belonging to this group and unloads that collections recipes", MessageType.Info);
+            var newWardrobeSlot = EditorGUILayout.TextField("Collection Group", wardrobeSlot);
+			if(newWardrobeSlot != wardrobeSlot)
+			{
+				WardrobeSlotField.SetValue(target, newWardrobeSlot);
+				doUpdate = true;
+			}
 
 			EditorGUILayout.Space();
 				

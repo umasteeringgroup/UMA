@@ -26,6 +26,9 @@ namespace UMACharacterSystem
 		//Again for RecipeEditor to be able to get usable info
 		public virtual List<string> GetRecipeNamesForRaceSlot(string race, string slot) { return null; }
 
+		//Again for RecipeEditor to be able to get usable info
+		public virtual List<UMARecipeBase> GetRecipesForRaceSlot(string race, string slot) { return null; }
+
 		//Again for RecipeEditor to get info
 		public virtual bool CheckRecipeAvailability(string recipeName) { return true; }
     }
