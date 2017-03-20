@@ -478,7 +478,7 @@ public abstract class UMAPackedRecipeBase : UMARecipeBase
 					PackedOverlayDataV2 tempPackedOverlay = new PackedOverlayDataV2();
 
 					OverlayData overlayData = umaRecipe.slotDataList[i].GetOverlay(overlayIdx);
-					tempPackedOverlay.id = overlayData.asset.overlayName;
+					tempPackedOverlay.id = overlayData.overlayName;
 					tempPackedOverlay.rect = new int[4];
 					tempPackedOverlay.rect[0] = Mathf.FloorToInt(overlayData.rect.x);
 					tempPackedOverlay.rect[1] = Mathf.FloorToInt(overlayData.rect.y);

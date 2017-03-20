@@ -89,12 +89,14 @@ namespace UMA
 			for (int i = 0; i < slots.Length; i++)
 			{
 				var slot = slots[i];
-				if (slot == null) continue;
-				if (slot.asset.material != null && slot.GetOverlay(0) != null)
+				if (slot == null)
+					continue;
+				
+				if ((slot.asset.material != null) && (slot.GetOverlay(0) != null))
 				{
 					if (!slot.asset.material.RequireSeperateRenderer)
 					{
-						// at least one slot that doesn't require a seperate renderer, so we reserve renderer 0 for those.
+						// At least one slot that doesn't require a seperate renderer, so we reserve renderer 0 for those.
 						rendererCount = 1;
 						break;
 					}
@@ -103,69 +105,79 @@ namespace UMA
 
             for (int i = 0; i < slots.Length; i++)
             {
-                var slot = slots[i];
-                if (slot == null) continue;
-                if (slot.asset.material != null && slot.GetOverlay(0) != null)
+                SlotData slot = slots[i];
+                if (slot == null)
+					continue;
+
+				OverlayData overlay0 = slot.GetOverlay(0);
+				if ((slot.asset.material != null) && (overlay0 != null))
                 {
-                    var overlayList = slot.GetOverlayList();
+					List<OverlayData> overlayList = slot.GetOverlayList();
                     UMAData.GeneratedMaterial generatedMaterial;
                     if (!generatedMaterialLookup.TryGetValue(overlayList, out generatedMaterial))
                     {
-                        generatedMaterial = FindOrCreateGeneratedMaterial(slots[i].asset.material);
+						generatedMaterial = FindOrCreateGeneratedMaterial(slot.asset.material);
                         generatedMaterialLookup.Add(overlayList, generatedMaterial);
                     }
-                    var tempMaterialDefinition = new UMAData.MaterialFragment();
-					tempMaterialDefinition.baseOverlay = new UMAData.textureData();
-					var overlayAsset = slots[i].GetOverlay(0).asset;
-					tempMaterialDefinition.baseOverlay.textureList = overlayAsset.textureList;
-					tempMaterialDefinition.baseOverlay.alphaTexture = overlayAsset.GetAlphaMask();
-					tempMaterialDefinition.baseOverlay.overlayType = overlayAsset.overlayType;
-					tempMaterialDefinition.size = tempMaterialDefinition.baseOverlay.textureList[0].width * tempMaterialDefinition.baseOverlay.textureList[0].height;
-                    tempMaterialDefinition.baseColor = slots[i].GetOverlay(0).colorData.color;
-                    tempMaterialDefinition.umaMaterial = slots[i].asset.material;
-                    int overlays = 0;
-                    for (int overlayCounter = 0; overlayCounter < slots[i].OverlayCount; overlayCounter++)
+
+					int validOverlayCount = 0;
+					for (int j = 0; j < slot.OverlayCount; j++)
                     {
-                        var overlay = slots[i].GetOverlay(overlayCounter);
+						var overlay = slot.GetOverlay(j);
                         if (overlay != null)
                         {
-                            overlays++;
+                            validOverlayCount++;
+							if (overlay.isProcedural)
+								overlay.GenerateProceduralTextures();
                         }
                     }
 
-                    tempMaterialDefinition.overlays = new UMAData.textureData[overlays - 1];
-                    tempMaterialDefinition.overlayColors = new Color32[overlays - 1];
-                    tempMaterialDefinition.rects = new Rect[overlays - 1];
-                    tempMaterialDefinition.overlayData = new OverlayData[overlays];
-                    tempMaterialDefinition.channelMask = new Color[overlays][];
-                    tempMaterialDefinition.channelAdditiveMask = new Color[overlays][];
-                    tempMaterialDefinition.overlayData[0] = slots[i].GetOverlay(0);
-                    tempMaterialDefinition.channelMask[0] = slots[i].GetOverlay(0).colorData.channelMask;
-                    tempMaterialDefinition.channelAdditiveMask[0] = slots[i].GetOverlay(0).colorData.channelAdditiveMask;
-                    tempMaterialDefinition.slotData = slots[i];
+					UMAData.MaterialFragment tempMaterialDefinition = new UMAData.MaterialFragment();
+					tempMaterialDefinition.baseOverlay = new UMAData.textureData();
+					tempMaterialDefinition.baseOverlay.textureList = overlay0.textureArray;
+					tempMaterialDefinition.baseOverlay.alphaTexture = overlay0.alphaMask;
+					tempMaterialDefinition.baseOverlay.overlayType = overlay0.overlayType;
+
+					tempMaterialDefinition.umaMaterial = slot.asset.material;
+					tempMaterialDefinition.baseColor = overlay0.colorData.color;
+					tempMaterialDefinition.size = tempMaterialDefinition.baseOverlay.alphaTexture.width * tempMaterialDefinition.baseOverlay.alphaTexture.height;
+
+                    tempMaterialDefinition.overlays = new UMAData.textureData[validOverlayCount - 1];
+                    tempMaterialDefinition.overlayColors = new Color32[validOverlayCount - 1];
+                    tempMaterialDefinition.rects = new Rect[validOverlayCount - 1];
+                    tempMaterialDefinition.overlayData = new OverlayData[validOverlayCount];
+                    tempMaterialDefinition.channelMask = new Color[validOverlayCount][];
+                    tempMaterialDefinition.channelAdditiveMask = new Color[validOverlayCount][];
+					tempMaterialDefinition.overlayData[0] = slot.GetOverlay(0);
+					tempMaterialDefinition.channelMask[0] = slot.GetOverlay(0).colorData.channelMask;
+					tempMaterialDefinition.channelAdditiveMask[0] = slot.GetOverlay(0).colorData.channelAdditiveMask;
+					tempMaterialDefinition.slotData = slot;
 
                     int overlayID = 0;
-                    for (int overlayCounter = 0; overlayCounter < slots[i].OverlayCount - 1; overlayCounter++)
+					for (int j = 1; j < slot.OverlayCount; j++)
                     {
-                        var overlay = slots[i].GetOverlay(overlayCounter + 1);
-                        if (overlay == null) continue;
+						OverlayData overlay = slot.GetOverlay(j);
+                        if (overlay == null)
+							continue;
+
+						tempMaterialDefinition.rects[overlayID] = overlay.rect;
                         tempMaterialDefinition.overlays[overlayID] = new UMAData.textureData();
-                        tempMaterialDefinition.rects[overlayID] = overlay.rect;
-                        tempMaterialDefinition.overlays[overlayID].textureList = overlay.asset.textureList;
-                        tempMaterialDefinition.overlayColors[overlayID] = overlay.colorData.color;
-						tempMaterialDefinition.overlays[overlayID].alphaTexture = overlay.asset.GetAlphaMask();
-                        tempMaterialDefinition.channelMask[overlayID + 1] = overlay.colorData.channelMask;
-						tempMaterialDefinition.overlays[overlayID].overlayType = overlay.asset.overlayType;
-                        tempMaterialDefinition.channelAdditiveMask[overlayID + 1] = overlay.colorData.channelAdditiveMask;
-                        tempMaterialDefinition.overlayData[overlayID + 1] = overlay;
-                        overlayID++;
+						tempMaterialDefinition.overlays[overlayID].textureList = overlay.textureArray;
+						tempMaterialDefinition.overlays[overlayID].alphaTexture = overlay.alphaMask;
+						tempMaterialDefinition.overlays[overlayID].overlayType = overlay.overlayType;
+						tempMaterialDefinition.overlayColors[overlayID] = overlay.colorData.color;
+
+						overlayID++;
+						tempMaterialDefinition.overlayData[overlayID] = overlay;
+                        tempMaterialDefinition.channelMask[overlayID] = overlay.colorData.channelMask;
+                        tempMaterialDefinition.channelAdditiveMask[overlayID] = overlay.colorData.channelAdditiveMask;
                     }
 
-                    tempMaterialDefinition.overlayList = slots[i].GetOverlayList();
+					tempMaterialDefinition.overlayList = overlayList;
                     tempMaterialDefinition.isRectShared = false;
                     for (int j = 0; j < generatedMaterial.materialFragments.Count; j++)
                     {
-                        if (generatedMaterial.materialFragments[j].overlayList == tempMaterialDefinition.overlayList)
+						if (tempMaterialDefinition.overlayList == generatedMaterial.materialFragments[j].overlayList)
                         {
                             tempMaterialDefinition.isRectShared = true;
                             tempMaterialDefinition.rectFragment = generatedMaterial.materialFragments[j];
@@ -199,6 +211,22 @@ namespace UMA
 
             CleanBackUpTextures();
             UpdateUV();
+
+			// HACK - is this the right place?
+			SlotData[] slots = umaData.umaRecipe.slotDataList;
+			for (int i = 0; i < slots.Length; i++)
+			{
+				var slot = slots[i];
+				if (slot == null)
+					continue;
+
+				for (int j = 1; j < slot.OverlayCount; j++)
+				{
+					OverlayData overlay = slot.GetOverlay(j);
+					if ((overlay != null) && (overlay.isProcedural))
+						overlay.ReleaseProceduralTextures();
+				}
+			}
 
             if (updateMaterialList)
             {
@@ -279,8 +307,7 @@ namespace UMA
                 }
             }
         }
-
-
+			
         private bool CalculateRects(UMAData.GeneratedMaterial material)
         {
             Rect nullRect = new Rect(0, 0, 0, 0);

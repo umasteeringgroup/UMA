@@ -81,27 +81,31 @@ public class OverlayLibraryEditor : Editor {
 		
 	}
 	
-	private void ScaleDownTextures(){
+	private void ScaleDownTextures()
+	{
 
 		OverlayDataAsset[] overlayElementList = GetOverlayDataArray();
 		string path;
 		
-		
-		for(int i = 0; i < overlayElementList.Length; i++){
-			if(overlayElementList[i] != null){
+		for(int i = 0; i < overlayElementList.Length; i++)
+		{
+			if ((overlayElementList[i] != null) && (!overlayElementList[i].material.IsProcedural()))
+			{
 				Rect tempRect = overlayElementList[i].rect;
-				overlayElementList[i].rect = new Rect(tempRect.x*0.5f,tempRect.y*0.5f,tempRect.width*0.5f,tempRect.height*0.5f);				
+				overlayElementList[i].rect = new Rect(tempRect.x * 0.5f, tempRect.y * 0.5f, tempRect.width * 0.5f, tempRect.height * 0.5f);				
 				
 				EditorUtility.SetDirty(overlayElementList[i]);
 				
-				for(int textureID = 0; textureID < overlayElementList[i].textureList.Length; textureID++){
-					if(overlayElementList[i].textureList[textureID]){
-						path = AssetDatabase.GetAssetPath(overlayElementList[i].textureList[textureID]);
+				for(int j = 0; j < overlayElementList[i].textureCount; j++)
+				{
+					if(overlayElementList[i].textureList[j])
+					{
+						path = AssetDatabase.GetAssetPath(overlayElementList[i].textureList[j]);
 						TextureImporter textureImporter = AssetImporter.GetAtPath(path) as TextureImporter;
 						 
-						textureImporter.maxTextureSize = (int)(textureImporter.maxTextureSize*0.5f);
+						textureImporter.maxTextureSize = (int)(textureImporter.maxTextureSize * 0.5f);
 												
-						AssetDatabase.WriteImportSettingsIfDirty (path);
+						AssetDatabase.WriteImportSettingsIfDirty(path);
     					AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
 					}
 				}
