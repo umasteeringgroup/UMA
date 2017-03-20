@@ -8,7 +8,7 @@ namespace UMA.PhysicsAvatar
 {
 	public class UMAPhysicsAvatar : MonoBehaviour {
 
-		// property to activate/deactivate ragdoll mode (exposed in editor by script "RagdollPlayer.cs")
+		// property to activate/deactivate ragdoll mode (exposed in editor by script "UMAPhysicsAvatarEditor.cs")
 		public bool ragdolled
 		{
 			get	{ return _ragdolled; }
