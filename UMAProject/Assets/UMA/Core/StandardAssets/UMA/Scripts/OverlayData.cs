@@ -94,7 +94,7 @@ namespace UMA
 		[System.NonSerialized]
 		public OverlayColorData colorData;
 
-		public class OverlaySubstanceData
+		public class OverlayProceduralData
 		{
 			public string name;
 			public ProceduralPropertyType type;
@@ -106,6 +106,7 @@ namespace UMA
 			public Texture2D textureValue;
 			public Vector4 vectorValue;
 		}
+		public OverlayProceduralData[] proceduralData;
 
 		/// <summary>
 		/// Deep copy of the OverlayData.
@@ -137,7 +138,7 @@ namespace UMA
 			if (asset.material == null)
 			{
 				Debug.LogError("Error: Materials are missing on Asset: " + asset.name + ". Have you imported all packages?");
-				this.colorData = new OverlayColorData(3); // ?? Don't know. Just create it for standard PBR material size. 
+				this.colorData = new OverlayColorData(3); // Don't know. Just create it for standard PBR material size. 
 			}
 			else
 			{
@@ -172,7 +173,7 @@ namespace UMA
 			}
 			else
 			{
-				// Assume that procedural materials can always generate all channels
+				// HACK - Assume that procedural materials can always generate all channels
 				if (this.isProcedural)
 				{
 				}
@@ -275,37 +276,39 @@ namespace UMA
 //			{
 //				Debug.Log(properties[i].name + " / " + properties[i].label + " / " + properties[i].type);
 //			}
+//			proceduralData = new OverlayProceduralData[1];
+//			proceduralData[0] = new OverlayProceduralData();
+//			proceduralData[0].name = "basecolor_color";
+//			proceduralData[0].type = ProceduralPropertyType.Color3;
+//			proceduralData[0].colorValue = Color.yellow;
 
-//			for (int i = 0; i < OverlaySubstanceDataCount; i++)
-//			{
-//			OverlaySubstanceData substanceData;
-//			if (material.HasProceduralProperty(substanceData.name)) // HACK - redundant? can we have bad OverlaySubstanceData?
-//			{
-//			switch (substanceData.type) {
-//				case ProceduralPropertyType.Boolean:
-//					material.SetProceduralBoolean(substanceData.name, substanceData.booleanValue);
-//					break;
-//				case ProceduralPropertyType.Color3:
-//				case ProceduralPropertyType.Color4:
-//						material.SetProceduralColor(substanceData.name, substanceData.colorValue);
-//					break;
-//				case ProceduralPropertyType.Enum:
-//						material.SetProceduralEnum(substanceData.name, substanceData.enumValue);
-//					break;
-//				case ProceduralPropertyType.Float:
-//						material.SetProceduralFloat(substanceData.name, substanceData.floatValue);
-//					break;
-//				case ProceduralPropertyType.Texture:
-//						material.SetProceduralTexture(substanceData.name, substanceData.textureValue);
-//					break;
-//				case ProceduralPropertyType.Vector2:
-//				case ProceduralPropertyType.Vector3:
-//				case ProceduralPropertyType.Vector4:
-//						material.SetProceduralVector(substanceData.name, substanceData.vectorValue);
-//					break;
-//			}
-//			}
-//			}
+			if (proceduralData != null) foreach (OverlayProceduralData data in proceduralData)
+			{
+				switch (data.type)
+				{
+					case ProceduralPropertyType.Boolean:
+						material.SetProceduralBoolean(data.name, data.booleanValue);
+						break;
+					case ProceduralPropertyType.Color3:
+					case ProceduralPropertyType.Color4:
+						material.SetProceduralColor(data.name, data.colorValue);
+						break;
+					case ProceduralPropertyType.Enum:
+						material.SetProceduralEnum(data.name, data.enumValue);
+						break;
+					case ProceduralPropertyType.Float:
+						material.SetProceduralFloat(data.name, data.floatValue);
+						break;
+					case ProceduralPropertyType.Texture:
+						material.SetProceduralTexture(data.name, data.textureValue);
+						break;
+					case ProceduralPropertyType.Vector2:
+					case ProceduralPropertyType.Vector3:
+					case ProceduralPropertyType.Vector4:
+						material.SetProceduralVector(data.name, data.vectorValue);
+						break;
+				}
+			}
 			material.RebuildTexturesImmediately();
 
 			int channelCount = asset.material.channels.Length;
