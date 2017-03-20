@@ -17,11 +17,16 @@ namespace UMA.PhysicsAvatar
 		// Variable to store ragdoll state
 		private bool _ragdolled = false;
 
+		[Tooltip("Set this to true if you know the player will use a capsule collider and rigidbody")]
 		public bool simplePlayerCollider = true;
+		[Tooltip("Set this to have your body collider act as triggers when not ragdolled")]
+		public bool enableColliderTriggers = false;
 
+		[Tooltip("Experimental, for blending animations with physics")]
 		[Range(0,1f)]
 		public float ragdollBlendAmount;
 
+		[Tooltip("Set this to snap the Avatar to the position of it's hip after ragdoll is finished")]
 		public bool UpdateTransformAfterRagdoll = true;
 
 		[Tooltip("Layer to set the ragdoll colliders on. See layer based collision")]
@@ -109,17 +114,20 @@ namespace UMA.PhysicsAvatar
 							BoxCollider boxCollider = bone.AddComponent<BoxCollider> ();
 							boxCollider.center = collider.colliderCentre;
 							boxCollider.size = collider.boxDimensions;
+							boxCollider.isTrigger = false; //Set initially to false;
 							_BoxColliders.Add (boxCollider);
 						} else if (collider.colliderType == ColliderDefinition.ColliderType.Sphere) {
 							SphereCollider sphereCollider = bone.AddComponent<SphereCollider> ();
 							sphereCollider.center = collider.colliderCentre;
 							sphereCollider.radius = collider.sphereRadius;
+							sphereCollider.isTrigger = false; //Set initially to false;
 							_SphereColliders.Add (sphereCollider);
 						} else if (collider.colliderType == ColliderDefinition.ColliderType.Capsule) {
 							CapsuleCollider capsuleCollider = bone.AddComponent<CapsuleCollider> ();
 							capsuleCollider.center = collider.colliderCentre;
 							capsuleCollider.radius = collider.capsuleRadius;
 							capsuleCollider.height = collider.capsuleHeight;
+							capsuleCollider.isTrigger = false; //Set initially to false;
 							switch (collider.capsuleAlignment) {
 							case(ColliderDefinition.Direction.X):
 								capsuleCollider.direction = 0;
@@ -235,10 +243,14 @@ namespace UMA.PhysicsAvatar
 			// iterate through all rigidbodies and switch kinematic mode on/off
 			//Set all rigidbodies.isKinematic to opposite of ragdolled state
 			SetAllKinematic( !ragdollState );
-			SetBodyColliders( !ragdollState );
+
+			if( enableColliderTriggers ) //Change the trigger state on collider if we enable this flag.
+				SetBodyColliders( !ragdollState );
 				
 			// switch animator on/off
-			GetComponent<Animator>().enabled = !ragdollState;	
+			Animator animator = GetComponent<Animator>();
+			if( animator != null )
+				animator.enabled = !ragdollState;	
 			// switch expression player (locks head if left on)
 			ExpressionPlayer expressionPlayer = GetComponent<ExpressionPlayer>();
 			if( expressionPlayer != null )
