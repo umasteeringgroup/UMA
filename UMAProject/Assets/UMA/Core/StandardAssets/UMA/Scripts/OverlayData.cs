@@ -20,6 +20,8 @@ namespace UMA
 
 		protected ProceduralTexture[] generatedTextures = null;
 
+		const string proceduralSizeProperty = "$outputsize";
+
 		// Properties dependant on the underlying asset.
 		public bool isProcedural { get { return asset.material.IsProcedural(); } }
 		public string overlayName { get { return asset.overlayName; } }
@@ -28,6 +30,9 @@ namespace UMA
 		{
 			get
 			{
+				if (asset.alphaMask != null)
+					return asset.alphaMask;
+				
 				if (this.isProcedural)
 				{
 					if ((generatedTextures == null) || (generatedTextures.Length != asset.textureCount))
@@ -39,7 +44,7 @@ namespace UMA
 					return generatedTextures[0];
 				}
 
-				return asset.GetAlphaMask();
+				return asset.textureList[0];
 			}
 		}
 		public Texture[] textureArray
@@ -58,6 +63,28 @@ namespace UMA
 				}
 
 				return asset.textureList;
+			}
+		}
+		public int pixelCount
+		{
+			get
+			{
+				if (this.isProcedural)
+				{
+					ProceduralMaterial material = asset.material.material as ProceduralMaterial;
+					if (material.HasProceduralProperty(proceduralSizeProperty))
+					{
+						Vector4 size = material.GetProceduralVector(proceduralSizeProperty);
+						return (2 << Mathf.FloorToInt(size.x)) * (2 << Mathf.FloorToInt(size.y));
+					}
+					else
+					{
+						Debug.LogWarning("Unable to determine size for procedural material " + material.name);
+						return 0;
+					}
+				}
+
+				return asset.textureList[0].width * asset.textureList[0].height;
 			}
 		}
 
@@ -243,6 +270,12 @@ namespace UMA
 				return;
 
 			ProceduralMaterial material = asset.material.material as ProceduralMaterial;
+//			ProceduralPropertyDescription[] properties = material.GetProceduralPropertyDescriptions();
+//			for (int i = 0; i < properties.Length; i++)
+//			{
+//				Debug.Log(properties[i].name + " / " + properties[i].label + " / " + properties[i].type);
+//			}
+
 //			for (int i = 0; i < OverlaySubstanceDataCount; i++)
 //			{
 //			OverlaySubstanceData substanceData;

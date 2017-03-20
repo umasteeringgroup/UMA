@@ -140,7 +140,7 @@ namespace UMA
 
 					tempMaterialDefinition.umaMaterial = slot.asset.material;
 					tempMaterialDefinition.baseColor = overlay0.colorData.color;
-					tempMaterialDefinition.size = tempMaterialDefinition.baseOverlay.alphaTexture.width * tempMaterialDefinition.baseOverlay.alphaTexture.height;
+					tempMaterialDefinition.size = overlay0.pixelCount;
 
                     tempMaterialDefinition.overlays = new UMAData.textureData[validOverlayCount - 1];
                     tempMaterialDefinition.overlayColors = new Color32[validOverlayCount - 1];
