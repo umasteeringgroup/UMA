@@ -146,6 +146,11 @@ namespace UMA
 			}
 			this.asset = asset;
 			this.rect = asset.rect;
+
+			if (this.isProcedural)
+			{
+				this.proceduralData = new OverlayProceduralData[0];
+			}
 		}
 
 		/// <summary>
@@ -309,7 +314,10 @@ namespace UMA
 						break;
 				}
 			}
+//			ProceduralProcessorUsage usage = ProceduralMaterial.substanceProcessorUsage;
+//			ProceduralMaterial.substanceProcessorUsage = ProceduralProcessorUsage.All;
 			material.RebuildTexturesImmediately();
+//			ProceduralMaterial.substanceProcessorUsage = usage;
 
 			int channelCount = asset.material.channels.Length;
 			generatedTextures = new ProceduralTexture[channelCount];

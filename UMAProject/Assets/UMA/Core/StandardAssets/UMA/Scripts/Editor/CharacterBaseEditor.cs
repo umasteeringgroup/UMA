@@ -982,6 +982,7 @@ namespace UMAEditor
 		private readonly OverlayData _overlayData;
 		private ColorEditor[] _colors;
 		private readonly TextureEditor[] _textures;
+		private readonly ProceduralPropertyEditor[] _properties;
 		private bool _foldout = true;
 
 		public bool Delete { get; private set; }
@@ -1010,10 +1011,23 @@ namespace UMAEditor
 				}
 			}
 
-			_textures = new TextureEditor[overlayData.asset.textureList.Length];
-			for (int i = 0; i < overlayData.asset.textureList.Length; i++)
+			_textures = new TextureEditor[overlayData.asset.textureCount];
+			for (int i = 0; i < overlayData.asset.textureCount; i++)
 			{
-				_textures[i] = new TextureEditor(overlayData.asset.textureList[i]);
+				_textures[i] = new TextureEditor(overlayData.textureArray[i]);
+			}
+
+			if (overlayData.isProcedural)
+			{
+				_properties = new ProceduralPropertyEditor[overlayData.proceduralData.Length];
+				for (int i = 0; i < overlayData.proceduralData.Length; i++)
+				{
+					_properties[i] = new ProceduralPropertyEditor(overlayData.proceduralData[i]);
+				}
+			}
+			else
+			{
+				_properties = null;
 			}
 
 			BuildColorEditors();
@@ -1052,6 +1066,7 @@ namespace UMAEditor
 			GUIHelper.BeginHorizontalPadded(10, Color.white);
 			GUILayout.BeginVertical();
 
+			// Edit the colors
 			bool changed = OnColorGUI();
 
             // Edit the rect
@@ -1064,12 +1079,25 @@ namespace UMAEditor
                 changed = true;
             }
             GUILayout.EndHorizontal();
-            // End rect edit
 
+			// Edit the procedural properties
+			if (_overlayData.isProcedural)
+			{
+				GUILayout.BeginVertical();
+				GUILayout.Label("Procedural Settings");
+				foreach (var property in _properties)
+				{
+					changed |= property.OnGUI();
+				}
+				GUILayout.EndVertical();
+			}
+
+			// Edit the textures
+			GUILayout.Label("Textures");
 			GUILayout.BeginHorizontal();
 			foreach (var texture in _textures)
 			{
-				changed |= texture.OnGUI();
+				changed |= texture.OnGUI(!_overlayData.isProcedural);
 			}
 			GUILayout.EndHorizontal();
 
@@ -1201,7 +1229,7 @@ namespace UMAEditor
 			_texture = texture;
 		}
 
-		public bool OnGUI()
+		public bool OnGUI(bool allowEdits = true)
 		{
 			bool changed = false;
 
@@ -1213,7 +1241,7 @@ namespace UMAEditor
 			EditorGUI.indentLevel = origIndentLevel;
 			EditorGUIUtility.labelWidth = origLabelWidth;
 
-			if (newTexture != _texture)
+			if (allowEdits && (newTexture != _texture))
 			{
 				_texture = newTexture;
 				changed = true;
@@ -1232,6 +1260,23 @@ namespace UMAEditor
 		{
 			this.color = color;
 			this.description = description;
+		}
+	}
+
+	public class ProceduralPropertyEditor
+	{
+		public OverlayData.OverlayProceduralData property;
+
+		public ProceduralPropertyEditor(OverlayData.OverlayProceduralData prop)
+		{
+			this.property = prop;
+		}
+
+		public bool OnGUI()
+		{
+			bool changed = false;
+
+			return changed;
 		}
 	}
 
