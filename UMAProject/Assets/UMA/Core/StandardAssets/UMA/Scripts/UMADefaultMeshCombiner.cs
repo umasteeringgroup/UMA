@@ -113,24 +113,13 @@ namespace UMA
 
 			for (currentRendererIndex = 0; currentRendererIndex < umaData.generatedMaterials.rendererCount; currentRendererIndex++)
 			{
-				//Move umaMesh creation to with in the renderer loops, or make sure to set all it's buffers to null, see below.
+				//Move umaMesh creation to with in the renderer loops
+				//May want to make sure to set all it's buffers to null instead of creating a new UMAMeshData
 				UMAMeshData umaMesh = new UMAMeshData();
 				umaMesh.ClaimSharedBuffers();
 
 				umaMesh.subMeshCount = 0;
 				umaMesh.vertexCount = 0;
-
-				/*umaMesh.vertices = null;//added
-				umaMesh.boneWeights = null;
-				umaMesh.unityBoneWeights = null;
-				umaMesh.normals = null;
-				umaMesh.tangents = null;
-				umaMesh.uv = null;
-				umaMesh.uv2 = null;
-				umaMesh.uv3 = null;
-				umaMesh.uv4 = null;
-				umaMesh.colors32 = null;
-				umaMesh.clothSkinning = null;*/
 
 				combinedMeshList.Clear();
 				combinedMaterialList.Clear();
