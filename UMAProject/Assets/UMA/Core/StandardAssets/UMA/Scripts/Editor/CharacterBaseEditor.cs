@@ -980,9 +980,11 @@ namespace UMAEditor
 		private readonly UMAData.UMARecipe _recipe;
 		protected readonly SlotData _slotData;
 		private readonly OverlayData _overlayData;
-		private ColorEditor[] _colors;
 		private readonly TextureEditor[] _textures;
-		private readonly ProceduralPropertyEditor[] _properties;
+		private ColorEditor[] _colors;
+		private ProceduralPropertyEditor[] _properties;
+		private ProceduralPropertyDescription[] _descriptions;
+		private int _selectedProperty = 0;
 		private bool _foldout = true;
 
 		public bool Delete { get; private set; }
@@ -1019,10 +1021,23 @@ namespace UMAEditor
 
 			if (overlayData.isProcedural)
 			{
+				ProceduralMaterial material = _overlayData.asset.material.material as ProceduralMaterial;
+
+				_descriptions = material.GetProceduralPropertyDescriptions();
 				_properties = new ProceduralPropertyEditor[overlayData.proceduralData.Length];
 				for (int i = 0; i < overlayData.proceduralData.Length; i++)
 				{
-					_properties[i] = new ProceduralPropertyEditor(overlayData.proceduralData[i]);
+					ProceduralPropertyDescription description = null;
+					for (int j = 0; j < _descriptions.Length; j++)
+					{
+						if (_descriptions[i].name == overlayData.proceduralData[i].name)
+						{
+							description = _descriptions[i];
+							break;
+						}
+					}
+
+					_properties[i] = new ProceduralPropertyEditor(overlayData.proceduralData[i], description);
 				}
 			}
 			else
@@ -1085,10 +1100,69 @@ namespace UMAEditor
 			{
 				GUILayout.BeginVertical();
 				GUILayout.Label("Procedural Settings");
+				EditorGUI.indentLevel++;
+
+				List<string> propertyList = new List<string>(_descriptions.Length);
+				foreach (ProceduralPropertyDescription description in _descriptions)
+				{
+					// "Internal" substance properties begin with a '$'
+					if (description.label.StartsWith("$"))
+						continue;
+					
+					propertyList.Add(description.label);
+
+					// Only collect propoerties that aren't already set
+					for (int i = 0; i < _overlayData.proceduralData.Length; i++)
+					{
+						if (_overlayData.proceduralData[i].name == description.name)
+						{
+							propertyList.Remove(description.label);
+							break;
+						}
+					}
+				}
+				string[] propertyArray = propertyList.ToArray();
+
+				GUILayout.BeginHorizontal();
+				_selectedProperty = EditorGUILayout.Popup(_selectedProperty, propertyArray);
+
+				EditorGUI.BeginDisabledGroup(_selectedProperty >= propertyArray.Length);
+				if (GUILayout.Button("Add", EditorStyles.miniButton, GUILayout.Width(40)))
+				{
+					string propertyLabel = propertyArray[_selectedProperty];
+					ProceduralPropertyDescription description = null;
+					for (int i = 0; i < _descriptions.Length; i++)
+					{
+						if (_descriptions[i].label == propertyLabel)
+						{
+							description = _descriptions[i];
+							break;
+						}
+					}
+
+					if (description != null)
+					{
+						OverlayData.OverlayProceduralData newProperty = new OverlayData.OverlayProceduralData();
+						newProperty.name = description.name;
+						newProperty.type = description.type;
+
+						ArrayUtility.Add(ref _overlayData.proceduralData, newProperty);
+						ArrayUtility.Add(ref _properties, new ProceduralPropertyEditor(newProperty, description));
+
+						_selectedProperty = 0;
+						changed = true;
+					}
+				}
+				EditorGUI.EndDisabledGroup();
+
+				GUILayout.EndHorizontal();
+
 				foreach (var property in _properties)
 				{
 					changed |= property.OnGUI();
 				}
+
+				EditorGUI.indentLevel--;
 				GUILayout.EndVertical();
 			}
 
@@ -1266,15 +1340,112 @@ namespace UMAEditor
 	public class ProceduralPropertyEditor
 	{
 		public OverlayData.OverlayProceduralData property;
+		public ProceduralPropertyDescription description;
 
-		public ProceduralPropertyEditor(OverlayData.OverlayProceduralData prop)
+		public ProceduralPropertyEditor(OverlayData.OverlayProceduralData prop, ProceduralPropertyDescription desc)
 		{
 			this.property = prop;
+			this.description = desc;
+			if (this.description == null)
+			{
+				this.description = new ProceduralPropertyDescription();
+				this.description.name = this.property.name;
+				this.description.type = this.property.type;
+				this.description.label = this.property.name;
+			}
 		}
 
 		public bool OnGUI()
 		{
 			bool changed = false;
+
+			GUILayout.BeginHorizontal();
+
+			switch (this.property.type)
+			{
+				case ProceduralPropertyType.Boolean:
+					bool newBool = EditorGUILayout.Toggle(description.label, property.booleanValue);
+					if (newBool != property.booleanValue)
+					{
+						property.booleanValue = newBool;
+						changed = true;
+					}
+					break;
+				case ProceduralPropertyType.Color3:
+				case ProceduralPropertyType.Color4:
+					Color newColor = EditorGUILayout.ColorField(description.label, property.colorValue);
+					if (newColor != property.colorValue)
+					{
+						property.colorValue = newColor;
+						changed = true;
+					}
+					break;
+				case ProceduralPropertyType.Enum:
+					int newEnum = EditorGUILayout.Popup(description.label, property.enumValue, description.enumOptions);
+					if (newEnum != property.enumValue)
+					{
+						property.enumValue = newEnum;
+						changed = true;
+					}
+					break;
+				case ProceduralPropertyType.Float:
+					float newFloat = property.floatValue;
+					if (description.hasRange)
+					{
+						newFloat = EditorGUILayout.Slider(description.label, property.floatValue, description.minimum, description.maximum);
+					}
+					else
+					{
+						newFloat = EditorGUILayout.FloatField(description.label, property.floatValue);
+					}
+					if (newFloat != property.floatValue)
+					{
+						property.floatValue = newFloat;
+						changed = true;
+					}
+					break;
+				case ProceduralPropertyType.Texture:
+					Texture2D newTexture = (Texture2D) EditorGUILayout.ObjectField(description.label, property.textureValue, typeof(Texture2D), false, GUILayout.Width(100));
+					if (newTexture != property.textureValue)
+					{
+						property.textureValue = newTexture;
+						changed = true;
+					}
+					break;
+				
+				// TODO - Should be using description.componentLabels for these
+				case ProceduralPropertyType.Vector2:
+					Vector2 oldVector2 = new Vector2(property.vectorValue.x, property.vectorValue.y);
+					Vector2 newVector2 = EditorGUILayout.Vector2Field(description.label, oldVector2);
+					if (newVector2 != oldVector2)
+					{
+						property.vectorValue.x = newVector2.x;
+						property.vectorValue.y = newVector2.y;
+						changed = true;
+					}
+					break;
+				case ProceduralPropertyType.Vector3:
+					Vector3 oldVector3 = new Vector3(property.vectorValue.x, property.vectorValue.y, property.vectorValue.z);
+					Vector3 newVector3 = EditorGUILayout.Vector3Field(description.label, oldVector3);
+					if (newVector3 != oldVector3)
+					{
+						property.vectorValue.x = newVector3.x;
+						property.vectorValue.y = newVector3.y;
+						property.vectorValue.z = newVector3.z;
+						changed = true;
+					}
+					break;
+				case ProceduralPropertyType.Vector4:
+					Vector4 newVector4 = EditorGUILayout.Vector4Field(description.label, property.vectorValue);
+					if (newVector4 != property.vectorValue)
+					{
+						property.vectorValue = newVector4;
+						changed = true;
+					}
+					break;
+			}
+
+			GUILayout.EndHorizontal();
 
 			return changed;
 		}
