@@ -10,7 +10,7 @@ public class UMAPhysicsAvatarEditor : Editor
 	public override void OnInspectorGUI()
 	{
 		UMAPhysicsAvatar avatar = (UMAPhysicsAvatar)target;		
-		avatar.ragdolled = EditorGUILayout.Toggle("ragdolled", avatar.ragdolled);
+		avatar.ragdolled = EditorGUILayout.Toggle("Ragdolled", avatar.ragdolled);
 		DrawDefaultInspector();
 	}
 }
