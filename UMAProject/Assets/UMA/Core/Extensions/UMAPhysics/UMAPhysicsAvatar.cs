@@ -8,7 +8,7 @@ namespace UMA.PhysicsAvatar
 {
 	public class UMAPhysicsAvatar : MonoBehaviour {
 
-		// property to activate/deactivate ragdoll mode (exposed in editor by script "RagdollPlayer.cs")
+		// property to activate/deactivate ragdoll mode 
 		public bool ragdolled
 		{
 			get	{ return _ragdolled; }
@@ -65,6 +65,16 @@ namespace UMA.PhysicsAvatar
 			}
 		}
 
+		/*void OnCollisionEnter(Collision col)
+		{
+			Debug.Log ("OnCollisionEnter");
+		}*/
+
+		/*void OnTriggerEnter(Collider other )
+		{
+			Debug.Log ("OnTriggerEnter");
+		}*/
+
 		public void CreatePhysicsObjects( List<UMAPhysicsElement> elements )
 		{
 			if( _umaData == null )
@@ -76,7 +86,7 @@ namespace UMA.PhysicsAvatar
 				return;
 			}
 			
-			//Don't update if we already have a rigidbody on the hips?
+			//Don't update if we already have a rigidbody on the root bone?
 			if ( _rootBone && _rootBone.GetComponent<Rigidbody> () )
 				return;
 
@@ -85,7 +95,7 @@ namespace UMA.PhysicsAvatar
 				_playerCollider = gameObject.GetComponent<CapsuleCollider> ();
 				_playerRigidbody = gameObject.GetComponent<Rigidbody> ();
 				if (_playerCollider == null || _playerRigidbody == null)
-					Debug.LogError ("PlayerCollider or PlayerRigidBody is null, try putting the collider recipe before the PhysicsRecipe");
+					Debug.LogWarning ("PlayerCollider or PlayerRigidBody is null, try putting the collider recipe before the PhysicsRecipe, or turn off SimplePlayerCollider.");
 			}
 
 			foreach (UMAPhysicsElement element in elements) 
@@ -109,17 +119,20 @@ namespace UMA.PhysicsAvatar
 							BoxCollider boxCollider = bone.AddComponent<BoxCollider> ();
 							boxCollider.center = collider.colliderCentre;
 							boxCollider.size = collider.boxDimensions;
+							//boxCollider.isTrigger = true;
 							_BoxColliders.Add (boxCollider);
 						} else if (collider.colliderType == ColliderDefinition.ColliderType.Sphere) {
 							SphereCollider sphereCollider = bone.AddComponent<SphereCollider> ();
 							sphereCollider.center = collider.colliderCentre;
 							sphereCollider.radius = collider.sphereRadius;
+							//sphereCollider.isTrigger = true;
 							_SphereColliders.Add (sphereCollider);
 						} else if (collider.colliderType == ColliderDefinition.ColliderType.Capsule) {
 							CapsuleCollider capsuleCollider = bone.AddComponent<CapsuleCollider> ();
 							capsuleCollider.center = collider.colliderCentre;
 							capsuleCollider.radius = collider.capsuleRadius;
 							capsuleCollider.height = collider.capsuleHeight;
+							//capsuleCollider.isTrigger = true;
 							switch (collider.capsuleAlignment) {
 							case(ColliderDefinition.Direction.X):
 								capsuleCollider.direction = 0;
@@ -170,7 +183,42 @@ namespace UMA.PhysicsAvatar
 				}
 			}
 
+			UpdateClothColliders ();
 			SetRagdolled (_ragdolled);
+		}
+
+		public CapsuleCollider[] GetCapsuleColliders()
+		{
+			return _CapsuleColliders.ToArray();
+		}
+
+		public ClothSphereColliderPair[] GetClothSphereColliderPairs()
+		{
+			ClothSphereColliderPair[] colliders = new ClothSphereColliderPair[_SphereColliders.Count];
+
+			for( int i = 0; i < _SphereColliders.Count; i++ )
+			{
+				colliders [i].first = _SphereColliders [i];
+			}
+
+			return colliders;
+		}
+
+		//Update all cloth components
+		public void UpdateClothColliders()
+		{
+			if (_umaData) 
+			{
+				foreach (Renderer renderer in _umaData.GetRenderers()) 
+				{
+					Cloth cloth = renderer.GetComponent<Cloth> ();
+					if (cloth) 
+					{
+						cloth.capsuleColliders = GetCapsuleColliders ();
+						cloth.sphereColliders = GetClothSphereColliderPairs ();
+					}
+				}
+			}
 		}
 
 		private void SetRagdolled(bool ragdollState)
@@ -230,7 +278,7 @@ namespace UMA.PhysicsAvatar
 			foreach (Rigidbody rigidbody in _rigidbodies)
 			{
 				rigidbody.isKinematic = flag;
-				//rigidbody.detectCollisions = flag;
+				rigidbody.detectCollisions = !flag;
 			}
 		}
 

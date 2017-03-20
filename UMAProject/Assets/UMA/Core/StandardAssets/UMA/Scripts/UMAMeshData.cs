@@ -9,6 +9,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UMA.PhysicsAvatar;
 
 namespace UMA
 {
@@ -572,7 +573,15 @@ namespace UMA
 			{
 				var cloth = renderer.GetComponent<Cloth>();
 				if (cloth == null)
+				{
 					cloth = renderer.gameObject.AddComponent<Cloth>();
+					UMAPhysicsAvatar physicsAvatar = renderer.gameObject.GetComponent<UMAPhysicsAvatar> ();
+					if( physicsAvatar != null )
+					{
+						cloth.capsuleColliders = physicsAvatar.GetCapsuleColliders ();
+						cloth.sphereColliders = physicsAvatar.GetClothSphereColliderPairs ();
+					}
+				}
 				cloth.coefficients = clothSkinning;
 			}
 		}
