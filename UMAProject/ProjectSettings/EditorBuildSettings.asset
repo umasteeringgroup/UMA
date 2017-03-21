@@ -26,3 +26,5 @@ EditorBuildSettings:
     path: Assets/UMA/Examples/Main Examples/Scenes/UMA Core Demo - Texture LOD.unity
   - enabled: 1
     path: Assets/UMA/Examples/Main Examples/Scenes/UMA Core Demo - Networking Menu.unity
+  - enabled: 1
+    path: Assets/UMA/Examples/Main Examples/Scenes/UMA Core Demo - Networking Game.unity
