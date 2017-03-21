@@ -1030,9 +1030,9 @@ namespace UMAEditor
 					ProceduralPropertyDescription description = null;
 					for (int j = 0; j < _descriptions.Length; j++)
 					{
-						if (_descriptions[i].name == overlayData.proceduralData[i].name)
+						if (_descriptions[j].name == overlayData.proceduralData[i].name)
 						{
-							description = _descriptions[i];
+							description = _descriptions[j];
 							break;
 						}
 					}
