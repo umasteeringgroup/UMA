@@ -219,9 +219,8 @@ namespace UMA
 					return false;
 			}
 
-			if (umaData.isMeshDirty)
-			{
-				UpdateUMAMesh(umaData.isAtlasDirty);
+			if (umaData.isMeshDirty) {
+				UpdateUMAMesh (umaData.isAtlasDirty);
 				umaData.isAtlasDirty = false;
 				umaData.isMeshDirty = false;
 				SlotsChanged++;
@@ -229,7 +228,8 @@ namespace UMA
 
 				if (!fastGeneration)
 					return false;
-			}
+			} else
+				umaData.skeleton.BeginSkeletonUpdate ();
 
 			if (umaData.isShapeDirty) 
 			{
