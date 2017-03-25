@@ -172,6 +172,7 @@ namespace UMA
                 }
             }
 
+			umaData.skeleton.EndSkeletonUpdate ();
             umaData.firstBake = false;
         }
 

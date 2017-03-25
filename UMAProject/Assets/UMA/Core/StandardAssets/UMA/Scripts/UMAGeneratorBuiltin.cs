@@ -231,12 +231,15 @@ namespace UMA
 					return false;
 			}
 
-			if (umaData.isShapeDirty)
+			if (umaData.isShapeDirty) 
 			{
-				UpdateUMABody(umaData);
+				UpdateUMABody (umaData);
 				umaData.isShapeDirty = false;
 				DnaChanged++;
-			}
+			} 
+			else
+				umaData.skeleton.EndSkeletonUpdate ();
+
 			UMAReady();
 			return true;
 		}
