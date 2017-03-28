@@ -106,17 +106,20 @@ namespace UMA
 
 				foreach(AnimatorControllerParameter param in parameters)
 				{
-					switch(param.type)
-					{
-						case AnimatorControllerParameterType.Bool:
-							animator.SetBool(param.nameHash, param.defaultBool);
-							break;
-						case AnimatorControllerParameterType.Float:
-							animator.SetFloat(param.nameHash, param.defaultFloat);
-							break;
-						case AnimatorControllerParameterType.Int:
-							animator.SetInteger(param.nameHash, param.defaultInt);
-							break;
+					if (!animator.IsParameterControlledByCurve(param.nameHash))
+                	{
+						switch(param.type)
+						{
+							case AnimatorControllerParameterType.Bool:
+								animator.SetBool(param.nameHash, param.defaultBool);
+								break;
+							case AnimatorControllerParameterType.Float:
+								animator.SetFloat(param.nameHash, param.defaultFloat);
+								break;
+							case AnimatorControllerParameterType.Int:
+								animator.SetInteger(param.nameHash, param.defaultInt);
+								break;
+						}
 					}
 				}
 
