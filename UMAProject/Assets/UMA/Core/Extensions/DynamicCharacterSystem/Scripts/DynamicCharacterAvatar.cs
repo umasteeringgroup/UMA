@@ -436,7 +436,7 @@ namespace UMACharacterSystem
 			//If the user set up the component on Awake via scripting they may already have set the wardrobe so check that WardrobeRecipes is empty before doing LoadDefaultWardrobe
 			if (WardrobeRecipes.Count == 0)
 				LoadDefaultWardrobe(true);//this may cause downloads to happen
-			SetExpressionSet(true);
+			SetExpressionSet();
 			SetAnimatorController(true);
 			//if we are not waiting for bundles before building, build the placeholder avatar now
 			if (!waitForBundles && DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
