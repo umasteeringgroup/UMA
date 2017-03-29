@@ -77,7 +77,7 @@ public partial class DynamicCharacterAvatarEditor : Editor
 			/*LoadOtions fields*/ "defaultLoadOptions", "loadPathType", "loadPath", "loadFilename", "loadString", "loadFileOnStart", "waitForBundles", /*"buildAfterLoad",*/
 			/*SaveOptions fields*/ "defaultSaveOptions", "savePathType","savePath", "saveFilename", "makeUniqueFilename","ensureSharedColors", 
 			/*Moved into AdvancedOptions*/"context","umaData","umaRecipe", "umaAdditionalRecipes","umaGenerator", "animationController",
-			/*Moved into CharacterEvents*/"CharacterCreated", "CharacterUpdated", "CharacterDestroyed", "RecipeUpdated",
+			/*Moved into CharacterEvents*/"CharacterCreated", "CharacterUpdated", "CharacterDestroyed", "CharacterDnaUpdated", "RecipeUpdated",
 			/*PlaceholderOptions fields*/"showPlaceholder", "previewModel", "customModel", "customRotation", "previewColor"});
 
 		//The base DynamicAvatar properties- get these early because changing the race changes someof them
@@ -318,11 +318,13 @@ public partial class DynamicCharacterAvatarEditor : Editor
 		{
 			SerializedProperty CharacterUpdated = serializedObject.FindProperty("CharacterUpdated");
 			SerializedProperty CharacterDestroyed= serializedObject.FindProperty("CharacterDestroyed");
+			SerializedProperty CharacterDnaUpdated = serializedObject.FindProperty ("CharacterDnaUpdated");
 			SerializedProperty RecipeUpdated = serializedObject.FindProperty("RecipeUpdated");
 
 			EditorGUILayout.PropertyField(CharacterCreated);
 			EditorGUILayout.PropertyField(CharacterUpdated);
 			EditorGUILayout.PropertyField(CharacterDestroyed);
+			EditorGUILayout.PropertyField (CharacterDnaUpdated);
 			EditorGUILayout.PropertyField(RecipeUpdated);
 		}
 		if (EditorGUI.EndChangeCheck())
