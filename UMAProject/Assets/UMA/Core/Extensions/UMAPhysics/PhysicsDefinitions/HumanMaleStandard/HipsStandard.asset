@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d7148fed8e84254e8597f83852f2e34, type: 3}
+  m_Name: HipsStandard
+  m_EditorClassIdentifier: 
+  isRoot: 1
+  boneName: Hips
+  mass: 3
+  colliders:
+  - colliderType: 0
+    colliderCentre: {x: -0.2, y: 0, z: 0}
+    boxDimensions: {x: 0.37, y: 0.34, z: 0.28}
+    sphereRadius: 0
+    capsuleRadius: 0
+    capsuleheight: 0
+    capsuleAlignment: 0
+  parentBone: 
+  axis: {x: 0, y: 0, z: 0}
+  swingAxis: {x: 0, y: 0, z: 0}
+  lowTwistLimit: 0
+  highTwistLimit: 0
+  swing1Limit: 0
+  swing2Limit: 0
+  enablePreprocessing: 0

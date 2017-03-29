@@ -15,7 +15,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &422758
 Transform:
   m_ObjectHideFlags: 1
@@ -317,13 +317,6 @@ MonoBehaviour:
     IsAssetBundle: 0
   - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
-    _Name: UMA_fem_hair_1_005
-    _Item: {fileID: 11400000, guid: 911a7511737178d4dbfe1ab52a2d8887, type: 2}
-    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Slots/Hair/FemaleHighPolyHair.asset
-    IsResource: 0
-    IsAssetBundle: 0
-  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
     _Name: FemaleLongHair01
     _Item: {fileID: 11400000, guid: 0dfbf95a2c3548040a6cc23330e64d76, type: 2}
     _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Slots/Hair/FemaleLongHair01.asset
@@ -414,6 +407,34 @@ MonoBehaviour:
     _Name: M_Eyebrow
     _Item: {fileID: 11400000, guid: 8b232fbd9c99b3149bc6c4f6cb7afb7d, type: 2}
     _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Slots/Hair/M_Eyebrow_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: MaleEarsMorph
+    _Item: {fileID: 11400000, guid: 36832eb4f58c963418b5be22d9a7eafb, type: 2}
+    _Path: Assets/UMA/Examples/Blendshape Examples/Assets/Slots/MaleEarsMorph/MaleEarsMorph_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: PhysicsStandard
+    _Item: {fileID: 11400000, guid: 515a46b056a0d8d4d8fc2de3b7f58d29, type: 2}
+    _Path: Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/Physics/Standard/PhysicsStandardSlot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: PhysicsHD
+    _Item: {fileID: 11400000, guid: bc5ef2dcc0274644bb1733e78ad1514d, type: 2}
+    _Path: Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/Physics/HD/PhysicsHDSlot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: ClothRobe
+    _Item: {fileID: 11400000, guid: 6b8d84d3d68be9146899e780a8c296fb, type: 2}
+    _Path: Assets/UMA/Examples/Physics Examples/Assets/Slots/ClothRobe/ClothRobe_Slot.asset
     IsResource: 0
     IsAssetBundle: 0
   - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
@@ -993,6 +1014,13 @@ MonoBehaviour:
     _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Hair/TheRebel.asset
     IsResource: 0
     IsAssetBundle: 0
+  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: ClothRobe
+    _Item: {fileID: 11400000, guid: e06be47adf242924c9fff2c65c65ad5c, type: 2}
+    _Path: Assets/UMA/Examples/Physics Examples/Assets/Overlays/ClothRobeOverlay.asset
+    IsResource: 0
+    IsAssetBundle: 0
   - _QualifiedName: UMA.RaceData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
     _Name: HumanFemaleDCS
@@ -1363,6 +1391,20 @@ MonoBehaviour:
     _Name: MaleShorts2
     _Item: {fileID: 11400000, guid: 71e3ef35d8b941d4ab538b01f57dbb79, type: 2}
     _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleShorts2.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: BlendShapeRecipe
+    _Item: {fileID: 11400000, guid: 79f076bff9f0ea840abbeda53d42de10, type: 2}
+    _Path: Assets/UMA/Examples/Blendshape Examples/Assets/Recipe/BlendShapeRecipe.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _QualifiedName: UMAWardrobeRecipe, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    _Name: ClothRobeRecipe
+    _Item: {fileID: 11400000, guid: be7c02d6f94052348a3fc382a4ff26dc, type: 2}
+    _Path: Assets/UMA/Examples/Physics Examples/Assets/Recipe/ClothRobeRecipe.asset
     IsResource: 0
     IsAssetBundle: 0
   - _QualifiedName: UMA.DynamicUMADnaAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,

@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d7148fed8e84254e8597f83852f2e34, type: 3}
+  m_Name: HeadStandard
+  m_EditorClassIdentifier: 
+  isRoot: 0
+  boneName: Head
+  mass: 0.5
+  colliders:
+  - colliderType: 1
+    colliderCentre: {x: -0.1, y: 0, z: 0.06}
+    boxDimensions: {x: 0, y: 0, z: 0}
+    sphereRadius: 0.14
+    capsuleRadius: 0
+    capsuleheight: 0
+    capsuleAlignment: 0
+  parentBone: Spine1
+  axis: {x: 1, y: 0, z: 0}
+  swingAxis: {x: 0, y: 1, z: 0}
+  lowTwistLimit: -60
+  highTwistLimit: 60
+  swing1Limit: 40
+  swing2Limit: 0
+  enablePreprocessing: 0
