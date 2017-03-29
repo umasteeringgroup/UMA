@@ -128,9 +128,14 @@ namespace UMA
 		/// Callback event when character has been destroyed.
 		/// </summary>
 		public event Action<UMAData> OnCharacterDestroyed { add { if (CharacterDestroyed == null) CharacterDestroyed = new UMADataEvent(); CharacterDestroyed.AddListener(new UnityAction<UMAData>(value)); } remove { CharacterDestroyed.RemoveListener(new UnityAction<UMAData>(value)); } }
+
+		/// Callback event when character DNA has been updated.
+		/// </summary>
+		public event Action<UMAData> OnCharacterDnaUpdated { add { if (CharacterDnaUpdated == null) CharacterDnaUpdated = new UMADataEvent(); CharacterDnaUpdated.AddListener(new UnityAction<UMAData>(value)); } remove { CharacterDnaUpdated.RemoveListener(new UnityAction<UMAData>(value)); } }
 		public UMADataEvent CharacterCreated;
 		public UMADataEvent CharacterDestroyed;
 		public UMADataEvent CharacterUpdated;
+		public UMADataEvent CharacterDnaUpdated;
 
 		public GameObject umaRoot;
 
@@ -1356,6 +1361,11 @@ namespace UMA
 		/// </summary>
 		public void FireDNAAppliedEvents()
 		{
+			if (CharacterDnaUpdated != null)
+			{
+				CharacterDnaUpdated.Invoke(this);
+			}
+			
 			foreach (var slotData in umaRecipe.slotDataList)
 			{
 				if (slotData != null && slotData.asset.DNAApplied != null)

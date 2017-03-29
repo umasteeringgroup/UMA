@@ -36,6 +36,10 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 	/// Callback event when character is updated.
 	/// </summary>
 	public UMADataEvent CharacterUpdated;
+	/// <summary>
+	/// Callback event when character DNA is updated.
+	/// </summary>
+	public UMADataEvent CharacterDnaUpdated;
 
 	public virtual void Start()
 	{
@@ -69,6 +73,7 @@ public abstract class UMAAvatarBase : MonoBehaviour {
 		if (CharacterCreated != null) umaData.CharacterCreated = CharacterCreated;
 		if (CharacterDestroyed != null) umaData.CharacterDestroyed = CharacterDestroyed;
 		if (CharacterUpdated != null) umaData.CharacterUpdated = CharacterUpdated;
+		if (CharacterDnaUpdated != null) umaData.CharacterDnaUpdated = CharacterDnaUpdated;
 	}
 
 	/// <summary>
