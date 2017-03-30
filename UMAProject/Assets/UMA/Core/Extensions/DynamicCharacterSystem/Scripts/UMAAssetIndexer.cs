@@ -215,6 +215,8 @@ public class UMAAssetIndexer : MonoBehaviour, ISerializationCallbackReceiver
             if (theIndex == null)
             {
 #if UNITY_EDITOR
+                System.Diagnostics.Stopwatch st = new System.Diagnostics.Stopwatch();
+                st.Start();
                 theIndex = Resources.Load("AssetIndexer") as GameObject;
                 if (theIndex == null)
                 {
@@ -225,6 +227,8 @@ public class UMAAssetIndexer : MonoBehaviour, ISerializationCallbackReceiver
                 {
                     return null;
                 }
+                st.Stop();
+                Debug.Log("Asset index loaded in " + st.Elapsed + " ms");
 #else
                 theIndex = GameObject.Instantiate(Resources.Load<GameObject>("AssetIndexer")) as GameObject;
                 theIndex.hideFlags = HideFlags.HideAndDontSave;
@@ -245,6 +249,11 @@ public class UMAAssetIndexer : MonoBehaviour, ISerializationCallbackReceiver
         UpdateList();
         foreach (AssetItem ai in Items)
         {
+            if (ItemsByPath.ContainsKey(ai._Path))
+            {
+                Debug.Log("Duplicate path for item: " + ai._Path);
+                continue;
+            }
             ItemsByPath.Add(ai._Path, ai);
         }
 
@@ -743,7 +752,6 @@ public class UMAAssetIndexer : MonoBehaviour, ISerializationCallbackReceiver
     {
         UpdateList();
     }
-
     void ISerializationCallbackReceiver.OnAfterDeserialize()
     {
         List<System.Type> newTypes = new List<System.Type>()
@@ -778,10 +786,19 @@ public class UMAAssetIndexer : MonoBehaviour, ISerializationCallbackReceiver
         { (typeof(DynamicUMADnaAsset)), (typeof(DynamicUMADnaAsset)) }
         };
 
+        List<string> invalidTypeNames = new List<string>();
         // Add the additional Types.
         foreach (string s in IndexedTypeNames)
         {
+            if (s == "")
+                continue;
             System.Type sType = System.Type.GetType(s);
+            if (sType == null)
+            {
+                invalidTypeNames.Add(s);
+                Debug.LogWarning("Could not find type for " + s);
+                continue;
+            }
             newTypes.Add(sType);
             if (!TypeToLookup.ContainsKey(sType))
             {
@@ -790,6 +807,14 @@ public class UMAAssetIndexer : MonoBehaviour, ISerializationCallbackReceiver
         }
 
         Types = newTypes.ToArray();
+
+        if (invalidTypeNames.Count > 0)
+        {
+            foreach (string ivs in invalidTypeNames)
+            {
+                IndexedTypeNames.Remove(ivs);
+            }
+        }
 
         UpdateDictionaries();
     }
