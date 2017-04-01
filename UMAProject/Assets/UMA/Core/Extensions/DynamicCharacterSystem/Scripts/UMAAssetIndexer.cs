@@ -555,10 +555,20 @@ public class UMAAssetIndexer : MonoBehaviour, ISerializationCallbackReceiver
     /// </summary>
     /// <param name="type"></param>
     /// <param name="o"></param>
-    public void AddAsset(System.Type type, string Name, string Path, Object o, bool SkipBundleCheck = false)
+    public void AddAsset(System.Type type, string name, string path, Object o, bool skipBundleCheck = false)
     {
-        AssetItem ai = new AssetItem(type, Name,Path, o);
-        AddAssetItem(ai, SkipBundleCheck);
+        if (o == null)
+        {
+            Debug.Log("Skipping null item");
+            return;
+        }
+        if (type == null)
+        {
+            type = o.GetType();
+        }
+
+        AssetItem ai = new AssetItem(type, name,path, o);
+        AddAssetItem(ai, skipBundleCheck);
     }
 
     /// <summary>

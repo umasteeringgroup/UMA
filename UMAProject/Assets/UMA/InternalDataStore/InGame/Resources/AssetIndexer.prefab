@@ -588,13 +588,6 @@ MonoBehaviour:
     IsAssetBundle: 0
   - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
-    _Name: Eye Overlay
-    _Item: {fileID: 11400000, guid: 98b05b17b4e8ff142b1f16df2ef2315b, type: 2}
-    _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Face/Eye/Eye Overlay.asset
-    IsResource: 0
-    IsAssetBundle: 0
-  - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
     _Name: EyeOverlay
     _Item: {fileID: 11400000, guid: 79fb331967188a048837288f16dbc006, type: 2}
     _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Face/Eye/EyeOverlay.asset
@@ -1016,9 +1009,9 @@ MonoBehaviour:
     IsAssetBundle: 0
   - _QualifiedName: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
-    _Name: ClothRobe
-    _Item: {fileID: 11400000, guid: e06be47adf242924c9fff2c65c65ad5c, type: 2}
-    _Path: Assets/UMA/Examples/Physics Examples/Assets/Overlays/ClothRobeOverlay.asset
+    _Name: Eye Overlay
+    _Item: {fileID: 11400000, guid: 98b05b17b4e8ff142b1f16df2ef2315b, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanShared/Overlays/Face/Eye/Eye Overlay.asset
     IsResource: 0
     IsAssetBundle: 0
   - _QualifiedName: UMA.RaceData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
