@@ -61,6 +61,9 @@ namespace UMA
 			if (atlasResolution == 0)
 				atlasResolution = 256;
 
+			if (defaultOverlayAsset != null)
+				defaultOverlayData = new OverlayData (defaultOverlayAsset);
+
 			if (!textureMerge)
 			{
 				Transform tempTextureMerger = Instantiate(textureMergePrefab, Vector3.zero, Quaternion.identity) as Transform;

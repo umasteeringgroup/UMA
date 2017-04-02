@@ -19,6 +19,11 @@ namespace UMA
 		public bool convertMipMaps;
         [Tooltip("Initial size of the texture atlas (square)")]
 		public int atlasResolution;
+		[Tooltip("The default overlay to display if a slot has meshData and no overlays assigned")]
+		public OverlayDataAsset defaultOverlayAsset;
+		[HideInInspector]
+		public OverlayData defaultOverlayData;
+
 		/// <summary>
 		/// Adds the dirty UMA to the update queue.
 		/// </summary>

@@ -105,6 +105,12 @@ namespace UMA
             {
                 var slot = slots[i];
                 if (slot == null) continue;
+				//Let's only add the default overlay if the slot has overlays and NO meshData
+				if (slot.asset.meshData != null && slot.GetOverlay (0) == null) 
+				{
+					if( umaGenerator.defaultOverlayData != null )
+						slot.AddOverlay ( umaGenerator.defaultOverlayData );
+				}
                 if (slot.asset.material != null && slot.GetOverlay(0) != null)
                 {
                     var overlayList = slot.GetOverlayList();
