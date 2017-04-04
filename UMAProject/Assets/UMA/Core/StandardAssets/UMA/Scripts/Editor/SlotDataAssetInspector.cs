@@ -5,7 +5,7 @@ using UnityEditor;
 namespace UMA.Editors
 {
 	[CustomEditor(typeof(SlotDataAsset))]
-    public class SlotDataAssetInspector : UnityEditor.Editor
+    public class SlotDataAssetInspector : Editor
     {
         public override void OnInspectorGUI()
         {

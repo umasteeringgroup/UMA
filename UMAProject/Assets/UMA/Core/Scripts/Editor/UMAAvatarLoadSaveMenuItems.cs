@@ -3,7 +3,7 @@ using UnityEditor;
 
 namespace UMA.Editors
 {
-	public class UMAAvatarLoadSaveMenuItems : UnityEditor.Editor
+	public class UMAAvatarLoadSaveMenuItems : Editor
 	{
 		[MenuItem("UMA/Runtime/Save Selected Avatars generated textures to PNG")]
 		public static void SaveSelectedAvatarsPNG()

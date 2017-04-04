@@ -4,7 +4,7 @@ using UnityEditor;
 namespace UMA.Examples
 {
     [CustomEditor(typeof(EnvPresetChooser))]
-    public class EnvPresetChooserEd : UnityEditor.Editor
+    public class EnvPresetChooserEd : Editor
     {
         new EnvPresetChooser target { get { return base.target as EnvPresetChooser; } }
 

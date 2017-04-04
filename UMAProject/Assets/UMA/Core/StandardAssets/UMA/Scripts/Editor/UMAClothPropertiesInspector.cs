@@ -4,7 +4,7 @@ using UnityEditor;
 namespace UMA.Editors
 {
 	[CustomEditor(typeof(UMAClothProperties))]
-	public class UMAClothPropertiesInspector : UnityEditor.Editor
+	public class UMAClothPropertiesInspector : Editor
 	{
 		public override void OnInspectorGUI()
 		{

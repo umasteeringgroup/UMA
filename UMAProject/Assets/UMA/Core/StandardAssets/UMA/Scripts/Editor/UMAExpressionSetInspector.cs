@@ -11,7 +11,7 @@ using UnityEditor;
 namespace UMA.PoseTools
 {
 	[CustomEditor(typeof(UMAExpressionSet))]
-	public class UMAExpressionSetInspector : UnityEditor.Editor
+	public class UMAExpressionSetInspector : Editor
 	{
 		private UMAExpressionSet expressionSet;
 		public void OnEnable()

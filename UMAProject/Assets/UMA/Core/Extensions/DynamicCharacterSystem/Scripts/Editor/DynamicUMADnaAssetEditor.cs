@@ -7,7 +7,7 @@ using UMA.Editors;
 namespace UMA.CharacterSystem.Editors
 {
     [CustomEditor(typeof(DynamicUMADnaAsset))]
-    public class DynamicUMADnaAssetEditor : UnityEditor.Editor
+    public class DynamicUMADnaAssetEditor : Editor
 	{
 		public string newDNAName = "";
 

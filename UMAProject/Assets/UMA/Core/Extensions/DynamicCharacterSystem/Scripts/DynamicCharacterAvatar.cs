@@ -2077,10 +2077,7 @@ namespace UMA.CharacterSystem
 			//if its a standard UmaTextRecipe load it directly into UMAData since there wont be any wardrobe slots...
 			//but make sure settingsToLoad race is the race that was actually used by SetStartingRace
 			settingsToLoad.race = activeRace.name;
-			if (settingsToLoad.version == 2)
-				UMATextRecipe.UnpackRecipeVersion2(umaData.umaRecipe, settingsToLoad, context);
-			else
-				UMATextRecipe.UnpackRecipeVersion1(umaData.umaRecipe, settingsToLoad, context);
+			UMATextRecipe.UnpackRecipe(umaData.umaRecipe, settingsToLoad, context);
 			//
 			ClearSlots();//old umas dont have any wardrobe
 						 //old style recipes may still have had assets in an asset bundle. So if we are showing a placeholder rather than waiting...
@@ -2590,7 +2587,7 @@ namespace UMA.CharacterSystem
 				if (sd.slotName == Replacer.replaces)
 				{
 					UMAPackedRecipeBase.UMAPackRecipe PackRecipe = Replacer.PackedLoad(context);
-					UMAData.UMARecipe TempRecipe = UMATextRecipe.UnpackRecipeVersion2(PackRecipe, context);
+					UMAData.UMARecipe TempRecipe = UMATextRecipe.UnpackRecipe(PackRecipe, context);
 					if (TempRecipe.slotDataList.Length > 0)
 					{
 						List<OverlayData> Overlays = sd.GetOverlayList();

@@ -7,7 +7,7 @@ using UMA.Editors;
 namespace UMA.CharacterSystem.Editors
 {
 	[CustomEditor(typeof(DynamicDNAConverterBehaviour), true)]
-	public class DynamicDNAConverterBehaviourEditor : UnityEditor.Editor
+	public class DynamicDNAConverterBehaviourEditor : Editor
 	{
 
 		[MenuItem("Assets/Create/UMA/DNA/Dynamic DNA Converter")]
@@ -42,10 +42,10 @@ namespace UMA.CharacterSystem.Editors
 		//DynamicDNAConverterCustomizer
 		public DynamicDNAConverterCustomizer thisDDCC = null;
 		//UMABonePose Editor
-		private UnityEditor.Editor thisUBP = null;
+		private Editor thisUBP = null;
 		public string createBonePoseAssetName = "";
 		//DynamicUMADNAAsset Editor
-		private UnityEditor.Editor thisDUDA = null;
+		private Editor thisDUDA = null;
 		public string createDnaAssetName = "";
 		//
 		[System.NonSerialized]
@@ -323,11 +323,11 @@ namespace UMA.CharacterSystem.Editors
 				{
 					if (thisDUDA == null)
 					{
-						thisDUDA = UnityEditor.Editor.CreateEditor((DynamicUMADnaAsset)dnaAsset.objectReferenceValue, typeof(UMA.CharacterSystem.Editors.DynamicUMADnaAssetEditor));
+						thisDUDA = Editor.CreateEditor((DynamicUMADnaAsset)dnaAsset.objectReferenceValue, typeof(UMA.CharacterSystem.Editors.DynamicUMADnaAssetEditor));
 					}
 					else if (thisDUDA.target != (DynamicUMADnaAsset)dnaAsset.objectReferenceValue)
 					{
-						thisDUDA = UnityEditor.Editor.CreateEditor((DynamicUMADnaAsset)dnaAsset.objectReferenceValue, typeof(UMA.CharacterSystem.Editors.DynamicUMADnaAssetEditor));
+						thisDUDA = Editor.CreateEditor((DynamicUMADnaAsset)dnaAsset.objectReferenceValue, typeof(UMA.CharacterSystem.Editors.DynamicUMADnaAssetEditor));
 					}
 					EditorGUI.BeginChangeCheck();
 					thisDUDA.OnInspectorGUI();
@@ -916,7 +916,7 @@ namespace UMA.CharacterSystem.Editors
 					EditorGUILayout.PropertyField(serializedObject.FindProperty("startingPoseWeight"));
 					if (thisUBP == null)
 					{
-						thisUBP = UnityEditor.Editor.CreateEditor((UMA.PoseTools.UMABonePose)bonePoseAsset.objectReferenceValue, typeof(UMA.PoseTools.UMABonePoseEditor));
+						thisUBP = Editor.CreateEditor((UMA.PoseTools.UMABonePose)bonePoseAsset.objectReferenceValue, typeof(UMA.PoseTools.UMABonePoseEditor));
 						((UMA.PoseTools.UMABonePoseEditor)thisUBP).dynamicDNAConverterMode = true;
 						if (umaData != null)
 						{
@@ -926,7 +926,7 @@ namespace UMA.CharacterSystem.Editors
 					}
 					else if (thisUBP.target != (UMA.PoseTools.UMABonePose)bonePoseAsset.objectReferenceValue)
 					{
-						thisUBP = UnityEditor.Editor.CreateEditor((UMA.PoseTools.UMABonePose)bonePoseAsset.objectReferenceValue, typeof(UMA.PoseTools.UMABonePoseEditor));
+						thisUBP = Editor.CreateEditor((UMA.PoseTools.UMABonePose)bonePoseAsset.objectReferenceValue, typeof(UMA.PoseTools.UMABonePoseEditor));
 						((UMA.PoseTools.UMABonePoseEditor)thisUBP).dynamicDNAConverterMode = true;
 						if (umaData != null)
 						{

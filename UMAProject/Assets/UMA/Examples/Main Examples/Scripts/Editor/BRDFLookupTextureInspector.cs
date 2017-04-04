@@ -4,7 +4,7 @@ using UnityEditor;
 namespace UMA.Examples
 {
 	[CustomEditor(typeof(BRDFLookupTexture))]
-	internal class BRDFLookupTextureInspector : UnityEditor.Editor
+	internal class BRDFLookupTextureInspector : Editor
 	{
 		private bool changed = false;
 		private bool previewRGB = true;

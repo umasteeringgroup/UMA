@@ -17,15 +17,27 @@ namespace UMA
 		public override void Load(UMA.UMAData.UMARecipe umaRecipe, UMAContext context)
 		{
 			var packedRecipe = PackedLoad(context);
-			switch (packedRecipe.version)
+         UnpackRecipe(umaRecipe, packedRecipe, context);
+      }
+
+      public static UMAData.UMARecipe UnpackRecipe(UMAPackRecipe umaPackRecipe, UMAContext context)
+      {
+         UMAData.UMARecipe umaRecipe = new UMAData.UMARecipe();
+         UnpackRecipe(umaRecipe, umaPackRecipe, context);
+         return umaRecipe;
+      }
+
+      public static void UnpackRecipe(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContext context)
+      {
+         switch (umaPackRecipe.version)
 			{
 				case 2:
-					UnpackRecipeVersion2(umaRecipe, packedRecipe, context);
+				   UnpackRecipeVersion2(umaRecipe, umaPackRecipe, context);
 					break;
 
 				case 1:
 				default:
-					if (UnpackRecipeVersion1(umaRecipe, packedRecipe, context))
+				   if (UnpackRecipeVersion1(umaRecipe, umaPackRecipe, context))
 					{
 						umaRecipe.MergeMatchingOverlays();
 					}

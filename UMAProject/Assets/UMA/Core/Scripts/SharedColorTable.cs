@@ -12,7 +12,7 @@ namespace UMA
 		[MenuItem("Assets/Create/UMA/Core/Shared Color List")]
 		public static void CreateSharedColor()
 		{
-			UMA.Editors.CustomAssetUtility.CreateAsset<SharedColorTable>();
+			UMA.CustomAssetUtility.CreateAsset<SharedColorTable>();
 		}
 	#endif
 		public int channelCount;

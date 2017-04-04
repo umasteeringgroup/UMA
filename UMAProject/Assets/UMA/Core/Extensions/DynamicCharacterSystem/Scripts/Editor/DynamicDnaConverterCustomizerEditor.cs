@@ -6,10 +6,10 @@ using UMA.Editors;
 namespace UMA.CharacterSystem.Editors
 {
     [CustomEditor(typeof(DynamicDNAConverterCustomizer), true)]
-    public class DynamicDNAConverterCustomizerEditor : UnityEditor.Editor
+    public class DynamicDNAConverterCustomizerEditor : Editor
     {
         DynamicDNAConverterCustomizer thisDDCC;
-        Dictionary<DynamicDNAConverterBehaviour, UnityEditor.Editor> SDCBs = new Dictionary<DynamicDNAConverterBehaviour, UnityEditor.Editor>();
+        Dictionary<DynamicDNAConverterBehaviour, Editor> SDCBs = new Dictionary<DynamicDNAConverterBehaviour, Editor>();
         public override void OnInspectorGUI()
         {
             thisDDCC = target as DynamicDNAConverterCustomizer;
@@ -126,14 +126,14 @@ namespace UMA.CharacterSystem.Editors
                     EditorGUI.EndDisabledGroup();
                 GUIHelper.EndVerticalPadded(10);
                 //
-                UnityEditor.Editor thisSDCB;
+                Editor thisSDCB;
                 if(SDCBs.TryGetValue((DynamicDNAConverterBehaviour)serializedObject.FindProperty("selectedConverter").objectReferenceValue, out thisSDCB))
                 {
                     ((DynamicDNAConverterBehaviourEditor)thisSDCB).initialized = true;
                 }
                 else
                 {
-                    thisSDCB = UnityEditor.Editor.CreateEditor((DynamicDNAConverterBehaviour)serializedObject.FindProperty("selectedConverter").objectReferenceValue, typeof(DynamicDNAConverterBehaviourEditor));
+                    thisSDCB = Editor.CreateEditor((DynamicDNAConverterBehaviour)serializedObject.FindProperty("selectedConverter").objectReferenceValue, typeof(DynamicDNAConverterBehaviourEditor));
                     SDCBs.Add((DynamicDNAConverterBehaviour)serializedObject.FindProperty("selectedConverter").objectReferenceValue, thisSDCB);
                 }
                 ((DynamicDNAConverterBehaviourEditor)thisSDCB).minimalMode = true;

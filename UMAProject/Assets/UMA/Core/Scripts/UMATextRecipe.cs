@@ -53,7 +53,7 @@ namespace UMA
 		[UnityEditor.MenuItem("Assets/Create/UMA/Core/Text Recipe")]
 		public static void CreateTextRecipeAsset()
 		{
-			UMA.Editors.CustomAssetUtility.CreateAsset<UMATextRecipe>();
+			UMA.CustomAssetUtility.CreateAsset<UMATextRecipe>();
 		}
 		#endif
 	}

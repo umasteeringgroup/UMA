@@ -6,7 +6,7 @@ using UnityEditor;
 namespace UMA.Dynamics.Examples
 {
 	[CustomEditor(typeof(ClothHelper))]
-	public class ClothHelperEditor : UnityEditor.Editor
+	public class ClothHelperEditor : Editor
 	{
 
 		ClothHelper m_ClothHelper;

@@ -4,7 +4,7 @@ using UnityEditor;
 namespace UMA.Dynamics.Editors
 {
 	[CustomEditor(typeof(UMAPhysicsSlotDefinition))]
-	public class UMAPhysicsSlotEditor : UnityEditor.Editor 
+	public class UMAPhysicsSlotEditor : Editor 
 	{
 		public override void OnInspectorGUI()
 		{

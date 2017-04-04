@@ -3,7 +3,7 @@
 namespace UMA.Editors
 {
 	[CustomEditor(typeof(UMAGeneratorBuiltin), true)]
-	public class UMAGeneratorBuiltinEditor : UnityEditor.Editor
+	public class UMAGeneratorBuiltinEditor : Editor
 	{
 		public override void OnInspectorGUI()
 		{

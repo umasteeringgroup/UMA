@@ -1,9 +1,9 @@
 ﻿using UnityEditor;
 
-namespace UMA.Dynamics.Editor
+namespace UMA.Dynamics.Editors
 {
 	[CustomEditor(typeof(UMAPhysicsElement))]
-	public class UMAPhysicsElementEditor : UnityEditor.Editor
+	public class UMAPhysicsElementEditor : Editor
 	{
 		public override void OnInspectorGUI()
 		{

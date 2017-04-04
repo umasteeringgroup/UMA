@@ -26,7 +26,7 @@ namespace UMA
 		[UnityEditor.MenuItem("Assets/Create/UMA/DNA/BlendShape DNA")]
 		public static void CreateBlendShapeAsset()
 		{
-			UMA.Editors.CustomAssetUtility.CreateAsset<BlendShapeDnaAsset>();
+			UMA.CustomAssetUtility.CreateAsset<BlendShapeDnaAsset>();
 		}
 		#endif
 	}

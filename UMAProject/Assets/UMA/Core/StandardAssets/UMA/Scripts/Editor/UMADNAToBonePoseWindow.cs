@@ -11,7 +11,7 @@ using UnityEditor;
 
 namespace UMA.PoseTools
 {
-	public class UMADNAToBonePoseWindow : UnityEditor.EditorWindow
+	public class UMADNAToBonePoseWindow : EditorWindow
 	{
 		public UMAData sourceUMA;
 		public UnityEngine.Object outputFolder;

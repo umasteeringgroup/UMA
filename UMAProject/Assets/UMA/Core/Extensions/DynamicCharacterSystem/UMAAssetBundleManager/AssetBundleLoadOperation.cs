@@ -6,6 +6,9 @@ using UnityEngine.Networking;
 #if ENABLE_IOS_ON_DEMAND_RESOURCES
 using UnityEngine.iOS;
 #endif
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 using System.Collections;
 
 namespace UMA.AssetBundles
@@ -476,9 +479,9 @@ namespace UMA.AssetBundles
 			}
 
 			if (isAdditive)
-				m_Operation = UnityEditor.EditorApplication.LoadLevelAdditiveAsyncInPlayMode(levelPaths[0]);
+				m_Operation = EditorApplication.LoadLevelAdditiveAsyncInPlayMode(levelPaths[0]);
 			else
-				m_Operation = UnityEditor.EditorApplication.LoadLevelAsyncInPlayMode(levelPaths[0]);
+				m_Operation = EditorApplication.LoadLevelAsyncInPlayMode(levelPaths[0]);
 		}
 
 		public override bool Update()

@@ -4,7 +4,7 @@ using UnityEditor;
 namespace UMA.Editors
 {
 	[CustomEditor(typeof(OverlayData))]
-	public class OverlayInspector : UnityEditor.Editor 
+	public class OverlayInspector : Editor 
 	{
 	    [MenuItem("Assets/Create/UMA/Core/Overlay Asset")]
 	    public static void CreateOverlayMenuItem()

@@ -23,7 +23,7 @@ namespace UMA.Examples
             {
                 Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
                 RaycastHit hit;
-				if (UnityEngine.Physics.Raycast(ray, out hit, 100.0f))
+                if (Physics.Raycast(ray, out hit, 100.0f))
                 {
                     if (hit.collider.name == "Generated Character")
                     {

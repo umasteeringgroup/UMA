@@ -4,7 +4,7 @@ using UnityEditor;
 namespace UMA.Editors
 {
 	[CustomEditor(typeof(OverlayDataAsset))]
-	public class OverlayDataAssetInspector : UnityEditor.Editor
+	public class OverlayDataAssetInspector : Editor
 	{
 		public override void OnInspectorGUI()
 		{

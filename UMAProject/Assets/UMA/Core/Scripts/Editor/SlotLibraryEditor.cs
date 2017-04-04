@@ -7,7 +7,7 @@ namespace UMA.Editors
 {
 	[CustomEditor(typeof(SlotLibrary))]
 	[CanEditMultipleObjects]
-	public class SlotLibraryEditor : UnityEditor.Editor
+	public class SlotLibraryEditor : Editor
 	{
 		private SerializedObject m_Object;
 		private SlotLibrary slotLibrary;

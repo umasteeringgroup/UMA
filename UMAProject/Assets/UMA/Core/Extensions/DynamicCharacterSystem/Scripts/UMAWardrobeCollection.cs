@@ -152,7 +152,7 @@ namespace UMA.CharacterSystem
 			{
 				var packedRecipe = PackedLoadDCSInternal(context);
 				if(packedRecipe != null)
-					UnpackRecipeVersion2(umaRecipe, packedRecipe, context);
+				   UnpackRecipe(umaRecipe, packedRecipe, context);
 			}
 		}
 		#endregion
@@ -161,7 +161,7 @@ namespace UMA.CharacterSystem
 		[UnityEditor.MenuItem("Assets/Create/UMA/DCS/Wardrobe Collection")]
 		public static void CreateWardrobeCollectionAsset()
 		{
-			UMA.Editors.CustomAssetUtility.CreateAsset<UMAWardrobeCollection>();
+			UMA.CustomAssetUtility.CreateAsset<UMAWardrobeCollection>();
 		}
 #endif
 	}

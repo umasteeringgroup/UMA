@@ -78,7 +78,7 @@ namespace UMA.CharacterSystem
 					Debug.LogWarning("[UMADynamicCharacterAvatar] recipe did not have wardrobe set");
 				var packedRecipe = PackedLoadDCSInternal(context);
 				if (packedRecipe != null)
-					UnpackRecipeVersion2(umaRecipe, packedRecipe, context);
+				   UnpackRecipe(umaRecipe, packedRecipe, context);
 			}
 		}
 		/*we are not going to have a create menu option for DynamicCharacterAvatar recipes I dont think

@@ -5,7 +5,7 @@ using UMA.AssetBundles;
 namespace UMA.CharacterSystem.Editors
 {
 	[CustomEditor(typeof(DynamicAssetLoader),true)]
-	public class DynamicAssetLoaderEditor : UnityEditor.Editor
+	public class DynamicAssetLoaderEditor : Editor
 	{
 		public override void OnInspectorGUI()
 		{

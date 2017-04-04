@@ -188,7 +188,7 @@ namespace UMA
 			if (activeWardrobeSet.Count > 0 || (recipeType == "DynamicCharacterAvatar" /*|| recipeType == "WardrobeCollection"*/))
 			{
 				var packedRecipe = PackedLoadDCSInternal(context/*, recipeString*/);
-				UnpackRecipeVersion2(umaRecipe, packedRecipe, context);
+			   UnpackRecipe(umaRecipe, packedRecipe, context);
 			}
 			else //we can use standard UMALoading
 			{

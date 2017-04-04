@@ -30,7 +30,7 @@ namespace UMA.Dynamics
 		[UnityEditor.MenuItem("Assets/Create/UMA/Misc/Physics Element")]
 		public static void CreatePhysicsElementAsset()
 		{
-			UMA.Editors.CustomAssetUtility.CreateAsset<UMAPhysicsElement>();
+			UMA.CustomAssetUtility.CreateAsset<UMAPhysicsElement>();
 		}
 		#endif
 	}

@@ -7,7 +7,7 @@ namespace UMA.Editors
 {
 	[CustomEditor(typeof(OverlayLibrary))]
 	[CanEditMultipleObjects]
-	public class OverlayLibraryEditor : UnityEditor.Editor
+	public class OverlayLibraryEditor : Editor
 	{	
 		private SerializedObject m_Object;
 		private OverlayLibrary overlayLibrary;

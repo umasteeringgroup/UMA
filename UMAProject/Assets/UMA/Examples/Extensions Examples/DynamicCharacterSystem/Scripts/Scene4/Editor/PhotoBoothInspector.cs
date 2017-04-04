@@ -9,7 +9,7 @@ using UMA.CharacterSystem;
 namespace UMA.CharacterSystem.Examples
 {
 	[CustomEditor(typeof(PhotoBooth), true)]
-	public class PhotoBoothEditor : UnityEditor.Editor
+	public class PhotoBoothEditor : Editor
 	{
 		protected PhotoBooth thisPB;
 
@@ -21,7 +21,7 @@ namespace UMA.CharacterSystem.Examples
 		public override void OnInspectorGUI()
 		{
 			//DrawDefaultInspector ();
-			UnityEditor.Editor.DrawPropertiesExcluding(serializedObject, new string[] {"doingTakePhoto","animationFreezeFrame", "autoPhotosEnabled", "textureToPhoto","dimAllButTarget","dimToColor", "dimToMetallic", "neutralizeTargetColors","neutralizeToColor", "neutralizeToMetallic", "addUnderwearToBasePhoto","overwriteExistingPhotos","destinationFolder","photoName" });
+			Editor.DrawPropertiesExcluding(serializedObject, new string[] {"doingTakePhoto","animationFreezeFrame", "autoPhotosEnabled", "textureToPhoto","dimAllButTarget","dimToColor", "dimToMetallic", "neutralizeTargetColors","neutralizeToColor", "neutralizeToMetallic", "addUnderwearToBasePhoto","overwriteExistingPhotos","destinationFolder","photoName" });
 			serializedObject.ApplyModifiedProperties();
 			bool freezeAnimation = serializedObject.FindProperty("freezeAnimation").boolValue;
 			bool doingTakePhoto = serializedObject.FindProperty("doingTakePhoto").boolValue;
