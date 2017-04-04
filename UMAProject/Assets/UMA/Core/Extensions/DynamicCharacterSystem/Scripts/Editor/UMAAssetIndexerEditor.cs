@@ -13,8 +13,11 @@ public class UMAAssetIndexerEditor : Editor
     UMAAssetIndexer UAI;
     List<Object> AddedDuringGui = new List<Object>();
     List<System.Type> AddedTypes = new List<System.Type>();
-    List<UMAAssetIndexer.AssetItem> DeletedDuringGUI = new List<UMAAssetIndexer.AssetItem>();
+    List<AssetItem> DeletedDuringGUI = new List<AssetItem>();
     List<System.Type> RemovedTypes = new List<System.Type>();
+    public string Filter = "";
+
+    public UMAMaterial SelectedMaterial = null;
 
     [MenuItem("UMA/UMA Global Library")]
     public static void Init()
@@ -110,7 +113,7 @@ public class UMAAssetIndexerEditor : Editor
         foreach (var assetFile in assetFiles)
         {
             string Extension = System.IO.Path.GetExtension(assetFile).ToLower();
-            if (Extension == ".asset" || Extension == ".controller")
+            if (Extension == ".asset" || Extension == ".controller" || Extension == ".txt")
             {
                 Object o = AssetDatabase.LoadMainAssetAtPath(assetFile);
 
@@ -136,7 +139,7 @@ public class UMAAssetIndexerEditor : Editor
                 AddObject(o);
             }
 
-            foreach (UMAAssetIndexer.AssetItem ai in DeletedDuringGUI)
+            foreach (AssetItem ai in DeletedDuringGUI)
             {
                 UAI.RemoveAsset(ai._Type, ai._Name);
             }
@@ -192,6 +195,22 @@ public class UMAAssetIndexerEditor : Editor
         if (Toggles.Count != Types.Length) SetFoldouts(false);
 
         GUILayout.BeginHorizontal();
+        if (GUILayout.Button("Reindex Names"))
+        {
+            UAI.RebuildIndex();
+        }
+        if (GUILayout.Button("Clear References"))
+        {
+            UAI.ClearReferences();
+            Resources.UnloadUnusedAssets();
+        }
+        if (GUILayout.Button("Clear All"))
+        {
+            UAI.Clear();
+        }
+        GUILayout.EndHorizontal();
+
+        GUILayout.BeginHorizontal();
         if (GUILayout.Button("Collapse All"))
         {
             SetFoldouts(false);
@@ -201,28 +220,31 @@ public class UMAAssetIndexerEditor : Editor
         {
             SetFoldouts(true);
         }
-        if (GUILayout.Button("Reindex Names"))
-        {
-            UAI.RebuildIndex();
-        }
-        if (GUILayout.Button("Clear"))
-        {
-            UAI.Clear();
-        }
+
         GUILayout.EndHorizontal();
+
+        UAI.SerializeAllObjects = EditorGUILayout.Toggle("Serialize for build (SLOW)", UAI.SerializeAllObjects);
+        UAI.AutoUpdate = EditorGUILayout.Toggle("Process Updates", UAI.AutoUpdate);
+        Filter = EditorGUILayout.TextField("Filter Library", Filter);
 
         foreach (System.Type t in Types)
         {
             if (t != typeof(AnimatorController)) // Somewhere, a kitten died because I typed that.
             {
-                ShowArray(t);
+                ShowArray(t, Filter);
             }
         }
     }
 
-    public void ShowArray(System.Type CurrentType)
+
+    public void ShowArray(System.Type CurrentType, string Filter)
     {
-        Dictionary<string, UMAAssetIndexer.AssetItem> TypeDic = UAI.GetAssetDictionary(CurrentType);
+        bool HasFilter = false;
+
+        string actFilter = Filter.Trim().ToLower();
+        if (actFilter.Length > 0)
+            HasFilter = true;
+        Dictionary<string, AssetItem> TypeDic = UAI.GetAssetDictionary(CurrentType);
 
         GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
         GUILayout.Space(10);
@@ -233,7 +255,7 @@ public class UMAAssetIndexerEditor : Editor
 
         if (Toggles[CurrentType]) 
         {
-            GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+            GUIHelper.BeginVerticalPadded(5, new Color(0.75f, 0.875f, 1f));
             GUILayout.BeginHorizontal(); 
             GUILayout.Label("Sorted By: " + UMAAssetIndexer.SortOrder, GUILayout.MaxWidth(160));
             foreach (string s in UMAAssetIndexer.SortOrders)
@@ -246,14 +268,17 @@ public class UMAAssetIndexerEditor : Editor
             GUILayout.EndHorizontal();
 
 
-            List<UMAAssetIndexer.AssetItem> Items = new List<UMAAssetIndexer.AssetItem>();
+            List<AssetItem> Items = new List<AssetItem>();
             Items.AddRange(TypeDic.Values);
             Items.Sort();
-            foreach (UMAAssetIndexer.AssetItem ai in Items)
+            foreach (AssetItem ai in Items)
             {
+                string lblVal = ai.ToString(UMAAssetIndexer.SortOrder);
+                if (HasFilter && (!lblVal.ToLower().Contains(actFilter)))
+                    continue;
+
                 GUILayout.BeginHorizontal(EditorStyles.textField);
 
-                string lblVal = ai.ToString(UMAAssetIndexer.SortOrder);
                 if (GUILayout.Button(lblVal /* ai._Name + " (" + ai._AssetBaseName + ")" */, EditorStyles.label))
                 {
                     EditorGUIUtility.PingObject(AssetDatabase.LoadMainAssetAtPath(ai._Path));
@@ -266,7 +291,58 @@ public class UMAAssetIndexerEditor : Editor
                 GUILayout.EndHorizontal();
             }
 
-            GUIHelper.EndVerticalPadded(10);
+            if (CurrentType == typeof(SlotDataAsset) || CurrentType == typeof(OverlayDataAsset))
+            {
+                GUIHelper.BeginVerticalPadded(5, new Color(0.65f, 0.65f, 0.65f));
+                GUILayout.Label("Utilities");
+                GUILayout.Space(10);
+                EditorGUILayout.BeginHorizontal();
+                SelectedMaterial = (UMAMaterial)EditorGUILayout.ObjectField(SelectedMaterial, typeof(UMAMaterial), false);
+                GUILayout.Label("Assign To");
+                if (GUILayout.Button("Unassigned"))
+                {
+                    foreach (AssetItem ai in Items)
+                    {
+                        string lblVal = ai.ToString(UMAAssetIndexer.SortOrder);
+                        if (HasFilter && (!lblVal.ToLower().Contains(actFilter)))
+                            continue;
+
+                        if (ai._Type == typeof(SlotDataAsset))
+                        {
+                            if ((ai.Item as SlotDataAsset).material != null) continue;
+                            (ai.Item as SlotDataAsset).material = SelectedMaterial;
+                        }
+                        if (ai._Type == typeof(OverlayDataAsset))
+                        {
+                            if ((ai.Item as OverlayDataAsset).material != null) continue;
+                            (ai.Item as OverlayDataAsset).material = SelectedMaterial;
+                        }
+                    }
+                }
+                if (GUILayout.Button("All"))
+                {
+                    foreach (AssetItem ai in Items)
+                    {
+                        string lblVal = ai.ToString(UMAAssetIndexer.SortOrder);
+                        if (HasFilter && (!lblVal.ToLower().Contains(actFilter)))
+                            continue;
+
+                        if (ai._Type == typeof(SlotDataAsset))
+                        {
+                            (ai.Item as SlotDataAsset).material = SelectedMaterial;
+                        }
+                        if (ai._Type == typeof(OverlayDataAsset))
+                        {
+                            (ai.Item as OverlayDataAsset).material = SelectedMaterial;
+                        }
+                    }
+                }
+            
+                EditorGUILayout.EndHorizontal();
+                GUIHelper.EndVerticalPadded(5);
+            }
+
+            GUIHelper.EndVerticalPadded(5);
         }
     }
 

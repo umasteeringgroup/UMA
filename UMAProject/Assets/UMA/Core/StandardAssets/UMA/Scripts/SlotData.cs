@@ -239,7 +239,8 @@ namespace UMA
 						{
 							if (!overlayData.asset.material.Equals(asset.material))
 							{
-								Debug.LogError(string.Format("Slot '{0}' and Overlay '{1}' don't have the same UMA Material", asset.slotName, overlayData.asset.overlayName));
+                                
+								Debug.LogError(string.Format("Slot '{0} ({2})' and Overlay '{1} ({3})' don't have the same UMA Material", asset.slotName, overlayData.asset.overlayName, asset.material.name, overlayData.asset.material.name));
 								valid = false;
 							}
 						}
