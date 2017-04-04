@@ -437,7 +437,7 @@ namespace UMAEditor
 
 			//displayValue UI
 			string PreviousValue = displayValue;
-			displayValue = EditorGUILayout.TextField("Display Value", displayValue);
+			displayValue = EditorGUILayout.DelayedTextField("Display Value", displayValue);
 			if (displayValue != PreviousValue)
 			{
 				DisplayValueField.SetValue(target, displayValue);

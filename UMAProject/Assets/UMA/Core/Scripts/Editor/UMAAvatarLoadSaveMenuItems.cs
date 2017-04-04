@@ -308,8 +308,28 @@ public class UMAAvatarLoadSaveMenuItems : Editor
 		}
 	}
 
-	//We dont need this now pUMATextRecipe works out which model was used itself
-	/*[MenuItem("UMA/Load and Save/Load Dynamic Character Avatar From JSON", priority = 1)]
+    [UnityEditor.MenuItem("Assets/Add Selected Assets to UMA Global Library")]
+    public static void AddSelectedToGlobalLibrary()
+    {
+        int added = 0;
+        UMAAssetIndexer UAI = UMAAssetIndexer.Instance;
+
+        foreach(Object o in Selection.objects)
+        {
+            System.Type type = o.GetType();
+            if (UAI.IsIndexedType(type))
+            {
+                UAI.EvilAddAsset(type, o);
+                added++;
+            }
+        }
+        UAI.ForceSave();
+        EditorUtility.DisplayDialog("Success", added + " item(s) added to Global Library","OK");
+    }
+
+
+    //We dont need this now pUMATextRecipe works out which model was used itself
+    /*[MenuItem("UMA/Load and Save/Load Dynamic Character Avatar From JSON", priority = 1)]
     public static void LoadSelectedAvatarsJSON()
     {
         if (!Application.isPlaying)

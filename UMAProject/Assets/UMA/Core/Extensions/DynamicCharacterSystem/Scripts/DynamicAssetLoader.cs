@@ -939,6 +939,8 @@ namespace UMA
         /// <param name="callback"></param>
         bool SimulateAddAssetsFromAssetBundlesNew<T>(ref Dictionary<string, List<string>> assetBundlesUsedDict, ref List<T> assetsToReturn, string[] bundlesToSearchArray, int? assetNameHash = null, string assetName = "", Action<T[]> callback = null, bool forceDownloadAll = false) where T : UnityEngine.Object
         {
+            var st = UMAAssetIndexer.StartTimer();
+
             Type typeParameterType = typeof(T);
             var typeString = typeParameterType.FullName;
             int currentSimulatedDownloadedBundlesCount = simulatedDownloadedBundles.Count;
@@ -1107,6 +1109,7 @@ namespace UMA
                     }
                 }
             }
+            UMAAssetIndexer.StopTimer(st, "SimulateAddAssetsFromAssetBundlesNew Type=" + typeof(T).Name);
             return assetFound;
         }
 #endif
