@@ -390,10 +390,14 @@ namespace UMA.CharacterSystem
 				if (!Application.isPlaying && previewMesh)
 				{
 					Quaternion rotation = Quaternion.Euler(-90, 180, 0);
+					Vector3 scale = new Vector3(0.88f, 0.88f, 0.88f);
 					if (previewModel == PreviewModel.Custom)
+					{
 						rotation = Quaternion.Euler(customRotation);
+						scale = new Vector3(1, 1, 1);
+					}
 					mat.SetPass(0);
-					Graphics.DrawMeshNow(previewMesh, Matrix4x4.TRS(transform.position, transform.rotation * rotation, new Vector3(0.88f, 0.88f, 0.88f)));
+					Graphics.DrawMeshNow(previewMesh, Matrix4x4.TRS(transform.position, transform.rotation * rotation, scale));
 				}
 				lastPreviewModel = previewModel;
 				lastCustomModel = customModel;
