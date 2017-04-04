@@ -233,12 +233,13 @@ namespace UMA
 				return;
 			}
 #endif
-			didDnaAssetUpdate = false;
-            didDnaAssetUpdate = UMA.CharacterSystem.DynamicAssetLoader.Instance.AddAssets<DynamicUMADnaAsset>(true, true, true, "", "", null, _dnaAssetName, SetMissingDnaAsset);
-            if (didDnaAssetUpdate == false)
-            {
-                Debug.LogWarning("DynamicUMADna could not find DNAAsset " + _dnaAssetName + "!");
-            }
+// TODO Eli needs to talk to DOS about how to fix this so it's Standard Assets safe
+//			didDnaAssetUpdate = false;
+//            didDnaAssetUpdate = UMA.CharacterSystem.DynamicAssetLoader.Instance.AddAssets<DynamicUMADnaAsset>(true, true, true, "", "", null, _dnaAssetName, SetMissingDnaAsset);
+//            if (didDnaAssetUpdate == false)
+//            {
+//                Debug.LogWarning("DynamicUMADna could not find DNAAsset " + _dnaAssetName + "!");
+//            }
         }
 
         public static DynamicUMADna LoadInstance(string data)
