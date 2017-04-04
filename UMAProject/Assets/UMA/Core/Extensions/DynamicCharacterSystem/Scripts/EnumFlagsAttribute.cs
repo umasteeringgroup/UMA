@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace UMACharacterSystem
+namespace UMA.CharacterSystem
 {
 	public class EnumFlagsAttribute : PropertyAttribute
 	{

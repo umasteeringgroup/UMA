@@ -9,7 +9,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UMA.PhysicsAvatar;
+using UMA.Dynamics;
 
 namespace UMA
 {

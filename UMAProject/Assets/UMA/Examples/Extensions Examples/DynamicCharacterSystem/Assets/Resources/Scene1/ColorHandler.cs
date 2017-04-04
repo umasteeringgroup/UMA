@@ -1,24 +1,27 @@
 ﻿using UnityEngine;
 using System.Collections;
-using UMACharacterSystem;
+using UMA.CharacterSystem;
 using UMA;
 
-public class ColorHandler : MonoBehaviour
+namespace UMA.CharacterSystem.Examples
 {
-    DynamicCharacterAvatar Avatar;
-    string ColorName;
-    OverlayColorData ColorValue;
-
-    public void Setup(DynamicCharacterAvatar avatar, string colorName, OverlayColorData colorValue)
+    public class ColorHandler : MonoBehaviour
     {
-        Avatar = avatar;
-        ColorName = colorName;
-        ColorValue = colorValue;
-    }
+        DynamicCharacterAvatar Avatar;
+        string ColorName;
+        OverlayColorData ColorValue;
 
-    public void OnClick()
-    {
-        Avatar.SetColor(ColorName, ColorValue);
-        Avatar.UpdateColors(true);
+        public void Setup(DynamicCharacterAvatar avatar, string colorName, OverlayColorData colorValue)
+        {
+            Avatar = avatar;
+            ColorName = colorName;
+            ColorValue = colorValue;
+        }
+
+        public void OnClick()
+        {
+            Avatar.SetColor(ColorName, ColorValue);
+            Avatar.UpdateColors(true);
+        }
     }
 }

@@ -1,12 +1,10 @@
 using UnityEngine;
 using UnityEngine.Events;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using UMA.PoseTools;
 
-namespace UMA
+namespace UMA.CharacterSystem
 {
     //A serialized version of DNAConverterBehaviour, so that we can include these settings in assetBundles, which cannot include their own scripts...
     //Uses DynamicUmaDna which can have Dynamic DNA Names based on a DynamicUmaDnaAsset - if there is no asset set DynamicUmaDna falls back to UMADnaHumanoid

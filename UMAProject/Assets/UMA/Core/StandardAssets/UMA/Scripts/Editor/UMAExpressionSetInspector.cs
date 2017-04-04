@@ -7,12 +7,11 @@
 
 using UnityEngine;
 using UnityEditor;
-using System.Collections;
 
 namespace UMA.PoseTools
 {
 	[CustomEditor(typeof(UMAExpressionSet))]
-	public class UMAExpressionSetInspector : Editor
+	public class UMAExpressionSetInspector : UnityEditor.Editor
 	{
 		private UMAExpressionSet expressionSet;
 		public void OnEnable()

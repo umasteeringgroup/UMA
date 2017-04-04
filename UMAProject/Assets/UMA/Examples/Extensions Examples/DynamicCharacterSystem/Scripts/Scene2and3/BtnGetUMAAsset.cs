@@ -2,39 +2,37 @@
 using UnityEngine.Events;
 using System.Collections;
 using UMA;
-using UMAAssetBundleManager;
+using UMA.AssetBundles;
 
-public class BtnGetUMAAsset : MonoBehaviour {
-
-    public enum UMAAssetType  { Race, Slot, Overlay, Recipe};
-
-    public string assetName = "";
-    public UMAAssetType umaAssetType = UMAAssetType.Race;
-    public UnityEvent assetLoaded;
-    //bool assetLoading = false;
-    
-    public void GetAsset()
+namespace UMA.CharacterSystem.Examples
+{
+    public class BtnGetUMAAsset : MonoBehaviour
     {
-        if(umaAssetType == UMAAssetType.Race)
-        {
+        public enum UMAAssetType  { Race, Slot, Overlay, Recipe};
 
-        }
-        else if (umaAssetType == UMAAssetType.Slot)
+        public string assetName = "";
+        public UMAAssetType umaAssetType = UMAAssetType.Race;
+        public UnityEvent assetLoaded;
+        //bool assetLoading = false;
+        
+        public void GetAsset()
         {
+            if(umaAssetType == UMAAssetType.Race)
+            {
 
-        }
-        else if (umaAssetType == UMAAssetType.Overlay)
-        {
+            }
+            else if (umaAssetType == UMAAssetType.Slot)
+            {
 
-        }
-        else if (umaAssetType == UMAAssetType.Recipe)
-        {
+            }
+            else if (umaAssetType == UMAAssetType.Overlay)
+            {
 
+            }
+            else if (umaAssetType == UMAAssetType.Recipe)
+            {
+
+            }
         }
     }
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
 }

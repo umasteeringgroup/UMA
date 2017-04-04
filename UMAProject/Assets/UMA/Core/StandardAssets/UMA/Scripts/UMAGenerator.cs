@@ -1,21 +1,23 @@
 using UnityEngine;
-using UMA;
 
-public class UMAGenerator : UMAGeneratorBuiltin
+namespace UMA
 {
-	public override void Awake()
-	{
-		base.Awake();
-	}
-
-    public override void addDirtyUMA(UMAData umaToAdd)
+    public class UMAGenerator : UMAGeneratorBuiltin
     {
-        if (!gameObject.activeInHierarchy)
+        public override void Awake()
         {
-            Debug.LogError("Adding Dirty UMA to a Generator that is not an active scene object, UMA generators must be active scene objects!", gameObject);
-            Debug.LogError("UMA Data ", umaToAdd.gameObject);
-            return;
+            base.Awake();
         }
-        base.addDirtyUMA(umaToAdd);
+
+        public override void addDirtyUMA(UMAData umaToAdd)
+        {
+            if (!gameObject.activeInHierarchy)
+            {
+                Debug.LogError("Adding Dirty UMA to a Generator that is not an active scene object, UMA generators must be active scene objects!", gameObject);
+                Debug.LogError("UMA Data ", umaToAdd.gameObject);
+                return;
+            }
+            base.addDirtyUMA(umaToAdd);
+        }
     }
 }

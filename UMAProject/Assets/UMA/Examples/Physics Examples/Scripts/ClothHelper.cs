@@ -2,77 +2,72 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ClothHelper : MonoBehaviour {
-
-	public float distance = 0.0f;
-	public float penetration = 10.0f;
-
-	public float distanceMax = 0.0f;
-	public float penetrationMax = 10.0f;
-	public Texture2D clothWeightMap;
-
-	[HideInInspector]
-	public bool drawFlag = true;
-	[HideInInspector]
-	public Dictionary<Vector3, int> clothVerts = new Dictionary<Vector3, int>();
-
-	private Cloth m_Cloth;
-	private float m_CubeLen = 0.01f;
-
-	// Use this for initialization
-	void Start () 
+namespace UMA.Dynamics.Examples
+{
+	public class ClothHelper : MonoBehaviour
 	{
-		m_Cloth = gameObject.GetComponent<Cloth> ();	
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
+		public float distance = 0.0f;
+		public float penetration = 10.0f;
+		public float distanceMax = 0.0f;
+		public float penetrationMax = 10.0f;
+		public Texture2D clothWeightMap;
 
-	void OnDrawGizmos()
-	{
-		if (drawFlag) 
+		[HideInInspector]
+		public bool drawFlag = true;
+		[HideInInspector]
+		public Dictionary<Vector3, int> clothVerts = new Dictionary<Vector3, int>();
+
+		private Cloth m_Cloth;
+		private float m_CubeLen = 0.01f;
+
+		// Use this for initialization
+		void Start () 
 		{
-			Vector3 size = new Vector3 (m_CubeLen, m_CubeLen, m_CubeLen);
-			Gizmos.color = new Color (1, 0, 0, 1);
-			if (m_Cloth == null) 
-			{
-				m_Cloth = gameObject.GetComponent<Cloth> ();	
-			}
+			m_Cloth = gameObject.GetComponent<Cloth> ();	
+		}
 
-			if (m_Cloth != null) 
+		void OnDrawGizmos()
+		{
+			if (drawFlag) 
 			{
-				/*for (int i = 0; i < m_Cloth.vertices.Length; i++) 
+				Vector3 size = new Vector3 (m_CubeLen, m_CubeLen, m_CubeLen);
+				Gizmos.color = new Color (1, 0, 0, 1);
+				if (m_Cloth == null) 
 				{
-					Gizmos.DrawCube (m_Cloth.vertices [i], size);
-				}*/
-				foreach( KeyValuePair<Vector3, int> item in clothVerts )
+					m_Cloth = gameObject.GetComponent<Cloth> ();	
+				}
+
+				if (m_Cloth != null) 
 				{
-					Gizmos.DrawCube (item.Key, size);
+					/*for (int i = 0; i < m_Cloth.vertices.Length; i++) 
+					{
+						Gizmos.DrawCube (m_Cloth.vertices [i], size);
+					}*/
+					foreach( KeyValuePair<Vector3, int> item in clothVerts )
+					{
+						Gizmos.DrawCube (item.Key, size);
+					}
 				}
 			}
 		}
-	}
 
-	public void SetAllClothContraints()
-	{
-		Debug.Log ("Setting All Cloth Constraints");
-
-		if (m_Cloth == null) 
+		public void SetAllClothContraints()
 		{
-			Debug.LogError ("No Cloth component found!");
-			return;
-		}
+			Debug.Log ("Setting All Cloth Constraints");
 
-		ClothSkinningCoefficient[] newConstraints = new ClothSkinningCoefficient[m_Cloth.coefficients.Length];
-		for (int i = 0; i < m_Cloth.coefficients.Length; i++) 
-		{
-			newConstraints [i].maxDistance = distance;
-			newConstraints [i].collisionSphereDistance = penetration;
+			if (m_Cloth == null) 
+			{
+				Debug.LogError ("No Cloth component found!");
+				return;
+			}
+
+			ClothSkinningCoefficient[] newConstraints = new ClothSkinningCoefficient[m_Cloth.coefficients.Length];
+			for (int i = 0; i < m_Cloth.coefficients.Length; i++) 
+			{
+				newConstraints [i].maxDistance = distance;
+				newConstraints [i].collisionSphereDistance = penetration;
+			}
+			m_Cloth.coefficients = newConstraints;
 		}
-		m_Cloth.coefficients = newConstraints;
 	}
-
-
 }

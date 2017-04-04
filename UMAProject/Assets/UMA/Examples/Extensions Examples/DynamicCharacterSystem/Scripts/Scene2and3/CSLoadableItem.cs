@@ -2,19 +2,22 @@
 using UnityEngine.UI;
 using System.Collections;
 
-public class CSLoadableItem : MonoBehaviour {
-
-    public TestCustomizerDD customizerScript;
-    public string filename = "";
-    public string filepath = "";
-
-    public void loadThisFile()
+namespace UMA.CharacterSystem.Examples
+{
+    public class CSLoadableItem : MonoBehaviour
     {
-        //make sure no others are clicked...
-        foreach(Button but in this.gameObject.transform.parent.GetComponentsInChildren<Button>())
+        public TestCustomizerDD customizerScript;
+        public string filename = "";
+        public string filepath = "";
+
+        public void loadThisFile()
         {
-            but.interactable = false;
+            //make sure no others are clicked...
+            foreach(Button but in this.gameObject.transform.parent.GetComponentsInChildren<Button>())
+            {
+                but.interactable = false;
+            }
+            customizerScript.LoadListedFile(filename, filepath);
         }
-        customizerScript.LoadListedFile(filename, filepath);
     }
 }

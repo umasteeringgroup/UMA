@@ -1,20 +1,12 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-
 using UnityEditor;
-
 using UnityEngine;
+using UMA.CharacterSystem;
 
-using Object = UnityEngine.Object;
-using UMA;
-using UMA.Integrations;
-using UMACharacterSystem;
-
- 
-namespace UMAEditor
+namespace UMA.Editors
 {
 	public partial class RecipeEditor
 	{

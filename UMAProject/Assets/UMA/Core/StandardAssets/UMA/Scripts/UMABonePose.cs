@@ -8,7 +8,6 @@ using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
-using System.Collections;
 using System.Collections.Generic;
 
 namespace UMA.PoseTools
@@ -111,7 +110,7 @@ namespace UMA.PoseTools
 		[UnityEditor.MenuItem("Assets/Create/UMA/DNA/Bone Pose")]
 		public static void CreateBonePoseAsset()
 		{
-			UMAEditor.CustomAssetUtility.CreateAsset<UMABonePose>();
+			UMA.Editors.CustomAssetUtility.CreateAsset<UMABonePose>();
 		}
 #endif
 

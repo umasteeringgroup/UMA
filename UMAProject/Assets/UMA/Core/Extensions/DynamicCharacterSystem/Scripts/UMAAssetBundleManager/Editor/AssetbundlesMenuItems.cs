@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections;
 
-namespace UMAAssetBundleManager
+namespace UMA.AssetBundles
 {
 	public class AssetBundlesMenuItems
 	{

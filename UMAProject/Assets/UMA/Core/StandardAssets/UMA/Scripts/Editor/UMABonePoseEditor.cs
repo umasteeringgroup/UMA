@@ -2,14 +2,12 @@ using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
-using System;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace UMA.PoseTools
 {
     [CustomEditor(typeof(UMABonePose),true)]
-    public class UMABonePoseEditor : Editor
+    public class UMABonePoseEditor : UnityEditor.Editor
     {
 		// HACK for testing
 		public UMAData sourceUMA;

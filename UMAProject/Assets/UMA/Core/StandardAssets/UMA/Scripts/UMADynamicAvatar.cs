@@ -1,41 +1,38 @@
 using UnityEngine;
-using System;
-using System.IO;
-using System.Runtime.Serialization;
-using System.Collections;
-using System.Collections.Generic;
-using UMA;
 
-/// <summary>
-/// UMA avatar which can automatically load on start.
-/// </summary>
-public class UMADynamicAvatar : UMAAvatarBase
+namespace UMA
 {
-	public bool loadOnStart;
-	public override void Start()
+	/// <summary>
+	/// UMA avatar which can automatically load on start.
+	/// </summary>
+	public class UMADynamicAvatar : UMAAvatarBase
 	{
-		base.Start();
-		if (loadOnStart)
+		public bool loadOnStart;
+		public override void Start()
 		{
-			if (umaAdditionalRecipes == null || umaAdditionalRecipes.Length == 0)
+			base.Start();
+			if (loadOnStart)
 			{
-				Load(umaRecipe);
-			}
-			else
-			{
-				Load(umaRecipe, umaAdditionalRecipes);
+				if (umaAdditionalRecipes == null || umaAdditionalRecipes.Length == 0)
+				{
+					Load(umaRecipe);
+				}
+				else
+				{
+					Load(umaRecipe, umaAdditionalRecipes);
+				}
 			}
 		}
+	#if UNITY_EDITOR
+		[UnityEditor.MenuItem("GameObject/Create Other/UMA/Dynamic Avatar")]
+		static void CreateDynamicAvatarMenuItem()
+		{
+			var res = new GameObject("New Dynamic Avatar");
+			var da = res.AddComponent<UMADynamicAvatar>();
+			da.context = UMAContext.FindInstance();
+			da.umaGenerator = Component.FindObjectOfType<UMAGeneratorBase>();
+			UnityEditor.Selection.activeGameObject = res;
+		}
+	#endif
 	}
-#if UNITY_EDITOR
-	[UnityEditor.MenuItem("GameObject/Create Other/UMA/Dynamic Avatar")]
-	static void CreateDynamicAvatarMenuItem()
-	{
-		var res = new GameObject("New Dynamic Avatar");
-		var da = res.AddComponent<UMADynamicAvatar>();
-		da.context = UMAContext.FindInstance();
-		da.umaGenerator = Component.FindObjectOfType<UMAGeneratorBase>();
-		UnityEditor.Selection.activeGameObject = res;
-	}
-#endif
 }

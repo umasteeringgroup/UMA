@@ -2,16 +2,13 @@ using UnityEngine;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using UMAAssetBundleManager;
+using UMA.AssetBundles;
 
-namespace UMA
+namespace UMA.CharacterSystem
 {
-
 	[System.Serializable]
 	public class DownloadingAssetsList
 	{
-
-
 		public List<DownloadingAssetItem> downloadingItems = new List<DownloadingAssetItem>();
 		public bool areDownloadedItemsReady = true;
 
@@ -232,12 +229,12 @@ namespace UMA
 					else if (item.tempAsset.GetType() == typeof(UMATextRecipe))
 					{
 						UMATextRecipe downloadedRecipe = loadedBundleAB.LoadAsset<UMATextRecipe>(itemFilename);
-						(UMAContext.Instance.dynamicCharacterSystem as UMACharacterSystem.DynamicCharacterSystem).AddRecipe(downloadedRecipe);
+						(UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem).AddRecipe(downloadedRecipe);
 					}
 					else if (item.tempAsset.GetType() == typeof(UMAWardrobeRecipe))
 					{
 						UMAWardrobeRecipe downloadedRecipe = loadedBundleAB.LoadAsset<UMAWardrobeRecipe>(itemFilename);
-						(UMAContext.Instance.dynamicCharacterSystem as UMACharacterSystem.DynamicCharacterSystem).AddRecipe(downloadedRecipe);
+						(UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem).AddRecipe(downloadedRecipe);
 					}
 					else if (item.dynamicCallback.Count > 0)
 					{

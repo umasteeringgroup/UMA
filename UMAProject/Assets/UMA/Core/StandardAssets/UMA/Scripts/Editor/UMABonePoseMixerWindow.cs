@@ -7,12 +7,11 @@
 
 using UnityEngine;
 using UnityEditor;
-using System.Text;
 using System.Collections.Generic;
 
 namespace UMA.PoseTools
 {
-	public class UMABonePoseMixerWindow : EditorWindow
+	public class UMABonePoseMixerWindow : UnityEditor.EditorWindow
 	{
 		public Transform skeleton = null;
 		public UnityEngine.Object poseFolder = null;

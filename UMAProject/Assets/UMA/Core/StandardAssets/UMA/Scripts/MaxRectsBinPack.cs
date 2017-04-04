@@ -6,15 +6,11 @@
  	This version is also public domain - do whatever you want with it.
 */
 
-
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
-
 
 namespace UMA
 {
-
 	public class MaxRectsBinPack{
 	 
 		public int binWidth = 0;

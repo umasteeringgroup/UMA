@@ -1,12 +1,12 @@
 ﻿#if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
-using UMA;
 using System.IO;
 
-namespace UMAEditor
+namespace UMA.Editors
 {
-	public static class TPoseExtracter  {
+	public static class TPoseExtracter
+	{
 	    [MenuItem("UMA/Extract T-Pose")]
 	    static void ExtractTPose()
 	    {

@@ -2,9 +2,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using UMA;
-using UMAAssetBundleManager;
+using UMA.AssetBundles;
 
-namespace UMACharacterSystem
+namespace UMA.CharacterSystem.Examples
 {
 	public class WardrobeCollectionDemoBtn : MonoBehaviour
 	{

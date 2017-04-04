@@ -1,28 +1,30 @@
 ﻿#if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
-using UMA;
 
-[CustomEditor(typeof(UMAAssetCollection), true)]
-public class UMAAssetCollectionEditor : Editor 
+namespace UMA.Editors
 {
-	public override void OnInspectorGUI()
+	[CustomEditor(typeof(UMAAssetCollection), true)]
+	public class UMAAssetCollectionEditor : UnityEditor.Editor 
 	{
-		if (GUILayout.Button("Add to Scene"))
+		public override void OnInspectorGUI()
 		{
-			var collection = target as UMAAssetCollection;
-			var overlayLibrary = UnityEngine.Object.FindObjectOfType<OverlayLibraryBase>();
-			var slotLibrary = UnityEngine.Object.FindObjectOfType<SlotLibraryBase>();
-			var raceLibrary = UnityEngine.Object.FindObjectOfType<RaceLibraryBase>();
-			collection.AddToLibraries(overlayLibrary, slotLibrary, raceLibrary);
+			if (GUILayout.Button("Add to Scene"))
+			{
+				var collection = target as UMAAssetCollection;
+				var overlayLibrary = UnityEngine.Object.FindObjectOfType<OverlayLibraryBase>();
+				var slotLibrary = UnityEngine.Object.FindObjectOfType<SlotLibraryBase>();
+				var raceLibrary = UnityEngine.Object.FindObjectOfType<RaceLibraryBase>();
+				collection.AddToLibraries(overlayLibrary, slotLibrary, raceLibrary);
+			}
+			base.OnInspectorGUI();
 		}
-		base.OnInspectorGUI();
-	}
 
-	[MenuItem("Assets/Create/UMA/Core/Asset Collection")]
-	public static void CreateUMAAssetCollection()
-	{
-		UMAEditor.CustomAssetUtility.CreateAsset<UMAAssetCollection>();
+		[MenuItem("Assets/Create/UMA/Core/Asset Collection")]
+		public static void CreateUMAAssetCollection()
+		{
+			UMA.Editors.CustomAssetUtility.CreateAsset<UMAAssetCollection>();
+		}
 	}
+	#endif
 }
-#endif

@@ -2,8 +2,6 @@ using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
-using System;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace UMA
@@ -236,7 +234,7 @@ namespace UMA
 			}
 #endif
 			didDnaAssetUpdate = false;
-            didDnaAssetUpdate = DynamicAssetLoader.Instance.AddAssets <UMA.DynamicUMADnaAsset > (true, true, true, "", "", null, _dnaAssetName, SetMissingDnaAsset);
+            didDnaAssetUpdate = UMA.CharacterSystem.DynamicAssetLoader.Instance.AddAssets<DynamicUMADnaAsset>(true, true, true, "", "", null, _dnaAssetName, SetMissingDnaAsset);
             if (didDnaAssetUpdate == false)
             {
                 Debug.LogWarning("DynamicUMADna could not find DNAAsset " + _dnaAssetName + "!");

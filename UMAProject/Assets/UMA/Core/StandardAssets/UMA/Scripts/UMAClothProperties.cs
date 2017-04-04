@@ -10,7 +10,7 @@ namespace UMA
 		[UnityEditor.MenuItem("Assets/Create/UMA/Misc/Cloth Properties")]
 		public static void CreateClothPropertiesAsset()
 		{
-			UMAEditor.CustomAssetUtility.CreateAsset<UMAClothProperties>();
+			UMA.Editors.CustomAssetUtility.CreateAsset<UMAClothProperties>();
 		}
 		#endif
 

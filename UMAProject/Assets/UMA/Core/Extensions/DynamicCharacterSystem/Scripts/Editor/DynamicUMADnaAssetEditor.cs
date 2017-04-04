@@ -1,24 +1,14 @@
 #if UNITY_EDITOR
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
-using UMA;
+using UMA.Editors;
 
-
-namespace UMAEditor
+namespace UMA.CharacterSystem.Editors
 {
     [CustomEditor(typeof(DynamicUMADnaAsset))]
-    public class DynamicUMADnaAssetEditor : Editor {
-
-		//We will make DNA Assets so they can only be created from a DynamicDNAConverter as this will re-enforce the idea that
-		//DynamicDNAConverter's need to work with specific DNA
-		/*[MenuItem("Assets/Create/Dynamic UMA DNA Asset")]
-        public static void CreateDynamicUMADnaMenuItem()
-        {
-            CustomAssetUtility.CreateAsset<DynamicUMADnaAsset>();
-        }*/
-
+    public class DynamicUMADnaAssetEditor : UnityEditor.Editor
+	{
 		public string newDNAName = "";
 
 		int DNAAssetPickerID = 0;

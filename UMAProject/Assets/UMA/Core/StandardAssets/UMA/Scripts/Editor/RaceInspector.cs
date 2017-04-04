@@ -1,13 +1,11 @@
 #if UNITY_EDITOR
 using UnityEngine;
-using System.Collections;
 using UnityEditor;
-using UMA;
 
-namespace UMAEditor
+namespace UMA.Editors
 {
 	[CustomEditor(typeof(RaceData))]
-	public partial class RaceInspector : Editor 
+	public partial class RaceInspector : UnityEditor.Editor 
 	{
 	    [MenuItem("Assets/Create/UMA/Core/RaceData")]
 	    public static void CreateRaceMenuItem()

@@ -2,13 +2,9 @@ using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
-using System.Collections;
 using System.Collections.Generic;
-using System;
-using UMA;
-using UMAAssetBundleManager;
 
-namespace UMACharacterSystem
+namespace UMA.CharacterSystem
 {
 	public class DynamicCharacterSystem : DynamicCharacterSystemBase
 	{

@@ -5,7 +5,7 @@ using UnityEditor;
 using System.Collections;
 using System.IO;
 
-namespace UMAAssetBundleManager
+namespace UMA.AssetBundles
 {
 	[System.Serializable]
 	public partial class UMAEncryptedBundle : ScriptableObject

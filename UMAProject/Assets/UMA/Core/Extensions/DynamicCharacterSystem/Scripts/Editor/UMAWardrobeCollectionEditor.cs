@@ -1,25 +1,16 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-
 using UnityEditor;
-
 using UnityEngine;
+using UMA.CharacterSystem;
 
-using Object = UnityEngine.Object;
-using UMA;
-using UMA.Integrations;
-using UMACharacterSystem;
-
-
-namespace UMAEditor
+namespace UMA.Editors
 {
 	[CustomEditor(typeof(UMAWardrobeCollection), true)]
-	public partial class UMAWardrobeCollectionEditor : RecipeEditor {
-
-
+	public partial class UMAWardrobeCollectionEditor : RecipeEditor
+	{
 		static bool coverImagesIsExpanded = false;
 
 		protected override bool PreInspectorGUI()

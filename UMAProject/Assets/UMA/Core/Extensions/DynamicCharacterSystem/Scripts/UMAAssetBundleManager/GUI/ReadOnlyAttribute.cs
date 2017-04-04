@@ -1,5 +1,9 @@
 ﻿using UnityEngine;
-public class ReadOnlyAttribute : PropertyAttribute
-{
 
+namespace UMA.AssetBundles
+{
+	public class ReadOnlyAttribute : PropertyAttribute
+	{
+
+	}
 }

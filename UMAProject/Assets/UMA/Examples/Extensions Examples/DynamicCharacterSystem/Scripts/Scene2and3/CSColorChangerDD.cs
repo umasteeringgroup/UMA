@@ -1,13 +1,17 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class CSColorChangerDD : MonoBehaviour {
+namespace UMA.CharacterSystem.Examples
+{
+	public class CSColorChangerDD : MonoBehaviour
+	{
+		public string colorToChange;
 
-	public string colorToChange;
+		public TestCustomizerDD customizerScript;
 
-	public TestCustomizerDD customizerScript;
-
-	public void ChangeColor(int colorId){
-		customizerScript.SetColor(colorToChange, colorId);
+		public void ChangeColor(int colorId)
+		{
+			customizerScript.SetColor(colorToChange, colorId);
+		}
 	}
 }

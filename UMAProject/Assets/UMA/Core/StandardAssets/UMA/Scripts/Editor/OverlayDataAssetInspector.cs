@@ -1,14 +1,10 @@
 #if UNITY_EDITOR
-using UnityEngine;
-using System.Collections;
 using UnityEditor;
-using UMA;
 
-
-namespace UMAEditor
+namespace UMA.Editors
 {
 	[CustomEditor(typeof(OverlayDataAsset))]
-	public class OverlayDataAssetInspector : Editor
+	public class OverlayDataAssetInspector : UnityEditor.Editor
 	{
 		public override void OnInspectorGUI()
 		{
@@ -20,7 +16,6 @@ namespace UMAEditor
 				AssetDatabase.SaveAssets();
 			}
 		}
-
 	}
 }
 #endif

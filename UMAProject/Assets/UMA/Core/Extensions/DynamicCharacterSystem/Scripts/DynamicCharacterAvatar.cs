@@ -13,10 +13,9 @@ using System;
 using System.IO;
 using System.Collections;
 using System.Collections.Generic;
-using UMA;
 using UMA.PoseTools;//so we can set the expression set based on the race
 
-namespace UMACharacterSystem
+namespace UMA.CharacterSystem
 {
 	public class DynamicCharacterAvatar : UMAAvatarBase
 	{
@@ -2722,7 +2721,7 @@ namespace UMACharacterSystem
 			thisUMAContext.slotLibrary = EditorUMAContext.AddComponent<DynamicSlotLibrary>();
 			(thisUMAContext.slotLibrary as DynamicSlotLibrary).dynamicallyAddFromResources = true;
 			(thisUMAContext.slotLibrary as DynamicSlotLibrary).dynamicallyAddFromAssetBundles = true;
-			thisUMAContext.dynamicCharacterSystem = EditorUMAContext.AddComponent<UMACharacterSystem.DynamicCharacterSystem>();
+			thisUMAContext.dynamicCharacterSystem = EditorUMAContext.AddComponent<DynamicCharacterSystem>();
 			(thisUMAContext.dynamicCharacterSystem as DynamicCharacterSystem).dynamicallyAddFromResources = true;
 			(thisUMAContext.dynamicCharacterSystem as DynamicCharacterSystem).dynamicallyAddFromAssetBundles = true;
 			var thisDAL = EditorUMAContext.AddComponent<DynamicAssetLoader>();

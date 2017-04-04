@@ -1,158 +1,160 @@
 using UnityEngine;
 using System.Collections.Generic;
-using UMA;
 using System;
 
-public class SlotLibrary : SlotLibraryBase
+namespace UMA
 {
-	[SerializeField]
-	protected SlotDataAsset[] slotElementList = new SlotDataAsset[0];
-	[NonSerialized]
-	private Dictionary<int, SlotDataAsset> slotDictionary;
-
-	void Awake()
+	public class SlotLibrary : SlotLibraryBase
 	{
-		ValidateDictionary();
-	}
+		[SerializeField]
+		protected SlotDataAsset[] slotElementList = new SlotDataAsset[0];
+		[NonSerialized]
+		private Dictionary<int, SlotDataAsset> slotDictionary;
 
-#pragma warning disable 618
-	override public void UpdateDictionary()
-	{
-		ValidateDictionary();
-		slotDictionary.Clear();
-		for (int i = 0; i < slotElementList.Length; i++)
+		void Awake()
 		{
-			if (slotElementList[i])
-			{
-				var hash = slotElementList[i].nameHash;
-				if (!slotDictionary.ContainsKey(hash))
-				{
-					slotDictionary.Add(hash, slotElementList[i]);
-				}
-			}
+			ValidateDictionary();
 		}
-	}
 
-	public override void ValidateDictionary()
-	{
-		if (slotDictionary == null)
+	#pragma warning disable 618
+		override public void UpdateDictionary()
 		{
-			slotDictionary = new Dictionary<int, SlotDataAsset>();
-			UpdateDictionary();
-		}
-	}
-
-	public override void AddSlotAsset(SlotDataAsset slot)
-	{
-		ValidateDictionary();
-		if (slotDictionary.ContainsKey(slot.nameHash))
-		{
+			ValidateDictionary();
+			slotDictionary.Clear();
 			for (int i = 0; i < slotElementList.Length; i++)
 			{
-				if (slotElementList[i].slotName == slot.slotName)
+				if (slotElementList[i])
 				{
-					slotElementList[i] = slot;
-					break;
+					var hash = slotElementList[i].nameHash;
+					if (!slotDictionary.ContainsKey(hash))
+					{
+						slotDictionary.Add(hash, slotElementList[i]);
+					}
 				}
 			}
 		}
-		else
+
+		public override void ValidateDictionary()
 		{
-			var list = new SlotDataAsset[slotElementList.Length + 1];
-			for (int i = 0; i < slotElementList.Length; i++)
+			if (slotDictionary == null)
 			{
-				list[i] = slotElementList[i];
+				slotDictionary = new Dictionary<int, SlotDataAsset>();
+				UpdateDictionary();
 			}
-			list[list.Length - 1] = slot;
-			slotElementList = list;
 		}
-		slotDictionary[slot.nameHash] = slot;
-	}
-#pragma warning restore 618
 
-	public override bool HasSlot(string name)
-	{
-		ValidateDictionary();
-		return slotDictionary.ContainsKey(UMAUtils.StringToHash(name));
-	}
-
-	public override bool HasSlot(int nameHash)
-	{
-		ValidateDictionary();
-		return slotDictionary.ContainsKey(nameHash);
-	}
-
-	public override SlotData InstantiateSlot(string name)
-	{
-		var res = Internal_InstantiateSlot(UMAUtils.StringToHash(name));
-		if (res == null)
+		public override void AddSlotAsset(SlotDataAsset slot)
 		{
-			throw new UMAResourceNotFoundException("SlotLibrary: Unable to find: " + name);
-		}
-		return res;
-	}
-	public override SlotData InstantiateSlot(int nameHash)
-	{
-		var res = Internal_InstantiateSlot(nameHash);
-		if (res == null)
-		{
-			throw new UMAResourceNotFoundException("SlotLibrary: Unable to find hash: " + nameHash);
-		}
-		return res;
-	}
-
-	public override SlotData InstantiateSlot(string name, List<OverlayData> overlayList)
-	{
-		var res = Internal_InstantiateSlot(UMAUtils.StringToHash(name));
-		if (res == null)
-		{
-			throw new UMAResourceNotFoundException("SlotLibrary: Unable to find: " + name);
-		}
-		res.SetOverlayList(overlayList);
-		return res;
-	}
-
-	public override SlotData InstantiateSlot(int nameHash, List<OverlayData> overlayList)
-	{
-		var res = Internal_InstantiateSlot(nameHash);
-		if (res == null)
-		{
-#if UNITY_EDITOR
-			foreach (var path in UnityEditor.AssetDatabase.GetAllAssetPaths())
+			ValidateDictionary();
+			if (slotDictionary.ContainsKey(slot.nameHash))
 			{
-				if (!path.EndsWith(".asset")) continue;
-				var slot = UnityEditor.AssetDatabase.LoadAssetAtPath(path, typeof(SlotDataAsset)) as SlotDataAsset;
-				if (slot == null) continue;
-				if (slot.nameHash == nameHash)
+				for (int i = 0; i < slotElementList.Length; i++)
 				{
-					throw new UMAResourceNotFoundException("SlotLibrary: Unable to find: " + slot.slotName);
+					if (slotElementList[i].slotName == slot.slotName)
+					{
+						slotElementList[i] = slot;
+						break;
+					}
 				}
 			}
-#endif
-			throw new UMAResourceNotFoundException("SlotLibrary: Unable to find hash: " + nameHash);
+			else
+			{
+				var list = new SlotDataAsset[slotElementList.Length + 1];
+				for (int i = 0; i < slotElementList.Length; i++)
+				{
+					list[i] = slotElementList[i];
+				}
+				list[list.Length - 1] = slot;
+				slotElementList = list;
+			}
+			slotDictionary[slot.nameHash] = slot;
 		}
-		res.SetOverlayList(overlayList);
-		return res;
-	}
+	#pragma warning restore 618
 
-	private SlotData Internal_InstantiateSlot(int nameHash)
-	{
-		ValidateDictionary();
-		SlotDataAsset source;
-		if (!slotDictionary.TryGetValue(nameHash, out source))
+		public override bool HasSlot(string name)
 		{
-			return null;
+			ValidateDictionary();
+			return slotDictionary.ContainsKey(UMAUtils.StringToHash(name));
 		}
-		else
-		{
-			return new SlotData(source);
-		}
-	}
 
-	public override SlotDataAsset[] GetAllSlotAssets()
-	{
-#pragma warning disable 618
-		return slotElementList;
-#pragma warning restore 618
+		public override bool HasSlot(int nameHash)
+		{
+			ValidateDictionary();
+			return slotDictionary.ContainsKey(nameHash);
+		}
+
+		public override SlotData InstantiateSlot(string name)
+		{
+			var res = Internal_InstantiateSlot(UMAUtils.StringToHash(name));
+			if (res == null)
+			{
+				throw new UMAResourceNotFoundException("SlotLibrary: Unable to find: " + name);
+			}
+			return res;
+		}
+		public override SlotData InstantiateSlot(int nameHash)
+		{
+			var res = Internal_InstantiateSlot(nameHash);
+			if (res == null)
+			{
+				throw new UMAResourceNotFoundException("SlotLibrary: Unable to find hash: " + nameHash);
+			}
+			return res;
+		}
+
+		public override SlotData InstantiateSlot(string name, List<OverlayData> overlayList)
+		{
+			var res = Internal_InstantiateSlot(UMAUtils.StringToHash(name));
+			if (res == null)
+			{
+				throw new UMAResourceNotFoundException("SlotLibrary: Unable to find: " + name);
+			}
+			res.SetOverlayList(overlayList);
+			return res;
+		}
+
+		public override SlotData InstantiateSlot(int nameHash, List<OverlayData> overlayList)
+		{
+			var res = Internal_InstantiateSlot(nameHash);
+			if (res == null)
+			{
+	#if UNITY_EDITOR
+				foreach (var path in UnityEditor.AssetDatabase.GetAllAssetPaths())
+				{
+					if (!path.EndsWith(".asset")) continue;
+					var slot = UnityEditor.AssetDatabase.LoadAssetAtPath(path, typeof(SlotDataAsset)) as SlotDataAsset;
+					if (slot == null) continue;
+					if (slot.nameHash == nameHash)
+					{
+						throw new UMAResourceNotFoundException("SlotLibrary: Unable to find: " + slot.slotName);
+					}
+				}
+	#endif
+				throw new UMAResourceNotFoundException("SlotLibrary: Unable to find hash: " + nameHash);
+			}
+			res.SetOverlayList(overlayList);
+			return res;
+		}
+
+		private SlotData Internal_InstantiateSlot(int nameHash)
+		{
+			ValidateDictionary();
+			SlotDataAsset source;
+			if (!slotDictionary.TryGetValue(nameHash, out source))
+			{
+				return null;
+			}
+			else
+			{
+				return new SlotData(source);
+			}
+		}
+
+		public override SlotDataAsset[] GetAllSlotAssets()
+		{
+	#pragma warning disable 618
+			return slotElementList;
+	#pragma warning restore 618
+		}
 	}
 }

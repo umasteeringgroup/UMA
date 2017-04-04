@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using UMA;
 
-namespace UMAAssetBundleManager
+namespace UMA.AssetBundles
 {
 	public class BuildScript
 	{

@@ -7,12 +7,11 @@
 #if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
-using System.Collections;
 
 namespace UMA.PoseTools
 {
 	[CustomEditor(typeof(ExpressionPlayer), true)]
-	public class ExpressionPlayerInspector : Editor
+	public class ExpressionPlayerInspector : UnityEditor.Editor
 	{
 		private ExpressionPlayer player;
 

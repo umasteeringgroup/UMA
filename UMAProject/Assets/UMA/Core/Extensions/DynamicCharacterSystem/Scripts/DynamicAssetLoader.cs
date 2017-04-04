@@ -6,9 +6,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
-using UMAAssetBundleManager;
+using UMA.AssetBundles;
 
-namespace UMA
+namespace UMA.CharacterSystem
 {
     public class DynamicAssetLoader : MonoBehaviour
     {
@@ -277,7 +277,7 @@ namespace UMA
                 var context = UMAContext.FindInstance();
                 if (context != null)
                 {
-                    if ((context.dynamicCharacterSystem != null && (context.dynamicCharacterSystem as UMACharacterSystem.DynamicCharacterSystem).dynamicallyAddFromAssetBundles)
+                    if ((context.dynamicCharacterSystem != null && (context.dynamicCharacterSystem as DynamicCharacterSystem).dynamicallyAddFromAssetBundles)
                         || (context.raceLibrary != null && (context.raceLibrary as DynamicRaceLibrary).dynamicallyAddFromAssetBundles)
                         || (context.slotLibrary != null && (context.slotLibrary as DynamicSlotLibrary).dynamicallyAddFromAssetBundles)
                         || (context.overlayLibrary != null && (context.overlayLibrary as DynamicOverlayLibrary).dynamicallyAddFromAssetBundles))
@@ -564,10 +564,10 @@ namespace UMA
                     }
                 }
             }
-            UMACharacterSystem.DynamicCharacterSystem thisDCS = null;
+            DynamicCharacterSystem thisDCS = null;
             if (UMAContext.Instance != null)
             {
-                thisDCS = UMAContext.Instance.dynamicCharacterSystem as UMACharacterSystem.DynamicCharacterSystem;
+                thisDCS = UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem;
             }
             if (thisDCS != null)
             {
@@ -1094,7 +1094,7 @@ namespace UMA
             //10012017 Only do this if thisDCS.addAllRecipesFromDownloadedBundles is true
             if (currentSimulatedDownloadedBundlesCount != simulatedDownloadedBundles.Count /*&& typeof(T) != typeof(RaceData)*/ && assetName != "")
             {
-                var thisDCS = UMAContext.Instance.dynamicCharacterSystem as UMACharacterSystem.DynamicCharacterSystem;
+                var thisDCS = UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem;
                 if (thisDCS != null)
                 {
                     if (thisDCS.addAllRecipesFromDownloadedBundles)
@@ -1128,7 +1128,7 @@ namespace UMA
             }
             var allAssetBundlePaths = AssetDatabase.GetAssetPathsFromAssetBundle(assetBundleToLoad);
             //We need to add the recipes from the bundle to DCS, other assets add them selves as they are requested by the recipes
-            var thisDCS = UMAContext.Instance.dynamicCharacterSystem as UMACharacterSystem.DynamicCharacterSystem;
+            var thisDCS = UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem;
             bool dcsNeedsRefresh = false;
             if (thisDCS)
             {

@@ -2,12 +2,9 @@
 
 using UnityEngine;
 using UnityEditor;
-using System;
 using System.Collections.Generic;
-using UMA;
 
-
-namespace UMAEditor
+namespace UMA.Editors
 {
 	public static class UMASlotProcessingUtil
 	{

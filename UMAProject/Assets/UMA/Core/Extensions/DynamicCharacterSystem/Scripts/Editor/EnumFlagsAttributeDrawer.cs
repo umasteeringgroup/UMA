@@ -4,7 +4,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace UMACharacterSystem
+namespace UMA.CharacterSystem.Editors
 {
 	[CustomPropertyDrawer(typeof(EnumFlagsAttribute))]
 	public class EnumFlagsAttributeDrawer : PropertyDrawer

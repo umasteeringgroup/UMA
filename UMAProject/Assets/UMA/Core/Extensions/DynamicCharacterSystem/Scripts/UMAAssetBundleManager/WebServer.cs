@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
-namespace UMAAssetBundleManager
+namespace UMA.AssetBundles
 {
     public class SimpleWebServer
     {

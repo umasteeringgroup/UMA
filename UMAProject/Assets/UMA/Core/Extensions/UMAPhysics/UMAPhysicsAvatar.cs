@@ -1,13 +1,12 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UMA.PoseTools;
 
-namespace UMA.PhysicsAvatar
+namespace UMA.Dynamics
 {
-	public class UMAPhysicsAvatar : MonoBehaviour {
-
+	public class UMAPhysicsAvatar : MonoBehaviour
+	{
 		// property to activate/deactivate ragdoll mode (exposed in editor by script "UMAPhysicsAvatarEditor.cs")
 		public bool ragdolled
 		{

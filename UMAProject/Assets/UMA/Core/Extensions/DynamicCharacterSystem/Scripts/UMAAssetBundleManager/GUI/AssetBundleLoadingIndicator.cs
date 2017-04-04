@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace UMAAssetBundleManager
+namespace UMA.AssetBundles
 {
 	public class AssetBundleLoadingIndicator : MonoBehaviour
 	{

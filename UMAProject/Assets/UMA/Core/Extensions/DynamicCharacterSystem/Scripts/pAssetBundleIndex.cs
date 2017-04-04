@@ -1,9 +1,8 @@
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
+using UMA.CharacterSystem;
 
-namespace UMAAssetBundleManager
+namespace UMA.AssetBundles
 {
 	//This is an example of how the AssetBundleIndex class can be extended to contain extra data about items in the index. 
 	//Here we have extended it to include extra data about UMATextRecipes that are set to be 'Wardrobe' recipes rather than 'Standard' ones.

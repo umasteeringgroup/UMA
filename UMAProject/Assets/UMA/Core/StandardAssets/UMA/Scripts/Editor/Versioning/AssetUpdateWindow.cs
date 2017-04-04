@@ -3,11 +3,12 @@ using UnityEditor;
 using System;
 using System.Collections.Generic;
 using System.Net;
+using UMA;
 using kode80.GUIWrapper;
 
 namespace kode80.Versioning
 {
-	public class AssetUpdateWindow : EditorWindow
+	public class AssetUpdateWindow : UnityEditor.EditorWindow
 	{
 		private GUIVertical _gui;
 		private List<GUILabel> _assetUpdateLabels;

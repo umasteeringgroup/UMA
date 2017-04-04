@@ -1,19 +1,9 @@
 #if UNITY_EDITOR
 using System; 
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-
 using UnityEditor;
+using UMA.CharacterSystem;
 
-using UnityEngine;
-
-using Object = UnityEngine.Object;
-using UMA;
-using UMA.Integrations;
-using UMACharacterSystem;
-
-namespace UMAEditor
+namespace UMA.Editors
 {
 	[CustomEditor(typeof(UMAWardrobeRecipe), true)]
 	public partial class UMAWardrobeRecipeEditor : RecipeEditor

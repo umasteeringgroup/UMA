@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-namespace UMACharacterSystem
+namespace UMA.CharacterSystem
 {
 	public class DynamicCharacterSystemBase : MonoBehaviour
 	{

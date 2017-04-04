@@ -1,59 +1,62 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
-using UMACharacterSystem;
+using UMA.CharacterSystem;
 
-public class DNAHandler : MonoBehaviour
+namespace UMA.CharacterSystem.Examples
 {
-    public GameObject SelectionPanel;
-    public GameObject DnaPrefab;
-    public GameObject LabelPrefab;
-
-    DnaSetter DNA;
-    DynamicCharacterAvatar Avatar;
-
-    public void Setup(DynamicCharacterAvatar avatar, DnaSetter dna, GameObject panel)
+    public class DNAHandler : MonoBehaviour
     {
-        Avatar = avatar;
-        DNA = dna;
-        SelectionPanel = panel;
-    }
+        public GameObject SelectionPanel;
+        public GameObject DnaPrefab;
+        public GameObject LabelPrefab;
 
-    /// <summary>
-    /// 
-    /// </summary>
-    private void Cleanup()
-    {
-        if (SelectionPanel.transform.childCount > 0)
+        DnaSetter DNA;
+        DynamicCharacterAvatar Avatar;
+
+        public void Setup(DynamicCharacterAvatar avatar, DnaSetter dna, GameObject panel)
         {
-            foreach (Transform t in SelectionPanel.transform)
+            Avatar = avatar;
+            DNA = dna;
+            SelectionPanel = panel;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void Cleanup()
+        {
+            if (SelectionPanel.transform.childCount > 0)
             {
-                GameObject.Destroy(t.gameObject);
+                foreach (Transform t in SelectionPanel.transform)
+                {
+                    GameObject.Destroy(t.gameObject);
+                }
             }
         }
-    }
 
-    /// <summary>
-    /// Button Handler
-    /// </summary>
-    public void OnClick()
-    {
-        Cleanup();
-        // construct the label
-        AddLabel(DNA.Name);
+        /// <summary>
+        /// Button Handler
+        /// </summary>
+        public void OnClick()
+        {
+            Cleanup();
+            // construct the label
+            AddLabel(DNA.Name);
 
-        // construct the slider
-        GameObject go = GameObject.Instantiate(DnaPrefab);
-        DNASliderHandler dsh = go.GetComponent<DNASliderHandler>();
-        dsh.Setup(DNA, Avatar);
-        go.transform.SetParent(SelectionPanel.transform);
-    }
+            // construct the slider
+            GameObject go = GameObject.Instantiate(DnaPrefab);
+            DNASliderHandler dsh = go.GetComponent<DNASliderHandler>();
+            dsh.Setup(DNA, Avatar);
+            go.transform.SetParent(SelectionPanel.transform);
+        }
 
-    private void AddLabel(string theText)
-    {
-        GameObject go = GameObject.Instantiate(LabelPrefab);
-        go.transform.SetParent(SelectionPanel.transform);
-        Text txt = go.GetComponentInChildren<Text>();
-        txt.text = theText;
+        private void AddLabel(string theText)
+        {
+            GameObject go = GameObject.Instantiate(LabelPrefab);
+            go.transform.SetParent(SelectionPanel.transform);
+            Text txt = go.GetComponentInChildren<Text>();
+            txt.text = theText;
+        }
     }
 }

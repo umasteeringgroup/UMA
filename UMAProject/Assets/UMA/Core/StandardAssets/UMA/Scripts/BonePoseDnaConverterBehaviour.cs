@@ -1,5 +1,4 @@
 using UnityEngine;
-using System.Collections;
 using UMA.PoseTools;
 
 namespace UMA

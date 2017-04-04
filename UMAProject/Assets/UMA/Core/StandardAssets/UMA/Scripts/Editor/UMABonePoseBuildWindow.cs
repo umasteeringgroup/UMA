@@ -8,15 +8,13 @@
 
 using UnityEngine;
 using UnityEditor;
-using System.Text;
 using System.Collections.Generic;
-
 using System.IO;
 using System.Xml.Serialization;
 
 namespace UMA.PoseTools
 {
-	public class UMABonePoseBuildWindow : EditorWindow
+	public class UMABonePoseBuildWindow : UnityEditor.EditorWindow
 	{
 		public Transform sourceSkeleton;
 		public UnityEngine.Object poseFolder;

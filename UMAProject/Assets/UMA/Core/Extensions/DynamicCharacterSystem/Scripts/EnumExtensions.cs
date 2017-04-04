@@ -1,6 +1,6 @@
 using System;
 
-namespace UMACharacterSystem
+namespace UMA.CharacterSystem
 {
 	public static class EnumExtensions
 	{

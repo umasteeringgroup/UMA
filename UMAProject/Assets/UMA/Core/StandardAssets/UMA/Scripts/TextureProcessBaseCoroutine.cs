@@ -1,10 +1,4 @@
-﻿using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
-
-
-
-namespace UMA
+﻿namespace UMA
 {
 	/// <summary>
 	/// Base class for texture processing coroutines.

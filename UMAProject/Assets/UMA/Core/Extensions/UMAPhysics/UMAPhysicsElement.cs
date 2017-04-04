@@ -1,8 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
-namespace UMA
+namespace UMA.Dynamics
 {
 	[System.Serializable]
 	public class UMAPhysicsElement : ScriptableObject 
@@ -32,7 +30,7 @@ namespace UMA
 		[UnityEditor.MenuItem("Assets/Create/UMA/Misc/Physics Element")]
 		public static void CreatePhysicsElementAsset()
 		{
-			UMAEditor.CustomAssetUtility.CreateAsset<UMAPhysicsElement>();
+			UMA.Editors.CustomAssetUtility.CreateAsset<UMAPhysicsElement>();
 		}
 		#endif
 	}

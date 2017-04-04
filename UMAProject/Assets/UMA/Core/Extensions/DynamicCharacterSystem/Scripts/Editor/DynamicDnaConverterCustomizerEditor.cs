@@ -1,17 +1,15 @@
-using System.Collections;
-using System.Reflection;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using UMA;
+using UMA.Editors;
 
-namespace UMAEditor
+namespace UMA.CharacterSystem.Editors
 {
     [CustomEditor(typeof(DynamicDNAConverterCustomizer), true)]
-    public class DynamicDNAConverterCustomizerEditor : Editor
+    public class DynamicDNAConverterCustomizerEditor : UnityEditor.Editor
     {
         DynamicDNAConverterCustomizer thisDDCC;
-        Dictionary<DynamicDNAConverterBehaviour, Editor> SDCBs = new Dictionary<DynamicDNAConverterBehaviour, Editor>();
+        Dictionary<DynamicDNAConverterBehaviour, UnityEditor.Editor> SDCBs = new Dictionary<DynamicDNAConverterBehaviour, UnityEditor.Editor>();
         public override void OnInspectorGUI()
         {
             thisDDCC = target as DynamicDNAConverterCustomizer;
@@ -128,14 +126,14 @@ namespace UMAEditor
                     EditorGUI.EndDisabledGroup();
                 GUIHelper.EndVerticalPadded(10);
                 //
-                Editor thisSDCB;
+                UnityEditor.Editor thisSDCB;
                 if(SDCBs.TryGetValue((DynamicDNAConverterBehaviour)serializedObject.FindProperty("selectedConverter").objectReferenceValue, out thisSDCB))
                 {
                     ((DynamicDNAConverterBehaviourEditor)thisSDCB).initialized = true;
                 }
                 else
                 {
-                    thisSDCB = Editor.CreateEditor((DynamicDNAConverterBehaviour)serializedObject.FindProperty("selectedConverter").objectReferenceValue, typeof(DynamicDNAConverterBehaviourEditor));
+                    thisSDCB = UnityEditor.Editor.CreateEditor((DynamicDNAConverterBehaviour)serializedObject.FindProperty("selectedConverter").objectReferenceValue, typeof(DynamicDNAConverterBehaviourEditor));
                     SDCBs.Add((DynamicDNAConverterBehaviour)serializedObject.FindProperty("selectedConverter").objectReferenceValue, thisSDCB);
                 }
                 ((DynamicDNAConverterBehaviourEditor)thisSDCB).minimalMode = true;

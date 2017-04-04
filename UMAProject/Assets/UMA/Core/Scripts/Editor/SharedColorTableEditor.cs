@@ -1,8 +1,10 @@
-using UnityEngine;
 using UnityEditor;
-using System.Collections;
 
-[CustomEditor(typeof(SharedColorTable))]
-public class SharedColorTableEditor : Editor 
+namespace UMA.Editors
 {
+	[CustomEditor(typeof(SharedColorTable))]
+	public class SharedColorTableEditor : UnityEditor.Editor 
+	{
+	}
 }
+

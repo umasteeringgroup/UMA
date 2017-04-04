@@ -1,9 +1,7 @@
 using UnityEngine;
 using UnityEditor;
-using System.Collections.Generic;
-using UMA;
 
-namespace UMAEditor
+namespace UMA.Editors
 {
 	[CustomPropertyDrawer(typeof(OverlayColorData),true)]
 	public class OverlayColorDataPropertyDrawer : PropertyDrawer

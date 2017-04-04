@@ -6,7 +6,7 @@ using UnityEngine.UI;
 using UnityEditor;
 #endif
 
-namespace UMA
+namespace UMA.Examples
 {
 	public class UMASlotVerifyWizard : MonoBehaviour
 	{

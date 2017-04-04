@@ -1,8 +1,6 @@
-﻿using UnityEngine;
-using System.Collections;
-using System;
+﻿using System;
 
-namespace UMA.Integration.PowerTools
+namespace UMA.Integrations.PowerTools
 {
 	[Serializable]
 	public class UMALODConversionEntry

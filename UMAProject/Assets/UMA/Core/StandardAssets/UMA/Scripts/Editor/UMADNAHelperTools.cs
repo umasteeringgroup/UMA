@@ -1,16 +1,11 @@
 #if UNITY_EDITOR
 
-using UnityEngine;
 using UnityEditor;
-using System.Collections;
-using System.Reflection;
 using System;
 using System.IO;
-using System.Text;
 using System.Collections.Generic;
-using UMA;
 
-namespace UMAEditor
+namespace UMA.Editors
 {
 	public static class UMADNAHelperTools
 	{

@@ -1,10 +1,9 @@
 using UnityEngine;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using UMAAssetBundleManager;
+using UMA.AssetBundles;
 
-namespace UMA
+namespace UMA.CharacterSystem
 {
 	/// <summary>
 	/// Downloading assets Item that provides access to the progress of the requested asset

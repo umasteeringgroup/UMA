@@ -3,28 +3,31 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UMA;
-using UMACharacterSystem;
+using UMA.CharacterSystem;
 
-public class BlendShapeDnaSlider : MonoBehaviour {
-
-	public DynamicCharacterAvatar avatar;
-
-	Dictionary<string, DnaSetter> dna = new Dictionary<string, DnaSetter>();
-
-
-	public void OnCharacterCreated(UMAData umaData)
+namespace UMA.Examples
+{
+	public class BlendShapeDnaSlider : MonoBehaviour
 	{
-		if (avatar) 
+		public DynamicCharacterAvatar avatar;
+
+		Dictionary<string, DnaSetter> dna = new Dictionary<string, DnaSetter>();
+
+
+		public void OnCharacterCreated(UMAData umaData)
 		{
-			dna = avatar.GetDNA ();		
-			Slider slider = gameObject.GetComponent<Slider> ();
-			slider.value = dna ["MaleEarsMorph"].Value;
+			if (avatar) 
+			{
+				dna = avatar.GetDNA ();		
+				Slider slider = gameObject.GetComponent<Slider> ();
+				slider.value = dna ["MaleEarsMorph"].Value;
+			}
 		}
-	}
 
-	public void SetEarMorph(float value)
-	{
-		dna ["MaleEarsMorph"].Set (value);
-		avatar.ForceUpdate (true);
+		public void SetEarMorph(float value)
+		{
+			dna ["MaleEarsMorph"].Set (value);
+			avatar.ForceUpdate (true);
+		}
 	}
 }

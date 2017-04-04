@@ -1,30 +1,31 @@
 ﻿using System;
 using System.Text;
-using System.Collections.Generic;
 
-
-public static class UMAExtensions
+namespace UMA.CharacterSystem
 {
-   public static int WordCount(this String str)
-   {
-      return str.Split(new char[] { ' ', '.', '?' }, 
-         StringSplitOptions.RemoveEmptyEntries).Length;
-   }
-
-   public static string BreakupCamelCase(this String str)
-   {
-      StringBuilder sb = new StringBuilder();   
-      for (int i=0;i<str.Length;i++)
+      public static class UMAExtensions
       {
-         char c = str[i];
-         if (i > 0 && char.IsUpper(c))
-         {
-            sb.Append(' ');
-         }
-         if (i==0)
-            c = char.ToUpper(c);
-         sb.Append(c);
+            public static int WordCount(this String str)
+            {
+                  return str.Split(new char[] { ' ', '.', '?' }, 
+                  StringSplitOptions.RemoveEmptyEntries).Length;
+            }
+
+            public static string BreakupCamelCase(this String str)
+            {
+                  StringBuilder sb = new StringBuilder();   
+                  for (int i=0;i<str.Length;i++)
+                  {
+                        char c = str[i];
+                        if (i > 0 && char.IsUpper(c))
+                        {
+                              sb.Append(' ');
+                        }
+                        if (i==0)
+                              c = char.ToUpper(c);
+                        sb.Append(c);
+                  }
+                  return sb.ToString();
+            }
       }
-      return sb.ToString();
-   }
-} 
+}

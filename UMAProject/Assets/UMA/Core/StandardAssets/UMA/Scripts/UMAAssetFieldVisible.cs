@@ -1,1 +1,4 @@
-﻿public class UMAAssetFieldVisible : System.Attribute { }
+﻿namespace UMA
+{
+	public class UMAAssetFieldVisible : System.Attribute { }
+}

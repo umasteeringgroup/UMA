@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-namespace UMA
+namespace UMA.Examples
 {
 	/// <summary>
 	/// Removes or disables components during character update callback.

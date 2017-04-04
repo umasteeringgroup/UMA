@@ -1,7 +1,4 @@
-﻿using UnityEngine;
-using System.Collections;
-
-namespace UMA
+﻿namespace UMA
 {
     public interface INameProvider
     {

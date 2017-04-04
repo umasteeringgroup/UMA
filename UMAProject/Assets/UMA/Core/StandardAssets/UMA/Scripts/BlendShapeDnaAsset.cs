@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace UMA
 {
@@ -28,7 +26,7 @@ namespace UMA
 		[UnityEditor.MenuItem("Assets/Create/UMA/DNA/BlendShape DNA")]
 		public static void CreateBlendShapeAsset()
 		{
-			UMAEditor.CustomAssetUtility.CreateAsset<BlendShapeDnaAsset>();
+			UMA.Editors.CustomAssetUtility.CreateAsset<BlendShapeDnaAsset>();
 		}
 		#endif
 	}

@@ -1,12 +1,11 @@
 ﻿using UnityEngine;
-using System.Collections;
 using System;
 #if UNITY_EDITOR
 using UnityEditor;
 using System.IO;
 #endif
 
-namespace UMA.Integration.PowerTools
+namespace UMA.Integrations.PowerTools
 {
 	[Serializable]
 	public class UMALODConversionSet : ScriptableObject

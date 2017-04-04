@@ -1,9 +1,8 @@
 ﻿using UnityEngine;
-using System.Collections;
 using System;
 using System.Collections.Generic;
 
-namespace UMA
+namespace UMA.Editors
 {
 	public sealed class DictionaryCustomFormatter : IFormatProvider, ICustomFormatter
 	{

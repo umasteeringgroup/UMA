@@ -1,25 +1,28 @@
 ﻿using UnityEngine;
 using System.Collections;
-using UMACharacterSystem;
+using UMA.CharacterSystem;
 using UnityEngine.UI;
 
-public class DNASliderHandler : MonoBehaviour
+namespace UMA.CharacterSystem.Examples
 {
-    DnaSetter DNA;
-    DynamicCharacterAvatar Avatar;
-    Slider Slider;
-
-    public void Setup(DnaSetter dna, DynamicCharacterAvatar avatar)
+    public class DNASliderHandler : MonoBehaviour
     {
-        DNA = dna;
-        Avatar = avatar;
-        Slider = GetComponent<Slider>();
-        Slider.value = dna.Value;
-    }
+        DnaSetter DNA;
+        DynamicCharacterAvatar Avatar;
+        Slider Slider;
 
-    public void ValueChanged(float value)
-    {
-        DNA.Set(value);
-        Avatar.ForceUpdate(true);
+        public void Setup(DnaSetter dna, DynamicCharacterAvatar avatar)
+        {
+            DNA = dna;
+            Avatar = avatar;
+            Slider = GetComponent<Slider>();
+            Slider.value = dna.Value;
+        }
+
+        public void ValueChanged(float value)
+        {
+            DNA.Set(value);
+            Avatar.ForceUpdate(true);
+        }
     }
 }

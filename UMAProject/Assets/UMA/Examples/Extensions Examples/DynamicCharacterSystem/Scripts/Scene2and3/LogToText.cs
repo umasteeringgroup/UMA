@@ -3,7 +3,7 @@ using System.Collections;
 using System.Text;
 using UnityEngine.UI;
 
-namespace UMA
+namespace UMA.CharacterSystem.Examples
 {
 	public class LogToText : MonoBehaviour
 	{

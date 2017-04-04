@@ -3,9 +3,9 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 using System.Collections;
 using UMA;
-using UMAAssetBundleManager;
+using UMA.AssetBundles;
 
-namespace UMACharacterSystem
+namespace UMA.CharacterSystem.Examples
 {
 	public class WardrobeCollectionDemoUI : MonoBehaviour
 	{

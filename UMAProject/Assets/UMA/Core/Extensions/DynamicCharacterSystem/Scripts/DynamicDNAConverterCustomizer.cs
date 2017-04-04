@@ -6,7 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UMA.PoseTools;
 
-namespace UMA
+namespace UMA.CharacterSystem
 {
     public class DynamicDNAConverterCustomizer : MonoBehaviour
     {

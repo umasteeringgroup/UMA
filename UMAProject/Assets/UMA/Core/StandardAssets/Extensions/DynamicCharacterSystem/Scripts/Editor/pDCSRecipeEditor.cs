@@ -1,20 +1,12 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-
 using UnityEditor;
-
 using UnityEngine;
+using UMA.CharacterSystem;
 
-using Object = UnityEngine.Object;
-using UMA;
-using UMA.Integrations;
-using UMACharacterSystem;
-
-
-namespace UMAEditor
+namespace UMA.Editors
 {
 	//unfortunately this needs to be here if we are going to make it possible to have 'Backewards Compatible' DCA recipes (i.e. saved as 'Standard' but with a wardrobeSet)
 	//if we removed that functionality this could all go into UMADynamicCharacterAvatarRecipeEditor

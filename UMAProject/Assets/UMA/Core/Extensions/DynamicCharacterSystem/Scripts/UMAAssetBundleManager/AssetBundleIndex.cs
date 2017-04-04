@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-namespace UMAAssetBundleManager
+namespace UMA.AssetBundles
 {
 	/// <summary>
 	/// An AssetBunldeIndex containing a list of assetbundles each with a list of assets inside that asset bundle. The user can customize the fields of data that are stored for each asset.

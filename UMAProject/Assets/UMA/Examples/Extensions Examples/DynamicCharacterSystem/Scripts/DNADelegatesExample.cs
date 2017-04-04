@@ -3,9 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UMA;
 
-namespace UMACharacterSystem
+namespace UMA.CharacterSystem.Examples
 {
-
 	public class DNADelegatesExample : MonoBehaviour
 	{
 

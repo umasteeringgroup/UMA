@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using UnityEditor;
 #endif
 using UMA;
-using UMAAssetBundleManager;
+using UMA.AssetBundles;
 
-namespace UMACharacterSystem
+namespace UMA.CharacterSystem.Examples
 {
 	/// <summary>
 	/// Gets a list of all the available 'UMAWardrobeCollection' assets that are available in Resources and (optionally) in any available assetBundles

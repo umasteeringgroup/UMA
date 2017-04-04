@@ -1,14 +1,10 @@
 ﻿#if UNITY_EDITOR
-using UnityEngine;
-using System.Collections;
 using UnityEditor;
-using UMA;
 
-
-namespace UMAEditor
+namespace UMA.Editors
 {
 	[CustomEditor(typeof(OverlayData))]
-	public class OverlayInspector : Editor 
+	public class OverlayInspector : UnityEditor.Editor 
 	{
 	    [MenuItem("Assets/Create/UMA/Core/Overlay Asset")]
 	    public static void CreateOverlayMenuItem()

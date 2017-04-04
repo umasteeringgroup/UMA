@@ -1,11 +1,9 @@
 ﻿#if UNITY_EDITOR
 using UnityEngine;
-using System.Collections;
 using UnityEditor;
 using UnityEditorInternal;
-using UMA;
 
-namespace UMAEditor
+namespace UMA.Editors
 {
 	public partial class RaceInspector
 	{
@@ -13,7 +11,7 @@ namespace UMAEditor
 		private ReorderableList wardrobeSlotList;
 		private bool wardrobeSlotListInitialized = false;
 
-        partial void  PreInspectorGUI(ref bool result)
+        partial void PreInspectorGUI(ref bool result)
 		{
 			if(!wardrobeSlotListInitialized){
 				InitWardrobeSlotList();

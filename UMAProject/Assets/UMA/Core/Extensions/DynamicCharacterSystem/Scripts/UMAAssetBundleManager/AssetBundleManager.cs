@@ -27,7 +27,7 @@ using System.Collections.Generic;
             Resolves the correct AssetBundle according to the active variant.
 */
 
-namespace UMAAssetBundleManager
+namespace UMA.AssetBundles
 {
 
 	/// <summary>

@@ -1,14 +1,11 @@
 #if UNITY_EDITOR
 using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEditor;
-using UMA;
 
-namespace UMAEditor
+namespace UMA.Editors
 {
 	[CustomEditor(typeof(SlotDataAsset))]
-    public class SlotDataAssetInspector : Editor
+    public class SlotDataAssetInspector : UnityEditor.Editor
     {
         public override void OnInspectorGUI()
         {

@@ -1,13 +1,10 @@
 using UnityEngine;
 using UnityEditor;
-using System.Text;
-using System.IO;
-using UMA;
 using System.Collections.Generic;
 
-namespace UMAEditor
+namespace UMA.Editors
 {
-	public class UmaSlotBuilderWindow : EditorWindow 
+	public class UmaSlotBuilderWindow : UnityEditor.EditorWindow 
 	{
 	    public string slotName;
         public string RootBone = "Global";

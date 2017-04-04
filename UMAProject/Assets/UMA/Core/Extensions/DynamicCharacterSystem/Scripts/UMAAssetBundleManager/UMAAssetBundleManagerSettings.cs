@@ -4,13 +4,11 @@ using UnityEditor;
 using System;
 using System.IO;
 using System.Text.RegularExpressions;
-using UMAEditor;
-using UMA;
 
-namespace UMAAssetBundleManager
+namespace UMA.AssetBundles
 {
 
-	public class UMAAssetBundleManagerSettings : EditorWindow
+	public class UMAAssetBundleManagerSettings : UnityEditor.EditorWindow
 	{
 		#region PUBLIC FIELDS
 

@@ -1,18 +1,7 @@
 #if UNITY_EDITOR
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-
 using UnityEditor;
 
-using UnityEngine;
-
-using Object = UnityEngine.Object;
-using UMA;
-using UMA.Integrations;
-
-namespace UMAEditor
+namespace UMA.Editors
 {
     [CustomEditor(typeof(UMA.UMAData), true)]
     public class UMADataEditor : CharacterBaseEditor

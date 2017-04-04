@@ -1,5 +1,4 @@
 using UnityEngine;
-using System.Collections;
 using System;
 
 namespace UMA
@@ -42,7 +41,7 @@ namespace UMA
 		[UnityEditor.MenuItem("Assets/Create/UMA/Core/Material")]
 		public static void CreateMaterialAsset()
 		{
-			UMAEditor.CustomAssetUtility.CreateAsset<UMAMaterial>();
+			UMA.Editors.CustomAssetUtility.CreateAsset<UMAMaterial>();
 		}
 #endif
         /// <summary>

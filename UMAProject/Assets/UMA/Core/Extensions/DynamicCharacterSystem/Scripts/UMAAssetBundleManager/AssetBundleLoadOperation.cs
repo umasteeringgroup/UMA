@@ -8,7 +8,7 @@ using UnityEngine.iOS;
 #endif
 using System.Collections;
 
-namespace UMAAssetBundleManager
+namespace UMA.AssetBundles
 {
 	public abstract class AssetBundleLoadOperation : IEnumerator
 	{

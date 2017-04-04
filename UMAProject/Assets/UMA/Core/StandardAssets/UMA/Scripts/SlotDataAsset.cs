@@ -1,7 +1,4 @@
 using UnityEngine;
-using UnityEngine.Serialization;
-using System.Collections;
-using System.Collections.Generic;
 
 namespace UMA
 {

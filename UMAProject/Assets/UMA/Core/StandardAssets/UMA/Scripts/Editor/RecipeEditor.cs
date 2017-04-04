@@ -1,18 +1,10 @@
 #if UNITY_EDITOR
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-
 using UnityEditor;
-
 using UnityEngine;
-
-using Object = UnityEngine.Object;
-using UMA;
 using UMA.Integrations;
 
-namespace UMAEditor
+namespace UMA.Editors
 {
 	/// <summary>
 	/// Recipe editor.
@@ -52,7 +44,7 @@ namespace UMAEditor
 					position = hit.point;
 				}
 
-				var newSelection = new List<Object>(DragAndDrop.objectReferences.Length);
+				var newSelection = new List<UnityEngine.Object>(DragAndDrop.objectReferences.Length);
 				foreach (var reference in DragAndDrop.objectReferences)
 				{
 				    if (reference is UMARecipeBase)
@@ -215,7 +207,7 @@ namespace UMAEditor
             }
         }
 	}
-	/*public class ShowGatheringNotification : EditorWindow
+	/*public class ShowGatheringNotification : UnityEditor.EditorWindow
 	{
 
 		string notification  = "UMA is gathering Data";

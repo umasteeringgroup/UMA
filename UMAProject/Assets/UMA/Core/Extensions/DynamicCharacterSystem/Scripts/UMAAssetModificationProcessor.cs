@@ -1,9 +1,8 @@
 #if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
-using System.Collections;
 
-namespace UMA
+namespace UMA.CharacterSystem
 {
 	public class UMAAssetPostProcessor : AssetPostprocessor
 	{
