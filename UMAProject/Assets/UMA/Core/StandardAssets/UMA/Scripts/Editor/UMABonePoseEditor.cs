@@ -7,7 +7,7 @@ using System.Collections.Generic;
 namespace UMA.PoseTools
 {
     [CustomEditor(typeof(UMABonePose),true)]
-    public class UMABonePoseEditor : UnityEditor.Editor
+    public class UMABonePoseEditor : Editor
     {
 		// HACK for testing
 		public UMAData sourceUMA;

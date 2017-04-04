@@ -1230,7 +1230,7 @@ namespace UMA.Editors
 		}
 	}
 
-	public abstract class CharacterBaseEditor : UnityEditor.Editor
+	public abstract class CharacterBaseEditor : Editor
 	{
 		protected readonly string[] toolbar =
 		{

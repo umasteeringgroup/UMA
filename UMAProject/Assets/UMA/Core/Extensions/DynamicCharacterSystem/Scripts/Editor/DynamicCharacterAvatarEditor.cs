@@ -7,7 +7,7 @@ using System;
 namespace UMA.CharacterSystem.Editors
 {
 	[CustomEditor(typeof(DynamicCharacterAvatar), true)]
-	public partial class DynamicCharacterAvatarEditor : UnityEditor.Editor
+   public partial class DynamicCharacterAvatarEditor : Editor
 	{
 		public bool showHelp = false;
 
@@ -72,7 +72,7 @@ namespace UMA.CharacterSystem.Editors
 		public override void OnInspectorGUI()
 		{
 			serializedObject.Update();
-			UnityEditor.Editor.DrawPropertiesExcluding(serializedObject, new string[] { "hide", "loadBlendShapes","activeRace","defaultChangeRaceOptions","cacheCurrentState", "rebuildSkeleton", "preloadWardrobeRecipes", "raceAnimationControllers",
+		   Editor.DrawPropertiesExcluding(serializedObject, new string[] { "hide", "loadBlendShapes","activeRace","defaultChangeRaceOptions","cacheCurrentState", "rebuildSkeleton", "preloadWardrobeRecipes", "raceAnimationControllers",
 				"characterColors","BoundsOffset","_buildCharacterEnabled",
 				/*LoadOtions fields*/ "defaultLoadOptions", "loadPathType", "loadPath", "loadFilename", "loadString", "loadFileOnStart", "waitForBundles", /*"buildAfterLoad",*/
 				/*SaveOptions fields*/ "defaultSaveOptions", "savePathType","savePath", "saveFilename", "makeUniqueFilename","ensureSharedColors", 

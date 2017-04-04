@@ -8,7 +8,7 @@ using kode80.GUIWrapper;
 
 namespace kode80.Versioning
 {
-	public class AssetUpdateWindow : UnityEditor.EditorWindow
+	public class AssetUpdateWindow : EditorWindow
 	{
 		private GUIVertical _gui;
 		private List<GUILabel> _assetUpdateLabels;

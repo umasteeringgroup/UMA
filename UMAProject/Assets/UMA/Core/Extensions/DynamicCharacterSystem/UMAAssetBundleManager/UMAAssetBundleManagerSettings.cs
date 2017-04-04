@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 namespace UMA.AssetBundles
 {
 
-	public class UMAAssetBundleManagerSettings : UnityEditor.EditorWindow
+	public class UMAAssetBundleManagerSettings : EditorWindow
 	{
 		#region PUBLIC FIELDS
 

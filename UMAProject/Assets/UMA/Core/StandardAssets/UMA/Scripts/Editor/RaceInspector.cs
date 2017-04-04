@@ -5,7 +5,7 @@ using UnityEditor;
 namespace UMA.Editors
 {
 	[CustomEditor(typeof(RaceData))]
-	public partial class RaceInspector : UnityEditor.Editor 
+	public partial class RaceInspector : Editor 
 	{
 	    [MenuItem("Assets/Create/UMA/Core/RaceData")]
 	    public static void CreateRaceMenuItem()

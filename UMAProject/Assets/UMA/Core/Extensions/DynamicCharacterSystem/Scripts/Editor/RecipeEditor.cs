@@ -207,7 +207,7 @@ namespace UMA.Editors
             }
         }
 	}
-	/*public class ShowGatheringNotification : UnityEditor.EditorWindow
+	/*public class ShowGatheringNotification : EditorWindow
 	{
 
 		string notification  = "UMA is gathering Data";

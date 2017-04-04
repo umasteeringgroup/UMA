@@ -38,8 +38,8 @@ namespace kode80.GUIWrapper
 		
 		protected override void CustomOnGUI ()
 		{
-			UnityEditor.Editor editor = null;
-			UnityEditor.Editor.CreateCachedEditor( target, null, ref editor);
+			Editor editor = null;
+			Editor.CreateCachedEditor( target, null, ref editor);
 			editor.DrawDefaultInspector();
 		}
 	}

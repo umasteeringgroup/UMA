@@ -5,7 +5,7 @@ namespace UMA.CharacterSystem.Editors
 {
     [CustomEditor(typeof(DynamicRaceLibrary))]
     [CanEditMultipleObjects]
-    public class DynamicRaceLibraryEditor : UnityEditor.Editor
+    public class DynamicRaceLibraryEditor : Editor
     {
         private SerializedObject m_Object;
         private DynamicRaceLibrary raceLibrary;
@@ -20,7 +20,7 @@ namespace UMA.CharacterSystem.Editors
 
         public override void OnInspectorGUI()
         {
-            UnityEditor.Editor.DrawPropertiesExcluding(serializedObject, new string[] { "dynamicallyAddFromResources", "resourcesFolderPath", "dynamicallyAddFromAssetBundles", "assetBundleNamesToSearch" });
+            Editor.DrawPropertiesExcluding(serializedObject, new string[] { "dynamicallyAddFromResources", "resourcesFolderPath", "dynamicallyAddFromAssetBundles", "assetBundleNamesToSearch" });
             serializedObject.ApplyModifiedProperties();
             SerializedProperty dynamicallyAddFromResources = serializedObject.FindProperty("dynamicallyAddFromResources");
             SerializedProperty dynamicallyAddFromAssetBundles = serializedObject.FindProperty("dynamicallyAddFromAssetBundles");

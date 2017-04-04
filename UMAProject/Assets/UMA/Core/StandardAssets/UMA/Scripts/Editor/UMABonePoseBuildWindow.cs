@@ -14,7 +14,7 @@ using System.Xml.Serialization;
 
 namespace UMA.PoseTools
 {
-	public class UMABonePoseBuildWindow : UnityEditor.EditorWindow
+	public class UMABonePoseBuildWindow : EditorWindow
 	{
 		public Transform sourceSkeleton;
 		public UnityEngine.Object poseFolder;

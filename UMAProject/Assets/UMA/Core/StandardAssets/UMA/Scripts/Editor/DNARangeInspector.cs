@@ -5,7 +5,7 @@ using UnityEditor;
 namespace UMA.Editors
 {
 	[CustomEditor(typeof(DNARangeAsset))]
-	public class DNARangeInspector : UnityEditor.Editor 
+	public class DNARangeInspector : Editor 
 	{
 	    [MenuItem("Assets/Create/UMA/DNA/DNA Range Asset")]
 	    public static void CreateOverlayMenuItem()

@@ -22,10 +22,11 @@ namespace UMA
 		}
 
 		/// <summary>
-		/// Returns the set dnaTypeHash or generates one if not set
+		/// DNA Type hash for supported DNA
 		/// </summary>
 		/// <returns></returns>
-		public override int DNATypeHash //we may not need this override since dnaTypeHash might never be 0
+		///
+		public override int DNATypeHash
 		{
 			set {
 				dnaTypeHash = value;
@@ -39,9 +40,9 @@ namespace UMA
 				}
 				else
 				{
-					Debug.LogWarning(this.name + " did not have a DNA Asset assigned. This is required for DynamicDnaConverters.");
+					Debug.LogWarning("BlendShapeDnaConverterBehaviour " +this.name + " did not have a DNA Asset assigned.");
+					return 0;
 				}
-				return 0;
 			}
 		}
 

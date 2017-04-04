@@ -1,10 +1,10 @@
 ﻿using UnityEngine;
 using UnityEditor;
 
-namespace UMA.Dynamics.Editor
+namespace UMA.Dynamics.Editors
 {
 	[CustomEditor(typeof(UMAPhysicsAvatar))]
-	public class UMAPhysicsAvatarEditor : UnityEditor.Editor 
+	public class UMAPhysicsAvatarEditor : Editor 
 	{
 		public override void OnInspectorGUI()
 		{

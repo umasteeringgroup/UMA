@@ -7,7 +7,7 @@ using UMA.Editors;
 namespace UMA.CharacterSystem.Editors
 {
     [CustomEditor(typeof(UMAAssetIndexer))]
-    public class UMAAssetIndexerEditor : UnityEditor.Editor
+    public class UMAAssetIndexerEditor : Editor
     {
         Dictionary<System.Type,bool> Toggles = new Dictionary<System.Type,bool>();
         UMAAssetIndexer UAI;

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace UMA.Editors
 {
-	public class UmaSlotBuilderWindow : UnityEditor.EditorWindow 
+	public class UmaSlotBuilderWindow : EditorWindow 
 	{
 	    public string slotName;
         public string RootBone = "Global";

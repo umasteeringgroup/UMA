@@ -41,7 +41,7 @@ namespace UMA
 		[UnityEditor.MenuItem("Assets/Create/UMA/Core/Material")]
 		public static void CreateMaterialAsset()
 		{
-			UMA.Editors.CustomAssetUtility.CreateAsset<UMAMaterial>();
+			UMA.CustomAssetUtility.CreateAsset<UMAMaterial>();
 		}
 #endif
         /// <summary>

@@ -69,7 +69,7 @@ namespace UMA.CharacterSystem
 		[UnityEditor.MenuItem("Assets/Create/UMA/DCS/Wardrobe Recipe")]
 		public static void CreateWardrobeRecipeAsset()
 		{
-			UMA.Editors.CustomAssetUtility.CreateAsset<UMAWardrobeRecipe>();
+			UMA.CustomAssetUtility.CreateAsset<UMAWardrobeRecipe>();
 		}
 	#endif
 	}

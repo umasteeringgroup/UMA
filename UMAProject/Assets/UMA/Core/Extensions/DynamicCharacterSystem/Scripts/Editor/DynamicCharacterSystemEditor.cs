@@ -5,7 +5,7 @@ namespace UMA.CharacterSystem.Editors
 {
 	[CustomEditor(typeof(DynamicCharacterSystem))]
 	[CanEditMultipleObjects]
-	public class DynamicCharacterSystemEditor : UnityEditor.Editor
+	public class DynamicCharacterSystemEditor : Editor
 	{
 		private SerializedObject m_Object;
 		private DynamicCharacterSystem dCharacterSystem;
@@ -18,7 +18,7 @@ namespace UMA.CharacterSystem.Editors
 		}
 
 		public override void OnInspectorGUI(){
-			UnityEditor.Editor.DrawPropertiesExcluding (serializedObject, new string[] { "dynamicallyAddFromResources", "resourcesCharactersFolder", "resourcesRecipesFolder", "dynamicallyAddFromAssetBundles", "assetBundlesForCharactersToSearch", "assetBundlesForRecipesToSearch", "addAllRecipesFromDownloadedBundles" });
+			Editor.DrawPropertiesExcluding (serializedObject, new string[] { "dynamicallyAddFromResources", "resourcesCharactersFolder", "resourcesRecipesFolder", "dynamicallyAddFromAssetBundles", "assetBundlesForCharactersToSearch", "assetBundlesForRecipesToSearch", "addAllRecipesFromDownloadedBundles" });
 			serializedObject.ApplyModifiedProperties ();
 			SerializedProperty dynamicallyAddFromResources = serializedObject.FindProperty("dynamicallyAddFromResources");
 			SerializedProperty dynamicallyAddFromAssetBundles = serializedObject.FindProperty("dynamicallyAddFromAssetBundles");

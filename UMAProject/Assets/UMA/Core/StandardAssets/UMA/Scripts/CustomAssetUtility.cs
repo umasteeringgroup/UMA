@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEditor;
 using System.IO;
 
-namespace UMA.Editors
+namespace UMA
 {
 	/// <summary>
 	/// Utility class for creating scriptable object assets.
