@@ -68,10 +68,19 @@ public partial class UMATextRecipe : UMAPackedRecipeBase
 	/// </summary>
 	public override UMAContext CreateEditorContext()
 	{
-		var EditorUMAContext = new GameObject();
-		EditorUMAContext.name = "UMAEditorContext";
+		Debug.Log("UMA Recipe Editor created an UMAEditorContext to enable editing. This will auto delete once you have finished editing your recipe or you add the UMA_DCS prefab to this scene.");
+		GameObject EditorUMAContext;
+        if (GameObject.Find("UMAEditorContext"))
+		{
+			EditorUMAContext = GameObject.Find("UMAEditorContext");
+        }
+		else
+		{
+			EditorUMAContext = new GameObject();
+			EditorUMAContext.name = "UMAEditorContext";
+		}
 		//Make this GameObject not show up in the scene or save
-		EditorUMAContext.hideFlags = HideFlags.HideInHierarchy | HideFlags.DontSave;
+		EditorUMAContext.hideFlags = HideFlags.DontSave | HideFlags.NotEditable;
 		var thisUMAContext = EditorUMAContext.AddComponent<UMAContext>();
 		UMAContext.Instance = thisUMAContext;
 		//we need to add the libraries as components of the game object too
@@ -90,7 +99,7 @@ public partial class UMATextRecipe : UMAPackedRecipeBase
 		(thisUMAContext.dynamicCharacterSystem as DynamicCharacterSystem).dynamicallyAddFromAssetBundles = true;
 		var thisDAL = EditorUMAContext.AddComponent<DynamicAssetLoader>();
 		DynamicAssetLoader.Instance = thisDAL;
-		return EditorUMAContext.GetComponent<UMAContext>();
+		return thisUMAContext;
 	}
 #endif
 

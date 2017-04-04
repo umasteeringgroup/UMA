@@ -226,6 +226,8 @@ namespace UMA
 			//Try to use updated Bounds to set the height.
 			if (overallModifiersEnabled && umaData.myRenderer != null)
 			{
+				if (!umaData.myRenderer.enabled)
+					return;
 				if(umaData.myRenderer.localBounds.size.y == 0)
 					return;
 				var currentSMROffscreenSetting = umaData.myRenderer.updateWhenOffscreen;
