@@ -938,9 +938,9 @@ namespace UMA.CharacterSystem
 		/// </summary>
 		public void UnloadWardrobeCollectionGroup(string collectionGroupToUnload)
 		{
-			foreach(KeyValuePair<string, UMAWardrobeCollection> kp in _wardrobeCollections)
+			foreach (KeyValuePair<string, UMAWardrobeCollection> kp in _wardrobeCollections)
 			{
-				if(kp.Key == collectionGroupToUnload)
+				if (kp.Key == collectionGroupToUnload)
 				{
 					var thisSettings = kp.Value.GetUniversalPackRecipe(this, context);
 					//if there is a wardrobe set for this race treat this like a 'FullOutfit'
@@ -1032,7 +1032,7 @@ namespace UMA.CharacterSystem
 			//now load any wardrobeCollections slots if they are not already taken
 			if (_wardrobeCollections.Count > 0)
 			{
-				foreach(KeyValuePair<string, UMAWardrobeCollection> kp in _wardrobeCollections)
+				foreach (KeyValuePair<string, UMAWardrobeCollection> kp in _wardrobeCollections)
 				{
 					var collectionRecipes = kp.Value.wardrobeCollection[activeRace.name];
 					if (collectionRecipes != null && collectionRecipes.Count > 0)
@@ -1044,18 +1044,6 @@ namespace UMA.CharacterSystem
 						}
 					}
 				}
-				/*for (int i = 0; i < _wardrobeCollections.Count; i++)
-				{
-					var collectionRecipes = _wardrobeCollections[i].wardrobeCollection[activeRace.name];
-					if (collectionRecipes != null && collectionRecipes.Count > 0)
-					{
-						foreach (WardrobeSettings ws in collectionRecipes)
-						{
-							if (!WardrobeRecipes.ContainsKey(ws.slot))
-								SetSlot(ws.slot, ws.recipe);
-						}
-					}
-				}*/
 			}
 		}
 
@@ -1087,14 +1075,6 @@ namespace UMA.CharacterSystem
 								break;
 							}
 						}
-						/*for (int i = 0; i < _wardrobeCollections.Count; i++)
-						{
-							if (_wardrobeCollections[i].name == ws.recipe)
-							{
-								found = true;
-								break;
-							}
-						}*/
 						if (!found)
 						{
 							LoadWardrobeCollection(ws.recipe);
@@ -1137,26 +1117,6 @@ namespace UMA.CharacterSystem
 						}
 					}
 				}
-				/*for (int i = 0; i < _wardrobeCollections.Count; i++)
-				{
-					//dont do anything to collections that are downloading
-					if (DynamicAssetLoader.Instance.downloadingAssetsContains(_wardrobeCollections[i].name))
-						return;
-					var collectionRecipes = _wardrobeCollections[i].wardrobeCollection[activeRace.name];
-					if (collectionRecipes != null)
-					{
-						foreach (WardrobeSettings ws in collectionRecipes)
-						{
-							if (_wardrobeRecipes.ContainsKey(ws.slot))
-							{
-								if (_wardrobeRecipes[ws.slot].name == ws.recipe)
-								{
-									ClearSlot(ws.slot);
-								}
-							}
-						}
-					}
-				}*/
 			}
 		}
 
@@ -1516,7 +1476,7 @@ namespace UMA.CharacterSystem
 		{
 			this.CharacterUpdated.RemoveListener(InitializeExpressionPlayer);
 			InitializeExpressionPlayer();
-        }
+		}
 
 		private void InitializeExpressionPlayer()
 		{
@@ -1695,7 +1655,6 @@ namespace UMA.CharacterSystem
 			var prevSharedColors = umaData.umaRecipe.sharedColors;//not sure if this is gonna work
 			if (ensureSharedColors)//we dont want to keep the colors in the recipe though (otherwise effectively ensureSharedColors is going to be true hereafter)
 				EnsureSharedColors();
-			//UpdateWardrobeCollections(true);
 			ClearWardrobeCollectionRecipesForSave();
 			string extension = saveAsAsset ? "asset" : "txt";
 			var origSaveType = savePathType;
@@ -2129,6 +2088,38 @@ namespace UMA.CharacterSystem
 			StartCoroutine(GetRecipeStringToLoad());
 		}
 
+		public void LoadFromAssetFile(string Name)
+		{
+			UMAAssetIndexer UAI = UMAAssetIndexer.Instance;
+			AssetItem ai = UAI.GetAssetItem<UMATextRecipe>(loadFilename.Trim());
+			if (ai != null)
+			{
+				string recipeString = (ai.Item as UMATextRecipe).recipeString;
+				StartCoroutine(ProcessRecipeString(recipeString));
+				return;
+			}
+			Debug.LogWarning("Asset '" + Name + "' Not found in Global Index");
+		}
+
+		public void LoadFromTextFile(string Name)
+		{
+			UMAAssetIndexer UAI = UMAAssetIndexer.Instance;
+			AssetItem ai = UAI.GetAssetItem<TextAsset>(loadFilename.Trim());
+			if (ai != null)
+			{
+				string recipeString = (ai.Item as TextAsset).text;
+				StartCoroutine(ProcessRecipeString(recipeString));
+				return;
+			}
+			Debug.LogWarning("Asset '" + Name + "' Not found in Global Index");
+		}
+
+		IEnumerator ProcessRecipeString(string recipeString)
+		{
+			LoadFromRecipeString(recipeString);
+			yield break;
+		}
+
 		IEnumerator GetRecipeStringToLoad()
 		{
 			string path = "";
@@ -2147,9 +2138,24 @@ namespace UMA.CharacterSystem
 			var thisDCS = context.dynamicCharacterSystem as DynamicCharacterSystem;
 			if (loadPathType == loadPathTypes.CharacterSystem)
 			{
-				if (thisDCS.CharacterRecipes.ContainsKey(loadFilename.Trim()))
+				UMAAssetIndexer UAI = UMAAssetIndexer.Instance;
+				AssetItem ai = UAI.GetAssetItem<UMATextRecipe>(loadFilename.Trim());
+				if (ai != null)
 				{
-					thisDCS.CharacterRecipes.TryGetValue(loadFilename.Trim(), out recipeString);
+					recipeString = (ai.Item as UMATextRecipe).recipeString;
+				}
+				else
+				{
+					ai = UAI.GetAssetItem<TextAsset>(loadFilename.Trim());
+
+					if (ai != null)
+					{
+						recipeString = (ai.Item as TextAsset).text;
+					}
+					if (thisDCS.CharacterRecipes.ContainsKey(loadFilename.Trim()))
+					{
+						thisDCS.CharacterRecipes.TryGetValue(loadFilename.Trim(), out recipeString);
+					}
 				}
 			}
 			if (loadPathType == loadPathTypes.FileSystem)
@@ -2276,26 +2282,6 @@ namespace UMA.CharacterSystem
 			List<UMAWardrobeRecipe> ReplaceRecipes = new List<UMAWardrobeRecipe>();
 			List<UMARecipeBase> Recipes = new List<UMARecipeBase>();
 			List<string> SuppressSlotsStrings = new List<string>();
-			//THIS WONT BE NEEDED WHEN COLLECTIONS ARE IN THEIR OWN LIST
-			/*var wardrobeRecipesToRender = new Dictionary<string, UMATextRecipe>();
-			if (WardrobeRecipes.Count > 0)
-			{
-				//Dont add the WardrobeCollection to the recipes to render- they doesn't render directly and will have already set their actual wardrobeRecipe slots SetSlot
-				foreach (KeyValuePair<string, UMATextRecipe> kp in WardrobeRecipes)
-				{
-					if (kp.Value.GetType() != typeof(UMAWardrobeCollection))
-					{
-						if (!wardrobeRecipesToRender.ContainsKey(kp.Key))
-						{
-							wardrobeRecipesToRender.Add(kp.Key, kp.Value);
-						}
-						else
-						{
-							wardrobeRecipesToRender[kp.Key] = kp.Value;
-						}
-					}
-				}
-			}*/
 			if ((WardrobeRecipes.Count > 0) && activeRace.racedata != null)
 			{
 				foreach (UMATextRecipe utr in WardrobeRecipes.Values)
@@ -2447,7 +2433,7 @@ namespace UMA.CharacterSystem
 
 			umaRecipe.Load(umaData.umaRecipe, context);
 
-			umaData.AddAdditionalRecipes(umaAdditionalRecipes, context);//Dont these do the same thing?
+			umaData.AddAdditionalRecipes(umaAdditionalRecipes, context);
 			AddAdditionalSerializedRecipes(umaAdditionalSerializedRecipes);
 
 			RemoveHiddenSlots();
@@ -2551,21 +2537,6 @@ namespace UMA.CharacterSystem
                 gameObject.GetComponent<Animator>().runtimeAnimatorController = null;
             }
             */
-
-			//Not needed now the Expression Player Initializes at the correct time
-			/*if (gameObject.GetComponent<UMAExpressionPlayer>())
-			{
-				gameObject.GetComponent<UMAExpressionPlayer>().expressionSet = null;
-				gameObject.GetComponent<UMAExpressionPlayer>().enabled = false;
-
-				UnityEngine.Events.UnityAction<UMAData> EnableExPlayer = null;
-				EnableExPlayer = delegate (UMAData data)
-				{
-					gameObject.GetComponent<UMAExpressionPlayer>().enabled = true;
-					CharacterUpdated.RemoveListener(EnableExPlayer);//cant work out how to make it remove itself
-				};
-				CharacterUpdated.AddListener(EnableExPlayer);
-			}*/
 		}
 
 		public void AddAdditionalSerializedRecipes(UMARecipeBase[] umaAdditionalSerializedRecipes)
@@ -2705,10 +2676,19 @@ namespace UMA.CharacterSystem
 		/// </summary>
 		public UMAContext CreateEditorContext()
 		{
-			EditorUMAContext = new GameObject();
-			EditorUMAContext.name = "UMAEditorContext";
+			Debug.Log("DynamicCharacterAvatar created an UMAEditorContext to enable editing. This will auto delete once you have finished editing your Avatar or you add the UMA_DCS prefab to this scene.");
+			//if there is already an EditorUMAContext use it
+			if (GameObject.Find("UMAEditorContext"))
+			{
+				EditorUMAContext = GameObject.Find("UMAEditorContext");
+			}
+			else
+			{
+				EditorUMAContext = new GameObject();
+				EditorUMAContext.name = "UMAEditorContext";
+			}
 			//Make this GameObject not show up in the scene or save
-			EditorUMAContext.hideFlags = HideFlags.HideInHierarchy | HideFlags.DontSave;
+			EditorUMAContext.hideFlags = HideFlags.DontSave | HideFlags.NotEditable;
 			var thisUMAContext = EditorUMAContext.AddComponent<UMAContext>();
 			UMAContext.Instance = thisUMAContext;
 			//we need to add the libraries as components of the game object too
@@ -2730,7 +2710,7 @@ namespace UMA.CharacterSystem
 			//add an event to EditorApplication so that this context gets destroyed when this game object is no longer being inspected
 			EditorApplication.update -= CheckEditorContextNeeded;
 			EditorApplication.update += CheckEditorContextNeeded;
-			return EditorUMAContext.GetComponent<UMAContext>();
+			return thisUMAContext;
 		}
 
 		public void CheckEditorContextNeeded()
@@ -2794,7 +2774,7 @@ namespace UMA.CharacterSystem
 			if (_wardrobeCollections.Count > 0)
 			{
 				Dictionary<string, UMAWardrobeCollection> newWardrobeCollections = new Dictionary<string, UMAWardrobeCollection>();
-				foreach(UMAWardrobeCollection uwr in _wardrobeCollections.Values)
+				foreach (UMAWardrobeCollection uwr in _wardrobeCollections.Values)
 				{
 					newWardrobeCollections.Add(uwr.wardrobeSlot, (thisDCS.GetRecipe(uwr.name, false) as UMAWardrobeCollection));
 					var collectionRecipes = newWardrobeCollections[uwr.wardrobeSlot].wardrobeCollection[activeRace.name];
@@ -3169,11 +3149,6 @@ namespace UMA.CharacterSystem
 						}
 					}
 				}
-				CleanAnimatorsFromResourcesAndBundles();
-			}
-			public void CleanAnimatorsFromResourcesAndBundles()
-			{
-				Resources.UnloadUnusedAssets();
 			}
 		}
 

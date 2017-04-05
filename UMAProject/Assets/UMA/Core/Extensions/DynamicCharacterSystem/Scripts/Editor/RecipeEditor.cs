@@ -144,7 +144,7 @@ namespace UMA.Editors
             recipeBase.Save(_recipe, UMAContext.FindInstance());
             EditorUtility.SetDirty(recipeBase);
             AssetDatabase.SaveAssets();
-            AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(recipeBase));
+            // AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(recipeBase));
             _rebuildOnLayout = true;
 
             _needsUpdate = false;

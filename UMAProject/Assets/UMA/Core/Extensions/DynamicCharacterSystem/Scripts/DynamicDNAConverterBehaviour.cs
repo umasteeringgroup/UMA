@@ -224,6 +224,10 @@ namespace UMA.CharacterSystem
 			//Try to use updated Bounds to set the height.
 			if (overallModifiersEnabled && umaData.GetRenderer(0) != null)
 			{
+				if (umaData.rendererCount < 1)
+					return;
+				if (!umaData.GetRenderer(0).enabled)
+					return;
 				if(umaData.GetRenderer(0).localBounds.size.y == 0)
 					return;
 				var currentSMROffscreenSetting = umaData.GetRenderer(0).updateWhenOffscreen;

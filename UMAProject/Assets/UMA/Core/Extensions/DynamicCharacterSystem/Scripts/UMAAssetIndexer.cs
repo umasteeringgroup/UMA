@@ -1,213 +1,100 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using UMA;
+using UMA.CharacterSystem;
 
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.Animations;
 #endif
-
-namespace UMA.CharacterSystem
+namespace UMA
 {
+    [InitializeOnLoad]
     public class UMAAssetIndexer : MonoBehaviour, ISerializationCallbackReceiver
+#if UNITY_EDITOR    
+#if UNITY_5_6_OR_NEWER
+     , IPreprocessBuild
+#endif
+#endif
     {
         #region constants and static strings
-        public const string IndexPath = "/InternalDataStore/InGame/Resources/AssetIndexer";
         public static string SortOrder = "Name";
         public static string[] SortOrders = { "Name", "AssetName" };
-        #endregion
-        #region Internal Classes
-        [System.Serializable]
-        public class AssetItem
-    #if UNITY_EDITOR        
-            : System.IEquatable<AssetItem>, System.IComparable<AssetItem>
-    #endif
-        {
-            #region Fields
-            public string _QualifiedName;
-            public string _Name;
-            public Object _Item;
-            public string _Path;
-            public bool IsResource;
-            public bool IsAssetBundle;
-            #endregion
-            #region Properties
-            public System.Type _Type
-            {
-                get
-                {
-                    if (_QualifiedName == null)
-                        return null;
-                    return System.Type.GetType(_QualifiedName);
-                }
-            }
-
-            public string _AssetBaseName
-            {
-                get
-                {
-                    return System.IO.Path.GetFileNameWithoutExtension(_Path);
-                }
-            }
-
-            public string AssetName
-            {
-                get
-                {
-                    return _Item.name;
-                }
-            }
-
-            public string EvilName
-            {
-                get
-                {
-                    Object o = _Item;
-
-                    if (o is SlotDataAsset)
-                    {
-                        SlotDataAsset sd = o as SlotDataAsset;
-                        return sd.slotName;
-                    }
-                    if (o is OverlayDataAsset)
-                    {
-                        OverlayDataAsset od = o as OverlayDataAsset;
-                        return od.overlayName;
-                    }
-                    if (o is RaceData)
-                    {
-                        return (o as RaceData).raceName;
-                    }
-                    return o.name;
-                }
-            }
-            #endregion
-            #region Methods (edit time)
-    #if UNITY_EDITOR
-
-            public string ToString(string SortOrder)
-            {
-                if (SortOrder == "AssetName")
-                    return _AssetBaseName;
-                if (SortOrder == "FilePath")
-                    return _Path;
-                return _Name;
-            }
-
-            public bool Equals(AssetItem other)
-            {
-                if (other == null)
-                    return false;
-
-                if (SortOrder == "AssetName")
-                {
-                    if (this._AssetBaseName == other._AssetBaseName)
-                        return true;
-                    else 
-                        return false;
-                }
-
-                if (SortOrder == "FilePath")
-                {
-                    if (this._Path == other._Path)
-                        return true;
-                    else
-                        return false;
-
-                }
-
-                if (this._Name == other._Name)
-                    return true;
-
-                return false;
-            }
-
-            public int CompareTo(AssetItem other)
-            {
-                // A null value means that this object is greater.
-                if (other == null)
-                    return 1;
-
-                if (SortOrder == "AssetName")
-                {
-                    return (this._AssetBaseName.CompareTo(other._AssetBaseName));
-                }
-
-                if (SortOrder == "FilePath")
-                {
-                    return this._Path.CompareTo(other._Path);
-                }
-
-                return this._Name.CompareTo(other._Name);
-            }
-
-    #endif
-            #endregion
-            #region Constructors
-            public AssetItem(System.Type Type, string Name, string Path, Object Item)
-            {
-                if (Type == null) return;
-
-
-                _QualifiedName = Type.AssemblyQualifiedName;
-                _Name = Name;
-                _Item = Item;
-                _Path = Path;
-            }
-            public AssetItem(System.Type Type, Object Item)
-            {
-                if (Type == null) return;
-                _QualifiedName = Type.AssemblyQualifiedName;
-                _Item = Item;
-                _Name = EvilName;
-            }
-            #endregion
-        }
+        public static Dictionary<string, System.Type> TypeFromString = new Dictionary<string, System.Type>();
         #endregion
         #region Fields
-        public Dictionary<System.Type, System.Type> TypeToLookup = new Dictionary<System.Type, System.Type>()
+        public bool AutoUpdate;
+        public bool SerializeAllObjects;
+
+        private Dictionary<System.Type, System.Type> TypeToLookup = new Dictionary<System.Type, System.Type>()
         {
-            { (typeof(SlotDataAsset)),(typeof(SlotDataAsset)) },
-            { (typeof(OverlayDataAsset)),(typeof(OverlayDataAsset)) },
-            { (typeof(RaceData)),(typeof(RaceData)) },
-            { (typeof(UMATextRecipe)),(typeof(UMATextRecipe)) },
-            { (typeof(UMAWardrobeRecipe)),(typeof(UMAWardrobeRecipe)) },
-            { (typeof(UMAWardrobeCollection)),(typeof(UMAWardrobeCollection)) },
-            { (typeof(RuntimeAnimatorController)),(typeof(RuntimeAnimatorController)) },
-    #if UNITY_EDITOR
-            { (typeof(AnimatorController)),(typeof(RuntimeAnimatorController)) },
-    #endif
-            {  typeof(TextAsset), typeof(TextAsset) },
-            { (typeof(DynamicUMADnaAsset)), (typeof(DynamicUMADnaAsset)) }
+        { (typeof(SlotDataAsset)),(typeof(SlotDataAsset)) },
+        { (typeof(OverlayDataAsset)),(typeof(OverlayDataAsset)) },
+        { (typeof(RaceData)),(typeof(RaceData)) },
+        { (typeof(UMATextRecipe)),(typeof(UMATextRecipe)) },
+        { (typeof(UMAWardrobeRecipe)),(typeof(UMAWardrobeRecipe)) },
+        { (typeof(UMAWardrobeCollection)),(typeof(UMAWardrobeCollection)) },
+        { (typeof(RuntimeAnimatorController)),(typeof(RuntimeAnimatorController)) },
+#if UNITY_EDITOR
+        { (typeof(AnimatorController)),(typeof(RuntimeAnimatorController)) },
+#endif
+        {  typeof(TextAsset), typeof(TextAsset) },
+        { (typeof(DynamicUMADnaAsset)), (typeof(DynamicUMADnaAsset)) }
         };
 
 
         // The names of the fully qualified types.
         public List<string> IndexedTypeNames = new List<string>();
         // These list is used so Unity will serialize the data
-        public List<AssetItem> Items = new List<AssetItem>();
+        private List<AssetItem> Items = new List<AssetItem>();
+        // These list is used so Unity will serialize the data
+        public List<AssetItem> SerializedItems = new List<AssetItem>();
         // This is really where we keep the data.
         private Dictionary<System.Type, Dictionary<string, AssetItem>> TypeLookup = new Dictionary<System.Type, Dictionary<string, AssetItem>>();
         // This list tracks the types for use in iterating through the dictionaries
         private System.Type[] Types =
         {
-            (typeof(SlotDataAsset)),
-            (typeof(OverlayDataAsset)),
-            (typeof(RaceData)),
-            (typeof(UMATextRecipe)),
-            (typeof(UMAWardrobeRecipe)),
-            (typeof(UMAWardrobeCollection)),
-            (typeof(RuntimeAnimatorController)),
-    #if UNITY_EDITOR
-            (typeof(AnimatorController)),
-    #endif
-            (typeof(DynamicUMADnaAsset)),
-            (typeof(TextAsset))
-        };
+        (typeof(SlotDataAsset)),
+        (typeof(OverlayDataAsset)),
+        (typeof(RaceData)),
+        (typeof(UMATextRecipe)),
+        (typeof(UMAWardrobeRecipe)),
+        (typeof(UMAWardrobeCollection)),
+        (typeof(RuntimeAnimatorController)),
+#if UNITY_EDITOR
+        (typeof(AnimatorController)),
+#endif
+        (typeof(DynamicUMADnaAsset)),
+        (typeof(TextAsset))
+    };
         #endregion
         #region Static Fields
         static GameObject theIndex = null;
         static UMAAssetIndexer theIndexer = null;
         #endregion
+
+        public static System.Diagnostics.Stopwatch StartTimer()
+        {
+#if TIMEINDEXER
+
+            Debug.Log("Timer started at " + Time.realtimeSinceStartup + " Sec");
+            System.Diagnostics.Stopwatch st = new System.Diagnostics.Stopwatch();
+            st.Start();
+
+            return st;
+#else
+            return null;
+#endif
+        }
+
+        public static void StopTimer(System.Diagnostics.Stopwatch st, string Status)
+        {
+#if TIMEINDEXER
+            st.Stop();
+            Debug.Log(Status + " Completed " + st.ElapsedMilliseconds + "ms");
+            return;
+#endif
+        }
 
         public static UMAAssetIndexer Instance
         {
@@ -215,7 +102,8 @@ namespace UMA.CharacterSystem
             {
                 if (theIndex == null)
                 {
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
+                    var st = StartTimer();
                     theIndex = Resources.Load("AssetIndexer") as GameObject;
                     if (theIndex == null)
                     {
@@ -226,19 +114,24 @@ namespace UMA.CharacterSystem
                     {
                         return null;
                     }
-    #else
-                    theIndex = GameObject.Instantiate(Resources.Load<GameObject>("AssetIndexer")) as GameObject;
-                    theIndex.hideFlags = HideFlags.HideAndDontSave;
-                    theIndexer = theIndex.GetComponent<UMAAssetIndexer>();
-    #endif
+                    StopTimer(st,"Asset index load");
+#else
+                theIndex = GameObject.Instantiate(Resources.Load<GameObject>("AssetIndexer")) as GameObject;
+                theIndex.hideFlags = HideFlags.HideAndDontSave;
+                theIndexer = theIndex.GetComponent<UMAAssetIndexer>();
+#endif
                 }
                 return theIndexer;
             }
         }
 
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
         public void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
+            if (!AutoUpdate)
+            {
+                return;
+            }
             bool changed = false;
 
             // Build a dictionary of the items by path.
@@ -246,27 +139,15 @@ namespace UMA.CharacterSystem
             UpdateList();
             foreach (AssetItem ai in Items)
             {
+                if (ItemsByPath.ContainsKey(ai._Path))
+                {
+                    Debug.Log("Duplicate path for item: " + ai._Path);
+                    continue;
+                }
                 ItemsByPath.Add(ai._Path, ai);
             }
 
-            for (int i=0;i<importedAssets.Length;i++)
-            {
-                if (ItemsByPath.ContainsKey(importedAssets[i]))
-                {
-                    try
-                    {
-                        AssetItem ai = ItemsByPath[importedAssets[i]];
-                        ai._Name = ai.EvilName;
-                        ai._Path = AssetDatabase.GetAssetPath(ai._Item.GetInstanceID());
-                        changed = true;
-                    }
-                    finally
-                    {
-
-                    }
-                }
-            }
-
+            // see if they moved it in the editor.
             for (int i = 0; i < movedAssets.Length; i++)
             {
                 string NewPath = movedAssets[i];
@@ -275,14 +156,15 @@ namespace UMA.CharacterSystem
                 // Check to see if this is an indexed asset.
                 if (ItemsByPath.ContainsKey(OldPath))
                 {
-                    // One of our indexed assets.
+                    changed = true;
+                    // If they moved it into an Asset Bundle folder, then we need to "unindex" it.
                     if (InAssetBundleFolder(NewPath))
                     {
                         // Null it out, so we don't add it to the index...
                         ItemsByPath[OldPath] = null;
-                        changed = true;
                         continue;
                     }
+                    // 
                     ItemsByPath[OldPath]._Path = NewPath;
                 }
             }
@@ -304,19 +186,21 @@ namespace UMA.CharacterSystem
                 ForceSave();
             }
         }
-        
+
         /// <summary>
         /// Force the Index to save and reload
         /// </summary>
         public void ForceSave()
         {
+            var st = StartTimer();
             EditorUtility.SetDirty(this.gameObject);
             AssetDatabase.SaveAssets();
+            StopTimer(st, "ForceSave");
         }
-    #endif 
+#endif
 
 
-        #region Manage Types
+#region Manage Types
         /// <summary>
         /// Returns a list of all types that we know about.
         /// </summary>
@@ -354,13 +238,14 @@ namespace UMA.CharacterSystem
         {
             string QualifiedName = sType.AssemblyQualifiedName;
             if (IsAdditionalIndexedType(QualifiedName)) return;
-    
+
             List<System.Type> newTypes = new List<System.Type>();
             newTypes.AddRange(Types);
             newTypes.Add(sType);
             Types = newTypes.ToArray();
             TypeToLookup.Add(sType, sType);
             IndexedTypeNames.Add(sType.AssemblyQualifiedName);
+            BuildStringTypes();
         }
 
         public void RemoveType(System.Type sType)
@@ -369,17 +254,18 @@ namespace UMA.CharacterSystem
             if (!IsAdditionalIndexedType(QualifiedName)) return;
 
             TypeToLookup.Remove(sType);
-        
+
             List<System.Type> newTypes = new List<System.Type>();
             newTypes.AddRange(Types);
             newTypes.Remove(sType);
             Types = newTypes.ToArray();
             TypeLookup.Remove(sType);
             IndexedTypeNames.Remove(sType.AssemblyQualifiedName);
+            BuildStringTypes();
         }
-        #endregion
+#endregion
 
-        #region Access the index
+#region Access the index
         /// <summary>
         /// Return the asset specified, if it exists.
         /// if it can't be found by name, then we do a scan of the assets to see if 
@@ -397,6 +283,7 @@ namespace UMA.CharacterSystem
             {
                 return TypeDic[Name];
             }
+            /*
             foreach (AssetItem ai in TypeDic.Values)
             {
                 if (Name == ai.EvilName)
@@ -404,7 +291,7 @@ namespace UMA.CharacterSystem
                     RebuildIndex();
                     return ai;
                 }
-            }
+            }*/
             return null;
         }
 
@@ -442,6 +329,8 @@ namespace UMA.CharacterSystem
 
         public List<T> GetAllAssets<T>(string[] foldersToSearch = null) where T : UnityEngine.Object
         {
+            var st = StartTimer();
+
             var ret = new List<T>();
             System.Type ot = typeof(T);
 
@@ -450,13 +339,16 @@ namespace UMA.CharacterSystem
             foreach (KeyValuePair<string, AssetItem> kp in TypeDic)
             {
                 if (AssetFolderCheck(kp.Value, foldersToSearch))
-                    ret.Add((kp.Value._Item as T));
+                    ret.Add((kp.Value.Item as T));
             }
+            StopTimer(st, "GetAllAssets type=" + typeof(T).Name);
             return ret;
         }
 
         public T GetAsset<T>(int nameHash, string[] foldersToSearch = null) where T : UnityEngine.Object
         {
+            System.Diagnostics.Stopwatch st = new System.Diagnostics.Stopwatch();
+            st.Start();
             System.Type ot = typeof(T);
             Dictionary<string, AssetItem> TypeDic = (Dictionary<string, AssetItem>)TypeLookup[ot];
             string assetName = "";
@@ -465,14 +357,33 @@ namespace UMA.CharacterSystem
             {
                 assetName = "";
                 assetHash = -1;
-                GetEvilAssetNameAndHash(typeof(T), kp.Value._Item, ref assetName, assetHash);
+                GetEvilAssetNameAndHash(typeof(T), kp.Value.Item, ref assetName, assetHash);
                 if (assetHash == nameHash)
                 {
                     if (AssetFolderCheck(kp.Value, foldersToSearch))
-                        return (kp.Value._Item as T);
+                    {
+                        st.Stop();
+                        if (st.ElapsedMilliseconds > 2)
+                        {
+                            Debug.Log("GetAsset 0 for type "+typeof(T).Name+" completed in " + st.ElapsedMilliseconds + "ms");
+                        }
+                        return (kp.Value.Item as T);
+                    }
                     else
+                    {
+                        st.Stop();
+                        if (st.ElapsedMilliseconds > 2)
+                        {
+                            Debug.Log("GetAsset 1 for type " + typeof(T).Name + " completed in " + st.ElapsedMilliseconds + "ms");
+                        }
                         return null;
+                    }
                 }
+            }
+            st.Stop();
+            if (st.ElapsedMilliseconds > 2)
+            {
+                Debug.Log("GetAsset 2 for type " + typeof(T).Name + " completed in " + st.ElapsedMilliseconds + "ms");
             }
             return null;
         }
@@ -483,7 +394,7 @@ namespace UMA.CharacterSystem
             if (thisAssetItem != null)
             {
                 if (AssetFolderCheck(thisAssetItem, foldersToSearch))
-                    return (thisAssetItem._Item as T);
+                    return (thisAssetItem.Item as T);
                 else
                     return null;
             }
@@ -510,7 +421,7 @@ namespace UMA.CharacterSystem
             return false;
         }
 
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
         /// <summary>
         /// Check to see if something is an an assetbundle. If so, don't add it
         /// </summary>
@@ -539,7 +450,7 @@ namespace UMA.CharacterSystem
             for (int i = 0; i < assetBundleNames.Length; i++)
             {
                 pathsInBundle = new List<string>(AssetDatabase.GetAssetPathsFromAssetBundle(assetBundleNames[i]));
-                foreach(string s in pathsInBundle)
+                foreach (string s in pathsInBundle)
                 {
                     if (System.IO.Path.GetDirectoryName(s) == path)
                         return true;
@@ -547,10 +458,10 @@ namespace UMA.CharacterSystem
             }
             return false;
         }
-    #endif
-        #endregion
+#endif
+#endregion
 
-        #region Add Remove Assets
+#region Add Remove Assets
         /// <summary>
         /// Adds an asset to the index. Does NOT save the asset! you must do that separately.
         /// </summary>
@@ -568,7 +479,7 @@ namespace UMA.CharacterSystem
                 type = o.GetType();
             }
 
-            AssetItem ai = new AssetItem(type, name,path, o);
+            AssetItem ai = new AssetItem(type, name, path, o);
             AddAssetItem(ai, skipBundleCheck);
         }
 
@@ -576,7 +487,7 @@ namespace UMA.CharacterSystem
         /// Adds an asset to the index. If the name already exists, it is not added. (Should we do this, or replace it?)
         /// </summary>
         /// <param name="ai"></param>
-        public void AddAssetItem(AssetItem ai, bool SkipBundleCheck = false)
+        private void AddAssetItem(AssetItem ai, bool SkipBundleCheck = false)
         {
             System.Type theType = TypeToLookup[ai._Type];
             Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(theType);
@@ -586,21 +497,21 @@ namespace UMA.CharacterSystem
                 Debug.Log("Duplicate asset " + ai._Name + " was ignored.");
                 return;
             }
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
             if (!SkipBundleCheck)
             {
-                string Path = AssetDatabase.GetAssetPath(ai._Item.GetInstanceID());
+                string Path = AssetDatabase.GetAssetPath(ai.Item.GetInstanceID());
                 if (InAssetBundle(Path))
                 {
                     Debug.Log("Asset " + ai._Name + "is in Asset Bundle, and was not added to the index.");
                     return;
                 }
             }
-    #endif
+#endif
             TypeDic.Add(ai._Name, ai);
         }
 
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
         /// <summary>
         /// This is the evil version of AddAsset. This version cares not for the good of the project, nor
         /// does it care about readability, expandibility, and indeed, hates goodness with every beat of it's 
@@ -634,10 +545,10 @@ namespace UMA.CharacterSystem
             Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(type);
             TypeDic.Remove(Name);
         }
-    #endif
-        #endregion
+#endif
+#endregion
 
-        #region Maintenance
+#region Maintenance
 
         /// <summary>
         /// Updates the dictionaries after deserialization.
@@ -655,18 +566,36 @@ namespace UMA.CharacterSystem
                 if (ai == null)
                     continue;
                 // Make sure Unity hasn't lost a reference to it somehow.
-                if (ai._Item != null)
+                if (ai.Item != null)
                 {
-                    AddAsset(ai._Type, ai._Name, ai._Path, ai._Item, true);
+                    AddAsset(ai._Type, ai._Name, ai._Path, ai.Item, true);
                 }
             }
         }
 
         /// <summary>
+        /// Updates the dictionaries after deserialization.
+        /// </summary>
+        private void UpdateSerializedDictionaryItems()
+        {
+            foreach (System.Type type in Types)
+            {
+                CreateLookupDictionary(type);
+            }
+            foreach (AssetItem ai in SerializedItems)
+            {
+                // We null things out when we want to delete them. This prevents it from going back into 
+                // the dictionary when rebuilt.
+                if (ai == null)
+                    continue;
+                AddAssetItem(ai, true);
+            }
+        }
+        /// <summary>
         /// Creates a lookup dictionary for a list. Used when reloading after deserialization
         /// </summary>
         /// <param name="type"></param>
-        public void CreateLookupDictionary(System.Type type)
+        private void CreateLookupDictionary(System.Type type)
         {
             Dictionary<string, AssetItem> dic = new Dictionary<string, AssetItem>();
             if (TypeLookup.ContainsKey(type))
@@ -699,7 +628,36 @@ namespace UMA.CharacterSystem
             }
         }
 
-    #if UNITY_EDITOR
+        private void UpdateSerializedList(bool ForceItemSave)
+        {
+            SerializedItems.Clear();
+            foreach (System.Type type in Types)
+            {
+                Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(type);
+                foreach (AssetItem ai in TypeDic.Values)
+                {
+                    // Don't add asset bundle or resource items to index. They are loaded on demand.
+                    if (ai.IsAssetBundle == false && ai.IsResource == false)
+                    {
+                        AssetItem ais = ai.CreateSerializedItem(ForceItemSave);
+                        SerializedItems.Add(ais);
+                    }
+                }
+            }
+        }
+
+
+
+#if UNITY_EDITOR
+        private void BuildStringTypes()
+        {
+            TypeFromString.Clear();
+            foreach (System.Type st in Types)
+            {
+                TypeFromString.Add(st.Name, st);
+            }
+        }
+
         public void Clear()
         {
             // Rebuild the tables
@@ -707,7 +665,20 @@ namespace UMA.CharacterSystem
             UpdateDictionaries();
             ForceSave();
         }
-    #endif
+
+        public void ClearReferences()
+        {
+            // Rebuild the tables
+            UpdateList();
+            foreach (AssetItem ai in Items)
+            {
+                ai._SerializedItem = null;
+            }
+            UpdateDictionaries();
+            ForceSave();
+        }
+
+#endif
         /// <summary>
         /// returns the entire lookup dictionary for a specific type.
         /// </summary>
@@ -737,52 +708,62 @@ namespace UMA.CharacterSystem
             UpdateDictionaries();
         }
 
-        #endregion
+#endregion
 
-        #region Serialization
+#region Serialization
         void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
-            UpdateList();
+            UpdateSerializedList(this.SerializeAllObjects);
         }
-
         void ISerializationCallbackReceiver.OnAfterDeserialize()
         {
+            var st = StartTimer();
+
             List<System.Type> newTypes = new List<System.Type>()
-            {
-            (typeof(SlotDataAsset)),
-            (typeof(OverlayDataAsset)),
-            (typeof(RaceData)),
-            (typeof(UMATextRecipe)),
-            (typeof(UMAWardrobeRecipe)),
-            (typeof(UMAWardrobeCollection)),
-            (typeof(RuntimeAnimatorController)),
-    #if UNITY_EDITOR
-            (typeof(AnimatorController)),
-    #endif
-                (typeof(DynamicUMADnaAsset)),
-            (typeof(TextAsset))
-            };
+        {
+        (typeof(SlotDataAsset)),
+        (typeof(OverlayDataAsset)),
+        (typeof(RaceData)),
+        (typeof(UMATextRecipe)),
+        (typeof(UMAWardrobeRecipe)),
+        (typeof(UMAWardrobeCollection)),
+        (typeof(RuntimeAnimatorController)),
+#if UNITY_EDITOR
+        (typeof(AnimatorController)),
+#endif
+            (typeof(DynamicUMADnaAsset)),
+        (typeof(TextAsset))
+        };
 
             TypeToLookup = new Dictionary<System.Type, System.Type>()
-            {
-            { (typeof(SlotDataAsset)),(typeof(SlotDataAsset)) },
-            { (typeof(OverlayDataAsset)),(typeof(OverlayDataAsset)) },
-            { (typeof(RaceData)),(typeof(RaceData)) },
-            { (typeof(UMATextRecipe)),(typeof(UMATextRecipe)) },
-            { (typeof(UMAWardrobeRecipe)),(typeof(UMAWardrobeRecipe)) },
-            { (typeof(UMAWardrobeCollection)),(typeof(UMAWardrobeCollection)) },
-            { (typeof(RuntimeAnimatorController)),(typeof(RuntimeAnimatorController)) },
-    #if UNITY_EDITOR
-            { (typeof(AnimatorController)),(typeof(RuntimeAnimatorController)) },
-    #endif
-            {  typeof(TextAsset), typeof(TextAsset) },
-            { (typeof(DynamicUMADnaAsset)), (typeof(DynamicUMADnaAsset)) }
-            };
+        {
+        { (typeof(SlotDataAsset)),(typeof(SlotDataAsset)) },
+        { (typeof(OverlayDataAsset)),(typeof(OverlayDataAsset)) },
+        { (typeof(RaceData)),(typeof(RaceData)) },
+        { (typeof(UMATextRecipe)),(typeof(UMATextRecipe)) },
+        { (typeof(UMAWardrobeRecipe)),(typeof(UMAWardrobeRecipe)) },
+        { (typeof(UMAWardrobeCollection)),(typeof(UMAWardrobeCollection)) },
+        { (typeof(RuntimeAnimatorController)),(typeof(RuntimeAnimatorController)) },
+#if UNITY_EDITOR
+        { (typeof(AnimatorController)),(typeof(RuntimeAnimatorController)) },
+#endif
+        {  typeof(TextAsset), typeof(TextAsset) },
+        { (typeof(DynamicUMADnaAsset)), (typeof(DynamicUMADnaAsset)) }
+        };
 
+            List<string> invalidTypeNames = new List<string>();
             // Add the additional Types.
             foreach (string s in IndexedTypeNames)
             {
+                if (s == "")
+                    continue;
                 System.Type sType = System.Type.GetType(s);
+                if (sType == null)
+                {
+                    invalidTypeNames.Add(s);
+                    Debug.LogWarning("Could not find type for " + s);
+                    continue;
+                }
                 newTypes.Add(sType);
                 if (!TypeToLookup.ContainsKey(sType))
                 {
@@ -792,8 +773,36 @@ namespace UMA.CharacterSystem
 
             Types = newTypes.ToArray();
 
-            UpdateDictionaries();
+            if (invalidTypeNames.Count > 0)
+            {
+                foreach (string ivs in invalidTypeNames)
+                {
+                    IndexedTypeNames.Remove(ivs);
+                }
+            }
+            BuildStringTypes();
+            UpdateSerializedDictionaryItems();
+            StopTimer(st, "Before Serialize");
         }
+#if UNITY_EDITOR
+#if UNITY_5_6_OR_NEWER
+    int IOrderedCallback.callbackOrder
+    {
+        get
+        {
+            return 0;
+        }
+    }
+
+    void IPreprocessBuild.OnPreprocessBuild(BuildTarget target, string path)
+    {
+        bool wasSet = SerializeAllObjects;
+        SerializeAllObjects = true;
+        ForceSave();
+        SerializeAllObjects = wasSet;
+    }
+#endif
+#endif
         #endregion
     }
 }
