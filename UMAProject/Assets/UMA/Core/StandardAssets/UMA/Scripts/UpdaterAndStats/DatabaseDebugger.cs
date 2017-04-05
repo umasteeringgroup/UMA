@@ -2,9 +2,9 @@
 
 public class DatabaseDebugger : MonoBehaviour
 {
+	public string version = "2.1.0";
 	public bool sendDl = false;
 	public bool getStats = false;
-	public string version = "2.1.0";
 	public bool addRow = false;
 
 	private void Update()
@@ -16,7 +16,7 @@ public class DatabaseDebugger : MonoBehaviour
 			WWWForm form = new WWWForm();
 			form.AddField("hash", DatabaseInterface.hash);
 			form.AddField("type", "dlStat");
-			form.AddField("version", "2.1.0");
+			form.AddField("version", version);
 			
 			StartCoroutine(DatabaseInterface.DbRequest(form, PrintResult));
 		}
