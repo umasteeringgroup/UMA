@@ -651,7 +651,6 @@ namespace UMA
         private void BuildStringTypes()
         {
             TypeFromString.Clear();
-            var types = GetTypes();
             foreach (System.Type st in Types)
             {
                 TypeFromString.Add(st.Name, st);
