@@ -309,7 +309,7 @@ namespace UMA.Editors
 
 	public class SharedColorsCollectionEditor
 	{
-		private bool _foldout = true;
+		static bool _foldout = true;
 		static int selectedChannelCount = 3;//DOS MODIFIED made this three so colors by default have the channels for Gloss/Metallic
 		String[] names = new string[4] { "1", "2", "3", "4" };
 		int[] channels = new int[4] { 1, 2, 3, 4 };
@@ -454,10 +454,47 @@ namespace UMA.Editors
 		//an Id for the 'ClickToPick' slot picker
 		protected static int _slotPickerID = -1;
 
-		//DOS Changed this to protected so childs can inherit
-		protected bool DropAreaGUI(Rect dropArea)
+        protected List<SlotDataAsset> DraggedSlots = new List<SlotDataAsset>();
+        protected List<OverlayDataAsset> DraggedOverlays = new List<OverlayDataAsset>();
+
+        /// <summary>
+        /// Add the drag and drop files to the recipe.
+        /// if any overlays are dropped, they are added to the first slot that was dropped.
+        /// if no slots were dropped, they are added to the first slot in the recipe.
+        /// </summary>
+        protected void AddDraggedFiles()
+        {
+            SlotData FirstSlot = null;
+
+            // Add the slots.
+            // if there are overlays, well, no way to really know where they go, so add them to the first slot.
+            foreach (SlotDataAsset sd in DraggedSlots)
+            {
+                SlotData slot = new SlotData(sd);
+                slot = _recipe.MergeSlot(slot, false);
+                if (FirstSlot == null)
+                {
+                    FirstSlot = slot;
+                }
+            }
+            DraggedSlots.Clear();
+
+            if (DraggedOverlays.Count > 0)
+            {
+                if (FirstSlot == null)
+                    FirstSlot = _recipe.GetSlot(0);
+                
+                foreach (OverlayDataAsset od in DraggedOverlays)
+                {
+                    FirstSlot.AddOverlay(new OverlayData(od));
+                }
+                DraggedOverlays.Clear();
+            }
+        }
+
+        //DOS Changed this to protected so childs can inherit
+        protected bool DropAreaGUI(Rect dropArea)
 		{
-			int count = 0;
 			var evt = Event.current;
 			int pickedCount = 0;
 			//make the box clickable so that the user can select slotData assets from the asset selection window
@@ -514,20 +551,25 @@ namespace UMA.Editors
 							if (tempSlotDataAsset)
 							{
                                 LastSlot = tempSlotDataAsset.slotName;
-								AddSlotDataAsset(tempSlotDataAsset);
-								count++;
+                                DraggedSlots.Add(tempSlotDataAsset);
+								// AddSlotDataAsset(tempSlotDataAsset);
 								continue;
 							}
+                            if (draggedObjects[i] is OverlayDataAsset)
+                            {
+                                DraggedOverlays.Add(draggedObjects[i] as OverlayDataAsset);
+                            }
 
 							var path = AssetDatabase.GetAssetPath(draggedObjects[i]);
 							if (System.IO.Directory.Exists(path))
 							{
-								RecursiveScanFoldersForAssets(path, ref count);
+								RecursiveScanFoldersForAssets(path);
 							}
 						}
 					}
-					if (count > 0)
+					if (DraggedSlots.Count > 0 || DraggedOverlays.Count > 0)
 					{
+                        AddDraggedFiles();
 						return true;
 					}
 				}
@@ -543,8 +585,9 @@ namespace UMA.Editors
 			var slot = new SlotData(added);
 			_recipe.MergeSlot(slot, false);
 		}
+
 		//DOS Changed this to protected so childs can inherit
-		protected void RecursiveScanFoldersForAssets(string path, ref int count)
+		protected void RecursiveScanFoldersForAssets(string path)
 		{
 			var assetFiles = System.IO.Directory.GetFiles(path, "*.asset");
 			foreach (var assetFile in assetFiles)
@@ -552,13 +595,18 @@ namespace UMA.Editors
 				var tempSlotDataAsset = AssetDatabase.LoadAssetAtPath(assetFile, typeof(SlotDataAsset)) as SlotDataAsset;
 				if (tempSlotDataAsset)
 				{
-					count++;
-					AddSlotDataAsset(tempSlotDataAsset);
+                    DraggedSlots.Add(tempSlotDataAsset);
+					//AddSlotDataAsset(tempSlotDataAsset);
 				}
-			}
+                var tempOverlayDataAsset = AssetDatabase.LoadAssetAtPath<OverlayDataAsset>(assetFile);
+                if (tempOverlayDataAsset)
+                {
+                    DraggedOverlays.Add(tempOverlayDataAsset as OverlayDataAsset);
+                }
+            }
 			foreach (var subFolder in System.IO.Directory.GetDirectories(path))
 			{
-				RecursiveScanFoldersForAssets(subFolder.Replace('\\', '/'), ref count);
+				RecursiveScanFoldersForAssets(subFolder.Replace('\\', '/'));
 			}
 		}
 
@@ -625,7 +673,7 @@ namespace UMA.Editors
 
             GUILayout.Space(20);
             Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
-            GUI.Box(dropArea, "Drag Slots here. Click to Pick");
+            GUI.Box(dropArea, "Drag Slots and Overlays here. Click to Pick");
             if (DropAreaGUI(dropArea))
             {
                 changed |= true;
@@ -693,21 +741,31 @@ namespace UMA.Editors
 
 			GUILayout.Space(20);
 
-			if (GUILayout.Button("Remove Nulls"))
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Clear"))
 			{
-				var newList = new List<SlotData>(_recipe.slotDataList.Length);
-				foreach (var slotData in _recipe.slotDataList)
-				{
-					if (slotData != null) newList.Add(slotData);
-				}
-				_recipe.slotDataList = newList.ToArray();
+                _recipe.slotDataList = new SlotData[0];
 				changed |= true;
 				_dnaDirty |= true;
 				_textureDirty |= true;
 				_meshDirty |= true;
 			}
+            if (GUILayout.Button("Remove Nulls"))
+            {
+                var newList = new List<SlotData>(_recipe.slotDataList.Length);
+                foreach (var slotData in _recipe.slotDataList)
+                {
+                    if (slotData != null) newList.Add(slotData);
+                }
+                _recipe.slotDataList = newList.ToArray();
+                changed |= true;
+                _dnaDirty |= true;
+                _textureDirty |= true;
+                _meshDirty |= true;
+            }
+            GUILayout.EndHorizontal();
 
-			GUILayout.BeginHorizontal();
+            GUILayout.BeginHorizontal();
             if (GUILayout.Button("Collapse All"))
             {
                 CollapseAll();

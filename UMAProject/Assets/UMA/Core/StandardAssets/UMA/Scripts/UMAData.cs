@@ -597,10 +597,10 @@ namespace UMA
 			/// </summary>
 			/// <param name="slot">Slot.</param>
 			/// <param name="dontSerialize">If set to <c>true</c> slot will not be serialized.</param>
-			public void MergeSlot(SlotData slot, bool dontSerialize)
+			public SlotData MergeSlot(SlotData slot, bool dontSerialize)
 			{
 				if ((slot == null) || (slot.asset == null))
-					return;
+					return null;
 
 				int overlayCount = 0;
 				for (int i = 0; i < slotDataList.Length; i++)
@@ -643,7 +643,7 @@ namespace UMA
 							}
 						}
 						originalSlot.dontSerialize = dontSerialize;
-						return;
+						return originalSlot;
 					}
 				}
 
@@ -667,6 +667,7 @@ namespace UMA
 				}
 				slotDataList[insertIndex] = slotCopy;
 				MergeMatchingOverlays();
+                return slotCopy;
 			}
 
 			/// <summary>

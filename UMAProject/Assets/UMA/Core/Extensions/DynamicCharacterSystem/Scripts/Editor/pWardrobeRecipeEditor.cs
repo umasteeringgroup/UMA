@@ -597,7 +597,7 @@ namespace UMA.Editors
 
 				GUILayout.Space(20);
 				Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
-				GUI.Box(dropArea, "Drag Slots here. Click to pick");
+				GUI.Box(dropArea, "Drag Slots and Overlays here. Click to pick");
 				if (DropAreaGUI(dropArea))
 				{
 					changed |= true;
@@ -648,8 +648,16 @@ namespace UMA.Editors
 				}
 
 				GUILayout.Space(20);
-
-				if (GUILayout.Button("Remove Nulls"))
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Clear Recipe"))
+                {
+                    _recipe.slotDataList = new SlotData[0];
+                    changed |= true;
+                    _dnaDirty |= true;
+                    _textureDirty |= true;
+                    _meshDirty |= true;
+                }
+                if (GUILayout.Button("Remove Nulls"))
 				{
 					var newList = new List<SlotData>(_recipe.slotDataList.Length);
 					foreach (var slotData in _recipe.slotDataList)
@@ -662,6 +670,7 @@ namespace UMA.Editors
 					_textureDirty |= true;
 					_meshDirty |= true;
 				}
+                GUILayout.EndHorizontal();
 
 				GUILayout.BeginHorizontal();
 				if (GUILayout.Button("Collapse All"))
