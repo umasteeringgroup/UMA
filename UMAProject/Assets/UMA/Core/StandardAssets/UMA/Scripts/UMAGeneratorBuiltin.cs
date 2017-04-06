@@ -137,7 +137,7 @@ namespace UMA
 		}
 
 #pragma warning disable 618
-		private void RebuildAllRenderTextures()
+		public void RebuildAllRenderTextures()
 		{
 			var activeUmaData = umaData;
 			var storedGeneratorCoroutine = activeGeneratorCoroutine;
