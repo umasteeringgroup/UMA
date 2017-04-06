@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections.Generic;
 using UMA;
 
@@ -8,8 +8,10 @@ using UnityEditor.Animations;
 #endif
 namespace UMA
 {
-    [InitializeOnLoad]
-    public class UMAAssetIndexer : MonoBehaviour, ISerializationCallbackReceiver
+#if UNITY_EDITOR
+	[InitializeOnLoad]
+#endif
+	public class UMAAssetIndexer : MonoBehaviour, ISerializationCallbackReceiver
 #if UNITY_EDITOR    
 #if UNITY_5_6_OR_NEWER
      , IPreprocessBuild
@@ -244,8 +246,10 @@ namespace UMA
             Types = newTypes.ToArray();
             TypeToLookup.Add(sType, sType);
             IndexedTypeNames.Add(sType.AssemblyQualifiedName);
-            BuildStringTypes();
-        }
+#if UNITY_EDITOR
+			BuildStringTypes();
+#endif
+		}
 
         public void RemoveType(System.Type sType)
         {
@@ -260,8 +264,10 @@ namespace UMA
             Types = newTypes.ToArray();
             TypeLookup.Remove(sType);
             IndexedTypeNames.Remove(sType.AssemblyQualifiedName);
-            BuildStringTypes();
-        }
+#if UNITY_EDITOR
+			BuildStringTypes();
+#endif
+		}
 #endregion
 
 #region Access the index
@@ -779,8 +785,10 @@ namespace UMA
                     IndexedTypeNames.Remove(ivs);
                 }
             }
-            BuildStringTypes();
-            UpdateSerializedDictionaryItems();
+#if UNITY_EDITOR
+			BuildStringTypes();
+#endif
+			UpdateSerializedDictionaryItems();
             StopTimer(st, "Before Serialize");
         }
 #if UNITY_EDITOR
