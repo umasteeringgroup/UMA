@@ -21,8 +21,12 @@ namespace UMA
 		public int atlasResolution;
 		[Tooltip("The default overlay to display if a slot has meshData and no overlays assigned")]
 		public OverlayDataAsset defaultOverlayAsset;
-		[HideInInspector]
-		public OverlayData defaultOverlayData;
+
+		protected OverlayData _defaultOverlayData;
+		public OverlayData defaultOverlaydata
+		{
+			get { return _defaultOverlayData; }
+		}
 
 		/// <summary>
 		/// Adds the dirty UMA to the update queue.

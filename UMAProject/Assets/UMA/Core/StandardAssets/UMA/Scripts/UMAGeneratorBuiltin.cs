@@ -62,7 +62,7 @@ namespace UMA
 				atlasResolution = 256;
 
 			if (defaultOverlayAsset != null)
-				defaultOverlayData = new OverlayData (defaultOverlayAsset);
+				_defaultOverlayData = new OverlayData (defaultOverlayAsset);
 
 			if (!textureMerge)
 			{
