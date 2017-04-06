@@ -317,6 +317,16 @@ MonoBehaviour:
   convertRenderTexture: 0
   convertMipMaps: 1
   atlasResolution: 4096
+  defaultOverlayAsset: {fileID: 11400000, guid: fe30fbf67b51de8499624c6913a39e64,
+    type: 2}
+  defaultOverlayData:
+    asset: {fileID: 0}
+    rect:
+      serializedVersion: 2
+      x: 0
+      y: 0
+      width: 0
+      height: 0
   textureMergePrefab: {fileID: 400002, guid: b67c04ae1c362e94e9e8c5505c381525, type: 2}
   meshCombiner: {fileID: 11456094}
   InitialScaleFactor: 2
@@ -349,6 +359,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 0fbc0a0bbfb29084bbeafb0876b6e28b, type: 2}
   - {fileID: 11400000, guid: edcf92bdef3d2e04c980749f7d702647, type: 2}
   - {fileID: 11400000, guid: 98c6dc40a5e2e4f3f92aabfafaf67c78, type: 2}
+  - {fileID: 11400000, guid: 36832eb4f58c963418b5be22d9a7eafb, type: 2}
   dynamicallyAddFromResources: 1
   resourcesFolderPath: 
   dynamicallyAddFromAssetBundles: 0
@@ -443,6 +454,13 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  - {fileID: 11400000, guid: 0b7ed825e2431f54c9f786a489da80bc, type: 2}
+  - {fileID: 11400000, guid: cc6c17656f669be4bbb2e21d48e57a45, type: 2}
+  - {fileID: 11400000, guid: 78bcc1abec57f9c409e43c37c84b131e, type: 2}
+  - {fileID: 11400000, guid: e7c8290369e5f724e8e185a77240e37e, type: 2}
+  - {fileID: 11400000, guid: 881f10d72572db34cb1150ac3df21a97, type: 2}
+  - {fileID: 11400000, guid: 2041a0dad0ad3894ea9590072acacf65, type: 2}
+  - {fileID: 11400000, guid: fe973a02183b3894296cc24e40283fde, type: 2}
 --- !u!114 &11464156
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -575,6 +593,12 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 7c7d4dd46aadf264ca87a97b357a238e, type: 2}
   - {fileID: 11400000, guid: 331efa6bce027af46ae666095da5f511, type: 2}
   - {fileID: 11400000, guid: 73cf00c391282944c8251cee30c6cb68, type: 2}
+  - {fileID: 11400000, guid: 98b05b17b4e8ff142b1f16df2ef2315b, type: 2}
+  - {fileID: 11400000, guid: 31b625579c8744547b02bdd5c42c557e, type: 2}
+  - {fileID: 11400000, guid: 5746c09014733de4bbf208291c61aaea, type: 2}
+  - {fileID: 11400000, guid: 03e5bfa4f7f2fd445974ed61bdf5d9cf, type: 2}
+  - {fileID: 11400000, guid: 4e3423fc7dbaee44397ec91baa5ce828, type: 2}
+  - {fileID: 11400000, guid: 19ca51fa9b344074ebeaad4c873fd125, type: 2}
 --- !u!114 &11486452
 MonoBehaviour:
   m_ObjectHideFlags: 1
