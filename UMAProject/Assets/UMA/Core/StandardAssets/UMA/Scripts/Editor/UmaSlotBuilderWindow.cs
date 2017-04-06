@@ -72,6 +72,16 @@ namespace UMA.Editors
 	                Debug.Log("Success.");
 	            }
 	        }
+
+
+			if (slotMesh != null )
+			{
+				if( slotMesh.localBounds.size.x > 10.0f || slotMesh.localBounds.size.y > 10.0f || slotMesh.localBounds.size.z > 10.0f)
+					EditorGUILayout.HelpBox ("This slot's size is very large. It's import scale may be incorrect!", MessageType.Warning);
+
+				if( slotMesh.localBounds.size.x < 0.01f || slotMesh.localBounds.size.y < 0.01f || slotMesh.localBounds.size.z < 0.01f)
+					EditorGUILayout.HelpBox ("This slot's size is very small. It's import scale may be incorrect!", MessageType.Warning);
+			}
 	      
 	        GUILayout.Label("", EditorStyles.boldLabel);
 	        Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
@@ -119,6 +129,7 @@ namespace UMA.Editors
 	            Debug.LogError("Slot Mesh not supplied.");
 	            return null;
 	        }
+
             Debug.Log("Slot Mesh: " + slotMesh.name, slotMesh.gameObject);
 			SlotDataAsset slot = UMASlotProcessingUtil.CreateSlotData(AssetDatabase.GetAssetPath(slotFolder), GetAssetFolder(), GetAssetName(), slotMesh, material, normalReferenceMesh,RootBone);
 	        return slot;
