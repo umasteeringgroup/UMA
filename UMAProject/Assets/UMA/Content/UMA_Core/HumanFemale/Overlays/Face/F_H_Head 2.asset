@@ -9,9 +9,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c4834e6077abe64e968f9f87c9ac70a, type: 3}
-  m_Name: M_Face_Old
+  m_Name: F_H_Head 2
   m_EditorClassIdentifier: 
-  overlayName: M_Face_Old
+  overlayName: F_H_Head 2
   overlayType: 0
   rect:
     serializedVersion: 2
@@ -21,9 +21,9 @@ MonoBehaviour:
     height: 0
   alphaMask: {fileID: 0}
   textureList:
-  - {fileID: 2800000, guid: 116d755c88cf64549afed9e79d5ea312, type: 3}
-  - {fileID: 2800000, guid: 47186f824201ea94b8b191deab03942e, type: 3}
-  - {fileID: 2800000, guid: 1bd613af11494064fabcf21c9156e5c7, type: 3}
+  - {fileID: 2800000, guid: 49d78f31508b22e4f81bae8c6ca38e13, type: 3}
+  - {fileID: 2800000, guid: 63b4d18e3035f19478f48fc951ba36ca, type: 3}
+  - {fileID: 2800000, guid: 94d4ed1afcae6d24aa8325f9fcda20c4, type: 3}
   tags: []
   material: {fileID: 11400000, guid: 8e29dbac5d2e82f44a759a7e2cc568ab, type: 2}
   OcclusionEntries: []
