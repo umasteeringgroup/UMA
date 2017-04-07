@@ -13,7 +13,7 @@ SceneSettings:
 --- !u!104 &2
 RenderSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 7
+  serializedVersion: 6
   m_Fog: 0
   m_FogColor: {r: 0.6, g: 0.7529412, b: 0.99607843, a: 1}
   m_FogMode: 2
@@ -37,12 +37,12 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 166765684}
-  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
 --- !u!157 &4
 LightmapSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 7
-  m_GIWorkflowMode: 1
+  serializedVersion: 6
+  m_GIWorkflowMode: 0
+  m_LightmapsMode: 1
   m_GISettings:
     serializedVersion: 2
     m_BounceScale: 1
@@ -53,25 +53,20 @@ LightmapSettings:
     m_EnableBakedLightmaps: 1
     m_EnableRealtimeLightmaps: 1
   m_LightmapEditorSettings:
-    serializedVersion: 4
+    serializedVersion: 3
     m_Resolution: 1
     m_BakeResolution: 50
     m_TextureWidth: 1024
     m_TextureHeight: 1024
-    m_AO: 0
     m_AOMaxDistance: 1
-    m_CompAOExponent: 0
-    m_CompAOExponentDirect: 0
     m_Padding: 2
+    m_CompAOExponent: 0
     m_LightmapParameters: {fileID: 0}
-    m_LightmapsBakeMode: 1
     m_TextureCompression: 0
-    m_DirectLightInLightProbes: 1
     m_FinalGather: 0
-    m_FinalGatherFiltering: 1
     m_FinalGatherRayCount: 1024
     m_ReflectionCompression: 2
-  m_LightingDataAsset: {fileID: 112000001, guid: 44832b671251fcd45b0864e699a30c3d,
+  m_LightingDataAsset: {fileID: 112000001, guid: e3643b076c84ccc43a00a0860e3b51f6,
     type: 2}
   m_RuntimeCPUUsage: 25
 --- !u!196 &5
@@ -751,7 +746,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 305676970}
   m_Direction: 0
   m_Value: 0
-  m_Size: 0.9999999
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -1375,7 +1370,7 @@ Light:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 152714819}
   m_Enabled: 1
-  serializedVersion: 7
+  serializedVersion: 6
   m_Type: 1
   m_Color: {r: 0.6, g: 0.7529412, b: 0.99607843, a: 1}
   m_Intensity: 0.4
@@ -1385,7 +1380,6 @@ Light:
   m_Shadows:
     m_Type: 0
     m_Resolution: 3
-    m_CustomResolution: -1
     m_Strength: 1
     m_Bias: 0.1
     m_NormalBias: 0.4
@@ -1398,10 +1392,10 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_Lightmapping: 4
-  m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+  m_AreaSize: {x: 1, y: 1}
 --- !u!1 &160583029
 GameObject:
   m_ObjectHideFlags: 0
@@ -1623,7 +1617,7 @@ Light:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 166765682}
   m_Enabled: 1
-  serializedVersion: 7
+  serializedVersion: 6
   m_Type: 1
   m_Color: {r: 0.9338235, g: 0.9185755, b: 0.88575906, a: 1}
   m_Intensity: 1.2
@@ -1633,7 +1627,6 @@ Light:
   m_Shadows:
     m_Type: 2
     m_Resolution: -1
-    m_CustomResolution: -1
     m_Strength: 1
     m_Bias: 0.02
     m_NormalBias: 1
@@ -1646,10 +1639,10 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_Lightmapping: 4
-  m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+  m_AreaSize: {x: 1, y: 1}
 --- !u!1 &167269312
 GameObject:
   m_ObjectHideFlags: 0
@@ -4299,7 +4292,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  context: {fileID: 0}
+  context: {fileID: 1875296715}
   umaData: {fileID: 0}
   umaRecipe: {fileID: 0}
   umaAdditionalRecipes:
@@ -4341,8 +4334,6 @@ MonoBehaviour:
   loadBlendShapes: 0
   activeRace:
     name: HumanFemaleDCS
-    _data: {fileID: 11400000, guid: 92f8416dee5a3f043a417078fa29c476, type: 2}
-    _cachedRaceDatas: []
   defaultChangeRaceOptions: 8
   cacheCurrentState: 1
   rebuildSkeleton: 0
@@ -4350,15 +4341,12 @@ MonoBehaviour:
     loadDefaultRecipes: 1
     recipes:
     - _recipeName: ToonHair1
-      _recipe: {fileID: 11400000, guid: 7208f8cc5e698b74ca3fc08abfb29cc6, type: 2}
       _compatibleRaces:
       - ToonFemale
     - _recipeName: ToonFemaleUnderwear1
-      _recipe: {fileID: 11400000, guid: ea281ac1676c4374783d2104f659f68d, type: 2}
       _compatibleRaces:
       - ToonFemale
     - _recipeName: FemaleHair1
-      _recipe: {fileID: 11400000, guid: 53a236a7ccb00374dbbed2f13dc8509d, type: 2}
       _compatibleRaces:
       - HumanFemaleResources
   raceAnimationControllers:
@@ -4367,17 +4355,11 @@ MonoBehaviour:
     animators:
     - raceName: ToonFemale
       animatorControllerName: IdleTest-w-head
-      animatorController: {fileID: 9100000, guid: f0ae291110d799142ba94baf538f376c,
-        type: 2}
     - raceName: HumanMaleDCS
       animatorControllerName: Locomotion with Head
-      animatorController: {fileID: 9100000, guid: ae859d58fdf844b73863d3833f955cdf,
-        type: 2}
     - raceName: HumanFemaleResources
       animatorControllerName: Locomotion with Head
-      animatorController: {fileID: 9100000, guid: ae859d58fdf844b73863d3833f955cdf,
-        type: 2}
-    dynamicallyAddFromResources: 0
+    dynamicallyAddFromResources: 1
     resourcesFolderPath: 
     dynamicallyAddFromAssetBundles: 1
     assetBundleNames: 
@@ -4865,7 +4847,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  context: {fileID: 0}
+  context: {fileID: 1875296715}
   umaData: {fileID: 0}
   umaRecipe: {fileID: 0}
   umaAdditionalRecipes:
@@ -4907,8 +4889,6 @@ MonoBehaviour:
   loadBlendShapes: 0
   activeRace:
     name: HumanGirlDCS
-    _data: {fileID: 11400000, guid: 8f9fc622c08165a4297be9de525ccd1b, type: 2}
-    _cachedRaceDatas: []
   defaultChangeRaceOptions: 8
   cacheCurrentState: 1
   rebuildSkeleton: 0
@@ -4916,15 +4896,12 @@ MonoBehaviour:
     loadDefaultRecipes: 1
     recipes:
     - _recipeName: ToonHair1
-      _recipe: {fileID: 11400000, guid: 7208f8cc5e698b74ca3fc08abfb29cc6, type: 2}
       _compatibleRaces:
       - ToonFemale
     - _recipeName: ToonFemaleUnderwear1
-      _recipe: {fileID: 11400000, guid: ea281ac1676c4374783d2104f659f68d, type: 2}
       _compatibleRaces:
       - ToonFemale
     - _recipeName: FemaleHair1
-      _recipe: {fileID: 11400000, guid: 53a236a7ccb00374dbbed2f13dc8509d, type: 2}
       _compatibleRaces:
       - HumanFemaleResources
   raceAnimationControllers:
@@ -4933,17 +4910,11 @@ MonoBehaviour:
     animators:
     - raceName: ToonFemale
       animatorControllerName: IdleTest-w-head
-      animatorController: {fileID: 9100000, guid: f0ae291110d799142ba94baf538f376c,
-        type: 2}
     - raceName: HumanFemaleResources
       animatorControllerName: Locomotion with Head
-      animatorController: {fileID: 9100000, guid: ae859d58fdf844b73863d3833f955cdf,
-        type: 2}
     - raceName: HumanMaleDCS
       animatorControllerName: Locomotion with Head
-      animatorController: {fileID: 9100000, guid: ae859d58fdf844b73863d3833f955cdf,
-        type: 2}
-    dynamicallyAddFromResources: 0
+    dynamicallyAddFromResources: 1
     resourcesFolderPath: 
     dynamicallyAddFromAssetBundles: 1
     assetBundleNames: 
@@ -7767,7 +7738,7 @@ Light:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 709798930}
   m_Enabled: 1
-  serializedVersion: 7
+  serializedVersion: 6
   m_Type: 1
   m_Color: {r: 0.9632353, g: 0.9508408, b: 0.878244, a: 1}
   m_Intensity: 0.33
@@ -7777,7 +7748,6 @@ Light:
   m_Shadows:
     m_Type: 0
     m_Resolution: 3
-    m_CustomResolution: -1
     m_Strength: 0.59
     m_Bias: 0.1
     m_NormalBias: 0.4
@@ -7790,10 +7760,10 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_Lightmapping: 4
-  m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+  m_AreaSize: {x: 1, y: 1}
 --- !u!1 &727029868
 GameObject:
   m_ObjectHideFlags: 0
@@ -9307,7 +9277,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  context: {fileID: 0}
+  context: {fileID: 1875296715}
   umaData: {fileID: 0}
   umaRecipe: {fileID: 0}
   umaAdditionalRecipes:
@@ -9349,8 +9319,6 @@ MonoBehaviour:
   loadBlendShapes: 0
   activeRace:
     name: HumanMaleDCS
-    _data: {fileID: 11400000, guid: 5ed11744a54425247b40c4f8967bdcbd, type: 2}
-    _cachedRaceDatas: []
   defaultChangeRaceOptions: 8
   cacheCurrentState: 1
   rebuildSkeleton: 0
@@ -9358,20 +9326,16 @@ MonoBehaviour:
     loadDefaultRecipes: 1
     recipes:
     - _recipeName: MaleBeard3
-      _recipe: {fileID: 11400000, guid: 1df4eb647357a74498fa7e6b4672ad8d, type: 2}
       _compatibleRaces:
       - HumanMaleDCS
       - HumanMale
     - _recipeName: ToonFemaleUnderwear1
-      _recipe: {fileID: 11400000, guid: ea281ac1676c4374783d2104f659f68d, type: 2}
       _compatibleRaces:
       - ToonFemale
     - _recipeName: ToonHair1
-      _recipe: {fileID: 11400000, guid: 7208f8cc5e698b74ca3fc08abfb29cc6, type: 2}
       _compatibleRaces:
       - ToonFemale
     - _recipeName: FemaleHair1
-      _recipe: {fileID: 11400000, guid: 53a236a7ccb00374dbbed2f13dc8509d, type: 2}
       _compatibleRaces:
       - HumanFemaleResources
   raceAnimationControllers:
@@ -9380,17 +9344,11 @@ MonoBehaviour:
     animators:
     - raceName: HumanMaleDCS
       animatorControllerName: Locomotion with Head
-      animatorController: {fileID: 9100000, guid: ae859d58fdf844b73863d3833f955cdf,
-        type: 2}
     - raceName: HumanFemaleResources
       animatorControllerName: Locomotion with Head
-      animatorController: {fileID: 9100000, guid: ae859d58fdf844b73863d3833f955cdf,
-        type: 2}
     - raceName: ToonFemale
       animatorControllerName: IdleTest-w-head
-      animatorController: {fileID: 9100000, guid: f0ae291110d799142ba94baf538f376c,
-        type: 2}
-    dynamicallyAddFromResources: 0
+    dynamicallyAddFromResources: 1
     resourcesFolderPath: 
     dynamicallyAddFromAssetBundles: 1
     assetBundleNames: 
@@ -10240,7 +10198,6 @@ LightProbeGroup:
   - {x: -11, y: 4, z: -3}
   - {x: -11, y: 0, z: -3}
   - {x: 11, y: 4, z: -13}
-  - {x: 11, y: 0, z: -13}
   - {x: 9, y: 4, z: -13}
   - {x: 9, y: 0, z: -13}
   - {x: 7, y: 4, z: -13}
@@ -10311,6 +10268,7 @@ LightProbeGroup:
   - {x: 3, y: 0, z: -3}
   - {x: 1, y: 4, z: -3}
   - {x: 1, y: 0, z: -3}
+  - {x: 11, y: 0, z: -13}
 --- !u!1 &1016074254
 GameObject:
   m_ObjectHideFlags: 0
@@ -12322,20 +12280,17 @@ MeshRenderer:
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
   m_Materials:
   - {fileID: 2100000, guid: 411da2e7323235d4fabbb4c5ac71d378, type: 2}
   m_SubsetIndices: 
   m_StaticBatchRoot: {fileID: 0}
+  m_UseLightProbes: 1
+  m_ReflectionProbeUsage: 1
   m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
-  m_SelectedWireframeHidden: 0
   m_MinimumChartSize: 4
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
@@ -12629,7 +12584,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0.9848077, z: 0, w: -0.1736483}
   m_LocalPosition: {x: -0.16746101, y: 0.20350203, z: 0.010451518}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -160, z: 0}
   m_Children:
   - {fileID: 152714820}
   - {fileID: 166765683}
@@ -15089,11 +15044,11 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
-  - {fileID: 11400000, guid: 302859ff4fef7f348a7c2901c57a96fc, type: 2}
-  - {fileID: 11400000, guid: 9222e3ac774d82e4abfb125a01bc86a3, type: 2}
-  - {fileID: 11400000, guid: df6521286595b18459b88c72476c8e2b, type: 2}
-  - {fileID: 11400000, guid: 02b36f0f437b2de4f9f9dde111370b4c, type: 2}
-  - {fileID: 11400000, guid: eda007c65c8ea644c84aaf4cb3266ef6, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
@@ -15148,6 +15103,10 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 11400000, guid: 1cb8a895dbe7af3499df9ad078311653, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 11400000, guid: b762ef314be9a9f4296c335e96ab7caa, type: 2}
 --- !u!4 &1545467459
 Transform:
   m_ObjectHideFlags: 0
@@ -18348,14 +18307,6 @@ MonoBehaviour:
   loadingMessageText: {fileID: 1993467763}
   loadingMessage: Loading Assets...
   isInitialized: 0
-  placeholderRace: {fileID: 11400000, guid: 8182baefc34d4474b939b341f9c3a712, type: 2}
-  placeholderWardrobeRecipe: {fileID: 11400000, guid: dc9b2ee309a14484aaf8f4c83614e499,
-    type: 2}
-  placeholderSlot: {fileID: 11400000, guid: 1793ec477efd5b643a2a938a41cbd8f7, type: 2}
-  placeholderOverlay: {fileID: 11400000, guid: 331efa6bce027af46ae666095da5f511, type: 2}
-  downloadingAssets:
-    downloadingItems: []
-    areDownloadedItemsReady: 1
   debugOnFail: 1
 --- !u!4 &1945811234
 Transform:
@@ -19386,6 +19337,7 @@ ReflectionProbe:
   m_TimeSlicingMode: 0
   m_Resolution: 128
   m_UpdateFrequency: 0
+  m_Importance: 1
   m_BoxSize: {x: 10, y: 10, z: 10}
   m_BoxOffset: {x: 0, y: 0, z: 0}
   m_NearClip: 0.3
@@ -19402,7 +19354,6 @@ ReflectionProbe:
   m_BoxProjection: 0
   m_RenderDynamicObjects: 0
   m_UseOcclusionCulling: 1
-  m_Importance: 1
   m_CustomBakedTexture: {fileID: 0}
 --- !u!1 &2079936341
 GameObject:

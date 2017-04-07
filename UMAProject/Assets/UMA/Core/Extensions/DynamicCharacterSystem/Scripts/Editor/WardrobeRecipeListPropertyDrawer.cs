@@ -44,7 +44,6 @@ public class WardrobeRecipeListPropertyDrawer : PropertyDrawer
                                 SerializedProperty thisElement = thisRecipesProp.GetArrayElementAtIndex(ii);
                                 if (thisElement.FindPropertyRelative("_recipeName").stringValue == tempRecipeAsset.name)
                                 {
-                                    thisRecipesProp.GetArrayElementAtIndex(ii).FindPropertyRelative("_recipe").objectReferenceValue = tempRecipeAsset;
                                     int compatibleRacesArraySize = tempRecipeAsset.compatibleRaces.Count;
                                     thisRecipesProp.GetArrayElementAtIndex(ii).FindPropertyRelative("_compatibleRaces").arraySize = compatibleRacesArraySize;
                                     for (int cr = 0; cr < compatibleRacesArraySize; cr++)
@@ -60,7 +59,6 @@ public class WardrobeRecipeListPropertyDrawer : PropertyDrawer
                                 thisRecipesProp.InsertArrayElementAtIndex(newArrayElIndex);
                                 thisRecipesProp.serializedObject.ApplyModifiedProperties();
                                 thisRecipesProp.GetArrayElementAtIndex(newArrayElIndex).FindPropertyRelative("_recipeName").stringValue = tempRecipeAsset.name;
-                                thisRecipesProp.GetArrayElementAtIndex(newArrayElIndex).FindPropertyRelative("_recipe").objectReferenceValue = tempRecipeAsset;
                                 int compatibleRacesArraySize = tempRecipeAsset.compatibleRaces.Count;
                                 thisRecipesProp.GetArrayElementAtIndex(newArrayElIndex).FindPropertyRelative("_compatibleRaces").arraySize = compatibleRacesArraySize;
                                 for (int cr = 0; cr < compatibleRacesArraySize; cr++)
@@ -91,7 +89,6 @@ public class WardrobeRecipeListPropertyDrawer : PropertyDrawer
         }
         return h;
     }
-    //TODO this needs to know its DCA
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {
         if (warningIcon == null)
@@ -144,18 +141,19 @@ public class WardrobeRecipeListPropertyDrawer : PropertyDrawer
                 if (!recipeIsLive)
                 {
                     var warningRect = new Rect((valRBut.xMin - 25f), valRBut.yMin, 20f, valRBut.height);
-                    var warningGUIContent = new GUIContent("", recipeName + " was not Live. Click this button to add it to the Global Library.");
-                    warningGUIContent.image = warningIcon;
-                    //Id like this to be a button that opens the window, opens the recipe section and ideally highlights the asset that needs to be made live
-                    if (GUI.Button(warningRect, warningGUIContent, warningStyle))
-                    {
-                        var thisRecipe = thisElement.FindPropertyRelative("_recipe").objectReferenceValue;
-                        if (thisRecipe != null)
-                            UMAAssetIndexer.Instance.EvilAddAsset(thisRecipe.GetType(), thisRecipe);
-                        else
-                            UMAAssetIndexerEditor.Init();
-                    }
-                }
+                    var warningGUIContent = new GUIContent("", recipeName + " was not Live. If the asset is in an assetBundle make sure the DynamicCharacterSystem is set to Add assets from assetBundles otherwise click this button to add it to the Global Library.");
+					warningGUIContent.image = warningIcon;
+					//show a warning icon if the added recipe is not available from the global index (or assetBundles)
+					var foundRecipe = FindMissingRecipe(recipeName);
+					if (GUI.Button(warningRect, warningGUIContent, warningStyle))
+					{
+						//the _recipe value is no longer serialized so we need to get it from AssetDatabase
+						if (foundRecipe != null)
+							UMAAssetIndexer.Instance.EvilAddAsset(foundRecipe.GetType(), foundRecipe);
+						else
+							UMAAssetIndexerEditor.Init();
+					}
+				}
                 if (GUI.Button(valRBut, "X"))
                 {
                     thisRecipesProp.DeleteArrayElementAtIndex(i);
@@ -192,11 +190,45 @@ public class WardrobeRecipeListPropertyDrawer : PropertyDrawer
         DynamicAssetLoader.Instance.debugOnFail = false;
         found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeRecipe>(searchResources, searchAssetBundles, true, assetBundlesToSearch, resourcesFolderPath, null, recipeName, null);
         if (!found)
-            found = DynamicAssetLoader.Instance.AddAssets<UMATextRecipe>(searchResources, searchAssetBundles, true, assetBundlesToSearch, resourcesFolderPath, null, recipeName, null);
-        if (!found)
             found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeCollection>(searchResources, searchAssetBundles, true, assetBundlesToSearch, resourcesFolderPath, null, recipeName, null);
         DynamicAssetLoader.Instance.debugOnFail = true;
         return found;
     }
+	private UMARecipeBase FindMissingRecipe(string recipeName)
+	{
+		UMARecipeBase foundRecipe = null;
+		//the following will find things like femaleHair1 if 'maleHair1' is the recipe name
+		var foundWardrobeGUIDS = AssetDatabase.FindAssets("t:UMAWardrobeRecipe " + recipeName);
+		if (foundWardrobeGUIDS.Length > 0)
+		{
+			foreach (string guid in foundWardrobeGUIDS)
+			{
+				var tempAsset = AssetDatabase.LoadAssetAtPath<UMAWardrobeRecipe>(AssetDatabase.GUIDToAssetPath(guid));
+				if (tempAsset.name == recipeName)
+				{
+					foundRecipe = tempAsset;
+					break;
+				}
+			}
+		}
+		//try searching for WardrobeCollections
+		if (foundRecipe == null)
+		{
+			var foundWardrobeCollectionGUIDS = AssetDatabase.FindAssets("t:UMAWardrobeCollection " + recipeName);
+			if (foundWardrobeCollectionGUIDS.Length > 0)
+			{
+				foreach (string guid in foundWardrobeCollectionGUIDS)
+				{
+					var tempAsset = AssetDatabase.LoadAssetAtPath<UMAWardrobeCollection>(AssetDatabase.GUIDToAssetPath(guid));
+					if (tempAsset.name == recipeName)
+					{
+						foundRecipe = tempAsset;
+						break;
+					}
+				}
+			}
+		}
+		return foundRecipe;
+	}
 }
 #endif

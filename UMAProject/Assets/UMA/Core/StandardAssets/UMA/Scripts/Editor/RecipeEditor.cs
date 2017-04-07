@@ -97,7 +97,7 @@ namespace UMAEditor
 					if (context == null)
 					{
 						context = umaRecipeBase.CreateEditorContext();
-						generatedContext = context.gameObject;
+						generatedContext = context.gameObject.transform.parent.gameObject;
 					}
 					//legacy checks for context
 					if (context == null)

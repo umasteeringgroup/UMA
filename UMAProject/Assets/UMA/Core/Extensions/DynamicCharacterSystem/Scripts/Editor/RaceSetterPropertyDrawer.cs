@@ -17,7 +17,6 @@ public class RaceSetterPropertyDrawer : PropertyDrawer
 	//When the app IS running it shows the reaces you CAN choose- i.e. the ones that are either in the build or have been downloaded.
 	public List<RaceData> foundRaces = new List<RaceData>();
 	public List<string> foundRaceNames = new List<string>();
-	bool raceListGenerated = false;
 
 	public void SetRaceLists(RaceData[] raceDataArray = null)
 	{
@@ -31,13 +30,12 @@ public class RaceSetterPropertyDrawer : PropertyDrawer
 		foundRaceNames.Add("None Set");
 		foreach (RaceData race in raceDataArray)
 		{
-			if (race != null && race.raceName != "PlaceholderRace")
+			if (race != null && race.raceName != "RaceDataPlaceholder")
 			{
 				foundRaces.Add(race);
 				foundRaceNames.Add(race.raceName);
 			}
 		}
-		raceListGenerated = true;
 	}
 	private void CheckRaceDataLists()
 	{
@@ -49,8 +47,7 @@ public class RaceSetterPropertyDrawer : PropertyDrawer
 		}
 		else
 		{
-			//In this case we *need* all the races this setting *could* be so everything from the library, resources and asset bundles because the developer need to be able to set the race to be any of these
-			//BUT we only need to do GetAllRaces ONCE for this data to be correct
+			//In this case we *need* all the races this setting *could* be so everything from the library, and asset bundles because the developer need to be able to set the race to be any of these
 			var raceDatas = thisDynamicRaceLibrary.GetAllRaces();
 			if ((raceDatas.Length + 1) != (foundRaces.Count))
 			{
@@ -61,42 +58,21 @@ public class RaceSetterPropertyDrawer : PropertyDrawer
 
 	public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 	{
-		if (!Application.isPlaying)
-		{
-			if (raceListGenerated == false)
-				CheckRaceDataLists();
-		}
-		else
-		{
-			CheckRaceDataLists();
-		}
+		CheckRaceDataLists();
+
 		var RaceName = property.FindPropertyRelative("name");
-		var RaceValue = property.FindPropertyRelative("_data");
 		
 		string rn = RaceName.stringValue;
-		RaceData rv = (RaceData)RaceValue.objectReferenceValue;
 		int rIndex = 0;
 		int newrIndex;
-		if (rn != "" || rv != null)
+		if (rn != "")
 		{
-			if (rn != "")
+			if (!foundRaceNames.Contains(rn))
 			{
-				if (!foundRaceNames.Contains(rn))
-				{
-					foundRaceNames.Add(rn + " (Not Available)");
-					foundRaces.Add(null);
-				}
-				rIndex = foundRaceNames.IndexOf(rn) == -1 ? (foundRaceNames.IndexOf(rn + " (Not Available)") == -1 ? 0 : foundRaceNames.IndexOf(rn + " (Not Available)")) : foundRaceNames.IndexOf(rn);
+				foundRaceNames.Add(rn + " (Not Available)");
+				foundRaces.Add(null);
 			}
-			else
-			{
-				if (!foundRaces.Contains(rv))
-				{
-					foundRaceNames.Add(rv.raceName + " (Not Available)");
-					foundRaces.Add(null);
-				}
-				rIndex = foundRaceNames.IndexOf(rn) == -1 ? (foundRaceNames.IndexOf(rn + " (Not Available)") == -1 ? 0 : foundRaceNames.IndexOf(rn + " (Not Available)")) : foundRaceNames.IndexOf(rn);
-			}
+			rIndex = foundRaceNames.IndexOf(rn) == -1 ? (foundRaceNames.IndexOf(rn + " (Not Available)") == -1 ? 0 : foundRaceNames.IndexOf(rn + " (Not Available)")) : foundRaceNames.IndexOf(rn);
 		}
 		EditorGUI.BeginProperty(position, label, property);
 		Rect contentPosition = EditorGUI.PrefixLabel(position, new GUIContent("Active Race"));
@@ -107,7 +83,6 @@ public class RaceSetterPropertyDrawer : PropertyDrawer
 		{
 			if (rIndex != newrIndex)
 			{
-				RaceValue.objectReferenceValue = foundRaces[newrIndex];
 				RaceName.stringValue = foundRaceNames[newrIndex];
 				//somehow if the app is playing this already works- and doing it here makes it not work
 				if (!EditorApplication.isPlaying)

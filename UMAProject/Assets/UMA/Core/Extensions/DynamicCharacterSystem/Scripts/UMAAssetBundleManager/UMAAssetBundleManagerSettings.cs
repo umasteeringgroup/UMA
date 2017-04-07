@@ -417,11 +417,6 @@ namespace UMAAssetBundleManager
 					Debug.LogException(e);
 				}
 			}
-
-			if (!BuildScript.CanRunLocally(EditorUserBuildSettings.activeBuildTarget))
-			{
-				EditorGUILayout.HelpBox("Builds for " + EditorUserBuildSettings.activeBuildTarget.ToString() + " cannot access this local server, but you can still use it in the editor.", MessageType.Warning);
-			}
 			EndVerticalPadded(5);
 			EditorGUILayout.Space();
 
@@ -429,6 +424,11 @@ namespace UMAAssetBundleManager
 			BeginVerticalPadded(5, new Color(0.75f, 0.875f, 1f));
 			GUILayout.Label("AssetBundle Testing Server", EditorStyles.boldLabel);
 			EditorGUILayout.HelpBox("Once you have built your bundles this local Testing Server can be enabled and it will load those AssetBundles rather than the files inside the project.", MessageType.Info);
+
+			if (!BuildScript.CanRunLocally(EditorUserBuildSettings.activeBuildTarget))
+			{
+				EditorGUILayout.HelpBox("Builds for " + EditorUserBuildSettings.activeBuildTarget.ToString() + " cannot access this local server, but you can still use it in the editor.", MessageType.Warning);
+			}
 
 			bool updateURL = false;
 			EnableLocalAssetBundleServer = EditorGUILayout.Toggle("Start Server", EnableLocalAssetBundleServer);
@@ -572,8 +572,15 @@ namespace UMAAssetBundleManager
 
 			EditorGUILayout.Space();
 			//END SCROLL VIEW
-			EditorGUILayout.EndVertical();
-			EditorGUILayout.EndScrollView();
+			//for some reason when we build or build assetbundles when this window is open we get an error
+			//InvalidOperationException: Operation is not valid due to the current state of the object
+			//so try catch is here as a nasty hack to get rid of it
+			try
+			{
+				EditorGUILayout.EndVertical();
+				EditorGUILayout.EndScrollView();
+			}
+			catch { }
 
 		}
 
@@ -593,10 +600,17 @@ namespace UMAAssetBundleManager
 
 		public static void EndVerticalPadded(float padding)
 		{
-			GUILayout.Space(padding);
-			GUILayout.EndVertical();
-			GUILayout.Space(padding);
-			GUILayout.EndHorizontal();
+			//for some reason when we build or build assetbundles when this window is open we get an error
+			//InvalidOperationException: Operation is not valid due to the current state of the object
+			//so try catch is here as a nasty hack to get rid of it
+			try
+			{
+				GUILayout.Space(padding);
+				GUILayout.EndVertical();
+				GUILayout.Space(padding);
+				GUILayout.EndHorizontal();
+			}
+			catch { }
 		}
 
 		public static void BeginVerticalIndented(float indentation, Color backgroundColor)

@@ -18,36 +18,31 @@ public partial class DynamicCharacterAvatarEditor : Editor
 
 	public void OnEnable()
     {
-        thisDCA = target as DynamicCharacterAvatar;
-		var context = UMAContext.FindInstance();
-		if(context == null)
+		thisDCA = target as DynamicCharacterAvatar;
+		if (thisDCA.context == null)
 		{
-			context = thisDCA.CreateEditorContext();
-		}
-		//Set this DynamicCharacterAvatar for RaceSetter so if the user chages the race dropdown the race changes
-		if (_racePropDrawer.thisDCA == null)
-        {
-            _racePropDrawer.thisDCA = thisDCA;
-			//Set the raceLibrary for the race setter
-			if (context)
+			thisDCA.context = UMAContext.FindInstance();
+			if (thisDCA.context == null)
 			{
-				var dynamicRaceLibrary = (DynamicRaceLibrary)context.raceLibrary as DynamicRaceLibrary;
-				_racePropDrawer.thisDynamicRaceLibrary = dynamicRaceLibrary;
-			}
-        }
-		if (_wardrobePropDrawer.thisDCS == null)
-		{
-			_wardrobePropDrawer.thisDCA = thisDCA;
-            if (context)
-			{
-				var dynamicCharacterSystem = (DynamicCharacterSystem)context.dynamicCharacterSystem as DynamicCharacterSystem;
-				_wardrobePropDrawer.thisDCS = dynamicCharacterSystem;
+				thisDCA.context = thisDCA.CreateEditorContext();
 			}
 		}
-		if (_animatorPropDrawer.thisDCA == null)
+		else if (thisDCA.context.gameObject.name == "UMAEditorContext")
 		{
-			_animatorPropDrawer.thisDCA = thisDCA;
+			//this will set also the existing Editorcontext if there is one
+			thisDCA.CreateEditorContext();
 		}
+		else if (thisDCA.context.gameObject.transform.parent != null)
+		{
+			//this will set also the existing Editorcontext if there is one
+			if (thisDCA.context.gameObject.transform.parent.gameObject.name == "UMAEditorContext")
+				thisDCA.CreateEditorContext();
+		}
+		 _racePropDrawer.thisDCA = thisDCA;
+		_racePropDrawer.thisDynamicRaceLibrary = (DynamicRaceLibrary)thisDCA.context.raceLibrary as DynamicRaceLibrary;
+		_wardrobePropDrawer.thisDCA = thisDCA;
+		_wardrobePropDrawer.thisDCS = (DynamicCharacterSystem)thisDCA.context.dynamicCharacterSystem as DynamicCharacterSystem;
+		_animatorPropDrawer.thisDCA = thisDCA;
 	}
 
 	public void SetNewColorCount(int colorCount)
@@ -100,7 +95,7 @@ public partial class DynamicCharacterAvatarEditor : Editor
 		_racePropDrawer.OnGUI(currentRect, thisRaceSetter, new GUIContent(thisRaceSetter.displayName));
 		if (EditorGUI.EndChangeCheck())
 		{
-			thisDCA.ChangeRace((RaceData)thisRaceSetter.FindPropertyRelative("_data").objectReferenceValue);
+			thisDCA.ChangeRace((string)thisRaceSetter.FindPropertyRelative("name").stringValue);
 			//Changing the race may cause umaRecipe, animationController to so forcefully update these too
 			umaRecipe.objectReferenceValue = thisDCA.umaRecipe;
 			animationController.objectReferenceValue = thisDCA.animationController;

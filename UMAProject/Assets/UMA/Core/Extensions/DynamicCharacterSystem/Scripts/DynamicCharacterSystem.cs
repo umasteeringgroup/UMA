@@ -82,7 +82,7 @@ namespace UMACharacterSystem
 				//we need to check that this is not null- the user may not have downloaded it yet
 				if (possibleRaces[i] == null)
 					continue;
-				if (DynamicAssetLoader.Instance != null && possibleRaces[i].raceName == (DynamicAssetLoader.Instance.placeholderRace != null ? DynamicAssetLoader.Instance.placeholderRace.raceName : "PlaceholderRace"))
+				if (DynamicAssetLoader.Instance != null && possibleRaces[i].raceName == "RaceDataPlaceholder")
 					continue;
 				if (Recipes.ContainsKey(possibleRaces[i].raceName))
 				{
@@ -127,7 +127,7 @@ namespace UMACharacterSystem
 			var possibleRaces = (context.raceLibrary as DynamicRaceLibrary).GetAllRacesBase();
 			for (int i = 0; i < possibleRaces.Length; i++)
 			{
-				if (!Recipes.ContainsKey(possibleRaces[i].raceName) && possibleRaces[i].raceName != (DynamicAssetLoader.Instance.placeholderRace != null ? DynamicAssetLoader.Instance.placeholderRace.raceName : "PlaceholderRace"))
+				if (!Recipes.ContainsKey(possibleRaces[i].raceName) && possibleRaces[i].raceName != "RaceDataPlaceholder")
 				{
 					Recipes.Add(possibleRaces[i].raceName, new Dictionary<string, List<UMATextRecipe>>());
 				}
@@ -169,7 +169,7 @@ namespace UMACharacterSystem
 					//we need to check that this is not null- the user may not have downloaded it yet
 					if (possibleRaces[i] != null)
 					{
-						if (!Recipes.ContainsKey(possibleRaces[i].raceName) && possibleRaces[i].raceName != (DynamicAssetLoader.Instance.placeholderRace != null ? DynamicAssetLoader.Instance.placeholderRace.raceName : "PlaceholderRace"))
+						if (!Recipes.ContainsKey(possibleRaces[i].raceName) && possibleRaces[i].raceName != "RaceDataPlaceholder")
 						{
 							Recipes.Add(possibleRaces[i].raceName, new Dictionary<string, List<UMATextRecipe>>());
 						}
@@ -251,6 +251,10 @@ namespace UMACharacterSystem
 			{
 				if (filename == "" || (filename != "" && filename.Trim() == u.name))
 				{
+					if(u.wardrobeSlot == null)//u == null is getting sent somehow
+					{
+						Debug.Log(u.name + " had no wardrobe slot");
+					}
 					var thisWardrobeSlot = u.wardrobeSlot;
 					if (u.GetType() == typeof(UMAWardrobeCollection))
 					{

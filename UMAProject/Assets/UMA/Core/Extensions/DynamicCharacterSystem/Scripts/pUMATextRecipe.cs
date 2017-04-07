@@ -59,47 +59,18 @@ public partial class UMATextRecipe : UMAPackedRecipeBase
 			}
 		}
 	}
-	
+
 #endif
 
 #if UNITY_EDITOR
 	/// <summary>
 	/// Creates a temporary UMAContext for use when editing recipes when the open Scene does not have an UMAContext or libraries set up
 	/// </summary>
+	/// 
 	public override UMAContext CreateEditorContext()
 	{
-		Debug.Log("UMA Recipe Editor created an UMAEditorContext to enable editing. This will auto delete once you have finished editing your recipe or you add the UMA_DCS prefab to this scene.");
-		GameObject EditorUMAContext;
-        if (GameObject.Find("UMAEditorContext"))
-		{
-			EditorUMAContext = GameObject.Find("UMAEditorContext");
-        }
-		else
-		{
-			EditorUMAContext = new GameObject();
-			EditorUMAContext.name = "UMAEditorContext";
-		}
-		//Make this GameObject not show up in the scene or save
-		EditorUMAContext.hideFlags = HideFlags.DontSave | HideFlags.NotEditable;
-		var thisUMAContext = EditorUMAContext.AddComponent<UMAContext>();
-		UMAContext.Instance = thisUMAContext;
-		//we need to add the libraries as components of the game object too
-		//and then set THOSE components to the umaContext component
-		thisUMAContext.raceLibrary = EditorUMAContext.AddComponent<DynamicRaceLibrary>();
-		(thisUMAContext.raceLibrary as DynamicRaceLibrary).dynamicallyAddFromResources = true;
-		(thisUMAContext.raceLibrary as DynamicRaceLibrary).dynamicallyAddFromAssetBundles = true;
-		thisUMAContext.overlayLibrary = EditorUMAContext.AddComponent<DynamicOverlayLibrary>();
-		(thisUMAContext.overlayLibrary as DynamicOverlayLibrary).dynamicallyAddFromResources = true;
-		(thisUMAContext.overlayLibrary as DynamicOverlayLibrary).dynamicallyAddFromAssetBundles = true;
-		thisUMAContext.slotLibrary = EditorUMAContext.AddComponent<DynamicSlotLibrary>();
-		(thisUMAContext.slotLibrary as DynamicSlotLibrary).dynamicallyAddFromResources = true;
-		(thisUMAContext.slotLibrary as DynamicSlotLibrary).dynamicallyAddFromAssetBundles = true;
-		thisUMAContext.dynamicCharacterSystem = EditorUMAContext.AddComponent<UMACharacterSystem.DynamicCharacterSystem>();
-		(thisUMAContext.dynamicCharacterSystem as DynamicCharacterSystem).dynamicallyAddFromResources = true;
-		(thisUMAContext.dynamicCharacterSystem as DynamicCharacterSystem).dynamicallyAddFromAssetBundles = true;
-		var thisDAL = EditorUMAContext.AddComponent<DynamicAssetLoader>();
-		DynamicAssetLoader.Instance = thisDAL;
-		return thisUMAContext;
+		UMAContext.CreateEditorContext();
+		return UMAContext.Instance;
 	}
 #endif
 

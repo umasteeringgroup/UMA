@@ -200,7 +200,7 @@ public class TestCustomizerDD : MonoBehaviour
 		raceDropdownOptions.Add("None Set");
 		foreach (RaceData r in raceDropdownOptionsArray)
 		{
-			if (r.raceName != "PlaceholderRace")
+			if (r.raceName != "RaceDataPlaceholder")
 				raceDropdownOptions.Add(r.raceName);
 		}
 		for (int i = 0; i < raceDropdownOptions.Count; i++)

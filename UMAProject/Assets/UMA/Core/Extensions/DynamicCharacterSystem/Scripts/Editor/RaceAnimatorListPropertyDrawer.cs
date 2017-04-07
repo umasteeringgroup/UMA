@@ -11,8 +11,13 @@ public class RaceAnimatorListPropertyDrawer : PropertyDrawer {
 
 	float padding = 2f;
 	public DynamicCharacterAvatar thisDCA;
+	Texture2D warningIcon;
 
 	public override void OnGUI(Rect position, SerializedProperty property, GUIContent label){
+		if (warningIcon == null)
+		{
+			warningIcon = EditorGUIUtility.FindTexture("console.warnicon.sml");
+		}
 		EditorGUI.BeginProperty (position, label, property);
 		var r0 = new Rect (position.xMin, position.yMin, position.width, EditorGUIUtility.singleLineHeight);
 		SerializedProperty foldoutProp1 = property.FindPropertyRelative ("defaultAnimationController");
@@ -33,10 +38,9 @@ public class RaceAnimatorListPropertyDrawer : PropertyDrawer {
 				EditorGUI.indentLevel++;
 				var thisAnimatorsProp = property.FindPropertyRelative ("animators");
 				var numAnimators = thisAnimatorsProp.arraySize;
-				var warningStyle = new GUIStyle(EditorStyles.miniButton);
-				warningStyle.contentOffset = new Vector2(0f, 0f);
-				warningStyle.fontStyle = FontStyle.Bold;
-				var currentTint = GUI.color;
+				var warningStyle = new GUIStyle(EditorStyles.label);
+				warningStyle.fixedHeight = warningIcon.height + 4f;
+				warningStyle.contentOffset = new Vector2(0, -2f);
 				for (int i = 0; i < numAnimators; i++) {
 					var thisAnimtorProp = thisAnimatorsProp.GetArrayElementAtIndex (i);
 					valR = new Rect (valR.xMin, valR.yMax + padding, valR.width, EditorGUIUtility.singleLineHeight);
@@ -75,13 +79,16 @@ public class RaceAnimatorListPropertyDrawer : PropertyDrawer {
 								thisAnimatorsProp.GetArrayElementAtIndex (i).FindPropertyRelative ("raceName").stringValue = thisRD.raceName;
 							}
 						}
-					} else {
+					}
+					else
+					{
 						EditorGUI.BeginDisabledGroup (true);
 						EditorGUI.TextField (rFieldR, thisAnimtorProp.FindPropertyRelative ("raceName").stringValue);
 						EditorGUI.EndDisabledGroup ();
 					}
 					EditorGUI.LabelField (aLabelR, "Animator");
-					if (thisAnimtorProp.FindPropertyRelative ("animatorControllerName").stringValue == "") {
+					var thisAnimatorName = thisAnimtorProp.FindPropertyRelative("animatorControllerName").stringValue;
+					if (thisAnimatorName == "") {
 						//draw an object field for RunTimeAnimatorController
 						EditorGUI.BeginChangeCheck();
 						RuntimeAnimatorController thisRC = null;
@@ -89,24 +96,34 @@ public class RaceAnimatorListPropertyDrawer : PropertyDrawer {
 						//if this gets filled set the values
 						if(EditorGUI.EndChangeCheck()){
 							if (thisRC != null) {
-								thisAnimatorsProp.GetArrayElementAtIndex (i).FindPropertyRelative ("animatorControllerName").stringValue = thisRC.name;
-								thisAnimatorsProp.GetArrayElementAtIndex (i).FindPropertyRelative ("animatorController").objectReferenceValue = thisRC;
+								thisAnimatorsProp.GetArrayElementAtIndex(i).FindPropertyRelative("animatorControllerName").stringValue = thisRC.name;
 							}
 						}
-					} else {
-						EditorGUI.BeginDisabledGroup (true);
-						EditorGUI.TextField (aFieldR, thisAnimtorProp.FindPropertyRelative ("animatorControllerName").stringValue);
-						EditorGUI.EndDisabledGroup ();
+					}
+					else
+					{
 						if (DynamicAssetLoader.Instance)
 						{
-							if (!CheckAnimatorAvailability(thisAnimtorProp.FindPropertyRelative("animatorControllerName").stringValue))
+							if (!CheckAnimatorAvailability(thisAnimatorName))
 							{
 								var warningRect = new Rect((removeR.xMin - 20f), removeR.yMin, 20f, removeR.height);
-								GUI.color = new Color(255, 200, 0);
-								GUI.Box(warningRect, new GUIContent("!", thisAnimtorProp.FindPropertyRelative("animatorControllerName").stringValue + " was not in a Resources folder or an asset bundle. You need to add it to one of these to make it 'LIVE'"), warningStyle);
-								GUI.color = currentTint;
+								aFieldR.xMax = aFieldR.xMax - 20f;
+								//if its in an assetbundle we need a different message (i.e "turn on 'Dynamically Add From AssetBundles"') 
+								var warningGUIContent = new GUIContent("", thisAnimtorProp.FindPropertyRelative("animatorControllerName").stringValue + " was not Live. If the asset is in an assetBundle check 'Dynamically Add from AssetBundles' below otherwise click this button to add it to the Global Library.");
+								warningGUIContent.image = warningIcon;
+								if (GUI.Button(warningRect, warningGUIContent, warningStyle))
+								{
+									var thisAnimator = FindMissingAnimator(thisAnimatorName);
+									if (thisAnimator != null)
+										UMAAssetIndexer.Instance.EvilAddAsset(thisAnimator.GetType(), thisAnimator);
+									else
+										UMAAssetIndexerEditor.Init();
+								}
 							}
 						}
+						EditorGUI.BeginDisabledGroup(true);
+						EditorGUI.TextField(aFieldR, thisAnimtorProp.FindPropertyRelative("animatorControllerName").stringValue);
+						EditorGUI.EndDisabledGroup();
 					}
 					if(GUI.Button(removeR,"X")){
 						willDeleteArrayElementAtIndex.Add(i);
@@ -131,7 +148,6 @@ public class RaceAnimatorListPropertyDrawer : PropertyDrawer {
 					//make sure its blank
 					thisAnimatorsProp.GetArrayElementAtIndex(numAnimators).FindPropertyRelative("raceName").stringValue = "";
 					thisAnimatorsProp.GetArrayElementAtIndex(numAnimators).FindPropertyRelative("animatorControllerName").stringValue = "";
-					thisAnimatorsProp.GetArrayElementAtIndex(numAnimators).FindPropertyRelative("animatorController").objectReferenceValue = null;
 					thisAnimatorsProp.serializedObject.ApplyModifiedProperties();
 				}
 				EditorGUI.indentLevel--;
@@ -184,7 +200,7 @@ public class RaceAnimatorListPropertyDrawer : PropertyDrawer {
 	/// </summary>
 	/// <param name="recipeName"></param>
 	/// <returns></returns>
-	private bool CheckAnimatorAvailability(string racName/*, DynamicCharacterAvatar thisDCA = null*/)
+	private bool CheckAnimatorAvailability(string racName)
 	{
 		if (Application.isPlaying)
 			return true;
@@ -205,10 +221,31 @@ public class RaceAnimatorListPropertyDrawer : PropertyDrawer {
 		if (defaultController)
 			if (defaultController.name == racName)
 				return true;
-		DynamicAssetLoader.Instance.debugOnFail = false;
+		var dalDebug = DynamicAssetLoader.Instance.debugOnFail;
+        DynamicAssetLoader.Instance.debugOnFail = false;
 		found = DynamicAssetLoader.Instance.AddAssets<RuntimeAnimatorController>(searchResources, searchAssetBundles, true, assetBundlesToSearch, resourcesFolderPath, null, racName, null);
-		DynamicAssetLoader.Instance.debugOnFail = true;
-		return found;
+		DynamicAssetLoader.Instance.debugOnFail = dalDebug;
+        return found;
+	}
+
+	private RuntimeAnimatorController FindMissingAnimator(string animatorName)
+	{
+		RuntimeAnimatorController foundAnimator = null;
+		//the following will find things like femaleHair1 if 'maleHair1' is the recipe name
+		var foundWardrobeGUIDS = AssetDatabase.FindAssets("t:RuntimeAnimatorController " + animatorName);
+		if (foundWardrobeGUIDS.Length > 0)
+		{
+			foreach (string guid in foundWardrobeGUIDS)
+			{
+				var tempAsset = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(AssetDatabase.GUIDToAssetPath(guid));
+				if (tempAsset.name == animatorName)
+				{
+					foundAnimator = tempAsset;
+					break;
+				}
+			}
+		}
+		return foundAnimator;
 	}
 }
 #endif

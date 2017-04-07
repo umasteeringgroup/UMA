@@ -9,7 +9,6 @@ GameObject:
   m_Component:
   - 4: {fileID: 487678}
   - 114: {fileID: 11453600}
-  - 114: {fileID: 11466274}
   m_Layer: 0
   m_Name: UMADynamicCharacterAvatar
   m_TagString: Untagged
@@ -71,9 +70,7 @@ MonoBehaviour:
   hide: 0
   loadBlendShapes: 0
   activeRace:
-    name: HumanMale
-    _data: {fileID: 11400000, guid: 62688b7aa02fbc544916e522fcc239c7, type: 2}
-    _cachedRaceDatas: []
+    name: HumanMaleDCS
   defaultChangeRaceOptions: 8
   cacheCurrentState: 1
   rebuildSkeleton: 0
@@ -83,22 +80,10 @@ MonoBehaviour:
   raceAnimationControllers:
     defaultAnimationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343,
       type: 2}
-    animators:
-    - raceName: ToonFemale
-      animatorControllerName: IdleTest-w-head
-      animatorController: {fileID: 9100000, guid: f0ae291110d799142ba94baf538f376c,
-        type: 2}
-    - raceName: HumanMaleDCS
-      animatorControllerName: Locomotion with Head
-      animatorController: {fileID: 9100000, guid: ae859d58fdf844b73863d3833f955cdf,
-        type: 2}
-    - raceName: HumanFemaleResources
-      animatorControllerName: Locomotion with Head
-      animatorController: {fileID: 9100000, guid: ae859d58fdf844b73863d3833f955cdf,
-        type: 2}
-    dynamicallyAddFromResources: 0
+    animators: []
+    dynamicallyAddFromResources: 1
     resourcesFolderPath: 
-    dynamicallyAddFromAssetBundles: 1
+    dynamicallyAddFromAssetBundles: 0
     assetBundleNames: 
   characterColors:
     _colors:
@@ -159,7 +144,7 @@ MonoBehaviour:
   loadFilename: 
   loadString: 
   loadFileOnStart: 1
-  waitForBundles: 0
+  waitForBundles: 1
   defaultLoadOptions: 31
   savePathType: 0
   savePath: CharacterRecipes
@@ -174,80 +159,6 @@ MonoBehaviour:
   customRotation: {x: 0, y: 0, z: 0}
   previewColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   _buildCharacterEnabled: 1
---- !u!114 &11466274
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 153068}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: -1862395651, guid: f5f67c52d1564df4a8936ccd202a3bd8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Delegates:
-  - eventID: 4
-    callback:
-      m_PersistentCalls:
-        m_Calls:
-        - m_Target: {fileID: 0}
-          m_MethodName: SetActive
-          m_Mode: 6
-          m_Arguments:
-            m_ObjectArgument: {fileID: 0}
-            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-            m_IntArgument: 0
-            m_FloatArgument: 0
-            m_StringArgument: 
-            m_BoolArgument: 1
-          m_CallState: 2
-        - m_Target: {fileID: 0}
-          m_MethodName: SetActive
-          m_Mode: 6
-          m_Arguments:
-            m_ObjectArgument: {fileID: 0}
-            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-            m_IntArgument: 0
-            m_FloatArgument: 0
-            m_StringArgument: 
-            m_BoolArgument: 1
-          m_CallState: 2
-        - m_Target: {fileID: 0}
-          m_MethodName: SetAvatar
-          m_Mode: 2
-          m_Arguments:
-            m_ObjectArgument: {fileID: 0}
-            m_ObjectArgumentAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-            m_IntArgument: 0
-            m_FloatArgument: 0
-            m_StringArgument: 
-            m_BoolArgument: 1
-          m_CallState: 2
-        - m_Target: {fileID: 0}
-          m_MethodName: SetActive
-          m_Mode: 6
-          m_Arguments:
-            m_ObjectArgument: {fileID: 0}
-            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-            m_IntArgument: 0
-            m_FloatArgument: 0
-            m_StringArgument: 
-            m_BoolArgument: 0
-          m_CallState: 2
-        - m_Target: {fileID: 0}
-          m_MethodName: SetActive
-          m_Mode: 6
-          m_Arguments:
-            m_ObjectArgument: {fileID: 0}
-            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-            m_IntArgument: 0
-            m_FloatArgument: 0
-            m_StringArgument: 
-            m_BoolArgument: 1
-          m_CallState: 2
-      m_TypeName: UnityEngine.EventSystems.EventTrigger+TriggerEvent, UnityEngine.UI,
-        Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-  delegates: []
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1

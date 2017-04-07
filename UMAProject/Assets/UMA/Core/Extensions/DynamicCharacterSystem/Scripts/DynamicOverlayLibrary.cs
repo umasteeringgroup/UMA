@@ -23,7 +23,7 @@ public class DynamicOverlayLibrary : OverlayLibrary
     public Dictionary<string, List<string>> assetBundlesUsedDict = new Dictionary<string, List<string>>();
 #if UNITY_EDITOR
     [HideInInspector]
-    public List<OverlayDataAsset> editorAddedAssets = new List<OverlayDataAsset>();
+    List<OverlayDataAsset> editorAddedAssets = new List<OverlayDataAsset>();
 #endif
     [System.NonSerialized]
     [HideInInspector]
