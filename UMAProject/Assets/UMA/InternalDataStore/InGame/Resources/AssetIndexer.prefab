@@ -366,6 +366,12 @@ MonoBehaviour:
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: SlotDataAsset
+    _Name: MaleEarsMorph
+    _SerializedItem: {fileID: 0}
+    _Path: Assets/UMA/Examples/Blendshape Examples/Assets/Slots/MaleEarsMorph/MaleEarsMorph_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: SlotDataAsset
     _Name: FemaleEyelashGuide
     _SerializedItem: {fileID: 0}
     _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/FemaleEyelashGuide.asset
@@ -521,6 +527,30 @@ MonoBehaviour:
     _Path: Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/Locomotion/LocomotionSlot.asset
     IsResource: 0
     IsAssetBundle: 0
+  - _BaseTypeName: SlotDataAsset
+    _Name: PhysicsHD
+    _SerializedItem: {fileID: 0}
+    _Path: Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/Physics/HD/PhysicsHDSlot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: SlotDataAsset
+    _Name: PhysicsStandard
+    _SerializedItem: {fileID: 0}
+    _Path: Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/Physics/Standard/PhysicsStandardSlot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: SlotDataAsset
+    _Name: ClothRobe
+    _SerializedItem: {fileID: 0}
+    _Path: Assets/UMA/Examples/Physics Examples/Assets/Slots/ClothRobe/ClothRobe_Slot.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: OverlayDataAsset
+    _Name: DefaultStandardOverlay
+    _SerializedItem: {fileID: 0}
+    _Path: Assets/UMA/Content/UMA_Core/DefaultMissingOverlays/DefaultStandardOverlayDataAsset.asset
+    IsResource: 0
+    IsAssetBundle: 0
   - _BaseTypeName: OverlayDataAsset
     _Name: F_H_Bod
     _SerializedItem: {fileID: 0}
@@ -531,12 +561,6 @@ MonoBehaviour:
     _Name: FemaleLipstick01
     _SerializedItem: {fileID: 0}
     _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Overlays/Complexion/FemaleLipstick01.asset
-    IsResource: 0
-    IsAssetBundle: 0
-  - _BaseTypeName: OverlayDataAsset
-    _Name: F_H_Head 2
-    _SerializedItem: {fileID: 0}
-    _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Overlays/Face/F_H_Head 2.asset
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: OverlayDataAsset
@@ -595,21 +619,9 @@ MonoBehaviour:
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: OverlayDataAsset
-    _Name: M_Face_01
-    _SerializedItem: {fileID: 0}
-    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Overlays/Face/M_Face_01.asset
-    IsResource: 0
-    IsAssetBundle: 0
-  - _BaseTypeName: OverlayDataAsset
-    _Name: M_Face_02
-    _SerializedItem: {fileID: 0}
-    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Overlays/Face/M_Face_02.asset
-    IsResource: 0
-    IsAssetBundle: 0
-  - _BaseTypeName: OverlayDataAsset
     _Name: M_Face
     _SerializedItem: {fileID: 0}
-    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Overlays/Face/M_Face_BW_Compatible.asset
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Overlays/Face/M_Face.asset
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: OverlayDataAsset
@@ -1035,6 +1047,12 @@ MonoBehaviour:
     _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Overlays/PlaceholderOverlay.asset
     IsResource: 0
     IsAssetBundle: 0
+  - _BaseTypeName: OverlayDataAsset
+    _Name: ClothRobe
+    _SerializedItem: {fileID: 0}
+    _Path: Assets/UMA/Examples/Physics Examples/Assets/Overlays/ClothRobeOverlay.asset
+    IsResource: 0
+    IsAssetBundle: 0
   - _BaseTypeName: RaceData
     _Name: HumanFemaleDCS
     _SerializedItem: {fileID: 0}
@@ -1152,6 +1170,18 @@ MonoBehaviour:
     _Name: LocomotionRecipe
     _SerializedItem: {fileID: 0}
     _Path: Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/Locomotion/LocomotionRecipe.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: UMATextRecipe
+    _Name: PhysicsHDRecipe
+    _SerializedItem: {fileID: 0}
+    _Path: Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/Physics/HD/PhysicsHDRecipe.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: UMATextRecipe
+    _Name: PhysicsStandardRecipe
+    _SerializedItem: {fileID: 0}
+    _Path: Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/Physics/Standard/PhysicsStandardRecipe.asset
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: UMATextRecipe
@@ -1512,9 +1542,21 @@ MonoBehaviour:
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: UMAWardrobeRecipe
+    _Name: BlendShapeRecipe
+    _SerializedItem: {fileID: 0}
+    _Path: Assets/UMA/Examples/Blendshape Examples/Assets/Recipe/BlendShapeRecipe.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: UMAWardrobeRecipe
     _Name: PlaceholderWardrobeRecipe
     _SerializedItem: {fileID: 0}
     _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Recipes/PlaceholderWardrobeRecipe.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: UMAWardrobeRecipe
+    _Name: ClothRobeRecipe
+    _SerializedItem: {fileID: 0}
+    _Path: Assets/UMA/Examples/Physics Examples/Assets/Recipe/ClothRobeRecipe.asset
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: DynamicUMADnaAsset
@@ -1539,6 +1581,12 @@ MonoBehaviour:
     _Name: HumanMaleDynamicDnaAsset
     _SerializedItem: {fileID: 0}
     _Path: Assets/UMA/Content/UMA_Core/HumanMale/DNA/DynamicDNA/HumanMaleDynamicDnaAsset.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: DynamicUMADnaAsset
+    _Name: BlendNamesDynamicDNA
+    _SerializedItem: {fileID: 0}
+    _Path: Assets/UMA/Examples/Blendshape Examples/DNA/BlendNamesDynamicDNA.asset
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: TextAsset

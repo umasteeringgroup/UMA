@@ -49,7 +49,7 @@ MonoBehaviour:
         overlayListSource: 0
         overlayElements:
         - possibleOverlays:
-          - overlayID: M_Face_02
+          - overlayID: M_Face
             maxRGB: {r: 0, g: 0, b: 0, a: 1}
             minRGB: {r: 0, g: 0, b: 0, a: 1}
             useSkinColor: 1

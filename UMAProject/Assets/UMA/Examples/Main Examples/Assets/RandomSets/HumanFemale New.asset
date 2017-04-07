@@ -58,15 +58,6 @@ MonoBehaviour:
             colorChannelUse: 0
             colorChannel: 0
             overlayType: 4
-          - overlayID: F_H_Head 2
-            maxRGB: {r: 0, g: 0, b: 0, a: 1}
-            minRGB: {r: 0, g: 0, b: 0, a: 1}
-            useSkinColor: 1
-            useHairColor: 0
-            hairColorMultiplier: 0
-            colorChannelUse: 0
-            colorChannel: 0
-            overlayType: 4
         - possibleOverlays:
           - overlayID: FemaleEyebrow01
             maxRGB: {r: 0.1254902, g: 0.05882353, b: 0.05882353, a: 1}
