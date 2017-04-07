@@ -48,7 +48,11 @@ namespace UMA
 			else
 			{
 				umaData.CleanMesh(false);
-				if (umaData.rendererCount != umaData.generatedMaterials.rendererCount)
+				if (umaData.rendererCount == umaData.generatedMaterials.rendererCount)
+				{
+					renderers = umaData.GetRenderers();
+				}
+				else
 				{
 					var oldRenderers = umaData.GetRenderers();
 					var globalTransform = umaData.GetGlobalTransform();

@@ -430,7 +430,12 @@ namespace UMA.Examples
 			{
 				if (umaData.animator != null)
 					umaData.animator.enabled = false;
-				umaData.Show();
+				
+				Renderer[] renderers = umaData.GetRenderers();
+				for (int i = 0; i < renderers.Length; i++)
+				{
+					renderers[i].enabled = false;
+				}
 			}
 		}
 
@@ -621,7 +626,12 @@ namespace UMA.Examples
 					{
 						if (generatedData.animator != null)
 							generatedData.animator.enabled = true;
-						umaData.Show();
+						
+						Renderer[] renderers = generatedData.GetRenderers();
+						for (int i = 0; i < renderers.Length; i++)
+						{
+							renderers[i].enabled = true;
+						}
 					}
 				}
 				generateLotsUMA = false;
