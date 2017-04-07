@@ -191,7 +191,7 @@ namespace UMA
 		/// Creates a new avatar for a UMA character.
 		/// </summary>
 		/// <param name="umaData">UMA data.</param>
-		/// <param name="animator>Animator.</param>
+		/// <param name="animator">Animator.</param>
 		public static void SetAvatar(UMAData umaData, Animator animator)
 		{
 			var umaTPose = umaData.umaRecipe.raceData.TPose;

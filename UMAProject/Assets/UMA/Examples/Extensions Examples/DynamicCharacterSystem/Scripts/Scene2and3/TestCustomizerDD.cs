@@ -12,7 +12,6 @@ namespace UMA.CharacterSystem.Examples
 {
 	public class TestCustomizerDD : MonoBehaviour
 	{
-
 		//SharedColorTableItem makes it possible to have more color tables than just skin/hair/cloth
 		//So a slot has a shared color name and this iterates over the shared color tables to see if a table with that name exists
 		//if it does it uses it, if not it uses the GenericColorList
@@ -130,8 +129,6 @@ namespace UMA.CharacterSystem.Examples
 			set { _saveColors = value; }
 		}
 
-
-
 		string thisRace;
 
 		public void Start()
@@ -154,9 +151,9 @@ namespace UMA.CharacterSystem.Examples
 			CloseAllPanels();
 			if (Avatar == null || newAvatarObject != Avatar.gameObject)
 			{
-				if (newAvatarObject.GetComponent<DynamicCharacterAvatar>() != null)
+				Avatar = newAvatarObject.GetComponent<DynamicCharacterAvatar>();
+				if (Avatar != null)
 				{
-					Avatar = newAvatarObject.GetComponent<DynamicCharacterAvatar>();
 					if (Orbitor != null)
 						Orbitor.SwitchTarget(Avatar.gameObject.transform);
 					thisRace = Avatar.activeRace.name;

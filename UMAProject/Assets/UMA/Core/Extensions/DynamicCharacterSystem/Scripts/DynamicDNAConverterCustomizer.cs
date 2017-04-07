@@ -102,21 +102,7 @@ namespace UMA.CharacterSystem
 								SetAvailableConverters(activeUMA.umaData);
 							}
             //TODO make the guide /target semi transparent...
-            /*if(guideUMA != null)
-            {
-                if(guideUMA.umaData != null && guideAlphaSet == false)
-                {
-                    foreach(SlotData slot in guideUMA.umaData.umaRecipe.GetAllSlots())
-                    {
-                        foreach(OverlayData overlay in slot.GetOverlayList())
-                        {
-                            overlay.asset.alphaMask = guideAlphaTex;
-                        }
-                    }
-                    guideAlphaSet = true;
-                    guideUMA.umaData.Dirty(false, true, false);
-                }
-            }*/
+
         }
 
         public void SetAvatar(GameObject newAvatarObject)
