@@ -3089,7 +3089,8 @@ namespace UMACharacterSystem
 						{
 							FindAnimatorByName(animators[i].animatorControllerName);
                         }
-						controllerToUse = animators[i].animatorController;
+						if(animators[i].animatorController != null)
+							controllerToUse = animators[i].animatorController;
 						break;
                     }
 				}
