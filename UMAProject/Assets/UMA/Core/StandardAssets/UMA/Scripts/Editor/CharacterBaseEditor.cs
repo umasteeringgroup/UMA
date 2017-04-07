@@ -90,7 +90,8 @@ namespace UMAEditor
 			{
 				//DynamicUMADna:: We need to use _dnaTypeHashes now
 				int dnaTypeHash = _dnaTypeHashes[viewDna];
-				if (_dnaValues[dnaTypeHash].OnGUI())
+				var currentDNA = recipe.GetDna(dnaTypeHash);
+				if (_dnaValues[dnaTypeHash].OnGUI(currentDNA))
 				{
 					_dnaDirty = true;
 					return true;
@@ -198,12 +199,12 @@ namespace UMAEditor
 			}
 		}
 
-		public bool OnGUI()
+		public bool OnGUI(UMADnaBase currentDNA = null)
 		{
 			bool changed = false;
 			foreach (var dnaGroup in _groups.Values)
 			{
-				changed |= dnaGroup.OnGUI();
+				changed |= dnaGroup.OnGUI(currentDNA);
 			}
 
 			return changed;
@@ -221,7 +222,7 @@ namespace UMAEditor
 			_groupName = groupName;
 		}
 
-		public bool OnGUI()
+		public bool OnGUI(UMADnaBase currentDNA = null)
 		{
 			_foldout = EditorGUILayout.Foldout(_foldout, _groupName);
 
@@ -234,7 +235,7 @@ namespace UMAEditor
 
 			foreach (var field in _fields)
 			{
-				changed |= field.OnGUI();
+				changed |= field.OnGUI(currentDNA);
 			}
 
 			GUILayout.EndVertical();
@@ -281,8 +282,25 @@ namespace UMAEditor
 			_value = (float)field.GetValue(dna);
 		}
 
-		public bool OnGUI()
+		public bool OnGUI(UMADnaBase currentDNA = null)
 		{
+			bool changed = false;
+			//With DCS values can get changed when a new recipe is loaded.
+			//Check that the value this field currently has matches the value in the recipe
+			if (currentDNA != null)
+			{
+				if (_dna is DynamicUMADnaBase)
+				{
+					if (((DynamicUMADnaBase)currentDNA).GetValue(_realName, true) != _value)
+						changed = true;
+				}
+				else
+				{
+					if ((float)_field.GetValue(currentDNA) != _value)
+						changed = true;
+				}
+			}
+
 			float newValue = EditorGUILayout.Slider(_name, _value, 0f, 1f);
 			//float newValue = EditorGUILayout.FloatField(_name, _value);
 
@@ -297,10 +315,10 @@ namespace UMAEditor
 				{
 					_field.SetValue(_dna, newValue);
 				}
-				return true;
+				changed = true;
 			}
 
-			return false;
+			return changed;
 		}
 
 		public class Comparer : IComparer<DNAFieldEditor>
@@ -733,6 +751,26 @@ namespace UMAEditor
                 }
             }
 
+			//check the slotEditors are uptodate with the slots in the recipe
+			//They can get out of sync happen in the UMAData component when DCS modifies the recipe
+			var recipeSlots = _recipe.GetAllSlots();
+			for (int i = 0; i < _slotEditors.Count; i++)
+			{
+				bool found = false;
+				for(int ri = 0; ri < recipeSlots.Length; ri++)
+				{
+					if (_slotEditors[i].Slot.slotName == recipeSlots[ri].slotName)
+					{
+						found = true;
+						break;
+					}
+				}
+				if (!found)
+				{
+					Debug.Log("Recipe slots did not match slotEditor slots. Updating...");
+					return true;
+				}
+			}
 
 			for (int i = 0; i < _slotEditors.Count; i++)
 			{
