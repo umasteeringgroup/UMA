@@ -55,7 +55,7 @@ namespace UMA
 			int[][] submeshTriangles = new int[subMeshCount][];
 			for (int i = 0; i < subMeshTriangleLength.Length; i++)
 			{
-				submeshTriangles[i] = new int[subMeshTriangleLength[i]];
+				submeshTriangles[i] = target.GetSubmeshBuffer(subMeshTriangleLength[i], i);
 				subMeshTriangleLength[i] = 0;
 			}
 
@@ -680,6 +680,7 @@ namespace UMA
 			if (oldArray != null && oldArray.Length >= newLength)
 				return oldArray;
 
+//			Debug.Log("EnsureArrayLength allocating array of " + newLength + " of type: " + typeof(T));
 			return new T[newLength];
 		}
 	}

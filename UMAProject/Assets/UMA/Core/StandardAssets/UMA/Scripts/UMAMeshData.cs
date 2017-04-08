@@ -285,6 +285,22 @@ namespace UMA
 		static Vector2[] gUV4Array;
 		static List<Color32> gColors32 = new List<Color32>(MAX_VERTEX_COUNT);
 		static Color32[] gColors32Array;
+
+		const int UNUSED_SUBMESH = -1;
+		static List<int>[] gSubmeshTris = {
+			// Order gSubmeshTris list from smallest to largest so they can be
+			// efficiently assigned to the smallest valid array
+			new List<int>(MAX_VERTEX_COUNT / 4),
+			new List<int>(MAX_VERTEX_COUNT / 4),
+			new List<int>(MAX_VERTEX_COUNT / 2),
+			new List<int>(MAX_VERTEX_COUNT / 2),
+			new List<int>(MAX_VERTEX_COUNT),
+			new List<int>(MAX_VERTEX_COUNT),
+			new List<int>(MAX_VERTEX_COUNT * 2),
+		};
+		static int[][] gSubmeshTriArrays;
+		static int[] gSubmeshTriIndices;
+
 		// They forgot the List<> method for bone weights.
 #if USE_UNSAFE_CODE
 		static BoneWeight[] gBoneWeightsArray = new BoneWeight[MAX_VERTEX_COUNT];
@@ -327,6 +343,15 @@ namespace UMA
 				gColors32Array = gColors32.GetBackingArray();
 				if (gColors32Array == null) haveBackingArrays = false;
 
+				gSubmeshTriIndices = new int[gSubmeshTris.Length];
+				gSubmeshTriArrays = new int[gSubmeshTris.Length][];
+				for (int i = 0; i < gSubmeshTris.Length; i++)
+				{
+					gSubmeshTriIndices[i] = UNUSED_SUBMESH;
+					gSubmeshTriArrays[i] = gSubmeshTris[i].GetBackingArray();
+					if (gSubmeshTriArrays[i] == null) haveBackingArrays = false;
+				}
+
 				if (haveBackingArrays == false)
 				{
 					Debug.LogError("Unable to access backing arrays for shared UMAMeshData!");
@@ -362,6 +387,30 @@ namespace UMA
 		}
 
 		/// <summary>
+		/// Get an array for submesh triangle data.
+		/// </summary>
+		/// <returns>Either a shared or allocated int array for submesh triangles.</returns>
+		public int[] GetSubmeshBuffer(int size, int submeshIndex)
+		{
+			if (OwnSharedBuffers())
+			{
+				for (int i = 0; i < gSubmeshTris.Length; i++)
+				{
+					if ((gSubmeshTriIndices[i] == UNUSED_SUBMESH) && (size < gSubmeshTris[i].Capacity))
+					{
+						gSubmeshTriIndices[i] = submeshIndex;
+						gSubmeshTris[i].SetActiveSize(size);
+						return gSubmeshTriArrays[i];
+					}
+				}
+
+				Debug.LogWarning("Could not claim shared submesh buffer of size: " + size);
+			}
+
+			return new int[size];
+		}
+
+		/// <summary>
 		/// Releases the static buffers.
 		/// </summary>
 		public void ReleaseSharedBuffers()
@@ -384,6 +433,12 @@ namespace UMA
 				uv4 = null;
 				gColors32.SetActiveSize(0);
 				colors32 = null;
+
+				for (int i = 0; i < gSubmeshTris.Length; i++)
+				{
+					gSubmeshTriIndices[i] = UNUSED_SUBMESH;
+					gSubmeshTris[i].SetActiveSize(0);
+				}
 
 				boneWeights = null;
 				unityBoneWeights = null;
@@ -594,7 +649,20 @@ namespace UMA
 			mesh.subMeshCount = subMeshCount;
 			for (int i = 0; i < subMeshCount; i++)
 			{
-				mesh.SetTriangles(submeshes[i].triangles, i);
+				bool sharedBuffer = false;
+				for (int j = 0; j < gSubmeshTris.Length; j++)
+				{
+					if (gSubmeshTriIndices[j] == i)
+					{
+						sharedBuffer = true;
+						mesh.SetTriangles(gSubmeshTris[j], i);
+						gSubmeshTriIndices[j] = UNUSED_SUBMESH;
+						break;
+					}
+				}
+
+				if (!sharedBuffer)
+					mesh.SetTriangles(submeshes[i].triangles, i);
 			}
 
 			//Apply the blendshape data from the slot asset back to the combined UMA unity mesh.
