@@ -1026,9 +1026,24 @@ namespace UMA
                         possiblePaths = AssetDatabase.GetAssetPathsFromAssetBundle(assetBundleNamesArray[i]);
                     }
                 }
-                foreach (string path in possiblePaths)
+				foreach (string path in possiblePaths)
                 {
-                    T target = (T)AssetDatabase.LoadAssetAtPath(path, typeof(T));
+					// the line T target = (T)AssetDatabase.LoadAssetAtPath(path, typeof(T)); below appears to load the asset *and then* check if its a type of T
+					// this leads to a big slowdown the first time this happens. Its much quicker (although messier) to do the following as getting the paths
+					// does not load the actual asset. This is also slightly quicker than getting all paths of type T outside this loop
+					// the 't:' filter needs the type to not have a namespace
+					var typeForSearch = typeof(T).ToString().Replace(typeof(T).Namespace + ".", "");
+					var searchString = assetName == "" ? "t:" + typeForSearch : "t:" + typeForSearch + " " + assetName;
+					var containingPath = System.IO.Path.GetDirectoryName(path);
+					var typeGUIDs = AssetDatabase.FindAssets(searchString, new string[1] { containingPath });
+					var typePaths = new List<string>(typeGUIDs.Length);
+					for (int ti = 0; ti < typeGUIDs.Length; ti++)
+						typePaths.Add(AssetDatabase.GUIDToAssetPath(typeGUIDs[ti]));
+
+					if (!typePaths.Contains(path))
+						continue;
+
+					T target = (T)AssetDatabase.LoadAssetAtPath(path, typeof(T));
                     if (target != null)
                     {
                         assetFound = true;
