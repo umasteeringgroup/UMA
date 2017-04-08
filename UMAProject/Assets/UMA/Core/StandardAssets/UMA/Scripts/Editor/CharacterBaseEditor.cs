@@ -756,10 +756,14 @@ namespace UMAEditor
 			var recipeSlots = _recipe.GetAllSlots();
 			for (int i = 0; i < _slotEditors.Count; i++)
 			{
+				if (_slotEditors[i].Slot == null)
+					continue;
 				bool found = false;
 				for(int ri = 0; ri < recipeSlots.Length; ri++)
 				{
-					if (_slotEditors[i].Slot.slotName == recipeSlots[ri].slotName)
+					if (recipeSlots[ri] == null)
+						continue;
+                    if (_slotEditors[i].Slot.slotName == recipeSlots[ri].slotName)
 					{
 						found = true;
 						break;
