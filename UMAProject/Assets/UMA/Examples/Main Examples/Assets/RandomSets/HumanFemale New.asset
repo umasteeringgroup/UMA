@@ -101,7 +101,7 @@ MonoBehaviour:
             colorChannelUse: 0
             colorChannel: 0
             overlayType: 4
-          - overlayID: F_H_Head 2
+          - overlayID: F_H_Head
             maxRGB: {r: 0, g: 0, b: 0, a: 1}
             minRGB: {r: 0, g: 0, b: 0, a: 1}
             useSkinColor: 1
