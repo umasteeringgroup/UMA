@@ -15,8 +15,12 @@ MonoBehaviour:
   DisplayValue: Undies
   compatibleRaces:
   - HumanFemaleDCS
+  - HumanFemale
   wardrobeRecipeThumbs:
   - race: HumanFemaleDCS
+    filename: 
+    thumb: {fileID: 21300000, guid: 450b02d22ce9235439792daf9fcedabd, type: 3}
+  - race: HumanFemale
     filename: 
     thumb: {fileID: 21300000, guid: 450b02d22ce9235439792daf9fcedabd, type: 3}
   wardrobeSlot: Underwear

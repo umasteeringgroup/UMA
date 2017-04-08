@@ -15,8 +15,12 @@ MonoBehaviour:
   DisplayValue: Shirt 1
   compatibleRaces:
   - HumanFemaleDCS
+  - HumanFemale
   wardrobeRecipeThumbs:
   - race: HumanFemaleDCS
+    filename: 
+    thumb: {fileID: 21300000, guid: d191bf2ff62503541b1db787c52002e5, type: 3}
+  - race: HumanFemale
     filename: 
     thumb: {fileID: 21300000, guid: d191bf2ff62503541b1db787c52002e5, type: 3}
   wardrobeSlot: Chest
