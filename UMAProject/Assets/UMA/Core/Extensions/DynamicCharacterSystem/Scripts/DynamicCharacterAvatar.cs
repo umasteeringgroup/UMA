@@ -1495,6 +1495,7 @@ namespace UMACharacterSystem
 				return;
 			if (thisExpressionPlayer.expressionSet == null)
 				return;
+			thisExpressionPlayer.enabled = true;
 			thisExpressionPlayer.Initialize();
 		}
 
@@ -2532,6 +2533,7 @@ namespace UMACharacterSystem
 			if (!Application.isPlaying)
 				return;
 
+			//dont clear the gameObjects here, only do it when the race is set to not be none and if 'RebuildSkeleton' is checked on 
 			foreach (Transform child in gameObject.transform)
 			{
 				Destroy(child.gameObject);
@@ -2550,7 +2552,9 @@ namespace UMACharacterSystem
                 gameObject.GetComponent<Animator>().runtimeAnimatorController = null;
             }
             */
-		}
+			if (gameObject.GetComponent<UMAExpressionPlayer>())
+				gameObject.GetComponent<UMAExpressionPlayer>().enabled = false;
+        }
 
 		public void AddAdditionalSerializedRecipes(UMARecipeBase[] umaAdditionalSerializedRecipes)
 		{
