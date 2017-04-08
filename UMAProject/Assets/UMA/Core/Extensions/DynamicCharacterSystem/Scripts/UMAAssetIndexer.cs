@@ -6,6 +6,9 @@ using UMA;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.Animations;
+#if UNITY_5_6_OR_NEWER
+using UnityEditor.Build;
+#endif
 #endif
 namespace UMA
 {
