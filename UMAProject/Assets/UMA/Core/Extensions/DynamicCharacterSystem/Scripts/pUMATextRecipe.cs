@@ -266,15 +266,15 @@ namespace UMA
 			}
 			else if (recipeType != "Standard")//this will just be for type DynamicCharacterAvatar- and WardrobeCollection if we add that
 			{
-				var packedRecipe = PackRecipeV2(umaRecipe);
-				//DCSPackRecipe doesn't do any more work, it just gets the values from PackRecipeV2 that we need and discards the rest
+				var packedRecipe = PackRecipeV3(umaRecipe);
+				//DCSPackRecipe doesn't do any more work, it just gets the values from PackRecipeV3 that we need and discards the rest
 				var packedRecipeToSave = new DCSPackRecipe(packedRecipe, this.name, recipeType, activeWardrobeSet);
 				recipeString = JsonUtility.ToJson(packedRecipeToSave);
 			}
 			else //This will be Standard- this is 'backwards Compatible' and is also how the Recipe Editor saves 'backwardsCompatible' 'Standard' recipes when they are inspected
 			{
 				umaRecipe.MergeMatchingOverlays();
-				var packedRecipe = PackRecipeV2(umaRecipe);
+				var packedRecipe = PackRecipeV3(umaRecipe);
 				var packedRecipeToSave = new DCSUniversalPackRecipe(packedRecipe);//this gets us a recipe with all the standard stuff plus our extra fields
 																				//so now we can save the wardrobeSet into it if it existed
 				if (activeWardrobeSet != null)
@@ -494,7 +494,7 @@ namespace UMA
 							}
 							else
 								_sharedColors = new OverlayColorData[0];
-						}//PackedOverlayColorDataV2
+						}//PackedOverlayColorDataV3
 						else if (colors != null)
 						{
 							if (colors.Length > 0)
@@ -535,7 +535,7 @@ namespace UMA
 				packedRecipeType = pRecipeType;
 				version = umaPackRecipe.version;
 				packedSlotDataList = umaPackRecipe.packedSlotDataList;
-				slotsV2 = umaPackRecipe.slotsV2;
+				slotsV3 = umaPackRecipe.slotsV3;
 				colors = umaPackRecipe.colors;
 				fColors = umaPackRecipe.fColors;
 				sharedColorCount = umaPackRecipe.sharedColorCount;
@@ -551,8 +551,8 @@ namespace UMA
 			{
 				//Debug.Log("Created universal model from DCSPackRecipe");
 				packedRecipeType = dcsPackRecipe.packedRecipeType;
-				version = 2;
-				slotsV2 = new PackedSlotDataV2[0];//we need this otherwise the RecipeInspector doesn't show anything...
+				version = 3;
+				slotsV3 = new PackedSlotDataV3[0];//we need this otherwise the RecipeInspector doesn't show anything...
 				race = dcsPackRecipe.race;
 				fColors = dcsPackRecipe.characterColors.ToArray();
 				sharedColorCount = dcsPackRecipe.characterColors.Count;
@@ -568,11 +568,11 @@ namespace UMA
 			public DCSUniversalPackRecipe(UMAData.UMARecipe recipeToSave, Dictionary<string, UMATextRecipe> wardrobeRecipes = null, string pRecipeType = "DynamicCharacterAvatar")
 			{
 				///Debug.Log("Created universal model from Avatar");
-				var packedRecipe = PackRecipeV2(recipeToSave);
+				var packedRecipe = PackRecipeV3(recipeToSave);
 				packedRecipeType = pRecipeType;
 				version = packedRecipe.version;
 				packedSlotDataList = packedRecipe.packedSlotDataList;
-				slotsV2 = packedRecipe.slotsV2;
+				slotsV3 = packedRecipe.slotsV3;
 				colors = packedRecipe.colors;
 				fColors = packedRecipe.fColors;
 				sharedColorCount = packedRecipe.sharedColorCount;

@@ -54,6 +54,31 @@ namespace UMA
 		public UMAMaterial material;
 
 		/// <summary>
+		/// The number of textures in the texture array.
+		/// </summary>
+		public int textureCount
+		{
+			get
+			{
+				if (material.IsProcedural())
+				{
+					int count = 0;
+					for (int i = 0; i < material.channels.Length; i++)
+					{
+						if (material.channels[i].channelType != UMAMaterial.ChannelType.MaterialColor)
+							count++;
+					}
+
+					return count;
+				}
+				else if (textureList == null)
+					return 0;
+				
+				return textureList.Length;
+			}
+		}
+
+		/// <summary>
 		/// Occlusion Entries for occluding triangles, currently only supported by powertools.
 		/// </summary>
 		[System.Serializable]

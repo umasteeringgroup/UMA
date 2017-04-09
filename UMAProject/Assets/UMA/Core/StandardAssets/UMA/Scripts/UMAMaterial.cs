@@ -35,7 +35,8 @@ namespace UMA
             public ChannelType channelType;
             public RenderTextureFormat textureFormat;
             public string materialPropertyName;
-        }
+			public string sourceTextureName;
+       }
 
 #if UNITY_EDITOR
 		[UnityEditor.MenuItem("Assets/Create/UMA/Core/Material")]
@@ -44,8 +45,22 @@ namespace UMA
 			UMA.CustomAssetUtility.CreateAsset<UMAMaterial>();
 		}
 #endif
+
+		/// <summary>
+		/// Is the UMAMaterial based on a procedural material (substance)?
+		/// </summary>
+		public bool IsProcedural()
+		{
+			if ((material != null) && (material is ProceduralMaterial))
+				return true;
+			
+			return false;
+		}
+
         /// <summary>
-        /// Checks if UMAMaterials are effectively equal. Useful when comparing materials from asset bundles, that would otherwise say they are different to ones in the binary
+        /// Checks if UMAMaterials are effectively equal.
+		/// Useful when comparing materials from asset bundles, that would otherwise say they are different to ones in the binary
+		/// And procedural materials which can be output compatible even if they are generated from different sources
         /// </summary>
         /// <param name="material">The material to compare</param>
         /// <returns></returns>
@@ -57,17 +72,23 @@ namespace UMA
             }
             else
             {
-                if (this.name == material.name &&
-                    this.material.name == material.material.name &&
-                    this.materialType == material.materialType &&
-                    this.channels.Length == material.channels.Length)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
+				if (this.material.shader != material.material.shader)
+					return false;
+				if (this.materialType != material.materialType)
+					return false;
+				if (this.channels.Length != material.channels.Length)
+					return false;
+				for (int i = 0; i < this.channels.Length; i++)
+				{
+					MaterialChannel thisChannel = this.channels[i];
+					MaterialChannel otherChannel = material.channels[i];
+					if (thisChannel.channelType != otherChannel.channelType)
+						return false;
+					if (thisChannel.materialPropertyName != otherChannel.materialPropertyName)
+						return false;
+				}
+
+				return true;
             }
         }
 

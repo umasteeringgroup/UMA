@@ -70,7 +70,7 @@ namespace UMA
 			{
 				for (int i = 0; i < overlayList.Count; i++)
 				{
-					if (overlayList[i].asset.overlayName == name)
+					if (overlayList[i].overlayName == name)
 					{
 						overlayList.RemoveAt(i);
 						changed = true;
@@ -88,7 +88,7 @@ namespace UMA
 			{
 				foreach (var overlay in overlayList)
 				{
-					if (overlay.asset.overlayName == name)
+					if (overlay.overlayName == name)
 					{
 						overlay.colorData.color = color;
 						changed = true;
@@ -104,7 +104,7 @@ namespace UMA
 			{
 				foreach (var overlay in overlayList)
 				{
-					if (overlay.asset.overlayName == name)
+					if (overlay.overlayName == name)
 					{
 						return overlay;
 					}
@@ -233,63 +233,10 @@ namespace UMA
 					var overlayData = overlayList[i];
 					if (overlayData != null)
 					{
-						if (overlayData.asset.material != asset.material)
+						if (!overlayData.Validate(asset.material, (i == 0)))
 						{
-							if (!overlayData.asset.material.Equals(asset.material))
-							{
-                                
-								Debug.LogError(string.Format("Slot '{0} ({2})' and Overlay '{1} ({3})' don't have the same UMA Material", asset.slotName, overlayData.asset.overlayName, asset.material.name, overlayData.asset.material.name));
-								valid = false;
-							}
-						}
-
-						if ((overlayData.asset.textureList == null) || (overlayData.asset.textureList.Length != asset.material.channels.Length))
-						{
-							Debug.LogError(string.Format("Overlay '{0}' doesn't have the right number of channels", overlayData.asset.overlayName));
 							valid = false;
-						}
-						else
-						{
-							if (i == 0)
-							{
-								// all channels must be initialized by the base overlay
-								for (int j = 0; j < asset.material.channels.Length; j++)
-								{
-									if ((overlayData.asset.textureList[j] == null) && (asset.material.channels[j].channelType != UMAMaterial.ChannelType.MaterialColor))
-									{
-										Debug.LogError(string.Format("Base Overlay '{0}' missing required texture in channel {1}", overlayData.asset.overlayName, j));
-										valid = false;
-									}
-								}
-							}
-							else
-							{
-								// the following overlays just need a main texture
-								int j = 0;
-								if ((overlayData.asset.textureList[j] == null) && (asset.material.channels[j].channelType != UMAMaterial.ChannelType.MaterialColor))
-								{
-									Debug.LogError(string.Format("Overlay '{0}' missing a main texture", overlayData.asset.overlayName, j));
-									valid = false;
-								}
-							}
-						}
-
-						if (overlayData.colorData.channelMask.Length < asset.material.channels.Length)
-						{
-							// Fixup colorData if moving from Legacy to PBR materials
-							int oldsize = overlayData.colorData.channelMask.Length;
-
-							System.Array.Resize(ref overlayData.colorData.channelMask, asset.material.channels.Length);
-							System.Array.Resize(ref overlayData.colorData.channelAdditiveMask, asset.material.channels.Length);
-
-							for (int j = oldsize; j > asset.material.channels.Length; j++)
-							{
-								overlayData.colorData.channelMask[j] = Color.white;
-								overlayData.colorData.channelAdditiveMask[j] = Color.black;
-							}
-
-
-							Debug.LogWarning(string.Format("Overlay '{0}' missing required color data on Asset: " + asset.name + " Resizing and adding defaults", overlayData.asset.overlayName));
+							Debug.LogError(string.Format("Invalid Overlay '{0}' on Slot '{1}'.", overlayData.overlayName, asset.slotName));
 						}
 					}
 				}
