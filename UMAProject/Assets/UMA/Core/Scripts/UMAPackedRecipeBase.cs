@@ -216,6 +216,7 @@ namespace UMA
 			public string name;
 			public int type;
 			public int[] vals;
+			public string text;
 
 			public PackedOverlaySubstanceData(OverlayData.OverlayProceduralData proceduralData)
 			{

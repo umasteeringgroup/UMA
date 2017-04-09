@@ -1137,6 +1137,13 @@ MonoBehaviour:
     _Path: Assets/UMA/Examples/Physics Examples/Assets/Overlays/ClothRobeOverlay.asset
     IsResource: 0
     IsAssetBundle: 0
+  - _BaseTypeName: OverlayDataAsset
+    _Name: ProceduralShirt
+    _SerializedItem: {fileID: 0}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Clothing/Procedural
+      Shirt/ProceduralShirt.asset
+    IsResource: 0
+    IsAssetBundle: 0
   - _BaseTypeName: RaceData
     _Name: HumanFemaleDCS
     _SerializedItem: {fileID: 0}
