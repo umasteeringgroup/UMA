@@ -250,9 +250,7 @@ namespace UMA
 			Types = newTypes.ToArray();
 			TypeToLookup.Add(sType, sType);
 			IndexedTypeNames.Add(sType.AssemblyQualifiedName);
-#if UNITY_EDITOR
 			BuildStringTypes();
-#endif
 		}
 
 		public void RemoveType(System.Type sType)
@@ -268,9 +266,7 @@ namespace UMA
 			Types = newTypes.ToArray();
 			TypeLookup.Remove(sType);
 			IndexedTypeNames.Remove(sType.AssemblyQualifiedName);
-#if UNITY_EDITOR
 			BuildStringTypes();
-#endif
 		}
 		#endregion
 
@@ -657,9 +653,6 @@ namespace UMA
 			}
 		}
 
-
-
-#if UNITY_EDITOR
 		private void BuildStringTypes()
 		{
 			TypeFromString.Clear();
@@ -668,6 +661,9 @@ namespace UMA
 				TypeFromString.Add(st.Name, st);
 			}
 		}
+
+
+#if UNITY_EDITOR
 
 		public void Clear()
 		{
@@ -791,9 +787,7 @@ namespace UMA
 					IndexedTypeNames.Remove(ivs);
 				}
 			}
-#if UNITY_EDITOR
 			BuildStringTypes();
-#endif
 			UpdateSerializedDictionaryItems();
 			StopTimer(st, "Before Serialize");
 		}
