@@ -9,15 +9,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d6ce19a51999011448644fc01e9cec03, type: 3}
-  m_Name: PlaceholderSlot
+  m_Name: SlotDataAssetPlaceholder
   m_EditorClassIdentifier: 
-  slotName: PlaceholderSlot
-  material: {fileID: 11400000, guid: 49612ff41f94f1447b22badd4435a229, type: 2}
-  textureNameList: []
-  meshRenderer: {fileID: 0}
-  materialSample: {fileID: 0}
+  slotName: SlotDataAssetPlaceholder
+  material: {fileID: 11400000, guid: 8e29dbac5d2e82f44a759a7e2cc568ab, type: 2}
   overlayScale: 1
-  animatedBones: []
   animatedBoneNames: []
   animatedBoneHashes: 
   slotDNA: {fileID: 0}
@@ -32,35 +28,36 @@ MonoBehaviour:
     uv2: []
     uv3: []
     uv4: []
+    blendShapes: []
+    clothSkinningSerialized: []
     submeshes: []
-    bones: []
-    rootBone: {fileID: 0}
     umaBones: []
     umaBoneCount: 0
     rootBoneHash: 0
     boneNameHashes: 
     subMeshCount: 0
     vertexCount: 0
+    RootBoneName: Global
   subMeshIndex: 0
   slotGroup: 
   tags: []
   CharacterBegun:
     m_PersistentCalls:
       m_Calls: []
-    m_TypeName: UMA.UMADataEvent, Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral,
+    m_TypeName: UMA.UMADataEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   SlotAtlassed:
     m_PersistentCalls:
       m_Calls: []
-    m_TypeName: UMA.UMADataSlotMaterialRectEvent, Assembly-CSharp-firstpass, Version=0.0.0.0,
+    m_TypeName: UMA.UMADataSlotMaterialRectEvent, Assembly-CSharp, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   DNAApplied:
     m_PersistentCalls:
       m_Calls: []
-    m_TypeName: UMA.UMADataEvent, Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral,
+    m_TypeName: UMA.UMADataEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   CharacterCompleted:
     m_PersistentCalls:
       m_Calls: []
-    m_TypeName: UMA.UMADataEvent, Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral,
+    m_TypeName: UMA.UMADataEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
