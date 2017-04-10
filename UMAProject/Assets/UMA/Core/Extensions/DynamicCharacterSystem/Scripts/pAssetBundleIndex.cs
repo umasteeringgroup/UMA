@@ -16,7 +16,7 @@ namespace UMA.AssetBundles
 
 			partial void AddDataPostProcess(string filename, UnityEngine.Object obj)
 			{
-				if (assetType == "UMATextRecipe")
+				if (GetTypeWithoutAssembly(assetType) == "UMATextRecipe")
 				{
 					if ((obj as UMATextRecipe).recipeType == "Wardrobe")
 					{
@@ -28,7 +28,7 @@ namespace UMA.AssetBundles
 						}
 					}
 				}
-				else if (assetType == "UMAWardrobeRecipe")
+				else if (GetTypeWithoutAssembly(assetType) == "UMAWardrobeRecipe")
 				{
 					assetWardrobeCompatibleWith = (obj as UMAWardrobeRecipe).compatibleRaces;
 					if ((obj as UMAWardrobeRecipe).wardrobeSlot != "None")
@@ -37,7 +37,7 @@ namespace UMA.AssetBundles
 						assetWardrobeHides = (obj as UMAWardrobeRecipe).Hides;
 					}
 				}
-				else if (assetType == "UMAWardrobeCollection")
+				else if (GetTypeWithoutAssembly(assetType) == "UMAWardrobeCollection")
 				{
 					assetWardrobeCompatibleWith = (obj as UMAWardrobeCollection).compatibleRaces;
 					if (assetWardrobeCompatibleWith.Count > 0)
