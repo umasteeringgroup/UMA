@@ -313,6 +313,18 @@ namespace UMA.CharacterSystem
 
 		#region Start Update and Inititalization
 
+		public void Awake()
+		{
+#if UNITY_EDITOR
+			EditorUMAContext = GameObject.Find("UMAEditorContext");
+			if (EditorUMAContext != null)
+			{
+				EditorUMAContext.hideFlags = HideFlags.DontSave | HideFlags.NotEditable;
+				EditorApplication.update -= CheckEditorContextNeeded;
+				EditorApplication.update += CheckEditorContextNeeded;
+			}
+#endif
+		}
 		// Use this for initialization
 		public override void Start()
 		{
@@ -367,6 +379,20 @@ namespace UMA.CharacterSystem
 					BuildCharacter(waitForBundles);
 				}
 			}
+		}
+
+		void OnDisable()
+		{
+#if UNITY_EDITOR
+			DestroyEditorUMAContext();
+#endif
+		}
+
+		void OnDestroy()
+		{
+#if UNITY_EDITOR
+			DestroyEditorUMAContext();
+#endif
 		}
 
 #if UNITY_EDITOR
@@ -461,23 +487,6 @@ namespace UMA.CharacterSystem
 			{
 				LoadFromRecipe(umaRecipe);
 			}
-		}
-
-		void OnDisable()
-		{
-#if UNITY_EDITOR
-			if (EditorUMAContext != null)
-			{
-				Destroy(EditorUMAContext);
-			}
-#endif
-		}
-
-		void OnDestroy()
-		{
-#if UNITY_EDITOR
-			EditorApplication.update -= CheckEditorContextNeeded;
-#endif
 		}
 
 		#endregion
@@ -1485,6 +1494,7 @@ namespace UMA.CharacterSystem
 				return;
 			if (thisExpressionPlayer.expressionSet == null)
 				return;
+			thisExpressionPlayer.enabled = true;
 			thisExpressionPlayer.Initialize();
 		}
 
@@ -1493,20 +1503,7 @@ namespace UMA.CharacterSystem
 		/// </summary>
 		public void SetAnimatorController(bool addAnimator = false)
 		{
-			int validControllers = raceAnimationControllers.Validate().Count;//triggers resources load or asset bundle download of any animators that are in resources/asset bundles
-
-			RuntimeAnimatorController controllerToUse = raceAnimationControllers.defaultAnimationController;
-			if (validControllers > 0)
-			{
-				foreach (RaceAnimator raceAnimator in raceAnimationControllers.animators)
-				{
-					if (raceAnimator.raceName == activeRace.name && raceAnimator.animatorController != null)
-					{
-						controllerToUse = raceAnimator.animatorController;
-						break;
-					}
-				}
-			}
+			RuntimeAnimatorController controllerToUse = raceAnimationControllers.GetAnimatorForRace(activeRace.name);
 			animationController = controllerToUse;
 			var thisAnimator = gameObject.GetComponent<Animator>();
 			if (controllerToUse != null)
@@ -1515,7 +1512,6 @@ namespace UMA.CharacterSystem
 					thisAnimator = gameObject.AddComponent<Animator>();
 				if (thisAnimator != null)
 				{
-
 					thisAnimator.runtimeAnimatorController = controllerToUse;
 					if (!requiredAssetsToCheck.Contains(controllerToUse.name) && DynamicAssetLoader.Instance.downloadingAssetsContains(controllerToUse.name))
 					{
@@ -2537,6 +2533,8 @@ namespace UMA.CharacterSystem
                 gameObject.GetComponent<Animator>().runtimeAnimatorController = null;
             }
             */
+			if (gameObject.GetComponent<UMAExpressionPlayer>())
+				gameObject.GetComponent<UMAExpressionPlayer>().enabled = false;
 		}
 
 		public void AddAdditionalSerializedRecipes(UMARecipeBase[] umaAdditionalSerializedRecipes)
@@ -2676,63 +2674,35 @@ namespace UMA.CharacterSystem
 		/// </summary>
 		public UMAContext CreateEditorContext()
 		{
-			Debug.Log("DynamicCharacterAvatar created an UMAEditorContext to enable editing. This will auto delete once you have finished editing your Avatar or you add the UMA_DCS prefab to this scene.");
-			//if there is already an EditorUMAContext use it
-			if (GameObject.Find("UMAEditorContext"))
-			{
-				EditorUMAContext = GameObject.Find("UMAEditorContext");
-			}
-			else
-			{
-				EditorUMAContext = new GameObject();
-				EditorUMAContext.name = "UMAEditorContext";
-			}
-			//Make this GameObject not show up in the scene or save
-			EditorUMAContext.hideFlags = HideFlags.DontSave | HideFlags.NotEditable;
-			var thisUMAContext = EditorUMAContext.AddComponent<UMAContext>();
-			UMAContext.Instance = thisUMAContext;
-			//we need to add the libraries as components of the game object too
-			//and then set THOSE components to the umaContext component
-			thisUMAContext.raceLibrary = EditorUMAContext.AddComponent<DynamicRaceLibrary>();
-			(thisUMAContext.raceLibrary as DynamicRaceLibrary).dynamicallyAddFromResources = true;
-			(thisUMAContext.raceLibrary as DynamicRaceLibrary).dynamicallyAddFromAssetBundles = true;
-			thisUMAContext.overlayLibrary = EditorUMAContext.AddComponent<DynamicOverlayLibrary>();
-			(thisUMAContext.overlayLibrary as DynamicOverlayLibrary).dynamicallyAddFromResources = true;
-			(thisUMAContext.overlayLibrary as DynamicOverlayLibrary).dynamicallyAddFromAssetBundles = true;
-			thisUMAContext.slotLibrary = EditorUMAContext.AddComponent<DynamicSlotLibrary>();
-			(thisUMAContext.slotLibrary as DynamicSlotLibrary).dynamicallyAddFromResources = true;
-			(thisUMAContext.slotLibrary as DynamicSlotLibrary).dynamicallyAddFromAssetBundles = true;
-			thisUMAContext.dynamicCharacterSystem = EditorUMAContext.AddComponent<DynamicCharacterSystem>();
-			(thisUMAContext.dynamicCharacterSystem as DynamicCharacterSystem).dynamicallyAddFromResources = true;
-			(thisUMAContext.dynamicCharacterSystem as DynamicCharacterSystem).dynamicallyAddFromAssetBundles = true;
-			var thisDAL = EditorUMAContext.AddComponent<DynamicAssetLoader>();
-			DynamicAssetLoader.Instance = thisDAL;
-			//add an event to EditorApplication so that this context gets destroyed when this game object is no longer being inspected
+			EditorUMAContext = UMAContext.CreateEditorContext();
 			EditorApplication.update -= CheckEditorContextNeeded;
 			EditorApplication.update += CheckEditorContextNeeded;
-			return thisUMAContext;
+			return UMAContext.Instance;
+		}
+
+		private void DestroyEditorUMAContext()
+		{
+			if (EditorUMAContext != null)
+			{
+				foreach (Transform child in EditorUMAContext.transform)
+				{
+					DestroyImmediate(child.gameObject);
+				}
+				DestroyImmediate(EditorUMAContext);
+				EditorApplication.update -= CheckEditorContextNeeded;
+				Debug.Log("UMAEditorContext was removed");
+			}
 		}
 
 		public void CheckEditorContextNeeded()
 		{
 			if (EditorUMAContext != null)
 			{
-				if (EditorUMAContext.GetComponent<UMAContext>() != null)
+				if (EditorUMAContext.GetComponentInChildren<UMAContext>() != null || EditorUMAContext.GetComponent<UMAContext>() != null)
 				{
-					if (this == null)
+					if (this == null || gameObject == null || Selection.activeGameObject == null || Selection.activeGameObject != gameObject)
 					{
-						DestroyImmediate(EditorUMAContext);
-						EditorApplication.update -= CheckEditorContextNeeded;
-					}
-					else if (gameObject == null || Selection.activeGameObject == null)
-					{
-						DestroyImmediate(EditorUMAContext);
-						EditorApplication.update -= CheckEditorContextNeeded;
-					}
-					else if (Selection.activeGameObject != gameObject)
-					{
-						DestroyImmediate(EditorUMAContext);
-						EditorApplication.update -= CheckEditorContextNeeded;
+						DestroyEditorUMAContext();
 					}
 				}
 			}
@@ -2941,12 +2911,8 @@ namespace UMA.CharacterSystem
 		public class RaceSetter
 		{
 			public string name;
-			//This was not properly reporting itself as 'missing' when it is set to an asset that is in an asset bundle, so now data is a property that validates itself
-			//but we need it in the inspector I think
-			[SerializeField]
+
 			RaceData _data;
-			[SerializeField]//Needs to be serialized for the inspector but otherwise no- TODO what happens in a build? will this get saved across sessions- because we dont want that
-			RaceData[] _cachedRaceDatas;
 
 			//These properties use camelCase rather than lower case to deliberately hide the fact they are properties
 			/// <summary>
@@ -2956,10 +2922,8 @@ namespace UMA.CharacterSystem
 			{
 				get
 				{
-					if (Application.isPlaying)
-						return Validate();
-					else
-						return _data;
+					Validate();
+					return _data;
 				}
 				set
 				{
@@ -2974,20 +2938,23 @@ namespace UMA.CharacterSystem
 				get { return _data; }
 			}
 
-			RaceData Validate()
+			void Validate()
 			{
-				RaceData racedata = null;
 				var thisContext = UMAContext.FindInstance();
+				if (thisContext == null)
+				{
+					Debug.LogWarning("UMAContext was missing this is required in scenes that use UMA. Please add the UMA_DCS prefab to the scene");
+					return;
+				}
 				var thisDynamicRaceLibrary = (DynamicRaceLibrary)thisContext.raceLibrary as DynamicRaceLibrary;
-				_cachedRaceDatas = thisDynamicRaceLibrary.GetAllRaces();
-				foreach (RaceData race in _cachedRaceDatas)
+				foreach (RaceData race in thisDynamicRaceLibrary.GetAllRaces())
 				{
 					if (race.raceName == this.name)
-						racedata = race;
+					{
+						_data = race;
+						break;
+					}
 				}
-				//shouldn't this result in _data too?- if not why not? it should surely?
-				_data = racedata;
-				return racedata;
 			}
 		}
 
@@ -2995,6 +2962,7 @@ namespace UMA.CharacterSystem
 		public class WardrobeRecipeListItem
 		{
 			public string _recipeName;
+			[System.NonSerialized]
 			public UMATextRecipe _recipe;
 			//store compatible races here because when a recipe is not downloaded we dont have access to this info...
 			public List<string> _compatibleRaces;
@@ -3025,16 +2993,21 @@ namespace UMA.CharacterSystem
 			public List<WardrobeRecipeListItem> Validate(bool allowDownloadables = false, string raceName = "")
 			{
 				List<WardrobeRecipeListItem> validRecipes = new List<WardrobeRecipeListItem>();
-				var thisDCS = UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem;
+				var thisContext = UMAContext.FindInstance();
+				if (thisContext == null)
+				{
+					return validRecipes;
+				}
+				var thisDCS = thisContext.dynamicCharacterSystem as DynamicCharacterSystem;
 				if (thisDCS != null)
 				{
 					foreach (WardrobeRecipeListItem WLIRecipe in recipes)
 					{
 						if (allowDownloadables && (raceName == "" || WLIRecipe._compatibleRaces.Contains(raceName)))
 						{
-							if (thisDCS.GetRecipe(WLIRecipe._recipeName, true) != null)
+							WLIRecipe._recipe = thisDCS.GetRecipe(WLIRecipe._recipeName);
+							if (WLIRecipe._recipe != null)
 							{
-								WLIRecipe._recipe = thisDCS.GetRecipe(WLIRecipe._recipeName);
 								WLIRecipe._compatibleRaces = new List<string>(WLIRecipe._recipe.compatibleRaces);
 								validRecipes.Add(WLIRecipe);
 							}
@@ -3069,7 +3042,12 @@ namespace UMA.CharacterSystem
 		{
 			public string raceName;
 			public string animatorControllerName;
-			public RuntimeAnimatorController animatorController;
+			private RuntimeAnimatorController _animatorController;
+			public RuntimeAnimatorController animatorController
+			{
+				get { return _animatorController; }
+				set { _animatorController = value; }
+			}
 		}
 
 		[Serializable]
@@ -3083,69 +3061,42 @@ namespace UMA.CharacterSystem
 			public string assetBundleNames;
 			public Dictionary<string, List<string>> assetBundlesUsedDict = new Dictionary<string, List<string>>();
 
-			public List<string> Validate()
+			public RuntimeAnimatorController GetAnimatorForRace(string racename)
 			{
-				UpdateAnimators();
-				int validAnimators = 0;
-				List<string> validAnimatorsList = new List<string>();
-				foreach (RaceAnimator animator in animators)
+				RuntimeAnimatorController controllerToUse = defaultAnimationController;
+				for (int i = 0; i < animators.Count; i++)
 				{
-					if (animator.animatorController != null)
+					if (animators[i].raceName == racename)
 					{
-						validAnimators++;
-						validAnimatorsList.Add(animator.animatorControllerName);
-					}
-				}
-				return validAnimatorsList;
-			}
-			public void UpdateAnimators()
-			{
-				foreach (RaceAnimator animator in animators)
-				{
-					if (animator.animatorController == null)
-					{
-						if (animator.animatorControllerName != "")
+						if (animators[i].animatorController == null)
 						{
-							FindAnimatorByName(animator.animatorControllerName);
+							FindAnimatorByName(animators[i].animatorControllerName);
 						}
+						if (animators[i].animatorController != null)
+							controllerToUse = animators[i].animatorController;
+						break;
 					}
 				}
+				return controllerToUse;
 			}
 			public void FindAnimatorByName(string animatorName)
 			{
-				DynamicAssetLoader.Instance.AddAssets<RuntimeAnimatorController>(ref assetBundlesUsedDict, true, true, false, "", "", null, animatorName, SetFoundAnimators);
-
+				bool dalDebugSetting = DynamicAssetLoader.Instance.debugOnFail;
+				DynamicAssetLoader.Instance.debugOnFail = false;
+				DynamicAssetLoader.Instance.AddAssets<RuntimeAnimatorController>(ref assetBundlesUsedDict, dynamicallyAddFromResources, dynamicallyAddFromAssetBundles, true, assetBundleNames, resourcesFolderPath, null, animatorName, SetFoundAnimators);
+				DynamicAssetLoader.Instance.debugOnFail = dalDebugSetting;
 			}
-			//This function is probably redundant since animators from this class should never cause assetbundles to download
-			//and therefore there should never be any 'temp' assets that need to be replaced
-			public void SetAnimator(RuntimeAnimatorController controller)
-			{
-				foreach (RaceAnimator animator in animators)
-				{
-					if (animator.animatorControllerName != "")
-					{
-						if (animator.animatorControllerName == controller.name)
-						{
-							animator.animatorController = controller;
-						}
-					}
-				}
-			}
+			
 			private void SetFoundAnimators(RuntimeAnimatorController[] foundControllers)
 			{
-				foreach (RuntimeAnimatorController foundController in foundControllers)
+				for (int fi = 0; fi < foundControllers.Length; fi++)
 				{
-					foreach (RaceAnimator animator in animators)
+					for (int i = 0; i < animators.Count; i++)
 					{
-						if (animator.animatorController == null)
+						if (animators[i].animatorControllerName == foundControllers[fi].name)
 						{
-							if (animator.animatorControllerName != "")
-							{
-								if (animator.animatorControllerName == foundController.name)
-								{
-									animator.animatorController = foundController;
-								}
-							}
+							animators[i].animatorController = foundControllers[fi];
+							break;
 						}
 					}
 				}

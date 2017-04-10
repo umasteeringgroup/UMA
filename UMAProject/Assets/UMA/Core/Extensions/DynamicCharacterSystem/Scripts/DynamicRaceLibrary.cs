@@ -23,7 +23,6 @@ namespace UMA.CharacterSystem
 	#if UNITY_EDITOR
 		//if we have already added everything in the editor dont do it again
 		bool allAssetsAddedInEditor = false;
-		[HideInInspector]
 		List<RaceData> editorAddedAssets = new List<RaceData>();
 	#endif
 		[System.NonSerialized]
@@ -81,9 +80,9 @@ namespace UMA.CharacterSystem
 			if (editorAddedAssets.Count > 0)
 			{
 				editorAddedAssets.Clear();
-				allAssetsAddedInEditor = false;
 			}
-	#endif
+			allAssetsAddedInEditor = false;
+#endif
 		}
 
 	#if UNITY_EDITOR

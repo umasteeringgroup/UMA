@@ -166,6 +166,10 @@ namespace UMA
 				if (contextGO != null)
 					Instance = contextGO.GetComponent<UMAContext>();
 			}
+			if (Instance == null)
+			{
+				Instance = Component.FindObjectOfType<UMAContext>();
+			}
 			return Instance;	
 		}
 	}

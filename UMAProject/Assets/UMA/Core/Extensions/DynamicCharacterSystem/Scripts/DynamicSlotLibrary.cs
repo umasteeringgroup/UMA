@@ -20,8 +20,7 @@ namespace UMA.CharacterSystem
         //or other scripts can use it to find out which asset bundles are being used by the Libraries at any given point.
         public Dictionary<string, List<string>> assetBundlesUsedDict = new Dictionary<string, List<string>>();
     #if UNITY_EDITOR
-        [HideInInspector]
-        public List<SlotDataAsset> editorAddedAssets = new List<SlotDataAsset>();
+        List<SlotDataAsset> editorAddedAssets = new List<SlotDataAsset>();
     #endif
         [System.NonSerialized]
         [HideInInspector]

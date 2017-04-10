@@ -168,6 +168,8 @@ namespace UMA.CharacterSystem.Examples
 		{
 			foreach (UMAWardrobeCollection uwc in uwcs)
 			{
+				if (uwc == null)
+					continue;
 				if (filename == "" || (filename != "" && filename.Trim() == uwc.name))
 				{
 					if (!collectionIndex.ContainsKey(uwc.name))

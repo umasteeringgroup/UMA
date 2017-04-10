@@ -78,7 +78,7 @@ namespace UMA.CharacterSystem
 				//we need to check that this is not null- the user may not have downloaded it yet
 				if (possibleRaces[i] == null)
 					continue;
-				if (DynamicAssetLoader.Instance != null && possibleRaces[i].raceName == (DynamicAssetLoader.Instance.placeholderRace != null ? DynamicAssetLoader.Instance.placeholderRace.raceName : "PlaceholderRace"))
+				if (possibleRaces[i].raceName == "RaceDataPlaceholder")
 					continue;
 				if (Recipes.ContainsKey(possibleRaces[i].raceName))
 				{
@@ -123,7 +123,7 @@ namespace UMA.CharacterSystem
 			var possibleRaces = (context.raceLibrary as DynamicRaceLibrary).GetAllRacesBase();
 			for (int i = 0; i < possibleRaces.Length; i++)
 			{
-				if (!Recipes.ContainsKey(possibleRaces[i].raceName) && possibleRaces[i].raceName != (DynamicAssetLoader.Instance.placeholderRace != null ? DynamicAssetLoader.Instance.placeholderRace.raceName : "PlaceholderRace"))
+				if (!Recipes.ContainsKey(possibleRaces[i].raceName) && possibleRaces[i].raceName != "RaceDataPlaceholder")
 				{
 					Recipes.Add(possibleRaces[i].raceName, new Dictionary<string, List<UMATextRecipe>>());
 				}
@@ -165,8 +165,8 @@ namespace UMA.CharacterSystem
 					//we need to check that this is not null- the user may not have downloaded it yet
 					if (possibleRaces[i] != null)
 					{
-						if (!Recipes.ContainsKey(possibleRaces[i].raceName) && possibleRaces[i].raceName != (DynamicAssetLoader.Instance.placeholderRace != null ? DynamicAssetLoader.Instance.placeholderRace.raceName : "PlaceholderRace"))
-						{
+						if (!Recipes.ContainsKey(possibleRaces[i].raceName) && possibleRaces[i].raceName != "RaceDataPlaceholder")
+                        {
 							Recipes.Add(possibleRaces[i].raceName, new Dictionary<string, List<UMATextRecipe>>());
 						}
 					}
