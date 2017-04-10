@@ -278,7 +278,8 @@ namespace UMA
         public AssetItem GetAssetItem<T>(string Name)
         {
             System.Type ot = typeof(T);
-            Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(ot);
+            System.Type theType = TypeToLookup[ot];
+            Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(theType);
             if (TypeDic.ContainsKey(Name))
             {
                 return TypeDic[Name];
@@ -333,8 +334,9 @@ namespace UMA
 
             var ret = new List<T>();
             System.Type ot = typeof(T);
+            System.Type theType = TypeToLookup[ot];
 
-            Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(ot);
+            Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(theType);
 
             foreach (KeyValuePair<string, AssetItem> kp in TypeDic)
             {
@@ -542,6 +544,7 @@ namespace UMA
         /// <param name="Name"></param>
         public void RemoveAsset(System.Type type, string Name)
         {
+            System.Type theType = TypeToLookup[type];
             Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(type);
             TypeDic.Remove(Name);
         }
