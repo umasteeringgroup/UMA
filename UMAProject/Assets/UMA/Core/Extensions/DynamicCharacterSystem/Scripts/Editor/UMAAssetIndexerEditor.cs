@@ -223,7 +223,12 @@ public class UMAAssetIndexerEditor : Editor
 
         GUILayout.EndHorizontal();
 
+        bool PreSerialize = UAI.SerializeAllObjects;
         UAI.SerializeAllObjects = EditorGUILayout.Toggle("Serialize for build (SLOW)", UAI.SerializeAllObjects);
+        if (UAI.SerializeAllObjects != PreSerialize)
+        {
+            UAI.ForceSave();
+        }
         UAI.AutoUpdate = EditorGUILayout.Toggle("Process Updates", UAI.AutoUpdate);
         Filter = EditorGUILayout.TextField("Filter Library", Filter);
 
