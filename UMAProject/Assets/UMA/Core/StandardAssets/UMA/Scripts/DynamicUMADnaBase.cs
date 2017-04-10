@@ -118,6 +118,19 @@ namespace UMA
 			}
 		}
 
+		public virtual void SetMissingDnaAsset(DynamicUMADnaAsset[] foundAssets)
+		{
+			//we can only use one
+			if (foundAssets.Length > 0)
+			{
+				dnaAsset = foundAssets[0];
+				if (DynamicDNADictionary.ContainsKey(dnaAssetName))
+					DynamicDNADictionary[dnaAssetName] = dnaAsset;
+				else
+					DynamicDNADictionary.Add(dnaAsset.name, dnaAsset);
+            }
+		}
+
 		#endregion
 	}
 }
