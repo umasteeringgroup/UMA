@@ -549,7 +549,8 @@ namespace UMA
 		/// <param name="Name"></param>
 		public void RemoveAsset(System.Type type, string Name)
 		{
-			Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(type);
+			System.Type theType = TypeToLookup[type];
+			Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(theType);
 			TypeDic.Remove(Name);
 		}
 #endif
