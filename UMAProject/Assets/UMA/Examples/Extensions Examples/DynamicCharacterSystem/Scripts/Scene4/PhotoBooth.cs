@@ -641,5 +641,5 @@ namespace UMA.CharacterSystem.Examples
 
 	}
 
-	#endif
 }
+#endif
