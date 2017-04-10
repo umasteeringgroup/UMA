@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections.Generic;
 using UMA;
 using UMA.CharacterSystem;
@@ -6,11 +6,16 @@ using UMA.CharacterSystem;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.Animations;
+#if UNITY_5_6_OR_NEWER
+using UnityEditor.Build;
+#endif
 #endif
 namespace UMA
 {
-    [InitializeOnLoad]
-    public class UMAAssetIndexer : MonoBehaviour, ISerializationCallbackReceiver
+#if UNITY_EDITOR
+	[InitializeOnLoad]
+#endif
+	public class UMAAssetIndexer : MonoBehaviour, ISerializationCallbackReceiver
 #if UNITY_EDITOR    
 #if UNITY_5_6_OR_NEWER
      , IPreprocessBuild
@@ -545,7 +550,7 @@ namespace UMA
         public void RemoveAsset(System.Type type, string Name)
         {
             System.Type theType = TypeToLookup[type];
-            Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(type);
+            Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(theType);
             TypeDic.Remove(Name);
         }
 #endif
@@ -650,18 +655,18 @@ namespace UMA
         }
 
 
+		private void BuildStringTypes()
+		{
+			TypeFromString.Clear();
+			foreach (System.Type st in Types)
+			{
+				TypeFromString.Add(st.Name, st);
+			}
+		}
 
 #if UNITY_EDITOR
-        private void BuildStringTypes()
-        {
-            TypeFromString.Clear();
-            foreach (System.Type st in Types)
-            {
-                TypeFromString.Add(st.Name, st);
-            }
-        }
 
-        public void Clear()
+		public void Clear()
         {
             // Rebuild the tables
             Items.Clear();
