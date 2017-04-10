@@ -11,7 +11,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6ae7341e07d1b8f41aa37f5e2c910168, type: 3}
   m_Name: ToonStarDancerCollection
   m_EditorClassIdentifier: 
-  recipeString: '{"packedRecipeType":"WardrobeCollection","name":"ToonStarDancerCollection","race":"","dna":[],"characterColors":[{"name":"Skin","colors":[255,166,166,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"SharedColor1","colors":[8,225,90,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"SharedColor2","colors":[170,30,126,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"SharedColor3","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"wardrobeSet":[],"raceAnimatorController":""}'
   recipeType: WardrobeCollection
   DisplayValue: 
   compatibleRaces:
@@ -24,8 +23,8 @@ MonoBehaviour:
   Hides: []
   suppressWardrobeSlots: []
   activeWardrobeSet: []
+  recipeString: '{"packedRecipeType":"WardrobeCollection","name":"ToonStarDancerCollection","race":"","dna":[],"characterColors":[{"name":"Skin","colors":[255,166,166,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"SharedColor1","colors":[8,225,90,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"SharedColor2","colors":[170,30,126,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"SharedColor3","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"wardrobeSet":[],"raceAnimatorController":""}'
   coverImages: []
-  coverImagesIsExpanded: 0
   wardrobeCollection:
     sets:
     - targetRace: ToonFemale
