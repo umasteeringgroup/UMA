@@ -681,12 +681,12 @@ namespace UMA
 					for( int frameIndex = 0; frameIndex < blendShapes[shapeIndex].frames.Length; frameIndex++)
 					{
 						//There might be an extreme edge case where someone has the same named blendshapes on different meshes that end up on different renderers.
-						string name = blendShapes [shapeIndex].shapeName; 
+						string name = blendShapes[shapeIndex].shapeName; 
 						mesh.AddBlendShapeFrame (name,
-							blendShapes [shapeIndex].frames [frameIndex].frameWeight,
-							blendShapes [shapeIndex].frames [frameIndex].deltaVertices,
-							blendShapes [shapeIndex].frames [frameIndex].deltaNormals,
-							blendShapes [shapeIndex].frames [frameIndex].deltaTangents);
+							blendShapes[shapeIndex].frames[frameIndex].frameWeight,
+							blendShapes[shapeIndex].frames[frameIndex].deltaVertices,
+							blendShapes[shapeIndex].frames[frameIndex].deltaNormals,
+							blendShapes[shapeIndex].frames[frameIndex].deltaTangents);
 					}
 				}
 			}

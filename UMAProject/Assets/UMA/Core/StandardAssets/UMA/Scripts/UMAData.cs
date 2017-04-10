@@ -860,6 +860,11 @@ namespace UMA
 						}
                     }
 				}
+				foreach (int addedDNAHash in umaDnaConverter.Keys)
+				{
+					requiredDnas.Add(addedDNAHash);
+				}
+
 				//now remove any we no longer need
 				var keysToRemove = new List<int>();
 				foreach(var kvp in umaDna)
