@@ -19,13 +19,13 @@ MonoBehaviour:
   wardrobeRecipeThumbs:
   - race: HumanFemale
     filename: 
-    thumb: {fileID: 21300000, guid: 1daa9b20b431b164ca35fc614c9fca1d, type: 3}
+    thumb: {fileID: 21300000, guid: 03c6257f7fe1aa149852f48c96f60e17, type: 3}
   - race: HumanFemaleDCS
     filename: 
-    thumb: {fileID: 21300000, guid: 1daa9b20b431b164ca35fc614c9fca1d, type: 3}
+    thumb: {fileID: 21300000, guid: 03c6257f7fe1aa149852f48c96f60e17, type: 3}
   wardrobeSlot: Hair
   Hides: []
   suppressWardrobeSlots: []
   activeWardrobeSet: []
-  recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"UMA_fem_hair_1_005","scale":100,"copyIdx":-1,"overlays":[{"id":"MeshHairStd","colorIdx":0,"rect":[0,0,0,0]}]}],"colors":[],"fColors":[{"name":"Hair","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"","packedDna":[]}'
+  recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"UMA_fem_hair_1_005","scale":100,"copyIdx":-1,"overlays":[{"id":"MeshHairStd","colorIdx":0,"rect":[0,0,0,0],"data":[]}]}],"colors":[],"fColors":[{"name":"Hair","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"","packedDna":[]}'
   replaces: Nothing

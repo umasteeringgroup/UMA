@@ -15,13 +15,17 @@ MonoBehaviour:
   DisplayValue: Shirt 4
   compatibleRaces:
   - HumanFemaleDCS
+  - HumanFemale
   wardrobeRecipeThumbs:
   - race: HumanFemaleDCS
+    filename: 
+    thumb: {fileID: 21300000, guid: a2d8033d2ee207e4f8d529dfa3835eed, type: 3}
+  - race: HumanFemale
     filename: 
     thumb: {fileID: 21300000, guid: a2d8033d2ee207e4f8d529dfa3835eed, type: 3}
   wardrobeSlot: Chest
   Hides: []
   suppressWardrobeSlots: []
   activeWardrobeSet: []
-  recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"FemaleTshirt01","scale":100,"copyIdx":-1,"overlays":[{"id":"FemaleTshirt02","colorIdx":0,"rect":[0,0,0,0]}]}],"colors":[],"fColors":[{"name":"Shirt","colors":[170,0,0,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"","packedDna":[]}'
+  recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"FemaleTshirt01","scale":100,"copyIdx":-1,"overlays":[{"id":"FemaleTshirt02","colorIdx":0,"rect":[0,0,0,0],"data":[]}]}],"colors":[],"fColors":[{"name":"Shirt","colors":[170,0,0,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"","packedDna":[]}'
   replaces: Nothing

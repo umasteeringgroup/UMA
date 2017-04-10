@@ -15,13 +15,17 @@ MonoBehaviour:
   DisplayValue: Pants 1
   compatibleRaces:
   - HumanFemaleDCS
+  - HumanFemale
   wardrobeRecipeThumbs:
   - race: HumanFemaleDCS
+    filename: 
+    thumb: {fileID: 21300000, guid: 2a792eb9072696d43a9352984c5225f6, type: 3}
+  - race: HumanFemale
     filename: 
     thumb: {fileID: 21300000, guid: 2a792eb9072696d43a9352984c5225f6, type: 3}
   wardrobeSlot: Legs
   Hides: []
   suppressWardrobeSlots: []
   activeWardrobeSet: []
-  recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"FemaleLegs","scale":100,"copyIdx":-1,"overlays":[{"id":"FemaleJeans01","colorIdx":0,"rect":[0,0,0,0]}]}],"colors":[],"fColors":[{"name":"Pants1","colors":[165,37,232,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"","packedDna":[]}'
+  recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"FemaleLegs","scale":100,"copyIdx":-1,"overlays":[{"id":"FemaleJeans01","colorIdx":0,"rect":[0,0,0,0],"data":[]}]}],"colors":[],"fColors":[{"name":"Pants1","colors":[165,37,232,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"","packedDna":[]}'
   replaces: Nothing
