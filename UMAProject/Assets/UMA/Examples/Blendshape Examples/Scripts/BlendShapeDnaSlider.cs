@@ -9,25 +9,36 @@ namespace UMA.Examples
 {
 	public class BlendShapeDnaSlider : MonoBehaviour
 	{
-		public DynamicCharacterAvatar avatar;
+		public int dnaTypeHash = 386317366;
+		public int dnaEntryIndex = 0;
 
-		Dictionary<string, DnaSetter> dna = new Dictionary<string, DnaSetter>();
-
+		protected UMAData data;
+		protected UMADnaBase dna;
 
 		public void OnCharacterCreated(UMAData umaData)
 		{
-			if (avatar) 
+			this.data = umaData;
+			Slider slider = gameObject.GetComponent<Slider>();
+
+			dna = umaData.GetDna(dnaTypeHash);		
+			if (dna != null)
 			{
-				dna = avatar.GetDNA ();		
-				Slider slider = gameObject.GetComponent<Slider> ();
-				slider.value = dna ["MaleEarsMorph"].Value;
+				slider.value = dna.GetValue(dnaEntryIndex);
 			}
 		}
 
 		public void SetEarMorph(float value)
 		{
-			dna ["MaleEarsMorph"].Set (value);
-			avatar.ForceUpdate (true);
+			if (dna == null)
+			{
+				dna = data.GetDna(dnaTypeHash);		
+			}
+
+			if (dna != null)
+			{
+				dna.SetValue(dnaEntryIndex, value);
+				data.Dirty(true, false, false);
+			}
 		}
 	}
 }
