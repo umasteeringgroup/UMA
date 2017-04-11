@@ -196,7 +196,6 @@ GameObject:
   m_Component:
   - 4: {fileID: 290335184}
   - 114: {fileID: 290335183}
-  - 114: {fileID: 290335182}
   m_Layer: 0
   m_Name: UMAAvatar
   m_TagString: Untagged
@@ -204,21 +203,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &290335182
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 290335181}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 82d7247a34e569242ab2a23b1e26f4b2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  avatar: {fileID: 290335183}
-  converter: {fileID: 114623140960697878, guid: 6a4aa7dcf25c93345972fa3a282de793,
-    type: 2}
-  dnaAsset: {fileID: 11400000, guid: 534a08ac04adc1849943bde519c8d8f5, type: 2}
 --- !u!114 &290335183
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -239,8 +223,8 @@ MonoBehaviour:
   CharacterCreated:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 290335182}
-        m_MethodName: AddConverter
+      - m_Target: {fileID: 1162386725}
+        m_MethodName: OnCharacterCreated
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -732,8 +716,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 12ad27c86306f0b44933df3b3b03fd4f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  avatar: {fileID: 290335183}
   dnaTypeHash: 386317366
+  dnaEntryIndex: 0
 --- !u!114 &1162386726
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -908,7 +892,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1686647895}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.68, z: -1.22}
+  m_LocalPosition: {x: 0, y: 1.366, z: -0.74}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children: []
