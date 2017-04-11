@@ -201,7 +201,13 @@ namespace UMA.CharacterSystem.Editors
 			{
 				UAI.RebuildIndex();
 			}
-			if (GUILayout.Button("Clear References"))
+            if (GUILayout.Button("Add Build References"))
+            {
+                UAI.AddReferences();
+                Resources.UnloadUnusedAssets();
+            }
+
+            if (GUILayout.Button("Clear References"))
 			{
 				UAI.ClearReferences();
 				Resources.UnloadUnusedAssets();
@@ -225,12 +231,12 @@ namespace UMA.CharacterSystem.Editors
 
 			GUILayout.EndHorizontal();
 
-			bool PreSerialize = UAI.SerializeAllObjects;
-			UAI.SerializeAllObjects = EditorGUILayout.Toggle("Serialize for build (SLOW)", UAI.SerializeAllObjects);
-			if (UAI.SerializeAllObjects != PreSerialize)
-			{
-				UAI.ForceSave();
-			}
+			//bool PreSerialize = UAI.SerializeAllObjects;
+			////UAI.SerializeAllObjects = EditorGUILayout.Toggle("Serialize for build (SLOW)", UAI.SerializeAllObjects);
+			//if (UAI.SerializeAllObjects != PreSerialize)
+			//{
+			//	UAI.ForceSave();
+			//}
 			UAI.AutoUpdate = EditorGUILayout.Toggle("Process Updates", UAI.AutoUpdate);
 			Filter = EditorGUILayout.TextField("Filter Library", Filter);
 
@@ -285,6 +291,11 @@ namespace UMA.CharacterSystem.Editors
 						continue;
 
 					GUILayout.BeginHorizontal(EditorStyles.textField);
+
+                    if (ai._SerializedItem == null)
+                    {
+                        lblVal += "<Not in Build>";
+                    }
 
 					if (GUILayout.Button(lblVal /* ai._Name + " (" + ai._AssetBaseName + ")" */, EditorStyles.label))
 					{

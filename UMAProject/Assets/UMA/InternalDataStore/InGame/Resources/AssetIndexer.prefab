@@ -41,7 +41,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   AutoUpdate: 0
-  SerializeAllObjects: 1
   IndexedTypeNames: []
   SerializedItems:
   - _BaseTypeName: SlotDataAsset
@@ -465,42 +464,6 @@ MonoBehaviour:
     _Name: UMA_Toon_TORSO-Female-Guide
     _SerializedItem: {fileID: 11400000, guid: 46906d9a196de0a4c88a8fe830ab7aed, type: 2}
     _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Resources/Slots/Toon/UMA_Toon_TORSO-Female_Guide.asset
-    IsResource: 0
-    IsAssetBundle: 0
-  - _BaseTypeName: SlotDataAsset
-    _Name: PlaceholderFace
-    _SerializedItem: {fileID: 0}
-    _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Slots/PlaceholderFace.asset
-    IsResource: 0
-    IsAssetBundle: 0
-  - _BaseTypeName: SlotDataAsset
-    _Name: PlaceholderFeet
-    _SerializedItem: {fileID: 0}
-    _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Slots/PlaceholderFeet.asset
-    IsResource: 0
-    IsAssetBundle: 0
-  - _BaseTypeName: SlotDataAsset
-    _Name: PlaceholderHands
-    _SerializedItem: {fileID: 0}
-    _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Slots/PlaceholderHands.asset
-    IsResource: 0
-    IsAssetBundle: 0
-  - _BaseTypeName: SlotDataAsset
-    _Name: PlaceholderLegs
-    _SerializedItem: {fileID: 0}
-    _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Slots/PlaceholderLegs.asset
-    IsResource: 0
-    IsAssetBundle: 0
-  - _BaseTypeName: SlotDataAsset
-    _Name: PlaceholderSlot
-    _SerializedItem: {fileID: 0}
-    _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Slots/PlaceholderSlot.asset
-    IsResource: 0
-    IsAssetBundle: 0
-  - _BaseTypeName: SlotDataAsset
-    _Name: PlaceholderTorso
-    _SerializedItem: {fileID: 0}
-    _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Slots/PlaceholderTorso.asset
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: SlotDataAsset
@@ -1126,12 +1089,6 @@ MonoBehaviour:
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: OverlayDataAsset
-    _Name: PlaceholderOverlay
-    _SerializedItem: {fileID: 0}
-    _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Overlays/PlaceholderOverlay.asset
-    IsResource: 0
-    IsAssetBundle: 0
-  - _BaseTypeName: OverlayDataAsset
     _Name: ClothRobe
     _SerializedItem: {fileID: 11400000, guid: e06be47adf242924c9fff2c65c65ad5c, type: 2}
     _Path: Assets/UMA/Examples/Physics Examples/Assets/Overlays/ClothRobeOverlay.asset
@@ -1172,12 +1129,6 @@ MonoBehaviour:
     _Name: HumanMale
     _SerializedItem: {fileID: 11400000, guid: 62688b7aa02fbc544916e522fcc239c7, type: 2}
     _Path: Assets/UMA/Content/UMA_Core/HumanMale/RaceData/Human Male.asset
-    IsResource: 0
-    IsAssetBundle: 0
-  - _BaseTypeName: RaceData
-    _Name: PlaceholderRace
-    _SerializedItem: {fileID: 0}
-    _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Race/PlaceholderRace.asset
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: RaceData
@@ -1243,12 +1194,6 @@ MonoBehaviour:
     _Name: GirlBaseGuide
     _SerializedItem: {fileID: 11400000, guid: 83f5378151e5efe4990799b413b20f32, type: 2}
     _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Recipes/GirlBaseGuide.asset
-    IsResource: 0
-    IsAssetBundle: 0
-  - _BaseTypeName: UMATextRecipe
-    _Name: PlaceholderBase
-    _SerializedItem: {fileID: 0}
-    _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Recipes/PlaceholderBase.asset
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: UMATextRecipe
@@ -1663,12 +1608,6 @@ MonoBehaviour:
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: UMAWardrobeRecipe
-    _Name: PlaceholderWardrobeRecipe
-    _SerializedItem: {fileID: 0}
-    _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/Resources/Recipes/PlaceholderWardrobeRecipe.asset
-    IsResource: 0
-    IsAssetBundle: 0
-  - _BaseTypeName: UMAWardrobeRecipe
     _Name: ClothRobeRecipe
     _SerializedItem: {fileID: 11400000, guid: be7c02d6f94052348a3fc382a4ff26dc, type: 2}
     _Path: Assets/UMA/Examples/Physics Examples/Assets/Recipe/ClothRobeRecipe.asset
@@ -1728,12 +1667,6 @@ MonoBehaviour:
     _Name: PhotoboothREADME
     _SerializedItem: {fileID: 4900000, guid: 4b64c6ef32e7c8246b98f32250d36c3e, type: 3}
     _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PhotoBooth/PhotoboothREADME.txt
-    IsResource: 0
-    IsAssetBundle: 0
-  - _BaseTypeName: TextAsset
-    _Name: PlaceholderAssetsREADME
-    _SerializedItem: {fileID: 0}
-    _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/PlaceholderAssets/PlaceholderAssetsREADME.txt
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: TextAsset

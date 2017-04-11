@@ -29,7 +29,7 @@ namespace UMA
         #endregion
         #region Fields
         public bool AutoUpdate;
-        public bool SerializeAllObjects;
+        //public bool SerializeAllObjects;
 
         private Dictionary<System.Type, System.Type> TypeToLookup = new Dictionary<System.Type, System.Type>()
         {
@@ -636,7 +636,7 @@ namespace UMA
             }
         }
 
-        private void UpdateSerializedList(bool ForceItemSave)
+        private void UpdateSerializedList()// bool ForceItemSave)
         {
             SerializedItems.Clear();
             foreach (System.Type type in Types)
@@ -647,8 +647,16 @@ namespace UMA
                     // Don't add asset bundle or resource items to index. They are loaded on demand.
                     if (ai.IsAssetBundle == false && ai.IsResource == false)
                     {
-                        AssetItem ais = ai.CreateSerializedItem(ForceItemSave);
-                        SerializedItems.Add(ais);
+                        //AssetItem ais = ai.CreateSerializedItem(ForceItemSave);
+                        //if (ForceItemSave)
+                        //{
+                        //    Object o = ai.Item;
+                        // }
+                        // else
+                        // {
+                        //     ai._SerializedItem = null;
+                        // }
+                        SerializedItems.Add(ai);
                     }
                 }
             }
@@ -674,15 +682,27 @@ namespace UMA
             ForceSave();
         }
 
+        public void AddReferences()
+        {
+            // Rebuild the tables
+            UpdateSerializedList();
+            foreach (AssetItem ai in SerializedItems)
+            {
+                Object o = ai.Item;
+            }
+            UpdateSerializedDictionaryItems();
+            ForceSave();
+        }
+
         public void ClearReferences()
         {
             // Rebuild the tables
-            UpdateList();
-            foreach (AssetItem ai in Items)
+            UpdateSerializedList();
+            foreach (AssetItem ai in SerializedItems)
             {
                 ai._SerializedItem = null;
             }
-            UpdateDictionaries();
+            UpdateSerializedDictionaryItems();
             ForceSave();
         }
 
@@ -721,12 +741,12 @@ namespace UMA
 #region Serialization
         void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
-            UpdateSerializedList(this.SerializeAllObjects);
+            UpdateSerializedList();// this.SerializeAllObjects);
         }
         void ISerializationCallbackReceiver.OnAfterDeserialize()
         {
             var st = StartTimer();
-
+            #region typestuff
             List<System.Type> newTypes = new List<System.Type>()
         {
         (typeof(SlotDataAsset)),
@@ -789,6 +809,7 @@ namespace UMA
                 }
             }
             BuildStringTypes();
+            #endregion
             UpdateSerializedDictionaryItems();
             StopTimer(st, "Before Serialize");
         }
