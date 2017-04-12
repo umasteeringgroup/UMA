@@ -1187,6 +1187,9 @@ namespace UMACharacterSystem
 		//NOTE needs to be public for the editor
 		public void UpdateColors(bool triggerDirty = false)
 		{
+		    if (umaData.umaRecipe.sharedColors == null)
+		        return;
+
 			foreach (UMA.OverlayColorData ucd in umaData.umaRecipe.sharedColors)
 			{
 				if (ucd.HasName())
