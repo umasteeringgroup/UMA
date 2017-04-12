@@ -286,6 +286,7 @@ namespace UMA.CharacterSystem.Editors
 				Items.Sort();
 				foreach (AssetItem ai in Items)
 				{
+                    string lblBuild = "B-";
 					string lblVal = ai.ToString(UMAAssetIndexer.SortOrder);
 					if (HasFilter && (!lblVal.ToLower().Contains(actFilter)))
 						continue;
@@ -295,6 +296,7 @@ namespace UMA.CharacterSystem.Editors
                     if (ai._SerializedItem == null)
                     {
                         lblVal += "<Not in Build>";
+                        lblBuild = "B+";
                     }
 
 					if (GUILayout.Button(lblVal /* ai._Name + " (" + ai._AssetBaseName + ")" */, EditorStyles.label))
@@ -302,6 +304,19 @@ namespace UMA.CharacterSystem.Editors
 						EditorGUIUtility.PingObject(AssetDatabase.LoadMainAssetAtPath(ai._Path));
 					}
 
+                    if (GUILayout.Button(lblBuild,GUILayout.Width(35)))
+                    {
+                        if (ai._SerializedItem == null)
+                        {
+                            // Force the item to load.
+                            Object o = ai.Item; 
+                        }
+                        else
+                        {
+                            ai.ReleaseItem();
+                        }
+
+                    }
 					if (GUILayout.Button("-", GUILayout.Width(20.0f)))
 					{
 						DeletedDuringGUI.Add(ai);

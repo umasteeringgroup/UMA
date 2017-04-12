@@ -94,6 +94,11 @@ namespace UMA
         #region Methods (edit time)
 #if UNITY_EDITOR
 
+        public void ReleaseItem()
+        {
+            _SerializedItem = null;
+        }
+
         public string ToString(string SortOrder)
         {
             if (SortOrder == "AssetName")

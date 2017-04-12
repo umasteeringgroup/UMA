@@ -42,6 +42,7 @@ PlayerSettings:
   runInBackground: 0
   captureSingleScreen: 0
   Override IPod Music: 0
+  muteOtherAudioSources: 0
   Prepare IOS For Recording: 0
   submitAnalytics: 1
   usePlayerLog: 1
@@ -161,6 +162,9 @@ PlayerSettings:
   iOSLaunchScreeniPadCustomXibPath: 
   iOSDeviceRequirements: []
   appleDeveloperTeamID: 
+  iOSManualSigningProvisioningProfileID: 
+  tvOSManualSigningProvisioningProfileID: 
+  appleEnableAutomaticSigning: 0
   AndroidTargetDevice: 0
   AndroidSplashScreenScale: 0
   androidSplashScreen: {fileID: 0}

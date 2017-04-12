@@ -1,26 +1,15 @@
 using UnityEngine;
 using System.Collections.Generic;
-using UMA;
 using UMA.CharacterSystem;
 
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.Animations;
-#if UNITY_5_6_OR_NEWER
-using UnityEditor.Build;
 #endif
-#endif
+
 namespace UMA
 {
-#if UNITY_EDITOR
-	[InitializeOnLoad]
-#endif
-	public class UMAAssetIndexer : MonoBehaviour, ISerializationCallbackReceiver
-#if UNITY_EDITOR    
-#if UNITY_5_6_OR_NEWER
-     , IPreprocessBuild
-#endif
-#endif
+    public class UMAAssetIndexer : MonoBehaviour, ISerializationCallbackReceiver
     {
         #region constants and static strings
         public static string SortOrder = "Name";
@@ -141,7 +130,7 @@ namespace UMA
 
             // Build a dictionary of the items by path.
             Dictionary<string, AssetItem> ItemsByPath = new Dictionary<string, AssetItem>();
-            UpdateList();
+            UpdateSerializedList();
             foreach (AssetItem ai in Items)
             {
                 if (ItemsByPath.ContainsKey(ai._Path))
@@ -185,7 +174,7 @@ namespace UMA
                 Items.Add(ai);
             }
 
-            UpdateDictionaries();
+            UpdateSerializedDictionaryItems();
             if (changed)
             {
                 ForceSave();
@@ -559,30 +548,8 @@ namespace UMA
 #region Maintenance
 
         /// <summary>
-        /// Updates the dictionaries after deserialization.
-        /// </summary>
-        private void UpdateDictionaries(bool SkipBundleCheck = false)
-        {
-            foreach (System.Type type in Types)
-            {
-                CreateLookupDictionary(type);
-            }
-            foreach (AssetItem ai in Items)
-            {
-                // We null things out when we want to delete them. This prevents it from going back into 
-                // the dictionary when rebuilt.
-                if (ai == null)
-                    continue;
-                // Make sure Unity hasn't lost a reference to it somehow.
-                if (ai.Item != null)
-                {
-                    AddAsset(ai._Type, ai._Name, ai._Path, ai.Item, true);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Updates the dictionaries after deserialization.
+        /// Updates the dictionaries from this list.
+        /// Used when restoring items after modification, or after deserialization.
         /// </summary>
         private void UpdateSerializedDictionaryItems()
         {
@@ -617,26 +584,10 @@ namespace UMA
         }
 
         /// <summary>
-        /// Updates the List so it can be serialized.
+        /// Updates the list so all items can be processed at once, or for 
+        /// serialization.
         /// </summary>
-        private void UpdateList()
-        {
-            Items.Clear();
-            foreach (System.Type type in Types)
-            {
-                Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(type);
-                foreach (AssetItem ai in TypeDic.Values)
-                {
-                    // Don't add asset bundle or resource items to index. They are loaded on demand.
-                    if (ai.IsAssetBundle == false && ai.IsResource == false)
-                    {
-                        Items.Add(ai);
-                    }
-                }
-            }
-        }
-
-        private void UpdateSerializedList()// bool ForceItemSave)
+        private void UpdateSerializedList()
         {
             SerializedItems.Clear();
             foreach (System.Type type in Types)
@@ -647,22 +598,15 @@ namespace UMA
                     // Don't add asset bundle or resource items to index. They are loaded on demand.
                     if (ai.IsAssetBundle == false && ai.IsResource == false)
                     {
-                        //AssetItem ais = ai.CreateSerializedItem(ForceItemSave);
-                        //if (ForceItemSave)
-                        //{
-                        //    Object o = ai.Item;
-                        // }
-                        // else
-                        // {
-                        //     ai._SerializedItem = null;
-                        // }
                         SerializedItems.Add(ai);
                     }
                 }
             }
         }
 
-
+        /// <summary>
+        /// Builds a list of types and a string to look them up.
+        /// </summary>
 		private void BuildStringTypes()
 		{
 			TypeFromString.Clear();
@@ -674,14 +618,24 @@ namespace UMA
 
 #if UNITY_EDITOR
 
+        /// <summary>
+        /// Clears the index
+        /// </summary>
 		public void Clear()
         {
             // Rebuild the tables
+            ClearReferences();
             Items.Clear();
-            UpdateDictionaries();
+            UpdateSerializedDictionaryItems();
             ForceSave();
         }
 
+        /// <summary>
+        /// Adds references to all items by accessing the item property.
+        /// This forces Unity to load the item and return a reference to it.
+        /// When building, Unity needs the references to the items because we 
+        /// cannot demand load them without the AssetDatabase.
+        /// </summary>
         public void AddReferences()
         {
             // Rebuild the tables
@@ -694,13 +648,18 @@ namespace UMA
             ForceSave();
         }
 
+        /// <summary>
+        /// This releases items by dereferencing them so they can be 
+        /// picked up by garbage collection.
+        /// This also makes working with the index much faster.
+        /// </summary>
         public void ClearReferences()
         {
             // Rebuild the tables
             UpdateSerializedList();
             foreach (AssetItem ai in SerializedItems)
             {
-                ai._SerializedItem = null;
+                ai.ReleaseItem();
             }
             UpdateSerializedDictionaryItems();
             ForceSave();
@@ -728,12 +687,12 @@ namespace UMA
         /// </summary>
         public void RebuildIndex()
         {
-            UpdateList();
+            UpdateSerializedList();
             foreach (AssetItem ai in Items)
             {
                 ai._Name = ai.EvilName;
             }
-            UpdateDictionaries();
+            UpdateSerializedDictionaryItems();
         }
 
 #endregion
@@ -759,7 +718,7 @@ namespace UMA
 #if UNITY_EDITOR
         (typeof(AnimatorController)),
 #endif
-            (typeof(DynamicUMADnaAsset)),
+        (typeof(DynamicUMADnaAsset)),
         (typeof(TextAsset))
         };
 
@@ -813,25 +772,6 @@ namespace UMA
             UpdateSerializedDictionaryItems();
             StopTimer(st, "Before Serialize");
         }
-#if UNITY_EDITOR
-#if UNITY_5_6_OR_NEWER
-    int IOrderedCallback.callbackOrder
-    {
-        get
-        {
-            return 0;
-        }
-    }
-
-    void IPreprocessBuild.OnPreprocessBuild(BuildTarget target, string path)
-    {
-        bool wasSet = SerializeAllObjects;
-        SerializeAllObjects = true;
-        ForceSave();
-        SerializeAllObjects = wasSet;
-    }
-#endif
-#endif
         #endregion
     }
 }
