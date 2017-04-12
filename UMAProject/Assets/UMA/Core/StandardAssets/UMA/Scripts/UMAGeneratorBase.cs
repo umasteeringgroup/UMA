@@ -144,9 +144,9 @@ namespace UMA
 					var oldParent = umaTransform.parent;
 					var originalRot = umaTransform.localRotation;
 					var originalPos = umaTransform.localPosition;
-                    var animator = umaData.animator;
+					var animator = umaData.animator;
 
-                    umaTransform.SetParent(null, false);
+					umaTransform.SetParent(null, false);
 					umaTransform.localRotation = Quaternion.identity;
 					umaTransform.localPosition = Vector3.zero;
 					
@@ -159,14 +159,21 @@ namespace UMA
 						animator.runtimeAnimatorController = umaData.animationController;
 						umaData.animator = animator;
 					}
-					else
+					// the controller is the same so state can be saved and restored
+					else if (animator.runtimeAnimatorController == umaData.animationController)
 					{
 						AnimatorState snapshot = new AnimatorState();
 						snapshot.SaveAnimatorState(animator);
 						Object.Destroy(animator.avatar);
 						SetAvatar(umaData, animator);
-						if(animator.runtimeAnimatorController != null)
+						if (animator.runtimeAnimatorController != null)
 							snapshot.RestoreAnimatorState(animator);
+					}
+					// controller is different and needs updating
+					else
+					{
+						SetAvatar(umaData, animator);
+						animator.runtimeAnimatorController = umaData.animationController;
 					}
 
 					umaTransform.SetParent(oldParent, false);
