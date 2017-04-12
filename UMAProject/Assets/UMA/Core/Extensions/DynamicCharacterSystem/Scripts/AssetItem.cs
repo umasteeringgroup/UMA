@@ -73,6 +73,10 @@ namespace UMA
             {
                 Object o = Item;
 
+                if (!o)
+                {
+                    return "<Not Found!>";
+                }
                 if (o is SlotDataAsset)
                 {
                     SlotDataAsset sd = o as SlotDataAsset;
@@ -87,12 +91,18 @@ namespace UMA
                 {
                     return (o as RaceData).raceName;
                 }
+
                 return o.name;
             }
         }
         #endregion
         #region Methods (edit time)
 #if UNITY_EDITOR
+
+        public void ReleaseItem()
+        {
+            _SerializedItem = null;
+        }
 
         public string ToString(string SortOrder)
         {
