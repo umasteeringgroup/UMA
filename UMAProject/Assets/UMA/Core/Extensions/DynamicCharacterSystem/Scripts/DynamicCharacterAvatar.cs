@@ -362,8 +362,14 @@ namespace UMA.CharacterSystem
 			{
 				umaData.ignoreBlendShapes = !loadBlendShapes;
 
-				if (umaData.rendererCount > 0)
-					umaData.GetRenderer(0).enabled = !hide;
+                if (umaData.rendererCount > 0)
+                {
+                    SkinnedMeshRenderer smr = umaData.GetRenderer(0);
+                    if (smr != null && smr.enabled == hide)
+                    {
+                        umaData.GetRenderer(0).enabled = !hide;
+                    }
+                }
 			}
 			//This hardly ever happens now since the changeRace/LoadFromString/StartCO methods all yield themselves until asset bundles have been downloaded
 			if (requiredAssetsToCheck.Count > 0 && !waitForBundles && BuildCharacterEnabled)

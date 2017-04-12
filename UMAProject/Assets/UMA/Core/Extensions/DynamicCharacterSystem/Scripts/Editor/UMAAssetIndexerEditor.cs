@@ -18,6 +18,7 @@ namespace UMA.CharacterSystem.Editors
 		List<AssetItem> DeletedDuringGUI = new List<AssetItem>();
 		List<System.Type> RemovedTypes = new List<System.Type>();
 		public string Filter = "";
+        public bool IncludeText;
 
 		public UMAMaterial SelectedMaterial = null;
 
@@ -206,7 +207,20 @@ namespace UMA.CharacterSystem.Editors
                 UAI.AddReferences();
                 Resources.UnloadUnusedAssets();
             }
+            GUILayout.EndHorizontal();
 
+
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Rebuild From Project (Adds Everything)"))
+            {
+                UAI.Clear();
+                UAI.AddEverything(IncludeText);
+                Resources.UnloadUnusedAssets();
+            }
+            IncludeText = GUILayout.Toggle(IncludeText, "Include TextAssets");
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
             if (GUILayout.Button("Clear References"))
 			{
 				UAI.ClearReferences();

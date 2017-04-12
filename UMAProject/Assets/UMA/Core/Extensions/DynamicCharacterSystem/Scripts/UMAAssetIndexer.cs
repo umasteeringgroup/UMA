@@ -18,7 +18,6 @@ namespace UMA
         #endregion
         #region Fields
         public bool AutoUpdate;
-        //public bool SerializeAllObjects;
 
         private Dictionary<System.Type, System.Type> TypeToLookup = new Dictionary<System.Type, System.Type>()
         {
@@ -39,8 +38,6 @@ namespace UMA
 
         // The names of the fully qualified types.
         public List<string> IndexedTypeNames = new List<string>();
-        // These list is used so Unity will serialize the data
-        private List<AssetItem> Items = new List<AssetItem>();
         // These list is used so Unity will serialize the data
         public List<AssetItem> SerializedItems = new List<AssetItem>();
         // This is really where we keep the data.
@@ -131,7 +128,7 @@ namespace UMA
             // Build a dictionary of the items by path.
             Dictionary<string, AssetItem> ItemsByPath = new Dictionary<string, AssetItem>();
             UpdateSerializedList();
-            foreach (AssetItem ai in Items)
+            foreach (AssetItem ai in SerializedItems)
             {
                 if (ItemsByPath.ContainsKey(ai._Path))
                 {
@@ -164,14 +161,14 @@ namespace UMA
             }
 
             // Rebuild the tables
-            Items.Clear();
+            SerializedItems.Clear();
             foreach (AssetItem ai in ItemsByPath.Values)
             {
                 // We null things out when we want to delete them. This prevents it from going back into 
                 // the dictionary when rebuilt.
                 if (ai == null)
                     continue;
-                Items.Add(ai);
+                SerializedItems.Add(ai);
             }
 
             UpdateSerializedDictionaryItems();
@@ -618,16 +615,46 @@ namespace UMA
 
 #if UNITY_EDITOR
 
+        public void AddEverything(bool includeText)
+        {
+            Clear(false);
+
+            foreach(string s in TypeFromString.Keys)
+            {
+                System.Type CurrentType = TypeFromString[s];
+                if (!includeText)
+                {
+                    if (CurrentType == typeof(TextAsset))
+                    {
+                        continue;
+                    }
+                }
+                if (s != "AnimatorController")
+                {
+                    string[] guids = AssetDatabase.FindAssets("t:" + s);
+                    foreach (string guid in guids)
+                    {
+                        string Path = AssetDatabase.GUIDToAssetPath(guid);
+                        Object o = AssetDatabase.LoadAssetAtPath(Path, CurrentType);
+                        AssetItem ai = new AssetItem(CurrentType, o);
+                        AddAssetItem(ai);
+                    }
+                }
+            }
+            ForceSave();
+        }
+
         /// <summary>
         /// Clears the index
         /// </summary>
-		public void Clear()
+		public void Clear(bool forceSave = true)
         {
             // Rebuild the tables
             ClearReferences();
-            Items.Clear();
+            SerializedItems.Clear();
             UpdateSerializedDictionaryItems();
-            ForceSave();
+            if (forceSave)
+               ForceSave();
         }
 
         /// <summary>
@@ -688,7 +715,7 @@ namespace UMA
         public void RebuildIndex()
         {
             UpdateSerializedList();
-            foreach (AssetItem ai in Items)
+            foreach (AssetItem ai in SerializedItems)
             {
                 ai._Name = ai.EvilName;
             }

@@ -191,6 +191,18 @@ namespace UMA.CharacterSystem.Examples
             go.SetActive(true);
         }
 
+        public void ChangeSex()
+        {
+            if (Avatar.activeRace.name == "HumanMale")
+            {
+                Avatar.ChangeRace("HumanFemale");
+            }
+            else
+            {
+                Avatar.ChangeRace("HumanMale");
+            }
+        }
+
         public void CenterCam()
         {
             Orbiter.Reset();
