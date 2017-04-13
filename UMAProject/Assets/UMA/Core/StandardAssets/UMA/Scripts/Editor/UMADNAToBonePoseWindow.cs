@@ -8,6 +8,7 @@
 
 using UnityEngine;
 using UnityEditor;
+using UMA;
 
 namespace UMA.PoseTools
 {
@@ -176,25 +177,24 @@ namespace UMA.PoseTools
 				Destroy(tempAvatarPreDNA);
 				Destroy(tempAvatarPostDNA);
 
-				// Build a prefab DNA Converter and populate it with the poses
-				string prefabName = "Converter Prefab";
-				string prefabPath = AssetDatabase.GenerateUniqueAssetPath(folderPath + "/" + prefabName + ".prefab");
+				// Build a prefab DNA Converter and populate it with the morph set
+				string assetName = "Morph Set";
+				string assetPath = AssetDatabase.GenerateUniqueAssetPath(folderPath + "/" + assetName + ".asset");
 
-				GameObject tempConverterPrefab = new GameObject(prefabName);
-				BonePoseDnaConverterBehaviour converter = tempConverterPrefab.AddComponent<BonePoseDnaConverterBehaviour>();
-				SerializedObject serializedConverter = new SerializedObject(converter);
+				MorphSetDnaAsset asset = CustomAssetUtility.CreateAsset<MorphSetDnaAsset>(assetPath, false);
+				SerializedObject serializedAsset = new SerializedObject(asset);
 
-				SerializedProperty startingPose = serializedConverter.FindProperty("startingPose");
+				SerializedProperty startingPose = serializedAsset.FindProperty("startingPose");
 				startingPose.objectReferenceValue = AssetDatabase.LoadAssetAtPath<UMABonePose>(folderPath + "/" + startingPoseName + ".asset");
 
-				SerializedProperty posePairArray = serializedConverter.FindProperty("dnaPoses");
-				posePairArray.ClearArray();
+				SerializedProperty morphSetArray = serializedAsset.FindProperty("dnaMorphs");
+				morphSetArray.ClearArray();
 				for (int i = 0; i < activeDNACount; i++)
 				{
 					string posePairName = activeDNA.Names[i];
 
-					posePairArray.InsertArrayElementAtIndex(i);
-					SerializedProperty posePair = posePairArray.GetArrayElementAtIndex(i);
+					morphSetArray.InsertArrayElementAtIndex(i);
+					SerializedProperty posePair = morphSetArray.GetArrayElementAtIndex(i);
 
 					SerializedProperty dnaEntryName = posePair.FindPropertyRelative("dnaEntryName");
 					dnaEntryName.stringValue = posePairName;
@@ -203,6 +203,18 @@ namespace UMA.PoseTools
 					SerializedProperty onePose = posePair.FindPropertyRelative("poseOne");
 					onePose.objectReferenceValue = AssetDatabase.LoadAssetAtPath<UMABonePose>(folderPath + "/" + posePairName + "_1.asset");
 				}
+				serializedAsset.ApplyModifiedPropertiesWithoutUndo();
+					
+				// Build a prefab DNA Converter and populate it with the morph set
+				string prefabName = "Converter Prefab";
+				string prefabPath = AssetDatabase.GenerateUniqueAssetPath(folderPath + "/" + prefabName + ".prefab");
+
+				GameObject tempConverterPrefab = new GameObject(prefabName);
+				MorphSetDnaConverterBehaviour converter = tempConverterPrefab.AddComponent<MorphSetDnaConverterBehaviour>();
+				SerializedObject serializedConverter = new SerializedObject(converter);
+
+				SerializedProperty morphSet = serializedAsset.FindProperty("morphSet");
+				morphSet.objectReferenceValue = AssetDatabase.LoadAssetAtPath<MorphSetDnaAsset>(assetPath);
 
 				serializedConverter.ApplyModifiedPropertiesWithoutUndo();
 				PrefabUtility.CreatePrefab(prefabPath, tempConverterPrefab);

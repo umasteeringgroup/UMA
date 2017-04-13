@@ -16,7 +16,7 @@ MonoBehaviour:
   overlayScale: 1
   animatedBoneNames: []
   animatedBoneHashes: 
-  slotDNA: {fileID: 114623140960697878, guid: 6a4aa7dcf25c93345972fa3a282de793, type: 2}
+  slotDNA: {fileID: 11429166, guid: 6a4aa7dcf25c93345972fa3a282de793, type: 2}
   meshData:
     bindPoses:
     - e00: -0.26163986
