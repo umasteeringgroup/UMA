@@ -57,11 +57,6 @@ namespace UMA.Examples
                 {
                     morphWeight = (dnaValue - 0.5f) * 2f;
                 }
-                else if (dnaValue < 0.49f)
-                {
-                    morphWeight = (0.5f - dnaValue) * 2f;
-                }
-
                 data.blendShapeSettings.bakeBlendShapes.Add("MaleElvenEars", morphWeight );
                 data.Dirty(true, true, true);
             }
