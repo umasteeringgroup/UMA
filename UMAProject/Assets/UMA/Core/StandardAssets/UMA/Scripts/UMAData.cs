@@ -1524,6 +1524,200 @@ namespace UMA
 			Debug.LogError ("GetBlendShapeName: no blendshape at index " + shapeIndex + "!");
 			return "";
 		}
+
+		/// <summary>
+		/// Bakes the blend shape data into the mesh
+		/// </summary>
+		/// <param name="shapes">(Optional) array of the names of shapes to be baked (default = all).</param>
+		public void BakeBlendShapes(string[] shapes = null)
+		{
+			foreach (SkinnedMeshRenderer renderer in renderers)
+			{
+				int shapeCount = renderer.sharedMesh.blendShapeCount;
+				int bakeCount = 0;
+				bool[] bakeShape = new bool[shapeCount];
+				string[] unbakedNames = new string[shapeCount];
+				float[][] unbakedWeights = new float[shapeCount][];
+				Vector3[][][] unbakedVertices = new Vector3[shapeCount][][];
+				Vector3[][][] unbakedNormals = new Vector3[shapeCount][][];
+				Vector3[][][] unbakedTangents = new Vector3[shapeCount][][];
+
+				for (int i = 0; i < shapeCount; i++)
+				{
+					if (shapes != null)
+					{
+						string shapeName = renderer.sharedMesh.GetBlendShapeName(i);
+						int nameIndex = Array.IndexOf<string>(shapes, shapeName);
+						if (nameIndex >= 0)
+						{
+							bakeShape[i] = true;
+							bakeCount++;
+						}
+						else
+						{
+							bakeShape[i] = false;
+						}
+					}
+					else
+					{
+						bakeShape[i] = true;
+						bakeCount++;
+					}
+				}
+				if (bakeCount == 0)
+					return;
+
+				for (int i = 0; i < shapeCount; i++)
+				{
+					float shapeWeight = renderer.GetBlendShapeWeight(i);
+
+					if (bakeShape[i])
+					{
+						BakeBlendShape(renderer, i, shapeWeight);
+					}
+					else
+					{
+						unbakedNames[i] = renderer.sharedMesh.GetBlendShapeName(i);
+						int frameCount = renderer.sharedMesh.GetBlendShapeFrameCount(i);
+						unbakedVertices[i] = new Vector3[frameCount][];
+						unbakedNormals[i] = new Vector3[frameCount][];
+						unbakedTangents[i] = new Vector3[frameCount][];
+						unbakedWeights[i] = new float[frameCount];
+						for (int j = 0; j < frameCount; j++)
+						{
+							unbakedWeights[i][j] = renderer.sharedMesh.GetBlendShapeFrameWeight(i, j);
+							unbakedVertices[i][j] = new Vector3[renderer.sharedMesh.vertexCount];
+							unbakedNormals[i][j] = new Vector3[renderer.sharedMesh.vertexCount];
+							unbakedTangents[i][j] = new Vector3[renderer.sharedMesh.vertexCount];
+							renderer.sharedMesh.GetBlendShapeFrameVertices(i, j,
+								unbakedVertices[i][j],
+								unbakedNormals[i][j],
+								unbakedTangents[i][j]
+							);
+						}
+					}
+				}
+
+				renderer.sharedMesh.ClearBlendShapes();
+
+				for (int i = 0; i < shapeCount; i++)
+				{
+					if (!bakeShape[i])
+					{
+						int frameCount = unbakedWeights[i].Length;
+						for (int j = 0; j < frameCount; j++)
+						{
+							renderer.sharedMesh.AddBlendShapeFrame(
+								unbakedNames[i],
+								unbakedWeights[i][j],
+								unbakedVertices[i][j],
+								unbakedNormals[i][j],
+								unbakedTangents[i][j]);
+						}
+					}
+				}
+			}
+		}
+
+		/// <summary>
+		/// Bakes the blend shape data into a mesh
+		/// WARNING: Does NOT remove the blend shape.
+		/// </summary>
+		/// <param name="renderer">Renderer of mesh to be baked.</param>
+		/// <param name="index">Index of blend shape to apply.</param>
+		/// <param name="value">Weight at which to apply blend shape.</param>
+		public void BakeBlendShape(SkinnedMeshRenderer renderer, int index, float value)
+		{
+			if (renderer == null)
+				return;
+			if (renderer.sharedMesh == null)
+				return;
+			if (index >= renderer.sharedMesh.blendShapeCount)
+				return;
+
+			float weight = value;
+
+			Vector3[] vertices = renderer.sharedMesh.vertices;
+			Vector3[] normals = renderer.sharedMesh.normals;
+			Vector4[] tangents = renderer.sharedMesh.tangents;
+
+			Vector3[] deltaVertices = new Vector3[vertices.Length];
+			Vector3[] deltaNormals = null;
+			if (normals != null) deltaNormals = new Vector3[normals.Length];
+			Vector3[] deltaTangents = null;
+			if (tangents != null) deltaTangents = new Vector3[tangents.Length];
+
+			int frame = 0;
+			int frameCount = renderer.sharedMesh.GetBlendShapeFrameCount(index);
+			float[] frameWeights = new float[frameCount];
+			for (int j = 0; j < frameCount; j++)
+			{
+				frameWeights[j] = renderer.sharedMesh.GetBlendShapeFrameWeight(index, j);
+			}
+
+			if (frameCount > 0)
+			{
+				while ((frame < frameCount) && (weight > frameWeights[frame]))
+					frame++;
+
+				if (frame >= frameCount)
+				{
+					// Past the end of the frames, so apply at >100%
+					frame--;
+					weight = weight / frameWeights[frame];
+				}
+				else if (frame > 0)
+				{
+					// Apply previous frame at full strength
+					renderer.sharedMesh.GetBlendShapeFrameVertices(index, frame - 1, deltaVertices, deltaNormals, deltaTangents);
+					for (int i = 0; i < vertices.Length; i++)
+					{
+						vertices[i] += deltaVertices[i];
+					}
+					if (deltaNormals != null)
+					{
+						for (int i = 0; i < normals.Length; i++)
+						{
+							normals[i] += deltaNormals[i];
+						}
+					}
+					if (deltaTangents != null)
+					{
+						for (int i = 0; i < tangents.Length; i++)
+						{
+							tangents[i] += (Vector4)deltaTangents[i];
+						}
+					}
+
+					// Adjust the weight
+					weight -= frameWeights[frame - 1];
+					weight = weight / (frameWeights[frame] - frameWeights[frame - 1]);
+				}
+
+				// Apply frame at adjusted weight
+				renderer.sharedMesh.GetBlendShapeFrameVertices(index, frame, deltaVertices, deltaNormals, deltaTangents);
+				for (int i = 0; i < vertices.Length; i++)
+				{
+					vertices[i] += deltaVertices[i] * weight;
+				}
+				if (deltaNormals != null)
+				{
+					for (int i = 0; i < normals.Length; i++)
+					{
+						normals[i] += deltaNormals[i] * weight;
+					}
+				}
+				if (deltaTangents != null)
+				{
+					for (int i = 0; i < tangents.Length; i++)
+					{
+						tangents[i] += (Vector4)deltaTangents[i] * weight;
+					}
+				}
+			}
+
+		}
+
 		#endregion
 	}
 }
