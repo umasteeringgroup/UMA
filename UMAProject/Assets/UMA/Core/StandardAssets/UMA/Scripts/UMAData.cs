@@ -1536,7 +1536,9 @@ namespace UMA
 			Debug.LogError ("GetBlendShapeName: no blendshape at index " + shapeIndex + "!");
 			return "";
 		}
-
+			
+// These don't actually work because ClearBlendShapes() on an active mesh crashes
+/*
 		/// <summary>
 		/// Bakes the blend shape data into the mesh
 		/// </summary>
@@ -1572,7 +1574,7 @@ namespace UMA
 					}
 					else
 					{
-                        //No shape Names supplied so let's bake them all!
+                        // No shape Names supplied so let's bake them all!
 						bakeShape[i] = true;
 						bakeCount++;
 					}
@@ -1648,17 +1650,14 @@ namespace UMA
 			if (index >= renderer.sharedMesh.blendShapeCount)
 				return;
 
-			float weight = value;
-
+			if (value <= 0f)
+				return;
+			
 			Vector3[] vertices = renderer.sharedMesh.vertices;
 			Vector3[] normals = renderer.sharedMesh.normals;
+			if (normals == null) normals = new Vector3[0];
 			Vector4[] tangents = renderer.sharedMesh.tangents;
-
-			Vector3[] deltaVertices = new Vector3[vertices.Length];
-			Vector3[] deltaNormals = null;
-			if (normals != null) deltaNormals = new Vector3[normals.Length];
-			Vector3[] deltaTangents = null;
-			if (tangents != null) deltaTangents = new Vector3[tangents.Length];
+			if (tangents == null) tangents = new Vector4[0];
 
 			int frame = 0;
 			int frameCount = renderer.sharedMesh.GetBlendShapeFrameCount(index);
@@ -1668,68 +1667,80 @@ namespace UMA
 				frameWeights[j] = renderer.sharedMesh.GetBlendShapeFrameWeight(index, j);
 			}
 
+			bool lerp = false;
 			if (frameCount > 0)
 			{
-				while ((frame < frameCount) && (weight > frameWeights[frame]))
+				while ((frame < frameCount) && (value > frameWeights[frame]))
 					frame++;
 
 				if (frame >= frameCount)
 				{
 					// Past the end of the frames, so apply at >100%
 					frame--;
-					weight = weight / frameWeights[frame];
 				}
 				else if (frame > 0)
 				{
-					// Apply previous frame at full strength
-					renderer.sharedMesh.GetBlendShapeFrameVertices(index, frame - 1, deltaVertices, deltaNormals, deltaTangents);
-					for (int i = 0; i < vertices.Length; i++)
-					{
-						vertices[i] += deltaVertices[i];
-					}
-					if (deltaNormals != null)
-					{
-						for (int i = 0; i < normals.Length; i++)
-						{
-							normals[i] += deltaNormals[i];
-						}
-					}
-					if (deltaTangents != null)
-					{
-						for (int i = 0; i < tangents.Length; i++)
-						{
-							tangents[i] += (Vector4)deltaTangents[i];
-						}
-					}
-
-					// Adjust the weight
-					weight -= frameWeights[frame - 1];
-					weight = weight / (frameWeights[frame] - frameWeights[frame - 1]);
+					lerp = true;
 				}
+			}
 
+			if (lerp)
+			{
+				// Lerp between frames
+				float lerpWeight = (value - frameWeights[frame - 1]) / (frameWeights[frame] - frameWeights[frame - 1]);
+
+				Vector3[] deltaVerticesLow = new Vector3[vertices.Length];
+				Vector3[] deltaNormalsLow = new Vector3[normals.Length];
+				Vector3[] deltaTangentsLow = new Vector3[tangents.Length];
+				renderer.sharedMesh.GetBlendShapeFrameVertices(index, frame - 1, deltaVerticesLow, deltaNormalsLow, deltaTangentsLow);
+
+				Vector3[] deltaVerticesHigh = new Vector3[vertices.Length];
+				Vector3[] deltaNormalsHigh = new Vector3[normals.Length];
+				Vector3[] deltaTangentsHigh = new Vector3[tangents.Length];
+				renderer.sharedMesh.GetBlendShapeFrameVertices(index, frame, deltaVerticesHigh, deltaNormalsHigh, deltaTangentsHigh);
+
+				for (int i = 0; i < vertices.Length; i++)
+				{
+					vertices[i] += Vector3.Lerp(deltaVerticesLow[i], deltaVerticesHigh[i], lerpWeight);
+				}
+				for (int i = 0; i < normals.Length; i++)
+				{
+					normals[i] += Vector3.Lerp(deltaNormalsLow[i], deltaNormalsHigh[i], lerpWeight);
+				}
+				for (int i = 0; i < tangents.Length; i++)
+				{
+					tangents[i] += (Vector4)Vector3.Lerp(deltaTangentsLow[i], deltaTangentsHigh[i], lerpWeight);
+				}
+			}
+			else
+			{
 				// Apply frame at adjusted weight
+				float weight = value / frameWeights[frame];
+
+				Vector3[] deltaVertices = new Vector3[vertices.Length];
+				Vector3[] deltaNormals = new Vector3[normals.Length];
+				Vector3[] deltaTangents = new Vector3[tangents.Length];
 				renderer.sharedMesh.GetBlendShapeFrameVertices(index, frame, deltaVertices, deltaNormals, deltaTangents);
+
 				for (int i = 0; i < vertices.Length; i++)
 				{
 					vertices[i] += deltaVertices[i] * weight;
 				}
-				if (deltaNormals != null)
+				for (int i = 0; i < normals.Length; i++)
 				{
-					for (int i = 0; i < normals.Length; i++)
-					{
-						normals[i] += deltaNormals[i] * weight;
-					}
+					normals[i] += deltaNormals[i] * weight;
 				}
-				if (deltaTangents != null)
+				for (int i = 0; i < tangents.Length; i++)
 				{
-					for (int i = 0; i < tangents.Length; i++)
-					{
-						tangents[i] += (Vector4)deltaTangents[i] * weight;
-					}
+					tangents[i] += (Vector4)deltaTangents[i] * weight;
 				}
 			}
-		}
 
+			renderer.sharedMesh.vertices = vertices;
+			renderer.sharedMesh.normals = normals;
+			renderer.sharedMesh.tangents = tangents;
+		}
+*/
 		#endregion
 	}
 }

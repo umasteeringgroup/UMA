@@ -207,60 +207,78 @@ namespace UMA
                             #region BlendShape Baking
                             if(blendShapeSettings.bakeBlendShapes != null || blendShapeSettings.bakeBlendShapes.Count == 0)
                             {
-                                //If there are names in the bakeBlendShape dictionary and we find them in the meshData blendshape list, then lets bake them instead of adding them.
+                                // If there are names in the bakeBlendShape dictionary and we find them in the meshData blendshape list, then lets bake them instead of adding them.
                                 UMABlendShape currentShape = source.meshData.blendShapes[shapeIndex];
                                 if( blendShapeSettings.bakeBlendShapes.ContainsKey(currentShape.shapeName))
                                 {
                                     float weight = blendShapeSettings.bakeBlendShapes[currentShape.shapeName] * 100.0f;
-                                    Mathf.Clamp( weight, 0.0f, 100.0f );
+									if (weight <= 0f) continue; // Baking in nothing, so skip it entirely
 
-                                    //Let's find the frame this weight is in
+                                    // Let's find the frame this weight is in
                                     int frameIndex;
-                                    for( frameIndex = 0; frameIndex < currentShape.frames.Length; frameIndex++ )
+									int prevIndex;
+                                    for (frameIndex = 0; frameIndex < currentShape.frames.Length; frameIndex++)
                                     {
                                         if (currentShape.frames[frameIndex].frameWeight >= weight)
                                             break;
                                     }
 
-                                    //Let's calculate the weight for the frame we're in
-                                    float adjustedWeight = (weight / currentShape.frames[frameIndex].frameWeight);
-                                    if (frameIndex <= 0)
-                                        adjustedWeight = (weight / currentShape.frames[frameIndex].frameWeight);
-                                    else
-                                    {
-                                        float previousWeight = currentShape.frames[frameIndex - 1].frameWeight;
-                                        adjustedWeight = ((weight - previousWeight) / (currentShape.frames[frameIndex].frameWeight - previousWeight));
-                                    }
+									// Let's calculate the weight for the frame we're in
+									float frameWeight = 1f;
+									float prevWeight = 0f;
+									bool doLerp = false;
+									// Weight is higher than the last frame, shape is over 100%
+									if (frameIndex >= currentShape.frames.Length)
+									{
+										frameIndex = currentShape.frames.Length - 1;
+										frameWeight = (weight / currentShape.frames[frameIndex].frameWeight);
+									}
+									else if (frameIndex > 0)
+									{
+										doLerp = true;
+										prevWeight = currentShape.frames[frameIndex - 1].frameWeight;
+										frameWeight = ((weight - prevWeight) / (currentShape.frames[frameIndex].frameWeight - prevWeight));
+										prevWeight = 1f - frameWeight;
+									}
+									else
+									{
+										frameWeight = (weight / currentShape.frames[frameIndex].frameWeight);
+									}
+									prevIndex = frameIndex - 1;
 
-                                    //The blendshape frames lerp between the deltas of two adjacent frames.
-                                    for (int bakeIndex = 0; bakeIndex < currentShape.frames[frameIndex].deltaVertices.Length; bakeIndex++)
+                                    // The blend shape frames lerp between the deltas of two adjacent frames.
+									int vertIndex = vertexIndex;
+									for (int bakeIndex = 0; bakeIndex < currentShape.frames[frameIndex].deltaVertices.Length; bakeIndex++, vertIndex++)
                                     {
-                                        //Add the current frame's deltas
-                                        vertices[vertexIndex + bakeIndex] += currentShape.frames[frameIndex].deltaVertices[bakeIndex] * adjustedWeight;
-                                        //Add in the previous frame's deltas
-                                        if (frameIndex > 0)
-                                            vertices[vertexIndex + bakeIndex] += currentShape.frames[frameIndex-1].deltaVertices[bakeIndex] * (1.0f - adjustedWeight);
+                                        // Add the current frame's deltas
+										vertices[vertIndex] += currentShape.frames[frameIndex].deltaVertices[bakeIndex] * frameWeight;
+                                        // Add in the previous frame's deltas
+										if (doLerp)
+											vertices[vertIndex] += currentShape.frames[prevIndex].deltaVertices[bakeIndex] * prevWeight;
                                     }
 
                                     if (has_normals)
                                     {
-                                        for (int bakeIndex = 0; bakeIndex < currentShape.frames[frameIndex].deltaNormals.Length; bakeIndex++)
+										vertIndex = vertexIndex;
+										for (int bakeIndex = 0; bakeIndex < currentShape.frames[frameIndex].deltaNormals.Length; bakeIndex++, vertIndex++)
                                         {
-                                            normals[vertexIndex + bakeIndex] += currentShape.frames[frameIndex].deltaNormals[bakeIndex] * adjustedWeight;
-                                            if(frameIndex > 0 )
-                                                normals[vertexIndex + bakeIndex] += currentShape.frames[frameIndex].deltaNormals[bakeIndex] * (1.0f - adjustedWeight);
+											normals[vertIndex] += currentShape.frames[frameIndex].deltaNormals[bakeIndex] * frameWeight;
+											if (doLerp)
+												normals[vertIndex] += currentShape.frames[prevIndex].deltaNormals[bakeIndex] * prevWeight;
                                         }
                                     }
+
                                     if (has_tangents)
                                     {
-                                        for (int bakeIndex = 0; bakeIndex < currentShape.frames[frameIndex].deltaTangents.Length; bakeIndex++)
+										vertIndex = vertexIndex;
+										for (int bakeIndex = 0; bakeIndex < currentShape.frames[frameIndex].deltaTangents.Length; bakeIndex++, vertIndex++)
                                         {
-                                            tangents[vertexIndex + bakeIndex] += (Vector4)currentShape.frames[frameIndex].deltaTangents[bakeIndex] * adjustedWeight;
-                                            if(frameIndex > 0 )
-                                                tangents[vertexIndex + bakeIndex] += (Vector4)currentShape.frames[frameIndex].deltaTangents[bakeIndex] * (1.0f - adjustedWeight);    
+											tangents[vertIndex] += (Vector4)currentShape.frames[frameIndex].deltaTangents[bakeIndex] * frameWeight;
+											if (doLerp)
+												tangents[vertIndex] += (Vector4)currentShape.frames[prevIndex].deltaTangents[bakeIndex] * prevWeight;    
                                         }
                                     }
-                                    continue; //If we bake then lets not perform the rest of this interation of the loop.
+                                    continue; // If we bake then don't perform the rest of this interation of the loop.
                                 }                                
                             }
                             #endregion
