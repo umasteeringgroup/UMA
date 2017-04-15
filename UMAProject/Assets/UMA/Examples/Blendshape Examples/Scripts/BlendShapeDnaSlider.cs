@@ -51,7 +51,18 @@ namespace UMA.Examples
             if (dna != null)
             {
                 data.blendShapeSettings.bakeBlendShapes = new Dictionary<string, float>();
-                data.blendShapeSettings.bakeBlendShapes.Add("MaleElvenEars", dna.GetValue(dnaEntryIndex));
+                float dnaValue = dna.GetValue(dnaEntryIndex);
+                float morphWeight = 0.0f;
+                if (dnaValue > 0.51f)
+                {
+                    morphWeight = (dnaValue - 0.5f) * 2f;
+                }
+                else if (dnaValue < 0.49f)
+                {
+                    morphWeight = (0.5f - dnaValue) * 2f;
+                }
+
+                data.blendShapeSettings.bakeBlendShapes.Add("MaleElvenEars", morphWeight );
                 data.Dirty(true, true, true);
             }
         }

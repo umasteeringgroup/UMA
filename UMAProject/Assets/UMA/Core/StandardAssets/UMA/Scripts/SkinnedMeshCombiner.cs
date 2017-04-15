@@ -212,6 +212,8 @@ namespace UMA
                                 {
                                     float weight = blendShapeSettings.bakeBlendShapes[currentShape.shapeName] * 100.0f;
                                     Mathf.Clamp( weight, 0.0f, 100.0f );
+                                    Debug.Log("Weight: " + weight);
+
                                     //Let's find the frame this weight is in
                                     int frameIndex;
                                     for( frameIndex = 0; frameIndex < currentShape.frames.Length; frameIndex++ )
@@ -220,7 +222,17 @@ namespace UMA
                                             break;
                                     }
 
+                                    //Let's calculate the weight for the frame we're in
                                     float adjustedWeight = (weight / currentShape.frames[frameIndex].frameWeight);
+                                   /* if (frameIndex <= 0)
+                                        adjustedWeight = (weight / currentShape.frames[frameIndex].frameWeight);
+                                    else
+                                    {
+                                        float previousWeight = currentShape.frames[frameIndex - 1].frameWeight;
+                                        adjustedWeight = ((weight - previousWeight) / (currentShape.frames[frameIndex].frameWeight - previousWeight));
+                                    }*/
+
+                                    Debug.Log("AdjustedWeight: " + adjustedWeight + " frameIndex: " + frameIndex);
 
                                     for (int bakeIndex = 0; bakeIndex < currentShape.frames[frameIndex].deltaVertices.Length; bakeIndex++)
                                         vertices[vertexIndex + bakeIndex] += currentShape.frames[frameIndex].deltaVertices[bakeIndex] * adjustedWeight;
