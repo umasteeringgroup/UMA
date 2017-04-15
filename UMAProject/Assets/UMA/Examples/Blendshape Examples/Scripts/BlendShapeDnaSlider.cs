@@ -40,5 +40,26 @@ namespace UMA.Examples
 				data.Dirty(true, false, false);
 			}
 		}
+
+        public void BakeEarMorph()
+        {
+            if (dna == null)
+            {
+                dna = data.GetDna(dnaTypeHash);     
+            }
+
+            if (dna != null)
+            {
+                data.blendShapeSettings.bakeBlendShapes = new Dictionary<string, float>();
+                data.blendShapeSettings.bakeBlendShapes.Add("MaleElvenEars", dna.GetValue(dnaEntryIndex));
+                data.Dirty(true, true, true);
+            }
+        }
+
+        public void UnbakeEarMorph()
+        {
+            data.blendShapeSettings.bakeBlendShapes.Clear();
+            data.Dirty(true, true, true);
+        }
 	}
 }

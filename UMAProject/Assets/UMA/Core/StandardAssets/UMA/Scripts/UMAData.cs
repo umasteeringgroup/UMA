@@ -72,7 +72,7 @@ namespace UMA
 		/// </summary>
 		public bool isAtlasDirty;
 
-		public bool ignoreBlendShapes = false;
+        public BlendShapeSettings blendShapeSettings = new BlendShapeSettings();
 
 		public RuntimeAnimatorController animationController;
 
@@ -1413,6 +1413,18 @@ namespace UMA
 		}
 
 		#region BlendShape Support
+        public class BlendShapeSettings
+        {
+            public bool ignoreBlendShapes; //default false
+            public Dictionary<string,float> bakeBlendShapes;
+
+            public BlendShapeSettings()
+            {
+                ignoreBlendShapes = false;
+                bakeBlendShapes = new Dictionary<string, float>();
+            }
+        }
+
 		//For future multiple renderer support
 		public struct BlendShapeLocation
 		{
@@ -1548,7 +1560,7 @@ namespace UMA
 					{
 						string shapeName = renderer.sharedMesh.GetBlendShapeName(i);
 						int nameIndex = Array.IndexOf<string>(shapes, shapeName);
-						if (nameIndex >= 0)
+                        if (nameIndex >= 0)
 						{
 							bakeShape[i] = true;
 							bakeCount++;
@@ -1560,6 +1572,7 @@ namespace UMA
 					}
 					else
 					{
+                        //No shape Names supplied so let's bake them all!
 						bakeShape[i] = true;
 						bakeCount++;
 					}
@@ -1715,7 +1728,6 @@ namespace UMA
 					}
 				}
 			}
-
 		}
 
 		#endregion

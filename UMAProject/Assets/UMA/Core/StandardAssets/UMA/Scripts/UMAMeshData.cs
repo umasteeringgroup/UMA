@@ -674,7 +674,8 @@ namespace UMA
 				{
 					if (blendShapes [shapeIndex] == null) 
 					{
-						Debug.LogError ("blendShapes [shapeIndex] == null!");
+						//Debug.LogError ("blendShapes [shapeIndex] == null!");
+                        //No longer an error, this will be null if the blendshape got baked.
 						break;
 					}
 

@@ -331,7 +331,7 @@ namespace UMA.CharacterSystem
 			AddCharacterStateCache("NULL");
 			base.Start();
 
-			umaData.ignoreBlendShapes = !loadBlendShapes;
+            umaData.blendShapeSettings.ignoreBlendShapes = !loadBlendShapes;
 
 			//if the animator has been set the 'old' way respect that...
 			if (raceAnimationControllers.defaultAnimationController == null && animationController != null)
@@ -360,7 +360,7 @@ namespace UMA.CharacterSystem
 		{
 			if (umaData != null)
 			{
-				umaData.ignoreBlendShapes = !loadBlendShapes;
+                umaData.blendShapeSettings.ignoreBlendShapes = !loadBlendShapes;
 
                 if (umaData.rendererCount > 0)
                 {

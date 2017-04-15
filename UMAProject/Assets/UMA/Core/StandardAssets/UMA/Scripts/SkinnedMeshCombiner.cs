@@ -40,8 +40,11 @@ namespace UMA
 		/// </summary>
 		/// <param name="target">Target.</param>
 		/// <param name="sources">Sources.</param>
-		public static void CombineMeshes(UMAMeshData target, CombineInstance[] sources, bool ignoreBlendShapes = false)
+        public static void CombineMeshes(UMAMeshData target, CombineInstance[] sources, UMAData.BlendShapeSettings blendShapeSettings = null)
 		{
+            if (blendShapeSettings == null)
+                blendShapeSettings = new UMAData.BlendShapeSettings();
+            
 			int vertexCount = 0;
 			int bindPoseCount = 0;
 			int transformHierarchyCount = 0;
@@ -67,7 +70,7 @@ namespace UMA
 			bool has_uv4 = (meshComponents & MeshComponents.has_uv4) != MeshComponents.none;
 			bool has_colors32 = (meshComponents & MeshComponents.has_colors32) != MeshComponents.none;
 			bool has_blendShapes = (meshComponents & MeshComponents.has_blendShapes) != MeshComponents.none;
-			if (ignoreBlendShapes)
+			if (blendShapeSettings.ignoreBlendShapes)
 				has_blendShapes = false;
 			bool has_clothSkinning = (meshComponents & MeshComponents.has_clothSkinning) != MeshComponents.none;
 
@@ -201,6 +204,41 @@ namespace UMA
 					{
 						for (int shapeIndex = 0; shapeIndex < source.meshData.blendShapes.Length; shapeIndex++)
 						{
+                            if(blendShapeSettings.bakeBlendShapes != null || blendShapeSettings.bakeBlendShapes.Count == 0)
+                            {
+                                //If there are names in the bakeBlendShape dictionary and we find them in the meshData blendshape list, then lets bake them instead of adding them.
+                                UMABlendShape currentShape = source.meshData.blendShapes[shapeIndex];
+                                if( blendShapeSettings.bakeBlendShapes.ContainsKey(currentShape.shapeName))
+                                {
+                                    float weight = blendShapeSettings.bakeBlendShapes[currentShape.shapeName] * 100.0f;
+                                    Mathf.Clamp( weight, 0.0f, 100.0f );
+                                    //Let's find the frame this weight is in
+                                    int frameIndex;
+                                    for( frameIndex = 0; frameIndex < currentShape.frames.Length; frameIndex++ )
+                                    {
+                                        if (currentShape.frames[frameIndex].frameWeight >= weight)
+                                            break;
+                                    }
+
+                                    float adjustedWeight = (weight / currentShape.frames[frameIndex].frameWeight);
+
+                                    for (int bakeIndex = 0; bakeIndex < currentShape.frames[frameIndex].deltaVertices.Length; bakeIndex++)
+                                        vertices[vertexIndex + bakeIndex] += currentShape.frames[frameIndex].deltaVertices[bakeIndex] * adjustedWeight;
+
+                                    if (has_normals)
+                                    {
+                                        for (int bakeIndex = 0; bakeIndex < currentShape.frames[frameIndex].deltaNormals.Length; bakeIndex++)
+                                            normals[vertexIndex + bakeIndex] += currentShape.frames[frameIndex].deltaNormals[bakeIndex] * adjustedWeight;
+                                    }
+                                    if (has_tangents)
+                                    {
+                                        for (int bakeIndex = 0; bakeIndex < currentShape.frames[frameIndex].deltaTangents.Length; bakeIndex++)
+                                            tangents[vertexIndex + bakeIndex] += (Vector4)currentShape.frames[frameIndex].deltaTangents[bakeIndex] * adjustedWeight;
+                                    }
+                                    continue; //If we bake then lets not perform the rest of this interation of the loop.
+                                }                                
+                            }
+
 							bool nameAlreadyExists = false;
 							int i = 0;
 							//Probably this would be better with a dictionary

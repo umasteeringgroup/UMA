@@ -139,7 +139,7 @@ namespace UMA
 				}
 				else
 				{
-					SkinnedMeshCombiner.CombineMeshes(umaMesh, combinedMeshList.ToArray());
+                    SkinnedMeshCombiner.CombineMeshes(umaMesh, combinedMeshList.ToArray(), umaData.blendShapeSettings );
 
 					if (updatedAtlas)
 					{
