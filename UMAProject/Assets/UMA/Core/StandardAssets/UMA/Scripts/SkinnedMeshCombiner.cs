@@ -204,6 +204,7 @@ namespace UMA
 					{
 						for (int shapeIndex = 0; shapeIndex < source.meshData.blendShapes.Length; shapeIndex++)
 						{
+                            #region BlendShape Baking
                             if(blendShapeSettings.bakeBlendShapes != null || blendShapeSettings.bakeBlendShapes.Count == 0)
                             {
                                 //If there are names in the bakeBlendShape dictionary and we find them in the meshData blendshape list, then lets bake them instead of adding them.
@@ -212,7 +213,6 @@ namespace UMA
                                 {
                                     float weight = blendShapeSettings.bakeBlendShapes[currentShape.shapeName] * 100.0f;
                                     Mathf.Clamp( weight, 0.0f, 100.0f );
-                                    Debug.Log("Weight: " + weight);
 
                                     //Let's find the frame this weight is in
                                     int frameIndex;
@@ -224,32 +224,46 @@ namespace UMA
 
                                     //Let's calculate the weight for the frame we're in
                                     float adjustedWeight = (weight / currentShape.frames[frameIndex].frameWeight);
-                                   /* if (frameIndex <= 0)
+                                    if (frameIndex <= 0)
                                         adjustedWeight = (weight / currentShape.frames[frameIndex].frameWeight);
                                     else
                                     {
                                         float previousWeight = currentShape.frames[frameIndex - 1].frameWeight;
                                         adjustedWeight = ((weight - previousWeight) / (currentShape.frames[frameIndex].frameWeight - previousWeight));
-                                    }*/
+                                    }
 
-                                    Debug.Log("AdjustedWeight: " + adjustedWeight + " frameIndex: " + frameIndex);
-
+                                    //The blendshape frames lerp between the deltas of two adjacent frames.
                                     for (int bakeIndex = 0; bakeIndex < currentShape.frames[frameIndex].deltaVertices.Length; bakeIndex++)
+                                    {
+                                        //Add the current frame's deltas
                                         vertices[vertexIndex + bakeIndex] += currentShape.frames[frameIndex].deltaVertices[bakeIndex] * adjustedWeight;
+                                        //Add in the previous frame's deltas
+                                        if (frameIndex > 0)
+                                            vertices[vertexIndex + bakeIndex] += currentShape.frames[frameIndex-1].deltaVertices[bakeIndex] * (1.0f - adjustedWeight);
+                                    }
 
                                     if (has_normals)
                                     {
                                         for (int bakeIndex = 0; bakeIndex < currentShape.frames[frameIndex].deltaNormals.Length; bakeIndex++)
+                                        {
                                             normals[vertexIndex + bakeIndex] += currentShape.frames[frameIndex].deltaNormals[bakeIndex] * adjustedWeight;
+                                            if(frameIndex > 0 )
+                                                normals[vertexIndex + bakeIndex] += currentShape.frames[frameIndex].deltaNormals[bakeIndex] * (1.0f - adjustedWeight);
+                                        }
                                     }
                                     if (has_tangents)
                                     {
                                         for (int bakeIndex = 0; bakeIndex < currentShape.frames[frameIndex].deltaTangents.Length; bakeIndex++)
+                                        {
                                             tangents[vertexIndex + bakeIndex] += (Vector4)currentShape.frames[frameIndex].deltaTangents[bakeIndex] * adjustedWeight;
+                                            if(frameIndex > 0 )
+                                                tangents[vertexIndex + bakeIndex] += (Vector4)currentShape.frames[frameIndex].deltaTangents[bakeIndex] * (1.0f - adjustedWeight);    
+                                        }
                                     }
                                     continue; //If we bake then lets not perform the rest of this interation of the loop.
                                 }                                
                             }
+                            #endregion
 
 							bool nameAlreadyExists = false;
 							int i = 0;
