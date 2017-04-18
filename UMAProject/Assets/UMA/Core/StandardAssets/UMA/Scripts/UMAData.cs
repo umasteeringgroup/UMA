@@ -1329,11 +1329,8 @@ namespace UMA
 				{
 					var bone = tpose.boneInfo[i];
 					var hash = UMAUtils.StringToHash(bone.name);
-					var go = skeleton.GetBoneGameObject(hash);
-					if (go == null) continue;
-					skeleton.SetPosition(hash, bone.position);
-					skeleton.SetRotation(hash, bone.rotation);
-					skeleton.SetScale(hash, bone.scale);
+					if (!skeleton.HasBone(hash)) continue;
+					skeleton.Set(hash, bone.position, bone.scale, bone.rotation);
 				}
 			}
 		}
