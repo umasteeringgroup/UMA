@@ -290,10 +290,11 @@ namespace UMA
 			bone.scale = trans.localScale;
 		}
 
+		private static List<SkeletonBone> newBones = new List<SkeletonBone>();
 		private static void SkeletonModifier(UMAData umaData, ref SkeletonBone[] bones, HumanBone[] human)
 		{
 			int missingBoneCount = 0;
-			var newBones = new List<SkeletonBone>(bones.Length);
+			newBones.Clear();
 
 			while (!umaData.skeleton.HasBone(UMAUtils.StringToHash(bones[missingBoneCount].name)))
 			{
