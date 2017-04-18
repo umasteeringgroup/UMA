@@ -40,6 +40,11 @@ namespace UMA
 
 		private Dictionary<int, BoneData> boneHashDataLookup;
 
+#if UNITY_EDITOR
+		// Dictionary backup to support code reload
+		private List<BoneData> boneHashDataBackup = new List<BoneData>();
+#endif
+
 		private Dictionary<int, BoneData> boneHashData
 		{
 			get
@@ -47,6 +52,12 @@ namespace UMA
 				if (boneHashDataLookup == null)
 				{
 					boneHashDataLookup = new Dictionary<int, BoneData>();
+#if UNITY_EDITOR
+					foreach (BoneData tData in boneHashDataBackup)
+					{
+						boneHashDataLookup.Add(tData.boneNameHash, tData);
+					}
+#endif
 				}
 
 				return boneHashDataLookup;
@@ -55,6 +66,9 @@ namespace UMA
 			set
 			{
 				boneHashDataLookup = value;
+#if UNITY_EDITOR
+				boneHashDataBackup = new List<BoneData>(value.Values);
+#endif
 			}
 		}
 
@@ -128,6 +142,9 @@ namespace UMA
 			};
 
 			boneHashData.Add(hash, data);
+#if UNITY_EDITOR
+			boneHashDataBackup.Add(data);
+#endif
 
 			for (int i = 0; i < transform.childCount; i++)
 			{
@@ -171,6 +188,9 @@ namespace UMA
 			};
 
 			boneHashData.Add(hash, newBone);
+#if UNITY_EDITOR
+			boneHashDataBackup.Add(newBone);
+#endif
 		}
 
 		/// <summary>
@@ -190,6 +210,9 @@ namespace UMA
 			};
 
 			boneHashData.Add(transform.hash, newBone);
+#if UNITY_EDITOR
+			boneHashDataBackup.Add(newBone);
+#endif
 		}
 
 		/// <summary>
@@ -202,6 +225,9 @@ namespace UMA
 			if (bd != null)
 			{
 				boneHashData.Remove(nameHash);
+#if UNITY_EDITOR
+				boneHashDataBackup.Remove(bd);
+#endif
 			}
 		}
 
