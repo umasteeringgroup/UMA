@@ -3156,6 +3156,7 @@ namespace UMA.CharacterSystem
 				{
 					if (_name != null)
 						ConvertOldFieldsToNew();
+					EnsureChannels(3);
 					return channelAdditiveMask[2];
 				}
 				set
