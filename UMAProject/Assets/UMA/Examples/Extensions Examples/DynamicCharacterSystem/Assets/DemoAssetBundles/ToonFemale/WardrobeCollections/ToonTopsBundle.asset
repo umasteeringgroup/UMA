@@ -24,8 +24,7 @@ MonoBehaviour:
   suppressWardrobeSlots: []
   activeWardrobeSet: []
   recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[],"colors":[],"fColors":[],"sharedColorCount":0,"race":"","packedDna":[]}'
-  coverImages:
-  - {fileID: 21300000, guid: 62a1872587a7aa04eab1c4eb9b178386, type: 3}
+  coverImages: []
   wardrobeCollection:
     sets:
     - targetRace: ToonFemale
