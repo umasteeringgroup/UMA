@@ -86,10 +86,10 @@ namespace UMA.Editors
                 {
 					var context = UMAContext.FindInstance();
 					//create a virtual UMAContext if we dont have one and we have DCS
-					if (context == null)
+					if (context == null || context.gameObject.name == "UMAEditorContext")
 					{
-						context = umaRecipeBase.CreateEditorContext();
-						generatedContext = context.gameObject.transform.parent.gameObject;
+						context = umaRecipeBase.CreateEditorContext();//will create or update an UMAEditorContext to the latest version
+						generatedContext = context.gameObject.transform.parent.gameObject;//The UMAContext in a UMAEditorContext is that gameobject's child
 					}
 					//legacy checks for context
 					if (context == null)
