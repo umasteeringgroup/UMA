@@ -91,7 +91,7 @@ namespace UMA
         {
             get
             {
-                if (theIndex == null)
+                if (theIndex == null || theIndexer == null)
                 {
 #if UNITY_EDITOR
                     var st = StartTimer();

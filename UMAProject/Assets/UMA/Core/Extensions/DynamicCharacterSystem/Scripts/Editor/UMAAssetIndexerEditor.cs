@@ -1,10 +1,8 @@
-using UnityEngine;
 using System.Collections.Generic;
-using UMA;
-using UMA.CharacterSystem;
+using UMA.Editors;
 using UnityEditor;
 using UnityEditor.Animations;
-using UMA.Editors;
+using UnityEngine;
 
 namespace UMA.CharacterSystem.Editors
 {
@@ -19,6 +17,7 @@ namespace UMA.CharacterSystem.Editors
 		List<System.Type> RemovedTypes = new List<System.Type>();
 		public string Filter = "";
         public bool IncludeText;
+        int NotInBuildCount = 0;
 
 		public UMAMaterial SelectedMaterial = null;
 
@@ -252,36 +251,86 @@ namespace UMA.CharacterSystem.Editors
 			//	UAI.ForceSave();
 			//}
 			UAI.AutoUpdate = EditorGUILayout.Toggle("Process Updates", UAI.AutoUpdate);
+            GUILayout.BeginHorizontal();
+
 			Filter = EditorGUILayout.TextField("Filter Library", Filter);
+            GUI.SetNextControlName("TheDumbUnityBuggyField");
+            if (GUILayout.Button("-", GUILayout.Width(20)))
+            {
+                Filter = "";
+                // 10 year old unity bug that no one wants to fix.
+                GUI.FocusControl("TheDumbUnityBuggyField");
+            }
+            GUILayout.EndHorizontal();
+
+            bool HasErrors = false;
+            string ErrorTypes = "";
+            NotInBuildCount = 0;
 
 			foreach (System.Type t in Types)
 			{
 				if (t != typeof(AnimatorController)) // Somewhere, a kitten died because I typed that.
 				{
-					ShowArray(t, Filter);
+					if (ShowArray(t, Filter))
+                    {
+                        HasErrors = true;
+                        ErrorTypes += t.Name +" ";
 				}
 			}
 		}
+            string bldMessage = "(" + NotInBuildCount + ") Item(s) not in build";
+            GUILayout.BeginHorizontal();
+            if (HasErrors)
+            {
+                GUILayout.Label(ErrorTypes + "Have error items! "+bldMessage);
+            }
+            else
+            {
+                GUILayout.Label("All items appear OK. " +bldMessage);
+            }
+            GUILayout.EndHorizontal();
+		}
 
 
-		public void ShowArray(System.Type CurrentType, string Filter)
+		public bool ShowArray(System.Type CurrentType, string Filter)
 		{
 			bool HasFilter = false;
-
+            bool NotFound = false;
 			string actFilter = Filter.Trim().ToLower();
 			if (actFilter.Length > 0)
 				HasFilter = true;
 			Dictionary<string, AssetItem> TypeDic = UAI.GetAssetDictionary(CurrentType);
 
+            List<AssetItem> Items = new List<AssetItem>();
+            Items.AddRange(TypeDic.Values);
+
+            int NotInBuild = 0;
+            int VisibleItems = 0;
+            foreach (AssetItem ai in Items)
+            {
+                if (ai._SerializedItem == null)
+                {
+                    NotInBuild++;
+                }
+                string Displayed = ai.ToString(UMAAssetIndexer.SortOrder);
+                if (HasFilter && (!Displayed.ToLower().Contains(actFilter)))
+                {
+                    continue;
+                }
+                VisibleItems++;
+            }
+
+            NotInBuildCount += NotInBuild;
 			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
 			GUILayout.Space(10);
-			Toggles[CurrentType] = EditorGUILayout.Foldout(Toggles[CurrentType], CurrentType.Name + ": " + TypeDic.Count + " Item(s)");
-
-
+			Toggles[CurrentType] = EditorGUILayout.Foldout(Toggles[CurrentType], CurrentType.Name + ":  "+VisibleItems+ "/" + TypeDic.Count + " Item(s). "+NotInBuild+" Not in build.");
 			GUILayout.EndHorizontal();
+
+
 
 			if (Toggles[CurrentType])
 			{
+                Items.Sort();
 				GUIHelper.BeginVerticalPadded(5, new Color(0.75f, 0.875f, 1f));
 				GUILayout.BeginHorizontal();
 				GUILayout.Label("Sorted By: " + UMAAssetIndexer.SortOrder, GUILayout.MaxWidth(160));
@@ -295,9 +344,6 @@ namespace UMA.CharacterSystem.Editors
 				GUILayout.EndHorizontal();
 
 
-				List<AssetItem> Items = new List<AssetItem>();
-				Items.AddRange(TypeDic.Values);
-				Items.Sort();
 				foreach (AssetItem ai in Items)
 				{
                     string lblBuild = "B-";
@@ -305,6 +351,10 @@ namespace UMA.CharacterSystem.Editors
 					if (HasFilter && (!lblVal.ToLower().Contains(actFilter)))
 						continue;
 
+                    if (ai._Name == "< Not Found!>")
+                    {
+                        NotFound = true;
+                    }
 					GUILayout.BeginHorizontal(EditorStyles.textField);
 
                     if (ai._SerializedItem == null)
@@ -338,6 +388,16 @@ namespace UMA.CharacterSystem.Editors
 					GUILayout.EndHorizontal();
 				}
 
+                GUILayout.BeginHorizontal();
+                if (NotFound)
+                {
+                    GUILayout.Label("Warning - Some items not found!");
+                }
+                else
+                {
+                    GUILayout.Label("All Items appear OK");
+                }
+                GUILayout.EndHorizontal();
 				if (CurrentType == typeof(SlotDataAsset) || CurrentType == typeof(OverlayDataAsset))
 				{
 					GUIHelper.BeginVerticalPadded(5, new Color(0.65f, 0.65f, 0.65f));
@@ -391,6 +451,7 @@ namespace UMA.CharacterSystem.Editors
 
 				GUIHelper.EndVerticalPadded(5);
 			}
+            return NotFound;
 		}
 
 		public bool bShowTypes;
