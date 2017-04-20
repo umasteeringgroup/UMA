@@ -490,6 +490,12 @@ namespace UMA
                 Debug.Log("Duplicate asset " + ai._Name + " was ignored.");
                 return;
             }
+
+            if (ai._Name.ToLower().Contains((ai._Type.Name+"placeholder").ToLower()))
+            {
+                Debug.Log("Placeholder asset " + ai._Name + " was ignored. Placeholders are not indexed.");
+                return;
+            }
 #if UNITY_EDITOR
             if (!SkipBundleCheck)
             {
