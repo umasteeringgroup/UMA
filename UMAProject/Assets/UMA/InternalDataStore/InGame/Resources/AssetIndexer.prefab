@@ -598,18 +598,6 @@ MonoBehaviour:
     _Path: Assets/UMA/Examples/Physics Examples/Assets/Slots/ClothRobe/ClothRobe_Slot.asset
     IsResource: 0
     IsAssetBundle: 0
-  - _BaseTypeName: SlotDataAsset
-    _Name: SlotDataAssetPlaceholder
-    _SerializedItem: {fileID: 11400000, guid: 1793ec477efd5b643a2a938a41cbd8f7, type: 2}
-    _Path: Assets/UMA/InternalDataStore/InGame/Resources/PlaceholderAssets/SlotDataAssetPlaceholder.asset
-    IsResource: 0
-    IsAssetBundle: 0
-  - _BaseTypeName: SlotDataAsset
-    _Name: SlotDataAssetPlaceholder_Slot
-    _SerializedItem: {fileID: 11400000, guid: f7dc0c3c60324eb47b462c0eed16b191, type: 2}
-    _Path: Assets/UMA/InternalDataStore/InGame/Resources/PlaceholderAssets/SlotDataAssetPlaceholder_Slot.asset
-    IsResource: 0
-    IsAssetBundle: 0
   - _BaseTypeName: OverlayDataAsset
     _Name: DefaultStandardOverlay
     _SerializedItem: {fileID: 11400000, guid: fe30fbf67b51de8499624c6913a39e64, type: 2}
@@ -1119,12 +1107,6 @@ MonoBehaviour:
     _Path: Assets/UMA/Examples/Physics Examples/Assets/Overlays/ClothRobeOverlay.asset
     IsResource: 0
     IsAssetBundle: 0
-  - _BaseTypeName: OverlayDataAsset
-    _Name: OverlayDataAssetPlaceholder
-    _SerializedItem: {fileID: 11400000, guid: 331efa6bce027af46ae666095da5f511, type: 2}
-    _Path: Assets/UMA/InternalDataStore/InGame/Resources/PlaceholderAssets/OverlayDataAssetPlaceholder.asset
-    IsResource: 0
-    IsAssetBundle: 0
   - _BaseTypeName: RaceData
     _Name: HumanFemale
     _SerializedItem: {fileID: 11400000, guid: f8fea6f0ee17b3f42a4ae6cfb627bab3, type: 2}
@@ -1165,12 +1147,6 @@ MonoBehaviour:
     _Name: HumanMaleHighPoly
     _SerializedItem: {fileID: 11400000, guid: 715d7d582b97b5b4d86b6ed75bb7268d, type: 2}
     _Path: Assets/UMA/Content/UMA_Core/HumanMale/RaceData/Human Male HighPoly.asset
-    IsResource: 0
-    IsAssetBundle: 0
-  - _BaseTypeName: RaceData
-    _Name: RaceDataPlaceholder
-    _SerializedItem: {fileID: 11400000, guid: 8182baefc34d4474b939b341f9c3a712, type: 2}
-    _Path: Assets/UMA/InternalDataStore/InGame/Resources/PlaceholderAssets/RaceDataPlaceholder.asset
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: UMATextRecipe
@@ -1311,12 +1287,6 @@ MonoBehaviour:
     _Name: ClothRobeRecipe
     _SerializedItem: {fileID: 11400000, guid: be7c02d6f94052348a3fc382a4ff26dc, type: 2}
     _Path: Assets/UMA/Examples/Physics Examples/Assets/Recipe/ClothRobeRecipe.asset
-    IsResource: 0
-    IsAssetBundle: 0
-  - _BaseTypeName: UMATextRecipe
-    _Name: UMATextRecipePlaceholder
-    _SerializedItem: {fileID: 11400000, guid: 7718e9b4495984c4dbd13594e24c5abc, type: 2}
-    _Path: Assets/UMA/InternalDataStore/InGame/Resources/PlaceholderAssets/UMATextRecipePlaceholder.asset
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: UMATextRecipe
@@ -1545,12 +1515,6 @@ MonoBehaviour:
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: UMAWardrobeRecipe
-    _Name: UMAWardrobeRecipePlaceholder
-    _SerializedItem: {fileID: 11400000, guid: dc9b2ee309a14484aaf8f4c83614e499, type: 2}
-    _Path: Assets/UMA/InternalDataStore/InGame/Resources/PlaceholderAssets/UMAWardrobeRecipePlaceholder.asset
-    IsResource: 0
-    IsAssetBundle: 0
-  - _BaseTypeName: UMAWardrobeRecipe
     _Name: FemaleHandsMid
     _SerializedItem: {fileID: 11400000, guid: 00ebafe9f3edb334db9f8a3c83242429, type: 2}
     _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Recipes/Wardrobe Recipes/HumanFemale/FemaleHandsMid.asset
@@ -1771,12 +1735,6 @@ MonoBehaviour:
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: RuntimeAnimatorController
-    _Name: RuntimeAnimatorControllerPlaceholder
-    _SerializedItem: {fileID: 9100000, guid: b4357ee1f94b2474bb1ce0e93e509d83, type: 2}
-    _Path: Assets/UMA/InternalDataStore/InGame/Resources/PlaceholderAssets/RuntimeAnimatorControllerPlaceholder.controller
-    IsResource: 0
-    IsAssetBundle: 0
-  - _BaseTypeName: RuntimeAnimatorController
     _Name: UMA_APose_Controller
     _SerializedItem: {fileID: 9100000, guid: 66af5264f1619114db5f72f979ce14bd, type: 2}
     _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/DynamicDNA/Animation/UMA_APose_Controller.controller
@@ -1799,12 +1757,6 @@ MonoBehaviour:
     _SerializedItem: {fileID: 9100000, guid: ae859d58fdf844b73863d3833f955cdf, type: 2}
     _Path: Assets/UMA/Examples/Main Examples/Assets/Animation/Animators/Locomotion
       with Head.controller
-    IsResource: 0
-    IsAssetBundle: 0
-  - _BaseTypeName: RuntimeAnimatorController
-    _Name: RuntimeAnimatorControllerPlaceholder
-    _SerializedItem: {fileID: 9100000, guid: b4357ee1f94b2474bb1ce0e93e509d83, type: 2}
-    _Path: Assets/UMA/InternalDataStore/InGame/Resources/PlaceholderAssets/RuntimeAnimatorControllerPlaceholder.controller
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: DynamicUMADnaAsset
