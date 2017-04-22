@@ -62,7 +62,6 @@ namespace UMA
 		{
 			return raceLibrary.GetRace(name);
 		}
-
 		/// <summary>
 		/// Gets a race by name hash.
 		/// </summary>
@@ -74,6 +73,15 @@ namespace UMA
 		}
 
 		/// <summary>
+		/// Array of all races in the context.
+		/// </summary>
+		/// <returns>The array of race data.</returns>
+		public RaceData[] GetAllRaces()
+		{
+			return raceLibrary.GetAllRaces();
+		}
+
+		/// <summary>
 		/// Instantiate a slot by name.
 		/// </summary>
 		/// <returns>The slot.</returns>
@@ -82,6 +90,7 @@ namespace UMA
 		{
 			return slotLibrary.InstantiateSlot(name);
 		}
+
 		/// <summary>
 		/// Instantiate a slot by name hash.
 		/// </summary>
@@ -111,6 +120,25 @@ namespace UMA
 		public SlotData InstantiateSlot(int nameHash, List<OverlayData> overlayList)
 		{
 			return slotLibrary.InstantiateSlot(nameHash, overlayList);
+		}
+
+		/// <summary>
+		/// Check for presence of a slot by name.
+		/// </summary>
+		/// <returns><c>True</c> if the slot exists in this context.</returns>
+		/// <param name="name">Name.</param>
+		public bool HasSlot(string name)
+		{
+			return slotLibrary.HasSlot(name);
+		}
+		/// <summary>
+		/// Check for presence of a slot by name hash.
+		/// </summary>
+		/// <returns><c>True</c> if the slot exists in this context.</returns>
+		/// <param name="name">Name hash.</param>
+		public bool HasSlot(int nameHash)
+		{ 
+			return slotLibrary.HasSlot(nameHash);
 		}
 
 		/// <summary>
