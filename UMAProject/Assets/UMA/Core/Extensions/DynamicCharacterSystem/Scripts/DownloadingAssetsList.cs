@@ -202,6 +202,25 @@ namespace UMA.CharacterSystem
 					var itemFilename = AssetBundleManager.AssetBundleIndexObject.GetFilenameFromAssetName(item.containingBundle, item.requiredAssetName, assetType.ToString());
 					if (assetType == typeof(RaceData))
 					{
+						//HACK TO FIX RACEDATA DYNAMICDNACONVERTERS DYNAMICDNA ASSETS CAUSING LOAD FAILURES in UNITY 5.5+
+						//As of Unity 5.5 a bug has reappeared when loading some types of assets that reference assets in other bundles.
+						//AssetBundleManager successfully ensures these required bundles are loaded first, but even so Unity fils to load
+						//the required asset from them in some cases, notably it seems when the required asset is set in the field of a Prefab (like our DNAAssets are)
+						//To fix this generally we could 'LoadAllAssets' from any dependent bundles, but this could incur significant memory overhead
+						//So for now we will just fix this for UMA and hope a patch is forthcoming in a subsequent version of Unity 
+						if (AssetBundleManager.AssetBundleIndexObject.GetAllDependencies(item.containingBundle).Length > 0)
+						{
+							var allDeps = AssetBundleManager.AssetBundleIndexObject.GetAllDependencies(item.containingBundle);
+							for (int i = 0; i < allDeps.Length; i++)
+							{
+								string depsError = "";
+								LoadedAssetBundle depsBundle = AssetBundleManager.GetLoadedAssetBundle(allDeps[i], out depsError);
+								if (String.IsNullOrEmpty(depsError) && depsBundle != null)
+								{
+									depsBundle.m_AssetBundle.LoadAllAssets<DynamicUMADnaAsset>();
+								}
+							}
+						}
 						RaceData actualRace = loadedBundleAB.LoadAsset<RaceData>(itemFilename);
 						UMAContext.Instance.raceLibrary.AddRace(actualRace);
 						UMAContext.Instance.raceLibrary.UpdateDictionary();
