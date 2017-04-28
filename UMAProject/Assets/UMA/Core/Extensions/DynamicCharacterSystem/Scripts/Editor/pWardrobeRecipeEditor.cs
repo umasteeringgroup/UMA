@@ -361,7 +361,9 @@ namespace UMA.Editors
 			}
 			else
 			{
-				EditorGUILayout.HelpBox("No Compatible Races set. This " + TargetType.ToString() + " will be available to all races.", MessageType.None);
+				//EditorGUILayout.HelpBox("No Compatible Races set. This " + TargetType.ToString() + " will be available to all races.", MessageType.None);
+				//DOS MODIFIED this should really be possible tho...
+				EditorGUILayout.HelpBox("No Compatible Races set.", MessageType.Warning);
 			}
 			CompatibleRacesDropArea(dropArea, newCompatibleRaces);
 
