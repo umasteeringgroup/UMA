@@ -818,7 +818,15 @@ MonoBehaviour:
   rebuildSkeleton: 0
   preloadWardrobeRecipes:
     loadDefaultRecipes: 1
-    recipes: []
+    recipes:
+    - _recipeName: FemaleUndies2
+      _compatibleRaces:
+      - HumanFemaleDCS
+      - HumanFemale
+    - _recipeName: MaleUnderwear
+      _compatibleRaces:
+      - HumanMale
+      - HumanMaleDCS
   raceAnimationControllers:
     defaultAnimationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343,
       type: 2}
@@ -1411,7 +1419,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1034896865}
   m_HandleRect: {fileID: 1034896864}
   m_Direction: 0
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:

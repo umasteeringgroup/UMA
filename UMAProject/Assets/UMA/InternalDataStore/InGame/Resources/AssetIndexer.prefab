@@ -1619,7 +1619,7 @@ MonoBehaviour:
     IsAssetBundle: 0
   - _BaseTypeName: UMAWardrobeRecipe
     _Name: MaleFace
-    _SerializedItem: {fileID: 11400000, guid: 2059a38eee267f6458c7f4de066df8ad, type: 2}
+    _SerializedItem: {fileID: 0}
     _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleFace.asset
     IsResource: 0
     IsAssetBundle: 0
@@ -1707,6 +1707,18 @@ MonoBehaviour:
     _Name: MaleShorts2
     _SerializedItem: {fileID: 11400000, guid: 71e3ef35d8b941d4ab538b01f57dbb79, type: 2}
     _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleShorts2.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: UMAWardrobeRecipe
+    _Name: MaleUnderwear
+    _SerializedItem: {fileID: 11400000, guid: fd65ba08e9f303242809809d1fcb4307, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleUnderwear.asset
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: UMAWardrobeRecipe
+    _Name: FemaleUndies2
+    _SerializedItem: {fileID: 11400000, guid: 9050e005ddce44d4f89dc6158808b409, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanFemale/Recipes/WardrobeRecipes/HumanFemale/FemaleUndies2.asset
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: RuntimeAnimatorController
