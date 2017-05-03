@@ -19,10 +19,10 @@ MonoBehaviour:
   wardrobeRecipeThumbs:
   - race: HumanFemaleDCS
     filename: 
-    thumb: {fileID: 21300000, guid: 450b02d22ce9235439792daf9fcedabd, type: 3}
+    thumb: {fileID: 21300000, guid: b7453d0380dc0f1498dd4368b2a87da0, type: 3}
   - race: HumanFemale
     filename: 
-    thumb: {fileID: 21300000, guid: 450b02d22ce9235439792daf9fcedabd, type: 3}
+    thumb: {fileID: 21300000, guid: b7453d0380dc0f1498dd4368b2a87da0, type: 3}
   wardrobeSlot: Underwear
   Hides: []
   suppressWardrobeSlots: []
