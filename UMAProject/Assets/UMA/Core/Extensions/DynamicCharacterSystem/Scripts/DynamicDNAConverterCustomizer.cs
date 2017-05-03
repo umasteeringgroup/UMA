@@ -156,21 +156,7 @@ namespace UMA.CharacterSystem
         {
             if (TposeAnimatorController == null)
                 return;
-            if (guideUMA != null)
-            {
-                if (guideUMA.gameObject.GetComponent<Animator>())
-                {
-                    guideUMA.gameObject.GetComponent<Animator>().runtimeAnimatorController = TposeAnimatorController;
-                }
-            }
-            if(activeUMA != null)
-            {
-                if (activeUMA.gameObject.GetComponent<Animator>())
-                {
-                    activeUMA.gameObject.GetComponent<Animator>().runtimeAnimatorController = TposeAnimatorController;
-                }
-            }
-            UpdateUMA();
+			SwapAnimator(TposeAnimatorController);
         }
 
 
@@ -178,21 +164,7 @@ namespace UMA.CharacterSystem
         {
             if (AposeAnimatorController == null)
                 return;
-            if (guideUMA != null)
-            {
-                if (guideUMA.gameObject.GetComponent<Animator>())
-                {
-                    guideUMA.gameObject.GetComponent<Animator>().runtimeAnimatorController = AposeAnimatorController;
-                }
-            }
-            if (activeUMA != null)
-            {
-                if (activeUMA.gameObject.GetComponent<Animator>())
-                {
-                    activeUMA.gameObject.GetComponent<Animator>().runtimeAnimatorController = AposeAnimatorController;
-                }
-            }
-            UpdateUMA();
+			SwapAnimator(AposeAnimatorController);
         }
 
 
@@ -200,22 +172,38 @@ namespace UMA.CharacterSystem
         {
             if (MovementAnimatorController == null)
                 return;
-            if (guideUMA != null)
-            {
-                if (guideUMA.gameObject.GetComponent<Animator>())
-                {
-                    guideUMA.gameObject.GetComponent<Animator>().runtimeAnimatorController = MovementAnimatorController;
-                }
-            }
-            if (activeUMA != null)
-            {
-                if (activeUMA.gameObject.GetComponent<Animator>())
-                {
-                    activeUMA.gameObject.GetComponent<Animator>().runtimeAnimatorController = MovementAnimatorController;
-                }
-            }
-            UpdateUMA();
+			SwapAnimator(MovementAnimatorController);
         }
+
+		private void SwapAnimator(RuntimeAnimatorController animatorToUse)
+		{
+			//changing the animationController in 5.6 resets the rotation of this game object so store the rotation and set it back
+			if (guideUMA != null)
+			{
+				if (guideUMA.gameObject.GetComponent<Animator>())
+				{
+					var guideOriginalRot = Quaternion.identity;
+					if (guideUMA.umaData != null)
+						guideOriginalRot = guideUMA.umaData.transform.localRotation;
+					guideUMA.gameObject.GetComponent<Animator>().runtimeAnimatorController = animatorToUse;
+					if (guideUMA.umaData != null)
+						guideUMA.umaData.transform.localRotation = guideOriginalRot;
+				}
+            }
+			if (activeUMA != null)
+			{
+				if (activeUMA.gameObject.GetComponent<Animator>())
+				{
+					var originalRot = Quaternion.identity;
+					if (activeUMA.umaData != null)
+						originalRot = activeUMA.umaData.transform.localRotation;
+					activeUMA.gameObject.GetComponent<Animator>().runtimeAnimatorController = animatorToUse;
+					if (activeUMA.umaData != null)
+						activeUMA.umaData.transform.localRotation = originalRot;
+				}
+			}
+			UpdateUMA();
+		}
 
 		void OnDrawGizmos()
 		{
