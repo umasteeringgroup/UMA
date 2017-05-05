@@ -82,6 +82,15 @@ namespace UMA
 		}
 
 		/// <summary>
+		/// Add a race to the context.
+		/// </summary>
+		/// <param name="race">New race.</param>
+		public void AddRace(RaceData race)
+		{
+			raceLibrary.AddRace(race);
+		}
+
+		/// <summary>
 		/// Instantiate a slot by name.
 		/// </summary>
 		/// <returns>The slot.</returns>
@@ -142,6 +151,15 @@ namespace UMA
 		}
 
 		/// <summary>
+		/// Add a slot asset to the context.
+		/// </summary>
+		/// <param name="slot">New slot asset.</param>
+		public void AddSlotAsset(SlotDataAsset slot)
+		{
+			slotLibrary.AddSlotAsset(slot);
+		}
+
+		/// <summary>
 		/// Instantiate an overlay by name.
 		/// </summary>
 		/// <returns>The overlay.</returns>
@@ -179,6 +197,15 @@ namespace UMA
 		public OverlayData InstantiateOverlay(int nameHash, Color color)
 		{
 			return overlayLibrary.InstantiateOverlay(nameHash, color);
+		}
+
+		/// <summary>
+		/// Add an overlay asset to the context.
+		/// </summary>
+		/// <param name="overlay">New overlay asset.</param>
+		public void AddOverlayAsset(OverlayDataAsset overlay)
+		{
+			overlayLibrary.AddOverlayAsset(overlay);
 		}
 
 	#pragma warning restore 618

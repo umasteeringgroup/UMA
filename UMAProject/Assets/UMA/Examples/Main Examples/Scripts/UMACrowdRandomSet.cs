@@ -103,6 +103,11 @@ namespace UMA.Examples
 			}
 		}
 
+		public static void Apply(UMA.UMAData umaData, CrowdRaceData race, Color skinColor, Color HairColor, Color Shine, HashSet<string> Keywords, UMAContext context)
+		{
+			Apply(umaData, race, skinColor, HairColor, Shine, Keywords, context.slotLibrary, context.overlayLibrary);
+		}
+
 		public static void Apply(UMA.UMAData umaData, CrowdRaceData race, Color skinColor, Color HairColor, Color Shine, HashSet<string> Keywords, SlotLibraryBase slotLibrary, OverlayLibraryBase overlayLibrary)
 		{
 			var slotParts = new HashSet<string>();

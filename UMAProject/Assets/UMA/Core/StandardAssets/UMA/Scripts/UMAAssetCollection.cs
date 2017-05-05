@@ -11,37 +11,40 @@ namespace UMA
         public SlotDataAsset[] slotData;
         public OverlayDataAsset[] overlayData;
 
-		public virtual void AddToLibraries(OverlayLibraryBase overlayLibrary, SlotLibraryBase slotLibrary, RaceLibraryBase raceLibrary)
+		public virtual void AddToContext(UMAContext context)
 		{
-			if (overlayLibrary != null && overlayData.Length > 0)
+			if (context == null)
+				return;
+
+			if (overlayData.Length > 0)
 			{
 #if UNITY_EDITOR
-				UnityEditor.Undo.RecordObject(overlayLibrary, "Added Asset Collection");
+				UnityEditor.Undo.RecordObject(context, "Added overlays from asset collection");
 #endif
 				for (int i = 0; i < overlayData.Length; i++)
 				{
-					overlayLibrary.AddOverlayAsset(overlayData[i]);
+					context.AddOverlayAsset(overlayData[i]);
 				}
 			}
-			if (slotLibrary != null && slotData.Length > 0)
+			if (slotData.Length > 0)
 			{
 #if UNITY_EDITOR
-				UnityEditor.Undo.RecordObject(slotLibrary, "Added Asset Collection");
+				UnityEditor.Undo.RecordObject(context, "Added slots from asset collection");
 #endif
 				for (int i = 0; i < slotData.Length; i++)
 				{
-					slotLibrary.AddSlotAsset(slotData[i]);
+					context.AddSlotAsset(slotData[i]);
 				}
 
 			}
-			if (raceLibrary != null && raceData.Length > 0) 
+			if (raceData.Length > 0) 
 			{
 #if UNITY_EDITOR
-				UnityEditor.Undo.RecordObject(raceLibrary, "Added Asset Collection");
+				UnityEditor.Undo.RecordObject(context, "Added races from asset collection");
 #endif
 				for (int i = 0; i < raceData.Length; i++)
 				{
-					raceLibrary.AddRace(raceData[i]);
+					context.AddRace(raceData[i]);
 				}
 			}
 		}

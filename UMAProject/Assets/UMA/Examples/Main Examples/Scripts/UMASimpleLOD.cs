@@ -96,9 +96,9 @@ namespace UMA.Examples
 					{
 						slotName = string.Format("{0}_LOD{1}", slotName, currentLevel - lodOffset);
 					}
-					if (slotName != slot.slotName && UMAContext.Instance.slotLibrary.HasSlot(slotName))
+					if (slotName != slot.slotName && UMAContext.Instance.HasSlot(slotName))
 					{
-						umaData.umaRecipe.slotDataList[i] = UMAContext.Instance.slotLibrary.InstantiateSlot(slotName, slot.GetOverlayList());
+						umaData.umaRecipe.slotDataList[i] = UMAContext.Instance.InstantiateSlot(slotName, slot.GetOverlayList());
 						changedSlots = true;
 					}
 				}

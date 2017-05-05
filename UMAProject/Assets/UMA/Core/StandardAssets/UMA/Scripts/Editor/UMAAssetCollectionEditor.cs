@@ -9,14 +9,15 @@ namespace UMA.Editors
 	{
 		public override void OnInspectorGUI()
 		{
-			if (GUILayout.Button("Add to Scene"))
+			var context = UMAContext.FindInstance();
+			EditorGUI.BeginDisabledGroup(context == null);
+			if (GUILayout.Button("Add to Scene Context"))
 			{
 				var collection = target as UMAAssetCollection;
-				var overlayLibrary = UnityEngine.Object.FindObjectOfType<OverlayLibraryBase>();
-				var slotLibrary = UnityEngine.Object.FindObjectOfType<SlotLibraryBase>();
-				var raceLibrary = UnityEngine.Object.FindObjectOfType<RaceLibraryBase>();
-				collection.AddToLibraries(overlayLibrary, slotLibrary, raceLibrary);
+				collection.AddToContext(context);
 			}
+			EditorGUI.EndDisabledGroup();
+
 			base.OnInspectorGUI();
 		}
 
