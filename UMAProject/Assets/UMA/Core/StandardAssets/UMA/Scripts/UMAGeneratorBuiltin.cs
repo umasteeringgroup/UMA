@@ -232,18 +232,18 @@ namespace UMA
 				if (!fastGeneration)
 					return false;
 			}
-			else
-			{
-				umaData.skeleton.BeginSkeletonUpdate();
-			}
 
 			if (umaData.isShapeDirty) 
 			{
+				if (!umaData.skeleton.isUpdating)
+				{
+					umaData.skeleton.BeginSkeletonUpdate();
+				}
 				UpdateUMABody(umaData);
 				umaData.isShapeDirty = false;
 				DnaChanged++;
 			} 
-			else
+			else if (umaData.skeleton.isUpdating)
 			{
 				umaData.skeleton.EndSkeletonUpdate();
 			}

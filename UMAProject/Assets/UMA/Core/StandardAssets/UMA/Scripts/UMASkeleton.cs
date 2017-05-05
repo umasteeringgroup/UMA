@@ -38,6 +38,8 @@ namespace UMA
 		/// <value>The bone count.</value>
 		public virtual int boneCount { get { return boneHashData.Count; } }
 
+		public bool isUpdating { get { return updating; } }
+
 		private Dictionary<int, BoneData> boneHashDataLookup;
 
 #if UNITY_EDITOR
