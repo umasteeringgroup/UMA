@@ -74,6 +74,8 @@ namespace UMA
             {
 				if (this.material.shader != material.material.shader)
 					return false;
+                if (this.material.renderQueue != material.material.renderQueue)
+                    return false;
 				if (this.materialType != material.materialType)
 					return false;
 				if (this.channels.Length != material.channels.Length)

@@ -1166,7 +1166,7 @@ namespace UMA.Editors
 		public bool OnGUI()
 		{
 			bool delete;
-			GUIHelper.FoldoutBar(ref _foldout, _overlayData.asset.overlayName, out move, out delete);
+			GUIHelper.FoldoutBar(ref _foldout, _overlayData.asset.overlayName + "("+_overlayData.asset.material.name+")", out move, out delete);
 
 			if (!_foldout)
 				return false;
