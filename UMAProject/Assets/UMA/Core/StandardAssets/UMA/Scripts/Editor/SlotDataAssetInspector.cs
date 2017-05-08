@@ -7,14 +7,42 @@ namespace UMA.Editors
 	[CustomEditor(typeof(SlotDataAsset))]
     public class SlotDataAssetInspector : Editor
     {
-        public override void OnInspectorGUI()
+		//allow for delayed saving so typing in a field does not trigger save with every keystroke
+		private float lastActionTime = 0;
+		private bool doSave = false;
+
+		void OnEnable()
+		{
+			EditorApplication.update += DoDelayedSave;
+		}
+
+		void OnDestroy()
+		{
+			EditorApplication.update -= DoDelayedSave;
+		}
+
+		void DoDelayedSave()
+		{
+			if (doSave && Time.realtimeSinceStartup > (lastActionTime + 0.5f))
+			{
+				doSave = false;
+				Debug.Log("Saved SlotDataAsset lastActionTime = " + lastActionTime + " realTime = " + Time.realtimeSinceStartup);
+				lastActionTime = Time.realtimeSinceStartup;
+				EditorUtility.SetDirty(target);
+				AssetDatabase.SaveAssets();
+			}
+		}
+		public override void OnInspectorGUI()
         {
+			if (lastActionTime == 0)
+				lastActionTime = Time.realtimeSinceStartup;
+
 			EditorGUI.BeginChangeCheck();
 			base.OnInspectorGUI();
 			if (EditorGUI.EndChangeCheck())
 			{
-				EditorUtility.SetDirty(target);
-				AssetDatabase.SaveAssets();
+				lastActionTime = Time.realtimeSinceStartup;
+				doSave = true;
 			}
 
 			foreach (var t in targets)
@@ -29,6 +57,7 @@ namespace UMA.Editors
 						{
 							slotDataAsset.animatedBoneHashes[i] = UMASkeleton.StringToHash(slotDataAsset.animatedBoneNames[i]);
 						}
+						//DelayedSave here too?
 						EditorUtility.SetDirty(slotDataAsset);
 						AssetDatabase.SaveAssets();
 					}

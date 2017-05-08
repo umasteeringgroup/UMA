@@ -16,18 +16,58 @@ namespace UMA.Editors
 		protected RaceData race;
         protected bool _needsUpdate;
         protected string _errorMessage;
-		
+		//we dont really want to use delayedFields because if the user does not change focus from the field in the inspector but instead selects another asset in their projects their changes dont save
+		//Instead what we really want to do is set a short delay on saving so that the asset doesn't save while the user is typing in a field
+		private float lastActionTime = 0;
+		private bool doSave = false;
+		//pRaceInspector needs to get unpacked UMATextRecipes so we might need a virtual UMAContext
+		GameObject EditorUMAContext;
+
 		public void OnEnable() {
 			race = target as RaceData;
+			EditorApplication.update += DoDelayedSave;
 		}
 
+		void OnDestroy()
+		{
+			EditorApplication.update -= DoDelayedSave;
+			if (EditorUMAContext != null)
+				DestroyEditorUMAContext();
+
+		}
+
+		void DoDelayedSave()
+		{
+			if (doSave && Time.realtimeSinceStartup > (lastActionTime + 0.5f))
+			{
+				doSave = false;
+				lastActionTime = Time.realtimeSinceStartup;
+				EditorUtility.SetDirty(race);
+				AssetDatabase.SaveAssets();
+			}
+		}
+
+		private void DestroyEditorUMAContext()
+		{
+			if (EditorUMAContext != null)
+			{
+				foreach (Transform child in EditorUMAContext.transform)
+				{
+					DestroyImmediate(child.gameObject);
+				}
+				DestroyImmediate(EditorUMAContext);
+			}
+		}
 		/// <summary>
 		/// Add to PreInspectorGUI in any derived editors to allow editing of new properties added to races.
 		/// </summary>
 		partial void PreInspectorGUI(ref bool result);
 
 	    public override void OnInspectorGUI()
-	    { 
+	    {
+			if (lastActionTime == 0)
+				lastActionTime = Time.realtimeSinceStartup;
+
 			race.raceName = EditorGUILayout.TextField("Race Name", race.raceName);
             race.umaTarget = (UMA.RaceData.UMATarget)EditorGUILayout.EnumPopup("UMA Target", race.umaTarget);
             race.genericRootMotionTransformName = EditorGUILayout.TextField("Root Motion Transform", race.genericRootMotionTransformName);
@@ -76,11 +116,11 @@ namespace UMA.Editors
 			}catch (UMAResourceNotFoundException e){
 				_errorMessage = e.Message;
 			}
-			
-            if (GUI.changed)
-            {
-                EditorUtility.SetDirty(race);
-                AssetDatabase.SaveAssets();
+
+			if (GUI.changed)
+			{
+				doSave = true;
+				lastActionTime = Time.realtimeSinceStartup;
             }
 		}
 
