@@ -129,24 +129,19 @@ namespace UMA.CharacterSystem.Editors
 			GUILayout.Space(2f);
 			SerializedProperty thisPreloadWardrobeRecipes = serializedObject.FindProperty("preloadWardrobeRecipes");
 			Rect pwrCurrentRect = EditorGUILayout.GetControlRect(false, _wardrobePropDrawer.GetPropertyHeight(thisPreloadWardrobeRecipes, GUIContent.none));
-			EditorGUI.BeginChangeCheck();
 			_wardrobePropDrawer.OnGUI(pwrCurrentRect, thisPreloadWardrobeRecipes, new GUIContent(thisPreloadWardrobeRecipes.displayName));
 			if (showHelp)
 			{
 				EditorGUILayout.HelpBox("Preload Wardrobe: Sets the default wardrobe recipes to use on the Avatar. This is useful when creating specific Avatar prefabs.", MessageType.Info);
 			}
-			//if (EditorGUI.EndChangeCheck())
-			//{
-			//	EditorGUI.BeginChangeCheck();
-			//EditorGUILayout.PropertyField(serializedObject.FindProperty("preloadWardrobeRecipes"));
-			if (EditorGUI.EndChangeCheck())
+			if (_wardrobePropDrawer.changed)
 			{
 				serializedObject.ApplyModifiedProperties();
 				if (Application.isPlaying)
 				{
 					thisDCA.ClearSlots();
 					thisDCA.LoadDefaultWardrobe();
-					thisDCA.BuildCharacter();
+					thisDCA.BuildCharacter(true);
 				}
 			}
 			SerializedProperty thisRaceAnimationControllers = serializedObject.FindProperty("raceAnimationControllers");

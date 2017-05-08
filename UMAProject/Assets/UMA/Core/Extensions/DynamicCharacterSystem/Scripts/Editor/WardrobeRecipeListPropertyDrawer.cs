@@ -11,6 +11,7 @@ namespace UMA.CharacterSystem.Editors
         float padding = 2f;
         public DynamicCharacterSystem thisDCS;
         public DynamicCharacterAvatar thisDCA;
+		public bool changed = false;
         Texture warningIcon;
         //Make a drop area for wardrobe recipes
         private void DropAreaGUI(Rect dropArea, SerializedProperty thisRecipesProp)
@@ -67,6 +68,7 @@ namespace UMA.CharacterSystem.Editors
                                     }
                                     thisRecipesProp.serializedObject.ApplyModifiedProperties();
                                     GUI.changed = true;
+									changed = true;
                                 }
                                 continue;
                             }
@@ -91,6 +93,7 @@ namespace UMA.CharacterSystem.Editors
         }
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
+			changed = false;
             if (warningIcon == null)
             {
                 warningIcon = EditorGUIUtility.FindTexture("console.warnicon.sml");
@@ -156,6 +159,7 @@ namespace UMA.CharacterSystem.Editors
 					}
                     if (GUI.Button(valRBut, "X"))
                     {
+						changed = true;
                         thisRecipesProp.DeleteArrayElementAtIndex(i);
                         thisRecipesProp.serializedObject.ApplyModifiedProperties();
                     }
