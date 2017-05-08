@@ -27,8 +27,25 @@ MonoBehaviour:
   - Waist
   - Legs
   - WerewolfFeet
-  backwardsCompatibleWith:
-  - HumanMaleDCS
+  backwardsCompatibleWith: []
+  _crossCompatibilitySettings:
+    settingsData:
+    - ccRace: HumanMaleDCS
+      ccSettings:
+      - raceSlot: UMA_Werewolf_Torso
+        compatibleRaceSlot: MaleTorso
+        overlaysMatch: 0
+      - raceSlot: UMA_Werewolf_Legs
+        compatibleRaceSlot: MaleLegs
+        overlaysMatch: 0
+    - ccRace: HumanMale
+      ccSettings:
+      - raceSlot: UMA_Werewolf_Torso
+        compatibleRaceSlot: MaleTorso
+        overlaysMatch: 0
+      - raceSlot: UMA_Werewolf_Legs
+        compatibleRaceSlot: MaleLegs
+        overlaysMatch: 0
   raceThumbnails:
     fullThumb: {fileID: 21300000, guid: c265c11931ae8a1448c4c3c111eeceb7, type: 3}
     faceThumb: {fileID: 21300000, guid: 1bbf9fe37888e474192ed69553add85b, type: 3}
