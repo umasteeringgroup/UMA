@@ -157,7 +157,7 @@ namespace UMA.Editors
 							for (int i = 0; i < wcRecipesForRace.Count; i++)
 							{
 								Type wcType = wcRecipesForRace[i].GetType();
-								if (wcType.ToString() == "UMAWardrobeCollection")
+								if (wcType.ToString().Replace(wcType.Namespace+".", "") == "UMAWardrobeCollection")
 								{
 									FieldInfo wcRecipeSlotField = wcType.GetField("wardrobeSlot", BindingFlags.Public | BindingFlags.Instance);
 									var wcRecipeSlot = (string)wcRecipeSlotField.GetValue(wcRecipesForRace[i]);
@@ -530,7 +530,7 @@ namespace UMA.Editors
 
 							if (suppressWardrobeSlot != null)
 							{
-								if (activeRace == "" || ((compatibleRaces.Count == 0 || compatibleRaces.Contains(activeRace)) || (_recipe.raceData.findBackwardsCompatibleWith(compatibleRaces) && _recipe.raceData.wardrobeSlots.Contains(wardrobeSlot))))
+								if (activeRace == "" || ((compatibleRaces.Count == 0 || compatibleRaces.Contains(activeRace)) || (_recipe.raceData.IsCrossCompatibleWith(compatibleRaces) && _recipe.raceData.wardrobeSlots.Contains(wardrobeSlot))))
 								{
 									if (!SuppressSlotsStrings.Contains(wardrobeSlot))
 									{
@@ -562,7 +562,7 @@ namespace UMA.Editors
 							string wardrobeSlot = (string)WardrobeSlotField.GetValue(utr);
 							List<string> hides = (List<string>)HidesField.GetValue(utr);
 
-							if (activeRace == "" || ((compatibleRaces.Count == 0 || compatibleRaces.Contains(activeRace)) || (_recipe.raceData.findBackwardsCompatibleWith(compatibleRaces) && _recipe.raceData.wardrobeSlots.Contains(wardrobeSlot))))
+							if (activeRace == "" || ((compatibleRaces.Count == 0 || compatibleRaces.Contains(activeRace)) || (_recipe.raceData.IsCrossCompatibleWith(compatibleRaces) && _recipe.raceData.wardrobeSlots.Contains(wardrobeSlot))))
 							{
 								Recipes.Add(utr);
 								if (hides.Count > 0)

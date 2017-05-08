@@ -85,12 +85,47 @@ namespace UMA.CharacterSystem
 				}
 			}
 		}
+
+		public List<WardrobeSettings> GetRacesWardrobeSet(string race)
+		{
+			var thisContext = UMAContext.FindInstance();
+			if(thisContext == null)
+			{
+				Debug.LogWarning("Getting the WardrobeSet from a WardrobeCollection requires a valid UMAContext in the scene");
+				return new List<WardrobeSettings>();
+			}
+			var thisRace = (thisContext.raceLibrary as DynamicRaceLibrary).GetRace(race, true);
+			return GetRacesWardrobeSet(thisRace);
+		}
+		/// <summary>
+		/// Gets the wardrobeSet set in this collection for the given race
+		/// Or wardrobeSet for first matched cross compatible race the given race has
+		/// </summary>
+		public List<WardrobeSettings> GetRacesWardrobeSet(RaceData race)
+		{
+			var setToUse = wardrobeCollection[race.raceName];
+			//if no set was directly compatible with the active race, check if it has sets for any cross compatible races that race may have
+			if (setToUse.Count == 0)
+			{
+				var thisDCACCRaces = race.GetCrossCompatibleRaces();
+				for (int i = 0; i < thisDCACCRaces.Count; i++)
+				{
+					if (wardrobeCollection[thisDCACCRaces[i]].Count > 0)
+					{
+						setToUse = wardrobeCollection[thisDCACCRaces[i]];
+						break;
+					}
+				}
+			}
+			return setToUse;
+		}
+
 		/// <summary>
 		/// Gets the recipe names for the given race from the WardrobeCollection
 		/// </summary>
 		public List<string> GetRacesRecipeNames(string race, DynamicCharacterSystem dcs)
 		{
-			var recipesToGet = wardrobeCollection[race];
+			var recipesToGet = GetRacesWardrobeSet(race);
 			List<string> recipesWeGot = new List<string>();
 			for (int i = 0; i < recipesToGet.Count; i++)
 			{
@@ -103,7 +138,7 @@ namespace UMA.CharacterSystem
 		/// </summary>
 		public List<UMATextRecipe> GetRacesRecipes(string race, DynamicCharacterSystem dcs)
 		{
-			var recipesToGet = wardrobeCollection[race];
+			var recipesToGet = GetRacesWardrobeSet(race);
 			List<UMATextRecipe> recipesWeGot = new List<UMATextRecipe>();
 			for (int i = 0; i < recipesToGet.Count; i++)
 			{
@@ -133,11 +168,13 @@ namespace UMA.CharacterSystem
 
 		/// <summary>
 		/// Gets a DCSUnversalPackRecipeModel that has the wardrobeSet set to be the set in this collection for the given race of the sent avatar
+		/// Or if this recipe is cross compatible returns the wardrobe set for the first matched cross compatible race
 		/// </summary>
 		public DCSUniversalPackRecipe GetUniversalPackRecipe(DynamicCharacterAvatar dca, UMAContext context)
 		{
 			var thisPackRecipe = PackedLoadDCSInternal(context);
-			thisPackRecipe.wardrobeSet = wardrobeCollection[dca.activeRace.name];
+			var setToUse = GetRacesWardrobeSet(dca.activeRace.racedata);
+            thisPackRecipe.wardrobeSet = setToUse;
 			thisPackRecipe.race = dca.activeRace.name;
 			return thisPackRecipe;
 		}

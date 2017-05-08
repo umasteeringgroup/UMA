@@ -89,7 +89,7 @@ namespace UMA.CharacterSystem.Examples
 
 		//Loading options when Changing Race
 		bool _keepDNA = false;
-		bool _keepWardrobe = false;
+		bool _keepWardrobe = true;
 		bool _keepBodyColors = true;
 
 		public bool KeepDNA
@@ -199,7 +199,7 @@ namespace UMA.CharacterSystem.Examples
 			raceDropdownOptions.Add("None Set");
 			foreach (RaceData r in raceDropdownOptionsArray)
 			{
-				if (r.raceName != "PlaceholderRace")
+				if (r.raceName != "PlaceholderRace" && r.raceName != "RaceDataPlaceholder")
 					raceDropdownOptions.Add(r.raceName);
 			}
 			for (int i = 0; i < raceDropdownOptions.Count; i++)
@@ -217,10 +217,10 @@ namespace UMA.CharacterSystem.Examples
 			}
 			// we also need to make the raceChangeOptions toggles match the settings in the component
 			Toggle[] thisChangeRaceToggles = null;
-			if(changeRaceDropdown.template.FindChild("ChangeRaceOptsHolder") != null)
-				if(changeRaceDropdown.template.FindChild("ChangeRaceOptsHolder").FindChild("ChangeRaceToggles") != null)
-					if(changeRaceDropdown.template.FindChild("ChangeRaceOptsHolder").FindChild("ChangeRaceToggles").GetComponentsInChildren<Toggle>().Length != 0)
-						thisChangeRaceToggles = changeRaceDropdown.template.FindChild("ChangeRaceOptsHolder").FindChild("ChangeRaceToggles").GetComponentsInChildren<Toggle>();
+			if(changeRaceDropdown.template.Find("ChangeRaceOptsHolder") != null)
+				if(changeRaceDropdown.template.Find("ChangeRaceOptsHolder").Find("ChangeRaceToggles") != null)
+					if(changeRaceDropdown.template.Find("ChangeRaceOptsHolder").Find("ChangeRaceToggles").GetComponentsInChildren<Toggle>().Length != 0)
+						thisChangeRaceToggles = changeRaceDropdown.template.Find("ChangeRaceOptsHolder").Find("ChangeRaceToggles").GetComponentsInChildren<Toggle>();
 			if(thisChangeRaceToggles != null)
 			for(int i = 0; i < thisChangeRaceToggles.Length; i++)
 			{
@@ -312,18 +312,20 @@ namespace UMA.CharacterSystem.Examples
 			{
 				if (slot == "None")
 					continue;
-				if (wardrobeDropdownPanel.transform.FindChild(slot + "DropdownHolder") == null)
+				if (wardrobeDropdownPanel.transform.Find(slot + "DropdownHolder") == null)
 				{
 					GameObject thisWardrobeDropdown = Instantiate(wardrobeDrodownPrefab) as GameObject;
 					thisWardrobeDropdown.transform.SetParent(wardrobeDropdownPanel.transform, false);
 					thisWardrobeDropdown.GetComponent<CSWardrobeSlotChangerDD>().customizerScript = this;
 					thisWardrobeDropdown.GetComponent<CSWardrobeSlotChangerDD>().wardrobeSlotToChange = slot;
 					thisWardrobeDropdown.name = slot + "DropdownHolder";
-					thisWardrobeDropdown.transform.FindChild("SlotLabel").GetComponent<Text>().text = slot;
+					thisWardrobeDropdown.transform.Find("SlotLabel").GetComponent<Text>().text = slot;
 					thisWardrobeDropdown.GetComponent<Dropdown>().onValueChanged.AddListener(thisWardrobeDropdown.GetComponent<CSWardrobeSlotChangerDD>().ChangeWardrobeSlot);
 				}
 			}
 		}
+
+
 		public void SetUpWardrobeDropdowns()
 		{
 			if (Avatar != null)
@@ -347,83 +349,197 @@ namespace UMA.CharacterSystem.Examples
 				}
 				if (characterSystem.Recipes.ContainsKey(thisRace) && characterSystem.Recipes[thisRace].ContainsKey(thisSlot) && showOption)
 				{
-					thisDD.options.Clear();
-					thisDD.onValueChanged.RemoveAllListeners();
-					var wardrobeOptions = new List<UMATextRecipe>(characterSystem.Recipes[thisRace][thisSlot]);
-					var thisUnsetThumb = Avatar.activeRace.racedata.raceThumbnails.GetThumbFor(thisSlot);
-					var thisUnsetOption = new Dropdown.OptionData();
-					thisUnsetOption.text = thisSlot == "Face" ? "Standard" : "None";
-					thisUnsetOption.image = thisUnsetThumb;
-					thisDD.options.Add(thisUnsetOption);
-					for (int i = 0; i < wardrobeOptions.Count; i++)
+					if (thisSlot == "WardrobeCollection")
 					{
-						var thisddOption = new Dropdown.OptionData();
-						thisddOption.text = wardrobeOptions[i].DisplayValue != "" ? wardrobeOptions[i].DisplayValue : wardrobeOptions[i].name;
-						thisddOption.image = wardrobeOptions[i].GetWardrobeRecipeThumbFor(thisRace);
-						thisDD.options.Add(thisddOption);
-					}
-					int selected = 0;
-					UMATextRecipe thisDDRecipe = null;
-					if (Avatar.WardrobeRecipes.Count > 0)
-					{
-						foreach (KeyValuePair<string, UMATextRecipe> kp in Avatar.WardrobeRecipes)
-						{
-							var recipeSlotName = kp.Value.wardrobeSlot;
-							if (recipeSlotName == thisSlot && kp.Value.compatibleRaces.Contains(thisRace))
-							{
-								for (int ri = 0; ri < characterSystem.Recipes[thisRace][recipeSlotName].Count; ri++)
-								{
-									if (characterSystem.Recipes[thisRace][recipeSlotName][ri].name == kp.Value.name)
-									{
-										//we could do alot more checks here to check equalness if this is the only way to make this work...
-										selected = ri + 1;
-									}
-								}
-								thisDDRecipe = kp.Value;
-							}
-							else if (recipeSlotName == thisSlot && (Avatar.activeRace.racedata.findBackwardsCompatibleWith(kp.Value.compatibleRaces) && Avatar.activeRace.racedata.wardrobeSlots.Contains(thisSlot)))
-							{
-								//for backwards compatible Races- races can be backwards compatible with other races (set in the Race itself) and this enables one race to wear anothers wardrobe (if that race has the same wardrobe slots)
-								selected = (characterSystem.Recipes[thisRace][recipeSlotName].FindIndex(s => s.Equals(kp.Value)) + 1);
-								thisDDRecipe = kp.Value;
-							}
-						}
-					}
-					thisDD.value = selected;
-					if (selected == 0)
-					{
-						thisDD.captionImage.sprite = thisUnsetThumb;
-						thisDD.captionImage.enabled = true;
+						SetUpWardrobeCollectionDropdown(child, thisDD);
 					}
 					else
 					{
-						thisDD.captionImage.sprite = thisDDRecipe.GetWardrobeRecipeThumbFor(thisRace);
-						thisDD.captionImage.enabled = true;
+						thisDD.options.Clear();
+						thisDD.onValueChanged.RemoveAllListeners();
+						var wardrobeOptions = new List<UMATextRecipe>(characterSystem.Recipes[thisRace][thisSlot]);
+						var thisUnsetThumb = Avatar.activeRace.racedata.raceThumbnails.GetThumbFor(thisSlot);
+						var thisUnsetOption = new Dropdown.OptionData();
+						thisUnsetOption.text = thisSlot == "Face" ? "Standard" : "None";
+						thisUnsetOption.image = thisUnsetThumb;
+						thisDD.options.Add(thisUnsetOption);
+						for (int i = 0; i < wardrobeOptions.Count; i++)
+						{
+							var thisddOption = new Dropdown.OptionData();
+							thisddOption.text = wardrobeOptions[i].DisplayValue != "" ? wardrobeOptions[i].DisplayValue : wardrobeOptions[i].name;
+							thisddOption.image = wardrobeOptions[i].GetWardrobeRecipeThumbFor(thisRace);
+							thisDD.options.Add(thisddOption);
+						}
+						int selected = 0;
+						UMATextRecipe thisDDRecipe = null;
+						if (Avatar.WardrobeRecipes.Count > 0)
+						{
+							foreach (KeyValuePair<string, UMATextRecipe> kp in Avatar.WardrobeRecipes)
+							{
+								var recipeSlotName = kp.Value.wardrobeSlot;
+								if (recipeSlotName == thisSlot && kp.Value.compatibleRaces.Contains(thisRace))
+								{
+									for (int ri = 0; ri < characterSystem.Recipes[thisRace][recipeSlotName].Count; ri++)
+									{
+										if (characterSystem.Recipes[thisRace][recipeSlotName][ri].name == kp.Value.name)
+										{
+											//we could do alot more checks here to check equalness if this is the only way to make this work...
+											selected = ri + 1;
+										}
+									}
+									thisDDRecipe = kp.Value;
+								}
+								else if (recipeSlotName == thisSlot && (Avatar.activeRace.racedata.IsCrossCompatibleWith(kp.Value.compatibleRaces) && Avatar.activeRace.racedata.wardrobeSlots.Contains(thisSlot)))
+								{
+									//for cross compatible Races- races can be cross compatible with other races (set in the Race itself) and this enables one race to wear anothers wardrobe (if that race has the same wardrobe slots)
+									selected = (characterSystem.Recipes[thisRace][recipeSlotName].FindIndex(s => s.Equals(kp.Value)) + 1);
+									thisDDRecipe = kp.Value;
+								}
+							}
+						}
+						thisDD.value = selected;
+						if (selected == 0)
+						{
+							thisDD.captionImage.sprite = thisUnsetThumb;
+							thisDD.captionImage.enabled = true;
+						}
+						else
+						{
+							thisDD.captionImage.sprite = thisDDRecipe.GetWardrobeRecipeThumbFor(thisRace);
+							thisDD.captionImage.enabled = true;
+						}
+						thisDD.onValueChanged.AddListener(child.GetComponent<CSWardrobeSlotChangerDD>().ChangeWardrobeSlot);
+						var thisSuppressedTextGO = thisDD.gameObject.transform.Find("ActiveWSlot").Find("SuppressedIndicator");
+						thisDD.interactable = true;
+						if (thisSuppressedTextGO)
+						{
+							thisSuppressedTextGO.GetComponent<Image>().enabled = false;
+							thisSuppressedTextGO.GetComponentInChildren<Text>().text = "";
+						}
 					}
-					thisDD.onValueChanged.AddListener(child.GetComponent<CSWardrobeSlotChangerDD>().ChangeWardrobeSlot);
 				}
 				else
 				{
 					child.gameObject.SetActive(false);
 				}
 			}
+			if (Avatar != null)
+				UpdateSuppressedWardrobeDropdowns();
 		}
 
-		//Decided this may be more confusing than useful...Just left here in case I change my mind...
-		public void UpdateSuppressedWardrobeDropdowns(UMATextRecipe suppressedBy)
+		private void SetUpWardrobeCollectionDropdown(Transform childGO, Dropdown thisDD)
 		{
-			if (suppressedBy.suppressWardrobeSlots == null)
-				return;
-			var suppressedSlots = suppressedBy.suppressWardrobeSlots;
-			foreach (Transform child in wardrobeDropdownPanel.transform)
+			var thisSlot = "WardrobeCollection";
+			thisDD.options.Clear();
+			thisDD.onValueChanged.RemoveAllListeners();
+			var wardrobeOptions = new List<UMATextRecipe>(characterSystem.Recipes[thisRace][thisSlot]);
+			var thisUnsetThumb = Avatar.activeRace.racedata.raceThumbnails.GetThumbFor(thisSlot);
+			var thisDummyOption = new Dropdown.OptionData();
+			thisDummyOption.text = "Dummy";
+			thisDummyOption.image = thisUnsetThumb;
+			thisDD.options.Add(thisDummyOption);
+			var thisUnsetOption = new Dropdown.OptionData();
+			thisUnsetOption.text = "Remove All";
+			thisUnsetOption.image = thisUnsetThumb;
+			thisDD.options.Add(thisUnsetOption);
+			int activeWCs = 0;
+			int appliedWCs = 0;
+			for (int i = 0; i < wardrobeOptions.Count; i++)
 			{
-				child.GetComponent<Dropdown>().captionImage.overrideSprite = null;
-				var thisSlot = child.GetComponent<CSWardrobeSlotChangerDD>().wardrobeSlotToChange;
-				if (suppressedSlots.Contains(thisSlot))
+				var thisddOption = new Dropdown.OptionData();
+				thisddOption.text = wardrobeOptions[i].DisplayValue != "" ? wardrobeOptions[i].DisplayValue : wardrobeOptions[i].name;
+				thisddOption.image = wardrobeOptions[i].GetWardrobeRecipeThumbFor(thisRace);
+				thisDD.options.Add(thisddOption);
+				if (Avatar.GetWardrobeCollection(wardrobeOptions[i].name))
 				{
-					child.GetComponent<Dropdown>().value = 0;
-					//make the suppressed slot show the image of the item it is being suppressed by
-					child.GetComponent<Dropdown>().captionImage.overrideSprite = suppressedBy.GetWardrobeRecipeThumbFor(thisRace);
+					activeWCs++;
+					if(Avatar.IsCollectionApplied(wardrobeOptions[i].name))
+						appliedWCs++;
+				}
+			}
+			thisDD.value = 0;
+			thisDD.transform.Find("SlotLabel").GetComponent<Text>().text = "";
+			thisDD.captionImage.sprite = thisUnsetThumb;
+			thisDD.captionImage.enabled = true;
+			if (thisDD.gameObject.GetComponent<EventTrigger>() == null)
+			{
+				var trigger = thisDD.gameObject.AddComponent<EventTrigger>();
+				EventTrigger.Entry entry = new EventTrigger.Entry();
+				entry.eventID = EventTriggerType.PointerClick;
+				entry.callback.AddListener(UpdateWardrobeCollectionDropdownOpts);
+				trigger.triggers.Add(entry);
+			}
+			thisDD.onValueChanged.AddListener(childGO.GetComponent<CSWardrobeSlotChangerDD>().ChangeWardrobeSlot);
+			var thisSuppressedTextGO = thisDD.gameObject.transform.Find("ActiveWSlot").Find("SuppressedIndicator");
+			thisDD.interactable = true;
+			if (thisSuppressedTextGO)
+			{
+				thisSuppressedTextGO.GetComponent<Image>().enabled = true;
+				var activeString = activeWCs > 0 ? "\r\n(" + activeWCs + " ACTIVE)" : "";
+				var appliedString = activeWCs > 0 ? "\r\n(" + appliedWCs + " APPLIED)" : "";
+				thisSuppressedTextGO.GetComponentInChildren<Text>().text = "WARDROBE COLLECTIONS "+ activeString + appliedString;
+				thisSuppressedTextGO.GetComponentInChildren<Text>().fontStyle = FontStyle.Bold;
+            }
+		}
+
+		public void UpdateWardrobeCollectionDropdownOpts(BaseEventData eventData)
+		{
+			var selectedItem = eventData.selectedObject;
+			var selectedItemCheckMark = selectedItem.transform.Find("Item Checkmark");
+			var selectedSprite = selectedItemCheckMark.GetComponent<Image>().sprite;
+			selectedItemCheckMark.GetComponent<Image>().enabled = false;
+			selectedItem.SetActive(false);
+			var allItems = selectedItem.transform.parent.GetComponentsInChildren<Toggle>();
+			for (int i = 0; i < allItems.Length; i++)
+			{
+				if (allItems[i].gameObject == selectedItem)
+					continue;
+				var collectionName = allItems[i].gameObject.name.Split(new string[] { ": " }, StringSplitOptions.RemoveEmptyEntries)[1];
+				if (Avatar.GetWardrobeCollection(collectionName))
+				{
+					var forcedCheckmark = Instantiate<GameObject>(selectedItemCheckMark.gameObject);
+					forcedCheckmark.name = "forcedCheckmark";
+					forcedCheckmark.transform.SetParent(allItems[i].gameObject.transform, false);
+					forcedCheckmark.GetComponent<Image>().enabled = true;
+				}
+				else
+				{
+					if (allItems[i].gameObject.transform.Find("forcedCheckMark") != null)
+					{
+						Destroy(allItems[i].gameObject.transform.Find("forcedCheckMark"));
+					}
+				}
+			}
+		}
+
+		public void UpdateSuppressedWardrobeDropdowns()
+		{
+			if (Avatar.WardrobeRecipes.Count == 0)
+				return;
+			foreach (KeyValuePair<string, UMATextRecipe> kp in Avatar.WardrobeRecipes)
+			{
+				if (kp.Value.suppressWardrobeSlots == null)
+					continue;
+				var suppressedSlots = kp.Value.suppressWardrobeSlots;
+				foreach (Transform child in wardrobeDropdownPanel.transform)
+				{
+					var thisDD = child.GetComponent<Dropdown>();
+					var thisSuppressedTextGO = thisDD.gameObject.transform.Find("ActiveWSlot").Find("SuppressedIndicator");
+					thisDD.captionImage.overrideSprite = null;
+					var thisSlot = child.GetComponent<CSWardrobeSlotChangerDD>().wardrobeSlotToChange;
+					if (suppressedSlots.Contains(thisSlot))
+					{
+						thisDD.onValueChanged.RemoveAllListeners();
+						thisDD.value = 0;
+						//make the suppressed slot show the image of the item it is being suppressed by
+						thisDD.captionImage.overrideSprite = kp.Value.GetWardrobeRecipeThumbFor(thisRace);
+						thisDD.interactable = false;
+						if (thisSuppressedTextGO)
+						{
+							thisSuppressedTextGO.GetComponent<Image>().enabled = true;
+							thisSuppressedTextGO.GetComponentInChildren<Text>().text = "Suppressed by " + kp.Value.name + " on " + kp.Value.wardrobeSlot;
+						}
+					}
 				}
 			}
 		}
@@ -457,7 +573,7 @@ namespace UMA.CharacterSystem.Examples
 					thisColorDropdown.GetComponent<CSColorChangerDD>().customizerScript = this;
 					thisColorDropdown.GetComponent<CSColorChangerDD>().colorToChange = colorType.name;
 					thisColorDropdown.name = colorType.name + "DropdownHolder";
-					thisColorDropdown.transform.FindChild("SlotLabel").GetComponent<Text>().text = colorType.name + " Color";
+					thisColorDropdown.transform.Find("SlotLabel").GetComponent<Text>().text = colorType.name + " Color";
 					thisColorDropdown.GetComponent<DropdownWithColor>().onValueChanged.AddListener(thisColorDropdown.GetComponent<CSColorChangerDD>().ChangeColor);
 					SetUpColorDropdownValue(thisColorDropdown.GetComponent<CSColorChangerDD>(), colorType);
 				}
@@ -604,40 +720,51 @@ namespace UMA.CharacterSystem.Examples
 		/// <param name="fSlotNumber">Id number slot to change</param>
 		public void SetSlot(string slotToChange, float fSlotNumber)
 		{
-			var thisRace = Avatar.activeRace.name;
-			int slotNumber = (int)fSlotNumber;
-			string prioritySlot = "";
-			List<string> prioritySlotOver = new List<string>();
-			UMATextRecipe tr = null;
-			if (slotNumber >= 0)
+			if (slotToChange == "WardrobeCollection")
 			{
-				tr = characterSystem.Recipes[thisRace][slotToChange][slotNumber];
-				prioritySlotOver = tr.suppressWardrobeSlots;
-				prioritySlot = tr.wardrobeSlot;
-				Avatar.SetSlot(tr);
+				SetWardrobeCollectionSlot(slotToChange, fSlotNumber);
 			}
 			else
 			{
-				Avatar.ClearSlot(slotToChange);
-			}
-			if (prioritySlotOver.Count > 0)
-			{
-				foreach (Transform child in wardrobeDropdownPanel.transform)
+				var thisRace = Avatar.activeRace.name;
+				int slotNumber = (int)fSlotNumber;
+				UMATextRecipe tr = null;
+				if (slotNumber >= 0)
 				{
-					if (child.gameObject.activeSelf)
-					{
-						var thisSlot = child.GetComponent<CSWardrobeSlotChangerDD>().wardrobeSlotToChange;
-						if (prioritySlotOver.Contains(thisSlot))
-						{
-							child.GetComponent<Dropdown>().value = 0;
-							child.GetComponent<Dropdown>().CancelInvoke();
-						}
-					}
+					tr = characterSystem.Recipes[thisRace][slotToChange][slotNumber];
+					Avatar.SetSlot(tr);
+				}
+				else
+				{
+					Avatar.ClearSlot(slotToChange);
+					Avatar.ReapplyWardrobeCollections();
 				}
 			}
-			Avatar.BuildCharacter(true, prioritySlot, prioritySlotOver);
-			//Update the dropdowns to reflect any changes
+			Avatar.BuildCharacter(true);
+			//Update the dropdowns to reflect any changes after the character has built
 			SetUpWardrobeDropdowns();
+		}
+
+		public void SetWardrobeCollectionSlot(string slotToChange, float fSlotNumber)
+		{
+			int slotNumber = ((int)fSlotNumber) - 1;
+			if (slotNumber >= 0)
+			{
+				var wc = characterSystem.Recipes[thisRace][slotToChange][slotNumber];
+				if (Avatar.GetWardrobeCollection(wc.name))
+				{
+					Avatar.UnloadWardrobeCollection(wc.name);
+				}
+				else
+				{
+					Avatar.SetSlot(wc);
+				}
+			}
+			else
+			{
+				Avatar.UnloadAllWardrobeCollections();
+			}
+
 		}
 
 		public void CloseAllPanels()

@@ -342,8 +342,8 @@ namespace UMA.CharacterSystem
 							RaceData raceKeyRace = (context.raceLibrary as DynamicRaceLibrary).GetRace(racekey, false);
 							if (raceKeyRace == null)
 								continue;
-							if (raceKeyRace.backwardsCompatibleWith.Contains(u.compatibleRaces[i]) && raceKeyRace.wardrobeSlots.Contains(thisWardrobeSlot))
-							{
+							if (raceKeyRace.IsCrossCompatibleWith(u.compatibleRaces[i]) && (raceKeyRace.wardrobeSlots.Contains(thisWardrobeSlot) || thisWardrobeSlot == "WardrobeCollection"))
+                            {
 								Dictionary<string, List<UMATextRecipe>> RaceRecipes = Recipes[racekey];
 								if (!RaceRecipes.ContainsKey(thisWardrobeSlot))
 								{
