@@ -2397,27 +2397,30 @@ namespace UMA.CharacterSystem
 
 		#region CHARACTER FINAL ASSEMBLY
 
-		IEnumerator BuildCharacterWhenReady(bool RestoreDNA = true/*, string prioritySlot = "", List<string> prioritySlotOver = default(List<string>)*/)
+		IEnumerator BuildCharacterWhenReady(bool RestoreDNA = true)
 		{
 			while (!DynamicAssetLoader.Instance.isInitialized)
 			{
 				yield return null;
 			}
 			yield return StartCoroutine(UpdateAfterDownloads());
-			BuildCharacter(RestoreDNA/*, prioritySlot, prioritySlotOver*/);
+			BuildCharacter(RestoreDNA);
 		}
 
+#if UNITY_5_5_OR_NEWER
+		//This results in a 'call is ambiguous' error in Unity 53/54 
 		[Obsolete("[DynamicCharacterAvatar.BuildCharacter] prioritySlot and prioritySlotOver have been depricated.")]
 		public void BuildCharacter(bool RestoreDNA = true, string prioritySlot = "", List<string> prioritySlotOver = default(List<string>))
 		{
 			BuildCharacter(RestoreDNA);
 		}
+#endif
 		/// <summary>
 		/// Builds the character by combining the Avatar's raceData.baseRecipe with the any wardrobe recipes that have been applied to the avatar.
 		/// </summary>
 		/// <returns>Can also be used to return an array of additional slots if this avatars flagForReload field is set to true before calling</returns>
 		/// <param name="RestoreDNA">If updating the same race set this to true to restore the current DNA.</param>
-		public void BuildCharacter(bool RestoreDNA = true/*, string prioritySlot = "", List<string> prioritySlotOver = default(List<string>)*/)
+		public void BuildCharacter(bool RestoreDNA = true)
 		{
 			if (!_buildCharacterEnabled)
 				return;
@@ -2428,19 +2431,16 @@ namespace UMA.CharacterSystem
 
             if (!DynamicAssetLoader.Instance.isInitialized)
 			{
-				StartCoroutine(BuildCharacterWhenReady(RestoreDNA/*, prioritySlot, prioritySlotOver*/));
+				StartCoroutine(BuildCharacterWhenReady(RestoreDNA));
 				return;
 			}
 			if (waitForBundles && DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
 			{
-				StartCoroutine(BuildCharacterWhenReady(RestoreDNA/*, prioritySlot, prioritySlotOver*/));
+				StartCoroutine(BuildCharacterWhenReady(RestoreDNA));
 				return;
 			}
-			/*if (prioritySlotOver == default(List<string>))
-				prioritySlotOver = new List<string>();*/
 
 			HiddenSlots.Clear();
-
 
 
 			UMADnaBase[] CurrentDNA = null;
@@ -2465,21 +2465,10 @@ namespace UMA.CharacterSystem
 					{
 						if (activeRace.name == "" || ((utr.compatibleRaces.Count == 0 || utr.compatibleRaces.Contains(activeRace.name)) || (activeRace.racedata.IsCrossCompatibleWith(utr.compatibleRaces) && activeRace.racedata.wardrobeSlots.Contains(utr.wardrobeSlot))))
 						{
-							/*if (prioritySlotOver.Count > 0)
-							{
-								foreach (string suppressedSlot in prioritySlotOver)
-								{
-									if (suppressedSlot == utr.wardrobeSlot)
-									{
-										SuppressSlotsStrings.Add(suppressedSlot);
-									}
-								}
-							}*/
 							if (!SuppressSlotsStrings.Contains(utr.wardrobeSlot))
 							{
 								foreach (string suppressedSlot in utr.suppressWardrobeSlots)
 								{
-									//if (prioritySlot == "" || prioritySlot != suppressedSlot)
 										SuppressSlotsStrings.Add(suppressedSlot);
 								}
 							}
@@ -2933,9 +2922,9 @@ namespace UMA.CharacterSystem
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region UMACONTEXT RELATED
+#region UMACONTEXT RELATED
 
 		//If the user inspects a DCA when there is no UMAContext in the scene it will blow up because RaceSetter needs one in order to find all the available races
 		//and the Default Wardrobe and Race animators need one in order to assess whether the assets will be available at run time so create one on the fly like UMATextRecipe does
@@ -2984,9 +2973,9 @@ namespace UMA.CharacterSystem
 		}
 #endif
 
-		#endregion
+#endregion
 
-		#region ASSETBUNDLES RELATED
+#region ASSETBUNDLES RELATED
 
 		/// <summary>
 		/// Use when temporary wardrobe recipes have been used while the real ones have been downloading. Will replace the temp textrecipes with the downloaded ones.
@@ -3172,11 +3161,11 @@ namespace UMA.CharacterSystem
 			}
 		}
 
-		#endregion
+#endregion
 
-		#endregion
+#endregion
 
-		#region SPECIALTYPES // these types should only be needed by DynamicCharacterAvatar
+#region SPECIALTYPES // these types should only be needed by DynamicCharacterAvatar
 
 		[Serializable]
 		public class RaceSetter
@@ -3508,7 +3497,7 @@ namespace UMA.CharacterSystem
 				set { _colors = value; }
 			}
 
-			#region CONSTRUCTOR
+#region CONSTRUCTOR
 
 			/// <summary>
 			/// The default Constructor adds a delegate to EditorApplication.update which checks if any of the ColorValues were updated from old values to new values and marks the scene as dirty
@@ -3531,7 +3520,7 @@ namespace UMA.CharacterSystem
 				Colors = colorValueList;
 			}
 
-			#endregion
+#endregion
 
 
 			private ColorValue GetColorValue(string name)
@@ -3619,9 +3608,9 @@ namespace UMA.CharacterSystem
 		}
 	}
 
-	#endregion
+#endregion
 
-	#region DNASETTER
+#region DNASETTER
 	/// <summary>
 	/// A DnaSetter is used to set a specific piece of DNA on the avatar
 	/// that it is pulled from.
@@ -3678,5 +3667,5 @@ namespace UMA.CharacterSystem
 			return Owner.GetValue(OwnerIndex);
 		}
 	}
-	#endregion
+#endregion
 }
