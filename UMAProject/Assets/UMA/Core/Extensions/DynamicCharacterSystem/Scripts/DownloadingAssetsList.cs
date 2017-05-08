@@ -224,6 +224,8 @@ namespace UMA.CharacterSystem
 						RaceData actualRace = loadedBundleAB.LoadAsset<RaceData>(itemFilename);
 						UMAContext.Instance.raceLibrary.AddRace(actualRace);
 						UMAContext.Instance.raceLibrary.UpdateDictionary();
+						//Refresh DCS so that anything that this race is cross compatible with gets added to its list of available recipes
+						(UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem).RefreshRaceKeys();
 					}
 					else if (assetType == typeof(SlotDataAsset))
 					{
