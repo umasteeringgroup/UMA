@@ -38,7 +38,9 @@ namespace UMA
 		/// <param name="nameHash">Name hash.</param>
 		/// <param name="color">Tint color.</param>
 		public abstract OverlayData InstantiateOverlay(int nameHash, Color color);
-		
+
+		public abstract bool HasOverlay(string Name);
+		public abstract bool HasOverlay(int NameHash);
 		public abstract OverlayDataAsset[] GetAllOverlayAssets();
 
 		public abstract void UpdateDictionary();

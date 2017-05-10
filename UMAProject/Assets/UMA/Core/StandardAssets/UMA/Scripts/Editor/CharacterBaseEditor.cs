@@ -1,3 +1,4 @@
+#define UNITY_EDITOR
 #if UNITY_EDITOR
 
 using System;
@@ -7,6 +8,7 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
+using UMA;
 
 namespace UMA.Editors
 {
@@ -927,6 +929,31 @@ namespace UMA.Editors
 			return _overlayData;
 		}
 
+		private bool InIndex(SlotData _slotData)
+		{
+			if (UMAContext.Instance != null)
+			{
+				if (UMAContext.Instance.HasSlot(_slotData.asset.slotName))
+				{
+					return true;
+				}
+			}
+
+			AssetItem ai = UMAAssetIndexer.Instance.GetAssetItem<SlotDataAsset>(_slotData.asset.slotName);
+			if (ai != null)
+			{
+				return true;
+			}
+
+			string path = AssetDatabase.GetAssetPath(_slotData.asset);
+			if (UMAAssetIndexer.Instance.InAssetBundle(path))
+			{
+				return true;
+			}
+
+			return false;
+		}
+
 		public bool OnGUI(ref bool _dnaDirty, ref bool _textureDirty, ref bool _meshDirty)
 		{
 			bool delete;
@@ -941,10 +968,27 @@ namespace UMA.Editors
              
 			if (!FoldOut)
 				return false;
+			
 
             bool changed = false;
 
 			GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+
+			if (!InIndex(_slotData))
+			{
+				EditorGUILayout.HelpBox("Slot "+_slotData.asset.name+" is not indexed!", MessageType.Error);
+
+				GUILayout.BeginHorizontal();
+				if (GUILayout.Button("Add to Scene Only"))
+				{
+					UMAContext.Instance.AddSlotAsset(_slotData.asset);
+				}
+				if (GUILayout.Button("Add to Global Index (Recommended)"))
+				{
+					UMAAssetIndexer.Instance.EvilAddAsset(typeof(SlotDataAsset),_slotData.asset);
+				}
+				GUILayout.EndHorizontal();
+			}
 
 			if (sharedOverlays)
 			{
@@ -1163,6 +1207,31 @@ namespace UMA.Editors
 			}
 		}
 
+		private bool InIndex(OverlayData _overlayData)
+		{
+			if (UMAContext.Instance != null)
+			{
+				if (UMAContext.Instance.HasOverlay(_overlayData.overlayName))
+				{
+					return true;
+				}
+			}
+
+			AssetItem ai = UMAAssetIndexer.Instance.GetAssetItem<OverlayDataAsset>(_overlayData.asset.overlayName);
+			if (ai != null)
+			{
+				return true;
+			}
+
+			string path = AssetDatabase.GetAssetPath(_overlayData.asset);
+			if (UMAAssetIndexer.Instance.InAssetBundle(path))
+			{
+				return true;
+			}
+
+			return false;
+		}
+
 		public bool OnGUI()
 		{
 			bool delete;
@@ -1172,6 +1241,24 @@ namespace UMA.Editors
 				return false;
 
 			Delete = delete;
+
+
+
+			if (!InIndex(_overlayData))
+			{
+				EditorGUILayout.HelpBox("Overlay "+_overlayData.asset.name+" is not indexed!", MessageType.Error);
+				GUILayout.BeginHorizontal();
+				if (GUILayout.Button("Add to Scene Only"))
+				{
+					UMAContext.Instance.AddOverlayAsset(_overlayData.asset);
+					
+				}
+				if (GUILayout.Button("Add to Global Index"))
+				{
+					UMAAssetIndexer.Instance.EvilAddAsset(typeof(OverlayDataAsset),_overlayData.asset);
+				}
+				GUILayout.EndHorizontal();
+			}
 
 			GUIHelper.BeginHorizontalPadded(10, Color.white);
 			GUILayout.BeginVertical();

@@ -160,6 +160,25 @@ namespace UMA
 		}
 
 		/// <summary>
+		/// Check for presence of an overlay by name.
+		/// </summary>
+		/// <returns><c>True</c> if the overlay exists in this context.</returns>
+		/// <param name="name">Name.</param>
+		public bool HasOverlay(string name)
+		{
+			return overlayLibrary.HasOverlay(name);
+		}
+		/// <summary>
+		/// Check for presence of an overlay by name hash.
+		/// </summary>
+		/// <returns><c>True</c> if the overlay exists in this context.</returns>
+		/// <param name="name">Name hash.</param>
+		public bool HasOverlay(int nameHash)
+		{ 
+			return overlayLibrary.HasOverlay(nameHash);
+		}
+
+		/// <summary>
 		/// Instantiate an overlay by name.
 		/// </summary>
 		/// <returns>The overlay.</returns>

@@ -38,6 +38,19 @@ namespace UMA
 			}
 		}
 
+		public override bool HasOverlay(string Name)
+		{
+			ValidateDictionary();
+			var hash = UMAUtils.StringToHash(Name);
+			return overlayDictionary.ContainsKey(hash);
+		}
+
+		public override bool HasOverlay(int NameHash)
+		{
+			ValidateDictionary();
+			return overlayDictionary.ContainsKey(NameHash);
+		}
+
 		public override void AddOverlayAsset(OverlayDataAsset overlay)
 		{
 			ValidateDictionary();
