@@ -1243,28 +1243,61 @@ namespace UMA.Editors
 			Delete = delete;
 
 
-
-			if (!InIndex(_overlayData))
-			{
-				EditorGUILayout.HelpBox("Overlay "+_overlayData.asset.name+" is not indexed!", MessageType.Error);
-				GUILayout.BeginHorizontal();
-				if (GUILayout.Button("Add to Scene Only"))
-				{
-					UMAContext.Instance.AddOverlayAsset(_overlayData.asset);
-					
-				}
-				if (GUILayout.Button("Add to Global Index"))
-				{
-					UMAAssetIndexer.Instance.EvilAddAsset(typeof(OverlayDataAsset),_overlayData.asset);
-				}
-				GUILayout.EndHorizontal();
-			}
-
 			GUIHelper.BeginHorizontalPadded(10, Color.white);
 			GUILayout.BeginVertical();
 
-			// Edit the colors
-			bool changed = OnColorGUI();
+
+
+            if (!InIndex(_overlayData))
+            {
+                EditorGUILayout.HelpBox("Overlay " + _overlayData.asset.name + " is not indexed!", MessageType.Error);
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Add to Scene Only"))
+                {
+                    UMAContext.Instance.AddOverlayAsset(_overlayData.asset);
+
+                }
+                if (GUILayout.Button("Add to Global Index"))
+                {
+                    UMAAssetIndexer.Instance.EvilAddAsset(typeof(OverlayDataAsset), _overlayData.asset);
+                }
+                GUILayout.EndHorizontal();
+            }
+
+            if (_overlayData.asset.material != _slotData.asset.material)
+            {
+
+                if (_overlayData.asset.material.channels.Length == _slotData.asset.material.channels.Length)
+                {
+                    EditorGUILayout.HelpBox("Material " + _overlayData.asset.material.name + " does not match slot material: " + _slotData.asset.material.name, MessageType.Error);
+                    if (GUILayout.Button("Copy Slot Material to Overlay"))
+                    {
+                        _overlayData.asset.material = _slotData.asset.material;
+                        EditorUtility.SetDirty(_overlayData.asset);
+                        AssetDatabase.SaveAssets();
+                    }
+                }
+                else
+                {
+                    EditorGUILayout.HelpBox("Material " + _overlayData.asset.material.name + " does not match slot material: " + _slotData.asset.material.name + " and Channel count is not the same. Overlay must be removed or fixed manually", MessageType.Error);
+                }
+                if (GUILayout.Button("Select Slot in Project"))
+                {
+                    // find the asset.
+                    // select it in the project.
+                    Selection.activeObject = _slotData.asset;
+                }
+
+                if (GUILayout.Button("Select Overlay in Project"))
+                {
+                    // find the asset.
+                    // select it in the project.
+                    Selection.activeObject = _overlayData.asset;
+                }
+            }
+
+            // Edit the colors
+            bool changed = OnColorGUI();
 
             // Edit the rect
             GUILayout.BeginHorizontal();
