@@ -13,6 +13,8 @@ namespace UMA.Editors
 	    public SkinnedMeshRenderer normalReferenceMesh;
 	    public SkinnedMeshRenderer slotMesh;
 	    public UMAMaterial slotMaterial;
+        public bool createOverlay;
+        public bool createRecipe;
 
 	    string GetAssetFolder()
 	    {
@@ -63,14 +65,26 @@ namespace UMA.Editors
 			EnforceFolder(ref slotFolder);
             RootBone = EditorGUILayout.TextField("Root Bone (ex:'Global')", RootBone);
 			slotName = EditorGUILayout.TextField("Element Name", slotName);
+            createOverlay = EditorGUILayout.Toggle("Create Overlay "+slotName+"_Overlay", createOverlay);
+            createRecipe = EditorGUILayout.Toggle("Create Wardrobe Recipe "+slotName+"_Recipe", createRecipe);
 			
 	        if (GUILayout.Button("Create Slot"))
 	        {
 	            Debug.Log("Processing...");
-	            if (CreateSlot() != null)
+                SlotDataAsset sd = CreateSlot();
+	            if (sd != null)
 	            {
 	                Debug.Log("Success.");
-	            }
+                    string AssetPath = AssetDatabase.GetAssetPath(sd.GetInstanceID());
+                    if (createOverlay)
+                    {
+                        CreateOverlay(AssetPath.Replace(sd.name, sd.slotName + "_Overlay"),sd);
+                    }
+                    if (createRecipe)
+                    {
+                        CreateRecipe(AssetPath.Replace(sd.name, sd.slotName + "_Recipe"));
+                    }
+                }
 	        }
 
 
@@ -99,11 +113,29 @@ namespace UMA.Editors
 				Debug.LogError("slotName must be specified.");
 	            return null;
 			}
-			
-	        return CreateSlot_Internal();
+
+            SlotDataAsset sd = CreateSlot_Internal();
+
+            return sd;
 	    }
 
-	    private SlotDataAsset CreateSlot_Internal()
+        private void CreateOverlay(string path, SlotDataAsset sd)
+        {
+            OverlayDataAsset asset = ScriptableObject.CreateInstance<OverlayDataAsset>();
+            asset.overlayName = slotName + "_Overlay";
+            asset.material = sd.material;
+            AssetDatabase.CreateAsset(asset, path);
+            AssetDatabase.SaveAssets();
+        }
+
+        private void CreateRecipe(string path)
+        {
+            CharacterSystem.UMAWardrobeRecipe asset = ScriptableObject.CreateInstance<CharacterSystem.UMAWardrobeRecipe>();
+            asset.DisplayValue = slotName;
+            AssetDatabase.CreateAsset(asset, path);
+            AssetDatabase.SaveAssets();
+        }
+        private SlotDataAsset CreateSlot_Internal()
 	    {
 			var material = slotMaterial;
 			if (slotName == null || slotName == "")
@@ -159,16 +191,27 @@ namespace UMA.Editors
 						RecurseObject(draggedObjects[i], meshes);
 					}
 
+                    SlotDataAsset sd = null;
 					foreach(var mesh in meshes)
 					{
 						slotMesh = mesh;
 						GetMaterialName(mesh.name, mesh);
-						if (CreateSlot() != null)
+                        sd = CreateSlot();
+						if (sd != null)
 						{
 							Debug.Log("Batch importer processed mesh: " + slotName);
-						}
+                            string AssetPath = AssetDatabase.GetAssetPath(sd.GetInstanceID());
+                            if (createOverlay)
+                            {
+                                CreateOverlay(AssetPath.Replace(sd.name, sd.slotName + "_Overlay"), sd);
+                            }
+                            if (createRecipe)
+                            {
+                                CreateRecipe(AssetPath.Replace(sd.name, sd.slotName + "_Recipe"));
+                            }
+                        }
 					}
-	            }
+                }
 	        }
 	    }
 
