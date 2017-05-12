@@ -15,6 +15,13 @@ namespace UMA.CharacterSystem.Editors
 		List<System.Type> AddedTypes = new List<System.Type>();
 		List<AssetItem> DeletedDuringGUI = new List<AssetItem>();
 		List<System.Type> RemovedTypes = new List<System.Type>();
+        Dictionary<System.Type, List<bool>> TypeCheckboxes = new Dictionary<System.Type, List<bool>>();
+
+        delegate void ProcessAssetItem(System.Type type, int i, AssetItem a);
+
+        // dictionary of type
+        // contains list of bools
+
 		public string Filter = "";
         public bool IncludeText;
         int NotInBuildCount = 0;
@@ -299,7 +306,13 @@ namespace UMA.CharacterSystem.Editors
 			string actFilter = Filter.Trim().ToLower();
 			if (actFilter.Length > 0)
 				HasFilter = true;
-			Dictionary<string, AssetItem> TypeDic = UAI.GetAssetDictionary(CurrentType);
+
+            Dictionary<string, AssetItem> TypeDic = UAI.GetAssetDictionary(CurrentType);
+
+            if (!TypeCheckboxes.ContainsKey(CurrentType))
+            {
+                TypeCheckboxes.Add(CurrentType, new List<bool>());
+            }
 
             List<AssetItem> Items = new List<AssetItem>();
             Items.AddRange(TypeDic.Values);
@@ -318,6 +331,12 @@ namespace UMA.CharacterSystem.Editors
                     continue;
                 }
                 VisibleItems++;
+            }
+
+            if (TypeCheckboxes[CurrentType].Count != VisibleItems)
+            {
+                TypeCheckboxes[CurrentType].Clear();
+                TypeCheckboxes[CurrentType].AddRange(new bool[VisibleItems]);
             }
 
             NotInBuildCount += NotInBuild;
@@ -343,7 +362,7 @@ namespace UMA.CharacterSystem.Editors
 				}
 				GUILayout.EndHorizontal();
 
-
+                int CurrentVisibleItem = 0;
 				foreach (AssetItem ai in Items)
 				{
                     string lblBuild = "B-";
@@ -357,6 +376,7 @@ namespace UMA.CharacterSystem.Editors
                     }
 					GUILayout.BeginHorizontal(EditorStyles.textField);
 
+                    TypeCheckboxes[CurrentType][CurrentVisibleItem] = EditorGUILayout.Toggle(TypeCheckboxes[CurrentType][CurrentVisibleItem++],GUILayout.Width(20));
                     if (ai._SerializedItem == null)
                     {
                         lblVal += "<Not in Build>";
@@ -373,7 +393,7 @@ namespace UMA.CharacterSystem.Editors
                         if (ai._SerializedItem == null)
                         {
                             // Force the item to load.
-                            Object o = ai.Item; 
+                            UnityEngine.Object o = ai.Item; 
                         }
                         else
                         {
@@ -403,48 +423,37 @@ namespace UMA.CharacterSystem.Editors
 					GUIHelper.BeginVerticalPadded(5, new Color(0.65f, 0.65f, 0.65f));
 					GUILayout.Label("Utilities");
 					GUILayout.Space(10);
-					EditorGUILayout.BeginHorizontal();
+
+                    EditorGUILayout.BeginHorizontal();
+                    if (GUILayout.Button("Select All"))
+                    {
+                        ProcessItems(CurrentType, null, HasFilter, actFilter, Items, SelectItems);
+                    }
+                    if (GUILayout.Button("Select None"))
+                    {
+                        ProcessItems(CurrentType, null, HasFilter, actFilter, Items, DeselectItems);
+                    }
+                    EditorGUILayout.EndHorizontal();
+                    EditorGUILayout.BeginHorizontal();
+                    if (GUILayout.Button("Remove Checked"))
+                    {
+                        ProcessItems(CurrentType, TypeCheckboxes[CurrentType], HasFilter, actFilter, Items, RemoveChecked);
+                    }
+                    EditorGUILayout.EndHorizontal();
+
+
+
+                    EditorGUILayout.BeginHorizontal();
 					SelectedMaterial = (UMAMaterial)EditorGUILayout.ObjectField(SelectedMaterial, typeof(UMAMaterial), false);
-					GUILayout.Label("Assign To");
+					GUILayout.Label("Apply to checked: ");
 					if (GUILayout.Button("Unassigned"))
-					{
-						foreach (AssetItem ai in Items)
-						{
-							string lblVal = ai.ToString(UMAAssetIndexer.SortOrder);
-							if (HasFilter && (!lblVal.ToLower().Contains(actFilter)))
-								continue;
-
-							if (ai._Type == typeof(SlotDataAsset))
-							{
-								if ((ai.Item as SlotDataAsset).material != null) continue;
-								(ai.Item as SlotDataAsset).material = SelectedMaterial;
-							}
-							if (ai._Type == typeof(OverlayDataAsset))
-							{
-								if ((ai.Item as OverlayDataAsset).material != null) continue;
-								(ai.Item as OverlayDataAsset).material = SelectedMaterial;
-							}
-						}
+                    {
+                        ProcessItems(CurrentType, TypeCheckboxes[CurrentType], HasFilter, actFilter, Items, SetItemNullMaterial);
+                    }
+                    if (GUILayout.Button("All"))
+                    {
+                        ProcessItems(CurrentType, TypeCheckboxes[CurrentType], HasFilter, actFilter, Items, SetItemMaterial);
 					}
-					if (GUILayout.Button("All"))
-					{
-						foreach (AssetItem ai in Items)
-						{
-							string lblVal = ai.ToString(UMAAssetIndexer.SortOrder);
-							if (HasFilter && (!lblVal.ToLower().Contains(actFilter)))
-								continue;
-
-							if (ai._Type == typeof(SlotDataAsset))
-							{
-								(ai.Item as SlotDataAsset).material = SelectedMaterial;
-							}
-							if (ai._Type == typeof(OverlayDataAsset))
-							{
-								(ai.Item as OverlayDataAsset).material = SelectedMaterial;
-							}
-						}
-					}
-
 					EditorGUILayout.EndHorizontal();
 					GUIHelper.EndVerticalPadded(5);
 				}
@@ -454,7 +463,70 @@ namespace UMA.CharacterSystem.Editors
             return NotFound;
 		}
 
-		public bool bShowTypes;
+        private void RemoveChecked(System.Type type, int i, AssetItem ai)
+        {
+            DeletedDuringGUI.Add(ai);
+        }
+
+        private void SelectItems(System.Type CurrentType, int i, AssetItem a)
+        {
+            TypeCheckboxes[CurrentType][i] = true;
+        }
+
+        private void DeselectItems(System.Type CurrentType, int i, AssetItem a)
+        {
+            TypeCheckboxes[CurrentType][i] = false;
+        }
+
+        void SetItemNullMaterial(System.Type type, int i, AssetItem ai)
+        {
+            if (ai._Type == typeof(SlotDataAsset))
+            {
+                if ((ai.Item as SlotDataAsset).material == null)
+                  (ai.Item as SlotDataAsset).material = SelectedMaterial;
+            }
+            if (ai._Type == typeof(OverlayDataAsset))
+            {
+                if ((ai.Item as OverlayDataAsset).material == null)
+                (ai.Item as OverlayDataAsset).material = SelectedMaterial;
+            }
+        }
+        void SetItemMaterial(System.Type type, int i, AssetItem ai)
+        {
+            if (ai._Type == typeof(SlotDataAsset))
+            {
+                    (ai.Item as SlotDataAsset).material = SelectedMaterial;
+            }
+            if (ai._Type == typeof(OverlayDataAsset))
+            {
+                    (ai.Item as OverlayDataAsset).material = SelectedMaterial;
+            }
+        }
+
+        private void ProcessItems(System.Type type, List<bool> Selected, bool HasFilter, string actFilter, List<AssetItem> Items, ProcessAssetItem p)
+        {
+            int i = 0;
+            foreach (AssetItem ai in Items)
+            {
+                string lblVal = ai.ToString(UMAAssetIndexer.SortOrder);
+                if (HasFilter && (!lblVal.ToLower().Contains(actFilter)))
+                    continue;
+                if (Selected != null)
+                {
+                    if (Selected[i])
+                    {
+                        p(type, i, ai);
+                    }
+                }
+                else
+                {
+                    p(type, i, ai);
+                }
+                ++i;
+            }
+        }
+
+        public bool bShowTypes;
 
 		public void ShowTypes()
 		{
