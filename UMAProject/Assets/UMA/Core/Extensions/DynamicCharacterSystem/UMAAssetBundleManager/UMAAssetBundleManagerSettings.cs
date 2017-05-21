@@ -328,8 +328,7 @@ namespace UMA.AssetBundles
 						EditorGUIUtility.keyboardControl = 0;
 
 					}
-				}
-				
+				}	
 				EditorGUILayout.EndHorizontal();
 				//EncryptionKey URL
 				//not sure how this would work- the delivered key would itself need to be encrypted probably
@@ -377,6 +376,17 @@ namespace UMA.AssetBundles
 
 				EndVerticalIndented();
 			}
+#if ENABLE_IOS_APP_SLICING
+			var currentAppSlicingSetting = UMAABMSettings.GetBuildForSlicing();
+			string AppSlicingTooltip = "If true will build bundles uncompressed for use with iOS Resources Catalogs";
+			EditorGUI.BeginChangeCheck();
+			bool newAppSlicingSetting = EditorGUILayout.ToggleLeft(new GUIContent("Build for iOS App Slicing", AppSlicingTooltip), currentAppSlicingSetting);
+			if (EditorGUI.EndChangeCheck())
+			{
+				UMAABMSettings.SetBuildForSlicing(newAppSlicingSetting);
+			}
+
+#endif
 
 			//Asset Bundle Building
 			EditorGUILayout.Space();
@@ -404,22 +414,14 @@ namespace UMA.AssetBundles
 			EditorGUILayout.HelpBox(buildBundlesMsg, buildBundlesMsgType);
 			if (GUILayout.Button(buttonBuildAssetBundlesText))
 			{
-				try
-				{
-					BuildScript.BuildAssetBundles();
-					_statusMessage = "Asset Bundles Built";
-				}
-				catch (Exception e)
-				{
-					_statusMessage = string.Format("Building Asset Bundle Exception: {0}\nStack Trace\n{1}", e.ToString(), e.StackTrace);
-					Debug.LogException(e);
-				}
+				BuildScript.BuildAssetBundles();
+				return;
 			}
 			EndVerticalPadded(5);
 			EditorGUILayout.Space();
 
 			//Local AssetBundleServer
-			BeginVerticalPadded(5, new Color(0.75f, 0.875f, 1f));
+			BeginVerticalPadded(5f, new Color(0.75f, 0.875f, 1f));
 			GUILayout.Label("AssetBundle Testing Server", EditorStyles.boldLabel);
 			EditorGUILayout.HelpBox("Once you have built your bundles this local Testing Server can be enabled and it will load those AssetBundles rather than the files inside the project.", MessageType.Info);
 
@@ -546,29 +548,30 @@ namespace UMA.AssetBundles
 			EndVerticalPadded(5);
 			EditorGUILayout.Space();
 
-			//Testing Build
-			BeginVerticalPadded(5, new Color(0.75f, 0.875f, 1f));
-			GUILayout.Label("Testing Build", EditorStyles.boldLabel);
-			//if the bundles are build and the server is turned on then the user can use this option otherwise there is no point
-			//But we will show them that this option is available even if this is not the case
-			if (!showClearCache || !EnableLocalAssetBundleServer)
+			//Testing Build- only show this if we can run a build for the current platform (i.e. if its not iOS or Android)
+			if (BuildScript.CanRunLocally (EditorUserBuildSettings.activeBuildTarget)) 
 			{
-				EditorGUI.BeginDisabledGroup(true);
-			}
-			EditorGUILayout.HelpBox("Make a testing Build that uses the Local Server using the button below.", MessageType.Info);
-			developmentBuild = EditorGUILayout.Toggle("Development Build", developmentBuild);
-			if (GUILayout.Button("Build and Run!"))
-			{
-				BuildScript.BuildAndRunPlayer(developmentBuild);
-			}
-			if (!showClearCache || !EnableLocalAssetBundleServer)//
-			{
-				EditorGUI.EndDisabledGroup();
-			}
-			EditorGUILayout.Space();
-			EndVerticalPadded(5);
+				BeginVerticalPadded (5, new Color (0.75f, 0.875f, 1f));
+				GUILayout.Label ("Local Testing Build", EditorStyles.boldLabel);
+				//if the bundles are built and the server is turned on then the user can use this option otherwise there is no point
+				//But we will show them that this option is available even if this is not the case
+				if (!showClearCache || !EnableLocalAssetBundleServer) {
+					EditorGUI.BeginDisabledGroup (true);
+				}
+				EditorGUILayout.HelpBox ("Make a testing Build that uses the Local Server using the button below.", MessageType.Info);
 
-			EditorGUILayout.Space();
+				developmentBuild = EditorGUILayout.Toggle ("Development Build", developmentBuild);
+				if (GUILayout.Button ("Build and Run!")) {
+					BuildScript.BuildAndRunPlayer (developmentBuild);
+				}
+				if (!showClearCache || !EnableLocalAssetBundleServer) {//
+					EditorGUI.EndDisabledGroup ();
+				}
+				EditorGUILayout.Space ();
+				EndVerticalPadded (5);
+
+				EditorGUILayout.Space ();
+			}
 			//END SCROLL VIEW
 			//for some reason when we build or build assetbundles when this window is open we get an error
 			//InvalidOperationException: Operation is not valid due to the current state of the object
@@ -587,13 +590,20 @@ namespace UMA.AssetBundles
 
 		public static void BeginVerticalPadded(float padding, Color backgroundColor)
 		{
-			GUI.color = backgroundColor;
-			GUILayout.BeginHorizontal(EditorStyles.textField);
-			GUI.color = Color.white;
+			//for some reason when we build or build assetbundles when this window is open we get an error
+			//InvalidOperationException: Operation is not valid due to the current state of the object
+			//so try catch is here as a nasty hack to get rid of it
+			try
+			{
+				GUI.color = backgroundColor;
+				GUILayout.BeginHorizontal(EditorStyles.textField);
+				GUI.color = Color.white;
 
-			GUILayout.Space(padding);
-			GUILayout.BeginVertical();
-			GUILayout.Space(padding);
+				GUILayout.Space(padding);
+				GUILayout.BeginVertical();
+				GUILayout.Space(padding);
+			}
+			catch { }
 		}
 
 		public static void EndVerticalPadded(float padding)
@@ -636,6 +646,8 @@ namespace UMA.AssetBundles
 		public string encryptionPassword = "";
 		public string encryptionSuffix = "";
 		public bool encodeNames = false;
+		[Tooltip("If true will build uncompressed assetBundles for use with iOS resource catalogs")]
+		public bool buildForAppSlicing = false;
 
 		public UMAABMSettingsStore() { }
 
@@ -704,6 +716,17 @@ namespace UMA.AssetBundles
 				return false;
 			else
 				return thisSettings.encodeNames;
+		}
+		/// <summary>
+		/// Should the bundles be built for use with iOS app slicing
+		/// </summary>
+		public static bool GetBuildForSlicing()
+		{
+			var thisSettings = GetEncryptionSettings();
+			if (thisSettings == null)
+				return false;
+			else
+				return thisSettings.buildForAppSlicing;
 		}
 
 		public static void ClearEncryptionSettings()
@@ -775,6 +798,17 @@ namespace UMA.AssetBundles
 		public static void SetEncodeNames(bool encodeNames)
 		{
 			SetEncryptionSettings(true,"", "", encodeNames);
+		}
+
+		/// <summary>
+		/// Should the bundles be built for use with iOS app slicing
+		/// </summary>
+		public static void SetBuildForSlicing(bool enabled)
+		{
+			var thisSettings = GetEncryptionSettings();
+			if (thisSettings == null)
+				thisSettings = new UMAABMSettingsStore();
+			thisSettings.buildForAppSlicing = enabled;
 		}
 
 		#endregion

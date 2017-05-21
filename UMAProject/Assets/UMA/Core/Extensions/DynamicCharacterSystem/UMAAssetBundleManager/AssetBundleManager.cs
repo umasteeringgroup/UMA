@@ -632,7 +632,7 @@ namespace UMA.AssetBundles
 			if (bundleBaseDownloadingURL.ToLower().StartsWith("odr://"))
 			{
 #if ENABLE_IOS_ON_DEMAND_RESOURCES
-                Log(LogType.Info, "Requesting bundle " + assetBundleName + " through ODR");
+				Log(LogType.Info, "Requesting bundle " + assetBundleToGet + " through ODR");
                 m_InProgressOperations.Add(new AssetBundleDownloadFromODROperation(assetBundleToGet));
 #else
 				new ApplicationException("Can't load bundle " + assetBundleToFind + " through ODR: this Unity version or build target doesn't support it.");
@@ -641,7 +641,7 @@ namespace UMA.AssetBundles
 			else if (bundleBaseDownloadingURL.ToLower().StartsWith("res://"))
 			{
 #if ENABLE_IOS_APP_SLICING
-                Log(LogType.Info, "Requesting bundle " + assetBundleName + " through asset catalog");
+				Log(LogType.Info, "Requesting bundle " + assetBundleToGet + " through asset catalog");
                 m_InProgressOperations.Add(new AssetBundleOpenFromAssetCatalogOperation(assetBundleToGet));
 #else
 				new ApplicationException("Can't load bundle " + assetBundleToFind + " through asset catalog: this Unity version or build target doesn't support it.");

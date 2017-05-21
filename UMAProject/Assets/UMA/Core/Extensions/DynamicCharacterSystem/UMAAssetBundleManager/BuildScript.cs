@@ -38,16 +38,19 @@ namespace UMA.AssetBundles
 				if (shouldCheckODR)
 				{
 #if ENABLE_IOS_ON_DEMAND_RESOURCES
-                if (PlayerSettings.iOS.useOnDemandResources)
-                    options |= BuildAssetBundleOptions.UncompressedAssetBundle;
-				else if(UMAABMSettings.GetEncryptionPassword() != "")
-					options |= BuildAssetBundleOptions.ChunkBasedCompression;
+	                if (PlayerSettings.iOS.useOnDemandResources)
+	                    options |= BuildAssetBundleOptions.UncompressedAssetBundle;
+					else if(UMAABMSettings.GetEncryptionEnabled())
+						options |= BuildAssetBundleOptions.ChunkBasedCompression;
 #endif
 #if ENABLE_IOS_APP_SLICING
-                options |= BuildAssetBundleOptions.UncompressedAssetBundle;
+					if(UMAABMSettings.GetBuildForSlicing())
+                		options |= BuildAssetBundleOptions.UncompressedAssetBundle;
+					else if(!PlayerSettings.iOS.useOnDemandResources && UMAABMSettings.GetEncryptionEnabled())
+						options |= BuildAssetBundleOptions.ChunkBasedCompression;
 #endif
 				}
-				if (UMAABMSettings.GetEncryptionPassword() != "")
+				if (UMAABMSettings.GetEncryptionEnabled())
 				{
 					if (!shouldCheckODR)
 						options |= BuildAssetBundleOptions.ChunkBasedCompression;
@@ -66,9 +69,10 @@ namespace UMA.AssetBundles
 					string bundleName = assetBundleNamesArray[i];
 
 					string[] assetBundleAssetsArray = AssetDatabase.GetAssetPathsFromAssetBundle(bundleName);
-					//If there are no assets added to this bundle continue because it wont be in the resulting assetBundleManifest
-					if (assetBundleAssetsArray == null)
-						continue;
+					//If there are no assets added to this bundle show a warning telling the user to remove Unused asset bundle names
+					if (assetBundleAssetsArray == null || assetBundleAssetsArray.Length == 0){
+						Debug.Log(assetBundleNamesArray[i]+" was an empty assetBundle. Please do 'Remove Unused Names' in the 'Asset Labels' section of the Inspector");
+					}
 
 					thisIndex.bundlesIndex.Add(new AssetBundleIndex.AssetBundleIndexList(bundleName));
 
@@ -136,7 +140,6 @@ namespace UMA.AssetBundles
 						thisIndex.bundlesIndex[i].encryptedName = encryptedBundleName;
 					}
 				}
-				//TODO is this it for encrypted bundles?
 				var relativeAssetBundlesOutputPathForPlatform = Path.Combine(Utility.AssetBundlesOutputPath, Utility.GetPlatformName());
 				//Update and Save the index asset and build again. This will store the updated asset in the windowsindex asset bundle
 				EditorUtility.SetDirty(thisIndex);
@@ -194,6 +197,9 @@ namespace UMA.AssetBundles
 				}
 				//Now we can remove the temp Index item from the assetDatabase
 				AssetDatabase.DeleteAsset(thisIndexAssetPath);
+				//And remove its assetBundle name from the assetBundleNames
+				AssetDatabase.RemoveAssetBundleName(Utility.GetPlatformName().ToLower() + "index", false);
+				Debug.Log("Asset Bundles built successfully for platform "+Utility.GetPlatformName()+(UMAABMSettings.GetEncryptionEnabled() ? " (Encrypted)!" : "!"));
 			}
 			catch (System.Exception e)
 			{
@@ -201,6 +207,8 @@ namespace UMA.AssetBundles
 					AssetDatabase.DeleteAsset(thisIndexAssetPath);
 				if(thisEncryptionAssetPath != "")
 					AssetDatabase.DeleteAsset(thisEncryptionAssetPath);
+				//And remove its assetBundle name from the assetBundleNames
+				AssetDatabase.RemoveAssetBundleName(Utility.GetPlatformName().ToLower() + "index", false);
 				Debug.LogError("Your AssetBundles did not build properly. Error Message: " + e.Message+" Error Exception: "+e.InnerException+" Error StackTrace: "+e.StackTrace);
 			}
 		}
@@ -256,7 +264,7 @@ namespace UMA.AssetBundles
 			if (SimpleWebServer.serverStarted && CanRunLocally(EditorUserBuildSettings.activeBuildTarget))
 				SimpleWebServer.DestroyServerURLFile();
 
-			if (buildError == "" || buildError == null)
+			if (string.IsNullOrEmpty (buildError))
 			{
 				string fullPathToBuild = Path.Combine(Directory.GetParent(Application.dataPath).FullName, outputPath);
 				Debug.Log("Built Successful! Build Location: " + fullPathToBuild);
