@@ -69,8 +69,10 @@ namespace UMA
 
 		public void CachSerializedItem()
 		{
+			#if UNITY_EDITOR		
 			if (_SerializedItem != null) return;
 			_SerializedItem = AssetDatabase.LoadAssetAtPath(_Path, _Type);	
+			#endif
 		}
 
         public string EvilName
