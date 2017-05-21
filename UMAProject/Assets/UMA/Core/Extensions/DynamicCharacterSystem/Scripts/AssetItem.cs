@@ -67,6 +67,12 @@ namespace UMA
             }
         }
 
+		public void CachSerializedItem()
+		{
+			if (_SerializedItem != null) return;
+			_SerializedItem = AssetDatabase.LoadAssetAtPath(_Path, _Type);	
+		}
+
         public string EvilName
         {
             get

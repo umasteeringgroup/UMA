@@ -678,7 +678,8 @@ namespace UMA
             UpdateSerializedList();
             foreach (AssetItem ai in SerializedItems)
             {
-                Object o = ai.Item;
+				if (!ai.IsAssetBundle)
+					ai.CachSerializedItem();
             }
             UpdateSerializedDictionaryItems();
             ForceSave();

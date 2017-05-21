@@ -392,8 +392,8 @@ namespace UMA.CharacterSystem.Editors
                     {
                         if (ai._SerializedItem == null)
                         {
-                            // Force the item to load.
-                            UnityEngine.Object o = ai.Item; 
+							if (!ai.IsAssetBundle)
+								ai.CachSerializedItem();
                         }
                         else
                         {

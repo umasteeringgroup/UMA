@@ -336,7 +336,7 @@ namespace UMA
 
 			for (int i = 0; i < generatedTextures.Length; i++)
 			{
-				ProceduralTexture texture = generatedTextures[i];
+//				ProceduralTexture texture = generatedTextures[i];
 //				if (texture != null)
 //					Object.Destroy(texture);
 

@@ -486,7 +486,7 @@ namespace UMA.CharacterSystem.Examples
 		{
 			var selectedItem = eventData.selectedObject;
 			var selectedItemCheckMark = selectedItem.transform.Find("Item Checkmark");
-			var selectedSprite = selectedItemCheckMark.GetComponent<Image>().sprite;
+			//var selectedSprite = selectedItemCheckMark.GetComponent<Image>().sprite;
 			selectedItemCheckMark.GetComponent<Image>().enabled = false;
 			selectedItem.SetActive(false);
 			var allItems = selectedItem.transform.parent.GetComponentsInChildren<Toggle>();
