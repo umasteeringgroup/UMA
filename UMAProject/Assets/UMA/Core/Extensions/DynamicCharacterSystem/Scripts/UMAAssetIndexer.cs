@@ -593,17 +593,20 @@ namespace UMA
         private void UpdateSerializedList()
         {
             SerializedItems.Clear();
-            foreach (System.Type type in Types)
+			foreach (System.Type type in TypeToLookup.Keys)
             {
-                Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(type);
-                foreach (AssetItem ai in TypeDic.Values)
-                {
-                    // Don't add asset bundle or resource items to index. They are loaded on demand.
-                    if (ai.IsAssetBundle == false && ai.IsResource == false)
-                    {
-                        SerializedItems.Add(ai);
-                    }
-                }
+				if (type == TypeToLookup[type])
+				{
+                	Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(type);
+                	foreach (AssetItem ai in TypeDic.Values)
+                	{
+                    	// Don't add asset bundle or resource items to index. They are loaded on demand.
+                    	if (ai.IsAssetBundle == false && ai.IsResource == false)
+                    	{
+                       		SerializedItems.Add(ai);
+                    	}
+                	}
+				}
             }
         }
 
