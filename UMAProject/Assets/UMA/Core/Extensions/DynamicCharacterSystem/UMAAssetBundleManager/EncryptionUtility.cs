@@ -56,12 +56,11 @@ namespace UMA.AssetBundles
 
 		public static byte[] Decrypt(byte[] EncryptedData, string Pwd, byte[] IV)
 		{
-			var pass = UMAABMSettings.GetEncryptionPassword();
-			if (String.IsNullOrEmpty(pass))
+			if(Pwd == "")
 			{
-				throw new Exception("[EncryptUtil] could not perform any encryption because not encryption password was set in UMAAssetBundleManager.");
+				throw new Exception("[EncryptUtil] No password was provided for decryption");
 			}
-			return Decrypt(BuildKey(pass,IV),EncryptedData);
+			return Decrypt(BuildKey(Pwd,IV),EncryptedData);
 		}
 
 
