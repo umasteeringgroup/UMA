@@ -54,7 +54,7 @@ namespace UMA.AssetBundles
 		}
 
 
-		public static byte[] zDecrypt(byte[] EncryptedData, string Pwd, byte[] IV)
+		public static byte[] Decrypt(byte[] EncryptedData, string Pwd, byte[] IV)
 		{
 			if(Pwd == "")
 			{
@@ -65,7 +65,7 @@ namespace UMA.AssetBundles
 
 
 		#if UNITY_EDITOR
-		public static byte[] zEncrypt(byte[] value, ref byte[] IVout)
+		public static byte[] Encrypt(byte[] value, ref byte[] IVout)
 		{
 			var pass = UMAABMSettings.GetEncryptionPassword();
 			if (String.IsNullOrEmpty(pass))
@@ -191,7 +191,7 @@ namespace UMA.AssetBundles
 		//we dont want this editor only
 #if UNITY_EDITOR
 		//used in the editor to encrypt assetbundles
-		public static byte[] Encrypt(byte[] value, ref byte[] IVout)
+		public static byte[] zEncrypt(byte[] value, ref byte[] IVout)
 		{
 			var pass = UMAABMSettings.GetEncryptionPassword();
 			if (String.IsNullOrEmpty(pass))
@@ -206,7 +206,7 @@ namespace UMA.AssetBundles
 		}
 #endif
 
-		public static string Encrypt(byte[] value, byte[] Key, byte[] IV)
+		public static string zEncrypt(byte[] value, byte[] Key, byte[] IV)
 		{
 			SymmetricAlgorithm algorithm = new AesManaged();
 			ICryptoTransform transform = algorithm.CreateEncryptor(Key, IV);
@@ -215,7 +215,7 @@ namespace UMA.AssetBundles
 		}
 
 		//with the bundle decryption we will send an IV but generate a key based on the current password
-		public static byte[] Decrypt(byte[] value, string password, byte[] thisIV)
+		public static byte[] zDecrypt(byte[] value, string password, byte[] thisIV)
 		{
 			if(password == "")
 			{
@@ -228,7 +228,7 @@ namespace UMA.AssetBundles
 			return CryptoTransform(transform, value);
 		}
 		
-		public static byte[] Decrypt(string text, byte[] Key, byte[] IV)
+		public static byte[] zDecrypt(string text, byte[] Key, byte[] IV)
 		{
 			var data = Convert.FromBase64String(text);
 			SymmetricAlgorithm algorithm = new AesManaged();
