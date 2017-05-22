@@ -54,7 +54,7 @@ namespace UMA.AssetBundles
 		}
 
 
-		public static byte[] Decrypt(byte[] EncryptedData, string Pwd, byte[] IV)
+		public static byte[] zDecrypt(byte[] EncryptedData, string Pwd, byte[] IV)
 		{
 			if(Pwd == "")
 			{
@@ -65,7 +65,7 @@ namespace UMA.AssetBundles
 
 
 		#if UNITY_EDITOR
-		public static byte[] Encrypt(byte[] value, ref byte[] IVout)
+		public static byte[] zEncrypt(byte[] value, ref byte[] IVout)
 		{
 			var pass = UMAABMSettings.GetEncryptionPassword();
 			if (String.IsNullOrEmpty(pass))
@@ -126,7 +126,7 @@ namespace UMA.AssetBundles
 
 
 
-/*
+
 		public static byte[] Key;
 		public static byte[] IV;
 
@@ -235,6 +235,5 @@ namespace UMA.AssetBundles
 			ICryptoTransform transform = algorithm.CreateDecryptor(Key, IV);
 			return CryptoTransform(transform, data);
 		}
-	*/
 	}
 }
