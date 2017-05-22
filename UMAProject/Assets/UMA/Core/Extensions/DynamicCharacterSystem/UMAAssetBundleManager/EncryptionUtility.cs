@@ -73,7 +73,7 @@ namespace UMA.AssetBundles
 				throw new Exception("[EncryptUtil] could not perform any encryption because not encryption password was set in UMAAssetBundleManager.");
 			}
 
-			IVout = GenerateIV();
+			IVout = GenerateIV(pass);
 			return Encrypt(BuildKey(pass,IVout),value);
 		}
 		#endif
@@ -88,7 +88,7 @@ namespace UMA.AssetBundles
 		{
 			byte[] ret = new byte[first.Length + second.Length];
 			Buffer.BlockCopy(first, 0, ret, 0, first.Length);
-			Buffer.BlockCopy(second, 0, ret, first.Length, second.Length);
+			Buffer.BlockCopy(second, 0, ret, first.Length, second.Length); 
 			return ret;
 		}
 
@@ -110,10 +110,12 @@ namespace UMA.AssetBundles
 				return true;
 		}
 
-		public static byte[] GenerateIV()
+		public static byte[] GenerateIV(string pass)
 		{
-			string IV = GenerateRandomPW(10);
-			return Encoding.ASCII.GetBytes(IV);
+			var textBytes = Encoding.UTF8.GetBytes(pass+"_umldata");
+			var res = Convert.ToBase64String(textBytes);
+
+			return Encoding.ASCII.GetBytes(res.Substring(0,8));
 		}
 
 		public static string GenerateRandomPW(int length = 16)
@@ -162,7 +164,7 @@ namespace UMA.AssetBundles
 			return key.GetBytes(myAlg.KeySize / 8);
 		}
 
-		public static byte[] GenerateIV(string password)
+		public static byte[] OldGenerateIV(string password)
 		{
 			if (password.Length < 16)
 			{
