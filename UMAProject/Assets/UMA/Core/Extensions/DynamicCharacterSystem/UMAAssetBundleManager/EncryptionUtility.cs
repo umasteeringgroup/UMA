@@ -16,36 +16,52 @@ namespace UMA.AssetBundles
 	{
 		public static byte[] Encrypt(byte[] pwd, byte[] data) 
 		{
-				int a, i, j, k, tmp;
-				int[] key, box;
-				byte[] cipher;
+			int a, i, j, k, tmp;
+			int[] key, box;
+			byte[] cipher;
 
-				key = new int[256];
-				box = new int[256];
-				cipher = new byte[data.Length];
+			key = new int[256];
+			box = new int[256];
+			cipher = new byte[data.Length];
 
-				for (i = 0; i < 256; i++) {
-					key[i] = pwd[i % pwd.Length];
-					box[i] = i;
-				}
-				for (j = i = 0; i < 256; i++) {
-					j = (j + box[i] + key[i]) % 256;
-					tmp = box[i];
-					box[i] = box[j];
-					box[j] = tmp;
-				}
-				for (a = j = i = 0; i < data.Length; i++) {
-					a++;
-					a %= 256;
-					j += box[a];
-					j %= 256;
-					tmp = box[a];
-					box[a] = box[j];
-					box[j] = tmp;
-					k = box[((box[a] + box[j]) % 256)];
-					cipher[i] = (byte)(data[i] ^ k);
-				}
-				return cipher;
+			for (i = 0; i < 256; i++) {
+				key[i] = pwd[i % pwd.Length];
+				box[i] = i;
+			}
+			for (j = i = 0; i < 256; i++) {
+				j = (j + box[i] + key[i]) % 256;
+				tmp = box[i];
+				box[i] = box[j];
+				box[j] = tmp;
+			}
+			for (a = j = i = 0; i < data.Length; i++) {
+				a++;
+				a %= 256;
+				j += box[a];
+				j %= 256;
+				tmp = box[a];
+				box[a] = box[j];
+				box[j] = tmp;
+				k = box[((box[a] + box[j]) % 256)];
+				cipher[i] = (byte)(data[i] ^ k);
+			}
+			return cipher;
+		}
+
+		public static void DebugLog(string s)
+		{
+			string fname = System.IO.Path.Combine(Application.dataPath,"debuglog.txt");
+			System.IO.File.AppendAllText(fname,s+Environment.NewLine);
+			Debug.Log(s);
+		}
+
+		public static void LogHash(byte[] data)
+		{
+			using(SHA1CryptoServiceProvider sha1 = new SHA1CryptoServiceProvider())
+			{
+				string hash = Convert.ToBase64String(sha1.ComputeHash(data));
+				DebugLog("Hash is: "+hash);
+			}
 		}
 
 		public static byte[] Decrypt(byte[] pwd, byte[] data) 
@@ -60,7 +76,10 @@ namespace UMA.AssetBundles
 			{
 				throw new Exception("[EncryptUtil] No password was provided for decryption");
 			}
-			return Decrypt(BuildKey(Pwd,IV),EncryptedData);
+			DebugLog("Decrypting Assetbundle with PWD "+Pwd + " IV " + Encoding.ASCII.GetString(IV)+ " Size is: "+EncryptedData.Length);
+			byte[] decrypted = Decrypt(BuildKey(Pwd,IV),EncryptedData);
+			LogHash(decrypted);
+			return decrypted;
 		}
 
 
@@ -74,6 +93,9 @@ namespace UMA.AssetBundles
 			}
 
 			IVout = GenerateIV(pass);
+
+			DebugLog("Encrypting Assetbundle with PWD "+pass + " IV " + Encoding.ASCII.GetString(IVout)+ " Size is: "+value.Length);
+			LogHash(value);
 			return Encrypt(BuildKey(pass,IVout),value);
 		}
 		#endif
@@ -88,7 +110,7 @@ namespace UMA.AssetBundles
 		{
 			byte[] ret = new byte[first.Length + second.Length];
 			Buffer.BlockCopy(first, 0, ret, 0, first.Length);
-			Buffer.BlockCopy(second, 0, ret, first.Length, second.Length); 
+			Buffer.BlockCopy(second, 0, ret, first.Length, second.Length);
 			return ret;
 		}
 
@@ -125,117 +147,6 @@ namespace UMA.AssetBundles
 			rg.GetBytes(b);
 			return Convert.ToBase64String(b);
 		}
-
-
-
-
-		public static byte[] Key;
-		public static byte[] IV;
-
-
-
-
-		public static void GenerateKeyAndIV(string password)
-		{
-			if (password.Length < 16)
-			{
-				throw new CryptographicException("Error - Password must be 16 characters long or greater");
-			}
-			AesManaged myAlg = new AesManaged();
-			byte[] salt = Encoding.ASCII.GetBytes(password.Substring(password.Length - 16));
-			Rfc2898DeriveBytes key = new Rfc2898DeriveBytes(password, salt);
-			if (Key == null)
-			{
-				Debug.LogWarning("Key was Null");
-				Key = key.GetBytes(myAlg.KeySize / 8);
-			}
-			IV = key.GetBytes(myAlg.BlockSize / 8);
-		}
-
-		public static byte[] GenerateKey(string password)
-		{
-			if (password.Length < 16)
-			{
-				throw new CryptographicException("Error - Password must be 16 characters long or greater");
-			}
-			AesManaged myAlg = new AesManaged();
-			byte[] salt = Encoding.ASCII.GetBytes(password.Substring(password.Length - 16));
-			Rfc2898DeriveBytes key = new Rfc2898DeriveBytes(password, salt);
-			return key.GetBytes(myAlg.KeySize / 8);
-		}
-
-		public static byte[] OldGenerateIV(string password)
-		{
-			if (password.Length < 16)
-			{
-				throw new CryptographicException("Error - Password must be 16 characters long or greater");
-			}
-			AesManaged myAlg = new AesManaged();
-			byte[] salt = Encoding.ASCII.GetBytes(password.Substring(password.Length - 16));
-			Rfc2898DeriveBytes key = new Rfc2898DeriveBytes(password, salt);
-			return key.GetBytes(myAlg.BlockSize / 8);
-		}
-
-		private static byte[] CryptoTransform(ICryptoTransform cryptoTransform, byte[] data)
-		{
-			using (var memoryStream = new MemoryStream())
-			{
-				using (var cryptoStream = new CryptoStream(memoryStream, cryptoTransform, CryptoStreamMode.Write))
-				{
-					cryptoStream.Write(data, 0, data.Length);
-					cryptoStream.FlushFinalBlock();
-					byte[] retBytes = memoryStream.ToArray();
-					memoryStream.Close();
-					return retBytes;
-				}
-			}
-		}
-		//we dont want this editor only
-#if UNITY_EDITOR
-		//used in the editor to encrypt assetbundles
-		public static byte[] zEncrypt(byte[] value, ref byte[] IVout)
-		{
-			var pass = UMAABMSettings.GetEncryptionPassword();
-			if (String.IsNullOrEmpty(pass))
-			{
-				throw new Exception("[EncryptUtil] could not perform any encryption because not encryption password was set in UMAAssetBundleManager.");
-			}
-			IVout = GenerateIV(pass);
-			var thisKey = GenerateKey(pass);
-			SymmetricAlgorithm algorithm = new AesManaged();
-			ICryptoTransform transform = algorithm.CreateEncryptor(thisKey, IVout);
-			return CryptoTransform(transform, value);
-		}
-#endif
-
-		public static string zEncrypt(byte[] value, byte[] Key, byte[] IV)
-		{
-			SymmetricAlgorithm algorithm = new AesManaged();
-			ICryptoTransform transform = algorithm.CreateEncryptor(Key, IV);
-			var encrypted = CryptoTransform(transform, value);
-			return Convert.ToBase64String(encrypted);
-		}
-
-		//with the bundle decryption we will send an IV but generate a key based on the current password
-		public static byte[] zDecrypt(byte[] value, string password, byte[] thisIV)
-		{
-			if(password == "")
-			{
-				throw new Exception("[EncryptUtil] No password was provided for decryption");
-			}
-			var thisKey = GenerateKey(password);
-			SymmetricAlgorithm algorithm = new AesManaged();
-			ICryptoTransform transform = algorithm.CreateDecryptor(thisKey, thisIV);
-
-			return CryptoTransform(transform, value);
-		}
-		
-		public static byte[] zDecrypt(string text, byte[] Key, byte[] IV)
-		{
-			var data = Convert.FromBase64String(text);
-			SymmetricAlgorithm algorithm = new AesManaged();
-			ICryptoTransform transform = algorithm.CreateDecryptor(Key, IV);
-			return CryptoTransform(transform, data);
-		}
 	}
+
 }
