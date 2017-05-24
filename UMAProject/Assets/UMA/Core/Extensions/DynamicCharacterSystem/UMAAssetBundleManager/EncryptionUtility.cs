@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 
 
-#if UNITY_EDITOR
+#if UNITY_EDITOR 
 using UnityEditor;
 #endif
 using System;
@@ -76,8 +76,12 @@ namespace UMA.AssetBundles
 			{
 				throw new Exception("[EncryptUtil] No password was provided for decryption");
 			}
-			DebugLog("Decrypting Assetbundle with PWD "+Pwd + " IV " + Encoding.ASCII.GetString(IV)+ " Size is: "+EncryptedData.Length);
-			byte[] decrypted = Decrypt(BuildKey(Pwd,IV),EncryptedData);
+
+			byte[] IVout = GenerateIV(Pwd);
+
+			DebugLog("Decrypting Assetbundle with PWD "+Pwd + " IV " + Encoding.UTF8.GetString(IV)+ " calculated IV is "+Encoding.UTF8.GetString(IVout)+" Size is: "+EncryptedData.Length);
+
+			byte[] decrypted = Decrypt(BuildKey(Pwd,IVout),EncryptedData);
 			LogHash(decrypted);
 			return decrypted;
 		}
@@ -94,7 +98,7 @@ namespace UMA.AssetBundles
 
 			IVout = GenerateIV(pass);
 
-			DebugLog("Encrypting Assetbundle with PWD "+pass + " IV " + Encoding.ASCII.GetString(IVout)+ " Size is: "+value.Length);
+			DebugLog("Encrypting Assetbundle with PWD "+pass + " IV " + Encoding.UTF8.GetString(IVout)+ " Size is: "+value.Length);
 			LogHash(value);
 			return Encrypt(BuildKey(pass,IVout),value);
 		}
@@ -102,7 +106,7 @@ namespace UMA.AssetBundles
 
 		public static byte[] BuildKey(string pw, byte[] IV)
 		{
-			byte[] pwb = Encoding.ASCII.GetBytes(pw);
+			byte[] pwb = Encoding.UTF8.GetBytes(pw);
 			return Combine(pwb,IV);
 		}
 
@@ -137,7 +141,7 @@ namespace UMA.AssetBundles
 			var textBytes = Encoding.UTF8.GetBytes(pass+"_umldata");
 			var res = Convert.ToBase64String(textBytes);
 
-			return Encoding.ASCII.GetBytes(res.Substring(0,8));
+			return Encoding.UTF8.GetBytes(res.Substring(0,8));
 		}
 
 		public static string GenerateRandomPW(int length = 16)
