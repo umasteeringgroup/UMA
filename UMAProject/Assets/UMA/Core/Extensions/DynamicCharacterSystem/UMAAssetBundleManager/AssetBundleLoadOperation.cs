@@ -78,11 +78,12 @@ namespace UMA.AssetBundles
 					try {
 						decryptedData = EncryptionUtil.Decrypt(encryptedAsset.data, AssetBundleManager.BundleEncryptionKey, encryptedAsset.IV);
 					}
-					catch
+					catch(System.Exception e)
 					{
-						Debug.LogError("[AssetBundleLoadOperation] could not decrypt " + assetBundleName);
+						Debug.LogError("[AssetBundleLoadOperation] could not decrypt " + assetBundleName+ "Error message was "+e.Message+" : "+e.StackTrace);
 						return false;
 					}
+					bundle.Unload (true);
 					decryptedLoadOperation = new AssetBundleLoadDecrypted(decryptedData, assetBundleName);
 					return true;
 				}

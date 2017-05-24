@@ -24,6 +24,9 @@ namespace UMA.AssetBundles
 		string currentEncryptionSuffix = "";
 		string newEncryptionSuffix = "";
 		bool currentEncodeNamesSetting = false;
+#if ENABLE_IOS_APP_SLICING
+		bool currentAppSlicingSetting = false;
+#endif
 		bool newEncodeNamesSetting = false;
 
 		//server related
@@ -107,6 +110,9 @@ namespace UMA.AssetBundles
 			if (currentEncryptionSuffix == "")
 				currentEncryptionSuffix = newEncryptionSuffix = DEFAULT_ENCRYPTION_SUFFIX;
 			currentEncodeNamesSetting = newEncodeNamesSetting = UMAABMSettings.GetEncodeNames();
+#if ENABLE_IOS_APP_SLICING
+			currentAppSlicingSetting = UMAABMSettings.GetBuildForSlicing();
+#endif
         }
 
 		void OnEnable()
@@ -117,7 +123,9 @@ namespace UMA.AssetBundles
 			if (currentEncryptionSuffix == "")
 				currentEncryptionSuffix = newEncryptionSuffix = DEFAULT_ENCRYPTION_SUFFIX;
 			currentEncodeNamesSetting = newEncodeNamesSetting = UMAABMSettings.GetEncodeNames();
-
+#if ENABLE_IOS_APP_SLICING
+			currentAppSlicingSetting = UMAABMSettings.GetBuildForSlicing();
+#endif
 			//localAssetBundleServer status
 			_enableLocalAssetBundleServer = EditorPrefs.GetBool(Application.dataPath+"LocalAssetBundleServerEnabled");
 			_port = EditorPrefs.GetInt(Application.dataPath + "LocalAssetBundleServerPort", 7888);
@@ -386,12 +394,12 @@ namespace UMA.AssetBundles
 				EndVerticalIndented();
 			}
 #if ENABLE_IOS_APP_SLICING
-			var currentAppSlicingSetting = UMAABMSettings.GetBuildForSlicing();
 			string AppSlicingTooltip = "If true will build bundles uncompressed for use with iOS Resources Catalogs";
 			EditorGUI.BeginChangeCheck();
 			bool newAppSlicingSetting = EditorGUILayout.ToggleLeft(new GUIContent("Build for iOS App Slicing", AppSlicingTooltip), currentAppSlicingSetting);
 			if (EditorGUI.EndChangeCheck())
 			{
+				currentAppSlicingSetting = newAppSlicingSetting;
 				UMAABMSettings.SetBuildForSlicing(newAppSlicingSetting);
 			}
 
@@ -424,6 +432,7 @@ namespace UMA.AssetBundles
 			if (GUILayout.Button(buttonBuildAssetBundlesText))
 			{
 				BuildScript.BuildAssetBundles();
+				Caching.CleanCache ();
 				return;
 			}
 			EndVerticalPadded(5);
