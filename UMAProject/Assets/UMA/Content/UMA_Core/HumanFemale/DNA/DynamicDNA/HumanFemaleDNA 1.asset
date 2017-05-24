@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Name: HumanFemaleDNA 1
   m_EditorClassIdentifier: 
   dnaTypeHash: 1932961400
-  lastKnownAssetPath: Assets/UMA/Content/UMA/HumanFemale/DNA/DynamicDNA/HumanFemaleDNA
+  lastKnownAssetPath: Assets/UMA/Content/UMA_Core/HumanFemale/DNA/DynamicDNA/HumanFemaleDNA
     1.asset
-  lastKnownDuplicateAssetPath: Assets/UMA/Content/UMA/HumanFemale/DNA/DynamicDNA/HumanFemaleDNA
+  lastKnownDuplicateAssetPath: Assets/UMA/Content/UMA_Core/HumanFemale/DNA/DynamicDNA/HumanFemaleDNA
     2.asset
-  lastKnownInstanceID: 10766
+  lastKnownInstanceID: 10606
   Names:
   - height
   - headSize

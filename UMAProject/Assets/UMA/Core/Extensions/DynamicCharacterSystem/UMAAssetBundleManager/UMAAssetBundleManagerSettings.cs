@@ -178,14 +178,23 @@ namespace UMA.AssetBundles
 		void UpdateHosts()
 		{
 			var strHostName = System.Net.Dns.GetHostName();
-			var ipEntry = System.Net.Dns.GetHostEntry(strHostName);
 			var list = new System.Collections.Generic.List<string>();
-			foreach (var addr in ipEntry.AddressList)
+			try
 			{
-				if (addr.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+				var ipEntry = System.Net.Dns.GetHostEntry(strHostName);
+						
+				foreach (var addr in ipEntry.AddressList)
 				{
-					list.Add(string.Format("http://{0}:{1}/", addr, Port));
+					if (addr.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+					{
+						list.Add(string.Format("http://{0}:{1}/", addr, Port));
+					}
 				}
+			}
+			catch(Exception ex)
+			{
+				Debug.Log(ex.Message);
+				strHostName = "localhost";
 			}
 			if (list.Count == 0)
 			{
