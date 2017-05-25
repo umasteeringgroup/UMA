@@ -148,7 +148,7 @@ namespace UMA
 				var parent = RecursiveFindBoneInHierarchy(bone.parent, hierarchyRoot, boneMap);
 	            if (parent != null)
 				{
-					res = parent.FindChild(bone.name);
+					res = parent.Find(bone.name);
 					if (res != null)
 					{
 						boneMap.Add(bone, res);

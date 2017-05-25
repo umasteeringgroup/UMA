@@ -119,23 +119,23 @@ namespace UMA.Examples
                 {
                     if (dstTarget != null)
                     {
-                        Transform rendTrans = dstTarget.FindChild("UMARenderer");
+                        Transform rendTrans = dstTarget.Find("UMARenderer");
                         if(rendTrans == null)
                             return dstTarget.position;
                         Renderer rend = rendTrans.GetComponent<Renderer>();
                         float height = rend.bounds.size.y;
                         distance = (height / 2) * 1.75f;
-                        return dstTarget.FindChild("Root").position + new Vector3(0, height / 2, 0);
+                        return dstTarget.Find("Root").position + new Vector3(0, height / 2, 0);
                     }
                     else
                     {
-                        Transform rendTrans = target.FindChild("UMARenderer");
+                        Transform rendTrans = target.Find("UMARenderer");
                         if(rendTrans == null)
                             return target.position;
                         Renderer rend = rendTrans.GetComponent<Renderer>();
                         float height = rend.bounds.size.y;
                         distance = (height / 2) * 1.75f;
-                        return target.FindChild("Root").position + new Vector3(0, height / 2, 0);
+                        return target.Find("Root").position + new Vector3(0, height / 2, 0);
                     }
                 }
             }

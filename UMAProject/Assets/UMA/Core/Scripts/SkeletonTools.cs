@@ -69,7 +69,7 @@ namespace UMA
 			for (int i = 0; i < race.childCount; i++)
 			{
 				var raceChild = race.GetChild(i);
-				var slotChild = slot.FindChild(raceChild.name);
+				var slotChild = slot.Find(raceChild.name);
 				if (slotChild != null)
 				{
 					CompareSkeletonRecursive(raceChild, slotChild, ref failure);
@@ -140,7 +140,7 @@ namespace UMA
 			for (int i = 0; i < source.childCount; i++)
 			{
 				var raceChild = source.GetChild(i);
-				var slotChild = dest.FindChild(raceChild.name);
+				var slotChild = dest.Find(raceChild.name);
 				if (slotChild != null)
 				{
 					ForceSkeletonRecursive(raceChild, slotChild);

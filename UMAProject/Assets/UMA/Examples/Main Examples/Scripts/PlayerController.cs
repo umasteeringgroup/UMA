@@ -15,7 +15,7 @@ namespace UMA.Examples
         {
             //Set up some stuff
             umaTransform = transform.GetChild(0);
-            camContainer = umaTransform.FindChild("PlayerCam(Clone)");
+            camContainer = umaTransform.Find("PlayerCam(Clone)");
             animator = umaTransform.GetComponent<Animator>();
 
             //If we are not the local player, disable the camera and disable script

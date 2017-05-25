@@ -100,7 +100,7 @@ namespace UMA
 
 		public Transform GetGlobalTransform()
 		{
-			return (renderers != null && renderers.Length > 0) ? renderers[0].rootBone : umaRoot.transform.FindChild("Global");
+			return (renderers != null && renderers.Length > 0) ? renderers[0].rootBone : umaRoot.transform.Find("Global");
 		}
 
 		public void RegisterAnimatedBoneHierarchy(int hash)

@@ -38,9 +38,9 @@ namespace UMA.Examples
         private void Start()
         {
             panel = GameObject.Find("Canvas/Panel").transform;
-            bodyGO = panel.FindChild("Body");
-            topHeadGO = panel.FindChild("UpperHead");
-            lowHeadGO = panel.FindChild("LowerHead");
+            bodyGO = panel.Find("Body");
+            topHeadGO = panel.Find("UpperHead");
+            lowHeadGO = panel.Find("LowerHead");
 
             /*skinColors = new Color[]{
                 Color.white,
@@ -149,7 +149,7 @@ namespace UMA.Examples
                 myCamera.transform.position = new Vector3(0, yPos + 0.05f, -0.62f);
 
                 if (bodyArea == 2)
-                    panel.FindChild("LowerHead/FacialHair").gameObject.SetActive(true);
+                    panel.Find("LowerHead/FacialHair").gameObject.SetActive(true);
             }
         }
 
@@ -168,7 +168,7 @@ namespace UMA.Examples
                 myCamera.transform.position = new Vector3(0, yPos + 0.05f, -0.62f);
 
                 if (bodyArea == 2)
-                    panel.FindChild("LowerHead/FacialHair").gameObject.SetActive(false);
+                    panel.Find("LowerHead/FacialHair").gameObject.SetActive(false);
             }
         }
 
@@ -223,61 +223,61 @@ namespace UMA.Examples
                 lowHeadGO.gameObject.SetActive(true);
                 ReceiveValues();
                 if (umaData.umaRecipe.raceData.raceName == "umaDnaMale")
-                    panel.FindChild("LowerHead/FacialHair").gameObject.SetActive(true);
+                    panel.Find("LowerHead/FacialHair").gameObject.SetActive(true);
                 else
-                    panel.FindChild("LowerHead/FacialHair").gameObject.SetActive(false);
+                    panel.Find("LowerHead/FacialHair").gameObject.SetActive(false);
             }
         }
 
         private void InitSliders()
         {
-            sliderControlList[0] = bodyGO.FindChild("Height").GetComponent<Slider>();
-            sliderControlList[1] = bodyGO.FindChild("HeadSize").GetComponent<Slider>();
+            sliderControlList[0] = bodyGO.Find("Height").GetComponent<Slider>();
+            sliderControlList[1] = bodyGO.Find("HeadSize").GetComponent<Slider>();
 
-            sliderControlList[2] = bodyGO.FindChild("UpperMuscle").GetComponent<Slider>();
-            sliderControlList[3] = bodyGO.FindChild("LowerMuscle").GetComponent<Slider>();
-            sliderControlList[4] = bodyGO.FindChild("UpperWeight").GetComponent<Slider>();
-            sliderControlList[5] = bodyGO.FindChild("LowerWeight").GetComponent<Slider>();
+            sliderControlList[2] = bodyGO.Find("UpperMuscle").GetComponent<Slider>();
+            sliderControlList[3] = bodyGO.Find("LowerMuscle").GetComponent<Slider>();
+            sliderControlList[4] = bodyGO.Find("UpperWeight").GetComponent<Slider>();
+            sliderControlList[5] = bodyGO.Find("LowerWeight").GetComponent<Slider>();
 
-            sliderControlList[6] = bodyGO.FindChild("ArmLength").GetComponent<Slider>();
-            sliderControlList[7] = bodyGO.FindChild("ArmWidth").GetComponent<Slider>();
+            sliderControlList[6] = bodyGO.Find("ArmLength").GetComponent<Slider>();
+            sliderControlList[7] = bodyGO.Find("ArmWidth").GetComponent<Slider>();
 
-            sliderControlList[8] = bodyGO.FindChild("ForearmLength").GetComponent<Slider>();
-            sliderControlList[9] = bodyGO.FindChild("ForearmWidth").GetComponent<Slider>();
-            sliderControlList[10] = bodyGO.FindChild("HandSize").GetComponent<Slider>();
+            sliderControlList[8] = bodyGO.Find("ForearmLength").GetComponent<Slider>();
+            sliderControlList[9] = bodyGO.Find("ForearmWidth").GetComponent<Slider>();
+            sliderControlList[10] = bodyGO.Find("HandSize").GetComponent<Slider>();
 
-            sliderControlList[11] = bodyGO.FindChild("FeetSize").GetComponent<Slider>();
-            sliderControlList[12] = bodyGO.FindChild("LegSeparation").GetComponent<Slider>();
-            sliderControlList[13] = bodyGO.FindChild("LegSize").GetComponent<Slider>();
+            sliderControlList[11] = bodyGO.Find("FeetSize").GetComponent<Slider>();
+            sliderControlList[12] = bodyGO.Find("LegSeparation").GetComponent<Slider>();
+            sliderControlList[13] = bodyGO.Find("LegSize").GetComponent<Slider>();
 
-            sliderControlList[14] = bodyGO.FindChild("BumSize").GetComponent<Slider>();
-            sliderControlList[15] = bodyGO.FindChild("BreastSize").GetComponent<Slider>();
-            sliderControlList[16] = bodyGO.FindChild("Belly").GetComponent<Slider>();
-            sliderControlList[17] = bodyGO.FindChild("Waist").GetComponent<Slider>();
+            sliderControlList[14] = bodyGO.Find("BumSize").GetComponent<Slider>();
+            sliderControlList[15] = bodyGO.Find("BreastSize").GetComponent<Slider>();
+            sliderControlList[16] = bodyGO.Find("Belly").GetComponent<Slider>();
+            sliderControlList[17] = bodyGO.Find("Waist").GetComponent<Slider>();
 
             //sliderControlList[18] = bodyGO.FindChild("SkinColor").GetComponent<Slider>();
             //sliderControlList[18].maxValue = skinColors.Length - 1;
 
 
-            sliderControlList2[0] = topHeadGO.FindChild("HeadWidth").GetComponent<Slider>();
-            sliderControlList2[1] = topHeadGO.FindChild("ForeheadSize").GetComponent<Slider>();
-            sliderControlList2[2] = topHeadGO.FindChild("ForeheadPosition").GetComponent<Slider>();
+            sliderControlList2[0] = topHeadGO.Find("HeadWidth").GetComponent<Slider>();
+            sliderControlList2[1] = topHeadGO.Find("ForeheadSize").GetComponent<Slider>();
+            sliderControlList2[2] = topHeadGO.Find("ForeheadPosition").GetComponent<Slider>();
 
-            sliderControlList2[3] = topHeadGO.FindChild("EarSize").GetComponent<Slider>();
-            sliderControlList2[4] = topHeadGO.FindChild("EarPosition").GetComponent<Slider>();
-            sliderControlList2[5] = topHeadGO.FindChild("EarRotation").GetComponent<Slider>();
+            sliderControlList2[3] = topHeadGO.Find("EarSize").GetComponent<Slider>();
+            sliderControlList2[4] = topHeadGO.Find("EarPosition").GetComponent<Slider>();
+            sliderControlList2[5] = topHeadGO.Find("EarRotation").GetComponent<Slider>();
 
-            sliderControlList2[6] = topHeadGO.FindChild("NoseSize").GetComponent<Slider>();
-            sliderControlList2[7] = topHeadGO.FindChild("NoseCurve").GetComponent<Slider>();
-            sliderControlList2[8] = topHeadGO.FindChild("NoseWidth").GetComponent<Slider>();
+            sliderControlList2[6] = topHeadGO.Find("NoseSize").GetComponent<Slider>();
+            sliderControlList2[7] = topHeadGO.Find("NoseCurve").GetComponent<Slider>();
+            sliderControlList2[8] = topHeadGO.Find("NoseWidth").GetComponent<Slider>();
 
-            sliderControlList2[9] = topHeadGO.FindChild("NoseInclination").GetComponent<Slider>();
-            sliderControlList2[10] = topHeadGO.FindChild("NosePosition").GetComponent<Slider>();
-            sliderControlList2[11] = topHeadGO.FindChild("NoseFlatten").GetComponent<Slider>();
-            sliderControlList2[12] = topHeadGO.FindChild("NosePronounce").GetComponent<Slider>();
+            sliderControlList2[9] = topHeadGO.Find("NoseInclination").GetComponent<Slider>();
+            sliderControlList2[10] = topHeadGO.Find("NosePosition").GetComponent<Slider>();
+            sliderControlList2[11] = topHeadGO.Find("NoseFlatten").GetComponent<Slider>();
+            sliderControlList2[12] = topHeadGO.Find("NosePronounce").GetComponent<Slider>();
 
-            sliderControlList2[13] = topHeadGO.FindChild("EyeSize").GetComponent<Slider>();
-            sliderControlList2[14] = topHeadGO.FindChild("EyeRotation").GetComponent<Slider>();
+            sliderControlList2[13] = topHeadGO.Find("EyeSize").GetComponent<Slider>();
+            sliderControlList2[14] = topHeadGO.Find("EyeRotation").GetComponent<Slider>();
 
             //sliderControlList2[15] = topHeadGO.FindChild("HairColor").GetComponent<Slider>();
             //sliderControlList2[15].maxValue = hairColors.Length - 1;
@@ -290,24 +290,24 @@ namespace UMA.Examples
 
             topHeadGO.gameObject.SetActive(false);
 
-            sliderControlList3[0] = lowHeadGO.FindChild("CheekSize").GetComponent<Slider>();
-            sliderControlList3[1] = lowHeadGO.FindChild("CheekPosition").GetComponent<Slider>();
+            sliderControlList3[0] = lowHeadGO.Find("CheekSize").GetComponent<Slider>();
+            sliderControlList3[1] = lowHeadGO.Find("CheekPosition").GetComponent<Slider>();
 
-            sliderControlList3[2] = lowHeadGO.FindChild("LowCheekPosition").GetComponent<Slider>();
-            sliderControlList3[3] = lowHeadGO.FindChild("LowCheekPronounce").GetComponent<Slider>();
+            sliderControlList3[2] = lowHeadGO.Find("LowCheekPosition").GetComponent<Slider>();
+            sliderControlList3[3] = lowHeadGO.Find("LowCheekPronounce").GetComponent<Slider>();
 
-            sliderControlList3[4] = lowHeadGO.FindChild("LipSize").GetComponent<Slider>();
-            sliderControlList3[5] = lowHeadGO.FindChild("MouthSize").GetComponent<Slider>();
+            sliderControlList3[4] = lowHeadGO.Find("LipSize").GetComponent<Slider>();
+            sliderControlList3[5] = lowHeadGO.Find("MouthSize").GetComponent<Slider>();
 
-            sliderControlList3[6] = lowHeadGO.FindChild("JawLength").GetComponent<Slider>();
-            sliderControlList3[7] = lowHeadGO.FindChild("JawWidth").GetComponent<Slider>();
-            sliderControlList3[8] = lowHeadGO.FindChild("JawPosition").GetComponent<Slider>();
+            sliderControlList3[6] = lowHeadGO.Find("JawLength").GetComponent<Slider>();
+            sliderControlList3[7] = lowHeadGO.Find("JawWidth").GetComponent<Slider>();
+            sliderControlList3[8] = lowHeadGO.Find("JawPosition").GetComponent<Slider>();
 
-            sliderControlList3[9] = lowHeadGO.FindChild("Neck").GetComponent<Slider>();
+            sliderControlList3[9] = lowHeadGO.Find("Neck").GetComponent<Slider>();
 
-            sliderControlList3[10] = lowHeadGO.FindChild("ChinSize").GetComponent<Slider>();
-            sliderControlList3[11] = lowHeadGO.FindChild("ChinPronounce").GetComponent<Slider>();
-            sliderControlList3[12] = lowHeadGO.FindChild("ChinPosition").GetComponent<Slider>();
+            sliderControlList3[10] = lowHeadGO.Find("ChinSize").GetComponent<Slider>();
+            sliderControlList3[11] = lowHeadGO.Find("ChinPronounce").GetComponent<Slider>();
+            sliderControlList3[12] = lowHeadGO.Find("ChinPosition").GetComponent<Slider>();
 
             //sliderControlList3[13] = lowHeadGO.FindChild("FacialHair").GetComponent<Slider>();
             //sliderControlList3[13].maxValue = facialHairStyles.Length - 1;
