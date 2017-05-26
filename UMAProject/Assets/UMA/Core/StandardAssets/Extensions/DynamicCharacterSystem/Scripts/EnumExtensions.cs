@@ -4,7 +4,7 @@ namespace UMA.CharacterSystem
 {
 	public static class EnumExtensions
 	{
-		public static bool HasFlag(this Enum self, Enum flag)
+		public static bool HasFlagSet(this Enum self, Enum flag)
 		{
 			if (self.GetType() != flag.GetType())
 			{

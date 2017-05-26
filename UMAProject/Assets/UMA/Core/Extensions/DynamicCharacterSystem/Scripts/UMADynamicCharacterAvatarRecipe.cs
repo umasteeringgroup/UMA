@@ -32,7 +32,7 @@ namespace UMA.CharacterSystem
 		public UMADynamicCharacterAvatarRecipe(DynamicCharacterAvatar dca, string recipeName = "", DynamicCharacterAvatar.SaveOptions customSaveOptions = DynamicCharacterAvatar.SaveOptions.useDefaults)
 		{
 			recipeType = "DynamicCharacterAvatar";
-			if (customSaveOptions.HasFlag(DynamicCharacterAvatar.SaveOptions.useDefaults))
+			if (customSaveOptions.HasFlagSet(DynamicCharacterAvatar.SaveOptions.useDefaults))
 				customSaveOptions = dca.defaultSaveOptions;
 			if (recipeName == "")
 				recipeName = dca.gameObject.name;

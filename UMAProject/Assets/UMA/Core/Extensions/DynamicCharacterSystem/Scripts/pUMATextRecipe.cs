@@ -402,9 +402,9 @@ namespace UMA
 				packedRecipeType = pRecipeType;
 				name = recipeName;
 				race = dcaToSave.activeRace.racedata.raceName;
-				if (saveOptions.HasFlag(DynamicCharacterAvatar.SaveOptions.saveDNA))
+				if (saveOptions.HasFlagSet(DynamicCharacterAvatar.SaveOptions.saveDNA))
 					dna = GetPackedDNA(recipeToSave);
-				if (saveOptions.HasFlag(DynamicCharacterAvatar.SaveOptions.saveColors))
+				if (saveOptions.HasFlagSet(DynamicCharacterAvatar.SaveOptions.saveColors))
 				{
 					characterColors = new List<PackedOverlayColorDataV3>();
 					for (int i = 0; i < recipeToSave.sharedColors.Length; i++)
@@ -412,9 +412,9 @@ namespace UMA
 						characterColors.Add(new PackedOverlayColorDataV3(recipeToSave.sharedColors[i]));
 					}
 				}
-				if (saveOptions.HasFlag(DynamicCharacterAvatar.SaveOptions.saveWardrobe))
+				if (saveOptions.HasFlagSet(DynamicCharacterAvatar.SaveOptions.saveWardrobe))
 					wardrobeSet = GenerateWardrobeSet(dcaToSave.WardrobeRecipes, dcaToSave.WardrobeCollections, slotsToSave);
-				if (saveOptions.HasFlag(DynamicCharacterAvatar.SaveOptions.saveAnimator))
+				if (saveOptions.HasFlagSet(DynamicCharacterAvatar.SaveOptions.saveAnimator))
 				{
 					if (dcaToSave.animationController != null)
 						raceAnimatorController = (dcaToSave.animationController.name);

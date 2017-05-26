@@ -622,15 +622,15 @@ namespace UMA.CharacterSystem
 			//if keepBodyColors then dont load body colors from the racebaserecipe == keep current bodyColors
 			LoadOptions thisLoadFlags = LoadOptions.loadDNA | LoadOptions.loadWardrobe | LoadOptions.loadWardrobeColors | LoadOptions.loadBodyColors;
 			//we wont be able to keep anything if the race is currently null so dont change the flags in that case
-			if (thisChangeRaceOpts.HasFlag(ChangeRaceOptions.keepBodyColors) && activeRace.racedata != null)
+			if (thisChangeRaceOpts.HasFlagSet(ChangeRaceOptions.keepBodyColors) && activeRace.racedata != null)
 			{
 				thisLoadFlags &= ~LoadOptions.loadBodyColors;//Dont load body colors - keep what we have
 			}
-			if (thisChangeRaceOpts.HasFlag(ChangeRaceOptions.keepDNA) && activeRace.racedata != null)
+			if (thisChangeRaceOpts.HasFlagSet(ChangeRaceOptions.keepDNA) && activeRace.racedata != null)
 			{
 				thisLoadFlags &= ~LoadOptions.loadDNA;//dont load dna keep what we have
 			}
-			if (thisChangeRaceOpts.HasFlag(ChangeRaceOptions.keepWardrobe) && activeRace.racedata != null)
+			if (thisChangeRaceOpts.HasFlagSet(ChangeRaceOptions.keepWardrobe) && activeRace.racedata != null)
 			{
 				thisLoadFlags &= ~LoadOptions.loadWardrobe;//dont load wardrobe- try to keep what we have
 				thisLoadFlags &= ~LoadOptions.loadWardrobeColors;
@@ -650,7 +650,7 @@ namespace UMA.CharacterSystem
 					//call this here rather than letting ImportSettingsCO do it because the base recipe might have a different race to the race it's been assigned to!
 					SetActiveRace();
 					//if we are not going to try to keep the current wardrobe, clear it
-					if (!thisChangeRaceOpts.HasFlag(ChangeRaceOptions.keepWardrobe))
+					if (!thisChangeRaceOpts.HasFlagSet(ChangeRaceOptions.keepWardrobe))
 					{
 						_wardrobeRecipes.Clear();
 					}
@@ -666,20 +666,20 @@ namespace UMA.CharacterSystem
 				//call this here rather than letting ImportSettingsCO do it because the base recipe might have a different race to the race it's been assigned to!
 				SetActiveRace();
 				//if there is no cached version and we are NOT keeping the current colors- we want to reset to the colors the component started with
-				if (!thisChangeRaceOpts.HasFlag(ChangeRaceOptions.keepBodyColors))
+				if (!thisChangeRaceOpts.HasFlagSet(ChangeRaceOptions.keepBodyColors))
 				{
 					//if keepBodyColors is FALSE we ALSO dont want to load them from the recipe- we want to load them from the null set
 					thisLoadFlags &= ~LoadOptions.loadBodyColors;
 					RestoreCachedBodyColors(false, true);
 				}
-				if (!thisChangeRaceOpts.HasFlag(ChangeRaceOptions.keepWardrobe))
+				if (!thisChangeRaceOpts.HasFlagSet(ChangeRaceOptions.keepWardrobe))
 				{
 					//if keepWardrobe is FALSE we ALSO dont want to load colors from the recipe- we want to load them from the null set
 					thisLoadFlags &= ~LoadOptions.loadWardrobeColors;
 					RestoreCachedWardrobeColors(false, true);
 				}
 				//if we are not going to try to keep the current wardrobe, clear it
-				if (!thisChangeRaceOpts.HasFlag(ChangeRaceOptions.keepWardrobe))
+				if (!thisChangeRaceOpts.HasFlagSet(ChangeRaceOptions.keepWardrobe))
 				{
 					_wardrobeRecipes.Clear();
 				}
@@ -1387,26 +1387,26 @@ namespace UMA.CharacterSystem
 		private OverlayColorData[] ImportSharedColors(OverlayColorData[] colorsToLoad, LoadOptions thisLoadOptions)
 		{
 			List<OverlayColorData> newSharedColors = new List<OverlayColorData>();
-			if (thisLoadOptions.HasFlag(LoadOptions.loadBodyColors) && thisLoadOptions.HasFlag(LoadOptions.loadWardrobeColors) && colorsToLoad.Length > 0)
+			if (thisLoadOptions.HasFlagSet(LoadOptions.loadBodyColors) && thisLoadOptions.HasFlagSet(LoadOptions.loadWardrobeColors) && colorsToLoad.Length > 0)
 			{
 				characterColors.Colors.Clear();
 			}
-			if (thisLoadOptions.HasFlag(LoadOptions.loadBodyColors) && colorsToLoad.Length > 0)
+			if (thisLoadOptions.HasFlagSet(LoadOptions.loadBodyColors) && colorsToLoad.Length > 0)
 			{
 				newSharedColors.AddRange(LoadBodyColors(colorsToLoad, false));
 			}
-			if (thisLoadOptions.HasFlag(LoadOptions.loadWardrobeColors) && colorsToLoad.Length > 0)
+			if (thisLoadOptions.HasFlagSet(LoadOptions.loadWardrobeColors) && colorsToLoad.Length > 0)
 			{
 				newSharedColors.AddRange(LoadWardrobeColors(colorsToLoad, false));
 			}
 			//if we were not loading both things then we want to restore any colors that were set in the Avatar settings if the characterColors does not already contain a color for that name
-			if (!thisLoadOptions.HasFlag(LoadOptions.loadBodyColors) || !thisLoadOptions.HasFlag(LoadOptions.loadWardrobeColors) || colorsToLoad.Length == 0)
+			if (!thisLoadOptions.HasFlagSet(LoadOptions.loadBodyColors) || !thisLoadOptions.HasFlagSet(LoadOptions.loadWardrobeColors) || colorsToLoad.Length == 0)
 			{
-				if (!thisLoadOptions.HasFlag(LoadOptions.loadBodyColors) || colorsToLoad.Length == 0)
+				if (!thisLoadOptions.HasFlagSet(LoadOptions.loadBodyColors) || colorsToLoad.Length == 0)
 				{
 					newSharedColors.AddRange(RestoreCachedBodyColors(false));
 				}
-				if (!thisLoadOptions.HasFlag(LoadOptions.loadWardrobeColors) || colorsToLoad.Length == 0)
+				if (!thisLoadOptions.HasFlagSet(LoadOptions.loadWardrobeColors) || colorsToLoad.Length == 0)
 				{
 					newSharedColors.AddRange(RestoreCachedWardrobeColors(false));
 				}
@@ -2086,11 +2086,11 @@ namespace UMA.CharacterSystem
 			{
 				Initialize();
 			}
-			if ((!thisLoadOptions.HasFlag(LoadOptions.loadDNA) || settingsToLoad.packedDna.Count == 0) && activeRace.racedata != null)
+			if ((!thisLoadOptions.HasFlagSet(LoadOptions.loadDNA) || settingsToLoad.packedDna.Count == 0) && activeRace.racedata != null)
 			{
 				prevDna = umaData.umaRecipe.GetAllDna();
 			}
-			if (thisLoadOptions.HasFlag(LoadOptions.loadRace))
+			if (thisLoadOptions.HasFlagSet(LoadOptions.loadRace))
 			{
 				if (settingsToLoad.race == null || settingsToLoad.race == "")
 				{
@@ -2127,7 +2127,7 @@ namespace UMA.CharacterSystem
 				}
 				//if we are loading wardrobe override everything that was previously set (by the default wardrobe or any previous user modifications)
 				//sending an empty wardrobe set will clear the current wardrobe. If preLoadDefaultWardrobe is true and the wardrobe is empty LoadDefaultWardrobe gets called
-				if (thisLoadOptions.HasFlag(LoadOptions.loadWardrobe))//sending an empty wardrobe set will clear the current wardrobe
+				if (thisLoadOptions.HasFlagSet(LoadOptions.loadWardrobe))//sending an empty wardrobe set will clear the current wardrobe
 				{
 					_buildCharacterEnabled = false;
 					LoadWardrobeSet(settingsToLoad.wardrobeSet);
@@ -2167,7 +2167,7 @@ namespace UMA.CharacterSystem
 					BuildCharacter(false);
 				}
 				//
-				if (thisLoadOptions.HasFlag(LoadOptions.loadDNA) && settingsToLoad.packedDna.Count > 0)
+				if (thisLoadOptions.HasFlagSet(LoadOptions.loadDNA) && settingsToLoad.packedDna.Count > 0)
 				{
 					umaData.umaRecipe.ClearDna();
 					foreach (UMADnaBase dna in settingsToLoad.GetAllDna())
@@ -2201,7 +2201,7 @@ namespace UMA.CharacterSystem
 		{
 			_isFirstSettingsBuild = false;
 			var prevDna = new UMADnaBase[0];
-			if ((!thisLoadOptions.HasFlag(LoadOptions.loadDNA) || settingsToLoad.packedDna.Count == 0) && activeRace.racedata != null)
+			if ((!thisLoadOptions.HasFlagSet(LoadOptions.loadDNA) || settingsToLoad.packedDna.Count == 0) && activeRace.racedata != null)
 			{
 				prevDna = umaData.umaRecipe.GetAllDna();
 			}
@@ -2227,7 +2227,7 @@ namespace UMA.CharacterSystem
 			umaData.AddAdditionalRecipes(umaAdditionalRecipes, context);
 			//UMAs unpacking sets the DNA
 			//but we can still try to set it back if thats what we want
-			if (prevDna.Length > 0 && !thisLoadOptions.HasFlag(LoadOptions.loadDNA) && wasBuildCharacterEnabled)
+			if (prevDna.Length > 0 && !thisLoadOptions.HasFlagSet(LoadOptions.loadDNA) && wasBuildCharacterEnabled)
 			{
 				TryImportDNAValues(prevDna);
 			}
