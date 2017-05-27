@@ -2259,7 +2259,7 @@ namespace UMA.CharacterSystem
 		public void LoadFromAssetFile(string Name)
 		{
 			UMAAssetIndexer UAI = UMAAssetIndexer.Instance;
-			AssetItem ai = UAI.GetAssetItem<UMATextRecipe>(loadFilename.Trim());
+			AssetItem ai = UAI.GetAssetItem<UMATextRecipe>(Name.Trim());
 			if (ai != null)
 			{
 				string recipeString = (ai.Item as UMATextRecipe).recipeString;
@@ -2272,7 +2272,7 @@ namespace UMA.CharacterSystem
 		public void LoadFromTextFile(string Name)
 		{
 			UMAAssetIndexer UAI = UMAAssetIndexer.Instance;
-			AssetItem ai = UAI.GetAssetItem<TextAsset>(loadFilename.Trim());
+			AssetItem ai = UAI.GetAssetItem<TextAsset>(Name.Trim());
 			if (ai != null)
 			{
 				string recipeString = (ai.Item as TextAsset).text;
