@@ -80,6 +80,8 @@ namespace UMA
 					return false;
 				if (this.channels.Length != material.channels.Length)
 					return false;
+                if (this.clothProperties != material.clothProperties)
+                    return false;
 				for (int i = 0; i < this.channels.Length; i++)
 				{
 					MaterialChannel thisChannel = this.channels[i];
