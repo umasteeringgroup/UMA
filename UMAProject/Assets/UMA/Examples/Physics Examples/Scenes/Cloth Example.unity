@@ -1359,7 +1359,7 @@ Prefab:
     - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 2}
       propertyPath: umaAdditionalRecipes.Array.data[1]
       value: 
-      objectReference: {fileID: 11400000, guid: b8f097e9dd7c12f41be671d16d75804d,
+      objectReference: {fileID: 11400000, guid: f36ba6c553c66f747bc69741fa115880,
         type: 2}
     - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 2}
       propertyPath: preloadWardrobeRecipes.recipes.Array.data[0]._recipeName
