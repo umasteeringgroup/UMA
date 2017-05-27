@@ -164,6 +164,15 @@ ModelImporter:
     100312: UMA_Male_Rig
     100314: UpperLips
     100316: UpperLipsAdjust
+    100318: ClothRobeNonSimulated
+    100320: ClothRobeSimulated
+    100322: Tassel002
+    100324: Tassel003
+    100326: Tassel01
+    100328: Robe
+    100330: RobeNonSimulated
+    100332: RobeOriginal
+    100334: RobeSimulated
     400000: ClothRobe
     400002: //RootNode
     400004: Global
@@ -323,11 +332,32 @@ ModelImporter:
     400312: UMA_Male_Rig
     400314: UpperLips
     400316: UpperLipsAdjust
+    400318: ClothRobeNonSimulated
+    400320: ClothRobeSimulated
+    400322: Tassel002
+    400324: Tassel003
+    400326: Tassel01
+    400328: Robe
+    400330: RobeNonSimulated
+    400332: RobeOriginal
+    400334: RobeSimulated
     4300000: ClothRobe
+    4300002: ClothRobeSimulated
+    4300004: ClothRobeNonSimulated
+    4300006: Robe
+    4300008: RobeOriginal
+    4300010: RobeSimulated
+    4300012: RobeNonSimulated
     7400000: Take 001
     9500000: //RootNode
     11100000: //RootNode
     13700000: ClothRobe
+    13700002: ClothRobeNonSimulated
+    13700004: ClothRobeSimulated
+    13700006: Robe
+    13700008: RobeNonSimulated
+    13700010: RobeOriginal
+    13700012: RobeSimulated
   materials:
     importMaterials: 0
     materialName: 0
