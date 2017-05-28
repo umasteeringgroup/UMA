@@ -27,7 +27,7 @@ MonoBehaviour:
     boxDimensions: {x: 0, y: 0, z: 0}
     sphereRadius: 0
     capsuleRadius: 0.06
-    capsuleHeight: 0
+    capsuleHeight: 0.35
     capsuleAlignment: 0
   parentBone: LeftUpLeg
   axis: {x: 0, y: -1, z: 0}

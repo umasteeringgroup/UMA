@@ -19,7 +19,7 @@ MonoBehaviour:
     colliderCentre: {x: -0.23, y: 0, z: 0.025}
     boxDimensions: {x: 0, y: 0, z: 0}
     sphereRadius: 0
-    capsuleRadius: 0.1
+    capsuleRadius: 0.09
     capsuleHeight: 0.5
     capsuleAlignment: 0
   parentBone: Hips

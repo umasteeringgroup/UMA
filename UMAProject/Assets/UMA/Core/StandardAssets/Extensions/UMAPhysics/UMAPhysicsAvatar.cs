@@ -210,6 +210,8 @@ namespace UMA.Dynamics
 					{
 						cloth.capsuleColliders = GetCapsuleColliders ();
 						cloth.sphereColliders = GetClothSphereColliderPairs ();
+                        if ((cloth.capsuleColliders.Length + cloth.sphereColliders.Length) > 10)
+                            Debug.LogWarning("Cloth Collider count is high. You might experience strange behavior with the cloth simulation.");
 					}
 				}
 			}
