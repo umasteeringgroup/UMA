@@ -624,6 +624,46 @@ namespace UMA
 
 #if UNITY_EDITOR
 
+		public void RepairAndCleanup()
+		{
+			// Rebuild the tables
+			UpdateSerializedList();
+
+			for(int i=0;i<SerializedItems.Count;i++)
+			{
+				AssetItem ai = SerializedItems[i];
+				if (!ai.IsAssetBundle)
+				{
+					// If we already have a reference to the item, let's verify that everything is correct on it.
+					Object obj = ai.Item;
+					if (obj != null)
+					{
+						ai._Name = ai.EvilName;
+						ai._Path = AssetDatabase.GetAssetPath(obj.GetInstanceID());
+						ai._Guid = AssetDatabase.AssetPathToGUID(ai._Path);
+					}
+					else
+					{
+						// Clear out the item reference so we will attempt to fix it if it's broken.
+						ai._SerializedItem = null;
+						// This will attempt to load the item, using the path, guid or name (in that order).
+						// This is in case we didn't have a reference to the item, and it was moved
+						ai.CachSerializedItem();
+						// If an item can't be found and we didn't ahve a reference to it, then we need to delete it.
+						if (ai._SerializedItem == null)
+						{
+							// Can't be found or loaded
+							// null it out, so it doesn't get added back.
+							SerializedItems[i] = null;
+						}
+					}
+				}
+			}
+
+			UpdateSerializedDictionaryItems();
+			ForceSave();
+		}
+
         public void AddEverything(bool includeText)
         {
             Clear(false);
