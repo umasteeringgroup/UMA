@@ -25,6 +25,8 @@ namespace UMA
 		public float stretchingStiffness;
 		public bool useGravity;
 		public float useVirtualParticles;
+        public Vector3 externalAcceleration;
+        public Vector3 randomAcceleration;
 		public float worldAccelerationScale;
 		public float worldVelocityScale;
 
@@ -33,7 +35,6 @@ namespace UMA
 			cloth.bendingStiffness = bendingStiffness;
 			//cloth.clothSolverFrequency = clothSolverFrequency;
 			cloth.collisionMassScale = collisionMassScale;
-			cloth.damping = damping;
 			//cloth.enableContinuousCollision = enableContinuousCollision;
 			//cloth.enableTethers = enableTethers;
 			cloth.friction = friction;
@@ -41,6 +42,8 @@ namespace UMA
 			cloth.stretchingStiffness = stretchingStiffness;
 			cloth.useGravity = useGravity;
 			cloth.useVirtualParticles = useVirtualParticles;
+            cloth.externalAcceleration = externalAcceleration;
+            cloth.randomAcceleration = randomAcceleration;
 			cloth.worldAccelerationScale = worldAccelerationScale;
 			cloth.worldVelocityScale = worldVelocityScale;
 #if UNITY_EDITOR
@@ -61,6 +64,8 @@ namespace UMA
 			stretchingStiffness = cloth.stretchingStiffness;
 			useGravity = cloth.useGravity;
 			useVirtualParticles = cloth.useVirtualParticles;
+            externalAcceleration = cloth.externalAcceleration;
+            randomAcceleration = cloth.randomAcceleration;
 			worldAccelerationScale = cloth.worldAccelerationScale;
 			worldVelocityScale = cloth.worldVelocityScale;
 #if UNITY_EDITOR
