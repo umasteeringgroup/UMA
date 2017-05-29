@@ -154,7 +154,7 @@ namespace UMA.CharacterSystem.Editors
 							if (foundRecipe != null)
 								UMAAssetIndexer.Instance.EvilAddAsset(foundRecipe.GetType(), foundRecipe);
 							else
-								UMAAssetIndexerEditor.Init();
+								UMAAssetIndexerEditorWindow.ShowWindow();
 						}
 					}
                     if (GUI.Button(valRBut, "X"))

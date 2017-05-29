@@ -17,6 +17,7 @@ namespace UMA
         public string _Name;
         public Object _SerializedItem;
         public string _Path;
+		public string _Guid;
         public bool IsResource;
         public bool IsAssetBundle;
         #endregion
@@ -51,7 +52,7 @@ namespace UMA
             {
 #if UNITY_EDITOR
                 if (_SerializedItem != null) return _SerializedItem;
-                _SerializedItem = AssetDatabase.LoadAssetAtPath(_Path, _Type);
+				CachSerializedItem();
                 return _SerializedItem;
 #else
                 return _SerializedItem;
@@ -72,6 +73,32 @@ namespace UMA
 			#if UNITY_EDITOR		
 			if (_SerializedItem != null) return;
 			_SerializedItem = AssetDatabase.LoadAssetAtPath(_Path, _Type);	
+			if (_SerializedItem == null) 
+			{
+				// uhoh. It's gone.
+				if (!string.IsNullOrEmpty(_Guid))
+				{
+					// at least we have a guid. Let's try to find it from that...
+					_Path = AssetDatabase.GUIDToAssetPath(_Guid);
+					if (!string.IsNullOrEmpty(_Path))
+					{
+						_SerializedItem = AssetDatabase.LoadAssetAtPath(_Path,_Type);
+					}
+				}
+				// No guid, or couldn't even find by GUID.
+				// Let's search for it?
+				if (_SerializedItem == null)
+				{
+					string s = _Type.Name;
+					string[] guids = AssetDatabase.FindAssets(_Name+ " t:" + s);
+					if (guids.Length > 0)
+					{
+						_Guid = guids[0];
+						_Path = AssetDatabase.GUIDToAssetPath(_Guid);
+						_SerializedItem = AssetDatabase.LoadAssetAtPath(_Path, _Type);
+					}
+				}
+			}
 			#endif
 		}
 
@@ -179,12 +206,16 @@ namespace UMA
             _Name = Name;
             _SerializedItem = Item;
             _Path = Path;
+			#if UNITY_EDITOR
+			_Guid = AssetDatabase.AssetPathToGUID(_Path);
+			#endif
         }
         public AssetItem(System.Type Type, Object Item)
         {
             if (Type == null) return;
 #if UNITY_EDITOR
             _Path = AssetDatabase.GetAssetPath(Item.GetInstanceID());
+			_Guid = AssetDatabase.AssetPathToGUID(_Path);
 #endif
             _TheType = Type;
             _BaseTypeName = Type.Name;

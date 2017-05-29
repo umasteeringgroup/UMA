@@ -6,8 +6,8 @@ using UnityEngine;
 
 namespace UMA.CharacterSystem.Editors
 {
-	[CustomEditor(typeof(UMAAssetIndexer))]
-	public class UMAAssetIndexerEditor : Editor
+
+	public class UMAAssetIndexerEditorWindow : EditorWindow
 	{
 		Dictionary<System.Type, bool> Toggles = new Dictionary<System.Type, bool>();
 		UMAAssetIndexer UAI;
@@ -15,25 +15,41 @@ namespace UMA.CharacterSystem.Editors
 		List<System.Type> AddedTypes = new List<System.Type>();
 		List<AssetItem> DeletedDuringGUI = new List<AssetItem>();
 		List<System.Type> RemovedTypes = new List<System.Type>();
-        Dictionary<System.Type, List<bool>> TypeCheckboxes = new Dictionary<System.Type, List<bool>>();
+		Dictionary<System.Type, List<bool>> TypeCheckboxes = new Dictionary<System.Type, List<bool>>();
+		public Vector2 scrollPosition = Vector2.zero;
+		delegate void ProcessAssetItem(System.Type type, int i, AssetItem a);
 
-        delegate void ProcessAssetItem(System.Type type, int i, AssetItem a);
-
-        // dictionary of type
-        // contains list of bools
+		// dictionary of type
+		// contains list of bools
 
 		public string Filter = "";
-        public bool IncludeText;
-        int NotInBuildCount = 0;
+		public bool IncludeText;
+		int NotInBuildCount = 0;
 
 		public UMAMaterial SelectedMaterial = null;
-
-		[MenuItem("UMA/UMA Global Library")]
-		public static void Init()
+		void OnGUI()
 		{
-			UMAAssetIndexer ua = UMAAssetIndexer.Instance;
-			Selection.activeObject = ua.gameObject;
+			if (UAI == null)
+			{
+				UAI = UMAAssetIndexer.Instance;
+			}
+			GUILayout.Space(16);
+			GUILayout.BeginHorizontal();
+			GUILayout.FlexibleSpace();
+			GUILayout.Label("UMA Global Library");
+			GUILayout.FlexibleSpace();
+			GUILayout.EndHorizontal();
+			GUILayout.Space(16);
+
+			EditorGUILayout.HelpBox("Note: Build References MUST be added when building your application. On large applications this can be slow, so it is recommend to only have build references when actually building.", MessageType.Warning);
+
+			GUILayout.Space(16);
+
+			scrollPosition = GUILayout.BeginScrollView(scrollPosition,GUIStyle.none);
+			DoGUI();
+			GUILayout.EndScrollView();
 		}
+
 
 		#region Drag Drop
 		private void DropAreaGUI(Rect dropArea)
@@ -182,10 +198,8 @@ namespace UMA.CharacterSystem.Editors
 			}
 		}
 
-		public override void OnInspectorGUI()
+		public void DoGUI()
 		{
-			UAI = target as UMAAssetIndexer;
-
 			if (Event.current.type == EventType.Layout)
 			{
 				Cleanup();
@@ -204,35 +218,45 @@ namespace UMA.CharacterSystem.Editors
 			if (Toggles.Count != Types.Length) SetFoldouts(false);
 
 			GUILayout.BeginHorizontal();
-			if (GUILayout.Button("Reindex Names"))
+			//if (GUILayout.Button("Reindex Names"))
+			//{
+			//	UAI.RebuildIndex();
+			//}
+
+			GUILayout.EndHorizontal();
+
+
+			GUILayout.BeginHorizontal();
+			if (GUILayout.Button("Rebuild From Project (Adds Everything)"))
 			{
-				UAI.RebuildIndex();
+				UAI.Clear();
+				UAI.AddEverything(IncludeText);
+				Resources.UnloadUnusedAssets();
 			}
-            if (GUILayout.Button("Add Build References"))
-            {
-                UAI.AddReferences();
-                Resources.UnloadUnusedAssets();
-            }
-            GUILayout.EndHorizontal();
+			IncludeText = GUILayout.Toggle(IncludeText, "Include TextAssets");
+			GUILayout.EndHorizontal();
+
+			GUILayout.BeginHorizontal();
+			if (GUILayout.Button("Repair and Remove invalid items"))
+			{
+				UAI.RepairAndCleanup();
+				Resources.UnloadUnusedAssets();
+			}
+			GUILayout.EndHorizontal();
 
 
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Rebuild From Project (Adds Everything)"))
-            {
-                UAI.Clear();
-                UAI.AddEverything(IncludeText);
-                Resources.UnloadUnusedAssets();
-            }
-            IncludeText = GUILayout.Toggle(IncludeText, "Include TextAssets");
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Clear References"))
+			GUILayout.BeginHorizontal();
+			if (GUILayout.Button("Add Build References"))
+			{
+				UAI.AddReferences();
+				Resources.UnloadUnusedAssets();
+			}
+			if (GUILayout.Button("Clear References"))
 			{
 				UAI.ClearReferences();
 				Resources.UnloadUnusedAssets();
 			}
-			if (GUILayout.Button("Clear All"))
+			if (GUILayout.Button("Empty Index"))
 			{
 				UAI.Clear();
 			}
@@ -258,88 +282,88 @@ namespace UMA.CharacterSystem.Editors
 			//	UAI.ForceSave();
 			//}
 			UAI.AutoUpdate = EditorGUILayout.Toggle("Process Updates", UAI.AutoUpdate);
-            GUILayout.BeginHorizontal();
+			GUILayout.BeginHorizontal();
 
 			Filter = EditorGUILayout.TextField("Filter Library", Filter);
-            GUI.SetNextControlName("TheDumbUnityBuggyField");
-            if (GUILayout.Button("-", GUILayout.Width(20)))
-            {
-                Filter = "";
-                // 10 year old unity bug that no one wants to fix.
-                GUI.FocusControl("TheDumbUnityBuggyField");
-            }
-            GUILayout.EndHorizontal();
+			GUI.SetNextControlName("TheDumbUnityBuggyField");
+			if (GUILayout.Button("-", GUILayout.Width(20)))
+			{
+				Filter = "";
+				// 10 year old unity bug that no one wants to fix.
+				GUI.FocusControl("TheDumbUnityBuggyField");
+			}
+			GUILayout.EndHorizontal();
 
-            bool HasErrors = false;
-            string ErrorTypes = "";
-            NotInBuildCount = 0;
+			bool HasErrors = false;
+			string ErrorTypes = "";
+			NotInBuildCount = 0;
 
 			foreach (System.Type t in Types)
 			{
 				if (t != typeof(AnimatorController)) // Somewhere, a kitten died because I typed that.
 				{
 					if (ShowArray(t, Filter))
-                    {
-                        HasErrors = true;
-                        ErrorTypes += t.Name +" ";
+					{
+						HasErrors = true;
+						ErrorTypes += t.Name +" ";
+					}
 				}
 			}
-		}
-            string bldMessage = "(" + NotInBuildCount + ") Item(s) not in build";
-            GUILayout.BeginHorizontal();
-            if (HasErrors)
-            {
-                GUILayout.Label(ErrorTypes + "Have error items! "+bldMessage);
-            }
-            else
-            {
-                GUILayout.Label("All items appear OK. " +bldMessage);
-            }
-            GUILayout.EndHorizontal();
+			string bldMessage = "(" + NotInBuildCount + ") Item(s) not in build";
+			GUILayout.BeginHorizontal();
+			if (HasErrors)
+			{
+				GUILayout.Label(ErrorTypes + "Have error items! "+bldMessage);
+			}
+			else
+			{
+				GUILayout.Label("All items appear OK. " +bldMessage);
+			}
+			GUILayout.EndHorizontal();
 		}
 
 
 		public bool ShowArray(System.Type CurrentType, string Filter)
 		{
 			bool HasFilter = false;
-            bool NotFound = false;
+			bool NotFound = false;
 			string actFilter = Filter.Trim().ToLower();
 			if (actFilter.Length > 0)
 				HasFilter = true;
 
-            Dictionary<string, AssetItem> TypeDic = UAI.GetAssetDictionary(CurrentType);
+			Dictionary<string, AssetItem> TypeDic = UAI.GetAssetDictionary(CurrentType);
 
-            if (!TypeCheckboxes.ContainsKey(CurrentType))
-            {
-                TypeCheckboxes.Add(CurrentType, new List<bool>());
-            }
+			if (!TypeCheckboxes.ContainsKey(CurrentType))
+			{
+				TypeCheckboxes.Add(CurrentType, new List<bool>());
+			}
 
-            List<AssetItem> Items = new List<AssetItem>();
-            Items.AddRange(TypeDic.Values);
+			List<AssetItem> Items = new List<AssetItem>();
+			Items.AddRange(TypeDic.Values);
 
-            int NotInBuild = 0;
-            int VisibleItems = 0;
-            foreach (AssetItem ai in Items)
-            {
-                if (ai._SerializedItem == null)
-                {
-                    NotInBuild++;
-                }
-                string Displayed = ai.ToString(UMAAssetIndexer.SortOrder);
-                if (HasFilter && (!Displayed.ToLower().Contains(actFilter)))
-                {
-                    continue;
-                }
-                VisibleItems++;
-            }
+			int NotInBuild = 0;
+			int VisibleItems = 0;
+			foreach (AssetItem ai in Items)
+			{
+				if (ai._SerializedItem == null)
+				{
+					NotInBuild++;
+				}
+				string Displayed = ai.ToString(UMAAssetIndexer.SortOrder);
+				if (HasFilter && (!Displayed.ToLower().Contains(actFilter)))
+				{
+					continue;
+				}
+				VisibleItems++;
+			}
 
-            if (TypeCheckboxes[CurrentType].Count != VisibleItems)
-            {
-                TypeCheckboxes[CurrentType].Clear();
-                TypeCheckboxes[CurrentType].AddRange(new bool[VisibleItems]);
-            }
+			if (TypeCheckboxes[CurrentType].Count != VisibleItems)
+			{
+				TypeCheckboxes[CurrentType].Clear();
+				TypeCheckboxes[CurrentType].AddRange(new bool[VisibleItems]);
+			}
 
-            NotInBuildCount += NotInBuild;
+			NotInBuildCount += NotInBuild;
 			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
 			GUILayout.Space(10);
 			Toggles[CurrentType] = EditorGUILayout.Foldout(Toggles[CurrentType], CurrentType.Name + ":  "+VisibleItems+ "/" + TypeDic.Count + " Item(s). "+NotInBuild+" Not in build.");
@@ -349,7 +373,7 @@ namespace UMA.CharacterSystem.Editors
 
 			if (Toggles[CurrentType])
 			{
-                Items.Sort();
+				Items.Sort();
 				GUIHelper.BeginVerticalPadded(5, new Color(0.75f, 0.875f, 1f));
 				GUILayout.BeginHorizontal();
 				GUILayout.Label("Sorted By: " + UMAAssetIndexer.SortOrder, GUILayout.MaxWidth(160));
@@ -362,45 +386,45 @@ namespace UMA.CharacterSystem.Editors
 				}
 				GUILayout.EndHorizontal();
 
-                int CurrentVisibleItem = 0;
+				int CurrentVisibleItem = 0;
 				foreach (AssetItem ai in Items)
 				{
-                    string lblBuild = "B-";
+					string lblBuild = "B-";
 					string lblVal = ai.ToString(UMAAssetIndexer.SortOrder);
 					if (HasFilter && (!lblVal.ToLower().Contains(actFilter)))
 						continue;
 
-                    if (ai._Name == "< Not Found!>")
-                    {
-                        NotFound = true;
-                    }
+					if (ai._Name == "< Not Found!>")
+					{
+						NotFound = true;
+					}
 					GUILayout.BeginHorizontal(EditorStyles.textField);
 
-                    TypeCheckboxes[CurrentType][CurrentVisibleItem] = EditorGUILayout.Toggle(TypeCheckboxes[CurrentType][CurrentVisibleItem++],GUILayout.Width(20));
-                    if (ai._SerializedItem == null)
-                    {
-                        lblVal += "<Not in Build>";
-                        lblBuild = "B+";
-                    }
+					TypeCheckboxes[CurrentType][CurrentVisibleItem] = EditorGUILayout.Toggle(TypeCheckboxes[CurrentType][CurrentVisibleItem++],GUILayout.Width(20));
+					if (ai._SerializedItem == null)
+					{
+						lblVal += "<Not in Build>";
+						lblBuild = "B+";
+					}
 
 					if (GUILayout.Button(lblVal /* ai._Name + " (" + ai._AssetBaseName + ")" */, EditorStyles.label))
 					{
 						EditorGUIUtility.PingObject(AssetDatabase.LoadMainAssetAtPath(ai._Path));
 					}
 
-                    if (GUILayout.Button(lblBuild,GUILayout.Width(35)))
-                    {
-                        if (ai._SerializedItem == null)
-                        {
+					if (GUILayout.Button(lblBuild,GUILayout.Width(35)))
+					{
+						if (ai._SerializedItem == null)
+						{
 							if (!ai.IsAssetBundle)
 								ai.CachSerializedItem();
-                        }
-                        else
-                        {
-                            ai.ReleaseItem();
-                        }
+						}
+						else
+						{
+							ai.ReleaseItem();
+						}
 
-                    }
+					}
 					if (GUILayout.Button("-", GUILayout.Width(20.0f)))
 					{
 						DeletedDuringGUI.Add(ai);
@@ -408,51 +432,51 @@ namespace UMA.CharacterSystem.Editors
 					GUILayout.EndHorizontal();
 				}
 
-                GUILayout.BeginHorizontal();
-                if (NotFound)
-                {
-                    GUILayout.Label("Warning - Some items not found!");
-                }
-                else
-                {
-                    GUILayout.Label("All Items appear OK");
-                }
-                GUILayout.EndHorizontal();
+				GUILayout.BeginHorizontal();
+				if (NotFound)
+				{
+					GUILayout.Label("Warning - Some items not found!");
+				}
+				else
+				{
+					GUILayout.Label("All Items appear OK");
+				}
+				GUILayout.EndHorizontal();
 				if (CurrentType == typeof(SlotDataAsset) || CurrentType == typeof(OverlayDataAsset))
 				{
 					GUIHelper.BeginVerticalPadded(5, new Color(0.65f, 0.65f, 0.65f));
 					GUILayout.Label("Utilities");
 					GUILayout.Space(10);
 
-                    EditorGUILayout.BeginHorizontal();
-                    if (GUILayout.Button("Select All"))
-                    {
-                        ProcessItems(CurrentType, null, HasFilter, actFilter, Items, SelectItems);
-                    }
-                    if (GUILayout.Button("Select None"))
-                    {
-                        ProcessItems(CurrentType, null, HasFilter, actFilter, Items, DeselectItems);
-                    }
-                    EditorGUILayout.EndHorizontal();
-                    EditorGUILayout.BeginHorizontal();
-                    if (GUILayout.Button("Remove Checked"))
-                    {
-                        ProcessItems(CurrentType, TypeCheckboxes[CurrentType], HasFilter, actFilter, Items, RemoveChecked);
-                    }
-                    EditorGUILayout.EndHorizontal();
+					EditorGUILayout.BeginHorizontal();
+					if (GUILayout.Button("Select All"))
+					{
+						ProcessItems(CurrentType, null, HasFilter, actFilter, Items, SelectItems);
+					}
+					if (GUILayout.Button("Select None"))
+					{
+						ProcessItems(CurrentType, null, HasFilter, actFilter, Items, DeselectItems);
+					}
+					EditorGUILayout.EndHorizontal();
+					EditorGUILayout.BeginHorizontal();
+					if (GUILayout.Button("Remove Checked"))
+					{
+						ProcessItems(CurrentType, TypeCheckboxes[CurrentType], HasFilter, actFilter, Items, RemoveChecked);
+					}
+					EditorGUILayout.EndHorizontal();
 
 
 
-                    EditorGUILayout.BeginHorizontal();
+					EditorGUILayout.BeginHorizontal();
 					SelectedMaterial = (UMAMaterial)EditorGUILayout.ObjectField(SelectedMaterial, typeof(UMAMaterial), false);
 					GUILayout.Label("Apply to checked: ");
 					if (GUILayout.Button("Unassigned"))
-                    {
-                        ProcessItems(CurrentType, TypeCheckboxes[CurrentType], HasFilter, actFilter, Items, SetItemNullMaterial);
-                    }
-                    if (GUILayout.Button("All"))
-                    {
-                        ProcessItems(CurrentType, TypeCheckboxes[CurrentType], HasFilter, actFilter, Items, SetItemMaterial);
+					{
+						ProcessItems(CurrentType, TypeCheckboxes[CurrentType], HasFilter, actFilter, Items, SetItemNullMaterial);
+					}
+					if (GUILayout.Button("All"))
+					{
+						ProcessItems(CurrentType, TypeCheckboxes[CurrentType], HasFilter, actFilter, Items, SetItemMaterial);
 					}
 					EditorGUILayout.EndHorizontal();
 					GUIHelper.EndVerticalPadded(5);
@@ -460,73 +484,73 @@ namespace UMA.CharacterSystem.Editors
 
 				GUIHelper.EndVerticalPadded(5);
 			}
-            return NotFound;
+			return NotFound;
 		}
 
-        private void RemoveChecked(System.Type type, int i, AssetItem ai)
-        {
-            DeletedDuringGUI.Add(ai);
-        }
+		private void RemoveChecked(System.Type type, int i, AssetItem ai)
+		{
+			DeletedDuringGUI.Add(ai);
+		}
 
-        private void SelectItems(System.Type CurrentType, int i, AssetItem a)
-        {
-            TypeCheckboxes[CurrentType][i] = true;
-        }
+		private void SelectItems(System.Type CurrentType, int i, AssetItem a)
+		{
+			TypeCheckboxes[CurrentType][i] = true;
+		}
 
-        private void DeselectItems(System.Type CurrentType, int i, AssetItem a)
-        {
-            TypeCheckboxes[CurrentType][i] = false;
-        }
+		private void DeselectItems(System.Type CurrentType, int i, AssetItem a)
+		{
+			TypeCheckboxes[CurrentType][i] = false;
+		}
 
-        void SetItemNullMaterial(System.Type type, int i, AssetItem ai)
-        {
-            if (ai._Type == typeof(SlotDataAsset))
-            {
-                if ((ai.Item as SlotDataAsset).material == null)
-                  (ai.Item as SlotDataAsset).material = SelectedMaterial;
-            }
-            if (ai._Type == typeof(OverlayDataAsset))
-            {
-                if ((ai.Item as OverlayDataAsset).material == null)
-                (ai.Item as OverlayDataAsset).material = SelectedMaterial;
-            }
-        }
-        void SetItemMaterial(System.Type type, int i, AssetItem ai)
-        {
-            if (ai._Type == typeof(SlotDataAsset))
-            {
-                    (ai.Item as SlotDataAsset).material = SelectedMaterial;
-            }
-            if (ai._Type == typeof(OverlayDataAsset))
-            {
-                    (ai.Item as OverlayDataAsset).material = SelectedMaterial;
-            }
-        }
+		void SetItemNullMaterial(System.Type type, int i, AssetItem ai)
+		{
+			if (ai._Type == typeof(SlotDataAsset))
+			{
+				if ((ai.Item as SlotDataAsset).material == null)
+					(ai.Item as SlotDataAsset).material = SelectedMaterial;
+			}
+			if (ai._Type == typeof(OverlayDataAsset))
+			{
+				if ((ai.Item as OverlayDataAsset).material == null)
+					(ai.Item as OverlayDataAsset).material = SelectedMaterial;
+			}
+		}
+		void SetItemMaterial(System.Type type, int i, AssetItem ai)
+		{
+			if (ai._Type == typeof(SlotDataAsset))
+			{
+				(ai.Item as SlotDataAsset).material = SelectedMaterial;
+			}
+			if (ai._Type == typeof(OverlayDataAsset))
+			{
+				(ai.Item as OverlayDataAsset).material = SelectedMaterial;
+			}
+		}
 
-        private void ProcessItems(System.Type type, List<bool> Selected, bool HasFilter, string actFilter, List<AssetItem> Items, ProcessAssetItem p)
-        {
-            int i = 0;
-            foreach (AssetItem ai in Items)
-            {
-                string lblVal = ai.ToString(UMAAssetIndexer.SortOrder);
-                if (HasFilter && (!lblVal.ToLower().Contains(actFilter)))
-                    continue;
-                if (Selected != null)
-                {
-                    if (Selected[i])
-                    {
-                        p(type, i, ai);
-                    }
-                }
-                else
-                {
-                    p(type, i, ai);
-                }
-                ++i;
-            }
-        }
+		private void ProcessItems(System.Type type, List<bool> Selected, bool HasFilter, string actFilter, List<AssetItem> Items, ProcessAssetItem p)
+		{
+			int i = 0;
+			foreach (AssetItem ai in Items)
+			{
+				string lblVal = ai.ToString(UMAAssetIndexer.SortOrder);
+				if (HasFilter && (!lblVal.ToLower().Contains(actFilter)))
+					continue;
+				if (Selected != null)
+				{
+					if (Selected[i])
+					{
+						p(type, i, ai);
+					}
+				}
+				else
+				{
+					p(type, i, ai);
+				}
+				++i;
+			}
+		}
 
-        public bool bShowTypes;
+		public bool bShowTypes;
 
 		public void ShowTypes()
 		{
@@ -558,6 +582,15 @@ namespace UMA.CharacterSystem.Editors
 				}
 				GUIHelper.EndVerticalPadded(10);
 			}
+		}
+		[MenuItem ("UMA/Global Library Window")]
+		public static void  ShowWindow () 
+		{
+			UMAAssetIndexerEditorWindow window = EditorWindow.GetWindow<UMAAssetIndexerEditorWindow>();
+			Texture icon = AssetDatabase.LoadAssetAtPath<Texture> ("Assets/UMA/InternalDataStore/UMA32.png");
+			// Create the instance of GUIContent to assign to the window. Gives the title "RBSettings" and the icon
+			GUIContent titleContent = new GUIContent ("UMA Library", icon);
+			window.titleContent = titleContent;
 		}
 	}
 }
