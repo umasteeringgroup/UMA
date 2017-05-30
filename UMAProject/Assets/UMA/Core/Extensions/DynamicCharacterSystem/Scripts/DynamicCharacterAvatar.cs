@@ -2633,6 +2633,34 @@ namespace UMA.CharacterSystem
 				ReplaceSlot(umr);
 			}
 
+			foreach(SlotData sd in umaData.umaRecipe.slotDataList)
+			{
+				if (sd.OverlayCount > 1)
+				{
+					List<OverlayData> Overlays = sd.GetOverlayList();
+					List<OverlayData> SortedOverlays = new List<OverlayData>(Overlays.Count);
+
+					foreach(OverlayData od in Overlays)
+					{
+						if (od.asset.overlayType == OverlayDataAsset.OverlayType.Cutout)
+						{
+							continue;
+						}
+						SortedOverlays.Add(od);
+					}
+
+					foreach(OverlayData od in Overlays)
+					{
+						if (od.asset.overlayType == OverlayDataAsset.OverlayType.Cutout)
+						{
+							SortedOverlays.Add(od);
+						}
+					}
+					sd.SetOverlayList(SortedOverlays);
+				}
+			}
+
+
 			UpdateColors();
 
 			//New event that allows for tweaking the resulting recipe before the character is actually generated
