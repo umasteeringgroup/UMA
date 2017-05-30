@@ -19,5 +19,7 @@ MonoBehaviour:
   stretchingStiffness: 0.9
   useGravity: 1
   useVirtualParticles: 0
+  externalAcceleration: {x: 0, y: 0, z: 0}
+  randomAcceleration: {x: 5, y: 0, z: 5}
   worldAccelerationScale: 0
   worldVelocityScale: 0
