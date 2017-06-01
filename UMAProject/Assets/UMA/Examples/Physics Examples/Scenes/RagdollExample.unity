@@ -1440,6 +1440,7 @@ GameObject:
   - 114: {fileID: 1355390902}
   - 136: {fileID: 1355390905}
   - 114: {fileID: 1355390904}
+  - 54: {fileID: 1355390906}
   m_Layer: 0
   m_Name: UMADynamicCharacterAvatar
   m_TagString: Untagged
@@ -1613,7 +1614,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f8a093c691abd240af4df2e78d67f0e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  simplePlayerCollider: 0
+  simplePlayerCollider: 1
   enableColliderTriggers: 0
   ragdollBlendAmount: 0
   UpdateTransformAfterRagdoll: 1
@@ -1658,10 +1659,25 @@ CapsuleCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  m_Radius: 0.25
-  m_Height: 1.8
+  m_Radius: 0.5
+  m_Height: 1
   m_Direction: 1
-  m_Center: {x: 0, y: 0.9, z: 0}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!54 &1355390906
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1355390901}
+  serializedVersion: 2
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1 &1526330859
 GameObject:
   m_ObjectHideFlags: 0
