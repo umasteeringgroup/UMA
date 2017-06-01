@@ -35,7 +35,8 @@ namespace UMA
 				physicsAvatar.UpdateTransformAfterRagdoll = UpdateTransformAfterRagdoll;
 				physicsAvatar.ragdollLayer = ragdollLayer;
 				physicsAvatar.playerLayer = playerLayer;
-				physicsAvatar.CreatePhysicsObjects (PhysicsElements);
+                physicsAvatar.elements = PhysicsElements;
+				physicsAvatar.CreatePhysicsObjects ();
 			}
 		}
 	}

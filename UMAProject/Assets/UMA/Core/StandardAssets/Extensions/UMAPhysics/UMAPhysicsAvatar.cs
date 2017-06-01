@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 using UMA.PoseTools;
+using UMA.CharacterSystem;
 
 namespace UMA.Dynamics
 {
@@ -22,6 +23,7 @@ namespace UMA.Dynamics
 		public bool enableColliderTriggers = false;
 
 		[Tooltip("Experimental, for blending animations with physics")]
+        [HideInInspector]
 		[Range(0,1f)]
 		public float ragdollBlendAmount;
 
@@ -32,6 +34,9 @@ namespace UMA.Dynamics
 		public int ragdollLayer = 8;
 		[Tooltip("Layer to set the player collider on. See layer based collision")]
 		public int playerLayer = 9;
+
+        [Tooltip("List of Physics Elements, see UMAPhysicsElement class")]
+        public List<UMAPhysicsElement> elements = new List<UMAPhysicsElement>();
 
 		public UnityEvent onRagdollStarted;
 		public UnityEvent onRagdollEnded;
@@ -52,7 +57,11 @@ namespace UMA.Dynamics
 		{
 			_umaData = gameObject.GetComponent<UMAData> ();	
 			gameObject.layer = playerLayer;
-		}
+
+            DynamicCharacterAvatar avatar = gameObject.GetComponent<DynamicCharacterAvatar>();
+            if (avatar != null)
+                avatar.CharacterCreated.AddListener(OnCharacterCreatedCallback);
+        }
 
 		void FixedUpdate()
 		{
@@ -69,7 +78,12 @@ namespace UMA.Dynamics
 			}
 		}
 
-		public void CreatePhysicsObjects( List<UMAPhysicsElement> elements )
+        public void OnCharacterCreatedCallback(UMAData umaData)
+        {
+            CreatePhysicsObjects();
+        }
+
+		public void CreatePhysicsObjects()
 		{
 			if( _umaData == null )
 				_umaData = gameObject.GetComponent<UMAData> ();	
