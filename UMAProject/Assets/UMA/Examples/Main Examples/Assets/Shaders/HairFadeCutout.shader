@@ -98,9 +98,6 @@ Shader "UMA/Hair Fade Cutout"
 			#pragma multi_compile UNITY_PASS_SHADOWCASTER
 			#pragma skip_variants FOG_LINEAR FOG_EXP FOG_EXP2
 			# include "HLSLSupport.cginc"
-			#if ( SHADER_API_D3D11 || SHADER_API_GLCORE || SHADER_API_GLES3 )
-				#define CAN_SKIP_VPOS
-			#endif
 			#include "UnityCG.cginc"
 			#include "Lighting.cginc"
 			#include "UnityPBSLighting.cginc"
@@ -131,11 +128,7 @@ Shader "UMA/Hair Fade Cutout"
 				TRANSFER_SHADOW_CASTER_NORMALOFFSET( o )
 				return o;
 			}
-			fixed4 frag( v2f IN
-			#if !defined( CAN_SKIP_VPOS )
-			, UNITY_VPOS_TYPE vpos : VPOS
-			#endif
-			) : SV_Target
+			fixed4 frag( v2f IN ) : SV_Target
 			{
 				Input surfIN;
 				UNITY_INITIALIZE_OUTPUT( Input, surfIN );
@@ -145,9 +138,6 @@ Shader "UMA/Hair Fade Cutout"
 				SurfaceOutputStandard o;
 				UNITY_INITIALIZE_OUTPUT( SurfaceOutputStandard, o )
 				surf( surfIN, o );
-				#if defined( CAN_SKIP_VPOS )
-				float2 vpos = IN.pos;
-				#endif
 				SHADOW_CASTER_FRAGMENT( IN )
 			}
 			ENDCG
