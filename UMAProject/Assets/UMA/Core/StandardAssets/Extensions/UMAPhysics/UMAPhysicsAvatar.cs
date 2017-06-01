@@ -98,52 +98,67 @@ namespace UMA.Dynamics
 				{
 					// add Generic Info
 					GameObject bone = _umaData.GetBoneGameObject (element.boneName);
-					if (!bone.GetComponent<Rigidbody> ()) {
-						Rigidbody rigidBody = bone.AddComponent<Rigidbody> ();
-						rigidBody.isKinematic = true;
-						rigidBody.mass = element.mass;
-						_rigidbodies.Add (rigidBody);
-					}
 
-					bone.layer = ragdollLayer;
+                    if (bone == null)
+                    {
+                        Debug.LogWarning("UMAPhysics: " + element.boneName + " not found!");
+                        continue; //if we don't find the bone then go to the next iteration
+                    }
+                
+                    if (!bone.GetComponent<Rigidbody>())
+                    {
+                        Rigidbody rigidBody = bone.AddComponent<Rigidbody>();
+                        rigidBody.isKinematic = true;
+                        rigidBody.mass = element.mass;
+                        _rigidbodies.Add(rigidBody);
+                    }
 
-					foreach (ColliderDefinition collider in element.colliders) {
-						// Add Appropriate Collider
-						if (collider.colliderType == ColliderDefinition.ColliderType.Box) {
-							BoxCollider boxCollider = bone.AddComponent<BoxCollider> ();
-							boxCollider.center = collider.colliderCentre;
-							boxCollider.size = collider.boxDimensions;
-							boxCollider.isTrigger = false; //Set initially to false;
-							_BoxColliders.Add (boxCollider);
-						} else if (collider.colliderType == ColliderDefinition.ColliderType.Sphere) {
-							SphereCollider sphereCollider = bone.AddComponent<SphereCollider> ();
-							sphereCollider.center = collider.colliderCentre;
-							sphereCollider.radius = collider.sphereRadius;
-							sphereCollider.isTrigger = false; //Set initially to false;
-							_SphereColliders.Add (sphereCollider);
-						} else if (collider.colliderType == ColliderDefinition.ColliderType.Capsule) {
-							CapsuleCollider capsuleCollider = bone.AddComponent<CapsuleCollider> ();
-							capsuleCollider.center = collider.colliderCentre;
-							capsuleCollider.radius = collider.capsuleRadius;
-							capsuleCollider.height = collider.capsuleHeight;
-							capsuleCollider.isTrigger = false; //Set initially to false;
-							switch (collider.capsuleAlignment) {
-							case(ColliderDefinition.Direction.X):
-								capsuleCollider.direction = 0;
-								break;
-							case(ColliderDefinition.Direction.Y):
-								capsuleCollider.direction = 1;
-								break;
-							case(ColliderDefinition.Direction.Z):
-								capsuleCollider.direction = 2;
-								break;
-							default:
-								capsuleCollider.direction = 0;
-								break;
-							}
-							_CapsuleColliders.Add (capsuleCollider);
-						}
-					}
+                    bone.layer = ragdollLayer;
+
+                    foreach (ColliderDefinition collider in element.colliders)
+                    {
+                        // Add Appropriate Collider
+                        if (collider.colliderType == ColliderDefinition.ColliderType.Box)
+                        {
+                            BoxCollider boxCollider = bone.AddComponent<BoxCollider>();
+                            boxCollider.center = collider.colliderCentre;
+                            boxCollider.size = collider.boxDimensions;
+                            boxCollider.isTrigger = false; //Set initially to false;
+                            _BoxColliders.Add(boxCollider);
+                        }
+                        else if (collider.colliderType == ColliderDefinition.ColliderType.Sphere)
+                        {
+                            SphereCollider sphereCollider = bone.AddComponent<SphereCollider>();
+                            sphereCollider.center = collider.colliderCentre;
+                            sphereCollider.radius = collider.sphereRadius;
+                            sphereCollider.isTrigger = false; //Set initially to false;
+                            _SphereColliders.Add(sphereCollider);
+                        }
+                        else if (collider.colliderType == ColliderDefinition.ColliderType.Capsule)
+                        {
+                            CapsuleCollider capsuleCollider = bone.AddComponent<CapsuleCollider>();
+                            capsuleCollider.center = collider.colliderCentre;
+                            capsuleCollider.radius = collider.capsuleRadius;
+                            capsuleCollider.height = collider.capsuleHeight;
+                            capsuleCollider.isTrigger = false; //Set initially to false;
+                            switch (collider.capsuleAlignment)
+                            {
+                                case(ColliderDefinition.Direction.X):
+                                    capsuleCollider.direction = 0;
+                                    break;
+                                case(ColliderDefinition.Direction.Y):
+                                    capsuleCollider.direction = 1;
+                                    break;
+                                case(ColliderDefinition.Direction.Z):
+                                    capsuleCollider.direction = 2;
+                                    break;
+                                default:
+                                    capsuleCollider.direction = 0;
+                                    break;
+                            }
+                            _CapsuleColliders.Add(capsuleCollider);
+                        }
+                    }
 				}
 			}
 
@@ -157,6 +172,9 @@ namespace UMA.Dynamics
 
 					GameObject bone = _umaData.GetBoneGameObject (element.boneName);
 
+                    if (bone == null)
+                        continue; //if we don't find the bone then go to the next iteration
+                    
 					// Add Character Joint
 					if (!element.isRoot) {
 						CharacterJoint joint = bone.AddComponent<CharacterJoint> ();
