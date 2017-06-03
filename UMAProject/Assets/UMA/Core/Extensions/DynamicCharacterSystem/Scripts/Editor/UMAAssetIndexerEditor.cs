@@ -7,10 +7,10 @@ using UnityEngine;
 namespace UMA.CharacterSystem.Editors
 {
 
-	public class UMAAssetIndexerEditorWindow : EditorWindow
+	public class UMAAssetIndexerEditor : EditorWindow
 	{
 		Dictionary<System.Type, bool> Toggles = new Dictionary<System.Type, bool>();
-		UMAAssetIndexer UAI;
+		UMAAssetIndexer _UAI;
 		List<Object> AddedDuringGui = new List<Object>();
 		List<System.Type> AddedTypes = new List<System.Type>();
 		List<AssetItem> DeletedDuringGUI = new List<AssetItem>();
@@ -26,12 +26,31 @@ namespace UMA.CharacterSystem.Editors
 		public bool IncludeText;
 		int NotInBuildCount = 0;
 
+		UMAAssetIndexer UAI
+		{
+			get
+			{
+				if (_UAI == null)
+				{
+					_UAI = UMAAssetIndexer.Instance;
+				}	
+				return _UAI;
+			}
+		}
+
 		public UMAMaterial SelectedMaterial = null;
 		void OnGUI()
 		{
-			if (UAI == null)
+			try
 			{
-				UAI = UMAAssetIndexer.Instance;
+				if (UAI == null)
+				{
+					return;
+				}
+			}
+			catch
+			{
+				return;
 			}
 			GUILayout.Space(16);
 			GUILayout.BeginHorizontal();
@@ -586,7 +605,7 @@ namespace UMA.CharacterSystem.Editors
 		[MenuItem ("UMA/Global Library Window")]
 		public static void  ShowWindow () 
 		{
-			UMAAssetIndexerEditorWindow window = EditorWindow.GetWindow<UMAAssetIndexerEditorWindow>();
+			UMAAssetIndexerEditor window = EditorWindow.GetWindow<UMAAssetIndexerEditor>();
 			Texture icon = AssetDatabase.LoadAssetAtPath<Texture> ("Assets/UMA/InternalDataStore/UMA32.png");
 			// Create the instance of GUIContent to assign to the window. Gives the title "RBSettings" and the icon
 			GUIContent titleContent = new GUIContent ("UMA Library", icon);

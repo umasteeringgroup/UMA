@@ -117,7 +117,7 @@ namespace UMA.CharacterSystem.Editors
 										if (thisAnimator != null)
 											UMAAssetIndexer.Instance.EvilAddAsset(thisAnimator.GetType(), thisAnimator);
 										else
-											UMAAssetIndexerEditorWindow.ShowWindow();
+											UMAAssetIndexerEditor.ShowWindow();
 									}
 								}
 							}
