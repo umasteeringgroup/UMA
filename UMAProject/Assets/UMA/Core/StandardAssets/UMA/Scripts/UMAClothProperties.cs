@@ -35,6 +35,7 @@ namespace UMA
 			cloth.bendingStiffness = bendingStiffness;
 			//cloth.clothSolverFrequency = clothSolverFrequency;
 			cloth.collisionMassScale = collisionMassScale;
+            cloth.damping = damping;
 			//cloth.enableContinuousCollision = enableContinuousCollision;
 			//cloth.enableTethers = enableTethers;
 			cloth.friction = friction;
