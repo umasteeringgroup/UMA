@@ -46,8 +46,13 @@ namespace UMA.Dynamics
 		private GameObject _rootBone;
 		private List<Rigidbody> _rigidbodies = new List<Rigidbody> ();
 		private List<BoxCollider> _BoxColliders = new List<BoxCollider> ();
-		private List<SphereCollider> _SphereColliders = new List<SphereCollider>();
-		private List<CapsuleCollider> _CapsuleColliders = new List<CapsuleCollider>();
+
+        public List<ClothSphereColliderPair> SphereColliders { get { return _SphereColliders; }}
+        private List<ClothSphereColliderPair> _SphereColliders = new List<ClothSphereColliderPair>();
+		
+        public List<CapsuleCollider> CapsuleColliders { get { return _CapsuleColliders; }}
+        private List<CapsuleCollider> _CapsuleColliders = new List<CapsuleCollider>();
+
 	
 		private CapsuleCollider _playerCollider;
 		private Rigidbody _playerRigidbody;
@@ -57,6 +62,9 @@ namespace UMA.Dynamics
 		{
 			_umaData = gameObject.GetComponent<UMAData> ();	
 			gameObject.layer = playerLayer;
+
+            if(_SphereColliders == null) { _SphereColliders = new List<ClothSphereColliderPair>(); }
+            if(_CapsuleColliders == null) { _CapsuleColliders = new List<CapsuleCollider>(); }
 
             DynamicCharacterAvatar avatar = gameObject.GetComponent<DynamicCharacterAvatar>();
             if (avatar != null)
@@ -146,7 +154,8 @@ namespace UMA.Dynamics
                             sphereCollider.center = collider.colliderCentre;
                             sphereCollider.radius = collider.sphereRadius;
                             sphereCollider.isTrigger = false; //Set initially to false;
-                            _SphereColliders.Add(sphereCollider);
+
+                            _SphereColliders.Add(new ClothSphereColliderPair(sphereCollider));
                         }
                         else if (collider.colliderType == ColliderDefinition.ColliderType.Capsule)
                         {
@@ -213,23 +222,6 @@ namespace UMA.Dynamics
 			SetRagdolled (_ragdolled);
 		}
 
-		public CapsuleCollider[] GetCapsuleColliders()
-		{
-			return _CapsuleColliders.ToArray();
-		}
-
-		public ClothSphereColliderPair[] GetClothSphereColliderPairs()
-		{
-			ClothSphereColliderPair[] colliders = new ClothSphereColliderPair[_SphereColliders.Count];
-
-			for( int i = 0; i < _SphereColliders.Count; i++ )
-			{
-				colliders [i].first = _SphereColliders [i];
-			}
-
-			return colliders;
-		}
-
 		//Update all cloth components
 		public void UpdateClothColliders()
 		{
@@ -240,8 +232,8 @@ namespace UMA.Dynamics
 					Cloth cloth = renderer.GetComponent<Cloth> ();
 					if (cloth) 
 					{
-						cloth.capsuleColliders = GetCapsuleColliders ();
-						cloth.sphereColliders = GetClothSphereColliderPairs ();
+                        cloth.sphereColliders = SphereColliders.ToArray();
+                        cloth.capsuleColliders = CapsuleColliders.ToArray();
                         if ((cloth.capsuleColliders.Length + cloth.sphereColliders.Length) > 10)
                             Debug.LogWarning("Cloth Collider count is high. You might experience strange behavior with the cloth simulation.");
 					}
@@ -323,10 +315,12 @@ namespace UMA.Dynamics
 				//collider.enabled = flag;
 			}
 
-			foreach (SphereCollider collider in _SphereColliders) 
+            foreach (ClothSphereColliderPair collider in _SphereColliders) 
 			{
-				collider.isTrigger = flag;
-				//collider.enabled = flag;
+                collider.first.isTrigger = flag;
+                //collider.second.isTrigger = flag;
+				//collider.first.enabled = flag;
+                //collider.second.enabled = flag;
 			}
 			
 			foreach (CapsuleCollider collider in _CapsuleColliders) 
