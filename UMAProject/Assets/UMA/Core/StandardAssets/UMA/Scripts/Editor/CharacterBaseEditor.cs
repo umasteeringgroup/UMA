@@ -1457,6 +1457,7 @@ namespace UMA.Editors
 
 				bool showExtendedRanges = showExtendedRangeForOverlay == _overlayData;
 				var newShowExtendedRanges = EditorGUILayout.Toggle("Show Extended Ranges", showExtendedRanges);
+
 				if (showExtendedRanges != newShowExtendedRanges)
 				{
 					if (newShowExtendedRanges)
