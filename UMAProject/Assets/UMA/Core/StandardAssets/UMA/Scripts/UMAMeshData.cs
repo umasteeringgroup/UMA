@@ -707,8 +707,8 @@ namespace UMA
                     UMAPhysicsAvatar physicsAvatar = renderer.gameObject.GetComponentInParent<UMAPhysicsAvatar> ();
                     if (physicsAvatar != null)
                     {
-                        cloth.capsuleColliders = physicsAvatar.GetCapsuleColliders();
-                        cloth.sphereColliders = physicsAvatar.GetClothSphereColliderPairs();
+                        cloth.sphereColliders = physicsAvatar.SphereColliders.ToArray();
+                        cloth.capsuleColliders = physicsAvatar.CapsuleColliders.ToArray();
                     }
                     else
                         Debug.Log("PhysicsAvatar is null!");
