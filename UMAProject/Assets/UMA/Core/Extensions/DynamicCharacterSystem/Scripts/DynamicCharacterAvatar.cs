@@ -1586,7 +1586,14 @@ namespace UMA.CharacterSystem
 
 				for (int i = 0; i < db.Count; i++)
 				{
-					dna.Add(db.Names[i], new DnaSetter(db.Names[i], db.Values[i], i, db, Category));
+					if (dna.ContainsKey(db.Names[i]))
+					{
+						dna[db.Names[i]] = new DnaSetter(db.Names[i], db.Values[i], i, db, Category);
+					}
+					else
+					{
+						dna.Add(db.Names[i], new DnaSetter(db.Names[i], db.Values[i], i, db, Category));
+					}
 				}
 			}
 			return dna;
