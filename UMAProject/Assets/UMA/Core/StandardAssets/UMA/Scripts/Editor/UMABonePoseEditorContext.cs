@@ -121,85 +121,52 @@ namespace UMA.PoseTools
 
 			MirrorData mirror;
 			// Current transform has a mirror, check children
-			if (mirrors.TryGetValue(transform, out mirror) &&
-				// But only add each pair of mirrors once
-				(transform == mirror.transformA))
+			if (mirrors.TryGetValue(transform, out mirror))
 			{
-				for (int i = 0; i < transform.childCount; i++)
+				// But only add each pair of mirrors once
+				if (transform == mirror.transformA)
 				{
-					Transform childA = transform.GetChild(i);
-					Vector3 childApos = childA.localPosition;
-
-					// If the bone is too close to the local origin check for a name match
-					if (Vector3.Distance(childApos, Vector3.zero) < 0.05f)
+					for (int i = 0; i < transform.childCount; i++)
 					{
-						int longestMatch = 0;
-						int bestIndex = -1;
+						Transform childA = transform.GetChild(i);
+						Vector3 childApos = childA.localPosition;
 
-						for (int j = 0; j < mirror.transformB.childCount; j++)
+						// If the bone is too close to the local origin check for a name match
+						if (Vector3.Distance(childApos, Vector3.zero) < 0.05f)
 						{
-							Transform childB = mirror.transformB.GetChild(j);
-							Vector3 childBpos = childB.localPosition;
-							if (childBpos != Vector3.zero) continue;
-							if (childB.name == childA.name)
+							int longestMatch = 0;
+							int bestIndex = -1;
+
+							for (int j = 0; j < mirror.transformB.childCount; j++)
 							{
-								longestMatch = childA.name.Length;
-								bestIndex = j;
-								break;
-							}
-
-							while ((childA.name.Length > longestMatch) &&
-								(childB.name.StartsWith(childA.name.Substring(0, longestMatch + 1))))
-							{
-								longestMatch++;
-								bestIndex = j;
-							}
-							while ((childA.name.Length > longestMatch) &&
-								(childB.name.EndsWith(childA.name.Substring(childA.name.Length - (longestMatch + 1)))))
-							{
-								longestMatch++;
-								bestIndex = j;
-							}
-						}
-
-						// If we found a good enough match then consider it a mirror
-						if (longestMatch > 5)
-						{
-							Transform childB = mirror.transformB.GetChild(bestIndex);
-							MirrorData newMirror = new MirrorData();
-							newMirror.plane = mirror.plane;
-							newMirror.transformA = childA;
-							newMirror.transformB = childB;
-							mirrors.Add(childA, newMirror);
-							mirrors.Add(childB, newMirror);
-
-//							Debug.Log("Found new named mirror: " + childA.name + " : " + childB.name);
-						}
-
-					}
-					// Else check for a position match
-					else
-					{
-						for (int j = 0; j < mirror.transformB.childCount; j++)
-						{
-							Transform childB = mirror.transformB.GetChild(j);
-							Vector3 childBpos = childB.localPosition;
-
-							switch (mirror.plane)
-							{
-								case MirrorPlane.Mirror_X:
-									childBpos.x = -childBpos.x;
+								Transform childB = mirror.transformB.GetChild(j);
+								Vector3 childBpos = childB.localPosition;
+								if (childBpos != Vector3.zero) continue;
+								if (childB.name == childA.name)
+								{
+									longestMatch = childA.name.Length;
+									bestIndex = j;
 									break;
-								case MirrorPlane.Mirror_Y:
-									childBpos.y = -childBpos.y;
-									break;
-								case MirrorPlane.Mirror_Z:
-									childBpos.z = -childBpos.z;
-									break;
+								}
+
+								while ((childA.name.Length > longestMatch) &&
+									(childB.name.StartsWith(childA.name.Substring(0, longestMatch + 1))))
+								{
+									longestMatch++;
+									bestIndex = j;
+								}
+								while ((childA.name.Length > longestMatch) &&
+									(childB.name.EndsWith(childA.name.Substring(childA.name.Length - (longestMatch + 1)))))
+								{
+									longestMatch++;
+									bestIndex = j;
+								}
 							}
 
-							if (childApos == childBpos)
+							// If we found a good enough match then consider it a mirror
+							if (longestMatch > 5)
 							{
+								Transform childB = mirror.transformB.GetChild(bestIndex);
 								MirrorData newMirror = new MirrorData();
 								newMirror.plane = mirror.plane;
 								newMirror.transformA = childA;
@@ -207,7 +174,42 @@ namespace UMA.PoseTools
 								mirrors.Add(childA, newMirror);
 								mirrors.Add(childB, newMirror);
 
-//								Debug.Log("Found new child mirror: " + childA.name + " : " + childB.name);
+	//							Debug.Log("Found new named mirror: " + childA.name + " : " + childB.name);
+							}
+
+						}
+						// Else check for a position match
+						else
+						{
+							for (int j = 0; j < mirror.transformB.childCount; j++)
+							{
+								Transform childB = mirror.transformB.GetChild(j);
+								Vector3 childBpos = childB.localPosition;
+
+								switch (mirror.plane)
+								{
+									case MirrorPlane.Mirror_X:
+										childBpos.x = -childBpos.x;
+										break;
+									case MirrorPlane.Mirror_Y:
+										childBpos.y = -childBpos.y;
+										break;
+									case MirrorPlane.Mirror_Z:
+										childBpos.z = -childBpos.z;
+										break;
+								}
+
+								if (childApos == childBpos)
+								{
+									MirrorData newMirror = new MirrorData();
+									newMirror.plane = mirror.plane;
+									newMirror.transformA = childA;
+									newMirror.transformB = childB;
+									mirrors.Add(childA, newMirror);
+									mirrors.Add(childB, newMirror);
+
+	//								Debug.Log("Found new child mirror: " + childA.name + " : " + childB.name);
+								}
 							}
 						}
 					}
