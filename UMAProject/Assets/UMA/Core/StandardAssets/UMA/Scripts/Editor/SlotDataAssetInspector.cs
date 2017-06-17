@@ -64,15 +64,45 @@ namespace UMA.Editors
 				}
 			}
 
-			GUILayout.Space(20);
-			Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
-			GUI.Box(dropArea, "Drag Bone Transforms here to add their names to the Animated Bone Names.\nSo the power tools will preserve them!");
-			GUILayout.Space(20);
+            GUILayout.Space(20);
+            Rect updateDropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
+            GUI.Box(updateDropArea, "Drag SkinnedMeshRenderers here to update the slot meshData.");
+            GUILayout.Space(10);
+            UpdateSlotDropAreaGUI(updateDropArea);
 
-			DropAreaGUI(dropArea);
+			GUILayout.Space(10);
+			Rect boneDropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
+			GUI.Box(boneDropArea, "Drag Bone Transforms here to add their names to the Animated Bone Names.\nSo the power tools will preserve them!");
+			GUILayout.Space(10);
+			AnimatedBoneDropAreaGUI(boneDropArea);
         }
 
-		private void DropAreaGUI(Rect dropArea)
+        private void AnimatedBoneDropAreaGUI(Rect dropArea)
+        {
+            GameObject obj = DropAreaGUI(dropArea);
+            if (obj != null)
+                AddAnimatedBone(obj.name);
+        }
+
+        private void UpdateSlotDropAreaGUI(Rect dropArea)
+        {
+            GameObject obj = DropAreaGUI(dropArea);
+            if (obj != null)
+            {
+                SkinnedMeshRenderer skinnedMesh = obj.GetComponent<SkinnedMeshRenderer>();
+                if (skinnedMesh != null)
+                {
+                    Debug.Log("Updating SlotDataAsset with SkinnedMeshRenderer...");
+                    UpdateSlotData(skinnedMesh);
+                    Debug.Log("Update Complete!");
+                }
+                else
+                    EditorUtility.DisplayDialog("Error", "No skinned mesh renderer found!", "Ok");
+            }
+                
+        }
+
+        private GameObject DropAreaGUI(Rect dropArea)
 		{
 			var evt = Event.current;
 
@@ -97,13 +127,14 @@ namespace UMA.Editors
 							var go = draggedObjects[i] as GameObject;
 							if (go != null)
 							{
-								AddAnimatedBone(go.name);
+                                return go;
 							}
 						}
 					}
 					AssetDatabase.SaveAssets();
 				}
 			}
+            return null;
 		}
 
 		private void AddAnimatedBone(string animatedBone)
@@ -120,6 +151,15 @@ namespace UMA.Editors
 				}
 			}			
 		}
+
+        private void UpdateSlotData(SkinnedMeshRenderer skinnedMesh)
+        {
+            SlotDataAsset slot = target as SlotDataAsset;
+
+            string existingRootBone = slot.meshData.RootBoneName;
+            slot.UpdateMeshData(skinnedMesh, existingRootBone);
+        }
+
     }
 }
 #endif
