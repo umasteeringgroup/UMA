@@ -160,19 +160,6 @@ namespace UMA.Editors
             slot.UpdateMeshData(skinnedMesh, existingRootBone);
         }
 
-        public override bool HasPreviewGUI()
-        {
-            SlotDataAsset slot = target as SlotDataAsset;
-            if (slot.meshData == null)
-                return false;
-            
-            return true;
-        }
-
-        public override void OnPreviewGUI(Rect region, GUIStyle background)
-        {
-
-        }
     }
 }
 #endif
