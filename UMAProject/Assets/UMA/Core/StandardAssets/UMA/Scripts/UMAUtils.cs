@@ -31,6 +31,16 @@ namespace UMA
 			
 			return mean + dev * rand_std_normal;
 		}
+
+        public static string GetAssetFolder(string path)
+        {
+            int index = path.LastIndexOf('/');
+            if( index > 0 )
+            {
+                return path.Substring(0, index);
+            }
+            return "";
+        }
 		
 	}
 

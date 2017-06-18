@@ -157,9 +157,9 @@ namespace UMA.Editors
             SlotDataAsset slot = target as SlotDataAsset;
 
             string existingRootBone = slot.meshData.RootBoneName;
-            slot.UpdateMeshData(skinnedMesh, existingRootBone);
-        }
 
+            UMASlotProcessingUtil.UpdateSlotData(slot, skinnedMesh, slot.material, null, existingRootBone);
+        }
     }
 }
 #endif
