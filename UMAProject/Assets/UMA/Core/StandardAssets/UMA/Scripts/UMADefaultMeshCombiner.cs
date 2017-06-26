@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace UMA
@@ -200,7 +201,19 @@ namespace UMA
 					var materialDefinition = generatedMaterial.materialFragments[materialDefinitionIndex];
 					var slotData = materialDefinition.slotData;
                     combineInstance = new SkinnedMeshCombiner.CombineInstance();
+
+                    //Original, doesn't copy MeshData, so no extra garbage.
 					combineInstance.meshData = slotData.asset.meshData;
+
+                    //New MeshHiding
+                    if (slotData.meshHideMask != null)
+                    {
+                        Debug.Log("Setting new umaData for combiner");
+                        //combineInstance.meshHideMask = slotData.meshHideMask;
+                        combineInstance.meshData = MeshHideAsset.FilterMeshData(slotData.asset.meshData, slotData.meshHideMask);
+                    }
+                    //*******
+
 					combineInstance.targetSubmeshIndices = new int[combineInstance.meshData.subMeshCount];
 					for (int i = 0; i < combineInstance.meshData.subMeshCount; i++)
 					{
