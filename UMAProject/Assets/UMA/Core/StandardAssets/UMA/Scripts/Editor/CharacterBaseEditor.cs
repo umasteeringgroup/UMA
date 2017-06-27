@@ -1121,7 +1121,9 @@ namespace UMA.Editors
 		private readonly OverlayData _overlayData;
 		private readonly TextureEditor[] _textures;
 		private ColorEditor[] _colors;
+        #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
 		private ProceduralPropertyEditor[] _properties;
+        #endif
 		private ProceduralPropertyDescription[] _descriptions;
 		private int _selectedProperty = 0;
 		private bool _foldout = true;
@@ -1158,6 +1160,7 @@ namespace UMA.Editors
 				_textures[i] = new TextureEditor(overlayData.textureArray[i]);
 			}
 
+            #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
 			if (overlayData.isProcedural)
 			{
 				ProceduralMaterial material = _overlayData.asset.material.material as ProceduralMaterial;
@@ -1183,6 +1186,7 @@ namespace UMA.Editors
 			{
 				_properties = null;
 			}
+            #endif
 
 			BuildColorEditors();
 		}
@@ -1310,6 +1314,7 @@ namespace UMA.Editors
             }
             GUILayout.EndHorizontal();
 
+            #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
 			// Edit the procedural properties
 			if (_overlayData.isProcedural)
 			{
@@ -1380,6 +1385,7 @@ namespace UMA.Editors
 				EditorGUI.indentLevel--;
 				GUILayout.EndVertical();
 			}
+            #endif      
 
 			// Edit the textures
 			GUILayout.Label("Textures");
@@ -1553,6 +1559,7 @@ namespace UMA.Editors
 		}
 	}
 
+    #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
 	public class ProceduralPropertyEditor
 	{
 		public OverlayData.OverlayProceduralData property;
@@ -1666,6 +1673,7 @@ namespace UMA.Editors
 			return changed;
 		}
 	}
+    #endif
 
 	public abstract class CharacterBaseEditor : Editor
 	{

@@ -51,9 +51,11 @@ namespace UMA
 		/// </summary>
 		public bool IsProcedural()
 		{
+            #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
 			if ((material != null) && (material is ProceduralMaterial))
 				return true;
-			
+            #endif
+
 			return false;
 		}
 
