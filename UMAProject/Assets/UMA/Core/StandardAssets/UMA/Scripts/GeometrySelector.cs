@@ -8,7 +8,8 @@ namespace UMA
     {
         public bool showWireframe = true;
         public MeshHideAsset meshAsset;
-        public List<int> selectedTriangles = new List<int>();
+
+        public BitArray selectedTriangles;
 
         //public MeshHideAsset HideAsset;
         public Mesh sharedMesh
@@ -26,7 +27,7 @@ namespace UMA
         //Use 0 for unselected and 1 for selected
         private Material[] _Materials;
 
-        public delegate void OnDoneEditing(List<int> selection);
+        public delegate void OnDoneEditing(BitArray selection);
         public OnDoneEditing doneEditing;
 
         public void Initialize()
@@ -39,6 +40,9 @@ namespace UMA
             }
 
             gameObject.transform.hideFlags = HideFlags.NotEditable | HideFlags.HideInInspector;
+
+            if (selectedTriangles == null)
+                selectedTriangles = new BitArray(_sharedMesh.triangles.Length);
                 
             if( !gameObject.GetComponent<MeshFilter>())
             {
@@ -116,29 +120,27 @@ namespace UMA
             if (_sharedMesh == null)
                 return;
 
-            selectedTriangles.Clear();
-            for (int i = 0; i < _sharedMesh.triangles.Length; i+=3)
-            {
-                selectedTriangles.Add(i);
-            }
+            selectedTriangles.SetAll(true);
+
             UpdateSelectionMesh();
         }
 
         public void ClearAll()
         {
-            selectedTriangles.Clear();
+            selectedTriangles.SetAll(false);
+
             UpdateSelectionMesh();
         }
 
         public void UpdateSelectionMesh()
         {
-            int selectedCount = selectedTriangles.Count * 3;
+            int selectedCount = UMAUtils.GetCardinality(selectedTriangles);
             int[] newSelectedTriangles = new int[selectedCount];
             int selectedIndex = 0;
 
-            for (int i = 0; i < sharedMesh.triangles.Length; i+=3)
-            {
-                if (selectedTriangles.Contains(i))
+            for (int i = 0; i < selectedTriangles.Length; i+=3)
+            {                
+                if (selectedTriangles[i])
                 {
                     newSelectedTriangles[selectedIndex] = sharedMesh.triangles[i];
                     newSelectedTriangles[selectedIndex + 1] = sharedMesh.triangles[i + 1];
@@ -146,6 +148,7 @@ namespace UMA
                     selectedIndex += 3;
                 }
             }
+
 
             sharedMesh.SetTriangles(newSelectedTriangles, 1);
         }

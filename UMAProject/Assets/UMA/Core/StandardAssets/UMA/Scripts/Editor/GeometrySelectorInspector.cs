@@ -75,15 +75,10 @@ namespace UMA.Editors
                 int[] triangleHit = RayPick();
                 if (triangleHit != null)
                 {
-                    if (source.selectedTriangles.Contains(triangleHit[0]))
-                    {
-                        source.selectedTriangles.Remove(triangleHit[0]);
-                    }
-                    else
-                    {
-                        source.selectedTriangles.Add(triangleHit[0]);//let's only store the first index of the triangle hit
-                    }
-
+                    source.selectedTriangles[triangleHit[0]] = !source.selectedTriangles[triangleHit[0]];
+                    source.selectedTriangles[triangleHit[1]] = !source.selectedTriangles[triangleHit[1]];
+                    source.selectedTriangles[triangleHit[2]] = !source.selectedTriangles[triangleHit[2]];
+                        
                     source.UpdateSelectionMesh();
                 }
             }

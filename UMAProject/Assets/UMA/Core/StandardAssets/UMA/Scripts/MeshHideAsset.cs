@@ -168,14 +168,21 @@ namespace UMA
         }
 
         [ExecuteInEditMode]
-        public void SaveSelection( List<int> selection )
+        //public void SaveSelection( List<int> selection )
+        public void SaveSelection( BitArray selection )
         {
+            if (selection.Count != _triangleFlags[0].Count)
+            {
+                Debug.Log("SaveSelection: counts don't match!");
+                return;
+            }
+
             //Only works for submesh 0 for now
             _triangleFlags[0].SetAll(false);
-            foreach (int index in selection)
-            {
-                SetTriangleFlag(index, true);
-            }
+            if (selection.Length == _triangleFlags[0].Length)
+                _triangleFlags[0] = new BitArray(selection);
+            else
+                Debug.LogWarning("SaveSelection: counts don't match!");
         }
 
         public static BitArray[] GenerateMask( List<MeshHideAsset> assets )

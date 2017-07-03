@@ -105,20 +105,7 @@ namespace UMA.Editors
                 Selection.activeGameObject = obj;
 
                 //temporary, only works on submesh 0
-                for( int i = 0; i < source.triangleFlags[0].Count - 2; i++)
-                {
-                    if( source.triangleFlags[0][i] )
-                    {
-                        //double check that all three triangle indices are set
-                        if (source.triangleFlags[0][i + 1] && source.triangleFlags[0][i + 2])
-                        {
-                            geometry.selectedTriangles.Add(i);
-                            i += 2;
-                        }
-                        else
-                            Debug.LogError("Triangleflags mismatch!");
-                    }
-                }
+                geometry.selectedTriangles = new BitArray(source.triangleFlags[0]);
 
                 geometry.UpdateSelectionMesh();
             }
