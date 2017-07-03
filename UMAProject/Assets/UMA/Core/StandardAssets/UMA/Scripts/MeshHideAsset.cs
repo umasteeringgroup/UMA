@@ -16,37 +16,94 @@ namespace UMA
         [SerializeField, HideInInspector]
         private SlotDataAsset _asset;
 
-        public BitArray vertexFlags { get { return _vertexFlags; }}
-        private BitArray _vertexFlags; //Flag of all vertices of whether this asset wants that vertex hidden or not.
+        public BitArray[] triangleFlags { get { return _triangleFlags; }}
+        private BitArray[] _triangleFlags; //Flag of all triangles of whether this asset wants that triangle hidden or not.
 
+
+        [System.Serializable]
+        public class serializedFlags
+        {
+            public bool[] flags;
+
+            public serializedFlags(int count)
+            {
+                flags = new bool[count];
+            }
+        }
         [SerializeField]
-        private bool[] _serializedFlags;
+        private serializedFlags[] _serializedFlags;
 
-        public int VertexCount 
+        public int SubmeshCount
+        {
+            get
+            {
+                if (_triangleFlags != null)
+                {
+                    return _triangleFlags.Length;
+                }
+                else
+                    return 0;
+            }
+        }
+
+        public int TriangleCount 
         { 
             get 
             {
-                if (_vertexFlags != null)
-                    return _vertexFlags.Length;
+                if (_triangleFlags != null)
+                {
+                    int total = 0;
+                    for (int i = 0; i < _triangleFlags.Length; i++)
+                        total += _triangleFlags[i].Count;
+
+                    return total;
+                }
                 else
                     return 0;
             }
         }   
 
+        public int HiddenCount
+        {
+            get
+            {
+                if (_triangleFlags != null)
+                {
+                    int total = 0;
+                    for (int i = 0; i < _triangleFlags.Length; i++)
+                    {
+                        total += GetCardinality(_triangleFlags[i]);
+                    }
+
+                    return total;
+                }
+                else
+                    return 0;
+            }
+        }
+
         public void OnBeforeSerialize()
         {
-            if (_vertexFlags == null)
+            if (_triangleFlags == null)
                 return;
             
-            if (VertexCount > 0)
+            if (TriangleCount > 0)
             {
-                if (_serializedFlags == null)
-                    _serializedFlags = new bool[_vertexFlags.Length];
-                else
-                    _serializedFlags.Initialize();
-
-                _vertexFlags.CopyTo(_serializedFlags, 0);
+                _serializedFlags = new serializedFlags[_triangleFlags.Length];
+                for (int i = 0; i < _triangleFlags.Length; i++)
+                {
+                    _serializedFlags[i] = new serializedFlags(_triangleFlags[i].Length);
+                    _serializedFlags[i].flags.Initialize();
+                }                    
             }
+
+            for (int i = 0; i < _triangleFlags.Length; i++)
+            {
+                _triangleFlags[i].CopyTo(_serializedFlags[i].flags, 0);
+            }
+
+            if (_serializedFlags == null)
+                Debug.LogError("Serializing triangle flags failed!");
         }
 
         public void OnAfterDeserialize()
@@ -58,7 +115,13 @@ namespace UMA
             }
 
             if (_serializedFlags.Length > 0)
-                _vertexFlags = new BitArray(_serializedFlags);
+            {
+                _triangleFlags = new BitArray[_serializedFlags.Length];
+                for (int i = 0; i < _serializedFlags.Length; i++)
+                {
+                    _triangleFlags[i] = new BitArray(_serializedFlags[i].flags);
+                }
+            }
         }
 
         /// <summary>
@@ -76,12 +139,15 @@ namespace UMA
             if (asset.meshData == null)
                 return;
 
-            _vertexFlags = new BitArray(asset.meshData.vertexCount);
-            _serializedFlags = new bool[asset.meshData.vertexCount];
+            _triangleFlags = new BitArray[asset.meshData.subMeshCount];
+            for (int i = 0; i < asset.meshData.subMeshCount; i++)
+            {
+                _triangleFlags[i] = new BitArray(asset.meshData.submeshes[i].triangles.Length);
+            }
             Debug.Log("MeshHideAsset Initialized!");
         }
 
-        public int NumHiddenVertices()
+        /*public int NumHiddenVertices()
         {
             int hiddenCount = 0;
             for (int i = 0; i < VertexCount; i++)
@@ -90,7 +156,7 @@ namespace UMA
                     hiddenCount++;
             }
             return hiddenCount;
-        }
+        }*/
 /*
         public Vector3[] GetUnhiddenVertices()
         {
@@ -112,76 +178,89 @@ namespace UMA
         /// <summary>
         ///  Set a vertex by position and if found set it's boolean value
         /// </summary>
+        /// <param name="triangleIndex" The first index for the triangle to set>
         [ExecuteInEditMode]
-        public void SetVertexFlag(Vector3 pos, bool flag)
+        public void SetTriangleFlag(int triangleIndex, bool flag, int submesh = 0)
         {
-            if (_vertexFlags == null)
+            if (_triangleFlags == null)
             {
-                Debug.LogError("Vertex Array not initialized!");
+                Debug.LogError("Triangle Array not initialized!");
                 return;
             }
-            Debug.Log("SetVertexFlag");
-            for (int i = 0; i < asset.meshData.vertexCount; i++)
+                
+            if (triangleIndex >= 0 && (_triangleFlags[submesh].Length - 3) > triangleIndex)
             {
-                if (asset.meshData.vertices[i] == pos)
-                {
-                    Debug.Log("Found vertex to set");
-                    _vertexFlags[i] = flag;
-                    break;
-                }
+                _triangleFlags[submesh][triangleIndex] = flag;
+                _triangleFlags[submesh][triangleIndex+1] = flag;
+                _triangleFlags[submesh][triangleIndex+2] = flag;
             }
-            OnBeforeSerialize();
         }
 
-        public static BitArray GenerateMask( List<MeshHideAsset> assets )
+        public static BitArray[] GenerateMask( List<MeshHideAsset> assets )
         {
-            List<BitArray> flags = new List<BitArray>();
+            List<BitArray[]> flags = new List<BitArray[]>();
             foreach (MeshHideAsset asset in assets)
-                flags.Add(asset.vertexFlags);
+                flags.Add(asset.triangleFlags);
 
             return CombineVertexFlags(flags);
         }
 
-        public static BitArray CombineVertexFlags( List<BitArray> flags)
+        public static BitArray[] CombineVertexFlags( List<BitArray[]> flags)
         {
             if (flags == null || flags.Count <= 0)
                 return null;
             
-            BitArray final = new BitArray(flags[0]);
+            BitArray[] final = new BitArray[flags[0].Length];
+            for(int i = 0; i < flags[0].Length; i++)
+            {
+                final[i] = new BitArray(flags[0][i]);
+            }
 
             for (int i = 1; i < flags.Count; i++)
             {
-                if( flags[i].Count == flags[0].Count)
-                    final.Or(flags[i]);
+                for (int j = 0; j < flags[i].Length; j++)
+                {
+                    if (flags[i][j].Count == flags[0][j].Count)
+                        final[j].Or(flags[i][j]);
+                }
             }
 
             return final;
         }
 
-        [ExecuteInEditMode]
-        public static UMAMeshData FilterMeshData( UMAMeshData meshData, BitArray vertexFlags )
+        public static void MaskedCopyIntArrayAdd(int[] source, int sourceIndex, int[] dest, int destIndex, int count, int add, BitArray mask)
         {
-            if (meshData == null || vertexFlags == null)
-                return null;
+            if (mask.Count != source.Length || mask.Count != count)
+            {
+                Debug.LogError("MaskedCopyIntArrayAdd: mask and source count do not match!");
+                return;
+            }
 
-            if (vertexFlags.Count != meshData.vertexCount)
+            for (int i = 0; i < count; i++)
+            {
+                if (!mask[i])
+                    dest[destIndex++] = source[sourceIndex+i] + add;
+            }
+        }
+
+        [ExecuteInEditMode]
+        public static UMAMeshData FilterMeshData( UMAMeshData meshData, BitArray[] triangleFlags )
+        {
+            if (meshData == null || triangleFlags == null)
+            {
+                Debug.LogWarning("FilterMeshData: meshData or triangleFlags are null!");
                 return null;
+            }
+
+            if (triangleFlags.Length != meshData.subMeshCount)
+            {
+                Debug.LogWarning("FilterMeshData: triangleFlags count not equal to subMeshCount");
+                return null;
+            }
 
             UMAMeshData newData = new UMAMeshData();
             newData.submeshes = new SubMeshTriangles[meshData.subMeshCount];
             newData.subMeshCount = meshData.subMeshCount;
-
-            int[] vertexIndicesMap = new int[vertexFlags.Count];
-            UMABoneWeight[] newBoneWeights = new UMABoneWeight[vertexFlags.Count];
-            Vector3[] newVertices = new Vector3[vertexFlags.Count];
-            Vector3[] newNormals = new Vector3[vertexFlags.Count];
-            Vector4[] newTangents = new Vector4[vertexFlags.Count];
-            Vector2[] newUV = new Vector2[vertexFlags.Count];
-            Vector2[] newUV2 = new Vector2[vertexFlags.Count];
-            Vector2[] newUV3 = new Vector2[vertexFlags.Count];
-            Vector2[] newUV4 = new Vector2[vertexFlags.Count];
-            UnityEngine.Color32[] newColors32 = new UnityEngine.Color32[vertexFlags.Count];
-            int index = 0;
 
             bool has_normals = (meshData.normals != null && meshData.normals.Length != 0);
             bool has_tangents = (meshData.tangents != null && meshData.tangents.Length != 0);
@@ -191,76 +270,103 @@ namespace UMA
             bool has_uv4 = (meshData.uv4 != null && meshData.uv4.Length != 0);
             bool has_colors32 = (meshData.colors32 != null && meshData.colors32.Length != 0);
 
-            //First let's filter out our vertices and store a map of the new vertex indexes.
-            for (int i = 0; i < vertexFlags.Count; i++)
+            //int[] vertexIndicesMap = new int[vertexFlags.Count];
+            //assume not clearing island vertices yet
+            newData.boneWeights = new UMABoneWeight[meshData.vertexCount];
+            meshData.boneWeights.CopyTo(newData.boneWeights, 0);
+
+            newData.vertices = new Vector3[meshData.vertexCount];
+            meshData.vertices.CopyTo(newData.vertices, 0);
+
+            if(has_normals)
             {
-                if (!vertexFlags[i])
-                {
-                    newVertices[index] = meshData.vertices[i];
-                    newBoneWeights[index] = meshData.boneWeights[i];
-                    if (has_normals) newNormals[index] = meshData.normals[i];
-                    if (has_tangents) newTangents[index] = meshData.tangents[i];
-                    if (has_uv) newUV[index] = meshData.uv[i];
-                    if (has_uv2) newUV2[index] = meshData.uv2[i];
-                    if (has_uv3) newUV3[index] = meshData.uv3[i];
-                    if (has_uv4) newUV4[index] = meshData.uv4[i];
-                    if (has_colors32) newColors32[index] = meshData.colors32[i];
-
-                    vertexIndicesMap[i] = index;
-                    index++;
-                }
-                else
-                    vertexIndicesMap[i] = -1;
-            }
-            if (index > 0)
-            {
-                newData.vertices = newVertices;
-                newData.vertexCount = newVertices.Length;
-                newData.boneWeights = newBoneWeights;
-                newData.normals = newNormals;
-                newData.tangents = newTangents;
-                newData.uv = newUV;
-                newData.uv2 = newUV2;
-                newData.uv3 = newUV3;
-                newData.uv4 = newUV4;
-                newData.colors32 = newColors32;
-
-                newData.bindPoses = meshData.bindPoses;
-                newData.boneNameHashes = meshData.boneNameHashes;
-                newData.unityBoneWeights = meshData.unityBoneWeights;
-                newData.rootBoneHash = meshData.rootBoneHash;
-                newData.umaBoneCount = meshData.umaBoneCount;
-                newData.umaBones = meshData.umaBones;
-
-                newData.subMeshCount = meshData.subMeshCount;
+                newData.normals = new Vector3[meshData.vertexCount];
+                meshData.normals.CopyTo(newData.normals, 0);
             }
 
-            //Now, let's rebuild our triangle lists and point their indexes to the new correct one.
+            if(has_tangents)
+            {
+                newData.tangents = new Vector4[meshData.vertexCount];
+                meshData.tangents.CopyTo(newData.tangents, 0);
+            }
+
+            if(has_uv)
+            {
+                newData.uv = new Vector2[meshData.vertexCount];
+                meshData.uv.CopyTo(newData.uv, 0);
+            }
+
+            if(has_uv2)
+            {
+                newData.uv2 = new Vector2[meshData.vertexCount];
+                meshData.uv2.CopyTo(newData.uv2, 0);
+            }
+
+            if(has_uv3)
+            {                  
+                newData.uv3 = new Vector2[meshData.vertexCount];
+                meshData.uv3.CopyTo(newData.uv3, 0);
+            }
+
+            if(has_uv4)
+            {
+                newData.uv4 = new Vector2[meshData.vertexCount];
+                meshData.uv4.CopyTo(newData.uv4, 0);
+            }
+
+            if(has_colors32)
+            {
+                newData.colors32 = new UnityEngine.Color32[meshData.vertexCount];
+                meshData.colors32.CopyTo(newData.colors32, 0);
+            }
+                
             for (int i = 0; i < meshData.subMeshCount; i++)
             {
-                List<int> newIndices = new List<int>();
-                for (int j = 0; j < meshData.submeshes[i].triangles.Length; j+=3)
+                List<int> newTriangles = new List<int>();
+                for (int j = 0; j < meshData.submeshes[i].triangles.Length; j++)
                 {
-                    int index0 = meshData.submeshes[i].triangles[j];
-                    int index1 = meshData.submeshes[i].triangles[j+1];
-                    int index2 = meshData.submeshes[i].triangles[j+2];
-
-                    if (vertexIndicesMap[index0] < 0 || vertexIndicesMap[index1] < 0 || vertexIndicesMap[index2] < 0)
-                        continue;
-                    else
-                    {
-                        newIndices.Add(vertexIndicesMap[index0]);
-                        newIndices.Add(vertexIndicesMap[index1]);
-                        newIndices.Add(vertexIndicesMap[index2]);
-                    }                        
+                    if (!triangleFlags[i][j])
+                        newTriangles.Add(meshData.submeshes[i].triangles[j]);
                 }
-                if (newIndices.Count > 0)
-                {
-                    newData.submeshes[i] = new SubMeshTriangles();
-                    newData.submeshes[i].triangles = newIndices.ToArray();
-                }
+                newData.submeshes[i] = new SubMeshTriangles();
+                newData.submeshes[i].triangles = new int[newTriangles.Count];
+                newTriangles.CopyTo(newData.submeshes[i].triangles);
             }
+
             return newData;
+        }
+
+        //https://stackoverflow.com/questions/5063178/counting-bits-set-in-a-net-bitarray-class
+        public static Int32 GetCardinality(BitArray bitArray)
+        {
+
+            Int32[] ints = new Int32[(bitArray.Count >> 5) + 1];
+
+            bitArray.CopyTo(ints, 0);
+
+            Int32 count = 0;
+
+            // fix for not truncated bits in last integer that may have been set to true with SetAll()
+            ints[ints.Length - 1] &= ~(-1 << (bitArray.Count % 32));
+
+            for (Int32 i = 0; i < ints.Length; i++)
+            {
+
+                Int32 c = ints[i];
+
+                // magic (http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetParallel)
+                unchecked
+                {
+                    c = c - ((c >> 1) & 0x55555555);
+                    c = (c & 0x33333333) + ((c >> 2) & 0x33333333);
+                    c = ((c + (c >> 4) & 0xF0F0F0F) * 0x1010101) >> 24;
+                }
+
+                count += c;
+
+            }
+
+            return count;
         }
 
         #if UNITY_EDITOR
@@ -270,38 +376,5 @@ namespace UMA
             UMA.CustomAssetUtility.CreateAsset<MeshHideAsset>();
         }
         #endif
-    }
-
-    public class MeshHideEditObject : MonoBehaviour
-    {
-        public MeshHideAsset HideAsset;
-
-        [Header("Cube Gizmo Control")]
-        public Color CubeColorActive = Color.black;
-        public Color CubeColorHidden = Color.red;
-        [Range( 0.001f, 0.05f )]
-        public float CubeSize = 0.01f;
-       
-        private Vector3 _CubeSize = new Vector3( 0.01f, 0.01f, 0.01f );
-        public BoxCollider pickCollider;
-
-
-        void OnDrawGizmosSelected()
-        {
-            if (HideAsset == null)
-                return;
-            
-            _CubeSize.x = CubeSize; _CubeSize.y = CubeSize; _CubeSize.z = CubeSize;
-
-            for( int i = 0; i < HideAsset.asset.meshData.vertexCount; i++ )
-            {
-                if (HideAsset.vertexFlags[i]==true)
-                    Gizmos.color = CubeColorHidden;
-                else
-                    Gizmos.color = CubeColorActive;
-
-                Gizmos.DrawCube(HideAsset.asset.meshData.vertices[i], _CubeSize);
-            }
-        }
     }
 }

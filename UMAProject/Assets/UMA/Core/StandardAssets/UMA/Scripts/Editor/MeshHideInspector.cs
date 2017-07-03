@@ -56,16 +56,18 @@ namespace UMA.Editors
                 EditorUtility.SetDirty(target);
             }
 
-            string vertexInfo;
-            if (source.VertexCount > 0)
+            string info;
+            if (source.TriangleCount > 0)
             {
-                vertexInfo = "Vertex Count: " + source.VertexCount.ToString();
-                vertexInfo += "\nHidden Vertices: " + source.NumHiddenVertices().ToString();
+                info = "Triangle indices Count: " + source.TriangleCount.ToString();
+                info += "\nSubmesh Count: " + source.SubmeshCount.ToString();
+                info += "\nHidden Triangle Count: " + source.HiddenCount.ToString();
+                //vertexInfo += "\nHidden Vertices: " + source.NumHiddenVertices().ToString();
             }
             else
-                vertexInfo = "No vertex array found";
+                info = "No triangle array found";
 
-            EditorGUILayout.HelpBox(vertexInfo, MessageType.Info);
+            EditorGUILayout.HelpBox(info, MessageType.Info);
 
             if (GUILayout.Button("Create Scene Object"))
             {
@@ -77,30 +79,54 @@ namespace UMA.Editors
 
         private void UpdateMeshPreview()
         {
-            _meshPreview = new Mesh();
+            if( _meshPreview == null )
+                _meshPreview = new Mesh();
             
             MeshHideAsset source = target as MeshHideAsset;
 
-            UMAMeshData _meshData = MeshHideAsset.FilterMeshData( source.asset.meshData, source.vertexFlags);
-            if (_meshData == null)
+            UMAMeshData _meshData = MeshHideAsset.FilterMeshData( source.asset.meshData, source.triangleFlags);
+            /*if (_meshData == null)
+            {
+                Debug.LogWarning("UpdateMeshPreview: meshData is null!");
                 return;
+            }*/
 
+            _meshPreview.Clear();
             _meshPreview.vertices = _meshData.vertices;
-            _meshPreview.triangles = _meshData.submeshes[0].triangles;
+            _meshPreview.SetTriangles(_meshData.submeshes[0].triangles, 0); //temp for only first submesh
+            //_meshPreview.triangles = _meshData.submeshes[0].triangles;
         }
 
         private void CreateSceneEditObject()
         {
             GameObject obj = new GameObject();
-            obj.name = "MeshHideEditObject";
-            MeshHideEditObject meshHide = obj.AddComponent<MeshHideEditObject>();
-            meshHide.pickCollider = obj.AddComponent<BoxCollider>(); //for object picking
+            GeometrySelector geometry = obj.AddComponent<GeometrySelector>();
+            MeshHideAsset source = target as MeshHideAsset;
 
-            meshHide.HideAsset = target as MeshHideAsset;
-            Selection.activeGameObject = obj;
+            if (geometry != null)
+            {
+                geometry.meshAsset = source;
+                geometry.InitializeFromMeshData(source.asset.meshData);
+                Selection.activeGameObject = obj;
 
-            meshHide.pickCollider.size = new Vector3( 0.01f, 0.01f, 0.01f);
-            meshHide.pickCollider.center = new Vector3(0, 0, 0);
+                //temporary, only works on submesh 0
+                for( int i = 0; i < source.triangleFlags[0].Count - 2; i++)
+                {
+                    if( source.triangleFlags[0][i] )
+                    {
+                        //double check that all three triangle indices are set
+                        if (source.triangleFlags[0][i + 1] && source.triangleFlags[0][i + 2])
+                        {
+                            geometry.selectedTriangles.Add(i);
+                            i += 2;
+                        }
+                        else
+                            Debug.LogError("Triangleflags mismatch!");
+                    }
+                }
+
+                geometry.UpdateSelectionMesh();
+            }
         }
 
         public override bool HasPreviewGUI()
@@ -114,6 +140,9 @@ namespace UMA.Editors
 
         public override void OnPreviewGUI(Rect r, GUIStyle background)
         {
+            if (_meshPreview == null)
+                return;
+            
             _drag = Drag2D(_drag, r);
 
             if (_previewRenderUtility == null)
