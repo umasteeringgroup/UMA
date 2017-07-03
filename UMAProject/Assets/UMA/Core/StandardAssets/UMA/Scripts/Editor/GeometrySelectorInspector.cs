@@ -26,6 +26,8 @@ namespace UMA.Editors
             serializedObject.Update();
 
             EditorGUILayout.PropertyField(showWireframe);
+
+            if( source.meshRenderer ) EditorUtility.SetSelectedRenderState(source.meshRenderer, EditorSelectedRenderState.Wireframe);
             //showWireFrame = EditorGUILayout.Toggle("ShowWireFrame",showWireFrame);
 
             var obj = EditorGUILayout.ObjectField("SharedMesh", source.sharedMesh, typeof(Mesh), false);
@@ -35,7 +37,17 @@ namespace UMA.Editors
                 EditorUtility.SetDirty(target);
             }
 
-            if (GUILayout.Button("Done with Edits"))
+            if (GUILayout.Button("Clear All"))
+            {
+                source.ClearAll();
+            }
+
+            if (GUILayout.Button("Select All"))
+            {
+                source.SelectAll();
+            }
+
+            if (GUILayout.Button("Done Editing"))
             {
                 doneEditing = true;
             }
@@ -66,22 +78,10 @@ namespace UMA.Editors
                     if (source.selectedTriangles.Contains(triangleHit[0]))
                     {
                         source.selectedTriangles.Remove(triangleHit[0]);
-
-                        //Change this in the future so that instead of trying to keep the two in sync, just update the asset when done editing
-                        if (source.meshAsset != null)
-                        {
-                            source.meshAsset.SetTriangleFlag(triangleHit[0], false);
-                        }
                     }
                     else
                     {
                         source.selectedTriangles.Add(triangleHit[0]);//let's only store the first index of the triangle hit
-
-                        //Change this in the future so that instead of trying to keep the two in sync, just update the asset when done editing
-                        if (source.meshAsset != null)
-                        {
-                            source.meshAsset.SetTriangleFlag(triangleHit[0], true);;
-                        }
                     }
 
                     source.UpdateSelectionMesh();
@@ -123,10 +123,11 @@ namespace UMA.Editors
 
         private void DestroySceneEditObject()
         {
-            GeometrySelector editObject = target as GeometrySelector;
-            if(editObject.meshAsset != null) 
-                Selection.activeObject = editObject.meshAsset;
-            DestroyImmediate(editObject.gameObject);
+            GeometrySelector source = target as GeometrySelector;
+            if( source.doneEditing != null) source.doneEditing( source.selectedTriangles );
+            if(source.meshAsset != null) 
+                Selection.activeObject = source.meshAsset;
+            DestroyImmediate(source.gameObject);
         }
     }
 }

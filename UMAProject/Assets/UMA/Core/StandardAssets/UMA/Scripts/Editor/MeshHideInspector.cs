@@ -69,7 +69,7 @@ namespace UMA.Editors
 
             EditorGUILayout.HelpBox(info, MessageType.Info);
 
-            if (GUILayout.Button("Create Scene Object"))
+            if (GUILayout.Button("Begin Editing"))
             {
                 CreateSceneEditObject();
             }
@@ -84,17 +84,11 @@ namespace UMA.Editors
             
             MeshHideAsset source = target as MeshHideAsset;
 
-            UMAMeshData _meshData = MeshHideAsset.FilterMeshData( source.asset.meshData, source.triangleFlags);
-            /*if (_meshData == null)
-            {
-                Debug.LogWarning("UpdateMeshPreview: meshData is null!");
-                return;
-            }*/
+            UMAMeshData _meshData = MeshHideAsset.CreateMeshData( source.asset.meshData, source.triangleFlags);
 
             _meshPreview.Clear();
             _meshPreview.vertices = _meshData.vertices;
             _meshPreview.SetTriangles(_meshData.submeshes[0].triangles, 0); //temp for only first submesh
-            //_meshPreview.triangles = _meshData.submeshes[0].triangles;
         }
 
         private void CreateSceneEditObject()
@@ -106,6 +100,7 @@ namespace UMA.Editors
             if (geometry != null)
             {
                 geometry.meshAsset = source;
+                geometry.doneEditing += source.SaveSelection;
                 geometry.InitializeFromMeshData(source.asset.meshData);
                 Selection.activeGameObject = obj;
 
@@ -172,7 +167,7 @@ namespace UMA.Editors
 
         public override void OnPreviewSettings()
         {
-            if (GUILayout.Button("Update Mesh", EditorStyles.whiteMiniLabel))
+            if (GUILayout.Button("Refresh", EditorStyles.whiteMiniLabel))
                 UpdateMeshPreview();
         }
 

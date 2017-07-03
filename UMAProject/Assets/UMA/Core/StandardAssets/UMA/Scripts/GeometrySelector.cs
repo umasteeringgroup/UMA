@@ -8,6 +8,7 @@ namespace UMA
     {
         public bool showWireframe = true;
         public MeshHideAsset meshAsset;
+        public List<int> selectedTriangles = new List<int>();
 
         //public MeshHideAsset HideAsset;
         public Mesh sharedMesh
@@ -17,12 +18,16 @@ namespace UMA
         }
         private Mesh _sharedMesh;
 
+        public MeshRenderer meshRenderer
+        {
+            get { return _meshRenderer; }
+        }
         private MeshRenderer _meshRenderer;
         //Use 0 for unselected and 1 for selected
         private Material[] _Materials;
 
-        //public Dictionary<int, int> selectedTriangles = new Dictionary<int, int>();
-        public List<int> selectedTriangles = new List<int>();
+        public delegate void OnDoneEditing(List<int> selection);
+        public OnDoneEditing doneEditing;
 
         public void Initialize()
         {
@@ -32,11 +37,14 @@ namespace UMA
                 Debug.LogWarning("GeometrySelector: Initializing with no mesh!");
                 return;
             }
+
+            gameObject.transform.hideFlags = HideFlags.NotEditable | HideFlags.HideInInspector;
                 
             if( !gameObject.GetComponent<MeshFilter>())
             {
                 MeshFilter meshFilter = gameObject.AddComponent<MeshFilter>();
                 meshFilter.mesh = _sharedMesh;
+                meshFilter.hideFlags = HideFlags.HideInInspector;
             }
 
             if( !gameObject.GetComponent<MeshRenderer>())
@@ -44,13 +52,15 @@ namespace UMA
                 _meshRenderer = gameObject.AddComponent<MeshRenderer>();
                 _meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 _meshRenderer.receiveShadows = false;
+                _meshRenderer.hideFlags = HideFlags.HideInInspector;
             }
 
             if( !gameObject.GetComponent<MeshCollider>())
             {
                 MeshCollider meshCollider = gameObject.AddComponent<MeshCollider>();
                 meshCollider.convex = false;
-                meshCollider.sharedMesh = _sharedMesh;;
+                meshCollider.sharedMesh = _sharedMesh;
+                meshCollider.hideFlags = HideFlags.HideInInspector;
             }
 
             if (_Materials == null)
@@ -68,7 +78,10 @@ namespace UMA
                 _Materials[0].color = Color.gray;
 
                 _sharedMesh.subMeshCount = 2;
-                _meshRenderer.materials = _Materials;
+                _meshRenderer.sharedMaterials = _Materials;
+
+                _meshRenderer.sharedMaterials[0].hideFlags = HideFlags.HideInInspector;
+                _meshRenderer.sharedMaterials[1].hideFlags = HideFlags.HideInInspector;
             }
         }
 
@@ -96,6 +109,25 @@ namespace UMA
                 _sharedMesh.SetTriangles(meshData.submeshes[i].triangles, i);
 
             Initialize();
+        }
+
+        public void SelectAll()
+        {
+            if (_sharedMesh == null)
+                return;
+
+            selectedTriangles.Clear();
+            for (int i = 0; i < _sharedMesh.triangles.Length; i+=3)
+            {
+                selectedTriangles.Add(i);
+            }
+            UpdateSelectionMesh();
+        }
+
+        public void ClearAll()
+        {
+            selectedTriangles.Clear();
+            UpdateSelectionMesh();
         }
 
         public void UpdateSelectionMesh()

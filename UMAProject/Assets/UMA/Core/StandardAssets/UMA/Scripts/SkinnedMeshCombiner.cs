@@ -384,8 +384,8 @@ namespace UMA
                         }
                         else
                         {
-                            MeshHideAsset.MaskedCopyIntArrayAdd(subTriangles, 0, submeshTriangles[destMesh], subMeshTriangleLength[destMesh], triangleLength, vertexIndex, source.triangleMask[i] );
-                            subMeshTriangleLength[destMesh] += (triangleLength - MeshHideAsset.GetCardinality(source.triangleMask[i]));
+                            MaskedCopyIntArrayAdd(subTriangles, 0, submeshTriangles[destMesh], subMeshTriangleLength[destMesh], triangleLength, vertexIndex, source.triangleMask[i] );
+                            subMeshTriangleLength[destMesh] += (triangleLength - UMAUtils.GetCardinality(source.triangleMask[i]));
                         }
 					}
 				}
@@ -574,7 +574,7 @@ namespace UMA
 					if (source.targetSubmeshIndices[i] >= 0)
 					{
                         int triangleLength = (source.triangleMask == null) ? source.meshData.submeshes[i].triangles.Length :
-                            (source.meshData.submeshes[i].triangles.Length - MeshHideAsset.GetCardinality(source.triangleMask[i]));
+                            (source.meshData.submeshes[i].triangles.Length - UMAUtils.GetCardinality(source.triangleMask[i]));
 
                         subMeshTriangleLength[source.targetSubmeshIndices[i]] += triangleLength;
 					}
@@ -770,6 +770,21 @@ namespace UMA
 				dest[destIndex++] = source[sourceIndex++] + add;
 			}
 		}
+
+        public static void MaskedCopyIntArrayAdd(int[] source, int sourceIndex, int[] dest, int destIndex, int count, int add, BitArray mask)
+        {
+            if (mask.Count != source.Length || mask.Count != count)
+            {
+                Debug.LogError("MaskedCopyIntArrayAdd: mask and source count do not match!");
+                return;
+            }
+
+            for (int i = 0; i < count; i++)
+            {
+                if (!mask[i])
+                    dest[destIndex++] = source[sourceIndex+i] + add;
+            }
+        }
 
 		private static T[] EnsureArrayLength<T>(T[] oldArray, int newLength)
 		{

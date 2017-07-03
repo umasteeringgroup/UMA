@@ -72,7 +72,7 @@ namespace UMA
                     int total = 0;
                     for (int i = 0; i < _triangleFlags.Length; i++)
                     {
-                        total += GetCardinality(_triangleFlags[i]);
+                        total += UMAUtils.GetCardinality(_triangleFlags[i]);
                     }
 
                     return total;
@@ -144,36 +144,7 @@ namespace UMA
             {
                 _triangleFlags[i] = new BitArray(asset.meshData.submeshes[i].triangles.Length);
             }
-            Debug.Log("MeshHideAsset Initialized!");
         }
-
-        /*public int NumHiddenVertices()
-        {
-            int hiddenCount = 0;
-            for (int i = 0; i < VertexCount; i++)
-            {
-                if (vertexFlags[i])
-                    hiddenCount++;
-            }
-            return hiddenCount;
-        }*/
-/*
-        public Vector3[] GetUnhiddenVertices()
-        {
-            Vector3[] vertices = new Vector3[NumUnhiddenVertices()];
-            int index = 0;
-
-            for (int i = 0; i < VertexCount; i++)
-            {
-                if (!vertexFlags[i])
-                {
-                    vertices[index] = asset.meshData.vertices[i];
-                    index++;
-                }
-            }
-
-            return vertices;
-        }*/
 
         /// <summary>
         ///  Set a vertex by position and if found set it's boolean value
@@ -193,6 +164,17 @@ namespace UMA
                 _triangleFlags[submesh][triangleIndex] = flag;
                 _triangleFlags[submesh][triangleIndex+1] = flag;
                 _triangleFlags[submesh][triangleIndex+2] = flag;
+            }
+        }
+
+        [ExecuteInEditMode]
+        public void SaveSelection( List<int> selection )
+        {
+            //Only works for submesh 0 for now
+            _triangleFlags[0].SetAll(false);
+            foreach (int index in selection)
+            {
+                SetTriangleFlag(index, true);
             }
         }
 
@@ -228,23 +210,8 @@ namespace UMA
             return final;
         }
 
-        public static void MaskedCopyIntArrayAdd(int[] source, int sourceIndex, int[] dest, int destIndex, int count, int add, BitArray mask)
-        {
-            if (mask.Count != source.Length || mask.Count != count)
-            {
-                Debug.LogError("MaskedCopyIntArrayAdd: mask and source count do not match!");
-                return;
-            }
-
-            for (int i = 0; i < count; i++)
-            {
-                if (!mask[i])
-                    dest[destIndex++] = source[sourceIndex+i] + add;
-            }
-        }
-
         [ExecuteInEditMode]
-        public static UMAMeshData FilterMeshData( UMAMeshData meshData, BitArray[] triangleFlags )
+        public static UMAMeshData CreateMeshData( UMAMeshData meshData, BitArray[] triangleFlags )
         {
             if (meshData == null || triangleFlags == null)
             {
@@ -263,17 +230,6 @@ namespace UMA
             newData.subMeshCount = meshData.subMeshCount;
 
             bool has_normals = (meshData.normals != null && meshData.normals.Length != 0);
-            bool has_tangents = (meshData.tangents != null && meshData.tangents.Length != 0);
-            bool has_uv = (meshData.uv != null && meshData.uv.Length != 0 );
-            bool has_uv2 = (meshData.uv2 != null && meshData.uv2.Length != 0);
-            bool has_uv3 = (meshData.uv3 != null && meshData.uv3.Length != 0);
-            bool has_uv4 = (meshData.uv4 != null && meshData.uv4.Length != 0);
-            bool has_colors32 = (meshData.colors32 != null && meshData.colors32.Length != 0);
-
-            //int[] vertexIndicesMap = new int[vertexFlags.Count];
-            //assume not clearing island vertices yet
-            newData.boneWeights = new UMABoneWeight[meshData.vertexCount];
-            meshData.boneWeights.CopyTo(newData.boneWeights, 0);
 
             newData.vertices = new Vector3[meshData.vertexCount];
             meshData.vertices.CopyTo(newData.vertices, 0);
@@ -282,42 +238,6 @@ namespace UMA
             {
                 newData.normals = new Vector3[meshData.vertexCount];
                 meshData.normals.CopyTo(newData.normals, 0);
-            }
-
-            if(has_tangents)
-            {
-                newData.tangents = new Vector4[meshData.vertexCount];
-                meshData.tangents.CopyTo(newData.tangents, 0);
-            }
-
-            if(has_uv)
-            {
-                newData.uv = new Vector2[meshData.vertexCount];
-                meshData.uv.CopyTo(newData.uv, 0);
-            }
-
-            if(has_uv2)
-            {
-                newData.uv2 = new Vector2[meshData.vertexCount];
-                meshData.uv2.CopyTo(newData.uv2, 0);
-            }
-
-            if(has_uv3)
-            {                  
-                newData.uv3 = new Vector2[meshData.vertexCount];
-                meshData.uv3.CopyTo(newData.uv3, 0);
-            }
-
-            if(has_uv4)
-            {
-                newData.uv4 = new Vector2[meshData.vertexCount];
-                meshData.uv4.CopyTo(newData.uv4, 0);
-            }
-
-            if(has_colors32)
-            {
-                newData.colors32 = new UnityEngine.Color32[meshData.vertexCount];
-                meshData.colors32.CopyTo(newData.colors32, 0);
             }
                 
             for (int i = 0; i < meshData.subMeshCount; i++)
@@ -334,39 +254,6 @@ namespace UMA
             }
 
             return newData;
-        }
-
-        //https://stackoverflow.com/questions/5063178/counting-bits-set-in-a-net-bitarray-class
-        public static Int32 GetCardinality(BitArray bitArray)
-        {
-
-            Int32[] ints = new Int32[(bitArray.Count >> 5) + 1];
-
-            bitArray.CopyTo(ints, 0);
-
-            Int32 count = 0;
-
-            // fix for not truncated bits in last integer that may have been set to true with SetAll()
-            ints[ints.Length - 1] &= ~(-1 << (bitArray.Count % 32));
-
-            for (Int32 i = 0; i < ints.Length; i++)
-            {
-
-                Int32 c = ints[i];
-
-                // magic (http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetParallel)
-                unchecked
-                {
-                    c = c - ((c >> 1) & 0x55555555);
-                    c = (c & 0x33333333) + ((c >> 2) & 0x33333333);
-                    c = ((c + (c >> 4) & 0xF0F0F0F) * 0x1010101) >> 24;
-                }
-
-                count += c;
-
-            }
-
-            return count;
         }
 
         #if UNITY_EDITOR
