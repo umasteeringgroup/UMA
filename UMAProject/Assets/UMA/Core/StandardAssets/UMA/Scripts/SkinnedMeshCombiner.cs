@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 using System;
 
@@ -16,6 +17,8 @@ namespace UMA
 		{
 			public UMAMeshData meshData;
 			public int[] targetSubmeshIndices;
+
+            public BitArray[] triangleMask;
 		}
 
 		private enum MeshComponents
@@ -370,12 +373,20 @@ namespace UMA
 				{
 					if (source.targetSubmeshIndices[i] >= 0)
 					{
-						int[] subTriangles = source.meshData.submeshes[i].triangles;
-						int triangleLength = subTriangles.Length;
-						int destMesh = source.targetSubmeshIndices[i];
+                        int[] subTriangles = source.meshData.submeshes[i].triangles;
+                        int triangleLength = subTriangles.Length;
+                        int destMesh = source.targetSubmeshIndices[i];
 
-						CopyIntArrayAdd(subTriangles, 0, submeshTriangles[destMesh], subMeshTriangleLength[destMesh], triangleLength, vertexIndex);
-						subMeshTriangleLength[destMesh] += triangleLength;
+                        if (source.triangleMask == null)
+                        {
+    						CopyIntArrayAdd(subTriangles, 0, submeshTriangles[destMesh], subMeshTriangleLength[destMesh], triangleLength, vertexIndex);
+    						subMeshTriangleLength[destMesh] += triangleLength;
+                        }
+                        else
+                        {
+                            MeshHideAsset.MaskedCopyIntArrayAdd(subTriangles, 0, submeshTriangles[destMesh], subMeshTriangleLength[destMesh], triangleLength, vertexIndex, source.triangleMask[i] );
+                            subMeshTriangleLength[destMesh] += (triangleLength - MeshHideAsset.GetCardinality(source.triangleMask[i]));
+                        }
 					}
 				}
 
@@ -562,8 +573,10 @@ namespace UMA
 				{
 					if (source.targetSubmeshIndices[i] >= 0)
 					{
-						int triangleLength = source.meshData.submeshes[i].triangles.Length;
-						subMeshTriangleLength[source.targetSubmeshIndices[i]] += triangleLength;
+                        int triangleLength = (source.triangleMask == null) ? source.meshData.submeshes[i].triangles.Length :
+                            (source.meshData.submeshes[i].triangles.Length - MeshHideAsset.GetCardinality(source.triangleMask[i]));
+
+                        subMeshTriangleLength[source.targetSubmeshIndices[i]] += triangleLength;
 					}
 				}
 			}

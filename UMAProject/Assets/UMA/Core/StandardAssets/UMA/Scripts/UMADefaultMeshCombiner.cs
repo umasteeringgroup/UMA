@@ -207,12 +207,7 @@ namespace UMA
 
                     //New MeshHiding
                     if (slotData.meshHideMask != null)
-                    {
-                        Debug.Log("Setting new umaData for combiner");
-                        //combineInstance.meshHideMask = slotData.meshHideMask;
-                        combineInstance.meshData = MeshHideAsset.FilterMeshData(slotData.asset.meshData, slotData.meshHideMask);
-                    }
-                    //*******
+                        combineInstance.triangleMask = slotData.meshHideMask;
 
 					combineInstance.targetSubmeshIndices = new int[combineInstance.meshData.subMeshCount];
 					for (int i = 0; i < combineInstance.meshData.subMeshCount; i++)
