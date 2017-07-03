@@ -217,52 +217,6 @@ namespace UMA
             return final;
         }
 
-        [ExecuteInEditMode]
-        public static UMAMeshData CreateMeshData( UMAMeshData meshData, BitArray[] triangleFlags )
-        {
-            if (meshData == null || triangleFlags == null)
-            {
-                Debug.LogWarning("FilterMeshData: meshData or triangleFlags are null!");
-                return null;
-            }
-
-            if (triangleFlags.Length != meshData.subMeshCount)
-            {
-                Debug.LogWarning("FilterMeshData: triangleFlags count not equal to subMeshCount");
-                return null;
-            }
-
-            UMAMeshData newData = new UMAMeshData();
-            newData.submeshes = new SubMeshTriangles[meshData.subMeshCount];
-            newData.subMeshCount = meshData.subMeshCount;
-
-            bool has_normals = (meshData.normals != null && meshData.normals.Length != 0);
-
-            newData.vertices = new Vector3[meshData.vertexCount];
-            meshData.vertices.CopyTo(newData.vertices, 0);
-
-            if(has_normals)
-            {
-                newData.normals = new Vector3[meshData.vertexCount];
-                meshData.normals.CopyTo(newData.normals, 0);
-            }
-                
-            for (int i = 0; i < meshData.subMeshCount; i++)
-            {
-                List<int> newTriangles = new List<int>();
-                for (int j = 0; j < meshData.submeshes[i].triangles.Length; j++)
-                {
-                    if (!triangleFlags[i][j])
-                        newTriangles.Add(meshData.submeshes[i].triangles[j]);
-                }
-                newData.submeshes[i] = new SubMeshTriangles();
-                newData.submeshes[i].triangles = new int[newTriangles.Count];
-                newTriangles.CopyTo(newData.submeshes[i].triangles);
-            }
-
-            return newData;
-        }
-
         #if UNITY_EDITOR
         [UnityEditor.MenuItem("Assets/Create/UMA/Misc/Mesh Hide Asset")]
         public static void CreateMeshHideAsset()

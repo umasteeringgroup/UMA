@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEditor;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace UMA.Editors
 {
@@ -11,6 +12,7 @@ namespace UMA.Editors
     public class MeshHideInspector : Editor 
     {
         private Mesh _meshPreview;
+        private UMAMeshData _meshData;
         private PreviewRenderUtility _previewRenderUtility;
         private Vector2 _drag;
         private Material _material;
@@ -29,8 +31,7 @@ namespace UMA.Editors
             if (_previewRenderUtility == null)
             {
                 _previewRenderUtility = new PreviewRenderUtility();
-                _previewRenderUtility.m_Camera.transform.position = new Vector3(0, 0, -6);
-                _previewRenderUtility.m_Camera.transform.rotation = Quaternion.identity;
+                ResetPreviewCamera();
             }
 
             if( _material == null )
@@ -62,7 +63,6 @@ namespace UMA.Editors
                 info = "Triangle indices Count: " + source.TriangleCount.ToString();
                 info += "\nSubmesh Count: " + source.SubmeshCount.ToString();
                 info += "\nHidden Triangle Count: " + source.HiddenCount.ToString();
-                //vertexInfo += "\nHidden Vertices: " + source.NumHiddenVertices().ToString();
             }
             else
                 info = "No triangle array found";
@@ -79,16 +79,61 @@ namespace UMA.Editors
 
         private void UpdateMeshPreview()
         {
-            if( _meshPreview == null )
-                _meshPreview = new Mesh();
-            
             MeshHideAsset source = target as MeshHideAsset;
 
-            UMAMeshData _meshData = MeshHideAsset.CreateMeshData( source.asset.meshData, source.triangleFlags);
+            if( _meshPreview == null )
+                _meshPreview = new Mesh();
+
+            UpdateMeshData( source.triangleFlags);
 
             _meshPreview.Clear();
             _meshPreview.vertices = _meshData.vertices;
             _meshPreview.SetTriangles(_meshData.submeshes[0].triangles, 0); //temp for only first submesh
+
+            ResetPreviewCamera();
+        }
+
+        public void UpdateMeshData( BitArray[] triangleFlags )
+        {
+            if (triangleFlags == null)
+            {
+                Debug.LogWarning("UpdateMeshData: triangleFlags are null!");
+                return;
+            }
+
+            if (_meshData == null )
+                _meshData = new UMAMeshData();
+
+            MeshHideAsset source = target as MeshHideAsset;
+
+            UMAMeshData sourceData = source.asset.meshData;
+                
+            _meshData.submeshes = new SubMeshTriangles[sourceData.subMeshCount];
+            _meshData.subMeshCount = sourceData.subMeshCount;
+
+            bool has_normals = (sourceData.normals != null && sourceData.normals.Length != 0);
+
+            _meshData.vertices = new Vector3[sourceData.vertexCount];
+            sourceData.vertices.CopyTo(_meshData.vertices, 0);
+
+            if(has_normals)
+            {
+                _meshData.normals = new Vector3[sourceData.vertexCount];
+                sourceData.normals.CopyTo(_meshData.normals, 0);
+            }
+
+            for (int i = 0; i < sourceData.subMeshCount; i++)
+            {
+                List<int> newTriangles = new List<int>();
+                for (int j = 0; j < sourceData.submeshes[i].triangles.Length; j++)
+                {
+                    if (!triangleFlags[i][j])
+                        newTriangles.Add(sourceData.submeshes[i].triangles[j]);
+                }
+                _meshData.submeshes[i] = new SubMeshTriangles();
+                _meshData.submeshes[i].triangles = new int[newTriangles.Count];
+                newTriangles.CopyTo(_meshData.submeshes[i].triangles);
+            }
         }
 
         private void CreateSceneEditObject()
@@ -110,7 +155,7 @@ namespace UMA.Editors
                 geometry.UpdateSelectionMesh();
             }
         }
-
+            
         public override bool HasPreviewGUI()
         {
             MeshHideAsset source = target as MeshHideAsset;
@@ -124,20 +169,19 @@ namespace UMA.Editors
         {
             if (_meshPreview == null)
                 return;
-            
+
             _drag = Drag2D(_drag, r);
 
             if (_previewRenderUtility == null)
             {
                 _previewRenderUtility = new PreviewRenderUtility();
-                _previewRenderUtility.m_Camera.transform.position = new Vector3(0, 0, -6);
-                _previewRenderUtility.m_Camera.transform.rotation = Quaternion.identity;
+                ResetPreviewCamera();
             }
 
             if( Event.current.type == EventType.repaint )
             {
                 _previewRenderUtility.BeginPreview(r, background);
-                _previewRenderUtility.DrawMesh(_meshPreview, Matrix4x4.identity, _material, 0);
+                _previewRenderUtility.DrawMesh(_meshPreview, Vector3.zero, Quaternion.identity, _material, 0);
 
                 _previewRenderUtility.m_Camera.transform.position = Vector2.zero;
                 _previewRenderUtility.m_Camera.transform.rotation = Quaternion.Euler(new Vector3(-_drag.y, -_drag.x, 0));
@@ -150,6 +194,21 @@ namespace UMA.Editors
 
                 GUI.DrawTexture(r, resultRender, ScaleMode.StretchToFill, false);
             }
+        }
+
+        public void ResetPreviewCamera()
+        {
+            if (_previewRenderUtility == null)
+                return;
+
+            MeshHideAsset source = target as MeshHideAsset;
+            
+            _drag = Vector2.zero;
+            if( source.asset.meshData.rootBoneHash == UMAUtils.StringToHash("Global"))
+                _drag.y = -90;
+            
+            _previewRenderUtility.m_Camera.transform.position = new Vector3(0, 0, -6);
+            _previewRenderUtility.m_Camera.transform.rotation = Quaternion.identity;
         }
 
         public override void OnPreviewSettings()
