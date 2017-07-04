@@ -2468,6 +2468,8 @@ namespace UMA.CharacterSystem
 			List<string> SuppressSlotsStrings = new List<string>();
 			if ((WardrobeRecipes.Count > 0) && activeRace.racedata != null)
             {
+                MeshHideDictionary.Clear();
+
 				foreach (UMATextRecipe utr in WardrobeRecipes.Values)
 				{
 					if (utr.suppressWardrobeSlots != null)
@@ -2487,7 +2489,6 @@ namespace UMA.CharacterSystem
                     //Collect all the MeshHideAssets on all the wardrobe recipes
                     if (utr.MeshHideAssets != null)
                     {
-                        MeshHideDictionary.Clear();
                         foreach (MeshHideAsset meshHide in utr.MeshHideAssets)
                         {
                             if (meshHide != null && meshHide.asset != null)
