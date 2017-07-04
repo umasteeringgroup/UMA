@@ -138,7 +138,7 @@ namespace UMA.Editors
 
         private void CreateSceneEditObject()
         {
-            GameObject obj = new GameObject();
+            GameObject obj = EditorUtility.CreateGameObjectWithHideFlags("GeometrySelector", HideFlags.DontSaveInEditor); 
             GeometrySelector geometry = obj.AddComponent<GeometrySelector>();
             MeshHideAsset source = target as MeshHideAsset;
 
