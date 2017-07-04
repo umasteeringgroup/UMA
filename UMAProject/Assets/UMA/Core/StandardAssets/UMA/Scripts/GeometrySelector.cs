@@ -39,6 +39,12 @@ namespace UMA
                 return;
             }
 
+            if (meshAsset != null)
+            {
+                if (meshAsset.asset.meshData.rootBoneHash == UMAUtils.StringToHash("Global"))
+                    gameObject.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
+            }
+
             gameObject.transform.hideFlags = HideFlags.NotEditable | HideFlags.HideInInspector;
 
             if (selectedTriangles == null)
@@ -159,7 +165,7 @@ namespace UMA
                 return;
 
             if (showWireframe)
-                Gizmos.DrawWireMesh(_sharedMesh);
+                Gizmos.DrawWireMesh(_sharedMesh, gameObject.transform.position, gameObject.transform.rotation);
         }
     }
 }
