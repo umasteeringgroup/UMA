@@ -183,6 +183,10 @@ namespace UMA
                 _triangleFlags[0] = new BitArray(selection);
             else
                 Debug.LogWarning("SaveSelection: counts don't match!");
+
+            #if UNITY_EDITOR
+            UnityEditor.EditorUtility.SetDirty(this);
+            #endif
         }
 
         public static BitArray[] GenerateMask( List<MeshHideAsset> assets )
