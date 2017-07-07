@@ -2640,6 +2640,7 @@ namespace UMA.CharacterSystem
 				ReplaceSlot(umr);
 			}
 
+
 			foreach(SlotData sd in umaData.umaRecipe.slotDataList)
 			{
 				if (sd.OverlayCount > 1)
@@ -2665,7 +2666,7 @@ namespace UMA.CharacterSystem
 					}
 					sd.SetOverlayList(SortedOverlays);
 				}
-			}
+			} 
 
 
 			UpdateColors();

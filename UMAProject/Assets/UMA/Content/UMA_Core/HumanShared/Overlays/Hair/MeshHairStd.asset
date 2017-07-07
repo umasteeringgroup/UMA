@@ -23,7 +23,6 @@ MonoBehaviour:
   textureList:
   - {fileID: 2800000, guid: 92914de304309e747853a495770218e9, type: 3}
   - {fileID: 2800000, guid: 58dd27014d7068843ab43bc57b2b80a9, type: 3}
-  - {fileID: 2800000, guid: ee65380e19fdd504a9289b08a200da55, type: 3}
   tags: []
-  material: {fileID: 11400000, guid: 872de57b1179c1348bbbab6b3168adbf, type: 2}
+  material: {fileID: 11400000, guid: 96100edaaed712d48ab984f7e51d23df, type: 2}
   OcclusionEntries: []

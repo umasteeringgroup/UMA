@@ -173,10 +173,21 @@ namespace UMA
 		/// <summary>
 		/// Sets the complete list of overlays.
 		/// </summary>
-		/// <param name="overlayList">The overlay list.</param>
-		public void SetOverlayList(List<OverlayData> overlayList)
+		/// <param name="newOverlayList">The overlay list.</param>
+		public void SetOverlayList(List<OverlayData> newOverlayList)
 		{
-			this.overlayList = overlayList;
+            if (this.overlayList.Count == newOverlayList.Count)
+            {
+                // keep the list, and just set the overlays so that merging continues to work.
+                for (int i = 0; i < this.overlayList.Count; i++)
+                {
+                    this.overlayList[i] = newOverlayList[i];
+                }
+            }
+            else
+            {
+                this.overlayList = newOverlayList;
+            }
 		}
 
 		/// <summary>
