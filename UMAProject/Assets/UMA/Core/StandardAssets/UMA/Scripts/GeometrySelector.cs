@@ -24,6 +24,12 @@ namespace UMA
             get { return _meshRenderer; }
         }
         private MeshRenderer _meshRenderer;
+
+        public MeshCollider meshCollider
+        {
+            get { return _meshCollider; }
+        }
+        private MeshCollider _meshCollider;
         //Use 0 for unselected and 1 for selected
         private Material[] _Materials;
 
@@ -67,10 +73,10 @@ namespace UMA
 
             if( !gameObject.GetComponent<MeshCollider>())
             {
-                MeshCollider meshCollider = gameObject.AddComponent<MeshCollider>();
-                meshCollider.convex = false;
-                meshCollider.sharedMesh = _sharedMesh;
-                meshCollider.hideFlags = HideFlags.HideInInspector;
+                _meshCollider = gameObject.AddComponent<MeshCollider>();
+                _meshCollider.convex = false;
+                _meshCollider.sharedMesh = _sharedMesh;
+                _meshCollider.hideFlags = HideFlags.HideInInspector;
             }
 
             if (_Materials == null)

@@ -91,6 +91,8 @@ namespace UMA.Editors
 
         private int[] RayPick()
         {
+            GeometrySelector source = target as GeometrySelector;
+
             if (Camera.current == null)
             {
                 Debug.LogWarning("Camera is null!");
@@ -103,7 +105,7 @@ namespace UMA.Editors
                 return null;
 
             MeshCollider meshCollider = hit.collider as MeshCollider;
-            if (meshCollider == null || meshCollider.sharedMesh == null)
+            if (meshCollider == null || meshCollider.sharedMesh == null || meshCollider != source.meshCollider)
                 return null;
 
             Mesh mesh = meshCollider.sharedMesh;
