@@ -6,7 +6,6 @@ namespace UMA
 {
     public class GeometrySelector : MonoBehaviour 
     {
-        public bool showWireframe = true;
         public MeshHideAsset meshAsset;
 
         public BitArray selectedTriangles;
@@ -163,15 +162,6 @@ namespace UMA
 
 
             sharedMesh.SetTriangles(newSelectedTriangles, 1);
-        }
-
-        void OnDrawGizmos()
-        {           
-            if (_sharedMesh == null)
-                return;
-
-            if (showWireframe)
-                Gizmos.DrawWireMesh(_sharedMesh, gameObject.transform.position, gameObject.transform.rotation);
         }
     }
 }

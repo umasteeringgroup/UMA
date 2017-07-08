@@ -10,12 +10,13 @@ namespace UMA.Editors
     {
         //public bool showWireFrame = true;
         private bool doneEditing = false;
-        private SerializedProperty showWireframe;
+        private bool showWireframe = true;
 
         void OnEnable()
         {
             EditorApplication.update += GeometryUpdate;
-            showWireframe = serializedObject.FindProperty("showWireframe");
+
+            UpdateShadingMode(showWireframe);
         }
 
         public override void OnInspectorGUI()
@@ -25,17 +26,16 @@ namespace UMA.Editors
             //base.OnInspectorGUI();
             serializedObject.Update();
 
-            EditorGUILayout.PropertyField(showWireframe);
-
-            if( source.meshRenderer ) EditorUtility.SetSelectedRenderState(source.meshRenderer, EditorSelectedRenderState.Wireframe);
-            //showWireFrame = EditorGUILayout.Toggle("ShowWireFrame",showWireFrame);
-
             var obj = EditorGUILayout.ObjectField("SharedMesh", source.sharedMesh, typeof(Mesh), false);
             if (obj != null && obj != source.sharedMesh)
             {
                 source.sharedMesh = obj as Mesh;
                 EditorUtility.SetDirty(target);
             }
+
+            bool toggled = GUILayout.Toggle(showWireframe, "Show Wireframe", "Button");
+            if (toggled != showWireframe) { UpdateShadingMode(toggled); }           
+            showWireframe = toggled;
 
             if (GUILayout.Button("Clear All"))
             {
@@ -69,7 +69,7 @@ namespace UMA.Editors
 
             if (Event.current.type == EventType.layout)
                 HandleUtility.AddDefaultControl(GUIUtility.GetControlID(GetHashCode(), FocusType.Passive));
-            
+
             if (Event.current != null && Event.current.type == EventType.MouseDown && Event.current.button == 0)
             {
                 int[] triangleHit = RayPick();
@@ -87,6 +87,22 @@ namespace UMA.Editors
             {
                 SceneView.RepaintAll();
             }
+        }
+
+        private void UpdateShadingMode(bool wireframeOn)
+        {
+            if (SceneView.lastActiveSceneView == null)
+            {
+                Debug.LogWarning("currentDrawingSceneView is null");
+                return;
+            }
+
+            if (wireframeOn)
+                SceneView.lastActiveSceneView.renderMode = DrawCameraMode.TexturedWire;
+            else
+                SceneView.lastActiveSceneView.renderMode = DrawCameraMode.Textured;
+                
+            SceneView.RepaintAll();
         }
 
         private int[] RayPick()
@@ -121,6 +137,7 @@ namespace UMA.Editors
         private void DestroySceneEditObject()
         {
             GeometrySelector source = target as GeometrySelector;
+            UpdateShadingMode(false);
             if( source.doneEditing != null) source.doneEditing( source.selectedTriangles );
             if(source.meshAsset != null) 
                 Selection.activeObject = source.meshAsset;
