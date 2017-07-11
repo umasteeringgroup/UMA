@@ -1268,9 +1268,8 @@ namespace UMA.Editors
                 GUILayout.EndHorizontal();
             }
 
-            if (_overlayData.asset.material != _slotData.asset.material)
+            if ((_overlayData.asset.material.IsProcedural() == false) && (_overlayData.asset.material != _slotData.asset.material))
             {
-
                 if (_overlayData.asset.material.channels.Length == _slotData.asset.material.channels.Length)
                 {
                     EditorGUILayout.HelpBox("Material " + _overlayData.asset.material.name + " does not match slot material: " + _slotData.asset.material.name, MessageType.Error);
