@@ -10,10 +10,12 @@ namespace UMA.Editors
     {
         private bool doneEditing = false; //set to true to end editing this objects
         private bool showWireframe = true; //whether to switch to wireframe mode or not
+        private bool backfaceCull = true; 
         private bool isSelecting = false; //is the user actively selecting
         private bool setSelectedOn = true; //whether to set the triangles to selected or unselection when using selection box
         private Vector2 startMousePos;
         private Rect screenRect; 
+        private Texture2D textureMap;
 
         private float drawTolerance = 10.0f; //in pixels
 
@@ -67,15 +69,21 @@ namespace UMA.Editors
                 EditorUtility.SetDirty(target);
             }
 
+            GUILayout.BeginHorizontal();
             bool toggled = GUILayout.Toggle(showWireframe, new GUIContent("Show Wireframe", "Toggles showing the Wireframe"), "Button", GUILayout.MinHeight(50));
             if (toggled != showWireframe) { UpdateShadingMode(toggled); }           
             showWireframe = toggled;
 
+            backfaceCull = GUILayout.Toggle(backfaceCull, new GUIContent("  Backface Cull  ", "Toggles whether to select back faces"), "Button", GUILayout.MinHeight(50));
+            GUILayout.EndHorizontal();
+
+            GUILayout.Space(20);
             GUILayout.BeginHorizontal();
             setSelectedOn = GUILayout.Toggle(setSelectedOn, new GUIContent("Unselect", "Toggles to apply unselected state to triangles highlighted"), "Button", GUILayout.MinHeight(50));
             setSelectedOn = GUILayout.Toggle(!setSelectedOn, new GUIContent("  Select  ", "Toggles to apply selected state to triangles highlighted"), "Button", GUILayout.MinHeight(50));
             GUILayout.EndHorizontal();
 
+            GUILayout.Space(20);
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Clear All", GUILayout.MinHeight(50)))
             {
@@ -88,6 +96,10 @@ namespace UMA.Editors
             }
             GUILayout.EndHorizontal();
 
+            GUILayout.Space(20);
+            textureMap = EditorGUILayout.ObjectField("Texture Map", textureMap, typeof(Texture2D), false) as Texture2D;
+
+            GUILayout.Space(20);
             if (GUILayout.Button(new GUIContent("Done Editing", "Save the changes and apply them to the MeshHideAsset"), GUILayout.MinHeight(50)))
             {
                 doneEditing = true;
@@ -167,27 +179,48 @@ namespace UMA.Editors
                     {
                         bool found = false;
                         Vector3 center = new Vector3();
+                        Vector3 centerNormal = new Vector3();
 
                         for (int k = 0; k < 3; k++)
                         {
                             Vector3 vertex = source.meshAsset.asset.meshData.vertices[triangles[i+k]];
                             vertex = source.transform.localToWorldMatrix.MultiplyVector(vertex);
+
+                            Vector3 normal = source.meshAsset.asset.meshData.normals[triangles[i+k]];
+                            normal = source.transform.localToWorldMatrix.MultiplyVector(normal);
+
                             center += vertex;
+                            centerNormal += normal;
+
                             vertex = SceneView.currentDrawingSceneView.camera.WorldToScreenPoint(vertex);
                             vertex.y = SceneView.currentDrawingSceneView.camera.pixelHeight - vertex.y;
 
                             if (selectionRect.Contains( vertex ))
                             {
-                                found = true;
-                                break;
+                                if (backfaceCull)
+                                {
+                                    if (Vector3.Dot(normal, SceneView.currentDrawingSceneView.camera.transform.position - normal) > 0)
+                                        found = true;
+                                }
+                                else
+                                    found = true;
                             }
                         }
 
                         center = center / 3;
+                        centerNormal = centerNormal / 3;
                         center = SceneView.currentDrawingSceneView.camera.WorldToScreenPoint(center);
                         center.y = SceneView.currentDrawingSceneView.camera.pixelHeight - center.y;
-                        if (selectionRect.Contains( center ))
-                            found = true;
+                        if (selectionRect.Contains(center))
+                        {
+                            if (backfaceCull)
+                            {
+                                if (Vector3.Dot(centerNormal, SceneView.currentDrawingSceneView.camera.transform.position - centerNormal) > 0)
+                                    found = true;
+                            }
+                            else
+                                found = true;
+                        }
 
                         if (found)
                         {
