@@ -97,7 +97,9 @@ namespace UMA.Editors
             GUILayout.EndHorizontal();
 
             GUILayout.Space(20);
-            textureMap = EditorGUILayout.ObjectField("Texture Map", textureMap, typeof(Texture2D), false) as Texture2D;
+            textureMap = EditorGUILayout.ObjectField("Texture Map", textureMap, typeof(Texture2D), false) as Texture2D;                
+            if( GUILayout.Button("Load Texture Map"))
+                source.UpdateFromTexture(textureMap);                
 
             GUILayout.Space(20);
             if (GUILayout.Button(new GUIContent("Done Editing", "Save the changes and apply them to the MeshHideAsset"), GUILayout.MinHeight(50)))
@@ -199,7 +201,8 @@ namespace UMA.Editors
                             {
                                 if (backfaceCull)
                                 {
-                                    if (Vector3.Dot(normal, SceneView.currentDrawingSceneView.camera.transform.position - normal) > 0)
+                                    //if (Vector3.Dot(normal, SceneView.currentDrawingSceneView.camera.transform.position - normal) > 0.1f)
+                                    if (Vector3.Dot(normal, SceneView.currentDrawingSceneView.camera.transform.forward) < -0.5f)
                                         found = true;
                                 }
                                 else
@@ -215,7 +218,8 @@ namespace UMA.Editors
                         {
                             if (backfaceCull)
                             {
-                                if (Vector3.Dot(centerNormal, SceneView.currentDrawingSceneView.camera.transform.position - centerNormal) > 0)
+                                //if (Vector3.Dot(centerNormal, SceneView.currentDrawingSceneView.camera.transform.position - centerNormal) > 0.1f)
+                                if (Vector3.Dot(centerNormal, SceneView.currentDrawingSceneView.camera.transform.forward) < -0.5f)
                                     found = true;
                             }
                             else
