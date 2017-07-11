@@ -138,9 +138,14 @@ namespace UMA
 
         public void ClearAll()
         {
-            selectedTriangles.SetAll(false);
+            if (selectedTriangles != null)
+            {
+                selectedTriangles.SetAll(false);
 
-            UpdateSelectionMesh();
+                UpdateSelectionMesh();
+            }
+            else
+                Debug.LogWarning("selectedTriangles is null! Try starting editing again.");
         }
 
         public void UpdateSelectionMesh()
@@ -163,5 +168,18 @@ namespace UMA
 
             sharedMesh.SetTriangles(newSelectedTriangles, 1);
         }
+
+        /*void OnDrawGizmos()
+        {
+            Vector3 size = new Vector3(0.01f, 0.01f, 0.01f);
+
+            for (int i = 0; i < meshAsset.asset.meshData.vertexCount; i++)
+            {
+                Vector3 vertex = meshAsset.asset.meshData.vertices[i];
+                vertex = this.transform.localToWorldMatrix.MultiplyPoint(vertex);
+
+                Gizmos.DrawCube(vertex, size);
+            }
+        }*/
     }
 }

@@ -69,7 +69,7 @@ namespace UMA.Editors
 
             EditorGUILayout.HelpBox(info, MessageType.Info);
 
-            if (GUILayout.Button("Begin Editing"))
+            if (GUILayout.Button("Begin Editing", GUILayout.MinHeight(50)))
             {
                 CreateSceneEditObject();
             }
