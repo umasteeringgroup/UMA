@@ -169,6 +169,51 @@ namespace UMA
             sharedMesh.SetTriangles(newSelectedTriangles, 1);
         }
 
+        public void UpdateFromTexture(Texture2D tex)
+        {
+            if (_sharedMesh == null)
+                return;
+            
+            if (_sharedMesh.uv == null)
+            {
+                Debug.LogWarning("UpdateFromTexture: This mesh has no uv data!");
+                return;
+            }
+
+            if (selectedTriangles == null)
+            {
+                Debug.LogWarning("UpdateFromTexture: selectedTriangles is null!");
+                return;
+            }
+
+            for (int i = 0; i < meshAsset.asset.meshData.submeshes[0].triangles.Length; i+=3)
+            {
+                bool selected = false;
+                Vector2 centerUV = new Vector2();
+                for (int k = 0; k < 3; k++)
+                {            
+                    int index = meshAsset.asset.meshData.submeshes[0].triangles[i + k];
+                    centerUV += meshAsset.asset.meshData.uv[index];
+                    int x = Mathf.FloorToInt(meshAsset.asset.meshData.uv[index].x * tex.width);
+                    int y = Mathf.FloorToInt(meshAsset.asset.meshData.uv[index].y * tex.height);
+                    if (tex.GetPixel(x, y).grayscale > 0.5f)
+                        selected = true;
+                }
+
+                centerUV = centerUV / 3;
+                int centerX = Mathf.FloorToInt(centerUV.x * tex.width);
+                int centerY = Mathf.FloorToInt(centerUV.y * tex.height);
+                if (tex.GetPixel(centerX, centerY).grayscale > 0.5f)
+                    selected = true;
+
+                selectedTriangles[i] = selected;
+                selectedTriangles[i+1] = selected;
+                selectedTriangles[i+2] = selected;
+            }
+
+            UpdateSelectionMesh();
+        }
+
         /*void OnDrawGizmos()
         {
             Vector3 size = new Vector3(0.01f, 0.01f, 0.01f);
