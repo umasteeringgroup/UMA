@@ -684,9 +684,27 @@ namespace UMA
                     foreach (string guid in guids)
                     {
                         string Path = AssetDatabase.GUIDToAssetPath(guid);
+                        if (Path.ToLower().Contains(".shader"))
+                        {
+                            continue;
+                        }
                         Object o = AssetDatabase.LoadAssetAtPath(Path, CurrentType);
-                        AssetItem ai = new AssetItem(CurrentType, o);
-                        AddAssetItem(ai);
+                        if (o != null)
+                        {
+                            AssetItem ai = new AssetItem(CurrentType, o);
+                            AddAssetItem(ai);
+                        }
+                        else
+                        {
+                            if (Path == null)
+                            {
+                                Debug.LogWarning("Cannot instantiate item " + guid);
+                            }
+                            else
+                            {
+                                Debug.LogWarning("Cannot instantiate item " + Path);
+                            }
+                        }
                     }
                 }
             }
