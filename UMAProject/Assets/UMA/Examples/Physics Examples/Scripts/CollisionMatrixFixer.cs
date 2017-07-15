@@ -4,7 +4,6 @@ using System.Collections;
 public class CollisionMatrixFixer : MonoBehaviour 
 {
     private int _defaultRagdollLayer = 8;
-    private int _defaultPlayerLayer = 9;
 
 	// Use this for initialization
 	void Start () 
