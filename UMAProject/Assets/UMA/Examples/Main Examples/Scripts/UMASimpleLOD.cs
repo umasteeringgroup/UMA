@@ -35,12 +35,18 @@ namespace UMA.Examples
 
 		public void Update()
 		{
+            if (umaData == null)
+                umaData = gameObject.GetComponent<UMAData>();
+
+            if (umaData == null)
+                return;
+
 			float cameraDistance = (transform.position - Camera.main.transform.position).magnitude;
 			float lodDistanceStep = lodDistance;
 			float atlasResolutionScale = 1f;
 
 			int currentLevel = 0;
-			while (cameraDistance > lodDistanceStep)
+			while (lodDistance !=0 && cameraDistance > lodDistanceStep)
 			{
 				lodDistanceStep *= 2;
 				atlasResolutionScale *= 0.5f;
@@ -81,7 +87,11 @@ namespace UMA.Examples
 		private bool ProcessRecipe(int currentLevel)
 		{
 			bool changedSlots = false;
-			for(int i = 0; i < umaData.umaRecipe.slotDataList.Length; i++)
+
+            if (umaData.umaRecipe.slotDataList == null)
+                return false;
+
+            for (int i = 0; i < umaData.umaRecipe.slotDataList.Length; i++)
 			{
 				var slot = umaData.umaRecipe.slotDataList[i];
 				if (slot != null)
