@@ -2417,14 +2417,6 @@ namespace UMA.CharacterSystem
 			BuildCharacter(RestoreDNA);
 		}
 
-#if UNITY_5_5_OR_NEWER
-		//This results in a 'call is ambiguous' error in Unity 53/54 
-		[Obsolete("[DynamicCharacterAvatar.BuildCharacter] prioritySlot and prioritySlotOver have been depricated.")]
-		public void BuildCharacter(bool RestoreDNA = true, string prioritySlot = "", List<string> prioritySlotOver = default(List<string>))
-		{
-			BuildCharacter(RestoreDNA);
-		}
-#endif
 		/// <summary>
 		/// Builds the character by combining the Avatar's raceData.baseRecipe with the any wardrobe recipes that have been applied to the avatar.
 		/// </summary>
