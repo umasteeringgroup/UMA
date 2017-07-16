@@ -69,6 +69,9 @@ namespace UMA.Dynamics
             DynamicCharacterAvatar avatar = gameObject.GetComponent<DynamicCharacterAvatar>();
             if (avatar != null)
                 avatar.CharacterCreated.AddListener(OnCharacterCreatedCallback);
+
+            if (!Physics.GetIgnoreLayerCollision(ragdollLayer, playerLayer))
+                Debug.LogWarning("RagdollLayer and PlayerLayer are not ignoring each other! This will cause collision issues. Please update the collision matrix or 'Add Default Layers' in the Physics Slot Definition");
         }
 
 		void FixedUpdate()
