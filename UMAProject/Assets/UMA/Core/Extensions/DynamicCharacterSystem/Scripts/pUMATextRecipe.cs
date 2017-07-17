@@ -547,7 +547,7 @@ namespace UMA
 			/// <param name="recipeType"></param>
 			public DCSUniversalPackRecipe(UMAData.UMARecipe recipeToSave, Dictionary<string, UMATextRecipe> wardrobeRecipes = null, string pRecipeType = "DynamicCharacterAvatar")
 			{
-				///Debug.Log("Created universal model from Avatar");
+				//Debug.Log("Created universal model from Avatar");
 				var packedRecipe = PackRecipeV3(recipeToSave);
 				packedRecipeType = pRecipeType;
 				version = packedRecipe.version;

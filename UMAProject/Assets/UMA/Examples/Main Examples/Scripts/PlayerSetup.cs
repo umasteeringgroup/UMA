@@ -34,7 +34,7 @@ namespace UMA.Examples
             //Give it a unique name
             gameObject.name = "Player|" + netId;
 
-            ///Setup the UMA basics
+            //Setup the UMA basics
             thisUMA = new GameObject("Player");
             UMADynamicAvatar dynamicAvatar = thisUMA.AddComponent<UMADynamicAvatar>();
             dynamicAvatar.Initialize();

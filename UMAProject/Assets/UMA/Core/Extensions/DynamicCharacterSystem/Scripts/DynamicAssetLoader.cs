@@ -980,7 +980,7 @@ namespace UMA.CharacterSystem
                 assetBundleNamesArray = allAssetBundleNames;
             }
             bool assetFound = false;
-            ///a list of all the assets any assets we load depend on
+            //a list of all the assets any assets we load depend on
             List<string> dependencies = new List<string>();
             for (int i = 0; i < assetBundleNamesArray.Length; i++)
             {
