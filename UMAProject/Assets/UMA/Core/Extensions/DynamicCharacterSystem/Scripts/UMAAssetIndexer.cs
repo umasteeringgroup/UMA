@@ -458,8 +458,11 @@ namespace UMA
         /// <summary>
         /// Adds an asset to the index. Does NOT save the asset! you must do that separately.
         /// </summary>
-        /// <param name="type"></param>
-        /// <param name="o"></param>
+        /// <param name="type">System Type of the object to add.</param>
+        /// <param name="name">Name for the object.</param>
+        /// <param name="path">Path to the object.</param>
+        /// <param name="o">The Object to add.</param>
+        /// <param name="skipBundleCheck">Option to skip checking Asset Bundles.</param>
         public void AddAsset(System.Type type, string name, string path, Object o, bool skipBundleCheck = false)
         {
             if (o == null)
@@ -524,7 +527,6 @@ namespace UMA
         /// And EvilAddAsset doesn't save either. You have to do that manually. 
         /// </summary>
         /// <param name="type"></param>
-        /// <param name="Name"></param>
         /// <param name="o"></param>
         public void EvilAddAsset(System.Type type, Object o)
         {

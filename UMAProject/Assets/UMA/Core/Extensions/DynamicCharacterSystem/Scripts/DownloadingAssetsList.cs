@@ -153,7 +153,7 @@ namespace UMA.CharacterSystem
 		/// <summary>
 		/// Removes a list of downloadingAssetItems from the downloadingItems List.
 		/// </summary>
-		/// <param name="assetName"></param>
+		/// <param name="itemsToRemove"></param>
 		public IEnumerator RemoveDownload(List<DownloadingAssetItem> itemsToRemove)
 		{
 			//Not used any more UMAs check the status of stuff they asked for themselves

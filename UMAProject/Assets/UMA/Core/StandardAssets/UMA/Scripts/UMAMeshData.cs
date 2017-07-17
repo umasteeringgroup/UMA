@@ -476,7 +476,7 @@ namespace UMA
 		/// <summary>
 		/// Initialize UMA mesh data from Unity mesh.
 		/// </summary>
-		/// <param name="renderer">Source renderer.</param>
+		/// <param name="sharedMesh">Source mesh.</param>
 		public void RetrieveDataFromUnityMesh(Mesh sharedMesh)
 		{
 			bindPoses = sharedMesh.bindposes;

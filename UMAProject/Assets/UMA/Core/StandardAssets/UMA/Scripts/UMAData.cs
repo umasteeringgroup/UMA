@@ -535,6 +535,7 @@ namespace UMA
 			/// </summary>
 			/// <returns>The DNA.</returns>
 			/// <param name="type">Type.</param>
+			/// <param name="dnaTypeHash">The DNAType's hash."</param>
 			public UMADnaBase GetOrCreateDna(Type type, int dnaTypeHash)
 			{
 				UMADnaBase dna;

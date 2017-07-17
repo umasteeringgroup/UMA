@@ -298,6 +298,7 @@ namespace UMA.Editors
 			/// Adds the shared colors from a given recipe name into the target recipe
 			/// </summary>
 			/// <param name="sourceRecipeName"></param>
+			/// <param name="targetRecipe"></param>
 			protected virtual bool AddSharedColorsFromRecipe(string sourceRecipeName, UMAData.UMARecipe targetRecipe)
 			{
 				bool changed = false;
