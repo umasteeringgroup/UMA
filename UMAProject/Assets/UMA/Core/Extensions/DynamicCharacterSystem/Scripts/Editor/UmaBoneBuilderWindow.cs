@@ -10,6 +10,7 @@ namespace UMA.Editors
     public class UmaBoneBuilderWindow : EditorWindow 
     {
         public DynamicCharacterAvatar avatar;
+        public bool removeUMAData = true;
 
         private UMAData _umaData;
         private Animator _animator;
@@ -29,6 +30,7 @@ namespace UMA.Editors
             GUILayout.Space(20);
 
             avatar = EditorGUILayout.ObjectField ("DynamicCharacterAvatar  ", avatar, typeof(DynamicCharacterAvatar), true) as DynamicCharacterAvatar;
+            removeUMAData = EditorGUILayout.Toggle(new GUIContent("Remove UMAData", "A recipe and UMAData is created during the bone generation process, checking this will remove it at the end of the process. (Recommended)"), removeUMAData);
 
             if (GUILayout.Button("Generate Bones"))
             {
@@ -42,6 +44,7 @@ namespace UMA.Editors
                     EnsureRoot ();
                     CreateBoneTransforms ();
                     InitializeAnimator ();
+                    if( removeUMAData ) Cleanup();
                     Debug.Log ("Completed!");
                 }
             }
@@ -150,6 +153,14 @@ namespace UMA.Editors
                 _umaData.skeleton.EnsureBone(_umaBones[i]);
             }
             _umaData.skeleton.EnsureBoneHierarchy();
+        }
+
+        private void Cleanup()
+        {
+            avatar.umaRecipe = null;
+            avatar.umaData = null;
+            if( _umaData )
+                DestroyImmediate(_umaData);
         }
     }
 }
