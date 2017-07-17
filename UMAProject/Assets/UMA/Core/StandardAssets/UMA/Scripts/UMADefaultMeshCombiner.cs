@@ -19,68 +19,84 @@ namespace UMA
 
 		protected void EnsureUMADataSetup(UMAData umaData)
 		{
-			if (umaData.umaRoot == null)
-			{
-				GameObject newRoot = new GameObject("Root");
-				//make root of the UMAAvatar respect the layer setting of the UMAAvatar so cameras can just target this layer
-				newRoot.layer = umaData.gameObject.layer;
-				newRoot.transform.parent = umaData.transform;
-				newRoot.transform.localPosition = Vector3.zero;
-				newRoot.transform.localRotation = Quaternion.Euler(270f, 0, 0f);
-				newRoot.transform.localScale = Vector3.one;
-				umaData.umaRoot = newRoot;
+            if (umaData.umaRoot != null)
+            {
+                umaData.CleanMesh(false);
+                if (umaData.rendererCount == umaData.generatedMaterials.rendererCount)
+                {
+                    renderers = umaData.GetRenderers();
+                }
+                else
+                {
+                    var oldRenderers = umaData.GetRenderers();
+                    var globalTransform = umaData.GetGlobalTransform();
 
-				GameObject newGlobal = new GameObject("Global");
-				newGlobal.transform.parent = newRoot.transform;
-				newGlobal.transform.localPosition = Vector3.zero;
-				newGlobal.transform.localRotation = Quaternion.Euler(90f, 90f, 0f);
+                    renderers = new SkinnedMeshRenderer[umaData.generatedMaterials.rendererCount];
 
-				umaData.skeleton = new UMASkeleton(newGlobal.transform);
+                    for (int i = 0; i < umaData.generatedMaterials.rendererCount; i++)
+                    {
+                        if (oldRenderers != null && oldRenderers.Length > i)
+                        {
+                            renderers[i] = oldRenderers[i];
+                            continue;
+                        }
+                        renderers[i] = MakeRenderer(i, globalTransform);
+                    }
 
-				renderers = new SkinnedMeshRenderer[umaData.generatedMaterials.rendererCount];
-
-				for (int i = 0; i < umaData.generatedMaterials.rendererCount; i++)
-				{
-					renderers[i] = MakeRenderer(i, newGlobal.transform);
-				}
-				umaData.SetRenderers(renderers);
-			}
-			else
-			{
-				umaData.CleanMesh(false);
-				if (umaData.rendererCount == umaData.generatedMaterials.rendererCount)
-				{
-					renderers = umaData.GetRenderers();
-				}
-				else
-				{
-					var oldRenderers = umaData.GetRenderers();
-					var globalTransform = umaData.GetGlobalTransform();
-
-					renderers = new SkinnedMeshRenderer[umaData.generatedMaterials.rendererCount];
-
-					for (int i = 0; i < umaData.generatedMaterials.rendererCount; i++)
-					{
-						if (oldRenderers != null && oldRenderers.Length > i)
-						{
-							renderers[i] = oldRenderers[i];
-							continue;
-						}
-						renderers[i] = MakeRenderer(i, globalTransform);
-					}
-
-					if (oldRenderers != null)
-					{
-						for (int i = umaData.generatedMaterials.rendererCount; i < oldRenderers.Length; i++)
-						{
+                    if (oldRenderers != null)
+                    {
+                        for (int i = umaData.generatedMaterials.rendererCount; i < oldRenderers.Length; i++)
+                        {
                             Destroy(oldRenderers[i].gameObject);
                             //For cloth, be aware of issue: 845868
                             //https://issuetracker.unity3d.com/issues/cloth-repeatedly-destroying-objects-with-cloth-components-causes-a-crash-in-unity-cloth-updatenormals
-						}
-					}
-					umaData.SetRenderers(renderers);
-				}
-			}
+                        }
+                    }
+                    umaData.SetRenderers(renderers);
+                }
+                return;
+            }
+
+            if (umaData.umaRoot == null)
+            {
+                Transform rootTransform = umaData.gameObject.transform.FindChild("Root");
+                if (rootTransform)
+                {
+                    umaData.umaRoot = rootTransform.gameObject;
+                }
+                else
+                {
+                    GameObject newRoot = new GameObject("Root");
+                    //make root of the UMAAvatar respect the layer setting of the UMAAvatar so cameras can just target this layer
+                    newRoot.layer = umaData.gameObject.layer;
+                    newRoot.transform.parent = umaData.transform;
+                    newRoot.transform.localPosition = Vector3.zero;
+                    newRoot.transform.localRotation = Quaternion.Euler(270f, 0, 0f);
+                    newRoot.transform.localScale = Vector3.one;
+                    umaData.umaRoot = newRoot;
+                }
+
+                Transform globalTransform = umaData.umaRoot.transform.FindChild("Global");
+                if (!globalTransform)
+                {
+                    GameObject newGlobal = new GameObject("Global");
+                    newGlobal.transform.parent = umaData.umaRoot.transform;
+                    newGlobal.transform.localPosition = Vector3.zero;
+                    newGlobal.transform.localRotation = Quaternion.Euler(90f, 90f, 0f);  
+
+                    globalTransform = newGlobal.transform;
+                }
+
+                umaData.skeleton = new UMASkeleton(globalTransform);
+
+                renderers = new SkinnedMeshRenderer[umaData.generatedMaterials.rendererCount];
+
+                for (int i = 0; i < umaData.generatedMaterials.rendererCount; i++)
+                {
+                    renderers[i] = MakeRenderer(i, globalTransform);
+                }
+                umaData.SetRenderers(renderers);
+            }
 		}
 
 		private SkinnedMeshRenderer MakeRenderer(int i, Transform rootBone)
