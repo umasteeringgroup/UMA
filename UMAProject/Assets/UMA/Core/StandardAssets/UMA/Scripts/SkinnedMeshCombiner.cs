@@ -40,6 +40,7 @@ namespace UMA
 		/// </summary>
 		/// <param name="target">Target.</param>
 		/// <param name="sources">Sources.</param>
+		/// <param name="blendShapeSettings">BlendShape Settings.</param>
         public static void CombineMeshes(UMAMeshData target, CombineInstance[] sources, UMAData.BlendShapeSettings blendShapeSettings = null)
 		{
             if (blendShapeSettings == null)

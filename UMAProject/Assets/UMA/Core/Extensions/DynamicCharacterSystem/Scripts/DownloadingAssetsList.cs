@@ -39,7 +39,9 @@ namespace UMA.CharacterSystem
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="requiredAssetName"></param>
+		/// <param name="requiredAssetNameHash"></param>
 		/// <param name="containingBundle"></param>
+		/// <param name="callback"></param>
 		/// <returns></returns>
 		public T AddDownloadItem<T>(string requiredAssetName, int? requiredAssetNameHash, string containingBundle, Delegate callback = null) where T : UnityEngine.Object
 		{

@@ -144,7 +144,7 @@ namespace UMA
 		/// Check for presence of a slot by name hash.
 		/// </summary>
 		/// <returns><c>True</c> if the slot exists in this context.</returns>
-		/// <param name="name">Name hash.</param>
+		/// <param name="nameHash">Name hash.</param>
 		public bool HasSlot(int nameHash)
 		{ 
 			return slotLibrary.HasSlot(nameHash);
