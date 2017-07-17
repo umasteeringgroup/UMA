@@ -772,6 +772,7 @@ namespace UMA
 			/// Applies each DNA converter to the UMA data and skeleton.
 			/// </summary>
 			/// <param name="umaData">UMA data.</param>
+			/// <param name="fixUpUMADnaToDynamicUMADna"></param>
 			public void ApplyDNA(UMAData umaData, bool fixUpUMADnaToDynamicUMADna = false)
 			{
 				EnsureAllDNAPresent();

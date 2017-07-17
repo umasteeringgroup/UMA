@@ -721,7 +721,6 @@ namespace UMA
 		/// Applies the data to a Unity mesh.
 		/// </summary>
 		/// <param name="renderer">Target renderer.</param>
-		/// <param name="skeleton">Skeleton.</param>
 		public void CopyDataToUnityMesh(SkinnedMeshRenderer renderer)
 		{
 			Mesh mesh = renderer.sharedMesh;

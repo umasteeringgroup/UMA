@@ -419,7 +419,6 @@ namespace UMA
         /// Check to see if something is an an assetbundle. If so, don't add it
         /// </summary>
         /// <param name="path"></param>
-        /// <param name="assetName"></param>
         /// <returns></returns>
         public bool InAssetBundle(string path)
         {
@@ -483,6 +482,7 @@ namespace UMA
         /// Adds an asset to the index. If the name already exists, it is not added. (Should we do this, or replace it?)
         /// </summary>
         /// <param name="ai"></param>
+        /// <param name="SkipBundleCheck"></param>
         private void AddAssetItem(AssetItem ai, bool SkipBundleCheck = false)
         {
             System.Type theType = TypeToLookup[ai._Type];
