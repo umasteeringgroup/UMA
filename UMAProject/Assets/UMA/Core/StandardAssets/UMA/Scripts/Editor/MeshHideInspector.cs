@@ -44,9 +44,6 @@ namespace UMA.Editors
             MeshHideAsset source = target as MeshHideAsset;
 
             //DrawDefaultInspector();
-            if (source.asset == null)
-                EditorGUILayout.HelpBox("No SlotDataAsset set!", MessageType.Warning);
-
             var obj = EditorGUILayout.ObjectField("SlotDataAsset", source.asset, typeof(SlotDataAsset), false);
             if (obj != null && obj != source.asset)
             {
@@ -57,22 +54,37 @@ namespace UMA.Editors
                 EditorUtility.SetDirty(target);
             }
 
-            string info;
+            //If we had a slotData added and we set it to none, then lets clear everything.
+            if(obj == null && source.asset != null)
+            {
+                source.asset = null;
+                source.Initialize();
+                AssetDatabase.SaveAssets();
+                EditorUtility.SetDirty(target);
+            }
+
+            if (source.asset == null)
+                EditorGUILayout.HelpBox("No SlotDataAsset set! Begin by adding a SlotDataAsset to the object field above.", MessageType.Error);
+
+            GUILayout.Space(20);
             if (source.TriangleCount > 0)
             {
-                info = "Triangle indices Count: " + source.TriangleCount.ToString();
-                info += "\nSubmesh Count: " + source.SubmeshCount.ToString();
-                info += "\nHidden Triangle Count: " + source.HiddenCount.ToString();
+                EditorGUILayout.LabelField("Triangle Indices Count: " + source.TriangleCount);
+                EditorGUILayout.LabelField("Submesh Count: " + source.SubmeshCount);
+                EditorGUILayout.LabelField("Hidden Triangle Count: " + source.HiddenCount);
             }
             else
-                info = "No triangle array found";
+                EditorGUILayout.LabelField("No triangle array found");
 
-            EditorGUILayout.HelpBox(info, MessageType.Info);
-
+            GUILayout.Space(20);
+            if (source.asset == null) //Disable and reenable the GUI so the begin editing button is diabled if no asset is set.
+                GUI.enabled = false;
             if (GUILayout.Button("Begin Editing", GUILayout.MinHeight(50)))
             {
-                CreateSceneEditObject();
+                if( source.asset != null )
+                    CreateSceneEditObject();
             }
+            GUI.enabled = true;
 
             serializedObject.ApplyModifiedProperties();
         }
@@ -80,6 +92,11 @@ namespace UMA.Editors
         private void UpdateMeshPreview()
         {
             MeshHideAsset source = target as MeshHideAsset;
+            if (source.asset == null)
+            {
+                _meshPreview = null;
+                return;
+            }
 
             if( _meshPreview == null )
                 _meshPreview = new Mesh();
@@ -138,9 +155,12 @@ namespace UMA.Editors
 
         private void CreateSceneEditObject()
         {
+            MeshHideAsset source = target as MeshHideAsset;
+            if (source.asset == null)
+                return;
+
             GameObject obj = EditorUtility.CreateGameObjectWithHideFlags("GeometrySelector", HideFlags.DontSaveInEditor); 
             GeometrySelector geometry = obj.AddComponent<GeometrySelector>();
-            MeshHideAsset source = target as MeshHideAsset;
 
             if (geometry != null)
             {

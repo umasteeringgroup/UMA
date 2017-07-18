@@ -62,25 +62,21 @@ namespace UMA.Editors
             //base.OnInspectorGUI();
             serializedObject.Update();
 
-            var obj = EditorGUILayout.ObjectField("SharedMesh", source.sharedMesh, typeof(Mesh), false);
-            if (obj != null && obj != source.sharedMesh)
-            {
-                source.sharedMesh = obj as Mesh;
-                EditorUtility.SetDirty(target);
-            }
-
+            GUILayout.Space(20);
+            EditorGUILayout.LabelField("Visual Options");
             GUILayout.BeginHorizontal();
-            bool toggled = GUILayout.Toggle(showWireframe, new GUIContent("Show Wireframe", "Toggles showing the Wireframe"), "Button", GUILayout.MinHeight(50));
+            bool toggled = GUILayout.Toggle(showWireframe, new GUIContent("Show Wireframe", "Toggle showing the Wireframe"), "Button", GUILayout.MinHeight(50));
             if (toggled != showWireframe) { UpdateShadingMode(toggled); }           
             showWireframe = toggled;
 
-            backfaceCull = GUILayout.Toggle(backfaceCull, new GUIContent("  Backface Cull  ", "Toggles whether to select back faces"), "Button", GUILayout.MinHeight(50));
+            backfaceCull = GUILayout.Toggle(backfaceCull, new GUIContent("  Backface Cull  ", "Toggle whether to select back faces"), "Button", GUILayout.MinHeight(50));
             GUILayout.EndHorizontal();
 
             GUILayout.Space(20);
+            EditorGUILayout.LabelField("Selection Options");
             GUILayout.BeginHorizontal();
-            setSelectedOn = GUILayout.Toggle(setSelectedOn, new GUIContent("Unselect", "Toggles to apply unselected state to triangles highlighted"), "Button", GUILayout.MinHeight(50));
-            setSelectedOn = GUILayout.Toggle(!setSelectedOn, new GUIContent("  Select  ", "Toggles to apply selected state to triangles highlighted"), "Button", GUILayout.MinHeight(50));
+            setSelectedOn = GUILayout.Toggle(setSelectedOn, new GUIContent("Unselect", "Toggle to apply unselected state to triangles highlighted"), "Button", GUILayout.MinHeight(50));
+            setSelectedOn = GUILayout.Toggle(!setSelectedOn, new GUIContent("  Select  ", "Toggle to apply selected state to triangles highlighted"), "Button", GUILayout.MinHeight(50));
             GUILayout.EndHorizontal();
 
             GUILayout.Space(20);
@@ -97,7 +93,7 @@ namespace UMA.Editors
             GUILayout.EndHorizontal();
 
             GUILayout.Space(20);
-            textureMap = EditorGUILayout.ObjectField("Texture Map", textureMap, typeof(Texture2D), false) as Texture2D;                
+            textureMap = EditorGUILayout.ObjectField("Set From Texture Map", textureMap, typeof(Texture2D), false) as Texture2D;                
             if( GUILayout.Button("Load Texture Map"))
                 source.UpdateFromTexture(textureMap);                
 
@@ -278,8 +274,6 @@ namespace UMA.Editors
             MeshCollider meshCollider = hit.collider as MeshCollider;
             if (meshCollider == null || meshCollider.sharedMesh == null || meshCollider != source.meshCollider)
                 return null;
-
-            Mesh mesh = meshCollider.sharedMesh;
 
             int[] triangle = new int[3];
             triangle[0] = hit.triangleIndex * 3 + 0;

@@ -108,6 +108,12 @@ namespace UMA
 
         public void OnAfterDeserialize()
         {
+            if (_asset == null)
+            {
+                Debug.LogError('"' + this.name + '"' + " asset is null!");
+                return;
+            }
+            
             if (_serializedFlags == null)
             {
                 Debug.LogError("SerializedFlags is null!");
@@ -130,13 +136,13 @@ namespace UMA
         [ExecuteInEditMode]
         public void Initialize()
         {
-            if (asset == null)
+            if (_asset == null)
             {
-                Debug.LogError("MeshHideAsset: Asset is null!");
+                _triangleFlags = null;
                 return;
             }
 
-            if (asset.meshData == null)
+            if (_asset.meshData == null)
                 return;
 
             _triangleFlags = new BitArray[asset.meshData.subMeshCount];
@@ -149,7 +155,9 @@ namespace UMA
         /// <summary>
         ///  Set a vertex by position and if found set it's boolean value
         /// </summary>
-        /// <param name="triangleIndex" The first index for the triangle to set>
+        /// <param name="triangleIndex">The first index for the triangle to set.</param>
+        /// <param name="flag">Bool to set the triangle flag to.</param>
+        /// <param name="submesh">The submesh index to access. Default = 0.</param>
         [ExecuteInEditMode]
         public void SetTriangleFlag(int triangleIndex, bool flag, int submesh = 0)
         {
