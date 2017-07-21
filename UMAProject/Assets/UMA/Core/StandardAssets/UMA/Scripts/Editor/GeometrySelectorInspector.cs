@@ -21,7 +21,7 @@ namespace UMA.Editors
 
         #region Selection Utility Class
         // Credit: http://hyunkell.com/blog/rts-style-unit-selection-in-unity-5/
-        public class SelectionUtils
+        public static class SelectionUtils
         {
             static Texture2D _whiteTexture;
             public static Texture2D WhiteTexture

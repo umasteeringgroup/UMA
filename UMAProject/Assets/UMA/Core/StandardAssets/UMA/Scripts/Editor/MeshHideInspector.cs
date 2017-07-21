@@ -159,21 +159,39 @@ namespace UMA.Editors
             if (source.asset == null)
                 return;
 
+            if (GeometrySelectorExists())
+            {
+                Debug.LogError("A GeometrySelector Object already exists! Finish editing that one first.");
+                return;
+            }
+
             GameObject obj = EditorUtility.CreateGameObjectWithHideFlags("GeometrySelector", HideFlags.DontSaveInEditor); 
             GeometrySelector geometry = obj.AddComponent<GeometrySelector>();
 
             if (geometry != null)
             {
+                //test
+                GeometrySelectorWindow.Init(geometry);
+                //
+
                 geometry.meshAsset = source;
                 geometry.doneEditing += source.SaveSelection;
                 geometry.InitializeFromMeshData(source.asset.meshData);
-                Selection.activeGameObject = obj;
+                //Selection.activeGameObject = obj;
 
                 //temporary, only works on submesh 0
                 geometry.selectedTriangles = new BitArray(source.triangleFlags[0]);
 
                 geometry.UpdateSelectionMesh();
             }
+        }
+
+        private bool GeometrySelectorExists()
+        {
+            if (GameObject.Find("GeometrySelector") != null)
+                return true;
+
+            return false;
         }
             
         public override bool HasPreviewGUI()
