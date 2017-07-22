@@ -40,11 +40,13 @@ namespace UMA
         [System.Serializable]
         public class serializedFlags
         {
-            public bool[] flags;
+            public int[] flags;
+			public int Count;
 
             public serializedFlags(int count)
             {
-                flags = new bool[count];
+				Count = count;
+				flags = new int[(Count + 31) / 32];
             }
         }
         [SerializeField]
@@ -152,6 +154,7 @@ namespace UMA
                 for (int i = 0; i < _serializedFlags.Length; i++)
                 {
                     _triangleFlags[i] = new BitArray(_serializedFlags[i].flags);
+					_triangleFlags[i].Length = _serializedFlags[i].Count;
                 }
             }
         }

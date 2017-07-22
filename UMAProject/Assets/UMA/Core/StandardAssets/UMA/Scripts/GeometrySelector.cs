@@ -19,6 +19,13 @@ namespace UMA
         }
         private Mesh _sharedMesh;
 
+		public Mesh occlusionMesh
+		{
+			get { return _occlusionMesh; }
+			set { _occlusionMesh = value; }
+		}
+		private Mesh _occlusionMesh;
+
         public MeshRenderer meshRenderer
         {
             get { return _meshRenderer; }
@@ -215,17 +222,22 @@ namespace UMA
             UpdateSelectionMesh();
         }
 
-        /*void OnDrawGizmos()
+        void OnDrawGizmos()
         {
-            Vector3 size = new Vector3(0.01f, 0.01f, 0.01f);
-
-            for (int i = 0; i < meshAsset.asset.meshData.vertexCount; i++)
-            {
-                Vector3 vertex = meshAsset.asset.meshData.vertices[i];
-                vertex = this.transform.localToWorldMatrix.MultiplyPoint(vertex);
-
-                Gizmos.DrawCube(vertex, size);
-            }
-        }*/
+//            Vector3 size = new Vector3(0.01f, 0.01f, 0.01f);
+//
+//            for (int i = 0; i < meshAsset.asset.meshData.vertexCount; i++)
+//            {
+//                Vector3 vertex = meshAsset.asset.meshData.vertices[i];
+//                vertex = this.transform.localToWorldMatrix.MultiplyPoint(vertex);
+//
+//                Gizmos.DrawCube(vertex, size);
+//            }
+            
+			if (_occlusionMesh != null)
+			{
+				Gizmos.DrawWireMesh(_occlusionMesh, transform.position, transform.rotation);
+			}
+        }
     }
 }

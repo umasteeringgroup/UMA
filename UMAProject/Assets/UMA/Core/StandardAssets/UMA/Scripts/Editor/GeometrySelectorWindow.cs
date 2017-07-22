@@ -7,6 +7,7 @@ namespace UMA.Editors
     public class GeometrySelectorWindow : EditorWindow {
 
         private GeometrySelector _Source;
+		private SlotDataAsset _Occluder = null;
         private bool doneEditing = false; //set to true to end editing this objects
         private bool showWireframe = true; //whether to switch to wireframe mode or not
         private bool backfaceCull = true; 
@@ -47,6 +48,42 @@ namespace UMA.Editors
 
         void OnGUI()
         {
+			GUILayout.Space(20);
+			EditorGUILayout.LabelField("Occlusion Slot (Optional)");
+			SlotDataAsset newOccluder = (SlotDataAsset) EditorGUILayout.ObjectField(_Occluder, typeof(SlotDataAsset), false);
+			if (newOccluder != _Occluder)
+			{
+				_Occluder = newOccluder;
+				if (_Occluder != null)
+				{
+					Mesh occlusionMesh = new Mesh();
+					occlusionMesh.subMeshCount = _Occluder.meshData.subMeshCount;
+					occlusionMesh.vertices = _Occluder.meshData.vertices;
+					occlusionMesh.normals = _Occluder.meshData.normals;
+					occlusionMesh.tangents = _Occluder.meshData.tangents;
+					occlusionMesh.uv = _Occluder.meshData.uv;
+					occlusionMesh.uv2 = _Occluder.meshData.uv2;
+					occlusionMesh.uv3 = _Occluder.meshData.uv3;
+					occlusionMesh.uv4 = _Occluder.meshData.uv4;
+					occlusionMesh.colors32 = _Occluder.meshData.colors32;
+
+					occlusionMesh.triangles = new int[0];
+					for (int i = 0; i < _Occluder.meshData.subMeshCount; i++)
+						occlusionMesh.SetTriangles(_Occluder.meshData.submeshes[i].triangles, i);
+
+					_Source.occlusionMesh = occlusionMesh;
+				}
+				else
+				{
+					_Source.occlusionMesh = null;
+				}
+			}
+			EditorGUI.BeginDisabledGroup(_Occluder == null);
+			if (GUILayout.Button("Raycast Hidden Faces"))
+			{
+			}
+			EditorGUI.EndDisabledGroup();
+
             GUILayout.Space(20);
             EditorGUILayout.LabelField("Visual Options");
             GUILayout.BeginHorizontal();
@@ -130,10 +167,13 @@ namespace UMA.Editors
         {
             if (_Source == null)
                 return;
+			
+			if (!isSelecting && Event.current.alt)
+				return;
 
-            if (Event.current.alt || Event.current.control)
-                return;
-            
+			if (!isSelecting && Event.current.control)
+				return;
+			
             Rect selectionRect = new Rect();
 
             if (Event.current.type == EventType.layout)
@@ -161,6 +201,13 @@ namespace UMA.Editors
                     Handles.EndGUI();
                     HandleUtility.Repaint();
                 }
+
+				if (Event.current.type == EventType.MouseDrag)
+				{
+					SceneView.RepaintAll();
+					Event.current.Use();
+					return;
+				}
             }
 
             if (Event.current != null && Event.current.type == EventType.MouseDown && Event.current.button == 0)
