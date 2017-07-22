@@ -162,7 +162,7 @@ namespace UMA.Editors
         private void GeometryUpdate()
         {
             if (doneEditing)
-                Cleanup();
+                Close();
         }
 
         void OnSceneGUI(SceneView sceneView)
@@ -466,8 +466,6 @@ namespace UMA.Editors
                 if (_Source.meshAsset != null)
                     Selection.activeObject = _Source.meshAsset;
                 DestroyImmediate(_Source.gameObject);
-
-                this.Close();
             }
         }
     }
