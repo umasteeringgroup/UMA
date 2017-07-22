@@ -166,7 +166,7 @@ namespace UMA
             {                
                 if (selectedTriangles[i])
                 {
-                    newSelectedTriangles[selectedIndex] = sharedMesh.triangles[i];
+                    newSelectedTriangles[selectedIndex + 0] = sharedMesh.triangles[i + 0];
                     newSelectedTriangles[selectedIndex + 1] = sharedMesh.triangles[i + 1];
                     newSelectedTriangles[selectedIndex + 2] = sharedMesh.triangles[i + 2];
                     selectedIndex += 3;

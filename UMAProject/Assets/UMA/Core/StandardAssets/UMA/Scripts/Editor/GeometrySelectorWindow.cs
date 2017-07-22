@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEditor;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace UMA.Editors
 {
@@ -81,6 +82,7 @@ namespace UMA.Editors
 			EditorGUI.BeginDisabledGroup(_Occluder == null);
 			if (GUILayout.Button("Raycast Hidden Faces"))
 			{
+				RaycastHide();
 			}
 			EditorGUI.EndDisabledGroup();
 
@@ -322,6 +324,137 @@ namespace UMA.Editors
 
             return triangle;
         }
+
+		/// <summary>
+		/// Checks if the specified ray hits the triagnlge descibed by p1, p2 and p3.
+		/// Möller–Trumbore ray-triangle intersection algorithm implementation.
+		/// Source from Unity Answers
+		/// </summary>
+		/// <param name="ray">The ray to test hit for.</param>
+		/// <param name="p1">Vertex 1 of the triangle.</param>
+		/// <param name="p2">Vertex 2 of the triangle.</param>
+		/// <param name="p3">Vertex 3 of the triangle.</param>
+		/// <returns><c>true</c> when the ray hits the triangle, otherwise <c>false</c></returns>
+		public static bool RayTriIntersect(Ray ray, Vector3 p1, Vector3 p2, Vector3 p3)
+		{
+			// Vectors from p1 to p2/p3 (edges)
+			Vector3 e1, e2;  
+
+			Vector3 p, q, t;
+			float det, invDet, u, v;
+
+
+			//Find vectors for edges sharing vertex/point p1
+			e1 = p2 - p1;
+			e2 = p3 - p1;
+
+			// Calculate determinant 
+			p = Vector3.Cross(ray.direction, e2);
+
+			//Calculate determinat
+			det = Vector3.Dot(e1, p);
+
+			//if determinant is near zero, ray lies in plane of triangle otherwise not
+			if (det > -Mathf.Epsilon && det < Mathf.Epsilon) { return false; }
+			invDet = 1.0f / det;
+
+			//calculate distance from p1 to ray origin
+			t = ray.origin - p1;
+
+			//Calculate u parameter
+			u = Vector3.Dot(t, p) * invDet;
+
+			//Check for ray hit
+			if (u < 0 || u > 1) { return false; }
+
+			//Prepare to test v parameter
+			q = Vector3.Cross(t, e1);
+
+			//Calculate v parameter
+			v = Vector3.Dot(ray.direction, q) * invDet;
+
+			//Check for ray hit
+			if (v < 0 || u + v > 1) { return false; }
+
+			if ((Vector3.Dot(e2, q) * invDet) > Mathf.Epsilon)
+			{ 
+				//ray does intersect
+				return true;
+			}
+
+			// No hit at all
+			return false;
+		}
+
+		private void RaycastHide()
+		{
+			if (_Source == null)
+				return;
+
+			Mesh targetMesh = _Source.sharedMesh;
+			if (targetMesh == null)
+				return;
+			
+			Mesh occlusionMesh = _Source.occlusionMesh;
+			if (occlusionMesh == null)
+				return;
+			
+			Vector3[] targetVerts = targetMesh.vertices;
+			Vector3[] targetNorms = targetMesh.normals;
+			if (targetNorms.Length != targetVerts.Length)
+				return;
+			
+			Vector3[] occlusionVerts = occlusionMesh.vertices;
+			List<int[]> occlusionTriangles = new List<int[]>();
+			for (int i = 0; i < occlusionMesh.subMeshCount; i++)
+			{
+				occlusionTriangles.Add(occlusionMesh.GetTriangles(i));
+			}
+
+			BitArray vertexOccluded = new BitArray(targetVerts.Length);
+			for (int i = 0; i < targetVerts.Length; i++)
+			{
+				Ray testRay = new Ray(targetVerts[i], targetNorms[i]);
+				for (int j = 0; j < occlusionTriangles.Count; j++)
+				{
+					int[] triVerts = occlusionTriangles[j];
+					for (int k = 0; k < triVerts.Length; k+= 3)
+					{
+						if (RayTriIntersect(testRay,
+							occlusionVerts[triVerts[k + 0]],
+							occlusionVerts[triVerts[k + 1]],
+							occlusionVerts[triVerts[k + 2]]))
+						{
+							vertexOccluded[i] = true;
+							break;
+						}
+					}
+
+					if (vertexOccluded[i])
+						continue;
+				}
+			}
+
+			_Source.selectedTriangles.SetAll(false);
+
+			for (int i = 0; i < /*_Source.sharedMesh.subMeshCount*/ 1; i++)
+			{
+				int[] triVerts = _Source.sharedMesh.GetTriangles(i);
+				for (int j = 0; j < triVerts.Length; j += 3)
+				{
+					if (vertexOccluded[triVerts[j + 0]] &&
+						vertexOccluded[triVerts[j + 1]] &&
+						vertexOccluded[triVerts[j + 2]])
+					{
+						_Source.selectedTriangles[j + 0] = true;
+						_Source.selectedTriangles[j + 1] = true;
+						_Source.selectedTriangles[j + 2] = true;
+					}
+				}
+			}
+
+			_Source.UpdateSelectionMesh();
+		}
 
         private void DestroySceneEditObject()
         {
