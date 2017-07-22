@@ -23,6 +23,9 @@ namespace UMA.Editors
             if (source.asset == null)
                 return;
 
+            if( _material == null )
+                _material = AssetDatabase.GetBuiltinExtraResource<Material>("Default-Diffuse.mat");
+
             if (_meshPreview == null)
             {
                 UpdateMeshPreview();
@@ -33,9 +36,6 @@ namespace UMA.Editors
                 _previewRenderUtility = new PreviewRenderUtility();
                 ResetPreviewCamera();
             }
-
-            if( _material == null )
-                _material = AssetDatabase.GetBuiltinExtraResource<Material>("Default-Diffuse.mat");
         }
 
         public override void OnInspectorGUI()
@@ -170,9 +170,7 @@ namespace UMA.Editors
 
             if (geometry != null)
             {
-                //test
                 GeometrySelectorWindow.Init(geometry);
-                //
 
                 geometry.meshAsset = source;
                 geometry.doneEditing += source.SaveSelection;
@@ -207,6 +205,9 @@ namespace UMA.Editors
         {
             if (_meshPreview == null)
                 return;
+
+            if( _material == null )
+                _material = AssetDatabase.GetBuiltinExtraResource<Material>("Default-Diffuse.mat");
 
             _drag = Drag2D(_drag, r);
 

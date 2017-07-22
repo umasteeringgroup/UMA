@@ -173,7 +173,6 @@ namespace UMA
                 }
             }
 
-
             sharedMesh.SetTriangles(newSelectedTriangles, 1);
         }
 
@@ -223,17 +222,7 @@ namespace UMA
         }
 
         void OnDrawGizmos()
-        {
-//            Vector3 size = new Vector3(0.01f, 0.01f, 0.01f);
-//
-//            for (int i = 0; i < meshAsset.asset.meshData.vertexCount; i++)
-//            {
-//                Vector3 vertex = meshAsset.asset.meshData.vertices[i];
-//                vertex = this.transform.localToWorldMatrix.MultiplyPoint(vertex);
-//
-//                Gizmos.DrawCube(vertex, size);
-//            }
-            
+        {            
 			if (_occlusionMesh != null)
 			{
 				Gizmos.DrawWireMesh(_occlusionMesh, transform.position, transform.rotation);
