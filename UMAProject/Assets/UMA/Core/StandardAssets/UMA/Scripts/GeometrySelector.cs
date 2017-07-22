@@ -6,6 +6,7 @@ namespace UMA
 {
     public class GeometrySelector : MonoBehaviour 
     {
+        [HideInInspector]
         public MeshHideAsset meshAsset;
 
         public BitArray selectedTriangles;
