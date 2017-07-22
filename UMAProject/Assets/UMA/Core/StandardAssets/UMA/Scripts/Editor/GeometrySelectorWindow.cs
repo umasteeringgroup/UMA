@@ -33,6 +33,18 @@ namespace UMA.Editors
             UpdateShadingMode(showWireframe);
         }
 
+        private void OnDestroy()
+        {
+            Cleanup();
+        }
+
+        private void Cleanup()
+        {
+            EditorApplication.update -= GeometryUpdate;
+            SceneView.onSceneGUIDelegate -= OnSceneGUI;
+            DestroySceneEditObject();
+        }
+
         void OnGUI()
         {
             GUILayout.Space(20);
@@ -111,11 +123,7 @@ namespace UMA.Editors
         private void GeometryUpdate()
         {
             if (doneEditing)
-            {
-                EditorApplication.update -= GeometryUpdate;
-                SceneView.onSceneGUIDelegate -= OnSceneGUI;
-                DestroySceneEditObject();
-            }
+                Cleanup();
         }
 
         void OnSceneGUI(SceneView sceneView)
