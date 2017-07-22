@@ -77,14 +77,13 @@ namespace UMA.Editors
                 EditorGUILayout.LabelField("No triangle array found");
 
             GUILayout.Space(20);
-            if (source.asset == null) //Disable and reenable the GUI so the begin editing button is diabled if no asset is set.
-                GUI.enabled = false;
+            EditorGUI.BeginDisabledGroup(source.asset == null);
             if (GUILayout.Button("Begin Editing", GUILayout.MinHeight(50)))
             {
                 if( source.asset != null )
                     CreateSceneEditObject();
             }
-            GUI.enabled = true;
+            EditorGUI.EndDisabledGroup();
 
             serializedObject.ApplyModifiedProperties();
         }
