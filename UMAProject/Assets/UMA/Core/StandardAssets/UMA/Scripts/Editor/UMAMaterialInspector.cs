@@ -29,7 +29,7 @@ namespace UMA.Editors
             }
 
             EditorGUILayout.PropertyField(serializedObject.FindProperty("material"), new GUIContent( "Material", "The Unity Material to link to."));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("materialType"), new GUIContent( "Material Type", "Atlas this material or do not atlas it."));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("materialType"), new GUIContent( "Material Type", "To atlas or not to atlas- that is the question."));
 
             GUILayout.Space(20);
 
@@ -37,10 +37,8 @@ namespace UMA.Editors
 
             GUILayout.Space(20);
 
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("clothProperties"));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("RequireSeperateRenderer"));
-
-            //Another feature, detect whether existing Material Property Names exist in the selected shader or not
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("clothProperties"), new GUIContent("Cloth Properties","The cloth properties asset to apply to this material.  Use this only if planning to use the cloth component with this material."));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("RequireSeperateRenderer"), new GUIContent("Require Separate Renderer","Toggle this to force UMA to create a new renderer for meshes using this material."));
 
             serializedObject.ApplyModifiedProperties();
         }
@@ -48,7 +46,7 @@ namespace UMA.Editors
         //Maybe eventually we can use the new IMGUI classes once older unity version are no longer supported.
         private void DrawChannelList(SerializedProperty list)
         {
-            EditorGUILayout.PropertyField(list);
+            EditorGUILayout.PropertyField(list, new GUIContent("Texture Channels","List of texture channels to be used in this material."));
             EditorGUI.indentLevel += 1;
             if (list.isExpanded)
             {
@@ -56,21 +54,21 @@ namespace UMA.Editors
                 for (int i = 0; i < list.arraySize; i++)
                 {
                     SerializedProperty channel = list.GetArrayElementAtIndex(i);
-                    EditorGUILayout.PropertyField(channel);
+                    SerializedProperty materialPropertyName = channel.FindPropertyRelative("materialPropertyName");//Let's get this eary to be able to use it in the element header.
+                    EditorGUILayout.PropertyField(channel, new GUIContent("Channel " + i + ": " + materialPropertyName.stringValue));
                     EditorGUI.indentLevel += 1;
                     if (channel.isExpanded)
                     {                     
-                        EditorGUILayout.PropertyField(channel.FindPropertyRelative("channelType"));
-                        EditorGUILayout.PropertyField(channel.FindPropertyRelative("textureFormat"));
+                        EditorGUILayout.PropertyField(channel.FindPropertyRelative("channelType"), new GUIContent("Channel Type", "The channel type. Affects the texture atlassing process."));
+                        EditorGUILayout.PropertyField(channel.FindPropertyRelative("textureFormat"), new GUIContent("Texture Format", "Format used for the texture in this channel."));
 
                         EditorGUILayout.BeginHorizontal();
 
-                        SerializedProperty materialPropertyName = channel.FindPropertyRelative("materialPropertyName");
-                        EditorGUILayout.PropertyField( materialPropertyName, GUILayout.MinWidth(300));
+                        EditorGUILayout.PropertyField( materialPropertyName, new GUIContent("Material Property Name", "The name of the property this texture corresponds to in the shader used by this material."), GUILayout.MinWidth(300));
                         if (_shaderProperties != null)
                         {
-                            int selection = EditorGUILayout.Popup(-1, _shaderProperties, GUILayout.MinWidth(100), GUILayout.MaxWidth(200));
-                            if (selection >= 0)
+                            int selection = EditorGUILayout.Popup(0, _shaderProperties, GUILayout.MinWidth(100), GUILayout.MaxWidth(200));
+                            if (selection > 0)
                                 materialPropertyName.stringValue = _shaderProperties[selection];
                                 
                         }
@@ -83,8 +81,7 @@ namespace UMA.Editors
                                 EditorGUILayout.HelpBox("This name is not found in the shader! Are you sure it is correct?", MessageType.Warning);
                         }
 
-
-                        EditorGUILayout.PropertyField(channel.FindPropertyRelative("sourceTextureName"));
+                        EditorGUILayout.PropertyField(channel.FindPropertyRelative("sourceTextureName"), new GUIContent("Source Texture Name", "For use with procedural materials, leave empty otherwise."));
                     }
                     EditorGUI.indentLevel -= 1;
                 }
@@ -99,6 +96,7 @@ namespace UMA.Editors
                 return null;
 
             List<string> texProperties = new List<string>();
+            texProperties.Add("Select");
             for (int i = 0; i < count; i++)
             {
                 if (ShaderUtil.GetPropertyType(shader, i) == ShaderUtil.ShaderPropertyType.TexEnv)
