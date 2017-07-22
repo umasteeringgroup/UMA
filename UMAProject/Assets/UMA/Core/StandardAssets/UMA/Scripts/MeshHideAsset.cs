@@ -1,14 +1,27 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using System;
 
 namespace UMA
 {
+    /// <summary>
+    /// This ScriptableObject class is used for advanced mesh hiding with UMA and the DCS.  
+    /// </summary>
+    /// <remarks>
+    /// This class simply stores a link to a SlotDataAsset (the slot to get hiding applied to) and a list of the slot's triangles as a BitArray.
+    /// Each bit indicates a flag of whether the triangle should be hidden or not in the final generated UMA.
+    /// After creating the MeshHideAsset, it can then be added to a list in a wardrobe recipes.  This makes it so when the wardrobe recipe is active and the slot associated
+    /// with the MeshHideAsset is found in the UMA recipe, then apply the triangle hiding to the slot.  MeshHideAsset's are also unioned, so multiple MeshHideAssets with
+    /// the same slotData can combine to hide their unioned list.
+    /// </remarks>
     public class MeshHideAsset : ScriptableObject, ISerializationCallbackReceiver
     {
+        /// <summary>
+        /// The asset we want to apply mesh hiding to if found in the generated UMA.
+        /// </summary>
+        /// <value>The SlotDataAsset.</value>
         [SerializeField]
-        public SlotDataAsset asset //The asset we want to apply mesh hiding to if found in the generated UMA;
+        public SlotDataAsset asset
         {
             get{ return _asset; }
             set{ _asset = value; Initialize(); }
@@ -16,8 +29,12 @@ namespace UMA
         [SerializeField, HideInInspector]
         private SlotDataAsset _asset;
 
+        /// <summary>
+        /// BitArray of the triangle flags list. The list is 1 to 1 for the triangles in the asset's triangle list.
+        /// </summary>
+        /// <value>The array of BitArrays. A BitArray for each submesh triangle list.</value>
         public BitArray[] triangleFlags { get { return _triangleFlags; }}
-        private BitArray[] _triangleFlags; //Flag of all triangles of whether this asset wants that triangle hidden or not.
+        private BitArray[] _triangleFlags; 
 
 
         [System.Serializable]
@@ -46,6 +63,10 @@ namespace UMA
             }
         }
 
+        /// <summary>
+        /// Gets the total triangle count in the multidimensional triangleFlags.
+        /// </summary>
+        /// <value>The triangle count.</value>
         public int TriangleCount 
         { 
             get 
@@ -63,6 +84,10 @@ namespace UMA
             }
         }   
 
+        /// <summary>
+        /// Gets the hidden triangles count.
+        /// </summary>
+        /// <value>The hidden triangles count.</value>
         public int HiddenCount
         {
             get
@@ -82,6 +107,9 @@ namespace UMA
             }
         }
 
+        /// <summary>
+        /// Custom serialization to write the BitArray to a boolean array.
+        /// </summary>
         public void OnBeforeSerialize()
         {
             if (_triangleFlags == null)
@@ -106,19 +134,17 @@ namespace UMA
                 Debug.LogError("Serializing triangle flags failed!");
         }
 
+        /// <summary>
+        /// Custom deserialization to write the boolean array to the BitArray.
+        /// </summary>
         public void OnAfterDeserialize()
         {
+            //We're not logging an error here because we'll get spammed by it for empty/not-set assets.
             if (_asset == null)
-            {
-                Debug.LogError('"' + this.name + '"' + " asset is null!");
                 return;
-            }
             
             if (_serializedFlags == null)
-            {
-                Debug.LogError("SerializedFlags is null!");
                 return;
-            }
 
             if (_serializedFlags.Length > 0)
             {
@@ -131,7 +157,7 @@ namespace UMA
         }
 
         /// <summary>
-        ///  Initialize this asset by creating a new boolean array
+        ///  Initialize this asset by creating a new boolean array that matches the triangle length in the asset triangle list.
         /// </summary>
         [ExecuteInEditMode]
         public void Initialize()
@@ -153,7 +179,7 @@ namespace UMA
         }
 
         /// <summary>
-        ///  Set a vertex by position and if found set it's boolean value
+        ///  Set the triangle flag's boolean value
         /// </summary>
         /// <param name="triangleIndex">The first index for the triangle to set.</param>
         /// <param name="flag">Bool to set the triangle flag to.</param>
@@ -175,8 +201,11 @@ namespace UMA
             }
         }
 
+        /// <summary>
+        /// Set the given BitArray to this object's triangleFlag's BitArray.
+        /// </summary>
+        /// <param name="selection">The BitArray selection.</param>
         [ExecuteInEditMode]
-        //public void SaveSelection( List<int> selection )
         public void SaveSelection( BitArray selection )
         {
             if (selection.Count != _triangleFlags[0].Count)
@@ -197,16 +226,26 @@ namespace UMA
             #endif
         }
 
+        /// <summary>
+        /// Generates a final BitArray mask from a list of MeshHideAssets.
+        /// </summary>
+        /// <returns>The BitArray array mask.</returns>
+        /// <param name="assets">List of MeshHideAssets.</param>
         public static BitArray[] GenerateMask( List<MeshHideAsset> assets )
         {
             List<BitArray[]> flags = new List<BitArray[]>();
             foreach (MeshHideAsset asset in assets)
                 flags.Add(asset.triangleFlags);
 
-            return CombineVertexFlags(flags);
+            return CombineTriangleFlags(flags);
         }
 
-        public static BitArray[] CombineVertexFlags( List<BitArray[]> flags)
+        /// <summary>
+        /// Combines the list of BitArray arrays.
+        /// </summary>
+        /// <returns>The final combined BitArray array.</returns>
+        /// <param name="flags">List of BitArray array flags.</param>
+        public static BitArray[] CombineTriangleFlags( List<BitArray[]> flags)
         {
             if (flags == null || flags.Count <= 0)
                 return null;
