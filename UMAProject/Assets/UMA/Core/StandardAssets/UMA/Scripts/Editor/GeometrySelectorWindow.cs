@@ -130,6 +130,9 @@ namespace UMA.Editors
         {
             if (_Source == null)
                 return;
+
+            if (Event.current.alt || Event.current.control)
+                return;
             
             Rect selectionRect = new Rect();
 
