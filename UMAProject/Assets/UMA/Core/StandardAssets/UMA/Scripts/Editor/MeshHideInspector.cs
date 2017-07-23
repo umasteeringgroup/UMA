@@ -141,10 +141,14 @@ namespace UMA.Editors
             for (int i = 0; i < sourceData.subMeshCount; i++)
             {
                 List<int> newTriangles = new List<int>();
-                for (int j = 0; j < sourceData.submeshes[i].triangles.Length; j++)
+                for (int j = 0; j < triangleFlags[i].Count; j++)
                 {
                     if (!triangleFlags[i][j])
-                        newTriangles.Add(sourceData.submeshes[i].triangles[j]);
+                    {
+                        newTriangles.Add(sourceData.submeshes[i].triangles[(j*3) + 0]);
+                        newTriangles.Add(sourceData.submeshes[i].triangles[(j*3) + 1]);
+                        newTriangles.Add(sourceData.submeshes[i].triangles[(j*3) + 2]);
+                    }
                 }
                 _meshData.submeshes[i] = new SubMeshTriangles();
                 _meshData.submeshes[i].triangles = new int[newTriangles.Count];
@@ -174,7 +178,6 @@ namespace UMA.Editors
                 geometry.meshAsset = source;
                 geometry.doneEditing += source.SaveSelection;
                 geometry.InitializeFromMeshData(source.asset.meshData);
-                //Selection.activeGameObject = obj;
 
                 //temporary, only works on submesh 0
                 geometry.selectedTriangles = new BitArray(source.triangleFlags[0]);

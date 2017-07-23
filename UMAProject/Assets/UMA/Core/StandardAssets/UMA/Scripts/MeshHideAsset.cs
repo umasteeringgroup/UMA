@@ -30,7 +30,7 @@ namespace UMA
         private SlotDataAsset _asset;
 
         /// <summary>
-        /// BitArray of the triangle flags list. The list is 1 to 1 for the triangles in the asset's triangle list.
+        /// BitArray of the triangle flags list. The list stores only the first index of the triangle vertex in the asset's triangle list.
         /// </summary>
         /// <value>The array of BitArrays. A BitArray for each submesh triangle list.</value>
         public BitArray[] triangleFlags { get { return _triangleFlags; }}
@@ -177,7 +177,7 @@ namespace UMA
             _triangleFlags = new BitArray[asset.meshData.subMeshCount];
             for (int i = 0; i < asset.meshData.subMeshCount; i++)
             {
-                _triangleFlags[i] = new BitArray(asset.meshData.submeshes[i].triangles.Length);
+                _triangleFlags[i] = new BitArray(asset.meshData.submeshes[i].triangles.Length / 3);
             }
         }
 
@@ -199,8 +199,6 @@ namespace UMA
             if (triangleIndex >= 0 && (_triangleFlags[submesh].Length - 3) > triangleIndex)
             {
                 _triangleFlags[submesh][triangleIndex] = flag;
-                _triangleFlags[submesh][triangleIndex+1] = flag;
-                _triangleFlags[submesh][triangleIndex+2] = flag;
             }
         }
 

@@ -57,31 +57,11 @@ namespace UMA.Editors
 			{
 				_Occluder = newOccluder;
 				if (_Occluder != null)
-				{
                     _Source.CreateOcclusionMesh(_Occluder.meshData);
-					/*Mesh occlusionMesh = new Mesh();
-					occlusionMesh.subMeshCount = _Occluder.meshData.subMeshCount;
-					occlusionMesh.vertices = _Occluder.meshData.vertices;
-					occlusionMesh.normals = _Occluder.meshData.normals;
-					occlusionMesh.tangents = _Occluder.meshData.tangents;
-					occlusionMesh.uv = _Occluder.meshData.uv;
-					occlusionMesh.uv2 = _Occluder.meshData.uv2;
-					occlusionMesh.uv3 = _Occluder.meshData.uv3;
-					occlusionMesh.uv4 = _Occluder.meshData.uv4;
-					occlusionMesh.colors32 = _Occluder.meshData.colors32;
-
-					occlusionMesh.triangles = new int[0];
-					for (int i = 0; i < _Occluder.meshData.subMeshCount; i++)
-						occlusionMesh.SetTriangles(_Occluder.meshData.submeshes[i].triangles, i);
-
-					_Source.occlusionMesh = occlusionMesh;*/
-				}
 				else
-				{
 					_Source.occlusionMesh = null;
-				}
 			}
-			//EditorGUI.BeginDisabledGroup(_Occluder == null);
+
             if (_Occluder != null)
             {
                 float previousOffset = EditorGUILayout.FloatField(new GUIContent("Occluder Offset", "Distance along the normal to offset each vertex of the occlusion mesh"), _occluderOffset);
@@ -96,7 +76,6 @@ namespace UMA.Editors
                     RaycastHide();
                 }
             }
-			//EditorGUI.EndDisabledGroup();
 
             GUILayout.Space(20);
             EditorGUILayout.LabelField("Visual Options");
@@ -224,18 +203,16 @@ namespace UMA.Editors
 				}
             }
 
+            //Single mouse click
             if (Event.current != null && Event.current.type == EventType.MouseDown && Event.current.button == 0)
             {
                 isSelecting = true;
                 startMousePos = Event.current.mousePosition;
 
-                int[] triangleHit = RayPick();
-                if (triangleHit != null)
+                int triangleHit = RayPick();
+                if (triangleHit >= 0)
                 {
-                    _Source.selectedTriangles[triangleHit[0]] = !_Source.selectedTriangles[triangleHit[0]];
-                    _Source.selectedTriangles[triangleHit[1]] = !_Source.selectedTriangles[triangleHit[1]];
-                    _Source.selectedTriangles[triangleHit[2]] = !_Source.selectedTriangles[triangleHit[2]];
-
+                    _Source.selectedTriangles[triangleHit] = !_Source.selectedTriangles[triangleHit];
                     _Source.UpdateSelectionMesh();
                 }
             }
@@ -271,7 +248,7 @@ namespace UMA.Editors
                             {
                                 if (backfaceCull)
                                 {
-                                    if (Vector3.Dot(normal, SceneView.currentDrawingSceneView.camera.transform.forward) < -0.5f)
+                                    if (Vector3.Dot(normal, SceneView.currentDrawingSceneView.camera.transform.forward) < -0.0f)
                                         found = true;
                                 }
                                 else
@@ -287,7 +264,7 @@ namespace UMA.Editors
                         {
                             if (backfaceCull)
                             {
-                                if (Vector3.Dot(centerNormal, SceneView.currentDrawingSceneView.camera.transform.forward) < -0.5f)
+                                if (Vector3.Dot(centerNormal, SceneView.currentDrawingSceneView.camera.transform.forward) < -0.0f)
                                     found = true;
                             }
                             else
@@ -295,11 +272,7 @@ namespace UMA.Editors
                         }
 
                         if (found)
-                        {
-                            _Source.selectedTriangles[i] = setSelectedOn;
-                            _Source.selectedTriangles[i+1] = setSelectedOn;
-                            _Source.selectedTriangles[i+2] = setSelectedOn;
-                        }
+                            _Source.selectedTriangles[(i / 3)] = setSelectedOn;
                     }
 
                     _Source.UpdateSelectionMesh();
@@ -312,29 +285,24 @@ namespace UMA.Editors
             }
         }
 
-        private int[] RayPick()
+        private int RayPick()
         {
             if (Camera.current == null)
             {
                 Debug.LogWarning("Camera is null!");
-                return null;
+                return -1;
             }
 
             Ray ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
             RaycastHit hit;
             if (!Physics.Raycast(ray, out hit))
-                return null;
+                return -1;
 
             MeshCollider meshCollider = hit.collider as MeshCollider;
             if (meshCollider == null || meshCollider.sharedMesh == null || meshCollider != _Source.meshCollider)
-                return null;
+                return -1;
 
-            int[] triangle = new int[3];
-            triangle[0] = hit.triangleIndex * 3 + 0;
-            triangle[1] = hit.triangleIndex * 3 + 1;
-            triangle[2] = hit.triangleIndex * 3 + 2;
-
-            return triangle;
+            return hit.triangleIndex;
         }
 
 		/// <summary>
@@ -461,9 +429,7 @@ namespace UMA.Editors
 						vertexOccluded[triVerts[j + 1]] &&
 						vertexOccluded[triVerts[j + 2]])
 					{
-						_Source.selectedTriangles[j + 0] = true;
-						_Source.selectedTriangles[j + 1] = true;
-						_Source.selectedTriangles[j + 2] = true;
+                        _Source.selectedTriangles[(j / 3)] = true;
 					}
 				}
 			}

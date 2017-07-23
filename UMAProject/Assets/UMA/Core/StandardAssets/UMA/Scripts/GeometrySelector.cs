@@ -11,7 +11,6 @@ namespace UMA
 
         public BitArray selectedTriangles;
 
-        //public MeshHideAsset HideAsset;
         public Mesh sharedMesh
         {
             get { return _sharedMesh; }
@@ -62,7 +61,7 @@ namespace UMA
             gameObject.transform.hideFlags = HideFlags.NotEditable | HideFlags.HideInInspector;
 
             if (selectedTriangles == null)
-                selectedTriangles = new BitArray(_sharedMesh.triangles.Length);
+                selectedTriangles = new BitArray(_sharedMesh.triangles.Length / 3);
                 
             if( !gameObject.GetComponent<MeshFilter>())
             {
@@ -160,16 +159,16 @@ namespace UMA
         public void UpdateSelectionMesh()
         {
             int selectedCount = UMAUtils.GetCardinality(selectedTriangles);
-            int[] newSelectedTriangles = new int[selectedCount];
+            int[] newSelectedTriangles = new int[selectedCount*3];
             int selectedIndex = 0;
 
-            for (int i = 0; i < selectedTriangles.Length; i+=3)
+            for (int i = 0; i < selectedTriangles.Length; i++)
             {                
                 if (selectedTriangles[i])
                 {
-                    newSelectedTriangles[selectedIndex + 0] = sharedMesh.triangles[i + 0];
-                    newSelectedTriangles[selectedIndex + 1] = sharedMesh.triangles[i + 1];
-                    newSelectedTriangles[selectedIndex + 2] = sharedMesh.triangles[i + 2];
+                    newSelectedTriangles[selectedIndex + 0] = sharedMesh.triangles[(i*3) + 0];
+                    newSelectedTriangles[selectedIndex + 1] = sharedMesh.triangles[(i*3) + 1];
+                    newSelectedTriangles[selectedIndex + 2] = sharedMesh.triangles[(i*3) + 2];
                     selectedIndex += 3;
                 }
             }
@@ -215,8 +214,6 @@ namespace UMA
                     selected = true;
 
                 selectedTriangles[i] = selected;
-                selectedTriangles[i+1] = selected;
-                selectedTriangles[i+2] = selected;
             }
 
             UpdateSelectionMesh();
