@@ -51,7 +51,7 @@ namespace UMA.Editors
         void OnGUI()
         {
 			GUILayout.Space(20);
-			EditorGUILayout.LabelField("Occlusion Slot (Optional)");
+            EditorGUILayout.LabelField(new GUIContent("Occlusion Slot (Optional)","Use this mesh to attempt to automatically detect occluded triangles"));
 			SlotDataAsset newOccluder = (SlotDataAsset) EditorGUILayout.ObjectField(_Occluder, typeof(SlotDataAsset), false);
 			if (newOccluder != _Occluder)
 			{
