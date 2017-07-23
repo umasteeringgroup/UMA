@@ -213,7 +213,7 @@ namespace UMA
                 if (tex.GetPixel(centerX, centerY).grayscale > 0.5f)
                     selected = true;
 
-                selectedTriangles[i] = selected;
+                selectedTriangles[(i/3)] = selected;
             }
 
             UpdateSelectionMesh();
