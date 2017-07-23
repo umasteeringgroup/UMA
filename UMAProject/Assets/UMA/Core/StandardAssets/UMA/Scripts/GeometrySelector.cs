@@ -25,6 +25,7 @@ namespace UMA
 			set { _occlusionMesh = value; }
 		}
 		private Mesh _occlusionMesh;
+        private UMAMeshData _meshData;
 
         public MeshRenderer meshRenderer
         {
@@ -221,11 +222,59 @@ namespace UMA
             UpdateSelectionMesh();
         }
 
+        public void CreateOcclusionMesh(UMAMeshData meshData)
+        {
+            if (meshData == null)
+                return;
+
+            _meshData = meshData;
+
+            if (_occlusionMesh == null)
+                _occlusionMesh = new Mesh();
+            else
+                _occlusionMesh.Clear();
+            
+            _occlusionMesh.subMeshCount = meshData.subMeshCount;
+            _occlusionMesh.vertices = meshData.vertices;
+            _occlusionMesh.normals = meshData.normals;
+            _occlusionMesh.tangents = meshData.tangents;
+            _occlusionMesh.uv = meshData.uv;
+            _occlusionMesh.uv2 = meshData.uv2;
+            _occlusionMesh.uv3 = meshData.uv3;
+            _occlusionMesh.uv4 = meshData.uv4;
+            _occlusionMesh.colors32 = meshData.colors32;
+
+            _occlusionMesh.triangles = new int[0];
+            for (int i = 0; i < meshData.subMeshCount; i++)
+                occlusionMesh.SetTriangles(meshData.submeshes[i].triangles, i);
+        }
+
+        public void UpdateOcclusionMesh(float offset = 0)
+        {
+            if (_occlusionMesh == null)
+                return;
+
+            if (_occlusionMesh.vertices == null || _occlusionMesh.normals == null)
+                return;
+
+            //Let's call CreateOcclusionMesh to reset it.
+            CreateOcclusionMesh(_meshData);
+
+            if (!Mathf.Approximately(offset,0)) //If offset is zero, we can early out because we already reset the mesh.
+            {
+                Vector3[] newVerts = new Vector3[_occlusionMesh.vertexCount];
+                for (int i = 0; i < _occlusionMesh.vertexCount; i++)
+                {
+                    newVerts[i] = _occlusionMesh.vertices[i] + (_occlusionMesh.normals[i].normalized * offset);
+                }
+                _occlusionMesh.vertices = newVerts;
+            }
+        }
+
         void OnDrawGizmos()
         {            
 			if (_occlusionMesh != null)
 			{
-				Gizmos.DrawWireMesh(_occlusionMesh, transform.position, transform.rotation);
 			}
         }
     }

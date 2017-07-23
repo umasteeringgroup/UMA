@@ -9,6 +9,7 @@ namespace UMA.Editors
 
         private GeometrySelector _Source;
 		private SlotDataAsset _Occluder = null;
+        private float _occluderOffset = 0;
         private bool doneEditing = false; //set to true to end editing this objects
         private bool showWireframe = true; //whether to switch to wireframe mode or not
         private bool backfaceCull = true; 
@@ -57,7 +58,8 @@ namespace UMA.Editors
 				_Occluder = newOccluder;
 				if (_Occluder != null)
 				{
-					Mesh occlusionMesh = new Mesh();
+                    _Source.CreateOcclusionMesh(_Occluder.meshData);
+					/*Mesh occlusionMesh = new Mesh();
 					occlusionMesh.subMeshCount = _Occluder.meshData.subMeshCount;
 					occlusionMesh.vertices = _Occluder.meshData.vertices;
 					occlusionMesh.normals = _Occluder.meshData.normals;
@@ -72,19 +74,29 @@ namespace UMA.Editors
 					for (int i = 0; i < _Occluder.meshData.subMeshCount; i++)
 						occlusionMesh.SetTriangles(_Occluder.meshData.submeshes[i].triangles, i);
 
-					_Source.occlusionMesh = occlusionMesh;
+					_Source.occlusionMesh = occlusionMesh;*/
 				}
 				else
 				{
 					_Source.occlusionMesh = null;
 				}
 			}
-			EditorGUI.BeginDisabledGroup(_Occluder == null);
-			if (GUILayout.Button("Raycast Hidden Faces"))
-			{
-				RaycastHide();
-			}
-			EditorGUI.EndDisabledGroup();
+			//EditorGUI.BeginDisabledGroup(_Occluder == null);
+            if (_Occluder != null)
+            {
+                float previousOffset = EditorGUILayout.FloatField(new GUIContent("Occluder Offset", "Distance along the normal to offset each vertex of the occlusion mesh"), _occluderOffset);
+                if (!Mathf.Approximately(previousOffset,_occluderOffset))
+                {
+                    _occluderOffset = previousOffset;
+                    _Source.UpdateOcclusionMesh(_occluderOffset);
+                }
+
+                if (GUILayout.Button(new GUIContent("Raycast Hidden Faces", "Warning! This will clear the current selection.")))
+                {
+                    RaycastHide();
+                }
+            }
+			//EditorGUI.EndDisabledGroup();
 
             GUILayout.Space(20);
             EditorGUILayout.LabelField("Visual Options");
