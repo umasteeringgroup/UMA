@@ -275,6 +275,7 @@ namespace UMA
         {            
 			if (_occlusionMesh != null)
 			{
+                Gizmos.DrawWireMesh(_occlusionMesh, transform.position, transform.rotation);
 			}
         }
     }

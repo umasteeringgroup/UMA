@@ -425,7 +425,9 @@ namespace UMA.Editors
 
 			BitArray vertexOccluded = new BitArray(targetVerts.Length);
 			for (int i = 0; i < targetVerts.Length; i++)
-			{
+            {
+                EditorUtility.DisplayProgressBar("Progress", "calculating...", ((float)i / (float)targetVerts.Length));
+                    
 				Ray testRay = new Ray(targetVerts[i], targetNorms[i]);
 				for (int j = 0; j < occlusionTriangles.Count; j++)
 				{
@@ -446,6 +448,7 @@ namespace UMA.Editors
 						continue;
 				}
 			}
+            EditorUtility.ClearProgressBar();
 
 			_Source.selectedTriangles.SetAll(false);
 
