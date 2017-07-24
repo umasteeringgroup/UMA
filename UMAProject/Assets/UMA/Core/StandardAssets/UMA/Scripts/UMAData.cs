@@ -227,10 +227,10 @@ namespace UMA
 
 #if UNITY_EDITOR
 			if (!valid && UnityEditor.EditorApplication.isPlaying)
-            {
-                Debug.LogError("UMAData: Recipe or Generator is not valid!");
-                UnityEditor.EditorApplication.isPaused = true;
-            }
+			{
+				Debug.LogError("UMAData: Recipe or Generator is not valid!");
+				UnityEditor.EditorApplication.isPaused = true;
+			}
 #endif
 
 			return valid;
