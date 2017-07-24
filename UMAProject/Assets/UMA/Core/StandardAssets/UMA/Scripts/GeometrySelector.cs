@@ -246,7 +246,7 @@ namespace UMA
                 occlusionMesh.SetTriangles(meshData.submeshes[i].triangles, i);
         }
 
-        public void UpdateOcclusionMesh(float offset = 0)
+        public void UpdateOcclusionMesh(float offset, Vector3 rot)
         {
             if (_occlusionMesh == null)
                 return;
@@ -256,16 +256,19 @@ namespace UMA
 
             //Let's call CreateOcclusionMesh to reset it.
             CreateOcclusionMesh(_meshData);
+            Quaternion rotation = new Quaternion();
+            rotation.eulerAngles = rot;
 
-            if (!Mathf.Approximately(offset,0)) //If offset is zero, we can early out because we already reset the mesh.
+            if (Mathf.Approximately(offset,0) && rot == Vector3.zero) //If offset is zero and rot is zero, we can early out because we already reset the mesh.
+                return;
+            
+            Vector3[] newVerts = new Vector3[_occlusionMesh.vertexCount];
+            for (int i = 0; i < _occlusionMesh.vertexCount; i++)
             {
-                Vector3[] newVerts = new Vector3[_occlusionMesh.vertexCount];
-                for (int i = 0; i < _occlusionMesh.vertexCount; i++)
-                {
-                    newVerts[i] = _occlusionMesh.vertices[i] + (_occlusionMesh.normals[i].normalized * offset);
-                }
-                _occlusionMesh.vertices = newVerts;
+                newVerts[i] = _occlusionMesh.vertices[i] + (_occlusionMesh.normals[i].normalized * offset);
+                newVerts[i] = rotation * (newVerts[i]); //we assume to always be at (0,0,0)
             }
+            _occlusionMesh.vertices = newVerts;
         }
 
         void OnDrawGizmos()

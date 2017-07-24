@@ -10,6 +10,7 @@ namespace UMA.Editors
         private GeometrySelector _Source;
 		private SlotDataAsset _Occluder = null;
         private float _occluderOffset = 0;
+        private Vector3 _occluderRotation = Vector3.zero;
         private bool doneEditing = false; //set to true to end editing this objects
         private bool showWireframe = true; //whether to switch to wireframe mode or not
         private bool backfaceCull = true; 
@@ -64,12 +65,23 @@ namespace UMA.Editors
 
             if (_Occluder != null)
             {
+                bool newOffset = false;
+                bool newRot = false;
                 float previousOffset = EditorGUILayout.FloatField(new GUIContent("Occluder Offset", "Distance along the normal to offset each vertex of the occlusion mesh"), _occluderOffset);
                 if (!Mathf.Approximately(previousOffset,_occluderOffset))
                 {
                     _occluderOffset = previousOffset;
-                    _Source.UpdateOcclusionMesh(_occluderOffset);
+                    newOffset = true;
                 }
+                Vector3 previousRot = EditorGUILayout.Vector3Field(new GUIContent("Rotation", "Offset the rotation (degrees) of the occluder"), _occluderRotation );
+                if (previousRot != _occluderRotation)
+                {
+                    _occluderRotation = previousRot;
+                    newRot = true;
+                }
+
+                if (newOffset || newRot)
+                    _Source.UpdateOcclusionMesh(_occluderOffset, _occluderRotation);
 
                 if (GUILayout.Button(new GUIContent("Raycast Hidden Faces", "Warning! This will clear the current selection.")))
                 {
@@ -306,7 +318,7 @@ namespace UMA.Editors
         }
 
 		/// <summary>
-		/// Checks if the specified ray hits the triagnlge descibed by p1, p2 and p3.
+		/// Checks if the specified ray hits the triangle descibed by p1, p2 and p3.
 		/// Möller–Trumbore ray-triangle intersection algorithm implementation.
 		/// Source from Unity Answers
 		/// </summary>
