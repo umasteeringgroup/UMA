@@ -35,8 +35,8 @@ namespace UMA.Examples
 
 		public void Update()
 		{
-if (umaData == null)
-umaData = gameObject.GetComponent<UMAData>();
+            if (umaData == null)
+                umaData = gameObject.GetComponent<UMAData>();
 
             if (umaData == null)
                 return;
@@ -88,8 +88,8 @@ umaData = gameObject.GetComponent<UMAData>();
 		{
 			bool changedSlots = false;
 
-if (umaData.umaRecipe.slotDataList == null)
-return false;
+            if (umaData.umaRecipe.slotDataList == null)
+                return false;
 
             for (int i = 0; i < umaData.umaRecipe.slotDataList.Length; i++)
 			{
