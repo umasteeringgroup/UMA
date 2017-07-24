@@ -35,11 +35,11 @@ namespace UMA.Examples
 
 		public void Update()
 		{
-if (umaData == null)
-umaData = gameObject.GetComponent<UMAData>();
+            if (umaData == null)
+                umaData = gameObject.GetComponent<UMAData>();
 
-if (umaData == null)
-return;
+            if (umaData == null)
+                return;
 
 			float cameraDistance = (transform.position - Camera.main.transform.position).magnitude;
 			float lodDistanceStep = lodDistance;
