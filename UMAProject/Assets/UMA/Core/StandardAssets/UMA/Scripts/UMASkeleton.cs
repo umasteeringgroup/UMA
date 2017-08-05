@@ -143,15 +143,15 @@ namespace UMA
 				umaTransform = new UMATransform(transform, hash, parentHash)
 			};
 
-            if (!boneHashData.ContainsKey(hash))
-            {
-                boneHashData.Add(hash, data);
+			if (!boneHashData.ContainsKey(hash))
+			{
+				boneHashData.Add(hash, data);
 #if UNITY_EDITOR
-                boneHashDataBackup.Add(data);
+				boneHashDataBackup.Add(data);
 #endif
-            }
-            else
-                Debug.LogError("AddBonesRecursive: " + transform.name + " already exists in the dictionary!");
+			}
+			else
+				Debug.LogError("AddBonesRecursive: " + transform.name + " already exists in the dictionary!");
 
 			for (int i = 0; i < transform.childCount; i++)
 			{
@@ -194,15 +194,15 @@ namespace UMA
 				umaTransform = new UMATransform(transform, hash, parentHash),
 			};
 
-            if (!boneHashData.ContainsKey(hash))
-            {
-                boneHashData.Add(hash, newBone);
+			if (!boneHashData.ContainsKey(hash))
+			{
+				boneHashData.Add(hash, newBone);
 #if UNITY_EDITOR
-                boneHashDataBackup.Add(newBone);
+				boneHashDataBackup.Add(newBone);
 #endif
-            }
-            else
-                Debug.LogError("AddBone: " + transform.name + " already exists in the dictionary!");
+			}
+			else
+				Debug.LogError("AddBone: " + transform.name + " already exists in the dictionary!");
 		}
 
 		/// <summary>
@@ -221,15 +221,15 @@ namespace UMA
 				umaTransform = transform.Duplicate(),
 			};
 
-            if (!boneHashData.ContainsKey(transform.hash))
-            {
-                boneHashData.Add(transform.hash, newBone);
+			if (!boneHashData.ContainsKey(transform.hash))
+			{
+				boneHashData.Add(transform.hash, newBone);
 #if UNITY_EDITOR
-                boneHashDataBackup.Add(newBone);
+				boneHashDataBackup.Add(newBone);
 #endif
-            }
-            else
-                Debug.LogError("AddBone: " + transform.name + " already exists in the dictionary!");
+			}
+			else
+				Debug.LogError("AddBone: " + transform.name + " already exists in the dictionary!");
 		}
 
 		/// <summary>
@@ -664,16 +664,16 @@ namespace UMA
 			{
 				if (entry.accessedFrame == -1)
 				{
-                    if (boneHashData.ContainsKey(entry.umaTransform.parent))
-                    {
-                        entry.boneTransform.parent = boneHashData[entry.umaTransform.parent].boneTransform;
-                        entry.boneTransform.localPosition = entry.umaTransform.position;
-                        entry.boneTransform.localRotation = entry.umaTransform.rotation;
-                        entry.boneTransform.localScale = entry.umaTransform.scale;
-                        entry.accessedFrame = frame;
-                    }
-                    else
-                        Debug.LogError("EnsureBoneHierarchy: " + entry.umaTransform.name + " parent not found in dictionary!");
+					if (boneHashData.ContainsKey(entry.umaTransform.parent))
+					{
+						entry.boneTransform.parent = boneHashData[entry.umaTransform.parent].boneTransform;
+						entry.boneTransform.localPosition = entry.umaTransform.position;
+						entry.boneTransform.localRotation = entry.umaTransform.rotation;
+						entry.boneTransform.localScale = entry.umaTransform.scale;
+						entry.accessedFrame = frame;
+					}
+					else
+						Debug.LogError("EnsureBoneHierarchy: " + entry.umaTransform.name + " parent not found in dictionary!");
 				}
 			}
 		}
