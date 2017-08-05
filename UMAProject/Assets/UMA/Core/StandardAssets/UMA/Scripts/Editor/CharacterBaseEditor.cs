@@ -661,9 +661,6 @@ namespace UMA.Editors
                     List<OverlayData> CurrentOverlays = sortedSlots[i].GetOverlays();
                     List<OverlayData> PreviousOverlays = sortedSlots[i-1].GetOverlays();
 
-                    int CurrentHash = CurrentOverlays.GetHashCode();
-                    int PreviousHash = PreviousOverlays.GetHashCode();
-
                     if (CurrentOverlays == PreviousOverlays)
                     {
                         sortedSlots[i].sharedOverlays = true;
