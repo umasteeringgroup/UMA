@@ -1713,6 +1713,24 @@ namespace UMA.Editors
 			return true;
 		}
 
+        public virtual void OnEnable()
+        {
+            _needsUpdate = false;
+            _forceUpdate = false;
+        }
+
+        public virtual void OnDisable()
+        {
+            if (_needsUpdate)
+            {
+                if (EditorUtility.DisplayDialog("Unsaved Changes", "Save changes made to the recipe?", "Save", "Discard"))
+                    DoUpdate();
+                
+                _needsUpdate = false;
+                _forceUpdate = false;
+            }                
+        }
+
 		/// <summary>
 		/// Override PreInspectorGUI in any derived editors to allow editing of new properties added to recipes.
 		/// </summary>
@@ -1781,7 +1799,10 @@ namespace UMA.Editors
 					Rebuild();
 				}
 
-				_needsUpdate = PreInspectorGUI();
+                if (PreInspectorGUI())
+                {
+                    _needsUpdate = true;
+                }
 
 				if (ToolbarGUI())
 				{
