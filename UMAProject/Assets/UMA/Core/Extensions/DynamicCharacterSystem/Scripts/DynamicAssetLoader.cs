@@ -477,7 +477,9 @@ namespace UMA.CharacterSystem
         /// <summary>
         /// Loads a list of asset bundles and their dependencies asynchroniously
         /// </summary>
-        /// <param name="assetBundlesToLoad"></param>
+        /// <param name="assetBundlesToLoad">List of Asset Bundles to load.</param>
+        /// <param name="loadingMsg"></param>
+        /// <param name="loadedMsg"></param>
         /// <returns></returns>
         protected IEnumerator LoadAssetBundlesAsync(List<string> assetBundlesToLoad, string loadingMsg = "", string loadedMsg = "")
         {
@@ -702,10 +704,14 @@ namespace UMA.CharacterSystem
 		/// Automatically performs the operation in SimulationMode if AssetBundleManager.SimulationMode is enabled or if the Application is not playing.
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
-		/// <param name="bundlesToSearch"></param>
+		/// <param name="assetBundlesUsedDict"></param>
+		/// <param name="assetsToReturn"></param>
+		/// <param name="downloadAssetsEnabled"></param>
+		/// <param name="bundlesToSearchArray"></param>
 		/// <param name="assetNameHash"></param>
 		/// <param name="assetName"></param>
 		/// <param name="callback"></param>
+		/// <param name="forceDownloadAll"></param>
 		public bool AddAssetsFromAssetBundles<T>(ref Dictionary<string, List<string>> assetBundlesUsedDict, ref List<T> assetsToReturn, bool downloadAssetsEnabled, string[] bundlesToSearchArray, int? assetNameHash = null, string assetName = "", Action<T[]> callback = null, bool forceDownloadAll = false) where T : UnityEngine.Object
         {
 #if UNITY_EDITOR
@@ -942,10 +948,13 @@ namespace UMA.CharacterSystem
         /// Simulates the loading of assets when AssetBundleManager is set to 'SimulationMode'
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="bundlesToSearch"></param>
+        /// <param name="assetBundlesUsedDict"></param>
+        /// <param name="assetsToReturn"></param>
+        /// <param name="bundlesToSearchArray"></param>
         /// <param name="assetNameHash"></param>
         /// <param name="assetName"></param>
         /// <param name="callback"></param>
+        /// <param name="forceDownloadAll"></param>
         bool SimulateAddAssetsFromAssetBundlesNew<T>(ref Dictionary<string, List<string>> assetBundlesUsedDict, ref List<T> assetsToReturn, string[] bundlesToSearchArray, int? assetNameHash = null, string assetName = "", Action<T[]> callback = null, bool forceDownloadAll = false) where T : UnityEngine.Object
         {
             var st = UMAAssetIndexer.StartTimer();
@@ -980,7 +989,7 @@ namespace UMA.CharacterSystem
                 assetBundleNamesArray = allAssetBundleNames;
             }
             bool assetFound = false;
-            ///a list of all the assets any assets we load depend on
+            //a list of all the assets any assets we load depend on
             List<string> dependencies = new List<string>();
             for (int i = 0; i < assetBundleNamesArray.Length; i++)
             {

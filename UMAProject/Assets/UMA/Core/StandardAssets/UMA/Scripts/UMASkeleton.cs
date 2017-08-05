@@ -429,6 +429,7 @@ namespace UMA
 		/// </summary>
 		/// <param name="nameHash">Name hash.</param>
 		/// <param name="rotation">Rotation.</param>
+		/// <param name="weight">Weight.</param>
 		public virtual void SetRotationRelative(int nameHash, Quaternion rotation, float weight /*, bool hasAnimator = true*/)
 		{
 			BoneData db;

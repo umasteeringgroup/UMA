@@ -129,6 +129,7 @@ namespace UMA
 		/// </summary>
 		public event Action<UMAData> OnCharacterDestroyed { add { if (CharacterDestroyed == null) CharacterDestroyed = new UMADataEvent(); CharacterDestroyed.AddListener(new UnityAction<UMAData>(value)); } remove { CharacterDestroyed.RemoveListener(new UnityAction<UMAData>(value)); } }
 
+		/// <summary>
 		/// Callback event when character DNA has been updated.
 		/// </summary>
 		public event Action<UMAData> OnCharacterDnaUpdated { add { if (CharacterDnaUpdated == null) CharacterDnaUpdated = new UMADataEvent(); CharacterDnaUpdated.AddListener(new UnityAction<UMAData>(value)); } remove { CharacterDnaUpdated.RemoveListener(new UnityAction<UMAData>(value)); } }
@@ -534,6 +535,7 @@ namespace UMA
 			/// </summary>
 			/// <returns>The DNA.</returns>
 			/// <param name="type">Type.</param>
+			/// <param name="dnaTypeHash">The DNAType's hash."</param>
 			public UMADnaBase GetOrCreateDna(Type type, int dnaTypeHash)
 			{
 				UMADnaBase dna;
@@ -770,6 +772,7 @@ namespace UMA
 			/// Applies each DNA converter to the UMA data and skeleton.
 			/// </summary>
 			/// <param name="umaData">UMA data.</param>
+			/// <param name="fixUpUMADnaToDynamicUMADna"></param>
 			public void ApplyDNA(UMAData umaData, bool fixUpUMADnaToDynamicUMADna = false)
 			{
 				EnsureAllDNAPresent();
@@ -1471,7 +1474,7 @@ namespace UMA
 		/// <summary>
 		/// Set the blendshape by it's name.
 		/// </summary>
-		/// <param name="name">Name of the blendshape.</param
+		/// <param name="name">Name of the blendshape.</param>
 		/// <param name="weight">Weight(float) to set this blendshape to.</param>
 		public void SetBlendShape(string name, float weight)
 		{

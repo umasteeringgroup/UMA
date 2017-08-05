@@ -39,7 +39,9 @@ namespace UMA.CharacterSystem
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="requiredAssetName"></param>
+		/// <param name="requiredAssetNameHash"></param>
 		/// <param name="containingBundle"></param>
+		/// <param name="callback"></param>
 		/// <returns></returns>
 		public T AddDownloadItem<T>(string requiredAssetName, int? requiredAssetNameHash, string containingBundle, Delegate callback = null) where T : UnityEngine.Object
 		{
@@ -151,7 +153,7 @@ namespace UMA.CharacterSystem
 		/// <summary>
 		/// Removes a list of downloadingAssetItems from the downloadingItems List.
 		/// </summary>
-		/// <param name="assetName"></param>
+		/// <param name="itemsToRemove"></param>
 		public IEnumerator RemoveDownload(List<DownloadingAssetItem> itemsToRemove)
 		{
 			//Not used any more UMAs check the status of stuff they asked for themselves
