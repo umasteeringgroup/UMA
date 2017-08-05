@@ -1793,12 +1793,7 @@ namespace UMA.Editors
 					_needsUpdate = true;
 				}
 
-                if (_AutomaticUpdates == false)
-                {
-                    _needsUpdate = false;
-                }
-
-                if (_needsUpdate || _forceUpdate)
+                if ((_AutomaticUpdates && _needsUpdate) || _forceUpdate)
 				{
 					DoUpdate();
                     _needsUpdate = false;
