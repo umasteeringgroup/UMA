@@ -654,16 +654,19 @@ namespace UMA.Editors
                 List<SlotEditor> sortedSlots = new List<SlotEditor>(_slotEditors);
                 sortedSlots.Sort(SlotEditor.comparer);
         
-				var overlays1 = sortedSlots[0].GetOverlays();
-				var overlays2 = sortedSlots[1].GetOverlays();
-				for (int i = 0; i < sortedSlots.Count - 2; i++)
-				{
-					if (overlays1 == overlays2)
+
+                // previous code didn't work when there were only two slots
+                for (int i=1;i<sortedSlots.Count;i++)
+                {
+                    List<OverlayData> CurrentOverlays = sortedSlots[i].GetOverlays();
+                    List<OverlayData> PreviousOverlays = sortedSlots[i-1].GetOverlays();
+
+                    if (CurrentOverlays == PreviousOverlays)
+                    {
                         sortedSlots[i].sharedOverlays = true;
-					overlays1 = overlays2;
-					overlays2 = sortedSlots[i + 2].GetOverlays();
-				}
-			}
+				    }
+			    }
+            }
 		}
         //DOS made this virtual so children can override
         public virtual bool OnGUI(string targetName, ref bool _dnaDirty, ref bool _textureDirty, ref bool _meshDirty)
@@ -1189,6 +1192,7 @@ namespace UMA.Editors
             #endif
 
 			BuildColorEditors();
+
 		}
 
 		private void BuildColorEditors()
@@ -1680,9 +1684,12 @@ namespace UMA.Editors
 		{
 		 "DNA", "Slots"
 	  };
+        public static bool _AutomaticUpdates = true;
+        protected Vector2 scrollPosition;
 		protected string _description;
 		protected string _errorMessage;
 		protected bool _needsUpdate;
+        protected bool _forceUpdate;
 		protected bool _dnaDirty;
 		protected bool _textureDirty;
 		protected bool _meshDirty;
@@ -1706,6 +1713,24 @@ namespace UMA.Editors
 			return true;
 		}
 
+        public virtual void OnEnable()
+        {
+            _needsUpdate = false;
+            _forceUpdate = false;
+        }
+
+        public virtual void OnDisable()
+        {
+            if (_needsUpdate)
+            {
+                if (EditorUtility.DisplayDialog("Unsaved Changes", "Save changes made to the recipe?", "Save", "Discard"))
+                    DoUpdate();
+                
+                _needsUpdate = false;
+                _forceUpdate = false;
+            }                
+        }
+
 		/// <summary>
 		/// Override PreInspectorGUI in any derived editors to allow editing of new properties added to recipes.
 		/// </summary>
@@ -1727,6 +1752,19 @@ namespace UMA.Editors
 		public override void OnInspectorGUI()
 		{
 			GUILayout.Label(_description);
+            _AutomaticUpdates = GUILayout.Toggle(_AutomaticUpdates, "Automatic Updates");
+            _forceUpdate = false;
+
+            if (!_AutomaticUpdates)
+            {
+                if(GUILayout.Button("Save Recipe"))
+                {
+                    _needsUpdate = true;
+                    _forceUpdate = true;
+                }
+            }
+
+            scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUIStyle.none);
 
 			if (_errorMessage != null)
 			{
@@ -1761,7 +1799,10 @@ namespace UMA.Editors
 					Rebuild();
 				}
 
-				_needsUpdate = PreInspectorGUI();
+                if (PreInspectorGUI())
+                {
+                    _needsUpdate = true;
+                }
 
 				if (ToolbarGUI())
 				{
@@ -1773,9 +1814,11 @@ namespace UMA.Editors
 					_needsUpdate = true;
 				}
 
-				if (_needsUpdate)
+                if ((_AutomaticUpdates && _needsUpdate) || _forceUpdate)
 				{
 					DoUpdate();
+                    _needsUpdate = false;
+                    _forceUpdate = false;
 				}
 			}
 			catch (UMAResourceNotFoundException e)
@@ -1788,6 +1831,7 @@ namespace UMA.Editors
 			}
 			//end the busted Recipe disabled group if we had it
 			EditorGUI.EndDisabledGroup();
+            GUILayout.EndScrollView();
 		}
 
 		protected abstract void DoUpdate();
