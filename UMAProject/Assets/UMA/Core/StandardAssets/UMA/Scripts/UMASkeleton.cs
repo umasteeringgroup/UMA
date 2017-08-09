@@ -660,7 +660,7 @@ namespace UMA
 
 		public virtual Quaternion GetTPoseCorrectedRotation(int nameHash, Quaternion tPoseRotation)
 		{
-			return tPoseRotation;
+			return boneHashData[nameHash].boneTransform.localRotation;
 		}
 	}
 }
