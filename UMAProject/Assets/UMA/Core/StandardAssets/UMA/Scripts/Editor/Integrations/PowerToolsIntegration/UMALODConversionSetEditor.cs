@@ -3,7 +3,7 @@ using UnityEditor;
 
 namespace UMA.Integrations.PowerTools
 {
-	[CustomEditor(typeof(UMALODConversionSet), isFallback = false)]
+	[CustomEditor(typeof(UMALODConversionSet), isFallback = true)]
 	public class UMALODConversionSetEditor : Editor
 	{
 		public override void OnInspectorGUI()
