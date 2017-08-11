@@ -482,32 +482,39 @@ namespace UMA
         /// <param name="ai"></param>
         private void AddAssetItem(AssetItem ai, bool SkipBundleCheck = false)
         {
-            System.Type theType = TypeToLookup[ai._Type];
-            Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(theType);
-            // Get out if we already have it.
-            if (TypeDic.ContainsKey(ai._Name))
+            try
             {
-                Debug.Log("Duplicate asset " + ai._Name + " was ignored.");
-                return;
-            }
-
-            if (ai._Name.ToLower().Contains((ai._Type.Name+"placeholder").ToLower()))
-            {
-                Debug.Log("Placeholder asset " + ai._Name + " was ignored. Placeholders are not indexed.");
-                return;
-            }
-#if UNITY_EDITOR
-            if (!SkipBundleCheck)
-            {
-                string Path = AssetDatabase.GetAssetPath(ai.Item.GetInstanceID());
-                if (InAssetBundle(Path))
+                System.Type theType = TypeToLookup[ai._Type];
+                Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(theType);
+                // Get out if we already have it.
+                if (TypeDic.ContainsKey(ai._Name))
                 {
-                    Debug.Log("Asset " + ai._Name + "is in Asset Bundle, and was not added to the index.");
+                    Debug.Log("Duplicate asset " + ai._Name + " was ignored.");
                     return;
                 }
-            }
+
+                if (ai._Name.ToLower().Contains((ai._Type.Name + "placeholder").ToLower()))
+                {
+                    Debug.Log("Placeholder asset " + ai._Name + " was ignored. Placeholders are not indexed.");
+                    return;
+                }
+#if UNITY_EDITOR
+                if (!SkipBundleCheck)
+                {
+                    string Path = AssetDatabase.GetAssetPath(ai.Item.GetInstanceID());
+                    if (InAssetBundle(Path))
+                    {
+                        Debug.Log("Asset " + ai._Name + "is in Asset Bundle, and was not added to the index.");
+                        return;
+                    }
+                }
 #endif
-            TypeDic.Add(ai._Name, ai);
+                TypeDic.Add(ai._Name, ai);
+            }
+            catch (System.Exception ex)
+            {
+                UnityEngine.Debug.LogWarning("Exception in UMAAssetIndexer.AddAssetItem: " + ex);
+            }
         }
 
 #if UNITY_EDITOR
