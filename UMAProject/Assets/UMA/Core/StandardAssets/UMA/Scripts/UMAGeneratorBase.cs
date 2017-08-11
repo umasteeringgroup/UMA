@@ -331,7 +331,7 @@ namespace UMA
 				{
 					skeletonbone.position = boneGO.transform.localPosition;
 					skeletonbone.scale = boneGO.transform.localScale;
-					skeletonbone.rotation = umaData.skeleton.GetTPoseCorrectedRotation(boneHash, boneGO.transform.localRotation);
+					skeletonbone.rotation = umaData.skeleton.GetTPoseCorrectedRotation(boneHash, skeletonbone.rotation);
 					newBones.Add(skeletonbone);
 				}
 			}
