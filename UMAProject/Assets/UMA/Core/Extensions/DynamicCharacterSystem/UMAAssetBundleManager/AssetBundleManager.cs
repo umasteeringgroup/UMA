@@ -187,12 +187,16 @@ namespace UMA.AssetBundles
 		{
 			if (Application.isEditor)
 				return "file://" + System.Environment.CurrentDirectory.Replace("\\", "/"); // Use the build output folder directly.
-			else if (Application.isWebPlayer)
+
+#if !UNITY_2017_2_OR_NEWER
+			if (Application.isWebPlayer)
 				return System.IO.Path.GetDirectoryName(Application.absoluteURL).Replace("\\", "/") + "/StreamingAssets";
-			else if (Application.isMobilePlatform || Application.isConsolePlatform)
+#endif
+			if (Application.isMobilePlatform || Application.isConsolePlatform)
 				return Application.streamingAssetsPath;
-			else // For standalone player.
-				return "file://" + Application.streamingAssetsPath;
+
+			// For standalone player.
+			return "file://" + Application.streamingAssetsPath;
 		}
 
 		/// <summary>
