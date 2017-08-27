@@ -225,6 +225,12 @@ namespace UMA
 				valid = valid && umaRecipe.Validate();
 			}
 
+			if (animationController == null)
+			{
+				if (Application.isPlaying)
+					Debug.LogWarning("No animation controller supplied.");
+			}
+
 #if UNITY_EDITOR
 			if (!valid && UnityEditor.EditorApplication.isPlaying)
 			{

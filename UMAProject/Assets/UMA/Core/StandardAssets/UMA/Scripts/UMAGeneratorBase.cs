@@ -182,8 +182,6 @@ namespace UMA
 					umaTransform.localRotation = originalRot;
 					umaTransform.localPosition = originalPos;
 				}
-				else
-					Debug.LogWarning("No animation controller supplied.");
 			}
 		}
 
