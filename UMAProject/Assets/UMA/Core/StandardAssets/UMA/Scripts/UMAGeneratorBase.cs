@@ -172,7 +172,7 @@ namespace UMA
 					{
 						AnimatorState snapshot = new AnimatorState();
 						snapshot.SaveAnimatorState(animator);
-						Object.Destroy(animator.avatar);
+						UMAUtils.DestroySceneObject(animator.avatar);
 						SetAvatar(umaData, animator);
 						if(animator.runtimeAnimatorController != null)
 							snapshot.RestoreAnimatorState(animator);

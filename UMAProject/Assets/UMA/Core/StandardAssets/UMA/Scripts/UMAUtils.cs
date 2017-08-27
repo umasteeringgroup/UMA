@@ -41,7 +41,22 @@ namespace UMA
             }
             return "";
         }
-		
+
+		public static void DestroySceneObject(UnityEngine.Object obj)
+		{
+#if UNITY_EDITOR
+			if (Application.isPlaying)
+			{
+				UnityEngine.Object.Destroy(obj);
+			}
+			else
+			{
+				UnityEngine.Object.DestroyImmediate(obj, false);
+			}
+#else
+			UnityEngine.Object.Destroy(obj);
+#endif
+		}
 	}
 
 	// Extension class for System.Collections.Generic.List<T> to get

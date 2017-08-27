@@ -120,7 +120,7 @@ namespace UMA.CharacterSystem
                     _instance.gameObjectsToActivate.Clear();
                     _instance.gameObjectsToActivate.AddRange(this.gameObjectsToActivate);
                     _instance.remoteServerIndexURL = this.remoteServerIndexURL;
-                    Destroy(this.gameObject);
+                    UMAUtils.DestroySceneObject(this.gameObject);
                     destroyingThis = true;
                 }
                 else
