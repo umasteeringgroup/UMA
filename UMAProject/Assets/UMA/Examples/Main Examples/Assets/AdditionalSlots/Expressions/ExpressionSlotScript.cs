@@ -46,7 +46,7 @@ namespace UMA.PoseTools
 			var expressionPlayer = umaData.GetComponent<UMAExpressionPlayer>();
 			if (expressionPlayer.SlotUpdateVsCharacterUpdate-- == 0)
 			{
-				Destroy(expressionPlayer);
+				UMAUtils.DestroySceneObject(expressionPlayer);
 				umaData.CharacterUpdated.RemoveListener(new UnityAction<UMAData>(umaData_OnCharacterUpdated));
 				return;
 			}

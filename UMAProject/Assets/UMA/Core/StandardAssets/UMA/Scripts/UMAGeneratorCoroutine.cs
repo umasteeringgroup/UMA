@@ -253,7 +253,7 @@ namespace UMA
 					{
 						if (atlasses[i].renderer == j)
 						{
-							UnityEngine.Object.Destroy(mats[materialIndex]);
+							UMAUtils.DestroySceneObject(mats[materialIndex]);
 							newMats[materialIndex] = atlasses[i].material;
 							materialIndex++;
 						}
@@ -279,12 +279,12 @@ namespace UMA
 					{
 						RenderTexture tempRenderTexture = tempTexture as RenderTexture;
 						tempRenderTexture.Release();
-						UnityEngine.Object.Destroy(tempRenderTexture);
+						UMAUtils.DestroySceneObject(tempRenderTexture);
 						tempRenderTexture = null;
 					}
 					else
 					{
-						UnityEngine.Object.Destroy(tempTexture);
+						UMAUtils.DestroySceneObject(tempTexture);
 					}
 					backUpTexture[textureIndex] = null;
 				}

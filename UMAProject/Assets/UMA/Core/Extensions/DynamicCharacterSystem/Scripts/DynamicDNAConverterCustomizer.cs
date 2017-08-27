@@ -331,8 +331,8 @@ namespace UMA.CharacterSystem
 				}
 			}
 
-			Destroy(tempAvatarPreDNA);
-			Destroy(tempAvatarPostDNA);
+			UMAUtils.DestroySceneObject(tempAvatarPreDNA);
+			UMAUtils.DestroySceneObject(tempAvatarPostDNA);
 
 			// This can be very helpful for testing
 			/*
