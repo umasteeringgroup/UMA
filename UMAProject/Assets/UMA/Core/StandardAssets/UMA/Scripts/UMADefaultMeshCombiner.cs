@@ -73,13 +73,21 @@ namespace UMA
 					{
 						for (int i = umaData.generatedMaterials.rendererCount; i < oldRenderers.Length; i++)
 						{
-                            Destroy(oldRenderers[i].gameObject);
-                            //For cloth, be aware of issue: 845868
-                            //https://issuetracker.unity3d.com/issues/cloth-repeatedly-destroying-objects-with-cloth-components-causes-a-crash-in-unity-cloth-updatenormals
+							Destroy(oldRenderers[i].gameObject);
+							//For cloth, be aware of issue: 845868
+							//https://issuetracker.unity3d.com/issues/cloth-repeatedly-destroying-objects-with-cloth-components-causes-a-crash-in-unity-cloth-updatenormals
 						}
 					}
 					umaData.SetRenderers(renderers);
 				}
+			}
+
+			//Clear out cloth components because they could be old or need to be reset with new constraint length
+			for (int i = 0; i < umaData.rendererCount; i++)
+			{
+				Cloth cloth = renderers[i].GetComponent<Cloth>();
+				if (cloth != null)
+					DestroyImmediate(cloth);
 			}
 		}
 
