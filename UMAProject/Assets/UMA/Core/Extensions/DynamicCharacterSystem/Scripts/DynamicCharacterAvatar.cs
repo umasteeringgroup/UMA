@@ -2664,7 +2664,7 @@ namespace UMA.CharacterSystem
 							SortedOverlays.Add(od);
 						}
 					}
-					sd.SetOverlayList(SortedOverlays);
+					sd.UpdateOverlayList(SortedOverlays);
 				}
 			} 
 
