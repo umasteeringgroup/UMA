@@ -550,6 +550,7 @@ namespace UMA
 				if (source.meshData.uv3 != null && source.meshData.uv3.Length != 0) meshComponents |= MeshComponents.has_uv3;
 				if (source.meshData.uv4 != null && source.meshData.uv4.Length != 0) meshComponents |= MeshComponents.has_uv4;
 				if (source.meshData.colors32 != null && source.meshData.colors32.Length != 0) meshComponents |= MeshComponents.has_colors32;
+				if (source.meshData.clothSkinningSerialized != null && source.meshData.clothSkinningSerialized.Length != 0)	meshComponents |= MeshComponents.has_clothSkinning;
 
 				//If we find a blendshape on this mesh then lets add it to the blendShapeNames hash to get all the unique names
 				if (source.meshData.blendShapes != null && source.meshData.blendShapes.Length != 0)
