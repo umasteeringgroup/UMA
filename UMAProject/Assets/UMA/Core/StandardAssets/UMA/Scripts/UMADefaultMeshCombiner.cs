@@ -87,7 +87,7 @@ namespace UMA
 			{
 				Cloth cloth = renderers[i].GetComponent<Cloth>();
 				if (cloth != null)
-					DestroyImmediate(cloth); //Crashes if trying to use Destroy()
+					DestroyImmediate(cloth,false); //Crashes if trying to use Destroy()
 			}
 		}
 
