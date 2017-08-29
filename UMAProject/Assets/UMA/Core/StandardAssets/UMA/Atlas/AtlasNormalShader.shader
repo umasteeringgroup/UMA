@@ -9,6 +9,7 @@ Properties {
 	_AdditiveColor ("Additive Color", Color) = (0,0,0,0)
 	_MainTex ("Normalmap", 2D) = "bump" {}
 	_ExtraTex ("mask", 2D) = "white" {}
+	_AlphaMask("Alpha Mask", Float) = 1
 }
 
 SubShader {
@@ -28,6 +29,7 @@ CGPROGRAM
 
 float4 _Color;
 float4 _AdditiveColor;
+float _AlphaMask;
 sampler2D _MainTex;
 sampler2D _ExtraTex;
 
@@ -48,8 +50,8 @@ v2f vert (appdata_base v)
 
 half4 frag (v2f i) : COLOR
 {
-    half4 maskcol = tex2D (_ExtraTex, i.uv);
-	float value = 1 - maskcol.a;
+	float mask = tex2D(_ExtraTex, i.uv).a * _AlphaMask;
+	float value = 1 - mask;
     return half4(value, value, value, value);
 }
 ENDCG
@@ -68,6 +70,7 @@ CGPROGRAM
 
 float4 _Color;
 float4 _AdditiveColor;
+float _AlphaMask;
 sampler2D _MainTex;
 sampler2D _ExtraTex;
 
@@ -89,8 +92,8 @@ v2f vert (appdata_base v)
 half4 frag (v2f i) : COLOR
 {
     half4 texcol = tex2D (_MainTex, i.uv) * _Color + _AdditiveColor;
-    half4 maskcol = tex2D (_ExtraTex, i.uv);
-    return texcol * maskcol.a;
+	float mask = tex2D(_ExtraTex, i.uv).a * _AlphaMask;
+	return texcol * mask;
 }
 ENDCG
 	}

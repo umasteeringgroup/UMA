@@ -74,23 +74,26 @@ namespace UMA
 		private void SetupMaterial(ref TextureMergeRect textureMergeRect, UMAData.MaterialFragment source, int textureType)
 		{
 			textureMergeRect.tex = source.baseOverlay.textureList[textureType];
-
+			var color = source.GetMultiplier(0, textureType);
 			switch (source.slotData.asset.material.channels[textureType].channelType)
 			{
 				case UMAMaterial.ChannelType.NormalMap:
 					textureMergeRect.mat.shader = normalShader;
+					textureMergeRect.mat.SetFloat("_AlphaMask", source.GetMultiplier(0, 0).a);
 					break;
 				case UMAMaterial.ChannelType.Texture:
 					textureMergeRect.mat.shader = dataShader;
+					textureMergeRect.mat.SetFloat("_AlphaMask", source.GetMultiplier(0, 0).a);
 					break;
 				case UMAMaterial.ChannelType.DiffuseTexture:
 					textureMergeRect.mat.shader = diffuseShader;
+					color.a = Mathf.Sqrt(color.a * source.GetMultiplier(0, 0).a);
 					break;
 			}
 			textureMergeRect.mat.SetTexture("_MainTex", source.baseOverlay.textureList[textureType]);
 			textureMergeRect.mat.SetTexture("_ExtraTex", source.baseOverlay.alphaTexture);
-			textureMergeRect.mat.SetColor("_Color", source.GetMultiplier(0, textureType));
 			textureMergeRect.mat.SetColor("_AdditiveColor", source.GetAdditive(0, textureType));
+			textureMergeRect.mat.SetColor("_Color", color);
 		}
 
 		public void SetupModule(UMAData.MaterialFragment source, int textureType)
@@ -146,21 +149,25 @@ namespace UMA
 			textureMergeRect.tex = source.overlays[i2].textureList[textureType];
 			if (source.overlays[i2].overlayType == OverlayDataAsset.OverlayType.Normal)
 			{
+				var color = source.GetMultiplier(i2 + 1, textureType);
 				switch (source.slotData.asset.material.channels[textureType].channelType)
 				{
 					case UMAMaterial.ChannelType.NormalMap:
 						textureMergeRect.mat.shader = normalShader;
+						textureMergeRect.mat.SetFloat("_AlphaMask", source.GetMultiplier(i2+1, 0).a);
 						break;
 					case UMAMaterial.ChannelType.Texture:
 						textureMergeRect.mat.shader = dataShader;
+						textureMergeRect.mat.SetFloat("_AlphaMask", source.GetMultiplier(0, 0).a);
 						break;
 					case UMAMaterial.ChannelType.DiffuseTexture:
 						textureMergeRect.mat.shader = diffuseShader;
+						color.a = Mathf.Sqrt(color.a * source.GetMultiplier(0, 0).a);
 						break;
 				}
 				textureMergeRect.mat.SetTexture("_MainTex", source.overlays[i2].textureList[textureType]);
 				textureMergeRect.mat.SetTexture("_ExtraTex", source.overlays[i2].alphaTexture);
-				textureMergeRect.mat.SetColor("_Color", source.GetMultiplier(i2 + 1, textureType));
+				textureMergeRect.mat.SetColor("_Color", color);
 				textureMergeRect.mat.SetColor("_AdditiveColor", source.GetAdditive(i2 + 1, textureType));
 			}
 			else
