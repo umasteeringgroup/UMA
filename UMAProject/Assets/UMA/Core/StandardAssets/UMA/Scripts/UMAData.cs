@@ -1059,7 +1059,7 @@ namespace UMA
 			dirty = true;
 			if (!umaGenerator)
 			{
-				umaGenerator = GameObject.Find("UMAGenerator").GetComponent<UMAGeneratorBase>();
+				umaGenerator = FindObjectOfType<UMAGeneratorBase>();
 			}
 			if (umaGenerator)
 			{
