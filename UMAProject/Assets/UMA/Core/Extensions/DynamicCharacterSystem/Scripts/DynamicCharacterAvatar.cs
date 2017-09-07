@@ -1858,7 +1858,7 @@ namespace UMA.CharacterSystem
 #endif
 				}
 				if (!saveAsAsset)
-					ScriptableObject.Destroy(asset);
+					UMAUtils.DestroySceneObject(asset);
 			}
 			if (ensureSharedColors)
 			{
@@ -2687,7 +2687,7 @@ namespace UMA.CharacterSystem
 				{
 					foreach (Transform child in gameObject.transform)
 					{
-						Destroy(child.gameObject);
+						UMAUtils.DestroySceneObject(child.gameObject);
 					}
 				}
 				UpdateNewRace();
@@ -2747,7 +2747,7 @@ namespace UMA.CharacterSystem
 
 			foreach (Transform child in gameObject.transform)
 			{
-				Destroy(child.gameObject);
+				UMAUtils.DestroySceneObject(child.gameObject);
 			}
 			ClearSlots();
 			umaRecipe = null;

@@ -40,7 +40,7 @@ namespace UMA.CharacterSystem
 	public void Initialize (DynamicCharacterAvatar Avatar) 
 		{
 
-		foreach(GameObject go in CreatedObjects) Destroy(go);
+		foreach(GameObject go in CreatedObjects) UMAUtils.DestroySceneObject(go);
 		CreatedObjects.Clear();
 
 			UMADnaBase[] DNA = Avatar.GetAllDNA();

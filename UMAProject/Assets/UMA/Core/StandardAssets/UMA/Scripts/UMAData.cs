@@ -226,6 +226,12 @@ namespace UMA
 				valid = valid && umaRecipe.Validate();
 			}
 
+			if (animationController == null)
+			{
+				if (Application.isPlaying)
+					Debug.LogWarning("No animation controller supplied.");
+			}
+
 #if UNITY_EDITOR
 			if (!valid && UnityEditor.EditorApplication.isPlaying)
 			{
@@ -1082,7 +1088,7 @@ namespace UMA
 				CleanTextures();
 				CleanMesh(true);
 				CleanAvatar();
-				Destroy(umaRoot);
+				UMAUtils.DestroySceneObject(umaRoot);
 			}
 		}
 
@@ -1094,8 +1100,8 @@ namespace UMA
 			animationController = null;
 			if (animator != null)
 			{
-				if (animator.avatar) GameObject.Destroy(animator.avatar);
-				if (animator) GameObject.Destroy(animator);
+				if (animator.avatar) UMAUtils.DestroySceneObject(animator.avatar);
+				if (animator) UMAUtils.DestroySceneObject(animator);
 			}
 		}
 
@@ -1117,12 +1123,11 @@ namespace UMA
 							{
 								RenderTexture tempRenderTexture = tempTexture as RenderTexture;
 								tempRenderTexture.Release();
-								Destroy(tempRenderTexture);
-								tempRenderTexture = null;
+								UMAUtils.DestroySceneObject(tempRenderTexture);
 							}
 							else
 							{
-								Destroy(tempTexture);
+								UMAUtils.DestroySceneObject(tempTexture);
 							}
 							generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex] = null;
 						}
@@ -1145,13 +1150,13 @@ namespace UMA
 				{
 					if (mats[i])
 					{
-						Destroy(mats[i]);
+						UMAUtils.DestroySceneObject(mats[i]);
 					}
 				}
 				if (destroyRenderer)
 				{
-					Destroy(renderer.sharedMesh);
-					Destroy(renderer);
+					UMAUtils.DestroySceneObject(renderer.sharedMesh);
+					UMAUtils.DestroySceneObject(renderer);
 				}
 			}
 		}

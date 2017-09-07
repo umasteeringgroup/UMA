@@ -174,8 +174,8 @@ namespace UMA.PoseTools
 			}
 			else
 			{
-				Destroy(tempAvatarPreDNA);
-				Destroy(tempAvatarPostDNA);
+				UMAUtils.DestroySceneObject(tempAvatarPreDNA);
+				UMAUtils.DestroySceneObject(tempAvatarPostDNA);
 
 				// Build a prefab DNA Converter and populate it with the morph set
 				string assetName = "Morph Set";

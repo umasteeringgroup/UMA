@@ -127,7 +127,7 @@ namespace UMA.Editors
                      asset.Save(avatar.umaData.umaRecipe, avatar.context);
                   }				
                   System.IO.File.WriteAllText(path, asset.recipeString);
-                  ScriptableObject.Destroy(asset);
+                  UMAUtils.DestroySceneObject(asset);
                }
             }
          }
@@ -200,7 +200,7 @@ namespace UMA.Editors
                      avatar.Load(asset);
                   }
                   
-                  Destroy(asset);
+                  UMAUtils.DestroySceneObject(asset);
                }
             }
          }
