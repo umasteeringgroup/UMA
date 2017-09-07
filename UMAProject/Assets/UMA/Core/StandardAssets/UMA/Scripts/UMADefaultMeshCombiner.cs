@@ -73,13 +73,21 @@ namespace UMA
 					{
 						for (int i = umaData.generatedMaterials.rendererCount; i < oldRenderers.Length; i++)
 						{
-                            Destroy(oldRenderers[i].gameObject);
-                            //For cloth, be aware of issue: 845868
-                            //https://issuetracker.unity3d.com/issues/cloth-repeatedly-destroying-objects-with-cloth-components-causes-a-crash-in-unity-cloth-updatenormals
+							UMAUtils.DestroySceneObject(oldRenderers[i].gameObject);
+							//For cloth, be aware of issue: 845868
+							//https://issuetracker.unity3d.com/issues/cloth-repeatedly-destroying-objects-with-cloth-components-causes-a-crash-in-unity-cloth-updatenormals
 						}
 					}
 					umaData.SetRenderers(renderers);
 				}
+			}
+
+			//Clear out old cloth components
+			for (int i = 0; i < umaData.rendererCount; i++)
+			{
+				Cloth cloth = renderers[i].GetComponent<Cloth>();
+				if (cloth != null)
+					DestroyImmediate(cloth,false); //Crashes if trying to use Destroy()
 			}
 		}
 
@@ -90,6 +98,7 @@ namespace UMA
 			newSMRGO.transform.localPosition = Vector3.zero;
 			newSMRGO.transform.localRotation = Quaternion.Euler(0, 0, 0f);
 			newSMRGO.transform.localScale = Vector3.one;
+			newSMRGO.gameObject.layer = umaData.gameObject.layer;
 
 			var newRenderer = newSMRGO.AddComponent<SkinnedMeshRenderer>();
 			newRenderer.enabled = false;
@@ -160,7 +169,7 @@ namespace UMA
 				}
 				else
 				{
-					Destroy(cloth);
+					UMAUtils.DestroySceneObject(cloth);
 				}
 
 				var materials = combinedMaterialList.ToArray();
