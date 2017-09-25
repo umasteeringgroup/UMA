@@ -72,6 +72,8 @@ namespace UMA.Editors
 
         public void OnEnable()
         {
+            base.OnEnable();
+
             if (!NeedsReenable())
                 return;
 
