@@ -100,7 +100,7 @@ namespace UMA.Editors
             GUILayout.EndHorizontal();
 
             GUILayout.Space(20);
-            EditorGUILayout.LabelField("Selection Options");
+            EditorGUILayout.LabelField("Selection Options (Drag to area select, hold shift to paint selection");
             GUILayout.BeginHorizontal();
             setSelectedOn = GUILayout.Toggle(setSelectedOn, new GUIContent("Unselect", "Toggle to apply unselected state to triangles highlighted"), "Button", GUILayout.MinHeight(50));
             setSelectedOn = GUILayout.Toggle(!setSelectedOn, new GUIContent("  Select  ", "Toggle to apply selected state to triangles highlighted"), "Button", GUILayout.MinHeight(50));
@@ -198,7 +198,19 @@ namespace UMA.Editors
                     selectionSize.y = Mathf.Abs(selectionSize.y);
                     correctedPos.y = startMousePos.y - selectionSize.y;
                 }
-                if (selectionSize.x > drawTolerance || selectionSize.y > drawTolerance)
+
+                if (Event.current.shift)
+                {
+                    startMousePos = Event.current.mousePosition;
+
+                    int triangleHit = RayPick();
+                    if (triangleHit >= 0)
+                    {
+                        _Source.selectedTriangles[triangleHit] = setSelectedOn;
+                        _Source.UpdateSelectionMesh();
+                    }
+                }
+                else if (selectionSize.x > drawTolerance || selectionSize.y > drawTolerance)
                 {
                     Handles.BeginGUI();
                     selectionRect = new Rect(correctedPos, selectionSize);
