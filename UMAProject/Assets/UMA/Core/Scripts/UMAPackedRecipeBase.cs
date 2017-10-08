@@ -963,12 +963,18 @@ namespace UMA
 								overlayData.EnsureChannels(overlayData.asset.material.channels.Length);
 						
                             #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
-
-							for (int dataIdx = 0; dataIdx < packedOverlay.data.Length; dataIdx++)
+							if(packedOverlay.data == null)
+								overlayData.proceduralData = new OverlayData.OverlayProceduralData[0];
+							else
 							{
-								OverlayData.OverlayProceduralData proceduralData = new OverlayData.OverlayProceduralData();
-								packedOverlay.data[dataIdx].SetOverlayProceduralData(proceduralData);
-								overlayData.proceduralData[dataIdx] = proceduralData;
+								overlayData.proceduralData = new OverlayData.OverlayProceduralData[packedOverlay.data.Length];
+
+    								for (int dataIdx = 0; dataIdx < packedOverlay.data.Length; dataIdx++)
+    								{
+	    								OverlayData.OverlayProceduralData proceduralData = new OverlayData.OverlayProceduralData();
+	    								packedOverlay.data[dataIdx].SetOverlayProceduralData(proceduralData);
+    									overlayData.proceduralData[dataIdx] = proceduralData;
+								}
 							}
                             #endif
 
