@@ -2,6 +2,12 @@
 using System.Collections;
 using UMA;
 
+
+// TODO
+// Make a list of objects to mount per bone
+// Add function to mount and hide other objects per bone or all
+// Add events/callbacks
+
 public class UMAMountObject : MonoBehaviour 
 {
     public GameObject objPrefab;
