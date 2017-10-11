@@ -204,6 +204,9 @@ namespace UMA.Editors
 
             if (geometry != null)
             {
+                Selection.activeGameObject = obj;
+                SceneView.lastActiveSceneView.FrameSelected(true);
+                //float frameSize 
                 GeometrySelectorWindow.Init(geometry,currentscenes);
 
                 geometry.meshAsset = source;
