@@ -1,11 +1,20 @@
 ﻿using UnityEngine;
 using UnityEditor;
+using UnityEngine.SceneManagement;
+using UnityEditor.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
 
 namespace UMA.Editors
 {
     public class GeometrySelectorWindow : EditorWindow {
+
+        public struct SceneInfo
+        {
+            public string path;
+            public string name;
+            public OpenSceneMode mode;
+        }
 
         private GeometrySelector _Source;
 		private SlotDataAsset _Occluder = null;
@@ -21,9 +30,11 @@ namespace UMA.Editors
 
         private const float drawTolerance = 10.0f; //in pixels
         private Color selectionColor = new Color(0.8f, 0.8f, 0.95f, 0.15f);
+        private static List<SceneInfo> restoreScenes;
 
-        public static void Init(GeometrySelector source)
+        public static void Init(GeometrySelector source, List<SceneInfo> savedScenes)
         {
+            restoreScenes = savedScenes;
             GeometrySelectorWindow window = (GeometrySelectorWindow)EditorWindow.GetWindow(typeof(GeometrySelectorWindow));
             window._Source = source;
             window.minSize = new Vector2(200, 400);
@@ -47,6 +58,13 @@ namespace UMA.Editors
             EditorApplication.update -= GeometryUpdate;
             SceneView.onSceneGUIDelegate -= OnSceneGUI;
             DestroySceneEditObject();
+            if (restoreScenes != null)
+            {
+                foreach (SceneInfo s in restoreScenes)
+                {
+                        EditorSceneManager.OpenScene(s.path, s.mode);
+                }
+            }
         }
 
         void OnGUI()

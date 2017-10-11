@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using UnityEditor;
+using UnityEngine.SceneManagement;
+using UnityEditor.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -80,8 +82,10 @@ namespace UMA.Editors
             EditorGUI.BeginDisabledGroup(source.asset == null);
             if (GUILayout.Button("Begin Editing", GUILayout.MinHeight(50)))
             {
-                if( source.asset != null )
+                if (source.asset != null)
+                {
                     CreateSceneEditObject();
+                }
             }
             EditorGUI.EndDisabledGroup();
 
@@ -167,13 +171,40 @@ namespace UMA.Editors
                 Debug.LogError("A GeometrySelector Object already exists! Finish editing that one first.");
                 return;
             }
+            if (!EditorSceneManager.SaveOpenScenes())
+                return;
+
+
+            List<GeometrySelectorWindow.SceneInfo> currentscenes = new List<GeometrySelectorWindow.SceneInfo>();
+
+            for (int i = 0; i < EditorSceneManager.sceneCount; i++)
+            {
+                Scene sc = EditorSceneManager.GetSceneAt(i);
+                GeometrySelectorWindow.SceneInfo si = new GeometrySelectorWindow.SceneInfo();
+                si.path = sc.path;
+                si.name = sc.name;
+                if (i == 0)
+                {
+                    // first scene should clear the temp scene.
+                    si.mode = OpenSceneMode.Single;
+                }
+                else
+                {
+                    si.mode = sc.isLoaded ? OpenSceneMode.Additive : OpenSceneMode.AdditiveWithoutLoading;
+                }
+                currentscenes.Add(si);
+            }
+
+            Scene s = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
+            EditorSceneManager.SetActiveScene(s);
 
             GameObject obj = EditorUtility.CreateGameObjectWithHideFlags("GeometrySelector", HideFlags.DontSaveInEditor); 
             GeometrySelector geometry = obj.AddComponent<GeometrySelector>();
+            
 
             if (geometry != null)
             {
-                GeometrySelectorWindow.Init(geometry);
+                GeometrySelectorWindow.Init(geometry,currentscenes);
 
                 geometry.meshAsset = source;
                 geometry.doneEditing += source.SaveSelection;
