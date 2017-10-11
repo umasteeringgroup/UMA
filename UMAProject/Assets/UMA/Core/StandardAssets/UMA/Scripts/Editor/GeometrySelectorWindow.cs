@@ -206,8 +206,12 @@ namespace UMA.Editors
                     int triangleHit = RayPick();
                     if (triangleHit >= 0)
                     {
-                        _Source.selectedTriangles[triangleHit] = setSelectedOn;
-                        _Source.UpdateSelectionMesh();
+                        if (_Source.selectedTriangles[triangleHit] != setSelectedOn)
+                        {
+                            // avoid constant rebuild.
+                            _Source.selectedTriangles[triangleHit] = setSelectedOn;
+                            _Source.UpdateSelectionMesh();
+                        }
                     }
                 }
                 else if (selectionSize.x > drawTolerance || selectionSize.y > drawTolerance)

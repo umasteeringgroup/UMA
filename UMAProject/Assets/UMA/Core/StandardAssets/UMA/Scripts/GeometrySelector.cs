@@ -162,13 +162,15 @@ namespace UMA
             int[] newSelectedTriangles = new int[selectedCount*3];
             int selectedIndex = 0;
 
+            int[] tris = sharedMesh.triangles;
+
             for (int i = 0; i < selectedTriangles.Length; i++)
             {                
                 if (selectedTriangles[i])
                 {
-                    newSelectedTriangles[selectedIndex + 0] = sharedMesh.triangles[(i*3) + 0];
-                    newSelectedTriangles[selectedIndex + 1] = sharedMesh.triangles[(i*3) + 1];
-                    newSelectedTriangles[selectedIndex + 2] = sharedMesh.triangles[(i*3) + 2];
+                    newSelectedTriangles[selectedIndex + 0] = tris[(i*3) + 0];
+                    newSelectedTriangles[selectedIndex + 1] = tris[(i*3) + 1];
+                    newSelectedTriangles[selectedIndex + 2] = tris[(i*3) + 2];
                     selectedIndex += 3;
                 }
             }
