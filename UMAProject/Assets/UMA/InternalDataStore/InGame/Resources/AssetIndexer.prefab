@@ -795,6 +795,13 @@ MonoBehaviour:
     _Guid: 5ab9cab67c9728b42a2ef6bd5f13cf4f
     IsResource: 0
     IsAssetBundle: 0
+  - _BaseTypeName: SlotDataAsset
+    _Name: ColorDnaSlot
+    _SerializedItem: {fileID: 11400000, guid: a5093a7304baade43931919ab087d94c, type: 2}
+    _Path: Assets/UMA/Examples/Extensions Examples/ColorDNA/ColorDnaSlot.asset
+    _Guid: a5093a7304baade43931919ab087d94c
+    IsResource: 0
+    IsAssetBundle: 0
   - _BaseTypeName: OverlayDataAsset
     _Name: FemaleLongHair_Overlay
     _SerializedItem: {fileID: 11400000, guid: 304fc44cf9ff5ad428e4802e082702c5, type: 2}
@@ -1511,6 +1518,13 @@ MonoBehaviour:
     _SerializedItem: {fileID: 11400000, guid: e06be47adf242924c9fff2c65c65ad5c, type: 2}
     _Path: Assets/UMA/Examples/Physics Examples/Assets/Overlays/ClothRobeSimulatedOverlay.asset
     _Guid: e06be47adf242924c9fff2c65c65ad5c
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: OverlayDataAsset
+    _Name: MuscularityOverlay
+    _SerializedItem: {fileID: 11400000, guid: a1aaef22314ee6748a3a3549fdd31469, type: 2}
+    _Path: Assets/UMA/Examples/Extensions Examples/ColorDNA/MuscularityOverlay.asset
+    _Guid: a1aaef22314ee6748a3a3549fdd31469
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: RaceData
@@ -2656,6 +2670,13 @@ MonoBehaviour:
     _SerializedItem: {fileID: 11400000, guid: be7c02d6f94052348a3fc382a4ff26dc, type: 2}
     _Path: Assets/UMA/Examples/Physics Examples/Assets/Recipe/ClothRobeRecipe.asset
     _Guid: be7c02d6f94052348a3fc382a4ff26dc
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: UMAWardrobeRecipe
+    _Name: ColorDNARecipe
+    _SerializedItem: {fileID: 11400000, guid: 4e587f04b1113be4da76ca3d1c225528, type: 2}
+    _Path: Assets/ColorDNA/ColorDNARecipe.asset
+    _Guid: 4e587f04b1113be4da76ca3d1c225528
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: RuntimeAnimatorController
