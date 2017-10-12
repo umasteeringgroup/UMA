@@ -44,6 +44,7 @@ namespace UMA.Editors
         {
             serializedObject.Update();
             MeshHideAsset source = target as MeshHideAsset;
+            bool beginSceneEditing = false;
 
             //DrawDefaultInspector();
             var obj = EditorGUILayout.ObjectField("SlotDataAsset", source.asset, typeof(SlotDataAsset), false);
@@ -83,13 +84,14 @@ namespace UMA.Editors
             if (GUILayout.Button("Begin Editing", GUILayout.MinHeight(50)))
             {
                 if (source.asset != null)
-                {
-                    CreateSceneEditObject();
-                }
+                    beginSceneEditing = true;
             }
             EditorGUI.EndDisabledGroup();
 
             serializedObject.ApplyModifiedProperties();
+
+            if(beginSceneEditing)
+                CreateSceneEditObject();
         }
 
         private void UpdateMeshPreview()
