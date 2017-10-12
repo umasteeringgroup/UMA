@@ -11,87 +11,81 @@ Properties {
 	_ExtraTex ("mask", 2D) = "white" {}
 }
 
-SubShader {
+SubShader 
+{
 	Tags {"Queue"="Transparent" "IgnoreProjector"="True" "RenderType"="Transparent"}
 
-	Pass 
-	{	
-		Tags { "LightMode" = "Vertex" }
-    	Fog { Mode Off }
-		Blend Zero SrcAlpha
-		Lighting Off
-CGPROGRAM
-#pragma vertex vert
-#pragma fragment frag
-
-#include "UnityCG.cginc"
-
-float4 _Color;
-float4 _AdditiveColor;
-sampler2D _MainTex;
-sampler2D _ExtraTex;
-
-struct v2f {
-    float4  pos : SV_POSITION;
-    float2  uv : TEXCOORD0;
-};
-
-float4 _MainTex_ST;
-
-v2f vert (appdata_base v)
-{
-    v2f o;
-    o.pos = mul (UNITY_MATRIX_MVP, v.vertex);
-    o.uv = TRANSFORM_TEX (v.texcoord, _MainTex);
-    return o;
-}
-
-half4 frag (v2f i) : COLOR
-{
-    half4 maskcol = tex2D (_ExtraTex, i.uv);
-	float value = 1 - maskcol.a;
-    return half4(value, value, value, value);
-}
-ENDCG
-	}
+	GrabPass {}
 	Pass 
 	{
 		Tags { "LightMode" = "Vertex" }
    		Fog { Mode Off }
-		Blend One One
+		Blend off
 		Lighting Off
-CGPROGRAM
-#pragma vertex vert
-#pragma fragment frag
+		CGPROGRAM
+		#pragma vertex vert
+		#pragma fragment frag
 
-#include "UnityCG.cginc"
+		#include "UnityCG.cginc"
+		#include "UnityStandardUtils.cginc"
 
-float4 _Color;
-float4 _AdditiveColor;
-sampler2D _MainTex;
-sampler2D _ExtraTex;
+		float4 _Color;
+		float4 _AdditiveColor;
+		sampler2D _MainTex;
+		sampler2D _ExtraTex;
+		sampler2D _GrabTexture;
 
-struct v2f {
-    float4  pos : SV_POSITION;
-    float2  uv : TEXCOORD0;
-};
+		struct v2f {
+		    float4  pos : SV_POSITION;
+		    float2  uv : TEXCOORD0;
+		    float4  grabuv : TEXCOORD1;
+		};
 
-float4 _MainTex_ST;
+		float4 _MainTex_ST;
 
-v2f vert (appdata_base v)
-{
-    v2f o;
-    o.pos = mul (UNITY_MATRIX_MVP, v.vertex);
-    o.uv = TRANSFORM_TEX (v.texcoord, _MainTex);
-    return o;
-}
+		//http://blog.selfshadow.com/publications/blending-in-detail/
 
-half4 frag (v2f i) : COLOR
-{
-    half4 texcol = tex2D (_MainTex, i.uv) * _Color + _AdditiveColor;
-    half4 maskcol = tex2D (_ExtraTex, i.uv);
-    return texcol * maskcol.a;
-}
+		float3 linearBlend(float3 n1, float3 n2)
+		{
+			return normalize(lerp(n2, n1, _Color.a));
+		}
+
+		float3 pdBlend(float3 n1, float3 n2)
+		{
+			float2 p1 = (n1.xy/n1.z);
+			float2 p2 = (n2.xy/n2.z);
+
+			float2 pd = lerp(n2, n1, _Color.a);
+
+			return normalize(float3(pd,1));
+		}
+
+		v2f vert (appdata_base v)
+		{
+		    v2f o;
+		    o.pos = mul (UNITY_MATRIX_MVP, v.vertex);
+		    o.uv = TRANSFORM_TEX (v.texcoord, _MainTex);
+		    o.grabuv = ComputeGrabScreenPos(o.pos);
+		    return o;
+		}
+
+		half4 frag (v2f i) : COLOR
+		{
+			float3 n1 = UnpackNormal(tex2D(_MainTex, i.uv));
+			float3 n2 = UnpackNormal(tex2D(_GrabTexture, i.grabuv));
+
+			//Add alpha check early out?
+
+			//float3 r = linearBlend(n1,n2);
+			float3 r = pdBlend(n1, n2);
+
+			//Bring normal back into packed range.
+			r = r * 0.5 + 0.5;
+
+			//G and A are the important ones. 
+			//Setting green to red and blue just so it looks greyscale in the inspector.
+			return half4(r.y,r.y,r.y,r.x); 
+		}
 ENDCG
 	}
 }
