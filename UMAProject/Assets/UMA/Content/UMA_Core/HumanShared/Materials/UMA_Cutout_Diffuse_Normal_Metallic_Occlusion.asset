@@ -9,9 +9,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ac718b8ce852d1445b8fbe5c323134ac, type: 3}
-  m_Name: UMA_Diffuse_Normal_Specular
+  m_Name: UMA_Cutout_Diffuse_Normal_Metallic_Occlusion
   m_EditorClassIdentifier: 
-  material: {fileID: 2100000, guid: cd1ed1024fad50b4f82637b57f787dd1, type: 2}
+  material: {fileID: 2100000, guid: 54eb6bad3b11e4d4b8c8879e354fdf76, type: 2}
   materialType: 1
   channels:
   - channelType: 4
@@ -24,7 +24,11 @@ MonoBehaviour:
     sourceTextureName: 
   - channelType: 0
     textureFormat: 0
-    materialPropertyName: _SpecGlossMap
+    materialPropertyName: _MetallicGlossMap
+    sourceTextureName: 
+  - channelType: 0
+    textureFormat: 0
+    materialPropertyName: _OcclusionMap
     sourceTextureName: 
   clothProperties: {fileID: 0}
   RequireSeperateRenderer: 0
