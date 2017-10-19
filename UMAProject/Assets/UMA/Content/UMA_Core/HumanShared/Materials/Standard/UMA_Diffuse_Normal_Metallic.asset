@@ -17,9 +17,14 @@ MonoBehaviour:
   - channelType: 4
     textureFormat: 0
     materialPropertyName: _MainTex
+    sourceTextureName: 
   - channelType: 1
     textureFormat: 0
     materialPropertyName: _BumpMap
+    sourceTextureName: 
   - channelType: 0
     textureFormat: 0
     materialPropertyName: _MetallicGlossMap
+    sourceTextureName: 
+  clothProperties: {fileID: 0}
+  RequireSeperateRenderer: 0

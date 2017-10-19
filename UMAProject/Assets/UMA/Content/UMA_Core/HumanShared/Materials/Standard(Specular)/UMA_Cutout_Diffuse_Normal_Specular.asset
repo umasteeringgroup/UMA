@@ -9,9 +9,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ac718b8ce852d1445b8fbe5c323134ac, type: 3}
-  m_Name: UMA_Hair_Std
+  m_Name: UMA_Cutout_Diffuse_Normal_Specular
   m_EditorClassIdentifier: 
-  material: {fileID: 2100000, guid: 9ae673dab7af9db43afeb2f193929cd2, type: 2}
+  material: {fileID: 2100000, guid: 1cb41221da2bd204888180929437dd2e, type: 2}
   materialType: 1
   channels:
   - channelType: 4
@@ -24,7 +24,7 @@ MonoBehaviour:
     sourceTextureName: 
   - channelType: 0
     textureFormat: 0
-    materialPropertyName: _MetallicGlossMap
+    materialPropertyName: _SpecGlossMap
     sourceTextureName: 
   clothProperties: {fileID: 0}
   RequireSeperateRenderer: 0
