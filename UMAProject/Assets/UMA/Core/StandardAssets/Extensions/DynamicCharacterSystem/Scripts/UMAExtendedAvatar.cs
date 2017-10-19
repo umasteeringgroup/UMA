@@ -33,7 +33,6 @@ namespace UMA.CharacterSystem
 				if(!previewMesh || lastPreviewModel != previewModel) LoadMesh();
 				
 				mat.color = previewColor;
-				if(!Application.isPlaying)
 				{
 					
 					mat.SetPass(0);
@@ -47,8 +46,7 @@ namespace UMA.CharacterSystem
 		{
 			string modelPath = "HumanMale/FBX/Male_Unified.fbx";
 			if(previewModel == PreviewModel.Female) modelPath = "HumanFemale/FBX/Female_Unified.fbx";
-			GameObject model = UnityEditor.AssetDatabase.LoadAssetAtPath("Assets/UMA/Content/UMA/" + modelPath, typeof(GameObject)) as GameObject;
-			previewMesh = model.GetComponentInChildren<SkinnedMeshRenderer>().sharedMesh;
+			GameObject model = UnityEditor.AssetDatabase.LoadAssetAtPath("Assets/UMA/Content/UMA_Core/" + modelPath, typeof(GameObject)) as GameObject;
 		}
 	#endif
 	}
