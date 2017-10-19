@@ -1764,7 +1764,7 @@ namespace UMA.Editors
                 }
             }
 
-            scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUIStyle.none);
+            scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUIStyle.none, GUILayout.MinHeight(600));
 
 			if (_errorMessage != null)
 			{
