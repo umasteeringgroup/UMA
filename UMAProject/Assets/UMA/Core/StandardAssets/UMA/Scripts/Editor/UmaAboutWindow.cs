@@ -20,7 +20,6 @@ namespace UMA
         private Rect _BannerRect = new Rect(0,0,200,53);
 
         private Texture _IconTexture;
-        private Rect _IconRect = new Rect(0, 0, 32, 32);
 
         private bool initialized = false;
 
@@ -44,7 +43,7 @@ namespace UMA
             Rect centered = _BannerRect;
             centered.center = new Vector2(size.x *0.5f, _BannerRect.yMax*0.5f);
             GUI.DrawTexture(centered, _BannerTexture);
-            GUILayout.Space(80);
+            GUILayout.Space(60);
 
             GUILayout.BeginHorizontal();
             EditorGUILayout.LabelField(string.Format("Version: {0}", umaVersion), centeredStyle);
