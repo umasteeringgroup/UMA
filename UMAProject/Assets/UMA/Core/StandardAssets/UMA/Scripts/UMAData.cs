@@ -186,7 +186,7 @@ namespace UMA
 		{
 			//umaRoot = gameObject;
 			//animator = umaRoot.GetComponent<Animator>();
-            animator = gameObject.GetComponent<Animator>();
+			animator = gameObject.GetComponent<Animator>();
 		}
 
 #pragma warning disable 618
