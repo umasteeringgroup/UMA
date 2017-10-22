@@ -28,3 +28,7 @@ EditorBuildSettings:
     path: Assets/UMA/Examples/Main Examples/Scenes/UMA Core Demo - Networking Menu.unity
   - enabled: 1
     path: Assets/UMA/Examples/Main Examples/Scenes/UMA Core Demo - Networking Game.unity
+  - enabled: 1
+    path: Assets/UMA/Examples/Extensions Examples/DcsNetworkExample/Scene/DcsNetwork-Offline.unity
+  - enabled: 1
+    path: Assets/UMA/Examples/Extensions Examples/DcsNetworkExample/Scene/DcsNetwork-Online.unity
