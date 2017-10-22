@@ -291,7 +291,7 @@ MonoBehaviour:
     loadDefaultRecipes: 1
     recipes: []
   raceAnimationControllers:
-    defaultAnimationController: {fileID: 9100000, guid: e2cf68ff4b1ffda45a77f7307dd789b9,
+    defaultAnimationController: {fileID: 9100000, guid: 7195a97ce1aa87b4d872d1fbcf267921,
       type: 2}
     animators:
     - raceName: ToonFemale
