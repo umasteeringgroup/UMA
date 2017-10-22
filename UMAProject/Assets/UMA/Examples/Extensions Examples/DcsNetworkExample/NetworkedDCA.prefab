@@ -345,26 +345,13 @@ MonoBehaviour:
       _color: {r: 0.9632353, g: 0.82158303, b: 0.82158303, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
       valuesConverted: 0
-    - name: Pants1
-      channelMask:
-      - {r: 0.3529412, g: 0.4156863, b: 0.6392157, a: 1}
-      - {r: 1, g: 1, b: 1, a: 1}
-      - {r: 1, g: 1, b: 1, a: 1}
-      channelAdditiveMask:
-      - {r: 0, g: 0, b: 0, a: 0}
-      - {r: 0, g: 0, b: 0, a: 0}
-      - {r: 0, g: 0, b: 0, a: 0}
-      _name: 
-      _color: {r: 0.3529412, g: 0.4156863, b: 0.6392157, a: 1}
-      _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
-      valuesConverted: 0
   loadPathType: 2
   loadPath: CharacterRecipes
   loadFilename: 
   loadString: 
   loadFileOnStart: 1
   waitForBundles: 1
-  defaultLoadOptions: 31
+  defaultLoadOptions: 7
   savePathType: 0
   savePath: CharacterRecipes
   saveFilename: 

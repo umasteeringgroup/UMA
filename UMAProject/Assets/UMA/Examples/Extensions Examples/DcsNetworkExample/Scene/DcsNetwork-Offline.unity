@@ -139,7 +139,7 @@ MonoBehaviour:
   m_LogLevel: 2
   m_PlayerPrefab: {fileID: 171948, guid: 541fd5b43dfbb1348a45467fdafac911, type: 2}
   m_AutoCreatePlayer: 1
-  m_PlayerSpawnMethod: 0
+  m_PlayerSpawnMethod: 1
   m_OfflineScene: DcsNetwork-Offline
   m_OnlineScene: DcsNetwork-Online
   m_SpawnPrefabs:

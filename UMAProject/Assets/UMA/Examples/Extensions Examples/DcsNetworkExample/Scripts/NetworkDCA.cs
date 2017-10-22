@@ -216,8 +216,28 @@ namespace UMA.CharacterSystem
                 _avatar.context = UMAContext.FindInstance();
 
                 _avatar.ChangeRace(reader.ReadString());
-                _avatar.SetColor("Skin", reader.ReadColor());
-                _avatar.SetColor("Hair", reader.ReadColor());
+
+
+                //TODO there is a problem with the character color for the initialState
+                Color skinColor = reader.ReadColor();
+                //_avatar.SetColor("Skin", reader.ReadColor());
+                _avatar.SetColor("Skin", skinColor);
+                //Debug.Log("Skin color: " + skinColor);
+
+                Color hairColor = reader.ReadColor();
+                //_avatar.SetColor("Hair", reader.ReadColor());
+                //_avatar.SetColor("Hair", hairColor);
+                _avatar.characterColors.SetColor("Hair",hairColor);
+                //Debug.Log("Hair color: " + hairColor);
+
+                _avatar.UpdateColors();
+
+                /*foreach (DynamicCharacterAvatar.ColorValue color in _avatar.characterColors.Colors)
+                {
+                    Debug.Log(color.Name + " " + color.Color);
+                }*/
+
+
                 ReadWardrobe("Hair", reader.ReadString());
                 ReadWardrobe("Helmet", reader.ReadString());
                 ReadWardrobe("Chest", reader.ReadString());
@@ -225,8 +245,12 @@ namespace UMA.CharacterSystem
                 ReadWardrobe("Legs", reader.ReadString());
                 ReadWardrobe("Feet", reader.ReadString());
                 ReadWardrobe("Underwear", reader.ReadString());
+
+                _avatar.BuildCharacter();
+                _avatar.ForceUpdate(false, true, true);
                 return;
             }
+
             int bitmask = (int)reader.ReadPackedUInt32();
             if ((bitmask & RaceMask) != 0)
                 _avatar.ChangeRace(reader.ReadString());
@@ -356,9 +380,8 @@ namespace UMA.CharacterSystem
                 return;
             
             _avatar.SetColor("Skin", newColor);
+            _avatar.UpdateColors(true);
             SetDirtyBit(SkinColorMask);
-            _avatar.BuildCharacter();
-            _avatar.ForceUpdate(false, true, false);
         }
 
         [Command]
@@ -368,9 +391,8 @@ namespace UMA.CharacterSystem
                 return;
 
             _avatar.SetColor("Hair", newColor);
+            _avatar.UpdateColors(true);
             SetDirtyBit(HairColorMask);
-            _avatar.BuildCharacter();
-            _avatar.ForceUpdate(false, true, false);
         }
         //====================================================================
         //  UMAData Callbacks
