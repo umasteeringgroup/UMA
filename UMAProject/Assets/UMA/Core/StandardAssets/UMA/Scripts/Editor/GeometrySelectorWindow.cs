@@ -81,6 +81,7 @@ namespace UMA.Editors
 					_Source.occlusionMesh = null;
 			}
 
+
             if (_Occluder != null)
             {
                 bool newOffset = false;
@@ -116,6 +117,7 @@ namespace UMA.Editors
 
             backfaceCull = GUILayout.Toggle(backfaceCull, new GUIContent("  Backface Cull  ", "Toggle whether to select back faces"), "Button", GUILayout.MinHeight(50));
             GUILayout.EndHorizontal();
+
 
             GUILayout.Space(20);
             EditorGUILayout.LabelField("Selection Options (Drag to area select, hold shift to paint selection");

@@ -93,8 +93,11 @@ namespace UMA.Editors
             GUILayout.Label("if there are any unsaved changes.");
             serializedObject.ApplyModifiedProperties();
 
-            if(beginSceneEditing)
-                CreateSceneEditObject();
+            if (beginSceneEditing)
+            {
+                // This has to happen outside the inspector
+                EditorApplication.delayCall += CreateSceneEditObject;
+            }
         }
 
         private void UpdateMeshPreview()
@@ -223,7 +226,7 @@ namespace UMA.Editors
 
                 geometry.UpdateSelectionMesh();
                 SceneView.FrameLastActiveSceneView();
-                SceneView.lastActiveSceneView.FrameSelected();
+                SceneView.lastActiveSceneView.FrameSelected(); 
             }
         }
 
