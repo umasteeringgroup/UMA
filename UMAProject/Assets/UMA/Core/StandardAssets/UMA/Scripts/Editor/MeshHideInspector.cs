@@ -44,6 +44,7 @@ namespace UMA.Editors
         {
             serializedObject.Update();
             MeshHideAsset source = target as MeshHideAsset;
+            bool beginSceneEditing = false;
 
             //DrawDefaultInspector();
             var obj = EditorGUILayout.ObjectField("SlotDataAsset", source.asset, typeof(SlotDataAsset), false);
@@ -83,9 +84,7 @@ namespace UMA.Editors
             if (GUILayout.Button("Begin Editing", GUILayout.MinHeight(50)))
             {
                 if (source.asset != null)
-                {
-                    CreateSceneEditObject();
-                }
+                    beginSceneEditing = true;
             }
             EditorGUI.EndDisabledGroup();
             GUILayout.Space(20);
@@ -93,6 +92,9 @@ namespace UMA.Editors
             GUILayout.Label("You will be prompted to save the scene");
             GUILayout.Label("if there are any unsaved changes.");
             serializedObject.ApplyModifiedProperties();
+
+            if(beginSceneEditing)
+                CreateSceneEditObject();
         }
 
         private void UpdateMeshPreview()
@@ -111,7 +113,10 @@ namespace UMA.Editors
 
             _meshPreview.Clear();
             _meshPreview.vertices = _meshData.vertices;
-            _meshPreview.SetTriangles(_meshData.submeshes[0].triangles, 0); //temp for only first submesh
+            _meshPreview.subMeshCount = _meshData.subMeshCount;
+
+            for(int i = 0; i < _meshData.subMeshCount; i++)
+                _meshPreview.SetTriangles(_meshData.submeshes[i].triangles, i);
 
             ResetPreviewCamera();
         }
