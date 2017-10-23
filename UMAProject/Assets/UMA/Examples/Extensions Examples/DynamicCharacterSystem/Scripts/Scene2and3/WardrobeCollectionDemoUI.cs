@@ -83,7 +83,7 @@ namespace UMA.CharacterSystem.Examples
 						if (thisUWC.wardrobeCollection[thisCustomizer.Avatar.activeRace.name].Count > 0)
 						{
 							thisCustomizer.Avatar.SetSlot(thisUWC);
-							thisCustomizer.Avatar.BuildCharacter();
+							thisCustomizer.Avatar.BuildCharacter(true);
 						}
 					}
 				}

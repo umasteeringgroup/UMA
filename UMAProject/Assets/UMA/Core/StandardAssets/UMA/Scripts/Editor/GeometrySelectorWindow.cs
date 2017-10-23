@@ -69,7 +69,7 @@ namespace UMA.Editors
 
         void OnGUI()
         {
-			GUILayout.Space(20);
+            GUILayout.Space(20);
             EditorGUILayout.LabelField(new GUIContent("Occlusion Slot (Optional)","Use this mesh to attempt to automatically detect occluded triangles"));
 			SlotDataAsset newOccluder = (SlotDataAsset) EditorGUILayout.ObjectField(_Occluder, typeof(SlotDataAsset), false);
 			if (newOccluder != _Occluder)
@@ -188,6 +188,11 @@ namespace UMA.Editors
 
         void OnSceneGUI(SceneView sceneView)
         {
+            Handles.BeginGUI();
+            GUILayout.Label("Return to original scene by closing the Geometry Selector Window");
+            GUILayout.Label("Or by pressing \"Done Editing\"");
+            Handles.EndGUI();
+
             if (_Source == null)
                 return;
 			

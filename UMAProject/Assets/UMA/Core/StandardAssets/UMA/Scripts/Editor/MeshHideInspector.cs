@@ -88,7 +88,10 @@ namespace UMA.Editors
                 }
             }
             EditorGUI.EndDisabledGroup();
-
+            GUILayout.Space(20);
+            GUILayout.Label("Editing will be done in an empty scene.");
+            GUILayout.Label("You will be prompted to save the scene");
+            GUILayout.Label("if there are any unsaved changes.");
             serializedObject.ApplyModifiedProperties();
         }
 
@@ -168,7 +171,7 @@ namespace UMA.Editors
 
             if (GeometrySelectorExists())
             {
-                Debug.LogError("A GeometrySelector Object already exists! Finish editing that one first.");
+                UnityEditor.Selection.activeGameObject = GameObject.Find("GeometrySelector").gameObject;
                 return;
             }
             if (!EditorSceneManager.SaveOpenScenes())
@@ -197,16 +200,13 @@ namespace UMA.Editors
 
             Scene s = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
             EditorSceneManager.SetActiveScene(s);
-
             GameObject obj = EditorUtility.CreateGameObjectWithHideFlags("GeometrySelector", HideFlags.DontSaveInEditor); 
             GeometrySelector geometry = obj.AddComponent<GeometrySelector>();
-            
 
             if (geometry != null)
             {
                 Selection.activeGameObject = obj;
-                SceneView.lastActiveSceneView.FrameSelected(true);
-                //float frameSize 
+                SceneView.lastActiveSceneView.FrameSelected(true); 
                 GeometrySelectorWindow.Init(geometry,currentscenes);
 
                 geometry.meshAsset = source;
@@ -217,9 +217,12 @@ namespace UMA.Editors
                 geometry.selectedTriangles = new BitArray(source.triangleFlags[0]);
 
                 geometry.UpdateSelectionMesh();
+                SceneView.FrameLastActiveSceneView();
+                SceneView.lastActiveSceneView.FrameSelected();
             }
         }
 
+ 
         private bool GeometrySelectorExists()
         {
             if (GameObject.Find("GeometrySelector") != null)
