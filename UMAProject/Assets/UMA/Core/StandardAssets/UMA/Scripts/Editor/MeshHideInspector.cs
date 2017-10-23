@@ -110,7 +110,10 @@ namespace UMA.Editors
 
             _meshPreview.Clear();
             _meshPreview.vertices = _meshData.vertices;
-            _meshPreview.SetTriangles(_meshData.submeshes[0].triangles, 0); //temp for only first submesh
+            _meshPreview.subMeshCount = _meshData.subMeshCount;
+
+            for(int i = 0; i < _meshData.subMeshCount; i++)
+                _meshPreview.SetTriangles(_meshData.submeshes[i].triangles, i);
 
             ResetPreviewCamera();
         }

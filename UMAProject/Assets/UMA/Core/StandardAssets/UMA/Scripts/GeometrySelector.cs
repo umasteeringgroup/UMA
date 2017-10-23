@@ -127,7 +127,6 @@ namespace UMA
             _sharedMesh.uv4 = meshData.uv4;
             _sharedMesh.colors32 = meshData.colors32;
 
-            _sharedMesh.triangles = new int[0];
             for (int i = 0; i < meshData.subMeshCount; i++)
                 _sharedMesh.SetTriangles(meshData.submeshes[i].triangles, i);
 
