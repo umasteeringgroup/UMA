@@ -32,10 +32,16 @@ namespace UMA.Editors
         private Color selectionColor = new Color(0.8f, 0.8f, 0.95f, 0.15f);
         private static List<SceneInfo> restoreScenes;
 
+        public static GeometrySelectorWindow Instance { get; private set; }
+        public static bool IsOpen
+        {
+            get { return Instance != null; }
+        }
+
         public static void Init(GeometrySelector source, List<SceneInfo> savedScenes)
         {
             restoreScenes = savedScenes;
-            GeometrySelectorWindow window = (GeometrySelectorWindow)EditorWindow.GetWindow(typeof(GeometrySelectorWindow));
+            GeometrySelectorWindow window = (GeometrySelectorWindow)EditorWindow.GetWindow(typeof(GeometrySelectorWindow),false, "Geometry Selector",true);
             window._Source = source;
             window.minSize = new Vector2(200, 400);
             window.Show();
@@ -43,6 +49,7 @@ namespace UMA.Editors
 
         void OnEnable()
         {
+            Instance = this;
             EditorApplication.update += GeometryUpdate;
             SceneView.onSceneGUIDelegate += OnSceneGUI;
             UpdateShadingMode(showWireframe);
@@ -55,6 +62,7 @@ namespace UMA.Editors
 
         private void Cleanup()
         {
+            Instance = null;
             EditorApplication.update -= GeometryUpdate;
             SceneView.onSceneGUIDelegate -= OnSceneGUI;
             DestroySceneEditObject();
