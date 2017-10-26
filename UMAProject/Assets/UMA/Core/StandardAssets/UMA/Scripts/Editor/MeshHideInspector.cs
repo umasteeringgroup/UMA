@@ -193,6 +193,8 @@ namespace UMA.Editors
 
         private void CreateSceneEditObject()
         {
+
+
             MeshHideAsset source = target as MeshHideAsset;
             if (source.asset == null)
                 return;
@@ -210,6 +212,15 @@ namespace UMA.Editors
             if (!EditorSceneManager.SaveOpenScenes())
                 return;
 
+            SceneView sceneView = SceneView.lastActiveSceneView;
+
+            if (sceneView == null)
+            {
+                EditorUtility.DisplayDialog("Error", "A Scene View must be open and active", "OK");
+                return;
+            }
+
+            SceneView.lastActiveSceneView.Focus();
 
             List<GeometrySelectorWindow.SceneInfo> currentscenes = new List<GeometrySelectorWindow.SceneInfo>();
 
@@ -243,7 +254,7 @@ namespace UMA.Editors
                 GeometrySelectorWindow.Init(geometry,currentscenes);
 
                 geometry.meshAsset = source;
-                geometry.doneEditing += source.SaveSelection;
+                geometry.doneEditing += GeometrySelectorWindow.Instance.SaveSelection; //source.SaveSelection;
                 geometry.InitializeFromMeshData(source.asset.meshData);
 
                 //temporary, only works on submesh 0

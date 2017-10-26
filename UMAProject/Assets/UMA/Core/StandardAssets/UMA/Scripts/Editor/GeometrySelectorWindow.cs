@@ -25,6 +25,7 @@ namespace UMA.Editors
         private bool backfaceCull = true; 
         private bool isSelecting = false; //is the user actively selecting
         private bool setSelectedOn = true; //whether to set the triangles to selected or unselection when using selection box
+        private bool cancelSave = false; // Set this to true to cancel save;
         private Vector2 startMousePos;
         private Texture2D textureMap;
 
@@ -43,7 +44,7 @@ namespace UMA.Editors
             restoreScenes = savedScenes;
             GeometrySelectorWindow window = (GeometrySelectorWindow)EditorWindow.GetWindow(typeof(GeometrySelectorWindow),false, "Geometry Selector",true);
             window._Source = source;
-            window.minSize = new Vector2(200, 400);
+            window.minSize = new Vector2(200, 200);
             window.Show();
         }
 
@@ -126,7 +127,7 @@ namespace UMA.Editors
             backfaceCull = GUILayout.Toggle(backfaceCull, new GUIContent("  Backface Cull  ", "Toggle whether to select back faces"), "Button", GUILayout.MinHeight(50));
             GUILayout.EndHorizontal();
 
-
+            /*
             GUILayout.Space(20);
             EditorGUILayout.LabelField("Selection Options (Drag to area select, hold shift to paint selection");
             GUILayout.BeginHorizontal();
@@ -146,6 +147,7 @@ namespace UMA.Editors
                 SelectAll();
             }
             GUILayout.EndHorizontal();
+            */
 
             GUILayout.Space(20);
             textureMap = EditorGUILayout.ObjectField("Set From Texture Map", textureMap, typeof(Texture2D), false) as Texture2D;                
@@ -155,11 +157,13 @@ namespace UMA.Editors
                     _Source.UpdateFromTexture(textureMap);                
             }
 
+            /*
             GUILayout.Space(20);
             if (GUILayout.Button(new GUIContent("Done Editing", "Save the changes and apply them to the MeshHideAsset"), GUILayout.MinHeight(50)))
             {
                 doneEditing = true;
             }
+            */
         }
 
         private void UpdateShadingMode(bool wireframeOn)
@@ -196,11 +200,70 @@ namespace UMA.Editors
                 Close();
         }
 
+        private Rect toolbarRect = new Rect(0,0,0,20);
+        private Rect labelRect = new Rect(5, 0, 50, 20);
+        private Rect focusbtnRect = new Rect(55, 0, 90, 20);
+        private Rect clearbtnRect = new Rect(145, 0, 100, 20);
+        private Rect selectallbtnRect = new Rect(245, 0, 100, 20);
+        private Rect selectbtnRect = new Rect(345, 0, 140, 20);
+        private Rect savebtnRect = new Rect(485,0,110,20);
+        private Rect cancelbtnRect = new Rect(595, 0, 110, 20);
+
+        private void SetupToolbar(float sceneWidth)
+        {
+            toolbarRect.width = sceneWidth;
+        }
+        private string SelectionString(bool selectionMode)
+        {
+            return selectionMode ? "Selection Mode: Add" : "Selection Mode: Remove";
+        }
+
+        public void SaveSelection(BitArray selection)
+        {
+            if (cancelSave)
+                return;
+            _Source.meshAsset.SaveSelection(selection);
+        }
+        
         void OnSceneGUI(SceneView sceneView)
         {
+            SetupToolbar(sceneView.position.width);
             Handles.BeginGUI();
-            GUILayout.Label("Return to original scene by closing the Geometry Selector Window");
-            GUILayout.Label("Or by pressing \"Done Editing\"");
+            GUI.Box(toolbarRect, GUIContent.none, EditorStyles.toolbar);
+            GUI.Label(labelRect, "UMA", EditorStyles.label);
+
+            if (GUI.Button(focusbtnRect, "Focus Mesh", EditorStyles.toolbarButton))
+            {
+                Selection.activeGameObject = _Source.gameObject;
+                SceneView.lastActiveSceneView.FrameSelected();
+            }
+            if (GUI.Button(clearbtnRect,"Clear Selection",EditorStyles.toolbarButton))
+            {
+                ClearAll();
+            }
+            if (GUI.Button(selectallbtnRect, "Select All", EditorStyles.toolbarButton))
+            {
+                SelectAll();
+            }
+
+            if (GUI.Button(selectbtnRect, SelectionString(setSelectedOn), EditorStyles.toolbarButton))
+            {
+                setSelectedOn = !setSelectedOn;
+            }
+            if (GUI.Button(savebtnRect, "Save and Return", EditorStyles.toolbarButton))
+            {
+                doneEditing = true;
+            }
+            if (GUI.Button(cancelbtnRect, "Cancel Edits", EditorStyles.toolbarButton))
+            {
+                doneEditing = true;
+                cancelSave = true;
+            }
+
+            GUILayout.Label("Left click and drag to area select");
+	        GUILayout.Label("Hold SHIFT while dragging to paint");
+	        GUILayout.Label("Hold ALT while dragging to orbit");
+	        GUILayout.Label("Return to original scene by pressing \"Save and Return\"");
             Handles.EndGUI();
 
             if (_Source == null)
