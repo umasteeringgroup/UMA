@@ -45,17 +45,17 @@ SubShader
 
 		//http://blog.selfshadow.com/publications/blending-in-detail/
 
-		float3 linearBlend(float3 n1, float3 n2)
+		float3 linearBlend(float3 n1, float3 n2, float t)
 		{
-			return normalize(lerp(n2, n1, _Color.a));
+			return normalize(lerp(n2, n1, t));
 		}
 
-		float3 pdBlend(float3 n1, float3 n2)
+		float3 pdBlend(float3 n1, float3 n2, float t)
 		{
 			float2 p1 = (n1.xy/n1.z);
 			float2 p2 = (n2.xy/n2.z);
 
-			float2 pd = lerp(n2, n1, _Color.a);
+			float2 pd = lerp(n2, n1, t);
 
 			return normalize(float3(pd,1));
 		}
@@ -74,13 +74,20 @@ SubShader
 			float3 n1 = UnpackNormal(tex2D(_MainTex, i.uv));
 			float3 n2 = UnpackNormal(tex2D(_GrabTexture, i.grabuv));
 
+			float4 extra = tex2D(_ExtraTex, i.uv);
+
+			n1 = clamp(n1, -1, 1);
+			n2 = clamp(n2, -1, 1);
+
+			float t = min(extra.a, _Color.a);
+
 			//Add alpha check early out?
 
 			//float3 r = linearBlend(n1,n2);
-			float3 r = pdBlend(n1, n2);
+			float3 r = pdBlend(n1, n2, t );
 
 			//Bring normal back into packed range.
-			r = r * 0.5 + 0.5;
+			r = saturate(r * 0.5 + 0.5);
 
 			//G and A are the important ones. 
 			//Setting green to red and blue just so it looks greyscale in the inspector.
