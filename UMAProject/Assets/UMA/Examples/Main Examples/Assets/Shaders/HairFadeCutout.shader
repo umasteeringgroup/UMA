@@ -1,3 +1,5 @@
+// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+
 // Simple 2 Pass Hair Shader 
 
 // This shader blends a solid cutout and fade shader to try and produce reasonable looking hair.
@@ -126,7 +128,7 @@ Shader "UMA/Hair Fade Cutout"
 			{
 				v2f o;
 				UNITY_INITIALIZE_OUTPUT( v2f, o );
-				float3 worldPos = mul( _Object2World, v.vertex ).xyz;
+				float3 worldPos = mul( unity_ObjectToWorld, v.vertex ).xyz;
 				half3 worldNormal = UnityObjectToWorldNormal( v.normal );
 				fixed3 worldTangent = UnityObjectToWorldDir( v.tangent.xyz );
 				fixed tangentSign = v.tangent.w * unity_WorldTransformParams.w;

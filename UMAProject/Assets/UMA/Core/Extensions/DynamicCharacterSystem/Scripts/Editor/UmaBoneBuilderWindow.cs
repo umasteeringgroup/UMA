@@ -160,7 +160,7 @@ namespace UMA.Editors
             if (_umaData.skeleton == null) 
             {
                 Transform globalTransform;
-                globalTransform = _umaData.umaRoot.transform.FindChild ("Global");
+                globalTransform = _umaData.umaRoot.transform.Find ("Global");
                 if (globalTransform != null) 
                 {
                     _umaData.skeleton = new UMASkeleton (globalTransform);
