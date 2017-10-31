@@ -9,7 +9,8 @@ namespace UMA.Editors
 {
     public class UmaBoneBuilderWindow : EditorWindow 
     {
-        public DynamicCharacterAvatar avatar;
+        public GameObject umaObject;
+        public UMATextRecipe baseRecipe;
         public bool removeUMAData = true;
 
         private UMAData _umaData;
@@ -29,16 +30,21 @@ namespace UMA.Editors
             GUILayout.Label("UMA Bone Builder");
             GUILayout.Space(20);
 
-            avatar = EditorGUILayout.ObjectField ("DynamicCharacterAvatar  ", avatar, typeof(DynamicCharacterAvatar), true) as DynamicCharacterAvatar;
+            umaObject = EditorGUILayout.ObjectField ("UMA GameObject  ", umaObject, typeof(GameObject), true) as GameObject;
+            baseRecipe = EditorGUILayout.ObjectField("Base Recipe", baseRecipe, typeof(UMATextRecipe), false) as UMATextRecipe;
             removeUMAData = EditorGUILayout.Toggle(new GUIContent("Remove UMAData", "A recipe and UMAData is created during the bone generation process, checking this will remove it at the end of the process. (Recommended)"), removeUMAData);
 
             if (GUILayout.Button("Generate Bones"))
             {
-                Debug.Log("Processing...");
-                if (avatar == null)
-                    Debug.Log ("DynamicCharacterAvatar not set!");
-                else 
+                if (umaObject == null)
+                    Debug.LogWarning ("UMA GameObject not set!");
+
+                if (baseRecipe == null)
+                    Debug.LogWarning("BaseRecipe not set!");
+
+                if(umaObject != null && baseRecipe != null)
                 {
+                    Debug.Log("Processing...");
                     InitializeUMAData ();
                     FindBones ();
                     EnsureRoot ();
@@ -52,38 +58,35 @@ namespace UMA.Editors
 
         private void InitializeUMAData()
         {
-            if (avatar == null)
+            if (umaObject == null)
                 return;
 
-            if (avatar.activeRace.data == null)
+            if (baseRecipe == null)
                 return;
 
             //Adds the umaData component
-            avatar.Initialize ();
+            if (_umaData == null)
+                _umaData = umaObject.AddComponent<UMAData>();
 
-            if (avatar.umaData == null)
+            if (_umaData == null)
                 return;
-
-            _umaData = avatar.umaData;
 
             //Create a new recipe objects
             if ( _umaData.umaRecipe == null)
                 _umaData.umaRecipe = new UMAData.UMARecipe ();
 
-            avatar.umaRecipe = avatar.activeRace.racedata.baseRaceRecipe;
-            avatar.umaRecipe.Load (_umaData.umaRecipe, avatar.context);
-            _umaData.umaRecipe.raceData = avatar.activeRace.racedata;
+            baseRecipe.Load(_umaData.umaRecipe, UMAContext.FindInstance());
             Debug.Log ("UMAData initialization successful!");
         }
 
         private void InitializeAnimator()
         {
-            if (avatar == null)
+            if (umaObject == null)
                 return;
 
-            _animator = avatar.gameObject.GetComponent<Animator> ();
+            _animator = umaObject.gameObject.GetComponent<Animator> ();
             if (_animator == null)
-                _animator = avatar.gameObject.AddComponent<Animator> ();
+                _animator = umaObject.gameObject.AddComponent<Animator> ();
 
             UMAGeneratorBase.SetAvatar (_umaData, _animator);
         }
@@ -92,11 +95,11 @@ namespace UMA.Editors
         {
             //get all the umaBones and umaBoneCount
             Dictionary<string, UMATransform> boneDict = new Dictionary<string, UMATransform> ();
-            for (int i = 0; i < avatar.umaData.umaRecipe.slotDataList.Length; i++) 
+            for (int i = 0; i < _umaData.umaRecipe.slotDataList.Length; i++) 
             {
-                if (avatar.umaData.umaRecipe.slotDataList [i] != null) {
-                    for (int j = 0; j < avatar.umaData.umaRecipe.slotDataList [i].asset.meshData.umaBoneCount; j++) {
-                        UMATransform bone = avatar.umaData.umaRecipe.slotDataList [i].asset.meshData.umaBones [j];
+                if (_umaData.umaRecipe.slotDataList [i] != null) {
+                    for (int j = 0; j < _umaData.umaRecipe.slotDataList [i].asset.meshData.umaBoneCount; j++) {
+                        UMATransform bone = _umaData.umaRecipe.slotDataList [i].asset.meshData.umaBones [j];
                         if (!boneDict.ContainsKey (bone.name))
                             boneDict.Add (bone.name, bone);
                     }
@@ -157,8 +160,6 @@ namespace UMA.Editors
 
         private void Cleanup()
         {
-            avatar.umaRecipe = null;
-            avatar.umaData = null;
             if( _umaData )
                 DestroyImmediate(_umaData);
         }
