@@ -245,6 +245,19 @@ namespace UMA.Editors
 			{
 				newMesh.SetTriangles(sourceMesh.GetTriangles(i), i);
 			}
+
+			Vector3[] deltaVertices = new Vector3[sourceMesh.vertices.Length];
+			Vector3[] deltaNormals = new Vector3[sourceMesh.normals.Length];
+			Vector3[] deltaTangents = new Vector3[sourceMesh.tangents.Length];
+			for (int shapeIndex = 0; shapeIndex < sourceMesh.blendShapeCount; shapeIndex++)
+			{
+				for (int frameIndex = 0; frameIndex < sourceMesh.GetBlendShapeFrameCount(shapeIndex); frameIndex++)
+				{
+					sourceMesh.GetBlendShapeFrameVertices(shapeIndex, frameIndex, deltaVertices, deltaNormals, deltaTangents);
+					newMesh.AddBlendShapeFrame(sourceMesh.GetBlendShapeName(shapeIndex), sourceMesh.GetBlendShapeFrameWeight(shapeIndex, frameIndex), deltaVertices, deltaNormals, deltaTangents);
+				}
+			}
+
 			return newMesh;
 		}
 

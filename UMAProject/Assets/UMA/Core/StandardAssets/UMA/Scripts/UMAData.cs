@@ -129,6 +129,7 @@ namespace UMA
 		/// </summary>
 		public event Action<UMAData> OnCharacterDestroyed { add { if (CharacterDestroyed == null) CharacterDestroyed = new UMADataEvent(); CharacterDestroyed.AddListener(new UnityAction<UMAData>(value)); } remove { CharacterDestroyed.RemoveListener(new UnityAction<UMAData>(value)); } }
 
+		/// <summary>
 		/// Callback event when character DNA has been updated.
 		/// </summary>
 		public event Action<UMAData> OnCharacterDnaUpdated { add { if (CharacterDnaUpdated == null) CharacterDnaUpdated = new UMADataEvent(); CharacterDnaUpdated.AddListener(new UnityAction<UMAData>(value)); } remove { CharacterDnaUpdated.RemoveListener(new UnityAction<UMAData>(value)); } }
@@ -226,12 +227,18 @@ namespace UMA
 				valid = valid && umaRecipe.Validate();
 			}
 
+			if (animationController == null)
+			{
+				if (Application.isPlaying)
+					Debug.LogWarning("No animation controller supplied.");
+			}
+
 #if UNITY_EDITOR
 			if (!valid && UnityEditor.EditorApplication.isPlaying)
-            {
-                Debug.LogError("UMAData: Recipe or Generator is not valid!");
-                UnityEditor.EditorApplication.isPaused = true;
-            }
+			{
+				Debug.LogError("UMAData: Recipe or Generator is not valid!");
+				UnityEditor.EditorApplication.isPaused = true;
+			}
 #endif
 
 			return valid;
@@ -535,6 +542,7 @@ namespace UMA
 			/// </summary>
 			/// <returns>The DNA.</returns>
 			/// <param name="type">Type.</param>
+			/// <param name="dnaTypeHash">The DNAType's hash."</param>
 			public UMADnaBase GetOrCreateDna(Type type, int dnaTypeHash)
 			{
 				UMADnaBase dna;
@@ -771,6 +779,7 @@ namespace UMA
 			/// Applies each DNA converter to the UMA data and skeleton.
 			/// </summary>
 			/// <param name="umaData">UMA data.</param>
+			/// <param name="fixUpUMADnaToDynamicUMADna"></param>
 			public void ApplyDNA(UMAData umaData, bool fixUpUMADnaToDynamicUMADna = false)
 			{
 				EnsureAllDNAPresent();
@@ -1057,7 +1066,7 @@ namespace UMA
 			dirty = true;
 			if (!umaGenerator)
 			{
-				umaGenerator = GameObject.Find("UMAGenerator").GetComponent<UMAGeneratorBase>();
+				umaGenerator = FindObjectOfType<UMAGeneratorBase>();
 			}
 			if (umaGenerator)
 			{
@@ -1080,7 +1089,7 @@ namespace UMA
 				CleanTextures();
 				CleanMesh(true);
 				CleanAvatar();
-				Destroy(umaRoot);
+				UMAUtils.DestroySceneObject(umaRoot);
 			}
 		}
 
@@ -1092,8 +1101,8 @@ namespace UMA
 			animationController = null;
 			if (animator != null)
 			{
-				if (animator.avatar) GameObject.Destroy(animator.avatar);
-				if (animator) GameObject.Destroy(animator);
+				if (animator.avatar) UMAUtils.DestroySceneObject(animator.avatar);
+				if (animator) UMAUtils.DestroySceneObject(animator);
 			}
 		}
 
@@ -1115,12 +1124,11 @@ namespace UMA
 							{
 								RenderTexture tempRenderTexture = tempTexture as RenderTexture;
 								tempRenderTexture.Release();
-								Destroy(tempRenderTexture);
-								tempRenderTexture = null;
+								UMAUtils.DestroySceneObject(tempRenderTexture);
 							}
 							else
 							{
-								Destroy(tempTexture);
+								UMAUtils.DestroySceneObject(tempTexture);
 							}
 							generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex] = null;
 						}
@@ -1143,13 +1151,13 @@ namespace UMA
 				{
 					if (mats[i])
 					{
-						Destroy(mats[i]);
+						UMAUtils.DestroySceneObject(mats[i]);
 					}
 				}
 				if (destroyRenderer)
 				{
-					Destroy(renderer.sharedMesh);
-					Destroy(renderer);
+					UMAUtils.DestroySceneObject(renderer.sharedMesh);
+					UMAUtils.DestroySceneObject(renderer);
 				}
 			}
 		}
@@ -1472,7 +1480,7 @@ namespace UMA
 		/// <summary>
 		/// Set the blendshape by it's name.
 		/// </summary>
-		/// <param name="name">Name of the blendshape.</param
+		/// <param name="name">Name of the blendshape.</param>
 		/// <param name="weight">Weight(float) to set this blendshape to.</param>
 		public void SetBlendShape(string name, float weight)
 		{
