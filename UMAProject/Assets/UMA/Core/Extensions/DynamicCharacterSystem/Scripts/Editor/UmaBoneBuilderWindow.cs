@@ -10,13 +10,16 @@ namespace UMA.Editors
     public class UmaBoneBuilderWindow : EditorWindow 
     {
         public GameObject umaObject;
-        public UMATextRecipe baseRecipe;
+        public UMARecipeBase baseRecipe;
         public bool removeUMAData = true;
 
         private UMAData _umaData;
         private Animator _animator;
         private int _umaBoneCount;
         private UMATransform[] _umaBones;
+
+        private GameObject newUmaObj = null;
+        private DynamicCharacterAvatar _avatar = null;
 
         [MenuItem("UMA/Bone Builder")]
         public static void OpenUmaTexturePrepareWindow()
@@ -29,13 +32,29 @@ namespace UMA.Editors
         {
             GUILayout.Label("UMA Bone Builder");
             GUILayout.Space(20);
+           
+            newUmaObj = EditorGUILayout.ObjectField ("UMA GameObject  ", umaObject, typeof(GameObject), true) as GameObject;
+            if (newUmaObj != umaObject)
+            {
+                umaObject = newUmaObj;
+                _avatar = umaObject.GetComponent<DynamicCharacterAvatar>();                    
+            }
 
-            umaObject = EditorGUILayout.ObjectField ("UMA GameObject  ", umaObject, typeof(GameObject), true) as GameObject;
-            baseRecipe = EditorGUILayout.ObjectField("Base Recipe", baseRecipe, typeof(UMATextRecipe), false) as UMATextRecipe;
+            if (umaObject != null && _avatar == null)
+            {
+                EditorGUILayout.HelpBox("This UMA is not a DynamicCharacterAvatar so we need to supply the base recipe.", MessageType.Info);
+                baseRecipe = EditorGUILayout.ObjectField("Base Recipe", baseRecipe, typeof(UMARecipeBase), false) as UMARecipeBase;
+            }
+            else
+                baseRecipe = null;
+            
             removeUMAData = EditorGUILayout.Toggle(new GUIContent("Remove UMAData", "A recipe and UMAData is created during the bone generation process, checking this will remove it at the end of the process. (Recommended)"), removeUMAData);
 
             if (GUILayout.Button("Generate Bones"))
             {
+                if (_avatar != null)
+                    baseRecipe = _avatar.activeRace.data.baseRaceRecipe;
+
                 if (umaObject == null)
                     Debug.LogWarning ("UMA GameObject not set!");
 
