@@ -17,3 +17,6 @@ MonoBehaviour:
   - channelType: 3
     textureFormat: 0
     materialPropertyName: _MainTex
+    sourceTextureName: 
+  clothProperties: {fileID: 0}
+  RequireSeperateRenderer: 0
