@@ -1752,19 +1752,18 @@ namespace UMA.Editors
 		public override void OnInspectorGUI()
 		{
 			GUILayout.Label(_description);
-            _AutomaticUpdates = GUILayout.Toggle(_AutomaticUpdates, "Automatic Updates");
-            _forceUpdate = false;
+      _AutomaticUpdates = GUILayout.Toggle(_AutomaticUpdates, "Automatic Updates");
+      _forceUpdate = false;
 
-            if (!_AutomaticUpdates)
-            {
-                if(GUILayout.Button("Save Recipe"))
-                {
-                    _needsUpdate = true;
-                    _forceUpdate = true;
-                }
-            }
-
-            scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUIStyle.none, GUILayout.MinHeight(600));
+      if (!_AutomaticUpdates)
+      {
+          if(GUILayout.Button("Save Recipe"))
+          {
+              _needsUpdate = true;
+              _forceUpdate = true;
+          }
+      }
+      scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUIStyle.none, GUILayout.MinHeight(600));
 
 			if (_errorMessage != null)
 			{

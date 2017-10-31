@@ -15,7 +15,7 @@ namespace UMA.Examples
     /// It calculates frames/second over each updateInterval,
     /// so the display does not keep changing wildly.
     ///
-    /// It is also fairly accurate at very low FPS counts (<10).
+    /// It is also fairly accurate at very low FPS counts ( less than 10).
     /// We do this not by simply counting frames per interval, but
     /// by accumulating FPS for each frame. This way we end up with
     /// correct overall FPS even if the interval renders something like
