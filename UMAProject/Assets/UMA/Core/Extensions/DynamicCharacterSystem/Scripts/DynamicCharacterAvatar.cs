@@ -1195,7 +1195,8 @@ namespace UMA.CharacterSystem
 		/// <summary>
 		/// Load a wardrobe set as defined in a UMATextRecipe.DCSPackRecipe model.
 		/// </summary>
-		/// <param name="wardrobeSet"></param>
+		/// <param name="wardrobeSet">List of wardrobe settings.</param>
+		/// <param name="clearExisting">Defaults to false. Set to true to clear the existing wardrobe recipes.</param>
 		public void LoadWardrobeSet(List<WardrobeSettings> wardrobeSet, bool clearExisting = false)
 		{
 			_isFirstSettingsBuild = false;
@@ -1434,7 +1435,7 @@ namespace UMA.CharacterSystem
 		/// <summary>
 		/// Loads any shared colors from the given recipe to the CharacterColors List, only if they are also defined in the current baseRaceRecipe, optionally applying then to the current UMAData.UMARecipe
 		/// </summary>
-		/// <param name="recipeToLoad"></param>
+		/// <param name="colorsToLoad"></param>
 		/// <param name="apply"></param>
 		/// <returns></returns>
 		public List<OverlayColorData> LoadBodyColors(OverlayColorData[] colorsToLoad, bool apply = false)
@@ -1444,7 +1445,7 @@ namespace UMA.CharacterSystem
 		/// <summary>
 		/// Loads any shared colors from the given recipe to the CharacterColors List, only if they are NOT defined in the current baseRaceRecipe, optionally applying then to the current UMAData.UMARecipe
 		/// </summary>
-		/// <param name="recipeToLoad"></param>
+		/// <param name="colorsToLoad"></param>
 		/// <param name="apply"></param>
 		/// <returns></returns>
 		public List<OverlayColorData> LoadWardrobeColors(OverlayColorData[] colorsToLoad, bool apply = false)
@@ -1484,6 +1485,7 @@ namespace UMA.CharacterSystem
 		/// Restores the body colors to the ones defined in the component on start, optionally applying these to the UMAData.UMARecipe
 		/// </summary>
 		/// <param name="apply"></param>
+		/// <param name="fullRestore"></param>
 		/// <returns></returns>
 		public List<OverlayColorData> RestoreCachedBodyColors(bool apply = false, bool fullRestore = false)
 		{
@@ -1493,6 +1495,7 @@ namespace UMA.CharacterSystem
 		///  Restores the wardrobe colors to the ones defined in the component on start, optionally applying these to the UMAData.UMARecipe
 		/// </summary>
 		/// <param name="apply"></param>
+		/// <param name="fullRestore"></param>
 		/// <returns></returns>
 		public List<OverlayColorData> RestoreCachedWardrobeColors(bool apply = false, bool fullRestore = false)
 		{
@@ -1855,7 +1858,7 @@ namespace UMA.CharacterSystem
 #endif
 				}
 				if (!saveAsAsset)
-					ScriptableObject.Destroy(asset);
+					UMAUtils.DestroySceneObject(asset);
 			}
 			if (ensureSharedColors)
 			{
@@ -2034,11 +2037,12 @@ namespace UMA.CharacterSystem
 		/// <summary>
 		/// Sets the avatar to load a recipe string from the given path
 		/// </summary>
-		/// <param name="recipeString"></param>
-		public void SetLoadFilename(string filename, loadPathTypes _loadPathType)
+		/// <param name="filename"></param>
+		/// <param name="newLoadPathType"></param>
+		public void SetLoadFilename(string filename, loadPathTypes newLoadPathType)
 		{
 			loadFilename = filename;
-			loadPathType = _loadPathType;
+			loadPathType = newLoadPathType;
 			loadFileOnStart = true;
 		}
 
@@ -2591,7 +2595,8 @@ namespace UMA.CharacterSystem
 		/// Has additional functions for removing any slots that should be hidden by any 'wardrobe Recipes' that are in the additional recipes array.
 		/// </summary>
 		/// <param name="umaRecipe"></param>
-		/// <param name="umaAdditionalRecipes"></param>
+		/// <param name="Replaces"></param>
+		/// <param name="umaAdditionalSerializedRecipes"></param>
 		/// <returns>Returns true if the final recipe load caused more assets to download</returns>
 		bool LoadCharacter(UMARecipeBase umaRecipe, List<UMAWardrobeRecipe> Replaces, params UMARecipeBase[] umaAdditionalSerializedRecipes)
 		{
@@ -2682,7 +2687,7 @@ namespace UMA.CharacterSystem
 				{
 					foreach (Transform child in gameObject.transform)
 					{
-						Destroy(child.gameObject);
+						UMAUtils.DestroySceneObject(child.gameObject);
 					}
 				}
 				UpdateNewRace();
@@ -2742,7 +2747,7 @@ namespace UMA.CharacterSystem
 
 			foreach (Transform child in gameObject.transform)
 			{
-				Destroy(child.gameObject);
+				UMAUtils.DestroySceneObject(child.gameObject);
 			}
 			ClearSlots();
 			umaRecipe = null;
@@ -3662,6 +3667,7 @@ namespace UMA.CharacterSystem
 		/// <param name="value"></param>
 		/// <param name="ownerIndex"></param>
 		/// <param name="owner"></param>
+		/// <param name="category"></param>
 		public DnaSetter(string name, float value, int ownerIndex, UMADnaBase owner, string category)
 		{
 			Name = name;
