@@ -59,7 +59,7 @@ namespace UMA
 
 			if (umaData.umaRoot == null)
 			{
-				Transform rootTransform = umaData.gameObject.transform.FindChild("Root");
+				Transform rootTransform = umaData.gameObject.transform.Find("Root");
 				if (rootTransform)
 				{
 					umaData.umaRoot = rootTransform.gameObject;
@@ -76,7 +76,7 @@ namespace UMA
 					umaData.umaRoot = newRoot;
 				}
 
-				Transform globalTransform = umaData.umaRoot.transform.FindChild("Global");
+				Transform globalTransform = umaData.umaRoot.transform.Find("Global");
 				if (!globalTransform)
 				{
 					GameObject newGlobal = new GameObject("Global");
