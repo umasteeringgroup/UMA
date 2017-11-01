@@ -160,20 +160,10 @@ namespace UMA.Editors
 							textureImporter.isReadable = readWrite.boolValue;
 							
 							if(compress.boolValue){
-	#if UNITY_5_5_OR_NEWER
 								textureImporter.textureCompression = TextureImporterCompression.CompressedHQ;
 								textureImporter.compressionQuality = (int)TextureCompressionQuality.Best;                               
-	#else
-								textureImporter.textureFormat = TextureImporterFormat.AutomaticCompressed;
-								textureImporter.compressionQuality = (int)TextureCompressionQuality.Best;
-	#endif
 							}else{
-	#if UNITY_5_5_OR_NEWER
 								textureImporter.textureCompression = TextureImporterCompression.Uncompressed;                             
-	#else
-								textureImporter.textureFormat = TextureImporterFormat.AutomaticTruecolor;
-								textureImporter.compressionQuality = (int)TextureCompressionQuality.Best;
-	#endif
 							}
 							
 							AssetDatabase.WriteImportSettingsIfDirty (path);
