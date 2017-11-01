@@ -3337,18 +3337,13 @@ namespace UMA.CharacterSystem
 			}
 		}
 
-		[Serializable]
-		public class RaceAnimator
-		{
-			public string raceName;
-			public string animatorControllerName;
-			private RuntimeAnimatorController _animatorController;
-			public RuntimeAnimatorController animatorController
-			{
-				get { return _animatorController; }
-				set { _animatorController = value; }
-			}
-		}
+        [Serializable]
+        public class RaceAnimator
+        {
+            public string raceName;
+            public string animatorControllerName;
+            public RuntimeAnimatorController animatorController;
+        }
 
 		[Serializable]
 		public class RaceAnimatorList
