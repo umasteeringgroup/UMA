@@ -70,7 +70,7 @@ namespace UMA
 					path = path.Replace("/" + Path.GetFileName(AssetDatabase.GetAssetPath(Selection.activeObject)), "");
 				}
 
-				var assetName = baseName+ " "+typeof(T).Name;
+				var assetName = baseName + " " + typeof(T).Name;
 
 				assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/" + assetName + ".asset");
 			}
