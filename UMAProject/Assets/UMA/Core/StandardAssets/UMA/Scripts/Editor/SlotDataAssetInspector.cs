@@ -11,7 +11,7 @@ namespace UMA.Editors
         [MenuItem("Assets/Create/UMA/Core/Custom Slot Asset")]
         public static void CreateCustomSlotAssetMenuItem()
         {
-        	SlotDataAsset sde = CustomAssetUtility.CreateAsset<SlotDataAsset>("",true,"Custom");
+        	SlotDataAsset sde = CustomAssetUtility.CreateAsset<SlotDataAsset>("", true, "Custom");
         }
 
 		//allow for delayed saving so typing in a field does not trigger save with every keystroke
