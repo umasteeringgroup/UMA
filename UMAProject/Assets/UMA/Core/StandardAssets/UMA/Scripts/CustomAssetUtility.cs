@@ -28,7 +28,7 @@ namespace UMA
                 path = path.Replace("/" + Path.GetFileName(AssetDatabase.GetAssetPath(Selection.activeObject)), "");
             }
 
-            string assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/New "+name+".prefab");
+            string assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/New " + name + ".prefab");
 
             GameObject go = new GameObject(name);
             foreach (System.Type t in types)
