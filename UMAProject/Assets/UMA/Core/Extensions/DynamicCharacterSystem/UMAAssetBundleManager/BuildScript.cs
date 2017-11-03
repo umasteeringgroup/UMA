@@ -249,9 +249,7 @@ namespace UMA.AssetBundles
 				option = developmentBuild ? BuildOptions.Development | BuildOptions.AutoRunPlayer : BuildOptions.AutoRunPlayer;
 			}
 			string buildError = "";
-#if UNITY_5_4 || UNITY_5_3 || UNITY_5_2 || UNITY_5_1 || UNITY_5_0
-			buildError = BuildPipeline.BuildPlayer(levels, outputPath + targetName, EditorUserBuildSettings.activeBuildTarget, option);
-#else
+
             BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions();
             buildPlayerOptions.scenes = levels;
             buildPlayerOptions.locationPathName = outputPath + targetName;
@@ -259,7 +257,7 @@ namespace UMA.AssetBundles
             buildPlayerOptions.target = EditorUserBuildSettings.activeBuildTarget;
             buildPlayerOptions.options = option;
             buildError = BuildPipeline.BuildPlayer(buildPlayerOptions);
-#endif
+			
 			//after the build completes destroy the serverURL file
 			if (SimpleWebServer.serverStarted && CanRunLocally(EditorUserBuildSettings.activeBuildTarget))
 				SimpleWebServer.DestroyServerURLFile();
@@ -297,10 +295,6 @@ namespace UMA.AssetBundles
 			// Build and copy AssetBundles.
 			BuildScript.BuildAssetBundles();
 			//DOS NOTES this was added in the latest pull requests for the original AssetBundleManager not sure why?
-#if UNITY_5_4 || UNITY_5_3 || UNITY_5_2 || UNITY_5_1 || UNITY_5_0
-			BuildOptions option = EditorUserBuildSettings.development ? BuildOptions.Development : BuildOptions.None;
-			BuildPipeline.BuildPlayer(levels, outputPath + targetName, EditorUserBuildSettings.activeBuildTarget, option);
-#else
             BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions();
             buildPlayerOptions.scenes = levels;
             buildPlayerOptions.locationPathName = outputPath + targetName;
@@ -308,7 +302,6 @@ namespace UMA.AssetBundles
             buildPlayerOptions.target = EditorUserBuildSettings.activeBuildTarget;
             buildPlayerOptions.options = EditorUserBuildSettings.development ? BuildOptions.Development : BuildOptions.None;
             BuildPipeline.BuildPlayer(buildPlayerOptions);
-#endif
 		}
 
 		public static void BuildStandalonePlayer()
@@ -333,10 +326,6 @@ namespace UMA.AssetBundles
 			BuildScript.CopyAssetBundlesTo(Path.Combine(Application.streamingAssetsPath, Utility.AssetBundlesOutputPath));
 			AssetDatabase.Refresh();
 
-#if UNITY_5_4 || UNITY_5_3 || UNITY_5_2 || UNITY_5_1 || UNITY_5_0
-			BuildOptions option = EditorUserBuildSettings.development ? BuildOptions.Development : BuildOptions.None;
-			BuildPipeline.BuildPlayer(levels, outputPath + targetName, EditorUserBuildSettings.activeBuildTarget, option);
-#else
             BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions();
             buildPlayerOptions.scenes = levels;
             buildPlayerOptions.locationPathName = outputPath + targetName;
@@ -344,7 +333,6 @@ namespace UMA.AssetBundles
             buildPlayerOptions.target = EditorUserBuildSettings.activeBuildTarget;
             buildPlayerOptions.options = EditorUserBuildSettings.development ? BuildOptions.Development : BuildOptions.None;
             BuildPipeline.BuildPlayer(buildPlayerOptions);
-#endif
 		}
 		/// <summary>
 		/// Returns true if the build can potentially run on the current machine (a local build)
@@ -378,10 +366,6 @@ namespace UMA.AssetBundles
 					else
 						return false;
 				case BuildTarget.WebGL:
-#if !UNITY_5_4_OR_NEWER
-                case BuildTarget.WebPlayer:
-                case BuildTarget.WebPlayerStreamed:
-#endif
 					return true;
 				default:
 					return false;
@@ -402,10 +386,6 @@ namespace UMA.AssetBundles
 				case BuildTarget.StandaloneOSXIntel64:
 				case BuildTarget.StandaloneOSXUniversal:
 					return "/test.app";
-#if !UNITY_5_4_OR_NEWER
-                case BuildTarget.WebPlayer:
-                case BuildTarget.WebPlayerStreamed:
-#endif
 				case BuildTarget.WebGL:
 				case BuildTarget.iOS:
 					return "";
