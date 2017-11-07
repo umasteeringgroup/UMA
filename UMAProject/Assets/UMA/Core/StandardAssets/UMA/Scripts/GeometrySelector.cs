@@ -137,8 +137,20 @@ namespace UMA
         {
             if (_sharedMesh == null)
                 return;
+            if (selectedTriangles == null)
+                return;
 
             selectedTriangles.SetAll(true);
+
+            UpdateSelectionMesh();
+        }
+
+        public void Invert()
+        {
+            if (_sharedMesh == null)
+                return;
+
+            selectedTriangles = selectedTriangles.Not();
 
             UpdateSelectionMesh();
         }

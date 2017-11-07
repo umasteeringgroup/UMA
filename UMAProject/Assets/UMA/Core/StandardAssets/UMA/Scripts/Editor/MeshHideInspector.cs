@@ -209,8 +209,21 @@ namespace UMA.Editors
                 GameObject.DestroyImmediate(GameObject.Find("GeometrySelector").gameObject);
             }
 
-            if (!EditorSceneManager.SaveOpenScenes())
-                return;
+            int saveChoice = EditorUtility.DisplayDialogComplex("Open Mesh Hide Editor", "Opening the Mesh Hide Editor will close all scenes and create a new blank scene. Any current scene changes will be lost unless saved.", "Save and Continue", "Continue without saving", "Cancel");
+
+            switch(saveChoice)
+            {
+                case 0: // Save and continue
+                    {
+                        if (!EditorSceneManager.SaveOpenScenes())
+                            return;
+                        break;
+                    }
+                case 1: // don't save and continue
+                    break;
+                case 2: // cancel
+                    return;
+            }
 
             SceneView sceneView = SceneView.lastActiveSceneView;
 

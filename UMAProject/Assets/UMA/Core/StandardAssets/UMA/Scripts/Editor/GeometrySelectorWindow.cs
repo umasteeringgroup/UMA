@@ -4,6 +4,7 @@ using UnityEngine.SceneManagement;
 using UnityEditor.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 
 namespace UMA.Editors
 {
@@ -32,6 +33,13 @@ namespace UMA.Editors
         private const float drawTolerance = 10.0f; //in pixels
         private Color selectionColor = new Color(0.8f, 0.8f, 0.95f, 0.15f);
         private static List<SceneInfo> restoreScenes;
+        private Vector2 scrollPosition = Vector2.zero;
+        private int selectionSelected = 0;
+        private static string[] selectionOptions = new string[] { "Select", "UnSelect" };
+        private Rect infoRect = new Rect(10, 30, 400, 30);
+        private GUIStyle whiteLabels;
+        private GUIStyle blackLabels; 
+
 
         public static GeometrySelectorWindow Instance { get; private set; }
         public static bool IsOpen
@@ -42,7 +50,11 @@ namespace UMA.Editors
         public static void Init(GeometrySelector source, List<SceneInfo> savedScenes)
         {
             restoreScenes = savedScenes;
-            GeometrySelectorWindow window = (GeometrySelectorWindow)EditorWindow.GetWindow(typeof(GeometrySelectorWindow),false, "Geometry Selector",true);
+
+            Rect R = SceneView.lastActiveSceneView.position; 
+
+            GeometrySelectorWindow window = (GeometrySelectorWindow)EditorWindow.GetWindowWithRect<GeometrySelectorWindow>(new Rect(R.width-260, R.y + 10, 250, 250), false, "Mesh Hide", true);
+
             window._Source = source;
             window.minSize = new Vector2(200, 200);
             window.Show();
@@ -54,6 +66,15 @@ namespace UMA.Editors
             EditorApplication.update += GeometryUpdate;
             SceneView.onSceneGUIDelegate += OnSceneGUI;
             UpdateShadingMode(showWireframe);
+
+            whiteLabels = new GUIStyle(EditorStyles.boldLabel);
+            blackLabels = new GUIStyle(EditorStyles.boldLabel);
+            whiteLabels.normal.textColor = Color.white;
+            blackLabels.normal.textColor = Color.black;
+
+            Tools.current = Tool.None;
+            Tools.hidden = true;
+            EditorApplication.LockReloadAssemblies();
         }
 
         private void OnDestroy()
@@ -66,22 +87,28 @@ namespace UMA.Editors
             Instance = null;
             EditorApplication.update -= GeometryUpdate;
             SceneView.onSceneGUIDelegate -= OnSceneGUI;
+            Tools.hidden = false;
             DestroySceneEditObject();
+            EditorApplication.UnlockReloadAssemblies();
             if (restoreScenes != null)
             {
                 foreach (SceneInfo s in restoreScenes)
                 {
-                        EditorSceneManager.OpenScene(s.path, s.mode);
+                    if (string.IsNullOrEmpty(s.path))
+                        continue;
+                    EditorSceneManager.OpenScene(s.path, s.mode);
                 }
             }
         }
 
         void OnGUI()
         {
+            EditorGUILayout.LabelField("Mesh Selector Utilities", EditorStyles.largeLabel, GUILayout.MaxHeight(25) );
+            scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUIStyle.none);
             GUILayout.Space(20);
             EditorGUILayout.LabelField(new GUIContent("Occlusion Slot (Optional)","Use this mesh to attempt to automatically detect occluded triangles"));
 			SlotDataAsset newOccluder = (SlotDataAsset) EditorGUILayout.ObjectField(_Occluder, typeof(SlotDataAsset), false);
-			if (newOccluder != _Occluder)
+ 			if (newOccluder != _Occluder)
 			{
 				_Occluder = newOccluder;
 				if (_Occluder != null)
@@ -118,52 +145,22 @@ namespace UMA.Editors
             }
 
             GUILayout.Space(20);
-            EditorGUILayout.LabelField("Visual Options");
-            GUILayout.BeginHorizontal();
-            bool toggled = GUILayout.Toggle(showWireframe, new GUIContent("Show Wireframe", "Toggle showing the Wireframe"), "Button", GUILayout.MinHeight(50));
-            if (toggled != showWireframe) { UpdateShadingMode(toggled); }           
-            showWireframe = toggled;
-
-            backfaceCull = GUILayout.Toggle(backfaceCull, new GUIContent("  Backface Cull  ", "Toggle whether to select back faces"), "Button", GUILayout.MinHeight(50));
-            GUILayout.EndHorizontal();
-
-            /*
-            GUILayout.Space(20);
-            EditorGUILayout.LabelField("Selection Options (Drag to area select, hold shift to paint selection");
-            GUILayout.BeginHorizontal();
-            setSelectedOn = GUILayout.Toggle(setSelectedOn, new GUIContent("Unselect", "Toggle to apply unselected state to triangles highlighted"), "Button", GUILayout.MinHeight(50));
-            setSelectedOn = GUILayout.Toggle(!setSelectedOn, new GUIContent("  Select  ", "Toggle to apply selected state to triangles highlighted"), "Button", GUILayout.MinHeight(50));
-            GUILayout.EndHorizontal();
-
-            GUILayout.Space(20);
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Clear All", GUILayout.MinHeight(50)))
-            {
-                ClearAll();
-            }
-
-            if (GUILayout.Button("Select All", GUILayout.MinHeight(50)))
-            {
-                SelectAll();
-            }
-            GUILayout.EndHorizontal();
-            */
-
-            GUILayout.Space(20);
             textureMap = EditorGUILayout.ObjectField("Set From Texture Map", textureMap, typeof(Texture2D), false) as Texture2D;                
-            if (GUILayout.Button("Load Texture Map"))
+            if (GUILayout.Button("Calculate occlusion from texture."))
             {
-                if(_Source != null)
-                    _Source.UpdateFromTexture(textureMap);                
+                if (_Source != null)
+                {
+                    if (textureMap == null)
+                    {
+                        EditorUtility.DisplayDialog("Warning", "A readable texture must be selected before processing.", "OK");
+                    }
+                    else
+                    {
+                        _Source.UpdateFromTexture(textureMap);
+                    }
+                }              
             }
-
-            /*
-            GUILayout.Space(20);
-            if (GUILayout.Button(new GUIContent("Done Editing", "Save the changes and apply them to the MeshHideAsset"), GUILayout.MinHeight(50)))
-            {
-                doneEditing = true;
-            }
-            */
+            GUILayout.EndScrollView();
         }
 
         private void UpdateShadingMode(bool wireframeOn)
@@ -194,25 +191,30 @@ namespace UMA.Editors
                 _Source.SelectAll();
         }
 
+        private void Invert()
+        {
+            if (_Source != null)
+                _Source.Invert();
+        }
+
         private void GeometryUpdate()
         {
             if (doneEditing)
                 Close();
         }
 
-        private Rect toolbarRect = new Rect(0,0,0,20);
-        private Rect labelRect = new Rect(5, 0, 50, 20);
-        private Rect focusbtnRect = new Rect(55, 0, 90, 20);
-        private Rect clearbtnRect = new Rect(145, 0, 100, 20);
-        private Rect selectallbtnRect = new Rect(245, 0, 100, 20);
-        private Rect selectbtnRect = new Rect(345, 0, 140, 20);
-        private Rect savebtnRect = new Rect(485,0,110,20);
-        private Rect cancelbtnRect = new Rect(595, 0, 110, 20);
 
-        private void SetupToolbar(float sceneWidth)
+        private void ResetLabelStart()
         {
-            toolbarRect.width = sceneWidth;
+            infoRect = new Rect(10, 30, 400, 30);
         }
+
+        private void MoveToNextMessage(float xoffset, float yoffset)
+        {
+            infoRect.x += xoffset;
+            infoRect.y += yoffset;
+        }
+
         private string SelectionString(bool selectionMode)
         {
             return selectionMode ? "Selection Mode: Add" : "Selection Mode: Remove";
@@ -224,46 +226,110 @@ namespace UMA.Editors
                 return;
             _Source.meshAsset.SaveSelection(selection);
         }
-        
-        void OnSceneGUI(SceneView sceneView)
-        {
-            SetupToolbar(sceneView.position.width);
-            Handles.BeginGUI();
-            GUI.Box(toolbarRect, GUIContent.none, EditorStyles.toolbar);
-            GUI.Label(labelRect, "UMA", EditorStyles.label);
 
-            if (GUI.Button(focusbtnRect, "Focus Mesh", EditorStyles.toolbarButton))
-            {
-                Selection.activeGameObject = _Source.gameObject;
-                SceneView.lastActiveSceneView.FrameSelected();
-            }
-            if (GUI.Button(clearbtnRect,"Clear Selection",EditorStyles.toolbarButton))
+        private void DrawNextLabel(string lbl)
+        {
+            // Frame the text so it's visible everywhere
+            MoveToNextMessage(-1, -1);
+            GUI.Label(infoRect, lbl, blackLabels);
+            MoveToNextMessage(2, 0);
+            GUI.Label(infoRect, lbl, blackLabels);
+            MoveToNextMessage(0, 2);
+            GUI.Label(infoRect, lbl, blackLabels);
+            MoveToNextMessage(-2, 0);
+            GUI.Label(infoRect, lbl, blackLabels);
+            MoveToNextMessage(1, -1);
+            GUI.Label(infoRect, lbl, whiteLabels);
+            MoveToNextMessage(0, 20);
+        }
+        
+
+        void SceneWindow(int WindowID)
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Selection", GUILayout.Width(100));
+            if (GUILayout.Button("Clear"))
             {
                 ClearAll();
             }
-            if (GUI.Button(selectallbtnRect, "Select All", EditorStyles.toolbarButton))
+            if (GUILayout.Button("Select All"))
             {
                 SelectAll();
             }
-
-            if (GUI.Button(selectbtnRect, SelectionString(setSelectedOn), EditorStyles.toolbarButton))
+            if (GUILayout.Button("Invert"))
             {
-                setSelectedOn = !setSelectedOn;
+                Invert();
             }
-            if (GUI.Button(savebtnRect, "Save and Return", EditorStyles.toolbarButton))
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Selection Mode", GUILayout.Width(100));
+            selectionSelected = GUILayout.SelectionGrid(selectionSelected, selectionOptions, selectionOptions.Length);
+            if (selectionSelected == 0)
+                setSelectedOn = true;
+            else
+                setSelectedOn = false;
+
+            GUILayout.EndHorizontal();
+
+            GUILayout.Space(10);
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Options", GUILayout.Width(100));
+            bool toggled = GUILayout.Toggle(showWireframe, new GUIContent("Show Wireframe", "Toggle showing the Wireframe"), "Button");
+            if (toggled != showWireframe)
+            {
+                UpdateShadingMode(toggled);
+            }
+            showWireframe = toggled;
+            backfaceCull = GUILayout.Toggle(backfaceCull, new GUIContent("  Backface Cull  ", "Toggle whether to select back faces"), "Button");
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            GUILayout.Label("______________________________________________");
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Focus Mesh"))
+            {
+                Selection.activeGameObject = _Source.gameObject;
+                EditorApplication.delayCall += ForceFrame;
+            }
+            GUILayout.Space(100);
+            if (GUILayout.Button("Save & Return"))
             {
                 doneEditing = true;
             }
-            if (GUI.Button(cancelbtnRect, "Cancel Edits", EditorStyles.toolbarButton))
+            if (GUILayout.Button("Cancel Edits"))
             {
                 doneEditing = true;
                 cancelSave = true;
             }
+            GUILayout.EndHorizontal();
+        }
 
-            GUILayout.Label("Left click and drag to area select");
-	        GUILayout.Label("Hold SHIFT while dragging to paint");
-	        GUILayout.Label("Hold ALT while dragging to orbit");
-	        GUILayout.Label("Return to original scene by pressing \"Save and Return\"");
+        private void ForceFrame()
+        {
+                SceneView.FrameLastActiveSceneView();            
+        }
+
+        void OnSceneGUI(SceneView sceneView)
+        {
+            const float WindowHeight = 140;
+            const float WindowWidth = 380;
+            const float Margin = 20;
+
+            ResetLabelStart();
+
+            Handles.BeginGUI();
+
+            GUI.Window(1, new Rect(sceneView.position.width -(WindowWidth+Margin), sceneView.position.height - (WindowHeight+Margin), WindowWidth, WindowHeight), SceneWindow, "UMA Mesh Hide Geometry Selector");
+            DrawNextLabel("Left click and drag to area select");
+            DrawNextLabel( "Hold SHIFT while dragging to paint");
+            DrawNextLabel("Hold ALT while dragging to orbit");
+            DrawNextLabel("Return to original scene by pressing \"Save and Return\"");
             Handles.EndGUI();
 
             if (_Source == null)
