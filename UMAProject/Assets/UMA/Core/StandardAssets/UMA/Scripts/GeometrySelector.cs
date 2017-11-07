@@ -1,6 +1,7 @@
-﻿using System.Collections;
+﻿using UnityEngine;
+using UnityEditor.SceneManagement;
+using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace UMA
 {
@@ -40,8 +41,14 @@ namespace UMA
         //Use 0 for unselected and 1 for selected
         private Material[] _Materials;
 
-        public delegate void OnDoneEditing(BitArray selection);
-        public OnDoneEditing doneEditing;
+        public struct SceneInfo
+        {
+            public string path;
+            public string name;
+            public OpenSceneMode mode;
+        }
+
+        public List<SceneInfo> restoreScenes;
 
         public void Initialize()
         {

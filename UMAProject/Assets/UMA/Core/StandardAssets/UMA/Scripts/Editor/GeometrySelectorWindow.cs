@@ -8,15 +8,9 @@ using System;
 
 namespace UMA.Editors
 {
-    public class GeometrySelectorWindow : EditorWindow {
-
-        public struct SceneInfo
-        {
-            public string path;
-            public string name;
-            public OpenSceneMode mode;
-        }
-
+    [CustomEditor(typeof(GeometrySelector))]
+    public class GeometrySelectorWindow : Editor 
+    {
         private GeometrySelector _Source;
 		private SlotDataAsset _Occluder = null;
         private float _occluderOffset = 0;
@@ -32,7 +26,7 @@ namespace UMA.Editors
 
         private const float drawTolerance = 10.0f; //in pixels
         private Color selectionColor = new Color(0.8f, 0.8f, 0.95f, 0.15f);
-        private static List<SceneInfo> restoreScenes;
+        private List<GeometrySelector.SceneInfo> restoreScenes;
         private Vector2 scrollPosition = Vector2.zero;
         private int selectionSelected = 0;
         private static string[] selectionOptions = new string[] { "Select", "UnSelect" };
@@ -47,24 +41,16 @@ namespace UMA.Editors
             get { return Instance != null; }
         }
 
-        public static void Init(GeometrySelector source, List<SceneInfo> savedScenes)
-        {
-            restoreScenes = savedScenes;
-
-            Rect R = SceneView.lastActiveSceneView.position; 
-
-            GeometrySelectorWindow window = (GeometrySelectorWindow)EditorWindow.GetWindowWithRect<GeometrySelectorWindow>(new Rect(R.width-260, R.y + 10, 250, 250), false, "Mesh Hide", true);
-
-            window._Source = source;
-            window.minSize = new Vector2(200, 200);
-            window.Show();
-        }
-
         void OnEnable()
         {
+            _Source = target as GeometrySelector;
+            if (_Source != null)
+                restoreScenes = _Source.restoreScenes;
+            else
+                Debug.LogError("GeometrySelector not found!");
+            
             Instance = this;
             EditorApplication.update += GeometryUpdate;
-            SceneView.onSceneGUIDelegate += OnSceneGUI;
             UpdateShadingMode(showWireframe);
 
             whiteLabels = new GUIStyle(EditorStyles.boldLabel);
@@ -86,13 +72,12 @@ namespace UMA.Editors
         {
             Instance = null;
             EditorApplication.update -= GeometryUpdate;
-            SceneView.onSceneGUIDelegate -= OnSceneGUI;
             Tools.hidden = false;
             DestroySceneEditObject();
             EditorApplication.UnlockReloadAssemblies();
             if (restoreScenes != null)
             {
-                foreach (SceneInfo s in restoreScenes)
+                foreach (GeometrySelector.SceneInfo s in restoreScenes)
                 {
                     if (string.IsNullOrEmpty(s.path))
                         continue;
@@ -101,7 +86,7 @@ namespace UMA.Editors
             }
         }
 
-        void OnGUI()
+        public override void OnInspectorGUI()
         {
             EditorGUILayout.LabelField("Mesh Selector Utilities", EditorStyles.largeLabel, GUILayout.MaxHeight(25) );
             scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUIStyle.none);
@@ -200,10 +185,12 @@ namespace UMA.Editors
         private void GeometryUpdate()
         {
             if (doneEditing)
-                Close();
+            {
+                SaveSelection(_Source.selectedTriangles);
+                Cleanup();
+            }
         }
-
-
+            
         private void ResetLabelStart()
         {
             infoRect = new Rect(10, 30, 400, 30);
@@ -219,7 +206,7 @@ namespace UMA.Editors
         {
             return selectionMode ? "Selection Mode: Add" : "Selection Mode: Remove";
         }
-
+            
         public void SaveSelection(BitArray selection)
         {
             if (cancelSave)
@@ -315,7 +302,7 @@ namespace UMA.Editors
                 SceneView.FrameLastActiveSceneView();            
         }
 
-        void OnSceneGUI(SceneView sceneView)
+        void OnSceneGUI()
         {
             const float WindowHeight = 140;
             const float WindowWidth = 380;
@@ -325,7 +312,7 @@ namespace UMA.Editors
 
             Handles.BeginGUI();
 
-            GUI.Window(1, new Rect(sceneView.position.width -(WindowWidth+Margin), sceneView.position.height - (WindowHeight+Margin), WindowWidth, WindowHeight), SceneWindow, "UMA Mesh Hide Geometry Selector");
+            GUI.Window(1, new Rect(SceneView.lastActiveSceneView.position.width -(WindowWidth+Margin), SceneView.lastActiveSceneView.position.height - (WindowHeight+Margin), WindowWidth, WindowHeight), SceneWindow, "UMA Mesh Hide Geometry Selector");
             DrawNextLabel("Left click and drag to area select");
             DrawNextLabel( "Hold SHIFT while dragging to paint");
             DrawNextLabel("Hold ALT while dragging to orbit");
@@ -632,8 +619,6 @@ namespace UMA.Editors
             if (_Source != null)
             {
                 UpdateShadingMode(false);
-                if (_Source.doneEditing != null)
-                    _Source.doneEditing(_Source.selectedTriangles);
                 if (_Source.meshAsset != null)
                     Selection.activeObject = _Source.meshAsset;
                 DestroyImmediate(_Source.gameObject);

@@ -117,7 +117,7 @@ namespace UMA.Editors
 
         private void CloseWindow()
         {
-            GeometrySelectorWindow.Instance.Close();
+           // GeometrySelectorWindow.Instance.Close();
         }
 
         private void UpdateMeshPreview()
@@ -235,12 +235,12 @@ namespace UMA.Editors
 
             SceneView.lastActiveSceneView.Focus();
 
-            List<GeometrySelectorWindow.SceneInfo> currentscenes = new List<GeometrySelectorWindow.SceneInfo>();
+            List<GeometrySelector.SceneInfo> currentscenes = new List<GeometrySelector.SceneInfo>();
 
             for (int i = 0; i < EditorSceneManager.sceneCount; i++)
             {
                 Scene sc = EditorSceneManager.GetSceneAt(i);
-                GeometrySelectorWindow.SceneInfo si = new GeometrySelectorWindow.SceneInfo();
+                GeometrySelector.SceneInfo si = new GeometrySelector.SceneInfo();
                 si.path = sc.path;
                 si.name = sc.name;
                 if (i == 0)
@@ -264,10 +264,9 @@ namespace UMA.Editors
             {
                 Selection.activeGameObject = obj;
                 SceneView.lastActiveSceneView.FrameSelected(true); 
-                GeometrySelectorWindow.Init(geometry,currentscenes);
 
                 geometry.meshAsset = source;
-                geometry.doneEditing += GeometrySelectorWindow.Instance.SaveSelection; //source.SaveSelection;
+                geometry.restoreScenes = currentscenes;
                 geometry.InitializeFromMeshData(source.asset.meshData);
 
                 //temporary, only works on submesh 0
