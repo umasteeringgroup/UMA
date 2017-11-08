@@ -37,7 +37,8 @@ namespace UMA.Editors
             if (newUmaObj != umaObject)
             {
                 umaObject = newUmaObj;
-                _avatar = umaObject.GetComponent<DynamicCharacterAvatar>();                    
+                if(newUmaObj != null)
+                    _avatar = umaObject.GetComponent<DynamicCharacterAvatar>();                    
             }
 
             if (umaObject != null && _avatar == null)
@@ -52,26 +53,35 @@ namespace UMA.Editors
 
             if (GUILayout.Button("Generate Bones"))
             {
+                if (umaObject == null)
+                {
+                    Debug.LogWarning ("UMA GameObject not set!");
+                    return;
+                }
+
+                if (_avatar.activeRace.data == null)
+                {
+                    Debug.LogWarning ("No recipe data found. Make sure the race is added to the library!");
+                    return;
+                }
+
                 if (_avatar != null)
                     baseRecipe = _avatar.activeRace.data.baseRaceRecipe;
 
-                if (umaObject == null)
-                    Debug.LogWarning ("UMA GameObject not set!");
-
                 if (baseRecipe == null)
-                    Debug.LogWarning("BaseRecipe not set!");
-
-                if(umaObject != null && baseRecipe != null)
                 {
-                    Debug.Log("Processing...");
-                    InitializeUMAData ();
-                    FindBones ();
-                    EnsureRoot ();
-                    CreateBoneTransforms ();
-                    InitializeAnimator ();
-                    if( removeUMAData ) Cleanup();
-                    Debug.Log ("Completed!");
+                    Debug.LogWarning("BaseRecipe not set!");
+                    return;
                 }
+
+                Debug.Log("Processing...");
+                InitializeUMAData ();
+                FindBones ();
+                EnsureRoot ();
+                CreateBoneTransforms ();
+                InitializeAnimator ();
+                if( removeUMAData ) Cleanup();
+                Debug.Log ("Completed!");
             }
         }
 
