@@ -328,9 +328,50 @@ namespace UMA
 			if (umaData)
 			{
 				umaData.skeleton.ResetAll();
+
 				// Put the skeleton into TPose so rotations will be valid for generating avatar
 				umaData.GotoTPose();
 				umaData.ApplyDNA();
+
+				// HACK the binds
+				SkinnedMeshRenderer renderer = umaData.GetRenderer(0);
+				Mesh mesh = renderer.sharedMesh;
+
+				Matrix4x4[] matrices = new Matrix4x4[renderer.bones.Length];
+				Vector3[] positions = new Vector3[renderer.bones.Length];
+				Transform[] parents = new Transform[renderer.bones.Length];
+
+				for (int boneIndex = 0; boneIndex < renderer.bones.Length; boneIndex++)
+				{
+					matrices[boneIndex] = renderer.bones[boneIndex].localToWorldMatrix;
+					positions[boneIndex] = renderer.bones[boneIndex].position;
+				}
+
+				for (int boneIndex = 0; boneIndex < renderer.bones.Length; boneIndex++)
+				{
+					parents[boneIndex] = renderer.bones[boneIndex].parent;
+					renderer.bones[boneIndex].parent = null;
+				}
+
+				for (int boneIndex = 0; boneIndex < renderer.bones.Length; boneIndex++)
+				{
+					renderer.bones[boneIndex].localScale = Vector3.one;
+					renderer.bones[boneIndex].position = positions[boneIndex];
+				}
+
+				for (int boneIndex = 0; boneIndex < renderer.bones.Length; boneIndex++)
+				{
+					renderer.bones[boneIndex].SetParent(parents[boneIndex], true);
+				}
+
+				Matrix4x4[] binds = new Matrix4x4[mesh.bindposes.Length];
+				for (int bindIndex = 0; bindIndex < mesh.bindposes.Length; bindIndex++)
+				{
+					binds[bindIndex] = renderer.bones[bindIndex].worldToLocalMatrix * matrices[bindIndex] * mesh.bindposes[bindIndex];
+				}
+				mesh.bindposes = binds;
+				// end of HACK the binds
+
 				umaData.FireDNAAppliedEvents();
 				umaData.skeleton.EndSkeletonUpdate();
 				UpdateAvatar(umaData);
