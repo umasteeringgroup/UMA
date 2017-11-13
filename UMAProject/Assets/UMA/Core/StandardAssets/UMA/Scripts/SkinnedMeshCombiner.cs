@@ -379,8 +379,14 @@ namespace UMA
 
 						if (source.triangleMask == null)
 						{
+							CopyIntArrayAdd(subTriangles, 0, submeshTriangles[destMesh], subMeshTriangleLength[destMesh], triangleLength, vertexIndex);
+							subMeshTriangleLength[destMesh] += triangleLength;
+						}
+						else
+						{
 							MaskedCopyIntArrayAdd(subTriangles, 0, submeshTriangles[destMesh], subMeshTriangleLength[destMesh], triangleLength, vertexIndex, source.triangleMask[i] );
 							subMeshTriangleLength[destMesh] += (triangleLength - (UMAUtils.GetCardinality(source.triangleMask[i])*3));
+						}
 					}
 				}
 
