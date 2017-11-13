@@ -179,6 +179,8 @@ namespace UMA.CharacterSystem
         //This is reset at the beginning of every build operation
         private List<string> crossCompatibleRaces = new List<string>();
 
+        private Dictionary<SlotDataAsset, List<MeshHideAsset>> MeshHideDictionary = new Dictionary<SlotDataAsset, List<MeshHideAsset>>();
+
 
 #if UNITY_EDITOR
         private GameObject EditorUMAContext = null;
@@ -2480,6 +2482,26 @@ namespace UMA.CharacterSystem
                             }
                         }
                     }
+                    //Collect all the MeshHideAssets on all the wardrobe recipes
+                    if (utr.MeshHideAssets != null)
+                    {
+                        foreach (MeshHideAsset meshHide in utr.MeshHideAssets)
+                        {
+                            if (meshHide != null && meshHide.asset != null)
+                            {
+                                if (!MeshHideDictionary.ContainsKey(meshHide.asset))
+                                {   //If this meshHide.asset isn't already in the dictionary, then let's add it and start a new list.
+                                    MeshHideDictionary.Add(meshHide.asset, new List<MeshHideAsset>());
+                                    MeshHideDictionary[meshHide.asset].Add(meshHide);
+                                }
+                                else
+                                {   //If this meshHide.asset is already in the dictionary AND the meshHide isn't already in the list, then add it.
+                                    if (!MeshHideDictionary[meshHide.asset].Contains(meshHide))
+                                        MeshHideDictionary[meshHide.asset].Add(meshHide);
+                                }
+                            }
+                        }
+                    }
                 }
 
                 foreach (string ws in activeRace.racedata.wardrobeSlots)//this doesn't need to validate racedata- we wouldn't be here if it was null
@@ -2643,6 +2665,12 @@ namespace UMA.CharacterSystem
 
             foreach (SlotData sd in umaData.umaRecipe.slotDataList)
             {
+                //Add MeshHideAsset here
+                if (MeshHideDictionary.ContainsKey(sd.asset))
+                {   //If this slotDataAsset is found in the MeshHideDictionary then we need to supply the SlotData with the bitArray.
+                    sd.meshHideMask = MeshHideAsset.GenerateMask( MeshHideDictionary[sd.asset] );
+                }
+                
                 if (sd.OverlayCount > 1)
                 {
                     List<OverlayData> Overlays = sd.GetOverlayList();
@@ -2667,7 +2695,6 @@ namespace UMA.CharacterSystem
                     sd.UpdateOverlayList(SortedOverlays);
                 }
             }
-
 
             UpdateColors();
 

@@ -472,7 +472,6 @@ namespace UMA.Editors
                 EditorGUILayout.HelpBox("Wardrobe Slot: This assigns the recipe to a Wardrobe Slot. The wardrobe slots are defined on the race. Characters can have only one recipe per Wardrobe Slot at a time, so for example, adding a 'beard' recipe to a character will replace the existing 'beard' if there is one", MessageType.Info);
             }
 
-
             //SuppressedSlots UI
             int suppressFlags = 0;
 			for (int i = 0; i < generatedWardrobeSlotOptions.Count; i++)
@@ -553,6 +552,20 @@ namespace UMA.Editors
             {
                 EditorGUILayout.HelpBox("Replaces: This is used to replace part of the base recipe while keeping it's overlays. For example, if you want to replace the head from the base race recipe with a High Poly head, you would 'replace' the head, not hide it. Only one slot can be replaced, and the recipe should only contain one slot.", MessageType.Info);
             }
+
+            #region MeshHideArray
+            //EditorGUIUtility.LookLikeInspector();
+            SerializedProperty meshHides = serializedObject.FindProperty ("MeshHideAssets");
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.PropertyField(meshHides, true);
+            if(EditorGUI.EndChangeCheck())
+                serializedObject.ApplyModifiedProperties();
+            //EditorGUIUtility.LookLikeControls();
+            if(ShowHelp)
+            {
+                EditorGUILayout.HelpBox("MeshHideAssets: This is a list of advanced mesh hiding assets to hide their corresponding slot meshes on a per vertex basis.", MessageType.Info);
+            }
+            #endregion
 
             //Update the values
             if (newWardrobeSlot != wardrobeSlot)

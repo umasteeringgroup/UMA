@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace UMA
@@ -226,6 +227,11 @@ namespace UMA
 					var slotData = materialDefinition.slotData;
 					combineInstance = new SkinnedMeshCombiner.CombineInstance();
 					combineInstance.meshData = slotData.asset.meshData;
+
+					//New MeshHiding
+					if (slotData.meshHideMask != null)
+						combineInstance.triangleMask = slotData.meshHideMask;
+
 					combineInstance.targetSubmeshIndices = new int[combineInstance.meshData.subMeshCount];
 					for (int i = 0; i < combineInstance.meshData.subMeshCount; i++)
 					{

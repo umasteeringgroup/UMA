@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -32,15 +33,53 @@ namespace UMA
 			return mean + dev * rand_std_normal;
 		}
 
-        public static string GetAssetFolder(string path)
+    /// <summary>
+    ///  Fast way to get the number of bits set to true.
+    /// </summary>
+    /// <returns>Number of bits set to true.</returns>
+    /// <param name="bitArray">Bit array.</param>
+    //https://stackoverflow.com/questions/5063178/counting-bits-set-in-a-net-bitarray-class
+    public static System.Int32 GetCardinality(BitArray bitArray)
+    {
+
+        System.Int32[] ints = new System.Int32[(bitArray.Count >> 5) + 1];
+
+        bitArray.CopyTo(ints, 0);
+
+        System.Int32 count = 0;
+
+        // fix for not truncated bits in last integer that may have been set to true with SetAll()
+        ints[ints.Length - 1] &= ~(-1 << (bitArray.Count % 32));
+
+        for (System.Int32 i = 0; i < ints.Length; i++)
         {
-            int index = path.LastIndexOf('/');
-            if( index > 0 )
+
+            System.Int32 c = ints[i];
+
+            // magic (http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetParallel)
+            unchecked
             {
-                return path.Substring(0, index);
+                c = c - ((c >> 1) & 0x55555555);
+                c = (c & 0x33333333) + ((c >> 2) & 0x33333333);
+                c = ((c + (c >> 4) & 0xF0F0F0F) * 0x1010101) >> 24;
             }
-            return "";
+
+            count += c;
+
         }
+
+        return count;
+    }		
+    
+    public static string GetAssetFolder(string path)
+    {
+        int index = path.LastIndexOf('/');
+        if( index > 0 )
+        {
+            return path.Substring(0, index);
+        }
+        return "";
+    }
 
 		public static void DestroySceneObject(UnityEngine.Object obj)
 		{

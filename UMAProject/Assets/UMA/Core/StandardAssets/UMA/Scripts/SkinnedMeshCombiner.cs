@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 using System;
 
@@ -16,6 +17,7 @@ namespace UMA
 		{
 			public UMAMeshData meshData;
 			public int[] targetSubmeshIndices;
+			public BitArray[] triangleMask;
 		}
 
 		private enum MeshComponents
@@ -41,10 +43,10 @@ namespace UMA
 		/// <param name="target">Target.</param>
 		/// <param name="sources">Sources.</param>
 		/// <param name="blendShapeSettings">BlendShape Settings.</param>
-        public static void CombineMeshes(UMAMeshData target, CombineInstance[] sources, UMAData.BlendShapeSettings blendShapeSettings = null)
+		public static void CombineMeshes(UMAMeshData target, CombineInstance[] sources, UMAData.BlendShapeSettings blendShapeSettings = null)
 		{
-            if (blendShapeSettings == null)
-                blendShapeSettings = new UMAData.BlendShapeSettings();
+			if (blendShapeSettings == null)
+				blendShapeSettings = new UMAData.BlendShapeSettings();
             
 			int vertexCount = 0;
 			int bindPoseCount = 0;
@@ -375,8 +377,16 @@ namespace UMA
 						int triangleLength = subTriangles.Length;
 						int destMesh = source.targetSubmeshIndices[i];
 
-						CopyIntArrayAdd(subTriangles, 0, submeshTriangles[destMesh], subMeshTriangleLength[destMesh], triangleLength, vertexIndex);
-						subMeshTriangleLength[destMesh] += triangleLength;
+						if (source.triangleMask == null)
+						{
+							CopyIntArrayAdd(subTriangles, 0, submeshTriangles[destMesh], subMeshTriangleLength[destMesh], triangleLength, vertexIndex);
+							subMeshTriangleLength[destMesh] += triangleLength;
+						}
+						else
+						{
+							MaskedCopyIntArrayAdd(subTriangles, 0, submeshTriangles[destMesh], subMeshTriangleLength[destMesh], triangleLength, vertexIndex, source.triangleMask[i] );
+							subMeshTriangleLength[destMesh] += (triangleLength - (UMAUtils.GetCardinality(source.triangleMask[i])*3));
+						}
 					}
 				}
 
@@ -564,7 +574,9 @@ namespace UMA
 				{
 					if (source.targetSubmeshIndices[i] >= 0)
 					{
-						int triangleLength = source.meshData.submeshes[i].triangles.Length;
+						int triangleLength = (source.triangleMask == null) ? source.meshData.submeshes[i].triangles.Length :
+							(source.meshData.submeshes[i].triangles.Length - (UMAUtils.GetCardinality(source.triangleMask[i]) * 3));
+
 						subMeshTriangleLength[source.targetSubmeshIndices[i]] += triangleLength;
 					}
 				}
@@ -757,6 +769,25 @@ namespace UMA
 			for (int i = 0; i < count; i++)
 			{
 				dest[destIndex++] = source[sourceIndex++] + add;
+			}
+		}
+
+		public static void MaskedCopyIntArrayAdd(int[] source, int sourceIndex, int[] dest, int destIndex, int count, int add, BitArray mask)
+		{
+			if ((mask.Count*3) != source.Length || (mask.Count*3) != count)
+			{
+				Debug.LogError("MaskedCopyIntArrayAdd: mask and source count do not match!");
+				return;
+			}
+                
+			for (int i = 0; i < count; i+=3)
+			{
+				if (!mask[(i/3)])
+				{
+					dest[destIndex++] = source[sourceIndex + i + 0] + add;
+					dest[destIndex++] = source[sourceIndex + i + 1] + add;
+					dest[destIndex++] = source[sourceIndex + i + 2] + add;
+				}
 			}
 		}
 
