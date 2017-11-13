@@ -228,9 +228,9 @@ namespace UMA
 					combineInstance = new SkinnedMeshCombiner.CombineInstance();
 					combineInstance.meshData = slotData.asset.meshData;
 
-          //New MeshHiding
-          if (slotData.meshHideMask != null)
-              combineInstance.triangleMask = slotData.meshHideMask;
+					//New MeshHiding
+					if (slotData.meshHideMask != null)
+						combineInstance.triangleMask = slotData.meshHideMask;
 
 					combineInstance.targetSubmeshIndices = new int[combineInstance.meshData.subMeshCount];
 					for (int i = 0; i < combineInstance.meshData.subMeshCount; i++)

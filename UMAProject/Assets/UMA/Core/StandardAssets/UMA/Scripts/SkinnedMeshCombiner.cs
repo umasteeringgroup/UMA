@@ -17,8 +17,7 @@ namespace UMA
 		{
 			public UMAMeshData meshData;
 			public int[] targetSubmeshIndices;
-
-            public BitArray[] triangleMask;
+			public BitArray[] triangleMask;
 		}
 
 		private enum MeshComponents
@@ -44,10 +43,10 @@ namespace UMA
 		/// <param name="target">Target.</param>
 		/// <param name="sources">Sources.</param>
 		/// <param name="blendShapeSettings">BlendShape Settings.</param>
-        public static void CombineMeshes(UMAMeshData target, CombineInstance[] sources, UMAData.BlendShapeSettings blendShapeSettings = null)
+		public static void CombineMeshes(UMAMeshData target, CombineInstance[] sources, UMAData.BlendShapeSettings blendShapeSettings = null)
 		{
-            if (blendShapeSettings == null)
-                blendShapeSettings = new UMAData.BlendShapeSettings();
+			if (blendShapeSettings == null)
+				blendShapeSettings = new UMAData.BlendShapeSettings();
             
 			int vertexCount = 0;
 			int bindPoseCount = 0;
@@ -374,20 +373,14 @@ namespace UMA
 				{
 					if (source.targetSubmeshIndices[i] >= 0)
 					{
-                        int[] subTriangles = source.meshData.submeshes[i].triangles;
-                        int triangleLength = subTriangles.Length;
-                        int destMesh = source.targetSubmeshIndices[i];
+						int[] subTriangles = source.meshData.submeshes[i].triangles;
+						int triangleLength = subTriangles.Length;
+						int destMesh = source.targetSubmeshIndices[i];
 
-                        if (source.triangleMask == null)
-                        {
-    						CopyIntArrayAdd(subTriangles, 0, submeshTriangles[destMesh], subMeshTriangleLength[destMesh], triangleLength, vertexIndex);
-    						subMeshTriangleLength[destMesh] += triangleLength;
-                        }
-                        else
-                        {
-                            MaskedCopyIntArrayAdd(subTriangles, 0, submeshTriangles[destMesh], subMeshTriangleLength[destMesh], triangleLength, vertexIndex, source.triangleMask[i] );
-                            subMeshTriangleLength[destMesh] += (triangleLength - (UMAUtils.GetCardinality(source.triangleMask[i])*3));
-                        }
+						if (source.triangleMask == null)
+						{
+							MaskedCopyIntArrayAdd(subTriangles, 0, submeshTriangles[destMesh], subMeshTriangleLength[destMesh], triangleLength, vertexIndex, source.triangleMask[i] );
+							subMeshTriangleLength[destMesh] += (triangleLength - (UMAUtils.GetCardinality(source.triangleMask[i])*3));
 					}
 				}
 
@@ -575,10 +568,10 @@ namespace UMA
 				{
 					if (source.targetSubmeshIndices[i] >= 0)
 					{
-                        int triangleLength = (source.triangleMask == null) ? source.meshData.submeshes[i].triangles.Length :
-                            (source.meshData.submeshes[i].triangles.Length - (UMAUtils.GetCardinality(source.triangleMask[i]) * 3));
+						int triangleLength = (source.triangleMask == null) ? source.meshData.submeshes[i].triangles.Length :
+							(source.meshData.submeshes[i].triangles.Length - (UMAUtils.GetCardinality(source.triangleMask[i]) * 3));
 
-                        subMeshTriangleLength[source.targetSubmeshIndices[i]] += triangleLength;
+						subMeshTriangleLength[source.targetSubmeshIndices[i]] += triangleLength;
 					}
 				}
 			}
@@ -773,24 +766,24 @@ namespace UMA
 			}
 		}
 
-        public static void MaskedCopyIntArrayAdd(int[] source, int sourceIndex, int[] dest, int destIndex, int count, int add, BitArray mask)
-        {
-            if ((mask.Count*3) != source.Length || (mask.Count*3) != count)
-            {
-                Debug.LogError("MaskedCopyIntArrayAdd: mask and source count do not match!");
-                return;
-            }
+		public static void MaskedCopyIntArrayAdd(int[] source, int sourceIndex, int[] dest, int destIndex, int count, int add, BitArray mask)
+		{
+			if ((mask.Count*3) != source.Length || (mask.Count*3) != count)
+			{
+				Debug.LogError("MaskedCopyIntArrayAdd: mask and source count do not match!");
+				return;
+			}
                 
-            for (int i = 0; i < count; i+=3)
-            {
-                if (!mask[(i/3)])
-                {
-                    dest[destIndex++] = source[sourceIndex + i + 0] + add;
-                    dest[destIndex++] = source[sourceIndex + i + 1] + add;
-                    dest[destIndex++] = source[sourceIndex + i + 2] + add;
-                }
-            }
-        }
+			for (int i = 0; i < count; i+=3)
+			{
+				if (!mask[(i/3)])
+				{
+					dest[destIndex++] = source[sourceIndex + i + 0] + add;
+					dest[destIndex++] = source[sourceIndex + i + 1] + add;
+					dest[destIndex++] = source[sourceIndex + i + 2] + add;
+				}
+			}
+		}
 
 		private static T[] EnsureArrayLength<T>(T[] oldArray, int newLength)
 		{
