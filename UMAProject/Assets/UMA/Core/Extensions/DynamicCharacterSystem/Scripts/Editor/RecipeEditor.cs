@@ -70,8 +70,10 @@ namespace UMA.Editors
 			return GO;
 		}
 
-        public void OnEnable()
+        public override void OnEnable()
         {
+            base.OnEnable();
+
             if (!NeedsReenable())
                 return;
 

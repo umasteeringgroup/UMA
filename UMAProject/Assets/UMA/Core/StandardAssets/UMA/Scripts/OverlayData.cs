@@ -18,7 +18,10 @@ namespace UMA
 		/// </summary>
 		public Rect rect;
 
+        #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
+        //https://docs.unity3d.com/Manual/ProceduralMaterials.html
 		protected ProceduralTexture[] generatedTextures = null;
+        #endif
 
 		const string proceduralSizeProperty = "$outputsize";
 
@@ -33,6 +36,7 @@ namespace UMA
 				if (asset.alphaMask != null)
 					return asset.alphaMask;
 				
+                #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
 				if (this.isProcedural)
 				{
 					if ((generatedTextures == null) || (generatedTextures.Length != asset.textureCount))
@@ -43,6 +47,7 @@ namespace UMA
 
 					return generatedTextures[0];
 				}
+                #endif
 
 				return asset.textureList[0];
 			}
@@ -51,6 +56,7 @@ namespace UMA
 		{
 			get
 			{
+                #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
 				if (this.isProcedural)
 				{
 					if ((generatedTextures == null) || (generatedTextures.Length != asset.textureCount))
@@ -61,6 +67,7 @@ namespace UMA
 
 					return generatedTextures;
 				}
+                #endif
 
 				return asset.textureList;
 			}
@@ -69,6 +76,7 @@ namespace UMA
 		{
 			get
 			{
+                #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
 				if (this.isProcedural)
 				{
 					ProceduralMaterial material = asset.material.material as ProceduralMaterial;
@@ -83,6 +91,7 @@ namespace UMA
 						return 0;
 					}
 				}
+                #endif
 
 				return asset.textureList[0].width * asset.textureList[0].height;
 			}
@@ -94,6 +103,7 @@ namespace UMA
 		[System.NonSerialized]
 		public OverlayColorData colorData;
 
+        #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
 		public class OverlayProceduralData
 		{
 			public string name;
@@ -107,6 +117,7 @@ namespace UMA
 			public Vector4 vectorValue;
 		}
 		public OverlayProceduralData[] proceduralData;
+        #endif
 
 		/// <summary>
 		/// Deep copy of the OverlayData.
@@ -147,10 +158,12 @@ namespace UMA
 			this.asset = asset;
 			this.rect = asset.rect;
 
+            #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
 			if (this.isProcedural)
 			{
 				this.proceduralData = new OverlayProceduralData[0];
 			}
+            #endif
 		}
 
 		/// <summary>
@@ -179,21 +192,21 @@ namespace UMA
 			else
 			{
 				// HACK - Assume that procedural materials can always generate all channels
-				if (this.isProcedural)
-				{
-				}
+                if (this.isProcedural)
+                {
+                }
 				// All channels must be initialized by the base overlay, only channel 0 in others
 				else for (int i = 0; i < targetMaterial.channels.Length; i++)
-				{
-					if ((asset.textureList[i] == null) && (targetMaterial.channels[i].channelType != UMAMaterial.ChannelType.MaterialColor))
-					{
-						Debug.LogError(string.Format("Overlay '{0}' missing required texture in channel {1}", asset.overlayName, i));
-						valid = false;
-					}
+                {
+                    if ((asset.textureList[i] == null) && (targetMaterial.channels[i].channelType != UMAMaterial.ChannelType.MaterialColor))
+                    {
+                        Debug.LogError(string.Format("Overlay '{0}' missing required texture in channel {1}", asset.overlayName, i));
+                        valid = false;
+                    }
 
-					if (!isBaseOverlay)
-						break;
-				}
+                    if (!isBaseOverlay)
+                        break;
+                }
 			}
 
 			if (colorData.channelMask.Length < targetMaterial.channels.Length)
@@ -270,6 +283,7 @@ namespace UMA
 			colorData = overlay.colorData.Duplicate();
 		}
 
+        #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
 		public void GenerateProceduralTextures()
 		{
 			if (!this.isProcedural)
@@ -326,7 +340,9 @@ namespace UMA
 				}
 			}
 		}
+        #endif
 
+        #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
 		public void ReleaseProceduralTextures()
 		{
 			if (!this.isProcedural)
@@ -345,6 +361,7 @@ namespace UMA
 
 			generatedTextures = null;
 		}
+        #endif
 
 		public void EnsureChannels(int channels)
 		{
@@ -366,6 +383,7 @@ namespace UMA
 			return !((bool)overlay2);
 		}
 
+		/// <summary>
 		/// Compares two overlay.assets and overlay.rects to see if they are the same. Mainly for comparing overlays from AssetBundles.
 		/// </summary>
 		/// <param name="overlay1"></param>

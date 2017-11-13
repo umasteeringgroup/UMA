@@ -12,7 +12,7 @@ namespace UMA.Editors
 		//the active dna and update the editor for it when the recipe changes.
 		private int[] _currentDnaTypeHashes;
 
-		public void OnEnable()
+		public override void OnEnable()
         {
             if (!NeedsReenable())
                 return;

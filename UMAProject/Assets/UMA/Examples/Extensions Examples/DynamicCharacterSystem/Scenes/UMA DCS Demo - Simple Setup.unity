@@ -20,11 +20,11 @@ RenderSettings:
   m_FogDensity: 0.01
   m_LinearFogStart: 50
   m_LinearFogEnd: 250
-  m_AmbientSkyColor: {r: 0.09968737, g: 0.12511392, b: 0.13740693, a: 0.4734968}
-  m_AmbientEquatorColor: {r: 0.09968737, g: 0.12511392, b: 0.13740693, a: 0.4734968}
-  m_AmbientGroundColor: {r: 0.09968737, g: 0.12511392, b: 0.13740693, a: 0.4734968}
+  m_AmbientSkyColor: {r: 0.42647058, g: 0.42647058, b: 0.42647058, a: 1}
+  m_AmbientEquatorColor: {r: 0.16911763, g: 0.16911763, b: 0.16911763, a: 1}
+  m_AmbientGroundColor: {r: 0.1102941, g: 0.1102941, b: 0.1102941, a: 1}
   m_AmbientIntensity: 1
-  m_AmbientMode: 0
+  m_AmbientMode: 1
   m_SkyboxMaterial: {fileID: 2100000, guid: 11b30e62ce68af4478c801d9ca4e972b, type: 2}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
@@ -2231,7 +2231,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 419486, guid: a70e3506d4b0528439ba632e74af08b8, type: 2}
       propertyPath: m_RootOrder
-      value: 7
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 11468000, guid: a70e3506d4b0528439ba632e74af08b8, type: 2}
       propertyPath: lookupTexture
@@ -2277,7 +2277,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 433544, guid: fe29e3c90ef88194184c6f3656db5ec5, type: 2}
       propertyPath: m_RootOrder
-      value: 7
+      value: 8
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: fe29e3c90ef88194184c6f3656db5ec5, type: 2}
@@ -4624,7 +4624,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1645511934}
   m_HandleRect: {fileID: 1645511933}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:

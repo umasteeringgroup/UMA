@@ -254,17 +254,24 @@ namespace UMA
 
 		public virtual void OnDirtyUpdate()
 		{
-			if (HandleDirtyUpdate(umaDirtyList[0]))
+			try
 			{
-				umaDirtyList.RemoveAt(0);
-				umaData.MoveToList(cleanUmas);
-				umaData = null;
+				if (HandleDirtyUpdate(umaDirtyList[0]))
+				{
+					umaDirtyList.RemoveAt(0);
+					umaData.MoveToList(cleanUmas);
+					umaData = null;
+				}
+				else if (fastGeneration && HandleDirtyUpdate(umaDirtyList[0]))
+				{
+					umaDirtyList.RemoveAt(0);
+					umaData.MoveToList(cleanUmas);
+					umaData = null;
+				}
 			}
-			else if (fastGeneration && HandleDirtyUpdate(umaDirtyList[0]))
+			catch (Exception ex)
 			{
-				umaDirtyList.RemoveAt(0);
-				umaData.MoveToList(cleanUmas);
-				umaData = null;
+				UnityEngine.Debug.LogWarning("Exception in UMAGeneratorBuiltin.OnDirtyUpdate: " + ex);
 			}
 		}
 

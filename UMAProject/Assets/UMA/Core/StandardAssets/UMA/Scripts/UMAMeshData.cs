@@ -476,7 +476,7 @@ namespace UMA
 		/// <summary>
 		/// Initialize UMA mesh data from Unity mesh.
 		/// </summary>
-		/// <param name="renderer">Source renderer.</param>
+		/// <param name="sharedMesh">Source mesh.</param>
 		public void RetrieveDataFromUnityMesh(Mesh sharedMesh)
 		{
 			bindPoses = sharedMesh.bindposes;
@@ -721,7 +721,6 @@ namespace UMA
 		/// Applies the data to a Unity mesh.
 		/// </summary>
 		/// <param name="renderer">Target renderer.</param>
-		/// <param name="skeleton">Skeleton.</param>
 		public void CopyDataToUnityMesh(SkinnedMeshRenderer renderer)
 		{
 			Mesh mesh = renderer.sharedMesh;

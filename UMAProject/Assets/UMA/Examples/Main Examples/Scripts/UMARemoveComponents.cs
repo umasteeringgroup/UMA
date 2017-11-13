@@ -16,7 +16,7 @@ namespace UMA.Examples
 			foreach (var componentName in removeComponentNames)
 			{
 				var component = data.animator.GetComponent(componentName);
-				Destroy(component);
+				UMAUtils.DestroySceneObject(component);
 			}
 			foreach (var componentName in disableComponentNames)
 			{

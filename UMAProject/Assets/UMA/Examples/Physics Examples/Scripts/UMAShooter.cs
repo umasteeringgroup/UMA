@@ -114,7 +114,7 @@ namespace UMA.Dynamics.Examples
 						//impact direction also according to the ray
 						impact = ray.direction * 1.0f;
 						
-						///impactTarget.AddForce(impact,ForceMode.VelocityChange);
+						//impactTarget.AddForce(impact,ForceMode.VelocityChange);
 						
 						//the impact will be reapplied for the next 100ms
 						//to make the connected objects follow even though the simulated body joints

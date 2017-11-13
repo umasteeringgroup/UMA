@@ -15,6 +15,8 @@ namespace UMA.Editors
 	    public UMAMaterial slotMaterial;
         public bool createOverlay;
         public bool createRecipe;
+        public bool addToGlobalLibrary;
+        public bool addToLocalLibrary;
 
 	    string GetAssetFolder()
 	    {
@@ -65,27 +67,55 @@ namespace UMA.Editors
 			EnforceFolder(ref slotFolder);
             RootBone = EditorGUILayout.TextField("Root Bone (ex:'Global')", RootBone);
 			slotName = EditorGUILayout.TextField("Element Name", slotName);
-            createOverlay = EditorGUILayout.Toggle("Create Overlay "+slotName+"_Overlay", createOverlay);
-            createRecipe = EditorGUILayout.Toggle("Create Wardrobe Recipe "+slotName+"_Recipe", createRecipe);
-			
-	        if (GUILayout.Button("Create Slot"))
-	        {
-	            Debug.Log("Processing...");
+            EditorGUILayout.BeginHorizontal();
+            createOverlay = EditorGUILayout.Toggle("Create Overlay", createOverlay);
+            EditorGUILayout.LabelField(slotName + "_Overlay");
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.BeginHorizontal();
+            createRecipe = EditorGUILayout.Toggle("Create Wardrobe Recipe ", createRecipe);
+            EditorGUILayout.LabelField(slotName + "_Recipe");
+            EditorGUILayout.EndHorizontal();
+            addToGlobalLibrary = EditorGUILayout.Toggle("Add To Global Library", addToGlobalLibrary);
+            if (UMAContext.Instance != null)
+            {
+                if (UMAContext.Instance.slotLibrary != null)
+                {
+                    addToLocalLibrary = EditorGUILayout.Toggle("Add to Scene Library", addToLocalLibrary);
+                }
+            }
+
+
+
+
+            if (GUILayout.Button("Create Slot"))
+            {
+                Debug.Log("Processing...");
                 SlotDataAsset sd = CreateSlot();
-	            if (sd != null)
-	            {
-	                Debug.Log("Success.");
+                if (sd != null)
+                {
+                    Debug.Log("Success.");
                     string AssetPath = AssetDatabase.GetAssetPath(sd.GetInstanceID());
+                    if (addToGlobalLibrary)
+                    {
+                        UMAAssetIndexer.Instance.EvilAddAsset(typeof(SlotDataAsset), sd);
+                    }
+                    if (addToLocalLibrary && UMAContext.Instance != null)
+                    {
+                        if (UMAContext.Instance.slotLibrary != null)
+                        {
+                            UMAContext.Instance.slotLibrary.AddSlotAsset(sd);
+                        }
+                    }
                     if (createOverlay)
                     {
-                        CreateOverlay(AssetPath.Replace(sd.name, sd.slotName + "_Overlay"),sd);
+                        CreateOverlay(AssetPath.Replace(sd.name, sd.slotName + "_Overlay"), sd);
                     }
                     if (createRecipe)
                     {
                         CreateRecipe(AssetPath.Replace(sd.name, sd.slotName + "_Recipe"));
                     }
                 }
-	        }
+            }
 
 
 			if (slotMesh != null )
@@ -126,15 +156,33 @@ namespace UMA.Editors
             asset.material = sd.material;
             AssetDatabase.CreateAsset(asset, path);
             AssetDatabase.SaveAssets();
+            if (addToGlobalLibrary)
+            {
+                UMAAssetIndexer.Instance.EvilAddAsset(typeof(OverlayDataAsset), asset);
+            }
+            if (addToLocalLibrary && UMAContext.Instance != null)
+            {
+                if (UMAContext.Instance.overlayLibrary != null)
+                {
+                    UMAContext.Instance.overlayLibrary.AddOverlayAsset(asset);
+                }
+            }
         }
 
         private void CreateRecipe(string path)
         {
             CharacterSystem.UMAWardrobeRecipe asset = ScriptableObject.CreateInstance<CharacterSystem.UMAWardrobeRecipe>();
+            //UMAData ud = new UMAData();
+            //ud.SetSlots()
             asset.DisplayValue = slotName;
             AssetDatabase.CreateAsset(asset, path);
             AssetDatabase.SaveAssets();
+            if (addToGlobalLibrary)
+            {
+                UMAAssetIndexer.Instance.EvilAddAsset(typeof(CharacterSystem.UMAWardrobeRecipe), asset);
+            }
         }
+
         private SlotDataAsset CreateSlot_Internal()
 	    {
 			var material = slotMaterial;

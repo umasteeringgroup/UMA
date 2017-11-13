@@ -1,3 +1,5 @@
+// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+
 // Simple 2 Pass Hair Shader 
 
 // This shader blends a solid cutout and fade shader to try and produce reasonable looking hair.
@@ -13,6 +15,10 @@ Shader "UMA/Hair Fade Cutout"
 		_MaskClipValue( "Cotout Clip Value", Range( 0 , 1) ) = 0.7
 		_BumpMap("Normal Map", 2D) = "bump" {}
 		_BumpStrength("Bump Strength", Range( 0 , 1)) = 0.4
+		_MetallicStrength("Metallic Strength", Range (0,1) ) = 0.5
+		_MetallicAdd("Metallic Add", Range (0,1) ) = 0.0
+		_SmoothnessStrength("Smoothness Strength", Range (0,1)) = 0.5
+		_SmoothnessAdd("Smoothness Add",Range(0,1)) = 0.0
 		_MetallicGlossMap("Metallic Gloss Map", 2D) = "white" {}
 		[HideInInspector] _texcoord( "", 2D ) = "white" {}
 	}
@@ -31,6 +37,10 @@ Shader "UMA/Hair Fade Cutout"
 			float2 uv_texcoord;
 		};
 
+	    uniform float _MetallicAdd;
+	    uniform float _MetallicStrength;
+		uniform float _SmoothnessStrength;
+		uniform float _SmoothnessAdd;
 		uniform float _BumpStrength;
 		uniform sampler2D _BumpMap;
 		uniform float4 _BumpMap_ST;
@@ -48,7 +58,8 @@ Shader "UMA/Hair Fade Cutout"
 			float4 tex2DNode1 = tex2D( _MainTex,uv_MainTex);
 			o.Albedo = tex2DNode1.xyz;
 			float2 uv_MetallicGlossMap = i.uv_texcoord * _MetallicGlossMap_ST.xy + _MetallicGlossMap_ST.zw;
-			o.Metallic = tex2D( _MetallicGlossMap,uv_MetallicGlossMap).x;
+			o.Metallic = _MetallicAdd + (tex2D( _MetallicGlossMap,uv_MetallicGlossMap).x * _MetallicStrength);
+			o.Smoothness = _SmoothnessAdd + (tex2D(_MetallicGlossMap, uv_MetallicGlossMap).a * _SmoothnessStrength);
 			o.Alpha = tex2DNode1.a;
 			clip( tex2DNode1.a - _MaskClipValue );
 		}
@@ -75,7 +86,9 @@ Shader "UMA/Hair Fade Cutout"
 			float4 tex2DNode1 = tex2D( _MainTex,uv_MainTex);
 			o.Albedo = tex2DNode1.xyz;
 			float2 uv_MetallicGlossMap = i.uv_texcoord * _MetallicGlossMap_ST.xy + _MetallicGlossMap_ST.zw;
-			o.Metallic = tex2D( _MetallicGlossMap,uv_MetallicGlossMap).x;
+			// o.Metallic = tex2D( _MetallicGlossMap,uv_MetallicGlossMap).x * _MetallicStrength;
+			o.Metallic = _MetallicAdd + (tex2D(_MetallicGlossMap, uv_MetallicGlossMap).x * _MetallicStrength);
+			o.Smoothness = _SmoothnessAdd + (tex2D(_MetallicGlossMap, uv_MetallicGlossMap).a * _SmoothnessStrength);
 			o.Alpha = tex2DNode1.a;
 		}
 
@@ -115,7 +128,7 @@ Shader "UMA/Hair Fade Cutout"
 			{
 				v2f o;
 				UNITY_INITIALIZE_OUTPUT( v2f, o );
-				float3 worldPos = mul( _Object2World, v.vertex ).xyz;
+				float3 worldPos = mul( unity_ObjectToWorld, v.vertex ).xyz;
 				half3 worldNormal = UnityObjectToWorldNormal( v.normal );
 				fixed3 worldTangent = UnityObjectToWorldDir( v.tangent.xyz );
 				fixed tangentSign = v.tangent.w * unity_WorldTransformParams.w;

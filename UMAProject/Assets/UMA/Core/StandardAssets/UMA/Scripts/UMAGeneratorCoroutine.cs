@@ -134,8 +134,10 @@ namespace UMA
 						if (overlay != null)
 						{
 							validOverlayCount++;
+                            #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
 							if (overlay.isProcedural)
 								overlay.GenerateProceduralTextures();
+                            #endif
 						}
 					}
 
@@ -231,8 +233,10 @@ namespace UMA
 				for (int j = 1; j < slot.OverlayCount; j++)
 				{
 					OverlayData overlay = slot.GetOverlay(j);
+                    #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
 					if ((overlay != null) && (overlay.isProcedural))
 						overlay.ReleaseProceduralTextures();
+                    #endif
 				}
 			}
 
@@ -249,7 +253,7 @@ namespace UMA
 					{
 						if (atlasses[i].renderer == j)
 						{
-							UnityEngine.Object.Destroy(mats[materialIndex]);
+							UMAUtils.DestroySceneObject(mats[materialIndex]);
 							newMats[materialIndex] = atlasses[i].material;
 							materialIndex++;
 						}
@@ -275,12 +279,12 @@ namespace UMA
 					{
 						RenderTexture tempRenderTexture = tempTexture as RenderTexture;
 						tempRenderTexture.Release();
-						UnityEngine.Object.Destroy(tempRenderTexture);
+						UMAUtils.DestroySceneObject(tempRenderTexture);
 						tempRenderTexture = null;
 					}
 					else
 					{
-						UnityEngine.Object.Destroy(tempTexture);
+						UMAUtils.DestroySceneObject(tempTexture);
 					}
 					backUpTexture[textureIndex] = null;
 				}

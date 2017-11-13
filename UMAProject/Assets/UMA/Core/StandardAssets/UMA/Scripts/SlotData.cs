@@ -42,6 +42,17 @@ namespace UMA
 			overlayScale = asset.overlayScale;
 		}
 
+        /// <summary>
+        /// Property to return overlay hash so it is visible in debugger.
+        /// </summary>
+        public int OverlayHash
+        {
+            get
+            {
+                return GetOverlayList().GetHashCode();
+            }
+        }
+
 		/// <summary>
 		/// Deep copy of the SlotData.
 		/// </summary>
@@ -178,10 +189,31 @@ namespace UMA
 		/// <summary>
 		/// Sets the complete list of overlays.
 		/// </summary>
-		/// <param name="overlayList">The overlay list.</param>
-		public void SetOverlayList(List<OverlayData> overlayList)
+		/// <param name="newOverlayList">The overlay list.</param>
+		public void SetOverlayList(List<OverlayData> newOverlayList)
 		{
-			this.overlayList = overlayList;
+                this.overlayList = newOverlayList;
+		}
+
+        /// <summary>
+        /// Sets the complete list of overlays.
+        /// Reuses the overlay list if it exists.
+        /// </summary>
+        /// <param name="newOverlayList">The overlay list.</param>
+        public void UpdateOverlayList(List<OverlayData> newOverlayList)
+        {
+            if (this.overlayList.Count == newOverlayList.Count)
+            {
+                // keep the list, and just set the overlays so that merging continues to work.
+                for (int i = 0; i < this.overlayList.Count; i++)
+                {
+                    this.overlayList[i] = newOverlayList[i];
+                }
+            }
+            else
+            {
+                this.overlayList = newOverlayList;
+            }
 		}
 
 		/// <summary>
@@ -320,7 +352,8 @@ namespace UMA
 
 		public void OnAfterDeserialize()
 		{
-			if (overlayList == null) overlayList = new List<OverlayData>();
+			if (overlayList == null)
+                overlayList = new List<OverlayData>();
 		}
 
 		public void OnBeforeSerialize()

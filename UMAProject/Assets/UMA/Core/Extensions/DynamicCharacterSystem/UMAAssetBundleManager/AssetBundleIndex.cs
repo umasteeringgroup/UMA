@@ -248,7 +248,7 @@ namespace UMA.AssetBundles
 		/// Replicates AssetBundle.Contains but uses assetNameHash and adds an optional type filter
 		/// </summary>
 		/// <param name="assetBundleName"></param>
-		/// <param name="assetName"></param>
+		/// <param name="assetHash"></param>
 		/// <param name="type"></param>
 		/// <returns></returns>
 		public bool AssetBundleContains(string assetBundleName, int? assetHash, string type = "")
@@ -263,7 +263,7 @@ namespace UMA.AssetBundles
 		/// <summary>
 		/// Searches the available AssetBundles for the given assetName optionally filtered by type
 		/// </summary>
-		/// <param name="assetName"></param>
+		/// <param name="assetNameOrFilename"></param>
 		/// <param name="type"></param>
 		/// <returns></returns>
 		public string[] FindContainingAssetBundle(string assetNameOrFilename, string type = "")

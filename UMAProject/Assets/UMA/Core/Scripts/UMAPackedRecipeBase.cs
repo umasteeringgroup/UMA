@@ -204,9 +204,12 @@ namespace UMA
 			public string id;
 			public int colorIdx;
 			public int[] rect;
+            #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
 			public PackedOverlaySubstanceData[] data;
+            #endif
 		}
 
+        #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
 		[System.Serializable]
 		public class PackedOverlaySubstanceData
 		{
@@ -331,6 +334,7 @@ namespace UMA
 				}
 			}
 		}
+        #endif
 
 		[System.Serializable]
 		public class PackedOverlayColorDataV3
@@ -632,6 +636,7 @@ namespace UMA
 						tempPackedOverlay.rect[2] = Mathf.FloorToInt(overlayData.rect.width);
 						tempPackedOverlay.rect[3] = Mathf.FloorToInt(overlayData.rect.height);
 
+                        #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
 						if (overlayData.isProcedural && (overlayData.proceduralData != null))
 						{
 							tempPackedOverlay.data = new PackedOverlaySubstanceData[overlayData.proceduralData.Length];
@@ -640,6 +645,7 @@ namespace UMA
 								tempPackedOverlay.data[dataIdx] = new PackedOverlaySubstanceData(overlayData.proceduralData[dataIdx]);
 							}
 						}
+                        #endif
 
 						OverlayColorData colorData = overlayData.colorData;
 						int colorIndex = -1;
@@ -956,13 +962,21 @@ namespace UMA
 							if (UMAPackRecipe.MaterialIsValid(overlayData.asset.material))
 								overlayData.EnsureChannels(overlayData.asset.material.channels.Length);
 						
-							overlayData.proceduralData = new OverlayData.OverlayProceduralData[packedOverlay.data.Length];
-							for (int dataIdx = 0; dataIdx < packedOverlay.data.Length; dataIdx++)
+                            #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
+							if(packedOverlay.data == null)
+								overlayData.proceduralData = new OverlayData.OverlayProceduralData[0];
+							else
 							{
-								OverlayData.OverlayProceduralData proceduralData = new OverlayData.OverlayProceduralData();
-								packedOverlay.data[dataIdx].SetOverlayProceduralData(proceduralData);
-								overlayData.proceduralData[dataIdx] = proceduralData;
+								overlayData.proceduralData = new OverlayData.OverlayProceduralData[packedOverlay.data.Length];
+
+    								for (int dataIdx = 0; dataIdx < packedOverlay.data.Length; dataIdx++)
+    								{
+	    								OverlayData.OverlayProceduralData proceduralData = new OverlayData.OverlayProceduralData();
+	    								packedOverlay.data[dataIdx].SetOverlayProceduralData(proceduralData);
+    									overlayData.proceduralData[dataIdx] = proceduralData;
+								}
 							}
+                            #endif
 
 							tempSlotData.AddOverlay(overlayData);
 						}

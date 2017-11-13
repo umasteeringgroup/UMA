@@ -172,7 +172,7 @@ namespace UMA
 					{
 						AnimatorState snapshot = new AnimatorState();
 						snapshot.SaveAnimatorState(animator);
-						Object.Destroy(animator.avatar);
+						UMAUtils.DestroySceneObject(animator.avatar);
 						SetAvatar(umaData, animator);
 						if(animator.runtimeAnimatorController != null)
 							snapshot.RestoreAnimatorState(animator);
@@ -182,8 +182,6 @@ namespace UMA
 					umaTransform.localRotation = originalRot;
 					umaTransform.localPosition = originalPos;
 				}
-				else
-					Debug.LogWarning("No animation controller supplied.");
 			}
 		}
 
@@ -331,7 +329,7 @@ namespace UMA
 				{
 					skeletonbone.position = boneGO.transform.localPosition;
 					skeletonbone.scale = boneGO.transform.localScale;
-					skeletonbone.rotation = umaData.skeleton.GetTPoseCorrectedRotation(boneHash, boneGO.transform.localRotation);
+					skeletonbone.rotation = umaData.skeleton.GetTPoseCorrectedRotation(boneHash, skeletonbone.rotation);
 					newBones.Add(skeletonbone);
 				}
 			}

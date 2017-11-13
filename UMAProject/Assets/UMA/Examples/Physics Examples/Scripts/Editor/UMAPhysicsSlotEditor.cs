@@ -25,8 +25,18 @@ namespace UMA.Dynamics.Editors
 
 		private void AddDefaultLayers()
 		{
+			UMAPhysicsSlotDefinition slot = target as UMAPhysicsSlotDefinition;
+
 			CreateLayer ("Ragdoll");
 			CreateLayer ("Player");
+
+			for (int i = 8; i < 32; i++)
+			{
+				if( i != slot.ragdollLayer )
+				Physics.IgnoreLayerCollision(slot.ragdollLayer, i, true);
+			}
+
+			Physics.IgnoreLayerCollision(slot.ragdollLayer, slot.ragdollLayer, false);
 		}
 
 		private void CreateLayer(string name)

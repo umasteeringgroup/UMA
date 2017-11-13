@@ -432,7 +432,12 @@ namespace UMA.AssetBundles
 			if (GUILayout.Button(buttonBuildAssetBundlesText))
 			{
 				BuildScript.BuildAssetBundles();
-				Caching.CleanCache ();
+
+#if UNITY_2017_2_OR_NEWER
+				Caching.ClearCache ();
+#else
+				Caching.CleanCache();          
+#endif
 				return;
 			}
 			EndVerticalPadded(5);
@@ -539,7 +544,11 @@ namespace UMA.AssetBundles
 
 				if (GUILayout.Button("Clean the Cache"))
 				{
+#if UNITY_2017_2_OR_NEWER
+					_statusMessage = Caching.ClearCache() ? "Cache Cleared." : "Error clearing cache.";
+#else
 					_statusMessage = Caching.CleanCache() ? "Cache Cleared." : "Error clearing cache.";
+#endif
 				}
 				EditorGUILayout.Space();
 			}

@@ -30,8 +30,11 @@ MonoBehaviour:
   - Legs
   - Feet
   - FullOutfit
-  backwardsCompatibleWith:
-  - HumanFemaleDCS
+  backwardsCompatibleWith: []
+  _crossCompatibilitySettings:
+    settingsData:
+    - ccRace: HumanFemaleDCS
+      ccSettings: []
   raceThumbnails:
     fullThumb: {fileID: 21300000, guid: 50e3801fc7aefb24583de1c1625c8277, type: 3}
     faceThumb: {fileID: 21300000, guid: 1550614af86fead4b9d72c0eea8235ef, type: 3}

@@ -23,7 +23,7 @@ namespace UMA.Dynamics
 		public bool enableColliderTriggers = false;
 
 		[Tooltip("Experimental, for blending animations with physics")]
-        [HideInInspector]
+        	[HideInInspector]
 		[Range(0,1f)]
 		public float ragdollBlendAmount;
 
@@ -35,8 +35,8 @@ namespace UMA.Dynamics
 		[Tooltip("Layer to set the player collider on. See layer based collision")]
 		public int playerLayer = 9;
 
-        [Tooltip("List of Physics Elements, see UMAPhysicsElement class")]
-        public List<UMAPhysicsElement> elements = new List<UMAPhysicsElement>();
+        	[Tooltip("List of Physics Elements, see UMAPhysicsElement class")]
+        	public List<UMAPhysicsElement> elements = new List<UMAPhysicsElement>();
 
 		public UnityEvent onRagdollStarted;
 		public UnityEvent onRagdollEnded;
@@ -47,11 +47,11 @@ namespace UMA.Dynamics
 		private List<Rigidbody> _rigidbodies = new List<Rigidbody> ();
 		private List<BoxCollider> _BoxColliders = new List<BoxCollider> ();
 
-        public List<ClothSphereColliderPair> SphereColliders { get { return _SphereColliders; }}
-        private List<ClothSphereColliderPair> _SphereColliders = new List<ClothSphereColliderPair>();
+        	public List<ClothSphereColliderPair> SphereColliders { get { return _SphereColliders; }}
+        	private List<ClothSphereColliderPair> _SphereColliders = new List<ClothSphereColliderPair>();
 		
-        public List<CapsuleCollider> CapsuleColliders { get { return _CapsuleColliders; }}
-        private List<CapsuleCollider> _CapsuleColliders = new List<CapsuleCollider>();
+        	public List<CapsuleCollider> CapsuleColliders { get { return _CapsuleColliders; }}
+        	private List<CapsuleCollider> _CapsuleColliders = new List<CapsuleCollider>();
 
 	
 		private CapsuleCollider _playerCollider;
@@ -63,13 +63,16 @@ namespace UMA.Dynamics
 			_umaData = gameObject.GetComponent<UMAData> ();	
 			gameObject.layer = playerLayer;
 
-            if(_SphereColliders == null) { _SphereColliders = new List<ClothSphereColliderPair>(); }
-            if(_CapsuleColliders == null) { _CapsuleColliders = new List<CapsuleCollider>(); }
+			if(_SphereColliders == null) { _SphereColliders = new List<ClothSphereColliderPair>(); }
+			if(_CapsuleColliders == null) { _CapsuleColliders = new List<CapsuleCollider>(); }
 
-            DynamicCharacterAvatar avatar = gameObject.GetComponent<DynamicCharacterAvatar>();
-            if (avatar != null)
-                avatar.CharacterCreated.AddListener(OnCharacterCreatedCallback);
-        }
+			DynamicCharacterAvatar avatar = gameObject.GetComponent<DynamicCharacterAvatar>();
+			if (avatar != null)
+				avatar.CharacterCreated.AddListener(OnCharacterCreatedCallback);
+
+			if (!Physics.GetIgnoreLayerCollision(ragdollLayer, playerLayer))
+				Debug.LogWarning("RagdollLayer and PlayerLayer are not ignoring each other! This will cause collision issues. Please update the collision matrix or 'Add Default Layers' in the Physics Slot Definition");
+		}
 
 		void FixedUpdate()
 		{
