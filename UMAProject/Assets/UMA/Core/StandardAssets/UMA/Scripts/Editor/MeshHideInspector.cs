@@ -80,19 +80,7 @@ namespace UMA.Editors
                 EditorGUILayout.LabelField("No triangle array found");
 
             GUILayout.Space(20);
-            if (GeometrySelectorWindow.IsOpen)
-            {
-                GUILayout.Space(20);
-                if (GUILayout.Button("End Editing", GUILayout.MinHeight(50)))
-                {
-                    EditorApplication.delayCall += CloseWindow;
-                }
-
-                GUILayout.Space(20);
-                GUILayout.Label("You are already editing the mesh");
-                GUILayout.Label("Press End Editing to close the session.");
-            }
-            else
+            if (!GeometrySelectorWindow.IsOpen)
             {
                 EditorGUI.BeginDisabledGroup(source.asset == null);
                 if (GUILayout.Button("Begin Editing", GUILayout.MinHeight(50)))
@@ -113,11 +101,6 @@ namespace UMA.Editors
                 // This has to happen outside the inspector
                 EditorApplication.delayCall += CreateSceneEditObject;
             }
-        }
-
-        private void CloseWindow()
-        {
-           // GeometrySelectorWindow.Instance.Close();
         }
 
         private void UpdateMeshPreview()
@@ -193,8 +176,6 @@ namespace UMA.Editors
 
         private void CreateSceneEditObject()
         {
-
-
             MeshHideAsset source = target as MeshHideAsset;
             if (source.asset == null)
                 return;
