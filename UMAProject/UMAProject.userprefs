@@ -1,12 +1,28 @@
-﻿<Properties StartupItem="Assembly-CSharp.csproj">
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="Unity.Instance.Unity Editor" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\UMA\Example\Scripts\Editor\UMAAvatarLoadSaveMenuItems.cs">
+﻿<Properties StartupConfiguration="{DBD2650E-48C4-ECDB-F287-B8ED145ADDE6}|">
+  <MonoDevelop.Ide.ItemProperties.Assembly-CSharp PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/UMA/Core/Extensions/DynamicCharacterSystem/Scripts/Editor/UMAWardrobeRecipeEditor.cs">
     <Files>
-      <File FileName="Assets\UMA\Example\Scripts\Editor\UMAAvatarLoadSaveMenuItems.cs" Line="18" Column="5" />
+      <File FileName="Assets/UMA/Core/Extensions/DynamicCharacterSystem/Scripts/DynamicCharacterAvatar.cs" Line="1" Column="1" />
+      <File FileName="Assets/UMA/Core/Extensions/DynamicCharacterSystem/Scripts/Editor/DynamicCharacterAvatarEditor.cs" Line="135" Column="57" />
+      <File FileName="Assets/UMA/Core/Extensions/DynamicCharacterSystem/Scripts/Editor/WardrobeRecipeListPropertyDrawer.cs" Line="103" Column="3" />
+      <File FileName="Assets/UMA/Core/StandardAssets/UMA/Scripts/Editor/CharacterBaseEditor.cs" Line="648" Column="1" />
+      <File FileName="Assets/UMA/Core/StandardAssets/UMA/Scripts/Editor/OverlayInspector.cs" Line="13" Column="7" />
+      <File FileName="Assets/UMA/Core/StandardAssets/UMA/Scripts/CustomAssetUtility.cs" Line="1" Column="1" />
+      <File FileName="Assets/UMA/Core/StandardAssets/UMA/Scripts/Editor/SlotDataAssetInspector.cs" Line="1" Column="1" />
+      <File FileName="Assets/UMA/Core/StandardAssets/UMA/Scripts/Editor/GeometrySelectorWindow.cs" Line="77" Column="61" />
+      <File FileName="Assets/UMA/Core/Extensions/DynamicCharacterSystem/Scripts/Editor/pWardrobeRecipeEditor.cs" Line="598" Column="1" />
+      <File FileName="Assets/UMA/Core/Extensions/DynamicCharacterSystem/Scripts/Editor/UMAWardrobeRecipeEditor.cs" Line="65" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
-    <BreakpointStore />
+    <BreakpointStore>
+      <Breakpoint file="/Users/jaimi/Documents/GitHub/UMA/UMAProject/Assets/UMA/Core/StandardAssets/UMA/Scripts/Editor/GeometrySelectorWindow.cs" relfile="Assets/UMA/Core/StandardAssets/UMA/Scripts/Editor/GeometrySelectorWindow.cs" line="308" column="1" />
+      <Breakpoint file="/Users/jaimi/Documents/GitHub/UMA/UMAProject/Assets/UMA/Core/StandardAssets/UMA/Scripts/Editor/GeometrySelectorWindow.cs" relfile="Assets/UMA/Core/StandardAssets/UMA/Scripts/Editor/GeometrySelectorWindow.cs" line="203" column="1" />
+      <Breakpoint file="/Users/jaimi/Documents/GitHub/UMA/UMAProject/Assets/UMA/Core/StandardAssets/UMA/Scripts/Editor/CharacterBaseEditor.cs" relfile="Assets/UMA/Core/StandardAssets/UMA/Scripts/Editor/CharacterBaseEditor.cs" line="1132" column="1" />
+    </BreakpointStore>
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
   <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.ItemProperties.UMAProject PreferredExecutionTarget="Unity.Editor" />
+  <MultiItemStartupConfigurations />
 </Properties>
