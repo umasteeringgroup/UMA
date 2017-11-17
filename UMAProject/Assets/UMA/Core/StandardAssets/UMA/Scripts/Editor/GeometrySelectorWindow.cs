@@ -32,7 +32,8 @@ namespace UMA.Editors
         private static string[] selectionOptions = new string[] { "Select", "UnSelect" };
         private Rect infoRect = new Rect(10, 30, 400, 30);
         private GUIStyle whiteLabels;
-        private GUIStyle blackLabels; 
+        private GUIStyle blackLabels;
+		private bool disposed;
 
 
         public static GeometrySelectorWindow Instance { get; private set; }
@@ -43,6 +44,8 @@ namespace UMA.Editors
 
         void OnEnable()
         {
+			disposed = false;
+
             _Source = target as GeometrySelector;
             if (_Source != null)
                 restoreScenes = _Source.restoreScenes;
@@ -70,6 +73,12 @@ namespace UMA.Editors
 
         private void Cleanup()
         {
+			// Guard against Unity calling this via update multiple times even after
+			// it's been removed from the event. Only happens on Mac.
+			if (disposed)
+				return;
+			disposed = true;
+
             Instance = null;
             EditorApplication.update -= GeometryUpdate;
             Tools.hidden = false;
