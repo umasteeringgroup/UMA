@@ -913,6 +913,8 @@ namespace UMA.Editors
 		public bool sharedOverlays = false;
 		public int idx;
 
+
+
 		public SlotEditor(UMAData.UMARecipe recipe, SlotData slotData, int index)
 		{
 			_recipe = recipe;
@@ -1119,6 +1121,7 @@ namespace UMA.Editors
 
 	public class OverlayEditor
 	{
+		public static Dictionary<string, bool> OverlayExpanded = new Dictionary<string, bool>();		
 		private readonly UMAData.UMARecipe _recipe;
 		protected readonly SlotData _slotData;
 		private readonly OverlayData _overlayData;
@@ -1136,11 +1139,19 @@ namespace UMA.Editors
 		public int move;
 		private static OverlayData showExtendedRangeForOverlay;
 
+		public void EnsureEntry(string overlayName)
+		{
+			if (OverlayExpanded.ContainsKey(overlayName))
+				return;
+			OverlayExpanded.Add(overlayName, true);
+		}
+
 		public OverlayEditor(UMAData.UMARecipe recipe, SlotData slotData, OverlayData overlayData)
 		{
 			_recipe = recipe;
 			_overlayData = overlayData;
 			_slotData = slotData;
+			EnsureEntry((overlayData.overlayName));
 
 			// Sanity check the colors
 			if (_recipe.sharedColors == null)
@@ -1243,7 +1254,12 @@ namespace UMA.Editors
 		public bool OnGUI()
 		{
 			bool delete;
+
+			_foldout = OverlayExpanded[_overlayData.overlayName];
+
 			GUIHelper.FoldoutBar(ref _foldout, _overlayData.asset.overlayName + "("+_overlayData.asset.material.name+")", out move, out delete);
+
+			OverlayExpanded[_overlayData.overlayName] = _foldout;
 
 			if (!_foldout)
 				return false;
@@ -1763,7 +1779,7 @@ namespace UMA.Editors
               _forceUpdate = true;
           }
       }
-      scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUIStyle.none, GUILayout.MinHeight(600));
+			scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUIStyle.none , GUILayout.MinHeight(600), GUILayout.MaxHeight(3000));
 
 			if (_errorMessage != null)
 			{

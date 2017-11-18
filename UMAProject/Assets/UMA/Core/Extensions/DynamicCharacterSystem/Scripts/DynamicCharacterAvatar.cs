@@ -2448,8 +2448,10 @@ namespace UMA.CharacterSystem
                 return;
             }
 
+			// clear the hiddenslots and hidden mesh assets
+			// so they can be accumulate anew from the recipe
             HiddenSlots.Clear();
-
+			MeshHideDictionary = new Dictionary<SlotDataAsset, List<MeshHideAsset>>();
 
             UMADnaBase[] CurrentDNA = null;
             if (umaData != null)

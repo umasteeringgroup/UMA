@@ -1,23 +1,25 @@
 ﻿using UnityEngine;
+#if UNITY_EDITOR
 using UnityEditor.SceneManagement;
+#endif
 using System.Collections;
 using System.Collections.Generic;
 
 namespace UMA
 {
-    public class GeometrySelector : MonoBehaviour 
-    {
-        [HideInInspector]
-        public MeshHideAsset meshAsset;
+	public class GeometrySelector : MonoBehaviour
+	{
+		[HideInInspector]
+		public MeshHideAsset meshAsset;
 
-        public BitArray selectedTriangles;
+		public BitArray selectedTriangles;
 
-        public Mesh sharedMesh
-        {
-            get { return _sharedMesh; }
-            set { _sharedMesh = (Mesh)Instantiate(value); Initialize(); }
-        }
-        private Mesh _sharedMesh;
+		public Mesh sharedMesh
+		{
+			get { return _sharedMesh; }
+			set { _sharedMesh = (Mesh)Instantiate(value); Initialize(); }
+		}
+		private Mesh _sharedMesh;
 
 		public Mesh occlusionMesh
 		{
@@ -25,23 +27,24 @@ namespace UMA
 			set { _occlusionMesh = value; }
 		}
 		private Mesh _occlusionMesh;
-        private UMAMeshData _meshData;
+		private UMAMeshData _meshData;
 
-        public MeshRenderer meshRenderer
-        {
-            get { return _meshRenderer; }
-        }
-        private MeshRenderer _meshRenderer;
+		public MeshRenderer meshRenderer
+		{
+			get { return _meshRenderer; }
+		}
+		private MeshRenderer _meshRenderer;
 
-        public MeshCollider meshCollider
-        {
-            get { return _meshCollider; }
-        }
-        private MeshCollider _meshCollider;
-        //Use 0 for unselected and 1 for selected
-        private Material[] _Materials;
+		public MeshCollider meshCollider
+		{
+			get { return _meshCollider; }
+		}
+		private MeshCollider _meshCollider;
+		//Use 0 for unselected and 1 for selected
+		private Material[] _Materials;
 
-        public struct SceneInfo
+#if UNITY_EDITOR
+		public struct SceneInfo
         {
             public string path;
             public string name;
@@ -49,8 +52,9 @@ namespace UMA
         }
 
         public List<SceneInfo> restoreScenes;
+#endif
 
-        public void Initialize()
+		public void Initialize()
         {
             gameObject.name = "GeometrySelector";
             if (_sharedMesh == null)
