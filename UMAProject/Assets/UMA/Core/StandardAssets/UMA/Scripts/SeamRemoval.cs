@@ -69,11 +69,27 @@ namespace UMA
 			tempMesh.uv = originalMesh.sharedMesh.uv;
 			tempMesh.triangles = originalMesh.sharedMesh.triangles;
 			tempMesh.bindposes = originalMesh.sharedMesh.bindposes;
+
+			int shapeCount = originalMesh.sharedMesh.blendShapeCount;
+			for (int shapeIndex = 0; shapeIndex < shapeCount; shapeIndex++)
+			{
+				string shapeName = originalMesh.sharedMesh.GetBlendShapeName(shapeIndex);
+				int frameCount = originalMesh.sharedMesh.GetBlendShapeFrameCount(shapeIndex);
+				for (int frameIndex = 0; frameIndex < frameCount; frameIndex++)
+				{
+					float frameWeight = originalMesh.sharedMesh.GetBlendShapeFrameWeight(shapeIndex, frameIndex);
+					Vector3[] deltaVertices = new Vector3[tempMesh.vertexCount];
+					Vector3[] deltaNormals = new Vector3[tempMesh.vertexCount];
+					Vector3[] deltaTangents = new Vector3[tempMesh.vertexCount];
+	
+					originalMesh.sharedMesh.GetBlendShapeFrameVertices(shapeIndex, frameIndex, deltaVertices, deltaNormals, deltaTangents);
+					tempMesh.AddBlendShapeFrame( shapeName, frameWeight, deltaVertices, deltaNormals, deltaTangents );
+				}
+			}
 			
 			calculateMeshTangents(tempMesh);
 			
 	        return tempMesh;
-
 	    }
 		
 
