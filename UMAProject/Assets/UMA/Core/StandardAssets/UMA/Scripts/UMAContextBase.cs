@@ -128,7 +128,7 @@ namespace UMA
 		/// </summary>
 		/// <param name="overlay">New overlay asset.</param>
 		public abstract void AddOverlayAsset(OverlayDataAsset overlay);
-/*
+
 		/// <summary>
 		/// Check for presence of a DNA type by name.
 		/// </summary>
@@ -160,7 +160,7 @@ namespace UMA
 		/// </summary>
 		/// <param name="dna">New DNA asset.</param>
 		public abstract void AddDNAAsset(DynamicUMADnaAsset dnaAsset);
-*/
+
 		/// <summary>
 		/// Finds the singleton context in the scene.
 		/// </summary>

@@ -22,6 +22,8 @@ namespace UMA
 		/// </summary>
 		public DynamicOverlayLibrary overlayLibrary;
 
+		protected DNALibrary dnaLibrary;
+
 		#pragma warning disable 618
 		public void Start()
 		{
@@ -37,6 +39,10 @@ namespace UMA
 			{
 				overlayLibrary = GameObject.Find("OverlayLibrary").GetComponent<DynamicOverlayLibrary>();
 			}
+			if (!dnaLibrary)
+			{
+				dnaLibrary = GameObject.Find("DNALibrary").GetComponent<DNALibrary>();
+			}
 			// Note: Removed null check so that this is always assigned if you have a UMAContext in your scene
 			// This will avoid those occasions where someone drops in a bogus context in a test scene, and then 
 			// later loads a valid scene (and everything breaks)
@@ -51,6 +57,7 @@ namespace UMA
 			slotLibrary.ValidateDictionary();
 			raceLibrary.ValidateDictionary();
 			overlayLibrary.ValidateDictionary();
+			dnaLibrary.ValidateDictionary();
 		}
 
 		/// <summary>
@@ -229,6 +236,52 @@ namespace UMA
 		public override void AddOverlayAsset(OverlayDataAsset overlay)
 		{
 			overlayLibrary.AddOverlayAsset(overlay);
+		}
+		/// <summary>
+		/// Check for presence of a DNA type by name.
+		/// </summary>
+		/// <returns><c>True</c> if the DNA exists in this context.</returns>
+		/// <param name="name">Name.</param>
+		public override bool HasDNA(string name)
+		{
+			return dnaLibrary.HasDNA(name);
+		}
+		/// <summary>
+		/// Check for presence of an DNA type by name hash.
+		/// </summary>
+		/// <returns><c>True</c> if the DNA exists in this context.</returns>
+		/// <param name="nameHash">Name hash.</param>
+		public override bool HasDNA(int nameHash)
+		{ 
+			return dnaLibrary.HasDNA(nameHash);
+		}
+
+		/// <summary>
+		/// Instantiate DNA by name.
+		/// </summary>
+		/// <returns>The overlay.</returns>
+		/// <param name="name">Name.</param>
+		public override UMADnaBase InstantiateDNA(string name)
+		{
+			return dnaLibrary.InstantiateDNA(name);
+		}
+		/// <summary>
+		/// Instantiate DNA by name hash.
+		/// </summary>
+		/// <returns>The overlay.</returns>
+		/// <param name="nameHash">Name hash.</param>
+		public override UMADnaBase InstantiateDNA(int nameHash)
+		{
+			return dnaLibrary.InstantiateDNA(nameHash);
+		}
+
+		/// <summary>
+		/// Add a DNA asset to the context.
+		/// </summary>
+		/// <param name="dna">New DNA asset.</param>
+		public override void AddDNAAsset(DynamicUMADnaAsset dnaAsset)
+		{
+			dnaLibrary.AddDNAAsset(dnaAsset);
 		}
 
 #if UNITY_EDITOR
