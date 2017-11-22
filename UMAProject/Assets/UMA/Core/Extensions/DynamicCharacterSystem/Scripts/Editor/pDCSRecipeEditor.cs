@@ -43,13 +43,13 @@ namespace UMA.Editors
 					warningIcon = EditorGUIUtility.FindTexture("console.warnicon.sml");
 				}
 				bool changed = false;
-				var context = UMAContext.FindInstance();
+				var context = UMAContextBase.FindInstance();
 				if (context == null)
 				{
 					var _errorMessage = "Editing a recipe requires a loaded scene with a valid UMAContext.";
 					Debug.LogWarning(_errorMessage);
 				}
-				var recipesForRaceSlot = context.dynamicCharacterSystem.GetRecipeNamesForRaceSlot(_wsRace, _wsSlot);
+				var recipesForRaceSlot = (context as DynamicUMAContext).dynamicCharacterSystem.GetRecipeNamesForRaceSlot(_wsRace, _wsSlot);
 				List<string> thisPopupVals = new List<string>();
 				thisPopupVals.Add("None");
 				thisPopupVals.AddRange(recipesForRaceSlot);
@@ -61,13 +61,13 @@ namespace UMA.Editors
 				warningStyle.contentOffset = new Vector2(0, -2f);
 				if (_wsRecipeName != "")
 				{
-					recipeIsLive = context.dynamicCharacterSystem.CheckRecipeAvailability(_wsRecipeName);
+					recipeIsLive = (context as DynamicUMAContext).dynamicCharacterSystem.CheckRecipeAvailability(_wsRecipeName);
 					selected = thisPopupVals.IndexOf(_wsRecipeName);
 					if (selected == -1)
 					{
 						selected = thisPopupVals.Count;
 						string missingOrIncompatible = "missing";
-						if (context.dynamicCharacterSystem.GetBaseRecipe(_wsRecipeName, false) != null)
+						if ((context as DynamicUMAContext).dynamicCharacterSystem.GetBaseRecipe(_wsRecipeName, false) != null)
 							missingOrIncompatible = "incompatible";
 						thisPopupVals.Add(_wsRecipeName + " (" + missingOrIncompatible + ")");
 					}
@@ -138,7 +138,7 @@ namespace UMA.Editors
 				if (_race != null)
 					if (_race.wardrobeSlots.Count > 0)
 					{
-						var context = UMAContext.FindInstance();
+						var context = UMAContextBase.FindInstance();
 						if (context == null)
 						{
 							var _errorMessage = "Editing a recipe requires a loaded scene with a valid UMAContext.";
@@ -150,7 +150,7 @@ namespace UMA.Editors
 						GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
 						if (_allowWardrobeCollectionSlot)
 						{
-							var wcRecipesForRace = context.dynamicCharacterSystem.GetRecipesForRaceSlot(_race.raceName, "WardrobeCollection");
+						var wcRecipesForRace = (context as DynamicUMAContext).dynamicCharacterSystem.GetRecipesForRaceSlot(_race.raceName, "WardrobeCollection");
 							var wcGroupDict = new Dictionary<string, List<string>>();
 							//for 'Standard Assets' we need to do some kind of get Types thing I think because we then need to use reflection to get the wardrobeSlot field
 							//how can we get what we want here when WardrobeCollections dont exist in Standard Assets (if 'StandardAssets' has been moved there)
@@ -303,10 +303,10 @@ namespace UMA.Editors
 			{
 				bool changed = false;
 				var thisUmaDataRecipe = new UMAData.UMARecipe();
-				var context = UMAContext.FindInstance();
+				var context = UMAContextBase.FindInstance();
 				if (context == null)
 					return false;
-				var thisWardrobeRecipe = context.dynamicCharacterSystem.GetBaseRecipe(sourceRecipeName);
+				var thisWardrobeRecipe = (context as DynamicUMAContext).dynamicCharacterSystem.GetBaseRecipe(sourceRecipeName);
 				if (thisWardrobeRecipe == null)
 					return false;
 				try
@@ -456,7 +456,7 @@ namespace UMA.Editors
 			}
 			private void UpdateBackwardsCompatibleData()
 			{
-				var context = UMAContext.FindInstance();
+				var context = UMAContextBase.FindInstance();
 				if (context == null)
 				{
 					var _errorMessage = "Editing a recipe requires a loaded scene with a valid UMAContext.";
@@ -467,7 +467,7 @@ namespace UMA.Editors
 				thisBaseRecipe.Load(_recipe, context);
 				if (_wardrobeSet.Count > 0)
 				{
-					var thisDCS = context.dynamicCharacterSystem;
+					var thisDCS = (context as DynamicUMAContext).dynamicCharacterSystem;
 					if (thisDCS == null)
 					{
 						var _errorMessage = "Editing a recipe requires a loaded scene with a valid UMAContext.";

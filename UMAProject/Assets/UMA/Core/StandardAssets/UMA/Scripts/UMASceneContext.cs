@@ -4,11 +4,10 @@ using System.Collections.Generic;
 namespace UMA
 {
 	/// <summary>
-	/// Gloal container for various UMA objects in the scene. Marked as partial so the developer can add to this if necessary
+	/// Simple scene based container for instantiating various UMA objects.
 	/// </summary>
-	public partial class UMAContext : MonoBehaviour
+	public class UMASceneContext : UMAContextBase
 	{
-		public static UMAContext Instance;
 		/// <summary>
 		/// The race library.
 		/// </summary>
@@ -22,7 +21,8 @@ namespace UMA
 		/// </summary>
 		public OverlayLibraryBase overlayLibrary;
 
-	#pragma warning disable 618
+		protected Dictionary<int, DynamicUMADnaAsset> dnaDict;
+
 		public void Start()
 		{
 			if (!slotLibrary)
@@ -58,7 +58,7 @@ namespace UMA
 		/// </summary>
 		/// <returns>The race.</returns>
 		/// <param name="name">Name.</param>
-		public RaceData GetRace(string name)
+		public override RaceData GetRace(string name)
 		{
 			return raceLibrary.GetRace(name);
 		}
@@ -67,7 +67,7 @@ namespace UMA
 		/// </summary>
 		/// <returns>The race.</returns>
 		/// <param name="nameHash">Name hash.</param>
-		public RaceData GetRace(int nameHash)
+		public override RaceData GetRace(int nameHash)
 		{
 			return raceLibrary.GetRace(nameHash);
 		}
@@ -76,7 +76,7 @@ namespace UMA
 		/// Array of all races in the context.
 		/// </summary>
 		/// <returns>The array of race data.</returns>
-		public RaceData[] GetAllRaces()
+		public override RaceData[] GetAllRaces()
 		{
 			return raceLibrary.GetAllRaces();
 		}
@@ -85,7 +85,7 @@ namespace UMA
 		/// Add a race to the context.
 		/// </summary>
 		/// <param name="race">New race.</param>
-		public void AddRace(RaceData race)
+		public override void AddRace(RaceData race)
 		{
 			raceLibrary.AddRace(race);
 		}
@@ -95,7 +95,7 @@ namespace UMA
 		/// </summary>
 		/// <returns>The slot.</returns>
 		/// <param name="name">Name.</param>
-		public SlotData InstantiateSlot(string name)
+		public override SlotData InstantiateSlot(string name)
 		{
 			return slotLibrary.InstantiateSlot(name);
 		}
@@ -105,7 +105,7 @@ namespace UMA
 		/// </summary>
 		/// <returns>The slot.</returns>
 		/// <param name="nameHash">Name hash.</param>
-		public SlotData InstantiateSlot(int nameHash)
+		public override SlotData InstantiateSlot(int nameHash)
 		{
 			return slotLibrary.InstantiateSlot(nameHash);
 		}
@@ -116,7 +116,7 @@ namespace UMA
 		/// <returns>The slot.</returns>
 		/// <param name="name">Name.</param>
 		/// <param name="overlayList">Overlay list.</param>
-		public SlotData InstantiateSlot(string name, List<OverlayData> overlayList)
+		public override SlotData InstantiateSlot(string name, List<OverlayData> overlayList)
 		{
 			return slotLibrary.InstantiateSlot(name, overlayList);
 		}
@@ -126,7 +126,7 @@ namespace UMA
 		/// <returns>The slot.</returns>
 		/// <param name="nameHash">Name hash.</param>
 		/// <param name="overlayList">Overlay list.</param>
-		public SlotData InstantiateSlot(int nameHash, List<OverlayData> overlayList)
+		public override SlotData InstantiateSlot(int nameHash, List<OverlayData> overlayList)
 		{
 			return slotLibrary.InstantiateSlot(nameHash, overlayList);
 		}
@@ -136,7 +136,7 @@ namespace UMA
 		/// </summary>
 		/// <returns><c>True</c> if the slot exists in this context.</returns>
 		/// <param name="name">Name.</param>
-		public bool HasSlot(string name)
+		public override bool HasSlot(string name)
 		{
 			return slotLibrary.HasSlot(name);
 		}
@@ -145,7 +145,7 @@ namespace UMA
 		/// </summary>
 		/// <returns><c>True</c> if the slot exists in this context.</returns>
 		/// <param name="nameHash">Name hash.</param>
-		public bool HasSlot(int nameHash)
+		public override bool HasSlot(int nameHash)
 		{ 
 			return slotLibrary.HasSlot(nameHash);
 		}
@@ -154,7 +154,7 @@ namespace UMA
 		/// Add a slot asset to the context.
 		/// </summary>
 		/// <param name="slot">New slot asset.</param>
-		public void AddSlotAsset(SlotDataAsset slot)
+		public override void AddSlotAsset(SlotDataAsset slot)
 		{
 			slotLibrary.AddSlotAsset(slot);
 		}
@@ -164,7 +164,7 @@ namespace UMA
 		/// </summary>
 		/// <returns><c>True</c> if the overlay exists in this context.</returns>
 		/// <param name="name">Name.</param>
-		public bool HasOverlay(string name)
+		public override bool HasOverlay(string name)
 		{
 			return overlayLibrary.HasOverlay(name);
 		}
@@ -173,7 +173,7 @@ namespace UMA
 		/// </summary>
 		/// <returns><c>True</c> if the overlay exists in this context.</returns>
 		/// <param name="nameHash">Name hash.</param>
-		public bool HasOverlay(int nameHash)
+		public override bool HasOverlay(int nameHash)
 		{ 
 			return overlayLibrary.HasOverlay(nameHash);
 		}
@@ -183,7 +183,7 @@ namespace UMA
 		/// </summary>
 		/// <returns>The overlay.</returns>
 		/// <param name="name">Name.</param>
-		public OverlayData InstantiateOverlay(string name)
+		public override OverlayData InstantiateOverlay(string name)
 		{
 			return overlayLibrary.InstantiateOverlay(name);
 		}
@@ -192,7 +192,7 @@ namespace UMA
 		/// </summary>
 		/// <returns>The overlay.</returns>
 		/// <param name="nameHash">Name hash.</param>
-		public OverlayData InstantiateOverlay(int nameHash)
+		public override OverlayData InstantiateOverlay(int nameHash)
 		{
 			return overlayLibrary.InstantiateOverlay(nameHash);
 		}
@@ -203,7 +203,7 @@ namespace UMA
 		/// <returns>The overlay.</returns>
 		/// <param name="name">Name.</param>
 		/// <param name="color">Color.</param>
-		public OverlayData InstantiateOverlay(string name, Color color)
+		public override OverlayData InstantiateOverlay(string name, Color color)
 		{
 			return overlayLibrary.InstantiateOverlay(name, color);
 		}
@@ -213,7 +213,7 @@ namespace UMA
 		/// <returns>The overlay.</returns>
 		/// <param name="nameHash">Name hash.</param>
 		/// <param name="color">Color.</param>
-		public OverlayData InstantiateOverlay(int nameHash, Color color)
+		public override OverlayData InstantiateOverlay(int nameHash, Color color)
 		{
 			return overlayLibrary.InstantiateOverlay(nameHash, color);
 		}
@@ -222,29 +222,69 @@ namespace UMA
 		/// Add an overlay asset to the context.
 		/// </summary>
 		/// <param name="overlay">New overlay asset.</param>
-		public void AddOverlayAsset(OverlayDataAsset overlay)
+		public override void AddOverlayAsset(OverlayDataAsset overlay)
 		{
 			overlayLibrary.AddOverlayAsset(overlay);
 		}
-
-	#pragma warning restore 618
+/*
 		/// <summary>
-		/// Finds the singleton context in the scene.
+		/// Check for presence of a DNA type by name.
 		/// </summary>
-		/// <returns>The UMA context.</returns>
-		public static UMAContext FindInstance()
+		/// <returns><c>True</c> if the DNA exists in this context.</returns>
+		/// <param name="name">Name.</param>
+		public override bool HasDNA(string name)
 		{
-			if (Instance == null)
-			{
-				var contextGO = GameObject.Find("UMAContext");
-				if (contextGO != null)
-					Instance = contextGO.GetComponent<UMAContext>();
-			}
-			if (Instance == null)
-			{
-				Instance = Component.FindObjectOfType<UMAContext>();
-			}
-			return Instance;	
+			return dnaDict.ContainsKey(UMAUtils.StringToHash(name));
 		}
+		/// <summary>
+		/// Check for presence of an DNA type by name hash.
+		/// </summary>
+		/// <returns><c>True</c> if the DNA exists in this context.</returns>
+		/// <param name="nameHash">Name hash.</param>
+		public override bool HasDNA(int nameHash)
+		{ 
+			return dnaDict.ContainsKey(nameHash);
+		}
+
+		/// <summary>
+		/// Instantiate DNA by name.
+		/// </summary>
+		/// <returns>The overlay.</returns>
+		/// <param name="name">Name.</param>
+		public override UMADnaBase InstantiateDNA(string name)
+		{
+			DynamicUMADnaAsset dnaAsset;
+			if (dnaDict.TryGetValue(UMAUtils.StringToHash(name), out dnaAsset))
+			{
+				return new DynamicUMADna(dnaAsset.dnaTypeHash);
+			}
+
+			return null;
+		}
+		/// <summary>
+		/// Instantiate DNA by name hash.
+		/// </summary>
+		/// <returns>The overlay.</returns>
+		/// <param name="nameHash">Name hash.</param>
+		public override UMADnaBase InstantiateDNA(int nameHash)
+		{
+			DynamicUMADnaAsset dnaAsset;
+			if (dnaDict.TryGetValue(nameHash, out dnaAsset))
+			{
+				return new DynamicUMADna(dnaAsset.dnaTypeHash);
+			}
+
+			return null;
+		}
+			
+		/// <summary>
+		/// Add a DNA asset to the context.
+		/// </summary>
+		/// <param name="dna">New DNA asset.</param>
+		public override void AddDNAAsset(DynamicUMADnaAsset dnaAsset)
+		{
+			dnaDict.Add(dnaAsset.dnaTypeHash, dnaAsset);
+		}
+*/
 	}
 }

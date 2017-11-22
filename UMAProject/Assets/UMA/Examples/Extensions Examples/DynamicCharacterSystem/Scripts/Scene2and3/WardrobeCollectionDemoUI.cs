@@ -72,10 +72,10 @@ namespace UMA.CharacterSystem.Examples
 					return;
 				}
 				//if not show a message otherwise load the recipe
-				var thisContext = thisCustomizer.Avatar.context != null ? thisCustomizer.Avatar.context : UMAContext.FindInstance();
+				var thisContext = thisCustomizer.Avatar.context != null ? thisCustomizer.Avatar.context : UMAContextBase.FindInstance();
 				if (thisContext != null)
 				{
-					var thisDCS = (thisContext.dynamicCharacterSystem as DynamicCharacterSystem);
+					var thisDCS = ((thisContext as DynamicUMAContext).dynamicCharacterSystem as DynamicCharacterSystem);
 					if (thisDCS != null)
 					{
 						thisDCS.GetRecipe(collectionName, true);

@@ -193,7 +193,7 @@ namespace UMA.CharacterSystem.Examples
 			}
 			changeRaceDropdown.options.Clear();
 			changeRaceDropdown.onValueChanged.RemoveListener(ChangeRace);
-			var raceDropdownOptionsArray = (Avatar.context.raceLibrary as DynamicRaceLibrary).GetAllRacesBase();
+			var raceDropdownOptionsArray = (Avatar.context as DynamicUMAContext).raceLibrary.GetAllRacesBase();
 			raceDropdownOptions = new List<string>();
 			//add the 'NoneSet'
 			raceDropdownOptions.Add("None Set");
@@ -276,7 +276,7 @@ namespace UMA.CharacterSystem.Examples
 				thisRace = RaceToSet;
 				//Force CharacterSystem to find the new race - unless its None Set
 				if(RaceToSet != "None Set")
-					UMAContext.Instance.raceLibrary.GetRace(RaceToSet);
+					UMAContextBase.Instance.GetRace(RaceToSet);
 				DynamicCharacterAvatar.ChangeRaceOptions thisLoadOptions = DynamicCharacterAvatar.ChangeRaceOptions.none;
 				if (_keepDNA || _keepWardrobe || _keepBodyColors)
 				{
@@ -922,7 +922,7 @@ namespace UMA.CharacterSystem.Examples
 					thisLoadableItem.GetComponentInChildren<Text>().text = Path.GetFileNameWithoutExtension(path);
 				}
 			}
-			foreach (KeyValuePair<string, string> kp in (UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem).CharacterRecipes)
+			foreach (KeyValuePair<string, string> kp in ((UMAContextBase.Instance as DynamicUMAContext).dynamicCharacterSystem as DynamicCharacterSystem).CharacterRecipes)
 			{
 				GameObject thisLoadableItem = Instantiate(loadableItemPrefab) as GameObject;
 				thisLoadableItem.transform.SetParent(ItemList.content.transform, false);
@@ -942,7 +942,7 @@ namespace UMA.CharacterSystem.Examples
 			}
 			else
 			{
-				recipeText = (UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem).CharacterRecipes[filename];
+				recipeText = ((UMAContextBase.Instance as DynamicUMAContext).dynamicCharacterSystem as DynamicCharacterSystem).CharacterRecipes[filename];
 			}
 			if (recipeText != "")
 			{

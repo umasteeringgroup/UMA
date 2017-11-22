@@ -79,7 +79,7 @@ namespace UMA.CharacterSystem.Examples
 					doingTakePhoto = false;
 					return;
 				}
-				dcs = UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem;
+				dcs = (UMAContextBase.Instance as DynamicUMAContext).dynamicCharacterSystem as DynamicCharacterSystem;
 				if (!autoPhotosEnabled)
 				{
 					bool canPhoto = SetBestRenderTexture();

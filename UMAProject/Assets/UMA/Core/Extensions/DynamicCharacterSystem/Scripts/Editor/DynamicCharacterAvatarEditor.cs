@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using System;
+using UMA;
 
 namespace UMA.CharacterSystem.Editors
 {
@@ -21,7 +22,7 @@ namespace UMA.CharacterSystem.Editors
 			thisDCA = target as DynamicCharacterAvatar;
 			if (thisDCA.context == null)
 			{
-				thisDCA.context = UMAContext.FindInstance();
+				thisDCA.context = DynamicUMAContext.FindInstance();
 				if (thisDCA.context == null)
 				{
 					thisDCA.context = thisDCA.CreateEditorContext();
@@ -39,9 +40,9 @@ namespace UMA.CharacterSystem.Editors
 					thisDCA.CreateEditorContext();
 			}
 			_racePropDrawer.thisDCA = thisDCA;
-			_racePropDrawer.thisDynamicRaceLibrary = (DynamicRaceLibrary)thisDCA.context.raceLibrary as DynamicRaceLibrary;
+			_racePropDrawer.thisDynamicRaceLibrary = (thisDCA.context as DynamicUMAContext).raceLibrary;;
 			_wardrobePropDrawer.thisDCA = thisDCA;
-			_wardrobePropDrawer.thisDCS = (DynamicCharacterSystem)thisDCA.context.dynamicCharacterSystem as DynamicCharacterSystem;
+			_wardrobePropDrawer.thisDCS = (thisDCA.context as DynamicUMAContext).dynamicCharacterSystem as DynamicCharacterSystem;
 			_animatorPropDrawer.thisDCA = thisDCA;
 		}
 

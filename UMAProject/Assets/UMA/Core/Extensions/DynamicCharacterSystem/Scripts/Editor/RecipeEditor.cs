@@ -86,7 +86,7 @@ namespace UMA.Editors
                 var umaRecipeBase = target as UMARecipeBase;
                 if (umaRecipeBase != null)
                 {
-					var context = UMAContext.FindInstance();
+					var context = UMAContextBase.FindInstance();
 					//create a virtual UMAContext if we dont have one and we have DCS
 					if (context == null || context.gameObject.name == "UMAEditorContext")
 					{
@@ -101,6 +101,7 @@ namespace UMA.Editors
 						//_recipe = null;
 						//return;
 					}
+					/*
 				   else if (context.raceLibrary == null)
 				   {
 						_errorMessage = "Editing a recipe requires a loaded scene with a valid UMAContext with RaceLibrary assigned.";
@@ -108,6 +109,7 @@ namespace UMA.Editors
 					  //_recipe = null;
 					  //return;
 				   }
+				   */
                     umaRecipeBase.Load(_recipe, context);
                     _description = umaRecipeBase.GetInfo();
                 }
@@ -127,8 +129,8 @@ namespace UMA.Editors
 		{
 			if (generatedContext != null)
 			{
-				//Ensure UMAContext.Instance is set to null
-				UMAContext.Instance = null;
+				//Ensure UMAContextBase.Instance is set to null
+				UMAContextBase.Instance = null;
 				DestroyImmediate(generatedContext);
 			}
 		}
@@ -143,7 +145,7 @@ namespace UMA.Editors
         protected override void DoUpdate()
         {
             var recipeBase = (UMARecipeBase)target;
-            recipeBase.Save(_recipe, UMAContext.FindInstance());
+            recipeBase.Save(_recipe, UMAContextBase.FindInstance());
             EditorUtility.SetDirty(recipeBase);
             AssetDatabase.SaveAssets();
             // AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(recipeBase));

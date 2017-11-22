@@ -8,7 +8,7 @@ namespace UMA
 	/// </summary>
 	public abstract class UMAAvatarBase : MonoBehaviour
 	{
-		public UMAContext context;
+		public UMAContextBase context;
 		public UMAData umaData;
 		/// <summary>
 		/// The serialized basic UMA recipe.
@@ -48,7 +48,7 @@ namespace UMA
 		{
 			if (context == null)
 			{
-				context = UMAContext.FindInstance();
+				context = UMAContextBase.FindInstance();
 			}
 
 			if (umaData == null)

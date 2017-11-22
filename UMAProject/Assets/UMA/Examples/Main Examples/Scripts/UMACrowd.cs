@@ -10,7 +10,7 @@ namespace UMA.Examples
 		public UMACrowdRandomSet[] randomPool;
 		public UMAGeneratorBase generator;
 		public UMAData umaData;
-		public UMAContext umaContext;
+		public UMAContextBase umaContext;
 		public RuntimeAnimatorController animationController;
 		public float atlasResolutionScale = 1;
 		public bool generateUMA;
@@ -644,7 +644,7 @@ namespace UMA.Examples
 
 		private void AddAdditionalSlots()
 		{
-			umaData.AddAdditionalRecipes(additionalRecipes, UMAContext.FindInstance());
+			umaData.AddAdditionalRecipes(additionalRecipes, UMAContextBase.FindInstance());
 		}
 
 		public void ReplaceAll()

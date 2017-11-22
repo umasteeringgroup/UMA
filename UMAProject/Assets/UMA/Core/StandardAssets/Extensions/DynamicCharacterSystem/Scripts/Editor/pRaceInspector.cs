@@ -212,11 +212,11 @@ namespace UMA.Editors
 					baseSlotsList.Clear();
 					baseSlotsNamesList.Clear();
 					//editing a race will require a context too because we need to get the base recipes and their slots
-					if (UMAContext.FindInstance() == null)
+					if (UMAContextBase.FindInstance() == null)
 					{
-						EditorUMAContext = UMAContext.CreateEditorContext();
+						EditorUMAContext = DynamicUMAContext.CreateEditorContext();
 					}
-					UMAData.UMARecipe thisBaseRecipe = (baseRaceRecipe.objectReferenceValue as UMARecipeBase).GetCachedRecipe(UMAContext.Instance);
+					UMAData.UMARecipe thisBaseRecipe = (baseRaceRecipe.objectReferenceValue as UMARecipeBase).GetCachedRecipe(UMAContextBase.Instance);
 					SlotData[] thisBaseSlots = thisBaseRecipe.GetAllSlots();
 					foreach (SlotData slot in thisBaseSlots)
 					{
@@ -312,7 +312,7 @@ namespace UMA.Editors
 					{
 						var ccSlotsList = new List<SlotData>();
 						var ccSlotsNamesList = new List<string>();
-						UMAData.UMARecipe ccBaseRecipe = ccRaceData.baseRaceRecipe.GetCachedRecipe(UMAContext.Instance);
+						UMAData.UMARecipe ccBaseRecipe = ccRaceData.baseRaceRecipe.GetCachedRecipe(UMAContextBase.Instance);
 						SlotData[] ccBaseSlots = ccBaseRecipe.GetAllSlots();
 						foreach (SlotData slot in ccBaseSlots)
 						{

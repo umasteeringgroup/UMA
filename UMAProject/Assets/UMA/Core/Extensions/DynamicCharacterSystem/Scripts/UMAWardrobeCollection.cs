@@ -54,7 +54,7 @@ namespace UMA.CharacterSystem
 		/// </summary>
 		public void EnsureLocalAvailability(string forRace = "")
 		{
-			var thisDCS = (UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem);
+			var thisDCS = ((UMAContextBase.Instance as DynamicUMAContext).dynamicCharacterSystem as DynamicCharacterSystem);
 			if (thisDCS == null)
 				return;
 				
@@ -88,13 +88,13 @@ namespace UMA.CharacterSystem
 
 		public List<WardrobeSettings> GetRacesWardrobeSet(string race)
 		{
-			var thisContext = UMAContext.FindInstance();
+			var thisContext = UMAContextBase.FindInstance();
 			if(thisContext == null)
 			{
 				Debug.LogWarning("Getting the WardrobeSet from a WardrobeCollection requires a valid UMAContext in the scene");
 				return new List<WardrobeSettings>();
 			}
-			var thisRace = (thisContext.raceLibrary as DynamicRaceLibrary).GetRace(race, true);
+			var thisRace = ((thisContext as DynamicUMAContext).raceLibrary as DynamicRaceLibrary).GetRace(race, true);
 			return GetRacesWardrobeSet(thisRace);
 		}
 		/// <summary>
@@ -170,7 +170,7 @@ namespace UMA.CharacterSystem
 		/// Gets a DCSUnversalPackRecipeModel that has the wardrobeSet set to be the set in this collection for the given race of the sent avatar
 		/// Or if this recipe is cross compatible returns the wardrobe set for the first matched cross compatible race
 		/// </summary>
-		public DCSUniversalPackRecipe GetUniversalPackRecipe(DynamicCharacterAvatar dca, UMAContext context)
+		public DCSUniversalPackRecipe GetUniversalPackRecipe(DynamicCharacterAvatar dca, UMAContextBase context)
 		{
 			var thisPackRecipe = PackedLoadDCSInternal(context);
 			var setToUse = GetRacesWardrobeSet(dca.activeRace.racedata);
@@ -183,7 +183,7 @@ namespace UMA.CharacterSystem
 		/// <summary>
 		/// NOTE: Use GetUniversalPackRecipe to get a recipe that includes a wardrobeSet. Load this Recipe's recipeString into the specified UMAData.UMARecipe.
 		/// </summary>
-		public override void Load(UMA.UMAData.UMARecipe umaRecipe, UMAContext context)
+		public override void Load(UMA.UMAData.UMARecipe umaRecipe, UMAContextBase context)
 		{
 			if ((recipeString != null) && (recipeString.Length > 0))
 			{

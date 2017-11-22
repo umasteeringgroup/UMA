@@ -16,7 +16,7 @@ namespace UMA
 
 	public abstract partial class UMADna
 	{
-		public static string[] GetNames(System.Type dnaType)
+		private static string[] GetNames(System.Type dnaType)
 		{
 
 			if( dnaType == typeof(UMADnaHumanoid) )
@@ -41,7 +41,7 @@ namespace UMA
 			return null;
 		}
 
-		public static System.Type[] GetTypes()
+		private static System.Type[] GetTypes()
 		{
 			return new System.Type[]
 			{
@@ -52,8 +52,9 @@ namespace UMA
 			};
 		}
 
-		public static UMADnaBase LoadInstance(System.Type dnaType, System.String data)
+		public static UMADnaBase LoadInstance(System.String className, System.String data)
 		{
+			System.Type dnaType = GetType(className);
 
 			if( dnaType == typeof(UMADnaHumanoid))
 				return UMADnaHumanoid.LoadInstance(data);

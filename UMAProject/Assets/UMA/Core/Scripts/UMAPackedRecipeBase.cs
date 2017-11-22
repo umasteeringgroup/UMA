@@ -14,20 +14,20 @@ namespace UMA
 		/// </summary>
 		/// <param name="umaRecipe">UMA recipe.</param>
 		/// <param name="context">Context.</param>
-		public override void Load(UMA.UMAData.UMARecipe umaRecipe, UMAContext context)
+		public override void Load(UMA.UMAData.UMARecipe umaRecipe, UMAContextBase context)
 		{
 			var packedRecipe = PackedLoad(context);
 			UnpackRecipe(umaRecipe, packedRecipe, context);
 		}
 
-		public static UMAData.UMARecipe UnpackRecipe(UMAPackRecipe umaPackRecipe, UMAContext context)
+		public static UMAData.UMARecipe UnpackRecipe(UMAPackRecipe umaPackRecipe, UMAContextBase context)
 		{
 			UMAData.UMARecipe umaRecipe = new UMAData.UMARecipe();
 			UnpackRecipe(umaRecipe, umaPackRecipe, context);
 			return umaRecipe;
 		}
 
-		public static void UnpackRecipe(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContext context)
+		public static void UnpackRecipe(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContextBase context)
 		{
 			switch (umaPackRecipe.version)
 			{
@@ -54,7 +54,7 @@ namespace UMA
 		/// </summary>
 		/// <param name="umaRecipe">UMA recipe.</param>
 		/// <param name="context">Context.</param>
-		public override void Save(UMA.UMAData.UMARecipe umaRecipe, UMAContext context)
+		public override void Save(UMA.UMAData.UMARecipe umaRecipe, UMAContextBase context)
 		{
 			umaRecipe.MergeMatchingOverlays();
 			var packedRecipe = PackRecipeV3(umaRecipe);
@@ -66,14 +66,14 @@ namespace UMA
 		/// </summary>
 		/// <returns>The UMAPackRecipe.</returns>
 		/// <param name="context">Context.</param>
-		public abstract UMAPackRecipe PackedLoad(UMAContext context);
+		public abstract UMAPackRecipe PackedLoad(UMAContextBase context);
 
 		/// <summary>
 		/// Serialize the packed recipe.
 		/// </summary>
 		/// <param name="packedRecipe">Packed recipe.</param>
 		/// <param name="context">Context.</param>
-		public abstract void PackedSave(UMAPackRecipe packedRecipe, UMAContext context);
+		public abstract void PackedSave(UMAPackRecipe packedRecipe, UMAContextBase context);
 
 		#region Packing Related
 
@@ -680,7 +680,7 @@ namespace UMA
 			return umaPackRecipe;
 		}
 
-		public static bool UnpackRecipeVersion1(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContext context)
+		public static bool UnpackRecipeVersion1(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContextBase context)
 		{
 			if (!UMAPackRecipe.ArrayHasData(umaPackRecipe.packedSlotDataList))
 				return false;
@@ -692,8 +692,7 @@ namespace UMA
 			umaRecipe.ClearDna();
 			for (int dna = 0; dna < umaPackRecipe.packedDna.Count; dna++)
 			{
-				Type dnaType = UMADna.GetType(umaPackRecipe.packedDna[dna].dnaType);
-				umaRecipe.AddDna(UMADna.LoadInstance(dnaType, umaPackRecipe.packedDna[dna].packedDna));
+				umaRecipe.AddDna(UMADna.LoadInstance(umaPackRecipe.packedDna[dna].dnaType, umaPackRecipe.packedDna[dna].packedDna));
 			}
 
 			for (int i = 0; i < umaPackRecipe.packedSlotDataList.Length; i++)
@@ -781,20 +780,19 @@ namespace UMA
 
 			foreach (UMAPackedDna packedDna in DNA)
 			{
-				Type dnaType = UMADna.GetType(packedDna.dnaType);
-				UnpackedDNA.Add(UMADna.LoadInstance(dnaType, packedDna.packedDna));
+				UnpackedDNA.Add(UMADna.LoadInstance(packedDna.dnaType, packedDna.packedDna));
 			}
 			return UnpackedDNA;
 		}
 
-		public static UMAData.UMARecipe UnpackRecipeVersion2(UMAPackRecipe umaPackRecipe, UMAContext context)
+		public static UMAData.UMARecipe UnpackRecipeVersion2(UMAPackRecipe umaPackRecipe, UMAContextBase context)
 		{
 			UMAData.UMARecipe umaRecipe = new UMAData.UMARecipe();
 			UnpackRecipeVersion2(umaRecipe, umaPackRecipe, context);
 			return umaRecipe;
 		}
 
-		public static void UnpackRecipeVersion2(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContext context)
+		public static void UnpackRecipeVersion2(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContextBase context)
 		{
 			umaRecipe.slotDataList = new SlotData[umaPackRecipe.slotsV2.Length];
 			umaRecipe.SetRace(context.GetRace(umaPackRecipe.race));
@@ -878,14 +876,14 @@ namespace UMA
 			}
 		}
 
-		public static UMAData.UMARecipe UnpackRecipeVersion3(UMAPackRecipe umaPackRecipe, UMAContext context)
+		public static UMAData.UMARecipe UnpackRecipeVersion3(UMAPackRecipe umaPackRecipe, UMAContextBase context)
 		{
 			UMAData.UMARecipe umaRecipe = new UMAData.UMARecipe();
 			UnpackRecipeVersion3(umaRecipe, umaPackRecipe, context);
 			return umaRecipe;
 		}
 
-		public static void UnpackRecipeVersion3(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContext context)
+		public static void UnpackRecipeVersion3(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContextBase context)
 		{
 			umaRecipe.slotDataList = new SlotData[umaPackRecipe.slotsV3.Length];
 			umaRecipe.SetRace(context.GetRace(umaPackRecipe.race));

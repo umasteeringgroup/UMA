@@ -716,7 +716,7 @@ namespace UMA.Editors
 					if (_recipe.raceData.baseRaceRecipe.name != targetName)
 					{
 						//we dont want to show this if this IS the base recipe
-						UMAData.UMARecipe thisBaseRecipe = _recipe.raceData.baseRaceRecipe.GetCachedRecipe(UMAContext.Instance);
+						UMAData.UMARecipe thisBaseRecipe = _recipe.raceData.baseRaceRecipe.GetCachedRecipe(UMAContextBase.Instance);
 						SlotData[] thisBaseSlots = thisBaseRecipe.GetAllSlots();
 						foreach (SlotData slot in thisBaseSlots)
 						{
@@ -936,9 +936,9 @@ namespace UMA.Editors
 
 		private bool InIndex(SlotData _slotData)
 		{
-			if (UMAContext.Instance != null)
+			if (UMAContextBase.Instance != null)
 			{
-				if (UMAContext.Instance.HasSlot(_slotData.asset.slotName))
+				if (UMAContextBase.Instance.HasSlot(_slotData.asset.slotName))
 				{
 					return true;
 				}
@@ -986,7 +986,7 @@ namespace UMA.Editors
 				GUILayout.BeginHorizontal();
 				if (GUILayout.Button("Add to Scene Only"))
 				{
-					UMAContext.Instance.AddSlotAsset(_slotData.asset);
+					UMAContextBase.Instance.AddSlotAsset(_slotData.asset);
 				}
 				if (GUILayout.Button("Add to Global Index (Recommended)"))
 				{
@@ -1228,9 +1228,9 @@ namespace UMA.Editors
 
 		private bool InIndex(OverlayData _overlayData)
 		{
-			if (UMAContext.Instance != null)
+			if (UMAContextBase.Instance != null)
 			{
-				if (UMAContext.Instance.HasOverlay(_overlayData.overlayName))
+				if (UMAContextBase.Instance.HasOverlay(_overlayData.overlayName))
 				{
 					return true;
 				}
@@ -1278,7 +1278,7 @@ namespace UMA.Editors
                 GUILayout.BeginHorizontal();
                 if (GUILayout.Button("Add to Scene Only"))
                 {
-                    UMAContext.Instance.AddOverlayAsset(_overlayData.asset);
+                    UMAContextBase.Instance.AddOverlayAsset(_overlayData.asset);
 
                 }
                 if (GUILayout.Button("Add to Global Index"))

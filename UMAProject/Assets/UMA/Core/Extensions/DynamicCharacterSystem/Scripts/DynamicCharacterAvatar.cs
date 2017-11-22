@@ -229,8 +229,8 @@ namespace UMA.CharacterSystem
                 //b) DCS will use that placeholder race to find the (backwards)compatible recipes for this race even before the raceData has finished downloading
                 //when a race is added to the dictionary the recipes associated with it include the backwards compatible ones
                 //when a new recipe is added from a download, when it is downloaded it gets added to the backwardsCompatible and compatible races it is for.
-                (context.raceLibrary).GetRace(activeRace.name);
-                return (context.dynamicCharacterSystem as DynamicCharacterSystem).Recipes[activeRace.name];
+                context.GetRace(activeRace.name);
+				return ((context as DynamicUMAContext).dynamicCharacterSystem as DynamicCharacterSystem).Recipes[activeRace.name];
             }
         }
         //CurrentWardrobeSlots - if the race was in an asset bundle and has not finished downloading we will not have accurate data for this
@@ -494,7 +494,7 @@ namespace UMA.CharacterSystem
             }
             if (needsUpdate)
             {
-                activeRace.data = context.raceLibrary.GetRace(activeRace.name);
+                activeRace.data = context.GetRace(activeRace.name);
                 umaRecipe = activeRace.data.baseRaceRecipe;
             }
             //If the UmaRecipe is still after that null, bail - we cant go any further (and SetStartingRace will have shown an error)
@@ -553,7 +553,7 @@ namespace UMA.CharacterSystem
             else if (activeRace.name != "")
             {
                 //This only happens when the Avatar itself has an active race set to be one that is in an assetbundle
-                activeRace.data = context.raceLibrary.GetRace(activeRace.name);// this will trigger a download if the race is in an asset bundle and return a temp asset
+                activeRace.data = context.GetRace(activeRace.name);// this will trigger a download if the race is in an asset bundle and return a temp asset
                 if (activeRace.racedata != null)
                 {
                     umaRecipe = activeRace.racedata.baseRaceRecipe;
@@ -579,7 +579,7 @@ namespace UMA.CharacterSystem
         {
             RaceData thisRace = null;
             if (racename != "None Set")
-                thisRace = (context.raceLibrary as DynamicRaceLibrary).GetRace(racename);
+                thisRace = (context as DynamicUMAContext).GetRace(racename);
             ChangeRace(thisRace, customChangeRaceOptions);
         }
 
@@ -751,7 +751,7 @@ namespace UMA.CharacterSystem
         public UMATextRecipe FindSlotRecipe(string Slotname, string Recipename)
         {
             //This line is here to ensure DCS downloads a recipe if it needs to do that.
-            (context.dynamicCharacterSystem as DynamicCharacterSystem).GetRecipe(Recipename);
+			((context as DynamicUMAContext).dynamicCharacterSystem as DynamicCharacterSystem).GetRecipe(Recipename);
 
             var recipes = AvailableRecipes;
 
@@ -1065,7 +1065,7 @@ namespace UMA.CharacterSystem
             List<WardrobeRecipeListItem> validDefaultRecipes = preloadWardrobeRecipes.Validate(true, activeRace.name, activeRace.racedata);
             fallbackSet = fallbackSet ?? new List<WardrobeSettings>();
             //to get the recipes from the fallbackSet we need DCS
-            var thisContext = UMAContext.FindInstance();
+            var thisContext = UMAContextBase.FindInstance();
             if (thisContext == null)
             {
 #if UNITY_EDITOR
@@ -1074,7 +1074,7 @@ namespace UMA.CharacterSystem
 				return;
 #endif
             }
-            var thisDCS = thisContext.dynamicCharacterSystem as DynamicCharacterSystem;
+			var thisDCS = (thisContext as DynamicUMAContext).dynamicCharacterSystem as DynamicCharacterSystem;
             Dictionary<string, UMATextRecipe> wrBU = new Dictionary<string, UMATextRecipe>(_wardrobeRecipes);
             ClearWardrobeCollectionsRecipes();
             ClearSlots();
@@ -2138,7 +2138,7 @@ namespace UMA.CharacterSystem
                 }
                 if (needsUpdate)
                 {
-                    activeRace.data = context.raceLibrary.GetRace(activeRace.name);
+                    activeRace.data = context.GetRace(activeRace.name);
                     umaRecipe = activeRace.data.baseRaceRecipe;
                 }
                 //if we are loading wardrobe override everything that was previously set (by the default wardrobe or any previous user modifications)
@@ -2319,7 +2319,7 @@ namespace UMA.CharacterSystem
                 loadPathType = loadPathTypes.FileSystem;
             }
 #endif
-            var thisDCS = context.dynamicCharacterSystem as DynamicCharacterSystem;
+			var thisDCS = (context as DynamicUMAContext).dynamicCharacterSystem as DynamicCharacterSystem;
             if (loadPathType == loadPathTypes.CharacterSystem)
             {
                 UMAAssetIndexer UAI = UMAAssetIndexer.Instance;
@@ -2997,12 +2997,12 @@ namespace UMA.CharacterSystem
         /// <summary>
         /// Creates a temporary UMAContext for use when editing DynamicCharacterAvatars when the open Scene does not have an UMAContext or libraries set up
         /// </summary>
-        public UMAContext CreateEditorContext()
+        public UMAContextBase CreateEditorContext()
         {
-            EditorUMAContext = UMAContext.CreateEditorContext();
+			EditorUMAContext = DynamicUMAContext.CreateEditorContext();
             EditorApplication.update -= CheckEditorContextNeeded;
             EditorApplication.update += CheckEditorContextNeeded;
-            return UMAContext.Instance;
+            return UMAContextBase.Instance;
         }
 
         private void DestroyEditorUMAContext()
@@ -3023,7 +3023,7 @@ namespace UMA.CharacterSystem
         {
             if (EditorUMAContext != null)
             {
-                if (EditorUMAContext.GetComponentInChildren<UMAContext>() != null || EditorUMAContext.GetComponent<UMAContext>() != null)
+                if (EditorUMAContext.GetComponentInChildren<UMAContextBase>() != null || EditorUMAContext.GetComponent<UMAContextBase>() != null)
                 {
                     if (this == null || gameObject == null || Selection.activeGameObject == null || Selection.activeGameObject != gameObject)
                     {
@@ -3051,7 +3051,7 @@ namespace UMA.CharacterSystem
             //that has a chest slot and a legs slot, which chest slot should show? I think WardrobeRecipes should take priority
             //BUT at this point what will we have if things were downloading?
             Dictionary<string, UMATextRecipe> newWardrobeRecipes = new Dictionary<string, UMATextRecipe>();
-            var thisDCS = context.dynamicCharacterSystem as DynamicCharacterSystem;
+			var thisDCS = (context as DynamicUMAContext).dynamicCharacterSystem as DynamicCharacterSystem;
             //because of WardrobeCollections we may need a more robust system here? maybe a 'placeholder' bool?
             foreach (KeyValuePair<string, UMATextRecipe> kp in _wardrobeRecipes)
             {
@@ -3108,7 +3108,7 @@ namespace UMA.CharacterSystem
         void UpdateAfterDownload()
         {
             requiredAssetsToCheck.Clear();
-            activeRace.data = context.raceLibrary.GetRace(activeRace.name);
+            activeRace.data = context.GetRace(activeRace.name);
             umaRecipe = activeRace.data.baseRaceRecipe;
             UpdateSetSlots();
             if (BuildCharacterEnabled)
@@ -3128,10 +3128,10 @@ namespace UMA.CharacterSystem
             assetBundlesUsedbyCharacter.Clear();
             if (umaData != null)
             {
-                var raceLibraryDict = ((DynamicRaceLibrary)context.raceLibrary as DynamicRaceLibrary).assetBundlesUsedDict;
-                var slotLibraryDict = ((DynamicSlotLibrary)context.slotLibrary as DynamicSlotLibrary).assetBundlesUsedDict;
-                var overlayLibraryDict = ((DynamicOverlayLibrary)context.overlayLibrary as DynamicOverlayLibrary).assetBundlesUsedDict;
-                var characterSystemDict = ((DynamicCharacterSystem)context.dynamicCharacterSystem as DynamicCharacterSystem).assetBundlesUsedDict;
+				var raceLibraryDict = ((context as DynamicUMAContext).raceLibrary as DynamicRaceLibrary).assetBundlesUsedDict;
+				var slotLibraryDict = ((context as DynamicUMAContext).slotLibrary as DynamicSlotLibrary).assetBundlesUsedDict;
+				var overlayLibraryDict = ((context as DynamicUMAContext).overlayLibrary as DynamicOverlayLibrary).assetBundlesUsedDict;
+				var characterSystemDict = ((context as DynamicUMAContext).dynamicCharacterSystem as DynamicCharacterSystem).assetBundlesUsedDict;
                 var raceAnimatorsDict = raceAnimationControllers.assetBundlesUsedDict;
                 if (raceLibraryDict.Count > 0)
                 {
@@ -3265,13 +3265,13 @@ namespace UMA.CharacterSystem
 
             void Validate()
             {
-                var thisContext = UMAContext.FindInstance();
+                var thisContext = UMAContextBase.FindInstance();
                 if (thisContext == null)
                 {
                     Debug.LogWarning("UMAContext was missing this is required in scenes that use UMA. Please add the UMA_DCS prefab to the scene");
                     return;
                 }
-                var thisDynamicRaceLibrary = (DynamicRaceLibrary)thisContext.raceLibrary as DynamicRaceLibrary;
+				var thisDynamicRaceLibrary = (thisContext as DynamicUMAContext).raceLibrary as DynamicRaceLibrary;
                 foreach (RaceData race in thisDynamicRaceLibrary.GetAllRaces())
                 {
                     if (race.raceName == this.name)
@@ -3318,12 +3318,12 @@ namespace UMA.CharacterSystem
             public List<WardrobeRecipeListItem> Validate(bool allowDownloadables = false, string raceName = "", RaceData race = null)
             {
                 List<WardrobeRecipeListItem> validRecipes = new List<WardrobeRecipeListItem>();
-                var thisContext = UMAContext.FindInstance();
+                var thisContext = UMAContextBase.FindInstance();
                 if (thisContext == null)
                 {
                     return validRecipes;
                 }
-                var thisDCS = thisContext.dynamicCharacterSystem as DynamicCharacterSystem;
+				var thisDCS = (thisContext as DynamicUMAContext).dynamicCharacterSystem as DynamicCharacterSystem;
                 if (thisDCS != null)
                 {
                     foreach (WardrobeRecipeListItem WLIRecipe in recipes)

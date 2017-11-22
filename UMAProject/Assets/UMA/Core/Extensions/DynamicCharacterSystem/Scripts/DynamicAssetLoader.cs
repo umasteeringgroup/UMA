@@ -267,7 +267,7 @@ namespace UMA.CharacterSystem
                 warningType = "info";
 #endif
                 AssetBundleManager.SimulateOverride = true;
-                var context = UMAContext.FindInstance();
+				var context = UMAContextBase.FindInstance() as DynamicUMAContext;
                 if (context != null)
                 {
                     if ((context.dynamicCharacterSystem != null && (context.dynamicCharacterSystem as DynamicCharacterSystem).dynamicallyAddFromAssetBundles)
@@ -560,9 +560,9 @@ namespace UMA.CharacterSystem
                 }
             }
             DynamicCharacterSystem thisDCS = null;
-            if (UMAContext.Instance != null)
+            if (UMAContextBase.Instance != null)
             {
-                thisDCS = UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem;
+				thisDCS = (UMAContextBase.Instance as DynamicUMAContext).dynamicCharacterSystem as DynamicCharacterSystem;
             }
             if (thisDCS != null)
             {
@@ -1129,7 +1129,7 @@ namespace UMA.CharacterSystem
             //10012017 Only do this if thisDCS.addAllRecipesFromDownloadedBundles is true
             if (currentSimulatedDownloadedBundlesCount != simulatedDownloadedBundles.Count /*&& typeof(T) != typeof(RaceData)*/ && assetName != "")
             {
-                var thisDCS = UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem;
+				var thisDCS = (UMAContextBase.Instance as DynamicUMAContext).dynamicCharacterSystem as DynamicCharacterSystem;
                 if (thisDCS != null)
                 {
                     if (thisDCS.addAllRecipesFromDownloadedBundles)
@@ -1164,7 +1164,7 @@ namespace UMA.CharacterSystem
             }
             var allAssetBundlePaths = AssetDatabase.GetAssetPathsFromAssetBundle(assetBundleToLoad);
             //We need to add the recipes from the bundle to DCS, other assets add them selves as they are requested by the recipes
-            var thisDCS = UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem;
+			var thisDCS = (UMAContextBase.Instance as DynamicUMAContext).dynamicCharacterSystem as DynamicCharacterSystem;
             bool dcsNeedsRefresh = false;
             if (thisDCS)
             {

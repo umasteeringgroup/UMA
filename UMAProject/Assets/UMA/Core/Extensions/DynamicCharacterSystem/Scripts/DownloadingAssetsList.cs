@@ -227,10 +227,9 @@ namespace UMA.CharacterSystem
 						}
 #endif
 						RaceData actualRace = loadedBundleAB.LoadAsset<RaceData>(itemFilename);
-						UMAContext.Instance.raceLibrary.AddRace(actualRace);
-						UMAContext.Instance.raceLibrary.UpdateDictionary();
+						UMAContextBase.Instance.AddRace(actualRace);
 						//Refresh DCS so that anything that this race is cross compatible with gets added to its list of available recipes
-						(UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem).RefreshRaceKeys();
+						((DynamicUMAContext.Instance as DynamicUMAContext).dynamicCharacterSystem as DynamicCharacterSystem).RefreshRaceKeys();
 					}
 					else if (assetType == typeof(SlotDataAsset))
 					{
@@ -238,7 +237,7 @@ namespace UMA.CharacterSystem
 						thisSlot = loadedBundleAB.LoadAsset<SlotDataAsset>(itemFilename);
 						if (thisSlot != null)
 						{
-							UMAContext.Instance.slotLibrary.AddSlotAsset(thisSlot);
+							UMAContextBase.Instance.AddSlotAsset(thisSlot);
 						}
 						else
 						{
@@ -251,7 +250,7 @@ namespace UMA.CharacterSystem
 						thisOverlay = loadedBundleAB.LoadAsset<OverlayDataAsset>(itemFilename);
 						if (thisOverlay != null)
 						{
-							UMAContext.Instance.overlayLibrary.AddOverlayAsset(thisOverlay);
+							UMAContextBase.Instance.AddOverlayAsset(thisOverlay);
 						}
 						else
 						{
@@ -261,12 +260,12 @@ namespace UMA.CharacterSystem
 					else if (assetType == typeof(UMATextRecipe))
 					{
 						UMATextRecipe downloadedRecipe = loadedBundleAB.LoadAsset<UMATextRecipe>(itemFilename);
-						(UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem).AddRecipe(downloadedRecipe);
+						((UMAContextBase.Instance as DynamicUMAContext).dynamicCharacterSystem as DynamicCharacterSystem).AddRecipe(downloadedRecipe);
 					}
 					else if (assetType == typeof(UMAWardrobeRecipe))
 					{
 						UMAWardrobeRecipe downloadedRecipe = loadedBundleAB.LoadAsset<UMAWardrobeRecipe>(itemFilename);
-						(UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem).AddRecipe(downloadedRecipe);
+						((UMAContextBase.Instance as DynamicUMAContext).dynamicCharacterSystem as DynamicCharacterSystem).AddRecipe(downloadedRecipe);
 					}
 					else if (item.dynamicCallback.Count > 0)
 					{
