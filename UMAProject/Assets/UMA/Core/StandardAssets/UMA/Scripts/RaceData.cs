@@ -34,9 +34,6 @@ namespace UMA
         /// </summary>
         public DnaConverterBehaviour[] dnaConverterList = new DnaConverterBehaviour[0];
 
-		[System.Obsolete("UMA 2.2+ - RaceData.raceDictionary is obsolete use GetConverter or dnaConverterList instead", false)]
-		public Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate> raceDictionary = new Dictionary<Type, DnaConverterBehaviour.DNAConvertDelegate>();
-	    
         public DnaConverterBehaviour GetConverter(UMADnaBase DNA)
         {
             foreach (DnaConverterBehaviour dcb in dnaConverterList)
@@ -92,7 +89,6 @@ namespace UMA
 
 	    void Awake()
 	    {
-	        UpdateDictionary();
 	    }
 
         public bool Validate()
@@ -105,23 +101,5 @@ namespace UMA
 			
 			return valid;
 		}
-
-		#pragma warning disable 618
-	    public void UpdateDictionary()
-	    {
-	        raceDictionary.Clear();
-	        for (int i = 0; i < dnaConverterList.Length; i++)
-	        {
-	            if (dnaConverterList[i])
-	            {
-                    dnaConverterList[i].Prepare();
-	                if (!raceDictionary.ContainsKey(dnaConverterList[i].DNAType))
-	                {
-	                    raceDictionary.Add(dnaConverterList[i].DNAType, dnaConverterList[i].ApplyDnaAction);
-	                }
-	            }
-	        }
-	    }
-		#pragma warning restore 618
 	}
 }

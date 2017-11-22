@@ -205,7 +205,6 @@ namespace UMA.CharacterSystem
 		{
 			if (race == null)
 				return;
-			race.UpdateDictionary();
 			try
 			{
 				base.AddRace(race);
@@ -218,7 +217,6 @@ namespace UMA.CharacterSystem
 				{
 					if (raceElementList[i] != null)
 					{
-						raceElementList[i].UpdateDictionary();
 						newRaceElementList.Add(raceElementList[i]);
 					}
 				}
