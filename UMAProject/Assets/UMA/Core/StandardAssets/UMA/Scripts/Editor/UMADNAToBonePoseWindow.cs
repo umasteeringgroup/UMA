@@ -121,7 +121,6 @@ namespace UMA.PoseTools
 				DnaConverterBehaviour activeConverter = sourceUMA.umaRecipe.raceData.GetConverter(sourceUMA.umaRecipe.GetDna(selectedDNAHash));
 				umaPreDNA.umaRecipe.raceData.dnaConverterList = new DnaConverterBehaviour[1];
 				umaPreDNA.umaRecipe.raceData.dnaConverterList[0] = activeConverter;
-				umaPreDNA.umaRecipe.raceData.UpdateDictionary();
 				umaPreDNA.umaRecipe.EnsureAllDNAPresent();
 				umaPreDNA.Dirty(true, false, true);
 			}
@@ -273,7 +272,6 @@ namespace UMA.PoseTools
 			tempAvatar2.umaData.umaRecipe.raceData.umaTarget = sourceUMA.umaRecipe.raceData.umaTarget;
 			tempAvatar2.umaData.umaRecipe.raceData.dnaConverterList = new DnaConverterBehaviour[1];
 			tempAvatar2.umaData.umaRecipe.raceData.dnaConverterList[0] = activeConverter;
-			tempAvatar2.umaData.umaRecipe.raceData.UpdateDictionary();
 
 			slotIndex = 0;
 			foreach (SlotData slotEntry in activeSlots) {
