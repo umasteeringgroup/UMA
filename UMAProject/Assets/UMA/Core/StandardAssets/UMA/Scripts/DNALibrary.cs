@@ -107,7 +107,7 @@ namespace UMA
 			}
 			else
 			{
-				// HACK
+				// HACK HACK HACK HACK
 				if (nameHash == UMAUtils.StringToHash("UMADnaHumanoid")) {return new UMADnaHumanoid();}
 				if (nameHash == UMAUtils.StringToHash("UMADnaTutorial")) {return new UMADnaTutorial();}
 

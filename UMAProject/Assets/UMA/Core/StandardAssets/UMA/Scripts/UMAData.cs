@@ -828,7 +828,8 @@ namespace UMA
 						requiredDnas.Add(dnaTypeHash);
                         if (!umaDna.ContainsKey(dnaTypeHash))
 						{
-							var dna = converter.DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
+							//var dna = converter.DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
+							var dna = UMAContextBase.Instance.InstantiateDNA(dnaTypeHash);
 							dna.DNATypeHash = dnaTypeHash;
 							//DynamicUMADna:: needs the DNAasset from the converter - moved because this might change
 							if (converter is DynamicDNAConverterBehaviourBase)

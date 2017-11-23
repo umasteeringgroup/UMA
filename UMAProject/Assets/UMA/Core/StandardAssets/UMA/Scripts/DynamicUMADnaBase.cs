@@ -92,7 +92,7 @@ namespace UMA
 
 		public abstract override float GetValue(int idx);
 
-		public abstract void SetValue(string name, float value);
+		public abstract override void SetValue(string name, float value);
 
 		public abstract override void SetValue(int idx, float value);
 

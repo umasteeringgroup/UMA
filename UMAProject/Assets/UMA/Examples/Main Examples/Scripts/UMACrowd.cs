@@ -37,6 +37,63 @@ namespace UMA.Examples
 		public UMADataEvent CharacterDestroyed;
 		public UMADataEvent CharacterUpdated;
 
+		// Indices of humanoidDNA entries
+		static bool indicesSet = false;
+		static int height;
+		static int headSize;
+		static int headWidth;
+		static int neckThickness;
+		static int armLength;
+		static int forearmLength;
+		static int armWidth;
+		static int forearmWidth;
+
+		static int handsSize;
+		static int feetSize;
+		static int legSeparation;
+		static int upperMuscle;
+		static int lowerMuscle;
+		static int upperWeight;
+		static int lowerWeight;
+		static int legsSize;
+		static int belly;
+		static int waist;
+		static int gluteusSize;
+
+		static int earsSize;
+		static int earsPosition;
+		static int earsRotation;
+		static int noseSize;
+		static int noseCurve;
+		static int noseWidth;
+		static int noseInclination;
+		static int nosePosition;
+		static int nosePronounced;
+		static int noseFlatten;
+
+		static int chinSize;
+		static int chinPronounced;
+		static int chinPosition;
+
+		static int mandibleSize;
+		static int jawsSize;
+		static int jawsPosition;
+
+		static int cheekSize;
+		static int cheekPosition;
+		static int lowCheekPronounced;
+		static int lowCheekPosition;
+
+		static int foreheadSize;
+		static int foreheadPosition;
+
+		static int lipsSize;
+		static int mouthSize;
+		static int eyeRotation;
+		static int eyeSize;
+
+		static int breastSize;
+
 		void Awake()
 		{
 			if (space <= 0) space = 1;
@@ -66,6 +123,69 @@ namespace UMA.Examples
 			{
 				RandomizeAll();
 			}
+		}
+
+		private static void buildIndices(UMADnaBase dna)
+		{
+			if (indicesSet) return;
+			if (dna == null) return;
+
+			height = dna.GetIndex("height");
+			headSize = dna.GetIndex("headSize");
+			headWidth = dna.GetIndex("headWidth");
+			neckThickness = dna.GetIndex("neckThickness");
+			armLength = dna.GetIndex("armLength");
+			forearmLength = dna.GetIndex("forearmLength");
+			armWidth = dna.GetIndex("armWidth");
+			forearmWidth = dna.GetIndex("forearmWidth");
+
+			handsSize = dna.GetIndex("handsSize");
+			feetSize = dna.GetIndex("feetSize");
+			legSeparation = dna.GetIndex("legSeparation");
+			upperMuscle = dna.GetIndex("upperMuscle");
+			lowerMuscle = dna.GetIndex("lowerMuscle");
+			upperWeight = dna.GetIndex("upperWeight");
+			lowerWeight = dna.GetIndex("lowerWeight");
+			legsSize = dna.GetIndex("legsSize");
+			belly = dna.GetIndex("belly");
+			waist = dna.GetIndex("waist");
+			gluteusSize = dna.GetIndex("gluteusSize");
+
+			earsSize = dna.GetIndex("earsSize");
+			earsPosition = dna.GetIndex("earsPosition");
+			earsRotation = dna.GetIndex("earsRotation");
+			noseSize = dna.GetIndex("noseSize");
+			noseCurve = dna.GetIndex("noseCurve");
+			noseWidth = dna.GetIndex("noseWidth");
+			noseInclination = dna.GetIndex("noseInclination");
+			nosePosition = dna.GetIndex("nosePosition");
+			nosePronounced = dna.GetIndex("nosePronounced");
+			noseFlatten = dna.GetIndex("noseFlatten");
+
+			chinSize = dna.GetIndex("chinSize");
+			chinPronounced = dna.GetIndex("chinPronounced");
+			chinPosition = dna.GetIndex("chinPosition");
+
+			mandibleSize = dna.GetIndex("mandibleSize");
+			jawsSize = dna.GetIndex("jawsSize");
+			jawsPosition = dna.GetIndex("jawsPosition");
+
+			cheekSize = dna.GetIndex("cheekSize");
+			cheekPosition = dna.GetIndex("cheekPosition");
+			lowCheekPronounced = dna.GetIndex("lowCheekPronounced");
+			lowCheekPosition = dna.GetIndex("lowCheekPosition");
+
+			foreheadSize = dna.GetIndex("foreheadSize");
+			foreheadPosition = dna.GetIndex("foreheadPosition");
+
+			lipsSize = dna.GetIndex("lipsSize");
+			mouthSize = dna.GetIndex("mouthSize");
+			eyeRotation = dna.GetIndex("eyeRotation");
+			eyeSize = dna.GetIndex("eyeSize");
+
+			breastSize = dna.GetIndex("breastSize");
+
+			indicesSet = true;
 		}
 
 		private void DefineSlots(UMACrowdRandomSet.CrowdRaceData race)
@@ -441,92 +561,97 @@ namespace UMA.Examples
 
 		public static void RandomizeShape(UMAData umaData)
 		{
-			UMADnaHumanoid umaDna = umaData.umaRecipe.GetDna<UMADnaHumanoid>();
-			umaDna.height = Random.Range(0.4f, 0.5f);
-			umaDna.headSize = Random.Range(0.485f, 0.515f);
-			umaDna.headWidth = Random.Range(0.4f, 0.6f);
+			UMADnaBase humanoidDNA = umaData.umaRecipe.GetDna(UMAUtils.StringToHash("UMADnaHumanoid"));
+			buildIndices(humanoidDNA);
 
-			umaDna.neckThickness = Random.Range(0.495f, 0.51f);
+			// HACK
+			// This is obviosuly terrible! Cache the indices or do a wrapping object!
+			humanoidDNA.SetValue(height, Random.Range(0.4f, 0.5f));
+			humanoidDNA.SetValue(headSize, Random.Range(0.485f, 0.515f));
+			humanoidDNA.SetValue(headWidth, Random.Range(0.4f, 0.6f));
+
+			humanoidDNA.SetValue(neckThickness, Random.Range(0.495f, 0.51f));
 
 			if (umaData.umaRecipe.raceData.raceName == "HumanMale")
 			{
-				umaDna.handsSize = Random.Range(0.485f, 0.515f);
-				umaDna.feetSize = Random.Range(0.485f, 0.515f);
-				umaDna.legSeparation = Random.Range(0.4f, 0.6f);
-				umaDna.waist = 0.5f;
+				humanoidDNA.SetValue(handsSize, Random.Range(0.485f, 0.515f));
+				humanoidDNA.SetValue(feetSize, Random.Range(0.485f, 0.515f));
+				humanoidDNA.SetValue(legSeparation, Random.Range(0.4f, 0.6f));
+				humanoidDNA.SetValue(waist, 0.5f);
 			}
 			else
 			{
-				umaDna.handsSize = Random.Range(0.485f, 0.515f);
-				umaDna.feetSize = Random.Range(0.485f, 0.515f);
-				umaDna.legSeparation = Random.Range(0.485f, 0.515f);
-				umaDna.waist = Random.Range(0.3f, 0.8f);
+				humanoidDNA.SetValue(handsSize, Random.Range(0.485f, 0.515f));
+				humanoidDNA.SetValue(feetSize, Random.Range(0.485f, 0.515f));
+				humanoidDNA.SetValue(legSeparation, Random.Range(0.485f, 0.515f));
+				humanoidDNA.SetValue(waist, Random.Range(0.3f, 0.8f));
 			}
 
-			umaDna.armLength = Random.Range(0.485f, 0.515f);
-			umaDna.forearmLength = Random.Range(0.485f, 0.515f);
-			umaDna.armWidth = Random.Range(0.3f, 0.8f);
-			umaDna.forearmWidth = Random.Range(0.3f, 0.8f);
+			humanoidDNA.SetValue(armLength, Random.Range(0.485f, 0.515f));
+			humanoidDNA.SetValue(forearmLength, Random.Range(0.485f, 0.515f));
+			humanoidDNA.SetValue(armWidth, Random.Range(0.3f, 0.8f));
+			humanoidDNA.SetValue(forearmWidth, Random.Range(0.3f, 0.8f));
 
-			umaDna.upperMuscle = Random.Range(0.0f, 1.0f);
-			umaDna.upperWeight = Random.Range(-0.2f, 0.2f) + umaDna.upperMuscle;
-			if (umaDna.upperWeight > 1.0) { umaDna.upperWeight = 1.0f; }
-			if (umaDna.upperWeight < 0.0) { umaDna.upperWeight = 0.0f; }
+			humanoidDNA.SetValue(upperMuscle, Random.Range(0.0f, 1.0f));
+			humanoidDNA.SetValue(upperWeight, Random.Range(-0.2f, 0.2f) + humanoidDNA.GetValue(upperMuscle));
+			if (humanoidDNA.GetValue(upperWeight) > 1.0) { humanoidDNA.SetValue(upperWeight, 1.0f); }
+			if (humanoidDNA.GetValue(upperWeight) < 0.0) { humanoidDNA.SetValue(upperWeight, 0.0f); }
 
-			umaDna.lowerMuscle = Random.Range(-0.2f, 0.2f) + umaDna.upperMuscle;
-			if (umaDna.lowerMuscle > 1.0) { umaDna.lowerMuscle = 1.0f; }
-			if (umaDna.lowerMuscle < 0.0) { umaDna.lowerMuscle = 0.0f; }
+			humanoidDNA.SetValue(lowerMuscle, Random.Range(-0.2f, 0.2f) + humanoidDNA.GetValue(upperMuscle));
+			if (humanoidDNA.GetValue(lowerMuscle) > 1.0) { humanoidDNA.SetValue(lowerMuscle, 1.0f); }
+			if (humanoidDNA.GetValue(lowerMuscle) < 0.0) { humanoidDNA.SetValue(lowerMuscle, 0.0f); }
 
-			umaDna.lowerWeight = Random.Range(-0.1f, 0.1f) + umaDna.upperWeight;
-			if (umaDna.lowerWeight > 1.0) { umaDna.lowerWeight = 1.0f; }
-			if (umaDna.lowerWeight < 0.0) { umaDna.lowerWeight = 0.0f; }
+			humanoidDNA.SetValue(lowerWeight, Random.Range(-0.1f, 0.1f) + humanoidDNA.GetValue(upperWeight));
+			if (humanoidDNA.GetValue(lowerWeight) > 1.0) { humanoidDNA.SetValue(lowerWeight, 1.0f); }
+			if (humanoidDNA.GetValue(lowerWeight) < 0.0) { humanoidDNA.SetValue(lowerWeight, 0.0f); }
 
-			umaDna.belly = umaDna.upperWeight * Random.Range(0.0f,1.0f);
-			umaDna.legsSize = Random.Range(0.45f, 0.6f);
-			umaDna.gluteusSize = Random.Range(0.4f, 0.6f);
+			humanoidDNA.SetValue(belly, humanoidDNA.GetValue(upperWeight) * Random.Range(0.0f,1.0f));
+			humanoidDNA.SetValue(legsSize, Random.Range(0.45f, 0.6f));
+			humanoidDNA.SetValue(gluteusSize, Random.Range(0.4f, 0.6f));
 
-			umaDna.earsSize = Random.Range(0.3f, 0.8f);
-			umaDna.earsPosition = Random.Range(0.3f, 0.8f);
-			umaDna.earsRotation = Random.Range(0.3f, 0.8f);
+			humanoidDNA.SetValue(earsSize, Random.Range(0.3f, 0.8f));
+			humanoidDNA.SetValue(earsPosition, Random.Range(0.3f, 0.8f));
+			humanoidDNA.SetValue(earsRotation, Random.Range(0.3f, 0.8f));
 
-			umaDna.noseSize = Random.Range(0.3f, 0.8f);
+			humanoidDNA.SetValue(noseSize, Random.Range(0.3f, 0.8f));
 
-			umaDna.noseCurve = Random.Range(0.3f, 0.8f);
-			umaDna.noseWidth = Random.Range(0.3f, 0.8f);
-			umaDna.noseInclination = Random.Range(0.3f, 0.8f);
-			umaDna.nosePosition = Random.Range(0.3f, 0.8f);
-			umaDna.nosePronounced = Random.Range(0.3f, 0.8f);
-			umaDna.noseFlatten = Random.Range(0.3f, 0.8f);
+			humanoidDNA.SetValue(noseCurve, Random.Range(0.3f, 0.8f));
+			humanoidDNA.SetValue(noseWidth, Random.Range(0.3f, 0.8f));
+			humanoidDNA.SetValue(noseInclination, Random.Range(0.3f, 0.8f));
+			humanoidDNA.SetValue(nosePosition, Random.Range(0.3f, 0.8f));
+			humanoidDNA.SetValue(nosePronounced, Random.Range(0.3f, 0.8f));
+			humanoidDNA.SetValue(noseFlatten, Random.Range(0.3f, 0.8f));
 
-			umaDna.chinSize = Random.Range(0.3f, 0.8f);
-			umaDna.chinPronounced = Random.Range(0.3f, 0.8f);
-			umaDna.chinPosition = Random.Range(0.3f, 0.8f);
+			humanoidDNA.SetValue(chinSize, Random.Range(0.3f, 0.8f));
+			humanoidDNA.SetValue(chinPronounced, Random.Range(0.3f, 0.8f));
+			humanoidDNA.SetValue(chinPosition, Random.Range(0.3f, 0.8f));
 
-			umaDna.mandibleSize = Random.Range(0.45f, 0.52f);
-			umaDna.jawsSize = Random.Range(0.3f, 0.8f);
-			umaDna.jawsPosition = Random.Range(0.3f, 0.8f);
+			humanoidDNA.SetValue(mandibleSize, Random.Range(0.45f, 0.52f));
+			humanoidDNA.SetValue(jawsSize, Random.Range(0.3f, 0.8f));
+			humanoidDNA.SetValue(jawsPosition, Random.Range(0.3f, 0.8f));
 
-			umaDna.cheekSize = Random.Range(0.3f, 0.8f);
-			umaDna.cheekPosition = Random.Range(0.3f, 0.8f);
-			umaDna.lowCheekPronounced = Random.Range(0.3f, 0.8f);
-			umaDna.lowCheekPosition = Random.Range(0.3f, 0.8f);
+			humanoidDNA.SetValue(cheekSize, Random.Range(0.3f, 0.8f));
+			humanoidDNA.SetValue(cheekPosition, Random.Range(0.3f, 0.8f));
+			humanoidDNA.SetValue(lowCheekPronounced, Random.Range(0.3f, 0.8f));
+			humanoidDNA.SetValue(lowCheekPosition, Random.Range(0.3f, 0.8f));
 
-			umaDna.foreheadSize = Random.Range(0.3f, 0.8f);
-			umaDna.foreheadPosition = Random.Range(0.15f, 0.65f);
+			humanoidDNA.SetValue(foreheadSize, Random.Range(0.3f, 0.8f));
+			humanoidDNA.SetValue(foreheadPosition, Random.Range(0.15f, 0.65f));
 
-			umaDna.lipsSize = Random.Range(0.3f, 0.8f);
-			umaDna.mouthSize = Random.Range(0.3f, 0.8f);
-			umaDna.eyeRotation = Random.Range(0.3f, 0.8f);
-			umaDna.eyeSize = Random.Range(0.3f, 0.8f);
-			umaDna.breastSize = Random.Range(0.3f, 0.8f);
+			humanoidDNA.SetValue(lipsSize, Random.Range(0.3f, 0.8f));
+			humanoidDNA.SetValue(mouthSize, Random.Range(0.3f, 0.8f));
+			humanoidDNA.SetValue(eyeRotation, Random.Range(0.3f, 0.8f));
+			humanoidDNA.SetValue(eyeSize, Random.Range(0.3f, 0.8f));
+			humanoidDNA.SetValue(breastSize, Random.Range(0.3f, 0.8f));
 		}
 
 		protected virtual void GenerateUMAShapes()
 		{
-			UMADnaHumanoid umaDna = umaData.umaRecipe.GetDna<UMADnaHumanoid>();
+			UMADnaBase umaDna = umaData.umaRecipe.GetDna(UMAUtils.StringToHash("UMADnaHumanoid"));
 			if (umaDna ==  null)
 			{
-				umaDna = new UMADnaHumanoid();
+				//umaDna = new UMADnaHumanoid();
+				umaDna = umaContext.InstantiateDNA(UMAUtils.StringToHash("UMADnaHumanoid"));
 				umaData.umaRecipe.AddDna(umaDna);
 			}
 

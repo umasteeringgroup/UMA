@@ -19,8 +19,12 @@ namespace UMA
 			get;
 		}
 
+		public abstract int GetIndex(string name);
+
 		public abstract float GetValue(int idx);
+		public abstract float GetValue(string name);
 		public abstract void SetValue(int idx, float value);
+		public abstract void SetValue(string name, float value);
 
 		[SerializeField]
 		protected int dnaTypeHash;

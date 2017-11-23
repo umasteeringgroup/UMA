@@ -21,7 +21,7 @@ namespace UMA
 		/// </summary>
 		public OverlayLibraryBase overlayLibrary;
 
-		protected DNALibrary dnaLibrary;
+		public DNALibrary dnaLibrary;
 
 		public void Start()
 		{
