@@ -21,6 +21,9 @@ namespace UMA.PoseTools
 
 		public override void OnInspectorGUI()
 		{
+			string assetPath = AssetDatabase.GetAssetPath(expressionSet);
+			bool bundledPoses = true;
+
 			GUILayout.BeginVertical();
 
 			if (expressionSet.posePairs.Length != UMAExpressionPlayer.PoseCount)
@@ -41,16 +44,37 @@ namespace UMA.PoseTools
 				{
 					EditorGUILayout.LabelField(primary);
 					expressionSet.posePairs[i].primary = EditorGUILayout.ObjectField(expressionSet.posePairs[i].primary, typeof(UMABonePose), false) as UMABonePose;
+					if (expressionSet.posePairs[i].primary != null)
+					{
+						if (AssetDatabase.GetAssetPath(expressionSet.posePairs[i].primary) != assetPath)
+							bundledPoses = false;
+					}
 				}
 				if (inverse != null)
 				{
 					EditorGUILayout.LabelField(inverse);
 					expressionSet.posePairs[i].inverse = EditorGUILayout.ObjectField(expressionSet.posePairs[i].inverse, typeof(UMABonePose), false) as UMABonePose;
+					if (expressionSet.posePairs[i].primary != null)
+					{
+						if (AssetDatabase.GetAssetPath(expressionSet.posePairs[i].primary) != assetPath)
+							bundledPoses = false;
+					}
 				}
 				EditorGUILayout.Space();
 			}
 
 			GUILayout.EndVertical();
+
+			EditorGUI.BeginDisabledGroup(bundledPoses);
+			GUILayout.BeginHorizontal();
+			GUILayout.FlexibleSpace();
+			if (GUILayout.Button(new GUIContent("Embed Assets", "Bundles all of the expression assets inside this asset."), GUILayout.MaxWidth(120)))
+			{
+				bool keepAssets = EditorUtility.DisplayDialog("Embedding expression assets", "Would you like to delete the original assets after embedding?", "Keep Assets", "Delete Assets");
+			}
+			GUILayout.FlexibleSpace();
+			GUILayout.EndHorizontal();
+			EditorGUI.EndDisabledGroup();
 
 			if (GUI.changed)
 			{

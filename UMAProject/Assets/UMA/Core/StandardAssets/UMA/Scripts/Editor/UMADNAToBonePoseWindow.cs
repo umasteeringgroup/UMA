@@ -8,6 +8,7 @@
 
 using UnityEngine;
 using UnityEditor;
+using System.Collections.Generic;
 using UMA;
 
 namespace UMA.PoseTools
@@ -18,6 +19,8 @@ namespace UMA.PoseTools
 		public UnityEngine.Object outputFolder;
 
 		private string folderPath = "";
+		private string assetPath = "";
+		private UnityEngine.Object assetObject;
 		private GameObject tempAvatarPreDNA;
 		private GameObject tempAvatarPostDNA;
 		private bool avatarDNAisDirty = false;
@@ -41,6 +44,8 @@ namespace UMA.PoseTools
 		private static GUIContent saveButtonGUIContent = new GUIContent(
 			"Save Pose Set",
 			"Generate the new poses (may take several seconds).");
+
+		private Dictionary<string, UMABonePose> poseDict = new Dictionary<string, UMABonePose>();
 		
 		void OnGUI()
 		{
@@ -152,7 +157,11 @@ namespace UMA.PoseTools
 				activeDNA.SetValue(i, 0.5f);
 			}
 
-			AssetDatabase.CreateAsset(bonePose, folderPath + "/" + poseSaveName + ".asset");
+			//AssetDatabase.CreateAsset(bonePose, folderPath + "/" + poseSaveName + ".asset");
+			bonePose.name = poseSaveName;
+			bonePose.hideFlags = HideFlags.HideInHierarchy;
+			AssetDatabase.AddObjectToAsset(bonePose, assetObject);
+			poseDict.Add(poseSaveName, bonePose);
 			EditorUtility.SetDirty(bonePose);
 			AssetDatabase.SaveAssets();
 
@@ -161,6 +170,7 @@ namespace UMA.PoseTools
 			{
 				poseSaveName = activeDNA.Names[poseSaveIndex] + "_0";
 				activeDNA.SetValue(poseSaveIndex, 0.0f);
+				umaPostDNA.Dirty();
 				avatarDNAisDirty = true;
 			}
 			else if (poseSaveIndex < (activeDNACount * 2))
@@ -176,15 +186,11 @@ namespace UMA.PoseTools
 				UMAUtils.DestroySceneObject(tempAvatarPreDNA);
 				UMAUtils.DestroySceneObject(tempAvatarPostDNA);
 
-				// Build a prefab DNA Converter and populate it with the morph set
-				string assetName = "Morph Set";
-				string assetPath = AssetDatabase.GenerateUniqueAssetPath(folderPath + "/" + assetName + ".asset");
-
-				MorphSetDnaAsset asset = CustomAssetUtility.CreateAsset<MorphSetDnaAsset>(assetPath, false);
-				SerializedObject serializedAsset = new SerializedObject(asset);
+				// Populate the asset
+				SerializedObject serializedAsset = new SerializedObject(assetObject);
 
 				SerializedProperty startingPose = serializedAsset.FindProperty("startingPose");
-				startingPose.objectReferenceValue = AssetDatabase.LoadAssetAtPath<UMABonePose>(folderPath + "/" + startingPoseName + ".asset");
+				startingPose.objectReferenceValue = poseDict[startingPoseName];//.AssetDatabase.LoadAssetAtPath<UMABonePose>(assetPath + "/" + startingPoseName);
 
 				SerializedProperty morphSetArray = serializedAsset.FindProperty("dnaMorphs");
 				morphSetArray.ClearArray();
@@ -198,9 +204,9 @@ namespace UMA.PoseTools
 					SerializedProperty dnaEntryName = posePair.FindPropertyRelative("dnaEntryName");
 					dnaEntryName.stringValue = posePairName;
 					SerializedProperty zeroPose = posePair.FindPropertyRelative("poseZero");
-					zeroPose.objectReferenceValue = AssetDatabase.LoadAssetAtPath<UMABonePose>(folderPath + "/" + posePairName + "_0.asset");
+					zeroPose.objectReferenceValue = poseDict[posePairName + "_0"]; // AssetDatabase.LoadAssetAtPath<UMABonePose>(assetPath + "/" + posePairName + "_0");
 					SerializedProperty onePose = posePair.FindPropertyRelative("poseOne");
-					onePose.objectReferenceValue = AssetDatabase.LoadAssetAtPath<UMABonePose>(folderPath + "/" + posePairName + "_1.asset");
+					onePose.objectReferenceValue = poseDict[posePairName + "_1"]; // AssetDatabase.LoadAssetAtPath<UMABonePose>(assetPath + "/" + posePairName + "_1");
 				}
 				serializedAsset.ApplyModifiedPropertiesWithoutUndo();
 					
@@ -231,6 +237,13 @@ namespace UMA.PoseTools
 				folderPath = AssetDatabase.GUIDToAssetPath(folderGUID);
 			}
 
+			// Create the asset
+			string assetName = "Morph Set";
+			assetPath = AssetDatabase.GenerateUniqueAssetPath(folderPath + "/" + assetName + ".asset");
+
+			assetObject = CustomAssetUtility.CreateAsset<MorphSetDnaAsset>(assetPath, false);
+
+			poseDict.Clear();
 			poseSaveIndex = -1;
 
 			// Build a temporary version of the Avatar with no DNA to get original state
@@ -301,11 +314,12 @@ namespace UMA.PoseTools
 			}
 		}
 
-		private const float bonePoseAccuracy = 0.0001f;
+		private static float squaredPosAccuracy = Mathf.Pow(0.002f, 2f); // 2mm movement or more
+		private static float squaredScaleAccuracy = Mathf.Pow(0.01f, 2f); // 1% change in scale
 		private static bool LocalTransformsMatch(Transform t1, Transform t2)
 		{
-			if ((t1.localPosition - t2.localPosition).sqrMagnitude > bonePoseAccuracy) return false;
-			if ((t1.localScale - t2.localScale).sqrMagnitude > bonePoseAccuracy) return false;
+			if ((t1.localPosition - t2.localPosition).sqrMagnitude > squaredPosAccuracy) return false;
+			if ((t1.localScale - t2.localScale).sqrMagnitude > squaredScaleAccuracy) return false;
 			if (t1.localRotation != t2.localRotation) return false;
 
 			return true;

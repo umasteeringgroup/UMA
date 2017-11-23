@@ -113,9 +113,7 @@ namespace UMA.PoseTools
 			for (int i = 0; i < values.Length; i++)
 			{
 				if ((MecanimAlternate[i] & mecanimMask) != MecanimJoint.None)
-				{
 					continue;
-				}
 
 				float weight = values[i];
 				if (weight == 0f)
