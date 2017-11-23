@@ -137,45 +137,15 @@ namespace UMA.PoseTools
 
 				if (GUILayout.Button("Randomize"))
 				{
-					UMADnaHumanoid humanoidDna = umaAvatar.umaData.GetDna<UMADnaHumanoid>();
+					UMADnaBase humanoidDna = umaAvatar.umaData.GetDna(UMAUtils.StringToHash("UMADnaHumanoid"));
 
 					if (humanoidDna != null)
 					{
-						humanoidDna.headSize = Random.Range(0.475f, 0.525f);
-						humanoidDna.headWidth = (Random.value + Random.value) / 2f;
-						humanoidDna.neckThickness = (Random.value + Random.value) / 2f;
-
-						humanoidDna.earsSize = (Random.value + Random.value) / 2f;
-						humanoidDna.earsPosition = (Random.value + Random.value) / 2f;
-						humanoidDna.earsRotation = (Random.value + Random.value) / 2f;
-						humanoidDna.noseSize = (Random.value + Random.value) / 2f;
-						humanoidDna.noseCurve = (Random.value + Random.value) / 2f;
-						humanoidDna.noseWidth = (Random.value + Random.value) / 2f;
-						humanoidDna.noseInclination = (Random.value + Random.value) / 2f;
-						humanoidDna.nosePosition = (Random.value + Random.value) / 2f;
-						humanoidDna.nosePronounced = (Random.value + Random.value) / 2f;
-						humanoidDna.noseFlatten = (Random.value + Random.value) / 2f;
-
-						humanoidDna.chinSize = (Random.value + Random.value) / 2f;
-						humanoidDna.chinPronounced = (Random.value + Random.value) / 2f;
-						humanoidDna.chinPosition = (Random.value + Random.value) / 2f;
-
-						humanoidDna.mandibleSize = (Random.value + Random.value) / 2f;
-						humanoidDna.jawsSize = (Random.value + Random.value) / 2f;
-						humanoidDna.jawsPosition = (Random.value + Random.value) / 2f;
-
-						humanoidDna.cheekSize = (Random.value + Random.value) / 2f;
-						humanoidDna.cheekPosition = (Random.value + Random.value) / 2f;
-						humanoidDna.lowCheekPronounced = (Random.value + Random.value) / 2f;
-						humanoidDna.lowCheekPosition = (Random.value + Random.value) / 2f;
-
-						humanoidDna.foreheadSize = (Random.value + Random.value) / 2f;
-						humanoidDna.foreheadPosition = (Random.value + Random.value) / 2f;
-
-						humanoidDna.lipsSize = (Random.value + Random.value) / 2f;
-						humanoidDna.mouthSize = (Random.value + Random.value) / 2f;
-						humanoidDna.eyeRotation = (Random.value + Random.value) / 2f;
-						humanoidDna.eyeSize = (Random.value + Random.value) / 2f;
+						for (int i = 0; i < humanoidDna.Count; i++)
+						{
+							humanoidDna.SetValue(i, (Random.value + Random.value) / 2f);
+						}
+						humanoidDna.SetValue("headSize", Random.Range(0.475f, 0.525f));
 
 						umaAvatar.UpdateSameRace();
 					}

@@ -3,8 +3,10 @@
 // Dennis Trevillyan - WatreGames
 //
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using System.Collections;
+using System.Collections.Generic;
 using UMA;
 
 namespace UMA.Examples
@@ -16,8 +18,8 @@ namespace UMA.Examples
         public CameraTrack cameraTrack;
         public MouseOrbitImproved orbitor;
 
-        private UMADnaHumanoid umaDna;
-        private UMADnaTutorial umaTutorialDna;
+		private UMADnaBase umaHumanoidDna;
+		private UMADnaBase umaTutorialDna;
 
         private GameObject DnaPanel;            // This is the parent panel
         private GameObject DnaScrollPanel;      // This is the scrollable panel that holds the sliders
@@ -70,61 +72,68 @@ namespace UMA.Examples
         private Slider EyeSpacingSlider;
         private Slider LowCheekPosSlider;
         private Slider HeadWidthSlider;
+
         private Slider[] sliders;
         private Rect ViewPortReduced;
         private Transform baseTarget;
         private Button DnaHide;
 
-        // get the sliders and store for later use
+		private Dictionary<Slider, UMADnaBase.UMADnaAccessor> accessors = new Dictionary<Slider, UMADnaBase.UMADnaAccessor>();
+
+        // Get the sliders and store for later use
         void Awake()
         {
-            HeightSlider = GameObject.Find("HeightSlider").GetComponent<Slider>();
-            UpperMuscleSlider = GameObject.Find("UpperMuscleSlider").GetComponent<Slider>();
-            UpperWeightSlider = GameObject.Find("UpperWeightSlider").GetComponent<Slider>();
-            LowerMuscleSlider = GameObject.Find("LowerMuscleSlider").GetComponent<Slider>();
-            LowerWeightSlider = GameObject.Find("LowerWeightSlider").GetComponent<Slider>();
-            ArmLengthSlider = GameObject.Find("ArmLengthSlider").GetComponent<Slider>();
-            ForearmLengthSlider = GameObject.Find("ForearmLengthSlider").GetComponent<Slider>();
-            LegSeparationSlider = GameObject.Find("LegSepSlider").GetComponent<Slider>();
-            HandSizeSlider = GameObject.Find("HandSizeSlider").GetComponent<Slider>();
-            FeetSizeSlider = GameObject.Find("FeetSizeSlider").GetComponent<Slider>();
-            LegSizeSlider = GameObject.Find("LegSizeSlider").GetComponent<Slider>();
-            ArmWidthSlider = GameObject.Find("ArmWidthSlider").GetComponent<Slider>();
-            ForearmWidthSlider = GameObject.Find("ForearmWidthSlider").GetComponent<Slider>();
-            BreastSlider = GameObject.Find("BreastSizeSlider").GetComponent<Slider>();
-            BellySlider = GameObject.Find("BellySlider").GetComponent<Slider>();
-            WaistSizeSlider = GameObject.Find("WaistSizeSlider").GetComponent<Slider>();
-            GlueteusSizeSlider = GameObject.Find("GluteusSlider").GetComponent<Slider>();
-            HeadSizeSlider = GameObject.Find("HeadSizeSlider").GetComponent<Slider>();
-            HeadWidthSlider = GameObject.Find("HeadWidthSlider").GetComponent<Slider>();
-            NeckThickSlider = GameObject.Find("NeckSlider").GetComponent<Slider>();
-            EarSizeSlider = GameObject.Find("EarSizeSlider").GetComponent<Slider>();
-            EarPositionSlider = GameObject.Find("EarPosSlider").GetComponent<Slider>();
-            EarRotationSlider = GameObject.Find("EarRotSlider").GetComponent<Slider>();
-            NoseSizeSlider = GameObject.Find("NoseSizeSlider").GetComponent<Slider>();
-            NoseCurveSlider = GameObject.Find("NoseCurveSlider").GetComponent<Slider>();
-            NoseWidthSlider = GameObject.Find("NoseWidthSlider").GetComponent<Slider>();
-            NoseInclinationSlider = GameObject.Find("NoseInclineSlider").GetComponent<Slider>();
-            NosePositionSlider = GameObject.Find("NosePosSlider").GetComponent<Slider>();
-            NosePronuncedSlider = GameObject.Find("NosePronSlider").GetComponent<Slider>();
-            NoseFlattenSlider = GameObject.Find("NoseFlatSlider").GetComponent<Slider>();
-            ChinSizeSlider = GameObject.Find("ChinSizeSlider").GetComponent<Slider>();
-            ChinPronouncedSlider = GameObject.Find("ChinPronSlider").GetComponent<Slider>();
-            ChinPositionSlider = GameObject.Find("ChinPosSlider").GetComponent<Slider>();
-            MandibleSizeSlider = GameObject.Find("MandibleSizeSlider").GetComponent<Slider>();
-            JawSizeSlider = GameObject.Find("JawSizeSlider").GetComponent<Slider>();
-            JawPositionSlider = GameObject.Find("JawPosSlider").GetComponent<Slider>();
-            CheekSizeSlider = GameObject.Find("CheekSizeSlider").GetComponent<Slider>();
-            CheekPositionSlider = GameObject.Find("CheekPosSlider").GetComponent<Slider>();
-            lowCheekPronSlider = GameObject.Find("LowCheekPronSlider").GetComponent<Slider>();
-            ForeHeadSizeSlider = GameObject.Find("ForeheadSizeSlider").GetComponent<Slider>();
-            ForeHeadPositionSlider = GameObject.Find("ForeheadPosSlider").GetComponent<Slider>();
-            LipSizeSlider = GameObject.Find("LipSizeSlider").GetComponent<Slider>();
-            MouthSlider = GameObject.Find("MouthSizeSlider").GetComponent<Slider>();
-            EyeSizeSlider = GameObject.Find("EyeSizeSlider").GetComponent<Slider>();
-            EyeRotationSlider = GameObject.Find("EyeRotSlider").GetComponent<Slider>();
-            EyeSpacingSlider = GameObject.Find("EyeSpaceSlider").GetComponent<Slider>();
-            LowCheekPosSlider = GameObject.Find("LowCheekPosSlider").GetComponent<Slider>();
+			List<Slider> foundSliders = new List<Slider>();
+
+			HeightSlider = GameObject.Find("HeightSlider").GetComponent<Slider>(); foundSliders.Add(HeightSlider);
+			UpperMuscleSlider = GameObject.Find("UpperMuscleSlider").GetComponent<Slider>(); foundSliders.Add(UpperMuscleSlider);
+			UpperWeightSlider = GameObject.Find("UpperWeightSlider").GetComponent<Slider>(); foundSliders.Add(UpperWeightSlider);
+			LowerMuscleSlider = GameObject.Find("LowerMuscleSlider").GetComponent<Slider>(); foundSliders.Add(LowerMuscleSlider);
+			LowerWeightSlider = GameObject.Find("LowerWeightSlider").GetComponent<Slider>(); foundSliders.Add(LowerWeightSlider);
+			ArmLengthSlider = GameObject.Find("ArmLengthSlider").GetComponent<Slider>(); foundSliders.Add(ArmLengthSlider);
+			ForearmLengthSlider = GameObject.Find("ForearmLengthSlider").GetComponent<Slider>(); foundSliders.Add(ForearmLengthSlider);
+			LegSeparationSlider = GameObject.Find("LegSepSlider").GetComponent<Slider>(); foundSliders.Add(LegSeparationSlider);
+			HandSizeSlider = GameObject.Find("HandSizeSlider").GetComponent<Slider>(); foundSliders.Add(HandSizeSlider);
+			FeetSizeSlider = GameObject.Find("FeetSizeSlider").GetComponent<Slider>(); foundSliders.Add(FeetSizeSlider);
+			LegSizeSlider = GameObject.Find("LegSizeSlider").GetComponent<Slider>(); foundSliders.Add(LegSizeSlider);
+			ArmWidthSlider = GameObject.Find("ArmWidthSlider").GetComponent<Slider>(); foundSliders.Add(ArmWidthSlider);
+			ForearmWidthSlider = GameObject.Find("ForearmWidthSlider").GetComponent<Slider>(); foundSliders.Add(ForearmWidthSlider);
+			BreastSlider = GameObject.Find("BreastSizeSlider").GetComponent<Slider>(); foundSliders.Add(BreastSlider);
+			BellySlider = GameObject.Find("BellySlider").GetComponent<Slider>(); foundSliders.Add(BellySlider);
+			WaistSizeSlider = GameObject.Find("WaistSizeSlider").GetComponent<Slider>(); foundSliders.Add(WaistSizeSlider);
+			GlueteusSizeSlider = GameObject.Find("GluteusSlider").GetComponent<Slider>(); foundSliders.Add(GlueteusSizeSlider);
+			HeadSizeSlider = GameObject.Find("HeadSizeSlider").GetComponent<Slider>(); foundSliders.Add(HeadSizeSlider);
+			HeadWidthSlider = GameObject.Find("HeadWidthSlider").GetComponent<Slider>(); foundSliders.Add(HeadWidthSlider);
+			NeckThickSlider = GameObject.Find("NeckSlider").GetComponent<Slider>(); foundSliders.Add(NeckThickSlider);
+			EarSizeSlider = GameObject.Find("EarSizeSlider").GetComponent<Slider>(); foundSliders.Add(EarSizeSlider);
+			EarPositionSlider = GameObject.Find("EarPosSlider").GetComponent<Slider>(); foundSliders.Add(EarPositionSlider);
+			EarRotationSlider = GameObject.Find("EarRotSlider").GetComponent<Slider>(); foundSliders.Add(EarRotationSlider);
+			NoseSizeSlider = GameObject.Find("NoseSizeSlider").GetComponent<Slider>(); foundSliders.Add(NoseSizeSlider);
+			NoseCurveSlider = GameObject.Find("NoseCurveSlider").GetComponent<Slider>(); foundSliders.Add(NoseCurveSlider);
+			NoseWidthSlider = GameObject.Find("NoseWidthSlider").GetComponent<Slider>(); foundSliders.Add(NoseWidthSlider);
+			NoseInclinationSlider = GameObject.Find("NoseInclineSlider").GetComponent<Slider>(); foundSliders.Add(NoseInclinationSlider);
+			NosePositionSlider = GameObject.Find("NosePosSlider").GetComponent<Slider>(); foundSliders.Add(NosePositionSlider);
+			NosePronuncedSlider = GameObject.Find("NosePronSlider").GetComponent<Slider>(); foundSliders.Add(NosePronuncedSlider);
+			NoseFlattenSlider = GameObject.Find("NoseFlatSlider").GetComponent<Slider>(); foundSliders.Add(NoseFlattenSlider);
+			ChinSizeSlider = GameObject.Find("ChinSizeSlider").GetComponent<Slider>(); foundSliders.Add(ChinSizeSlider);
+			ChinPronouncedSlider = GameObject.Find("ChinPronSlider").GetComponent<Slider>(); foundSliders.Add(ChinPronouncedSlider);
+			ChinPositionSlider = GameObject.Find("ChinPosSlider").GetComponent<Slider>(); foundSliders.Add(ChinPositionSlider);
+			MandibleSizeSlider = GameObject.Find("MandibleSizeSlider").GetComponent<Slider>(); foundSliders.Add(MandibleSizeSlider);
+			JawSizeSlider = GameObject.Find("JawSizeSlider").GetComponent<Slider>(); foundSliders.Add(JawSizeSlider);
+			JawPositionSlider = GameObject.Find("JawPosSlider").GetComponent<Slider>(); foundSliders.Add(JawPositionSlider);
+			CheekSizeSlider = GameObject.Find("CheekSizeSlider").GetComponent<Slider>(); foundSliders.Add(CheekSizeSlider);
+			CheekPositionSlider = GameObject.Find("CheekPosSlider").GetComponent<Slider>(); foundSliders.Add(CheekPositionSlider);
+			lowCheekPronSlider = GameObject.Find("LowCheekPronSlider").GetComponent<Slider>(); foundSliders.Add(lowCheekPronSlider);
+			ForeHeadSizeSlider = GameObject.Find("ForeheadSizeSlider").GetComponent<Slider>(); foundSliders.Add(ForeHeadSizeSlider);
+			ForeHeadPositionSlider = GameObject.Find("ForeheadPosSlider").GetComponent<Slider>(); foundSliders.Add(ForeHeadPositionSlider);
+			LipSizeSlider = GameObject.Find("LipSizeSlider").GetComponent<Slider>(); foundSliders.Add(LipSizeSlider);
+			MouthSlider = GameObject.Find("MouthSizeSlider").GetComponent<Slider>(); foundSliders.Add(MouthSlider);
+			EyeSizeSlider = GameObject.Find("EyeSizeSlider").GetComponent<Slider>(); foundSliders.Add(EyeSizeSlider);
+			EyeRotationSlider = GameObject.Find("EyeRotSlider").GetComponent<Slider>(); foundSliders.Add(EyeRotationSlider);
+			EyeSpacingSlider = GameObject.Find("EyeSpaceSlider").GetComponent<Slider>(); foundSliders.Add(EyeSpacingSlider);
+			LowCheekPosSlider = GameObject.Find("LowCheekPosSlider").GetComponent<Slider>(); foundSliders.Add(LowCheekPosSlider);
+
+			sliders = foundSliders.ToArray();
 
             // Find the panels and hide for now
             DnaPanel = GameObject.Find("DnaEditorPanel");
@@ -145,12 +154,6 @@ namespace UMA.Examples
 
         protected virtual void Start()
         {
-            //float vpWidth;
-
-            //        sliders = DnaScrollPanel.GetComponentsInChildren<Slider>();     // Create an array of the sliders to use for initialization
-            //vpWidth = ((float)Screen.width - 175) / (float)Screen.width;    // Get the width of the screen so that we can adjust the viewport
-            //ViewPortReduced = new Rect(0, 0, vpWidth, 1);
-            //Camera.main.rect = ViewPortFull;
             baseTarget = GameObject.Find("UMACrowd").transform;             // Get the transform of the UMA Crown GO to use when retargeting the camera
         }
 
@@ -198,8 +201,64 @@ namespace UMA.Examples
                 orbitor.target = umaData.umaRoot.transform;
             }
 
-            umaDna = umaData.GetDna<UMADnaHumanoid>();
+            umaHumanoidDna = umaData.GetDna<UMADnaHumanoid>();
             umaTutorialDna = umaData.GetDna<UMADnaTutorial>();
+
+			accessors.Clear();
+			if (umaHumanoidDna != null)
+			{
+				accessors.Add(HeightSlider, umaHumanoidDna.GetAccessor("height"));
+				accessors.Add(UpperMuscleSlider, umaHumanoidDna.GetAccessor("upperMuscle"));
+				accessors.Add(UpperWeightSlider, umaHumanoidDna.GetAccessor("upperWeight"));
+				accessors.Add(LowerMuscleSlider, umaHumanoidDna.GetAccessor("lowerMuscle"));
+				accessors.Add(LowerWeightSlider, umaHumanoidDna.GetAccessor("lowerWeight"));
+				accessors.Add(ArmLengthSlider, umaHumanoidDna.GetAccessor("armLength"));
+				accessors.Add(ForearmLengthSlider, umaHumanoidDna.GetAccessor("forearmLength"));
+				accessors.Add(LegSeparationSlider, umaHumanoidDna.GetAccessor("legSeparation"));
+				accessors.Add(HandSizeSlider, umaHumanoidDna.GetAccessor("handsSize"));
+				accessors.Add(FeetSizeSlider, umaHumanoidDna.GetAccessor("feetSize"));
+				accessors.Add(LegSizeSlider, umaHumanoidDna.GetAccessor("legsSize"));
+				accessors.Add(ArmWidthSlider, umaHumanoidDna.GetAccessor("armWidth"));
+				accessors.Add(ForearmWidthSlider, umaHumanoidDna.GetAccessor("forearmWidth"));
+				accessors.Add(BreastSlider, umaHumanoidDna.GetAccessor("breastSize"));
+				accessors.Add(BellySlider, umaHumanoidDna.GetAccessor("belly"));
+				accessors.Add(WaistSizeSlider, umaHumanoidDna.GetAccessor("waist"));
+				accessors.Add(GlueteusSizeSlider, umaHumanoidDna.GetAccessor("gluteusSize"));
+				accessors.Add(HeadSizeSlider, umaHumanoidDna.GetAccessor("headSize"));
+				accessors.Add(HeadWidthSlider, umaHumanoidDna.GetAccessor("headWidth"));
+				accessors.Add(NeckThickSlider, umaHumanoidDna.GetAccessor("neckThickness"));
+				accessors.Add(EarSizeSlider, umaHumanoidDna.GetAccessor("earsSize"));
+				accessors.Add(EarPositionSlider, umaHumanoidDna.GetAccessor("earsPosition"));
+				accessors.Add(EarRotationSlider, umaHumanoidDna.GetAccessor("earsRotation"));
+				accessors.Add(NoseSizeSlider, umaHumanoidDna.GetAccessor("noseSize"));
+				accessors.Add(NoseCurveSlider, umaHumanoidDna.GetAccessor("noseCurve"));
+				accessors.Add(NoseWidthSlider, umaHumanoidDna.GetAccessor("noseWidth"));
+				accessors.Add(NoseInclinationSlider, umaHumanoidDna.GetAccessor("noseInclination"));
+				accessors.Add(NosePositionSlider, umaHumanoidDna.GetAccessor("nosePosition"));
+				accessors.Add(NosePronuncedSlider, umaHumanoidDna.GetAccessor("nosePronounced"));
+				accessors.Add(NoseFlattenSlider, umaHumanoidDna.GetAccessor("noseFlatten"));
+				accessors.Add(ChinSizeSlider, umaHumanoidDna.GetAccessor("chinSize"));
+				accessors.Add(ChinPronouncedSlider, umaHumanoidDna.GetAccessor("chinPronounced"));
+				accessors.Add(ChinPositionSlider, umaHumanoidDna.GetAccessor("chinPosition"));
+				accessors.Add(MandibleSizeSlider, umaHumanoidDna.GetAccessor("mandibleSize"));
+				accessors.Add(JawSizeSlider, umaHumanoidDna.GetAccessor("jawsSize"));
+				accessors.Add(JawPositionSlider, umaHumanoidDna.GetAccessor("jawsPosition"));
+				accessors.Add(CheekSizeSlider, umaHumanoidDna.GetAccessor("cheekSize"));
+				accessors.Add(CheekPositionSlider, umaHumanoidDna.GetAccessor("cheekPosition"));
+				accessors.Add(lowCheekPronSlider, umaHumanoidDna.GetAccessor("lowCheekPronounced"));
+				accessors.Add(ForeHeadSizeSlider, umaHumanoidDna.GetAccessor("foreheadSize"));
+				accessors.Add(ForeHeadPositionSlider, umaHumanoidDna.GetAccessor("foreheadPosition"));
+				accessors.Add(LipSizeSlider, umaHumanoidDna.GetAccessor("lipsSize"));
+				accessors.Add(MouthSlider, umaHumanoidDna.GetAccessor("mouthSize"));
+				accessors.Add(EyeSizeSlider, umaHumanoidDna.GetAccessor("eyeSize"));
+				accessors.Add(EyeRotationSlider, umaHumanoidDna.GetAccessor("eyeRotation"));
+				accessors.Add(LowCheekPosSlider, umaHumanoidDna.GetAccessor("lowCheekPosition"));
+			}
+
+			if (umaTutorialDna != null)
+			{
+				accessors.Add(EyeSpacingSlider, umaTutorialDna.GetAccessor("eyeSpacing"));
+			}
 
             SetSliders();
             SetCamera(true);
@@ -229,7 +288,7 @@ namespace UMA.Examples
                 DnaPanel.SetActive(false);
                 DnaHide.gameObject.SetActive(false);
                 umaData = null;
-                umaDna = null;
+                umaHumanoidDna = null;
                 umaTutorialDna = null;
             }
         }
@@ -262,102 +321,38 @@ namespace UMA.Examples
         // Set all of the sliders to the values contained in the UMA Character
         public void SetSliders()
         {
-            HeightSlider.value = umaDna.height;
-            UpperMuscleSlider.value = umaDna.upperMuscle;
-            UpperWeightSlider.value = umaDna.upperWeight;
-            LowerMuscleSlider.value = umaDna.lowerMuscle;
-            LowerWeightSlider.value = umaDna.lowerWeight;
-            ArmLengthSlider.value = umaDna.armLength;
-            ForearmLengthSlider.value = umaDna.forearmLength;
-            LegSeparationSlider.value = umaDna.legSeparation;
-            HandSizeSlider.value = umaDna.handsSize;
-            FeetSizeSlider.value = umaDna.feetSize;
-            LegSizeSlider.value = umaDna.legsSize;
-            ArmWidthSlider.value = umaDna.armWidth;
-            ForearmWidthSlider.value = umaDna.forearmWidth;
-            BreastSlider.value = umaDna.breastSize;
-            BellySlider.value = umaDna.belly;
-            WaistSizeSlider.value = umaDna.waist;
-            GlueteusSizeSlider.value = umaDna.gluteusSize;
-            HeadSizeSlider.value = umaDna.headSize;
-            HeadWidthSlider.value = umaDna.headWidth;
-            NeckThickSlider.value = umaDna.neckThickness;
-            EarSizeSlider.value = umaDna.earsSize;
-            EarPositionSlider.value = umaDna.earsPosition;
-            EarRotationSlider.value = umaDna.earsRotation;
-            NoseSizeSlider.value = umaDna.noseSize;
-            NoseCurveSlider.value = umaDna.noseCurve;
-            NoseWidthSlider.value = umaDna.noseWidth;
-            NoseInclinationSlider.value = umaDna.noseInclination;
-            NosePositionSlider.value = umaDna.nosePosition;
-            NosePronuncedSlider.value = umaDna.nosePronounced;
-            NoseFlattenSlider.value = umaDna.noseFlatten;
-            ChinSizeSlider.value = umaDna.chinSize;
-            ChinPronouncedSlider.value = umaDna.chinPronounced;
-            ChinPositionSlider.value = umaDna.chinPosition;
-            MandibleSizeSlider.value = umaDna.mandibleSize;
-            JawSizeSlider.value = umaDna.jawsSize;
-            JawPositionSlider.value = umaDna.jawsPosition;
-            CheekSizeSlider.value = umaDna.cheekSize;
-            CheekPositionSlider.value = umaDna.cheekPosition;
-            lowCheekPronSlider.value = umaDna.lowCheekPronounced;
-            ForeHeadSizeSlider.value = umaDna.foreheadSize;
-            ForeHeadPositionSlider.value = umaDna.foreheadPosition;
-            LipSizeSlider.value = umaDna.lipsSize;
-            MouthSlider.value = umaDna.mouthSize;
-            EyeSizeSlider.value = umaDna.eyeSize;
-            EyeRotationSlider.value = umaDna.eyeRotation;
-            LowCheekPosSlider.value = umaDna.lowCheekPosition;
-            if (umaTutorialDna != null) EyeSpacingSlider.value = umaTutorialDna.eyeSpacing;
+			UMADnaBase.UMADnaAccessor accessor;
+			foreach (Slider slider in sliders)
+			{
+				if (slider == null) continue;
+				if (accessors.TryGetValue(slider, out accessor))
+				{
+					if (accessor != null)
+					{
+						slider.value = accessor.Get();
+					}
+				}
+			}
         }
 
-        // Slider callbacks 
-        public void OnHeightChange() { if (umaDna != null) umaDna.height = HeightSlider.value; UpdateUMAShape(); }
-        public void OnUpperMuscleChange() { if (umaDna != null) umaDna.upperMuscle = UpperMuscleSlider.value; UpdateUMAShape(); }
-        public void OnUpperWeightChange() { if (umaDna != null) umaDna.upperWeight = UpperWeightSlider.value; UpdateUMAShape(); }
-        public void OnLowerMuscleChange() { if (umaDna != null) umaDna.lowerMuscle = LowerMuscleSlider.value; UpdateUMAShape(); }
-        public void OnLowerWeightChange() { if (umaDna != null) umaDna.lowerWeight = LowerWeightSlider.value; UpdateUMAShape(); }
-        public void OnArmLengthChange() { if (umaDna != null) umaDna.armLength = ArmLengthSlider.value; UpdateUMAShape(); }
-        public void OnForearmLengthChange() { if (umaDna != null) umaDna.forearmLength = ForearmLengthSlider.value; UpdateUMAShape(); }
-        public void OnLegSeparationChange() { if (umaDna != null) umaDna.legSeparation = LegSeparationSlider.value; UpdateUMAShape(); }
-        public void OnHandSizeChange() { if (umaDna != null) umaDna.handsSize = HandSizeSlider.value; UpdateUMAShape(); }
-        public void OnFootSizeChange() { if (umaDna != null) umaDna.feetSize = FeetSizeSlider.value; UpdateUMAShape(); }
-        public void OnLegSizeChange() { if (umaDna != null) umaDna.legsSize = LegSizeSlider.value; UpdateUMAShape(); }
-        public void OnArmWidthChange() { if (umaDna != null) umaDna.armWidth = ArmWidthSlider.value; UpdateUMAShape(); }
-        public void OnForearmWidthChange() { if (umaDna != null) umaDna.forearmWidth = ForearmWidthSlider.value; UpdateUMAShape(); }
-        public void OnBreastSizeChange() { if (umaDna != null) umaDna.breastSize = BreastSlider.value; UpdateUMAShape(); }
-        public void OnBellySizeChange() { if (umaDna != null) umaDna.belly = BellySlider.value; UpdateUMAShape(); }
-        public void OnWaistSizeChange() { if (umaDna != null) umaDna.waist = WaistSizeSlider.value; UpdateUMAShape(); }
-        public void OnGluteusSizeChange() { if (umaDna != null) umaDna.gluteusSize = GlueteusSizeSlider.value; UpdateUMAShape(); }
-        public void OnHeadSizeChange() { if (umaDna != null) umaDna.headSize = HeadSizeSlider.value; UpdateUMAShape(); }
-        public void OnHeadWidthChange() { if (umaDna != null) umaDna.headWidth = HeadWidthSlider.value; UpdateUMAShape(); }
-        public void OnNeckThicknessChange() { if (umaDna != null) umaDna.neckThickness = NeckThickSlider.value; UpdateUMAShape(); }
-        public void OnEarSizeChange() { if (umaDna != null) umaDna.earsSize = EarSizeSlider.value; UpdateUMAShape(); }
-        public void OnEarPositionChange() { if (umaDna != null) umaDna.earsPosition = EarPositionSlider.value; UpdateUMAShape(); }
-        public void OnEarRotationChange() { if (umaDna != null) umaDna.earsRotation = EarRotationSlider.value; UpdateUMAShape(); }
-        public void OnNoseSizeChange() { if (umaDna != null) umaDna.noseSize = NoseSizeSlider.value; UpdateUMAShape(); }
-        public void OnNoseCurveChange() { if (umaDna != null) umaDna.noseCurve = NoseCurveSlider.value; UpdateUMAShape(); }
-        public void OnNoseWidthChange() { if (umaDna != null) umaDna.noseWidth = NoseWidthSlider.value; UpdateUMAShape(); }
-        public void OnNoseInclinationChange() { if (umaDna != null) umaDna.noseInclination = NoseInclinationSlider.value; UpdateUMAShape(); }
-        public void OnNosePositionChange() { if (umaDna != null) umaDna.nosePosition = NosePositionSlider.value; UpdateUMAShape(); }
-        public void OnNosePronouncedChange() { if (umaDna != null) umaDna.nosePronounced = NosePronuncedSlider.value; UpdateUMAShape(); }
-        public void OnNoseFlattenChange() { if (umaDna != null) umaDna.noseFlatten = NoseFlattenSlider.value; UpdateUMAShape(); }
-        public void OnChinSizeChange() { if (umaDna != null) umaDna.chinSize = ChinSizeSlider.value; UpdateUMAShape(); }
-        public void OnChinPronouncedChange() { if (umaDna != null) umaDna.chinPronounced = ChinPronouncedSlider.value; UpdateUMAShape(); }
-        public void OnChinPositionChange() { if (umaDna != null) umaDna.chinPosition = ChinPositionSlider.value; UpdateUMAShape(); }
-        public void OnMandibleSizeChange() { if (umaDna != null) umaDna.mandibleSize = MandibleSizeSlider.value; UpdateUMAShape(); }
-        public void OnJawSizeChange() { if (umaDna != null) umaDna.jawsSize = JawSizeSlider.value; UpdateUMAShape(); }
-        public void OnJawPositionChange() { if (umaDna != null) umaDna.jawsPosition = JawPositionSlider.value; UpdateUMAShape(); }
-        public void OnCheekSizeChange() { if (umaDna != null) umaDna.cheekSize = CheekSizeSlider.value; UpdateUMAShape(); }
-        public void OnCheekPositionChange() { if (umaDna != null) umaDna.cheekPosition = CheekPositionSlider.value; UpdateUMAShape(); }
-        public void OnCheekLowPronouncedChange() { if (umaDna != null) umaDna.lowCheekPronounced = lowCheekPronSlider.value; UpdateUMAShape(); }
-        public void OnForeheadSizeChange() { if (umaDna != null) umaDna.foreheadSize = ForeHeadSizeSlider.value; UpdateUMAShape(); }
-        public void OnForeheadPositionChange() { if (umaDna != null) umaDna.foreheadPosition = ForeHeadPositionSlider.value; UpdateUMAShape(); }
-        public void OnLipSizeChange() { if (umaDna != null) umaDna.lipsSize = LipSizeSlider.value; UpdateUMAShape(); }
-        public void OnMouthSizeChange() { if (umaDna != null) umaDna.mouthSize = MouthSlider.value; UpdateUMAShape(); }
-        public void OnEyeSizechange() { if (umaDna != null) umaDna.eyeSize = EyeSizeSlider.value; UpdateUMAShape(); }
-        public void OnEyeRotationChange() { if (umaDna != null) umaDna.eyeRotation = EyeRotationSlider.value; UpdateUMAShape(); }
-        public void OnLowCheekPositionChange() { if (umaDna != null) umaDna.lowCheekPosition = LowCheekPosSlider.value; UpdateUMAShape(); }
-        public void OnEyeSpacingChange() { if (umaTutorialDna != null) umaTutorialDna.eyeSpacing = EyeSpacingSlider.value; UpdateUMAShape(); }
+        // Slider callback
+		public void OnSliderChange()
+		{
+			GameObject selectedGO = EventSystem.current.currentSelectedGameObject;
+			if (selectedGO == null) return;
+
+			Slider slider = selectedGO.GetComponent<Slider>();
+			if (slider == null) return;
+
+			UMADnaBase.UMADnaAccessor accessor;
+			if (accessors.TryGetValue(slider, out accessor))
+			{
+				if (accessor != null)
+				{
+					accessor.Set(slider.value);
+					UpdateUMAShape();
+				}
+			}
+		}
     }
 }

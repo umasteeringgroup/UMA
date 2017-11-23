@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using System.Collections;
 using System.Collections.Generic;
 using UMA;
@@ -9,7 +10,7 @@ namespace UMA.Examples
     public class UMACharacterCustomization : MonoBehaviour
     {
         public UMAData umaData;
-        private UMADnaHumanoid umaDna;
+        private UMADnaBase umaDna;
         private UMACrowd crowdHandle;
 
         private Slider[] sliderControlList;
@@ -34,6 +35,8 @@ namespace UMA.Examples
 
         private Vector3 lastPos = new Vector3(0, 1.2f, -2.4f);
         private Quaternion lastRot;
+
+		private Dictionary<Slider, UMADnaBase.UMADnaAccessor> accessors;
 
         private void Start()
         {
@@ -103,6 +106,8 @@ namespace UMA.Examples
             sliderControlList2 = new Slider[18];
             sliderControlList3 = new Slider[14];
 
+			accessors = new Dictionary<Slider, UMADnaBase.UMADnaAccessor>();
+
             InitSliders();
 
             int randomResult = Random.Range(0, 2);
@@ -117,8 +122,74 @@ namespace UMA.Examples
             if (tempUMA)
             {
                 umaData = tempUMA;
-                umaDna = umaData.umaRecipe.GetDna<UMADnaHumanoid>();
-                ReceiveValues();
+				umaDna = umaData.umaRecipe.GetDna(UMAUtils.StringToHash("UMADnaHumanoid"));
+
+				if (umaDna != null)
+				{
+					accessors.Clear();
+
+					accessors.Add(sliderControlList[0], umaDna.GetAccessor("height"));
+					accessors.Add(sliderControlList[1], umaDna.GetAccessor("headSize"));
+
+					accessors.Add(sliderControlList[2], umaDna.GetAccessor("upperMuscle"));
+					accessors.Add(sliderControlList[3], umaDna.GetAccessor("lowerMuscle"));
+					accessors.Add(sliderControlList[4], umaDna.GetAccessor("upperWeight"));
+					accessors.Add(sliderControlList[5], umaDna.GetAccessor("lowerWeight"));
+
+					accessors.Add(sliderControlList[6], umaDna.GetAccessor("armLength"));
+					accessors.Add(sliderControlList[7], umaDna.GetAccessor("armWidth"));
+					accessors.Add(sliderControlList[8], umaDna.GetAccessor("forearmLength"));
+					accessors.Add(sliderControlList[9], umaDna.GetAccessor("forearmWidth"));
+					accessors.Add(sliderControlList[10], umaDna.GetAccessor("handsSize"));
+
+					accessors.Add(sliderControlList[11], umaDna.GetAccessor("feetSize"));
+					accessors.Add(sliderControlList[12], umaDna.GetAccessor("legSeparation"));
+					accessors.Add(sliderControlList[13], umaDna.GetAccessor("legsSize"));
+					accessors.Add(sliderControlList[14], umaDna.GetAccessor("gluteusSize"));
+
+					accessors.Add(sliderControlList[15], umaDna.GetAccessor("breastSize"));
+					accessors.Add(sliderControlList[16], umaDna.GetAccessor("belly"));
+					accessors.Add(sliderControlList[17], umaDna.GetAccessor("waist"));
+
+					accessors.Add(sliderControlList2[0], umaDna.GetAccessor("headWidth"));
+					accessors.Add(sliderControlList2[1], umaDna.GetAccessor("foreheadSize"));
+					accessors.Add(sliderControlList2[2], umaDna.GetAccessor("foreheadPosition"));
+
+					accessors.Add(sliderControlList2[3], umaDna.GetAccessor("earsSize"));
+					accessors.Add(sliderControlList2[4], umaDna.GetAccessor("earsPosition"));
+					accessors.Add(sliderControlList2[5], umaDna.GetAccessor("earsRotation"));
+
+					accessors.Add(sliderControlList2[6], umaDna.GetAccessor("noseSize"));
+					accessors.Add(sliderControlList2[7], umaDna.GetAccessor("noseCurve"));
+					accessors.Add(sliderControlList2[8], umaDna.GetAccessor("noseWidth"));
+
+					accessors.Add(sliderControlList2[9], umaDna.GetAccessor("noseInclination"));
+					accessors.Add(sliderControlList2[10], umaDna.GetAccessor("nosePosition"));
+					accessors.Add(sliderControlList2[11], umaDna.GetAccessor("nosePronounced"));
+					accessors.Add(sliderControlList2[12], umaDna.GetAccessor("noseFlatten"));
+
+					accessors.Add(sliderControlList2[13], umaDna.GetAccessor("eyeSize"));
+					accessors.Add(sliderControlList2[14], umaDna.GetAccessor("eyeRotation"));
+
+					accessors.Add(sliderControlList3[0], umaDna.GetAccessor("cheekSize"));
+					accessors.Add(sliderControlList3[1], umaDna.GetAccessor("cheekPosition"));
+					accessors.Add(sliderControlList3[2], umaDna.GetAccessor("lowCheekPronounced"));
+					accessors.Add(sliderControlList3[3], umaDna.GetAccessor("lowCheekPosition"));
+
+					accessors.Add(sliderControlList3[4], umaDna.GetAccessor("lipsSize"));
+					accessors.Add(sliderControlList3[5], umaDna.GetAccessor("mouthSize"));
+					accessors.Add(sliderControlList3[6], umaDna.GetAccessor("mandibleSize"));
+
+					accessors.Add(sliderControlList3[7], umaDna.GetAccessor("jawsSize"));
+					accessors.Add(sliderControlList3[8], umaDna.GetAccessor("jawsPosition"));
+					accessors.Add(sliderControlList3[9], umaDna.GetAccessor("neckThickness"));
+
+					accessors.Add(sliderControlList3[10], umaDna.GetAccessor("chinSize"));
+					accessors.Add(sliderControlList3[11], umaDna.GetAccessor("chinPronounced"));
+					accessors.Add(sliderControlList3[12], umaDna.GetAccessor("chinPosition"));
+
+                	ReceiveValues();
+				}
             }
         }
 
@@ -327,116 +398,45 @@ namespace UMA.Examples
             umaData.Dirty();
         }
 
+		private void ValidateAccessors()
+		{
+		}
+
         private void ReceiveValues()
         {
             if (umaDna != null)
             {
+				UMADnaBase.UMADnaAccessor accessor;
+
                 if (bodyArea == 0)
                 {
-                    sliderControlList[0].value = umaDna.height;
-                    sliderControlList[1].value = umaDna.headSize;
-
-                    sliderControlList[2].value = umaDna.upperMuscle;
-                    sliderControlList[3].value = umaDna.lowerMuscle;
-                    sliderControlList[4].value = umaDna.upperWeight;
-                    sliderControlList[5].value = umaDna.lowerWeight;
-
-                    sliderControlList[6].value = umaDna.armLength;
-                    sliderControlList[7].value = umaDna.armWidth;
-                    sliderControlList[8].value = umaDna.forearmLength;
-                    sliderControlList[9].value = umaDna.forearmWidth;
-                    sliderControlList[10].value = umaDna.handsSize;
-
-                    sliderControlList[11].value = umaDna.feetSize;
-                    sliderControlList[12].value = umaDna.legSeparation;
-                    sliderControlList[13].value = umaDna.legsSize;
-                    sliderControlList[14].value = umaDna.gluteusSize;
-
-                    sliderControlList[15].value = umaDna.breastSize;
-                    sliderControlList[16].value = umaDna.belly;
-                    sliderControlList[17].value = umaDna.waist;
-
-                    //sliderControlList[18].value = (float)umaDna.Body[(int)Positions.BuildSlots.Body_Torso].colors[0] - 1;
-
+					foreach (Slider slider in sliderControlList)
+					{
+						if (accessors.TryGetValue(slider, out accessor))
+						{
+							slider.value = accessor.Get();
+						}
+					}
                 }
                 else if (bodyArea == 1)
                 {
-                    sliderControlList2[0].value = umaDna.headWidth;
-                    sliderControlList2[1].value = umaDna.foreheadSize;
-                    sliderControlList2[2].value = umaDna.foreheadPosition;
-
-                    sliderControlList2[3].value = umaDna.earsSize;
-                    sliderControlList2[4].value = umaDna.earsPosition;
-                    sliderControlList2[5].value = umaDna.earsRotation;
-
-                    sliderControlList2[6].value = umaDna.noseSize;
-                    sliderControlList2[7].value = umaDna.noseCurve;
-                    sliderControlList2[8].value = umaDna.noseWidth;
-
-                    sliderControlList2[9].value = umaDna.noseInclination;
-                    sliderControlList2[10].value = umaDna.nosePosition;
-                    sliderControlList2[11].value = umaDna.nosePronounced;
-                    sliderControlList2[12].value = umaDna.noseFlatten;
-
-                    sliderControlList2[13].value = umaDna.eyeSize;
-                    sliderControlList2[14].value = umaDna.eyeRotation;
-
-                    /*if(umaDna.gender == 'F')
-                    {
-                        for(int i = 0; i < femaleHairStyles.Length; i++)
-                        {
-                            if(umaDna.Body[(int)Positions.BuildSlots.Body_Hair].element.Name == femaleHairStyles[i])
-                            {
-                                sliderControlList2[17].value = i;
-                                break;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        for(int i = 0; i < maleHairStyles.Length; i++)
-                        {
-                            if(umaDna.Body[(int)Positions.BuildSlots.Body_Hair].element.Name == maleHairStyles[i])
-                            {
-                                sliderControlList2[17].value = i;
-                                break;
-                            }
-                        }
-                    }*/
-
-                    //sliderControlList2[15].value = (float)umaDna.Body[(int)Positions.BuildSlots.Body_Hair].colors[0] - 12;
-                    //sliderControlList2[16].value = (float)umaDna.Body[(int)Positions.BuildSlots.Body_HeadEyes].colors[0] - 22;
+					foreach (Slider slider in sliderControlList2)
+					{
+						if (accessors.TryGetValue(slider, out accessor))
+						{
+							slider.value = accessor.Get();
+						}
+					}
                 }
                 else
                 {
-                    sliderControlList3[0].value = umaDna.cheekSize;
-                    sliderControlList3[1].value = umaDna.cheekPosition;
-                    sliderControlList3[2].value = umaDna.lowCheekPronounced;
-                    sliderControlList3[3].value = umaDna.lowCheekPosition;
-
-                    sliderControlList3[4].value = umaDna.lipsSize;
-                    sliderControlList3[5].value = umaDna.mouthSize;
-                    sliderControlList3[6].value = umaDna.mandibleSize;
-
-                    sliderControlList3[7].value = umaDna.jawsSize;
-                    sliderControlList3[8].value = umaDna.jawsPosition;
-                    sliderControlList3[9].value = umaDna.neckThickness;
-
-                    sliderControlList3[10].value = umaDna.chinSize;
-                    sliderControlList3[11].value = umaDna.chinPronounced;
-                    sliderControlList3[12].value = umaDna.chinPosition;
-
-                    /*if(umaDna.gender == 'M')
-                    {
-                        for(int i = 0; i < facialHairStyles.Length; i++)
-                        {
-                            if(umaDna.Body[(int)Positions.BuildSlots.Body_Beard].element.Name == facialHairStyles[i])
-                            {
-                                sliderControlList3[17].value = i;
-                                break;
-                            }
-                        }
-                    }*/
+					foreach (Slider slider in sliderControlList3)
+					{
+						if (accessors.TryGetValue(slider, out accessor))
+						{
+							slider.value = accessor.Get();
+						}
+					}
                 }
             }
         }
@@ -444,277 +444,282 @@ namespace UMA.Examples
         // Slider callbacks 
         public void OnHeightChange()
         {
-            umaDna.height = sliderControlList[0].value;
-            UpdateUMAShape();
+			Slider slider = EventSystem.current.currentSelectedGameObject.GetComponent<Slider>();
+			UMADnaBase.UMADnaAccessor accessor;
+			if (accessors.TryGetValue(slider, out accessor))
+			{
+				accessor.Set(slider.value);
+				UpdateUMAShape();
+			}
         }
 
         public void OnUpperMuscleChange()
         {
-            umaDna.upperMuscle = sliderControlList[2].value;
+//            umaDna.upperMuscle = sliderControlList[2].value;
             UpdateUMAShape();
         }
 
         public void OnUpperWeightChange()
         {
-            umaDna.upperWeight = sliderControlList[4].value;
+//            umaDna.upperWeight = sliderControlList[4].value;
             UpdateUMAShape();
         }
 
         public void OnLowerMuscleChange()
         {
-            umaDna.lowerMuscle = sliderControlList[3].value;
+//            umaDna.lowerMuscle = sliderControlList[3].value;
             UpdateUMAShape();
         }
 
         public void OnLowerWeightChange()
         {
-            umaDna.lowerWeight = sliderControlList[5].value;
+//            umaDna.lowerWeight = sliderControlList[5].value;
             UpdateUMAShape();
         }
 
         public void OnArmLengthChange()
         {
-            umaDna.armLength = sliderControlList[6].value;
+//            umaDna.armLength = sliderControlList[6].value;
             UpdateUMAShape();
         }
 
         public void OnForearmLengthChange()
         {
-            umaDna.forearmLength = sliderControlList[8].value;
+//            umaDna.forearmLength = sliderControlList[8].value;
             UpdateUMAShape();
         }
 
         public void OnLegSeparationChange()
         {
-            umaDna.legSeparation = sliderControlList[12].value;
+//            umaDna.legSeparation = sliderControlList[12].value;
             UpdateUMAShape();
         }
 
         public void OnHandSizeChange()
         {
-            umaDna.handsSize = sliderControlList[10].value;
+//            umaDna.handsSize = sliderControlList[10].value;
             UpdateUMAShape();
         }
 
         public void OnFootSizeChange()
         {
-            umaDna.feetSize = sliderControlList[11].value;
+//            umaDna.feetSize = sliderControlList[11].value;
             UpdateUMAShape();
         }
 
         public void OnLegSizeChange()
         {
-            umaDna.legsSize = sliderControlList[13].value;
+//            umaDna.legsSize = sliderControlList[13].value;
             UpdateUMAShape();
         }
 
         public void OnArmWidthChange()
         {
-            umaDna.armWidth = sliderControlList[7].value;
+//            umaDna.armWidth = sliderControlList[7].value;
             UpdateUMAShape();
         }
 
         public void OnForearmWidthChange()
         {
-            umaDna.forearmWidth = sliderControlList[9].value;
+//            umaDna.forearmWidth = sliderControlList[9].value;
             UpdateUMAShape();
         }
 
         public void OnBreastSizeChange()
         {
-            umaDna.breastSize = sliderControlList[15].value;
+//            umaDna.breastSize = sliderControlList[15].value;
             UpdateUMAShape();
         }
 
         public void OnBellySizeChange()
         {
-            umaDna.belly = sliderControlList[16].value;
+//            umaDna.belly = sliderControlList[16].value;
             UpdateUMAShape();
         }
 
         public void OnWaistSizeChange()
         {
-            umaDna.waist = sliderControlList[17].value;
+//            umaDna.waist = sliderControlList[17].value;
             UpdateUMAShape();
         }
 
         public void OnGluteusSizeChange()
         {
-            umaDna.gluteusSize = sliderControlList[14].value;
+//            umaDna.gluteusSize = sliderControlList[14].value;
             UpdateUMAShape();
         }
 
         public void OnHeadSizeChange()
         {
-            umaDna.headSize = sliderControlList[1].value;
+//            umaDna.headSize = sliderControlList[1].value;
             UpdateUMAShape();
         }
 
         public void OnHeadWidthChange()
         {
-            umaDna.headWidth = sliderControlList2[0].value;
+//            umaDna.headWidth = sliderControlList2[0].value;
             UpdateUMAShape();
         }
 
         public void OnNeckThicknessChange()
         {
-            umaDna.neckThickness = sliderControlList3[9].value;
+//            umaDna.neckThickness = sliderControlList3[9].value;
             UpdateUMAShape();
         }
 
         public void OnEarSizeChange()
         {
-            umaDna.earsSize = sliderControlList2[3].value;
+//            umaDna.earsSize = sliderControlList2[3].value;
             UpdateUMAShape();
         }
 
         public void OnEarPositionChange()
         {
-            umaDna.earsPosition = sliderControlList2[4].value;
+//            umaDna.earsPosition = sliderControlList2[4].value;
             UpdateUMAShape();
         }
 
         public void OnEarRotationChange()
         {
-            umaDna.earsRotation = sliderControlList2[5].value;
+//            umaDna.earsRotation = sliderControlList2[5].value;
             UpdateUMAShape();
         }
 
         public void OnNoseSizeChange()
         {
-            umaDna.noseSize = sliderControlList2[6].value;
+//            umaDna.noseSize = sliderControlList2[6].value;
             UpdateUMAShape();
         }
 
         public void OnNoseCurveChange()
         {
-            umaDna.noseCurve = sliderControlList2[7].value;
+//            umaDna.noseCurve = sliderControlList2[7].value;
             UpdateUMAShape();
         }
 
         public void OnNoseWidthChange()
         {
-            umaDna.noseWidth = sliderControlList2[8].value;
+//            umaDna.noseWidth = sliderControlList2[8].value;
             UpdateUMAShape();
         }
 
         public void OnNoseInclinationChange()
         {
-            umaDna.noseInclination = sliderControlList2[9].value;
+//            umaDna.noseInclination = sliderControlList2[9].value;
             UpdateUMAShape();
         }
 
         public void OnNosePositionChange()
         {
-            umaDna.nosePosition = sliderControlList2[10].value;
+//            umaDna.nosePosition = sliderControlList2[10].value;
             UpdateUMAShape();
         }
 
         public void OnNosePronouncedChange()
         {
-            umaDna.nosePronounced = sliderControlList2[11].value;
+//            umaDna.nosePronounced = sliderControlList2[11].value;
             UpdateUMAShape();
         }
 
         public void OnNoseFlattenChange()
         {
-            umaDna.noseFlatten = sliderControlList2[12].value;
+//            umaDna.noseFlatten = sliderControlList2[12].value;
             UpdateUMAShape();
         }
 
         public void OnChinSizeChange()
         {
-            umaDna.chinSize = sliderControlList3[10].value;
+//            umaDna.chinSize = sliderControlList3[10].value;
             UpdateUMAShape();
         }
 
         public void OnChinPronouncedChange()
         {
-            umaDna.chinPronounced = sliderControlList3[11].value;
+//            umaDna.chinPronounced = sliderControlList3[11].value;
             UpdateUMAShape();
         }
 
         public void OnChinPositionChange()
         {
-            umaDna.chinPosition = sliderControlList3[12].value;
+//            umaDna.chinPosition = sliderControlList3[12].value;
             UpdateUMAShape();
         }
 
         public void OnMandibleSizeChange()
         {
-            umaDna.mandibleSize = sliderControlList3[6].value;
+//            umaDna.mandibleSize = sliderControlList3[6].value;
             UpdateUMAShape();
         }
 
         public void OnJawSizeChange()
         {
-            umaDna.jawsSize = sliderControlList3[7].value;
+//            umaDna.jawsSize = sliderControlList3[7].value;
             UpdateUMAShape();
         }
 
         public void OnJawPositionChange()
         {
-            umaDna.jawsPosition = sliderControlList3[8].value;
+//            umaDna.jawsPosition = sliderControlList3[8].value;
             UpdateUMAShape();
         }
 
         public void OnCheekSizeChange()
         {
-            umaDna.cheekSize = sliderControlList3[0].value;
+//            umaDna.cheekSize = sliderControlList3[0].value;
             UpdateUMAShape();
         }
 
         public void OnCheekPositionChange()
         {
-            umaDna.cheekPosition = sliderControlList3[1].value;
+//            umaDna.cheekPosition = sliderControlList3[1].value;
             UpdateUMAShape();
         }
 
         public void OnCheekLowPronouncedChange()
         {
-            umaDna.lowCheekPronounced = sliderControlList3[2].value;
+//            umaDna.lowCheekPronounced = sliderControlList3[2].value;
             UpdateUMAShape();
         }
 
         public void OnForeheadSizeChange()
         {
-            umaDna.foreheadSize = sliderControlList2[1].value;
+//            umaDna.foreheadSize = sliderControlList2[1].value;
             UpdateUMAShape();
         }
 
         public void OnForeheadPositionChange()
         {
-            umaDna.foreheadPosition = sliderControlList2[2].value;
+//            umaDna.foreheadPosition = sliderControlList2[2].value;
             UpdateUMAShape();
         }
 
         public void OnLipSizeChange()
         {
-            umaDna.lipsSize = sliderControlList3[4].value;
+//            umaDna.lipsSize = sliderControlList3[4].value;
             UpdateUMAShape();
         }
 
         public void OnMouthSizeChange()
         {
-            umaDna.mouthSize = sliderControlList3[5].value;
+//            umaDna.mouthSize = sliderControlList3[5].value;
             UpdateUMAShape();
         }
 
         public void OnEyeSizechange()
         {
-            umaDna.eyeSize = sliderControlList2[13].value;
+//            umaDna.eyeSize = sliderControlList2[13].value;
             UpdateUMAShape();
         }
 
         public void OnEyeRotationChange()
         {
-            umaDna.eyeRotation = sliderControlList2[14].value;
+//            umaDna.eyeRotation = sliderControlList2[14].value;
             UpdateUMAShape();
         }
 
         public void OnLowCheekPositionChange()
         {
-            umaDna.lowCheekPosition = sliderControlList3[3].value;
+//            umaDna.lowCheekPosition = sliderControlList3[3].value;
             UpdateUMAShape();
         }
 

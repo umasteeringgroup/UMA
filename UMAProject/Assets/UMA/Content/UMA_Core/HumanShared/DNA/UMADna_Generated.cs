@@ -31,7 +31,7 @@ namespace UMA
 			return new string[0];
 		}
 
-		public static System.Type GetType(System.String className)
+		private static System.Type GetType(System.String className)
 		{
 
 			if( "UMADnaHumanoid" == className ) return typeof(UMADnaHumanoid);	
