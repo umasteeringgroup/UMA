@@ -12,75 +12,2485 @@ MonoBehaviour:
   m_Name: Toon Expression Set
   m_EditorClassIdentifier: 
   posePairs:
-  - primary: {fileID: 11400000, guid: a71090d7a6dbcf5488ee2120ca04dca0, type: 2}
-    inverse: {fileID: 11400000, guid: cf91de1a1497654438142a43a2571afe, type: 2}
-  - primary: {fileID: 11400000, guid: 5961f08c8d03c204a94898545efca790, type: 2}
-    inverse: {fileID: 11400000, guid: 8931ea7a3391646488478c1b6ed4824b, type: 2}
-  - primary: {fileID: 11400000, guid: 286dbed294ef5474aa29c2f4ba0e46ef, type: 2}
-    inverse: {fileID: 11400000, guid: 5e7f77c4d63fba248a6c86f9c5a5404b, type: 2}
-  - primary: {fileID: 11400000, guid: 99d05b284375ce34ab66904d10dec39f, type: 2}
-    inverse: {fileID: 11400000, guid: 194ad1566a2925640a7b28d505df3126, type: 2}
-  - primary: {fileID: 11400000, guid: e939ba481f8daa546aff685cc7c64ed0, type: 2}
-    inverse: {fileID: 11400000, guid: 7c3114546f045254a803184fb8a85a57, type: 2}
-  - primary: {fileID: 11400000, guid: e88d2ffc653e2c3449864bc12d09602f, type: 2}
-    inverse: {fileID: 11400000, guid: cb7fa8611d08bff438ed1b96f5e44ba0, type: 2}
-  - primary: {fileID: 11400000, guid: 29b8463aaf78e51408e7456898a4f1e1, type: 2}
-    inverse: {fileID: 11400000, guid: 408911ea657ce804eb451d8ff74856d8, type: 2}
-  - primary: {fileID: 11400000, guid: c8eefe7154ae4d74daf76ad509c43a45, type: 2}
+  - primary: {fileID: 114579413862591534}
+    inverse: {fileID: 114224912581445770}
+  - primary: {fileID: 114838143179846328}
+    inverse: {fileID: 114276239980873736}
+  - primary: {fileID: 114322194704063862}
+    inverse: {fileID: 114017361005705854}
+  - primary: {fileID: 114951264051045394}
+    inverse: {fileID: 114691135624773498}
+  - primary: {fileID: 114155306569128516}
+    inverse: {fileID: 114614471479584764}
+  - primary: {fileID: 114250197015857270}
+    inverse: {fileID: 114670117934693656}
+  - primary: {fileID: 114504037298891662}
+    inverse: {fileID: 114347978535037682}
+  - primary: {fileID: 114141258053797562}
     inverse: {fileID: 0}
-  - primary: {fileID: 11400000, guid: de31573dc57f4cd4a90b0785dc465ed8, type: 2}
-    inverse: {fileID: 11400000, guid: 16db7ae13da40aa41a16160b54a40e4b, type: 2}
-  - primary: {fileID: 11400000, guid: 2469186428a54674c9f8148311c38692, type: 2}
-    inverse: {fileID: 11400000, guid: 0ac7f12f779ffc0438add7b9a93d354a, type: 2}
-  - primary: {fileID: 11400000, guid: d1223a866832cc54ebd77e1050763776, type: 2}
-    inverse: {fileID: 11400000, guid: b2ddaab1cb49a63488b4ff7a4b349869, type: 2}
-  - primary: {fileID: 11400000, guid: 9b7932385cb02f34296483edbc170111, type: 2}
-    inverse: {fileID: 11400000, guid: 9241f0ab120d2034b98e837e695d43e0, type: 2}
-  - primary: {fileID: 11400000, guid: 7080d046e2722474199df9d2c34995e7, type: 2}
+  - primary: {fileID: 114211029163862870}
+    inverse: {fileID: 114470593994344460}
+  - primary: {fileID: 114480770852130834}
+    inverse: {fileID: 114288135716375476}
+  - primary: {fileID: 114727490242389300}
+    inverse: {fileID: 114900916136817664}
+  - primary: {fileID: 114328219490976862}
+    inverse: {fileID: 114727726767721472}
+  - primary: {fileID: 114385228546835898}
     inverse: {fileID: 0}
   - primary: {fileID: 0}
     inverse: {fileID: 0}
-  - primary: {fileID: 11400000, guid: da97353143375c248bfbdc4d45951e71, type: 2}
-    inverse: {fileID: 11400000, guid: 13f50a1ac3d64e94aafe5360fbbd173d, type: 2}
-  - primary: {fileID: 11400000, guid: 7e8d773ae3567864090a85fa64263b80, type: 2}
-    inverse: {fileID: 11400000, guid: 327cefca72bb24f42b4185edd0765490, type: 2}
-  - primary: {fileID: 11400000, guid: 0d3c64b8359e70b48a315f7d477a2787, type: 2}
-    inverse: {fileID: 11400000, guid: f30132ec8b376fa4d8b125727a218a6f, type: 2}
-  - primary: {fileID: 11400000, guid: ce8a1c055b54aff47b24b0c99c43bd4a, type: 2}
-    inverse: {fileID: 11400000, guid: 24d153ff998b87b4a8fd91c38443c278, type: 2}
-  - primary: {fileID: 11400000, guid: 3de9cf11746a452488f064e51cc9f174, type: 2}
-    inverse: {fileID: 11400000, guid: 46a5b48aed322db4a9fb569b3bd3bd6a, type: 2}
-  - primary: {fileID: 11400000, guid: 1551afe8a7664da4dacda0108407f834, type: 2}
-    inverse: {fileID: 11400000, guid: c4c6f18ac02008c438382f7a2ba6ded1, type: 2}
-  - primary: {fileID: 11400000, guid: 0aa338fb693805244887798a080ccaf0, type: 2}
-    inverse: {fileID: 11400000, guid: fc0d1fe10b00468419aabb35b21b9197, type: 2}
-  - primary: {fileID: 11400000, guid: 66d117af8a8cd854e9554de97b1c8bd1, type: 2}
-    inverse: {fileID: 11400000, guid: 3cd3b2786d2f2b744b3ee2a1c8e9e512, type: 2}
-  - primary: {fileID: 11400000, guid: 9a5b900661649ae458160d5dadc58a4a, type: 2}
-    inverse: {fileID: 11400000, guid: c8f199805f591ad46b1289a892804b3d, type: 2}
-  - primary: {fileID: 11400000, guid: 33c6f38ca686bd34b971cf3849e040a7, type: 2}
-    inverse: {fileID: 11400000, guid: 590e85748f0c2294cb8588e72fdbe0c6, type: 2}
-  - primary: {fileID: 11400000, guid: b5273c4c1815a1146ba1cdfaa099b122, type: 2}
-    inverse: {fileID: 11400000, guid: 3ff9c3f3d36dd4e458609d4889364845, type: 2}
-  - primary: {fileID: 11400000, guid: 51b0d27e4425be04fb4bfb2ddc585fe7, type: 2}
+  - primary: {fileID: 114570929559812966}
+    inverse: {fileID: 114033853435013718}
+  - primary: {fileID: 114618373482235332}
+    inverse: {fileID: 114782649091393642}
+  - primary: {fileID: 114621018167723784}
+    inverse: {fileID: 114610162313850364}
+  - primary: {fileID: 114306801228173164}
+    inverse: {fileID: 114217496177493944}
+  - primary: {fileID: 114937524194858506}
+    inverse: {fileID: 114488104194236206}
+  - primary: {fileID: 114606513384184490}
+    inverse: {fileID: 114692920244976188}
+  - primary: {fileID: 114432422261365260}
+    inverse: {fileID: 114654813894892066}
+  - primary: {fileID: 114286248249691498}
+    inverse: {fileID: 114654345022336094}
+  - primary: {fileID: 114439350842287258}
+    inverse: {fileID: 114908976897526468}
+  - primary: {fileID: 114000126907967698}
+    inverse: {fileID: 114373457058491166}
+  - primary: {fileID: 114090720648690398}
+    inverse: {fileID: 114530702327303964}
+  - primary: {fileID: 114938459257143854}
     inverse: {fileID: 0}
-  - primary: {fileID: 11400000, guid: db8c42856fa764047b3f1ca49e6ef994, type: 2}
-    inverse: {fileID: 11400000, guid: fb3d7bf63c116f04f929290e07995a6e, type: 2}
-  - primary: {fileID: 11400000, guid: a256dca2715ddcd499f625adfbd1e612, type: 2}
-    inverse: {fileID: 11400000, guid: 0a7a841382e3a8a4999a1ef9b0d63547, type: 2}
-  - primary: {fileID: 11400000, guid: 3a59564f297136a47b8434bb04d187c5, type: 2}
-    inverse: {fileID: 11400000, guid: 01a7cd83dd2236b47b7cbf24ba41aa02, type: 2}
-  - primary: {fileID: 11400000, guid: 121aa90f1a0180b4fbb9532dc45356b9, type: 2}
-    inverse: {fileID: 11400000, guid: 1724886f53853a445b8d1ed0e2236c18, type: 2}
-  - primary: {fileID: 11400000, guid: 0553395e5d8ee72449eba51a34963588, type: 2}
-    inverse: {fileID: 11400000, guid: 433d03a92aca69e41b69628b1099dd17, type: 2}
-  - primary: {fileID: 11400000, guid: 54f2cf09468ac5e458a9a6048da4b166, type: 2}
-    inverse: {fileID: 11400000, guid: d458990e57177ba4e98830d5b31854a6, type: 2}
-  - primary: {fileID: 11400000, guid: 5a6f1c4aec5ff8c4a946f1e058fc1e0c, type: 2}
+  - primary: {fileID: 114123958695728548}
+    inverse: {fileID: 114345796711174604}
+  - primary: {fileID: 114651680183905086}
+    inverse: {fileID: 114063872842803148}
+  - primary: {fileID: 114383803108408984}
+    inverse: {fileID: 114002637263790292}
+  - primary: {fileID: 114314158854697508}
+    inverse: {fileID: 114221205781264406}
+  - primary: {fileID: 114127069616034938}
+    inverse: {fileID: 114264339497323018}
+  - primary: {fileID: 114191296830483976}
+    inverse: {fileID: 114814109982993818}
+  - primary: {fileID: 114174973492069772}
     inverse: {fileID: 0}
-  - primary: {fileID: 11400000, guid: b72491023ba89b14699282485aa9f4e7, type: 2}
-    inverse: {fileID: 11400000, guid: ae079dcef805b7c4c9436792fb6f964b, type: 2}
-  - primary: {fileID: 11400000, guid: a02eee778f9458248b1752331ae07de7, type: 2}
-    inverse: {fileID: 11400000, guid: 357bd0646ea1e454e8f7905eff07c8db, type: 2}
-  - primary: {fileID: 11400000, guid: cfe28ca7dc07e7b479409c317f724978, type: 2}
-    inverse: {fileID: 11400000, guid: 59475413fe8131c4c93776847243c55d, type: 2}
+  - primary: {fileID: 114939426937871754}
+    inverse: {fileID: 114943912874741294}
+  - primary: {fileID: 114003853908042116}
+    inverse: {fileID: 114501904002745388}
+  - primary: {fileID: 114161514263284378}
+    inverse: {fileID: 114150304821104602}
+--- !u!114 &114000126907967698
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: CheeksPuff-L
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftLipsSuperiorMiddle
+    hash: -1900485368
+    position: {x: -0.000120051205, y: -0.000037992373, z: -0.00012677908}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.99999976, z: 1}
+  - bone: LeftLowCheek
+    hash: 1716905425
+    position: {x: -0.017931186, y: 0.022394337, z: 0.05691433}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.99999964, z: 0.9999999}
+  - bone: LeftLips
+    hash: 1620479899
+    position: {x: 0.00017434359, y: -0.00023381412, z: -0.00014219433}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftLipsInferior
+    hash: -2082379262
+    position: {x: 0.00019941106, y: -0.00023828447, z: -0.00009650737}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftMaskMouth
+    hash: -898041465
+    position: {x: 0.00017434359, y: -0.00023381412, z: -0.00014219433}
+    rotation: {x: -0.000000016177765, y: 3.803201e-10, z: 0.0000000045180597, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114002637263790292
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: EyesDown-L
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftEyeGlobe
+    hash: -326698209
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.25021246, y: -0.000000001888472, z: -0.0000000014757359, w: 0.96819097}
+    scale: {x: 1, y: 1, z: 0.9999999}
+  - bone: LeftLowerLid
+    hash: 484878204
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.12315567, y: -0.0000000017464689, z: -0.0000000014742194, w: 0.9923874}
+    scale: {x: 1, y: 0.9999999, z: 1}
+  - bone: LeftMaskEyeGlobe
+    hash: 350061075
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.25071207, y: -4.803155e-10, z: -0.0000000022501898, w: 0.96806175}
+    scale: {x: 1, y: 1, z: 0.9999999}
+  - bone: LeftUpperLid
+    hash: -209628701
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.12284173, y: -8.315175e-10, z: 9.439055e-10, w: 0.9924263}
+    scale: {x: 1, y: 1, z: 1.0000001}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114003853908042116
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: BrowsOuterUp-R
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: NoseBase
+    hash: -1184023893
+    position: {x: -2.910383e-11, y: -0.00013262779, z: 0.0000019967556}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.0000001, z: 1.0000001}
+  - bone: NoseTop
+    hash: 463827395
+    position: {x: -0.00000040975283, y: 0.000025838614, z: -0.0000003874302}
+    rotation: {x: 0.00000004246161, y: 4.7852278e-12, z: 6.6836225e-10, w: 1.0000001}
+    scale: {x: 1, y: 1.0000001, z: 1.0000001}
+  - bone: RightEyebrowMiddle
+    hash: 1695671804
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.06202611, y: 1.2513769e-10, z: -9.353382e-11, w: 0.9980746}
+    scale: {x: 1.0000001, y: 1.0000001, z: 1}
+  - bone: RightEyebrowUp
+    hash: 1246724795
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.07430831, y: 6.0061525e-11, z: 3.6361643e-11, w: 0.99723536}
+    scale: {x: 1.0000001, y: 0.9999995, z: 1}
+  - bone: RightLipsSuperiorMiddle
+    hash: -2093673696
+    position: {x: -0.0000012293458, y: -0.0000821203, z: 0.00002336502}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 0.9999999, z: 1}
+  - bone: RightNose
+    hash: -764976276
+    position: {x: 0.00000834465, y: -0.000015556812, z: 0.00000011920929}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.0000001, y: 1.0000001, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114017361005705854
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: NeckTiltRight
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Neck
+    hash: -2145158803
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.000106945074, y: -0.000022231548, z: -0.2512908, w: 0.9679116}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114033853435013718
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: TongueDown
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Tongue02
+    hash: -718215880
+    position: {x: 2.5710278e-10, y: -0.0000000037252903, z: 0.0000000038874752}
+    rotation: {x: 0.24985859, y: -0.00000043621102, z: -0.0000016686079, w: 0.96828234}
+    scale: {x: 1.0045767, y: 1.0000001, z: 0.9999999}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114063872842803148
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: EyesClose-R
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightCheek
+    hash: 827866759
+    position: {x: 0.0000015869737, y: -0.00036995858, z: 0.0000047534704}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.9999999, z: 1}
+  - bone: RightLowerLid
+    hash: -945389519
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.08605129, y: 0.0000000029622402, z: -0.0000000026180689, w: 0.99629074}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightUpperLid
+    hash: 683767470
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.26376233, y: 0.000000001297531, z: 0.000000003444049, w: 0.96458775}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114090720648690398
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: CheeksPuff-R
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightLips
+    hash: -1558564409
+    position: {x: 0.000021673739, y: 0.000047132373, z: 0.000028662384}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightMaskMouth
+    hash: -1026653043
+    position: {x: 0.000021673739, y: 0.000047132373, z: 0.000028662384}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLowCheek
+    hash: -1122647396
+    position: {x: 0.010565378, y: 0.022290807, z: 0.063070044}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114123958695728548
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: EyesOpen-L
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftLowerLid
+    hash: 484878204
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.10088291, y: -0.0000000019153816, z: -0.0000000031193268, w: 0.9948984}
+    scale: {x: 1, y: 0.9999999, z: 1}
+  - bone: LeftUpperLid
+    hash: -209628701
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.090342335, y: 0.0000000015711684, z: 1.2744018e-10, w: 0.99591076}
+    scale: {x: 1, y: 1, z: 1.0000001}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114127069616034938
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: EyesIn-L
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftEyeGlobe
+    hash: -326698209
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.0000000025885205, y: -0.0000000013341108, z: 0.23295301, w: 0.97248805}
+    scale: {x: 1, y: 1, z: 0.9999999}
+  - bone: LeftMaskEyeGlobe
+    hash: 350061075
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.0000000029433476, y: 6.9305167e-10, z: 0.23308384, w: 0.97245675}
+    scale: {x: 1, y: 1, z: 0.9999999}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114141258053797562
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: JawForward
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Mandible
+    hash: 1574626840
+    position: {x: 0.0000000011496013, y: -0.011092415, z: 0.01129809}
+    rotation: {x: 0.0036707257, y: -0.00000003333185, z: 0.000000056728165, w: 1.000006}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftLipsInferior
+    hash: -2082379262
+    position: {x: -0.00024243444, y: 0.0008943975, z: -0.0002790317}
+    rotation: {x: 0.000000043057906, y: 0.000000010073848, z: -1.5719875e-10, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLipsInferior
+    hash: 921042654
+    position: {x: 0.00024243444, y: 0.0008943826, z: -0.00027899444}
+    rotation: {x: 0.0000000010873349, y: 0.00000001029656, z: -0.000000024650035,
+      w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114150304821104602
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: BrowInnerDown
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftEyebrowLow
+    hash: 2129323926
+    position: {x: -0.0000002644956, y: -0.00013294816, z: -0.000041142106}
+    rotation: {x: -0.058118265, y: -0.000048978072, z: 0.0075789583, w: 0.9982795}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: NoseTop
+    hash: 463827395
+    position: {x: 0.00020711834, y: -0.01308614, z: -0.0013885051}
+    rotation: {x: -0.057106443, y: -5.6231658e-11, z: -5.6343086e-10, w: 0.998374}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightEyebrowLow
+    hash: -1640515339
+    position: {x: 0.0000002644956, y: -0.00013294816, z: -0.000041142106}
+    rotation: {x: -0.05811822, y: 0.00004897177, z: -0.0075790854, w: 0.9982795}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114155306569128516
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: HeadLeft
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Head
+    hash: 130111906
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.000050744755, y: -0.3292297, z: -0.000035496596, w: 0.94424987}
+    scale: {x: 1, y: 0.99999994, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114161514263284378
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: BrowInnerUp
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftEyebrowLow
+    hash: 2129323926
+    position: {x: 0.000004455447, y: 0.0020272434, z: 0.00062711537}
+    rotation: {x: 0.06041368, y: 1.8695913e-12, z: 5.3301807e-12, w: 0.9981916}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: NoseTop
+    hash: 463827395
+    position: {x: -0.00017962928, y: 0.011327803, z: -0.0001720041}
+    rotation: {x: 0.000000041827015, y: -9.857365e-12, z: -2.1363467e-13, w: 1.0000001}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightEyebrowLow
+    hash: -1640515339
+    position: {x: -0.000004455447, y: 0.0020272434, z: 0.00062711537}
+    rotation: {x: 0.06041368, y: 7.1468984e-11, z: -4.8813304e-11, w: 0.9981916}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114174973492069772
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: BrowIn
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftEyebrowLow
+    hash: 2129323926
+    position: {x: 0, y: 0.0005698204, z: 0.0047552586}
+    rotation: {x: 0.0000139926515, y: -0.000002046559, z: 0.065446116, w: 0.9978638}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftEyebrowMiddle
+    hash: -356417641
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.0000004162516, y: -0.000000007411763, z: 0.008880123, w: 0.9999605}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftEyebrowUp
+    hash: 1123680177
+    position: {x: -0.000000014901161, y: -0.000015825033, z: 0.0000005811453}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: NoseTopAdjust
+    hash: 1973914600
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.61599994, y: 1, z: 1}
+  - bone: RightEyebrowLow
+    hash: -1640515339
+    position: {x: 0, y: 0.0005698055, z: 0.0047552586}
+    rotation: {x: 0.000013947716, y: 0.0000025154284, z: -0.06544558, w: 0.9978638}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightEyebrowMiddle
+    hash: 1695671804
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.0000005442995, y: 0.0000000039953907, z: -0.008880172, w: 0.9999604}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightEyebrowUp
+    hash: 1246724795
+    position: {x: 0.000000014901161, y: -0.000015825033, z: 0.0000005811453}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114191296830483976
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: EyesIn-R
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightEyeGlobe
+    hash: 935779410
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.0000000065177677, y: -7.187187e-10, z: -0.2329544, w: 0.9724878}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightMaskEyeGlobe
+    hash: -1579608369
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.00000000648709, y: 4.5341914e-11, z: -0.2330838, w: 0.9724567}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114211029163862870
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: JawLeft
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Mandible
+    hash: 1574626840
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.000023438342, y: -0.000002949468, z: -0.055676237, w: 0.99844885}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114217496177493944
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: MouthFrown-L
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftLipsSuperiorMiddle
+    hash: -1900485368
+    position: {x: -0.008625586, y: -0.0037208218, z: -0.0022308528}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.99999976, z: 1}
+  - bone: LeftLowCheek
+    hash: 1716905425
+    position: {x: -0.002142407, y: -0.0029858348, z: 0.002513364}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.99999964, z: 0.9999999}
+  - bone: LipsSuperior
+    hash: -1089081410
+    position: {x: -2.910383e-11, y: -0.0007695742, z: 0.00017607212}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.0000001, z: 1}
+  - bone: LeftLips
+    hash: 1620479899
+    position: {x: 0.0037341788, y: 0.008295372, z: -0.029931698}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  - bone: LeftLipsInferior
+    hash: -2082379262
+    position: {x: -0.0019218065, y: 0.0020550191, z: 0.000032767653}
+    rotation: {x: -0.13850772, y: -0.0000000032743006, z: -0.000000029605152, w: 0.99036133}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftMaskMouth
+    hash: -898041465
+    position: {x: 0.0037341565, y: 0.008295372, z: -0.029931698}
+    rotation: {x: -0.000000016177765, y: 3.803201e-10, z: 0.0000000045180597, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LipsInferior
+    hash: -499586065
+    position: {x: -0.000040930703, y: 0.000011488795, z: 0.0038670003}
+    rotation: {x: -0.041447427, y: -3.5210623e-11, z: -1.737192e-10, w: 0.99914074}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114221205781264406
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: EyesDown-R
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightEyeGlobe
+    hash: 935779410
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.2502125, y: 6.494855e-10, z: 7.703922e-10, w: 0.96819097}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLowerLid
+    hash: -945389519
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.12315558, y: -0.0000000011903475, z: 1.186092e-10, w: 0.9923874}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightMaskEyeGlobe
+    hash: -1579608369
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.250712, y: 0.0000000010840178, z: -0.0000000035667234, w: 0.96806175}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightUpperLid
+    hash: 683767470
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.12284175, y: -6.956746e-10, z: -0.0000000015644338, w: 0.9924263}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114224912581445770
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: NeckDown
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Neck
+    hash: -2145158803
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.24911295, y: -3.0243803e-14, z: 3.5804667e-15, w: 0.96847445}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114250197015857270
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: HeadTiltLeft
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Head
+    hash: 130111906
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.000019010156, y: 0.0000034330133, z: 0.2488394, w: 0.96854484}
+    scale: {x: 1, y: 0.99999994, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114264339497323018
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: EyesOut-L
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftEyeGlobe
+    hash: -326698209
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.0000000053240883, y: 0.0000000013719437, z: -0.32390606, w: 0.9460892}
+    scale: {x: 1, y: 1, z: 0.9999999}
+  - bone: LeftMaskEyeGlobe
+    hash: 350061075
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.0000000023762696, y: 0.0000000015539496, z: -0.2510119, w: 0.967984}
+    scale: {x: 1, y: 1, z: 0.9999999}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114276239980873736
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: NeckRight
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Neck
+    hash: -2145158803
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.00031051907, y: 0.33211863, z: 0.00022095894, w: 0.9432376}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114286248249691498
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: UpperLipUp-L
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftLipsSuperiorMiddle
+    hash: -1900485368
+    position: {x: -0.0014742836, y: 0.015247573, z: 0.005562246}
+    rotation: {x: 0.00003090761, y: -0.000010042999, z: 0.00040383288, w: 0.99999994}
+    scale: {x: 1, y: 0.99999976, z: 1}
+  - bone: LipsSuperior
+    hash: -1089081410
+    position: {x: 2.3283064e-10, y: 0.0070948116, z: 0.00014939904}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.0000001, z: 1}
+  - bone: LeftLips
+    hash: 1620479899
+    position: {x: 0.000000007450581, y: -0.00347808, z: 0.005718775}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  - bone: LeftLipsInferior
+    hash: -2082379262
+    position: {x: 0.0001378879, y: -0.0001269579, z: -0.000018067658}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftMaskMouth
+    hash: -898041465
+    position: {x: 0.000000007450581, y: -0.00347808, z: 0.005718775}
+    rotation: {x: -0.000000016177765, y: 3.803201e-10, z: 0.0000000045180597, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LipsInferior
+    hash: -499586065
+    position: {x: -0.00000016819831, y: -0.000040009618, z: 0.0000018030405}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  - bone: NoseBase
+    hash: -1184023893
+    position: {x: 1.4551915e-11, y: 0.000296928, z: -0.0000045597553}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.0000001, z: 1.0000001}
+  - bone: UpperLips
+    hash: 891826736
+    position: {x: -0.000000053740223, y: 0.003828358, z: -0.000000059604645}
+    rotation: {x: 0.0000037089228, y: 3.5788814e-13, z: -1.9224097e-13, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114288135716375476
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: MouthRight
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftLipsSuperiorMiddle
+    hash: -1900485368
+    position: {x: 0.0046011694, y: 0.0014429456, z: 0.0048124194}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LipsSuperior
+    hash: -1089081410
+    position: {x: 0.0056014108, y: -0.0000000018626451, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftLips
+    hash: 1620479899
+    position: {x: -0.011412099, y: 0.015340492, z: 0.009329781}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftLipsInferior
+    hash: -2082379262
+    position: {x: -0.004187919, y: 0.004952401, z: 0.002006039}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftMaskMouth
+    hash: -898041465
+    position: {x: -0.011412099, y: 0.015340492, z: 0.009329781}
+    rotation: {x: 0, y: 0, z: 0, w: 0.99999994}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LipsInferior
+    hash: -499586065
+    position: {x: -0.0056010582, y: 0.000020936131, z: -0.000059321523}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLips
+    hash: -1558564409
+    position: {x: -0.008968078, y: -0.019454017, z: -0.011831544}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLipsInferior
+    hash: 921042654
+    position: {x: -0.00927157, y: -0.003000319, z: -0.0012169629}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightMaskMouth
+    hash: -1026653043
+    position: {x: -0.008968078, y: -0.019454017, z: -0.011831544}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLipsSuperiorMiddle
+    hash: -2093673696
+    position: {x: 0.009551115, y: -0.00082650967, z: -0.0023928583}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114306801228173164
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: MouthWide-L
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftCheek
+    hash: 1397141478
+    position: {x: -0.0041399524, y: 0.00011392683, z: 0.0075034797}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftLipsSuperiorMiddle
+    hash: -1900485368
+    position: {x: -0.013616804, y: 0.0046227984, z: -0.009374946}
+    rotation: {x: 6.8767725e-10, y: -0.000000010412069, z: 0.0000000014520092, w: 1}
+    scale: {x: 1, y: 0.99999976, z: 1}
+  - bone: LeftLowCheek
+    hash: 1716905425
+    position: {x: -0.026101373, y: 0.01201092, z: -0.00050638616}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.99999964, z: 0.9999999}
+  - bone: LipsSuperior
+    hash: -1089081410
+    position: {x: 8.731149e-11, y: 0.002680799, z: -0.0010408163}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.0000001, z: 1}
+  - bone: LeftLips
+    hash: 1620479899
+    position: {x: 0.031091928, y: -0.02738811, z: 0.009422131}
+    rotation: {x: 5.894222e-10, y: -0.0000000067149126, z: 0.00000001729745, w: 1}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  - bone: LeftLipsInferior
+    hash: -2082379262
+    position: {x: 0.012883373, y: -0.010131434, z: 0.0015690178}
+    rotation: {x: 0.000000014711723, y: -6.800438e-11, z: 0.000000030808057, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftMaskMouth
+    hash: -898041465
+    position: {x: 0.031091943, y: -0.027388103, z: 0.009422138}
+    rotation: {x: 0.000000012647109, y: 1.7999813e-10, z: 0.00000003681222, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LipsInferior
+    hash: -499586065
+    position: {x: -0.000006169583, y: -0.000690192, z: 0.0003393516}
+    rotation: {x: 0.0000000146880055, y: -4.350351e-10, z: 5.3483194e-11, w: 1}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114314158854697508
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: EyesUp-R
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightEyeGlobe
+    hash: 935779410
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.123866916, y: -1.7739896e-10, z: -5.6142685e-10, w: 0.99229884}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLowerLid
+    hash: -945389519
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.100088276, y: 0.0000000013891618, z: 0.0000000012872211, w: 0.9949786}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightMaskEyeGlobe
+    hash: -1579608369
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.2496572, y: 5.676642e-10, z: -0.000000003149018, w: 0.9683343}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightUpperLid
+    hash: 683767470
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.047935825, y: 1.01689164e-10, z: 0.0000000012968838, w: 0.99885046}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114322194704063862
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: NeckTiltLeft
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Neck
+    hash: -2145158803
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.00017996004, y: 0.000034070446, z: 0.2490293, w: 0.96849597}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114328219490976862
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: MouthNarrow
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftLipsSuperiorMiddle
+    hash: -1900485368
+    position: {x: 0.012052171, y: -0.0012343824, z: 0.0020373762}
+    rotation: {x: 0.00040798035, y: 0.00027049103, z: -0.19566894, w: 0.98071444}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftLowCheek
+    hash: 1716905425
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.00001557836, y: -0.000017730801, z: 0.17129233, w: 0.98525417}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LipsSuperior
+    hash: -1089081410
+    position: {x: -5.820766e-11, y: 0.00474443, z: -0.0010850728}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.99999994, z: 1}
+  - bone: LeftLips
+    hash: 1620479899
+    position: {x: -0.029624082, y: 0.028204933, z: 0.0025468543}
+    rotation: {x: -0.12977324, y: 0.01909873, z: -0.14594081, w: 0.98060334}
+    scale: {x: 0.99999994, y: 1, z: 0.99999994}
+  - bone: LeftLipsInferior
+    hash: -2082379262
+    position: {x: -0.011718672, y: 0.007304758, z: -0.005149916}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftMaskMouth
+    hash: -898041465
+    position: {x: -0.029624097, y: 0.028204888, z: 0.002546966}
+    rotation: {x: -0.12977324, y: 0.019098716, z: -0.14594081, w: 0.9806033}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LipsInferior
+    hash: -499586065
+    position: {x: 0.000050127368, y: 0.0028109103, z: -0.0037375614}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLips
+    hash: -1558564409
+    position: {x: 0.029624082, y: 0.028204888, z: 0.0025469884}
+    rotation: {x: -0.12977324, y: -0.019098707, z: 0.14594083, w: 0.98060334}
+    scale: {x: 0.99999994, y: 1, z: 0.99999994}
+  - bone: RightLipsInferior
+    hash: 921042654
+    position: {x: 0.011718679, y: 0.007304758, z: -0.005149901}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.99999994, y: 1, z: 1}
+  - bone: RightMaskMouth
+    hash: -1026653043
+    position: {x: 0.029624082, y: 0.028204888, z: 0.0025469884}
+    rotation: {x: -0.12977323, y: -0.019098723, z: 0.14594083, w: 0.98060334}
+    scale: {x: 0.99999994, y: 1, z: 0.99999994}
+  - bone: RightLipsSuperiorMiddle
+    hash: -2093673696
+    position: {x: -0.012052167, y: -0.0012343824, z: 0.0020373762}
+    rotation: {x: 0.0004079464, y: -0.00027042755, z: 0.19566934, w: 0.98071444}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLowCheek
+    hash: -1122647396
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.000015351985, y: 0.000017734796, z: -0.17129202, w: 0.9852542}
+    scale: {x: 0.99999994, y: 1, z: 0.99999994}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114345796711174604
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: EyesClose-L
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftCheek
+    hash: 1397141478
+    position: {x: -0.0000015869737, y: -0.00036995858, z: 0.0000047534704}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftLowerLid
+    hash: 484878204
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.086051315, y: 0.0000000015499343, z: -0.0000000015948183, w: 0.99629074}
+    scale: {x: 1, y: 0.9999999, z: 1}
+  - bone: LeftUpperLid
+    hash: -209628701
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.2556545, y: -0.0000000027539646, z: 1.509721e-10, w: 0.9667682}
+    scale: {x: 1, y: 1, z: 1.0000001}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114347978535037682
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: JawClose
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Mandible
+    hash: 1574626840
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.02224679, y: 1.8334112e-10, z: -3.1203962e-10, w: 0.99973315}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftLips
+    hash: 1620479899
+    position: {x: 0, y: 0.00017538667, z: -0.00028835237}
+    rotation: {x: 0.0000000013305141, y: -0.000000015157227, z: -0.000000026584436,
+      w: 1}
+    scale: {x: 0.99999994, y: 1, z: 0.99999994}
+  - bone: LeftMaskMouth
+    hash: -898041465
+    position: {x: 0, y: 0.00017538667, z: -0.00028835237}
+    rotation: {x: -0.00000013131014, y: -7.2365425e-10, z: -7.979517e-10, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114373457058491166
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: EyesSquint-L
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftCheek
+    hash: 1397141478
+    position: {x: 0.00006315112, y: 0.014782593, z: -0.00018966198}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftEye
+    hash: 27653119
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.0000012, y: 1.0000014, z: 0.913041}
+  - bone: LeftLowerLid
+    hash: 484878204
+    position: {x: 0.0000000033558933, y: 0.000000008568122, z: -0.000000032042152}
+    rotation: {x: 0.05312545, y: 4.5065082e-10, z: 0.0000000037503516, w: 0.9985879}
+    scale: {x: 1, y: 0.9999999, z: 1}
+  - bone: LeftUpperLid
+    hash: -209628701
+    position: {x: 0.0000000033558933, y: 0.000000008568122, z: -0.000000032042152}
+    rotation: {x: -0.061650537, y: 0.0000000015971265, z: 0.0000000055764153, w: 0.99809784}
+    scale: {x: 1, y: 1, z: 1.0000001}
+  - bone: LeftEyebrowLow
+    hash: 2129323926
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.014791443, y: 9.255931e-11, z: 1.1733142e-11, w: 0.9998906}
+    scale: {x: 1, y: 1.0000002, z: 1}
+  - bone: LeftEyebrowMiddle
+    hash: -356417641
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.02533238, y: -2.828633e-10, z: 1.0860397e-10, w: 0.9996791}
+    scale: {x: 1.0000001, y: 1, z: 1}
+  - bone: LeftEyebrowUp
+    hash: 1123680177
+    position: {x: -0.0000029355288, y: -0.0024870187, z: 0.0000910908}
+    rotation: {x: -0.033298273, y: 1.0537e-11, z: 4.943502e-11, w: 0.99944556}
+    scale: {x: 1.0000001, y: 0.9999999, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114383803108408984
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: EyesUp-L
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftEyeGlobe
+    hash: -326698209
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.1238669, y: 1.2569899e-10, z: -0.0000000011548711, w: 0.9922989}
+    scale: {x: 1, y: 1, z: 0.9999999}
+  - bone: LeftLowerLid
+    hash: 484878204
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.10008829, y: 1.145971e-10, z: -0.0000000011463793, w: 0.9949786}
+    scale: {x: 1, y: 0.9999999, z: 1}
+  - bone: LeftMaskEyeGlobe
+    hash: 350061075
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.24965723, y: 0.0000000015719004, z: 0.0000000011013129, w: 0.9683343}
+    scale: {x: 1, y: 1, z: 0.9999999}
+  - bone: LeftUpperLid
+    hash: -209628701
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.04793576, y: 3.1919337e-10, z: -5.946835e-11, w: 0.9988504}
+    scale: {x: 1, y: 1, z: 1.0000001}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114385228546835898
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: TongueOut
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Tongue01
+    hash: 1278850178
+    position: {x: -0.0001834511, y: 0.05639749, z: 0.02421406}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: Tongue02
+    hash: -718215880
+    position: {x: 0.00021991754, y: 0.013089903, z: -0.0031560615}
+    rotation: {x: -0.00000020414969, y: -0.000000021425748, z: -0.00000009757832,
+      w: 1}
+    scale: {x: 0.88092417, y: 0.9999999, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114432422261365260
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: LowerLipUp-R
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LipsSuperior
+    hash: -1089081410
+    position: {x: 0, y: 0.0000049099326, z: 0.0000054240227}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.0000001, z: 1}
+  - bone: LipsInferior
+    hash: -499586065
+    position: {x: -0.00004591578, y: -0.0067979097, z: 0.0019451007}
+    rotation: {x: 0.17244165, y: 1.8870856e-10, z: 5.1840688e-11, w: 0.9850198}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  - bone: RightLipsInferior
+    hash: 921042654
+    position: {x: 0.0021629669, y: -0.01311487, z: 0.005453512}
+    rotation: {x: 0.21739036, y: 5.261745e-10, z: -0.000000019208036, w: 0.9760847}
+    scale: {x: 1.0000001, y: 1.0000001, z: 1}
+  - bone: RightLipsSuperiorMiddle
+    hash: -2093673696
+    position: {x: -0.000007797033, y: 0.000020503998, z: 0.000046879053}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 0.9999999, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114439350842287258
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: UpperLipUp-R
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LipsSuperior
+    hash: -1089081410
+    position: {x: 2.3283064e-10, y: 0.0070948116, z: 0.00014939904}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.0000001, z: 1}
+  - bone: LipsInferior
+    hash: -499586065
+    position: {x: -0.00000016819831, y: -0.000040009618, z: 0.0000018030405}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  - bone: RightLips
+    hash: -1558564409
+    position: {x: -0.000000022351742, y: -0.00347808, z: 0.0057187676}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  - bone: RightLipsInferior
+    hash: 921042654
+    position: {x: -0.0001378879, y: -0.0001269579, z: -0.000018067658}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.0000001, y: 1.0000001, z: 1}
+  - bone: RightMaskMouth
+    hash: -1026653043
+    position: {x: -0.000000022351742, y: -0.00347808, z: 0.0057187676}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  - bone: NoseBase
+    hash: -1184023893
+    position: {x: 1.4551915e-11, y: 0.000296928, z: -0.0000045597553}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.0000001, z: 1.0000001}
+  - bone: RightLipsSuperiorMiddle
+    hash: -2093673696
+    position: {x: 0.0014742911, y: 0.015247151, z: 0.005562365}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 0.9999999, z: 1}
+  - bone: UpperLips
+    hash: 891826736
+    position: {x: -0.000000053740223, y: 0.003828358, z: -0.000000059604645}
+    rotation: {x: 0.0000037089228, y: 3.5788814e-13, z: -1.9224097e-13, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114470593994344460
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: JawRight
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftLipsSuperiorMiddle
+    hash: -1900485368
+    position: {x: -0.007287767, y: -0.0012089685, z: -0.003851205}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LipsSuperior
+    hash: -1089081410
+    position: {x: -0.005173198, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: Mandible
+    hash: 1574626840
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.000016958616, y: 0.0000020369434, z: 0.056001835, w: 0.99843067}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftLips
+    hash: 1620479899
+    position: {x: 0.00988894, y: -0.023365788, z: -0.014210701}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftMaskMouth
+    hash: -898041465
+    position: {x: 0.00988894, y: -0.023365788, z: -0.014210701}
+    rotation: {x: 0, y: 0, z: 0, w: 0.99999994}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LipsInferior
+    hash: -499586065
+    position: {x: 0.005172872, y: -0.000019297004, z: 0.000054702163}
+    rotation: {x: 5.0350223e-12, y: 6.2595235e-10, z: 8.9674773e-10, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLips
+    hash: -1558564409
+    position: {x: 0.00900621, y: 0.015411675, z: 0.009373039}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLipsInferior
+    hash: 921042654
+    position: {x: 0.0039165467, y: 0.0037873536, z: 0.0015342459}
+    rotation: {x: -5.099045e-10, y: -0.0000000048421436, z: 0.000000023587898, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightMaskMouth
+    hash: -1026653043
+    position: {x: 0.00900621, y: 0.015411675, z: 0.009373039}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLipsSuperiorMiddle
+    hash: -2093673696
+    position: {x: -0.0041974336, y: 0.0010886639, z: 0.0035924613}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114480770852130834
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: MouthLeft
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftLipsSuperiorMiddle
+    hash: -1900485368
+    position: {x: -0.009501345, y: -0.0008189585, z: -0.0023690164}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LipsSuperior
+    hash: -1089081410
+    position: {x: -0.005566789, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftLips
+    hash: 1620479899
+    position: {x: 0.008885294, y: -0.019304365, z: -0.011740543}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftLipsInferior
+    hash: -2082379262
+    position: {x: 0.009251233, y: -0.0029815882, z: -0.0012093782}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftMaskMouth
+    hash: -898041465
+    position: {x: 0.008885294, y: -0.019304372, z: -0.0117405355}
+    rotation: {x: 0, y: 0, z: 0, w: 0.99999994}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LipsInferior
+    hash: -499586065
+    position: {x: 0.0055664387, y: -0.000020802021, z: 0.000058971345}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLips
+    hash: -1558564409
+    position: {x: 0.011199929, y: 0.015040994, z: 0.009147644}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLipsInferior
+    hash: 921042654
+    position: {x: 0.004214525, y: 0.0050230473, z: 0.0020346493}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightMaskMouth
+    hash: -1026653043
+    position: {x: 0.011199929, y: 0.015040994, z: 0.009147644}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLipsSuperiorMiddle
+    hash: -2093673696
+    position: {x: -0.004621029, y: 0.0014589727, z: 0.004867524}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114488104194236206
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: MouthFrown-R
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LipsSuperior
+    hash: -1089081410
+    position: {x: -2.910383e-11, y: -0.0007695742, z: 0.00017607212}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.0000001, z: 1}
+  - bone: LipsInferior
+    hash: -499586065
+    position: {x: -0.000040930703, y: 0.000011488795, z: 0.0038670003}
+    rotation: {x: -0.041447427, y: -3.5210623e-11, z: -1.737192e-10, w: 0.99914074}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  - bone: RightLips
+    hash: -1558564409
+    position: {x: -0.003734149, y: 0.008295372, z: -0.029931698}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  - bone: RightLipsInferior
+    hash: 921042654
+    position: {x: 0.0019218065, y: 0.0020550191, z: 0.000032767653}
+    rotation: {x: -0.13850771, y: -0.0000000045430277, z: -0.000000009366618, w: 0.99036133}
+    scale: {x: 1.0000001, y: 1.0000001, z: 1}
+  - bone: RightMaskMouth
+    hash: -1026653043
+    position: {x: -0.003734149, y: 0.008295372, z: -0.029931698}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  - bone: RightLipsSuperiorMiddle
+    hash: -2093673696
+    position: {x: 0.008625582, y: -0.0037208237, z: -0.0022308826}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 0.9999999, z: 1}
+  - bone: RightLowCheek
+    hash: -1122647396
+    position: {x: 0.002142407, y: -0.0029858348, z: 0.002513364}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114501904002745388
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: BrowsOuterDown-R
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightEyebrowMiddle
+    hash: 1695671804
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.04338817, y: -5.2928034e-10, z: 1.8273599e-10, w: 0.99905837}
+    scale: {x: 1.0000001, y: 1.0000001, z: 1}
+  - bone: RightEyebrowUp
+    hash: 1246724795
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.07388639, y: 3.7415702e-11, z: -3.966114e-12, w: 0.9972667}
+    scale: {x: 1.0000001, y: 0.9999995, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114504037298891662
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: JawOpen
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Mandible
+    hash: 1574626840
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.17440185, y: -4.9232795e-15, z: 6.6551976e-15, w: 0.9847269}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftLips
+    hash: 1620479899
+    position: {x: -0.013828248, y: -0.02403909, z: 0.05088654}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftLipsInferior
+    hash: -2082379262
+    position: {x: 0.0039087757, y: -0.014420897, z: 0.004498534}
+    rotation: {x: 0.000000028705271, y: 0.000000006715899, z: -1.0479917e-10, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftMaskMouth
+    hash: -898041465
+    position: {x: -0.0024926588, y: -0.012037605, z: -0.0073209926}
+    rotation: {x: 0, y: 0, z: 0, w: 0.99999994}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LipsInferior
+    hash: -499586065
+    position: {x: 1.09139364e-10, y: -0.0060795844, z: -0.0021444038}
+    rotation: {x: -1.2885282e-12, y: -3.928848e-11, z: -2.2948816e-10, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLips
+    hash: -1558564409
+    position: {x: 0.013828158, y: -0.024039075, z: 0.05088651}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLipsInferior
+    hash: 921042654
+    position: {x: -0.0039087683, y: -0.014420927, z: 0.0044985265}
+    rotation: {x: 4.682542e-10, y: 0.000000004440188, z: -0.000000015961296, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightMaskMouth
+    hash: -1026653043
+    position: {x: 0.0024926662, y: -0.01203759, z: -0.0073209926}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114530702327303964
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: EyesSquint-R
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightCheek
+    hash: 827866759
+    position: {x: -0.00006316602, y: 0.014782593, z: -0.00018967688}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.9999999, z: 1}
+  - bone: RightEye
+    hash: -2120937982
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.9999995, y: 0.99999964, z: 0.9130449}
+  - bone: RightLowerLid
+    hash: -945389519
+    position: {x: 0.000000002566427, y: -5.960459e-10, z: 0.00000006164424}
+    rotation: {x: 0.053125437, y: -0.0000000014870862, z: 0.0000000067730244, w: 0.99858797}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightUpperLid
+    hash: 683767470
+    position: {x: 0.000000002566427, y: -5.960459e-10, z: 0.00000006164424}
+    rotation: {x: -0.06165054, y: 3.5767025e-10, z: 0.0000000010557147, w: 0.9980978}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  - bone: RightEyebrowLow
+    hash: -1640515339
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.014791443, y: 1.1698736e-10, z: -2.24026e-11, w: 0.9998906}
+    scale: {x: 1, y: 1.0000002, z: 1}
+  - bone: RightEyebrowMiddle
+    hash: 1695671804
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.025332335, y: 4.885495e-12, z: 1.9486454e-10, w: 0.999679}
+    scale: {x: 1.0000001, y: 1.0000001, z: 1}
+  - bone: RightEyebrowUp
+    hash: 1246724795
+    position: {x: 0.0000029355288, y: -0.0024870485, z: 0.0000910908}
+    rotation: {x: -0.033298314, y: 1.3729219e-10, z: 4.4190873e-11, w: 0.99944556}
+    scale: {x: 1.0000001, y: 0.9999995, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114570929559812966
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: TongueUp
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Tongue02
+    hash: -718215880
+    position: {x: 8.318124e-10, y: -0.000000014901161, z: 0.000000012577271}
+    rotation: {x: -0.23852652, y: 0.00000014751308, z: 0.0000007369632, w: 0.97121143}
+    scale: {x: 1, y: 0.99999964, z: 1.0000004}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114579413862591534
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: NeckUp
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Neck
+    hash: -2145158803
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.25124454, y: -1.1095324e-15, z: 1.3592099e-14, w: 0.96792364}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114606513384184490
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: LowerLipUp-L
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftLipsSuperiorMiddle
+    hash: -1900485368
+    position: {x: 0.000008124858, y: 0.000020679086, z: 0.000046879053}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.99999976, z: 1}
+  - bone: LipsSuperior
+    hash: -1089081410
+    position: {x: 0, y: 0.0000049117953, z: 0.0000054240227}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.0000001, z: 1}
+  - bone: LeftLipsInferior
+    hash: -2082379262
+    position: {x: -0.002162952, y: -0.01311487, z: 0.005453512}
+    rotation: {x: 0.21739034, y: -5.5484e-10, z: -5.45905e-10, w: 0.9760847}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LipsInferior
+    hash: -499586065
+    position: {x: -0.00004591578, y: -0.006797895, z: 0.0019451007}
+    rotation: {x: 0.17244168, y: -1.11240066e-10, z: -4.2498415e-11, w: 0.9850198}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114610162313850364
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: TongueNarrow
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Tongue01
+    hash: 1278850178
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -3.9933877e-12, y: 2.7904826e-10, z: -6.911984e-10, w: 1.0000001}
+    scale: {x: 0.9292925, y: 1, z: 1}
+  - bone: Tongue02
+    hash: -718215880
+    position: {x: -0.0000000012316604, y: 0.000000029802322, z: -0.000000033977102}
+    rotation: {x: -0.000000029466065, y: -0.0000010571827, z: -0.00000024377619, w: 1.0000001}
+    scale: {x: 0.9548262, y: 1, z: 0.9999999}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114614471479584764
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: HeadRight
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Head
+    hash: 130111906
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.000030375979, y: 0.33241266, z: 0.000022170996, w: 0.9431341}
+    scale: {x: 1, y: 0.99999994, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114618373482235332
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: TongueLeft
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Tongue01
+    hash: 1278850178
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.000092673334, y: -0.000007120468, z: -0.08166126, w: 0.9966883}
+    scale: {x: 1, y: 0.9999999, z: 1}
+  - bone: Tongue02
+    hash: -718215880
+    position: {x: -0.0000000013019195, y: -0.0000000037252903, z: -0.000000066002244}
+    rotation: {x: -0.00017187154, y: -0.000017535616, z: 0.16420333, w: 0.9864517}
+    scale: {x: 0.9999999, y: 0.9999997, z: 1.0000002}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114621018167723784
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: TongueWide
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Tongue01
+    hash: 1278850178
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -4.4232244e-12, y: 2.623464e-10, z: -7.469567e-10, w: 1.0000001}
+    scale: {x: 1.0907451, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114651680183905086
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: EyesOpen-R
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightLowerLid
+    hash: -945389519
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.10088293, y: 9.886326e-10, z: -0.0000000017200764, w: 0.9948983}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightUpperLid
+    hash: 683767470
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.09038995, y: -1.4349741e-10, z: -0.0000000053314, w: 0.9959064}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114654345022336094
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: UpperLipDown-L
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftLipsSuperiorMiddle
+    hash: -1900485368
+    position: {x: -0.0014101788, y: -0.0036513843, z: -0.008249104}
+    rotation: {x: -0.17125897, y: -0.0000014539743, z: -0.0000010842163, w: 0.98522604}
+    scale: {x: 1, y: 0.99999976, z: 1}
+  - bone: LipsSuperior
+    hash: -1089081410
+    position: {x: 2.0372681e-10, y: -0.0033355486, z: -0.0036420822}
+    rotation: {x: -0.12533313, y: -7.1682027e-16, z: 4.8113983e-15, w: 0.9921147}
+    scale: {x: 1, y: 1.0000001, z: 1}
+  - bone: LeftLips
+    hash: 1620479899
+    position: {x: 0, y: 0.000024959445, z: -0.000041015446}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  - bone: LeftLipsInferior
+    hash: -2082379262
+    position: {x: 0.00004874915, y: -0.000044882298, z: -0.0000063851476}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftMaskMouth
+    hash: -898041465
+    position: {x: 0, y: 0.000024959445, z: -0.000041015446}
+    rotation: {x: -0.000000016177765, y: 3.803201e-10, z: 0.0000000045180597, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LipsInferior
+    hash: -499586065
+    position: {x: -0.0000000594664, y: -0.000014141202, z: 0.00000064074993}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  - bone: NoseBase
+    hash: -1184023893
+    position: {x: -2.910383e-11, y: -0.00012347102, z: 0.0000018775463}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.0000001, z: 1.0000001}
+  - bone: UpperLips
+    hash: 891826736
+    position: {x: 0, y: -0.00000014062971, z: 0}
+    rotation: {x: -0.011184341, y: 1.6961798e-13, z: -6.6984797e-13, w: 0.9999375}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114654813894892066
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: LowerLipDown-R
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LipsSuperior
+    hash: -1089081410
+    position: {x: 0, y: 0.00004743971, z: 0.00005221367}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.0000001, z: 1}
+  - bone: LipsInferior
+    hash: -499586065
+    position: {x: 0.00009991406, y: 0.0013362318, z: -0.008963704}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  - bone: RightLips
+    hash: -1558564409
+    position: {x: 0.000000014901161, y: 0.00319089, z: -0.0052466765}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  - bone: RightLipsInferior
+    hash: 921042654
+    position: {x: 0.0007204488, y: 0.005564511, z: -0.022640318}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.0000001, y: 1.0000001, z: 1}
+  - bone: RightMaskMouth
+    hash: -1026653043
+    position: {x: 0.000000014901161, y: 0.00319089, z: -0.0052466765}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  - bone: NoseBase
+    hash: -1184023893
+    position: {x: 0, y: -0.000035956502, z: 0.0000005364418}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.0000001, z: 1.0000001}
+  - bone: RightLipsSuperiorMiddle
+    hash: -2093673696
+    position: {x: -0.000022057444, y: 0.00005799532, z: 0.00013259053}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 0.9999999, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114670117934693656
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: HeadTiltRight
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Head
+    hash: 130111906
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.0000099972385, y: -0.0000020379875, z: -0.2515869, w: 0.9678347}
+    scale: {x: 1, y: 0.99999994, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114691135624773498
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: HeadDown
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Head
+    hash: 130111906
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.24893305, y: 8.7186795e-15, z: 5.0180603e-16, w: 0.9685207}
+    scale: {x: 1, y: 0.99999994, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114692920244976188
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: LowerLipDown-L
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftLipsSuperiorMiddle
+    hash: -1900485368
+    position: {x: 0.000022981316, y: 0.000058490783, z: 0.00013259053}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.99999976, z: 1}
+  - bone: LipsSuperior
+    hash: -1089081410
+    position: {x: 0, y: 0.00004743971, z: 0.00005221367}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.0000001, z: 1}
+  - bone: LeftLips
+    hash: 1620479899
+    position: {x: -0.000000007450581, y: 0.00319089, z: -0.0052466765}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  - bone: LeftLipsInferior
+    hash: -2082379262
+    position: {x: -0.00072042644, y: 0.005564511, z: -0.022640325}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftMaskMouth
+    hash: -898041465
+    position: {x: -0.000000014901161, y: 0.00319089, z: -0.0052466765}
+    rotation: {x: -0.000000016177765, y: 3.803201e-10, z: 0.0000000045180597, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LipsInferior
+    hash: -499586065
+    position: {x: 0.00009991406, y: 0.0013362318, z: -0.008963704}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  - bone: NoseBase
+    hash: -1184023893
+    position: {x: 0, y: -0.000035956502, z: 0.0000005364418}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.0000001, z: 1.0000001}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114727490242389300
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: MouthUp
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftLipsSuperiorMiddle
+    hash: -1900485368
+    position: {x: -0.00007868186, y: 0.005240109, z: -0.0014959872}
+    rotation: {x: 0.00000027891986, y: 0.00000075944655, z: 0.00000066959433, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LipsSuperior
+    hash: -1089081410
+    position: {x: -0.0000000014260877, y: 0.010167109, z: -0.002325356}
+    rotation: {x: 1.44329e-14, y: -0.000000043792028, z: -0.00000020887275, w: 1}
+    scale: {x: 1, y: 0.99999994, z: 1}
+  - bone: LeftLips
+    hash: 1620479899
+    position: {x: 0.000000007450581, y: -0.0017215312, z: 0.002830632}
+    rotation: {x: 9.978857e-10, y: -0.000000011367921, z: -0.000000019938328, w: 1}
+    scale: {x: 0.99999994, y: 1, z: 0.99999994}
+  - bone: LeftLipsInferior
+    hash: -2082379262
+    position: {x: 0.0000022649765, y: -0.003600672, z: 0.008894049}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftMaskMouth
+    hash: -898041465
+    position: {x: 0.000000007450581, y: -0.0017215312, z: 0.002830632}
+    rotation: {x: -0.00000008670216, y: 0.0000000031920733, z: -0.0000000051134803,
+      w: 0.99999994}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LipsInferior
+    hash: -499586065
+    position: {x: -0.00019405226, y: -0.005748138, z: 0.01629582}
+    rotation: {x: 0.000000014686599, y: -5.525123e-12, z: -1.9720989e-10, w: 1}
+    scale: {x: 1, y: 1, z: 1.0000001}
+  - bone: RightLips
+    hash: -1558564409
+    position: {x: -0.000000007450581, y: -0.0017205626, z: 0.0028290376}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.99999994, y: 1, z: 0.99999994}
+  - bone: RightLipsInferior
+    hash: 921042654
+    position: {x: -0.000002272427, y: -0.003600672, z: 0.008894049}
+    rotation: {x: 0.000000015725847, y: 0.000000009579338, z: 0.000000027726433, w: 1}
+    scale: {x: 0.99999994, y: 1, z: 1}
+  - bone: RightMaskMouth
+    hash: -1026653043
+    position: {x: -0.000000007450581, y: -0.0017205626, z: 0.0028290376}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.99999994, y: 1, z: 0.99999994}
+  - bone: RightLipsSuperiorMiddle
+    hash: -2093673696
+    position: {x: 0.00007868186, y: 0.005240108, z: -0.0014959872}
+    rotation: {x: -0.00000027330063, y: 0.00000030767654, z: 0.0000006572181, w: 1.0000001}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: UpperLips
+    hash: 891826736
+    position: {x: -0.000000049883965, y: 0.0035494827, z: -0.000000044703484}
+    rotation: {x: -2.4313884e-14, y: 1.890442e-15, z: 0.0000000034502845, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114727726767721472
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: MouthPucker
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftLipsSuperiorMiddle
+    hash: -1900485368
+    position: {x: 0.016087808, y: -0.012210112, z: 0.008756906}
+    rotation: {x: -0.04056439, y: 0.015810786, z: -0.33663496, w: 0.94062823}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LipsSuperior
+    hash: -1089081410
+    position: {x: 0.0000000012514647, y: -0.0031664148, z: 0.017517477}
+    rotation: {x: 0.26960078, y: -6.309035e-15, z: 7.4406307e-16, w: 0.96297216}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LipsSuperiorAdjust
+    hash: 1865332640
+    position: {x: 1.3293945e-11, y: 0.000000058451903, z: 0.000000049906557}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.6159836, y: 1, z: 1}
+  - bone: LeftLips
+    hash: 1620479899
+    position: {x: -0.04332482, y: 0.0364777, z: 0.005121693}
+    rotation: {x: -0.07376755, y: 0.01728525, z: -0.23191063, w: 0.969782}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftLipsInferior
+    hash: -2082379262
+    position: {x: -0.021499563, y: 0.019790128, z: 0.0028047338}
+    rotation: {x: -0.09706711, y: 0.027155958, z: -0.27171227, w: 0.95708567}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftMaskMouth
+    hash: -898041465
+    position: {x: -0.04332564, y: 0.03647375, z: 0.005119428}
+    rotation: {x: -0.073767595, y: 0.017285235, z: -0.23191065, w: 0.96978194}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LipsInferior
+    hash: -499586065
+    position: {x: 0.000052435178, y: 0.012435004, z: -0.00056919456}
+    rotation: {x: -0.23537472, y: 6.163389e-10, z: -2.1130395e-10, w: 0.9719047}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLips
+    hash: -1558564409
+    position: {x: 0.043325618, y: 0.03647375, z: 0.005119413}
+    rotation: {x: -0.07376753, y: -0.017285254, z: 0.23191068, w: 0.96978194}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLipsInferior
+    hash: 921042654
+    position: {x: 0.021499552, y: 0.019790128, z: 0.0028047487}
+    rotation: {x: -0.09706711, y: -0.027155971, z: 0.2717122, w: 0.9570857}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightMaskMouth
+    hash: -1026653043
+    position: {x: 0.043325618, y: 0.03647375, z: 0.005119413}
+    rotation: {x: -0.07376753, y: -0.017285254, z: 0.23191068, w: 0.96978194}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLipsSuperiorMiddle
+    hash: -2093673696
+    position: {x: -0.016087797, y: -0.01221011, z: 0.008756965}
+    rotation: {x: -0.040578462, y: -0.015815783, z: 0.3366349, w: 0.94062763}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114782649091393642
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: TongueRight
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Tongue01
+    hash: 1278850178
+    position: {x: -0.000000013271347, y: -0.000000044703484, z: 0.000000055879354}
+    rotation: {x: -0.00007273666, y: 0.000010197329, z: 0.08293564, w: 0.9965673}
+    scale: {x: 1, y: 0.9999998, z: 1}
+  - bone: Tongue02
+    hash: -718215880
+    position: {x: -0.000000001758337, y: 0.000000011175871, z: -0.000000089248886}
+    rotation: {x: -0.00013319617, y: -0.000050894734, z: -0.1659662, w: 0.98618466}
+    scale: {x: 0.9999998, y: 1, z: 0.9999999}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114814109982993818
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: EyesOut-R
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightEyeGlobe
+    hash: 935779410
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.0000000062803296, y: -0.0000000024283, z: 0.32428244, w: 0.9459603}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightMaskEyeGlobe
+    hash: -1579608369
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.000000003992991, y: -7.253344e-10, z: 0.2510119, w: 0.967984}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114838143179846328
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: NeckLeft
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Neck
+    hash: -2145158803
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.0004728496, y: -0.32949573, z: -0.0003248949, w: 0.9441569}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114900916136817664
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: MouthDown
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftLipsSuperiorMiddle
+    hash: -1900485368
+    position: {x: 0.00006501749, y: -0.0043300968, z: 0.0012362003}
+    rotation: {x: 0.000000046707328, y: -0.000000007651888, z: 0.00000020381815, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LipsSuperior
+    hash: -1089081410
+    position: {x: 8.731149e-10, y: -0.0061144736, z: 0.0013985038}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.99999994, z: 1}
+  - bone: LeftLips
+    hash: 1620479899
+    position: {x: -0.000000014901161, y: 0.0040914714, z: -0.006727405}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.99999994, y: 1, z: 0.99999994}
+  - bone: LeftLipsInferior
+    hash: -2082379262
+    position: {x: -0.000001065433, y: 0.0016998351, z: -0.00419873}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftMaskMouth
+    hash: -898041465
+    position: {x: -0.000000022351742, y: 0.0040914714, z: -0.006727405}
+    rotation: {x: 0, y: 0, z: 0, w: 0.99999994}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LipsInferior
+    hash: -499586065
+    position: {x: 0.000070901224, y: 0.0021002293, z: -0.005954057}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLips
+    hash: -1558564409
+    position: {x: 0.000000022351742, y: 0.0040914714, z: -0.006727405}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.99999994, y: 1, z: 0.99999994}
+  - bone: RightLipsInferior
+    hash: 921042654
+    position: {x: 0.0000010728836, y: 0.0016998351, z: -0.00419873}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.99999994, y: 1, z: 1}
+  - bone: RightMaskMouth
+    hash: -1026653043
+    position: {x: 0.000000022351742, y: 0.0040914714, z: -0.006727405}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.99999994, y: 1, z: 0.99999994}
+  - bone: RightLipsSuperiorMiddle
+    hash: -2093673696
+    position: {x: -0.00006501749, y: -0.0043300968, z: 0.0012361705}
+    rotation: {x: -6.625519e-10, y: 0.000000011820088, z: -0.00000020067134, w: 1.0000001}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: UpperLips
+    hash: 891826736
+    position: {x: 0.000000057611032, y: -0.00409831, z: -0.000000014901161}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114908976897526468
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: UpperLipDown-R
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LipsSuperior
+    hash: -1089081410
+    position: {x: 2.0372681e-10, y: -0.0033355486, z: -0.0036420822}
+    rotation: {x: -0.12533313, y: -7.1682027e-16, z: 4.8113983e-15, w: 0.9921147}
+    scale: {x: 1, y: 1.0000001, z: 1}
+  - bone: LipsInferior
+    hash: -499586065
+    position: {x: -0.0000000594664, y: -0.000014141202, z: 0.00000064074993}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  - bone: RightLips
+    hash: -1558564409
+    position: {x: 0, y: 0.000024959445, z: -0.000041015446}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  - bone: RightLipsInferior
+    hash: 921042654
+    position: {x: -0.00004874915, y: -0.000044882298, z: -0.0000063851476}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.0000001, y: 1.0000001, z: 1}
+  - bone: RightMaskMouth
+    hash: -1026653043
+    position: {x: 0, y: 0.000024959445, z: -0.000041015446}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  - bone: NoseBase
+    hash: -1184023893
+    position: {x: -2.910383e-11, y: -0.00012347102, z: 0.0000018775463}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.0000001, z: 1.0000001}
+  - bone: RightLipsSuperiorMiddle
+    hash: -2093673696
+    position: {x: 0.0013537817, y: -0.00362047, z: -0.008249968}
+    rotation: {x: -0.17125899, y: 0.0000006360412, z: 0.0000010029753, w: 0.9852261}
+    scale: {x: 1, y: 0.9999999, z: 1}
+  - bone: UpperLips
+    hash: 891826736
+    position: {x: 0, y: -0.00000014062971, z: 0}
+    rotation: {x: -0.011184341, y: 1.6961798e-13, z: -6.6984797e-13, w: 0.9999375}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114937524194858506
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: MouthWide-R
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LipsSuperior
+    hash: -1089081410
+    position: {x: 8.731149e-11, y: 0.002680799, z: -0.0010408163}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.0000001, z: 1}
+  - bone: LipsInferior
+    hash: -499586065
+    position: {x: -0.000006169583, y: -0.000690192, z: 0.0003393516}
+    rotation: {x: 0.0000000146880055, y: -4.350351e-10, z: 5.3483194e-11, w: 1}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  - bone: RightLips
+    hash: -1558564409
+    position: {x: -0.031091958, y: -0.02738811, z: 0.009422056}
+    rotation: {x: 0.00000002866803, y: -0.0000000015863747, z: -0.00000003179352,
+      w: 1}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  - bone: RightLipsInferior
+    hash: 921042654
+    position: {x: -0.012883373, y: -0.010131434, z: 0.0015690178}
+    rotation: {x: 0.000000014711713, y: 6.8006156e-11, z: -0.00000003080806, w: 1}
+    scale: {x: 1.0000001, y: 1.0000001, z: 1}
+  - bone: RightMaskMouth
+    hash: -1026653043
+    position: {x: -0.031091958, y: -0.02738811, z: 0.009422056}
+    rotation: {x: 0.00000002866803, y: -0.0000000015863747, z: -0.00000003179352,
+      w: 1}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  - bone: RightCheek
+    hash: 827866759
+    position: {x: 0.004139945, y: 0.00011392683, z: 0.0075034946}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.9999999, z: 1}
+  - bone: RightLipsSuperiorMiddle
+    hash: -2093673696
+    position: {x: 0.013616785, y: 0.0046227966, z: -0.009374976}
+    rotation: {x: 6.876846e-10, y: 0.000000010412069, z: -0.0000000014520092, w: 1.0000001}
+    scale: {x: 1, y: 0.9999999, z: 1}
+  - bone: RightLowCheek
+    hash: -1122647396
+    position: {x: 0.026101358, y: 0.012010918, z: -0.00050641596}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114938459257143854
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: NoseSneer
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftLipsSuperiorMiddle
+    hash: -1900485368
+    position: {x: -0.00004420802, y: 0.0029448392, z: -0.0008406639}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftLowCheek
+    hash: 1716905425
+    position: {x: 0.000009179115, y: 0.000012785662, z: -0.000010758638}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftNose
+    hash: 300670256
+    position: {x: 0.009406395, y: 0.01722468, z: -0.00012983382}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftLips
+    hash: 1620479899
+    position: {x: -0.000034034252, y: -0.00007560849, z: 0.0002728775}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftMaskMouth
+    hash: -898041465
+    position: {x: -0.000034034252, y: -0.00007560849, z: 0.0002728775}
+    rotation: {x: 0, y: 0, z: 0, w: 0.99999994}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLips
+    hash: -1558564409
+    position: {x: 0.000034034252, y: -0.00007560849, z: 0.0002728775}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightMaskMouth
+    hash: -1026653043
+    position: {x: 0.000034034252, y: -0.00007560849, z: 0.0002728775}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: NoseBase
+    hash: -1184023893
+    position: {x: 2.6193447e-10, y: 0.010383524, z: -0.00015762448}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: NoseMiddle
+    hash: 865884795
+    position: {x: 0.0000036442652, y: 0.003046967, z: 0.000028371811}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: NoseTop
+    hash: 463827395
+    position: {x: 0.00009097127, y: -0.0057371557, z: 0.00008711219}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLipsSuperiorMiddle
+    hash: -2093673696
+    position: {x: 0.00004420802, y: 0.0029448401, z: -0.0008406639}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLowCheek
+    hash: -1122647396
+    position: {x: -0.000009179115, y: 0.000012785662, z: -0.000010758638}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightNose
+    hash: -764976276
+    position: {x: -0.011973541, y: 0.022322021, z: -0.00016716123}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: UpperLips
+    hash: 891826736
+    position: {x: -0.00000006960181, y: 0.0049575698, z: -0.000000014901161}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114939426937871754
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: BrowsOuterUp-L
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftEyebrowMiddle
+    hash: -356417641
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.062026024, y: -5.2116766e-10, z: 3.1629188e-10, w: 0.9980746}
+    scale: {x: 1.0000001, y: 1, z: 1}
+  - bone: LeftEyebrowUp
+    hash: 1123680177
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.07430843, y: 6.55294e-11, z: -3.374037e-14, w: 0.9972354}
+    scale: {x: 1.0000001, y: 0.9999999, z: 1}
+  - bone: LeftLipsSuperiorMiddle
+    hash: -1900485368
+    position: {x: 0.0000012293458, y: -0.0000821203, z: 0.00002336502}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.99999976, z: 1}
+  - bone: LeftNose
+    hash: 300670256
+    position: {x: -0.000048331916, y: -0.0000885129, z: 0.0000006556511}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.0000005, z: 1.0000001}
+  - bone: NoseBase
+    hash: -1184023893
+    position: {x: -2.910383e-11, y: -0.00013262779, z: 0.0000019967556}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.0000001, z: 1.0000001}
+  - bone: NoseTop
+    hash: 463827395
+    position: {x: -0.00000040975283, y: 0.000025838614, z: -0.0000003874302}
+    rotation: {x: 0.00000004246161, y: 4.7852278e-12, z: 6.6836225e-10, w: 1.0000001}
+    scale: {x: 1, y: 1.0000001, z: 1.0000001}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114943912874741294
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: BrowsOuterDown-L
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftEyebrowMiddle
+    hash: -356417641
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.04338825, y: -5.9987354e-10, z: -3.8188487e-11, w: 0.99905837}
+    scale: {x: 1.0000001, y: 1, z: 1}
+  - bone: LeftEyebrowUp
+    hash: 1123680177
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.073886335, y: 1.1440695e-10, z: 3.00878e-11, w: 0.9972666}
+    scale: {x: 1.0000001, y: 0.9999999, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114951264051045394
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: HeadUp
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Head
+    hash: 130111906
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.25147393, y: 6.7292283e-15, z: 4.5572287e-15, w: 0.96786404}
+    scale: {x: 1, y: 0.99999994, z: 1}
+  tweenPoses: []
+  tweenWeights: []
