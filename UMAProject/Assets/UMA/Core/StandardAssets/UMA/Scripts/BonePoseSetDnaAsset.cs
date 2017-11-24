@@ -4,7 +4,7 @@ using UMA.PoseTools;
 namespace UMA
 {
 	[System.Serializable]
-	public class MorphSetDnaAsset : ScriptableObject
+	public class BonePoseSetDnaAsset : ScriptableObject
 	{
 		[System.Serializable]
 		public class DNASizeAdjustment
@@ -15,37 +15,34 @@ namespace UMA
 		}
 
 		[System.Serializable]
-		public class DNAMorphSet
+		public class PosePair
 		{
-			public string dnaEntryName;
 			public UMABonePose poseZero;
 			public UMABonePose poseOne;
-			public string blendShapeZero;
-			public string blendShapeOne;
 			public DNASizeAdjustment sizeZero;
 			public DNASizeAdjustment sizeOne;
 		}
 
 		public int dnaTypeHash;
+		public int dnaVersion;
 
 		public UMABonePose startingPose;
-		public string startingBlendShape;
 
-		public DNAMorphSet[] dnaMorphs;
+		public PosePair[] posePairs;
 
 		void OnEnable()
 		{
-			if (dnaMorphs == null)
+			if (posePairs == null)
 			{
-				dnaMorphs = new DNAMorphSet[0];
+				posePairs = new PosePair[0];
 			}
 		}
 
 		#if UNITY_EDITOR
-		[UnityEditor.MenuItem("Assets/Create/UMA/DNA/Morph Set DNA")]
-		public static void CreateMorphSetDnaAsset()
+		[UnityEditor.MenuItem("Assets/Create/UMA/DNA/Bone Pose Set")]
+		public static void CreateBonePoseSetDnaAsset()
 		{
-			UMA.CustomAssetUtility.CreateAsset<MorphSetDnaAsset>();
+			UMA.CustomAssetUtility.CreateAsset<BonePoseSetDnaAsset>();
 		}
 		#endif
 	}

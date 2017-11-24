@@ -7,7 +7,7 @@ using UMA.CharacterSystem;
 
 namespace UMA.Editors
 {
-    public class UmaBoneBuilderWindow : EditorWindow 
+    public class UMABoneBuilderWindow : EditorWindow 
     {
         public GameObject umaObject;
         public UMARecipeBase baseRecipe;
@@ -24,7 +24,7 @@ namespace UMA.Editors
         [MenuItem("UMA/Bone Builder")]
         public static void OpenUmaTexturePrepareWindow()
         {
-            UmaBoneBuilderWindow window = (UmaBoneBuilderWindow)EditorWindow.GetWindow(typeof(UmaBoneBuilderWindow));
+            UMABoneBuilderWindow window = (UMABoneBuilderWindow)EditorWindow.GetWindow(typeof(UMABoneBuilderWindow));
             window.titleContent.text = "Bone Builder";
         }
 
