@@ -70,7 +70,50 @@ namespace UMA.PoseTools
 			GUILayout.FlexibleSpace();
 			if (GUILayout.Button(new GUIContent("Embed Assets", "Bundles all of the expression assets inside this asset."), GUILayout.MaxWidth(120)))
 			{
-				bool keepAssets = EditorUtility.DisplayDialog("Embedding expression assets", "Would you like to delete the original assets after embedding?", "Keep Assets", "Delete Assets");
+				bool keepAssets = EditorUtility.DisplayDialog("Embedding expression assets.", "Would you like to delete the original assets after embedding?", "Keep Assets", "Delete Assets");
+
+				for (int i = 0; i < UMAExpressionPlayer.PoseCount; i++)
+				{
+					UMABonePose poseAsset;
+					string posePath;
+
+					if (expressionSet.posePairs[i] == null)
+						continue;
+
+					poseAsset = expressionSet.posePairs[i].primary;
+					if (poseAsset != null)
+					{
+						posePath = AssetDatabase.GetAssetPath(poseAsset);
+						if (posePath != assetPath)
+						{
+							UMABonePose newAsset = Object.Instantiate(poseAsset);
+							newAsset.name = poseAsset.name;					// Otherwise it will append (Clone)
+							newAsset.hideFlags = HideFlags.HideInHierarchy;	// Don't show it in Project view
+							expressionSet.posePairs[i].primary = newAsset;
+							AssetDatabase.AddObjectToAsset(newAsset, assetPath);
+							if (!keepAssets)
+								AssetDatabase.DeleteAsset(posePath);
+						}
+					}
+
+					poseAsset = expressionSet.posePairs[i].inverse;
+					if (poseAsset != null)
+					{
+						posePath = AssetDatabase.GetAssetPath(poseAsset);
+						if (posePath != assetPath)
+						{
+							UMABonePose newAsset = Object.Instantiate(poseAsset);
+							newAsset.name = poseAsset.name;
+							newAsset.hideFlags = HideFlags.HideInHierarchy;
+							expressionSet.posePairs[i].inverse = newAsset;
+							AssetDatabase.AddObjectToAsset(newAsset, assetPath);
+							if (!keepAssets)
+								AssetDatabase.DeleteAsset(posePath);
+						}
+					}
+				}
+
+				AssetDatabase.SaveAssets();
 			}
 			GUILayout.FlexibleSpace();
 			GUILayout.EndHorizontal();
