@@ -5,10 +5,10 @@ GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Component:
-  - 4: {fileID: 400000}
-  - 114: {fileID: 11400000}
+  - component: {fileID: 400000}
+  - component: {fileID: 114884429556071656}
   m_Layer: 0
   m_Name: TutorialDNAConverterBehaviour
   m_TagString: Untagged
@@ -25,23 +25,10 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0.2752999, y: 1.682059, z: -0.43053064}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
---- !u!114 &11400000
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 100000}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 461a6e020632b416b879aa3a48c5638e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  DisplayValue: 
-  dnaTypeHash: -1679007774
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1
@@ -53,3 +40,18 @@ Prefab:
   m_ParentPrefab: {fileID: 0}
   m_RootGameObject: {fileID: 100000}
   m_IsPrefabParent: 1
+--- !u!114 &114884429556071656
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 100000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31d2679b8f01940d5848702b04741cac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  DisplayValue: 
+  dnaTypeHash: -1679007774
+  dnaAsset: {fileID: 11400000, guid: 73724a21f630f479587f85c091ae207c, type: 2}
+  bonePoseSet: {fileID: 11400000, guid: fad7ea66452eb42a78625ce45f5ed53d, type: 2}

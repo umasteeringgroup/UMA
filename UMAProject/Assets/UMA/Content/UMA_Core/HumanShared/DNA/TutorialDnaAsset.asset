@@ -9,13 +9,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 28add7ad4625f8748a81d045544985b2, type: 3}
-  m_Name: EyeSpacing
+  m_Name: TutorialDnaAsset
   m_EditorClassIdentifier: 
-  dnaTypeHash: 2094876586
-  lastKnownAssetPath: Assets/UMA/Content/UMA_Core/HumanFemale/DNA/DynamicDNA/EyeSpacing.asset
-  lastKnownDuplicateAssetPath: Assets/UMA/Content/UMA_Core/HumanFemale/DNA/DynamicDNA/EyeSpacing
+  dnaTypeHash: -1679007774
+  lastKnownAssetPath: Assets/UMA/Content/UMA_Core/HumanShared/DNA/TutorialDnaAsset.asset
+  lastKnownDuplicateAssetPath: Assets/UMA/Content/UMA_Core/HumanShared/DNA/TutorialDnaAsset
     1.asset
-  lastKnownInstanceID: 10644
+  lastKnownInstanceID: -259004
   Names:
   - eyeSpacing
-  - eyeSymmetry

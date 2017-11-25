@@ -22,8 +22,8 @@ namespace UMA
 			if( dnaType == typeof(UMADnaHumanoid) )
 				return UMADnaHumanoid.GetNames();
 
-			if( dnaType == typeof(UMADnaTutorial) )
-				return UMADnaTutorial.GetNames();
+//			if( dnaType == typeof(UMADnaTutorial) )
+//				return UMADnaTutorial.GetNames();
 
 			if( dnaType == typeof(DynamicUMADna) )
 				return DynamicUMADna.GetNames();
@@ -35,7 +35,7 @@ namespace UMA
 		{
 
 			if( "UMADnaHumanoid" == className ) return typeof(UMADnaHumanoid);	
-			if( "UMADnaTutorial" == className ) return typeof(UMADnaTutorial);	
+//			if( "UMADnaTutorial" == className ) return typeof(UMADnaTutorial);	
 			if( "DynamicUMADna" == className ) return typeof(DynamicUMADna);	
 
 			return null;
@@ -47,7 +47,7 @@ namespace UMA
 			{
 
 				typeof(UMADnaHumanoid),
-				typeof(UMADnaTutorial),
+//				typeof(UMADnaTutorial),
 				typeof(DynamicUMADna),
 			};
 		}
@@ -58,8 +58,8 @@ namespace UMA
 
 			if( dnaType == typeof(UMADnaHumanoid))
 				return UMADnaHumanoid.LoadInstance(data);
-			if( dnaType == typeof(UMADnaTutorial))
-				return UMADnaTutorial.LoadInstance(data);
+//			if( dnaType == typeof(UMADnaTutorial))
+//				return UMADnaTutorial.LoadInstance(data);
 			if( dnaType == typeof(DynamicUMADna))
 				return DynamicUMADna.LoadInstance(data);
 
@@ -72,8 +72,8 @@ namespace UMA
 
 			if( dnaType == typeof(UMADnaHumanoid))
 				return UMADnaHumanoid.SaveInstance(instance as UMADnaHumanoid);
-			if( dnaType == typeof(UMADnaTutorial))
-				return UMADnaTutorial.SaveInstance(instance as UMADnaTutorial);
+//			if( dnaType == typeof(UMADnaTutorial))
+//				return UMADnaTutorial.SaveInstance(instance as UMADnaTutorial);
 			if( dnaType == typeof(DynamicUMADna))
 				return DynamicUMADna.SaveInstance(instance as DynamicUMADna);
 

@@ -37,6 +37,8 @@ MonoBehaviour:
   - AlternateHead
   - AlternateHands
   backwardsCompatibleWith: []
+  _crossCompatibilitySettings:
+    settingsData: []
   raceThumbnails:
     fullThumb: {fileID: 21300000, guid: 0960bf37021a1a7429ade3f60120b82c, type: 3}
     faceThumb: {fileID: 21300000, guid: ecadaada9dd71a946923ce1576e25862, type: 3}
@@ -56,7 +58,7 @@ MonoBehaviour:
   raceName: HumanFemale
   dnaConverterList:
   - {fileID: 11400000, guid: 9e2e0dcce00983248a5c1b8107cb1b1d, type: 2}
-  - {fileID: 11400000, guid: 2a5c36ccd1f394ff3b7aac62b5d1e308, type: 2}
+  - {fileID: 114884429556071656, guid: 2a5c36ccd1f394ff3b7aac62b5d1e308, type: 2}
   TPose: {fileID: 11400000, guid: 2329cbcce463cce4684e8efa7fdbff2c, type: 2}
   umaTarget: 0
   genericRootMotionTransformName: 

@@ -201,8 +201,8 @@ namespace UMA.Examples
                 orbitor.target = umaData.umaRoot.transform;
             }
 
-            umaHumanoidDna = umaData.GetDna<UMADnaHumanoid>();
-            umaTutorialDna = umaData.GetDna<UMADnaTutorial>();
+			umaHumanoidDna = umaData.GetDna(UMAUtils.StringToHash("UMADnaHumanoid"));
+			umaTutorialDna = umaData.GetDna(UMAUtils.StringToHash("UMADnaTutorial"));
 
 			accessors.Clear();
 			if (umaHumanoidDna != null)

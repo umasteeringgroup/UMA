@@ -380,6 +380,12 @@ namespace UMA.CharacterSystem.Editors
 			}
 			(target as DynamicUMADnaAsset).Names = currentNames.ToArray();
         }
+
+		[MenuItem("Assets/Create/UMA/DNA/Dynamic DNA Asset")]
+		public static void CreateDnaAssetMenuItem()
+		{
+			CustomAssetUtility.CreateAsset<DynamicUMADnaAsset>();
+		}
     }
 }
 #endif

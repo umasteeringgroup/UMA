@@ -109,7 +109,7 @@ namespace UMA
 			{
 				// HACK HACK HACK HACK
 				if (nameHash == UMAUtils.StringToHash("UMADnaHumanoid")) {return new UMADnaHumanoid();}
-				if (nameHash == UMAUtils.StringToHash("UMADnaTutorial")) {return new UMADnaTutorial();}
+//				if (nameHash == UMAUtils.StringToHash("UMADnaTutorial")) {return new UMADnaTutorial();}
 
 				return null;
 			}
