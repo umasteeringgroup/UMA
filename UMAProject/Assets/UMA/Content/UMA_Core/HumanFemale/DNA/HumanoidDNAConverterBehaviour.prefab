@@ -10,7 +10,7 @@ GameObject:
   - component: {fileID: 400000}
   - component: {fileID: 114884429556071656}
   m_Layer: 0
-  m_Name: TutorialDNAConverterBehaviour
+  m_Name: HumanoidDNAConverterBehaviour
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -52,6 +52,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   DisplayValue: 
-  dnaTypeHash: -1679007774
-  dnaAsset: {fileID: 11400000, guid: 73724a21f630f479587f85c091ae207c, type: 2}
-  bonePoseSet: {fileID: 11400000, guid: fad7ea66452eb42a78625ce45f5ed53d, type: 2}
+  dnaTypeHash: -212795365
+  dnaAsset: {fileID: 11400000, guid: 544a199d9a5d54e21995918e17a554d5, type: 2}
+  bonePoseSet: {fileID: 11400000, guid: f08e2eae0d9e14ee3869344df6140320, type: 2}

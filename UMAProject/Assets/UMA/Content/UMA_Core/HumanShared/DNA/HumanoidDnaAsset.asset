@@ -9,17 +9,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 28add7ad4625f8748a81d045544985b2, type: 3}
-  m_Name: HumanMaleDynamicDnaAsset
+  m_Name: HumanoidDnaAsset
   m_EditorClassIdentifier: 
-  dnaTypeHash: 815443803
-  lastKnownAssetPath: Assets/UMA/Content/UMA_Core/HumanMale/DNA/DynamicDNA/HumanMaleDynamicDnaAsset.asset
-  lastKnownDuplicateAssetPath: Assets/UMA/Content/UMA_Core/HumanMale/DNA/DynamicDNA/HumanMaleDynamicDnaAsset
+  dnaTypeHash: -212795365
+  lastKnownAssetPath: Assets/UMA/Content/UMA_Core/HumanShared/DNA/HumanoidDnaAsset.asset
+  lastKnownDuplicateAssetPath: Assets/UMA/Content/UMA_Core/HumanShared/DNA/HumanoidDnaAsset
     1.asset
-  lastKnownInstanceID: 10650
+  lastKnownInstanceID: 13536
   Names:
-  - skinGreenness
-  - skinBlueness
-  - skinRedness
   - height
   - headSize
   - headWidth

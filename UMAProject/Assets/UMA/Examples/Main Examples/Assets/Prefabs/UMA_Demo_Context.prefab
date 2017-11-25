@@ -501,4 +501,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6201c1dc73210499db49cee29955bebc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dnaAssetArray: []
+  dnaAssetArray:
+  - {fileID: 11400000, guid: 544a199d9a5d54e21995918e17a554d5, type: 2}
+  - {fileID: 11400000, guid: 73724a21f630f479587f85c091ae207c, type: 2}

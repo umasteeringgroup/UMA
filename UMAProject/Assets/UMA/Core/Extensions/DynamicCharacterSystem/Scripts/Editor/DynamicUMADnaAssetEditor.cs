@@ -160,6 +160,7 @@ namespace UMA.CharacterSystem.Editors
 				EditorGUI.PropertyField(hashFieldRect, dnaTypeHash, new GUIContent(""));
 				if (EditorGUI.EndChangeCheck())
 				{
+					/*
 					//we MUST NOT let this have the same TypeHash as UMADnaHumanoid or UMADnaTutorial, so if people randomly choose that value- dont assign it
 					if(dnaTypeHash.intValue == UMAUtils.StringToHash("UMADnaHumanoid") || dnaTypeHash.intValue == UMAUtils.StringToHash("UMADnaTutorial"))
 					{
@@ -170,6 +171,8 @@ namespace UMA.CharacterSystem.Editors
 					{
 						serializedObject.ApplyModifiedProperties();
 					}
+					*/
+					serializedObject.ApplyModifiedProperties();
 				}
 				//EditorGUILayout.EndHorizontal();
 			}

@@ -1,0 +1,3114 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f58f075679e2d4220be5d47a2c93bae9, type: 3}
+  m_Name: Humanoid DNA Male Pose Set
+  m_EditorClassIdentifier: 
+  dnaTypeHash: -212795365
+  dnaVersion: 0
+  startingPose: {fileID: 114710514253165276}
+  posePairs:
+  - poseZero: {fileID: 114485739474755052}
+    poseOne: {fileID: 114011468492558700}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114797888613212328}
+    poseOne: {fileID: 114936052123952944}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114365271057816648}
+    poseOne: {fileID: 114934446385494254}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114927496786104584}
+    poseOne: {fileID: 114742987632174036}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114247028016394194}
+    poseOne: {fileID: 114727409945234650}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114289520266474852}
+    poseOne: {fileID: 114176326344600634}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114324638028119110}
+    poseOne: {fileID: 114758072668158698}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114971047283792734}
+    poseOne: {fileID: 114484206707201646}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114167190989281424}
+    poseOne: {fileID: 114083632814831036}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114567613548193876}
+    poseOne: {fileID: 114142952206951530}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114521031079961426}
+    poseOne: {fileID: 114924657325613844}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114592060795907740}
+    poseOne: {fileID: 114873630440927694}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114458485711756374}
+    poseOne: {fileID: 114064094305915680}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114582733171978032}
+    poseOne: {fileID: 114830662388582110}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114108396845223150}
+    poseOne: {fileID: 114848608570969142}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114909944609802498}
+    poseOne: {fileID: 114197308003337510}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114067462015712496}
+    poseOne: {fileID: 114406605186576014}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114272416026838894}
+    poseOne: {fileID: 114278033120216542}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114219137046596566}
+    poseOne: {fileID: 114462578566369588}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114434482405215920}
+    poseOne: {fileID: 114432576764893778}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114760928982721790}
+    poseOne: {fileID: 114316930502324358}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114146784657886080}
+    poseOne: {fileID: 114716372176498374}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114476623987427292}
+    poseOne: {fileID: 114385845012048106}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114918852653918650}
+    poseOne: {fileID: 114766668272570206}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114779174488816732}
+    poseOne: {fileID: 114968184362627006}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114880874495087792}
+    poseOne: {fileID: 114344870132610284}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114893330699805702}
+    poseOne: {fileID: 114592172119033202}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114698398813717180}
+    poseOne: {fileID: 114274621502786996}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114485001336563648}
+    poseOne: {fileID: 114294007612417670}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114627773326098818}
+    poseOne: {fileID: 114685010685551014}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114674347072322610}
+    poseOne: {fileID: 114236108270321466}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114277915938515578}
+    poseOne: {fileID: 114579646233434580}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114064665535121720}
+    poseOne: {fileID: 114378425895589636}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114358914074105346}
+    poseOne: {fileID: 114037140014083172}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114677049322336150}
+    poseOne: {fileID: 114486390539418700}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114970143028068186}
+    poseOne: {fileID: 114866683268311814}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114791077429136882}
+    poseOne: {fileID: 114777326124013086}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114338643178892596}
+    poseOne: {fileID: 114997557012548750}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114090137704551330}
+    poseOne: {fileID: 114617484621320206}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114647015569885934}
+    poseOne: {fileID: 114526924604615834}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114472329531843774}
+    poseOne: {fileID: 114098659280855166}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114896122468607908}
+    poseOne: {fileID: 114846188040585618}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114762073544198884}
+    poseOne: {fileID: 114651503055802528}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114319611649401212}
+    poseOne: {fileID: 114995861011832894}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114766041289354868}
+    poseOne: {fileID: 114675650741770512}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+  - poseZero: {fileID: 114899943739396618}
+    poseOne: {fileID: 114776329005203874}
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+--- !u!114 &114011468492558700
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: height_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Position
+    hash: -1084586333
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.5681819, y: 1.5681819, z: 1.5681819}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114037140014083172
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: jawsSize_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightLowMaxilarAdjust
+    hash: 459855613
+    position: {x: 0, y: -0.0125, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftLowMaxilarAdjust
+    hash: 1385644791
+    position: {x: 0, y: 0.0125, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114064094305915680
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: lowerMuscle_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightLegAdjust
+    hash: -1005160586
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.45, z: 1.375}
+  - bone: LeftLegAdjust
+    hash: -861926788
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.45, z: 1.375}
+  - bone: RightUpLegAdjust
+    hash: -506228642
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 1.075, z: 1.075}
+  - bone: LeftUpLegAdjust
+    hash: 898137571
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 1.075, z: 1.075}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114064665535121720
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: mandibleSize_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Mandible
+    hash: 1574626840
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.825, y: 0.825, z: 0.825}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114067462015712496
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: belly_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LowerBackBelly
+    hash: -1421416706
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.5, y: 0.825, z: 0.375}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114083632814831036
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: handsSize_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftHand
+    hash: -1233783956
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 2, y: 2, z: 2}
+  - bone: RightHand
+    hash: 1979272496
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 2, y: 2, z: 2}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114090137704551330
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: lowCheekPosition_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftLowCheekAdjust
+    hash: -982498292
+    position: {x: 0, y: 0, z: -0.03}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLowCheekAdjust
+    hash: 530525254
+    position: {x: 0, y: 0, z: -0.03}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114098659280855166
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: foreheadPosition_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightEyebrowLowAdjust
+    hash: -1288301130
+    position: {x: 0, y: 0, z: -0.01}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftEyebrowUpAdjust
+    hash: -550662924
+    position: {x: 0, y: 0, z: -0.0035}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftEyebrowLowAdjust
+    hash: -87457348
+    position: {x: 0, y: 0, z: -0.01}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightEyebrowUpAdjust
+    hash: 1241434898
+    position: {x: 0, y: 0, z: -0.0035}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftEyebrowMiddleAdjust
+    hash: 1573521115
+    position: {x: 0, y: 0, z: -0.025}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightEyebrowMiddleAdjust
+    hash: 1752310743
+    position: {x: 0, y: 0, z: -0.025}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: NoseTopAdjust
+    hash: 1973914600
+    position: {x: 0, y: 0, z: -0.0125}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114108396845223150
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: lowerWeight_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LowerBackAdjust
+    hash: -1471957022
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.925, y: 0.925, z: 0.925}
+  - bone: RightLegAdjust
+    hash: -1005160586
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.925, z: 0.925}
+  - bone: LeftLegAdjust
+    hash: -861926788
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.925, z: 0.925}
+  - bone: RightUpLegAdjust
+    hash: -506228642
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 0.775, z: 0.775}
+  - bone: LeftUpLeg
+    hash: 392266736
+    position: {x: 0, y: 0.017499998, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftUpLegAdjust
+    hash: 898137571
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 0.775, z: 0.775}
+  - bone: RightUpLeg
+    hash: 1971262097
+    position: {x: 0, y: -0.017499998, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114142952206951530
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: feetSize_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightFoot
+    hash: -1693174228
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 2, y: 2, z: 2}
+  - bone: Position
+    hash: -1084586333
+    position: {x: -0.1, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftFoot
+    hash: 1486391408
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 2, y: 2, z: 2}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114146784657886080
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: earsRotation_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftEarAdjust
+    hash: -777059916
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: -0.1305262, w: 0.9914449}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightEarAdjust
+    hash: -652641090
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0.1305262, w: 0.9914449}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114167190989281424
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: handsSize_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftHand
+    hash: -1233783956
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.5, y: 0.5, z: 0.5}
+  - bone: RightHand
+    hash: 1979272496
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 0.5, y: 0.5, z: 0.5}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114176326344600634
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: forearmLength_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftForeArm
+    hash: -1984349568
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 2, y: 2, z: 2}
+  - bone: RightForeArm
+    hash: 1918345642
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 2, y: 2, z: 2}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114197308003337510
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: legsSize_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Position
+    hash: -1084586333
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.5681819, y: 1.5681819, z: 1.5681819}
+  - bone: RightLegAdjust
+    hash: -1005160586
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.65, z: 0.65}
+  - bone: LowerBack
+    hash: -919067556
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.5, y: 0.5, z: 0.5}
+  - bone: LeftLegAdjust
+    hash: -861926788
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.65, z: 0.65}
+  - bone: RightUpLegAdjust
+    hash: -506228642
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 0.5, z: 0.5}
+  - bone: LeftUpLeg
+    hash: 392266736
+    position: {x: 0, y: 0.05, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftUpLegAdjust
+    hash: 898137571
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 0.5, z: 0.5}
+  - bone: RightUpLeg
+    hash: 1971262097
+    position: {x: 0, y: -0.05, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114219137046596566
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: gluteusSize_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightGluteus
+    hash: -2110033470
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.325, y: 0.325, z: 0.325}
+  - bone: LeftGluteus
+    hash: 2044062440
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 0.325, y: 0.325, z: 0.325}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114236108270321466
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: chinPronounced_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: MandibleAdjust
+    hash: 691264956
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.09, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114247028016394194
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: armLength_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftArm
+    hash: -343733542
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 0.5, y: 0.5, z: 0.5}
+  - bone: RightArm
+    hash: 1806956327
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 0.5, y: 0.5, z: 0.5}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114272416026838894
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: waist_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LowerBackAdjust
+    hash: -1471957022
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.775, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114274621502786996
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: nosePronounced_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: NoseMiddleAdjust
+    hash: -1907186538
+    position: {x: -0.006, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightNoseAdjust
+    hash: -973641869
+    position: {x: -0.0125, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: NoseBaseAdjust
+    hash: -685367200
+    position: {x: -0.0125, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftNoseAdjust
+    hash: 623523856
+    position: {x: -0.0125, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114277915938515578
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: chinPosition_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: MandibleAdjust
+    hash: 691264956
+    position: {x: 0, y: 0, z: -0.00375}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114278033120216542
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: waist_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LowerBackAdjust
+    hash: -1471957022
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.225, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114289520266474852
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: forearmLength_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftForeArm
+    hash: -1984349568
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.5, y: 0.5, z: 0.5}
+  - bone: RightForeArm
+    hash: 1918345642
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.5, y: 0.5, z: 0.5}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114294007612417670
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: noseFlatten_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: NoseBaseAdjust
+    hash: -685367200
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1.375}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114316930502324358
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: earsPosition_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftEarAdjust
+    hash: -777059916
+    position: {x: 0, y: 0, z: 0.01}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightEarAdjust
+    hash: -652641090
+    position: {x: 0, y: 0, z: 0.01}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114319611649401212
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: eyeRotation_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightEyeAdjust
+    hash: -734071712
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.08715574, y: 0, z: 0, w: 0.9961947}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftEyeAdjust
+    hash: -595031702
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.08715574, y: 0, z: 0, w: 0.9961947}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114324638028119110
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: armWidth_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightArmAdjust
+    hash: -413665443
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.675, z: 0.675}
+  - bone: LeftArmAdjust
+    hash: -270431657
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.675, z: 0.675}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114338643178892596
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: lowCheekPronounced_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftLowCheekAdjust
+    hash: -982498292
+    position: {x: 0.034999996, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLowCheekAdjust
+    hash: 530525254
+    position: {x: 0.034999996, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114344870132610284
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: noseInclination_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: NoseBaseAdjust
+    hash: -685367200
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0.25881907, z: 0, w: 0.9659259}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114358914074105346
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: jawsSize_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightLowMaxilarAdjust
+    hash: 459855613
+    position: {x: 0, y: 0.0125, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftLowMaxilarAdjust
+    hash: 1385644791
+    position: {x: 0, y: -0.0125, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114365271057816648
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: headWidth_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftEarAdjust
+    hash: -777059916
+    position: {x: 0.005, y: 0.015, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightEarAdjust
+    hash: -652641090
+    position: {x: 0.005, y: -0.015, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: HeadAdjust
+    hash: -423229038
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.85, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114378425895589636
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: mandibleSize_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Mandible
+    hash: 1574626840
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.175, y: 1.175, z: 1.175}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114385845012048106
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: noseSize_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: NoseMiddleAdjust
+    hash: -1907186538
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.5, y: 1.125, z: 1.05}
+  - bone: NoseBaseAdjust
+    hash: -685367200
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.75, y: 1.075, z: 1.075}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114406605186576014
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: belly_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LowerBackBelly
+    hash: -1421416706
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.5, y: 1.175, z: 1.625}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114432576764893778
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: earsSize_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftEarAdjust
+    hash: -777059916
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.5, y: 1.5, z: 1.5}
+  - bone: RightEarAdjust
+    hash: -652641090
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.5, y: 1.5, z: 1.5}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114434482405215920
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: earsSize_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftEarAdjust
+    hash: -777059916
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.75, y: 0.75, z: 0.75}
+  - bone: RightEarAdjust
+    hash: -652641090
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.75, y: 0.75, z: 0.75}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114458485711756374
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: lowerMuscle_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightLegAdjust
+    hash: -1005160586
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.65, z: 0.65}
+  - bone: LeftLegAdjust
+    hash: -861926788
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.65, z: 0.65}
+  - bone: RightUpLegAdjust
+    hash: -506228642
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 0.925, z: 0.925}
+  - bone: LeftUpLegAdjust
+    hash: 898137571
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 0.925, z: 0.925}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114462578566369588
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: gluteusSize_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightGluteus
+    hash: -2110033470
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.675, y: 1.675, z: 1.675}
+  - bone: LeftGluteus
+    hash: 2044062440
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1.675, y: 1.675, z: 1.675}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114472329531843774
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: foreheadPosition_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightEyebrowLowAdjust
+    hash: -1288301130
+    position: {x: 0, y: 0, z: 0.005}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftEyebrowUpAdjust
+    hash: -550662924
+    position: {x: 0, y: 0, z: 0.0035}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftEyebrowLowAdjust
+    hash: -87457348
+    position: {x: 0, y: 0, z: 0.005}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightEyebrowUpAdjust
+    hash: 1241434898
+    position: {x: 0, y: 0, z: 0.0035}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftEyebrowMiddleAdjust
+    hash: 1573521115
+    position: {x: 0, y: 0, z: 0.005}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightEyebrowMiddleAdjust
+    hash: 1752310743
+    position: {x: 0, y: 0, z: 0.005}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: NoseTopAdjust
+    hash: 1973914600
+    position: {x: 0, y: 0, z: 0.0025}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114476623987427292
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: noseSize_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: NoseMiddleAdjust
+    hash: -1907186538
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.5, y: 0.875, z: 0.95}
+  - bone: NoseBaseAdjust
+    hash: -685367200
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.25, y: 0.925, z: 0.925}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114484206707201646
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: forearmWidth_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightForeArmAdjust
+    hash: -1195342688
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.25, z: 1.25}
+  - bone: LeftForeArmTwistAdjust
+    hash: 547566030
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.175, z: 1.175}
+  - bone: RightForeArmTwistAdjust
+    hash: 758040550
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.175, z: 1.175}
+  - bone: LeftForeArmAdjust
+    hash: 923803339
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.25, z: 1.25}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114485001336563648
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: noseFlatten_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: NoseBaseAdjust
+    hash: -685367200
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 0.625}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114485739474755052
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: height_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Position
+    hash: -1084586333
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.5681818, y: 0.5681818, z: 0.5681818}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114486390539418700
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: jawsPosition_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightLowMaxilarAdjust
+    hash: 459855613
+    position: {x: 0, y: 0, z: 0.015}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftLowMaxilarAdjust
+    hash: 1385644791
+    position: {x: 0, y: 0, z: 0.015}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114521031079961426
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: legSeparation_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftUpLeg
+    hash: 392266736
+    position: {x: 0, y: 0.055, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightUpLeg
+    hash: 1971262097
+    position: {x: 0, y: -0.055, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114526924604615834
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: foreheadSize_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightEyebrowLowAdjust
+    hash: -1288301130
+    position: {x: -0.0075, y: 0, z: -0.0025}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftEyebrowUpAdjust
+    hash: -550662924
+    position: {x: -0.0075, y: 0, z: -0.0025}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftEyebrowLowAdjust
+    hash: -87457348
+    position: {x: -0.0075, y: 0, z: -0.0025}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightEyebrowUpAdjust
+    hash: 1241434898
+    position: {x: -0.0075, y: 0, z: -0.0025}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftEyebrowMiddleAdjust
+    hash: 1573521115
+    position: {x: -0.0075, y: 0, z: -0.0025}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightEyebrowMiddleAdjust
+    hash: 1752310743
+    position: {x: -0.0075, y: 0, z: -0.0025}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: NoseTopAdjust
+    hash: 1973914600
+    position: {x: -0.0075, y: 0, z: -0.00075}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114567613548193876
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: feetSize_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightFoot
+    hash: -1693174228
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 0.5, y: 0.5, z: 0.5}
+  - bone: Position
+    hash: -1084586333
+    position: {x: 0.0675, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftFoot
+    hash: 1486391408
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 0.5, y: 0.5, z: 0.5}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114579646233434580
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: chinPosition_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: MandibleAdjust
+    hash: 691264956
+    position: {x: 0, y: 0, z: 0.00375}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114582733171978032
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: upperWeight_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LowerBackAdjust
+    hash: -1471957022
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.875, y: 0.875, z: 0.875}
+  - bone: LeftShoulderAdjust
+    hash: -1372013129
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 0.825, z: 0.825}
+  - bone: RightOuterBreast
+    hash: -1043063424
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.95, y: 0.95, z: 0.95}
+  - bone: LeftOuterBreast
+    hash: 361754685
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.95, y: 0.95, z: 0.95}
+  - bone: Spine1Adjust
+    hash: 473121629
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.9444444, z: 0.7857143}
+  - bone: SpineAdjust
+    hash: 1842365421
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.8333334, z: 0.9375}
+  - bone: RightShoulderAdjust
+    hash: 1960302077
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.825, z: 0.825}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114592060795907740
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: upperMuscle_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftShoulderAdjust
+    hash: -1372013129
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 0.75, z: 0.75}
+  - bone: LeftTrapezius
+    hash: -1320475381
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 0.65, y: 0.65, z: 0.65}
+  - bone: RightTrapezius
+    hash: -1174579199
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.65, y: 0.65, z: 0.65}
+  - bone: RightShoulder
+    hash: -167360539
+    position: {x: 0, y: -0.018, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: Spine1Adjust
+    hash: 473121629
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.7222222, z: 0.7857143}
+  - bone: LeftShoulder
+    hash: 759586984
+    position: {x: 0, y: 0.018, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000002}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: SpineAdjust
+    hash: 1842365421
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.8333334, z: 0.9375}
+  - bone: RightShoulderAdjust
+    hash: 1960302077
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.75, z: 0.75}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114592172119033202
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: nosePosition_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: NoseMiddleAdjust
+    hash: -1907186538
+    position: {x: 0, y: 0, z: 0.0075}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightNoseAdjust
+    hash: -973641869
+    position: {x: 0, y: 0, z: 0.0125}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: UpperLipsAdjust
+    hash: -736966710
+    position: {x: 0, y: 0, z: 0.00225}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: NoseBaseAdjust
+    hash: -685367200
+    position: {x: 0, y: 0, z: 0.0125}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftNoseAdjust
+    hash: 623523856
+    position: {x: 0, y: 0, z: 0.0125}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114617484621320206
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: lowCheekPosition_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftLowCheekAdjust
+    hash: -982498292
+    position: {x: 0, y: 0, z: 0.03}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLowCheekAdjust
+    hash: 530525254
+    position: {x: 0, y: 0, z: 0.03}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114627773326098818
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: chinSize_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: MandibleAdjust
+    hash: 691264956
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.75, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114647015569885934
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: foreheadSize_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightEyebrowLowAdjust
+    hash: -1288301130
+    position: {x: 0.005, y: 0, z: 0.0025}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftEyebrowUpAdjust
+    hash: -550662924
+    position: {x: 0.005, y: 0, z: 0.0025}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftEyebrowLowAdjust
+    hash: -87457348
+    position: {x: 0.005, y: 0, z: 0.0025}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightEyebrowUpAdjust
+    hash: 1241434898
+    position: {x: 0.005, y: 0, z: 0.0025}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftEyebrowMiddleAdjust
+    hash: 1573521115
+    position: {x: 0.005, y: 0, z: 0.0025}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightEyebrowMiddleAdjust
+    hash: 1752310743
+    position: {x: 0.005, y: 0, z: 0.0025}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: NoseTopAdjust
+    hash: 1973914600
+    position: {x: 0.005, y: 0, z: 0.00075}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114651503055802528
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: mouthSize_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftLipsAdjust
+    hash: -666615888
+    position: {x: 0, y: 0.005, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLipsAdjust
+    hash: 949575891
+    position: {x: 0, y: -0.005, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLipsSuperiorMiddleAdjust
+    hash: 1220922885
+    position: {x: 0, y: -0.0035, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLipsInferiorAdjust
+    hash: 1389899872
+    position: {x: 0, y: -0.0035, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftLipsInferiorAdjust
+    hash: 1599456840
+    position: {x: 0, y: 0.0035, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftLipsSuperiorMiddleAdjust
+    hash: 1940197654
+    position: {x: 0, y: 0.0035, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114674347072322610
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: chinPronounced_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: MandibleAdjust
+    hash: 691264956
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.90999997, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114675650741770512
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: eyeSize_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightEye
+    hash: -2120937982
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.15, y: 1.15, z: 1.15}
+  - bone: LeftEye
+    hash: 27653119
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.15, y: 1.15, z: 1.15}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114677049322336150
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: jawsPosition_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightLowMaxilarAdjust
+    hash: 459855613
+    position: {x: 0, y: 0, z: -0.015}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftLowMaxilarAdjust
+    hash: 1385644791
+    position: {x: 0, y: 0, z: -0.015}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114685010685551014
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: chinSize_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: MandibleAdjust
+    hash: 691264956
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.3, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114698398813717180
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: nosePronounced_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: NoseMiddleAdjust
+    hash: -1907186538
+    position: {x: 0.006, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightNoseAdjust
+    hash: -973641869
+    position: {x: 0.0125, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: NoseBaseAdjust
+    hash: -685367200
+    position: {x: 0.0125, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftNoseAdjust
+    hash: 623523856
+    position: {x: 0.0125, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114710514253165276
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: StartingPose
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Position
+    hash: -1084586333
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.88, y: 0.88, z: 0.88}
+  - bone: RightShoulder
+    hash: -167360539
+    position: {x: 0, y: 0.0029999986, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: Spine1Adjust
+    hash: 473121629
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.9, z: 0.7}
+  - bone: LeftShoulder
+    hash: 759586984
+    position: {x: 0, y: -0.0029999986, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000002}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: SpineAdjust
+    hash: 1842365421
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.9, z: 0.8}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114716372176498374
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: earsRotation_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftEarAdjust
+    hash: -777059916
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0.1736482, w: 0.9848078}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightEarAdjust
+    hash: -652641090
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: -0.1736482, w: 0.9848078}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114727409945234650
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: armLength_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftArm
+    hash: -343733542
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 2, y: 2, z: 2}
+  - bone: RightArm
+    hash: 1806956327
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 2, y: 2, z: 2}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114742987632174036
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: neckThickness_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: NeckAdjust
+    hash: 1605701185
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.4, z: 1.6}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114758072668158698
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: armWidth_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightArmAdjust
+    hash: -413665443
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.325, z: 1.325}
+  - bone: LeftArmAdjust
+    hash: -270431657
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.325, z: 1.325}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114760928982721790
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: earsPosition_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftEarAdjust
+    hash: -777059916
+    position: {x: 0, y: 0, z: -0.01}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightEarAdjust
+    hash: -652641090
+    position: {x: 0, y: 0, z: -0.01}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114762073544198884
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: mouthSize_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftLipsAdjust
+    hash: -666615888
+    position: {x: 0, y: -0.015, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLipsAdjust
+    hash: 949575891
+    position: {x: 0, y: 0.015, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLipsSuperiorMiddleAdjust
+    hash: 1220922885
+    position: {x: 0, y: 0.0035, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLipsInferiorAdjust
+    hash: 1389899872
+    position: {x: 0, y: 0.0035, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftLipsInferiorAdjust
+    hash: 1599456840
+    position: {x: 0, y: -0.0035, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftLipsSuperiorMiddleAdjust
+    hash: 1940197654
+    position: {x: 0, y: -0.0035, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114766041289354868
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: eyeSize_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightEye
+    hash: -2120937982
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.85, y: 0.85, z: 0.85}
+  - bone: LeftEye
+    hash: 27653119
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.85, y: 0.85, z: 0.85}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114766668272570206
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: noseCurve_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: NoseMiddleAdjust
+    hash: -1907186538
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.75, y: 1.075, z: 1.075}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114776329005203874
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: breastSize_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightOuterBreast
+    hash: -1043063424
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.5, y: 1.5, z: 1.5}
+  - bone: LeftOuterBreast
+    hash: 361754685
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.5, y: 1.5, z: 1.5}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114777326124013086
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: cheekPosition_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftCheekAdjust
+    hash: -1371476741
+    position: {x: 0, y: 0, z: 0.015}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightCheekAdjust
+    hash: 2048590150
+    position: {x: 0, y: 0, z: 0.015}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114779174488816732
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: noseWidth_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: NoseMiddleAdjust
+    hash: -1907186538
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.75, z: 1}
+  - bone: NoseBaseAdjust
+    hash: -685367200
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.5, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114791077429136882
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: cheekPosition_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftCheekAdjust
+    hash: -1371476741
+    position: {x: 0, y: 0, z: -0.015}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightCheekAdjust
+    hash: 2048590150
+    position: {x: 0, y: 0, z: -0.015}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114797888613212328
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: headSize_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Head
+    hash: 130111906
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.5, y: 0.5, z: 0.5}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114830662388582110
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: upperWeight_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LowerBackAdjust
+    hash: -1471957022
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.125, y: 1.125, z: 1.125}
+  - bone: LeftShoulderAdjust
+    hash: -1372013129
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 1.175, z: 1.175}
+  - bone: RightOuterBreast
+    hash: -1043063424
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.05, y: 1.05, z: 1.05}
+  - bone: LeftOuterBreast
+    hash: 361754685
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.05, y: 1.05, z: 1.05}
+  - bone: Spine1Adjust
+    hash: 473121629
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.0555556, z: 1.3214285}
+  - bone: SpineAdjust
+    hash: 1842365421
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.1944444, z: 1.21875}
+  - bone: RightShoulderAdjust
+    hash: 1960302077
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.175, z: 1.175}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114846188040585618
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: lipsSize_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightLipsSuperiorMiddleAdjust
+    hash: 1220922885
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.025, y: 1.45, z: 1.45}
+  - bone: RightLipsInferiorAdjust
+    hash: 1389899872
+    position: {x: 0, y: 0, z: -0.004}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.025, y: 1.45, z: 1.45}
+  - bone: LeftLipsInferiorAdjust
+    hash: 1599456840
+    position: {x: 0, y: 0, z: -0.004}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.025, y: 1.45, z: 1.45}
+  - bone: LipsInferiorAdjust
+    hash: 1799356466
+    position: {x: 0, y: 0, z: -0.004}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.025, y: 1.5, z: 1.5}
+  - bone: LipsSuperiorAdjust
+    hash: 1865332640
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.025, y: 1.45, z: 1.45}
+  - bone: LeftLipsSuperiorMiddleAdjust
+    hash: 1940197654
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.025, y: 1.45, z: 1.45}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114848608570969142
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: lowerWeight_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LowerBackAdjust
+    hash: -1471957022
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.075, y: 1.075, z: 1.075}
+  - bone: RightLegAdjust
+    hash: -1005160586
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.075, z: 1.075}
+  - bone: LeftLegAdjust
+    hash: -861926788
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.075, z: 1.075}
+  - bone: RightUpLegAdjust
+    hash: -506228642
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 1.15, z: 1.15}
+  - bone: LeftUpLeg
+    hash: 392266736
+    position: {x: 0, y: -0.017500006, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftUpLegAdjust
+    hash: 898137571
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 1.15, z: 1.15}
+  - bone: RightUpLeg
+    hash: 1971262097
+    position: {x: 0, y: 0.017499998, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114866683268311814
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: cheekSize_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftCheekAdjust
+    hash: -1371476741
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.525, y: 1.525, z: 1.525}
+  - bone: RightCheekAdjust
+    hash: 2048590150
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.525, y: 1.525, z: 1.525}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114873630440927694
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: upperMuscle_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftShoulderAdjust
+    hash: -1372013129
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 1.25, z: 1.25}
+  - bone: LeftTrapezius
+    hash: -1320475381
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1.35, y: 1.35, z: 1.35}
+  - bone: RightTrapezius
+    hash: -1174579199
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.35, y: 1.35, z: 1.35}
+  - bone: RightShoulder
+    hash: -167360539
+    position: {x: 0, y: 0.082, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: Spine1Adjust
+    hash: 473121629
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.2777778, z: 1.3214285}
+  - bone: LeftShoulder
+    hash: 759586984
+    position: {x: 0, y: -0.082, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000002}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: SpineAdjust
+    hash: 1842365421
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.25, z: 1.15625}
+  - bone: RightShoulderAdjust
+    hash: 1960302077
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.25, z: 1.25}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114880874495087792
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: noseInclination_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: NoseBaseAdjust
+    hash: -685367200
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: -0.25881907, z: 0, w: 0.9659259}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114893330699805702
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: nosePosition_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: NoseMiddleAdjust
+    hash: -1907186538
+    position: {x: 0, y: 0, z: -0.0075}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightNoseAdjust
+    hash: -973641869
+    position: {x: 0, y: 0, z: -0.0125}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: UpperLipsAdjust
+    hash: -736966710
+    position: {x: 0, y: 0, z: -0.00225}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: NoseBaseAdjust
+    hash: -685367200
+    position: {x: 0, y: 0, z: -0.0125}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftNoseAdjust
+    hash: 623523856
+    position: {x: 0, y: 0, z: -0.0125}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114896122468607908
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: lipsSize_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightLipsSuperiorMiddleAdjust
+    hash: 1220922885
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.65, z: 0.65}
+  - bone: RightLipsInferiorAdjust
+    hash: 1389899872
+    position: {x: 0, y: 0, z: 0.004}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.65, z: 0.65}
+  - bone: LeftLipsInferiorAdjust
+    hash: 1599456840
+    position: {x: 0, y: 0, z: 0.004}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.65, z: 0.65}
+  - bone: LipsInferiorAdjust
+    hash: 1799356466
+    position: {x: 0, y: 0, z: 0.004}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.65, z: 0.65}
+  - bone: LipsSuperiorAdjust
+    hash: 1865332640
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.65, z: 0.65}
+  - bone: LeftLipsSuperiorMiddleAdjust
+    hash: 1940197654
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.65, z: 0.65}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114899943739396618
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: breastSize_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightOuterBreast
+    hash: -1043063424
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.6, y: 0.6, z: 0.6}
+  - bone: LeftOuterBreast
+    hash: 361754685
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.6, y: 0.6, z: 0.6}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114909944609802498
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: legsSize_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Position
+    hash: -1084586333
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.5681818, y: 0.5681818, z: 0.5681818}
+  - bone: RightLegAdjust
+    hash: -1005160586
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.45, z: 1.45}
+  - bone: LowerBack
+    hash: -919067556
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.5, y: 1.5, z: 1.5}
+  - bone: LeftLegAdjust
+    hash: -861926788
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.45, z: 1.45}
+  - bone: RightUpLegAdjust
+    hash: -506228642
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 1.15, z: 1.15}
+  - bone: LeftUpLeg
+    hash: 392266736
+    position: {x: 0, y: -0.050000004, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftUpLegAdjust
+    hash: 898137571
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 1.15, z: 1.15}
+  - bone: RightUpLeg
+    hash: 1971262097
+    position: {x: 0, y: 0.049999997, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114918852653918650
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: noseCurve_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: NoseMiddleAdjust
+    hash: -1907186538
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.5, y: 0.925, z: 0.925}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114924657325613844
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: legSeparation_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftUpLeg
+    hash: 392266736
+    position: {x: 0, y: -0.055, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightUpLeg
+    hash: 1971262097
+    position: {x: 0, y: 0.055000007, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114927496786104584
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: neckThickness_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: NeckAdjust
+    hash: 1605701185
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.6, z: 0.5}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114934446385494254
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: headWidth_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftEarAdjust
+    hash: -777059916
+    position: {x: -0.005, y: -0.015, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightEarAdjust
+    hash: -652641090
+    position: {x: -0.005, y: 0.015, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: HeadAdjust
+    hash: -423229038
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.15, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114936052123952944
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: headSize_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Head
+    hash: 130111906
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 2, y: 2, z: 2}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114968184362627006
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: noseWidth_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: NoseMiddleAdjust
+    hash: -1907186538
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.25, z: 1}
+  - bone: NoseBaseAdjust
+    hash: -685367200
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.5, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114970143028068186
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: cheekSize_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftCheekAdjust
+    hash: -1371476741
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.47500002, y: 0.47500002, z: 0.47500002}
+  - bone: RightCheekAdjust
+    hash: 2048590150
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.47500002, y: 0.47500002, z: 0.47500002}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114971047283792734
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: forearmWidth_0
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightForeArmAdjust
+    hash: -1195342688
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.75, z: 0.75}
+  - bone: LeftForeArmTwistAdjust
+    hash: 547566030
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.825, z: 0.825}
+  - bone: RightForeArmTwistAdjust
+    hash: 758040550
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.825, z: 0.825}
+  - bone: LeftForeArmAdjust
+    hash: 923803339
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.75, z: 0.75}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114995861011832894
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: eyeRotation_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightEyeAdjust
+    hash: -734071712
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.08715574, y: 0, z: 0, w: 0.9961947}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftEyeAdjust
+    hash: -595031702
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.08715574, y: 0, z: 0, w: 0.9961947}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []
+--- !u!114 &114997557012548750
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: lowCheekPronounced_1
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftLowCheekAdjust
+    hash: -982498292
+    position: {x: -0.035000004, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLowCheekAdjust
+    hash: 530525254
+    position: {x: -0.035000004, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []

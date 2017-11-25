@@ -858,7 +858,7 @@ namespace UMA
 						requiredDnas.Add(dnaTypeHash);
 						if (!umaDna.ContainsKey(dnaTypeHash))
 						{
-							var dna = slotData.asset.slotDNA.DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
+							var dna = UMAContextBase.Instance.InstantiateDNA(dnaTypeHash);
 							dna.DNATypeHash = dnaTypeHash;
 							//DynamicUMADna:: needs the DNAasset from the converter TODO are there other places where I heed to sort out this slotDNA?
 							if (slotData.asset.slotDNA is DynamicDNAConverterBehaviourBase)

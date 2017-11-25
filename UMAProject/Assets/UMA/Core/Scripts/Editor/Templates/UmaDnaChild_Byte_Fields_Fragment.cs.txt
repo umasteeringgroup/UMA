@@ -1,1 +1,0 @@
-		public System.Byte {0:FieldName};

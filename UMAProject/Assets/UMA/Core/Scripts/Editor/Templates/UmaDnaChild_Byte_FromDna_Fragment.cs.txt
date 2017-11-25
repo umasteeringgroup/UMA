@@ -1,1 +1,0 @@
-		res.{0:FieldName} = (System.Byte)(dna.{0:FieldName} * 255f+0.5f);
