@@ -58,34 +58,11 @@ namespace UMA
 						normals[vertexIndex] = referencenormals[othervertexIndex];
 	                }
 	            }
-	        }		
-				
-			Mesh tempMesh = new Mesh();
-			tempMesh.name = originalMesh.gameObject.name;
-			tempMesh.vertices = originalMesh.sharedMesh.vertices;
-			tempMesh.normals = normals;
-			tempMesh.tangents = originalMesh.sharedMesh.tangents;
-			tempMesh.boneWeights = originalMesh.sharedMesh.boneWeights;
-			tempMesh.uv = originalMesh.sharedMesh.uv;
-			tempMesh.triangles = originalMesh.sharedMesh.triangles;
-			tempMesh.bindposes = originalMesh.sharedMesh.bindposes;
+	        }	
 
-			int shapeCount = originalMesh.sharedMesh.blendShapeCount;
-			for (int shapeIndex = 0; shapeIndex < shapeCount; shapeIndex++)
-			{
-				string shapeName = originalMesh.sharedMesh.GetBlendShapeName(shapeIndex);
-				int frameCount = originalMesh.sharedMesh.GetBlendShapeFrameCount(shapeIndex);
-				for (int frameIndex = 0; frameIndex < frameCount; frameIndex++)
-				{
-					float frameWeight = originalMesh.sharedMesh.GetBlendShapeFrameWeight(shapeIndex, frameIndex);
-					Vector3[] deltaVertices = new Vector3[tempMesh.vertexCount];
-					Vector3[] deltaNormals = new Vector3[tempMesh.vertexCount];
-					Vector3[] deltaTangents = new Vector3[tempMesh.vertexCount];
-	
-					originalMesh.sharedMesh.GetBlendShapeFrameVertices(shapeIndex, frameIndex, deltaVertices, deltaNormals, deltaTangents);
-					tempMesh.AddBlendShapeFrame( shapeName, frameWeight, deltaVertices, deltaNormals, deltaTangents );
-				}
-			}
+			Mesh tempMesh = Instantiate(originalMesh.sharedMesh);
+			tempMesh.name = originalMesh.gameObject.name;
+			tempMesh.normals = normals;
 			
 			calculateMeshTangents(tempMesh);
 			
