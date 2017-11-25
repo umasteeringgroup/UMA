@@ -129,10 +129,9 @@ namespace UMA.Editors
 							{
 								DNAConvertersAdded = true;
 								_recipe.AddDNAUpdater(DnaConverter);
-								Type thisType = DnaConverter.DNAType;
 								if (DnaConverter is DynamicDNAConverterBehaviourBase)
 								{
-									var dna = _recipe.GetOrCreateDna(thisType, DnaConverter.DNATypeHash);
+									var dna = _recipe.GetOrCreateDna(DnaConverter.DNATypeHash);
 									if (((DynamicDNAConverterBehaviourBase)DnaConverter).dnaAsset != null)
 									{
 										((DynamicUMADnaBase)dna).dnaAsset = ((DynamicDNAConverterBehaviourBase)DnaConverter).dnaAsset;
@@ -140,7 +139,7 @@ namespace UMA.Editors
 								}
 								else
 								{
-									_recipe.GetOrCreateDna(thisType, DnaConverter.DNATypeHash);
+									_recipe.GetOrCreateDna(DnaConverter.DNATypeHash);
 								}
 							}
 						}
@@ -183,7 +182,7 @@ namespace UMA.Editors
 						Debug.LogWarning("Dynamic DNA Converter "+ thisDNAConverterList[i].name+" needs a DNA Asset assigned to it");
                         continue;
 					}
-					var dna = _recipe.GetOrCreateDna(thisDNAConverterList[i].DNAType, thisDNAConverterList[i].DNATypeHash);
+					var dna = _recipe.GetOrCreateDna(thisDNAConverterList[i].DNATypeHash);
 					if (thisDNAConverterList[i] is DynamicDNAConverterBehaviourBase)
 					{
 						var thisDnaAsset = ((DynamicDNAConverterBehaviourBase)thisDNAConverterList[i]).dnaAsset;

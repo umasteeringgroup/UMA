@@ -155,7 +155,7 @@ namespace UMA.CharacterSystem.Editors
 				if(GUI.Button(hashBtnRect,"Save")){
 					editTypeHashEnabled = false;
                 }
-				var originalDnaTypeHash = dnaTypeHash;
+//				var originalDnaTypeHash = dnaTypeHash;
 				EditorGUI.BeginChangeCheck();
 				EditorGUI.PropertyField(hashFieldRect, dnaTypeHash, new GUIContent(""));
 				if (EditorGUI.EndChangeCheck())

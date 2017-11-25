@@ -461,31 +461,6 @@ namespace UMA
 				umaDna.Remove(dnaTypeNameHash);
 			}
 			/// <summary>
-			/// Removes the specified DNA.
-			/// </summary>
-			/// <param name="type">Type.</param>
-			public void RemoveDna(Type type)
-			{
-				int dnaTypeNameHash = UMAUtils.StringToHash(type.Name);
-				dnaValues.Remove(umaDna[dnaTypeNameHash]);
-				umaDna.Remove(dnaTypeNameHash);
-			}
-
-			/// <summary>
-			/// Get DNA of specified type.
-			/// </summary>
-			/// <returns>The DNA (or null if not found).</returns>
-			/// <param name="type">Type.</param>
-			public UMADnaBase GetDna(Type type)
-			{
-				UMADnaBase dna;
-				if (umaDna.TryGetValue(UMAUtils.StringToHash(type.Name), out dna))
-				{
-					return dna;
-				}
-				return null;
-			}
-			/// <summary>
 			/// Get DNA of specified type.
 			/// </summary>
 			/// <returns>The DNA (or null if not found).</returns>
@@ -504,46 +479,8 @@ namespace UMA
 			/// Get DNA of specified type, adding if not found.
 			/// </summary>
 			/// <returns>The DNA.</returns>
-			/// <typeparam name="T">Type.</typeparam>
-			public T GetOrCreateDna<T>()
-				where T : UMADnaBase
-			{
-				T res = GetDna<T>();
-				if (res == null)
-				{
-					res = typeof(T).GetConstructor(System.Type.EmptyTypes).Invoke(null) as T;
-					umaDna.Add(res.DNATypeHash, res);
-					dnaValues.Add(res);
-				}
-				return res;
-			}
-
-			/// <summary>
-			/// Get DNA of specified type, adding if not found.
-			/// </summary>
-			/// <returns>The DNA.</returns>
-			/// <param name="type">Type.</param>
-			public UMADnaBase GetOrCreateDna(Type type)
-			{
-				UMADnaBase dna;
-				var typeNameHash = UMAUtils.StringToHash(type.Name);
-				if (umaDna.TryGetValue(typeNameHash, out dna))
-				{
-					return dna;
-				}
-
-				dna = type.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
-				umaDna.Add(typeNameHash, dna);
-				dnaValues.Add(dna);
-				return dna;
-			}
-			/// <summary>
-			/// Get DNA of specified type, adding if not found.
-			/// </summary>
-			/// <returns>The DNA.</returns>
-			/// <param name="type">Type.</param>
 			/// <param name="dnaTypeHash">The DNAType's hash."</param>
-			public UMADnaBase GetOrCreateDna(Type type, int dnaTypeHash)
+			public UMADnaBase GetOrCreateDna(int dnaTypeHash)
 			{
 				UMADnaBase dna;
 				if (umaDna.TryGetValue(dnaTypeHash, out dna))
@@ -551,10 +488,12 @@ namespace UMA
 					return dna;
 				}
 
-				dna = type.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
-				dna.DNATypeHash = dnaTypeHash;
-				umaDna.Add(dnaTypeHash, dna);
-				dnaValues.Add(dna);
+				dna = UMAContextBase.Instance.InstantiateDNA(dnaTypeHash);
+				if (dna != null)
+				{
+					umaDna.Add(dnaTypeHash, dna);
+					dnaValues.Add(dna);
+				}
 				return dna;
 			}
 #pragma warning restore 618
@@ -975,7 +914,7 @@ namespace UMA
 
 				foreach (var dnaEntry in recipe.umaDna)
 				{
-					var destDNA = GetOrCreateDna(dnaEntry.Value.GetType(), dnaEntry.Key);
+					var destDNA = GetOrCreateDna(dnaEntry.Key);
 					destDNA.Values = dnaEntry.Value.Values;
 				}
 
@@ -1247,28 +1186,7 @@ namespace UMA
 		{
 			return umaRecipe.GetDna(dnaTypeNameHash);
 		}
-
-		/// <summary>
-		/// Retrieve DNA by type.
-		/// </summary>
-		/// <returns>The DNA (or null if not found).</returns>
-		/// <param name="type">Type.</param>
-		public UMADnaBase GetDna(Type type)
-		{
-			return umaRecipe.GetDna(type);
-		}
-
-		/// <summary>
-		/// Retrieve DNA by type.
-		/// </summary>
-		/// <returns>The DNA (or null if not found).</returns>
-		/// <typeparam name="T">The type od DNA requested.</typeparam>
-		public T GetDna<T>()
-			where T : UMADnaBase
-		{
-			return umaRecipe.GetDna<T>();
-		}
-
+			
 		/// <summary>
 		/// Marks portions of the UMAData as modified.
 		/// </summary>
