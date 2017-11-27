@@ -437,7 +437,7 @@ namespace UMA.Editors
 			EditorGUILayout.Space();
 			//Draw the Wardrobe slot field as a WardrobeCollection Group text field.
 			EditorGUILayout.HelpBox("When a collection is placed on an avatar it replaces any other collections belonging to this group and unloads that collections recipes", MessageType.Info);
-            var newWardrobeSlot = EditorGUILayout.TextField("Collection Group", wardrobeSlot);
+            var newWardrobeSlot = EditorGUILayout.DelayedTextField("Collection Group", wardrobeSlot);
 			if(newWardrobeSlot != wardrobeSlot)
 			{
 				WardrobeSlotField.SetValue(target, newWardrobeSlot);
