@@ -3098,11 +3098,19 @@ namespace UMA.CharacterSystem
             {
                 UpdateAfterDownload();
             }
-            // UpdateAfterDownload.UpdateSetSlots might have also caused downloads to happen so if it did do this again
-            if (requiredAssetsToCheck.Count > 0)
+			// UpdateAfterDownload.UpdateSetSlots might have also caused downloads to happen
+			//(eg they themselves ref slots/overlays/races that are in other bundles) so check that 
+			//(they will be in requiredAssetsToCheck) and wait
+			if (requiredAssetsToCheck.Count > 0)
             {
-                yield return StartCoroutine(UpdateAfterDownloads());
-            }
+				//We cant call this Coroutine again from within itself (causes a stackOverflow) so just wait
+				//yield return StartCoroutine(UpdateAfterDownloads());
+				while (DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
+				{
+					yield return null;
+				}
+				UpdateAfterDownload();
+			}
         }
 
         void UpdateAfterDownload()
