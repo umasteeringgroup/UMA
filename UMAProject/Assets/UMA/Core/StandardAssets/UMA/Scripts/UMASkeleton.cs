@@ -478,11 +478,17 @@ namespace UMA
 			{
 				db.accessedFrame = frame;
 				db.boneTransform.localPosition += position * weight;
-				Quaternion fullRotation = db.boneTransform.localRotation * rotation;
-				db.boneTransform.localRotation = Quaternion.Slerp(db.boneTransform.localRotation, fullRotation, weight);
-				var fullScale = scale;
-				fullScale.Scale(db.boneTransform.localScale);
-				db.boneTransform.localScale = Vector3.Lerp(db.boneTransform.localScale, fullScale, weight);
+				if (rotation != Quaternion.identity)
+				{
+					Quaternion fullRotation = db.boneTransform.localRotation * rotation;
+					db.boneTransform.localRotation = Quaternion.Slerp(db.boneTransform.localRotation, fullRotation, weight);
+				}
+				if (scale != Vector3.one)
+				{
+					var fullScale = scale;
+					fullScale.Scale(db.boneTransform.localScale);
+					db.boneTransform.localScale = Vector3.Lerp(db.boneTransform.localScale, fullScale, weight);
+				}
 			}
 		}
 

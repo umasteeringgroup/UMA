@@ -1,4 +1,7 @@
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 using System.Collections.Generic;
 
 namespace UMA
@@ -6,62 +9,18 @@ namespace UMA
 	/// <summary>
 	/// Simple scene based container for instantiating various UMA objects.
 	/// </summary>
-	public class UMASceneContext : UMAContextBase
+	public class UMAAssetBundleContext : UMAContextBase
 	{
-		/// <summary>
-		/// The race library.
-		/// </summary>
-		[SerializeField]
-		protected RaceLibraryBase raceLibrary;
-		/// <summary>
-		/// The slot library.
-		/// </summary>
-		[SerializeField]
-		protected SlotLibraryBase slotLibrary;
-		/// <summary>
-		/// The overlay library.
-		/// </summary>
-		[SerializeField]
-		protected OverlayLibraryBase overlayLibrary;
+		public string bundleName;
 
-		// HACK is this going to stay? Maybe ditch the libraries completely?
+		public string bundleURL;
+
 		[SerializeField]
-		protected DNALibrary dnaLibrary;
+		protected AssetBundle bundle;
 
-		public void Start()
-		{
-			if (!slotLibrary)
-			{
-				slotLibrary = GameObject.Find("SlotLibrary").GetComponent<SlotLibraryBase>();
-			}
-			if (!raceLibrary)
-			{
-				raceLibrary = GameObject.Find("RaceLibrary").GetComponent<RaceLibraryBase>();
-			}
-			if (!overlayLibrary)
-			{
-				overlayLibrary = GameObject.Find("OverlayLibrary").GetComponent<OverlayLibraryBase>();
-			}
-			if (!dnaLibrary)
-			{
-				dnaLibrary = GameObject.Find("DNALibrary").GetComponent<DNALibrary>();
-			}
-			// Note: Removed null check so that this is always assigned if you have a UMAContext in your scene
-			// This will avoid those occasions where someone drops in a bogus context in a test scene, and then 
-			// later loads a valid scene (and everything breaks)
-			Instance = this;
-		}
-
-		/// <summary>
-		/// Validates the library contents.
-		/// </summary>
-		public void ValidateDictionaries()
-		{
-			slotLibrary.ValidateDictionary();
-			raceLibrary.ValidateDictionary();
-			overlayLibrary.ValidateDictionary();
-			dnaLibrary.ValidateDictionary();
-		}
+#if UNITY_EDITOR
+		protected AssetBundleBuild bundleBuild;
+#endif
 
 		/// <summary>
 		/// Gets a race by name.
@@ -70,7 +29,7 @@ namespace UMA
 		/// <param name="name">Name.</param>
 		public override RaceData GetRace(string name)
 		{
-			return raceLibrary.GetRace(name);
+			return GetRace(UMAUtils.StringToHash(name));
 		}
 		/// <summary>
 		/// Gets a race by name hash.
@@ -79,7 +38,7 @@ namespace UMA
 		/// <param name="nameHash">Name hash.</param>
 		public override RaceData GetRace(int nameHash)
 		{
-			return raceLibrary.GetRace(nameHash);
+			return null;
 		}
 
 		/// <summary>
@@ -88,7 +47,7 @@ namespace UMA
 		/// <returns>The array of race data.</returns>
 		public override RaceData[] GetAllRaces()
 		{
-			return raceLibrary.GetAllRaces();
+			return null;
 		}
 
 		/// <summary>
@@ -97,7 +56,6 @@ namespace UMA
 		/// <param name="race">New race.</param>
 		public override void AddRace(RaceData race)
 		{
-			raceLibrary.AddRace(race);
 		}
 
 		/// <summary>
@@ -107,7 +65,7 @@ namespace UMA
 		/// <param name="name">Name.</param>
 		public override SlotData InstantiateSlot(string name)
 		{
-			return slotLibrary.InstantiateSlot(name);
+			return InstantiateSlot(UMAUtils.StringToHash(name));
 		}
 
 		/// <summary>
@@ -117,7 +75,7 @@ namespace UMA
 		/// <param name="nameHash">Name hash.</param>
 		public override SlotData InstantiateSlot(int nameHash)
 		{
-			return slotLibrary.InstantiateSlot(nameHash);
+			return null;
 		}
 
 		/// <summary>
@@ -128,7 +86,7 @@ namespace UMA
 		/// <param name="overlayList">Overlay list.</param>
 		public override SlotData InstantiateSlot(string name, List<OverlayData> overlayList)
 		{
-			return slotLibrary.InstantiateSlot(name, overlayList);
+			return InstantiateSlot(UMAUtils.StringToHash(name), overlayList);
 		}
 		/// <summary>
 		/// Instantiate a slot by name hash, with overlays.
@@ -138,7 +96,7 @@ namespace UMA
 		/// <param name="overlayList">Overlay list.</param>
 		public override SlotData InstantiateSlot(int nameHash, List<OverlayData> overlayList)
 		{
-			return slotLibrary.InstantiateSlot(nameHash, overlayList);
+			return null;
 		}
 
 		/// <summary>
@@ -148,7 +106,7 @@ namespace UMA
 		/// <param name="name">Name.</param>
 		public override bool HasSlot(string name)
 		{
-			return slotLibrary.HasSlot(name);
+			return HasSlot(UMAUtils.StringToHash(name));
 		}
 		/// <summary>
 		/// Check for presence of a slot by name hash.
@@ -157,7 +115,7 @@ namespace UMA
 		/// <param name="nameHash">Name hash.</param>
 		public override bool HasSlot(int nameHash)
 		{ 
-			return slotLibrary.HasSlot(nameHash);
+			return false;
 		}
 
 		/// <summary>
@@ -166,7 +124,6 @@ namespace UMA
 		/// <param name="slot">New slot asset.</param>
 		public override void AddSlotAsset(SlotDataAsset slot)
 		{
-			slotLibrary.AddSlotAsset(slot);
 		}
 
 		/// <summary>
@@ -176,7 +133,7 @@ namespace UMA
 		/// <param name="name">Name.</param>
 		public override bool HasOverlay(string name)
 		{
-			return overlayLibrary.HasOverlay(name);
+			return HasOverlay(UMAUtils.StringToHash(name));
 		}
 		/// <summary>
 		/// Check for presence of an overlay by name hash.
@@ -185,7 +142,7 @@ namespace UMA
 		/// <param name="nameHash">Name hash.</param>
 		public override bool HasOverlay(int nameHash)
 		{ 
-			return overlayLibrary.HasOverlay(nameHash);
+			return false;
 		}
 
 		/// <summary>
@@ -195,7 +152,7 @@ namespace UMA
 		/// <param name="name">Name.</param>
 		public override OverlayData InstantiateOverlay(string name)
 		{
-			return overlayLibrary.InstantiateOverlay(name);
+			return InstantiateOverlay(UMAUtils.StringToHash(name));
 		}
 		/// <summary>
 		/// Instantiate an overlay by name hash.
@@ -204,7 +161,7 @@ namespace UMA
 		/// <param name="nameHash">Name hash.</param>
 		public override OverlayData InstantiateOverlay(int nameHash)
 		{
-			return overlayLibrary.InstantiateOverlay(nameHash);
+			return null;
 		}
 
 		/// <summary>
@@ -215,7 +172,7 @@ namespace UMA
 		/// <param name="color">Color.</param>
 		public override OverlayData InstantiateOverlay(string name, Color color)
 		{
-			return overlayLibrary.InstantiateOverlay(name, color);
+			return InstantiateOverlay(UMAUtils.StringToHash(name), color);
 		}
 		/// <summary>
 		/// Instantiate a tinted overlay by name hash.
@@ -225,7 +182,7 @@ namespace UMA
 		/// <param name="color">Color.</param>
 		public override OverlayData InstantiateOverlay(int nameHash, Color color)
 		{
-			return overlayLibrary.InstantiateOverlay(nameHash, color);
+			return null;
 		}
 
 		/// <summary>
@@ -234,7 +191,6 @@ namespace UMA
 		/// <param name="overlay">New overlay asset.</param>
 		public override void AddOverlayAsset(OverlayDataAsset overlay)
 		{
-			overlayLibrary.AddOverlayAsset(overlay);
 		}
 
 		/// <summary>
@@ -244,7 +200,7 @@ namespace UMA
 		/// <param name="name">Name.</param>
 		public override bool HasDNA(string name)
 		{
-			return dnaLibrary.HasDNA(name);
+			return HasDNA(UMAUtils.StringToHash(name));
 		}
 		/// <summary>
 		/// Check for presence of an DNA type by name hash.
@@ -253,7 +209,7 @@ namespace UMA
 		/// <param name="nameHash">Name hash.</param>
 		public override bool HasDNA(int nameHash)
 		{ 
-			return dnaLibrary.HasDNA(nameHash);
+			return false;
 		}
 
 		/// <summary>
@@ -263,7 +219,7 @@ namespace UMA
 		/// <param name="name">Name.</param>
 		public override UMADnaBase InstantiateDNA(string name)
 		{
-			return dnaLibrary.InstantiateDNA(name);
+			return InstantiateDNA(UMAUtils.StringToHash(name));
 		}
 		/// <summary>
 		/// Instantiate DNA by name hash.
@@ -272,7 +228,7 @@ namespace UMA
 		/// <param name="nameHash">Name hash.</param>
 		public override UMADnaBase InstantiateDNA(int nameHash)
 		{
-			return dnaLibrary.InstantiateDNA(nameHash);
+			return null;
 		}
 			
 		/// <summary>
@@ -281,7 +237,6 @@ namespace UMA
 		/// <param name="dna">New DNA asset.</param>
 		public override void AddDNAAsset(DynamicUMADnaAsset dnaAsset)
 		{
-			dnaLibrary.AddDNAAsset(dnaAsset);
 		}
 	}
 }

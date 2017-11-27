@@ -128,49 +128,8 @@ namespace UMA.CharacterSystem
 
         public override SlotData InstantiateSlot(string name)
         {
-            SlotData res;
-            try
-            {
-                res = base.InstantiateSlot(UMAUtils.StringToHash(name));
-            }
-            catch
-            {
-                res = null;
-            }
-    #if UNITY_EDITOR
-            if (!Application.isPlaying && res == null)
-            {
-                res = GetEditorAddedAsset(null, name);
-            }
-    #endif
-            if (res == null)
-            {
-                //we try to load the slot dynamically
-                UpdateDynamicSlotLibrary(name);
-                try
-                {
-                    res = base.InstantiateSlot(name);
-                }
-                catch
-                {
-                    res = null;
-                }
-                if (res == null)
-                {
-    #if UNITY_EDITOR
-                    if (!Application.isPlaying)
-                    {
-                        res = GetEditorAddedAsset(null, name);
-                        if (res != null)
-                        {
-                            return res;
-                        }
-                    }
-    #endif
-                    throw new UMAResourceNotFoundException("dSlotLibrary (211): Unable to find: " + name);
-                }
-            }
-            return res;
+			int hash = UMAUtils.StringToHash(name);
+			return InstantiateSlot(hash);
         }
         public override SlotData InstantiateSlot(int nameHash)
         {
@@ -219,95 +178,16 @@ namespace UMA.CharacterSystem
         }
         public override SlotData InstantiateSlot(string name, List<OverlayData> overlayList)
         {
-            SlotData res;
-            try
-            {
-                res = base.InstantiateSlot(name);
-            }
-            catch
-            {
-                res = null;
-            }
-    #if UNITY_EDITOR
-            if (!Application.isPlaying && res == null)
-            {
-                res = GetEditorAddedAsset(null, name);
-            }
-    #endif
-            if (res == null)
-            {
-                //we load dynamically
-                UpdateDynamicSlotLibrary(name);
-                try {
-                    res = base.InstantiateSlot(name);
-                }
-                catch
-                {
-                    res = null;
-                }
-                if (res == null)
-                {
-    #if UNITY_EDITOR
-                    if (!Application.isPlaying)
-                    {
-                        res = GetEditorAddedAsset(null, name);
-                        if (res != null)
-                        {
-                            res.SetOverlayList(overlayList);
-                            return res;
-                        }
-                    }
-    #endif
-                    throw new UMAResourceNotFoundException("dSlotLibrary: Unable to find: " + name);
-                }
-            }
-            res.SetOverlayList(overlayList);
-            return res;
+			int hash = UMAUtils.StringToHash(name);
+			return InstantiateSlot(hash, overlayList);
         }
         public override SlotData InstantiateSlot(int nameHash, List<OverlayData> overlayList)
         {
-            SlotData res;
-            try
-            {
-                res = base.InstantiateSlot(nameHash);
-            }
-            catch
-            {
-                res = null;
-            }
-    #if UNITY_EDITOR
-            if (!Application.isPlaying && res == null)
-            {
-                res = GetEditorAddedAsset(nameHash);
-            }
-    #endif
-            if (res == null)
-            {
-                UpdateDynamicSlotLibrary(nameHash);
-                try {
-                    res = base.InstantiateSlot(nameHash);
-                }
-                catch
-                {
-                    res = null;
-                }
-                if (res == null)
-                {
-    #if UNITY_EDITOR
-                    if (!Application.isPlaying)
-                    {
-                        res = GetEditorAddedAsset(nameHash);
-                        if (res != null)
-                        {
-                            res.SetOverlayList(overlayList);
-                            return res;
-                        }
-                    }
-    #endif
-                    throw new UMAResourceNotFoundException("dSlotLibrary: Unable to find: " + nameHash);
-                }
-            }
-            res.SetOverlayList(overlayList);
+			SlotData res = InstantiateSlot(nameHash);
+
+			if (res != null)
+				res.SetOverlayList(overlayList);
+			
             return res;
         }
         /// <summary>

@@ -118,6 +118,7 @@ namespace UMA
 			var res = Internal_InstantiateSlot(nameHash);
 			if (res == null)
 			{
+				// HACK why does this specific case have the different error handling?
 	#if UNITY_EDITOR
 				foreach (var path in UnityEditor.AssetDatabase.GetAllAssetPaths())
 				{
