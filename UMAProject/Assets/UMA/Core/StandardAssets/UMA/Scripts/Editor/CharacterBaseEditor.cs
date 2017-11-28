@@ -630,6 +630,29 @@ namespace UMA.Editors
 			}
 		}
 
+		protected bool RaceInIndex(RaceData _raceData)
+		{
+			if (UMAContext.Instance != null)
+			{
+				if (UMAContext.Instance.HasRace(_raceData.raceName) != null)
+					return true;
+            }
+
+			AssetItem ai = UMAAssetIndexer.Instance.GetAssetItem<RaceData>(_raceData.raceName);
+			if (ai != null)
+			{
+				return true;
+			}
+
+			string path = AssetDatabase.GetAssetPath(_raceData);
+			if (UMAAssetIndexer.Instance.InAssetBundle(path))
+			{
+				return true;
+			}
+
+			return false;
+		}
+
 		public SlotMasterEditor(UMAData.UMARecipe recipe)
 		{
 			_recipe = recipe;
@@ -684,11 +707,27 @@ namespace UMA.Editors
 
             if (_recipe.raceData != newRace)
             {
-                _recipe.SetRace(newRace);
+				_recipe.SetRace(newRace);
                 changed = true;
             }
 
-            if (_sharedColorsEditor.OnGUI(_recipe))
+			if (_recipe.raceData != null && !RaceInIndex(_recipe.raceData))
+			{
+				EditorGUILayout.HelpBox("Race " + _recipe.raceData.raceName + " is not indexed! Either assign it to an assetBundle or use one of the buttons below to add it to the Scene/Global Library.", MessageType.Error);
+
+				GUILayout.BeginHorizontal();
+				if (GUILayout.Button("Add to Scene Only"))
+				{
+					UMAContext.Instance.AddRace(_recipe.raceData);
+				}
+				if (GUILayout.Button("Add to Global Index (Recommended)"))
+				{
+					UMAAssetIndexer.Instance.EvilAddAsset(typeof(RaceData), _recipe.raceData);
+				}
+				GUILayout.EndHorizontal();
+			}
+
+			if (_sharedColorsEditor.OnGUI(_recipe))
             {
                 changed = true;
                 _textureDirty = true;

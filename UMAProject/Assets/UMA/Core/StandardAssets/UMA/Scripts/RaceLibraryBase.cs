@@ -8,10 +8,22 @@ namespace UMA
     public abstract class RaceLibraryBase : MonoBehaviour
     {
 		/// <summary>
+		/// Gets a race by name without trying to find it in the globalIndex or assetBundles
+		/// </summary>
+		/// <returns>The race (or null if not in library instance).</returns>
+		/// <param name="raceName">Name.</param>
+		public abstract RaceData HasRace(string raceName);
+		/// <summary>
+		/// Gets a race by name hash without trying to find it in the globalIndex or assetBundles
+		/// </summary>
+		/// <returns>The race (or null if not in library instance).</returns>
+		/// <param name="raceHash">Name hash.</param>
+		public abstract RaceData HasRace(int raceHash);
+		/// <summary>
 		/// Add a race to the library.
 		/// </summary>
 		/// <param name="race">Race.</param>
-        public abstract void AddRace(RaceData race);
+		public abstract void AddRace(RaceData race);
 		/// <summary>
 		/// Gets a race by name.
 		/// </summary>

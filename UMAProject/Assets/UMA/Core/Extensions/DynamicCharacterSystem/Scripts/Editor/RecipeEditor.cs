@@ -21,6 +21,10 @@ namespace UMA.Editors
 
 		EditorWindow inspectorWindow;
 
+		//for showing a warning if any of the compatible races are missing or not assigned to bundles or the index
+		protected Texture warningIcon;
+		protected GUIStyle warningStyle;
+
 		public virtual void OnSceneDrag(SceneView view)
 		{
 			if (Event.current.type == EventType.DragUpdated)
@@ -135,6 +139,13 @@ namespace UMA.Editors
 
         public override void OnInspectorGUI()
         {
+			if (warningIcon == null)
+			{
+				warningIcon = EditorGUIUtility.FindTexture("console.warnicon.sml");
+				warningStyle = new GUIStyle(EditorStyles.label);
+                warningStyle.fixedHeight = warningIcon.height + 4f;
+				warningStyle.contentOffset = new Vector2(0, -2f);
+			}
 			if (_recipe == null) return;
             PowerToolsGUI();
             base.OnInspectorGUI();
@@ -208,6 +219,34 @@ namespace UMA.Editors
                 GUILayout.EndHorizontal();
             }
         }
+
+		/// <summary>
+		/// Checks if the given RaceData is in the globalLibrary or an assetBundle
+		/// </summary>
+		/// <param name="_raceData"></param>
+		/// <returns></returns>
+		protected bool RaceInIndex(RaceData _raceData)
+		{
+			if (UMAContext.Instance != null)
+			{
+				if (UMAContext.Instance.HasRace(_raceData.raceName) != null)
+					return true;
+			}
+
+			AssetItem ai = UMAAssetIndexer.Instance.GetAssetItem<RaceData>(_raceData.raceName);
+			if (ai != null)
+			{
+				return true;
+			}
+
+			string path = AssetDatabase.GetAssetPath(_raceData);
+			if (UMAAssetIndexer.Instance.InAssetBundle(path))
+			{
+				return true;
+			}
+
+			return false;
+		}
 	}
 	/*public class ShowGatheringNotification : EditorWindow
 	{
