@@ -59,13 +59,44 @@ namespace UMA.AssetBundles
 
 				//AssetBundleIndex
 				AssetBundleIndex thisIndex = ScriptableObject.CreateInstance<AssetBundleIndex>();
+				//Added a bundlesPlayerVersion value to the assetBundles that can be used when determining
+				//whether the app version matches the bundles version or if the bundles/application require updating.
+				if (UMAABMSettings.EnableBundleIndexVersioning)
+				{
+					string versionErrMsg = "";
+					if (UMAABMSettings.BundleIndexVersioningMethod == UMAABMSettingsStore.BundleIndexVersioningOpts.UseBuildVersion)
+					{
+						thisIndex.bundlesPlayerVersion = Application.version;
+						versionErrMsg = "there was no 'Version' value set up in Edit->ProjectSettings->Player->Version";
+					}
+					else if (UMAABMSettings.BundleIndexVersioningMethod == UMAABMSettingsStore.BundleIndexVersioningOpts.Custom)
+					{
+						thisIndex.bundlesPlayerVersion = UMAABMSettings.BundleIndexCustomValue;
+						versionErrMsg = "there was no value set up UMA-> UMA AssetBundle Manager window";
+					}
+					if (string.IsNullOrEmpty(thisIndex.bundlesPlayerVersion))
+					{
+						EditorUtility.DisplayDialog("Bundle Index Versioning Error", "You have turned on 'Bundle Index Versioning' but " + versionErrMsg + ". Please set that and try building your bundles again.", "OK");
+						return;
+					}
+					else
+					{
+						if (!EditorUtility.DisplayDialog("Building Bundles", "Asset Bundles will be built with bundlesPlayerVersion value of '" + thisIndex.bundlesPlayerVersion + "' Is that correct?", "Build", "Cancel"))
+						{
+							//If the user did not aggree to that bail.
+							return;
+						}
+					}
+				}
 
 				string[] assetBundleNamesArray = AssetDatabase.GetAllAssetBundleNames();
-
 				//Generate a buildmap as we go
 				AssetBundleBuild[] buildMap = new AssetBundleBuild[assetBundleNamesArray.Length + 1];//+1 for the index bundle
 				for (int i = 0; i < assetBundleNamesArray.Length; i++)
 				{
+					//Building the map takes a while so show something...
+					EditorUtility.DisplayProgressBar("Building Asset Bundles", "Creating Build Map", (1f / (float)assetBundleNamesArray.Length) * (i + 1) );
+
 					string bundleName = assetBundleNamesArray[i];
 
 					string[] assetBundleAssetsArray = AssetDatabase.GetAssetPathsFromAssetBundle(bundleName);
@@ -97,6 +128,8 @@ namespace UMA.AssetBundles
 					}
 				}
 
+				EditorUtility.ClearProgressBar();
+
 				thisIndexAssetPath = "Assets/" + Utility.GetPlatformName() + "Index.asset";
 				thisIndex.name = "AssetBundleIndex";
 				AssetDatabase.CreateAsset(thisIndex, thisIndexAssetPath);
@@ -111,11 +144,11 @@ namespace UMA.AssetBundles
 				{
 					throw new System.Exception("Your assetBundles did not build properly.");
 				}
-				//reload the saved index (TODO may not be necessary)
 				thisIndex = AssetDatabase.LoadAssetAtPath<AssetBundleIndex>("Assets/" + Utility.GetPlatformName() + "Index.asset");
 				//Get any bundles with variants
 				string[] bundlesWithVariant = assetBundleManifest.GetAllAssetBundlesWithVariant();
 				thisIndex.bundlesWithVariant = bundlesWithVariant;
+
 				//then loop over each bundle in the bundle names and get the bundle specific data
 				for (int i = 0; i < assetBundleNamesArray.Length; i++)
 				{
@@ -165,7 +198,7 @@ namespace UMA.AssetBundles
 					var encryptedOutputPath = Path.Combine(Utility.AssetBundlesOutputPath, Path.Combine("Encrypted", Utility.GetPlatformName()));
 					if (!Directory.Exists(encryptedOutputPath))
 						Directory.CreateDirectory(encryptedOutputPath);
-					for (int bmi = 0; bmi < buildMap.Length; bmi++)//-1 to not include the index bundle (or maybe we do encrypt the index bundle?)
+					for (int bmi = 0; bmi < buildMap.Length; bmi++)
 					{
 						var thisEncryptionAsset = AssetDatabase.LoadAssetAtPath<UMAEncryptedBundle>(thisEncryptionAssetPath);
 						//get the data from the unencrypted bundle and encrypt it into the EncryptedData asset
