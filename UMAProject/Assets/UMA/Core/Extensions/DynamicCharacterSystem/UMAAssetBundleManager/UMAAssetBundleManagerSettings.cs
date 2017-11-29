@@ -485,7 +485,7 @@ namespace UMA.AssetBundles
 #if UNITY_2017_2_OR_NEWER
 				Caching.ClearCache ();
 #else
-				Caching.ClearCache();          
+				Caching.CleanCache();          
 #endif
 				return;
 			}
@@ -596,7 +596,7 @@ namespace UMA.AssetBundles
 #if UNITY_2017_2_OR_NEWER
 					_statusMessage = Caching.ClearCache() ? "Cache Cleared." : "Error clearing cache.";
 #else
-					_statusMessage = Caching.ClearCache() ? "Cache Cleared." : "Error clearing cache.";
+					_statusMessage = Caching.CleanCache() ? "Cache Cleared." : "Error clearing cache.";
 #endif
 				}
 				EditorGUILayout.Space();
