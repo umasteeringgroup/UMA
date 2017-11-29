@@ -1778,7 +1778,7 @@ namespace UMA.CharacterSystem
         /// </summary>
         /// <param name="backwardsCompatible">If true, slot and overlay data is included and you can load the recipe into a non-dynamicCharacterAvatar.</param>
         /// <returns></returns>
-        public string GetCurrentRecipe(bool backwardsCompatible = true)
+        public string GetCurrentRecipe(bool backwardsCompatible = false)
         {
             Dictionary<string, UMATextRecipe> wardrobeCache = new Dictionary<string, UMATextRecipe>(_wardrobeRecipes);
             Dictionary<string, UMAWardrobeCollection> wcCache = new Dictionary<string, UMAWardrobeCollection>(_wardrobeCollections);
