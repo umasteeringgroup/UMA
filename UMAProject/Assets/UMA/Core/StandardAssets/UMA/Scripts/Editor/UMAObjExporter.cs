@@ -68,7 +68,7 @@ namespace UMA.Editors
 						var staticMesh = new Mesh();
 						avatar.umaData.GetRenderer(0).BakeMesh(staticMesh);
 						FileUtils.WriteAllText(path, MeshToString(staticMesh, avatar.umaData.GetRenderer(0).sharedMaterials));
-						Object.Destroy(staticMesh);
+						UMAUtils.DestroySceneObject(staticMesh);
 					}
 				}
 			}

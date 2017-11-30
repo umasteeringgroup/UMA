@@ -126,6 +126,12 @@ namespace UMA.AssetBundles
 		public List<AssetBundleIndexList> bundlesIndex = new List<AssetBundleIndexList>();
 		[SerializeField]
 		public string[] bundlesWithVariant;
+		/// <summary>
+		/// You can make sure this value is set by checking 'Enable Bundle Index Versioning' in the UMA AssetBundles Settings window.
+		/// You can use it to determine if the assetBundles are compatible with the current application build and vice versa.
+		/// </summary>
+		[SerializeField]
+		public string bundlesPlayerVersion = "";
 
 		public AssetBundleIndex()
 		{
@@ -221,9 +227,10 @@ namespace UMA.AssetBundles
 		public string[] GetAllAssetBundleNames()
 		{
 			List<string> assetBundleNames = new List<string>();
-			foreach (AssetBundleIndexList iAssetList in bundlesIndex)
+			//foreach (AssetBundleIndexList iAssetList in bundlesIndex)
+			for(int i = 0; i < bundlesIndex.Count; i++)
 			{
-				assetBundleNames.Add(iAssetList.assetBundleName);
+				assetBundleNames.Add(bundlesIndex[i].assetBundleName);
 			}
 			return assetBundleNames.ToArray();
 		}
@@ -248,7 +255,7 @@ namespace UMA.AssetBundles
 		/// Replicates AssetBundle.Contains but uses assetNameHash and adds an optional type filter
 		/// </summary>
 		/// <param name="assetBundleName"></param>
-		/// <param name="assetName"></param>
+		/// <param name="assetHash"></param>
 		/// <param name="type"></param>
 		/// <returns></returns>
 		public bool AssetBundleContains(string assetBundleName, int? assetHash, string type = "")
@@ -263,7 +270,7 @@ namespace UMA.AssetBundles
 		/// <summary>
 		/// Searches the available AssetBundles for the given assetName optionally filtered by type
 		/// </summary>
-		/// <param name="assetName"></param>
+		/// <param name="assetNameOrFilename"></param>
 		/// <param name="type"></param>
 		/// <returns></returns>
 		public string[] FindContainingAssetBundle(string assetNameOrFilename, string type = "")
@@ -337,15 +344,17 @@ namespace UMA.AssetBundles
 		public string[] GetAllAssetsOfTypeInBundle(string assetBundleName, string type)
 		{
 			List<string> foundAssets = new List<string>();
-			foreach (AssetBundleIndexList iAssetList in bundlesIndex)
+			//foreach (AssetBundleIndexList iAssetList in bundlesIndex)
+			for(int i = 0; i < bundlesIndex.Count; i++)
 			{
-				if (iAssetList.assetBundleName == assetBundleName)
+				if (bundlesIndex[i].assetBundleName == assetBundleName)
 				{
-					foreach (AssetBundleIndexItem iAsset in iAssetList.assetBundleAssets)
+					//foreach (AssetBundleIndexItem iAsset in iAssetList.assetBundleAssets)
+					for(int ii = 0; ii < bundlesIndex[i].assetBundleAssets.Count; ii++)
 					{
-						if (type == "" || (type != "" && (type == iAsset.assetType || type == GetTypeWithoutAssembly(iAsset.assetType))))
+						if (type == "" || (type != "" && (type == bundlesIndex[i].assetBundleAssets[ii].assetType || type == GetTypeWithoutAssembly(bundlesIndex[i].assetBundleAssets[ii].assetType))))
 						{
-							foundAssets.Add(iAsset.assetName);
+							foundAssets.Add(bundlesIndex[i].assetBundleAssets[ii].assetName);
 						}
 
 					}
@@ -357,27 +366,29 @@ namespace UMA.AssetBundles
 		public AssetBundleIndexItem GetAssetBundleIndexItem(string assetBundleName, string assetNameOrFilename, string type = "")
 		{
 			AssetBundleIndexItem indexAsset = null;
-			foreach (AssetBundleIndexList iAssetList in bundlesIndex)
+			//foreach (AssetBundleIndexList iAssetList in bundlesIndex)
+			for(int i = 0; i < bundlesIndex.Count; i++)
 			{
 				if (indexAsset != null)
 					break;
-				if (iAssetList.assetBundleName == assetBundleName)
+				if (bundlesIndex[i].assetBundleName == assetBundleName)
 				{
-					foreach (AssetBundleIndexItem iAsset in iAssetList.assetBundleAssets)
+					//foreach (AssetBundleIndexItem iAsset in bundlesIndex[i].assetBundleAssets)
+					for(int ii = 0; ii < bundlesIndex[i].assetBundleAssets.Count; ii++)
 					{
-						if (assetNameOrFilename == iAsset.assetName)
+						if (assetNameOrFilename == bundlesIndex[i].assetBundleAssets[ii].assetName)
 						{
-							if (type == "" || (type != "" && (type == iAsset.assetType || type == GetTypeWithoutAssembly(iAsset.assetType))))
+							if (type == "" || (type != "" && (type == bundlesIndex[i].assetBundleAssets[ii].assetType || type == GetTypeWithoutAssembly(bundlesIndex[i].assetBundleAssets[ii].assetType))))
 							{
-								indexAsset = iAsset;
+								indexAsset = bundlesIndex[i].assetBundleAssets[ii];
 							}
 
 						}
-						else if (assetNameOrFilename == iAsset.filename)
+						else if (assetNameOrFilename == bundlesIndex[i].assetBundleAssets[ii].filename)
 						{
-							if (type == "" || (type != "" && (type == iAsset.assetType || type == GetTypeWithoutAssembly(iAsset.assetType))))
+							if (type == "" || (type != "" && (type == bundlesIndex[i].assetBundleAssets[ii].assetType || type == GetTypeWithoutAssembly(bundlesIndex[i].assetBundleAssets[ii].assetType))))
 							{
-								indexAsset = iAsset;
+								indexAsset = bundlesIndex[i].assetBundleAssets[ii];
 							}
 
 						}
@@ -392,19 +403,21 @@ namespace UMA.AssetBundles
 		public AssetBundleIndexItem GetAssetBundleIndexItem(string assetBundleName, int? assetNameHash, string type = "")
 		{
 			AssetBundleIndexItem indexAsset = null;
-			foreach (AssetBundleIndexList iAssetList in bundlesIndex)
+			//foreach (AssetBundleIndexList iAssetList in bundlesIndex)
+			for(int i = 0; i < bundlesIndex.Count; i++)
 			{
 				if (indexAsset != null)
 					break;
-				if (iAssetList.assetBundleName == assetBundleName)
+				if (bundlesIndex[i].assetBundleName == assetBundleName)
 				{
-					foreach (AssetBundleIndexItem iAsset in iAssetList.assetBundleAssets)
+					//foreach (AssetBundleIndexItem iAsset in iAssetList.assetBundleAssets)
+					for(int ii = 0; ii < bundlesIndex[i].assetBundleAssets.Count; ii++)
 					{
-						if (assetNameHash == iAsset.assetHash)
+						if (assetNameHash == bundlesIndex[i].assetBundleAssets[ii].assetHash)
 						{
-							if (type == "" || (type != "" && (type == iAsset.assetType || type == GetTypeWithoutAssembly(iAsset.assetType))))
+							if (type == "" || (type != "" && (type == bundlesIndex[i].assetBundleAssets[ii].assetType || type == GetTypeWithoutAssembly(bundlesIndex[i].assetBundleAssets[ii].assetType))))
 							{
-								indexAsset = iAsset;
+								indexAsset = bundlesIndex[i].assetBundleAssets[ii];
 							}
 
 						}

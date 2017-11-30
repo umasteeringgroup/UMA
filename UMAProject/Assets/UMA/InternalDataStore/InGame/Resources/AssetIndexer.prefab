@@ -248,7 +248,7 @@ MonoBehaviour:
     IsAssetBundle: 0
   - _BaseTypeName: SlotDataAsset
     _Name: F_High poly head
-    _SerializedItem: {fileID: 11400000, guid: 72d68f914034a9c4f94c733168884070, type: 2}
+    _SerializedItem: {fileID: 11400000, guid: c2e03835c947bd449adbe23861a31c93, type: 2}
     _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Slots/Body/MidPoly/UMA_Human_Female_Head_Mid_Slot.asset
     _Guid: 72d68f914034a9c4f94c733168884070
     IsResource: 0

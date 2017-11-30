@@ -29,6 +29,13 @@ namespace UMA.AssetBundles
 #endif
 		bool newEncodeNamesSetting = false;
 
+		//DOS MODIFIED 14/11/2017 added a ability to set the new bundlesPlayerVersion value
+		bool _enableBundleIndexVersioning;
+		//either automatically use the Buildversion from player settings or specify a value here
+		UMAABMSettingsStore.BundleIndexVersioningOpts _bundleIndexVersioningMethod = UMAABMSettingsStore.BundleIndexVersioningOpts.UseBuildVersion;
+		//if useBundlesVersioning is set to Custom this value is used when the bundles are built
+		string _bundleIndexCustomValue = "0.0";
+
 		//server related
 		bool _enableLocalAssetBundleServer;
 		int _port;
@@ -113,6 +120,7 @@ namespace UMA.AssetBundles
 #if ENABLE_IOS_APP_SLICING
 			currentAppSlicingSetting = UMAABMSettings.GetBuildForSlicing();
 #endif
+			_enableBundleIndexVersioning = UMAABMSettings.EnableBundleIndexVersioning;
         }
 
 		void OnEnable()
@@ -126,6 +134,7 @@ namespace UMA.AssetBundles
 #if ENABLE_IOS_APP_SLICING
 			currentAppSlicingSetting = UMAABMSettings.GetBuildForSlicing();
 #endif
+			_enableBundleIndexVersioning = UMAABMSettings.EnableBundleIndexVersioning;
 			//localAssetBundleServer status
 			_enableLocalAssetBundleServer = EditorPrefs.GetBool(Application.dataPath+"LocalAssetBundleServerEnabled");
 			_port = EditorPrefs.GetInt(Application.dataPath + "LocalAssetBundleServerPort", 7888);
@@ -260,7 +269,47 @@ namespace UMA.AssetBundles
 			BeginVerticalPadded(5, new Color(0.75f, 0.875f, 1f));
 
 			GUILayout.Label("AssetBundle Options", EditorStyles.boldLabel);
-
+			//AssetBundle Build versioning
+			EditorGUI.BeginChangeCheck();
+			_enableBundleIndexVersioning = EditorGUILayout.ToggleLeft("Enable AssetBundle Index Versioning", _enableBundleIndexVersioning);
+			if (EditorGUI.EndChangeCheck())
+			{
+				UMAABMSettings.EnableBundleIndexVersioning = _enableBundleIndexVersioning;
+            }
+			if (_enableBundleIndexVersioning)
+			{
+				BeginVerticalIndented(10, new Color(0.75f, 0.875f, 1f));
+				EditorGUILayout.HelpBox("Sets the 'bundlesPlayerVersion' value of the AssetBundleIndex when you build your bundles. You can use this to determine if your app needs to force the user to go online to update their bundles and/or application (its up to you how you do that though!). ", MessageType.Info);
+				EditorGUI.BeginChangeCheck();
+				_bundleIndexVersioningMethod = (UMAABMSettingsStore.BundleIndexVersioningOpts)EditorGUILayout.EnumPopup("Bundles Versioning Method", _bundleIndexVersioningMethod);
+				if (EditorGUI.EndChangeCheck())
+				{
+					UMAABMSettings.BundleIndexVersioningMethod = _bundleIndexVersioningMethod;
+				}
+				if(_bundleIndexVersioningMethod == UMAABMSettingsStore.BundleIndexVersioningOpts.Custom)
+				{
+					EditorGUI.BeginChangeCheck();
+					_bundleIndexCustomValue = EditorGUILayout.TextField("Bundles Index Player Version", _bundleIndexCustomValue);
+					if (EditorGUI.EndChangeCheck())
+					{
+						UMAABMSettings.BundleIndexCustomValue = _bundleIndexCustomValue;
+                    }
+                }
+				else
+				{
+					var currentBuildVersion = Application.version;
+					if (string.IsNullOrEmpty(currentBuildVersion))
+					{
+						EditorGUILayout.HelpBox("Please be sure to set a 'Version' number (eg 1.0, 2.1.0) in Edit->ProjectSettings->Player->Version", MessageType.Warning);
+					}
+					else
+					{
+						EditorGUILayout.HelpBox("Current 'Version' number ("+currentBuildVersion+ ") will be used. You can change this in Edit->ProjectSettings->Player->Version.", MessageType.Info);
+					}
+				}
+				EditorGUILayout.Space();
+				EndVerticalIndented();
+			}
 			//Asset Bundle Encryption
 			//defined here so we can modify the message if encryption settings change
 			string buildBundlesMsg = "";
@@ -432,7 +481,12 @@ namespace UMA.AssetBundles
 			if (GUILayout.Button(buttonBuildAssetBundlesText))
 			{
 				BuildScript.BuildAssetBundles();
-				Caching.CleanCache ();
+
+#if UNITY_2017_2_OR_NEWER
+				Caching.ClearCache ();
+#else
+				Caching.CleanCache();          
+#endif
 				return;
 			}
 			EndVerticalPadded(5);
@@ -539,7 +593,11 @@ namespace UMA.AssetBundles
 
 				if (GUILayout.Button("Clean the Cache"))
 				{
+#if UNITY_2017_2_OR_NEWER
+					_statusMessage = Caching.ClearCache() ? "Cache Cleared." : "Error clearing cache.";
+#else
 					_statusMessage = Caching.CleanCache() ? "Cache Cleared." : "Error clearing cache.";
+#endif
 				}
 				EditorGUILayout.Space();
 			}
@@ -660,12 +718,20 @@ namespace UMA.AssetBundles
 	[System.Serializable]
 	public class UMAABMSettingsStore
 	{
+		public enum BundleIndexVersioningOpts { UseBuildVersion, Custom }
+
 		public bool encryptionEnabled = false;
 		public string encryptionPassword = "";
 		public string encryptionSuffix = "";
 		public bool encodeNames = false;
 		[Tooltip("If true will build uncompressed assetBundles for use with iOS resource catalogs")]
 		public bool buildForAppSlicing = false;
+
+		public bool enableBundleIndexVersioning;
+		//either automatically use the Buildversion from player settings or specify a value here
+		public BundleIndexVersioningOpts bundleIndexVersioningMethod = BundleIndexVersioningOpts.UseBuildVersion;
+		//if useBundlesVersioning is set to Custom this value is used when the bundles are built
+		public string bundleIndexCustomValue = "0.0";
 
 		public UMAABMSettingsStore() { }
 
@@ -682,11 +748,64 @@ namespace UMA.AssetBundles
 	{
 		#region PUBLIC FIELDS
 
-		public const string SETTINGS_FILENAME = "UMAEncryptionSettings-DoNotDelete.txt";
+		//This is not just for Encryption settings any more so it has the wrong name- its editor only so we can change it...
+		public const string SETTINGS_FILENAME = "UMAABMSettings-DoNotDelete.txt";
+		public const string SETTINGS_OLD_FILENAME = "UMAEncryptionSettings-DoNotDelete.txt";
+
+		private static UMAABMSettingsStore thisSettings;
+		#endregion
+
+		#region PROPERTIES
+		//pretty much all of these should have been properties- sorry I didn't uderstand those very well at the time
+
+		//This is better but we dont want to be doing GetThisSettings() either we want another property that does it once
+		/// <summary>
+		/// Is BundlesIndexVersioning enabled
+		/// </summary>
+		public static bool EnableBundleIndexVersioning
+		{
+			get { return GetThisSettings().enableBundleIndexVersioning; }
+			set{ GetThisSettings().enableBundleIndexVersioning = value;
+				File.WriteAllText(Path.Combine(GetSettingsFolderPath(), SETTINGS_FILENAME), JsonUtility.ToJson(thisSettings));
+				AssetDatabase.Refresh();
+			}
+		}
+
+		/// <summary>
+		/// Does BundlesIndexversioning use a custom value or the Player build Value
+		/// </summary>
+		public static UMAABMSettingsStore.BundleIndexVersioningOpts BundleIndexVersioningMethod
+		{
+			get { return GetThisSettings().bundleIndexVersioningMethod; }
+			set { GetThisSettings().bundleIndexVersioningMethod = value;
+				File.WriteAllText(Path.Combine(GetSettingsFolderPath(), SETTINGS_FILENAME), JsonUtility.ToJson(thisSettings));
+				AssetDatabase.Refresh();
+			}
+		}
+		/// <summary>
+		/// A custom value for bundleIndexVersioning
+		/// </summary>
+		public static string BundleIndexCustomValue
+		{
+			get { return GetThisSettings().bundleIndexCustomValue; }
+			set {
+				GetThisSettings().bundleIndexCustomValue = value;
+				File.WriteAllText(Path.Combine(GetSettingsFolderPath(), SETTINGS_FILENAME), JsonUtility.ToJson(thisSettings));
+				AssetDatabase.Refresh();
+			}
+		}
+
 
 		#endregion
 
 		#region STATIC LOAD SAVE Methods
+		private static UMAABMSettingsStore GetThisSettings()
+		{
+			thisSettings = GetEncryptionSettings();
+			if (thisSettings == null)
+				thisSettings = new UMAABMSettingsStore();
+			return thisSettings;
+		}
 
 		private static string GetSettingsFolderPath()
 		{
@@ -696,11 +815,18 @@ namespace UMA.AssetBundles
 		//we are saving the encryptions settings to a text file so that teams working on the same project/ github etc/ can all use the same settings
 		public static UMAABMSettingsStore GetEncryptionSettings()
 		{
+			if(File.Exists(Path.Combine(GetSettingsFolderPath(), SETTINGS_OLD_FILENAME)))
+			{
+				//we need to write the data from the old file into the new file and delete the old one...
+				File.WriteAllText(Path.Combine(GetSettingsFolderPath(), SETTINGS_FILENAME), File.ReadAllText(Path.Combine(GetSettingsFolderPath(), SETTINGS_OLD_FILENAME)));
+				File.Delete(Path.Combine(GetSettingsFolderPath(), SETTINGS_OLD_FILENAME));
+            }
 			if (!File.Exists(Path.Combine(GetSettingsFolderPath(), SETTINGS_FILENAME)))
 				return null;
 			else
 				return JsonUtility.FromJson<UMAABMSettingsStore>(File.ReadAllText(Path.Combine(GetSettingsFolderPath(), SETTINGS_FILENAME)));
 		}
+
 		public static bool GetEncryptionEnabled()
 		{
 			var thisSettings = GetEncryptionSettings();
@@ -749,8 +875,13 @@ namespace UMA.AssetBundles
 
 		public static void ClearEncryptionSettings()
 		{
-			var thisSettings = new UMAABMSettingsStore();
-			File.WriteAllText(Path.Combine(GetSettingsFolderPath(), SETTINGS_FILENAME), JsonUtility.ToJson(thisSettings));
+			var thisSettings = GetEncryptionSettings();
+			var newSettings = new UMAABMSettingsStore();
+			newSettings.buildForAppSlicing = thisSettings.buildForAppSlicing;
+			newSettings.bundleIndexCustomValue = thisSettings.bundleIndexCustomValue;
+			newSettings.bundleIndexVersioningMethod = thisSettings.bundleIndexVersioningMethod;
+			newSettings.enableBundleIndexVersioning = thisSettings.enableBundleIndexVersioning;
+			File.WriteAllText(Path.Combine(GetSettingsFolderPath(), SETTINGS_FILENAME), JsonUtility.ToJson(newSettings));
 		}
 
 		public static void SetEncryptionSettings(bool encryptionEnabled, string encryptionPassword = "", string encryptionSuffix = "", bool? encodeNames = null)
@@ -763,12 +894,7 @@ namespace UMA.AssetBundles
 			thisSettings.encryptionSuffix = encryptionSuffix != "" ? encryptionSuffix : thisSettings.encryptionSuffix;
 			thisSettings.encodeNames = encodeNames != null ? (bool)encodeNames : thisSettings.encodeNames;
 			File.WriteAllText(Path.Combine(GetSettingsFolderPath(), SETTINGS_FILENAME), JsonUtility.ToJson(thisSettings));
-			//need to make this show right in Unity when its inspected
-			/*TextAsset textAsset = (TextAsset)AssetDatabase.LoadAssetAtPath(Path.Combine(GetSettingsFolderPath(), SETTINGS_FILENAME), typeof(TextAsset));
-			EditorUtility.SetDirty(textAsset);
-			AssetDatabase.SaveAssets();*/
 			AssetDatabase.Refresh();
-			//AssetDatabase.ImportAsset(Path.Combine(GetSettingsFolderPath(), SETTINGS_FILENAME), typeof(TextAsset));
 		}
 		/// <summary>
 		/// Turns encryption OFF

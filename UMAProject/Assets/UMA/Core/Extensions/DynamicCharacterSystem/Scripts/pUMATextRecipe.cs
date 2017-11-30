@@ -31,6 +31,9 @@ namespace UMA
 		[SerializeField]
 		public List<WardrobeSettings> activeWardrobeSet = new List<WardrobeSettings>();//used in the editor to draw 'DynamicCharacterSystem' type recipe assets, in a different way to 'Standard' or 'Wardrobe' assets
 
+        [SerializeField]
+        public List<MeshHideAsset> MeshHideAssets = new List<MeshHideAsset>();
+
 	#if UNITY_EDITOR
 		/// <summary>
 		/// Converts this recipe to the given child type. Used by RecipeEditor to convert old recipes
@@ -180,7 +183,6 @@ namespace UMA
 		/// Internal call to static PackedLoadDCS which uses the assets string and object and returns a DCSUniversalPackRecipe data model that can be used by any UMA
 		/// </summary>
 		/// <param name="context"></param>
-		/// <param name="recipeToUnpack"></param>
 		/// <returns></returns>
 		protected DCSUniversalPackRecipe PackedLoadDCSInternal(UMAContext context/*, string recipeToUnpack*/)
 		{
@@ -388,7 +390,7 @@ namespace UMA
 			/// </summary>
 			/// <param name="dcaToSave"></param>
 			/// <param name="recipeName"></param>
-			/// <param name="recipeType"></param>
+			/// <param name="pRecipeType"></param>
 			/// <param name="saveOptions"></param>
 			/// <param name="slotsToSave"></param>
 			public DCSPackRecipe(DynamicCharacterAvatar dcaToSave, string recipeName, string pRecipeType, DynamicCharacterAvatar.SaveOptions saveOptions, params string[] slotsToSave)
@@ -425,7 +427,7 @@ namespace UMA
 			/// </summary>
 			/// <param name="umaPackRecipe"></param>
 			/// <param name="recipeName"></param>
-			/// <param name="recipeType"></param>
+			/// <param name="pRecipeType"></param>
 			/// <param name="wardrobeSetToSave"></param>
 			public DCSPackRecipe(UMAPackRecipe umaPackRecipe, string recipeName = "", string pRecipeType = "Standard", List<WardrobeSettings> wardrobeSetToSave = null)
 			{
@@ -508,7 +510,7 @@ namespace UMA
 			/// Convert an UMAPackRecipe into a DCSUniversalPackRecipe. Used when DCS needs to load an old UMA
 			/// </summary>
 			/// <param name="umaPackRecipe"></param>
-			/// <param name="recipeType"></param>
+			/// <param name="pRecipeType"></param>
 			public DCSUniversalPackRecipe(UMAPackRecipe umaPackRecipe, string pRecipeType = "Standard")
 			{
 				//Debug.Log("Created universal model from UMAPackRecipe");
@@ -544,10 +546,10 @@ namespace UMA
 			/// </summary>
 			/// <param name="recipeToSave"></param>
 			/// <param name="wardrobeRecipes"></param>
-			/// <param name="recipeType"></param>
+			/// <param name="pRecipeType"></param>
 			public DCSUniversalPackRecipe(UMAData.UMARecipe recipeToSave, Dictionary<string, UMATextRecipe> wardrobeRecipes = null, string pRecipeType = "DynamicCharacterAvatar")
 			{
-				///Debug.Log("Created universal model from Avatar");
+				//Debug.Log("Created universal model from Avatar");
 				var packedRecipe = PackRecipeV3(recipeToSave);
 				packedRecipeType = pRecipeType;
 				version = packedRecipe.version;

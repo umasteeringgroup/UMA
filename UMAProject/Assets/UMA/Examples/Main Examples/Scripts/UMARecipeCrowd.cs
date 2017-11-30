@@ -169,7 +169,7 @@ namespace UMA.Examples
 			while(--childCount >= 0)
 			{
 				Transform child = gameObject.transform.GetChild(childCount);
-				Destroy(child.gameObject);
+				UMAUtils.DestroySceneObject(child.gameObject);
 			}
 
 			generating = true;

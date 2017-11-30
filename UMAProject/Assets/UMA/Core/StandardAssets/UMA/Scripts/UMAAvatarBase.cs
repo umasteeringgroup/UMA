@@ -1,7 +1,5 @@
 using UnityEngine;
-#if UNITY_5_5_OR_NEWER
 using UnityEngine.Profiling;
-#endif
 
 namespace UMA
 {
@@ -143,7 +141,7 @@ namespace UMA
 				umaData.CleanTextures();
 				umaData.CleanMesh(true);
 				umaData.CleanAvatar();
-				Destroy(umaData.umaRoot);
+				UMAUtils.DestroySceneObject(umaData.umaRoot);
 				umaData.umaRoot = null;
 				umaData.SetRenderers(null);
 				umaData.animator = null;

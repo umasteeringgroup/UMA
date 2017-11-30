@@ -20,6 +20,7 @@ namespace UMA.Editors
 			private string _wsRace;
 			private string _wsSlot;
 			private string _wsRecipeName;
+			private string _wcOverrideName;
 			Texture warningIcon;
 
 			public string RecipeName
@@ -29,11 +30,12 @@ namespace UMA.Editors
 					return _wsRecipeName;
 				}
 			}
-			public WardrobeSlotRecipePopup(string race, string slot, string recipeName)
+			public WardrobeSlotRecipePopup(string race, string slot, string recipeName, string wcOverrideName = "")
 			{
 				_wsRace = race;
 				_wsSlot = slot;
 				_wsRecipeName = recipeName;
+				_wcOverrideName = wcOverrideName;
 			}
 
 			public bool OnGUI()
@@ -52,7 +54,13 @@ namespace UMA.Editors
 				var recipesForRaceSlot = context.dynamicCharacterSystem.GetRecipeNamesForRaceSlot(_wsRace, _wsSlot);
 				List<string> thisPopupVals = new List<string>();
 				thisPopupVals.Add("None");
+				List<string> thisPopupLabels = new List<string>();
+				var noneString = "None";
+				if (_wcOverrideName != "")
+					noneString = "None (Set by '" + _wcOverrideName + "' Wardrobe Collection)";
+				thisPopupLabels.Add(noneString);
 				thisPopupVals.AddRange(recipesForRaceSlot);
+				thisPopupLabels.AddRange(recipesForRaceSlot);
 				var selected = 0;
 				var recipeIsLive = true;
 				Rect valRBut = new Rect();
@@ -69,15 +77,15 @@ namespace UMA.Editors
 						string missingOrIncompatible = "missing";
 						if (context.dynamicCharacterSystem.GetBaseRecipe(_wsRecipeName, false) != null)
 							missingOrIncompatible = "incompatible";
-						thisPopupVals.Add(_wsRecipeName + " (" + missingOrIncompatible + ")");
-					}
+						thisPopupLabels.Add(_wsRecipeName + " (" + missingOrIncompatible + ")");
+                    }
 				}
 				var newSelected = selected;
 				if (!recipeIsLive)
 					EditorGUI.indentLevel++;
 				var label = _wsSlot == "WardrobeCollection" ? " " : _wsSlot;
 				EditorGUI.BeginChangeCheck();
-				newSelected = EditorGUILayout.Popup(label, selected, thisPopupVals.ToArray());
+				newSelected = EditorGUILayout.Popup(label, selected, thisPopupLabels.ToArray());
 				if (!recipeIsLive)
 				{
 					EditorGUI.indentLevel--;
@@ -88,7 +96,7 @@ namespace UMA.Editors
 					if (newSelected != selected)
 					{
 						changed = true;
-						_wsRecipeName = (thisPopupVals[newSelected].IndexOf("(missing)") == -1 && thisPopupVals[newSelected].IndexOf("(incompatible)") == -1) ? (thisPopupVals[newSelected] != "None" ? thisPopupVals[newSelected] : "") : _wsRecipeName.Replace("(missing)", "").Replace("(incompatible)", "");
+						_wsRecipeName = (thisPopupLabels[newSelected].IndexOf("(missing)") == -1 && thisPopupLabels[newSelected].IndexOf("(incompatible)") == -1) ? (thisPopupVals[newSelected] != "None" ? thisPopupVals[newSelected] : "") : _wsRecipeName;
 					}
 				}
 				if (!recipeIsLive)
@@ -148,12 +156,20 @@ namespace UMA.Editors
 						if (_wardrobeSet == null || context == null)
 							return false;
 						GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+
+						EditorGUILayout.HelpBox("Recently added recipes not showing up? Make sure you have added them to the 'UMA Global Library' and click the 'Refresh Recipes' button below.", MessageType.Info);
+						if (GUILayout.Button("Refresh Recipes"))
+						{
+							context.dynamicCharacterSystem.Refresh(false);
+							return false;
+						}
+						//a dictionary of slots that are being assigned by WardrobeCollections
+						var slotsAssignedByWCs = new Dictionary<string, string>();
 						if (_allowWardrobeCollectionSlot)
 						{
 							var wcRecipesForRace = context.dynamicCharacterSystem.GetRecipesForRaceSlot(_race.raceName, "WardrobeCollection");
-							var wcGroupDict = new Dictionary<string, List<string>>();
-							//for 'Standard Assets' we need to do some kind of get Types thing I think because we then need to use reflection to get the wardrobeSlot field
-							//how can we get what we want here when WardrobeCollections dont exist in Standard Assets (if 'StandardAssets' has been moved there)
+							var wcGroupDict = new Dictionary<string, List<UMARecipeBase>>();
+							//I'm using reflection here to get fields and methods from the UMAWardrobeCollection type so this will still work if 'StandardAssets' is moved to 'Standard Assets'
 							for (int i = 0; i < wcRecipesForRace.Count; i++)
 							{
 								Type wcType = wcRecipesForRace[i].GetType();
@@ -163,31 +179,42 @@ namespace UMA.Editors
 									var wcRecipeSlot = (string)wcRecipeSlotField.GetValue(wcRecipesForRace[i]);
 									if (!wcGroupDict.ContainsKey(wcRecipeSlot))
 									{
-										wcGroupDict.Add(wcRecipeSlot, new List<string>());
+										wcGroupDict.Add(wcRecipeSlot, new List<UMARecipeBase>());
 									}
-									wcGroupDict[wcRecipeSlot].Add(wcRecipesForRace[i].name);
+									wcGroupDict[wcRecipeSlot].Add(wcRecipesForRace[i]);
 								}
 							}
 							if (wcGroupDict.Count > 0)
 							{
+								MethodInfo WCGetRacesWardrobeSetMethod = null;
 								EditorGUILayout.LabelField("WardrobeCollections");
 								EditorGUI.indentLevel++;
-								foreach (KeyValuePair<string, List<string>> kp in wcGroupDict)
+								foreach (KeyValuePair<string, List<UMARecipeBase>> kp in wcGroupDict)
 								{
-									var thisPopupVals = new List<string>();
-									thisPopupVals.Add("None");
-									thisPopupVals.AddRange(kp.Value);
+									if (WCGetRacesWardrobeSetMethod == null)
+										WCGetRacesWardrobeSetMethod = kp.Value[0].GetType().GetMethod("GetRacesWardrobeSet", new Type[] { typeof(RaceData) });
 									var selected = 0;
 									var prevRecipe = "";
-									//if one of the recipes in the wardrobe set is one of these then its selected
-									for (int pvi = 0; pvi < thisPopupVals.Count; pvi++)
+									var thisPopupVals = new List<string>();
+									thisPopupVals.Add("None");
+									for (int i = 0; i < kp.Value.Count; i++)
 									{
+										thisPopupVals.Add(kp.Value[i].name);
+										//check if this is selected
 										for (int wsi = 0; wsi < _wardrobeSet.Count; wsi++)
 										{
-											if (thisPopupVals[pvi] == _wardrobeSet[wsi].recipe)
+											if (kp.Value[i].name == _wardrobeSet[wsi].recipe)
 											{
 												prevRecipe = _wardrobeSet[wsi].recipe;
-												selected = pvi;
+												selected = i + 1;
+												var thisWCWardrobeSet = (List<WardrobeSettings>)WCGetRacesWardrobeSetMethod.Invoke(kp.Value[i], new object[] { _race });
+												for (int wcwsi = 0; wcwsi < thisWCWardrobeSet.Count; wcwsi++)
+												{
+													if (!slotsAssignedByWCs.ContainsKey(thisWCWardrobeSet[wcwsi].slot))
+														slotsAssignedByWCs.Add(thisWCWardrobeSet[wcwsi].slot, kp.Value[i].name);
+													else
+														slotsAssignedByWCs[thisWCWardrobeSet[wcwsi].slot] = kp.Value[i].name;
+												}
 												break;
 											}
 										}
@@ -226,8 +253,9 @@ namespace UMA.Editors
 							if (wsl == "None")
 								continue;
 
-							if (wsl == "FullOutfit" && _allowWardrobeCollectionSlot == false)
-								continue;
+							//Obsolete- now wardrobeCollections apply their WardrobeSet to any slots
+							//if (wsl == "FullOutfit" && _allowWardrobeCollectionSlot == false)
+							//	continue;
 
 							WardrobeSlotRecipePopup thisPicker = null;
 							bool assignedPicker = false;
@@ -242,6 +270,10 @@ namespace UMA.Editors
 							}
 							if (!assignedPicker)//means there was nothing in the wardrobe set for it
 							{
+								//This may still be being assigned by a wardrobe collection though so show that
+								var wcOverrideName = "";
+								if (slotsAssignedByWCs.ContainsKey(wsl))
+									wcOverrideName = slotsAssignedByWCs[wsl];
 								thisPicker = new WardrobeSlotRecipePopup(_race.raceName, wsl, "");
 							}
 							if (thisPicker.OnGUI())
@@ -298,6 +330,7 @@ namespace UMA.Editors
 			/// Adds the shared colors from a given recipe name into the target recipe
 			/// </summary>
 			/// <param name="sourceRecipeName"></param>
+			/// <param name="targetRecipe"></param>
 			protected virtual bool AddSharedColorsFromRecipe(string sourceRecipeName, UMAData.UMARecipe targetRecipe)
 			{
 				bool changed = false;
@@ -393,6 +426,7 @@ namespace UMA.Editors
 					{
 						EditorGUI.BeginDisabledGroup(true);
 						GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+						EditorGUILayout.HelpBox("If you are going to use the recipe with a DynamicCharacterAvatar, it is recommended that you that you edit the 'WardrobeSet' section above and/or the base/wardrobe recipes directly. Changes you make manually below will only affect old style UMAAvatars", MessageType.Info);
 						for (int i = 0; i < _slotEditors.Count; i++)
 						{
 							var editor = _slotEditors[i];
@@ -440,7 +474,7 @@ namespace UMA.Editors
 						{
 							if (_wardrobeSet == null)
 								return false;
-							//if this is a 'backwards compatible' recipe dont show the 'wardrobeCollections' bit
+							//if this is a 'backwards compatible' recipe dont show the 'wardrobeCollections' bit since old avatars cannot wear collections
 							bool showWardrobeCollections = _recipe.slotDataList.Length > 0 ? false : true;
                             var thisWardrobeSetEditor = new WardrobeSetEditor(_recipe.raceData, _wardrobeSet, _recipe, showWardrobeCollections);
 							if (thisWardrobeSetEditor.OnGUI())
@@ -485,7 +519,7 @@ namespace UMA.Editors
 						{
 							continue;
 						}
-						if (thisRecipe.GetType().ToString() == "UMAWardrobeCollection")
+						if (thisRecipe.GetType().ToString() == "UMA.UMAWardrobeCollection")
 						{
 							var TargetType = thisRecipe.GetType();
 							FieldInfo WardrobeCollectionField = TargetType.GetField("wardrobeCollection", BindingFlags.Public | BindingFlags.Instance);
