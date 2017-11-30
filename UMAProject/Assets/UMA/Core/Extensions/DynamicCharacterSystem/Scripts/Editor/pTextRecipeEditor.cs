@@ -291,7 +291,7 @@ namespace UMA.Editors
 
 				if (ActiveWardrobeSetField == null)
 					ActiveWardrobeSetField = TargetType.GetField("activeWardrobeSet", BindingFlags.Public | BindingFlags.Instance);
-				List<WardrobeSettings> activeWardrobeSet = (List<WardrobeSettings>)ActiveWardrobeSetField.GetValue(target);
+				activeWardrobeSet = (List<WardrobeSettings>)ActiveWardrobeSetField.GetValue(target);
 				//draws a button to 'Add DNA' when a new 'standard' recipe is created
 				if (AddDNAButtonUI())
 				{
