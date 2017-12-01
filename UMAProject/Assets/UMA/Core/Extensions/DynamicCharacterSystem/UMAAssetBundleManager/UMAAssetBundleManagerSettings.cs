@@ -482,7 +482,7 @@ namespace UMA.AssetBundles
 			{
 				BuildScript.BuildAssetBundles();
 
-#if UNITY_2017_2_OR_NEWER
+#if UNITY_2017_1_OR_NEWER
 				Caching.ClearCache ();
 #else
 				Caching.CleanCache();          
@@ -593,7 +593,7 @@ namespace UMA.AssetBundles
 
 				if (GUILayout.Button("Clean the Cache"))
 				{
-#if UNITY_2017_2_OR_NEWER
+#if UNITY_2017_1_OR_NEWER
 					_statusMessage = Caching.ClearCache() ? "Cache Cleared." : "Error clearing cache.";
 #else
 					_statusMessage = Caching.CleanCache() ? "Cache Cleared." : "Error clearing cache.";
