@@ -78,7 +78,7 @@ namespace UMA
 			bool has_clothSkinning = (meshComponents & MeshComponents.has_clothSkinning) != MeshComponents.none;
 
 			Vector3[] vertices = EnsureArrayLength(target.vertices, vertexCount);
-			BoneWeight[] boneWeights = EnsureArrayLength(target.unityBoneWeights, vertexCount);
+			UMABoneWeight[] boneWeights = EnsureArrayLength(target.boneWeights, vertexCount);
 			Vector3[] normals = has_normals ? EnsureArrayLength(target.normals, vertexCount) : null;
 			Vector4[] tangents = has_tangents ? EnsureArrayLength(target.tangents, vertexCount) : null;
 			Vector2[] uv = has_uv ? EnsureArrayLength(target.uv, vertexCount) : null;
@@ -401,7 +401,7 @@ namespace UMA
 			// fill in new values.
 			target.vertexCount = vertexCount;
 			target.vertices = vertices;
-			target.unityBoneWeights = boneWeights;
+			target.boneWeights = boneWeights;
 			target.bindPoses = bindPoses.ToArray();
 			target.normals = normals;
 			target.tangents = tangents;
@@ -436,7 +436,7 @@ namespace UMA
 			var target = new UMAMeshData();
 			target.bindPoses = source.bindPoses;
 			target.boneNameHashes = source.boneNameHashes;
-			target.unityBoneWeights = UMABoneWeight.Convert(source.boneWeights);
+			target.boneWeights = source.boneWeights;
 			target.colors32 = source.colors32;
 			target.normals = source.normals;
 			target.rootBoneHash = source.rootBoneHash;
@@ -563,11 +563,11 @@ namespace UMA
 				if (source.meshData.colors32 != null && source.meshData.colors32.Length != 0) meshComponents |= MeshComponents.has_colors32;
 				if (source.meshData.clothSkinningSerialized != null && source.meshData.clothSkinningSerialized.Length != 0)	meshComponents |= MeshComponents.has_clothSkinning;
 
-				//If we find a blendshape on this mesh then lets add it to the blendShapeNames hash to get all the unique names
+				// If we find a blendshape on this mesh then lets add it to the blendShapeNames hash to get all the unique names
 				if (source.meshData.blendShapes != null && source.meshData.blendShapes.Length != 0)
 				{
 					for (int shapeIndex = 0; shapeIndex < source.meshData.blendShapes.Length; shapeIndex++)
-						blendShapeNames.Add (source.meshData.blendShapes [shapeIndex].shapeName);
+						blendShapeNames.Add(source.meshData.blendShapes [shapeIndex].shapeName);
 				}
 
 				for (int i = 0; i < source.meshData.subMeshCount; i++)
@@ -606,7 +606,7 @@ namespace UMA
 			return highestTargetIndex + 1;
 		}
 
-		private static void BuildBoneWeights(UMABoneWeight[] source, int sourceIndex, BoneWeight[] dest, int destIndex, int count, int[] bones, Matrix4x4[] bindPoses, Dictionary<int, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<int> bonesList)
+		private static void BuildBoneWeights(UMABoneWeight[] source, int sourceIndex, UMABoneWeight[] dest, int destIndex, int count, int[] bones, Matrix4x4[] bindPoses, Dictionary<int, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<int> bonesList)
 		{
 			int[] boneMapping = new int[bones.Length];
 			for (int i = 0; i < boneMapping.Length; i++)
@@ -620,7 +620,7 @@ namespace UMA
 			}
 		}
 
-		private static void TranslateBoneWeight(ref UMABoneWeight source, ref BoneWeight dest, int[] boneMapping)
+		private static void TranslateBoneWeight(ref UMABoneWeight source, ref UMABoneWeight dest, int[] boneMapping)
 		{
 			dest.weight0 = source.weight0;
 			dest.weight1 = source.weight1;

@@ -1,7 +1,3 @@
-#if !UNITY_STANDALONE
-#undef USE_UNSAFE_CODE
-#endif 
-
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -231,14 +227,30 @@ namespace UMA
 	}
 
 	/// <summary>
+	/// Data for building a skinned mesh renderer.
+	/// </summary>
+	[Serializable]
+	public class UMASkinningData
+	{
+		public Matrix4x4[] bindMatrices;
+		public UMATransform[] umaBones;
+
+		[NonSerialized]
+		public int[] remapIndices;
+		[NonSerialized]
+		public Matrix4x4[] remapMatrices;
+	}
+
+	/// <summary>
 	/// UMA version of Unity mesh data.
 	/// </summary>
 	[Serializable]
 	public class UMAMeshData
 	{
 		public Matrix4x4[] bindPoses;
+		public UMATransform[] umaBones;
 		public UMABoneWeight[] boneWeights;
-		public BoneWeight[] unityBoneWeights;
+//		public BoneWeight[] unityBoneWeights;
 		public Vector3[] vertices;
 		public Vector3[] normals;
 		public Vector4[] tangents;
@@ -255,7 +267,6 @@ namespace UMA
 		public Transform[] bones;
 		[NonSerialized]
 		public Transform rootBone;
-		public UMATransform[] umaBones;
 		public int umaBoneCount;
 		public int rootBoneHash;
 		public int[] boneNameHashes;
@@ -285,6 +296,7 @@ namespace UMA
 		static Vector2[] gUV4Array;
 		static List<Color32> gColors32 = new List<Color32>(MAX_VERTEX_COUNT);
 		static Color32[] gColors32Array;
+		// They forgot the List<> method for bone weights.
 
 		const int UNUSED_SUBMESH = -1;
 		static List<int>[] gSubmeshTris = {
@@ -300,11 +312,7 @@ namespace UMA
 		};
 		static int[][] gSubmeshTriArrays;
 		static int[] gSubmeshTriIndices;
-
-		// They forgot the List<> method for bone weights.
-#if USE_UNSAFE_CODE
-		static BoneWeight[] gBoneWeightsArray = new BoneWeight[MAX_VERTEX_COUNT];
-#endif
+	
 
 		/// <summary>
 		/// Does this UMAMeshData own the shared buffers?
@@ -375,9 +383,6 @@ namespace UMA
 				colors32 = gColors32Array;
 
 				boneWeights = null;
-#if USE_UNSAFE_CODE
-				unityBoneWeights = gBoneWeightsArray;
-#endif
 
 				return true;
 			}
@@ -441,7 +446,7 @@ namespace UMA
 				}
 
 				boneWeights = null;
-				unityBoneWeights = null;
+//				unityBoneWeights = null;
 				bufferLockOwner = null;
 			}
 		}
@@ -634,7 +639,7 @@ namespace UMA
 			else
 			{
 				mesh.vertices = vertices;
-				mesh.boneWeights = unityBoneWeights != null ? unityBoneWeights : UMABoneWeight.Convert(boneWeights);
+				mesh.boneWeights = UMABoneWeight.Convert(boneWeights);
 				mesh.normals = normals;
 				mesh.tangents = tangents;
 				mesh.uv = uv;
@@ -768,33 +773,8 @@ namespace UMA
 			mesh.SetVertices(gVertices);
 
 			// Whoops, looks like they also forgot one! Job well done.
-#if USE_UNSAFE_CODE
-			unsafe
-			{
-				fixed (void* pBoneWeights = gBoneWeightsArray) 
-				{ 
-					UIntPtr* lengthPtr = (UIntPtr*)pBoneWeights - 1; 
-					try 
-					{ 
-						*lengthPtr = (UIntPtr)vertexCount; 
-						mesh.boneWeights = gBoneWeightsArray; 
-					} 
-					finally 
-					{ 
-						*lengthPtr = (UIntPtr)MAX_VERTEX_COUNT; 
-					} 
-				}
-			}
-#else
-			if (unityBoneWeights != null)
-			{
-				mesh.boneWeights = unityBoneWeights;
-			}
-			else
-			{
-				mesh.boneWeights = UMABoneWeight.Convert(boneWeights);
-			}
-#endif
+			mesh.boneWeights = UMABoneWeight.Convert(boneWeights);
+
 			if (normals != null)
 			{
 				gNormals.SetActiveSize(vertexCount);
