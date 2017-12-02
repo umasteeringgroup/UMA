@@ -205,14 +205,14 @@ namespace UMA
 	[Serializable]
 	public class UMABlendFrame
 	{
-		public float frameWeight; //should be 100% for one frame
+		public float frameWeight;
 		public Vector3[] deltaVertices;
 		public Vector3[] deltaNormals;
 		public Vector3[] deltaTangents;
 
 		public UMABlendFrame(int vertexCount)
 		{
-			frameWeight = 100.0f;
+			frameWeight = 100.0f; // Should be 100% for a single frame
 			deltaVertices = new Vector3[vertexCount];
 			deltaNormals = new Vector3[vertexCount];
 			deltaTangents = new Vector3[vertexCount];
@@ -239,6 +239,8 @@ namespace UMA
 		public int[] remapIndices;
 		[NonSerialized]
 		public Matrix4x4[] remapMatrices;
+//		[NonSerialized]
+//		public Matrix4x4[] localToRootMatrices;
 	}
 
 	/// <summary>
@@ -247,8 +249,19 @@ namespace UMA
 	[Serializable]
 	public class UMAMeshData
 	{
+//		UMASkinningData skinning;
+//		UMASkinningData skinningParent; ??? or hash and lookup during combine ???
 		public Matrix4x4[] bindPoses;
 		public UMATransform[] umaBones;
+		//		[NonSerialized]
+		//		public Transform[] bones;
+		[NonSerialized]
+		public Transform rootBone;
+		public int umaBoneCount;
+		public int rootBoneHash;
+		public int[] boneNameHashes;
+		public string RootBoneName = "Global";
+
 		public UMABoneWeight[] boneWeights;
 //		public BoneWeight[] unityBoneWeights;
 		public Vector3[] vertices;
@@ -263,16 +276,9 @@ namespace UMA
 		public ClothSkinningCoefficient[] clothSkinning;
 		public Vector2[] clothSkinningSerialized;
 		public SubMeshTriangles[] submeshes;
-		[NonSerialized]
-		public Transform[] bones;
-		[NonSerialized]
-		public Transform rootBone;
-		public int umaBoneCount;
-		public int rootBoneHash;
-		public int[] boneNameHashes;
+
 		public int subMeshCount;
 		public int vertexCount;
-        public string RootBoneName = "Global";
 
 		// Static shared data to reduce garbage
 		// See: http://feedback.unity3d.com/suggestions/allow-mesh-data-to-have-a-length

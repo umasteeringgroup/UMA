@@ -5,7 +5,8 @@ namespace UMA
 	/// <summary>
 	/// UMA replacement for UnityEngine.ProceduralPropertyDescription, which is being removed.
 	/// </summary>
-	public class UMAPropertyDescription : ScriptableObject {
+	public class UMAPropertyDescription : ScriptableObject
+	{
 		/// <summary>
 		/// The name of the ProceduralProperty. Used to get and set the values.
 		/// </summary>
@@ -22,7 +23,7 @@ namespace UMA
 		public string[] componentLabels;
 
 		/// <summary>
-		/// The available options for a ProceduralProperties of type Enum or Bitmask.
+		/// The available options for ProceduralProperties of type Enum or Bitmask.
 		/// </summary>
 		public string[] enumOptions;
 

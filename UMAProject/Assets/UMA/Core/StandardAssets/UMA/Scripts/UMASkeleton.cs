@@ -87,6 +87,58 @@ namespace UMA
 			EndSkeletonUpdate();
 		}
 
+		/// <summary>
+		/// Initializes a new UMASkeleton from the recipe in UMAData.
+		/// </summary>
+		/// <param name="umaData">UMAData.</param>
+		public UMASkeleton(UMAData umaData)
+		{
+			// HACK this crap needs to go, or at worst be in one place only
+			if (umaData.umaRoot == null)
+			{
+				GameObject newRoot = new GameObject("Root");
+				newRoot.layer = umaData.gameObject.layer;
+				newRoot.transform.parent = umaData.transform;
+				newRoot.transform.localPosition = Vector3.zero;
+				newRoot.transform.localRotation = Quaternion.Euler(270f, 0, 0f);
+				newRoot.transform.localScale = Vector3.one;
+				umaData.umaRoot = newRoot;
+			} 
+
+			if (umaData.umaRoot.transform.Find("Global") == null) 
+			{
+				GameObject newGlobal = new GameObject("Global");
+				newGlobal.transform.parent = umaData.umaRoot.transform;
+				newGlobal.transform.localPosition = Vector3.zero;
+				newGlobal.transform.localRotation = Quaternion.Euler(90f, 90f, 0f);
+			}
+
+			rootBoneHash = UMAUtils.StringToHash(umaData.umaRoot.name);
+			this.boneHashData = new Dictionary<int, BoneData>();
+
+			BeginSkeletonUpdate();
+			AddBonesRecursive(umaData.umaRoot.transform);
+			foreach (SlotData slot in umaData.umaRecipe.slotDataList) 
+			{
+				if (slot != null)
+				{
+					UMAMeshData meshData = slot.asset.meshData;
+					if (meshData == null) continue;
+
+					for (int i = 0; i < meshData.umaBoneCount; i++)
+					{
+						UMATransform bone = meshData.umaBones[i];
+						if (!boneHashData.ContainsKey(bone.hash))
+						{
+							AddBone(bone);
+						}
+					}
+				}
+			}
+			EnsureBoneHierarchy();
+			EndSkeletonUpdate();
+		}
+
 		protected UMASkeleton()
 		{
 		}
@@ -463,7 +515,7 @@ namespace UMA
 		}
 
 		/// <summary>
-		/// Lerp the specified bone toward a new position, rotation, and scale.
+		/// Morph the specified bone toward a relative position, rotation, and scale.
 		/// This method silently fails if the bone doesn't exist! (Desired behaviour in DNA converters due to LOD/Occlusion)
 		/// </summary>
 		/// <param name="nameHash">Name hash.</param>

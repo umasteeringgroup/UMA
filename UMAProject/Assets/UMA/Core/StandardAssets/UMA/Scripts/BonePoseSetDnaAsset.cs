@@ -6,21 +6,22 @@ namespace UMA
 	[System.Serializable]
 	public class BonePoseSetDnaAsset : ScriptableObject
 	{
-		[System.Serializable]
-		public class DNASizeAdjustment
-		{
-			public float heightRatio = 1f;
-			public float massRatio = 1f;
-			public float radiusRatio = 1f;
-		}
+// HACK move this into its own DNA
+//		[System.Serializable]
+//		public class DNASizeAdjustment
+//		{
+//			public float heightRatio = 1f;
+//			public float massRatio = 1f;
+//			public float radiusRatio = 1f;
+//		}
 
 		[System.Serializable]
 		public class PosePair
 		{
 			public UMABonePose poseZero;
 			public UMABonePose poseOne;
-			public DNASizeAdjustment sizeZero;
-			public DNASizeAdjustment sizeOne;
+//			public DNASizeAdjustment sizeZero;
+//			public DNASizeAdjustment sizeOne;
 		}
 
 		public int dnaTypeHash;

@@ -965,14 +965,14 @@ namespace UMA
 		}
 
 
-		[System.Serializable]
-		public class BoneData
-		{
-			public Transform boneTransform;
-			public Vector3 originalBoneScale;
-			public Vector3 originalBonePosition;
-			public Quaternion originalBoneRotation;
-		}
+//		[System.Serializable]
+//		public class BoneData
+//		{
+//			public Transform boneTransform;
+//			public Vector3 originalBoneScale;
+//			public Vector3 originalBonePosition;
+//			public Quaternion originalBoneRotation;
+//		}
 
 		/// <summary>
 		/// Calls character updated and/or created events.
