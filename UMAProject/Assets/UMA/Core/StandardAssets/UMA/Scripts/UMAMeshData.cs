@@ -253,8 +253,8 @@ namespace UMA
 //		UMASkinningData skinningParent; ??? or hash and lookup during combine ???
 		public Matrix4x4[] bindPoses;
 		public UMATransform[] umaBones;
-		//		[NonSerialized]
-		//		public Transform[] bones;
+		[NonSerialized]
+		public Transform[] bones;
 		[NonSerialized]
 		public Transform rootBone;
 		public int umaBoneCount;
@@ -580,7 +580,7 @@ namespace UMA
 			rootBoneHash = UMAUtils.StringToHash(rootBone.name);
 			ComputeBoneNameHashes(bones);
 			this.rootBone = rootBone;
-			this.bones = bones;
+//			this.bones = bones;
 		}
 
 		private static Transform RecursiveFindBone(Transform bone, string raceRoot)
@@ -705,7 +705,8 @@ namespace UMA
 			#endregion
 
 			mesh.RecalculateBounds();
-			renderer.bones = bones != null ? bones : skeleton.HashesToTransforms(boneNameHashes);
+//			renderer.bones = bones != null ? bones : skeleton.HashesToTransforms(boneNameHashes);
+			renderer.bones = skeleton.HashesToTransforms(boneNameHashes);
 			renderer.sharedMesh = mesh;
 			renderer.rootBone = rootBone;
 
@@ -732,6 +733,8 @@ namespace UMA
 		/// Applies the data to a Unity mesh.
 		/// </summary>
 		/// <param name="renderer">Target renderer.</param>
+		// HACK this unsed fun ction keeps up from removing the unused Unity bones array
+		/*
 		public void CopyDataToUnityMesh(SkinnedMeshRenderer renderer)
 		{
 			Mesh mesh = renderer.sharedMesh;
@@ -748,19 +751,13 @@ namespace UMA
 			mesh.colors32 = colors32;
 			mesh.bindposes = bindPoses;
 			
-			var subMeshCount = submeshes.Length;
-			mesh.subMeshCount = subMeshCount;
-			for (int i = 0; i < subMeshCount; i++)
-			{
-				mesh.SetTriangles(submeshes[i].triangles, i);
-			}
-			
 			renderer.bones = bones;
 			renderer.rootBone = rootBone;
 			
 			mesh.RecalculateBounds();
 			renderer.sharedMesh = mesh;
 		}
+		*/
 
 		private void CreateTransforms(UMASkeleton skeleton)
 		{
