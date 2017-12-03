@@ -285,7 +285,7 @@ namespace UMA
 		private static UMAMeshData bufferLockOwner = null;
 		private static bool buffersInitialized = false;
 		private static bool haveBackingArrays = false;
-		const int MAX_VERTEX_COUNT = 65534;
+		public const int MAX_VERTEX_COUNT = 65534;
 		static List<Vector3> gVertices = new List<Vector3>(MAX_VERTEX_COUNT);
 		static Vector3[] gVerticesArray;
 		static List<Vector3> gNormals = new List<Vector3>(MAX_VERTEX_COUNT);

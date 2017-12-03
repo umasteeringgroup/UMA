@@ -34,6 +34,11 @@ namespace UMA
 			has_clothSkinning = 256,
 		}
 
+
+		static int[] vertexRemaps = new int[UMAMeshData.MAX_VERTEX_COUNT];
+		static int[] bindRemaps = new int[256];
+		static Matrix4x4[] bindTransforms = new Matrix4x4[256];
+
 		static Dictionary<int, BoneIndexEntry> bonesCollection;
 		static List<Matrix4x4> bindPoses;
 		static List<int> bonesList;
@@ -52,6 +57,7 @@ namespace UMA
 			int bindPoseCount = 0;
 			int transformHierarchyCount = 0;
 			int blendShapeCount = 0;
+			int destIndex = 0;
 
 			MeshComponents meshComponents = MeshComponents.none;
 			int subMeshCount = FindTargetSubMeshCount(sources);
@@ -119,13 +125,73 @@ namespace UMA
 				int sourceVertexCount = source.meshData.vertices.Length;
 				BuildBoneWeights(source.meshData.boneWeights, 0, boneWeights, vertexIndex, sourceVertexCount, source.meshData.boneNameHashes, source.meshData.bindPoses, bonesCollection, bindPoses, bonesList);
 
-				Array.Copy(source.meshData.vertices, 0, vertices, vertexIndex, sourceVertexCount);
+				//Array.Copy(source.meshData.vertices, 0, vertices, vertexIndex, sourceVertexCount);
+				destIndex = vertexIndex;
+				for (int i = 0; i < sourceVertexCount; i++)
+				{
+					if (false)
+					{
+						// Vertex is occluded
+						vertexRemaps[i] = -1;
+					}
+					else
+					{
+						vertexRemaps[i] = destIndex;
+						Vector3 vertexSrc = source.meshData.vertices[i];
+						BoneWeight boneSrc = source.meshData.boneWeights[i];
+
+						// Apply BAKED blendshape data here
+
+						// Rebind vertex to new bones
+						// HACK only do this if the base binds mismatch or there are extra bones
+						if (false)
+						{
+							int boneIndex;
+							float boneWeight;
+							Vector3 vertexDst = Vector3.zero;
+							boneIndex = boneSrc.boneIndex0;
+							boneWeight = boneSrc.weight0;
+							boneWeights[destIndex].boneIndex0 = bindRemaps[boneIndex];
+							boneWeights[destIndex].weight0 = boneWeight;
+							vertexDst += bindTransforms[boneIndex].MultiplyPoint(vertexSrc) * boneWeight;
+							boneIndex = boneSrc.boneIndex1;
+							boneWeight = boneSrc.weight1;
+							boneWeights[destIndex].boneIndex1 = bindRemaps[boneIndex];
+							boneWeights[destIndex].weight1 = boneWeight;
+							vertexDst += bindTransforms[boneIndex].MultiplyPoint(vertexSrc) * boneWeight;
+							boneIndex = boneSrc.boneIndex2;
+							boneWeight = boneSrc.weight2;
+							boneWeights[destIndex].boneIndex2 = bindRemaps[boneIndex];
+							boneWeights[destIndex].weight2 = boneWeight;
+							vertexDst += bindTransforms[boneIndex].MultiplyPoint(vertexSrc) * boneWeight;
+							boneIndex = boneSrc.boneIndex3;
+							boneWeight = boneSrc.weight3;
+							boneWeights[destIndex].boneIndex3 = bindRemaps[boneIndex];
+							boneWeights[destIndex].weight3 = boneWeight;
+							vertexDst += bindTransforms[boneIndex].MultiplyPoint(vertexSrc) * boneWeight;
+							vertices[destIndex++] = vertexDst;
+						}
+						else
+						{
+//							boneWeights[destIndex] = boneSrc;
+							vertices[destIndex++] = vertexSrc;
+						}
+					}
+				}
 
 				if (has_normals)
 				{
 					if (source.meshData.normals != null && source.meshData.normals.Length > 0)
 					{
-						Array.Copy(source.meshData.normals, 0, normals, vertexIndex, sourceVertexCount);
+						//Array.Copy(source.meshData.normals, 0, normals, vertexIndex, sourceVertexCount);
+						destIndex = vertexIndex;
+						for (int i = 0; i < sourceVertexCount; i++)
+						{
+							if (vertexRemaps[i] > 0)
+							{
+								normals[destIndex++] = source.meshData.normals[i];
+							}
+						}
 					}
 					else
 					{
@@ -136,7 +202,15 @@ namespace UMA
 				{
 					if (source.meshData.tangents != null && source.meshData.tangents.Length > 0)
 					{
-						Array.Copy(source.meshData.tangents, 0, tangents, vertexIndex, sourceVertexCount);
+						//Array.Copy(source.meshData.tangents, 0, tangents, vertexIndex, sourceVertexCount);
+						destIndex = vertexIndex;
+						for (int i = 0; i < sourceVertexCount; i++)
+						{
+							if (vertexRemaps[i] > 0)
+							{
+								tangents[destIndex++] = source.meshData.tangents[i];
+							}
+						}
 					}
 					else
 					{
@@ -147,7 +221,15 @@ namespace UMA
 				{
 					if (source.meshData.uv != null && source.meshData.uv.Length >= sourceVertexCount)
 					{
-						Array.Copy(source.meshData.uv, 0, uv, vertexIndex, sourceVertexCount);
+						//Array.Copy(source.meshData.uv, 0, uv, vertexIndex, sourceVertexCount);
+						destIndex = vertexIndex;
+						for (int i = 0; i < sourceVertexCount; i++)
+						{
+							if (vertexRemaps[i] > 0)
+							{
+								uv[destIndex++] = source.meshData.uv[i];
+							}
+						}
 					}
 					else
 					{
@@ -158,7 +240,15 @@ namespace UMA
 				{
 					if (source.meshData.uv2 != null && source.meshData.uv2.Length >= sourceVertexCount)
 					{
-						Array.Copy(source.meshData.uv2, 0, uv2, vertexIndex, sourceVertexCount);
+						//Array.Copy(source.meshData.uv2, 0, uv2, vertexIndex, sourceVertexCount);
+						destIndex = vertexIndex;
+						for (int i = 0; i < sourceVertexCount; i++)
+						{
+							if (vertexRemaps[i] > 0)
+							{
+								uv2[destIndex++] = source.meshData.uv2[i];
+							}
+						}
 					}
 					else
 					{
@@ -169,7 +259,15 @@ namespace UMA
 				{
 					if (source.meshData.uv3 != null && source.meshData.uv3.Length >= sourceVertexCount)
 					{
-						Array.Copy(source.meshData.uv3, 0, uv3, vertexIndex, sourceVertexCount);
+						//Array.Copy(source.meshData.uv3, 0, uv3, vertexIndex, sourceVertexCount);
+						destIndex = vertexIndex;
+						for (int i = 0; i < sourceVertexCount; i++)
+						{
+							if (vertexRemaps[i] > 0)
+							{
+								uv3[destIndex++] = source.meshData.uv3[i];
+							}
+						}
 					}
 					else
 					{
@@ -180,7 +278,15 @@ namespace UMA
 				{
 					if (source.meshData.uv4 != null && source.meshData.uv4.Length >= sourceVertexCount)
 					{
-						Array.Copy(source.meshData.uv4, 0, uv4, vertexIndex, sourceVertexCount);
+						//Array.Copy(source.meshData.uv4, 0, uv4, vertexIndex, sourceVertexCount);
+						destIndex = vertexIndex;
+						for (int i = 0; i < sourceVertexCount; i++)
+						{
+							if (vertexRemaps[i] > 0)
+							{
+								uv4[destIndex++] = source.meshData.uv4[i];
+							}
+						}
 					}
 					else
 					{
@@ -192,7 +298,15 @@ namespace UMA
 				{
 					if (source.meshData.colors32 != null && source.meshData.colors32.Length > 0)
 					{
-						Array.Copy(source.meshData.colors32, 0, colors32, vertexIndex, sourceVertexCount);
+						//Array.Copy(source.meshData.colors32, 0, colors32, vertexIndex, sourceVertexCount);
+						destIndex = vertexIndex;
+						for (int i = 0; i < sourceVertexCount; i++)
+						{
+							if (vertexRemaps[i] > 0)
+							{
+								colors32[destIndex++] = source.meshData.colors32[i];
+							}
+						}
 					}
 					else
 					{
@@ -379,7 +493,13 @@ namespace UMA
 
 						if (source.triangleMask == null)
 						{
-							CopyIntArrayAdd(subTriangles, 0, submeshTriangles[destMesh], subMeshTriangleLength[destMesh], triangleLength, vertexIndex);
+							// CopyIntArrayAdd(subTriangles, 0, submeshTriangles[destMesh], subMeshTriangleLength[destMesh], triangleLength, vertexIndex);
+							destIndex = subMeshTriangleLength[destMesh];
+							for (int j = 0; j < triangleLength; j++)
+							{
+								submeshTriangles[destMesh][destIndex++] = vertexRemaps[subTriangles[j]];
+							}
+
 							subMeshTriangleLength[destMesh] += triangleLength;
 						}
 						else
