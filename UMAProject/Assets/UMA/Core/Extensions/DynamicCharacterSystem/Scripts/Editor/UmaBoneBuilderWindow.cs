@@ -59,7 +59,7 @@ namespace UMA.Editors
                     return;
                 }
 
-                if (_avatar.activeRace.data == null)
+                if (_avatar != null && _avatar.activeRace.data == null)
                 {
                     Debug.LogWarning ("No recipe data found. Make sure the race is added to the library!");
                     return;
