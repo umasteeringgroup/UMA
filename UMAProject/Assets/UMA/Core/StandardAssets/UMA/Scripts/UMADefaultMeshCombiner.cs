@@ -60,41 +60,13 @@ namespace UMA
 
 			if (umaData.umaRoot == null)
 			{
-				Transform rootTransform = umaData.gameObject.transform.Find("Root");
-				if (rootTransform)
-				{
-					umaData.umaRoot = rootTransform.gameObject;
-				}
-				else
-				{
-					GameObject newRoot = new GameObject("Root");
-					//make root of the UMAAvatar respect the layer setting of the UMAAvatar so cameras can just target this layer
-					newRoot.layer = umaData.gameObject.layer;
-					newRoot.transform.parent = umaData.transform;
-					newRoot.transform.localPosition = Vector3.zero;
-					newRoot.transform.localRotation = Quaternion.Euler(270f, 0, 0f);
-					newRoot.transform.localScale = Vector3.one;
-					umaData.umaRoot = newRoot;
-				}
-
-				Transform globalTransform = umaData.umaRoot.transform.Find("Global");
-				if (!globalTransform)
-				{
-					GameObject newGlobal = new GameObject("Global");
-					newGlobal.transform.parent = umaData.umaRoot.transform;
-					newGlobal.transform.localPosition = Vector3.zero;
-					newGlobal.transform.localRotation = Quaternion.Euler(90f, 90f, 0f);  
-
-					globalTransform = newGlobal.transform;
-				}
-
-				umaData.skeleton = new UMASkeleton(globalTransform);
+				umaData.skeleton = new UMASkeleton(umaData);
 
 				renderers = new SkinnedMeshRenderer[umaData.generatedMaterials.rendererCount];
 
 				for (int i = 0; i < umaData.generatedMaterials.rendererCount; i++)
 				{
-					renderers[i] = MakeRenderer(i, globalTransform);
+					renderers[i] = MakeRenderer(i, umaData.umaRoot.transform);
 				}
 				umaData.SetRenderers(renderers);
 			}

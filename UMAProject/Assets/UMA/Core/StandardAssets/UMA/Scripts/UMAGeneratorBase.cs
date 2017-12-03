@@ -322,15 +322,19 @@ namespace UMA
 
 			for (var i = missingBoneCount; i < bones.Length; i++)
 			{
-				var skeletonbone = bones[i];
-				int boneHash = UMAUtils.StringToHash(skeletonbone.name);
+				SkeletonBone skeletonBone = bones[i];
+				int boneHash = UMAUtils.StringToHash(skeletonBone.name);
 				GameObject boneGO = umaData.skeleton.GetBoneGameObject(boneHash);
 				if (boneGO != null)
 				{
-					skeletonbone.position = boneGO.transform.localPosition;
-					skeletonbone.scale = boneGO.transform.localScale;
-					skeletonbone.rotation = umaData.skeleton.GetTPoseCorrectedRotation(boneHash, skeletonbone.rotation);
-					newBones.Add(skeletonbone);
+					skeletonBone.position = boneGO.transform.localPosition;
+					skeletonBone.scale = boneGO.transform.localScale;
+					skeletonBone.rotation = umaData.skeleton.GetTPoseCorrectedRotation(boneHash, skeletonBone.rotation);
+					newBones.Add(skeletonBone);
+				}
+				else
+				{
+					Debug.LogWarning("Couldn't find bone: " + skeletonBone.name);
 				}
 			}
 			bones = newBones.ToArray();

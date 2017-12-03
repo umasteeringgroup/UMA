@@ -142,8 +142,17 @@ namespace UMA
 
 						// Apply BAKED blendshape data here
 
+						// THEORY
+						// Skeleton has a dictionary of <hash, preservedBoneIndex>
+						// Build as skeleton is built from preserved transforms
+						// Apply DNA to skeleton
+						// 
+						// UMATransform has a bind matrix
+						// bindRemaps[] = dictionary lookup from current slot skinning (+ inherited ?)
+						// bindTransforms[] = skinningBind.inv * skeleton bone to bone Matrix * slot umaTransofrm bind
+						// SMR binds and bones built from dictionary order
+
 						// Rebind vertex to new bones
-						// HACK only do this if the base binds mismatch or there are extra bones
 						if (false)
 						{
 							int boneIndex;

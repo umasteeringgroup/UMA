@@ -8,7 +8,7 @@ namespace UMA.PoseTools
 	{
 		public ExpressionPlayer expressionPlayer;
 		public UMAExpressionSet expressionSet;
-		public Transform skeletonRoot;
+		public SkinnedMeshRenderer umaRenderer;
 
 		protected UMASkeleton skeleton;
 
@@ -23,7 +23,7 @@ namespace UMA.PoseTools
 		void Update()
 		{
 			if (expressionSet == null) return;
-			if (skeletonRoot == null) return;
+			if (umaRenderer == null) return;
 			if (expressionPlayer == null)
 			{
 				expressionPlayer = gameObject.GetComponent<ExpressionPlayer>();
@@ -36,7 +36,7 @@ namespace UMA.PoseTools
 
 			if (skeleton == null)
 			{
-				skeleton = new UMASkeleton(skeletonRoot);
+				skeleton = new UMASkeleton(umaRenderer);
 			}
 
 			expressionSet.RestoreBones(skeleton);
