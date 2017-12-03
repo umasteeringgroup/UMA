@@ -246,6 +246,12 @@ namespace UMA.Dynamics
 
 		private void SetRagdolled(bool ragdollState)
 		{
+            if (!Application.isPlaying)
+            {
+                _ragdolled = false;
+                return;
+            }
+            
 			//Player Collider stuff
 			//Call Player Collider enable/disable event here
 			if (ragdollState) 
