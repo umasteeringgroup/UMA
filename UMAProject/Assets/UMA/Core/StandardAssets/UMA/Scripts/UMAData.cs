@@ -1363,6 +1363,7 @@ namespace UMA
 		/// </summary>
 		public void FireCharacterBegunEvents()
 		{
+
 			foreach (var slotData in umaRecipe.slotDataList)
 			{
 				if (slotData != null && slotData.asset.CharacterBegun != null)

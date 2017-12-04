@@ -28,6 +28,10 @@ namespace UMA
 		/// </summary>
 		public UMADataEvent CharacterCreated;
 		/// <summary>
+		/// Callback event when character is started.
+		/// </summary>
+		public UMADataEvent CharacterBegun;
+		/// <summary>
 		/// Callback event when character is destroyed.
 		/// </summary>
 		public UMADataEvent CharacterDestroyed;
@@ -70,6 +74,7 @@ namespace UMA
 				umaData.umaGenerator = umaGenerator;
 			}
 			if (CharacterCreated != null) umaData.CharacterCreated = CharacterCreated;
+			if (CharacterBegun != null) umaData.CharacterBegun = CharacterBegun;
 			if (CharacterDestroyed != null) umaData.CharacterDestroyed = CharacterDestroyed;
 			if (CharacterUpdated != null) umaData.CharacterUpdated = CharacterUpdated;
 			if (CharacterDnaUpdated != null) umaData.CharacterDnaUpdated = CharacterDnaUpdated;

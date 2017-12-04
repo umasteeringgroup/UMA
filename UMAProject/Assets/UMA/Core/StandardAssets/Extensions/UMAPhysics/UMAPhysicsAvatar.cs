@@ -57,6 +57,23 @@ namespace UMA.Dynamics
 		private CapsuleCollider _playerCollider;
 		private Rigidbody _playerRigidbody;
 
+		struct CachedBone
+		{
+			public Transform boneTransform;
+			public Vector3 localPosition;
+			public Quaternion localRotation;
+			public Vector3 localScale;
+
+			public CachedBone(Transform transform)
+			{
+				boneTransform = transform;
+				localPosition = transform.localPosition;
+				localRotation = transform.localRotation;
+				localScale = transform.localScale;
+			}
+		}
+		private List<CachedBone> cachedBones = new List<CachedBone>();
+
 		// Use this for initialization
 		void Start () 
 		{
@@ -68,7 +85,11 @@ namespace UMA.Dynamics
 
 			DynamicCharacterAvatar avatar = gameObject.GetComponent<DynamicCharacterAvatar>();
 			if (avatar != null)
+			{
 				avatar.CharacterCreated.AddListener(OnCharacterCreatedCallback);
+				avatar.CharacterBegun.AddListener(OnCharacterBegunCallback);
+				avatar.CharacterUpdated.AddListener(OnCharacterUpdatedCallback);
+			}
 
 			if (!Physics.GetIgnoreLayerCollision(ragdollLayer, playerLayer))
 				Debug.LogWarning("RagdollLayer and PlayerLayer are not ignoring each other! This will cause collision issues. Please update the collision matrix or 'Add Default Layers' in the Physics Slot Definition");
@@ -89,10 +110,41 @@ namespace UMA.Dynamics
 			}
 		}
 
-        public void OnCharacterCreatedCallback(UMAData umaData)
-        {
-            CreatePhysicsObjects();
-        }
+		public void OnCharacterCreatedCallback(UMAData umaData)
+		{
+			CreatePhysicsObjects();
+		}
+
+		public void OnCharacterBegunCallback(UMAData umaData)
+		{
+			if (_ragdolled)
+			{
+				cachedBones.Clear();
+				foreach (int hash in umaData.skeleton.BoneHashes)
+				{
+					Transform boneTransform = umaData.skeleton.GetBoneTransform(hash);
+					if(boneTransform != null)
+					{
+						CachedBone cachedBone = new CachedBone(boneTransform);
+						cachedBones.Add(cachedBone);
+					}
+				}
+			}
+		}
+
+		public void OnCharacterUpdatedCallback(UMAData umaData)
+		{
+			if (_ragdolled)
+			{
+				foreach (CachedBone cachedbone in cachedBones)
+				{
+					cachedbone.boneTransform.localPosition = cachedbone.localPosition;
+					cachedbone.boneTransform.localRotation = cachedbone.localRotation;
+					cachedbone.boneTransform.localScale = cachedbone.localScale;
+				}
+				cachedBones.Clear();
+			}
+		}
 
 		public void CreatePhysicsObjects()
 		{
