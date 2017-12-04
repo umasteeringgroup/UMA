@@ -325,7 +325,7 @@ namespace UMA
 
 		public virtual void UpdateUMABody(UMAData umaData)
 		{
-			if (umaData)
+			if (umaData && umaData.animator != null && umaData.animator.enabled)
 			{
 				umaData.skeleton.ResetAll();
 				// Put the skeleton into TPose so rotations will be valid for generating avatar
