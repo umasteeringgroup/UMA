@@ -83,16 +83,25 @@ namespace UMA.Dynamics
 			if(_SphereColliders == null) { _SphereColliders = new List<ClothSphereColliderPair>(); }
 			if(_CapsuleColliders == null) { _CapsuleColliders = new List<CapsuleCollider>(); }
 
-			DynamicCharacterAvatar avatar = gameObject.GetComponent<DynamicCharacterAvatar>();
-			if (avatar != null)
+			if (_umaData != null)
 			{
-				avatar.CharacterCreated.AddListener(OnCharacterCreatedCallback);
-				avatar.CharacterBegun.AddListener(OnCharacterBegunCallback);
-				avatar.CharacterUpdated.AddListener(OnCharacterUpdatedCallback);
+				_umaData.CharacterCreated.AddListener(OnCharacterCreatedCallback);
+				_umaData.CharacterBegun.AddListener(OnCharacterBegunCallback);
+				_umaData.CharacterUpdated.AddListener(OnCharacterUpdatedCallback);
 			}
 
 			if (!Physics.GetIgnoreLayerCollision(ragdollLayer, playerLayer))
 				Debug.LogWarning("RagdollLayer and PlayerLayer are not ignoring each other! This will cause collision issues. Please update the collision matrix or 'Add Default Layers' in the Physics Slot Definition");
+		}
+
+		void OnDestroy()
+		{
+			if (_umaData != null)
+			{
+				_umaData.CharacterCreated.RemoveListener(OnCharacterCreatedCallback);
+				_umaData.CharacterBegun.RemoveListener(OnCharacterBegunCallback);
+				_umaData.CharacterUpdated.RemoveListener(OnCharacterUpdatedCallback);
+			}
 		}
 
 		void FixedUpdate()
