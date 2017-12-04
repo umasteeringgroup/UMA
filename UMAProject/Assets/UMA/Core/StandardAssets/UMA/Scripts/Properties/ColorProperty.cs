@@ -3,7 +3,8 @@ using UnityEngine;
 
 namespace UMA
 {
-	public class ColorProperty : Property
+	[Serializable]
+	public class ColorProperty : BaseProperty
 	{
 		public Color color;
 	}

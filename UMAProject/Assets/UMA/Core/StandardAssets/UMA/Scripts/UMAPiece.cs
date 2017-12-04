@@ -5,9 +5,9 @@ using UnityEngine;
 
 namespace UMA
 {
-	[CreateAssetMenu]
+	[CreateAssetMenu(menuName ="UMA/Piece")]
 	public class UMAPiece : ScriptableObject
 	{
-		public Property[] Properties;
+		public BasePieceProperty[] Properties;
 	}
 }

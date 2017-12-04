@@ -8,12 +8,12 @@ namespace UMA
 	{
 		public static Type PropertyTypeField(string label, Type type, params GUILayoutOption[] options)
 		{
-			var index = ArrayUtility.IndexOf(Property.PropertyTypes, type);
+			var index = ArrayUtility.IndexOf(BaseProperty.PropertyTypes, type);
 			EditorGUI.BeginChangeCheck();
 			var newIndex = EditorGUILayout.Popup(new GUIContent(label), index, PropertyTypesGUIContents, options);
 			if (EditorGUI.EndChangeCheck())
 			{
-				return Property.PropertyTypes[newIndex];
+				return BaseProperty.PropertyTypes[newIndex];
 			}
 			return type;
 		}
@@ -24,7 +24,7 @@ namespace UMA
 			{
 				if (_propertyTypesGUIContents == null)
 				{
-					var propertyTypes = Property.PropertyTypes;
+					var propertyTypes = BaseProperty.PropertyTypes;
 					_propertyTypesGUIContents = new GUIContent[propertyTypes.Length];
 					for (int i = 0; i < propertyTypes.Length; i++) 
 					{
@@ -35,6 +35,5 @@ namespace UMA
 			}
 		}
 		static GUIContent[] _propertyTypesGUIContents;
-	
 	}
 }

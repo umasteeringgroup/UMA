@@ -3,7 +3,8 @@ using UnityEngine;
 
 namespace UMA
 {
-	public class FloatProperty : Property
+	[Serializable]
+	public class FloatProperty : BaseProperty
 	{
 		public float value;
 	}
