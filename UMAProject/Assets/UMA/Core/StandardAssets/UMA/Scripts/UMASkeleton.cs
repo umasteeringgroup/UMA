@@ -647,7 +647,7 @@ namespace UMA
 			BoneData res;
 			if (boneHashData.TryGetValue(umaTransform.hash, out res))
 			{
-				res.accessedFrame = frame;
+				res.accessedFrame = -1;
 				//res.umaTransform.Assign(umaTransform);
 			}
 			else
