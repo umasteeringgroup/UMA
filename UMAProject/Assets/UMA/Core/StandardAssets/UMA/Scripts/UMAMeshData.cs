@@ -27,6 +27,10 @@ namespace UMA
 		public int hash;
 		public int parent;
 
+		// HACK - I'm not sure about these
+		public bool preserve;
+		public Matrix4x4 bind;
+
 		public UMATransform()
 		{
 		}
@@ -88,62 +92,7 @@ namespace UMA
 		public float weight1;
 		public float weight2;
 		public float weight3;
-		public void Set(int index, int bone, float weight)
-		{
-			switch(index)
-			{
-			case 0:
-				boneIndex0 = bone;
-				weight0 = weight;
-				break;
-			case 1:
-				boneIndex1 = bone;
-				weight1 = weight;
-				break;
-			case 2:
-				boneIndex2 = bone;
-				weight2 = weight;
-				break;
-			case 3:
-				boneIndex3 = bone;
-				weight3 = weight;
-				break;
-			default:
-				throw new NotImplementedException();
-			}
-		}
-		public float GetWeight(int index)
-		{
-			switch(index)
-			{
-			case 0:
-				return weight0;
-			case 1:
-				return weight1;
-			case 2:
-				return weight2;
-			case 3:
-				return weight3;
-			default:
-				throw new NotImplementedException();
-			}
-		}
-		public int GetBoneIndex(int index)
-		{
-			switch(index)
-			{
-			case 0:
-				return boneIndex0;
-			case 1:
-				return boneIndex1;
-			case 2:
-				return boneIndex2;
-			case 3:
-				return boneIndex3;
-			default:
-				throw new NotImplementedException();
-			}
-		}		
+
 		public static implicit operator UMABoneWeight(BoneWeight sourceWeight)
 		{
 			var res = new UMABoneWeight();
@@ -171,11 +120,12 @@ namespace UMA
 			return res;
 		}
 
-		public static UMABoneWeight[] Convert(BoneWeight[] boneWeights)
+		public static UMABoneWeight[] Convert(BoneWeight[] boneWeights, int count)
 		{
-			if(boneWeights == null) return null;
-			var res = new UMABoneWeight[boneWeights.Length];
-			for (int i = 0; i < boneWeights.Length; i++)
+			if (boneWeights == null) return null;
+
+			var res = new UMABoneWeight[count];
+			for (int i = 0; i < count; i++)
 			{
 				res[i] = boneWeights[i];
 			}
@@ -184,6 +134,7 @@ namespace UMA
 		public static UMABoneWeight[] Convert(List<BoneWeight> boneWeights)
 		{
 			if(boneWeights == null) return null;
+
 			var res = new UMABoneWeight[boneWeights.Count];
 			for (int i = 0; i < boneWeights.Count; i++)
 			{
@@ -191,10 +142,12 @@ namespace UMA
 			}
 			return res;
 		}
-		public static BoneWeight[] Convert(UMABoneWeight[] boneWeights)
+		public static BoneWeight[] Convert(UMABoneWeight[] boneWeights, int count)
 		{
-			var res = new BoneWeight[boneWeights.Length];
-			for (int i = 0; i < boneWeights.Length; i++)
+			if (boneWeights == null) return null;
+
+			var res = new BoneWeight[count];
+			for (int i = 0; i < count; i++)
 			{
 				res[i] = boneWeights[i];
 			}
@@ -232,15 +185,9 @@ namespace UMA
 	[Serializable]
 	public class UMASkinningData
 	{
-		public Matrix4x4[] bindMatrices;
+		// Hack - trying binds in UMATransform???
+//		public Matrix4x4[] matrixBinds;
 		public UMATransform[] umaBones;
-
-		[NonSerialized]
-		public int[] remapIndices;
-		[NonSerialized]
-		public Matrix4x4[] remapMatrices;
-//		[NonSerialized]
-//		public Matrix4x4[] localToRootMatrices;
 	}
 
 	/// <summary>
@@ -253,14 +200,18 @@ namespace UMA
 //		UMASkinningData skinningParent; ??? or hash and lookup during combine ???
 		public Matrix4x4[] bindPoses;
 		public UMATransform[] umaBones;
+//		[NonSerialized]
+//		public Transform[] bones;
 		[NonSerialized]
-		public Transform[] bones;
-		[NonSerialized]
-		public Transform rootBone;
 		public int umaBoneCount;
-		public int rootBoneHash;
+
+		// HACK - nuke this the second the combiner is fixed
 		public int[] boneNameHashes;
+
+		// HACK - really? all three?
+		public Transform rootBone;
 		public string RootBoneName = "Global";
+		public int rootBoneHash;
 
 		public UMABoneWeight[] boneWeights;
 //		public BoneWeight[] unityBoneWeights;
@@ -303,6 +254,7 @@ namespace UMA
 		static List<Color32> gColors32 = new List<Color32>(MAX_VERTEX_COUNT);
 		static Color32[] gColors32Array;
 		// They forgot the List<> method for bone weights.
+		static UMABoneWeight[] gBoneWeightsArray = new UMABoneWeight[MAX_VERTEX_COUNT];
 
 		const int UNUSED_SUBMESH = -1;
 		static List<int>[] gSubmeshTris = {
@@ -387,8 +339,7 @@ namespace UMA
 				uv3 = gUV3Array;
 				uv4 = gUV4Array;
 				colors32 = gColors32Array;
-
-				boneWeights = null;
+				boneWeights = gBoneWeightsArray;
 
 				return true;
 			}
@@ -457,24 +408,24 @@ namespace UMA
 			}
 		}
 
-		public void PrepareVertexBuffers(int size)
-		{
-			vertexCount = size;
-			boneWeights = new UMABoneWeight[size];
-			vertices = new Vector3[size];
-			normals = new Vector3[size];
-			tangents = new Vector4[size];
-			colors32 = new Color32[size];
-			uv = new Vector2[size];
-			uv2 = new Vector2[size];
-			uv3 = new Vector2[size];
-			uv4 = new Vector2[size];
-			clothSkinning = new ClothSkinningCoefficient[size];
-			clothSkinningSerialized = new Vector2[size];
-		}
+//		public void PrepareVertexBuffers(int size)
+//		{
+//			vertexCount = size;
+//			boneWeights = new UMABoneWeight[size];
+//			vertices = new Vector3[size];
+//			normals = new Vector3[size];
+//			tangents = new Vector4[size];
+//			colors32 = new Color32[size];
+//			uv = new Vector2[size];
+//			uv2 = new Vector2[size];
+//			uv3 = new Vector2[size];
+//			uv4 = new Vector2[size];
+//			clothSkinning = new ClothSkinningCoefficient[size];
+//			clothSkinningSerialized = new Vector2[size];
+//		}
 		
 		/// <summary>
-		/// Initialize UMA mesh data from Unity mesh.
+		/// Initialize UMA mesh data from Unity renderer.
 		/// </summary>
 		/// <param name="renderer">Source renderer.</param>
 		public void RetrieveDataFromUnityMesh(SkinnedMeshRenderer renderer)
@@ -483,17 +434,17 @@ namespace UMA
 
 			UpdateBones(renderer.rootBone, renderer.bones);
 		}
-		
+
 		/// <summary>
 		/// Initialize UMA mesh data from Unity mesh.
 		/// </summary>
 		/// <param name="sharedMesh">Source mesh.</param>
-		public void RetrieveDataFromUnityMesh(Mesh sharedMesh)
+		protected void RetrieveDataFromUnityMesh(Mesh sharedMesh)
 		{
 			bindPoses = sharedMesh.bindposes;
-			boneWeights = UMABoneWeight.Convert(sharedMesh.boneWeights);
 			vertices = sharedMesh.vertices;
 			vertexCount = vertices.Length;
+			boneWeights = UMABoneWeight.Convert(sharedMesh.boneWeights, vertexCount);
 			normals = sharedMesh.normals;
 			tangents = sharedMesh.tangents;
 			colors32 = sharedMesh.colors32;
@@ -508,7 +459,7 @@ namespace UMA
 				submeshes[i].triangles = sharedMesh.GetTriangles(i);
 			}
 
-			//Create the blendshape data on the slot asset from the unity mesh
+			// Create the blendshape data on the slot asset from the unity mesh
 			#region Blendshape
 			blendShapes = new UMABlendShape[sharedMesh.blendShapeCount];
 			for (int shapeIndex = 0; shapeIndex < sharedMesh.blendShapeCount; shapeIndex++) 
@@ -645,7 +596,7 @@ namespace UMA
 			else
 			{
 				mesh.vertices = vertices;
-				mesh.boneWeights = UMABoneWeight.Convert(boneWeights);
+				mesh.boneWeights = UMABoneWeight.Convert(boneWeights, vertexCount);
 				mesh.normals = normals;
 				mesh.tangents = tangents;
 				mesh.uv = uv;
@@ -655,6 +606,8 @@ namespace UMA
 				mesh.colors32 = colors32;
 			}
 			mesh.bindposes = bindPoses;
+// HACK - I think I want this
+//mesh.bindposes = skeleton.GetBinds();
 
 			var subMeshCount = submeshes.Length;
 			mesh.subMeshCount = subMeshCount;
@@ -707,6 +660,8 @@ namespace UMA
 			mesh.RecalculateBounds();
 //			renderer.bones = bones != null ? bones : skeleton.HashesToTransforms(boneNameHashes);
 			renderer.bones = skeleton.HashesToTransforms(boneNameHashes);
+// HACK - I think I want this
+//mesh.bindposes = skeleton.GetTransforms();
 			renderer.sharedMesh = mesh;
 			renderer.rootBone = rootBone;
 
@@ -761,7 +716,7 @@ namespace UMA
 
 		private void CreateTransforms(UMASkeleton skeleton)
 		{
-			for(int i = 0; i < umaBoneCount; i++)
+			for (int i = 0; i < umaBoneCount; i++)
 			{
 				skeleton.EnsureBone(umaBones[i]);
 			}
@@ -776,7 +731,7 @@ namespace UMA
 			mesh.SetVertices(gVertices);
 
 			// Whoops, looks like they also forgot one! Job well done.
-			mesh.boneWeights = UMABoneWeight.Convert(boneWeights);
+			mesh.boneWeights = UMABoneWeight.Convert(boneWeights, vertexCount);
 
 			if (normals != null)
 			{

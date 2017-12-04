@@ -132,12 +132,10 @@ namespace UMA.PoseTools
 
 			Transform transformPreDNA;
 			Transform transformPostDNA;
-			bool transformDirty;
-			int parentHash;
 			foreach (int boneHash in skeletonPreDNA.BoneHashes)
 			{
-				skeletonPreDNA.TryGetBoneTransform(boneHash, out transformPreDNA, out transformDirty, out parentHash);
-				skeletonPostDNA.TryGetBoneTransform(boneHash, out transformPostDNA, out transformDirty, out parentHash);
+				skeletonPreDNA.TryGetBoneTransform(boneHash, out transformPreDNA);
+				skeletonPostDNA.TryGetBoneTransform(boneHash, out transformPostDNA);
 
 				if ((transformPreDNA == null) || (transformPostDNA == null))
 				{
