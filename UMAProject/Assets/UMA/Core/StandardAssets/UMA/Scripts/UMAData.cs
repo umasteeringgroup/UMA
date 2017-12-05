@@ -137,6 +137,7 @@ namespace UMA
 		public UMADataEvent CharacterDestroyed;
 		public UMADataEvent CharacterUpdated;
 		public UMADataEvent CharacterDnaUpdated;
+		public UMADataEvent CharacterBegun;
 
 		public GameObject umaRoot;
 
@@ -1363,6 +1364,9 @@ namespace UMA
 		/// </summary>
 		public void FireCharacterBegunEvents()
 		{
+			if (CharacterBegun != null)
+				CharacterBegun.Invoke(this);
+
 			foreach (var slotData in umaRecipe.slotDataList)
 			{
 				if (slotData != null && slotData.asset.CharacterBegun != null)
