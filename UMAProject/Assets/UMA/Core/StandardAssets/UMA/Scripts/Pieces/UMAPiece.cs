@@ -8,6 +8,8 @@ namespace UMA
 	[CreateAssetMenu(menuName ="UMA/Piece")]
 	public class UMAPiece : ScriptableObject
 	{
-		public BasePieceProperty[] Properties;
+		public BasePieceProperty[] Properties = new BasePieceProperty[0];
+		public UMAPieceBlock[] Blocks = new UMAPieceBlock[0];
+		public UMALocation Location;
 	}
 }
