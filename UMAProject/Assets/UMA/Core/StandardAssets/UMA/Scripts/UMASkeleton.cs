@@ -10,6 +10,20 @@ namespace UMA
 	[Serializable]
 	public class UMASkeleton
 	{
+		public class bindDebug
+		{
+			public int hash;
+			public Matrix4x4 bind;
+
+			public bindDebug(int h, Matrix4x4 b)
+			{
+				hash = h;
+				bind = b;
+			}
+		}
+		public List<bindDebug> debugOldBinds = new List<bindDebug>();
+		public List<bindDebug> debugNewBinds = new List<bindDebug>();
+
 		/// <summary>
 		/// Internal class for storing bone and transform information.
 		/// </summary>
@@ -236,12 +250,28 @@ namespace UMA
 		/// Gets the bind matrix of a retained bone in the skinning array.
 		/// </summary>
 		/// <param name="nameHash">Name hash.</param>
-		public virtual Matrix4x4 GetSkinningBind(int nameHash)
+		public virtual Matrix4x4 GetSkinningBindToBone(int nameHash)
 		{
 			BoneData bone;
 			if (boneDictionary.TryGetValue(nameHash, out bone))
 			{
-				return bone.umaTransform.bind;
+				return bone.umaTransform.bindToBone;
+			}
+
+			Debug.LogError("Could not find skinning bone in skeleton!");
+			return Matrix4x4.identity;
+		}
+
+		/// <summary>
+		/// Gets the bind matrix of a retained bone in the skinning array.
+		/// </summary>
+		/// <param name="nameHash">Name hash.</param>
+		public virtual Matrix4x4 GetSkinningBoneToRoot(int nameHash)
+		{
+			BoneData bone;
+			if (boneDictionary.TryGetValue(nameHash, out bone))
+			{
+				return bone.umaTransform.boneToRoot;
 			}
 
 			Debug.LogError("Could not find skinning bone in skeleton!");
@@ -289,9 +319,10 @@ namespace UMA
 					BoneData bone;
 					if (boneDictionary.TryGetValue(skinning.Key, out bone))
 					{
-						skinningBinds[skinning.Value] = bone.umaTransform.bind;
+						skinningBinds[skinning.Value] = bone.umaTransform.bindToBone;
 						skinningTransforms[skinning.Value] = bone.boneTransform;
-						Debug.Log("WRONG for "+bone.umaTransform.name+"\n"+bone.umaTransform.bind);
+//						Debug.Log("WRONG for "+bone.umaTransform.name+"\n"+bone.umaTransform.bind);
+						debugNewBinds.Add(new bindDebug(bone.umaTransform.hash, bone.umaTransform.bindToBone));
 					}
 					else
 					{

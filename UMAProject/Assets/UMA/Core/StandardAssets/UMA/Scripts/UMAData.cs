@@ -10,6 +10,63 @@ namespace UMA
 	/// </summary>
 	public class UMAData : MonoBehaviour
 	{
+#if UNITY_EDITOR
+		void debugDrawBone(Transform t)
+		{
+			//LineRenderer.SetWidth(5.0, 2.0);
+			foreach ( Transform child in t)
+			{
+				float len = 0.05f;
+				Vector3 loxalX = new Vector3(len,0,0);
+				Vector3 loxalY = new Vector3(0,len,0);
+				Vector3 loxalZ = new Vector3(0,0,len);
+				loxalX = child.rotation * loxalX;
+				loxalY = child.rotation * loxalY;
+				loxalZ = child.rotation * loxalZ;
+
+				Gizmos.DrawLine(t.position * 0.1f + child.position * 0.9f,  t.position * 0.9f + child.position * 0.1f);
+
+				Gizmos.color = Color.red;
+				Gizmos.DrawLine(child.position,  child.position+loxalX);
+				Gizmos.color = Color.green;
+				Gizmos.DrawLine(child.position,  child.position+loxalY);
+				Gizmos.color = Color.blue;
+				Gizmos.DrawLine(child.position,  child.position+loxalZ);
+				debugDrawBone(child);
+			}
+			//LineRenderer.SetWidth(1.0, 1.0);
+		}
+
+		void OnDrawGizmos()
+		{
+			if (skeleton != null)
+			{
+				foreach (UMASkeleton.bindDebug debugInfo in skeleton.debugOldBinds)
+				{
+					Transform bone = skeleton.GetBoneTransform(debugInfo.hash);
+					if (bone != null)
+					{
+						Matrix4x4 boneMatrix = bone.localToWorldMatrix * debugInfo.bind;
+						Vector3 pointOrig = boneMatrix.MultiplyPoint(Vector3.zero);
+						Gizmos.color = Color.red;
+						Gizmos.DrawSphere(pointOrig, 0.05f);
+					}
+				}
+				foreach (UMASkeleton.bindDebug debugInfo in skeleton.debugNewBinds)
+				{
+					Transform bone = skeleton.GetBoneTransform(debugInfo.hash);
+					if (bone != null)
+					{
+						Matrix4x4 boneMatrix = bone.localToWorldMatrix * debugInfo.bind;
+						Vector3 pointOrig = boneMatrix.MultiplyPoint(Vector3.zero);
+						Gizmos.color = Color.blue;
+						Gizmos.DrawSphere(pointOrig, 0.05f);
+					}
+				}
+			}
+//			debugDrawBone(umaRoot.transform);
+		}
+#endif
 		[Obsolete("UMA 2.5 myRenderer is now obsolete, an uma can have multiple renderers. Use int rendererCount { get; } and GetRenderer(int) instead.", false)]
 		public SkinnedMeshRenderer myRenderer;
 

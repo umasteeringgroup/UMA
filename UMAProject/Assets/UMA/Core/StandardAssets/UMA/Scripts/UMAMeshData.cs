@@ -29,7 +29,8 @@ namespace UMA
 
 		// HACK - I'm not sure about these
 		public bool retained;
-		public Matrix4x4 bind;
+		public Matrix4x4 bindToBone;
+		public Matrix4x4 boneToRoot;
 
 		public UMATransform()
 		{
@@ -59,7 +60,9 @@ namespace UMA
 				rotation = rotation,
 				scale = scale,
 				retained = retained,
-				bind = bind };
+				bindToBone = bindToBone,
+				boneToRoot = boneToRoot
+			};
 		}
 
 		public static UMATransformComparer TransformComparer = new UMATransformComparer();

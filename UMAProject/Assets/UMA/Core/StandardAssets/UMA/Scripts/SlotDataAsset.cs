@@ -1,4 +1,8 @@
 using UnityEngine;
+#if UNITY_EDITOR
+using System.Collections;
+using System.Collections.Generic;
+#endif
 
 namespace UMA
 {
@@ -139,6 +143,29 @@ namespace UMA
 		public void UpdateMeshData()
 		{
 		}
+
+		// HACK
+		Dictionary<int, UMATransform> umaBones;
+		Dictionary<int, Matrix4x4> bonesToRoot;
+		private void CalcBoneToRoot(UMATransform bone)
+		{
+			if (bonesToRoot.ContainsKey(bone.hash)) return;
+
+			if (!umaBones.ContainsKey(bone.parent))
+			{
+				Matrix4x4 boneToRoot = Matrix4x4.TRS(bone.position, bone.rotation, bone.scale).inverse;
+				bonesToRoot.Add(bone.hash, boneToRoot);
+				Debug.Log("Top level bone " + umaBones[bone.hash].name + "\n" + boneToRoot);
+				return;
+			}
+
+			if (!bonesToRoot.ContainsKey(bone.parent))
+			{
+				CalcBoneToRoot(umaBones[bone.parent]);
+			}
+			bonesToRoot.Add(bone.hash, bonesToRoot[bone.parent] * Matrix4x4.TRS(bone.position, bone.rotation, bone.scale).inverse);
+		}
+
 #endif
 		public void OnAfterDeserialize()
 		{
@@ -148,13 +175,33 @@ namespace UMA
 			// HACK - screw with the stored data to match new formats
 			if ((meshData != null) && (meshData.bindPoses != null))
 			{
+				umaBones = new Dictionary<int, UMATransform>(meshData.umaBones.Length);
+				bonesToRoot = new Dictionary<int, Matrix4x4>(meshData.umaBones.Length);
+
 				Debug.LogWarning("Hacking UMAMeshData for " + this.GetAssetName());
+
 				int boneCount = meshData.umaBones.Length;
 				for (int i = 0; i < meshData.umaBones.Length; i++)
 				{
-					meshData.umaBones[i].bind = Matrix4x4.identity;
+					meshData.umaBones[i].bindToBone = Matrix4x4.identity;
 					meshData.umaBones[i].retained = true;
+					umaBones.Add(meshData.umaBones[i].hash, meshData.umaBones[i]);
 				}
+
+//				bonesToRoot.Add(meshData.rootBoneHash, Matrix4x4.identity);
+				for (int i = 0; i < meshData.umaBones.Length; i++)
+				{
+					try
+					{
+						CalcBoneToRoot(meshData.umaBones[i]);
+						meshData.umaBones[i].boneToRoot = bonesToRoot[meshData.umaBones[i].hash];
+					}
+					catch
+					{
+						Debug.LogError("Error looking for bone: " + meshData.umaBones[i].name);
+					}
+				}
+
 				int bindCount = meshData.bindPoses.Length;
 				for (int i = 0; i < bindCount; i++)
 				{
@@ -163,7 +210,7 @@ namespace UMA
 					{
 						if (meshData.umaBones[j].hash == hash)
 						{
-							meshData.umaBones[j].bind = meshData.bindPoses[i];
+							meshData.umaBones[j].bindToBone = meshData.bindPoses[i];
 //							Debug.Log("Found skinning bind for " + meshData.umaBones[j].name);
 							break;
 						}

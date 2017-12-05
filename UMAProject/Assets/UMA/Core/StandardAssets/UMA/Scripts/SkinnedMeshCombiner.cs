@@ -138,7 +138,7 @@ namespace UMA
 					UMATransform bone = source.meshData.umaBones[i];
 					// HACK - needs to include remap to non-retained bones
 					rebindIndices[i] = skeleton.GetSkinningIndex(bone.hash);
-					rebindMatrices[i] = skeleton.GetSkinningBind(bone.hash).inverse * bone.bind;
+					rebindMatrices[i] = skeleton.GetSkinningBindToBone(bone.hash).inverse * skeleton.GetSkinningBoneToRoot(bone.hash).inverse * bone.boneToRoot * bone.bindToBone;
 //					rebindIndices[i] = skeleton.hackBinds.Count;
 //					rebindMatrices[i] = Matrix4x4.identity;
 //					skeleton.hackBinds.Add(bone.bind);
@@ -182,6 +182,7 @@ namespace UMA
 						boneWeight = boneSrc.weight0;
 						boneWeights[destIndex].boneIndex0 = rebindIndices[boneIndex];
 						boneWeights[destIndex].weight0 = boneWeight;
+						// HACK - use MultiplyPoint3x4 after testing
 						vertexDst += rebindMatrices[boneIndex].MultiplyPoint(vertexSrc) * boneWeight;
 						boneIndex = boneSrc.boneIndex1;
 						boneWeight = boneSrc.weight1;
@@ -574,9 +575,10 @@ namespace UMA
 			}
 //			target.boneNameHashes = bonesList.ToArray();
 
-			for (int i = 0; i < bindPoses.Count; i += 10)
+			for (int i = 0; i < bindPoses.Count; i++)
 			{
-				Debug.Log("CORRECT for "+skeleton.GetBoneGameObject(bonesList[i]).name+"\n"+bindPoses[i]);
+				skeleton.debugOldBinds.Add(new UMASkeleton.bindDebug(bonesList[i], bindPoses[i]));
+//				Debug.Log("CORRECT for "+skeleton.GetBoneGameObject(bonesList[i]).name+"\n"+bindPoses[i]);
 			}
 		}
 
