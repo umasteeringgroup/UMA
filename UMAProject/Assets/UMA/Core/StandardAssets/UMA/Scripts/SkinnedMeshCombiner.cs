@@ -127,6 +127,8 @@ namespace UMA
 				bool hasVertexMask = (source.vertexMask != null);
 				int sourceVertexCount = source.meshData.vertexCount;
 				int sourceBoneCount = source.meshData.umaBones.Length;
+
+
 				if (sourceBoneCount > rebindIndices.Length)
 				{
 					Debug.LogWarning("Very high bone count may indicate problem with mesh data.");
@@ -138,10 +140,11 @@ namespace UMA
 					UMATransform bone = source.meshData.umaBones[i];
 					// HACK - needs to include remap to non-retained bones
 					rebindIndices[i] = skeleton.GetSkinningIndex(bone.hash);
-					rebindMatrices[i] = skeleton.GetSkinningBindToBone(bone.hash).inverse * skeleton.GetSkinningBoneToRoot(bone.hash).inverse * bone.boneToRoot * bone.bindToBone;
+//					rebindMatrices[i] = skeleton.GetSkinningBindToBone(bone.hash).inverse * skeleton.GetSkinningBoneToRoot(bone.hash).inverse * bone.boneToRoot * bone.bindToBone;
+					rebindMatrices[i] = skeleton.GetSkinningBindToBone(bone.hash).inverse * bone.bindToBone;
 //					rebindIndices[i] = skeleton.hackBinds.Count;
 //					rebindMatrices[i] = Matrix4x4.identity;
-//					skeleton.hackBinds.Add(bone.bind);
+//					skeleton.hackBinds.Add(bone.bindToBone);
 //					skeleton.hackTransforms.Add(skeleton.GetBoneTransform(bone.hash));
 				}
 

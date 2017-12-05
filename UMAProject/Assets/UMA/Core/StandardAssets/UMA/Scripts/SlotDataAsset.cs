@@ -155,7 +155,7 @@ namespace UMA
 			{
 				Matrix4x4 boneToRoot = Matrix4x4.TRS(bone.position, bone.rotation, bone.scale).inverse;
 				bonesToRoot.Add(bone.hash, boneToRoot);
-				Debug.Log("Top level bone " + umaBones[bone.hash].name + "\n" + boneToRoot);
+//				Debug.Log("Top level bone " + umaBones[bone.hash].name + "\n" + boneToRoot);
 				return;
 			}
 
@@ -178,7 +178,7 @@ namespace UMA
 				umaBones = new Dictionary<int, UMATransform>(meshData.umaBones.Length);
 				bonesToRoot = new Dictionary<int, Matrix4x4>(meshData.umaBones.Length);
 
-				Debug.LogWarning("Hacking UMAMeshData for " + this.GetAssetName());
+//				Debug.LogWarning("Hacking UMAMeshData for " + this.GetAssetName());
 
 				int boneCount = meshData.umaBones.Length;
 				for (int i = 0; i < meshData.umaBones.Length; i++)

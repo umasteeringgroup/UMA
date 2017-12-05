@@ -49,7 +49,7 @@ namespace UMA
 						Matrix4x4 boneMatrix = bone.localToWorldMatrix * debugInfo.bind;
 						Vector3 pointOrig = boneMatrix.MultiplyPoint(Vector3.zero);
 						Gizmos.color = Color.red;
-						Gizmos.DrawSphere(pointOrig, 0.05f);
+						Gizmos.DrawSphere(pointOrig, 0.04f);
 					}
 				}
 				foreach (UMASkeleton.bindDebug debugInfo in skeleton.debugNewBinds)
@@ -60,7 +60,7 @@ namespace UMA
 						Matrix4x4 boneMatrix = bone.localToWorldMatrix * debugInfo.bind;
 						Vector3 pointOrig = boneMatrix.MultiplyPoint(Vector3.zero);
 						Gizmos.color = Color.blue;
-						Gizmos.DrawSphere(pointOrig, 0.05f);
+						Gizmos.DrawWireSphere(pointOrig, 0.06f);
 					}
 				}
 			}

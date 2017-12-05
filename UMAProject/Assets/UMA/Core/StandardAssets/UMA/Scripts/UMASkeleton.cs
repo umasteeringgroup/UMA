@@ -289,8 +289,10 @@ namespace UMA
 		{
 			EnsureSkinningData();
 
+			// HACK
+			if (hackBinds.Count > 0) return hackBinds.ToArray();
+
 			return skinningBinds;
-//			return hackBinds.ToArray();
 		}
 
 		/// <summary>
@@ -300,8 +302,10 @@ namespace UMA
 		{
 			EnsureSkinningData();
 
+			// HACK
+			if (hackTransforms.Count > 0) return hackTransforms.ToArray();
+
 			return skinningTransforms;
-//			return hackTransforms.ToArray();
 		}
 
 		/// <summary>
