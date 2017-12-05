@@ -117,7 +117,7 @@ namespace UMA.PoseTools
 
 						if (context.mirrorTransform != null)
 						{
-							int mirrorHash = UMASkeleton.StringToHash(context.mirrorTransform.name);
+							int mirrorHash = UMAUtils.StringToHash(context.mirrorTransform.name);
 							for (int i = 0; i < targetPose.poses.Length; i++)
 							{
 								if (targetPose.poses[i].hash == mirrorHash)
@@ -304,7 +304,7 @@ namespace UMA.PoseTools
 				SerializedProperty bone = pose.FindPropertyRelative("bone");
 				bone.stringValue = addBoneName;
 				SerializedProperty hash = pose.FindPropertyRelative("hash");
-				hash.intValue = UMASkeleton.StringToHash(addBoneName);
+				hash.intValue = UMAUtils.StringToHash(addBoneName);
 				SerializedProperty position = pose.FindPropertyRelative("position");
 				position.vector3Value = Vector3.zero;
 				SerializedProperty rotation = pose.FindPropertyRelative("rotation");
