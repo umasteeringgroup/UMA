@@ -37,7 +37,7 @@ namespace UMA.PoseTools
 			expressionPlayer.umaData = umaData;
 			foreach (var hash in expressionSet.GetAnimatedBoneHashes())
 			{
-				umaData.skeleton.SetAnimatedBoneHierachy(hash);
+				umaData.skeleton.SetRetainedBoneHierachy(hash);
 			}
 		}
 

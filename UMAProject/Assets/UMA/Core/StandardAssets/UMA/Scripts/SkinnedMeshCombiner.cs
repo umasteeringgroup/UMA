@@ -17,7 +17,8 @@ namespace UMA
 		{
 			public UMAMeshData meshData;
 			public int[] targetSubmeshIndices;
-			public BitArray[] triangleMask;
+			public BitArray vertexMask = null;
+			public BitArray[] triangleMask = null;
 		}
 
 		private enum MeshComponents
@@ -36,8 +37,8 @@ namespace UMA
 
 
 		static int[] vertexRemaps = new int[UMAMeshData.MAX_VERTEX_COUNT];
-		static int[] bindRemaps = new int[256];
-		static Matrix4x4[] bindTransforms = new Matrix4x4[256];
+		static int[] rebindIndices = new int[256];
+		static Matrix4x4[] rebindMatrices = new Matrix4x4[256];
 
 		static Dictionary<int, BoneIndexEntry> bonesCollection;
 		static List<Matrix4x4> bindPoses;
@@ -48,7 +49,7 @@ namespace UMA
 		/// <param name="target">Target.</param>
 		/// <param name="sources">Sources.</param>
 		/// <param name="blendShapeSettings">BlendShape Settings.</param>
-		public static void CombineMeshes(UMAMeshData target, CombineInstance[] sources, UMAData.BlendShapeSettings blendShapeSettings = null)
+		public static void CombineMeshes(UMAMeshData target, CombineInstance[] sources, UMASkeleton skeleton, UMAData.BlendShapeSettings blendShapeSettings = null)
 		{
 			if (blendShapeSettings == null)
 				blendShapeSettings = new UMAData.BlendShapeSettings();
@@ -99,14 +100,16 @@ namespace UMA
 			Dictionary<Vector3, int> localClothVertices = has_clothSkinning ? new Dictionary<Vector3, int>(vertexCount) : null;
 
 			int boneCount = 0;
+			int vertexIndex = 0;
+			int blendShapeIndex = 0;
+
 			foreach (var source in sources)
 			{
 				MergeSortedTransforms(umaTransforms, ref boneCount, source.meshData.umaBones);
 			}
-			int vertexIndex = 0;
 
 			if (bonesCollection == null)
-				bonesCollection = new Dictionary<int, BoneIndexEntry>(boneCount);
+				bonesCollection = new Dictionary<int, BoneIndexEntry>();
 			else
 				bonesCollection.Clear();
 			if (bindPoses == null)
@@ -114,22 +117,41 @@ namespace UMA
 			else
 				bindPoses.Clear();
 			if (bonesList == null)
-				bonesList = new List<int>(boneCount);
+				bonesList = new List<int>();
 			else
 				bonesList.Clear();
 
-			int blendShapeIndex = 0;
 
 			foreach (var source in sources)
 			{
-				int sourceVertexCount = source.meshData.vertices.Length;
+				bool hasVertexMask = (source.vertexMask != null);
+				int sourceVertexCount = source.meshData.vertexCount;
+				int sourceBoneCount = source.meshData.umaBones.Length;
+				if (sourceBoneCount > rebindIndices.Length)
+				{
+					Debug.LogWarning("Very high bone count may indicate problem with mesh data.");
+					rebindIndices = new int[sourceBoneCount];
+					rebindMatrices = new Matrix4x4[sourceBoneCount];
+				}
+				for (int i = 0; i < sourceBoneCount; i++)
+				{
+					UMATransform bone = source.meshData.umaBones[i];
+					// HACK - needs to include remap to non-retained bones
+					rebindIndices[i] = skeleton.GetSkinningIndex(bone.hash);
+					rebindMatrices[i] = skeleton.GetSkinningBind(bone.hash).inverse * bone.bind;
+//					rebindIndices[i] = skeleton.hackBinds.Count;
+//					rebindMatrices[i] = Matrix4x4.identity;
+//					skeleton.hackBinds.Add(bone.bind);
+//					skeleton.hackTransforms.Add(skeleton.GetBoneTransform(bone.hash));
+				}
+
 				BuildBoneWeights(source.meshData.boneWeights, 0, boneWeights, vertexIndex, sourceVertexCount, source.meshData.boneNameHashes, source.meshData.bindPoses, bonesCollection, bindPoses, bonesList);
 
 				//Array.Copy(source.meshData.vertices, 0, vertices, vertexIndex, sourceVertexCount);
 				destIndex = vertexIndex;
 				for (int i = 0; i < sourceVertexCount; i++)
 				{
-					if (false)
+					if (hasVertexMask && source.vertexMask[i])
 					{
 						// Vertex is occluded
 						vertexRemaps[i] = -1;
@@ -153,38 +175,30 @@ namespace UMA
 						// SMR binds and bones built from dictionary order
 
 						// Rebind vertex to new bones
-						if (false)
-						{
-							int boneIndex;
-							float boneWeight;
-							Vector3 vertexDst = Vector3.zero;
-							boneIndex = boneSrc.boneIndex0;
-							boneWeight = boneSrc.weight0;
-							boneWeights[destIndex].boneIndex0 = bindRemaps[boneIndex];
-							boneWeights[destIndex].weight0 = boneWeight;
-							vertexDst += bindTransforms[boneIndex].MultiplyPoint(vertexSrc) * boneWeight;
-							boneIndex = boneSrc.boneIndex1;
-							boneWeight = boneSrc.weight1;
-							boneWeights[destIndex].boneIndex1 = bindRemaps[boneIndex];
-							boneWeights[destIndex].weight1 = boneWeight;
-							vertexDst += bindTransforms[boneIndex].MultiplyPoint(vertexSrc) * boneWeight;
-							boneIndex = boneSrc.boneIndex2;
-							boneWeight = boneSrc.weight2;
-							boneWeights[destIndex].boneIndex2 = bindRemaps[boneIndex];
-							boneWeights[destIndex].weight2 = boneWeight;
-							vertexDst += bindTransforms[boneIndex].MultiplyPoint(vertexSrc) * boneWeight;
-							boneIndex = boneSrc.boneIndex3;
-							boneWeight = boneSrc.weight3;
-							boneWeights[destIndex].boneIndex3 = bindRemaps[boneIndex];
-							boneWeights[destIndex].weight3 = boneWeight;
-							vertexDst += bindTransforms[boneIndex].MultiplyPoint(vertexSrc) * boneWeight;
-							vertices[destIndex++] = vertexDst;
-						}
-						else
-						{
-//							boneWeights[destIndex] = boneSrc;
-							vertices[destIndex++] = vertexSrc;
-						}
+						int boneIndex;
+						float boneWeight;
+						Vector3 vertexDst = Vector3.zero;
+						boneIndex = boneSrc.boneIndex0;
+						boneWeight = boneSrc.weight0;
+						boneWeights[destIndex].boneIndex0 = rebindIndices[boneIndex];
+						boneWeights[destIndex].weight0 = boneWeight;
+						vertexDst += rebindMatrices[boneIndex].MultiplyPoint(vertexSrc) * boneWeight;
+						boneIndex = boneSrc.boneIndex1;
+						boneWeight = boneSrc.weight1;
+						boneWeights[destIndex].boneIndex1 = rebindIndices[boneIndex];
+						boneWeights[destIndex].weight1 = boneWeight;
+						vertexDst += rebindMatrices[boneIndex].MultiplyPoint(vertexSrc) * boneWeight;
+						boneIndex = boneSrc.boneIndex2;
+						boneWeight = boneSrc.weight2;
+						boneWeights[destIndex].boneIndex2 = rebindIndices[boneIndex];
+						boneWeights[destIndex].weight2 = boneWeight;
+						vertexDst += rebindMatrices[boneIndex].MultiplyPoint(vertexSrc) * boneWeight;
+						boneIndex = boneSrc.boneIndex3;
+						boneWeight = boneSrc.weight3;
+						boneWeights[destIndex].boneIndex3 = rebindIndices[boneIndex];
+						boneWeights[destIndex].weight3 = boneWeight;
+						vertexDst += rebindMatrices[boneIndex].MultiplyPoint(vertexSrc) * boneWeight;
+						vertices[destIndex++] = vertexDst;
 					}
 				}
 
@@ -196,7 +210,7 @@ namespace UMA
 						destIndex = vertexIndex;
 						for (int i = 0; i < sourceVertexCount; i++)
 						{
-							if (vertexRemaps[i] > 0)
+							if (vertexRemaps[i] >= 0)
 							{
 								normals[destIndex++] = source.meshData.normals[i];
 							}
@@ -215,7 +229,7 @@ namespace UMA
 						destIndex = vertexIndex;
 						for (int i = 0; i < sourceVertexCount; i++)
 						{
-							if (vertexRemaps[i] > 0)
+							if (vertexRemaps[i] >= 0)
 							{
 								tangents[destIndex++] = source.meshData.tangents[i];
 							}
@@ -234,7 +248,7 @@ namespace UMA
 						destIndex = vertexIndex;
 						for (int i = 0; i < sourceVertexCount; i++)
 						{
-							if (vertexRemaps[i] > 0)
+							if (vertexRemaps[i] >= 0)
 							{
 								uv[destIndex++] = source.meshData.uv[i];
 							}
@@ -253,7 +267,7 @@ namespace UMA
 						destIndex = vertexIndex;
 						for (int i = 0; i < sourceVertexCount; i++)
 						{
-							if (vertexRemaps[i] > 0)
+							if (vertexRemaps[i] >= 0)
 							{
 								uv2[destIndex++] = source.meshData.uv2[i];
 							}
@@ -272,7 +286,7 @@ namespace UMA
 						destIndex = vertexIndex;
 						for (int i = 0; i < sourceVertexCount; i++)
 						{
-							if (vertexRemaps[i] > 0)
+							if (vertexRemaps[i] >= 0)
 							{
 								uv3[destIndex++] = source.meshData.uv3[i];
 							}
@@ -291,7 +305,7 @@ namespace UMA
 						destIndex = vertexIndex;
 						for (int i = 0; i < sourceVertexCount; i++)
 						{
-							if (vertexRemaps[i] > 0)
+							if (vertexRemaps[i] >= 0)
 							{
 								uv4[destIndex++] = source.meshData.uv4[i];
 							}
@@ -311,7 +325,7 @@ namespace UMA
 						destIndex = vertexIndex;
 						for (int i = 0; i < sourceVertexCount; i++)
 						{
-							if (vertexRemaps[i] > 0)
+							if (vertexRemaps[i] >= 0)
 							{
 								colors32[destIndex++] = source.meshData.colors32[i];
 							}
@@ -531,7 +545,7 @@ namespace UMA
 			target.vertexCount = vertexCount;
 			target.vertices = vertices;
 			target.boneWeights = boneWeights;
-			target.bindPoses = bindPoses.ToArray();
+//			target.bindPoses = bindPoses.ToArray();
 			target.normals = normals;
 			target.tangents = tangents;
 			target.uv = uv;
@@ -551,13 +565,19 @@ namespace UMA
 
 			target.subMeshCount = subMeshCount;
 			target.submeshes = new SubMeshTriangles[subMeshCount];
-			target.umaBones = umaTransforms;
-			target.umaBoneCount = boneCount;
+//			target.umaBones = umaTransforms;
+//			target.umaBoneCount = boneCount;
+
 			for (int i = 0; i < subMeshCount; i++)
 			{
 				target.submeshes[i].triangles = submeshTriangles[i];
 			}
-			target.boneNameHashes = bonesList.ToArray();
+//			target.boneNameHashes = bonesList.ToArray();
+
+			for (int i = 0; i < bindPoses.Count; i += 10)
+			{
+				Debug.Log("CORRECT for "+skeleton.GetBoneGameObject(bonesList[i]).name+"\n"+bindPoses[i]);
+			}
 		}
 
 		public static UMAMeshData ShallowInstanceMesh(UMAMeshData source)
@@ -572,7 +592,6 @@ namespace UMA
 			target.subMeshCount = source.subMeshCount;
 			target.submeshes = source.submeshes;
 			target.tangents = source.tangents;
-			target.umaBoneCount = source.umaBoneCount;
 			target.umaBones = source.umaBones;
 			target.uv = source.uv;
 			target.uv2 = source.uv2;
@@ -680,9 +699,16 @@ namespace UMA
 
 			foreach (var source in sources)
 			{
-				vertexCount += source.meshData.vertices.Length;
+				int vertexLength = source.meshData.vertices.Length;
+				if (source.vertexMask != null)
+				{
+					vertexLength -= UMAUtils.GetCardinality(source.vertexMask);
+				}
+
+				vertexCount += vertexLength;
 				bindPoseCount += source.meshData.bindPoses.Length;
 				transformHierarchyCount += source.meshData.umaBones.Length;
+
 				if (source.meshData.normals != null && source.meshData.normals.Length != 0) meshComponents |= MeshComponents.has_normals;
 				if (source.meshData.tangents != null && source.meshData.tangents.Length != 0) meshComponents |= MeshComponents.has_tangents;
 				if (source.meshData.uv != null && source.meshData.uv.Length != 0) meshComponents |= MeshComponents.has_uv;
@@ -696,15 +722,18 @@ namespace UMA
 				if (source.meshData.blendShapes != null && source.meshData.blendShapes.Length != 0)
 				{
 					for (int shapeIndex = 0; shapeIndex < source.meshData.blendShapes.Length; shapeIndex++)
-						blendShapeNames.Add(source.meshData.blendShapes [shapeIndex].shapeName);
+						blendShapeNames.Add(source.meshData.blendShapes[shapeIndex].shapeName);
 				}
 
 				for (int i = 0; i < source.meshData.subMeshCount; i++)
 				{
 					if (source.targetSubmeshIndices[i] >= 0)
 					{
-						int triangleLength = (source.triangleMask == null) ? source.meshData.submeshes[i].triangles.Length :
-							(source.meshData.submeshes[i].triangles.Length - (UMAUtils.GetCardinality(source.triangleMask[i]) * 3));
+						int triangleLength = source.meshData.submeshes[i].triangles.Length;
+						if (source.triangleMask != null)
+						{
+							triangleLength -= UMAUtils.GetCardinality(source.triangleMask[i]) * 3;
+						}
 
 						subMeshTriangleLength[source.targetSubmeshIndices[i]] += triangleLength;
 					}
@@ -816,9 +845,9 @@ namespace UMA
 
 		private static int TranslateBoneIndex(int index, int[] bonesHashes, Matrix4x4[] bindPoses, Dictionary<int, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<int> bonesList)
 		{
-			var boneTransform = bonesHashes[index];
+			int boneHash = bonesHashes[index];
 			BoneIndexEntry entry;
-			if (bonesCollection.TryGetValue(boneTransform, out entry))
+			if (bonesCollection.TryGetValue(boneHash, out entry))
 			{
 				for (int i = 0; i < entry.Count; i++)
 				{
@@ -831,15 +860,15 @@ namespace UMA
 				var idx = bindPosesList.Count;
 				entry.AddIndex(idx);
 				bindPosesList.Add(bindPoses[index]);
-				bonesList.Add(boneTransform);
+				bonesList.Add(boneHash);
 				return idx;
 			}
 			else
 			{
 				var idx = bindPosesList.Count;
-				bonesCollection.Add(boneTransform, new BoneIndexEntry() { index = idx });
+				bonesCollection.Add(boneHash, new BoneIndexEntry() { index = idx });
 				bindPosesList.Add(bindPoses[index]);
-				bonesList.Add(boneTransform);
+				bonesList.Add(boneHash);
 				return idx;
 			}
 		}

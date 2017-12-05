@@ -143,6 +143,37 @@ namespace UMA
 		public void OnAfterDeserialize()
 		{
 			nameHash = UMAUtils.StringToHash(slotName);
+
+#if UNITY_EDITOR
+			// HACK - screw with the stored data to match new formats
+			if ((meshData != null) && (meshData.bindPoses != null))
+			{
+				Debug.LogWarning("Hacking UMAMeshData for " + this.GetAssetName());
+				int boneCount = meshData.umaBones.Length;
+				for (int i = 0; i < meshData.umaBones.Length; i++)
+				{
+					meshData.umaBones[i].bind = Matrix4x4.identity;
+					meshData.umaBones[i].retained = true;
+				}
+				int bindCount = meshData.bindPoses.Length;
+				for (int i = 0; i < bindCount; i++)
+				{
+					int hash = meshData.boneNameHashes[i];
+					for (int j = 0; j < boneCount; j++)
+					{
+						if (meshData.umaBones[j].hash == hash)
+						{
+							meshData.umaBones[j].bind = meshData.bindPoses[i];
+//							Debug.Log("Found skinning bind for " + meshData.umaBones[j].name);
+							break;
+						}
+					}
+				}
+
+//				meshData.bindPoses = null;
+//				UnityEditor.EditorUtility.SetDirty(this);
+			}
+#endif
 		}
 		public void OnBeforeSerialize() { }
 

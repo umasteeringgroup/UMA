@@ -76,6 +76,7 @@ namespace UMA
 
 		public RuntimeAnimatorController animationController;
 
+		// HACK - I'm going to move this into the skeleton
 		private Dictionary<int, int> animatedBonesTable;
 
 		public void ResetAnimatedBones()
@@ -983,6 +984,7 @@ namespace UMA
 			if (!this.cancelled && !isOfficiallyCreated)
 			{
 				isOfficiallyCreated = true;
+				// HACK - wtf???
 				if (CharacterCreated != null)
 				{
 					CharacterCreated.Invoke(this);
