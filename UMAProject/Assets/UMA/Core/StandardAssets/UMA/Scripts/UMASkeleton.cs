@@ -10,19 +10,19 @@ namespace UMA
 	[Serializable]
 	public class UMASkeleton
 	{
-		public class bindDebug
-		{
-			public int hash;
-			public Matrix4x4 bind;
-
-			public bindDebug(int h, Matrix4x4 b)
-			{
-				hash = h;
-				bind = b;
-			}
-		}
-		public List<bindDebug> debugOldBinds = new List<bindDebug>();
-		public List<bindDebug> debugNewBinds = new List<bindDebug>();
+//		public class bindDebug
+//		{
+//			public int hash;
+//			public Matrix4x4 bind;
+//
+//			public bindDebug(int h, Matrix4x4 b)
+//			{
+//				hash = h;
+//				bind = b;
+//			}
+//		}
+//		public List<bindDebug> debugOldBinds = new List<bindDebug>();
+//		public List<bindDebug> debugNewBinds = new List<bindDebug>();
 
 		/// <summary>
 		/// Internal class for storing bone and transform information.
@@ -279,8 +279,8 @@ namespace UMA
 		}
 
 		// HACK testing
-		public List<Matrix4x4> hackBinds = new List<Matrix4x4>();
-		public List<Transform> hackTransforms = new List<Transform>();
+//		public List<Matrix4x4> hackBinds = new List<Matrix4x4>();
+//		public List<Transform> hackTransforms = new List<Transform>();
 
 		/// <summary>
 		/// Gets the array of skinning binds.
@@ -290,7 +290,7 @@ namespace UMA
 			EnsureSkinningData();
 
 			// HACK
-			if (hackBinds.Count > 0) return hackBinds.ToArray();
+//			if (hackBinds.Count > 0) return hackBinds.ToArray();
 
 			return skinningBinds;
 		}
@@ -303,7 +303,7 @@ namespace UMA
 			EnsureSkinningData();
 
 			// HACK
-			if (hackTransforms.Count > 0) return hackTransforms.ToArray();
+//			if (hackTransforms.Count > 0) return hackTransforms.ToArray();
 
 			return skinningTransforms;
 		}
@@ -326,7 +326,7 @@ namespace UMA
 						skinningBinds[skinning.Value] = bone.umaTransform.bindToBone;
 						skinningTransforms[skinning.Value] = bone.boneTransform;
 //						Debug.Log("WRONG for "+bone.umaTransform.name+"\n"+bone.umaTransform.bind);
-						debugNewBinds.Add(new bindDebug(bone.umaTransform.hash, bone.umaTransform.bindToBone));
+//						debugNewBinds.Add(new bindDebug(bone.umaTransform.hash, bone.umaTransform.bindToBone));
 					}
 					else
 					{
