@@ -298,12 +298,12 @@ namespace UMA.Editors
                 _previewRenderUtility.BeginPreview(r, background);
                 _previewRenderUtility.DrawMesh(_meshPreview, Vector3.zero, Quaternion.identity, _material, 0);
 
-                _previewRenderUtility.m_Camera.transform.position = Vector2.zero;
-                _previewRenderUtility.m_Camera.transform.rotation = Quaternion.Euler(new Vector3(-_drag.y, -_drag.x, 0));
-                _previewRenderUtility.m_Camera.transform.position = _previewRenderUtility.m_Camera.transform.forward * -6f;
-                _previewRenderUtility.m_Camera.transform.position +=  _meshPreview.bounds.center;
+                _previewRenderUtility.camera.transform.position = Vector2.zero;
+                _previewRenderUtility.camera.transform.rotation = Quaternion.Euler(new Vector3(-_drag.y, -_drag.x, 0));
+                _previewRenderUtility.camera.transform.position = _previewRenderUtility.camera.transform.forward * -6f;
+                _previewRenderUtility.camera.transform.position +=  _meshPreview.bounds.center;
 
-                _previewRenderUtility.m_Camera.Render();
+                _previewRenderUtility.camera.Render();
 
                 Texture resultRender = _previewRenderUtility.EndPreview();
 
@@ -322,8 +322,8 @@ namespace UMA.Editors
             if( source.asset.meshData.rootBoneHash == UMAUtils.StringToHash("Global"))
                 _drag.y = -90;
             
-            _previewRenderUtility.m_Camera.transform.position = new Vector3(0, 0, -6);
-            _previewRenderUtility.m_Camera.transform.rotation = Quaternion.identity;
+            _previewRenderUtility.camera.transform.position = new Vector3(0, 0, -6);
+            _previewRenderUtility.camera.transform.rotation = Quaternion.identity;
         }
 
         public override void OnPreviewSettings()

@@ -62,7 +62,7 @@ namespace UMA.Editors
 						slotDataAsset.animatedBoneHashes = new int[slotDataAsset.animatedBoneNames.Length];
 						for (int i = 0; i < slotDataAsset.animatedBoneNames.Length; i++)
 						{
-							slotDataAsset.animatedBoneHashes[i] = UMASkeleton.StringToHash(slotDataAsset.animatedBoneNames[i]);
+							slotDataAsset.animatedBoneHashes[i] = UMAUtils.StringToHash(slotDataAsset.animatedBoneNames[i]);
 						}
 						//DelayedSave here too?
 						EditorUtility.SetDirty(slotDataAsset);
@@ -146,7 +146,7 @@ namespace UMA.Editors
 
 		private void AddAnimatedBone(string animatedBone)
 		{
-			var hash = UMASkeleton.StringToHash(animatedBone);
+			var hash = UMAUtils.StringToHash(animatedBone);
 			foreach (var t in targets)
 			{
 				var slotDataAsset = t as SlotDataAsset;

@@ -28,8 +28,9 @@ namespace UMA
 		public int parent;
 
 		// HACK - I'm not sure about these
-		public bool preserve;
-		public Matrix4x4 bind;
+		public bool retained;
+		public Matrix4x4 bindToBone;
+		public Matrix4x4 boneToRoot;
 
 		public UMATransform()
 		{
@@ -51,7 +52,17 @@ namespace UMA
 		/// <returns>An identical copy</returns>
 		public UMATransform Duplicate()
 		{
-			return new UMATransform() { hash = hash, name = name, parent = parent, position = position, rotation = rotation, scale = scale };
+			return new UMATransform() {
+				hash = hash,
+				name = name,
+				parent = parent,
+				position = position,
+				rotation = rotation,
+				scale = scale,
+				retained = retained,
+				bindToBone = bindToBone,
+				boneToRoot = boneToRoot
+			};
 		}
 
 		public static UMATransformComparer TransformComparer = new UMATransformComparer();
@@ -202,8 +213,8 @@ namespace UMA
 		public UMATransform[] umaBones;
 //		[NonSerialized]
 //		public Transform[] bones;
-		[NonSerialized]
-		public int umaBoneCount;
+//		[NonSerialized]
+//		public int umaBoneCount;
 
 		// HACK - nuke this the second the combiner is fixed
 		public int[] boneNameHashes;
@@ -500,8 +511,9 @@ namespace UMA
 		/// </summary>
 		/// <param name="rootBone">Root transform.</param>
 		/// <param name="bones">Transforms.</param>
-		public void UpdateBones(Transform rootBone, Transform[] bones)
+		protected void UpdateBones(Transform rootBone, Transform[] bones)
 		{
+// HACK - no need to sort bones if the combiner doesn't merge lists
 			rootBone = FindRoot(rootBone, bones);
 			
 			var requiredBones = new Dictionary<Transform, UMATransform>();
@@ -526,7 +538,6 @@ namespace UMA
 			var sortedBones = new List<UMATransform>(requiredBones.Values);
 			sortedBones.Sort(UMATransform.TransformComparer);
 			umaBones = sortedBones.ToArray();
-			umaBoneCount = umaBones.Length;
 
 			rootBoneHash = UMAUtils.StringToHash(rootBone.name);
 			ComputeBoneNameHashes(bones);
@@ -573,7 +584,8 @@ namespace UMA
 		/// <param name="skeleton">Skeleton.</param>
 		public void ApplyDataToUnityMesh(SkinnedMeshRenderer renderer, UMASkeleton skeleton)
 		{
-			CreateTransforms(skeleton);
+//			CreateTransforms(skeleton);
+//			skeleton.EnsureBoneHierarchy();
 
 			Mesh mesh = renderer.sharedMesh;
 #if UNITY_EDITOR
@@ -605,9 +617,8 @@ namespace UMA
 				mesh.uv4 = uv4;
 				mesh.colors32 = colors32;
 			}
-			mesh.bindposes = bindPoses;
-// HACK - I think I want this
-//mesh.bindposes = skeleton.GetBinds();
+//			mesh.bindposes = bindPoses;
+			mesh.bindposes = skeleton.GetSkinningBinds();
 
 			var subMeshCount = submeshes.Length;
 			mesh.subMeshCount = subMeshCount;
@@ -658,12 +669,13 @@ namespace UMA
 			#endregion
 
 			mesh.RecalculateBounds();
-//			renderer.bones = bones != null ? bones : skeleton.HashesToTransforms(boneNameHashes);
-			renderer.bones = skeleton.HashesToTransforms(boneNameHashes);
-// HACK - I think I want this
-//mesh.bindposes = skeleton.GetTransforms();
+//			renderer.bones = skeleton.HashesToTransforms(boneNameHashes);
+			renderer.bones = skeleton.GetSkinningTransforms();
+
 			renderer.sharedMesh = mesh;
-			renderer.rootBone = rootBone;
+//			renderer.rootBone = rootBone;
+			renderer.rootBone = skeleton.GetBoneTransform(skeleton.rootBoneHash);
+
 
 			if (clothSkinning != null && clothSkinning.Length > 0)
 			{
@@ -716,9 +728,9 @@ namespace UMA
 
 		private void CreateTransforms(UMASkeleton skeleton)
 		{
-			for (int i = 0; i < umaBoneCount; i++)
+			foreach (UMATransform umaBone in umaBones)
 			{
-				skeleton.EnsureBone(umaBones[i]);
+				skeleton.EnsureBone(umaBone);
 			}
 			skeleton.EnsureBoneHierarchy();
 		}

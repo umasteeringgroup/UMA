@@ -1,4 +1,8 @@
 using UnityEngine;
+#if UNITY_EDITOR
+using System.Collections;
+using System.Collections.Generic;
+#endif
 
 namespace UMA
 {
@@ -139,10 +143,129 @@ namespace UMA
 		public void UpdateMeshData()
 		{
 		}
+
+		// HACK
+		Dictionary<int, UMATransform> umaBones;
+//		Dictionary<int, Matrix4x4> bonesToRoot;
+//		private void CalcBoneToRoot(UMATransform bone)
+//		{
+//			if (bonesToRoot.ContainsKey(bone.hash)) return;
+//
+//			if (!umaBones.ContainsKey(bone.parent))
+//			{
+//				Matrix4x4 boneToRoot = Matrix4x4.TRS(bone.position, bone.rotation, bone.scale).inverse;
+//				bonesToRoot.Add(bone.hash, boneToRoot);
+////				Debug.Log("Top level bone " + umaBones[bone.hash].name + "\n" + boneToRoot);
+//				return;
+//			}
+//
+//			if (!bonesToRoot.ContainsKey(bone.parent))
+//			{
+//				CalcBoneToRoot(umaBones[bone.parent]);
+//			}
+//			bonesToRoot.Add(bone.hash, bonesToRoot[bone.parent] * Matrix4x4.TRS(bone.position, bone.rotation, bone.scale).inverse);
+//		}
+
 #endif
 		public void OnAfterDeserialize()
 		{
 			nameHash = UMAUtils.StringToHash(slotName);
+
+#if UNITY_EDITOR
+			// HACK - screw with the stored data to match new formats
+			if ((meshData != null) && (meshData.bindPoses != null))
+			{
+				umaBones = new Dictionary<int, UMATransform>(meshData.umaBones.Length);
+//				bonesToRoot = new Dictionary<int, Matrix4x4>(meshData.umaBones.Length);
+
+//				Debug.LogWarning("Hacking UMAMeshData for " + this.GetAssetName());
+
+				int boneCount = meshData.umaBones.Length;
+				for (int i = 0; i < meshData.umaBones.Length; i++)
+				{
+					meshData.umaBones[i].bindToBone = Matrix4x4.zero;
+					meshData.umaBones[i].retained = true;
+					umaBones.Add(meshData.umaBones[i].hash, meshData.umaBones[i]);
+				}
+
+//				bonesToRoot.Add(meshData.rootBoneHash, Matrix4x4.identity);
+//				for (int i = 0; i < meshData.umaBones.Length; i++)
+//				{
+//					try
+//					{
+//						CalcBoneToRoot(meshData.umaBones[i]);
+//						meshData.umaBones[i].boneToRoot = bonesToRoot[meshData.umaBones[i].hash];
+//					}
+//					catch
+//					{
+//						Debug.LogError("Error looking for bone: " + meshData.umaBones[i].name);
+//					}
+//				}
+
+				List<UMATransform> sortedBones = new List<UMATransform>();
+
+				int bindCount = meshData.bindPoses.Length;
+//				int globalHash = UMAUtils.StringToHash("Global");
+//				int rootHash = UMAUtils.StringToHash("Root");
+				for (int i = 0; i < bindCount; i++)
+				{
+					UMATransform bone;
+					if (umaBones.TryGetValue(meshData.boneNameHashes[i], out bone))
+					{
+						bone.bindToBone = meshData.bindPoses[i];
+						sortedBones.Add(bone);
+					}
+					else
+					{
+						Debug.LogError("Missing bind bone");
+					}
+//
+//					if (meshData.boneNameHashes[i] == globalHash)
+//					{
+//						Debug.LogWarning("Skinning to Global bone");
+//					}
+//					if (meshData.boneNameHashes[i] == rootHash)
+//					{
+//						Debug.LogWarning("Skinning to Root bone");
+//					}
+				}
+
+				for (int i = 0; i < meshData.umaBones.Length; i++)
+				{
+					UMATransform bone = meshData.umaBones[i];
+
+					if (!sortedBones.Contains(bone))
+					{
+						sortedBones.Add(bone);
+					}
+				}
+
+				meshData.umaBones = sortedBones.ToArray();
+
+//				for (int i = 0; i < meshData.boneWeights.Length; i++)
+//				{
+//					if (meshData.boneWeights[i].boneIndex0 >= meshData.boneNameHashes.Length)
+//					{
+//						Debug.LogError("Bad bind bone");
+//					}
+//					if (meshData.boneWeights[i].boneIndex1 >= meshData.boneNameHashes.Length)
+//					{
+//						Debug.LogError("Bad bind bone");
+//					}
+//					if (meshData.boneWeights[i].boneIndex2 >= meshData.boneNameHashes.Length)
+//					{
+//						Debug.LogError("Bad bind bone");
+//					}
+//					if (meshData.boneWeights[i].boneIndex3 >= meshData.boneNameHashes.Length)
+//					{
+//						Debug.LogError("Bad bind bone");
+//					}
+//				}
+
+//				meshData.bindPoses = null;
+//				UnityEditor.EditorUtility.SetDirty(this);
+			}
+#endif
 		}
 		public void OnBeforeSerialize() { }
 

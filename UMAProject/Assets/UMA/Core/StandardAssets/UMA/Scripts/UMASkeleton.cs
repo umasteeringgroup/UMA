@@ -10,21 +10,34 @@ namespace UMA
 	[Serializable]
 	public class UMASkeleton
 	{
+//		public class bindDebug
+//		{
+//			public int hash;
+//			public Matrix4x4 bind;
+//
+//			public bindDebug(int h, Matrix4x4 b)
+//			{
+//				hash = h;
+//				bind = b;
+//			}
+//		}
+//		public List<bindDebug> debugOldBinds = new List<bindDebug>();
+//		public List<bindDebug> debugNewBinds = new List<bindDebug>();
+
 		/// <summary>
 		/// Internal class for storing bone and transform information.
 		/// </summary>
 		[Serializable]
 		public class BoneData
 		{
-			// Just use the ones in the UMATransform
-//			public int boneNameHash;
-//			public int parentBoneNameHash;
 			public Transform boneTransform;
 			public UMATransform umaTransform;
 			public Quaternion rotation;
 			public Vector3 position;
 			public Vector3 scale;
-//			public Matrix4x4 bind;
+
+//			[NonSerialized]
+//			public Matrix4x4 localToRoot;
 		}
 
 		public IEnumerable<int> BoneHashes { get { return GetBoneHashes(); } }
@@ -45,6 +58,9 @@ namespace UMA
 
 		protected SerializableDictionary<int, BoneData> boneDictionary;
 		protected SerializableDictionary<int, int> skinningDictionary;
+
+		protected Matrix4x4[] skinningBinds;
+		protected Transform[] skinningTransforms;
 
 		/// <summary>
 		/// Initializes a new UMASkeleton from a transform hierarchy.
@@ -89,9 +105,11 @@ namespace UMA
 				umaData.umaRoot = newRoot;
 				rootBoneHash = UMAUtils.StringToHash(umaData.umaRoot.name);
 				AddBone(newRoot.transform, rootBoneHash, 0);
-				AddBone(newGlobal.transform, UMAUtils.StringToHash(newGlobal.name), rootBoneHash);
+				SetRetainedBone(rootBoneHash);
+				int globalHash = UMAUtils.StringToHash(newGlobal.name);
+				AddBone(newGlobal.transform, globalHash, rootBoneHash);
+				SetRetainedBone(globalHash);
 			}
-
 
 			foreach (SlotData slot in umaData.umaRecipe.slotDataList) 
 			{
@@ -100,12 +118,15 @@ namespace UMA
 					UMAMeshData meshData = slot.asset.meshData;
 					if (meshData == null) continue;
 
-					for (int i = 0; i < meshData.umaBoneCount; i++)
+					foreach (UMATransform umaBone in meshData.umaBones)
 					{
-						UMATransform bone = meshData.umaBones[i];
-						if (!boneDictionary.ContainsKey(bone.hash))
+						if (!boneDictionary.ContainsKey(umaBone.hash))
 						{
-							AddBone(bone);
+							AddBone(umaBone);
+						}
+						if (umaBone.retained)
+						{
+							SetRetainedBone(umaBone.hash);
 						}
 					}
 				}
@@ -131,11 +152,11 @@ namespace UMA
 		/// </summary>
 		public virtual void EndSkeletonUpdate()
 		{
-			foreach (var bd in boneDictionary.Values)
+			foreach (BoneData bone in boneDictionary.Values)
 			{
-				bd.rotation = bd.boneTransform.localRotation;
-				bd.position = bd.boneTransform.localPosition;
-				bd.scale = bd.boneTransform.localScale;
+				bone.rotation = bone.boneTransform.localRotation;
+				bone.position = bone.boneTransform.localPosition;
+				bone.scale = bone.boneTransform.localScale;
 			}
 
 			// HACK need to fix things here???
@@ -143,19 +164,176 @@ namespace UMA
 			updating = false;
 		}
 
-		public virtual void SetAnimatedBone(int nameHash)
+		/// <summary>
+		/// Marks the bone as retained.
+		/// </summary>
+		/// <param name="parentHash">Hash of bone name.</param>
+		public virtual void SetRetainedBone(int nameHash)
 		{
-			// The default MeshCombiner is ignoring the animated bones, virtual method added to share common interface.
+			if (!skinningDictionary.ContainsKey(nameHash))
+			{
+				skinningDictionary.Add(nameHash, skinningDictionary.Count);
+			}
 		}
 
-		public virtual void SetAnimatedBoneHierachy(int nameHash)
+		/// <summary>
+		/// Marks the bone and all parents as retained.
+		/// </summary>
+		/// <param name="parentHash">Hash of bone name.</param>
+		public virtual void SetRetainedBoneHierachy(int nameHash)
 		{
-			// The default MeshCombiner is ignoring the animated bones, virtual method added to share common interface.
+			if (!skinningDictionary.ContainsKey(nameHash))
+			{
+				skinningDictionary.Add(nameHash, skinningDictionary.Count);
+
+				BoneData bone = null;
+				boneDictionary.TryGetValue(nameHash, out bone);
+				if (bone != null)
+				{
+					SetRetainedBoneHierachy(bone.umaTransform.parent);
+				}
+			}
 		}
 
-		public virtual void ClearAnimatedBoneHierachy(int nameHash, bool recursive)
+		/// <summary>
+		/// Marks the bone as unretained.
+		/// </summary>
+		/// <param name="parentHash">Hash of bone name.</param>
+		public virtual void ClearRetainedBone(int nameHash)
 		{
-			// The default MeshCombiner is ignoring the animated bones, virtual method added to share common interface.
+			// HACK - this is going to break the indices
+//			if (skinningDictionary.ContainsKey(nameHash))
+//			{
+//				skinningDictionary.Remove(nameHash);
+//			}
+		}
+
+		/// <summary>
+		/// Marks the bone and all children unretained.
+		/// </summary>
+		/// <param name="parentHash">Hash of bone name.</param>
+		public virtual void ClearRetainedBoneHierachy(int nameHash)
+		{
+			// HACK - this is going to break the indices
+//			if (skinningDictionary.ContainsKey(nameHash))
+//			{
+//				skinningDictionary.Remove(nameHash);
+//
+//				foreach (BoneData bone in boneDictionary.Values)
+//				{
+//					if (bone.umaTransform.parent == nameHash)
+//					{
+//						ClearRetainedBoneHierachy(bone.umaTransform.hash);
+//					}
+//				}
+//			}
+		}
+
+		/// <summary>
+		/// Gets the index of a retained bone in the skinning array.
+		/// </summary>
+		/// <param name="nameHash">Name hash.</param>
+		public virtual int GetSkinningIndex(int nameHash)
+		{
+			int index;
+			if (!skinningDictionary.TryGetValue(nameHash, out index))
+			{
+				Debug.LogWarning("Had to add bone to skinning data.");
+				index = skinningDictionary.Count;
+				skinningDictionary.Add(nameHash, index);
+			}
+
+			return index;
+		}
+
+		/// <summary>
+		/// Gets the bind matrix of a retained bone in the skinning array.
+		/// </summary>
+		/// <param name="nameHash">Name hash.</param>
+		public virtual Matrix4x4 GetSkinningBindToBone(int nameHash)
+		{
+			BoneData bone;
+			if (boneDictionary.TryGetValue(nameHash, out bone))
+			{
+				return bone.umaTransform.bindToBone;
+			}
+
+			Debug.LogError("Could not find skinning bone in skeleton!");
+			return Matrix4x4.identity;
+		}
+
+		/// <summary>
+		/// Gets the bind matrix of a retained bone in the skinning array.
+		/// </summary>
+		/// <param name="nameHash">Name hash.</param>
+		public virtual Matrix4x4 GetSkinningBoneToRoot(int nameHash)
+		{
+			BoneData bone;
+			if (boneDictionary.TryGetValue(nameHash, out bone))
+			{
+				return bone.umaTransform.boneToRoot;
+			}
+
+			Debug.LogError("Could not find skinning bone in skeleton!");
+			return Matrix4x4.identity;
+		}
+
+		// HACK testing
+//		public List<Matrix4x4> hackBinds = new List<Matrix4x4>();
+//		public List<Transform> hackTransforms = new List<Transform>();
+
+		/// <summary>
+		/// Gets the array of skinning binds.
+		/// </summary>
+		public virtual Matrix4x4[] GetSkinningBinds()
+		{
+			EnsureSkinningData();
+
+			// HACK
+//			if (hackBinds.Count > 0) return hackBinds.ToArray();
+
+			return skinningBinds;
+		}
+
+		/// <summary>
+		/// Gets the array of skinning transforms.
+		/// </summary>
+		public virtual Transform[] GetSkinningTransforms()
+		{
+			EnsureSkinningData();
+
+			// HACK
+//			if (hackTransforms.Count > 0) return hackTransforms.ToArray();
+
+			return skinningTransforms;
+		}
+
+		/// <summary>
+		/// Builds the skinning arrays if they are invalid.
+		/// </summary>
+		private void EnsureSkinningData()
+		{
+			if ((skinningBinds == null) || (skinningBinds.Length != skinningDictionary.Count))
+			{
+				skinningBinds = new Matrix4x4[skinningDictionary.Count];
+				skinningTransforms = new Transform[skinningDictionary.Count];
+
+				foreach (KeyValuePair<int, int> skinning in skinningDictionary)
+				{
+					BoneData bone;
+					if (boneDictionary.TryGetValue(skinning.Key, out bone))
+					{
+						skinningBinds[skinning.Value] = bone.umaTransform.bindToBone;
+						skinningTransforms[skinning.Value] = bone.boneTransform;
+//						Debug.Log("WRONG for "+bone.umaTransform.name+"\n"+bone.umaTransform.bind);
+//						debugNewBinds.Add(new bindDebug(bone.umaTransform.hash, bone.umaTransform.bindToBone));
+					}
+					else
+					{
+						Debug.LogError("Couldn't find skinning bone in skeleton!");
+					}
+				}
+			}
 		}
 
 		private void AddBonesRecursive(Transform transform)
@@ -164,8 +342,6 @@ namespace UMA
 			var parentHash = transform.parent != null ? UMAUtils.StringToHash(transform.parent.name) : 0;
 			BoneData data = new BoneData()
 			{
-//				parentBoneNameHash = parentHash,
-//				boneNameHash = hash,
 				boneTransform = transform,
 				umaTransform = new UMATransform(transform, hash, parentHash)
 			};
@@ -186,9 +362,9 @@ namespace UMA
 
 		protected virtual BoneData GetBone(int nameHash)
 		{
-			BoneData data = null;
-			boneDictionary.TryGetValue(nameHash, out data);
-			return data;
+			BoneData bone = null;
+			boneDictionary.TryGetValue(nameHash, out bone);
+			return bone;
 		}
 
 		/// <summary>
@@ -207,14 +383,12 @@ namespace UMA
 		/// <param name="parentHash">Hash of parent transform name.</param>
 		/// <param name="hash">Hash of transform name.</param>
 		/// <param name="transform">Transform.</param>
-		public virtual void AddBone(Transform transform, int hash, int parentHash)
+		protected virtual void AddBone(Transform transform, int hash, int parentHash)
 		{
 			BoneData newBone = new BoneData()
 			{
-//				parentBoneNameHash = parentHash,
-//				boneNameHash = hash,
 				boneTransform = transform,
-				umaTransform = new UMATransform(transform, hash, parentHash),
+				umaTransform = new UMATransform(transform, hash, parentHash)
 			};
 
 			if (!boneDictionary.ContainsKey(hash))
@@ -229,23 +403,23 @@ namespace UMA
 		/// Adds the transform into the skeleton.
 		/// </summary>
 		/// <param name="transform">Transform.</param>
-		public virtual void AddBone(UMATransform transform)
+		protected virtual void AddBone(UMATransform umaTransform)
 		{
-			var go = new GameObject(transform.name);
+			GameObject go = new GameObject(umaTransform.name);
 			BoneData newBone = new BoneData()
 			{
-//				parentBoneNameHash = transform.parent,
-//				boneNameHash = transform.hash,
 				boneTransform = go.transform,
-				umaTransform = transform.Duplicate(),
+				umaTransform = umaTransform.Duplicate(),
 			};
 
-			if (!boneDictionary.ContainsKey(transform.hash))
+			if (!boneDictionary.ContainsKey(umaTransform.hash))
 			{
-				boneDictionary.Add(transform.hash, newBone);
+				boneDictionary.Add(umaTransform.hash, newBone);
 			}
 			else
-				Debug.LogError("AddBone: " + transform.name + " already exists in the dictionary!");
+			{
+				Debug.LogError("AddBone: " + umaTransform.name + " already exists in the dictionary!");
+			}
 		}
 
 		/// <summary>
@@ -254,10 +428,14 @@ namespace UMA
 		/// <param name="nameHash">Name hash.</param>
 		public virtual void RemoveBone(int nameHash)
 		{
-			BoneData bd = GetBone(nameHash);
-			if (bd != null)
+			if (boneDictionary.ContainsKey(nameHash))
 			{
 				boneDictionary.Remove(nameHash);
+			}
+
+			if (skinningDictionary.ContainsKey(nameHash))
+			{
+				skinningDictionary.Remove(nameHash);
 			}
 		}
 
@@ -557,6 +735,7 @@ namespace UMA
 				}
 			}
 		}
+
 		/// <summary>
 		/// Gets the position of a bone.
 		/// </summary>
@@ -610,8 +789,6 @@ namespace UMA
 				throw new Exception("Bone not found.");
 			}
 		}
-
-		public static int StringToHash(string name) { return UMAUtils.StringToHash(name); }
 
 		public virtual Transform[] HashesToTransforms(int[] boneNameHashes)
 		{
