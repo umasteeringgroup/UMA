@@ -289,7 +289,7 @@ namespace UMA
             Vector3[] newVerts = new Vector3[_occlusionMesh.vertexCount];
             for (int i = 0; i < _occlusionMesh.vertexCount; i++)
             {
-                newVerts[i] = _occlusionMesh.vertices[i] + (_occlusionMesh.normals[i].normalized * offset);
+                newVerts[i] = verts[i] + (normals[i].normalized * offset);
                 newVerts[i] = rotation * (newVerts[i]); //we assume to always be at (0,0,0)
             }
             _occlusionMesh.vertices = newVerts;
