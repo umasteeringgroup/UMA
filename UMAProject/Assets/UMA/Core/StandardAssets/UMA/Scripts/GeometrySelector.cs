@@ -286,6 +286,8 @@ namespace UMA
             if (Mathf.Approximately(offset,0) && rot == Vector3.zero) //If offset is zero and rot is zero, we can early out because we already reset the mesh.
                 return;
             
+            Vector3[] verts = _occlusionMesh.vertices;
+            Vector3[] normals = _occlusionMesh.normals;
             Vector3[] newVerts = new Vector3[_occlusionMesh.vertexCount];
             for (int i = 0; i < _occlusionMesh.vertexCount; i++)
             {
