@@ -146,7 +146,12 @@ namespace UMA.CharacterSystem.Editors
 			}
 
 			//Move UMAAddidtionalRecipes out of advanced into its own section
+			EditorGUI.BeginChangeCheck();
 			EditorGUILayout.PropertyField(umaAdditionalRecipes, new GUIContent("Additional Utility Recipes", "Additional Recipes to add when the character is generated, like the capsuleCollider recipe for example"), true);
+			if (EditorGUI.EndChangeCheck())
+			{
+				serializedObject.ApplyModifiedProperties();
+			}
 			GUILayout.Space(2f);
 
 			SerializedProperty thisRaceAnimationControllers = serializedObject.FindProperty("raceAnimationControllers");
