@@ -3675,6 +3675,7 @@ namespace UMA.CharacterSystem
             }
         }
 			
+		[ContextMenu("Copy From Current Wardrobe")]
 		void CopyDefaultWardrobe()
 		{
 			string[] nameList = new string[_wardrobeRecipes.Values.Count];
@@ -3690,6 +3691,7 @@ namespace UMA.CharacterSystem
 			Debug.Log("Copied: " + EditorGUIUtility.systemCopyBuffer);
 		}
 
+		[ContextMenu("Paste To Default Wardrobe")]
 		void PasteDefaultWardrobe()
 		{
 			Debug.Log("Pasting: " + EditorGUIUtility.systemCopyBuffer);
