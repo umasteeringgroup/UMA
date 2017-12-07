@@ -29,19 +29,19 @@ namespace UMA
 		protected DNALibrary dnaLibrary;
 
 		[SerializeField]
-		protected SerializableDictionary<int, RaceData> raceDictionary = null;
+		protected RaceAssetDictionary raceDictionary = null;
 
 		[SerializeField]
-		protected SerializableDictionary<int, SlotDataAsset> slotDictionary = null;
+		protected SlotAssetDictionary slotDictionary = null;
 
 		[SerializeField]
-		protected SerializableDictionary<int, OverlayDataAsset> overlayDictionary = null;
+		protected OverlayAssetDictionary overlayDictionary = null;
 
 		[SerializeField]
-		protected SerializableDictionary<int, DynamicUMADnaAsset> dnaDictionary = null;
+		protected DNAAssetDictionary dnaDictionary = null;
 
 		[SerializeField]
-		protected SerializableDictionary<int, MeshHideAsset> occlusionDictionary = null;
+		protected OcclusionAssetDictionary occlusionDictionary = null;
 
 		public void Start()
 		{
@@ -69,7 +69,7 @@ namespace UMA
 			#if UNITY_EDITOR
 //			if (raceDictionary == null)
 			{
-				raceDictionary = new SerializableDictionary<int, RaceData>();
+				raceDictionary = new RaceAssetDictionary();
 				if (raceLibrary != null)
 				{
 					Debug.LogWarning("Updating race library on " + this.name);
@@ -84,7 +84,7 @@ namespace UMA
 			}
 //			if (slotDictionary == null)
 			{
-				slotDictionary = new SerializableDictionary<int, SlotDataAsset>();
+				slotDictionary = new SlotAssetDictionary();
 				if (slotLibrary != null)
 				{
 					Debug.LogWarning("Updating slot library on " + this.name);
@@ -99,7 +99,7 @@ namespace UMA
 			}
 //			if (overlayDictionary == null)
 			{
-				overlayDictionary = new SerializableDictionary<int, OverlayDataAsset>();
+				overlayDictionary = new OverlayAssetDictionary();
 				if (overlayLibrary != null)
 				{
 					Debug.LogWarning("Updating overlay library on " + this.name);
@@ -114,7 +114,7 @@ namespace UMA
 			}
 //			if (dnaDictionary == null)
 			{
-				dnaDictionary = new SerializableDictionary<int, DynamicUMADnaAsset>();
+				dnaDictionary = new DNAAssetDictionary();
 				if (dnaLibrary != null)
 				{
 					Debug.LogWarning("Updating DNA library on " + this.name);
@@ -129,7 +129,7 @@ namespace UMA
 			}
 //			if (occlusionDictionary == null)
 			{
-				occlusionDictionary = new SerializableDictionary<int, MeshHideAsset>();
+				occlusionDictionary = new OcclusionAssetDictionary();
 			}
 			#endif
 
