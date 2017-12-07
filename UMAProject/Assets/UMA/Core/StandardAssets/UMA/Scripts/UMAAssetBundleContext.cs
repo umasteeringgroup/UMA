@@ -127,6 +127,33 @@ namespace UMA
 		}
 
 		/// <summary>
+		/// Check for presence of slot occlusion data by name.
+		/// </summary>
+		/// <returns><c>True</c> if there is occlusion data for the slot in this context.</returns>
+		/// <param name="name">Name.</param>
+		public override bool HasOcclusion(string name)
+		{
+			return false;
+		}
+		/// <summary>
+		/// Check for presence of slot occlusion data by name hash.
+		/// </summary>
+		/// <returns><c>True</c> if occlusion data for the slot exists in this context.</returns>
+		/// <param name="nameHash">Name hash.</param>
+		public override bool HasOcclusion(int nameHash)
+		{
+			return false;
+		}
+
+		/// <summary>
+		/// Add a ocllusion data asset to the context.
+		/// </summary>
+		/// <param name="slot">New slot asset.</param>
+		public override void AddOcclusionAsset(MeshHideAsset asset)
+		{
+		}
+
+		/// <summary>
 		/// Check for presence of an overlay by name.
 		/// </summary>
 		/// <returns><c>True</c> if the overlay exists in this context.</returns>

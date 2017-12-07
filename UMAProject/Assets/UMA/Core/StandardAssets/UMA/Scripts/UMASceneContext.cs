@@ -28,6 +28,26 @@ namespace UMA
 		[SerializeField]
 		protected DNALibrary dnaLibrary;
 
+		[SerializeField]
+		protected RaceData[] raceAssets;
+		protected Dictionary<int, RaceData> raceDictionary;
+
+		[SerializeField]
+		protected SlotDataAsset[] slotAssets;
+		protected Dictionary<int, SlotDataAsset> slotDictionary;
+
+		[SerializeField]
+		protected OverlayDataAsset[] overlayAssets;
+		protected Dictionary<int, OverlayDataAsset> overlayDictionary;
+
+		[SerializeField]
+		protected DynamicUMADnaAsset[] dnaAssets;
+		protected Dictionary<int, DynamicUMADnaAsset> dnaDictionary;
+
+		[SerializeField]
+		protected MeshHideAsset[] occlusionAssets;
+		protected Dictionary<int, MeshHideAsset> occlusionDictionary;
+
 		public void Start()
 		{
 			if (!slotLibrary)
@@ -70,7 +90,7 @@ namespace UMA
 		/// <param name="name">Name.</param>
 		public override RaceData GetRace(string name)
 		{
-			return raceLibrary.GetRace(name);
+			return GetRace(UMAUtils.StringToHash(name));
 		}
 		/// <summary>
 		/// Gets a race by name hash.
@@ -107,7 +127,7 @@ namespace UMA
 		/// <param name="name">Name.</param>
 		public override SlotData InstantiateSlot(string name)
 		{
-			return slotLibrary.InstantiateSlot(name);
+			return InstantiateSlot(UMAUtils.StringToHash(name));
 		}
 
 		/// <summary>
@@ -128,7 +148,7 @@ namespace UMA
 		/// <param name="overlayList">Overlay list.</param>
 		public override SlotData InstantiateSlot(string name, List<OverlayData> overlayList)
 		{
-			return slotLibrary.InstantiateSlot(name, overlayList);
+			return InstantiateSlot(UMAUtils.StringToHash(name), overlayList);
 		}
 		/// <summary>
 		/// Instantiate a slot by name hash, with overlays.
@@ -148,7 +168,7 @@ namespace UMA
 		/// <param name="name">Name.</param>
 		public override bool HasSlot(string name)
 		{
-			return slotLibrary.HasSlot(name);
+			return HasSlot(UMAUtils.StringToHash(name));
 		}
 		/// <summary>
 		/// Check for presence of a slot by name hash.
@@ -170,13 +190,40 @@ namespace UMA
 		}
 
 		/// <summary>
+		/// Check for presence of slot occlusion data by name.
+		/// </summary>
+		/// <returns><c>True</c> if there is occlusion data for the slot in this context.</returns>
+		/// <param name="name">Name.</param>
+		public override bool HasOcclusion(string name)
+		{
+			return HasOcclusion(UMAUtils.StringToHash(name));
+		}
+		/// <summary>
+		/// Check for presence of slot occlusion data by name hash.
+		/// </summary>
+		/// <returns><c>True</c> if occlusion data for the slot exists in this context.</returns>
+		/// <param name="nameHash">Name hash.</param>
+		public override bool HasOcclusion(int nameHash)
+		{
+			return false;
+		}
+
+		/// <summary>
+		/// Add a ocllusion data asset to the context.
+		/// </summary>
+		/// <param name="slot">New slot asset.</param>
+		public override void AddOcclusionAsset(MeshHideAsset asset)
+		{
+		}
+
+		/// <summary>
 		/// Check for presence of an overlay by name.
 		/// </summary>
 		/// <returns><c>True</c> if the overlay exists in this context.</returns>
 		/// <param name="name">Name.</param>
 		public override bool HasOverlay(string name)
 		{
-			return overlayLibrary.HasOverlay(name);
+			return HasOverlay(UMAUtils.StringToHash(name));
 		}
 		/// <summary>
 		/// Check for presence of an overlay by name hash.
@@ -195,7 +242,7 @@ namespace UMA
 		/// <param name="name">Name.</param>
 		public override OverlayData InstantiateOverlay(string name)
 		{
-			return overlayLibrary.InstantiateOverlay(name);
+			return InstantiateOverlay(UMAUtils.StringToHash(name));
 		}
 		/// <summary>
 		/// Instantiate an overlay by name hash.
@@ -215,7 +262,7 @@ namespace UMA
 		/// <param name="color">Color.</param>
 		public override OverlayData InstantiateOverlay(string name, Color color)
 		{
-			return overlayLibrary.InstantiateOverlay(name, color);
+			return InstantiateOverlay(UMAUtils.StringToHash(name), color);
 		}
 		/// <summary>
 		/// Instantiate a tinted overlay by name hash.
@@ -244,7 +291,7 @@ namespace UMA
 		/// <param name="name">Name.</param>
 		public override bool HasDNA(string name)
 		{
-			return dnaLibrary.HasDNA(name);
+			return HasDNA(UMAUtils.StringToHash(name));
 		}
 		/// <summary>
 		/// Check for presence of an DNA type by name hash.
@@ -263,7 +310,7 @@ namespace UMA
 		/// <param name="name">Name.</param>
 		public override UMADnaBase InstantiateDNA(string name)
 		{
-			return dnaLibrary.InstantiateDNA(name);
+			return InstantiateDNA(UMAUtils.StringToHash(name));
 		}
 		/// <summary>
 		/// Instantiate DNA by name hash.
