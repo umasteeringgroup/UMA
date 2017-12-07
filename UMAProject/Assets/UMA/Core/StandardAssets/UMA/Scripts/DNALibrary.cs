@@ -93,7 +93,14 @@ namespace UMA
 			}
 			return res;
 		}
-			
+
+		public DynamicUMADnaAsset[] GetAllDNAAssets()
+		{
+			#pragma warning disable 618
+			return dnaAssetArray;
+			#pragma warning restore 618
+		}
+
 		private UMADnaBase Internal_InstantiateDNA(int nameHash)
 		{
 			ValidateDictionary();

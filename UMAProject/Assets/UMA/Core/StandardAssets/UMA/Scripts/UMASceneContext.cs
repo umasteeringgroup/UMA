@@ -29,40 +29,35 @@ namespace UMA
 		protected DNALibrary dnaLibrary;
 
 		[SerializeField]
-		protected RaceData[] raceAssets;
-		protected Dictionary<int, RaceData> raceDictionary;
+		protected SerializableDictionary<int, RaceData> raceDictionary = null;
 
 		[SerializeField]
-		protected SlotDataAsset[] slotAssets;
-		protected Dictionary<int, SlotDataAsset> slotDictionary;
+		protected SerializableDictionary<int, SlotDataAsset> slotDictionary = null;
 
 		[SerializeField]
-		protected OverlayDataAsset[] overlayAssets;
-		protected Dictionary<int, OverlayDataAsset> overlayDictionary;
+		protected SerializableDictionary<int, OverlayDataAsset> overlayDictionary = null;
 
 		[SerializeField]
-		protected DynamicUMADnaAsset[] dnaAssets;
-		protected Dictionary<int, DynamicUMADnaAsset> dnaDictionary;
+		protected SerializableDictionary<int, DynamicUMADnaAsset> dnaDictionary = null;
 
 		[SerializeField]
-		protected MeshHideAsset[] occlusionAssets;
-		protected Dictionary<int, MeshHideAsset> occlusionDictionary;
+		protected SerializableDictionary<int, MeshHideAsset> occlusionDictionary = null;
 
 		public void Start()
 		{
-			if (!slotLibrary)
-			{
-				slotLibrary = GameObject.Find("SlotLibrary").GetComponent<SlotLibraryBase>();
-			}
-			if (!raceLibrary)
+			if (!raceLibrary && (raceDictionary == null))
 			{
 				raceLibrary = GameObject.Find("RaceLibrary").GetComponent<RaceLibraryBase>();
 			}
-			if (!overlayLibrary)
+			if (!slotLibrary && (slotDictionary == null))
+			{
+				slotLibrary = GameObject.Find("SlotLibrary").GetComponent<SlotLibraryBase>();
+			}
+			if (!overlayLibrary && (overlayDictionary == null))
 			{
 				overlayLibrary = GameObject.Find("OverlayLibrary").GetComponent<OverlayLibraryBase>();
 			}
-			if (!dnaLibrary)
+			if (!dnaLibrary && (dnaDictionary == null))
 			{
 				dnaLibrary = GameObject.Find("DNALibrary").GetComponent<DNALibrary>();
 			}
@@ -71,19 +66,86 @@ namespace UMA
 			// later loads a valid scene (and everything breaks)
 			Instance = this;
 
+			#if UNITY_EDITOR
+//			if (raceDictionary == null)
+			{
+				raceDictionary = new SerializableDictionary<int, RaceData>();
+				if (raceLibrary != null)
+				{
+					Debug.LogWarning("Updating race library on " + this.name);
+					RaceData[] races = raceLibrary.GetAllRaces();
+					foreach (RaceData race in races)
+					{
+						if (race == null) continue;
+						raceDictionary.Add(race.GetNameHash(), race);
+					}
+//					raceLibrary = null;
+				}
+			}
+//			if (slotDictionary == null)
+			{
+				slotDictionary = new SerializableDictionary<int, SlotDataAsset>();
+				if (slotLibrary != null)
+				{
+					Debug.LogWarning("Updating slot library on " + this.name);
+					SlotDataAsset[] slots = slotLibrary.GetAllSlotAssets();
+					foreach (SlotDataAsset slot in slots)
+					{
+						if (slot == null) continue;
+						slotDictionary.Add(slot.nameHash, slot);
+					}
+//					slotLibrary = null;
+				}
+			}
+//			if (overlayDictionary == null)
+			{
+				overlayDictionary = new SerializableDictionary<int, OverlayDataAsset>();
+				if (overlayLibrary != null)
+				{
+					Debug.LogWarning("Updating overlay library on " + this.name);
+					OverlayDataAsset[] overlays = overlayLibrary.GetAllOverlayAssets();
+					foreach (OverlayDataAsset overlay in overlays)
+					{
+						if (overlay == null) continue;
+						overlayDictionary.Add(overlay.nameHash, overlay);
+					}
+//					overlayLibrary = null;
+				}
+			}
+//			if (dnaDictionary == null)
+			{
+				dnaDictionary = new SerializableDictionary<int, DynamicUMADnaAsset>();
+				if (dnaLibrary != null)
+				{
+					Debug.LogWarning("Updating DNA library on " + this.name);
+					DynamicUMADnaAsset[] DNAs = dnaLibrary.GetAllDNAAssets();
+					foreach (DynamicUMADnaAsset dna in DNAs)
+					{
+						if (dna == null) continue;
+						dnaDictionary.Add(dna.dnaTypeHash, dna);
+					}
+//					dnaLibrary = null;
+				}
+			}
+//			if (occlusionDictionary == null)
+			{
+				occlusionDictionary = new SerializableDictionary<int, MeshHideAsset>();
+			}
+			#endif
+
 			UMAGlobal.Context.AddContext(this, 0);
 		}
 
 		/// <summary>
 		/// Validates the library contents.
 		/// </summary>
-		public void ValidateDictionaries()
-		{
-			slotLibrary.ValidateDictionary();
-			raceLibrary.ValidateDictionary();
-			overlayLibrary.ValidateDictionary();
-			dnaLibrary.ValidateDictionary();
-		}
+//		public void ValidateDictionaries()
+//		{
+//			slotLibrary.ValidateDictionary();
+//			raceLibrary.ValidateDictionary();
+//			overlayLibrary.ValidateDictionary();
+//			dnaLibrary.ValidateDictionary();
+//		}
 
 		/// <summary>
 		/// Gets a race by name.
@@ -101,7 +163,11 @@ namespace UMA
 		/// <param name="nameHash">Name hash.</param>
 		public override RaceData GetRace(int nameHash)
 		{
-			return raceLibrary.GetRace(nameHash);
+//			return raceLibrary.GetRace(nameHash);
+			RaceData race = null;
+			raceDictionary.TryGetValue(nameHash, out race);
+
+			return race;
 		}
 
 		/// <summary>
@@ -110,7 +176,12 @@ namespace UMA
 		/// <returns>The array of race data.</returns>
 		public override RaceData[] GetAllRaces()
 		{
-			return raceLibrary.GetAllRaces();
+//			return raceLibrary.GetAllRaces();
+			// HACK
+			RaceData[] raceArray = new RaceData[raceDictionary.Count];
+			raceDictionary.Values.CopyTo(raceArray, 0);
+
+			return raceArray;
 		}
 
 		/// <summary>
@@ -119,7 +190,9 @@ namespace UMA
 		/// <param name="race">New race.</param>
 		public override void AddRace(RaceData race)
 		{
-			raceLibrary.AddRace(race);
+//			raceLibrary.AddRace(race);
+			if (race == null) return;
+			raceDictionary.Add(race.GetNameHash(), race);
 		}
 
 		/// <summary>
@@ -139,7 +212,14 @@ namespace UMA
 		/// <param name="nameHash">Name hash.</param>
 		public override SlotData InstantiateSlot(int nameHash)
 		{
-			return slotLibrary.InstantiateSlot(nameHash);
+//			return slotLibrary.InstantiateSlot(nameHash);
+			SlotDataAsset asset;
+			if (slotDictionary.TryGetValue(nameHash, out asset))
+			{
+				return new SlotData(asset);
+			}
+
+			return null;
 		}
 
 		/// <summary>
@@ -161,6 +241,15 @@ namespace UMA
 		public override SlotData InstantiateSlot(int nameHash, List<OverlayData> overlayList)
 		{
 			return slotLibrary.InstantiateSlot(nameHash, overlayList);
+			SlotDataAsset asset;
+			if (slotDictionary.TryGetValue(nameHash, out asset))
+			{
+				SlotData slot = new SlotData(asset);
+				slot.SetOverlayList(overlayList);
+				return slot;
+			}
+
+			return null;
 		}
 
 		/// <summary>
@@ -179,7 +268,8 @@ namespace UMA
 		/// <param name="nameHash">Name hash.</param>
 		public override bool HasSlot(int nameHash)
 		{ 
-			return slotLibrary.HasSlot(nameHash);
+//			return slotLibrary.HasSlot(nameHash);
+			return slotDictionary.ContainsKey(nameHash);
 		}
 
 		/// <summary>
@@ -188,7 +278,8 @@ namespace UMA
 		/// <param name="slot">New slot asset.</param>
 		public override void AddSlotAsset(SlotDataAsset slot)
 		{
-			slotLibrary.AddSlotAsset(slot);
+//			slotLibrary.AddSlotAsset(slot);
+			slotDictionary.Add(slot.nameHash, slot);
 		}
 
 		/// <summary>
@@ -207,7 +298,7 @@ namespace UMA
 		/// <param name="nameHash">Name hash.</param>
 		public override bool HasOcclusion(int nameHash)
 		{
-			return false;
+			return occlusionDictionary.ContainsKey(nameHash);
 		}
 
 		/// <summary>
@@ -216,6 +307,8 @@ namespace UMA
 		/// <param name="slot">New slot asset.</param>
 		public override void AddOcclusionAsset(MeshHideAsset asset)
 		{
+			// HACK
+			occlusionDictionary.Add(asset.asset.nameHash, asset);
 		}
 
 		/// <summary>
@@ -234,7 +327,8 @@ namespace UMA
 		/// <param name="nameHash">Name hash.</param>
 		public override bool HasOverlay(int nameHash)
 		{ 
-			return overlayLibrary.HasOverlay(nameHash);
+//			return overlayLibrary.HasOverlay(nameHash);
+			return overlayDictionary.ContainsKey(nameHash);
 		}
 
 		/// <summary>
@@ -253,7 +347,14 @@ namespace UMA
 		/// <param name="nameHash">Name hash.</param>
 		public override OverlayData InstantiateOverlay(int nameHash)
 		{
-			return overlayLibrary.InstantiateOverlay(nameHash);
+//			return overlayLibrary.InstantiateOverlay(nameHash);
+			OverlayDataAsset asset;
+			if (overlayDictionary.TryGetValue(nameHash, out asset))
+			{
+				return new OverlayData(asset);
+			}
+
+			return null;
 		}
 
 		/// <summary>
@@ -274,7 +375,16 @@ namespace UMA
 		/// <param name="color">Color.</param>
 		public override OverlayData InstantiateOverlay(int nameHash, Color color)
 		{
-			return overlayLibrary.InstantiateOverlay(nameHash, color);
+//			return overlayLibrary.InstantiateOverlay(nameHash, color);
+			OverlayDataAsset asset;
+			if (overlayDictionary.TryGetValue(nameHash, out asset))
+			{
+				OverlayData overlay = new OverlayData(asset);
+				overlay.colorData.color = color;
+				return overlay;
+			}
+
+			return null;
 		}
 
 		/// <summary>
@@ -283,7 +393,8 @@ namespace UMA
 		/// <param name="overlay">New overlay asset.</param>
 		public override void AddOverlayAsset(OverlayDataAsset overlay)
 		{
-			overlayLibrary.AddOverlayAsset(overlay);
+//			overlayLibrary.AddOverlayAsset(overlay);
+			overlayDictionary.Add(overlay.nameHash, overlay);
 		}
 
 		/// <summary>
@@ -302,7 +413,8 @@ namespace UMA
 		/// <param name="nameHash">Name hash.</param>
 		public override bool HasDNA(int nameHash)
 		{ 
-			return dnaLibrary.HasDNA(nameHash);
+//			return dnaLibrary.HasDNA(nameHash);
+			return dnaDictionary.ContainsKey(nameHash);
 		}
 
 		/// <summary>
@@ -321,7 +433,18 @@ namespace UMA
 		/// <param name="nameHash">Name hash.</param>
 		public override UMADnaBase InstantiateDNA(int nameHash)
 		{
-			return dnaLibrary.InstantiateDNA(nameHash);
+//			return dnaLibrary.InstantiateDNA(nameHash);
+			DynamicUMADnaAsset asset;
+			if (dnaDictionary.TryGetValue(nameHash, out asset))
+			{
+				DynamicUMADna dna = new DynamicUMADna(nameHash);
+				// HACK - really???
+				dna.dnaAsset = asset;
+
+				return dna;
+			}
+
+			return null;
 		}
 			
 		/// <summary>
@@ -330,7 +453,8 @@ namespace UMA
 		/// <param name="dna">New DNA asset.</param>
 		public override void AddDNAAsset(DynamicUMADnaAsset dnaAsset)
 		{
-			dnaLibrary.AddDNAAsset(dnaAsset);
+//			dnaLibrary.AddDNAAsset(dnaAsset);
+			dnaDictionary.Add(dnaAsset.dnaTypeHash, dnaAsset);
 		}
 	}
 }

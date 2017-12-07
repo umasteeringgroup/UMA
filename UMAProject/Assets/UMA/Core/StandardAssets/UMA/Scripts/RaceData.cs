@@ -25,7 +25,7 @@ namespace UMA
         }
         public int GetNameHash()
         {
-            return 0;
+			return UMAUtils.StringToHash(raceName);
         }
         #endregion
 
