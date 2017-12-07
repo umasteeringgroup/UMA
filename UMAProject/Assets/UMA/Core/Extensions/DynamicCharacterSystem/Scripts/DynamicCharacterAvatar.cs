@@ -3674,6 +3674,53 @@ namespace UMA.CharacterSystem
                 }
             }
         }
+			
+		void CopyDefaultWardrobe()
+		{
+			string[] nameList = new string[_wardrobeRecipes.Values.Count];
+			string final = "";
+			int i = 0;
+
+			foreach (UMATextRecipe recipe in _wardrobeRecipes.Values)
+			{
+				nameList[i] = string.Format("{0};", recipe.name);
+				i++;
+			}
+			EditorGUIUtility.systemCopyBuffer = string.Concat(nameList);
+			Debug.Log("Copied: " + EditorGUIUtility.systemCopyBuffer);
+		}
+
+		void PasteDefaultWardrobe()
+		{
+			Debug.Log("Pasting: " + EditorGUIUtility.systemCopyBuffer);
+			string buffer = EditorGUIUtility.systemCopyBuffer;
+			if (buffer == null)
+				return;
+
+			char[] splitChar = { ';' };
+			string[] strArray = buffer.Split(splitChar, StringSplitOptions.RemoveEmptyEntries);
+
+			if (strArray == null)
+				return;
+			if (strArray.Length == 0)
+				return;
+
+			bool clearedList = false;
+			for (int i = 0; i < strArray.Length; i++)
+			{
+				UMATextRecipe recipe = UMAAssetIndexer.Instance.GetAsset<UMATextRecipe>(strArray[i]);
+				if(recipe != null )
+				{
+					if (!clearedList)
+					{
+						preloadWardrobeRecipes.recipes.Clear();
+						clearedList = true;
+					}
+					WardrobeRecipeListItem item = new WardrobeRecipeListItem(recipe);
+					preloadWardrobeRecipes.recipes.Add(item);
+				}
+			}
+		}
     }
 
     #endregion
