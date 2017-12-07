@@ -70,6 +70,8 @@ namespace UMA
 			// This will avoid those occasions where someone drops in a bogus context in a test scene, and then 
 			// later loads a valid scene (and everything breaks)
 			Instance = this;
+
+			UMAGlobal.Context.AddContext(this, 0);
 		}
 
 		/// <summary>

@@ -9,10 +9,10 @@ namespace UMA
 	/// <summary>
 	/// UMA context that delegates to a set of active subcontexts
 	/// </summary>
-	public class UMACompoundContext : UMAContextBase
+	public class UMACompoundContext
 	{
 		#if UNITY_EDITOR
-		public bool allowAssetSearch;
+		public bool allowAssetSearch = true;
 
 		protected SerializableDictionary<int, RaceData> raceDictionary = null;
 		protected SerializableDictionary<int, SlotDataAsset> slotDictionary = null;
@@ -97,7 +97,7 @@ namespace UMA
 		}
 		#endif
 
-		protected List<UMAContextBase> contexts;
+		protected List<UMAContextBase> contexts = new List<UMAContextBase>();
 
 		/// <summary>
 		/// Add an additional subcontext.
@@ -123,12 +123,13 @@ namespace UMA
 			}
 		}
 
+		#region RaceData
 		/// <summary>
 		/// Gets a race by name.
 		/// </summary>
 		/// <returns>The race.</returns>
 		/// <param name="name">Name.</param>
-		public override RaceData GetRace(string name)
+		public RaceData GetRace(string name)
 		{
 			RaceData race = null;
 			foreach (UMAContextBase context in contexts)
@@ -153,7 +154,7 @@ namespace UMA
 		/// </summary>
 		/// <returns>The race.</returns>
 		/// <param name="nameHash">Name hash.</param>
-		public override RaceData GetRace(int nameHash)
+		public RaceData GetRace(int nameHash)
 		{
 			RaceData race = null;
 			foreach (UMAContextBase context in contexts)
@@ -178,7 +179,7 @@ namespace UMA
 		/// Array of all races in the context.
 		/// </summary>
 		/// <returns>The array of race data.</returns>
-		public override RaceData[] GetAllRaces()
+		public RaceData[] GetAllRaces()
 		{
 			// HACK - is this needed? If so combine
 			return null;
@@ -188,9 +189,35 @@ namespace UMA
 		/// Add a race to the context.
 		/// </summary>
 		/// <param name="race">New race.</param>
-		public override void AddRace(RaceData race)
+		public void AddRace(RaceData race)
 		{
 			Debug.LogError("Cannot include assets in compound context, add to scene or asset bundle!");
+		}
+		#endregion
+
+		#region SlotData
+		/// <summary>
+		/// Check for presence of a slot by name.
+		/// </summary>
+		/// <returns><c>True</c> if the slot exists in this context.</returns>
+		/// <param name="name">Name.</param>
+		public bool HasSlot(string name)
+		{
+			return HasSlot(UMAUtils.StringToHash(name));
+		}
+		/// <summary>
+		/// Check for presence of a slot by name hash.
+		/// </summary>
+		/// <returns><c>True</c> if the slot exists in this context.</returns>
+		/// <param name="nameHash">Name hash.</param>
+		public bool HasSlot(int nameHash)
+		{
+			foreach (UMAContextBase context in contexts)
+			{
+				if (context.HasSlot(nameHash)) return true;
+			}
+
+			return false;
 		}
 
 		/// <summary>
@@ -198,7 +225,7 @@ namespace UMA
 		/// </summary>
 		/// <returns>The slot.</returns>
 		/// <param name="name">Name.</param>
-		public override SlotData InstantiateSlot(string name)
+		public SlotData InstantiateSlot(string name)
 		{
 			return InstantiateSlot(UMAUtils.StringToHash(name));
 		}
@@ -208,7 +235,7 @@ namespace UMA
 		/// </summary>
 		/// <returns>The slot.</returns>
 		/// <param name="nameHash">Name hash.</param>
-		public override SlotData InstantiateSlot(int nameHash)
+		public SlotData InstantiateSlot(int nameHash)
 		{
 			foreach (UMAContextBase context in contexts)
 			{
@@ -240,7 +267,7 @@ namespace UMA
 		/// <returns>The slot.</returns>
 		/// <param name="name">Name.</param>
 		/// <param name="overlayList">Overlay list.</param>
-		public override SlotData InstantiateSlot(string name, List<OverlayData> overlayList)
+		public SlotData InstantiateSlot(string name, List<OverlayData> overlayList)
 		{
 			return InstantiateSlot(UMAUtils.StringToHash(name), overlayList);
 		}
@@ -250,7 +277,7 @@ namespace UMA
 		/// <returns>The slot.</returns>
 		/// <param name="nameHash">Name hash.</param>
 		/// <param name="overlayList">Overlay list.</param>
-		public override SlotData InstantiateSlot(int nameHash, List<OverlayData> overlayList)
+		public SlotData InstantiateSlot(int nameHash, List<OverlayData> overlayList)
 		{
 			foreach (UMAContextBase context in contexts)
 			{
@@ -278,44 +305,22 @@ namespace UMA
 		}
 
 		/// <summary>
-		/// Check for presence of a slot by name.
-		/// </summary>
-		/// <returns><c>True</c> if the slot exists in this context.</returns>
-		/// <param name="name">Name.</param>
-		public override bool HasSlot(string name)
-		{
-			return HasSlot(UMAUtils.StringToHash(name));
-		}
-		/// <summary>
-		/// Check for presence of a slot by name hash.
-		/// </summary>
-		/// <returns><c>True</c> if the slot exists in this context.</returns>
-		/// <param name="nameHash">Name hash.</param>
-		public override bool HasSlot(int nameHash)
-		{
-			foreach (UMAContextBase context in contexts)
-			{
-				if (context.HasSlot(nameHash)) return true;
-			}
-
-			return false;
-		}
-
-		/// <summary>
 		/// Add a slot asset to the context.
 		/// </summary>
 		/// <param name="slot">New slot asset.</param>
-		public override void AddSlotAsset(SlotDataAsset slot)
+		public void AddSlotAsset(SlotDataAsset slot)
 		{
 			Debug.LogError("Cannot include assets in compound context, add to scene or asset bundle!");
 		}
+		#endregion
 
+		#region OcclusionData
 		/// <summary>
 		/// Check for presence of slot occlusion data by name.
 		/// </summary>
 		/// <returns><c>True</c> if there is occlusion data for the slot in this context.</returns>
 		/// <param name="name">Name.</param>
-		public override bool HasOcclusion(string name)
+		public bool HasOcclusion(string name)
 		{
 			return HasOcclusion(UMAUtils.StringToHash(name));
 		}
@@ -324,7 +329,7 @@ namespace UMA
 		/// </summary>
 		/// <returns><c>True</c> if occlusion data for the slot exists in this context.</returns>
 		/// <param name="nameHash">Name hash.</param>
-		public override bool HasOcclusion(int nameHash)
+		public bool HasOcclusion(int nameHash)
 		{
 			foreach (UMAContextBase context in contexts)
 			{
@@ -347,17 +352,19 @@ namespace UMA
 		/// Add a ocllusion data asset to the context.
 		/// </summary>
 		/// <param name="slot">New slot asset.</param>
-		public override void AddOcclusionAsset(MeshHideAsset asset)
+		public void AddOcclusionAsset(MeshHideAsset asset)
 		{
 			Debug.LogError("Cannot include assets in compound context, add to scene or asset bundle!");
 		}
+		#endregion
 
+		#region OverlayData
 		/// <summary>
 		/// Check for presence of an overlay by name.
 		/// </summary>
 		/// <returns><c>True</c> if the overlay exists in this context.</returns>
 		/// <param name="name">Name.</param>
-		public override bool HasOverlay(string name)
+		public bool HasOverlay(string name)
 		{
 			return HasOverlay(UMAUtils.StringToHash(name));
 		}
@@ -366,7 +373,7 @@ namespace UMA
 		/// </summary>
 		/// <returns><c>True</c> if the overlay exists in this context.</returns>
 		/// <param name="nameHash">Name hash.</param>
-		public override bool HasOverlay(int nameHash)
+		public bool HasOverlay(int nameHash)
 		{ 
 			foreach (UMAContextBase context in contexts)
 			{
@@ -390,7 +397,7 @@ namespace UMA
 		/// </summary>
 		/// <returns>The overlay.</returns>
 		/// <param name="name">Name.</param>
-		public override OverlayData InstantiateOverlay(string name)
+		public OverlayData InstantiateOverlay(string name)
 		{
 			return InstantiateOverlay(UMAUtils.StringToHash(name));
 		}
@@ -399,7 +406,7 @@ namespace UMA
 		/// </summary>
 		/// <returns>The overlay.</returns>
 		/// <param name="nameHash">Name hash.</param>
-		public override OverlayData InstantiateOverlay(int nameHash)
+		public OverlayData InstantiateOverlay(int nameHash)
 		{
 			foreach (UMAContextBase context in contexts)
 			{
@@ -431,7 +438,7 @@ namespace UMA
 		/// <returns>The overlay.</returns>
 		/// <param name="name">Name.</param>
 		/// <param name="color">Color.</param>
-		public override OverlayData InstantiateOverlay(string name, Color color)
+		public OverlayData InstantiateOverlay(string name, Color color)
 		{
 			return InstantiateOverlay(UMAUtils.StringToHash(name), color);
 		}
@@ -441,7 +448,7 @@ namespace UMA
 		/// <returns>The overlay.</returns>
 		/// <param name="nameHash">Name hash.</param>
 		/// <param name="color">Color.</param>
-		public override OverlayData InstantiateOverlay(int nameHash, Color color)
+		public OverlayData InstantiateOverlay(int nameHash, Color color)
 		{
 			foreach (UMAContextBase context in contexts)
 			{
@@ -473,17 +480,19 @@ namespace UMA
 		/// Add an overlay asset to the context.
 		/// </summary>
 		/// <param name="overlay">New overlay asset.</param>
-		public override void AddOverlayAsset(OverlayDataAsset overlay)
+		public void AddOverlayAsset(OverlayDataAsset overlay)
 		{
 			Debug.LogError("Cannot include assets in compound context, add to scene or asset bundle!");
 		}
+		#endregion
 
+		#region DNAData
 		/// <summary>
 		/// Check for presence of a DNA type by name.
 		/// </summary>
 		/// <returns><c>True</c> if the DNA exists in this context.</returns>
 		/// <param name="name">Name.</param>
-		public override bool HasDNA(string name)
+		public bool HasDNA(string name)
 		{
 			return HasDNA(UMAUtils.StringToHash(name));
 		}
@@ -492,7 +501,7 @@ namespace UMA
 		/// </summary>
 		/// <returns><c>True</c> if the DNA exists in this context.</returns>
 		/// <param name="nameHash">Name hash.</param>
-		public override bool HasDNA(int nameHash)
+		public bool HasDNA(int nameHash)
 		{ 
 			foreach (UMAContextBase context in contexts)
 			{
@@ -516,7 +525,7 @@ namespace UMA
 		/// </summary>
 		/// <returns>The overlay.</returns>
 		/// <param name="name">Name.</param>
-		public override UMADnaBase InstantiateDNA(string name)
+		public UMADnaBase InstantiateDNA(string name)
 		{
 			return InstantiateDNA(UMAUtils.StringToHash(name));
 		}
@@ -525,13 +534,13 @@ namespace UMA
 		/// </summary>
 		/// <returns>The overlay.</returns>
 		/// <param name="nameHash">Name hash.</param>
-		public override UMADnaBase InstantiateDNA(int nameHash)
+		public UMADnaBase InstantiateDNA(int nameHash)
 		{
 			foreach (UMAContextBase context in contexts)
 			{
 				if (context.HasDNA(nameHash))
 				{
-					context.InstantiateDNA(nameHash);
+					return context.InstantiateDNA(nameHash);
 				}
 			}
 
@@ -555,9 +564,10 @@ namespace UMA
 		/// Add a DNA asset to the context.
 		/// </summary>
 		/// <param name="dna">New DNA asset.</param>
-		public override void AddDNAAsset(DynamicUMADnaAsset dnaAsset)
+		public void AddDNAAsset(DynamicUMADnaAsset dnaAsset)
 		{
 			Debug.LogError("Cannot include assets in compound context, add to scene or asset bundle!");
 		}
+		#endregion
 	}
 }
