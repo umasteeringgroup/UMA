@@ -3678,49 +3678,42 @@ namespace UMA.CharacterSystem
 		[ContextMenu("Copy From Current Wardrobe")]
 		void CopyDefaultWardrobe()
 		{
-			string[] nameList = new string[_wardrobeRecipes.Values.Count];
-			string final = "";
-			int i = 0;
-
-			foreach (UMATextRecipe recipe in _wardrobeRecipes.Values)
-			{
-				nameList[i] = string.Format("{0};", recipe.name);
-				i++;
-			}
-			EditorGUIUtility.systemCopyBuffer = string.Concat(nameList);
+			string recipeString = JsonUtility.ToJson(new UMATextRecipe.DCSPackRecipe(this, "", "DynamicCharacterAvatar", defaultSaveOptions));
+			EditorGUIUtility.systemCopyBuffer = recipeString;
 			Debug.Log("Copied: " + EditorGUIUtility.systemCopyBuffer);
 		}
 
 		[ContextMenu("Paste To Default Wardrobe")]
 		void PasteDefaultWardrobe()
 		{
-			Debug.Log("Pasting: " + EditorGUIUtility.systemCopyBuffer);
 			string buffer = EditorGUIUtility.systemCopyBuffer;
-			if (buffer == null)
-				return;
+			Debug.Log("Pasting: " + buffer);
 
-			char[] splitChar = { ';' };
-			string[] strArray = buffer.Split(splitChar, StringSplitOptions.RemoveEmptyEntries);
+			UMATextRecipe.DCSPackRecipe copiedList = JsonUtility.FromJson<UMATextRecipe.DCSPackRecipe>(buffer);
 
-			if (strArray == null)
-				return;
-			if (strArray.Length == 0)
-				return;
+			ChangeRace(copiedList.race);
 
-			bool clearedList = false;
-			for (int i = 0; i < strArray.Length; i++)
+			if (copiedList.wardrobeSet.Count > 0)
+				preloadWardrobeRecipes.recipes.Clear();
+
+			foreach (WardrobeSettings wardrobe in copiedList.wardrobeSet)
 			{
-				UMATextRecipe recipe = UMAAssetIndexer.Instance.GetAsset<UMATextRecipe>(strArray[i]);
-				if(recipe != null )
+				UMATextRecipe recipe = UMAAssetIndexer.Instance.GetAsset<UMATextRecipe>(wardrobe.recipe);
+				if (recipe != null)
 				{
-					if (!clearedList)
-					{
-						preloadWardrobeRecipes.recipes.Clear();
-						clearedList = true;
-					}
 					WardrobeRecipeListItem item = new WardrobeRecipeListItem(recipe);
 					preloadWardrobeRecipes.recipes.Add(item);
 				}
+			}
+
+			if (copiedList.characterColors.Count > 0)
+				characterColors._colors.Clear();
+
+			foreach (UMAPackedRecipeBase.PackedOverlayColorDataV3 color in copiedList.characterColors)
+			{
+				OverlayColorData colorData = new OverlayColorData();
+				color.SetOverlayColorData(colorData);
+				characterColors.SetColor(color.name, colorData);
 			}
 		}
     }
