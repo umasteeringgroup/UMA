@@ -56,8 +56,8 @@ namespace UMA
 		public bool isUpdating { get { return updating; } }
 		protected bool updating;
 
-		protected SerializableDictionary<int, BoneData> boneDictionary;
-		protected SerializableDictionary<int, int> skinningDictionary;
+		protected SerializedDictionary<int, BoneData> boneDictionary;
+		protected SerializedDictionary<int, int> skinningDictionary;
 
 		protected Matrix4x4[] skinningBinds;
 		protected Transform[] skinningTransforms;
@@ -69,8 +69,8 @@ namespace UMA
 		public UMASkeleton(SkinnedMeshRenderer umaRenderer)
 		{
 			rootBoneHash = UMAUtils.StringToHash(umaRenderer.rootBone.name);
-			boneDictionary = new SerializableDictionary<int, BoneData>();
-			skinningDictionary = new SerializableDictionary<int, int>();
+			boneDictionary = new SerializedDictionary<int, BoneData>();
+			skinningDictionary = new SerializedDictionary<int, int>();
 			BeginSkeletonUpdate();
 			AddBonesRecursive(umaRenderer.rootBone);
 			EndSkeletonUpdate();
@@ -82,8 +82,8 @@ namespace UMA
 		/// <param name="umaData">UMAData.</param>
 		public UMASkeleton(UMAData umaData)
 		{
-			boneDictionary = new SerializableDictionary<int, BoneData>();
-			skinningDictionary = new SerializableDictionary<int, int>();
+			boneDictionary = new SerializedDictionary<int, BoneData>();
+			skinningDictionary = new SerializedDictionary<int, int>();
 
 			BeginSkeletonUpdate();
 

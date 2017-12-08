@@ -14,17 +14,17 @@ namespace UMA
 		#if UNITY_EDITOR
 		public bool allowAssetSearch = true;
 
-		protected SerializableDictionary<int, RaceData> raceDictionary = null;
-		protected SerializableDictionary<int, SlotDataAsset> slotDictionary = null;
-		protected SerializableDictionary<int, OverlayDataAsset> overlayDictionary = null;
-		protected SerializableDictionary<int, DynamicUMADnaAsset> dnaDictionary = null;
-		protected SerializableDictionary<int, MeshHideAsset> occlusionDictionary = null;
+		protected RaceAssetDictionary raceDictionary= null;
+		protected SlotAssetDictionary slotDictionary = null;
+		protected OverlayAssetDictionary overlayDictionary = null;
+		protected DNAAssetDictionary dnaDictionary = null;
+		protected OcclusionAssetDictionary occlusionDictionary = null;
 
 		protected void BuildRaceAssetDictionary()
 		{
 			string type = typeof(RaceData).Name;
 			Debug.LogWarning(string.Format("Searching asset database for {0} missing from context.", type));
-			raceDictionary = new SerializableDictionary<int, RaceData>();
+			raceDictionary = new RaceAssetDictionary();
 
 			string[] assetGUIDs = AssetDatabase.FindAssets("t:"+type);
 			foreach (string guid in assetGUIDs)
@@ -39,7 +39,7 @@ namespace UMA
 		{
 			string type = typeof(SlotDataAsset).Name;
 			Debug.LogWarning(string.Format("Searching asset database for {0} missing from context.", type));
-			slotDictionary = new SerializableDictionary<int, SlotDataAsset>();
+			slotDictionary = new SlotAssetDictionary();
 
 			string[] assetGUIDs = AssetDatabase.FindAssets("t:"+type);
 			foreach (string guid in assetGUIDs)
@@ -54,7 +54,7 @@ namespace UMA
 		{
 			string type = typeof(OverlayDataAsset).Name;
 			Debug.LogWarning(string.Format("Searching asset database for {0} missing from context.", type));
-			overlayDictionary = new SerializableDictionary<int, OverlayDataAsset>();
+			overlayDictionary = new OverlayAssetDictionary();
 
 			string[] assetGUIDs = AssetDatabase.FindAssets("t:"+type);
 			foreach (string guid in assetGUIDs)
@@ -69,7 +69,7 @@ namespace UMA
 		{
 			string type = typeof(DynamicUMADnaAsset).Name;
 			Debug.LogWarning(string.Format("Searching asset database for {0} missing from context.", type));
-			dnaDictionary = new SerializableDictionary<int, DynamicUMADnaAsset>();
+			dnaDictionary = new DNAAssetDictionary();
 
 			string[] assetGUIDs = AssetDatabase.FindAssets("t:"+type);
 			foreach (string guid in assetGUIDs)
@@ -84,7 +84,7 @@ namespace UMA
 		{
 			string type = typeof(MeshHideAsset).Name;
 			Debug.LogWarning(string.Format("Searching asset database for {0} missing from context.", type));
-			occlusionDictionary = new SerializableDictionary<int, MeshHideAsset>();
+			occlusionDictionary = new OcclusionAssetDictionary();
 
 			string[] assetGUIDs = AssetDatabase.FindAssets("t:"+type);
 			foreach (string guid in assetGUIDs)

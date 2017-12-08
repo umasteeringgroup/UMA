@@ -16,40 +16,48 @@ namespace UMA
 	/// Serializable dictionary for race assets
 	/// </summary>
 	[Serializable]
-	public class RaceAssetDictionary : SerializableDictionary<int, RaceData> { }
+	public class RaceAssetDictionary : SerializedDictionary<int, RaceData> { }
 
 	/// <summary>
 	/// Serializable dictionary for slot assets
 	/// </summary>
 	[Serializable]
-	public class SlotAssetDictionary : SerializableDictionary<int, SlotDataAsset> { }
+	public class SlotAssetDictionary : SerializedDictionary<int, SlotDataAsset> { }
 
 	/// <summary>
 	/// Serializable dictionary for overlay assets
 	/// </summary>
 	[Serializable]
-	public class OverlayAssetDictionary : SerializableDictionary<int, OverlayDataAsset> { }
+	public class OverlayAssetDictionary : SerializedDictionary<int, OverlayDataAsset> { }
 
 	/// <summary>
 	/// Serializable dictionary for DNA assets
 	/// </summary>
 	[Serializable]
-	public class DNAAssetDictionary : SerializableDictionary<int, DynamicUMADnaAsset> { }
+	public class DNAAssetDictionary : SerializedDictionary<int, DynamicUMADnaAsset> { }
 
 	/// <summary>
 	/// Serializable dictionary for occlusion assets
 	/// </summary>
 	[Serializable]
-	public class OcclusionAssetDictionary : SerializableDictionary<int, MeshHideAsset> { }
+	public class OcclusionAssetDictionary : SerializedDictionary<int, MeshHideAsset> { }
 
 	[Serializable]
-	public class SerializableDictionary<TKey, TValue> : Dictionary<TKey, TValue>, ISerializationCallbackReceiver
+	public class SerializedDictionary<TKey, TValue> : Dictionary<TKey, TValue>, ISerializationCallbackReceiver
 	{
 		[SerializeField]
 		private List<TKey> keys = new List<TKey>();
 
 		[SerializeField]
 		private List<TValue> values = new List<TValue>();
+
+		/// <remarks>
+		/// The serialization and deserialization happens so often it's impossible to keep the
+		/// two lists synchronized using SerializedProperty.DeleteArrayElementAtIndex().
+		/// Therefore this is used to mark a pair for deletion in OnAfterDeserialize()
+		/// </remarks>
+		[SerializeField]
+		private int deleteIndex = -1;
 
 		// Save the dictionary to lists
 		public void OnBeforeSerialize()
@@ -68,11 +76,20 @@ namespace UMA
 		{
 			this.Clear();
 
-			if(keys.Count != values.Count)
-				throw new System.Exception(string.Format("there are {0} keys and {1} values after deserialization. Make sure that both key and value types are serializable."));
+			if (keys.Count == values.Count)
+			{
+				for(int i = 0; i < keys.Count; i++)
+				{
+					if (i == deleteIndex) continue;
+					this.Add(keys[i], values[i]);
+				}
 
-			for(int i = 0; i < keys.Count; i++)
-				this.Add(keys[i], values[i]);
+				deleteIndex = -1;
+			}
+			else
+			{
+				Debug.LogError("Bad arrays in SerializableDictionary!");
+			}
 		}
 	}
 
