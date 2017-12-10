@@ -15,6 +15,7 @@ namespace UMA
         public static string SortOrder = "Name";
         public static string[] SortOrders = { "Name", "AssetName" };
         public static Dictionary<string, System.Type> TypeFromString = new Dictionary<string, System.Type>();
+        public static Dictionary<string, AssetItem> GuidTypes = new Dictionary<string, AssetItem>();
         #endregion
         #region Fields
         public bool AutoUpdate;
@@ -513,6 +514,7 @@ namespace UMA
                 }
 #endif
                 TypeDic.Add(ai._Name, ai);
+                GuidTypes.Add(ai._Guid, ai);
             }
             catch (System.Exception ex)
             {
@@ -521,6 +523,15 @@ namespace UMA
         }
 
 #if UNITY_EDITOR
+
+        public AssetItem FromGuid(string GUID)
+        {
+            if (GuidTypes.ContainsKey(GUID))
+            {
+                return GuidTypes[GUID];
+            }
+            return null;
+        }
         /// <summary>
         /// This is the evil version of AddAsset. This version cares not for the good of the project, nor
         /// does it care about readability, expandibility, and indeed, hates goodness with every beat of it's 
@@ -552,7 +563,12 @@ namespace UMA
         {
             System.Type theType = TypeToLookup[type];
             Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(theType);
-            TypeDic.Remove(Name);
+            if (TypeDic.ContainsKey(Name))
+            {
+                AssetItem ai = TypeDic[Name];
+                TypeDic.Remove(Name);
+                GuidTypes.Remove(Name);
+            }
         }
 #endif
 #endregion
@@ -565,6 +581,7 @@ namespace UMA
         /// </summary>
         private void UpdateSerializedDictionaryItems()
         {
+            GuidTypes = new Dictionary<string, AssetItem>();
             foreach (System.Type type in Types)
             {
                 CreateLookupDictionary(type);
@@ -617,6 +634,7 @@ namespace UMA
                 	}
 				}
             }
+
         }
 
         /// <summary>
