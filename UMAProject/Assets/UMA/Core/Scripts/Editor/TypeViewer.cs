@@ -12,10 +12,10 @@ namespace Tenebrous.EditorEnhancements
     [InitializeOnLoad]
     public static class UMAEditorUtilities
     {
-//        public static Type[] TrackTypes = { typeof(SlotDataAsset), typeof(OverlayDataAsset), typeof(UMAWardrobeRecipe), typeof(UMATextRecipe), typeof(SharedColorTable) };
-//        public static string[] TrackNames = { "Slot", "Overlay", "Wardrobe Item", "Text Recipe", "Color Table" };
         public static Dictionary<Type, string> FriendlyNames = new Dictionary<Type, string>();
         private static Texture2D icon;
+        private static bool showIndexedTypes = false;
+        private static bool showUnindexedTypes = true;
 
         static UMAEditorUtilities()
         {
@@ -29,19 +29,49 @@ namespace Tenebrous.EditorEnhancements
             FriendlyNames.Add(typeof(TextAsset), "Text");
             FriendlyNames.Add(typeof(DynamicUMADnaAsset), "Dynamic DNA");
             icon = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/UMA/InternalDataStore/UmaIndex.png");
+            showIndexedTypes = EditorPrefs.GetBool("BoolUMAShowTypes", true);
+            showUnindexedTypes = EditorPrefs.GetBool("BoolUMAShowUnindexed", true);
 
             if (icon == null)
             {
                 Debug.Log("Unable to load texture icon");
             }
             UMAAssetIndexer ai = UMAAssetIndexer.Instance;
-            EditorApplication.projectWindowItemOnGUI += DrawItems;
+            if (showIndexedTypes)
+            {
+                EditorApplication.projectWindowItemOnGUI += DrawItems;
+            }
         }
 
+        [PreferenceItem("UMA")]
+        public static void PreferencesGUI()
+        {
+            // Preferences GUI
+            bool newshowIndexedTypes = EditorGUILayout.Toggle("Show Indexed Types", showIndexedTypes);
+            showUnindexedTypes = EditorGUILayout.Toggle("Also Show Unindexed Types", showUnindexedTypes);
 
+            // Save the preferences
+            if (newshowIndexedTypes != showIndexedTypes)
+            {
+                showIndexedTypes = newshowIndexedTypes;
+                EditorPrefs.SetBool("BoolUMAShowTypes", showIndexedTypes);
+                if (showIndexedTypes)
+                    EditorApplication.projectWindowItemOnGUI += DrawItems;
+                else
+                    EditorApplication.projectWindowItemOnGUI -= DrawItems;
+            }
+
+
+            if (GUI.changed)
+            {
+                EditorApplication.RepaintProjectWindow();
+            }
+        }
 
         private static void DrawItems(string guid, Rect selectionRect)
         {
+            if (!showIndexedTypes) return;
+
             AssetItem ai = UMAAssetIndexer.Instance.FromGuid(guid);
             if (ai != null)
             {
@@ -54,6 +84,10 @@ namespace Tenebrous.EditorEnhancements
             }
             else
             {
+                if (showUnindexedTypes == false)
+                {
+                    return;
+                }
                 if (String.IsNullOrEmpty(guid))
                 {
                     return;
