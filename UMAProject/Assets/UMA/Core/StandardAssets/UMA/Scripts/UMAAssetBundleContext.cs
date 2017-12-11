@@ -28,9 +28,53 @@ namespace UMA
 				// Build the map;
 				bundleMap = new AssetBundleBuild();
 				bundleMap.assetBundleName = bundleName;
-//				bundleMap.assetBundleVariant = EditorUserBuildSettings.activeBuildTarget.ToString();
+				//bundleMap.assetBundleVariant = EditorUserBuildSettings.activeBuildTarget.ToString();
 
 				// Add assets
+				List<string> addressableNames = new List<string>();
+				List<string> assetNames = new List<string>();
+				foreach (AssetReference reference in raceDictionary.Values)
+				{
+					if ((reference.asset != null) && AssetDatabase.Contains(reference.asset))
+					{
+						assetNames.Add(AssetDatabase.GetAssetPath(reference.asset));
+						addressableNames.Add(reference.path);
+					}
+				}
+				foreach (AssetReference reference in slotDictionary.Values)
+				{
+					if ((reference.asset != null) && AssetDatabase.Contains(reference.asset))
+					{
+						assetNames.Add(AssetDatabase.GetAssetPath(reference.asset));
+						addressableNames.Add(reference.path);
+					}
+				}
+				foreach (AssetReference reference in overlayDictionary.Values)
+				{
+					if ((reference.asset != null) && AssetDatabase.Contains(reference.asset))
+					{
+						assetNames.Add(AssetDatabase.GetAssetPath(reference.asset));
+						addressableNames.Add(reference.path);
+					}
+				}
+				foreach (AssetReference reference in dnaDictionary.Values)
+				{
+					if ((reference.asset != null) && AssetDatabase.Contains(reference.asset))
+					{
+						assetNames.Add(AssetDatabase.GetAssetPath(reference.asset));
+						addressableNames.Add(reference.path);
+					}
+				}
+				foreach (AssetReference reference in occlusionDictionary.Values)
+				{
+					if ((reference.asset != null) && AssetDatabase.Contains(reference.asset))
+					{
+						assetNames.Add(AssetDatabase.GetAssetPath(reference.asset));
+						addressableNames.Add(reference.path);
+					}
+				}
+				bundleMap.addressableNames = addressableNames.ToArray();
+				bundleMap.assetNames = assetNames.ToArray();
 
 				return bundleMap;
 			}
@@ -184,6 +228,23 @@ namespace UMA
 		/// <param name="race">New race.</param>
 		public override void AddRace(RaceData race)
 		{
+			int hash = race.GetNameHash();
+			AssetReference reference;
+			if (raceDictionary.ContainsKey(hash))
+			{
+				reference = raceDictionary[hash];
+				if (reference.asset != race)
+				{
+					Debug.LogError("Tried to add non-matching asset with duplicate hash!");
+				}
+			}
+			else
+			{
+				reference = new AssetReference();
+				reference.asset = race;
+				reference.path = "Race/" + race.raceName;
+				raceDictionary.Add(hash, reference);
+			}
 		}
 
 		/// <summary>
@@ -281,6 +342,23 @@ namespace UMA
 		/// <param name="slot">New slot asset.</param>
 		public override void AddSlotAsset(SlotDataAsset slot)
 		{
+			int hash = slot.nameHash;
+			AssetReference reference;
+			if (slotDictionary.ContainsKey(hash))
+			{
+				reference = slotDictionary[hash];
+				if (reference.asset != slot)
+				{
+					Debug.LogError("Tried to add non-matching asset with duplicate hash!");
+				}
+			}
+			else
+			{
+				reference = new AssetReference();
+				reference.asset = slot;
+				reference.path = "Slot/" + slot.slotName;
+				slotDictionary.Add(hash, reference);
+			}
 		}
 
 		/// <summary>
@@ -303,11 +381,29 @@ namespace UMA
 		}
 
 		/// <summary>
-		/// Add a ocllusion data asset to the context.
+		/// Add an occlusion data asset to the context.
 		/// </summary>
-		/// <param name="slot">New slot asset.</param>
+		/// <param name="asset">New occlusion asset.</param>
 		public override void AddOcclusionAsset(MeshHideAsset asset)
 		{
+			// HACK
+			int hash = asset.asset.nameHash;
+			AssetReference reference;
+			if (occlusionDictionary.ContainsKey(hash))
+			{
+				reference = occlusionDictionary[hash];
+				if (reference.asset != asset)
+				{
+					Debug.LogError("Tried to add non-matching asset with duplicate hash!");
+				}
+			}
+			else
+			{
+				reference = new AssetReference();
+				reference.asset = asset;
+				reference.path = "Occlusion/" + asset.asset.slotName;
+				occlusionDictionary.Add(hash, reference);
+			}
 		}
 
 		/// <summary>
@@ -375,6 +471,23 @@ namespace UMA
 		/// <param name="overlay">New overlay asset.</param>
 		public override void AddOverlayAsset(OverlayDataAsset overlay)
 		{
+			int hash = overlay.nameHash;
+			AssetReference reference;
+			if (overlayDictionary.ContainsKey(hash))
+			{
+				reference = overlayDictionary[hash];
+				if (reference.asset != overlay)
+				{
+					Debug.LogError("Tried to add non-matching asset with duplicate hash!");
+				}
+			}
+			else
+			{
+				reference = new AssetReference();
+				reference.asset = overlay;
+				reference.path = "Overlay/" + overlay.overlayName;
+				overlayDictionary.Add(hash, reference);
+			}
 		}
 
 		/// <summary>
@@ -421,6 +534,24 @@ namespace UMA
 		/// <param name="dna">New DNA asset.</param>
 		public override void AddDNAAsset(DynamicUMADnaAsset dnaAsset)
 		{
+			int hash = dnaAsset.dnaTypeHash;
+			AssetReference reference;
+			if (dnaDictionary.ContainsKey(hash))
+			{
+				reference = dnaDictionary[hash];
+				if (reference.asset != dnaAsset)
+				{
+					Debug.LogError("Tried to add non-matching asset with duplicate hash!");
+				}
+			}
+			else
+			{
+				reference = new AssetReference();
+				reference.asset = dnaAsset;
+				// HACK
+				reference.path = "DNA/" + dnaAsset.GetAssetName();
+				dnaDictionary.Add(hash, reference);
+			}
 		}
 	}
 }
