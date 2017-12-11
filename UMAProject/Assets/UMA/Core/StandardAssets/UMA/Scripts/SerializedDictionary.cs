@@ -42,6 +42,12 @@ namespace UMA
 	[Serializable]
 	public class OcclusionAssetDictionary : SerializedDictionary<int, MeshHideAsset> { }
 
+	/// <summary>
+	/// Serializable dictionary for asset bundle references
+	/// </summary>
+	[Serializable]
+	public class AssetReferenceDictionary : SerializedDictionary<int, UMAAssetBundleContext.AssetReference> { }
+
 	[Serializable]
 	public class SerializedDictionary<TKey, TValue> : Dictionary<TKey, TValue>, ISerializationCallbackReceiver
 	{

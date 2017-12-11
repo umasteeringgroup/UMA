@@ -1,26 +1,128 @@
 using UnityEngine;
+using UnityEngine.Events;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
+
+using System.Collections;
 using System.Collections.Generic;
 
 namespace UMA
 {
 	/// <summary>
-	/// Simple scene based container for instantiating various UMA objects.
+	/// Context for wrapping UMA assets stored in an asset bundle.
 	/// </summary>
 	public class UMAAssetBundleContext : UMAContextBase
 	{
 		public string bundleName;
-
 		public string bundleURL;
+		public uint bundleCRC;
 
-		[SerializeField]
 		protected AssetBundle bundle;
 
-#if UNITY_EDITOR
-		protected AssetBundleBuild bundleBuild;
-#endif
+		#if UNITY_EDITOR
+		protected AssetBundleBuild bundleMap;
+		public AssetBundleBuild BundleBuildMap
+		{
+			get {
+				// Build the map;
+				bundleMap = new AssetBundleBuild();
+				bundleMap.assetBundleName = bundleName;
+//				bundleMap.assetBundleVariant = EditorUserBuildSettings.activeBuildTarget.ToString();
+
+				// Add assets
+
+				return bundleMap;
+			}
+		}
+		#endif
+
+		[System.Serializable]
+		public class AssetReference
+		{
+			public string path;
+
+			[System.NonSerialized]
+			public Object asset = null;
+			[System.NonSerialized]
+			public AssetBundleRequest request = null;
+		}
+
+		[SerializeField]
+		protected AssetReferenceDictionary raceDictionary;
+
+		[SerializeField]
+		protected AssetReferenceDictionary slotDictionary;
+
+		[SerializeField]
+		protected AssetReferenceDictionary overlayDictionary;
+
+		[SerializeField]
+		protected AssetReferenceDictionary dnaDictionary;
+
+		[SerializeField]
+		protected AssetReferenceDictionary occlusionDictionary;
+
+		public class BundleContextCallback : UnityEvent<UMAAssetBundleContext>
+		{
+		}
+
+		public class BundleContextEvent : UnityEvent<UMAAssetBundleContext>
+		{
+			public BundleContextEvent()
+			{
+			}
+
+			public BundleContextEvent(BundleContextEvent source)
+			{
+				for (int i = 0; i < source.GetPersistentEventCount(); i++)
+				{
+					var target = source.GetPersistentTarget(i);
+					AddListener(target, UnityEventBase.GetValidMethodInfo(target, source.GetPersistentMethodName(i), new System.Type[] { typeof(UMAAssetBundleContext) }));
+				}
+			}
+		}
+
+		public class BundleContextLoader
+		{
+			protected AssetBundleCreateRequest request;
+
+			protected BundleContextEvent bundleContextLoaded;
+
+			public event System.Action<UMAAssetBundleContext> OnBundleContextLoaded
+			{
+				add
+				{
+					if (bundleContextLoaded == null)
+						bundleContextLoaded = new BundleContextEvent();
+					
+					bundleContextLoaded.AddListener(new UnityAction<UMAAssetBundleContext>(value));
+				}
+				remove
+				{
+					bundleContextLoaded.RemoveListener(new UnityAction<UMAAssetBundleContext>(value));
+				}
+			}
+		}
+
+		static public UMAAssetBundleContext LoadFromFile(string filePath)
+		{
+			return null;
+		}
+
+		static public BundleContextLoader LoadFromFileAsync(string filePath)
+		{
+			return null;
+		}
+
+		static public BundleContextLoader LoadFromWebAsync(string wwwURL)
+		{
+			return null;
+		}
+
+		protected static void BundleContextLoaded(UMAAssetBundleContext context)
+		{
+		}
 
 		/// <summary>
 		/// Gets a race by name.
@@ -38,6 +140,32 @@ namespace UMA
 		/// <param name="nameHash">Name hash.</param>
 		public override RaceData GetRace(int nameHash)
 		{
+			AssetReference reference = null;
+			if (raceDictionary.TryGetValue(nameHash, out reference))
+			{
+				// Blocking version
+				if (reference.asset == null)
+				{
+					reference.asset = bundle.LoadAsset<RaceData>(reference.path);
+				}
+
+				// Asynchronous version
+//				if (reference.asset == null)
+//				{
+//					if (reference.request == null)
+//					{
+//						reference.request = bundle.LoadAssetAsync<RaceData>(reference.path);
+//					}
+//					else if (reference.request.isDone)
+//					{
+//						reference.asset = reference.request.asset;
+//						reference.request = null;
+//					}
+//				}
+					
+				return reference.asset as RaceData;
+			}
+
 			return null;
 		}
 
@@ -75,7 +203,21 @@ namespace UMA
 		/// <param name="nameHash">Name hash.</param>
 		public override SlotData InstantiateSlot(int nameHash)
 		{
-			return null;
+			SlotData slot = null;
+
+			AssetReference reference = null;
+			if (slotDictionary.TryGetValue(nameHash, out reference))
+			{
+				// Blocking version
+				if (reference.asset == null)
+				{
+					reference.asset = bundle.LoadAsset<SlotDataAsset>(reference.path);
+				}
+
+				slot = new SlotData(reference.asset as SlotDataAsset);
+			}
+
+			return slot;
 		}
 
 		/// <summary>
@@ -96,7 +238,22 @@ namespace UMA
 		/// <param name="overlayList">Overlay list.</param>
 		public override SlotData InstantiateSlot(int nameHash, List<OverlayData> overlayList)
 		{
-			return null;
+			SlotData slot = null;
+
+			AssetReference reference = null;
+			if (slotDictionary.TryGetValue(nameHash, out reference))
+			{
+				// Blocking version
+				if (reference.asset == null)
+				{
+					reference.asset = bundle.LoadAsset<SlotDataAsset>(reference.path);
+				}
+
+				slot = new SlotData(reference.asset as SlotDataAsset);
+				slot.SetOverlayList(overlayList);
+			}
+
+			return slot;
 		}
 
 		/// <summary>
@@ -115,7 +272,7 @@ namespace UMA
 		/// <param name="nameHash">Name hash.</param>
 		public override bool HasSlot(int nameHash)
 		{ 
-			return false;
+			return slotDictionary.ContainsKey(nameHash);
 		}
 
 		/// <summary>
@@ -142,7 +299,7 @@ namespace UMA
 		/// <param name="nameHash">Name hash.</param>
 		public override bool HasOcclusion(int nameHash)
 		{
-			return false;
+			return occlusionDictionary.ContainsKey(nameHash);
 		}
 
 		/// <summary>
@@ -169,7 +326,7 @@ namespace UMA
 		/// <param name="nameHash">Name hash.</param>
 		public override bool HasOverlay(int nameHash)
 		{ 
-			return false;
+			return overlayDictionary.ContainsKey(nameHash);
 		}
 
 		/// <summary>
@@ -236,7 +393,7 @@ namespace UMA
 		/// <param name="nameHash">Name hash.</param>
 		public override bool HasDNA(int nameHash)
 		{ 
-			return false;
+			return dnaDictionary.ContainsKey(nameHash);
 		}
 
 		/// <summary>
