@@ -67,5 +67,5 @@ MonoBehaviour:
   AnchorOffset: {x: 0.06, y: 0, z: -0.09}
   MinGlobalForce: 0.1
   MaxGlobalForce: 1
-  ForceMultiplier: 100
+  ForceMultiplier: 40
   ApplyGlobalForces: 1

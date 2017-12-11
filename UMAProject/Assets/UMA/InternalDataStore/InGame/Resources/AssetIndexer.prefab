@@ -2679,6 +2679,14 @@ MonoBehaviour:
     _Guid: 3c831180fd2f190428a8151a60b3e55f
     IsResource: 0
     IsAssetBundle: 0
+  - _BaseTypeName: UMAWardrobeRecipe
+    _Name: MaleJeans 1
+    _SerializedItem: {fileID: 11400000, guid: f0eac0526ff3dbe479868042322ab1b2, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleJeans
+      1.asset
+    _Guid: f0eac0526ff3dbe479868042322ab1b2
+    IsResource: 0
+    IsAssetBundle: 0
   - _BaseTypeName: RuntimeAnimatorController
     _Name: UMA_APose_Controller
     _SerializedItem: {fileID: 9100000, guid: 66af5264f1619114db5f72f979ce14bd, type: 2}
