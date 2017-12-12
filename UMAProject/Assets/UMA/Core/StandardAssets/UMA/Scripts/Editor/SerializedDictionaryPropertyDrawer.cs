@@ -68,6 +68,8 @@ namespace UMA.Editors
 
 						SerializedProperty key = keys.GetArrayElementAtIndex(i);
 						SerializedProperty value = values.GetArrayElementAtIndex(i);
+
+						EditorGUI.BeginChangeCheck();
 						DrawEntry(itemPosition, key, value);
 
 						if (GUI.Button(buttonPosition, "\u2212", EditorStyles.miniButton))
@@ -76,13 +78,17 @@ namespace UMA.Editors
 							/// The serialization and deserialization happens between these two calls making it
 							/// impossible to keep the two lists synchronized using DeleteArrayElementAtIndex()
 							/// </remarks>
-							// keys.DeleteArrayElementAtIndex(i);
-							// values.DeleteArrayElementAtIndex(i);
+							//keys.DeleteArrayElementAtIndex(i);
+							//values.DeleteArrayElementAtIndex(i);
 							SerializedProperty deleteIndex = property.FindPropertyRelative("deleteIndex");
 							if (deleteIndex != null)
 							{
 								deleteIndex.intValue = i;
 							}
+						}
+						if (EditorGUI.EndChangeCheck())
+						{
+							Undo.SetCurrentGroupName("Dictionary Edit");
 						}
 
 						itemPosition.y += itemPosition.height + EditorGUIUtility.standardVerticalSpacing;
