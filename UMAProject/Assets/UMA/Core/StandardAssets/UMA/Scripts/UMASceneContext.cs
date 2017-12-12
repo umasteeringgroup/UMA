@@ -29,19 +29,19 @@ namespace UMA
 		protected DNALibrary dnaLibrary;
 
 		[SerializeField]
-		protected RaceAssetDictionary raceDictionary = null;
+		protected RaceAssetDictionary raceDictionary;
 
 		[SerializeField]
-		protected SlotAssetDictionary slotDictionary = null;
+		protected SlotAssetDictionary slotDictionary;
 
 		[SerializeField]
-		protected OverlayAssetDictionary overlayDictionary = null;
+		protected OverlayAssetDictionary overlayDictionary;
 
 		[SerializeField]
-		protected DNAAssetDictionary dnaDictionary = null;
+		protected DNAAssetDictionary dnaDictionary;
 
 		[SerializeField]
-		protected OcclusionAssetDictionary occlusionDictionary = null;
+		protected OcclusionAssetDictionary occlusionDictionary;
 
 		public void Start()
 		{

@@ -85,11 +85,10 @@ namespace UMA
 		public class AssetReference
 		{
 			public string path;
+			public Object asset;
 
 			[System.NonSerialized]
-			public Object asset = null;
-			[System.NonSerialized]
-			public AssetBundleRequest request = null;
+			public AssetBundleRequest request;
 		}
 
 		[SerializeField]

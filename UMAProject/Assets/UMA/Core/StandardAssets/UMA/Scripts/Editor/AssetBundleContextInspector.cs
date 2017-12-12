@@ -4,15 +4,15 @@ using System.Collections.Generic;
 
 namespace UMA.Editors
 {
-	[CustomEditor(typeof(UMASceneContext))]
-	public class SceneContextInspector : Editor
+	[CustomEditor(typeof(UMAAssetBundleContext))]
+	public class AssetBundleContextInspector : Editor
 	{	
-		private UMASceneContext context;
+		private UMAAssetBundleContext context;
 		private SerializedObject serializedContext;
 
 		public void OnEnable()
 		{
-			context = target as UMASceneContext;
+			context = target as UMAAssetBundleContext;
 			serializedContext = new SerializedObject(context);
 		}
 

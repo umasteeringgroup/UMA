@@ -33,6 +33,21 @@ namespace UMA.Editors
 	[CustomPropertyDrawer(typeof(OcclusionAssetDictionary),true)]
 	public class OcclusionAssetDictionaryPropertyDrawer : SerializedDictionaryPropertyDrawer { }
 
+	/// <summary>
+	/// Serializable dictionary for occlusion assets
+	/// </summary>
+	[CustomPropertyDrawer(typeof(AssetReferenceDictionary), true)]
+	public class AssetReferencenDictionaryPropertyDrawer : SerializedDictionaryPropertyDrawer
+	{
+		public override void DrawEntry(Rect position, SerializedProperty key, SerializedProperty value)
+		{
+			EditorGUI.BeginDisabledGroup(true);
+			SerializedProperty asset = value.FindPropertyRelative("asset");
+			EditorGUI.ObjectField(position, GUIContent.none, asset.objectReferenceValue, asset.objectReferenceValue.GetType(), false);
+			EditorGUI.EndDisabledGroup();
+		}
+	}
+
 	public class SerializedDictionaryPropertyDrawer : PropertyDrawer
 	{
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
