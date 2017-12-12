@@ -65,6 +65,8 @@ namespace UMA.Editors
 				{
 					DragAndDrop.AcceptDrag();
 					Object[] draggedObjects = DragAndDrop.objectReferences;
+
+					Undo.RecordObject(context, "Add Assets");
 					foreach (Object asset in draggedObjects)
 					{
 						AddAssetToDictionaries(asset);
