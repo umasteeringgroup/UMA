@@ -72,6 +72,11 @@ public class PonytailSlotScript : MonoBehaviour
 
                 GameObject go = t.gameObject;
                 go.layer = 8; // our ragdoll layer
+
+                if (go.GetComponent<Rigidbody>() != null)
+                {
+                    continue;
+                }
                 Rigidbody r = go.AddComponent<Rigidbody>();
                 r.isKinematic = false;
 
