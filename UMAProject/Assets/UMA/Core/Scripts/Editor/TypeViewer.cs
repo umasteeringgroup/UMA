@@ -7,7 +7,7 @@ using UMA;
 using UMA.CharacterSystem;
 using UnityEditor.Animations;
 
-namespace Tenebrous.EditorEnhancements
+namespace UMA
 {
     [InitializeOnLoad]
     public static class UMAEditorUtilities
