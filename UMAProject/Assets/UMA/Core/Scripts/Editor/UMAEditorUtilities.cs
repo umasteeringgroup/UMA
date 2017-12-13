@@ -122,18 +122,17 @@ namespace UMA
 
                 Rect newRect = selectionRect;
                 Vector2 labelSize = labelstyle.CalcSize(new GUIContent(FriendlyType));
-                newRect.width += selectionRect.x;
-                newRect.x = 0;
-                newRect.x = newRect.width - labelSize.x;
-                newRect.x -= 4;
+                // Display Label
+                newRect.x = ((newRect.width + selectionRect.x) - labelSize.x)-20;
                 newRect.width = labelSize.x + 1;
-                newRect.x -= 16;
                 GUI.Label(newRect, FriendlyType, labelstyle);
+                // Display Icon
                 newRect.x = newRect.x + newRect.width;
                 newRect.width = 16;
                 GUI.DrawTexture(newRect, icon);
             }
         }
+
         private static void ShowAsset(Rect selectionRect, string FriendlyType)
         {
             if (selectionRect.height <= 22)
@@ -142,10 +141,7 @@ namespace UMA
 
                 Rect newRect = selectionRect;
                 Vector2 labelSize = labelstyle.CalcSize(new GUIContent(FriendlyType));
-                newRect.width += selectionRect.x;
-                newRect.x = 0;
-                newRect.x = newRect.width - labelSize.x;
-                newRect.x -= 4;
+                newRect.x = ((newRect.width+selectionRect.x) - labelSize.x)-4;
                 newRect.width = labelSize.x + 1;
                 GUI.Label(newRect, FriendlyType, labelstyle);
             }
