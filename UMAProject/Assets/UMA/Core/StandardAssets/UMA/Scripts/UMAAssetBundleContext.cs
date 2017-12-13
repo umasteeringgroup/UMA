@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Networking;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -14,9 +15,13 @@ namespace UMA
 	/// </summary>
 	public class UMAAssetBundleContext : UMAContextBase
 	{
+		const string contextBundlePath = "UMA Context";
+
 		public string bundleName;
 		public string bundleURL;
 		public uint bundleCRC;
+
+		public int contextPriority;
 
 		protected AssetBundle bundle;
 
@@ -126,11 +131,33 @@ namespace UMA
 			}
 		}
 
-		public class BundleContextLoader
+		public class BundleContextLoader : MonoBehaviour
 		{
-			protected AssetBundleCreateRequest request;
+			protected string path;
+			protected string url;
+			protected uint crc;
 
 			protected BundleContextEvent bundleContextLoaded;
+
+			static public BundleContextLoader LoadFile(string filePath, uint fileCRC = 0)
+			{
+				BundleContextLoader loader = new BundleContextLoader();
+				loader.path = filePath;
+				loader.crc = fileCRC;
+				loader.DoFileLoad();
+
+				return loader;
+			}
+
+			static public BundleContextLoader LoadWeb(string wwwURL, uint urlCRC = 0)
+			{
+				BundleContextLoader loader = new BundleContextLoader();
+				loader.url = wwwURL;
+				loader.crc = urlCRC;
+				loader.DoWebLoad();
+
+				return loader;
+			}
 
 			public event System.Action<UMAAssetBundleContext> OnBundleContextLoaded
 			{
@@ -146,25 +173,105 @@ namespace UMA
 					bundleContextLoaded.RemoveListener(new UnityAction<UMAAssetBundleContext>(value));
 				}
 			}
+
+			protected IEnumerator DoFileLoad()
+			{
+				AssetBundleCreateRequest bundleRequest = AssetBundle.LoadFromFileAsync(path, crc);
+				yield return bundleRequest;
+
+				AssetBundle loadedBundle = bundleRequest.assetBundle;
+				if (loadedBundle == null)
+				{
+					Debug.LogError("Could not load AssetBundle!");
+					yield break;
+				}
+
+				AssetBundleRequest assetRequest = loadedBundle.LoadAssetAsync<UMAAssetBundleContext>(contextBundlePath);
+				yield return assetRequest;
+
+				UMAAssetBundleContext loadedContext = assetRequest.asset as UMAAssetBundleContext;
+				if (loadedContext == null)
+				{
+					Debug.LogError("Could not load context from AssetBundle!");
+					yield break;
+				}
+
+				if (bundleContextLoaded != null)
+				{
+					bundleContextLoaded.Invoke(loadedContext);
+				}
+			}
+
+			protected IEnumerator DoWebLoad()
+			{
+				DownloadHandlerAssetBundle download = new DownloadHandlerAssetBundle(url, crc);
+				yield return download;
+
+				AssetBundle loadedBundle = download.assetBundle;
+				if (loadedBundle == null)
+				{
+					Debug.LogError("Could not load AssetBundle!");
+					yield break;
+				}
+
+				AssetBundleRequest assetRequest = loadedBundle.LoadAssetAsync<UMAAssetBundleContext>(contextBundlePath);
+				yield return assetRequest;
+
+				UMAAssetBundleContext loadedContext = assetRequest.asset as UMAAssetBundleContext;
+				if (loadedContext == null)
+				{
+					Debug.LogError("Could not load context from AssetBundle!");
+					yield break;
+				}
+
+				if (bundleContextLoaded != null)
+				{
+					bundleContextLoaded.Invoke(loadedContext);
+				}
+			}
 		}
 
-		static public UMAAssetBundleContext LoadFromFile(string filePath)
+		static public UMAAssetBundleContext LoadFromFile(string filePath, uint crc = 0)
 		{
-			return null;
+			AssetBundle loadedBundle = null;
+			UMAAssetBundleContext loadedContext = null;
+
+			loadedBundle = AssetBundle.LoadFromFile(filePath, crc);
+			if (loadedBundle == null)
+			{
+				Debug.LogError("Could not load AssetBundle!");
+			}
+			else
+			{
+				loadedContext = loadedBundle.LoadAsset<UMAAssetBundleContext>(contextBundlePath);
+			}
+
+			return loadedContext;
 		}
 
-		static public BundleContextLoader LoadFromFileAsync(string filePath)
+		static public BundleContextLoader LoadFromFileAsync(string filePath, uint crc = 0)
 		{
-			return null;
+			BundleContextLoader loader = BundleContextLoader.LoadFile(filePath, crc);
+			loader.OnBundleContextLoaded += BundleContextLoaded;
+
+			return loader;
 		}
 
-		static public BundleContextLoader LoadFromWebAsync(string wwwURL)
+		static public BundleContextLoader LoadFromWebAsync(string wwwURL, uint crc = 0)
 		{
-			return null;
+			BundleContextLoader loader = BundleContextLoader.LoadWeb(wwwURL, crc);
+			loader.OnBundleContextLoaded += BundleContextLoaded;
+
+			return loader;
 		}
 
 		protected static void BundleContextLoaded(UMAAssetBundleContext context)
 		{
+		}
+
+		public void Awake()
+		{
+			UMAGlobal.Context.AddContext(this, this.contextPriority);
 		}
 
 		/// <summary>

@@ -229,100 +229,28 @@ namespace UMA.CharacterSystem
             }
             return res;
         }
+
         public override OverlayData InstantiateOverlay(string name, Color color)
         {
-            OverlayData res;
-            try
-            {
-                res = base.InstantiateOverlay(name);
-            }
-            catch
-            {
-                res = null;
-            }
-    #if UNITY_EDITOR
-            if (!Application.isPlaying && res == null)
-            {
-                res = GetEditorAddedAsset(null, name);
-            }
-    #endif
-            if (res == null)
-            {
-                //we do something
-                UpdateDynamicOverlayLibrary(name);
-                try {
-                    res = base.InstantiateOverlay(name);
-                }
-                catch
-                {
-                    res = null;
-                }
-                if (res == null)
-                {
-    #if UNITY_EDITOR
-                    if (!Application.isPlaying)
-                    {
-                        res = GetEditorAddedAsset(null, name);
-                        if (res != null)
-                        {
-                            res.colorData.color = color;
-                            return res;
-                        }
-                    }
-    #endif
-                    throw new UMAResourceNotFoundException("dOverlayLibrary: Unable to find: " + name);
-                }
-            }
-            res.colorData.color = color;
-            return res;
+			OverlayData overlay = InstantiateOverlay(name);
+			if (overlay != null)
+			{
+				overlay.colorData.color = color;
+			}
+
+			return overlay;
         }
         //we dont seem to be able to use nameHash for some reason so in this case we are screwed- DOES THIS EVER HAPPEN?
         public override OverlayData InstantiateOverlay(int nameHash, Color color) {
-            Debug.Log("OverlayLibrary tried to InstantiateOverlay using Hash");
-            OverlayData res;
-            try
-            {
-                res = base.InstantiateOverlay(nameHash);
-            }
-            catch
-            {
-                res = null;
-            }
-    #if UNITY_EDITOR
-            if (!Application.isPlaying && res == null)
-            {
-                res = GetEditorAddedAsset(nameHash);
-            }
-    #endif
-            if (res == null)
-            {
-                UpdateDynamicOverlayLibrary(nameHash);
-                try {
-                    res = base.InstantiateOverlay(nameHash);
-                }
-                catch
-                {
-                    res = null;
-                }
-                if (res == null)
-                {
-    #if UNITY_EDITOR
-                    if (!Application.isPlaying)
-                    {
-                        res = GetEditorAddedAsset(nameHash);
-                        if (res != null)
-                        {
-                            res.colorData.color = color;
-                            return res;
-                        }
-                    }
-    #endif
-                    throw new UMAResourceNotFoundException("dOverlayLibrary: Unable to find: " + nameHash);
-                }
-            }
-            res.colorData.color = color;
-            return res;
+			OverlayData overlay = InstantiateOverlay(nameHash);
+			if (overlay != null)
+			{
+				overlay.colorData.color = color;
+			}
+
+			return overlay;
         }
+
         /// <summary>
         /// Gets the originating asset bundle.
         /// </summary>
