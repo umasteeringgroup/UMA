@@ -51639,7 +51639,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 114179240612418986, guid: 339e0131ba401514cb5923a30aa8a4e0,
           type: 2}
-        m_MethodName: OnDNAApplied
+        m_MethodName: OnCharacterUpdated
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

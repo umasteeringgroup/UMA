@@ -32,8 +32,9 @@ public class PonytailSlotScript : MonoBehaviour
     private Rigidbody thisRigidbody;                             // The RigidBody applied to the Pendulum.
     private Vector3 parentPosLastFrame;                          // last frames position. Used to calculate movement (and hence force)
 
-    // This should be attached to the last bone in the chain
-    public void OnDNAApplied(UMA.UMAData dta)
+
+    // Setup the anchor, bones and the pendulum
+    public void OnCharacterUpdated(UMA.UMAData dta)
     {
         umaData = dta;
         // Find Anchor Bone
@@ -198,25 +199,4 @@ public class PonytailSlotScript : MonoBehaviour
         }
         return null;
     }
-
-    /*
-    /// <summary>
-    /// Apply force from movement
-    /// </summary>
-    public void Update()
-    {
-        if (thisParent == null) return; // wait for this to be setup before applying forces.
-        if (!ApplyGlobalForces) return;
-
-        // Calculate global movement
-        Vector3 Force = (parentPosLastFrame - thisParent.position) * ForceMultiplier;
-        float Magnitude = Force.magnitude;
-
-        // small movements don't add force
-        if (Magnitude > MinGlobalForce)
-        {
-            thisRigidbody.AddForce(Vector3.ClampMagnitude(Force, MaxGlobalForce));
-        }
-        parentPosLastFrame = thisParent.position;
-    } */
 }
