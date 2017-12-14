@@ -7,7 +7,16 @@ namespace UMA
 	[Serializable]
 	public abstract class BaseProperty
 	{
-		#if UNITY_EDITOR
+		public virtual bool CanSetValueFrom(BaseProperty source)
+		{
+			var sourceType = source.GetType();
+			var destType = GetType();
+			return destType.IsAssignableFrom(sourceType) || sourceType.IsAssignableFrom(destType);
+		}
+
+		public abstract void SetValue(BaseProperty source);
+
+#if UNITY_EDITOR
 		public Type GetPiecePropertyType()
 		{
 			return GetPiecePropertyTypeFromPropertyType(GetType());
@@ -102,7 +111,7 @@ namespace UMA
 		
 		static Type[] _propertyTypes;
 		static Dictionary<Type, Type> _piecePropertyTypes;
-		
-		#endif
+
+#endif
 	}
 }

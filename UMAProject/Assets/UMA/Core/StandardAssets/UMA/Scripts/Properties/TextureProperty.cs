@@ -4,12 +4,12 @@ using UnityEngine;
 namespace UMA
 {
 	[Serializable]
-	public class FloatProperty : BaseProperty
+	public class TextureProperty : BaseProperty
 	{
-		public float value;
+		public Texture value;
 		public override void SetValue(BaseProperty source)
 		{
-			value = (source as FloatProperty).value;
+			value = (source as TextureProperty).value;
 		}
 	}
 }

@@ -6,9 +6,8 @@ using UnityEngine;
 namespace UMA
 {
 	[CreateAssetMenu(menuName ="UMA/Piece")]
-	public class UMAPiece : ScriptableObject
+	public class UMAPiece : UMAPropertyAsset
 	{
-		public BasePieceProperty[] Properties = new BasePieceProperty[0];
 		public UMAPieceBlock[] Blocks = new UMAPieceBlock[0];
 		public UMALocation Location;
 	}

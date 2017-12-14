@@ -6,6 +6,18 @@ namespace UMA
 {
 	public static class UMAEditorGUILayout
 	{
+		public static Type PropertyTypeField(Rect rect, string label, Type type)
+		{
+			var index = ArrayUtility.IndexOf(BaseProperty.PropertyTypes, type);
+			EditorGUI.BeginChangeCheck();
+			var newIndex = EditorGUI.Popup(rect, new GUIContent(label), index, PropertyTypesGUIContents);
+			if (EditorGUI.EndChangeCheck())
+			{
+				return BaseProperty.PropertyTypes[newIndex];
+			}
+			return type;
+		}
+
 		public static Type PropertyTypeField(string label, Type type, params GUILayoutOption[] options)
 		{
 			var index = ArrayUtility.IndexOf(BaseProperty.PropertyTypes, type);
@@ -17,6 +29,7 @@ namespace UMA
 			}
 			return type;
 		}
+
 
 		public static GUIContent[] PropertyTypesGUIContents
 		{

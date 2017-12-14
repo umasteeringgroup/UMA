@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System;
 
 namespace UMA
@@ -12,8 +12,9 @@ namespace UMA
         public MaterialType materialType = MaterialType.Atlas;
         public MaterialChannel[] channels;
         public UMAClothProperties clothProperties;
-        public bool RequireSeperateRenderer;
-
+	    public bool RequireSeperateRenderer;
+	    public BasePieceProperty[] properties;
+	    
         public enum MaterialType
         {
             Atlas = 1,
@@ -35,8 +36,16 @@ namespace UMA
             public ChannelType channelType;
             public RenderTextureFormat textureFormat;
             public string materialPropertyName;
-			public string sourceTextureName;
-       }
+	        public string sourceTextureName;
+	        public TextureCombinerProperty[] properties;
+        }
+	    
+	    [Serializable]
+	    public struct TextureCombinerProperty
+	    {
+	    	public BasePieceProperty source;
+	    	public BasePieceProperty dest;
+	    }
 
 #if UNITY_EDITOR
 		[UnityEditor.MenuItem("Assets/Create/UMA/Core/Material")]
