@@ -57,6 +57,11 @@ namespace UMA
 		/// Mecanim avatar type used by race (Humanoid or Generic).
 		/// </summary>
         public UMATarget umaTarget;
+		
+		/// <summary>
+		/// The default Location Set of this race.
+		/// </summary>
+		public UMALocationSet locationSet;
         public string genericRootMotionTransformName;
 		/// <summary>
 		/// The (optional) expression set used for facial animation.
