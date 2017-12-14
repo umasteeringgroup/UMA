@@ -23,8 +23,8 @@ namespace UMA
         [SerializeField]
         public SlotDataAsset asset
         {
-            get{ return _asset; }
-            set{ _asset = value; Initialize(); }
+            get { return _asset; }
+            set { _asset = value; Initialize(); }
         }
         [SerializeField, HideInInspector]
         private SlotDataAsset _asset;
@@ -36,6 +36,12 @@ namespace UMA
         public BitArray[] triangleFlags { get { return _triangleFlags; }}
         private BitArray[] _triangleFlags; 
 
+		/// <summary>
+		/// BitArray of occluded vertices.
+		/// </summary>
+		// HACK - save or generate?
+		public BitArray vertexFlags { get { return _vertexFlags; }}
+		private BitArray _vertexFlags; 
 
         [System.Serializable]
         public class serializedFlags
@@ -90,7 +96,7 @@ namespace UMA
         /// Gets the hidden triangles count.
         /// </summary>
         /// <value>The hidden triangles count.</value>
-        public int HiddenCount
+        public int HiddenTriangleCount
         {
             get
             {
@@ -108,6 +114,40 @@ namespace UMA
                     return 0;
             }
         }
+
+		/// <summary>
+		/// Gets the vertex count.
+		/// </summary>
+		/// <value>The vertex count.</value>
+		public int VertexCount 
+		{ 
+			get 
+			{
+				if (_vertexFlags != null)
+				{
+					return _vertexFlags.Count;
+				}
+				else
+					return 0;
+			}
+		}   
+
+		/// <summary>
+		/// Gets the hidden vertices count.
+		/// </summary>
+		/// <value>The hidden vertices count.</value>
+		public int HiddenVertexCount
+		{
+			get
+			{
+				if (_vertexFlags != null)
+				{
+					return UMAUtils.GetCardinality(_vertexFlags);
+				}
+				else
+					return 0;
+			}
+		}
 
         /// <summary>
         /// Custom serialization to write the BitArray to a boolean array.
@@ -141,22 +181,48 @@ namespace UMA
         /// </summary>
         public void OnAfterDeserialize()
         {
-            //We're not logging an error here because we'll get spammed by it for empty/not-set assets.
+            // We're not logging an error here because we'll get spammed by it for empty/not-set assets.
             if (_asset == null)
                 return;
             
             if (_serializedFlags == null)
                 return;
+			
+			if (_serializedFlags.Length != _asset.meshData.subMeshCount)
+			{
+				Debug.LogError("Occlusion data out of sync with mesh!");
+				return;
+			}
 
             if (_serializedFlags.Length > 0)
             {
                 _triangleFlags = new BitArray[_serializedFlags.Length];
                 for (int i = 0; i < _serializedFlags.Length; i++)
                 {
-                    _triangleFlags[i] = new BitArray(_serializedFlags[i].flags);
-					_triangleFlags[i].Length = _serializedFlags[i].Count;
-                }
+					if (_serializedFlags[i].Count != _asset.meshData.submeshes[i].TriangleCount)
+					{
+						Debug.LogError("Occlusion triangle data out of sync with mesh!");
+
+						_triangleFlags[i] = new BitArray(_asset.meshData.submeshes[i].TriangleCount, false);
+					}
+					else
+					{
+						_triangleFlags[i] = new BitArray(_serializedFlags[i].flags);
+						_triangleFlags[i].Length = _serializedFlags[i].Count;
+					}
+				}
             }
+
+			// Initialize the hidden vertics based on the triangles
+			_vertexFlags = new BitArray(_asset.meshData.vertexCount, true);
+			for (int i = 0; i < _triangleFlags.Length; i++)
+			{
+				SubMeshTriangles submeshTriangles = _asset.meshData.submeshes[i];
+				for (int j = 0; j < submeshTriangles.triangles.Length; j++)
+				{
+					_vertexFlags.Set(submeshTriangles.triangles[j], false);
+				}
+			}
         }
 
         /// <summary>
@@ -177,7 +243,7 @@ namespace UMA
             _triangleFlags = new BitArray[asset.meshData.subMeshCount];
             for (int i = 0; i < asset.meshData.subMeshCount; i++)
             {
-                _triangleFlags[i] = new BitArray(asset.meshData.submeshes[i].triangles.Length / 3);
+				_triangleFlags[i] = new BitArray(asset.meshData.submeshes[i].TriangleCount);
             }
         }
 

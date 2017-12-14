@@ -12,6 +12,19 @@ namespace UMA
 	public struct SubMeshTriangles
 	{
 		public int[] triangles;
+
+		public int TriangleCount
+		{
+			get
+			{
+				if (triangles != null)
+				{
+					return triangles.Length / 3;
+				}
+
+				return 0;
+			}
+		}
 	}
 
 	/// <summary>

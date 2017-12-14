@@ -147,8 +147,8 @@ namespace UMA
 						// SMR binds and bones built from dictionary order
 
 						// Rebind vertex to new bones
-						int boneIndex = boneSrc.boneIndex0;;
-						float boneWeight = boneSrc.weight0;;
+						int boneIndex = boneSrc.boneIndex0;
+						float boneWeight = boneSrc.weight0;
 						Vector3 vertexDst = Vector3.zero;
 						boneWeights[destIndex].boneIndex0 = rebindIndices[boneIndex];
 						boneWeights[destIndex].weight0 = boneWeight;

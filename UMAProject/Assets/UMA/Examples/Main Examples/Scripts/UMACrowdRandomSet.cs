@@ -103,7 +103,7 @@ namespace UMA.Examples
 			}
 		}
 
-		public static void Apply(UMA.UMAData umaData, CrowdRaceData race, Color skinColor, Color HairColor, Color Shine, HashSet<string> Keywords, UMAContextBase context)
+		public static void Apply(UMA.UMAData umaData, CrowdRaceData race, Color skinColor, Color HairColor, Color Shine, HashSet<string> Keywords)
 		{
 			var slotParts = new HashSet<string>();
 			umaData.umaRecipe.slotDataList = new SlotData[race.slotElements.Length];
@@ -130,7 +130,7 @@ namespace UMA.Examples
 				SlotData slotData;
 				if (slot.useSharedOverlayList && slot.overlayListSource >= 0 && slot.overlayListSource < i)
 				{
-					slotData = context.InstantiateSlot(slot.slotID, umaData.umaRecipe.slotDataList[slot.overlayListSource].GetOverlayList());
+					slotData = UMAGlobal.Context.InstantiateSlot(slot.slotID, umaData.umaRecipe.slotDataList[slot.overlayListSource].GetOverlayList());
 				}
 				else
 				{
@@ -138,7 +138,7 @@ namespace UMA.Examples
 					{
 						Debug.LogError("UMA Crowd: Invalid overlayListSource for " + slot.slotID);
 					}
-					slotData = context.InstantiateSlot(slot.slotID);
+					slotData = UMAGlobal.Context.InstantiateSlot(slot.slotID);
 				}
 				umaData.umaRecipe.slotDataList[i] = slotData;
 				for (int overlayIdx = 0; overlayIdx < slot.overlayElements.Length; overlayIdx++)
@@ -150,7 +150,7 @@ namespace UMA.Examples
 					overlay.UpdateVersion();
 					slotParts.Add(overlay.overlayID);
 					Color overlayColor = Color.black;
-					var overlayData = context.InstantiateOverlay(overlay.overlayID, overlayColor);
+					var overlayData = UMAGlobal.Context.InstantiateOverlay(overlay.overlayID, overlayColor);
 
 
 					switch (overlay.overlayType)

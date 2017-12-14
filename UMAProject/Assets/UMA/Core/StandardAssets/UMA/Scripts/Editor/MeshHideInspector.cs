@@ -74,7 +74,7 @@ namespace UMA.Editors
             {
                 EditorGUILayout.LabelField("Triangle Indices Count: " + source.TriangleCount);
                 EditorGUILayout.LabelField("Submesh Count: " + source.SubmeshCount);
-                EditorGUILayout.LabelField("Hidden Triangle Count: " + source.HiddenCount);
+                EditorGUILayout.LabelField("Hidden Triangle Count: " + source.HiddenTriangleCount);
             }
             else
                 EditorGUILayout.LabelField("No triangle array found");
