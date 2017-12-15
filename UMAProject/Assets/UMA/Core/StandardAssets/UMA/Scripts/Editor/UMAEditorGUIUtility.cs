@@ -18,17 +18,6 @@ namespace UMA
 			return type;
 		}
 
-		public static Type PropertyTypeField(string label, Type type, params GUILayoutOption[] options)
-		{
-			var index = ArrayUtility.IndexOf(BaseProperty.PropertyTypes, type);
-			EditorGUI.BeginChangeCheck();
-			var newIndex = EditorGUILayout.Popup(new GUIContent(label), index, PropertyTypesGUIContents, options);
-			if (EditorGUI.EndChangeCheck())
-			{
-				return BaseProperty.PropertyTypes[newIndex];
-			}
-			return type;
-		}
 
 
 		public static GUIContent[] PropertyTypesGUIContents
@@ -49,11 +38,11 @@ namespace UMA
 		}
 		static GUIContent[] _propertyTypesGUIContents;
 
-		public static Type ConditionTypeField(string label, Type type, params GUILayoutOption[] options)
+		public static Type ConditionTypeField(Rect rect, string label, Type type)
 		{
 			var index = ArrayUtility.IndexOf(BaseCondition.ConditionTypes, type);
 			EditorGUI.BeginChangeCheck();
-			var newIndex = EditorGUILayout.Popup(new GUIContent(label), index, ConditionTypesGUIContents, options);
+			var newIndex = EditorGUI.Popup(rect, new GUIContent(label), index, ConditionTypesGUIContents);
 			if (EditorGUI.EndChangeCheck())
 			{
 				return BaseCondition.ConditionTypes[newIndex];

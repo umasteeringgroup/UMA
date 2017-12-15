@@ -3,18 +3,18 @@ using UnityEditor;
 
 namespace UMA
 {
-	[CustomEditor(typeof(FloatPieceProperty))]
-	public class FloatPropertyDrawer : Editor 
+	//[CustomEditor(typeof(FloatPieceProperty))]
+	[CustomPropertyDrawer(typeof(FloatPieceProperty))]
+	public class FloatPropertyDrawer : BasePropertyDrawer<FloatProperty>
 	{
-		public override void OnInspectorGUI()
+		protected override void OnPublicGUI(FloatProperty value)
 		{
-			EditorGUI.BeginChangeCheck();
-			var value = (target as FloatPieceProperty).value;
+			value.value = EditorGUILayout.Slider("Default", value.value, 0f, 1f);
+		}
+		
+		protected override void OnConstantGUI(FloatProperty value)
+		{
 			value.value = EditorGUILayout.Slider("Value", value.value, 0f, 1f);
-			if (EditorGUI.EndChangeCheck())
-			{
-				EditorUtility.SetDirty(target);
-			}
 		}
 	}	
 }

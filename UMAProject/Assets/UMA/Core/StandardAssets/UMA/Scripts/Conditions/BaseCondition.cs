@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace UMA
 {
-	public abstract class BaseCondition : ScriptableObject
+	public abstract class BaseCondition : InspectableAsset
 	{
 		public virtual string ConditionType()
 		{

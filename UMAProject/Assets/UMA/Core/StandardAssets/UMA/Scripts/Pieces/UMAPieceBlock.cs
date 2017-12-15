@@ -9,6 +9,7 @@ namespace UMA
 	{
 		public BaseCondition Condition;
 		public UMAPieceSlot[] Slots = new UMAPieceSlot[0];
+		public UMAPieceOverlay[] Overlays = new UMAPieceOverlay[0];
 		public UMALocation[] SuppressLocations = new UMALocation[0];
 	}
 }

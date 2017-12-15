@@ -23,7 +23,7 @@ namespace UMA
 			case PropertyType.Public:
 				value.color = EditorGUI.ColorField(rect.GetLineRect(), "Default", value.color);
 				
-				var lineRect = new InspectorRect(EditorGUI.PrefixLabel(rect.GetLineRect(), new GUIContent("Lock Channels")));
+				var lineRect = new InspectorRect(EditorGUI.PrefixLabel(rect.GetLineRect(), new GUIContent("Lock Channels")), 0);
 				value.overrideR = GUI.Toggle(lineRect.GetColumnRect(0,4), value.overrideR, "Red");
 				value.overrideG = GUI.Toggle(lineRect.GetColumnRect(1,4), value.overrideG, "Green");
 				value.overrideB = GUI.Toggle(lineRect.GetColumnRect(2,4), value.overrideB, "Blue");
@@ -33,7 +33,7 @@ namespace UMA
 			case PropertyType.Required:
 				value.color = EditorGUI.ColorField(rect.GetLineRect(), "Locked", value.color);
 				
-				var reqLineRect = new InspectorRect(EditorGUI.PrefixLabel(rect.GetLineRect(), new GUIContent("Lock Channels")));
+				var reqLineRect = new InspectorRect(EditorGUI.PrefixLabel(rect.GetLineRect(), new GUIContent("Lock Channels")), 0);
 				value.overrideR = GUI.Toggle(reqLineRect.GetColumnRect(0,4), value.overrideR, "Red");
 				value.overrideG = GUI.Toggle(reqLineRect.GetColumnRect(1,4), value.overrideG, "Green");
 				value.overrideB = GUI.Toggle(reqLineRect.GetColumnRect(2,4), value.overrideB, "Blue");

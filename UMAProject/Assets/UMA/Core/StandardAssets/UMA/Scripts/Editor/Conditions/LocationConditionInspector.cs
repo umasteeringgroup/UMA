@@ -3,14 +3,24 @@ using UnityEditor;
 
 namespace UMA
 {
-	[CustomEditor(typeof(LocationCondition))]
-	public class LocationConditionInspector : Editor
+	[UMACustomPropertyDrawer(typeof(LocationCondition))]
+	[CustomPropertyDrawer(typeof(LocationCondition), true)]
+	public class LocationConditionInspector : PropertyDrawer
 	{
-		public override void OnInspectorGUI()
+		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 		{
-			var locationCondition = target as LocationCondition;
-			locationCondition.Location = EditorGUILayout.ObjectField("Location", locationCondition.Location, typeof(UMALocation), false) as UMALocation;
-			locationCondition.Condition = (LocationCondition.ConditionRule) EditorGUILayout.EnumPopup("Condition", locationCondition.Condition);
+			return InspectableAsset.CalculateElementHeight(2);
+		}
+
+		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+		{
+			var rect = new InspectorRect(position);
+			Debug.Log(position);
+			EditorGUI.LabelField(rect.GetLineRect(), "property.type", property.type);
+			EditorGUI.LabelField(rect.GetLineRect(), "property.propertyType", property.propertyType.ToString());
+
+			//Location = EditorGUI.ObjectField(rect.GetLineRect(), "Location", Location, typeof(UMALocation), false) as UMALocation;
+			//Condition = (LocationCondition.ConditionRule)EditorGUI.EnumPopup(rect.GetLineRect(), "Condition", Condition);
 		}
 	}
 }

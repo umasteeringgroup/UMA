@@ -15,6 +15,5 @@ namespace UMA
 		}
 		public SlotOperation Operation = SlotOperation.Add;
 		public SlotDataAsset Slot;
-		public UMAPieceOverlay[] Overlays = new UMAPieceOverlay[0];
 	}
 }

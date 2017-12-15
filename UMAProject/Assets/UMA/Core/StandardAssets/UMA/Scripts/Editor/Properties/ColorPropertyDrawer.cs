@@ -3,18 +3,18 @@ using UnityEditor;
 
 namespace UMA
 {
-	[CustomEditor(typeof(ColorPieceProperty))]
-	public class ColorPropertyDrawer : Editor 
+	[CustomPropertyDrawer(typeof(ColorPieceProperty))]
+	//[CustomEditor(typeof(ColorPieceProperty))]
+	public class ColorPropertyDrawer : BasePropertyDrawer<ColorProperty>
 	{
-		public override void OnInspectorGUI()
+		protected override void OnPublicGUI(ColorProperty value)
 		{
-			EditorGUI.BeginChangeCheck();
-			var value = (target as ColorPieceProperty).value;
-			value.color = EditorGUILayout.ColorField("Color", value.color);
-			if (EditorGUI.EndChangeCheck())
-			{
-				EditorUtility.SetDirty(target);
-			}
+			value.color = EditorGUILayout.ColorField("Default", value.color);
+		}
+		
+		protected override void OnConstantGUI(ColorProperty value)
+		{
+			value.color = EditorGUILayout.ColorField("Value", value.color);
 		}
 	}	
 }

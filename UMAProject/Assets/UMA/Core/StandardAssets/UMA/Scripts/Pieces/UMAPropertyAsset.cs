@@ -10,6 +10,32 @@ namespace UMA
 		public BasePieceProperty[] Properties = new BasePieceProperty[0];
 
 #if UNITY_EDITOR
+		public int GetPublicPropertyCount()
+		{
+			int publicProperties = 0;
+			for (int i = 0; i < Properties.Length; i++)
+			{
+				if (Properties[i].propertyType != BasePieceProperty.PropertyType.Constant)
+					publicProperties++;
+			}
+			return publicProperties;
+		}
+
+		public int GetPublicProperties(IList<BasePieceProperty> properties)
+		{
+			int publicProperties = 0;
+			for (int i = 0; i < Properties.Length; i++)
+			{
+				if (Properties[i].propertyType != BasePieceProperty.PropertyType.Constant)
+				{
+					properties[i] = Properties[i];
+					publicProperties++;
+				}
+			}
+			return publicProperties;
+		}
+
+
 		public virtual void RecordState() { }
 		public virtual void OnChange() { popupStrings = null; }
 

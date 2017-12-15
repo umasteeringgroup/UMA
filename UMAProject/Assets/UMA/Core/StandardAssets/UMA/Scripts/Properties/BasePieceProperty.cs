@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace UMA
 {
-	public abstract class BasePieceProperty : ScriptableObject
+	public abstract class BasePieceProperty : InspectableAsset
 	{
 		public enum PropertyType
 		{
@@ -28,15 +28,6 @@ namespace UMA
 		public Type GetPropertyType()
 		{
 			return BaseProperty.FindGenericParentValueType(GetType(), basePiecePropertyType);
-		}
-
-		public virtual float GetInspectorHeight()
-		{
-			return 0;
-		}
-
-		public virtual void DrawInspectorProperties(InspectorRect rect, bool isActive, bool isFocused)
-		{
 		}
 #endif
 	}

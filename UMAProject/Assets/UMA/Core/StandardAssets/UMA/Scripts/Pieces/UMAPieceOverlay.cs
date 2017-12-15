@@ -9,11 +9,12 @@ namespace UMA
 	{
 		public OverlayDataAsset Overlay;
 		public OverlayOperation Operation;
+		public PropertyMapping[] MappedProperties;
 
 		public enum OverlayOperation
 		{
 			Add,
 			Remove
-		}		
+		}
 	}
 }
