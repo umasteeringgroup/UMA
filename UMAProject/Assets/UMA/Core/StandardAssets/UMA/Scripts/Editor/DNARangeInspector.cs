@@ -26,7 +26,7 @@ namespace UMA.Editors
 				if (dnaSource != null)
 				{
 					if (dnaRange.dnaConverter.DNAType == typeof(DynamicUMADna)) {
-						entryCount = dnaRange.dnaConverter.dnaAsset.Names.Length;
+						entryCount = ((DynamicDNAConverterBehaviourBase)dnaRange.dnaConverter).dnaAsset.Names.Length;
 					} else {
 						entryCount = dnaSource.Count;
 					}
@@ -38,7 +38,7 @@ namespace UMA.Editors
 	    {
 			bool dirty = false;
 
-			DynamicDNAConverterBehaviourBase newSource = EditorGUILayout.ObjectField("DNA Converter", dnaRange.dnaConverter, typeof(DynamicDNAConverterBehaviourBase), true) as DynamicDNAConverterBehaviourBase;
+			DnaConverterBehaviour newSource = EditorGUILayout.ObjectField("DNA Converter", dnaRange.dnaConverter, typeof(DnaConverterBehaviour), true) as DnaConverterBehaviour;
 
 			if (newSource != dnaRange.dnaConverter)
 			{
@@ -56,7 +56,7 @@ namespace UMA.Editors
 				{
 					if (dnaRange.dnaConverter.DNAType == typeof(DynamicUMADna))
 					{
-						entryCount = dnaRange.dnaConverter.dnaAsset.Names.Length;
+						entryCount = ((DynamicDNAConverterBehaviourBase)dnaRange.dnaConverter).dnaAsset.Names.Length;
 					}
 					else
 					{
@@ -90,7 +90,7 @@ namespace UMA.Editors
 				string[] dnaNames;
 				if (dnaRange.dnaConverter.DNAType == typeof(DynamicUMADna))
 				{
-					dnaNames = dnaRange.dnaConverter.dnaAsset.Names;
+					dnaNames = ((DynamicDNAConverterBehaviourBase)dnaRange.dnaConverter).dnaAsset.Names;
 				}
 				else
 				{

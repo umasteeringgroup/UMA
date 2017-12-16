@@ -20,7 +20,7 @@ namespace UMA
 		/// <summary>
 		/// The DNA converter for which the ranges apply.
 		/// </summary>
-		public DynamicDNAConverterBehaviourBase dnaConverter;
+		public DnaConverterBehaviour dnaConverter;
 
 		/// <summary>
 		/// The mean (average) value for each DNA entry.
@@ -45,11 +45,12 @@ namespace UMA
 		{
 			if (dnaConverter == null)
 				return false;
-			
-			if (dnaConverter.dnaAsset.Names.Length > index)
-			{
-				if (Regex.Replace(dnaConverter.dnaAsset.Names[index], "( )+", "") == Regex.Replace(name, "( )+", ""))
-					return true;
+
+			if (dnaConverter.DNAType == typeof(DynamicUMADna)) {
+				if (((DynamicDNAConverterBehaviourBase)dnaConverter).dnaAsset.Names.Length > index) {
+					if (Regex.Replace (((DynamicDNAConverterBehaviourBase)dnaConverter).dnaAsset.Names [index], "( )+", "") == Regex.Replace (name, "( )+", ""))
+						return true;
+				}
 			}
 			return false;
 		}
