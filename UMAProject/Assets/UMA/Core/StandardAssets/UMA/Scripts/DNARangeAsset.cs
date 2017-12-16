@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Text.RegularExpressions;
 
 namespace UMA
 {
@@ -19,7 +20,7 @@ namespace UMA
 		/// <summary>
 		/// The DNA converter for which the ranges apply.
 		/// </summary>
-		public DnaConverterBehaviour dnaConverter;
+		public DynamicDNAConverterBehaviourBase dnaConverter;
 
 		/// <summary>
 		/// The mean (average) value for each DNA entry.
@@ -39,6 +40,28 @@ namespace UMA
 		public float[] spreads;
 
 		private float[] values;
+
+		public bool ContainsDNARange(int index, string name)
+		{
+			if (dnaConverter == null)
+				return false;
+			
+			if (dnaConverter.dnaAsset.Names.Length > index)
+			{
+				if (Regex.Replace(dnaConverter.dnaAsset.Names[index], "( )+", "") == Regex.Replace(name, "( )+", ""))
+					return true;
+			}
+			return false;
+		}
+
+		public bool ValueInRange(int index, float value)
+		{
+			float rangeMin = means[index] - spreads[index];
+			float rangeMax = means[index] + spreads[index];
+			if (value < rangeMin || value > rangeMax)
+				return false;
+			return true;
+		}
 
 		/// <summary>
 		/// Uniformly randomizes each value in the DNA.
