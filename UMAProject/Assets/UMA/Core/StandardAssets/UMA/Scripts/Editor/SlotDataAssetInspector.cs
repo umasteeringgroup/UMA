@@ -7,6 +7,13 @@ namespace UMA.Editors
 	[CustomEditor(typeof(SlotDataAsset))]
     public class SlotDataAssetInspector : Editor
     {
+
+        [MenuItem("Assets/Create/UMA/Core/Custom Slot Asset")]
+        public static void CreateCustomSlotAssetMenuItem()
+        {
+        	CustomAssetUtility.CreateAsset<SlotDataAsset>("", true, "Custom");
+        }
+
 		//allow for delayed saving so typing in a field does not trigger save with every keystroke
 		private float lastActionTime = 0;
 		private bool doSave = false;

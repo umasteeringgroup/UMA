@@ -383,6 +383,7 @@ namespace UMA
 			return !((bool)overlay2);
 		}
 
+		/// <summary>
 		/// Compares two overlay.assets and overlay.rects to see if they are the same. Mainly for comparing overlays from AssetBundles.
 		/// </summary>
 		/// <param name="overlay1"></param>

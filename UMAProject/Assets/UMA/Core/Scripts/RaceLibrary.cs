@@ -57,7 +57,41 @@ namespace UMA
 			raceElementList = list;
 			raceDictionary.Add(race.raceName, race);
 		}
-	#pragma warning restore 618
+#pragma warning restore 618
+
+		public override RaceData HasRace(string raceName)
+		{
+			if ((raceName == null) || (raceName.Length == 0))
+				return null;
+
+			ValidateDictionary();
+			RaceData res;
+			if (!raceDictionary.TryGetValue(raceName, out res))
+			{
+				return null;
+			}
+			return res;
+		}
+
+		public override RaceData HasRace(int raceHash)
+		{
+			if (raceHash == 0)
+				return null;
+
+			ValidateDictionary();
+
+			foreach (string name in raceDictionary.Keys)
+			{
+				int hash = UMAUtils.StringToHash(name);
+
+				if (hash == raceHash)
+				{
+					return raceDictionary[name];
+				}
+			}
+
+			return null;
+		}
 
 		override public RaceData GetRace(string raceName)
 		{

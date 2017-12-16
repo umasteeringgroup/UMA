@@ -131,14 +131,12 @@ namespace UMA.Examples
             //        DnaScrollPanel = GameObject.Find("ScrollPanel");
             DnaPanel.SetActive(false);
 
-#if UNITY_5 && !UNITY_5_1 && !UNITY_5_0
             var oldUIMask = DnaPanel.GetComponent<Mask>();
             if (oldUIMask != null)
             {
                 DestroyImmediate(oldUIMask);
                 DnaPanel.AddComponent<RectMask2D>();
             }
-#endif
 
             // Find the DNA hide button and hide it for now
             DnaHide = GameObject.Find("MessagePanel").GetComponentInChildren<Button>();
@@ -214,14 +212,13 @@ namespace UMA.Examples
             {
                 DnaPanel.SetActive(true);
                 DnaHide.gameObject.SetActive(true);
-#if UNITY_5 && !UNITY_5_1 && !UNITY_5_0
+
                 // really Unity? Yes we change the value and set it back to trigger a ui recalculation... 
                 // because setting the damn game object active doesn't do that!
                 var rt = DnaPanel.GetComponent<RectTransform>();
                 var pos = rt.offsetMin;
                 rt.offsetMin = new Vector2(pos.x + 1, pos.y);
                 rt.offsetMin = pos;
-#endif
             }
             else
             {

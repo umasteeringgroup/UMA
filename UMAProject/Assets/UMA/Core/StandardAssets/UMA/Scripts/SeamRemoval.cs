@@ -58,22 +58,15 @@ namespace UMA
 						normals[vertexIndex] = referencenormals[othervertexIndex];
 	                }
 	            }
-	        }		
-				
-			Mesh tempMesh = new Mesh();
+	        }	
+
+			Mesh tempMesh = Instantiate(originalMesh.sharedMesh);
 			tempMesh.name = originalMesh.gameObject.name;
-			tempMesh.vertices = originalMesh.sharedMesh.vertices;
 			tempMesh.normals = normals;
-			tempMesh.tangents = originalMesh.sharedMesh.tangents;
-			tempMesh.boneWeights = originalMesh.sharedMesh.boneWeights;
-			tempMesh.uv = originalMesh.sharedMesh.uv;
-			tempMesh.triangles = originalMesh.sharedMesh.triangles;
-			tempMesh.bindposes = originalMesh.sharedMesh.bindposes;
 			
 			calculateMeshTangents(tempMesh);
 			
 	        return tempMesh;
-
 	    }
 		
 

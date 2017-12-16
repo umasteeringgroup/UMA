@@ -36,17 +36,17 @@ namespace UMA
 					//so in this case delete all the components that would have been added from the found gameObject from the previous code
 					if (EditorUMAContext.GetComponent<UMAContext>())
 					{
-						Destroy(EditorUMAContext.GetComponent<UMAContext>());//should also make the instance null again
+						UMAUtils.DestroySceneObject(EditorUMAContext.GetComponent<UMAContext>());//should also make the instance null again
 						if (EditorUMAContext.GetComponent<DynamicRaceLibrary>())
-							Destroy(EditorUMAContext.GetComponent<DynamicRaceLibrary>());
+							UMAUtils.DestroySceneObject(EditorUMAContext.GetComponent<DynamicRaceLibrary>());
 						if (EditorUMAContext.GetComponent<DynamicSlotLibrary>())
-							Destroy(EditorUMAContext.GetComponent<DynamicSlotLibrary>());
+							UMAUtils.DestroySceneObject(EditorUMAContext.GetComponent<DynamicSlotLibrary>());
 						if (EditorUMAContext.GetComponent<DynamicOverlayLibrary>())
-							Destroy(EditorUMAContext.GetComponent<DynamicOverlayLibrary>());
+							UMAUtils.DestroySceneObject(EditorUMAContext.GetComponent<DynamicOverlayLibrary>());
 						if (EditorUMAContext.GetComponent<DynamicCharacterSystem>())
-							Destroy(EditorUMAContext.GetComponent<DynamicCharacterSystem>());
+							UMAUtils.DestroySceneObject(EditorUMAContext.GetComponent<DynamicCharacterSystem>());
 						if (EditorUMAContext.GetComponent<DynamicAssetLoader>())
-							Destroy(EditorUMAContext.GetComponent<DynamicAssetLoader>());
+							UMAUtils.DestroySceneObject(EditorUMAContext.GetComponent<DynamicAssetLoader>());
 					}
 				}
 				else if (UMAContext.FindInstance().gameObject.transform.parent.gameObject.name == "UMAEditorContext")

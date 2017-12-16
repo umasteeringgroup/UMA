@@ -199,7 +199,7 @@ namespace UMA.CharacterSystem.Editors
 		/// (so that other animators can be assigned that can exist in asset bundles). The only way to get the others is from DynamicAssetLoader
 		/// so they MUST be in an assetBundle or in GlobalIndex or there is no way of finding them, if they are not, show a warning.
 		/// </summary>
-		/// <param name="recipeName"></param>
+		/// <param name="racName">RuntimeAnimatorController name.</param>
 		/// <returns></returns>
 		private bool CheckAnimatorAvailability(string racName)
 		{

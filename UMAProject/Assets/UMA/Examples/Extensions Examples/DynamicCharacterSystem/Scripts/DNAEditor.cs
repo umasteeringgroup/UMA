@@ -10,6 +10,7 @@ namespace UMA.CharacterSystem
         UMADnaBase _Owner;   // different DNA 
         DynamicCharacterAvatar _Avatar;
         float _InitialValue;
+		DNARangeAsset _dnr;
 
         public Slider ValueSlider;
         public Text Label;
@@ -27,18 +28,37 @@ namespace UMA.CharacterSystem
             _Index = index;
             _Owner = owner;
             _Avatar = avatar;
-
-            //not used?
-            //DNARangeAsset[] dnr = avatar.RaceData.dnaRanges;
-            //dnr[0].
-            //             values[i] = means[i] + (Random.value - 0.5f) * spreads[i];
             _InitialValue = currentval;
+
+			DNARangeAsset[] dnaRangeAssets = avatar.activeRace.data.dnaRanges;
+			foreach (DNARangeAsset d in dnaRangeAssets) 
+			{
+				if (d.ContainsDNARange (_Index, _DNAName)) {
+					_dnr = d;
+					return;
+				}
+			}
         }
 
         public void ChangeValue(float value)
         {
-            _Owner.SetValue(_Index, value);
-            _Avatar.ForceUpdate(true, false, false);
+			if (_dnr == null) //No specified DNA Range Asset for this DNA
+			{ 
+				_Owner.SetValue (_Index, value);
+				_Avatar.ForceUpdate (true, false, false);				
+				return;
+			}
+			
+			if (_dnr.ValueInRange (_Index, value))
+			{
+				_Owner.SetValue (_Index, value);
+				_Avatar.ForceUpdate(true, false, false);
+				return;
+			}
+			else
+			{
+				//Debug.LogWarning ("DNA Value out of range!");
+			}
         }
     }
 }

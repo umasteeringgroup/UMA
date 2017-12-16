@@ -39,11 +39,11 @@ namespace UMA.CharacterSystem.Examples
 
             foreach (Transform t in SlotPanel.transform)
             {
-                GameObject.Destroy(t.gameObject);
+                UMAUtils.DestroySceneObject(t.gameObject);
             }
             foreach (Transform t in WardrobePanel.transform)
             {
-                GameObject.Destroy(t.gameObject);
+                UMAUtils.DestroySceneObject(t.gameObject);
             }
         }
 
@@ -260,7 +260,7 @@ namespace UMA.CharacterSystem.Examples
 
             Avatar.SetColor("Hair", HairColors.colors[RandHair]);
             Avatar.SetColor("Skin", SkinColors.colors[RandSkin]);
-            Avatar.BuildCharacter();
+            Avatar.BuildCharacter(true);
             Avatar.ForceUpdate(true, true, true);
         }
 

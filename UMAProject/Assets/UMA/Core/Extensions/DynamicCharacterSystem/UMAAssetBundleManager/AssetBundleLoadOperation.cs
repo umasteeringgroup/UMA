@@ -1,8 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
-#if UNITY_5_4_OR_NEWER
 using UnityEngine.Networking;
-#endif
 #if ENABLE_IOS_ON_DEMAND_RESOURCES
 using UnityEngine.iOS;
 #endif
@@ -10,6 +8,8 @@ using UnityEngine.iOS;
 using UnityEditor;
 #endif
 using System.Collections;
+//added System.IO for loading/saving cached bundleIndexes
+using System.IO;
 
 namespace UMA.AssetBundles
 {
@@ -253,6 +253,8 @@ namespace UMA.AssetBundles
 		string m_Url;
 		int zeroDownload = 0;
 		bool m_isJsonIndex = false;
+		int retryAttempts = 0;
+		int maxRetryAttempts = 5;
 
 		public AssetBundleDownloadFromWebOperation(string assetBundleName, WWW www, bool isJsonIndex = false)
 			: base(assetBundleName)
@@ -288,22 +290,30 @@ namespace UMA.AssetBundles
 			base.Update();
 			}
             
-			// TODO: When can check iOS copy this into the iOS functions above
+			// TODO: iOS AppSlicing and OnDemandResources will need something like this too
 			// This checks that the download is actually happening and restarts it if it is not
 			//fixes a bug in SimpleWebServer where it would randomly stop working for some reason
 			if (!downloadIsDone)
 			{
-				downloadProgress = m_WWW.progress;
+				//We actually need to know if progress has stalled, not just if there is none
+				//so set the progress after we compare
+				//downloadProgress = m_WWW.progress;
 				if (!string.IsNullOrEmpty(m_WWW.error))
 				{
 					Debug.Log("[AssetBundleLoadOperation] download error for "+ m_WWW.url+" : " + m_WWW.error);
 				}
 				else
 				{
-					if (m_WWW.progress == 0)
+					//if (m_WWW.progress == 0)
+					if(m_WWW.progress == downloadProgress)
 					{
 						zeroDownload++;
 					}
+					else
+					{
+						downloadProgress = m_WWW.progress;
+						zeroDownload = 0;
+                    }
 #if UNITY_EDITOR
 					//Sometimes SimpleWebServer randomly looses it port connection
 					//Sometimes restarting the download helps, sometimes it needs to be completely restarted
@@ -331,12 +341,39 @@ namespace UMA.AssetBundles
 					}
 					else
 #endif
-					if(zeroDownload == 500)
+					if((downloadProgress == 0 && zeroDownload == 500) || zeroDownload >= Mathf.Clamp((2500 * downloadProgress), 500,2500))//let this number get larger the more has been downloaded (cos its really annoying to be at 98% and have it fail)
 					{
-						Debug.Log("[AssetBundleLoadOperation] progress was zero for 500 frames restarting dowload");
+						//when we cannot download because WiFi is connected but a hotspot needs authentication
+						//or because the user has run out of mobile data the www class takes a while error out
+						if ((AssetBundleManager.ConnectionChecker != null && !AssetBundleManager.ConnectionChecker.InternetAvailable) || retryAttempts > maxRetryAttempts)
+						{
+							if (retryAttempts > maxRetryAttempts)
+							{
+								//there was some unknown error with the connection
+								//tell the user we could not complete the download
+								error = "Downloading of " + assetBundleName + " failed after 10 attempts. Something is wrong with the internet connection.";
+								m_WWW.Dispose();
+								m_WWW = null;
+							}
+							else
+							{
+								//if we have a connection checker and no connection, leave the www alone so it times out on its own
+								Debug.Log("[AssetBundleLoadOperation] progress was zero for "+ zeroDownload+" frames and the ConnectionChecker said there was no Internet Available.");
+							}
+						}
+						else
+					{
+							Debug.Log("[AssetBundleLoadOperation] progress was zero for " + zeroDownload + " frames restarting dowload");
 						m_WWW.Dispose();
 						m_WWW = null;
+							//m_WWW = new WWW(m_Url);//make sure this still caches
+							if (AssetBundleManager.AssetBundleIndexObject != null)
+								m_WWW = WWW.LoadFromCacheOrDownload(m_Url, AssetBundleManager.AssetBundleIndexObject.GetAssetBundleHash(assetBundleName), 0);
+							else
 						m_WWW = new WWW(m_Url);
+							//but increment the retry either way so the failed Ui shows sooner
+							retryAttempts++;
+						}
 						zeroDownload = 0;
 					}
 
@@ -345,7 +382,10 @@ namespace UMA.AssetBundles
 			}
 			else
 			{
-				downloadProgress = 1f;
+				if (string.IsNullOrEmpty(error))
+				  downloadProgress = 1f;
+				else
+					downloadProgress = 0;
 				return false;
 			}
 		}
@@ -364,10 +404,11 @@ namespace UMA.AssetBundles
 
 		protected override void FinishDownload()
 		{
-			error = m_WWW.error;
+			if(m_WWW != null)
+			   error = m_WWW.error;
 			if (!string.IsNullOrEmpty(error))
 			{
-				Debug.LogWarning("[AssetBundleLoadOperation.AssetBundleDownloadFromWebOperation] URL was "+ m_WWW.url+" error was " + error);
+				Debug.LogWarning("[AssetBundleLoadOperation.AssetBundleDownloadFromWebOperation] URL was "+ m_Url + " error was " + error);
 				return;
 			}
 
@@ -624,7 +665,7 @@ namespace UMA.AssetBundles
 			LoadedAssetBundle loadedBundle = AssetBundleManager.GetLoadedAssetBundle(m_AssetBundleName, out m_DownloadingError);
 			if (loadedBundle != null)
 			{
-				///@TODO: When asset bundle download fails this throws an exception...
+				/// When asset bundle download fails this throws an exception but this should be caught above now
 				m_Request = loadedBundle.m_AssetBundle.LoadAssetAsync(m_AssetName, m_Type);
 				return false;
 			}
@@ -653,7 +694,8 @@ namespace UMA.AssetBundles
 	/// </summary>
 	public class AssetBundleLoadIndexOperation : AssetBundleLoadAssetOperationFull
 	{
-		bool _isJsonIndex;
+		//made protected so descendent class can inherit
+		protected bool _isJsonIndex;
 		public AssetBundleLoadIndexOperation(string bundleName, string assetName, System.Type type, bool isJsonIndex = false)
 			: base(bundleName, assetName, type)
 		{
@@ -687,6 +729,18 @@ namespace UMA.AssetBundles
 			if (m_Request != null && m_Request.isDone)
             {
                 AssetBundleManager.AssetBundleIndexObject = GetAsset<AssetBundleIndex>();
+				//If there is an AssetBundleManager.m_ConnectionChecker and it is set to m_ConnectionChecker.UseBundleIndexCaching
+				//cache this so we can use it offline if we need to
+				if(AssetBundleManager.ConnectionChecker != null && AssetBundleManager.ConnectionChecker.UseBundleIndexCaching == true)
+					if (AssetBundleManager.AssetBundleIndexObject != null)
+					{
+						Debug.Log("Caching downloaded index with Build version " + AssetBundleManager.AssetBundleIndexObject.bundlesPlayerVersion);
+						var cachedIndexPath = Path.Combine(Application.persistentDataPath, "cachedBundleIndex");
+						if (!Directory.Exists(cachedIndexPath))
+							Directory.CreateDirectory(cachedIndexPath);
+						cachedIndexPath = Path.Combine(cachedIndexPath, m_AssetBundleName + ".json");
+						File.WriteAllText(cachedIndexPath, JsonUtility.ToJson(AssetBundleManager.AssetBundleIndexObject));
+					}
                 return false;
             }
 			if (AssetBundleManager.AssetBundleIndexObject != null)
@@ -694,6 +748,48 @@ namespace UMA.AssetBundles
 				return false;
 			}
 			else
+			{
+				// if there has been an error make this return false
+				//It wont need any more updates and ABM needs to put it in failed downloads
+				if(string.IsNullOrEmpty(m_DownloadingError))
+					return true;
+				else
+				{
+					return false;
+				}
+			}
+		}
+	}
+
+	public class AssetBundleLoadCachedIndexOperation : AssetBundleLoadIndexOperation
+	{
+		public AssetBundleLoadCachedIndexOperation(string bundleName, string assetName, System.Type type, bool isJsonIndex = false)
+			: base(bundleName, assetName, type, isJsonIndex)
+		{
+			var cachedIndexPath = Path.Combine(Application.persistentDataPath, "cachedBundleIndex");
+			if (!Directory.Exists(cachedIndexPath))
+				Directory.CreateDirectory(cachedIndexPath);
+			cachedIndexPath = Path.Combine(cachedIndexPath, bundleName+".json");
+			if (File.Exists(cachedIndexPath))
+			{
+				Debug.Log("Cached index found for " + cachedIndexPath);
+				AssetBundleManager.AssetBundleIndexObject = ScriptableObject.CreateInstance<AssetBundleIndex>();
+				JsonUtility.FromJsonOverwrite(File.ReadAllText(cachedIndexPath), AssetBundleManager.AssetBundleIndexObject);
+				//AssetBundleManager.AssetBundleIndexObject = JsonUtility.FromJson<AssetBundleIndex>(File.ReadAllText(cachedIndexPath));
+			}
+			else
+			{
+				//we need an error saying no cached index existed
+				m_DownloadingError = "No cached Index existed for bundleName";
+            }
+		}
+
+		public override bool Update()
+		{
+			return false;
+		}
+		public override bool IsDone()
+		{
 				return true;
 		}
 	}

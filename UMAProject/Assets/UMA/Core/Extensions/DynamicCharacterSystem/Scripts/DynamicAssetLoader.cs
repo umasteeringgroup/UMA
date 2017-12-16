@@ -94,6 +94,15 @@ namespace UMA.CharacterSystem
                 StartCoroutine(StartCO());
         }
 
+		//New method to trigger Initialization again if it fails because there is no Internet Connection
+		public void ReInitialize()
+		{
+			if (!isInitializing && !isInitialized)
+			{
+				StartCoroutine(StartCO());
+			}
+		}
+
         IEnumerator StartCO()
         {
             bool destroyingThis = false;
@@ -120,7 +129,7 @@ namespace UMA.CharacterSystem
                     _instance.gameObjectsToActivate.Clear();
                     _instance.gameObjectsToActivate.AddRange(this.gameObjectsToActivate);
                     _instance.remoteServerIndexURL = this.remoteServerIndexURL;
-                    Destroy(this.gameObject);
+                    UMAUtils.DestroySceneObject(this.gameObject);
                     destroyingThis = true;
                 }
                 else
@@ -141,7 +150,8 @@ namespace UMA.CharacterSystem
             }
 
             //Load any preload asset bundles if there are any
-            if (!destroyingThis)
+			//If we are not initialized dont to this
+            if (!destroyingThis && isInitialized)
                 if (assetBundlesToPreLoad.Count > 0)
                 {
                     List<string> bundlesToSend = new List<string>(assetBundlesToPreLoad.Count);
@@ -153,7 +163,8 @@ namespace UMA.CharacterSystem
 
         void Update()
         {
-            if (assetBundlesToPreLoad.Count > 0)
+			//If we are not initialized dont to this
+			if (assetBundlesToPreLoad.Count > 0 && isInitialized)
             {
                 List<string> bundlesToSend = new List<string>(assetBundlesToPreLoad.Count);
                 bundlesToSend.AddRange(assetBundlesToPreLoad);
@@ -403,7 +414,7 @@ namespace UMA.CharacterSystem
                         //if we are in the editor this can only have happenned because the asset bundles were not built and by this point
                         //an error will have already been shown about that and AssetBundleManager.SimulationOverride will be true so we can just continue.
 #if UNITY_EDITOR
-                        if (AssetBundleManager.AssetBundleIndexObject == null)
+                        if (AssetBundleManager.AssetBundleIndexObject == null && AssetBundleManager.SimulateAssetBundleInEditor)
                         {
                             isInitialized = true;
                             yield break;
@@ -414,6 +425,8 @@ namespace UMA.CharacterSystem
                 else
                 {
                     Debug.LogWarning("AssetBundleManager failed to initialize correctly");
+					//set this false so ReInitializing can happen
+					isInitializing = false;
                 }
             }
         }
@@ -477,7 +490,9 @@ namespace UMA.CharacterSystem
         /// <summary>
         /// Loads a list of asset bundles and their dependencies asynchroniously
         /// </summary>
-        /// <param name="assetBundlesToLoad"></param>
+        /// <param name="assetBundlesToLoad">List of Asset Bundles to load.</param>
+        /// <param name="loadingMsg"></param>
+        /// <param name="loadedMsg"></param>
         /// <returns></returns>
         protected IEnumerator LoadAssetBundlesAsync(List<string> assetBundlesToLoad, string loadingMsg = "", string loadedMsg = "")
         {
@@ -702,10 +717,14 @@ namespace UMA.CharacterSystem
 		/// Automatically performs the operation in SimulationMode if AssetBundleManager.SimulationMode is enabled or if the Application is not playing.
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
-		/// <param name="bundlesToSearch"></param>
+		/// <param name="assetBundlesUsedDict"></param>
+		/// <param name="assetsToReturn"></param>
+		/// <param name="downloadAssetsEnabled"></param>
+		/// <param name="bundlesToSearchArray"></param>
 		/// <param name="assetNameHash"></param>
 		/// <param name="assetName"></param>
 		/// <param name="callback"></param>
+		/// <param name="forceDownloadAll"></param>
 		public bool AddAssetsFromAssetBundles<T>(ref Dictionary<string, List<string>> assetBundlesUsedDict, ref List<T> assetsToReturn, bool downloadAssetsEnabled, string[] bundlesToSearchArray, int? assetNameHash = null, string assetName = "", Action<T[]> callback = null, bool forceDownloadAll = false) where T : UnityEngine.Object
         {
 #if UNITY_EDITOR
@@ -858,11 +877,6 @@ namespace UMA.CharacterSystem
                                             Debug.LogWarning("Load Asset could not get a " + typeof(T).ToString() + " asset called " + asset + " from " + assetBundleNamesArray[i]);
                                         }
                                     }
-                                    /*if (target == null && typeof(T) == typeof(SlotDataAsset))
-									{
-										//08122016 DOS NOTES now the assetBundleIndex records the 'slotname' for slots rather than just the asset name we should not need to try this any more. TODO Confirm
-										target = (T)AssetBundleManager.GetLoadedAssetBundle(assetBundleNamesArray[i], out error).m_AssetBundle.LoadAsset<T>(asset + "_Slot");
-									}*/
                                     if (target != null)
                                     {
                                         assetFound = true;
@@ -942,14 +956,17 @@ namespace UMA.CharacterSystem
         /// Simulates the loading of assets when AssetBundleManager is set to 'SimulationMode'
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="bundlesToSearch"></param>
+        /// <param name="assetBundlesUsedDict"></param>
+        /// <param name="assetsToReturn"></param>
+        /// <param name="bundlesToSearchArray"></param>
         /// <param name="assetNameHash"></param>
         /// <param name="assetName"></param>
         /// <param name="callback"></param>
+        /// <param name="forceDownloadAll"></param>
         bool SimulateAddAssetsFromAssetBundlesNew<T>(ref Dictionary<string, List<string>> assetBundlesUsedDict, ref List<T> assetsToReturn, string[] bundlesToSearchArray, int? assetNameHash = null, string assetName = "", Action<T[]> callback = null, bool forceDownloadAll = false) where T : UnityEngine.Object
         {
             var st = UMAAssetIndexer.StartTimer();
-
+			var assetNameToSearch = assetName;
             Type typeParameterType = typeof(T);
             var typeString = typeParameterType.FullName;
             int currentSimulatedDownloadedBundlesCount = simulatedDownloadedBundles.Count;
@@ -980,7 +997,7 @@ namespace UMA.CharacterSystem
                 assetBundleNamesArray = allAssetBundleNames;
             }
             bool assetFound = false;
-            ///a list of all the assets any assets we load depend on
+            //a list of all the assets any assets we load depend on
             List<string> dependencies = new List<string>();
             for (int i = 0; i < assetBundleNamesArray.Length; i++)
             {
@@ -993,7 +1010,9 @@ namespace UMA.CharacterSystem
                     //if we dont do this we have to load all the assets of that type and check their name which is really slow
                     //I think its worth having this compromise because this does not happen when the local server is on or the assets are *actually* downloaded from an external source because the AssetBundleIndex is used then
                     //if this is looking for SlotsDataAssets then the asset name has _Slot after it usually even if the slot name doesn't have that-but the user might have renamed it so cover both cases
-                    if (typeof(T) == typeof(SlotDataAsset))
+					//THIS COMPROMISE DOES NOT WORK WITH UMA CORE CONTENT the asset for 'MaleEyes' for example is 'UMA_Human_Male_Eyes_Slot'
+					//I think the only way to make this quick is for the GlobalLibrary to maintain a list of UMA assets that are in AssetBundles for use in the editor when we are in 'SimulationMode'
+					/*if (typeof(T) == typeof(SlotDataAsset))
                     {
                         string[] possiblePathsTemp = AssetDatabase.GetAssetPathsFromAssetBundleAndAssetName(assetBundleNamesArray[i], assetName);
                         string[] possiblePaths_SlotTemp = AssetDatabase.GetAssetPathsFromAssetBundleAndAssetName(assetBundleNamesArray[i], assetName + "_Slot");
@@ -1006,6 +1025,43 @@ namespace UMA.CharacterSystem
                             }
                         }
                         possiblePaths = possiblePathsList.ToArray();
+                    }
+                    else
+                    {
+                        possiblePaths = AssetDatabase.GetAssetPathsFromAssetBundleAndAssetName(assetBundleNamesArray[i], assetName);
+                    }*/
+					//not sure how we can do anything here other than load _everything_ and see if its what we want- blasted filters just dont seem to work
+					if (typeof(T) == typeof(SlotDataAsset) || typeof(T) == typeof(OverlayDataAsset) || typeof(T) == typeof(RaceData))
+					{
+						//This works (slowly) but also causes ALL the assets from the assetBundle to be loaded
+						//which is not ideal but then this is editor only so maybe not an issue?
+						var possiblePathsTempTemp = AssetDatabase.GetAssetPathsFromAssetBundle(assetBundleNamesArray[i]);
+						var possiblePathsTempList = new List<string>();
+						foreach (string path in possiblePathsTempTemp)
+                    {
+							var containingPath = System.IO.Path.GetDirectoryName(path);
+							var typeGUIDs = AssetDatabase.FindAssets("t:" + typeof(T).ToString().Replace(typeof(T).Namespace + ".", ""), new string[1] { containingPath });
+							for (int ti = 0; ti < typeGUIDs.Length; ti++)
+								possiblePathsTempList.Add(AssetDatabase.GUIDToAssetPath(typeGUIDs[ti]));
+						}
+						var possiblePathsTemp = possiblePathsTempList.ToArray();
+						var possiblePathsList = new List<string>();
+						T tempTarget = null;
+                        for (int pti = 0; pti < possiblePathsTemp.Length; pti++)
+                        {
+							tempTarget = (T)AssetDatabase.LoadAssetAtPath(possiblePathsTemp[pti], typeof(T));
+							if(tempTarget)
+							if(
+								(typeof(T) == typeof(SlotDataAsset) && (tempTarget as SlotDataAsset).slotName == assetName)||
+								(typeof(T) == typeof(OverlayDataAsset) && (tempTarget as OverlayDataAsset).overlayName == assetName)||
+								(typeof(T) == typeof(RaceData) && (tempTarget as RaceData).raceName == assetName)
+								)
+                            {
+								possiblePathsList.Add(possiblePathsTemp[pti]);
+                            }
+                        }
+                        possiblePaths = possiblePathsList.ToArray();
+						assetNameToSearch = "";//we cant use the sent name as a filter because its a slot/overlay/racename
                     }
                     else
                     {
@@ -1033,7 +1089,7 @@ namespace UMA.CharacterSystem
 					// does not load the actual asset. This is also slightly quicker than getting all paths of type T outside this loop
 					// the 't:' filter needs the type to not have a namespace
 					var typeForSearch = typeof(T).ToString().Replace(typeof(T).Namespace + ".", "");
-					var searchString = assetName == "" ? "t:" + typeForSearch : "t:" + typeForSearch + " " + assetName;
+					var searchString = assetNameToSearch == "" ? "t:" + typeForSearch : "t:" + typeForSearch + " " + assetName;
 					var containingPath = System.IO.Path.GetDirectoryName(path);
 					var typeGUIDs = AssetDatabase.FindAssets(searchString, new string[1] { containingPath });
 					var typePaths = new List<string>(typeGUIDs.Length);

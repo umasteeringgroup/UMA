@@ -154,9 +154,6 @@ namespace UnityEngine.UI
             /// <summary>
             ///   <para>Create an object representing a single option for the dropdown list.</para>
             /// </summary>
-            /// <param name="text">Optional text for the option.</param>
-            /// <param name="image">Optional image for the option.</param>
-            /// <param name="color">Optional color for the option.</param>
             public OptionData()
             {
             }
@@ -165,8 +162,6 @@ namespace UnityEngine.UI
             ///   <para>Create an object representing a single option for the dropdown list.</para>
             /// </summary>
             /// <param name="text">Optional text for the option.</param>
-            /// <param name="image">Optional image for the option.</param>
-            /// <param name="color">Optional color for the option.</param>
             public OptionData(string text)
             {
                 this.text = text;
@@ -175,9 +170,7 @@ namespace UnityEngine.UI
             /// <summary>
             ///   <para>Create an object representing a single option for the dropdown list.</para>
             /// </summary>
-            /// <param name="text">Optional text for the option.</param>
             /// <param name="image">Optional image for the option.</param>
-            /// <param name="color">Optional color for the option.</param>
             public OptionData(Sprite image)
             {
                 this.image = image;
@@ -186,8 +179,6 @@ namespace UnityEngine.UI
             /// <summary>
             ///   <para>Create an object representing a single option for the dropdown list.</para>
             /// </summary>
-            /// <param name="text">Optional text for the option.</param>
-            /// <param name="image">Optional image for the option.</param>
             /// <param name="color">Optional color for the option.</param>
             public OptionData(Color color)
             {
@@ -199,7 +190,6 @@ namespace UnityEngine.UI
             /// </summary>
             /// <param name="text">Optional text for the option.</param>
             /// <param name="image">Optional image for the option.</param>
-            /// <param name="color">Optional color for the option.</param>
             public OptionData(string text, Sprite image)
             {
                 this.text = text;
@@ -209,7 +199,6 @@ namespace UnityEngine.UI
             ///   <para>Create an object representing a single option for the dropdown list.</para>
             /// </summary>
             /// <param name="text">Optional text for the option.</param>
-            /// <param name="image">Optional image for the option.</param>
             /// <param name="color">Optional color for the option.</param>
             public OptionData(string text, Color color)
             {
@@ -219,7 +208,6 @@ namespace UnityEngine.UI
             /// <summary>
             ///   <para>Create an object representing a single option for the dropdown list.</para>
             /// </summary>
-            /// <param name="text">Optional text for the option.</param>
             /// <param name="image">Optional image for the option.</param>
             /// <param name="color">Optional color for the option.</param>
             public OptionData(Sprite image, Color color)

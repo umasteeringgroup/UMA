@@ -630,6 +630,29 @@ namespace UMA.Editors
 			}
 		}
 
+		protected bool RaceInIndex(RaceData _raceData)
+		{
+			if (UMAContext.Instance != null)
+			{
+				if (UMAContext.Instance.HasRace(_raceData.raceName) != null)
+					return true;
+            }
+
+			AssetItem ai = UMAAssetIndexer.Instance.GetAssetItem<RaceData>(_raceData.raceName);
+			if (ai != null)
+			{
+				return true;
+			}
+
+			string path = AssetDatabase.GetAssetPath(_raceData);
+			if (UMAAssetIndexer.Instance.InAssetBundle(path))
+			{
+				return true;
+			}
+
+			return false;
+		}
+
 		public SlotMasterEditor(UMAData.UMARecipe recipe)
 		{
 			_recipe = recipe;
@@ -684,11 +707,27 @@ namespace UMA.Editors
 
             if (_recipe.raceData != newRace)
             {
-                _recipe.SetRace(newRace);
+				_recipe.SetRace(newRace);
                 changed = true;
             }
 
-            if (_sharedColorsEditor.OnGUI(_recipe))
+			if (_recipe.raceData != null && !RaceInIndex(_recipe.raceData))
+			{
+				EditorGUILayout.HelpBox("Race " + _recipe.raceData.raceName + " is not indexed! Either assign it to an assetBundle or use one of the buttons below to add it to the Scene/Global Library.", MessageType.Error);
+
+				GUILayout.BeginHorizontal();
+				if (GUILayout.Button("Add to Scene Only"))
+				{
+					UMAContext.Instance.AddRace(_recipe.raceData);
+				}
+				if (GUILayout.Button("Add to Global Index (Recommended)"))
+				{
+					UMAAssetIndexer.Instance.EvilAddAsset(typeof(RaceData), _recipe.raceData);
+				}
+				GUILayout.EndHorizontal();
+			}
+
+			if (_sharedColorsEditor.OnGUI(_recipe))
             {
                 changed = true;
                 _textureDirty = true;
@@ -913,6 +952,8 @@ namespace UMA.Editors
 		public bool sharedOverlays = false;
 		public int idx;
 
+
+
 		public SlotEditor(UMAData.UMARecipe recipe, SlotData slotData, int index)
 		{
 			_recipe = recipe;
@@ -1119,6 +1160,7 @@ namespace UMA.Editors
 
 	public class OverlayEditor
 	{
+		public static Dictionary<string, bool> OverlayExpanded = new Dictionary<string, bool>();		
 		private readonly UMAData.UMARecipe _recipe;
 		protected readonly SlotData _slotData;
 		private readonly OverlayData _overlayData;
@@ -1136,11 +1178,19 @@ namespace UMA.Editors
 		public int move;
 		private static OverlayData showExtendedRangeForOverlay;
 
+		public void EnsureEntry(string overlayName)
+		{
+			if (OverlayExpanded.ContainsKey(overlayName))
+				return;
+			OverlayExpanded.Add(overlayName, true);
+		}
+
 		public OverlayEditor(UMAData.UMARecipe recipe, SlotData slotData, OverlayData overlayData)
 		{
 			_recipe = recipe;
 			_overlayData = overlayData;
 			_slotData = slotData;
+			EnsureEntry((overlayData.overlayName));
 
 			// Sanity check the colors
 			if (_recipe.sharedColors == null)
@@ -1243,7 +1293,12 @@ namespace UMA.Editors
 		public bool OnGUI()
 		{
 			bool delete;
+
+			_foldout = OverlayExpanded[_overlayData.overlayName];
+
 			GUIHelper.FoldoutBar(ref _foldout, _overlayData.asset.overlayName + "("+_overlayData.asset.material.name+")", out move, out delete);
+
+			OverlayExpanded[_overlayData.overlayName] = _foldout;
 
 			if (!_foldout)
 				return false;
@@ -1752,19 +1807,18 @@ namespace UMA.Editors
 		public override void OnInspectorGUI()
 		{
 			GUILayout.Label(_description);
-            _AutomaticUpdates = GUILayout.Toggle(_AutomaticUpdates, "Automatic Updates");
-            _forceUpdate = false;
+      _AutomaticUpdates = GUILayout.Toggle(_AutomaticUpdates, "Automatic Updates");
+      _forceUpdate = false;
 
-            if (!_AutomaticUpdates)
-            {
-                if(GUILayout.Button("Save Recipe"))
-                {
-                    _needsUpdate = true;
-                    _forceUpdate = true;
-                }
-            }
-
-            scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUIStyle.none);
+      if (!_AutomaticUpdates)
+      {
+          if(GUILayout.Button("Save Recipe"))
+          {
+              _needsUpdate = true;
+              _forceUpdate = true;
+          }
+      }
+			scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUIStyle.none , GUILayout.MinHeight(600), GUILayout.MaxHeight(3000));
 
 			if (_errorMessage != null)
 			{

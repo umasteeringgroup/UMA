@@ -144,6 +144,16 @@ namespace UMA.CharacterSystem.Editors
 					thisDCA.BuildCharacter(true);
 				}
 			}
+
+			//Move UMAAddidtionalRecipes out of advanced into its own section
+			EditorGUI.BeginChangeCheck();
+			EditorGUILayout.PropertyField(umaAdditionalRecipes, new GUIContent("Additional Utility Recipes", "Additional Recipes to add when the character is generated, like the capsuleCollider recipe for example"), true);
+			if (EditorGUI.EndChangeCheck())
+			{
+				serializedObject.ApplyModifiedProperties();
+			}
+			GUILayout.Space(2f);
+
 			SerializedProperty thisRaceAnimationControllers = serializedObject.FindProperty("raceAnimationControllers");
 			Rect racCurrentRect = EditorGUILayout.GetControlRect(false, _animatorPropDrawer.GetPropertyHeight(thisRaceAnimationControllers, GUIContent.none));
 			EditorGUI.BeginChangeCheck();
@@ -163,7 +173,6 @@ namespace UMA.CharacterSystem.Editors
 					thisDCA.SetAnimatorController();
 				}
 			}
-			GUILayout.Space(2f);
 			//NewCharacterColors
 			SerializedProperty characterColors = serializedObject.FindProperty("characterColors");
 			SerializedProperty newCharacterColors = characterColors.FindPropertyRelative("_colors");
@@ -358,7 +367,6 @@ namespace UMA.CharacterSystem.Editors
 				EditorGUILayout.PropertyField(umaGenerator);
 				EditorGUILayout.Space();
 				EditorGUILayout.PropertyField(umaRecipe);
-				EditorGUILayout.PropertyField(umaAdditionalRecipes, true);
 				EditorGUILayout.PropertyField(animationController);
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("BoundsOffset"));
 			}

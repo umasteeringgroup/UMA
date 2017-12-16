@@ -66,7 +66,7 @@ namespace UMA.CharacterSystem.Examples
         {
             foreach (Transform t in ColorPanel.transform)
             {
-                GameObject.Destroy(t.gameObject);
+                UMAUtils.DestroySceneObject(t.gameObject);
             }
         }
     }
