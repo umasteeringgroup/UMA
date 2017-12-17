@@ -38,6 +38,9 @@ namespace UMA
         /// </remarks>
         [UMAAssetFieldVisible]
 		public UMAMaterial material;
+		
+	    [UMAAssetFieldVisible]
+	    public UMANamedMaterial namedMaterial;
 
 		/// <summary>
 		/// Default overlay scale for slots using the asset.

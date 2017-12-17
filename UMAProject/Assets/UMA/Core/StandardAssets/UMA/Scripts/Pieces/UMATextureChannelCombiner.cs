@@ -8,7 +8,7 @@ using UnityEditor;
 namespace UMA
 {
 	[CreateAssetMenu(menuName ="UMA/Texture Channel Combiner")]
-	public class UMATextureChannelCombiner : UMAMappedPropertyAsset
+	public class UMATextureChannelCombiner : UMAMappedOwnedPropertyAsset
 	{
 		public Shader combineShader;
 
@@ -30,6 +30,10 @@ namespace UMA
 			else if (valueType == typeof(FloatProperty))
 			{
 				_material.SetFloat(property.name, (value as FloatProperty).value);
+			}
+			else if (valueType == typeof(TextureProperty))
+			{
+				_material.SetTexture(property.name, (value as TextureProperty).value);
 			}
 			throw new NotImplementedException();
 		}

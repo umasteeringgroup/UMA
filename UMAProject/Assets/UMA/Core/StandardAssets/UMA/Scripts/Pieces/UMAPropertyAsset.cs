@@ -15,7 +15,7 @@ namespace UMA
 			int publicProperties = 0;
 			for (int i = 0; i < Properties.Length; i++)
 			{
-				if (Properties[i].propertyType != BasePieceProperty.PropertyType.Constant)
+				if (Properties[i].propertyType != PropertyType.Constant)
 					publicProperties++;
 			}
 			return publicProperties;
@@ -26,9 +26,34 @@ namespace UMA
 			int publicProperties = 0;
 			for (int i = 0; i < Properties.Length; i++)
 			{
-				if (Properties[i].propertyType != BasePieceProperty.PropertyType.Constant)
+				if (Properties[i].propertyType != PropertyType.Constant)
 				{
-					properties[i] = Properties[i];
+					properties[publicProperties] = Properties[i];
+					publicProperties++;
+				}
+			}
+			return publicProperties;
+		}
+
+		public int GetPrivatePropertyCount()
+		{
+			int publicProperties = 0;
+			for (int i = 0; i < Properties.Length; i++)
+			{
+				if (Properties[i].propertyType == PropertyType.Constant)
+					publicProperties++;
+			}
+			return publicProperties;
+		}
+
+		public int GetPrivateProperties(IList<BasePieceProperty> properties)
+		{
+			int publicProperties = 0;
+			for (int i = 0; i < Properties.Length; i++)
+			{
+				if (Properties[i].propertyType == PropertyType.Constant)
+				{
+					properties[publicProperties] = Properties[i];
 					publicProperties++;
 				}
 			}
@@ -52,7 +77,7 @@ namespace UMA
 			}
 			for (int i = 0; i < Properties.Length; i++)
 			{
-				popupStrings[i+1] = Properties[i].name;
+				popupStrings[i+1] = Properties[i].propertyName;
 			}
 			var newIndex = UnityEditor.EditorGUI.Popup(rect, title, oldIndex, popupStrings);
 			if (newIndex != oldIndex)

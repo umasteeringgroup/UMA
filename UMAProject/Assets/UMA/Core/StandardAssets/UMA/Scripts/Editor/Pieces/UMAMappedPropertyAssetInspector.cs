@@ -22,14 +22,14 @@ namespace UMA
 			_destinationStrings[0] = "None";
 			for (int i = 0; i < asset.DestinationProperties.Length; i++)
 			{
-				_destinationStrings[i + 1] = asset.DestinationProperties[i].name;
+				_destinationStrings[i + 1] = asset.DestinationProperties[i].propertyName;
 			}
 
 			_sourceStrings = new string[asset.Properties.Length + 1];
 			_sourceStrings[0] = "None";
 			for (int i = 0; i < asset.Properties.Length; i++)
 			{
-				_sourceStrings[i + 1] = asset.Properties[i].name;
+				_sourceStrings[i + 1] = asset.Properties[i].propertyName;
 			}
 
 			propertyMappingROL = new UnityEditorInternal.ReorderableList(asset.Mappings, typeof(PropertyMapping));

@@ -45,16 +45,15 @@ namespace UMA
 
 		private void ROL_properties_addCallBack(ReorderableList list)
 		{
-			var newProperty = BasePieceProperty.CreateProperty(BaseProperty.PropertyTypes[0]);
-			newProperty.name = "Added";
-			AddScriptableObjectToAsset(asset, newProperty);
+			var newProperty = BasePieceProperty.CreateProperty(BaseProperty.PropertyTypes[0], asset);
+			newProperty.propertyName ="Added";
 			ArrayUtility.Insert(ref asset.Properties, asset.Properties.Length, newProperty);
 			list.list = asset.Properties;
 		}
 
 		private void ROL_properties_removeCallBack(ReorderableList list)
 		{
-			DestroyImmediate(asset.Properties[list.index], true);
+			asset.Properties[list.index].DestroyImmediate();
 			ArrayUtility.RemoveAt(ref asset.Properties, list.index);
 			list.list = asset.Properties;
 		}
@@ -71,25 +70,20 @@ namespace UMA
 
 			var nameRect = rect.GetLineRect();
 
-			var newName = EditorGUI.TextField(nameRect, "Name", property.name);
-			if (newName != property.name)
+			var newName = EditorGUI.TextField(nameRect, "Name", property.propertyName);
+			if (newName != property.propertyName)
 			{
-				property.name = newName;
+				property.propertyName = newName;
+				property.data.name = newName+"_data";
 			}
 
-			property.propertyType = (BasePieceProperty.PropertyType)EditorGUI.EnumPopup(rect.GetLineRect(), "Input Type", property.propertyType);
+			property.propertyType = (PropertyType)EditorGUI.EnumPopup(rect.GetLineRect(), "Input Type", property.propertyType);
 
 			EditorGUI.BeginChangeCheck();
 			var propertyType = UMAEditorGUILayout.PropertyTypeField(rect.GetLineRect(), "Value Type", property.GetPropertyType());
 			if (EditorGUI.EndChangeCheck())
 			{
-				var newProperty = BasePieceProperty.CreateProperty(propertyType);
-				newProperty.name = property.name;
-				newProperty.propertyType = property.propertyType;
-				AddScriptableObjectToAsset(asset, newProperty);
-				DestroyImmediate(property, true);
-				asset.Properties[index] = newProperty;
-				property = newProperty;
+				property.ChangePropertyDataType(propertyType);
 			}
 			asset.Properties[index].DrawInspectorProperties(rect, isActive, isFocused);
 		}

@@ -315,9 +315,9 @@ namespace UMA
 		public float GetOverlayHeight(UMAPieceOverlay overlay)
 		{
 			int lines = 2;
-			if (overlay.Overlay != null)
+			if (overlay.Overlay != null && overlay.Overlay.overlayMaterial != null)
 			{
-				var propertyCount = overlay.Overlay.GetPublicPropertyCount();
+				var propertyCount = overlay.Overlay.overlayMaterial.GetPublicPropertyCount();
 				if (propertyCount > 0)
 				{
 					lines += 1 + propertyCount;
@@ -332,17 +332,21 @@ namespace UMA
 			overlay.Overlay = EditorGUI.ObjectField(rect.GetLineRect(), "Overlay Data Asset", overlay.Overlay, typeof(OverlayDataAsset), false) as OverlayDataAsset;
 			overlay.Operation = (UMAPieceOverlay.OverlayOperation)EditorGUI.EnumPopup(rect.GetLineRect(), "Operation", overlay.Operation);
 
-			if (overlay.Overlay != null)
+			if (overlay.Overlay != null && overlay.Overlay.overlayMaterial != null)
 			{
-				var publicProperties = overlay.Overlay.GetPublicPropertyCount();
+				var publicProperties = overlay.Overlay.overlayMaterial.GetPublicPropertyCount();
 				var properties = new BasePieceProperty[publicProperties];
 
 				if (publicProperties > 0)
 				{
 					EditorGUI.LabelField(rect.GetLineRect(), "Overlay Property Mappings");
-					EditorGUI.indentLevel++;
 
-					overlay.Overlay.GetPublicProperties(properties);
+					//var lineRect = new InspectorRect(rect.GetLineRect(), 0);
+					//EditorGUI.LabelField(lineRect.GetHorizontalRect(-30), "Overlay Property Mappings");
+					//if (GUI.Button(lineRect. "Ping OverlayMaterial"))
+
+					EditorGUI.indentLevel++;
+					overlay.Overlay.overlayMaterial.GetPublicProperties(properties);
 					for (int i = 0; i < publicProperties; i++)
 					{
 						var destProperty = properties[i];
@@ -352,13 +356,13 @@ namespace UMA
 						{
 							if (overlay.MappedProperties[j].Dest == destProperty)
 							{
-								propertyIndex = Array.IndexOf(_propertyStrings, overlay.MappedProperties[j].Source.name);
+								propertyIndex = Array.IndexOf(_propertyStrings, overlay.MappedProperties[j].Source.propertyName);
 								mapIndex = j;
 								break;
 							}
 						}
 
-						var newPropertyIndex = EditorGUI.Popup(rect.GetLineRect(), destProperty.name, propertyIndex, _propertyStrings);
+						var newPropertyIndex = EditorGUI.Popup(rect.GetLineRect(), destProperty.propertyName, propertyIndex, _propertyStrings);
 						if (propertyIndex != newPropertyIndex)
 						{
 							if (propertyIndex == 0)
@@ -439,7 +443,7 @@ namespace UMA
 			_propertyStrings[0] = "None";
 			for (int i = 0; i < piece.Properties.Length; i++)
 			{
-				_propertyStrings[i + 1] = piece.Properties[i].name;
+				_propertyStrings[i + 1] = piece.Properties[i].propertyName;
 			}
 
 			while (slotsROL.Count < piece.Blocks.Length)
@@ -516,102 +520,6 @@ namespace UMA
 			list.DoLayoutList();
 			var newRect = GUILayoutUtility.GetLastRect();
 			return new Rect(oldRect.x, oldRect.yMax, oldRect.width, newRect.yMax - oldRect.yMax);
-		}
-
-		//private void DrawBlock(UMAPieceBlock block)
-		//{
-		//	EditorGUI.BeginChangeCheck();
-		//	var propertyType = UMAEditorGUILayout.ConditionTypeField("Condition", block.Condition.GetType());
-		//	if (EditorGUI.EndChangeCheck())
-		//	{
-		//		var newCondition = BaseCondition.CreateCondition(propertyType);
-		//		AddScriptableObjectToAsset(piece, newCondition);
-		//		DestroyImmediate(block.Condition, true);
-		//		block.Condition = newCondition;
-		//	}
-		//	EditorGUI.indentLevel++;
-		//	DrawScriptableObject(block.Condition);
-		//	EditorGUI.indentLevel--;
-
-		//	EditorGUILayout.LabelField("Slots");
-		//	EditorGUI.indentLevel++;
-		//	for (int i = block.Slots.Length - 1; i >= 0; i--)
-		//	{
-		//		GUILayout.BeginHorizontal();
-		//		EditorGUILayout.LabelField("Slot "+(block.Slots.Length-i));
-		//		if (GUILayout.Button("-", GUILayout.Width(15), GUILayout.Height(15)))
-		//		{
-		//			ArrayUtility.RemoveAt(ref block.Slots, i);
-		//			GUILayout.EndHorizontal();
-		//			continue;
-		//		}
-
-		//		GUILayout.EndHorizontal();
-		//		EditorGUI.indentLevel++;
-		//		DrawSlot(block.Slots[i]);
-		//		EditorGUI.indentLevel--;
-		//	}
-		//	GUILayout.BeginHorizontal();
-		//	GUILayout.Label("", GUILayout.Width(EditorGUI.indentLevel*20));
-		//	if (GUILayout.Button("Add Slot"))
-		//	{
-		//		var newSlot = new UMAPieceSlot();
-		//		ArrayUtility.Insert(ref block.Slots, 0, newSlot);
-		//	}
-		//	GUILayout.EndHorizontal();
-		//	EditorGUI.indentLevel--;
-
-
-		//	EditorGUILayout.Space();
-		//}
-
-		private void DrawSlot(UMAPieceSlot slot)
-		{
-			slot.Slot = EditorGUILayout.ObjectField("Slot Data Asset", slot.Slot, typeof(SlotDataAsset), false) as SlotDataAsset;
-			
-			EditorGUI.indentLevel++;
-			slot.Operation = (UMAPieceSlot.SlotOperation)EditorGUILayout.EnumPopup("Operation", slot.Operation);
-			//if (slot.Operation != UMAPieceSlot.SlotOperation.Remove)
-			//{
-			//	EditorGUILayout.LabelField("Overlays");
-			//	EditorGUI.indentLevel++;
-			//	for (int i = slot.Overlays.Length - 1; i >= 0; i--)
-			//	{
-			//		GUILayout.BeginHorizontal();
-			//		EditorGUILayout.LabelField("Overlay "+(slot.Overlays.Length-i));
-			//		if (GUILayout.Button("-", GUILayout.Width(15), GUILayout.Height(15)))
-			//		{
-			//			ArrayUtility.RemoveAt(ref slot.Overlays, i);
-			//			GUILayout.EndHorizontal();
-			//			continue;
-			//		}
-			//		GUILayout.EndHorizontal();
-					
-			//		EditorGUI.indentLevel++;
-			//		DrawOverlay(slot.Overlays[i]);
-			//		EditorGUI.indentLevel--;
-			//	}
-			//	EditorGUI.indentLevel--;
-			//	GUILayout.BeginHorizontal();
-			//	GUILayout.Label("", GUILayout.Width(EditorGUI.indentLevel*20));
-			//	if (GUILayout.Button("Add Overlay"))
-			//	{
-			//		var newOverlay = new UMAPieceOverlay();
-			//		ArrayUtility.Insert(ref slot.Overlays, 0, newOverlay);
-			//	}
-			//	GUILayout.EndHorizontal();
-			//}
-			EditorGUI.indentLevel--;
-			EditorGUILayout.Space();
-		}
-
-		private void DrawOverlay(UMAPieceOverlay overlay)
-		{
-			overlay.Overlay = EditorGUILayout.ObjectField("Overlay Data Asset", overlay.Overlay, typeof(OverlayDataAsset), false) as OverlayDataAsset;
-
-			EditorGUI.indentLevel++;
-			overlay.Operation = (UMAPieceOverlay.OverlayOperation)EditorGUILayout.EnumPopup("Operation", overlay.Operation);
-			EditorGUI.indentLevel--;
 		}
 	}
 }

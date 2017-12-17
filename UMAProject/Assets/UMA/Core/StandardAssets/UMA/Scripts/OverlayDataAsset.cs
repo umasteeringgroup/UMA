@@ -8,7 +8,7 @@ namespace UMA
 	/// Contains the immutable data shared between overlays of the same type.
 	/// </summary>
 	[System.Serializable]
-	public partial class OverlayDataAsset : UMAPropertyAsset, ISerializationCallbackReceiver
+	public partial class OverlayDataAsset : ScriptableObject, ISerializationCallbackReceiver
 	{
 	    public string overlayName;
 		[System.NonSerialized]
@@ -52,6 +52,12 @@ namespace UMA
 		/// </remarks>
 		[UMAAssetFieldVisible]
 		public UMAMaterial material;
+
+		[UMAAssetFieldVisible]
+		public UMAOverlayMaterial overlayMaterial;
+
+		[UMAAssetFieldVisible]
+		public UMANamedMaterial namedMaterial;
 
 		/// <summary>
 		/// The number of textures in the texture array.
