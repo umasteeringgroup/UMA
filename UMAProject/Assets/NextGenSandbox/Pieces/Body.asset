@@ -1,0 +1,88 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a6df2b0524a9ded458eda4b8be420a6e, type: 3}
+  m_Name: Body
+  m_EditorClassIdentifier: 
+  Properties:
+  - {fileID: 114422422165268762}
+  Blocks:
+  - Condition: {fileID: 114006265391905952}
+    Slots:
+    - Operation: 0
+      Slot: {fileID: 11400000, guid: eb4f50cabcdda94429b14616561086c2, type: 2}
+    - Operation: 0
+      Slot: {fileID: 11400000, guid: 523345fdaf05b784c9e090f7486dbfff, type: 2}
+    - Operation: 0
+      Slot: {fileID: 11400000, guid: cccd8e8f05eaae441af7067067d78f53, type: 2}
+    - Operation: 0
+      Slot: {fileID: 11400000, guid: 194ded673764c4142a4688e107e7223a, type: 2}
+    - Operation: 0
+      Slot: {fileID: 11400000, guid: c1abccd758476de4a80dd0e0a9d6bd73, type: 2}
+    - Operation: 0
+      Slot: {fileID: 11400000, guid: be532fa3d52bf354bafe8dd6d3f5d0d9, type: 2}
+    - Operation: 0
+      Slot: {fileID: 11400000, guid: 5d2dcfdc83978174baed3647dd4a91b6, type: 2}
+    Overlays:
+    - Overlay: {fileID: 11400000, guid: 4f8efadfd20f0f348b479a449285dfdb, type: 2}
+      Operation: 0
+      MappedProperties:
+      - Source: {fileID: 114422422165268762}
+        Dest: {fileID: 114491072972916742, guid: 62e9e9bcfba0fe24a878f1a5679ee356,
+          type: 2}
+    - Overlay: {fileID: 11400000, guid: 49ecaca55df3683449b905709c4895a7, type: 2}
+      Operation: 0
+      MappedProperties:
+      - Source: {fileID: 114422422165268762}
+        Dest: {fileID: 114491072972916742, guid: 62e9e9bcfba0fe24a878f1a5679ee356,
+          type: 2}
+    SuppressLocations: []
+  Location: {fileID: 11400000, guid: 108d9165544a884459bd298668dfaf87, type: 2}
+--- !u!114 &114006265391905952
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1880060cbbbf714a9cf6168a0731955, type: 3}
+  m_Name: AlwaysCondition
+  m_EditorClassIdentifier: 
+--- !u!114 &114422422165268762
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f687c27b5b04c24469ab6a07ad9505c1, type: 3}
+  m_Name: SkinColor
+  m_EditorClassIdentifier: 
+  data: {fileID: 114718609268944206}
+--- !u!114 &114718609268944206
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 57f05ec1cb4eb924cba6251514186875, type: 3}
+  m_Name: SkinColor_data
+  m_EditorClassIdentifier: 
+  propertyType: 0
+  value:
+    color: {r: 1, g: 1, b: 1, a: 1}
+    overrideR: 0
+    overrideG: 0
+    overrideB: 0
+    overrideA: 1

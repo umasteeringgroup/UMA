@@ -1,0 +1,161 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 152f0a642562e284698531e0be67f2dd, type: 3}
+  m_Name: OverlayMaterial_Diffuse_Normal_Metallic
+  m_EditorClassIdentifier: 
+  Properties:
+  - {fileID: 114491072972916742}
+  - {fileID: 114962458589344286}
+  - {fileID: 114644762398281790}
+  - {fileID: 114967183096266188}
+  DestinationProperties:
+  - {fileID: 114474079650572626, guid: 8572452c3d88ce04d8d1de8f133f9022, type: 2}
+  - {fileID: 114579434771326658, guid: 8572452c3d88ce04d8d1de8f133f9022, type: 2}
+  - {fileID: 114445995227917440, guid: 8572452c3d88ce04d8d1de8f133f9022, type: 2}
+  channels:
+  - combiner: {fileID: 11400000, guid: 653b7e7203fb9754f85ba402cef1e41f, type: 2}
+    properties:
+    - Source: {fileID: 114491072972916742}
+      Dest: {fileID: 114743148755573044, guid: 653b7e7203fb9754f85ba402cef1e41f, type: 2}
+    - Source: {fileID: 114962458589344286}
+      Dest: {fileID: 114508369302517164, guid: 653b7e7203fb9754f85ba402cef1e41f, type: 2}
+    - Source: {fileID: 114962458589344286}
+      Dest: {fileID: 114843712263354200, guid: 653b7e7203fb9754f85ba402cef1e41f, type: 2}
+    target: {fileID: 114474079650572626, guid: 8572452c3d88ce04d8d1de8f133f9022, type: 2}
+  - combiner: {fileID: 11400000, guid: 6e0234b9beddfd24abeae7af90f37310, type: 2}
+    properties:
+    - Source: {fileID: 114491072972916742}
+      Dest: {fileID: 114743148755573044, guid: 6e0234b9beddfd24abeae7af90f37310, type: 2}
+    - Source: {fileID: 114644762398281790}
+      Dest: {fileID: 114508369302517164, guid: 6e0234b9beddfd24abeae7af90f37310, type: 2}
+    - Source: {fileID: 114962458589344286}
+      Dest: {fileID: 114843712263354200, guid: 6e0234b9beddfd24abeae7af90f37310, type: 2}
+    target: {fileID: 114579434771326658, guid: 8572452c3d88ce04d8d1de8f133f9022, type: 2}
+  - combiner: {fileID: 11400000, guid: 930c4f41c5057694e9254834864e7edb, type: 2}
+    properties:
+    - Source: {fileID: 114491072972916742}
+      Dest: {fileID: 114743148755573044, guid: 930c4f41c5057694e9254834864e7edb, type: 2}
+    - Source: {fileID: 114967183096266188}
+      Dest: {fileID: 114508369302517164, guid: 930c4f41c5057694e9254834864e7edb, type: 2}
+    - Source: {fileID: 114962458589344286}
+      Dest: {fileID: 114843712263354200, guid: 930c4f41c5057694e9254834864e7edb, type: 2}
+    target: {fileID: 114445995227917440, guid: 8572452c3d88ce04d8d1de8f133f9022, type: 2}
+  clothProperties: {fileID: 0}
+  atlas: {fileID: 11400000, guid: 8572452c3d88ce04d8d1de8f133f9022, type: 2}
+  RequireSeperateRenderer: 0
+  materialType: 1
+--- !u!114 &114046950421298428
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 44aa3cc440813624d88461e7801b5157, type: 3}
+  m_Name: DiffuseTexture_data
+  m_EditorClassIdentifier: 
+  propertyType: 1
+  value:
+    value: {fileID: 0}
+    textureIndex: 0
+--- !u!114 &114345983201207454
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 44aa3cc440813624d88461e7801b5157, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  propertyType: 1
+  value:
+    value: {fileID: 0}
+    textureIndex: 1
+--- !u!114 &114381157477591462
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 44aa3cc440813624d88461e7801b5157, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  propertyType: 1
+  value:
+    value: {fileID: 0}
+    textureIndex: 2
+--- !u!114 &114491072972916742
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f687c27b5b04c24469ab6a07ad9505c1, type: 3}
+  m_Name: Color
+  m_EditorClassIdentifier: 
+  data: {fileID: 114682964864797026}
+--- !u!114 &114644762398281790
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f687c27b5b04c24469ab6a07ad9505c1, type: 3}
+  m_Name: BumpMap
+  m_EditorClassIdentifier: 
+  data: {fileID: 114345983201207454}
+--- !u!114 &114682964864797026
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0cfd781621586b47bf298febc86a7bc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  propertyType: 0
+  value:
+    color: {r: 1, g: 1, b: 1, a: 1}
+--- !u!114 &114962458589344286
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f687c27b5b04c24469ab6a07ad9505c1, type: 3}
+  m_Name: DiffuseTexture
+  m_EditorClassIdentifier: 
+  data: {fileID: 114046950421298428}
+--- !u!114 &114967183096266188
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f687c27b5b04c24469ab6a07ad9505c1, type: 3}
+  m_Name: MetallicMap
+  m_EditorClassIdentifier: 
+  data: {fileID: 114381157477591462}

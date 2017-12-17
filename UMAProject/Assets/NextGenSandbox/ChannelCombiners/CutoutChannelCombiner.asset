@@ -1,0 +1,245 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60e11a0bb8e6a03438baac05b034aa25, type: 3}
+  m_Name: CutoutChannelCombiner
+  m_EditorClassIdentifier: 
+  Properties:
+  - {fileID: 114743148755573044}
+  - {fileID: 114508369302517164}
+  - {fileID: 114843712263354200}
+  - {fileID: 114470517155804954}
+  DestinationProperties:
+  - {fileID: 114980884606083620}
+  - {fileID: 114912835024751188}
+  - {fileID: 114558115088489784}
+  - {fileID: 114525432683514102}
+  Mappings:
+  - Source: {fileID: 114743148755573044}
+    Dest: {fileID: 114980884606083620}
+  - Source: {fileID: 114470517155804954}
+    Dest: {fileID: 114912835024751188}
+  - Source: {fileID: 114508369302517164}
+    Dest: {fileID: 114558115088489784}
+  - Source: {fileID: 114843712263354200}
+    Dest: {fileID: 114525432683514102}
+  combineShader: {fileID: 4800000, guid: ae83be5246f311646b3043ed012d9d64, type: 3}
+--- !u!114 &114079269313221032
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0cfd781621586b47bf298febc86a7bc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  propertyType: 1
+  value:
+    color: {r: 0, g: 0, b: 0, a: 0}
+--- !u!114 &114152282720852082
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 57f05ec1cb4eb924cba6251514186875, type: 3}
+  m_Name: ColorAlpha_data
+  m_EditorClassIdentifier: 
+  propertyType: 0
+  value:
+    color: {r: 1, g: 1, b: 1, a: 1}
+    overrideR: 1
+    overrideG: 1
+    overrideB: 1
+    overrideA: 0
+--- !u!114 &114180348257523390
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e735c9767219e5142974162206953709, type: 3}
+  m_Name: SourceTexture_data
+  m_EditorClassIdentifier: 
+  propertyType: 2
+  value:
+    value: {fileID: 0}
+--- !u!114 &114272676944535214
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e735c9767219e5142974162206953709, type: 3}
+  m_Name: _ExtraTex_data
+  m_EditorClassIdentifier: 
+  propertyType: 0
+  value:
+    value: {fileID: 0}
+--- !u!114 &114470517155804954
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f687c27b5b04c24469ab6a07ad9505c1, type: 3}
+  m_Name: NeutralAdditive
+  m_EditorClassIdentifier: 
+  data: {fileID: 114079269313221032}
+--- !u!114 &114471533154053808
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0cfd781621586b47bf298febc86a7bc, type: 3}
+  m_Name: _Color_data
+  m_EditorClassIdentifier: 
+  propertyType: 0
+  value:
+    color: {r: 0, g: 0, b: 0, a: 0}
+--- !u!114 &114508369302517164
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f687c27b5b04c24469ab6a07ad9505c1, type: 3}
+  m_Name: SourceTexture
+  m_EditorClassIdentifier: 
+  data: {fileID: 114180348257523390}
+--- !u!114 &114525432683514102
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f687c27b5b04c24469ab6a07ad9505c1, type: 3}
+  m_Name: _ExtraTex
+  m_EditorClassIdentifier: 
+  data: {fileID: 114272676944535214}
+--- !u!114 &114558115088489784
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f687c27b5b04c24469ab6a07ad9505c1, type: 3}
+  m_Name: _MainTex
+  m_EditorClassIdentifier: 
+  data: {fileID: 114560574348327886}
+--- !u!114 &114560574348327886
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e735c9767219e5142974162206953709, type: 3}
+  m_Name: _MainTex_data
+  m_EditorClassIdentifier: 
+  propertyType: 0
+  value:
+    value: {fileID: 0}
+--- !u!114 &114567175019896158
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0cfd781621586b47bf298febc86a7bc, type: 3}
+  m_Name: _AdditiveColor_data
+  m_EditorClassIdentifier: 
+  propertyType: 0
+  value:
+    color: {r: 0, g: 0, b: 0, a: 0}
+--- !u!114 &114676003196170382
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e735c9767219e5142974162206953709, type: 3}
+  m_Name: AlphaTexture_data
+  m_EditorClassIdentifier: 
+  propertyType: 2
+  value:
+    value: {fileID: 0}
+--- !u!114 &114743148755573044
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f687c27b5b04c24469ab6a07ad9505c1, type: 3}
+  m_Name: ColorAlpha
+  m_EditorClassIdentifier: 
+  data: {fileID: 114152282720852082}
+--- !u!114 &114843712263354200
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f687c27b5b04c24469ab6a07ad9505c1, type: 3}
+  m_Name: AlphaTexture
+  m_EditorClassIdentifier: 
+  data: {fileID: 114676003196170382}
+--- !u!114 &114912835024751188
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f687c27b5b04c24469ab6a07ad9505c1, type: 3}
+  m_Name: _AdditiveColor
+  m_EditorClassIdentifier: 
+  data: {fileID: 114567175019896158}
+--- !u!114 &114980884606083620
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f687c27b5b04c24469ab6a07ad9505c1, type: 3}
+  m_Name: _Color
+  m_EditorClassIdentifier: 
+  data: {fileID: 114471533154053808}

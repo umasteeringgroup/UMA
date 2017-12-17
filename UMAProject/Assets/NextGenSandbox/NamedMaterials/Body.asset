@@ -1,0 +1,16 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f9ef963d083f8c42aede25f4e1c3bca, type: 3}
+  m_Name: Body
+  m_EditorClassIdentifier: 
+  material: {fileID: 11400000, guid: 8572452c3d88ce04d8d1de8f133f9022, type: 2}
+  RequireSeperateRenderer: 0
+  materialType: 1
