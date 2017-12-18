@@ -10,8 +10,7 @@ namespace UMA
 		public enum SlotOperation
 		{
 			Add,
-			Remove,
-			Extend
+			Remove
 		}
 		public SlotOperation Operation = SlotOperation.Add;
 		public SlotDataAsset Slot;
