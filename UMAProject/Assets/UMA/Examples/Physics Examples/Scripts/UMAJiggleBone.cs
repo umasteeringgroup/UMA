@@ -20,7 +20,6 @@ namespace UMA
     public class UMAJiggleBone : MonoBehaviour
     {
         // Target and dynamic positions
-        Vector3 targetPos = new Vector3();
         Vector3 dynamicPos = new Vector3();
 
         // Bone settings
@@ -56,7 +55,6 @@ namespace UMA
             transform.rotation = new Quaternion();
 
             // Update forwardVector and upVector
-            Vector3 forwardVector = transform.TransformDirection(new Vector3((boneAxis.x * targetDistance), (boneAxis.y * targetDistance), (boneAxis.z * targetDistance)));
             Vector3 upVector = transform.TransformDirection(new Vector3(0, 1, 0));
 
             // Calculate target position

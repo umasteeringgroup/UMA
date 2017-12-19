@@ -28,9 +28,6 @@ public class PonytailSlotScript : MonoBehaviour
     private Transform AnchorBone;                                // the transform of the anchor bone
 
     private UMA.UMAData umaData;                                 // UMAData of the owning UMA
-    private Transform thisParent;                                // Parent object for calculating global movement. This is currently pulled from the Anchor bone.
-    private Rigidbody thisRigidbody;                             // The RigidBody applied to the Pendulum.
-    private Vector3 parentPosLastFrame;                          // last frames position. Used to calculate movement (and hence force)
 
 
     // Setup the anchor, bones and the pendulum
@@ -39,12 +36,9 @@ public class PonytailSlotScript : MonoBehaviour
         umaData = dta;
         // Find Anchor Bone
         AnchorBone = SetupAnchorBone(AnchorBoneName);
-        thisParent = AnchorBone;
-        parentPosLastFrame = thisParent.position;
 
         // Setup Swing Bones
         SetupSwingBones(SwingBoneNames);
-        thisRigidbody = SwingBones[SwingBones.Length-1].gameObject.GetComponent<Rigidbody>();
     }
 
     private void SetupSwingBones(List<string> swingBoneNames)
@@ -61,7 +55,7 @@ public class PonytailSlotScript : MonoBehaviour
             for (int i = 0; i < swingBoneNames.Count; i++)
             {
                 string s = swingBoneNames[i];
-                Transform t = RecursiveFindBone(AnchorBone, s);
+                Transform t = umaData.skeleton.GetBoneTransform(UMAUtils.StringToHash(s));
                 SwingBones[i] = t;
 
                 if (t== null)
@@ -137,7 +131,7 @@ public class PonytailSlotScript : MonoBehaviour
 
     private Transform SetupAnchorBone(string Name)
     {
-        Transform t = RecursiveFindBone(umaData.gameObject.transform, Name);// FindParentBone(Name);
+        Transform t = umaData.skeleton.GetBoneTransform(UMAUtils.StringToHash(Name));
         if (t == null)
         {
             Debug.Log("Cannot find anchor bone: " + Name);
@@ -165,43 +159,5 @@ public class PonytailSlotScript : MonoBehaviour
         sc.center = AnchorOffset;
 
         return t;
-    }
-
-    /// <summary>
-    /// Looks up the hierarchy for a bone with the passed name
-    /// </summary>
-    /// <param name="Name"></param>
-    /// <returns></returns>
-    private Transform FindParentBone(string Name)
-    {
-        Transform Bone = gameObject.transform;
-
-        while (Bone != null)
-        {
-            if (String.Compare(Bone.name,Name,true) == 0)
-            {
-                return Bone;
-            }
-            Bone = Bone.parent;
-        }
-        return null;
-    }
-
-    /// <summary>
-    /// Find a bone by name, given a bone somewhere above the hierarchy
-    /// </summary>
-    /// <param name="bone"></param>
-    /// <param name="raceRoot"></param>
-    /// <returns></returns>
-    private Transform RecursiveFindBone(Transform bone, string raceRoot)
-    {
-        if (String.Compare(bone.name,raceRoot,true) == 0) return bone;
-
-        for (int i = 0; i < bone.childCount; i++)
-        {
-            var result = RecursiveFindBone(bone.GetChild(i), raceRoot);
-            if (result != null) return result;
-        }
-        return null;
     }
 }

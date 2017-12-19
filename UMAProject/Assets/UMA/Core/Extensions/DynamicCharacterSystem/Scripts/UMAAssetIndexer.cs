@@ -493,13 +493,13 @@ namespace UMA
                 // Get out if we already have it.
                 if (TypeDic.ContainsKey(ai._Name))
                 {
-                    Debug.Log("Duplicate asset " + ai._Name + " was ignored.");
+                    // Debug.Log("Duplicate asset " + ai._Name + " was ignored.");
                     return;
                 }
 
                 if (ai._Name.ToLower().Contains((ai._Type.Name + "placeholder").ToLower()))
                 {
-                    Debug.Log("Placeholder asset " + ai._Name + " was ignored. Placeholders are not indexed.");
+                    //Debug.Log("Placeholder asset " + ai._Name + " was ignored. Placeholders are not indexed.");
                     return;
                 }
 #if UNITY_EDITOR
@@ -508,12 +508,16 @@ namespace UMA
                     string Path = AssetDatabase.GetAssetPath(ai.Item.GetInstanceID());
                     if (InAssetBundle(Path))
                     {
-                        Debug.Log("Asset " + ai._Name + "is in Asset Bundle, and was not added to the index.");
+                        // Debug.Log("Asset " + ai._Name + "is in Asset Bundle, and was not added to the index.");
                         return;
                     }
                 }
 #endif
                 TypeDic.Add(ai._Name, ai);
+                if (GuidTypes.ContainsKey(ai._Guid))
+                {
+                    return;
+                }
                 GuidTypes.Add(ai._Guid, ai);
             }
             catch (System.Exception ex)
@@ -744,6 +748,7 @@ namespace UMA
 		public void Clear(bool forceSave = true)
         {
             // Rebuild the tables
+            GuidTypes.Clear();
             ClearReferences();
             SerializedItems.Clear();
             UpdateSerializedDictionaryItems();
