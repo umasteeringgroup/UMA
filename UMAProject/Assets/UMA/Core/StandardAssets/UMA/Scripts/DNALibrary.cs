@@ -80,7 +80,7 @@ namespace UMA
 			var res = Internal_InstantiateDNA(UMAUtils.StringToHash(name));
 			if (res == null)
 			{
-				throw new UMAResourceNotFoundException("SlotLibrary: Unable to find: " + name);
+				throw new UMAResourceNotFoundException("DNALibrary: Unable to find: " + name);
 			}
 			return res;
 		}
@@ -89,7 +89,7 @@ namespace UMA
 			var res = Internal_InstantiateDNA(nameHash);
 			if (res == null)
 			{
-				throw new UMAResourceNotFoundException("SlotLibrary: Unable to find hash: " + nameHash);
+				throw new UMAResourceNotFoundException("DNALibrary: Unable to find hash: " + nameHash);
 			}
 			return res;
 		}

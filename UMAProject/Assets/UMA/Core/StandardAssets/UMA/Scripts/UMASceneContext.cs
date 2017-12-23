@@ -240,7 +240,7 @@ namespace UMA
 		/// <param name="overlayList">Overlay list.</param>
 		public override SlotData InstantiateSlot(int nameHash, List<OverlayData> overlayList)
 		{
-			return slotLibrary.InstantiateSlot(nameHash, overlayList);
+			//return slotLibrary.InstantiateSlot(nameHash, overlayList);
 			SlotDataAsset asset;
 			if (slotDictionary.TryGetValue(nameHash, out asset))
 			{

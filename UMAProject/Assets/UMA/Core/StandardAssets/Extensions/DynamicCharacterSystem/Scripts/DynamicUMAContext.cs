@@ -22,7 +22,13 @@ namespace UMA
 		/// </summary>
 		public DynamicOverlayLibrary overlayLibrary;
 
-		protected DNALibrary dnaLibrary;
+		/// <summary>
+		/// The DynamicCharacterSystem
+		/// </summary>
+		public UMA.CharacterSystem.DynamicCharacterSystemBase dynamicCharacterSystem;
+		/// <summary>
+
+		public DNALibrary dnaLibrary;
 
 		#pragma warning disable 618
 		public void Start()
@@ -60,11 +66,6 @@ namespace UMA
 			dnaLibrary.ValidateDictionary();
 		}
 
-		/// <summary>
-		/// The DynamicCharacterSystem
-		/// </summary>
-		public UMA.CharacterSystem.DynamicCharacterSystemBase dynamicCharacterSystem;
-		/// <summary>
 		/// Gets a race by name.
 		/// </summary>
 		/// <returns>The race.</returns>
