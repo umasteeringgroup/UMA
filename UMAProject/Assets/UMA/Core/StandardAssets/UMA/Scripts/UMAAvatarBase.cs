@@ -21,7 +21,7 @@ namespace UMA
 		public UMAGeneratorBase umaGenerator;
 		public RuntimeAnimatorController animationController;
 
-		protected RaceData umaRace = null;
+		protected RaceDataAsset umaRace = null;
 
 		/// <summary>
 		/// Callback event when character is created.

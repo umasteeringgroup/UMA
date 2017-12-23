@@ -450,7 +450,7 @@ namespace UMA
 				return material != null && !string.IsNullOrEmpty(material.name);
 			}
 
-			public static bool RaceIsValid(RaceData raceData)
+			public static bool RaceIsValid(RaceDataAsset raceData)
 			{
 				return raceData != null && !string.IsNullOrEmpty(raceData.raceName);
 			}

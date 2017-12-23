@@ -673,7 +673,7 @@ namespace UMA.Editors
         {
             bool changed = false;
 
-            RaceData newRace = (RaceData)EditorGUILayout.ObjectField("RaceData", _recipe.raceData, typeof(RaceData), false);
+            RaceDataAsset newRace = (RaceDataAsset)EditorGUILayout.ObjectField("RaceData", _recipe.raceData, typeof(RaceDataAsset), false);
             if (_recipe.raceData == null)
             {
                 GUIHelper.BeginVerticalPadded(10, new Color(0.55f, 0.25f, 0.25f));
@@ -1003,7 +1003,7 @@ namespace UMA.Editors
 				GUIHelper.BeginVerticalPadded(10, new Color(0.85f, 0.85f, 0.85f));
 				foreach (OverlayData ov in ovr)
 				{
-					EditorGUILayout.LabelField(ov.asset.overlayName);
+					EditorGUILayout.LabelField(ov.asset.umaName);
 				}
 				GUIHelper.EndVerticalPadded(10);
 			}
@@ -1236,7 +1236,7 @@ namespace UMA.Editors
 				}
 			}
 
-			AssetItem ai = UMAAssetIndexer.Instance.GetAssetItem<OverlayDataAsset>(_overlayData.asset.overlayName);
+			AssetItem ai = UMAAssetIndexer.Instance.GetAssetItem<OverlayDataAsset>(_overlayData.asset.umaName);
 			if (ai != null)
 			{
 				return true;
@@ -1257,7 +1257,7 @@ namespace UMA.Editors
 
 			_foldout = OverlayExpanded[_overlayData.overlayName];
 
-			GUIHelper.FoldoutBar(ref _foldout, _overlayData.asset.overlayName + "("+_overlayData.asset.material.name+")", out move, out delete);
+			GUIHelper.FoldoutBar(ref _foldout, _overlayData.asset.umaName + "("+_overlayData.asset.material.name+")", out move, out delete);
 
 			OverlayExpanded[_overlayData.overlayName] = _foldout;
 

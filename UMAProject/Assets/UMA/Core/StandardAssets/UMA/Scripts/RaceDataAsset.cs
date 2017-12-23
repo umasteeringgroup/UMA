@@ -14,7 +14,7 @@ namespace UMA
 	/// specific DNA converters, despite sharing the same DNA types.
 	/// </remarks>
 	[Serializable]
-	public partial class RaceData : ScriptableObject, INameProvider
+	public partial class RaceDataAsset : ScriptableObject, INameProvider
 	{
 	    public string raceName;
 

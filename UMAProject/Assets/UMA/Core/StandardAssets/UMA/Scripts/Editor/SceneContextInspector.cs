@@ -18,9 +18,9 @@ namespace UMA.Editors
 
 		private bool AddAssetToDictionaries(Object asset)
 		{
-			if (asset is RaceData)
+			if (asset is RaceDataAsset)
 			{
-				context.AddRace(asset as RaceData);
+				context.AddRace(asset as RaceDataAsset);
 				return true;
 			}
 			if (asset is SlotDataAsset)

@@ -29,7 +29,7 @@ namespace UMA
 			{
 				if (overlayElementList[i])
 				{
-					var hash = UMAUtils.StringToHash(overlayElementList[i].overlayName);
+					var hash = UMAUtils.StringToHash(overlayElementList[i].umaName);
 					if (!overlayDictionary.ContainsKey(hash))
 					{
 						overlayDictionary.Add(hash, overlayElementList[i]);
@@ -54,12 +54,12 @@ namespace UMA
 		public override void AddOverlayAsset(OverlayDataAsset overlay)
 		{
 			ValidateDictionary();
-			var hash = UMAUtils.StringToHash(overlay.overlayName);
+			var hash = overlay.umaHash;
 			if (overlayDictionary.ContainsKey(hash))
 			{
 				for (int i = 0; i < overlayElementList.Length; i++)
 				{
-					if (overlayElementList[i].overlayName == overlay.overlayName)
+					if (overlayElementList[i].umaHash == overlay.umaHash)
 					{
 						overlayElementList[i] = overlay;
 						break;

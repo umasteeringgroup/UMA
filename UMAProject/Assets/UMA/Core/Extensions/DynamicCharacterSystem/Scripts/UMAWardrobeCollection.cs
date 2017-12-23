@@ -101,7 +101,7 @@ namespace UMA.CharacterSystem
 		/// Gets the wardrobeSet set in this collection for the given race
 		/// Or wardrobeSet for first matched cross compatible race the given race has
 		/// </summary>
-		public List<WardrobeSettings> GetRacesWardrobeSet(RaceData race)
+		public List<WardrobeSettings> GetRacesWardrobeSet(RaceDataAsset race)
 		{
 			var setToUse = wardrobeCollection[race.raceName];
 			//if no set was directly compatible with the active race, check if it has sets for any cross compatible races that race may have

@@ -401,7 +401,7 @@ namespace UMA
 		[System.Serializable]
 		public class UMARecipe
 		{
-			public RaceData raceData;
+			public RaceDataAsset raceData;
 			Dictionary<int, UMADnaBase> _umaDna;
 			protected Dictionary<int, UMADnaBase> umaDna
 			{
@@ -560,7 +560,7 @@ namespace UMA
 			/// Sets the race.
 			/// </summary>
 			/// <param name="raceData">Race.</param>
-			public void SetRace(RaceData raceData)
+			public void SetRace(RaceDataAsset raceData)
 			{
 				this.raceData = raceData;
 				ClearDNAConverters();
@@ -570,7 +570,7 @@ namespace UMA
 			/// Gets the race.
 			/// </summary>
 			/// <returns>The race.</returns>
-			public RaceData GetRace()
+			public RaceDataAsset GetRace()
 			{
 				return this.raceData;
 			}

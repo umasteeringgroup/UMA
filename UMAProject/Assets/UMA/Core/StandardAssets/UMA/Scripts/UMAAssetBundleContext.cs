@@ -279,7 +279,7 @@ namespace UMA
 		/// </summary>
 		/// <returns>The race.</returns>
 		/// <param name="name">Name.</param>
-		public override RaceData GetRace(string name)
+		public override RaceDataAsset GetRace(string name)
 		{
 			return GetRace(UMAUtils.StringToHash(name));
 		}
@@ -288,7 +288,7 @@ namespace UMA
 		/// </summary>
 		/// <returns>The race.</returns>
 		/// <param name="nameHash">Name hash.</param>
-		public override RaceData GetRace(int nameHash)
+		public override RaceDataAsset GetRace(int nameHash)
 		{
 			AssetReference reference = null;
 			if (raceDictionary.TryGetValue(nameHash, out reference))
@@ -296,7 +296,7 @@ namespace UMA
 				// Blocking version
 				if (reference.asset == null)
 				{
-					reference.asset = bundle.LoadAsset<RaceData>(reference.path);
+					reference.asset = bundle.LoadAsset<RaceDataAsset>(reference.path);
 				}
 
 				// Asynchronous version
@@ -313,7 +313,7 @@ namespace UMA
 //					}
 //				}
 					
-				return reference.asset as RaceData;
+				return reference.asset as RaceDataAsset;
 			}
 
 			return null;
@@ -323,7 +323,7 @@ namespace UMA
 		/// Array of all races in the context.
 		/// </summary>
 		/// <returns>The array of race data.</returns>
-		public override RaceData[] GetAllRaces()
+		public override RaceDataAsset[] GetAllRaces()
 		{
 			return null;
 		}
@@ -332,7 +332,7 @@ namespace UMA
 		/// Add a race to the context.
 		/// </summary>
 		/// <param name="race">New race.</param>
-		public override void AddRace(RaceData race)
+		public override void AddRace(RaceDataAsset race)
 		{
 			int hash = race.GetNameHash();
 			AssetReference reference;
@@ -591,7 +591,7 @@ namespace UMA
 			{
 				reference = new AssetReference();
 				reference.asset = overlay;
-				reference.path = "Overlay/" + overlay.overlayName;
+				reference.path = "Overlay/" + overlay.umaName;
 				overlayDictionary.Add(hash, reference);
 			}
 		}

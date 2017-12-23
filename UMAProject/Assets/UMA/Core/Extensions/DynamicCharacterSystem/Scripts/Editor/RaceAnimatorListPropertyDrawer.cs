@@ -70,8 +70,8 @@ namespace UMA.CharacterSystem.Editors
 						if (thisAnimtorProp.FindPropertyRelative ("raceName").stringValue == "") {
 							//draw an object field for RaceData
 							EditorGUI.BeginChangeCheck();
-							RaceData thisRD = null;
-							thisRD = (RaceData)EditorGUI.ObjectField (rFieldR, thisRD, typeof(RaceData),false);
+							RaceDataAsset thisRD = null;
+							thisRD = (RaceDataAsset)EditorGUI.ObjectField (rFieldR, thisRD, typeof(RaceDataAsset),false);
 							//if this gets filled set the values
 							if(EditorGUI.EndChangeCheck()){
 								if (thisRD != null) {

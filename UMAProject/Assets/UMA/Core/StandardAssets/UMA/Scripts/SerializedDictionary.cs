@@ -16,7 +16,7 @@ namespace UMA
 	/// Serializable dictionary for race assets
 	/// </summary>
 	[Serializable]
-	public class RaceAssetDictionary : SerializedDictionary<int, RaceData> { }
+	public class RaceAssetDictionary : SerializedDictionary<int, RaceDataAsset> { }
 
 	/// <summary>
 	/// Serializable dictionary for slot assets

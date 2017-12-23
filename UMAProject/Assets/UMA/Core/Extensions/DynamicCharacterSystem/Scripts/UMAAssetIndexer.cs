@@ -23,7 +23,7 @@ namespace UMA
         {
         { (typeof(SlotDataAsset)),(typeof(SlotDataAsset)) },
         { (typeof(OverlayDataAsset)),(typeof(OverlayDataAsset)) },
-        { (typeof(RaceData)),(typeof(RaceData)) },
+        { (typeof(RaceDataAsset)),(typeof(RaceDataAsset)) },
         { (typeof(UMATextRecipe)),(typeof(UMATextRecipe)) },
         { (typeof(UMAWardrobeRecipe)),(typeof(UMAWardrobeRecipe)) },
         { (typeof(UMAWardrobeCollection)),(typeof(UMAWardrobeCollection)) },
@@ -47,7 +47,7 @@ namespace UMA
         {
         (typeof(SlotDataAsset)),
         (typeof(OverlayDataAsset)),
-        (typeof(RaceData)),
+        (typeof(RaceDataAsset)),
         (typeof(UMATextRecipe)),
         (typeof(UMAWardrobeRecipe)),
         (typeof(UMAWardrobeCollection)),
@@ -301,12 +301,12 @@ namespace UMA
             else if (o is OverlayDataAsset)
             {
                 OverlayDataAsset od = o as OverlayDataAsset;
-                assetName = od.overlayName;
+                assetName = od.umaName;
                 assetHash = od.nameHash;
             }
-            else if (o is RaceData)
+            else if (o is RaceDataAsset)
             {
-                RaceData rd = o as RaceData;
+                RaceDataAsset rd = o as RaceDataAsset;
                 assetName = rd.raceName;
                 assetHash = UMAUtils.StringToHash(assetName);
             }
@@ -814,7 +814,7 @@ namespace UMA
         {
         (typeof(SlotDataAsset)),
         (typeof(OverlayDataAsset)),
-        (typeof(RaceData)),
+        (typeof(RaceDataAsset)),
         (typeof(UMATextRecipe)),
         (typeof(UMAWardrobeRecipe)),
         (typeof(UMAWardrobeCollection)),
@@ -830,7 +830,7 @@ namespace UMA
         {
         { (typeof(SlotDataAsset)),(typeof(SlotDataAsset)) },
         { (typeof(OverlayDataAsset)),(typeof(OverlayDataAsset)) },
-        { (typeof(RaceData)),(typeof(RaceData)) },
+        { (typeof(RaceDataAsset)),(typeof(RaceDataAsset)) },
         { (typeof(UMATextRecipe)),(typeof(UMATextRecipe)) },
         { (typeof(UMAWardrobeRecipe)),(typeof(UMAWardrobeRecipe)) },
         { (typeof(UMAWardrobeCollection)),(typeof(UMAWardrobeCollection)) },

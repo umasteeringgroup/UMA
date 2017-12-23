@@ -46,13 +46,13 @@ namespace UMA.AssetBundles
 				{
 					if (assetType == "UMA.RaceData")
 					{
-						assetName = (obj as UMA.RaceData).raceName;
-						assetHash = UMA.UMAUtils.StringToHash((obj as UMA.RaceData).raceName);
+						assetName = (obj as UMA.RaceDataAsset).raceName;
+						assetHash = UMA.UMAUtils.StringToHash((obj as UMA.RaceDataAsset).raceName);
 					}
 					else if (assetType == "UMA.OverlayDataAsset")
 					{
-						assetName = (obj as UMA.OverlayDataAsset).overlayName;
-						assetHash = UMA.UMAUtils.StringToHash((obj as UMA.OverlayDataAsset).overlayName);
+						assetName = (obj as UMA.OverlayDataAsset).umaName;
+						assetHash = (obj as UMA.OverlayDataAsset).umaHash;
 					}
 					else if (assetType == "UMA.SlotDataAsset")
 					{

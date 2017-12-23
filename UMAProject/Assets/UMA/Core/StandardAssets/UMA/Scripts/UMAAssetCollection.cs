@@ -7,7 +7,7 @@ namespace UMA
 	/// </summary>
     public class UMAAssetCollection : ScriptableObject
     {
-        public RaceData[] raceData;
+        public RaceDataAsset[] raceData;
         public SlotDataAsset[] slotData;
         public OverlayDataAsset[] overlayData;
 

@@ -13,10 +13,10 @@ namespace UMA.CharacterSystem.Editors
 		public DynamicRaceLibrary thisDynamicRaceLibrary;
 		//In the Editor when the app is NOT running this shows all the races you COULD choose- including those AssetBundles.
 		//When the app IS running it shows the reaces you CAN choose- i.e. the ones that are either in the build or have been downloaded.
-		public List<RaceData> foundRaces = new List<RaceData>();
+		public List<RaceDataAsset> foundRaces = new List<RaceDataAsset>();
 		public List<string> foundRaceNames = new List<string>();
 
-		public void SetRaceLists(RaceData[] raceDataArray = null)
+		public void SetRaceLists(RaceDataAsset[] raceDataArray = null)
 		{
 			if (raceDataArray == null)
 			{
@@ -26,7 +26,7 @@ namespace UMA.CharacterSystem.Editors
 			foundRaceNames.Clear();
 			foundRaces.Add(null);
 			foundRaceNames.Add("None Set");
-			foreach (RaceData race in raceDataArray)
+			foreach (RaceDataAsset race in raceDataArray)
 			{
 				if (race != null && race.raceName != "RaceDataPlaceholder")
 				{

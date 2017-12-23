@@ -79,8 +79,8 @@ namespace UMA.CharacterSystem
                         else if(overlayName != null)
                         {
                             if(overlayName != "")
-                                if(edOverlay.overlayName == overlayName)
-                                    foundOverlay = new OverlayData(edOverlay);
+							if(edOverlay.umaName == overlayName)
+                            	foundOverlay = new OverlayData(edOverlay);
                         }
 
                     }

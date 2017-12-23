@@ -53,10 +53,10 @@ namespace UMA.CharacterSystem
 					requiredAssetNameHash = UMAUtils.StringToHash(requiredAssetName);
 				}
 				thisTempAsset = GetTempAsset<T>();
-				if (typeof(T) == typeof(RaceData))
+				if (typeof(T) == typeof(RaceDataAsset))
 				{
-					(thisTempAsset as RaceData).raceName = requiredAssetName;
-					(thisTempAsset as RaceData).name = requiredAssetName;
+					(thisTempAsset as RaceDataAsset).raceName = requiredAssetName;
+					(thisTempAsset as RaceDataAsset).name = requiredAssetName;
 				}
 				else if (typeof(T) == typeof(SlotDataAsset))
 				{
@@ -202,7 +202,7 @@ namespace UMA.CharacterSystem
 					if (assetType.ToString().IndexOf("AnimatorController") > -1)
 						assetType = typeof(RuntimeAnimatorController);
 					var itemFilename = AssetBundleManager.AssetBundleIndexObject.GetFilenameFromAssetName(item.containingBundle, item.requiredAssetName, assetType.ToString());
-					if (assetType == typeof(RaceData))
+					if (assetType == typeof(RaceDataAsset))
 					{
 						//HACK TO FIX RACEDATA DYNAMICDNACONVERTERS DYNAMICDNA ASSETS CAUSING LOAD FAILURES in UNITY 5.5+
 						//As of Unity 5.5 a bug has reappeared when loading some types of assets that reference assets in other bundles.
@@ -226,7 +226,7 @@ namespace UMA.CharacterSystem
 							}
 						}
 #endif
-						RaceData actualRace = loadedBundleAB.LoadAsset<RaceData>(itemFilename);
+						RaceDataAsset actualRace = loadedBundleAB.LoadAsset<RaceDataAsset>(itemFilename);
 						UMAContextBase.Instance.AddRace(actualRace);
 						//Refresh DCS so that anything that this race is cross compatible with gets added to its list of available recipes
 						((DynamicUMAContext.Instance as DynamicUMAContext).dynamicCharacterSystem as DynamicCharacterSystem).RefreshRaceKeys();

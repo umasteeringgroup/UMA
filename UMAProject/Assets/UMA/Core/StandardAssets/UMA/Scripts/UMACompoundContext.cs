@@ -22,7 +22,7 @@ namespace UMA
 
 		protected void BuildRaceAssetDictionary()
 		{
-			string type = typeof(RaceData).Name;
+			string type = typeof(RaceDataAsset).Name;
 			Debug.LogWarning(string.Format("Searching asset database for {0} missing from context.", type));
 			raceDictionary = new RaceAssetDictionary();
 
@@ -30,7 +30,7 @@ namespace UMA
 			foreach (string guid in assetGUIDs)
 			{
 				string path = AssetDatabase.GUIDToAssetPath(guid);
-				RaceData asset = AssetDatabase.LoadAssetAtPath<RaceData>(path);
+				RaceDataAsset asset = AssetDatabase.LoadAssetAtPath<RaceDataAsset>(path);
 				raceDictionary.Add(asset.GetNameHash(), asset);
 			}
 		}
@@ -129,9 +129,9 @@ namespace UMA
 		/// </summary>
 		/// <returns>The race.</returns>
 		/// <param name="name">Name.</param>
-		public RaceData GetRace(string name)
+		public RaceDataAsset GetRace(string name)
 		{
-			RaceData race = null;
+			RaceDataAsset race = null;
 			foreach (UMAContextBase context in contexts)
 			{
 				race = context.GetRace(name);
@@ -154,9 +154,9 @@ namespace UMA
 		/// </summary>
 		/// <returns>The race.</returns>
 		/// <param name="nameHash">Name hash.</param>
-		public RaceData GetRace(int nameHash)
+		public RaceDataAsset GetRace(int nameHash)
 		{
-			RaceData race = null;
+			RaceDataAsset race = null;
 			foreach (UMAContextBase context in contexts)
 			{
 				race = context.GetRace(nameHash);
@@ -179,7 +179,7 @@ namespace UMA
 		/// Array of all races in the context.
 		/// </summary>
 		/// <returns>The array of race data.</returns>
-		public RaceData[] GetAllRaces()
+		public RaceDataAsset[] GetAllRaces()
 		{
 			// HACK - is this needed? If so combine
 			return null;
@@ -189,7 +189,7 @@ namespace UMA
 		/// Add a race to the context.
 		/// </summary>
 		/// <param name="race">New race.</param>
-		public void AddRace(RaceData race)
+		public void AddRace(RaceDataAsset race)
 		{
 			Debug.LogError("Cannot include assets in compound context, add to scene or asset bundle!");
 		}

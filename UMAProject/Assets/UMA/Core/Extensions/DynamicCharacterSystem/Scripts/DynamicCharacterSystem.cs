@@ -152,7 +152,7 @@ namespace UMA.CharacterSystem
 				Init();
 				return;
 			}
-			RaceData[] possibleRaces = new RaceData[0];
+			RaceDataAsset[] possibleRaces = new RaceDataAsset[0];
 			if (forceUpdateRaceLibrary)
 			{
 				possibleRaces = (context as DynamicUMAContext).raceLibrary.GetAllRaces();//if any new races are added by this then RaceLibrary will Re-Trigger this if there was anything new so dont do anything else
@@ -339,7 +339,7 @@ namespace UMA.CharacterSystem
 						{
 							//here we also need to check that the race itself has a wardrobe slot that matches the one in the compatible race
 							//11012017 Dont trigger backwards compatible races to download
-							RaceData raceKeyRace = ((context as DynamicUMAContext).raceLibrary as DynamicRaceLibrary).GetRace(racekey, false);
+							RaceDataAsset raceKeyRace = ((context as DynamicUMAContext).raceLibrary as DynamicRaceLibrary).GetRace(racekey, false);
 							if (raceKeyRace == null)
 								continue;
 							if (raceKeyRace.IsCrossCompatibleWith(u.compatibleRaces[i]) && (raceKeyRace.wardrobeSlots.Contains(thisWardrobeSlot) || thisWardrobeSlot == "WardrobeCollection"))

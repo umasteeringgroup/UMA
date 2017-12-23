@@ -70,7 +70,7 @@ namespace UMA
 		/// </summary>
 		/// <returns>The race.</returns>
 		/// <param name="name">Name.</param>
-		public override RaceData GetRace(string name)
+		public override RaceDataAsset GetRace(string name)
 		{
 			return raceLibrary.GetRace(name);
 		}
@@ -79,7 +79,7 @@ namespace UMA
 		/// </summary>
 		/// <returns>The race.</returns>
 		/// <param name="nameHash">Name hash.</param>
-		public override RaceData GetRace(int nameHash)
+		public override RaceDataAsset GetRace(int nameHash)
 		{
 			return raceLibrary.GetRace(nameHash);
 		}
@@ -88,7 +88,7 @@ namespace UMA
 		/// Array of all races in the context.
 		/// </summary>
 		/// <returns>The array of race data.</returns>
-		public override RaceData[] GetAllRaces()
+		public override RaceDataAsset[] GetAllRaces()
 		{
 			return raceLibrary.GetAllRaces();
 		}
@@ -97,7 +97,7 @@ namespace UMA
 		/// Add a race to the context.
 		/// </summary>
 		/// <param name="race">New race.</param>
-		public override void AddRace(RaceData race)
+		public override void AddRace(RaceDataAsset race)
 		{
 			raceLibrary.AddRace(race);
 		}

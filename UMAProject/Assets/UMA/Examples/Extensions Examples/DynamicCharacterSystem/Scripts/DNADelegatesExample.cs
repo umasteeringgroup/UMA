@@ -13,7 +13,7 @@ namespace UMA.CharacterSystem.Examples
 		public DynamicDNAConverterBehaviour targetDNAConverter;
 		public DNAPanel delegateDNAEditor;
 
-		RaceData lastRace;
+		RaceDataAsset lastRace;
 		Color startingSkinColor = Color.black;
 
 		void Awake()

@@ -15,25 +15,25 @@ namespace UMA
 		/// </summary>
 		/// <returns>The race.</returns>
 		/// <param name="name">Name.</param>
-		public abstract RaceData GetRace(string name);
+		public abstract RaceDataAsset GetRace(string name);
 		/// <summary>
 		/// Gets a race by name hash.
 		/// </summary>
 		/// <returns>The race.</returns>
 		/// <param name="nameHash">Name hash.</param>
-		public abstract RaceData GetRace(int nameHash);
+		public abstract RaceDataAsset GetRace(int nameHash);
 
 		/// <summary>
 		/// Array of all races in the context.
 		/// </summary>
 		/// <returns>The array of race data.</returns>
-		public abstract RaceData[] GetAllRaces();
+		public abstract RaceDataAsset[] GetAllRaces();
 
 		/// <summary>
 		/// Add a race to the context.
 		/// </summary>
 		/// <param name="race">New race.</param>
-		public abstract void AddRace(RaceData race);
+		public abstract void AddRace(RaceDataAsset race);
 
 		/// <summary>
 		/// Instantiate a slot by name.

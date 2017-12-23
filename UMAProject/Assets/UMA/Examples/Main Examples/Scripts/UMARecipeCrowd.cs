@@ -238,7 +238,7 @@ namespace UMA.Examples
 
 		public virtual void RandomizeDNA(UMAData umaData)
 		{
-			RaceData race = umaData.umaRecipe.GetRace();
+			RaceDataAsset race = umaData.umaRecipe.GetRace();
 			if ((race != null) && (race.dnaRanges != null))
 			{
 				foreach (DNARangeAsset dnaRange in race.dnaRanges)
@@ -250,7 +250,7 @@ namespace UMA.Examples
 		
 		public virtual void RandomizeDNAGaussian(UMAData umaData)
 		{
-			RaceData race = umaData.umaRecipe.GetRace();
+			RaceDataAsset race = umaData.umaRecipe.GetRace();
 			if ((race != null) && (race.dnaRanges != null))
 			{
 				foreach (DNARangeAsset dnaRange in race.dnaRanges)

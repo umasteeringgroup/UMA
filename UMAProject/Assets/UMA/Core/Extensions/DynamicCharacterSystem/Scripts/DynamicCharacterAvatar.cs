@@ -82,7 +82,7 @@ namespace UMA.CharacterSystem
         //To determine what recipes from a previous race can be applied to a the new race (on race change) sometimes we need to know what the previous race was
         //for example when a wardrobe collection is applied to a race, when the race changes we need to know if a given current slot was set because the wardrobe collection was compatible with the previous race.
         //if it was we know we need to look at that wardrobe collection and see if it has settings for the current race (rather than just saying the current slot is not compatible with the current race)
-        private RaceData previousRace = null;
+        private RaceDataAsset previousRace = null;
 
         [EnumFlags]
         public ChangeRaceOptions defaultChangeRaceOptions = ChangeRaceOptions.keepBodyColors;
@@ -577,7 +577,7 @@ namespace UMA.CharacterSystem
         /// <param name="customChangeRaceOptions">flags for the race change options</param>
         public void ChangeRace(string racename, ChangeRaceOptions customChangeRaceOptions = ChangeRaceOptions.useDefaults)
         {
-            RaceData thisRace = null;
+            RaceDataAsset thisRace = null;
             if (racename != "None Set")
                 thisRace = (context as DynamicUMAContext).GetRace(racename);
             ChangeRace(thisRace, customChangeRaceOptions);
@@ -588,7 +588,7 @@ namespace UMA.CharacterSystem
         /// </summary>
         /// <param name="race"></param>
         /// <param name="customChangeRaceOptions">flags for the race change options</param>
-        public void ChangeRace(RaceData race, ChangeRaceOptions customChangeRaceOptions = ChangeRaceOptions.useDefaults)
+        public void ChangeRace(RaceDataAsset race, ChangeRaceOptions customChangeRaceOptions = ChangeRaceOptions.useDefaults)
         {
             bool actuallyChangeRace = false;
             if (race == null)
@@ -614,7 +614,7 @@ namespace UMA.CharacterSystem
                 PerformRaceChange(race, customChangeRaceOptions);
         }
 
-        private void PerformRaceChange(RaceData race, ChangeRaceOptions customChangeRaceOptions = ChangeRaceOptions.useDefaults)
+        private void PerformRaceChange(RaceDataAsset race, ChangeRaceOptions customChangeRaceOptions = ChangeRaceOptions.useDefaults)
         {
             var thisChangeRaceOpts = customChangeRaceOptions == ChangeRaceOptions.useDefaults ? defaultChangeRaceOptions : customChangeRaceOptions;
 
@@ -3237,13 +3237,13 @@ namespace UMA.CharacterSystem
         {
             public string name;
 
-            RaceData _data;
+            RaceDataAsset _data;
 
             //These properties use camelCase rather than lower case to deliberately hide the fact they are properties
             /// <summary>
             /// Will return the racedata for the current activeRace.name - if it is in an asset bundle or in resources it will find it (if it has already been downloaded) but wont cause it to download. If you ony need to know if the data is there use the racedata field instead.
             /// </summary>
-            public RaceData data
+            public RaceDataAsset data
             {
                 get
                 {
@@ -3258,7 +3258,7 @@ namespace UMA.CharacterSystem
             /// <summary>
             /// returns the active raceData (quick)
             /// </summary>
-            public RaceData racedata
+            public RaceDataAsset racedata
             {
                 get { return _data; }
             }
@@ -3272,7 +3272,7 @@ namespace UMA.CharacterSystem
                     return;
                 }
 				var thisDynamicRaceLibrary = (thisContext as DynamicUMAContext).raceLibrary as DynamicRaceLibrary;
-                foreach (RaceData race in thisDynamicRaceLibrary.GetAllRaces())
+                foreach (RaceDataAsset race in thisDynamicRaceLibrary.GetAllRaces())
                 {
                     if (race.raceName == this.name)
                     {
@@ -3315,7 +3315,7 @@ namespace UMA.CharacterSystem
             public bool loadDefaultRecipes = true;
             public List<WardrobeRecipeListItem> recipes = new List<WardrobeRecipeListItem>();
 
-            public List<WardrobeRecipeListItem> Validate(bool allowDownloadables = false, string raceName = "", RaceData race = null)
+            public List<WardrobeRecipeListItem> Validate(bool allowDownloadables = false, string raceName = "", RaceDataAsset race = null)
             {
                 List<WardrobeRecipeListItem> validRecipes = new List<WardrobeRecipeListItem>();
                 var thisContext = UMAContextBase.FindInstance();

@@ -38,6 +38,7 @@ namespace UMA
 		protected List<string[]> oldNames;
 
 		protected List<int[]> oldRemaps;
+
 		public int[] GetRemap(byte oldVersion)
 		{
 			if ((oldVersion < 0) || (oldVersion >= oldNames.Count))
@@ -67,7 +68,7 @@ namespace UMA
 
 		public float[] RemapValues(float[] origValues, byte origVersion, float defaultVal)
 		{
-			if ((origVersion == _dnaVersion) && (origValues.Length == _dnaNames.Length))
+			if (origVersion == _dnaVersion)
 			{
 				return origValues;
 			}

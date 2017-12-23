@@ -196,11 +196,11 @@ namespace UMA
 
 			switch (umaData.umaRecipe.raceData.umaTarget)
 			{
-				case RaceData.UMATarget.Humanoid:
+				case RaceDataAsset.UMATarget.Humanoid:
 					umaTPose.DeSerialize();
 					animator.avatar = CreateAvatar(umaData, umaTPose);
 					break;
-				case RaceData.UMATarget.Generic:
+				case RaceDataAsset.UMATarget.Generic:
 					animator.avatar = CreateGenericAvatar(umaData);
 					break;
 			}

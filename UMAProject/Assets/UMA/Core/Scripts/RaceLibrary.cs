@@ -7,8 +7,8 @@ namespace UMA
 	public class RaceLibrary : RaceLibraryBase
 	{
 		[SerializeField]
-		protected RaceData[] raceElementList = new RaceData[0];
-		private Dictionary<string, RaceData> raceDictionary;
+		protected RaceDataAsset[] raceElementList = new RaceDataAsset[0];
+		private Dictionary<string, RaceDataAsset> raceDictionary;
 
 		void Awake(){
 			ValidateDictionary();
@@ -18,7 +18,7 @@ namespace UMA
 		{
 			if (raceDictionary == null)
 			{
-				raceDictionary = new Dictionary<string, RaceData>();
+				raceDictionary = new Dictionary<string, RaceDataAsset>();
 				UpdateDictionary();
 			}
 		}
@@ -37,7 +37,7 @@ namespace UMA
 			}
 		}
 
-		override public void AddRace(RaceData race)
+		override public void AddRace(RaceDataAsset race)
 		{
 			if (race == null) return;
 
@@ -50,7 +50,7 @@ namespace UMA
 					return;
 				}
 			}
-			var list = new RaceData[raceElementList.Length + 1];
+			var list = new RaceDataAsset[raceElementList.Length + 1];
 			Array.Copy(raceElementList, list, raceElementList.Length );
 			list[raceElementList.Length] = race;
 			raceElementList = list;
@@ -58,13 +58,13 @@ namespace UMA
 		}
 	#pragma warning restore 618
 
-		override public RaceData GetRace(string raceName)
+		override public RaceDataAsset GetRace(string raceName)
 		{
 			if ((raceName == null) || (raceName.Length == 0))
 				return null;
 
 			ValidateDictionary();
-			RaceData res;
+			RaceDataAsset res;
 			if (!raceDictionary.TryGetValue(raceName, out res))
 			{
 				return null;
@@ -72,7 +72,7 @@ namespace UMA
 			return res;
 		}
 
-		override public RaceData GetRace(int raceHash)
+		override public RaceDataAsset GetRace(int raceHash)
 		{
 			if (raceHash == 0)
 				return null;
@@ -90,7 +90,7 @@ namespace UMA
 			return null;
 		}
 
-		public override RaceData[] GetAllRaces()
+		public override RaceDataAsset[] GetAllRaces()
 		{
 	#pragma warning disable 618
 			return raceElementList;

@@ -120,11 +120,11 @@ namespace UMA
                 if (o is OverlayDataAsset)
                 {
                     OverlayDataAsset od = o as OverlayDataAsset;
-                    return od.overlayName;
+                    return od.umaName;
                 }
-                if (o is RaceData)
+                if (o is RaceDataAsset)
                 {
-                    return (o as RaceData).raceName;
+                    return (o as RaceDataAsset).raceName;
                 }
 
                 return o.name;

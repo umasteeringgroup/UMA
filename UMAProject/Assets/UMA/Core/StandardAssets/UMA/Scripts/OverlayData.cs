@@ -27,7 +27,7 @@ namespace UMA
 
 		// Properties dependant on the underlying asset.
 		public bool isProcedural { get { return asset.material.IsProcedural(); } }
-		public string overlayName { get { return asset.overlayName; } }
+		public string overlayName { get { return asset.umaName; } }
 		public OverlayDataAsset.OverlayType overlayType { get { return asset.overlayType; } }
 		public Texture alphaMask
 		{
@@ -179,14 +179,14 @@ namespace UMA
 			{
 				if (!asset.material.Equals(targetMaterial))
 				{
-					Debug.LogError(string.Format("Overlay '{0}' doesn't have the expected UMA Material: '{1}'", asset.overlayName, targetMaterial.name));
+					Debug.LogError(string.Format("Overlay '{0}' doesn't have the expected UMA Material: '{1}'", asset.umaName, targetMaterial.name));
 					valid = false;
 				}
 			}
 
 			if (asset.textureCount != targetMaterial.channels.Length)
 			{
-				Debug.LogError(string.Format("Overlay '{0}' doesn't have the right number of channels", asset.overlayName));
+				Debug.LogError(string.Format("Overlay '{0}' doesn't have the right number of channels", asset.umaName));
 				valid = false;
 			}
 			else
@@ -200,7 +200,7 @@ namespace UMA
                 {
                     if ((asset.textureList[i] == null) && (targetMaterial.channels[i].channelType != UMAMaterial.ChannelType.MaterialColor))
                     {
-                        Debug.LogError(string.Format("Overlay '{0}' missing required texture in channel {1}", asset.overlayName, i));
+                        Debug.LogError(string.Format("Overlay '{0}' missing required texture in channel {1}", asset.umaName, i));
                         valid = false;
                     }
 
@@ -224,7 +224,7 @@ namespace UMA
 				}
 
 
-				Debug.LogWarning(string.Format("Overlay '{0}' missing required color data. Resizing and adding defaults", asset.overlayName));
+				Debug.LogWarning(string.Format("Overlay '{0}' missing required color data. Resizing and adding defaults", asset.umaName));
 			}
 
 			return valid;
@@ -395,7 +395,7 @@ namespace UMA
 			{
 				if (overlay2)
 				{
-					return ((overlay1.asset.overlayName == overlay2.asset.overlayName) &&
+					return ((overlay1.asset.umaName == overlay2.asset.umaName) &&
 							(overlay1.asset.material.Equals(overlay2.asset.material)) &&
 							(overlay1.rect == overlay2.rect));
 				}

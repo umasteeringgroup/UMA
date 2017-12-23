@@ -8,11 +8,22 @@ namespace UMA
 	/// Contains the immutable data shared between overlays of the same type.
 	/// </summary>
 	[System.Serializable]
-	public partial class OverlayDataAsset : ScriptableObject, ISerializationCallbackReceiver
+	public partial class OverlayDataAsset : UMADataAsset, ISerializationCallbackReceiver
 	{
-	    public string overlayName;
+		public override string umaName
+		{
+			get { return overlayName; }
+		}
+
+		public override int umaHash
+		{
+			get { return nameHash; }
+		}
+
+		public string overlayName;
 		[System.NonSerialized]
 		public int nameHash;
+
 
 		public enum OverlayType
 		{

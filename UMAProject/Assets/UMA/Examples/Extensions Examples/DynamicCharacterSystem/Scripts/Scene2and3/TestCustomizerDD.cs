@@ -197,7 +197,7 @@ namespace UMA.CharacterSystem.Examples
 			raceDropdownOptions = new List<string>();
 			//add the 'NoneSet'
 			raceDropdownOptions.Add("None Set");
-			foreach (RaceData r in raceDropdownOptionsArray)
+			foreach (RaceDataAsset r in raceDropdownOptionsArray)
 			{
 				if (r.raceName != "PlaceholderRace" && r.raceName != "RaceDataPlaceholder")
 					raceDropdownOptions.Add(r.raceName);

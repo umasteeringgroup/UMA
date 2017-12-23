@@ -8,7 +8,7 @@ using System.Collections.Generic;
 
 namespace UMA
 {
-    public partial class RaceData
+    public partial class RaceDataAsset
     {
 
 		public UMARecipeBase baseRaceRecipe;
@@ -91,7 +91,7 @@ namespace UMA
 		/// <summary>
 		/// Given a raceNames returns whether this race has been set to be 'cross compatible' with that race.
 		/// </summary>
-		public bool IsCrossCompatibleWith(RaceData compatibleRace)
+		public bool IsCrossCompatibleWith(RaceDataAsset compatibleRace)
 		{
 			return GetCrossCompatibleRaces().Contains(compatibleRace.raceName);
 		}

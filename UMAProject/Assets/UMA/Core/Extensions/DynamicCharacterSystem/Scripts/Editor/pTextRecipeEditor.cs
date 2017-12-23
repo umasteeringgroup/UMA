@@ -38,7 +38,7 @@ namespace UMA.Editors
 			GUILayout.Space(10);
 			if (!hideRaceField)
 			{
-				RaceData newRace = (RaceData)EditorGUILayout.ObjectField("RaceData", _recipe.raceData, typeof(RaceData), false);
+				RaceDataAsset newRace = (RaceDataAsset)EditorGUILayout.ObjectField("RaceData", _recipe.raceData, typeof(RaceDataAsset), false);
 				if (_recipe.raceData != newRace)
 				{
 					_recipe.SetRace(newRace);
@@ -95,7 +95,7 @@ namespace UMA.Editors
 		/// <returns></returns>
 		protected virtual bool AddDNAButtonUI()
 		{
-			RaceData standardRaceData = null;
+			RaceDataAsset standardRaceData = null;
 			if (_recipe != null)
 			{
 				standardRaceData = _recipe.raceData;
@@ -151,7 +151,7 @@ namespace UMA.Editors
 
 		protected virtual bool FixDNAConverters()
 		{
-			RaceData standardRaceData = null;
+			RaceDataAsset standardRaceData = null;
 			if (_recipe != null)
 			{
 				standardRaceData = _recipe.raceData;

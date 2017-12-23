@@ -35,7 +35,7 @@ namespace UMA.Examples
 		/// <summary>
 		/// The race of the merged recipe.
 		/// </summary>
-		public RaceData raceData;
+		public RaceDataAsset raceData;
 		/// <summary>
 		/// The recipe sections.
 		/// </summary>

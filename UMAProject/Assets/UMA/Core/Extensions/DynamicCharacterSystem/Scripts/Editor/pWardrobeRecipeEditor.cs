@@ -20,14 +20,14 @@ namespace UMA.Editors
 				if (dropArea.Contains(evt.mousePosition))
 				{
 					compatibleRacePickerID = EditorGUIUtility.GetControlID(new GUIContent("crfObjectPicker"), FocusType.Passive);
-					EditorGUIUtility.ShowObjectPicker<RaceData>(null, false, "", compatibleRacePickerID);
+					EditorGUIUtility.ShowObjectPicker<RaceDataAsset>(null, false, "", compatibleRacePickerID);
 					Event.current.Use();//stops the Mismatched LayoutGroup errors
 					return;
 				}
 			}
 			if (evt.commandName == "ObjectSelectorUpdated" && EditorGUIUtility.GetObjectPickerControlID() == compatibleRacePickerID)
 			{
-				RaceData tempRaceDataAsset = EditorGUIUtility.GetObjectPickerObject() as RaceData;
+				RaceDataAsset tempRaceDataAsset = EditorGUIUtility.GetObjectPickerObject() as RaceDataAsset;
 				if (tempRaceDataAsset)
 				{
 					AddRaceDataAsset(tempRaceDataAsset, compatibleRaces);
@@ -53,7 +53,7 @@ namespace UMA.Editors
 					{
 						if (draggedObjects[i])
 						{
-							RaceData tempRaceDataAsset = draggedObjects[i] as RaceData;
+							RaceDataAsset tempRaceDataAsset = draggedObjects[i] as RaceDataAsset;
 							if (tempRaceDataAsset)
 							{
 								AddRaceDataAsset(tempRaceDataAsset, compatibleRaces);
@@ -76,7 +76,7 @@ namespace UMA.Editors
 			var assetFiles = System.IO.Directory.GetFiles(path, "*.asset");
 			foreach (var assetFile in assetFiles)
 			{
-				var tempRaceDataAsset = AssetDatabase.LoadAssetAtPath(assetFile, typeof(RaceData)) as RaceData;
+				var tempRaceDataAsset = AssetDatabase.LoadAssetAtPath(assetFile, typeof(RaceDataAsset)) as RaceDataAsset;
 				if (tempRaceDataAsset)
 				{
 					AddRaceDataAsset(tempRaceDataAsset, compatibleRaces);
@@ -88,7 +88,7 @@ namespace UMA.Editors
 			}
 		}
 
-		private void AddRaceDataAsset(RaceData raceDataAsset, List<string> compatibleRaces)
+		private void AddRaceDataAsset(RaceDataAsset raceDataAsset, List<string> compatibleRaces)
 		{
 			if (!compatibleRaces.Contains(raceDataAsset.raceName))
 				compatibleRaces.Add(raceDataAsset.raceName);
@@ -117,7 +117,7 @@ namespace UMA.Editors
 						generatedWardrobeSlotOptions = new List<string>();
 						generatedWardrobeSlotOptionsLabels = new List<string>();
 					}
-					List<RaceData> thisRaceDatas = new List<RaceData>();
+					List<RaceDataAsset> thisRaceDatas = new List<RaceDataAsset>();
 					for (int i = 0; i < compatibleRaces.Count; i++)
 					{
 						thisRaceDatas.Add(GetCompatibleRaceData(compatibleRaces[i]));
@@ -237,13 +237,13 @@ namespace UMA.Editors
 			}
 		}
 
-		private RaceData GetCompatibleRaceData(string raceName)
+		private RaceDataAsset GetCompatibleRaceData(string raceName)
 		{
-			RaceData foundRace = null;
+			RaceDataAsset foundRace = null;
 			string[] foundRacesStrings = AssetDatabase.FindAssets("t:RaceData");
 			for (int i = 0; i < foundRacesStrings.Length; i++)
 			{
-				RaceData thisFoundRace = AssetDatabase.LoadAssetAtPath<RaceData>(AssetDatabase.GUIDToAssetPath(foundRacesStrings[i]));
+				RaceDataAsset thisFoundRace = AssetDatabase.LoadAssetAtPath<RaceDataAsset>(AssetDatabase.GUIDToAssetPath(foundRacesStrings[i]));
 				if (thisFoundRace.raceName == raceName)
 				{
 					foundRace = thisFoundRace;

@@ -4,16 +4,16 @@ using UnityEditor;
 
 namespace UMA.Editors
 {
-	[CustomEditor(typeof(RaceData))]
+	[CustomEditor(typeof(RaceDataAsset))]
 	public partial class RaceInspector : Editor 
 	{
 	    [MenuItem("Assets/Create/UMA/Core/RaceData")]
 	    public static void CreateRaceMenuItem()
 	    {
-	        CustomAssetUtility.CreateAsset<RaceData>();
+	        CustomAssetUtility.CreateAsset<RaceDataAsset>();
 	    }
 
-		protected RaceData race;
+		protected RaceDataAsset race;
         protected bool _needsUpdate;
         protected string _errorMessage;
 		//we dont really want to use delayedFields because if the user does not change focus from the field in the inspector but instead selects another asset in their projects their changes dont save
@@ -24,7 +24,7 @@ namespace UMA.Editors
 		GameObject EditorUMAContext;
 
 		public void OnEnable() {
-			race = target as RaceData;
+			race = target as RaceDataAsset;
 			EditorApplication.update += DoDelayedSave;
 		}
 
@@ -69,7 +69,7 @@ namespace UMA.Editors
 				lastActionTime = Time.realtimeSinceStartup;
 
 			race.raceName = EditorGUILayout.TextField("Race Name", race.raceName);
-            race.umaTarget = (UMA.RaceData.UMATarget)EditorGUILayout.EnumPopup("UMA Target", race.umaTarget);
+            race.umaTarget = (UMA.RaceDataAsset.UMATarget)EditorGUILayout.EnumPopup("UMA Target", race.umaTarget);
             race.genericRootMotionTransformName = EditorGUILayout.TextField("Root Motion Transform", race.genericRootMotionTransformName);
 			race.TPose = EditorGUILayout.ObjectField("TPose", race.TPose, typeof(UmaTPose), false) as UmaTPose;
 			race.expressionSet = EditorGUILayout.ObjectField("Expression Set", race.expressionSet, typeof(UMA.PoseTools.UMAExpressionSet), false) as UMA.PoseTools.UMAExpressionSet;

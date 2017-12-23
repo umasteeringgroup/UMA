@@ -115,7 +115,7 @@ namespace UMA.Editors
 		{
 			private readonly UMAData.UMARecipe _recipe;
 			private readonly List<WardrobeSettings> _wardrobeSet;
-			private readonly RaceData _race;
+			private readonly RaceDataAsset _race;
 			private readonly bool _allowWardrobeCollectionSlot = true;
 
 			public List<WardrobeSettings> WardrobeSet
@@ -125,7 +125,7 @@ namespace UMA.Editors
 					return _wardrobeSet;
 				}
 			}
-			public WardrobeSetEditor(RaceData race, List<WardrobeSettings> wardrobeSet, UMAData.UMARecipe recipe, bool allowWardrobeCollectionSlot)
+			public WardrobeSetEditor(RaceDataAsset race, List<WardrobeSettings> wardrobeSet, UMAData.UMARecipe recipe, bool allowWardrobeCollectionSlot)
 			{
 				_recipe = recipe;
 				_wardrobeSet = wardrobeSet;

@@ -73,8 +73,8 @@ namespace UMA
 				if (raceLibrary != null)
 				{
 					Debug.LogWarning("Updating race library on " + this.name);
-					RaceData[] races = raceLibrary.GetAllRaces();
-					foreach (RaceData race in races)
+					RaceDataAsset[] races = raceLibrary.GetAllRaces();
+					foreach (RaceDataAsset race in races)
 					{
 						if (race == null) continue;
 						raceDictionary.Add(race.GetNameHash(), race);
@@ -152,7 +152,7 @@ namespace UMA
 		/// </summary>
 		/// <returns>The race.</returns>
 		/// <param name="name">Name.</param>
-		public override RaceData GetRace(string name)
+		public override RaceDataAsset GetRace(string name)
 		{
 			return GetRace(UMAUtils.StringToHash(name));
 		}
@@ -161,10 +161,10 @@ namespace UMA
 		/// </summary>
 		/// <returns>The race.</returns>
 		/// <param name="nameHash">Name hash.</param>
-		public override RaceData GetRace(int nameHash)
+		public override RaceDataAsset GetRace(int nameHash)
 		{
 //			return raceLibrary.GetRace(nameHash);
-			RaceData race = null;
+			RaceDataAsset race = null;
 			raceDictionary.TryGetValue(nameHash, out race);
 
 			return race;
@@ -174,11 +174,11 @@ namespace UMA
 		/// Array of all races in the context.
 		/// </summary>
 		/// <returns>The array of race data.</returns>
-		public override RaceData[] GetAllRaces()
+		public override RaceDataAsset[] GetAllRaces()
 		{
 //			return raceLibrary.GetAllRaces();
 			// HACK
-			RaceData[] raceArray = new RaceData[raceDictionary.Count];
+			RaceDataAsset[] raceArray = new RaceDataAsset[raceDictionary.Count];
 			raceDictionary.Values.CopyTo(raceArray, 0);
 
 			return raceArray;
@@ -188,7 +188,7 @@ namespace UMA
 		/// Add a race to the context.
 		/// </summary>
 		/// <param name="race">New race.</param>
-		public override void AddRace(RaceData race)
+		public override void AddRace(RaceDataAsset race)
 		{
 //			raceLibrary.AddRace(race);
 			if (race == null) return;
