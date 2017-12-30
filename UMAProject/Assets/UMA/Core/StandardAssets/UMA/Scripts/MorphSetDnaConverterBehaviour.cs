@@ -97,8 +97,6 @@ namespace UMA
 				if (!String.IsNullOrEmpty(morph.blendShapeOne))
 					data.SetBlendShape(morph.blendShapeOne, morphWeight);
 
-				if (morph.poseZero != null)
-					morph.poseZero.ApplyPose(skeleton, 0f);
 				if(!String.IsNullOrEmpty(morph.blendShapeZero))
 					data.SetBlendShape(morph.blendShapeZero, 0f);
 			}
@@ -110,8 +108,6 @@ namespace UMA
 				if (!String.IsNullOrEmpty(morph.blendShapeZero))
 					data.SetBlendShape(morph.blendShapeZero, morphWeight);
 
-				if (morph.poseOne != null)
-					morph.poseOne.ApplyPose(skeleton, 0f);
 				if (!String.IsNullOrEmpty(morph.blendShapeOne))
 					data.SetBlendShape(morph.blendShapeOne, 0f);
 			}
