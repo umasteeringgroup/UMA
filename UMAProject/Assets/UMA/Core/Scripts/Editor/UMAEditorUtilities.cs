@@ -1,10 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using System;
-using System.Linq;
-using UMA;
 using UMA.CharacterSystem;
 using UnityEditor.Animations;
 
@@ -153,7 +150,8 @@ namespace UMA
 		public static void ToggleUMAHotkeys()
 		{
 			string definesString = PlayerSettings.GetScriptingDefineSymbolsForGroup ( EditorUserBuildSettings.selectedBuildTargetGroup );
-			List<string> allDefines = definesString.Split ( ';' ).ToList ();
+            List<string> allDefines = new List<string>();
+            allDefines.AddRange(definesString.Split(';'));
 
 			if (allDefines.Contains(umaHotkeyWord))
 				allDefines.Remove(umaHotkeyWord);

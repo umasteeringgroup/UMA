@@ -3,7 +3,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
+//using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
@@ -1469,7 +1469,7 @@ namespace UMA.Editors
 			
 			//DOS 13012016 if we also check here that _recipe.sharedColors still contains 
 			//the desired ocd then we can save the collection when colors are deleted
-			if (_overlayData.colorData.IsASharedColor && _recipe.sharedColors.Contains(_overlayData.colorData))
+			if (_overlayData.colorData.IsASharedColor && _recipe.HasSharedColor(_overlayData.colorData))
 			{
 				GUIHelper.BeginVerticalPadded(2f, new Color(0.75f, 0.875f, 1f));
 				GUILayout.BeginHorizontal();

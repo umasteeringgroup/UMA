@@ -404,6 +404,23 @@ namespace UMA
 				return valid;
 			}
 
+            /// <summary>
+            /// Checks to see if the sharedColors array contains the passed color
+            /// </summary>
+            /// <param name="col"></param>
+            /// <returns></returns>
+            public bool HasSharedColor(OverlayColorData col)
+            {
+                foreach(OverlayColorData ocd in sharedColors)
+                {
+                    if (ocd.Equals(col))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
 #pragma warning disable 618
 			/// <summary>
 			/// Gets the DNA array.
