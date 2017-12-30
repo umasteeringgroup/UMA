@@ -79,7 +79,10 @@ namespace UMA.PoseTools
 		void Update()
 		{
 			if (!initialized)
+			{
+				Initialize();
 				return;
+			}
 
 			// Fix for animation systems which require consistent values frame to frame
 			Quaternion headRotation = umaData.skeleton.GetRotation(headHash);
