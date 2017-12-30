@@ -451,6 +451,7 @@ namespace UMA
 			target.uv4 = source.uv4;
 			target.vertexCount = source.vertexCount;
 			target.vertices = source.vertices;
+			target.blendShapes = source.blendShapes;
 
 			if (source.clothSkinningSerialized != null && source.clothSkinningSerialized.Length != 0)
 			{
