@@ -146,7 +146,11 @@ namespace UMA
             }
         }
 
-		[MenuItem("UMA/Toggle Hotkeys")]
+		#if UMA_HOTKEYS
+		[MenuItem("UMA/Toggle Hotkeys (enabled)")]
+		#else
+		[MenuItem("UMA/Toggle Hotkeys (disabled)")]
+		#endif
 		public static void ToggleUMAHotkeys()
 		{
 			string definesString = PlayerSettings.GetScriptingDefineSymbolsForGroup ( EditorUserBuildSettings.selectedBuildTargetGroup );
