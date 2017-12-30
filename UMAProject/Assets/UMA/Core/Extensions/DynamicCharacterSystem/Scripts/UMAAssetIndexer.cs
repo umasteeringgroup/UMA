@@ -29,6 +29,7 @@ namespace UMA
         { (typeof(UMAWardrobeRecipe)),(typeof(UMAWardrobeRecipe)) },
         { (typeof(UMAWardrobeCollection)),(typeof(UMAWardrobeCollection)) },
         { (typeof(RuntimeAnimatorController)),(typeof(RuntimeAnimatorController)) },
+        { (typeof(AnimatorOverrideController)),(typeof(RuntimeAnimatorController)) },
 #if UNITY_EDITOR
         { (typeof(AnimatorController)),(typeof(RuntimeAnimatorController)) },
 #endif
@@ -53,6 +54,7 @@ namespace UMA
         (typeof(UMAWardrobeRecipe)),
         (typeof(UMAWardrobeCollection)),
         (typeof(RuntimeAnimatorController)),
+        (typeof(AnimatorOverrideController)),
 #if UNITY_EDITOR
         (typeof(AnimatorController)),
 #endif
@@ -842,6 +844,7 @@ namespace UMA
         (typeof(UMAWardrobeRecipe)),
         (typeof(UMAWardrobeCollection)),
         (typeof(RuntimeAnimatorController)),
+        (typeof(AnimatorOverrideController)),
 #if UNITY_EDITOR
         (typeof(AnimatorController)),
 #endif
@@ -858,7 +861,8 @@ namespace UMA
         { (typeof(UMAWardrobeRecipe)),(typeof(UMAWardrobeRecipe)) },
         { (typeof(UMAWardrobeCollection)),(typeof(UMAWardrobeCollection)) },
         { (typeof(RuntimeAnimatorController)),(typeof(RuntimeAnimatorController)) },
-#if UNITY_EDITOR
+        { (typeof(AnimatorOverrideController)),(typeof(RuntimeAnimatorController)) },
+        #if UNITY_EDITOR
         { (typeof(AnimatorController)),(typeof(RuntimeAnimatorController)) },
 #endif
         {  typeof(TextAsset), typeof(TextAsset) },

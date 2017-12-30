@@ -1,9 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using System;
-using UMA;
 using UMA.CharacterSystem;
 using UnityEditor.Animations;
 
@@ -16,6 +14,7 @@ namespace UMA
         private static Texture2D icon;
         private static bool showIndexedTypes = false;
         private static bool showUnindexedTypes = true;
+		private const string umaHotkeyWord = "UMA_HOTKEYS";
 
         static UMAEditorUtilities()
         {
@@ -146,5 +145,24 @@ namespace UMA
                 GUI.Label(newRect, FriendlyType, labelstyle);
             }
         }
+
+		#if UMA_HOTKEYS
+		[MenuItem("UMA/Toggle Hotkeys (enabled)")]
+		#else
+		[MenuItem("UMA/Toggle Hotkeys (disabled)")]
+		#endif
+		public static void ToggleUMAHotkeys()
+		{
+			string definesString = PlayerSettings.GetScriptingDefineSymbolsForGroup ( EditorUserBuildSettings.selectedBuildTargetGroup );
+            List<string> allDefines = new List<string>();
+            allDefines.AddRange(definesString.Split(';'));
+
+			if (allDefines.Contains(umaHotkeyWord))
+				allDefines.Remove(umaHotkeyWord);
+			else
+				allDefines.Add(umaHotkeyWord);
+
+			PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, string.Join( ";", allDefines.ToArray()));
+		}
     }
 }
