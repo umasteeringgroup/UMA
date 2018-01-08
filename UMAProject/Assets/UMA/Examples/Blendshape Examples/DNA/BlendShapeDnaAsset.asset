@@ -19,7 +19,7 @@ MonoBehaviour:
     poseZero: {fileID: 0}
     poseOne: {fileID: 0}
     blendShapeZero: 
-    blendShapeOne: MaleElvenEars
+    blendShapeOne: MaleEarsMorph
     sizeZero:
       heightRatio: 0
       massRatio: 0

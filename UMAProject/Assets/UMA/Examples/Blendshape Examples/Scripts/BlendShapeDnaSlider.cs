@@ -58,7 +58,6 @@ namespace UMA.Examples
 
 			if (dna != null && dnaEntryIndex >= 0)
             {
-				Debug.Log("Baking blendshape: " + dnaName);
 				if( data.blendShapeSettings.bakeBlendShapes == null)
                 	data.blendShapeSettings.bakeBlendShapes = new Dictionary<string, float>();
 				
