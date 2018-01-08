@@ -28,3 +28,16 @@ MonoBehaviour:
       heightRatio: 0
       massRatio: 0
       radiusRatio: 0
+  - dnaEntryName: MaleAlienHead
+    poseZero: {fileID: 0}
+    poseOne: {fileID: 0}
+    blendShapeZero: 
+    blendShapeOne: AlienHead
+    sizeZero:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0
+    sizeOne:
+      heightRatio: 0
+      massRatio: 0
+      radiusRatio: 0

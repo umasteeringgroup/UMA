@@ -809,6 +809,13 @@ MonoBehaviour:
     _Guid: e414c14586660fb46865f0168c8d01dd
     IsResource: 0
     IsAssetBundle: 0
+  - _BaseTypeName: SlotDataAsset
+    _Name: MaleAlienHead
+    _SerializedItem: {fileID: 11400000, guid: 344a9e3f0f0a6384da7335c405e65999, type: 2}
+    _Path: Assets/UMA/Examples/Blendshape Examples/Assets/Slots/MaleAlienHead/MaleAlienHead_Slot.asset
+    _Guid: 344a9e3f0f0a6384da7335c405e65999
+    IsResource: 0
+    IsAssetBundle: 0
   - _BaseTypeName: OverlayDataAsset
     _Name: FemaleLongHair_Overlay
     _SerializedItem: {fileID: 11400000, guid: 304fc44cf9ff5ad428e4802e082702c5, type: 2}

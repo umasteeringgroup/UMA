@@ -27,7 +27,7 @@ namespace UMA.Examples
 			}
 		}
 
-		public void SetEarMorph(float value)
+		public void SetMorph(float value)
 		{
 			if (dna == null)
 			{
@@ -41,7 +41,7 @@ namespace UMA.Examples
 			}
 		}
 
-        public void BakeEarMorph()
+        public void BakeMorph()
         {
             if (dna == null)
             {
@@ -62,7 +62,7 @@ namespace UMA.Examples
             }
         }
 
-        public void UnbakeEarMorph()
+        public void UnbakeMorph()
         {
             data.blendShapeSettings.bakeBlendShapes.Clear();
             data.Dirty(true, true, true);
