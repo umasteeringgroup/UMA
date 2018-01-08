@@ -1661,7 +1661,7 @@ MonoBehaviour:
     uv3: []
     uv4: []
     blendShapes:
-    - shapeName: MaleElvenEars
+    - shapeName: MaleEarsMorph
       frames:
       - frameWeight: 50
         deltaVertices:

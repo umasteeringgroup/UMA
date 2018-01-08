@@ -1214,7 +1214,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dnaTypeHash: 386317366
-  dnaEntryIndex: 1
+  dnaName: MaleAlienHead
 --- !u!114 &715940360
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1671,7 +1671,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dnaTypeHash: 386317366
-  dnaEntryIndex: 0
+  dnaName: MaleEarsMorph
 --- !u!114 &1162386726
 MonoBehaviour:
   m_ObjectHideFlags: 0

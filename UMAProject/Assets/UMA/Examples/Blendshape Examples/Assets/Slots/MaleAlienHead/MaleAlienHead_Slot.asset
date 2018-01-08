@@ -8945,7 +8945,7 @@ MonoBehaviour:
     uv3: []
     uv4: []
     blendShapes:
-    - shapeName: AlienHead
+    - shapeName: MaleAlienHead
       frames:
       - frameWeight: 100
         deltaVertices:

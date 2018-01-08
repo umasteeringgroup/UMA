@@ -32,7 +32,7 @@ MonoBehaviour:
     poseZero: {fileID: 0}
     poseOne: {fileID: 0}
     blendShapeZero: 
-    blendShapeOne: AlienHead
+    blendShapeOne: MaleAlienHead
     sizeZero:
       heightRatio: 0
       massRatio: 0
