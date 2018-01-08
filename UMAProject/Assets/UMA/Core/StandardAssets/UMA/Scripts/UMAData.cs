@@ -1456,13 +1456,6 @@ namespace UMA
             }
         }
 
-		//For future multiple renderer support
-		public struct BlendShapeLocation
-		{
-			public int shapeIndex;
-			public int rendererIndex;
-		}
-
 		/// <summary>
 		/// Sets the blendshape by index and renderer.
 		/// </summary>
@@ -1490,7 +1483,7 @@ namespace UMA
 			}
 
 			if (weight < 0.0f || weight > 1.0f)
-				Debug.LogError ("SetBlendShape: Weight is out of range, clamping...");
+				Debug.LogWarning ("SetBlendShape: Weight is out of range, clamping...");
 
 			weight = Mathf.Clamp01 (weight);
 			weight *= 100.0f; //Scale up to 1-100 for SetBlendShapeWeight.
@@ -1505,42 +1498,20 @@ namespace UMA
 		/// <param name="weight">Weight(float) to set this blendshape to.</param>
 		public void SetBlendShape(string name, float weight)
 		{
-			BlendShapeLocation loc = GetBlendShapeIndex (name);
-			if (loc.shapeIndex < 0)
-				return;
-
 			if (weight < 0.0f || weight > 1.0f)
-				Debug.LogError ("SetBlendShape: Weight is out of range, clamping...");
+				Debug.LogWarning ("SetBlendShape: Weight is out of range, clamping...");
 
 			weight = Mathf.Clamp01 (weight);
 			weight *= 100.0f; //Scale up to 1-100 for SetBlendShapeWeight.
 
-			renderers [loc.rendererIndex].SetBlendShapeWeight (loc.shapeIndex, weight);//for multi-renderer support
-		}
-		/// <summary>
-		/// Gets the first found index of the blendshape by name in the renderers
-		/// </summary>
-		/// <param name="name">Name of the blendshape.</param>
-		public BlendShapeLocation GetBlendShapeIndex(string name)
-		{
-			BlendShapeLocation loc = new BlendShapeLocation ();
-			loc.shapeIndex = -1;
-			loc.rendererIndex = -1;
-
-			for (int i = 0; i < rendererCount; i++) //for multi-renderer support
+			foreach (SkinnedMeshRenderer renderer in renderers)
 			{
-				int index = renderers [i].sharedMesh.GetBlendShapeIndex (name);
-				if (index >= 0) 
-				{
-					loc.shapeIndex = index;
-					loc.rendererIndex = i;
-					return loc;
-				}
+				int index = renderer.sharedMesh.GetBlendShapeIndex(name);
+				if (index >= 0)
+					renderer.SetBlendShapeWeight(index, weight);
 			}
-
-			//Debug.LogError ("GetBlendShapeIndex: blendshape " + name + " not found!");
-			return loc;
 		}
+
 		/// <summary>
 		/// Gets the name of the blendshape by index and renderer
 		/// </summary>
