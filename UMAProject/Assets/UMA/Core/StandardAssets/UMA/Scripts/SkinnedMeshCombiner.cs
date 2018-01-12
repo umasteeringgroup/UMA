@@ -208,7 +208,7 @@ namespace UMA
 						for (int shapeIndex = 0; shapeIndex < source.meshData.blendShapes.Length; shapeIndex++)
 						{
                             #region BlendShape Baking
-                            if(blendShapeSettings.bakeBlendShapes != null && blendShapeSettings.bakeBlendShapes.Count >= 0)
+                            if(blendShapeSettings.bakeBlendShapes != null && blendShapeSettings.bakeBlendShapes.Count > 0)
                             {
                                 // If there are names in the bakeBlendShape dictionary and we find them in the meshData blendshape list, then lets bake them instead of adding them.
                                 UMABlendShape currentShape = source.meshData.blendShapes[shapeIndex];
