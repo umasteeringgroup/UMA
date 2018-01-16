@@ -237,12 +237,12 @@ namespace UMA.Editors
 					}
 
 					SlotDataAsset sd = null;
-					float current = 1;
+					float current = 1f;
 					float total = (float)meshes.Count;
 
 					foreach(var mesh in meshes)
 					{
-						EditorUtility.DisplayProgressBar(string.Format("Creating Slots {0} of {1}", current, total), string.Format("Slot: {0}", mesh.name), (current / meshes.Count));
+						EditorUtility.DisplayProgressBar(string.Format("Creating Slots {0} of {1}", current, total), string.Format("Slot: {0}", mesh.name), (current / total));
 						slotMesh = mesh;
 						GetMaterialName(mesh.name, mesh);
 						sd = CreateSlot();
