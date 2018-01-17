@@ -570,22 +570,29 @@ namespace UMA.Editors
 					hiddenBaseFlags |= 0x1 << i;
 				}
 			}
-			int newHiddenBaseFlags = 0;
-			newHiddenBaseFlags = EditorGUILayout.MaskField("Hides Base Slot(s)", hiddenBaseFlags, generatedBaseSlotOptionsLabels.ToArray());
-			for (int i = 0; i < generatedBaseSlotOptionsLabels.Count; i++)
+
+			if (generatedBaseSlotOptionsLabels.Count > 0)
 			{
-				if ((newHiddenBaseFlags & (1 << i)) == (1 << i))
+				int newHiddenBaseFlags = 0;
+				newHiddenBaseFlags = EditorGUILayout.MaskField("Hides Base Slot(s)", hiddenBaseFlags, generatedBaseSlotOptionsLabels.ToArray());
+				for (int i = 0; i < generatedBaseSlotOptionsLabels.Count; i++)
 				{
-					newHides.Add(generatedBaseSlotOptions[i]);
+					if ((newHiddenBaseFlags & (1 << i)) == (1 << i))
+					{
+						newHides.Add(generatedBaseSlotOptions[i]);
+					}
+				}
+				if (newHides.Count > 1)
+				{
+					GUI.enabled = false;
+					string newHidesResult = String.Join(", ", newHides.ToArray());
+					EditorGUILayout.TextField(newHidesResult);
+					GUI.enabled = true;
 				}
 			}
-			if (newHides.Count > 1)
-			{
-				GUI.enabled = false;
-				string newHidesResult = String.Join(", ", newHides.ToArray());
-				EditorGUILayout.TextField(newHidesResult);
-				GUI.enabled = true;
-			}
+			else
+				EditorGUILayout.Popup("Hides Base Slots(s)", 0, new string[1] {"Nothing"} );
+			
             if (ShowHelp)
             {
                 EditorGUILayout.HelpBox("Hides: This is used to hide parts of the base recipe. For example, if you create gloves, you may want to hide the 'hands', so you don't get poke-through", MessageType.Info);
