@@ -266,6 +266,8 @@ namespace UMA
             _occlusionMesh.colors32 = meshData.colors32;
 
             _occlusionMesh.triangles = new int[0];
+			_occlusionMesh.subMeshCount = meshData.subMeshCount;
+
             for (int i = 0; i < meshData.subMeshCount; i++)
                 occlusionMesh.SetTriangles(meshData.submeshes[i].triangles, i);
         }
