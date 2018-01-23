@@ -788,31 +788,46 @@ namespace UMA.CharacterSystem
         /// Sets the avatars wardrobe slot to use the given wardrobe recipe (not to be mistaken with an UMA SlotDataAsset)
         /// </summary>
         /// <param name="utr"></param>
-        public void SetSlot(UMATextRecipe utr)
+        /// <summary>
+        /// Sets the avatars wardrobe slot to use the given wardrobe recipe (not to be mistaken with an UMA SlotDataAsset)
+        /// </summary>
+        /// <param name="utr">The WardrobeRecipe it WardrobeCollection to add to the Avatar</param>
+        /// <param name="onlyWhenCompatible">If true only adds the recipe if it is compatible with the active race</param>
+        public bool SetSlot(UMATextRecipe utr, bool onlyWhenCompatible = false)
         {
-            var thisRecipeSlot = utr.wardrobeSlot;
-            if (utr is UMAWardrobeCollection)
+            // Validate that we're not assigning invalid data
+            if (utr is UMAWardrobeCollection || activeRace.name == "" || !onlyWhenCompatible ||
+                ((utr.compatibleRaces.Count == 0 || utr.compatibleRaces.Contains(activeRace.name)) ||
+                (activeRace.racedata.IsCrossCompatibleWith(utr.compatibleRaces) && activeRace.racedata.wardrobeSlots.Contains(utr.wardrobeSlot))))
             {
-                LoadWardrobeCollection((utr as UMAWardrobeCollection));
-                return;
-            }
+                var thisRecipeSlot = utr.wardrobeSlot;
 
-            if (thisRecipeSlot != "" && thisRecipeSlot != "None")
-            {
-                if (_wardrobeRecipes.ContainsKey(thisRecipeSlot))
+                if (utr is UMAWardrobeCollection)
                 {
-                    _wardrobeRecipes[thisRecipeSlot] = utr;
+                    LoadWardrobeCollection((utr as UMAWardrobeCollection));
+                    return true;
                 }
-                else
+
+                if (thisRecipeSlot != "" && thisRecipeSlot != "None")
                 {
-                    _wardrobeRecipes.Add(thisRecipeSlot, utr);
-                }
-                if (!requiredAssetsToCheck.Contains(utr.name) && DynamicAssetLoader.Instance.downloadingAssetsContains(utr.name))
-                {
-                    requiredAssetsToCheck.Add(utr.name);
+                    if (_wardrobeRecipes.ContainsKey(thisRecipeSlot))
+                    {
+                        _wardrobeRecipes[thisRecipeSlot] = utr;
+                    }
+                    else
+                    {
+                        _wardrobeRecipes.Add(thisRecipeSlot, utr);
+                    }
+                    if (!requiredAssetsToCheck.Contains(utr.name) && DynamicAssetLoader.Instance.downloadingAssetsContains(utr.name))
+                    {
+                        requiredAssetsToCheck.Add(utr.name);
+                    }
+                    return true;
                 }
             }
+            return false;
         }
+
         public void SetSlot(string Slotname, string Recipename)
         {
             UMATextRecipe utr = FindSlotRecipe(Slotname, Recipename);
