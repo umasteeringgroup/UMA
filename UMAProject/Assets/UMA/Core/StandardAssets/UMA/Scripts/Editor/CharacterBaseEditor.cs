@@ -1168,9 +1168,9 @@ namespace UMA.Editors
 		private ColorEditor[] _colors;
 #if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 		private ProceduralPropertyEditor[] _properties;
-        #endif
 		private ProceduralPropertyDescription[] _descriptions;
 		private int _selectedProperty = 0;
+#endif
 		private bool _foldout = true;
 
 		public bool Delete { get; private set; }
