@@ -13,5 +13,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _asset: {fileID: 11400000, guid: 2041a0dad0ad3894ea9590072acacf65, type: 2}
   _serializedFlags:
-  - flags: 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+  - flags: ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffbfffffffffff00ff870078e721fef97ff8ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff1f0000706098fef1fffdffffffffffff
     Count: 884
