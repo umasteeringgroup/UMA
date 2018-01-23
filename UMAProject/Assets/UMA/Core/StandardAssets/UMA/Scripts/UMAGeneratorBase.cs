@@ -28,6 +28,20 @@ namespace UMA
 			get { return _defaultOverlayData; }
 		}
 
+        /// <summary>
+        /// returns true if the UMAData is in the update queue.
+        /// </summary>
+        /// <param name="umaToCheck"></param>
+        /// <returns></returns>
+        public abstract bool updatePending(UMAData umaToCheck);
+        
+        /// <summary>
+        /// removes the UMAData if it exists in the update queue.
+        /// Use this if you need to delete the UMA after scheduling an update for it.
+        /// </summary>
+        /// <param name="umaToRemove"></param>
+        public abstract void removeUMA(UMAData umaToRemove);
+
 		/// <summary>
 		/// Adds the dirty UMA to the update queue.
 		/// </summary>

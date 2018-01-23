@@ -417,6 +417,7 @@ namespace UMA.CharacterSystem
 #if UNITY_EDITOR
             DestroyEditorUMAContext();
 #endif
+            Cleanup();
         }
 
 #if UNITY_EDITOR
@@ -3234,6 +3235,34 @@ namespace UMA.CharacterSystem
             }
         }
 
+        #endregion
+
+        #region CLEANUP
+
+        /// <summary>
+        /// Cleanup UMA system
+        /// </summary>
+        public void Cleanup()
+        {
+            if (umaGenerator != null)
+            {
+                umaGenerator.removeUMA(umaData);
+            }
+        }
+
+        /// <summary>
+        /// Looks through the dirtylist to see if it is being update.
+        /// You should probably not do this every frame.
+        /// </summary>
+        /// <returns></returns>
+        public bool UpdatePending()
+        {
+            if (umaGenerator != null)
+            {
+                return umaGenerator.updatePending(umaData);
+            }
+            return false;
+        }
         #endregion
 
         #endregion
