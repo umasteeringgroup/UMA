@@ -810,21 +810,66 @@ namespace UMA.CharacterSystem
 
                 if (thisRecipeSlot != "" && thisRecipeSlot != "None")
                 {
-                    if (_wardrobeRecipes.ContainsKey(thisRecipeSlot))
-                    {
-                        _wardrobeRecipes[thisRecipeSlot] = utr;
-                    }
-                    else
-                    {
-                        _wardrobeRecipes.Add(thisRecipeSlot, utr);
-                    }
-                    if (!requiredAssetsToCheck.Contains(utr.name) && DynamicAssetLoader.Instance.downloadingAssetsContains(utr.name))
-                    {
-                        requiredAssetsToCheck.Add(utr.name);
-                    }
+                    internalSetSlot(utr, thisRecipeSlot);
                     return true;
                 }
             }
+            return false;
+        }
+
+        private void internalSetSlot(UMATextRecipe utr, string thisRecipeSlot)
+        {
+            if (_wardrobeRecipes.ContainsKey(thisRecipeSlot))
+            {
+                _wardrobeRecipes[thisRecipeSlot] = utr;
+            }
+            else
+            {
+                _wardrobeRecipes.Add(thisRecipeSlot, utr);
+            }
+            if (!requiredAssetsToCheck.Contains(utr.name) && DynamicAssetLoader.Instance.downloadingAssetsContains(utr.name))
+            {
+                requiredAssetsToCheck.Add(utr.name);
+            }
+        }
+
+        public bool SetSlot(UMATextRecipe utr)
+        {
+            if (utr is UMAWardrobeCollection)
+            {
+                LoadWardrobeCollection((utr as UMAWardrobeCollection));
+                return true;
+            }
+
+            // This is set to not load
+            if (utr.wardrobeSlot == "None")
+            {
+                return false;
+            }
+
+            // No race set yet - must be a preload.
+            if (string.IsNullOrEmpty(activeRace.name))
+            {
+                internalSetSlot(utr, utr.wardrobeSlot);
+                return true;
+            }
+
+            // No compatible races set... Oh well, just allow it.
+            // Must work for everything! 
+            if (utr.compatibleRaces.Count == 0)
+            {
+                internalSetSlot(utr, utr.wardrobeSlot);
+                return true;
+            }
+
+            // If it's for this race, or the race is compatible with another race
+            if (utr.compatibleRaces.Contains(activeRace.name) || activeRace.racedata.IsCrossCompatibleWith(utr.compatibleRaces))
+            {
+                internalSetSlot(utr, utr.wardrobeSlot);
+                return true;
+            }
+
+            // must be incompatible
             return false;
         }
 
