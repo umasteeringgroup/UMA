@@ -257,6 +257,7 @@ namespace UMA
 			HumanDescription description = CreateHumanDescription(umaData, umaTPose);
 			//DebugLogHumanAvatar(umaData.gameObject, description);
 			Avatar res = AvatarBuilder.BuildHumanAvatar(umaData.gameObject, description);
+			res.name = umaData.name;
 			return res;
 		}
 
@@ -268,6 +269,7 @@ namespace UMA
 		public static Avatar CreateGenericAvatar(UMAData umaData)
 		{
 			Avatar res = AvatarBuilder.BuildGenericAvatar(umaData.gameObject, umaData.umaRecipe.GetRace().genericRootMotionTransformName);
+			res.name = umaData.name;
 			return res;
 		}
 
