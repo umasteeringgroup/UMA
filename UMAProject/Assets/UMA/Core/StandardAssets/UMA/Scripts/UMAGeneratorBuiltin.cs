@@ -291,7 +291,22 @@ namespace UMA
         /// <inheritdoc/>
         public override bool updatePending(UMAData umaToCheck)
         {
-            return (umaDirtyList.Contains(umaToCheck));
+            if (umaDirtyList.Count < 2)
+                return false;
+
+            int val = umaDirtyList.IndexOf(umaToCheck, 1);
+            return val != -1;
+        }
+
+        /// <inheritdoc/>
+        public override bool updateProcessing(UMAData umaToCheck)
+        {
+            if (umaDirtyList.Count > 0)
+            {
+                if (umaDirtyList[0] == umaToCheck)
+                    return true;
+            }
+            return false;
         }
 
         /// <inheritdoc/>

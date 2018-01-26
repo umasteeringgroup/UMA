@@ -30,11 +30,20 @@ namespace UMA
 
         /// <summary>
         /// returns true if the UMAData is in the update queue.
+        /// Note that this will return false if the UMA is currently being processed!
         /// </summary>
         /// <param name="umaToCheck"></param>
         /// <returns></returns>
         public abstract bool updatePending(UMAData umaToCheck);
-        
+
+        /// <summary>
+        /// Returns true if the UMA is at pos 0 in the DirtyList -
+        /// this means it's the UMA that is currently being processed
+        /// </summary>
+        /// <param name="umaToCheck"></param>
+        /// <returns></returns>
+        public abstract bool updateProcessing(UMAData umaToCheck);
+
         /// <summary>
         /// removes the UMAData if it exists in the update queue.
         /// Use this if you need to delete the UMA after scheduling an update for it.

@@ -3304,9 +3304,9 @@ namespace UMA.CharacterSystem
         /// </summary>
         public void Cleanup()
         {
-            if (umaGenerator != null)
+            if (umaData != null)
             {
-                umaGenerator.removeUMA(umaData);
+                umaData.umaGenerator.removeUMA(umaData);
             }
         }
 
@@ -3317,9 +3317,9 @@ namespace UMA.CharacterSystem
         /// <returns></returns>
         public bool UpdatePending()
         {
-            if (umaGenerator != null)
+            if (umaData != null)
             {
-                return umaGenerator.updatePending(umaData);
+                return umaData.umaGenerator.updatePending(umaData);
             }
             return false;
         }
