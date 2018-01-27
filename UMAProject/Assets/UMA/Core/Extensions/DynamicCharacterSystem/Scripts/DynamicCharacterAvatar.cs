@@ -417,6 +417,7 @@ namespace UMA.CharacterSystem
 #if UNITY_EDITOR
             DestroyEditorUMAContext();
 #endif
+            Cleanup();
         }
 
 #if UNITY_EDITOR
@@ -783,35 +784,71 @@ namespace UMA.CharacterSystem
             }
             return "";
         }
+
         /// <summary>
         /// Sets the avatars wardrobe slot to use the given wardrobe recipe (not to be mistaken with an UMA SlotDataAsset)
         /// </summary>
-        /// <param name="utr"></param>
-        public void SetSlot(UMATextRecipe utr)
+        /// <param name="utr">The WardrobeRecipe it WardrobeCollection to add to the Avatar</param>
+        private void internalSetSlot(UMATextRecipe utr, string thisRecipeSlot)
         {
-            var thisRecipeSlot = utr.wardrobeSlot;
+            if (_wardrobeRecipes.ContainsKey(thisRecipeSlot))
+            {
+                _wardrobeRecipes[thisRecipeSlot] = utr;
+            }
+            else
+            {
+                _wardrobeRecipes.Add(thisRecipeSlot, utr);
+            }
+            if (!requiredAssetsToCheck.Contains(utr.name) && DynamicAssetLoader.Instance.downloadingAssetsContains(utr.name))
+            {
+                requiredAssetsToCheck.Add(utr.name);
+            }
+        }
+
+        /// <summary>
+        /// Sets the avatars wardrobe slot to use the given wardrobe recipe (not to be mistaken with an UMA SlotDataAsset)
+        /// </summary>
+        /// <param name="utr">The WardrobeRecipe it WardrobeCollection to add to the Avatar</param>
+        public bool SetSlot(UMATextRecipe utr)
+        {
             if (utr is UMAWardrobeCollection)
             {
                 LoadWardrobeCollection((utr as UMAWardrobeCollection));
-                return;
+                return true;
             }
 
-            if (thisRecipeSlot != "" && thisRecipeSlot != "None")
+            // This is set to not load
+            if (utr.wardrobeSlot == "None")
             {
-                if (_wardrobeRecipes.ContainsKey(thisRecipeSlot))
-                {
-                    _wardrobeRecipes[thisRecipeSlot] = utr;
-                }
-                else
-                {
-                    _wardrobeRecipes.Add(thisRecipeSlot, utr);
-                }
-                if (!requiredAssetsToCheck.Contains(utr.name) && DynamicAssetLoader.Instance.downloadingAssetsContains(utr.name))
-                {
-                    requiredAssetsToCheck.Add(utr.name);
-                }
+                return false;
             }
+
+            // No race set yet - must be a preload.
+            if (string.IsNullOrEmpty(activeRace.name))
+            {
+                internalSetSlot(utr, utr.wardrobeSlot);
+                return true;
+            }
+
+            // No compatible races set... Oh well, just allow it.
+            // Must work for everything! 
+            if (utr.compatibleRaces.Count == 0)
+            {
+                internalSetSlot(utr, utr.wardrobeSlot);
+                return true;
+            }
+
+            // If it's for this race, or the race is compatible with another race
+            if (utr.compatibleRaces.Contains(activeRace.name) || activeRace.racedata.IsCrossCompatibleWith(utr.compatibleRaces))
+            {
+                internalSetSlot(utr, utr.wardrobeSlot);
+                return true;
+            }
+
+            // must be incompatible
+            return false;
         }
+
         public void SetSlot(string Slotname, string Recipename)
         {
             UMATextRecipe utr = FindSlotRecipe(Slotname, Recipename);
@@ -3234,6 +3271,34 @@ namespace UMA.CharacterSystem
             }
         }
 
+        #endregion
+
+        #region CLEANUP
+
+        /// <summary>
+        /// Cleanup UMA system
+        /// </summary>
+        public void Cleanup()
+        {
+            if (umaData != null)
+            {
+                umaData.umaGenerator.removeUMA(umaData);
+            }
+        }
+
+        /// <summary>
+        /// Looks through the dirtylist to see if it is being update.
+        /// You should probably not do this every frame.
+        /// </summary>
+        /// <returns></returns>
+        public bool UpdatePending()
+        {
+            if (umaData != null)
+            {
+                return umaData.umaGenerator.updatePending(umaData);
+            }
+            return false;
+        }
         #endregion
 
         #endregion
