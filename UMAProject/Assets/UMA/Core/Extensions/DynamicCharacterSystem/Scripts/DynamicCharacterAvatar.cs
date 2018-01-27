@@ -784,39 +784,11 @@ namespace UMA.CharacterSystem
             }
             return "";
         }
-        /// <summary>
-        /// Sets the avatars wardrobe slot to use the given wardrobe recipe (not to be mistaken with an UMA SlotDataAsset)
-        /// </summary>
-        /// <param name="utr"></param>
+
         /// <summary>
         /// Sets the avatars wardrobe slot to use the given wardrobe recipe (not to be mistaken with an UMA SlotDataAsset)
         /// </summary>
         /// <param name="utr">The WardrobeRecipe it WardrobeCollection to add to the Avatar</param>
-        /// <param name="onlyWhenCompatible">If true only adds the recipe if it is compatible with the active race</param>
-        public bool SetSlot(UMATextRecipe utr, bool onlyWhenCompatible = false)
-        {
-            // Validate that we're not assigning invalid data
-            if (utr is UMAWardrobeCollection || activeRace.name == "" || !onlyWhenCompatible ||
-                ((utr.compatibleRaces.Count == 0 || utr.compatibleRaces.Contains(activeRace.name)) ||
-                (activeRace.racedata.IsCrossCompatibleWith(utr.compatibleRaces) && activeRace.racedata.wardrobeSlots.Contains(utr.wardrobeSlot))))
-            {
-                var thisRecipeSlot = utr.wardrobeSlot;
-
-                if (utr is UMAWardrobeCollection)
-                {
-                    LoadWardrobeCollection((utr as UMAWardrobeCollection));
-                    return true;
-                }
-
-                if (thisRecipeSlot != "" && thisRecipeSlot != "None")
-                {
-                    internalSetSlot(utr, thisRecipeSlot);
-                    return true;
-                }
-            }
-            return false;
-        }
-
         private void internalSetSlot(UMATextRecipe utr, string thisRecipeSlot)
         {
             if (_wardrobeRecipes.ContainsKey(thisRecipeSlot))
@@ -833,6 +805,10 @@ namespace UMA.CharacterSystem
             }
         }
 
+        /// <summary>
+        /// Sets the avatars wardrobe slot to use the given wardrobe recipe (not to be mistaken with an UMA SlotDataAsset)
+        /// </summary>
+        /// <param name="utr">The WardrobeRecipe it WardrobeCollection to add to the Avatar</param>
         public bool SetSlot(UMATextRecipe utr)
         {
             if (utr is UMAWardrobeCollection)
