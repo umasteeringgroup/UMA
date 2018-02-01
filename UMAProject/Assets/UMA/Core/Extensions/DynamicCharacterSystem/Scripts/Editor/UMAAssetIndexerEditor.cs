@@ -426,12 +426,12 @@ namespace UMA.CharacterSystem.Editors
 						lblBuild = "B+";
 					}
 
-                    if (GUILayout.Button(lblVal, EditorStyles.label))
-                    {
-                        Object o = AssetDatabase.LoadMainAssetAtPath(ai._Path);
-                        EditorGUIUtility.PingObject(o);
-                        Selection.activeObject = o;
-                    }
+					if (GUILayout.Button(lblVal, EditorStyles.label))
+					{
+						Object o = AssetDatabase.LoadMainAssetAtPath(ai._Path);
+						EditorGUIUtility.PingObject(o);
+						Selection.activeObject = o;
+					}
 
                     if (GUILayout.Button(lblBuild,GUILayout.Width(35)))
 					{
