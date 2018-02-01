@@ -433,7 +433,7 @@ namespace UMA.CharacterSystem.Editors
 						Selection.activeObject = o;
 					}
 
-                    if (GUILayout.Button(lblBuild,GUILayout.Width(35)))
+					if (GUILayout.Button(lblBuild,GUILayout.Width(35)))
 					{
 						if (ai._SerializedItem == null)
 						{
