@@ -115,7 +115,7 @@ namespace UMA
                 if (o is SlotDataAsset)
                 {
                     SlotDataAsset sd = o as SlotDataAsset;
-                    return sd.slotName;
+					return sd.umaName;
                 }
                 if (o is OverlayDataAsset)
                 {

@@ -588,7 +588,7 @@ namespace UMA.Editors
 						{
 							if (sd == null)
 								continue;
-							if (!HiddenSlots.Contains(sd.asset.slotName))
+							if (!HiddenSlots.Contains(sd.asset.umaName))
 							{
 								NewSlots.Add(sd);
 							}

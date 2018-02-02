@@ -50,7 +50,7 @@ namespace UMA
 			{
 				for (int i = 0; i < slotElementList.Length; i++)
 				{
-					if (slotElementList[i].slotName == slot.slotName)
+					if (slotElementList[i].umaName == slot.umaName)
 					{
 						slotElementList[i] = slot;
 						break;
@@ -127,7 +127,7 @@ namespace UMA
 					if (slot == null) continue;
 					if (slot.nameHash == nameHash)
 					{
-						throw new UMAResourceNotFoundException("SlotLibrary: Unable to find: " + slot.slotName);
+						throw new UMAResourceNotFoundException("SlotLibrary: Unable to find: " + slot.umaName);
 					}
 				}
 	#endif

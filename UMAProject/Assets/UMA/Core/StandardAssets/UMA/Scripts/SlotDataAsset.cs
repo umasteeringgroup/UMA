@@ -10,8 +10,18 @@ namespace UMA
 	/// Contains the immutable data shared between slots of the same type.
 	/// </summary>
 	[System.Serializable]
-	public partial class SlotDataAsset : ScriptableObject, ISerializationCallbackReceiver, INameProvider
+	public partial class SlotDataAsset : UMADataAsset, ISerializationCallbackReceiver, INameProvider
     {
+		public override string umaName
+		{
+			get { return slotName; }
+		}
+
+		public override int umaHash
+		{
+			get { return nameHash; }
+		}
+
 		public string slotName;
 		[System.NonSerialized]
 		public int nameHash;
@@ -120,7 +130,7 @@ namespace UMA
         
 		public override string ToString()
 		{
-			return "SlotData: " + slotName;
+			return "SlotDataAsset: " + slotName;
 		}
 
         public void UpdateMeshData(SkinnedMeshRenderer meshRenderer, string rootBoneName)

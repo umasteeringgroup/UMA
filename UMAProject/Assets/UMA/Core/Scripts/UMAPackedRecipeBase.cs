@@ -427,7 +427,7 @@ namespace UMA
 
 			public static bool SlotIsValid(SlotData slotData)
 			{
-				return slotData != null && slotData.asset != null && !string.IsNullOrEmpty(slotData.asset.slotName);
+				return slotData != null && slotData.asset != null && !string.IsNullOrEmpty(slotData.asset.umaName);
 			}
 
 			public static bool SlotIsValid(packedSlotData packedSlotData)
@@ -603,7 +603,7 @@ namespace UMA
 					PackedSlotDataV3 tempPackedSlotData = new PackedSlotDataV3();
 					umaPackRecipe.slotsV3[i] = tempPackedSlotData;
 
-					tempPackedSlotData.id = umaRecipe.slotDataList[i].asset.slotName;
+					tempPackedSlotData.id = umaRecipe.slotDataList[i].asset.umaName;
 					tempPackedSlotData.scale = Mathf.FloorToInt(umaRecipe.slotDataList[i].overlayScale * 100);
 
 					bool copiedOverlays = false;

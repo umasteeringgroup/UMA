@@ -75,7 +75,8 @@ namespace UMA.CharacterSystem
                         {
                             if(edSlot.nameHash == nameHash)
                                 foundSlot = new SlotData(edSlot);
-                        }else if(slotName != null)
+                        }
+						else if(slotName != null)
                         {
                             if(slotName != "")
                                 if(edSlot.slotName == slotName)

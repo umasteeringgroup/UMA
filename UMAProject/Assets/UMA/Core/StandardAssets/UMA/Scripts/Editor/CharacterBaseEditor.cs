@@ -535,8 +535,8 @@ namespace UMA.Editors
 				SlotDataAsset tempSlotDataAsset = EditorGUIUtility.GetObjectPickerObject() as SlotDataAsset;
 				if (tempSlotDataAsset)
 				{
-					Debug.Log("Slot Picked " + tempSlotDataAsset.slotName);
-					LastSlot = tempSlotDataAsset.slotName;
+					Debug.Log("Slot Picked " + tempSlotDataAsset.umaName);
+					LastSlot = tempSlotDataAsset.umaName;
 					AddSlotDataAsset(tempSlotDataAsset);
 					pickedCount++;
 					Event.current.Use();//stops the Mismatched LayoutGroup errors
@@ -570,7 +570,7 @@ namespace UMA.Editors
 							SlotDataAsset tempSlotDataAsset = draggedObjects[i] as SlotDataAsset;
 							if (tempSlotDataAsset)
 							{
-                                LastSlot = tempSlotDataAsset.slotName;
+								LastSlot = tempSlotDataAsset.umaName;
                                 DraggedSlots.Add(tempSlotDataAsset);
 								// AddSlotDataAsset(tempSlotDataAsset);
 								continue;
@@ -737,7 +737,7 @@ namespace UMA.Editors
 						if (baseAdded != 0)
 						{
 							var slot = baseSlotsList[baseAdded - 1];
-							LastSlot = slot.asset.slotName;
+							LastSlot = slot.asset.umaName;
 							var slotToAdd = new SlotData(slot.asset);
 							_recipe.MergeSlot(slotToAdd, false);
 							changed |= true;
@@ -753,7 +753,7 @@ namespace UMA.Editors
 
             if (added != null)
             {
-				LastSlot = added.slotName;
+				LastSlot = added.umaName;
 				var slot = new SlotData(added);
                 _recipe.MergeSlot(slot, false);
                 changed |= true;
@@ -922,7 +922,7 @@ namespace UMA.Editors
 			_overlayData = slotData.GetOverlayList();
 
 			this.idx = index;
-			_name = slotData.asset.slotName;
+			_name = slotData.asset.umaName;
 			for (int i = 0; i < _overlayData.Count; i++)
 			{
 				_overlayEditors.Add(new OverlayEditor(_recipe, slotData, _overlayData[i]));
@@ -938,13 +938,13 @@ namespace UMA.Editors
 		{
 			if (UMAContextBase.Instance != null)
 			{
-				if (UMAContextBase.Instance.HasSlot(_slotData.asset.slotName))
+				if (UMAContextBase.Instance.HasSlot(_slotData.asset.umaName))
 				{
 					return true;
 				}
 			}
 
-			AssetItem ai = UMAAssetIndexer.Instance.GetAssetItem<SlotDataAsset>(_slotData.asset.slotName);
+			AssetItem ai = UMAAssetIndexer.Instance.GetAssetItem<SlotDataAsset>(_slotData.asset.umaName);
 			if (ai != null)
 			{
 				return true;

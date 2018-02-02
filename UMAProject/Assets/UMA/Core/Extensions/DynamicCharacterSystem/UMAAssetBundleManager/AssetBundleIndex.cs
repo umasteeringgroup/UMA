@@ -56,8 +56,8 @@ namespace UMA.AssetBundles
 					}
 					else if (assetType == "UMA.SlotDataAsset")
 					{
-						assetName = (obj as UMA.SlotDataAsset).slotName;
-						assetHash = (obj as UMA.SlotDataAsset).nameHash;
+						assetName = (obj as UMA.SlotDataAsset).umaName;
+						assetHash = (obj as UMA.SlotDataAsset).umaHash;
 					}
 					else if (assetType == "UMATextRecipe")
 					{

@@ -462,7 +462,7 @@ namespace UMA
 			{
 				reference = new AssetReference();
 				reference.asset = slot;
-				reference.path = "Slot/" + slot.slotName;
+				reference.path = "Slot/" + slot.umaName;
 				slotDictionary.Add(hash, reference);
 			}
 		}
@@ -507,7 +507,7 @@ namespace UMA
 			{
 				reference = new AssetReference();
 				reference.asset = asset;
-				reference.path = "Occlusion/" + asset.asset.slotName;
+				reference.path = "Occlusion/" + asset.asset.umaName;
 				occlusionDictionary.Add(hash, reference);
 			}
 		}

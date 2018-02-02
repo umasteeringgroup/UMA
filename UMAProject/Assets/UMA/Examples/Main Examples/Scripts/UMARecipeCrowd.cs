@@ -209,8 +209,8 @@ namespace UMA.Examples
 				if (slot == null) continue;
 				if (slot.asset.name == null) continue;
 
-				if (slot.asset.slotName == "MaleJeans01") maleJeansIndex = i;
-				else if (slot.asset.slotName == "MaleLegs") maleLegsIndex = i;
+				if (slot.asset.umaName == "MaleJeans01") maleJeansIndex = i;
+				else if (slot.asset.umaName == "MaleLegs") maleLegsIndex = i;
 			}
 			if ((maleJeansIndex >= 0) && (maleLegsIndex >= 0))
 			{

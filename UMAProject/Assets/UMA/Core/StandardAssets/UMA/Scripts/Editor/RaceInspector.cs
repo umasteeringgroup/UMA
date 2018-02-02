@@ -7,7 +7,7 @@ namespace UMA.Editors
 	[CustomEditor(typeof(RaceDataAsset))]
 	public partial class RaceInspector : Editor 
 	{
-	    [MenuItem("Assets/Create/UMA/Core/RaceData")]
+	    [MenuItem("Assets/Create/UMA/Core/RaceDataAsset")]
 	    public static void CreateRaceMenuItem()
 	    {
 	        CustomAssetUtility.CreateAsset<RaceDataAsset>();

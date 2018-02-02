@@ -101,7 +101,7 @@ namespace UMA
 
 			foreach (var source in sources)
 			{
-				bool hasVertexMask = (source.vertexMask != null);
+				bool has_vertexMask = (source.vertexMask != null);
 				int sourceVertexCount = source.meshData.vertexCount;
 				int sourceBoneCount = source.meshData.umaBones.Length;
 
@@ -123,7 +123,7 @@ namespace UMA
 				destIndex = vertexIndex;
 				for (int i = 0; i < sourceVertexCount; i++)
 				{
-					if (hasVertexMask && source.vertexMask[i])
+					if (has_vertexMask && source.vertexMask[i])
 					{
 						// Vertex is occluded
 						vertexRemaps[i] = -1;
@@ -191,6 +191,7 @@ namespace UMA
 						FillArray(tangents, vertexIndex, sourceVertexCount, Vector3.zero);
 					}
 				}
+
 				if (has_tangents)
 				{
 					if (source.meshData.tangents != null && source.meshData.tangents.Length > 0)
@@ -210,6 +211,7 @@ namespace UMA
 						FillArray(tangents, vertexIndex, sourceVertexCount, Vector4.zero);
 					}
 				}
+
 				if (has_uv)
 				{
 					if (source.meshData.uv != null && source.meshData.uv.Length >= sourceVertexCount)
@@ -523,8 +525,10 @@ namespace UMA
 			target.uv4 = uv4;
 			target.colors32 = colors32;
 
-			if (has_blendShapes) 
+			if (has_blendShapes)
+			{
 				target.blendShapes = blendShapes;
+			}
 
 			if (has_clothSkinning)
 			{
@@ -534,7 +538,6 @@ namespace UMA
 
 			target.subMeshCount = subMeshCount;
 			target.submeshes = new SubMeshTriangles[subMeshCount];
-
 			for (int i = 0; i < subMeshCount; i++)
 			{
 				target.submeshes[i].triangles = submeshTriangles[i];

@@ -6,7 +6,7 @@ namespace UMA.Editors
 	[CustomEditor(typeof(OverlayData))]
 	public class OverlayInspector : Editor 
 	{
-	    [MenuItem("Assets/Create/UMA/Core/Overlay Asset")]
+	    [MenuItem("Assets/Create/UMA/Core/OverlayDataAsset")]
 	    public static void CreateOverlayMenuItem()
 	    {
 	        CustomAssetUtility.CreateAsset<OverlayDataAsset>();

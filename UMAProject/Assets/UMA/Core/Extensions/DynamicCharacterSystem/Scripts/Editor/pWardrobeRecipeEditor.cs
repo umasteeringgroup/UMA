@@ -211,15 +211,15 @@ namespace UMA.Editors
 						{
 							if (slot != null)
 							{
-								if (!generatedBaseSlotOptions.Contains(slot.asset.slotName))
+								if (!generatedBaseSlotOptions.Contains(slot.asset.umaName))
 								{
-									generatedBaseSlotOptions.Add(slot.asset.slotName);
+									generatedBaseSlotOptions.Add(slot.asset.umaName);
 								}
-								if (!slotsRacesDict.ContainsKey(slot.asset.slotName))
+								if (!slotsRacesDict.ContainsKey(slot.asset.umaName))
 								{
-									slotsRacesDict.Add(slot.asset.slotName, new List<string>());
+									slotsRacesDict.Add(slot.asset.umaName, new List<string>());
 								}
-								slotsRacesDict[slot.asset.slotName].Add(compatibleRaces[i]);
+								slotsRacesDict[slot.asset.umaName].Add(compatibleRaces[i]);
 							}
 						}
 					}
@@ -653,7 +653,7 @@ namespace UMA.Editors
 
 				if (added != null)
 				{
-					LastSlot = added.slotName;
+					LastSlot = added.umaName;
 					var slot = new SlotData(added);
 					_recipe.MergeSlot(slot, false);
 					changed |= true;

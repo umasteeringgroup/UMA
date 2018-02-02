@@ -295,8 +295,8 @@ namespace UMA
             if (o is SlotDataAsset)
             {
                 SlotDataAsset sd = o as SlotDataAsset;
-                assetName = sd.slotName;
-                assetHash = sd.nameHash;
+				assetName = sd.umaName;
+				assetHash = sd.umaHash;
             }
             else if (o is OverlayDataAsset)
             {

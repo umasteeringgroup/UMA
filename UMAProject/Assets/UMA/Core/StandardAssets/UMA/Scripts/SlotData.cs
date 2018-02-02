@@ -242,14 +242,14 @@ namespace UMA
 			{
 				if (asset.material == null)
 				{
-					Debug.LogError(string.Format("Slot '{0}' has a mesh but no material.", asset.slotName), asset);
+					Debug.LogError(string.Format("Slot '{0}' has a mesh but no material.", slotName), asset);
 					valid = false;
 				}
 				else
 				{
 					if (asset.material.material == null)
 					{
-						Debug.LogError(string.Format("Slot '{0}' has an umaMaterial without a material assigned.", asset.slotName), asset);
+						Debug.LogError(string.Format("Slot '{0}' has an umaMaterial without a material assigned.", slotName), asset);
 						valid = false;
 					}
 					else
@@ -273,7 +273,7 @@ namespace UMA
 						if (!overlayData.Validate(asset.material, (i == 0)))
 						{
 							valid = false;
-							Debug.LogError(string.Format("Invalid Overlay '{0}' on Slot '{1}'.", overlayData.overlayName, asset.slotName));
+							Debug.LogError(string.Format("Invalid Overlay '{0}' on Slot '{1}'.", overlayData.overlayName, slotName));
 						}
 					}
 				}
@@ -299,7 +299,7 @@ namespace UMA
 
 		public override string ToString()
 		{
-			return "SlotData: " + asset.slotName;
+			return "SlotData: " + slotName;
 		}
 
 		#region operator ==, != and similar HACKS, seriously.....
