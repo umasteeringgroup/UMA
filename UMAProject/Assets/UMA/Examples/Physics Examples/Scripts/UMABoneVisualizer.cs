@@ -94,6 +94,7 @@ public class UMABoneVisualizer : MonoBehaviour
 
                         Scale.Set(BoneLength / 10.0f, BoneLength / 10.0f, BoneLength);
                         Vector3 relativePos = child.transform.position - child.parent.transform.position;
+                        Quaternion rotation = (relativePos == Vector3.zero) ? Quaternion.identity : Quaternion.LookRotation(relativePos);
 
                         Gizmos.DrawMesh(BoneMesh, child.parent.position, rotation, Scale);
                     }
