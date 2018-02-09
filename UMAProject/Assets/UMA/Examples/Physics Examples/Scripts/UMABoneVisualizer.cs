@@ -17,6 +17,9 @@ public class UMABoneVisualizer : MonoBehaviour
     {
         if (rootNode == null || BoneMesh == null)
             Setup();
+
+        if (Application.isPlaying)
+            Debug.LogWarning(string.Format("The BoneVisualizer on {0} is a helper component and should be removed for a final build.", gameObject.name ));
     }
 
     /// <summary>
@@ -88,11 +91,9 @@ public class UMABoneVisualizer : MonoBehaviour
                     if (DrawAsBones && BoneMesh!= null)
                     {
                         float BoneLength = Vector3.Distance(child.position, child.parent.position);
-                        float MaxSize = BoneLength * 0.1f;
 
                         Scale.Set(BoneLength / 10.0f, BoneLength / 10.0f, BoneLength);
                         Vector3 relativePos = child.transform.position - child.parent.transform.position;
-                        Quaternion rotation = Quaternion.LookRotation(relativePos);
 
                         Gizmos.DrawMesh(BoneMesh, child.parent.position, rotation, Scale);
                     }
