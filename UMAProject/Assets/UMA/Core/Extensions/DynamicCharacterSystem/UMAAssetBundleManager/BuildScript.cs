@@ -389,9 +389,11 @@ namespace UMA.AssetBundles
 						return true;
 					else
 						return false;
-				case BuildTarget.StandaloneOSXIntel:
+#if !UNITY_2017_3_OR_NEWER
+                case BuildTarget.StandaloneOSXIntel:
 				case BuildTarget.StandaloneOSXIntel64:
-				case BuildTarget.StandaloneOSXUniversal:
+#endif
+                case BuildTarget.StandaloneOSXUniversal:
 					if (currentEnvironment.IndexOf("OSX") > -1)
 						return true;
 					else
@@ -413,9 +415,11 @@ namespace UMA.AssetBundles
 				case BuildTarget.StandaloneWindows:
 				case BuildTarget.StandaloneWindows64:
 					return "/test.exe";
-				case BuildTarget.StandaloneOSXIntel:
+#if !UNITY_2017_3_OR_NEWER
+                case BuildTarget.StandaloneOSXIntel:
 				case BuildTarget.StandaloneOSXIntel64:
-				case BuildTarget.StandaloneOSXUniversal:
+#endif
+                case BuildTarget.StandaloneOSXUniversal:
 					return "/test.app";
 				case BuildTarget.WebGL:
 				case BuildTarget.iOS:
