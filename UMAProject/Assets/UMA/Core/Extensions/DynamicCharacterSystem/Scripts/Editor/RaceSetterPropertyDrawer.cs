@@ -45,12 +45,15 @@ namespace UMA.CharacterSystem.Editors
 			}
 			else
 			{
-				//In this case we *need* all the races this setting *could* be so everything from the library, resources and asset bundles because the developer need to be able to set the race to be any of these
-				var raceDatas = thisDynamicRaceLibrary.GetAllRaces();
-					if ((raceDatas.Length + 1) != (foundRaces.Count))
-					{
-						SetRaceLists(raceDatas);
-				}
+                //In this case we *need* all the races this setting *could* be so everything from the library, resources and asset bundles because the developer need to be able to set the race to be any of these
+                if (thisDynamicRaceLibrary != null)
+                {
+                    var raceDatas = thisDynamicRaceLibrary.GetAllRaces();
+                    if ((raceDatas.Length + 1) != (foundRaces.Count))
+                    {
+                        SetRaceLists(raceDatas);
+                    }
+                }
 			}
 		}
 
