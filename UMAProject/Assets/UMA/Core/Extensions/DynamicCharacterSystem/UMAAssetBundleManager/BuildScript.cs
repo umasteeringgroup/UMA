@@ -281,22 +281,20 @@ namespace UMA.AssetBundles
 			{
 				option = developmentBuild ? BuildOptions.Development | BuildOptions.AutoRunPlayer : BuildOptions.AutoRunPlayer;
 			}
-			string buildError = "";
 
-            BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions();
-            buildPlayerOptions.scenes = levels;
-            buildPlayerOptions.locationPathName = outputPath + targetName;
-            buildPlayerOptions.assetBundleManifestPath = GetAssetBundleManifestFilePath();
-            buildPlayerOptions.target = EditorUserBuildSettings.activeBuildTarget;
-            buildPlayerOptions.options = option;
-            buildError = BuildPipeline.BuildPlayer(buildPlayerOptions);
-			
-			//after the build completes destroy the serverURL file
-			if (SimpleWebServer.serverStarted && CanRunLocally(EditorUserBuildSettings.activeBuildTarget))
-				SimpleWebServer.DestroyServerURLFile();
+			BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions();
+			buildPlayerOptions.scenes = levels;
+			buildPlayerOptions.locationPathName = outputPath + targetName;
+			buildPlayerOptions.assetBundleManifestPath = GetAssetBundleManifestFilePath();
+			buildPlayerOptions.target = EditorUserBuildSettings.activeBuildTarget;
+			buildPlayerOptions.options = option;
 
-			if (string.IsNullOrEmpty (buildError))
+			if (BuildPipeline.BuildPlayer(buildPlayerOptions) == null)
 			{
+				//after the build completes destroy the serverURL file
+				if (SimpleWebServer.serverStarted && CanRunLocally(EditorUserBuildSettings.activeBuildTarget))
+					SimpleWebServer.DestroyServerURLFile();
+
 				string fullPathToBuild = Path.Combine(Directory.GetParent(Application.dataPath).FullName, outputPath);
 				Debug.Log("Built Successful! Build Location: " + fullPathToBuild);
 				if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.WebGL)
