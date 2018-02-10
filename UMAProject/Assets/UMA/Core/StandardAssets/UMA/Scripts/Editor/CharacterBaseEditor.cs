@@ -1004,7 +1004,7 @@ namespace UMA.Editors
             bool select;
             bool _foldOut = FoldOut;
 
-			GUIHelper.FoldoutBarButton(ref _foldOut, _name + "      (" + _slotData.asset.name + ")","sel", out select, out delete);
+			GUIHelper.FoldoutBarButton(ref _foldOut, _name + "      (" + _slotData.asset.name + ")","inspect", out select, out delete);
 
             FoldOut = _foldOut;
 
@@ -1014,7 +1014,7 @@ namespace UMA.Editors
             if (select)
             {
                 EditorGUIUtility.PingObject(_slotData.asset.GetInstanceID());
-                Selection.instanceIDs = new int[] { _slotData.asset.GetInstanceID()};
+                InspectorUtlity.InspectTarget(_slotData.asset);
             }
 
 			if (!FoldOut)
@@ -1304,12 +1304,12 @@ namespace UMA.Editors
 
 			_foldout = OverlayExpanded[_overlayData.overlayName];
 
-			GUIHelper.FoldoutBarButton(ref _foldout, _overlayData.asset.overlayName + "("+_overlayData.asset.material.name+")", "sel",out select, out move, out delete);
+			GUIHelper.FoldoutBarButton(ref _foldout, _overlayData.asset.overlayName + "("+_overlayData.asset.material.name+")", "inspect",out select, out move, out delete);
 
             if (select)
             {
                 EditorGUIUtility.PingObject(_overlayData.asset.GetInstanceID());
-                Selection.instanceIDs = new int[] { _overlayData.asset.GetInstanceID() };
+                InspectorUtlity.InspectTarget(_overlayData.asset);
             }
 
 			OverlayExpanded[_overlayData.overlayName] = _foldout;
