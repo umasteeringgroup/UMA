@@ -433,11 +433,11 @@ namespace UMA.CharacterSystem.Editors
 						Selection.activeObject = o;
 					}
 
-                    if (GUILayout.Button("I",GUILayout.Width(20.0f)))
-                    {
-                        Object o = AssetDatabase.LoadMainAssetAtPath(ai._Path);
-                        InspectorUtlity.InspectTarget(o);
-                    }
+					if (GUILayout.Button("I",GUILayout.Width(20.0f)))
+					{
+						Object o = AssetDatabase.LoadMainAssetAtPath(ai._Path);
+						InspectorUtlity.InspectTarget(o);
+					}
 					if (GUILayout.Button(lblBuild,GUILayout.Width(35)))
 					{
 						if (ai._SerializedItem == null)

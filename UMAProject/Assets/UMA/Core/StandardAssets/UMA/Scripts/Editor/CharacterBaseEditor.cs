@@ -1001,8 +1001,8 @@ namespace UMA.Editors
 		public bool OnGUI(ref bool _dnaDirty, ref bool _textureDirty, ref bool _meshDirty)
 		{
 			bool delete;
-            bool select;
-            bool _foldOut = FoldOut;
+			bool select;
+			bool _foldOut = FoldOut;
 
 			GUIHelper.FoldoutBarButton(ref _foldOut, _name + "      (" + _slotData.asset.name + ")","inspect", out select, out delete);
 
@@ -1300,17 +1300,17 @@ namespace UMA.Editors
 		public bool OnGUI()
 		{
 			bool delete;
-            bool select;
+			bool select;
 
 			_foldout = OverlayExpanded[_overlayData.overlayName];
 
 			GUIHelper.FoldoutBarButton(ref _foldout, _overlayData.asset.overlayName + "("+_overlayData.asset.material.name+")", "inspect",out select, out move, out delete);
 
-            if (select)
-            {
-                EditorGUIUtility.PingObject(_overlayData.asset.GetInstanceID());
-                InspectorUtlity.InspectTarget(_overlayData.asset);
-            }
+			if (select)
+			{
+				EditorGUIUtility.PingObject(_overlayData.asset.GetInstanceID());
+				InspectorUtlity.InspectTarget(_overlayData.asset);
+			}
 
 			OverlayExpanded[_overlayData.overlayName] = _foldout;
 

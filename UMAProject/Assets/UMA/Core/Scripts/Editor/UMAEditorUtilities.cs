@@ -157,7 +157,7 @@ namespace UMA
 #if UMA_HOTKEYS
 		[MenuItem("UMA/Toggle Hotkeys (enabled)")]
 #else
-        [MenuItem("UMA/Toggle Hotkeys (disabled)")]
+		[MenuItem("UMA/Toggle Hotkeys (disabled)")]
 		#endif
 		public static void ToggleUMAHotkeys()
 		{
