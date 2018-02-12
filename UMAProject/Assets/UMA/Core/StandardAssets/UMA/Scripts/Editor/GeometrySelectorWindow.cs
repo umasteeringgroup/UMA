@@ -164,10 +164,18 @@ namespace UMA.Editors
                 return;
             }
 
+#if UNITY_2018_1_OR_NEWER
+            SceneView.CameraMode newMode = SceneView.lastActiveSceneView.cameraMode;
+            if (wireframeOn)
+                newMode.drawMode = DrawCameraMode.TexturedWire;
+            else
+                newMode.drawMode = DrawCameraMode.Textured;
+#else
             if (wireframeOn)
                 SceneView.lastActiveSceneView.renderMode = DrawCameraMode.TexturedWire;
             else
                 SceneView.lastActiveSceneView.renderMode = DrawCameraMode.Textured;
+#endif
 
             SceneView.RepaintAll();
         }
