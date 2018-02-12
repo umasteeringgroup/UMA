@@ -25,7 +25,7 @@ namespace UMA.AssetBundles
 		{
 			var thisIndexAssetPath = "";
 			var thisEncryptionAssetPath = "";
-            try {
+			try {
 				// Choose the output path according to the build target.
 				string outputPath = CreateAssetBundleDirectory();
 
@@ -33,19 +33,19 @@ namespace UMA.AssetBundles
 
 				bool shouldCheckODR = EditorUserBuildSettings.activeBuildTarget == BuildTarget.iOS;
 #if UNITY_TVOS
-            shouldCheckODR |= EditorUserBuildSettings.activeBuildTarget == BuildTarget.tvOS;
+			shouldCheckODR |= EditorUserBuildSettings.activeBuildTarget == BuildTarget.tvOS;
 #endif
 				if (shouldCheckODR)
 				{
 #if ENABLE_IOS_ON_DEMAND_RESOURCES
-	                if (PlayerSettings.iOS.useOnDemandResources)
-	                    options |= BuildAssetBundleOptions.UncompressedAssetBundle;
+					if (PlayerSettings.iOS.useOnDemandResources)
+						options |= BuildAssetBundleOptions.UncompressedAssetBundle;
 					else if(UMAABMSettings.GetEncryptionEnabled())
 						options |= BuildAssetBundleOptions.ChunkBasedCompression;
 #endif
 #if ENABLE_IOS_APP_SLICING
 					if(UMAABMSettings.GetBuildForSlicing())
-                		options |= BuildAssetBundleOptions.UncompressedAssetBundle;
+						options |= BuildAssetBundleOptions.UncompressedAssetBundle;
 					else if(!PlayerSettings.iOS.useOnDemandResources && UMAABMSettings.GetEncryptionEnabled())
 						options |= BuildAssetBundleOptions.ChunkBasedCompression;
 #endif
@@ -390,10 +390,10 @@ namespace UMA.AssetBundles
 					else
 						return false;
 #if !UNITY_2017_3_OR_NEWER
-                case BuildTarget.StandaloneOSXIntel:
+				case BuildTarget.StandaloneOSXIntel:
 				case BuildTarget.StandaloneOSXIntel64:
 #endif
-                case BuildTarget.StandaloneOSXUniversal:
+				case BuildTarget.StandaloneOSXUniversal:
 					if (currentEnvironment.IndexOf("OSX") > -1)
 						return true;
 					else
@@ -416,10 +416,10 @@ namespace UMA.AssetBundles
 				case BuildTarget.StandaloneWindows64:
 					return "/test.exe";
 #if !UNITY_2017_3_OR_NEWER
-                case BuildTarget.StandaloneOSXIntel:
+				case BuildTarget.StandaloneOSXIntel:
 				case BuildTarget.StandaloneOSXIntel64:
 #endif
-                case BuildTarget.StandaloneOSXUniversal:
+				case BuildTarget.StandaloneOSXUniversal:
 					return "/test.app";
 				case BuildTarget.WebGL:
 				case BuildTarget.iOS:
