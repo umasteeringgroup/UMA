@@ -77,7 +77,7 @@ namespace UMA.Editors
 				EditorGUILayout.EndHorizontal();
 				if (GUILayout.Button("Add"))
 				{
-					coverImages.Add(new Sprite());
+					coverImages.Add(null);
 				}
 				if (!AreListsEqual<Sprite>(prevCoverImages, coverImages))
 				{

@@ -25,7 +25,7 @@ namespace UMA.AssetBundles
 		{
 			var thisIndexAssetPath = "";
 			var thisEncryptionAssetPath = "";
-            try {
+			try {
 				// Choose the output path according to the build target.
 				string outputPath = CreateAssetBundleDirectory();
 
@@ -33,19 +33,19 @@ namespace UMA.AssetBundles
 
 				bool shouldCheckODR = EditorUserBuildSettings.activeBuildTarget == BuildTarget.iOS;
 #if UNITY_TVOS
-            shouldCheckODR |= EditorUserBuildSettings.activeBuildTarget == BuildTarget.tvOS;
+			shouldCheckODR |= EditorUserBuildSettings.activeBuildTarget == BuildTarget.tvOS;
 #endif
 				if (shouldCheckODR)
 				{
 #if ENABLE_IOS_ON_DEMAND_RESOURCES
-	                if (PlayerSettings.iOS.useOnDemandResources)
-	                    options |= BuildAssetBundleOptions.UncompressedAssetBundle;
+					if (PlayerSettings.iOS.useOnDemandResources)
+						options |= BuildAssetBundleOptions.UncompressedAssetBundle;
 					else if(UMAABMSettings.GetEncryptionEnabled())
 						options |= BuildAssetBundleOptions.ChunkBasedCompression;
 #endif
 #if ENABLE_IOS_APP_SLICING
 					if(UMAABMSettings.GetBuildForSlicing())
-                		options |= BuildAssetBundleOptions.UncompressedAssetBundle;
+						options |= BuildAssetBundleOptions.UncompressedAssetBundle;
 					else if(!PlayerSettings.iOS.useOnDemandResources && UMAABMSettings.GetEncryptionEnabled())
 						options |= BuildAssetBundleOptions.ChunkBasedCompression;
 #endif
@@ -281,22 +281,20 @@ namespace UMA.AssetBundles
 			{
 				option = developmentBuild ? BuildOptions.Development | BuildOptions.AutoRunPlayer : BuildOptions.AutoRunPlayer;
 			}
-			string buildError = "";
 
-            BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions();
-            buildPlayerOptions.scenes = levels;
-            buildPlayerOptions.locationPathName = outputPath + targetName;
-            buildPlayerOptions.assetBundleManifestPath = GetAssetBundleManifestFilePath();
-            buildPlayerOptions.target = EditorUserBuildSettings.activeBuildTarget;
-            buildPlayerOptions.options = option;
-            buildError = BuildPipeline.BuildPlayer(buildPlayerOptions);
-			
-			//after the build completes destroy the serverURL file
-			if (SimpleWebServer.serverStarted && CanRunLocally(EditorUserBuildSettings.activeBuildTarget))
-				SimpleWebServer.DestroyServerURLFile();
+			BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions();
+			buildPlayerOptions.scenes = levels;
+			buildPlayerOptions.locationPathName = outputPath + targetName;
+			buildPlayerOptions.assetBundleManifestPath = GetAssetBundleManifestFilePath();
+			buildPlayerOptions.target = EditorUserBuildSettings.activeBuildTarget;
+			buildPlayerOptions.options = option;
 
-			if (string.IsNullOrEmpty (buildError))
+			if (BuildPipeline.BuildPlayer(buildPlayerOptions) == null)
 			{
+				//after the build completes destroy the serverURL file
+				if (SimpleWebServer.serverStarted && CanRunLocally(EditorUserBuildSettings.activeBuildTarget))
+					SimpleWebServer.DestroyServerURLFile();
+
 				string fullPathToBuild = Path.Combine(Directory.GetParent(Application.dataPath).FullName, outputPath);
 				Debug.Log("Built Successful! Build Location: " + fullPathToBuild);
 				if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.WebGL)
@@ -391,8 +389,10 @@ namespace UMA.AssetBundles
 						return true;
 					else
 						return false;
+#if !UNITY_2017_3_OR_NEWER
 				case BuildTarget.StandaloneOSXIntel:
 				case BuildTarget.StandaloneOSXIntel64:
+#endif
 				case BuildTarget.StandaloneOSXUniversal:
 					if (currentEnvironment.IndexOf("OSX") > -1)
 						return true;
@@ -415,8 +415,10 @@ namespace UMA.AssetBundles
 				case BuildTarget.StandaloneWindows:
 				case BuildTarget.StandaloneWindows64:
 					return "/test.exe";
+#if !UNITY_2017_3_OR_NEWER
 				case BuildTarget.StandaloneOSXIntel:
 				case BuildTarget.StandaloneOSXIntel64:
+#endif
 				case BuildTarget.StandaloneOSXUniversal:
 					return "/test.app";
 				case BuildTarget.WebGL:
