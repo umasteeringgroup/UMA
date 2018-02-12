@@ -115,15 +115,19 @@ namespace UMA
 
         private static void ShowAsset(Rect selectionRect, string FriendlyType, Texture2D icon)
         {
-            if (selectionRect.height <= 22)
+            if (selectionRect.height <= 22 && selectionRect.width > 200)
             {
                 GUIStyle labelstyle = EditorStyles.miniLabel;
+                Color col = EditorGUIUtility.isProSkin
+                    ? (Color)new Color32(56, 56, 56, 255)
+                    : (Color)new Color32(194, 194, 194, 255);
 
                 Rect newRect = selectionRect;
                 Vector2 labelSize = labelstyle.CalcSize(new GUIContent(FriendlyType));
                 // Display Label
-                newRect.x = ((newRect.width + selectionRect.x) - labelSize.x)-20;
+                newRect.x = ((newRect.width + selectionRect.x) - labelSize.x) - 20;
                 newRect.width = labelSize.x + 1;
+                EditorGUI.DrawRect(newRect, col);
                 GUI.Label(newRect, FriendlyType, labelstyle);
                 // Display Icon
                 newRect.x = newRect.x + newRect.width;
@@ -134,21 +138,25 @@ namespace UMA
 
         private static void ShowAsset(Rect selectionRect, string FriendlyType)
         {
-            if (selectionRect.height <= 22)
+            if (selectionRect.height <= 22 && selectionRect.width > 200)
             {
                 GUIStyle labelstyle = EditorStyles.miniLabel;
+                Color col = EditorGUIUtility.isProSkin
+                    ? (Color)new Color32(56, 56, 56, 255)
+                    : (Color)new Color32(194, 194, 194, 255);
 
                 Rect newRect = selectionRect;
                 Vector2 labelSize = labelstyle.CalcSize(new GUIContent(FriendlyType));
-                newRect.x = ((newRect.width+selectionRect.x) - labelSize.x)-4;
+                newRect.x = ((newRect.width + selectionRect.x) - labelSize.x) - 4;
                 newRect.width = labelSize.x + 1;
+                EditorGUI.DrawRect(newRect, col);
                 GUI.Label(newRect, FriendlyType, labelstyle);
             }
         }
 
-		#if UMA_HOTKEYS
+#if UMA_HOTKEYS
 		[MenuItem("UMA/Toggle Hotkeys (enabled)")]
-		#else
+#else
 		[MenuItem("UMA/Toggle Hotkeys (disabled)")]
 		#endif
 		public static void ToggleUMAHotkeys()

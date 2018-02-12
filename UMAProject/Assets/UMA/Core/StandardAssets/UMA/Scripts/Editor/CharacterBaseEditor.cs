@@ -1001,15 +1001,22 @@ namespace UMA.Editors
 		public bool OnGUI(ref bool _dnaDirty, ref bool _textureDirty, ref bool _meshDirty)
 		{
 			bool delete;
-            bool _foldOut = FoldOut;
+			bool select;
+			bool _foldOut = FoldOut;
 
-			GUIHelper.FoldoutBar(ref _foldOut, _name + "      (" + _slotData.asset.name + ")", out delete);
+			GUIHelper.FoldoutBarButton(ref _foldOut, _name + "      (" + _slotData.asset.name + ")","inspect", out select, out delete);
 
             FoldOut = _foldOut;
 
             // Set this before exiting.
             Delete = delete;
              
+            if (select)
+            {
+                EditorGUIUtility.PingObject(_slotData.asset.GetInstanceID());
+                InspectorUtlity.InspectTarget(_slotData.asset);
+            }
+
 			if (!FoldOut)
 				return false;
 			
@@ -1293,10 +1300,17 @@ namespace UMA.Editors
 		public bool OnGUI()
 		{
 			bool delete;
+			bool select;
 
 			_foldout = OverlayExpanded[_overlayData.overlayName];
 
-			GUIHelper.FoldoutBar(ref _foldout, _overlayData.asset.overlayName + "("+_overlayData.asset.material.name+")", out move, out delete);
+			GUIHelper.FoldoutBarButton(ref _foldout, _overlayData.asset.overlayName + "("+_overlayData.asset.material.name+")", "inspect",out select, out move, out delete);
+
+			if (select)
+			{
+				EditorGUIUtility.PingObject(_overlayData.asset.GetInstanceID());
+				InspectorUtlity.InspectTarget(_overlayData.asset);
+			}
 
 			OverlayExpanded[_overlayData.overlayName] = _foldout;
 
@@ -1848,7 +1862,7 @@ namespace UMA.Editors
 					_oldTarget = target;
 				}
 
-				if (_rebuildOnLayout && Event.current.type == EventType.layout)
+				if (_rebuildOnLayout && Event.current.type == EventType.Layout)
 				{
 					Rebuild();
 				}
