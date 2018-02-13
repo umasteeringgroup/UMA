@@ -1,3 +1,5 @@
+// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+
 //	============================================================
 //	Name:		AtlasShader
 //	Author: 	Joen Joensen (@UnLogick)
@@ -63,7 +65,7 @@ SubShader
 		v2f vert (appdata_base v)
 		{
 		    v2f o;
-		    o.pos = mul (UNITY_MATRIX_MVP, v.vertex);
+		    o.pos = UnityObjectToClipPos (v.vertex);
 		    o.uv = TRANSFORM_TEX (v.texcoord, _MainTex);
 		    o.grabuv = ComputeGrabScreenPos(o.pos);
 		    return o;
