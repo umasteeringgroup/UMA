@@ -72,7 +72,7 @@ namespace UMA.CharacterSystem.Editors
 				/*LoadOtions fields*/ "defaultLoadOptions", "loadPathType", "loadPath", "loadFilename", "loadString", "loadFileOnStart", "waitForBundles", /*"buildAfterLoad",*/
 				/*SaveOptions fields*/ "defaultSaveOptions", "savePathType","savePath", "saveFilename", "makeUniqueFilename","ensureSharedColors", 
 				/*Moved into AdvancedOptions*/"context","umaData","umaRecipe", "umaAdditionalRecipes","umaGenerator", "animationController",
-				/*Moved into CharacterEvents*/"CharacterCreated", "CharacterUpdated", "CharacterDestroyed", "CharacterDnaUpdated", "RecipeUpdated",
+				/*Moved into CharacterEvents*/"CharacterCreated", "CharacterBegun", "CharacterUpdated", "CharacterDestroyed", "CharacterDnaUpdated", "RecipeUpdated",
 				/*PlaceholderOptions fields*/"showPlaceholder", "previewModel", "customModel", "customRotation", "previewColor"});
 
 			//The base DynamicAvatar properties- get these early because changing the race changes someof them
@@ -144,6 +144,16 @@ namespace UMA.CharacterSystem.Editors
 					thisDCA.BuildCharacter(true);
 				}
 			}
+
+			//Move UMAAddidtionalRecipes out of advanced into its own section
+			EditorGUI.BeginChangeCheck();
+			EditorGUILayout.PropertyField(umaAdditionalRecipes, new GUIContent("Additional Utility Recipes", "Additional Recipes to add when the character is generated, like the capsuleCollider recipe for example"), true);
+			if (EditorGUI.EndChangeCheck())
+			{
+				serializedObject.ApplyModifiedProperties();
+			}
+			GUILayout.Space(2f);
+
 			SerializedProperty thisRaceAnimationControllers = serializedObject.FindProperty("raceAnimationControllers");
 			Rect racCurrentRect = EditorGUILayout.GetControlRect(false, _animatorPropDrawer.GetPropertyHeight(thisRaceAnimationControllers, GUIContent.none));
 			EditorGUI.BeginChangeCheck();
@@ -163,7 +173,6 @@ namespace UMA.CharacterSystem.Editors
 					thisDCA.SetAnimatorController();
 				}
 			}
-			GUILayout.Space(2f);
 			//NewCharacterColors
 			SerializedProperty characterColors = serializedObject.FindProperty("characterColors");
 			SerializedProperty newCharacterColors = characterColors.FindPropertyRelative("_colors");
@@ -306,11 +315,13 @@ namespace UMA.CharacterSystem.Editors
 			CharacterCreated.isExpanded = EditorGUILayout.Foldout(CharacterCreated.isExpanded, "Character Events");
 			if (CharacterCreated.isExpanded)
 			{
+				SerializedProperty CharacterBegun = serializedObject.FindProperty("CharacterBegun");
 				SerializedProperty CharacterUpdated = serializedObject.FindProperty("CharacterUpdated");
 				SerializedProperty CharacterDestroyed= serializedObject.FindProperty("CharacterDestroyed");
 				SerializedProperty CharacterDnaUpdated = serializedObject.FindProperty ("CharacterDnaUpdated");
 				SerializedProperty RecipeUpdated = serializedObject.FindProperty("RecipeUpdated");
 
+				EditorGUILayout.PropertyField(CharacterBegun);
 				EditorGUILayout.PropertyField(CharacterCreated);
 				EditorGUILayout.PropertyField(CharacterUpdated);
 				EditorGUILayout.PropertyField(CharacterDestroyed);
@@ -358,7 +369,6 @@ namespace UMA.CharacterSystem.Editors
 				EditorGUILayout.PropertyField(umaGenerator);
 				EditorGUILayout.Space();
 				EditorGUILayout.PropertyField(umaRecipe);
-				EditorGUILayout.PropertyField(umaAdditionalRecipes, true);
 				EditorGUILayout.PropertyField(animationController);
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("BoundsOffset"));
 			}

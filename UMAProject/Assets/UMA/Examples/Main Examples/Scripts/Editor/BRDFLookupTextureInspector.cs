@@ -37,11 +37,7 @@ namespace UMA.Examples
 				AssetDatabase.ImportAsset (assetPath, ImportAssetOptions.ForceUpdate);
 				texSettings = AssetImporter.GetAtPath (assetPath) as TextureImporter;
 			}
-	#if UNITY_5_5_OR_NEWER
 			texSettings.textureCompression = TextureImporterCompression.Uncompressed;                             
-	#else
-			texSettings.textureFormat = TextureImporterFormat.AutomaticTruecolor;
-	#endif
 			texSettings.wrapMode = TextureWrapMode.Clamp;
 			if (newAsset)
 				AssetDatabase.ImportAsset (assetPath, ImportAssetOptions.ForceUpdate);

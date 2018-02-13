@@ -6,6 +6,7 @@ using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI.CoroutineTween;
 
+// @cond doxygen ignore
 namespace UnityEngine.UI
 {
     /// <summary>
@@ -928,3 +929,4 @@ namespace UnityEngine.UI
         }
     }
 }
+// @endcond

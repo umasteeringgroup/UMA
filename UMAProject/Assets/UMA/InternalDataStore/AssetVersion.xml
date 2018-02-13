@@ -1,14 +1,10 @@
 <asset>
     <name>UMA 2</name>
     <author>UMA Steering Group</author>
-    <version>2.6.0</version>
-    <notes>-Dont restore AnimatorControllerParameter if driven by curve
--Checked for errors deserializing type
--Fixed missing meshes in Expression Clip Editor scene
--Fix crash in 5.6 with DCS
--Fix scale for custom preview models
--Various fixes for global library
--Fix faulty dependensies on asset bundles
+    <version>2.7.0</version>
+    <notes>
+	-New Bone Builder utility
+	-New Mesh Hide system
 </notes>
     <package-uri>http://umawiki.secretanorak.com/Updates/Update.unitypackage</package-uri>
     <version-uri>https://raw.githubusercontent.com/umasteeringgroup/UMA/master/UMAProject/Assets/UMA/InternalDataStore/AssetVersion.xml</version-uri>

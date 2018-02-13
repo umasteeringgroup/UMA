@@ -31,6 +31,9 @@ namespace UMA
 		[SerializeField]
 		public List<WardrobeSettings> activeWardrobeSet = new List<WardrobeSettings>();//used in the editor to draw 'DynamicCharacterSystem' type recipe assets, in a different way to 'Standard' or 'Wardrobe' assets
 
+        [SerializeField]
+        public List<MeshHideAsset> MeshHideAssets = new List<MeshHideAsset>();
+
 	#if UNITY_EDITOR
 		/// <summary>
 		/// Converts this recipe to the given child type. Used by RecipeEditor to convert old recipes
