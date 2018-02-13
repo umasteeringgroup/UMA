@@ -2,14 +2,23 @@
 using System.Collections;
 using UnityEngine.UI;
 using UMA;
+using UMA.CharacterSystem;
 
 public class ColorDnaSlider : MonoBehaviour 
 {
     public int dnaTypeHash = 1566835252;
     public int dnaEntryIndex = 0;
 
+    [SerializeField]
+    private DynamicCharacterAvatar avatar;
     protected UMAData data;
     protected UMADnaBase dna;
+
+    private void Start()
+    {
+        if (avatar != null)
+            avatar.CharacterBegun.AddListener(OnCharacterCreated);
+    }
 
     public void OnCharacterCreated(UMAData umaData)
     {
