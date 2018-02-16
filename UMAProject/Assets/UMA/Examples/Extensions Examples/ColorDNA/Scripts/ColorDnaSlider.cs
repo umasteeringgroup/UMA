@@ -28,6 +28,7 @@ public class ColorDnaSlider : MonoBehaviour
         dna = umaData.GetDna(dnaTypeHash);      
         if (dna != null)
         {
+            umaData.ApplyDNA();
             slider.value = dna.GetValue(dnaEntryIndex);
         }
     }
@@ -42,6 +43,7 @@ public class ColorDnaSlider : MonoBehaviour
         if (dna != null)
         {
             dna.SetValue(dnaEntryIndex, value);
+            data.ApplyDNA();
             data.Dirty(true, true, false);
         }
     }
