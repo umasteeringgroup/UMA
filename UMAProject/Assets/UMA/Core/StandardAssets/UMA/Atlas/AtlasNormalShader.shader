@@ -73,27 +73,28 @@ SubShader
 
 		half4 frag (v2f i) : COLOR
 		{
-			float3 n1 = UnpackNormal(tex2D(_MainTex, i.uv));
-			float3 n2 = UnpackNormal(tex2D(_GrabTexture, i.grabuv));
+			half3 n1 = UnpackNormal(tex2D(_MainTex, i.uv));
+			half3 n2 = UnpackNormal(tex2D(_GrabTexture, i.grabuv));
 
-			float4 extra = tex2D(_ExtraTex, i.uv);
+			half4 extra = tex2D(_ExtraTex, i.uv);
 
 			n1 = clamp(n1, -1, 1);
 			n2 = clamp(n2, -1, 1);
 
-			float t = min(extra.a, _Color.a);
+			half t = min(extra.a, _Color.a);
 
 			//Add alpha check early out?
 
 			//float3 r = linearBlend(n1,n2);
-			float3 r = pdBlend(n1, n2, t );
+			half3 r = pdBlend(n1, n2, t);
 
 			//Bring normal back into packed range.
 			r = saturate(r * 0.5 + 0.5);
 
 			//G and A are the important ones. 
 			//Setting green to red and blue just so it looks greyscale in the inspector.
-			return half4(r.y,r.y,r.y,r.x); 
+			//return half4(r.y,r.y,r.y,r.x);
+			return half4(1, r.y, 1, r.x);
 		}
 ENDCG
 	}
