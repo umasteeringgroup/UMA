@@ -389,6 +389,36 @@ namespace UMA.CharacterSystem.Editors
 		{
 			CustomAssetUtility.CreateAsset<DynamicUMADnaAsset>();
 		}
-    }
+
+		[MenuItem("UMA/HACK CONVERT DNA ASSET")]
+		static void ConvertDNAAssetMenuItem()
+		{
+			foreach (var obj in Selection.objects)
+			{
+				var asset = obj as DynamicUMADnaAsset;
+				if (asset != null)
+				{
+					string newPath = AssetDatabase.GetAssetPath(obj);
+					newPath = newPath.Replace(".asset", " Converted.asset");
+					DNADataAsset newAsset = CustomAssetUtility.CreateAsset<DNADataAsset>(newPath, false);
+					AssetDatabase.SaveAssets();
+
+					SerializedObject serializedAsset = new SerializedObject(newAsset);
+					SerializedProperty nameProperty = serializedAsset.FindProperty("_umaName");
+					nameProperty.stringValue = asset.GetAssetName();
+					SerializedProperty hashProperty = serializedAsset.FindProperty("_umaHash");
+					hashProperty.intValue = asset.dnaTypeHash;
+					SerializedProperty namesProperty = serializedAsset.FindProperty("_dnaNames");
+					namesProperty.arraySize = asset.Names.Length;
+					for (int i = 0; i < asset.Names.Length; i++)
+					{
+						SerializedProperty nameEntry = namesProperty.GetArrayElementAtIndex(i);
+						nameEntry.stringValue = asset.Names[i];
+					}
+					serializedAsset.ApplyModifiedPropertiesWithoutUndo();
+				}
+			}
+		}
+	}
 }
 #endif

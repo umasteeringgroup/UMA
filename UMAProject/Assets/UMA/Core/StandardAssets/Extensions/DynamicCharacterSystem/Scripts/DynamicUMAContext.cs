@@ -194,7 +194,7 @@ namespace UMA
 		/// Add a ocllusion data asset to the context.
 		/// </summary>
 		/// <param name="slot">New slot asset.</param>
-		public override void AddOcclusionAsset(MeshHideAsset asset)
+		public override void AddOcclusionAsset(OcclusionDataAsset asset)
 		{
 		}
 
