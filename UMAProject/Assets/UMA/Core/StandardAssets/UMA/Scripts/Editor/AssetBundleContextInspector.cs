@@ -38,9 +38,9 @@ namespace UMA.Editors
 				context.AddDNAAsset(asset as DynamicUMADnaAsset);
 				return true;
 			}
-			if (asset is MeshHideAsset)
+			if (asset is OcclusionDataAsset)
 			{
-				context.AddOcclusionAsset(asset as MeshHideAsset);
+				context.AddOcclusionAsset(asset as OcclusionDataAsset);
 				return true;
 			}
 

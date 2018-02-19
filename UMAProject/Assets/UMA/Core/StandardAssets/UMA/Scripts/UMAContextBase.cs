@@ -98,8 +98,8 @@ namespace UMA
 		/// <summary>
 		/// Add a ocllusion data asset to the context.
 		/// </summary>
-		/// <param name="slot">New slot asset.</param>
-		public abstract void AddOcclusionAsset(MeshHideAsset asset);
+		/// <param name="slot">New occluysion asset.</param>
+		public abstract void AddOcclusionAsset(OcclusionDataAsset asset);
 
 		/// <summary>
 		/// Check for presence of an overlay by name.

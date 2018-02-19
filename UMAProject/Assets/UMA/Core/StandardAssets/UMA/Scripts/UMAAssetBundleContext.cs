@@ -490,10 +490,10 @@ namespace UMA
 		/// Add an occlusion data asset to the context.
 		/// </summary>
 		/// <param name="asset">New occlusion asset.</param>
-		public override void AddOcclusionAsset(MeshHideAsset asset)
+		public override void AddOcclusionAsset(OcclusionDataAsset asset)
 		{
 			// HACK
-			int hash = asset.asset.nameHash;
+			int hash = asset.umaHash;
 			AssetReference reference;
 			if (occlusionDictionary.ContainsKey(hash))
 			{
@@ -507,7 +507,7 @@ namespace UMA
 			{
 				reference = new AssetReference();
 				reference.asset = asset;
-				reference.path = "Occlusion/" + asset.asset.umaName;
+				reference.path = "Occlusion/" + asset.umaName;
 				occlusionDictionary.Add(hash, reference);
 			}
 		}

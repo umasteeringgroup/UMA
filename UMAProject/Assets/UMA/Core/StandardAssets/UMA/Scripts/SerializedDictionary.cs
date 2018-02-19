@@ -40,7 +40,7 @@ namespace UMA
 	/// Serializable dictionary for occlusion assets
 	/// </summary>
 	[Serializable]
-	public class OcclusionAssetDictionary : SerializedDictionary<int, MeshHideAsset> { }
+	public class OcclusionAssetDictionary : SerializedDictionary<int, OcclusionDataAsset> { }
 
 	/// <summary>
 	/// Serializable dictionary for asset bundle references

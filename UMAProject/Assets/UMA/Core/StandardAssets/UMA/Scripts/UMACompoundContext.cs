@@ -46,7 +46,7 @@ namespace UMA
 			{
 				string path = AssetDatabase.GUIDToAssetPath(guid);
 				SlotDataAsset asset = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(path);
-				slotDictionary.Add(asset.GetNameHash(), asset);
+				slotDictionary.Add(asset.umaHash, asset);
 			}
 		}
 
@@ -61,7 +61,8 @@ namespace UMA
 			{
 				string path = AssetDatabase.GUIDToAssetPath(guid);
 				OverlayDataAsset asset = AssetDatabase.LoadAssetAtPath<OverlayDataAsset>(path);
-				overlayDictionary.Add(asset.nameHash, asset);
+				// HACK
+				overlayDictionary.Add(asset.umaHash, asset);
 			}
 		}
 
@@ -76,13 +77,14 @@ namespace UMA
 			{
 				string path = AssetDatabase.GUIDToAssetPath(guid);
 				DynamicUMADnaAsset asset = AssetDatabase.LoadAssetAtPath<DynamicUMADnaAsset>(path);
-				dnaDictionary.Add(asset.dnaTypeHash, asset);
+				// HACK
+				dnaDictionary.Add(asset.GetNameHash(), asset);
 			}
 		}
 
 		protected void BuildOcclusionAssetDictionary()
 		{
-			string type = typeof(MeshHideAsset).Name;
+			string type = typeof(OcclusionDataAsset).Name;
 			Debug.LogWarning(string.Format("Searching asset database for {0} missing from context.", type));
 			occlusionDictionary = new OcclusionAssetDictionary();
 
@@ -90,9 +92,8 @@ namespace UMA
 			foreach (string guid in assetGUIDs)
 			{
 				string path = AssetDatabase.GUIDToAssetPath(guid);
-				MeshHideAsset asset = AssetDatabase.LoadAssetAtPath<MeshHideAsset>(path);
-				// HACK - MeshHideAsset needs a hash
-				occlusionDictionary.Add(asset.asset.nameHash, asset);
+				OcclusionDataAsset asset = AssetDatabase.LoadAssetAtPath<OcclusionDataAsset>(path);
+				occlusionDictionary.Add(asset.umaHash, asset);
 			}
 		}
 		#endif

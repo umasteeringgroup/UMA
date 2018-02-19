@@ -305,10 +305,10 @@ namespace UMA
 		/// Add a ocllusion data asset to the context.
 		/// </summary>
 		/// <param name="slot">New slot asset.</param>
-		public override void AddOcclusionAsset(MeshHideAsset asset)
+		public override void AddOcclusionAsset(OcclusionDataAsset asset)
 		{
 			// HACK
-			occlusionDictionary.Add(asset.asset.nameHash, asset);
+			occlusionDictionary.Add(asset.umaHash, asset);
 		}
 
 		/// <summary>
