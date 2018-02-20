@@ -178,7 +178,7 @@ namespace UMA
 		/// Add a DNA asset to the context.
 		/// </summary>
 		/// <param name="dna">New DNA asset.</param>
-		public abstract void AddDNAAsset(DynamicUMADnaAsset dnaAsset);
+		public abstract void AddDNAAsset(DNADataAsset dnaAsset);
 
 		/// <summary>
 		/// Finds the singleton context in the scene.

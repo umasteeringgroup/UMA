@@ -61,14 +61,13 @@ namespace UMA
 			{
 				string path = AssetDatabase.GUIDToAssetPath(guid);
 				OverlayDataAsset asset = AssetDatabase.LoadAssetAtPath<OverlayDataAsset>(path);
-				// HACK
 				overlayDictionary.Add(asset.umaHash, asset);
 			}
 		}
 
 		protected void BuildDNAAssetDictionary()
 		{
-			string type = typeof(DynamicUMADnaAsset).Name;
+			string type = typeof(DNADataAsset).Name;
 			Debug.LogWarning(string.Format("Searching asset database for {0} missing from context.", type));
 			dnaDictionary = new DNAAssetDictionary();
 
@@ -76,9 +75,8 @@ namespace UMA
 			foreach (string guid in assetGUIDs)
 			{
 				string path = AssetDatabase.GUIDToAssetPath(guid);
-				DynamicUMADnaAsset asset = AssetDatabase.LoadAssetAtPath<DynamicUMADnaAsset>(path);
-				// HACK
-				dnaDictionary.Add(asset.GetNameHash(), asset);
+				DNADataAsset asset = AssetDatabase.LoadAssetAtPath<DNADataAsset>(path);
+				dnaDictionary.Add(asset.umaHash, asset);
 			}
 		}
 

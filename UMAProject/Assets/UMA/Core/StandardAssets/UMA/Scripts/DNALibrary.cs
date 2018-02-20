@@ -8,14 +8,14 @@ using System.Collections.Generic;
 namespace UMA
 {
 	/// <summary>
-	/// Base class for UMA slot libraries.
+	/// Base class for UMA DNA libraries.
 	/// </summary>
 	public class DNALibrary : MonoBehaviour 
 	{
 		[SerializeField]
-		protected DynamicUMADnaAsset[] dnaAssetArray = new DynamicUMADnaAsset[0];
+		protected DNADataAsset[] dnaAssetArray = new DNADataAsset[0];
 		[NonSerialized]
-		private Dictionary<int, DynamicUMADnaAsset> dnaDictionary;
+		private Dictionary<int, DNADataAsset> dnaDictionary;
 
 		void Awake()
 		{
@@ -30,7 +30,7 @@ namespace UMA
 			{
 				if (dnaAssetArray[i])
 				{
-					int hash = dnaAssetArray[i].dnaTypeHash;
+					int hash = dnaAssetArray[i].umaHash;
 					if (!dnaDictionary.ContainsKey(hash))
 					{
 						dnaDictionary.Add(hash, dnaAssetArray[i]);
@@ -43,7 +43,7 @@ namespace UMA
 		{
 			if (dnaDictionary == null)
 			{
-				dnaDictionary = new Dictionary<int, DynamicUMADnaAsset>();
+				dnaDictionary = new Dictionary<int, DNADataAsset>();
 				UpdateDictionary();
 			}
 		}
@@ -52,12 +52,12 @@ namespace UMA
 		/// Add a DNA Asset to the library.
 		/// </summary>
 		/// <param name="dna">DNA Asset.</param>
-		public void AddDNAAsset(DynamicUMADnaAsset dna)
+		public void AddDNAAsset(DNADataAsset dna)
 		{
 			ValidateDictionary();
 
-			dnaDictionary[dna.dnaTypeHash] = dna;
-			dnaAssetArray = new DynamicUMADnaAsset[dnaDictionary.Count];
+			dnaDictionary[dna.umaHash] = dna;
+			dnaAssetArray = new DNADataAsset[dnaDictionary.Count];
 
 			// HACK, only do this crap on serialization
 			dnaDictionary.Values.CopyTo(dnaAssetArray, 0);
@@ -94,7 +94,7 @@ namespace UMA
 			return res;
 		}
 
-		public DynamicUMADnaAsset[] GetAllDNAAssets()
+		public DNADataAsset[] GetAllDNAAssets()
 		{
 			#pragma warning disable 618
 			return dnaAssetArray;
@@ -104,11 +104,12 @@ namespace UMA
 		private UMADnaBase Internal_InstantiateDNA(int nameHash)
 		{
 			ValidateDictionary();
-			DynamicUMADnaAsset asset;
+			DNADataAsset asset;
 			if (dnaDictionary.TryGetValue(nameHash, out asset))
 			{
 				DynamicUMADna dynamicDNA = new DynamicUMADna(nameHash);
-				dynamicDNA.dnaAsset = asset;
+				// HACK
+				//dynamicDNA.dnaAsset = asset;
 
 				return dynamicDNA;
 			}

@@ -33,9 +33,9 @@ namespace UMA.Editors
 				context.AddOverlayAsset(asset as OverlayDataAsset);
 				return true;
 			}
-			if (asset is DynamicUMADnaAsset)
+			if (asset is DNADataAsset)
 			{
-				context.AddDNAAsset(asset as DynamicUMADnaAsset);
+				context.AddDNAAsset(asset as DNADataAsset);
 				return true;
 			}
 			if (asset is OcclusionDataAsset)

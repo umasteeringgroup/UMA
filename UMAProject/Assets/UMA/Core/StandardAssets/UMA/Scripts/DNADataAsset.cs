@@ -34,10 +34,20 @@ namespace UMA
 			get { return _dnaNames; }
 		}
 
+		public int dnaCount
+		{
+			get { return _dnaNames.Length; }
+		}
+
 		[SerializeField]
 		protected List<string[]> oldNames;
 
 		protected List<int[]> oldRemaps;
+
+		public int GetNameIndex(string name)
+		{
+			return System.Array.IndexOf(_dnaNames, name);
+		}
 
 		public int[] GetRemap(byte oldVersion)
 		{

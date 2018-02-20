@@ -8,6 +8,8 @@ namespace UMA
 	[System.Serializable]
 	public abstract class UMADnaBase
 	{
+		public const float MISSING_DNA_VALUE = 0.5f;
+
 		public abstract int Count { get; }
 		public abstract float[] Values
 		{

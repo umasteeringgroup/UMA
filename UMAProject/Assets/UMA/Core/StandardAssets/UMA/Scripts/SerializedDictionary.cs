@@ -34,7 +34,7 @@ namespace UMA
 	/// Serializable dictionary for DNA assets
 	/// </summary>
 	[Serializable]
-	public class DNAAssetDictionary : SerializedDictionary<int, DynamicUMADnaAsset> { }
+	public class DNAAssetDictionary : SerializedDictionary<int, DNADataAsset> { }
 
 	/// <summary>
 	/// Serializable dictionary for occlusion assets

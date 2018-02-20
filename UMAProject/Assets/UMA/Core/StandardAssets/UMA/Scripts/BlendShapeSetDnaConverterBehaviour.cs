@@ -7,7 +7,7 @@ namespace UMA
 	/// <summary>
 	/// DNA converter using a set of blend shapes.
 	/// </summary>
-	public class BlendShapeSetDnaConverterBehaviour : DynamicDNAConverterBehaviourBase
+	public class BlendShapeSetDnaConverterBehaviour : DnaConverterBehaviour
 	{
 		public BlendShapeSetDnaAsset blendShapeSet;
 

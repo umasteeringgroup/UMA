@@ -8,6 +8,8 @@ namespace UMA
 	/// </summary>
 	public class UMASceneContext : UMAContextBase
 	{
+		// HACK are these going to stay? Maybe ditch the libraries completely?
+
 		/// <summary>
 		/// The race library.
 		/// </summary>
@@ -23,8 +25,9 @@ namespace UMA
 		/// </summary>
 		[SerializeField]
 		protected OverlayLibraryBase overlayLibrary;
-
-		// HACK is this going to stay? Maybe ditch the libraries completely?
+		/// <summary>
+		/// The DNA library.
+		/// </summary>
 		[SerializeField]
 		protected DNALibrary dnaLibrary;
 
@@ -118,11 +121,11 @@ namespace UMA
 				if (dnaLibrary != null)
 				{
 					Debug.LogWarning("Updating DNA library on " + this.name);
-					DynamicUMADnaAsset[] DNAs = dnaLibrary.GetAllDNAAssets();
-					foreach (DynamicUMADnaAsset dna in DNAs)
+					DNADataAsset[] DNAs = dnaLibrary.GetAllDNAAssets();
+					foreach (DNADataAsset dna in DNAs)
 					{
 						if (dna == null) continue;
-						dnaDictionary.Add(dna.dnaTypeHash, dna);
+						dnaDictionary.Add(dna.umaHash, dna);
 					}
 //					dnaLibrary = null;
 				}
@@ -434,13 +437,10 @@ namespace UMA
 		public override UMADnaBase InstantiateDNA(int nameHash)
 		{
 //			return dnaLibrary.InstantiateDNA(nameHash);
-			DynamicUMADnaAsset asset;
+			DNADataAsset asset;
 			if (dnaDictionary.TryGetValue(nameHash, out asset))
 			{
-				DynamicUMADna dna = new DynamicUMADna(nameHash);
-				// HACK - really???
-				dna.dnaAsset = asset;
-
+				DNAData dna = new DNAData(asset);
 				return dna;
 			}
 
@@ -451,10 +451,10 @@ namespace UMA
 		/// Add a DNA asset to the context.
 		/// </summary>
 		/// <param name="dna">New DNA asset.</param>
-		public override void AddDNAAsset(DynamicUMADnaAsset dnaAsset)
+		public override void AddDNAAsset(DNADataAsset dnaAsset)
 		{
 //			dnaLibrary.AddDNAAsset(dnaAsset);
-			dnaDictionary.Add(dnaAsset.dnaTypeHash, dnaAsset);
+			dnaDictionary.Add(dnaAsset.umaHash, dnaAsset);
 		}
 	}
 }

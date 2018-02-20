@@ -307,7 +307,7 @@ namespace UMA
 		/// Add a DNA asset to the context.
 		/// </summary>
 		/// <param name="dna">New DNA asset.</param>
-		public override void AddDNAAsset(DynamicUMADnaAsset dnaAsset)
+		public override void AddDNAAsset(DNADataAsset dnaAsset)
 		{
 			dnaLibrary.AddDNAAsset(dnaAsset);
 		}

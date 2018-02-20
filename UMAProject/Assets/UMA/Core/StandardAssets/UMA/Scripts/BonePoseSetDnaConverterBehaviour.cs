@@ -7,7 +7,7 @@ namespace UMA
 	/// <summary>
 	/// DNA converter using a set of bone poses.
 	/// </summary>
-	public class BonePoseSetDnaConverterBehaviour : DynamicDNAConverterBehaviourBase
+	public class BonePoseSetDnaConverterBehaviour : DnaConverterBehaviour
 	{
 		public BonePoseSetDnaAsset bonePoseSet;
 

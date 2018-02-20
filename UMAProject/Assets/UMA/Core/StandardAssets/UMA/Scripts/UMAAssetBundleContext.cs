@@ -638,9 +638,9 @@ namespace UMA
 		/// Add a DNA asset to the context.
 		/// </summary>
 		/// <param name="dna">New DNA asset.</param>
-		public override void AddDNAAsset(DynamicUMADnaAsset dnaAsset)
+		public override void AddDNAAsset(DNADataAsset dnaAsset)
 		{
-			int hash = dnaAsset.dnaTypeHash;
+			int hash = dnaAsset.umaHash;
 			AssetReference reference;
 			if (dnaDictionary.ContainsKey(hash))
 			{
@@ -655,7 +655,7 @@ namespace UMA
 				reference = new AssetReference();
 				reference.asset = dnaAsset;
 				// HACK
-				reference.path = "DNA/" + dnaAsset.GetAssetName();
+				reference.path = "DNA/" + dnaAsset.umaName;
 				dnaDictionary.Add(hash, reference);
 			}
 		}
