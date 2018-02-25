@@ -94,7 +94,12 @@ SubShader
 			//G and A are the important ones. 
 			//Setting green to red and blue just so it looks greyscale in the inspector.
 			//return half4(r.y,r.y,r.y,r.x);
+
+#if defined(UNITY_NO_DXT5nm)
+			return half4(r.r, r.g, r.b, 0);
+#else
 			return half4(1, r.y, 1, r.x);
+#endif
 		}
 ENDCG
 	}
