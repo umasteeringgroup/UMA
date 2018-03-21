@@ -62,7 +62,6 @@ namespace UMA
 				{
 					float dnaValue = dnaValues[i];
 					MorphSetDnaAsset.DNAMorphSet morph = morphSet.dnaMorphs[i];
-
 					ApplyMorph(dnaValue, data, skeleton, morph);
 				}
 			}
@@ -97,10 +96,13 @@ namespace UMA
 				if (!String.IsNullOrEmpty(morph.blendShapeOne))
 					data.SetBlendShape(morph.blendShapeOne, morphWeight);
 
-				if(!String.IsNullOrEmpty(morph.blendShapeZero))
+				if (!String.IsNullOrEmpty(morph.blendShapeZero))
 					data.SetBlendShape(morph.blendShapeZero, 0f);
+
+				return;
 			}
-			else if (dnaValue <= 0.4999f)
+
+			if (dnaValue <= 0.4999f)
 			{
 				float morphWeight = (0.5f - dnaValue) * 2f;
 				if (morph.poseZero != null)
@@ -110,7 +112,16 @@ namespace UMA
 
 				if (!String.IsNullOrEmpty(morph.blendShapeOne))
 					data.SetBlendShape(morph.blendShapeOne, 0f);
+
+				return;
 			}
+
+			//if dnaValue == 0.5f
+			if (!String.IsNullOrEmpty(morph.blendShapeOne))
+				data.SetBlendShape(morph.blendShapeOne, 0f);
+
+			if (!String.IsNullOrEmpty(morph.blendShapeZero))
+				data.SetBlendShape(morph.blendShapeZero, 0f);
 		}
 	}
 }
