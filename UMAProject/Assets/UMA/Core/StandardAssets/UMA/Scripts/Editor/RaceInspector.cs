@@ -8,7 +8,7 @@ using System;
 namespace UMA.Editors
 {
 	[CustomEditor(typeof(RaceData))]
-	public partial class RaceInspector : Editor 
+	public class RaceInspector : Editor 
 	{
 		[MenuItem("Assets/Create/UMA/Core/RaceData")]
 		public static void CreateRaceMenuItem()
@@ -71,10 +71,6 @@ namespace UMA.Editors
 				DestroyImmediate(EditorUMAContext);
 			}
 		}
-		/// <summary>
-		/// Add to PreInspectorGUI in any derived editors to allow editing of new properties added to races.
-		/// </summary>
-		partial void PreInspectorGUI(ref bool result);
 
 		public override void OnInspectorGUI()
 		{
@@ -140,7 +136,7 @@ namespace UMA.Editors
 		/// <summary>
 		/// Add to this method in extender editors if you need to do anything extra when updating the data.
 		/// </summary>
-		partial void DoUpdate();
+		protected virtual void DoUpdate() { }
 
 		#region DCS functions
 		// Drop area for Backwards Compatible Races
@@ -244,8 +240,11 @@ namespace UMA.Editors
 			//	compatibleRaces.Add(raceDataAsset.raceName);
 		}
 
-
-		partial void PreInspectorGUI(ref bool result)
+		/// <summary>
+		/// Add to PreInspectorGUI in any derived editors to allow editing of new properties added to races.
+		/// </summary>
+		//partial void PreInspectorGUI(ref bool result);
+		protected virtual void PreInspectorGUI(ref bool result)
 		{
 			if (!wardrobeSlotListInitialized)
 			{
