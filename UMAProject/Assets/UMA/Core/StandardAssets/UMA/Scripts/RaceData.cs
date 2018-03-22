@@ -32,6 +32,7 @@ namespace UMA
         /// <summary>
         /// The set of DNA converters for modifying characters of this race.
         /// </summary>
+        [Tooltip("The List of Dna Converter components on prefab gameobjects that store the DNA converter instance data.")]
         public DnaConverterBehaviour[] dnaConverterList = new DnaConverterBehaviour[0];
 
 		[System.Obsolete("UMA 2.2+ - RaceData.raceDictionary is obsolete use GetConverter or dnaConverterList instead", false)]
