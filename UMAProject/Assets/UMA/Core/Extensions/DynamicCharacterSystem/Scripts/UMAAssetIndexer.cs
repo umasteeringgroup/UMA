@@ -9,6 +9,7 @@ using UnityEditor.Animations;
 
 namespace UMA
 {
+    [PreferBinarySerialization]
     public class UMAAssetIndexer : MonoBehaviour, ISerializationCallbackReceiver
     {
         #region constants and static strings
