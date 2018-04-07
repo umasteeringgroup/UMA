@@ -700,19 +700,21 @@ namespace UMA
 
 			if (clothSkinning != null && clothSkinning.Length > 0)
 			{
-				var cloth = renderer.GetComponent<Cloth>();
-				if (cloth == null)
+				Cloth cloth = renderer.GetComponent<Cloth>();
+				if (cloth != null)
 				{
-					cloth = renderer.gameObject.AddComponent<Cloth>();
-                    UMAPhysicsAvatar physicsAvatar = renderer.gameObject.GetComponentInParent<UMAPhysicsAvatar> ();
-                    if (physicsAvatar != null)
-                    {
-                        cloth.sphereColliders = physicsAvatar.SphereColliders.ToArray();
-                        cloth.capsuleColliders = physicsAvatar.CapsuleColliders.ToArray();
-                    }
-                    else
-                        Debug.Log("PhysicsAvatar is null!");
+					GameObject.DestroyImmediate(cloth);
+					cloth = null;
 				}
+
+				cloth = renderer.gameObject.AddComponent<Cloth>();
+				UMAPhysicsAvatar physicsAvatar = renderer.gameObject.GetComponentInParent<UMAPhysicsAvatar>();
+				if (physicsAvatar != null)
+				{
+					cloth.sphereColliders = physicsAvatar.SphereColliders.ToArray();
+					cloth.capsuleColliders = physicsAvatar.CapsuleColliders.ToArray();
+				}
+
 				cloth.coefficients = clothSkinning;
 			}
 		}
