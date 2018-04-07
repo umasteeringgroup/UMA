@@ -299,9 +299,9 @@ namespace UMA
 								}
 							}
 
-                            UMABlendShape[] sourceBlendShapes = source.meshData.blendShapes;
+							UMABlendShape[] sourceBlendShapes = source.meshData.blendShapes;
 
-                            if (nameAlreadyExists)//Lets add the vertices data to the existing blendShape
+							if (nameAlreadyExists)//Lets add the vertices data to the existing blendShape
 							{ 
 								if (blendShapes[i].frames.Length != source.meshData.blendShapes[shapeIndex].frames.Length) 
 								{

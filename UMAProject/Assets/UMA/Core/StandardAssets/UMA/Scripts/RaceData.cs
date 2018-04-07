@@ -13,7 +13,7 @@ namespace UMA
 	/// Female Humans, because they have slightly different TPoses and gender
 	/// specific DNA converters, despite sharing the same DNA types.
 	/// </remarks>
-    [PreferBinarySerialization]
+	[PreferBinarySerialization]
 	[Serializable]
 	public partial class RaceData : ScriptableObject, INameProvider
 	{
