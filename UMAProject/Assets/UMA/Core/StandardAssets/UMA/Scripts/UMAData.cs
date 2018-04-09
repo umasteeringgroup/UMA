@@ -1509,6 +1509,8 @@ namespace UMA
 				int index = renderer.sharedMesh.GetBlendShapeIndex(name);
 				if (index >= 0)
 					renderer.SetBlendShapeWeight(index, weight);
+				else
+					Debug.LogWarning(string.Format("Blendshape Index out of range for {0}",name));
 			}
 		}
 

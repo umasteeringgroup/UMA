@@ -214,12 +214,39 @@ namespace UMA
 		public Vector3[] deltaNormals;
 		public Vector3[] deltaTangents;
 
-		public UMABlendFrame(int vertexCount)
+		public UMABlendFrame(int vertexCount, bool hasNormals = true, bool hasTangents = true)
 		{
 			frameWeight = 100.0f;
 			deltaVertices = new Vector3[vertexCount];
-			deltaNormals = new Vector3[vertexCount];
-			deltaTangents = new Vector3[vertexCount];
+
+			if (hasNormals)
+				deltaNormals = new Vector3[vertexCount];
+			else
+				deltaNormals = new Vector3[0];
+
+			if (hasTangents)
+				deltaTangents = new Vector3[vertexCount];
+			else
+				deltaTangents = new Vector3[0];
+		}
+
+		/// <summary>
+		/// Determine whether the delta array has any non-zero vectors.
+		/// </summary>
+		/// <param name="deltas">Array of vector deltas.</param>
+		/// <returns></returns>
+		public static bool isAllZero(Vector3[] deltas)
+		{
+			if (deltas == null)
+				return true;
+
+			for(int i = 0; i < deltas.Length; i++)
+			{
+				if (deltas[i].sqrMagnitude > 0.0001f)
+					return false;
+			}
+
+			return true;
 		}
 	}
 
@@ -510,12 +537,31 @@ namespace UMA
 
 				for (int frameIndex = 0; frameIndex < frameCount; frameIndex++) 
 				{
-					blendShapes [shapeIndex].frames [frameIndex] = new UMABlendFrame (sharedMesh.vertexCount);
+					Vector3[] deltaVertices = new Vector3[sharedMesh.vertexCount];
+					Vector3[] deltaNormals = new Vector3[sharedMesh.vertexCount];
+					Vector3[] deltaTangents = new Vector3[sharedMesh.vertexCount];
+
+					bool hasNormals = false;
+					bool hasTangents = false;
+
+					//Get the delta arrays first so we can determine if we don't need the delta normals or the delta tangents.
+					sharedMesh.GetBlendShapeFrameVertices(shapeIndex, frameIndex, deltaVertices, deltaNormals, deltaTangents);
+
+					if (!UMABlendFrame.isAllZero(deltaNormals))
+						hasNormals = true;
+
+					if (!UMABlendFrame.isAllZero(deltaTangents))
+						hasTangents = true;
+
+					blendShapes [shapeIndex].frames [frameIndex] = new UMABlendFrame (sharedMesh.vertexCount, hasNormals, hasTangents);
 					blendShapes[shapeIndex].frames[frameIndex].frameWeight = sharedMesh.GetBlendShapeFrameWeight( shapeIndex, frameIndex );
-					sharedMesh.GetBlendShapeFrameVertices (shapeIndex, frameIndex, 
-						blendShapes [shapeIndex].frames [frameIndex].deltaVertices,
-						blendShapes [shapeIndex].frames [frameIndex].deltaNormals,
-						blendShapes [shapeIndex].frames [frameIndex].deltaTangents);
+
+					blendShapes[shapeIndex].frames[frameIndex].deltaVertices = deltaVertices;
+					if (hasNormals)
+						blendShapes[shapeIndex].frames[frameIndex].deltaNormals = deltaNormals;
+					if (hasTangents)
+						blendShapes[shapeIndex].frames[frameIndex].deltaTangents = deltaTangents;
+
 				}
 			}
 			#endregion
@@ -682,12 +728,20 @@ namespace UMA
 					for( int frameIndex = 0; frameIndex < blendShapes[shapeIndex].frames.Length; frameIndex++)
 					{
 						//There might be an extreme edge case where someone has the same named blendshapes on different meshes that end up on different renderers.
-						string name = blendShapes[shapeIndex].shapeName; 
-						mesh.AddBlendShapeFrame (name,
-							blendShapes[shapeIndex].frames[frameIndex].frameWeight,
-							blendShapes[shapeIndex].frames[frameIndex].deltaVertices,
-							blendShapes[shapeIndex].frames[frameIndex].deltaNormals,
-							blendShapes[shapeIndex].frames[frameIndex].deltaTangents);
+						string name = blendShapes[shapeIndex].shapeName;
+
+						float frameWeight = blendShapes[shapeIndex].frames[frameIndex].frameWeight;
+						Vector3[] deltaVertices = blendShapes[shapeIndex].frames[frameIndex].deltaVertices;
+						Vector3[] deltaNormals = blendShapes[shapeIndex].frames[frameIndex].deltaNormals;
+						Vector3[] deltaTangents = blendShapes[shapeIndex].frames[frameIndex].deltaTangents;
+
+						if (UMABlendFrame.isAllZero(deltaNormals))
+							deltaNormals = null;
+
+						if (UMABlendFrame.isAllZero(deltaTangents))
+							deltaTangents = null;
+
+						mesh.AddBlendShapeFrame (name, frameWeight, deltaVertices, deltaNormals, deltaTangents);
 					}
 				}
 			}

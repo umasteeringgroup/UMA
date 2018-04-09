@@ -261,7 +261,7 @@ namespace UMA
 											vertices[vertIndex] += currentShape.frames[prevIndex].deltaVertices[bakeIndex] * prevWeight;
                                     }
 
-                                    if (has_normals)
+                                    if (has_normals && currentShape.frames[frameIndex].deltaNormals != null && currentShape.frames[frameIndex].deltaNormals.Length > 0)
                                     {
 										vertIndex = vertexIndex;
 										for (int bakeIndex = 0; bakeIndex < currentShape.frames[frameIndex].deltaNormals.Length; bakeIndex++, vertIndex++)
@@ -272,7 +272,7 @@ namespace UMA
                                         }
                                     }
 
-                                    if (has_tangents)
+                                    if (has_tangents && currentShape.frames[frameIndex].deltaTangents != null && currentShape.frames[frameIndex].deltaTangents.Length > 0)
                                     {
 										vertIndex = vertexIndex;
 										for (int bakeIndex = 0; bakeIndex < currentShape.frames[frameIndex].deltaTangents.Length; bakeIndex++, vertIndex++)
@@ -299,6 +299,8 @@ namespace UMA
 								}
 							}
 
+							UMABlendShape[] sourceBlendShapes = source.meshData.blendShapes;
+
 							if (nameAlreadyExists)//Lets add the vertices data to the existing blendShape
 							{ 
 								if (blendShapes[i].frames.Length != source.meshData.blendShapes[shapeIndex].frames.Length) 
@@ -306,24 +308,41 @@ namespace UMA
 									Debug.LogError("SkinnedMeshCombiner: mesh blendShape frame counts don't match!");
 									break;
 								}
-								for (int frameIndex = 0; frameIndex < source.meshData.blendShapes[shapeIndex].frames.Length; frameIndex++) {
-									Array.Copy(source.meshData.blendShapes[shapeIndex].frames[frameIndex].deltaVertices, 0, blendShapes[i].frames[frameIndex].deltaVertices, vertexIndex, sourceVertexCount);
-									Array.Copy(source.meshData.blendShapes[shapeIndex].frames[frameIndex].deltaNormals, 0, blendShapes[i].frames[frameIndex].deltaNormals, vertexIndex, sourceVertexCount);
-									Array.Copy(source.meshData.blendShapes[shapeIndex].frames[frameIndex].deltaTangents, 0, blendShapes[i].frames[frameIndex].deltaTangents, vertexIndex, sourceVertexCount);
+								for (int frameIndex = 0; frameIndex < source.meshData.blendShapes[shapeIndex].frames.Length; frameIndex++)
+								{
+									Array.Copy(sourceBlendShapes[shapeIndex].frames[frameIndex].deltaVertices, 0, blendShapes[i].frames[frameIndex].deltaVertices, vertexIndex, sourceVertexCount);
+
+									Vector3[] sourceDeltaNormals = sourceBlendShapes[shapeIndex].frames[frameIndex].deltaNormals;
+									Vector3[] sourceDeltaTangents = sourceBlendShapes[shapeIndex].frames[frameIndex].deltaTangents;
+
+									if ( sourceDeltaNormals != null && sourceDeltaNormals.Length > 0)
+										Array.Copy( sourceDeltaNormals, 0, blendShapes[i].frames[frameIndex].deltaNormals, vertexIndex, sourceVertexCount);
+
+									if (sourceDeltaTangents != null && sourceDeltaTangents.Length > 0)
+										Array.Copy( sourceDeltaTangents, 0, blendShapes[i].frames[frameIndex].deltaTangents, vertexIndex, sourceVertexCount);
 								}
 							} 
 							else
 							{
 								blendShapes[blendShapeIndex] = new UMABlendShape();
-								blendShapes[blendShapeIndex].shapeName = source.meshData.blendShapes[shapeIndex].shapeName;
-								blendShapes[blendShapeIndex].frames = new UMABlendFrame[source.meshData.blendShapes[shapeIndex].frames.Length];
+								blendShapes[blendShapeIndex].shapeName = sourceBlendShapes[shapeIndex].shapeName;
+								blendShapes[blendShapeIndex].frames = new UMABlendFrame[sourceBlendShapes[shapeIndex].frames.Length];
 
-								for (int frameIndex = 0; frameIndex < source.meshData.blendShapes[shapeIndex].frames.Length; frameIndex++) {
-									blendShapes[blendShapeIndex].frames[frameIndex] = new UMABlendFrame(vertexCount); 
-									blendShapes[blendShapeIndex].frames[frameIndex].frameWeight = source.meshData.blendShapes[shapeIndex].frames[frameIndex].frameWeight;
-									Array.Copy(source.meshData.blendShapes[shapeIndex].frames[frameIndex].deltaVertices, 0, blendShapes[blendShapeIndex].frames[frameIndex].deltaVertices, vertexIndex, sourceVertexCount);
-									Array.Copy(source.meshData.blendShapes[shapeIndex].frames[frameIndex].deltaNormals, 0, blendShapes[blendShapeIndex].frames[frameIndex].deltaNormals, vertexIndex, sourceVertexCount);
-									Array.Copy(source.meshData.blendShapes[shapeIndex].frames[frameIndex].deltaTangents, 0, blendShapes[blendShapeIndex].frames[frameIndex].deltaTangents, vertexIndex, sourceVertexCount);
+								for (int frameIndex = 0; frameIndex < sourceBlendShapes[shapeIndex].frames.Length; frameIndex++)
+								{
+									bool hasNormals = (sourceBlendShapes[shapeIndex].frames[frameIndex].deltaNormals.Length > 0);
+									bool hasTangents = (sourceBlendShapes[shapeIndex].frames[frameIndex].deltaTangents.Length > 0);
+
+									blendShapes[blendShapeIndex].frames[frameIndex] = new UMABlendFrame(vertexCount, hasNormals, hasTangents); 
+									blendShapes[blendShapeIndex].frames[frameIndex].frameWeight = sourceBlendShapes[shapeIndex].frames[frameIndex].frameWeight;
+
+									Array.Copy(sourceBlendShapes[shapeIndex].frames[frameIndex].deltaVertices, 0, blendShapes[blendShapeIndex].frames[frameIndex].deltaVertices, vertexIndex, sourceVertexCount);
+
+									if(hasNormals)
+										Array.Copy(sourceBlendShapes[shapeIndex].frames[frameIndex].deltaNormals, 0, blendShapes[blendShapeIndex].frames[frameIndex].deltaNormals, vertexIndex, sourceVertexCount);
+
+									if(hasTangents)
+										Array.Copy(sourceBlendShapes[shapeIndex].frames[frameIndex].deltaTangents, 0, blendShapes[blendShapeIndex].frames[frameIndex].deltaTangents, vertexIndex, sourceVertexCount);
 								}
 								blendShapeIndex++;
 							}

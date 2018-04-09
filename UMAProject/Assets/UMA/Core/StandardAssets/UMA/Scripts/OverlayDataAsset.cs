@@ -7,6 +7,7 @@ namespace UMA
 	/// <summary>
 	/// Contains the immutable data shared between overlays of the same type.
 	/// </summary>
+	[PreferBinarySerialization]
 	[System.Serializable]
 	public partial class OverlayDataAsset : ScriptableObject, ISerializationCallbackReceiver
 	{
