@@ -371,7 +371,7 @@ namespace UMA
 				Vector2 tempResolution = new Vector2(umaGenerator.atlasResolution, umaGenerator.atlasResolution);
 
 				bool done = false;
-				while (!done)
+				while (!done && Mathf.Abs(usedArea.x) > 0.0001)
 				{
 					if (tempResolution.x * 0.5f >= usedArea.x)
 					{
@@ -384,7 +384,7 @@ namespace UMA
 				}
 
 				done = false;
-				while (!done)
+				while (!done && Mathf.Abs(usedArea.y) > 0.0001)
 				{
 
 					if (tempResolution.y * 0.5f >= usedArea.y)
