@@ -8,6 +8,7 @@ namespace UMA
 	/// <summary>
 	/// Utility class for avatar setup definitions.
 	/// </summary>
+	[PreferBinarySerialization]
 	[System.Serializable]
 	public class UmaTPose : ScriptableObject 
 	{
