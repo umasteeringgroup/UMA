@@ -33,7 +33,7 @@ namespace UMA
 		[NonSerialized]
 		public bool extendedInfo;
 
-
+        [HideInInspector]
 	    public byte[] serializedChunk;
 
 		/// <summary>
