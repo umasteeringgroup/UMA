@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UMA.Dynamics;
+using UnityEngine.Profiling;
 
 namespace UMA
 {
@@ -209,10 +210,13 @@ namespace UMA
 	[Serializable]
 	public class UMABlendFrame
 	{
-		public float frameWeight; //should be 100% for one frame
-		public Vector3[] deltaVertices;
-		public Vector3[] deltaNormals;
-		public Vector3[] deltaTangents;
+		public float frameWeight = 100.0f; //should be 100% for one frame
+		public Vector3[] deltaVertices = null;
+		public Vector3[] deltaNormals = null;
+		public Vector3[] deltaTangents = null;
+
+		public UMABlendFrame()
+		{ }
 
 		public UMABlendFrame(int vertexCount, bool hasNormals = true, bool hasTangents = true)
 		{
@@ -527,6 +531,11 @@ namespace UMA
 			//Create the blendshape data on the slot asset from the unity mesh
 			#region Blendshape
 			blendShapes = new UMABlendShape[sharedMesh.blendShapeCount];
+
+			Vector3[] deltaVertices = new Vector3[sharedMesh.vertexCount];
+			Vector3[] deltaNormals = new Vector3[sharedMesh.vertexCount];
+			Vector3[] deltaTangents = new Vector3[sharedMesh.vertexCount];
+
 			for (int shapeIndex = 0; shapeIndex < sharedMesh.blendShapeCount; shapeIndex++) 
 			{
 				blendShapes [shapeIndex] = new UMABlendShape ();
@@ -537,10 +546,6 @@ namespace UMA
 
 				for (int frameIndex = 0; frameIndex < frameCount; frameIndex++) 
 				{
-					Vector3[] deltaVertices = new Vector3[sharedMesh.vertexCount];
-					Vector3[] deltaNormals = new Vector3[sharedMesh.vertexCount];
-					Vector3[] deltaTangents = new Vector3[sharedMesh.vertexCount];
-
 					bool hasNormals = false;
 					bool hasTangents = false;
 
@@ -553,7 +558,7 @@ namespace UMA
 					if (!UMABlendFrame.isAllZero(deltaTangents))
 						hasTangents = true;
 
-					blendShapes [shapeIndex].frames [frameIndex] = new UMABlendFrame (sharedMesh.vertexCount, hasNormals, hasTangents);
+					blendShapes [shapeIndex].frames [frameIndex] = new UMABlendFrame ();
 					blendShapes[shapeIndex].frames[frameIndex].frameWeight = sharedMesh.GetBlendShapeFrameWeight( shapeIndex, frameIndex );
 
 					blendShapes[shapeIndex].frames[frameIndex].deltaVertices = deltaVertices;
@@ -563,6 +568,8 @@ namespace UMA
 						blendShapes[shapeIndex].frames[frameIndex].deltaTangents = deltaTangents;
 
 				}
+				if ((shapeIndex % 10) == 0) //for good measure, writing to file is still slow...
+					GC.Collect();
 			}
 			#endregion
 		}
