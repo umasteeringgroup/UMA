@@ -532,9 +532,9 @@ namespace UMA
 			#region Blendshape
 			blendShapes = new UMABlendShape[sharedMesh.blendShapeCount];
 
-			Vector3[] deltaVertices = new Vector3[sharedMesh.vertexCount];
-			Vector3[] deltaNormals = new Vector3[sharedMesh.vertexCount];
-			Vector3[] deltaTangents = new Vector3[sharedMesh.vertexCount];
+			Vector3[] deltaVertices;
+			Vector3[] deltaNormals;
+			Vector3[] deltaTangents;
 
 			for (int shapeIndex = 0; shapeIndex < sharedMesh.blendShapeCount; shapeIndex++) 
 			{
@@ -546,6 +546,10 @@ namespace UMA
 
 				for (int frameIndex = 0; frameIndex < frameCount; frameIndex++) 
 				{
+					deltaVertices = new Vector3[sharedMesh.vertexCount];
+					deltaNormals = new Vector3[sharedMesh.vertexCount];
+					deltaTangents = new Vector3[sharedMesh.vertexCount];
+
 					bool hasNormals = false;
 					bool hasTangents = false;
 
