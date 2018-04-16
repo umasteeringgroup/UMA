@@ -368,6 +368,13 @@ namespace UMA
 					}
 				}
 
+				//Headless mode ends up with zero usedArea
+				if(Mathf.Approximately( usedArea.x, 0f ) || Mathf.Approximately( usedArea.y, 0f ))
+				{
+					material.cropResolution = Vector2.zero;
+					return;
+				}
+
 				Vector2 tempResolution = new Vector2(umaGenerator.atlasResolution, umaGenerator.atlasResolution);
 
 				bool done = false;
