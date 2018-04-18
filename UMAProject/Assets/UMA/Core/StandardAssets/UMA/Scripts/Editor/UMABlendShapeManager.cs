@@ -68,8 +68,12 @@ namespace UMA.Editors
             {
                 EditorUtility.DisplayProgressBar(string.Format("Search and replace in {0} assets", _slotAssets.Count), ("Asset " + i), (i / _slotAssets.Count) );
                 if (_slotAssets[i].meshData != null)
+                {
                     BlendShapeNameReplace(_slotAssets[i].meshData, find, replace);
+                    EditorUtility.SetDirty(_slotAssets[i]);
+                }
             }
+            AssetDatabase.SaveAssets();
             EditorUtility.ClearProgressBar();
         }
 
