@@ -66,7 +66,11 @@ namespace UMA.CharacterSystem
 		#endregion
 
 	#if UNITY_EDITOR
+		#if UMA_HOTKEYS
+		[UnityEditor.MenuItem("Assets/Create/UMA/DCS/Wardrobe Recipe %#w")]
+		#else
 		[UnityEditor.MenuItem("Assets/Create/UMA/DCS/Wardrobe Recipe")]
+		#endif
 		public static void CreateWardrobeRecipeAsset()
 		{
 			UMA.CustomAssetUtility.CreateAsset<UMAWardrobeRecipe>();

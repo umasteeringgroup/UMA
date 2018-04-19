@@ -18,7 +18,7 @@ namespace UMA
 		/// </summary>
 		public Rect rect;
 
-        #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
+		#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
         //https://docs.unity3d.com/Manual/ProceduralMaterials.html
 		protected ProceduralTexture[] generatedTextures = null;
         #endif
@@ -36,7 +36,7 @@ namespace UMA
 				if (asset.alphaMask != null)
 					return asset.alphaMask;
 				
-                #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
+				#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 				if (this.isProcedural)
 				{
 					if ((generatedTextures == null) || (generatedTextures.Length != asset.textureCount))
@@ -56,7 +56,7 @@ namespace UMA
 		{
 			get
 			{
-                #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
+				#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 				if (this.isProcedural)
 				{
 					if ((generatedTextures == null) || (generatedTextures.Length != asset.textureCount))
@@ -76,7 +76,7 @@ namespace UMA
 		{
 			get
 			{
-                #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
+				#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 				if (this.isProcedural)
 				{
 					ProceduralMaterial material = asset.material.material as ProceduralMaterial;
@@ -103,7 +103,7 @@ namespace UMA
 		[System.NonSerialized]
 		public OverlayColorData colorData;
 
-        #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
+		#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 		public class OverlayProceduralData
 		{
 			public string name;
@@ -158,7 +158,7 @@ namespace UMA
 			this.asset = asset;
 			this.rect = asset.rect;
 
-            #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
+			#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 			if (this.isProcedural)
 			{
 				this.proceduralData = new OverlayProceduralData[0];
@@ -283,7 +283,7 @@ namespace UMA
 			colorData = overlay.colorData.Duplicate();
 		}
 
-        #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
+		#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 		public void GenerateProceduralTextures()
 		{
 			if (!this.isProcedural)
@@ -342,7 +342,7 @@ namespace UMA
 		}
         #endif
 
-        #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
+		#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 		public void ReleaseProceduralTextures()
 		{
 			if (!this.isProcedural)
@@ -383,6 +383,7 @@ namespace UMA
 			return !((bool)overlay2);
 		}
 
+		/// <summary>
 		/// Compares two overlay.assets and overlay.rects to see if they are the same. Mainly for comparing overlays from AssetBundles.
 		/// </summary>
 		/// <param name="overlay1"></param>

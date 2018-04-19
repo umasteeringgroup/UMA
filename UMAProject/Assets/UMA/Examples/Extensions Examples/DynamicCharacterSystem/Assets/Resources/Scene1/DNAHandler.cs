@@ -30,7 +30,7 @@ namespace UMA.CharacterSystem.Examples
             {
                 foreach (Transform t in SelectionPanel.transform)
                 {
-                    GameObject.Destroy(t.gameObject);
+                    UMAUtils.DestroySceneObject(t.gameObject);
                 }
             }
         }

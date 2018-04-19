@@ -129,6 +129,7 @@ namespace UMA
 		/// </summary>
 		public event Action<UMAData> OnCharacterDestroyed { add { if (CharacterDestroyed == null) CharacterDestroyed = new UMADataEvent(); CharacterDestroyed.AddListener(new UnityAction<UMAData>(value)); } remove { CharacterDestroyed.RemoveListener(new UnityAction<UMAData>(value)); } }
 
+		/// <summary>
 		/// Callback event when character DNA has been updated.
 		/// </summary>
 		public event Action<UMAData> OnCharacterDnaUpdated { add { if (CharacterDnaUpdated == null) CharacterDnaUpdated = new UMADataEvent(); CharacterDnaUpdated.AddListener(new UnityAction<UMAData>(value)); } remove { CharacterDnaUpdated.RemoveListener(new UnityAction<UMAData>(value)); } }
@@ -136,6 +137,7 @@ namespace UMA
 		public UMADataEvent CharacterDestroyed;
 		public UMADataEvent CharacterUpdated;
 		public UMADataEvent CharacterDnaUpdated;
+		public UMADataEvent CharacterBegun;
 
 		public GameObject umaRoot;
 
@@ -184,8 +186,9 @@ namespace UMA
 
 		public void SetupOnAwake()
 		{
-			umaRoot = gameObject;
-			animator = umaRoot.GetComponent<Animator>();
+			//umaRoot = gameObject;
+			//animator = umaRoot.GetComponent<Animator>();
+			animator = gameObject.GetComponent<Animator>();
 		}
 
 #pragma warning disable 618
@@ -223,6 +226,12 @@ namespace UMA
 			else
 			{
 				valid = valid && umaRecipe.Validate();
+			}
+
+			if (animationController == null)
+			{
+				if (Application.isPlaying)
+					Debug.LogWarning("No animation controller supplied.");
 			}
 
 #if UNITY_EDITOR
@@ -395,6 +404,23 @@ namespace UMA
 				return valid;
 			}
 
+            /// <summary>
+            /// Checks to see if the sharedColors array contains the passed color
+            /// </summary>
+            /// <param name="col"></param>
+            /// <returns></returns>
+            public bool HasSharedColor(OverlayColorData col)
+            {
+                foreach(OverlayColorData ocd in sharedColors)
+                {
+                    if (ocd.Equals(col))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
 #pragma warning disable 618
 			/// <summary>
 			/// Gets the DNA array.
@@ -534,6 +560,7 @@ namespace UMA
 			/// </summary>
 			/// <returns>The DNA.</returns>
 			/// <param name="type">Type.</param>
+			/// <param name="dnaTypeHash">The DNAType's hash."</param>
 			public UMADnaBase GetOrCreateDna(Type type, int dnaTypeHash)
 			{
 				UMADnaBase dna;
@@ -770,6 +797,7 @@ namespace UMA
 			/// Applies each DNA converter to the UMA data and skeleton.
 			/// </summary>
 			/// <param name="umaData">UMA data.</param>
+			/// <param name="fixUpUMADnaToDynamicUMADna"></param>
 			public void ApplyDNA(UMAData umaData, bool fixUpUMADnaToDynamicUMADna = false)
 			{
 				EnsureAllDNAPresent();
@@ -1056,7 +1084,7 @@ namespace UMA
 			dirty = true;
 			if (!umaGenerator)
 			{
-				umaGenerator = GameObject.Find("UMAGenerator").GetComponent<UMAGeneratorBase>();
+				umaGenerator = FindObjectOfType<UMAGeneratorBase>();
 			}
 			if (umaGenerator)
 			{
@@ -1079,7 +1107,7 @@ namespace UMA
 				CleanTextures();
 				CleanMesh(true);
 				CleanAvatar();
-				Destroy(umaRoot);
+				UMAUtils.DestroySceneObject(umaRoot);
 			}
 		}
 
@@ -1091,8 +1119,8 @@ namespace UMA
 			animationController = null;
 			if (animator != null)
 			{
-				if (animator.avatar) GameObject.Destroy(animator.avatar);
-				if (animator) GameObject.Destroy(animator);
+				if (animator.avatar) UMAUtils.DestroySceneObject(animator.avatar);
+				if (animator) UMAUtils.DestroySceneObject(animator);
 			}
 		}
 
@@ -1114,12 +1142,11 @@ namespace UMA
 							{
 								RenderTexture tempRenderTexture = tempTexture as RenderTexture;
 								tempRenderTexture.Release();
-								Destroy(tempRenderTexture);
-								tempRenderTexture = null;
+								UMAUtils.DestroySceneObject(tempRenderTexture);
 							}
 							else
 							{
-								Destroy(tempTexture);
+								UMAUtils.DestroySceneObject(tempTexture);
 							}
 							generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex] = null;
 						}
@@ -1142,13 +1169,13 @@ namespace UMA
 				{
 					if (mats[i])
 					{
-						Destroy(mats[i]);
+						UMAUtils.DestroySceneObject(mats[i]);
 					}
 				}
 				if (destroyRenderer)
 				{
-					Destroy(renderer.sharedMesh);
-					Destroy(renderer);
+					UMAUtils.DestroySceneObject(renderer.sharedMesh);
+					UMAUtils.DestroySceneObject(renderer);
 				}
 			}
 		}
@@ -1354,6 +1381,9 @@ namespace UMA
 		/// </summary>
 		public void FireCharacterBegunEvents()
 		{
+			if (CharacterBegun != null)
+				CharacterBegun.Invoke(this);
+
 			foreach (var slotData in umaRecipe.slotDataList)
 			{
 				if (slotData != null && slotData.asset.CharacterBegun != null)
@@ -1426,13 +1456,6 @@ namespace UMA
             }
         }
 
-		//For future multiple renderer support
-		public struct BlendShapeLocation
-		{
-			public int shapeIndex;
-			public int rendererIndex;
-		}
-
 		/// <summary>
 		/// Sets the blendshape by index and renderer.
 		/// </summary>
@@ -1460,7 +1483,7 @@ namespace UMA
 			}
 
 			if (weight < 0.0f || weight > 1.0f)
-				Debug.LogError ("SetBlendShape: Weight is out of range, clamping...");
+				Debug.LogWarning ("SetBlendShape: Weight is out of range, clamping...");
 
 			weight = Mathf.Clamp01 (weight);
 			weight *= 100.0f; //Scale up to 1-100 for SetBlendShapeWeight.
@@ -1471,46 +1494,24 @@ namespace UMA
 		/// <summary>
 		/// Set the blendshape by it's name.
 		/// </summary>
-		/// <param name="name">Name of the blendshape.</param
+		/// <param name="name">Name of the blendshape.</param>
 		/// <param name="weight">Weight(float) to set this blendshape to.</param>
 		public void SetBlendShape(string name, float weight)
 		{
-			BlendShapeLocation loc = GetBlendShapeIndex (name);
-			if (loc.shapeIndex < 0)
-				return;
-
 			if (weight < 0.0f || weight > 1.0f)
-				Debug.LogError ("SetBlendShape: Weight is out of range, clamping...");
+				Debug.LogWarning ("SetBlendShape: Weight is out of range, clamping...");
 
 			weight = Mathf.Clamp01 (weight);
 			weight *= 100.0f; //Scale up to 1-100 for SetBlendShapeWeight.
 
-			renderers [loc.rendererIndex].SetBlendShapeWeight (loc.shapeIndex, weight);//for multi-renderer support
-		}
-		/// <summary>
-		/// Gets the first found index of the blendshape by name in the renderers
-		/// </summary>
-		/// <param name="name">Name of the blendshape.</param>
-		public BlendShapeLocation GetBlendShapeIndex(string name)
-		{
-			BlendShapeLocation loc = new BlendShapeLocation ();
-			loc.shapeIndex = -1;
-			loc.rendererIndex = -1;
-
-			for (int i = 0; i < rendererCount; i++) //for multi-renderer support
+			foreach (SkinnedMeshRenderer renderer in renderers)
 			{
-				int index = renderers [i].sharedMesh.GetBlendShapeIndex (name);
-				if (index >= 0) 
-				{
-					loc.shapeIndex = index;
-					loc.rendererIndex = i;
-					return loc;
-				}
+				int index = renderer.sharedMesh.GetBlendShapeIndex(name);
+				if (index >= 0)
+					renderer.SetBlendShapeWeight(index, weight);
 			}
-
-			//Debug.LogError ("GetBlendShapeIndex: blendshape " + name + " not found!");
-			return loc;
 		}
+
 		/// <summary>
 		/// Gets the name of the blendshape by index and renderer
 		/// </summary>

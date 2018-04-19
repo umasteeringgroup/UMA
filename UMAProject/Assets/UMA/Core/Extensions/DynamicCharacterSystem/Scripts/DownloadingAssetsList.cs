@@ -39,7 +39,9 @@ namespace UMA.CharacterSystem
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="requiredAssetName"></param>
+		/// <param name="requiredAssetNameHash"></param>
 		/// <param name="containingBundle"></param>
+		/// <param name="callback"></param>
 		/// <returns></returns>
 		public T AddDownloadItem<T>(string requiredAssetName, int? requiredAssetNameHash, string containingBundle, Delegate callback = null) where T : UnityEngine.Object
 		{
@@ -151,7 +153,7 @@ namespace UMA.CharacterSystem
 		/// <summary>
 		/// Removes a list of downloadingAssetItems from the downloadingItems List.
 		/// </summary>
-		/// <param name="assetName"></param>
+		/// <param name="itemsToRemove"></param>
 		public IEnumerator RemoveDownload(List<DownloadingAssetItem> itemsToRemove)
 		{
 			//Not used any more UMAs check the status of stuff they asked for themselves
@@ -209,7 +211,7 @@ namespace UMA.CharacterSystem
 						//To fix this generally we could 'LoadAllAssets' from any dependent bundles, but this could incur significant memory overhead
 						//So for now we will just fix this for UMA and hope a patch is forthcoming in a subsequent version of Unity 
 						//FIXED as of Unity5.6.2f1
-#if UNITY_5_5 || UNITY_5_6_0 || UNITY_5_6_1
+#if UNITY_5_6_0 || UNITY_5_6_1
 						if (AssetBundleManager.AssetBundleIndexObject.GetAllDependencies(item.containingBundle).Length > 0)
 						{
 							var allDeps = AssetBundleManager.AssetBundleIndexObject.GetAllDependencies(item.containingBundle);

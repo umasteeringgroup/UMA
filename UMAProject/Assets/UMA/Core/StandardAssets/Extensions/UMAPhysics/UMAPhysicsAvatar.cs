@@ -57,6 +57,23 @@ namespace UMA.Dynamics
 		private CapsuleCollider _playerCollider;
 		private Rigidbody _playerRigidbody;
 
+		struct CachedBone
+		{
+			public Transform boneTransform;
+			public Vector3 localPosition;
+			public Quaternion localRotation;
+			public Vector3 localScale;
+
+			public CachedBone(Transform transform)
+			{
+				boneTransform = transform;
+				localPosition = transform.localPosition;
+				localRotation = transform.localRotation;
+				localScale = transform.localScale;
+			}
+		}
+		private List<CachedBone> cachedBones = new List<CachedBone>();
+
 		// Use this for initialization
 		void Start () 
 		{
@@ -66,12 +83,25 @@ namespace UMA.Dynamics
 			if(_SphereColliders == null) { _SphereColliders = new List<ClothSphereColliderPair>(); }
 			if(_CapsuleColliders == null) { _CapsuleColliders = new List<CapsuleCollider>(); }
 
-			DynamicCharacterAvatar avatar = gameObject.GetComponent<DynamicCharacterAvatar>();
-			if (avatar != null)
-				avatar.CharacterCreated.AddListener(OnCharacterCreatedCallback);
+			if (_umaData != null)
+			{
+				_umaData.CharacterCreated.AddListener(OnCharacterCreatedCallback);
+				_umaData.CharacterBegun.AddListener(OnCharacterBegunCallback);
+				_umaData.CharacterUpdated.AddListener(OnCharacterUpdatedCallback);
+			}
 
 			if (!Physics.GetIgnoreLayerCollision(ragdollLayer, playerLayer))
 				Debug.LogWarning("RagdollLayer and PlayerLayer are not ignoring each other! This will cause collision issues. Please update the collision matrix or 'Add Default Layers' in the Physics Slot Definition");
+		}
+
+		void OnDestroy()
+		{
+			if (_umaData != null)
+			{
+				_umaData.CharacterCreated.RemoveListener(OnCharacterCreatedCallback);
+				_umaData.CharacterBegun.RemoveListener(OnCharacterBegunCallback);
+				_umaData.CharacterUpdated.RemoveListener(OnCharacterUpdatedCallback);
+			}
 		}
 
 		void FixedUpdate()
@@ -89,10 +119,41 @@ namespace UMA.Dynamics
 			}
 		}
 
-        public void OnCharacterCreatedCallback(UMAData umaData)
-        {
-            CreatePhysicsObjects();
-        }
+		public void OnCharacterCreatedCallback(UMAData umaData)
+		{
+			CreatePhysicsObjects();
+		}
+
+		public void OnCharacterBegunCallback(UMAData umaData)
+		{
+			if (_ragdolled)
+			{
+				cachedBones.Clear();
+				foreach (int hash in umaData.skeleton.BoneHashes)
+				{
+					Transform boneTransform = umaData.skeleton.GetBoneTransform(hash);
+					if(boneTransform != null)
+					{
+						CachedBone cachedBone = new CachedBone(boneTransform);
+						cachedBones.Add(cachedBone);
+					}
+				}
+			}
+		}
+
+		public void OnCharacterUpdatedCallback(UMAData umaData)
+		{
+			if (_ragdolled)
+			{
+				foreach (CachedBone cachedbone in cachedBones)
+				{
+					cachedbone.boneTransform.localPosition = cachedbone.localPosition;
+					cachedbone.boneTransform.localRotation = cachedbone.localRotation;
+					cachedbone.boneTransform.localScale = cachedbone.localScale;
+				}
+				cachedBones.Clear();
+			}
+		}
 
 		public void CreatePhysicsObjects()
 		{
@@ -246,6 +307,12 @@ namespace UMA.Dynamics
 
 		private void SetRagdolled(bool ragdollState)
 		{
+            if (!Application.isPlaying)
+            {
+                _ragdolled = false;
+                return;
+            }
+            
 			//Player Collider stuff
 			//Call Player Collider enable/disable event here
 			if (ragdollState) 

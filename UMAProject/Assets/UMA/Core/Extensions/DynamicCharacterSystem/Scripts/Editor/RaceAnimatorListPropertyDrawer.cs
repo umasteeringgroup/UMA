@@ -199,7 +199,7 @@ namespace UMA.CharacterSystem.Editors
 		/// (so that other animators can be assigned that can exist in asset bundles). The only way to get the others is from DynamicAssetLoader
 		/// so they MUST be in an assetBundle or in GlobalIndex or there is no way of finding them, if they are not, show a warning.
 		/// </summary>
-		/// <param name="recipeName"></param>
+		/// <param name="racName">RuntimeAnimatorController name.</param>
 		/// <returns></returns>
 		private bool CheckAnimatorAvailability(string racName)
 		{
@@ -222,6 +222,10 @@ namespace UMA.CharacterSystem.Editors
 			if (defaultController)
 				if (defaultController.name == racName)
 					return true;
+            if (UMAAssetIndexer.Instance.GetAssetDictionary(typeof(RuntimeAnimatorController)).ContainsKey(racName))
+            {
+                return true;
+            }
 			var dalDebug = DynamicAssetLoader.Instance.debugOnFail;
 			DynamicAssetLoader.Instance.debugOnFail = false;
 			found = DynamicAssetLoader.Instance.AddAssets<RuntimeAnimatorController>(searchResources, searchAssetBundles, true, assetBundlesToSearch, resourcesFolderPath, null, racName, null);

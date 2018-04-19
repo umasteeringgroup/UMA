@@ -54,7 +54,26 @@ namespace UMA
 		}
 
 		/// <summary>
-		/// Gets a race by name.
+		/// Gets a race by name, if it has been added to the library
+		/// </summary>
+		/// <returns>The race.</returns>
+		/// <param name="name">Name.</param>
+		public RaceData HasRace(string name)
+		{
+			return raceLibrary.HasRace(name);
+		}
+		/// <summary>
+		/// Gets a race by name hash, if it has been added to the library.
+		/// </summary>
+		/// <returns>The race.</returns>
+		/// <param name="nameHash">Name hash.</param>
+		public RaceData HasRace(int nameHash)
+		{
+			return raceLibrary.HasRace(nameHash);
+		}
+
+		/// <summary>
+		/// Gets a race by name, if the library is a DynamicRaceLibrary it will try to find it.
 		/// </summary>
 		/// <returns>The race.</returns>
 		/// <param name="name">Name.</param>
@@ -63,7 +82,7 @@ namespace UMA
 			return raceLibrary.GetRace(name);
 		}
 		/// <summary>
-		/// Gets a race by name hash.
+		/// Gets a race by name hash, if the library is a DynamicRaceLibrary it will try to find it.
 		/// </summary>
 		/// <returns>The race.</returns>
 		/// <param name="nameHash">Name hash.</param>
@@ -144,7 +163,7 @@ namespace UMA
 		/// Check for presence of a slot by name hash.
 		/// </summary>
 		/// <returns><c>True</c> if the slot exists in this context.</returns>
-		/// <param name="name">Name hash.</param>
+		/// <param name="nameHash">Name hash.</param>
 		public bool HasSlot(int nameHash)
 		{ 
 			return slotLibrary.HasSlot(nameHash);
@@ -172,7 +191,7 @@ namespace UMA
 		/// Check for presence of an overlay by name hash.
 		/// </summary>
 		/// <returns><c>True</c> if the overlay exists in this context.</returns>
-		/// <param name="name">Name hash.</param>
+		/// <param name="nameHash">Name hash.</param>
 		public bool HasOverlay(int nameHash)
 		{ 
 			return overlayLibrary.HasOverlay(nameHash);

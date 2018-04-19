@@ -319,7 +319,7 @@ namespace UMA.CharacterSystem.Editors
 
 			foreach (System.Type t in Types)
 			{
-				if (t != typeof(AnimatorController)) // Somewhere, a kitten died because I typed that.
+				if (t != typeof(AnimatorController) && t!= typeof(AnimatorOverrideController)) // Somewhere, a kitten died because I typed that.
 				{
 					if (ShowArray(t, Filter))
 					{
@@ -426,9 +426,11 @@ namespace UMA.CharacterSystem.Editors
 						lblBuild = "B+";
 					}
 
-					if (GUILayout.Button(lblVal /* ai._Name + " (" + ai._AssetBaseName + ")" */, EditorStyles.label))
+					if (GUILayout.Button(lblVal, EditorStyles.label))
 					{
-						EditorGUIUtility.PingObject(AssetDatabase.LoadMainAssetAtPath(ai._Path));
+						Object o = AssetDatabase.LoadMainAssetAtPath(ai._Path);
+						EditorGUIUtility.PingObject(o);
+						Selection.activeObject = o;
 					}
 
 					if (GUILayout.Button(lblBuild,GUILayout.Width(35)))

@@ -10,6 +10,8 @@ namespace UMA.Editors
 {
 	public partial class RecipeEditor
 	{
+		private Dictionary<string,RaceData> _compatibleRaceDatas = new Dictionary<string,RaceData>();
+
 		// Drop area for compatible Races
 		private void CompatibleRacesDropArea(Rect dropArea, List<string> compatibleRaces)
 		{
@@ -117,16 +119,12 @@ namespace UMA.Editors
 						generatedWardrobeSlotOptions = new List<string>();
 						generatedWardrobeSlotOptionsLabels = new List<string>();
 					}
-					List<RaceData> thisRaceDatas = new List<RaceData>();
+					UpdateCompatibleRacesDict(compatibleRaces);
 					for (int i = 0; i < compatibleRaces.Count; i++)
 					{
-						thisRaceDatas.Add(GetCompatibleRaceData(compatibleRaces[i]));
-					}
-					for (int i = 0; i < thisRaceDatas.Count; i++)
-					{
-						if (thisRaceDatas[i] != null)
+						if(_compatibleRaceDatas.ContainsKey(compatibleRaces[i]))
 						{
-							List<string> thisWardrobeSlots = thisRaceDatas[i].wardrobeSlots;
+							List<string> thisWardrobeSlots = _compatibleRaceDatas[compatibleRaces[i]].wardrobeSlots;
 							for (int wi = 0; wi < thisWardrobeSlots.Count; wi++)
 							{
 								//WardrobeSlots display as 'Hair (FemaleOnly)' (for example) if the wardrobe slot is only available for one of the compatible races
@@ -148,24 +146,22 @@ namespace UMA.Editors
 						else
 						{
 							//Compatible Race is missing
-							thisRaceDatas.RemoveAt(i);
 							selectedIndex = -2;
 						}
 					}
 					for (int i = 0; i < generatedWardrobeSlotOptions.Count; i++)
 					{
 						List<string> onlyIn = new List<string>();
-						for (int ii = 0; ii < thisRaceDatas.Count; ii++)
+						foreach(KeyValuePair<string,RaceData> kp in _compatibleRaceDatas)
 						{
-							if (thisRaceDatas[ii].wardrobeSlots.Contains(generatedWardrobeSlotOptions[i]))
+							if(kp.Value.wardrobeSlots.Contains(generatedWardrobeSlotOptions[i]))
 							{
-								onlyIn.Add(thisRaceDatas[ii].raceName);
+								onlyIn.Add(kp.Key);
 							}
 						}
-						if (onlyIn.Count < thisRaceDatas.Count)
+						if(onlyIn.Count < _compatibleRaceDatas.Count)
 						{
 							//its not in all of them
-							//generatedWardrobeSlotOptions[i] = generatedWardrobeSlotOptions[i] + "  (" + String.Join(", ", onlyIn.ToArray()) + " Only)";
 							generatedWardrobeSlotOptionsLabels[i] = generatedWardrobeSlotOptionsLabels[i] + "  (" + String.Join(", ", onlyIn.ToArray()) + " Only)";
 						}
 					}
@@ -195,11 +191,11 @@ namespace UMA.Editors
 				}
 				List<UMARecipeBase> thisBaseRecipes = new List<UMARecipeBase>();
 				Dictionary<string, List<string>> slotsRacesDict = new Dictionary<string, List<string>>();
+				UpdateCompatibleRacesDict(compatibleRaces);
 				for (int i = 0; i < compatibleRaces.Count; i++)
 				{
-					if (GetCompatibleRaceData(compatibleRaces[i]) == null)
-						continue;
-					thisBaseRecipes.Add(GetCompatibleRaceData(compatibleRaces[i]).baseRaceRecipe);
+					if(_compatibleRaceDatas.ContainsKey(compatibleRaces[i]))
+						thisBaseRecipes.Add(_compatibleRaceDatas[compatibleRaces[i]].baseRaceRecipe);
 				}
 				for (int i = 0; i < thisBaseRecipes.Count; i++)
 				{
@@ -236,7 +232,29 @@ namespace UMA.Editors
 				}
 			}
 		}
-
+		//Updates a dictionary of racenames and racedatas so that GetCompatibleRaceData is called far less frequently (because its slow)
+		private void UpdateCompatibleRacesDict(List<string> compatibleRaces)
+		{
+			if (compatibleRaces.Count == 0)
+			{
+				_compatibleRaceDatas.Clear();
+				return;
+			}
+			Dictionary<string, RaceData> newDict = new Dictionary<string, RaceData>();
+			for (int i = 0; i < compatibleRaces.Count; i++)
+			{
+				if (_compatibleRaceDatas.ContainsKey(compatibleRaces[i]))
+					newDict.Add(compatibleRaces[i], _compatibleRaceDatas[compatibleRaces[i]]);
+				else
+				{
+					var thisRaceData = GetCompatibleRaceData(compatibleRaces[i]);
+					if(thisRaceData != null)
+						newDict.Add(compatibleRaces[i], thisRaceData);
+				}
+			}
+			_compatibleRaceDatas = newDict;
+		}
+		//Avoid calling this all the time because its slow
 		private RaceData GetCompatibleRaceData(string raceName)
 		{
 			RaceData foundRace = null;
@@ -252,6 +270,7 @@ namespace UMA.Editors
 			}
 			return foundRace;
 		}
+
 		protected virtual bool DrawCompatibleRacesUI(Type TargetType, bool ShowHelp = false)
 		{
 			bool doUpdate = false;
@@ -269,6 +288,8 @@ namespace UMA.Editors
 			List<string> newCompatibleRaces = new List<string>(compatibleRaces);
 			List<WardrobeRecipeThumb> newWardrobeThumbs = new List<WardrobeRecipeThumb>();
 			List<string> wardrobeThumbsDropDown = new List<string>();
+
+			UpdateCompatibleRacesDict(compatibleRaces);
 
 			if (compatibleRaces.Count > 0)
 			{
@@ -294,7 +315,7 @@ namespace UMA.Editors
 				}
 			}
 
-			GUILayout.Space(10);
+			//GUILayout.Space(10);
 			Rect dropArea = new Rect();
 			Rect dropAreaBox = new Rect();
 			if (compatibleRaces.Count > 0)
@@ -316,12 +337,47 @@ namespace UMA.Editors
 				for (int i = 0; i < compatibleRaces.Count; i++)
 				{
 					GUILayout.Space(padding);
-					GUI.enabled = false; //we readonly to prevent typos
 					Rect crfRect = GUILayoutUtility.GetRect(0.0f, EditorGUIUtility.singleLineHeight, GUILayout.ExpandWidth(true));
 					Rect crfDelRect = crfRect;
 					crfRect.width = crfRect.width - 75f - 20f - 20f;
 					crfDelRect.width = 20f + padding;
-					crfDelRect.x = crfRect.width + 20f + padding;
+					crfDelRect.x = crfRect.width /*+ 20f*/ + padding;
+					//We need to check if the RaceData is in the index or an assetBundle otherwise show the add buttons
+					if(!_compatibleRaceDatas.ContainsKey(compatibleRaces[i]) || !RaceInIndex(_compatibleRaceDatas[compatibleRaces[i]]))
+					{
+						crfRect.width = crfRect.width - 20f;
+						crfRect.x = crfRect.x + 20f;
+						var warningRect = new Rect((crfRect.xMin - 20f), crfRect.yMin, 20f, crfRect.height);
+						string warningMsg = "";
+						//the race is in the project but not assigned to the index or any assetBundles
+						if (_compatibleRaceDatas.ContainsKey(compatibleRaces[i]))
+							warningMsg = compatibleRaces[i] + " is not indexed! Either assign it to an assetBundle or use one of the buttons below to add it to the Scene/Global Library.";
+						else //the race is missing from the project
+							warningMsg = compatibleRaces[i] + " could not be found in the project. Have you deleted it?";
+						var warningGUIContent = new GUIContent("", warningMsg);
+						warningGUIContent.image = warningIcon;
+						EditorGUI.LabelField(warningRect, warningGUIContent);
+						if (_compatibleRaceDatas.ContainsKey(compatibleRaces[i]))
+						{
+							Rect addButsRect = GUILayoutUtility.GetRect(0.0f, EditorGUIUtility.singleLineHeight, GUILayout.ExpandWidth(true));
+							addButsRect.xMin = crfRect.xMin;
+							addButsRect.width = crfRect.width;
+							Rect butScene = addButsRect;
+							Rect butIndex = addButsRect;
+							butScene.width = addButsRect.width / 3f;
+							butIndex.xMin = butScene.xMax;
+							butIndex.width = (addButsRect.width / 3f)*2;
+                            if (GUI.Button(butScene,"Add to Scene Only", EditorStyles.miniButton))
+							{
+								UMAContext.Instance.AddRace(_compatibleRaceDatas[compatibleRaces[i]]);
+							}
+							if (GUI.Button(butIndex,"Add to Global Index (Recommended)", EditorStyles.miniButton))
+							{
+								UMAAssetIndexer.Instance.EvilAddAsset(typeof(RaceData), _compatibleRaceDatas[compatibleRaces[i]]);
+							}
+						}
+					}
+					GUI.enabled = false; //we readonly to prevent typos
 					EditorGUI.TextField(crfRect, compatibleRaces[i]);
 					GUI.enabled = true;
 					if (GUI.Button(crfDelRect, "X"))
@@ -330,7 +386,7 @@ namespace UMA.Editors
 					}
 				}
 				Rect thumbnailRect = dropArea;
-				thumbnailRect.x = dropArea.width + padding + 20f;
+				thumbnailRect.x = dropArea.width + padding /*+ 20f*/;
 				thumbnailRect.width = 75f;
 				thumbnailRect.y = thumbnailRect.y - 3f;
 				Rect thumbnailDDRect = thumbnailRect;
@@ -396,7 +452,8 @@ namespace UMA.Editors
             {
                 EditorGUILayout.HelpBox("Compatible races are used to assign this recipe to a race or races. Recipes are restricted to the races to which they are assigned - you cannot assign wardrobe items to races that are not compatible. Thumbnails can be used to attach sprites to the recipe for use in UI design.", MessageType.Info);
             }
-            return doUpdate;
+			GUILayout.Space(10);
+			return doUpdate;
 		}
 
 		protected virtual bool DrawWardrobeSlotsFields(Type TargetType, bool ShowHelp = false)
@@ -472,7 +529,6 @@ namespace UMA.Editors
                 EditorGUILayout.HelpBox("Wardrobe Slot: This assigns the recipe to a Wardrobe Slot. The wardrobe slots are defined on the race. Characters can have only one recipe per Wardrobe Slot at a time, so for example, adding a 'beard' recipe to a character will replace the existing 'beard' if there is one", MessageType.Info);
             }
 
-
             //SuppressedSlots UI
             int suppressFlags = 0;
 			for (int i = 0; i < generatedWardrobeSlotOptions.Count; i++)
@@ -514,22 +570,29 @@ namespace UMA.Editors
 					hiddenBaseFlags |= 0x1 << i;
 				}
 			}
-			int newHiddenBaseFlags = 0;
-			newHiddenBaseFlags = EditorGUILayout.MaskField("Hides Base Slot(s)", hiddenBaseFlags, generatedBaseSlotOptionsLabels.ToArray());
-			for (int i = 0; i < generatedBaseSlotOptionsLabels.Count; i++)
+
+			if (generatedBaseSlotOptionsLabels.Count > 0)
 			{
-				if ((newHiddenBaseFlags & (1 << i)) == (1 << i))
+				int newHiddenBaseFlags = 0;
+				newHiddenBaseFlags = EditorGUILayout.MaskField("Hides Base Slot(s)", hiddenBaseFlags, generatedBaseSlotOptionsLabels.ToArray());
+				for (int i = 0; i < generatedBaseSlotOptionsLabels.Count; i++)
 				{
-					newHides.Add(generatedBaseSlotOptions[i]);
+					if ((newHiddenBaseFlags & (1 << i)) == (1 << i))
+					{
+						newHides.Add(generatedBaseSlotOptions[i]);
+					}
+				}
+				if (newHides.Count > 1)
+				{
+					GUI.enabled = false;
+					string newHidesResult = String.Join(", ", newHides.ToArray());
+					EditorGUILayout.TextField(newHidesResult);
+					GUI.enabled = true;
 				}
 			}
-			if (newHides.Count > 1)
-			{
-				GUI.enabled = false;
-				string newHidesResult = String.Join(", ", newHides.ToArray());
-				EditorGUILayout.TextField(newHidesResult);
-				GUI.enabled = true;
-			}
+			else
+				EditorGUILayout.Popup("Hides Base Slots(s)", 0, new string[1] {"Nothing"} );
+			
             if (ShowHelp)
             {
                 EditorGUILayout.HelpBox("Hides: This is used to hide parts of the base recipe. For example, if you create gloves, you may want to hide the 'hands', so you don't get poke-through", MessageType.Info);
@@ -553,6 +616,20 @@ namespace UMA.Editors
             {
                 EditorGUILayout.HelpBox("Replaces: This is used to replace part of the base recipe while keeping it's overlays. For example, if you want to replace the head from the base race recipe with a High Poly head, you would 'replace' the head, not hide it. Only one slot can be replaced, and the recipe should only contain one slot.", MessageType.Info);
             }
+
+            #region MeshHideArray
+            //EditorGUIUtility.LookLikeInspector();
+            SerializedProperty meshHides = serializedObject.FindProperty ("MeshHideAssets");
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.PropertyField(meshHides, true);
+            if(EditorGUI.EndChangeCheck())
+                serializedObject.ApplyModifiedProperties();
+            //EditorGUIUtility.LookLikeControls();
+            if(ShowHelp)
+            {
+                EditorGUILayout.HelpBox("MeshHideAssets: This is a list of advanced mesh hiding assets to hide their corresponding slot meshes on a per vertex basis.", MessageType.Info);
+            }
+            #endregion
 
             //Update the values
             if (newWardrobeSlot != wardrobeSlot)

@@ -24,10 +24,10 @@ MonoBehaviour:
     filename: 
     thumb: {fileID: 0}
   wardrobeSlot: Chest
-  Hides:
-  - MaleTorso
+  Hides: []
   suppressWardrobeSlots: []
   activeWardrobeSet: []
-  recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"MaleHoodie","scale":100,"copyIdx":-1,"overlays":[{"id":"MaleHoodie_Overlay","colorIdx":0,"rect":[0,0,0,0],"data":[]}]},{"id":"MaleNeckline2","scale":100,"copyIdx":-1,"overlays":[{"id":"M_Bod
-    Overlay 1","colorIdx":1,"rect":[0,0,0,0],"data":[]}]}],"colors":[],"fColors":[{"name":"Shirt","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"Skin","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":2,"race":"","packedDna":[]}'
+  MeshHideAssets:
+  - {fileID: 11400000, guid: f1e5cb9113e36d44f8b6da360571f611, type: 2}
+  recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"MaleHoodie","scale":100,"copyIdx":-1,"overlays":[{"id":"MaleHoodie_Overlay","colorIdx":0,"rect":[0,0,0,0],"data":[]}]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]}],"colors":[],"fColors":[{"name":"Shirt","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"Skin","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":2,"race":"","packedDna":[]}'
   replaces: Nothing
