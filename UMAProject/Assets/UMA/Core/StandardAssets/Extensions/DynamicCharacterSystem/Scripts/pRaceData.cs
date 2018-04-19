@@ -10,9 +10,10 @@ namespace UMA
 {
     public partial class RaceData
     {
-
+		[Tooltip("UMA Text recipe that holds the slots and overlays that are the default set up for this race.")]
 		public UMARecipeBase baseRaceRecipe;
-        public List<string> wardrobeSlots = new List<string>(){
+		[Tooltip("Wardobe slots that wardrobe recipes can be assigned to.")]
+		public List<string> wardrobeSlots = new List<string>(){
             "None",
             "Face",
             "Hair",
