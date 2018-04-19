@@ -723,6 +723,7 @@ namespace UMA.Editors
 				if (GUILayout.Button("Add to Global Index (Recommended)"))
 				{
 					UMAAssetIndexer.Instance.EvilAddAsset(typeof(RaceData), _recipe.raceData);
+					UMAAssetIndexer.Instance.ForceSave();
 				}
 				GUILayout.EndHorizontal();
 			}
@@ -1037,6 +1038,7 @@ namespace UMA.Editors
 				if (GUILayout.Button("Add to Global Index (Recommended)"))
 				{
 					UMAAssetIndexer.Instance.EvilAddAsset(typeof(SlotDataAsset),_slotData.asset);
+					UMAAssetIndexer.Instance.ForceSave();
 				}
 				GUILayout.EndHorizontal();
 			}
@@ -1337,6 +1339,7 @@ namespace UMA.Editors
                 if (GUILayout.Button("Add to Global Index"))
                 {
                     UMAAssetIndexer.Instance.EvilAddAsset(typeof(OverlayDataAsset), _overlayData.asset);
+                    UMAAssetIndexer.Instance.ForceSave();
                 }
                 GUILayout.EndHorizontal();
             }
