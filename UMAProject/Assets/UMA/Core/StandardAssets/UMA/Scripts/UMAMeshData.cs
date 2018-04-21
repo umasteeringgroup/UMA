@@ -572,8 +572,6 @@ namespace UMA
 						blendShapes[shapeIndex].frames[frameIndex].deltaTangents = deltaTangents;
 
 				}
-				if ((shapeIndex % 10) == 0) //for good measure, writing to file is still slow...
-					GC.Collect();
 			}
 			#endregion
 		}
