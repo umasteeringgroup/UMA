@@ -17,6 +17,7 @@ namespace UMA.Editors
 		public bool createRecipe;
 		public bool addToGlobalLibrary;
 		public bool addToLocalLibrary;
+		public bool binarySerialization;
 
 		string GetAssetFolder()
 		{
@@ -67,6 +68,9 @@ namespace UMA.Editors
 			EnforceFolder(ref slotFolder);
 			RootBone = EditorGUILayout.TextField("Root Bone (ex:'Global')", RootBone);
 			slotName = EditorGUILayout.TextField("Element Name", slotName);
+			binarySerialization = EditorGUILayout.Toggle(new GUIContent("Binary Serialization", "Forces the created Mesh object to be serialized as binary. Recommended for large meshes and blendshapes."), binarySerialization);
+
+			EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
 			EditorGUILayout.BeginHorizontal();
 			createOverlay = EditorGUILayout.Toggle("Create Overlay", createOverlay);
 			EditorGUILayout.LabelField(slotName + "_Overlay");
@@ -208,7 +212,7 @@ namespace UMA.Editors
 			}
 
 			Debug.Log("Slot Mesh: " + slotMesh.name, slotMesh.gameObject);
-			SlotDataAsset slot = UMASlotProcessingUtil.CreateSlotData(AssetDatabase.GetAssetPath(slotFolder), GetAssetFolder(), GetAssetName(), slotMesh, material, normalReferenceMesh,RootBone);
+			SlotDataAsset slot = UMASlotProcessingUtil.CreateSlotData(AssetDatabase.GetAssetPath(slotFolder), GetAssetFolder(), GetAssetName(), slotMesh, material, normalReferenceMesh,RootBone, binarySerialization);
 			return slot;
 		}
 
