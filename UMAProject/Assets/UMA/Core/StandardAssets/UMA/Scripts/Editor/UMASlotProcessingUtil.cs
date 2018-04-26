@@ -103,7 +103,7 @@ namespace UMA.Editors
             AssetDatabase.SaveAssets();
         }
 
-		public static SlotDataAsset CreateSlotData(string slotFolder, string assetFolder, string assetName, SkinnedMeshRenderer mesh, UMAMaterial material, SkinnedMeshRenderer prefabMesh, string rootBone)
+		public static SlotDataAsset CreateSlotData(string slotFolder, string assetFolder, string assetName, SkinnedMeshRenderer mesh, UMAMaterial material, SkinnedMeshRenderer prefabMesh, string rootBone, bool binarySerialization = false)
 		{
 			if (!System.IO.Directory.Exists(slotFolder + '/' + assetFolder))
 			{
@@ -145,7 +145,18 @@ namespace UMA.Editors
 				resultingMesh = BuildNewReduceBonesMesh(resultingMesh, usedBonesDictionary);
 			}
 
-			AssetDatabase.CreateAsset(resultingMesh, slotFolder + '/' + assetName + '/' + mesh.name + ".asset");
+			if (binarySerialization)
+			{
+				//Work around for mesh being serialized as project format settings (text) when binary is much faster.
+				//If Unity introduces a way to set mesh as binary serialization then this becomes unnecessary.
+				BinaryAssetWrapper binaryAsset = ScriptableObject.CreateInstance<BinaryAssetWrapper>();
+				AssetDatabase.CreateAsset(binaryAsset, slotFolder + '/' + assetName + '/' + mesh.name + ".asset");
+				AssetDatabase.AddObjectToAsset(resultingMesh, binaryAsset);
+			}
+			else
+			{
+				AssetDatabase.CreateAsset(resultingMesh, slotFolder + '/' + assetName + '/' + mesh.name + ".asset");
+			}
 
 			tempGameObject.name = mesh.transform.parent.gameObject.name;
 			Transform[] transformList = tempGameObject.GetComponentsInChildren<Transform>();
