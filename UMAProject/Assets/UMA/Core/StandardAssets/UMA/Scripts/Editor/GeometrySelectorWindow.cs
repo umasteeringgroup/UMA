@@ -14,7 +14,10 @@ namespace UMA.Editors
         private GeometrySelector _Source;
         private SlotDataAsset _Occluder = null;
         private float _occluderOffset = 0;
+        private Vector3 _occluderPosition = Vector3.zero;
         private Vector3 _occluderRotation = Vector3.zero;
+        private Vector3 _occluderScale = Vector3.one;
+
         private bool doneEditing = false; //set to true to end editing this objects
         private bool showWireframe = true; //whether to switch to wireframe mode or not
         private bool backfaceCull = true; 
@@ -100,6 +103,13 @@ namespace UMA.Editors
             EditorGUILayout.LabelField("Mesh Selector Utilities", EditorStyles.largeLabel, GUILayout.MaxHeight(25) );
             scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUIStyle.none);
             GUILayout.Space(20);
+
+            _Source.visualizeNormals = EditorGUILayout.BeginToggleGroup("Visualize Normals", _Source.visualizeNormals);
+            _Source.normalsLength = EditorGUILayout.Slider(_Source.normalsLength, 0.01f, 1.5f);
+            _Source.normalsColor = EditorGUILayout.ColorField("Normals Color", _Source.normalsColor);
+            EditorGUILayout.EndToggleGroup();
+
+            GUILayout.Space(20);
             EditorGUILayout.LabelField(new GUIContent("Occlusion Slot (Optional)","Use this mesh to attempt to automatically detect occluded triangles"));
             SlotDataAsset newOccluder = (SlotDataAsset) EditorGUILayout.ObjectField(_Occluder, typeof(SlotDataAsset), false);
             if (newOccluder != _Occluder)
@@ -113,23 +123,41 @@ namespace UMA.Editors
 
             if (_Occluder != null)
             {
-                bool newOffset = false;
-                bool newRot = false;
-                float previousOffset = EditorGUILayout.FloatField(new GUIContent("Occluder Offset", "Distance along the normal to offset each vertex of the occlusion mesh"), _occluderOffset);
-                if (!Mathf.Approximately(previousOffset,_occluderOffset))
+                bool changed = false;
+
+                _Source.occlusionColor = EditorGUILayout.ColorField("Occlusion Mesh Color",_Source.occlusionColor);
+                _Source.occlusionWireframe = EditorGUILayout.Toggle("Occlusion Mesh Wireframe", _Source.occlusionWireframe);
+
+                float newOffset = EditorGUILayout.Slider(new GUIContent("Normal Offset", "Distance along the normal to offset each vertex of the occlusion mesh"), _occluderOffset, -0.1f, 0.25f);
+                if (!Mathf.Approximately(newOffset,_occluderOffset))
                 {
-                    _occluderOffset = previousOffset;
-                    newOffset = true;
-                }
-                Vector3 previousRot = EditorGUILayout.Vector3Field(new GUIContent("Rotation", "Offset the rotation (degrees) of the occluder"), _occluderRotation );
-                if (previousRot != _occluderRotation)
-                {
-                    _occluderRotation = previousRot;
-                    newRot = true;
+                    _occluderOffset = newOffset;
+                    changed = true;
                 }
 
-                if (newOffset || newRot)
-                    _Source.UpdateOcclusionMesh(_occluderOffset, _occluderRotation);
+                Vector3 newPosition = EditorGUILayout.Vector3Field(new GUIContent("Position", "Offset the position of the occluder"), _occluderPosition);
+                if( newPosition != _occluderPosition)
+                {
+                    _occluderPosition = newPosition;
+                    changed = true;
+                }
+
+                Vector3 newRotation = EditorGUILayout.Vector3Field(new GUIContent("Rotation", "Offset the rotation (degrees) of the occluder"), _occluderRotation);
+                if (newRotation != _occluderRotation)
+                {
+                    _occluderRotation = newRotation;
+                    changed = true;
+                }
+
+                Vector3 newScale = EditorGUILayout.Vector3Field(new GUIContent("Scale", "Offset the scale of the occluder"), _occluderScale);
+                if (newScale != _occluderScale)
+                {
+                    _occluderScale = newScale;
+                    changed = true;
+                }
+
+                if (changed)
+                    _Source.UpdateOcclusionMesh(_occluderOffset, _occluderPosition, _occluderRotation, _occluderScale);
 
                 if (GUILayout.Button(new GUIContent("Raycast Hidden Faces", "Warning! This will clear the current selection.")))
                 {
@@ -576,6 +604,13 @@ namespace UMA.Editors
             Vector3[] targetNorms = targetMesh.normals;
             if (targetNorms.Length != targetVerts.Length)
                 return;
+
+            Matrix4x4 m = _Source.gameObject.transform.localToWorldMatrix;
+            for (int i = 0; i < targetVerts.Length; i++)
+            {
+                targetVerts[i] = m.MultiplyPoint3x4(targetVerts[i]);
+                targetNorms[i] = m.MultiplyPoint3x4(targetNorms[i]);
+            }
             
             Vector3[] occlusionVerts = occlusionMesh.vertices;
             List<int[]> occlusionTriangles = new List<int[]>();

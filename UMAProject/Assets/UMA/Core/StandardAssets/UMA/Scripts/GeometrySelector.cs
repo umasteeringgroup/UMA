@@ -14,6 +14,10 @@ namespace UMA
 
 		public BitArray selectedTriangles;
 
+		public bool visualizeNormals = false;
+		public float normalsLength = 0.1f;
+		public Color32 normalsColor = Color.white;
+
 		public Mesh sharedMesh
 		{
 			get { return _sharedMesh; }
@@ -21,12 +25,17 @@ namespace UMA
 		}
 		private Mesh _sharedMesh;
 
+		//Occlusion mesh options
+		public Color32 occlusionColor = Color.white;
+		public bool occlusionWireframe = true;
+
 		public Mesh occlusionMesh
 		{
 			get { return _occlusionMesh; }
 			set { _occlusionMesh = value; }
 		}
 		private Mesh _occlusionMesh;
+
 		private UMAMeshData _meshData;
 
 		public MeshRenderer meshRenderer
@@ -272,7 +281,7 @@ namespace UMA
                 occlusionMesh.SetTriangles(meshData.submeshes[i].triangles, i);
         }
 
-        public void UpdateOcclusionMesh(float offset, Vector3 rot)
+        public void UpdateOcclusionMesh(float offset, Vector3 pos, Vector3 rot, Vector3 s)
         {
             if (_occlusionMesh == null)
                 return;
@@ -282,19 +291,20 @@ namespace UMA
 
             //Let's call CreateOcclusionMesh to reset it.
             CreateOcclusionMesh(_meshData);
-            Quaternion rotation = new Quaternion();
-            rotation.eulerAngles = rot;
 
-            if (Mathf.Approximately(offset,0) && rot == Vector3.zero) //If offset is zero and rot is zero, we can early out because we already reset the mesh.
-                return;
-            
+            if (Mathf.Approximately(offset,0) && rot == Vector3.zero && pos == Vector3.zero && s == Vector3.one) //If offset is zero and rot is zero, we can early out because we already reset the mesh.
+                 return;
+
+            Quaternion q = Quaternion.Euler(rot);
+            Matrix4x4 m = Matrix4x4.TRS(pos, q, s);
+
             Vector3[] verts = _occlusionMesh.vertices;
             Vector3[] normals = _occlusionMesh.normals;
             Vector3[] newVerts = new Vector3[_occlusionMesh.vertexCount];
             for (int i = 0; i < _occlusionMesh.vertexCount; i++)
             {
                 newVerts[i] = verts[i] + (normals[i].normalized * offset);
-                newVerts[i] = rotation * (newVerts[i]); //we assume to always be at (0,0,0)
+                newVerts[i] = m.MultiplyPoint3x4(newVerts[i]);
             }
             _occlusionMesh.vertices = newVerts;
         }
@@ -303,7 +313,27 @@ namespace UMA
         {            
 			if (_occlusionMesh != null)
 			{
-                Gizmos.DrawWireMesh(_occlusionMesh, transform.position, transform.rotation);
+                Gizmos.color = occlusionColor;
+                
+                if (occlusionWireframe)
+                    Gizmos.DrawWireMesh(_occlusionMesh);
+                else
+                    Gizmos.DrawMesh(_occlusionMesh);
+			}
+			if(visualizeNormals)
+			{
+				Matrix4x4 m = gameObject.transform.localToWorldMatrix;
+				Vector3[] targetVerts = sharedMesh.vertices;
+				Vector3[] targetNorms = sharedMesh.normals;
+
+				Gizmos.color = normalsColor;
+
+				for (int i = 0; i < targetVerts.Length; i++)
+				{
+					targetVerts[i] = m.MultiplyPoint3x4(targetVerts[i]);
+					targetNorms[i] = m.MultiplyPoint3x4(targetNorms[i]) * normalsLength;
+					Gizmos.DrawLine(targetVerts[i], targetVerts[i] + targetNorms[i]);
+				}
 			}
         }
     }
