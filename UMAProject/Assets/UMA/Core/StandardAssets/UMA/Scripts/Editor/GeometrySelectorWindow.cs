@@ -106,25 +106,26 @@ namespace UMA.Editors
             scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUIStyle.none);
             GUILayout.Space(20);
 
-            bool newNormals = EditorGUILayout.BeginToggleGroup("Visualize Normals", _Source.visualizeNormals);
-            if( newNormals != _Source.visualizeNormals )
+            EditorGUILayout.BeginHorizontal();
+            bool newNormals = EditorGUILayout.Toggle("Visualize Normals", _Source.visualizeNormals);
+            if ( newNormals != _Source.visualizeNormals )
             {
                 _Source.visualizeNormals = newNormals;
                 SceneView.RepaintAll();
             }
-            float newNormalLength = EditorGUILayout.Slider(_Source.normalsLength, 0.01f, 1.5f);
+            Color32 newNormalColor = EditorGUILayout.ColorField(_Source.normalsColor);
+            if (!newNormalColor.Equals(_Source.normalsColor))
+            {
+                _Source.normalsColor = newNormalColor;
+                SceneView.RepaintAll();
+            }
+            EditorGUILayout.EndHorizontal();
+            float newNormalLength = EditorGUILayout.Slider("Normals Length", _Source.normalsLength, 0.01f, 1.5f);
             if( newNormalLength != _Source.normalsLength )
             {
                 _Source.normalsLength = newNormalLength;
                 SceneView.RepaintAll();
             }
-            Color32 newNormalColor = EditorGUILayout.ColorField("Normals Color", _Source.normalsColor);
-            if( !newNormalColor.Equals(_Source.normalsColor) )
-            {
-                _Source.normalsColor = newNormalColor;
-                SceneView.RepaintAll();
-            }
-            EditorGUILayout.EndToggleGroup();
 
             GUILayout.Space(20);
             EditorGUILayout.LabelField(new GUIContent("Occlusion Slot (Optional)","Use this mesh to attempt to automatically detect occluded triangles"));
@@ -600,14 +601,14 @@ namespace UMA.Editors
         /// <param name="p2">Vertex 2 of the triangle.</param>
         /// <param name="p3">Vertex 3 of the triangle.</param>
         /// <returns><c>true</c> when the ray hits the triangle, otherwise <c>false</c></returns>
-        public static bool RayTriIntersect(Ray ray, Vector3 p1, Vector3 p2, Vector3 p3)
+        public static bool RayTriIntersect(Ray ray, Vector3 p1, Vector3 p2, Vector3 p3, out float dist)
         {
             // Vectors from p1 to p2/p3 (edges)
             Vector3 e1, e2;  
 
             Vector3 p, q, t;
             float det, invDet, u, v;
-
+            dist = Mathf.Infinity;
 
             //Find vectors for edges sharing vertex/point p1
             e1 = p2 - p1;
@@ -640,6 +641,8 @@ namespace UMA.Editors
 
             //Check for ray hit
             if (v < 0 || u + v > 1) { return false; }
+
+            dist = Vector3.Dot(e2, q) * invDet;
 
             if ((Vector3.Dot(e2, q) * invDet) > Mathf.Epsilon)
             { 
@@ -688,19 +691,25 @@ namespace UMA.Editors
             {
                 EditorUtility.DisplayProgressBar("Progress", "calculating...", ((float)i / (float)targetVerts.Length));
                     
-                Ray testRay = new Ray(targetVerts[i], targetNorms[i]);
+                Ray testRay = new Ray(targetVerts[i], targetNorms[i] );
                 for (int j = 0; j < occlusionTriangles.Count; j++)
                 {
                     int[] triVerts = occlusionTriangles[j];
                     for (int k = 0; k < triVerts.Length; k+= 3)
                     {
+                        float dist = Mathf.Infinity;
                         if (RayTriIntersect(testRay,
                             occlusionVerts[triVerts[k + 0]],
                             occlusionVerts[triVerts[k + 1]],
-                            occlusionVerts[triVerts[k + 2]]))
+                            occlusionVerts[triVerts[k + 2]],
+                            out dist))
                         {
-                            vertexOccluded[i] = true;
-                            break;
+                            if (dist <= _Source.normalsLength)
+                            {
+                                Debug.Log("Dist: " + dist + " NormalsLength: " + _Source.normalsLength);
+                                vertexOccluded[i] = true;
+                                break;
+                            }
                         }
                     }
 
@@ -717,8 +726,8 @@ namespace UMA.Editors
                 int[] triVerts = _Source.sharedMesh.GetTriangles(i);
                 for (int j = 0; j < triVerts.Length; j += 3)
                 {
-                    if (vertexOccluded[triVerts[j + 0]] &&
-                        vertexOccluded[triVerts[j + 1]] &&
+                    if (vertexOccluded[triVerts[j + 0]] ||
+                        vertexOccluded[triVerts[j + 1]] ||
                         vertexOccluded[triVerts[j + 2]])
                     {
                         _Source.selectedTriangles[(j / 3)] = true;

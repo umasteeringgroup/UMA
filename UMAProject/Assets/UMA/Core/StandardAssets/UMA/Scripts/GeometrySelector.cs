@@ -36,7 +36,6 @@ namespace UMA
 		}
 		private Mesh _occlusionMesh;
 
-
 		public MeshRenderer meshRenderer
 		{
 			get { return _meshRenderer; }
@@ -251,9 +250,41 @@ namespace UMA
             UpdateSelectionMesh();
         }
 
+        public void CreateOcclusionMesh(MeshHideAsset meshHide)
         {
+            if (meshHide == null)
                 return;
 
+            CreateOcclusionMesh(meshHide.asset.meshData);
+
+            int[] triangles = _occlusionMesh.GetTriangles(0);
+            BitArray bitArray = meshHide.triangleFlags[0];
+            List<int> newTriangles = new List<int>();
+
+            if((bitArray.Length * 3) != triangles.Length)
+            {
+                Debug.LogError("BitArray length does not match Triangle length!");
+                return;
+            }
+            
+            //Now let's trip away the triangles
+            for(int i = 0; i < bitArray.Length; i++)
+            {
+                if (bitArray[i])
+                {
+                    int triIndex = i * 3;
+                    newTriangles.Add( triangles[triIndex] );
+                    newTriangles.Add( triangles[triIndex+1]);
+                    newTriangles.Add( triangles[triIndex+2]);
+                }
+            }
+            _occlusionMesh.SetTriangles(newTriangles, 0);
+        }
+
+        public void CreateOcclusionMesh(UMAMeshData meshData)
+        {
+            if (meshData == null)
+                return;;
 
             if (_occlusionMesh == null)
                 _occlusionMesh = new Mesh();
@@ -277,11 +308,23 @@ namespace UMA
                 occlusionMesh.SetTriangles(meshData.submeshes[i].triangles, i);
         }
 
+        public void UpdateOcclusionMesh(UMAMeshData meshData, float offset, Vector3 pos, Vector3 rot, Vector3 s)
         {
-
-
             //Let's call CreateOcclusionMesh to reset it.
+            CreateOcclusionMesh(meshData);
 
+            UpdateOcclusionMesh(offset, pos, rot, s);
+        }
+
+        public void UpdateOcclusionMesh(MeshHideAsset meshHide, float offset, Vector3 pos, Vector3 rot, Vector3 s)
+        {
+            //Let's call CreateOcclusionMesh to reset it.
+            CreateOcclusionMesh(meshHide);
+            UpdateOcclusionMesh(offset, pos, rot, s);
+        }
+
+        private void UpdateOcclusionMesh(float offset, Vector3 pos, Vector3 rot, Vector3 s)
+        {
             if (Mathf.Approximately(offset,0) && rot == Vector3.zero && pos == Vector3.zero && s == Vector3.one) //If offset is zero and rot is zero, we can early out because we already reset the mesh.
                  return;
 
