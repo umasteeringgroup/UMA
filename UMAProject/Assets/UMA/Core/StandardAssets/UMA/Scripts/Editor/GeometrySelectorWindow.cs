@@ -12,7 +12,9 @@ namespace UMA.Editors
     public class GeometrySelectorWindow : Editor 
     {
         private GeometrySelector _Source;
-        private SlotDataAsset _Occluder = null;
+        private SlotDataAsset _OccluderSlotData = null;
+        private MeshHideAsset _OccluderMeshHide = null;
+
         private float _occluderOffset = 0;
         private Vector3 _occluderPosition = Vector3.zero;
         private Vector3 _occluderRotation = Vector3.zero;
@@ -104,66 +106,128 @@ namespace UMA.Editors
             scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUIStyle.none);
             GUILayout.Space(20);
 
-            _Source.visualizeNormals = EditorGUILayout.BeginToggleGroup("Visualize Normals", _Source.visualizeNormals);
-            _Source.normalsLength = EditorGUILayout.Slider(_Source.normalsLength, 0.01f, 1.5f);
-            _Source.normalsColor = EditorGUILayout.ColorField("Normals Color", _Source.normalsColor);
+            bool newNormals = EditorGUILayout.BeginToggleGroup("Visualize Normals", _Source.visualizeNormals);
+            if( newNormals != _Source.visualizeNormals )
+            {
+                _Source.visualizeNormals = newNormals;
+                SceneView.RepaintAll();
+            }
+            float newNormalLength = EditorGUILayout.Slider(_Source.normalsLength, 0.01f, 1.5f);
+            if( newNormalLength != _Source.normalsLength )
+            {
+                _Source.normalsLength = newNormalLength;
+                SceneView.RepaintAll();
+            }
+            Color32 newNormalColor = EditorGUILayout.ColorField("Normals Color", _Source.normalsColor);
+            if( !newNormalColor.Equals(_Source.normalsColor) )
+            {
+                _Source.normalsColor = newNormalColor;
+                SceneView.RepaintAll();
+            }
             EditorGUILayout.EndToggleGroup();
 
             GUILayout.Space(20);
             EditorGUILayout.LabelField(new GUIContent("Occlusion Slot (Optional)","Use this mesh to attempt to automatically detect occluded triangles"));
-            SlotDataAsset newOccluder = (SlotDataAsset) EditorGUILayout.ObjectField(_Occluder, typeof(SlotDataAsset), false);
-            if (newOccluder != _Occluder)
+            EditorGUILayout.BeginHorizontal();
+            SlotDataAsset newOccluderSlotData = (SlotDataAsset) EditorGUILayout.ObjectField(_OccluderSlotData, typeof(SlotDataAsset), false);
+            MeshHideAsset newOccluderMeshHide = (MeshHideAsset)EditorGUILayout.ObjectField(_OccluderMeshHide, typeof(MeshHideAsset), false);
+            if(GUILayout.Button("Clear", GUILayout.MaxWidth(60)))
             {
-                _Occluder = newOccluder;
-                if (_Occluder != null)
-                        _Source.CreateOcclusionMesh(_Occluder.meshData);
+                _OccluderSlotData = null;
+                newOccluderSlotData = null;
+                _OccluderMeshHide = null;
+                newOccluderMeshHide = null;
+                _Source.occlusionMesh = null;
+                SceneView.RepaintAll();
+            }
+            if (newOccluderSlotData != _OccluderSlotData)
+            {
+                _OccluderSlotData = newOccluderSlotData;
+                _OccluderMeshHide = null;
+                newOccluderMeshHide = null;
+                if (_OccluderSlotData != null)
+                        _Source.UpdateOcclusionMesh(_OccluderSlotData.meshData, _occluderOffset, _occluderPosition, _occluderRotation, _occluderScale);
                 else
                         _Source.occlusionMesh = null;
+                SceneView.RepaintAll();
             }
-
-            if (_Occluder != null)
+            if (newOccluderMeshHide != _OccluderMeshHide)
             {
-                bool changed = false;
-
-                _Source.occlusionColor = EditorGUILayout.ColorField("Occlusion Mesh Color",_Source.occlusionColor);
-                _Source.occlusionWireframe = EditorGUILayout.Toggle("Occlusion Mesh Wireframe", _Source.occlusionWireframe);
-
-                float newOffset = EditorGUILayout.Slider(new GUIContent("Normal Offset", "Distance along the normal to offset each vertex of the occlusion mesh"), _occluderOffset, -0.1f, 0.25f);
-                if (!Mathf.Approximately(newOffset,_occluderOffset))
+                if (newOccluderMeshHide == _Source.meshAsset)
                 {
-                    _occluderOffset = newOffset;
-                    changed = true;
+                    EditorUtility.DisplayDialog("Error", "Can not select the same MeshHideAsset currently being edited!", "OK");
                 }
-
-                Vector3 newPosition = EditorGUILayout.Vector3Field(new GUIContent("Position", "Offset the position of the occluder"), _occluderPosition);
-                if( newPosition != _occluderPosition)
+                else
                 {
-                    _occluderPosition = newPosition;
-                    changed = true;
-                }
-
-                Vector3 newRotation = EditorGUILayout.Vector3Field(new GUIContent("Rotation", "Offset the rotation (degrees) of the occluder"), _occluderRotation);
-                if (newRotation != _occluderRotation)
-                {
-                    _occluderRotation = newRotation;
-                    changed = true;
-                }
-
-                Vector3 newScale = EditorGUILayout.Vector3Field(new GUIContent("Scale", "Offset the scale of the occluder"), _occluderScale);
-                if (newScale != _occluderScale)
-                {
-                    _occluderScale = newScale;
-                    changed = true;
-                }
-
-                if (changed)
-                    _Source.UpdateOcclusionMesh(_occluderOffset, _occluderPosition, _occluderRotation, _occluderScale);
-
-                if (GUILayout.Button(new GUIContent("Raycast Hidden Faces", "Warning! This will clear the current selection.")))
-                {
-                    RaycastHide();
+                    _OccluderMeshHide = newOccluderMeshHide;
+                    _OccluderSlotData = null;
+                    newOccluderSlotData = null;
+                    if (_OccluderMeshHide != null && _OccluderMeshHide != _Source.meshAsset)
+                        _Source.UpdateOcclusionMesh(_OccluderMeshHide, _occluderOffset, _occluderPosition, _occluderRotation, _occluderScale);
+                    else
+                        _Source.occlusionMesh = null;
+                    SceneView.RepaintAll();
                 }
             }
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUI.BeginDisabledGroup(_Source.occlusionMesh == null);
+            bool changed = false;
+
+            Color32 newOcclusionColor = EditorGUILayout.ColorField("Occlusion Mesh Color",_Source.occlusionColor);
+            if( !newOcclusionColor.Equals(_Source.occlusionColor))
+            {
+                _Source.occlusionColor = newOcclusionColor;
+                SceneView.RepaintAll();
+            }
+            bool newWireframe = EditorGUILayout.Toggle("Occlusion Mesh Wireframe", _Source.occlusionWireframe);
+            if( newWireframe != _Source.occlusionWireframe )
+            {
+                _Source.occlusionWireframe = newWireframe;
+                SceneView.RepaintAll();
+            }
+
+            float newOffset = EditorGUILayout.Slider(new GUIContent("Normal Offset", "Distance along the normal to offset each vertex of the occlusion mesh"), _occluderOffset, -0.1f, 0.25f);
+            if (!Mathf.Approximately(newOffset,_occluderOffset))
+            {
+                _occluderOffset = newOffset;
+                changed = true;
+            }
+
+            Vector3 newPosition = EditorGUILayout.Vector3Field(new GUIContent("Position", "Offset the position of the occluder"), _occluderPosition);
+            if( newPosition != _occluderPosition)
+            {
+                _occluderPosition = newPosition;
+                changed = true;
+            }
+
+            Vector3 newRotation = EditorGUILayout.Vector3Field(new GUIContent("Rotation", "Offset the rotation (degrees) of the occluder"), _occluderRotation);
+            if (newRotation != _occluderRotation)
+            {
+                _occluderRotation = newRotation;
+                changed = true;
+            }
+
+            Vector3 newScale = EditorGUILayout.Vector3Field(new GUIContent("Scale", "Offset the scale of the occluder"), _occluderScale);
+            if (newScale != _occluderScale)
+            {
+                _occluderScale = newScale;
+                changed = true;
+            }
+
+            if (changed)
+            {
+                if(_OccluderSlotData)
+                    _Source.UpdateOcclusionMesh( _OccluderSlotData.meshData, _occluderOffset, _occluderPosition, _occluderRotation, _occluderScale);
+                if(_OccluderMeshHide)
+                    _Source.UpdateOcclusionMesh( _OccluderMeshHide, _occluderOffset, _occluderPosition, _occluderRotation, _occluderScale);
+            }
+
+            if (GUILayout.Button(new GUIContent("Raycast Hidden Faces", "Warning! This will clear the current selection.")))
+            {
+                RaycastHide();
+            }
+            EditorGUI.EndDisabledGroup();
 
             GUILayout.Space(20);
             textureMap = EditorGUILayout.ObjectField("Set From Texture Map", textureMap, typeof(Texture2D), false) as Texture2D;                

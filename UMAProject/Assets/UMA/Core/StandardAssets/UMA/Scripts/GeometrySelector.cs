@@ -36,7 +36,6 @@ namespace UMA
 		}
 		private Mesh _occlusionMesh;
 
-		private UMAMeshData _meshData;
 
 		public MeshRenderer meshRenderer
 		{
@@ -252,12 +251,9 @@ namespace UMA
             UpdateSelectionMesh();
         }
 
-        public void CreateOcclusionMesh(UMAMeshData meshData)
         {
-            if (meshData == null)
                 return;
 
-            _meshData = meshData;
 
             if (_occlusionMesh == null)
                 _occlusionMesh = new Mesh();
@@ -281,16 +277,10 @@ namespace UMA
                 occlusionMesh.SetTriangles(meshData.submeshes[i].triangles, i);
         }
 
-        public void UpdateOcclusionMesh(float offset, Vector3 pos, Vector3 rot, Vector3 s)
         {
-            if (_occlusionMesh == null)
-                return;
 
-            if (_occlusionMesh.vertices == null || _occlusionMesh.normals == null)
-                return;
 
             //Let's call CreateOcclusionMesh to reset it.
-            CreateOcclusionMesh(_meshData);
 
             if (Mathf.Approximately(offset,0) && rot == Vector3.zero && pos == Vector3.zero && s == Vector3.one) //If offset is zero and rot is zero, we can early out because we already reset the mesh.
                  return;
