@@ -5,6 +5,7 @@ using UnityEngine;
 namespace UMA.Editors
 {
 	[CustomEditor(typeof(OverlayDataAsset))]
+	[CanEditMultipleObjects]
 	public class OverlayDataAssetInspector : Editor
 	{
 		//DelayedFields ony trigger GUI.changed when the user selects another field. This means if the user changes a value but never changes the selected field it does not ever save.
