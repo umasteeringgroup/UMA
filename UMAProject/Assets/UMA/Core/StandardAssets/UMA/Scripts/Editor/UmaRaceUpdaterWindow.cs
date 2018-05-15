@@ -45,9 +45,16 @@ namespace UMA.Editors
 				return;
 			}
 
+			Slots.Clear();
+
+			if (Race == null)
+			{
+				EditorUtility.DisplayDialog("Error", "No RaceData selected!", "OK");
+				return;
+			}
+
 			Recipe = new UMAData.UMARecipe();
 			Race.baseRaceRecipe.Load(Recipe, Context);
-			Slots.Clear();
 
 			if (Recipe == null)
 				return;
