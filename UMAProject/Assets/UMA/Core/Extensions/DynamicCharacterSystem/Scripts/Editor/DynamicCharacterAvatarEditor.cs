@@ -363,7 +363,7 @@ namespace UMA.CharacterSystem.Editors
 				{
 					EditorGUILayout.HelpBox("Build Character Enabled: Builds the character on recipe load or race changed. If you want to load multiple recipes into a character you can disable this and enable it when you are done. By default this should be true.", MessageType.Info);
 				}
-				EditorGUILayout.PropertyField(serializedObject.FindProperty("loadBlendShapes"), new GUIContent("Load BlendShapes (experimental)"));
+				EditorGUILayout.PropertyField(serializedObject.FindProperty("loadBlendShapes"), new GUIContent("Load BlendShapes"));
 				EditorGUILayout.PropertyField(context);
 				EditorGUILayout.PropertyField(umaData);
 				EditorGUILayout.PropertyField(umaGenerator);
