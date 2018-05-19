@@ -30,7 +30,11 @@ namespace UMA.Editors
 			MeshHideAsset source = target as MeshHideAsset;
 
 			if (thisDynamicRaceLibrary == null)
-				thisDynamicRaceLibrary = UMAContext.FindInstance().raceLibrary as DynamicRaceLibrary;
+			{
+				UMAContext context = UMAContext.FindInstance();
+				if(context != null)
+					thisDynamicRaceLibrary = context.raceLibrary as DynamicRaceLibrary;
+			}
 
 			SetRaceLists();
 
@@ -60,18 +64,9 @@ namespace UMA.Editors
 
 			//DrawDefaultInspector();
 			SlotDataAsset obj = EditorGUILayout.ObjectField("SlotDataAsset", source.asset, typeof(SlotDataAsset), false) as SlotDataAsset;
-			if (obj != null && obj != source.asset)
+			if (obj != source.asset)
 			{
 				UpdateSourceAsset(obj);
-			}
-
-			//If we had a slotData added and we set it to none, then lets clear everything.
-			if(obj == null && source.asset != null)
-			{
-				source.asset = null;
-				source.Initialize();
-				AssetDatabase.SaveAssets();
-				EditorUtility.SetDirty(target);
 			}
 
 			if (source.asset == null)
@@ -79,14 +74,13 @@ namespace UMA.Editors
 
 
 			//Race Selector here
-			int newRaceIndex = 0;
 			GUILayout.Space(20);
-			newRaceIndex = EditorGUILayout.Popup("Select Base Slot by Race", selectedRaceIndex, foundRaceNames.ToArray() );
-			if(newRaceIndex != selectedRaceIndex)
+			selectedRaceIndex = EditorGUILayout.Popup("Select Base Slot by Race", selectedRaceIndex, foundRaceNames.ToArray());
+			if( selectedRaceIndex <= 0)
 			{
-				selectedRaceIndex = newRaceIndex;
+				EditorGUILayout.HelpBox("Quick selection of base slots by race. This is not needed to create a mesh hide asset, any slot can be used.", MessageType.Info);
 			}
-			if(selectedRaceIndex > 0)
+			else
 			{
 				UMAData.UMARecipe baseRecipe = new UMAData.UMARecipe();
 				foundRaces[selectedRaceIndex].baseRaceRecipe.Load(baseRecipe, UMAContext.FindInstance());
