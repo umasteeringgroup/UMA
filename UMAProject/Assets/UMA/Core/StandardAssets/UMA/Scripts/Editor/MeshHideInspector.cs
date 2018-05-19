@@ -4,6 +4,7 @@ using UnityEngine.SceneManagement;
 using UnityEditor.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
+using UMA.CharacterSystem;
 
 namespace UMA.Editors
 {
@@ -19,9 +20,20 @@ namespace UMA.Editors
         private Vector2 _drag;
         private Material _material;
 
+		private int selectedRaceIndex = 0;
+		private DynamicRaceLibrary thisDynamicRaceLibrary;
+		private List<RaceData> foundRaces = new List<RaceData>();
+		private List<string> foundRaceNames = new List<string>();
+
         void OnEnable()
         {
             MeshHideAsset source = target as MeshHideAsset;
+
+			if (thisDynamicRaceLibrary == null)
+				thisDynamicRaceLibrary = UMAContext.FindInstance().raceLibrary as DynamicRaceLibrary;
+
+			SetRaceLists();
+
             if (source.asset == null)
                 return;
 
@@ -47,14 +59,10 @@ namespace UMA.Editors
             bool beginSceneEditing = false;
 
             //DrawDefaultInspector();
-            var obj = EditorGUILayout.ObjectField("SlotDataAsset", source.asset, typeof(SlotDataAsset), false);
+            SlotDataAsset obj = EditorGUILayout.ObjectField("SlotDataAsset", source.asset, typeof(SlotDataAsset), false) as SlotDataAsset;
             if (obj != null && obj != source.asset)
             {
-                source.asset = obj as SlotDataAsset;
-                source.Initialize();
-                UpdateMeshPreview();
-                AssetDatabase.SaveAssets();
-                EditorUtility.SetDirty(target);
+                UpdateSourceAsset(obj);
             }
 
             //If we had a slotData added and we set it to none, then lets clear everything.
@@ -68,6 +76,33 @@ namespace UMA.Editors
 
             if (source.asset == null)
                 EditorGUILayout.HelpBox("No SlotDataAsset set! Begin by adding a SlotDataAsset to the object field above.", MessageType.Error);
+
+
+            //Race Selector here
+            int newRaceIndex = 0;
+            GUILayout.Space(20);
+            newRaceIndex = EditorGUILayout.Popup("Select Base Slot by Race", selectedRaceIndex, foundRaceNames.ToArray() );
+            if(newRaceIndex != selectedRaceIndex)
+            {
+                selectedRaceIndex = newRaceIndex;
+            }
+            if(selectedRaceIndex > 0)
+            {
+                UMAData.UMARecipe baseRecipe = new UMAData.UMARecipe();
+                foundRaces[selectedRaceIndex].baseRaceRecipe.Load(baseRecipe, UMAContext.FindInstance());
+
+                foreach(SlotData sd in baseRecipe.slotDataList)
+                {
+                    if (sd != null && sd.asset != null)
+                    {
+                        if( GUILayout.Button(string.Format("{0} ({1})", sd.asset.name, sd.slotName)))
+                        {
+                            if( UpdateSourceAsset(sd.asset))
+                                selectedRaceIndex = 0;
+                        }
+                    }
+                }                
+            }
 
             GUILayout.Space(20);
             if (source.TriangleCount > 0)
@@ -101,6 +136,33 @@ namespace UMA.Editors
                 // This has to happen outside the inspector
                 EditorApplication.delayCall += CreateSceneEditObject;
             }
+        }
+
+        private bool UpdateSourceAsset( SlotDataAsset newObj )
+        {
+            MeshHideAsset source = target as MeshHideAsset;
+            bool update = false;
+
+            if (source.asset != null)
+            {
+                if (EditorUtility.DisplayDialog("Warning", "Setting a new source slot will clear the existing data on this asset!", "OK", "Cancel"))
+                    update = true;
+            }
+            else
+            {
+                update = true;
+            }
+
+            if(update)
+            {
+                source.asset = newObj;
+                source.Initialize();
+                UpdateMeshPreview();
+                AssetDatabase.SaveAssets();
+                EditorUtility.SetDirty(target);
+                return true;
+            }
+            return false;
         }
 
         private void UpdateMeshPreview()
@@ -370,6 +432,26 @@ namespace UMA.Editors
                     break;
             }
             return scrollPosition;
-        }
-    }
+		}
+
+		public void SetRaceLists()
+		{
+			if (thisDynamicRaceLibrary == null)
+				return;
+
+			RaceData[] raceDataArray = thisDynamicRaceLibrary.GetAllRaces();
+			foundRaces.Clear();
+			foundRaceNames.Clear();
+			foundRaces.Add(null);
+			foundRaceNames.Add("None Set");
+			foreach (RaceData race in raceDataArray)
+			{
+				if (race != null && race.raceName != "RaceDataPlaceholder")
+				{
+					foundRaces.Add(race);
+					foundRaceNames.Add(race.raceName);
+				}
+			}
+		}
+	}
 }
