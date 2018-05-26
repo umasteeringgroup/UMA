@@ -2521,8 +2521,12 @@ namespace UMA.CharacterSystem
                             }
                         }
                     }
+                }
+
+                foreach (UMATextRecipe utr in WardrobeRecipes.Values)
+                {
                     //Collect all the MeshHideAssets on all the wardrobe recipes
-                    if (utr.MeshHideAssets != null)
+                    if (utr.MeshHideAssets != null && !SuppressSlotsStrings.Contains(utr.wardrobeSlot))
                     {
                         foreach (MeshHideAsset meshHide in utr.MeshHideAssets)
                         {
