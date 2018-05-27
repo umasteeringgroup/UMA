@@ -18,6 +18,7 @@ namespace UMA.Editors
         private PreviewRenderUtility _previewRenderUtility;
         private Vector2 _drag;
         private Material _material;
+        private bool _autoInitialize = true;
 
         void OnEnable()
         {
@@ -46,16 +47,20 @@ namespace UMA.Editors
             MeshHideAsset source = target as MeshHideAsset;
             bool beginSceneEditing = false;
 
-            //DrawDefaultInspector();
             var obj = EditorGUILayout.ObjectField("SlotDataAsset", source.asset, typeof(SlotDataAsset), false);
             if (obj != null && obj != source.asset)
             {
                 source.asset = obj as SlotDataAsset;
-                source.Initialize();
-                UpdateMeshPreview();
+                if (_autoInitialize)
+                {
+                    source.Initialize();
+                    UpdateMeshPreview();
+                }
                 AssetDatabase.SaveAssets();
                 EditorUtility.SetDirty(target);
             }
+            _autoInitialize = EditorGUILayout.Toggle(new GUIContent("AutoInitialize (recommended)", "Checking this will auto initialize the MeshHideAsset when a slot is added (recommended).  " +
+                "For users that are rebuilding slots that don't change the geometry, the slot reference will be lost but can be reset without losing the existing MeshHide information by unchecking this." ),_autoInitialize);
 
             //If we had a slotData added and we set it to none, then lets clear everything.
             if(obj == null && source.asset != null)
