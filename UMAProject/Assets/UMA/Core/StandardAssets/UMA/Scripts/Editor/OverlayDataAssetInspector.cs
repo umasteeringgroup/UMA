@@ -100,14 +100,17 @@ namespace UMA.Editors
 					EditorGUI.indentLevel--;
 				}
 
-				bool allValid = true;
-				for (int i = 0; i < _textureList.arraySize; i++)
+				if (!_textureList.hasMultipleDifferentValues)
 				{
-					if (_textureList.GetArrayElementAtIndex(i).objectReferenceValue == null)
-						allValid = false;
+					bool allValid = true;
+					for (int i = 0; i < _textureList.arraySize; i++)
+					{
+						if (_textureList.GetArrayElementAtIndex(i).objectReferenceValue == null)
+							allValid = false;
+					}
+					if (!allValid)
+						EditorGUILayout.HelpBox("Not all textures in Texture List set!", MessageType.Error);
 				}
-				if (!allValid)
-					EditorGUILayout.HelpBox("Not all textures in Texture List set!", MessageType.Error);
 			}
 			else
 				EditorGUILayout.HelpBox("No UMA Material selected!", MessageType.Warning);
