@@ -110,6 +110,13 @@ namespace UMA.Editors
 								checkedSlot.Slot.asset.material = Material;
 								EditorUtility.SetDirty(checkedSlot.Slot.asset);
 							}
+							
+							  // also update the overlay slots
+				+                                foreach (var overlaySlot in checkedSlot.Slot.GetOverlayList().ToArray())
+				+                                {
+				+                                    overlaySlot.asset.material = Material;
+				+                                    EditorUtility.SetDirty(overlaySlot.asset);
+				+                                }
 						}
 						AssetDatabase.SaveAssets();
 					}
