@@ -24,7 +24,7 @@ namespace UMA
         public SlotDataAsset asset
         {
             get{ return _asset; }
-            set{ _asset = value; Initialize(); }
+            set{ _asset = value; }
         }
         [SerializeField, HideInInspector]
         private SlotDataAsset _asset;

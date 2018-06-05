@@ -19,6 +19,7 @@ namespace UMA.Editors
 		private PreviewRenderUtility _previewRenderUtility;
 		private Vector2 _drag;
 		private Material _material;
+		private bool _autoInitialize = true;
 
 		private int selectedRaceIndex = 0;
 		private DynamicRaceLibrary thisDynamicRaceLibrary;
@@ -66,8 +67,14 @@ namespace UMA.Editors
 			SlotDataAsset obj = EditorGUILayout.ObjectField("SlotDataAsset", source.asset, typeof(SlotDataAsset), false) as SlotDataAsset;
 			if (obj != source.asset)
 			{
-				UpdateSourceAsset(obj);
+      	source.asset = obj as SlotDataAsset;
+				if (_autoInitialize)
+				{
+				  UpdateSourceAsset(obj);
+        }
 			}
+      _autoInitialize = EditorGUILayout.Toggle(new GUIContent("AutoInitialize (recommended)", "Checking this will auto initialize the MeshHideAsset when a slot is added (recommended).  " +
+				"For users that are rebuilding slots that don't change the geometry, the slot reference will be lost but can be reset without losing the existing MeshHide information by unchecking this." ),_autoInitialize);
 
 			if (source.asset == null)
 				EditorGUILayout.HelpBox("No SlotDataAsset set! Begin by adding a SlotDataAsset to the object field above.", MessageType.Error);
@@ -131,7 +138,7 @@ namespace UMA.Editors
 				EditorApplication.delayCall += CreateSceneEditObject;
 			}
 		}
-
+    
 		private bool UpdateSourceAsset( SlotDataAsset newObj )
 		{
 			MeshHideAsset source = target as MeshHideAsset;

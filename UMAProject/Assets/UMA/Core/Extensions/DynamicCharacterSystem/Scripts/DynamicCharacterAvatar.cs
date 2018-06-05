@@ -2488,7 +2488,7 @@ namespace UMA.CharacterSystem
 			// clear the hiddenslots and hidden mesh assets
 			// so they can be accumulate anew from the recipe
             HiddenSlots.Clear();
-			MeshHideDictionary = new Dictionary<SlotDataAsset, List<MeshHideAsset>>();
+            MeshHideDictionary.Clear();
 
             UMADnaBase[] CurrentDNA = null;
             if (umaData != null)
@@ -2521,8 +2521,12 @@ namespace UMA.CharacterSystem
                             }
                         }
                     }
+                }
+
+                foreach (UMATextRecipe utr in WardrobeRecipes.Values)
+                {
                     //Collect all the MeshHideAssets on all the wardrobe recipes
-                    if (utr.MeshHideAssets != null)
+                    if (utr.MeshHideAssets != null && !SuppressSlotsStrings.Contains(utr.wardrobeSlot))
                     {
                         foreach (MeshHideAsset meshHide in utr.MeshHideAssets)
                         {
@@ -2531,13 +2535,10 @@ namespace UMA.CharacterSystem
                                 if (!MeshHideDictionary.ContainsKey(meshHide.asset))
                                 {   //If this meshHide.asset isn't already in the dictionary, then let's add it and start a new list.
                                     MeshHideDictionary.Add(meshHide.asset, new List<MeshHideAsset>());
+                                }
+                                //If this meshHide.asset is already in the dictionary AND the meshHide isn't already in the list, then add it.
+                                if (!MeshHideDictionary[meshHide.asset].Contains(meshHide))
                                     MeshHideDictionary[meshHide.asset].Add(meshHide);
-                                }
-                                else
-                                {   //If this meshHide.asset is already in the dictionary AND the meshHide isn't already in the list, then add it.
-                                    if (!MeshHideDictionary[meshHide.asset].Contains(meshHide))
-                                        MeshHideDictionary[meshHide.asset].Add(meshHide);
-                                }
                             }
                         }
                     }
