@@ -767,8 +767,20 @@ namespace UMA.Editors
 					}
 				}
 				GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
 
-				for (int i = 0; i < _slotEditors.Count; i++)
+                if (GUILayout.Button("Select All Slots"))
+                {
+                    SelectAllSlots();
+                }
+                if (GUILayout.Button("Select All Overlays"))
+                {
+                    SelectAllOverlays();
+                }
+
+                GUILayout.EndHorizontal();
+
+                for (int i = 0; i < _slotEditors.Count; i++)
 				{
 					var editor = _slotEditors[i];
 
@@ -796,9 +808,40 @@ namespace UMA.Editors
 				return changed;
 			}
 		}
+       /* private void SelectAllSlots()
+        {
+            List<UnityEngine.Object> slots = new List<UnityEngine.Object>();
+            foreach (var slotData in _recipe.slotDataList)
+            {
+                if (slotData != null)
+                {
+                    slots.Add(slotData.asset);
+                }
+            }
+            Selection.objects = slots.ToArray();
+        }
 
-
-
-	}
+        private void SelectAllOverlays()
+        {
+            HashSet<UnityEngine.Object> overlays = new HashSet<UnityEngine.Object>();
+            foreach (var slotData in _recipe.slotDataList)
+            {
+                if (slotData != null)
+                {
+                    List<OverlayData> overlayData = slotData.GetOverlayList();
+                    foreach (var overlay in overlayData)
+                    {
+                        if (overlay != null)
+                        {
+                            overlays.Add(overlay.asset);
+                        }
+                    }
+                }
+            }
+            UnityEngine.Object[] newSelection = new UnityEngine.Object[overlays.Count];
+            overlays.CopyTo(newSelection);
+            Selection.objects = newSelection;
+        } */
+    }
 }
 #endif

@@ -840,7 +840,7 @@ namespace UMA.Editors
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            if(GUILayout.Button("Select All Slots"))
+            if(GUILayout.Button("Select All Slots")) 
             {
                 SelectAllSlots();
             }
@@ -932,7 +932,7 @@ namespace UMA.Editors
             }
         }
 
-        private void SelectAllSlots()
+        protected void SelectAllSlots()
         {
             List<Object> slots = new List<Object>();
             foreach (var slotData in _recipe.slotDataList)
@@ -945,7 +945,7 @@ namespace UMA.Editors
             Selection.objects = slots.ToArray();
         }
 
-        private void SelectAllOverlays()
+        protected void SelectAllOverlays()
         {
             HashSet<Object> overlays = new HashSet<Object>();
             foreach (var slotData in _recipe.slotDataList)
