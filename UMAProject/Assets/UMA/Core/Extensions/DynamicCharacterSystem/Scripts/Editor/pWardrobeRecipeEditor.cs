@@ -12,6 +12,8 @@ namespace UMA.Editors
 	{
 		private Dictionary<string,RaceData> _compatibleRaceDatas = new Dictionary<string,RaceData>();
 
+		int meshHideAssetPickerID = -1;
+
 		// Drop area for compatible Races
 		private void CompatibleRacesDropArea(Rect dropArea, List<string> compatibleRaces)
 		{
@@ -618,16 +620,31 @@ namespace UMA.Editors
             }
 
             #region MeshHideArray
-            //EditorGUIUtility.LookLikeInspector();
-            SerializedProperty meshHides = serializedObject.FindProperty ("MeshHideAssets");
-            EditorGUI.BeginChangeCheck();
-            EditorGUILayout.PropertyField(meshHides, true);
-            if(EditorGUI.EndChangeCheck())
-                serializedObject.ApplyModifiedProperties();
+			//EditorGUIUtility.LookLikeInspector();
+			SerializedProperty meshHides = serializedObject.FindProperty ("MeshHideAssets");
+			EditorGUI.BeginChangeCheck();
+			EditorGUILayout.BeginHorizontal();
+			if(GUILayout.Button("+", GUILayout.MaxWidth(30)))
+			{
+				meshHideAssetPickerID = EditorGUIUtility.GetControlID(FocusType.Passive) + 100;
+				EditorGUIUtility.ShowObjectPicker<MeshHideAsset>(null, false, "", meshHideAssetPickerID);
+			}
+			GUILayout.Space(10);
+			if (Event.current.commandName == "ObjectSelectorUpdated" && EditorGUIUtility.GetObjectPickerControlID() == meshHideAssetPickerID)
+			{
+				meshHides.InsertArrayElementAtIndex(0);
+				SerializedProperty element = meshHides.GetArrayElementAtIndex(0);
+				element.objectReferenceValue = EditorGUIUtility.GetObjectPickerObject();
+				meshHideAssetPickerID = -1;
+			}
+			EditorGUILayout.PropertyField(meshHides, true);
+			EditorGUILayout.EndHorizontal();
+			if (EditorGUI.EndChangeCheck())
+				serializedObject.ApplyModifiedProperties();
             //EditorGUIUtility.LookLikeControls();
             if(ShowHelp)
             {
-                EditorGUILayout.HelpBox("MeshHideAssets: This is a list of advanced mesh hiding assets to hide their corresponding slot meshes on a per vertex basis.", MessageType.Info);
+                EditorGUILayout.HelpBox("MeshHideAssets: This is a list of advanced mesh hiding assets to hide their corresponding slot meshes on a per triangle basis.", MessageType.Info);
             }
             #endregion
 
