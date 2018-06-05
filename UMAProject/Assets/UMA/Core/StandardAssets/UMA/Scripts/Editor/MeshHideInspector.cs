@@ -4,6 +4,7 @@ using UnityEngine.SceneManagement;
 using UnityEditor.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
+using UMA.CharacterSystem;
 
 namespace UMA.Editors
 {
@@ -20,9 +21,24 @@ namespace UMA.Editors
 		private Material _material;
 		private bool _autoInitialize = true;
 
+		private int selectedRaceIndex = 0;
+		private DynamicRaceLibrary thisDynamicRaceLibrary;
+		private List<RaceData> foundRaces = new List<RaceData>();
+		private List<string> foundRaceNames = new List<string>();
+
 		void OnEnable()
 		{
 			MeshHideAsset source = target as MeshHideAsset;
+
+			if (thisDynamicRaceLibrary == null)
+			{
+				UMAContext context = UMAContext.FindInstance();
+				if(context != null)
+					thisDynamicRaceLibrary = context.raceLibrary as DynamicRaceLibrary;
+			}
+
+			SetRaceLists();
+
 			if (source.asset == null)
 				return;
 
@@ -47,32 +63,47 @@ namespace UMA.Editors
 			MeshHideAsset source = target as MeshHideAsset;
 			bool beginSceneEditing = false;
 
-			var obj = EditorGUILayout.ObjectField("SlotDataAsset", source.asset, typeof(SlotDataAsset), false);
-			if (obj != null && obj != source.asset)
+			//DrawDefaultInspector();
+			SlotDataAsset obj = EditorGUILayout.ObjectField("SlotDataAsset", source.asset, typeof(SlotDataAsset), false) as SlotDataAsset;
+			if (obj != source.asset)
 			{
-				source.asset = obj as SlotDataAsset;
+      	source.asset = obj as SlotDataAsset;
 				if (_autoInitialize)
 				{
-					source.Initialize();
-					UpdateMeshPreview();
-				}
-				AssetDatabase.SaveAssets();
-				EditorUtility.SetDirty(target);
+				  UpdateSourceAsset(obj);
+        }
 			}
-			_autoInitialize = EditorGUILayout.Toggle(new GUIContent("AutoInitialize (recommended)", "Checking this will auto initialize the MeshHideAsset when a slot is added (recommended).  " +
+      _autoInitialize = EditorGUILayout.Toggle(new GUIContent("AutoInitialize (recommended)", "Checking this will auto initialize the MeshHideAsset when a slot is added (recommended).  " +
 				"For users that are rebuilding slots that don't change the geometry, the slot reference will be lost but can be reset without losing the existing MeshHide information by unchecking this." ),_autoInitialize);
-
-			//If we had a slotData added and we set it to none, then lets clear everything.
-			if(obj == null && source.asset != null)
-			{
-				source.asset = null;
-				source.Initialize();
-				AssetDatabase.SaveAssets();
-				EditorUtility.SetDirty(target);
-			}
 
 			if (source.asset == null)
 				EditorGUILayout.HelpBox("No SlotDataAsset set! Begin by adding a SlotDataAsset to the object field above.", MessageType.Error);
+
+
+			//Race Selector here
+			GUILayout.Space(20);
+			selectedRaceIndex = EditorGUILayout.Popup("Select Base Slot by Race", selectedRaceIndex, foundRaceNames.ToArray());
+			if( selectedRaceIndex <= 0)
+			{
+				EditorGUILayout.HelpBox("Quick selection of base slots by race. This is not needed to create a mesh hide asset, any slot can be used.", MessageType.Info);
+			}
+			else
+			{
+				UMAData.UMARecipe baseRecipe = new UMAData.UMARecipe();
+				foundRaces[selectedRaceIndex].baseRaceRecipe.Load(baseRecipe, UMAContext.FindInstance());
+
+				foreach(SlotData sd in baseRecipe.slotDataList)
+				{
+					if (sd != null && sd.asset != null)
+					{
+						if( GUILayout.Button(string.Format("{0} ({1})", sd.asset.name, sd.slotName)))
+						{
+							if( UpdateSourceAsset(sd.asset))
+								selectedRaceIndex = 0;
+						}
+					}
+				}                
+			}
 
 			GUILayout.Space(20);
 			if (source.TriangleCount > 0)
@@ -106,6 +137,33 @@ namespace UMA.Editors
 				// This has to happen outside the inspector
 				EditorApplication.delayCall += CreateSceneEditObject;
 			}
+		}
+    
+		private bool UpdateSourceAsset( SlotDataAsset newObj )
+		{
+			MeshHideAsset source = target as MeshHideAsset;
+			bool update = false;
+
+			if (source.asset != null)
+			{
+				if (EditorUtility.DisplayDialog("Warning", "Setting a new source slot will clear the existing data on this asset!", "OK", "Cancel"))
+					update = true;
+			}
+			else
+			{
+				update = true;
+			}
+
+			if(update)
+			{
+				source.asset = newObj;
+				source.Initialize();
+				UpdateMeshPreview();
+				AssetDatabase.SaveAssets();
+				EditorUtility.SetDirty(target);
+				return true;
+			}
+			return false;
 		}
 
 		private void UpdateMeshPreview()
@@ -375,6 +433,26 @@ namespace UMA.Editors
 					break;
 			}
 			return scrollPosition;
+		}
+
+		public void SetRaceLists()
+		{
+			if (thisDynamicRaceLibrary == null)
+				return;
+
+			RaceData[] raceDataArray = thisDynamicRaceLibrary.GetAllRaces();
+			foundRaces.Clear();
+			foundRaceNames.Clear();
+			foundRaces.Add(null);
+			foundRaceNames.Add("None Set");
+			foreach (RaceData race in raceDataArray)
+			{
+				if (race != null && race.raceName != "RaceDataPlaceholder")
+				{
+					foundRaces.Add(race);
+					foundRaceNames.Add(race.raceName);
+				}
+			}
 		}
 	}
 }
