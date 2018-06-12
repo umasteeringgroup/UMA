@@ -4,6 +4,8 @@ using UnityEditor;
 using System;
 using UMA.CharacterSystem;
 using UnityEditor.Animations;
+using System.IO;
+using System.Text.RegularExpressions;
 
 namespace UMA
 {
@@ -172,5 +174,85 @@ namespace UMA
 
 			PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, string.Join( ";", allDefines.ToArray()));
 		}
+
+        /// <summary>
+        /// Create a Wardrobe Recipe from the slot (and optionally overlay)
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="sd"></param>
+        /// <param name="od"></param>
+        /// <param name="slotName"></param>
+        /// <param name="addToGlobalLibrary"></param>
+        public static void CreateRecipe(string path, SlotDataAsset sd, OverlayDataAsset od, string slotName, bool addToGlobalLibrary)
+        {
+            // Generate an asset in memory
+            UMAWardrobeRecipe asset = ScriptableObject.CreateInstance<CharacterSystem.UMAWardrobeRecipe>();
+            UMAData.UMARecipe recipe = new UMAData.UMARecipe();
+            recipe.ClearDna();
+            SlotData mySlot = new SlotData(sd);
+            if (od != null)
+            {
+                OverlayData myOverlay = new OverlayData(od);
+                mySlot.AddOverlay(myOverlay);
+            }
+            recipe.SetSlot(0, mySlot);
+            asset.Save(recipe, UMAContext.Instance);
+            asset.DisplayValue = slotName;
+
+            // Write the asset to disk
+            AssetDatabase.CreateAsset(asset, path);
+            AssetDatabase.SaveAssets();
+            if (addToGlobalLibrary)
+            {
+                // Add it to the global libary
+                UMAAssetIndexer.Instance.EvilAddAsset(typeof(CharacterSystem.UMAWardrobeRecipe), asset);
+            }
+            // Inform the asset database a file has changes
+            AssetDatabase.Refresh();
+        }
+
+        [MenuItem("UMA/Create Wardrobe Recipe from selected slot and overlay")]
+        public static void SaveAsRecipe()
+        {
+            SlotDataAsset sd = null;
+            OverlayDataAsset od = null;
+
+            foreach (UnityEngine.Object obj in Selection.objects)
+            {
+                // Make sure it's in the project, not the hierarchy.
+                // Not sure how we would ever have Slots and Overlays in the hierarchy though.
+                if (AssetDatabase.Contains(obj))
+                {
+                    if (obj is SlotDataAsset)
+                    {
+                        sd = obj as SlotDataAsset;
+                    }
+                    if (obj is OverlayDataAsset)
+                    {
+                        od = obj as OverlayDataAsset;
+                    }
+                }
+            }
+
+            if (sd == null)
+            {
+                EditorUtility.DisplayDialog("Notice", "A SlotDataAsset must be selected in the project view", "Got it");
+                return;
+            }
+
+            string assetPath = AssetDatabase.GetAssetPath(sd.GetInstanceID());
+            string path = Path.GetDirectoryName(assetPath);
+            string AssetName = Path.GetFileNameWithoutExtension(assetPath);
+            if (AssetName.ToLower().Contains("_Slot"))
+            {
+                AssetName = Regex.Replace(AssetName, "_slot", "_recipe", RegexOptions.IgnoreCase);
+            }
+            else
+            {
+                AssetName += "_recipe";
+            }
+            assetPath = Path.Combine(path, AssetName + ".asset");
+            CreateRecipe(assetPath, sd, od, sd.name, true);
+        }
     }
 }
