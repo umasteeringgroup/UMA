@@ -72,6 +72,7 @@ namespace UMA
         private static void DrawItems(string guid, Rect selectionRect)
         {
             if (!showIndexedTypes) return;
+            if (UMAAssetIndexer.Instance == null) return;
 
             AssetItem ai = UMAAssetIndexer.Instance.FromGuid(guid);
             if (ai != null)
