@@ -29,7 +29,7 @@ namespace UMA
             FriendlyNames.Add(typeof(DynamicUMADnaAsset), "Dynamic DNA");
             icon = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/UMA/InternalDataStore/UmaIndex.png");
             showIndexedTypes = EditorPrefs.GetBool("BoolUMAShowTypes", true);
-            showUnindexedTypes = EditorPrefs.GetBool("BoolUMAShowUnindexed", true);
+            showUnindexedTypes = EditorPrefs.GetBool("BoolUMAShowUnindexed", false);
 
             if (icon == null)
             {
@@ -41,6 +41,7 @@ namespace UMA
                 EditorApplication.projectWindowItemOnGUI += DrawItems;
             }
         }
+
 
         [PreferenceItem("UMA")]
         public static void PreferencesGUI()
@@ -173,4 +174,41 @@ namespace UMA
 			PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, string.Join( ";", allDefines.ToArray()));
 		}
     }
+
+    public static class UMAExtensions
+    {
+        public static System.Type[] GetAllDerivedTypes(this System.AppDomain aAppDomain, System.Type aType)
+        {
+            var result = new List<System.Type>();
+            var assemblies = aAppDomain.GetAssemblies();
+            foreach (var assembly in assemblies)
+            {
+                var types = assembly.GetTypes();
+                foreach (var type in types)
+                {
+                    if (type.IsSubclassOf(aType))
+                        result.Add(type);
+                }
+            }
+            return result.ToArray();
+        }
+
+        public static Rect GetEditorMainWindowPos()
+        {
+            Resolution r = Screen.currentResolution;
+            return new Rect(0, 0, r.width, r.height);
+        }
+
+        public static void CenterOnMainWin(this UnityEditor.EditorWindow aWin)
+        {
+            var main = GetEditorMainWindowPos();
+            var pos = aWin.position;
+            float w = (main.width - pos.width) * 0.5f;
+            float h = (main.height - pos.height) * 0.5f;
+            pos.x = main.x + w;
+            pos.y = main.y + h;
+            aWin.position = pos;
+        }
+    }
+
 }
