@@ -612,7 +612,7 @@ namespace UMA
 			}
 			else
 			{
-				throw new Exception("Bone not found.");
+				throw new Exception("Bone not found. BoneHash: " + nameHash);
 			}
 		}
 

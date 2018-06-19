@@ -85,8 +85,14 @@ namespace UMA.PoseTools
 			}
 
 			// Fix for animation systems which require consistent values frame to frame
-			Quaternion headRotation = umaData.skeleton.GetRotation(headHash);
-			Quaternion neckRotation = umaData.skeleton.GetRotation(neckHash);
+			Quaternion headRotation = Quaternion.identity;
+			Quaternion neckRotation = Quaternion.identity;
+
+			try { headRotation = umaData.skeleton.GetRotation(headHash); }
+			catch(System.Exception) { Debug.LogError("GetRotation: Head Bone not found!"); }
+
+			try { neckRotation = umaData.skeleton.GetRotation(neckHash); }
+			catch(System.Exception) { Debug.LogError("GetRotation: Neck Bone not found!"); }
 
 			// Need to reset bones here if we want Mecanim animation
 			expressionSet.RestoreBones(umaData.skeleton, logResetErrors);
