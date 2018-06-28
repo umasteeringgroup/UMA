@@ -32,7 +32,7 @@ namespace UMA.Dynamics.Editors
 			EditorGUILayout.HelpBox("Sets layer 8 and 9 to Ragdoll and Player. If your code uses different layers do not use this defaults button", MessageType.Info);
 			if (GUILayout.Button("Add Default Layers"))
 			{
-				//AddDefaultLayers();
+				AddDefaultLayers( ragdollLayer, playerLayer);
 			}
 			EditorGUILayout.HelpBox("The Ragdoll layer needs it's collision matrix layers set to collide with only itself. Set this in Edit->Project Settings->Physics->Layer Collision Matrix", MessageType.Info);
 			ragdollLayer.intValue = EditorGUILayout.LayerField("Ragdoll Layer", ragdollLayer.intValue);
@@ -43,6 +43,20 @@ namespace UMA.Dynamics.Editors
 			EditorGUILayout.PropertyField(onRagdollEnded);
 
 			serializedObject.ApplyModifiedProperties();
+		}
+
+		static public void AddDefaultLayers(SerializedProperty ragdollLayer, SerializedProperty playerLayer)
+		{
+			UMAUtils.CreateLayer("Ragdoll");
+			UMAUtils.CreateLayer("Player");
+
+			for (int i = 8; i < 32; i++)
+			{
+				if (i != ragdollLayer.intValue)
+					Physics.IgnoreLayerCollision(ragdollLayer.intValue, i, true);
+			}
+
+			Physics.IgnoreLayerCollision(ragdollLayer.intValue, ragdollLayer.intValue, false);
 		}
 	}
 }
