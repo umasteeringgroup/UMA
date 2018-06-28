@@ -47,11 +47,11 @@ namespace UMA.Dynamics
 		private List<Rigidbody> _rigidbodies = new List<Rigidbody> ();
 		private List<BoxCollider> _BoxColliders = new List<BoxCollider> ();
 
-        	public List<ClothSphereColliderPair> SphereColliders { get { return _SphereColliders; }}
-        	private List<ClothSphereColliderPair> _SphereColliders = new List<ClothSphereColliderPair>();
+		public List<ClothSphereColliderPair> SphereColliders { get { return _SphereColliders; }}
+		private List<ClothSphereColliderPair> _SphereColliders = new List<ClothSphereColliderPair>();
 		
-        	public List<CapsuleCollider> CapsuleColliders { get { return _CapsuleColliders; }}
-        	private List<CapsuleCollider> _CapsuleColliders = new List<CapsuleCollider>();
+		public List<CapsuleCollider> CapsuleColliders { get { return _CapsuleColliders; }}
+		private List<CapsuleCollider> _CapsuleColliders = new List<CapsuleCollider>();
 
 	
 		private CapsuleCollider _playerCollider;
