@@ -23,7 +23,7 @@ namespace UMA.Dynamics
 		public bool enableColliderTriggers = false;
 
 		[Tooltip("Experimental, for blending animations with physics")]
-        	[HideInInspector]
+		[HideInInspector]
 		[Range(0,1f)]
 		public float ragdollBlendAmount;
 
@@ -35,8 +35,8 @@ namespace UMA.Dynamics
 		[Tooltip("Layer to set the player collider on. See layer based collision")]
 		public int playerLayer = 9;
 
-        	[Tooltip("List of Physics Elements, see UMAPhysicsElement class")]
-        	public List<UMAPhysicsElement> elements = new List<UMAPhysicsElement>();
+		[Tooltip("List of Physics Elements, see UMAPhysicsElement class")]
+		public List<UMAPhysicsElement> elements = new List<UMAPhysicsElement>();
 
 		public UnityEvent onRagdollStarted;
 		public UnityEvent onRagdollEnded;
