@@ -47,8 +47,8 @@ namespace UMA.Dynamics.Editors
 
 		static public void AddDefaultLayers(SerializedProperty ragdollLayer, SerializedProperty playerLayer)
 		{
-			UMAUtils.CreateLayer("Ragdoll");
-			UMAUtils.CreateLayer("Player");
+			ragdollLayer.intValue = UMAUtils.CreateLayer("Ragdoll");
+			playerLayer.intValue = UMAUtils.CreateLayer("Player");
 
 			for (int i = 8; i < 32; i++)
 			{

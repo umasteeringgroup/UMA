@@ -34,7 +34,7 @@ namespace UMA
 		}
 
 #if UNITY_EDITOR
-		static public void CreateLayer(string name)
+		static public int CreateLayer(string name)
 		{
 			//  https://forum.unity.com/threads/adding-layer-by-script.41970/#post-2274824
 			UnityEditor.SerializedObject tagManager = new UnityEditor.SerializedObject(UnityEditor.AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0]);
@@ -48,7 +48,7 @@ namespace UMA
 				if (layerSP.stringValue == name)
 				{
 					ExistLayer = true;
-					break;
+					return i;
 				}
 
 			}
@@ -60,9 +60,11 @@ namespace UMA
 					layerSP.stringValue = name;
 					tagManager.ApplyModifiedProperties();
 
-					break;
+					return j;
 				}
 			}
+
+			return 0;
 		}
 #endif
 
