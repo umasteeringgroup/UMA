@@ -41,7 +41,7 @@ namespace UMA.Dynamics
 		public UnityEvent onRagdollStarted;
 		public UnityEvent onRagdollEnded;
 
-		//Store our DynamicCharacterAvatar component
+		private DynamicCharacterAvatar _avatar;
 		private UMAData _umaData;
 		private GameObject _rootBone;
 		private List<Rigidbody> _rigidbodies = new List<Rigidbody> ();
@@ -77,18 +77,28 @@ namespace UMA.Dynamics
 		// Use this for initialization
 		void Start () 
 		{
-			_umaData = gameObject.GetComponent<UMAData> ();	
-			gameObject.layer = playerLayer;
-
-			if(_SphereColliders == null) { _SphereColliders = new List<ClothSphereColliderPair>(); }
-			if(_CapsuleColliders == null) { _CapsuleColliders = new List<CapsuleCollider>(); }
-
-			if (_umaData != null)
+			_avatar = GetComponent<DynamicCharacterAvatar>();
+			//Using DCS
+			if (_avatar != null)
 			{
-				_umaData.CharacterCreated.AddListener(OnCharacterCreatedCallback);
-				_umaData.CharacterBegun.AddListener(OnCharacterBegunCallback);
-				_umaData.CharacterUpdated.AddListener(OnCharacterUpdatedCallback);
+				_avatar.CharacterCreated.AddListener(OnCharacterCreatedCallback);
+				_avatar.CharacterBegun.AddListener(OnCharacterBegunCallback);
+				_avatar.CharacterUpdated.AddListener(OnCharacterUpdatedCallback);
 			}
+			else
+			{
+				//if we're not using the DCS then this will be created through a recipe
+				_umaData = gameObject.GetComponent<UMAData>();
+
+				if (_umaData != null)
+				{
+					_umaData.CharacterCreated.AddListener(OnCharacterCreatedCallback);
+					_umaData.CharacterBegun.AddListener(OnCharacterBegunCallback);
+					_umaData.CharacterUpdated.AddListener(OnCharacterUpdatedCallback);
+				}
+			}
+
+			gameObject.layer = playerLayer;
 
 			if (!Physics.GetIgnoreLayerCollision(ragdollLayer, playerLayer))
 				Debug.LogWarning("RagdollLayer and PlayerLayer are not ignoring each other! This will cause collision issues. Please update the collision matrix or 'Add Default Layers' in the Physics Slot Definition");
@@ -96,11 +106,20 @@ namespace UMA.Dynamics
 
 		void OnDestroy()
 		{
-			if (_umaData != null)
+			if (_avatar != null)
 			{
-				_umaData.CharacterCreated.RemoveListener(OnCharacterCreatedCallback);
-				_umaData.CharacterBegun.RemoveListener(OnCharacterBegunCallback);
-				_umaData.CharacterUpdated.RemoveListener(OnCharacterUpdatedCallback);
+				_avatar.CharacterCreated.RemoveListener(OnCharacterCreatedCallback);
+				_avatar.CharacterBegun.RemoveListener(OnCharacterBegunCallback);
+				_avatar.CharacterUpdated.RemoveListener(OnCharacterUpdatedCallback);
+			}
+			else
+			{
+				if (_umaData != null)
+				{
+					_umaData.CharacterCreated.RemoveListener(OnCharacterCreatedCallback);
+					_umaData.CharacterBegun.RemoveListener(OnCharacterBegunCallback);
+					_umaData.CharacterUpdated.RemoveListener(OnCharacterUpdatedCallback);
+				}
 			}
 		}
 
