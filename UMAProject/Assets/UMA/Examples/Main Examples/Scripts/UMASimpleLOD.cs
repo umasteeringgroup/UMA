@@ -15,6 +15,8 @@ namespace UMA.Examples
 		[Tooltip("This value is subtracted from the slot LOD counter.")]
 		public int lodOffset;
 
+		private Transform _cameraTransform;
+
 		public void SetSwapSlots(bool swapSlots, int lodOffset)
 		{
 			this.lodOffset = lodOffset;
@@ -33,6 +35,12 @@ namespace UMA.Examples
 			lodLevel = -1;
 		}
 
+		public void OnEnable()
+		{
+			//cache the camera transform for performance
+			_cameraTransform = Camera.main.transform;
+		}
+
 		public void Update()
 		{
 			if (umaData == null)
@@ -41,7 +49,7 @@ namespace UMA.Examples
 			if (umaData == null)
 				return;
 
-			float cameraDistance = (transform.position - Camera.main.transform.position).magnitude;
+			float cameraDistance = (transform.position - _cameraTransform.position).magnitude;
 			float lodDistanceStep = lodDistance;
 			float atlasResolutionScale = 1f;
 
@@ -69,7 +77,7 @@ namespace UMA.Examples
 					var renderer = lodDisplay.GetComponent<Renderer>();
 					renderer.material.SetColor("_EmissionColor", Color.grey);
 				}
-				var delta = transform.position-Camera.main.transform.position;
+				var delta = transform.position-_cameraTransform.position;
 				delta.y = 0;
 				lodDisplay.transform.rotation = Quaternion.LookRotation(delta, Vector3.up);
 			}
