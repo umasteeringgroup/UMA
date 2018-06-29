@@ -30,7 +30,9 @@ namespace UMA.PoseTools
 
 		public bool logResetErrors;
 
-
+		public bool useDisableDistance = false;
+		public float disableDistance = 10f;
+		private Transform _mainCameraTransform;
 
 		// Use this for initialization
 		void Start()
@@ -41,6 +43,9 @@ namespace UMA.PoseTools
 		public void Initialize()
 		{
 			blinkDelay = Random.Range(minBlinkDelay, maxBlinkDelay);
+
+			if(Camera.main != null)
+				_mainCameraTransform = Camera.main.transform;
 
 			if (umaData == null)
 			{
@@ -84,6 +89,9 @@ namespace UMA.PoseTools
 				return;
 			}
 
+			if (_mainCameraTransform != null && useDisableDistance && (_mainCameraTransform.position - transform.position).magnitude > disableDistance)
+				return;
+
 			// Fix for animation systems which require consistent values frame to frame
 			Quaternion headRotation = umaData.skeleton.GetRotation(headHash);
 			Quaternion neckRotation = umaData.skeleton.GetRotation(neckHash);
@@ -112,6 +120,9 @@ namespace UMA.PoseTools
 				return;
 
 			if (umaData == null || umaData.skeleton == null)
+				return;
+
+			if (_mainCameraTransform != null && useDisableDistance && (_mainCameraTransform.position - transform.position).magnitude > disableDistance)
 				return;
 
 			if (enableSaccades)
