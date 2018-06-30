@@ -89,7 +89,7 @@ namespace UMA.PoseTools
 				return;
 			}
 
-			if (_mainCameraTransform != null && useDisableDistance && (_mainCameraTransform.position - transform.position).magnitude > disableDistance)
+			if (_mainCameraTransform != null && useDisableDistance && (_mainCameraTransform.position - transform.position).sqrMagnitude > (disableDistance * disableDistance))
 				return;
 
 			// Fix for animation systems which require consistent values frame to frame
@@ -122,7 +122,7 @@ namespace UMA.PoseTools
 			if (umaData == null || umaData.skeleton == null)
 				return;
 
-			if (_mainCameraTransform != null && useDisableDistance && (_mainCameraTransform.position - transform.position).magnitude > disableDistance)
+			if (_mainCameraTransform != null && useDisableDistance && (_mainCameraTransform.position - transform.position).sqrMagnitude > (disableDistance * disableDistance))
 				return;
 
 			if (enableSaccades)
