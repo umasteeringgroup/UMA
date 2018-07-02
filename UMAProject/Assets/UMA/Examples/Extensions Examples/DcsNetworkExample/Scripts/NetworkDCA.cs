@@ -49,7 +49,12 @@ namespace UMA.CharacterSystem
             if (_avatar == null)
                 _avatar = GetComponent<DynamicCharacterAvatar>();
 
-            _avatar.umaData.CharacterCreated.AddListener(OnCharacterCreated);
+            _avatar.CharacterCreated.AddListener(OnCharacterCreated);
+
+            if (!isServer)
+                _avatar.BuildCharacterEnabled = false; //We need to not build the avatar until after the initial state packet
+            else
+                _avatar.BuildCharacterEnabled = true;
         }
 
         public override void OnStartLocalPlayer()
@@ -93,101 +98,101 @@ namespace UMA.CharacterSystem
 
             bool wroteSyncVar = false;
 
-            if ((base.syncVarDirtyBits & RaceMask) != 0u)
+            if ((syncVarDirtyBits & RaceMask) != 0u)
             {
                 if (!wroteSyncVar)
                 {
-                    writer.WritePackedUInt32(base.syncVarDirtyBits);
+                    writer.WritePackedUInt32(syncVarDirtyBits);
                     wroteSyncVar = true;
                 }
                 writer.Write(_avatar.activeRace.name);
             }
 
-            if ((base.syncVarDirtyBits & SkinColorMask) != 0u)
+            if ((syncVarDirtyBits & SkinColorMask) != 0u)
             {
                 if (!wroteSyncVar)
                 {
-                    writer.WritePackedUInt32(base.syncVarDirtyBits);
+                    writer.WritePackedUInt32(syncVarDirtyBits);
                     wroteSyncVar = true;
                 }
                 writer.Write(_avatar.GetColor("Skin").color);
             }
 
-            if ((base.syncVarDirtyBits & HairColorMask) != 0u)
+            if ((syncVarDirtyBits & HairColorMask) != 0u)
             {
                 if (!wroteSyncVar)
                 {
-                    writer.WritePackedUInt32(base.syncVarDirtyBits);
+                    writer.WritePackedUInt32(syncVarDirtyBits);
                     wroteSyncVar = true;
                 }
                 writer.Write(_avatar.GetColor("Hair").color);
             }
 
-            if ((base.syncVarDirtyBits & HairMask) != 0u)
+            if ((syncVarDirtyBits & HairMask) != 0u)
             {
                 if (!wroteSyncVar)
                 {
-                    writer.WritePackedUInt32(base.syncVarDirtyBits);
+                    writer.WritePackedUInt32(syncVarDirtyBits);
                     wroteSyncVar = true;
                 }
                 WriteWardrobe(writer, "Hair");
             }
 
-            if ((base.syncVarDirtyBits & HelmetMask) != 0u)
+            if ((syncVarDirtyBits & HelmetMask) != 0u)
             {
                 if (!wroteSyncVar)
                 {
-                    writer.WritePackedUInt32(base.syncVarDirtyBits);
+                    writer.WritePackedUInt32(syncVarDirtyBits);
                     wroteSyncVar = true;
                 }
                 WriteWardrobe(writer, "Helmet");
             }
 
-            if ((base.syncVarDirtyBits & ChestMask) != 0u)
+            if ((syncVarDirtyBits & ChestMask) != 0u)
             {
                 if (!wroteSyncVar)
                 {
-                    writer.WritePackedUInt32(base.syncVarDirtyBits);
+                    writer.WritePackedUInt32(syncVarDirtyBits);
                     wroteSyncVar = true;
                 }
                 WriteWardrobe(writer, "Chest");
             }
 
-            if ((base.syncVarDirtyBits & HandsMask) != 0u)
+            if ((syncVarDirtyBits & HandsMask) != 0u)
             {
                 if (!wroteSyncVar)
                 {
-                    writer.WritePackedUInt32(base.syncVarDirtyBits);
+                    writer.WritePackedUInt32(syncVarDirtyBits);
                     wroteSyncVar = true;
                 }
                 WriteWardrobe(writer, "Hands");
             }
 
-            if ((base.syncVarDirtyBits & LegsMask) != 0u)
+            if ((syncVarDirtyBits & LegsMask) != 0u)
             {
                 if (!wroteSyncVar)
                 {
-                    writer.WritePackedUInt32(base.syncVarDirtyBits);
+                    writer.WritePackedUInt32(syncVarDirtyBits);
                     wroteSyncVar = true;
                 }
                 WriteWardrobe(writer, "Legs");
             }
 
-            if ((base.syncVarDirtyBits & FeetMask) != 0u)
+            if ((syncVarDirtyBits & FeetMask) != 0u)
             {
                 if (!wroteSyncVar)
                 {
-                    writer.WritePackedUInt32(base.syncVarDirtyBits);
+                    writer.WritePackedUInt32(syncVarDirtyBits);
                     wroteSyncVar = true;
                 }
                 WriteWardrobe(writer, "Feet");
             }
 
-            if ((base.syncVarDirtyBits & UnderwearMask) != 0u)
+            if ((syncVarDirtyBits & UnderwearMask) != 0u)
             {
                 if (!wroteSyncVar)
                 {
-                    writer.WritePackedUInt32(base.syncVarDirtyBits);
+                    writer.WritePackedUInt32(syncVarDirtyBits);
                     wroteSyncVar = true;
                 }
                 WriteWardrobe(writer, "Underwear");
@@ -219,23 +224,9 @@ namespace UMA.CharacterSystem
 
 
                 //TODO there is a problem with the character color for the initialState
-                Color skinColor = reader.ReadColor();
-                //_avatar.SetColor("Skin", reader.ReadColor());
-                _avatar.SetColor("Skin", skinColor);
-                //Debug.Log("Skin color: " + skinColor);
-
-                Color hairColor = reader.ReadColor();
-                //_avatar.SetColor("Hair", reader.ReadColor());
-                //_avatar.SetColor("Hair", hairColor);
-                _avatar.characterColors.SetColor("Hair",hairColor);
-                //Debug.Log("Hair color: " + hairColor);
-
-                _avatar.UpdateColors();
-
-                /*foreach (DynamicCharacterAvatar.ColorValue color in _avatar.characterColors.Colors)
-                {
-                    Debug.Log(color.Name + " " + color.Color);
-                }*/
+                _avatar.SetColor("Skin", reader.ReadColor());
+                _avatar.SetColor("Hair", reader.ReadColor());
+                _avatar.UpdateColors(true);
 
 
                 ReadWardrobe("Hair", reader.ReadString());
@@ -246,6 +237,7 @@ namespace UMA.CharacterSystem
                 ReadWardrobe("Feet", reader.ReadString());
                 ReadWardrobe("Underwear", reader.ReadString());
 
+                _avatar.BuildCharacterEnabled = true;
                 _avatar.BuildCharacter();
                 _avatar.ForceUpdate(false, true, true);
                 return;
@@ -286,6 +278,7 @@ namespace UMA.CharacterSystem
             //With more diverse masks we'll need to change this check to be more specific
             if (bitmask > 0)
             {
+                _avatar.BuildCharacterEnabled = true;
                 _avatar.BuildCharacter();
                 _avatar.ForceUpdate(false, true, true);
             }
