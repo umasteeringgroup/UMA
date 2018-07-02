@@ -52,12 +52,12 @@ namespace UMA.Examples
 					tm.transform.localPosition = new Vector3(0, 2f, 0f);
 					tm.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
 
+					UMAData umaData = go.GetComponent<UMAData>();
+					umaData.CharacterCreated.AddListener(CharacterCreated);
+
 					var lod = go.AddComponent<UMASimpleLOD>();
 					lod.lodDistance = lodDistance;
 					lod.lodDisplay = tm.GetComponent<TextMesh>();
-					lod.umaData = go.GetComponent<UMAData>();
-					lod.umaData.CharacterUpdated.AddListener(lod.CharacterUpdated);
-					lod.umaData.CharacterCreated.AddListener(CharacterCreated);
 					lod.swapSlots = swapSlots;
 					lod.lodOffset = lodOffset;
 					lod.Update();
