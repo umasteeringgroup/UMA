@@ -74,3 +74,8 @@ MonoBehaviour:
     - {r: 0.56078434, g: 0.4666667, b: 0.33333334, a: 1}
     channelAdditiveMask:
     - {r: 0, g: 0, b: 0, a: 0}
+  - name: Hair
+    channelMask:
+    - {r: 1, g: 1, b: 1, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
