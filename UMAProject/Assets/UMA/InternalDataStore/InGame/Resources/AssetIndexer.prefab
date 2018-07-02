@@ -5,10 +5,10 @@ GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Component:
-  - 4: {fileID: 422758}
-  - 114: {fileID: 11432240}
+  - component: {fileID: 422758}
+  - component: {fileID: 11432240}
   m_Layer: 0
   m_Name: AssetIndexer
   m_TagString: Untagged
@@ -25,10 +25,10 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 3.4409695, y: 0.96156013, z: 2.617393}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &11432240
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -248,7 +248,7 @@ MonoBehaviour:
     IsAssetBundle: 0
   - _BaseTypeName: SlotDataAsset
     _Name: F_High poly head
-    _SerializedItem: {fileID: 11400000, guid: 72d68f914034a9c4f94c733168884070, type: 2}
+    _SerializedItem: {fileID: 11400000, guid: c2e03835c947bd449adbe23861a31c93, type: 2}
     _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Slots/Body/MidPoly/UMA_Human_Female_Head_Mid_Slot.asset
     _Guid: 72d68f914034a9c4f94c733168884070
     IsResource: 0
@@ -793,6 +793,27 @@ MonoBehaviour:
     _SerializedItem: {fileID: 11400000, guid: 5ab9cab67c9728b42a2ef6bd5f13cf4f, type: 2}
     _Path: Assets/UMA/Examples/Physics Examples/Assets/Slots/ClothRobeSimulated/ClothRobeSimulated_Slot.asset
     _Guid: 5ab9cab67c9728b42a2ef6bd5f13cf4f
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: SlotDataAsset
+    _Name: BoneyTail_1
+    _SerializedItem: {fileID: 11400000, guid: 34dcbac549d5c964f8c01cb8719d0a99, type: 2}
+    _Path: Assets/UMA/Examples/Physics Examples/Assets/Slots/BoneyTail/BoneyTail_1_Slot.asset
+    _Guid: 34dcbac549d5c964f8c01cb8719d0a99
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: SlotDataAsset
+    _Name: BoneyTail
+    _SerializedItem: {fileID: 11400000, guid: e414c14586660fb46865f0168c8d01dd, type: 2}
+    _Path: Assets/UMA/Examples/Physics Examples/Assets/Slots/BoneyTail/BoneyTail_Slot.asset
+    _Guid: e414c14586660fb46865f0168c8d01dd
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: SlotDataAsset
+    _Name: MaleAlienHead
+    _SerializedItem: {fileID: 11400000, guid: 344a9e3f0f0a6384da7335c405e65999, type: 2}
+    _Path: Assets/UMA/Examples/Blendshape Examples/Assets/Slots/MaleAlienHead/MaleAlienHead_Slot.asset
+    _Guid: 344a9e3f0f0a6384da7335c405e65999
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: OverlayDataAsset
@@ -2656,6 +2677,21 @@ MonoBehaviour:
     _SerializedItem: {fileID: 11400000, guid: be7c02d6f94052348a3fc382a4ff26dc, type: 2}
     _Path: Assets/UMA/Examples/Physics Examples/Assets/Recipe/ClothRobeRecipe.asset
     _Guid: be7c02d6f94052348a3fc382a4ff26dc
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: UMAWardrobeRecipe
+    _Name: BoneyTail_Recipe
+    _SerializedItem: {fileID: 11400000, guid: 3c831180fd2f190428a8151a60b3e55f, type: 2}
+    _Path: Assets/UMA/Examples/Physics Examples/Assets/Slots/BoneyTail/BoneyTail_Recipe.asset
+    _Guid: 3c831180fd2f190428a8151a60b3e55f
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: UMAWardrobeRecipe
+    _Name: MaleJeans 1
+    _SerializedItem: {fileID: 11400000, guid: f0eac0526ff3dbe479868042322ab1b2, type: 2}
+    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleJeans
+      1.asset
+    _Guid: f0eac0526ff3dbe479868042322ab1b2
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: RuntimeAnimatorController

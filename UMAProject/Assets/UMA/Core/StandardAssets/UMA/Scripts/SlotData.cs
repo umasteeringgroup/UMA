@@ -1,5 +1,7 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
+using System;
 
 namespace UMA
 {
@@ -26,6 +28,9 @@ namespace UMA
 		/// list of overlays used to texture the slot.
 		/// </summary>
 		private List<OverlayData> overlayList = new List<OverlayData>();
+
+		//For MeshHide system, this can get added at runtime and is the filtered HideMask that the combiner uses.
+		public BitArray[] meshHideMask;
 
 		/// <summary>
 		/// Constructor for slot using the given asset.

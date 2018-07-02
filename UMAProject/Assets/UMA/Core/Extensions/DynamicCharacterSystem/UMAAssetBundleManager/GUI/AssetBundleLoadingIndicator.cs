@@ -104,18 +104,24 @@ namespace UMA.AssetBundles
 				if (_bundlesToCheck.Count > 0)
 				{
 					float overallProgress = 0;
-					//var newBundlesToCheck = new List<string>();
+					var newBundlesToCheck = new List<string>();
 					for (int i = 0; i < _bundlesToCheck.Count; i++)
 					{
 						var thisProgress = AssetBundleManager.GetBundleDownloadProgress(_bundlesToCheck[i], true);
-						/*if(thisProgress != 1f)
+						if(thisProgress != 1f)
 						{
 							newBundlesToCheck.Add(_bundlesToCheck[i]);
-						}*/
 						overallProgress += thisProgress;
 					}
+						
+					}
+					_bundlesToCheck = newBundlesToCheck;
+					if (_bundlesToCheck.Count > 0)
+					{
 					percentDone = overallProgress / _bundlesToCheck.Count;
-					//_bundlesToCheck = newBundlesToCheck;
+					}
+					else
+						percentDone = 1f;
 				}
 				UpdateProgress();
 			}

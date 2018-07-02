@@ -28,7 +28,7 @@ namespace UMA
                 path = path.Replace("/" + Path.GetFileName(AssetDatabase.GetAssetPath(Selection.activeObject)), "");
             }
 
-            string assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/New "+name+".prefab");
+            string assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/New " + name + ".prefab");
 
             GameObject go = new GameObject(name);
             foreach (System.Type t in types)
@@ -45,7 +45,7 @@ namespace UMA
 		/// <param name="newAssetPath">The full path relative to 'Assets' (including extension) where the file should be saved. If empty the path and name are based on the currently selected object and desired type.</param>
 		/// <param name="selectCreatedAsset">If true the created asset will be selected after it is created (and show in the inspector)</param>
 		/// <returns>t</returns>
-		public static T CreateAsset<T>(string newAssetPath = "", bool selectCreatedAsset = true) where T : ScriptableObject
+		public static T CreateAsset<T>(string newAssetPath = "", bool selectCreatedAsset = true, string baseName = "New") where T : ScriptableObject
 	    {
 	        T asset = ScriptableObject.CreateInstance<T>();
 
@@ -70,7 +70,7 @@ namespace UMA
 					path = path.Replace("/" + Path.GetFileName(AssetDatabase.GetAssetPath(Selection.activeObject)), "");
 				}
 
-				var assetName = "New " + typeof(T).Name;
+				var assetName = baseName + " " + typeof(T).Name;
 
 				assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/" + assetName + ".asset");
 			}

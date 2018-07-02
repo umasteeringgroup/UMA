@@ -39,42 +39,38 @@ namespace UMA
 	        runScript = false;
 	    }
 
-	    public static Mesh PerformSeamRemoval(SkinnedMeshRenderer originalMesh, SkinnedMeshRenderer referenceMesh, float threshold)
-	    {
+		public static Mesh PerformSeamRemoval(SkinnedMeshRenderer originalMesh, SkinnedMeshRenderer referenceMesh, float threshold)
+		{
 			float sqrthreshold = threshold * threshold;
+			int matchCount = 0;
 			
-	        Vector3[] referenceVertices = referenceMesh.sharedMesh.vertices;
-	        Vector3[] referencenormals = referenceMesh.sharedMesh.normals;
+			Vector3[] referenceVertices = referenceMesh.sharedMesh.vertices;
+			Vector3[] referencenormals = referenceMesh.sharedMesh.normals;
 
-	        Vector3[] normals = originalMesh.sharedMesh.normals;
-	        Vector3[] meshIndexVertices = originalMesh.sharedMesh.vertices;
+			Vector3[] normals = originalMesh.sharedMesh.normals;
+			Vector3[] meshIndexVertices = originalMesh.sharedMesh.vertices;
 
-	        for (int vertexIndex = 0; vertexIndex < meshIndexVertices.Length; vertexIndex++)
-	        {
-	            for (int othervertexIndex = 0; othervertexIndex < referenceVertices.Length; othervertexIndex++)
-	            {
-	                if ((meshIndexVertices[vertexIndex] - referenceVertices[othervertexIndex]).sqrMagnitude <= sqrthreshold)
-	                {
+			for (int vertexIndex = 0; vertexIndex < meshIndexVertices.Length; vertexIndex++)
+			{
+				for (int othervertexIndex = 0; othervertexIndex < referenceVertices.Length; othervertexIndex++)
+				{
+					if ((meshIndexVertices[vertexIndex] - referenceVertices[othervertexIndex]).sqrMagnitude <= sqrthreshold)
+					{
+						matchCount++;
 						normals[vertexIndex] = referencenormals[othervertexIndex];
-	                }
-	            }
-	        }		
-				
-			Mesh tempMesh = new Mesh();
+					}
+				}
+			}
+
+			Debug.Log(string.Format("{0} matched vertices found during seam removal.", matchCount));
+			Mesh tempMesh = Instantiate(originalMesh.sharedMesh);
 			tempMesh.name = originalMesh.gameObject.name;
-			tempMesh.vertices = originalMesh.sharedMesh.vertices;
 			tempMesh.normals = normals;
-			tempMesh.tangents = originalMesh.sharedMesh.tangents;
-			tempMesh.boneWeights = originalMesh.sharedMesh.boneWeights;
-			tempMesh.uv = originalMesh.sharedMesh.uv;
-			tempMesh.triangles = originalMesh.sharedMesh.triangles;
-			tempMesh.bindposes = originalMesh.sharedMesh.bindposes;
 			
 			calculateMeshTangents(tempMesh);
 			
-	        return tempMesh;
-
-	    }
+			return tempMesh;
+		}
 		
 
 		public static void calculateMeshTangents(Mesh mesh)

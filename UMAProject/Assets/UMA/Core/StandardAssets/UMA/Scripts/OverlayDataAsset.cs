@@ -7,10 +7,12 @@ namespace UMA
 	/// <summary>
 	/// Contains the immutable data shared between overlays of the same type.
 	/// </summary>
+	[PreferBinarySerialization]
 	[System.Serializable]
 	public partial class OverlayDataAsset : ScriptableObject, ISerializationCallbackReceiver
 	{
-	    public string overlayName;
+		[Tooltip("The name of this overlay.")]
+		public string overlayName;
 		[System.NonSerialized]
 		public int nameHash;
 
@@ -22,25 +24,30 @@ namespace UMA
 		/// <summary>
 		/// How should this overlay be processed.
 		/// </summary>
+		[Tooltip("Normal or Cutout overlay type. This determines whether or not to use a cutout shader during the texture merging process.")]
 		public OverlayType overlayType;
 		/// <summary>
 		/// Destination rectangle for drawing overlay textures.
 		/// </summary>
+		[Tooltip("Destination rectangle for drawing overlay textures.")]
 		public Rect rect;
 		/// <summary>
 		/// Optional Alpha mask, if alpha mask is not set the texture[0].alpha is used instead.
 		/// Using a alpha mask also allows you to write alpha values from the texture[0] to cut holes
 		/// </summary>
+		[Tooltip("Optional Alpha mask, if alpha mask is not set the texture[0].alpha is used instead.")]
 		public Texture alphaMask;
 		/// <summary>
 		/// Array of textures required for the overlay material.
 		/// </summary>
-	    public Texture[] textureList;
-        /// <summary>
-        /// Use this to identify what kind of overlay this is and what it fits
-        /// Eg. BaseMeshSkin, BaseMeshOverlays, GenericPlateArmor01
-        /// </summary>
-        public string[] tags;
+		[Tooltip("Array of textures required for the overlay material.")]
+		public Texture[] textureList;
+		/// <summary>
+		/// Use this to identify what kind of overlay this is and what it fits
+		/// Eg. BaseMeshSkin, BaseMeshOverlays, GenericPlateArmor01
+		/// </summary>
+		[Tooltip("Use this to identify what kind of overlay this is and what it fits.")]
+		public string[] tags;
 
 		/// <summary>
 		/// The UMA material.
@@ -50,6 +57,7 @@ namespace UMA
 		/// used for drawing and information needed for matching the textures
 		/// and colors to the various material properties.
 		/// </remarks>
+		[Tooltip("The UMA material contains both a reference to the Unity material used for drawing and information needed for matching the textures and colors to the various material properties.")]
 		[UMAAssetFieldVisible]
 		public UMAMaterial material;
 
@@ -131,12 +139,13 @@ namespace UMA
 		/// Occlusion Entries for occluding triangles, currently only supported by powertools.
 		/// It is important that the OcclusionEntries be sorted by slotNameHash ascending to allow fast binary lookup
 		/// </summary>
+		[Tooltip("Occlusion Entries for occluding triangles, currently only supported by powertools.")]
 		public OcclusionEntry[] OcclusionEntries;
 
 		public OverlayDataAsset()
-	    {
+		{
 
-	    }
+		}
 
 		public void OnAfterDeserialize()
 		{

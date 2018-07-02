@@ -9,12 +9,14 @@ using UnityEditor.Animations;
 
 namespace UMA
 {
+    [PreferBinarySerialization]
     public class UMAAssetIndexer : MonoBehaviour, ISerializationCallbackReceiver
     {
         #region constants and static strings
         public static string SortOrder = "Name";
         public static string[] SortOrders = { "Name", "AssetName" };
         public static Dictionary<string, System.Type> TypeFromString = new Dictionary<string, System.Type>();
+        public static Dictionary<string, AssetItem> GuidTypes = new Dictionary<string, AssetItem>();
         #endregion
         #region Fields
         public bool AutoUpdate;
@@ -28,6 +30,7 @@ namespace UMA
         { (typeof(UMAWardrobeRecipe)),(typeof(UMAWardrobeRecipe)) },
         { (typeof(UMAWardrobeCollection)),(typeof(UMAWardrobeCollection)) },
         { (typeof(RuntimeAnimatorController)),(typeof(RuntimeAnimatorController)) },
+        { (typeof(AnimatorOverrideController)),(typeof(RuntimeAnimatorController)) },
 #if UNITY_EDITOR
         { (typeof(AnimatorController)),(typeof(RuntimeAnimatorController)) },
 #endif
@@ -52,6 +55,7 @@ namespace UMA
         (typeof(UMAWardrobeRecipe)),
         (typeof(UMAWardrobeCollection)),
         (typeof(RuntimeAnimatorController)),
+        (typeof(AnimatorOverrideController)),
 #if UNITY_EDITOR
         (typeof(AnimatorController)),
 #endif
@@ -492,13 +496,13 @@ namespace UMA
                 // Get out if we already have it.
                 if (TypeDic.ContainsKey(ai._Name))
                 {
-                    Debug.Log("Duplicate asset " + ai._Name + " was ignored.");
+                    // Debug.Log("Duplicate asset " + ai._Name + " was ignored.");
                     return;
                 }
 
                 if (ai._Name.ToLower().Contains((ai._Type.Name + "placeholder").ToLower()))
                 {
-                    Debug.Log("Placeholder asset " + ai._Name + " was ignored. Placeholders are not indexed.");
+                    //Debug.Log("Placeholder asset " + ai._Name + " was ignored. Placeholders are not indexed.");
                     return;
                 }
 #if UNITY_EDITOR
@@ -507,12 +511,17 @@ namespace UMA
                     string Path = AssetDatabase.GetAssetPath(ai.Item.GetInstanceID());
                     if (InAssetBundle(Path))
                     {
-                        Debug.Log("Asset " + ai._Name + "is in Asset Bundle, and was not added to the index.");
+                        // Debug.Log("Asset " + ai._Name + "is in Asset Bundle, and was not added to the index.");
                         return;
                     }
                 }
 #endif
                 TypeDic.Add(ai._Name, ai);
+                if (GuidTypes.ContainsKey(ai._Guid))
+                {
+                    return;
+                }
+                GuidTypes.Add(ai._Guid, ai);
             }
             catch (System.Exception ex)
             {
@@ -521,6 +530,15 @@ namespace UMA
         }
 
 #if UNITY_EDITOR
+
+        public AssetItem FromGuid(string GUID)
+        {
+            if (GuidTypes.ContainsKey(GUID))
+            {
+                return GuidTypes[GUID];
+            }
+            return null;
+        }
         /// <summary>
         /// This is the evil version of AddAsset. This version cares not for the good of the project, nor
         /// does it care about readability, expandibility, and indeed, hates goodness with every beat of it's 
@@ -552,7 +570,12 @@ namespace UMA
         {
             System.Type theType = TypeToLookup[type];
             Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(theType);
-            TypeDic.Remove(Name);
+            if (TypeDic.ContainsKey(Name))
+            {
+                AssetItem ai = TypeDic[Name];
+                TypeDic.Remove(Name);
+                GuidTypes.Remove(Name);
+            }
         }
 #endif
 #endregion
@@ -565,6 +588,7 @@ namespace UMA
         /// </summary>
         private void UpdateSerializedDictionaryItems()
         {
+            GuidTypes = new Dictionary<string, AssetItem>();
             foreach (System.Type type in Types)
             {
                 CreateLookupDictionary(type);
@@ -617,6 +641,7 @@ namespace UMA
                 	}
 				}
             }
+
         }
 
         /// <summary>
@@ -726,6 +751,7 @@ namespace UMA
 		public void Clear(bool forceSave = true)
         {
             // Rebuild the tables
+            GuidTypes.Clear();
             ClearReferences();
             SerializedItems.Clear();
             UpdateSerializedDictionaryItems();
@@ -819,6 +845,7 @@ namespace UMA
         (typeof(UMAWardrobeRecipe)),
         (typeof(UMAWardrobeCollection)),
         (typeof(RuntimeAnimatorController)),
+        (typeof(AnimatorOverrideController)),
 #if UNITY_EDITOR
         (typeof(AnimatorController)),
 #endif
@@ -835,7 +862,8 @@ namespace UMA
         { (typeof(UMAWardrobeRecipe)),(typeof(UMAWardrobeRecipe)) },
         { (typeof(UMAWardrobeCollection)),(typeof(UMAWardrobeCollection)) },
         { (typeof(RuntimeAnimatorController)),(typeof(RuntimeAnimatorController)) },
-#if UNITY_EDITOR
+        { (typeof(AnimatorOverrideController)),(typeof(RuntimeAnimatorController)) },
+        #if UNITY_EDITOR
         { (typeof(AnimatorController)),(typeof(RuntimeAnimatorController)) },
 #endif
         {  typeof(TextAsset), typeof(TextAsset) },

@@ -211,7 +211,7 @@ namespace UMA.CharacterSystem
 						//To fix this generally we could 'LoadAllAssets' from any dependent bundles, but this could incur significant memory overhead
 						//So for now we will just fix this for UMA and hope a patch is forthcoming in a subsequent version of Unity 
 						//FIXED as of Unity5.6.2f1
-#if UNITY_5_5 || UNITY_5_6_0 || UNITY_5_6_1
+#if UNITY_5_6_0 || UNITY_5_6_1
 						if (AssetBundleManager.AssetBundleIndexObject.GetAllDependencies(item.containingBundle).Length > 0)
 						{
 							var allDeps = AssetBundleManager.AssetBundleIndexObject.GetAllDependencies(item.containingBundle);

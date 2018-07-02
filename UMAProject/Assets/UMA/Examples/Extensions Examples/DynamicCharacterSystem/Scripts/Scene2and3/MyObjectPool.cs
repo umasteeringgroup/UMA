@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine.Events;
 
+// @cond doxygen ignore
 namespace UnityEngine.UI
 {
     public class MyObjectPool<T> where T : new()
@@ -73,3 +74,4 @@ namespace UnityEngine.UI
         }
     }
 }
+// @endcond

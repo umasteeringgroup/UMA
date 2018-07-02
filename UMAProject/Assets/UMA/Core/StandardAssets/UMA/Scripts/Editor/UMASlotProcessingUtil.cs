@@ -103,7 +103,7 @@ namespace UMA.Editors
             AssetDatabase.SaveAssets();
         }
 
-		public static SlotDataAsset CreateSlotData(string slotFolder, string assetFolder, string assetName, SkinnedMeshRenderer mesh, UMAMaterial material, SkinnedMeshRenderer prefabMesh, string rootBone)
+		public static SlotDataAsset CreateSlotData(string slotFolder, string assetFolder, string assetName, SkinnedMeshRenderer mesh, UMAMaterial material, SkinnedMeshRenderer prefabMesh, string rootBone, bool binarySerialization = false)
 		{
 			if (!System.IO.Directory.Exists(slotFolder + '/' + assetFolder))
 			{
@@ -145,7 +145,18 @@ namespace UMA.Editors
 				resultingMesh = BuildNewReduceBonesMesh(resultingMesh, usedBonesDictionary);
 			}
 
-			AssetDatabase.CreateAsset(resultingMesh, slotFolder + '/' + assetName + '/' + mesh.name + ".asset");
+			if (binarySerialization)
+			{
+				//Work around for mesh being serialized as project format settings (text) when binary is much faster.
+				//If Unity introduces a way to set mesh as binary serialization then this becomes unnecessary.
+				BinaryAssetWrapper binaryAsset = ScriptableObject.CreateInstance<BinaryAssetWrapper>();
+				AssetDatabase.CreateAsset(binaryAsset, slotFolder + '/' + assetName + '/' + mesh.name + ".asset");
+				AssetDatabase.AddObjectToAsset(resultingMesh, binaryAsset);
+			}
+			else
+			{
+				AssetDatabase.CreateAsset(resultingMesh, slotFolder + '/' + assetName + '/' + mesh.name + ".asset");
+			}
 
 			tempGameObject.name = mesh.transform.parent.gameObject.name;
 			Transform[] transformList = tempGameObject.GetComponentsInChildren<Transform>();
@@ -227,36 +238,9 @@ namespace UMA.Editors
 
 		private static Mesh BuildNewReduceBonesMesh(Mesh sourceMesh, Dictionary<int, int> usedBonesDictionary)
 		{
-			var newMesh = new Mesh();
-			newMesh.vertices = sourceMesh.vertices;
-			newMesh.uv = sourceMesh.uv;
-			newMesh.uv2 = sourceMesh.uv2;
-			newMesh.uv3 = sourceMesh.uv3;
-			newMesh.uv4 = sourceMesh.uv4;
-			newMesh.tangents = sourceMesh.tangents;
-			newMesh.normals = sourceMesh.normals;
-			newMesh.name = sourceMesh.name;
-			newMesh.colors32 = sourceMesh.colors32;
-			newMesh.colors = sourceMesh.colors;
+			Mesh newMesh = GameObject.Instantiate<Mesh>(sourceMesh);
 			newMesh.boneWeights = BuildNewBoneWeights(sourceMesh.boneWeights, usedBonesDictionary);
 			newMesh.bindposes = BuildNewBindPoses(sourceMesh.bindposes, usedBonesDictionary);
-			newMesh.subMeshCount = sourceMesh.subMeshCount;
-			for (int i = 0; i < sourceMesh.subMeshCount; i++)
-			{
-				newMesh.SetTriangles(sourceMesh.GetTriangles(i), i);
-			}
-
-			Vector3[] deltaVertices = new Vector3[sourceMesh.vertices.Length];
-			Vector3[] deltaNormals = new Vector3[sourceMesh.normals.Length];
-			Vector3[] deltaTangents = new Vector3[sourceMesh.tangents.Length];
-			for (int shapeIndex = 0; shapeIndex < sourceMesh.blendShapeCount; shapeIndex++)
-			{
-				for (int frameIndex = 0; frameIndex < sourceMesh.GetBlendShapeFrameCount(shapeIndex); frameIndex++)
-				{
-					sourceMesh.GetBlendShapeFrameVertices(shapeIndex, frameIndex, deltaVertices, deltaNormals, deltaTangents);
-					newMesh.AddBlendShapeFrame(sourceMesh.GetBlendShapeName(shapeIndex), sourceMesh.GetBlendShapeFrameWeight(shapeIndex, frameIndex), deltaVertices, deltaNormals, deltaTangents);
-				}
-			}
 
 			return newMesh;
 		}
