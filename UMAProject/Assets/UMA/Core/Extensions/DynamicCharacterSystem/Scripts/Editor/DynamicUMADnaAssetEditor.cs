@@ -2,12 +2,13 @@
 using UnityEngine;
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditorInternal;
 using UMA.Editors;
 
 namespace UMA.CharacterSystem.Editors
 {
-    [CustomEditor(typeof(DynamicUMADnaAsset))]
-    public class DynamicUMADnaAssetEditor : Editor
+	[CustomEditor(typeof(DynamicUMADnaAsset))]
+	public class DynamicUMADnaAssetEditor : Editor
 	{
 		public string newDNAName = "";
 
@@ -22,6 +23,9 @@ namespace UMA.CharacterSystem.Editors
 
 		bool initialized = false;
 
+		ReorderableList _dnaNameList;
+		List<int> _removeList = new List<int>();
+
 		DynamicUMADnaAsset thisDUDA;
 
 		public void Init()
@@ -34,6 +38,13 @@ namespace UMA.CharacterSystem.Editors
 				serializedObject.Update();
 			}
 			initialized = true;
+		}
+
+		private void OnEnable()
+		{
+			_dnaNameList = new ReorderableList(serializedObject, serializedObject.FindProperty("Names"), true, true, false, false);
+			_dnaNameList.drawElementCallback = DrawElementCallback;
+			_dnaNameList.drawHeaderCallback = DrawHeaderCallback;
 		}
 
 		private void ImportDNADropArea(Rect dropArea, List<string> dnaNames, int addMethod)
@@ -123,14 +134,31 @@ namespace UMA.CharacterSystem.Editors
 			}
 			dnaNames = newNames;
 			(target as DynamicUMADnaAsset).Names = dnaNames.ToArray();
-        }
+		}
+
+		private void DrawElementCallback(Rect rect, int index, bool isActive, bool isFocused)
+		{
+			SerializedProperty element = _dnaNameList.serializedProperty.GetArrayElementAtIndex(index);
+			rect.y += 2;
+			EditorGUI.LabelField(new Rect(rect.x, rect.y, 40, EditorGUIUtility.singleLineHeight), index.ToString());
+			EditorGUI.PropertyField(new Rect(rect.x + 30, rect.y, EditorGUIUtility.currentViewWidth - 185, EditorGUIUtility.singleLineHeight), element, GUIContent.none);
+			if (GUI.Button(new Rect(EditorGUIUtility.currentViewWidth - 110, rect.y, 80, EditorGUIUtility.singleLineHeight), "Delete"))
+			{
+				_removeList.Add(index);
+			}
+		}
+
+		private void DrawHeaderCallback(Rect rect)
+		{
+			EditorGUI.LabelField(rect, "DNA Names List (" + _dnaNameList.serializedProperty.arraySize + ")", EditorStyles.helpBox);
+		}
 
 		public override void OnInspectorGUI()
-        {
+		{
 			if (!initialized)
 				Init();
 
-            serializedObject.Update();
+			serializedObject.Update();
 			/*
 			EditorGUI.BeginDisabledGroup(true);
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("lastKnownAssetPath"));
@@ -148,13 +176,13 @@ namespace UMA.CharacterSystem.Editors
 			hashBtnRect.xMax = hashBtnRect.xMin + 50 + (EditorGUI.indentLevel * 20);
 			var hashFieldRect = hashEditorRect;
 			hashFieldRect.xMin = hashBtnRect.xMax - ((EditorGUI.indentLevel * 20)-10);
-            if (editTypeHashEnabled)
+			if (editTypeHashEnabled)
 			{
 				//EditorGUILayout.BeginHorizontal();
 				EditorGUI.LabelField(hashLabelRect, new GUIContent(dnaTypeHash.displayName,dnaTypeHash.tooltip));
 				if(GUI.Button(hashBtnRect,"Save")){
 					editTypeHashEnabled = false;
-                }
+				}
 				var originalDnaTypeHash = dnaTypeHash;
 				EditorGUI.BeginChangeCheck();
 				EditorGUI.PropertyField(hashFieldRect, dnaTypeHash, new GUIContent(""));
@@ -284,7 +312,7 @@ namespace UMA.CharacterSystem.Editors
 				EditorGUILayout.HelpBox("That name is already in use.", MessageType.Warning);
 			}
 			//ACTUAL NAMES LIST
-			GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
+			/*GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
 			EditorGUILayout.LabelField("DNA Names List (" + Names.arraySize + ")", EditorStyles.helpBox);
 			if (Names.arraySize > 0)
 			{
@@ -319,8 +347,20 @@ namespace UMA.CharacterSystem.Editors
 				EditorGUILayout.Space();
 				Names.serializedObject.ApplyModifiedProperties();
 			}
-			GUIHelper.EndVerticalPadded(3);
-        }
+			GUIHelper.EndVerticalPadded(3);*/
+			_dnaNameList.DoLayoutList();
+
+			//Clear out indices that have been added to the remove list.
+			for(int i = _dnaNameList.serializedProperty.arraySize - 1; i >= 0; i--)
+			{
+				if (_removeList.Contains(i))
+					_dnaNameList.serializedProperty.DeleteArrayElementAtIndex(i);
+			}
+			_removeList.Clear();
+
+
+			serializedObject.ApplyModifiedProperties();
+		}
 		protected void AddDefaultNames()
 		{
 			string[] defaultNames = new string[]
@@ -379,7 +419,7 @@ namespace UMA.CharacterSystem.Editors
 					currentNames.Add(defaultNames[i]);
 			}
 			(target as DynamicUMADnaAsset).Names = currentNames.ToArray();
-        }
-    }
+		}
+	}
 }
 #endif
