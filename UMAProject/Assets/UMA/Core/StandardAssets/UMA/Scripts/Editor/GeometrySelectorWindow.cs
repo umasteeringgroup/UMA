@@ -17,7 +17,7 @@ namespace UMA.Editors
 
         private float _occluderOffset = 0;
         private Vector3 _occluderPosition = Vector3.zero;
-        private Vector3 _occluderRotation = Vector3.zero;
+        private Vector3 _occluderRotation = new Vector3(270.0f, 0.0f, 0.0f);
         private Vector3 _occluderScale = Vector3.one;
 
         private bool doneEditing = false; //set to true to end editing this objects
