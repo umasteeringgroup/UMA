@@ -1366,6 +1366,20 @@ namespace UMA.CharacterSystem
         }
 
         /// <summary>
+        /// Remove a previously added color
+        /// </summary>
+        /// <param name="Name"></param>
+        /// <param name="UpdateTexture"></param>
+        public void ClearColor(string Name, bool Update = true)
+        {
+            characterColors.RemoveColor(Name);  
+            if (Update)
+            {
+                BuildCharacter();
+            }
+        }
+
+        /// <summary>
         /// Applies these colors to the loaded Avatar and adds any colors the loaded Avatar has which are missing from this list, to this list
         /// </summary>
         //NOTE needs to be public for the editor
@@ -3732,11 +3746,15 @@ namespace UMA.CharacterSystem
 
             public void RemoveColor(string name)
             {
+                List<ColorValue> newColors = new List<ColorValue>();
+
                 foreach (ColorValue cv in Colors)
                 {
-                    if (cv.Name == name)
-                        Colors.Remove(cv);
+                    if (cv.Name != name)
+                        newColors.Add(cv);
                 }
+
+                Colors = newColors;
             }
         }
     }
