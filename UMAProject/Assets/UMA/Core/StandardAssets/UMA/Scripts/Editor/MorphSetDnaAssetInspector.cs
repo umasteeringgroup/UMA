@@ -154,25 +154,25 @@ namespace UMA.Editors
             var element = _morphList.serializedProperty.GetArrayElementAtIndex(index);
             rect.y += 2;
             EditorGUI.PrefixLabel(new Rect(rect.x, rect.y, 20, EditorGUIUtility.singleLineHeight), new GUIContent(index.ToString()));
-            EditorGUI.PropertyField(new Rect(rect.x + 20, rect.y, 400, EditorGUIUtility.singleLineHeight), element.FindPropertyRelative("dnaEntryName"), new GUIContent("DNA Name"));
+            EditorGUI.PropertyField(new Rect(rect.x + 20, rect.y, EditorGUIUtility.currentViewWidth - 80, EditorGUIUtility.singleLineHeight), element.FindPropertyRelative("dnaEntryName"), new GUIContent("DNA Name"));
 
             rect.y += 2 + EditorGUIUtility.singleLineHeight;
-            EditorGUI.PropertyField(new Rect(rect.x + 20, rect.y, 400, EditorGUIUtility.singleLineHeight ), element.FindPropertyRelative("poseZero"));
+            EditorGUI.PropertyField(new Rect(rect.x + 20, rect.y, EditorGUIUtility.currentViewWidth - 80, EditorGUIUtility.singleLineHeight ), element.FindPropertyRelative("poseZero"));
 
             rect.y += 2 + EditorGUIUtility.singleLineHeight;
-            EditorGUI.PropertyField(new Rect(rect.x + 20, rect.y, 400, EditorGUIUtility.singleLineHeight), element.FindPropertyRelative("poseOne"));
+            EditorGUI.PropertyField(new Rect(rect.x + 20, rect.y, EditorGUIUtility.currentViewWidth - 80, EditorGUIUtility.singleLineHeight), element.FindPropertyRelative("poseOne"));
 
             rect.y += 2 + EditorGUIUtility.singleLineHeight;
-            EditorGUI.PropertyField(new Rect(rect.x + 20, rect.y, 400, EditorGUIUtility.singleLineHeight), element.FindPropertyRelative("blendShapeZero"));
+            EditorGUI.PropertyField(new Rect(rect.x + 20, rect.y, EditorGUIUtility.currentViewWidth - 80, EditorGUIUtility.singleLineHeight), element.FindPropertyRelative("blendShapeZero"));
 
             rect.y += 2 + EditorGUIUtility.singleLineHeight;
-            EditorGUI.PropertyField(new Rect(rect.x + 20, rect.y, 400, EditorGUIUtility.singleLineHeight), element.FindPropertyRelative("blendShapeOne"));
+            EditorGUI.PropertyField(new Rect(rect.x + 20, rect.y, EditorGUIUtility.currentViewWidth - 80, EditorGUIUtility.singleLineHeight), element.FindPropertyRelative("blendShapeOne"));
 
             rect.y += 2 + EditorGUIUtility.singleLineHeight;
-            EditorGUI.PropertyField(new Rect(rect.x + 20, rect.y, 400, EditorGUIUtility.singleLineHeight), element.FindPropertyRelative("sizeZero"));
+            EditorGUI.PropertyField(new Rect(rect.x + 20, rect.y, EditorGUIUtility.currentViewWidth - 80, EditorGUIUtility.singleLineHeight), element.FindPropertyRelative("sizeZero"), true);
 
             rect.y += 2 + EditorGUIUtility.singleLineHeight;
-            EditorGUI.PropertyField(new Rect(rect.x + 20, rect.y, 400, EditorGUIUtility.singleLineHeight), element.FindPropertyRelative("sizeOne"));
+            EditorGUI.PropertyField(new Rect(rect.x + 20, rect.y, EditorGUIUtility.currentViewWidth - 80, EditorGUIUtility.singleLineHeight), element.FindPropertyRelative("sizeOne"));
         }
     }
 }
