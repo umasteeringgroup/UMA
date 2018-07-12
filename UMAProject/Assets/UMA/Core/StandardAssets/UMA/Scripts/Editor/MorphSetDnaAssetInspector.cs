@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using UnityEditorInternal;
+using UMA.Editors;
 
 namespace UMA.Editors
 {
@@ -37,7 +38,8 @@ namespace UMA.Editors
             serializedObject.Update();
             DrawPropertiesExcluding(serializedObject, _excludeProperties);
 
-            GUILayout.Space(30);
+            GUILayout.Space(10);
+            GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
             _editorFoldout = EditorGUILayout.Foldout(_editorFoldout, "Editor Tools", true);
             if (_editorFoldout)
             {
@@ -65,12 +67,16 @@ namespace UMA.Editors
                 _dnaAsset = EditorGUILayout.ObjectField(_dnaAsset, typeof(DynamicUMADnaAsset), false) as DynamicUMADnaAsset;
                 EditorGUILayout.EndHorizontal();
             }
+            GUIHelper.EndVerticalPadded(3);
 
-            GUILayout.Space(30);
+            GUILayout.Space(10);
+            GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
             _morphsFoldout = EditorGUILayout.Foldout(_morphsFoldout, "Open/Close DNA Morphs", true);
             
             if(_morphsFoldout)
                 _morphList.DoLayoutList();
+
+            GUIHelper.EndVerticalPadded(3);
 
             serializedObject.ApplyModifiedProperties();
         }
