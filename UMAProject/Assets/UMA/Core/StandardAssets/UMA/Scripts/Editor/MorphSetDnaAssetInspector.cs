@@ -28,7 +28,7 @@ namespace UMA.Editors
             _morphList.onAddCallback = OnAddCallback;
 
             _morphList.drawHeaderCallback = rect => { EditorGUI.LabelField(rect, "DNA Morphs"); };
-            _morphList.elementHeightCallback = (index) => { return (EditorGUIUtility.singleLineHeight + 2) * 7; };
+            _morphList.elementHeightCallback = (index) => { return (EditorGUIUtility.singleLineHeight + 2) * 7 + 8; };
         }
 
         public override void OnInspectorGUI()
@@ -151,7 +151,13 @@ namespace UMA.Editors
 
         private void DrawMorphElement( Rect rect, int index, bool isActive, bool isFocused )
         {
-            var element = _morphList.serializedProperty.GetArrayElementAtIndex(index);
+            SerializedProperty element = _morphList.serializedProperty.GetArrayElementAtIndex(index);
+            SerializedProperty sizeZero = element.FindPropertyRelative("sizeZero");
+            SerializedProperty sizeOne = element.FindPropertyRelative("sizeOne");
+
+            SerializedProperty massRatio = sizeZero.FindPropertyRelative("massRatio");
+            SerializedProperty radiusRatio = sizeZero.FindPropertyRelative("radiusRatio");
+
             rect.y += 2;
             EditorGUI.PrefixLabel(new Rect(rect.x, rect.y, 20, EditorGUIUtility.singleLineHeight), new GUIContent(index.ToString()));
             EditorGUI.PropertyField(new Rect(rect.x + 20, rect.y, EditorGUIUtility.currentViewWidth - 80, EditorGUIUtility.singleLineHeight), element.FindPropertyRelative("dnaEntryName"), new GUIContent("DNA Name"));
@@ -169,10 +175,28 @@ namespace UMA.Editors
             EditorGUI.PropertyField(new Rect(rect.x + 20, rect.y, EditorGUIUtility.currentViewWidth - 80, EditorGUIUtility.singleLineHeight), element.FindPropertyRelative("blendShapeOne"));
 
             rect.y += 2 + EditorGUIUtility.singleLineHeight;
-            EditorGUI.PropertyField(new Rect(rect.x + 20, rect.y, EditorGUIUtility.currentViewWidth - 80, EditorGUIUtility.singleLineHeight), element.FindPropertyRelative("sizeZero"), true);
+            EditorGUI.LabelField(new Rect(rect.x + 20, rect.y, 80, EditorGUIUtility.singleLineHeight), "Size Zero:");
+
+            EditorGUI.LabelField(new Rect(rect.x + EditorGUIUtility.currentViewWidth - 440, rect.y, 80, EditorGUIUtility.singleLineHeight), "heightRatio:");
+            EditorGUI.PropertyField(new Rect(rect.x + EditorGUIUtility.currentViewWidth - 360, rect.y, 40, EditorGUIUtility.singleLineHeight), sizeZero.FindPropertyRelative("heightRatio"), GUIContent.none);
+
+            EditorGUI.LabelField(new Rect(rect.x + EditorGUIUtility.currentViewWidth - 310, rect.y, 80, EditorGUIUtility.singleLineHeight), "massRatio:");
+            EditorGUI.PropertyField(new Rect(rect.x + EditorGUIUtility.currentViewWidth - 230, rect.y, 40, EditorGUIUtility.singleLineHeight), sizeZero.FindPropertyRelative("massRatio"), GUIContent.none);
+
+            EditorGUI.LabelField(new Rect(rect.x + EditorGUIUtility.currentViewWidth - 180, rect.y, 80, EditorGUIUtility.singleLineHeight), "radiusRatio:");
+            EditorGUI.PropertyField(new Rect(rect.x + EditorGUIUtility.currentViewWidth - 100, rect.y, 40, EditorGUIUtility.singleLineHeight), sizeZero.FindPropertyRelative("radiusRatio"), GUIContent.none);
 
             rect.y += 2 + EditorGUIUtility.singleLineHeight;
-            EditorGUI.PropertyField(new Rect(rect.x + 20, rect.y, EditorGUIUtility.currentViewWidth - 80, EditorGUIUtility.singleLineHeight), element.FindPropertyRelative("sizeOne"));
+            EditorGUI.LabelField(new Rect(rect.x + 20, rect.y, 80, EditorGUIUtility.singleLineHeight), "Size One:");
+
+            EditorGUI.LabelField(new Rect(rect.x + EditorGUIUtility.currentViewWidth - 440, rect.y, 80, EditorGUIUtility.singleLineHeight), "heightRatio:");
+            EditorGUI.PropertyField(new Rect(rect.x + EditorGUIUtility.currentViewWidth - 360, rect.y, 40, EditorGUIUtility.singleLineHeight), sizeOne.FindPropertyRelative("heightRatio"), GUIContent.none);
+
+            EditorGUI.LabelField(new Rect(rect.x + EditorGUIUtility.currentViewWidth - 310, rect.y, 80, EditorGUIUtility.singleLineHeight), "massRatio:");
+            EditorGUI.PropertyField(new Rect(rect.x + EditorGUIUtility.currentViewWidth - 230, rect.y, 40, EditorGUIUtility.singleLineHeight), sizeOne.FindPropertyRelative("massRatio"), GUIContent.none);
+
+            EditorGUI.LabelField(new Rect(rect.x + EditorGUIUtility.currentViewWidth - 180, rect.y, 80, EditorGUIUtility.singleLineHeight), "radiusRatio:");
+            EditorGUI.PropertyField(new Rect(rect.x + EditorGUIUtility.currentViewWidth - 100, rect.y, 40, EditorGUIUtility.singleLineHeight), sizeOne.FindPropertyRelative("radiusRatio"), GUIContent.none);
         }
     }
 }
