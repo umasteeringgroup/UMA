@@ -179,7 +179,7 @@ namespace UMA.CharacterSystem
         //This is reset at the beginning of every build operation
         private List<string> crossCompatibleRaces = new List<string>();
 
-        private Dictionary<SlotDataAsset, List<MeshHideAsset>> MeshHideDictionary = new Dictionary<SlotDataAsset, List<MeshHideAsset>>();
+        private Dictionary<int, List<MeshHideAsset>> MeshHideDictionary = new Dictionary<int, List<MeshHideAsset>>();
 
 
 #if UNITY_EDITOR
@@ -2502,7 +2502,7 @@ namespace UMA.CharacterSystem
 			// clear the hiddenslots and hidden mesh assets
 			// so they can be accumulate anew from the recipe
             HiddenSlots.Clear();
-			MeshHideDictionary = new Dictionary<SlotDataAsset, List<MeshHideAsset>>();
+			MeshHideDictionary = new Dictionary<int, List<MeshHideAsset>>();
 
             UMADnaBase[] CurrentDNA = null;
             if (umaData != null)
@@ -2542,15 +2542,15 @@ namespace UMA.CharacterSystem
                         {
                             if (meshHide != null && meshHide.asset != null)
                             {
-                                if (!MeshHideDictionary.ContainsKey(meshHide.asset))
+                                if (!MeshHideDictionary.ContainsKey(meshHide.asset.nameHash))
                                 {   //If this meshHide.asset isn't already in the dictionary, then let's add it and start a new list.
-                                    MeshHideDictionary.Add(meshHide.asset, new List<MeshHideAsset>());
-                                    MeshHideDictionary[meshHide.asset].Add(meshHide);
+                                    MeshHideDictionary.Add(meshHide.asset.nameHash, new List<MeshHideAsset>());
+                                    MeshHideDictionary[meshHide.asset.nameHash].Add(meshHide);
                                 }
                                 else
                                 {   //If this meshHide.asset is already in the dictionary AND the meshHide isn't already in the list, then add it.
-                                    if (!MeshHideDictionary[meshHide.asset].Contains(meshHide))
-                                        MeshHideDictionary[meshHide.asset].Add(meshHide);
+                                    if (!MeshHideDictionary[meshHide.asset.nameHash].Contains(meshHide))
+                                        MeshHideDictionary[meshHide.asset.nameHash].Add(meshHide);
                                 }
                             }
                         }
@@ -2719,9 +2719,9 @@ namespace UMA.CharacterSystem
             foreach (SlotData sd in umaData.umaRecipe.slotDataList)
             {
                 //Add MeshHideAsset here
-                if (MeshHideDictionary.ContainsKey(sd.asset))
+                if (MeshHideDictionary.ContainsKey(sd.asset.nameHash))
                 {   //If this slotDataAsset is found in the MeshHideDictionary then we need to supply the SlotData with the bitArray.
-                    sd.meshHideMask = MeshHideAsset.GenerateMask( MeshHideDictionary[sd.asset] );
+                    sd.meshHideMask = MeshHideAsset.GenerateMask( MeshHideDictionary[sd.asset.nameHash] );
                 }
                 
                 if (sd.OverlayCount > 1)
