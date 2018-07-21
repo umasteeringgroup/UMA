@@ -244,16 +244,30 @@ namespace UMA
 			string assetPath = AssetDatabase.GetAssetPath(sd.GetInstanceID());
 			string path = Path.GetDirectoryName(assetPath);
 			string AssetName = Path.GetFileNameWithoutExtension(assetPath);
-			if (AssetName.ToLower().Contains("_Slot"))
+			if (AssetName.ToLower().Contains("_slot"))
 			{
-				AssetName = Regex.Replace(AssetName, "_slot", "_recipe", RegexOptions.IgnoreCase);
+				AssetName = Regex.Replace(AssetName, "_slot", "_Recipe", RegexOptions.IgnoreCase);
 			}
 			else
 			{
-				AssetName += "_recipe";
+				AssetName += "_Recipe";
 			}
 			assetPath = Path.Combine(path, AssetName + ".asset");
-			CreateRecipe(assetPath, sd, od, sd.name, true);
+
+			bool doCreate = false;
+			if (File.Exists(assetPath))
+			{
+				if (EditorUtility.DisplayDialog("File Already Exists!", "An asset at that location already exists! Overwrite it?", "Yes", "Cancel"))
+					doCreate = true;
+			}
+			else
+				doCreate = true;
+
+			if(doCreate)
+			{
+				CreateRecipe(assetPath, sd, od, sd.name, true);
+				Debug.Log("Recipe created at: " + assetPath);
+			}
 		}
 	}
 }
