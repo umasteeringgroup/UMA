@@ -272,8 +272,6 @@ namespace UMA
 		}
 	}
 
-    }
-
     public static class UMAExtensions
     {
         public static System.Type[] GetAllDerivedTypes(this System.AppDomain aAppDomain, System.Type aType)
