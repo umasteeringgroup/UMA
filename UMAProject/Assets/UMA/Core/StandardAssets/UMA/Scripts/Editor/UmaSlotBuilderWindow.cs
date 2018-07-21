@@ -107,7 +107,7 @@ namespace UMA.Editors
 							UMAContext.Instance.slotLibrary.AddSlotAsset(sd);
 						}
 					}
-                    OverlayDataAsset od = null;
+					OverlayDataAsset od = null;
 					if (createOverlay)
 					{
 						od = CreateOverlay(AssetPath.Replace(sd.name, sd.slotName + "_Overlay"), sd);
@@ -169,13 +169,13 @@ namespace UMA.Editors
 					UMAContext.Instance.overlayLibrary.AddOverlayAsset(asset);
 				}
 			}
-            return asset;
+			return asset;
 		}
 
-        private void CreateRecipe(string path, SlotDataAsset sd, OverlayDataAsset od)
-        {
-            UMAEditorUtilities.CreateRecipe(path, sd, od, sd.name, addToGlobalLibrary);
-        }
+		private void CreateRecipe(string path, SlotDataAsset sd, OverlayDataAsset od)
+		{
+			UMAEditorUtilities.CreateRecipe(path, sd, od, sd.name, addToGlobalLibrary);
+		}
 
 		private SlotDataAsset CreateSlot_Internal()
 		{
