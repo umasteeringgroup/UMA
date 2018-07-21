@@ -10,18 +10,35 @@ namespace UMA.CharacterSystem.Examples
         DynamicCharacterAvatar Avatar;
         string ColorName;
         OverlayColorData ColorValue;
+        bool IsRemover;
 
         public void Setup(DynamicCharacterAvatar avatar, string colorName, OverlayColorData colorValue)
         {
+            IsRemover = false;
             Avatar = avatar;
             ColorName = colorName;
             ColorValue = colorValue;
         }
 
+        public void SetupRemover(DynamicCharacterAvatar avatar, string colorName)
+        {
+            IsRemover = true;
+            Avatar = avatar;
+            ColorName = colorName;
+            ColorValue = new OverlayColorData(1);
+        }
+
         public void OnClick()
         {
-            Avatar.SetColor(ColorName, ColorValue);
-            Avatar.UpdateColors(true);
+            if (IsRemover)
+            {
+                Avatar.ClearColor(ColorName);
+            }
+            else
+            {
+                Avatar.SetColor(ColorName, ColorValue);
+                Avatar.UpdateColors(true);
+            }
         }
     }
 }
