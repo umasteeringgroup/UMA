@@ -10,9 +10,6 @@ namespace UMA
 	/// </summary>
 	public class UMAData : MonoBehaviour
 	{
-		[Obsolete("UMA 2.5 myRenderer is now obsolete, an uma can have multiple renderers. Use int rendererCount { get; } and GetRenderer(int) instead.", false)]
-		public SkinnedMeshRenderer myRenderer;
-
 		private SkinnedMeshRenderer[] renderers;
 		public int rendererCount { get { return renderers == null ? 0 : renderers.Length; } }
 
@@ -28,9 +25,6 @@ namespace UMA
 
 		public void SetRenderers(SkinnedMeshRenderer[] renderers)
 		{
-#pragma warning disable 618
-			myRenderer = (renderers != null && renderers.Length > 0) ? renderers[0] : null;
-#pragma warning restore 618
 			this.renderers = renderers;
 		}
 
@@ -199,7 +193,6 @@ namespace UMA
 		public void Assign(UMAData other)
 		{
 			animator = other.animator;
-			//myRenderer = other.myRenderer;
 			renderers = other.renderers;
 			umaRoot = other.umaRoot;
 			if (animationController == null)

@@ -12,9 +12,14 @@ namespace UMA.Editors
     public class GeometrySelectorWindow : Editor 
     {
         private GeometrySelector _Source;
-        private SlotDataAsset _Occluder = null;
+        private SlotDataAsset _OccluderSlotData = null;
+        private MeshHideAsset _OccluderMeshHide = null;
+
         private float _occluderOffset = 0;
-        private Vector3 _occluderRotation = Vector3.zero;
+        private Vector3 _occluderPosition = Vector3.zero;
+        private Vector3 _occluderRotation = new Vector3(270.0f, 0.0f, 0.0f);
+        private Vector3 _occluderScale = Vector3.one;
+
         private bool doneEditing = false; //set to true to end editing this objects
         private bool showWireframe = true; //whether to switch to wireframe mode or not
         private bool backfaceCull = true; 
@@ -100,42 +105,130 @@ namespace UMA.Editors
             EditorGUILayout.LabelField("Mesh Selector Utilities", EditorStyles.largeLabel, GUILayout.MaxHeight(25) );
             scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUIStyle.none);
             GUILayout.Space(20);
-            EditorGUILayout.LabelField(new GUIContent("Occlusion Slot (Optional)","Use this mesh to attempt to automatically detect occluded triangles"));
-            SlotDataAsset newOccluder = (SlotDataAsset) EditorGUILayout.ObjectField(_Occluder, typeof(SlotDataAsset), false);
-            if (newOccluder != _Occluder)
+
+            EditorGUILayout.BeginHorizontal();
+            bool newNormals = EditorGUILayout.Toggle("Visualize Normals", _Source.visualizeNormals);
+            if ( newNormals != _Source.visualizeNormals )
             {
-                _Occluder = newOccluder;
-                if (_Occluder != null)
-                        _Source.CreateOcclusionMesh(_Occluder.meshData);
+                _Source.visualizeNormals = newNormals;
+                SceneView.RepaintAll();
+            }
+            Color32 newNormalColor = EditorGUILayout.ColorField(_Source.normalsColor);
+            if (!newNormalColor.Equals(_Source.normalsColor))
+            {
+                _Source.normalsColor = newNormalColor;
+                SceneView.RepaintAll();
+            }
+            EditorGUILayout.EndHorizontal();
+            float newNormalLength = EditorGUILayout.Slider("Normals Length", _Source.normalsLength, 0.01f, 1.5f);
+            if( newNormalLength != _Source.normalsLength )
+            {
+                _Source.normalsLength = newNormalLength;
+                SceneView.RepaintAll();
+            }
+
+            GUILayout.Space(20);
+            EditorGUILayout.LabelField(new GUIContent("Occlusion Slot (Optional)","Use this mesh to attempt to automatically detect occluded triangles"));
+            EditorGUILayout.BeginHorizontal();
+            SlotDataAsset newOccluderSlotData = (SlotDataAsset) EditorGUILayout.ObjectField(_OccluderSlotData, typeof(SlotDataAsset), false);
+            MeshHideAsset newOccluderMeshHide = (MeshHideAsset)EditorGUILayout.ObjectField(_OccluderMeshHide, typeof(MeshHideAsset), false);
+            if(GUILayout.Button("Clear", GUILayout.MaxWidth(60)))
+            {
+                _OccluderSlotData = null;
+                newOccluderSlotData = null;
+                _OccluderMeshHide = null;
+                newOccluderMeshHide = null;
+                _Source.occlusionMesh = null;
+                SceneView.RepaintAll();
+            }
+            if (newOccluderSlotData != _OccluderSlotData)
+            {
+                _OccluderSlotData = newOccluderSlotData;
+                _OccluderMeshHide = null;
+                newOccluderMeshHide = null;
+                if (_OccluderSlotData != null)
+                        _Source.UpdateOcclusionMesh(_OccluderSlotData.meshData, _occluderOffset, _occluderPosition, _occluderRotation, _occluderScale);
                 else
                         _Source.occlusionMesh = null;
+                SceneView.RepaintAll();
             }
-
-            if (_Occluder != null)
+            if (newOccluderMeshHide != _OccluderMeshHide)
             {
-                bool newOffset = false;
-                bool newRot = false;
-                float previousOffset = EditorGUILayout.FloatField(new GUIContent("Occluder Offset", "Distance along the normal to offset each vertex of the occlusion mesh"), _occluderOffset);
-                if (!Mathf.Approximately(previousOffset,_occluderOffset))
+                if (newOccluderMeshHide == _Source.meshAsset)
                 {
-                    _occluderOffset = previousOffset;
-                    newOffset = true;
+                    EditorUtility.DisplayDialog("Error", "Can not select the same MeshHideAsset currently being edited!", "OK");
                 }
-                Vector3 previousRot = EditorGUILayout.Vector3Field(new GUIContent("Rotation", "Offset the rotation (degrees) of the occluder"), _occluderRotation );
-                if (previousRot != _occluderRotation)
+                else
                 {
-                    _occluderRotation = previousRot;
-                    newRot = true;
-                }
-
-                if (newOffset || newRot)
-                    _Source.UpdateOcclusionMesh(_occluderOffset, _occluderRotation);
-
-                if (GUILayout.Button(new GUIContent("Raycast Hidden Faces", "Warning! This will clear the current selection.")))
-                {
-                    RaycastHide();
+                    _OccluderMeshHide = newOccluderMeshHide;
+                    _OccluderSlotData = null;
+                    newOccluderSlotData = null;
+                    if (_OccluderMeshHide != null && _OccluderMeshHide != _Source.meshAsset)
+                        _Source.UpdateOcclusionMesh(_OccluderMeshHide, _occluderOffset, _occluderPosition, _occluderRotation, _occluderScale);
+                    else
+                        _Source.occlusionMesh = null;
+                    SceneView.RepaintAll();
                 }
             }
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUI.BeginDisabledGroup(_Source.occlusionMesh == null);
+            bool changed = false;
+
+            Color32 newOcclusionColor = EditorGUILayout.ColorField("Occlusion Mesh Color",_Source.occlusionColor);
+            if( !newOcclusionColor.Equals(_Source.occlusionColor))
+            {
+                _Source.occlusionColor = newOcclusionColor;
+                SceneView.RepaintAll();
+            }
+            bool newWireframe = EditorGUILayout.Toggle("Occlusion Mesh Wireframe", _Source.occlusionWireframe);
+            if( newWireframe != _Source.occlusionWireframe )
+            {
+                _Source.occlusionWireframe = newWireframe;
+                SceneView.RepaintAll();
+            }
+
+            float newOffset = EditorGUILayout.Slider(new GUIContent("Normal Offset", "Distance along the normal to offset each vertex of the occlusion mesh"), _occluderOffset, -0.1f, 0.25f);
+            if (!Mathf.Approximately(newOffset,_occluderOffset))
+            {
+                _occluderOffset = newOffset;
+                changed = true;
+            }
+
+            Vector3 newPosition = EditorGUILayout.Vector3Field(new GUIContent("Position", "Offset the position of the occluder"), _occluderPosition);
+            if( newPosition != _occluderPosition)
+            {
+                _occluderPosition = newPosition;
+                changed = true;
+            }
+
+            Vector3 newRotation = EditorGUILayout.Vector3Field(new GUIContent("Rotation", "Offset the rotation (degrees) of the occluder"), _occluderRotation);
+            if (newRotation != _occluderRotation)
+            {
+                _occluderRotation = newRotation;
+                changed = true;
+            }
+
+            Vector3 newScale = EditorGUILayout.Vector3Field(new GUIContent("Scale", "Offset the scale of the occluder"), _occluderScale);
+            if (newScale != _occluderScale)
+            {
+                _occluderScale = newScale;
+                changed = true;
+            }
+
+            if (changed)
+            {
+                if(_OccluderSlotData)
+                    _Source.UpdateOcclusionMesh( _OccluderSlotData.meshData, _occluderOffset, _occluderPosition, _occluderRotation, _occluderScale);
+                if(_OccluderMeshHide)
+                    _Source.UpdateOcclusionMesh( _OccluderMeshHide, _occluderOffset, _occluderPosition, _occluderRotation, _occluderScale);
+            }
+
+            if (GUILayout.Button(new GUIContent("Raycast Hidden Faces", "Warning! This will clear the current selection.")))
+            {
+                RaycastHide();
+            }
+            EditorGUI.EndDisabledGroup();
 
             GUILayout.Space(20);
             textureMap = EditorGUILayout.ObjectField("Set From Texture Map", textureMap, typeof(Texture2D), false) as Texture2D;                
@@ -508,14 +601,14 @@ namespace UMA.Editors
         /// <param name="p2">Vertex 2 of the triangle.</param>
         /// <param name="p3">Vertex 3 of the triangle.</param>
         /// <returns><c>true</c> when the ray hits the triangle, otherwise <c>false</c></returns>
-        public static bool RayTriIntersect(Ray ray, Vector3 p1, Vector3 p2, Vector3 p3)
+        public static bool RayTriIntersect(Ray ray, Vector3 p1, Vector3 p2, Vector3 p3, out float dist)
         {
             // Vectors from p1 to p2/p3 (edges)
             Vector3 e1, e2;  
 
             Vector3 p, q, t;
             float det, invDet, u, v;
-
+            dist = Mathf.Infinity;
 
             //Find vectors for edges sharing vertex/point p1
             e1 = p2 - p1;
@@ -549,6 +642,8 @@ namespace UMA.Editors
             //Check for ray hit
             if (v < 0 || u + v > 1) { return false; }
 
+            dist = Vector3.Dot(e2, q) * invDet;
+
             if ((Vector3.Dot(e2, q) * invDet) > Mathf.Epsilon)
             { 
                 //ray does intersect
@@ -576,6 +671,13 @@ namespace UMA.Editors
             Vector3[] targetNorms = targetMesh.normals;
             if (targetNorms.Length != targetVerts.Length)
                 return;
+
+            Matrix4x4 m = _Source.gameObject.transform.localToWorldMatrix;
+            for (int i = 0; i < targetVerts.Length; i++)
+            {
+                targetVerts[i] = m.MultiplyPoint3x4(targetVerts[i]);
+                targetNorms[i] = m.MultiplyPoint3x4(targetNorms[i]);
+            }
             
             Vector3[] occlusionVerts = occlusionMesh.vertices;
             List<int[]> occlusionTriangles = new List<int[]>();
@@ -589,19 +691,25 @@ namespace UMA.Editors
             {
                 EditorUtility.DisplayProgressBar("Progress", "calculating...", ((float)i / (float)targetVerts.Length));
                     
-                Ray testRay = new Ray(targetVerts[i], targetNorms[i]);
+                Ray testRay = new Ray(targetVerts[i], targetNorms[i] );
                 for (int j = 0; j < occlusionTriangles.Count; j++)
                 {
                     int[] triVerts = occlusionTriangles[j];
                     for (int k = 0; k < triVerts.Length; k+= 3)
                     {
+                        float dist = Mathf.Infinity;
                         if (RayTriIntersect(testRay,
                             occlusionVerts[triVerts[k + 0]],
                             occlusionVerts[triVerts[k + 1]],
-                            occlusionVerts[triVerts[k + 2]]))
+                            occlusionVerts[triVerts[k + 2]],
+                            out dist))
                         {
-                            vertexOccluded[i] = true;
-                            break;
+                            if (dist <= _Source.normalsLength)
+                            {
+                                Debug.Log("Dist: " + dist + " NormalsLength: " + _Source.normalsLength);
+                                vertexOccluded[i] = true;
+                                break;
+                            }
                         }
                     }
 
@@ -618,8 +726,8 @@ namespace UMA.Editors
                 int[] triVerts = _Source.sharedMesh.GetTriangles(i);
                 for (int j = 0; j < triVerts.Length; j += 3)
                 {
-                    if (vertexOccluded[triVerts[j + 0]] &&
-                        vertexOccluded[triVerts[j + 1]] &&
+                    if (vertexOccluded[triVerts[j + 0]] ||
+                        vertexOccluded[triVerts[j + 1]] ||
                         vertexOccluded[triVerts[j + 2]])
                     {
                         _Source.selectedTriangles[(j / 3)] = true;
