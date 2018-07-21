@@ -205,7 +205,8 @@ namespace UMA
 				{
 					if (source.meshData.blendShapes != null && source.meshData.blendShapes.Length > 0) 
 					{
-						for (int shapeIndex = 0; shapeIndex < source.meshData.blendShapes.Length; shapeIndex++)
+						int sourceBlendShapeLength = source.meshData.blendShapes.Length;
+						for (int shapeIndex = 0; shapeIndex < sourceBlendShapeLength; shapeIndex++)
 						{
 							#region BlendShape Baking
 							if(blendShapeSettings.bakeBlendShapes != null && blendShapeSettings.bakeBlendShapes.Count > 0)
@@ -327,12 +328,12 @@ namespace UMA
 
 							if (nameAlreadyExists)//Lets add the vertices data to the existing blendShape
 							{ 
-								if (blendShapes[i].frames.Length != source.meshData.blendShapes[shapeIndex].frames.Length) 
+								if (blendShapes[i].frames.Length != sourceBlendShapes[shapeIndex].frames.Length) 
 								{
 									Debug.LogError("SkinnedMeshCombiner: mesh blendShape frame counts don't match!");
 									break;
 								}
-								for (int frameIndex = 0; frameIndex < source.meshData.blendShapes[shapeIndex].frames.Length; frameIndex++)
+								for (int frameIndex = 0; frameIndex < sourceBlendShapes[shapeIndex].frames.Length; frameIndex++)
 								{
 									Array.Copy(sourceBlendShapes[shapeIndex].frames[frameIndex].deltaVertices, 0, blendShapes[i].frames[frameIndex].deltaVertices, vertexIndex, sourceVertexCount);
 
