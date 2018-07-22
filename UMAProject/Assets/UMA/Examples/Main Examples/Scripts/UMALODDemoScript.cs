@@ -46,12 +46,6 @@ namespace UMA.Examples
 					var go = crowd.GenerateUMA(Random.Range(0, 2), transform.position + new Vector3(Random.Range(-range, range), 0, Random.Range(-range, range)));
 					go.transform.localRotation = Quaternion.Euler(0, Random.Range(0, 360), 0);
 
-					// Add the display prefab
-					GameObject tm = (GameObject)GameObject.Instantiate(LODDisplayPrefab, go.transform.position, go.transform.rotation);
-					tm.transform.SetParent(go.transform);
-					tm.transform.localPosition = new Vector3(0, 2f, 0f);
-					tm.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
-
 					UMAData umaData = go.GetComponent<UMAData>();
 					umaData.CharacterCreated.AddListener(CharacterCreated);
 
@@ -62,7 +56,7 @@ namespace UMA.Examples
 					lod.Update();
 
 					var display = go.AddComponent<LODDisplay>();
-					display.lodDisplay = tm.GetComponent<TextMesh>();
+					display.LODDisplayPrefab = LODDisplayPrefab;
 				}
 			}
 		}
