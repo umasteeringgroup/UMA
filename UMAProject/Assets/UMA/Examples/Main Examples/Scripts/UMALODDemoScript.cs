@@ -57,10 +57,12 @@ namespace UMA.Examples
 
 					var lod = go.AddComponent<UMASimpleLOD>();
 					lod.lodDistance = lodDistance;
-					lod.lodDisplay = tm.GetComponent<TextMesh>();
 					lod.swapSlots = swapSlots;
 					lod.lodOffset = lodOffset;
 					lod.Update();
+
+					var display = go.AddComponent<LODDisplay>();
+					display.lodDisplay = tm.GetComponent<TextMesh>();
 				}
 			}
 		}
