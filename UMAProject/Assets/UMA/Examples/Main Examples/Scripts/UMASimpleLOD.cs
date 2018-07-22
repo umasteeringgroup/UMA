@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UMA;
+using UMA.CharacterSystem;
 using System;
 
 namespace UMA.Examples
@@ -16,8 +17,11 @@ namespace UMA.Examples
 		public int CurrentLOD {  get { return _currentLOD; } }
 		private int _currentLOD = -1;
 
+		private DynamicCharacterAvatar _avatar;
 		private UMAData _umaData;
 		private Transform _cameraTransform;
+
+		private bool initialized = false;
 
 		public void SetSwapSlots(bool swapSlots, int lodOffset)
 		{
@@ -39,12 +43,42 @@ namespace UMA.Examples
 
 		public void OnEnable()
 		{
+			_avatar = GetComponent<DynamicCharacterAvatar>();
+			if (_avatar != null)
+			{
+				_avatar.CharacterBegun.AddListener(CharacterBegun);
+			}
+			else
+			{
+				_umaData = GetComponent<UMAData>();
+				if (_umaData != null)
+					_umaData.CharacterCreated.AddListener(CharacterCreated);
+			}
+
 			//cache the camera transform for performance
 			_cameraTransform = Camera.main.transform;
-			_umaData = GetComponent<UMAData>();
+		}
+
+		public void CharacterCreated(UMAData umaData)
+		{
+			initialized = true;
+		}
+
+		public void CharacterBegun(UMAData umaData)
+		{
+			initialized = true;
+			PerformLodCheck();
 		}
 
 		public void Update()
+		{
+            if (!initialized)
+                return;
+
+            PerformLodCheck();
+		}
+
+		private void PerformLodCheck()
 		{
 			if (_umaData == null)
 				_umaData = gameObject.GetComponent<UMAData>();
@@ -52,12 +86,15 @@ namespace UMA.Examples
 			if (_umaData == null)
 				return;
 
+			if (_umaData.umaRecipe == null)
+				return;
+
 			float cameraDistance = (transform.position - _cameraTransform.position).magnitude;
 			float lodDistanceStep = lodDistance;
 			float atlasResolutionScale = 1f;
 
 			int currentLevel = 0;
-			while (lodDistance !=0 && cameraDistance > lodDistanceStep)
+			while (lodDistance != 0 && cameraDistance > lodDistanceStep)
 			{
 				lodDistanceStep *= 2;
 				atlasResolutionScale *= 0.5f;
