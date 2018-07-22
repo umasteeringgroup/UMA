@@ -2,17 +2,18 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UMA;
+using UMA.CharacterSystem;
 
 namespace UMA.Examples
 {
     public class LODDisplay : MonoBehaviour
     {
-        public TextMesh lodDisplay;
+        public GameObject LODDisplayPrefab;
+        private TextMesh _lodDisplay;
 
         private int _lastSetLevel = -1;
         private Transform _cameraTransform;
         private UMASimpleLOD _simpleLOD;
-        private MeshRenderer _renderer;
 
         public void OnEnable()
         {
@@ -20,14 +21,15 @@ namespace UMA.Examples
             _cameraTransform = Camera.main.transform;
             _simpleLOD = GetComponent<UMASimpleLOD>();
 
-            if (lodDisplay != null)
+            // Add the display prefab
+            if (LODDisplayPrefab != null)
             {
-                _renderer = lodDisplay.GetComponent<MeshRenderer>();
-                if (_renderer != null)
-                    _renderer.material.SetColor("_EmissionColor", Color.grey);
-                else
-                    Debug.LogError("Could not find renderer!");
-            }
+                GameObject tm = (GameObject)GameObject.Instantiate(LODDisplayPrefab, transform.position, transform.rotation);
+                tm.transform.SetParent(transform);
+                tm.transform.localPosition = new Vector3(0, 2f, 0f);
+                tm.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
+                _lodDisplay = tm.GetComponent<TextMesh>();
+            }            
         }
 
         // Update is called once per frame
@@ -36,25 +38,17 @@ namespace UMA.Examples
             if (_simpleLOD == null)
                 return;
 
-            if (lodDisplay != null)
+            if (_lodDisplay != null)
             {
                 if (_lastSetLevel != _simpleLOD.CurrentLOD)
                 {
                     _lastSetLevel = _simpleLOD.CurrentLOD;
-                    lodDisplay.text = string.Format("LOD #{0}", _lastSetLevel);
-                    if (_renderer != null)
-                        _renderer.material.SetColor("_EmissionColor", Color.grey);
+                    _lodDisplay.text = string.Format("LOD #{0}", _lastSetLevel);
                 }
                 var delta = transform.position - _cameraTransform.position;
                 delta.y = 0;
-                lodDisplay.transform.rotation = Quaternion.LookRotation(delta, Vector3.up);
+                _lodDisplay.transform.rotation = Quaternion.LookRotation(delta, Vector3.up);
             }
-        }
-
-        public void CharacterUpdated(UMAData data)
-        {
-            if (lodDisplay != null)
-                _renderer.material.SetColor("_EmissionColor", Color.white);
         }
     }
 }
