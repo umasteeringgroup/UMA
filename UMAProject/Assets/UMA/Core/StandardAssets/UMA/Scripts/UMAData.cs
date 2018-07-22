@@ -110,14 +110,10 @@ namespace UMA
 		public bool dirty = false;
 
 		private bool isOfficiallyCreated = false;
-        /// <summary>
-        /// Callback event when character has started updating.
-        /// </summary>
-        public event Action<UMAData> OnCharacterBegun { add { if (CharacterBegun == null) CharacterBegun = new UMADataEvent(); CharacterBegun.AddListener(new UnityAction<UMAData>(value)); } remove { CharacterBegun.RemoveListener(new UnityAction<UMAData>(value)); } }
-        /// <summary>
-        /// Callback event when character has been updated.
-        /// </summary>
-        public event Action<UMAData> OnCharacterUpdated { add { if (CharacterUpdated == null) CharacterUpdated = new UMADataEvent(); CharacterUpdated.AddListener(new UnityAction<UMAData>(value)); } remove { CharacterUpdated.RemoveListener(new UnityAction<UMAData>(value)); } }
+		/// <summary>
+		/// Callback event when character has been updated.
+		/// </summary>
+		public event Action<UMAData> OnCharacterUpdated { add { if (CharacterUpdated == null) CharacterUpdated = new UMADataEvent(); CharacterUpdated.AddListener(new UnityAction<UMAData>(value)); } remove { CharacterUpdated.RemoveListener(new UnityAction<UMAData>(value)); } }
 		/// <summary>
 		/// Callback event when character has been completely created.
 		/// </summary>
@@ -1065,7 +1061,6 @@ namespace UMA
 			}
 			if (CharacterUpdated != null)
 			{
-                Debug.Log("Character Created");
 				CharacterUpdated.Invoke(this);
 			}
 			dirty = false;
