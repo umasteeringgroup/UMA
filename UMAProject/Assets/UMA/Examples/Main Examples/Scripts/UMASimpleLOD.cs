@@ -13,6 +13,8 @@ namespace UMA.Examples
 		public bool swapSlots;
 		[Tooltip("This value is subtracted from the slot LOD counter.")]
 		public int lodOffset;
+		[Tooltip("This is the max LOD to search for if the current LOD can't be found.")]
+		public int maxLOD = 5;
 
 		public int CurrentLOD {  get { return _currentLOD - lodOffset; } }
 		private int _currentLOD = -1;
@@ -132,10 +134,31 @@ namespace UMA.Examples
 					{
 						slotName = string.Format("{0}_LOD{1}", slotName, currentLevel - lodOffset);
 					}
-					if (slotName != slot.slotName && UMAContext.Instance.HasSlot(slotName))
+
+					bool slotFound = false;
+					for (int k = (currentLevel - lodOffset); k >= 0; k--)
 					{
-						_umaData.umaRecipe.slotDataList[i] = UMAContext.Instance.InstantiateSlot(slotName, slot.GetOverlayList());
-						changedSlots = true;
+						if (slotName != slot.slotName && UMAContext.Instance.HasSlot(slotName))
+						{
+							_umaData.umaRecipe.slotDataList[i] = UMAContext.Instance.InstantiateSlot(slotName, slot.GetOverlayList());
+							slotFound = true;
+							changedSlots = true;
+							break;
+						}
+					}
+					//If slot still not found when searching down lods, then let's trying searching up lods
+					if(!slotFound)
+					{
+						for(int k = (currentLevel - lodOffset) + 1; k <= maxLOD; k++)
+						{
+							if (slotName != slot.slotName && UMAContext.Instance.HasSlot(slotName))
+							{
+								_umaData.umaRecipe.slotDataList[i] = UMAContext.Instance.InstantiateSlot(slotName, slot.GetOverlayList());
+								slotFound = true;
+								changedSlots = true;
+								break;
+							}
+						}
 					}
 				}
 			}
