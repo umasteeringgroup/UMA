@@ -157,7 +157,15 @@ namespace UMA
 		/// <param name="name">Name.</param>
 		public bool HasSlot(string name)
 		{
-			return slotLibrary.HasSlot(name);
+			if (slotLibrary.HasSlot(name))
+				return true;
+			else
+			{
+				if (UMAAssetIndexer.Instance.GetAssetItem<SlotDataAsset>(name) != null)
+					return true;
+			}
+
+			return false;
 		}
 		/// <summary>
 		/// Check for presence of a slot by name hash.
@@ -165,8 +173,16 @@ namespace UMA
 		/// <returns><c>True</c> if the slot exists in this context.</returns>
 		/// <param name="nameHash">Name hash.</param>
 		public bool HasSlot(int nameHash)
-		{ 
-			return slotLibrary.HasSlot(nameHash);
+		{
+			if (slotLibrary.HasSlot(nameHash))
+				return true;
+			else
+			{
+				if (UMAAssetIndexer.Instance.GetAsset<SlotDataAsset>(nameHash) != null)
+					return true;
+			}
+
+			return false;
 		}
 
 		/// <summary>
