@@ -14,7 +14,7 @@ namespace UMA.Examples
 		[Tooltip("This value is subtracted from the slot LOD counter.")]
 		public int lodOffset;
 
-		public int CurrentLOD {  get { return _currentLOD; } }
+		public int CurrentLOD {  get { return _currentLOD - lodOffset; } }
 		private int _currentLOD = -1;
 
 		private DynamicCharacterAvatar _avatar;
