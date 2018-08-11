@@ -109,6 +109,20 @@ namespace UMA
             }
         }
 
+        [ContextMenu("CopyToClipboard")]
+        public void CopyToClipboard()
+        {
+            UnityEditor.EditorGUIUtility.systemCopyBuffer = JsonUtility.ToJson(this);
+        }
+
+        [ContextMenu("PasteFromClipboard")]
+        public void PasteFromClipboard()
+        {
+            SlotDataAsset asset = UMAAssetIndexer.Instance.GetAsset<SlotDataAsset>("FemaleTorso");
+            JsonUtility.FromJsonOverwrite(UnityEditor.EditorGUIUtility.systemCopyBuffer, this);
+            this.asset = asset;
+        }
+
         /// <summary>
         /// Custom serialization to write the BitArray to a boolean array.
         /// </summary>
