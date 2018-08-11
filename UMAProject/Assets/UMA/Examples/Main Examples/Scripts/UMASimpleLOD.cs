@@ -110,6 +110,13 @@ namespace UMA.Examples
 				bool changedSlots = ProcessRecipe(currentLevel);
 				_umaData.Dirty(changedSlots, true, changedSlots);
 			}
+			else
+			{
+				if(_umaData.isMeshDirty)
+				{
+					ProcessRecipe(currentLevel);
+				}
+			}
 		}
 
 		private bool ProcessRecipe(int currentLevel)
