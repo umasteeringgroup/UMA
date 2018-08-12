@@ -24,10 +24,29 @@ namespace UMA
         public SlotDataAsset asset
         {
             get{ return _asset; }
-            set{ _asset = value; }
+            set
+            {
+                _asset = value;
+                if (_asset != null)
+                    _assetSlotName = _asset.slotName;
+                else
+                    _assetSlotName = "";
+            }
         }
         [SerializeField, HideInInspector]
         private SlotDataAsset _asset;
+
+        public string AssetSlotName
+        {
+            get { return _assetSlotName; }
+            set
+            {
+                _assetSlotName = value;
+                _asset = UMAAssetIndexer.Instance.GetAsset<SlotDataAsset>(_assetSlotName);
+            }
+        }
+        [SerializeField, HideInInspector]
+        private string _assetSlotName = "";
 
         /// <summary>
         /// BitArray of the triangle flags list. The list stores only the first index of the triangle vertex in the asset's triangle list.
