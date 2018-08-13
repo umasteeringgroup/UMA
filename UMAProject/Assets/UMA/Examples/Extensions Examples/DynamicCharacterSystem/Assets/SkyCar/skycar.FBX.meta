@@ -35,6 +35,10 @@ ModelImporter:
     100054: SkyCarSuspension
     100056: SkyCarBody_MeshPart0
     100058: SkyCarBody_MeshPart1
+    100060: FrontLeft
+    100062: FrontRight
+    100064: RearLeft
+    100066: RearRight
     400000: FrontLeftHubCap
     400002: FrontRightHubCap
     400004: RearLeftHubCap
@@ -65,6 +69,10 @@ ModelImporter:
     400054: SkyCarSuspension
     400056: SkyCarBody_MeshPart0
     400058: SkyCarBody_MeshPart1
+    400060: FrontLeft
+    400062: FrontRight
+    400064: RearLeft
+    400066: RearRight
     2300000: FrontLeftHubCap
     2300002: FrontRightHubCap
     2300004: RearLeftHubCap
