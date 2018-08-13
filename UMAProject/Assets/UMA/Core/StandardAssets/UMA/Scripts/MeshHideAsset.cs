@@ -128,6 +128,7 @@ namespace UMA
             }
         }
 
+#if UNITY_EDITOR
         [ContextMenu("CopyToClipboard")]
         public void CopyToClipboard()
         {
@@ -137,10 +138,9 @@ namespace UMA
         [ContextMenu("PasteFromClipboard")]
         public void PasteFromClipboard()
         {
-            SlotDataAsset asset = UMAAssetIndexer.Instance.GetAsset<SlotDataAsset>("FemaleTorso");
             JsonUtility.FromJsonOverwrite(UnityEditor.EditorGUIUtility.systemCopyBuffer, this);
-            this.asset = asset;
         }
+#endif
 
         /// <summary>
         /// Custom serialization to write the BitArray to a boolean array.
