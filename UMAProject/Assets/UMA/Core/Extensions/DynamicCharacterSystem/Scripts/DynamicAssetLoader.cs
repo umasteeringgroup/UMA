@@ -576,7 +576,8 @@ namespace UMA.CharacterSystem
             }
             LoadedAssetBundle loadedBundle = AssetBundleManager.GetLoadedAssetBundle(bundle, out error);
             float elapsedTime = Time.realtimeSinceStartup - startTime;
-			Debug.Log(bundle + (!String.IsNullOrEmpty(error) ? " was not" : " was") + " loaded successfully in " + elapsedTime + " seconds");
+            if (Debug.isDebugBuild)
+                Debug.Log(bundle + (!String.IsNullOrEmpty(error) ? " was not" : " was") + " loaded successfully in " + elapsedTime + " seconds");
 			if (!String.IsNullOrEmpty(error))
 			{
                 if (Debug.isDebugBuild)

@@ -82,7 +82,8 @@ namespace UMA.CharacterSystem
 					continue;
 				if (Recipes.ContainsKey(possibleRaces[i].raceName))
 				{
-					Debug.LogWarning("Warning: multiple races found for key:" + possibleRaces[i].raceName);
+					if (Debug.isDebugBuild)
+						Debug.LogWarning("Warning: multiple races found for key:" + possibleRaces[i].raceName);
 				}
 				else
 				{
@@ -216,7 +217,10 @@ namespace UMA.CharacterSystem
 				if ((!found && filename != "") || (filename == "" && (Application.isPlaying == false || addAllRecipesFromDownloadedBundles || bundleToGather == "")))//The WardrobeSetMasterEditor asks DCS to get all collections, but normally collections are only requested by name
 					found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeCollection>(ref assetBundlesUsedDict, dynamicallyAddFromResourcesNow, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesRecipesFolder, null, filename, AddRecipesFromAB);
 				if (!found && filename != "")
-					Debug.LogWarning("[DynamicCharacterSystem] could not find " + filename + " in Resources or any AssetBundles. Do you need to rebuild your UMAResources Index or AssetBundles?");
+				{
+					if (Debug.isDebugBuild)
+						Debug.LogWarning("[DynamicCharacterSystem] could not find " + filename + " in Resources or any AssetBundles. Do you need to rebuild your UMAResources Index or AssetBundles?");
+				}
 				DynamicAssetLoader.Instance.debugOnFail = true;
 
 			}
@@ -256,7 +260,8 @@ namespace UMA.CharacterSystem
 						{
 							if (RecipeIndex.ContainsKey(u.name))
 							{
-								Debug.LogWarning("DCS removed " + u.name + " from RecipeIndex");
+								if (Debug.isDebugBuild)
+									Debug.LogWarning("DCS removed " + u.name + " from RecipeIndex");
 								RecipeIndex.Remove(u.name);
 							}
 							else if (!DynamicAssetLoader.Instance.downloadingAssetsContains(u.name))
@@ -287,11 +292,13 @@ namespace UMA.CharacterSystem
 									{
 										if (Recipes[u.compatibleRaces[i]]["WardrobeCollection"].Contains(u))
 										{
-											Debug.LogWarning("DCS removed " + u.name + " from Recipes");
+											if (Debug.isDebugBuild)
+												Debug.LogWarning("DCS removed " + u.name + " from Recipes");
 											Recipes[u.compatibleRaces[i]]["WardrobeCollection"].Remove(u);
 											if (RecipeIndex.ContainsKey(u.name))
 											{
-												Debug.LogWarning("DCS removed " + u.name + " from RecipeIndex");
+												if (Debug.isDebugBuild)
+													Debug.LogWarning("DCS removed " + u.name + " from RecipeIndex");
 												RecipeIndex.Remove(u.name);
 											}
 											continue;
@@ -418,11 +425,13 @@ namespace UMA.CharacterSystem
 			}
 			if (originatingAssetBundle == "")
 			{
-				Debug.Log(recipeName + " was not found in any loaded AssetBundle");
+				if (Debug.isDebugBuild)
+					Debug.Log(recipeName + " was not found in any loaded AssetBundle");
 			}
 			else
 			{
-				Debug.Log("originatingAssetBundle for " + recipeName + " was " + originatingAssetBundle);
+				if (Debug.isDebugBuild)
+					Debug.Log("originatingAssetBundle for " + recipeName + " was " + originatingAssetBundle);
 			}
 			return originatingAssetBundle;
 		}
