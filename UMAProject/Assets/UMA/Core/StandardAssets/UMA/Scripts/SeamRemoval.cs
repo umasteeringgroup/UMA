@@ -62,7 +62,8 @@ namespace UMA
 				}
 			}
 
-			Debug.Log(string.Format("{0} matched vertices found during seam removal.", matchCount));
+			if (Debug.isDebugBuild)
+				Debug.Log(string.Format("{0} matched vertices found during seam removal.", matchCount));
 			Mesh tempMesh = Instantiate(originalMesh.sharedMesh);
 			tempMesh.name = originalMesh.gameObject.name;
 			tempMesh.normals = normals;

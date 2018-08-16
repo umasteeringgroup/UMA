@@ -52,7 +52,8 @@ namespace UMA.PoseTools
 				}
 				if (umaData == null)
 				{
-					Debug.LogError("Couldn't locate UMAData component");
+					if (Debug.isDebugBuild)
+						Debug.LogError("Couldn't locate UMAData component");
 				}
 			}
 
