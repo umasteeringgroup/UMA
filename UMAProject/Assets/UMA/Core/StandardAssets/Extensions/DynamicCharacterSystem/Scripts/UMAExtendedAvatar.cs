@@ -51,7 +51,10 @@ namespace UMA.CharacterSystem
 			if (model != null)
 				previewMesh = model.GetComponentInChildren<SkinnedMeshRenderer>().sharedMesh;
 			else
-				Debug.LogWarning("Preview Model not found on object " + gameObject.name);
+			{
+				if (Debug.isDebugBuild)
+					Debug.LogWarning("Preview Model not found on object " + gameObject.name);
+			}
 		}
 	#endif
 	}

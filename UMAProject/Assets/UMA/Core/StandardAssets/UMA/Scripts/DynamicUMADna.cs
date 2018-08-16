@@ -93,7 +93,8 @@ namespace UMA
 		/// </summary>
 		public static string[] GetNames()
 		{
-			Debug.LogWarning("Calling the static GetNames() method of Dynamic DNA, result will be empty");
+			if (Debug.isDebugBuild)
+				Debug.LogWarning("Calling the static GetNames() method of Dynamic DNA, result will be empty");
 
 			return new string[0];
 		}
@@ -239,7 +240,8 @@ namespace UMA
 			didDnaAssetUpdate = DynamicAssetLoader.Instance.AddAssets<UMA.DynamicUMADnaAsset>(true, true, true, "", "", null, dnaAssetName, SetMissingDnaAsset);
 			if (didDnaAssetUpdate == false)
 			{
-				Debug.LogWarning("DynamicUMADna could not find DNAAsset " + dnaAssetName + "!");
+				if (Debug.isDebugBuild)
+					Debug.LogWarning("DynamicUMADna could not find DNAAsset " + dnaAssetName + "!");
 			}
 		}
 
@@ -311,7 +313,8 @@ namespace UMA
 			}
 			else
 			{
-				Debug.LogWarning("Deserialized DynamicUMADna with no matching asset!");
+				if (Debug.isDebugBuild)
+					Debug.LogWarning("Deserialized DynamicUMADna with no matching asset!");
 			}
 
             return res;
