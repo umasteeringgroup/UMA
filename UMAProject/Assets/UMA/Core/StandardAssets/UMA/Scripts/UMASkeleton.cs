@@ -151,7 +151,7 @@ namespace UMA
 #endif
 			}
 			else
-				Debug.LogError("AddBonesRecursive: " + transform.name + " already exists in the dictionary!");
+				Debug.LogError("AddBonesRecursive: " + transform.name + " already exists in the dictionary! Consider renaming those bones. For example, `Items` under each hand bone can become `LeftItems` and `RightItems`.");
 
 			for (int i = 0; i < transform.childCount; i++)
 			{
@@ -202,7 +202,7 @@ namespace UMA
 #endif
 			}
 			else
-				Debug.LogError("AddBone: " + transform.name + " already exists in the dictionary!");
+				Debug.LogError("AddBone: " + transform.name + " already exists in the dictionary! Consider renaming those bones. For example, `Items` under each hand bone can become `LeftItems` and `RightItems`.");
 		}
 
 		/// <summary>
@@ -229,7 +229,7 @@ namespace UMA
 #endif
 			}
 			else
-				Debug.LogError("AddBone: " + transform.name + " already exists in the dictionary!");
+				Debug.LogError("AddBone: " + transform.name + " already exists in the dictionary! Consider renaming those bones. For example, `Items` under each hand bone can become `LeftItems` and `RightItems`.");
 		}
 
 		/// <summary>

@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEditor;
-using System.Linq;
+//using System.Linq;
 using System.Collections.Generic;
 
 namespace UMA.Editors
@@ -287,7 +287,8 @@ namespace UMA.Editors
 				if(GUILayout.Button("Order by Name")){
 					canUpdate = false;
 
-					List<OverlayDataAsset> OverlayDataTemp = overlayElementList.ToList();  
+                List<OverlayDataAsset> OverlayDataTemp = new List<OverlayDataAsset>();
+                OverlayDataTemp.AddRange(overlayElementList); 
 				
 					//Make sure there's no invalid data
 					for(int i = 0; i < OverlayDataTemp.Count; i++){
@@ -319,9 +320,13 @@ namespace UMA.Editors
 					}
 
 					m_OverlayDataCount.intValue = Overlays.Count;
-					for(int i=0;i<Overlays.Count;i++)
+
+                    List<OverlayDataAsset> od = new List<OverlayDataAsset>();
+                    od.AddRange(Overlays);
+
+					for(int i=0;i<od.Count;i++)
 					{
-						SetOverlayData(i,Overlays.ElementAt(i));
+						SetOverlayData(i,od[i]);
 					}
 					isDirty = true;
 					canUpdate = false;

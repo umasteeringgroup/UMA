@@ -24,7 +24,7 @@ namespace UMA
         public SlotDataAsset asset
         {
             get{ return _asset; }
-            set{ _asset = value; Initialize(); }
+            set{ _asset = value; }
         }
         [SerializeField, HideInInspector]
         private SlotDataAsset _asset;
@@ -270,7 +270,11 @@ namespace UMA
         }
 
         #if UNITY_EDITOR
-        [UnityEditor.MenuItem("Assets/Create/UMA/Misc/Mesh Hide Asset")]
+		#if UMA_HOTKEYS
+        [UnityEditor.MenuItem("Assets/Create/UMA/Misc/Mesh Hide Asset %#h")]
+		#else
+		[UnityEditor.MenuItem("Assets/Create/UMA/Misc/Mesh Hide Asset")]
+		#endif
         public static void CreateMeshHideAsset()
         {
             UMA.CustomAssetUtility.CreateAsset<MeshHideAsset>();

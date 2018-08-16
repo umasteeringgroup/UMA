@@ -7,6 +7,9 @@ using UMA.CharacterSystem;
 
 namespace UMA.Editors
 {
+	/// <summary>
+	///  This editor tool is used for generating the bone objects on a race so that they can be referenced in the editor.
+	/// </summary>
     public class UmaBoneBuilderWindow : EditorWindow 
     {
         public GameObject umaObject;

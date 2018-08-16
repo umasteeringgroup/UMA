@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEditor;
-using System.Linq;
+//using System.Linq;
 using System.Collections.Generic;
 
 namespace UMA.Editors
@@ -146,7 +146,8 @@ namespace UMA.Editors
 			{
 				canUpdate = false;
 
-				List<SlotDataAsset> SlotDataAssetTemp = slotElementList.ToList();
+                List<SlotDataAsset> SlotDataAssetTemp = new List<SlotDataAsset>();
+                SlotDataAssetTemp.AddRange(slotElementList);
 
 				//Make sure there's no invalid data
 				for (int i = 0; i < SlotDataAssetTemp.Count; i++)
@@ -180,11 +181,14 @@ namespace UMA.Editors
 				{
 					Slots.Add(osa);
 				}
-				
-				m_SlotDataAssetCount.intValue = Slots.Count;
-				for(int i=0;i<Slots.Count;i++)
+
+                List<SlotDataAsset> sd = new List<SlotDataAsset>();
+                sd.AddRange(Slots);
+
+                m_SlotDataAssetCount.intValue = Slots.Count;
+				for(int i=0;i<sd.Count;i++)
 				{
-					SetSlotDataAsset(i,Slots.ElementAt(i));
+					SetSlotDataAsset(i,sd[i]);
 				}
 				isDirty = true;
 				canUpdate = false;

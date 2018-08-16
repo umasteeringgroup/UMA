@@ -179,7 +179,7 @@ namespace UMA.CharacterSystem
         //This is reset at the beginning of every build operation
         private List<string> crossCompatibleRaces = new List<string>();
 
-        private Dictionary<SlotDataAsset, List<MeshHideAsset>> MeshHideDictionary = new Dictionary<SlotDataAsset, List<MeshHideAsset>>();
+        private Dictionary<int, List<MeshHideAsset>> MeshHideDictionary = new Dictionary<int, List<MeshHideAsset>>();
 
 
 #if UNITY_EDITOR
@@ -417,6 +417,7 @@ namespace UMA.CharacterSystem
 #if UNITY_EDITOR
             DestroyEditorUMAContext();
 #endif
+            Cleanup();
         }
 
 #if UNITY_EDITOR
@@ -783,35 +784,71 @@ namespace UMA.CharacterSystem
             }
             return "";
         }
+
         /// <summary>
         /// Sets the avatars wardrobe slot to use the given wardrobe recipe (not to be mistaken with an UMA SlotDataAsset)
         /// </summary>
-        /// <param name="utr"></param>
-        public void SetSlot(UMATextRecipe utr)
+        /// <param name="utr">The WardrobeRecipe it WardrobeCollection to add to the Avatar</param>
+        private void internalSetSlot(UMATextRecipe utr, string thisRecipeSlot)
         {
-            var thisRecipeSlot = utr.wardrobeSlot;
+            if (_wardrobeRecipes.ContainsKey(thisRecipeSlot))
+            {
+                _wardrobeRecipes[thisRecipeSlot] = utr;
+            }
+            else
+            {
+                _wardrobeRecipes.Add(thisRecipeSlot, utr);
+            }
+            if (!requiredAssetsToCheck.Contains(utr.name) && DynamicAssetLoader.Instance.downloadingAssetsContains(utr.name))
+            {
+                requiredAssetsToCheck.Add(utr.name);
+            }
+        }
+
+        /// <summary>
+        /// Sets the avatars wardrobe slot to use the given wardrobe recipe (not to be mistaken with an UMA SlotDataAsset)
+        /// </summary>
+        /// <param name="utr">The WardrobeRecipe it WardrobeCollection to add to the Avatar</param>
+        public bool SetSlot(UMATextRecipe utr)
+        {
             if (utr is UMAWardrobeCollection)
             {
                 LoadWardrobeCollection((utr as UMAWardrobeCollection));
-                return;
+                return true;
             }
 
-            if (thisRecipeSlot != "" && thisRecipeSlot != "None")
+            // This is set to not load
+            if (utr.wardrobeSlot == "None")
             {
-                if (_wardrobeRecipes.ContainsKey(thisRecipeSlot))
-                {
-                    _wardrobeRecipes[thisRecipeSlot] = utr;
-                }
-                else
-                {
-                    _wardrobeRecipes.Add(thisRecipeSlot, utr);
-                }
-                if (!requiredAssetsToCheck.Contains(utr.name) && DynamicAssetLoader.Instance.downloadingAssetsContains(utr.name))
-                {
-                    requiredAssetsToCheck.Add(utr.name);
-                }
+                return false;
             }
+
+            // No race set yet - must be a preload.
+            if (string.IsNullOrEmpty(activeRace.name))
+            {
+                internalSetSlot(utr, utr.wardrobeSlot);
+                return true;
+            }
+
+            // No compatible races set... Oh well, just allow it.
+            // Must work for everything! 
+            if (utr.compatibleRaces.Count == 0)
+            {
+                internalSetSlot(utr, utr.wardrobeSlot);
+                return true;
+            }
+
+            // If it's for this race, or the race is compatible with another race
+            if (utr.compatibleRaces.Contains(activeRace.name) || activeRace.racedata.IsCrossCompatibleWith(utr.compatibleRaces))
+            {
+                internalSetSlot(utr, utr.wardrobeSlot);
+                return true;
+            }
+
+            // must be incompatible
+            return false;
         }
+
         public void SetSlot(string Slotname, string Recipename)
         {
             UMATextRecipe utr = FindSlotRecipe(Slotname, Recipename);
@@ -1325,6 +1362,20 @@ namespace UMA.CharacterSystem
             {
                 UpdateColors();
                 ForceUpdate(false, UpdateTexture, false);
+            }
+        }
+
+        /// <summary>
+        /// Remove a previously added color
+        /// </summary>
+        /// <param name="Name"></param>
+        /// <param name="UpdateTexture"></param>
+        public void ClearColor(string Name, bool Update = true)
+        {
+            characterColors.RemoveColor(Name);  
+            if (Update)
+            {
+                BuildCharacter();
             }
         }
 
@@ -2451,7 +2502,7 @@ namespace UMA.CharacterSystem
 			// clear the hiddenslots and hidden mesh assets
 			// so they can be accumulate anew from the recipe
             HiddenSlots.Clear();
-			MeshHideDictionary = new Dictionary<SlotDataAsset, List<MeshHideAsset>>();
+            MeshHideDictionary.Clear();
 
             UMADnaBase[] CurrentDNA = null;
             if (umaData != null)
@@ -2484,23 +2535,25 @@ namespace UMA.CharacterSystem
                             }
                         }
                     }
+                }
+
+                foreach (UMATextRecipe utr in WardrobeRecipes.Values)
+                {
                     //Collect all the MeshHideAssets on all the wardrobe recipes
-                    if (utr.MeshHideAssets != null)
+                    if (utr.MeshHideAssets != null && !SuppressSlotsStrings.Contains(utr.wardrobeSlot))
                     {
                         foreach (MeshHideAsset meshHide in utr.MeshHideAssets)
                         {
                             if (meshHide != null && meshHide.asset != null)
                             {
-                                if (!MeshHideDictionary.ContainsKey(meshHide.asset))
+                                if (!MeshHideDictionary.ContainsKey(meshHide.asset.nameHash))
                                 {   //If this meshHide.asset isn't already in the dictionary, then let's add it and start a new list.
-                                    MeshHideDictionary.Add(meshHide.asset, new List<MeshHideAsset>());
-                                    MeshHideDictionary[meshHide.asset].Add(meshHide);
+                                    MeshHideDictionary.Add(meshHide.asset.nameHash, new List<MeshHideAsset>());
                                 }
-                                else
-                                {   //If this meshHide.asset is already in the dictionary AND the meshHide isn't already in the list, then add it.
-                                    if (!MeshHideDictionary[meshHide.asset].Contains(meshHide))
-                                        MeshHideDictionary[meshHide.asset].Add(meshHide);
-                                }
+
+                                //If this meshHide.asset is already in the dictionary AND the meshHide isn't already in the list, then add it.
+                                if (!MeshHideDictionary[meshHide.asset.nameHash].Contains(meshHide))
+                                    MeshHideDictionary[meshHide.asset.nameHash].Add(meshHide);
                             }
                         }
                     }
@@ -2668,9 +2721,9 @@ namespace UMA.CharacterSystem
             foreach (SlotData sd in umaData.umaRecipe.slotDataList)
             {
                 //Add MeshHideAsset here
-                if (MeshHideDictionary.ContainsKey(sd.asset))
+                if (MeshHideDictionary.ContainsKey(sd.asset.nameHash))
                 {   //If this slotDataAsset is found in the MeshHideDictionary then we need to supply the SlotData with the bitArray.
-                    sd.meshHideMask = MeshHideAsset.GenerateMask( MeshHideDictionary[sd.asset] );
+                    sd.meshHideMask = MeshHideAsset.GenerateMask( MeshHideDictionary[sd.asset.nameHash] );
                 }
                 
                 if (sd.OverlayCount > 1)
@@ -3236,6 +3289,34 @@ namespace UMA.CharacterSystem
 
         #endregion
 
+        #region CLEANUP
+
+        /// <summary>
+        /// Cleanup UMA system
+        /// </summary>
+        public void Cleanup()
+        {
+            if (umaData != null)
+            {
+                umaData.umaGenerator.removeUMA(umaData);
+            }
+        }
+
+        /// <summary>
+        /// Looks through the dirtylist to see if it is being update.
+        /// You should probably not do this every frame.
+        /// </summary>
+        /// <returns></returns>
+        public bool UpdatePending()
+        {
+            if (umaData != null)
+            {
+                return umaData.umaGenerator.updatePending(umaData);
+            }
+            return false;
+        }
+        #endregion
+
         #endregion
 
         #region SPECIALTYPES // these types should only be needed by DynamicCharacterAvatar
@@ -3667,11 +3748,15 @@ namespace UMA.CharacterSystem
 
             public void RemoveColor(string name)
             {
+                List<ColorValue> newColors = new List<ColorValue>();
+
                 foreach (ColorValue cv in Colors)
                 {
-                    if (cv.Name == name)
-                        Colors.Remove(cv);
+                    if (cv.Name != name)
+                        newColors.Add(cv);
                 }
+
+                Colors = newColors;
             }
         }
 			

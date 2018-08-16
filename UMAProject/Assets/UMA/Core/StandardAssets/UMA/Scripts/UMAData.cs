@@ -10,9 +10,6 @@ namespace UMA
 	/// </summary>
 	public class UMAData : MonoBehaviour
 	{
-		[Obsolete("UMA 2.5 myRenderer is now obsolete, an uma can have multiple renderers. Use int rendererCount { get; } and GetRenderer(int) instead.", false)]
-		public SkinnedMeshRenderer myRenderer;
-
 		private SkinnedMeshRenderer[] renderers;
 		public int rendererCount { get { return renderers == null ? 0 : renderers.Length; } }
 
@@ -28,9 +25,6 @@ namespace UMA
 
 		public void SetRenderers(SkinnedMeshRenderer[] renderers)
 		{
-#pragma warning disable 618
-			myRenderer = (renderers != null && renderers.Length > 0) ? renderers[0] : null;
-#pragma warning restore 618
 			this.renderers = renderers;
 		}
 
@@ -199,7 +193,6 @@ namespace UMA
 		public void Assign(UMAData other)
 		{
 			animator = other.animator;
-			//myRenderer = other.myRenderer;
 			renderers = other.renderers;
 			umaRoot = other.umaRoot;
 			if (animationController == null)
@@ -403,6 +396,23 @@ namespace UMA
 				}
 				return valid;
 			}
+
+            /// <summary>
+            /// Checks to see if the sharedColors array contains the passed color
+            /// </summary>
+            /// <param name="col"></param>
+            /// <returns></returns>
+            public bool HasSharedColor(OverlayColorData col)
+            {
+                foreach(OverlayColorData ocd in sharedColors)
+                {
+                    if (ocd.Equals(col))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
 
 #pragma warning disable 618
 			/// <summary>
@@ -1439,13 +1449,6 @@ namespace UMA
             }
         }
 
-		//For future multiple renderer support
-		public struct BlendShapeLocation
-		{
-			public int shapeIndex;
-			public int rendererIndex;
-		}
-
 		/// <summary>
 		/// Sets the blendshape by index and renderer.
 		/// </summary>
@@ -1473,7 +1476,7 @@ namespace UMA
 			}
 
 			if (weight < 0.0f || weight > 1.0f)
-				Debug.LogError ("SetBlendShape: Weight is out of range, clamping...");
+				Debug.LogWarning ("SetBlendShape: Weight is out of range, clamping...");
 
 			weight = Mathf.Clamp01 (weight);
 			weight *= 100.0f; //Scale up to 1-100 for SetBlendShapeWeight.
@@ -1488,42 +1491,22 @@ namespace UMA
 		/// <param name="weight">Weight(float) to set this blendshape to.</param>
 		public void SetBlendShape(string name, float weight)
 		{
-			BlendShapeLocation loc = GetBlendShapeIndex (name);
-			if (loc.shapeIndex < 0)
-				return;
-
 			if (weight < 0.0f || weight > 1.0f)
-				Debug.LogError ("SetBlendShape: Weight is out of range, clamping...");
+				Debug.LogWarning ("SetBlendShape: Weight is out of range, clamping...");
 
 			weight = Mathf.Clamp01 (weight);
 			weight *= 100.0f; //Scale up to 1-100 for SetBlendShapeWeight.
 
-			renderers [loc.rendererIndex].SetBlendShapeWeight (loc.shapeIndex, weight);//for multi-renderer support
-		}
-		/// <summary>
-		/// Gets the first found index of the blendshape by name in the renderers
-		/// </summary>
-		/// <param name="name">Name of the blendshape.</param>
-		public BlendShapeLocation GetBlendShapeIndex(string name)
-		{
-			BlendShapeLocation loc = new BlendShapeLocation ();
-			loc.shapeIndex = -1;
-			loc.rendererIndex = -1;
-
-			for (int i = 0; i < rendererCount; i++) //for multi-renderer support
+			foreach (SkinnedMeshRenderer renderer in renderers)
 			{
-				int index = renderers [i].sharedMesh.GetBlendShapeIndex (name);
-				if (index >= 0) 
-				{
-					loc.shapeIndex = index;
-					loc.rendererIndex = i;
-					return loc;
-				}
+				int index = renderer.sharedMesh.GetBlendShapeIndex(name);
+				if (index >= 0)
+					renderer.SetBlendShapeWeight(index, weight);
+				else
+					Debug.LogWarning(string.Format("Blendshape Index out of range for {0}",name));
 			}
-
-			//Debug.LogError ("GetBlendShapeIndex: blendshape " + name + " not found!");
-			return loc;
 		}
+
 		/// <summary>
 		/// Gets the name of the blendshape by index and renderer
 		/// </summary>

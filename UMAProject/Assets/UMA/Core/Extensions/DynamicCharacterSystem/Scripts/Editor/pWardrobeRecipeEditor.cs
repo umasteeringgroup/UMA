@@ -12,6 +12,8 @@ namespace UMA.Editors
 	{
 		private Dictionary<string,RaceData> _compatibleRaceDatas = new Dictionary<string,RaceData>();
 
+		int meshHideAssetPickerID = -1;
+
 		// Drop area for compatible Races
 		private void CompatibleRacesDropArea(Rect dropArea, List<string> compatibleRaces)
 		{
@@ -570,22 +572,29 @@ namespace UMA.Editors
 					hiddenBaseFlags |= 0x1 << i;
 				}
 			}
-			int newHiddenBaseFlags = 0;
-			newHiddenBaseFlags = EditorGUILayout.MaskField("Hides Base Slot(s)", hiddenBaseFlags, generatedBaseSlotOptionsLabels.ToArray());
-			for (int i = 0; i < generatedBaseSlotOptionsLabels.Count; i++)
+
+			if (generatedBaseSlotOptionsLabels.Count > 0)
 			{
-				if ((newHiddenBaseFlags & (1 << i)) == (1 << i))
+				int newHiddenBaseFlags = 0;
+				newHiddenBaseFlags = EditorGUILayout.MaskField("Hides Base Slot(s)", hiddenBaseFlags, generatedBaseSlotOptionsLabels.ToArray());
+				for (int i = 0; i < generatedBaseSlotOptionsLabels.Count; i++)
 				{
-					newHides.Add(generatedBaseSlotOptions[i]);
+					if ((newHiddenBaseFlags & (1 << i)) == (1 << i))
+					{
+						newHides.Add(generatedBaseSlotOptions[i]);
+					}
+				}
+				if (newHides.Count > 1)
+				{
+					GUI.enabled = false;
+					string newHidesResult = String.Join(", ", newHides.ToArray());
+					EditorGUILayout.TextField(newHidesResult);
+					GUI.enabled = true;
 				}
 			}
-			if (newHides.Count > 1)
-			{
-				GUI.enabled = false;
-				string newHidesResult = String.Join(", ", newHides.ToArray());
-				EditorGUILayout.TextField(newHidesResult);
-				GUI.enabled = true;
-			}
+			else
+				EditorGUILayout.Popup("Hides Base Slots(s)", 0, new string[1] {"Nothing"} );
+			
             if (ShowHelp)
             {
                 EditorGUILayout.HelpBox("Hides: This is used to hide parts of the base recipe. For example, if you create gloves, you may want to hide the 'hands', so you don't get poke-through", MessageType.Info);
@@ -611,16 +620,31 @@ namespace UMA.Editors
             }
 
             #region MeshHideArray
-            //EditorGUIUtility.LookLikeInspector();
-            SerializedProperty meshHides = serializedObject.FindProperty ("MeshHideAssets");
-            EditorGUI.BeginChangeCheck();
-            EditorGUILayout.PropertyField(meshHides, true);
-            if(EditorGUI.EndChangeCheck())
-                serializedObject.ApplyModifiedProperties();
+			//EditorGUIUtility.LookLikeInspector();
+			SerializedProperty meshHides = serializedObject.FindProperty ("MeshHideAssets");
+			EditorGUI.BeginChangeCheck();
+			EditorGUILayout.BeginHorizontal();
+			if(GUILayout.Button("+", GUILayout.MaxWidth(30)))
+			{
+				meshHideAssetPickerID = EditorGUIUtility.GetControlID(FocusType.Passive) + 100;
+				EditorGUIUtility.ShowObjectPicker<MeshHideAsset>(null, false, "", meshHideAssetPickerID);
+			}
+			GUILayout.Space(10);
+			if (Event.current.commandName == "ObjectSelectorUpdated" && EditorGUIUtility.GetObjectPickerControlID() == meshHideAssetPickerID)
+			{
+				meshHides.InsertArrayElementAtIndex(0);
+				SerializedProperty element = meshHides.GetArrayElementAtIndex(0);
+				element.objectReferenceValue = EditorGUIUtility.GetObjectPickerObject();
+				meshHideAssetPickerID = -1;
+			}
+			EditorGUILayout.PropertyField(meshHides, true);
+			EditorGUILayout.EndHorizontal();
+			if (EditorGUI.EndChangeCheck())
+				serializedObject.ApplyModifiedProperties();
             //EditorGUIUtility.LookLikeControls();
             if(ShowHelp)
             {
-                EditorGUILayout.HelpBox("MeshHideAssets: This is a list of advanced mesh hiding assets to hide their corresponding slot meshes on a per vertex basis.", MessageType.Info);
+                EditorGUILayout.HelpBox("MeshHideAssets: This is a list of advanced mesh hiding assets to hide their corresponding slot meshes on a per triangle basis.", MessageType.Info);
             }
             #endregion
 
@@ -760,8 +784,20 @@ namespace UMA.Editors
 					}
 				}
 				GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
 
-				for (int i = 0; i < _slotEditors.Count; i++)
+                if (GUILayout.Button("Select All Slots"))
+                {
+                    SelectAllSlots();
+                }
+                if (GUILayout.Button("Select All Overlays"))
+                {
+                    SelectAllOverlays();
+                }
+
+                GUILayout.EndHorizontal();
+
+                for (int i = 0; i < _slotEditors.Count; i++)
 				{
 					var editor = _slotEditors[i];
 
@@ -789,9 +825,40 @@ namespace UMA.Editors
 				return changed;
 			}
 		}
+       /* private void SelectAllSlots()
+        {
+            List<UnityEngine.Object> slots = new List<UnityEngine.Object>();
+            foreach (var slotData in _recipe.slotDataList)
+            {
+                if (slotData != null)
+                {
+                    slots.Add(slotData.asset);
+                }
+            }
+            Selection.objects = slots.ToArray();
+        }
 
-
-
-	}
+        private void SelectAllOverlays()
+        {
+            HashSet<UnityEngine.Object> overlays = new HashSet<UnityEngine.Object>();
+            foreach (var slotData in _recipe.slotDataList)
+            {
+                if (slotData != null)
+                {
+                    List<OverlayData> overlayData = slotData.GetOverlayList();
+                    foreach (var overlay in overlayData)
+                    {
+                        if (overlay != null)
+                        {
+                            overlays.Add(overlay.asset);
+                        }
+                    }
+                }
+            }
+            UnityEngine.Object[] newSelection = new UnityEngine.Object[overlays.Count];
+            overlays.CopyTo(newSelection);
+            Selection.objects = newSelection;
+        } */
+    }
 }
 #endif

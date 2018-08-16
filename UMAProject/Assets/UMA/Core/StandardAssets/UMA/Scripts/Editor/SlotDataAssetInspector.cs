@@ -5,8 +5,16 @@ using UnityEditor;
 namespace UMA.Editors
 {
 	[CustomEditor(typeof(SlotDataAsset))]
-    public class SlotDataAssetInspector : Editor
-    {
+	[CanEditMultipleObjects]
+	public class SlotDataAssetInspector : Editor
+	{
+		SerializedProperty slotName;
+		SerializedProperty CharacterBegun;
+		SerializedProperty SlotAtlassed;
+		SerializedProperty DNAApplied;
+		SerializedProperty CharacterCompleted;
+
+		private bool eventsFoldout = false;
 
         [MenuItem("Assets/Create/UMA/Core/Custom Slot Asset")]
         public static void CreateCustomSlotAssetMenuItem()
@@ -14,42 +22,30 @@ namespace UMA.Editors
         	CustomAssetUtility.CreateAsset<SlotDataAsset>("", true, "Custom");
         }
 
-		//allow for delayed saving so typing in a field does not trigger save with every keystroke
-		private float lastActionTime = 0;
-		private bool doSave = false;
-
 		void OnEnable()
 		{
-			EditorApplication.update += DoDelayedSave;
+			slotName = serializedObject.FindProperty("slotName");
+			CharacterBegun = serializedObject.FindProperty("CharacterBegun");
+			SlotAtlassed = serializedObject.FindProperty("SlotAtlassed");
+			DNAApplied = serializedObject.FindProperty("DNAApplied");
+			CharacterCompleted = serializedObject.FindProperty("CharacterCompleted");
 		}
 
-		void OnDestroy()
-		{
-			EditorApplication.update -= DoDelayedSave;
-		}
-
-		void DoDelayedSave()
-		{
-			if (doSave && Time.realtimeSinceStartup > (lastActionTime + 0.5f))
-			{
-				doSave = false;
-				Debug.Log("Saved SlotDataAsset lastActionTime = " + lastActionTime + " realTime = " + Time.realtimeSinceStartup);
-				lastActionTime = Time.realtimeSinceStartup;
-				EditorUtility.SetDirty(target);
-				AssetDatabase.SaveAssets();
-			}
-		}
 		public override void OnInspectorGUI()
         {
-			if (lastActionTime == 0)
-				lastActionTime = Time.realtimeSinceStartup;
+			serializedObject.Update();
+			//base.OnInspectorGUI();
 
-			EditorGUI.BeginChangeCheck();
-			base.OnInspectorGUI();
-			if (EditorGUI.EndChangeCheck())
+			EditorGUILayout.DelayedTextField(slotName);
+			Editor.DrawPropertiesExcluding(serializedObject, new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "DNAApplied", "CharacterCompleted" });
+
+			eventsFoldout = EditorGUILayout.Foldout(eventsFoldout, "Slot Events");
+			if (eventsFoldout)
 			{
-				lastActionTime = Time.realtimeSinceStartup;
-				doSave = true;
+				EditorGUILayout.PropertyField(CharacterBegun);
+				EditorGUILayout.PropertyField(SlotAtlassed);
+				EditorGUILayout.PropertyField(DNAApplied);
+				EditorGUILayout.PropertyField(CharacterCompleted);
 			}
 
 			foreach (var t in targets)
@@ -82,6 +78,9 @@ namespace UMA.Editors
 			GUI.Box(boneDropArea, "Drag Bone Transforms here to add their names to the Animated Bone Names.\nSo the power tools will preserve them!");
 			GUILayout.Space(10);
 			AnimatedBoneDropAreaGUI(boneDropArea);
+
+			serializedObject.ApplyModifiedProperties();
+			AssetDatabase.SaveAssets();
         }
 
         private void AnimatedBoneDropAreaGUI(Rect dropArea)

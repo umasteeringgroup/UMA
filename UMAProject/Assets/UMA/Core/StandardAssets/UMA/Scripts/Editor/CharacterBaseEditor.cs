@@ -3,7 +3,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
+//using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
@@ -723,6 +723,7 @@ namespace UMA.Editors
 				if (GUILayout.Button("Add to Global Index (Recommended)"))
 				{
 					UMAAssetIndexer.Instance.EvilAddAsset(typeof(RaceData), _recipe.raceData);
+					UMAAssetIndexer.Instance.ForceSave();
 				}
 				GUILayout.EndHorizontal();
 			}
@@ -838,6 +839,17 @@ namespace UMA.Editors
             }
             GUILayout.EndHorizontal();
 
+            GUILayout.BeginHorizontal();
+            if(GUILayout.Button("Select All Slots")) 
+            {
+                SelectAllSlots();
+            }
+            if(GUILayout.Button("Select All Overlays"))
+            {
+                SelectAllOverlays();
+            }
+            GUILayout.EndHorizontal();
+
             if (LastSlot != "")
             {
                 if (OpenSlots.ContainsKey(LastSlot))
@@ -918,6 +930,41 @@ namespace UMA.Editors
             {
                 OpenSlots[s] = false;
             }
+        }
+
+        protected void SelectAllSlots()
+        {
+            List<Object> slots = new List<Object>();
+            foreach (var slotData in _recipe.slotDataList)
+            {
+                if (slotData != null)
+                {
+                    slots.Add(slotData.asset);
+                }
+            }
+            Selection.objects = slots.ToArray();
+        }
+
+        protected void SelectAllOverlays()
+        {
+            HashSet<Object> overlays = new HashSet<Object>();
+            foreach (var slotData in _recipe.slotDataList)
+            {
+                if (slotData != null)
+                {
+                    List<OverlayData> overlayData = slotData.GetOverlayList();
+                    foreach (var overlay in overlayData)
+                    {
+                        if(overlay != null)
+                        {
+                            overlays.Add(overlay.asset);
+                        }
+                    }
+                }
+            }
+            Object[] newSelection = new Object[overlays.Count];
+            overlays.CopyTo(newSelection);
+            Selection.objects = newSelection;
         }
     }
 
@@ -1001,15 +1048,22 @@ namespace UMA.Editors
 		public bool OnGUI(ref bool _dnaDirty, ref bool _textureDirty, ref bool _meshDirty)
 		{
 			bool delete;
-            bool _foldOut = FoldOut;
+			bool select;
+			bool _foldOut = FoldOut;
 
-			GUIHelper.FoldoutBar(ref _foldOut, _name + "      (" + _slotData.asset.name + ")", out delete);
+			GUIHelper.FoldoutBarButton(ref _foldOut, _name + "      (" + _slotData.asset.name + ")","inspect", out select, out delete);
 
             FoldOut = _foldOut;
 
             // Set this before exiting.
             Delete = delete;
              
+            if (select)
+            {
+                EditorGUIUtility.PingObject(_slotData.asset.GetInstanceID());
+                InspectorUtlity.InspectTarget(_slotData.asset);
+            }
+
 			if (!FoldOut)
 				return false;
 			
@@ -1030,6 +1084,7 @@ namespace UMA.Editors
 				if (GUILayout.Button("Add to Global Index (Recommended)"))
 				{
 					UMAAssetIndexer.Instance.EvilAddAsset(typeof(SlotDataAsset),_slotData.asset);
+					UMAAssetIndexer.Instance.ForceSave();
 				}
 				GUILayout.EndHorizontal();
 			}
@@ -1166,11 +1221,11 @@ namespace UMA.Editors
 		private readonly OverlayData _overlayData;
 		private readonly TextureEditor[] _textures;
 		private ColorEditor[] _colors;
-        #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
+#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 		private ProceduralPropertyEditor[] _properties;
-        #endif
 		private ProceduralPropertyDescription[] _descriptions;
 		private int _selectedProperty = 0;
+#endif
 		private bool _foldout = true;
 
 		public bool Delete { get; private set; }
@@ -1213,7 +1268,7 @@ namespace UMA.Editors
 				_textures[i] = new TextureEditor(overlayData.textureArray[i]);
 			}
 
-            #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
+#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 			if (overlayData.isProcedural)
 			{
 				ProceduralMaterial material = _overlayData.asset.material.material as ProceduralMaterial;
@@ -1293,10 +1348,17 @@ namespace UMA.Editors
 		public bool OnGUI()
 		{
 			bool delete;
+			bool select;
 
 			_foldout = OverlayExpanded[_overlayData.overlayName];
 
-			GUIHelper.FoldoutBar(ref _foldout, _overlayData.asset.overlayName + "("+_overlayData.asset.material.name+")", out move, out delete);
+			GUIHelper.FoldoutBarButton(ref _foldout, _overlayData.asset.overlayName + "("+_overlayData.asset.material.name+")", "inspect",out select, out move, out delete);
+
+			if (select)
+			{
+				EditorGUIUtility.PingObject(_overlayData.asset.GetInstanceID());
+				InspectorUtlity.InspectTarget(_overlayData.asset);
+			}
 
 			OverlayExpanded[_overlayData.overlayName] = _foldout;
 
@@ -1323,6 +1385,7 @@ namespace UMA.Editors
                 if (GUILayout.Button("Add to Global Index"))
                 {
                     UMAAssetIndexer.Instance.EvilAddAsset(typeof(OverlayDataAsset), _overlayData.asset);
+                    UMAAssetIndexer.Instance.ForceSave();
                 }
                 GUILayout.EndHorizontal();
             }
@@ -1372,7 +1435,7 @@ namespace UMA.Editors
             }
             GUILayout.EndHorizontal();
 
-            #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
+#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 			// Edit the procedural properties
 			if (_overlayData.isProcedural)
 			{
@@ -1469,7 +1532,7 @@ namespace UMA.Editors
 			
 			//DOS 13012016 if we also check here that _recipe.sharedColors still contains 
 			//the desired ocd then we can save the collection when colors are deleted
-			if (_overlayData.colorData.IsASharedColor && _recipe.sharedColors.Contains(_overlayData.colorData))
+			if (_overlayData.colorData.IsASharedColor && _recipe.HasSharedColor(_overlayData.colorData))
 			{
 				GUIHelper.BeginVerticalPadded(2f, new Color(0.75f, 0.875f, 1f));
 				GUILayout.BeginHorizontal();
@@ -1617,7 +1680,7 @@ namespace UMA.Editors
 		}
 	}
 
-    #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
+#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 	public class ProceduralPropertyEditor
 	{
 		public OverlayData.OverlayProceduralData property;
@@ -1848,7 +1911,7 @@ namespace UMA.Editors
 					_oldTarget = target;
 				}
 
-				if (_rebuildOnLayout && Event.current.type == EventType.layout)
+				if (_rebuildOnLayout && Event.current.type == EventType.Layout)
 				{
 					Rebuild();
 				}

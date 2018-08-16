@@ -15,16 +15,22 @@ namespace UMA.Editors
 
 		private DNARangeAsset dnaRange;
 		private UMADnaBase dnaSource;
+
 		private int entryCount = 0;
 		
 		public void OnEnable()
 		{
 			dnaRange = target as DNARangeAsset;
-			if (dnaRange.dnaConverter != null)
-			{
-				dnaSource = dnaRange.dnaConverter.DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
+			if (dnaRange.dnaConverter != null) {
+				dnaSource = dnaRange.dnaConverter.DNAType.GetConstructor (System.Type.EmptyTypes).Invoke (null) as UMADnaBase;
 				if (dnaSource != null)
-					entryCount = dnaSource.Count;
+				{
+					if (dnaRange.dnaConverter.DNAType == typeof(DynamicUMADna)) {
+						entryCount = ((DynamicDNAConverterBehaviourBase)dnaRange.dnaConverter).dnaAsset.Names.Length;
+					} else {
+						entryCount = dnaSource.Count;
+					}
+				}
 			}
 		}
 
@@ -33,6 +39,7 @@ namespace UMA.Editors
 			bool dirty = false;
 
 			DnaConverterBehaviour newSource = EditorGUILayout.ObjectField("DNA Converter", dnaRange.dnaConverter, typeof(DnaConverterBehaviour), true) as DnaConverterBehaviour;
+
 			if (newSource != dnaRange.dnaConverter)
 			{
 				dnaRange.dnaConverter = newSource;
@@ -41,15 +48,21 @@ namespace UMA.Editors
 				{
 					dnaSource = dnaRange.dnaConverter.DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
 				}
-
 				if (dnaSource == null)
 				{
 					entryCount = 0;
 				}
 				else
 				{
-					entryCount = dnaSource.Count;
-				}
+					if (dnaRange.dnaConverter.DNAType == typeof(DynamicUMADna))
+					{
+						entryCount = ((DynamicDNAConverterBehaviourBase)dnaRange.dnaConverter).dnaAsset.Names.Length;
+					}
+					else
+					{
+						entryCount = dnaSource.Count;
+					}
+				}		
 				dnaRange.means = new float[entryCount];
 				dnaRange.deviations = new float[entryCount];
 				dnaRange.spreads = new float[entryCount];
@@ -74,7 +87,15 @@ namespace UMA.Editors
 				headerStyle.fontSize =  12;
 				EditorGUILayout.LabelField(dnaRange.dnaConverter.DNAType.Name, headerStyle); 
 
-				string[] dnaNames = dnaSource.Names;
+				string[] dnaNames;
+				if (dnaRange.dnaConverter.DNAType == typeof(DynamicUMADna))
+				{
+					dnaNames = ((DynamicDNAConverterBehaviourBase)dnaRange.dnaConverter).dnaAsset.Names;
+				}
+				else
+				{
+					dnaNames = dnaSource.Names;
+				}
 
 				for (int i = 0; i < entryCount; i++)
 				{
