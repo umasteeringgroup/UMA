@@ -26,7 +26,10 @@ namespace UMA.Examples
             if (allDNA.ContainsKey(dnaName))
                 DNA = allDNA[dnaName];
             else
-                Debug.Log("dnaName not in dna name list!");
+            {
+                if (Debug.isDebugBuild)
+                    Debug.Log("dnaName not in dna name list!");
+            }
 
             slider = GetComponent<Slider>();
             slider.onValueChanged.AddListener(ValueChanged);
@@ -43,7 +46,10 @@ namespace UMA.Examples
                 avatar.ForceUpdate(true, false, false);
             }
             else
-                Debug.Log("DNA is null!");
+            {
+                if (Debug.isDebugBuild)
+                    Debug.Log("DNA is null!");
+            }
         }
 
     }
