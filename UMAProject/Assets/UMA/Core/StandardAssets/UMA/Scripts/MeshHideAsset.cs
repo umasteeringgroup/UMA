@@ -166,7 +166,10 @@ namespace UMA
             }
 
             if (_serializedFlags == null)
-                Debug.LogError("Serializing triangle flags failed!");
+            {
+                if(Debug.isDebugBuild)
+                    Debug.LogError("Serializing triangle flags failed!");
+            }
         }
 
         /// <summary>
@@ -225,7 +228,9 @@ namespace UMA
         {
             if (_triangleFlags == null)
             {
-                Debug.LogError("Triangle Array not initialized!");
+                if(Debug.isDebugBuild)
+                    Debug.LogError("Triangle Array not initialized!");
+
                 return;
             }
                 
@@ -244,7 +249,9 @@ namespace UMA
         {
             if (selection.Count != _triangleFlags[0].Count)
             {
-                Debug.Log("SaveSelection: counts don't match!");
+                if (Debug.isDebugBuild)
+                    Debug.Log("SaveSelection: counts don't match!");
+
                 return;
             }
 
@@ -253,7 +260,10 @@ namespace UMA
             if (selection.Length == _triangleFlags[0].Length)
                 _triangleFlags[0] = new BitArray(selection);
             else
-                Debug.LogWarning("SaveSelection: counts don't match!");
+            {
+                if (Debug.isDebugBuild)
+                    Debug.LogWarning("SaveSelection: counts don't match!");
+            }
 
             #if UNITY_EDITOR
             UnityEditor.EditorUtility.SetDirty(this);
