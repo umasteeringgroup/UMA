@@ -57,34 +57,16 @@ namespace UMA.Examples
 				dna = data.GetDna(dnaTypeHash);
 
 			if (dna != null && dnaEntryIndex >= 0)
-            {
-				if( data.blendShapeSettings.bakeBlendShapes == null)
-                	data.blendShapeSettings.bakeBlendShapes = new Dictionary<string, float>();
-				
+            {				
                 float dnaValue = dna.GetValue(dnaEntryIndex);
-                float morphWeight = 0.0f;
-                if (dnaValue > 0.51f)
-                {
-                    morphWeight = (dnaValue - 0.5f) * 2f;
-                }
 
-				if(!data.blendShapeSettings.bakeBlendShapes.ContainsKey(dnaName))
-					data.blendShapeSettings.bakeBlendShapes.Add(dnaName, morphWeight );
-				
-                data.Dirty(true, true, true);
+                data.AddBakedBlendShape(dnaValue, null, dnaName, true);
             }
         }
 
         public void UnbakeMorph()
         {
-			if (data.blendShapeSettings != null)
-			{
-				if (data.blendShapeSettings.bakeBlendShapes.ContainsKey(dnaName))
-				{
-					data.blendShapeSettings.bakeBlendShapes.Remove(dnaName);
-					data.Dirty(true, true, true);
-				}
-			}
+			data.RemoveBakedBlendShape(dnaName, true);
         }
 	}
 }

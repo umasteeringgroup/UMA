@@ -1454,13 +1454,76 @@ namespace UMA
         public class BlendShapeSettings
         {
             public bool ignoreBlendShapes; //default false
-            public Dictionary<string,float> bakeBlendShapes;
+            public Dictionary<string, float> bakeBlendShapes = new Dictionary<string, float>();
 
             public BlendShapeSettings()
             {
                 ignoreBlendShapes = false;
-                bakeBlendShapes = new Dictionary<string, float>();
+                bakeBlendShapes.Clear();
             }
+        }
+
+        /// <summary>
+        /// Adds one, or both, named blendshapes (from a morph asset) to be baked.
+        /// </summary>
+        /// <param name="dnaValue">dnaValue of the morph associated with these blendshapes.</param>
+        /// <param name="blendShapeZero">string name of the blendShapeZero.</param>
+        /// <param name="blendShapeOne">string name of the blendShapeOne.</param>
+        /// <param name="rebuild">Set to true to rebuild the UMA after after baking.  Use false to control when to rebuild to submit other changes.</param>
+        public void AddBakedBlendShape( float dnaValue, string blendShapeZero, string blendShapeOne, bool rebuild = false)
+        {
+            float weightZero = 0f;
+            float weightOne = 0f;
+
+            dnaValue = dnaValue - 0.5f;
+            if (dnaValue >= 0f)
+                weightOne = Mathf.Clamp(dnaValue * 2f, 0f, 1f);
+            else
+                weightZero = Mathf.Clamp(dnaValue * -2f, 0f, 1f);
+
+            if(!string.IsNullOrEmpty(blendShapeZero))
+                AddBakedBlendShape(blendShapeZero, weightZero);
+
+            if(!string.IsNullOrEmpty(blendShapeOne))
+                AddBakedBlendShape(blendShapeOne, weightOne);
+
+            if (rebuild)
+                Dirty(true, true, true);
+        }
+
+        /// <summary>
+        /// Adds a named blendshape to be baked in to the UMA.
+        /// </summary>
+        /// <param name="name">string name of the blendshape</param>
+        /// <param name="weight">weight of the blendshape. 0-1</param>
+        /// <param name="rebuild">Set to true to rebuild the UMA after after baking.  Use false to control when to rebuild to submit other changes.</param>
+        public void AddBakedBlendShape( string name, float weight, bool rebuild = false)
+        {
+            if (!blendShapeSettings.bakeBlendShapes.ContainsKey(name))
+            {
+                blendShapeSettings.bakeBlendShapes.Add(name, weight);
+            }
+            else
+                blendShapeSettings.bakeBlendShapes[name] = weight;
+
+            if(rebuild)
+                Dirty(true, true, true);
+        }
+
+        /// <summary>
+        /// Remove named blendshape from being baked during UMA combining.
+        /// </summary>
+        /// <param name="name">string name of the blendshape</param>
+        /// <param name="rebuild">Set to true to rebuild the UMA after after baking.  Use false to control when to rebuild to submit other changes.</param>
+        public void RemoveBakedBlendShape( string name, bool rebuild = false)
+        {
+            if(blendShapeSettings.bakeBlendShapes.ContainsKey(name))
+            {
+                blendShapeSettings.bakeBlendShapes.Remove(name);
+            }
+
+            if(rebuild)
+                Dirty(true, true, true);
         }
 
 		/// <summary>
@@ -1530,6 +1593,7 @@ namespace UMA
 					if (Debug.isDebugBuild)
 						Debug.LogWarning(string.Format("Blendshape Index out of range for {0}", name));
 				}
+
 			}
 		}
 

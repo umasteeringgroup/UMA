@@ -125,6 +125,7 @@ namespace UMA
 			return DoUpdate;
 		}
 
+
 		[UnityEditor.MenuItem("Assets/Create/UMA/DNA/Dynamic DNA Asset")]
 		public static void CreateDynamicUMADnaAsset()
 		{
