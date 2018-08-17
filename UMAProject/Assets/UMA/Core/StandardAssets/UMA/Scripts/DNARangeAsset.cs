@@ -80,7 +80,9 @@ namespace UMA
 			int entryCount = dna.Count;
 			if (means.Length != entryCount)
 			{
-				Debug.LogWarning("Range settings out of sync with DNA, cannot apply!");
+				if (Debug.isDebugBuild)
+					Debug.LogWarning("Range settings out of sync with DNA, cannot apply!");
+
 				return;
 			}
 
@@ -111,7 +113,9 @@ namespace UMA
 			int entryCount = dna.Count;
 			if (means.Length != entryCount)
 			{
-				Debug.LogWarning("Range settings out of sync with DNA, cannot apply!");
+				if (Debug.isDebugBuild)
+					Debug.LogWarning("Range settings out of sync with DNA, cannot apply!");
+
 				return;
 			}
 			

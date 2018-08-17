@@ -337,12 +337,14 @@ namespace UMA
 				{
 					if (umaGenerator.fitAtlas)
 					{
-						Debug.LogWarning("Atlas resolution is too small, Textures will be reduced.", umaData.gameObject);
+						if (Debug.isDebugBuild)
+							Debug.LogWarning("Atlas resolution is too small, Textures will be reduced.", umaData.gameObject);
 						return false;
 					}
 					else
 					{
-						Debug.LogError("Atlas resolution is too small, not all textures will fit.", umaData.gameObject);
+						if (Debug.isDebugBuild)
+							Debug.LogError("Atlas resolution is too small, not all textures will fit.", umaData.gameObject);
 					}
 				}
 			}

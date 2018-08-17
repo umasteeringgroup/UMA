@@ -75,7 +75,10 @@ namespace UMA.CharacterSystem
 				if (RecipeHasWardrobeSet(recipeString))
 					activeWardrobeSet = GetRecipesWardrobeSet(recipeString);
 				else
-					Debug.LogWarning("[UMADynamicCharacterAvatar] recipe did not have wardrobe set");
+				{
+					if (Debug.isDebugBuild)
+						Debug.LogWarning("[UMADynamicCharacterAvatar] recipe did not have wardrobe set");
+				}
 				var packedRecipe = PackedLoadDCSInternal(context);
 				if (packedRecipe != null)
 				   UnpackRecipe(umaRecipe, packedRecipe, context);

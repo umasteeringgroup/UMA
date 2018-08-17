@@ -385,7 +385,8 @@ namespace UMA
 
 				if (haveBackingArrays == false)
 				{
-					Debug.LogError("Unable to access backing arrays for shared UMAMeshData!");
+					if (Debug.isDebugBuild)
+						Debug.LogError("Unable to access backing arrays for shared UMAMeshData!");
 				}
 			}
 
@@ -413,7 +414,8 @@ namespace UMA
 				return true;
 			}
 
-			Debug.LogWarning("Unable to claim UMAMeshData global buffers!");
+			if (Debug.isDebugBuild)
+				Debug.LogWarning("Unable to claim UMAMeshData global buffers!");
 			return false;
 		}
 
@@ -435,7 +437,8 @@ namespace UMA
 					}
 				}
 
-				Debug.LogWarning("Could not claim shared submesh buffer of size: " + size);
+				if (Debug.isDebugBuild)
+					Debug.LogWarning("Could not claim shared submesh buffer of size: " + size);
 			}
 
 			return new int[size];
@@ -672,11 +675,13 @@ namespace UMA
 #if UNITY_EDITOR
 			if (UnityEditor.PrefabUtility.IsComponentAddedToPrefabInstance(renderer))
 			{
-				Debug.LogError("Cannot apply changes to prefab!");
+				if (Debug.isDebugBuild)
+					Debug.LogError("Cannot apply changes to prefab!");
 			}
 			if (UnityEditor.AssetDatabase.IsSubAsset(mesh))
 			{
-				Debug.LogError("Cannot apply changes to asset mesh!");
+				if (Debug.isDebugBuild)
+					Debug.LogError("Cannot apply changes to asset mesh!");
 			}
 #endif
 			mesh.subMeshCount = 1;

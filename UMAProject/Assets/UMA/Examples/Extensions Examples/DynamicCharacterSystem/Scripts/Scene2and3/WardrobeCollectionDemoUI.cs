@@ -68,7 +68,8 @@ namespace UMA.CharacterSystem.Examples
 				if (!thisUWC.compatibleRaces.Contains(thisCustomizer.Avatar.activeRace.name) && thisUWC.compatibleRaces.Count > 0)
 				{
 					//show a messagebox- but for now
-					Debug.LogWarning("This wardrobe collection was not compatible with that avatar");
+					if (Debug.isDebugBuild)
+						Debug.LogWarning("This wardrobe collection was not compatible with that avatar");
 					return;
 				}
 				//if not show a message otherwise load the recipe
