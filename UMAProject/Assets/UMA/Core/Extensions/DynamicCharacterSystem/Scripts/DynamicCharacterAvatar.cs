@@ -3777,6 +3777,50 @@ namespace UMA.CharacterSystem
                 Colors = newColors;
             }
         }
+
+#if UNITY_EDITOR           
+        [ContextMenu("Copy From Current Wardrobe")]
+		void CopyDefaultWardrobe()
+		{
+			string recipeString = JsonUtility.ToJson(new UMATextRecipe.DCSPackRecipe(this, "", "DynamicCharacterAvatar", defaultSaveOptions));
+			EditorGUIUtility.systemCopyBuffer = recipeString;
+			Debug.Log("Copied: " + EditorGUIUtility.systemCopyBuffer);
+		}
+
+		[ContextMenu("Paste To Default Wardrobe")]
+		void PasteDefaultWardrobe()
+		{
+			string buffer = EditorGUIUtility.systemCopyBuffer;
+			Debug.Log("Pasting: " + buffer);
+
+			UMATextRecipe.DCSPackRecipe copiedList = JsonUtility.FromJson<UMATextRecipe.DCSPackRecipe>(buffer);
+
+			ChangeRace(copiedList.race);
+
+			if (copiedList.wardrobeSet.Count > 0)
+				preloadWardrobeRecipes.recipes.Clear();
+
+			foreach (WardrobeSettings wardrobe in copiedList.wardrobeSet)
+			{
+				UMATextRecipe recipe = UMAAssetIndexer.Instance.GetAsset<UMATextRecipe>(wardrobe.recipe);
+				if (recipe != null)
+				{
+					WardrobeRecipeListItem item = new WardrobeRecipeListItem(recipe);
+					preloadWardrobeRecipes.recipes.Add(item);
+				}
+			}
+
+			if (copiedList.characterColors.Count > 0)
+				characterColors._colors.Clear();
+
+			foreach (UMAPackedRecipeBase.PackedOverlayColorDataV3 color in copiedList.characterColors)
+			{
+				OverlayColorData colorData = new OverlayColorData();
+				color.SetOverlayColorData(colorData);
+				characterColors.SetColor(color.name, colorData);
+			}
+		}
+#endif
     }
 
     #endregion
