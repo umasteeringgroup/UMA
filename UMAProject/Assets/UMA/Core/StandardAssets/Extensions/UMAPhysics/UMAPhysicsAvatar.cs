@@ -23,7 +23,7 @@ namespace UMA.Dynamics
 		public bool enableColliderTriggers = false;
 
 		[Tooltip("Experimental, for blending animations with physics")]
-        	[HideInInspector]
+		[HideInInspector]
 		[Range(0,1f)]
 		public float ragdollBlendAmount;
 
@@ -35,23 +35,23 @@ namespace UMA.Dynamics
 		[Tooltip("Layer to set the player collider on. See layer based collision")]
 		public int playerLayer = 9;
 
-        	[Tooltip("List of Physics Elements, see UMAPhysicsElement class")]
-        	public List<UMAPhysicsElement> elements = new List<UMAPhysicsElement>();
+		[Tooltip("List of Physics Elements, see UMAPhysicsElement class")]
+		public List<UMAPhysicsElement> elements = new List<UMAPhysicsElement>();
 
 		public UnityEvent onRagdollStarted;
 		public UnityEvent onRagdollEnded;
 
-		//Store our DynamicCharacterAvatar component
+		private DynamicCharacterAvatar _avatar;
 		private UMAData _umaData;
 		private GameObject _rootBone;
 		private List<Rigidbody> _rigidbodies = new List<Rigidbody> ();
 		private List<BoxCollider> _BoxColliders = new List<BoxCollider> ();
 
-        	public List<ClothSphereColliderPair> SphereColliders { get { return _SphereColliders; }}
-        	private List<ClothSphereColliderPair> _SphereColliders = new List<ClothSphereColliderPair>();
+		public List<ClothSphereColliderPair> SphereColliders { get { return _SphereColliders; }}
+		private List<ClothSphereColliderPair> _SphereColliders = new List<ClothSphereColliderPair>();
 		
-        	public List<CapsuleCollider> CapsuleColliders { get { return _CapsuleColliders; }}
-        	private List<CapsuleCollider> _CapsuleColliders = new List<CapsuleCollider>();
+		public List<CapsuleCollider> CapsuleColliders { get { return _CapsuleColliders; }}
+		private List<CapsuleCollider> _CapsuleColliders = new List<CapsuleCollider>();
 
 	
 		private CapsuleCollider _playerCollider;
@@ -77,18 +77,28 @@ namespace UMA.Dynamics
 		// Use this for initialization
 		void Start () 
 		{
-			_umaData = gameObject.GetComponent<UMAData> ();	
-			gameObject.layer = playerLayer;
-
-			if(_SphereColliders == null) { _SphereColliders = new List<ClothSphereColliderPair>(); }
-			if(_CapsuleColliders == null) { _CapsuleColliders = new List<CapsuleCollider>(); }
-
-			if (_umaData != null)
+			_avatar = GetComponent<DynamicCharacterAvatar>();
+			//Using DCS
+			if (_avatar != null)
 			{
-				_umaData.CharacterCreated.AddListener(OnCharacterCreatedCallback);
-				_umaData.CharacterBegun.AddListener(OnCharacterBegunCallback);
-				_umaData.CharacterUpdated.AddListener(OnCharacterUpdatedCallback);
+				_avatar.CharacterCreated.AddListener(OnCharacterCreatedCallback);
+				_avatar.CharacterBegun.AddListener(OnCharacterBegunCallback);
+				_avatar.CharacterUpdated.AddListener(OnCharacterUpdatedCallback);
 			}
+			else
+			{
+				//if we're not using the DCS then this will be created through a recipe
+				_umaData = gameObject.GetComponent<UMAData>();
+
+				if (_umaData != null)
+				{
+					_umaData.CharacterCreated.AddListener(OnCharacterCreatedCallback);
+					_umaData.CharacterBegun.AddListener(OnCharacterBegunCallback);
+					_umaData.CharacterUpdated.AddListener(OnCharacterUpdatedCallback);
+				}
+			}
+
+			gameObject.layer = playerLayer;
 
 			if (!Physics.GetIgnoreLayerCollision(ragdollLayer, playerLayer))
 			{
@@ -99,11 +109,20 @@ namespace UMA.Dynamics
 
 		void OnDestroy()
 		{
-			if (_umaData != null)
+			if (_avatar != null)
 			{
-				_umaData.CharacterCreated.RemoveListener(OnCharacterCreatedCallback);
-				_umaData.CharacterBegun.RemoveListener(OnCharacterBegunCallback);
-				_umaData.CharacterUpdated.RemoveListener(OnCharacterUpdatedCallback);
+				_avatar.CharacterCreated.RemoveListener(OnCharacterCreatedCallback);
+				_avatar.CharacterBegun.RemoveListener(OnCharacterBegunCallback);
+				_avatar.CharacterUpdated.RemoveListener(OnCharacterUpdatedCallback);
+			}
+			else
+			{
+				if (_umaData != null)
+				{
+					_umaData.CharacterCreated.RemoveListener(OnCharacterCreatedCallback);
+					_umaData.CharacterBegun.RemoveListener(OnCharacterBegunCallback);
+					_umaData.CharacterUpdated.RemoveListener(OnCharacterUpdatedCallback);
+				}
 			}
 		}
 

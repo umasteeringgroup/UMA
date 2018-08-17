@@ -186,10 +186,10 @@ namespace UMA
 			{
 				if (!asset.material.Equals(targetMaterial))
 				{
-					if (Debug.isDebugBuild)
-						Debug.LogError(string.Format("Overlay '{0}' doesn't have the expected UMA Material: '{1}'", asset.overlayName, targetMaterial.name));
-
-					valid = false;
+#if UNITY_EDITOR
+                    Debug.LogError(string.Format("Overlay '{0}' doesn't have the expected UMA Material: '{1}'!\nCurrently it has '{2}' at '{3}'", asset.overlayName, targetMaterial.name, asset.material, UnityEditor.AssetDatabase.GetAssetPath(asset)));
+#endif
+                    valid = false;
 				}
 			}
 
