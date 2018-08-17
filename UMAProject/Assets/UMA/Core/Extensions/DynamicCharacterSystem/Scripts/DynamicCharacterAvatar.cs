@@ -3759,8 +3759,9 @@ namespace UMA.CharacterSystem
                 Colors = newColors;
             }
         }
-			
-		[ContextMenu("Copy From Current Wardrobe")]
+
+#if UNITY_EDITOR           
+        [ContextMenu("Copy From Current Wardrobe")]
 		void CopyDefaultWardrobe()
 		{
 			string recipeString = JsonUtility.ToJson(new UMATextRecipe.DCSPackRecipe(this, "", "DynamicCharacterAvatar", defaultSaveOptions));
@@ -3801,6 +3802,7 @@ namespace UMA.CharacterSystem
 				characterColors.SetColor(color.name, colorData);
 			}
 		}
+#endif
     }
 
     #endregion
