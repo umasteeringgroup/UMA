@@ -246,6 +246,12 @@ namespace UMA.Editors
                     }
                 }              
             }
+
+            GUILayout.Space(20);
+            if (GUILayout.Button(new GUIContent("View UV Layout", "Brings up a window displaying the uv layout of the currently selected object and export to texture options.")))
+            {
+                GeometryUVEditorWindow.Init(_Source);
+            }
             GUILayout.EndScrollView();
         }
 

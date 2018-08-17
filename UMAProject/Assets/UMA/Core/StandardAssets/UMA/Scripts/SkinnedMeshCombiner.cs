@@ -330,7 +330,8 @@ namespace UMA
 							{ 
 								if (blendShapes[i].frames.Length != sourceBlendShapes[shapeIndex].frames.Length) 
 								{
-									Debug.LogError("SkinnedMeshCombiner: mesh blendShape frame counts don't match!");
+									if (Debug.isDebugBuild)
+										Debug.LogError("SkinnedMeshCombiner: mesh blendShape frame counts don't match!");
 									break;
 								}
 								for (int frameIndex = 0; frameIndex < sourceBlendShapes[shapeIndex].frames.Length; frameIndex++)
@@ -440,7 +441,8 @@ namespace UMA
 
 			if (vertexCount != vertexIndex)
 			{
-				Debug.LogError("Combined vertices size didn't match precomputed value!");
+				if (Debug.isDebugBuild)
+					Debug.LogError("Combined vertices size didn't match precomputed value!");
 			}
 
 			// fill in new values.
@@ -839,7 +841,8 @@ namespace UMA
 		{
 			if ((mask.Count*3) != source.Length || (mask.Count*3) != count)
 			{
-				Debug.LogError("MaskedCopyIntArrayAdd: mask and source count do not match!");
+				if (Debug.isDebugBuild)
+					Debug.LogError("MaskedCopyIntArrayAdd: mask and source count do not match!");
 				return;
 			}
                 

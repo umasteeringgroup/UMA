@@ -66,7 +66,9 @@ namespace UMA
             gameObject.name = "GeometrySelector";
             if (_sharedMesh == null)
             {
-                Debug.LogWarning("GeometrySelector: Initializing with no mesh!");
+                if (Debug.isDebugBuild)
+                    Debug.LogWarning("GeometrySelector: Initializing with no mesh!");
+
                 return;
             }
 
@@ -130,7 +132,9 @@ namespace UMA
         {
             if (meshData == null)
             {
-                Debug.LogError("InitializeFromMeshData: meshData is null!");
+                if (Debug.isDebugBuild)
+                    Debug.LogError("InitializeFromMeshData: meshData is null!");
+
                 return;
             }
 
@@ -182,7 +186,10 @@ namespace UMA
                 UpdateSelectionMesh();
             }
             else
-                Debug.LogWarning("selectedTriangles is null! Try starting editing again.");
+            {
+                if (Debug.isDebugBuild)
+                    Debug.LogWarning("selectedTriangles is null! Try starting editing again.");
+            }
         }
 
         public void UpdateSelectionMesh()
@@ -214,13 +221,17 @@ namespace UMA
             
             if (_sharedMesh.uv == null)
             {
-                Debug.LogWarning("UpdateFromTexture: This mesh has no uv data!");
+                if (Debug.isDebugBuild)
+                    Debug.LogWarning("UpdateFromTexture: This mesh has no uv data!");
+
                 return;
             }
 
             if (selectedTriangles == null)
             {
-                Debug.LogWarning("UpdateFromTexture: selectedTriangles is null!");
+                if (Debug.isDebugBuild)
+                    Debug.LogWarning("UpdateFromTexture: selectedTriangles is null!");
+
                 return;
             }
 
@@ -263,7 +274,9 @@ namespace UMA
 
             if((bitArray.Length * 3) != triangles.Length)
             {
-                Debug.LogError("BitArray length does not match Triangle length!");
+                if (Debug.isDebugBuild)
+                    Debug.LogError("BitArray length does not match Triangle length!");
+
                 return;
             }
             

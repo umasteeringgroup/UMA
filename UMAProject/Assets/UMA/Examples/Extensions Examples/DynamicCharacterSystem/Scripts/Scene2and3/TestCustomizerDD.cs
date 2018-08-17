@@ -599,7 +599,8 @@ namespace UMA.CharacterSystem.Examples
 		{
 			if (GenericColorList == null)
 			{
-				Debug.LogWarning("[TestCustomizerDD] the GenericColorList was null or missing, this must be set.");
+				if (Debug.isDebugBuild)
+					Debug.LogWarning("[TestCustomizerDD] the GenericColorList was null or missing, this must be set.");
 				return;
 			}
 			int colorTableSelected = -1;
@@ -609,7 +610,8 @@ namespace UMA.CharacterSystem.Examples
 				thisColorTable = sharedColorTables[sharedColorTables.FindIndex(s => s.name == colorType.name)].sharedColorTable;
 				if (thisColorTable == null)
 				{
-					Debug.LogWarning("[TestCustomizerDD] the colorList for " + colorType.name + " was null or missing, please set this or remove it from the list.");
+					if (Debug.isDebugBuild)
+						Debug.LogWarning("[TestCustomizerDD] the colorList for " + colorType.name + " was null or missing, please set this or remove it from the list.");
 					return;
 				}
 				for (int i = 0; i < thisColorTable.colors.Length; i++)
@@ -955,7 +957,8 @@ namespace UMA.CharacterSystem.Examples
 			if (thisFilename != "")
 			{
 				thisFilename = Path.GetFileNameWithoutExtension(thisFilename.Replace(" ", ""));
-				Debug.Log("Saved File with filename " + thisFilename);
+				if (Debug.isDebugBuild)
+					Debug.Log("Saved File with filename " + thisFilename);
 				Avatar.saveFilename = thisFilename;
 
 				DynamicCharacterAvatar.SaveOptions thisSaveOptions = DynamicCharacterAvatar.SaveOptions.useDefaults;

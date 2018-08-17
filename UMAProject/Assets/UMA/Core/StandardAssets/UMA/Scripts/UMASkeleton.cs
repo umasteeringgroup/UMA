@@ -151,7 +151,10 @@ namespace UMA
 #endif
 			}
 			else
-				Debug.LogError("AddBonesRecursive: " + transform.name + " already exists in the dictionary! Consider renaming those bones. For example, `Items` under each hand bone can become `LeftItems` and `RightItems`.");
+			{
+				if (Debug.isDebugBuild)
+					Debug.LogError("AddBonesRecursive: " + transform.name + " already exists in the dictionary! Consider renaming those bones. For example, `Items` under each hand bone can become `LeftItems` and `RightItems`.");
+			}
 
 			for (int i = 0; i < transform.childCount; i++)
 			{
@@ -202,7 +205,10 @@ namespace UMA
 #endif
 			}
 			else
-				Debug.LogError("AddBone: " + transform.name + " already exists in the dictionary! Consider renaming those bones. For example, `Items` under each hand bone can become `LeftItems` and `RightItems`.");
+			{
+				if (Debug.isDebugBuild)
+					Debug.LogError("AddBone: " + transform.name + " already exists in the dictionary! Consider renaming those bones. For example, `Items` under each hand bone can become `LeftItems` and `RightItems`.");
+			}
 		}
 
 		/// <summary>
@@ -229,7 +235,10 @@ namespace UMA
 #endif
 			}
 			else
-				Debug.LogError("AddBone: " + transform.name + " already exists in the dictionary! Consider renaming those bones. For example, `Items` under each hand bone can become `LeftItems` and `RightItems`.");
+			{
+				if (Debug.isDebugBuild)
+					Debug.LogError("AddBone: " + transform.name + " already exists in the dictionary! Consider renaming those bones. For example, `Items` under each hand bone can become `LeftItems` and `RightItems`.");
+			}
 		}
 
 		/// <summary>
@@ -674,7 +683,10 @@ namespace UMA
 						entry.accessedFrame = frame;
 					}
 					else
-						Debug.LogError("EnsureBoneHierarchy: " + entry.umaTransform.name + " parent not found in dictionary!");
+					{
+						if (Debug.isDebugBuild)
+							Debug.LogError("EnsureBoneHierarchy: " + entry.umaTransform.name + " parent not found in dictionary!");
+					}
 				}
 			}
 		}

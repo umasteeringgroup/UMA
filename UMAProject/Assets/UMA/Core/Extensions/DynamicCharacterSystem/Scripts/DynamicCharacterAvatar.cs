@@ -394,7 +394,8 @@ namespace UMA.CharacterSystem
             {
                 if (DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck) == false)
                 {
-                    Debug.Log("Update did build");
+                    if (Debug.isDebugBuild)
+                        Debug.Log("Update did build");
                     UpdateAfterDownload();
                     //actually we dont know in this case if we are restoring DNA or not
                     //but a placeholder race should only have been used if defaultLoadOptions.waitForBundles is false
@@ -538,7 +539,8 @@ namespace UMA.CharacterSystem
             if (activeRace.name == "" || activeRace.name == "None Set")
             {
                 activeRace.data = null;
-                Debug.LogWarning("No activeRace set. Aborting build");
+                if (Debug.isDebugBuild)
+                    Debug.LogWarning("No activeRace set. Aborting build");
                 return;
             }
             //calling activeRace.data causes RaceLibrary to gather all racedatas from resources an returns all those along with any temporary assetbundle racedatas that are downloading
@@ -563,7 +565,8 @@ namespace UMA.CharacterSystem
             //if we are loading an old UMARecipe from the recipe field and the old race is not in resources the race will be null but the recipe wont be 
             if (umaRecipe == null)
             {
-                Debug.LogWarning("[SetActiveRace] could not find baseRaceRecipe for the race " + activeRace.name + ". Have you set one in the raceData?");
+                if (Debug.isDebugBuild)
+                    Debug.LogWarning("[SetActiveRace] could not find baseRaceRecipe for the race " + activeRace.name + ". Have you set one in the raceData?");
             }
             if (DynamicAssetLoader.Instance.downloadingAssetsContains(activeRace.name))
             {
@@ -743,7 +746,8 @@ namespace UMA.CharacterSystem
                     }
                     else
                     {
-                        Debug.LogWarning("[DynamicCharacterAvatar:LoadDefaultWardrobe] recipe._recipe was null for " + recipe._recipeName);
+                        if (Debug.isDebugBuild)
+                            Debug.LogWarning("[DynamicCharacterAvatar:LoadDefaultWardrobe] recipe._recipe was null for " + recipe._recipeName);
                     }
                 }
             }
@@ -856,7 +860,8 @@ namespace UMA.CharacterSystem
             {
                 //throw new Exception("Unable to find slot or recipe for Slotname "+ Slotname+" Recipename "+ Recipename);
                 //it may just be that the race has changed and the current wardrobe didn't fit? If so we dont want to stop everything.
-                Debug.LogWarning("Unable to find slot or recipe for Slotname " + Slotname + " Recipename " + Recipename);
+                if (Debug.isDebugBuild)
+                    Debug.LogWarning("Unable to find slot or recipe for Slotname " + Slotname + " Recipename " + Recipename);
             }
             else
             {
@@ -1903,7 +1908,8 @@ namespace UMA.CharacterSystem
 #else
 				FileUtils.WriteAllText(filePath, asset.recipeString);
 #endif
-                Debug.Log("Recipe saved to " + filePath);
+                if (Debug.isDebugBuild)
+                    Debug.Log("Recipe saved to " + filePath);
                 if (savePathType == savePathTypes.Resources)
                 {
 #if UNITY_EDITOR
@@ -1993,7 +1999,8 @@ namespace UMA.CharacterSystem
             }
             else
             {
-                Debug.LogError("CharacterSystem Save Error! Could not save file, check you have set the filename and path correctly...");
+                if (Debug.isDebugBuild)
+                    Debug.LogError("CharacterSystem Save Error! Could not save file, check you have set the filename and path correctly...");
                 return "";
             }
         }
@@ -2064,7 +2071,8 @@ namespace UMA.CharacterSystem
         /// <param name="Recipe"></param>
         public void Preload(string Recipe)
         {
-            Debug.LogWarning("DEPRICATED please use SetLoadString instead");
+            if (Debug.isDebugBuild)
+                Debug.LogWarning("DEPRICATED please use SetLoadString instead");
             loadString = Recipe;
             loadPathType = loadPathTypes.String;
             loadFileOnStart = true;
@@ -2108,7 +2116,8 @@ namespace UMA.CharacterSystem
         {
             if (UMATextRecipe.GetRecipesType((settingsToLoad as UMATextRecipe).recipeString) == "Wardrobe" || (settingsToLoad as UMATextRecipe).recipeType == "Wardrobe")
             {
-                Debug.LogError("The assigned UMATextRecipe was a Wardrobe Recipe. You cannot load a character from a Wardrobe Recipe");
+                if (Debug.isDebugBuild)
+                    Debug.LogError("The assigned UMATextRecipe was a Wardrobe Recipe. You cannot load a character from a Wardrobe Recipe");
                 return;
             }
             ImportSettings(UMATextRecipe.PackedLoadDCS(context, (settingsToLoad as UMATextRecipe).recipeString), customLoadOptions);
@@ -2161,7 +2170,8 @@ namespace UMA.CharacterSystem
             {
                 if (settingsToLoad.race == null || settingsToLoad.race == "")
                 {
-                    Debug.LogError("The sent recipe did not have an assigned Race. Avatar could not be created from the recipe");
+                    if (Debug.isDebugBuild)
+                        Debug.LogError("The sent recipe did not have an assigned Race. Avatar could not be created from the recipe");
                     yield break;
                 }
                 activeRace.name = settingsToLoad.race;
@@ -2333,7 +2343,8 @@ namespace UMA.CharacterSystem
                 StartCoroutine(ProcessRecipeString(recipeString));
                 return;
             }
-            Debug.LogWarning("Asset '" + Name + "' Not found in Global Index");
+            if (Debug.isDebugBuild)
+                Debug.LogWarning("Asset '" + Name + "' Not found in Global Index");
         }
 
         public void LoadFromTextFile(string Name)
@@ -2346,7 +2357,8 @@ namespace UMA.CharacterSystem
                 StartCoroutine(ProcessRecipeString(recipeString));
                 return;
             }
-            Debug.LogWarning("Asset '" + Name + "' Not found in Global Index");
+            if (Debug.isDebugBuild)
+                Debug.LogWarning("Asset '" + Name + "' Not found in Global Index");
         }
 
         IEnumerator ProcessRecipeString(string recipeString)
@@ -2429,7 +2441,8 @@ namespace UMA.CharacterSystem
                     path = (loadPath != "") ? System.IO.Path.Combine(path, loadPath.TrimStart('\\', '/').TrimEnd('\\', '/').Trim()) : path;
                     if (loadFilename == "")
                     {
-                        Debug.LogWarning("[CharacterAvatar.DoLoad] No filename specified to load!");
+                        if (Debug.isDebugBuild)
+                            Debug.LogWarning("[CharacterAvatar.DoLoad] No filename specified to load!");
                         yield break;
                     }
                     else
@@ -2454,7 +2467,8 @@ namespace UMA.CharacterSystem
             }
             else
             {
-                Debug.LogWarning("[CharacterAvatar.DoLoad] No TextRecipe found with filename " + loadFilename);
+                if (Debug.isDebugBuild)
+                    Debug.LogWarning("[CharacterAvatar.DoLoad] No TextRecipe found with filename " + loadFilename);
             }
             yield break;
         }
@@ -2664,7 +2678,8 @@ namespace UMA.CharacterSystem
         //We dont really want the *actual* 'Load' method public because we dont want people to see/call that
         public override void Load(UMARecipeBase umaRecipe, params UMARecipeBase[] umaAdditionalSerializedRecipes)
         {
-            Debug.Log(" With a DynamicCharacterAvatar you do not call Load directly. If you want to load an UMATextRecipe directly call ImportSettings(yourUMATextRecipe)");
+            if (Debug.isDebugBuild)
+                Debug.Log(" With a DynamicCharacterAvatar you do not call Load directly. If you want to load an UMATextRecipe directly call ImportSettings(yourUMATextRecipe)");
             return;
         }
         /// <summary>
@@ -3068,7 +3083,8 @@ namespace UMA.CharacterSystem
                 }
                 DestroyImmediate(EditorUMAContext);
                 EditorApplication.update -= CheckEditorContextNeeded;
-                Debug.Log("UMAEditorContext was removed");
+                if (Debug.isDebugBuild)
+                    Debug.Log("UMAEditorContext was removed");
             }
         }
 
@@ -3357,7 +3373,8 @@ namespace UMA.CharacterSystem
                 var thisContext = UMAContext.FindInstance();
                 if (thisContext == null)
                 {
-                    Debug.LogWarning("UMAContext was missing this is required in scenes that use UMA. Please add the UMA_DCS prefab to the scene");
+                    if (Debug.isDebugBuild)
+                        Debug.LogWarning("UMAContext was missing this is required in scenes that use UMA. Please add the UMA_DCS prefab to the scene");
                     return;
                 }
                 var thisDynamicRaceLibrary = (DynamicRaceLibrary)thisContext.raceLibrary as DynamicRaceLibrary;
@@ -3449,7 +3466,8 @@ namespace UMA.CharacterSystem
                 }
                 else
                 {
-                    Debug.LogWarning("There was no DynamicCharacterSystem set up in UMAContext");
+                    if (Debug.isDebugBuild)
+                        Debug.LogWarning("There was no DynamicCharacterSystem set up in UMAContext");
                 }
                 return validRecipes;
             }

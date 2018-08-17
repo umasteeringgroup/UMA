@@ -91,7 +91,10 @@ namespace UMA.Dynamics
 			}
 
 			if (!Physics.GetIgnoreLayerCollision(ragdollLayer, playerLayer))
-				Debug.LogWarning("RagdollLayer and PlayerLayer are not ignoring each other! This will cause collision issues. Please update the collision matrix or 'Add Default Layers' in the Physics Slot Definition");
+			{
+				if (Debug.isDebugBuild)
+					Debug.LogWarning("RagdollLayer and PlayerLayer are not ignoring each other! This will cause collision issues. Please update the collision matrix or 'Add Default Layers' in the Physics Slot Definition");
+			}
 		}
 
 		void OnDestroy()
@@ -162,7 +165,8 @@ namespace UMA.Dynamics
 
 			if (_umaData == null) 
 			{
-				Debug.LogError ("CreatePhysicsObjects: umaData is null!");
+				if (Debug.isDebugBuild)
+					Debug.LogError ("CreatePhysicsObjects: umaData is null!");
 				return;
 			}
 			
@@ -175,7 +179,10 @@ namespace UMA.Dynamics
 				_playerCollider = gameObject.GetComponent<CapsuleCollider> ();
 				_playerRigidbody = gameObject.GetComponent<Rigidbody> ();
 				if (_playerCollider == null || _playerRigidbody == null)
-					Debug.LogWarning ("PlayerCollider or PlayerRigidBody is null, try putting the collider recipe before the PhysicsRecipe, or turn off SimplePlayerCollider.");
+				{
+					if (Debug.isDebugBuild)
+						Debug.LogWarning("PlayerCollider or PlayerRigidBody is null, try putting the collider recipe before the PhysicsRecipe, or turn off SimplePlayerCollider.");
+				}
 			}
 
 			foreach (UMAPhysicsElement element in elements) 
@@ -187,7 +194,8 @@ namespace UMA.Dynamics
 
                     if (bone == null)
                     {
-                        Debug.LogWarning("UMAPhysics: " + element.boneName + " not found!");
+						if (Debug.isDebugBuild)
+							Debug.LogWarning("UMAPhysics: " + element.boneName + " not found!");
                         continue; //if we don't find the bone then go to the next iteration
                     }
                 
@@ -298,8 +306,11 @@ namespace UMA.Dynamics
 					{
                         cloth.sphereColliders = SphereColliders.ToArray();
                         cloth.capsuleColliders = CapsuleColliders.ToArray();
-                        if ((cloth.capsuleColliders.Length + cloth.sphereColliders.Length) > 10)
-                            Debug.LogWarning("Cloth Collider count is high. You might experience strange behavior with the cloth simulation.");
+						if ((cloth.capsuleColliders.Length + cloth.sphereColliders.Length) > 10)
+						{
+							if (Debug.isDebugBuild)
+								Debug.LogWarning("Cloth Collider count is high. You might experience strange behavior with the cloth simulation.");
+						}
 					}
 				}
 			}

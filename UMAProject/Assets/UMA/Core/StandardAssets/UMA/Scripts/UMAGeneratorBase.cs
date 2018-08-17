@@ -231,27 +231,33 @@ namespace UMA
 
 		public static void DebugLogHumanAvatar(GameObject root, HumanDescription description)
 		{
-			Debug.Log("***", root);
+			if (Debug.isDebugBuild)
+				Debug.Log("***", root);
 			Dictionary<String, String> bones = new Dictionary<String, String>();
 			foreach (var sb in description.skeleton)
 			{
-				Debug.Log(sb.name);
+				if (Debug.isDebugBuild)
+					Debug.Log(sb.name);
 				bones[sb.name] = sb.name;
 			}
-			Debug.Log("----");
+			if (Debug.isDebugBuild)
+				Debug.Log("----");
 			foreach (var hb in description.human)
 			{
 				string boneName;
 				if (bones.TryGetValue(hb.boneName, out boneName))
 				{
-					Debug.Log(hb.humanName + " -> " + boneName);
+					if (Debug.isDebugBuild)
+						Debug.Log(hb.humanName + " -> " + boneName);
 				}
 				else
 				{
-					Debug.LogWarning(hb.humanName + " !-> " + hb.boneName);
+					if (Debug.isDebugBuild)
+						Debug.LogWarning(hb.humanName + " !-> " + hb.boneName);
 				}
 			}
-			Debug.Log("++++");
+			if (Debug.isDebugBuild)
+				Debug.Log("++++");
 		}
 
 		/// <summary>

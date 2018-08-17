@@ -207,13 +207,15 @@ namespace UMA
 			bool valid = true;
 			if (umaGenerator == null)
 			{
-				Debug.LogError("UMA data missing required generator!");
+				if (Debug.isDebugBuild)
+					Debug.LogError("UMA data missing required generator!");
 				valid = false;
 			}
 
 			if (umaRecipe == null)
 			{
-				Debug.LogError("UMA data missing required recipe!");
+				if (Debug.isDebugBuild)
+					Debug.LogError("UMA data missing required recipe!");
 				valid = false;
 			}
 			else
@@ -224,13 +226,17 @@ namespace UMA
 			if (animationController == null)
 			{
 				if (Application.isPlaying)
-					Debug.LogWarning("No animation controller supplied.");
+				{
+					if (Debug.isDebugBuild)
+						Debug.LogWarning("No animation controller supplied.");
+				}
 			}
 
 #if UNITY_EDITOR
 			if (!valid && UnityEditor.EditorApplication.isPlaying)
 			{
-				Debug.LogError("UMAData: Recipe or Generator is not valid!");
+				if (Debug.isDebugBuild)
+					Debug.LogError("UMAData: Recipe or Generator is not valid!");
 				UnityEditor.EditorApplication.isPaused = true;
 			}
 #endif
@@ -366,7 +372,8 @@ namespace UMA
 				bool valid = true;
 				if (raceData == null)
 				{
-					Debug.LogError("UMA recipe missing required race!");
+					if (Debug.isDebugBuild)
+						Debug.LogError("UMA recipe missing required race!");
 					valid = false;
 				}
 				else
@@ -376,7 +383,8 @@ namespace UMA
 
 				if (slotDataList == null || slotDataList.Length == 0)
 				{
-					Debug.LogError("UMA recipe slot list is empty!");
+					if (Debug.isDebugBuild)
+						Debug.LogError("UMA recipe slot list is empty!");
 					valid = false;
 				}
 				int slotDataCount = 0;
@@ -391,7 +399,8 @@ namespace UMA
 				}
 				if (slotDataCount < 1)
 				{
-					Debug.LogError("UMA recipe slot list contains only null objects!");
+					if (Debug.isDebugBuild)
+						Debug.LogError("UMA recipe slot list contains only null objects!");
 					valid = false;
 				}
 				return valid;
@@ -815,7 +824,8 @@ namespace UMA
 						}
 						else
 						{
-							Debug.LogWarning("Cannot apply dna: " + dnaEntry.Value.GetType().Name + " using key " + dnaEntry.Key);
+							if (Debug.isDebugBuild)
+								Debug.LogWarning("Cannot apply dna: " + dnaEntry.Value.GetType().Name + " using key " + dnaEntry.Key);
 						}
 					}
 				}
@@ -916,7 +926,8 @@ namespace UMA
 					{
 						if(converter == null)
 						{
-							Debug.LogWarning("RaceData " + raceData.raceName + " has a missing DNAConverter");
+							if (Debug.isDebugBuild)
+								Debug.LogWarning("RaceData " + raceData.raceName + " has a missing DNAConverter");
 							continue;
 						}
 						//'old' dna converters return a typehash based on the type name. 
@@ -930,7 +941,8 @@ namespace UMA
 						else
 						{
 							//We MUST NOT give DynamicDNA the same hash a UMADnaHumanoid or else we loose the values
-							Debug.Log(raceData.raceName + " has multiple dna converters that are trying to use the same dna (" + converter.DNATypeHash + "). This is not allowed.");
+							if (Debug.isDebugBuild)
+								Debug.Log(raceData.raceName + " has multiple dna converters that are trying to use the same dna (" + converter.DNATypeHash + "). This is not allowed.");
 						}
 					}
 				}
@@ -951,7 +963,8 @@ namespace UMA
 				}
 				else
 				{
-					Debug.Log(raceData.raceName + " has multiple dna converters that are trying to use the same dna ("+ dnaConverter.DNATypeHash+"). This is not allowed.");
+					if (Debug.isDebugBuild)
+						Debug.Log(raceData.raceName + " has multiple dna converters that are trying to use the same dna ("+ dnaConverter.DNATypeHash+"). This is not allowed.");
 				}
 			}
 
@@ -980,7 +993,8 @@ namespace UMA
 
 				if ((recipe.raceData != null) && (recipe.raceData != raceData))
 				{
-					Debug.LogWarning("Merging recipe with conflicting race data: " + recipe.raceData.name);
+					if (Debug.isDebugBuild)
+						Debug.LogWarning("Merging recipe with conflicting race data: " + recipe.raceData.name);
 				}
 
 				foreach (var dnaEntry in recipe.umaDna)
@@ -1522,24 +1536,30 @@ namespace UMA
 		{
 			if (rIndex >= rendererCount) //for multi-renderer support
 			{
-				Debug.LogError ("SetBlendShape: This renderer doesn't exist!");
+				if (Debug.isDebugBuild)
+					Debug.LogError ("SetBlendShape: This renderer doesn't exist!");
 				return;
 			}
 
 			if (shapeIndex < 0) 
 			{
-				Debug.LogError ("SetBlendShape: Index is less than zero!");
+				if (Debug.isDebugBuild)
+					Debug.LogError ("SetBlendShape: Index is less than zero!");
 				return;
 			}
 
 			if (shapeIndex >= renderers [rIndex].sharedMesh.blendShapeCount) //for multi-renderer support
 			{
-				Debug.LogError ("SetBlendShape: Index is greater than blendShapeCount!");
+				if (Debug.isDebugBuild)
+					Debug.LogError ("SetBlendShape: Index is greater than blendShapeCount!");
 				return;
 			}
 
 			if (weight < 0.0f || weight > 1.0f)
-				Debug.LogWarning ("SetBlendShape: Weight is out of range, clamping...");
+			{
+				if (Debug.isDebugBuild)
+					Debug.LogWarning("SetBlendShape: Weight is out of range, clamping...");
+			}
 
 			weight = Mathf.Clamp01 (weight);
 			weight *= 100.0f; //Scale up to 1-100 for SetBlendShapeWeight.
@@ -1555,7 +1575,10 @@ namespace UMA
 		public void SetBlendShape(string name, float weight)
 		{
 			if (weight < 0.0f || weight > 1.0f)
-				Debug.LogWarning ("SetBlendShape: Weight is out of range, clamping...");
+			{
+				if (Debug.isDebugBuild)
+					Debug.LogWarning("SetBlendShape: Weight is out of range, clamping...");
+			}
 
 			weight = Mathf.Clamp01 (weight);
 			weight *= 100.0f; //Scale up to 1-100 for SetBlendShapeWeight.
@@ -1565,8 +1588,12 @@ namespace UMA
 				int index = renderer.sharedMesh.GetBlendShapeIndex(name);
 				if (index >= 0)
 					renderer.SetBlendShapeWeight(index, weight);
-				//else
-					//Debug.LogWarning(string.Format("Blendshape Index out of range for {0}",name));
+				else
+				{
+					if (Debug.isDebugBuild)
+						Debug.LogWarning(string.Format("Blendshape Index out of range for {0}", name));
+				}
+
 			}
 		}
 
@@ -1579,13 +1606,17 @@ namespace UMA
 		{
 			if (shapeIndex < 0) 
 			{
-				Debug.LogError ("GetBlendShapeName: Index is less than zero!");
+				if (Debug.isDebugBuild)
+					Debug.LogError ("GetBlendShapeName: Index is less than zero!");
+
 				return "";
 			}
 				
 			if (rendererIndex >= rendererCount) //for multi-renderer support
 			{
-				Debug.LogError ("GetBlendShapeName: This renderer doesn't exist!");
+				if (Debug.isDebugBuild)
+					Debug.LogError ("GetBlendShapeName: This renderer doesn't exist!");
+
 				return "";
 			}
 
@@ -1593,7 +1624,9 @@ namespace UMA
 			if( shapeIndex < renderers [rendererIndex].sharedMesh.blendShapeCount )
 				return renderers [rendererIndex].sharedMesh.GetBlendShapeName (shapeIndex);
 
-			Debug.LogError ("GetBlendShapeName: no blendshape at index " + shapeIndex + "!");
+			if (Debug.isDebugBuild)
+				Debug.LogError ("GetBlendShapeName: no blendshape at index " + shapeIndex + "!");
+
 			return "";
 		}
 			
