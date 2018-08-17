@@ -671,25 +671,7 @@ namespace UMA.CharacterSystem.Examples
 				thisDD.value = colorTableSelected;
 				thisDD.captionImage.color = selectedColor;
 			}
-			else
-			{
-				var thisddOption = new DropdownWithColor.OptionData();
-				thisddOption.text = colorTable.colors[0].name;
-				thisddOption.color = activeColor.color;
-				Sprite spriteToUse = genericColorSwatch;
-				/*if (activeColor.MetallicGloss != colorBlack)
-				{
-					spriteToUse = genericColorSwatchMetallic;
-				}*/
-				if (activeColor.channelAdditiveMask.Length >= 3)
-				//if (activeColor.MetallicGloss != colorBlack)
-				{
-					spriteToUse = genericColorSwatchMetallic;
-				}
-				thisddOption.image = spriteToUse;
-				thisDD.options.Add(thisddOption);
-				thisDD.value = colorTable.colors.Length + 1;
-			}
+			
 			thisDD.RefreshShownValue();
 			thisDD.onValueChanged.AddListener(colorDropdown.ChangeColor);
 		}

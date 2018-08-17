@@ -723,6 +723,7 @@ namespace UMA.Editors
 				if (GUILayout.Button("Add to Global Index (Recommended)"))
 				{
 					UMAAssetIndexer.Instance.EvilAddAsset(typeof(RaceData), _recipe.raceData);
+					UMAAssetIndexer.Instance.ForceSave();
 				}
 				GUILayout.EndHorizontal();
 			}
@@ -838,6 +839,17 @@ namespace UMA.Editors
             }
             GUILayout.EndHorizontal();
 
+            GUILayout.BeginHorizontal();
+            if(GUILayout.Button("Select All Slots")) 
+            {
+                SelectAllSlots();
+            }
+            if(GUILayout.Button("Select All Overlays"))
+            {
+                SelectAllOverlays();
+            }
+            GUILayout.EndHorizontal();
+
             if (LastSlot != "")
             {
                 if (OpenSlots.ContainsKey(LastSlot))
@@ -918,6 +930,41 @@ namespace UMA.Editors
             {
                 OpenSlots[s] = false;
             }
+        }
+
+        protected void SelectAllSlots()
+        {
+            List<Object> slots = new List<Object>();
+            foreach (var slotData in _recipe.slotDataList)
+            {
+                if (slotData != null)
+                {
+                    slots.Add(slotData.asset);
+                }
+            }
+            Selection.objects = slots.ToArray();
+        }
+
+        protected void SelectAllOverlays()
+        {
+            HashSet<Object> overlays = new HashSet<Object>();
+            foreach (var slotData in _recipe.slotDataList)
+            {
+                if (slotData != null)
+                {
+                    List<OverlayData> overlayData = slotData.GetOverlayList();
+                    foreach (var overlay in overlayData)
+                    {
+                        if(overlay != null)
+                        {
+                            overlays.Add(overlay.asset);
+                        }
+                    }
+                }
+            }
+            Object[] newSelection = new Object[overlays.Count];
+            overlays.CopyTo(newSelection);
+            Selection.objects = newSelection;
         }
     }
 
@@ -1037,6 +1084,7 @@ namespace UMA.Editors
 				if (GUILayout.Button("Add to Global Index (Recommended)"))
 				{
 					UMAAssetIndexer.Instance.EvilAddAsset(typeof(SlotDataAsset),_slotData.asset);
+					UMAAssetIndexer.Instance.ForceSave();
 				}
 				GUILayout.EndHorizontal();
 			}
@@ -1337,6 +1385,7 @@ namespace UMA.Editors
                 if (GUILayout.Button("Add to Global Index"))
                 {
                     UMAAssetIndexer.Instance.EvilAddAsset(typeof(OverlayDataAsset), _overlayData.asset);
+                    UMAAssetIndexer.Instance.ForceSave();
                 }
                 GUILayout.EndHorizontal();
             }

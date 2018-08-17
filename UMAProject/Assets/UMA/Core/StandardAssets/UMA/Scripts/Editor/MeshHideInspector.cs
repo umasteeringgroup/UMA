@@ -4,372 +4,455 @@ using UnityEngine.SceneManagement;
 using UnityEditor.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
+using UMA.CharacterSystem;
 
 namespace UMA.Editors
 {
-    //OnPreviewGUI
-    //http://timaksu.com/post/126337219047/spruce-up-your-custom-unity-inspectors-with-a
-    //
-    [CustomEditor(typeof(MeshHideAsset))]
-    public class MeshHideInspector : Editor 
-    {
-        private Mesh _meshPreview;
-        private UMAMeshData _meshData;
-        private PreviewRenderUtility _previewRenderUtility;
-        private Vector2 _drag;
-        private Material _material;
+	//OnPreviewGUI
+	//http://timaksu.com/post/126337219047/spruce-up-your-custom-unity-inspectors-with-a
+	//
+	[CustomEditor(typeof(MeshHideAsset))]
+	public class MeshHideInspector : Editor 
+	{
+		private Mesh _meshPreview;
+		private UMAMeshData _meshData;
+		private PreviewRenderUtility _previewRenderUtility;
+		private Vector2 _drag;
+		private Material _material;
+		private bool _autoInitialize = true;
 
-        void OnEnable()
-        {
-            MeshHideAsset source = target as MeshHideAsset;
-            if (source.asset == null)
-                return;
+		private int selectedRaceIndex = 0;
+		private DynamicRaceLibrary thisDynamicRaceLibrary;
+		private List<RaceData> foundRaces = new List<RaceData>();
+		private List<string> foundRaceNames = new List<string>();
 
-            if( _material == null )
-                _material = AssetDatabase.GetBuiltinExtraResource<Material>("Default-Diffuse.mat");
+		void OnEnable()
+		{
+			MeshHideAsset source = target as MeshHideAsset;
 
-            if (_meshPreview == null)
-            {
-                UpdateMeshPreview();
-            }
+			if (thisDynamicRaceLibrary == null)
+			{
+				UMAContext context = UMAContext.FindInstance();
+				if(context != null)
+					thisDynamicRaceLibrary = context.raceLibrary as DynamicRaceLibrary;
+			}
 
-            if (_previewRenderUtility == null)
-            {
-                _previewRenderUtility = new PreviewRenderUtility();
-                ResetPreviewCamera();
-            }
+			SetRaceLists();
+
+			if (source.asset == null)
+				return;
+
+			if( _material == null )
+				_material = AssetDatabase.GetBuiltinExtraResource<Material>("Default-Diffuse.mat");
+
+			if (_meshPreview == null)
+			{
+				UpdateMeshPreview();
+			}
+
+			if (_previewRenderUtility == null)
+			{
+				_previewRenderUtility = new PreviewRenderUtility();
+				ResetPreviewCamera();
+			}
+		}
+
+		public override void OnInspectorGUI()
+		{
+			serializedObject.Update();
+			MeshHideAsset source = target as MeshHideAsset;
+			bool beginSceneEditing = false;
+
+			//DrawDefaultInspector();
+			SlotDataAsset obj = EditorGUILayout.ObjectField("SlotDataAsset", source.asset, typeof(SlotDataAsset), false) as SlotDataAsset;
+			if (obj != source.asset)
+			{
+      	source.asset = obj as SlotDataAsset;
+				if (_autoInitialize)
+				{
+				  UpdateSourceAsset(obj);
         }
+			}
+      _autoInitialize = EditorGUILayout.Toggle(new GUIContent("AutoInitialize (recommended)", "Checking this will auto initialize the MeshHideAsset when a slot is added (recommended).  " +
+				"For users that are rebuilding slots that don't change the geometry, the slot reference will be lost but can be reset without losing the existing MeshHide information by unchecking this." ),_autoInitialize);
 
-        public override void OnInspectorGUI()
-        {
-            serializedObject.Update();
-            MeshHideAsset source = target as MeshHideAsset;
-            bool beginSceneEditing = false;
+			if (source.asset == null)
+				EditorGUILayout.HelpBox("No SlotDataAsset set! Begin by adding a SlotDataAsset to the object field above.", MessageType.Error);
 
-            //DrawDefaultInspector();
-            var obj = EditorGUILayout.ObjectField("SlotDataAsset", source.asset, typeof(SlotDataAsset), false);
-            if (obj != null && obj != source.asset)
-            {
-                source.asset = obj as SlotDataAsset;
-                source.Initialize();
-                UpdateMeshPreview();
-                AssetDatabase.SaveAssets();
-                EditorUtility.SetDirty(target);
-            }
 
-            //If we had a slotData added and we set it to none, then lets clear everything.
-            if(obj == null && source.asset != null)
-            {
-                source.asset = null;
-                source.Initialize();
-                AssetDatabase.SaveAssets();
-                EditorUtility.SetDirty(target);
-            }
+			//Race Selector here
+			GUILayout.Space(20);
+			selectedRaceIndex = EditorGUILayout.Popup("Select Base Slot by Race", selectedRaceIndex, foundRaceNames.ToArray());
+			if( selectedRaceIndex <= 0)
+			{
+				EditorGUILayout.HelpBox("Quick selection of base slots by race. This is not needed to create a mesh hide asset, any slot can be used.", MessageType.Info);
+			}
+			else
+			{
+				UMAData.UMARecipe baseRecipe = new UMAData.UMARecipe();
+				foundRaces[selectedRaceIndex].baseRaceRecipe.Load(baseRecipe, UMAContext.FindInstance());
 
-            if (source.asset == null)
-                EditorGUILayout.HelpBox("No SlotDataAsset set! Begin by adding a SlotDataAsset to the object field above.", MessageType.Error);
+				foreach(SlotData sd in baseRecipe.slotDataList)
+				{
+					if (sd != null && sd.asset != null)
+					{
+						if( GUILayout.Button(string.Format("{0} ({1})", sd.asset.name, sd.slotName)))
+						{
+							if( UpdateSourceAsset(sd.asset))
+								selectedRaceIndex = 0;
+						}
+					}
+				}                
+			}
 
-            GUILayout.Space(20);
-            if (source.TriangleCount > 0)
-            {
-                EditorGUILayout.LabelField("Triangle Indices Count: " + source.TriangleCount);
-                EditorGUILayout.LabelField("Submesh Count: " + source.SubmeshCount);
-                EditorGUILayout.LabelField("Hidden Triangle Count: " + source.HiddenCount);
-            }
-            else
-                EditorGUILayout.LabelField("No triangle array found");
+			GUILayout.Space(20);
+			if (source.TriangleCount > 0)
+			{
+				EditorGUILayout.LabelField("Triangle Indices Count: " + source.TriangleCount);
+				EditorGUILayout.LabelField("Submesh Count: " + source.SubmeshCount);
+				EditorGUILayout.LabelField("Hidden Triangle Count: " + source.HiddenCount);
+			}
+			else
+				EditorGUILayout.LabelField("No triangle array found");
 
-            GUILayout.Space(20);
-            if (!GeometrySelectorWindow.IsOpen)
-            {
-                EditorGUI.BeginDisabledGroup(source.asset == null);
-                if (GUILayout.Button("Begin Editing", GUILayout.MinHeight(50)))
-                {
-                    if (source.asset != null)
-                        beginSceneEditing = true;
-                }
-                EditorGUI.EndDisabledGroup();
-                GUILayout.Space(20);
-                GUILayout.Label("Editing will be done in an empty scene.");
-                GUILayout.Label("You will be prompted to save the scene");
-                GUILayout.Label("if there are any unsaved changes.");
-            }
-            serializedObject.ApplyModifiedProperties();
+			GUILayout.Space(20);
+			if (!GeometrySelectorWindow.IsOpen)
+			{
+				EditorGUI.BeginDisabledGroup(source.asset == null);
+				if (GUILayout.Button("Begin Editing", GUILayout.MinHeight(50)))
+				{
+					if (source.asset != null)
+						beginSceneEditing = true;
+				}
+				EditorGUI.EndDisabledGroup();
+				GUILayout.Space(20);
+				GUILayout.Label("Editing will be done in an empty scene.");
+				GUILayout.Label("You will be prompted to save the scene");
+				GUILayout.Label("if there are any unsaved changes.");
+			}
+			serializedObject.ApplyModifiedProperties();
 
-            if (beginSceneEditing)
-            {
-                // This has to happen outside the inspector
-                EditorApplication.delayCall += CreateSceneEditObject;
-            }
-        }
+			if (beginSceneEditing)
+			{
+				// This has to happen outside the inspector
+				EditorApplication.delayCall += CreateSceneEditObject;
+			}
+		}
+    
+		private bool UpdateSourceAsset( SlotDataAsset newObj )
+		{
+			MeshHideAsset source = target as MeshHideAsset;
+			bool update = false;
 
-        private void UpdateMeshPreview()
-        {
-            MeshHideAsset source = target as MeshHideAsset;
-            if (source.asset == null)
-            {
-                _meshPreview = null;
-                return;
-            }
+			if (source.asset != null)
+			{
+				if (EditorUtility.DisplayDialog("Warning", "Setting a new source slot will clear the existing data on this asset!", "OK", "Cancel"))
+					update = true;
+			}
+			else
+			{
+				update = true;
+			}
 
-            if( _meshPreview == null )
-                _meshPreview = new Mesh();
+			if(update)
+			{
+				source.asset = newObj;
+				source.Initialize();
+				UpdateMeshPreview();
+				AssetDatabase.SaveAssets();
+				EditorUtility.SetDirty(target);
+				return true;
+			}
+			return false;
+		}
 
-            UpdateMeshData( source.triangleFlags);
+		private void UpdateMeshPreview()
+		{
+			MeshHideAsset source = target as MeshHideAsset;
+			if (source.asset == null)
+			{
+				_meshPreview = null;
+				return;
+			}
 
-            _meshPreview.Clear();
-            _meshPreview.vertices = _meshData.vertices;
-            _meshPreview.subMeshCount = _meshData.subMeshCount;
+			if( _meshPreview == null )
+				_meshPreview = new Mesh();
 
-            for(int i = 0; i < _meshData.subMeshCount; i++)
-                _meshPreview.SetTriangles(_meshData.submeshes[i].triangles, i);
+			UpdateMeshData( source.triangleFlags);
 
-            ResetPreviewCamera();
-        }
+			_meshPreview.Clear();
+			_meshPreview.vertices = _meshData.vertices;
+			_meshPreview.subMeshCount = _meshData.subMeshCount;
 
-        public void UpdateMeshData( BitArray[] triangleFlags )
-        {
-            if (triangleFlags == null)
-            {
-                Debug.LogWarning("UpdateMeshData: triangleFlags are null!");
-                return;
-            }
+			for(int i = 0; i < _meshData.subMeshCount; i++)
+				_meshPreview.SetTriangles(_meshData.submeshes[i].triangles, i);
 
-            if (_meshData == null )
-                _meshData = new UMAMeshData();
+			ResetPreviewCamera();
+		}
 
-            MeshHideAsset source = target as MeshHideAsset;
+		public void UpdateMeshData( BitArray[] triangleFlags )
+		{
+			if (triangleFlags == null)
+			{
+				Debug.LogWarning("UpdateMeshData: triangleFlags are null!");
+				return;
+			}
 
-            UMAMeshData sourceData = source.asset.meshData;
-                
-            _meshData.submeshes = new SubMeshTriangles[sourceData.subMeshCount];
-            _meshData.subMeshCount = sourceData.subMeshCount;
+			if (_meshData == null )
+				_meshData = new UMAMeshData();
 
-            bool has_normals = (sourceData.normals != null && sourceData.normals.Length != 0);
+			MeshHideAsset source = target as MeshHideAsset;
 
-            _meshData.vertices = new Vector3[sourceData.vertexCount];
-            sourceData.vertices.CopyTo(_meshData.vertices, 0);
+			UMAMeshData sourceData = source.asset.meshData;
+				
+			_meshData.submeshes = new SubMeshTriangles[sourceData.subMeshCount];
+			_meshData.subMeshCount = sourceData.subMeshCount;
 
-            if(has_normals)
-            {
-                _meshData.normals = new Vector3[sourceData.vertexCount];
-                sourceData.normals.CopyTo(_meshData.normals, 0);
-            }
+			bool has_normals = (sourceData.normals != null && sourceData.normals.Length != 0);
 
-            for (int i = 0; i < sourceData.subMeshCount; i++)
-            {
-                List<int> newTriangles = new List<int>();
-                for (int j = 0; j < triangleFlags[i].Count; j++)
-                {
-                    if (!triangleFlags[i][j])
-                    {
-                        newTriangles.Add(sourceData.submeshes[i].triangles[(j*3) + 0]);
-                        newTriangles.Add(sourceData.submeshes[i].triangles[(j*3) + 1]);
-                        newTriangles.Add(sourceData.submeshes[i].triangles[(j*3) + 2]);
-                    }
-                }
-                _meshData.submeshes[i] = new SubMeshTriangles();
-                _meshData.submeshes[i].triangles = new int[newTriangles.Count];
-                newTriangles.CopyTo(_meshData.submeshes[i].triangles);
-            }
-        }
+			_meshData.vertices = new Vector3[sourceData.vertexCount];
+			sourceData.vertices.CopyTo(_meshData.vertices, 0);
 
-        private void CreateSceneEditObject()
-        {
-            MeshHideAsset source = target as MeshHideAsset;
-            if (source.asset == null)
-                return;
+			if(has_normals)
+			{
+				_meshData.normals = new Vector3[sourceData.vertexCount];
+				sourceData.normals.CopyTo(_meshData.normals, 0);
+			}
 
-            if (GeometrySelectorWindow.IsOpen)
-            {
-                return;
-            }
+			for (int i = 0; i < sourceData.subMeshCount; i++)
+			{
+				List<int> newTriangles = new List<int>();
+				for (int j = 0; j < triangleFlags[i].Count; j++)
+				{
+					if (!triangleFlags[i][j])
+					{
+						newTriangles.Add(sourceData.submeshes[i].triangles[(j*3) + 0]);
+						newTriangles.Add(sourceData.submeshes[i].triangles[(j*3) + 1]);
+						newTriangles.Add(sourceData.submeshes[i].triangles[(j*3) + 2]);
+					}
+				}
+				_meshData.submeshes[i] = new SubMeshTriangles();
+				_meshData.submeshes[i].triangles = new int[newTriangles.Count];
+				newTriangles.CopyTo(_meshData.submeshes[i].triangles);
+			}
+		}
 
-            if (GeometrySelectorExists())
-            {
-                GameObject.DestroyImmediate(GameObject.Find("GeometrySelector").gameObject);
-            }
+		private void CreateSceneEditObject()
+		{
+			MeshHideAsset source = target as MeshHideAsset;
+			if (source.asset == null)
+				return;
 
-            int saveChoice = EditorUtility.DisplayDialogComplex("Open Mesh Hide Editor", "Opening the Mesh Hide Editor will close all scenes and create a new blank scene. Any current scene changes will be lost unless saved.", "Save and Continue", "Continue without saving", "Cancel");
+			if (GeometrySelectorWindow.IsOpen)
+			{
+				return;
+			}
 
-            switch(saveChoice)
-            {
-                case 0: // Save and continue
-                    {
-                        if (!EditorSceneManager.SaveOpenScenes())
-                            return;
-                        break;
-                    }
-                case 1: // don't save and continue
-                    break;
-                case 2: // cancel
-                    return;
-            }
+			if (GeometrySelectorExists())
+			{
+				GameObject.DestroyImmediate(GameObject.Find("GeometrySelector").gameObject);
+			}
 
-            SceneView sceneView = SceneView.lastActiveSceneView;
+			int saveChoice = EditorUtility.DisplayDialogComplex("Open Mesh Hide Editor", "Opening the Mesh Hide Editor will close all scenes and create a new blank scene. Any current scene changes will be lost unless saved.", "Save and Continue", "Continue without saving", "Cancel");
 
-            if (sceneView == null)
-            {
-                EditorUtility.DisplayDialog("Error", "A Scene View must be open and active", "OK");
-                return;
-            }
+			switch(saveChoice)
+			{
+				case 0: // Save and continue
+					{
+						if (!EditorSceneManager.SaveOpenScenes())
+							return;
+						break;
+					}
+				case 1: // don't save and continue
+					break;
+				case 2: // cancel
+					return;
+			}
 
-            SceneView.lastActiveSceneView.Focus();
+			SceneView sceneView = SceneView.lastActiveSceneView;
 
-            List<GeometrySelector.SceneInfo> currentscenes = new List<GeometrySelector.SceneInfo>();
+			if (sceneView == null)
+			{
+				EditorUtility.DisplayDialog("Error", "A Scene View must be open and active", "OK");
+				return;
+			}
 
-            for (int i = 0; i < EditorSceneManager.sceneCount; i++)
-            {
-                Scene sc = EditorSceneManager.GetSceneAt(i);
-                GeometrySelector.SceneInfo si = new GeometrySelector.SceneInfo();
-                si.path = sc.path;
-                si.name = sc.name;
-                if (i == 0)
-                {
-                    // first scene should clear the temp scene.
-                    si.mode = OpenSceneMode.Single;
-                }
-                else
-                {
-                    si.mode = sc.isLoaded ? OpenSceneMode.Additive : OpenSceneMode.AdditiveWithoutLoading;
-                }
-                currentscenes.Add(si);
-            }
+			SceneView.lastActiveSceneView.Focus();
 
-            Scene s = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
-            EditorSceneManager.SetActiveScene(s);
-            GameObject obj = EditorUtility.CreateGameObjectWithHideFlags("GeometrySelector", HideFlags.DontSaveInEditor); 
-            GeometrySelector geometry = obj.AddComponent<GeometrySelector>();
+			List<GeometrySelector.SceneInfo> currentscenes = new List<GeometrySelector.SceneInfo>();
 
-            if (geometry != null)
-            {
-                Selection.activeGameObject = obj;
-                SceneView.lastActiveSceneView.FrameSelected(true); 
+			for (int i = 0; i < EditorSceneManager.sceneCount; i++)
+			{
+				Scene sc = EditorSceneManager.GetSceneAt(i);
+				GeometrySelector.SceneInfo si = new GeometrySelector.SceneInfo();
+				si.path = sc.path;
+				si.name = sc.name;
+				if (i == 0)
+				{
+					// first scene should clear the temp scene.
+					si.mode = OpenSceneMode.Single;
+				}
+				else
+				{
+					si.mode = sc.isLoaded ? OpenSceneMode.Additive : OpenSceneMode.AdditiveWithoutLoading;
+				}
+				currentscenes.Add(si);
+			}
 
-                geometry.meshAsset = source;
-                geometry.restoreScenes = currentscenes;
-                geometry.InitializeFromMeshData(source.asset.meshData);
+			Scene s = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
+			EditorSceneManager.SetActiveScene(s);
+			GameObject obj = EditorUtility.CreateGameObjectWithHideFlags("GeometrySelector", HideFlags.DontSaveInEditor); 
+			GeometrySelector geometry = obj.AddComponent<GeometrySelector>();
 
-                //temporary, only works on submesh 0
-                geometry.selectedTriangles = new BitArray(source.triangleFlags[0]);
+			if (geometry != null)
+			{
+				Selection.activeGameObject = obj;
+				SceneView.lastActiveSceneView.FrameSelected(true); 
 
-                geometry.UpdateSelectionMesh();
-                SceneView.FrameLastActiveSceneView();
-                SceneView.lastActiveSceneView.FrameSelected(); 
-            }
-        }
+				geometry.meshAsset = source;
+				geometry.restoreScenes = currentscenes;
+				geometry.InitializeFromMeshData(source.asset.meshData);
+
+				//temporary, only works on submesh 0
+				geometry.selectedTriangles = new BitArray(source.triangleFlags[0]);
+
+				geometry.UpdateSelectionMesh();
+				SceneView.FrameLastActiveSceneView();
+				SceneView.lastActiveSceneView.FrameSelected(); 
+			}
+		}
 
  
-        private bool GeometrySelectorExists()
-        {
-            if (GameObject.Find("GeometrySelector") != null)
-                return true;
+		private bool GeometrySelectorExists()
+		{
+			if (GameObject.Find("GeometrySelector") != null)
+				return true;
 
-            return false;
-        }
-            
-        public override bool HasPreviewGUI()
-        {
-            MeshHideAsset source = target as MeshHideAsset;
-            if (source.asset == null)
-                return false;
-            
-            return true;
-        }
+			return false;
+		}
+			
+		public override bool HasPreviewGUI()
+		{
+			MeshHideAsset source = target as MeshHideAsset;
+			if (source.asset == null)
+				return false;
+			
+			return true;
+		}
 
-        public override void OnPreviewGUI(Rect r, GUIStyle background)
-        {
-            if (_meshPreview == null)
-                return;
+		public override void OnPreviewGUI(Rect r, GUIStyle background)
+		{
+			if (_meshPreview == null)
+				return;
 
-            if( _material == null )
-                _material = AssetDatabase.GetBuiltinExtraResource<Material>("Default-Diffuse.mat");
+			if( _material == null )
+				_material = AssetDatabase.GetBuiltinExtraResource<Material>("Default-Diffuse.mat");
 
-            _drag = Drag2D(_drag, r);
+			_drag = Drag2D(_drag, r);
 
-            if (_previewRenderUtility == null)
-            {
-                _previewRenderUtility = new PreviewRenderUtility();
-                ResetPreviewCamera();
-            }
+			if (_previewRenderUtility == null)
+			{
+				_previewRenderUtility = new PreviewRenderUtility();
+				ResetPreviewCamera();
+			}
 
-            if( Event.current.type == EventType.repaint )
-            {
-                _previewRenderUtility.BeginPreview(r, background);
-                _previewRenderUtility.DrawMesh(_meshPreview, Vector3.zero, Quaternion.identity, _material, 0);
+			if( Event.current.type == EventType.repaint )
+			{
+				_previewRenderUtility.BeginPreview(r, background);
+				_previewRenderUtility.DrawMesh(_meshPreview, Vector3.zero, Quaternion.identity, _material, 0);
 
-                _previewRenderUtility.m_Camera.transform.position = Vector2.zero;
-                _previewRenderUtility.m_Camera.transform.rotation = Quaternion.Euler(new Vector3(-_drag.y, -_drag.x, 0));
-                _previewRenderUtility.m_Camera.transform.position = _previewRenderUtility.m_Camera.transform.forward * -6f;
-                _previewRenderUtility.m_Camera.transform.position +=  _meshPreview.bounds.center;
+				_previewRenderUtility.m_Camera.transform.position = Vector2.zero;
+				_previewRenderUtility.m_Camera.transform.rotation = Quaternion.Euler(new Vector3(-_drag.y, -_drag.x, 0));
+				_previewRenderUtility.m_Camera.transform.position = _previewRenderUtility.m_Camera.transform.forward * -6f;
+				_previewRenderUtility.m_Camera.transform.position +=  _meshPreview.bounds.center;
 
-                _previewRenderUtility.m_Camera.Render();
+				_previewRenderUtility.m_Camera.Render();
 
-                Texture resultRender = _previewRenderUtility.EndPreview();
+				Texture resultRender = _previewRenderUtility.EndPreview();
 
-                GUI.DrawTexture(r, resultRender, ScaleMode.StretchToFill, false);
-            }
-        }
+				GUI.DrawTexture(r, resultRender, ScaleMode.StretchToFill, false);
+			}
+		}
 
-        public void ResetPreviewCamera()
-        {
-            if (_previewRenderUtility == null)
-                return;
+		public void ResetPreviewCamera()
+		{
+			if (_previewRenderUtility == null)
+				return;
 
-            MeshHideAsset source = target as MeshHideAsset;
-            
-            _drag = Vector2.zero;
-            if( source.asset.meshData.rootBoneHash == UMAUtils.StringToHash("Global"))
-                _drag.y = -90;
-            
-            _previewRenderUtility.m_Camera.transform.position = new Vector3(0, 0, -6);
-            _previewRenderUtility.m_Camera.transform.rotation = Quaternion.identity;
-        }
+			MeshHideAsset source = target as MeshHideAsset;
+			
+			_drag = Vector2.zero;
+			if( source.asset.meshData.rootBoneHash == UMAUtils.StringToHash("Global"))
+				_drag.y = -90;
+			
+			_previewRenderUtility.m_Camera.transform.position = new Vector3(0, 0, -6);
+			_previewRenderUtility.m_Camera.transform.rotation = Quaternion.identity;
+		}
 
-        public override void OnPreviewSettings()
-        {
-            if (GUILayout.Button("Refresh", EditorStyles.whiteMiniLabel))
-                UpdateMeshPreview();
-        }
+		public override void OnPreviewSettings()
+		{
+			if (GUILayout.Button("Refresh", EditorStyles.whiteMiniLabel))
+				UpdateMeshPreview();
+		}
 
-        void OnDestroy()
-        {
-            if( _previewRenderUtility != null )
-                _previewRenderUtility.Cleanup();
-        }
+		void OnDestroy()
+		{
+			if( _previewRenderUtility != null )
+				_previewRenderUtility.Cleanup();
+		}
 
-        public static Vector2 Drag2D(Vector2 scrollPosition, Rect position)
-        {
-            int controlID = GUIUtility.GetControlID("Slider".GetHashCode(), FocusType.Passive);
-            Event current = Event.current;
-            switch (current.GetTypeForControl(controlID))
-            {
-                case EventType.MouseDown:
-                    if (position.Contains(current.mousePosition) && position.width > 50f)
-                    {
-                        GUIUtility.hotControl = controlID;
-                        current.Use();
-                        EditorGUIUtility.SetWantsMouseJumping(1);
-                    }
-                    break;
-                case EventType.MouseUp:
-                    if (GUIUtility.hotControl == controlID)
-                    {
-                        GUIUtility.hotControl = 0;
-                    }
-                    EditorGUIUtility.SetWantsMouseJumping(0);
-                    break;
-                case EventType.MouseDrag:
-                    if (GUIUtility.hotControl == controlID)
-                    {
-                        scrollPosition -= current.delta * (float)((!current.shift) ? 1 : 3) / Mathf.Min(position.width, position.height) * 140f;
-                        scrollPosition.y = Mathf.Clamp(scrollPosition.y, -90f, 90f);
-                        current.Use();
-                        GUI.changed = true;
-                    }
-                    break;
-            }
-            return scrollPosition;
-        }
-    }
+		public static Vector2 Drag2D(Vector2 scrollPosition, Rect position)
+		{
+			int controlID = GUIUtility.GetControlID("Slider".GetHashCode(), FocusType.Passive);
+			Event current = Event.current;
+			switch (current.GetTypeForControl(controlID))
+			{
+				case EventType.MouseDown:
+					if (position.Contains(current.mousePosition) && position.width > 50f)
+					{
+						GUIUtility.hotControl = controlID;
+						current.Use();
+						EditorGUIUtility.SetWantsMouseJumping(1);
+					}
+					break;
+				case EventType.MouseUp:
+					if (GUIUtility.hotControl == controlID)
+					{
+						GUIUtility.hotControl = 0;
+					}
+					EditorGUIUtility.SetWantsMouseJumping(0);
+					break;
+				case EventType.MouseDrag:
+					if (GUIUtility.hotControl == controlID)
+					{
+						scrollPosition -= current.delta * (float)((!current.shift) ? 1 : 3) / Mathf.Min(position.width, position.height) * 140f;
+						scrollPosition.y = Mathf.Clamp(scrollPosition.y, -90f, 90f);
+						current.Use();
+						GUI.changed = true;
+					}
+					break;
+			}
+			return scrollPosition;
+		}
+
+		public void SetRaceLists()
+		{
+			if (thisDynamicRaceLibrary == null)
+				return;
+
+			RaceData[] raceDataArray = thisDynamicRaceLibrary.GetAllRaces();
+			foundRaces.Clear();
+			foundRaceNames.Clear();
+			foundRaces.Add(null);
+			foundRaceNames.Add("None Set");
+			foreach (RaceData race in raceDataArray)
+			{
+				if (race != null && race.raceName != "RaceDataPlaceholder")
+				{
+					foundRaces.Add(race);
+					foundRaceNames.Add(race.raceName);
+				}
+			}
+		}
+	}
 }

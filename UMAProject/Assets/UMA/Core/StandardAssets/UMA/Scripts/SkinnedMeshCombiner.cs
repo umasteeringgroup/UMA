@@ -476,7 +476,7 @@ namespace UMA
 			target.boneNameHashes = bonesList.ToArray();
 		}
 
-		public static UMAMeshData ShallowInstanceMesh(UMAMeshData source)
+		public static UMAMeshData ShallowInstanceMesh(UMAMeshData source, BitArray[] triangleMask = null)
 		{
 			var target = new UMAMeshData();
 			target.bindPoses = source.bindPoses;
@@ -486,7 +486,6 @@ namespace UMA
 			target.normals = source.normals;
 			target.rootBoneHash = source.rootBoneHash;
 			target.subMeshCount = source.subMeshCount;
-			target.submeshes = source.submeshes;
 			target.tangents = source.tangents;
 			target.umaBoneCount = source.umaBoneCount;
 			target.umaBones = source.umaBones;
@@ -497,6 +496,24 @@ namespace UMA
 			target.vertexCount = source.vertexCount;
 			target.vertices = source.vertices;
 			target.blendShapes = source.blendShapes;
+
+			if (triangleMask != null)
+			{
+				target.submeshes = new SubMeshTriangles[source.subMeshCount];
+
+				for (int i = 0; i < source.subMeshCount; i++)
+				{
+
+					int sourceLength = source.submeshes[i].triangles.Length;
+					int triangleLength = sourceLength - (UMAUtils.GetCardinality(triangleMask[i]) * 3);
+					int[] destTriangles = new int[triangleLength];
+
+					MaskedCopyIntArrayAdd(source.submeshes[i].triangles, 0, destTriangles, 0, sourceLength, 0, triangleMask[i]);
+					target.submeshes[i].triangles = destTriangles;
+				}
+			}
+			else
+				target.submeshes = source.submeshes;
 
 			if (source.clothSkinningSerialized != null && source.clothSkinningSerialized.Length != 0)
 			{

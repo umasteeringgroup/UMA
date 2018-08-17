@@ -5,8 +5,9 @@ using UnityEditor;
 namespace UMA.Editors
 {
 	[CustomEditor(typeof(SlotDataAsset))]
-    public class SlotDataAssetInspector : Editor
-    {
+	[CanEditMultipleObjects]
+	public class SlotDataAssetInspector : Editor
+	{
 		SerializedProperty slotName;
 		SerializedProperty CharacterBegun;
 		SerializedProperty SlotAtlassed;
