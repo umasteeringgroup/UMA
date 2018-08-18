@@ -5,17 +5,18 @@ GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Component:
-  - 4: {fileID: 432988}
-  - 114: {fileID: 11438972}
-  - 114: {fileID: 11423586}
-  - 114: {fileID: 11400814}
-  - 114: {fileID: 11409904}
-  - 114: {fileID: 11410176}
-  - 136: {fileID: 13687518}
-  - 95: {fileID: 9548164}
-  - 54: {fileID: 5424724}
+  - component: {fileID: 432988}
+  - component: {fileID: 11438972}
+  - component: {fileID: 11423586}
+  - component: {fileID: 11400814}
+  - component: {fileID: 11409904}
+  - component: {fileID: 11410176}
+  - component: {fileID: 13687518}
+  - component: {fileID: 9548164}
+  - component: {fileID: 5424724}
+  - component: {fileID: 114810205475826446}
   m_Layer: 0
   m_Name: NetworkedDCA
   m_TagString: Untagged
@@ -28,13 +29,13 @@ GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Component:
-  - 4: {fileID: 404854}
-  - 20: {fileID: 2001854}
-  - 92: {fileID: 9263176}
-  - 124: {fileID: 12489664}
-  - 81: {fileID: 8128086}
+  - component: {fileID: 404854}
+  - component: {fileID: 2001854}
+  - component: {fileID: 9263176}
+  - component: {fileID: 12489664}
+  - component: {fileID: 8128086}
   m_Layer: 0
   m_Name: PlayerCamera
   m_TagString: MainCamera
@@ -51,10 +52,10 @@ Transform:
   m_LocalRotation: {x: 0.06705963, y: 6.2370915e-15, z: 3.8777528e-16, w: 0.997749}
   m_LocalPosition: {x: 0, y: 1.9, z: -1.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_LocalEulerAnglesHint: {x: 7.6902, y: 0, z: 0}
   m_Children: []
   m_Father: {fileID: 432988}
   m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 7.6902, y: 0, z: 0}
 --- !u!4 &432988
 Transform:
   m_ObjectHideFlags: 1
@@ -64,11 +65,11 @@ Transform:
   m_LocalRotation: {x: 0, y: 1, z: 0, w: -0.00000016292068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_LocalEulerAnglesHint: {x: 0, y: -180, z: 0}
   m_Children:
   - {fileID: 404854}
   m_Father: {fileID: 0}
   m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: -180, z: 0}
 --- !u!20 &2001854
 Camera:
   m_ObjectHideFlags: 1
@@ -99,6 +100,8 @@ Camera:
   m_TargetDisplay: 0
   m_TargetEye: 3
   m_HDR: 0
+  m_AllowMSAA: 1
+  m_ForceIntoRT: 0
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
@@ -160,16 +163,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ee08ec17d9e1f6f4da5c55a51ff12882, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  hairDropDownSelector: {fileID: 0}
-  helmetDropDownSelector: {fileID: 0}
-  chestDropDownSelector: {fileID: 0}
-  handsDropDownSelector: {fileID: 0}
-  legsDropDownSelector: {fileID: 0}
-  feetDropDownSelector: {fileID: 0}
-  underwearDropDownSelector: {fileID: 0}
-  raceButton: {fileID: 0}
-  skinColorList: {fileID: 0}
-  hairColorList: {fileID: 0}
   playerCamera: {fileID: 2001854}
   networkDebug: 0
 --- !u!114 &11409904
@@ -202,6 +195,7 @@ MonoBehaviour:
   m_RotationSyncCompression: 0
   m_SyncSpin: 0
   m_MovementTheshold: 0.001
+  m_VelocityThreshold: 0.0001
   m_SnapThreshold: 5
   m_InterpolateRotation: 1
   m_InterpolateMovement: 1
@@ -260,6 +254,11 @@ MonoBehaviour:
       m_Calls: []
     m_TypeName: UMA.UMADataEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
+  CharacterBegun:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: UMA.UMADataEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
   CharacterDestroyed:
     m_PersistentCalls:
       m_Calls: []
@@ -296,10 +295,13 @@ MonoBehaviour:
     animators:
     - raceName: ToonFemale
       animatorControllerName: IdleTest-w-head
+      animatorController: {fileID: 0}
     - raceName: HumanMaleDCS
       animatorControllerName: Locomotion with Head
+      animatorController: {fileID: 0}
     - raceName: HumanFemaleResources
       animatorControllerName: Locomotion with Head
+      animatorController: {fileID: 0}
     dynamicallyAddFromResources: 1
     resourcesFolderPath: 
     dynamicallyAddFromAssetBundles: 1
@@ -396,3 +398,24 @@ Prefab:
   m_ParentPrefab: {fileID: 0}
   m_RootGameObject: {fileID: 171948}
   m_IsPrefabParent: 1
+--- !u!114 &114810205475826446
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 171948}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 12b201a32b1a4744f8d0f34594350b5b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hairDropDownSelector: {fileID: 0}
+  helmetDropDownSelector: {fileID: 0}
+  chestDropDownSelector: {fileID: 0}
+  handsDropDownSelector: {fileID: 0}
+  legsDropDownSelector: {fileID: 0}
+  feetDropDownSelector: {fileID: 0}
+  underwearDropDownSelector: {fileID: 0}
+  raceButton: {fileID: 0}
+  skinColorList: {fileID: 0}
+  hairColorList: {fileID: 0}

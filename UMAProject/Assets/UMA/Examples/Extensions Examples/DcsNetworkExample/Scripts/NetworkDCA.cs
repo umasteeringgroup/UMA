@@ -1,32 +1,22 @@
 ﻿using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.Networking;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace UMA.CharacterSystem
 {
     [RequireComponent(typeof(DynamicCharacterAvatar))]
     public class NetworkDCA : NetworkBehaviour 
     {
-        //TODO decouple these gui objects
-        public UMAWardrobeCollectionSelector hairDropDownSelector;
-        public UMAWardrobeCollectionSelector helmetDropDownSelector;
-        public UMAWardrobeCollectionSelector chestDropDownSelector;
-        public UMAWardrobeCollectionSelector handsDropDownSelector;
-        public UMAWardrobeCollectionSelector legsDropDownSelector;
-        public UMAWardrobeCollectionSelector feetDropDownSelector;
-        public UMAWardrobeCollectionSelector underwearDropDownSelector;
-        public ChangeRaceButton raceButton;
-        public DynamicColorList skinColorList;
-        public DynamicColorList hairColorList;
-
+        //Let's create this property so we don't need other scripts to be network behaviours just to check this.
+        public bool isLocal { get { return isLocalPlayer; } }
         public Camera playerCamera;
-
         public DynamicCharacterAvatar avatar 
         { 
             get { return _avatar; } 
         }
         private DynamicCharacterAvatar _avatar;
-
 
         public const uint RaceMask         = 1 << 0;
         public const uint DnaMask          = 1 << 1;
@@ -48,8 +38,6 @@ namespace UMA.CharacterSystem
         {
             if (_avatar == null)
                 _avatar = GetComponent<DynamicCharacterAvatar>();
-
-            _avatar.CharacterCreated.AddListener(OnCharacterCreated);
 
             if (!isServer)
                 _avatar.BuildCharacterEnabled = false; //We need to not build the avatar until after the initial state packet
@@ -86,6 +74,7 @@ namespace UMA.CharacterSystem
                 writer.Write(_avatar.activeRace.name);
                 writer.Write(_avatar.GetColor("Skin").color);
                 writer.Write(_avatar.GetColor("Hair").color);
+                //Can't write dna here, it's not created yet :(
                 WriteWardrobe(writer, "Hair");
                 WriteWardrobe(writer, "Helmet");
                 WriteWardrobe(writer, "Chest");
@@ -136,6 +125,16 @@ namespace UMA.CharacterSystem
                     wroteSyncVar = true;
                 }
                 WriteWardrobe(writer, "Hair");
+            }
+
+            if ((syncVarDirtyBits & DnaMask) != 0u)
+            {
+                if (!wroteSyncVar)
+                {
+                    writer.WritePackedUInt32(syncVarDirtyBits);
+                    wroteSyncVar = true;
+                }
+                WriteDNA(writer);
             }
 
             if ((syncVarDirtyBits & HelmetMask) != 0u)
@@ -201,6 +200,26 @@ namespace UMA.CharacterSystem
             return wroteSyncVar;
         }
 
+        private void WriteDNA(NetworkWriter writer)
+        {
+            Dictionary<string, DnaSetter> dna = _avatar.GetDNA();
+
+            foreach(string dnaName in dna.Keys)
+            {
+                writer.Write(dna[dnaName].Value);
+            }
+        }
+
+        private void ReadDNA(NetworkReader reader)
+        {
+            Dictionary<string, DnaSetter> dna = _avatar.GetDNA();
+
+            foreach (string dnaName in dna.Keys)
+            {
+                dna[dnaName].Set((float)reader.ReadSingle());
+            }
+        }
+
         private void WriteWardrobe(NetworkWriter writer, string slotName)
         {
             if (networkDebug) { Debug.Log(string.Format("Writing slot: {0}", slotName )); }
@@ -223,11 +242,10 @@ namespace UMA.CharacterSystem
                 _avatar.ChangeRace(reader.ReadString());
 
 
-                //TODO there is a problem with the character color for the initialState
                 _avatar.SetColor("Skin", reader.ReadColor());
                 _avatar.SetColor("Hair", reader.ReadColor());
                 _avatar.UpdateColors(true);
-
+                ReadDNA(reader);
 
                 ReadWardrobe("Hair", reader.ReadString());
                 ReadWardrobe("Helmet", reader.ReadString());
@@ -255,6 +273,9 @@ namespace UMA.CharacterSystem
 
             if ((bitmask & HairMask) != 0)
                 ReadWardrobe("Hair", reader.ReadString());
+
+            if ((bitmask & DnaMask) != 0)
+                ReadDNA(reader);
 
             if ((bitmask & HelmetMask) != 0)
                 ReadWardrobe("Helmet", reader.ReadString());
@@ -387,52 +408,23 @@ namespace UMA.CharacterSystem
             _avatar.UpdateColors(true);
             SetDirtyBit(HairColorMask);
         }
-        //====================================================================
-        //  UMAData Callbacks
-        //====================================================================
-        private void OnCharacterCreated(UMAData umaData)
+
+        [Command]
+        public void CmdUpdateDNA()
         {
-            if (_avatar == null)
-            {
-                Debug.LogError("Avatar is null!");
+            if (avatar == null)
                 return;
-            }
 
-            if (isLocalPlayer)
+            Dictionary<string, DnaSetter> dna = avatar.GetDNA();
+
+            foreach (DnaSetter setter in dna.Values)
             {
-                //TODO remove these
-                raceButton = GameObject.Find("RaceButton").GetComponent<ChangeRaceButton>();
-                raceButton.avatar = _avatar;
-
-                hairDropDownSelector = GameObject.Find("HairDropdown").GetComponent<UMAWardrobeCollectionSelector>();
-                hairDropDownSelector.avatar = _avatar;
-
-                helmetDropDownSelector = GameObject.Find("HelmetDropdown").GetComponent<UMAWardrobeCollectionSelector>();
-                helmetDropDownSelector.avatar = _avatar;
-
-                chestDropDownSelector = GameObject.Find("ChestDropdown").GetComponent<UMAWardrobeCollectionSelector>();
-                chestDropDownSelector.avatar = _avatar;
-
-                handsDropDownSelector = GameObject.Find("HandsDropdown").GetComponent<UMAWardrobeCollectionSelector>();
-                handsDropDownSelector.avatar = _avatar;
-
-                legsDropDownSelector = GameObject.Find("LegsDropdown").GetComponent<UMAWardrobeCollectionSelector>();
-                legsDropDownSelector.avatar = _avatar;
-
-                feetDropDownSelector = GameObject.Find("FeetDropdown").GetComponent<UMAWardrobeCollectionSelector>();
-                feetDropDownSelector.avatar = _avatar;
-
-                underwearDropDownSelector = GameObject.Find("UnderwearDropdown").GetComponent<UMAWardrobeCollectionSelector>();
-                underwearDropDownSelector.avatar = _avatar;
-
-                skinColorList = GameObject.Find("SkinColorList").GetComponent<DynamicColorList>();
-                skinColorList.avatar = _avatar;
-                skinColorList.Initialize("Skin");
-
-                hairColorList = GameObject.Find("HairColorList").GetComponent<DynamicColorList>();
-                hairColorList.avatar = _avatar;
-                hairColorList.Initialize("Hair");
+                setter.Set(Random.Range(0.1f, 0.9f));
             }
+
+            avatar.ForceUpdate(true, false, false);
+
+            SetDirtyBit(DnaMask);
         }
     }
 }
