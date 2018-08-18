@@ -1,49 +1,95 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using UMA;
 
-
-// TODO
-// Make a list of objects to mount per bone
-// Add function to mount and hide other objects per bone or all
-// Add events/callbacks
-
-public class UMAMountObject : MonoBehaviour 
+public class UMAMountObject : MonoBehaviour
 {
-    public GameObject objPrefab;
-    public string boneName;
+    [System.Serializable]
+    public class mountInfo
+    {
+        [Tooltip("Prefab of the object that will get mounted.")]
+        public GameObject objPrefab;
+        [Tooltip("Name of the bone that the object will get mounted to.")]
+        public string boneName;
 
-    public Vector3 position = Vector3.zero;
-    public Vector3 rotation = Vector3.zero;
-    public Vector3 scale = Vector3.one;
+        public Vector3 position;
+        public Vector3 rotation;
+        public Vector3 scale = Vector3.one;
+    }
+    [Tooltip("A list of the objects that can be dynamically mounted.")]
+    public mountInfo[] mountInfos;
 
     private UMAData _umaData;
+    private Dictionary<string, int> nameMap = new Dictionary<string, int>();
 
-    public void MountObject()
+    void OnEnable()
     {
-        if( _umaData == null )
+        if (_umaData == null)
             _umaData = gameObject.GetComponent<UMAData>();
 
+        for (int i = 0; i < mountInfos.Length; i++)
+        {
+            if (nameMap.ContainsKey(mountInfos[i].objPrefab.name))
+            {
+                if (Debug.isDebugBuild)
+                    Debug.LogWarning("ObjPrefab already added! " + mountInfos[i].objPrefab.name);
+            }
+            nameMap.Add(mountInfos[i].objPrefab.name, i);
+        }
+    }
+
+    private bool IsValid()
+    {
         if (_umaData == null)
+            return false;
+
+        if (mountInfos == null)
+            return false;
+
+        if (mountInfos.Length <= 0)
+            return false;
+
+        return true;
+    }
+
+    public void MountObject(string name)
+    {
+        if (nameMap.ContainsKey(name))
+        {
+            MountObject(nameMap[name]);
+        }
+        else
+        {
+            if (Debug.isDebugBuild)
+                Debug.LogWarning(name + " not found in list!");
+        }
+    }
+
+    public void MountObject(int index)
+    {
+        if (_umaData == null)
+            _umaData = gameObject.GetComponent<UMAData>();
+
+        if (!IsValid())
             return;
 
-        if (boneName == null)
-            return;
+        GameObject boneObj = null;
 
-        GameObject boneObj = _umaData.GetBoneGameObject(boneName);
+        boneObj = _umaData.GetBoneGameObject(mountInfos[index].boneName);
 
         if (boneObj == null)
             return;
 
-        Transform objTransform = boneObj.transform.FindChild(objPrefab.name);
+        Transform objTransform = boneObj.transform.Find(mountInfos[index].objPrefab.name);
         if (objTransform == null)
         {
-            GameObject newObj = GameObject.Instantiate(objPrefab);
-            newObj.name = objPrefab.name;
+            GameObject newObj = GameObject.Instantiate(mountInfos[index].objPrefab);
+            newObj.name = mountInfos[index].objPrefab.name;
             newObj.transform.SetParent(boneObj.transform, false);
-            newObj.transform.localPosition = position;
-            newObj.transform.localRotation = Quaternion.Euler(rotation);
-            newObj.transform.localScale = scale;
+            newObj.transform.localPosition = mountInfos[index].position;
+            newObj.transform.localRotation = Quaternion.Euler(mountInfos[index].rotation);
+            newObj.transform.localScale = mountInfos[index].scale;
         }
         else
         {
@@ -51,23 +97,33 @@ public class UMAMountObject : MonoBehaviour
         }
     }
 
-    public void UnMountObject()
+    public void UnMountObject(string name)
     {
-        if( _umaData == null )
+        if (nameMap.ContainsKey(name))
+        {
+            UnMountObject(nameMap[name]);
+        }
+        else
+        {
+            if (Debug.isDebugBuild)
+                Debug.LogWarning(name + " not found in list!");
+        }
+    }
+
+    public void UnMountObject(int index)
+    {
+        if (_umaData == null)
             _umaData = gameObject.GetComponent<UMAData>();
 
-        if (_umaData == null)
+        if (!IsValid())
             return;
 
-        if (boneName == null)
-            return;
-
-        GameObject boneObj = _umaData.GetBoneGameObject(boneName);
+        GameObject boneObj = _umaData.GetBoneGameObject(mountInfos[index].boneName);
 
         if (boneObj == null)
             return;
 
-        Transform objTransform = boneObj.transform.FindChild(objPrefab.name);
+        Transform objTransform = boneObj.transform.Find(mountInfos[index].objPrefab.name);
         if (objTransform != null)
         {
             objTransform.gameObject.SetActive(false);
