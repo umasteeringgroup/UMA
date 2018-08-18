@@ -271,7 +271,8 @@ namespace UMA
 			}
 			catch (Exception ex)
 			{
-				UnityEngine.Debug.LogWarning("Exception in UMAGeneratorBuiltin.OnDirtyUpdate: " + ex);
+				if (Debug.isDebugBuild)
+					UnityEngine.Debug.LogWarning("Exception in UMAGeneratorBuiltin.OnDirtyUpdate: " + ex);
 			}
 		}
 
@@ -283,17 +284,53 @@ namespace UMA
 			}
 			else
 			{
-				Debug.LogError("UMAGenerator.UpdateUMAMesh, no MeshCombiner specified", gameObject);
+				if (Debug.isDebugBuild)
+					Debug.LogError("UMAGenerator.UpdateUMAMesh, no MeshCombiner specified", gameObject);
 			}
 		}
 
-		/// <inheritdoc/>
-		public override void addDirtyUMA(UMAData umaToAdd)
+
+        /// <inheritdoc/>
+        public override bool updatePending(UMAData umaToCheck)
+        {
+            if (umaDirtyList.Count < 2)
+                return false;
+
+            int val = umaDirtyList.IndexOf(umaToCheck, 1);
+            return val != -1;
+        }
+
+        /// <inheritdoc/>
+        public override bool updateProcessing(UMAData umaToCheck)
+        {
+            if (umaDirtyList.Count > 0)
+            {
+                if (umaDirtyList[0] == umaToCheck)
+                    return true;
+            }
+            return false;
+        }
+
+        /// <inheritdoc/>
+        public override void removeUMA(UMAData umaToRemove)
+        {
+            // Remove from the various lists if it exists
+            umaDirtyList.Remove(umaToRemove);
+            cleanUmas.Remove(umaToRemove);
+            dirtyUmas.Remove(umaToRemove);
+        }
+
+        /// <inheritdoc/>
+        public override void addDirtyUMA(UMAData umaToAdd)
 		{
 			if (umaToAdd)
 			{
-				umaDirtyList.Add(umaToAdd);
-				umaToAdd.MoveToList(dirtyUmas);
+                // guard against duplicates
+                if (!updatePending(umaToAdd))
+                {
+                    umaDirtyList.Add(umaToAdd);
+                    umaToAdd.MoveToList(dirtyUmas);
+                }
 			}
 		}
 
@@ -318,7 +355,8 @@ namespace UMA
 				umaData.FireCharacterCompletedEvents();
 				if (umaData.skeleton.boneCount > 300)
 				{
-					Debug.LogWarning("Skeleton has " + umaData.skeleton.boneCount + " bones, may be an error with slots!");
+					if (Debug.isDebugBuild)
+						Debug.LogWarning("Skeleton has " + umaData.skeleton.boneCount + " bones, may be an error with slots!");
 				}
 			}
 		}

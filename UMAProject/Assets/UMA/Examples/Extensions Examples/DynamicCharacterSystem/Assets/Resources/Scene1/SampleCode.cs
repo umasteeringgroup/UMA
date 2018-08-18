@@ -260,7 +260,7 @@ namespace UMA.CharacterSystem.Examples
 
             Avatar.SetColor("Hair", HairColors.colors[RandHair]);
             Avatar.SetColor("Skin", SkinColors.colors[RandSkin]);
-            Avatar.BuildCharacter();
+            Avatar.BuildCharacter(true);
             Avatar.ForceUpdate(true, true, true);
         }
 

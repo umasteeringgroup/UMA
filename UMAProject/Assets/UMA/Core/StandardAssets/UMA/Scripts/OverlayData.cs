@@ -18,7 +18,7 @@ namespace UMA
 		/// </summary>
 		public Rect rect;
 
-        #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
+		#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
         //https://docs.unity3d.com/Manual/ProceduralMaterials.html
 		protected ProceduralTexture[] generatedTextures = null;
         #endif
@@ -36,12 +36,13 @@ namespace UMA
 				if (asset.alphaMask != null)
 					return asset.alphaMask;
 				
-                #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
+				#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 				if (this.isProcedural)
 				{
 					if ((generatedTextures == null) || (generatedTextures.Length != asset.textureCount))
 					{
-						Debug.LogWarning("Accessing empty texture array on procedural overlay. GenerateProceduralTextures() should have already been called!");
+						if (Debug.isDebugBuild)
+							Debug.LogWarning("Accessing empty texture array on procedural overlay. GenerateProceduralTextures() should have already been called!");
 						GenerateProceduralTextures();
 					}
 
@@ -56,12 +57,13 @@ namespace UMA
 		{
 			get
 			{
-                #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
+				#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 				if (this.isProcedural)
 				{
 					if ((generatedTextures == null) || (generatedTextures.Length != asset.textureCount))
 					{
-						Debug.LogWarning("Accessing empty texture array on procedural overlay. GenerateProceduralTextures() should have already been called!");
+						if (Debug.isDebugBuild)
+							Debug.LogWarning("Accessing empty texture array on procedural overlay. GenerateProceduralTextures() should have already been called!");
 						GenerateProceduralTextures();
 					}
 
@@ -76,7 +78,7 @@ namespace UMA
 		{
 			get
 			{
-                #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
+				#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 				if (this.isProcedural)
 				{
 					ProceduralMaterial material = asset.material.material as ProceduralMaterial;
@@ -87,7 +89,8 @@ namespace UMA
 					}
 					else
 					{
-						Debug.LogWarning("Unable to determine size for procedural material " + material.name);
+						if (Debug.isDebugBuild)
+							Debug.LogWarning("Unable to determine size for procedural material " + material.name);
 						return 0;
 					}
 				}
@@ -103,7 +106,7 @@ namespace UMA
 		[System.NonSerialized]
 		public OverlayColorData colorData;
 
-        #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
+		#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 		public class OverlayProceduralData
 		{
 			public string name;
@@ -143,12 +146,16 @@ namespace UMA
 		{
 			if (asset == null)
 			{
-				Debug.LogError("Overlay Data Asset is NULL!");
+				if (Debug.isDebugBuild)
+					Debug.LogError("Overlay Data Asset is NULL!");
+
 				return;
 			}
 			if (asset.material == null)
 			{
-				Debug.LogError("Error: Materials are missing on Asset: " + asset.name + ". Have you imported all packages?");
+				if (Debug.isDebugBuild)
+					Debug.LogError("Error: Materials are missing on Asset: " + asset.name + ". Have you imported all packages?");
+
 				this.colorData = new OverlayColorData(3); // Don't know. Just create it for standard PBR material size. 
 			}
 			else
@@ -158,7 +165,7 @@ namespace UMA
 			this.asset = asset;
 			this.rect = asset.rect;
 
-            #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
+			#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 			if (this.isProcedural)
 			{
 				this.proceduralData = new OverlayProceduralData[0];
@@ -179,14 +186,17 @@ namespace UMA
 			{
 				if (!asset.material.Equals(targetMaterial))
 				{
-					Debug.LogError(string.Format("Overlay '{0}' doesn't have the expected UMA Material: '{1}'", asset.overlayName, targetMaterial.name));
-					valid = false;
+#if UNITY_EDITOR
+                    Debug.LogError(string.Format("Overlay '{0}' doesn't have the expected UMA Material: '{1}'!\nCurrently it has '{2}' at '{3}'", asset.overlayName, targetMaterial.name, asset.material, UnityEditor.AssetDatabase.GetAssetPath(asset)));
+#endif
+                    valid = false;
 				}
 			}
 
 			if (asset.textureCount != targetMaterial.channels.Length)
 			{
-				Debug.LogError(string.Format("Overlay '{0}' doesn't have the right number of channels", asset.overlayName));
+				if (Debug.isDebugBuild)
+					Debug.LogError(string.Format("Overlay '{0}' doesn't have the right number of channels", asset.overlayName));
 				valid = false;
 			}
 			else
@@ -200,7 +210,8 @@ namespace UMA
                 {
                     if ((asset.textureList[i] == null) && (targetMaterial.channels[i].channelType != UMAMaterial.ChannelType.MaterialColor))
                     {
-                        Debug.LogError(string.Format("Overlay '{0}' missing required texture in channel {1}", asset.overlayName, i));
+						if (Debug.isDebugBuild)
+							Debug.LogError(string.Format("Overlay '{0}' missing required texture in channel {1}", asset.overlayName, i));
                         valid = false;
                     }
 
@@ -223,8 +234,8 @@ namespace UMA
 					colorData.channelAdditiveMask[i] = Color.black;
 				}
 
-
-				Debug.LogWarning(string.Format("Overlay '{0}' missing required color data. Resizing and adding defaults", asset.overlayName));
+				if (Debug.isDebugBuild)
+					Debug.LogWarning(string.Format("Overlay '{0}' missing required color data. Resizing and adding defaults", asset.overlayName));
 			}
 
 			return valid;
@@ -283,7 +294,7 @@ namespace UMA
 			colorData = overlay.colorData.Duplicate();
 		}
 
-        #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
+		#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 		public void GenerateProceduralTextures()
 		{
 			if (!this.isProcedural)
@@ -342,7 +353,7 @@ namespace UMA
 		}
         #endif
 
-        #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
+		#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 		public void ReleaseProceduralTextures()
 		{
 			if (!this.isProcedural)

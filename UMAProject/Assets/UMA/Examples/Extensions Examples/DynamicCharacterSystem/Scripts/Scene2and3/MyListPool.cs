@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
+// @cond doxygen ignore
 namespace UnityEngine.UI
 {
     public static class MyListPool<T>
@@ -21,3 +22,4 @@ namespace UnityEngine.UI
         }
     }
 }
+// @endcond

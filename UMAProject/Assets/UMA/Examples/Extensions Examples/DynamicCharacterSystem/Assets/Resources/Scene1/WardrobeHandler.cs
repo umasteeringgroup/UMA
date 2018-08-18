@@ -23,7 +23,7 @@ namespace UMA.CharacterSystem.Examples
             if (Recipe == null)
             {
                 Avatar.ClearSlot(Slot);
-                Avatar.BuildCharacter();
+                Avatar.BuildCharacter(true);
                 Avatar.ForceUpdate(true, true, true);
                 return;
             }
@@ -34,7 +34,7 @@ namespace UMA.CharacterSystem.Examples
             // putting on a shirt will replace the existing shirt if one exists.
             Avatar.SetSlot(Recipe);
             // Rebuild the character so its wearing the new wardrobe item.
-            Avatar.BuildCharacter();
+            Avatar.BuildCharacter(true);
             Avatar.ForceUpdate(true, true, true);
         }
     }

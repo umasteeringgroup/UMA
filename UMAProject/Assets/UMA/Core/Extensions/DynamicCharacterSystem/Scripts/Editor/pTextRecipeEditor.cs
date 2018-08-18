@@ -21,6 +21,9 @@ namespace UMA.Editors
 		protected List<string> generatedBaseSlotOptions = new List<string>();
 		protected List<string> generatedBaseSlotOptionsLabels = new List<string>();
 
+		FieldInfo ActiveWardrobeSetField = null;
+		List<WardrobeSettings> activeWardrobeSet = null;
+
 		protected override bool PreInspectorGUI()
 		{
 			return TextRecipeGUI();
@@ -128,7 +131,8 @@ namespace UMA.Editors
 							if (DnaConverter != null)
 							{
 								DNAConvertersAdded = true;
-								_recipe.AddDNAUpdater(DnaConverter);
+								//the recipe already has the DNAConverter, it just doesn't have the values it requires to show the output in the DNA tab of the recipe
+								//_recipe.AddDNAUpdater(DnaConverter);
 								Type thisType = DnaConverter.DNAType;
 								if (DnaConverter is DynamicDNAConverterBehaviourBase)
 								{
@@ -273,57 +277,37 @@ namespace UMA.Editors
 
 		private bool TextRecipeGUI()
 		{
-			Type TargetType = target.GetType();
+			Type TargetType = target.GetType();//used to get the UMATextRecipe type taher than UMARecipeBase
 			bool doUpdate = false;
 
-			if (TargetType.ToString() == "UMATextRecipe" /*|| TargetType.ToString() == "UMAWardrobeRecipe" || TargetType.ToString() == "UMADCSRecipe"*/)
+			if (TargetType.ToString() == "UMA.UMATextRecipe")
 			{
-				FieldInfo RecipeTypeField = TargetType.GetField("recipeType", BindingFlags.Public | BindingFlags.Instance);
-				//the Recipe Type field defines whether the extra wardrobe recipe fields show and whether we are overriding the SlotMasterEditor with WardrobeSetMasterEditor
-				string recipeType = (string)RecipeTypeField.GetValue(target);
-
-				FieldInfo ActiveWardrobeSetField = TargetType.GetField("activeWardrobeSet", BindingFlags.Public | BindingFlags.Instance);
-				List<WardrobeSettings> activeWardrobeSet = (List<WardrobeSettings>)ActiveWardrobeSetField.GetValue(target);
-
-				//if this recipeType == Wardrobe the recipe is old, i.e. from before they were seperate type, so show a warning
-				if (recipeType == "WardrobeCollection" || recipeType == "DynamicCharacterAvatar" || recipeType == "Wardrobe")
-				{
-					EditorGUILayout.HelpBox("This is an out of date " + recipeType + " recipe. Please recreate it by creating a new one from the 'Create/UMA/DCS' menu", MessageType.Warning);
-					hideRaceField = true;
-					hideToolBar = true;
-				}
 
 				EditorGUI.BeginDisabledGroup(true);
 
-				if (!recipeTypeOpts.Contains(recipeType))
-					recipeTypeOpts.Add(recipeType);
-
-				int rtIndex = recipeTypeOpts.IndexOf(recipeType);
-				EditorGUILayout.Popup("Recipe Type", rtIndex, recipeTypeOpts.ToArray());
+				EditorGUILayout.Popup("Recipe Type", 0, new string[] { "Standard" });//other types (WardrobeRecipe, DynamicCharacterAvatarRecipe) have their own editors now so this is just for UI consistancy
 
 				EditorGUI.EndDisabledGroup();
 
-				//If this is a Standard recipe or a DynamicCharacterAvatar we may need to fix or update the DNA converters
-				//This happens when the race the recipe uses has a DNA converter that has been changed from UMADNAHumanoid to DynamicDNA
-				if (recipeType == "Standard" || recipeType == "DynamicCharacterAvatar")
+				if (ActiveWardrobeSetField == null)
+					ActiveWardrobeSetField = TargetType.GetField("activeWardrobeSet", BindingFlags.Public | BindingFlags.Instance);
+				activeWardrobeSet = (List<WardrobeSettings>)ActiveWardrobeSetField.GetValue(target);
+				//draws a button to 'Add DNA' when a new 'standard' recipe is created
+				if (AddDNAButtonUI())
 				{
-					//draws a button to 'Add DNA' when a new 'standard' recipe is created
-					if (AddDNAButtonUI())
-					{
-						hideToolBar = false;
-						return true;
-					}
-					//fixes dna when the recipes race has updated from UMADnaHumanoid/Tutorial to DynamicDna
-					if (FixDNAConverters())
-					{
-						hideToolBar = false;
-						return true;
-					}
+					hideToolBar = false;
+					return true;
+				}
+				//fixes dna when the recipes race has updated from UMADnaHumanoid/Tutorial to DynamicDna
+				if (FixDNAConverters())
+				{
+					hideToolBar = false;
+					return true;
 				}
 
 				//When recipes are saved from a DynamicCharacterAvatar as a 'Standard' rather than 'Optimized' recipe they are saved as 'BackwardsCompatible'
 				//This means they have slots/overlay data AND a wardrobeSet. In this case we need to draw the "DynamicCharacterAvatarRecipe' slot editor
-				//and this will show an editable Wardrobe set which will update an (uneditable) slot/overlay list
+				//and this will show an editable Wardrobe set which will update and a slot/overlay list
 				if ((activeWardrobeSet.Count > 0))
 				{
 					hideRaceField = false;

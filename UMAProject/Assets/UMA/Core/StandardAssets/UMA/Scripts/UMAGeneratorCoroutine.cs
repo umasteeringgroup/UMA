@@ -134,7 +134,7 @@ namespace UMA
 						if (overlay != null)
 						{
 							validOverlayCount++;
-                            #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
+							#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 							if (overlay.isProcedural)
 								overlay.GenerateProceduralTextures();
                             #endif
@@ -230,14 +230,14 @@ namespace UMA
 				if (slot == null)
 					continue;
 
+#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 				for (int j = 1; j < slot.OverlayCount; j++)
 				{
 					OverlayData overlay = slot.GetOverlay(j);
-                    #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
 					if ((overlay != null) && (overlay.isProcedural))
 						overlay.ReleaseProceduralTextures();
-                    #endif
 				}
+#endif
 			}
 
 			if (updateMaterialList)
@@ -337,12 +337,14 @@ namespace UMA
 				{
 					if (umaGenerator.fitAtlas)
 					{
-						Debug.LogWarning("Atlas resolution is too small, Textures will be reduced.", umaData.gameObject);
+						if (Debug.isDebugBuild)
+							Debug.LogWarning("Atlas resolution is too small, Textures will be reduced.", umaData.gameObject);
 						return false;
 					}
 					else
 					{
-						Debug.LogError("Atlas resolution is too small, not all textures will fit.", umaData.gameObject);
+						if (Debug.isDebugBuild)
+							Debug.LogError("Atlas resolution is too small, not all textures will fit.", umaData.gameObject);
 					}
 				}
 			}
@@ -368,10 +370,17 @@ namespace UMA
 					}
 				}
 
+				//Headless mode ends up with zero usedArea
+				if(Mathf.Approximately( usedArea.x, 0f ) || Mathf.Approximately( usedArea.y, 0f ))
+				{
+					material.cropResolution = Vector2.zero;
+					return;
+				}
+
 				Vector2 tempResolution = new Vector2(umaGenerator.atlasResolution, umaGenerator.atlasResolution);
 
 				bool done = false;
-				while (!done)
+				while (!done && Mathf.Abs(usedArea.x) > 0.0001)
 				{
 					if (tempResolution.x * 0.5f >= usedArea.x)
 					{
@@ -384,7 +393,7 @@ namespace UMA
 				}
 
 				done = false;
-				while (!done)
+				while (!done && Mathf.Abs(usedArea.y) > 0.0001)
 				{
 
 					if (tempResolution.y * 0.5f >= usedArea.y)

@@ -118,7 +118,8 @@ namespace UMA.CharacterSystem
 				}
 				else
 				{
-					Debug.LogWarning("Could not get TempAsset for " + requiredAssetName);
+					if (Debug.isDebugBuild)
+						Debug.LogWarning("Could not get TempAsset for " + requiredAssetName);
 				}
 			}
 			return thisTempAsset;
@@ -179,7 +180,9 @@ namespace UMA.CharacterSystem
 				}
 				if (!String.IsNullOrEmpty(error))
 				{
-					Debug.LogError(error);
+					if (Debug.isDebugBuild)
+						Debug.LogError(error);
+
 					yield break;
 				}
 			}
@@ -193,7 +196,9 @@ namespace UMA.CharacterSystem
 					var loadedBundleAB = loadedBundle.m_AssetBundle;
 					if (!String.IsNullOrEmpty(error))
 					{
-						Debug.LogError(error);
+						if (Debug.isDebugBuild)
+							Debug.LogError(error);
+
 						yield break;
 					}
 					var assetType = item.tempAsset.GetType();
@@ -211,7 +216,7 @@ namespace UMA.CharacterSystem
 						//To fix this generally we could 'LoadAllAssets' from any dependent bundles, but this could incur significant memory overhead
 						//So for now we will just fix this for UMA and hope a patch is forthcoming in a subsequent version of Unity 
 						//FIXED as of Unity5.6.2f1
-#if UNITY_5_5 || UNITY_5_6_0 || UNITY_5_6_1
+#if UNITY_5_6_0 || UNITY_5_6_1
 						if (AssetBundleManager.AssetBundleIndexObject.GetAllDependencies(item.containingBundle).Length > 0)
 						{
 							var allDeps = AssetBundleManager.AssetBundleIndexObject.GetAllDependencies(item.containingBundle);
@@ -242,7 +247,8 @@ namespace UMA.CharacterSystem
 						}
 						else
 						{
-							Debug.LogWarning("[DynamicAssetLoader] could not add downloaded slot" + item.requiredAssetName);
+							if (Debug.isDebugBuild)
+								Debug.LogWarning("[DynamicAssetLoader] could not add downloaded slot" + item.requiredAssetName);
 						}
 					}
 					else if (assetType == typeof(OverlayDataAsset))
@@ -255,7 +261,8 @@ namespace UMA.CharacterSystem
 						}
 						else
 						{
-							Debug.LogWarning("[DynamicAssetLoader] could not add downloaded overlay" + item.requiredAssetName + " from assetbundle " + item.containingBundle);
+							if (Debug.isDebugBuild)
+								Debug.LogWarning("[DynamicAssetLoader] could not add downloaded overlay" + item.requiredAssetName + " from assetbundle " + item.containingBundle);
 						}
 					}
 					else if (assetType == typeof(UMATextRecipe))
@@ -282,7 +289,8 @@ namespace UMA.CharacterSystem
 					}
 					if (!String.IsNullOrEmpty(error))
 					{
-						Debug.LogError(error);
+						if (Debug.isDebugBuild)
+							Debug.LogError(error);
 					}
 				}
 				downloadingItems.Remove(item);
@@ -383,7 +391,8 @@ namespace UMA.CharacterSystem
 			}
 			else
 			{
-				Debug.Log(assetName + " was not downloading");
+				if (Debug.isDebugBuild)
+					Debug.Log(assetName + " was not downloading");
 			}
 			return progress;
 		}

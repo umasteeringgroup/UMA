@@ -23,7 +23,7 @@ namespace UMA.Dynamics
 		public bool enableColliderTriggers = false;
 
 		[Tooltip("Experimental, for blending animations with physics")]
-        	[HideInInspector]
+		[HideInInspector]
 		[Range(0,1f)]
 		public float ragdollBlendAmount;
 
@@ -35,43 +35,95 @@ namespace UMA.Dynamics
 		[Tooltip("Layer to set the player collider on. See layer based collision")]
 		public int playerLayer = 9;
 
-        	[Tooltip("List of Physics Elements, see UMAPhysicsElement class")]
-        	public List<UMAPhysicsElement> elements = new List<UMAPhysicsElement>();
+		[Tooltip("List of Physics Elements, see UMAPhysicsElement class")]
+		public List<UMAPhysicsElement> elements = new List<UMAPhysicsElement>();
 
 		public UnityEvent onRagdollStarted;
 		public UnityEvent onRagdollEnded;
 
-		//Store our DynamicCharacterAvatar component
+		private DynamicCharacterAvatar _avatar;
 		private UMAData _umaData;
 		private GameObject _rootBone;
 		private List<Rigidbody> _rigidbodies = new List<Rigidbody> ();
 		private List<BoxCollider> _BoxColliders = new List<BoxCollider> ();
 
-        	public List<ClothSphereColliderPair> SphereColliders { get { return _SphereColliders; }}
-        	private List<ClothSphereColliderPair> _SphereColliders = new List<ClothSphereColliderPair>();
+		public List<ClothSphereColliderPair> SphereColliders { get { return _SphereColliders; }}
+		private List<ClothSphereColliderPair> _SphereColliders = new List<ClothSphereColliderPair>();
 		
-        	public List<CapsuleCollider> CapsuleColliders { get { return _CapsuleColliders; }}
-        	private List<CapsuleCollider> _CapsuleColliders = new List<CapsuleCollider>();
+		public List<CapsuleCollider> CapsuleColliders { get { return _CapsuleColliders; }}
+		private List<CapsuleCollider> _CapsuleColliders = new List<CapsuleCollider>();
 
 	
 		private CapsuleCollider _playerCollider;
 		private Rigidbody _playerRigidbody;
 
+		struct CachedBone
+		{
+			public Transform boneTransform;
+			public Vector3 localPosition;
+			public Quaternion localRotation;
+			public Vector3 localScale;
+
+			public CachedBone(Transform transform)
+			{
+				boneTransform = transform;
+				localPosition = transform.localPosition;
+				localRotation = transform.localRotation;
+				localScale = transform.localScale;
+			}
+		}
+		private List<CachedBone> cachedBones = new List<CachedBone>();
+
 		// Use this for initialization
 		void Start () 
 		{
-			_umaData = gameObject.GetComponent<UMAData> ();	
+			_avatar = GetComponent<DynamicCharacterAvatar>();
+			//Using DCS
+			if (_avatar != null)
+			{
+				_avatar.CharacterCreated.AddListener(OnCharacterCreatedCallback);
+				_avatar.CharacterBegun.AddListener(OnCharacterBegunCallback);
+				_avatar.CharacterUpdated.AddListener(OnCharacterUpdatedCallback);
+			}
+			else
+			{
+				//if we're not using the DCS then this will be created through a recipe
+				_umaData = gameObject.GetComponent<UMAData>();
+
+				if (_umaData != null)
+				{
+					_umaData.CharacterCreated.AddListener(OnCharacterCreatedCallback);
+					_umaData.CharacterBegun.AddListener(OnCharacterBegunCallback);
+					_umaData.CharacterUpdated.AddListener(OnCharacterUpdatedCallback);
+				}
+			}
+
 			gameObject.layer = playerLayer;
 
-			if(_SphereColliders == null) { _SphereColliders = new List<ClothSphereColliderPair>(); }
-			if(_CapsuleColliders == null) { _CapsuleColliders = new List<CapsuleCollider>(); }
-
-			DynamicCharacterAvatar avatar = gameObject.GetComponent<DynamicCharacterAvatar>();
-			if (avatar != null)
-				avatar.CharacterCreated.AddListener(OnCharacterCreatedCallback);
-
 			if (!Physics.GetIgnoreLayerCollision(ragdollLayer, playerLayer))
-				Debug.LogWarning("RagdollLayer and PlayerLayer are not ignoring each other! This will cause collision issues. Please update the collision matrix or 'Add Default Layers' in the Physics Slot Definition");
+			{
+				if (Debug.isDebugBuild)
+					Debug.LogWarning("RagdollLayer and PlayerLayer are not ignoring each other! This will cause collision issues. Please update the collision matrix or 'Add Default Layers' in the Physics Slot Definition");
+			}
+		}
+
+		void OnDestroy()
+		{
+			if (_avatar != null)
+			{
+				_avatar.CharacterCreated.RemoveListener(OnCharacterCreatedCallback);
+				_avatar.CharacterBegun.RemoveListener(OnCharacterBegunCallback);
+				_avatar.CharacterUpdated.RemoveListener(OnCharacterUpdatedCallback);
+			}
+			else
+			{
+				if (_umaData != null)
+				{
+					_umaData.CharacterCreated.RemoveListener(OnCharacterCreatedCallback);
+					_umaData.CharacterBegun.RemoveListener(OnCharacterBegunCallback);
+					_umaData.CharacterUpdated.RemoveListener(OnCharacterUpdatedCallback);
+				}
+			}
 		}
 
 		void FixedUpdate()
@@ -89,10 +141,41 @@ namespace UMA.Dynamics
 			}
 		}
 
-        public void OnCharacterCreatedCallback(UMAData umaData)
-        {
-            CreatePhysicsObjects();
-        }
+		public void OnCharacterCreatedCallback(UMAData umaData)
+		{
+			CreatePhysicsObjects();
+		}
+
+		public void OnCharacterBegunCallback(UMAData umaData)
+		{
+			if (_ragdolled)
+			{
+				cachedBones.Clear();
+				foreach (int hash in umaData.skeleton.BoneHashes)
+				{
+					Transform boneTransform = umaData.skeleton.GetBoneTransform(hash);
+					if(boneTransform != null)
+					{
+						CachedBone cachedBone = new CachedBone(boneTransform);
+						cachedBones.Add(cachedBone);
+					}
+				}
+			}
+		}
+
+		public void OnCharacterUpdatedCallback(UMAData umaData)
+		{
+			if (_ragdolled)
+			{
+				foreach (CachedBone cachedbone in cachedBones)
+				{
+					cachedbone.boneTransform.localPosition = cachedbone.localPosition;
+					cachedbone.boneTransform.localRotation = cachedbone.localRotation;
+					cachedbone.boneTransform.localScale = cachedbone.localScale;
+				}
+				cachedBones.Clear();
+			}
+		}
 
 		public void CreatePhysicsObjects()
 		{
@@ -101,7 +184,8 @@ namespace UMA.Dynamics
 
 			if (_umaData == null) 
 			{
-				Debug.LogError ("CreatePhysicsObjects: umaData is null!");
+				if (Debug.isDebugBuild)
+					Debug.LogError ("CreatePhysicsObjects: umaData is null!");
 				return;
 			}
 			
@@ -114,7 +198,10 @@ namespace UMA.Dynamics
 				_playerCollider = gameObject.GetComponent<CapsuleCollider> ();
 				_playerRigidbody = gameObject.GetComponent<Rigidbody> ();
 				if (_playerCollider == null || _playerRigidbody == null)
-					Debug.LogWarning ("PlayerCollider or PlayerRigidBody is null, try putting the collider recipe before the PhysicsRecipe, or turn off SimplePlayerCollider.");
+				{
+					if (Debug.isDebugBuild)
+						Debug.LogWarning("PlayerCollider or PlayerRigidBody is null, try putting the collider recipe before the PhysicsRecipe, or turn off SimplePlayerCollider.");
+				}
 			}
 
 			foreach (UMAPhysicsElement element in elements) 
@@ -126,7 +213,8 @@ namespace UMA.Dynamics
 
                     if (bone == null)
                     {
-                        Debug.LogWarning("UMAPhysics: " + element.boneName + " not found!");
+						if (Debug.isDebugBuild)
+							Debug.LogWarning("UMAPhysics: " + element.boneName + " not found!");
                         continue; //if we don't find the bone then go to the next iteration
                     }
                 
@@ -237,8 +325,11 @@ namespace UMA.Dynamics
 					{
                         cloth.sphereColliders = SphereColliders.ToArray();
                         cloth.capsuleColliders = CapsuleColliders.ToArray();
-                        if ((cloth.capsuleColliders.Length + cloth.sphereColliders.Length) > 10)
-                            Debug.LogWarning("Cloth Collider count is high. You might experience strange behavior with the cloth simulation.");
+						if ((cloth.capsuleColliders.Length + cloth.sphereColliders.Length) > 10)
+						{
+							if (Debug.isDebugBuild)
+								Debug.LogWarning("Cloth Collider count is high. You might experience strange behavior with the cloth simulation.");
+						}
 					}
 				}
 			}
@@ -246,6 +337,12 @@ namespace UMA.Dynamics
 
 		private void SetRagdolled(bool ragdollState)
 		{
+            if (!Application.isPlaying)
+            {
+                _ragdolled = false;
+                return;
+            }
+            
 			//Player Collider stuff
 			//Call Player Collider enable/disable event here
 			if (ragdollState) 

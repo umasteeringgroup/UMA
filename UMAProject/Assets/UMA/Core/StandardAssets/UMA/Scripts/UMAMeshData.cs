@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UMA.Dynamics;
+using UnityEngine.Profiling;
 
 namespace UMA
 {
@@ -209,17 +210,47 @@ namespace UMA
 	[Serializable]
 	public class UMABlendFrame
 	{
-		public float frameWeight; //should be 100% for one frame
-		public Vector3[] deltaVertices;
-		public Vector3[] deltaNormals;
-		public Vector3[] deltaTangents;
+		public float frameWeight = 100.0f; //should be 100% for one frame
+		public Vector3[] deltaVertices = null;
+		public Vector3[] deltaNormals = null;
+		public Vector3[] deltaTangents = null;
 
-		public UMABlendFrame(int vertexCount)
+		public UMABlendFrame()
+		{ }
+
+		public UMABlendFrame(int vertexCount, bool hasNormals = true, bool hasTangents = true)
 		{
 			frameWeight = 100.0f;
 			deltaVertices = new Vector3[vertexCount];
-			deltaNormals = new Vector3[vertexCount];
-			deltaTangents = new Vector3[vertexCount];
+
+			if (hasNormals)
+				deltaNormals = new Vector3[vertexCount];
+			else
+				deltaNormals = new Vector3[0];
+
+			if (hasTangents)
+				deltaTangents = new Vector3[vertexCount];
+			else
+				deltaTangents = new Vector3[0];
+		}
+
+		/// <summary>
+		/// Determine whether the delta array has any non-zero vectors.
+		/// </summary>
+		/// <param name="deltas">Array of vector deltas.</param>
+		/// <returns></returns>
+		public static bool isAllZero(Vector3[] deltas)
+		{
+			if (deltas == null)
+				return true;
+
+			for(int i = 0; i < deltas.Length; i++)
+			{
+				if (deltas[i].sqrMagnitude > 0.0001f)
+					return false;
+			}
+
+			return true;
 		}
 	}
 
@@ -354,7 +385,8 @@ namespace UMA
 
 				if (haveBackingArrays == false)
 				{
-					Debug.LogError("Unable to access backing arrays for shared UMAMeshData!");
+					if (Debug.isDebugBuild)
+						Debug.LogError("Unable to access backing arrays for shared UMAMeshData!");
 				}
 			}
 
@@ -382,7 +414,8 @@ namespace UMA
 				return true;
 			}
 
-			Debug.LogWarning("Unable to claim UMAMeshData global buffers!");
+			if (Debug.isDebugBuild)
+				Debug.LogWarning("Unable to claim UMAMeshData global buffers!");
 			return false;
 		}
 
@@ -404,7 +437,8 @@ namespace UMA
 					}
 				}
 
-				Debug.LogWarning("Could not claim shared submesh buffer of size: " + size);
+				if (Debug.isDebugBuild)
+					Debug.LogWarning("Could not claim shared submesh buffer of size: " + size);
 			}
 
 			return new int[size];
@@ -500,6 +534,11 @@ namespace UMA
 			//Create the blendshape data on the slot asset from the unity mesh
 			#region Blendshape
 			blendShapes = new UMABlendShape[sharedMesh.blendShapeCount];
+
+			Vector3[] deltaVertices;
+			Vector3[] deltaNormals;
+			Vector3[] deltaTangents;
+
 			for (int shapeIndex = 0; shapeIndex < sharedMesh.blendShapeCount; shapeIndex++) 
 			{
 				blendShapes [shapeIndex] = new UMABlendShape ();
@@ -510,12 +549,31 @@ namespace UMA
 
 				for (int frameIndex = 0; frameIndex < frameCount; frameIndex++) 
 				{
-					blendShapes [shapeIndex].frames [frameIndex] = new UMABlendFrame (sharedMesh.vertexCount);
+					deltaVertices = new Vector3[sharedMesh.vertexCount];
+					deltaNormals = new Vector3[sharedMesh.vertexCount];
+					deltaTangents = new Vector3[sharedMesh.vertexCount];
+
+					bool hasNormals = false;
+					bool hasTangents = false;
+
+					//Get the delta arrays first so we can determine if we don't need the delta normals or the delta tangents.
+					sharedMesh.GetBlendShapeFrameVertices(shapeIndex, frameIndex, deltaVertices, deltaNormals, deltaTangents);
+
+					if (!UMABlendFrame.isAllZero(deltaNormals))
+						hasNormals = true;
+
+					if (!UMABlendFrame.isAllZero(deltaTangents))
+						hasTangents = true;
+
+					blendShapes [shapeIndex].frames [frameIndex] = new UMABlendFrame ();
 					blendShapes[shapeIndex].frames[frameIndex].frameWeight = sharedMesh.GetBlendShapeFrameWeight( shapeIndex, frameIndex );
-					sharedMesh.GetBlendShapeFrameVertices (shapeIndex, frameIndex, 
-						blendShapes [shapeIndex].frames [frameIndex].deltaVertices,
-						blendShapes [shapeIndex].frames [frameIndex].deltaNormals,
-						blendShapes [shapeIndex].frames [frameIndex].deltaTangents);
+
+					blendShapes[shapeIndex].frames[frameIndex].deltaVertices = deltaVertices;
+					if (hasNormals)
+						blendShapes[shapeIndex].frames[frameIndex].deltaNormals = deltaNormals;
+					if (hasTangents)
+						blendShapes[shapeIndex].frames[frameIndex].deltaTangents = deltaTangents;
+
 				}
 			}
 			#endregion
@@ -617,11 +675,13 @@ namespace UMA
 #if UNITY_EDITOR
 			if (UnityEditor.PrefabUtility.IsComponentAddedToPrefabInstance(renderer))
 			{
-				Debug.LogError("Cannot apply changes to prefab!");
+				if (Debug.isDebugBuild)
+					Debug.LogError("Cannot apply changes to prefab!");
 			}
 			if (UnityEditor.AssetDatabase.IsSubAsset(mesh))
 			{
-				Debug.LogError("Cannot apply changes to asset mesh!");
+				if (Debug.isDebugBuild)
+					Debug.LogError("Cannot apply changes to asset mesh!");
 			}
 #endif
 			mesh.subMeshCount = 1;
@@ -682,12 +742,20 @@ namespace UMA
 					for( int frameIndex = 0; frameIndex < blendShapes[shapeIndex].frames.Length; frameIndex++)
 					{
 						//There might be an extreme edge case where someone has the same named blendshapes on different meshes that end up on different renderers.
-						string name = blendShapes[shapeIndex].shapeName; 
-						mesh.AddBlendShapeFrame (name,
-							blendShapes[shapeIndex].frames[frameIndex].frameWeight,
-							blendShapes[shapeIndex].frames[frameIndex].deltaVertices,
-							blendShapes[shapeIndex].frames[frameIndex].deltaNormals,
-							blendShapes[shapeIndex].frames[frameIndex].deltaTangents);
+						string name = blendShapes[shapeIndex].shapeName;
+
+						float frameWeight = blendShapes[shapeIndex].frames[frameIndex].frameWeight;
+						Vector3[] deltaVertices = blendShapes[shapeIndex].frames[frameIndex].deltaVertices;
+						Vector3[] deltaNormals = blendShapes[shapeIndex].frames[frameIndex].deltaNormals;
+						Vector3[] deltaTangents = blendShapes[shapeIndex].frames[frameIndex].deltaTangents;
+
+						if (UMABlendFrame.isAllZero(deltaNormals))
+							deltaNormals = null;
+
+						if (UMABlendFrame.isAllZero(deltaTangents))
+							deltaTangents = null;
+
+						mesh.AddBlendShapeFrame (name, frameWeight, deltaVertices, deltaNormals, deltaTangents);
 					}
 				}
 			}
@@ -700,19 +768,21 @@ namespace UMA
 
 			if (clothSkinning != null && clothSkinning.Length > 0)
 			{
-				var cloth = renderer.GetComponent<Cloth>();
-				if (cloth == null)
+				Cloth cloth = renderer.GetComponent<Cloth>();
+				if (cloth != null)
 				{
-					cloth = renderer.gameObject.AddComponent<Cloth>();
-                    UMAPhysicsAvatar physicsAvatar = renderer.gameObject.GetComponentInParent<UMAPhysicsAvatar> ();
-                    if (physicsAvatar != null)
-                    {
-                        cloth.sphereColliders = physicsAvatar.SphereColliders.ToArray();
-                        cloth.capsuleColliders = physicsAvatar.CapsuleColliders.ToArray();
-                    }
-                    else
-                        Debug.Log("PhysicsAvatar is null!");
+					GameObject.DestroyImmediate(cloth);
+					cloth = null;
 				}
+
+				cloth = renderer.gameObject.AddComponent<Cloth>();
+				UMAPhysicsAvatar physicsAvatar = renderer.gameObject.GetComponentInParent<UMAPhysicsAvatar>();
+				if (physicsAvatar != null)
+				{
+					cloth.sphereColliders = physicsAvatar.SphereColliders.ToArray();
+					cloth.capsuleColliders = physicsAvatar.CapsuleColliders.ToArray();
+				}
+
 				cloth.coefficients = clothSkinning;
 			}
 		}
@@ -893,6 +963,136 @@ namespace UMA
 			var newList = new List<UMATransform>(umaBones);
 			newList.Sort(UMATransform.TransformComparer);
 			umaBones = newList.ToArray();
+		}
+
+		/// <summary>
+		/// Creates a deep copy of an UMAMeshData object.
+		/// </summary>
+		/// <returns>The new copy of the UMAMeshData</returns>
+		public UMAMeshData DeepCopy()
+		{
+			UMAMeshData newMeshData = new UMAMeshData();
+
+			if (bindPoses != null)
+			{
+				newMeshData.bindPoses = new Matrix4x4[bindPoses.Length];
+				Array.Copy(bindPoses, newMeshData.bindPoses, bindPoses.Length);
+			}
+
+			if (boneWeights != null)
+			{
+				newMeshData.boneWeights = new UMABoneWeight[boneWeights.Length];
+				Array.Copy(boneWeights, newMeshData.boneWeights, boneWeights.Length);
+			}
+
+			if (unityBoneWeights != null)
+			{
+				newMeshData.unityBoneWeights = new BoneWeight[unityBoneWeights.Length];
+				Array.Copy(unityBoneWeights, newMeshData.unityBoneWeights, unityBoneWeights.Length);
+			}
+
+			if (vertices != null)
+			{
+				newMeshData.vertices = new Vector3[vertices.Length];
+				Array.Copy(vertices, newMeshData.vertices, vertices.Length);
+			}
+
+			if (normals != null)
+			{
+				newMeshData.normals = new Vector3[normals.Length];
+				Array.Copy(normals, newMeshData.normals, normals.Length);
+			}
+
+			if (tangents != null)
+			{
+				newMeshData.tangents = new Vector4[tangents.Length];
+				Array.Copy(tangents, newMeshData.tangents, tangents.Length);
+			}
+
+			if (colors32 != null)
+			{
+				newMeshData.colors32 = new Color32[colors32.Length];
+				Array.Copy(colors32, newMeshData.colors32, colors32.Length);
+			}
+
+			if (uv != null)
+			{
+				newMeshData.uv = new Vector2[uv.Length];
+				Array.Copy(uv, newMeshData.uv, uv.Length);
+			}
+
+			if (uv2 != null)
+			{
+				newMeshData.uv2 = new Vector2[uv2.Length];
+				Array.Copy(uv2, newMeshData.uv, uv2.Length);
+			}
+
+			if (uv3 != null)
+			{
+				newMeshData.uv3 = new Vector2[uv3.Length];
+				Array.Copy(uv3, newMeshData.uv, uv3.Length);
+			}
+
+			if (uv4 != null)
+			{
+				newMeshData.uv4 = new Vector2[uv4.Length];
+				Array.Copy(uv4, newMeshData.uv, uv4.Length);
+			}
+
+			if(blendShapes != null)
+			{
+				newMeshData.blendShapes = new UMABlendShape[blendShapes.Length];
+				Array.Copy(blendShapes, newMeshData.blendShapes, blendShapes.Length);
+			}
+
+			if(clothSkinning != null)
+			{
+				newMeshData.clothSkinning = new ClothSkinningCoefficient[clothSkinning.Length];
+				Array.Copy(clothSkinning, newMeshData.clothSkinning, clothSkinning.Length);
+			}
+
+			if(clothSkinningSerialized != null)
+			{
+				newMeshData.clothSkinningSerialized = new Vector2[clothSkinningSerialized.Length];
+				Array.Copy(clothSkinningSerialized, newMeshData.clothSkinningSerialized, clothSkinningSerialized.Length);
+			}
+
+			if(submeshes != null)
+			{
+				newMeshData.submeshes = new SubMeshTriangles[submeshes.Length];
+				Array.Copy(submeshes, newMeshData.submeshes, submeshes.Length);
+			}
+
+			if(bones != null)
+			{
+				newMeshData.bones = bones.Clone() as Transform[];
+			}
+
+			if(rootBone != null)
+			{
+				newMeshData.rootBone = rootBone;
+			}
+
+			if(umaBones != null)
+			{
+				newMeshData.umaBones = new UMATransform[umaBones.Length];
+				Array.Copy(umaBones, newMeshData.umaBones, umaBones.Length);
+			}
+
+			newMeshData.umaBoneCount = umaBoneCount;
+			newMeshData.rootBoneHash = rootBoneHash;
+
+			if(boneNameHashes != null)
+			{
+				newMeshData.boneNameHashes = new int[boneNameHashes.Length];
+				Array.Copy(boneNameHashes, newMeshData.boneNameHashes, boneNameHashes.Length);
+			}
+
+			newMeshData.subMeshCount = subMeshCount;
+			newMeshData.vertexCount = vertexCount;
+			newMeshData.RootBoneName = RootBoneName;
+
+			return newMeshData;
 		}
 	}
 }

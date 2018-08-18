@@ -10,29 +10,39 @@ namespace UMA.Examples
 	public class BlendShapeDnaSlider : MonoBehaviour
 	{
 		public int dnaTypeHash = 386317366;
-		public int dnaEntryIndex = 0;
+		public string dnaName = "";
 
 		protected UMAData data;
 		protected UMADnaBase dna;
+		int dnaEntryIndex = -1;
 
 		public void OnCharacterCreated(UMAData umaData)
 		{
 			this.data = umaData;
 			Slider slider = gameObject.GetComponent<Slider>();
 
-			dna = umaData.GetDna(dnaTypeHash);		
+			dna = umaData.GetDna(dnaTypeHash);
 			if (dna != null)
 			{
-				slider.value = dna.GetValue(dnaEntryIndex);
+				string[] dnaNames = dna.Names;
+				for(int i = 0; i < dnaNames.Length; i++)
+				{
+					if (dnaName == dnaNames[i])
+					{
+						dnaEntryIndex = i;
+						break;
+					}
+				}
+
+				if(dnaEntryIndex >= 0)
+					slider.value = dna.GetValue(dnaEntryIndex);
 			}
 		}
 
-		public void SetEarMorph(float value)
+		public void SetMorph(float value)
 		{
 			if (dna == null)
-			{
-				dna = data.GetDna(dnaTypeHash);		
-			}
+				dna = data.GetDna(dnaTypeHash);
 
 			if (dna != null)
 			{
@@ -41,31 +51,22 @@ namespace UMA.Examples
 			}
 		}
 
-        public void BakeEarMorph()
+        public void BakeMorph()
         {
-            if (dna == null)
-            {
-                dna = data.GetDna(dnaTypeHash);     
-            }
+			if (dna == null)
+				dna = data.GetDna(dnaTypeHash);
 
-            if (dna != null)
-            {
-                data.blendShapeSettings.bakeBlendShapes = new Dictionary<string, float>();
+			if (dna != null && dnaEntryIndex >= 0)
+            {				
                 float dnaValue = dna.GetValue(dnaEntryIndex);
-                float morphWeight = 0.0f;
-                if (dnaValue > 0.51f)
-                {
-                    morphWeight = (dnaValue - 0.5f) * 2f;
-                }
-                data.blendShapeSettings.bakeBlendShapes.Add("MaleElvenEars", morphWeight );
-                data.Dirty(true, true, true);
+
+                data.AddBakedBlendShape(dnaValue, null, dnaName, true);
             }
         }
 
-        public void UnbakeEarMorph()
+        public void UnbakeMorph()
         {
-            data.blendShapeSettings.bakeBlendShapes.Clear();
-            data.Dirty(true, true, true);
+			data.RemoveBakedBlendShape(dnaName, true);
         }
 	}
 }

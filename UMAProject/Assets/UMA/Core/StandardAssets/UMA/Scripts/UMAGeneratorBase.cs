@@ -28,6 +28,29 @@ namespace UMA
 			get { return _defaultOverlayData; }
 		}
 
+        /// <summary>
+        /// returns true if the UMAData is in the update queue.
+        /// Note that this will return false if the UMA is currently being processed!
+        /// </summary>
+        /// <param name="umaToCheck"></param>
+        /// <returns></returns>
+        public abstract bool updatePending(UMAData umaToCheck);
+
+        /// <summary>
+        /// Returns true if the UMA is at pos 0 in the DirtyList -
+        /// this means it's the UMA that is currently being processed
+        /// </summary>
+        /// <param name="umaToCheck"></param>
+        /// <returns></returns>
+        public abstract bool updateProcessing(UMAData umaToCheck);
+
+        /// <summary>
+        /// removes the UMAData if it exists in the update queue.
+        /// Use this if you need to delete the UMA after scheduling an update for it.
+        /// </summary>
+        /// <param name="umaToRemove"></param>
+        public abstract void removeUMA(UMAData umaToRemove);
+
 		/// <summary>
 		/// Adds the dirty UMA to the update queue.
 		/// </summary>
@@ -208,27 +231,33 @@ namespace UMA
 
 		public static void DebugLogHumanAvatar(GameObject root, HumanDescription description)
 		{
-			Debug.Log("***", root);
+			if (Debug.isDebugBuild)
+				Debug.Log("***", root);
 			Dictionary<String, String> bones = new Dictionary<String, String>();
 			foreach (var sb in description.skeleton)
 			{
-				Debug.Log(sb.name);
+				if (Debug.isDebugBuild)
+					Debug.Log(sb.name);
 				bones[sb.name] = sb.name;
 			}
-			Debug.Log("----");
+			if (Debug.isDebugBuild)
+				Debug.Log("----");
 			foreach (var hb in description.human)
 			{
 				string boneName;
 				if (bones.TryGetValue(hb.boneName, out boneName))
 				{
-					Debug.Log(hb.humanName + " -> " + boneName);
+					if (Debug.isDebugBuild)
+						Debug.Log(hb.humanName + " -> " + boneName);
 				}
 				else
 				{
-					Debug.LogWarning(hb.humanName + " !-> " + hb.boneName);
+					if (Debug.isDebugBuild)
+						Debug.LogWarning(hb.humanName + " !-> " + hb.boneName);
 				}
 			}
-			Debug.Log("++++");
+			if (Debug.isDebugBuild)
+				Debug.Log("++++");
 		}
 
 		/// <summary>
@@ -243,6 +272,7 @@ namespace UMA
 			HumanDescription description = CreateHumanDescription(umaData, umaTPose);
 			//DebugLogHumanAvatar(umaData.gameObject, description);
 			Avatar res = AvatarBuilder.BuildHumanAvatar(umaData.gameObject, description);
+			res.name = umaData.name;
 			return res;
 		}
 
@@ -254,6 +284,7 @@ namespace UMA
 		public static Avatar CreateGenericAvatar(UMAData umaData)
 		{
 			Avatar res = AvatarBuilder.BuildGenericAvatar(umaData.gameObject, umaData.umaRecipe.GetRace().genericRootMotionTransformName);
+			res.name = umaData.name;
 			return res;
 		}
 

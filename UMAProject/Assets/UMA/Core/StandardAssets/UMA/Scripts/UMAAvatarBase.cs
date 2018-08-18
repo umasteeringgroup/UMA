@@ -1,7 +1,5 @@
 using UnityEngine;
-#if UNITY_5_5_OR_NEWER
 using UnityEngine.Profiling;
-#endif
 
 namespace UMA
 {
@@ -29,6 +27,10 @@ namespace UMA
 		/// Callback event when character is created.
 		/// </summary>
 		public UMADataEvent CharacterCreated;
+		/// <summary>
+		/// Callback event when character is started.
+		/// </summary>
+		public UMADataEvent CharacterBegun;
 		/// <summary>
 		/// Callback event when character is destroyed.
 		/// </summary>
@@ -61,8 +63,11 @@ namespace UMA
 					umaData = gameObject.AddComponent<UMAData>();
 					if (umaGenerator != null && !umaGenerator.gameObject.activeInHierarchy)
 					{
-						Debug.LogError("Invalid UMA Generator on Avatar.", gameObject);
-						Debug.LogError("UMA generators must be active scene objects!", umaGenerator.gameObject);
+						if (Debug.isDebugBuild)
+						{
+							Debug.LogError("Invalid UMA Generator on Avatar.", gameObject);
+							Debug.LogError("UMA generators must be active scene objects!", umaGenerator.gameObject);
+						}
 						umaGenerator = null;
 					}
 				}
@@ -72,6 +77,7 @@ namespace UMA
 				umaData.umaGenerator = umaGenerator;
 			}
 			if (CharacterCreated != null) umaData.CharacterCreated = CharacterCreated;
+			if (CharacterBegun != null) umaData.CharacterBegun = CharacterBegun;
 			if (CharacterDestroyed != null) umaData.CharacterDestroyed = CharacterDestroyed;
 			if (CharacterUpdated != null) umaData.CharacterUpdated = CharacterUpdated;
 			if (CharacterDnaUpdated != null) umaData.CharacterDnaUpdated = CharacterDnaUpdated;

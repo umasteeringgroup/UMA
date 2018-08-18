@@ -222,6 +222,10 @@ namespace UMA.CharacterSystem.Editors
 			if (defaultController)
 				if (defaultController.name == racName)
 					return true;
+            if (UMAAssetIndexer.Instance.GetAssetDictionary(typeof(RuntimeAnimatorController)).ContainsKey(racName))
+            {
+                return true;
+            }
 			var dalDebug = DynamicAssetLoader.Instance.debugOnFail;
 			DynamicAssetLoader.Instance.debugOnFail = false;
 			found = DynamicAssetLoader.Instance.AddAssets<RuntimeAnimatorController>(searchResources, searchAssetBundles, true, assetBundlesToSearch, resourcesFolderPath, null, racName, null);

@@ -1,12 +1,25 @@
 ﻿using UnityEngine;
 using System.Collections;
-using System.Linq;
+//using System.Linq;
 
 namespace UMA.Examples
 {
     public class EnvPresetChooser : MonoBehaviour
     {
-        public Transform[] presets { get { return transform.Cast<Transform>().ToArray(); } }
+        public Transform[] presets
+        {
+            get
+            {
+                int i = 0;
+                Transform[] transforms = new Transform[transform.childCount];
+                foreach(Transform t in transform)
+                {
+                    transforms[i++] = t;
+                }
+                return transforms;               
+                //return transform.Cast<Transform>().ToArray();
+            }
+        }
 
         public int GetActivePreset()
         {

@@ -29,7 +29,8 @@ namespace UMA.PoseTools
 				expressionPlayer = gameObject.GetComponent<ExpressionPlayer>();
 				if (expressionPlayer == null)
 				{
-					Debug.LogWarning("Couldn't find expression player to preview!");
+					if (Debug.isDebugBuild)
+						Debug.LogWarning("Couldn't find expression player to preview!");
 					return;
 				}
 			}

@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEditor;
-using System.Linq;
+//using System.Linq;
 using System.Collections.Generic;
 
 namespace UMA.Editors
@@ -160,20 +160,10 @@ namespace UMA.Editors
 							textureImporter.isReadable = readWrite.boolValue;
 							
 							if(compress.boolValue){
-	#if UNITY_5_5_OR_NEWER
 								textureImporter.textureCompression = TextureImporterCompression.CompressedHQ;
 								textureImporter.compressionQuality = (int)TextureCompressionQuality.Best;                               
-	#else
-								textureImporter.textureFormat = TextureImporterFormat.AutomaticCompressed;
-								textureImporter.compressionQuality = (int)TextureCompressionQuality.Best;
-	#endif
 							}else{
-	#if UNITY_5_5_OR_NEWER
 								textureImporter.textureCompression = TextureImporterCompression.Uncompressed;                             
-	#else
-								textureImporter.textureFormat = TextureImporterFormat.AutomaticTruecolor;
-								textureImporter.compressionQuality = (int)TextureCompressionQuality.Best;
-	#endif
 							}
 							
 							AssetDatabase.WriteImportSettingsIfDirty (path);
@@ -297,7 +287,8 @@ namespace UMA.Editors
 				if(GUILayout.Button("Order by Name")){
 					canUpdate = false;
 
-					List<OverlayDataAsset> OverlayDataTemp = overlayElementList.ToList();  
+                List<OverlayDataAsset> OverlayDataTemp = new List<OverlayDataAsset>();
+                OverlayDataTemp.AddRange(overlayElementList); 
 				
 					//Make sure there's no invalid data
 					for(int i = 0; i < OverlayDataTemp.Count; i++){
@@ -329,9 +320,13 @@ namespace UMA.Editors
 					}
 
 					m_OverlayDataCount.intValue = Overlays.Count;
-					for(int i=0;i<Overlays.Count;i++)
+
+                    List<OverlayDataAsset> od = new List<OverlayDataAsset>();
+                    od.AddRange(Overlays);
+
+					for(int i=0;i<od.Count;i++)
 					{
-						SetOverlayData(i,Overlays.ElementAt(i));
+						SetOverlayData(i,od[i]);
 					}
 					isDirty = true;
 					canUpdate = false;

@@ -94,6 +94,15 @@ namespace UMA.CharacterSystem
                 StartCoroutine(StartCO());
         }
 
+		//New method to trigger Initialization again if it fails because there is no Internet Connection
+		public void ReInitialize()
+		{
+			if (!isInitializing && !isInitialized)
+			{
+				StartCoroutine(StartCO());
+			}
+		}
+
         IEnumerator StartCO()
         {
             bool destroyingThis = false;
@@ -114,7 +123,8 @@ namespace UMA.CharacterSystem
                 //copy some values over and then destroy this
                 if (_instance.makePersistent)
                 {
-                    Debug.Log("[DynamicAssetLoader] _instance was NOT this one and was persistent");
+                    if (Debug.isDebugBuild)
+                        Debug.Log("[DynamicAssetLoader] _instance was NOT this one and was persistent");
                     _instance.assetBundlesToPreLoad.Clear();
                     _instance.assetBundlesToPreLoad.AddRange(this.assetBundlesToPreLoad);
                     _instance.gameObjectsToActivate.Clear();
@@ -141,7 +151,8 @@ namespace UMA.CharacterSystem
             }
 
             //Load any preload asset bundles if there are any
-            if (!destroyingThis)
+			//If we are not initialized dont to this
+            if (!destroyingThis && isInitialized)
                 if (assetBundlesToPreLoad.Count > 0)
                 {
                     List<string> bundlesToSend = new List<string>(assetBundlesToPreLoad.Count);
@@ -153,7 +164,8 @@ namespace UMA.CharacterSystem
 
         void Update()
         {
-            if (assetBundlesToPreLoad.Count > 0)
+			//If we are not initialized dont to this
+			if (assetBundlesToPreLoad.Count > 0 && isInitialized)
             {
                 List<string> bundlesToSend = new List<string>(assetBundlesToPreLoad.Count);
                 bundlesToSend.AddRange(assetBundlesToPreLoad);
@@ -250,7 +262,8 @@ namespace UMA.CharacterSystem
                 if (SimpleWebServer.serverStarted)//this is not true in builds no matter what- but we in the editor we need to know
 #endif
                     URLToUse = remoteServerURL = SimpleWebServer.ServerURL;
-                Debug.Log("[DynamicAssetLoader] SimpleWebServer.ServerURL = " + URLToUse);
+                if (Debug.isDebugBuild)
+                    Debug.Log("[DynamicAssetLoader] SimpleWebServer.ServerURL = " + URLToUse);
             }
             else
             {
@@ -276,17 +289,29 @@ namespace UMA.CharacterSystem
                         || (context.overlayLibrary != null && (context.overlayLibrary as DynamicOverlayLibrary).dynamicallyAddFromAssetBundles))
                     {
                         if (warningType == "warning")
-                            Debug.LogWarning(errorString);
+                        {
+                            if (Debug.isDebugBuild)
+                                Debug.LogWarning(errorString);
+                        }
                         else
-                            Debug.Log(errorString);
+                        {
+                            if (Debug.isDebugBuild)
+                                Debug.Log(errorString);
+                        }
                     }
                 }
                 else //if you are just using dynamicassetLoader independently of UMA then you may still want this message
                 {
                     if (warningType == "warning")
-                        Debug.LogWarning(errorString);
+                    {
+                        if (Debug.isDebugBuild)
+                            Debug.LogWarning(errorString);
+                    }
                     else
-                        Debug.Log(errorString);
+                    {
+                        if (Debug.isDebugBuild)
+                            Debug.Log(errorString);
+                    }
                 }
             }
             return;
@@ -316,7 +341,10 @@ namespace UMA.CharacterSystem
 #if UNITY_EDITOR
                         //if the set password and the UMAAssetBundleManagerSettings Passwords dont match and we are in the editor warn the user
                         if (bundleEncryptionPassword != UMAABMSettings.GetEncryptionPassword())
-                            Debug.LogWarning("The bundle encryption password set in this scenes DynamicAssetLoader did not match the one set in UMAAssetBundleManagerSettings. You can fix this by inspecting the DynamicAssetLoader component. It will update automatically.");
+                        {
+                            if (Debug.isDebugBuild)
+                                Debug.LogWarning("The bundle encryption password set in this scenes DynamicAssetLoader did not match the one set in UMAAssetBundleManagerSettings. You can fix this by inspecting the DynamicAssetLoader component. It will update automatically.");
+                        }
 #endif
                         AssetBundleManager.BundleEncryptionKey = bundleEncryptionPassword;
                     }
@@ -327,12 +355,14 @@ namespace UMA.CharacterSystem
                         if (UMAABMSettings.GetEncryptionPassword() != "")
                         {
                             AssetBundleManager.BundleEncryptionKey = UMAABMSettings.GetEncryptionPassword();
-                            Debug.LogWarning("You are using encrypted asset bundles but you have not assigned the encryption key to this scenes DynamicAssetLoader, you need to do this before you build your game or your bundles will not be decrypted!");
+                            if (Debug.isDebugBuild)
+                                Debug.LogWarning("You are using encrypted asset bundles but you have not assigned the encryption key to this scenes DynamicAssetLoader, you need to do this before you build your game or your bundles will not be decrypted!");
                         }
                         //if an encryption key has NOT been generated show a warnining that the user need to generate one in the UMAAssetBundleManager window
                         else
                         {
-                            Debug.LogWarning("The DynamicAssetLoader in this scene is set to use encrypted bundles but you have not generated an encryption key yet. Please go to UMAAssetBundleManager to generate one, then assign it to your DynamicAssetLoader components in your scene.");
+                            if (Debug.isDebugBuild)
+                                Debug.LogWarning("The DynamicAssetLoader in this scene is set to use encrypted bundles but you have not generated an encryption key yet. Please go to UMAAssetBundleManager to generate one, then assign it to your DynamicAssetLoader components in your scene.");
                         }
                     }
 #endif
@@ -341,7 +371,10 @@ namespace UMA.CharacterSystem
                 {
 #if UNITY_EDITOR
                     if (UMAABMSettings.GetEncryptionEnabled())
-                        Debug.LogWarning("You have AssetBunlde Encryption turned ON in UMAAssetBundleManager but have not enabled it in this scenes Dynamic AssetLoader. Please do this in the inspector for the DynamicAssetLoader component.");
+                    {
+                        if (Debug.isDebugBuild)
+                            Debug.LogWarning("You have AssetBunlde Encryption turned ON in UMAAssetBundleManager but have not enabled it in this scenes Dynamic AssetLoader. Please do this in the inspector for the DynamicAssetLoader component.");
+                    }
 #endif
                 }
                 InitializeSourceURL();//in the editor this might set AssetBundleManager.SimulateAssetBundleInEditor to be true aswell so check that
@@ -403,7 +436,7 @@ namespace UMA.CharacterSystem
                         //if we are in the editor this can only have happenned because the asset bundles were not built and by this point
                         //an error will have already been shown about that and AssetBundleManager.SimulationOverride will be true so we can just continue.
 #if UNITY_EDITOR
-                        if (AssetBundleManager.AssetBundleIndexObject == null)
+                        if (AssetBundleManager.AssetBundleIndexObject == null && AssetBundleManager.SimulateAssetBundleInEditor)
                         {
                             isInitialized = true;
                             yield break;
@@ -413,7 +446,10 @@ namespace UMA.CharacterSystem
                 }
                 else
                 {
-                    Debug.LogWarning("AssetBundleManager failed to initialize correctly");
+                    if (Debug.isDebugBuild)
+                        Debug.LogWarning("AssetBundleManager failed to initialize correctly");
+					//set this false so ReInitializing can happen
+					isInitializing = false;
                 }
             }
         }
@@ -508,7 +544,8 @@ namespace UMA.CharacterSystem
                 {
                     if ((bundle == assetBundleName || bundle.IndexOf(assetBundleName + "/") > -1))
                     {
-                        Debug.Log("Started loading of " + bundle);
+                        if (Debug.isDebugBuild)
+                            Debug.Log("Started loading of " + bundle);
                         if (AssetBundleLoadingIndicator.Instance)
                             AssetBundleLoadingIndicator.Instance.Show(bundle, loadingMsg, "", loadedMsg);
                         StartCoroutine(LoadAssetBundleAsync(bundle));
@@ -539,10 +576,13 @@ namespace UMA.CharacterSystem
             }
             LoadedAssetBundle loadedBundle = AssetBundleManager.GetLoadedAssetBundle(bundle, out error);
             float elapsedTime = Time.realtimeSinceStartup - startTime;
-			Debug.Log(bundle + (!String.IsNullOrEmpty(error) ? " was not" : " was") + " loaded successfully in " + elapsedTime + " seconds");
+            if (Debug.isDebugBuild)
+                Debug.Log(bundle + (!String.IsNullOrEmpty(error) ? " was not" : " was") + " loaded successfully in " + elapsedTime + " seconds");
 			if (!String.IsNullOrEmpty(error))
 			{
-                Debug.LogError("[DynamicAssetLoader] Bundle Load Error: " + error);
+                if (Debug.isDebugBuild)
+                    Debug.LogError("[DynamicAssetLoader] Bundle Load Error: " + error);
+
                 yield break;
             }
             //If this assetBundle contains UMATextRecipes we may need to trigger some post processing...
@@ -598,7 +638,8 @@ namespace UMA.CharacterSystem
         {
             if (isInitialized == false && Application.isPlaying && (searchBundles && downloadAssetsEnabled))
             {
-                Debug.LogWarning("[DynamicAssetLoader] had not finished initializing when " + typeof(T).ToString() + " assets were requested. Please be sure wait for 'DynamicAssetLoader.Instance.isInitialized' to be true before requesting dynamically addedd assets from the libraries.");
+                if (Debug.isDebugBuild)
+                    Debug.LogWarning("[DynamicAssetLoader] had not finished initializing when " + typeof(T).ToString() + " assets were requested. Please be sure wait for 'DynamicAssetLoader.Instance.isInitialized' to be true before requesting dynamically addedd assets from the libraries.");
             }
             bool found = false;
             List<T> assetsToReturn = new List<T>();
@@ -614,7 +655,8 @@ namespace UMA.CharacterSystem
                 }
                 else
                 {
-                    Debug.LogWarning("[DynamicAssetLoader] UMAResourcesIndex.Instance WAS NULL");
+                    if (Debug.isDebugBuild)
+                        Debug.LogWarning("[DynamicAssetLoader] UMAResourcesIndex.Instance WAS NULL");
                 }
             }
             //if we can and want to search asset bundles
@@ -725,11 +767,13 @@ namespace UMA.CharacterSystem
                 if (AssetBundleManager.AssetBundleIndexObject == null)
                 {
 #if UNITY_EDITOR
-                    Debug.LogWarning("[DynamicAssetLoader] No AssetBundleManager.AssetBundleIndexObject found. Do you need to rebuild your AssetBundles and/or upload the platform index bundle?");
+                    if (Debug.isDebugBuild)
+                        Debug.LogWarning("[DynamicAssetLoader] No AssetBundleManager.AssetBundleIndexObject found. Do you need to rebuild your AssetBundles and/or upload the platform index bundle?");
                     AssetBundleManager.SimulateOverride = true;
                     return SimulateAddAssetsFromAssetBundlesNew<T>(ref assetBundlesUsedDict, ref assetsToReturn, bundlesToSearchArray, assetNameHash, assetName, callback);
 #else
-					Debug.LogError("[DynamicAssetLoader] No AssetBundleManager.AssetBundleIndexObject found. Do you need to rebuild your AssetBundles and/or upload the platform index bundle?");
+                    if(Debug.isDebugBuild)
+					    Debug.LogError("[DynamicAssetLoader] No AssetBundleManager.AssetBundleIndexObject found. Do you need to rebuild your AssetBundles and/or upload the platform index bundle?");
                     return false;
 #endif
                 }
@@ -792,7 +836,8 @@ namespace UMA.CharacterSystem
                                 {
                                     if (!String.IsNullOrEmpty(error))
                                     {
-                                        Debug.LogWarning(error);
+                                        if (Debug.isDebugBuild)
+                                            Debug.LogWarning(error);
                                     }
                                 }
                             }
@@ -849,26 +894,27 @@ namespace UMA.CharacterSystem
                                     }
                                     catch
                                     {
-                                        Debug.LogWarning("[DynamicAssetLoader]AddAssetsFromAssetBundles " + assetBundleNamesArray[i] + " had not loaded at the time of the request");
+                                        if (Debug.isDebugBuild)
+                                            Debug.LogWarning("[DynamicAssetLoader]AddAssetsFromAssetBundles " + assetBundleNamesArray[i] + " had not loaded at the time of the request");
                                         var thiserror = "";
                                         AssetBundleManager.GetLoadedAssetBundle(assetBundleNamesArray[i], out thiserror);
                                         if (thiserror != "" && thiserror != null)
-                                            Debug.LogWarning("GetLoadedAssetBundle error was " + thiserror);
+                                        {
+                                            if (Debug.isDebugBuild)
+                                                Debug.LogWarning("GetLoadedAssetBundle error was " + thiserror);
+                                        }
                                         else if (AssetBundleManager.GetLoadedAssetBundle(assetBundleNamesArray[i], out thiserror).m_AssetBundle == null)
                                         {
                                             //The problem is here the bundle is downloaded but not LOADED
-                                            Debug.LogWarning("Bundle was ok but m_AssetBundle was null");
+                                            if (Debug.isDebugBuild)
+                                                Debug.LogWarning("Bundle was ok but m_AssetBundle was null");
                                         }
                                         else if (AssetBundleManager.GetLoadedAssetBundle(assetBundleNamesArray[i], out error).m_AssetBundle.LoadAsset<T>(asset) == null)
                                         {
-                                            Debug.LogWarning("Load Asset could not get a " + typeof(T).ToString() + " asset called " + asset + " from " + assetBundleNamesArray[i]);
+                                            if (Debug.isDebugBuild)
+                                                Debug.LogWarning("Load Asset could not get a " + typeof(T).ToString() + " asset called " + asset + " from " + assetBundleNamesArray[i]);
                                         }
                                     }
-                                    /*if (target == null && typeof(T) == typeof(SlotDataAsset))
-									{
-										//08122016 DOS NOTES now the assetBundleIndex records the 'slotname' for slots rather than just the asset name we should not need to try this any more. TODO Confirm
-										target = (T)AssetBundleManager.GetLoadedAssetBundle(assetBundleNamesArray[i], out error).m_AssetBundle.LoadAsset<T>(asset + "_Slot");
-									}*/
                                     if (target != null)
                                     {
                                         assetFound = true;
@@ -886,7 +932,8 @@ namespace UMA.CharacterSystem
                                     {
                                         if (!String.IsNullOrEmpty(error))
                                         {
-                                            Debug.LogWarning(error);
+                                            if (Debug.isDebugBuild)
+                                                Debug.LogWarning(error);
                                         }
                                     }
                                 }
@@ -934,7 +981,8 @@ namespace UMA.CharacterSystem
                 {
                     string[] assetIsInArray = AssetBundleManager.AssetBundleIndexObject.FindContainingAssetBundle(assetName, typeString);
                     string assetIsIn = assetIsInArray.Length > 0 ? " but it was in " + assetIsInArray[0] : ". Do you need to reupload you platform manifest and index?";
-                    Debug.LogWarning("Dynamic" + typeof(T).Name + "Library (" + typeString + ") could not load " + assetName + " from any of the AssetBundles searched" + assetIsIn);
+                    if (Debug.isDebugBuild)
+                        Debug.LogWarning("Dynamic" + typeof(T).Name + "Library (" + typeString + ") could not load " + assetName + " from any of the AssetBundles searched" + assetIsIn);
                 }
 
                 return assetFound;
@@ -958,14 +1006,15 @@ namespace UMA.CharacterSystem
         bool SimulateAddAssetsFromAssetBundlesNew<T>(ref Dictionary<string, List<string>> assetBundlesUsedDict, ref List<T> assetsToReturn, string[] bundlesToSearchArray, int? assetNameHash = null, string assetName = "", Action<T[]> callback = null, bool forceDownloadAll = false) where T : UnityEngine.Object
         {
             var st = UMAAssetIndexer.StartTimer();
-
+			var assetNameToSearch = assetName;
             Type typeParameterType = typeof(T);
             var typeString = typeParameterType.FullName;
             int currentSimulatedDownloadedBundlesCount = simulatedDownloadedBundles.Count;
             if (assetNameHash != null)
             {
                 // We could load all assets of type, iterate over them and get the hash and see if it matches...But then that would be as slow as loading from resources was
-                Debug.Log("It is not currently possible to search for assetBundle assets in SimulationMode using the assetNameHash. " + typeString + " is trying to do this with assetNameHash " + assetNameHash);
+                if (Debug.isDebugBuild)
+                    Debug.Log("It is not currently possible to search for assetBundle assets in SimulationMode using the assetNameHash. " + typeString + " is trying to do this with assetNameHash " + assetNameHash);
             }
             string[] allAssetBundleNames = AssetDatabase.GetAllAssetBundleNames();
             string[] assetBundleNamesArray;
@@ -1002,7 +1051,9 @@ namespace UMA.CharacterSystem
                     //if we dont do this we have to load all the assets of that type and check their name which is really slow
                     //I think its worth having this compromise because this does not happen when the local server is on or the assets are *actually* downloaded from an external source because the AssetBundleIndex is used then
                     //if this is looking for SlotsDataAssets then the asset name has _Slot after it usually even if the slot name doesn't have that-but the user might have renamed it so cover both cases
-                    if (typeof(T) == typeof(SlotDataAsset))
+					//THIS COMPROMISE DOES NOT WORK WITH UMA CORE CONTENT the asset for 'MaleEyes' for example is 'UMA_Human_Male_Eyes_Slot'
+					//I think the only way to make this quick is for the GlobalLibrary to maintain a list of UMA assets that are in AssetBundles for use in the editor when we are in 'SimulationMode'
+					/*if (typeof(T) == typeof(SlotDataAsset))
                     {
                         string[] possiblePathsTemp = AssetDatabase.GetAssetPathsFromAssetBundleAndAssetName(assetBundleNamesArray[i], assetName);
                         string[] possiblePaths_SlotTemp = AssetDatabase.GetAssetPathsFromAssetBundleAndAssetName(assetBundleNamesArray[i], assetName + "_Slot");
@@ -1015,6 +1066,43 @@ namespace UMA.CharacterSystem
                             }
                         }
                         possiblePaths = possiblePathsList.ToArray();
+                    }
+                    else
+                    {
+                        possiblePaths = AssetDatabase.GetAssetPathsFromAssetBundleAndAssetName(assetBundleNamesArray[i], assetName);
+                    }*/
+					//not sure how we can do anything here other than load _everything_ and see if its what we want- blasted filters just dont seem to work
+					if (typeof(T) == typeof(SlotDataAsset) || typeof(T) == typeof(OverlayDataAsset) || typeof(T) == typeof(RaceData))
+					{
+						//This works (slowly) but also causes ALL the assets from the assetBundle to be loaded
+						//which is not ideal but then this is editor only so maybe not an issue?
+						var possiblePathsTempTemp = AssetDatabase.GetAssetPathsFromAssetBundle(assetBundleNamesArray[i]);
+						var possiblePathsTempList = new List<string>();
+						foreach (string path in possiblePathsTempTemp)
+                    {
+							var containingPath = System.IO.Path.GetDirectoryName(path);
+							var typeGUIDs = AssetDatabase.FindAssets("t:" + typeof(T).ToString().Replace(typeof(T).Namespace + ".", ""), new string[1] { containingPath });
+							for (int ti = 0; ti < typeGUIDs.Length; ti++)
+								possiblePathsTempList.Add(AssetDatabase.GUIDToAssetPath(typeGUIDs[ti]));
+						}
+						var possiblePathsTemp = possiblePathsTempList.ToArray();
+						var possiblePathsList = new List<string>();
+						T tempTarget = null;
+                        for (int pti = 0; pti < possiblePathsTemp.Length; pti++)
+                        {
+							tempTarget = (T)AssetDatabase.LoadAssetAtPath(possiblePathsTemp[pti], typeof(T));
+							if(tempTarget)
+							if(
+								(typeof(T) == typeof(SlotDataAsset) && (tempTarget as SlotDataAsset).slotName == assetName)||
+								(typeof(T) == typeof(OverlayDataAsset) && (tempTarget as OverlayDataAsset).overlayName == assetName)||
+								(typeof(T) == typeof(RaceData) && (tempTarget as RaceData).raceName == assetName)
+								)
+                            {
+								possiblePathsList.Add(possiblePathsTemp[pti]);
+                            }
+                        }
+                        possiblePaths = possiblePathsList.ToArray();
+						assetNameToSearch = "";//we cant use the sent name as a filter because its a slot/overlay/racename
                     }
                     else
                     {
@@ -1042,7 +1130,7 @@ namespace UMA.CharacterSystem
 					// does not load the actual asset. This is also slightly quicker than getting all paths of type T outside this loop
 					// the 't:' filter needs the type to not have a namespace
 					var typeForSearch = typeof(T).ToString().Replace(typeof(T).Namespace + ".", "");
-					var searchString = assetName == "" ? "t:" + typeForSearch : "t:" + typeForSearch + " " + assetName;
+					var searchString = assetNameToSearch == "" ? "t:" + typeForSearch : "t:" + typeForSearch + " " + assetName;
 					var containingPath = System.IO.Path.GetDirectoryName(path);
 					var typeGUIDs = AssetDatabase.FindAssets(searchString, new string[1] { containingPath });
 					var typePaths = new List<string>(typeGUIDs.Length);
@@ -1115,7 +1203,9 @@ namespace UMA.CharacterSystem
             }
             if (!assetFound && assetName != "" && debugOnFail)
             {
-                Debug.LogWarning("Dynamic" + typeString + "Library could not simulate the loading of " + assetName + " from any AssetBundles");
+                if (Debug.isDebugBuild)
+                    Debug.LogWarning("Dynamic" + typeString + "Library could not simulate the loading of " + assetName + " from any AssetBundles");
+
                 return assetFound;
             }
             if (assetsToReturn.Count > 0 && callback != null)
