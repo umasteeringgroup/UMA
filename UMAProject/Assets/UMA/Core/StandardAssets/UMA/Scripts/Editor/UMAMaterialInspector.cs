@@ -31,6 +31,10 @@ namespace UMA.Editors
             EditorGUILayout.PropertyField(serializedObject.FindProperty("material"), new GUIContent( "Material", "The Unity Material to link to."));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("materialType"), new GUIContent( "Material Type", "To atlas or not to atlas- that is the question."));
 
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("MipMapBias"), new GUIContent("Mip Map Bias", "Negative values have sharper bias"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("AnisoLevel"), new GUIContent("Aniso Level", "Anisotropic level"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("TrilinearFiltering"),  new GUIContent("Trilinear Filtering", "Check to force trilinear filtering"));
+
             GUILayout.Space(20);
 
             DrawChannelList(serializedObject.FindProperty("channels"));

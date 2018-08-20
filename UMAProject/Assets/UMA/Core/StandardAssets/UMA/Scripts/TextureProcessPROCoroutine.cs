@@ -146,15 +146,33 @@ namespace UMA
 								tempTexture = resultingTextures[textureType] as Texture2D;
 								tempTexture.Apply();
 								tempTexture.wrapMode = TextureWrapMode.Repeat;
-								tempTexture.filterMode = FilterMode.Bilinear;
-								resultingTextures[textureType] = tempTexture;
+                                tempTexture.anisoLevel = slotData.asset.material.AnisoLevel;
+                                tempTexture.mipMapBias = slotData.asset.material.MipMapBias;
+                                if (slotData.asset.material.TrilinearFiltering == true)
+                                {
+                                    tempTexture.filterMode = FilterMode.Trilinear;
+                                }
+                                else
+                                {
+                                    tempTexture.filterMode = FilterMode.Bilinear;
+                                }
+                                resultingTextures[textureType] = tempTexture;
 								atlas.material.SetTexture(slotData.asset.material.channels[textureType].materialPropertyName, tempTexture);
 							#endregion
 							}
 							else
 							{
-								destinationTexture.filterMode = FilterMode.Bilinear;
-								destinationTexture.wrapMode = TextureWrapMode.Repeat;
+                                destinationTexture.anisoLevel = slotData.asset.material.AnisoLevel;
+                                destinationTexture.mipMapBias = slotData.asset.material.MipMapBias;
+                                if (slotData.asset.material.TrilinearFiltering == true)
+                                {
+                                    destinationTexture.filterMode = FilterMode.Trilinear;
+                                }
+                                else
+                                {
+                                    destinationTexture.filterMode = FilterMode.Bilinear;
+                                }
+                                destinationTexture.wrapMode = TextureWrapMode.Repeat;
 								resultingTextures[textureType] = destinationTexture;
 								atlas.material.SetTexture(slotData.asset.material.channels[textureType].materialPropertyName, destinationTexture);
 							}
