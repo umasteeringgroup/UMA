@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.IO;
 using System.Collections.Generic;
 using UMA.CharacterSystem;
 
@@ -723,14 +724,18 @@ namespace UMA
                 if (s != "AnimatorController")
                 {
                     string[] guids = AssetDatabase.FindAssets("t:" + s);
-                    foreach (string guid in guids)
+                    for(int i = 0; i < guids.Length; i++)
                     {
-                        string Path = AssetDatabase.GUIDToAssetPath(guid);
-                        if (Path.ToLower().Contains(".shader"))
+                        string assetPath = AssetDatabase.GUIDToAssetPath(guids[i]);
+
+                        string fileName = Path.GetFileName(assetPath);
+                        EditorUtility.DisplayProgressBar("Adding Items to Global Library.", fileName, ((float)i / (float)guids.Length));
+
+                        if (assetPath.ToLower().Contains(".shader"))
                         {
                             continue;
                         }
-                        Object o = AssetDatabase.LoadAssetAtPath(Path, CurrentType);
+                        Object o = AssetDatabase.LoadAssetAtPath(assetPath, CurrentType);
                         if (o != null)
                         {
                             AssetItem ai = new AssetItem(CurrentType, o);
@@ -738,18 +743,19 @@ namespace UMA
                         }
                         else
                         {
-                            if (Path == null)
+                            if (assetPath == null)
                             {
                                 if (Debug.isDebugBuild)
-                                    Debug.LogWarning("Cannot instantiate item " + guid);
+                                    Debug.LogWarning("Cannot instantiate item " + guids[i]);
                             }
                             else
                             {
                                 if (Debug.isDebugBuild)
-                                    Debug.LogWarning("Cannot instantiate item " + Path);
+                                    Debug.LogWarning("Cannot instantiate item " + assetPath);
                             }
                         }
                     }
+                    EditorUtility.ClearProgressBar();
                 }
             }
             ForceSave();

@@ -154,9 +154,10 @@ namespace UMA.Editors
             SerializedProperty element = _morphList.serializedProperty.GetArrayElementAtIndex(index);
             SerializedProperty sizeZero = element.FindPropertyRelative("sizeZero");
             SerializedProperty sizeOne = element.FindPropertyRelative("sizeOne");
-
+#pragma warning disable 0219
             SerializedProperty massRatio = sizeZero.FindPropertyRelative("massRatio");
             SerializedProperty radiusRatio = sizeZero.FindPropertyRelative("radiusRatio");
+#pragma warning restore 0219
 
             rect.y += 2;
             EditorGUI.PrefixLabel(new Rect(rect.x, rect.y, 20, EditorGUIUtility.singleLineHeight), new GUIContent(index.ToString()));

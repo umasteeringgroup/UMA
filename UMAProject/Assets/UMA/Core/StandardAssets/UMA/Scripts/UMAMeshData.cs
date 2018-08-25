@@ -234,6 +234,22 @@ namespace UMA
 				deltaTangents = new Vector3[0];
 		}
 
+		public bool HasNormals()
+		{
+			if (deltaNormals != null && deltaNormals.Length > 0)
+				return true;
+
+			return false;
+		}
+
+		public bool HasTangents()
+		{
+			if (deltaTangents != null && deltaTangents.Length > 0)
+				return true;
+
+			return false;
+		}
+
 		/// <summary>
 		/// Determine whether the delta array has any non-zero vectors.
 		/// </summary>
