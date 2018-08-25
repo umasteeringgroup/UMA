@@ -614,13 +614,6 @@ namespace UMA.Editors
 						newHides.Add(generatedBaseSlotOptions[i]);
 					}
 				}
-				if (newHides.Count > 1)
-				{
-					GUI.enabled = false;
-					string newHidesResult = String.Join(", ", newHides.ToArray());
-					EditorGUILayout.TextField(newHidesResult);
-					GUI.enabled = true;
-				}
 			}
 			else
 				EditorGUILayout.Popup("Hides Base Slots(s)", 0, new string[1] {"Nothing"} );
@@ -640,6 +633,13 @@ namespace UMA.Editors
             }
 
             EditorGUILayout.EndHorizontal();
+            if (newHides.Count > 1)
+            {
+                GUI.enabled = false;
+                string newHidesResult = String.Join(", ", newHides.ToArray());
+                EditorGUILayout.TextField(newHidesResult);
+                GUI.enabled = true;
+            }
 
             if (ShowHelp)
             {
