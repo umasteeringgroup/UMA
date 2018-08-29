@@ -146,14 +146,18 @@ namespace UMA
 								tempTexture = resultingTextures[textureType] as Texture2D;
 								tempTexture.Apply();
 								tempTexture.wrapMode = TextureWrapMode.Repeat;
-								tempTexture.filterMode = FilterMode.Bilinear;
+								tempTexture.anisoLevel = slotData.asset.material.AnisoLevel;
+								tempTexture.mipMapBias = slotData.asset.material.MipMapBias;
+								tempTexture.filterMode = slotData.asset.material.MatFilterMode;
 								resultingTextures[textureType] = tempTexture;
 								atlas.material.SetTexture(slotData.asset.material.channels[textureType].materialPropertyName, tempTexture);
 							#endregion
 							}
 							else
 							{
-								destinationTexture.filterMode = FilterMode.Bilinear;
+								destinationTexture.anisoLevel = slotData.asset.material.AnisoLevel;
+								destinationTexture.mipMapBias = slotData.asset.material.MipMapBias;
+								destinationTexture.filterMode = slotData.asset.material.MatFilterMode;
 								destinationTexture.wrapMode = TextureWrapMode.Repeat;
 								resultingTextures[textureType] = destinationTexture;
 								atlas.material.SetTexture(slotData.asset.material.channels[textureType].materialPropertyName, destinationTexture);

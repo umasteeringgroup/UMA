@@ -14,6 +14,12 @@ namespace UMA
         public UMAClothProperties clothProperties;
         public bool RequireSeperateRenderer;
 
+        [Range(-2.0f, 2.0f)]
+        public float MipMapBias = 0.0f;
+        [Range(1, 16)]
+        public int AnisoLevel = 1;
+        public FilterMode MatFilterMode = FilterMode.Bilinear;
+
         public enum MaterialType
         {
             Atlas = 1,
