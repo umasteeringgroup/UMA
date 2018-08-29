@@ -18,7 +18,7 @@ namespace UMA
         public float MipMapBias = 0.0f;
         [Range(0, 16)]
         public int AnisoLevel = 1;
-        public bool TrilinearFiltering = false;
+        public FilterMode MatFilterMode = FilterMode.Bilinear;
 
         public enum MaterialType
         {

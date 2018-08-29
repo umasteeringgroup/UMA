@@ -148,14 +148,7 @@ namespace UMA
 								tempTexture.wrapMode = TextureWrapMode.Repeat;
 								tempTexture.anisoLevel = slotData.asset.material.AnisoLevel;
 								tempTexture.mipMapBias = slotData.asset.material.MipMapBias;
-								if (slotData.asset.material.TrilinearFiltering == true)
-								{
-									tempTexture.filterMode = FilterMode.Trilinear;
-								}
-								else
-								{
-									tempTexture.filterMode = FilterMode.Bilinear;
-								}
+								tempTexture.filterMode = slotData.asset.material.MatFilterMode;
 								resultingTextures[textureType] = tempTexture;
 								atlas.material.SetTexture(slotData.asset.material.channels[textureType].materialPropertyName, tempTexture);
 							#endregion
@@ -164,14 +157,7 @@ namespace UMA
 							{
 								destinationTexture.anisoLevel = slotData.asset.material.AnisoLevel;
 								destinationTexture.mipMapBias = slotData.asset.material.MipMapBias;
-								if (slotData.asset.material.TrilinearFiltering == true)
-								{
-									destinationTexture.filterMode = FilterMode.Trilinear;
-								}
-								else
-								{
-									destinationTexture.filterMode = FilterMode.Bilinear;
-								}
+								destinationTexture.filterMode = slotData.asset.material.MatFilterMode;
 								destinationTexture.wrapMode = TextureWrapMode.Repeat;
 								resultingTextures[textureType] = destinationTexture;
 								atlas.material.SetTexture(slotData.asset.material.channels[textureType].materialPropertyName, destinationTexture);
