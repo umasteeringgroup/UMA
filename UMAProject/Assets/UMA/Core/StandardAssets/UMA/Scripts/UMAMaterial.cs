@@ -14,7 +14,7 @@ namespace UMA
         public UMAClothProperties clothProperties;
         public bool RequireSeperateRenderer;
         public float MipMapBias = 0.0f;
-        public int AnisoLevel = 0;
+        public int AnisoLevel = 1;
         public bool TrilinearFiltering = false;
 
         public enum MaterialType
