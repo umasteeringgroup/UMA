@@ -14,9 +14,9 @@ namespace UMA
         public UMAClothProperties clothProperties;
         public bool RequireSeperateRenderer;
 
-        [Range(-0.5f, 4.0f)]
+        [Range(-2.0f, 2.0f)]
         public float MipMapBias = 0.0f;
-        [Range(0, 16)]
+        [Range(1, 16)]
         public int AnisoLevel = 1;
         public FilterMode MatFilterMode = FilterMode.Bilinear;
 
