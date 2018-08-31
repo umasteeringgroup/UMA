@@ -33,6 +33,18 @@ namespace UMA
 
 		}
 
+		public static RenderTexture ResizeRenderTexture(RenderTexture source, int newWidth, int newHeight, FilterMode filter)
+		{
+			source.filterMode = filter;
+			RenderTexture rt = new RenderTexture(newWidth, newHeight, 0, source.format, RenderTextureReadWrite.Linear);
+
+			rt.filterMode = FilterMode.Point;
+
+			RenderTexture.active = rt;
+			Graphics.Blit(source, rt);
+			return rt;
+		}
+
         protected override IEnumerator workerMethod()
         {
 			var textureMerge = umaGenerator.textureMerge;
@@ -87,15 +99,32 @@ namespace UMA
 							camTransform.position = new Vector3(width >> 1, height >> 1, 3);
 							camTransform.rotation = Quaternion.Euler(0, 180, 180);
 							renderCamera.Render();
+
+							int DownSample = slotData.asset.material.channels[textureType].DownSample;
+
+							if (DownSample != 0)
+							{
+									int newW = width >> DownSample;
+									int newH = height >> DownSample;
+
+									RenderTexture rt = ResizeRenderTexture(destinationTexture, newW, newH, FilterMode.Bilinear);
+									destinationTexture.Release();
+									destinationTexture = rt;
+							}
+
 							renderCamera.gameObject.SetActive(false);
 							renderCamera.targetTexture = null;
 
-							if (umaGenerator.convertRenderTexture)
+							if (umaGenerator.convertRenderTexture || slotData.asset.material.channels[textureType].ConvertRenderTexture)
 							{
 								#region Convert Render Textures
 								yield return 25;
 								Texture2D tempTexture;
-								tempTexture = new Texture2D(destinationTexture.width, destinationTexture.height, TextureFormat.ARGB32, umaGenerator.convertMipMaps);
+
+
+
+								tempTexture = new Texture2D(destinationTexture.width, destinationTexture.height, TextureFormat.ARGB32, umaGenerator.convertMipMaps,true);
+  
 								int xblocks = destinationTexture.width / 512;
 								int yblocks = destinationTexture.height / 512;
 								if (xblocks == 0 || yblocks == 0)
@@ -134,6 +163,8 @@ namespace UMA
 										}
 									}
 								}
+                                
+                                
 								resultingTextures[textureType] = tempTexture as Texture;
 
 								renderCamera.targetTexture = null;
@@ -149,6 +180,10 @@ namespace UMA
 								tempTexture.anisoLevel = slotData.asset.material.AnisoLevel;
 								tempTexture.mipMapBias = slotData.asset.material.MipMapBias;
 								tempTexture.filterMode = slotData.asset.material.MatFilterMode;
+								if (slotData.asset.material.channels[textureType].Compression != UMAMaterial.CompressionSettings.None)
+								{
+										tempTexture.Compress(slotData.asset.material.channels[textureType].Compression == UMAMaterial.CompressionSettings.HighQuality);
+								}
 								resultingTextures[textureType] = tempTexture;
 								atlas.material.SetTexture(slotData.asset.material.channels[textureType].materialPropertyName, tempTexture);
 							#endregion
@@ -162,6 +197,7 @@ namespace UMA
 								resultingTextures[textureType] = destinationTexture;
 								atlas.material.SetTexture(slotData.asset.material.channels[textureType].materialPropertyName, destinationTexture);
 							}
+
 							umaGenerator.textureMerge.gameObject.SetActive(false);
 							break;
 						}
