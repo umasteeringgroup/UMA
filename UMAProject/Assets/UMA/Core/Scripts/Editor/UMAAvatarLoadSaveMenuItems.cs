@@ -48,9 +48,9 @@ namespace UMA.Editors
             {
                string PathBase = System.IO.Path.Combine(pathname, basename + "_material_" + i.ToString());
                string DiffuseName = PathBase + "_Diffuse.PNG";
-                    string NormalName = PathBase + "_Normal.PNG";
-                    SaveTexture(smr.materials[i].GetTexture("_MainTex"), DiffuseName);
-                    SaveTexture(smr.materials[i].GetTexture("_BumpMap"), NormalName);
+               string NormalName = PathBase + "_Normal.PNG";
+               SaveTexture(smr.materials[i].GetTexture("_MainTex"), DiffuseName);
+               SaveTexture(smr.materials[i].GetTexture("_BumpMap"), NormalName);
             }
          }
       }

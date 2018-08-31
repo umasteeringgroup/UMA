@@ -33,17 +33,17 @@ namespace UMA
 
 		}
 
-        public static RenderTexture ResizeRenderTexture(RenderTexture source, int newWidth, int newHeight, FilterMode filter)
-        {
-            source.filterMode = filter;
-            RenderTexture rt = new RenderTexture(newWidth, newHeight, 0, source.format, RenderTextureReadWrite.Linear);
+		public static RenderTexture ResizeRenderTexture(RenderTexture source, int newWidth, int newHeight, FilterMode filter)
+		{
+			source.filterMode = filter;
+			RenderTexture rt = new RenderTexture(newWidth, newHeight, 0, source.format, RenderTextureReadWrite.Linear);
 
-            rt.filterMode = FilterMode.Point;
+			rt.filterMode = FilterMode.Point;
 
-            RenderTexture.active = rt;
-            Graphics.Blit(source, rt);
-            return rt;
-        }
+			RenderTexture.active = rt;
+			Graphics.Blit(source, rt);
+			return rt;
+		}
 
         protected override IEnumerator workerMethod()
         {
@@ -100,17 +100,17 @@ namespace UMA
 							camTransform.rotation = Quaternion.Euler(0, 180, 180);
 							renderCamera.Render();
 
-                            int DownSample = slotData.asset.material.channels[textureType].DownSample;
+							int DownSample = slotData.asset.material.channels[textureType].DownSample;
 
-                            if (DownSample != 0)
-                            {
-                                    int newW = width >> DownSample;
-                                    int newH = height >> DownSample;
+							if (DownSample != 0)
+							{
+									int newW = width >> DownSample;
+									int newH = height >> DownSample;
 
-                                    RenderTexture rt = ResizeRenderTexture(destinationTexture, newW, newH, FilterMode.Bilinear);
-                                    destinationTexture.Release();
-                                    destinationTexture = rt;
-                            }
+									RenderTexture rt = ResizeRenderTexture(destinationTexture, newW, newH, FilterMode.Bilinear);
+									destinationTexture.Release();
+									destinationTexture = rt;
+							}
 
 							renderCamera.gameObject.SetActive(false);
 							renderCamera.targetTexture = null;
@@ -180,10 +180,10 @@ namespace UMA
 								tempTexture.anisoLevel = slotData.asset.material.AnisoLevel;
 								tempTexture.mipMapBias = slotData.asset.material.MipMapBias;
 								tempTexture.filterMode = slotData.asset.material.MatFilterMode;
-                                if (slotData.asset.material.channels[textureType].Compression != UMAMaterial.CompressionSettings.None)
-                                {
-                                        tempTexture.Compress(slotData.asset.material.channels[textureType].Compression == UMAMaterial.CompressionSettings.HighQuality);
-                                }
+								if (slotData.asset.material.channels[textureType].Compression != UMAMaterial.CompressionSettings.None)
+								{
+										tempTexture.Compress(slotData.asset.material.channels[textureType].Compression == UMAMaterial.CompressionSettings.HighQuality);
+								}
 								resultingTextures[textureType] = tempTexture;
 								atlas.material.SetTexture(slotData.asset.material.channels[textureType].materialPropertyName, tempTexture);
 							#endregion
@@ -194,7 +194,7 @@ namespace UMA
 								destinationTexture.mipMapBias = slotData.asset.material.MipMapBias;
 								destinationTexture.filterMode = slotData.asset.material.MatFilterMode;
 								destinationTexture.wrapMode = TextureWrapMode.Repeat;
-                                resultingTextures[textureType] = destinationTexture;
+								resultingTextures[textureType] = destinationTexture;
 								atlas.material.SetTexture(slotData.asset.material.channels[textureType].materialPropertyName, destinationTexture);
 							}
 
