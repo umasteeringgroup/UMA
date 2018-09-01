@@ -11,6 +11,7 @@ namespace UMA.Examples
 	{
 		public int dnaTypeHash = 386317366;
 		public string dnaName = "";
+		public Text statusText;
 
 		protected UMAData data;
 		protected UMADnaBase dna;
@@ -61,12 +62,18 @@ namespace UMA.Examples
                 float dnaValue = dna.GetValue(dnaEntryIndex);
 
                 data.AddBakedBlendShape(dnaValue, null, dnaName, true);
+
+				if (statusText != null)
+					statusText.text = "(Baked)";
             }
         }
 
         public void UnbakeMorph()
         {
 			data.RemoveBakedBlendShape(dnaName, true);
+
+			if (statusText != null)
+				statusText.text = "(Unbaked)";
         }
 	}
 }
