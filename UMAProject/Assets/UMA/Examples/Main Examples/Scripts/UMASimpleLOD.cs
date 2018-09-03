@@ -169,8 +169,21 @@ namespace UMA.Examples
 					}
 				}
 			}
+
+            //Reprocess mesh hide assets
+            //Eventually, make this a function in DCA (UpdateMeshHideMasks) and replace correspond code in DCA.LoadCharacter too
+            if (_avatar != null)
+            {
+                foreach (SlotData sd in _umaData.umaRecipe.slotDataList)
+                {
+                    if (_avatar.MeshHideDictionary.ContainsKey(sd.asset))
+                    {   //If this slotDataAsset is found in the MeshHideDictionary then we need to supply the SlotData with the bitArray.
+                        sd.meshHideMask = MeshHideAsset.GenerateMask(_avatar.MeshHideDictionary[sd.asset]);
+                    }
+                }
+            }
 #if UNITY_EDITOR
-			UnityEditor.EditorUtility.SetDirty(_umaData);
+            UnityEditor.EditorUtility.SetDirty(_umaData);
 #endif
 			return changedSlots;
 		}
