@@ -2536,13 +2536,11 @@ namespace UMA.CharacterSystem
                                 if (!_meshHideDictionary.ContainsKey(meshHide.asset))
                                 {   //If this meshHide.asset isn't already in the dictionary, then let's add it and start a new list.
                                     _meshHideDictionary.Add(meshHide.asset, new List<MeshHideAsset>());
-                                    Debug.Log("Found: " + meshHide.name);
                                 }
                                 //If this meshHide.asset is already in the dictionary AND the meshHide isn't already in the list, then add it.
                                 if (!_meshHideDictionary[meshHide.asset].Contains(meshHide))
                                 {
                                     _meshHideDictionary[meshHide.asset].Add(meshHide);
-                                    Debug.Log("Found: " + meshHide.name);
                                 }
                             }
                         }
