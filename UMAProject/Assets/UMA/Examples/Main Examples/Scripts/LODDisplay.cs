@@ -6,6 +6,7 @@ using UMA.CharacterSystem;
 
 namespace UMA.Examples
 {
+    [RequireComponent(typeof(UMASimpleLOD))]
     public class LODDisplay : MonoBehaviour
     {
         public GameObject LODDisplayPrefab;
@@ -29,16 +30,18 @@ namespace UMA.Examples
                 tm.transform.localPosition = new Vector3(0, 2f, 0f);
                 tm.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
                 _lodDisplay = tm.GetComponent<TextMesh>();
-            }            
+            }
+            else
+            {
+                if (Debug.isDebugBuild)
+                    Debug.LogWarning("No LOD Display prefab set on " + gameObject.name);
+            }
         }
 
         // Update is called once per frame
         void Update()
         {
-            if (_simpleLOD == null)
-                return;
-
-            if (_lodDisplay != null)
+            if (_simpleLOD != null && _lodDisplay != null)
             {
                 if (_lastSetLevel != _simpleLOD.CurrentLOD)
                 {
