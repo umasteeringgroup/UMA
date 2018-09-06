@@ -172,7 +172,7 @@ namespace UMA.Examples
 
             //Reprocess mesh hide assets
             //Eventually, make this a function in DCA (UpdateMeshHideMasks) and replace correspond code in DCA.LoadCharacter too
-            if (_avatar != null)
+            if (_avatar != null && changedSlots)
             {
                 foreach (SlotData sd in _umaData.umaRecipe.slotDataList)
                 {
