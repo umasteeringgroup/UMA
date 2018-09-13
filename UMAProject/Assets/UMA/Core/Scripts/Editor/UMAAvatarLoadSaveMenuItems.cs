@@ -49,8 +49,10 @@ namespace UMA.Editors
                string PathBase = System.IO.Path.Combine(pathname, basename + "_material_" + i.ToString());
                string DiffuseName = PathBase + "_Diffuse.PNG";
                string NormalName = PathBase + "_Normal.PNG";
-               SaveTexture(smr.materials[i].GetTexture("_MainTex"), DiffuseName);
-               SaveTexture(smr.materials[i].GetTexture("_BumpMap"), NormalName);
+               Texture diff = smr.materials[i].GetTexture("_MainTex");
+               if (diff != null) SaveTexture(diff, DiffuseName);
+               Texture bmp = smr.materials[i].GetTexture("_BumpMap");
+               if (bmp != null) SaveTexture(bmp, NormalName);
             }
          }
       }
@@ -80,7 +82,7 @@ namespace UMA.Editors
          RenderTexture.active = rt;
 
          // Create a new Texture2D and read the RenderTexture image into it
-         Texture2D tex = new Texture2D(rt.width, rt.height);
+         Texture2D tex = new Texture2D(rt.width, rt.height,TextureFormat.ARGB32,false,true);
          tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
 
          // Restorie previously active render texture
