@@ -1,4 +1,5 @@
-﻿using UnityEditor;
+﻿#if UNITY_2017_1_OR_NEWER
+using UnityEditor;
 using UMA.Timeline;
 
 namespace UMA.Editors
@@ -42,3 +43,4 @@ namespace UMA.Editors
         }
     }
 }
+#endif

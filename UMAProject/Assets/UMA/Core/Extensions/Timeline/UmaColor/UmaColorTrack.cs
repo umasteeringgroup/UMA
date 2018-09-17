@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#if UNITY_2017_1_OR_NEWER
+using UnityEngine;
 using UnityEngine.Playables;
 using UnityEngine.Timeline;
 using UMA.CharacterSystem;
@@ -21,3 +22,4 @@ namespace UMA.Timeline
         }
     }
 }
+#endif

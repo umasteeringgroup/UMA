@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if UNITY_2017_1_OR_NEWER
+using System;
 using UnityEngine;
 using UnityEngine.Playables;
 using System.Collections.Generic;
@@ -20,3 +21,4 @@ namespace UMA.Timeline
         public List<DnaTuple> dnaValues = new List<DnaTuple>();
     }
 }
+#endif

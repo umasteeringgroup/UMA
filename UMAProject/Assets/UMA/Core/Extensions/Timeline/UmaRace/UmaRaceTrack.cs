@@ -1,4 +1,5 @@
-﻿using UnityEngine.Timeline;
+﻿#if UNITY_2017_1_OR_NEWER
+using UnityEngine.Timeline;
 using UMA.CharacterSystem;
 
 namespace UMA.Timeline
@@ -10,3 +11,4 @@ namespace UMA.Timeline
     {
     }
 }
+#endif
