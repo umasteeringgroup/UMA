@@ -2,43 +2,47 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
+using UMA.Timeline;
 
-[CustomPropertyDrawer(typeof(UmaWardrobeBehaviour))]
-public class UmaWardrobeBehaviourEditor : PropertyDrawer
+namespace UMA.Editors
 {
-    public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+    [CustomPropertyDrawer(typeof(UmaWardrobeBehaviour))]
+    public class UmaWardrobeBehaviourEditor : PropertyDrawer
     {
-        int fieldCount = 3;
-        return fieldCount * EditorGUIUtility.singleLineHeight;
-    }
-
-    public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
-    {
-        SerializedProperty wardrobeOption = property.FindPropertyRelative("wardrobeOption");
-        SerializedProperty recipesToAdd = property.FindPropertyRelative("recipesToAdd");
-        SerializedProperty slotsToClear = property.FindPropertyRelative("slotsToClear");
-        SerializedProperty rebuildImmediately = property.FindPropertyRelative("rebuildImmediately");
-
-        Rect singleFieldRect = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
-        EditorGUI.PropertyField(singleFieldRect, rebuildImmediately);
-
-        singleFieldRect.y += EditorGUIUtility.singleLineHeight;
-        EditorGUI.PropertyField(singleFieldRect, wardrobeOption);
-
-        if (wardrobeOption.enumValueIndex == (int)UmaWardrobeBehaviour.WardrobeOptions.AddRecipes)
+        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            singleFieldRect.y += EditorGUIUtility.singleLineHeight;
-            EditorGUI.PropertyField(singleFieldRect, recipesToAdd, true);
+            int fieldCount = 3;
+            return fieldCount * EditorGUIUtility.singleLineHeight;
         }
 
-        if (wardrobeOption.enumValueIndex == (int)UmaWardrobeBehaviour.WardrobeOptions.ClearSlots)
+        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            singleFieldRect.y += EditorGUIUtility.singleLineHeight;
-            EditorGUI.PropertyField(singleFieldRect, slotsToClear, true);
-        }
+            SerializedProperty wardrobeOption = property.FindPropertyRelative("wardrobeOption");
+            SerializedProperty recipesToAdd = property.FindPropertyRelative("recipesToAdd");
+            SerializedProperty slotsToClear = property.FindPropertyRelative("slotsToClear");
+            SerializedProperty rebuildImmediately = property.FindPropertyRelative("rebuildImmediately");
 
-        if (wardrobeOption.enumValueIndex == (int)UmaWardrobeBehaviour.WardrobeOptions.ClearAllSlots)
-        {
+            Rect singleFieldRect = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
+            EditorGUI.PropertyField(singleFieldRect, rebuildImmediately);
+
+            singleFieldRect.y += EditorGUIUtility.singleLineHeight;
+            EditorGUI.PropertyField(singleFieldRect, wardrobeOption);
+
+            if (wardrobeOption.enumValueIndex == (int)UmaWardrobeBehaviour.WardrobeOptions.AddRecipes)
+            {
+                singleFieldRect.y += EditorGUIUtility.singleLineHeight;
+                EditorGUI.PropertyField(singleFieldRect, recipesToAdd, true);
+            }
+
+            if (wardrobeOption.enumValueIndex == (int)UmaWardrobeBehaviour.WardrobeOptions.ClearSlots)
+            {
+                singleFieldRect.y += EditorGUIUtility.singleLineHeight;
+                EditorGUI.PropertyField(singleFieldRect, slotsToClear, true);
+            }
+
+            if (wardrobeOption.enumValueIndex == (int)UmaWardrobeBehaviour.WardrobeOptions.ClearAllSlots)
+            {
+            }
         }
     }
 }

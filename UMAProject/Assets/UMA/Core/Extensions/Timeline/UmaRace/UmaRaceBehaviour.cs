@@ -1,26 +1,27 @@
 ﻿using System;
 using UnityEngine;
 using UnityEngine.Playables;
-using UnityEngine.Timeline;
-using UMA;
 using UMA.CharacterSystem;
 
-[Serializable]
-public class UmaRaceBehaviour : PlayableBehaviour
+namespace UMA.Timeline
 {
-    public string raceToChangeTo = "";
-
-    [HideInInspector]
-    public bool isAdded = false;
-
-    public override void ProcessFrame(Playable playable, FrameData info, object playerData)
+    [Serializable]
+    public class UmaRaceBehaviour : PlayableBehaviour
     {
-        DynamicCharacterAvatar avatar = playerData as DynamicCharacterAvatar;
+        public string raceToChangeTo = "";
 
-        if (!isAdded)
+        [HideInInspector]
+        public bool isAdded = false;
+
+        public override void ProcessFrame(Playable playable, FrameData info, object playerData)
         {
-            isAdded = true;
-            avatar.ChangeRace(raceToChangeTo);
+            DynamicCharacterAvatar avatar = playerData as DynamicCharacterAvatar;
+
+            if (!isAdded)
+            {
+                isAdded = true;
+                avatar.ChangeRace(raceToChangeTo);
+            }
         }
     }
 }

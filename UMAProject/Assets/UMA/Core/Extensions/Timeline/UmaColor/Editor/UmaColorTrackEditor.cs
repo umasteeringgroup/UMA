@@ -1,20 +1,20 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEditor;
+﻿using UnityEditor;
+using UMA.Timeline;
 
-[CustomEditor(typeof(UmaColorTrack))]
-public class UmaColorTrackEditor : Editor
+namespace UMA.Editors
 {
-    public override void OnInspectorGUI()
+    [CustomEditor(typeof(UmaColorTrack))]
+    public class UmaColorTrackEditor : Editor
     {
-        serializedObject.Update();
+        public override void OnInspectorGUI()
+        {
+            serializedObject.Update();
 
-        SerializedProperty timeStep = serializedObject.FindProperty("timeStep");
+            SerializedProperty timeStep = serializedObject.FindProperty("timeStep");
 
-        EditorGUILayout.PropertyField(timeStep);
+            EditorGUILayout.PropertyField(timeStep);
 
-        serializedObject.ApplyModifiedProperties();
+            serializedObject.ApplyModifiedProperties();
+        }
     }
-
 }

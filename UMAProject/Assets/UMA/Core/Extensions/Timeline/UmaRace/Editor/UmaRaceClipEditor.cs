@@ -1,46 +1,44 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEditor;
-using UMA;
-using UMA.CharacterSystem;
-using UMA.CharacterSystem.Editors;
+﻿using UnityEditor;
+using UMA.Timeline;
 
-[CustomEditor(typeof(UmaRaceClip))]
-public class UmaRaceClipEditor : Editor
+namespace UMA.Editors
 {
-    SerializedProperty raceToChangeTo;
-
-    string[] raceOptions;
-    int selectedIndex = -1;
-
-    void OnEnable()
+    [CustomEditor(typeof(UmaRaceClip))]
+    public class UmaRaceClipEditor : Editor
     {
-        UMAContext context = UMAContext.FindInstance();
-        RaceData[] races = context.GetAllRaces();
+        SerializedProperty raceToChangeTo;
 
-        raceToChangeTo = serializedObject.FindProperty("raceToChangeTo");        
+        string[] raceOptions;
+        int selectedIndex = -1;
 
-        raceOptions = new string[races.Length];
-        for(int i = 0; i < races.Length; i++)
+        void OnEnable()
         {
-            raceOptions[i] = races[i].raceName;
-            if (raceToChangeTo.stringValue == raceOptions[i])
-                selectedIndex = i;
-        }
-    }
+            UMAContext context = UMAContext.FindInstance();
+            RaceData[] races = context.GetAllRaces();
 
-    public override void OnInspectorGUI()
-    {
-        serializedObject.Update();
+            raceToChangeTo = serializedObject.FindProperty("raceToChangeTo");
 
-        int newIndex = EditorGUILayout.Popup("Race To Change To", selectedIndex, raceOptions);
-        if (newIndex != selectedIndex)
-        {
-            selectedIndex = newIndex;
-            raceToChangeTo.stringValue = raceOptions[selectedIndex];
+            raceOptions = new string[races.Length];
+            for (int i = 0; i < races.Length; i++)
+            {
+                raceOptions[i] = races[i].raceName;
+                if (raceToChangeTo.stringValue == raceOptions[i])
+                    selectedIndex = i;
+            }
         }
 
-        serializedObject.ApplyModifiedProperties();
+        public override void OnInspectorGUI()
+        {
+            serializedObject.Update();
+
+            int newIndex = EditorGUILayout.Popup("Race To Change To", selectedIndex, raceOptions);
+            if (newIndex != selectedIndex)
+            {
+                selectedIndex = newIndex;
+                raceToChangeTo.stringValue = raceOptions[selectedIndex];
+            }
+
+            serializedObject.ApplyModifiedProperties();
+        }
     }
 }

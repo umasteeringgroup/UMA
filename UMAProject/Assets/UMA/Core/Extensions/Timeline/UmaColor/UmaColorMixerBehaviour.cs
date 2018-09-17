@@ -1,51 +1,51 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Playables;
-using UnityEngine.Timeline;
-using UMA;
 using UMA.CharacterSystem;
 
-public class UmaColorMixerBehaviour : PlayableBehaviour 
+namespace UMA.Timeline
 {
-	DynamicCharacterAvatar m_TrackBinding;
-    public float elapsedTime = 0f;
-    public float timeStep = 0.2f;
+    public class UmaColorMixerBehaviour : PlayableBehaviour
+    {
+        DynamicCharacterAvatar m_TrackBinding;
+        public float elapsedTime = 0f;
+        public float timeStep = 0.2f;
 
-	public override void ProcessFrame(Playable playable, FrameData info, object playerData)
-	{
-        Color finalColor = Color.black;
-        string sharedColorName = "";
-		m_TrackBinding = playerData as DynamicCharacterAvatar;
-
-		if (m_TrackBinding == null)
-		{
-			Debug.LogWarning("No DynamicCharacterAvatar set for UmaColor Playable!");
-			return;
-		}
-
-		int inputCount = playable.GetInputCount();
-		bool colorUpdated = false;
-       
-        elapsedTime += info.deltaTime;
-
-        for (int i = 0; i < inputCount; i++)
-		{
-			float inputWeight = playable.GetInputWeight(i);
-			ScriptPlayable<UmaColorBehaviour> inputPlayable = (ScriptPlayable<UmaColorBehaviour>)playable.GetInput(i);
-			UmaColorBehaviour input = inputPlayable.GetBehaviour();
-
-            sharedColorName = input.sharedColorName;
-            finalColor += input.color * inputWeight;
-        }
-
-        if (elapsedTime >= timeStep)
+        public override void ProcessFrame(Playable playable, FrameData info, object playerData)
         {
-            elapsedTime = 0f;
-            m_TrackBinding.SetColor(sharedColorName, finalColor);
-            colorUpdated = true;
-        }
+            Color finalColor = Color.black;
+            string sharedColorName = "";
+            m_TrackBinding = playerData as DynamicCharacterAvatar;
 
-        if (colorUpdated)
-			m_TrackBinding.UpdateColors(true);
-	}
+            if (m_TrackBinding == null)
+            {
+                Debug.LogWarning("No DynamicCharacterAvatar set for UmaColor Playable!");
+                return;
+            }
+
+            int inputCount = playable.GetInputCount();
+            bool colorUpdated = false;
+
+            elapsedTime += info.deltaTime;
+
+            for (int i = 0; i < inputCount; i++)
+            {
+                float inputWeight = playable.GetInputWeight(i);
+                ScriptPlayable<UmaColorBehaviour> inputPlayable = (ScriptPlayable<UmaColorBehaviour>)playable.GetInput(i);
+                UmaColorBehaviour input = inputPlayable.GetBehaviour();
+
+                sharedColorName = input.sharedColorName;
+                finalColor += input.color * inputWeight;
+            }
+
+            if (elapsedTime >= timeStep)
+            {
+                elapsedTime = 0f;
+                m_TrackBinding.SetColor(sharedColorName, finalColor);
+                colorUpdated = true;
+            }
+
+            if (colorUpdated)
+                m_TrackBinding.UpdateColors(true);
+        }
+    }
 }

@@ -3,19 +3,22 @@ using UnityEngine;
 using UnityEngine.Playables;
 using UnityEngine.Timeline;
 
-[Serializable]
-public class UmaDnaClip : PlayableAsset, ITimelineClipAsset
+namespace UMA.Timeline
 {
-    public UmaDnaBehaviour template = new UmaDnaBehaviour();
-
-    public ClipCaps clipCaps
+    [Serializable]
+    public class UmaDnaClip : PlayableAsset, ITimelineClipAsset
     {
-        get { return ClipCaps.Blending; }
-    }
+        public UmaDnaBehaviour template = new UmaDnaBehaviour();
 
-    public override Playable CreatePlayable(PlayableGraph graph, GameObject owner)
-    {
-        var playable = ScriptPlayable<UmaDnaBehaviour>.Create(graph, template);
-        return playable;
+        public ClipCaps clipCaps
+        {
+            get { return ClipCaps.Blending; }
+        }
+
+        public override Playable CreatePlayable(PlayableGraph graph, GameObject owner)
+        {
+            var playable = ScriptPlayable<UmaDnaBehaviour>.Create(graph, template);
+            return playable;
+        }
     }
 }

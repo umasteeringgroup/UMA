@@ -1,41 +1,41 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Playables;
-using UnityEngine.Timeline;
-using UMA;
 using UMA.CharacterSystem;
 using System.Collections.Generic;
 
-public class UmaDnaMixerBehaviour : PlayableBehaviour
+namespace UMA.Timeline
 {
-    DynamicCharacterAvatar avatar;
-
-    public override void ProcessFrame(Playable playable, FrameData info, object playerData)
+    public class UmaDnaMixerBehaviour : PlayableBehaviour
     {
-        DynamicCharacterAvatar avatar = playerData as DynamicCharacterAvatar;
-        if (avatar == null || !Application.isPlaying)
-            return;
+        DynamicCharacterAvatar avatar;
 
-        Dictionary<string, DnaSetter> allDNA = avatar.GetDNA();
-
-        int inputCount = playable.GetInputCount();
-        for (int i = 0; i < inputCount; i++)
+        public override void ProcessFrame(Playable playable, FrameData info, object playerData)
         {
-            float inputWeight = playable.GetInputWeight(i);
-            ScriptPlayable<UmaDnaBehaviour> inputPlayable = (ScriptPlayable<UmaDnaBehaviour>)playable.GetInput(i);
-            UmaDnaBehaviour input = inputPlayable.GetBehaviour();
+            DynamicCharacterAvatar avatar = playerData as DynamicCharacterAvatar;
+            if (avatar == null || !Application.isPlaying)
+                return;
 
-            foreach (UmaDnaBehaviour.DnaTuple dna in input.dnaValues)
+            Dictionary<string, DnaSetter> allDNA = avatar.GetDNA();
+
+            int inputCount = playable.GetInputCount();
+            for (int i = 0; i < inputCount; i++)
             {
-                if (allDNA.ContainsKey(dna.Name))
-                {
-                    float currentValue = allDNA[dna.Name].Value * (1f - inputWeight);
-                    allDNA[dna.Name].Set( currentValue + (dna.Value * inputWeight));
-                }
-            }
+                float inputWeight = playable.GetInputWeight(i);
+                ScriptPlayable<UmaDnaBehaviour> inputPlayable = (ScriptPlayable<UmaDnaBehaviour>)playable.GetInput(i);
+                UmaDnaBehaviour input = inputPlayable.GetBehaviour();
 
-            if (input.rebuildImmediately)
-                avatar.ForceUpdate(true, false, false);
+                foreach (UmaDnaBehaviour.DnaTuple dna in input.dnaValues)
+                {
+                    if (allDNA.ContainsKey(dna.Name))
+                    {
+                        float currentValue = allDNA[dna.Name].Value * (1f - inputWeight);
+                        allDNA[dna.Name].Set(currentValue + (dna.Value * inputWeight));
+                    }
+                }
+
+                if (input.rebuildImmediately)
+                    avatar.ForceUpdate(true, false, false);
+            }
         }
     }
 }

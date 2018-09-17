@@ -2,24 +2,25 @@
 using UnityEngine;
 using UnityEngine.Playables;
 using UnityEngine.Timeline;
-using UMA;
-using UMA.CharacterSystem;
 
-[Serializable]
-public class UmaRaceClip : PlayableAsset, ITimelineClipAsset
+namespace UMA.Timeline
 {
-    public string raceToChangeTo = "";
-
-    public ClipCaps clipCaps
+    [Serializable]
+    public class UmaRaceClip : PlayableAsset, ITimelineClipAsset
     {
-        get { return ClipCaps.None; }
-    }
+        public string raceToChangeTo = "";
 
-    public override Playable CreatePlayable(PlayableGraph graph, GameObject owner)
-    {
-        var playable = ScriptPlayable<UmaRaceBehaviour>.Create(graph);
-        playable.GetBehaviour().raceToChangeTo = raceToChangeTo;
-        return playable;
-    }
+        public ClipCaps clipCaps
+        {
+            get { return ClipCaps.None; }
+        }
 
+        public override Playable CreatePlayable(PlayableGraph graph, GameObject owner)
+        {
+            var playable = ScriptPlayable<UmaRaceBehaviour>.Create(graph);
+            playable.GetBehaviour().raceToChangeTo = raceToChangeTo;
+            return playable;
+        }
+
+    }
 }
