@@ -175,6 +175,34 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+--- !u!1 &84425579 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 153068, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 2}
+  m_PrefabInternal: {fileID: 137399732}
+--- !u!114 &84425580 stripped
+MonoBehaviour:
+  m_PrefabParentObject: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa,
+    type: 2}
+  m_PrefabInternal: {fileID: 137399732}
+  m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
+--- !u!114 &84425582
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 84425579}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c82dc34bd02334489aa32dfdeef3490, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playableDirector: {fileID: 1245141517}
+--- !u!114 &94985962 stripped
+MonoBehaviour:
+  m_PrefabParentObject: {fileID: 11470452, guid: fe29e3c90ef88194184c6f3656db5ec5,
+    type: 2}
+  m_PrefabInternal: {fileID: 685048510}
+  m_Script: {fileID: 11500000, guid: 1c0397d804a50934daade4356186eaf9, type: 3}
 --- !u!1001 &137399732
 Prefab:
   m_ObjectHideFlags: 0
@@ -182,6 +210,18 @@ Prefab:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 2}
+      propertyPath: preloadWardrobeRecipes.recipes.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 2}
+      propertyPath: preloadWardrobeRecipes.recipes.Array.data[0]._compatibleRaces.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 2}
+      propertyPath: preloadWardrobeRecipes.recipes.Array.data[1]._compatibleRaces.Array.size
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 487678, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 2}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -213,6 +253,34 @@ Prefab:
     - target: {fileID: 487678, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 2}
       propertyPath: m_RootOrder
       value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 2}
+      propertyPath: context
+      value: 
+      objectReference: {fileID: 94985962}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 2}
+      propertyPath: preloadWardrobeRecipes.recipes.Array.data[0]._recipeName
+      value: MaleUnderwear
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 2}
+      propertyPath: preloadWardrobeRecipes.recipes.Array.data[0]._compatibleRaces.Array.data[0]
+      value: HumanMale
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 2}
+      propertyPath: preloadWardrobeRecipes.recipes.Array.data[0]._compatibleRaces.Array.data[1]
+      value: HumanMaleDCS
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 2}
+      propertyPath: preloadWardrobeRecipes.recipes.Array.data[1]._recipeName
+      value: FemaleUndies
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 2}
+      propertyPath: preloadWardrobeRecipes.recipes.Array.data[1]._compatibleRaces.Array.data[0]
+      value: HumanFemaleDCS
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 2}
+      propertyPath: preloadWardrobeRecipes.recipes.Array.data[1]._compatibleRaces.Array.data[1]
+      value: HumanFemale
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 2}
@@ -430,4 +498,57 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1245141516
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 1245141518}
+  - component: {fileID: 1245141517}
+  m_Layer: 0
+  m_Name: TimelineDirector
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!320 &1245141517
+PlayableDirector:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1245141516}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_PlayableAsset: {fileID: 11400000, guid: 738e3c28ce1896c4d8bcdb8518abdaa1, type: 2}
+  m_InitialState: 0
+  m_WrapMode: 1
+  m_DirectorUpdateMode: 1
+  m_InitialTime: 0
+  m_SceneBindings:
+  - key: {fileID: 114419733523616686, guid: 738e3c28ce1896c4d8bcdb8518abdaa1, type: 2}
+    value: {fileID: 84425580}
+  - key: {fileID: 114802457322632702, guid: 738e3c28ce1896c4d8bcdb8518abdaa1, type: 2}
+    value: {fileID: 84425580}
+  - key: {fileID: 114572807684931792, guid: 738e3c28ce1896c4d8bcdb8518abdaa1, type: 2}
+    value: {fileID: 84425580}
+  - key: {fileID: 114337490342511956, guid: 738e3c28ce1896c4d8bcdb8518abdaa1, type: 2}
+    value: {fileID: 84425580}
+  m_ExposedReferences:
+    m_References: []
+--- !u!4 &1245141518
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1245141516}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 8.700762, y: 3.7443268, z: 1.8461409}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
