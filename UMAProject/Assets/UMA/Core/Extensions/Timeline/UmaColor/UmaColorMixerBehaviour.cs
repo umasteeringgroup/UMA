@@ -7,24 +7,31 @@ namespace UMA.Timeline
 {
     public class UmaColorMixerBehaviour : PlayableBehaviour
     {
-        DynamicCharacterAvatar m_TrackBinding;
+        DynamicCharacterAvatar avatar;
         public float elapsedTime = 0f;
         public float timeStep = 0.2f;
 
         public override void ProcessFrame(Playable playable, FrameData info, object playerData)
         {
-            Color finalColor = Color.black;
             string sharedColorName = "";
-            m_TrackBinding = playerData as DynamicCharacterAvatar;
+            avatar = playerData as DynamicCharacterAvatar;
 
-            if (m_TrackBinding == null)
+            if (avatar == null)
             {
-                Debug.LogWarning("No DynamicCharacterAvatar set for UmaColor Playable!");
+                if (Debug.isDebugBuild)
+                {
+                    Debug.LogWarning("No DynamicCharacterAvatar set for UmaColor Playable!");
+                }
                 return;
             }
 
             int inputCount = playable.GetInputCount();
             bool colorUpdated = false;
+
+            if (inputCount <= 0)
+                return;
+
+            Color finalColor = avatar.GetColor(((ScriptPlayable<UmaColorBehaviour>)playable.GetInput(0)).GetBehaviour().sharedColorName).color;
 
             elapsedTime += info.deltaTime;
 
@@ -35,18 +42,18 @@ namespace UMA.Timeline
                 UmaColorBehaviour input = inputPlayable.GetBehaviour();
 
                 sharedColorName = input.sharedColorName;
-                finalColor += input.color * inputWeight;
+                finalColor = (finalColor * (1f - inputWeight)) + (input.color * inputWeight);
             }
 
             if (elapsedTime >= timeStep)
             {
                 elapsedTime = 0f;
-                m_TrackBinding.SetColor(sharedColorName, finalColor);
+                avatar.SetColor(sharedColorName, finalColor);
                 colorUpdated = true;
             }
 
             if (colorUpdated)
-                m_TrackBinding.UpdateColors(true);
+                avatar.UpdateColors(true);
         }
     }
 }
