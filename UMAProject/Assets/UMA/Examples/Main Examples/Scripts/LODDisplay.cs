@@ -16,7 +16,7 @@ namespace UMA.Examples
         private Transform _cameraTransform;
         private UMASimpleLOD _simpleLOD;
 
-        public void OnEnable()
+        public void Start()
         {
             //cache the camera transform for performance
             _cameraTransform = Camera.main.transform;

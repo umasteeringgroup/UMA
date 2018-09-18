@@ -50,13 +50,14 @@ namespace UMA.Examples
 					umaData.CharacterCreated.AddListener(CharacterCreated);
 
 					var lod = go.AddComponent<UMASimpleLOD>();
-					lod.lodDistance = lodDistance;
+                    var display = go.AddComponent<LODDisplay>();
+                    display.LODDisplayPrefab = LODDisplayPrefab;
+
+                    lod.lodDistance = lodDistance;
 					lod.swapSlots = swapSlots;
 					lod.lodOffset = lodOffset;
 					lod.Update();
 
-					var display = go.AddComponent<LODDisplay>();
-					display.LODDisplayPrefab = LODDisplayPrefab;
 				}
 			}
 		}
