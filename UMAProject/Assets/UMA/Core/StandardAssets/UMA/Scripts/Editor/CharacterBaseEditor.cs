@@ -502,11 +502,27 @@ namespace UMA.Editors
             if (DraggedOverlays.Count > 0)
             {
                 if (FirstSlot == null)
-                    FirstSlot = _recipe.GetSlot(0);
-                
-                foreach (OverlayDataAsset od in DraggedOverlays)
                 {
-                    FirstSlot.AddOverlay(new OverlayData(od));
+                    foreach (SlotData sd in _recipe.slotDataList)
+                    {
+                        if (sd != null)
+                        {
+                            FirstSlot = sd;
+                            break;
+                        }
+                    }
+                }
+
+                if (FirstSlot != null)
+                {
+                    foreach (OverlayDataAsset od in DraggedOverlays)
+                    {
+                        FirstSlot.AddOverlay(new OverlayData(od));
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning("No slot found to apply overlay!");
                 }
                 DraggedOverlays.Clear();
             }

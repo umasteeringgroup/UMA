@@ -689,18 +689,26 @@ namespace UMA
 
 			Mesh mesh = renderer.sharedMesh;
 #if UNITY_EDITOR
-			if (UnityEditor.PrefabUtility.IsComponentAddedToPrefabInstance(renderer))
+#if UNITY_2018_3_OR_NEWER
+            if (UnityEditor.PrefabUtility.IsAddedComponentOverride(renderer))
 			{
 				if (Debug.isDebugBuild)
 					Debug.LogError("Cannot apply changes to prefab!");
 			}
-			if (UnityEditor.AssetDatabase.IsSubAsset(mesh))
+#else
+            if (UnityEditor.PrefabUtility.IsComponentAddedToPrefabInstance(renderer))
+			{
+				if (Debug.isDebugBuild)
+					Debug.LogError("Cannot apply changes to prefab!");
+			}
+#endif
+            if (UnityEditor.AssetDatabase.IsSubAsset(mesh))
 			{
 				if (Debug.isDebugBuild)
 					Debug.LogError("Cannot apply changes to asset mesh!");
 			}
 #endif
-			mesh.subMeshCount = 1;
+            mesh.subMeshCount = 1;
 			mesh.triangles = new int[0];
 
 			if (OwnSharedBuffers())
