@@ -35,14 +35,18 @@ namespace UMA
 		{
 			if (morphSet == null)
 			{
-				Debug.LogError("Missing morph set asset for: " + this.name);
+				if (Debug.isDebugBuild)
+					Debug.LogError("Missing morph set asset for: " + this.name);
+
 				return;
 			}
 
 			UMADnaBase activeDNA = data.GetDna(this.dnaTypeHash);
 			if (activeDNA == null)
 			{
-				Debug.LogError("Could not get DNA values for: "+ this.name);
+				if (Debug.isDebugBuild)
+					Debug.LogError("Could not get DNA values for: "+ this.name);
+
 				return;
 			}
 
@@ -67,7 +71,8 @@ namespace UMA
 			}
 			else
 			{
-				Debug.LogWarning("DNA length mismatch, trying names. This is SLOW!");
+				if (Debug.isDebugBuild)
+					Debug.LogWarning("DNA length mismatch, trying names. This is SLOW!");
 				string[] dnaNames = activeDNA.Names;
 				for (int i = 0; i < morphSet.dnaMorphs.Length; i++)
 				{

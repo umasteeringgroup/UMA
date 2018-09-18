@@ -28,3 +28,6 @@ MonoBehaviour:
     sourceTextureName: 
   clothProperties: {fileID: 0}
   RequireSeperateRenderer: 0
+  MipMapBias: 0
+  AnisoLevel: 1
+  MatFilterMode: 1

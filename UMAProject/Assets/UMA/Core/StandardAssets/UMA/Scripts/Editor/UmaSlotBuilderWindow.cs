@@ -107,13 +107,14 @@ namespace UMA.Editors
 							UMAContext.Instance.slotLibrary.AddSlotAsset(sd);
 						}
 					}
+					OverlayDataAsset od = null;
 					if (createOverlay)
 					{
-						CreateOverlay(AssetPath.Replace(sd.name, sd.slotName + "_Overlay"), sd);
+						od = CreateOverlay(AssetPath.Replace(sd.name, sd.slotName + "_Overlay"), sd);
 					}
 					if (createRecipe)
 					{
-						CreateRecipe(AssetPath.Replace(sd.name, sd.slotName + "_Recipe"));
+						CreateRecipe(AssetPath.Replace(sd.name, sd.slotName + "_Recipe"), sd, od);
 					}
 				}
 			}
@@ -150,7 +151,7 @@ namespace UMA.Editors
 			return sd;
 		}
 
-		private void CreateOverlay(string path, SlotDataAsset sd)
+		private OverlayDataAsset CreateOverlay(string path, SlotDataAsset sd)
 		{
 			OverlayDataAsset asset = ScriptableObject.CreateInstance<OverlayDataAsset>();
 			asset.overlayName = slotName + "_Overlay";
@@ -168,20 +169,12 @@ namespace UMA.Editors
 					UMAContext.Instance.overlayLibrary.AddOverlayAsset(asset);
 				}
 			}
+			return asset;
 		}
 
-		private void CreateRecipe(string path)
+		private void CreateRecipe(string path, SlotDataAsset sd, OverlayDataAsset od)
 		{
-			CharacterSystem.UMAWardrobeRecipe asset = ScriptableObject.CreateInstance<CharacterSystem.UMAWardrobeRecipe>();
-			//UMAData ud = new UMAData();
-			//ud.SetSlots()
-			asset.DisplayValue = slotName;
-			AssetDatabase.CreateAsset(asset, path);
-			AssetDatabase.SaveAssets();
-			if (addToGlobalLibrary)
-			{
-				UMAAssetIndexer.Instance.EvilAddAsset(typeof(CharacterSystem.UMAWardrobeRecipe), asset);
-			}
+			UMAEditorUtilities.CreateRecipe(path, sd, od, sd.name, addToGlobalLibrary);
 		}
 
 		private SlotDataAsset CreateSlot_Internal()
@@ -260,7 +253,7 @@ namespace UMA.Editors
 							}
 							if (createRecipe)
 							{
-								CreateRecipe(AssetPath.Replace(sd.name, sd.slotName + "_Recipe"));
+								CreateRecipe(AssetPath.Replace(sd.name, sd.slotName + "_Recipe"), sd, null);
 							}
 						}
 						current++;

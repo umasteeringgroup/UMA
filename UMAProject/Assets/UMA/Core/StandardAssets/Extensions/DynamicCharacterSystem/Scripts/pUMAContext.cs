@@ -21,10 +21,12 @@ namespace UMA
 				return null;
 			if (Application.isPlaying)
 			{
-				Debug.LogWarning("There was no UMAContext in this scene. Please add the UMA_DCS prefab to this scene before you try to generate an UMA.");
+				if (Debug.isDebugBuild)
+					Debug.LogWarning("There was no UMAContext in this scene. Please add the UMA_DCS prefab to this scene before you try to generate an UMA.");
 				return null;
 			}
-			Debug.Log("UMA Recipe Editor created an UMAEditorContext to enable editing. This will auto delete once you have finished editing your recipe or you add the UMA_DCS prefab to this scene.");
+			if (Debug.isDebugBuild)
+				Debug.Log("UMA Recipe Editor created an UMAEditorContext to enable editing. This will auto delete once you have finished editing your recipe or you add the UMA_DCS prefab to this scene.");
 			//if there is already an EditorUMAContext use it
 			if (UMAContext.FindInstance() != null)
 			{

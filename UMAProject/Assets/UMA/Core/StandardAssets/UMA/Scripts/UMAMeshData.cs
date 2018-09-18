@@ -234,6 +234,22 @@ namespace UMA
 				deltaTangents = new Vector3[0];
 		}
 
+		public bool HasNormals()
+		{
+			if (deltaNormals != null && deltaNormals.Length > 0)
+				return true;
+
+			return false;
+		}
+
+		public bool HasTangents()
+		{
+			if (deltaTangents != null && deltaTangents.Length > 0)
+				return true;
+
+			return false;
+		}
+
 		/// <summary>
 		/// Determine whether the delta array has any non-zero vectors.
 		/// </summary>
@@ -385,7 +401,8 @@ namespace UMA
 
 				if (haveBackingArrays == false)
 				{
-					Debug.LogError("Unable to access backing arrays for shared UMAMeshData!");
+					if (Debug.isDebugBuild)
+						Debug.LogError("Unable to access backing arrays for shared UMAMeshData!");
 				}
 			}
 
@@ -413,7 +430,8 @@ namespace UMA
 				return true;
 			}
 
-			Debug.LogWarning("Unable to claim UMAMeshData global buffers!");
+			if (Debug.isDebugBuild)
+				Debug.LogWarning("Unable to claim UMAMeshData global buffers!");
 			return false;
 		}
 
@@ -435,7 +453,8 @@ namespace UMA
 					}
 				}
 
-				Debug.LogWarning("Could not claim shared submesh buffer of size: " + size);
+				if (Debug.isDebugBuild)
+					Debug.LogWarning("Could not claim shared submesh buffer of size: " + size);
 			}
 
 			return new int[size];
@@ -672,11 +691,13 @@ namespace UMA
 #if UNITY_EDITOR
 			if (UnityEditor.PrefabUtility.IsComponentAddedToPrefabInstance(renderer))
 			{
-				Debug.LogError("Cannot apply changes to prefab!");
+				if (Debug.isDebugBuild)
+					Debug.LogError("Cannot apply changes to prefab!");
 			}
 			if (UnityEditor.AssetDatabase.IsSubAsset(mesh))
 			{
-				Debug.LogError("Cannot apply changes to asset mesh!");
+				if (Debug.isDebugBuild)
+					Debug.LogError("Cannot apply changes to asset mesh!");
 			}
 #endif
 			mesh.subMeshCount = 1;
@@ -958,6 +979,136 @@ namespace UMA
 			var newList = new List<UMATransform>(umaBones);
 			newList.Sort(UMATransform.TransformComparer);
 			umaBones = newList.ToArray();
+		}
+
+		/// <summary>
+		/// Creates a deep copy of an UMAMeshData object.
+		/// </summary>
+		/// <returns>The new copy of the UMAMeshData</returns>
+		public UMAMeshData DeepCopy()
+		{
+			UMAMeshData newMeshData = new UMAMeshData();
+
+			if (bindPoses != null)
+			{
+				newMeshData.bindPoses = new Matrix4x4[bindPoses.Length];
+				Array.Copy(bindPoses, newMeshData.bindPoses, bindPoses.Length);
+			}
+
+			if (boneWeights != null)
+			{
+				newMeshData.boneWeights = new UMABoneWeight[boneWeights.Length];
+				Array.Copy(boneWeights, newMeshData.boneWeights, boneWeights.Length);
+			}
+
+			if (unityBoneWeights != null)
+			{
+				newMeshData.unityBoneWeights = new BoneWeight[unityBoneWeights.Length];
+				Array.Copy(unityBoneWeights, newMeshData.unityBoneWeights, unityBoneWeights.Length);
+			}
+
+			if (vertices != null)
+			{
+				newMeshData.vertices = new Vector3[vertices.Length];
+				Array.Copy(vertices, newMeshData.vertices, vertices.Length);
+			}
+
+			if (normals != null)
+			{
+				newMeshData.normals = new Vector3[normals.Length];
+				Array.Copy(normals, newMeshData.normals, normals.Length);
+			}
+
+			if (tangents != null)
+			{
+				newMeshData.tangents = new Vector4[tangents.Length];
+				Array.Copy(tangents, newMeshData.tangents, tangents.Length);
+			}
+
+			if (colors32 != null)
+			{
+				newMeshData.colors32 = new Color32[colors32.Length];
+				Array.Copy(colors32, newMeshData.colors32, colors32.Length);
+			}
+
+			if (uv != null)
+			{
+				newMeshData.uv = new Vector2[uv.Length];
+				Array.Copy(uv, newMeshData.uv, uv.Length);
+			}
+
+			if (uv2 != null)
+			{
+				newMeshData.uv2 = new Vector2[uv2.Length];
+				Array.Copy(uv2, newMeshData.uv, uv2.Length);
+			}
+
+			if (uv3 != null)
+			{
+				newMeshData.uv3 = new Vector2[uv3.Length];
+				Array.Copy(uv3, newMeshData.uv, uv3.Length);
+			}
+
+			if (uv4 != null)
+			{
+				newMeshData.uv4 = new Vector2[uv4.Length];
+				Array.Copy(uv4, newMeshData.uv, uv4.Length);
+			}
+
+			if(blendShapes != null)
+			{
+				newMeshData.blendShapes = new UMABlendShape[blendShapes.Length];
+				Array.Copy(blendShapes, newMeshData.blendShapes, blendShapes.Length);
+			}
+
+			if(clothSkinning != null)
+			{
+				newMeshData.clothSkinning = new ClothSkinningCoefficient[clothSkinning.Length];
+				Array.Copy(clothSkinning, newMeshData.clothSkinning, clothSkinning.Length);
+			}
+
+			if(clothSkinningSerialized != null)
+			{
+				newMeshData.clothSkinningSerialized = new Vector2[clothSkinningSerialized.Length];
+				Array.Copy(clothSkinningSerialized, newMeshData.clothSkinningSerialized, clothSkinningSerialized.Length);
+			}
+
+			if(submeshes != null)
+			{
+				newMeshData.submeshes = new SubMeshTriangles[submeshes.Length];
+				Array.Copy(submeshes, newMeshData.submeshes, submeshes.Length);
+			}
+
+			if(bones != null)
+			{
+				newMeshData.bones = bones.Clone() as Transform[];
+			}
+
+			if(rootBone != null)
+			{
+				newMeshData.rootBone = rootBone;
+			}
+
+			if(umaBones != null)
+			{
+				newMeshData.umaBones = new UMATransform[umaBones.Length];
+				Array.Copy(umaBones, newMeshData.umaBones, umaBones.Length);
+			}
+
+			newMeshData.umaBoneCount = umaBoneCount;
+			newMeshData.rootBoneHash = rootBoneHash;
+
+			if(boneNameHashes != null)
+			{
+				newMeshData.boneNameHashes = new int[boneNameHashes.Length];
+				Array.Copy(boneNameHashes, newMeshData.boneNameHashes, boneNameHashes.Length);
+			}
+
+			newMeshData.subMeshCount = subMeshCount;
+			newMeshData.vertexCount = vertexCount;
+			newMeshData.RootBoneName = RootBoneName;
+
+			return newMeshData;
 		}
 	}
 }

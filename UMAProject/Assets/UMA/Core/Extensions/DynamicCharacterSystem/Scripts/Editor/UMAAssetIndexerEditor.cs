@@ -178,10 +178,12 @@ namespace UMA.CharacterSystem.Editors
 		{
 			if (AddedDuringGui.Count > 0 || DeletedDuringGUI.Count > 0 || AddedTypes.Count > 0 || RemovedTypes.Count > 0)
 			{
-				foreach (Object o in AddedDuringGui)
+				for (int i = 0; i < AddedDuringGui.Count; i++)
 				{
-					AddObject(o);
+					EditorUtility.DisplayProgressBar("Adding Items to Global Library.", AddedDuringGui[i].name, ((float)i / (float)AddedDuringGui.Count));
+					AddObject(AddedDuringGui[i]);
 				}
+				EditorUtility.ClearProgressBar();
 
 				foreach (AssetItem ai in DeletedDuringGUI)
 				{

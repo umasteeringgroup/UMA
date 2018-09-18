@@ -248,9 +248,9 @@ MonoBehaviour:
     IsAssetBundle: 0
   - _BaseTypeName: SlotDataAsset
     _Name: F_High poly head
-    _SerializedItem: {fileID: 11400000, guid: c2e03835c947bd449adbe23861a31c93, type: 2}
+    _SerializedItem: {fileID: 11400000, guid: 58e5a93186f923c4ca7910365d807714, type: 2}
     _Path: Assets/UMA/Content/UMA_Core/HumanFemale/Slots/Body/MidPoly/UMA_Human_Female_Head_Mid_Slot.asset
-    _Guid: 72d68f914034a9c4f94c733168884070
+    _Guid: 58e5a93186f923c4ca7910365d807714
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: SlotDataAsset
@@ -728,49 +728,42 @@ MonoBehaviour:
   - _BaseTypeName: SlotDataAsset
     _Name: CapsuleCollider
     _SerializedItem: {fileID: 11400000, guid: 04442629189f10a48bc3238f44aa9856, type: 2}
-    _Path: Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/CapsuleCollider/CapsuleColliderSlot.asset
+    _Path: Assets/UMA/Content/UMA_Examples/AdditionalSlots/CapsuleCollider/CapsuleColliderSlot.asset
     _Guid: 04442629189f10a48bc3238f44aa9856
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: SlotDataAsset
     _Name: Expressions
     _SerializedItem: {fileID: 11400000, guid: edcf92bdef3d2e04c980749f7d702647, type: 2}
-    _Path: Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/Expressions/ExpressionSlot.asset
+    _Path: Assets/UMA/Content/UMA_Examples/AdditionalSlots/Expressions/ExpressionSlot.asset
     _Guid: edcf92bdef3d2e04c980749f7d702647
-    IsResource: 0
-    IsAssetBundle: 0
-  - _BaseTypeName: SlotDataAsset
-    _Name: BipedIK
-    _SerializedItem: {fileID: 11400000, guid: 809fa02e9d728403b9a2ea2a9c37b0f2, type: 2}
-    _Path: Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/FinalIK/BipedIKSlot.asset
-    _Guid: 809fa02e9d728403b9a2ea2a9c37b0f2
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: SlotDataAsset
     _Name: ForearmTwist
     _SerializedItem: {fileID: 11400000, guid: 98c6dc40a5e2e4f3f92aabfafaf67c78, type: 2}
-    _Path: Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/ForearmTwist/ForearmTwistSlot.asset
+    _Path: Assets/UMA/Content/UMA_Examples/AdditionalSlots/ForearmTwist/ForearmTwistSlot.asset
     _Guid: 98c6dc40a5e2e4f3f92aabfafaf67c78
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: SlotDataAsset
     _Name: Locomotion
     _SerializedItem: {fileID: 11400000, guid: 0fbc0a0bbfb29084bbeafb0876b6e28b, type: 2}
-    _Path: Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/Locomotion/LocomotionSlot.asset
+    _Path: Assets/UMA/Content/UMA_Examples/AdditionalSlots/Locomotion/LocomotionSlot.asset
     _Guid: 0fbc0a0bbfb29084bbeafb0876b6e28b
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: SlotDataAsset
     _Name: PhysicsHD
     _SerializedItem: {fileID: 11400000, guid: bc5ef2dcc0274644bb1733e78ad1514d, type: 2}
-    _Path: Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/Physics/HD/PhysicsHDSlot.asset
+    _Path: Assets/UMA/Content/UMA_Examples/AdditionalSlots/Physics/HD/PhysicsHDSlot.asset
     _Guid: bc5ef2dcc0274644bb1733e78ad1514d
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: SlotDataAsset
     _Name: PhysicsStandard
     _SerializedItem: {fileID: 11400000, guid: 515a46b056a0d8d4d8fc2de3b7f58d29, type: 2}
-    _Path: Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/Physics/Standard/PhysicsStandardSlot.asset
+    _Path: Assets/UMA/Content/UMA_Examples/AdditionalSlots/Physics/Standard/PhysicsStandardSlot.asset
     _Guid: 515a46b056a0d8d4d8fc2de3b7f58d29
     IsResource: 0
     IsAssetBundle: 0
@@ -814,6 +807,62 @@ MonoBehaviour:
     _SerializedItem: {fileID: 11400000, guid: 344a9e3f0f0a6384da7335c405e65999, type: 2}
     _Path: Assets/UMA/Examples/Blendshape Examples/Assets/Slots/MaleAlienHead/MaleAlienHead_Slot.asset
     _Guid: 344a9e3f0f0a6384da7335c405e65999
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: SlotDataAsset
+    _Name: SkyCarBody
+    _SerializedItem: {fileID: 11400000, guid: ccdf514727275dc45914627958155442, type: 2}
+    _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/SkyCar/Slots/SkyCarBody/SkyCarBody_Slot.asset
+    _Guid: ccdf514727275dc45914627958155442
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: SlotDataAsset
+    _Name: SkyCarComponents
+    _SerializedItem: {fileID: 11400000, guid: 28c756f13cec71b49b27b4f4c0a71571, type: 2}
+    _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/SkyCar/Slots/SkyCarComponents/SkyCarComponents_Slot.asset
+    _Guid: 28c756f13cec71b49b27b4f4c0a71571
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: SlotDataAsset
+    _Name: SkyCarSpoiler
+    _SerializedItem: {fileID: 11400000, guid: 6e03cfedafaf94f48b148cfe04d24f96, type: 2}
+    _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/SkyCar/Slots/SkyCarSpoiler/SkyCarSpoiler_Slot.asset
+    _Guid: 6e03cfedafaf94f48b148cfe04d24f96
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: SlotDataAsset
+    _Name: SkyCarMudGuards
+    _SerializedItem: {fileID: 11400000, guid: 8e355a06d2222734f92344952e5cc8e5, type: 2}
+    _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/SkyCar/Slots/SkyCarMudGuards/SkyCarMudGuards_Slot.asset
+    _Guid: 8e355a06d2222734f92344952e5cc8e5
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: SlotDataAsset
+    _Name: SkyCarHubCaps
+    _SerializedItem: {fileID: 11400000, guid: 230ec082a97430c4da05bcd1157f7b44, type: 2}
+    _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/SkyCar/Slots/SkyCarHubCaps/SkyCarHubCaps_Slot.asset
+    _Guid: 230ec082a97430c4da05bcd1157f7b44
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: SlotDataAsset
+    _Name: SkyCarTires
+    _SerializedItem: {fileID: 11400000, guid: a3787093e63eb3a449d40959588abcb7, type: 2}
+    _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/SkyCar/Slots/SkyCarTires/SkyCarTires_Slot.asset
+    _Guid: a3787093e63eb3a449d40959588abcb7
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: SlotDataAsset
+    _Name: SkyCarAntenna
+    _SerializedItem: {fileID: 11400000, guid: a47975f4a828bdf4194bc7c5c27da7f4, type: 2}
+    _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/SkyCar/Slots/SkyCarAntenna/SkyCarAntenna_Slot.asset
+    _Guid: a47975f4a828bdf4194bc7c5c27da7f4
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: SlotDataAsset
+    _Name: SkyCarSuspension
+    _SerializedItem: {fileID: 11400000, guid: 45c60a52856ef014db9ac30909401956, type: 2}
+    _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/SkyCar/Slots/SkyCarSuspension/SkyCarSuspension_Slot.asset
+    _Guid: 45c60a52856ef014db9ac30909401956
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: OverlayDataAsset
@@ -1415,14 +1464,6 @@ MonoBehaviour:
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: OverlayDataAsset
-    _Name: ProceduralShirt
-    _SerializedItem: {fileID: 11400000, guid: f3796aea3cb214124978cb1945b76001, type: 2}
-    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Clothing/Procedural
-      Shirt/ProceduralShirt.asset
-    _Guid: f3796aea3cb214124978cb1945b76001
-    IsResource: 0
-    IsAssetBundle: 0
-  - _BaseTypeName: OverlayDataAsset
     _Name: Wrapped Pants
     _SerializedItem: {fileID: 11400000, guid: 161a5c050c3f1f74fb47075770f15450, type: 2}
     _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Overlays/Clothing/Wrapped Pants.asset
@@ -1534,6 +1575,41 @@ MonoBehaviour:
     _Guid: e06be47adf242924c9fff2c65c65ad5c
     IsResource: 0
     IsAssetBundle: 0
+  - _BaseTypeName: OverlayDataAsset
+    _Name: SkyCarBodyOverlay
+    _SerializedItem: {fileID: 11400000, guid: 27adb7051154579498a6b0ee107ce813, type: 2}
+    _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/SkyCar/Overlays/SkyCarBodyOverlay.asset
+    _Guid: 27adb7051154579498a6b0ee107ce813
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: OverlayDataAsset
+    _Name: SkyCarTiresOverlay
+    _SerializedItem: {fileID: 11400000, guid: c1d782df9dd936a4db81356428f06892, type: 2}
+    _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/SkyCar/Overlays/SkyCareTiresOverlay.asset
+    _Guid: c1d782df9dd936a4db81356428f06892
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: OverlayDataAsset
+    _Name: SkyCarHubCapsOverlay
+    _SerializedItem: {fileID: 11400000, guid: e7b8e0cbb5d59684fa2c2dc87d360ea8, type: 2}
+    _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/SkyCar/Overlays/SkyCarHubCapsOverlay.asset
+    _Guid: e7b8e0cbb5d59684fa2c2dc87d360ea8
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: OverlayDataAsset
+    _Name: SkyCarWindowsOverlay
+    _SerializedItem: {fileID: 11400000, guid: e17ed6a342f054b4ab8f3dd2fdea7fa1, type: 2}
+    _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/SkyCar/Overlays/SkyCarWindowsOverlay.asset
+    _Guid: e17ed6a342f054b4ab8f3dd2fdea7fa1
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: OverlayDataAsset
+    _Name: SkyCarStripesOverlay
+    _SerializedItem: {fileID: 11400000, guid: c494b917f233f9e42a6e34e169909743, type: 2}
+    _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/SkyCar/Overlays/SkyCarStripesOverlay.asset
+    _Guid: c494b917f233f9e42a6e34e169909743
+    IsResource: 0
+    IsAssetBundle: 0
   - _BaseTypeName: RaceData
     _Name: HumanFemale
     _SerializedItem: {fileID: 11400000, guid: f8fea6f0ee17b3f42a4ae6cfb627bab3, type: 2}
@@ -1581,6 +1657,13 @@ MonoBehaviour:
     _SerializedItem: {fileID: 11400000, guid: 715d7d582b97b5b4d86b6ed75bb7268d, type: 2}
     _Path: Assets/UMA/Content/UMA_Core/HumanMale/RaceData/Human Male HighPoly.asset
     _Guid: 715d7d582b97b5b4d86b6ed75bb7268d
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: RaceData
+    _Name: SkyCar
+    _SerializedItem: {fileID: 11400000, guid: f7b4c7fd4e2e99844be54c0b6967a79e, type: 2}
+    _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/SkyCar/RaceData/SkyCar.asset
+    _Guid: f7b4c7fd4e2e99844be54c0b6967a79e
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: UMATextRecipe
@@ -2084,49 +2167,42 @@ MonoBehaviour:
   - _BaseTypeName: UMATextRecipe
     _Name: CapsuleColliderRecipe
     _SerializedItem: {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
-    _Path: Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/CapsuleCollider/CapsuleColliderRecipe.asset
+    _Path: Assets/UMA/Content/UMA_Examples/AdditionalSlots/CapsuleCollider/CapsuleColliderRecipe.asset
     _Guid: 1f292487d7383514f97c491cadfb0442
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: UMATextRecipe
     _Name: ExpressionsRecipe
     _SerializedItem: {fileID: 11400000, guid: 920d59ac577b2d9449aa36a4d9e86f10, type: 2}
-    _Path: Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/Expressions/ExpressionsRecipe.asset
+    _Path: Assets/UMA/Content/UMA_Examples/AdditionalSlots/Expressions/ExpressionsRecipe.asset
     _Guid: 920d59ac577b2d9449aa36a4d9e86f10
-    IsResource: 0
-    IsAssetBundle: 0
-  - _BaseTypeName: UMATextRecipe
-    _Name: BipedIKRecipe
-    _SerializedItem: {fileID: 11400000, guid: 8a75929680d6b4d67b5d306597152491, type: 2}
-    _Path: Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/FinalIK/BipedIKRecipe.asset
-    _Guid: 8a75929680d6b4d67b5d306597152491
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: UMATextRecipe
     _Name: ForearmTwistRecipe
     _SerializedItem: {fileID: 11400000, guid: b4240924c651c4f1b840a7e4707660ac, type: 2}
-    _Path: Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/ForearmTwist/ForearmTwistRecipe.asset
+    _Path: Assets/UMA/Content/UMA_Examples/AdditionalSlots/ForearmTwist/ForearmTwistRecipe.asset
     _Guid: b4240924c651c4f1b840a7e4707660ac
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: UMATextRecipe
     _Name: LocomotionRecipe
     _SerializedItem: {fileID: 11400000, guid: e32a3ba3a6520264e99766273eb44e01, type: 2}
-    _Path: Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/Locomotion/LocomotionRecipe.asset
+    _Path: Assets/UMA/Content/UMA_Examples/AdditionalSlots/Locomotion/LocomotionRecipe.asset
     _Guid: e32a3ba3a6520264e99766273eb44e01
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: UMATextRecipe
     _Name: PhysicsHDRecipe
     _SerializedItem: {fileID: 11400000, guid: b8f097e9dd7c12f41be671d16d75804d, type: 2}
-    _Path: Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/Physics/HD/PhysicsHDRecipe.asset
+    _Path: Assets/UMA/Content/UMA_Examples/AdditionalSlots/Physics/HD/PhysicsHDRecipe.asset
     _Guid: b8f097e9dd7c12f41be671d16d75804d
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: UMATextRecipe
     _Name: PhysicsStandardRecipe
     _SerializedItem: {fileID: 11400000, guid: f36ba6c553c66f747bc69741fa115880, type: 2}
-    _Path: Assets/UMA/Examples/Main Examples/Assets/AdditionalSlots/Physics/Standard/PhysicsStandardRecipe.asset
+    _Path: Assets/UMA/Content/UMA_Examples/AdditionalSlots/Physics/Standard/PhysicsStandardRecipe.asset
     _Guid: f36ba6c553c66f747bc69741fa115880
     IsResource: 0
     IsAssetBundle: 0
@@ -2254,6 +2330,13 @@ MonoBehaviour:
     _SerializedItem: {fileID: 11400000, guid: dc9b2ee309a14484aaf8f4c83614e499, type: 2}
     _Path: Assets/UMA/InternalDataStore/InGame/Resources/PlaceholderAssets/UMAWardrobeRecipePlaceholder.asset
     _Guid: dc9b2ee309a14484aaf8f4c83614e499
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: UMATextRecipe
+    _Name: SkyCarBaseRecipe
+    _SerializedItem: {fileID: 11400000, guid: 3e701a02cd597ad4193792a7a3202dd3, type: 2}
+    _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/SkyCar/RaceData/SkyCarBaseRecipe.asset
+    _Guid: 3e701a02cd597ad4193792a7a3202dd3
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: UMAWardrobeRecipe
@@ -2694,6 +2777,27 @@ MonoBehaviour:
     _Guid: f0eac0526ff3dbe479868042322ab1b2
     IsResource: 0
     IsAssetBundle: 0
+  - _BaseTypeName: UMAWardrobeRecipe
+    _Name: SpoilerRecipe
+    _SerializedItem: {fileID: 11400000, guid: 369fe6f664ed6f84d99118735752b396, type: 2}
+    _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/SkyCar/Recipes/SpoilerRecipe.asset
+    _Guid: 369fe6f664ed6f84d99118735752b396
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: UMAWardrobeRecipe
+    _Name: AntennaRecipe
+    _SerializedItem: {fileID: 11400000, guid: edcc6824647857d4aa3b42576e1f081f, type: 2}
+    _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/SkyCar/Recipes/AntennaRecipe.asset
+    _Guid: edcc6824647857d4aa3b42576e1f081f
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: UMAWardrobeRecipe
+    _Name: StripesRecipe
+    _SerializedItem: {fileID: 11400000, guid: 72fba4c50655ea2428415b2a0debc752, type: 2}
+    _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/SkyCar/Recipes/StripesRecipe.asset
+    _Guid: 72fba4c50655ea2428415b2a0debc752
+    IsResource: 0
+    IsAssetBundle: 0
   - _BaseTypeName: RuntimeAnimatorController
     _Name: UMA_APose_Controller
     _SerializedItem: {fileID: 9100000, guid: 66af5264f1619114db5f72f979ce14bd, type: 2}
@@ -2711,15 +2815,14 @@ MonoBehaviour:
   - _BaseTypeName: RuntimeAnimatorController
     _Name: Locomotion
     _SerializedItem: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
-    _Path: Assets/UMA/Examples/Main Examples/Assets/Animation/Animators/Locomotion.controller
+    _Path: Assets/UMA/Content/UMA_Examples/Animators/Locomotion.controller
     _Guid: eb280940c811fab4a9e3ddf09381c343
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: RuntimeAnimatorController
     _Name: Locomotion with Head
     _SerializedItem: {fileID: 9100000, guid: ae859d58fdf844b73863d3833f955cdf, type: 2}
-    _Path: Assets/UMA/Examples/Main Examples/Assets/Animation/Animators/Locomotion
-      with Head.controller
+    _Path: Assets/UMA/Content/UMA_Examples/Animators/Locomotion with Head.controller
     _Guid: ae859d58fdf844b73863d3833f955cdf
     IsResource: 0
     IsAssetBundle: 0

@@ -179,10 +179,13 @@ namespace UMA.AssetBundles
 
 		private static void Log(LogType logType, string text)
 		{
-			if (logType == LogType.Error)
-				Debug.LogError("[AssetBundleManager] " + text);
-			else if (m_LogMode == LogMode.All)
-				Debug.Log("[AssetBundleManager] " + text);
+			if (Debug.isDebugBuild)
+			{
+				if (logType == LogType.Error)
+					Debug.LogError("[AssetBundleManager] " + text);
+				else if (m_LogMode == LogMode.All)
+					Debug.Log("[AssetBundleManager] " + text);
+			}
 		}
 
 #if UNITY_EDITOR
@@ -257,7 +260,8 @@ namespace UMA.AssetBundles
 			{
 				if (!absolutePath.EndsWith("/"))
 					absolutePath += "/";
-				Debug.Log("[AssetBundleManager] SetSourceAssetBundleURL to " + absolutePath + encryptedSuffix + Utility.GetPlatformName() + "/");
+				if (Debug.isDebugBuild)
+					Debug.Log("[AssetBundleManager] SetSourceAssetBundleURL to " + absolutePath + encryptedSuffix + Utility.GetPlatformName() + "/");
 				BaseDownloadingURL = absolutePath + encryptedSuffix + Utility.GetPlatformName() + "/";
 			}
 		}
@@ -290,7 +294,8 @@ namespace UMA.AssetBundles
 							else
 							{
 								//I think here we dont have an internet connection and we need one to download this bundle
-								Debug.LogWarning("AssetBundleManager could not download the AssetBundleIndex from the Remote Server URL you have set in DynamicAssetLoader. Have you set the URL correctly and uploaded your AssetBundles?");
+								if (Debug.isDebugBuild)
+									Debug.LogWarning("AssetBundleManager could not download the AssetBundleIndex from the Remote Server URL you have set in DynamicAssetLoader. Have you set the URL correctly and uploaded your AssetBundles?");
 								error = "AssetBundleManager could not download the AssetBundleIndex from the Remote Server URL you have set in DynamicAssetLoader. Have you set the URL correctly and uploaded your AssetBundles?";
 							}
 						}
@@ -298,7 +303,8 @@ namespace UMA.AssetBundles
 						{
 
 							//Otherwise the AssetBundles themselves will not have been built.
-							Debug.LogWarning("Switched to Simulation mode because no AssetBundles were found. Have you build them? (Go to 'Assets/AssetBundles/Build AssetBundles').");
+							if (Debug.isDebugBuild)
+								Debug.LogWarning("Switched to Simulation mode because no AssetBundles were found. Have you build them? (Go to 'Assets/AssetBundles/Build AssetBundles').");
 							error = "Switched to Simulation mode because no AssetBundles were found.Have you build them? (Go to 'Assets/AssetBundles/Build AssetBundles').";
 							//this needs to hide the loading infobox- or something needs too..
 						SimulateOverride = true;
@@ -306,7 +312,8 @@ namespace UMA.AssetBundles
 					}
 					else
 #endif
-						Debug.LogWarning("Could not return " + assetBundleName + " because of error:" + error);
+						if (Debug.isDebugBuild)
+							Debug.LogWarning("Could not return " + assetBundleName + " because of error:" + error);
 				}
 				return null;
 			}
@@ -517,7 +524,8 @@ namespace UMA.AssetBundles
 				//if we are not using index caching always trigger the ShowConnectionRequiredUI because we cant do anything without an index.
 				if (!m_ConnectionChecker.UseBundleIndexCaching)
 				{
-					Debug.LogWarning("[AssetBundleManager] Could not load the bundle index because there was no connection, and UseBundleIndexCaching was off");
+					if (Debug.isDebugBuild)
+						Debug.LogWarning("[AssetBundleManager] Could not load the bundle index because there was no connection, and UseBundleIndexCaching was off");
 					m_ConnectionChecker.ShowConnectionRequiredUI();
 					return null;
 				}
@@ -528,7 +536,8 @@ namespace UMA.AssetBundles
 					//so if(m_AssetBundleIndex == null) after that we need to call m_ConnectionChecker.ShowConnectionRequiredUI() because we cant do anything without an index
 					if (m_AssetBundleIndex == null)
 					{
-						Debug.LogWarning("[AssetBundleManager] Could not load the bundle index because there was no connection, and there was no cached index");
+						if (Debug.isDebugBuild)
+							Debug.LogWarning("[AssetBundleManager] Could not load the bundle index because there was no connection, and there was no cached index");
 						m_ConnectionChecker.ShowConnectionRequiredUI();
 					}
 					else
@@ -571,7 +580,8 @@ namespace UMA.AssetBundles
 			{
 				if (m_AssetBundleIndex == null)
 				{
-					Debug.LogError("Please initialize AssetBundleIndex by calling AssetBundleManager.Initialize()");
+					if (Debug.isDebugBuild)
+						Debug.LogError("Please initialize AssetBundleIndex by calling AssetBundleManager.Initialize()");
 					return;
 				}
 			}
@@ -584,7 +594,8 @@ namespace UMA.AssetBundles
 				LoadDependencies(assetBundleName);
 			else
 			{
-				Debug.LogWarning("Did not load deps for  " + assetBundleName + " was already processed " + isAlreadyProcessed);
+				if (Debug.isDebugBuild)
+					Debug.LogWarning("Did not load deps for  " + assetBundleName + " was already processed " + isAlreadyProcessed);
 			}
 		}
 
@@ -689,7 +700,8 @@ namespace UMA.AssetBundles
 			if(BundleEncryptionKey != "" && isLoadingAssetBundleIndex == false)
 			{
 				assetBundleToGet = m_AssetBundleIndex.GetAssetBundleEncryptedName(assetBundleToFind);
-				Debug.Log("assetBundleToFind was " + assetBundleToFind + " assetBundleToGet was " + assetBundleToGet);
+				if (Debug.isDebugBuild)
+					Debug.Log("assetBundleToFind was " + assetBundleToFind + " assetBundleToGet was " + assetBundleToGet);
             }
 			else if(BundleEncryptionKey != "" && isLoadingAssetBundleIndex == true)
 			{
@@ -701,7 +713,8 @@ namespace UMA.AssetBundles
 			m_LoadedAssetBundles.TryGetValue(assetBundleToFind, out bundle);//encrypted or not this will have the assetbundlename without the 'encrypted' suffix
 			if (bundle != null && bundle.m_AssetBundle != null)
 			{
-				Debug.Log("[AssetBundleManager] " + assetBundleToFind + " was already loaded");
+				if (Debug.isDebugBuild)
+					Debug.Log("[AssetBundleManager] " + assetBundleToFind + " was already loaded");
 				bundle.m_ReferencedCount++;
 				return true;
 			}
@@ -710,7 +723,8 @@ namespace UMA.AssetBundles
 			// users can call LoadAssetAsync()/LoadLevelAsync() several times then wait them to be finished which might have duplicate WWWs.
 			if (m_DownloadingBundles.Contains(assetBundleToFind))
 			{
-				Debug.Log("[AssetBundleManager] " + assetBundleToFind + " was already downloading");
+				if (Debug.isDebugBuild)
+					Debug.Log("[AssetBundleManager] " + assetBundleToFind + " was already downloading");
 				return true;
 			}
 
@@ -947,7 +961,10 @@ namespace UMA.AssetBundles
 			{
 				//If we dont have an index at all Update will have called this- in that case dont log
 				if (m_AssetBundleIndex != null)
-					Debug.LogWarning("[AssetbundleManager] RedownloadAssetBundleIndex aborted because there was no Internet Connection!");
+				{
+					if (Debug.isDebugBuild)
+						Debug.LogWarning("[AssetbundleManager] RedownloadAssetBundleIndex aborted because there was no Internet Connection!");
+				}
 			}
 		}
 		/// <summary>
@@ -986,7 +1003,8 @@ namespace UMA.AssetBundles
 									m_FailedBundleDownloads.Remove(dependencies[di]);
 							}
 						}
-						Debug.LogWarning("RELOADING " + assetBundleName + " after connection established");
+						if (Debug.isDebugBuild)
+							Debug.LogWarning("RELOADING " + assetBundleName + " after connection established");
 						LoadAssetBundle(assetBundleName);//this will create a new operation which I dont want really
 					}
 				}
@@ -1028,7 +1046,8 @@ namespace UMA.AssetBundles
 			}
 			else if(ConnectionChecker != null && !ConnectionChecker.InternetAvailable)
 			{
-				Debug.LogWarning("[AssetbundleManager] RedownloadActiveBundles aborted because there was no Internet Connection!");
+				if (Debug.isDebugBuild)
+					Debug.LogWarning("[AssetbundleManager] RedownloadActiveBundles aborted because there was no Internet Connection!");
 			}
 		}
 
@@ -1083,7 +1102,8 @@ namespace UMA.AssetBundles
 						//This will happen when there is an internet connection, that is working (i.e. the connection check passes)
 						//but for some reason the download is still failing- like if there is a storm and very small amounts of data
 						//download fine but large amounts fail
-						Debug.LogError("SHOW DOWNLOAD FAILED UI");
+						if (Debug.isDebugBuild)
+							Debug.LogError("SHOW DOWNLOAD FAILED UI");
 						m_ConnectionChecker.ShowDownloadFailedUI(download.assetBundleName);
 					}
 					//add it to failed downloads
@@ -1125,7 +1145,8 @@ namespace UMA.AssetBundles
 				string[] assetPaths = AssetDatabase.GetAssetPathsFromAssetBundleAndAssetName(assetBundleName, assetName);
 				if (assetPaths.Length == 0)
 				{
-					Debug.LogError("There is no asset with name \"" + assetName + "\" in " + assetBundleName);
+					if (Debug.isDebugBuild)
+						Debug.LogError("There is no asset with name \"" + assetName + "\" in " + assetBundleName);
 					return null;
 				}
 

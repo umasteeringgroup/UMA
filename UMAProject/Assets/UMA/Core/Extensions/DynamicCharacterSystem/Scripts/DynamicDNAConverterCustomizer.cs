@@ -223,7 +223,8 @@ namespace UMA.CharacterSystem
         {
             if (guideUMA == null || activeUMA == null)
             {
-                Debug.LogWarning("Both the Gude UMA and the UMA to Customize need to be set to align them to each other!");
+				if (Debug.isDebugBuild)
+					Debug.LogWarning("Both the Gude UMA and the UMA to Customize need to be set to align them to each other!");
                 return;
             }
             var activeUMAPosition = activeUMA.gameObject.transform.position;
@@ -238,7 +239,8 @@ namespace UMA.CharacterSystem
         {
             if (guideUMA == null)
             {
-                Debug.LogWarning("No Guide UMA was set to get DNA from!");
+				if (Debug.isDebugBuild)
+					Debug.LogWarning("No Guide UMA was set to get DNA from!");
                 return;
             }
             UMADnaBase[] activeUmaDNA = activeUMA.umaData.GetAllDna();
@@ -264,12 +266,14 @@ namespace UMA.CharacterSystem
         {
             if (converterToImport == null)
             {
-                Debug.LogWarning("There was no converter to import from");
+                if (Debug.isDebugBuild)
+                    Debug.LogWarning("There was no converter to import from");
                 return false;
             }
             if (selectedConverter == null)
             {
-                Debug.LogWarning("There was no converter to import to");
+                if(Debug.isDebugBuild)
+                    Debug.LogWarning("There was no converter to import to");
                 return false;
             }
             selectedConverter.startingPose = converterToImport.startingPose;
@@ -281,7 +285,8 @@ namespace UMA.CharacterSystem
             //.heightModifiers = converterToImport.heightModifiers;
             selectedConverter.radiusAdjust = converterToImport.radiusAdjust;
             selectedConverter.massModifiers = converterToImport.massModifiers;
-            Debug.Log("Imported " + converterToImport.name + " settings into " + selectedConverter.name);
+            if (Debug.isDebugBuild)
+                Debug.Log("Imported " + converterToImport.name + " settings into " + selectedConverter.name);
             return true;
         }
 
@@ -321,7 +326,8 @@ namespace UMA.CharacterSystem
 
 				if ((transformPreDNA == null) || (transformPostDNA == null))
 				{
-					Debug.LogWarning("Bad bone hash in skeleton: " + boneHash);
+                    if (Debug.isDebugBuild)
+                        Debug.LogWarning("Bad bone hash in skeleton: " + boneHash);
 					continue;
 				}
 
@@ -379,7 +385,8 @@ namespace UMA.CharacterSystem
         {
 			if (activeUMA == null || selectedConverter == null)
 			{
-				Debug.LogWarning("activeUMA == null || selectedConverter == null");
+                if (Debug.isDebugBuild)
+                    Debug.LogWarning("activeUMA == null || selectedConverter == null");
                 return false;
 			}
 
@@ -620,12 +627,16 @@ namespace UMA.CharacterSystem
         {
             if(dynamicDnaConverterPrefab == null)
             {
-                Debug.LogWarning("There was no prefab set up in the DynamicDnaConverterCustomizer. This must be set in order to save a new prefab.");
+                if (Debug.isDebugBuild)
+                    Debug.LogWarning("There was no prefab set up in the DynamicDnaConverterCustomizer. This must be set in order to save a new prefab.");
+
                 return;
             }
             if(selectedConverter == null)
             {
-                Debug.LogWarning("No converter was selected to save!");
+                if (Debug.isDebugBuild)
+                    Debug.LogWarning("No converter was selected to save!");
+
                 return;
             }
             var fullPath = EditorUtility.SaveFilePanel("Save New DynamicDnaConverterBehaviour", Application.dataPath, "", "prefab");
@@ -651,7 +662,8 @@ namespace UMA.CharacterSystem
             {
                 EditorUtility.SetDirty(newPrefab);
                 AssetDatabase.SaveAssets();
-                Debug.Log("Saved your changes to a new converter prefab at " + path);
+                if (Debug.isDebugBuild)
+                    Debug.Log("Saved your changes to a new converter prefab at " + path);
                 Destroy(thisNewPrefabGO);
             }
         }
