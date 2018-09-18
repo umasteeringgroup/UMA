@@ -26,16 +26,7 @@ namespace UMA.Examples
 
 		void Update()
 		{
-			if (swapSlots != _swapSlots || lodOffset != _lodOffset)
-			{
-				_swapSlots = swapSlots;
-				_lodOffset = lodOffset;
-				var lods = transform.GetComponentsInChildren<UMASimpleLOD>();
-				foreach(var lod in lods)
-				{
-					lod.SetSwapSlots(_swapSlots, _lodOffset);
-				}
-			}
+            // Note: SwapSlots is now taken care of on UMASimpleLOD
 			if (characterCount > 0)
 			{
 				if (!isBuilding)
