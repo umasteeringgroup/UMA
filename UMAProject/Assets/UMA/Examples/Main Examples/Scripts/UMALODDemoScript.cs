@@ -13,8 +13,8 @@ namespace UMA.Examples
 		public bool swapSlots = true;
 		private bool _swapSlots = true;
 		[Tooltip("This value is subtracted from the slot LOD counter.")]
-		public int lodOffset = 2;
-		private int _lodOffset = 2;
+		public int lodOffset = 0;
+		private int _lodOffset = 0;
 
 		private bool isBuilding;
 		UMACrowd crowd;

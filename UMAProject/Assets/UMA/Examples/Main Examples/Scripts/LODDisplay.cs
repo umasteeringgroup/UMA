@@ -46,7 +46,14 @@ namespace UMA.Examples
                 if (_lastSetLevel != _simpleLOD.CurrentLOD)
                 {
                     _lastSetLevel = _simpleLOD.CurrentLOD;
-                    _lodDisplay.text = string.Format("LOD #{0}", _lastSetLevel);
+                    if (_lastSetLevel < 0)
+                    {
+                        _lodDisplay.text = string.Format("LOD #0/{0}", _lastSetLevel);
+                    }
+                    else
+                    {
+                        _lodDisplay.text = string.Format("LOD #{0}", _lastSetLevel);
+                    }
                 }
                 var delta = transform.position - _cameraTransform.position;
                 delta.y = 0;
