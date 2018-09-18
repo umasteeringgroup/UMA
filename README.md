@@ -10,3 +10,5 @@ Wiki:     http://umadocs.secretanorak.com/doku.php?id=start
 Forum:    http://forum.unity3d.com/threads/uma-unity-multipurpose-avatar-on-the-asset-store.219175
 
 License:  MIT
+
+[![UMA Intro](intro.png)](https://youtu.be/qzJeMWNEhWM)]
