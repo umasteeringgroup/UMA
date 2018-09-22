@@ -5,6 +5,19 @@ using UnityEngine.Events;
 
 namespace UMA
 {
+	public class BlendShapeData
+	{
+		public float value;
+		public bool isBaked;
+	}
+
+	public class BlendShapeSettings
+	{
+		public bool ignoreBlendShapes = false; //switch for the skinnedmeshcombiner to skip all blendshapes or not.
+		public bool loadAllBlendShapes = true; //switch for whether to load all blendshapes found on umaMeshData or only ones found in the blendshape dictionary
+		public Dictionary<string, BlendShapeData> blendShapes = new Dictionary<string, BlendShapeData>();
+	}
+
 	/// <summary>
 	/// UMA data holds the recipe for creating a character and skeleton and Unity references for a built character.
 	/// </summary>
@@ -1451,26 +1464,15 @@ namespace UMA
 		}
 
 		#region BlendShape Support
-        public class BlendShapeSettings
-        {
-            public bool ignoreBlendShapes; //default false
-            public Dictionary<string, float> bakeBlendShapes = new Dictionary<string, float>();
-
-            public BlendShapeSettings()
-            {
-                ignoreBlendShapes = false;
-                bakeBlendShapes.Clear();
-            }
-        }
-
         /// <summary>
-        /// Adds one, or both, named blendshapes (from a morph asset) to be baked.
+        /// Set one, or both, named blendshapes (from a morph asset) data or to be baked.
         /// </summary>
-        /// <param name="dnaValue">dnaValue of the morph associated with these blendshapes.</param>
         /// <param name="blendShapeZero">string name of the blendShapeZero.</param>
         /// <param name="blendShapeOne">string name of the blendShapeOne.</param>
+        /// <param name="dnaValue">dnaValue of the morph associated with these blendshapes.</param>
+        /// <param name="bake">bool whether to bake the blendshape or not.</param>
         /// <param name="rebuild">Set to true to rebuild the UMA after after baking.  Use false to control when to rebuild to submit other changes.</param>
-        public void AddBakedBlendShape( float dnaValue, string blendShapeZero, string blendShapeOne, bool rebuild = false)
+        public void SetBlendShapeData(float dnaValue, string blendShapeZero, string blendShapeOne, bool bake, bool rebuild = false)
         {
             float weightZero = 0f;
             float weightOne = 0f;
@@ -1481,32 +1483,42 @@ namespace UMA
             else
                 weightZero = Mathf.Clamp(dnaValue * -2f, 0f, 1f);
 
-            if(!string.IsNullOrEmpty(blendShapeZero))
-                AddBakedBlendShape(blendShapeZero, weightZero);
+            if (!string.IsNullOrEmpty(blendShapeZero))
+                SetBlendShapeData(blendShapeZero, weightZero, bake);
 
-            if(!string.IsNullOrEmpty(blendShapeOne))
-                AddBakedBlendShape(blendShapeOne, weightOne);
+            if (!string.IsNullOrEmpty(blendShapeOne))
+                SetBlendShapeData(blendShapeOne, weightOne, bake);
 
             if (rebuild)
                 Dirty(true, true, true);
         }
 
         /// <summary>
-        /// Adds a named blendshape to be baked in to the UMA.
+        /// Adds a named blendshape to be combined or baked to the UMA.
         /// </summary>
-        /// <param name="name">string name of the blendshape</param>
+        /// <param name="name">string name of the blendshape.</param>
         /// <param name="weight">weight of the blendshape. 0-1</param>
+        /// <param name="bake">bool whether to bake the blendshape or not.</param>
         /// <param name="rebuild">Set to true to rebuild the UMA after after baking.  Use false to control when to rebuild to submit other changes.</param>
-        public void AddBakedBlendShape( string name, float weight, bool rebuild = false)
+        private void SetBlendShapeData(string name, float weight, bool bake, bool rebuild = false)
         {
-            if (!blendShapeSettings.bakeBlendShapes.ContainsKey(name))
+            if (blendShapeSettings.blendShapes.ContainsKey(name))
             {
-                blendShapeSettings.bakeBlendShapes.Add(name, weight);
+                blendShapeSettings.blendShapes[name].value = weight;
+                blendShapeSettings.blendShapes[name].isBaked = bake;
             }
             else
-                blendShapeSettings.bakeBlendShapes[name] = weight;
+            {
+                BlendShapeData data = new BlendShapeData
+                {
+                    value = weight,
+                    isBaked = bake,
+                };
 
-            if(rebuild)
+                blendShapeSettings.blendShapes.Add(name, data);
+            }
+
+            if (rebuild)
                 Dirty(true, true, true);
         }
 
@@ -1515,60 +1527,20 @@ namespace UMA
         /// </summary>
         /// <param name="name">string name of the blendshape</param>
         /// <param name="rebuild">Set to true to rebuild the UMA after after baking.  Use false to control when to rebuild to submit other changes.</param>
-        public void RemoveBakedBlendShape( string name, bool rebuild = false)
+        public void RemoveBlendShapeData(string name, bool rebuild = false)
         {
-            if(blendShapeSettings.bakeBlendShapes.ContainsKey(name))
+            if (blendShapeSettings.blendShapes.ContainsKey(name))
             {
-                blendShapeSettings.bakeBlendShapes.Remove(name);
+                blendShapeSettings.blendShapes.Remove(name);
             }
 
-            if(rebuild)
+            if (rebuild)
                 Dirty(true, true, true);
         }
 
 		/// <summary>
-		/// Sets the blendshape by index and renderer.
-		/// </summary>
-		/// <param name="shapeIndex">Name of the blendshape.</param>
-		/// <param name="weight">Weight(float) to set this blendshape to.</param>
-		/// <param name="rIndex">index (default first) of the renderer this blendshape is on.</param>
-		public void SetBlendShape(int shapeIndex, float weight, int rIndex = 0)
-		{
-			if (rIndex >= rendererCount) //for multi-renderer support
-			{
-				if (Debug.isDebugBuild)
-					Debug.LogError ("SetBlendShape: This renderer doesn't exist!");
-				return;
-			}
-
-			if (shapeIndex < 0) 
-			{
-				if (Debug.isDebugBuild)
-					Debug.LogError ("SetBlendShape: Index is less than zero!");
-				return;
-			}
-
-			if (shapeIndex >= renderers [rIndex].sharedMesh.blendShapeCount) //for multi-renderer support
-			{
-				if (Debug.isDebugBuild)
-					Debug.LogError ("SetBlendShape: Index is greater than blendShapeCount!");
-				return;
-			}
-
-			if (weight < 0.0f || weight > 1.0f)
-			{
-				if (Debug.isDebugBuild)
-					Debug.LogWarning("SetBlendShape: Weight is out of range, clamping...");
-			}
-
-			weight = Mathf.Clamp01 (weight);
-			weight *= 100.0f; //Scale up to 1-100 for SetBlendShapeWeight.
-
-			renderers [rIndex].SetBlendShapeWeight (shapeIndex, weight);//for multi-renderer support
-		}
-
-		/// <summary>
-		/// Set the blendshape by it's name.
+		/// Set the blendshape by it's name.  This is used for setting the unity blendshape directly on the skinnedMeshRenderer.
+		/// Use SetBlendShapeData to set the data for the skinnedMeshCombiner and for baking blendshapes
 		/// </summary>
 		/// <param name="name">Name of the blendshape.</param>
 		/// <param name="weight">Weight(float) to set this blendshape to.</param>

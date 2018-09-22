@@ -37,7 +37,7 @@ namespace UMA.Examples
 
 				if(dnaEntryIndex >= 0)
 					slider.value = dna.GetValue(dnaEntryIndex);
-			}
+            }
 		}
 
 		public void SetMorph(float value)
@@ -52,28 +52,25 @@ namespace UMA.Examples
 			}
 		}
 
-        public void BakeMorph()
-        {
+		public void BakeMorph( bool isBaked )
+		{
 			if (dna == null)
 				dna = data.GetDna(dnaTypeHash);
 
 			if (dna != null && dnaEntryIndex >= 0)
-            {				
-                float dnaValue = dna.GetValue(dnaEntryIndex);
+			{				
+				float dnaValue = dna.GetValue(dnaEntryIndex);
 
-                data.AddBakedBlendShape(dnaValue, null, dnaName, true);
+				data.SetBlendShapeData( dnaValue, null, dnaName, isBaked, true);
 
 				if (statusText != null)
-					statusText.text = "(Baked)";
-            }
-        }
-
-        public void UnbakeMorph()
-        {
-			data.RemoveBakedBlendShape(dnaName, true);
-
-			if (statusText != null)
-				statusText.text = "(Unbaked)";
+				{
+					if( isBaked )
+						statusText.text = "(Baked)";
+					else
+						statusText.text = "(Unbaked)";
+				}
+			}
         }
 	}
 }
