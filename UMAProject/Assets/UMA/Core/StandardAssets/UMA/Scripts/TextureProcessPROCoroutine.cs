@@ -26,10 +26,10 @@ namespace UMA
 		{
 			umaData = _umaData;
 			umaGenerator = _umaGenerator;
-		 if (umaGenerator is UMAGenerator)
-		 {
-			fastPath = (umaGenerator as UMAGenerator).fastGeneration;
-		 }
+			if (umaGenerator is UMAGenerator)
+			{
+				fastPath = (umaGenerator as UMAGenerator).fastGeneration;
+			}
 			if (umaData.atlasResolutionScale <= 0) umaData.atlasResolutionScale = 1f;
 		}
 
