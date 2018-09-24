@@ -752,7 +752,6 @@ namespace UMA.Editors
                         {
                             if (dist <= _Source.normalsLength)
                             {
-                                Debug.Log("Dist: " + dist + " NormalsLength: " + _Source.normalsLength);
                                 vertexOccluded[i] = true;
                                 break;
                             }
