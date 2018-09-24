@@ -13,9 +13,9 @@ namespace UMA
 		UMAData umaData;
 		RenderTexture destinationTexture;
 		Texture[] resultingTextures;
-	  UMAGeneratorBase umaGenerator;
+		UMAGeneratorBase umaGenerator;
 		Camera renderCamera;
-	  bool fastPath=false;
+		bool fastPath=false;
 
 		/// <summary>
 		/// Setup data for atlas building.
