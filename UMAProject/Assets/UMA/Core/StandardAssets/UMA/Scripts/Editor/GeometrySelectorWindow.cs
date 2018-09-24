@@ -20,6 +20,7 @@ namespace UMA.Editors
         private Vector3 _occluderRotation = new Vector3(270.0f, 0.0f, 0.0f);
         private Vector3 _occluderScale = Vector3.one;
 
+        private bool isMirroring = false;
         private bool doneEditing = false; //set to true to end editing this objects
         private bool showWireframe = true; //whether to switch to wireframe mode or not
         private bool backfaceCull = true; 
@@ -38,7 +39,7 @@ namespace UMA.Editors
         private Rect infoRect = new Rect(10, 30, 400, 30);
         private GUIStyle whiteLabels;
         private GUIStyle blackLabels;
-		private bool disposed;
+        private bool disposed;
 
 
         public static GeometrySelectorWindow Instance { get; private set; }
@@ -49,7 +50,7 @@ namespace UMA.Editors
 
         void OnEnable()
         {
-			disposed = false;
+            disposed = false;
 
             _Source = target as GeometrySelector;
             if (_Source != null)
@@ -78,11 +79,11 @@ namespace UMA.Editors
 
         private void Cleanup()
         {
-			// Guard against Unity calling this via update multiple times even after
-			// it's been removed from the event. Only happens on Mac.
-			if (disposed)
-				return;
-			disposed = true;
+            // Guard against Unity calling this via update multiple times even after
+            // it's been removed from the event. Only happens on Mac.
+            if (disposed)
+                return;
+            disposed = true;
 
             Instance = null;
             EditorApplication.update -= GeometryUpdate;
@@ -308,7 +309,7 @@ namespace UMA.Editors
             
         private void ResetLabelStart()
         {
-            infoRect = new Rect(10, 30, 400, 30);
+            infoRect = new Rect(10, 20, 400, 30);
         }
 
         private void MoveToNextMessage(float xoffset, float yoffset)
@@ -378,20 +379,27 @@ namespace UMA.Editors
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Options", GUILayout.Width(100));
-            bool toggled = GUILayout.Toggle(showWireframe, new GUIContent("Show Wireframe", "Toggle showing the Wireframe"), "Button");
+            bool toggled = GUILayout.Toggle(showWireframe, new GUIContent("Wireframe", "Toggle showing the Wireframe"), "Button");
             if (toggled != showWireframe)
             {
                 UpdateShadingMode(toggled);
             }
             showWireframe = toggled;
-            backfaceCull = GUILayout.Toggle(backfaceCull, new GUIContent("  Backface Cull  ", "Toggle whether to select back faces"), "Button");
+            backfaceCull = GUILayout.Toggle(backfaceCull, new GUIContent("Backface Cull", "Toggle whether to select back faces"), "Button");
+            isMirroring = GUILayout.Toggle(isMirroring, new GUIContent("X Symmetry", "Mirror Selection on X axis"), "Button");
             GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            GUILayout.Label("______________________________________________");
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
+            if (!isMirroring)
+            {
+                GUILayout.Space(18);
+            }
+            else
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.FlexibleSpace();
+                GUILayout.Label("Symmetry not supported in area select");
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal(); 
+            }
 
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Focus Mesh"))
@@ -429,7 +437,8 @@ namespace UMA.Editors
 
             GUI.Window(1, new Rect(SceneView.lastActiveSceneView.position.width -(WindowWidth+Margin), SceneView.lastActiveSceneView.position.height - (WindowHeight+Margin), WindowWidth, WindowHeight), SceneWindow, "UMA Mesh Hide Geometry Selector");
             DrawNextLabel("Left click and drag to area select");
-            DrawNextLabel( "Hold SHIFT while dragging to paint");
+            DrawNextLabel("Hold SHIFT while dragging to paint");
+            DrawNextLabel("Hold CTRL while dragging to paint inverse");
             DrawNextLabel("Hold ALT while dragging to orbit");
             DrawNextLabel("Return to original scene by pressing \"Save and Return\"");
             Handles.EndGUI();
@@ -440,9 +449,6 @@ namespace UMA.Editors
             if (!isSelecting && Event.current.alt)
                 return;
 
-            if (!isSelecting && Event.current.control)
-                return;
-            
             Rect selectionRect = new Rect();
 
             if (Event.current.type == EventType.layout)
@@ -463,17 +469,24 @@ namespace UMA.Editors
                     correctedPos.y = startMousePos.y - selectionSize.y;
                 }
 
-                if (Event.current.shift)
+                if (Event.current.shift || Event.current.control)
                 {
-                    startMousePos = Event.current.mousePosition;
+                    bool selVal = setSelectedOn;
+                    if (Event.current.control) selVal = !selVal;
 
-                    int triangleHit = RayPick();
+                    startMousePos = Event.current.mousePosition;
+                    int mirrorHit = -1;
+                    int triangleHit = RayPick(isMirroring, out mirrorHit);
                     if (triangleHit >= 0)
                     {
-                        if (_Source.selectedTriangles[triangleHit] != setSelectedOn)
+                        if (_Source.selectedTriangles[triangleHit] != selVal)
                         {
                             // avoid constant rebuild.
-                            _Source.selectedTriangles[triangleHit] = setSelectedOn;
+                            _Source.selectedTriangles[triangleHit] = selVal;
+                            if (isMirroring && mirrorHit != -1)
+                            {
+                                _Source.selectedTriangles[mirrorHit] = selVal;
+                            }
                             _Source.UpdateSelectionMesh();
                         }
                     }
@@ -500,11 +513,17 @@ namespace UMA.Editors
             {
                 isSelecting = true;
                 startMousePos = Event.current.mousePosition;
+                int mirrorHit = -1;
 
-                int triangleHit = RayPick();
+                int triangleHit = RayPick(isMirroring,out mirrorHit);
                 if (triangleHit >= 0)
                 {
                     _Source.selectedTriangles[triangleHit] = !_Source.selectedTriangles[triangleHit];
+                    if (isMirroring && mirrorHit != -1)
+                    {
+                        // Mirror triangle should be the same as the hit triangle regardless of previous selection.
+                        _Source.selectedTriangles[mirrorHit] = _Source.selectedTriangles[triangleHit];
+                    }
                     _Source.UpdateSelectionMesh();
                 }
             }
@@ -577,8 +596,9 @@ namespace UMA.Editors
             }
         }
 
-        private int RayPick()
+        private int RayPick(bool Mirror, out int MirrorTriangle)
         {
+            MirrorTriangle = -1;
             if (Camera.current == null)
             {
                 Debug.LogWarning("Camera is null!");
@@ -593,6 +613,26 @@ namespace UMA.Editors
             MeshCollider meshCollider = hit.collider as MeshCollider;
             if (meshCollider == null || meshCollider.sharedMesh == null || meshCollider != _Source.meshCollider)
                 return -1;
+
+            if (Mirror)
+            {
+                RaycastHit MirrorHit;
+
+                // this only works because the model is at 0,0
+                Vector3 MirrorHitPt = hit.point;
+                Vector3 MirrorNormal = hit.normal;
+
+                MirrorHitPt.x = -MirrorHitPt.x;
+                MirrorNormal.x = -MirrorNormal.x;
+
+                Vector3 NewSource = MirrorHitPt + Vector3.Scale(MirrorNormal, new Vector3(0.1f,0.1f,0.1f));
+                Vector3 NewNormal = Vector3.Scale(MirrorNormal,new Vector3(-1, -1, -1));
+                Ray NewRay = new Ray(NewSource, NewNormal);
+                if (Physics.Raycast(NewRay, out MirrorHit))
+                {
+                    MirrorTriangle = MirrorHit.triangleIndex;
+                }
+            }
 
             return hit.triangleIndex;
         }
@@ -712,7 +752,6 @@ namespace UMA.Editors
                         {
                             if (dist <= _Source.normalsLength)
                             {
-                                Debug.Log("Dist: " + dist + " NormalsLength: " + _Source.normalsLength);
                                 vertexOccluded[i] = true;
                                 break;
                             }
