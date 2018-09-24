@@ -708,7 +708,7 @@ namespace UMA
 					Debug.LogError("Cannot apply changes to asset mesh!");
 			}
 #endif
-            mesh.subMeshCount = 1;
+			mesh.subMeshCount = 1;
 			mesh.triangles = new int[0];
 
 			if (OwnSharedBuffers())
