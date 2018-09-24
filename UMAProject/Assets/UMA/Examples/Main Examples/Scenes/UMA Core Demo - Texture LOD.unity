@@ -38,12 +38,12 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.1019868, g: 0.13969967, b: 0.1919058, a: 1}
+  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
 --- !u!157 &4
 LightmapSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 9
-  m_GIWorkflowMode: 0
+  m_GIWorkflowMode: 1
   m_GISettings:
     serializedVersion: 2
     m_BounceScale: 1
@@ -277,6 +277,10 @@ Prefab:
     - target: {fileID: 403108, guid: 440aba8ed985a409db71f0649af3ce11, type: 2}
       propertyPath: m_RootOrder
       value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 11422736, guid: 440aba8ed985a409db71f0649af3ce11, type: 2}
+      propertyPath: InitialScaleFactor
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 440aba8ed985a409db71f0649af3ce11, type: 2}
@@ -1064,7 +1068,7 @@ MonoBehaviour:
   lodDistance: 5
   LODDisplayPrefab: {fileID: 121262, guid: eff4c96d93cf04cdcb2e6cafb3d27b14, type: 2}
   swapSlots: 1
-  lodOffset: 1
+  lodOffset: 0
 --- !u!4 &784184758
 Transform:
   m_ObjectHideFlags: 0

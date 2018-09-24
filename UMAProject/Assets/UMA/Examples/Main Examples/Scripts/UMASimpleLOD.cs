@@ -1,86 +1,121 @@
 ﻿using UnityEngine;
 using UMA;
+using UMA.CharacterSystem;
 using System;
 
 namespace UMA.Examples
 {
 	public class UMASimpleLOD : MonoBehaviour
 	{
-		public UMAData umaData;
 		public float lodDistance;
-		public TextMesh lodDisplay;
-		private int lodLevel;
+
 		[Tooltip("Look for LOD slots in the library.")]
 		public bool swapSlots;
 		[Tooltip("This value is subtracted from the slot LOD counter.")]
 		public int lodOffset;
+		[Tooltip("This is the max LOD to search for if the current LOD can't be found.")]
+		public int maxLOD = 5;
+
+		public int CurrentLOD {  get { return _currentLOD - lodOffset; } }
+		private int _currentLOD = -1;
+
+		private DynamicCharacterAvatar _avatar;
+		private UMAData _umaData;
+		private Transform _cameraTransform;
+
+		private bool initialized = false;
 
 		public void SetSwapSlots(bool swapSlots, int lodOffset)
 		{
 			this.lodOffset = lodOffset;
 			this.swapSlots = swapSlots;
-			bool changedSlots = ProcessRecipe(lodLevel);
+			bool changedSlots = ProcessRecipe(_currentLOD);
 			if (changedSlots)
 			{
-				var renderer = lodDisplay.GetComponent<Renderer>();
-				renderer.material.SetColor("_EmissionColor", Color.grey);
-				umaData.Dirty(true, true, true);
+				//var renderer = lodDisplay.GetComponent<Renderer>();
+				//renderer.material.SetColor("_EmissionColor", Color.grey);
+				_umaData.Dirty(true, true, true);
 			}
 		}
 
 		public void Awake()
 		{
-			lodLevel = -1;
+			_currentLOD = -1;
+		}
+
+		public void OnEnable()
+		{
+			_avatar = GetComponent<DynamicCharacterAvatar>();
+			if (_avatar != null)
+			{
+				_avatar.CharacterBegun.AddListener(CharacterBegun);
+			}
+			else
+			{
+				_umaData = GetComponent<UMAData>();
+				if (_umaData != null)
+					_umaData.CharacterCreated.AddListener(CharacterCreated);
+			}
+
+			//cache the camera transform for performance
+			_cameraTransform = Camera.main.transform;
+		}
+
+		public void CharacterCreated(UMAData umaData)
+		{
+			initialized = true;
+		}
+
+		public void CharacterBegun(UMAData umaData)
+		{
+			initialized = true;
+			PerformLodCheck();
 		}
 
 		public void Update()
 		{
-			if (umaData == null)
-				umaData = gameObject.GetComponent<UMAData>();
+            if (!initialized)
+                return;
 
-			if (umaData == null)
+            PerformLodCheck();
+		}
+
+		private void PerformLodCheck()
+		{
+			if (_umaData == null)
+				_umaData = gameObject.GetComponent<UMAData>();
+
+			if (_umaData == null)
 				return;
 
-			float cameraDistance = (transform.position - Camera.main.transform.position).magnitude;
+			if (_umaData.umaRecipe == null)
+				return;
+
+			float cameraDistance = (transform.position - _cameraTransform.position).magnitude;
 			float lodDistanceStep = lodDistance;
 			float atlasResolutionScale = 1f;
 
 			int currentLevel = 0;
-			while (lodDistance !=0 && cameraDistance > lodDistanceStep)
+			while (lodDistance != 0 && cameraDistance > lodDistanceStep)
 			{
 				lodDistanceStep *= 2;
 				atlasResolutionScale *= 0.5f;
 				++currentLevel;
 			}
+			_currentLOD = currentLevel;
 
-			if (umaData.atlasResolutionScale != atlasResolutionScale)
+			if (_umaData.atlasResolutionScale != atlasResolutionScale)
 			{
-				umaData.atlasResolutionScale = atlasResolutionScale;
+				_umaData.atlasResolutionScale = atlasResolutionScale;
 				bool changedSlots = ProcessRecipe(currentLevel);
-				umaData.Dirty(changedSlots, true, changedSlots);
+				_umaData.Dirty(changedSlots, true, changedSlots);
 			}
-
-			if (lodDisplay != null )
+			else
 			{
-				if (lodLevel != currentLevel)
+				if(_umaData.isMeshDirty)
 				{
-					lodLevel = currentLevel;
-					lodDisplay.text = string.Format("LOD #{0}", lodLevel);
-					var renderer = lodDisplay.GetComponent<Renderer>();
-					renderer.material.SetColor("_EmissionColor", Color.grey);
+					ProcessRecipe(currentLevel);
 				}
-				var delta = transform.position-Camera.main.transform.position;
-				delta.y = 0;
-				lodDisplay.transform.rotation = Quaternion.LookRotation(delta, Vector3.up);
-			}
-		}
-
-		public void CharacterUpdated(UMAData data)
-		{
-			if (lodDisplay != null)
-			{
-				var renderer = lodDisplay.GetComponent<Renderer>();
-				renderer.material.SetColor("_EmissionColor", Color.white);
 			}
 		}
 
@@ -88,12 +123,12 @@ namespace UMA.Examples
 		{
 			bool changedSlots = false;
 
-			if (umaData.umaRecipe.slotDataList == null)
+			if (_umaData.umaRecipe.slotDataList == null)
 				return false;
 
-			for (int i = 0; i < umaData.umaRecipe.slotDataList.Length; i++)
+			for (int i = 0; i < _umaData.umaRecipe.slotDataList.Length; i++)
 			{
-				var slot = umaData.umaRecipe.slotDataList[i];
+				var slot = _umaData.umaRecipe.slotDataList[i];
 				if (slot != null)
 				{
 					var slotName = slot.slotName;
@@ -106,15 +141,49 @@ namespace UMA.Examples
 					{
 						slotName = string.Format("{0}_LOD{1}", slotName, currentLevel - lodOffset);
 					}
-					if (slotName != slot.slotName && UMAContext.Instance.HasSlot(slotName))
+
+					bool slotFound = false;
+					for (int k = (currentLevel - lodOffset); k >= 0; k--)
 					{
-						umaData.umaRecipe.slotDataList[i] = UMAContext.Instance.InstantiateSlot(slotName, slot.GetOverlayList());
-						changedSlots = true;
+						if (slotName != slot.slotName && UMAContext.Instance.HasSlot(slotName))
+						{
+							_umaData.umaRecipe.slotDataList[i] = UMAContext.Instance.InstantiateSlot(slotName, slot.GetOverlayList());
+							slotFound = true;
+							changedSlots = true;
+							break;
+						}
+					}
+					//If slot still not found when searching down lods, then let's trying searching up lods
+					if(!slotFound)
+					{
+						for(int k = (currentLevel - lodOffset) + 1; k <= maxLOD; k++)
+						{
+							if (slotName != slot.slotName && UMAContext.Instance.HasSlot(slotName))
+							{
+								_umaData.umaRecipe.slotDataList[i] = UMAContext.Instance.InstantiateSlot(slotName, slot.GetOverlayList());
+								slotFound = true;
+								changedSlots = true;
+								break;
+							}
+						}
 					}
 				}
 			}
+
+            //Reprocess mesh hide assets
+            //Eventually, make this a function in DCA (UpdateMeshHideMasks) and replace correspond code in DCA.LoadCharacter too
+            if (_avatar != null && changedSlots)
+            {
+                foreach (SlotData sd in _umaData.umaRecipe.slotDataList)
+                {
+                    if (_avatar.MeshHideDictionary.ContainsKey(sd.asset))
+                    {   //If this slotDataAsset is found in the MeshHideDictionary then we need to supply the SlotData with the bitArray.
+                        sd.meshHideMask = MeshHideAsset.GenerateMask(_avatar.MeshHideDictionary[sd.asset]);
+                    }
+                }
+            }
 #if UNITY_EDITOR
-			UnityEditor.EditorUtility.SetDirty(umaData);
+            UnityEditor.EditorUtility.SetDirty(_umaData);
 #endif
 			return changedSlots;
 		}
