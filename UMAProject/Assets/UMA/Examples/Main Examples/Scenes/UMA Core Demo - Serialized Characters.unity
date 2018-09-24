@@ -291,7 +291,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 386a6bba8e6c74f4bbb78772f0b20d3c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Panel: {fileID: 0}
+  Panel: {fileID: 335455165}
 --- !u!114 &158530446
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2107,7 +2107,9 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: This scene demonstrates
+  m_Text: "This scene demonstrates using saved uma text recipes to load up an UMA.
+    \ \n\nInspect \"Troll\", \"KimCardassian\", \"Sven\", \"Harold\", or \"Shelly\"
+    and the recipe assigned to the \"UMA Recipe\" variable."
 --- !u!222 &1222598102
 CanvasRenderer:
   m_ObjectHideFlags: 0

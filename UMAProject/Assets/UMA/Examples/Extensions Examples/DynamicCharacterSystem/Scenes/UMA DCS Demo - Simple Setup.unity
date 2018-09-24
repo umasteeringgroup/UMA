@@ -1734,7 +1734,9 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: This scene demonstrates
+  m_Text: This scene demonstrates the Dynamic Character System on a Dynamic Character
+    Avatar.  This system manages a wardrobe for you so you don't need to manage slots
+    and overlays directly anymore.
 --- !u!222 &540069367
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -6973,7 +6975,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1645511934}
   m_HandleRect: {fileID: 1645511933}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:

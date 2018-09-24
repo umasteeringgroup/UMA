@@ -2467,7 +2467,16 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'This scene demonstrates '
+  m_Text: 'This scene demonstrates the use of uma text recipes with specifiy slots
+    and overlays.  The sample mixer scripts choose from a list of these recipes to
+    create an UMA.
+
+
+    Inspect "FemaleRecipeMixer" and "MaleRecipeMixer" under "UMA Crowd" to see the
+    scripts randomly choosing from the supplied recipes.
+
+
+'
 --- !u!222 &1574822082
 CanvasRenderer:
   m_ObjectHideFlags: 0
