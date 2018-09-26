@@ -297,14 +297,14 @@ namespace UMA
 		public static HumanDescription CreateHumanDescription(UMAData umaData, UmaTPose umaTPose)
 		{
 			var res = new HumanDescription();
-			res.armStretch = 0;
-			res.feetSpacing = 0;
-			res.legStretch = 0;
-			res.lowerArmTwist = 0.2f;
-			res.lowerLegTwist = 1f;
-			res.upperArmTwist = 0.5f;
-			res.upperLegTwist = 0.1f;
-			res.skeleton = umaTPose.boneInfo;
+			res.armStretch = umaTPose.armStretch == 0.0f ? 0.05f : umaTPose.armStretch; // this is for compatiblity with the existing tpose. 
+         res.legStretch = umaTPose.legStretch == 0.0f ? 0.05f : umaTPose.legStretch; 
+         res.feetSpacing = umaTPose.feetSpacing;
+         res.lowerArmTwist = umaTPose.lowerArmTwist == 0.0f ? 0.5f : umaTPose.lowerArmTwist;
+         res.lowerLegTwist = umaTPose.lowerLegTwist == 0.0f ? 0.5f : umaTPose.lowerLegTwist;
+         res.upperArmTwist = umaTPose.upperArmTwist == 0.0f ? 0.5f : umaTPose.upperArmTwist;
+         res.upperLegTwist = umaTPose.upperLegTwist == 0.0f ? 0.5f : umaTPose.upperLegTwist;
+         res.skeleton = umaTPose.boneInfo;
 			res.human = umaTPose.humanInfo;
 
 			SkeletonModifier(umaData, ref res.skeleton, res.human);
