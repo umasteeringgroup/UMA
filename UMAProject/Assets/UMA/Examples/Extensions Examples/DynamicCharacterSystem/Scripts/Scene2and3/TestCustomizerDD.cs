@@ -851,7 +851,7 @@ namespace UMA.CharacterSystem.Examples
 			if (Orbitor != null)
 			{
 				Orbitor.distance = 1.4f;
-				Orbitor.TargetBone = "Root/Global/Position/Hips/LowerBack/Spine/Spine1";
+				Orbitor.TargetBone = MouseOrbitImproved.targetOpts.Chest;
 			}
 		}
 
@@ -863,7 +863,7 @@ namespace UMA.CharacterSystem.Examples
 			if (Orbitor != null)
 			{
 				Orbitor.distance = 0.5f;
-				Orbitor.TargetBone = "Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head";
+				Orbitor.TargetBone = MouseOrbitImproved.targetOpts.Head;
 			}
 		}
 
