@@ -409,40 +409,44 @@ namespace UMA.CharacterSystem.Editors
 				showWardrobe = EditorGUILayout.Foldout(showWardrobe, "Current Wardrobe");
 				if (showWardrobe)
 				{
-				   EditorGUI.BeginDisabledGroup(true);
-				   Dictionary<string, UMATextRecipe> currentWardrobe = thisDCA.WardrobeRecipes;
+					EditorGUI.BeginDisabledGroup(true);
+					EditorGUI.indentLevel++;
+					Dictionary<string, UMATextRecipe> currentWardrobe = thisDCA.WardrobeRecipes;
 
-				   foreach (KeyValuePair<string, UMATextRecipe> item in currentWardrobe)
-				   {
-					  GUILayout.BeginHorizontal();
-					  EditorGUILayout.LabelField(item.Key,GUILayout.Width(88.0f));
-					  EditorGUILayout.TextField(item.Value.DisplayValue+" ("+item.Value.name+")");
-					  GUILayout.EndHorizontal();
-				   }
-				   EditorGUI.EndDisabledGroup();
+					foreach (KeyValuePair<string, UMATextRecipe> item in currentWardrobe)
+					{
+						GUILayout.BeginHorizontal();
+						EditorGUILayout.LabelField(item.Key,GUILayout.Width(88.0f));
+						EditorGUILayout.TextField(item.Value.DisplayValue+" ("+item.Value.name+")");
+						GUILayout.EndHorizontal();
+					}
+                    EditorGUI.indentLevel--;
+					EditorGUI.EndDisabledGroup();
 				}
 
 				showAssetBundles = EditorGUILayout.Foldout(showAssetBundles, "Used Asset Bundles");
 				if (showAssetBundles)
 				{
-				   EditorGUILayout.LabelField("AssetBundles used by Avatar");
-				   string assetBundlesUsed = "";
-				   if (thisDCA.assetBundlesUsedbyCharacter.Count == 0)
-				   {
-					  assetBundlesUsed = "None";
-				   }
-				   else
-				   {
-					  for (int i = 0; i < thisDCA.assetBundlesUsedbyCharacter.Count; i++)
-					  {
-						 assetBundlesUsed = assetBundlesUsed + thisDCA.assetBundlesUsedbyCharacter[i];
-						 if (i < (thisDCA.assetBundlesUsedbyCharacter.Count - 1))
+					EditorGUILayout.LabelField("AssetBundles used by Avatar");
+					string assetBundlesUsed = "";
+					if (thisDCA.assetBundlesUsedbyCharacter.Count == 0)
+					{
+						assetBundlesUsed = "None";
+					}
+					else
+					{
+						for (int i = 0; i < thisDCA.assetBundlesUsedbyCharacter.Count; i++)
+						{
+							assetBundlesUsed = assetBundlesUsed + thisDCA.assetBundlesUsedbyCharacter[i];
+							if (i < (thisDCA.assetBundlesUsedbyCharacter.Count - 1))
 							assetBundlesUsed = assetBundlesUsed + "\n";
-					  }
-				   }
-				   EditorGUI.BeginDisabledGroup(true);
-				   EditorGUILayout.TextArea(assetBundlesUsed);
-				   EditorGUI.EndDisabledGroup();
+						}
+					}
+					EditorGUI.BeginDisabledGroup(true);
+					EditorGUI.indentLevel++;
+					EditorGUILayout.TextArea(assetBundlesUsed);
+					EditorGUI.indentLevel--;
+					EditorGUI.EndDisabledGroup();
 				}
 			}
 		}
