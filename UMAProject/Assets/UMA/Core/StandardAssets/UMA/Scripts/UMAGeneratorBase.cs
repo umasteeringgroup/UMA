@@ -298,13 +298,13 @@ namespace UMA
 		{
 			var res = new HumanDescription();
 			res.armStretch = umaTPose.armStretch == 0.0f ? 0.05f : umaTPose.armStretch; // this is for compatiblity with the existing tpose. 
-         res.legStretch = umaTPose.legStretch == 0.0f ? 0.05f : umaTPose.legStretch; 
-         res.feetSpacing = umaTPose.feetSpacing;
-         res.lowerArmTwist = umaTPose.lowerArmTwist == 0.0f ? 0.5f : umaTPose.lowerArmTwist;
-         res.lowerLegTwist = umaTPose.lowerLegTwist == 0.0f ? 0.5f : umaTPose.lowerLegTwist;
-         res.upperArmTwist = umaTPose.upperArmTwist == 0.0f ? 0.5f : umaTPose.upperArmTwist;
-         res.upperLegTwist = umaTPose.upperLegTwist == 0.0f ? 0.5f : umaTPose.upperLegTwist;
-         res.skeleton = umaTPose.boneInfo;
+			res.legStretch = umaTPose.legStretch == 0.0f ? 0.05f : umaTPose.legStretch; 
+			res.feetSpacing = umaTPose.feetSpacing;
+			res.lowerArmTwist = umaTPose.lowerArmTwist == 0.0f ? 0.5f : umaTPose.lowerArmTwist;
+			res.lowerLegTwist = umaTPose.lowerLegTwist == 0.0f ? 0.5f : umaTPose.lowerLegTwist;
+			res.upperArmTwist = umaTPose.upperArmTwist == 0.0f ? 0.5f : umaTPose.upperArmTwist;
+			res.upperLegTwist = umaTPose.upperLegTwist == 0.0f ? 0.5f : umaTPose.upperLegTwist;
+			res.skeleton = umaTPose.boneInfo;
 			res.human = umaTPose.humanInfo;
 
 			SkeletonModifier(umaData, ref res.skeleton, res.human);

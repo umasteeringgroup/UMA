@@ -10,7 +10,7 @@ namespace UMA
     {
         bool boneInfoFoldout = false;
         bool humanInfoFoldout = false;
-      bool mecanimInfoFoldout = false;
+        bool mecanimInfoFoldout = false;
 
         UmaTPose source;
 
