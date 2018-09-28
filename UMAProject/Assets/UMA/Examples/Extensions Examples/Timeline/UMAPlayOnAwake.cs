@@ -1,7 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿#if UNITY_2017_1_OR_NEWER
 using UnityEngine;
-using UMA;
 using UMA.CharacterSystem;
 using UnityEngine.Playables;
 
@@ -26,3 +24,4 @@ namespace UMA.Examples
         }
     }
 }
+#endif
