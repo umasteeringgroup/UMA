@@ -10,6 +10,7 @@ namespace UMA
     {
         bool boneInfoFoldout = false;
         bool humanInfoFoldout = false;
+        bool mecanimInfoFoldout = false;
 
         UmaTPose source;
 
@@ -25,6 +26,17 @@ namespace UMA
                 return;
 
             //base.DrawDefaultInspector();
+            mecanimInfoFoldout = EditorGUILayout.Foldout(mecanimInfoFoldout, "Mecanim Adjustments");
+            if (mecanimInfoFoldout)
+            {
+                source.armStretch = EditorGUILayout.FloatField("Arm Stretch", source.armStretch);
+                source.legStretch = EditorGUILayout.FloatField("Leg Stretch", source.legStretch);
+                source.feetSpacing = EditorGUILayout.FloatField("Feet Spacing", source.feetSpacing);
+                source.lowerArmTwist = EditorGUILayout.FloatField("Lower Arm Twist", source.lowerArmTwist);
+                source.upperArmTwist = EditorGUILayout.FloatField("Upper Arm Twist", source.upperArmTwist);
+                source.lowerLegTwist = EditorGUILayout.FloatField("Lower Leg Twist", source.lowerLegTwist);
+                source.upperLegTwist = EditorGUILayout.FloatField("Upper Leg Twist", source.upperLegTwist);
+            }
 
             boneInfoFoldout = EditorGUILayout.Foldout(boneInfoFoldout, "Bone Info");
             if (source.boneInfo != null)
