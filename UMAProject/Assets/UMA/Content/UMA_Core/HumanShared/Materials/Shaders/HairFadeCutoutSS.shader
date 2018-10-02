@@ -23,7 +23,7 @@ Shader "UMA/Hair Fade Cutout (Single Sided)"
 
 	SubShader
 	{
-		Tags{ "RenderType" = "TransparentCutout"  "Queue" = "AlphaTest+0" }
+		Tags{ "RenderType" = "TransparentCutout"  "Queue" = "Transparent" }
 		Cull Back
 		CGINCLUDE
 		#include "UnityStandardUtils.cginc"
@@ -69,7 +69,7 @@ Shader "UMA/Hair Fade Cutout (Single Sided)"
 
 		ENDCG
 		
-		Tags{ "RenderType" = "Transparent"  "Queue" = "Transparent+0" "IgnoreProjector" = "True" }
+		Tags{ "RenderType" = "Transparent"  "Queue" = "Transparent+10" "IgnoreProjector" = "True" }
 		Cull Back
 		CGINCLUDE
 		#include "UnityStandardUtils.cginc"
