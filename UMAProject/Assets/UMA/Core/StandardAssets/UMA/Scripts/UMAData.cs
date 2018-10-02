@@ -1468,22 +1468,19 @@ namespace UMA
         /// Adds a named blendshape to be combined or baked to the UMA.
         /// </summary>
         /// <param name="name">string name of the blendshape.</param>
-        /// <param name="weight">weight of the blendshape. 0-1</param>
         /// <param name="bake">bool whether to bake the blendshape or not.</param>
         /// <param name="rebuild">Set to true to rebuild the UMA after after baking.  Use false to control when to rebuild to submit other changes.</param>
-        public void SetBlendShapeData(string name, float weight, bool bake, bool rebuild = false)
+        public void SetBlendShapeData(string name, bool bake, bool rebuild = false)
         {
 			BlendShapeData data;
 			if (blendShapeSettings.blendShapes.TryGetValue(name, out data))
 			{
-                data.value = weight;
 				data.isBaked = bake;
             }
             else
             {
                 data = new BlendShapeData
                 {
-                    value = weight,
                     isBaked = bake,
                 };
 
