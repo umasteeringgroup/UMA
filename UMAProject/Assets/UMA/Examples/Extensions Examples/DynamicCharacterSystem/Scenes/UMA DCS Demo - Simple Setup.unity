@@ -3444,7 +3444,7 @@ MonoBehaviour:
   singleTouchOrbiting: 0
   pinchToZoom: 0
   Clip: 0
-  TargetBone: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head
+  TargetBone: 0
 --- !u!114 &1378902867
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -248,5 +248,18 @@ namespace UMA
 				AddRecursively(boneInfoList, root.GetChild(i));
 			}
 		}
+
+        public string BoneNameFromHumanName(string humanName)
+        {
+            if (humanInfo == null)
+                return "";
+
+            foreach(HumanBone humanBone in humanInfo)
+            {
+                if (humanBone.humanName == humanName)
+                    return humanBone.boneName;
+            }
+            return "";
+        }
 	}
 }
