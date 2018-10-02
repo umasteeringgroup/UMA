@@ -11,10 +11,8 @@ namespace UMA.Examples
 		public GameObject LODDisplayPrefab;
 		[Tooltip("Look for LOD slots in the library.")]
 		public bool swapSlots = true;
-		private bool _swapSlots = true;
 		[Tooltip("This value is subtracted from the slot LOD counter.")]
 		public int lodOffset = 0;
-		private int _lodOffset = 0;
 
 		private bool isBuilding;
 		UMACrowd crowd;

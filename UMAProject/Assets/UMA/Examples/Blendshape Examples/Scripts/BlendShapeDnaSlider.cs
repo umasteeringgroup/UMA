@@ -59,9 +59,7 @@ namespace UMA.Examples
 
 			if (dna != null && dnaEntryIndex >= 0)
 			{				
-				float dnaValue = dna.GetValue(dnaEntryIndex);
-
-				data.SetBlendShapeData( dnaValue, null, dnaName, isBaked, true);
+				data.SetBlendShapeData(dnaName, isBaked, true);
 
 				if (statusText != null)
 				{

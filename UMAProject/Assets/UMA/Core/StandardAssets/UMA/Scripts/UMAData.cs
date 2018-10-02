@@ -1465,53 +1465,22 @@ namespace UMA
 
 		#region BlendShape Support
         /// <summary>
-        /// Set one, or both, named blendshapes (from a morph asset) data or to be baked.
-        /// </summary>
-        /// <param name="blendShapeZero">string name of the blendShapeZero.</param>
-        /// <param name="blendShapeOne">string name of the blendShapeOne.</param>
-        /// <param name="dnaValue">dnaValue of the morph associated with these blendshapes.</param>
-        /// <param name="bake">bool whether to bake the blendshape or not.</param>
-        /// <param name="rebuild">Set to true to rebuild the UMA after after baking.  Use false to control when to rebuild to submit other changes.</param>
-        public void SetBlendShapeData(float dnaValue, string blendShapeZero, string blendShapeOne, bool bake, bool rebuild = false)
-        {
-            float weightZero = 0f;
-            float weightOne = 0f;
-
-            dnaValue = dnaValue - 0.5f;
-            if (dnaValue >= 0f)
-                weightOne = Mathf.Clamp(dnaValue * 2f, 0f, 1f);
-            else
-                weightZero = Mathf.Clamp(dnaValue * -2f, 0f, 1f);
-
-            if (!string.IsNullOrEmpty(blendShapeZero))
-                SetBlendShapeData(blendShapeZero, weightZero, bake);
-
-            if (!string.IsNullOrEmpty(blendShapeOne))
-                SetBlendShapeData(blendShapeOne, weightOne, bake);
-
-            if (rebuild)
-                Dirty(true, true, true);
-        }
-
-        /// <summary>
         /// Adds a named blendshape to be combined or baked to the UMA.
         /// </summary>
         /// <param name="name">string name of the blendshape.</param>
-        /// <param name="weight">weight of the blendshape. 0-1</param>
         /// <param name="bake">bool whether to bake the blendshape or not.</param>
         /// <param name="rebuild">Set to true to rebuild the UMA after after baking.  Use false to control when to rebuild to submit other changes.</param>
-        private void SetBlendShapeData(string name, float weight, bool bake, bool rebuild = false)
+        public void SetBlendShapeData(string name, bool bake, bool rebuild = false)
         {
-            if (blendShapeSettings.blendShapes.ContainsKey(name))
-            {
-                blendShapeSettings.blendShapes[name].value = weight;
-                blendShapeSettings.blendShapes[name].isBaked = bake;
+			BlendShapeData data;
+			if (blendShapeSettings.blendShapes.TryGetValue(name, out data))
+			{
+				data.isBaked = bake;
             }
             else
             {
-                BlendShapeData data = new BlendShapeData
+                data = new BlendShapeData
                 {
-                    value = weight,
                     isBaked = bake,
                 };
 
@@ -1544,7 +1513,8 @@ namespace UMA
 		/// </summary>
 		/// <param name="name">Name of the blendshape.</param>
 		/// <param name="weight">Weight(float) to set this blendshape to.</param>
-		public void SetBlendShape(string name, float weight)
+		/// <param name="allowRebuild">Triggers a rebuild of the uma character if the blendshape is baked</param>
+		public void SetBlendShape(string name, float weight, bool allowRebuild = false)
 		{
 			if (weight < 0.0f || weight > 1.0f)
 			{
@@ -1553,13 +1523,39 @@ namespace UMA
 			}
 
 			weight = Mathf.Clamp01 (weight);
-			weight *= 100.0f; //Scale up to 1-100 for SetBlendShapeWeight.
-
-			foreach (SkinnedMeshRenderer renderer in renderers)
+			BlendShapeData data;
+			if (blendShapeSettings.blendShapes.TryGetValue(name, out data))
 			{
-				int index = renderer.sharedMesh.GetBlendShapeIndex(name);
-				if (index >= 0)
-					renderer.SetBlendShapeWeight(index, weight);
+				data.value = weight;
+			}
+			else
+			{
+				data = new BlendShapeData
+				{
+					value = weight,
+					isBaked = false,
+				};
+
+				blendShapeSettings.blendShapes.Add(name, data);
+			}
+
+			if (data.isBaked)
+			{
+				if (allowRebuild)
+				{
+					Dirty(true, true, true);
+				}
+			}
+			else
+			{
+				weight *= 100.0f; //Scale up to 1-100 for SetBlendShapeWeight.
+
+				foreach (SkinnedMeshRenderer renderer in renderers)
+				{
+					int index = renderer.sharedMesh.GetBlendShapeIndex(name);
+					if (index >= 0)
+						renderer.SetBlendShapeWeight(index, weight);
+				}
 			}
 		}
 
