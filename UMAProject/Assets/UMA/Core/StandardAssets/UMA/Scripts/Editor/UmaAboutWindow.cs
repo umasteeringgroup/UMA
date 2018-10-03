@@ -7,9 +7,9 @@ namespace UMA
     public class UmaAboutWindow : EditorWindow 
     {
         public static string umaVersion { get { return _version; } }
-        private static string _version = "2.7.0";
+        private static string _version = "2.8.0";
         private string windowTitle = "UMA About";
-        private string wikiLink = "http://www.umawiki.secretanorak.com/Main_Page";
+        private string wikiLink = "http://umadocs.secretanorak.com/doku.php";
         private string githubLink = "https://github.com/umasteeringgroup";
         private string forumLink = "https://forum.unity.com/threads/uma-unity-multipurpose-avatar-on-the-asset-store.219175/";
         private string slackLink = "https://uma-community.slack.com";
