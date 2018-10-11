@@ -14,7 +14,7 @@ namespace UMA
 		#if UNITY_EDITOR
 		public bool allowAssetSearch = true;
 
-		protected RaceAssetDictionary raceDictionary= null;
+		protected RaceAssetDictionary raceDictionary = null;
 		protected SlotAssetDictionary slotDictionary = null;
 		protected OverlayAssetDictionary overlayDictionary = null;
 		protected DNAAssetDictionary dnaDictionary = null;

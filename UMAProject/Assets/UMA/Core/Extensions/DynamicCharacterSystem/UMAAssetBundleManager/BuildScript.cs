@@ -256,7 +256,9 @@ namespace UMA.AssetBundles
             buildPlayerOptions.assetBundleManifestPath = GetAssetBundleManifestFilePath();
             buildPlayerOptions.target = EditorUserBuildSettings.activeBuildTarget;
             buildPlayerOptions.options = option;
-            buildError = BuildPipeline.BuildPlayer(buildPlayerOptions);
+			// HACK - I don't see how to get an error from this any more?
+//			buildError = BuildPipeline.BuildPlayer(buildPlayerOptions);
+			BuildPipeline.BuildPlayer(buildPlayerOptions);
 			
 			//after the build completes destroy the serverURL file
 			if (SimpleWebServer.serverStarted && CanRunLocally(EditorUserBuildSettings.activeBuildTarget))
@@ -360,7 +362,7 @@ namespace UMA.AssetBundles
 						return false;
 				case BuildTarget.StandaloneOSXIntel:
 				case BuildTarget.StandaloneOSXIntel64:
-				case BuildTarget.StandaloneOSXUniversal:
+				case BuildTarget.StandaloneOSX:
 					if (currentEnvironment.IndexOf("OSX") > -1)
 						return true;
 					else
@@ -384,7 +386,7 @@ namespace UMA.AssetBundles
 					return "/test.exe";
 				case BuildTarget.StandaloneOSXIntel:
 				case BuildTarget.StandaloneOSXIntel64:
-				case BuildTarget.StandaloneOSXUniversal:
+				case BuildTarget.StandaloneOSX:
 					return "/test.app";
 				case BuildTarget.WebGL:
 				case BuildTarget.iOS:

@@ -293,7 +293,7 @@ namespace UMA.Editors
                 ResetPreviewCamera();
             }
 
-            if( Event.current.type == EventType.repaint )
+            if( Event.current.type == EventType.Repaint )
             {
                 _previewRenderUtility.BeginPreview(r, background);
                 _previewRenderUtility.DrawMesh(_meshPreview, Vector3.zero, Quaternion.identity, _material, 0);

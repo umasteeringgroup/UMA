@@ -341,6 +341,13 @@ namespace UMA
         {
             UMA.CustomAssetUtility.CreateAsset<MeshHideAsset>();
         }
-        #endif
+
+		[UnityEditor.MenuItem("UMA/Data/Convert Occlusion Asset")]
+		public static void ConvertToOcclusionDataAsset()
+		{
+			OcclusionDataAsset newAsset = UMA.CustomAssetUtility.CreateAsset<OcclusionDataAsset>();
+		}
+
+		#endif
     }
 }
