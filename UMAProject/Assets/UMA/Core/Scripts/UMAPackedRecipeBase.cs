@@ -204,12 +204,12 @@ namespace UMA
 			public string id;
 			public int colorIdx;
 			public int[] rect;
-            #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
+            #if false // UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
 			public PackedOverlaySubstanceData[] data;
             #endif
 		}
 
-        #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
+        #if false // UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
 		[System.Serializable]
 		public class PackedOverlaySubstanceData
 		{
@@ -636,7 +636,7 @@ namespace UMA
 						tempPackedOverlay.rect[2] = Mathf.FloorToInt(overlayData.rect.width);
 						tempPackedOverlay.rect[3] = Mathf.FloorToInt(overlayData.rect.height);
 
-                        #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
+                        #if false // UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
 						if (overlayData.isProcedural && (overlayData.proceduralData != null))
 						{
 							tempPackedOverlay.data = new PackedOverlaySubstanceData[overlayData.proceduralData.Length];
@@ -960,7 +960,7 @@ namespace UMA
 							if (UMAPackRecipe.MaterialIsValid(overlayData.asset.material))
 								overlayData.EnsureChannels(overlayData.asset.material.channels.Length);
 						
-                            #if UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
+                            #if false // UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE //supported platforms for procedural materials
 							if(packedOverlay.data == null)
 								overlayData.proceduralData = new OverlayData.OverlayProceduralData[0];
 							else
