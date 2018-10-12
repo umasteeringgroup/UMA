@@ -12,9 +12,15 @@ namespace UMA.Editors
     public class GeometrySelectorWindow : Editor 
     {
         private GeometrySelector _Source;
-        private SlotDataAsset _Occluder = null;
+        private SlotDataAsset _OccluderSlotData = null;
+        private MeshHideAsset _OccluderMeshHide = null;
+
         private float _occluderOffset = 0;
-        private Vector3 _occluderRotation = Vector3.zero;
+        private Vector3 _occluderPosition = Vector3.zero;
+        private Vector3 _occluderRotation = new Vector3(270.0f, 0.0f, 0.0f);
+        private Vector3 _occluderScale = Vector3.one;
+
+        private bool isMirroring = false;
         private bool doneEditing = false; //set to true to end editing this objects
         private bool showWireframe = true; //whether to switch to wireframe mode or not
         private bool backfaceCull = true; 
@@ -33,7 +39,7 @@ namespace UMA.Editors
         private Rect infoRect = new Rect(10, 30, 400, 30);
         private GUIStyle whiteLabels;
         private GUIStyle blackLabels;
-		private bool disposed;
+        private bool disposed;
 
 
         public static GeometrySelectorWindow Instance { get; private set; }
@@ -44,7 +50,7 @@ namespace UMA.Editors
 
         void OnEnable()
         {
-			disposed = false;
+            disposed = false;
 
             _Source = target as GeometrySelector;
             if (_Source != null)
@@ -73,11 +79,11 @@ namespace UMA.Editors
 
         private void Cleanup()
         {
-			// Guard against Unity calling this via update multiple times even after
-			// it's been removed from the event. Only happens on Mac.
-			if (disposed)
-				return;
-			disposed = true;
+            // Guard against Unity calling this via update multiple times even after
+            // it's been removed from the event. Only happens on Mac.
+            if (disposed)
+                return;
+            disposed = true;
 
             Instance = null;
             EditorApplication.update -= GeometryUpdate;
@@ -100,42 +106,130 @@ namespace UMA.Editors
             EditorGUILayout.LabelField("Mesh Selector Utilities", EditorStyles.largeLabel, GUILayout.MaxHeight(25) );
             scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUIStyle.none);
             GUILayout.Space(20);
-            EditorGUILayout.LabelField(new GUIContent("Occlusion Slot (Optional)","Use this mesh to attempt to automatically detect occluded triangles"));
-            SlotDataAsset newOccluder = (SlotDataAsset) EditorGUILayout.ObjectField(_Occluder, typeof(SlotDataAsset), false);
-            if (newOccluder != _Occluder)
+
+            EditorGUILayout.BeginHorizontal();
+            bool newNormals = EditorGUILayout.Toggle("Visualize Normals", _Source.visualizeNormals);
+            if ( newNormals != _Source.visualizeNormals )
             {
-                _Occluder = newOccluder;
-                if (_Occluder != null)
-                        _Source.CreateOcclusionMesh(_Occluder.meshData);
+                _Source.visualizeNormals = newNormals;
+                SceneView.RepaintAll();
+            }
+            Color32 newNormalColor = EditorGUILayout.ColorField(_Source.normalsColor);
+            if (!newNormalColor.Equals(_Source.normalsColor))
+            {
+                _Source.normalsColor = newNormalColor;
+                SceneView.RepaintAll();
+            }
+            EditorGUILayout.EndHorizontal();
+            float newNormalLength = EditorGUILayout.Slider("Normals Length", _Source.normalsLength, 0.01f, 1.5f);
+            if( newNormalLength != _Source.normalsLength )
+            {
+                _Source.normalsLength = newNormalLength;
+                SceneView.RepaintAll();
+            }
+
+            GUILayout.Space(20);
+            EditorGUILayout.LabelField(new GUIContent("Occlusion Slot (Optional)","Use this mesh to attempt to automatically detect occluded triangles"));
+            EditorGUILayout.BeginHorizontal();
+            SlotDataAsset newOccluderSlotData = (SlotDataAsset) EditorGUILayout.ObjectField(_OccluderSlotData, typeof(SlotDataAsset), false);
+            MeshHideAsset newOccluderMeshHide = (MeshHideAsset)EditorGUILayout.ObjectField(_OccluderMeshHide, typeof(MeshHideAsset), false);
+            if(GUILayout.Button("Clear", GUILayout.MaxWidth(60)))
+            {
+                _OccluderSlotData = null;
+                newOccluderSlotData = null;
+                _OccluderMeshHide = null;
+                newOccluderMeshHide = null;
+                _Source.occlusionMesh = null;
+                SceneView.RepaintAll();
+            }
+            if (newOccluderSlotData != _OccluderSlotData)
+            {
+                _OccluderSlotData = newOccluderSlotData;
+                _OccluderMeshHide = null;
+                newOccluderMeshHide = null;
+                if (_OccluderSlotData != null)
+                        _Source.UpdateOcclusionMesh(_OccluderSlotData.meshData, _occluderOffset, _occluderPosition, _occluderRotation, _occluderScale);
                 else
                         _Source.occlusionMesh = null;
+                SceneView.RepaintAll();
             }
-
-            if (_Occluder != null)
+            if (newOccluderMeshHide != _OccluderMeshHide)
             {
-                bool newOffset = false;
-                bool newRot = false;
-                float previousOffset = EditorGUILayout.FloatField(new GUIContent("Occluder Offset", "Distance along the normal to offset each vertex of the occlusion mesh"), _occluderOffset);
-                if (!Mathf.Approximately(previousOffset,_occluderOffset))
+                if (newOccluderMeshHide == _Source.meshAsset)
                 {
-                    _occluderOffset = previousOffset;
-                    newOffset = true;
+                    EditorUtility.DisplayDialog("Error", "Can not select the same MeshHideAsset currently being edited!", "OK");
                 }
-                Vector3 previousRot = EditorGUILayout.Vector3Field(new GUIContent("Rotation", "Offset the rotation (degrees) of the occluder"), _occluderRotation );
-                if (previousRot != _occluderRotation)
+                else
                 {
-                    _occluderRotation = previousRot;
-                    newRot = true;
-                }
-
-                if (newOffset || newRot)
-                    _Source.UpdateOcclusionMesh(_occluderOffset, _occluderRotation);
-
-                if (GUILayout.Button(new GUIContent("Raycast Hidden Faces", "Warning! This will clear the current selection.")))
-                {
-                    RaycastHide();
+                    _OccluderMeshHide = newOccluderMeshHide;
+                    _OccluderSlotData = null;
+                    newOccluderSlotData = null;
+                    if (_OccluderMeshHide != null && _OccluderMeshHide != _Source.meshAsset)
+                        _Source.UpdateOcclusionMesh(_OccluderMeshHide, _occluderOffset, _occluderPosition, _occluderRotation, _occluderScale);
+                    else
+                        _Source.occlusionMesh = null;
+                    SceneView.RepaintAll();
                 }
             }
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUI.BeginDisabledGroup(_Source.occlusionMesh == null);
+            bool changed = false;
+
+            Color32 newOcclusionColor = EditorGUILayout.ColorField("Occlusion Mesh Color",_Source.occlusionColor);
+            if( !newOcclusionColor.Equals(_Source.occlusionColor))
+            {
+                _Source.occlusionColor = newOcclusionColor;
+                SceneView.RepaintAll();
+            }
+            bool newWireframe = EditorGUILayout.Toggle("Occlusion Mesh Wireframe", _Source.occlusionWireframe);
+            if( newWireframe != _Source.occlusionWireframe )
+            {
+                _Source.occlusionWireframe = newWireframe;
+                SceneView.RepaintAll();
+            }
+
+            float newOffset = EditorGUILayout.Slider(new GUIContent("Normal Offset", "Distance along the normal to offset each vertex of the occlusion mesh"), _occluderOffset, -0.1f, 0.25f);
+            if (!Mathf.Approximately(newOffset,_occluderOffset))
+            {
+                _occluderOffset = newOffset;
+                changed = true;
+            }
+
+            Vector3 newPosition = EditorGUILayout.Vector3Field(new GUIContent("Position", "Offset the position of the occluder"), _occluderPosition);
+            if( newPosition != _occluderPosition)
+            {
+                _occluderPosition = newPosition;
+                changed = true;
+            }
+
+            Vector3 newRotation = EditorGUILayout.Vector3Field(new GUIContent("Rotation", "Offset the rotation (degrees) of the occluder"), _occluderRotation);
+            if (newRotation != _occluderRotation)
+            {
+                _occluderRotation = newRotation;
+                changed = true;
+            }
+
+            Vector3 newScale = EditorGUILayout.Vector3Field(new GUIContent("Scale", "Offset the scale of the occluder"), _occluderScale);
+            if (newScale != _occluderScale)
+            {
+                _occluderScale = newScale;
+                changed = true;
+            }
+
+            if (changed)
+            {
+                if(_OccluderSlotData)
+                    _Source.UpdateOcclusionMesh( _OccluderSlotData.meshData, _occluderOffset, _occluderPosition, _occluderRotation, _occluderScale);
+                if(_OccluderMeshHide)
+                    _Source.UpdateOcclusionMesh( _OccluderMeshHide, _occluderOffset, _occluderPosition, _occluderRotation, _occluderScale);
+            }
+
+            if (GUILayout.Button(new GUIContent("Raycast Hidden Faces", "Warning! This will clear the current selection.")))
+            {
+                RaycastHide();
+            }
+            EditorGUI.EndDisabledGroup();
 
             GUILayout.Space(20);
             textureMap = EditorGUILayout.ObjectField("Set From Texture Map", textureMap, typeof(Texture2D), false) as Texture2D;                
@@ -152,6 +246,12 @@ namespace UMA.Editors
                         _Source.UpdateFromTexture(textureMap);
                     }
                 }              
+            }
+
+            GUILayout.Space(20);
+            if (GUILayout.Button(new GUIContent("View UV Layout", "Brings up a window displaying the uv layout of the currently selected object and export to texture options.")))
+            {
+                GeometryUVEditorWindow.Init(_Source);
             }
             GUILayout.EndScrollView();
         }
@@ -209,7 +309,7 @@ namespace UMA.Editors
             
         private void ResetLabelStart()
         {
-            infoRect = new Rect(10, 30, 400, 30);
+            infoRect = new Rect(10, 20, 400, 30);
         }
 
         private void MoveToNextMessage(float xoffset, float yoffset)
@@ -279,20 +379,27 @@ namespace UMA.Editors
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Options", GUILayout.Width(100));
-            bool toggled = GUILayout.Toggle(showWireframe, new GUIContent("Show Wireframe", "Toggle showing the Wireframe"), "Button");
+            bool toggled = GUILayout.Toggle(showWireframe, new GUIContent("Wireframe", "Toggle showing the Wireframe"), "Button");
             if (toggled != showWireframe)
             {
                 UpdateShadingMode(toggled);
             }
             showWireframe = toggled;
-            backfaceCull = GUILayout.Toggle(backfaceCull, new GUIContent("  Backface Cull  ", "Toggle whether to select back faces"), "Button");
+            backfaceCull = GUILayout.Toggle(backfaceCull, new GUIContent("Backface Cull", "Toggle whether to select back faces"), "Button");
+            isMirroring = GUILayout.Toggle(isMirroring, new GUIContent("X Symmetry", "Mirror Selection on X axis"), "Button");
             GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            GUILayout.Label("______________________________________________");
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
+            if (!isMirroring)
+            {
+                GUILayout.Space(18);
+            }
+            else
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.FlexibleSpace();
+                GUILayout.Label("Symmetry not supported in area select");
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal(); 
+            }
 
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Focus Mesh"))
@@ -330,7 +437,8 @@ namespace UMA.Editors
 
             GUI.Window(1, new Rect(SceneView.lastActiveSceneView.position.width -(WindowWidth+Margin), SceneView.lastActiveSceneView.position.height - (WindowHeight+Margin), WindowWidth, WindowHeight), SceneWindow, "UMA Mesh Hide Geometry Selector");
             DrawNextLabel("Left click and drag to area select");
-            DrawNextLabel( "Hold SHIFT while dragging to paint");
+            DrawNextLabel("Hold SHIFT while dragging to paint");
+            DrawNextLabel("Hold CTRL while dragging to paint inverse");
             DrawNextLabel("Hold ALT while dragging to orbit");
             DrawNextLabel("Return to original scene by pressing \"Save and Return\"");
             Handles.EndGUI();
@@ -341,9 +449,6 @@ namespace UMA.Editors
             if (!isSelecting && Event.current.alt)
                 return;
 
-            if (!isSelecting && Event.current.control)
-                return;
-            
             Rect selectionRect = new Rect();
 
             if (Event.current.type == EventType.layout)
@@ -364,17 +469,24 @@ namespace UMA.Editors
                     correctedPos.y = startMousePos.y - selectionSize.y;
                 }
 
-                if (Event.current.shift)
+                if (Event.current.shift || Event.current.control)
                 {
-                    startMousePos = Event.current.mousePosition;
+                    bool selVal = setSelectedOn;
+                    if (Event.current.control) selVal = !selVal;
 
-                    int triangleHit = RayPick();
+                    startMousePos = Event.current.mousePosition;
+                    int mirrorHit = -1;
+                    int triangleHit = RayPick(isMirroring, out mirrorHit);
                     if (triangleHit >= 0)
                     {
-                        if (_Source.selectedTriangles[triangleHit] != setSelectedOn)
+                        if (_Source.selectedTriangles[triangleHit] != selVal)
                         {
                             // avoid constant rebuild.
-                            _Source.selectedTriangles[triangleHit] = setSelectedOn;
+                            _Source.selectedTriangles[triangleHit] = selVal;
+                            if (isMirroring && mirrorHit != -1)
+                            {
+                                _Source.selectedTriangles[mirrorHit] = selVal;
+                            }
                             _Source.UpdateSelectionMesh();
                         }
                     }
@@ -401,11 +513,17 @@ namespace UMA.Editors
             {
                 isSelecting = true;
                 startMousePos = Event.current.mousePosition;
+                int mirrorHit = -1;
 
-                int triangleHit = RayPick();
+                int triangleHit = RayPick(isMirroring,out mirrorHit);
                 if (triangleHit >= 0)
                 {
                     _Source.selectedTriangles[triangleHit] = !_Source.selectedTriangles[triangleHit];
+                    if (isMirroring && mirrorHit != -1)
+                    {
+                        // Mirror triangle should be the same as the hit triangle regardless of previous selection.
+                        _Source.selectedTriangles[mirrorHit] = _Source.selectedTriangles[triangleHit];
+                    }
                     _Source.UpdateSelectionMesh();
                 }
             }
@@ -478,8 +596,9 @@ namespace UMA.Editors
             }
         }
 
-        private int RayPick()
+        private int RayPick(bool Mirror, out int MirrorTriangle)
         {
+            MirrorTriangle = -1;
             if (Camera.current == null)
             {
                 Debug.LogWarning("Camera is null!");
@@ -495,6 +614,26 @@ namespace UMA.Editors
             if (meshCollider == null || meshCollider.sharedMesh == null || meshCollider != _Source.meshCollider)
                 return -1;
 
+            if (Mirror)
+            {
+                RaycastHit MirrorHit;
+
+                // this only works because the model is at 0,0
+                Vector3 MirrorHitPt = hit.point;
+                Vector3 MirrorNormal = hit.normal;
+
+                MirrorHitPt.x = -MirrorHitPt.x;
+                MirrorNormal.x = -MirrorNormal.x;
+
+                Vector3 NewSource = MirrorHitPt + Vector3.Scale(MirrorNormal, new Vector3(0.1f,0.1f,0.1f));
+                Vector3 NewNormal = Vector3.Scale(MirrorNormal,new Vector3(-1, -1, -1));
+                Ray NewRay = new Ray(NewSource, NewNormal);
+                if (Physics.Raycast(NewRay, out MirrorHit))
+                {
+                    MirrorTriangle = MirrorHit.triangleIndex;
+                }
+            }
+
             return hit.triangleIndex;
         }
 
@@ -508,14 +647,14 @@ namespace UMA.Editors
         /// <param name="p2">Vertex 2 of the triangle.</param>
         /// <param name="p3">Vertex 3 of the triangle.</param>
         /// <returns><c>true</c> when the ray hits the triangle, otherwise <c>false</c></returns>
-        public static bool RayTriIntersect(Ray ray, Vector3 p1, Vector3 p2, Vector3 p3)
+        public static bool RayTriIntersect(Ray ray, Vector3 p1, Vector3 p2, Vector3 p3, out float dist)
         {
             // Vectors from p1 to p2/p3 (edges)
             Vector3 e1, e2;  
 
             Vector3 p, q, t;
             float det, invDet, u, v;
-
+            dist = Mathf.Infinity;
 
             //Find vectors for edges sharing vertex/point p1
             e1 = p2 - p1;
@@ -549,6 +688,8 @@ namespace UMA.Editors
             //Check for ray hit
             if (v < 0 || u + v > 1) { return false; }
 
+            dist = Vector3.Dot(e2, q) * invDet;
+
             if ((Vector3.Dot(e2, q) * invDet) > Mathf.Epsilon)
             { 
                 //ray does intersect
@@ -576,6 +717,13 @@ namespace UMA.Editors
             Vector3[] targetNorms = targetMesh.normals;
             if (targetNorms.Length != targetVerts.Length)
                 return;
+
+            Matrix4x4 m = _Source.gameObject.transform.localToWorldMatrix;
+            for (int i = 0; i < targetVerts.Length; i++)
+            {
+                targetVerts[i] = m.MultiplyPoint3x4(targetVerts[i]);
+                targetNorms[i] = m.MultiplyPoint3x4(targetNorms[i]);
+            }
             
             Vector3[] occlusionVerts = occlusionMesh.vertices;
             List<int[]> occlusionTriangles = new List<int[]>();
@@ -589,19 +737,24 @@ namespace UMA.Editors
             {
                 EditorUtility.DisplayProgressBar("Progress", "calculating...", ((float)i / (float)targetVerts.Length));
                     
-                Ray testRay = new Ray(targetVerts[i], targetNorms[i]);
+                Ray testRay = new Ray(targetVerts[i], targetNorms[i] );
                 for (int j = 0; j < occlusionTriangles.Count; j++)
                 {
                     int[] triVerts = occlusionTriangles[j];
                     for (int k = 0; k < triVerts.Length; k+= 3)
                     {
+                        float dist = Mathf.Infinity;
                         if (RayTriIntersect(testRay,
                             occlusionVerts[triVerts[k + 0]],
                             occlusionVerts[triVerts[k + 1]],
-                            occlusionVerts[triVerts[k + 2]]))
+                            occlusionVerts[triVerts[k + 2]],
+                            out dist))
                         {
-                            vertexOccluded[i] = true;
-                            break;
+                            if (dist <= _Source.normalsLength)
+                            {
+                                vertexOccluded[i] = true;
+                                break;
+                            }
                         }
                     }
 
@@ -618,8 +771,8 @@ namespace UMA.Editors
                 int[] triVerts = _Source.sharedMesh.GetTriangles(i);
                 for (int j = 0; j < triVerts.Length; j += 3)
                 {
-                    if (vertexOccluded[triVerts[j + 0]] &&
-                        vertexOccluded[triVerts[j + 1]] &&
+                    if (vertexOccluded[triVerts[j + 0]] ||
+                        vertexOccluded[triVerts[j + 1]] ||
                         vertexOccluded[triVerts[j + 2]])
                     {
                         _Source.selectedTriangles[(j / 3)] = true;

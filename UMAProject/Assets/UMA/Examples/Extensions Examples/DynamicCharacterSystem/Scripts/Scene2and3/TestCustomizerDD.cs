@@ -599,7 +599,8 @@ namespace UMA.CharacterSystem.Examples
 		{
 			if (GenericColorList == null)
 			{
-				Debug.LogWarning("[TestCustomizerDD] the GenericColorList was null or missing, this must be set.");
+				if (Debug.isDebugBuild)
+					Debug.LogWarning("[TestCustomizerDD] the GenericColorList was null or missing, this must be set.");
 				return;
 			}
 			int colorTableSelected = -1;
@@ -609,7 +610,8 @@ namespace UMA.CharacterSystem.Examples
 				thisColorTable = sharedColorTables[sharedColorTables.FindIndex(s => s.name == colorType.name)].sharedColorTable;
 				if (thisColorTable == null)
 				{
-					Debug.LogWarning("[TestCustomizerDD] the colorList for " + colorType.name + " was null or missing, please set this or remove it from the list.");
+					if (Debug.isDebugBuild)
+						Debug.LogWarning("[TestCustomizerDD] the colorList for " + colorType.name + " was null or missing, please set this or remove it from the list.");
 					return;
 				}
 				for (int i = 0; i < thisColorTable.colors.Length; i++)
@@ -671,25 +673,7 @@ namespace UMA.CharacterSystem.Examples
 				thisDD.value = colorTableSelected;
 				thisDD.captionImage.color = selectedColor;
 			}
-			else
-			{
-				var thisddOption = new DropdownWithColor.OptionData();
-				thisddOption.text = colorTable.colors[0].name;
-				thisddOption.color = activeColor.color;
-				Sprite spriteToUse = genericColorSwatch;
-				/*if (activeColor.MetallicGloss != colorBlack)
-				{
-					spriteToUse = genericColorSwatchMetallic;
-				}*/
-				if (activeColor.channelAdditiveMask.Length >= 3)
-				//if (activeColor.MetallicGloss != colorBlack)
-				{
-					spriteToUse = genericColorSwatchMetallic;
-				}
-				thisddOption.image = spriteToUse;
-				thisDD.options.Add(thisddOption);
-				thisDD.value = colorTable.colors.Length + 1;
-			}
+			
 			thisDD.RefreshShownValue();
 			thisDD.onValueChanged.AddListener(colorDropdown.ChangeColor);
 		}
@@ -867,7 +851,7 @@ namespace UMA.CharacterSystem.Examples
 			if (Orbitor != null)
 			{
 				Orbitor.distance = 1.4f;
-				Orbitor.TargetBone = "Root/Global/Position/Hips/LowerBack/Spine/Spine1";
+				Orbitor.TargetBone = MouseOrbitImproved.targetOpts.Chest;
 			}
 		}
 
@@ -879,7 +863,7 @@ namespace UMA.CharacterSystem.Examples
 			if (Orbitor != null)
 			{
 				Orbitor.distance = 0.5f;
-				Orbitor.TargetBone = "Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head";
+				Orbitor.TargetBone = MouseOrbitImproved.targetOpts.Head;
 			}
 		}
 
@@ -973,7 +957,8 @@ namespace UMA.CharacterSystem.Examples
 			if (thisFilename != "")
 			{
 				thisFilename = Path.GetFileNameWithoutExtension(thisFilename.Replace(" ", ""));
-				Debug.Log("Saved File with filename " + thisFilename);
+				if (Debug.isDebugBuild)
+					Debug.Log("Saved File with filename " + thisFilename);
 				Avatar.saveFilename = thisFilename;
 
 				DynamicCharacterAvatar.SaveOptions thisSaveOptions = DynamicCharacterAvatar.SaveOptions.useDefaults;

@@ -10,9 +10,10 @@ namespace UMA
 {
     public partial class RaceData
     {
-
+		[Tooltip("UMA Text recipe that holds the slots and overlays that are the default set up for this race.")]
 		public UMARecipeBase baseRaceRecipe;
-        public List<string> wardrobeSlots = new List<string>(){
+		[Tooltip("Wardobe slots that wardrobe recipes can be assigned to.")]
+		public List<string> wardrobeSlots = new List<string>(){
             "None",
             "Face",
             "Hair",
@@ -129,7 +130,8 @@ namespace UMA
 				//then clear the backwardsCompatibleWith list and save the asset- the user wont be able to use 'backwardsCompatibleWith' 
 				//but they will have been shown a warning if their scripts access the field directly
 #if UNITY_EDITOR
-				Debug.Log("RaceData for " + raceName + " updated its backwardsCompatibleWith value to the new CrossCompatibilitySettings. All good.");
+				if (Debug.isDebugBuild)
+					Debug.Log("RaceData for " + raceName + " updated its backwardsCompatibleWith value to the new CrossCompatibilitySettings. All good.");
 				if (!Application.isPlaying)
 				{
 					//Debug.Log("RaceData for " + raceName + " updated its backwardsCompatibleWith value to the new CrossCompatibilitySettings. All good.");

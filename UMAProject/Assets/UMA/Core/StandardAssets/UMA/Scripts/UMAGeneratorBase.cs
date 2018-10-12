@@ -231,27 +231,33 @@ namespace UMA
 
 		public static void DebugLogHumanAvatar(GameObject root, HumanDescription description)
 		{
-			Debug.Log("***", root);
+			if (Debug.isDebugBuild)
+				Debug.Log("***", root);
 			Dictionary<String, String> bones = new Dictionary<String, String>();
 			foreach (var sb in description.skeleton)
 			{
-				Debug.Log(sb.name);
+				if (Debug.isDebugBuild)
+					Debug.Log(sb.name);
 				bones[sb.name] = sb.name;
 			}
-			Debug.Log("----");
+			if (Debug.isDebugBuild)
+				Debug.Log("----");
 			foreach (var hb in description.human)
 			{
 				string boneName;
 				if (bones.TryGetValue(hb.boneName, out boneName))
 				{
-					Debug.Log(hb.humanName + " -> " + boneName);
+					if (Debug.isDebugBuild)
+						Debug.Log(hb.humanName + " -> " + boneName);
 				}
 				else
 				{
-					Debug.LogWarning(hb.humanName + " !-> " + hb.boneName);
+					if (Debug.isDebugBuild)
+						Debug.LogWarning(hb.humanName + " !-> " + hb.boneName);
 				}
 			}
-			Debug.Log("++++");
+			if (Debug.isDebugBuild)
+				Debug.Log("++++");
 		}
 
 		/// <summary>
@@ -291,13 +297,13 @@ namespace UMA
 		public static HumanDescription CreateHumanDescription(UMAData umaData, UmaTPose umaTPose)
 		{
 			var res = new HumanDescription();
-			res.armStretch = 0;
-			res.feetSpacing = 0;
-			res.legStretch = 0;
-			res.lowerArmTwist = 0.2f;
-			res.lowerLegTwist = 1f;
-			res.upperArmTwist = 0.5f;
-			res.upperLegTwist = 0.1f;
+			res.armStretch = umaTPose.armStretch == 0.0f ? 0.05f : umaTPose.armStretch; // this is for compatiblity with the existing tpose. 
+			res.legStretch = umaTPose.legStretch == 0.0f ? 0.05f : umaTPose.legStretch; 
+			res.feetSpacing = umaTPose.feetSpacing;
+			res.lowerArmTwist = umaTPose.lowerArmTwist == 0.0f ? 0.5f : umaTPose.lowerArmTwist;
+			res.lowerLegTwist = umaTPose.lowerLegTwist == 0.0f ? 0.5f : umaTPose.lowerLegTwist;
+			res.upperArmTwist = umaTPose.upperArmTwist == 0.0f ? 0.5f : umaTPose.upperArmTwist;
+			res.upperLegTwist = umaTPose.upperLegTwist == 0.0f ? 0.5f : umaTPose.upperLegTwist;
 			res.skeleton = umaTPose.boneInfo;
 			res.human = umaTPose.humanInfo;
 
