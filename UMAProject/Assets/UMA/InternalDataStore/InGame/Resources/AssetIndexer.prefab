@@ -5,10 +5,10 @@ GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 5
+  serializedVersion: 4
   m_Component:
-  - component: {fileID: 422758}
-  - component: {fileID: 11432240}
+  - 4: {fileID: 422758}
+  - 114: {fileID: 11432240}
   m_Layer: 0
   m_Name: AssetIndexer
   m_TagString: Untagged
@@ -25,10 +25,10 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 3.4409695, y: 0.96156013, z: 2.617393}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &11432240
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -789,24 +789,17 @@ MonoBehaviour:
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: SlotDataAsset
-    _Name: BoneyTail_1
-    _SerializedItem: {fileID: 11400000, guid: 34dcbac549d5c964f8c01cb8719d0a99, type: 2}
-    _Path: Assets/UMA/Examples/Physics Examples/Assets/Slots/BoneyTail/BoneyTail_1_Slot.asset
-    _Guid: 34dcbac549d5c964f8c01cb8719d0a99
+    _Name: ColorDnaSlot
+    _SerializedItem: {fileID: 11400000, guid: a5093a7304baade43931919ab087d94c, type: 2}
+    _Path: Assets/UMA/Examples/Extensions Examples/ColorDNA/ColorDnaSlot.asset
+    _Guid: a5093a7304baade43931919ab087d94c
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: SlotDataAsset
-    _Name: BoneyTail
-    _SerializedItem: {fileID: 11400000, guid: e414c14586660fb46865f0168c8d01dd, type: 2}
-    _Path: Assets/UMA/Examples/Physics Examples/Assets/Slots/BoneyTail/BoneyTail_Slot.asset
-    _Guid: e414c14586660fb46865f0168c8d01dd
-    IsResource: 0
-    IsAssetBundle: 0
-  - _BaseTypeName: SlotDataAsset
-    _Name: MaleAlienHead
-    _SerializedItem: {fileID: 11400000, guid: 344a9e3f0f0a6384da7335c405e65999, type: 2}
-    _Path: Assets/UMA/Examples/Blendshape Examples/Assets/Slots/MaleAlienHead/MaleAlienHead_Slot.asset
-    _Guid: 344a9e3f0f0a6384da7335c405e65999
+    _Name: ColorDNA
+    _SerializedItem: {fileID: 11400000, guid: a5093a7304baade43931919ab087d94c, type: 2}
+    _Path: Assets/UMA/Examples/Extensions Examples/ColorDNA/Assets/ColorDnaSlot.asset
+    _Guid: a5093a7304baade43931919ab087d94c
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: SlotDataAsset
@@ -1608,6 +1601,10 @@ MonoBehaviour:
     _SerializedItem: {fileID: 11400000, guid: c494b917f233f9e42a6e34e169909743, type: 2}
     _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/SkyCar/Overlays/SkyCarStripesOverlay.asset
     _Guid: c494b917f233f9e42a6e34e169909743
+    _Name: MuscularityOverlay
+    _SerializedItem: {fileID: 11400000, guid: a1aaef22314ee6748a3a3549fdd31469, type: 2}
+    _Path: Assets/UMA/Examples/Extensions Examples/ColorDNA/MuscularityOverlay.asset
+    _Guid: a1aaef22314ee6748a3a3549fdd31469
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: RaceData
@@ -2763,18 +2760,10 @@ MonoBehaviour:
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: UMAWardrobeRecipe
-    _Name: BoneyTail_Recipe
-    _SerializedItem: {fileID: 11400000, guid: 3c831180fd2f190428a8151a60b3e55f, type: 2}
-    _Path: Assets/UMA/Examples/Physics Examples/Assets/Slots/BoneyTail/BoneyTail_Recipe.asset
-    _Guid: 3c831180fd2f190428a8151a60b3e55f
-    IsResource: 0
-    IsAssetBundle: 0
-  - _BaseTypeName: UMAWardrobeRecipe
-    _Name: MaleJeans 1
-    _SerializedItem: {fileID: 11400000, guid: f0eac0526ff3dbe479868042322ab1b2, type: 2}
-    _Path: Assets/UMA/Content/UMA_Examples/HumanMale/Recipes/WardrobeRecipes/MaleJeans
-      1.asset
-    _Guid: f0eac0526ff3dbe479868042322ab1b2
+    _Name: ColorDNARecipe
+    _SerializedItem: {fileID: 11400000, guid: 4e587f04b1113be4da76ca3d1c225528, type: 2}
+    _Path: Assets/ColorDNA/ColorDNARecipe.asset
+    _Guid: 4e587f04b1113be4da76ca3d1c225528
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: UMAWardrobeRecipe
