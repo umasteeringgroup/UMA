@@ -14,10 +14,6 @@ namespace UMA
 
 		public BitArray selectedTriangles;
 
-		public bool visualizeNormals = false;
-		public float normalsLength = 0.1f;
-		public Color32 normalsColor = Color.white;
-
 		public Mesh sharedMesh
 		{
 			get { return _sharedMesh; }
@@ -25,16 +21,13 @@ namespace UMA
 		}
 		private Mesh _sharedMesh;
 
-		//Occlusion mesh options
-		public Color32 occlusionColor = Color.white;
-		public bool occlusionWireframe = true;
-
 		public Mesh occlusionMesh
 		{
 			get { return _occlusionMesh; }
 			set { _occlusionMesh = value; }
 		}
 		private Mesh _occlusionMesh;
+		private UMAMeshData _meshData;
 
 		public MeshRenderer meshRenderer
 		{
@@ -66,9 +59,7 @@ namespace UMA
             gameObject.name = "GeometrySelector";
             if (_sharedMesh == null)
             {
-                if (Debug.isDebugBuild)
-                    Debug.LogWarning("GeometrySelector: Initializing with no mesh!");
-
+                Debug.LogWarning("GeometrySelector: Initializing with no mesh!");
                 return;
             }
 
@@ -132,9 +123,7 @@ namespace UMA
         {
             if (meshData == null)
             {
-                if (Debug.isDebugBuild)
-                    Debug.LogError("InitializeFromMeshData: meshData is null!");
-
+                Debug.LogError("InitializeFromMeshData: meshData is null!");
                 return;
             }
 
@@ -186,10 +175,7 @@ namespace UMA
                 UpdateSelectionMesh();
             }
             else
-            {
-                if (Debug.isDebugBuild)
-                    Debug.LogWarning("selectedTriangles is null! Try starting editing again.");
-            }
+                Debug.LogWarning("selectedTriangles is null! Try starting editing again.");
         }
 
         public void UpdateSelectionMesh()
@@ -221,17 +207,13 @@ namespace UMA
             
             if (_sharedMesh.uv == null)
             {
-                if (Debug.isDebugBuild)
-                    Debug.LogWarning("UpdateFromTexture: This mesh has no uv data!");
-
+                Debug.LogWarning("UpdateFromTexture: This mesh has no uv data!");
                 return;
             }
 
             if (selectedTriangles == null)
             {
-                if (Debug.isDebugBuild)
-                    Debug.LogWarning("UpdateFromTexture: selectedTriangles is null!");
-
+                Debug.LogWarning("UpdateFromTexture: selectedTriangles is null!");
                 return;
             }
 
@@ -261,43 +243,12 @@ namespace UMA
             UpdateSelectionMesh();
         }
 
-        public void CreateOcclusionMesh(MeshHideAsset meshHide)
-        {
-            if (meshHide == null)
-                return;
-
-            CreateOcclusionMesh(meshHide.asset.meshData);
-
-            int[] triangles = _occlusionMesh.GetTriangles(0);
-            BitArray bitArray = meshHide.triangleFlags[0];
-            List<int> newTriangles = new List<int>();
-
-            if((bitArray.Length * 3) != triangles.Length)
-            {
-                if (Debug.isDebugBuild)
-                    Debug.LogError("BitArray length does not match Triangle length!");
-
-                return;
-            }
-            
-            //Now let's trip away the triangles
-            for(int i = 0; i < bitArray.Length; i++)
-            {
-                if (bitArray[i])
-                {
-                    int triIndex = i * 3;
-                    newTriangles.Add( triangles[triIndex] );
-                    newTriangles.Add( triangles[triIndex+1]);
-                    newTriangles.Add( triangles[triIndex+2]);
-                }
-            }
-            _occlusionMesh.SetTriangles(newTriangles, 0);
-        }
-
         public void CreateOcclusionMesh(UMAMeshData meshData)
         {
             if (meshData == null)
-                return;;
+                return;
+
+            _meshData = meshData;
 
             if (_occlusionMesh == null)
                 _occlusionMesh = new Mesh();
@@ -321,36 +272,29 @@ namespace UMA
                 occlusionMesh.SetTriangles(meshData.submeshes[i].triangles, i);
         }
 
-        public void UpdateOcclusionMesh(UMAMeshData meshData, float offset, Vector3 pos, Vector3 rot, Vector3 s)
+        public void UpdateOcclusionMesh(float offset, Vector3 rot)
         {
+            if (_occlusionMesh == null)
+                return;
+
+            if (_occlusionMesh.vertices == null || _occlusionMesh.normals == null)
+                return;
+
             //Let's call CreateOcclusionMesh to reset it.
-            CreateOcclusionMesh(meshData);
+            CreateOcclusionMesh(_meshData);
+            Quaternion rotation = new Quaternion();
+            rotation.eulerAngles = rot;
 
-            UpdateOcclusionMesh(offset, pos, rot, s);
-        }
-
-        public void UpdateOcclusionMesh(MeshHideAsset meshHide, float offset, Vector3 pos, Vector3 rot, Vector3 s)
-        {
-            //Let's call CreateOcclusionMesh to reset it.
-            CreateOcclusionMesh(meshHide);
-            UpdateOcclusionMesh(offset, pos, rot, s);
-        }
-
-        private void UpdateOcclusionMesh(float offset, Vector3 pos, Vector3 rot, Vector3 s)
-        {
-            if (Mathf.Approximately(offset,0) && rot == Vector3.zero && pos == Vector3.zero && s == Vector3.one) //If offset is zero and rot is zero, we can early out because we already reset the mesh.
-                 return;
-
-            Quaternion q = Quaternion.Euler(rot);
-            Matrix4x4 m = Matrix4x4.TRS(pos, q, s);
-
+            if (Mathf.Approximately(offset,0) && rot == Vector3.zero) //If offset is zero and rot is zero, we can early out because we already reset the mesh.
+                return;
+            
             Vector3[] verts = _occlusionMesh.vertices;
             Vector3[] normals = _occlusionMesh.normals;
             Vector3[] newVerts = new Vector3[_occlusionMesh.vertexCount];
             for (int i = 0; i < _occlusionMesh.vertexCount; i++)
             {
                 newVerts[i] = verts[i] + (normals[i].normalized * offset);
-                newVerts[i] = m.MultiplyPoint3x4(newVerts[i]);
+                newVerts[i] = rotation * (newVerts[i]); //we assume to always be at (0,0,0)
             }
             _occlusionMesh.vertices = newVerts;
         }
@@ -359,27 +303,7 @@ namespace UMA
         {            
 			if (_occlusionMesh != null)
 			{
-                Gizmos.color = occlusionColor;
-                
-                if (occlusionWireframe)
-                    Gizmos.DrawWireMesh(_occlusionMesh);
-                else
-                    Gizmos.DrawMesh(_occlusionMesh);
-			}
-			if(visualizeNormals)
-			{
-				Matrix4x4 m = gameObject.transform.localToWorldMatrix;
-				Vector3[] targetVerts = sharedMesh.vertices;
-				Vector3[] targetNorms = sharedMesh.normals;
-
-				Gizmos.color = normalsColor;
-
-				for (int i = 0; i < targetVerts.Length; i++)
-				{
-					targetVerts[i] = m.MultiplyPoint3x4(targetVerts[i]);
-					targetNorms[i] = m.MultiplyPoint3x4(targetNorms[i]) * normalsLength;
-					Gizmos.DrawLine(targetVerts[i], targetVerts[i] + targetNorms[i]);
-				}
+                Gizmos.DrawWireMesh(_occlusionMesh, transform.position, transform.rotation);
 			}
         }
     }

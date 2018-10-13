@@ -210,8 +210,7 @@ namespace UMA.AssetBundles
 			}
 			catch(Exception ex)
 			{
-				if (Debug.isDebugBuild)
-					Debug.Log(ex.Message);
+				Debug.Log(ex.Message);
 				strHostName = "localhost";
 			}
 			if (list.Count == 0)
@@ -232,32 +231,26 @@ namespace UMA.AssetBundles
 					if (!EnableLocalAssetBundleServer)
 					{
 						ServerStop();
-						if (Debug.isDebugBuild)
-							Debug.Log("Server Stopped");
+						Debug.Log("Server Stopped");
 					}
 					else if (SimpleWebServer.Instance.Port != _port)
 					{
 						ServerStop();
 						ServerStart();
-						if (Debug.isDebugBuild)
-							Debug.Log("Server Started");
+						Debug.Log("Server Started");
 					}
 				}
 				else if (EnableLocalAssetBundleServer || test)
 				{
 					ServerStart();
 					if (!test)
-					{
-						if (Debug.isDebugBuild)
-							Debug.Log("Server Started");
-					}
+						Debug.Log("Server Started");
 				}
 			}
 			catch (Exception e)
 			{
 				_statusMessage = string.Format("Simple Webserver Exception: {0}\nStack Trace\n{1}", e.ToString(), e.StackTrace);
-				if (Debug.isDebugBuild)
-					Debug.LogException(e);
+				Debug.LogException(e);
 				EditorPrefs.SetBool(Application.dataPath + "LocalAssetBundleServerEnabled", false);
 				EnableLocalAssetBundleServer = false;
 				serverException = true;

@@ -41,8 +41,7 @@ namespace UMA
 				{
 					if ((generatedTextures == null) || (generatedTextures.Length != asset.textureCount))
 					{
-						if (Debug.isDebugBuild)
-							Debug.LogWarning("Accessing empty texture array on procedural overlay. GenerateProceduralTextures() should have already been called!");
+						Debug.LogWarning("Accessing empty texture array on procedural overlay. GenerateProceduralTextures() should have already been called!");
 						GenerateProceduralTextures();
 					}
 
@@ -62,8 +61,7 @@ namespace UMA
 				{
 					if ((generatedTextures == null) || (generatedTextures.Length != asset.textureCount))
 					{
-						if (Debug.isDebugBuild)
-							Debug.LogWarning("Accessing empty texture array on procedural overlay. GenerateProceduralTextures() should have already been called!");
+						Debug.LogWarning("Accessing empty texture array on procedural overlay. GenerateProceduralTextures() should have already been called!");
 						GenerateProceduralTextures();
 					}
 
@@ -89,8 +87,7 @@ namespace UMA
 					}
 					else
 					{
-						if (Debug.isDebugBuild)
-							Debug.LogWarning("Unable to determine size for procedural material " + material.name);
+						Debug.LogWarning("Unable to determine size for procedural material " + material.name);
 						return 0;
 					}
 				}
@@ -146,16 +143,12 @@ namespace UMA
 		{
 			if (asset == null)
 			{
-				if (Debug.isDebugBuild)
-					Debug.LogError("Overlay Data Asset is NULL!");
-
+				Debug.LogError("Overlay Data Asset is NULL!");
 				return;
 			}
 			if (asset.material == null)
 			{
-				if (Debug.isDebugBuild)
-					Debug.LogError("Error: Materials are missing on Asset: " + asset.name + ". Have you imported all packages?");
-
+				Debug.LogError("Error: Materials are missing on Asset: " + asset.name + ". Have you imported all packages?");
 				this.colorData = new OverlayColorData(3); // Don't know. Just create it for standard PBR material size. 
 			}
 			else
@@ -186,17 +179,14 @@ namespace UMA
 			{
 				if (!asset.material.Equals(targetMaterial))
 				{
-#if UNITY_EDITOR
-                    Debug.LogError(string.Format("Overlay '{0}' doesn't have the expected UMA Material: '{1}'!\nCurrently it has '{2}' at '{3}'", asset.overlayName, targetMaterial.name, asset.material, UnityEditor.AssetDatabase.GetAssetPath(asset)));
-#endif
-                    valid = false;
+					Debug.LogError(string.Format("Overlay '{0}' doesn't have the expected UMA Material: '{1}'", asset.overlayName, targetMaterial.name));
+					valid = false;
 				}
 			}
 
 			if (asset.textureCount != targetMaterial.channels.Length)
 			{
-				if (Debug.isDebugBuild)
-					Debug.LogError(string.Format("Overlay '{0}' doesn't have the right number of channels", asset.overlayName));
+				Debug.LogError(string.Format("Overlay '{0}' doesn't have the right number of channels", asset.overlayName));
 				valid = false;
 			}
 			else
@@ -210,8 +200,7 @@ namespace UMA
                 {
                     if ((asset.textureList[i] == null) && (targetMaterial.channels[i].channelType != UMAMaterial.ChannelType.MaterialColor))
                     {
-						if (Debug.isDebugBuild)
-							Debug.LogError(string.Format("Overlay '{0}' missing required texture in channel {1}", asset.overlayName, i));
+                        Debug.LogError(string.Format("Overlay '{0}' missing required texture in channel {1}", asset.overlayName, i));
                         valid = false;
                     }
 
@@ -234,8 +223,8 @@ namespace UMA
 					colorData.channelAdditiveMask[i] = Color.black;
 				}
 
-				if (Debug.isDebugBuild)
-					Debug.LogWarning(string.Format("Overlay '{0}' missing required color data. Resizing and adding defaults", asset.overlayName));
+
+				Debug.LogWarning(string.Format("Overlay '{0}' missing required color data. Resizing and adding defaults", asset.overlayName));
 			}
 
 			return valid;

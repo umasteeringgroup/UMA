@@ -357,13 +357,11 @@ namespace UMA.CharacterSystem
 			}
 			if (originatingAssetBundle == "")
 			{
-				if (Debug.isDebugBuild)
-					Debug.Log(raceName + " was not found in any loaded AssetBundle");
+				Debug.Log(raceName + " was not found in any loaded AssetBundle");
 			}
 			else
 			{
-				if (Debug.isDebugBuild)
-					Debug.Log("originatingAssetBundle for " + raceName + " was " + originatingAssetBundle);
+				Debug.Log("originatingAssetBundle for " + raceName + " was " + originatingAssetBundle);
 			}
 			return originatingAssetBundle;
 		}

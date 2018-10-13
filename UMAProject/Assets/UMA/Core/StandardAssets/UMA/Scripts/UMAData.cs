@@ -5,24 +5,14 @@ using UnityEngine.Events;
 
 namespace UMA
 {
-	public class BlendShapeData
-	{
-		public float value;
-		public bool isBaked;
-	}
-
-	public class BlendShapeSettings
-	{
-		public bool ignoreBlendShapes = false; //switch for the skinnedmeshcombiner to skip all blendshapes or not.
-		public bool loadAllBlendShapes = true; //switch for whether to load all blendshapes found on umaMeshData or only ones found in the blendshape dictionary
-		public Dictionary<string, BlendShapeData> blendShapes = new Dictionary<string, BlendShapeData>();
-	}
-
 	/// <summary>
 	/// UMA data holds the recipe for creating a character and skeleton and Unity references for a built character.
 	/// </summary>
 	public class UMAData : MonoBehaviour
 	{
+		[Obsolete("UMA 2.5 myRenderer is now obsolete, an uma can have multiple renderers. Use int rendererCount { get; } and GetRenderer(int) instead.", false)]
+		public SkinnedMeshRenderer myRenderer;
+
 		private SkinnedMeshRenderer[] renderers;
 		public int rendererCount { get { return renderers == null ? 0 : renderers.Length; } }
 
@@ -38,6 +28,9 @@ namespace UMA
 
 		public void SetRenderers(SkinnedMeshRenderer[] renderers)
 		{
+#pragma warning disable 618
+			myRenderer = (renderers != null && renderers.Length > 0) ? renderers[0] : null;
+#pragma warning restore 618
 			this.renderers = renderers;
 		}
 
@@ -206,6 +199,7 @@ namespace UMA
 		public void Assign(UMAData other)
 		{
 			animator = other.animator;
+			//myRenderer = other.myRenderer;
 			renderers = other.renderers;
 			umaRoot = other.umaRoot;
 			if (animationController == null)
@@ -220,15 +214,13 @@ namespace UMA
 			bool valid = true;
 			if (umaGenerator == null)
 			{
-				if (Debug.isDebugBuild)
-					Debug.LogError("UMA data missing required generator!");
+				Debug.LogError("UMA data missing required generator!");
 				valid = false;
 			}
 
 			if (umaRecipe == null)
 			{
-				if (Debug.isDebugBuild)
-					Debug.LogError("UMA data missing required recipe!");
+				Debug.LogError("UMA data missing required recipe!");
 				valid = false;
 			}
 			else
@@ -239,17 +231,13 @@ namespace UMA
 			if (animationController == null)
 			{
 				if (Application.isPlaying)
-				{
-					if (Debug.isDebugBuild)
-						Debug.LogWarning("No animation controller supplied.");
-				}
+					Debug.LogWarning("No animation controller supplied.");
 			}
 
 #if UNITY_EDITOR
 			if (!valid && UnityEditor.EditorApplication.isPlaying)
 			{
-				if (Debug.isDebugBuild)
-					Debug.LogError("UMAData: Recipe or Generator is not valid!");
+				Debug.LogError("UMAData: Recipe or Generator is not valid!");
 				UnityEditor.EditorApplication.isPaused = true;
 			}
 #endif
@@ -385,8 +373,7 @@ namespace UMA
 				bool valid = true;
 				if (raceData == null)
 				{
-					if (Debug.isDebugBuild)
-						Debug.LogError("UMA recipe missing required race!");
+					Debug.LogError("UMA recipe missing required race!");
 					valid = false;
 				}
 				else
@@ -396,8 +383,7 @@ namespace UMA
 
 				if (slotDataList == null || slotDataList.Length == 0)
 				{
-					if (Debug.isDebugBuild)
-						Debug.LogError("UMA recipe slot list is empty!");
+					Debug.LogError("UMA recipe slot list is empty!");
 					valid = false;
 				}
 				int slotDataCount = 0;
@@ -412,8 +398,7 @@ namespace UMA
 				}
 				if (slotDataCount < 1)
 				{
-					if (Debug.isDebugBuild)
-						Debug.LogError("UMA recipe slot list contains only null objects!");
+					Debug.LogError("UMA recipe slot list contains only null objects!");
 					valid = false;
 				}
 				return valid;
@@ -837,8 +822,7 @@ namespace UMA
 						}
 						else
 						{
-							if (Debug.isDebugBuild)
-								Debug.LogWarning("Cannot apply dna: " + dnaEntry.Value.GetType().Name + " using key " + dnaEntry.Key);
+							Debug.LogWarning("Cannot apply dna: " + dnaEntry.Value.GetType().Name + " using key " + dnaEntry.Key);
 						}
 					}
 				}
@@ -939,8 +923,7 @@ namespace UMA
 					{
 						if(converter == null)
 						{
-							if (Debug.isDebugBuild)
-								Debug.LogWarning("RaceData " + raceData.raceName + " has a missing DNAConverter");
+							Debug.LogWarning("RaceData " + raceData.raceName + " has a missing DNAConverter");
 							continue;
 						}
 						//'old' dna converters return a typehash based on the type name. 
@@ -954,8 +937,7 @@ namespace UMA
 						else
 						{
 							//We MUST NOT give DynamicDNA the same hash a UMADnaHumanoid or else we loose the values
-							if (Debug.isDebugBuild)
-								Debug.Log(raceData.raceName + " has multiple dna converters that are trying to use the same dna (" + converter.DNATypeHash + "). This is not allowed.");
+							Debug.Log(raceData.raceName + " has multiple dna converters that are trying to use the same dna (" + converter.DNATypeHash + "). This is not allowed.");
 						}
 					}
 				}
@@ -976,8 +958,7 @@ namespace UMA
 				}
 				else
 				{
-					if (Debug.isDebugBuild)
-						Debug.Log(raceData.raceName + " has multiple dna converters that are trying to use the same dna ("+ dnaConverter.DNATypeHash+"). This is not allowed.");
+					Debug.Log(raceData.raceName + " has multiple dna converters that are trying to use the same dna ("+ dnaConverter.DNATypeHash+"). This is not allowed.");
 				}
 			}
 
@@ -1006,8 +987,7 @@ namespace UMA
 
 				if ((recipe.raceData != null) && (recipe.raceData != raceData))
 				{
-					if (Debug.isDebugBuild)
-						Debug.LogWarning("Merging recipe with conflicting race data: " + recipe.raceData.name);
+					Debug.LogWarning("Merging recipe with conflicting race data: " + recipe.raceData.name);
 				}
 
 				foreach (var dnaEntry in recipe.umaDna)
@@ -1464,98 +1444,71 @@ namespace UMA
 		}
 
 		#region BlendShape Support
-        /// <summary>
-        /// Adds a named blendshape to be combined or baked to the UMA.
-        /// </summary>
-        /// <param name="name">string name of the blendshape.</param>
-        /// <param name="bake">bool whether to bake the blendshape or not.</param>
-        /// <param name="rebuild">Set to true to rebuild the UMA after after baking.  Use false to control when to rebuild to submit other changes.</param>
-        public void SetBlendShapeData(string name, bool bake, bool rebuild = false)
+        public class BlendShapeSettings
         {
-			BlendShapeData data;
-			if (blendShapeSettings.blendShapes.TryGetValue(name, out data))
-			{
-				data.isBaked = bake;
-            }
-            else
+            public bool ignoreBlendShapes; //default false
+            public Dictionary<string,float> bakeBlendShapes;
+
+            public BlendShapeSettings()
             {
-                data = new BlendShapeData
-                {
-                    isBaked = bake,
-                };
-
-                blendShapeSettings.blendShapes.Add(name, data);
+                ignoreBlendShapes = false;
+                bakeBlendShapes = new Dictionary<string, float>();
             }
-
-            if (rebuild)
-                Dirty(true, true, true);
-        }
-
-        /// <summary>
-        /// Remove named blendshape from being baked during UMA combining.
-        /// </summary>
-        /// <param name="name">string name of the blendshape</param>
-        /// <param name="rebuild">Set to true to rebuild the UMA after after baking.  Use false to control when to rebuild to submit other changes.</param>
-        public void RemoveBlendShapeData(string name, bool rebuild = false)
-        {
-            if (blendShapeSettings.blendShapes.ContainsKey(name))
-            {
-                blendShapeSettings.blendShapes.Remove(name);
-            }
-
-            if (rebuild)
-                Dirty(true, true, true);
         }
 
 		/// <summary>
-		/// Set the blendshape by it's name.  This is used for setting the unity blendshape directly on the skinnedMeshRenderer.
-		/// Use SetBlendShapeData to set the data for the skinnedMeshCombiner and for baking blendshapes
+		/// Sets the blendshape by index and renderer.
+		/// </summary>
+		/// <param name="shapeIndex">Name of the blendshape.</param>
+		/// <param name="weight">Weight(float) to set this blendshape to.</param>
+		/// <param name="rIndex">index (default first) of the renderer this blendshape is on.</param>
+		public void SetBlendShape(int shapeIndex, float weight, int rIndex = 0)
+		{
+			if (rIndex >= rendererCount) //for multi-renderer support
+			{
+				Debug.LogError ("SetBlendShape: This renderer doesn't exist!");
+				return;
+			}
+
+			if (shapeIndex < 0) 
+			{
+				Debug.LogError ("SetBlendShape: Index is less than zero!");
+				return;
+			}
+
+			if (shapeIndex >= renderers [rIndex].sharedMesh.blendShapeCount) //for multi-renderer support
+			{
+				Debug.LogError ("SetBlendShape: Index is greater than blendShapeCount!");
+				return;
+			}
+
+			if (weight < 0.0f || weight > 1.0f)
+				Debug.LogWarning ("SetBlendShape: Weight is out of range, clamping...");
+
+			weight = Mathf.Clamp01 (weight);
+			weight *= 100.0f; //Scale up to 1-100 for SetBlendShapeWeight.
+
+			renderers [rIndex].SetBlendShapeWeight (shapeIndex, weight);//for multi-renderer support
+		}
+
+		/// <summary>
+		/// Set the blendshape by it's name.
 		/// </summary>
 		/// <param name="name">Name of the blendshape.</param>
 		/// <param name="weight">Weight(float) to set this blendshape to.</param>
-		/// <param name="allowRebuild">Triggers a rebuild of the uma character if the blendshape is baked</param>
-		public void SetBlendShape(string name, float weight, bool allowRebuild = false)
+		public void SetBlendShape(string name, float weight)
 		{
 			if (weight < 0.0f || weight > 1.0f)
-			{
-				if (Debug.isDebugBuild)
-					Debug.LogWarning("SetBlendShape: Weight is out of range, clamping...");
-			}
+				Debug.LogWarning ("SetBlendShape: Weight is out of range, clamping...");
 
 			weight = Mathf.Clamp01 (weight);
-			BlendShapeData data;
-			if (blendShapeSettings.blendShapes.TryGetValue(name, out data))
-			{
-				data.value = weight;
-			}
-			else
-			{
-				data = new BlendShapeData
-				{
-					value = weight,
-					isBaked = false,
-				};
+			weight *= 100.0f; //Scale up to 1-100 for SetBlendShapeWeight.
 
-				blendShapeSettings.blendShapes.Add(name, data);
-			}
-
-			if (data.isBaked)
+			foreach (SkinnedMeshRenderer renderer in renderers)
 			{
-				if (allowRebuild)
-				{
-					Dirty(true, true, true);
-				}
-			}
-			else
-			{
-				weight *= 100.0f; //Scale up to 1-100 for SetBlendShapeWeight.
-
-				foreach (SkinnedMeshRenderer renderer in renderers)
-				{
-					int index = renderer.sharedMesh.GetBlendShapeIndex(name);
-					if (index >= 0)
-						renderer.SetBlendShapeWeight(index, weight);
-				}
+				int index = renderer.sharedMesh.GetBlendShapeIndex(name);
+				if (index >= 0)
+					renderer.SetBlendShapeWeight(index, weight);
 			}
 		}
 
@@ -1568,17 +1521,13 @@ namespace UMA
 		{
 			if (shapeIndex < 0) 
 			{
-				if (Debug.isDebugBuild)
-					Debug.LogError ("GetBlendShapeName: Index is less than zero!");
-
+				Debug.LogError ("GetBlendShapeName: Index is less than zero!");
 				return "";
 			}
 				
 			if (rendererIndex >= rendererCount) //for multi-renderer support
 			{
-				if (Debug.isDebugBuild)
-					Debug.LogError ("GetBlendShapeName: This renderer doesn't exist!");
-
+				Debug.LogError ("GetBlendShapeName: This renderer doesn't exist!");
 				return "";
 			}
 
@@ -1586,9 +1535,7 @@ namespace UMA
 			if( shapeIndex < renderers [rendererIndex].sharedMesh.blendShapeCount )
 				return renderers [rendererIndex].sharedMesh.GetBlendShapeName (shapeIndex);
 
-			if (Debug.isDebugBuild)
-				Debug.LogError ("GetBlendShapeName: no blendshape at index " + shapeIndex + "!");
-
+			Debug.LogError ("GetBlendShapeName: no blendshape at index " + shapeIndex + "!");
 			return "";
 		}
 			

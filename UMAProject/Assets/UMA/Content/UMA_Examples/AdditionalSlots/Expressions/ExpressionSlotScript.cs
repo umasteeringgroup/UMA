@@ -23,9 +23,7 @@ namespace UMA.PoseTools
 			var expressionSet = umaData.umaRecipe.raceData.expressionSet;
 			if (expressionSet == null)
 			{
-				if (Debug.isDebugBuild)
-					Debug.LogError("Couldn't add Expressions to Race: " + umaData.umaRecipe.raceData.raceName, umaData.gameObject);
-
+				Debug.LogError("Couldn't add Expressions to Race: " + umaData.umaRecipe.raceData.raceName, umaData.gameObject);
 				return;
 			}
 			var expressionPlayer = umaData.GetComponent<UMAExpressionPlayer>();

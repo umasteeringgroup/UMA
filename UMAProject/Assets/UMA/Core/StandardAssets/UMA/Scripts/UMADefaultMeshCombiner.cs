@@ -162,7 +162,7 @@ namespace UMA
 				if (combinedMeshList.Count == 1)
 				{
 					// fast track
-					var tempMesh = SkinnedMeshCombiner.ShallowInstanceMesh(combinedMeshList[0].meshData, combinedMeshList[0].triangleMask );
+					var tempMesh = SkinnedMeshCombiner.ShallowInstanceMesh(combinedMeshList[0].meshData);
 					tempMesh.ApplyDataToUnityMesh(renderers[currentRendererIndex], umaData.skeleton);
 				}
 				else

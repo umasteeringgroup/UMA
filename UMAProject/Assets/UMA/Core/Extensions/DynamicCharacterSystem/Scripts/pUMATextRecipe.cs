@@ -40,27 +40,23 @@ namespace UMA
 		/// </summary>
 		public virtual void ConvertToType(string typeName)
 		{
-			if (Debug.isDebugBuild)
-				Debug.Log("Tried to convert to " + typeName);
+			Debug.Log("Tried to convert to " + typeName);
 			foreach (Type t in Assembly.GetAssembly(typeof(UMATextRecipe)).GetTypes())
 			{
 				if (t.Name == typeName)
 				{
-					if (Debug.isDebugBuild)
-						Debug.Log("found matching type");
+					Debug.Log("found matching type");
 					MethodInfo ConvertMethod = t.GetMethod("ConvertFromUTR", BindingFlags.Instance | BindingFlags.NonPublic);
 					if (ConvertMethod != null)
 					{
-						if (Debug.isDebugBuild)
-							Debug.Log("Found Convert method");
+						Debug.Log("Found Convert method");
 						var newT = ScriptableObject.CreateInstance(t);
 						ConvertMethod.Invoke(newT, new object[] { this, true });
 						break;
 					}
 					else
 					{
-						if (Debug.isDebugBuild)
-							Debug.Log("No convert method found in type " + t.Name);
+						Debug.Log("No convert method found in type " + t.Name);
 					}
 				}
 			}

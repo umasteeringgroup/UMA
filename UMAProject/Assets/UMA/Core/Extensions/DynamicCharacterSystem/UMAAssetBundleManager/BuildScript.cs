@@ -101,10 +101,8 @@ namespace UMA.AssetBundles
 
 					string[] assetBundleAssetsArray = AssetDatabase.GetAssetPathsFromAssetBundle(bundleName);
 					//If there are no assets added to this bundle show a warning telling the user to remove Unused asset bundle names
-					if (assetBundleAssetsArray == null || assetBundleAssetsArray.Length == 0)
-					{
-						if (Debug.isDebugBuild)
-							Debug.Log(assetBundleNamesArray[i]+" was an empty assetBundle. Please do 'Remove Unused Names' in the 'Asset Labels' section of the Inspector");
+					if (assetBundleAssetsArray == null || assetBundleAssetsArray.Length == 0){
+						Debug.Log(assetBundleNamesArray[i]+" was an empty assetBundle. Please do 'Remove Unused Names' in the 'Asset Labels' section of the Inspector");
 					}
 
 					thisIndex.bundlesIndex.Add(new AssetBundleIndex.AssetBundleIndexList(bundleName));
@@ -234,8 +232,7 @@ namespace UMA.AssetBundles
 				AssetDatabase.DeleteAsset(thisIndexAssetPath);
 				//And remove its assetBundle name from the assetBundleNames
 				AssetDatabase.RemoveAssetBundleName(Utility.GetPlatformName().ToLower() + "index", false);
-				if (Debug.isDebugBuild)
-					Debug.Log("Asset Bundles built successfully for platform "+Utility.GetPlatformName()+(UMAABMSettings.GetEncryptionEnabled() ? " (Encrypted)!" : "!"));
+				Debug.Log("Asset Bundles built successfully for platform "+Utility.GetPlatformName()+(UMAABMSettings.GetEncryptionEnabled() ? " (Encrypted)!" : "!"));
 			}
 			catch (System.Exception e)
 			{
@@ -245,8 +242,7 @@ namespace UMA.AssetBundles
 					AssetDatabase.DeleteAsset(thisEncryptionAssetPath);
 				//And remove its assetBundle name from the assetBundleNames
 				AssetDatabase.RemoveAssetBundleName(Utility.GetPlatformName().ToLower() + "index", false);
-				if (Debug.isDebugBuild)
-					Debug.LogError("Your AssetBundles did not build properly. Error Message: " + e.Message+" Error Exception: "+e.InnerException+" Error StackTrace: "+e.StackTrace);
+				Debug.LogError("Your AssetBundles did not build properly. Error Message: " + e.Message+" Error Exception: "+e.InnerException+" Error StackTrace: "+e.StackTrace);
 			}
 		}
 
@@ -262,8 +258,7 @@ namespace UMA.AssetBundles
 			string[] levels = GetLevelsFromBuildSettings();
 			if (levels.Length == 0)
 			{
-				if (Debug.isDebugBuild)
-					Debug.LogWarning("There were no Scenes in you Build Settings. Adding the current active Scene.");
+				Debug.LogWarning("There were no Scenes in you Build Settings. Adding the current active Scene.");
 				levels = new string[1] { UnityEngine.SceneManagement.SceneManager.GetActiveScene().path };
 			}
 			string targetName = GetBuildTargetName(EditorUserBuildSettings.activeBuildTarget);
@@ -274,8 +269,7 @@ namespace UMA.AssetBundles
 				SimpleWebServer.WriteServerURL();
 			else if (SimpleWebServer.serverStarted && !CanRunLocally(EditorUserBuildSettings.activeBuildTarget))
 			{
-				if (Debug.isDebugBuild)
-					Debug.LogWarning("Builds for " + EditorUserBuildSettings.activeBuildTarget.ToString() + " cannot access the LocalServer. AssetBundles will be downloaded from the remoteServerUrl's");
+				Debug.LogWarning("Builds for " + EditorUserBuildSettings.activeBuildTarget.ToString() + " cannot access the LocalServer. AssetBundles will be downloaded from the remoteServerUrl's");
 			}
 			//BuildOptions
 			BuildOptions option = BuildOptions.None;
@@ -302,8 +296,7 @@ namespace UMA.AssetBundles
 					SimpleWebServer.DestroyServerURLFile();
 
 				string fullPathToBuild = Path.Combine(Directory.GetParent(Application.dataPath).FullName, outputPath);
-				if (Debug.isDebugBuild)
-					Debug.Log("Built Successful! Build Location: " + fullPathToBuild);
+				Debug.Log("Built Successful! Build Location: " + fullPathToBuild);
 				if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.WebGL)
 				{
 					Application.OpenURL(SimpleWebServer.ServerURL + "index.html");
@@ -322,8 +315,7 @@ namespace UMA.AssetBundles
 			string[] levels = GetLevelsFromBuildSettings();
 			if (levels.Length == 0)
 			{
-				if (Debug.isDebugBuild)
-					Debug.Log("Nothing to build.");
+				Debug.Log("Nothing to build.");
 				return;
 			}
 
@@ -352,8 +344,7 @@ namespace UMA.AssetBundles
 			string[] levels = GetLevelsFromBuildSettings();
 			if (levels.Length == 0)
 			{
-				if (Debug.isDebugBuild)
-					Debug.Log("Nothing to build.");
+				Debug.Log("Nothing to build.");
 				return;
 			}
 
@@ -435,8 +426,7 @@ namespace UMA.AssetBundles
 					return "";
 				// Add more build targets for your own.
 				default:
-					if (Debug.isDebugBuild)
-						Debug.Log("Target not implemented.");
+					Debug.Log("Target not implemented.");
 					return null;
 			}
 		}
@@ -452,10 +442,7 @@ namespace UMA.AssetBundles
 			// Setup the source folder for assetbundles.
 			var source = Path.Combine(Path.Combine(System.Environment.CurrentDirectory, Utility.AssetBundlesOutputPath), outputFolder);
 			if (!System.IO.Directory.Exists(source))
-			{
-				if (Debug.isDebugBuild)
-					Debug.Log("No assetBundle output folder, try to build the assetBundles first.");
-			}
+				Debug.Log("No assetBundle output folder, try to build the assetBundles first.");
 
 			// Setup the destination folder for assetbundles.
 			var destination = System.IO.Path.Combine(outputPath, outputFolder);

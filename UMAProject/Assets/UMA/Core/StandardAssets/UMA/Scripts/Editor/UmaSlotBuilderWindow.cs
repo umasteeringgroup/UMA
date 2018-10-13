@@ -17,7 +17,6 @@ namespace UMA.Editors
 		public bool createRecipe;
 		public bool addToGlobalLibrary;
 		public bool addToLocalLibrary;
-		public bool binarySerialization;
 
 		string GetAssetFolder()
 		{
@@ -68,9 +67,6 @@ namespace UMA.Editors
 			EnforceFolder(ref slotFolder);
 			RootBone = EditorGUILayout.TextField("Root Bone (ex:'Global')", RootBone);
 			slotName = EditorGUILayout.TextField("Element Name", slotName);
-			binarySerialization = EditorGUILayout.Toggle(new GUIContent("Binary Serialization", "Forces the created Mesh object to be serialized as binary. Recommended for large meshes and blendshapes."), binarySerialization);
-
-			EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
 			EditorGUILayout.BeginHorizontal();
 			createOverlay = EditorGUILayout.Toggle("Create Overlay", createOverlay);
 			EditorGUILayout.LabelField(slotName + "_Overlay");
@@ -107,14 +103,13 @@ namespace UMA.Editors
 							UMAContext.Instance.slotLibrary.AddSlotAsset(sd);
 						}
 					}
-					OverlayDataAsset od = null;
 					if (createOverlay)
 					{
-						od = CreateOverlay(AssetPath.Replace(sd.name, sd.slotName + "_Overlay"), sd);
+						CreateOverlay(AssetPath.Replace(sd.name, sd.slotName + "_Overlay"), sd);
 					}
 					if (createRecipe)
 					{
-						CreateRecipe(AssetPath.Replace(sd.name, sd.slotName + "_Recipe"), sd, od);
+						CreateRecipe(AssetPath.Replace(sd.name, sd.slotName + "_Recipe"));
 					}
 				}
 			}
@@ -151,7 +146,7 @@ namespace UMA.Editors
 			return sd;
 		}
 
-		private OverlayDataAsset CreateOverlay(string path, SlotDataAsset sd)
+		private void CreateOverlay(string path, SlotDataAsset sd)
 		{
 			OverlayDataAsset asset = ScriptableObject.CreateInstance<OverlayDataAsset>();
 			asset.overlayName = slotName + "_Overlay";
@@ -169,12 +164,20 @@ namespace UMA.Editors
 					UMAContext.Instance.overlayLibrary.AddOverlayAsset(asset);
 				}
 			}
-			return asset;
 		}
 
-		private void CreateRecipe(string path, SlotDataAsset sd, OverlayDataAsset od)
+		private void CreateRecipe(string path)
 		{
-			UMAEditorUtilities.CreateRecipe(path, sd, od, sd.name, addToGlobalLibrary);
+			CharacterSystem.UMAWardrobeRecipe asset = ScriptableObject.CreateInstance<CharacterSystem.UMAWardrobeRecipe>();
+			//UMAData ud = new UMAData();
+			//ud.SetSlots()
+			asset.DisplayValue = slotName;
+			AssetDatabase.CreateAsset(asset, path);
+			AssetDatabase.SaveAssets();
+			if (addToGlobalLibrary)
+			{
+				UMAAssetIndexer.Instance.EvilAddAsset(typeof(CharacterSystem.UMAWardrobeRecipe), asset);
+			}
 		}
 
 		private SlotDataAsset CreateSlot_Internal()
@@ -205,7 +208,7 @@ namespace UMA.Editors
 			}
 
 			Debug.Log("Slot Mesh: " + slotMesh.name, slotMesh.gameObject);
-			SlotDataAsset slot = UMASlotProcessingUtil.CreateSlotData(AssetDatabase.GetAssetPath(slotFolder), GetAssetFolder(), GetAssetName(), slotMesh, material, normalReferenceMesh,RootBone, binarySerialization);
+			SlotDataAsset slot = UMASlotProcessingUtil.CreateSlotData(AssetDatabase.GetAssetPath(slotFolder), GetAssetFolder(), GetAssetName(), slotMesh, material, normalReferenceMesh,RootBone);
 			return slot;
 		}
 
@@ -253,7 +256,7 @@ namespace UMA.Editors
 							}
 							if (createRecipe)
 							{
-								CreateRecipe(AssetPath.Replace(sd.name, sd.slotName + "_Recipe"), sd, null);
+								CreateRecipe(AssetPath.Replace(sd.name, sd.slotName + "_Recipe"));
 							}
 						}
 						current++;

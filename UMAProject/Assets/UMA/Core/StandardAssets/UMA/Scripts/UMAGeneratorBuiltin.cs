@@ -271,8 +271,7 @@ namespace UMA
 			}
 			catch (Exception ex)
 			{
-				if (Debug.isDebugBuild)
-					UnityEngine.Debug.LogWarning("Exception in UMAGeneratorBuiltin.OnDirtyUpdate: " + ex);
+				UnityEngine.Debug.LogWarning("Exception in UMAGeneratorBuiltin.OnDirtyUpdate: " + ex);
 			}
 		}
 
@@ -284,8 +283,7 @@ namespace UMA
 			}
 			else
 			{
-				if (Debug.isDebugBuild)
-					Debug.LogError("UMAGenerator.UpdateUMAMesh, no MeshCombiner specified", gameObject);
+				Debug.LogError("UMAGenerator.UpdateUMAMesh, no MeshCombiner specified", gameObject);
 			}
 		}
 
@@ -355,8 +353,7 @@ namespace UMA
 				umaData.FireCharacterCompletedEvents();
 				if (umaData.skeleton.boneCount > 300)
 				{
-					if (Debug.isDebugBuild)
-						Debug.LogWarning("Skeleton has " + umaData.skeleton.boneCount + " bones, may be an error with slots!");
+					Debug.LogWarning("Skeleton has " + umaData.skeleton.boneCount + " bones, may be an error with slots!");
 				}
 			}
 		}

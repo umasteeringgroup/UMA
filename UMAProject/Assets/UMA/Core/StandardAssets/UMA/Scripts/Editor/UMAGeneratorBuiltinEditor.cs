@@ -1,44 +1,13 @@
-﻿using UnityEngine;
-using UnityEditor;
+﻿using UnityEditor;
 
 namespace UMA.Editors
 {
-	[CustomEditor(typeof(UMAGeneratorBuiltin))]
-	public class UMAGeneratorBuiltinEditor : UMAGeneratorBaseEditor
+	[CustomEditor(typeof(UMAGeneratorBuiltin), true)]
+	public class UMAGeneratorBuiltinEditor : Editor
 	{
-		SerializedProperty textureMergePrefab;
-		SerializedProperty meshCombiner;
-		SerializedProperty InitialScaleFactor;
-		SerializedProperty fastGeneration;
-		SerializedProperty garbageCollectionRate;
-
-#pragma warning disable 0108
-		public void OnEnable()
-		{
-			base.OnEnable();
-			textureMergePrefab = serializedObject.FindProperty("textureMergePrefab");
-			meshCombiner = serializedObject.FindProperty("meshCombiner");
-			InitialScaleFactor = serializedObject.FindProperty("InitialScaleFactor");
-			fastGeneration = serializedObject.FindProperty("fastGeneration");
-			garbageCollectionRate = serializedObject.FindProperty("garbageCollectionRate");
-		}
-#pragma warning restore 0108
-
 		public override void OnInspectorGUI()
 		{
 			base.OnInspectorGUI();
-
-			serializedObject.Update();
-
-			EditorGUILayout.PropertyField(InitialScaleFactor);
-			EditorGUILayout.PropertyField(fastGeneration);
-			EditorGUILayout.PropertyField(garbageCollectionRate);
-
-			GUILayout.Space(20);
-			EditorGUILayout.LabelField("Advanced Configuation", centeredLabel);
-			EditorGUILayout.PropertyField(textureMergePrefab);
-			EditorGUILayout.PropertyField(meshCombiner);
-
 			var generator = target as UMAGeneratorBuiltin;
 			if (EditorApplication.isPlaying)
 			{
@@ -47,8 +16,6 @@ namespace UMA.Editors
 				EditorGUILayout.LabelField("Texture Dirty", string.Format("{0}", generator.TextureChanged));
 				EditorGUILayout.LabelField("Mesh Dirty", string.Format("{0}", generator.SlotsChanged));
 			}
-
-			serializedObject.ApplyModifiedProperties();
 		}
 	}
 }

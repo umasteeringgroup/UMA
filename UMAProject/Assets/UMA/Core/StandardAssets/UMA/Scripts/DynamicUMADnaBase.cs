@@ -76,8 +76,7 @@ namespace UMA
 			InitializeDynamicDNADictionary();
 			if (DynamicDNADictionary.ContainsKey(asset.name))
 			{
-				if (Debug.isDebugBuild)
-					Debug.LogWarning("DynamicDNADictionary already contained DNA asset " + asset.name);
+				Debug.LogWarning("DynamicDNADictionary already contained DNA asset " + asset.name);
 			}
 			else
 			{
@@ -115,8 +114,7 @@ namespace UMA
 
 			if (!DynamicDNADictionary.TryGetValue(dnaAssetName, out _dnaAsset))
 			{
-				if (Debug.isDebugBuild)
-					Debug.LogWarning("DynamicUMADnaBase could not find DNAAsset " + dnaAssetName + "!");
+				Debug.LogWarning("DynamicUMADnaBase could not find DNAAsset " + dnaAssetName + "!");
 			}
 		}
 

@@ -6,7 +6,6 @@ namespace UMA
 	/// Contains the immutable data shared between slots of the same type.
 	/// </summary>
 	[System.Serializable]
-	[PreferBinarySerialization]
 	public partial class SlotDataAsset : ScriptableObject, ISerializationCallbackReceiver, INameProvider
     {
 		public string slotName;

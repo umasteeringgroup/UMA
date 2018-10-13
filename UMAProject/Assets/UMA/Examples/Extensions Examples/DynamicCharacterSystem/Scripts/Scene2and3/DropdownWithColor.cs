@@ -548,8 +548,7 @@ namespace UnityEngine.UI
             this.validTemplate = false;
             if (!this.m_Template)
             {
-                if (Debug.isDebugBuild)
-                    Debug.LogError("The dropdown template is not assigned. The template needs to be assigned and must have a child GameObject with a Toggle component serving as the item.", this);
+                Debug.LogError("The dropdown template is not assigned. The template needs to be assigned and must have a child GameObject with a Toggle component serving as the item.", this);
                 return;
             }
             GameObject gameObject = this.m_Template.gameObject;
@@ -559,26 +558,22 @@ namespace UnityEngine.UI
             if (!componentInChildren || componentInChildren.transform == this.template)
             {
                 this.validTemplate = false;
-                if (Debug.isDebugBuild)
-                    Debug.LogError("The dropdown template is not valid. The template must have a child GameObject with a Toggle component serving as the item.", this.template);
+                Debug.LogError("The dropdown template is not valid. The template must have a child GameObject with a Toggle component serving as the item.", this.template);
             }
             else if (!(componentInChildren.transform.parent is RectTransform))
             {
                 this.validTemplate = false;
-                if (Debug.isDebugBuild)
-                    Debug.LogError("The dropdown template is not valid. The child GameObject with a Toggle component (the item) must have a RectTransform on its parent.", this.template);
+                Debug.LogError("The dropdown template is not valid. The child GameObject with a Toggle component (the item) must have a RectTransform on its parent.", this.template);
             }
             else if (this.itemText != null && !this.itemText.transform.IsChildOf(componentInChildren.transform))
             {
                 this.validTemplate = false;
-                if (Debug.isDebugBuild)
-                    Debug.LogError("The dropdown template is not valid. The Item Text must be on the item GameObject or children of it.", this.template);
+                Debug.LogError("The dropdown template is not valid. The Item Text must be on the item GameObject or children of it.", this.template);
             }
             else if (this.itemImage != null && !this.itemImage.transform.IsChildOf(componentInChildren.transform))
             {
                 this.validTemplate = false;
-                if (Debug.isDebugBuild)
-                    Debug.LogError("The dropdown template is not valid. The Item Image must be on the item GameObject or children of it.", this.template);
+                Debug.LogError("The dropdown template is not valid. The Item Image must be on the item GameObject or children of it.", this.template);
             }
             if (!this.validTemplate)
             {

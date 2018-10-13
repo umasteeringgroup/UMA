@@ -68,8 +68,7 @@ namespace UMA.CharacterSystem
 				}
 				else
             	{
-					if (Debug.isDebugBuild)
-						Debug.LogWarning(this.name + " did not have a DNA Asset assigned. This is required for DynamicDnaConverters.");
+					Debug.LogWarning(this.name + " did not have a DNA Asset assigned. This is required for DynamicDnaConverters.");
             	}
             	return 0;
 			}

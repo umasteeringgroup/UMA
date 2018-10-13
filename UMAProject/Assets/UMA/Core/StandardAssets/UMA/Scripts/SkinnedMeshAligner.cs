@@ -32,8 +32,7 @@ namespace UMA
 	            var destIndex = FindBoneIndexInHierarchy(bone, template.rootBone, boneMap, templateIndex);
 	            if (destIndex == -1)
 	            {
-                    if (Debug.isDebugBuild)
-                        Debug.Log(bone.name, bone);
+	                Debug.Log(bone.name, bone);
 	                sourceIndex++;
 	                continue;
 	            }

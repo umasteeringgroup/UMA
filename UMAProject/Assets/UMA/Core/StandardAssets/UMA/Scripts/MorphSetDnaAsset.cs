@@ -28,9 +28,7 @@ namespace UMA
 
 		public int dnaTypeHash;
 
-		[Tooltip("Always apply this bone pose")]
 		public UMABonePose startingPose;
-		[Tooltip("Always apply this blendshape")]
 		public string startingBlendShape;
 
 		public DNAMorphSet[] dnaMorphs;

@@ -38,7 +38,6 @@ namespace UMA.CharacterSystem.Examples
             Cleanup();
 
             AddLabel(ColorName);
-            AddRemoverButton();
             foreach(OverlayColorData ocd in Colors.colors)
             {
                 AddButton(ocd);
@@ -51,18 +50,6 @@ namespace UMA.CharacterSystem.Examples
             go.transform.SetParent(ColorPanel.transform);
             Text txt = go.GetComponentInChildren<Text>();
             txt.text = theText;
-        }
-
-        private void AddRemoverButton()
-        {
-            GameObject go = GameObject.Instantiate(ColorButtonPrefab);
-            ColorHandler ch = go.GetComponent<ColorHandler>();
-            ch.SetupRemover(Avatar, ColorName);
-            Image i = go.GetComponent<Image>();
-            i.color = Color.white;
-            Text t = go.GetComponentInChildren<Text>();
-            t.text = "<default>";
-            go.transform.SetParent(ColorPanel.transform);
         }
 
         private void AddButton(OverlayColorData ocd)

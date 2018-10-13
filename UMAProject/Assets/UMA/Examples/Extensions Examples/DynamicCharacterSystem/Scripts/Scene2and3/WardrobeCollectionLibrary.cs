@@ -130,8 +130,7 @@ namespace UMA.CharacterSystem.Examples
 		{
 			if (DynamicAssetLoader.Instance == null)
 			{
-				if (Debug.isDebugBuild)
-					Debug.LogWarning("WardrobeCollectionLibrary requires an instance of DynamicAssetLoader to gather collection assets");
+				Debug.LogWarning("WardrobeCollectionLibrary requires an instance of DynamicAssetLoader to gather collection assets");
 				yield break;
 			}
 			while (!DynamicAssetLoader.Instance.isInitialized)

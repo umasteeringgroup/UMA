@@ -63,11 +63,8 @@ namespace UMA
 					umaData = gameObject.AddComponent<UMAData>();
 					if (umaGenerator != null && !umaGenerator.gameObject.activeInHierarchy)
 					{
-						if (Debug.isDebugBuild)
-						{
-							Debug.LogError("Invalid UMA Generator on Avatar.", gameObject);
-							Debug.LogError("UMA generators must be active scene objects!", umaGenerator.gameObject);
-						}
+						Debug.LogError("Invalid UMA Generator on Avatar.", gameObject);
+						Debug.LogError("UMA generators must be active scene objects!", umaGenerator.gameObject);
 						umaGenerator = null;
 					}
 				}

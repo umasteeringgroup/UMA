@@ -47,8 +47,7 @@ namespace UMA.CharacterSystem
 	#if UNITY_EDITOR
 		private bool CopyFromUTR(UMATextRecipe recipeToCopyFrom)
 		{
-			if (Debug.isDebugBuild)
-				Debug.Log("WardrobeConverts");
+			Debug.Log("WardrobeConverts");
 			if (recipeToCopyFrom.recipeType != "Wardrobe" || recipeToCopyFrom.GetType() != typeof(UMATextRecipe))
 				return false;
 			recipeType = "Wardrobe";

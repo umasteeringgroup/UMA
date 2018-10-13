@@ -11,7 +11,6 @@ namespace UMA.Examples
 	{
 		public int dnaTypeHash = 386317366;
 		public string dnaName = "";
-		public Text statusText;
 
 		protected UMAData data;
 		protected UMADnaBase dna;
@@ -37,7 +36,7 @@ namespace UMA.Examples
 
 				if(dnaEntryIndex >= 0)
 					slider.value = dna.GetValue(dnaEntryIndex);
-            }
+			}
 		}
 
 		public void SetMorph(float value)
@@ -52,21 +51,38 @@ namespace UMA.Examples
 			}
 		}
 
-		public void BakeMorph( bool isBaked )
-		{
+        public void BakeMorph()
+        {
 			if (dna == null)
 				dna = data.GetDna(dnaTypeHash);
 
 			if (dna != null && dnaEntryIndex >= 0)
-			{				
-				data.SetBlendShapeData(dnaName, isBaked, true);
+            {
+				if( data.blendShapeSettings.bakeBlendShapes == null)
+                	data.blendShapeSettings.bakeBlendShapes = new Dictionary<string, float>();
+				
+                float dnaValue = dna.GetValue(dnaEntryIndex);
+                float morphWeight = 0.0f;
+                if (dnaValue > 0.51f)
+                {
+                    morphWeight = (dnaValue - 0.5f) * 2f;
+                }
 
-				if (statusText != null)
+				if(!data.blendShapeSettings.bakeBlendShapes.ContainsKey(dnaName))
+					data.blendShapeSettings.bakeBlendShapes.Add(dnaName, morphWeight );
+				
+                data.Dirty(true, true, true);
+            }
+        }
+
+        public void UnbakeMorph()
+        {
+			if (data.blendShapeSettings != null)
+			{
+				if (data.blendShapeSettings.bakeBlendShapes.ContainsKey(dnaName))
 				{
-					if( isBaked )
-						statusText.text = "(Baked)";
-					else
-						statusText.text = "(Unbaked)";
+					data.blendShapeSettings.bakeBlendShapes.Remove(dnaName);
+					data.Dirty(true, true, true);
 				}
 			}
         }

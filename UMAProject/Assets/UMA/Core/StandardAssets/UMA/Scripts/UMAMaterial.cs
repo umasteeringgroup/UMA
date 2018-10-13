@@ -8,19 +8,11 @@ namespace UMA
     /// </summary>
     public class UMAMaterial : ScriptableObject
     {
-        public enum CompressionSettings { None, Fast, HighQuality };
         public Material material;
         public MaterialType materialType = MaterialType.Atlas;
         public MaterialChannel[] channels;
         public UMAClothProperties clothProperties;
         public bool RequireSeperateRenderer;
-
-        [Range(-2.0f, 2.0f)]
-        public float MipMapBias = 0.0f;
-        [Range(1, 16)]
-        public int AnisoLevel = 1;
-        public FilterMode MatFilterMode = FilterMode.Bilinear;
-        public CompressionSettings Compression = CompressionSettings.None;
 
         public enum MaterialType
         {
@@ -44,10 +36,6 @@ namespace UMA
             public RenderTextureFormat textureFormat;
             public string materialPropertyName;
 			public string sourceTextureName;
-            public CompressionSettings Compression;
-            [Range(0,4)]
-            public int DownSample;
-            public bool ConvertRenderTexture;
        }
 
 #if UNITY_EDITOR

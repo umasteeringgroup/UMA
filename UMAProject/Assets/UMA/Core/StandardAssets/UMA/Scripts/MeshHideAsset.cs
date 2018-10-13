@@ -24,29 +24,10 @@ namespace UMA
         public SlotDataAsset asset
         {
             get{ return _asset; }
-            set
-            {
-                _asset = value;
-                if (_asset != null)
-                    _assetSlotName = _asset.slotName;
-                else
-                    _assetSlotName = "";
-            }
+            set{ _asset = value; Initialize(); }
         }
         [SerializeField, HideInInspector]
         private SlotDataAsset _asset;
-
-        public string AssetSlotName
-        {
-            get { return _assetSlotName; }
-            set
-            {
-                _assetSlotName = value;
-                _asset = UMAAssetIndexer.Instance.GetAsset<SlotDataAsset>(_assetSlotName);
-            }
-        }
-        [SerializeField, HideInInspector]
-        private string _assetSlotName = "";
 
         /// <summary>
         /// BitArray of the triangle flags list. The list stores only the first index of the triangle vertex in the asset's triangle list.
@@ -128,20 +109,6 @@ namespace UMA
             }
         }
 
-#if UNITY_EDITOR
-        [ContextMenu("CopyToClipboard")]
-        public void CopyToClipboard()
-        {
-            UnityEditor.EditorGUIUtility.systemCopyBuffer = JsonUtility.ToJson(this);
-        }
-
-        [ContextMenu("PasteFromClipboard")]
-        public void PasteFromClipboard()
-        {
-            JsonUtility.FromJsonOverwrite(UnityEditor.EditorGUIUtility.systemCopyBuffer, this);
-        }
-#endif
-
         /// <summary>
         /// Custom serialization to write the BitArray to a boolean array.
         /// </summary>
@@ -166,10 +133,7 @@ namespace UMA
             }
 
             if (_serializedFlags == null)
-            {
-                if(Debug.isDebugBuild)
-                    Debug.LogError("Serializing triangle flags failed!");
-            }
+                Debug.LogError("Serializing triangle flags failed!");
         }
 
         /// <summary>
@@ -228,9 +192,7 @@ namespace UMA
         {
             if (_triangleFlags == null)
             {
-                if(Debug.isDebugBuild)
-                    Debug.LogError("Triangle Array not initialized!");
-
+                Debug.LogError("Triangle Array not initialized!");
                 return;
             }
                 
@@ -249,9 +211,7 @@ namespace UMA
         {
             if (selection.Count != _triangleFlags[0].Count)
             {
-                if (Debug.isDebugBuild)
-                    Debug.Log("SaveSelection: counts don't match!");
-
+                Debug.Log("SaveSelection: counts don't match!");
                 return;
             }
 
@@ -260,10 +220,7 @@ namespace UMA
             if (selection.Length == _triangleFlags[0].Length)
                 _triangleFlags[0] = new BitArray(selection);
             else
-            {
-                if (Debug.isDebugBuild)
-                    Debug.LogWarning("SaveSelection: counts don't match!");
-            }
+                Debug.LogWarning("SaveSelection: counts don't match!");
 
             #if UNITY_EDITOR
             UnityEditor.EditorUtility.SetDirty(this);

@@ -33,88 +33,53 @@ namespace UMA
 			return mean + dev * rand_std_normal;
 		}
 
-#if UNITY_EDITOR
-		static public int CreateLayer(string name)
-		{
-			//  https://forum.unity.com/threads/adding-layer-by-script.41970/#post-2274824
-			UnityEditor.SerializedObject tagManager = new UnityEditor.SerializedObject(UnityEditor.AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0]);
-			UnityEditor.SerializedProperty layers = tagManager.FindProperty("layers");
-			bool ExistLayer = false;
+    /// <summary>
+    ///  Fast way to get the number of bits set to true.
+    /// </summary>
+    /// <returns>Number of bits set to true.</returns>
+    /// <param name="bitArray">Bit array.</param>
+    //https://stackoverflow.com/questions/5063178/counting-bits-set-in-a-net-bitarray-class
+    public static System.Int32 GetCardinality(BitArray bitArray)
+    {
 
-			for (int i = 8; i < layers.arraySize; i++)
-			{
-				UnityEditor.SerializedProperty layerSP = layers.GetArrayElementAtIndex(i);
+        System.Int32[] ints = new System.Int32[(bitArray.Count >> 5) + 1];
 
-				if (layerSP.stringValue == name)
-				{
-					ExistLayer = true;
-					return i;
-				}
+        bitArray.CopyTo(ints, 0);
 
-			}
-			for (int j = 8; j < layers.arraySize; j++)
-			{
-				UnityEditor.SerializedProperty layerSP = layers.GetArrayElementAtIndex(j);
-				if (layerSP.stringValue == "" && !ExistLayer)
-				{
-					layerSP.stringValue = name;
-					tagManager.ApplyModifiedProperties();
+        System.Int32 count = 0;
 
-					return j;
-				}
-			}
+        // fix for not truncated bits in last integer that may have been set to true with SetAll()
+        ints[ints.Length - 1] &= ~(-1 << (bitArray.Count % 32));
 
-			return 0;
-		}
-#endif
+        for (System.Int32 i = 0; i < ints.Length; i++)
+        {
 
-		/// <summary>
-		///  Fast way to get the number of bits set to true.
-		/// </summary>
-		/// <returns>Number of bits set to true.</returns>
-		/// <param name="bitArray">Bit array.</param>
-		//https://stackoverflow.com/questions/5063178/counting-bits-set-in-a-net-bitarray-class
-		public static System.Int32 GetCardinality(BitArray bitArray)
-		{
+            System.Int32 c = ints[i];
 
-			System.Int32[] ints = new System.Int32[(bitArray.Count >> 5) + 1];
+            // magic (http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetParallel)
+            unchecked
+            {
+                c = c - ((c >> 1) & 0x55555555);
+                c = (c & 0x33333333) + ((c >> 2) & 0x33333333);
+                c = ((c + (c >> 4) & 0xF0F0F0F) * 0x1010101) >> 24;
+            }
 
-			bitArray.CopyTo(ints, 0);
+            count += c;
 
-			System.Int32 count = 0;
+        }
 
-			// fix for not truncated bits in last integer that may have been set to true with SetAll()
-			ints[ints.Length - 1] &= ~(-1 << (bitArray.Count % 32));
-
-			for (System.Int32 i = 0; i < ints.Length; i++)
-			{
-
-				System.Int32 c = ints[i];
-
-				// magic (http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetParallel)
-				unchecked
-				{
-					c = c - ((c >> 1) & 0x55555555);
-					c = (c & 0x33333333) + ((c >> 2) & 0x33333333);
-					c = ((c + (c >> 4) & 0xF0F0F0F) * 0x1010101) >> 24;
-				}
-
-				count += c;
-
-			}
-
-			return count;
-		}		
-	
-		public static string GetAssetFolder(string path)
-		{
-			int index = path.LastIndexOf('/');
-			if( index > 0 )
-			{
-				return path.Substring(0, index);
-			}
-			return "";
-		}
+        return count;
+    }		
+    
+    public static string GetAssetFolder(string path)
+    {
+        int index = path.LastIndexOf('/');
+        if( index > 0 )
+        {
+            return path.Substring(0, index);
+        }
+        return "";
+    }
 
 		public static void DestroySceneObject(UnityEngine.Object obj)
 		{

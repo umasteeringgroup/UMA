@@ -37,8 +37,7 @@ namespace UMA.Examples
 
         void OnCollisionEnter(Collision collision)
         {
-            if (Debug.isDebugBuild)
-                Debug.Log(collision.collider.name + ":" + name);
+            Debug.Log(collision.collider.name + ":" + name);
         }
     }
 }

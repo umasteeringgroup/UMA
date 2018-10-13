@@ -32,8 +32,7 @@ namespace UMA
 
 			if ((leftHand == null) || (rightHand == null) || (leftTwist == null) || (rightTwist == null))
 			{
-				if (Debug.isDebugBuild)
-					Debug.LogError("Failed to add Forearm Twist to: " + umaData.name);
+				Debug.LogError("Failed to add Forearm Twist to: " + umaData.name);
 				return;
 			}
 

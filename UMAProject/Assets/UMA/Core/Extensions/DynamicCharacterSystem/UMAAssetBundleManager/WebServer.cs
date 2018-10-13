@@ -43,8 +43,7 @@ namespace UMA.AssetBundles
                 _listener.Prefixes.Add(string.Format("http://*:{0}/", port));
             }
             catch {
-				if (Debug.isDebugBuild)
-					Debug.LogWarning("[Web Server] Could not add prefix to listener");
+                Debug.LogWarning("[Web Server] Could not add prefix to listener");
             }
             _listener.Start();
             _listener.BeginGetContext(OnGetContext, null);
@@ -70,8 +69,7 @@ namespace UMA.AssetBundles
             {
                 if (context.Request.RawUrl == "/")
                 {
-                    if (Debug.isDebugBuild)
-                        Debug.Log("[WebServer] context.Request.RawUrl");
+                    Debug.Log("[WebServer] context.Request.RawUrl");
                     context.Response.StatusCode = 200;
                     var process = System.Diagnostics.Process.GetCurrentProcess();
                     string msg = string.Format(@"<html><body><h1>UMA Simple Web Server</h1><table>
@@ -101,8 +99,7 @@ namespace UMA.AssetBundles
                     else
                     {
                         context.Response.StatusCode = 404;
-                        if (Debug.isDebugBuild)
-                            UnityEngine.Debug.LogErrorFormat("Url not served. Have you built your Asset Bundles? Url not served from: {0} '{1}'", context.Request.RawUrl, filePath);
+                        UnityEngine.Debug.LogErrorFormat("Url not served. Have you built your Asset Bundles? Url not served from: {0} '{1}'", context.Request.RawUrl, filePath);
 #if UNITY_EDITOR
                         AssetBundleManager.SimulateOverride = true;
                         context.Response.OutputStream.Close();
@@ -124,19 +121,16 @@ namespace UMA.AssetBundles
                 if (e.ErrorCode == -2147467259)
                 {
                     // shutdown, terminate silently
-                    if (Debug.isDebugBuild)
-                        Debug.LogWarning("[Web Server] ErrorCode -2147467259: terminate silently");
+                    Debug.LogWarning("[Web Server] ErrorCode -2147467259: terminate silently");
                     context.Response.Abort();
                     return;
                 }
-                if (Debug.isDebugBuild)
-                    UnityEngine.Debug.LogException(e);
+                UnityEngine.Debug.LogException(e);
                 context.Response.Abort();
             }
             catch (Exception e)
             {
-                if (Debug.isDebugBuild)
-                    UnityEngine.Debug.LogException(e);
+                UnityEngine.Debug.LogException(e);
                 context.Response.Abort();
             }
         }

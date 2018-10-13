@@ -4,8 +4,6 @@ using UnityEditor;
 using System;
 using UMA.CharacterSystem;
 using UnityEditor.Animations;
-using System.IO;
-using System.Text.RegularExpressions;
 
 namespace UMA
 {
@@ -31,7 +29,7 @@ namespace UMA
             FriendlyNames.Add(typeof(DynamicUMADnaAsset), "Dynamic DNA");
             icon = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/UMA/InternalDataStore/UmaIndex.png");
             showIndexedTypes = EditorPrefs.GetBool("BoolUMAShowTypes", true);
-            showUnindexedTypes = EditorPrefs.GetBool("BoolUMAShowUnindexed", false);
+            showUnindexedTypes = EditorPrefs.GetBool("BoolUMAShowUnindexed", true);
 
             if (icon == null)
             {
@@ -43,7 +41,6 @@ namespace UMA
                 EditorApplication.projectWindowItemOnGUI += DrawItems;
             }
         }
-
 
         [PreferenceItem("UMA")]
         public static void PreferencesGUI()
@@ -73,7 +70,6 @@ namespace UMA
         private static void DrawItems(string guid, Rect selectionRect)
         {
             if (!showIndexedTypes) return;
-            if (UMAAssetIndexer.Instance == null) return;
 
             AssetItem ai = UMAAssetIndexer.Instance.FromGuid(guid);
             if (ai != null)
@@ -176,135 +172,5 @@ namespace UMA
 
 			PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, string.Join( ";", allDefines.ToArray()));
 		}
-      
-		/// <summary>
-		/// Create a Wardrobe Recipe from the slot (and optionally overlay)
-		/// </summary>
-		/// <param name="path"></param>
-		/// <param name="sd"></param>
-		/// <param name="od"></param>
-		/// <param name="slotName"></param>
-		/// <param name="addToGlobalLibrary"></param>
-		public static void CreateRecipe(string path, SlotDataAsset sd, OverlayDataAsset od, string slotName, bool addToGlobalLibrary)
-		{
-			// Generate an asset in memory
-			UMAWardrobeRecipe asset = ScriptableObject.CreateInstance<CharacterSystem.UMAWardrobeRecipe>();
-			UMAData.UMARecipe recipe = new UMAData.UMARecipe();
-			recipe.ClearDna();
-			SlotData mySlot = new SlotData(sd);
-			if (od != null)
-			{
-				OverlayData myOverlay = new OverlayData(od);
-				mySlot.AddOverlay(myOverlay);
-			}
-			recipe.SetSlot(0, mySlot);
-			asset.Save(recipe, UMAContext.Instance);
-			asset.DisplayValue = slotName;
-
-			// Write the asset to disk
-			AssetDatabase.CreateAsset(asset, path);
-			AssetDatabase.SaveAssets();
-			if (addToGlobalLibrary)
-			{
-				// Add it to the global libary
-				UMAAssetIndexer.Instance.EvilAddAsset(typeof(CharacterSystem.UMAWardrobeRecipe), asset);
-			}
-			// Inform the asset database a file has changes
-			AssetDatabase.Refresh();
-		}
-
-		[MenuItem("UMA/Create Wardrobe Recipe from selected slot and overlay")]
-		public static void SaveAsRecipe()
-		{
-			SlotDataAsset sd = null;
-			OverlayDataAsset od = null;
-
-			foreach (UnityEngine.Object obj in Selection.objects)
-			{
-				// Make sure it's in the project, not the hierarchy.
-				// Not sure how we would ever have Slots and Overlays in the hierarchy though.
-				if (AssetDatabase.Contains(obj))
-				{
-					if (obj is SlotDataAsset)
-					{
-						sd = obj as SlotDataAsset;
-					}
-					if (obj is OverlayDataAsset)
-					{
-						od = obj as OverlayDataAsset;
-					}
-				}
-			}
-
-			if (sd == null)
-			{
-				EditorUtility.DisplayDialog("Notice", "A SlotDataAsset must be selected in the project view", "Got it");
-				return;
-			}
-
-			string assetPath = AssetDatabase.GetAssetPath(sd.GetInstanceID());
-			string path = Path.GetDirectoryName(assetPath);
-			string AssetName = Path.GetFileNameWithoutExtension(assetPath);
-			if (AssetName.ToLower().Contains("_slot"))
-			{
-				AssetName = Regex.Replace(AssetName, "_slot", "_Recipe", RegexOptions.IgnoreCase);
-			}
-			else
-			{
-				AssetName += "_Recipe";
-			}
-			assetPath = Path.Combine(path, AssetName + ".asset");
-
-			bool doCreate = false;
-			if (File.Exists(assetPath))
-			{
-				if (EditorUtility.DisplayDialog("File Already Exists!", "An asset at that location already exists! Overwrite it?", "Yes", "Cancel"))
-					doCreate = true;
-			}
-			else
-				doCreate = true;
-
-			if(doCreate)
-			{
-				CreateRecipe(assetPath, sd, od, sd.name, true);
-				Debug.Log("Recipe created at: " + assetPath);
-			}
-		}
-	}
-
-    public static class UMAExtensions
-    {
-        public static System.Type[] GetAllDerivedTypes(this System.AppDomain aAppDomain, System.Type aType)
-        {
-            var result = new List<System.Type>();
-            var assemblies = aAppDomain.GetAssemblies();
-            foreach (var assembly in assemblies)
-            {
-                var types = assembly.GetTypes();
-                foreach (var type in types)
-                {
-                    if (type.IsSubclassOf(aType))
-                        result.Add(type);
-                }
-            }
-            return result.ToArray();
-        }
-
-        public static Rect GetEditorMainWindowPos()
-        {
-            Resolution r = Screen.currentResolution;
-            return new Rect(0, 0, r.width, r.height);
-        }
-
-        public static void CenterOnMainWin(this UnityEditor.EditorWindow aWin)
-        {
-            var main = GetEditorMainWindowPos();
-            var pos = aWin.position;
-            float w = (main.width - pos.width) * 0.5f;
-            float h = (main.height - pos.height) * 0.5f;
-            pos.x = main.x + w;
-            pos.y = main.y + h;
-            aWin.position = pos;
-        }
     }
 }

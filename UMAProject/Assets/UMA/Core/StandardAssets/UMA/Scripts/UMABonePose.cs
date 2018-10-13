@@ -119,8 +119,7 @@ namespace UMA.PoseTools
 			int tweenCount = tweenPoses.Length;
 			if (tweenWeights.Length != tweenCount)
 			{
-				if (Debug.isDebugBuild)
-					Debug.LogError("Tween pose / weight mismatch!");
+				Debug.LogError("Tween pose / weight mismatch!");
 				return weight;
 			}
 
@@ -172,8 +171,7 @@ namespace UMA.PoseTools
 		{
 			if ((poses == null) || (umaSkeleton == null))
 			{
-				if (Debug.isDebugBuild)
-					Debug.LogError("Missing poses or skeleton!");
+				Debug.LogError("Missing poses or skeleton!");
 				return;
 			}
 

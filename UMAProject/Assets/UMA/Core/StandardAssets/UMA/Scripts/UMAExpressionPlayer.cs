@@ -30,9 +30,7 @@ namespace UMA.PoseTools
 
 		public bool logResetErrors;
 
-		public bool useDisableDistance = false;
-		public float disableDistance = 10f;
-		private Transform _mainCameraTransform;
+
 
 		// Use this for initialization
 		void Start()
@@ -44,9 +42,6 @@ namespace UMA.PoseTools
 		{
 			blinkDelay = Random.Range(minBlinkDelay, maxBlinkDelay);
 
-			if(Camera.main != null)
-				_mainCameraTransform = Camera.main.transform;
-
 			if (umaData == null)
 			{
 				// Find the UMAData, which could be up or down the hierarchy
@@ -57,8 +52,7 @@ namespace UMA.PoseTools
 				}
 				if (umaData == null)
 				{
-					if (Debug.isDebugBuild)
-						Debug.LogError("Couldn't locate UMAData component");
+					Debug.LogError("Couldn't locate UMAData component");
 				}
 			}
 
@@ -90,18 +84,9 @@ namespace UMA.PoseTools
 				return;
 			}
 
-			if (_mainCameraTransform != null && useDisableDistance && (_mainCameraTransform.position - transform.position).sqrMagnitude > (disableDistance * disableDistance))
-				return;
-
 			// Fix for animation systems which require consistent values frame to frame
-			Quaternion headRotation = Quaternion.identity;
-			Quaternion neckRotation = Quaternion.identity;
-
-			try { headRotation = umaData.skeleton.GetRotation(headHash); }
-			catch(System.Exception) { Debug.LogError("GetRotation: Head Bone not found!"); }
-
-			try { neckRotation = umaData.skeleton.GetRotation(neckHash); }
-			catch(System.Exception) { Debug.LogError("GetRotation: Neck Bone not found!"); }
+			Quaternion headRotation = umaData.skeleton.GetRotation(headHash);
+			Quaternion neckRotation = umaData.skeleton.GetRotation(neckHash);
 
 			// Need to reset bones here if we want Mecanim animation
 			expressionSet.RestoreBones(umaData.skeleton, logResetErrors);
@@ -127,9 +112,6 @@ namespace UMA.PoseTools
 				return;
 
 			if (umaData == null || umaData.skeleton == null)
-				return;
-
-			if (_mainCameraTransform != null && useDisableDistance && (_mainCameraTransform.position - transform.position).sqrMagnitude > (disableDistance * disableDistance))
 				return;
 
 			if (enableSaccades)

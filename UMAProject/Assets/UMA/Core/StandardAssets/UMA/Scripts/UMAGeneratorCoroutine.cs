@@ -337,14 +337,12 @@ namespace UMA
 				{
 					if (umaGenerator.fitAtlas)
 					{
-						if (Debug.isDebugBuild)
-							Debug.LogWarning("Atlas resolution is too small, Textures will be reduced.", umaData.gameObject);
+						Debug.LogWarning("Atlas resolution is too small, Textures will be reduced.", umaData.gameObject);
 						return false;
 					}
 					else
 					{
-						if (Debug.isDebugBuild)
-							Debug.LogError("Atlas resolution is too small, not all textures will fit.", umaData.gameObject);
+						Debug.LogError("Atlas resolution is too small, not all textures will fit.", umaData.gameObject);
 					}
 				}
 			}
@@ -370,17 +368,10 @@ namespace UMA
 					}
 				}
 
-				//Headless mode ends up with zero usedArea
-				if(Mathf.Approximately( usedArea.x, 0f ) || Mathf.Approximately( usedArea.y, 0f ))
-				{
-					material.cropResolution = Vector2.zero;
-					return;
-				}
-
 				Vector2 tempResolution = new Vector2(umaGenerator.atlasResolution, umaGenerator.atlasResolution);
 
 				bool done = false;
-				while (!done && Mathf.Abs(usedArea.x) > 0.0001)
+				while (!done)
 				{
 					if (tempResolution.x * 0.5f >= usedArea.x)
 					{
@@ -393,7 +384,7 @@ namespace UMA
 				}
 
 				done = false;
-				while (!done && Mathf.Abs(usedArea.y) > 0.0001)
+				while (!done)
 				{
 
 					if (tempResolution.y * 0.5f >= usedArea.y)

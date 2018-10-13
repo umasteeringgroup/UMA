@@ -69,15 +69,13 @@ namespace UMA.CharacterSystem.Examples
 				doingTakePhoto = true;
 				if (avatarToPhoto == null)
 				{
-					if (Debug.isDebugBuild)
-						Debug.Log("You need to set the Avatar to photo in the inspector!");
+					Debug.Log("You need to set the Avatar to photo in the inspector!");
 					doingTakePhoto = false;
 					return;
 				}
 				if (destinationFolder == "")
 				{
-					if (Debug.isDebugBuild)
-						Debug.Log("You need to set a DestinationFolder in the inspector!");
+					Debug.Log("You need to set a DestinationFolder in the inspector!");
 					doingTakePhoto = false;
 					return;
 				}
@@ -92,8 +90,7 @@ namespace UMA.CharacterSystem.Examples
 					}
 					else
 					{
-						if (Debug.isDebugBuild)
-							Debug.Log("Unknown RenderTexture Error...");
+						Debug.Log("Unknown RenderTexture Error...");
 						doingTakePhoto = false;
 						return;
 					}
@@ -113,8 +110,7 @@ namespace UMA.CharacterSystem.Examples
 			wardrobeRecipeToPhoto.Clear();
 			if (!basePhotoTaken)
 			{
-				if (Debug.isDebugBuild)
-					Debug.Log("Gonna take base Photo...");
+				Debug.Log("Gonna take base Photo...");
 				avatarToPhoto.ClearSlots();
 				if (addUnderwearToBasePhoto)
 				{
@@ -129,8 +125,7 @@ namespace UMA.CharacterSystem.Examples
 				bool renderTextureFound = SetBestRenderTexture("Body");
 				if (!renderTextureFound)
 				{
-					if (Debug.isDebugBuild)
-						Debug.Log("No suitable RenderTexture found for Base Photo..");
+					Debug.Log("No suitable RenderTexture found for Base Photo..");
 					doingTakePhoto = false;
 					yield break;
 				}
@@ -143,13 +138,11 @@ namespace UMA.CharacterSystem.Examples
 					yield return new WaitForSeconds(1f);
 				}
 				yield return StartCoroutine("TakePhotoCoroutine");
-				if (Debug.isDebugBuild)
-					Debug.Log("Took base Photo...");
+				Debug.Log("Took base Photo...");
 				StopCoroutine("TakePhotoCoroutine");
 				//really we need photos for each area of the body (i.e. from each renderTexture/Cam) with no clothes on so we can have a 'None' image
 				//so we'll need head, chest, hands, legs, feet, full outfit...
-				if (Debug.isDebugBuild)
-					Debug.Log("Now taking the Base Photos for body parts...");
+				Debug.Log("Now taking the Base Photos for body parts...");
 				List<string> emptySlotsToPhoto = new List<string> { "Head", "Chest", "Hands", "Legs", "Feet", "Outfit" };
 				//if dimming and neutralizing is on do it
 				if (dimAllButTarget && neutralizeTargetColors)
@@ -168,25 +161,21 @@ namespace UMA.CharacterSystem.Examples
 					renderTextureFound = SetBestRenderTexture(emptySlotToPhoto);
 					if (!renderTextureFound)
 					{
-						if (Debug.isDebugBuild)
-							Debug.Log("No suitable RenderTexture found for " + emptySlotToPhoto + " Photo..");
+						Debug.Log("No suitable RenderTexture found for " + emptySlotToPhoto + " Photo..");
 						continue;
 					}
 					yield return StartCoroutine("TakePhotoCoroutine");
-					if (Debug.isDebugBuild)
-						Debug.Log("Took base " + emptySlotToPhoto + " Photo...");
+					Debug.Log("Took base " + emptySlotToPhoto + " Photo...");
 					StopCoroutine("TakePhotoCoroutine");
 				}
 				basePhotoTaken = true;
-				if (Debug.isDebugBuild)
-					Debug.Log("Now taking the rest...");
+				Debug.Log("Now taking the rest...");
 				StartCoroutine(TakePhotosCoroutine(recipesToPhoto));
 				yield break;
 			}
 			else
 			{
-				if (Debug.isDebugBuild)
-					Debug.Log("Gonna take other wardrobe photos...");
+				Debug.Log("Gonna take other wardrobe photos...");
 				if (originalColors.Count > 0)
 				{
 					avatarToPhoto.CharacterUpdated.RemoveListener(SetCharacterReadyAfterColorChange);
@@ -196,26 +185,22 @@ namespace UMA.CharacterSystem.Examples
 				int slotsDone = 0;
 				foreach (string wardrobeSlot in recipesToPhoto.Keys)
 				{
-					if (Debug.isDebugBuild)
-						Debug.Log("Gonna take photos for " + wardrobeSlot);
+					Debug.Log("Gonna take photos for " + wardrobeSlot);
 					bool renderTextureFound = SetBestRenderTexture(wardrobeSlot);
 					if (!renderTextureFound)
 					{
-						if (Debug.isDebugBuild)
-							Debug.Log("No suitable RenderTexture found for " + wardrobeSlot + " Photo..");
+						Debug.Log("No suitable RenderTexture found for " + wardrobeSlot + " Photo..");
 						doingTakePhoto = false;
 						yield break;
 					}
 					foreach (UMATextRecipe wardrobeRecipe in recipesToPhoto[wardrobeSlot])
 					{
-						if (Debug.isDebugBuild)
-							Debug.Log("Gonna take photos for " + wardrobeRecipe.name + " in " + wardrobeSlot);
+						Debug.Log("Gonna take photos for " + wardrobeRecipe.name + " in " + wardrobeSlot);
 						photoName = wardrobeRecipe.name;
 						var path = destinationFolder + "/" + photoName + ".png";
 						if (!overwriteExistingPhotos && File.Exists(Application.dataPath + "/" + path))
 						{
-							if (Debug.isDebugBuild)
-								Debug.Log("Photo already existed for " + photoName + ". Turn on overwrite photos to replace existig ones");
+							Debug.Log("Photo already existed for " + photoName + ". Turn on overwrite photos to replace existig ones");
 							continue;
 						}
 						wardrobeRecipeToPhoto.Clear();
@@ -238,8 +223,7 @@ namespace UMA.CharacterSystem.Examples
 						avatarToPhoto.BuildCharacter(true);
 						while (!canTakePhoto)
 						{
-							if (Debug.isDebugBuild)
-								Debug.Log("Waiting to take photo...");
+							Debug.Log("Waiting to take photo...");
 							yield return new WaitForSeconds(1f);
 						}
 						yield return StartCoroutine("TakePhotoCoroutine");
@@ -259,8 +243,7 @@ namespace UMA.CharacterSystem.Examples
 
 		private void ResetCharacter()
 		{
-			if (Debug.isDebugBuild)
-				Debug.Log("Doing Final Reset");
+			Debug.Log("Doing Final Reset");
 			if (originalColors.Count > 0)
 			{
 				avatarToPhoto.CharacterUpdated.RemoveListener(SetCharacterReadyAfterColorChange);
@@ -320,8 +303,7 @@ namespace UMA.CharacterSystem.Examples
 		IEnumerator TakePhotoCoroutine()
 		{
 			canTakePhoto = false;
-			if (Debug.isDebugBuild)
-				Debug.Log("Taking Photo...");
+			Debug.Log("Taking Photo...");
 			if (!autoPhotosEnabled)
 			{
 				if (dimAllButTarget && neutralizeTargetColors)
@@ -343,8 +325,7 @@ namespace UMA.CharacterSystem.Examples
 			var path = destinationFolder + "/" + photoName + ".png";
 			if (!overwriteExistingPhotos && File.Exists(path))
 			{
-				if (Debug.isDebugBuild)
-					Debug.Log("could not overwrite existing Photo. Turn on Overwrite Existing Photos if you want to allow this");
+				Debug.Log("could not overwrite existing Photo. Turn on Overwrite Existing Photos if you want to allow this");
 				canTakePhoto = true;
 				doingTakePhoto = false;
 				if (!autoPhotosEnabled)
@@ -411,15 +392,9 @@ namespace UMA.CharacterSystem.Examples
 		private void DoDimmingAndNeutralizing()
 		{
 			if (wardrobeRecipeToPhoto.Count > 0)
-			{
-				if (Debug.isDebugBuild)
-					Debug.Log("Doing Dimming And Neutralizing for " + wardrobeRecipeToPhoto[0].name);
-			}
+				Debug.Log("Doing Dimming And Neutralizing for " + wardrobeRecipeToPhoto[0].name);
 			else
-			{
-				if (Debug.isDebugBuild)
-					Debug.Log("Doing Dimming And Neutralizing for Body shots");
-			}
+				Debug.Log("Doing Dimming And Neutralizing for Body shots");
 			int numAvatarSlots = avatarToPhoto.umaData.GetSlotArraySize();
 			originalColors.Clear();
 			List<string> slotsInRecipe = new List<string>();
@@ -551,8 +526,7 @@ namespace UMA.CharacterSystem.Examples
 			{
 				if (bodyRenderTexture == null)
 				{
-					if (Debug.isDebugBuild)
-						Debug.Log("You need to set the Body Render Texture in the inspector!");
+					Debug.Log("You need to set the Body Render Texture in the inspector!");
 					return false;
 				}
 				else
@@ -574,8 +548,7 @@ namespace UMA.CharacterSystem.Examples
 
 				if (headRenderTexture == null)
 				{
-					if (Debug.isDebugBuild)
-						Debug.Log("You need to set the Head Render Texture in the inspector!");
+					Debug.Log("You need to set the Head Render Texture in the inspector!");
 					return false;
 				}
 				else
@@ -592,8 +565,7 @@ namespace UMA.CharacterSystem.Examples
 			{
 				if (chestRenderTexture == null)
 				{
-					if (Debug.isDebugBuild)
-						Debug.Log("You need to set the Chest Render Texture in the inspector!");
+					Debug.Log("You need to set the Chest Render Texture in the inspector!");
 					return false;
 				}
 				else
@@ -606,8 +578,7 @@ namespace UMA.CharacterSystem.Examples
 			{
 				if (handsRenderTexture == null)
 				{
-					if (Debug.isDebugBuild)
-						Debug.Log("You need to set the Hands Render Texture in the inspector!");
+					Debug.Log("You need to set the Hands Render Texture in the inspector!");
 					return false;
 				}
 				else
@@ -622,8 +593,7 @@ namespace UMA.CharacterSystem.Examples
 			{
 				if (legsRenderTexture == null)
 				{
-					if (Debug.isDebugBuild)
-						Debug.Log("You need to set the Legs Render Texture in the inspector!");
+					Debug.Log("You need to set the Legs Render Texture in the inspector!");
 					return false;
 				}
 				else
@@ -636,8 +606,7 @@ namespace UMA.CharacterSystem.Examples
 			{
 				if (feetRenderTexture == null)
 				{
-					if (Debug.isDebugBuild)
-						Debug.Log("You need to set the Feet Render Texture in the inspector!");
+					Debug.Log("You need to set the Feet Render Texture in the inspector!");
 					return false;
 				}
 				else
@@ -652,8 +621,7 @@ namespace UMA.CharacterSystem.Examples
 			{
 				if (outfitRenderTexture == null)
 				{
-					if (Debug.isDebugBuild)
-						Debug.Log("You need to set the Outfit Render Texture in the inspector!");
+					Debug.Log("You need to set the Outfit Render Texture in the inspector!");
 					return false;
 				}
 				else
@@ -664,8 +632,7 @@ namespace UMA.CharacterSystem.Examples
 			}
 			else
 			{
-				if (Debug.isDebugBuild)
-					Debug.Log("No suitable render texture found for " + wardrobeSlot + " using Body rendertexture");
+				Debug.Log("No suitable render texture found for " + wardrobeSlot + " using Body rendertexture");
 				renderTextureToUse = bodyRenderTexture;
 				return true;
 			}

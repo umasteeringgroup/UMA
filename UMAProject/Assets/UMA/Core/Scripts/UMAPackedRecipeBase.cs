@@ -273,12 +273,10 @@ namespace UMA
 						vals[3] = Mathf.FloorToInt(proceduralData.vectorValue.w * floatIntScale);
 						break;
 					case ProceduralPropertyType.Texture:
-						if (Debug.isDebugBuild)
-							Debug.LogWarning("Unsupported Texture property on OverlayProceduralData.");
+						Debug.LogWarning("Unsupported Texture property on OverlayProceduralData.");
 						break;
 					default:
-						if (Debug.isDebugBuild)
-							Debug.LogError("Unsupported type enum in OverlayProceduralData! " + proceduralData.type);
+						Debug.LogError("Unsupported type enum in OverlayProceduralData! " + proceduralData.type);
 						break;
 				}
 			}
@@ -328,12 +326,10 @@ namespace UMA
 						break;
 					case (int)ProceduralPropertyType.Texture:
 						proceduralData.type = ProceduralPropertyType.Texture;
-						if (Debug.isDebugBuild)
-							Debug.LogWarning("Unsupported Texture property in PackedOverlaySubstanceData.");
+						Debug.LogWarning("Unsupported Texture property in PackedOverlaySubstanceData.");
 						break;
 					default:
-						if (Debug.isDebugBuild)
-							Debug.LogError("Bad type enum in PackedOverlaySubstanceData! " + this.type);
+						Debug.LogError("Bad type enum in PackedOverlaySubstanceData! " + this.type);
 						break;
 				}
 			}
