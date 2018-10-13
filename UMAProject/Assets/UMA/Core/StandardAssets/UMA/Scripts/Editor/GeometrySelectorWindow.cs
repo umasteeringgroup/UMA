@@ -229,6 +229,12 @@ namespace UMA.Editors
             {
                 RaycastHide();
             }
+
+            if (GUILayout.Button(new GUIContent("Raycast Overlapped Faces", "Warning! This will clear the current selection.")))
+            {
+                RaycastHideOverlappedFaces();
+            }
+
             EditorGUI.EndDisabledGroup();
 
             GUILayout.Space(20);
@@ -451,7 +457,7 @@ namespace UMA.Editors
 
             Rect selectionRect = new Rect();
 
-            if (Event.current.type == EventType.layout)
+            if (Event.current.type == EventType.Layout)
                 HandleUtility.AddDefaultControl(GUIUtility.GetControlID(GetHashCode(), FocusType.Passive));
 
             if (isSelecting)
@@ -647,10 +653,10 @@ namespace UMA.Editors
         /// <param name="p2">Vertex 2 of the triangle.</param>
         /// <param name="p3">Vertex 3 of the triangle.</param>
         /// <returns><c>true</c> when the ray hits the triangle, otherwise <c>false</c></returns>
-        public static bool RayTriIntersect(Ray ray, Vector3 p1, Vector3 p2, Vector3 p3, out float dist)
+        public static bool RayTriIntersect(Ray ray, Vector3 p1, Vector3 p2, Vector3 p3, out float dist, bool bBothSides = false)
         {
             // Vectors from p1 to p2/p3 (edges)
-            Vector3 e1, e2;  
+            Vector3 e1, e2;
 
             Vector3 p, q, t;
             float det, invDet, u, v;
@@ -690,8 +696,10 @@ namespace UMA.Editors
 
             dist = Vector3.Dot(e2, q) * invDet;
 
+            if (bBothSides) return true;
+
             if ((Vector3.Dot(e2, q) * invDet) > Mathf.Epsilon)
-            { 
+            {
                 //ray does intersect
                 return true;
             }
@@ -708,11 +716,11 @@ namespace UMA.Editors
             Mesh targetMesh = _Source.sharedMesh;
             if (targetMesh == null)
                 return;
-            
+
             Mesh occlusionMesh = _Source.occlusionMesh;
             if (occlusionMesh == null)
                 return;
-            
+
             Vector3[] targetVerts = targetMesh.vertices;
             Vector3[] targetNorms = targetMesh.normals;
             if (targetNorms.Length != targetVerts.Length)
@@ -724,7 +732,7 @@ namespace UMA.Editors
                 targetVerts[i] = m.MultiplyPoint3x4(targetVerts[i]);
                 targetNorms[i] = m.MultiplyPoint3x4(targetNorms[i]);
             }
-            
+
             Vector3[] occlusionVerts = occlusionMesh.vertices;
             List<int[]> occlusionTriangles = new List<int[]>();
             for (int i = 0; i < occlusionMesh.subMeshCount; i++)
@@ -736,12 +744,12 @@ namespace UMA.Editors
             for (int i = 0; i < targetVerts.Length; i++)
             {
                 EditorUtility.DisplayProgressBar("Progress", "calculating...", ((float)i / (float)targetVerts.Length));
-                    
-                Ray testRay = new Ray(targetVerts[i], targetNorms[i] );
+
+                Ray testRay = new Ray(targetVerts[i], targetNorms[i]);
                 for (int j = 0; j < occlusionTriangles.Count; j++)
                 {
                     int[] triVerts = occlusionTriangles[j];
-                    for (int k = 0; k < triVerts.Length; k+= 3)
+                    for (int k = 0; k < triVerts.Length; k += 3)
                     {
                         float dist = Mathf.Infinity;
                         if (RayTriIntersect(testRay,
@@ -773,6 +781,89 @@ namespace UMA.Editors
                 {
                     if (vertexOccluded[triVerts[j + 0]] ||
                         vertexOccluded[triVerts[j + 1]] ||
+                        vertexOccluded[triVerts[j + 2]])
+                    {
+                        _Source.selectedTriangles[(j / 3)] = true;
+                    }
+                }
+            }
+
+            _Source.UpdateSelectionMesh();
+        }
+
+        private void RaycastHideOverlappedFaces()
+        {
+            if (_Source == null)
+                return;
+
+            Mesh targetMesh = _Source.sharedMesh;
+            if (targetMesh == null)
+                return;
+
+            Mesh occlusionMesh = _Source.occlusionMesh;
+            if (occlusionMesh == null)
+                return;
+
+            Vector3[] targetVerts = targetMesh.vertices;
+            Vector3[] targetNorms = targetMesh.normals;
+            if (targetNorms.Length != targetVerts.Length)
+                return;
+
+            Matrix4x4 m = _Source.gameObject.transform.localToWorldMatrix;
+            for (int i = 0; i < targetVerts.Length; i++)
+            {
+                targetVerts[i] = m.MultiplyPoint3x4(targetVerts[i]);
+                targetNorms[i] = m.MultiplyPoint3x4(targetNorms[i]);
+            }
+
+            Vector3[] occlusionVerts = occlusionMesh.vertices;
+            List<int[]> occlusionTriangles = new List<int[]>();
+            for (int i = 0; i < occlusionMesh.subMeshCount; i++)
+            {
+                occlusionTriangles.Add(occlusionMesh.GetTriangles(i));
+            }
+
+            BitArray vertexOccluded = new BitArray(targetVerts.Length);
+            for (int i = 0; i < targetVerts.Length; i++)
+            {
+                EditorUtility.DisplayProgressBar("Progress", "calculating...", ((float)i / (float)targetVerts.Length));
+
+                Ray testRay = new Ray(targetVerts[i], targetNorms[i]);
+                for (int j = 0; j < occlusionTriangles.Count; j++)
+                {
+                    int[] triVerts = occlusionTriangles[j];
+                    for (int k = 0; k < triVerts.Length; k += 3)
+                    {
+                        float dist = Mathf.Infinity;
+                        if (RayTriIntersect(testRay,
+                            occlusionVerts[triVerts[k + 0]],
+                            occlusionVerts[triVerts[k + 1]],
+                            occlusionVerts[triVerts[k + 2]],
+                            out dist, true))
+                        {
+                            if (Mathf.Abs(dist) <= _Source.normalsLength)
+                            {
+                                vertexOccluded[i] = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (vertexOccluded[i])
+                        continue;
+                }
+            }
+            EditorUtility.ClearProgressBar();
+
+            _Source.selectedTriangles.SetAll(false);
+
+            for (int i = 0; i < /*_Source.sharedMesh.subMeshCount*/ 1; i++)
+            {
+                int[] triVerts = _Source.sharedMesh.GetTriangles(i);
+                for (int j = 0; j < triVerts.Length; j += 3)
+                {
+                    if (vertexOccluded[triVerts[j + 0]] &&
+                        vertexOccluded[triVerts[j + 1]] &&
                         vertexOccluded[triVerts[j + 2]])
                     {
                         _Source.selectedTriangles[(j / 3)] = true;
