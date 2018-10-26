@@ -5,6 +5,8 @@ using UMA.PoseTools;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
+using UMA.CharacterSystem;
+
 namespace UMA
 {
 	[System.Serializable]
@@ -23,6 +25,7 @@ namespace UMA
 		#region BACKWARDS COMPATIBILITY 
 
 		//the following are backwards compatible methods for DynamicDNAConverterBehaviour.StartingPose
+		//TODO can we make this work again?
 
 		//backwards compatibility
 		public UMABonePose StartingPose
@@ -88,14 +91,12 @@ namespace UMA
 
 		#endregion
 
-		#region REQUIRED DYNAMICDNAPLUGIN PROPERTIES
+		#region DYNAMICDNAPLUGIN PROPERTIES
 
 		public override string PluginHelp
 		{
-			get { return "Bone Pose DNA Converters convert the set dna names into weight settings for UMA Bone Pose that will be applied to a character. Normally you will set the 'Default Pose Weight' to 0 so that the pose is only applied when one of the set 'Modifier DNAs' returns a suitable value. However for a 'Starting Pose' you can set the 'Default Pose Weight' to 1. Optionally, you can link the 'Default Pose Weight' to a dna value on each character by setting up the 'Pose Weight DNA'"; }
+			get { return "Bone Pose DNA Converters convert the set dna names into weight settings for UMA Bone Pose that will be applied to a character. You can use the 'Starting Pose Weight' to force this pose on all characters that use this converter at the start. Or you can hook up to a modifying dna so that the pose is only applied based on a characters dna value."; }
 		}
-
-		
 
 		#endregion
 
@@ -126,9 +127,13 @@ namespace UMA
 
 		public override void ApplyDNA(UMAData umaData, UMASkeleton skeleton, int dnaTypeHash)
 		{
-			for(int i = 0; i < _poseDNAConverters.Count; i++)
+			var umaDna = umaData.GetDna(dnaTypeHash);
+			var masterWeightCalc = masterWeight.GetWeight(umaDna);
+			//var weightedDNA = masterWeight.GetWeightedDNA(umaDna);
+			for (int i = 0; i < _poseDNAConverters.Count; i++)
 			{
-				_poseDNAConverters[i].ApplyDNA(umaData, skeleton, dnaTypeHash);
+				_poseDNAConverters[i].ApplyDNA(umaData, skeleton, dnaTypeHash, masterWeightCalc);
+				//_poseDNAConverters[i].ApplyDNA(umaData, skeleton, weightedDNA);
 			}
 		}
 
@@ -137,19 +142,7 @@ namespace UMA
 		#region INSPECTOR GUI OVERRIDES
 
 #if UNITY_EDITOR
-		/*public override string[] ImportSettingsMethods
-		{
-			get
-			{
-				return new string[]
-				{
-				"Add",
-				"Replace",
-				"Overwrite",
-				"AddOverwrite"
-				};
-			}
-		}*/
+
 		public override string[] ImportSettingsMethods
 		{
 			get
@@ -173,6 +166,16 @@ namespace UMA
 
 		public override bool ImportSettings(UnityEngine.Object pluginToImport, int importMethod)
 		{
+			//deal with legacy settings from a DynamicDNAConverterBehaviour prefab
+			if (typeof(GameObject).IsAssignableFrom(pluginToImport.GetType()))
+			{
+				var DDCB = (pluginToImport as GameObject).GetComponent<DynamicDNAConverterBehaviour>();
+				if (DDCB != null)
+				{
+					return ImportLegacySettings(DDCB, importMethod);
+				}
+			}
+			//TODO Deal with Morphset?
 			var importPlug = pluginToImport as BonePoseDNAConverterPlugin;
 			if (importPlug == null)
 			{
@@ -191,90 +194,21 @@ namespace UMA
 			}
 			for (int i = 0; i < importPlug._poseDNAConverters.Count; i++)
 			{
-				_poseDNAConverters.Add(importPlug._poseDNAConverters[i]);
+				_poseDNAConverters.Add(new BonePoseDNAConverter(importPlug._poseDNAConverters[i]));
 			}
 			EditorUtility.SetDirty(this);
 			AssetDatabase.SaveAssets();
 			return true;
 		}
-		//I think this is just 'Add/Replace' now- maybe we can figure out some logic for Overwrite/AddOverwrite
-		/*public override bool ImportSettings(UnityEngine.Object pluginToImport, int importMethod)
+
+		private bool ImportLegacySettings(DynamicDNAConverterBehaviour DDCB, int importMethod)
 		{
-			var importPlug = pluginToImport as BonePoseDNAConverterPlugin;
-			if (importPlug == null)
-			{
-				Debug.LogWarning("The plugin you are trying to import was not a PoseDNAConverterPlugin!");
-				return false;
-			}
-			if (importPlug._poseDNAConverters.Count == 0)
-			{
-				Debug.LogWarning("The plugin you are trying to import had no settings!");
-				return false;
-			}
-			//Method Replace
-			if (importMethod == 1)
-			{
+			if(importMethod == 1)
 				_poseDNAConverters.Clear();
-			}
-			bool existed = false;
-			UMABonePose ovrBP = null;
-			DNAEvaluator ovrEval = null;
-			for (int i = 0; i < importPlug._poseDNAConverters.Count; i++)
-			{
-				existed = false;
-				ovrBP = null;
-				//if method is Add check there is no existing
-				//if method is Overwrite or AddOverwrite check if there is an existing entry with values we want to overwrite
-				if (importMethod == 0 || importMethod == 2 || importMethod == 3)
-				{
-					ovrBP = importPlug._poseDNAConverters[i].poseToApply;
-					ovrEval = importPlug._poseDNAConverters[i].startingPoseWeight.
-					for (int ii = 0; ii < _poseDNAConverters.Count; ii++)
-					{
-						if (_poseDNAConverters[ii].poseToApply == ovrBP && _poseDNAConverters[ii].defaultPoseWeightDNA == ovrEval)//this will only import one modifier that is using this pose is that right?
-						{
-							if (importMethod == 2 || importMethod == 3)
-							{
-								_poseDNAConverters[ii].defaultPoseWeightDNA = new DNAEvaluator(importPlug._poseDNAConverters[i].defaultPoseWeightDNA);
-								_poseDNAConverters[ii].defaultPoseWeight = importPlug._poseDNAConverters[i].defaultPoseWeight;
-								_poseDNAConverters[ii].onMissingPoseDNA = importPlug._poseDNAConverters[i].onMissingPoseDNA;
-								bool foundModifier = false;
-								string importReducerDNA = "";
-								for(int ri = 0; ri < importPlug._poseDNAConverters[i].modifierDnas.Count; ri++)
-								{
-									foundModifier = false;
-									importReducerDNA = importPlug._poseDNAConverters[i].modifierDnas[ri].dnaName;
-									if (!string.IsNullOrEmpty(importReducerDNA))
-									{
-										for (int rii = 0; rii < _poseDNAConverters[ii].modifierDnas.Count; rii++)
-										{
-											if (_poseDNAConverters[ii].modifierDnas[rii].dnaName == importReducerDNA)
-											{
-												foundModifier = true;
-												_poseDNAConverters[ii].modifierDnas[rii].evaluator = new DNAEvaluationGraph( importPlug._poseDNAConverters[i].modifierDnas[ri].evaluator);
-												_poseDNAConverters[ii].modifierDnas[rii].multiplier = importPlug._poseDNAConverters[i].modifierDnas[ri].multiplier;
-											}
-										}
-										if (!foundModifier)
-										{
-											_poseDNAConverters[ii].modifierDnas.Add(new DNAEvaluator(importPlug._poseDNAConverters[i].modifierDnas[ri]));
-										}
-									}
-								}
-							}
-							existed = true;
-						}
-					}
-				}
-				if (!existed && importMethod != 2)//if importmethod != overwrite
-				{
-					_poseDNAConverters.Add(new BonePoseDNAConverter(importPlug._poseDNAConverters[i]));
-				}
-			}
-			EditorUtility.SetDirty(this);
-			AssetDatabase.SaveAssets();
-			return true;
-		}*/
+			if(DDCB.startingPose != null)
+				_poseDNAConverters.Add(new BonePoseDNAConverter(DDCB.startingPose, DDCB.startingPoseWeight));
+			return false;
+		}
 
 #endif
 			#endregion
@@ -284,7 +218,6 @@ namespace UMA
 		[System.Serializable]
 		public class BonePoseDNAConverter
 		{
-			public enum onMissingPoseDNAOpts { UseGlobalWeight, UseZero }
 
 			#region FIELDS
 
@@ -293,28 +226,9 @@ namespace UMA
 			private UMABonePose _poseToApply;
 
 			[SerializeField]
-			[Tooltip("Make the default weight 1 to apply the pose on start, 0 so the pose is only applied by 'Modifying DNA' below. Or you can hook the weight up to a dna on the character to control this dynamically.")]
-			private DynamicDefaultWeight _startingPoseWeight = new DynamicDefaultWeight();
-
-			/*
-			//TODO DITCH THE FOLLOWING AND FIX METHODS
-			[SerializeField]
-			[Tooltip("The default weight for the pose when no dna is applied. Usually this is zero, but for a 'Starting Pose' set this value to 1. NOTE: Changing this value affects all characters that use the same converter behaviour. Set up a 'Default Pose Weight DNA'  (below) to affect the default weight 'per character'.")]
+			[Tooltip("Make the default weight 1 to apply the pose on start to *all* characters that use this converter or set to 0 so the pose is only applied by 'Modifying DNA' below. If you want to affect this 'per character' use 'Modifying DNA' instead")]
 			[Range(0f, 1f)]
-			[HideInInspector]
-			public float _defaultPoseWeight = 0f;
-
-			[SerializeField]
-			[Tooltip("A DNA to use for setting the 'Default Pose Weight' (above)")]
-			[DNAEvaluator.Config(true)]
-			[HideInInspector]
-			private DNAEvaluator _defaultPoseWeightDNA;
-
-			[SerializeField]
-			[HideInInspector]
-			[Tooltip("If the 'Default Pose Weight DNA'  is assigned but not available, should the 'Default Pose Weight' be used or zero?")]
-			private onMissingPoseDNAOpts _onMissingPoseDNA = onMissingPoseDNAOpts.UseGlobalWeight;
-			*/
+			private float _startingPoseWeight = 0f;
 
 			[SerializeField]
 			[Tooltip("Add dna(s) here that will change the amount that this Pose is applied depending on their evaluated value.")]
@@ -340,120 +254,25 @@ namespace UMA
 				set { _poseToApply = value; }
 			}
 
-			public DynamicDefaultWeight startingPoseWeight
+			public float startingPoseWeight
 			{
 				get { return _startingPoseWeight; }
 				set { _startingPoseWeight = value; }
 			}
 
-			/*public float defaultPoseWeight
-			{
-				get { return _defaultPoseWeight; }
-				set { _defaultPoseWeight = value; }
-			}
-
-			public onMissingPoseDNAOpts onMissingPoseDNA
-			{
-				get { return _onMissingPoseDNA; }
-				set { _onMissingPoseDNA = value; }
-			}
-
-			public DNAEvaluator defaultPoseWeightDNA
-			{
-				get { return _defaultPoseWeightDNA; }
-				set { _defaultPoseWeightDNA = value; }
-			}*/
-
-			public DNAEvaluatorList modifierDnas
+			public DNAEvaluatorList modifyingDNA
 			{
 				get { return _modifyingDNA; }
 				set { _modifyingDNA = new DNAEvaluatorList(value); }
 			}
 
-			/*
-			//The following properties are handy for Timeline
-
-			/// <summary>
-			/// Gets/Sets the dnaName that the defaultPoseWeightDNA evaluator uses. If no dnaEvaluator has been assigned to the 'defaultPoseWeightDNA' field one will be created using the 'default' evaluation settings.
-			/// You can use this to temporarily change the dna that is affecting the pose weight for special effects
-			/// </summary>
-			public string DefaultPoseWeightDNAName
-			{
-				get
-				{
-					if (_defaultPoseWeightDNA != null)
-						return _defaultPoseWeightDNA.dnaName;
-					else
-						return "";
-				}
-				set
-				{
-					if (_defaultPoseWeightDNA == null)
-						_defaultPoseWeightDNA = new DNAEvaluator(value, DNAEvaluationGraph.Default, 1f);
-					else
-						_defaultPoseWeightDNA.dnaName = value;
-				}
-			}
-
-			/// <summary>
-			/// Gets/Sets the multiplier that the defaultPoseWeightDNA evaluator uses. 
-			/// You can use this to turn the pose weight up or down independently of dna value for special effects
-			/// </summary>
-			public float DefaultPoseWeightDNAMultiplier
-			{
-				get
-				{
-					if (_defaultPoseWeightDNA != null)
-						return _defaultPoseWeightDNA.multiplier;
-					else
-						return 0f;
-				}
-				set
-				{
-					if (_defaultPoseWeightDNA != null)
-						_defaultPoseWeightDNA.multiplier = value;
-				}
-			}*/
-
-			#endregion
-
-			#region CONSTRUCTOR
-
-			public BonePoseDNAConverter() { }
-
-			public BonePoseDNAConverter(UMABonePose poseToApply, float startingPoseWeight = 0f, DNAEvaluator startingPoseWeightDNA = null)
-			{
-				this._poseToApply = poseToApply;
-				//this._defaultPoseWeight = defaultPoseWeight;
-				//this._defaultPoseWeightDNA = new DNAEvaluator(defaultPoseWeightDNA);
-				this._startingPoseWeight = new DynamicDefaultWeight(startingPoseWeight, startingPoseWeightDNA.dnaName, startingPoseWeightDNA.evaluator, startingPoseWeightDNA.multiplier);
-			}
-
-			public BonePoseDNAConverter(BonePoseDNAConverter other)
-			{
-				this._poseToApply = other.poseToApply;
-				//this._defaultPoseWeight = other.defaultPoseWeight;
-				//this._defaultPoseWeightDNA = new DNAEvaluator(other.defaultPoseWeightDNA);
-				//this.onMissingPoseDNA = other.onMissingPoseDNA;
-				this._startingPoseWeight = other._startingPoseWeight;
-				this._modifyingDNA = new DNAEvaluatorList(other.modifierDnas);
-			}
-
-			#endregion
-
-			#region METHODS
-
-			//TODO methods for screwing with the reducer dnas? Better if we can use fancy properties with indexers
+			//TODO Timeline properties for screwing with the modifying dnas?
 
 			public List<string> UsedDNANames
 			{
 				get
 				{
 					var usedNames = new List<string>();
-					//if (!String.IsNullOrEmpty(_defaultPoseWeightDNA.dnaName))
-					//	usedNames.Add(_defaultPoseWeightDNA.dnaName);
-					if(!String.IsNullOrEmpty(_startingPoseWeight.dnaName))
-						usedNames.Add(_startingPoseWeight.dnaName);
 					for (int i = 0; i < _modifyingDNA.Count; i++)
 					{
 						if (!String.IsNullOrEmpty(_modifyingDNA[i].dnaName))
@@ -462,34 +281,57 @@ namespace UMA
 					return usedNames;
 				}
 			}
+			#endregion
 
-			public void ApplyDNA(UMAData umaData, UMASkeleton skeleton, int dnaTypeHash)
+			#region CONSTRUCTOR
+
+			public BonePoseDNAConverter() { }
+
+			public BonePoseDNAConverter(UMABonePose poseToApply, float startingPoseWeight, DNAEvaluatorList modifyingDnas)
 			{
-				/* = _defaultPoseWeight;
-				//we can cast to this because the dna field in the converter wont accept anything else
-				_activeDNA = (DynamicUMADnaBase)umaData.GetDna(dnaTypeHash);
+				this._poseToApply = poseToApply;
+				this._startingPoseWeight = startingPoseWeight;
+				if (modifyingDnas != null)
+					this._modifyingDNA = new DNAEvaluatorList(modifyingDnas);
+			}
 
-				if (!string.IsNullOrEmpty(_defaultPoseWeightDNA.dnaName))
-				{
-					_dnaIndex = System.Array.IndexOf(_activeDNA.Names, _defaultPoseWeightDNA.dnaName);
-					if (_dnaIndex > -1)
-					{
-						_livePoseWeight = _defaultPoseWeightDNA.Evaluate(_activeDNA.GetValue(_dnaIndex));
-					}
-					else
-					{
-						//dna not found obey the _onMissingPoseDNA option
-						if (_onMissingPoseDNA == onMissingPoseDNAOpts.UseZero)
-							_livePoseWeight = 0f;
-					}
-				}*/
-				//we can cast to this because the dna field in the converter wont accept anything else
-				_activeDNA = (DynamicUMADnaBase)umaData.GetDna(dnaTypeHash);
-				_livePoseWeight = _startingPoseWeight.GetWeight(_activeDNA);
+			public BonePoseDNAConverter(UMABonePose poseToApply, float startingPoseWeight = 0f, List<DNAEvaluator> modifyingDnas = null)
+			{
+				this._poseToApply = poseToApply;
+				this._startingPoseWeight = startingPoseWeight;
+				if(modifyingDnas != null)
+					this._modifyingDNA = new DNAEvaluatorList(modifyingDnas);
+			}
 
+			public BonePoseDNAConverter(BonePoseDNAConverter other)
+			{
+				this._poseToApply = other._poseToApply;
+				this.startingPoseWeight = other._startingPoseWeight;
+				this._modifyingDNA = new DNAEvaluatorList(other._modifyingDNA);
+			}
+
+			#endregion
+
+			#region METHODS
+
+			public void ApplyDNA(UMAData umaData, UMASkeleton skeleton, UMADnaBase activeDNA, float masterWeight = 1f)
+			{
+
+				_livePoseWeight = _startingPoseWeight;
+				_livePoseWeight += _modifyingDNA.Evaluate(activeDNA);
+				_livePoseWeight = _livePoseWeight * masterWeight;
+				_livePoseWeight = Mathf.Clamp(_livePoseWeight, 0f, 1f);
+
+				_poseToApply.ApplyPose(skeleton, _livePoseWeight);
+			}
+
+			public void ApplyDNA(UMAData umaData, UMASkeleton skeleton, int dnaTypeHash, float masterWeight = 1f)
+			{
+				_activeDNA = (DynamicUMADnaBase)umaData.GetDna(dnaTypeHash);
+				_livePoseWeight = _startingPoseWeight;
 				_livePoseWeight += _modifyingDNA.Evaluate(_activeDNA);
-				if (_livePoseWeight < 0f)
-					_livePoseWeight = 0f;
+				_livePoseWeight = _livePoseWeight * masterWeight;
+				_livePoseWeight = Mathf.Clamp(_livePoseWeight, 0f, 1f);
 
 				_poseToApply.ApplyPose(skeleton, _livePoseWeight);
 			}

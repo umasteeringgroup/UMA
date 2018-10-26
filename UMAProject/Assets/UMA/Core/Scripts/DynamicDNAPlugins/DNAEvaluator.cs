@@ -71,7 +71,8 @@ namespace UMA
 		/// <returns>The evaluated value</returns>
 		public float Evaluate(float dnaValue)
 		{
-			return (_evaluator.Evaluate(dnaValue)) * _multiplier;
+			float val = dnaValue;
+			return (_evaluator.Evaluate(val)) * _multiplier;
 		}
 
 		/// <summary>

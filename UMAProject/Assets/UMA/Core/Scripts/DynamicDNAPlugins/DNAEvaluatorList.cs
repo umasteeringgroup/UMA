@@ -17,12 +17,22 @@ namespace UMA
 			Average,
 			Cumulative,
 			Minumum,
-			Maximum,
-			CumulativeNormalized
+			Maximum
+		};
+		//This is used with the Cumulative option above. Each line can be added/subtracted etc from the previous one
+		public enum CalcOption
+		{
+			Add,
+			Subtract,
+			Multiply,
+			Divide
 		};
 
 		[SerializeField]
 		private List<DNAEvaluator> _dnaEvaluators = new List<DNAEvaluator>();
+
+		[SerializeField]
+		private List<CalcOption> _entryCalcOption = new List<CalcOption>();
 
 		[SerializeField]
 		[Tooltip("How the evaluated results of each entry are combined and returned.(CumulativeNormalized subtracts 0.5f from the incoming value to make the default UMA dna value of 0.5f zero)")]
@@ -33,15 +43,25 @@ namespace UMA
 		public DNAEvaluatorList()
 		{
 			//make sure the list has an empty element in
-			_dnaEvaluators.Add(new DNAEvaluator());
+			//No dont- its confusing
+			//_dnaEvaluators.Add(new DNAEvaluator());
 		}
-
+		//TODO Sort Out EntryCalcs
 		public DNAEvaluatorList(DNAEvaluatorList other)
 		{
 			_aggregationMethod = other._aggregationMethod;
 			for(int i = 0; i < other._dnaEvaluators.Count; i++)
 			{
 				_dnaEvaluators.Add(new DNAEvaluator(other._dnaEvaluators[i]));
+			}
+		}
+
+		public DNAEvaluatorList(List<DNAEvaluator> evaluators, AggregationMethodOpts aggregationMethod = AggregationMethodOpts.Average)
+		{
+			_aggregationMethod = aggregationMethod;
+			for (int i = 0; i < evaluators.Count; i++)
+			{
+				_dnaEvaluators.Add(new DNAEvaluator(evaluators[i]));
 			}
 		}
 
@@ -54,7 +74,7 @@ namespace UMA
 		/// </summary>
 		/// <param name="dna">The dna to search</param>
 		/// <returns>The evaluated value</returns>
-		public float Evaluate(DynamicUMADnaBase dna)
+		public float Evaluate(UMADnaBase dna)
 		{
 			if(_dnaEvaluators.Count > 0)
 			{
@@ -110,13 +130,13 @@ namespace UMA
 					result += vals[i];
 				}
 			}
-			if(_aggregationMethod == AggregationMethodOpts.CumulativeNormalized)
+			/*if(_aggregationMethod == AggregationMethodOpts.CumulativeNormalized)
 			{
 				for (int i = 0; i < vals.Count; i++)
 				{
 					result += (vals[i] - 0.5f);
 				}
-			}
+			}*/
 			if(_aggregationMethod == AggregationMethodOpts.Minumum)
 			{
 				if (vals.Count > 0)

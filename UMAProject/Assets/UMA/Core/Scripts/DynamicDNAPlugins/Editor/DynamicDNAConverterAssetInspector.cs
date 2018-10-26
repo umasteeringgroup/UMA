@@ -211,7 +211,7 @@ namespace UMA.Editors
 		private void DrawConvertersHelp()
 		{
 			var info1 = "DNA Converters convert dna values into modifications to your character. Different converters apply the dna in different ways. For example a Skeleton Modifier will take a dna value and convert it into transforms that are applied to the skeleton bones. A Blendshape Modifier will convert a dna value into the power value for a blendshape.";
-			var info2 = "Normally DNA Converters only do anything when the dna value is changed from its starting value, but some converters allow you to define a 'default' value (and/or a DNA name that controls the default value) and this can used to apply a modification by default. A 'Starting Pose' is a good example of this.";
+			var info2 = "Normally DNA Converters only do anything when the dna value is changed from its starting value, but some converters allow you to define a 'Starting' value and this can used to apply a modification by default. A 'Starting Pose' is a good example of this.";
 			var info3 = "Converters are applied to the character from top to bottom, you can change the order by dragging the handle next to the converter entries header in the 'View By Converter Type' view.";
 			var info4 = "Also in the 'View By Converter Type' view you can click the 'Cog' icon to rename or delete a converter instance. Click the 'Import' button to show the import area for the plugin, which allows you to import settings from another instance in various ways";
 			var info5 = "The 'View By DNA Name' tab lists all the dna names the converters can use. Expanding a dna name shows you all the converters that use that dna name in any way.";

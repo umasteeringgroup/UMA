@@ -38,7 +38,7 @@ namespace UMA
 		/// <summary>
 		/// The behaviour will assign it self to this converter, when this converter is assigned to it
 		/// </summary>
-		private DynamicDNAConverterBehaviour _convertersBehaviour;
+		private DynamicDNAConverterBehaviour _converterBehaviour;
 
 		//TODO MAKE THIS PRIVATE AFTER WE START ASSIGNING THESE TO BEHAVIOURS
 		/// <summary>
@@ -46,21 +46,17 @@ namespace UMA
 		/// </summary>
 		public DynamicUMADnaAsset _dnaAsset;
 
-		/// <summary>
-		/// The UMAData assigned to this converter by the behaviour it is assigned to (Runtime Only)
-		/// </summary>
-		private UMAData _umaData;
-
 
 		public DynamicUMADnaAsset dnaAsset
 		{
-			get { return _dnaAsset; }
+			get { return _converterBehaviour.dnaAsset; }
+			//set { _dnaAsset = value; }
 		}
 
-
-		public UMAData umaData
+		public DynamicDNAConverterBehaviour converterBehaviour
 		{
-			get { return _umaData; }
+			get { return _converterBehaviour; }
+			set { _converterBehaviour = value; }
 		}
 
 		/// <summary>
@@ -70,6 +66,66 @@ namespace UMA
 		{
 			get { return _plugins.Count; }
 		}
+
+		#region BACKWARDS COMPATIBILITY
+
+		//Helper methods to make upgrading easier. DynamicDNAConverterBehaviour used to have its own SkeletonModifiers list and StartingPose so these replicate that functionality
+		/// <summary>
+		/// Gets the first found SkeletonModifiersDNAConverterPlugin in this controllers list and returns its list of SkeletonModifiers. TIP: The controller can have multiple sets of SkeletonModifiers now. Use the GetPlugins methods to get them all.
+		/// </summary>
+		public List<SkeletonModifier> SkeletonModifiersFirst
+		{
+			get
+			{
+				if(GetPlugins(typeof(SkeletonModifiersDNAConverterPlugin)).Count > 0)
+				{
+					return ((GetPlugins(typeof(SkeletonModifiersDNAConverterPlugin))[0]) as SkeletonModifiersDNAConverterPlugin).skeletonModifiers;
+				}
+				return new List<SkeletonModifier>();
+			}
+			set
+			{
+				if (GetPlugins(typeof(SkeletonModifiersDNAConverterPlugin)).Count > 0)
+				{
+					((GetPlugins(typeof(SkeletonModifiersDNAConverterPlugin))[0]) as SkeletonModifiersDNAConverterPlugin).skeletonModifiers = value;
+				}
+			}
+		}
+
+		public UMA.PoseTools.UMABonePose StartingPoseFirst
+		{
+			get
+			{
+				var bonePosePlugins = GetPlugins(typeof(BonePoseDNAConverterPlugin));
+				if (bonePosePlugins.Count > 0)
+				{
+					for (int i = 0; i < bonePosePlugins.Count; i++)
+					{
+						if ((bonePosePlugins[i] as BonePoseDNAConverterPlugin).StartingPose != null)
+							return (bonePosePlugins[i] as BonePoseDNAConverterPlugin).StartingPose;
+					}
+				}
+				return null;
+			}
+			set
+			{
+				var bonePosePlugins = GetPlugins(typeof(BonePoseDNAConverterPlugin));
+				if (bonePosePlugins.Count > 0)
+				{
+					for (int i = 0; i < bonePosePlugins.Count; i++)
+					{
+						if ((bonePosePlugins[i] as BonePoseDNAConverterPlugin).StartingPose != null)
+						{
+							(bonePosePlugins[i] as BonePoseDNAConverterPlugin).StartingPose = value;
+							return;
+						}
+					}
+				}
+			}
+		}
+
+		#endregion
+
 		/// <summary>
 		/// Calls ApplyData on all the plugins in this converters '_plugins' list
 		/// </summary>
@@ -198,9 +254,9 @@ namespace UMA
 					if (DynamicDNAPlugin.IsValidPlugin(_plugins[i]))
 					{
 						cleanList.Add(_plugins[i]);
-						if (_plugins[i].ConverterAsset != this)
+						if (_plugins[i].converterAsset != this)
 						{
-							_plugins[i].ConverterAsset = this;
+							_plugins[i].converterAsset = this;
 #if UNITY_EDITOR
 							EditorUtility.SetDirty(_plugins[i]);
 							changed = true;
@@ -372,9 +428,9 @@ namespace UMA
 
 #if UNITY_EDITOR
 		[UnityEditor.MenuItem("UniUMA/Create/Dynamic DNA Converter Asset")]//TODO Check this is not the same menu entry that UMA uses
-		public static void CreateDynamicDNAConverterAsset()
+		public static DynamicDNAConverterAsset CreateDynamicDNAConverterAsset(string newAssetPath = "", bool selectCreatedAsset = true, string baseName = "New")
 		{
-			UMA.CustomAssetUtility.CreateAsset<DynamicDNAConverterAsset>();
+			return UMA.CustomAssetUtility.CreateAsset<DynamicDNAConverterAsset>(newAssetPath, selectCreatedAsset, baseName);
 		}
 #endif
 	}

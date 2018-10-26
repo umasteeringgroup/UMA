@@ -11,25 +11,23 @@ namespace UMA
 	public class SkeletonModifiersDNAConverterPlugin : DynamicDNAPlugin
 	{
 		[SerializeField]
-		private List<DynamicDNAConverterBehaviour.SkeletonModifier> _skeletonModifiers = new List<DynamicDNAConverterBehaviour.SkeletonModifier>();
+		private List<SkeletonModifier> _skeletonModifiers = new List<SkeletonModifier>();
 
-		public List<DynamicDNAConverterBehaviour.SkeletonModifier> skeletonModifiers
+		public List<SkeletonModifier> skeletonModifiers
 		{
 			get { return _skeletonModifiers; }
 			set { _skeletonModifiers = value; }
 		}
-		#region REQUIRED DYNAMICDNAPLUGIN PROPERTIES
 
 		public override string PluginHelp
 		{
 			get { return "Skeleton DNA Converters use dna values to transform the bones in an avatars skeleton."; }
 		}
 
-		#endregion
 
 		#region PUBLIC METHODS
 
-		public void AddModifier(DynamicDNAConverterBehaviour.SkeletonModifier modifier)
+		public void AddModifier(SkeletonModifier modifier)
 		{
 			_skeletonModifiers.Add(modifier);
 		}
@@ -65,24 +63,34 @@ namespace UMA
 		public override void ApplyDNA(UMAData umaData, UMASkeleton skeleton, int dnaTypeHash)
 		{
 			var umaDna = umaData.GetDna(dnaTypeHash);
+			var masterWeightCalc = masterWeight.GetWeight(umaDna);
 			for (int i = 0; i < _skeletonModifiers.Count; i++)
 			{
 				_skeletonModifiers[i].umaDNA = umaDna;
 
 				var thisHash = (_skeletonModifiers[i].hash != 0) ? _skeletonModifiers[i].hash : UMAUtils.StringToHash(_skeletonModifiers[i].hashName);
 				//With these ValueX.x is the calculated value and ValueX.y is min and ValueX.z is max
-				var thisValueX = _skeletonModifiers[i].ValueX;
-				var thisValueY = _skeletonModifiers[i].ValueY;
-				var thisValueZ = _skeletonModifiers[i].ValueZ;
+				var thisValueX = _skeletonModifiers[i].CalculateValueX(umaDna, masterWeightCalc);
+				var thisValueY = _skeletonModifiers[i].CalculateValueY(umaDna, masterWeightCalc);
+				var thisValueZ = _skeletonModifiers[i].CalculateValueZ(umaDna, masterWeightCalc);
 
+				//If this is the bone that the converterbehaviour has defined as the overallScaleBone
+				//we need to include the converterBehaviours overallScale modifier in the calculation aswell
 				//use the overallScaleBoneHash property instead so the user can define the bone that is used here (by default its the 'Position' bone in an UMA Rig)
-				/*if (_skeletonModifiers[i].hash == overallScaleBoneHash && _skeletonModifiers[i].property == DynamicDNAConverterBehaviour.SkeletonModifier.SkeletonPropType.Scale)
+				/*if (_skeletonModifiers[i].hash == converterAsset.converterBehaviour.overallScaleBoneHash && _skeletonModifiers[i].property == SkeletonModifier.SkeletonPropType.Scale)
 				{
-					var calcVal = thisValueX.x - _skeletonModifiers[i].valuesX.val.value + overallScale;
-					overallScaleCalc = Mathf.Clamp(calcVal, thisValueX.y, thisValueX.z);
-					skeleton.SetScale(_skeletonModifiers[i].hash, new Vector3(overallScaleCalc, overallScaleCalc, overallScaleCalc));
+					//which is currently done like this- but I dont like it- it should be * overallScale not +
+					var calcVal = thisValueX.x - _skeletonModifiers[i].valuesX.val.value + converterAsset.converterBehaviour.overallScale;
+					var overallScaleCalc = Mathf.Clamp(calcVal, thisValueX.y, thisValueX.z);
+					//skeleton.SetScale(_skeletonModifiers[i].hash, new Vector3(overallScaleCalc, overallScaleCalc, overallScaleCalc));
+					//use MasterWeight
+					//this feels wrong- but its right currently, skeleton Modifiers apply the overallScale, so if they are disabled they wont
+					//probably the converterbehaviour should do this- which will make the startingposes wrong (GRRR!!!)
+					var currPos = skeleton.GetPosition(_skeletonModifiers[i].hash);
+					var currRot = skeleton.GetRotation(_skeletonModifiers[i].hash);
+					skeleton.Lerp(_skeletonModifiers[i].hash, currPos, new Vector3(overallScaleCalc, overallScaleCalc, overallScaleCalc), currRot, masterWeightCalc);
 				}
-				else */if (_skeletonModifiers[i].property == DynamicDNAConverterBehaviour.SkeletonModifier.SkeletonPropType.Position)
+				else*/ if (_skeletonModifiers[i].property == SkeletonModifier.SkeletonPropType.Position)
 				{
 					skeleton.SetPositionRelative(thisHash,
 						new Vector3(
@@ -90,7 +98,7 @@ namespace UMA
 							Mathf.Clamp(thisValueY.x, thisValueY.y, thisValueY.z),
 							Mathf.Clamp(thisValueZ.x, thisValueZ.y, thisValueZ.z)));
 				}
-				else if (_skeletonModifiers[i].property == DynamicDNAConverterBehaviour.SkeletonModifier.SkeletonPropType.Rotation)
+				else if (_skeletonModifiers[i].property == SkeletonModifier.SkeletonPropType.Rotation)
 				{
 					skeleton.SetRotationRelative(thisHash,
 						Quaternion.Euler(new Vector3(
@@ -98,7 +106,7 @@ namespace UMA
 							Mathf.Clamp(thisValueY.x, thisValueY.y, thisValueY.z),
 							Mathf.Clamp(thisValueZ.x, thisValueZ.y, thisValueZ.z))), 1f);
 				}
-				else if (_skeletonModifiers[i].property == DynamicDNAConverterBehaviour.SkeletonModifier.SkeletonPropType.Scale)
+				else if (_skeletonModifiers[i].property == SkeletonModifier.SkeletonPropType.Scale)
 				{
 					skeleton.SetScale(thisHash,
 						new Vector3(
@@ -133,10 +141,15 @@ namespace UMA
 				return 16f + (/*EditorGUIUtility.singleLineHeight +*/ (EditorGUIUtility.standardVerticalSpacing * 2));
 			}
 		}
-
+		/// <summary>
+		/// Imports SkeletomModifiers from another object into this SkeletonModifiersDNAConverterPlugin
+		/// </summary>
+		/// <param name="pluginToImport">You can import another SkeletonModifiersDNAConverterPlugin or settings from a legacy DynamicDNAConverterBehaviour prefab</param>
+		/// <param name="importMethod">Use 0 to Add to the existing list, 1 to Replace the existing list, 2 to only Overwrite anything in the existing list with matching modifiers in the incoming list, or 3 to Overwrite any existing entries and then Add any entries that were not already in the existing list</param>
+		/// <returns>True if any settings were imported successfully, otherwise false</returns>
 		public override bool ImportSettings(Object pluginToImport, int importMethod)
 		{
-			List<DynamicDNAConverterBehaviour.SkeletonModifier> importedSkeletonModifiers = new List<DynamicDNAConverterBehaviour.SkeletonModifier>();
+			List<SkeletonModifier> importedSkeletonModifiers = new List<SkeletonModifier>();
 			if (pluginToImport.GetType() == this.GetType())
 				importedSkeletonModifiers = (pluginToImport as SkeletonModifiersDNAConverterPlugin)._skeletonModifiers;
 			else
@@ -153,10 +166,8 @@ namespace UMA
 
 			if(importedSkeletonModifiers != null)
 			{
-				//Make sure all the bone hashes are there- OBSOLETE
-				//AddDNABoneHashes(DDCB, 0); 
-				//now add the modifiers
-				var currentModifiers = importMethod != 0 ? _skeletonModifiers : new List<DynamicDNAConverterBehaviour.SkeletonModifier>();
+				// add the modifiers
+				var currentModifiers = importMethod != 0 ? _skeletonModifiers : new List<SkeletonModifier>();
 				var incomingModifiers = importedSkeletonModifiers;
 
 				List<string> existingDNANames = new List<string>();
@@ -269,7 +280,7 @@ namespace UMA
 					}
 					if (!existed)
 					{
-						currentModifiers.Add(new DynamicDNAConverterBehaviour.SkeletonModifier(incomingModifiers[i]));
+						currentModifiers.Add(new SkeletonModifier(incomingModifiers[i]));
 					}
 				}
 				//now if the method is overwrite or addoverwrite we need to overwrite any existing values
@@ -315,11 +326,11 @@ namespace UMA
 			}
 		}
 
-		private void ProcessSkelModOverwrites(List<DynamicDNAConverterBehaviour.SkeletonModifier.spVal.spValValue.spValModifier> currentMods, List<DynamicDNAConverterBehaviour.SkeletonModifier.spVal.spValValue.spValModifier> incomingMods, List<string> existingDNANames)
+		private void ProcessSkelModOverwrites(List<SkeletonModifier.spVal.spValValue.spValModifier> currentMods, List<SkeletonModifier.spVal.spValValue.spValModifier> incomingMods, List<string> existingDNANames)
 		{
 			int modCount = 0;
-			DynamicDNAConverterBehaviour.SkeletonModifier.spVal.spValValue.spValModifier tempMods;
-			DynamicDNAConverterBehaviour.SkeletonModifier.spVal.spValValue.spValModifier tempNextMods;
+			SkeletonModifier.spVal.spValValue.spValModifier tempMods;
+			SkeletonModifier.spVal.spValValue.spValModifier tempNextMods;
 			modCount = incomingMods.Count;
 			for (int vi = 0; vi < modCount; vi++)
 			{
@@ -343,7 +354,7 @@ namespace UMA
 								//we need to make that command Multiply by 1 (or delete the line [check in the behaviour that this would be handled right])
 								if (mi + 1 != currentMods.Count && currentMods[mi + 1].modifier.ToString().IndexOf("DNA") == -1)
 								{
-									currentMods[mi + 1].modifier = DynamicDNAConverterBehaviour.SkeletonModifier.spVal.spValValue.spValModifier.spValModifierType.Multiply;
+									currentMods[mi + 1].modifier = SkeletonModifier.spVal.spValValue.spValModifier.spValModifierType.Multiply;
 									currentMods[mi + 1].modifierValue = 1f;
 								}
 							}
@@ -358,7 +369,7 @@ namespace UMA
 								}
 								else
 								{
-									var newMod = new DynamicDNAConverterBehaviour.SkeletonModifier.spVal.spValValue.spValModifier();
+									var newMod = new SkeletonModifier.spVal.spValValue.spValModifier();
 									newMod.modifier = tempNextMods.modifier;
 									newMod.modifierValue = tempNextMods.modifierValue;
 									//we need to add a line in current that matches the one in temp
@@ -374,7 +385,7 @@ namespace UMA
 					if (!foundInCurrent)
 					{
 						//we need to add this dna entry (and any following addMultiply/subtractdivide opertaion) to current
-						var newDNAMod = new DynamicDNAConverterBehaviour.SkeletonModifier.spVal.spValValue.spValModifier();
+						var newDNAMod = new SkeletonModifier.spVal.spValValue.spValModifier();
 						newDNAMod.DNATypeName = tempMods.DNATypeName;
 						newDNAMod.modifier = tempMods.modifier;
 						newDNAMod.modifierValue = tempMods.modifierValue;
@@ -383,7 +394,7 @@ namespace UMA
 						if (vi + 1 != modCount && incomingMods[vi + 1].modifier.ToString().IndexOf("DNA") == -1)
 						{
 							tempNextMods = incomingMods[vi + 1];
-							var newOpMod = new DynamicDNAConverterBehaviour.SkeletonModifier.spVal.spValValue.spValModifier();
+							var newOpMod = new SkeletonModifier.spVal.spValValue.spValModifier();
 							newOpMod.modifier = tempNextMods.modifier;
 							newOpMod.modifierValue = tempNextMods.modifierValue;
 							currentMods.Add(newOpMod);
@@ -403,7 +414,7 @@ namespace UMA
 		/// optionally filtering by a given name, in which case the returned list count will only be greater than zero if the modifier used the name
 		/// </summary>
 		/// <returns></returns>
-		private List<string> SkeletonModifierUsedDNANames(DynamicDNAConverterBehaviour.SkeletonModifier skeletonModifier, string dnaName = "")
+		private List<string> SkeletonModifierUsedDNANames(SkeletonModifier skeletonModifier, string dnaName = "")
 		{
 			List<string> usedNames = new List<string>();
 			for (int xi = 0; xi < skeletonModifier.valuesX.val.modifiers.Count; xi++)

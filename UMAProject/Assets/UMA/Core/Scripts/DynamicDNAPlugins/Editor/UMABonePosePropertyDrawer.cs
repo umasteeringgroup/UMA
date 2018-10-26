@@ -15,6 +15,7 @@ namespace UMA.PoseTools
 
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
+			EditorGUI.BeginProperty(position, label, property);
 			if(inspectIcon == null)
 			{
 				inspectIcon = EditorGUIUtility.FindTexture("ViewToolOrbit");
@@ -45,6 +46,7 @@ namespace UMA.PoseTools
 					inspectorWindow.Show();
 				}
 			}
+			EditorGUI.EndProperty();
 		}
 
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)

@@ -59,12 +59,76 @@ namespace UMA.Editors
 
 		private void ExpandNonDefaultInitialValues()
 		{
-
+			bool expandMain = false;
+			SerializedProperty thisSkelEl = null;
+			string thisSkeModProp = null;
+			SerializedObject thisModObj = null;
+			for (int i = 0; i < _cachedArrayElementsByIndex.Count; i++)
+			{
+				thisSkelEl = _cachedArrayElementsByIndex[i].element;
+				if (thisModObj == null)
+					thisModObj = thisSkelEl.serializedObject;
+				expandMain = false;
+				thisSkeModProp = thisSkelEl.FindPropertyRelative("_property").enumNames[thisSkelEl.FindPropertyRelative("_property").enumValueIndex];
+				if (thisSkeModProp != "")
+				{
+					if (thisSkeModProp == "Position" || thisSkeModProp == "Rotation")
+					{
+						thisSkelEl.FindPropertyRelative("_valuesX").isExpanded = thisSkelEl.FindPropertyRelative("_valuesX").FindPropertyRelative("_val").FindPropertyRelative("_value").floatValue != 0f;
+						thisSkelEl.FindPropertyRelative("_valuesY").isExpanded = thisSkelEl.FindPropertyRelative("_valuesY").FindPropertyRelative("_val").FindPropertyRelative("_value").floatValue != 0f;
+						thisSkelEl.FindPropertyRelative("_valuesZ").isExpanded = thisSkelEl.FindPropertyRelative("_valuesZ").FindPropertyRelative("_val").FindPropertyRelative("_value").floatValue != 0f;
+						if (thisSkelEl.FindPropertyRelative("_valuesX").isExpanded || thisSkelEl.FindPropertyRelative("_valuesY").isExpanded || thisSkelEl.FindPropertyRelative("_valuesZ").isExpanded)
+							expandMain = true;
+					}
+					if (thisSkeModProp == "Scale")
+					{
+						thisSkelEl.FindPropertyRelative("_valuesX").isExpanded = thisSkelEl.FindPropertyRelative("_valuesX").FindPropertyRelative("_val").FindPropertyRelative("_value").floatValue != 1f;
+						thisSkelEl.FindPropertyRelative("_valuesY").isExpanded = thisSkelEl.FindPropertyRelative("_valuesY").FindPropertyRelative("_val").FindPropertyRelative("_value").floatValue != 1f;
+						thisSkelEl.FindPropertyRelative("_valuesZ").isExpanded = thisSkelEl.FindPropertyRelative("_valuesZ").FindPropertyRelative("_val").FindPropertyRelative("_value").floatValue != 1f;
+						if (thisSkelEl.FindPropertyRelative("_valuesX").isExpanded || thisSkelEl.FindPropertyRelative("_valuesY").isExpanded || thisSkelEl.FindPropertyRelative("_valuesZ").isExpanded)
+							expandMain = true;
+					}
+				}
+				thisSkelEl.isExpanded = expandMain;
+			}
+			if (thisModObj != null)
+				thisModObj.ApplyModifiedProperties();
+			CacheArrayElementsByIndex(true);
 		}
 
 		private void ResetInitialValuesToDefaults()
 		{
-
+			if (EditorUtility.DisplayDialog("Confirm Reset", "Will reset only the Initial Values of each modifier, other settings will remain intact. There is no undo for this action, are you sure?", "Yes", "Cancel"))
+			{
+				SerializedProperty thisSkelEl = null;
+				string thisSkeModProp = null;
+				SerializedObject thisModObj = null;
+				for (int i = 0; i < _cachedArrayElementsByIndex.Count; i++)
+				{
+					thisSkelEl = _cachedArrayElementsByIndex[i].element;
+					if (thisModObj == null)
+						thisModObj = thisSkelEl.serializedObject;
+					thisSkeModProp = thisSkelEl.FindPropertyRelative("_property").enumNames[thisSkelEl.FindPropertyRelative("_property").enumValueIndex];
+					if (thisSkeModProp != "")
+					{
+						if (thisSkeModProp == "Position" || thisSkeModProp == "Rotation")
+						{
+							thisSkelEl.FindPropertyRelative("_valuesX").FindPropertyRelative("_val").FindPropertyRelative("_value").floatValue = 0f;
+							thisSkelEl.FindPropertyRelative("_valuesY").FindPropertyRelative("_val").FindPropertyRelative("_value").floatValue = 0f;
+							thisSkelEl.FindPropertyRelative("_valuesZ").FindPropertyRelative("_val").FindPropertyRelative("_value").floatValue = 0f;
+						}
+						if (thisSkeModProp == "Scale")
+						{
+							thisSkelEl.FindPropertyRelative("_valuesX").FindPropertyRelative("_val").FindPropertyRelative("_value").floatValue = 1f;
+							thisSkelEl.FindPropertyRelative("_valuesY").FindPropertyRelative("_val").FindPropertyRelative("_value").floatValue = 1f;
+							thisSkelEl.FindPropertyRelative("_valuesZ").FindPropertyRelative("_val").FindPropertyRelative("_value").floatValue = 1f;
+						}
+					}
+				}
+				if (thisModObj != null)
+					thisModObj.ApplyModifiedProperties();
+				CacheArrayElementsByIndex(true);
+			}
 		}
 
 		protected override void DrawElementsSearch(Rect rect)
@@ -97,7 +161,7 @@ namespace UMA.Editors
 				if(_searchFilterType == searchFilterTypeOpts.PositionModifiers || _searchFilterType == searchFilterTypeOpts.RotationModifiers || _searchFilterType == searchFilterTypeOpts.ScaleModifiers)
 				{
 					var thisSkelEl = _cachedArrayElementsByIndex[index].element;
-					string thisProperty = thisSkelEl.FindPropertyRelative("property").enumNames[thisSkelEl.FindPropertyRelative("property").enumValueIndex];
+					string thisProperty = thisSkelEl.FindPropertyRelative("_property").enumNames[thisSkelEl.FindPropertyRelative("_property").enumValueIndex];
 					if (_searchFilterType == searchFilterTypeOpts.PositionModifiers && thisProperty.IndexOf("Position", StringComparison.CurrentCultureIgnoreCase) == -1)
 						return false;
 					if (_searchFilterType == searchFilterTypeOpts.RotationModifiers && thisProperty.IndexOf("Rotation", StringComparison.CurrentCultureIgnoreCase) == -1)
@@ -116,14 +180,14 @@ namespace UMA.Editors
 					bool _continue = true;
 					foreach (string xyz in XYZ)
 					{
-						mods = thisSkelEl.FindPropertyRelative("values" + xyz).FindPropertyRelative("val").FindPropertyRelative("modifiers");
+						mods = thisSkelEl.FindPropertyRelative("_values" + xyz).FindPropertyRelative("_val").FindPropertyRelative("_modifiers");
 						for (int mi = 0; mi < mods.arraySize; mi++)
 						{
 							thisMod = mods.GetArrayElementAtIndex(mi);
-							modsi = thisMod.FindPropertyRelative("modifier").enumValueIndex;
+							modsi = thisMod.FindPropertyRelative("_modifier").enumValueIndex;
 							if (modsi > 3)
 							{
-								if (thisMod.FindPropertyRelative("DNATypeName").stringValue.IndexOf(elementSearchString, StringComparison.CurrentCultureIgnoreCase) > -1)
+								if (thisMod.FindPropertyRelative("_DNATypeName").stringValue.IndexOf(elementSearchString, StringComparison.CurrentCultureIgnoreCase) > -1)
 									_continue = false;
 							}
 						}
@@ -185,7 +249,7 @@ namespace UMA.Editors
 			{
 				//do it!
 				Debug.Log("Created a New Modifier");
-				var newModifier = new DynamicDNAConverterBehaviour.SkeletonModifier(_chosenBoneNameToAdd, UMAUtils.StringToHash(_chosenBoneNameToAdd), (DynamicDNAConverterBehaviour.SkeletonModifier.SkeletonPropType)_chosenPropertyToAdd);
+				var newModifier = new SkeletonModifier(_chosenBoneNameToAdd, UMAUtils.StringToHash(_chosenBoneNameToAdd), (SkeletonModifier.SkeletonPropType)_chosenPropertyToAdd);
 				(_target as SkeletonModifiersDNAConverterPlugin).AddModifier(newModifier);
 				_chosenBoneNameToAdd = "";
 				serializedObject.Update();
@@ -201,7 +265,7 @@ namespace UMA.Editors
 			for (int i = 0; i < _cachedArrayElementsByIndex.Count; i++)
 			{
 				var thisSkelMod = _cachedArrayElementsByIndex[i].element;
-				if (thisSkelMod.FindPropertyRelative("property").enumValueIndex == _chosenPropertyToAdd && thisSkelMod.FindPropertyRelative("hash").intValue == _chosenBoneHashToAdd)
+				if (thisSkelMod.FindPropertyRelative("_property").enumValueIndex == _chosenPropertyToAdd && thisSkelMod.FindPropertyRelative("_hash").intValue == _chosenBoneHashToAdd)
 				{
 					return "There was already a Skeleton Modifier for bone: "+_chosenBoneNameToAdd+" for property: "+ _propertyArray[_chosenPropertyToAdd];
 				}

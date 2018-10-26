@@ -58,7 +58,7 @@ namespace UMA
 			_onMissingDNA = other._onMissingDNA;
 		}
 
-		public DynamicDefaultWeight(float defaultWeight, string dnaForWeightName, DNAEvaluationGraph dnaForWeightGraph = null, float dnaForWeightMultiplier = 1f, MissingDNAForWeightOpts onMissingDNA = MissingDNAForWeightOpts.UseDefaultWeight)
+		public DynamicDefaultWeight(float defaultWeight = 0f, string dnaForWeightName = "", DNAEvaluationGraph dnaForWeightGraph = null, float dnaForWeightMultiplier = 1f, MissingDNAForWeightOpts onMissingDNA = MissingDNAForWeightOpts.UseDefaultWeight)
 		{
 			_defaultWeight = defaultWeight;
 			if (!string.IsNullOrEmpty(dnaForWeightName))

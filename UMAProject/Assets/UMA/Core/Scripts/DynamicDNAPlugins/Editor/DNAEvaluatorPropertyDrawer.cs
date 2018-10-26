@@ -176,10 +176,12 @@ namespace UMA.Editors
 				EditorGUI.PropertyField(dnaNameRect, dnaNameProp, GUIContent.none);
 			else
 			{
-				_dynamicDNAPlugin.ConverterAsset.DNANamesPopup(dnaNameRect, dnaNameProp, dnaNameProp.stringValue);
+				_dynamicDNAPlugin.converterAsset.DNANamesPopup(dnaNameRect, dnaNameProp, dnaNameProp.stringValue);
 			}
+			EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(dnaNameProp.stringValue));
 			EditorGUI.PropertyField(evaluatorRect, evaluatorProp, GUIContent.none);
 			EditorGUI.PropertyField(intensityRect, intensityProp, GUIContent.none);
+			EditorGUI.EndDisabledGroup();
 
 			EditorGUI.indentLevel = prevIndent;
 		}

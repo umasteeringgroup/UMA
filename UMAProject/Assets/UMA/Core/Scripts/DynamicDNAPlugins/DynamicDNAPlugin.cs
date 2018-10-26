@@ -78,7 +78,7 @@ namespace UMA
 		/// <summary>
 		/// The converter asset this plugin has been assigned to. This property is set by the converter when it is inspected or starts
 		/// </summary>
-		public DynamicDNAConverterAsset ConverterAsset
+		public DynamicDNAConverterAsset converterAsset
 		{
 			get { return _converterAsset; }
 			set { _converterAsset = value; }
@@ -94,7 +94,7 @@ namespace UMA
 			}
 		}
 
-		public UMAData umaData
+		/*public UMAData umaData
 		{
 			get
 			{
@@ -102,7 +102,7 @@ namespace UMA
 					return _converterAsset.umaData;
 				return null;
 			}
-		}
+		}*/
 
 		#endregion
 
@@ -398,7 +398,8 @@ namespace UMA
 				var weightedDNA = new DynamicUMADna();
 				if (masterWeight > 0)
 				{
-					weightedDNA.ImportUMADnaValues(incomingDna);
+					weightedDNA._names = incomingDna.Names;
+					weightedDNA._values = incomingDna.Values;
 					for (int i = 0; i < incomingDna.Count; i++)
 					{
 						weightedDNA.SetValue(i, weightedDNA.GetValue(i) * masterWeight);
