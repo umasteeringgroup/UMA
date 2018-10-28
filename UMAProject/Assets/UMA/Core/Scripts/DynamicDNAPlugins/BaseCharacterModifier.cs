@@ -50,8 +50,11 @@ namespace UMA
 		[SerializeField]
 		private float _scale = 1f;
 
+		//This is the field thats assigned in the editor, but we use the hash
+#pragma warning disable 0219
 		[SerializeField]
 		private string _bone = "Position";
+#pragma warning restore 0219
 
 		[SerializeField]
 		private int _scaleBoneHash = -1084586333;//hash of the Position Bone
@@ -548,5 +551,20 @@ namespace UMA
 		}
 		#endregion
 
+		#region ATTRIBUTES
+
+		[System.AttributeUsage(System.AttributeTargets.Field)]
+		public class ConfigAttribute : System.Attribute
+		{
+			public bool alwaysExpanded = false;
+
+			public ConfigAttribute(bool alwaysExpanded)
+			{
+				this.alwaysExpanded = alwaysExpanded;
+			}
+
+		}
+
+		#endregion
 	}
 }

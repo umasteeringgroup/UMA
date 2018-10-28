@@ -201,6 +201,7 @@ namespace UMA
 			return true;
 		}
 
+#pragma warning disable 618
 		private bool ImportLegacySettings(DynamicDNAConverterBehaviour DDCB, int importMethod)
 		{
 			if(importMethod == 1)
@@ -209,11 +210,12 @@ namespace UMA
 				_poseDNAConverters.Add(new BonePoseDNAConverter(DDCB.startingPose, DDCB.startingPoseWeight));
 			return false;
 		}
+#pragma warning restore 618
 
 #endif
-			#endregion
+		#endregion
 
-			#region SPECIAL TYPES
+		#region SPECIAL TYPES
 
 		[System.Serializable]
 		public class BonePoseDNAConverter
@@ -240,7 +242,7 @@ namespace UMA
 
 			private float _livePoseWeight = 0f;
 
-			private int _dnaIndex = -1;
+			//private int _dnaIndex = -1;
 
 			private DynamicUMADnaBase _activeDNA;
 

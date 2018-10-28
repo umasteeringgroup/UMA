@@ -18,14 +18,14 @@ namespace UMA.CharacterSystem.Editors
 
 		DynamicDNAConverterBehaviour _target;
 
+		SerializedProperty converterControllerProp;
+
 		//Set by the customizer in play mode
 		public UMAData umaData = null;
 		//Set by the customizer in play mode
 		public DynamicDNAConverterCustomizer thisDDCC = null;
 		
 		//Set by the customizer in play mode
-		//DECIDE ON THE FREAKING NAME FOR THIS
-		//public bool playMode = false;
 		//minimalMode is the mode that is used when a DynamicDnaConverterBehaviour is shown in a DynamicDnaConverterCustomizer rather than when its inspected directly
 		public bool minimalMode = false;
 
@@ -38,25 +38,30 @@ namespace UMA.CharacterSystem.Editors
 		//DynamicUMADNAAsset Editor
 		private Editor thisDUDA = null;
 		public string createDnaAssetName = "";
-		//the DynamicDNAConverterAssetInspector
-		private Editor DDCCAEditor = null;
+		//the DynamicDNAConverterControllerInspector
+		private Editor DDCCEditor = null;
 
-		//Foldouts Expanded bools
-		bool dnaAssetInfoExpanded = false;
+		//Upgrade fields and  bools
+		private bool _upgradeExpanded = false;
 		bool upgradeInfoExpanded = false;
 
 		string upgradeInfo1 = "DynamicDNAConverters now give you the ability to multiple kinds of converters in the same behaviour! This means the same dna can control your SkeletonModifers, Blendshapes, BonePoses etc";
 		string upgradeInfo2 = "The system also comes with a simple API so you can add your own plugins to the system, allowing you to make dna make any changes you can imagine.";
 		string upgradeInfo3 = "Clicking the 'Backup & Upgrade' button below will make a backup of this behaviour and then transfer all its settings over to the new system.";
 
+		//We only draw the old GUI if the legacy fields (_skeletonModifiers and _startingPose) have values
+		bool drawOldGUI = true;
+
 		//post upgrade info? Explain where starting poses are now? Or show a Wiki?
 
 		GUIStyle foldoutTipStyle;
+		bool overallModifiersHelpExpanded = false;
 
 		//Referenced by the customizer in play mode
 		[System.NonSerialized]
 		public bool initialized = false;
 
+#pragma warning disable 618
 		private void Init()
 		{
 			if (minimalMode)
@@ -72,8 +77,20 @@ namespace UMA.CharacterSystem.Editors
 
 			_target = target as DynamicDNAConverterBehaviour;
 
+			converterControllerProp = serializedObject.FindProperty("_converterController");
+			if(converterControllerProp.objectReferenceValue == null)
+			{
+				if (_target.skeletonModifiers.Count > 0 || _target.startingPose != null)
+					drawOldGUI = true;
+			}
+			else
+			{
+				drawOldGUI = false;
+			}
+
 			initialized = true;
 		}
+#pragma warning restore 618
 
 		void UpdateNames()
 		{
@@ -114,18 +131,6 @@ namespace UMA.CharacterSystem.Editors
 
 			EditorGUILayout.Space();
 
-			var converterControllerProp = serializedObject.FindProperty("_converterController");
-			if(converterControllerProp.objectReferenceValue == null)
-			{
-				if (_legacyDrawer == null)
-				{
-					_legacyDrawer = new LegacyDynamicDNAConverterGUIDrawer();
-					_legacyDrawer.Init(target, serializedObject, umaData, thisDDCC, bonesInSkeleton, minimalMode);
-				}
-				_legacyDrawer.DrawLegacyStartingPoseGUI();
-				EditorGUILayout.Space();
-			}
-
 			DrawOverallModifiersGUI();
 
 			EditorGUILayout.Space();
@@ -136,22 +141,18 @@ namespace UMA.CharacterSystem.Editors
 		private void DrawDNAAssetGUI()
 		{
 			SerializedProperty dnaAsset = serializedObject.FindProperty("dnaAsset");
-			dnaAsset.isExpanded = EditorGUILayout.Foldout(dnaAsset.isExpanded, "Dynamic DNA Asset", foldoutTipStyle);
-			if (dnaAsset.isExpanded)
+			if(drawOldGUI)
+				dnaAsset.isExpanded = EditorGUILayout.Foldout(dnaAsset.isExpanded, "Dynamic DNA Asset", foldoutTipStyle);
+			if (dnaAsset.isExpanded || !drawOldGUI)
 			{
 				GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
-				EditorGUI.indentLevel++;
-				dnaAssetInfoExpanded = EditorGUILayout.Foldout(dnaAssetInfoExpanded, "INFO");
-				if (dnaAssetInfoExpanded)
-					EditorGUILayout.HelpBox("The DynmicDNAAsset is the DNA this converter will apply to the skeleton. The DNA consists of names and associated values. Often you display these names as 'sliders'. The values set by these sliders change an Avatar's body proportions by modifying its skeleton bones by the dna value, according to the 'DNA Converter Settings' you set in the 'DNA Converter Settings' section.", MessageType.Info);
-
 				if (dnaAsset.objectReferenceValue == null)
 				{
 					//show a tip that people need to create or assign a dna asset
 					EditorGUILayout.HelpBox("Create or assign a DNA Asset this converter will use", MessageType.Info);
 				}
 				EditorGUI.BeginChangeCheck();
-				EditorGUILayout.PropertyField(dnaAsset, new GUIContent("DNA Asset", "A DynamicUMADnaAsset contains a list of names that define the 'DNA' that will be used to modify the Avatars Skeleton. Often displayed in the UI as 'sliders'"));
+				EditorGUILayout.PropertyField(dnaAsset, new GUIContent("DNA Asset", "A DynamicUMADnaAsset contains a list of names that define the 'DNA' that the DNA Converters use when modifying the Avatar. Often displayed in the UI as 'sliders'"));
 				if (EditorGUI.EndChangeCheck())
 				{
 					UpdateNames();
@@ -213,7 +214,7 @@ namespace UMA.CharacterSystem.Editors
 						UpdateNames();
 					}
 				}
-				EditorGUI.indentLevel--;
+				//EditorGUI.indentLevel--;
 				GUIHelper.EndVerticalPadded(3);
 			}
 			serializedObject.ApplyModifiedProperties();
@@ -221,11 +222,13 @@ namespace UMA.CharacterSystem.Editors
 
 		private void DrawDNAConvertersGUI()
 		{
-			var converterControllerProp = serializedObject.FindProperty("_converterController");
-			converterControllerProp.isExpanded = EditorGUILayout.Foldout(converterControllerProp.isExpanded, "DNA Converter Settings", foldoutTipStyle);
-			if (converterControllerProp.isExpanded)
+			if(drawOldGUI)
+				converterControllerProp.isExpanded = EditorGUILayout.Foldout(converterControllerProp.isExpanded, "DNA Converter Settings", foldoutTipStyle);
+			if (converterControllerProp.isExpanded || !drawOldGUI)
 			{
-				GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
+				//For some reason this is more indented than the one above and the one below- even if I dont draw the one above (DNA Asset)!!??
+				GUIHelper.BeginVerticalPadded(0, new Color(0.75f, 0.875f, 1f, 0.3f));
+				GUILayout.Space(3);
 				EditorGUI.BeginChangeCheck();
 				EditorGUILayout.PropertyField(converterControllerProp);
 				if (EditorGUI.EndChangeCheck())
@@ -233,7 +236,7 @@ namespace UMA.CharacterSystem.Editors
 					//Make sure the converterController has this target as its converterBehaviour value
 					if(converterControllerProp.objectReferenceValue != null)
 					{
-						((DynamicDNAConverterAsset)converterControllerProp.objectReferenceValue).converterBehaviour = target as DynamicDNAConverterBehaviour;
+						((DynamicDNAConverterController)converterControllerProp.objectReferenceValue).converterBehaviour = target as DynamicDNAConverterBehaviour;
 						//MakeDirty and save? 
 						//I think ScriptableObjects just change anyway when you set values direct
 						//TODO CONFIRM
@@ -242,12 +245,12 @@ namespace UMA.CharacterSystem.Editors
 
 				if (converterControllerProp.objectReferenceValue != null)
 				{
-					if (DDCCAEditor == null)
-						DDCCAEditor = Editor.CreateEditor((DynamicDNAConverterAsset)converterControllerProp.objectReferenceValue, typeof(DynamicDNAConverterAssetInspector));
-					else if (DDCCAEditor.target != (DynamicDNAConverterAsset)converterControllerProp.objectReferenceValue)
-						DDCCAEditor = Editor.CreateEditor((DynamicDNAConverterAsset)converterControllerProp.objectReferenceValue, typeof(DynamicDNAConverterAssetInspector));
-
-					DDCCAEditor.OnInspectorGUI();
+					if (DDCCEditor == null)
+						DDCCEditor = Editor.CreateEditor((DynamicDNAConverterController)converterControllerProp.objectReferenceValue, typeof(DynamicDNAConverterControllerInspector));
+					else if (DDCCEditor.target != (DynamicDNAConverterController)converterControllerProp.objectReferenceValue)
+						DDCCEditor = Editor.CreateEditor((DynamicDNAConverterController)converterControllerProp.objectReferenceValue, typeof(DynamicDNAConverterControllerInspector));
+					GUILayout.Space(5);
+					DDCCEditor.OnInspectorGUI();
 				}
 				else
 				{
@@ -258,35 +261,88 @@ namespace UMA.CharacterSystem.Editors
 						_legacyDrawer.Init(target, serializedObject, umaData, thisDDCC, bonesInSkeleton, minimalMode);
 					}
 					_legacyDrawer.DrawLegacySkeletonModifiersGUI();
+					_legacyDrawer.DrawLegacyStartingPoseGUI();
 				}
-				GUIHelper.EndVerticalPadded(3);
+				GUIHelper.EndVerticalPadded(0);
 			}
 		}
 
 		private void DrawUpgradeTools()
 		{
 			//We only need to draw this if the skeletonModifiers and startingPose arrays are not empty
+			if (converterControllerProp.objectReferenceValue == null && drawOldGUI)
+			{
+				GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
+				var upgradeRect = EditorGUILayout.GetControlRect();
+				GUIHelper.ToolbarStyleFoldout(upgradeRect, "Upgrade Available!", ref _upgradeExpanded, null, foldoutTipStyle);
+				if (_upgradeExpanded)
+				{
+					EditorGUILayout.HelpBox("Please click the 'Backup & Upgrade' button to upgrade this ConverterBehaviour", MessageType.Info);
+					var moreRect = EditorGUILayout.GetControlRect();
+					GUIHelper.ToolbarStyleFoldout(moreRect, "more", ref upgradeInfoExpanded, GUIStyle.none);
+					if (upgradeInfoExpanded)
+					{
+						EditorGUILayout.HelpBox(upgradeInfo1, MessageType.None);
+						EditorGUILayout.HelpBox(upgradeInfo2, MessageType.None);
+						EditorGUILayout.HelpBox(upgradeInfo3, MessageType.None);
+					}
+					GUILayout.BeginHorizontal();
+					GUILayout.Space(10);
+					if (GUILayout.Button("Backup & Upgrade"))
+					{
+						DoBackupAndUpgrade();
+					}
+					GUILayout.Space(10);
+					GUILayout.EndHorizontal();
+					EditorGUILayout.Space();
+				}
+				GUIHelper.EndVerticalPadded(3);
+			}
+		}
 
-			GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
-			EditorGUILayout.LabelField("Upgrade Available!", EditorStyles.boldLabel);
-			EditorGUILayout.HelpBox("Please click the 'Backup & Upgrade' button to upgrade this ConverterBehaviour", MessageType.Info);
-			upgradeInfoExpanded = EditorGUILayout.Foldout(upgradeInfoExpanded, "more");
-			if (upgradeInfoExpanded)
+		public void DrawOverallModifiersGUI()
+		{
+			var newOverallModifiersProp = serializedObject.FindProperty("_overallModifiers");
+			bool overallModifiersExpanded = newOverallModifiersProp.isExpanded;
+			var overallModsFoldoutRect = EditorGUILayout.GetControlRect();
+			overallModsFoldoutRect.height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+			var overallModsLabel = EditorGUI.BeginProperty(overallModsFoldoutRect, new GUIContent(newOverallModifiersProp.displayName), newOverallModifiersProp );
+			if (drawOldGUI)
 			{
-				EditorGUILayout.HelpBox(upgradeInfo1, MessageType.None);
-				EditorGUILayout.HelpBox(upgradeInfo2, MessageType.None);
-				EditorGUILayout.HelpBox(upgradeInfo3, MessageType.None);
+				EditorGUI.BeginChangeCheck();
+				overallModifiersExpanded = EditorGUI.Foldout(overallModsFoldoutRect,overallModifiersExpanded, overallModsLabel, true, foldoutTipStyle);
+				if (EditorGUI.EndChangeCheck())
+				{
+					newOverallModifiersProp.isExpanded = overallModifiersExpanded;
+				}
 			}
-			GUILayout.BeginHorizontal();
-			GUILayout.Space(10);
-			if (GUILayout.Button("Backup & Upgrade"))
+			if (overallModifiersExpanded || !drawOldGUI)
 			{
-				DoBackupAndUpgrade();
+				GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
+				if (!drawOldGUI)
+				{
+					//GUILayout.Space(5);
+					EditorGUI.BeginChangeCheck();
+					overallModsLabel.text = overallModsLabel.text.ToUpper();
+					GUIHelper.ToolbarStyleFoldout(overallModsFoldoutRect, overallModsLabel.text.ToUpper(), new string[] { overallModsLabel.tooltip }, ref overallModifiersExpanded, ref overallModifiersHelpExpanded);
+					if (EditorGUI.EndChangeCheck())
+					{
+						newOverallModifiersProp.isExpanded = overallModifiersExpanded;
+					}
+					//GUILayout.Space(5);
+				}
+				if (overallModifiersExpanded)
+				{
+					GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
+					GUILayout.Space(5);
+					EditorGUILayout.PropertyField(newOverallModifiersProp);
+					GUIHelper.EndVerticalPadded(3);
+				}
+				GUIHelper.EndVerticalPadded(3);
 			}
-			GUILayout.Space(10);
-			GUILayout.EndHorizontal();
-			EditorGUILayout.Space();
-			GUIHelper.EndVerticalPadded(3);
+			EditorGUI.EndProperty();
+			GUILayout.Space(5);
+			
 		}
 
 		private void DoBackupAndUpgrade()
@@ -294,55 +350,6 @@ namespace UMA.CharacterSystem.Editors
 			if (_target.BackupAndUpgrade())
 			{
 				//show wiki for the new world?
-			}
-		}
-
-		public void DrawOverallModifiersGUI()
-		{
-			/*var updateCharProp = serializedObject.FindProperty("overallModifiersEnabled");
-			updateCharProp.isExpanded = EditorGUILayout.Foldout(updateCharProp.isExpanded, "Overall Modifiers", foldoutTipStyle);
-			if (updateCharProp.isExpanded)
-			{
-				GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
-				EditorGUI.indentLevel++;
-				var overallScaleBoneHashProp = serializedObject.FindProperty("overallScaleBoneHash");
-				EditorGUILayout.PropertyField(serializedObject.FindProperty("overallScale"));
-				EditorGUI.BeginChangeCheck();
-				EditorGUILayout.PropertyField(serializedObject.FindProperty("overallScaleBone"));
-				if (EditorGUI.EndChangeCheck())
-				{
-					overallScaleBoneHashProp.intValue = UMAUtils.StringToHash(serializedObject.FindProperty("overallScaleBone").stringValue);
-				}
-
-				EditorGUILayout.Space();
-				var updateCharLabel = new GUIContent("Update CharacterHeight/Radius/Mass", "Allow this converter to update the CharacterHeight/Radius/Mass? Usually only your primary converter will make any changes here.");
-				updateCharProp.boolValue = EditorGUILayout.ToggleLeft(updateCharLabel, updateCharProp.boolValue);
-				if (updateCharProp.boolValue)
-				{
-					EditorGUILayout.PropertyField(serializedObject.FindProperty("_headRatio"));
-					EditorGUILayout.PropertyField(serializedObject.FindProperty("_heightDebugToolsEnabled"));
-					EditorGUILayout.PropertyField(serializedObject.FindProperty("radiusAdjust"));
-					EditorGUILayout.PropertyField(serializedObject.FindProperty("massModifiers"));
-
-					EditorGUILayout.Space();
-					EditorGUILayout.PropertyField(serializedObject.FindProperty("_updateBounds"));
-					EditorGUILayout.PropertyField(serializedObject.FindProperty("tightenBounds"));
-					EditorGUILayout.PropertyField(serializedObject.FindProperty("_adjustBounds"));
-					if (serializedObject.FindProperty("_adjustBounds").boolValue == true)
-						EditorGUILayout.PropertyField(serializedObject.FindProperty("boundsAdjust"));
-				}
-				EditorGUILayout.Space();
-
-				EditorGUI.indentLevel--;
-				GUIHelper.EndVerticalPadded(3);
-			}*/
-			var newOverallModifiersProp = serializedObject.FindProperty("_overallModifiers");
-			newOverallModifiersProp.isExpanded = EditorGUILayout.Foldout(newOverallModifiersProp.isExpanded, "Overall Modifiers", foldoutTipStyle);
-			if (newOverallModifiersProp.isExpanded)
-			{
-				GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
-				EditorGUILayout.PropertyField(newOverallModifiersProp, new GUIContent("New " + newOverallModifiersProp.displayName));
-				GUIHelper.EndVerticalPadded(3);
 			}
 		}
 	}

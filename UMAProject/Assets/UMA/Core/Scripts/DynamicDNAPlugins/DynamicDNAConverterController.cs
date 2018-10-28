@@ -14,7 +14,7 @@ namespace UMA
 	//this is so all the assets this needs are packaged up with it UMA3 style.
 	//This asset also calls ApplyDNA on each of the plugins in its list when DynamicDNAConverterBehaviour asks it to.
 	[System.Serializable]
-	public class DynamicDNAConverterAsset : ScriptableObject
+	public class DynamicDNAConverterController : ScriptableObject
 	{
 		/// <summary>
 		/// The List of all the plugins assigned to this Converter
@@ -77,17 +77,17 @@ namespace UMA
 		{
 			get
 			{
-				if(GetPlugins(typeof(SkeletonModifiersDNAConverterPlugin)).Count > 0)
+				if(GetPlugins(typeof(SkeletonDNAConverterPlugin)).Count > 0)
 				{
-					return ((GetPlugins(typeof(SkeletonModifiersDNAConverterPlugin))[0]) as SkeletonModifiersDNAConverterPlugin).skeletonModifiers;
+					return ((GetPlugins(typeof(SkeletonDNAConverterPlugin))[0]) as SkeletonDNAConverterPlugin).skeletonModifiers;
 				}
 				return new List<SkeletonModifier>();
 			}
 			set
 			{
-				if (GetPlugins(typeof(SkeletonModifiersDNAConverterPlugin)).Count > 0)
+				if (GetPlugins(typeof(SkeletonDNAConverterPlugin)).Count > 0)
 				{
-					((GetPlugins(typeof(SkeletonModifiersDNAConverterPlugin))[0]) as SkeletonModifiersDNAConverterPlugin).skeletonModifiers = value;
+					((GetPlugins(typeof(SkeletonDNAConverterPlugin))[0]) as SkeletonDNAConverterPlugin).skeletonModifiers = value;
 				}
 			}
 		}
@@ -310,7 +310,7 @@ namespace UMA
 		/// Creates a new plugin of the given type and stores it inside the given converters asset
 		/// </summary>
 		/// <returns>Returns the created asset</returns>
-		private static DynamicDNAPlugin CreatePlugin(System.Type pluginType, DynamicDNAConverterAsset converter)
+		private static DynamicDNAPlugin CreatePlugin(System.Type pluginType, DynamicDNAConverterController converter)
 		{
 			//Checks and warnings
 			if (pluginType == null)
@@ -427,10 +427,14 @@ namespace UMA
 		#endregion
 
 #if UNITY_EDITOR
-		[UnityEditor.MenuItem("UniUMA/Create/Dynamic DNA Converter Asset")]//TODO Check this is not the same menu entry that UMA uses
-		public static DynamicDNAConverterAsset CreateDynamicDNAConverterAsset(string newAssetPath = "", bool selectCreatedAsset = true, string baseName = "New")
+		[UnityEditor.MenuItem("UMA/Create Dynamic DNA Converter Controller")]
+		public static DynamicDNAConverterController CreateDynamicDNAConverterAsset()
 		{
-			return UMA.CustomAssetUtility.CreateAsset<DynamicDNAConverterAsset>(newAssetPath, selectCreatedAsset, baseName);
+			return UMA.CustomAssetUtility.CreateAsset<DynamicDNAConverterController>();
+		}
+		public static DynamicDNAConverterController CreateDynamicDNAConverterAsset(string newAssetPath, bool selectCreatedAsset = true, string baseName = "New")
+		{
+			return UMA.CustomAssetUtility.CreateAsset<DynamicDNAConverterController>(newAssetPath, selectCreatedAsset, baseName);
 		}
 #endif
 	}

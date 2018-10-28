@@ -22,7 +22,7 @@ namespace UMA.CharacterSystem.Editors
 
 		private string _skelModsTip = "Skeleton Modifiers control how the values of the DNA you set above are applied to the skeleton.  So for example 'Upper Weight' affects the scale of the Spine, breast, belly and shoulder bones in different ways. Add or edit a skeleton modifier in the list below to use a given dna value to modify the skeleton. The 'Value Modifiers' part of a Skeleton Modifier, takes the incoming value, modifies it by the settings and applies it to the bone. The Min and Max values are what that result will be 'clamped' to. Changes to the base 'Value' affect all characters using this converter are are applied regardless of any dna. Consider using a starting 'BonePose' instead for more control.";
 
-		bool skeletonModifiersExpanded = true;
+		//bool skeletonModifiersExpanded = true;
 		bool skeletonModifiersInfoExpanded = false;
 		bool extraSkelAddDelOptsExpanded = false;
 		bool startingPoseExpanded = false;
@@ -97,18 +97,20 @@ namespace UMA.CharacterSystem.Editors
 			var skeletonModifiers = serializedObject.FindProperty("_skeletonModifiers");
 
 			GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
-			if (!minimalMode)
-			{
-				EditorGUILayout.HelpBox("TIP: Setting up your DNA Converter's Skeleton Modifiers is much easier if you use the 'DNA Converter Bahaviour Customizer' scene as it can automatically populate the list of available bones with the ones in the generated Avatar's skeleton.", MessageType.Info);
-			}
 			EditorGUI.indentLevel++;
-			skeletonModifiersInfoExpanded = EditorGUILayout.Foldout(skeletonModifiersInfoExpanded, "INFO");
-			if (skeletonModifiersInfoExpanded)
-				EditorGUILayout.HelpBox(_skelModsTip, MessageType.Info);
 
 			skeletonModifiers.isExpanded = EditorGUILayout.Foldout(skeletonModifiers.isExpanded, "Skeleton Modifiers");
 			if (skeletonModifiers.isExpanded)
 			{
+				if (!minimalMode)
+				{
+					EditorGUILayout.HelpBox("TIP: Setting up your DNA Converter's Skeleton Modifiers is much easier if you use the 'DNA Converter Bahaviour Customizer' scene as it can automatically populate the list of available bones with the ones in the generated Avatar's skeleton.", MessageType.Info);
+				}
+
+				skeletonModifiersInfoExpanded = EditorGUILayout.Foldout(skeletonModifiersInfoExpanded, "INFO");
+				if (skeletonModifiersInfoExpanded)
+					EditorGUILayout.HelpBox(_skelModsTip, MessageType.Info);
+
 				//If dnaNames is null or empty show a warning
 				bool showDNANamesWarning = false;
 				if (skeletonModifiers.serializedObject.FindProperty("dnaAsset").objectReferenceValue == null)
@@ -171,7 +173,7 @@ namespace UMA.CharacterSystem.Editors
 			GUILayout.EndHorizontal();
 			EditorGUILayout.Space();
 		}
-
+#pragma warning disable 618
 		private void DrawLegacySkeletonModifiersAddNew(SerializedProperty skeletonModifiers)
 		{
 			Rect addSkelButsR = EditorGUILayout.GetControlRect(false);
@@ -268,6 +270,7 @@ namespace UMA.CharacterSystem.Editors
 				EditorGUILayout.HelpBox("There was already a modifier for that bone with that property. You can serach the existing modifiers to find it.", MessageType.Warning);
 			}
 		}
+#pragma warning restore 618
 
 		private void DrawLegacySkeletonModifiersList(SerializedProperty skeletonModifiers)
 		{
@@ -425,7 +428,9 @@ namespace UMA.CharacterSystem.Editors
 
 		public void DrawLegacyStartingPoseGUI()
 		{
-			startingPoseExpanded = EditorGUILayout.Foldout(startingPoseExpanded, "Starting Pose", foldoutTipStyle);
+			GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
+			EditorGUI.indentLevel++;
+			startingPoseExpanded = EditorGUILayout.Foldout(startingPoseExpanded, "Starting Pose");
 			if (startingPoseExpanded)
 			{
 				GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
@@ -522,6 +527,8 @@ namespace UMA.CharacterSystem.Editors
 				EditorGUI.indentLevel--;
 				GUIHelper.EndVerticalPadded(3);
 			}
+			EditorGUI.indentLevel--;
+			GUIHelper.EndVerticalPadded(3);
 			serializedObject.ApplyModifiedProperties();
 		}
 
@@ -586,7 +593,7 @@ namespace UMA.CharacterSystem.Editors
 				RecursiveScanFoldersForAssets(subFolder.Replace('\\', '/'), callback, addMethod);
 			}
 		}
-
+#pragma warning disable 618
 		private void AddDNAConverterModifiers(DynamicDNAConverterBehaviour tempDNAAsset, int addMethod)
 		{
 			//Do we need to make sure the dna names are there as well? What is there is no dna asset?
@@ -613,7 +620,7 @@ namespace UMA.CharacterSystem.Editors
 			(target as DynamicDNAConverterBehaviour).skeletonModifiers = currentModifiers;
 			serializedObject.Update();
 		}
-
+#pragma warning restore 618
 
 	}
 }

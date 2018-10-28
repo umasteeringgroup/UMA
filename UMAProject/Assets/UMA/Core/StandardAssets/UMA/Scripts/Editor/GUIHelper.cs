@@ -6,6 +6,39 @@ namespace UMA.Editors
 {
 	public static class GUIHelper
 	{
+
+		private static Texture _helpIcon;
+
+		private static GUIStyle _iconLabel;
+
+		public static Texture helpIcon
+		{
+			get {
+				if (_helpIcon != null)
+					return _helpIcon;
+				//Sometimes editor styles is not set up when we ask for this
+				if (EditorStyles.label == null)
+					return new Texture();
+				_helpIcon = EditorGUIUtility.FindTexture("_Help");
+				return _helpIcon;
+			}
+		}
+
+		public static GUIStyle iconLabel
+		{
+			get
+			{
+				if (_iconLabel != null)
+					return _iconLabel;
+				if (EditorStyles.label == null)
+					return new GUIStyle();
+				_iconLabel = new GUIStyle(EditorStyles.label);
+				_iconLabel.fixedHeight = 18f;
+				_iconLabel.contentOffset = new Vector2(-4.0f, 0f);
+				return _iconLabel;
+			}
+		}
+
 		public static void BeginVerticalPadded(float padding, Color backgroundColor)
 		{
 			GUI.color = backgroundColor;
@@ -182,6 +215,71 @@ namespace UMA.Editors
 
 			delete = GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
 			GUILayout.EndHorizontal();
+		}
+
+		public static void ToolbarStyleFoldout(Rect rect, string label, ref bool isExpanded, GUIStyle toolbarStyleOverride = null, GUIStyle labelStyleOverride = null)
+		{
+			bool dummyHelpExpanded = false;
+			ToolbarStyleFoldout(rect, new GUIContent(label), new string[0], ref isExpanded, ref dummyHelpExpanded, toolbarStyleOverride, labelStyleOverride);
+		}
+
+		public static void ToolbarStyleFoldout(Rect rect, GUIContent label, ref bool isExpanded, GUIStyle toolbarStyleOverride = null, GUIStyle labelStyleOverride = null)
+		{
+			bool dummyHelpExpanded = false;
+			ToolbarStyleFoldout(rect, label, new string[0], ref isExpanded, ref dummyHelpExpanded, toolbarStyleOverride, labelStyleOverride);
+		}
+
+		public static void ToolbarStyleFoldout(Rect rect, string label, string[] help, ref bool isExpanded, ref bool helpExpanded, GUIStyle toolbarStyleOverride = null, GUIStyle labelStyleOverride = null)
+		{
+			ToolbarStyleFoldout(rect, new GUIContent(label), help, ref isExpanded, ref helpExpanded, toolbarStyleOverride, labelStyleOverride);
+		}
+		/// <summary>
+		/// Draws a ToolBar style foldout with a centered foldout label. Optionally draws a help icon that will show the selected array of 'help' paragraphs
+		/// </summary>
+		/// <param name="rect"></param>
+		/// <param name="label"></param>
+		/// <param name="help">An array of help paragpahs. If supplied the help Icon will be shown</param>
+		/// <param name="isExpanded"></param>
+		/// <param name="helpExpanded"></param>
+		/// <param name="toolbarStyleOverride">Overrides EdiorStyles.toolbar as the background</param>
+		/// <param name="labelStyleOverride">Overrides EditorStyles.folodout as the label style</param>
+		public static void ToolbarStyleFoldout(Rect rect, GUIContent label, string[] help, ref bool isExpanded, ref bool helpExpanded, GUIStyle toolbarStyleOverride = null, GUIStyle labelStyleOverride = null)
+		{
+			GUIStyle toolbarStyle = toolbarStyleOverride;
+			GUIStyle labelStyle = labelStyleOverride;
+			if (toolbarStyle == null)
+				toolbarStyle = EditorStyles.toolbar;
+			if (labelStyle == null)
+				labelStyle = EditorStyles.foldout;
+			var helpIconRect = new Rect(rect.xMax - 20f, rect.yMin, 20f, rect.height);
+			var helpGUI= new GUIContent("", "Show Help");
+			helpGUI.image = helpIcon;
+			Event current = Event.current;
+			if (current.type == EventType.Repaint)
+			{
+				toolbarStyle.Draw(rect, GUIContent.none, false, false, false, false);
+			}
+			var labelWidth = labelStyle.CalcSize(label);
+			labelWidth.x += 15f;//add the foldout arrow
+			var toolbarFoldoutRect = new Rect((rect.xMax / 2f) - (labelWidth.x / 2f) + 30f, rect.yMin, ((rect.width / 2) + (labelWidth.x / 2f)) - 20f - 30f, rect.height);
+			isExpanded = EditorGUI.Foldout(toolbarFoldoutRect, isExpanded, label, true, labelStyle);
+			if (help.Length > 0)
+			{
+				helpExpanded = GUI.Toggle(helpIconRect, helpExpanded, helpGUI, iconLabel);
+				if (helpExpanded)
+				{
+					ToolbarStyleHelp(help);
+				}
+			}
+		}
+		private static void ToolbarStyleHelp(string[] help)
+		{
+			BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
+			for (int i = 0; i < help.Length; i++)
+			{
+				EditorGUILayout.HelpBox(help[i], MessageType.None);
+			}
+			EndVerticalPadded(3);
 		}
 	}
 }

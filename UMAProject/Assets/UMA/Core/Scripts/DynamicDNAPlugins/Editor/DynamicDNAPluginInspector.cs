@@ -19,7 +19,7 @@ namespace UMA.Editors
 
 		protected DynamicDNAPlugin _target;
 
-		protected DynamicDNAConverterAsset _converter;
+		protected DynamicDNAConverterController _converter;
 
 		protected DynamicUMADnaAsset _dnaAsset;
 
@@ -90,7 +90,7 @@ namespace UMA.Editors
 			set { _dnaAsset = value; }
 		}
 
-		public DynamicDNAConverterAsset Converter
+		public DynamicDNAConverterController Converter
 		{
 			get { return _converter; }
 			set { _converter = value; }

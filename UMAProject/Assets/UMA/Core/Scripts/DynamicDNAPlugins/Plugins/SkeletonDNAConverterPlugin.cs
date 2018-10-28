@@ -8,7 +8,7 @@ using UMA.CharacterSystem;
 
 namespace UMA
 {
-	public class SkeletonModifiersDNAConverterPlugin : DynamicDNAPlugin
+	public class SkeletonDNAConverterPlugin : DynamicDNAPlugin
 	{
 		[SerializeField]
 		private List<SkeletonModifier> _skeletonModifiers = new List<SkeletonModifier>();
@@ -141,6 +141,8 @@ namespace UMA
 				return 16f + (/*EditorGUIUtility.singleLineHeight +*/ (EditorGUIUtility.standardVerticalSpacing * 2));
 			}
 		}
+
+#pragma warning disable 618
 		/// <summary>
 		/// Imports SkeletomModifiers from another object into this SkeletonModifiersDNAConverterPlugin
 		/// </summary>
@@ -151,7 +153,7 @@ namespace UMA
 		{
 			List<SkeletonModifier> importedSkeletonModifiers = new List<SkeletonModifier>();
 			if (pluginToImport.GetType() == this.GetType())
-				importedSkeletonModifiers = (pluginToImport as SkeletonModifiersDNAConverterPlugin)._skeletonModifiers;
+				importedSkeletonModifiers = (pluginToImport as SkeletonDNAConverterPlugin)._skeletonModifiers;
 			else
 			{
 				if (typeof(GameObject).IsAssignableFrom(pluginToImport.GetType()))
@@ -325,6 +327,7 @@ namespace UMA
 				return false;
 			}
 		}
+#pragma warning restore 618
 
 		private void ProcessSkelModOverwrites(List<SkeletonModifier.spVal.spValValue.spValModifier> currentMods, List<SkeletonModifier.spVal.spValValue.spValModifier> incomingMods, List<string> existingDNANames)
 		{

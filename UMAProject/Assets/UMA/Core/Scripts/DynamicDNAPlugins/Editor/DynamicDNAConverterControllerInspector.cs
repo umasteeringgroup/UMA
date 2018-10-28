@@ -9,13 +9,13 @@ using UnityEditor.IMGUI.Controls;
 namespace UMA.Editors
 {
 
-	[CustomEditor(typeof(DynamicDNAConverterAsset),true)]
-	public class DynamicDNAConverterAssetInspector : Editor
+	[CustomEditor(typeof(DynamicDNAConverterController),true)]
+	public class DynamicDNAConverterControllerInspector : Editor
 	{
 
 		#region FIELDS
 
-		DynamicDNAConverterAsset _target;
+		DynamicDNAConverterController _target;
 
 		//if set will be sent to the plugins so they can draw a popup of dnaNames rather than a string field for dna selection if they wish
 		private DynamicUMADnaAsset _dnaAsset;
@@ -29,6 +29,8 @@ namespace UMA.Editors
 		// the type of converter plugin to add (set from the _availablePlugins above)
 		private Type _pluginToAdd;
 
+		private bool _selfExpanded = true;
+
 		private bool _helpExpanded = false;
 
 		//if true 'view by dna name' otherwise 'view by converter type'
@@ -38,6 +40,7 @@ namespace UMA.Editors
 		private Dictionary<string, bool> _expandedDNANames = new Dictionary<string, bool>();
 
 		private SerializedProperty _convertersListProp;
+
 		private ReorderableList _convertersROL;
 
 		//stores the search string (if any) when in 'view by dna' mode
@@ -63,11 +66,20 @@ namespace UMA.Editors
 
 		private bool _initialized = false;
 
-		#endregion
+		private string[] _help = new string[]
+		{
+		"DNA Converters convert dna values into modifications to your character. Different converters apply the dna in different ways. For example a Skeleton Modifier will take a dna value and convert it into transforms that are applied to the skeleton bones. A Blendshape Modifier will convert a dna value into the power value for a blendshape.",
+		"Normally DNA Converters only do anything when the dna value is changed from its starting value, but some converters allow you to define a 'Starting' value and this can used to apply a modification by default. A 'Starting Pose' is a good example of this.",
+		"Converters are applied to the character from top to bottom, you can change the order by dragging the handle next to the converter entries header in the 'View By Converter Type' view.",
+		"Also in the 'View By Converter Type' view you can click the 'Cog' icon to rename or delete a converter instance. Click the 'Import' button to show the import area for the plugin, which allows you to import settings from another instance in various ways",
+		"The 'View By DNA Name' tab lists all the dna names the converters can use. Expanding a dna name shows you all the converters that use that dna name in any way."
+		};
 
-		#region PUBLIC PROPERTIES
+	#endregion
 
-		public DynamicUMADnaAsset DNAAsset
+	#region PUBLIC PROPERTIES
+
+	public DynamicUMADnaAsset DNAAsset
 		{
 			set { _dnaAsset = value; }
 		}
@@ -88,6 +100,7 @@ namespace UMA.Editors
 				}
 				else
 				{
+
 					//Style for subHeaders
 					_subHeaderStyle = new GUIStyle(EditorStyles.helpBox);
 					_subHeaderStyle.margin = new RectOffset(_subHeaderStyle.margin.left, _subHeaderStyle.margin.right, _subHeaderStyle.margin.top, 0);
@@ -102,7 +115,7 @@ namespace UMA.Editors
 					_helpStyle = new GUIStyle(EditorStyles.label);
 					_helpStyle.fixedHeight = _helpIcon.height + 4f;
 					_helpStyle.contentOffset = new Vector2(-4f, 0f);
-
+					
 					//Styles for the Add Converter area
 					var reorderableListDefaults = new ReorderableList.Defaults();
 					_pluginChooserAreaStyle = new GUIStyle(reorderableListDefaults.boxBackground);
@@ -119,7 +132,7 @@ namespace UMA.Editors
 
 				_initialized = stylesSet;
 
-				_target = target as DynamicDNAConverterAsset;
+				_target = target as DynamicDNAConverterController;
 
 				InitPlugins();
 			}
@@ -166,25 +179,26 @@ namespace UMA.Editors
 				return;
 			}
 
-			GUIHelper.BeginVerticalPadded(3f, new Color(0.75f, 0.875f, 1f, 0.3f));
-
 			//Draw the header and help as defined in the scope
-			DrawConvertersHeader();
+			var controllerHeaderRect = EditorGUILayout.GetControlRect();
+			DrawControllersHeader(controllerHeaderRect, _help, ref _selfExpanded, ref _helpExpanded);
 
-			//Draw the view tabs for viewing by Modifier or dna name
-			DrawConvertersViewTabs();
-
-			//Draw the GUI for each initialized plugin depending on whether the 'By Plugin' view or the 'By DNA View' was selected
-			if (_view == false)
+			if (_selfExpanded)
 			{
-				DrawConverters();
-			}
-			else
-			{
-				DrawConvertersByDNA();
+				//Draw the view tabs for viewing by Modifier or dna name
+				DrawControllersViewTabs();
+
+				//Draw the GUI for each initialized plugin depending on whether the 'By Plugin' view or the 'By DNA View' was selected
+				if (_view == false)
+				{
+					DrawConverters();
+				}
+				else
+				{
+					DrawConvertersByDNA();
+				}
 			}
 
-			GUIHelper.EndVerticalPadded(3f);
 			EditorGUILayout.Space();
 
 			serializedObject.ApplyModifiedProperties();
@@ -192,38 +206,41 @@ namespace UMA.Editors
 		#endregion
 
 		#region GUI DRAWING METHODS
-
-		private void DrawConvertersHeader()
+		//private void DrawControllersHeader(Rect headerRect, string[] help, ref bool isExpanded)
+		private void DrawControllersHeader(Rect rect, string[] help, ref bool _isExpanded, ref bool _helpExpanded)
 		{
-			var scopeHeaderRect = EditorGUILayout.GetControlRect();
-			scopeHeaderRect.yMin = scopeHeaderRect.yMin + 0f;//+1 if not using ROL bg for next bit
-			var helpIconRect = new Rect(scopeHeaderRect.xMax - 20f, scopeHeaderRect.yMin, 20f, scopeHeaderRect.height);
-			var helpIcon = new GUIContent("");
+			/*var helpIconRect = new Rect(rect.xMax - 20f, rect.yMin, 20f, rect.height);
+			var helpIcon = new GUIContent("","Info");
 			helpIcon.image = _helpIcon;
-			EditorGUI.LabelField(scopeHeaderRect, _dnaConvertersLabel.ToUpper(), EditorStyles.toolbarButton);
+			Event current = Event.current;
+			if (current.type == EventType.Repaint)
+			{
+				EditorStyles.toolbar.Draw(rect,GUIContent.none, false, false, false, false);
+			}
+			var labelWidth = EditorStyles.foldout.CalcSize(new GUIContent(_dnaConvertersLabel.ToUpper()));
+			labelWidth.x += 15f;//add the foldout arrow
+			var scopeFoldoutRect = new Rect((rect.xMax / 2f) - (labelWidth.x / 2f) +30f, rect.yMin, ((rect.width /2) + (labelWidth.x / 2f)) - 20f -30f, rect.height);
+			_isExpanded = EditorGUI.Foldout(scopeFoldoutRect, _selfExpanded, _dnaConvertersLabel.ToUpper(), true);
 			_helpExpanded = GUI.Toggle(helpIconRect, _helpExpanded, helpIcon, _helpStyle);
 			if (_helpExpanded)
 			{
-				DrawConvertersHelp();
-			}
+				DrawHelp(help);
+			}*/
+			GUIHelper.ToolbarStyleFoldout(rect, new GUIContent(_dnaConvertersLabel.ToUpper()), _help, ref _isExpanded, ref _helpExpanded);
 		}
 
-		private void DrawConvertersHelp()
+		private void DrawHelp(string[] help)
 		{
-			var info1 = "DNA Converters convert dna values into modifications to your character. Different converters apply the dna in different ways. For example a Skeleton Modifier will take a dna value and convert it into transforms that are applied to the skeleton bones. A Blendshape Modifier will convert a dna value into the power value for a blendshape.";
-			var info2 = "Normally DNA Converters only do anything when the dna value is changed from its starting value, but some converters allow you to define a 'Starting' value and this can used to apply a modification by default. A 'Starting Pose' is a good example of this.";
-			var info3 = "Converters are applied to the character from top to bottom, you can change the order by dragging the handle next to the converter entries header in the 'View By Converter Type' view.";
-			var info4 = "Also in the 'View By Converter Type' view you can click the 'Cog' icon to rename or delete a converter instance. Click the 'Import' button to show the import area for the plugin, which allows you to import settings from another instance in various ways";
-			var info5 = "The 'View By DNA Name' tab lists all the dna names the converters can use. Expanding a dna name shows you all the converters that use that dna name in any way.";
-			EditorGUILayout.HelpBox(info1, MessageType.None);
-			EditorGUILayout.HelpBox(info2, MessageType.None);
-			EditorGUILayout.HelpBox(info3, MessageType.None);
-			EditorGUILayout.HelpBox(info4, MessageType.None);
-			EditorGUILayout.HelpBox(info5, MessageType.None);
+			GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
+			for(int i = 0; i < help.Length; i++)
+			{
+				EditorGUILayout.HelpBox(help[i], MessageType.None);
+			}
+			GUIHelper.EndVerticalPadded(3);
 		}
 
 		//Draws the 'View' tabs allowing the user to switch between viewing data 'By Plugin' or 'By DNA'
-		private void DrawConvertersViewTabs()
+		private void DrawControllersViewTabs()
 		{
 			//Tabs for viewing by modifier or by dna
 			var tabsRect = EditorGUILayout.GetControlRect();

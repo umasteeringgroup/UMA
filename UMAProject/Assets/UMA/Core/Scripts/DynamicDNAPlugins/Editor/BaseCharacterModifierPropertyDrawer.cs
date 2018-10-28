@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEditor;
 
@@ -11,18 +12,44 @@ namespace UMA
 		//I want an always expanded attribute here but I'll get to that...
 		BaseCharacterModifier _target;
 
+		private bool _alwaysExpanded = false;
+		private bool _manuallyConfigured = false;
+
 		bool initialized = false;
+
+		public bool AlwaysExpanded
+		{
+			set
+			{
+				_alwaysExpanded = value;
+				_manuallyConfigured = true;
+			}
+		}
 
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 		{
+			if (!_manuallyConfigured)
+			{
+				if (this.fieldInfo != null)
+				{
+					var attrib = this.fieldInfo.GetCustomAttributes(typeof(BaseCharacterModifier.ConfigAttribute), true).FirstOrDefault() as BaseCharacterModifier.ConfigAttribute;
+					if (attrib != null)
+					{
+						_alwaysExpanded = attrib.alwaysExpanded;
+					}
+				}
+			}
 			float ph = 0;
-			if (!property.isExpanded)
+			if (!property.isExpanded && !_alwaysExpanded)
 			{
 				ph = (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing);
 			}
 			else
 			{
-				ph = ((EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing) * 7);
+				if(_alwaysExpanded)
+					ph = ((EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing) * 6);
+				else
+					ph = ((EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing) * 7);
 			}
 			return ph;
 		}
@@ -42,13 +69,28 @@ namespace UMA
 
 			Init(property);
 
-			var foldoutRect = new Rect(position.xMin, position.yMin, position.width, (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing));
-			property.isExpanded = EditorGUI.Foldout(foldoutRect, property.isExpanded, label);
-			if (property.isExpanded)
+			if (!_manuallyConfigured)
+			{
+				if (this.fieldInfo != null)
+				{
+					var attrib = this.fieldInfo.GetCustomAttributes(typeof(BaseCharacterModifier.ConfigAttribute), true).FirstOrDefault() as BaseCharacterModifier.ConfigAttribute;
+					if (attrib != null)
+					{
+						_alwaysExpanded = attrib.alwaysExpanded;
+					}
+				}
+			}
+			if (!_alwaysExpanded)
+			{
+				var foldoutRect = new Rect(position.xMin, position.yMin, position.width, (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing));
+				property.isExpanded = EditorGUI.Foldout(foldoutRect, property.isExpanded, label);
+			}
+			if (property.isExpanded || _alwaysExpanded)
 			{
 				EditorGUI.indentLevel++;
 				position = EditorGUI.IndentedRect(position);
-				position.yMin = position.yMin + (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing);
+				if (!_alwaysExpanded)
+					position.yMin = position.yMin + (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing);
 				
 				// Don't make child fields be indented
 				var indent = EditorGUI.indentLevel;
@@ -114,8 +156,8 @@ namespace UMA
 
 				float prevlabelWidth = EditorGUIUtility.labelWidth;
 
-				//you loose the fucking tooltips when you do toggleLeft WTFF?!?
-				//none of the fucking tooltips show in play mode either!! What a fucking pain...
+				//you loose the tooltips when you do toggleLeft WTFF?!?
+				//none of the tooltips show in play mode either!! What a fucking pain...
 				var scaleLabel = EditorGUI.BeginProperty(scaleLabelRect, new GUIContent(adjustScaleProp.displayName), adjustScaleProp);
 				adjustScaleProp.boolValue = EditorGUI.ToggleLeft(scaleLabelRect, scaleLabel, adjustScaleProp.boolValue);
 				EditorGUI.EndProperty();

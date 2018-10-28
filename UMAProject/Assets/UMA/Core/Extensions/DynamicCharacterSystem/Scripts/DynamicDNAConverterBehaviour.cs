@@ -19,9 +19,11 @@ namespace UMA.CharacterSystem
 	{
 
 		[SerializeField]
-		private DynamicDNAConverterAsset _converterController;
+		private DynamicDNAConverterController _converterController;
 
 		[SerializeField]
+		[BaseCharacterModifier.Config(true)]
+		[Tooltip("Overall Modifiers can selectively be anabled and are calculated after all other DNA Converters have made changes to the avatar. They can change the characters base scale, its height and radius (used for fitting the collider), its mass, and update its bounds. Usually you only use these once per character, on the base 'Converter Behaviour' for the race.")]
 		private BaseCharacterModifier _overallModifiers = new BaseCharacterModifier();
 
 		#region NON-SERIALIZED PRIVATE FIELDS
@@ -32,7 +34,7 @@ namespace UMA.CharacterSystem
 
 		#region PUBLIC PROPERTIES
 
-		public DynamicDNAConverterAsset ConverterController
+		public DynamicDNAConverterController ConverterController
 		{
 			get { return _converterController; }
 			set
@@ -46,13 +48,15 @@ namespace UMA.CharacterSystem
 		{
 			get { return _overallModifiers; }
 		}
+
 		/// <summary>
-		/// Gets the base scale as set in the 'overall modifiers section of this converter
+		/// Gets the base scale as set in the 'overall modifiers' section of this converter
 		/// </summary>
 		public float baseScale
 		{
 			get { return _overallModifiers.scale; }
 		}
+		
 		/// <summary>
 		/// Changes the characters base scale at runtime
 		/// </summary>
@@ -98,6 +102,8 @@ namespace UMA.CharacterSystem
 		}
 
 		#endregion
+
+		#region PUBLIC METHODS
 
 		public bool AddDnaCallbackDelegate(UnityAction<string, float> callback, string targetDnaName)
 		{
@@ -205,6 +211,8 @@ namespace UMA.CharacterSystem
 			ApplyDynamicDnaAction(umaData, umaData.skeleton, true);
 		}
 
+		#endregion
+
 		#region ISERIALIZATIONCALLBACKRECIEVER
 
 		public void OnBeforeSerialize()
@@ -212,9 +220,12 @@ namespace UMA.CharacterSystem
 			//do nothing
 		}
 
+		/// <summary>
+		/// Converts a 'pre-DynamicDNAPlugins' DynamicDNAConverterBehaviour to a 'post-DynamicDNAPlugins' behaviour
+		/// </summary>
 		public void OnAfterDeserialize()
 		{
-			//a big if to determine if we need to upgrade
+			//a big 'if' to determine if we need to upgrade
 			//- we want to preserve the users settings even if overallModifiersEnabled was turned off
 			if (overallModifiersEnabled == true || overallScale != 1f || !String.IsNullOrEmpty(overallScaleBone)
 				|| boundsAdjust != Vector3.zero || radiusAdjust != Vector2.zero || massModifiers != Vector3.zero)
@@ -242,7 +253,7 @@ namespace UMA.CharacterSystem
 			if (_converterController != null)
 				return false;
 			GameObject backup = null;
-			DynamicDNAConverterAsset newController = null;
+			DynamicDNAConverterController newController = null;
 			DynamicDNAPlugin skelModsPlug = null;
 			DynamicDNAPlugin startingPosePlug = null;
 			//only backup if there is any data to back up
@@ -261,7 +272,7 @@ namespace UMA.CharacterSystem
 			var path = AssetDatabase.GetAssetPath(this.gameObject);
 			path = path.Replace("/" + Path.GetFileName(AssetDatabase.GetAssetPath(this.gameObject)), "");
 			var assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/" + newControllerName + ".asset");
-			newController = DynamicDNAConverterAsset.CreateDynamicDNAConverterAsset(assetPathAndName, false);
+			newController = DynamicDNAConverterController.CreateDynamicDNAConverterAsset(assetPathAndName, false);
 			if(newController == null)
 			{
 				//bail if the converterController was not created
@@ -270,8 +281,8 @@ namespace UMA.CharacterSystem
 			}
 			if (_skeletonModifiers.Count > 0)
 			{
-				skelModsPlug = newController.AddPlugin(typeof(SkeletonModifiersDNAConverterPlugin));
-				if(!((SkeletonModifiersDNAConverterPlugin)skelModsPlug).ImportSettings(this.gameObject, 0))
+				skelModsPlug = newController.AddPlugin(typeof(SkeletonDNAConverterPlugin));
+				if(!((SkeletonDNAConverterPlugin)skelModsPlug).ImportSettings(this.gameObject, 0))
 				{
 					Debug.LogWarning("Your SkeletonModifiers did not import correctly into the new plugin. Please try importing then manually");//mustnt ever happen
 				}
@@ -382,7 +393,6 @@ namespace UMA.CharacterSystem
 #endif
 
 		#endregion
-
 
 		#region BACKWARDS COMPATIBILITY
 		//Obsolete, we dont need this since we get the UMASkeleton in the ApplyDnaAction anyway

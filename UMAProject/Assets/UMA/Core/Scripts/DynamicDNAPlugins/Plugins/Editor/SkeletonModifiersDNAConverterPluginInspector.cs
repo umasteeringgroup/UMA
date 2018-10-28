@@ -9,7 +9,7 @@ using UMA.CharacterSystem;
 
 namespace UMA.Editors
 {
-	[CustomEditor(typeof(SkeletonModifiersDNAConverterPlugin), true)]
+	[CustomEditor(typeof(SkeletonDNAConverterPlugin), true)]
 	public class SkeletonModifiersDNAConverterPluginInspector : DynamicDNAPluginInspector
 	{
 		private enum searchFilterTypeOpts { 
@@ -250,7 +250,7 @@ namespace UMA.Editors
 				//do it!
 				Debug.Log("Created a New Modifier");
 				var newModifier = new SkeletonModifier(_chosenBoneNameToAdd, UMAUtils.StringToHash(_chosenBoneNameToAdd), (SkeletonModifier.SkeletonPropType)_chosenPropertyToAdd);
-				(_target as SkeletonModifiersDNAConverterPlugin).AddModifier(newModifier);
+				(_target as SkeletonDNAConverterPlugin).AddModifier(newModifier);
 				_chosenBoneNameToAdd = "";
 				serializedObject.Update();
 				CacheArrayElementsByIndex(true);

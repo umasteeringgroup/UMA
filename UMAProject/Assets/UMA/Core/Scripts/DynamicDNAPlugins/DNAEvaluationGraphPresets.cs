@@ -392,7 +392,7 @@ namespace UMA
 
 		#endregion
 
-		[UnityEditor.MenuItem("UniUMA/Create/DNAEvaluationGraph Presets Library")]
+		[UnityEditor.MenuItem("UMA/Create DNAEvaluationGraph Presets Library")]
 		public static void DNAEvaluatorPresetLibraryAsset()
 		{
 			//we want to create this in an editor folder

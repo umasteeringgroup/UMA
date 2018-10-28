@@ -69,7 +69,7 @@ namespace UMA
 		#region PRIVATE MEMBERS
 
 		[SerializeField]
-		private DynamicDNAConverterAsset _converterAsset;
+		private DynamicDNAConverterController _converterAsset;
 
 		#endregion
 
@@ -78,7 +78,7 @@ namespace UMA
 		/// <summary>
 		/// The converter asset this plugin has been assigned to. This property is set by the converter when it is inspected or starts
 		/// </summary>
-		public DynamicDNAConverterAsset converterAsset
+		public DynamicDNAConverterController converterAsset
 		{
 			get { return _converterAsset; }
 			set { _converterAsset = value; }
@@ -312,8 +312,6 @@ namespace UMA
 		private static readonly Type baseDynamicDNAPluginType = typeof(DynamicDNAPlugin);
 
 		private static List<Type> _pluginTypes;
-
-		private int _chosenImportSettingsMethod = 0;
 
 		#endregion
 

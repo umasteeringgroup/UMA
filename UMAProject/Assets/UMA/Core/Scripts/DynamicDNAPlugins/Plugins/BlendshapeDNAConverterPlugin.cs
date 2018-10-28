@@ -146,8 +146,6 @@ namespace UMA
 
 			private float _liveShapeWeight = 0f;
 
-			private int _dnaIndex = -1;
-
 			private DynamicUMADnaBase _activeDNA;
 
 			#endregion
