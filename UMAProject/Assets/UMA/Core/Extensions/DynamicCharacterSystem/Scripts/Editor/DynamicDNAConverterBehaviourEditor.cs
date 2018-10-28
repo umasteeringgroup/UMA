@@ -17,7 +17,7 @@ namespace UMA.CharacterSystem.Editors
 		}
 
 		DynamicDNAConverterBehaviour _target;
-
+		[System.NonSerialized]
 		SerializedProperty converterControllerProp;
 
 		//Set by the customizer in play mode
@@ -64,31 +64,37 @@ namespace UMA.CharacterSystem.Editors
 #pragma warning disable 618
 		private void Init()
 		{
-			if (minimalMode)
-			{
-				bonesInSkeleton = new List<string>(umaData.skeleton.BoneNames);
-			}
-			bonesInSkeleton.Sort();
-			UpdateNames();
+			//if (!initialized)
+			//{
+				if (minimalMode)
+				{
+					bonesInSkeleton = new List<string>(umaData.skeleton.BoneNames);
+				}
+				bonesInSkeleton.Sort();
+				UpdateNames();
 
-			//Style for Tips
-			foldoutTipStyle = new GUIStyle(EditorStyles.foldout);
-			foldoutTipStyle.fontStyle = FontStyle.Bold;
+				//Style for Tips
+				foldoutTipStyle = new GUIStyle(EditorStyles.foldout);
+				foldoutTipStyle.fontStyle = FontStyle.Bold;
 
-			_target = target as DynamicDNAConverterBehaviour;
+				_target = target as DynamicDNAConverterBehaviour;
 
-			converterControllerProp = serializedObject.FindProperty("_converterController");
-			if(converterControllerProp.objectReferenceValue == null)
-			{
-				if (_target.skeletonModifiers.Count > 0 || _target.startingPose != null)
-					drawOldGUI = true;
-			}
-			else
-			{
-				drawOldGUI = false;
-			}
+				converterControllerProp = serializedObject.FindProperty("_converterController");
+				if (converterControllerProp.objectReferenceValue == null)
+				{
+					if (_target.skeletonModifiers.Count > 0 || _target.startingPose != null)
+					{
+						Debug.Log("_target ["+ _target.gameObject.name+"] _target.skeletonModifiers.Count was " + _target.skeletonModifiers.Count + " _target.startingPose was " + _target.startingPose);
+						drawOldGUI = true;
+					}
+				}
+				else
+				{
+					drawOldGUI = false;
+				}
 
-			initialized = true;
+				initialized = true;
+			//}
 		}
 #pragma warning restore 618
 
@@ -115,8 +121,8 @@ namespace UMA.CharacterSystem.Editors
 		public override void OnInspectorGUI()
 		{
 			serializedObject.Update();
-			if (!initialized)
-				this.Init();
+
+			this.Init();
 
 			//DISPLAY VALUE
 			EditorGUILayout.Space();
@@ -241,6 +247,10 @@ namespace UMA.CharacterSystem.Editors
 						//I think ScriptableObjects just change anyway when you set values direct
 						//TODO CONFIRM
 					}
+					serializedObject.ApplyModifiedProperties();
+					serializedObject.Update();
+					initialized = false;
+					Init();
 				}
 
 				if (converterControllerProp.objectReferenceValue != null)
@@ -254,15 +264,19 @@ namespace UMA.CharacterSystem.Editors
 				}
 				else
 				{
-					DrawUpgradeTools();
-					if(_legacyDrawer == null)
+					if (drawOldGUI)
 					{
-						_legacyDrawer = new LegacyDynamicDNAConverterGUIDrawer();
-						_legacyDrawer.Init(target, serializedObject, umaData, thisDDCC, bonesInSkeleton, minimalMode);
+						DrawUpgradeTools();
+						if (_legacyDrawer == null)
+						{
+							_legacyDrawer = new LegacyDynamicDNAConverterGUIDrawer();
+							_legacyDrawer.Init(target, serializedObject, umaData, thisDDCC, bonesInSkeleton, minimalMode);
+						}
+						_legacyDrawer.DrawLegacySkeletonModifiersGUI();
+						_legacyDrawer.DrawLegacyStartingPoseGUI();
 					}
-					_legacyDrawer.DrawLegacySkeletonModifiersGUI();
-					_legacyDrawer.DrawLegacyStartingPoseGUI();
 				}
+				GUILayout.Space(3);
 				GUIHelper.EndVerticalPadded(0);
 			}
 		}
