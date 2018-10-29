@@ -18,7 +18,7 @@ namespace UMA.Editors
 
 		private static GUIStyle graphLabelStyle;
 
-		private float padding = 3f;
+		private string cachedTooltip = "";
 
 		private float popupIconSize = 20f;
 
@@ -66,6 +66,9 @@ namespace UMA.Editors
 				AddDefaultValues();
 			}
 
+			if (string.IsNullOrEmpty(cachedTooltip))
+				UpdateCachedToolTip(_helper.Target);
+
 			GUI.SetNextControlName("DNAEvaluationGraph");
 
 			var fieldRect = EditorGUI.PrefixLabel(position, label);
@@ -80,9 +83,13 @@ namespace UMA.Editors
 			EditorGUI.EndProperty();
 		}
 
+		private void UpdateCachedToolTip(DNAEvaluationGraph graph)
+		{
+			cachedTooltip = DNAEvaluationGraphPresetLibrary.GetTooltipFor(graph);
+		}
+
 		private void DrawPopup(Rect position, SerializedProperty property)
 		{
-			padding = 0f;
 			var popupIconRect = new Rect((position.xMax - popupIconSize) + 1f, position.yMin, popupIconSize - 2f, position.height + 1f);
 			var contentRect = new Rect(position.xMin + 1f, position.yMin + 0.5f, position.width - popupIconSize +3f, position.height - 2f);
 			var overlayRect = new Rect(position.xMin, position.yMin - 1f, position.width, position.height);
@@ -99,7 +106,7 @@ namespace UMA.Editors
 			
 			//now draw a button over the whole thing, with a label for the selected swatch, that will open up the swatch selector when its clicked
 			EditorGUI.DropShadowLabel(overlayRect, new GUIContent(_helper._name), graphLabelStyle);
-			if (GUI.Button(overlayRect, new GUIContent(_helper._name, DNAEvaluationGraphPresets.GetTooltipFor(_helper.Target)), graphLabelStyle))
+			if (GUI.Button(overlayRect, new GUIContent(_helper._name, cachedTooltip), graphLabelStyle))
 			{
 				GUI.FocusControl("DNAEvaluationGraph");
 
@@ -107,7 +114,7 @@ namespace UMA.Editors
 				//If this field contains a graph that is no longer in any preset libraries
 				//they wont be able to get that graph back unless they add it to a library
 				//so show a warning dialog giving them the option of doing that
-				if (_helper.Target != null && !DNAEvaluationGraphPresets.AllGraphPresets.Contains(_helper.Target))
+				if (_helper.Target != null && !DNAEvaluationGraphPresetLibrary.AllGraphPresets.Contains(_helper.Target))
 				{
 					var _missingGraphChoice = EditorUtility.DisplayDialogComplex("Missing Preset", "The graph " + _helper.Target.name + " was not in any preset libraries in the project. If you change the graph this field is using you wont be able to select " + _helper.Target.name + " again. What would you like to do?", "Change Anyway", "Store and Change", "Cancel");
 					if (_missingGraphChoice == 1)
@@ -115,7 +122,7 @@ namespace UMA.Editors
 						Debug.Log("_missingGraphChoice == 1");
 						//store and change
 						//add to the first found lib and then carry on
-						DNAEvaluationGraphPresets.AddNewPreset(_helper.Target.name, new AnimationCurve(_helper.Target.GraphKeys), _helper.Target.name);
+						DNAEvaluationGraphPresetLibrary.AddNewPreset(_helper.Target.name, new AnimationCurve(_helper.Target.GraphKeys), _helper.Target.name);
 					}
 					else if(_missingGraphChoice == 2)
 					{
@@ -123,7 +130,8 @@ namespace UMA.Editors
 						return;
 					}
 				}
-
+				var prevEnabled = GUI.enabled;
+				GUI.enabled = true;
 				if (_popupContent == null)
 					_popupContent = new DNAEvaluationGraphPopupContent();
 				_popupContent.width = overlayRect.width;
@@ -132,6 +140,7 @@ namespace UMA.Editors
 				_popupContent.OnSelected = PopupCallback;
 
 				PopupWindow.Show(overlayRect, _popupContent);
+				GUI.enabled = prevEnabled;
 			}
 		}
 
@@ -139,6 +148,7 @@ namespace UMA.Editors
 		{
 			_helper = new DNAEvaluationGraph.EditorHelper(selectedGraph);
 			CopyValuesFromHelper(property, _helper);
+			UpdateCachedToolTip(_helper.Target);
 			property.serializedObject.ApplyModifiedProperties();
 			GUI.changed = true;
 		}

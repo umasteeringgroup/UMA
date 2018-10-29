@@ -51,9 +51,9 @@ namespace UMA.Editors
 		public override Vector2 GetWindowSize()
 		{
 			var entrysHeightCalc = 0f;
-			if (DNAEvaluationGraphPresets.AllGraphPresets.Count > 0)
+			if (DNAEvaluationGraphPresetLibrary.AllGraphPresets.Count > 0)
 			{
-				entrysHeightCalc = (entryHeight * DNAEvaluationGraphPresets.AllGraphPresets.Count) + (padding * 2f);
+				entrysHeightCalc = (entryHeight * DNAEvaluationGraphPresetLibrary.AllGraphPresets.Count) + (padding * 2f);
 				entrysHeightCalc += (EditorGUIUtility.singleLineHeight * 2f) + (padding * 2f);
 				if (entrysHeightCalc > maxHeight)
 					entrysHeightCalc = maxHeight;
@@ -71,15 +71,15 @@ namespace UMA.Editors
 			Event current = Event.current;
 			
 			//handle the user editing a field whose graph is not longer in any preset libraries
-			var allPresets = DNAEvaluationGraphPresets.AllGraphPresets;
-			var allPresetTooltips = DNAEvaluationGraphPresets.AllGraphTooltips;
+			var allPresets = DNAEvaluationGraphPresetLibrary.AllGraphPresets;
+			var allPresetTooltips = DNAEvaluationGraphPresetLibrary.AllGraphTooltips;
 			if (_selectedPreset != null && !allPresets.Contains(_selectedPreset))
 			{
 				allPresets.Insert(0, _selectedPreset);
 				allPresetTooltips.Insert(0, _selectedPreset.name + " (Not in Presets Library)");
 			}
 			scrollPosition = GUILayout.BeginScrollView(scrollPosition);
-			if (DNAEvaluationGraphPresets.AllGraphPresets.Count > 0)
+			if (DNAEvaluationGraphPresetLibrary.AllGraphPresets.Count > 0)
 			{
 				for (int index = 0; index < allPresets.Count; index++)
 				{

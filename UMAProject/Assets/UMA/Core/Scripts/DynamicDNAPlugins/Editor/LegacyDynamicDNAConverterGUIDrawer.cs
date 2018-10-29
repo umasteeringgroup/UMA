@@ -52,6 +52,7 @@ namespace UMA.CharacterSystem.Editors
 		{
 			if (_skelModPropDrawer == null)
 				_skelModPropDrawer = new SkeletonModifierPropertyDrawer();
+			_skelModPropDrawer.AllowLegacyDNADrawer = true;
 			target = targetDDCB;
 			serializedObject = DDCBSO;
 			this.umaData = umaData;

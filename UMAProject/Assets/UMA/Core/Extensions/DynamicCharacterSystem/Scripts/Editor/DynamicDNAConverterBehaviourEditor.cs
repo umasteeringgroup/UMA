@@ -17,7 +17,7 @@ namespace UMA.CharacterSystem.Editors
 		}
 
 		DynamicDNAConverterBehaviour _target;
-		[System.NonSerialized]
+		
 		SerializedProperty converterControllerProp;
 
 		//Set by the customizer in play mode
@@ -64,8 +64,8 @@ namespace UMA.CharacterSystem.Editors
 #pragma warning disable 618
 		private void Init()
 		{
-			//if (!initialized)
-			//{
+			if (!initialized)
+			{
 				if (minimalMode)
 				{
 					bonesInSkeleton = new List<string>(umaData.skeleton.BoneNames);
@@ -80,12 +80,16 @@ namespace UMA.CharacterSystem.Editors
 				_target = target as DynamicDNAConverterBehaviour;
 
 				converterControllerProp = serializedObject.FindProperty("_converterController");
+
 				if (converterControllerProp.objectReferenceValue == null)
 				{
 					if (_target.skeletonModifiers.Count > 0 || _target.startingPose != null)
 					{
-						Debug.Log("_target ["+ _target.gameObject.name+"] _target.skeletonModifiers.Count was " + _target.skeletonModifiers.Count + " _target.startingPose was " + _target.startingPose);
 						drawOldGUI = true;
+					}
+					else
+					{
+						drawOldGUI = false;
 					}
 				}
 				else
@@ -94,7 +98,7 @@ namespace UMA.CharacterSystem.Editors
 				}
 
 				initialized = true;
-			//}
+			}
 		}
 #pragma warning restore 618
 

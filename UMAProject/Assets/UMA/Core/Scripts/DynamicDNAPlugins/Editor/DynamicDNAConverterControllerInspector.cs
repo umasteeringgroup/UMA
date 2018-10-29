@@ -62,7 +62,6 @@ namespace UMA.Editors
 
 		//default button sizes
 		private float _addPluginBtnWidth = 50f;
-		private float _deletePluginBtnWidth = 20f;
 
 		private bool _initialized = false;
 

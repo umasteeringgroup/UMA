@@ -40,16 +40,16 @@ namespace UMA
 		/// </summary>
 		private DynamicDNAConverterBehaviour _converterBehaviour;
 
-		//TODO MAKE THIS PRIVATE AFTER WE START ASSIGNING THESE TO BEHAVIOURS
-		/// <summary>
-		/// The DynamicUMADnaAsset assigned to this converter by the behaviour it is assigned to
-		/// </summary>
-		public DynamicUMADnaAsset _dnaAsset;
 
-
-		public DynamicUMADnaAsset dnaAsset
+		public DynamicUMADnaAsset DNAAsset
 		{
-			get { return _converterBehaviour.dnaAsset; }
+			get
+			{
+				if (_converterBehaviour != null)
+					return _converterBehaviour.dnaAsset;
+				else
+					return null;
+			}
 			//set { _dnaAsset = value; }
 		}
 
@@ -254,9 +254,9 @@ namespace UMA
 					if (DynamicDNAPlugin.IsValidPlugin(_plugins[i]))
 					{
 						cleanList.Add(_plugins[i]);
-						if (_plugins[i].converterAsset != this)
+						if (_plugins[i].converterController != this)
 						{
-							_plugins[i].converterAsset = this;
+							_plugins[i].converterController = this;
 #if UNITY_EDITOR
 							EditorUtility.SetDirty(_plugins[i]);
 							changed = true;
@@ -357,12 +357,13 @@ namespace UMA
 
 #if UNITY_EDITOR
 
+		//TODO make it possible to add a custom here
 		/// <summary>
 		/// Draws a popup for selecting a dna name from the converters DynamicDNAAsset (if set) otherwise draws a text field
 		/// </summary>
 		public void DNANamesPopup(Rect position, SerializedProperty property, string selected)
 		{
-			if (_dnaAsset == null)
+			if (DNAAsset == null)
 			{
 				EditorGUI.BeginChangeCheck();
 				property.stringValue = EditorGUI.TextField(position, selected);
@@ -404,7 +405,6 @@ namespace UMA
 					}
 					property.serializedObject.ApplyModifiedProperties();
 				}
-
 			}
 		}
 		//gets the names for the above popup, keeps missing names in the list too so that users can reselect them
@@ -413,9 +413,9 @@ namespace UMA
 			if (_dnaNamesForPopup.Count == 0 || forceUpdate)
 			{
 				_dnaNamesForPopup.Clear();
-				for (int i = 0; i < _dnaAsset.Names.Length; i++)
+				for (int i = 0; i < DNAAsset.Names.Length; i++)
 				{
-					_dnaNamesForPopup.Add(_dnaAsset.Names[i]);
+					_dnaNamesForPopup.Add(DNAAsset.Names[i]);
 				}
 				_dnaNamesForPopup.Insert(0, "Choose DNA Name");
 			}

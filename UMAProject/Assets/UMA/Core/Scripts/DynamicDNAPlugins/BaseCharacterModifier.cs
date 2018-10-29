@@ -51,10 +51,10 @@ namespace UMA
 		private float _scale = 1f;
 
 		//This is the field thats assigned in the editor, but we use the hash
-#pragma warning disable 0219
+#pragma warning disable 0414
 		[SerializeField]
 		private string _bone = "Position";
-#pragma warning restore 0219
+#pragma warning restore 0414
 
 		[SerializeField]
 		private int _scaleBoneHash = -1084586333;//hash of the Position Bone
@@ -232,7 +232,7 @@ namespace UMA
 				if (baseScaleTrans != null)
 				{
 					var liveScaleResult = _liveScale != -1f ? _liveScale : _scale;
-					Debug.Log("liveScaleResult " + liveScaleResult);
+					//Debug.Log("liveScaleResult " + liveScaleResult);
 					float finalOverallScale = baseScaleTrans.localScale.x * liveScaleResult;//hmm why does this work- its supposed to be +
 					skeleton.SetScale(_scaleBoneHash, new Vector3(finalOverallScale, finalOverallScale, finalOverallScale));
 				}
@@ -516,7 +516,7 @@ namespace UMA
 				//characterRadius is the average of the width we calculated plus the z-depth from the bounds / 2
 				//we need to include the new _radiusAdjust.y (which is now an adjust for the z axis as radiusAdjustY is now its own field (used for heightAdjust)
 				umaData.characterRadius = (charWidth + newBounds.size.z * (_radiusAdjust.x * 2)) / 2;
-				Debug.Log("BCM umaData.characterRadius[" + umaData.characterRadius + "] = (charWidth[" + charWidth + "] + newBounds.size.z[" + newBounds.size.z + "] * (radiusAdjust.x[" + _radiusAdjust.x + "] * 2)) / 2;");
+				//Debug.Log("BCM umaData.characterRadius[" + umaData.characterRadius + "] = (charWidth[" + charWidth + "] + newBounds.size.z[" + newBounds.size.z + "] * (radiusAdjust.x[" + _radiusAdjust.x + "] * 2)) / 2;");
 			}
 			else
 			{

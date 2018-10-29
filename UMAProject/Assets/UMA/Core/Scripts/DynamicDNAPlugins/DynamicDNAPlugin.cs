@@ -69,7 +69,7 @@ namespace UMA
 		#region PRIVATE MEMBERS
 
 		[SerializeField]
-		private DynamicDNAConverterController _converterAsset;
+		private DynamicDNAConverterController _converterController;
 
 		#endregion
 
@@ -78,18 +78,18 @@ namespace UMA
 		/// <summary>
 		/// The converter asset this plugin has been assigned to. This property is set by the converter when it is inspected or starts
 		/// </summary>
-		public DynamicDNAConverterController converterAsset
+		public DynamicDNAConverterController converterController
 		{
-			get { return _converterAsset; }
-			set { _converterAsset = value; }
+			get { return _converterController; }
+			set { _converterController = value; }
 		}
 
 		public DynamicUMADnaAsset DNAAsset
 		{
 			get
 			{
-				if (_converterAsset != null)
-					return _converterAsset.dnaAsset;
+				if (_converterController != null)
+					return _converterController.DNAAsset;
 				return null;
 			}
 		}
@@ -383,21 +383,88 @@ namespace UMA
 		//This override is here because I want to make sure all plugins start with a default weight of 1,
 		//I also wanted to make it draw differently and have a method for applying its influence to a whole set of dna
 		[System.Serializable]
-		public class MasterWeight : DynamicDefaultWeight
+		public class MasterWeight
 		{
-			public MasterWeight()
+
+			[Tooltip("The global weight to use for this set of converters. Applies to all characters that use the converter behaviour this resides in. Override this with DNAForWeight for 'per character' control")]
+			[Range(0f, 1f)]
+			[SerializeField]
+			protected float _globalWeight = 1f;
+
+			[Tooltip("If set, the weight value will be controlled by the given dna on the character.")]
+			[SerializeField]
+			[DNAEvaluator.Config(true, true, true)]
+			protected DNAEvaluator _DNAForWeight = new DNAEvaluator("", DNAEvaluationGraph.Raw, 1);
+
+			public float globalWeight
 			{
-				_defaultWeight = 1f;
+				get { return _globalWeight; }
+				set { _globalWeight = value; }
 			}
 
+			public string dnaName
+			{
+				get { return _DNAForWeight.dnaName; }
+				set { _DNAForWeight.dnaName = value; }
+			}
+
+			public DNAEvaluationGraph dnaEvaluationGraph
+			{
+				get { return _DNAForWeight.evaluator; }
+				set { _DNAForWeight.evaluator = value; }
+			}
+
+			public float dnaMultiplier
+			{
+				get { return _DNAForWeight.multiplier; }
+				set { _DNAForWeight.multiplier = value; }
+			}
+
+			public MasterWeight()
+			{
+				_globalWeight = 1f;
+			}
+
+			public MasterWeight(MasterWeight other)
+			{
+				_globalWeight = other._globalWeight;
+				_DNAForWeight = new DNAEvaluator(other._DNAForWeight);
+			}
+
+			public MasterWeight(float defaultWeight = 1f, string dnaForWeightName = "", DNAEvaluationGraph dnaForWeightGraph = null, float dnaForWeightMultiplier = 1f)
+			{
+				_globalWeight = defaultWeight;
+				if (!string.IsNullOrEmpty(dnaForWeightName))
+				{
+					_DNAForWeight = new DNAEvaluator(dnaForWeightName, dnaForWeightGraph, dnaForWeightMultiplier);
+				}
+				else
+				{
+					_DNAForWeight = new DNAEvaluator("", DNAEvaluationGraph.Raw, 1);
+				}
+			}
+
+			public float GetWeight(UMADnaBase umaDna = null)
+			{
+				if (!string.IsNullOrEmpty(_DNAForWeight.dnaName))
+				{
+					return _DNAForWeight.Evaluate(umaDna);
+				}
+				else
+					return _globalWeight;
+			}
+
+			//TODO check if this still screws up the incoming dnas values
 			public UMADnaBase GetWeightedDNA(UMADnaBase incomingDna)
 			{
 				var masterWeight = GetWeight(incomingDna);
 				var weightedDNA = new DynamicUMADna();
 				if (masterWeight > 0)
 				{
-					weightedDNA._names = incomingDna.Names;
-					weightedDNA._values = incomingDna.Values;
+					weightedDNA._names = new string[incomingDna.Names.Length];
+					Array.Copy(incomingDna.Names, weightedDNA._names, incomingDna.Names.Length);
+					weightedDNA._values = new float[incomingDna.Values.Length];
+					Array.Copy(incomingDna.Values, weightedDNA._values, incomingDna.Values.Length);
 					for (int i = 0; i < incomingDna.Count; i++)
 					{
 						weightedDNA.SetValue(i, weightedDNA.GetValue(i) * masterWeight);

@@ -13,6 +13,17 @@ namespace UMA
 	[System.Serializable]
 	public sealed class DNAEvaluator : ISerializationCallbackReceiver
 	{
+		//This is used with the Cumulative option in DNAEvaluatorList. Each line can be added/subtracted etc from the previous one
+		public enum CalcOption
+		{
+			Add,
+			Subtract,
+			Multiply,
+			Divide
+		};
+		[SerializeField]
+		[Tooltip("Define how the evaluated value will be combined with the previous Evaluator in the list.")]
+		private CalcOption _calcOption = CalcOption.Add;
 		[SerializeField]
 		[Tooltip("The DNA entry name to evaluate")]
 		private string _dnaName;
@@ -26,9 +37,20 @@ namespace UMA
 		[HideInInspector]
 		private bool _initialized = false;
 
+		//used at runtime to speed up finding dna values. The first time the evaluator evaluates it uses the dnaName, if the request successfully
+		//returns an index, thereafter the index is used
+		[System.NonSerialized]
+		private int _lastIndex = -1;
+
 		//if the evaluator fails to evaluate for any reason it returns this value
-		//But should this be 0.5 or should it be 0?
+		//But should this be 0.5 or should it be 0? I'm using 0.5 because 'failSilently' in DynamicUMADNA returns 0.5 when a name isn't found
 		public static readonly float defaultDNAValue = 0.5f;
+
+		public CalcOption calcOption
+		{
+			get { return _calcOption; }
+			set { _calcOption = value; }
+		}
 
 		public string dnaName
 		{
@@ -47,10 +69,12 @@ namespace UMA
 			get { return _multiplier; }
 			set { _multiplier = value; }
 		}
+
 		public DNAEvaluator() { }
 
-		public DNAEvaluator(string dnaName, DNAEvaluationGraph evaluator = null, float multiplier = 1f)
+		public DNAEvaluator(string dnaName, DNAEvaluationGraph evaluator = null, float multiplier = 1f, CalcOption calcOption = CalcOption.Add)
 		{
+			_calcOption = calcOption;
 			_dnaName = dnaName;
 			_evaluator = evaluator == null ? DNAEvaluationGraph.Default : new DNAEvaluationGraph(evaluator);
 			_multiplier = multiplier;
@@ -59,6 +83,7 @@ namespace UMA
 
 		public DNAEvaluator(DNAEvaluator other)
 		{
+			_calcOption = other.calcOption;
 			_dnaName = other.dnaName;
 			_evaluator = other.evaluator == null ? DNAEvaluationGraph.Default : new DNAEvaluationGraph(other.evaluator);
 			_multiplier = other.multiplier;
@@ -83,10 +108,18 @@ namespace UMA
 		/// <returns>The evaluated value</returns>
 		public float Evaluate(UMADnaBase dna)
 		{
-			var _dnaIndex = System.Array.IndexOf(dna.Names, _dnaName);
-			if (_dnaIndex > -1)
+			//GRR this makes no difference to speed either-WTFF?!?
+			if (_lastIndex != -1)
 			{
-				return Evaluate(dna.GetValue(_dnaIndex));
+				return Evaluate(dna.GetValue(_lastIndex));
+			}
+			else
+			{
+				_lastIndex = System.Array.IndexOf(dna.Names, _dnaName);
+				if (_lastIndex > -1)
+				{
+					return Evaluate(dna.GetValue(_lastIndex));
+				}
 			}
 			return defaultDNAValue;
 		}
@@ -111,11 +144,14 @@ namespace UMA
 
 		#region ATTRIBUTES
 
+		//TODO Ditch these I always want this drawn the same way
 		[System.AttributeUsage(System.AttributeTargets.Field)]
 		public class ConfigAttribute : System.Attribute
 		{
 			public bool drawInline = true;
 			public bool drawLabels = true;
+			//the calc option is usually only needed with a list of Evaluators whose results will be added/subtracted etc from each other
+			public bool drawCalcOption = false;
 			public bool alwaysExpanded = false;
 
 			public ConfigAttribute(bool drawInline)
@@ -132,6 +168,13 @@ namespace UMA
 				this.drawInline = drawInline;
 				this.drawLabels = drawLabels;
 				this.alwaysExpanded = alwaysExpanded;
+			}
+			public ConfigAttribute(bool drawInline, bool drawLabels, bool alwaysExpanded, bool drawCalcOption)
+			{
+				this.drawInline = drawInline;
+				this.drawLabels = drawLabels;
+				this.alwaysExpanded = alwaysExpanded;
+				this.drawCalcOption = drawCalcOption;
 			}
 
 		}

@@ -24,7 +24,7 @@ namespace UMA
 	//I chose not to just have an animationCurve field because its really not very easy to understand how the curve works on the incoming dna value
 
 	[System.Serializable]
-	public sealed class DNAEvaluationGraphPresets : ScriptableObject
+	public sealed class DNAEvaluationGraphPresetLibrary : ScriptableObject
 	{
 
 		[SerializeField]
@@ -143,13 +143,17 @@ namespace UMA
 		public static string GetTooltipFor(DNAEvaluationGraph graph)
 		{
 			var ret = graph.name;
-			if (DNAEvaluationGraph.Defaults.ContainsKey(graph))
-				return (DNAEvaluationGraph.Defaults[graph]);
-
+			//if (DNAEvaluationGraph.Defaults.ContainsKey(graph))
+			//	return (DNAEvaluationGraph.Defaults[graph]);
+			foreach(KeyValuePair<DNAEvaluationGraph, string> kp in DNAEvaluationGraph.Defaults)
+			{
+				if (kp.Key.GraphMatches(graph))
+					return kp.Value;
+			}
 			var _allCustomPresets = AllCustomGraphPresets;
 			for (int i = 0; i < _allCustomPresets.Count; i++)
 			{
-				if (_allCustomPresets[i] == graph)
+				if (_allCustomPresets[i].GraphMatches(graph))
 					return AllCustomGraphTooltips[i];
 			}
 			return ret;
@@ -356,14 +360,14 @@ namespace UMA
 			}
 		}
 
-		private static DNAEvaluationGraphPresets[] GetAllInstances()
+		private static DNAEvaluationGraphPresetLibrary[] GetAllInstances()
 		{
-			string[] guids = AssetDatabase.FindAssets("t:" + typeof(DNAEvaluationGraphPresets).Name); 
-			DNAEvaluationGraphPresets[] a = new DNAEvaluationGraphPresets[guids.Length];
+			string[] guids = AssetDatabase.FindAssets("t:" + typeof(DNAEvaluationGraphPresetLibrary).Name); 
+			DNAEvaluationGraphPresetLibrary[] a = new DNAEvaluationGraphPresetLibrary[guids.Length];
 			for (int i = 0; i < guids.Length; i++)
 			{
 				string path = AssetDatabase.GUIDToAssetPath(guids[i]);
-				a[i] = AssetDatabase.LoadAssetAtPath<DNAEvaluationGraphPresets>(path);
+				a[i] = AssetDatabase.LoadAssetAtPath<DNAEvaluationGraphPresetLibrary>(path);
 			}
 
 			return a;
@@ -408,7 +412,7 @@ namespace UMA
 			if (path.IndexOf("/Editor") < 0)
 				path += "/Editor";
 			path += "/New DNAEvaluatorPresetLibrary.asset";
-			UMA.CustomAssetUtility.CreateAsset<DNAEvaluationGraphPresets>(path);
+			UMA.CustomAssetUtility.CreateAsset<DNAEvaluationGraphPresetLibrary>(path);
 		}
 #endif
 

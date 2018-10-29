@@ -127,7 +127,7 @@ namespace UMA.CharacterSystem
 			this._valuesZ = new spVal(skelAddDefaults[_propType]);
 		}
 
-		public SkeletonModifier(SkeletonModifier importedModifier)
+		public SkeletonModifier(SkeletonModifier importedModifier, bool doUpgrade = false)
 		{
 			this._hashName = importedModifier._hashName;
 			this._hash = importedModifier._hash;
@@ -135,22 +135,40 @@ namespace UMA.CharacterSystem
 			this._valuesX = importedModifier._valuesX;
 			this._valuesY = importedModifier._valuesY;
 			this._valuesZ = importedModifier._valuesZ;
-			this._umaDNA = importedModifier._umaDNA;
+			this._umaDNA = importedModifier._umaDNA;//dont think this should have ever been serialized
+			if (doUpgrade)
+				UpgradeToDNAEvaluators();
 		}
-
+		//When happy get rid of this and do it via ISerializationCallbacks instead
+		public void UpgradeToDNAEvaluators()
+		{
+			_valuesX.val.ConvertToDNAEvaluators();
+			_valuesY.val.ConvertToDNAEvaluators();
+			_valuesZ.val.ConvertToDNAEvaluators();
+		}
+		//these need to also not apply any actual value overrides if the masterWeight is not 1
 		public Vector3 CalculateValueX(UMADnaBase umaDNA, float masterWeight = 1f)
 		{
-			return _valuesX.CalculateValue(_umaDNA, masterWeight);
+			var defaultval = skelAddDefaults[property].x;
+			var resVal = _valuesX.CalculateValue(_umaDNA, masterWeight);
+			resVal.x = Mathf.Lerp(defaultval, resVal.x, masterWeight);
+			return resVal;
 		}
 
 		public Vector3 CalculateValueY(UMADnaBase umaDNA, float masterWeight = 1f)
 		{
-			return _valuesY.CalculateValue(_umaDNA, masterWeight);
+			var defaultval = skelAddDefaults[property].x;
+			var resVal = _valuesY.CalculateValue(_umaDNA, masterWeight);
+			resVal.x = Mathf.Lerp(defaultval, resVal.x, masterWeight);
+			return resVal;
 		}
 
 		public Vector3 CalculateValueZ(UMADnaBase umaDNA, float masterWeight = 1f)
 		{
-			return _valuesZ.CalculateValue(_umaDNA, masterWeight);
+			var defaultval = skelAddDefaults[property].x;
+			var resVal = _valuesZ.CalculateValue(_umaDNA, masterWeight);
+			resVal.x = Mathf.Lerp(defaultval, resVal.x, masterWeight);
+			return resVal;
 		}
 
 		//Skeleton Modifier Special Types
@@ -195,14 +213,17 @@ namespace UMA.CharacterSystem
 				_max = startingVals.z;
 			}
 
+#pragma warning disable 618 //disable obsolete warning
 			public spVal(spVal importedSpVal)
 			{
 				_val = new spValValue();
 				_val.value = importedSpVal._val.value;
-				_val._modifiers = new List<spValValue.spValModifier>(importedSpVal._val.modifiers);
+				_val.modifiers = new List<spValValue.spValModifier>(importedSpVal._val.modifiers);
+				_val.modifyingDNA = new DNAEvaluatorList(importedSpVal._val.modifyingDNA);
 				_min = importedSpVal._min;
 				_max = importedSpVal._max;
 			}
+#pragma warning restore 618 //disable obsolete warning
 
 			public Vector3 CalculateValue(UMADnaBase umaDNA, float masterWeight = 1f)
 			{
@@ -222,10 +243,17 @@ namespace UMA.CharacterSystem
 			{
 				[FormerlySerializedAs("value")]
 				[SerializeField]
-				public float _value = 0f;
+				private float _value = 0f;
+
+				//Mark as Obsolete
 				[FormerlySerializedAs("modifiers")]
 				[SerializeField]
-				public List<spValModifier> _modifiers = new List<spValModifier>();
+				private List<spValModifier> _modifiers = new List<spValModifier>();
+
+				[SerializeField]
+				[DNAEvaluatorList.Config(DNAEvaluatorList.ConfigAttribute.LabelOptions.drawExpandedWithLabel)]
+				[Tooltip("A list of dna that will be used to modify the bone on this axis. Usually you use 'Cumulative' so that the initial value for the axis is modified by each line here in turn.")]
+				private DNAEvaluatorList _modifyingDNA = new DNAEvaluatorList();
 
 				public float value
 				{
@@ -233,127 +261,152 @@ namespace UMA.CharacterSystem
 					set { _value = value; }
 				}
 
+				[System.Obsolete("Will be removed in future version. Please use 'modifyingDNA' instead")]
 				public List<spValModifier> modifiers
 				{
 					get { return _modifiers; }
 					set { _modifiers = value; }
 				}
 
+				public DNAEvaluatorList modifyingDNA
+				{
+					get { return _modifyingDNA; }
+					set { _modifyingDNA = new DNAEvaluatorList(value); }
+				}
+
 				public float CalculateValue(UMADnaBase umaDNA, float masterWeight = 1f)
 				{
 					float thisVal = _value;
+					if (_modifiers.Count > 0 && _modifyingDNA.Count == 0)
+					{
+						thisVal = CalculateLegacyModifiers(thisVal, _modifiers, umaDNA, masterWeight);
+					}
+					if(_modifyingDNA.Count > 0)
+					{
+						var modDNAResult = _modifyingDNA.ApplyDNAToValue(umaDNA, _value);
+						var modDNAResultWeighted = Mathf.Lerp(_value, modDNAResult, masterWeight);
+						//if (thisVal != 0 && thisVal != 1)
+						//	Debug.Log("standardResult was " + thisVal + " modDNAResult was " + modDNAResultWeighted);
+						thisVal = modDNAResultWeighted;
+					}
+					return thisVal;
+				}
+
+				private float CalculateLegacyModifiers(float startingVal, List<spValModifier> _modifiers, UMADnaBase umaDNA, float masterWeight = 1f)
+				{
 					float modifierVal = 0;
 					float tempModifierVal = 0;
 					string dnaCombineMethod = "";
 					bool inModifierPair = false;
-					if (_modifiers.Count > 0)
+					for (int i = 0; i < _modifiers.Count; i++)
 					{
-						for (int i = 0; i < _modifiers.Count; i++)
+						if (_modifiers[i].DNATypeName != "None" && (_modifiers[i].modifier == spValModifier.spValModifierType.AddDNA ||
+							_modifiers[i].modifier == spValModifier.spValModifierType.DivideDNA ||
+							_modifiers[i].modifier == spValModifier.spValModifierType.MultiplyDNA ||
+							_modifiers[i].modifier == spValModifier.spValModifierType.SubtractDNA))
 						{
-							if (_modifiers[i].DNATypeName != "None" && (_modifiers[i].modifier == spValModifier.spValModifierType.AddDNA ||
-								_modifiers[i].modifier == spValModifier.spValModifierType.DivideDNA ||
-								_modifiers[i].modifier == spValModifier.spValModifierType.MultiplyDNA ||
-								_modifiers[i].modifier == spValModifier.spValModifierType.SubtractDNA))
+							//using the hash vs using the name makes virtually no difference
+							//tempModifierVal = GetUmaDNAValue(_modifiers[i].DNANameHash, umaDNA);
+							tempModifierVal = GetUmaDNAValue(_modifiers[i].DNATypeName, umaDNA);
+							tempModifierVal -= 0.5f;
+							tempModifierVal = tempModifierVal * masterWeight;
+							inModifierPair = true;
+							if (_modifiers[i].modifier == spValModifier.spValModifierType.AddDNA)
 							{
-								tempModifierVal = GetUmaDNAValue(_modifiers[i].DNATypeName, umaDNA);
-								tempModifierVal -= 0.5f;
-								tempModifierVal = tempModifierVal * masterWeight;
-								inModifierPair = true;
-								if (_modifiers[i].modifier == spValModifier.spValModifierType.AddDNA)
-								{
-									dnaCombineMethod = "Add";
-								}
-								else if (_modifiers[i].modifier == spValModifier.spValModifierType.DivideDNA)
-								{
-									dnaCombineMethod = "Divide";
-								}
-								else if (_modifiers[i].modifier == spValModifier.spValModifierType.MultiplyDNA)
-								{
-									dnaCombineMethod = "Multiply";
-								}
-								else if (_modifiers[i].modifier == spValModifier.spValModifierType.SubtractDNA)
-								{
-									dnaCombineMethod = "Subtract";
-								}
+								dnaCombineMethod = "Add";
 							}
-							else
+							else if (_modifiers[i].modifier == spValModifier.spValModifierType.DivideDNA)
 							{
-								if (_modifiers[i].modifier == spValModifier.spValModifierType.Add)
-								{
-									modifierVal += (tempModifierVal + (_modifiers[i].modifierValue * masterWeight));
-									tempModifierVal = 0;
-									inModifierPair = false;
-								}
-								else if (_modifiers[i].modifier == spValModifier.spValModifierType.Divide)
-								{
-									modifierVal += (tempModifierVal / (_modifiers[i].modifierValue * masterWeight));
-									tempModifierVal = 0;
-									inModifierPair = false;
-								}
-								else if (_modifiers[i].modifier == spValModifier.spValModifierType.Multiply)
-								{
-									modifierVal += (tempModifierVal * (_modifiers[i].modifierValue * masterWeight));
-									tempModifierVal = 0;
-									inModifierPair = false;
-								}
-								else if (_modifiers[i].modifier == spValModifier.spValModifierType.Subtract)
-								{
-									modifierVal += (tempModifierVal - (_modifiers[i].modifierValue * masterWeight));
-									tempModifierVal = 0;
-									inModifierPair = false;
-								}
+								dnaCombineMethod = "Divide";
 							}
-							modifierVal = modifierVal * masterWeight;
-							if (modifierVal != 0 && inModifierPair == false)
+							else if (_modifiers[i].modifier == spValModifier.spValModifierType.MultiplyDNA)
 							{
-								if (dnaCombineMethod == "Add")
-								{
-									thisVal += modifierVal;
-								}
-								if (dnaCombineMethod == "Subtract")
-								{
-									thisVal -= modifierVal;
-								}
-								if (dnaCombineMethod == "Multiply")
-								{
-									thisVal *= modifierVal;
-								}
-								if (dnaCombineMethod == "Divide")
-								{
-									thisVal /= modifierVal;
-								}
-								modifierVal = 0;
-								dnaCombineMethod = "";
+								dnaCombineMethod = "Multiply";
+							}
+							else if (_modifiers[i].modifier == spValModifier.spValModifierType.SubtractDNA)
+							{
+								dnaCombineMethod = "Subtract";
 							}
 						}
-						//in the case of left/Right(Up)LegAdjust the umadna is subtracted from the result without being multiplied by anything
-						//this accounts for the scenario where umaDna is left trailing with no correcponding add/subtract/multiply/divide multiplier
-						if (tempModifierVal != 0 && inModifierPair != false)
+						else
+						{
+							if (_modifiers[i].modifier == spValModifier.spValModifierType.Add)
+							{
+								modifierVal += (tempModifierVal + (_modifiers[i].modifierValue * masterWeight));
+								tempModifierVal = 0;
+								inModifierPair = false;
+							}
+							else if (_modifiers[i].modifier == spValModifier.spValModifierType.Divide)
+							{
+								modifierVal += (tempModifierVal / (_modifiers[i].modifierValue * masterWeight));
+								tempModifierVal = 0;
+								inModifierPair = false;
+							}
+							else if (_modifiers[i].modifier == spValModifier.spValModifierType.Multiply)
+							{
+								modifierVal += (tempModifierVal * (_modifiers[i].modifierValue * masterWeight));
+								tempModifierVal = 0;
+								inModifierPair = false;
+							}
+							else if (_modifiers[i].modifier == spValModifier.spValModifierType.Subtract)
+							{
+								modifierVal += (tempModifierVal - (_modifiers[i].modifierValue * masterWeight));
+								tempModifierVal = 0;
+								inModifierPair = false;
+							}
+						}
+						modifierVal = modifierVal * masterWeight;
+						if (modifierVal != 0 && inModifierPair == false)
 						{
 							if (dnaCombineMethod == "Add")
 							{
-								thisVal += tempModifierVal;
+								startingVal += modifierVal;
 							}
 							if (dnaCombineMethod == "Subtract")
 							{
-								thisVal -= tempModifierVal;
+								startingVal -= modifierVal;
 							}
 							if (dnaCombineMethod == "Multiply")
 							{
-								thisVal *= tempModifierVal;
+								startingVal *= modifierVal;
 							}
 							if (dnaCombineMethod == "Divide")
 							{
-								thisVal /= tempModifierVal;
+								startingVal /= modifierVal;
 							}
-							dnaCombineMethod = "";
 							modifierVal = 0;
-							tempModifierVal = 0;
-							inModifierPair = false;
+							dnaCombineMethod = "";
 						}
 					}
-					return thisVal;
+					//in the case of left/Right(Up)LegAdjust the umadna is subtracted from the result without being multiplied by anything
+					//this accounts for the scenario where umaDna is left trailing with no correcponding add/subtract/multiply/divide multiplier
+					if (tempModifierVal != 0 && inModifierPair != false)
+					{
+						if (dnaCombineMethod == "Add")
+						{
+							startingVal += tempModifierVal;
+						}
+						if (dnaCombineMethod == "Subtract")
+						{
+							startingVal -= tempModifierVal;
+						}
+						if (dnaCombineMethod == "Multiply")
+						{
+							startingVal *= tempModifierVal;
+						}
+						if (dnaCombineMethod == "Divide")
+						{
+							startingVal /= tempModifierVal;
+						}
+						dnaCombineMethod = "";
+						modifierVal = 0;
+						tempModifierVal = 0;
+						inModifierPair = false;
+					}
+					return startingVal;
 				}
+
+				//Obsolete
 				public float GetUmaDNAValue(string DNATypeName, UMADnaBase umaDnaIn)
 				{
 					if (umaDnaIn == null)
@@ -368,6 +421,57 @@ namespace UMA.CharacterSystem
 					return val;
 				}
 
+#pragma warning disable 618 //disable obsolete warning
+
+				//make this staic?
+				public void ConvertToDNAEvaluators()
+				{
+					spValModifier accessoryMod = null;
+					DNAEvaluator.CalcOption calcOption = DNAEvaluator.CalcOption.Add;
+					float multiplier = 1f;
+					if (_modifiers.Count > 0 && _modifyingDNA.Count == 0)
+					{
+						_modifyingDNA.Clear();
+						for (int i = 0; i < modifiers.Count; i++)
+						{
+							accessoryMod = null;
+							multiplier = 1f;
+							if (!string.IsNullOrEmpty(modifiers[i].DNATypeName))
+							{
+								if ((i + 1) < modifiers.Count && string.IsNullOrEmpty(modifiers[i + 1].DNATypeName))
+									accessoryMod = modifiers[i + 1];
+
+								if (modifiers[i].modifier == spValModifier.spValModifierType.AddDNA)
+									calcOption = DNAEvaluator.CalcOption.Add;
+								else if (modifiers[i].modifier == spValModifier.spValModifierType.DivideDNA)
+									calcOption = DNAEvaluator.CalcOption.Divide;
+								else if (modifiers[i].modifier == spValModifier.spValModifierType.MultiplyDNA)
+									calcOption = DNAEvaluator.CalcOption.Multiply;
+								else if (modifiers[i].modifier == spValModifier.spValModifierType.SubtractDNA)
+									calcOption = DNAEvaluator.CalcOption.Subtract;
+
+								if(accessoryMod != null)
+								{
+									if (accessoryMod.modifier == spValModifier.spValModifierType.Multiply)
+										multiplier = accessoryMod.modifierValue;
+									else if (accessoryMod.modifier == spValModifier.spValModifierType.Divide)
+										multiplier = (1f / accessoryMod.modifierValue);
+									//otherwise we are stuffed- you can do add/subtract by using a different evaluator but I'm not gonna do that here
+									else
+										multiplier = 1f;
+								}
+								_modifyingDNA.Add(new DNAEvaluator(modifiers[i].DNATypeName, DNAEvaluationGraph.Default, multiplier, calcOption));
+							}
+							if (accessoryMod != null)
+								i++;
+						}
+						_modifyingDNA.aggregationMethod = DNAEvaluatorList.AggregationMethodOpts.Cumulative;
+					}
+					_modifiers.Clear();
+				}
+#pragma warning restore 618 //restore obsolete warning
+
+				//Mark as obsolete
 				//spValValue Special Types
 				//The aim is to replace these with DNAEvaluators
 				[Serializable]
@@ -377,9 +481,11 @@ namespace UMA.CharacterSystem
 					[FormerlySerializedAs("modifier")]
 					[SerializeField]
 					private spValModifierType _modifier = spValModifierType.Add;
+
 					[FormerlySerializedAs("DNATypeName")]
 					[SerializeField]
 					private string _DNATypeName = "";
+
 					[FormerlySerializedAs("modifierValue")]
 					[SerializeField]
 					private float _modifierValue = 0f;
@@ -392,8 +498,8 @@ namespace UMA.CharacterSystem
 
 					public string DNATypeName
 					{
-						get { return _DNATypeName; }
-						set { _DNATypeName = value; }
+						get{return _DNATypeName;}
+						set{_DNATypeName = value;}
 					}
 
 					public float modifierValue
@@ -401,6 +507,7 @@ namespace UMA.CharacterSystem
 						get { return _modifierValue; }
 						set { _modifierValue = value; }
 					}
+
 				}
 			}
 		}

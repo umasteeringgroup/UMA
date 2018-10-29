@@ -348,7 +348,7 @@ namespace UMA.Editors
 			//There is no elements searching in the 'By DNA' view so clear the field
 			_elementSearchString = "";
 
-			var position = DrawPluginFoldout(Rect.zero, dnaName);
+			DrawPluginFoldout(Rect.zero, dnaName);
 			if (_isExpandedForDNA[dnaName])
 			{
 				DrawPluginHelp(Rect.zero, dnaName);

@@ -176,13 +176,10 @@ namespace UMA
 			{
 				get
 				{
-					var usedNames = new List<string>();
-					for (int i = 0; i < _modifyingDNA.Count; i++)
-					{
-						if (!string.IsNullOrEmpty(_modifyingDNA[i].dnaName))
-							usedNames.Add(_modifyingDNA[i].dnaName);
-					}
-					return usedNames;
+					//Do we include masterDNA in this? 
+					//It will make a dna entry where every entry in any plugin that uses the name shows up
+					//could be more annoying/confusing than useful
+					return _modifyingDNA.UsedDNANames;
 				}
 			}
 

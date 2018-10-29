@@ -8,6 +8,8 @@ using UMA.CharacterSystem;
 
 namespace UMA
 {
+	//Currently SkeletonModifiers are only updated to use DNAEvaluatorList when they are added to one of these plugins
+	//In future though we should do the update using ISerializationCallbackReciever on the SkeletonModifier class itself
 	public class SkeletonDNAConverterPlugin : DynamicDNAPlugin
 	{
 		[SerializeField]
@@ -142,7 +144,8 @@ namespace UMA
 			}
 		}
 
-#pragma warning disable 618
+#pragma warning disable 618 //disable obsolete warning
+
 		/// <summary>
 		/// Imports SkeletomModifiers from another object into this SkeletonModifiersDNAConverterPlugin
 		/// </summary>
@@ -152,6 +155,7 @@ namespace UMA
 		public override bool ImportSettings(Object pluginToImport, int importMethod)
 		{
 			List<SkeletonModifier> importedSkeletonModifiers = new List<SkeletonModifier>();
+			bool isLegacy = false;
 			if (pluginToImport.GetType() == this.GetType())
 				importedSkeletonModifiers = (pluginToImport as SkeletonDNAConverterPlugin)._skeletonModifiers;
 			else
@@ -162,6 +166,11 @@ namespace UMA
 					if(DDCB != null)
 					{
 						importedSkeletonModifiers = DDCB.skeletonModifiers;
+						//hmm this is not always the case because of the backwards compatible property giving us the first found skelModsPlugin aswell
+						//so if there is no converter controller, *then* its legacy- 
+						//or is it the user could still assign a controller without upgrading and then try and drag the behaviour in here
+						if(DDCB.ConverterController == null)
+							isLegacy = true;
 					}
 				}
 			}
@@ -179,7 +188,7 @@ namespace UMA
 				//If any dnanames are misisng give the user the option to only overwrite matching dna names
 				//or add the missing dna names and continue
 				//or cancel
-				string nameToCheck = "";
+				//string nameToCheck = "";
 				bool existed = false;
 
 				//if the names in the dnaAsset get changed during this process we need to save that too
@@ -204,6 +213,13 @@ namespace UMA
 						if (!existed)
 							continue;
 					}
+					var usedDNANames = SkeletonModifierUsedDNANames(incomingModifiers[i], isLegacy);
+					for(int nc = i; nc < usedDNANames.Count; nc++)
+					{
+						if (!existingDNANames.Contains(usedDNANames[nc]) && !missingDNANames.Contains(usedDNANames[nc]))
+							missingDNANames.Add(usedDNANames[nc]);
+					}
+					/*
 					//check x
 					for (int vi = 0; vi < incomingModifiers[i].valuesX.val.modifiers.Count; vi++)
 					{
@@ -230,7 +246,7 @@ namespace UMA
 						{
 							missingDNANames.Add(nameToCheck);
 						}
-					}
+					}*/
 				}
 				if (missingDNANames.Count > 0 && DNAAsset != null)
 				{
@@ -282,7 +298,7 @@ namespace UMA
 					}
 					if (!existed)
 					{
-						currentModifiers.Add(new SkeletonModifier(incomingModifiers[i]));
+						currentModifiers.Add(new SkeletonModifier(incomingModifiers[i], true));
 					}
 				}
 				//now if the method is overwrite or addoverwrite we need to overwrite any existing values
@@ -298,15 +314,27 @@ namespace UMA
 								currentModifiers[ci].valuesX.min = incomingModifiers[i].valuesX.min;
 								currentModifiers[ci].valuesX.max = incomingModifiers[i].valuesX.max;
 								currentModifiers[ci].valuesX.val.value = incomingModifiers[i].valuesX.val.value;
-								ProcessSkelModOverwrites(currentModifiers[ci].valuesX.val.modifiers, incomingModifiers[i].valuesX.val.modifiers, existingDNANames);
+								//now currentModifiers should only ever have modifyingDNA but incomingModifiers might contain data in  legacy 'modifiers' OR in 'modifyingDNA'
+								if(isLegacy)
+									ProcessSkelModOverwrites(currentModifiers[ci].valuesX.val.modifyingDNA, incomingModifiers[i].valuesX.val.modifiers, existingDNANames);
+								else
+									ProcessSkelModOverwrites(currentModifiers[ci].valuesX.val.modifyingDNA, incomingModifiers[i].valuesX.val.modifyingDNA, existingDNANames);
+
 								currentModifiers[ci].valuesY.min = incomingModifiers[i].valuesY.min;
 								currentModifiers[ci].valuesY.max = incomingModifiers[i].valuesY.max;
 								currentModifiers[ci].valuesY.val.value = incomingModifiers[i].valuesY.val.value;
-								ProcessSkelModOverwrites(currentModifiers[ci].valuesY.val.modifiers, incomingModifiers[i].valuesY.val.modifiers, existingDNANames);
+								if(isLegacy)
+									ProcessSkelModOverwrites(currentModifiers[ci].valuesY.val.modifyingDNA, incomingModifiers[i].valuesY.val.modifiers, existingDNANames);
+								else
+									ProcessSkelModOverwrites(currentModifiers[ci].valuesY.val.modifyingDNA, incomingModifiers[i].valuesY.val.modifyingDNA, existingDNANames);
+
 								currentModifiers[ci].valuesZ.min = incomingModifiers[i].valuesZ.min;
 								currentModifiers[ci].valuesZ.max = incomingModifiers[i].valuesZ.max;
 								currentModifiers[ci].valuesZ.val.value = incomingModifiers[i].valuesZ.val.value;
-								ProcessSkelModOverwrites(currentModifiers[ci].valuesZ.val.modifiers, incomingModifiers[i].valuesZ.val.modifiers, existingDNANames);
+								if(isLegacy)
+									ProcessSkelModOverwrites(currentModifiers[ci].valuesZ.val.modifyingDNA, incomingModifiers[i].valuesZ.val.modifiers, existingDNANames);
+								else
+									ProcessSkelModOverwrites(currentModifiers[ci].valuesZ.val.modifyingDNA, incomingModifiers[i].valuesZ.val.modifyingDNA, existingDNANames);
 
 								break;
 							}
@@ -329,7 +357,51 @@ namespace UMA
 		}
 #pragma warning restore 618
 
-		private void ProcessSkelModOverwrites(List<SkeletonModifier.spVal.spValValue.spValModifier> currentMods, List<SkeletonModifier.spVal.spValValue.spValModifier> incomingMods, List<string> existingDNANames)
+
+#pragma warning disable 618 //disable obsolete warning
+
+		/// <summary>
+		/// Converts the legacy incoming values into DNAEvaluators and then overwrites any DNAEvaluators in the current settings with the settings from the incoming DNAEvaluators if the dnaName matches, otherwise adds a new evaluator for the dnaName
+		/// </summary>
+		/// <param name="existingDNANames">If the dnaName used by a DNAEvaluator in the incoming settings is not found in this list it will not be processed</param>
+		private void ProcessSkelModOverwrites(DNAEvaluatorList currentMods, List<SkeletonModifier.spVal.spValValue.spValModifier> incomingMods, List<string> existingDNANames)
+		{
+			SkeletonModifier.spVal.spValValue tempValValue = new SkeletonModifier.spVal.spValValue();
+			tempValValue.modifiers = new List<SkeletonModifier.spVal.spValValue.spValModifier>(incomingMods);
+			tempValValue.ConvertToDNAEvaluators();
+			ProcessSkelModOverwrites(currentMods, tempValValue.modifyingDNA, existingDNANames);
+		}
+#pragma warning restore 618
+
+		/// <summary>
+		/// overwrites any DNAEvaluators in the current settings with the settings from the incoming DNAEvaluators if the dnaName matches, otherwise adds a new evaluator for the dnaName
+		/// </summary>
+		/// <param name="existingDNANames">If the dnaName used by a DNAEvaluator in the incoming settings is not found in this list it will not be processed</param>
+		private void ProcessSkelModOverwrites(DNAEvaluatorList currentMods, DNAEvaluatorList incomingMods, List<string> existingDNANames)
+		{
+			for (int i = 0; i < incomingMods.Count; i++)
+			{
+				if (!existingDNANames.Contains(incomingMods[i].dnaName))
+					continue;
+				var foundInCurrent = false;
+				for (int ci = 0; ci < currentMods.Count; ci++)
+				{
+					if (currentMods[ci].dnaName == incomingMods[i].dnaName)
+					{
+						currentMods[ci].calcOption = incomingMods[i].calcOption;
+						currentMods[ci].evaluator = new DNAEvaluationGraph(incomingMods[i].evaluator);
+						currentMods[ci].multiplier = incomingMods[i].multiplier;
+						foundInCurrent = true;
+					}
+				}
+				if (!foundInCurrent)
+				{
+					currentMods.Add(new DNAEvaluator(incomingMods[i].dnaName, incomingMods[i].evaluator, incomingMods[i].multiplier, incomingMods[i].calcOption));
+				}
+			}
+		}
+
+		/*private void ProcessSkelModOverwritesOld(List<SkeletonModifier.spVal.spValValue.spValModifier> currentMods, List<SkeletonModifier.spVal.spValValue.spValModifier> incomingMods, List<string> existingDNANames)
 		{
 			int modCount = 0;
 			SkeletonModifier.spVal.spValValue.spValModifier tempMods;
@@ -405,56 +477,82 @@ namespace UMA
 					}
 				}
 			}
-		}
+		}*/
 #endif
 
 		#endregion
 
 		#region PRIVATE METHODS
 
+#pragma warning disable 618 //disable obsolete warning
 		/// <summary>
 		/// Returns the DNANames used by the given skeleton modifier, 
-		/// optionally filtering by a given name, in which case the returned list count will only be greater than zero if the modifier used the name
+		/// optionally filtering by a given name, in which case the returned list count will only be greater than zero if the modifier used the name.
+		/// This can be used to query if any modifiers were using the given name
 		/// </summary>
 		/// <returns></returns>
-		private List<string> SkeletonModifierUsedDNANames(SkeletonModifier skeletonModifier, string dnaName = "")
+		private List<string> SkeletonModifierUsedDNANames(SkeletonModifier skeletonModifier, bool searchLegacy = false, string dnaName = "")
 		{
 			List<string> usedNames = new List<string>();
-			for (int xi = 0; xi < skeletonModifier.valuesX.val.modifiers.Count; xi++)
+			//names from new _modifyingDNA in the modifiers
+			var xNames = skeletonModifier.valuesX.val.modifyingDNA.UsedDNANames;
+			var yNames = skeletonModifier.valuesY.val.modifyingDNA.UsedDNANames;
+			var zNames = skeletonModifier.valuesZ.val.modifyingDNA.UsedDNANames;
+			for(int i = 0; i < xNames.Count; i++)
 			{
-				if (!string.IsNullOrEmpty(skeletonModifier.valuesX.val.modifiers[xi].DNATypeName) &&
-					dnaName == "" || skeletonModifier.valuesX.val.modifiers[xi].DNATypeName == dnaName)
+				if (!usedNames.Contains(xNames[i]) && (dnaName == "" || xNames[i] == dnaName))
+					usedNames.Add(xNames[i]);
+			}
+			for (int i = 0; i < yNames.Count; i++)
+			{
+				if (!usedNames.Contains(yNames[i]) && (dnaName == "" || yNames[i] == dnaName))
+					usedNames.Add(yNames[i]);
+			}
+			for (int i = 0; i < zNames.Count; i++)
+			{
+				if (!usedNames.Contains(zNames[i]) && (dnaName == "" || zNames[i] == dnaName))
+					usedNames.Add(zNames[i]);
+			}
+			if (searchLegacy)
+			{
+				//legacy names
+				for (int xi = 0; xi < skeletonModifier.valuesX.val.modifiers.Count; xi++)
 				{
-					if (!usedNames.Contains(skeletonModifier.valuesX.val.modifiers[xi].DNATypeName))
+					if (!string.IsNullOrEmpty(skeletonModifier.valuesX.val.modifiers[xi].DNATypeName) &&
+						dnaName == "" || skeletonModifier.valuesX.val.modifiers[xi].DNATypeName == dnaName)
 					{
-						usedNames.Add(skeletonModifier.valuesX.val.modifiers[xi].DNATypeName);
+						if (!usedNames.Contains(skeletonModifier.valuesX.val.modifiers[xi].DNATypeName))
+						{
+							usedNames.Add(skeletonModifier.valuesX.val.modifiers[xi].DNATypeName);
+						}
 					}
 				}
-			}
-			for (int yi = 0; yi < skeletonModifier.valuesY.val.modifiers.Count; yi++)
-			{
-				if (!string.IsNullOrEmpty(skeletonModifier.valuesY.val.modifiers[yi].DNATypeName) &&
-					dnaName == "" || skeletonModifier.valuesY.val.modifiers[yi].DNATypeName == dnaName)
+				for (int yi = 0; yi < skeletonModifier.valuesY.val.modifiers.Count; yi++)
 				{
-					if (!usedNames.Contains(skeletonModifier.valuesY.val.modifiers[yi].DNATypeName))
+					if (!string.IsNullOrEmpty(skeletonModifier.valuesY.val.modifiers[yi].DNATypeName) &&
+						dnaName == "" || skeletonModifier.valuesY.val.modifiers[yi].DNATypeName == dnaName)
 					{
-						usedNames.Add(skeletonModifier.valuesY.val.modifiers[yi].DNATypeName);
+						if (!usedNames.Contains(skeletonModifier.valuesY.val.modifiers[yi].DNATypeName))
+						{
+							usedNames.Add(skeletonModifier.valuesY.val.modifiers[yi].DNATypeName);
+						}
 					}
 				}
-			}
-			for (int zi = 0; zi < skeletonModifier.valuesZ.val.modifiers.Count; zi++)
-			{
-				if (!string.IsNullOrEmpty(skeletonModifier.valuesZ.val.modifiers[zi].DNATypeName) &&
-					dnaName == "" || skeletonModifier.valuesZ.val.modifiers[zi].DNATypeName == dnaName)
+				for (int zi = 0; zi < skeletonModifier.valuesZ.val.modifiers.Count; zi++)
 				{
-					if (!usedNames.Contains(skeletonModifier.valuesZ.val.modifiers[zi].DNATypeName))
+					if (!string.IsNullOrEmpty(skeletonModifier.valuesZ.val.modifiers[zi].DNATypeName) &&
+						dnaName == "" || skeletonModifier.valuesZ.val.modifiers[zi].DNATypeName == dnaName)
 					{
-						usedNames.Add(skeletonModifier.valuesZ.val.modifiers[zi].DNATypeName);
+						if (!usedNames.Contains(skeletonModifier.valuesZ.val.modifiers[zi].DNATypeName))
+						{
+							usedNames.Add(skeletonModifier.valuesZ.val.modifiers[zi].DNATypeName);
+						}
 					}
 				}
 			}
 			return usedNames;
 		}
+#pragma warning restore 618 //restore obsolete warning
 
 		#endregion
 	}

@@ -12,6 +12,7 @@ namespace UMA.Editors
 	[CustomPropertyDrawer(typeof(DNAEvaluator), true)]
 	public class DNAEvaluatorPropertyDrawer : PropertyDrawer
 	{
+		private const string CALCOPTIONPROPERTY = "_calcOption";
 		private const string DNANAMEPROPERTY = "_dnaName";
 		private const string EVALUATORPROPERTY = "_evaluator";
 		private const string MULTIPLIERPROPERTY = "_multiplier";
@@ -19,12 +20,20 @@ namespace UMA.Editors
 		private const string DNANAMELABEL = "DNA Name";
 		private const string EVALUATORLABEL = "Evaluator";
 		private const string MULTIPLIERLABEL = "Multiplier";
+		private const string CALCOPTIONMINILABEL = "\u01A9";
 
 		private DNAEvaluator _target;
 
 		private bool _drawInline = true;
 		private bool _drawLabels = true;
 		private bool _alwaysExpanded = false;
+		private bool _drawCalcOption = false;
+
+		private float _calcOptionWidth = 25f;
+		private GUIContent _calcOptionHeaderLabel = new GUIContent("\u03A3", "Define how the evaluated value will be combined with the previous Evaluator in the list.");
+		private GUIContent[] _calcOptionMiniLabels = new GUIContent[] { new GUIContent("+", "Add"), new GUIContent("-", "Subtract"), new GUIContent("\u00F7", "Divide"), new GUIContent("\u0078", "Multiply") };
+		private GUIStyle _calcPopupStyle;
+
 		private float _multiplierLabelWidth = 55f;
 		private Vector2 _dnaToEvaluatorRatio = new Vector2(2f, 3f);
 		private float _padding = 2f;
@@ -33,6 +42,9 @@ namespace UMA.Editors
 		//if this is drawn in a DynamicDNAPlugin it should give us dna names to choose from
 		private DynamicDNAPlugin _dynamicDNAPlugin;
 
+		private bool initialized = false;
+
+		//Ditch all this shiz I always want it drawn inline
 		public bool DrawInline
 		{
 			set
@@ -60,14 +72,28 @@ namespace UMA.Editors
 			}
 		}
 
-		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+		public bool DrawCalcOption
 		{
-			Event current = Event.current;
-			label = EditorGUI.BeginProperty(position, label, property);
+			set
+			{
+				_drawCalcOption = value;
+				_manuallyConfigured = true;
+			}
+		}
 
-			//Try and get a DNAAsset from the serializedObject
-			CheckDynamicDNAPlugin(property);
+		private void Init()
+		{
+			if (initialized)
+				return;
 
+			if (_drawCalcOption)
+			{
+				_calcPopupStyle = new GUIStyle(EditorStyles.popup);
+				//_calcPopupStyle.padding = new RectOffset();
+				//_calcPopupStyle.alignment = TextAnchor.MiddleCenter;
+				//_calcPopupStyle.fontStyle = FontStyle.Bold;
+				//_calcPopupStyle.fontSize++;
+			}
 			if (!_manuallyConfigured)
 			{
 				if (this.fieldInfo != null)
@@ -78,9 +104,22 @@ namespace UMA.Editors
 						_drawInline = attrib.drawInline;
 						_drawLabels = attrib.drawLabels;
 						_alwaysExpanded = attrib.alwaysExpanded;
+						_drawCalcOption = attrib.drawCalcOption;
 					}
 				}
 			}
+			initialized = true;
+		}
+
+		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+		{
+			Event current = Event.current;
+			label = EditorGUI.BeginProperty(position, label, property);
+
+			//Try and get a DNAAsset from the serializedObject- this is used for showing a popup in the dna field rather than a text field
+			CheckDynamicDNAPlugin(property);
+
+			Init();
 
 			if (_drawInline)
 			{
@@ -105,7 +144,10 @@ namespace UMA.Editors
 						if(current.type == EventType.Repaint)
 							reorderableListDefaults.headerBackground.Draw(position, GUIContent.none, false, false, false, false);
 						var rect1 = new Rect(position.xMin + 6f, position.yMin + 1f, position.width - 12f, position.height);
-						position = DoLabelsInline(rect1,(_alwaysExpanded ? label.text : DNANAMELABEL));
+						if(_alwaysExpanded)
+							position = DoLabelsInline(rect1, label);
+						else
+							position = DoLabelsInline(rect1, DNANAMELABEL);
 						position.xMin -= 6f;
 						position.width += 6f;
 						position.yMin -= 1f;
@@ -125,21 +167,42 @@ namespace UMA.Editors
 
 			EditorGUI.EndProperty();
 		}
-
 		public Rect DoLabelsInline(Rect position, string label1 = DNANAMELABEL, string label2 = EVALUATORLABEL, string label3 = MULTIPLIERLABEL)
 		{
+			return DoLabelsInline(position, new GUIContent(label1, GetChildTooltip(DNANAMEPROPERTY)), new GUIContent(label2, GetChildTooltip(EVALUATORPROPERTY)), new GUIContent(label3, GetChildTooltip(MULTIPLIERPROPERTY)));
+		}
+		public Rect DoLabelsInline(Rect position, GUIContent label1, GUIContent label2 = null, GUIContent label3 = null)
+		{
+			if (label2 == null)
+				label2 = new GUIContent(EVALUATORLABEL, GetChildTooltip(EVALUATORPROPERTY));
+			if (label3 == null)
+				label3 = new GUIContent(MULTIPLIERLABEL, GetChildTooltip(MULTIPLIERPROPERTY));
+
 			var prevIndent = EditorGUI.indentLevel;
 			EditorGUI.indentLevel = 0;
+
+			Rect calcOptionRect = Rect.zero;
+			if (_drawCalcOption)
+			{
+				//shouldn't need to add 15f here
+				calcOptionRect = new Rect(position.xMin+15f, position.yMin, _calcOptionWidth, EditorGUIUtility.singleLineHeight);
+				position.xMin = calcOptionRect.xMax;
+				//position.width = position.width - _calcOptionWidth;
+			}
 			var fieldbaseRatio = (position.width - _multiplierLabelWidth) / (_dnaToEvaluatorRatio.x + _dnaToEvaluatorRatio.y);
 			var dnafieldWidth = fieldbaseRatio * _dnaToEvaluatorRatio.x;
 			var evaluatorFieldWidth = fieldbaseRatio * _dnaToEvaluatorRatio.y;
 
 			var dnaNameLabelRect = new Rect(position.xMin, position.yMin, dnafieldWidth, EditorGUIUtility.singleLineHeight);
 			var evaluatorLabelRect = new Rect(dnaNameLabelRect.xMax, position.yMin, evaluatorFieldWidth, EditorGUIUtility.singleLineHeight);
-			var intensityLabelRect = new Rect(evaluatorLabelRect.xMax, position.yMin, _multiplierLabelWidth, EditorGUIUtility.singleLineHeight);
-			EditorGUI.LabelField(dnaNameLabelRect, new GUIContent(label1, GetChildTooltip(DNANAMEPROPERTY)), EditorStyles.centeredGreyMiniLabel);
-			EditorGUI.LabelField(evaluatorLabelRect, new GUIContent(label2, GetChildTooltip(EVALUATORPROPERTY)), EditorStyles.centeredGreyMiniLabel);
-			EditorGUI.LabelField(intensityLabelRect, new GUIContent(label3, GetChildTooltip(MULTIPLIERPROPERTY)), EditorStyles.centeredGreyMiniLabel);
+			var multiplierLabelRect = new Rect(evaluatorLabelRect.xMax, position.yMin, _multiplierLabelWidth, EditorGUIUtility.singleLineHeight);
+			if (_drawCalcOption)
+			{
+				EditorGUI.LabelField(calcOptionRect, _calcOptionHeaderLabel, EditorStyles.centeredGreyMiniLabel);
+			}
+			EditorGUI.LabelField(dnaNameLabelRect, label1, EditorStyles.centeredGreyMiniLabel);
+			EditorGUI.LabelField(evaluatorLabelRect, label2, EditorStyles.centeredGreyMiniLabel);
+			EditorGUI.LabelField(multiplierLabelRect, label3, EditorStyles.centeredGreyMiniLabel);
 			position.yMin = dnaNameLabelRect.yMax + 2f;
 
 			EditorGUI.indentLevel = prevIndent;
@@ -157,9 +220,19 @@ namespace UMA.Editors
 		{
 			CheckDynamicDNAPlugin(property);
 
+			Init();
+
 			var prevIndent = EditorGUI.indentLevel;
 			EditorGUI.indentLevel = 0;
 
+			Rect calcOptionRect = Rect.zero;
+			if (_drawCalcOption)
+			{
+				calcOptionRect = new Rect(position.xMin, position.yMin, _calcOptionWidth, EditorGUIUtility.singleLineHeight);
+				position.xMin = calcOptionRect.xMax;
+				//position.width = position.width - _calcOptionWidth;
+			}
+			var calcOptionProp = property.FindPropertyRelative(CALCOPTIONPROPERTY);
 			var dnaNameProp = property.FindPropertyRelative(DNANAMEPROPERTY);
 			var evaluatorProp = property.FindPropertyRelative(EVALUATORPROPERTY);
 			var intensityProp = property.FindPropertyRelative(MULTIPLIERPROPERTY);
@@ -171,16 +244,21 @@ namespace UMA.Editors
 
 			var dnaNameRect = new Rect(position.xMin + _padding, position.yMin, dnafieldWidth - (_padding * 2), position.height);
 			var evaluatorRect = new Rect(dnaNameRect.xMax + (_padding * 2), position.yMin, evaluatorFieldWidth - (_padding * 2), position.height);
-			var intensityRect = new Rect(evaluatorRect.xMax + (_padding * 2), position.yMin, _multiplierLabelWidth - (_padding * 2), position.height);
-			if(_dynamicDNAPlugin == null)
+			var multiplierRect = new Rect(evaluatorRect.xMax + (_padding * 2), position.yMin, _multiplierLabelWidth - (_padding * 2), position.height);
+
+			if (_drawCalcOption)
+			{
+				calcOptionProp.enumValueIndex = EditorGUI.Popup(calcOptionRect, calcOptionProp.enumValueIndex, _calcOptionMiniLabels, _calcPopupStyle);
+			}
+			if (_dynamicDNAPlugin == null)
 				EditorGUI.PropertyField(dnaNameRect, dnaNameProp, GUIContent.none);
 			else
 			{
-				_dynamicDNAPlugin.converterAsset.DNANamesPopup(dnaNameRect, dnaNameProp, dnaNameProp.stringValue);
+				_dynamicDNAPlugin.converterController.DNANamesPopup(dnaNameRect, dnaNameProp, dnaNameProp.stringValue);
 			}
 			EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(dnaNameProp.stringValue));
 			EditorGUI.PropertyField(evaluatorRect, evaluatorProp, GUIContent.none);
-			EditorGUI.PropertyField(intensityRect, intensityProp, GUIContent.none);
+			EditorGUI.PropertyField(multiplierRect, intensityProp, GUIContent.none);
 			EditorGUI.EndDisabledGroup();
 
 			EditorGUI.indentLevel = prevIndent;

@@ -6,11 +6,11 @@ using UMA;
 
 namespace UMA.Editors
 {
-	[CustomEditor(typeof(DNAEvaluationGraphPresets))]
-	public class DNAEvaluationGraphPresetsInspector : Editor
+	[CustomEditor(typeof(DNAEvaluationGraphPresetLibrary))]
+	public class DNAEvaluationGraphPresetLibraryInspector : Editor
 	{
 
-		DNAEvaluationGraphPresets _target;
+		DNAEvaluationGraphPresetLibrary _target;
 
 		DNAEvaluationGraphPropertyDrawer dnaEvalDrawer = new DNAEvaluationGraphPropertyDrawer();
 
@@ -59,15 +59,15 @@ namespace UMA.Editors
 		{
 			if (!initialized)
 			{
-				_target = serializedObject.targetObject as DNAEvaluationGraphPresets;
+				_target = serializedObject.targetObject as DNAEvaluationGraphPresetLibrary;
 				if (newGraph == null)
 				{
 					newGraph = new AnimationCurve(DNAEvaluationGraph.Default.GraphKeys);
 				}
 				wordwrappedTextArea = new GUIStyle(EditorStyles.textArea);
 				wordwrappedTextArea.wordWrap = true;
-				_customPresets = DNAEvaluationGraphPresets.AllCustomGraphPresets;
-				_customPresetTooltips = DNAEvaluationGraphPresets.AllCustomGraphTooltips;
+				_customPresets = DNAEvaluationGraphPresetLibrary.AllCustomGraphPresets;
+				_customPresetTooltips = DNAEvaluationGraphPresetLibrary.AllCustomGraphTooltips;
 				initialized = true;
 			}
 		}
@@ -100,15 +100,15 @@ namespace UMA.Editors
 			{
 				GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
 				EditorGUILayout.HelpBox("These are the standard evaluation graphs that ship with UMA. You can add your own in the custom section below.", MessageType.Info);
-				for (int i = 0; i < DNAEvaluationGraphPresets.DefaultGraphPresets.Count; i++)
+				for (int i = 0; i < DNAEvaluationGraphPresetLibrary.DefaultGraphPresets.Count; i++)
 				{
 					var rect = EditorGUILayout.GetControlRect(false, entryHeight + (padding * 2f));
 					rect.x += padding;
 					rect.width -= padding * 2f;
 					Rect swatchRect = new Rect(rect.xMin, rect.yMin + padding, rect.width, rect.height - (padding * 2f));
-					dnaEvalDrawer.DrawSwatch(swatchRect, DNAEvaluationGraphPresets.DefaultGraphPresets[i], DNAEvaluationGraphPresets.DefaultGraphTooltips[i], false, false, (dnaGraph) =>
+					dnaEvalDrawer.DrawSwatch(swatchRect, DNAEvaluationGraphPresetLibrary.DefaultGraphPresets[i], DNAEvaluationGraphPresetLibrary.DefaultGraphTooltips[i], false, false, (dnaGraph) =>
 					{
-						newGraph = new AnimationCurve(DNAEvaluationGraphPresets.DefaultGraphPresets[i].GraphKeys);
+						newGraph = new AnimationCurve(DNAEvaluationGraphPresetLibrary.DefaultGraphPresets[i].GraphKeys);
 						addPresetIsExpanded = true;
 					}
 					);
@@ -152,7 +152,7 @@ namespace UMA.Editors
 				{
 					for (int i = 0; i < custToDel.Count; i++)
 					{
-						DNAEvaluationGraphPresets.DeleteCustomPreset(_customPresets[custToDel[i]]);
+						DNAEvaluationGraphPresetLibrary.DeleteCustomPreset(_customPresets[custToDel[i]]);
 					}
 					initialized = false;
 					EditorUtility.SetDirty(_target);

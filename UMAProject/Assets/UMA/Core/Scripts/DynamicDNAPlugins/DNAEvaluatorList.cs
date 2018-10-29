@@ -16,37 +16,43 @@ namespace UMA
 		{
 			Average,
 			Cumulative,
-			Minumum,
+			Minimum,
 			Maximum
-		};
-		//This is used with the Cumulative option above. Each line can be added/subtracted etc from the previous one
-		public enum CalcOption
-		{
-			Add,
-			Subtract,
-			Multiply,
-			Divide
 		};
 
 		[SerializeField]
 		private List<DNAEvaluator> _dnaEvaluators = new List<DNAEvaluator>();
 
 		[SerializeField]
-		private List<CalcOption> _entryCalcOption = new List<CalcOption>();
-
-		[SerializeField]
-		[Tooltip("How the evaluated results of each entry are combined and returned.(CumulativeNormalized subtracts 0.5f from the incoming value to make the default UMA dna value of 0.5f zero)")]
+		[Tooltip("How the evaluated results of each entry are combined and returned. When 'Cumulative' is selected you can choose how each line will be combined with the preceeding one.")]
 		private AggregationMethodOpts _aggregationMethod = AggregationMethodOpts.Average;
+
+		public AggregationMethodOpts aggregationMethod
+		{
+			get { return _aggregationMethod; }
+			set { _aggregationMethod = value; }
+		}
+
+		public List<string> UsedDNANames
+		{
+			get
+			{
+				var ret = new List<string>();
+				for(int i = 0; i < _dnaEvaluators.Count; i++)
+				{
+					if (!string.IsNullOrEmpty(_dnaEvaluators[i].dnaName))
+						ret.Add(_dnaEvaluators[i].dnaName);
+				}
+				return ret;
+			}
+		}
 
 		#region CONSTRUCTOR
 
 		public DNAEvaluatorList()
 		{
-			//make sure the list has an empty element in
-			//No dont- its confusing
-			//_dnaEvaluators.Add(new DNAEvaluator());
 		}
-		//TODO Sort Out EntryCalcs
+
 		public DNAEvaluatorList(DNAEvaluatorList other)
 		{
 			_aggregationMethod = other._aggregationMethod;
@@ -78,6 +84,8 @@ namespace UMA
 		{
 			if(_dnaEvaluators.Count > 0)
 			{
+				/*
+				//This shouldn't be necessary now DNAEvaluator stores its last index
 				List<float> results = new List<float>();
 				//loop the dna to find all the dna name value pairs we need because getting dna by name is slow
 				Dictionary<int, float> incomingValues = new Dictionary<int, float>();
@@ -101,7 +109,8 @@ namespace UMA
 						results.Add(_dnaEvaluators[i].Evaluate(incomingValues[i]));
 					}
 				}
-				return GetAggregateValue(results);
+				return GetAggregateValue(results);*/
+				return GetAggregateValueNew(dna);
 			}
 			else
 			{
@@ -109,6 +118,80 @@ namespace UMA
 			}
 		}
 
+		public float ApplyDNAToValue(UMADnaBase umaDna, float startingValue)
+		{
+			if (_dnaEvaluators.Count > 0)
+			{
+				return GetAggregateValueNew(umaDna, startingValue);
+			}
+			else
+				return startingValue;
+		}
+
+		private float GetAggregateValueNew(UMADnaBase dna, float result = 0f)
+		{
+			float tempResult = 0f;
+			if (_aggregationMethod == AggregationMethodOpts.Average)
+			{
+				var aveCount = result != 0f ? 1 : 0;
+				for (int i = 0; i < _dnaEvaluators.Count; i++)
+				{
+					if (!string.IsNullOrEmpty(_dnaEvaluators[i].dnaName))
+					{
+						aveCount++;
+						result += _dnaEvaluators[i].Evaluate(dna);
+					}
+				}
+				if (aveCount > 0)
+					result = result / aveCount;
+			}
+			else if (_aggregationMethod == AggregationMethodOpts.Maximum)
+			{
+				for (int i = 0; i < _dnaEvaluators.Count; i++)
+				{
+					tempResult = 0f;
+					if (!string.IsNullOrEmpty(_dnaEvaluators[i].dnaName))
+					{
+						tempResult = _dnaEvaluators[i].Evaluate(dna);
+						if (tempResult > result)
+							result = tempResult;
+					}
+				}
+			}
+			else if (_aggregationMethod == AggregationMethodOpts.Minimum)
+			{
+				for (int i = 0; i < _dnaEvaluators.Count; i++)
+				{
+					tempResult = 0f;
+					if (!string.IsNullOrEmpty(_dnaEvaluators[i].dnaName))
+					{
+						tempResult = _dnaEvaluators[i].Evaluate(dna);
+						if (tempResult < result)
+							result = tempResult;
+					}
+				}
+			}
+			else if (aggregationMethod == AggregationMethodOpts.Cumulative)
+			{
+				for (int i = 0; i < _dnaEvaluators.Count; i++)
+				{
+					tempResult = 0f;
+					if (!string.IsNullOrEmpty(_dnaEvaluators[i].dnaName))
+					{
+						tempResult = _dnaEvaluators[i].Evaluate(dna);
+						if (_dnaEvaluators[i].calcOption == DNAEvaluator.CalcOption.Add)
+							result += tempResult;
+						else if (_dnaEvaluators[i].calcOption == DNAEvaluator.CalcOption.Subtract)
+							result -= tempResult;
+						else if (_dnaEvaluators[i].calcOption == DNAEvaluator.CalcOption.Multiply)
+							result *= tempResult;
+						else if (_dnaEvaluators[i].calcOption == DNAEvaluator.CalcOption.Divide && tempResult != 0)
+							result /= tempResult;
+					}
+				}
+			}
+			return result;
+		}
 		private float GetAggregateValue(List<float> vals)
 		{
 			float result = 0f;
@@ -137,7 +220,7 @@ namespace UMA
 					result += (vals[i] - 0.5f);
 				}
 			}*/
-			if(_aggregationMethod == AggregationMethodOpts.Minumum)
+			if(_aggregationMethod == AggregationMethodOpts.Minimum)
 			{
 				if (vals.Count > 0)
 				{
@@ -234,5 +317,39 @@ namespace UMA
 			return _dnaEvaluators.ToArray();
 		}
 		#endregion
-	}
+
+		#region ATTRIBUTES
+		[System.AttributeUsage(System.AttributeTargets.Field)]
+		public class ConfigAttribute : System.Attribute
+		{
+			public enum LabelOptions
+			{
+				drawLabelAsFoldout,
+				drawExpandedWithLabel,
+				drawExpandedNoLabel
+			}
+			//if drawExpandedNoLabel the label for the list is shown as the heading for the dnaName field
+			public LabelOptions labelOption = LabelOptions.drawLabelAsFoldout;
+			//if set, when a new entry is added to the list using the UI it will be of this type
+			public DNAEvaluationGraph defaultGraph = null;
+
+			/// <param name="labelOption">How to show the label for the list. If 'drawExpandedNoLabel' the label for the list is shown as the heading for the dnaName field</param>
+			public ConfigAttribute(LabelOptions labelOption)
+			{
+				this.labelOption = labelOption;
+			}
+			/*TODO IMPLIMENT THIS
+			/// <summary>
+			/// 
+			/// </summary>
+			/// <param name="labelOption">How to show the label for the list. If 'drawExpandedNoLabel' the label for the list is shown as the heading for the dnaName field</param>
+			/// <param name="defaultGraph">If set, when a new entry is added to the list using the UI it use the given graph. Use one of the preset properties in DNAEvaluationGraph</param>
+			public ConfigAttribute(LabelOptions labelOption, DNAEvaluationGraph defaultGraph)
+			{
+				this.labelOption = labelOption;
+				this.defaultGraph = defaultGraph;
+			}*/
+		}
+		#endregion
+}
 }

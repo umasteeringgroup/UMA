@@ -10,7 +10,7 @@ using UMA.CharacterSystem;
 namespace UMA.Editors
 {
 	[CustomEditor(typeof(SkeletonDNAConverterPlugin), true)]
-	public class SkeletonModifiersDNAConverterPluginInspector : DynamicDNAPluginInspector
+	public class SkeletonDNAConverterPluginInspector : DynamicDNAPluginInspector
 	{
 		private enum searchFilterTypeOpts { 
 			BoneName,
@@ -42,6 +42,11 @@ namespace UMA.Editors
 			_placeholderTextStyle = new GUIStyle(EditorStyles.textArea);
 			_placeholderTextStyle.fontStyle = FontStyle.Italic;
 			_warningIcon = EditorGUIUtility.IconContent("console.warnicon.sml").image;
+			//TODO This wont happen here It will happen during the upgrade process
+			/*for(int i = 0; i < (_target as SkeletonDNAConverterPlugin).skeletonModifiers.Count; i++)
+			{
+				(_target as SkeletonDNAConverterPlugin).skeletonModifiers[i].UpgradeToDNAEvaluators();
+			}*/
 		}
 
 		//Enable Editing of Starting Values and the corresponding 'Reset all Stating Values to Default' should be tool menu options I think

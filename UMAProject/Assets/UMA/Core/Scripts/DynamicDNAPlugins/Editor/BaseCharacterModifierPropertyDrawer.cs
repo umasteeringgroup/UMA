@@ -120,7 +120,6 @@ namespace UMA
 				var radiusRect = new Rect(position.xMin, heightRect.yMax, position.width, (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing));
 				var massRect = new Rect(position.xMin, radiusRect.yMax, position.width, (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing));
 				var boundsBoolsRect = new Rect(position.xMin, massRect.yMax, position.width, (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing));
-				var adjustBoundsRect = new Rect(position.xMin, boundsBoolsRect.yMax, position.width, position.height - ((EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing) * 5));
 
 				//labelsRects are all 120f wide or maybe  1/3rd or whatever unity makes them by standard
 				var scaleLabelRect = new Rect(position.xMin, scaleRect.yMin, (position.width / 3), scaleRect.height);

@@ -216,8 +216,10 @@ namespace UMA
 		//I have also made a whole Presets thing aswell thats the equivalent to preset colors in the color chooser or preset animation curves with animation curve
 		//Check out DNAEvaluationGraphPresets for this, or an instance of it in the inspector- its like an animationCurve preset library on crack.
 
+		//GRR This isnt the Default calc- default calc is just -0.5
+
 		/// <summary>
-		/// Performs the default math calculation on the incoming dna value, extending its range from 0f -> 1f to -1f -> 1f
+		/// Performs the default math calculation on the incoming dna value, subtracting 0.5f making its range -0.5f -> 0.5f
 		/// </summary>
 		public static DNAEvaluationGraph Default
 		{
@@ -225,7 +227,7 @@ namespace UMA
 			{
 				return new DNAEvaluationGraph(
 					"Default",
-					new AnimationCurve(new Keyframe(0f, -1f, 0f, 2f), new Keyframe(0.5f, 0f, 2f, 2f), new Keyframe(1f, 1f, 2f, 1f))
+					new AnimationCurve(new Keyframe(0f, -0.5f, 0f, 1f), new Keyframe(0.5f, 0f, 1f, 1f), new Keyframe(1f, 0.5f, 1f, 2f))
 					);
 			}
 		}
@@ -238,6 +240,32 @@ namespace UMA
 			{
 				return new DNAEvaluationGraph(
 					"DefaultInverted",
+					new AnimationCurve(new Keyframe(0f, 0.5f, 0f, -1f), new Keyframe(0.5f, 0f, -1f, -1f), new Keyframe(1f, -0.5f, -1f, 2f))
+					);
+			}
+		}
+		/// <summary>
+		/// Performs the default math calculation on the incoming dna value, and extends its range from 0f -> 1f to -1f -> 1f
+		/// </summary>
+		public static DNAEvaluationGraph DefaultOne
+		{
+			get
+			{
+				return new DNAEvaluationGraph(
+					"DefaultOne",
+					new AnimationCurve(new Keyframe(0f, -1f, 0f, 2f), new Keyframe(0.5f, 0f, 2f, 2f), new Keyframe(1f, 1f, 2f, 1f))
+					);
+			}
+		}
+		/// <summary>
+		///  Performs the default math calculation on the incoming dna value and inverts it, extending its range from 0f -> 1f to 1f -> -1f
+		/// </summary>
+		public static DNAEvaluationGraph DefaultOneInverted
+		{
+			get
+			{
+				return new DNAEvaluationGraph(
+					"DefaultOneInverted",
 					new AnimationCurve(new Keyframe(0f, 1f, 0f, -2f), new Keyframe(0.5f, 0f, -2f, -2f), new Keyframe(1f, -1f, -2f, 1f))
 					);
 			}
@@ -344,14 +372,21 @@ namespace UMA
 					);
 			}
 		}
-		
 		public static string DefaultToolTip
 		{
-			get { return "Performs the default math calculation on the incoming dna value, extending its range from 0f -> 1f to -1f -> 1f"; }
+			get { return "The Default DNA Calculation. Subtracts 0.5f from the incoming value, making its range -0.5f -> 0.5f and making 0.5f = 0f"; }
 		}
 		public static string DefaultInvertedToolTip
 		{
-			get { return "Performs the default math calculation on the incoming dna value and inverts it, extending its range from 0f -> 1f to 1f -> -1f"; }
+			get { return "The Default DNA Calculation but inverted. Subtracts 0.5f from the incoming value and multiplies by -1f, making its range 0.5f -> -0.5f and making 0.5f = 0f"; }
+		}
+		public static string DefaultOneToolTip
+		{
+			get { return "Subtracts 0.5f from the incoming value and doubles the result, extending its range from 0f -> 1f to -1f -> 1f"; }
+		}
+		public static string DefaultOneInvertedToolTip
+		{
+			get { return "Subtracts 0.5f from the incoming value, doubles the result, and inverts it, extending its range from 0f -> 1f to 1f -> -1f"; }
 		}
 		public static string ZeroZeroOneToolTip
 		{
@@ -398,6 +433,8 @@ namespace UMA
 				{
 					{ Default, DefaultToolTip },
 					{ DefaultInverted, DefaultInvertedToolTip },
+					{ DefaultOne, DefaultOneToolTip },
+					{ DefaultOneInverted, DefaultOneInvertedToolTip },
 					{ ZeroZeroOne, ZeroZeroOneToolTip },
 					{ OneZeroZero, OneZeroZeroToolTip },
 					{ ZeroOneZero, ZeroOneZeroToolTip },

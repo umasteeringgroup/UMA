@@ -14,8 +14,20 @@ namespace UMA.CharacterSystem.Editors
 		public List<string> bonesInSkeleton = null;
 		public List<int> hashes = new List<int>();
 		public string[] dnaNames;
-		//public bool enableSkelModValueEditing = false;
+
+		private bool _allowLegacyDNADrawer = false;
+
+		public bool AllowLegacyDNADrawer
+		{
+			get { return _allowLegacyDNADrawer; }
+			set { _allowLegacyDNADrawer = value; }
+		}
+
+#pragma warning disable 618 //disable obsolete warning
+		//we use DNAEvaluatorList now
 		spValModifierPropertyDrawer thisSpValDrawer = null;
+#pragma warning restore 618
+
 		Texture warningIcon;
 		GUIStyle warningStyle;
 
@@ -52,7 +64,7 @@ namespace UMA.CharacterSystem.Editors
 			Init(new List<string>(), new List<int>(), _dnaNames);
 			return _initialized;
 		}
-
+#pragma warning disable 618 //disable obsolete warning
 		public bool Init(List<string> _hashNames, List<int> _hashes, string[] _dnaNames = null)
 		{
 			if (!_initialized)
@@ -61,9 +73,15 @@ namespace UMA.CharacterSystem.Editors
 				hashNames = _hashNames;
 				hashes = _hashes;
 				dnaNames = _dnaNames;
-				if (thisSpValDrawer == null)
-					thisSpValDrawer = new spValModifierPropertyDrawer();
-				thisSpValDrawer.dnaNames = dnaNames;
+
+				//Will be removed ina future version since we use DNAEvaluatorList for these now
+				if (_allowLegacyDNADrawer)
+				{
+					if (thisSpValDrawer == null)
+						thisSpValDrawer = new spValModifierPropertyDrawer();
+					thisSpValDrawer.dnaNames = dnaNames;
+				}
+
 				if (warningIcon == null)
 				{
 					warningIcon = EditorGUIUtility.FindTexture("console.warnicon.sml");
@@ -81,6 +99,7 @@ namespace UMA.CharacterSystem.Editors
 			}
 			return _initialized;
 		}
+#pragma warning restore 618 //restore obsolete warning
 
 		public void UpdateHashNames(List<string> _hashNames, List<int> _hashes)
 		{
@@ -289,49 +308,70 @@ namespace UMA.CharacterSystem.Editors
 
 					//VALUE MODIFIERS AREA
 
-					var thisModifiersProp = subValuesVal.FindPropertyRelative("_modifiers");
-					var modifiersCount = thisModifiersProp.arraySize;
+					var legacyModifiersProp = subValuesVal.FindPropertyRelative("_modifiers");
+					var legacyModifiersCount = legacyModifiersProp.arraySize;
+
+					var modifyingDNAProp = subValuesVal.FindPropertyRelative("_modifyingDNA");
+					var modifyingDNACount = modifyingDNAProp.FindPropertyRelative("_dnaEvaluators").arraySize;
 
 					currRect = new Rect(currRect.xMin, valMinMaxArea.yMax + 2f, currRect.width, EditorGUIUtility.singleLineHeight);
-					modifiersArea = new Rect(currRect.xMin, currRect.yMin, currRect.width, ((EditorGUIUtility.singleLineHeight + padding) * (modifiersCount + 2)));//plus 2 for label and add button
+					modifiersArea = new Rect(currRect.xMin, currRect.yMin, currRect.width, ((EditorGUIUtility.singleLineHeight + padding) * (legacyModifiersCount + 2)));//plus 2 for label and add button
+
+					if(modifyingDNACount != 0 || !_allowLegacyDNADrawer)
+					{
+						modifiersArea = new Rect(currRect.xMin, currRect.yMin, currRect.width, (EditorGUI.GetPropertyHeight(modifyingDNAProp) + padding));
+					}
 
 					EditorGUI.DrawRect(modifiersArea, new Color32(255, 255, 255, 100));
-
-					EditorGUI.indentLevel++;
-					EditorGUI.LabelField(currRect, "Value Modifiers");
-					EditorGUI.indentLevel--;
 
 					//Pad the current Rect
 					currRect.xMin += padding * 2f;
 					currRect.width -= padding * 2f;
 
-					//Draw modifiers list
-					for (int i = 0; i < modifiersCount; i++)
+					//When modifiers get upgraded to _modifyingDNA they get cleared
+					//But for now
+					if (modifyingDNACount == 0 && _allowLegacyDNADrawer)
 					{
-						currRect = new Rect(currRect.xMin, currRect.yMax + padding, currRect.width, EditorGUIUtility.singleLineHeight);
-						modifiersProps = new Rect(currRect.xMin, currRect.yMin, currRect.width - delButWidth, EditorGUIUtility.singleLineHeight);
-						modifiersDel = new Rect(modifiersProps.xMax, currRect.yMin, delButWidth, EditorGUIUtility.singleLineHeight);
-						thisSpValDrawer.OnGUI(modifiersProps, thisModifiersProp.GetArrayElementAtIndex(i), new GUIContent(""));
-						if (GUI.Button(modifiersDel, "X"))
+						
+						//EditorGUI.indentLevel++;
+						EditorGUI.LabelField(currRect, "Value Modifiers");
+						//EditorGUI.indentLevel--;
+
+						//Draw modifiers list
+						for (int i = 0; i < legacyModifiersCount; i++)
 						{
-							thisModifiersProp.DeleteArrayElementAtIndex(i);
+							currRect = new Rect(currRect.xMin, currRect.yMax + padding, currRect.width, EditorGUIUtility.singleLineHeight);
+							modifiersProps = new Rect(currRect.xMin, currRect.yMin, currRect.width - delButWidth, EditorGUIUtility.singleLineHeight);
+							modifiersDel = new Rect(modifiersProps.xMax, currRect.yMin, delButWidth, EditorGUIUtility.singleLineHeight);
+							thisSpValDrawer.OnGUI(modifiersProps, legacyModifiersProp.GetArrayElementAtIndex(i), new GUIContent(""));
+							if (GUI.Button(modifiersDel, "X"))
+							{
+								legacyModifiersProp.DeleteArrayElementAtIndex(i);
+							}
 						}
+
+						//Draw the add button
+						modifiersAdd = new Rect(currRect.xMax - addButWidth, currRect.yMax + padding, addButWidth, EditorGUIUtility.singleLineHeight);
+
+						if (GUI.Button(modifiersAdd, "Add"))
+						{
+							legacyModifiersProp.InsertArrayElementAtIndex(legacyModifiersCount);
+						}
+						legacyModifiersProp.serializedObject.ApplyModifiedProperties();
 					}
-
-					//Draw the add button
-					modifiersAdd = new Rect(currRect.xMax - addButWidth, currRect.yMax + padding, addButWidth, EditorGUIUtility.singleLineHeight);
-
-					if (GUI.Button(modifiersAdd, "Add"))
+					else
 					{
-						thisModifiersProp.InsertArrayElementAtIndex(modifiersCount);
+						var thisModifyingDNARect = new Rect(currRect.xMin, currRect.yMin, currRect.width, position.height - currRect.yMax);
+						EditorGUI.PropertyField(thisModifyingDNARect, modifyingDNAProp);
 					}
-					thisModifiersProp.serializedObject.ApplyModifiedProperties();
+					
 				}
 
 			}
 			EditorGUI.indentLevel = startingIndent;
 			EditorGUI.EndProperty();
 		}
+
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 		{
 			float h = EditorGUIUtility.singleLineHeight + padding;
@@ -350,19 +390,41 @@ namespace UMA.CharacterSystem.Editors
 				var subValuesVal = activeValues.FindPropertyRelative("_val");
 				if (subValuesVal.isExpanded)
 					extraLines++;
-				extraLines++;
-				extraLines++;
-				extraLines += subValuesVal.FindPropertyRelative("_modifiers").arraySize;
-				//extrapix = 10f;
-				extraLines++;
+				
+				
+				var modifyingDNAProp = subValuesVal.FindPropertyRelative("_modifyingDNA");
+				var modifyingDNACount = modifyingDNAProp.FindPropertyRelative("_dnaEvaluators").arraySize;
+				var legacyModifiersCount = subValuesVal.FindPropertyRelative("_modifiers").arraySize;
+				//When modifiers get upgraded to _modifyingDNA they get cleared
+				//But for now
+				if (modifyingDNACount == 0 && _allowLegacyDNADrawer)
+				{
+					extraLines++;
+					extraLines += legacyModifiersCount;
+					//extrapix = 10f;
+					extraLines++;
+					extraLines++;
+				}
+				/*else
+				{
+					//Add _modifyingDNA (DNAEvaluators)
+					extraLines += modifyingDNACount + 3;
+				}*/
+				
 				//}
 				h *= (extraLines);
+				if(modifyingDNACount != 0 || !_allowLegacyDNADrawer)
+				{
+					h += (EditorGUI.GetPropertyHeight(modifyingDNAProp) + padding) + padding *3;
+				}
 			}
 			return h;
 		}
 	}
+	#region LEGACY MODIFIERS DRAWER
 
 	[CustomPropertyDrawer(typeof(SkeletonModifier.spVal.spValValue.spValModifier))]
+	[System.Obsolete("Do not use. Will be removed in a future version")]
 	public class spValModifierPropertyDrawer : PropertyDrawer
 	{
 		public string[] dnaNames;
@@ -442,4 +504,5 @@ namespace UMA.CharacterSystem.Editors
 			EditorGUI.EndProperty();
 		}
 	}
+	#endregion
 }

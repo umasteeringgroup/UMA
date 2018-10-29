@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEditor;
 using UnityEditorInternal;
@@ -9,7 +10,13 @@ namespace UMA.Editors
 	[CustomPropertyDrawer(typeof(DNAEvaluatorList), true)]
 	public class DNAEvaluatorListPropertyDrawer : PropertyDrawer
 	{
+
+		private const string DNAEVALUATORSPROPERTY = "_dnaEvaluators";
+		private const string AGGREGATIONMETHODPROPERTY = "_aggregationMethod";
+
 		private SerializedProperty _property;
+
+		private GUIContent _propertyLabel;
 
 		private float _padding = 2f;
 
@@ -17,41 +24,98 @@ namespace UMA.Editors
 
 		private DNAEvaluatorPropertyDrawer _dnaEvaluatorDrawer = new DNAEvaluatorPropertyDrawer();
 
-		private bool _drawAsReorderableList = true;
+		//private bool _drawAsReorderableList = true;
+
+		private DNAEvaluatorList.ConfigAttribute.LabelOptions _labelOption = DNAEvaluatorList.ConfigAttribute.LabelOptions.drawLabelAsFoldout;
+
+		private DNAEvaluationGraph _defaultGraph = null;
+
+		private bool _manuallyConfigured = false;
 
 		private GUIStyle _aggregationLabelStyle;
 
 		ReorderableList.Defaults ROLDefaults;
 
-		public bool DrawAsReorderableList
+		bool initialized = false;
+
+		//If the list aggregationMode is 'Cumulative' draw the calc options
+		private bool drawCalcOption = false;
+
+		public DNAEvaluatorList.ConfigAttribute.LabelOptions LabelOption
 		{
-			get { return _drawAsReorderableList; }
-			set { _drawAsReorderableList = value; }
+			get { return _labelOption; }
+			set {
+				_labelOption = value;
+				_manuallyConfigured = true;
+			}
+		}
+		//TODO Impliment this
+		/// <summary>
+		/// Not Implimented
+		/// </summary>
+		public DNAEvaluationGraph DefaultGraph
+		{
+			get { return _defaultGraph; }
+			set {
+				_defaultGraph = value;
+				if (_defaultGraph != null)
+					_manuallyConfigured = true;
+			}
+		}
+
+		private void Init()
+		{
+			if (initialized)
+				return;
+
+			if (!_manuallyConfigured)
+			{
+				if (this.fieldInfo != null)
+				{
+					var attrib = this.fieldInfo.GetCustomAttributes(typeof(DNAEvaluatorList.ConfigAttribute), true).FirstOrDefault() as DNAEvaluatorList.ConfigAttribute;
+					if (attrib != null)
+					{
+						_labelOption = attrib.labelOption;
+						_defaultGraph = attrib.defaultGraph;
+					}
+				}
+			}
+			_aggregationLabelStyle = new GUIStyle(EditorStyles.label);
+			_aggregationLabelStyle = new GUIStyle(EditorStyles.centeredGreyMiniLabel);
+			_aggregationLabelStyle.alignment = TextAnchor.MiddleLeft;
+
+			if (ROLDefaults == null)
+				ROLDefaults = new ReorderableList.Defaults();
+
+			initialized = true;
+
 		}
 
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 		{
-			if (property.isExpanded)
+			Init();
+
+			if (property.isExpanded 
+				|| _labelOption == DNAEvaluatorList.ConfigAttribute.LabelOptions.drawExpandedNoLabel 
+				|| _labelOption == DNAEvaluatorList.ConfigAttribute.LabelOptions.drawExpandedWithLabel)
 			{
-				if (_drawAsReorderableList)
+				var dnaEvalListProp = property.FindPropertyRelative(DNAEVALUATORSPROPERTY);
+				float h = 0f;
+
+				if(_labelOption == DNAEvaluatorList.ConfigAttribute.LabelOptions.drawExpandedWithLabel 
+					|| _labelOption == DNAEvaluatorList.ConfigAttribute.LabelOptions.drawLabelAsFoldout)
+					h = (EditorGUIUtility.singleLineHeight + (_padding * 3)) * 3;
+
+				if (dnaEvalListProp.arraySize > 0)
 				{
-					var dnaEvalListProp = property.FindPropertyRelative("_dnaEvaluators");
-					var h = (EditorGUIUtility.singleLineHeight + (_padding * 3)) * 3;
-					if (dnaEvalListProp.arraySize > 0)
-					{
-						for (int i = 0; i < dnaEvalListProp.arraySize; i++)
-							h += EditorGUIUtility.singleLineHeight + (_padding * 2);
-					}
-					else
-					{
+					for (int i = 0; i < dnaEvalListProp.arraySize; i++)
 						h += EditorGUIUtility.singleLineHeight + (_padding * 2);
-					}
-					return h;
 				}
 				else
 				{
-					return EditorGUI.GetPropertyHeight(property, true) - EditorGUIUtility.singleLineHeight;
+					h += EditorGUIUtility.singleLineHeight + (_padding * 2);
 				}
+				return h;
 			}
 			else
 			{
@@ -61,39 +125,45 @@ namespace UMA.Editors
 
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
-			
-			label = EditorGUI.BeginProperty(position, label, property);
+
+			_propertyLabel = label = EditorGUI.BeginProperty(position, label, property);
 
 			_property = property;
 
-			_aggregationLabelStyle = new GUIStyle(EditorStyles.label);
+			Init();
 
-			if(ROLDefaults == null)
-				ROLDefaults = new ReorderableList.Defaults();
-
-			if (!_drawAsReorderableList)
-				DrawDefaultList(position, property, label);
+			var aggregationProp = property.FindPropertyRelative(AGGREGATIONMETHODPROPERTY);
+			if (aggregationProp.enumValueIndex == 1)//Cumulative
+				drawCalcOption = true;
 			else
-			{
-				_aggregationLabelStyle = new GUIStyle(EditorStyles.centeredGreyMiniLabel);
-				_aggregationLabelStyle.alignment = TextAnchor.MiddleLeft;
-				DrawReorderableList(position, property, label);
-			}
+				drawCalcOption = false;
+
+			DrawReorderableList(position, property, label);
 
 			EditorGUI.EndProperty();
 		}
 
 		private void DrawReorderableList(Rect position, SerializedProperty property, GUIContent label)
 		{
-			var foldoutRect = new Rect(position.xMin, position.yMin, position.width, EditorGUIUtility.singleLineHeight);
-			property.isExpanded = EditorGUI.Foldout(foldoutRect, property.isExpanded, label);
-			if (property.isExpanded)
+			var labelRect = new Rect(position.xMin, position.yMin, position.width, 0f);
+			if (_labelOption == DNAEvaluatorList.ConfigAttribute.LabelOptions.drawLabelAsFoldout)
+			{
+				labelRect = new Rect(position.xMin, position.yMin, position.width, EditorGUIUtility.singleLineHeight);
+				property.isExpanded = EditorGUI.Foldout(labelRect, property.isExpanded, label);
+			}
+			else if(_labelOption == DNAEvaluatorList.ConfigAttribute.LabelOptions.drawExpandedWithLabel)
+			{
+				labelRect = new Rect(position.xMin, position.yMin, position.width, EditorGUIUtility.singleLineHeight);
+				EditorGUI.LabelField(labelRect, label);
+			}
+			if (property.isExpanded || _labelOption == DNAEvaluatorList.ConfigAttribute.LabelOptions.drawExpandedWithLabel || _labelOption == DNAEvaluatorList.ConfigAttribute.LabelOptions.drawExpandedNoLabel)
 			{
 				var contentRect = EditorGUI.IndentedRect(position);
-				contentRect.yMin = foldoutRect.yMax + _padding;
-				contentRect.height = contentRect.height - foldoutRect.height;
+				contentRect.yMin = labelRect.yMax + _padding;
+				contentRect.height = contentRect.height - labelRect.height;
 
-				var dnaEvalListProp = property.FindPropertyRelative("_dnaEvaluators");
+				var dnaEvalListProp = property.FindPropertyRelative(DNAEVALUATORSPROPERTY);
+				
 				_dnaEvaluatorList = CachedReorderableList.GetListDrawer(dnaEvalListProp, DrawHeaderCallback, null, DrawElementCallback, DrawFooterCallback);
 
 				_dnaEvaluatorList.DoList(contentRect);
@@ -104,9 +174,14 @@ namespace UMA.Editors
 		{
 			_dnaEvaluatorDrawer.DrawInline = true;
 			_dnaEvaluatorDrawer.DrawLabels = false;
-			var dragHandleSize = 30f;
-			var labelsRect = new Rect(rect.xMin, rect.yMin, rect.width - dragHandleSize, rect.height);
-			_dnaEvaluatorDrawer.DoLabelsInline(rect);
+			if(_labelOption == DNAEvaluatorList.ConfigAttribute.LabelOptions.drawExpandedNoLabel)
+			{
+				_dnaEvaluatorDrawer.DoLabelsInline(rect, _propertyLabel);
+			}
+			else
+			{
+				_dnaEvaluatorDrawer.DoLabelsInline(rect);
+			}
 		}
 
 		private void DrawFooterCallback(Rect rect)
@@ -149,67 +224,33 @@ namespace UMA.Editors
 			EditorGUI.indentLevel = prevIndentLevel;
 		}
 
+		//GetArrayElementAtIndex is slow, we need to cache the results the same way DNAPluginsDrawerer does
 		private void DrawElementCallback(Rect rect, int index, bool isActive, bool isFocused)
 		{
 			_dnaEvaluatorDrawer.DrawInline = true;
 			_dnaEvaluatorDrawer.DrawLabels = false;
 			var dnaEvalListProp = _dnaEvaluatorList.serializedProperty;
 			var entryRect = new Rect(rect.xMin, rect.yMin + _padding, rect.width, rect.height - _padding);
+			_dnaEvaluatorDrawer.DrawCalcOption = drawCalcOption;
 			_dnaEvaluatorDrawer.DoFieldsInline(entryRect, dnaEvalListProp.GetArrayElementAtIndex(index));
-		}
-
-		/// <summary>
-		/// Draws the list in the default Unity style (but with only one foldout rather than one for the property and one for the list)
-		/// </summary>
-		private void DrawDefaultList(Rect position, SerializedProperty property, GUIContent label)
-		{
-			var dnaEvalListProp = property.FindPropertyRelative("_dnaEvaluators");
-
-			var foldoutRect = new Rect(position.xMin, position.yMin, position.width, EditorGUIUtility.singleLineHeight);
-			property.isExpanded = EditorGUI.Foldout(foldoutRect, property.isExpanded, label);
-			if (property.isExpanded)
-			{
-				EditorGUI.indentLevel--;
-				var contentRect = EditorGUI.IndentedRect(position);//this is too indented, why?
-				EditorGUI.indentLevel++;
-				contentRect.yMin = foldoutRect.yMax + _padding;
-				contentRect.height = contentRect.height - foldoutRect.height;
-
-				//do the aggregation method
-				contentRect = DrawAggregationMethod(contentRect, property);
-
-				var sizeRect = new Rect(contentRect.xMin, contentRect.yMin, contentRect.width, EditorGUIUtility.singleLineHeight);
-
-				//the label is in the right place but the field is too indented compared to a standard list drawer so
-				var prevLabelWidth = EditorGUIUtility.labelWidth;
-				EditorGUIUtility.labelWidth = EditorGUIUtility.labelWidth - 15f;
-
-				dnaEvalListProp.arraySize = EditorGUI.IntField(sizeRect, "Size", dnaEvalListProp.arraySize);
-
-				var entryRect = new Rect(contentRect.xMin, sizeRect.yMax + _padding, contentRect.width, EditorGUIUtility.singleLineHeight);
-				for (int i = 0; i < dnaEvalListProp.arraySize; i++)
-				{
-					var dnaEvalProp = dnaEvalListProp.GetArrayElementAtIndex(i);
-					entryRect.height = EditorGUI.GetPropertyHeight(dnaEvalProp);
-					EditorGUI.PropertyField(entryRect, dnaEvalProp, true);
-					entryRect.yMin = entryRect.yMax + _padding;
-				}
-				EditorGUIUtility.labelWidth = prevLabelWidth;
-			}
 		}
 
 		private Rect DrawAggregationMethod(Rect position, SerializedProperty property)
 		{
 			var labelRectMinWidth = 110f;
 			var popupMinWidth = 60f;
-			var aggregationProp = property.FindPropertyRelative("_aggregationMethod");
+			var aggregationProp = property.FindPropertyRelative(AGGREGATIONMETHODPROPERTY);
 			var aggregationRect = new Rect(position.xMin, position.yMin, position.width, EditorGUIUtility.singleLineHeight);
 			var labelRectWidth = aggregationRect.width - labelRectMinWidth < popupMinWidth ? aggregationRect.width / 2f : labelRectMinWidth;
 			var popupRectWidth = aggregationRect.width - labelRectMinWidth < popupMinWidth ? aggregationRect.width / 2f : aggregationRect.width - labelRectWidth;
 			var labelRect = new Rect(aggregationRect.xMin, aggregationRect.yMin, labelRectWidth, aggregationRect.height);
 			var popupRect = new Rect(labelRect.xMax, aggregationRect.yMin, popupRectWidth, aggregationRect.height);
-			EditorGUI.LabelField(labelRect, aggregationProp.displayName, _aggregationLabelStyle);
+
+			var label = EditorGUI.BeginProperty(labelRect, new GUIContent(aggregationProp.displayName), aggregationProp);
+			EditorGUI.LabelField(labelRect, label, _aggregationLabelStyle);
 			EditorGUI.PropertyField(popupRect, aggregationProp, GUIContent.none);
+			EditorGUI.EndProperty();
+
 			var retRect = new Rect(position.xMin, aggregationRect.yMax + _padding, position.width, position.height - (EditorGUIUtility.singleLineHeight + _padding));
 			return retRect;
 		}
