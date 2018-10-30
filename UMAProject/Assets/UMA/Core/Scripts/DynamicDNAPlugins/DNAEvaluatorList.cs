@@ -33,6 +33,9 @@ namespace UMA
 			set { _aggregationMethod = value; }
 		}
 
+		/// <summary>
+		/// Returns a list of used dna names- any entries that dont have a name assigned are discarded. Beware that the list will include names that may not be in the current dna and these will return 0.5f
+		/// </summary>
 		public List<string> UsedDNANames
 		{
 			get

@@ -865,6 +865,13 @@ MonoBehaviour:
     _Guid: 45c60a52856ef014db9ac30909401956
     IsResource: 0
     IsAssetBundle: 0
+  - _BaseTypeName: SlotDataAsset
+    _Name: ElfEarsMorph
+    _SerializedItem: {fileID: 11400000, guid: 82e2d1671a9ac524d805de01b9408543, type: 2}
+    _Path: Assets/UMA/Examples/DynamicDNAPlugins Examples/Assets/Slots/ElfEarsMorph_Slot.asset
+    _Guid: 82e2d1671a9ac524d805de01b9408543
+    IsResource: 0
+    IsAssetBundle: 0
   - _BaseTypeName: OverlayDataAsset
     _Name: FemaleLongHair_Overlay
     _SerializedItem: {fileID: 11400000, guid: 304fc44cf9ff5ad428e4802e082702c5, type: 2}
@@ -1666,6 +1673,13 @@ MonoBehaviour:
     _Guid: f7b4c7fd4e2e99844be54c0b6967a79e
     IsResource: 0
     IsAssetBundle: 0
+  - _BaseTypeName: RaceData
+    _Name: HumanMaleDCSII
+    _SerializedItem: {fileID: 11400000, guid: 47ca517b770126341b0332ab373bc55d, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/RaceData/Human Male DCSII.asset
+    _Guid: 47ca517b770126341b0332ab373bc55d
+    IsResource: 0
+    IsAssetBundle: 0
   - _BaseTypeName: UMATextRecipe
     _Name: FemaleTallShoes_Black
     _SerializedItem: {fileID: 11400000, guid: f7ff3729dba08b044a2535b32a1251ba, type: 2}
@@ -2337,6 +2351,14 @@ MonoBehaviour:
     _SerializedItem: {fileID: 11400000, guid: 3e701a02cd597ad4193792a7a3202dd3, type: 2}
     _Path: Assets/UMA/Examples/Extensions Examples/DynamicCharacterSystem/Assets/SkyCar/RaceData/SkyCarBaseRecipe.asset
     _Guid: 3e701a02cd597ad4193792a7a3202dd3
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: UMATextRecipe
+    _Name: HumanMaleDCSII Base Recipe
+    _SerializedItem: {fileID: 11400000, guid: 64c6614d653bc0e4d8b0ec1524b409b6, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Recipes/BaseRecipes/HumanMaleDCSII
+      Base Recipe.asset
+    _Guid: 64c6614d653bc0e4d8b0ec1524b409b6
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: UMAWardrobeRecipe

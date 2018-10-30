@@ -220,23 +220,32 @@ namespace UMA
 
 			public void ApplyDNA(UMAData umaData, UMASkeleton skeleton, UMADnaBase activeDNA, float masterWeight = 1f)
 			{
-
 				_liveShapeWeight = _startingShapeWeight;
-				_liveShapeWeight += _modifyingDNA.Evaluate(activeDNA);
+
+				//dna weight superceeds startingWeight if it exists
+				if (_modifyingDNA.UsedDNANames.Count > 0)
+				{
+					_liveShapeWeight = _modifyingDNA.Evaluate(activeDNA);
+				}
 				_liveShapeWeight = _liveShapeWeight * masterWeight;
 				_liveShapeWeight = Mathf.Clamp(_liveShapeWeight, 0f, 1f);
-
 				umaData.SetBlendShape(_blendshapeToApply, _liveShapeWeight);
 			}
 
 			public void ApplyDNA(UMAData umaData, UMASkeleton skeleton, int dnaTypeHash, float masterWeight = 1f)
 			{
-				_activeDNA = (DynamicUMADnaBase)umaData.GetDna(dnaTypeHash);
 				_liveShapeWeight = _startingShapeWeight;
-				_liveShapeWeight += _modifyingDNA.Evaluate(_activeDNA);
+
+				//dna weight superceeds startingWeight if it exists
+				if (_modifyingDNA.UsedDNANames.Count > 0)
+				{
+					_activeDNA = (DynamicUMADnaBase)umaData.GetDna(dnaTypeHash);
+					_liveShapeWeight = _modifyingDNA.Evaluate(_activeDNA);
+				}
 				_liveShapeWeight = _liveShapeWeight * masterWeight;
 				_liveShapeWeight = Mathf.Clamp(_liveShapeWeight, 0f, 1f);
 
+				Debug.Log("Setting Blendshape " + _blendshapeToApply + " to " + _liveShapeWeight);
 				umaData.SetBlendShape(_blendshapeToApply, _liveShapeWeight);
 			}
 

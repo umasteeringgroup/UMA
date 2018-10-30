@@ -315,9 +315,13 @@ namespace UMA
 
 			public void ApplyDNA(UMAData umaData, UMASkeleton skeleton, UMADnaBase activeDNA, float masterWeight = 1f)
 			{
-
 				_livePoseWeight = _startingPoseWeight;
-				_livePoseWeight += _modifyingDNA.Evaluate(activeDNA);
+
+				//dna weight superceeds startingWeight if it exists
+				if (_modifyingDNA.UsedDNANames.Count > 0)
+				{
+					_livePoseWeight = _modifyingDNA.Evaluate(activeDNA);
+				}
 				_livePoseWeight = _livePoseWeight * masterWeight;
 				_livePoseWeight = Mathf.Clamp(_livePoseWeight, 0f, 1f);
 
@@ -326,9 +330,14 @@ namespace UMA
 
 			public void ApplyDNA(UMAData umaData, UMASkeleton skeleton, int dnaTypeHash, float masterWeight = 1f)
 			{
-				_activeDNA = (DynamicUMADnaBase)umaData.GetDna(dnaTypeHash);
 				_livePoseWeight = _startingPoseWeight;
-				_livePoseWeight += _modifyingDNA.Evaluate(_activeDNA);
+
+				//dna weight superceeds startingWeight if it exists
+				if (_modifyingDNA.UsedDNANames.Count > 0)
+				{
+					_activeDNA = (DynamicUMADnaBase)umaData.GetDna(dnaTypeHash);
+					_livePoseWeight = _modifyingDNA.Evaluate(_activeDNA);
+				}
 				_livePoseWeight = _livePoseWeight * masterWeight;
 				_livePoseWeight = Mathf.Clamp(_livePoseWeight, 0f, 1f);
 
