@@ -172,7 +172,6 @@ namespace UMA.Editors
 
 		private void DrawHeaderCallback(Rect rect)
 		{
-			_dnaEvaluatorDrawer.DrawInline = true;
 			_dnaEvaluatorDrawer.DrawLabels = false;
 			if(_labelOption == DNAEvaluatorList.ConfigAttribute.LabelOptions.drawExpandedNoLabel)
 			{
@@ -227,7 +226,6 @@ namespace UMA.Editors
 		//GetArrayElementAtIndex is slow, we need to cache the results the same way DNAPluginsDrawerer does
 		private void DrawElementCallback(Rect rect, int index, bool isActive, bool isFocused)
 		{
-			_dnaEvaluatorDrawer.DrawInline = true;
 			_dnaEvaluatorDrawer.DrawLabels = false;
 			var dnaEvalListProp = _dnaEvaluatorList.serializedProperty;
 			var entryRect = new Rect(rect.xMin, rect.yMin + _padding, rect.width, rect.height - _padding);

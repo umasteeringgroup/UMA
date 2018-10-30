@@ -253,7 +253,7 @@ namespace UMA.CharacterSystem
 				[SerializeField]
 				[DNAEvaluatorList.Config(DNAEvaluatorList.ConfigAttribute.LabelOptions.drawExpandedWithLabel)]
 				[Tooltip("A list of dna that will be used to modify the bone on this axis. Usually you use 'Cumulative' so that the initial value for the axis is modified by each line here in turn.")]
-				private DNAEvaluatorList _modifyingDNA = new DNAEvaluatorList();
+				private DNAEvaluatorList _modifyingDNA = new DNAEvaluatorList(DNAEvaluatorList.AggregationMethodOpts.Cumulative);
 
 				public float value
 				{
@@ -465,8 +465,8 @@ namespace UMA.CharacterSystem
 							if (accessoryMod != null)
 								i++;
 						}
-						_modifyingDNA.aggregationMethod = DNAEvaluatorList.AggregationMethodOpts.Cumulative;
 					}
+					_modifyingDNA.aggregationMethod = DNAEvaluatorList.AggregationMethodOpts.Cumulative;
 					_modifiers.Clear();
 				}
 #pragma warning restore 618 //restore obsolete warning

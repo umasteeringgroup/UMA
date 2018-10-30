@@ -14,6 +14,7 @@ namespace UMA.Editors
 	{
 		private const string CALCOPTIONPROPERTY = "_calcOption";
 		private const string DNANAMEPROPERTY = "_dnaName";
+		private const string DNANAMEHASHPROPERTY = "_dnaNameHash";
 		private const string EVALUATORPROPERTY = "_evaluator";
 		private const string MULTIPLIERPROPERTY = "_multiplier";
 
@@ -24,7 +25,6 @@ namespace UMA.Editors
 
 		private DNAEvaluator _target;
 
-		private bool _drawInline = true;
 		private bool _drawLabels = true;
 		private bool _alwaysExpanded = false;
 		private bool _drawCalcOption = false;
@@ -43,16 +43,6 @@ namespace UMA.Editors
 		private DynamicDNAPlugin _dynamicDNAPlugin;
 
 		private bool initialized = false;
-
-		//Ditch all this shiz I always want it drawn inline
-		public bool DrawInline
-		{
-			set
-			{
-				_drawInline = value;
-				_manuallyConfigured = true;
-			}
-		}
 
 		public bool DrawLabels
 		{
@@ -101,7 +91,6 @@ namespace UMA.Editors
 					var attrib = this.fieldInfo.GetCustomAttributes(typeof(DNAEvaluator.ConfigAttribute), true).FirstOrDefault() as DNAEvaluator.ConfigAttribute;
 					if (attrib != null)
 					{
-						_drawInline = attrib.drawInline;
 						_drawLabels = attrib.drawLabels;
 						_alwaysExpanded = attrib.alwaysExpanded;
 						_drawCalcOption = attrib.drawCalcOption;
@@ -121,56 +110,52 @@ namespace UMA.Editors
 
 			Init();
 
-			if (_drawInline)
+			if (!_alwaysExpanded)
 			{
-				if (!_alwaysExpanded)
-				{
-					var foldoutPos = new Rect(position.xMin, position.yMin, position.width, EditorGUIUtility.singleLineHeight);
-					property.isExpanded = EditorGUI.Foldout(foldoutPos, property.isExpanded, label);
-				}
-				var reorderableListDefaults = new ReorderableList.Defaults();
-				if (property.isExpanded || _alwaysExpanded)
-				{
-					EditorGUI.indentLevel++;
-					position = EditorGUI.IndentedRect(position);
-					if (!_alwaysExpanded)
-						position.yMin = position.yMin + EditorGUIUtility.singleLineHeight;
-					else
-						position.yMin += 2f;
-					position.xMin -= 15f;//make it the same width as a reorderable list
-					if (_drawLabels)
-					{
-						//can we draw this so it looks like the header of a reorderable List?
-						if(current.type == EventType.Repaint)
-							reorderableListDefaults.headerBackground.Draw(position, GUIContent.none, false, false, false, false);
-						var rect1 = new Rect(position.xMin + 6f, position.yMin + 1f, position.width - 12f, position.height);
-						if(_alwaysExpanded)
-							position = DoLabelsInline(rect1, label);
-						else
-							position = DoLabelsInline(rect1, DNANAMELABEL);
-						position.xMin -= 6f;
-						position.width += 6f;
-						position.yMin -= 1f;
-						position.height -= 3f;
-					}
-					if (current.type == EventType.Repaint)
-						reorderableListDefaults.boxBackground.Draw(position, GUIContent.none, false, false, false, false);
-					var rect2 = new Rect(position.xMin + 6f, position.yMin + 3f, position.width - 12f, position.height);
-					DoFieldsInline(rect2, property);
-					EditorGUI.indentLevel--;
-				}
+				var foldoutPos = new Rect(position.xMin, position.yMin, position.width, EditorGUIUtility.singleLineHeight);
+				property.isExpanded = EditorGUI.Foldout(foldoutPos, property.isExpanded, label);
 			}
-			else
+			var reorderableListDefaults = new ReorderableList.Defaults();
+
+			if (property.isExpanded || _alwaysExpanded)
 			{
-				EditorGUI.PropertyField(position, property, label, true);
+				EditorGUI.indentLevel++;
+				position = EditorGUI.IndentedRect(position);
+				if (!_alwaysExpanded)
+					position.yMin = position.yMin + EditorGUIUtility.singleLineHeight;
+				else
+					position.yMin += 2f;
+				position.xMin -= 15f;//make it the same width as a reorderable list
+				if (_drawLabels)
+				{
+					//can we draw this so it looks like the header of a reorderable List?
+					if (current.type == EventType.Repaint)
+						reorderableListDefaults.headerBackground.Draw(position, GUIContent.none, false, false, false, false);
+					var rect1 = new Rect(position.xMin + 6f, position.yMin + 1f, position.width - 12f, position.height);
+					if (_alwaysExpanded)
+						position = DoLabelsInline(rect1, label);
+					else
+						position = DoLabelsInline(rect1, DNANAMELABEL);
+					position.xMin -= 6f;
+					position.width += 6f;
+					position.yMin -= 1f;
+					position.height -= 3f;
+				}
+				if (current.type == EventType.Repaint)
+					reorderableListDefaults.boxBackground.Draw(position, GUIContent.none, false, false, false, false);
+				var rect2 = new Rect(position.xMin + 6f, position.yMin + 3f, position.width - 12f, position.height);
+				DoFieldsInline(rect2, property);
+				EditorGUI.indentLevel--;
 			}
 
 			EditorGUI.EndProperty();
 		}
+
 		public Rect DoLabelsInline(Rect position, string label1 = DNANAMELABEL, string label2 = EVALUATORLABEL, string label3 = MULTIPLIERLABEL)
 		{
 			return DoLabelsInline(position, new GUIContent(label1, GetChildTooltip(DNANAMEPROPERTY)), new GUIContent(label2, GetChildTooltip(EVALUATORPROPERTY)), new GUIContent(label3, GetChildTooltip(MULTIPLIERPROPERTY)));
 		}
+
 		public Rect DoLabelsInline(Rect position, GUIContent label1, GUIContent label2 = null, GUIContent label3 = null)
 		{
 			if (label2 == null)
@@ -234,6 +219,7 @@ namespace UMA.Editors
 			}
 			var calcOptionProp = property.FindPropertyRelative(CALCOPTIONPROPERTY);
 			var dnaNameProp = property.FindPropertyRelative(DNANAMEPROPERTY);
+			var dnaNameHashProp = property.FindPropertyRelative(DNANAMEHASHPROPERTY);
 			var evaluatorProp = property.FindPropertyRelative(EVALUATORPROPERTY);
 			var intensityProp = property.FindPropertyRelative(MULTIPLIERPROPERTY);
 			var fieldbaseRatio = (position.width - _multiplierLabelWidth) / (_dnaToEvaluatorRatio.x + _dnaToEvaluatorRatio.y);
@@ -250,11 +236,19 @@ namespace UMA.Editors
 			{
 				calcOptionProp.enumValueIndex = EditorGUI.Popup(calcOptionRect, calcOptionProp.enumValueIndex, _calcOptionMiniLabels, _calcPopupStyle);
 			}
+			EditorGUI.BeginChangeCheck();
 			if (_dynamicDNAPlugin == null)
 				EditorGUI.PropertyField(dnaNameRect, dnaNameProp, GUIContent.none);
 			else
 			{
 				_dynamicDNAPlugin.converterController.DNANamesPopup(dnaNameRect, dnaNameProp, dnaNameProp.stringValue);
+			}
+			if (EditorGUI.EndChangeCheck())
+			{
+				if (!string.IsNullOrEmpty(dnaNameProp.stringValue))
+					dnaNameHashProp.intValue = UMAUtils.StringToHash(dnaNameProp.stringValue);
+				else
+					dnaNameHashProp.intValue = -1;
 			}
 			EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(dnaNameProp.stringValue));
 			EditorGUI.PropertyField(evaluatorRect, evaluatorProp, GUIContent.none);
@@ -273,29 +267,22 @@ namespace UMA.Editors
 					var attrib = this.fieldInfo.GetCustomAttributes(typeof(DNAEvaluator.ConfigAttribute), true).FirstOrDefault() as DNAEvaluator.ConfigAttribute;
 					if (attrib != null)
 					{
-						_drawInline = attrib.drawInline;
 						_drawLabels = attrib.drawLabels;
 						_alwaysExpanded = attrib.alwaysExpanded;
+						_drawCalcOption = attrib.drawCalcOption;
 					}
 
 				}
 			}
-			if (!_drawInline)
+			if (property.isExpanded || _alwaysExpanded)
 			{
-				return EditorGUI.GetPropertyHeight(property, true);
+				if (_drawLabels)
+					return EditorGUIUtility.singleLineHeight * (_alwaysExpanded ? 2f : 3f) + (_padding * 4f) + 6f;
+				else
+					return EditorGUIUtility.singleLineHeight * (_alwaysExpanded ? 1f : 2f) + (_padding * 4f);
 			}
 			else
-			{
-				if (property.isExpanded || _alwaysExpanded)
-				{
-					if (_drawLabels)
-						return EditorGUIUtility.singleLineHeight * (_alwaysExpanded ? 2f : 3f) + (_padding * 4f) + 6f;
-					else
-						return EditorGUIUtility.singleLineHeight * (_alwaysExpanded ? 1f : 2f) + (_padding * 4f);
-				}
-				else
-					return EditorGUI.GetPropertyHeight(property, true);
-			}
+				return EditorGUI.GetPropertyHeight(property, true);
 		}
 
 		/// <summary>

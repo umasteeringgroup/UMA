@@ -393,7 +393,7 @@ namespace UMA
 
 			[Tooltip("If set, the weight value will be controlled by the given dna on the character.")]
 			[SerializeField]
-			[DNAEvaluator.Config(true, true, true)]
+			[DNAEvaluator.Config(true, true)]
 			protected DNAEvaluator _DNAForWeight = new DNAEvaluator("", DNAEvaluationGraph.Raw, 1);
 
 			public float globalWeight

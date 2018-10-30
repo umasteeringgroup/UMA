@@ -71,6 +71,11 @@ namespace UMA
 			}
 		}
 
+		public DNAEvaluatorList(AggregationMethodOpts aggregationMethod)
+		{
+			_aggregationMethod = aggregationMethod;
+		}
+
 		#endregion
 
 		#region METHODS
