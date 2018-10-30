@@ -1464,6 +1464,15 @@ namespace UMA
 		}
 
 		#region BlendShape Support
+
+		[Obsolete("AddBakedBlendShape has been replaced with SetBlendShapeData", true)]
+		public void AddBakedBlendShape(float dnaValue, string blendShapeZero, string blendShapeOne, bool rebuild = false)
+		{ }
+
+		[Obsolete("RemoveBakedBlendShape has been replaced with RemoveBlendShapeData", true)]
+		public void RemoveBakedBlendShape(string name, bool rebuild = false)
+		{ }
+
         /// <summary>
         /// Adds a named blendshape to be combined or baked to the UMA.
         /// </summary>
