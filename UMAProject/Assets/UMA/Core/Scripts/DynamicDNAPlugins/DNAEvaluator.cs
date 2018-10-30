@@ -27,6 +27,9 @@ namespace UMA
 		[SerializeField]
 		[Tooltip("The DNA entry name to evaluate")]
 		private string _dnaName;
+		//this could be used to search dnaNames by hash- I did some tests but could not see any speed improvement
+		[SerializeField]
+		private int _dnaNameHash = -1;
 		[SerializeField]
 		[Tooltip("Evaluates the incoming dna value using the given graph. Hover the options for info")]
 		private DNAEvaluationGraph _evaluator;
@@ -39,8 +42,10 @@ namespace UMA
 
 		//used at runtime to speed up finding dna values. The first time the evaluator evaluates it uses the dnaName, if the request successfully
 		//returns an index, thereafter the index is used
+		//this doesn't seem to have a massive impact on speed either
 		[System.NonSerialized]
 		private int _lastIndex = -1;
+		
 
 		//if the evaluator fails to evaluate for any reason it returns this value
 		//But should this be 0.5 or should it be 0? I'm using 0.5 because 'failSilently' in DynamicUMADNA returns 0.5 when a name isn't found
@@ -55,7 +60,16 @@ namespace UMA
 		public string dnaName
 		{
 			get { return _dnaName; }
-			set { _dnaName = value; }
+			set
+			{
+				_dnaName = value;
+				_dnaNameHash = UMAUtils.StringToHash(_dnaName);
+			}
+		}
+
+		public int dnaNameHash
+		{
+			get { return _dnaNameHash; }
 		}
 
 		public DNAEvaluationGraph evaluator
@@ -76,6 +90,7 @@ namespace UMA
 		{
 			_calcOption = calcOption;
 			_dnaName = dnaName;
+			_dnaNameHash = UMAUtils.StringToHash(_dnaName);
 			_evaluator = evaluator == null ? DNAEvaluationGraph.Default : new DNAEvaluationGraph(evaluator);
 			_multiplier = multiplier;
 			_initialized = true;
@@ -85,6 +100,7 @@ namespace UMA
 		{
 			_calcOption = other.calcOption;
 			_dnaName = other.dnaName;
+			_dnaNameHash = UMAUtils.StringToHash(_dnaName);
 			_evaluator = other.evaluator == null ? DNAEvaluationGraph.Default : new DNAEvaluationGraph(other.evaluator);
 			_multiplier = other.multiplier;
 			_initialized = true;
@@ -108,14 +124,23 @@ namespace UMA
 		/// <returns>The evaluated value</returns>
 		public float Evaluate(UMADnaBase dna)
 		{
-			//GRR this makes no difference to speed either-WTFF?!?
+			//TODO Figuer out if
+			//if using the lastIndex makes any difference- if it doesn't get rid of it because if the names change this will be wrong anyway, so its more bulletproof if we dont do this
+			//if in DynamicDNA its worth having the hash list of names- again if it makes not difference its better not to because they will only change if the array size changes but a name could get deleted and another added before dna knows
+			//Try to prove to Kenamis that the speed difference is inconsequential (if it is)
+
+			//using    lastIndex building dna takes apprx  00:00:00.0027695
+			//Using    lastIndex modifying dna takes apprx 00:00:00.0004993
+			//notusing lastIndex building dna takes apprx  00:00:00.0035695
+			//notusing lastIndex modifying dna takes apprx 00:00:00.0008447
+			//using lastIndex is about 1/3 faster at the cost of being less robust because the dnaNames could in theory be changed at runtime and lastIndex would then fail
 			if (_lastIndex != -1)
 			{
 				return Evaluate(dna.GetValue(_lastIndex));
 			}
 			else
 			{
-				_lastIndex = System.Array.IndexOf(dna.Names, _dnaName);
+			_lastIndex = System.Array.IndexOf(dna.Names, _dnaName);
 				if (_lastIndex > -1)
 				{
 					return Evaluate(dna.GetValue(_lastIndex));
@@ -128,13 +153,18 @@ namespace UMA
 
 		public void OnAfterDeserialize()
 		{
+
 		}
-		//Fix to ensure that when instances of this class are added to a list in the inspector the default float values are set properly
-		//GRR I hate this solution but I dont want users to have to set every new one of these in a list to be 1 rather than 0
+		//Fix to ensure that when instances of this class are added to a list in the inspector the default values are set properly
+		//GRR I hate this solution but I dont want users to have to set every new one of these to have a multiplier of 1 and if the dnaName is empty the hash needs to be -1
 		public void OnBeforeSerialize()
 		{
 			if (!_initialized)
 			{
+				if (!string.IsNullOrEmpty(_dnaName))
+					_dnaNameHash = UMAUtils.StringToHash(_dnaName);
+				else
+					_dnaNameHash = -1;
 				_multiplier = 1f;
 				_initialized = true;
 			}
@@ -148,30 +178,22 @@ namespace UMA
 		[System.AttributeUsage(System.AttributeTargets.Field)]
 		public class ConfigAttribute : System.Attribute
 		{
-			public bool drawInline = true;
 			public bool drawLabels = true;
 			//the calc option is usually only needed with a list of Evaluators whose results will be added/subtracted etc from each other
 			public bool drawCalcOption = false;
 			public bool alwaysExpanded = false;
 
-			public ConfigAttribute(bool drawInline)
+			public ConfigAttribute(bool drawLabels)
 			{
-				this.drawInline = drawInline;
-			}
-			public ConfigAttribute(bool drawInline, bool drawLabels)
-			{
-				this.drawInline = drawInline;
 				this.drawLabels = drawLabels;
 			}
-			public ConfigAttribute(bool drawInline, bool drawLabels, bool alwaysExpanded)
+			public ConfigAttribute(bool drawLabels, bool alwaysExpanded)
 			{
-				this.drawInline = drawInline;
 				this.drawLabels = drawLabels;
 				this.alwaysExpanded = alwaysExpanded;
 			}
-			public ConfigAttribute(bool drawInline, bool drawLabels, bool alwaysExpanded, bool drawCalcOption)
+			public ConfigAttribute( bool drawLabels, bool alwaysExpanded, bool drawCalcOption)
 			{
-				this.drawInline = drawInline;
 				this.drawLabels = drawLabels;
 				this.alwaysExpanded = alwaysExpanded;
 				this.drawCalcOption = drawCalcOption;
