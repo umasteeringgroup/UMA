@@ -74,11 +74,11 @@ namespace UMA.Editors
 		"The 'View By DNA Name' tab lists all the dna names the converters can use. Expanding a dna name shows you all the converters that use that dna name in any way."
 		};
 
-	#endregion
+		#endregion
 
-	#region PUBLIC PROPERTIES
+		#region PUBLIC PROPERTIES
 
-	public DynamicUMADnaAsset DNAAsset
+		public DynamicUMADnaAsset DNAAsset
 		{
 			set { _dnaAsset = value; }
 		}
@@ -529,6 +529,76 @@ namespace UMA.Editors
 			}
 
 			return namesList;
+		}
+
+		#endregion
+
+		#region STATIC UTILS
+
+		//editor gui fields for DNANames popups and bone names popups
+		//these need to live somewhere else really
+
+
+		//Id really like this to show 'Choose DNA Name' in the field and 'None' as the 'Un-Choose' option in the list
+		//but for that we need a generic menu
+		//I also want a customOption that shows the textfield until you press return and then asks you if you want to add the name to the dna asset
+		/// <summary>
+		/// Draws a popup for selecting a dna name from the converters DynamicDNAAsset (if set) otherwise draws a text field
+		/// </summary>
+		public static void DNANamesPopup(Rect position, SerializedProperty property, string selected, DynamicUMADnaAsset DNAAsset)
+		{
+			if (DNAAsset == null)
+			{
+				EditorGUI.BeginChangeCheck();
+				property.stringValue = EditorGUI.TextField(position, selected);
+				if (EditorGUI.EndChangeCheck())
+				{
+					property.serializedObject.ApplyModifiedProperties();
+				}
+			}
+			else
+			{
+				int selectedIndex = -1;
+				var names = GetDNANamesForPopup(DNAAsset);
+				selectedIndex = names.IndexOf(selected);
+				if (selectedIndex == -1)
+				{
+					if (!string.IsNullOrEmpty(selected))
+					{
+						names.Insert(1, selected);
+						selectedIndex = 1;
+					}
+					else
+					{
+						selectedIndex = 0;
+					}
+				}
+				EditorGUI.BeginChangeCheck();
+				selectedIndex = EditorGUI.Popup(position, selectedIndex, names.ToArray());
+				if (EditorGUI.EndChangeCheck())
+				{
+					if (selectedIndex != 0)
+					{
+						property.stringValue = names[selectedIndex];
+					}
+					else
+					{
+						property.stringValue = "";
+					}
+					property.serializedObject.ApplyModifiedProperties();
+				}
+			}
+		}
+		//gets the names for the above popup, keeps missing names in the list too so that users can reselect them
+		private static List<string> GetDNANamesForPopup(DynamicUMADnaAsset DNAAsset)
+		{
+			var _dnaNamesForPopup = new List<string>();
+			for (int i = 0; i < DNAAsset.Names.Length; i++)
+			{
+				_dnaNamesForPopup.Add(DNAAsset.Names[i]);
+			}
+			_dnaNamesForPopup.Insert(0, "Choose DNA Name");
+			return _dnaNamesForPopup;
 		}
 
 		#endregion

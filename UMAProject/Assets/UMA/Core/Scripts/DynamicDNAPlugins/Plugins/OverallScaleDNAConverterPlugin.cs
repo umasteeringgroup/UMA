@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 namespace UMA
 {
@@ -11,12 +12,13 @@ namespace UMA
 		{
 			//Just to help with organising in the inspector
 			[SerializeField]
+			[Tooltip("This is just a label for helping organise entries in the UI")]
 			private string _label;
 			[SerializeField]
+			[Tooltip("If no modifying dna is specified below this scale will be fully applied to the character.")]
 			private float _overallScale = 0.88f;
-			//[SerializeField]
-			//private DynamicDefaultWeight _overallScaleWeight = new DynamicDefaultWeight();
 			[SerializeField]
+			[Tooltip("Modify how much the overallScale above is applied to the character based on dna value(s) you specify here")]
 			private DNAEvaluatorList _modifyingDNA = new DNAEvaluatorList();
 
 			public float overallScale
@@ -42,16 +44,9 @@ namespace UMA
 			{
 				if (_modifyingDNA.Count > 0)
 					return _modifyingDNA.Evaluate(umaDNA);
-				return 1f;
+				return 1f;//if there is no modifying dna assume the overall scale is fully applied
 			}
 
-			public float GetEvaluatedScale(UMADnaBase umaDNA)
-			{
-				//return _overallScale * _overallScaleWeight.GetWeight(umaDNA);
-				if (_modifyingDNA.Count > 0)
-					return _overallScale * _modifyingDNA.Evaluate(umaDNA);
-				return _overallScale;
-			}
 		}
 
 		[SerializeField]
@@ -94,25 +89,26 @@ namespace UMA
 			var masterWeightCalc = masterWeight.GetWeight(umaDna);
 			if (masterWeightCalc == 0f)
 				return;
-			float evaluatedScale = 0f;
-			float accumulatedWeight = 0f;
-			float weight;
-			for(int i = 0; i < _overallScaleModifiers.Count; i++)
-			{
-				weight = _overallScaleModifiers[i].GetEvaluatedDNA(umaDna);
-				evaluatedScale += _overallScaleModifiers[i].overallScale * weight;
-				accumulatedWeight += weight;
-			}
-			//if accumulatedWeight is greater than 1 bring the evaluatedScale back into a sane rage
-			if(accumulatedWeight > 1)
-				evaluatedScale = evaluatedScale * (1 / accumulatedWeight);			
-			//float baseScale = this.converterAsset.converterBehaviour.overallScaleCalc;
-			//float newScale = Mathf.Lerp(baseScale, evaluatedScale, masterWeightCalc);
-			//this.converterAsset.converterBehaviour.overallScaleCalc = newScale;
 
-			float baseScale2 = this.converterController.converterBehaviour.baseScale;
-			float newScale2 = Mathf.Lerp(baseScale2, evaluatedScale, masterWeightCalc);
-			this.converterController.converterBehaviour.liveScale = newScale2;
+			float baseScale = this.converterController.converterBehaviour.baseScale;
+
+			//Each modifier will change the base scale to its overall scale value depending on how stronly its dna(s) are applied
+			float evaluatedScale = 0f;
+			for (int i = 0; i < _overallScaleModifiers.Count; i++)
+			{
+				evaluatedScale += Mathf.Lerp(baseScale, _overallScaleModifiers[i].overallScale, _overallScaleModifiers[i].GetEvaluatedDNA(umaDna));
+			}
+			evaluatedScale = evaluatedScale / _overallScaleModifiers.Count;
+
+			float newScale = Mathf.Lerp(baseScale, evaluatedScale, masterWeightCalc);
+			this.converterController.converterBehaviour.liveScale = newScale;
+		}
+
+		public override void OnAddEntryCallback(SerializedObject pluginSO, int entryIndex)
+		{
+			var thismodifier = pluginSO.FindProperty("_overallScaleModifiers").GetArrayElementAtIndex(entryIndex);
+			if (thismodifier.FindPropertyRelative("_overallScale").floatValue == 0f)
+				thismodifier.FindPropertyRelative("_overallScale").floatValue = 0.88f;
 		}
 
 	}

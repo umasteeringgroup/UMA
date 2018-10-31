@@ -1273,7 +1273,7 @@ RectTransform:
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -4017,8 +4017,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0.0000076293945, y: -0.000004546857}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0.0000076293945, y: 0.000038824513}
+  m_SizeDelta: {x: 0, y: 55.984848}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &349706808
 MonoBehaviour:
@@ -4218,7 +4218,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 968063932}
   m_Direction: 2
   m_Value: 0
-  m_Size: 0.99999994
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -4241,9 +4241,9 @@ RectTransform:
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
-  m_AnchorMax: {x: 1, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 20, y: 0}
+  m_SizeDelta: {x: 20, y: -17}
   m_Pivot: {x: 1, y: 1}
 --- !u!114 &361322638
 MonoBehaviour:
@@ -4426,7 +4426,7 @@ MonoBehaviour:
   hide: 0
   loadBlendShapes: 1
   activeRace:
-    name: HumanMaleDCS
+    name: HumanMaleDCSII
   defaultChangeRaceOptions: 8
   cacheCurrentState: 1
   rebuildSkeleton: 1
@@ -4451,6 +4451,16 @@ MonoBehaviour:
       _compatibleRaces:
       - HumanFemaleDCS
       - HumanFemale
+    - _recipeName: AlienHeadMorph
+      _compatibleRaces:
+      - HumanMale
+      - HumanMaleDCS
+      - HumanMaleDCSII
+    - _recipeName: ElfEarsMorph
+      _compatibleRaces:
+      - HumanMaleDCS
+      - HumanMale
+      - HumanMaleDCSII
   raceAnimationControllers:
     defaultAnimationController: {fileID: 9100000, guid: 66af5264f1619114db5f72f979ce14bd,
       type: 2}
@@ -4783,10 +4793,10 @@ RectTransform:
   m_Father: {fileID: 1744008072}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 96.935, y: -25.45}
+  m_SizeDelta: {x: 193.87, y: 50.9}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &389706379
 MonoBehaviour:
@@ -6804,7 +6814,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 109731254}
   m_HandleRect: {fileID: 109731252}
   m_Direction: 0
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -6828,9 +6838,9 @@ RectTransform:
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 20}
+  m_SizeDelta: {x: -17, y: 20}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &616992893
 MonoBehaviour:
@@ -6948,7 +6958,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &675988258
 RectTransform:
   m_ObjectHideFlags: 0
@@ -9073,7 +9083,7 @@ RectTransform:
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -10082,10 +10092,10 @@ RectTransform:
   m_Father: {fileID: 349706807}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 359.11365, y: -20}
+  m_SizeDelta: {x: 678.2273, y: 15.984849}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &1089183839
 MonoBehaviour:
@@ -10960,7 +10970,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1144732099
 RectTransform:
   m_ObjectHideFlags: 0
@@ -13288,7 +13298,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1385428170
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13511,7 +13521,7 @@ MonoBehaviour:
   hide: 0
   loadBlendShapes: 1
   activeRace:
-    name: HumanMaleDCSII
+    name: HumanMaleDCS
   defaultChangeRaceOptions: 8
   cacheCurrentState: 1
   rebuildSkeleton: 1
@@ -13536,16 +13546,6 @@ MonoBehaviour:
       _compatibleRaces:
       - HumanFemaleDCS
       - HumanFemale
-    - _recipeName: ElfEarsMorph
-      _compatibleRaces:
-      - HumanMaleDCS
-      - HumanMale
-      - HumanMaleDCSII
-    - _recipeName: AlienHeadMorph
-      _compatibleRaces:
-      - HumanMale
-      - HumanMaleDCS
-      - HumanMaleDCSII
   raceAnimationControllers:
     defaultAnimationController: {fileID: 9100000, guid: 66af5264f1619114db5f72f979ce14bd,
       type: 2}
@@ -16547,7 +16547,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -12, y: 111.999985}
+  m_AnchoredPosition: {x: -11.999939, y: 111.999985}
   m_SizeDelta: {x: -152, y: 73}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1684091491
@@ -19726,9 +19726,9 @@ RectTransform:
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: -17, y: -17}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &2077546859
 MonoBehaviour:

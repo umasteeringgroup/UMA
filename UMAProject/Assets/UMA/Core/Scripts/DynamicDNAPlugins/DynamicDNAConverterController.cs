@@ -27,16 +27,8 @@ namespace UMA
 		/// </summary>
 		private List<string> _usedDNANames = new List<string>();
 
-#if UNITY_EDITOR
 		/// <summary>
-		/// A list of names that is used by the DNANamesPopup GUI field, includes options for none and any assigned names that are not in the dna asset so they can be chosen again
-		/// </summary>
-		private List<string> _dnaNamesForPopup = new List<string>();
-#endif
-		//TODO Think about this more. One of the nice things about this is that the same converter can be assigned to multiple behaviours
-		//so maybe this only happens at runtime- but then the dnaAsset would only be there at runtime too- this will be confusing
-		/// <summary>
-		/// The behaviour will assign it self to this converter, when this converter is assigned to it
+		/// The behaviour will assign it self to this converter, when this converter is assigned to it, either when ApplyDNAAction is called or the controller is inspected via this Behaviour
 		/// </summary>
 		private DynamicDNAConverterBehaviour _converterBehaviour;
 
@@ -352,79 +344,6 @@ namespace UMA
 			}
 			return desiredName + (intSuffix != 0 ? intSuffix.ToString() : "");
 		}
-
-		#region GUI UTILITIES
-
-#if UNITY_EDITOR
-
-		//TODO make it possible to add a custom here
-		/// <summary>
-		/// Draws a popup for selecting a dna name from the converters DynamicDNAAsset (if set) otherwise draws a text field
-		/// </summary>
-		public void DNANamesPopup(Rect position, SerializedProperty property, string selected)
-		{
-			if (DNAAsset == null)
-			{
-				EditorGUI.BeginChangeCheck();
-				property.stringValue = EditorGUI.TextField(position, selected);
-				if (EditorGUI.EndChangeCheck())
-				{
-					property.serializedObject.ApplyModifiedProperties();
-				}
-			}
-			else
-			{
-				int selectedIndex = -1;
-				var names = GetDNANamesForPopup();
-				selectedIndex = names.IndexOf(selected);
-				if (selectedIndex == -1)
-				{
-					if (!string.IsNullOrEmpty(selected))
-					{
-						names.Insert(1, selected);
-						selectedIndex = 1;
-					}
-					else
-					{
-						selectedIndex = 0;
-					}
-				}
-				//Id really like this to show 'Choose DNA Name' in the field and 'None' as the 'Un-Choose' option in the list
-				//but for that we need a generic menu- I'll get to it TODO
-				EditorGUI.BeginChangeCheck();
-				selectedIndex = EditorGUI.Popup(position, selectedIndex, names.ToArray());
-				if (EditorGUI.EndChangeCheck())
-				{
-					if (selectedIndex != 0)
-					{
-						property.stringValue = names[selectedIndex];
-					}
-					else
-					{
-						property.stringValue = "";
-					}
-					property.serializedObject.ApplyModifiedProperties();
-				}
-			}
-		}
-		//gets the names for the above popup, keeps missing names in the list too so that users can reselect them
-		private List<string> GetDNANamesForPopup(bool forceUpdate = false)
-		{
-			if (_dnaNamesForPopup.Count == 0 || forceUpdate)
-			{
-				_dnaNamesForPopup.Clear();
-				for (int i = 0; i < DNAAsset.Names.Length; i++)
-				{
-					_dnaNamesForPopup.Add(DNAAsset.Names[i]);
-				}
-				_dnaNamesForPopup.Insert(0, "Choose DNA Name");
-			}
-			return _dnaNamesForPopup;
-		}
-
-#endif
-
-		#endregion
 
 #if UNITY_EDITOR
 		[UnityEditor.MenuItem("UMA/Create Dynamic DNA Converter Controller")]

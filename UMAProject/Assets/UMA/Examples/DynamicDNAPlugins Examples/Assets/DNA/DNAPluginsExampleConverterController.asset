@@ -9,12 +9,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 56c6edb17218abd469257d07a2bc5559, type: 3}
-  m_Name: HumanMale 1ConverterController
+  m_Name: DNAPluginsExampleConverterController
   m_EditorClassIdentifier: 
   _plugins:
   - {fileID: 114229394160915382}
   - {fileID: 114700032911936864}
   - {fileID: 114304921582309874}
+  - {fileID: 114812837614320502}
 --- !u!114 &114229394160915382
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10467,13 +10468,13 @@ MonoBehaviour:
       _initialized: 1
   _converterController: {fileID: 11400000}
   _blendshapeDNAConverters:
-  - _blendshapeToApply: MaleEarsMorph
+  - _blendshapeToApply: MaleAlienHead
     _startingShapeWeight: 0
     _modifyingDNA:
       _dnaEvaluators:
       - _calcOption: 0
-        _dnaName: skinRedness
-        _dnaNameHash: -925119651
+        _dnaName: ElfOrAlien
+        _dnaNameHash: 579259412
         _evaluator:
           _name: ZeroZeroOne
           _graph:
@@ -10503,34 +10504,34 @@ MonoBehaviour:
         _multiplier: 1
         _initialized: 1
       _aggregationMethod: 0
-  - _blendshapeToApply: MaleAlienHead
+  - _blendshapeToApply: MaleEarsMorph
     _startingShapeWeight: 0
     _modifyingDNA:
       _dnaEvaluators:
       - _calcOption: 0
-        _dnaName: skinGreenness
-        _dnaNameHash: 519392604
+        _dnaName: ElfOrAlien
+        _dnaNameHash: 579259412
         _evaluator:
-          _name: ZeroZeroOne
+          _name: OneZeroZero
           _graph:
             serializedVersion: 2
             m_Curve:
             - serializedVersion: 2
               time: 0
-              value: 0
+              value: 1
               inSlope: 0
-              outSlope: 0
+              outSlope: -2
               tangentMode: 0
             - serializedVersion: 2
               time: 0.5
               value: 0
-              inSlope: 0
-              outSlope: 2
+              inSlope: -2
+              outSlope: 0
               tangentMode: 0
             - serializedVersion: 2
               time: 1
-              value: 1
-              inSlope: 2
+              value: 0
+              inSlope: 0
               outSlope: 0
               tangentMode: 0
             m_PreInfinity: 2
@@ -10590,4 +10591,159 @@ MonoBehaviour:
     _startingPoseWeight: 1
     _modifyingDNA:
       _dnaEvaluators: []
+      _aggregationMethod: 0
+  - _poseToApply: {fileID: 11400000, guid: 3255c760ce8d08c479636e70302f27cb, type: 2}
+    _startingPoseWeight: 0
+    _modifyingDNA:
+      _dnaEvaluators:
+      - _calcOption: 0
+        _dnaName: ElfOrAlien
+        _dnaNameHash: 579259412
+        _evaluator:
+          _name: ZeroZeroOne
+          _graph:
+            serializedVersion: 2
+            m_Curve:
+            - serializedVersion: 2
+              time: 0
+              value: 0
+              inSlope: 0
+              outSlope: 0
+              tangentMode: 0
+            - serializedVersion: 2
+              time: 0.5
+              value: 0
+              inSlope: 0
+              outSlope: 2
+              tangentMode: 0
+            - serializedVersion: 2
+              time: 1
+              value: 1
+              inSlope: 2
+              outSlope: 0
+              tangentMode: 0
+            m_PreInfinity: 2
+            m_PostInfinity: 2
+            m_RotationOrder: 0
+        _multiplier: 1
+        _initialized: 1
+      _aggregationMethod: 0
+  - _poseToApply: {fileID: 11400000, guid: d133c962c1d29554ca7ae882e3840367, type: 2}
+    _startingPoseWeight: 0
+    _modifyingDNA:
+      _dnaEvaluators:
+      - _calcOption: 0
+        _dnaName: ElfOrAlien
+        _dnaNameHash: 579259412
+        _evaluator:
+          _name: OneZeroZero
+          _graph:
+            serializedVersion: 2
+            m_Curve:
+            - serializedVersion: 2
+              time: 0
+              value: 1
+              inSlope: 0
+              outSlope: -2
+              tangentMode: 0
+            - serializedVersion: 2
+              time: 0.5
+              value: 0
+              inSlope: -2
+              outSlope: 0
+              tangentMode: 0
+            - serializedVersion: 2
+              time: 1
+              value: 0
+              inSlope: 0
+              outSlope: 0
+              tangentMode: 0
+            m_PreInfinity: 2
+            m_PostInfinity: 2
+            m_RotationOrder: 0
+        _multiplier: 1
+        _initialized: 1
+      _aggregationMethod: 0
+--- !u!114 &114812837614320502
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d15b594bf85dc8e4fbf81314a1fc0702, type: 3}
+  m_Name: OverallScaleDNAConverters
+  m_EditorClassIdentifier: 
+  masterWeight:
+    _globalWeight: 1
+    _DNAForWeight:
+      _calcOption: 0
+      _dnaName: 
+      _dnaNameHash: 0
+      _evaluator:
+        _name: Raw
+        _graph:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 2
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 1
+            tangentMode: 0
+          - serializedVersion: 2
+            time: 0.5
+            value: 0.5
+            inSlope: 1
+            outSlope: 1
+            tangentMode: 0
+          - serializedVersion: 2
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 0
+            tangentMode: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+      _multiplier: 1
+      _initialized: 1
+  _converterController: {fileID: 11400000}
+  _overallScaleModifiers:
+  - _label: PixiScale
+    _overallScale: 0.81
+    _modifyingDNA:
+      _dnaEvaluators:
+      - _calcOption: 0
+        _dnaName: ElfOrAlien
+        _dnaNameHash: 579259412
+        _evaluator:
+          _name: OneZeroZero
+          _graph:
+            serializedVersion: 2
+            m_Curve:
+            - serializedVersion: 2
+              time: 0
+              value: 1
+              inSlope: 0
+              outSlope: -2
+              tangentMode: 0
+            - serializedVersion: 2
+              time: 0.5
+              value: 0
+              inSlope: -2
+              outSlope: 0
+              tangentMode: 0
+            - serializedVersion: 2
+              time: 1
+              value: 0
+              inSlope: 0
+              outSlope: 0
+              tangentMode: 0
+            m_PreInfinity: 2
+            m_PostInfinity: 2
+            m_RotationOrder: 0
+        _multiplier: 1
+        _initialized: 1
       _aggregationMethod: 0

@@ -64,9 +64,11 @@ namespace UMA
 
 		public override void ApplyDNA(UMAData umaData, UMASkeleton skeleton, int dnaTypeHash)
 		{
+			var umaDna = umaData.GetDna(dnaTypeHash);
+			var masterWeightCalc = masterWeight.GetWeight(umaDna);
 			for (int i = 0; i < _blendshapeDNAConverters.Count; i++)
 			{
-				_blendshapeDNAConverters[i].ApplyDNA(umaData, skeleton, dnaTypeHash);
+				_blendshapeDNAConverters[i].ApplyDNA(umaData, skeleton, umaDna, masterWeightCalc);
 			}
 		}
 
@@ -245,7 +247,6 @@ namespace UMA
 				_liveShapeWeight = _liveShapeWeight * masterWeight;
 				_liveShapeWeight = Mathf.Clamp(_liveShapeWeight, 0f, 1f);
 
-				Debug.Log("Setting Blendshape " + _blendshapeToApply + " to " + _liveShapeWeight);
 				umaData.SetBlendShape(_blendshapeToApply, _liveShapeWeight);
 			}
 

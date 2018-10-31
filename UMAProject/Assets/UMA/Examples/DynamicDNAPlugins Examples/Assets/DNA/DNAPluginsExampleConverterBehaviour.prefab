@@ -10,7 +10,7 @@ GameObject:
   - component: {fileID: 400000}
   - component: {fileID: 11465070}
   m_Layer: 0
-  m_Name: HumanMaleDynamicDNAConverterBehaviour 1
+  m_Name: DNAPluginsExampleConverterBehaviour
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -42,7 +42,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   DisplayValue: 
   dnaTypeHash: 601756857
-  dnaAsset: {fileID: 11400000, guid: 17b4ec3db2a10e04d8909cc9932562b5, type: 2}
+  dnaAsset: {fileID: 11400000, guid: 51557a0d9997c5945973dff0a2fc7031, type: 2}
   _converterController: {fileID: 11400000, guid: 64b8d73fdcd26004fa40391aea72889b,
     type: 2}
   _overallModifiers:

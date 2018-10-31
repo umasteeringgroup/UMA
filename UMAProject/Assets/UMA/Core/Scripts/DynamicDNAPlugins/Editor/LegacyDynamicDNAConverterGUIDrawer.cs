@@ -493,8 +493,8 @@ namespace UMA.CharacterSystem.Editors
 						EditorGUILayout.HelpBox("Edit a character that uses this converter in the 'DynamicDna Converter Behaviour Customizer' scene and you can create a StartingPoseAsset automatically here", MessageType.Info);
 					}
 				}
-				//This should BE in DynamicDNAConverterCustomizer
-				if (minimalMode && umaData.skeleton != null && bonePoseAsset.objectReferenceValue == null)
+				//Moved into DNAConverterCustomizer tools
+				/*if (minimalMode && umaData.skeleton != null && bonePoseAsset.objectReferenceValue == null)
 				{
 					EditorGUILayout.Space();
 					EditorGUILayout.LabelField("Create Poses from Current DNA state");
@@ -512,7 +512,7 @@ namespace UMA.CharacterSystem.Editors
 					}
 					GUILayout.BeginHorizontal();
 					GUILayout.Space(EditorGUI.indentLevel * 20);
-					if (GUILayout.Button(/*createFromDnaButR, */"Create Poses"))
+					if (GUILayout.Button("Create Poses"))
 					{
 						if (thisDDCC != null)
 						{
@@ -524,7 +524,7 @@ namespace UMA.CharacterSystem.Editors
 					}
 					GUILayout.EndHorizontal();
 
-				}
+				}*/
 				EditorGUI.indentLevel--;
 				GUIHelper.EndVerticalPadded(3);
 			}

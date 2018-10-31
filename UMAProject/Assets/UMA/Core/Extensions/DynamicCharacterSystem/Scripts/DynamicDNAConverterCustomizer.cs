@@ -11,7 +11,7 @@ namespace UMA.CharacterSystem
 	public class DynamicDNAConverterCustomizer : MonoBehaviour
 	{
 #if UNITY_EDITOR
-		public GameObject dynamicDnaConverterPrefab;//used for saving dnaConverter as new
+		public GameObject dynamicDnaConverterPrefab;//used for saving dnaConverter as new//TODO check this is needed any more since UMAUtils can make/clone a prefab now
 		public RuntimeAnimatorController TposeAnimatorController;
 		public RuntimeAnimatorController AposeAnimatorController;
 		public RuntimeAnimatorController MovementAnimatorController;
@@ -27,15 +27,17 @@ namespace UMA.CharacterSystem
 		UMAAvatarBase activeUMA;
 		[System.NonSerialized]
 		string activeUMARace;
-		[SerializeField]
+		[SerializeField]//Why
 		public List<DynamicDNAConverterBehaviour> availableConverters = new List<DynamicDNAConverterBehaviour>();
-		[SerializeField]
+		[SerializeField]//Why
 		public DynamicDNAConverterBehaviour selectedConverter;
 
 		GameObject converterBackupsFolder = null;
 
+		//Dont think customizer is going to do this now- skeletonModifiers in the old behaviour have import tools of their own and using controller duplicating the behaviour makes no sense
 		public DynamicDNAConverterBehaviour converterToImport;
 
+		//I think backups will be handled by the controller in the new world
 		Dictionary<string, DynamicDNAConverterBehaviour> converterBackups = new Dictionary<string, DynamicDNAConverterBehaviour>();
 		Dictionary<string, string[]> dnaAssetNamesBackups = new Dictionary<string, string[]>();
 		Dictionary<string, UMABonePose.PoseBone[]> poseBonesBackups = new Dictionary<string, UMABonePose.PoseBone[]>();
@@ -256,6 +258,7 @@ namespace UMA.CharacterSystem
 			UpdateUMA();
 		}
 
+		/*
 		/// <summary>
 		/// Imports the settings and assets from another DynamicDNAConverterBehaviour
 		/// </summary>
@@ -284,7 +287,7 @@ namespace UMA.CharacterSystem
 			selectedConverter.massModifiers = converterToImport.massModifiers;
 			Debug.Log("Imported " + converterToImport.name + " settings into " + selectedConverter.name);
 			return true;
-		}
+		}*/
 
 		private bool LocalTransformsMatch(Transform t1, Transform t2)
 		{
@@ -295,10 +298,13 @@ namespace UMA.CharacterSystem
 			return true;
 		}
 
-		protected void CreateBonePoseCallback(UMAData umaData)
+#pragma warning disable 618 //disable obsolete warning
+
+		private void CreateBonePoseCallback(UMAData umaData)
 		{
-			UMA.PoseTools.UMABonePose bonePose = null;
-			if (selectedConverter.startingPose == null)
+			UMA.PoseTools.UMABonePose bonePose = CreatePoseAsset("", bonePoseSaveName);
+			//I dont think this should have ever overwritten the existing one
+			/*if (selectedConverter.startingPose == null)
 			{
 				bonePose = CreatePoseAsset("", bonePoseSaveName);
 			}
@@ -306,7 +312,7 @@ namespace UMA.CharacterSystem
 			{
 				bonePose = selectedConverter.startingPose;
 				bonePose.poses = new UMABonePose.PoseBone[1];
-			}
+			}*/
 
 			UMASkeleton skeletonPreDNA = tempAvatarPreDNA.GetComponent<UMADynamicAvatar>().umaData.skeleton;
 			UMASkeleton skeletonPostDNA = tempAvatarPostDNA.GetComponent<UMADynamicAvatar>().umaData.skeleton;
@@ -330,10 +336,11 @@ namespace UMA.CharacterSystem
 				{
 					bonePose.AddBone(transformPreDNA, transformPostDNA.localPosition, transformPostDNA.localRotation, transformPostDNA.localScale);
 				}
-			}
-
+			}	
+			
 			UMAUtils.DestroySceneObject(tempAvatarPreDNA);
 			UMAUtils.DestroySceneObject(tempAvatarPostDNA);
+			
 
 			// This can be very helpful for testing
 			/*
@@ -342,10 +349,39 @@ namespace UMA.CharacterSystem
 
 			EditorUtility.SetDirty(bonePose);
 			AssetDatabase.SaveAssets();
-			// Set this asset as the converters pose asset
-			selectedConverter.startingPose = bonePose;
-			//make sure its fully applied
-			selectedConverter.startingPoseWeight = 1f;
+
+			if (selectedConverter.ConverterController != null)
+			{
+				//find the first BonePoseDNAConverterPlugin and add the pose to it
+				var existingBPCPs = selectedConverter.ConverterController.GetPlugins(typeof(BonePoseDNAConverterPlugin));
+				BonePoseDNAConverterPlugin thisBPCP;
+				if(existingBPCPs.Count > 0)
+				{
+					thisBPCP = existingBPCPs[0] as BonePoseDNAConverterPlugin;
+					//Turn off any other starting poses?
+					for (int i = 0; i < existingBPCPs.Count; i++)
+					{
+						for(int bi = 0; bi < (existingBPCPs[i] as BonePoseDNAConverterPlugin).poseDNAConverters.Count; bi++)
+						{
+							(existingBPCPs[i] as BonePoseDNAConverterPlugin).poseDNAConverters[bi].startingPoseWeight = 0f;
+						}
+					}
+				}
+				else
+				{
+					//if there isn't one create it
+					thisBPCP = selectedConverter.ConverterController.AddPlugin(typeof(BonePoseDNAConverterPlugin)) as BonePoseDNAConverterPlugin;
+				}
+				thisBPCP.poseDNAConverters.Add(new BonePoseDNAConverterPlugin.BonePoseDNAConverter(bonePose, 1f));
+				Debug.Log(bonePose.name + " added as a starting pose to " + thisBPCP.name);
+			}
+			else
+			{
+				// Set this asset as the converters pose asset
+				selectedConverter.startingPose = bonePose;
+				//make sure its fully applied
+				selectedConverter.startingPoseWeight = 1f;
+			}
 
 			// Reset all the DNA values for target Avatar to default
 			UMADnaBase[] targetDNA = activeUMA.umaData.GetAllDna();
@@ -362,7 +398,7 @@ namespace UMA.CharacterSystem
 			UMARecipeBase baseRaceRecipe = activeUMA.umaData.umaRecipe.GetRace().baseRaceRecipe;
 			if (baseRaceRecipe != null)
 			{
-				if (EditorUtility.DisplayDialog("Base Recipe Cleanup", "Starting Pose created. Remove DNA from base recipe of active race?", "Remove DNA", "Keep DNA"))
+				if (EditorUtility.DisplayDialog("Base Recipe Cleanup", "Starting Pose created. Remove DNA from base recipe of active race? Choose 'RemoveDNA' if your intention is to replace modifications made by a recipes starting DNA values with the created pose.", "Remove DNA", "Keep DNA"))
 				{
 					UMAData.UMARecipe baseRecipeData = new UMAData.UMARecipe();
 					baseRaceRecipe.Load(baseRecipeData, activeUMA.context);
@@ -371,6 +407,7 @@ namespace UMA.CharacterSystem
 				}
 			}
 		}
+#pragma warning restore 618
 
 		/// <summary>
 		/// Calculates the required poses necessary for an UMABonePose asset to render the Avatar in its current post DNA state, 
@@ -385,16 +422,19 @@ namespace UMA.CharacterSystem
 			}
 
 			bonePoseSaveName = createdAssetName;
-
+			//we need to close any dna editing panels because these will need to update after this process completes
+			UMA.CharacterSystem.Examples.TestCustomizerDD[] charCustomizerDDs = FindObjectsOfType<UMA.CharacterSystem.Examples.TestCustomizerDD>();
+			for (int i = 0; i < charCustomizerDDs.Length; i++)
+				charCustomizerDDs[i].CloseAllPanels();
 			// Build a temporary version of the Avatar with no DNA to get original state
 			UMADnaBase[] activeDNA = activeUMA.umaData.umaRecipe.GetAllDna();
 			SlotData[] activeSlots = activeUMA.umaData.umaRecipe.GetAllSlots();
 			int slotIndex;
 
 			tempAvatarPreDNA = new GameObject("Temp Raw Avatar");
-			tempAvatarPreDNA.transform.parent = activeUMA.transform.parent;
+			//tempAvatarPreDNA.transform.parent = activeUMA.transform.parent;
 			tempAvatarPreDNA.transform.localPosition = Vector3.zero;
-			tempAvatarPreDNA.transform.localRotation = activeUMA.transform.localRotation;
+			tempAvatarPreDNA.transform.localRotation = Quaternion.identity;
 
 			UMADynamicAvatar tempAvatar = tempAvatarPreDNA.AddComponent<UMADynamicAvatar>();
 			tempAvatar.umaGenerator = activeUMA.umaGenerator;
@@ -410,9 +450,9 @@ namespace UMA.CharacterSystem
 			tempAvatar.Show();
 
 			tempAvatarPostDNA = new GameObject("Temp DNA Avatar");
-			tempAvatarPostDNA.transform.parent = activeUMA.transform.parent;
+			//tempAvatarPostDNA.transform.parent = activeUMA.transform.parent;
 			tempAvatarPostDNA.transform.localPosition = Vector3.zero;
-			tempAvatarPostDNA.transform.localRotation = activeUMA.transform.localRotation;
+			tempAvatarPostDNA.transform.localRotation = Quaternion.identity;
 
 			UMADynamicAvatar tempAvatar2 = tempAvatarPostDNA.AddComponent<UMADynamicAvatar>();
 			tempAvatar2.umaGenerator = activeUMA.umaGenerator;
@@ -440,6 +480,10 @@ namespace UMA.CharacterSystem
 		#endregion
 
 		#region Save and Backup Methods
+
+		//TODO THIS ALL NEEDS SOME WORK- Use UnityUndo!
+
+#pragma warning disable 618 //disable obsolete warning
 		/// <summary>
 		/// Makes a backup of the currently selected converter whose values are restored to the current converter when the Application stops playing (unless you Save the changes)
 		/// </summary>
@@ -542,6 +586,7 @@ namespace UMA.CharacterSystem
 				}
 			}
 		}
+
 		/// <summary>
 		/// Saves the current changes to the converter by removing the backup that would otherwise reset the converter when the Application stops playing.
 		/// </summary>
@@ -661,6 +706,7 @@ namespace UMA.CharacterSystem
 			}
 		}
 #endif
+#pragma warning restore 618 //restore obsolete warning
 		#endregion
 
 		#region Asset Creation

@@ -2820,6 +2820,20 @@ MonoBehaviour:
     _Guid: 72fba4c50655ea2428415b2a0debc752
     IsResource: 0
     IsAssetBundle: 0
+  - _BaseTypeName: UMAWardrobeRecipe
+    _Name: AlienHeadMorph
+    _SerializedItem: {fileID: 11400000, guid: 4fbbb24f4db92f541a8f8966fbc887e4, type: 2}
+    _Path: Assets/UMA/Examples/DynamicDNAPlugins Examples/Assets/Recipes/WardrobeRecipes/AlienHeadMorph.asset
+    _Guid: 4fbbb24f4db92f541a8f8966fbc887e4
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: UMAWardrobeRecipe
+    _Name: ElfEarsMorph
+    _SerializedItem: {fileID: 11400000, guid: d7f773c6ff9565340b55a7325362b86f, type: 2}
+    _Path: Assets/UMA/Examples/DynamicDNAPlugins Examples/Assets/Recipes/WardrobeRecipes/ElfEarsMorph.asset
+    _Guid: d7f773c6ff9565340b55a7325362b86f
+    IsResource: 0
+    IsAssetBundle: 0
   - _BaseTypeName: RuntimeAnimatorController
     _Name: UMA_APose_Controller
     _SerializedItem: {fileID: 9100000, guid: 66af5264f1619114db5f72f979ce14bd, type: 2}
@@ -2986,6 +3000,13 @@ MonoBehaviour:
     _SerializedItem: {fileID: 11400000, guid: 534a08ac04adc1849943bde519c8d8f5, type: 2}
     _Path: Assets/UMA/Examples/Blendshape Examples/DNA/BlendNamesDynamicDNA.asset
     _Guid: 534a08ac04adc1849943bde519c8d8f5
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: DynamicUMADnaAsset
+    _Name: DNAPluginsExampleDNAAsset
+    _SerializedItem: {fileID: 11400000, guid: 51557a0d9997c5945973dff0a2fc7031, type: 2}
+    _Path: Assets/UMA/Examples/DynamicDNAPlugins Examples/Assets/DNA/DNAPluginsExampleDNAAsset.asset
+    _Guid: 51557a0d9997c5945973dff0a2fc7031
     IsResource: 0
     IsAssetBundle: 0
 --- !u!1001 &100100000

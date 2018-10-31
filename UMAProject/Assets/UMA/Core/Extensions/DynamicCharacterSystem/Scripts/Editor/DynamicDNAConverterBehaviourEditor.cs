@@ -247,9 +247,7 @@ namespace UMA.CharacterSystem.Editors
 					if(converterControllerProp.objectReferenceValue != null)
 					{
 						((DynamicDNAConverterController)converterControllerProp.objectReferenceValue).converterBehaviour = target as DynamicDNAConverterBehaviour;
-						//MakeDirty and save? 
-						//I think ScriptableObjects just change anyway when you set values direct
-						//TODO CONFIRM
+						//We dont save because the same controller can be used by lots of converters
 					}
 					serializedObject.ApplyModifiedProperties();
 					serializedObject.Update();

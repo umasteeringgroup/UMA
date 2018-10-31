@@ -932,7 +932,7 @@ namespace UMA.Editors
 		/// <param name="force">Force the cache to update</param>
 		protected void CacheArrayElementsByIndex(bool force = false)
 		{
-			if(_cachedArrayElementsByIndex.Count == 0 || force)
+			if(_cachedArrayElementsByIndex.Count == 0 || force || _cachedArrayElementsByIndex.Count != _converterElementsProp.arraySize)
 			{
 				_cachedArrayElementsByIndex.Clear();
 				for(int i = 0; i < _converterElementsProp.arraySize; i++)
@@ -1082,6 +1082,26 @@ namespace UMA.Editors
 				height = h;
 			}
 		}
+
+		#endregion
+
+		#region CALL PROTECTED METHOD
+
+		//I really want 
+		//GetConvertersListProperty
+		//DrawPluginHelp
+		//DrawElementsListHeaderContent
+		//GetPluginEntryLabel
+		//GetPluginEntryHeight
+		//DrawPluginEntry
+		//OnAddEntryCallback
+		//OnRemoveEntryCallback
+		//DrawElementsListFooterContent
+		//ImportSettings
+		//To all be defined as protected in DynamicDNAPlugin because they should only be used by this,
+		//I dont want them showing up in visualStudio or whatever when someone gets a DynamicDNAPlugin from the converters list
+		//BUT they cant be defined as protected BECAUSE they need to be used by this and I dont want people to have to make custom inspectors for plugins- cos its too much work
+		//SO I think the methods can be gotten via reflection here
 
 		#endregion
 	}

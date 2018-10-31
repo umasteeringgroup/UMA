@@ -241,7 +241,8 @@ namespace UMA.Editors
 				EditorGUI.PropertyField(dnaNameRect, dnaNameProp, GUIContent.none);
 			else
 			{
-				_dynamicDNAPlugin.converterController.DNANamesPopup(dnaNameRect, dnaNameProp, dnaNameProp.stringValue);
+				DynamicDNAConverterControllerInspector.DNANamesPopup(dnaNameRect, dnaNameProp, dnaNameProp.stringValue, _dynamicDNAPlugin.converterController.DNAAsset);
+				//_dynamicDNAPlugin.converterController.DNANamesPopup(dnaNameRect, dnaNameProp, dnaNameProp.stringValue);
 			}
 			if (EditorGUI.EndChangeCheck())
 			{
@@ -251,6 +252,7 @@ namespace UMA.Editors
 					dnaNameHashProp.intValue = -1;
 			}
 			EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(dnaNameProp.stringValue));
+			//This field is not registering a change when the graph gets picked grrr
 			EditorGUI.PropertyField(evaluatorRect, evaluatorProp, GUIContent.none);
 			EditorGUI.PropertyField(multiplierRect, intensityProp, GUIContent.none);
 			EditorGUI.EndDisabledGroup();

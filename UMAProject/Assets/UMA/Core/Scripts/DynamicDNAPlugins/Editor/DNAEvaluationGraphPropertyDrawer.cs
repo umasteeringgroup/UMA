@@ -69,9 +69,9 @@ namespace UMA.Editors
 			if (string.IsNullOrEmpty(cachedTooltip))
 				UpdateCachedToolTip(_helper.Target);
 
-			GUI.SetNextControlName("DNAEvaluationGraph");
-
 			var fieldRect = EditorGUI.PrefixLabel(position, label);
+
+			GUI.SetNextControlName("DNAEvaluationGraph");
 
 			var prevIndent = EditorGUI.indentLevel;
 			EditorGUI.indentLevel = 0;
@@ -130,6 +130,7 @@ namespace UMA.Editors
 						return;
 					}
 				}
+				//WHY is the content drawing disabled in play mode??!!??
 				var prevEnabled = GUI.enabled;
 				GUI.enabled = true;
 				if (_popupContent == null)
@@ -149,8 +150,9 @@ namespace UMA.Editors
 			_helper = new DNAEvaluationGraph.EditorHelper(selectedGraph);
 			CopyValuesFromHelper(property, _helper);
 			UpdateCachedToolTip(_helper.Target);
-			property.serializedObject.ApplyModifiedProperties();
+			//I cannot for the life of me get a change to register in the inspector when an item is chosen from the custom popup!
 			GUI.changed = true;
+			GUI.FocusControl("DNAEvaluationGraph");
 		}
 
 
@@ -160,8 +162,8 @@ namespace UMA.Editors
 		/// <param name="position"></param>
 		/// <param name="dnaGraph"></param>
 		/// <param name="tooltip">An optional tooltip for when the swatch is hovered</param>
-		/// <param name="hovered">Draw the swatch as hovered</param>
-		/// <param name="selected">Draw the swatch as selected</param>
+		/// <param name="hovered">Draw the swatch is hovered</param>
+		/// <param name="selected">Draw the swatch is selected</param>
 		/// <param name="callback">An optional callback to trigger when the swatch is clicked</param>
 		public void DrawSwatch(Rect position, DNAEvaluationGraph dnaGraph, string tooltip = "", bool hovered = false, bool selected = false, System.Action<DNAEvaluationGraph> callback = null)
 		{
@@ -171,7 +173,6 @@ namespace UMA.Editors
 
 			var thisBgColor = hovered ? _bgColorHovered : (selected ? _bgColorSelected : _bgColor);
 			EditorGUIUtility.DrawCurveSwatch(position, _drawhelper._graph, null, new Color(1f, 1f, 0f, 0.7f), thisBgColor);
-			//now draw a button over the whole thing, with a label for the selected swatch, that will open up the swatch selector when its clicked
 			var overlayRect = new Rect(position.xMin, position.yMin - 1f, position.width, position.height);
 
 			EditorGUI.DropShadowLabel(overlayRect, new GUIContent(dnaGraph.name), graphLabelStyle);
@@ -194,9 +195,6 @@ namespace UMA.Editors
 			_helper = new DNAEvaluationGraph.EditorHelper(DNAEvaluationGraph.Default);
 
 			CopyValuesFromHelper(property, _helper);
-
-			property.serializedObject.ApplyModifiedProperties();
-			property.serializedObject.Update();
 		}
 
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
@@ -206,6 +204,7 @@ namespace UMA.Editors
 
 		#region Static Utils
 
+		//DNAEvaluationGraph is simpler now so the _helper isn't really needed- its just for setting the graph directly really
 		private static void CopyValuesToHelper(SerializedProperty property, DNAEvaluationGraph.EditorHelper helper)
 		{
 			helper._name = property.FindPropertyRelative("_name").stringValue;
@@ -216,6 +215,8 @@ namespace UMA.Editors
 		{
 			property.FindPropertyRelative("_name").stringValue = helper._name;
 			property.FindPropertyRelative("_graph").animationCurveValue = helper._graph;
+			property.serializedObject.ApplyModifiedProperties();
+			//property.serializedObject.Update();
 		}
 
 		#endregion

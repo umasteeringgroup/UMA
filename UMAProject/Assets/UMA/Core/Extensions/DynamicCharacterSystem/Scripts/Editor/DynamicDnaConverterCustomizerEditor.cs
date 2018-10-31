@@ -10,6 +10,10 @@ namespace UMA.CharacterSystem.Editors
     {
         DynamicDNAConverterCustomizer thisDDCC;
         Dictionary<DynamicDNAConverterBehaviour, Editor> SDCBs = new Dictionary<DynamicDNAConverterBehaviour, Editor>();
+
+		//For BonePose CreationTools
+		string createBonePoseAssetName = "";
+
         public override void OnInspectorGUI()
         {
             thisDDCC = target as DynamicDNAConverterCustomizer;
@@ -100,8 +104,10 @@ namespace UMA.CharacterSystem.Editors
             if (serializedObject.FindProperty("selectedConverter").objectReferenceValue != null)
             {
 				thisDDCC.StartListeningForUndo();
-                GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
-                EditorGUILayout.LabelField("Import Settings from another Converter", EditorStyles.boldLabel);
+				//import like this makes no sense now
+				/*
+                GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f, 0.3f));
+				EditorGUILayout.LabelField("Import Settings from another Converter", EditorStyles.boldLabel);
                 var ImportFromConverterR = EditorGUILayout.GetControlRect(false);
                 var ImportFromConverterLabelR = ImportFromConverterR;
                 var ImportFromConverterFieldR = ImportFromConverterR;
@@ -125,6 +131,7 @@ namespace UMA.CharacterSystem.Editors
                 if (serializedObject.FindProperty("converterToImport").objectReferenceValue == null)
                     EditorGUI.EndDisabledGroup();
                 GUIHelper.EndVerticalPadded(10);
+				*/
                 //
                 Editor thisSDCB;
                 if(SDCBs.TryGetValue((DynamicDNAConverterBehaviour)serializedObject.FindProperty("selectedConverter").objectReferenceValue, out thisSDCB))
@@ -139,8 +146,8 @@ namespace UMA.CharacterSystem.Editors
                 ((DynamicDNAConverterBehaviourEditor)thisSDCB).minimalMode = true;
                 ((DynamicDNAConverterBehaviourEditor)thisSDCB).thisDDCC = thisDDCC;
                 ((DynamicDNAConverterBehaviourEditor)thisSDCB).umaData = thisDDCC.targetUMA.umaData;
-                GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
-                EditorGUILayout.LabelField("Edit Values", EditorStyles.boldLabel);
+                GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f, 0.3f));
+				EditorGUILayout.LabelField("Edit Values", EditorStyles.boldLabel);
                 EditorGUI.BeginChangeCheck();
                 thisSDCB.OnInspectorGUI();
                 if (EditorGUI.EndChangeCheck())
@@ -148,8 +155,8 @@ namespace UMA.CharacterSystem.Editors
                     thisDDCC.UpdateUMA();
                 }
                 GUIHelper.EndVerticalPadded(10);
-                GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
-                EditorGUILayout.LabelField("Save Values", EditorStyles.boldLabel);
+                GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f, 0.3f));
+				EditorGUILayout.LabelField("Save Values", EditorStyles.boldLabel);
                 Rect thisR = EditorGUILayout.GetControlRect(false);
                 var thisButReset = thisR;
                 var thisButSave = thisR;
@@ -170,6 +177,7 @@ namespace UMA.CharacterSystem.Editors
                     thisDDCC.SaveChangesAsNew();
                 }
                 GUIHelper.EndVerticalPadded(10);
+				DrawBonePoseCreationTools();
 			}
 			else
 			{
@@ -177,6 +185,48 @@ namespace UMA.CharacterSystem.Editors
 			}
 			serializedObject.ApplyModifiedProperties();
         }
+
+		private void DrawBonePoseCreationTools()
+		{
+			if (thisDDCC.targetUMA.umaData.skeleton != null)
+			{
+				GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f, 0.3f));
+				EditorGUILayout.LabelField("Create Poses from Current DNA state", EditorStyles.boldLabel);
+				EditorGUILayout.HelpBox("Create bone poses from Avatar's current dna modified state. Applies the pose and sets DNA values back to 0.", MessageType.None);
+				EditorGUILayout.HelpBox("Tip: Ensure all modifications you do not want included are turned off/set to default. In particular you will probably want to set 'Overall Modifiers' scale to 1 if you are planning to apply this in addition to the Pose later on.", MessageType.Info);
+				EditorGUILayout.HelpBox("Smaller margin of error equals greater accuracy but creates more poses to apply on DNA Update.", MessageType.None);
+				if (thisDDCC != null)
+				{
+					//[Range(0.000005f, 0.0005f)]
+					EditorGUI.BeginChangeCheck();
+					var thisAccuracy = EditorGUILayout.Slider(new GUIContent("Margin Of Error", "The smaller the margin of error, the more accurate the Pose will be, but it will also have more bonePoses to apply when DNA is updated"), thisDDCC.bonePoseAccuracy * 1000, 0.5f, 0.005f);
+					if (EditorGUI.EndChangeCheck())
+					{
+						thisDDCC.bonePoseAccuracy = thisAccuracy / 1000;
+						GUI.changed = false;
+					}
+				}
+				createBonePoseAssetName = EditorGUILayout.TextField("New Bone Pose Name",createBonePoseAssetName);
+				GUILayout.BeginHorizontal();
+				GUILayout.Space(20);
+				if (GUILayout.Button(/*createFromDnaButR, */"Create New BonePose Asset"))
+				{
+					if (thisDDCC != null)
+					{
+						if (thisDDCC.CreateBonePosesFromCurrentDna(createBonePoseAssetName))
+						{
+							serializedObject.Update();
+							createBonePoseAssetName = "";
+							//this needs to repaint the plugins because their height of the reorderable list has changed now
+							//cant figure out how to do that though
+						}
+					}
+				}
+				GUILayout.Space(20);
+				GUILayout.EndHorizontal();
+				GUIHelper.EndVerticalPadded(10);
+			}
+		}
    }
 
 }

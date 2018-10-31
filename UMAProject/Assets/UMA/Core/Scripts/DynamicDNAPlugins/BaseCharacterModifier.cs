@@ -184,7 +184,6 @@ namespace UMA
 		public BaseCharacterModifier() { }
 
 		//an epic constructor for backwards compatibility when re-deserializing
-		//THIS IS WRONG
 		public BaseCharacterModifier(bool overallModifiersEnabled, float overallScale,
 			string overallScaleBone, int overallScaleBoneHash,
 			bool tightenBounds, Vector3 boundsAdjust,
