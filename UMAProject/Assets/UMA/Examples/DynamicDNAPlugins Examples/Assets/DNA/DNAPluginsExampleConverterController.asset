@@ -10583,7 +10583,7 @@ MonoBehaviour:
             tangentMode: 0
           m_PreInfinity: 2
           m_PostInfinity: 2
-          m_RotationOrder: 4
+          m_RotationOrder: 0
       _multiplier: 1
       _initialized: 1
   _converterController: {fileID: 11400000}
@@ -10635,7 +10635,7 @@ MonoBehaviour:
     changeColor: 1
     color:
       serializedVersion: 2
-      rgba: 9355601
+      rgba: 8765777
     changeAlpha: 0
     alpha: 1
     modifyingDNA:
@@ -10843,7 +10843,7 @@ MonoBehaviour:
       _initialized: 1
   _converterController: {fileID: 11400000}
   _overallScaleModifiers:
-  - _label: PixiScale
+  - _label: ElfScale
     _overallScale: 0.81
     _modifyingDNA:
       _dnaEvaluators:
