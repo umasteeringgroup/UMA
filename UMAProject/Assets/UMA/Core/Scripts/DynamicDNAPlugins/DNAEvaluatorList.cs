@@ -339,15 +339,16 @@ namespace UMA
 			//if drawExpandedNoLabel the label for the list is shown as the heading for the dnaName field
 			public LabelOptions labelOption = LabelOptions.drawLabelAsFoldout;
 			//if set, when a new entry is added to the list using the UI it will be of this type
-			public DNAEvaluationGraph defaultGraph = null;
+			public DNAEvaluationGraph defaultGraph = DNAEvaluationGraph.Default;
 
 			/// <param name="labelOption">How to show the label for the list. If 'drawExpandedNoLabel' the label for the list is shown as the heading for the dnaName field</param>
 			public ConfigAttribute(LabelOptions labelOption)
 			{
 				this.labelOption = labelOption;
 			}
-			/*TODO IMPLIMENT THIS
-			/// <summary>
+			//TODO IMPLIMENT THIS
+			//default graph has to be comile time constant if we want to make this possible
+			/*/// <summary>
 			/// 
 			/// </summary>
 			/// <param name="labelOption">How to show the label for the list. If 'drawExpandedNoLabel' the label for the list is shown as the heading for the dnaName field</param>

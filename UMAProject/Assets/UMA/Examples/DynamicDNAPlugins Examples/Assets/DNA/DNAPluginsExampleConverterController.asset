@@ -16,6 +16,7 @@ MonoBehaviour:
   - {fileID: 114700032911936864}
   - {fileID: 114304921582309874}
   - {fileID: 114812837614320502}
+  - {fileID: 114620940923763576}
 --- !u!114 &114229394160915382
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10540,6 +10541,53 @@ MonoBehaviour:
         _multiplier: 1
         _initialized: 1
       _aggregationMethod: 0
+--- !u!114 &114620940923763576
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4952de3305cd7194bb51aafa1b220607, type: 3}
+  m_Name: ColorDNAConverters
+  m_EditorClassIdentifier: 
+  masterWeight:
+    _globalWeight: 1
+    _DNAForWeight:
+      _calcOption: 0
+      _dnaName: 
+      _dnaNameHash: 0
+      _evaluator:
+        _name: Raw
+        _graph:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 2
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 1
+            tangentMode: 0
+          - serializedVersion: 2
+            time: 0.5
+            value: 0.5
+            inSlope: 1
+            outSlope: 1
+            tangentMode: 0
+          - serializedVersion: 2
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 0
+            tangentMode: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+      _multiplier: 1
+      _initialized: 1
+  _converterController: {fileID: 11400000}
+  colorSets: []
 --- !u!114 &114700032911936864
 MonoBehaviour:
   m_ObjectHideFlags: 0
