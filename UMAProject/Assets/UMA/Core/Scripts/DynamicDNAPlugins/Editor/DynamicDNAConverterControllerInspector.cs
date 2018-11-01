@@ -314,22 +314,22 @@ namespace UMA.Editors
 				GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
 
 				//Draw the search field
-				namesToDraw = DrawDNASearchArea(EditorGUILayout.GetControlRect(), namesToDraw);
+				var activeNamesToDraw = DrawDNASearchArea(EditorGUILayout.GetControlRect(), namesToDraw);
 
 				DynamicDNAPlugin plugin;
 
-				for (int i = 0; i < namesToDraw.Count; i++)
+				for (int i = 0; i < activeNamesToDraw.Count; i++)
 				{
-					if (!_expandedDNANames.ContainsKey(namesToDraw[i]))
+					if (!_expandedDNANames.ContainsKey(activeNamesToDraw[i]))
 					{
-						_expandedDNANames.Add(namesToDraw[i], false);
+						_expandedDNANames.Add(activeNamesToDraw[i], false);
 					}
 					GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
 					EditorGUI.indentLevel++;
-					_expandedDNANames[namesToDraw[i]] = EditorGUILayout.Foldout(_expandedDNANames[namesToDraw[i]], namesToDraw[i]);
+					_expandedDNANames[activeNamesToDraw[i]] = EditorGUILayout.Foldout(_expandedDNANames[activeNamesToDraw[i]], activeNamesToDraw[i]);
 					EditorGUI.indentLevel--;
 					GUILayout.EndHorizontal();
-					if (_expandedDNANames[namesToDraw[i]])
+					if (_expandedDNANames[activeNamesToDraw[i]])
 					{
 						GUI.color = new Color(0.75f, 0.875f, 1f, 0.3f);
 						GUILayout.BeginVertical(_pluginsByDNAAreaStyle);
@@ -353,7 +353,7 @@ namespace UMA.Editors
 
 							//tell the plugin to draw its entry for this dna name, plugins might use more than one dna name so its up to their drawers to sort out what to draw
 							//the general idea is that if this dna name appears anywhere in the plugin, then it should draw the relevant entry
-							_pluginsEditors[plugin].OnInspectorForDNAGUI(namesToDraw[i]);
+							_pluginsEditors[plugin].OnInspectorForDNAGUI(activeNamesToDraw[i]);
 						}
 
 						GUILayout.EndVertical();
@@ -518,17 +518,17 @@ namespace UMA.Editors
 
 			if (String.IsNullOrEmpty(_DNASearchString))
 				return namesList;
-
+			List<string> filteredNames = new List<string>();
 			//loop backwards over the list so we can remove stuff without out of range shiz
 			for (int i = namesList.Count - 1; i >= 0; i--)
 			{
-				if (namesList[i].IndexOf(_DNASearchString) == -1)
+				if (namesList[i].IndexOf(_DNASearchString, StringComparison.CurrentCultureIgnoreCase) > -1)
 				{
-					namesList.RemoveAt(i);
+					filteredNames.Add(namesList[i]);
 				}
 			}
 
-			return namesList;
+			return filteredNames;
 		}
 
 		#endregion

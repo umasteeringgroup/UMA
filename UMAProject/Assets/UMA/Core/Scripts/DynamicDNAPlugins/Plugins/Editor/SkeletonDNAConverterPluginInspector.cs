@@ -178,23 +178,26 @@ namespace UMA.Editors
 				else 
 				{
 					var thisSkelEl = _cachedArrayElementsByIndex[index].element;
+					//In the plugin we are never using the legacy _modifiers but instead use _modifyingDNA.
 					string[] XYZ = new string[] { "X", "Y", "Z" };
 					SerializedProperty mods;
 					SerializedProperty thisMod;
-					int modsi;
+					//int modsi;
 					bool _continue = true;
 					foreach (string xyz in XYZ)
 					{
-						mods = thisSkelEl.FindPropertyRelative("_values" + xyz).FindPropertyRelative("_val").FindPropertyRelative("_modifiers");
+						mods = thisSkelEl.FindPropertyRelative("_values" + xyz).FindPropertyRelative("_val").FindPropertyRelative("_modifyingDNA").FindPropertyRelative("_dnaEvaluators");
 						for (int mi = 0; mi < mods.arraySize; mi++)
 						{
 							thisMod = mods.GetArrayElementAtIndex(mi);
-							modsi = thisMod.FindPropertyRelative("_modifier").enumValueIndex;
+							/*modsi = thisMod.FindPropertyRelative("_modifier").enumValueIndex;
 							if (modsi > 3)
 							{
 								if (thisMod.FindPropertyRelative("_DNATypeName").stringValue.IndexOf(elementSearchString, StringComparison.CurrentCultureIgnoreCase) > -1)
 									_continue = false;
-							}
+							}*/
+							if (thisMod.FindPropertyRelative("_dnaName").stringValue.IndexOf(elementSearchString, StringComparison.CurrentCultureIgnoreCase) > -1)
+								_continue = false;
 						}
 					}
 					if (_continue)
