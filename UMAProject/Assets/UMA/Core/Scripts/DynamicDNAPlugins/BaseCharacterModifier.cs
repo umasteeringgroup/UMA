@@ -80,6 +80,8 @@ namespace UMA
 		#endregion
 
 		#region NON-SERIALIZED FIELDS
+		//I know private fields are not supposed to be serialized but somehow setting these values at playtime still means they are here after
+		//(not that flagging as [Non-Serialized] helps I now discover...
 
 		[System.NonSerialized]
 		private Dictionary<string, Transform> _mechanimBoneDict = new Dictionary<string, Transform>();

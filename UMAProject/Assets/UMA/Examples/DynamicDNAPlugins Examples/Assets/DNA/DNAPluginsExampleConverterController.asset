@@ -10587,7 +10587,91 @@ MonoBehaviour:
       _multiplier: 1
       _initialized: 1
   _converterController: {fileID: 11400000}
-  colorSets: []
+  colorSets:
+  - overlayEntryName: M_Bod Overlay 1
+    colorChannel: 0
+    changeColor: 1
+    color:
+      serializedVersion: 2
+      rgba: 12958027
+    changeAlpha: 0
+    alpha: 1
+    modifyingDNA:
+      _dnaEvaluators:
+      - _calcOption: 0
+        _dnaName: ElfOrAlien
+        _dnaNameHash: 579259412
+        _evaluator:
+          _name: OneZeroZero
+          _graph:
+            serializedVersion: 2
+            m_Curve:
+            - serializedVersion: 2
+              time: 0
+              value: 1
+              inSlope: 0
+              outSlope: -2
+              tangentMode: 0
+            - serializedVersion: 2
+              time: 0.5
+              value: 0
+              inSlope: -2
+              outSlope: 0
+              tangentMode: 0
+            - serializedVersion: 2
+              time: 1
+              value: 0
+              inSlope: 0
+              outSlope: 0
+              tangentMode: 0
+            m_PreInfinity: 2
+            m_PostInfinity: 2
+            m_RotationOrder: 0
+        _multiplier: 1
+        _initialized: 1
+      _aggregationMethod: 0
+  - overlayEntryName: M_Bod Overlay 1
+    colorChannel: 0
+    changeColor: 1
+    color:
+      serializedVersion: 2
+      rgba: 9355601
+    changeAlpha: 0
+    alpha: 1
+    modifyingDNA:
+      _dnaEvaluators:
+      - _calcOption: 0
+        _dnaName: ElfOrAlien
+        _dnaNameHash: 579259412
+        _evaluator:
+          _name: ZeroZeroOne
+          _graph:
+            serializedVersion: 2
+            m_Curve:
+            - serializedVersion: 2
+              time: 0
+              value: 0
+              inSlope: 0
+              outSlope: 0
+              tangentMode: 0
+            - serializedVersion: 2
+              time: 0.5
+              value: 0
+              inSlope: 0
+              outSlope: 2
+              tangentMode: 0
+            - serializedVersion: 2
+              time: 1
+              value: 1
+              inSlope: 2
+              outSlope: 0
+              tangentMode: 0
+            m_PreInfinity: 2
+            m_PostInfinity: 2
+            m_RotationOrder: 0
+        _multiplier: 1
+        _initialized: 1
+      _aggregationMethod: 0
 --- !u!114 &114700032911936864
 MonoBehaviour:
   m_ObjectHideFlags: 0

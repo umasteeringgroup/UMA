@@ -163,7 +163,7 @@ namespace UMA
 
 				EditorGUI.BeginDisabledGroup(!adjustScaleProp.boolValue);
 				EditorGUIUtility.labelWidth = 40f;
-				if(_target.liveScale != -1)
+				if(Application.isPlaying && _target.liveScale != -1)
 				{
 					EditorGUI.BeginDisabledGroup(true);
 					EditorGUI.LabelField(scaleFields1FieldRect, new GUIContent("Scale", "The live scale is being modified by a converter above. Please exit playmode if you want to edit the base scale"));
