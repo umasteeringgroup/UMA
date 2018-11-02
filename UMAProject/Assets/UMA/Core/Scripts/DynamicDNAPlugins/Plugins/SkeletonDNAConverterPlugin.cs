@@ -168,7 +168,7 @@ namespace UMA
 						importedSkeletonModifiers = DDCB.skeletonModifiers;
 						//hmm this is not always the case because of the backwards compatible property giving us the first found skelModsPlugin aswell
 						//so if there is no converter controller, *then* its legacy- 
-						//or is it the user could still assign a controller without upgrading and then try and drag the behaviour in here
+						//or is it? the user could still assign a controller without upgrading and then try and drag the behaviour in here
 						if(DDCB.ConverterController == null)
 							isLegacy = true;
 					}
@@ -214,39 +214,11 @@ namespace UMA
 							continue;
 					}
 					var usedDNANames = SkeletonModifierUsedDNANames(incomingModifiers[i], isLegacy);
-					for(int nc = i; nc < usedDNANames.Count; nc++)
+					for(int nc = 0; nc < usedDNANames.Count; nc++)
 					{
 						if (!existingDNANames.Contains(usedDNANames[nc]) && !missingDNANames.Contains(usedDNANames[nc]))
 							missingDNANames.Add(usedDNANames[nc]);
 					}
-					/*
-					//check x
-					for (int vi = 0; vi < incomingModifiers[i].valuesX.val.modifiers.Count; vi++)
-					{
-						nameToCheck = incomingModifiers[i].valuesX.val.modifiers[vi].DNATypeName;
-						if (!string.IsNullOrEmpty(nameToCheck) && !existingDNANames.Contains(nameToCheck) && !missingDNANames.Contains(nameToCheck))
-						{
-							missingDNANames.Add(nameToCheck);
-						}
-					}
-					//check y
-					for (int vi = 0; vi < incomingModifiers[i].valuesY.val.modifiers.Count; vi++)
-					{
-						nameToCheck = incomingModifiers[i].valuesY.val.modifiers[vi].DNATypeName;
-						if (!string.IsNullOrEmpty(nameToCheck) && !existingDNANames.Contains(nameToCheck) && !missingDNANames.Contains(nameToCheck))
-						{
-							missingDNANames.Add(nameToCheck);
-						}
-					}
-					//check Z
-					for (int vi = 0; vi < incomingModifiers[i].valuesZ.val.modifiers.Count; vi++)
-					{
-						nameToCheck = incomingModifiers[i].valuesZ.val.modifiers[vi].DNATypeName;
-						if (!string.IsNullOrEmpty(nameToCheck) && !existingDNANames.Contains(nameToCheck) && !missingDNANames.Contains(nameToCheck))
-						{
-							missingDNANames.Add(nameToCheck);
-						}
-					}*/
 				}
 				if (missingDNANames.Count > 0 && DNAAsset != null)
 				{
@@ -279,10 +251,7 @@ namespace UMA
 				}
 				else if (DNAAsset == null)
 				{
-					//tell the user that they will need to assign a dna asset to this converter to merge the one they dropped
-					//if (EditorUtility.DisplayDialog("Missing DNA Asset", "To overwrite settings in this converter with the ones from the converter you dropped you will need to assign or create a DynamicDNA Asset to this converter.", "Ok"))
-					//	return false;
-					//Just carry on regardless?
+					//the inspector will sort this out later
 				}
 				//if the method is add or overwriteAdd we need to add any missing ones (if the method is replace the list will be empty so everything will get added here)
 				for (int i = 0; i < incomingModifiers.Count; i++)
@@ -293,29 +262,14 @@ namespace UMA
 						if ((currentModifiers[ci].hash == incomingModifiers[i].hash) && currentModifiers[ci].property == incomingModifiers[i].property)
 						{
 							existed = true;
-							break;
-						}
-					}
-					if (!existed)
-					{
-						currentModifiers.Add(new SkeletonModifier(incomingModifiers[i], true));
-					}
-				}
-				//now if the method is overwrite or addoverwrite we need to overwrite any existing values
-				if (importMethod == 2 || importMethod ==3)
-				{
-					for (int i = 0; i < incomingModifiers.Count; i++)
-					{
-						for (int ci = 0; ci < currentModifiers.Count; ci++)
-						{
-							if ((currentModifiers[ci].hash == incomingModifiers[i].hash) && currentModifiers[ci].property == incomingModifiers[i].property)
+							if (importMethod == 2 || importMethod == 3)
 							{
 								//handle the overwrites
 								currentModifiers[ci].valuesX.min = incomingModifiers[i].valuesX.min;
 								currentModifiers[ci].valuesX.max = incomingModifiers[i].valuesX.max;
 								currentModifiers[ci].valuesX.val.value = incomingModifiers[i].valuesX.val.value;
 								//now currentModifiers should only ever have modifyingDNA but incomingModifiers might contain data in  legacy 'modifiers' OR in 'modifyingDNA'
-								if(isLegacy)
+								if (isLegacy)
 									ProcessSkelModOverwrites(currentModifiers[ci].valuesX.val.modifyingDNA, incomingModifiers[i].valuesX.val.modifiers, existingDNANames);
 								else
 									ProcessSkelModOverwrites(currentModifiers[ci].valuesX.val.modifyingDNA, incomingModifiers[i].valuesX.val.modifyingDNA, existingDNANames);
@@ -323,7 +277,7 @@ namespace UMA
 								currentModifiers[ci].valuesY.min = incomingModifiers[i].valuesY.min;
 								currentModifiers[ci].valuesY.max = incomingModifiers[i].valuesY.max;
 								currentModifiers[ci].valuesY.val.value = incomingModifiers[i].valuesY.val.value;
-								if(isLegacy)
+								if (isLegacy)
 									ProcessSkelModOverwrites(currentModifiers[ci].valuesY.val.modifyingDNA, incomingModifiers[i].valuesY.val.modifiers, existingDNANames);
 								else
 									ProcessSkelModOverwrites(currentModifiers[ci].valuesY.val.modifyingDNA, incomingModifiers[i].valuesY.val.modifyingDNA, existingDNANames);
@@ -331,14 +285,17 @@ namespace UMA
 								currentModifiers[ci].valuesZ.min = incomingModifiers[i].valuesZ.min;
 								currentModifiers[ci].valuesZ.max = incomingModifiers[i].valuesZ.max;
 								currentModifiers[ci].valuesZ.val.value = incomingModifiers[i].valuesZ.val.value;
-								if(isLegacy)
+								if (isLegacy)
 									ProcessSkelModOverwrites(currentModifiers[ci].valuesZ.val.modifyingDNA, incomingModifiers[i].valuesZ.val.modifiers, existingDNANames);
 								else
 									ProcessSkelModOverwrites(currentModifiers[ci].valuesZ.val.modifyingDNA, incomingModifiers[i].valuesZ.val.modifyingDNA, existingDNANames);
-
-								break;
 							}
+							break;
 						}
+					}
+					if (!existed && importMethod != 2)//if the method is anything other overwrite add the missing modifier
+					{
+						currentModifiers.Add(new SkeletonModifier(incomingModifiers[i], true));
 					}
 				}
 				_skeletonModifiers = currentModifiers;

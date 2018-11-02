@@ -132,9 +132,9 @@ namespace UMA.CharacterSystem
 			this._hashName = importedModifier._hashName;
 			this._hash = importedModifier._hash;
 			this._property = importedModifier._property;
-			this._valuesX = importedModifier._valuesX;
-			this._valuesY = importedModifier._valuesY;
-			this._valuesZ = importedModifier._valuesZ;
+			this._valuesX = new spVal(importedModifier._valuesX);
+			this._valuesY = new spVal(importedModifier._valuesY);
+			this._valuesZ = new spVal(importedModifier._valuesZ);
 			this._umaDNA = importedModifier._umaDNA;//dont think this should have ever been serialized
 			if (doUpgrade)
 				UpgradeToDNAEvaluators();
@@ -436,9 +436,9 @@ namespace UMA.CharacterSystem
 						{
 							accessoryMod = null;
 							multiplier = 1f;
-							if (!string.IsNullOrEmpty(modifiers[i].DNATypeName))
+							if (!string.IsNullOrEmpty(modifiers[i].DNATypeName) && modifiers[i].modifier.ToString().IndexOf("DNA") > -1)
 							{
-								if ((i + 1) < modifiers.Count && string.IsNullOrEmpty(modifiers[i + 1].DNATypeName))
+								if ((i + 1) < modifiers.Count && modifiers[i + 1].modifier.ToString().IndexOf("DNA") < 0)
 									accessoryMod = modifiers[i + 1];
 
 								if (modifiers[i].modifier == spValModifier.spValModifierType.AddDNA)
