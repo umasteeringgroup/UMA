@@ -455,19 +455,19 @@ namespace UMA
 			var xNames = skeletonModifier.valuesX.val.modifyingDNA.UsedDNANames;
 			var yNames = skeletonModifier.valuesY.val.modifyingDNA.UsedDNANames;
 			var zNames = skeletonModifier.valuesZ.val.modifyingDNA.UsedDNANames;
-			for(int i = 0; i < xNames.Count; i++)
+			for (int i = 0; i < xNames.Count; i++)
 			{
-				if (!usedNames.Contains(xNames[i]) && (dnaName == "" || xNames[i] == dnaName))
+				if (!usedNames.Contains(xNames[i]) && (dnaName == "" || (!string.IsNullOrEmpty(dnaName) && xNames[i] == dnaName)))
 					usedNames.Add(xNames[i]);
 			}
 			for (int i = 0; i < yNames.Count; i++)
 			{
-				if (!usedNames.Contains(yNames[i]) && (dnaName == "" || yNames[i] == dnaName))
+				if (!usedNames.Contains(yNames[i]) && (dnaName == "" || (!string.IsNullOrEmpty(dnaName) && yNames[i] == dnaName)))
 					usedNames.Add(yNames[i]);
 			}
 			for (int i = 0; i < zNames.Count; i++)
 			{
-				if (!usedNames.Contains(zNames[i]) && (dnaName == "" || zNames[i] == dnaName))
+				if (!usedNames.Contains(zNames[i]) && (dnaName == "" || (!string.IsNullOrEmpty(dnaName) && zNames[i] == dnaName)))
 					usedNames.Add(zNames[i]);
 			}
 			if (searchLegacy)
@@ -476,34 +476,28 @@ namespace UMA
 				for (int xi = 0; xi < skeletonModifier.valuesX.val.modifiers.Count; xi++)
 				{
 					if (!string.IsNullOrEmpty(skeletonModifier.valuesX.val.modifiers[xi].DNATypeName) &&
-						dnaName == "" || skeletonModifier.valuesX.val.modifiers[xi].DNATypeName == dnaName)
+						dnaName == "" || (!string.IsNullOrEmpty(dnaName) && skeletonModifier.valuesX.val.modifiers[xi].DNATypeName == dnaName))
 					{
 						if (!usedNames.Contains(skeletonModifier.valuesX.val.modifiers[xi].DNATypeName))
-						{
 							usedNames.Add(skeletonModifier.valuesX.val.modifiers[xi].DNATypeName);
-						}
 					}
 				}
 				for (int yi = 0; yi < skeletonModifier.valuesY.val.modifiers.Count; yi++)
 				{
 					if (!string.IsNullOrEmpty(skeletonModifier.valuesY.val.modifiers[yi].DNATypeName) &&
-						dnaName == "" || skeletonModifier.valuesY.val.modifiers[yi].DNATypeName == dnaName)
+						dnaName == "" || (!string.IsNullOrEmpty(dnaName) && skeletonModifier.valuesY.val.modifiers[yi].DNATypeName == dnaName))
 					{
 						if (!usedNames.Contains(skeletonModifier.valuesY.val.modifiers[yi].DNATypeName))
-						{
 							usedNames.Add(skeletonModifier.valuesY.val.modifiers[yi].DNATypeName);
-						}
 					}
 				}
 				for (int zi = 0; zi < skeletonModifier.valuesZ.val.modifiers.Count; zi++)
 				{
 					if (!string.IsNullOrEmpty(skeletonModifier.valuesZ.val.modifiers[zi].DNATypeName) &&
-						dnaName == "" || skeletonModifier.valuesZ.val.modifiers[zi].DNATypeName == dnaName)
+						dnaName == "" || (!string.IsNullOrEmpty(dnaName) && skeletonModifier.valuesZ.val.modifiers[zi].DNATypeName == dnaName))
 					{
 						if (!usedNames.Contains(skeletonModifier.valuesZ.val.modifiers[zi].DNATypeName))
-						{
 							usedNames.Add(skeletonModifier.valuesZ.val.modifiers[zi].DNATypeName);
-						}
 					}
 				}
 			}
