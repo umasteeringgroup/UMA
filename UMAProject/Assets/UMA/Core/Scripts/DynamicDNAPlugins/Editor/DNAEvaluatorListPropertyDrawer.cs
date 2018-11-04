@@ -173,7 +173,8 @@ namespace UMA.Editors
 		private void DrawHeaderCallback(Rect rect)
 		{
 			_dnaEvaluatorDrawer.DrawLabels = false;
-			if(_labelOption == DNAEvaluatorList.ConfigAttribute.LabelOptions.drawExpandedNoLabel)
+			_dnaEvaluatorDrawer.DrawCalcOption = drawCalcOption;
+			if (_labelOption == DNAEvaluatorList.ConfigAttribute.LabelOptions.drawExpandedNoLabel)
 			{
 				_dnaEvaluatorDrawer.DoLabelsInline(rect, _propertyLabel);
 			}

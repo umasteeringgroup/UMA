@@ -63,24 +63,30 @@ namespace UMA
 			foldoutInfoRect.xMin = foldoutLabelNameRect.xMax;
 			foldoutInfoRect.width = italicLabel.CalcSize(infoText).x;
 			foldoutFieldRect.xMin = foldoutInfoRect.xMax + 4f;
-			foldoutFieldRect.width = 40f;
+			foldoutFieldRect.width = 50f;
 			//now fix anything that overflows!
 			var xMax = position.xMax;
 			if (foldoutFieldRect.xMax > xMax)
 			{
-				foldoutFieldRect.xMin = xMax - 40f;
-				foldoutInfoRect.width = xMax - labelWidth - 40f - 15f - 4f - 4f - 6f - 6f;
+				foldoutFieldRect.xMin = xMax - 50f;
+				foldoutInfoRect.width = xMax - labelWidth - 50f - 15f - 4f - 4f - 6f - 6f;
 			}
 			foldoutFieldRect.width = 40f;
 			float fieldValue = dnaNameForWeightProp.stringValue == "" ? globalWeightProp.floatValue : 0.5f;
 			//I want to evaluate the dna so users can see how different evaluators affect the value
-			if (!string.IsNullOrEmpty(dnaNameForWeightProp.stringValue))
+			if (!string.IsNullOrEmpty(dnaNameForWeightProp.stringValue) && Application.isPlaying)
 			{
-				fieldValue = EvalauateValue(fieldValue, dnaForWeightProp);
+				//this really has to get the current dna value else its too confusing
+				//fieldValue = EvalauateValue(fieldValue, dnaForWeightProp);
 			}
 			EditorGUI.BeginDisabledGroup(true);
 			EditorGUI.LabelField(foldoutInfoRect, infoText, italicLabel);
-			EditorGUI.FloatField(foldoutFieldRect, fieldValue);
+			//Dont do a disabled field because its too confusing
+			//EditorGUI.FloatField(foldoutFieldRect, fieldValue);
+			if (string.IsNullOrEmpty(dnaNameForWeightProp.stringValue))
+			{
+				EditorGUI.LabelField(foldoutFieldRect, "[" + fieldValue.ToString("0.00") + "]");
+			}
 			EditorGUI.EndDisabledGroup();
 		}
 
