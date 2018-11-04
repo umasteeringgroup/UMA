@@ -100,9 +100,11 @@ namespace UMA
 							Mathf.Clamp(thisValueX.x, thisValueX.y, thisValueX.z),
 							Mathf.Clamp(thisValueY.x, thisValueY.y, thisValueY.z),
 							Mathf.Clamp(thisValueZ.x, thisValueZ.y, thisValueZ.z));
-					var scaleDiff = new Vector3(scale.x - _skeletonModifiers[i].valuesX.val.value,
-						scale.y - _skeletonModifiers[i].valuesY.val.value,
-						scale.z - _skeletonModifiers[i].valuesZ.val.value);
+					//we cant use val.value here because the initial values always need to be applied
+					var defaultVal = SkeletonModifier.skelAddDefaults[SkeletonModifier.SkeletonPropType.Scale].x;
+					var scaleDiff = new Vector3(scale.x - defaultVal,
+						scale.y - defaultVal,
+						scale.z - defaultVal);
 					var weightedScaleDiff = scaleDiff * masterWeightCalc;
 					var fullScale = skeleton.GetScale(_skeletonModifiers[i].hash) + weightedScaleDiff;
 					skeleton.SetScale(thisHash, fullScale);

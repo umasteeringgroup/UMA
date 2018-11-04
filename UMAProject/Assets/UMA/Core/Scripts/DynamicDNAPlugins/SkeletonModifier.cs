@@ -83,8 +83,10 @@ namespace UMA.CharacterSystem
 			get { return _umaDNA; }
 			set { _umaDNA = value; }
 		}
-
-		protected Dictionary<SkeletonPropType, Vector3> skelAddDefaults = new Dictionary<SkeletonPropType, Vector3>
+		/// <summary>
+		/// A dictionary of skeletonModifier default values by SkeletonPropType where the x value is the default value for the property the y value is the default clamp min and the z value is the default clamp max
+		/// </summary>
+		public static Dictionary<SkeletonPropType, Vector3> skelAddDefaults = new Dictionary<SkeletonPropType, Vector3>
 			{
 				{SkeletonPropType.Position, new Vector3(0f,-0.1f, 0.1f) },
 				{SkeletonPropType.Rotation, new Vector3(0f,-360f, 360f) },
