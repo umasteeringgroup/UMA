@@ -92,14 +92,17 @@ namespace UMA
 
 			float baseScale = this.converterController.converterBehaviour.baseScale;
 
-			//Each modifier will change the base scale to its overall scale value depending on how stronly its dna(s) are applied
+			//Each modifier wants to change the base scale to its overall scale value depending on how stronly its dna(s) are applied
+			//so we need to accumulate the differences each one wants to make rather than the full value
 			float evaluatedScale = 0f;
+			float evaluatedDiff = 0f;
 			for (int i = 0; i < _overallScaleModifiers.Count; i++)
 			{
-				evaluatedScale += Mathf.Lerp(baseScale, _overallScaleModifiers[i].overallScale, _overallScaleModifiers[i].GetEvaluatedDNA(umaDna));
+				evaluatedDiff += ((_overallScaleModifiers[i].overallScale - baseScale) * _overallScaleModifiers[i].GetEvaluatedDNA(umaDna));
 			}
-			evaluatedScale = evaluatedScale / _overallScaleModifiers.Count;
-
+			//add the combined differences to the base scale
+			evaluatedScale = baseScale + evaluatedDiff;
+			//lerp to that result based on the masterWeightCalc
 			float newScale = Mathf.Lerp(baseScale, evaluatedScale, masterWeightCalc);
 			this.converterController.converterBehaviour.liveScale = newScale;
 		}

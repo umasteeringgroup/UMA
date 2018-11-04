@@ -168,7 +168,7 @@ namespace UMA
 					EditorGUI.BeginDisabledGroup(true);
 					EditorGUI.LabelField(scaleFields1FieldRect, new GUIContent("Scale", "The live scale is being modified by a converter above. Please exit playmode if you want to edit the base scale"));
 					var fieldRect = new Rect(scaleFields1FieldRect.xMin + 40f, scaleFields1FieldRect.yMin, scaleFields1FieldRect.width -40f, scaleFields1FieldRect.height);
-					EditorGUI.FloatField(fieldRect, scaleAdjustProp.floatValue);
+					EditorGUI.FloatField(fieldRect, _target.liveScale);
 					EditorGUI.EndDisabledGroup();
 
 				}
