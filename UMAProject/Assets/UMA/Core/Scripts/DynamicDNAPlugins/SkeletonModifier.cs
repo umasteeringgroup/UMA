@@ -41,8 +41,6 @@ namespace UMA.CharacterSystem
 		[SerializeField]
 		private UMADnaBase _umaDNA;
 
-		private float _masterWeight = 1f;
-
 		public string hashName
 		{
 			get { return _hashName; }
@@ -86,11 +84,6 @@ namespace UMA.CharacterSystem
 			set { _umaDNA = value; }
 		}
 
-		public float masterWeight
-		{
-			set { _masterWeight = value; }
-		}
-
 		protected Dictionary<SkeletonPropType, Vector3> skelAddDefaults = new Dictionary<SkeletonPropType, Vector3>
 			{
 				{SkeletonPropType.Position, new Vector3(0f,-0.1f, 0.1f) },
@@ -99,20 +92,20 @@ namespace UMA.CharacterSystem
 			};
 
 		//These should be methods since they require the umaDNA and masterWeight values to be set/sent
-		[Obsolete("Please use CalculateValueX((UMADnaBase umaDNA, float masterWeight) instead")]
+		[Obsolete("Please use CalculateValueX((UMADnaBase umaDNA) instead")]
 		public Vector3 ValueX
 		{
-			get { return _valuesX.CalculateValue(_umaDNA, _masterWeight); }
+			get { return _valuesX.CalculateValue(_umaDNA); }
 		}
-		[Obsolete("Please use CalculateValueY((UMADnaBase umaDNA, float masterWeight) instead")]
+		[Obsolete("Please use CalculateValueY((UMADnaBase umaDNA) instead")]
 		public Vector3 ValueY
 		{
-			get { return _valuesY.CalculateValue(_umaDNA, _masterWeight); }
+			get { return _valuesY.CalculateValue(_umaDNA); }
 		}
-		[Obsolete("Please use CalculateValueZ((UMADnaBase umaDNA, float masterWeight) instead")]
+		[Obsolete("Please use CalculateValueZ((UMADnaBase umaDNA) instead")]
 		public Vector3 ValueZ
 		{
-			get { return _valuesZ.CalculateValue(_umaDNA, _masterWeight); }
+			get { return _valuesZ.CalculateValue(_umaDNA); }
 		}
 
 		public SkeletonModifier() { }
@@ -147,27 +140,21 @@ namespace UMA.CharacterSystem
 			_valuesZ.val.ConvertToDNAEvaluators();
 		}
 		//these need to also not apply any actual value overrides if the masterWeight is not 1
-		public Vector3 CalculateValueX(UMADnaBase umaDNA, float masterWeight = 1f)
+		public Vector3 CalculateValueX(UMADnaBase umaDNA)
 		{
-			var defaultval = skelAddDefaults[property].x;
-			var resVal = _valuesX.CalculateValue(_umaDNA, masterWeight);
-			resVal.x = Mathf.Lerp(defaultval, resVal.x, masterWeight);
+			var resVal = _valuesX.CalculateValue(_umaDNA);
 			return resVal;
 		}
 
-		public Vector3 CalculateValueY(UMADnaBase umaDNA, float masterWeight = 1f)
+		public Vector3 CalculateValueY(UMADnaBase umaDNA)
 		{
-			var defaultval = skelAddDefaults[property].x;
-			var resVal = _valuesY.CalculateValue(_umaDNA, masterWeight);
-			resVal.x = Mathf.Lerp(defaultval, resVal.x, masterWeight);
+			var resVal = _valuesY.CalculateValue(_umaDNA);
 			return resVal;
 		}
 
-		public Vector3 CalculateValueZ(UMADnaBase umaDNA, float masterWeight = 1f)
+		public Vector3 CalculateValueZ(UMADnaBase umaDNA)
 		{
-			var defaultval = skelAddDefaults[property].x;
-			var resVal = _valuesZ.CalculateValue(_umaDNA, masterWeight);
-			resVal.x = Mathf.Lerp(defaultval, resVal.x, masterWeight);
+			var resVal = _valuesZ.CalculateValue(_umaDNA);
 			return resVal;
 		}
 
@@ -225,11 +212,11 @@ namespace UMA.CharacterSystem
 			}
 #pragma warning restore 618 //disable obsolete warning
 
-			public Vector3 CalculateValue(UMADnaBase umaDNA, float masterWeight = 1f)
+			public Vector3 CalculateValue(UMADnaBase umaDNA)
 			{
 				var thisVal = new Vector3();
 				//val
-				thisVal.x = _val.CalculateValue(umaDNA, masterWeight);
+				thisVal.x = _val.CalculateValue(umaDNA);
 				//valmin
 				thisVal.y = _min;
 				//max
@@ -274,25 +261,22 @@ namespace UMA.CharacterSystem
 					set { _modifyingDNA = new DNAEvaluatorList(value); }
 				}
 
-				public float CalculateValue(UMADnaBase umaDNA, float masterWeight = 1f)
+				public float CalculateValue(UMADnaBase umaDNA)
 				{
 					float thisVal = _value;
 					if (_modifiers.Count > 0 && _modifyingDNA.Count == 0)
 					{
-						thisVal = CalculateLegacyModifiers(thisVal, _modifiers, umaDNA, masterWeight);
+						thisVal = CalculateLegacyModifiers(thisVal, _modifiers, umaDNA);
 					}
 					if(_modifyingDNA.Count > 0)
 					{
 						var modDNAResult = _modifyingDNA.ApplyDNAToValue(umaDNA, _value);
-						var modDNAResultWeighted = Mathf.Lerp(_value, modDNAResult, masterWeight);
-						//if (thisVal != 0 && thisVal != 1)
-						//	Debug.Log("standardResult was " + thisVal + " modDNAResult was " + modDNAResultWeighted);
-						thisVal = modDNAResultWeighted;
+						thisVal = modDNAResult;
 					}
 					return thisVal;
 				}
 
-				private float CalculateLegacyModifiers(float startingVal, List<spValModifier> _modifiers, UMADnaBase umaDNA, float masterWeight = 1f)
+				private float CalculateLegacyModifiers(float startingVal, List<spValModifier> _modifiers, UMADnaBase umaDNA)
 				{
 					float modifierVal = 0;
 					float tempModifierVal = 0;
@@ -309,7 +293,6 @@ namespace UMA.CharacterSystem
 							//tempModifierVal = GetUmaDNAValue(_modifiers[i].DNANameHash, umaDNA);
 							tempModifierVal = GetUmaDNAValue(_modifiers[i].DNATypeName, umaDNA);
 							tempModifierVal -= 0.5f;
-							tempModifierVal = tempModifierVal * masterWeight;
 							inModifierPair = true;
 							if (_modifiers[i].modifier == spValModifier.spValModifierType.AddDNA)
 							{
@@ -332,30 +315,29 @@ namespace UMA.CharacterSystem
 						{
 							if (_modifiers[i].modifier == spValModifier.spValModifierType.Add)
 							{
-								modifierVal += (tempModifierVal + (_modifiers[i].modifierValue * masterWeight));
+								modifierVal += (tempModifierVal + _modifiers[i].modifierValue);
 								tempModifierVal = 0;
 								inModifierPair = false;
 							}
 							else if (_modifiers[i].modifier == spValModifier.spValModifierType.Divide)
 							{
-								modifierVal += (tempModifierVal / (_modifiers[i].modifierValue * masterWeight));
+								modifierVal += (tempModifierVal / _modifiers[i].modifierValue);
 								tempModifierVal = 0;
 								inModifierPair = false;
 							}
 							else if (_modifiers[i].modifier == spValModifier.spValModifierType.Multiply)
 							{
-								modifierVal += (tempModifierVal * (_modifiers[i].modifierValue * masterWeight));
+								modifierVal += (tempModifierVal * _modifiers[i].modifierValue);
 								tempModifierVal = 0;
 								inModifierPair = false;
 							}
 							else if (_modifiers[i].modifier == spValModifier.spValModifierType.Subtract)
 							{
-								modifierVal += (tempModifierVal - (_modifiers[i].modifierValue * masterWeight));
+								modifierVal += (tempModifierVal - _modifiers[i].modifierValue);
 								tempModifierVal = 0;
 								inModifierPair = false;
 							}
 						}
-						modifierVal = modifierVal * masterWeight;
 						if (modifierVal != 0 && inModifierPair == false)
 						{
 							if (dnaCombineMethod == "Add")

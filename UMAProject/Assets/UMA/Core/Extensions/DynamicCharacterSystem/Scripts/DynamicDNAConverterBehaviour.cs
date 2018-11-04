@@ -150,10 +150,9 @@ namespace UMA.CharacterSystem
 
 		public void ApplyDynamicDnaAction(UMAData umaData, UMASkeleton skeleton, bool asReset)
 		{
+			System.Diagnostics.Stopwatch st = new System.Diagnostics.Stopwatch();
+			st.Start();
 			UMADnaBase umaDna = null;
-
-			//reset the overallScaleCalc
-			//_overallScaleCalc = overallScale;
 			//reset the live scale on the overallModifiers ready for any adjustments any plugins might make
 			liveScale = -1;
 			if (!asReset)
@@ -168,6 +167,7 @@ namespace UMA.CharacterSystem
 			//although its only going to be skeletonModifiers with a hardcoded 'value' override that will do anything when dna is null
 			if (_converterController != null)
 			{
+				//make sure the controller has this as its behaviour because the same controller can be used by lots of behaviours (and they might all use different dna)
 				_converterController.converterBehaviour = this;
 				_converterController.ApplyDNA(umaData, skeleton, DNATypeHash);
 			}
@@ -181,6 +181,8 @@ namespace UMA.CharacterSystem
 			}
 			_overallModifiers.UpdateCharacter(umaData, skeleton, asReset);
 			ApplyDnaCallbackDelegates(umaData);
+			st.Stop();
+			Debug.Log(this.gameObject.name + " ApplyDNA took " + st.Elapsed);
 		}
 
 		public void ApplyDnaCallbackDelegates(UMAData umaData)
@@ -494,15 +496,14 @@ namespace UMA.CharacterSystem
 			for (int i = 0; i < _skeletonModifiers.Count; i++)
 			{
 				_skeletonModifiers[i].umaDNA = umaDna;
-				_skeletonModifiers[i].masterWeight = 1f;
 				//getting rid of BoneHashes list - when a bone name is added in the editor the skeleton modifier always generates the hash
 
 				var thisHash = (_skeletonModifiers[i].hash != 0) ? _skeletonModifiers[i].hash : UMAUtils.StringToHash(_skeletonModifiers[i].hashName);
 
 				//These are a Vector3 where Value?.x is the calculated value and Value?.y is min and Value?.z is max
-				var thisValueX = _skeletonModifiers[i].CalculateValueX(umaDna, 1f);
-				var thisValueY = _skeletonModifiers[i].CalculateValueY(umaDna, 1f);
-				var thisValueZ = _skeletonModifiers[i].CalculateValueZ(umaDna, 1f);
+				var thisValueX = _skeletonModifiers[i].CalculateValueX(umaDna);
+				var thisValueY = _skeletonModifiers[i].CalculateValueY(umaDna);
+				var thisValueZ = _skeletonModifiers[i].CalculateValueZ(umaDna);
 
 				//use the overallScaleBoneHash property instead so the user can define the bone that is used here (by default its the 'Position' bone in an UMA Rig)
 				/*if (_skeletonModifiers[i].hash == overallScaleBoneHash && _skeletonModifiers[i].property == SkeletonModifier.SkeletonPropType.Scale)

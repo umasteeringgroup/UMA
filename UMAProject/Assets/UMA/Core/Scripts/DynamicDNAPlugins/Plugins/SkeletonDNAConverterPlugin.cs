@@ -72,33 +72,17 @@ namespace UMA
 
 				var thisHash = (_skeletonModifiers[i].hash != 0) ? _skeletonModifiers[i].hash : UMAUtils.StringToHash(_skeletonModifiers[i].hashName);
 				//With these ValueX.x is the calculated value and ValueX.y is min and ValueX.z is max
-				var thisValueX = _skeletonModifiers[i].CalculateValueX(umaDna, masterWeightCalc);
-				var thisValueY = _skeletonModifiers[i].CalculateValueY(umaDna, masterWeightCalc);
-				var thisValueZ = _skeletonModifiers[i].CalculateValueZ(umaDna, masterWeightCalc);
+				var thisValueX = _skeletonModifiers[i].CalculateValueX(umaDna);
+				var thisValueY = _skeletonModifiers[i].CalculateValueY(umaDna);
+				var thisValueZ = _skeletonModifiers[i].CalculateValueZ(umaDna);
 
-				//If this is the bone that the converterbehaviour has defined as the overallScaleBone
-				//we need to include the converterBehaviours overallScale modifier in the calculation aswell
-				//use the overallScaleBoneHash property instead so the user can define the bone that is used here (by default its the 'Position' bone in an UMA Rig)
-				/*if (_skeletonModifiers[i].hash == converterAsset.converterBehaviour.overallScaleBoneHash && _skeletonModifiers[i].property == SkeletonModifier.SkeletonPropType.Scale)
-				{
-					//which is currently done like this- but I dont like it- it should be * overallScale not +
-					var calcVal = thisValueX.x - _skeletonModifiers[i].valuesX.val.value + converterAsset.converterBehaviour.overallScale;
-					var overallScaleCalc = Mathf.Clamp(calcVal, thisValueX.y, thisValueX.z);
-					//skeleton.SetScale(_skeletonModifiers[i].hash, new Vector3(overallScaleCalc, overallScaleCalc, overallScaleCalc));
-					//use MasterWeight
-					//this feels wrong- but its right currently, skeleton Modifiers apply the overallScale, so if they are disabled they wont
-					//probably the converterbehaviour should do this- which will make the startingposes wrong (GRRR!!!)
-					var currPos = skeleton.GetPosition(_skeletonModifiers[i].hash);
-					var currRot = skeleton.GetRotation(_skeletonModifiers[i].hash);
-					skeleton.Lerp(_skeletonModifiers[i].hash, currPos, new Vector3(overallScaleCalc, overallScaleCalc, overallScaleCalc), currRot, masterWeightCalc);
-				}
-				else*/ if (_skeletonModifiers[i].property == SkeletonModifier.SkeletonPropType.Position)
+				if (_skeletonModifiers[i].property == SkeletonModifier.SkeletonPropType.Position)
 				{
 					skeleton.SetPositionRelative(thisHash,
 						new Vector3(
 							Mathf.Clamp(thisValueX.x, thisValueX.y, thisValueX.z),
 							Mathf.Clamp(thisValueY.x, thisValueY.y, thisValueY.z),
-							Mathf.Clamp(thisValueZ.x, thisValueZ.y, thisValueZ.z)));
+							Mathf.Clamp(thisValueZ.x, thisValueZ.y, thisValueZ.z)), masterWeightCalc);
 				}
 				else if (_skeletonModifiers[i].property == SkeletonModifier.SkeletonPropType.Rotation)
 				{
@@ -106,15 +90,22 @@ namespace UMA
 						Quaternion.Euler(new Vector3(
 							Mathf.Clamp(thisValueX.x, thisValueX.y, thisValueX.z),
 							Mathf.Clamp(thisValueY.x, thisValueY.y, thisValueY.z),
-							Mathf.Clamp(thisValueZ.x, thisValueZ.y, thisValueZ.z))), 1f);
+							Mathf.Clamp(thisValueZ.x, thisValueZ.y, thisValueZ.z))), masterWeightCalc);
 				}
 				else if (_skeletonModifiers[i].property == SkeletonModifier.SkeletonPropType.Scale)
 				{
-					skeleton.SetScale(thisHash,
-						new Vector3(
+					//If there are two sets of skeletonModifiers and both are at 50% it needs to apply them both but the result should be cumulative
+					//so we need to work out the difference this one is making, weight that and add it to the current scale of the bone
+					var scale = new Vector3(
 							Mathf.Clamp(thisValueX.x, thisValueX.y, thisValueX.z),
 							Mathf.Clamp(thisValueY.x, thisValueY.y, thisValueY.z),
-							Mathf.Clamp(thisValueZ.x, thisValueZ.y, thisValueZ.z)));
+							Mathf.Clamp(thisValueZ.x, thisValueZ.y, thisValueZ.z));
+					var scaleDiff = new Vector3(scale.x - _skeletonModifiers[i].valuesX.val.value,
+						scale.y - _skeletonModifiers[i].valuesY.val.value,
+						scale.z - _skeletonModifiers[i].valuesZ.val.value);
+					var weightedScaleDiff = scaleDiff * masterWeightCalc;
+					var fullScale = skeleton.GetScale(_skeletonModifiers[i].hash) + weightedScaleDiff;
+					skeleton.SetScale(thisHash, fullScale);
 				}
 
 			}
@@ -358,83 +349,6 @@ namespace UMA
 			}
 		}
 
-		/*private void ProcessSkelModOverwritesOld(List<SkeletonModifier.spVal.spValValue.spValModifier> currentMods, List<SkeletonModifier.spVal.spValValue.spValModifier> incomingMods, List<string> existingDNANames)
-		{
-			int modCount = 0;
-			SkeletonModifier.spVal.spValValue.spValModifier tempMods;
-			SkeletonModifier.spVal.spValValue.spValModifier tempNextMods;
-			modCount = incomingMods.Count;
-			for (int vi = 0; vi < modCount; vi++)
-			{
-				tempMods = incomingMods[vi];
-				if (tempMods.modifier.ToString().IndexOf("DNA") > -1 && existingDNANames.Contains(tempMods.DNATypeName))
-				{
-					//if this is not the last one it will be in a pair i.e what the dna is multiplied/divided by or added to/subtracted from will be defined on the next line 
-					//loop over the currentModifiers[ci].valuesi.val.modifiers and see if there is an existing matching entry
-					bool foundInCurrent = false;
-					for (int mi = 0; mi < currentMods.Count; mi++)
-					{
-						if (currentMods[mi].DNATypeName == tempMods.DNATypeName)
-						{
-							foundInCurrent = true;
-							//is there an add/subtract/multiply/divide in temp dnas *following* line?
-
-							//if this is the last line in temp or the following line is also a dna name
-							if (vi + 1 == modCount || incomingMods[vi + 1].modifier.ToString().IndexOf("DNA") > -1)
-							{
-								//if this dna name in the current list is followed by and AddSubtractMultipleDivide operation
-								//we need to make that command Multiply by 1 (or delete the line [check in the behaviour that this would be handled right])
-								if (mi + 1 != currentMods.Count && currentMods[mi + 1].modifier.ToString().IndexOf("DNA") == -1)
-								{
-									currentMods[mi + 1].modifier = SkeletonModifier.spVal.spValValue.spValModifier.spValModifierType.Multiply;
-									currentMods[mi + 1].modifierValue = 1f;
-								}
-							}
-							else //this line in temp is followed by an AddSubtractMultipleDivide operation
-							{
-								tempNextMods = incomingMods[vi + 1];
-								//if there is a following AddSubtractMultipleDivide operation in current we need to make its values match the one in temp
-								if (mi + 1 != currentMods.Count && currentMods[mi + 1].modifier.ToString().IndexOf("DNA") == -1)
-								{
-									currentMods[mi + 1].modifier = tempNextMods.modifier;
-									currentMods[mi + 1].modifierValue = tempNextMods.modifierValue;
-								}
-								else
-								{
-									var newMod = new SkeletonModifier.spVal.spValValue.spValModifier();
-									newMod.modifier = tempNextMods.modifier;
-									newMod.modifierValue = tempNextMods.modifierValue;
-									//we need to add a line in current that matches the one in temp
-									if (mi + 1 != currentMods.Count)//insertAt
-										currentMods.Insert(mi + 1, newMod);
-									else//add
-										currentMods.Add(newMod);
-								}
-							}
-							break;
-						}
-					}
-					if (!foundInCurrent)
-					{
-						//we need to add this dna entry (and any following addMultiply/subtractdivide opertaion) to current
-						var newDNAMod = new SkeletonModifier.spVal.spValValue.spValModifier();
-						newDNAMod.DNATypeName = tempMods.DNATypeName;
-						newDNAMod.modifier = tempMods.modifier;
-						newDNAMod.modifierValue = tempMods.modifierValue;
-						currentMods.Add(newDNAMod);
-						//if theres a following operation in temp
-						if (vi + 1 != modCount && incomingMods[vi + 1].modifier.ToString().IndexOf("DNA") == -1)
-						{
-							tempNextMods = incomingMods[vi + 1];
-							var newOpMod = new SkeletonModifier.spVal.spValValue.spValModifier();
-							newOpMod.modifier = tempNextMods.modifier;
-							newOpMod.modifierValue = tempNextMods.modifierValue;
-							currentMods.Add(newOpMod);
-						}
-					}
-				}
-			}
-		}*/
 #endif
 
 		#endregion
