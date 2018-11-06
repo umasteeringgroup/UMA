@@ -13,6 +13,7 @@ namespace UMA.CharacterSystem.Editors
 
 		//For BonePose CreationTools
 		string createBonePoseAssetName = "";
+		bool applyAndResetOnCreateBP = true;
 
         public override void OnInspectorGUI()
         {
@@ -207,13 +208,15 @@ namespace UMA.CharacterSystem.Editors
 					}
 				}
 				createBonePoseAssetName = EditorGUILayout.TextField("New Bone Pose Name",createBonePoseAssetName);
+				EditorGUILayout.HelpBox("Should the pose be applied and the dna values be reset to 0?", MessageType.None);
+				applyAndResetOnCreateBP = EditorGUILayout.Toggle("Apply and Reset", applyAndResetOnCreateBP);
 				GUILayout.BeginHorizontal();
 				GUILayout.Space(20);
 				if (GUILayout.Button(/*createFromDnaButR, */"Create New BonePose Asset"))
 				{
 					if (thisDDCC != null)
 					{
-						if (thisDDCC.CreateBonePosesFromCurrentDna(createBonePoseAssetName))
+						if (thisDDCC.CreateBonePosesFromCurrentDna(createBonePoseAssetName, applyAndResetOnCreateBP))
 						{
 							serializedObject.Update();
 							createBonePoseAssetName = "";

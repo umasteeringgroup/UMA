@@ -300,6 +300,8 @@ namespace UMA.CharacterSystem
 
 #pragma warning disable 618 //disable obsolete warning
 
+		private bool _applyAndResetOnCreateBP = false;
+
 		private void CreateBonePoseCallback(UMAData umaData)
 		{
 			UMA.PoseTools.UMABonePose bonePose = CreatePoseAsset("", bonePoseSaveName);
@@ -350,60 +352,64 @@ namespace UMA.CharacterSystem
 			EditorUtility.SetDirty(bonePose);
 			AssetDatabase.SaveAssets();
 
-			if (selectedConverter.ConverterController != null)
+			if (_applyAndResetOnCreateBP)
 			{
-				//find the first BonePoseDNAConverterPlugin and add the pose to it
-				var existingBPCPs = selectedConverter.ConverterController.GetPlugins(typeof(BonePoseDNAConverterPlugin));
-				BonePoseDNAConverterPlugin thisBPCP;
-				if(existingBPCPs.Count > 0)
+
+				if (selectedConverter.ConverterController != null)
 				{
-					thisBPCP = existingBPCPs[0] as BonePoseDNAConverterPlugin;
-					//Turn off any other starting poses?
-					for (int i = 0; i < existingBPCPs.Count; i++)
+					//find the first BonePoseDNAConverterPlugin and add the pose to it
+					var existingBPCPs = selectedConverter.ConverterController.GetPlugins(typeof(BonePoseDNAConverterPlugin));
+					BonePoseDNAConverterPlugin thisBPCP;
+					if (existingBPCPs.Count > 0)
 					{
-						for(int bi = 0; bi < (existingBPCPs[i] as BonePoseDNAConverterPlugin).poseDNAConverters.Count; bi++)
+						thisBPCP = existingBPCPs[0] as BonePoseDNAConverterPlugin;
+						//Turn off any other starting poses?
+						for (int i = 0; i < existingBPCPs.Count; i++)
 						{
-							(existingBPCPs[i] as BonePoseDNAConverterPlugin).poseDNAConverters[bi].startingPoseWeight = 0f;
+							for (int bi = 0; bi < (existingBPCPs[i] as BonePoseDNAConverterPlugin).poseDNAConverters.Count; bi++)
+							{
+								(existingBPCPs[i] as BonePoseDNAConverterPlugin).poseDNAConverters[bi].startingPoseWeight = 0f;
+							}
 						}
 					}
+					else
+					{
+						//if there isn't one create it
+						thisBPCP = selectedConverter.ConverterController.AddPlugin(typeof(BonePoseDNAConverterPlugin)) as BonePoseDNAConverterPlugin;
+					}
+					thisBPCP.poseDNAConverters.Add(new BonePoseDNAConverterPlugin.BonePoseDNAConverter(bonePose, 1f));
+					Debug.Log(bonePose.name + " added as a starting pose to " + thisBPCP.name);
 				}
 				else
 				{
-					//if there isn't one create it
-					thisBPCP = selectedConverter.ConverterController.AddPlugin(typeof(BonePoseDNAConverterPlugin)) as BonePoseDNAConverterPlugin;
+					// Set this asset as the converters pose asset
+					selectedConverter.startingPose = bonePose;
+					//make sure its fully applied
+					selectedConverter.startingPoseWeight = 1f;
 				}
-				thisBPCP.poseDNAConverters.Add(new BonePoseDNAConverterPlugin.BonePoseDNAConverter(bonePose, 1f));
-				Debug.Log(bonePose.name + " added as a starting pose to " + thisBPCP.name);
-			}
-			else
-			{
-				// Set this asset as the converters pose asset
-				selectedConverter.startingPose = bonePose;
-				//make sure its fully applied
-				selectedConverter.startingPoseWeight = 1f;
-			}
 
-			// Reset all the DNA values for target Avatar to default
-			UMADnaBase[] targetDNA = activeUMA.umaData.GetAllDna();
-			foreach (UMADnaBase dnaEntry in targetDNA)
-			{
-				for (int i = 0; i < dnaEntry.Values.Length; i++)
+				// Reset all the DNA values for target Avatar to default
+				UMADnaBase[] targetDNA = activeUMA.umaData.GetAllDna();
+				foreach (UMADnaBase dnaEntry in targetDNA)
 				{
-					dnaEntry.SetValue(i, 0.5f);
+					for (int i = 0; i < dnaEntry.Values.Length; i++)
+					{
+						dnaEntry.SetValue(i, 0.5f);
+					}
 				}
-			}
 
-			// Optionally clear the DNA from the base recipe,
-			// since it's now included in the new starting pose
-			UMARecipeBase baseRaceRecipe = activeUMA.umaData.umaRecipe.GetRace().baseRaceRecipe;
-			if (baseRaceRecipe != null)
-			{
-				if (EditorUtility.DisplayDialog("Base Recipe Cleanup", "Starting Pose created. Remove DNA from base recipe of active race? Choose 'RemoveDNA' if your intention is to replace modifications made by a recipes starting DNA values with the created pose.", "Remove DNA", "Keep DNA"))
+				// Optionally clear the DNA from the base recipe,
+				// since it's now included in the new starting pose
+				UMARecipeBase baseRaceRecipe = activeUMA.umaData.umaRecipe.GetRace().baseRaceRecipe;
+				if (baseRaceRecipe != null)
 				{
-					UMAData.UMARecipe baseRecipeData = new UMAData.UMARecipe();
-					baseRaceRecipe.Load(baseRecipeData, activeUMA.context);
-					baseRecipeData.ClearDna();
-					baseRaceRecipe.Save(baseRecipeData, activeUMA.context);
+					if (EditorUtility.DisplayDialog("Base Recipe Cleanup", "Starting Pose created. Remove DNA from base recipe of active race? Choose 'RemoveDNA' if your intention is to replace modifications made by a recipes starting DNA values with the created pose.", "Remove DNA", "Keep DNA"))
+					{
+						UMAData.UMARecipe baseRecipeData = new UMAData.UMARecipe();
+						baseRaceRecipe.Load(baseRecipeData, activeUMA.context);
+						baseRecipeData.ClearDna();
+						baseRaceRecipe.Save(baseRecipeData, activeUMA.context);
+					}
 				}
 			}
 		}
@@ -413,7 +419,7 @@ namespace UMA.CharacterSystem
 		/// Calculates the required poses necessary for an UMABonePose asset to render the Avatar in its current post DNA state, 
 		/// adds these to the selected converters 'Starting Pose' asset- creating one if necessary and resets current Dna values to 0.
 		/// </summary>
-		public bool CreateBonePosesFromCurrentDna(string createdAssetName = "")
+		public bool CreateBonePosesFromCurrentDna(string createdAssetName = "", bool applyAndReset = false)
 		{
 			if (activeUMA == null || selectedConverter == null)
 			{
@@ -470,7 +476,7 @@ namespace UMA.CharacterSystem
 			{
 				tempAvatar2.umaData.umaRecipe.AddDna(dnaEntry);
 			}
-
+			_applyAndResetOnCreateBP = applyAndReset;
 			tempAvatar2.umaData.OnCharacterCreated += CreateBonePoseCallback;
 			tempAvatar2.Show();
 
