@@ -290,7 +290,10 @@ namespace UMA.CharacterSystem.Editors
 			{
 				GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
 				var upgradeRect = EditorGUILayout.GetControlRect();
+				var prevColor = GUI.color;
+				GUI.color = new Color(1, 0.9f, 0, 1);
 				GUIHelper.ToolbarStyleFoldout(upgradeRect, "Upgrade Available!", ref _upgradeExpanded, null, foldoutTipStyle);
+				GUI.color = prevColor;
 				if (_upgradeExpanded)
 				{
 					EditorGUILayout.HelpBox("Please click the 'Backup & Upgrade' button to upgrade this ConverterBehaviour", MessageType.Info);
