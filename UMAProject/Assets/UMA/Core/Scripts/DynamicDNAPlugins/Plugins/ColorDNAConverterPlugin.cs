@@ -49,8 +49,10 @@ namespace UMA {
 		private Dictionary<string, Color> _changedColors = new Dictionary<string, Color>();
 
 		//has dna been applied this cycle
+		[System.NonSerialized]
 		private bool _dnaApplied = false;
 		//have we added the extra listeners required by ColorDNA?
+		[System.NonSerialized]
 		private bool _listenersAdded = false;
 
 		public override Dictionary<string, List<int>> IndexesForDnaNames
@@ -88,9 +90,6 @@ namespace UMA {
 
 		public override void ApplyDNA(UMAData umaData, UMASkeleton skeleton, int dnaTypeHash)
 		{
-			//for color dna it may have been applied by a dna change OR a recipe/texture change so if its already been done dont do it again
-			if (_dnaApplied)
-				return;
 			//this needs to sign up to CharacterBegun because not all updates trigger dna changes and we need to update on texture changes too
 			//eli suggested that converters could subscribe to different events 'They could have a chance at each stage, like a skeleton job, a mesh job, a texture job'
 			//so this would be a texture job, but till then...
@@ -100,6 +99,9 @@ namespace UMA {
 				umaData.CharacterUpdated.AddListener(ResetOnCharaterUpdated);
 				_listenersAdded = true;
 			}
+			//for color dna it may have been applied by a dna change OR a recipe/texture change so if its already been done dont do it again
+			if (_dnaApplied)
+				return;
 
 			_changedColors.Clear();
 			UMADnaBase activeDNA = umaData.GetDna(dnaTypeHash);
