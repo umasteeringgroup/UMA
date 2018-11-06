@@ -18,7 +18,7 @@ namespace UMA.Editors
 					return _helpIcon;
 				//Sometimes editor styles is not set up when we ask for this
 				if (EditorStyles.label == null)
-					return new Texture();
+					return new Texture2D(16,16);
 				_helpIcon = EditorGUIUtility.FindTexture("_Help");
 				return _helpIcon;
 			}
