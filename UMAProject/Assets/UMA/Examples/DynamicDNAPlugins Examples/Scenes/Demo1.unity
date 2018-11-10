@@ -3876,7 +3876,7 @@ MonoBehaviour:
   hide: 0
   loadBlendShapes: 0
   activeRace:
-    name: HumanMale
+    name: HumanMaleDCS
   defaultChangeRaceOptions: 8
   cacheCurrentState: 1
   rebuildSkeleton: 0
@@ -16971,7 +16971,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -11.999939, y: 111.999985}
+  m_AnchoredPosition: {x: -12, y: 112}
   m_SizeDelta: {x: -152, y: 73}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1684091491

@@ -33,28 +33,28 @@ MonoBehaviour:
     _DNAForWeight:
       _calcOption: 0
       _dnaName: 
-      _dnaNameHash: 0
+      _dnaNameHash: -1
       _evaluator:
-        _name: Raw
+        _name: RawInverted
         _graph:
           serializedVersion: 2
           m_Curve:
           - serializedVersion: 2
             time: 0
-            value: 0
+            value: 1
             inSlope: 0
-            outSlope: 1
+            outSlope: -1
             tangentMode: 0
           - serializedVersion: 2
             time: 0.5
             value: 0.5
-            inSlope: 1
-            outSlope: 1
+            inSlope: -1
+            outSlope: -1
             tangentMode: 0
           - serializedVersion: 2
             time: 1
-            value: 1
-            inSlope: 1
+            value: 0
+            inSlope: -1
             outSlope: 0
             tangentMode: 0
           m_PreInfinity: 2
@@ -110,7 +110,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 0.3
             _initialized: 1
           _aggregationMethod: 1
@@ -254,7 +254,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 1.5
             _initialized: 1
           - _calcOption: 0
@@ -285,7 +285,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 0.1
             _initialized: 1
           _aggregationMethod: 1
@@ -686,7 +686,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 0.3
             _initialized: 1
           _aggregationMethod: 1
@@ -1063,7 +1063,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 0.1
             _initialized: 1
           - _calcOption: 0
@@ -1094,7 +1094,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 0.5
             _initialized: 1
           _aggregationMethod: 1
@@ -1217,7 +1217,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 0.35
             _initialized: 1
           - _calcOption: 0
@@ -1248,7 +1248,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 0.45
             _initialized: 1
           _aggregationMethod: 1
@@ -9884,7 +9884,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: -0.265
             _initialized: 1
           _aggregationMethod: 1
@@ -9945,7 +9945,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 0.265
             _initialized: 1
           _aggregationMethod: 1
@@ -10590,12 +10590,84 @@ MonoBehaviour:
   colorSets:
   - overlayEntryName: M_Bod Overlay 1
     colorChannel: 0
-    changeColor: 1
-    color:
-      serializedVersion: 2
-      rgba: 12958027
-    changeAlpha: 0
-    alpha: 1
+    colorModifier:
+      R:
+        enable: 1
+        useDNAValue: 0
+        value: 0.31764707
+        multiplier: 1
+      G:
+        enable: 1
+        useDNAValue: 0
+        value: 0.75686276
+        multiplier: 1
+      B:
+        enable: 1
+        useDNAValue: 0
+        value: 0.52156866
+        multiplier: 1
+      A:
+        enable: 0
+        useDNAValue: 0
+        value: 0
+        multiplier: 1
+    modifyingDNA:
+      _dnaEvaluators:
+      - _calcOption: 0
+        _dnaName: ElfOrAlien
+        _dnaNameHash: 579259412
+        _evaluator:
+          _name: ZeroZeroOne
+          _graph:
+            serializedVersion: 2
+            m_Curve:
+            - serializedVersion: 2
+              time: 0
+              value: 0
+              inSlope: 0
+              outSlope: 0
+              tangentMode: 0
+            - serializedVersion: 2
+              time: 0.5
+              value: 0
+              inSlope: 0
+              outSlope: 2
+              tangentMode: 0
+            - serializedVersion: 2
+              time: 1
+              value: 1
+              inSlope: 2
+              outSlope: 0
+              tangentMode: 0
+            m_PreInfinity: 2
+            m_PostInfinity: 2
+            m_RotationOrder: 0
+        _multiplier: 1
+        _initialized: 1
+      _aggregationMethod: 0
+  - overlayEntryName: M_Bod Overlay 1
+    colorChannel: 0
+    colorModifier:
+      R:
+        enable: 1
+        useDNAValue: 0
+        value: 0.29411766
+        multiplier: 1
+      G:
+        enable: 1
+        useDNAValue: 0
+        value: 0.7254902
+        multiplier: 1
+      B:
+        enable: 1
+        useDNAValue: 0
+        value: 0.77254903
+        multiplier: 1
+      A:
+        enable: 0
+        useDNAValue: 0
+        value: 0
+        multiplier: 1
     modifyingDNA:
       _dnaEvaluators:
       - _calcOption: 0
@@ -10630,14 +10702,29 @@ MonoBehaviour:
         _multiplier: 1
         _initialized: 1
       _aggregationMethod: 0
-  - overlayEntryName: M_Bod Overlay 1
+  - overlayEntryName: M_Face
     colorChannel: 0
-    changeColor: 1
-    color:
-      serializedVersion: 2
-      rgba: 8765777
-    changeAlpha: 0
-    alpha: 1
+    colorModifier:
+      R:
+        enable: 1
+        useDNAValue: 0
+        value: 0.31764707
+        multiplier: 1
+      G:
+        enable: 1
+        useDNAValue: 0
+        value: 0.75686276
+        multiplier: 1
+      B:
+        enable: 1
+        useDNAValue: 0
+        value: 0.52156866
+        multiplier: 1
+      A:
+        enable: 0
+        useDNAValue: 0
+        value: 0
+        multiplier: 1
     modifyingDNA:
       _dnaEvaluators:
       - _calcOption: 0
@@ -10664,6 +10751,63 @@ MonoBehaviour:
               time: 1
               value: 1
               inSlope: 2
+              outSlope: 0
+              tangentMode: 0
+            m_PreInfinity: 2
+            m_PostInfinity: 2
+            m_RotationOrder: 0
+        _multiplier: 1
+        _initialized: 1
+      _aggregationMethod: 0
+  - overlayEntryName: M_Face
+    colorChannel: 0
+    colorModifier:
+      R:
+        enable: 1
+        useDNAValue: 0
+        value: 0.29411766
+        multiplier: 1
+      G:
+        enable: 1
+        useDNAValue: 0
+        value: 0.7254902
+        multiplier: 1
+      B:
+        enable: 1
+        useDNAValue: 0
+        value: 0.77254903
+        multiplier: 1
+      A:
+        enable: 0
+        useDNAValue: 0
+        value: 0
+        multiplier: 1
+    modifyingDNA:
+      _dnaEvaluators:
+      - _calcOption: 0
+        _dnaName: ElfOrAlien
+        _dnaNameHash: 579259412
+        _evaluator:
+          _name: OneZeroZero
+          _graph:
+            serializedVersion: 2
+            m_Curve:
+            - serializedVersion: 2
+              time: 0
+              value: 1
+              inSlope: 0
+              outSlope: -2
+              tangentMode: 0
+            - serializedVersion: 2
+              time: 0.5
+              value: 0
+              inSlope: -2
+              outSlope: 0
+              tangentMode: 0
+            - serializedVersion: 2
+              time: 1
+              value: 0
+              inSlope: 0
               outSlope: 0
               tangentMode: 0
             m_PreInfinity: 2
@@ -10719,11 +10863,6 @@ MonoBehaviour:
       _initialized: 1
   _converterController: {fileID: 11400000}
   _poseDNAConverters:
-  - _poseToApply: {fileID: 11400000, guid: 5ae99fcc22c8dc84fb9af444f4831a53, type: 2}
-    _startingPoseWeight: 1
-    _modifyingDNA:
-      _dnaEvaluators: []
-      _aggregationMethod: 0
   - _poseToApply: {fileID: 11400000, guid: 3255c760ce8d08c479636e70302f27cb, type: 2}
     _startingPoseWeight: 0
     _modifyingDNA:
@@ -10789,6 +10928,42 @@ MonoBehaviour:
               value: 0
               inSlope: 0
               outSlope: 0
+              tangentMode: 0
+            m_PreInfinity: 2
+            m_PostInfinity: 2
+            m_RotationOrder: 0
+        _multiplier: 1
+        _initialized: 1
+      _aggregationMethod: 0
+  - _poseToApply: {fileID: 11400000, guid: 5ae99fcc22c8dc84fb9af444f4831a53, type: 2}
+    _startingPoseWeight: 0
+    _modifyingDNA:
+      _dnaEvaluators:
+      - _calcOption: 0
+        _dnaName: ElfOrAlien
+        _dnaNameHash: 579259412
+        _evaluator:
+          _name: ZeroOneZero
+          _graph:
+            serializedVersion: 2
+            m_Curve:
+            - serializedVersion: 2
+              time: 0
+              value: 0
+              inSlope: 0
+              outSlope: 2
+              tangentMode: 0
+            - serializedVersion: 2
+              time: 0.5
+              value: 1
+              inSlope: 2
+              outSlope: -2
+              tangentMode: 0
+            - serializedVersion: 2
+              time: 1
+              value: 0
+              inSlope: -2
+              outSlope: 1
               tangentMode: 0
             m_PreInfinity: 2
             m_PostInfinity: 2
