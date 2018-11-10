@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &100100000
+Prefab:
+  m_ObjectHideFlags: 1
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications: []
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 0}
+  m_RootGameObject: {fileID: 1112103586435320}
+  m_IsPrefabParent: 1
+--- !u!1 &1112103586435320
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 4948617476913588}
+  - component: {fileID: 114793309135689438}
+  m_Layer: 0
+  m_Name: MakeMeFatJeansConverterBehaviour
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4948617476913588
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1112103586435320}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &114793309135689438
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1112103586435320}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2323fdffbbd0f51409581a5ae1bab046, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  DisplayValue: 
+  dnaTypeHash: 0
+  dnaAsset: {fileID: 11400000, guid: 51557a0d9997c5945973dff0a2fc7031, type: 2}
+  _converterController: {fileID: 11400000, guid: f141c461f856796499f68a2299efd1af,
+    type: 2}
+  _overallModifiers:
+    _adjustScale: 0
+    _adjustHeight: 0
+    _adjustRadius: 0
+    _adjustMass: 0
+    _updateBounds: 0
+    _tightenBounds: 0
+    _adjustBounds: 0
+    _scale: 1
+    _bone: Position
+    _scaleBoneHash: -1084586333
+    _headRatio: 7.5
+    _radiusAdjustY: 0
+    _radiusAdjust: {x: 0.23, y: 0}
+    _massAdjust: {x: 46, y: 26, z: 26}
+    _boundsAdjust: {x: 0, y: 0, z: 0}
+  _skeletonModifiers: []
+  overallScale: 1
+  overallScaleBone: 
+  overallScaleBoneHash: -1084586333
+  overallModifiersEnabled: 0
+  radiusAdjust: {x: 0, y: 0}
+  massModifiers: {x: 0, y: 0, z: 0}
+  tightenBounds: 1
+  boundsAdjust: {x: 0, y: 0, z: 0}
+  _startingPose: {fileID: 0}
+  startingPoseWeight: 1
