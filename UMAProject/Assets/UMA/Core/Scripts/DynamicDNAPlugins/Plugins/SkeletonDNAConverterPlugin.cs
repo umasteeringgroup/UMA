@@ -21,11 +21,6 @@ namespace UMA
 			set { _skeletonModifiers = value; }
 		}
 
-		public override string PluginHelp
-		{
-			get { return "Skeleton DNA Converters use dna values to transform the bones in an avatars skeleton."; }
-		}
-
 
 		#region PUBLIC METHODS
 
@@ -114,6 +109,11 @@ namespace UMA
 		}
 
 #if UNITY_EDITOR
+
+		public override string PluginHelp
+		{
+			get { return "Skeleton DNA Converters use dna values to transform the bones in an avatars skeleton."; }
+		}
 
 		public override string[] ImportSettingsMethods
 		{

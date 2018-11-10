@@ -30,10 +30,12 @@ namespace UMA
 
 		#region DYNAMICDNAPLUGIN PROPERTIES
 
+#if UNITY_EDITOR
 		public override string PluginHelp
 		{
 			get { return "Blendshape DNA Converters convert the set dna names into weight settings for Blendshape on the character. You can use the 'Starting Shape Weight' to force this shape on for all characters that use this converter at the start. Or you can hook up to a modifying dna so that the shape is only applied based on a characters dna value."; }
 		}
+#endif
 
 		#endregion
 

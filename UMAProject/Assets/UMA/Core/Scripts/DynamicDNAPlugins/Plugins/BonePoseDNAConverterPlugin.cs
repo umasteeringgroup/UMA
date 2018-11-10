@@ -93,11 +93,13 @@ namespace UMA
 
 		#region DYNAMICDNAPLUGIN PROPERTIES
 
+#if UNITY_EDITOR
 		public override string PluginHelp
 		{
 			get { return "Bone Pose DNA Converters convert the set dna names into weight settings for UMA Bone Pose that will be applied to a character. You can use the 'Starting Pose Weight' to force this pose on all characters that use this converter at the start. Or you can hook up to a modifying dna so that the pose is only applied based on a characters dna value."; }
 		}
 
+#endif
 		#endregion
 
 		#region REQUIRED DYNAMICDNAPLUGIN METHODS

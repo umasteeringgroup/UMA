@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 namespace UMA
 {
@@ -285,15 +287,11 @@ namespace UMA
 			}
 		}
 
-		public override GUIContent GetPluginEntryLabel(SerializedProperty entry, SerializedObject pluginSO, int entryIndex)
-		{
-			if (entry != null)
-			{
-				return new GUIContent(entry.displayName + " Channel: [" + entry.FindPropertyRelative("colorChannel").intValue + "]");
-			}
-			return GUIContent.none;
-		}
+		#region DYNAMICDNAPLUGIN EDITOR OVERRIDES
 
+#if UNITY_EDITOR
+
+		//this could be runtime in DynamicDNAPlugin if it was ever needed
 		public override bool ImportSettings(Object pluginToImport, int importMethod)
 		{
 			if (pluginToImport.GetType() == typeof(ColorDNAConverterPlugin))
@@ -309,6 +307,15 @@ namespace UMA
 			return false;
 		}
 
+		public override GUIContent GetPluginEntryLabel(SerializedProperty entry, SerializedObject pluginSO, int entryIndex)
+		{
+			if (entry != null)
+			{
+				return new GUIContent(entry.displayName + " Channel: [" + entry.FindPropertyRelative("colorChannel").intValue + "]");
+			}
+			return GUIContent.none;
+		}
+
 		public override string PluginHelp
 		{
 			get
@@ -316,6 +323,10 @@ namespace UMA
 				return "ColorDNA Converters convert DNA values into color changes on an overlay. You can define which channel on the overlay you wish to affect to achieve things like changing the diffuse color, fading normal maps in and out, making a character more or less metallic and so forth. The changes do not change 'Shared Colors' but if the overlay was using a shared color, any changes to that will be respected.";
 			}
 		}
+
+#endif
+
+		#endregion
 
 	}
 }

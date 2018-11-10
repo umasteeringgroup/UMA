@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 namespace UMA
 {
@@ -75,11 +77,6 @@ namespace UMA
 			}
 		}
 
-		public override string PluginHelp
-		{
-			get { return "Changes the overall scale value on this plugins converter behaviour based on dna. Each entry will be evaluated according to evaluated weight of its dna entry and the weigted avaerage result of all the entries will be sent to the converter behaviour to use for its 'overall scale' calculation"; }
-		}
-
 		public override void ApplyDNA(UMAData umaData, UMASkeleton skeleton, int dnaTypeHash)
 		{
 			if (this.converterController == null || this.converterController.converterBehaviour == null || _overallScaleModifiers.Count == 0)
@@ -107,12 +104,23 @@ namespace UMA
 			this.converterController.converterBehaviour.liveScale = newScale;
 		}
 
+		#region DYNAMICDNAPLUGIN EDITOR OVERRIDES
+
+#if UNITY_EDITOR
+
+		public override string PluginHelp
+		{
+			get { return "Changes the overall scale value on this plugins converter behaviour based on dna. Each entry will be evaluated according to evaluated weight of its dna entry and the weigted avaerage result of all the entries will be sent to the converter behaviour to use for its 'overall scale' calculation"; }
+		}
+
 		public override void OnAddEntryCallback(SerializedObject pluginSO, int entryIndex)
 		{
 			var thismodifier = pluginSO.FindProperty("_overallScaleModifiers").GetArrayElementAtIndex(entryIndex);
 			if (thismodifier.FindPropertyRelative("_overallScale").floatValue == 0f)
 				thismodifier.FindPropertyRelative("_overallScale").floatValue = 0.88f;
 		}
+#endif
+		#endregion
 
 	}
 }
