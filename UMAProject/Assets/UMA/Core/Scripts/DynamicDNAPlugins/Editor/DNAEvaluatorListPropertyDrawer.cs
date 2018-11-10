@@ -173,7 +173,7 @@ namespace UMA.Editors
 		private void DrawHeaderCallback(Rect rect)
 		{
 			_dnaEvaluatorDrawer.DrawLabels = false;
-			_dnaEvaluatorDrawer.DrawCalcOption = drawCalcOption;
+			_dnaEvaluatorDrawer.DrawCalcOption = _dnaEvaluatorList.count > 1 ? drawCalcOption : false;
 			if (_labelOption == DNAEvaluatorList.ConfigAttribute.LabelOptions.drawExpandedNoLabel)
 			{
 				_dnaEvaluatorDrawer.DoLabelsInline(rect, _propertyLabel);
@@ -192,18 +192,30 @@ namespace UMA.Editors
 			float bgXmin = rect.xMax - 300f > rect.xMin ? rect.xMax - 300f : rect.xMin;
 			Rect bgRect = new Rect(bgXmin, rect.yMin, rect.width, rect.height);
 			bgRect.xMax = rect.xMax;
-			rect = new Rect(availWidth, rect.y, xMax - availWidth -4f, rect.height);
+			float agWidthMod = 0f;
+			//If the list count is greater than 1 we need to draw the background for the aggregation controls
+			if (_dnaEvaluatorList.count > 1)
+			{
+				agWidthMod = 4f;
+			}
+			rect = new Rect(availWidth, rect.y, xMax - availWidth - agWidthMod, rect.height);
 			Rect rect2 = new Rect(availWidth + 4f, rect.y - 3f, 25f, 13f);
 			Rect rect3 = new Rect(xMax - 33f, rect.y - 3f, 25f, 13f);
 			Rect agRect = new Rect(bgRect.xMin + 8f, bgRect.yMin, (bgRect.width - rect.width) -16f, bgRect.height);
 			if (Event.current.type == EventType.Repaint)
 			{
 				var prevFooterFixedHeight = ROLDefaults.footerBackground.fixedHeight;
-				//usually 13f but we need it higher to hold aggregation controls
-				ROLDefaults.footerBackground.fixedHeight = 13f + (EditorGUIUtility.standardVerticalSpacing * 3);
-				ROLDefaults.footerBackground.Draw(bgRect, false, false, false, false);
+				var addMinusHeight = prevFooterFixedHeight;
+				//If the list count is greater than 1 we need to draw the background for the aggregation controls
+				if (_dnaEvaluatorList.count > 1)
+				{
+					//usually 13f but we need it higher to hold aggregation controls
+					ROLDefaults.footerBackground.fixedHeight = 13f + (EditorGUIUtility.standardVerticalSpacing * 3);
+					ROLDefaults.footerBackground.Draw(bgRect, false, false, false, false);
+					addMinusHeight += 2f;
+				}
 				//now draw the standard background for the +/- controls
-				ROLDefaults.footerBackground.fixedHeight = prevFooterFixedHeight + 2f;
+				ROLDefaults.footerBackground.fixedHeight = addMinusHeight;
 				ROLDefaults.footerBackground.Draw(rect, false, false, false, false);
 				ROLDefaults.footerBackground.fixedHeight = prevFooterFixedHeight;
 			}
@@ -220,7 +232,11 @@ namespace UMA.Editors
 			}
 			var prevIndentLevel = EditorGUI.indentLevel;
 			EditorGUI.indentLevel = 0;
-			DrawAggregationMethod(agRect, _property);
+			//If the list count is greater than 1 we need to draw the background for the aggregation controls
+			if (_dnaEvaluatorList.count > 1)
+			{
+				DrawAggregationMethod(agRect, _property);
+			}
 			EditorGUI.indentLevel = prevIndentLevel;
 		}
 
@@ -230,7 +246,7 @@ namespace UMA.Editors
 			_dnaEvaluatorDrawer.DrawLabels = false;
 			var dnaEvalListProp = _dnaEvaluatorList.serializedProperty;
 			var entryRect = new Rect(rect.xMin, rect.yMin + _padding, rect.width, rect.height - _padding);
-			_dnaEvaluatorDrawer.DrawCalcOption = drawCalcOption;
+			_dnaEvaluatorDrawer.DrawCalcOption = _dnaEvaluatorList.count > 1 ? drawCalcOption : false;
 			_dnaEvaluatorDrawer.DoFieldsInline(entryRect, dnaEvalListProp.GetArrayElementAtIndex(index));
 		}
 

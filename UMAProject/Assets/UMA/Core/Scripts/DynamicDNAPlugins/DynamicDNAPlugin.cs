@@ -166,6 +166,8 @@ namespace UMA
 
 		#region VIRTUAL METHODS
 
+		//these all show when anything else gets a DynamicDNAPlugin - they need to be protected but also available to the pluginDrawer..How??
+
 #if UNITY_EDITOR
 		/// <summary>
 		/// Override this method if DynamicDNAPluginInspector is not finding your list of converters automatically
@@ -385,16 +387,31 @@ namespace UMA
 		[System.Serializable]
 		public class MasterWeight
 		{
+			public enum MasterWeightType
+			{
+				UseGlobalValue,
+				UseDNAValue
+			}
+
+			[Tooltip("Choose whether to use a global value for all characters that use this converter, or a dnaValue that characters can change.")]
+			[SerializeField]
+			private MasterWeightType _masterWeightType = MasterWeightType.UseGlobalValue;
 
 			[Tooltip("The global weight to use for this set of converters. Applies to all characters that use the converter behaviour this resides in. Override this with DNAForWeight for 'per character' control")]
 			[Range(0f, 1f)]
 			[SerializeField]
-			protected float _globalWeight = 1f;
+			private float _globalWeight = 1f;
 
 			[Tooltip("If set, the weight value will be controlled by the given dna on the character.")]
 			[SerializeField]
 			[DNAEvaluator.Config(true, true)]
-			protected DNAEvaluator _DNAForWeight = new DNAEvaluator("", DNAEvaluationGraph.Raw, 1);
+			private DNAEvaluator _DNAForWeight = new DNAEvaluator("", DNAEvaluationGraph.Raw, 1);
+
+			public MasterWeightType masterWeightType
+			{
+				get { return _masterWeightType; }
+				set { _masterWeightType = value; }
+			}
 
 			public float globalWeight
 			{
@@ -422,17 +439,20 @@ namespace UMA
 
 			public MasterWeight()
 			{
+				_masterWeightType = MasterWeightType.UseGlobalValue;
 				_globalWeight = 1f;
 			}
 
 			public MasterWeight(MasterWeight other)
 			{
+				_masterWeightType = other._masterWeightType;
 				_globalWeight = other._globalWeight;
 				_DNAForWeight = new DNAEvaluator(other._DNAForWeight);
 			}
 
-			public MasterWeight(float defaultWeight = 1f, string dnaForWeightName = "", DNAEvaluationGraph dnaForWeightGraph = null, float dnaForWeightMultiplier = 1f)
+			public MasterWeight(MasterWeightType masterWeightType = MasterWeightType.UseGlobalValue, float defaultWeight = 1f, string dnaForWeightName = "", DNAEvaluationGraph dnaForWeightGraph = null, float dnaForWeightMultiplier = 1f)
 			{
+				_masterWeightType = masterWeightType;
 				_globalWeight = defaultWeight;
 				if (!string.IsNullOrEmpty(dnaForWeightName))
 				{
@@ -446,7 +466,7 @@ namespace UMA
 
 			public float GetWeight(UMADnaBase umaDna = null)
 			{
-				if (!string.IsNullOrEmpty(_DNAForWeight.dnaName))
+				if (_masterWeightType == MasterWeightType.UseDNAValue)
 				{
 					return _DNAForWeight.Evaluate(umaDna);
 				}
@@ -457,6 +477,9 @@ namespace UMA
 			//TODO check if this still screws up the incoming dnas values
 			public UMADnaBase GetWeightedDNA(UMADnaBase incomingDna)
 			{
+				if (_masterWeightType == MasterWeightType.UseGlobalValue)
+					return incomingDna;
+
 				var masterWeight = GetWeight(incomingDna);
 				var weightedDNA = new DynamicUMADna();
 				if (masterWeight > 0)

@@ -12,6 +12,7 @@ namespace UMA
 
 		private DNAEvaluationGraph dummyEvaluator = new DNAEvaluationGraph();
 		private GUIStyle italicLabel;
+		private float typePopupWidth = 110f;
 
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
@@ -30,15 +31,28 @@ namespace UMA
 
 			if (property.isExpanded)
 			{
+				var masterWeightTypeProp = property.FindPropertyRelative("_masterWeightType");
 				var globalWeightProp = property.FindPropertyRelative("_globalWeight");
 				var dnaForWeightProp = property.FindPropertyRelative("_DNAForWeight");
 
-				var rect = EditorGUI.IndentedRect(foldoutRect);
-				var field1Rect = new Rect(rect.xMin, foldoutRect.yMax + EditorGUIUtility.standardVerticalSpacing, rect.width, EditorGUI.GetPropertyHeight(globalWeightProp));
-				var field2Rect = new Rect(field1Rect.xMin, field1Rect.yMax, field1Rect.width, EditorGUI.GetPropertyHeight(dnaForWeightProp));
+				var rect = foldoutRect;
+				var typeRect = new Rect(rect.xMin, foldoutRect.yMax + EditorGUIUtility.standardVerticalSpacing, typePopupWidth, EditorGUIUtility.singleLineHeight);
 
-				EditorGUI.PropertyField(field1Rect, globalWeightProp);
-				EditorGUI.PropertyField(field2Rect, dnaForWeightProp);
+				EditorGUI.PropertyField(typeRect, masterWeightTypeProp, GUIContent.none);
+
+				if (masterWeightTypeProp.enumValueIndex == 0)//useGlobalWeight
+				{
+					var field1Rect = new Rect(typeRect.xMax + 20f, foldoutRect.yMax + EditorGUIUtility.standardVerticalSpacing, rect.width - typeRect.width - 20f, EditorGUI.GetPropertyHeight(globalWeightProp));
+					EditorGUI.PropertyField(field1Rect, globalWeightProp, GUIContent.none);
+				}
+				else //use DNA Value
+				{
+					var field2Rect = new Rect(typeRect.xMax + 5f, foldoutRect.yMax, rect.width - typeRect.width, EditorGUI.GetPropertyHeight(dnaForWeightProp));
+					EditorGUI.PropertyField(field2Rect, dnaForWeightProp);
+				}
+				//var field1Rect = new Rect(rect.xMin, foldoutRect.yMax + EditorGUIUtility.standardVerticalSpacing, rect.width, EditorGUI.GetPropertyHeight(globalWeightProp));
+				//var field2Rect = new Rect(field1Rect.xMin, field1Rect.yMax, field1Rect.width, EditorGUI.GetPropertyHeight(dnaForWeightProp));
+				
 			}
 
 			DrawCurrentSettingInfo(property, foldoutRect, position);
@@ -51,11 +65,12 @@ namespace UMA
 			var foldoutInfoRect = new Rect(foldoutLabelNameRect.xMax + 4f, foldoutRect.yMin, 170f, foldoutRect.height);
 			var foldoutFieldRect = new Rect(foldoutInfoRect.xMax + 4f, foldoutRect.yMin, 40f, EditorGUIUtility.singleLineHeight);
 
+			var masterWeightTypeProp = property.FindPropertyRelative("_masterWeightType");
 			var globalWeightProp = property.FindPropertyRelative("_globalWeight");
 			var dnaForWeightProp = property.FindPropertyRelative("_DNAForWeight");
 			var dnaNameForWeightProp = dnaForWeightProp.FindPropertyRelative("_dnaName");
 
-			GUIContent infoText = dnaNameForWeightProp.stringValue == "" ? new GUIContent("Using Global Weight : ") : new GUIContent("Using DNA name '" + dnaNameForWeightProp.stringValue + "' : ");
+			GUIContent infoText = masterWeightTypeProp.enumValueIndex == 0 ? new GUIContent("Using Global Value : ") : new GUIContent("Using DNA Value '" + dnaNameForWeightProp.stringValue + "' : ");
 
 			//recalc widths based on that
 			var labelWidth = (EditorStyles.foldout.CalcSize(new GUIContent(property.displayName)).x - 15f);
@@ -72,9 +87,9 @@ namespace UMA
 				foldoutInfoRect.width = xMax - labelWidth - 50f - 15f - 4f - 4f - 6f - 6f;
 			}
 			foldoutFieldRect.width = 40f;
-			float fieldValue = dnaNameForWeightProp.stringValue == "" ? globalWeightProp.floatValue : 0.5f;
+			float fieldValue = masterWeightTypeProp.enumValueIndex == 0 ? globalWeightProp.floatValue : 0.5f;
 			//I want to evaluate the dna so users can see how different evaluators affect the value
-			if (!string.IsNullOrEmpty(dnaNameForWeightProp.stringValue) && Application.isPlaying)
+			if (masterWeightTypeProp.enumValueIndex == 1 && Application.isPlaying)
 			{
 				//this really has to get the current dna value else its too confusing
 				//fieldValue = EvalauateValue(fieldValue, dnaForWeightProp);
@@ -83,7 +98,7 @@ namespace UMA
 			EditorGUI.LabelField(foldoutInfoRect, infoText, italicLabel);
 			//Dont do a disabled field because its too confusing
 			//EditorGUI.FloatField(foldoutFieldRect, fieldValue);
-			if (string.IsNullOrEmpty(dnaNameForWeightProp.stringValue))
+			if (masterWeightTypeProp.enumValueIndex == 0)
 			{
 				EditorGUI.LabelField(foldoutFieldRect, "[" + fieldValue.ToString("0.00") + "]");
 			}
@@ -95,9 +110,16 @@ namespace UMA
 			var height = EditorGUIUtility.singleLineHeight;
 			if (property.isExpanded)
 			{
-				height += (EditorGUIUtility.singleLineHeight + (EditorGUIUtility.standardVerticalSpacing * 2)) * 3f;
-				//dnaEvaluator is a bit higher than this
-				height += 8f;
+				if(property.FindPropertyRelative("_masterWeightType").enumValueIndex == 0)//use GlobalValue
+				{
+					height += (EditorGUIUtility.singleLineHeight + (EditorGUIUtility.standardVerticalSpacing * 2));
+					height += 4f;
+				}
+				else //use dna Value
+				{
+					height += (EditorGUIUtility.singleLineHeight + (EditorGUIUtility.standardVerticalSpacing * 2)) * 2f;
+					height += 8f;
+				}
 			}
 			return height;
 		}

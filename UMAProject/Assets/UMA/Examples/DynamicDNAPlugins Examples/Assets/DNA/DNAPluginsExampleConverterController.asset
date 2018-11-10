@@ -10816,6 +10816,120 @@ MonoBehaviour:
         _multiplier: 1
         _initialized: 1
       _aggregationMethod: 0
+  - overlayEntryName: M_Bod smooth
+    colorChannel: 0
+    colorModifier:
+      R:
+        enable: 1
+        useDNAValue: 0
+        value: 0.31764707
+        multiplier: 1
+      G:
+        enable: 1
+        useDNAValue: 0
+        value: 0.75686276
+        multiplier: 1
+      B:
+        enable: 1
+        useDNAValue: 0
+        value: 0.52156866
+        multiplier: 1
+      A:
+        enable: 1
+        useDNAValue: 1
+        value: 0
+        multiplier: 1
+    modifyingDNA:
+      _dnaEvaluators:
+      - _calcOption: 0
+        _dnaName: ElfOrAlien
+        _dnaNameHash: 579259412
+        _evaluator:
+          _name: ZeroZeroOne
+          _graph:
+            serializedVersion: 2
+            m_Curve:
+            - serializedVersion: 2
+              time: 0
+              value: 0
+              inSlope: 0
+              outSlope: 0
+              tangentMode: 0
+            - serializedVersion: 2
+              time: 0.5
+              value: 0
+              inSlope: 0
+              outSlope: 2
+              tangentMode: 0
+            - serializedVersion: 2
+              time: 1
+              value: 1
+              inSlope: 2
+              outSlope: 0
+              tangentMode: 0
+            m_PreInfinity: 2
+            m_PostInfinity: 2
+            m_RotationOrder: 0
+        _multiplier: 1
+        _initialized: 1
+      _aggregationMethod: 0
+  - overlayEntryName: M_Bod smooth
+    colorChannel: 1
+    colorModifier:
+      R:
+        enable: 0
+        useDNAValue: 0
+        value: 0.31764707
+        multiplier: 1
+      G:
+        enable: 0
+        useDNAValue: 0
+        value: 0.75686276
+        multiplier: 1
+      B:
+        enable: 0
+        useDNAValue: 0
+        value: 0.52156866
+        multiplier: 1
+      A:
+        enable: 1
+        useDNAValue: 1
+        value: 0
+        multiplier: 1
+    modifyingDNA:
+      _dnaEvaluators:
+      - _calcOption: 0
+        _dnaName: ElfOrAlien
+        _dnaNameHash: 579259412
+        _evaluator:
+          _name: ZeroZeroOne
+          _graph:
+            serializedVersion: 2
+            m_Curve:
+            - serializedVersion: 2
+              time: 0
+              value: 0
+              inSlope: 0
+              outSlope: 0
+              tangentMode: 0
+            - serializedVersion: 2
+              time: 0.5
+              value: 0
+              inSlope: 0
+              outSlope: 2
+              tangentMode: 0
+            - serializedVersion: 2
+              time: 1
+              value: 1
+              inSlope: 2
+              outSlope: 0
+              tangentMode: 0
+            m_PreInfinity: 2
+            m_PostInfinity: 2
+            m_RotationOrder: 0
+        _multiplier: 1
+        _initialized: 1
+      _aggregationMethod: 0
 --- !u!114 &114700032911936864
 MonoBehaviour:
   m_ObjectHideFlags: 0
