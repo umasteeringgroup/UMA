@@ -1,39 +1,22 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
-namespace UMA {
+namespace UMA
+{
 	public class ColorDNAConverterPlugin : DynamicDNAPlugin
 	{
 
 		[System.Serializable]
 		public class DNAColorSet
 		{
-			//public string dnaEntryName;
 			public string overlayEntryName;
 			[Tooltip("Color Channel: For example PBR, 0 = Albedo, 1 = Normal, 2 = Metallic")]
 			public int colorChannel = 0;
-			//when changing the diffuse color of an overlay you might want to change its actual color and or change its opacity
-			public bool changeColor = true;
-			public Color32 color = new Color(1, 1, 1, 0);
-			public bool changeAlpha = true;
-			[Range(0f, 1f)]
-			public float alpha = 1f;
+			[Tooltip("Define how you want to change the colors used on this overlay")]
+			public DNAColorModifier colorModifier = new DNAColorModifier();
+			[Tooltip("Define the dna that influence these changes")]
 			public DNAEvaluatorList modifyingDNA = new DNAEvaluatorList();
-
-			private Color32 _currentColor;
-			private bool _currentColorStored = false;
-
-			public bool currentColorStored
-			{
-				get { return _currentColorStored; }
-			}
-			public Color32 currentColor
-			{
-				get { return _currentColor; }
-				set { _currentColor = value;
-					_currentColorStored = true;
-				}
-			}
 
 			public List<string> UsedDNANames
 			{
@@ -42,11 +25,79 @@ namespace UMA {
 					return modifyingDNA.UsedDNANames;
 				}
 			}
+
+			public DNAColorSet() { }
+
+			public DNAColorSet(DNAColorSet other)
+			{
+				overlayEntryName = other.overlayEntryName;
+				colorChannel = other.colorChannel;
+				colorModifier = new DNAColorModifier(other.colorModifier);
+				modifyingDNA = new DNAEvaluatorList(other.modifyingDNA);
+			}
+
+			[System.Serializable]
+			public class DNAColorComponent
+			{
+				[Tooltip("Change this component of the color")]
+				public bool enable = true;
+				[Tooltip("If false the dna value determines how much the current value is changed to the set value. If true the dna value is used *as* the value")]
+				public bool useDNAValue = false;
+				[Tooltip("The value for this component of the color")]
+				[Range(0f, 1f)]
+				public float value;
+				[Tooltip("A multiplier to apply to the evaluated dnaValue")]
+				public float multiplier = 1f;
+
+				public DNAColorComponent() { }
+
+				public DNAColorComponent(DNAColorComponent other)
+				{
+					enable = other.enable;
+					useDNAValue = other.useDNAValue;
+					value = other.value;
+					multiplier = other.multiplier;
+				}
+
+				public float Evaluate(float dnaValue, float current)
+				{
+					if (!enable)
+						return current;
+					else if (useDNAValue)
+					{
+						return dnaValue * multiplier;
+					}
+					else
+					{
+						return Mathf.Lerp(current, value, dnaValue);
+					}
+				}
+			}
+			[System.Serializable]
+			public class DNAColorModifier
+			{
+				public DNAColorComponent R = new DNAColorComponent();
+				public DNAColorComponent G = new DNAColorComponent();
+				public DNAColorComponent B = new DNAColorComponent();
+				public DNAColorComponent A = new DNAColorComponent();
+
+				public DNAColorModifier() { }
+
+				public DNAColorModifier(DNAColorModifier other)
+				{
+					R = new DNAColorComponent(other.R);
+					G = new DNAColorComponent(other.G);
+					B = new DNAColorComponent(other.B);
+					A = new DNAColorComponent(other.A);
+				}
+			}
 		}
 
 		public DNAColorSet[] colorSets = new DNAColorSet[0];
 
-		private Dictionary<string, Color> _changedColors = new Dictionary<string, Color>();
+		private Dictionary<string, Dictionary<int, Color32>> _changedColors = new Dictionary<string, Dictionary<int, Color32>>();
+
+		private Dictionary<string, OverlayColorData> _referenceColorDatas = new Dictionary<string, OverlayColorData>();
 
 		//has dna been applied this cycle
 		[System.NonSerialized]
@@ -60,7 +111,7 @@ namespace UMA {
 			get
 			{
 				var dict = new Dictionary<string, List<int>>();
-				for (int i= 0; i < colorSets.Length; i++)
+				for (int i = 0; i < colorSets.Length; i++)
 				{
 					for (int ci = 0; ci < colorSets[i].UsedDNANames.Count; ci++)
 					{
@@ -111,66 +162,80 @@ namespace UMA {
 				return;
 			}
 			var masterWeightCalc = masterWeight.GetWeight(activeDNA);
-			if (masterWeightCalc == 0)
+			if (masterWeightCalc == 0f)
 				return;
 
 			float[] dnaValues = activeDNA.Values;
 			string[] dnaNames = activeDNA.Names;
 
+			UpdateReferencedColorDatas(umaData.umaRecipe.slotDataList);
+
 			for (int i = 0; i < colorSets.Length; i++)
 			{
+				if (colorSets[i].modifyingDNA.UsedDNANames.Count == 0)
+					continue;
+
 				var dnaVal = colorSets[i].modifyingDNA.Evaluate(activeDNA);
 				bool found = false;
+
 				foreach (SlotData slot in umaData.umaRecipe.slotDataList)
 				{
 					OverlayData overlay = slot.GetOverlay(colorSets[i].overlayEntryName);
 					if (overlay != null)
 					{
 						found = true;
-						//Color newColor = Color.Lerp(colorSets[i].minColor, colorSets[i].maxColor, dnaValues[i]);//assumes a dna evaluator of Raw
-						//The above isn't right
-						//what we need to do here is change from the UNMODIFIED color to the new color
-						//but for that the unmodified color needs to be stored somewhere, cos we are going to change the overlayColor
-						//colorDNA is kind of based on the premise that you will only be using the color to fade new overlays in and out
-						//but what if all you want to do is fade in and out a color CHANGE on an EXISTING overlay
-						//I know there are other ways already to do this, setting the shared color on the dynamicAvatar for example
-						//but this whole plugins thing is about making these changes possible with dna
-						if (!colorSets[i].currentColorStored)
+
+						//Never change a shared color but store it as a reference
+						if (overlay.colorData.IsASharedColor)
 						{
-							colorSets[i].currentColor = overlay.GetColor(colorSets[i].colorChannel);
+							_referenceColorDatas.Add(colorSets[i].overlayEntryName, overlay.colorData);
+							//set the overlay to use an unshared version, so other overlays are not affected
+							overlay.colorData = overlay.colorData.Duplicate();
+							overlay.colorData.name = OverlayColorData.UNSHARED;
 						}
-						var currentColor = colorSets[i].currentColor;
-						//now the problem is that another item further up the list (or elsewhere) might have changed the color and we dont want to undo its changes
+
+						Color32 currentColor = overlay.GetColor(colorSets[i].colorChannel);
+
+						//if the overlay originally used a shared color, use its data for setting currentColor
+						if (_referenceColorDatas.ContainsKey(colorSets[i].overlayEntryName))
+						{
+							currentColor = _referenceColorDatas[colorSets[i].overlayEntryName].channelMask[colorSets[i].colorChannel];
+						}
+
+						//If the colour has been overidden this cycle use that instead
 						if (_changedColors.ContainsKey(colorSets[i].overlayEntryName))
-							currentColor = _changedColors[colorSets[i].overlayEntryName];
-						var newColor = currentColor;
-						if (colorSets[i].changeColor)
-						{
-							newColor.r = colorSets[i].color.r;
-							newColor.g = colorSets[i].color.g;
-							newColor.b = colorSets[i].color.b;
-						}
-						if (colorSets[i].changeAlpha)
-						{
-							//I'm sure im just being stupid here, please rewrite if theres a nicer way
-							Color alpha = new Color(0, 0, 0, colorSets[i].alpha);
-							Color32 alpha32 = alpha;
-							newColor.a = alpha32.a;
-						}
-						//how much do we change the color based on dna
-						newColor = Color.Lerp(currentColor, newColor, dnaVal);
-						//how much to we change the color based on masterweight
+							if (_changedColors[colorSets[i].overlayEntryName].ContainsKey(colorSets[i].colorChannel))
+								currentColor = _changedColors[colorSets[i].overlayEntryName][colorSets[i].colorChannel];
+
+						Color newColor = currentColor;
+						newColor.r = colorSets[i].colorModifier.R.Evaluate(dnaVal, newColor.r);
+						newColor.g = colorSets[i].colorModifier.G.Evaluate(dnaVal, newColor.g);
+						newColor.b = colorSets[i].colorModifier.B.Evaluate(dnaVal, newColor.b);
+						newColor.a = colorSets[i].colorModifier.A.Evaluate(dnaVal, newColor.a);
+
 						newColor = Color.Lerp(currentColor, newColor, masterWeightCalc);
-						overlay.SetColor(colorSets[i].colorChannel, newColor);
+						Color32 newColor32 = newColor;
+
+						overlay.SetColor(colorSets[i].colorChannel, newColor32);
+
 						if (!_changedColors.ContainsKey(colorSets[i].overlayEntryName))
 						{
-							_changedColors.Add(colorSets[i].overlayEntryName, newColor);
+							_changedColors.Add(colorSets[i].overlayEntryName, new Dictionary<int, Color32>());
 						}
+						if (!_changedColors[colorSets[i].overlayEntryName].ContainsKey(colorSets[i].colorChannel))
+						{
+							_changedColors[colorSets[i].overlayEntryName].Add(colorSets[i].colorChannel, newColor32);
+						}
+						else
+						{
+							_changedColors[colorSets[i].overlayEntryName][colorSets[i].colorChannel] = newColor;
+						}
+						break;
 					}
 				}
 				if (found)
 				{
-					//Should this be here or require the use to set it after setting DNA?
+					//let generator know we made changes
 					umaData.isTextureDirty = true;
 					umaData.isAtlasDirty = true;
 				}
@@ -180,6 +245,76 @@ namespace UMA {
 				}
 			}
 			_dnaApplied = true;
+		}
+
+		/// <summary>
+		/// Updates any previously referenced sharedColors to the latest version and ensures the overlay is using a non-shared version
+		/// </summary>
+		private void UpdateReferencedColorDatas(SlotData[] slotDataList)
+		{
+			if (_referenceColorDatas.Count > 0)
+			{
+				var updatedRefs = new Dictionary<string, OverlayColorData>();
+				foreach (KeyValuePair<string, OverlayColorData> kp in _referenceColorDatas)
+				{
+					foreach (SlotData slot in slotDataList)
+					{
+						OverlayData overlay = slot.GetOverlay(kp.Key);
+						if (overlay != null)
+						{
+							if (overlay.colorData.IsASharedColor)
+							{
+								//the shared color was recreated on the overlay after a wardrobe change
+								//store and use the new version
+								updatedRefs.Add(kp.Key, overlay.colorData);
+								overlay.colorData = overlay.colorData.Duplicate();
+								overlay.colorData.name = OverlayColorData.UNSHARED;
+							}
+							else
+							{
+								//update the overlay with colors from the reference
+								updatedRefs.Add(kp.Key, kp.Value);
+								overlay.colorData = kp.Value.Duplicate();
+								overlay.colorData.name = OverlayColorData.UNSHARED;
+							}
+							break;
+						}
+					}
+				}
+				_referenceColorDatas = updatedRefs;
+			}
+		}
+
+		public override GUIContent GetPluginEntryLabel(SerializedProperty entry, SerializedObject pluginSO, int entryIndex)
+		{
+			if (entry != null)
+			{
+				return new GUIContent(entry.displayName + " Channel: [" + entry.FindPropertyRelative("colorChannel").intValue + "]");
+			}
+			return GUIContent.none;
+		}
+
+		public override bool ImportSettings(Object pluginToImport, int importMethod)
+		{
+			if (pluginToImport.GetType() == typeof(ColorDNAConverterPlugin))
+			{
+				List<DNAColorSet> thisColorSets = importMethod == 0 ? new List<DNAColorSet>(colorSets) : new List<DNAColorSet>();
+				for (int i = 0; i < ((ColorDNAConverterPlugin)pluginToImport).colorSets.Length; i++)
+				{
+					thisColorSets.Add(((ColorDNAConverterPlugin)pluginToImport).colorSets[i]);
+				}
+				colorSets = thisColorSets.ToArray();
+				return true;
+			}
+			return false;
+		}
+
+		public override string PluginHelp
+		{
+			get
+			{
+				return "ColorDNA Converters convert DNA values into color changes on an overlay. You can define which channel on the overlay you wish to affect to achieve things like changing the diffuse color, fading normal maps in and out, making a character more or less metallic and so forth. The changes do not change 'Shared Colors' but if the overlay was using a shared color, any changes to that will be respected.";
+			}
 		}
 
 	}

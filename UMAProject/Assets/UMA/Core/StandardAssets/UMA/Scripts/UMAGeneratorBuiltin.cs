@@ -241,6 +241,9 @@ namespace UMA
 				}
 				UpdateUMABody(umaData);
 				umaData.isShapeDirty = false;
+				//this is nasty but DNA in ColorDNA and DynamicDNAPlugins might have made the texture dirty again so
+				if (umaData.isAtlasDirty || umaData.isTextureDirty)
+					return false;
 				DnaChanged++;
 			} 
 			else if (umaData.skeleton.isUpdating)
