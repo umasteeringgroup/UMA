@@ -66,8 +66,8 @@ namespace UMA.Editors
 				AddDefaultValues();
 			}
 
-			if (string.IsNullOrEmpty(cachedTooltip))
-				UpdateCachedToolTip(_helper.Target);
+			//Dont think we can cache the tooltip so always do this
+			UpdateCachedToolTip(_helper.Target);
 
 			var fieldRect = EditorGUI.PrefixLabel(position, label);
 
