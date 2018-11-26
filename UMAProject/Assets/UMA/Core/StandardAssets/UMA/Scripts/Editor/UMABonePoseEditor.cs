@@ -9,6 +9,12 @@ namespace UMA.PoseTools
     [CustomEditor(typeof(UMABonePose),true)]
     public class UMABonePoseEditor : Editor
     {
+		//When an UMABonePose is inspected at runtime (using the 'Inspect' button drawn by the property drawer)
+		//other tools can access the livePopupEditor property to set the 'sourceUMA' so that all the fancy edit tools work
+		//The property drawer makes sure there is only ever one of these open at any one time, so you know if you change
+		//any fields on the editor defined here you are changing them for that instance of the editor
+		private static UMABonePoseEditor _livePopupEditor = null;
+
 		// HACK for testing
 		public UMAData sourceUMA;
 
@@ -71,7 +77,25 @@ namespace UMA.PoseTools
 		private static GUIContent previewGUIContent = new GUIContent(
 			"Preview Weight",
 			"Amount to apply bone pose to preview model. Inactive while editing.");
-		
+
+		/// <summary>
+		/// Returns the last UMABonePose editor that was created when the 'Inspect' button next to an UMABonePose object field was pressed
+		/// </summary>
+		public static UMABonePoseEditor livePopupEditor
+		{
+			get { return _livePopupEditor; }
+		}
+
+		/// <summary>
+		/// Sets the UMABoneBoseEditor that should be returned when 'livePopupEditor' is requested. Usually this should only be used by the UMABonePose PropertyDrawer
+		/// </summary>
+		/// <param name="liveUBPEditor"></param>
+		public static void SetLivePopupEditor(UMABonePoseEditor liveUBPEditor)
+		{
+			if(Application.isPlaying)
+				_livePopupEditor = liveUBPEditor;
+		}
+
 		public void OnEnable()
 		{
 			targetPose = target as UMABonePose;
@@ -150,6 +174,54 @@ namespace UMA.PoseTools
 						targetPose.ApplyPose(context.activeUMA.skeleton, previewWeight);
 					}
 				}
+				else
+				{
+					//TODO
+					//how do we deal with poses that are not applied? The user will see the character in its current pose and bone positions for that
+					//which makes no sense
+					//also because this will be hooked up to dna, the dna itself might be causing other changes to happen ('overallScale' for example)
+					//So I think the editor for bonePoseConverters, needs to jump in here and ask the user if they want to apply the dna that makes the pose active?
+					//OR
+					//maybe we create a skeleton how it would be IF the pose was applied to it and the user edits those transforms?
+					//If the pose is applied they will see their character change, if its not it might be clearer that is the case
+				}
+			}
+			if (!Application.isPlaying)
+				_livePopupEditor = null;
+		}
+
+		private void DrawSkeletonBones()
+		{
+			if (context == null || context.activeUMA == null)
+				return;
+			var prevHandlesColor = Handles.color;
+			if (context.activeUMA.umaRoot != null)
+			{
+				var Global = context.activeUMA.umaRoot.transform.Find("Global");
+				if (Global != null)
+				{
+					var Position = Global.Find("Position");
+					if (Position != null)
+					{
+						var Hips = Position.Find("Hips");
+						if (Hips != null)
+						{
+							DrawSkeletonBonesRecursive(Hips);
+						}
+					}
+				}
+			}
+			Handles.color = prevHandlesColor;
+		}
+
+		private void DrawSkeletonBonesRecursive(Transform parentBone)
+		{
+			for (int i = 0; i < parentBone.childCount; i++)
+			{
+				Handles.color = parentBone.GetChild(i) == context.activeTransform ? Color.green : (parentBone.GetChild(i) == context.mirrorTransform ? new Color(0,0.5f,1) : Color.white);
+				Handles.DrawLine(parentBone.position, parentBone.GetChild(i).position);
+				if (parentBone.GetChild(i).childCount > 0)
+					DrawSkeletonBonesRecursive(parentBone.GetChild(i));
 			}
 		}
 
@@ -289,6 +361,7 @@ namespace UMA.PoseTools
 					
 				serializedObject.ApplyModifiedProperties();
 			}
+			DrawSkeletonBones();
 		}
 
         public override void OnInspectorGUI()
@@ -334,18 +407,26 @@ namespace UMA.PoseTools
 			if (!dynamicDNAConverterMode)
 			{
 				sourceUMA = EditorGUILayout.ObjectField("Source UMA", sourceUMA, typeof(UMAData), true) as UMAData;
-				if (sourceUMA != null)
+			}
+			else
+			{
+				if(sourceUMA != null)
 				{
-					if (context == null)
-					{
-						context = new UMABonePoseEditorContext();
-					}
-					if (context.activeUMA != sourceUMA)
-					{
-						context.activeUMA = sourceUMA;
-					}
+					EditorGUILayout.HelpBox("Switch to 'Scene View' and you will see gizmos to help you edit the positions of the pose bones below that you choose to 'Edit'", MessageType.Info);
 				}
 			}
+			if (sourceUMA != null)
+			{
+				if (context == null)
+				{
+					context = new UMABonePoseEditorContext();
+				}
+				if (context.activeUMA != sourceUMA)
+				{
+					context.activeUMA = sourceUMA;
+				}
+			}
+			
 
 			// Weight of pose on preview model
 			if (haveValidContext && !dynamicDNAConverterMode)

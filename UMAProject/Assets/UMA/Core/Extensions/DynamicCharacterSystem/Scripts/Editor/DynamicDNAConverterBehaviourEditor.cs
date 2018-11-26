@@ -263,6 +263,12 @@ namespace UMA.CharacterSystem.Editors
 						DDCCEditor = Editor.CreateEditor((DynamicDNAConverterController)converterControllerProp.objectReferenceValue, typeof(DynamicDNAConverterControllerInspector));
 					GUILayout.Space(5);
 					DDCCEditor.OnInspectorGUI();
+					//if there is an UMABonePose popup inspector open set the umaData as its sourceUMA
+					if (UMA.PoseTools.UMABonePoseEditor.livePopupEditor != null)
+					{
+						UMA.PoseTools.UMABonePoseEditor.livePopupEditor.sourceUMA = umaData;
+						UMA.PoseTools.UMABonePoseEditor.livePopupEditor.dynamicDNAConverterMode = true;
+					}
 				}
 				else
 				{

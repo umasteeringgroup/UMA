@@ -10,6 +10,8 @@ namespace UMA.CharacterSystem.Editors
 	[CustomEditor(typeof(DynamicUMADnaAsset))]
 	public class DynamicUMADnaAssetEditor : Editor
 	{
+		public static DynamicUMADnaAssetEditor _livePopupEditor;
+
 		public string newDNAName = "";
 
 		int DNAAssetPickerID = 0;
@@ -27,11 +29,10 @@ namespace UMA.CharacterSystem.Editors
 		//this is an array because the help drawer takes an array so it can draw multiple paragraphs
 		string[] _help = new string[]
 		{
-			"The Dynmic DNA defines the dna 'names' that 'DNA Converters' can use to make changes to your character.",
-			"'DNA Converters' can do almost anything to your character. 'Skeleton Converters', convert dna values into modifications to your skeleton bones transforms, 'Blendshape Converters' convert dna values into weights for a blendshape, and so on.",
-			"But you can make a dna name you define here play music, order something from Amazon, or anything you like, using the DynamicDNAPlugins API",
-			"The 'DNA Type Hash' is a unique identifier for this collection of names, you should only edit it if you find that you are having dna collisions that you will be notified about."
+			"The 'Dynamic DNA Asset' defines the dna 'names' that 'DNA Converters' can use to make changes to your character.",
 		};
+
+		string _dnaTypehashTooltip = "The 'DNA Type Hash' is a unique identifier for this collection of names, you should only edit it if you find that you are having dna collisions that you will be notified about.";
 
 		bool initialized = false;
 
@@ -40,6 +41,16 @@ namespace UMA.CharacterSystem.Editors
 
 		DynamicUMADnaAsset thisDUDA;
 
+		public static DynamicUMADnaAssetEditor livePopupEditor
+		{
+			get { return _livePopupEditor; }
+		}
+
+		public static void SetLivePopupEditor(DynamicUMADnaAssetEditor liveDUDAEditor)
+		{
+			if (Application.isPlaying)
+				_livePopupEditor = liveDUDAEditor;
+		}
 
 		public void Init()
 		{
@@ -68,7 +79,12 @@ namespace UMA.CharacterSystem.Editors
 			serializedObject.Update();
 			GUILayout.Space(5);
 			var dnaHeaderRect = EditorGUILayout.GetControlRect();
-			GUIHelper.ToolbarStyleFoldout(dnaHeaderRect, "DYNAMIC DNA", _help, ref _selfIsExpanded, ref _helpIsExpanded);
+			//I dont want this to be a foldout now I just want it to be a header with a help icon and an import icon
+			//GUIHelper.ToolbarStyleFoldout(dnaHeaderRect, "DYNAMIC DNA", _help, ref _selfIsExpanded, ref _helpIsExpanded);
+			//this is good but I want optional help and 'impoort'- but maybe thats too specific to be genericly in GUIHelper
+			//maybe GUIHelper can return its rect here so I can put the import icon over the top?
+			GUIHelper.ToolbarStyleHeader(dnaHeaderRect, new GUIContent("DYNAMIC DNA"), _help, ref _helpIsExpanded);
+			_selfIsExpanded = true;
 			if (_selfIsExpanded)
 			{
 				GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
@@ -86,8 +102,8 @@ namespace UMA.CharacterSystem.Editors
 				if (editTypeHashEnabled)
 				{
 					//EditorGUILayout.BeginHorizontal();
-					EditorGUI.LabelField(hashLabelRect, new GUIContent(dnaTypeHash.displayName, dnaTypeHash.tooltip));
-					if (GUI.Button(hashBtnRect, "Save"))
+					EditorGUI.LabelField(hashLabelRect, new GUIContent(dnaTypeHash.displayName, _dnaTypehashTooltip));
+					if (GUI.Button(hashBtnRect, new GUIContent("Save", _dnaTypehashTooltip)))
 					{
 						editTypeHashEnabled = false;
 					}
@@ -112,8 +128,8 @@ namespace UMA.CharacterSystem.Editors
 				else
 				{
 					//EditorGUILayout.BeginHorizontal();
-					EditorGUI.LabelField(hashLabelRect, new GUIContent(dnaTypeHash.displayName, dnaTypeHash.tooltip));
-					if (GUI.Button(hashBtnRect, "Edit"))
+					EditorGUI.LabelField(hashLabelRect, new GUIContent(dnaTypeHash.displayName, _dnaTypehashTooltip));
+					if (GUI.Button(hashBtnRect, new GUIContent("Edit", _dnaTypehashTooltip)))
 					{
 						if (EditorUtility.DisplayDialog("Really Change the Hash?", "If you change the DNA Assets hash, any recipes that use this DNA will need to be inspected so they update to the new value. Are you sure?", "Yes", "Cancel"))
 							editTypeHashEnabled = true;
@@ -179,6 +195,8 @@ namespace UMA.CharacterSystem.Editors
 					EditorGUI.EndDisabledGroup();
 					EditorGUILayout.Space();
 				}
+				//ACTUAL NAMES LIST
+				_dnaNameList.DoLayoutList();
 				//ADD NEW NAME BUTTON
 				EditorGUILayout.BeginHorizontal();
 				bool canAdd = true;
@@ -219,44 +237,6 @@ namespace UMA.CharacterSystem.Editors
 				{
 					EditorGUILayout.HelpBox("That name is already in use.", MessageType.Warning);
 				}
-				//ACTUAL NAMES LIST
-				/*GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
-				EditorGUILayout.LabelField("DNA Names List (" + Names.arraySize + ")", EditorStyles.helpBox);
-				if (Names.arraySize > 0)
-				{
-					for (int i = 0; i < Names.arraySize; i++)
-					{
-						var origName = Names.GetArrayElementAtIndex(i).stringValue;
-						var newName = origName;
-						Rect propRect = EditorGUILayout.GetControlRect(false);
-						Rect fieldRect = propRect;
-						Rect delRect = propRect;
-						fieldRect.width = fieldRect.width - 80f;
-						delRect.x = delRect.x + fieldRect.width + 5f;
-						delRect.width = 75f;
-						EditorGUILayout.BeginHorizontal();
-						EditorGUI.BeginChangeCheck();
-						newName = EditorGUI.TextField(fieldRect, "", newName);
-						if (EditorGUI.EndChangeCheck())
-						{
-							if (newName != origName && newName != "")
-							{
-								Names.GetArrayElementAtIndex(i).stringValue = newName;
-								serializedObject.ApplyModifiedProperties();
-							}
-						}
-						if (GUI.Button(delRect, "Delete"))
-						{
-							Names.DeleteArrayElementAtIndex(i);
-							continue;
-						}
-						EditorGUILayout.EndHorizontal();
-					}
-					EditorGUILayout.Space();
-					Names.serializedObject.ApplyModifiedProperties();
-				}
-				GUIHelper.EndVerticalPadded(3);*/
-				_dnaNameList.DoLayoutList();
 
 				//Clear out indices that have been added to the remove list.
 				for (int i = _dnaNameList.serializedProperty.arraySize - 1; i >= 0; i--)

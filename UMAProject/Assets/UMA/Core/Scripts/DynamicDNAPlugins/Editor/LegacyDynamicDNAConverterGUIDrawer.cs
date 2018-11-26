@@ -453,8 +453,14 @@ namespace UMA.CharacterSystem.Editors
 				//If the asset isn't null and we are in playmode set the context.activeUMA to this umaData for live editing
 				if (bonePoseAsset.objectReferenceValue != null && minimalMode)
 				{
-					UMA.PoseTools.UMABonePoseInspectorWindow.context.activeUMA = umaData;
-					UMA.PoseTools.UMABonePoseInspectorWindow.dynamicDNAConverterMode = true;
+					//UMA.PoseTools.UMABonePoseInspectorWindow.context.activeUMA = umaData;
+					//UMA.PoseTools.UMABonePoseInspectorWindow.dynamicDNAConverterMode = true;
+					//if there is an UMABonePose popup inspector open set the umaData as its sourceUMA
+					if (UMA.PoseTools.UMABonePoseEditor.livePopupEditor != null)
+					{
+						UMA.PoseTools.UMABonePoseEditor.livePopupEditor.sourceUMA = umaData;
+						UMA.PoseTools.UMABonePoseEditor.livePopupEditor.dynamicDNAConverterMode = true;
+					}
 				}
 
 				if (bonePoseAsset.objectReferenceValue != null)

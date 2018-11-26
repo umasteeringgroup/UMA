@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
+using UnityEngine.Events;
 
 namespace UMA.Editors
 {
@@ -11,7 +12,12 @@ namespace UMA.Editors
 
 		private static GUIStyle _iconLabel;
 
-		public static Texture helpIcon
+		private static Texture _inspectIcon;
+		private static GUIContent _inspectContent;
+		private static GUIStyle _inspectStyle;
+		private static float inspectBtnWidth = 25f;
+
+		private static Texture helpIcon
 		{
 			get {
 				if (_helpIcon != null)
@@ -24,7 +30,7 @@ namespace UMA.Editors
 			}
 		}
 
-		public static GUIStyle iconLabel
+		private static GUIStyle iconLabel
 		{
 			get
 			{
@@ -36,6 +42,49 @@ namespace UMA.Editors
 				_iconLabel.fixedHeight = 18f;
 				_iconLabel.contentOffset = new Vector2(-4.0f, 0f);
 				return _iconLabel;
+			}
+		}
+
+		private static Texture inspectIcon
+		{
+			get
+			{
+				if (_inspectIcon != null)
+					return _inspectIcon;
+				//Check EditorStyles has been set up
+				if (EditorStyles.label == null)
+					return new Texture2D(16, 16);
+				_inspectIcon = EditorGUIUtility.FindTexture("ViewToolOrbit");
+				return _inspectIcon;
+			}
+		}
+
+		private static GUIContent inspectContent
+		{
+			get
+			{
+				if (_inspectContent != null && _inspectIcon != null)
+					return _inspectContent;
+				_inspectContent = new GUIContent("", "Inspect");
+				_inspectContent.image = inspectIcon;
+				return _inspectContent;
+			}
+		}
+
+		private static GUIStyle inspectStyle
+		{
+			get
+			{
+				if (_inspectStyle != null)
+					return _inspectStyle;
+				//Check EditorStyles is set up
+				if (EditorStyles.miniButton == null)
+					return new GUIStyle();
+				_inspectStyle = new GUIStyle(EditorStyles.miniButton);
+				_inspectStyle.contentOffset = new Vector2(0f, 0f);
+				_inspectStyle.padding = new RectOffset(0, 0, 0, 0);
+				_inspectStyle.margin = new RectOffset(0, 0, 0, 0);
+				return _inspectStyle;
 			}
 		}
 
@@ -272,6 +321,32 @@ namespace UMA.Editors
 				}
 			}
 		}
+
+		public static void ToolbarStyleHeader(Rect rect, GUIContent label, string[] help, ref bool helpExpanded)
+		{
+			var toolbarStyle = EditorStyles.toolbar;
+			var labelStyle = EditorStyles.label;
+			var helpIconRect = new Rect(rect.xMax - 20f, rect.yMin, 20f, rect.height);
+			var helpGUI = new GUIContent("", "Show Help");
+			helpGUI.image = helpIcon;
+			Event current = Event.current;
+			if (current.type == EventType.Repaint)
+			{
+				toolbarStyle.Draw(rect, GUIContent.none, false, false, false, false);
+			}
+			var labelWidth = labelStyle.CalcSize(label);
+			var toolbarFoldoutRect = new Rect((rect.xMax / 2f) - (labelWidth.x / 2f) + 30f, rect.yMin, ((rect.width / 2) + (labelWidth.x / 2f)) - 20f - 30f, rect.height);
+			EditorGUI.LabelField(toolbarFoldoutRect, label, labelStyle);
+			if (help.Length > 0)
+			{
+				helpExpanded = GUI.Toggle(helpIconRect, helpExpanded, helpGUI, iconLabel);
+				if (helpExpanded)
+				{
+					ToolbarStyleHelp(help);
+				}
+			}
+		}
+
 		private static void ToolbarStyleHelp(string[] help)
 		{
 			BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
@@ -280,6 +355,31 @@ namespace UMA.Editors
 				EditorGUILayout.HelpBox(help[i], MessageType.None);
 			}
 			EndVerticalPadded(3);
+		}
+		/// <summary>
+		/// Draws an object field with an 'inspect' button next to it which opens up the editor for the assigned object in a popup window
+		/// </summary>
+		public static void InspectableObjectField(Rect position, SerializedProperty property, GUIContent label, UnityAction<EditorWindow> onCreateWindowCallback = null)
+		{
+			label = EditorGUI.BeginProperty(position, label, property);
+			var objectFieldRect = position;
+			var inspectBtnRect = Rect.zero;
+			if (property.objectReferenceValue)
+			{
+				objectFieldRect = new Rect(position.xMin, position.yMin, position.width - inspectBtnWidth - 4f, position.height);
+				inspectBtnRect = new Rect(objectFieldRect.xMax + 4f, objectFieldRect.yMin, inspectBtnWidth, objectFieldRect.height);
+			}
+			EditorGUI.ObjectField(objectFieldRect, property, label);
+			if (property.objectReferenceValue)
+			{
+				if (GUI.Button(inspectBtnRect, inspectContent, inspectStyle))
+				{
+					var inspectorWindow = InspectorUtlity.InspectTarget(property.objectReferenceValue);
+					if (onCreateWindowCallback != null)
+						onCreateWindowCallback(inspectorWindow);
+				}
+			}
+			EditorGUI.EndProperty();
 		}
 	}
 }

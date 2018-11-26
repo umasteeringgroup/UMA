@@ -6,10 +6,13 @@ using System.Reflection;
 
 public static class InspectorUtlity 
 {
-    /// <summary>
-    /// Creates a new inspector window instance and locks it to inspect the specified target
-    /// </summary>
-    public static void InspectTarget(Object target)
+
+	/// <summary>
+	/// Creates a new inspector window instance and locks it to inspect the specified target
+	/// </summary>
+	/// <param name="target">The target object to inspect</param>
+	/// <param name="revertProjectSelection">If true reverts the object selected in the project to the original selection. Otherwise selects the target object</param>
+	public static EditorWindow InspectTarget(Object target, bool revertProjectSelection = false)
     {
         var prevSelection = Selection.activeObject;
 
@@ -29,11 +32,38 @@ public static class InspectorUtlity
         // Set the selection to GO we want to inspect
         // Selection.activeGameObject = target;
         Selection.instanceIDs = new int[] { target.GetInstanceID() };
-        // Get a ref to the "locked" property, which will lock the state of the inspector to the current inspected target
-        var isLocked = inspectorType.GetProperty("isLocked", BindingFlags.Instance | BindingFlags.Public);
-        // Invoke `isLocked` setter method passing 'true' to lock the inspector
-        isLocked.GetSetMethod().Invoke(inspectorInstance, new object[] { true });
-        // Finally revert back to the previous selection so that other inspectors continue to inspect whatever they were inspecting...
-        Selection.activeObject = prevSelection;
-    }
+		// Get a ref to the "locked" property, which will lock the state of the inspector to the current inspected target
+		var isLocked = inspectorType.GetProperty("isLocked", BindingFlags.Instance | BindingFlags.Public);
+		// Invoke `isLocked` setter method passing 'true' to lock the inspector
+		isLocked.GetSetMethod().Invoke(inspectorInstance, new object[] { true });
+		// Finally revert back to the previous selection so that other inspectors continue to inspect whatever they were inspecting...
+		Selection.activeObject = prevSelection;
+		if (revertProjectSelection)
+			EditorGUIUtility.PingObject(prevSelection);
+		return inspectorInstance;
+	}
+	/// <summary>
+	/// Returns an array of editors for the specified inspectorWindow. 
+	/// CAUTION: This will now return the correct array straight after InspectTarget is called.
+	/// You need to wait for the inspector windows to repaint, and/or keep checking this array until it contains the expected editor for the expected target
+	/// </summary>
+	/// <param name="inspectorWindow"></param>
+	/// <returns></returns>
+	public static Editor[] GetInspectorsEditors(EditorWindow inspectorWindow)
+	{
+		Editor[] editors = new Editor[0];
+		var inspectorType = typeof(Editor).Assembly.GetType("UnityEditor.InspectorWindow");
+		if (inspectorWindow.GetType() != inspectorType)
+		{
+			Debug.LogWarning("The supplied window was not an InspectorWindow");
+			return null;
+		}
+		var activeEditorTrackerPInfo = inspectorType.GetProperty("tracker", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+		var activeEditorTracker = activeEditorTrackerPInfo.GetGetMethod().Invoke(inspectorWindow, new object[0]);
+		if (((ActiveEditorTracker)activeEditorTracker) != null)
+		{
+			editors = ((ActiveEditorTracker)activeEditorTracker).activeEditors;
+		}
+		return editors;
+	}
 }

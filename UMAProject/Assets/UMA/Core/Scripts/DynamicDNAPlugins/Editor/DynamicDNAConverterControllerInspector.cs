@@ -15,6 +15,8 @@ namespace UMA.Editors
 
 		#region FIELDS
 
+		private static DynamicDNAConverterControllerInspector _livePopupEditor;
+
 		DynamicDNAConverterController _target;
 
 		//if set will be sent to the plugins so they can draw a popup of dnaNames rather than a string field for dna selection if they wish
@@ -67,7 +69,7 @@ namespace UMA.Editors
 
 		private string[] _help = new string[]
 		{
-		"DNA Converters convert dna values into modifications to your character. Different converters apply the dna in different ways. For example a Skeleton Modifier will take a dna value and convert it into transforms that are applied to the skeleton bones. A Blendshape Modifier will convert a dna value into the power value for a blendshape.",
+		"DNA Converters convert dna values into modifications to your character. Different converters apply the dna in different ways. For example a Skeleton DNA Converter will take a dna value and convert it into transforms that are applied to the skeleton bones. A Blendshape DNA Converter will convert a dna value into the power value for a blendshape.",
 		"Normally DNA Converters only do anything when the dna value is changed from its starting value, but some converters allow you to define a 'Starting' value and this can used to apply a modification by default. A 'Starting Pose' is a good example of this.",
 		"Converters are applied to the character from top to bottom, you can change the order by dragging the handle next to the converter entries header in the 'View By Converter Type' view.",
 		"Also in the 'View By Converter Type' view you can click the 'Cog' icon to rename or delete a converter instance. Click the 'Import' button to show the import area for the plugin, which allows you to import settings from another instance in various ways",
@@ -81,6 +83,11 @@ namespace UMA.Editors
 		public DynamicUMADnaAsset DNAAsset
 		{
 			set { _dnaAsset = value; }
+		}
+
+		public static DynamicDNAConverterControllerInspector livePopupEditor
+		{
+			get { return _livePopupEditor; }
 		}
 
 		#endregion
@@ -225,7 +232,9 @@ namespace UMA.Editors
 			{
 				DrawHelp(help);
 			}*/
-			GUIHelper.ToolbarStyleFoldout(rect, new GUIContent(_dnaConvertersLabel.ToUpper()), _help, ref _isExpanded, ref _helpExpanded);
+			//GUIHelper.ToolbarStyleFoldout(rect, new GUIContent(_dnaConvertersLabel.ToUpper()), _help, ref _isExpanded, ref _helpExpanded);
+			GUIHelper.ToolbarStyleHeader(rect, new GUIContent(_dnaConvertersLabel.ToUpper()), _help, ref _helpExpanded);
+			_isExpanded = true;
 		}
 
 		private void DrawHelp(string[] help)
@@ -534,6 +543,12 @@ namespace UMA.Editors
 		#endregion
 
 		#region STATIC UTILS
+
+		public static void SetLivePopupEditor(DynamicDNAConverterControllerInspector liveDDCCEditor)
+		{
+			if (Application.isPlaying)
+				_livePopupEditor = liveDDCCEditor;
+		}
 
 		//editor gui fields for DNANames popups and bone names popups
 		//these need to live somewhere else really

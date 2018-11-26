@@ -4,10 +4,10 @@ using UnityEngine;
 using UnityEditor;
 using UMA.Editors;
 
-namespace UMA.PoseTools
+namespace UMA
 {
-	[CustomPropertyDrawer(typeof(UMABonePose),true)]
-	public class UMABonePosePropertyDrawer : PropertyDrawer
+	[CustomPropertyDrawer(typeof(DynamicDNAConverterController), true)]
+	public class DynamicDNAConverterControllerPropertyDrawer : PropertyDrawer
 	{
 		static EditorWindow inspectorPopup;
 
@@ -18,15 +18,15 @@ namespace UMA.PoseTools
 			//We need to check this a few times because when the inspector window is created by InspectorUtility.InspectTarget
 			//when the user clicks the inspect button next to the field that is drawn above,
 			//GetInspectorsEditors doesnt return the actual editors correctly until the popup window repaints
-			if (inspectorPopup != null && UMABonePoseEditor.livePopupEditor == null)
+			if (inspectorPopup != null && DynamicDNAConverterControllerInspector.livePopupEditor == null)
 			{
 				var editors = InspectorUtlity.GetInspectorsEditors(inspectorPopup);
 				for (int i = 0; i < editors.Length; i++)
 				{
-					if (editors[i].GetType() == typeof(UMABonePoseEditor))
+					if (editors[i].GetType() == typeof(DynamicDNAConverterControllerInspector))
 					{
-						if(editors[i].target == property.objectReferenceValue)
-							UMABonePoseEditor.SetLivePopupEditor(editors[i] as UMABonePoseEditor);
+						if (editors[i].target == property.objectReferenceValue)
+							DynamicDNAConverterControllerInspector.SetLivePopupEditor(editors[i] as DynamicDNAConverterControllerInspector);
 					}
 				}
 			}
@@ -42,9 +42,10 @@ namespace UMA.PoseTools
 			if (inspectorPopup != null && inspectorPopup != newInspectorPopup)
 			{
 				inspectorPopup.Close();
-				UMABonePoseEditor.SetLivePopupEditor(null);
+				DynamicDNAConverterControllerInspector.SetLivePopupEditor(null);
 			}
 			inspectorPopup = newInspectorPopup;
 		}
+
 	}
 }
