@@ -10,7 +10,7 @@ namespace UMA.CharacterSystem.Editors
 	public class DynamicDNAConverterBehaviourEditor : Editor
 	{
 
-		[MenuItem("Assets/Create/UMA/DNA/Dynamic DNA Converter")]
+		[MenuItem("Assets/Create/UMA/DNA/Dynamic DNA Converter Behaviour")]
 		public static void CreateDynamicDNAConverterBehaviour()
 		{
 			CustomAssetUtility.CreatePrefab("DynamicDNAConverterBehaviour", typeof(DynamicDNAConverterBehaviour));
@@ -34,18 +34,12 @@ namespace UMA.CharacterSystem.Editors
 		//moved into legacyDrawer- may still be useful here
 		private List<string> bonesInSkeleton = new List<string>();
 
-		//Other Editors
-		//DynamicUMADNAAsset Editor
-		private Editor thisDUDA = null;
-		public string createDnaAssetName = "";
-		//the DynamicDNAConverterControllerInspector
-		private Editor DDCCEditor = null;
 
 		//Upgrade fields and  bools
 		private bool _upgradeExpanded = false;
 		bool upgradeInfoExpanded = false;
 
-		string upgradeInfo1 = "DynamicDNAConverters now give you the ability to multiple kinds of converters in the same behaviour! This means the same dna can control your SkeletonModifers, Blendshapes, BonePoses etc";
+		string upgradeInfo1 = "DynamicDNAConverterBehaviours now give you the ability to use multiple kinds of converters! This means the same dna can control your SkeletonModifers, Blendshapes, BonePoses etc";
 		string upgradeInfo2 = "The system also comes with a simple API so you can add your own plugins to the system, allowing you to make dna make any changes you can imagine.";
 		string upgradeInfo3 = "Clicking the 'Backup & Upgrade' button below will make a backup of this behaviour and then transfer all its settings over to the new system.";
 
@@ -155,14 +149,13 @@ namespace UMA.CharacterSystem.Editors
 				dnaAsset.isExpanded = EditorGUILayout.Foldout(dnaAsset.isExpanded, "Dynamic DNA Asset", foldoutTipStyle);
 			if (dnaAsset.isExpanded || !drawOldGUI)
 			{
-				GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
 				if (dnaAsset.objectReferenceValue == null)
 				{
 					//show a tip that people need to create or assign a dna asset
-					EditorGUILayout.HelpBox("Create or assign a DNA Asset this converter will use", MessageType.Info);
+					EditorGUILayout.HelpBox("Assign a DNA Asset this Behaviour will use. This defines the names that will be available to the DNA Converters when modifying the Avatar. Often displayed in the UI as 'sliders'", MessageType.Info);
 				}
 				EditorGUI.BeginChangeCheck();
-				EditorGUILayout.PropertyField(dnaAsset, new GUIContent("DNA Asset", "A DynamicUMADnaAsset contains a list of names that define the 'DNA' that the DNA Converters use when modifying the Avatar. Often displayed in the UI as 'sliders'"));
+				EditorGUILayout.PropertyField(dnaAsset, new GUIContent("DNA Asset", "A DNA Asset defines the names that will be available to the DNA Converters when modifying the Avatar. Often displayed in the UI as 'sliders'"));
 				if (EditorGUI.EndChangeCheck())
 				{
 					UpdateNames();
@@ -175,57 +168,6 @@ namespace UMA.CharacterSystem.Editors
 						umaData.umaRecipe.ClearDNAConverters();
 					}
 				}
-				//If there is no dna asset assigned show a button to make one
-				if (dnaAsset.objectReferenceValue == null)
-				{
-					GUILayout.BeginHorizontal();
-					GUILayout.Space(EditorGUI.indentLevel * 15);
-					if (GUILayout.Button(new GUIContent("Create Dynamic DNA Asset")))
-					{
-						var suggestedPath = AssetDatabase.GetAssetPath(target);
-						var suggestedName = target.name + "DNAAsset";
-						var path = EditorUtility.SaveFilePanelInProject("Create a new Dynamic DNA Asset", suggestedName, "asset", "some message", suggestedPath);
-						if (path != "")
-						{
-							var newDnaAsset = CustomAssetUtility.CreateAsset<DynamicUMADnaAsset>(path, false);
-							if (newDnaAsset != null)
-							{
-								//set this asset as the used asset
-								dnaAsset.objectReferenceValue = newDnaAsset;
-								serializedObject.ApplyModifiedProperties();
-								createDnaAssetName = "";
-							}
-							UpdateNames();
-							if (minimalMode)
-							{
-								//force the Avatar to update its dna and dnaconverter dictionaries
-								umaData.umaRecipe.ClearDna();
-								umaData.umaRecipe.ClearDNAConverters();
-							}
-						}
-					}
-					GUILayout.EndHorizontal();
-				}
-				//Otherwise show the DNA Assets Editor
-				else
-				{
-					if (thisDUDA == null)
-					{
-						thisDUDA = Editor.CreateEditor((DynamicUMADnaAsset)dnaAsset.objectReferenceValue, typeof(UMA.CharacterSystem.Editors.DynamicUMADnaAssetEditor));
-					}
-					else if (thisDUDA.target != (DynamicUMADnaAsset)dnaAsset.objectReferenceValue)
-					{
-						thisDUDA = Editor.CreateEditor((DynamicUMADnaAsset)dnaAsset.objectReferenceValue, typeof(UMA.CharacterSystem.Editors.DynamicUMADnaAssetEditor));
-					}
-					EditorGUI.BeginChangeCheck();
-					thisDUDA.OnInspectorGUI();
-					if (EditorGUI.EndChangeCheck())
-					{
-						UpdateNames();
-					}
-				}
-				//EditorGUI.indentLevel--;
-				GUIHelper.EndVerticalPadded(3);
 			}
 			serializedObject.ApplyModifiedProperties();
 		}
@@ -236,33 +178,34 @@ namespace UMA.CharacterSystem.Editors
 				converterControllerProp.isExpanded = EditorGUILayout.Foldout(converterControllerProp.isExpanded, "DNA Converter Settings", foldoutTipStyle);
 			if (converterControllerProp.isExpanded || !drawOldGUI)
 			{
-				//For some reason this is more indented than the one above and the one below- even if I dont draw the one above (DNA Asset)!!??
-				GUIHelper.BeginVerticalPadded(0, new Color(0.75f, 0.875f, 1f, 0.3f));
-				GUILayout.Space(3);
-				EditorGUI.BeginChangeCheck();
-				EditorGUILayout.PropertyField(converterControllerProp);
-				if (EditorGUI.EndChangeCheck())
+				if (!drawOldGUI)
 				{
-					//Make sure the converterController has this target as its converterBehaviour value
-					if(converterControllerProp.objectReferenceValue != null)
+					if (converterControllerProp.objectReferenceValue == null)
 					{
-						((DynamicDNAConverterController)converterControllerProp.objectReferenceValue).converterBehaviour = target as DynamicDNAConverterBehaviour;
-						//We dont save because the same controller can be used by lots of converters
+						//show a tip that people need to create or assign a dna asset
+						EditorGUILayout.HelpBox("Assign a Converter Controller Asset this Behaviour will use. This asset defines the DNA Converters (SkeletonModifiers, BonePoses etc) that will make changes to the Avatar based on the values for the DNA names defined above", MessageType.Info);
 					}
-					serializedObject.ApplyModifiedProperties();
-					serializedObject.Update();
-					initialized = false;
-					Init();
+
+					EditorGUI.BeginChangeCheck();
+					EditorGUILayout.PropertyField(converterControllerProp, new GUIContent("Converter Controller", "The Converter Controller Asset defines the DNA Converters (SkeletonModifiers, BonePoses etc) that will make changes to the Avatar based on the values for the DNA names defined above"));
+					if (EditorGUI.EndChangeCheck())
+					{
+						//Make sure the converterController has this target as its converterBehaviour value
+						if (converterControllerProp.objectReferenceValue != null)
+						{
+							((DynamicDNAConverterController)converterControllerProp.objectReferenceValue).converterBehaviour = target as DynamicDNAConverterBehaviour;
+							//We dont save because the same controller can be used by lots of converters
+						}
+						serializedObject.ApplyModifiedProperties();
+						serializedObject.Update();
+						initialized = false;
+						Init();
+					}
 				}
 
 				if (converterControllerProp.objectReferenceValue != null)
 				{
-					if (DDCCEditor == null)
-						DDCCEditor = Editor.CreateEditor((DynamicDNAConverterController)converterControllerProp.objectReferenceValue, typeof(DynamicDNAConverterControllerInspector));
-					else if (DDCCEditor.target != (DynamicDNAConverterController)converterControllerProp.objectReferenceValue)
-						DDCCEditor = Editor.CreateEditor((DynamicDNAConverterController)converterControllerProp.objectReferenceValue, typeof(DynamicDNAConverterControllerInspector));
-					GUILayout.Space(5);
-					DDCCEditor.OnInspectorGUI();
+					((DynamicDNAConverterController)converterControllerProp.objectReferenceValue).converterBehaviour = target as DynamicDNAConverterBehaviour;
 					//if there is an UMABonePose popup inspector open set the umaData as its sourceUMA
 					if (UMA.PoseTools.UMABonePoseEditor.livePopupEditor != null)
 					{
@@ -284,8 +227,6 @@ namespace UMA.CharacterSystem.Editors
 						_legacyDrawer.DrawLegacyStartingPoseGUI();
 					}
 				}
-				GUILayout.Space(3);
-				GUIHelper.EndVerticalPadded(0);
 			}
 		}
 
@@ -304,7 +245,7 @@ namespace UMA.CharacterSystem.Editors
 				{
 					EditorGUILayout.HelpBox("Please click the 'Backup & Upgrade' button to upgrade this ConverterBehaviour", MessageType.Info);
 					var moreRect = EditorGUILayout.GetControlRect();
-					GUIHelper.ToolbarStyleFoldout(moreRect, "more", ref upgradeInfoExpanded, GUIStyle.none);
+					GUIHelper.ToolbarStyleFoldout(moreRect, "More Info", ref upgradeInfoExpanded, GUIStyle.none);
 					if (upgradeInfoExpanded)
 					{
 						EditorGUILayout.HelpBox(upgradeInfo1, MessageType.None);
@@ -374,7 +315,9 @@ namespace UMA.CharacterSystem.Editors
 		{
 			if (_target.BackupAndUpgrade())
 			{
-				//show wiki for the new world?
+				drawOldGUI = false;
+				EditorUtility.DisplayDialog("Upgrade Complete!", "Your SkeletonModifiers and StartingPose (if set) can now be found in the new 'Converter Controller'. The Converter Controller allows you to define many more types of DNA Converters than before. You can inspect it by clicking the 'Inspect' button next to the field", "Got it!");
+				
 			}
 		}
 	}

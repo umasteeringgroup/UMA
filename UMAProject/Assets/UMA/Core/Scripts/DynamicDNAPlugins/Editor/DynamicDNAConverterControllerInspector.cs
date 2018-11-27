@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEditor.IMGUI.Controls;
+using UnityEngine.Events;
 
 namespace UMA.Editors
 {
@@ -13,9 +14,17 @@ namespace UMA.Editors
 	public class DynamicDNAConverterControllerInspector : Editor
 	{
 
+		[MenuItem("Assets/Create/UMA/DNA/Dynamic DNA Converter Controller")]
+		public static void CreateDynamicDNAConverterController()
+		{
+			DynamicDNAConverterController.CreateDynamicDNAConverterAsset();
+		}
+
 		#region FIELDS
 
 		private static DynamicDNAConverterControllerInspector _livePopupEditor;
+
+		public static UnityEvent OnLivePopupEditorChange = new UnityEvent();
 
 		DynamicDNAConverterController _target;
 
@@ -76,6 +85,8 @@ namespace UMA.Editors
 		"The 'View By DNA Name' tab lists all the dna names the converters can use. Expanding a dna name shows you all the converters that use that dna name in any way."
 		};
 
+		private bool changed = false;
+
 		#endregion
 
 		#region PUBLIC PROPERTIES
@@ -88,6 +99,17 @@ namespace UMA.Editors
 		public static DynamicDNAConverterControllerInspector livePopupEditor
 		{
 			get { return _livePopupEditor; }
+		}
+
+		public static bool livePopupEditorChanged
+		{
+			get
+			{
+				if (_livePopupEditor != null)
+					return _livePopupEditor.changed;
+				else
+					return false;
+			}
 		}
 
 		#endregion
@@ -195,6 +217,7 @@ namespace UMA.Editors
 				DrawControllersViewTabs();
 
 				//Draw the GUI for each initialized plugin depending on whether the 'By Plugin' view or the 'By DNA View' was selected
+				EditorGUI.BeginChangeCheck();
 				if (_view == false)
 				{
 					DrawConverters();
@@ -203,6 +226,14 @@ namespace UMA.Editors
 				{
 					DrawConvertersByDNA();
 				}
+				if (EditorGUI.EndChangeCheck())
+				{
+					changed = true;
+					if (_livePopupEditor != null && _livePopupEditor == this)
+						OnLivePopupEditorChange.Invoke();
+				}
+				else
+					changed = false;
 			}
 
 			EditorGUILayout.Space();
@@ -567,8 +598,9 @@ namespace UMA.Editors
 				EditorGUI.BeginChangeCheck();
 				property.stringValue = EditorGUI.TextField(position, selected);
 				if (EditorGUI.EndChangeCheck())
-				{
+				{	
 					property.serializedObject.ApplyModifiedProperties();
+					GUI.changed = true;
 				}
 			}
 			else
@@ -601,6 +633,7 @@ namespace UMA.Editors
 						property.stringValue = "";
 					}
 					property.serializedObject.ApplyModifiedProperties();
+					GUI.changed = true;
 				}
 			}
 		}

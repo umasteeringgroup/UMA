@@ -33,6 +33,8 @@ namespace UMA.Editors
 		//Could be used to make all swatches show a -1f -> +1f range- isn't right now
 		private Rect rangesRect;
 
+		private bool changed = false;
+
 		private void Init()
 		{
 			if (initialized)
@@ -76,9 +78,16 @@ namespace UMA.Editors
 			var prevIndent = EditorGUI.indentLevel;
 			EditorGUI.indentLevel = 0;
 			DrawPopup(fieldRect, property);
+
 			EditorGUI.indentLevel = prevIndent;
 
 			CopyValuesFromHelper(property, _helper);
+
+			if (changed)
+			{
+				GUI.changed = true;
+				changed = false;
+			}
 
 			EditorGUI.EndProperty();
 		}
@@ -150,8 +159,9 @@ namespace UMA.Editors
 			_helper = new DNAEvaluationGraph.EditorHelper(selectedGraph);
 			CopyValuesFromHelper(property, _helper);
 			UpdateCachedToolTip(_helper.Target);
-			//I cannot for the life of me get a change to register in the inspector when an item is chosen from the custom popup!
 			GUI.changed = true;
+			//store the change for the next update
+			changed = true;
 			GUI.FocusControl("DNAEvaluationGraph");
 		}
 

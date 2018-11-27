@@ -10,9 +10,13 @@ namespace UMA.CharacterSystem.Editors
 	[CustomEditor(typeof(DynamicUMADnaAsset))]
 	public class DynamicUMADnaAssetEditor : Editor
 	{
-		public static DynamicUMADnaAssetEditor _livePopupEditor;
+		//The DNAAsset field now has an 'Inspect' button, that shows the asset in a popup window. This makes it easier for users to change their dna names
+		//without loosing track of the behaviour they were inspecting that uses the DNA Asset (particularly helpful when customizing in playmode)
+		private static DynamicUMADnaAssetEditor _livePopupEditor;
 
-		public string newDNAName = "";
+		private string newDNAName = "";
+		private bool canAddNewDNAName = false;
+
 
 		int DNAAssetPickerID = 0;
 
@@ -21,10 +25,46 @@ namespace UMA.CharacterSystem.Editors
 		int selectedAddMethod = 0;
 
 		bool editTypeHashEnabled = false;
-		bool otherAddOptionsOpen = false;
+		bool _importToolsExpanded = false;
 
-		bool _selfIsExpanded = false;
 		bool _helpIsExpanded = false;
+
+		private Texture2D _importIcon;
+		private GUIStyle _importStyle;
+		private GUIContent _importContent;
+
+		private Texture2D importIcon
+		{
+			get
+			{
+				if (_importIcon != null)
+					return _importIcon;
+				//Chek EditorStyles has been set up
+				if (EditorStyles.label == null)
+					return new Texture2D(4, 4);
+				_importIcon = EditorGUIUtility.FindTexture("CollabPull");
+				return _importIcon;
+			}
+		}
+
+		private GUIContent importContent
+		{
+			get
+			{
+				_importStyle= new GUIStyle();
+				if (_importContent != null && _importIcon != null)
+					return _importContent;
+				//Check EditorStyles has been set up
+				if (EditorStyles.label == null)
+					return new GUIContent("", "Show Import Names Tools");
+				_importContent = new GUIContent("", "Show Import Names Tools");
+				_importStyle = new GUIStyle(EditorStyles.label);
+				_importStyle.fixedHeight = importIcon.height + 4f;
+				_importStyle.contentOffset = new Vector2(-4f, -0f);
+				_importContent.image = _importIcon;
+				return _importContent;
+			}
+		}
 
 		//this is an array because the help drawer takes an array so it can draw multiple paragraphs
 		string[] _help = new string[]
@@ -69,6 +109,10 @@ namespace UMA.CharacterSystem.Editors
 			_dnaNameList = new ReorderableList(serializedObject, serializedObject.FindProperty("Names"), true, true, false, false);
 			_dnaNameList.drawElementCallback = DrawElementCallback;
 			_dnaNameList.drawHeaderCallback = DrawHeaderCallback;
+			_dnaNameList.headerHeight = 0f;
+			_dnaNameList.footerHeight = (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing * 2);
+			//we really want the add names controls to go in a modified footer for the list for consistancy
+			_dnaNameList.drawFooterCallback = DrawFooterCallback;
 		}
 
 		public override void OnInspectorGUI()
@@ -79,179 +123,131 @@ namespace UMA.CharacterSystem.Editors
 			serializedObject.Update();
 			GUILayout.Space(5);
 			var dnaHeaderRect = EditorGUILayout.GetControlRect();
-			//I dont want this to be a foldout now I just want it to be a header with a help icon and an import icon
-			//GUIHelper.ToolbarStyleFoldout(dnaHeaderRect, "DYNAMIC DNA", _help, ref _selfIsExpanded, ref _helpIsExpanded);
-			//this is good but I want optional help and 'impoort'- but maybe thats too specific to be genericly in GUIHelper
-			//maybe GUIHelper can return its rect here so I can put the import icon over the top?
+
 			GUIHelper.ToolbarStyleHeader(dnaHeaderRect, new GUIContent("DYNAMIC DNA"), _help, ref _helpIsExpanded);
-			_selfIsExpanded = true;
-			if (_selfIsExpanded)
+
+			var importBtnRect = new Rect(dnaHeaderRect.xMax -40f, dnaHeaderRect.yMin + 2f, 20f, EditorGUIUtility.singleLineHeight);
+			_importToolsExpanded = GUI.Toggle(importBtnRect, _importToolsExpanded, importContent, _importStyle);
+
+			GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
+
+			SerializedProperty Names = serializedObject.FindProperty("Names");
+
+			if (_importToolsExpanded)
 			{
-				GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
+				DrawImportNamesTools();
+			}
 
-				SerializedProperty dnaTypeHash = serializedObject.FindProperty("dnaTypeHash");
+			SerializedProperty dnaTypeHash = serializedObject.FindProperty("dnaTypeHash");
 
-				Rect hashEditorRect = GUILayoutUtility.GetRect(0.0f, EditorGUIUtility.singleLineHeight, GUILayout.ExpandWidth(true));
-				var hashLabelRect = hashEditorRect;
-				hashLabelRect.xMax = hashEditorRect.xMax / 3;
-				var hashBtnRect = hashEditorRect;
-				hashBtnRect.xMin = hashLabelRect.xMax + (EditorGUI.indentLevel * 20);
-				hashBtnRect.xMax = hashBtnRect.xMin + 50 + (EditorGUI.indentLevel * 20);
-				var hashFieldRect = hashEditorRect;
-				hashFieldRect.xMin = hashBtnRect.xMax - ((EditorGUI.indentLevel * 20) - 10);
-				if (editTypeHashEnabled)
+			Rect hashEditorRect = GUILayoutUtility.GetRect(0.0f, EditorGUIUtility.singleLineHeight, GUILayout.ExpandWidth(true));
+			var hashLabelRect = hashEditorRect;
+			hashLabelRect.xMax = hashEditorRect.xMax / 3;
+			var hashBtnRect = hashEditorRect;
+			hashBtnRect.xMin = hashLabelRect.xMax + (EditorGUI.indentLevel * 20);
+			hashBtnRect.xMax = hashBtnRect.xMin + 50 + (EditorGUI.indentLevel * 20);
+			var hashFieldRect = hashEditorRect;
+			hashFieldRect.xMin = hashBtnRect.xMax - ((EditorGUI.indentLevel * 20) - 10);
+			if (editTypeHashEnabled)
+			{
+				EditorGUI.LabelField(hashLabelRect, new GUIContent(dnaTypeHash.displayName, _dnaTypehashTooltip));
+				if (GUI.Button(hashBtnRect, new GUIContent("Save", _dnaTypehashTooltip)))
 				{
-					//EditorGUILayout.BeginHorizontal();
-					EditorGUI.LabelField(hashLabelRect, new GUIContent(dnaTypeHash.displayName, _dnaTypehashTooltip));
-					if (GUI.Button(hashBtnRect, new GUIContent("Save", _dnaTypehashTooltip)))
-					{
-						editTypeHashEnabled = false;
-					}
-					var originalDnaTypeHash = dnaTypeHash;
-					EditorGUI.BeginChangeCheck();
-					EditorGUI.PropertyField(hashFieldRect, dnaTypeHash, new GUIContent(""));
-					if (EditorGUI.EndChangeCheck())
-					{
-						//we MUST NOT let this have the same TypeHash as UMADnaHumanoid or UMADnaTutorial, so if people randomly choose that value- dont assign it
-						if (dnaTypeHash.intValue == UMAUtils.StringToHash("UMADnaHumanoid") || dnaTypeHash.intValue == UMAUtils.StringToHash("UMADnaTutorial"))
-						{
-							Debug.LogWarning("You are trying to set a DynamicDNA to the same hash as a UMADnaHumanoid or UMADnaTutorial dna- this is not allowed");
-							dnaTypeHash = originalDnaTypeHash;
-						}
-						else
-						{
-							serializedObject.ApplyModifiedProperties();
-						}
-					}
-					//EditorGUILayout.EndHorizontal();
+					editTypeHashEnabled = false;
 				}
-				else
-				{
-					//EditorGUILayout.BeginHorizontal();
-					EditorGUI.LabelField(hashLabelRect, new GUIContent(dnaTypeHash.displayName, _dnaTypehashTooltip));
-					if (GUI.Button(hashBtnRect, new GUIContent("Edit", _dnaTypehashTooltip)))
-					{
-						if (EditorUtility.DisplayDialog("Really Change the Hash?", "If you change the DNA Assets hash, any recipes that use this DNA will need to be inspected so they update to the new value. Are you sure?", "Yes", "Cancel"))
-							editTypeHashEnabled = true;
-					}
-					EditorGUI.BeginDisabledGroup(true);
-					EditorGUI.PropertyField(hashFieldRect, dnaTypeHash, new GUIContent(""));
-					EditorGUI.EndDisabledGroup();
-					//EditorGUILayout.EndHorizontal();
-				}
-				EditorGUILayout.Space();
-				SerializedProperty Names = serializedObject.FindProperty("Names");
-
-				if (Names.arraySize == 0)
-				{
-					EditorGUILayout.HelpBox("Define your the names for you dna by adding them below", MessageType.Info);
-				}
-				//OTHER OPTIONS FOR ADDING/DELETING NAMES - show in a foldout
-				EditorGUI.indentLevel++;
-				otherAddOptionsOpen = EditorGUILayout.Foldout(otherAddOptionsOpen, "Add/Delete Names Options");
-				EditorGUI.indentLevel--;
-				//
-				if (otherAddOptionsOpen)
-				{
-					//drop area for importing names from other dna assets
-					var dropArea = GUILayoutUtility.GetRect(0.0f, 60.0f, GUILayout.ExpandWidth(true));
-					dropArea.xMin = dropArea.xMin + (EditorGUI.indentLevel * 15);
-					GUI.Box(dropArea, "Drag DynamicUMADNAAssets here to import their names. Click to pick.");
-					var AddMethods = new GUIContent[dnaNamesAddOpts.Count];
-					for (int i = 0; i < dnaNamesAddOpts.Count; i++)
-						AddMethods[i] = new GUIContent(dnaNamesAddOpts[i]);
-					Rect selectedAddMethodRect = dropArea;
-					selectedAddMethodRect.yMin = dropArea.yMax - EditorGUIUtility.singleLineHeight - 5;
-					selectedAddMethodRect.xMin = dropArea.xMin - ((EditorGUI.indentLevel * 10) - 10);
-					selectedAddMethodRect.xMax = dropArea.xMax - ((EditorGUI.indentLevel * 10) + 10);
-					selectedAddMethod = EditorGUI.Popup(selectedAddMethodRect, new GUIContent("On Import", "Choose whether to 'Add' the names to the current list, or 'Replace' the names with the new list"), selectedAddMethod, AddMethods);
-
-					var namesList = new List<string>(Names.arraySize);
-					for (int i = 0; i < Names.arraySize; i++)
-						namesList.Add(Names.GetArrayElementAtIndex(i).stringValue);
-
-					ImportDNADropArea(dropArea, namesList, selectedAddMethod);
-
-					EditorGUILayout.Space();
-
-					//Clear all and Add Defaults Buttons
-					Rect clearAndDefaultsRect = GUILayoutUtility.GetRect(0.0f, EditorGUIUtility.singleLineHeight, GUILayout.ExpandWidth(true));
-					clearAndDefaultsRect.xMin = clearAndDefaultsRect.xMin + (EditorGUI.indentLevel * 15);
-					var defaultsButRect = clearAndDefaultsRect;
-					var clearButRect = clearAndDefaultsRect;
-					defaultsButRect.width = clearAndDefaultsRect.width / 2;
-					clearButRect.xMin = defaultsButRect.xMax;
-					clearButRect.width = clearAndDefaultsRect.width / 2;
-					if (GUI.Button(defaultsButRect, new GUIContent("Add Default Names", "Adds the default names as used by UMA Human Male DNA")))
-					{
-						AddDefaultNames();
-					}
-					EditorGUI.BeginDisabledGroup(Names.arraySize == 0);
-					if (GUI.Button(clearButRect, new GUIContent("Clear All Names", "Clears the current names. Cannot be undone.")))
-					{
-						if (EditorUtility.DisplayDialog("Really Clear All Names?", "This will delete all the names in the list and cannot be undone. Are you sure?", "Yes", "Cancel"))
-							(target as DynamicUMADnaAsset).Names = new string[0];
-					}
-					EditorGUI.EndDisabledGroup();
-					EditorGUILayout.Space();
-				}
-				//ACTUAL NAMES LIST
-				_dnaNameList.DoLayoutList();
-				//ADD NEW NAME BUTTON
-				EditorGUILayout.BeginHorizontal();
-				bool canAdd = true;
+				var originalDnaTypeHash = dnaTypeHash;
 				EditorGUI.BeginChangeCheck();
-				newDNAName = EditorGUILayout.TextField(newDNAName);//this wont bloody clear after the name is added
+				EditorGUI.PropertyField(hashFieldRect, dnaTypeHash, new GUIContent(""));
 				if (EditorGUI.EndChangeCheck())
 				{
-					//checking the text field seems to only work if its done OUTSIDE this change check ?!?!
-				}
-				//check the name is unique
-				if (newDNAName != "")
-				{
-					for (int ni = 0; ni < Names.arraySize; ni++)
+					//we MUST NOT let this have the same TypeHash as UMADnaHumanoid or UMADnaTutorial, so if people randomly choose that value- dont assign it
+					if (dnaTypeHash.intValue == UMAUtils.StringToHash("UMADnaHumanoid") || dnaTypeHash.intValue == UMAUtils.StringToHash("UMADnaTutorial"))
 					{
-						if (Names.GetArrayElementAtIndex(ni).stringValue == newDNAName)
-						{
-							canAdd = false;
-						}
+						Debug.LogWarning("You are trying to set a DynamicDNA to the same hash as a UMADnaHumanoid or UMADnaTutorial dna- this is not allowed");
+						dnaTypeHash = originalDnaTypeHash;
+					}
+					else
+					{
+						serializedObject.ApplyModifiedProperties();
 					}
 				}
-				if (GUILayout.Button("Add DNA Name"))
-				{
-					if (newDNAName == "")
-						return;
-					if (canAdd)
-					{
-						//var numNames = Names.arraySize;
-						Names.InsertArrayElementAtIndex(0);
-						Names.GetArrayElementAtIndex(0).stringValue = newDNAName;
-						Names.serializedObject.ApplyModifiedProperties();
-						newDNAName = "";
-						EditorGUIUtility.keyboardControl = 0;
-					}
-				}
-				EditorGUILayout.EndHorizontal();
-				//message that the name exists
-				if (canAdd == false)
-				{
-					EditorGUILayout.HelpBox("That name is already in use.", MessageType.Warning);
-				}
-
-				//Clear out indices that have been added to the remove list.
-				for (int i = _dnaNameList.serializedProperty.arraySize - 1; i >= 0; i--)
-				{
-					if (_removeList.Contains(i))
-						_dnaNameList.serializedProperty.DeleteArrayElementAtIndex(i);
-				}
-				_removeList.Clear();
-
-
-				serializedObject.ApplyModifiedProperties();
-
-				GUIHelper.EndVerticalPadded(3);
 			}
+			else
+			{
+				EditorGUI.LabelField(hashLabelRect, new GUIContent(dnaTypeHash.displayName, _dnaTypehashTooltip));
+				if (GUI.Button(hashBtnRect, new GUIContent("Edit", _dnaTypehashTooltip)))
+				{
+					if (EditorUtility.DisplayDialog("Really Change the Hash?", "If you change the DNA Assets hash, any recipes that use this DNA will need to be inspected so they update to the new value. Are you sure?", "Yes", "Cancel"))
+						editTypeHashEnabled = true;
+				}
+				EditorGUI.BeginDisabledGroup(true);
+				EditorGUI.PropertyField(hashFieldRect, dnaTypeHash, new GUIContent(""));
+				EditorGUI.EndDisabledGroup();
+			}
+			EditorGUILayout.Space();
+
+			if (Names.arraySize == 0)
+			{
+				EditorGUILayout.HelpBox("Define your the names for your dna by adding them below", MessageType.Info);
+			}
+			//ACTUAL NAMES LIST
+			_dnaNameList.DoLayoutList();
+			//ADD NEW NAME BUTTON
+			//Moved Add controls into the Reorderable list footer for consistancy
+
+			//message that the name exists
+			if (!string.IsNullOrEmpty(newDNAName) && canAddNewDNAName == false)
+			{
+				EditorGUILayout.HelpBox("That name is already in use.", MessageType.Warning);
+			}
+
+			//Clear out indices that have been added to the remove list.
+			for (int i = _dnaNameList.serializedProperty.arraySize - 1; i >= 0; i--)
+			{
+				if (_removeList.Contains(i))
+					_dnaNameList.serializedProperty.DeleteArrayElementAtIndex(i);
+			}
+			_removeList.Clear();
+
+
+			serializedObject.ApplyModifiedProperties();
+
+			GUIHelper.EndVerticalPadded(3);
 			GUILayout.Space(5);
+		}
+
+		private void DrawImportNamesTools()
+		{
+			SerializedProperty Names = serializedObject.FindProperty("Names");
+			//drop area for importing names from other dna assets
+			var dropArea = GUILayoutUtility.GetRect(0.0f, 60.0f, GUILayout.ExpandWidth(true));
+			dropArea.xMin = dropArea.xMin + (EditorGUI.indentLevel * 15);
+			GUI.Box(dropArea, "Drag DynamicUMADNAAssets here to import their names. Click to pick.");
+			var AddMethods = new GUIContent[dnaNamesAddOpts.Count];
+			for (int i = 0; i < dnaNamesAddOpts.Count; i++)
+				AddMethods[i] = new GUIContent(dnaNamesAddOpts[i]);
+			Rect selectedAddMethodRect = dropArea;
+			selectedAddMethodRect.yMin = dropArea.yMax - EditorGUIUtility.singleLineHeight - 5;
+			selectedAddMethodRect.xMin = dropArea.xMin - ((EditorGUI.indentLevel * 10) - 10);
+			selectedAddMethodRect.xMax = dropArea.xMax - ((EditorGUI.indentLevel * 10) + 10);
+			selectedAddMethod = EditorGUI.Popup(selectedAddMethodRect, new GUIContent("On Import", "Choose whether to 'Add' the names to the current list, or 'Replace' the names with the new list"), selectedAddMethod, AddMethods);
+
+			var namesList = new List<string>(Names.arraySize);
+			for (int i = 0; i < Names.arraySize; i++)
+				namesList.Add(Names.GetArrayElementAtIndex(i).stringValue);
+
+			ImportDNADropArea(dropArea, namesList, selectedAddMethod);
+
+			EditorGUILayout.Space();
+
+			//Add Defaults Buttons
+			Rect defaultsButRect = GUILayoutUtility.GetRect(0.0f, EditorGUIUtility.singleLineHeight, GUILayout.ExpandWidth(true));
+			defaultsButRect.xMin = defaultsButRect.xMin + (EditorGUI.indentLevel * 15);
+			if (GUI.Button(defaultsButRect, new GUIContent("Import Default Names", "Adds the default names as used by UMA Human Male DNA")))
+			{
+				AddDefaultNames();
+			}
+			EditorGUILayout.Space();
 		}
 
 		private void ImportDNADropArea(Rect dropArea, List<string> dnaNames, int addMethod)
@@ -360,6 +356,72 @@ namespace UMA.CharacterSystem.Editors
 		private void DrawHeaderCallback(Rect rect)
 		{
 			//EditorGUI.LabelField(rect, "DNA Names List (" + _dnaNameList.serializedProperty.arraySize + ")", EditorStyles.helpBox);
+		}
+
+		private void DrawFooterCallback(Rect rect)
+		{
+			var Names = _dnaNameList.serializedProperty;
+			var ROLDefaults = new ReorderableList.Defaults();
+			var padding = 4f;
+			var _addBtnWidth = 100f + padding;
+			var _labelWidth = 68f;
+
+			Rect addRect = rect;
+
+			addRect.xMin = addRect.xMax - 420 > addRect.xMin ? addRect.xMax - 420 : addRect.xMin;
+			addRect.height = (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing * 2);
+			var addBtnRect = new Rect(rect.xMax - (_addBtnWidth) - (padding * 2), addRect.yMin, ((_addBtnWidth / 5) * 2) - padding, EditorGUIUtility.singleLineHeight);
+			var fieldRect = new Rect(addRect.xMin + (padding * 2), addRect.yMin, addRect.width - _addBtnWidth - (padding * 6), EditorGUIUtility.singleLineHeight);
+			var labelRect = new Rect(fieldRect.xMin, fieldRect.yMin, _labelWidth, fieldRect.height);
+			fieldRect.xMin = labelRect.xMax + (padding);
+
+			var clearBtnRect = new Rect(addBtnRect.xMax + padding, addRect.yMin, ((_addBtnWidth / 5) * 3), EditorGUIUtility.singleLineHeight);
+
+			if (Event.current.type == EventType.Repaint)
+			{
+				var prevFooterFixedHeight = ROLDefaults.footerBackground.fixedHeight;
+				ROLDefaults.footerBackground.fixedHeight = addRect.height;
+				ROLDefaults.footerBackground.Draw(addRect, false, false, false, false);
+				ROLDefaults.footerBackground.fixedHeight = prevFooterFixedHeight;
+			}
+			EditorGUI.LabelField(labelRect, new GUIContent("Add Name:", "Add a DNA Name to the list"));
+			newDNAName = EditorGUI.TextField(fieldRect, newDNAName);
+			if (newDNAName != "")
+			{
+				canAddNewDNAName = true;
+				for (int ni = 0; ni < Names.arraySize; ni++)
+				{
+					if (Names.GetArrayElementAtIndex(ni).stringValue == newDNAName)
+					{
+						canAddNewDNAName = false;
+					}
+				}
+			}
+			if (GUI.Button(addBtnRect,"Add"))
+			{
+				if (newDNAName == "")
+					return;
+				if (canAddNewDNAName)
+				{
+					Names.arraySize = Names.arraySize + 1;
+					Names.GetArrayElementAtIndex(Names.arraySize - 1).stringValue = newDNAName;
+					Names.serializedObject.ApplyModifiedProperties();
+					newDNAName = "";
+					EditorGUIUtility.keyboardControl = 0;
+				}
+			}
+			EditorGUI.BeginDisabledGroup(Names.arraySize == 0);
+			if (GUI.Button(clearBtnRect, new GUIContent("Clear All", "Clears all the names from the list. Cannot be undone")))
+			{
+				if (EditorUtility.DisplayDialog("Really Clear All Names?", "This will delete all the names in the list and cannot be undone. Are you sure?", "Yes", "Cancel"))
+				{
+					Names.arraySize = 0;
+					Names.serializedObject.ApplyModifiedProperties();
+
+				}
+			}
+			EditorGUI.EndDisabledGroup();
+
 		}
 
 

@@ -730,7 +730,7 @@ namespace UMA.Editors
 
 		private void Delete()
 		{
-			if (EditorUtility.DisplayDialog("Delete " + _target.name, "This will delete " + _target.name + " plugin and ALL its settings. Are you sure?", "Delete", "Cancel"))
+			if (EditorUtility.DisplayDialog("Delete " + _target.name, "IMPORTANT: ConverterControllers can be shared by multiple ConverterBehaviour prefabs. Deleting " + _target.name + " from it will affect all the converter behaviours that use it. Really delete " + _target.name + "?", "Delete", "Cancel"))
 			{
 				_converter.DeletePlugin(_target);
 			}
@@ -744,7 +744,7 @@ namespace UMA.Editors
 
 		private void ClearSettings()
 		{
-			if (EditorUtility.DisplayDialog("Clear " + _target.name, "This will clear ALL " + _target.name + "'s settings. Are you sure?", "Clear", "Cancel"))
+			if (EditorUtility.DisplayDialog("Clear " + _target.name, "IMPORTANT: ConverterControllers can be shared by multiple ConverterBehaviour prefabs. Clearing " + _target.name + "'s settings will affect all the converter behaviours that use it. Really clear " + _target.name + "'s settings?", "Clear", "Cancel"))
 			{
 				_converterElementsProp.arraySize = 0;
 				serializedObject.ApplyModifiedProperties();
@@ -840,7 +840,7 @@ namespace UMA.Editors
 			if (selectedIndex == -1)
 			{
 				if (!string.IsNullOrEmpty(selected))
-					ret.Insert(0, selected);
+					ret.Insert(0, selected);//This is a bit confusing it needs to show as (missing)
 			}
 			selectedIndex = ret.IndexOf(selected);
 			return ret;

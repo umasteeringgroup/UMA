@@ -29,6 +29,7 @@ MonoBehaviour:
   m_Name: SkeletonDNAConverters
   m_EditorClassIdentifier: 
   masterWeight:
+    _masterWeightType: 0
     _globalWeight: 1
     _DNAForWeight:
       _calcOption: 0
@@ -325,7 +326,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 1.5
             _initialized: 1
           - _calcOption: 0
@@ -356,7 +357,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 0.1
             _initialized: 1
           _aggregationMethod: 1
@@ -396,7 +397,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 1.5
             _initialized: 1
           - _calcOption: 0
@@ -427,7 +428,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 0.1
             _initialized: 1
           _aggregationMethod: 1
@@ -470,7 +471,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 1.5
             _initialized: 1
           - _calcOption: 0
@@ -501,7 +502,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 0.1
             _initialized: 1
           _aggregationMethod: 1
@@ -541,7 +542,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 1.5
             _initialized: 1
           - _calcOption: 0
@@ -572,7 +573,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 0.1
             _initialized: 1
           _aggregationMethod: 1
@@ -9383,7 +9384,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 2
             _initialized: 1
           _aggregationMethod: 1
@@ -10434,6 +10435,7 @@ MonoBehaviour:
   m_Name: BlendshapeDNAConverters
   m_EditorClassIdentifier: 
   masterWeight:
+    _masterWeightType: 0
     _globalWeight: 1
     _DNAForWeight:
       _calcOption: 0
@@ -10553,6 +10555,7 @@ MonoBehaviour:
   m_Name: ColorDNAConverters
   m_EditorClassIdentifier: 
   masterWeight:
+    _masterWeightType: 0
     _globalWeight: 1
     _DNAForWeight:
       _calcOption: 0
@@ -10942,11 +10945,12 @@ MonoBehaviour:
   m_Name: BonePoseDNAConverters
   m_EditorClassIdentifier: 
   masterWeight:
+    _masterWeightType: 0
     _globalWeight: 1
     _DNAForWeight:
       _calcOption: 0
       _dnaName: 
-      _dnaNameHash: 0
+      _dnaNameHash: -1
       _evaluator:
         _name: Raw
         _graph:
@@ -11097,6 +11101,7 @@ MonoBehaviour:
   m_Name: OverallScaleDNAConverters
   m_EditorClassIdentifier: 
   masterWeight:
+    _masterWeightType: 0
     _globalWeight: 1
     _DNAForWeight:
       _calcOption: 0

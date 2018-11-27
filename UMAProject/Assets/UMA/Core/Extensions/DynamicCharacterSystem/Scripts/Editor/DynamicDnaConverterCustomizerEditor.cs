@@ -15,7 +15,22 @@ namespace UMA.CharacterSystem.Editors
 		string createBonePoseAssetName = "";
 		bool applyAndResetOnCreateBP = true;
 
-        public override void OnInspectorGUI()
+		//With DynamicDNAPlugins Update the editor for the DNA Converters (Skeleton Modifiers etc) no longer displays directly in the ConverterBehaviour
+		//but is viewed in its own popup inspector (so it is clear to the user its a seperate asset). We still want to know if anything has been edited in there though
+		//so we can do live updates to the avatar in play mode, so subscribe to OnLivePopupEditorChange so we get notified
+		private void OnEnable()
+		{
+			DynamicDNAConverterControllerInspector.OnLivePopupEditorChange.RemoveListener(OnLiveConverterControllerChange);
+			DynamicDNAConverterControllerInspector.OnLivePopupEditorChange.AddListener(OnLiveConverterControllerChange);
+		}
+
+		public void OnLiveConverterControllerChange()
+		{
+			thisDDCC = target as DynamicDNAConverterCustomizer;
+			thisDDCC.UpdateUMA();
+		}
+
+		public override void OnInspectorGUI()
         {
             thisDDCC = target as DynamicDNAConverterCustomizer;
             serializedObject.Update();

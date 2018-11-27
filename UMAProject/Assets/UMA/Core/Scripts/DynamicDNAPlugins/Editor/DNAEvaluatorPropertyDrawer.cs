@@ -253,7 +253,10 @@ namespace UMA.Editors
 			}
 			EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(dnaNameProp.stringValue));
 			//This field is not registering a change when the graph gets picked grrr
+			EditorGUI.BeginChangeCheck();
 			EditorGUI.PropertyField(evaluatorRect, evaluatorProp, GUIContent.none);
+			if (EditorGUI.EndChangeCheck())
+				GUI.changed = true;
 			EditorGUI.PropertyField(multiplierRect, intensityProp, GUIContent.none);
 			EditorGUI.EndDisabledGroup();
 

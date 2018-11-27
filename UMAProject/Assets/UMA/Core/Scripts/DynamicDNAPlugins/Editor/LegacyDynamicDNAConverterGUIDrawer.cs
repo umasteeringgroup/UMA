@@ -445,6 +445,7 @@ namespace UMA.CharacterSystem.Editors
 				{
 					serializedObject.ApplyModifiedProperties();
 					//If this gets set we need to back it up
+					if(thisDDCC != null)
 					thisDDCC.BackupConverter();
 				}
 				//Draw the poses array from the Asset if set or show controls to create a new asset.

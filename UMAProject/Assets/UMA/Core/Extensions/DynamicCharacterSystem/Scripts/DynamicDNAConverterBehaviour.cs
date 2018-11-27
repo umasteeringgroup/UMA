@@ -150,8 +150,8 @@ namespace UMA.CharacterSystem
 
 		public void ApplyDynamicDnaAction(UMAData umaData, UMASkeleton skeleton, bool asReset)
 		{
-			System.Diagnostics.Stopwatch st = new System.Diagnostics.Stopwatch();
-			st.Start();
+			//System.Diagnostics.Stopwatch st = new System.Diagnostics.Stopwatch();
+			//st.Start();
 			UMADnaBase umaDna = null;
 			//reset the live scale on the overallModifiers ready for any adjustments any plugins might make
 			liveScale = -1;
@@ -181,8 +181,8 @@ namespace UMA.CharacterSystem
 			}
 			_overallModifiers.UpdateCharacter(umaData, skeleton, asReset);
 			ApplyDnaCallbackDelegates(umaData);
-			st.Stop();
-			Debug.Log(this.gameObject.name + " ApplyDNA took " + st.Elapsed);
+			//st.Stop();
+			//Debug.Log(this.gameObject.name + " ApplyDNA took " + st.Elapsed);
 		}
 
 		public void ApplyDnaCallbackDelegates(UMAData umaData)

@@ -124,16 +124,12 @@ namespace UMA
 		/// <returns>The evaluated value</returns>
 		public float Evaluate(UMADnaBase dna)
 		{
-			//TODO Figuer out if
-			//if using the lastIndex makes any difference- if it doesn't get rid of it because if the names change this will be wrong anyway, so its more bulletproof if we dont do this
-			//if in DynamicDNA its worth having the hash list of names- again if it makes not difference its better not to because they will only change if the array size changes but a name could get deleted and another added before dna knows
-			//Try to prove to Kenamis that the speed difference is inconsequential (if it is)
-
 			//using    lastIndex building dna takes apprx  00:00:00.0027695
 			//Using    lastIndex modifying dna takes apprx 00:00:00.0004993
 			//notusing lastIndex building dna takes apprx  00:00:00.0035695
 			//notusing lastIndex modifying dna takes apprx 00:00:00.0008447
 			//using lastIndex is about 1/3 faster at the cost of being less robust because the dnaNames could in theory be changed at runtime and lastIndex would then fail
+			//could make the difference between being able to use things like color dna for wrinkle maps etc?
 			if (_lastIndex != -1)
 			{
 				return Evaluate(dna.GetValue(_lastIndex));
