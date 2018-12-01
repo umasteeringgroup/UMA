@@ -9,7 +9,7 @@ namespace UMA
 	public class ColorDNAConverterDNAColorComponentDrawer : PropertyDrawer
 	{
 		private float enableWidth = 30f;
-		private float useDNAWidth = 105f;
+		private float adjustTypeWidth = 145f;
 		//here we want to simplify the drawing on each line
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
@@ -22,28 +22,44 @@ namespace UMA
 			EditorGUI.indentLevel = 0;
 
 			var enableProp = property.FindPropertyRelative("enable");
+			var adjustmentTypeProp = property.FindPropertyRelative("adjustmentType");
 			var useDNAValueProp = property.FindPropertyRelative("useDNAValue");
 			var valueProp = property.FindPropertyRelative("value");
+			var adjustValueProp = property.FindPropertyRelative("adjustValue");
 			var multiplierProp = property.FindPropertyRelative("multiplier");
-			var enableRect = new Rect(position.xMin, position.yMin, enableWidth, position.height);
-			var useDNAValueRect = new Rect(enableRect.xMax, position.yMin, useDNAWidth, position.height);
-			var valueRect = new Rect(position.xMin + EditorGUIUtility.labelWidth - widthMod, position.yMin, position.width - EditorGUIUtility.labelWidth + widthMod, position.height);
+			var enableRect = new Rect(position.xMin, position.yMin, enableWidth, EditorGUIUtility.singleLineHeight);
+			//var useDNAValueRect = new Rect(enableRect.xMax, position.yMin, useDNAWidth, EditorGUIUtility.singleLineHeight);
+			//var adjTypeRect = new Rect(position.xMin + EditorGUIUtility.labelWidth - widthMod, position.yMin, position.width - EditorGUIUtility.labelWidth + widthMod, EditorGUIUtility.singleLineHeight);
+			var adjTypeRect = new Rect(enableRect.xMax, position.yMin, adjustTypeWidth, EditorGUIUtility.singleLineHeight);
+			var useDNAValueRect = new Rect(adjTypeRect.xMax + 4f, position.yMin, position.width - EditorGUIUtility.labelWidth + widthMod, EditorGUIUtility.singleLineHeight);
+			var valueRect = new Rect(enableRect.xMax, position.yMin + EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing, position.width - enableRect.width, EditorGUIUtility.singleLineHeight);
 
 			EditorGUIUtility.labelWidth = 13f;
 			var enableLabel = EditorGUI.BeginProperty(enableRect, new GUIContent(label.text), enableProp);
 			enableProp.boolValue = EditorGUI.Toggle(enableRect, enableLabel, enableProp.boolValue);
 			EditorGUI.EndProperty();
 			EditorGUI.BeginDisabledGroup(!enableProp.boolValue);
-			EditorGUIUtility.labelWidth = 95f;
-			EditorGUI.PropertyField(useDNAValueRect, useDNAValueProp);
-			EditorGUIUtility.labelWidth = 60f;
-			if (useDNAValueProp.boolValue)//Value
+			EditorGUIUtility.labelWidth = 57f;
+			var adjLabel = EditorGUI.BeginProperty(adjTypeRect, new GUIContent("Adj Type"), adjustmentTypeProp);
+			EditorGUI.PropertyField(adjTypeRect, adjustmentTypeProp, adjLabel);
+			EditorGUI.EndProperty();
+			EditorGUIUtility.labelWidth = 55f;
+			var dnaLabel = EditorGUI.BeginProperty(useDNAValueRect, new GUIContent("Use DNA"), useDNAValueProp);
+			EditorGUI.PropertyField(useDNAValueRect, useDNAValueProp, dnaLabel);
+			EditorGUI.EndProperty();
+			EditorGUIUtility.labelWidth = 80f;
+			//value Fields
+			if (useDNAValueProp.boolValue)
 			{
 				EditorGUI.PropertyField(valueRect, multiplierProp);
 			}
-			else//Weight
+			else if(adjustmentTypeProp.enumValueIndex == 0 || adjustmentTypeProp.enumValueIndex == 2 || adjustmentTypeProp.enumValueIndex == 4)
 			{
 				EditorGUI.PropertyField(valueRect, valueProp);
+			}
+			else
+			{
+				EditorGUI.PropertyField(valueRect, adjustValueProp);
 			}
 			EditorGUI.EndDisabledGroup();
 			EditorGUI.indentLevel = prevIndent;
@@ -53,7 +69,7 @@ namespace UMA
 
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 		{
-			return EditorGUIUtility.singleLineHeight;
+			return EditorGUIUtility.singleLineHeight * 2 + EditorGUIUtility.standardVerticalSpacing;
 		}
 	}
 
@@ -65,11 +81,14 @@ namespace UMA
 		{
 			label = EditorGUI.BeginProperty(position, label, property);
 			var foldoutRect = new Rect(position.xMin, position.yMin, EditorGUIUtility.labelWidth, EditorGUIUtility.singleLineHeight);
-			var colorPickerRect = new Rect(foldoutRect.xMax, position.yMin, position.width - foldoutRect.width, EditorGUIUtility.singleLineHeight);
+			//TODO Figure out how to make the colorpicker useful rather than confusing when channels are set to 'Adjust' modes
+			//for now I'm gonna disable it
+			/*var colorPickerRect = new Rect(foldoutRect.xMax, position.yMin, position.width - foldoutRect.width, EditorGUIUtility.singleLineHeight);
 			var propRVal = property.FindPropertyRelative("R").FindPropertyRelative("value");
 			var propGVal = property.FindPropertyRelative("G").FindPropertyRelative("value");
 			var propBVal = property.FindPropertyRelative("B").FindPropertyRelative("value");
 			var propAVal = property.FindPropertyRelative("A").FindPropertyRelative("value");
+			
 			var setColor = new Color(propRVal.floatValue, propGVal.floatValue, propBVal.floatValue, propAVal.floatValue);
 			EditorGUI.BeginChangeCheck();
 			var prevIndent = EditorGUI.indentLevel;
@@ -83,14 +102,14 @@ namespace UMA
 				propBVal.floatValue = setColor.b;
 				propAVal.floatValue = setColor.a;
 				property.serializedObject.ApplyModifiedProperties();
-			}
+			}*/
 			property.isExpanded = EditorGUI.Foldout(foldoutRect, property.isExpanded, label);
 			if (property.isExpanded)
 			{
-				var contentRectR = new Rect(position.xMin, position.yMin + EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing, position.width, EditorGUIUtility.singleLineHeight);
-				var contentRectG = new Rect(position.xMin, contentRectR.yMax, position.width, EditorGUIUtility.singleLineHeight);
-				var contentRectB = new Rect(position.xMin, contentRectG.yMax, position.width, EditorGUIUtility.singleLineHeight);
-				var contentRectA = new Rect(position.xMin, contentRectB.yMax, position.width, EditorGUIUtility.singleLineHeight);
+				var contentRectR = new Rect(position.xMin, position.yMin + EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing, position.width, EditorGUIUtility.singleLineHeight *2f);
+				var contentRectG = new Rect(position.xMin, contentRectR.yMax + (EditorGUIUtility.standardVerticalSpacing * 2), position.width, EditorGUIUtility.singleLineHeight *2f);
+				var contentRectB = new Rect(position.xMin, contentRectG.yMax + (EditorGUIUtility.standardVerticalSpacing * 2), position.width, EditorGUIUtility.singleLineHeight *2f);
+				var contentRectA = new Rect(position.xMin, contentRectB.yMax + (EditorGUIUtility.standardVerticalSpacing * 2), position.width, EditorGUIUtility.singleLineHeight *2f);
 				EditorGUI.PropertyField(contentRectR, property.FindPropertyRelative("R"));
 				EditorGUI.PropertyField(contentRectG, property.FindPropertyRelative("G"));
 				EditorGUI.PropertyField(contentRectB, property.FindPropertyRelative("B"));
@@ -102,7 +121,8 @@ namespace UMA
 		{
 			if (property.isExpanded)
 			{
-				return EditorGUIUtility.singleLineHeight * 5 + EditorGUIUtility.standardVerticalSpacing;
+				var colorChannelsHeight = (EditorGUIUtility.singleLineHeight * 2 + EditorGUIUtility.standardVerticalSpacing) * 4;
+				return colorChannelsHeight + EditorGUIUtility.singleLineHeight + (EditorGUIUtility.standardVerticalSpacing * 4);
 			}
 			return EditorGUIUtility.singleLineHeight;
 		}

@@ -299,22 +299,58 @@ namespace UMA
 
 			public Color GetMultiplier(int overlay, int textureType)
 			{
+				var c = Color.white;
+
 				if (channelMask[overlay] != null && channelMask[overlay].Length > 0)
 				{
-					return channelMask[overlay][textureType];
+					c = channelMask[overlay][textureType];
+					c.r = Mathf.Clamp((c.r + overlayData[overlay].GetComponentAdjustmentsForChannel(c.r, textureType, 0)), 0, 1);
+					c.g = Mathf.Clamp((c.g + overlayData[overlay].GetComponentAdjustmentsForChannel(c.g, textureType, 1)), 0, 1);
+					c.b = Mathf.Clamp((c.b + overlayData[overlay].GetComponentAdjustmentsForChannel(c.b, textureType, 2)), 0, 1);
+					c.a = Mathf.Clamp((c.a + overlayData[overlay].GetComponentAdjustmentsForChannel(c.a, textureType, 3)), 0, 1);
+					return c;
 				}
 				else
 				{
-					if (textureType > 0) return Color.white;
-					if (overlay == 0) return baseColor;
-					return overlayColors[overlay - 1];
+					if (textureType > 0)
+					{
+						c.r = Mathf.Clamp((c.r + overlayData[overlay].GetComponentAdjustmentsForChannel(c.r, textureType, 0)), 0, 1);
+						c.g = Mathf.Clamp((c.g + overlayData[overlay].GetComponentAdjustmentsForChannel(c.g, textureType, 1)), 0, 1);
+						c.b = Mathf.Clamp((c.b + overlayData[overlay].GetComponentAdjustmentsForChannel(c.b, textureType, 2)), 0, 1);
+						c.a = Mathf.Clamp((c.a + overlayData[overlay].GetComponentAdjustmentsForChannel(c.a, textureType, 3)), 0, 1);
+						//return Color.white;
+						return c;
+					}
+					if (overlay == 0)
+					{
+						c = baseColor;
+						c.r = Mathf.Clamp((c.r + overlayData[overlay].GetComponentAdjustmentsForChannel(c.r, textureType, 0)), 0, 1);
+						c.g = Mathf.Clamp((c.g + overlayData[overlay].GetComponentAdjustmentsForChannel(c.g, textureType, 1)), 0, 1);
+						c.b = Mathf.Clamp((c.b + overlayData[overlay].GetComponentAdjustmentsForChannel(c.b, textureType, 2)), 0, 1);
+						c.a = Mathf.Clamp((c.a + overlayData[overlay].GetComponentAdjustmentsForChannel(c.a, textureType, 3)), 0, 1);
+						//return baseColor;
+						return c;
+					}
+					c = overlayColors[overlay - 1];
+					c.r = Mathf.Clamp((c.r + overlayData[overlay].GetComponentAdjustmentsForChannel(c.r, textureType, 0)), 0, 1);
+					c.g = Mathf.Clamp((c.g + overlayData[overlay].GetComponentAdjustmentsForChannel(c.g, textureType, 1)), 0, 1);
+					c.b = Mathf.Clamp((c.b + overlayData[overlay].GetComponentAdjustmentsForChannel(c.b, textureType, 2)), 0, 1);
+					c.a = Mathf.Clamp((c.a + overlayData[overlay].GetComponentAdjustmentsForChannel(c.a, textureType, 3)), 0, 1);
+					//return overlayColors[overlay - 1];
+					return c;
 				}
 			}
 			public Color32 GetAdditive(int overlay, int textureType)
 			{
 				if (channelAdditiveMask[overlay] != null && channelAdditiveMask[overlay].Length > 0)
 				{
-					return channelAdditiveMask[overlay][textureType];
+					var c = channelAdditiveMask[overlay][textureType];
+					c.r = Mathf.Clamp((c.r + overlayData[overlay].GetComponentAdjustmentsForChannel(c.r, textureType, 0, true)), 0, 1);
+					c.g = Mathf.Clamp((c.g + overlayData[overlay].GetComponentAdjustmentsForChannel(c.g, textureType, 1, true)), 0, 1);
+					c.b = Mathf.Clamp((c.b + overlayData[overlay].GetComponentAdjustmentsForChannel(c.b, textureType, 2, true)), 0, 1);
+					c.a = Mathf.Clamp((c.a + overlayData[overlay].GetComponentAdjustmentsForChannel(c.a, textureType, 3, true)), 0, 1);
+					//return channelAdditiveMask[overlay][textureType];
+					return c;
 				}
 				else
 				{
@@ -787,6 +823,23 @@ namespace UMA
 			}
 
 			/// <summary>
+			/// Clears any currently applied ColorAdjusters on all overlays
+			/// </summary>
+			public void ClearOverlayColorAdjusters()
+			{
+				for (int i = 0; i < slotDataList.Length; i++)
+				{
+					if (slotDataList[i] == null)
+						continue;
+					List<OverlayData> slotOverlays = slotDataList[i].GetOverlayList();
+					for(int oi= 0; oi < slotOverlays.Count; oi++)
+					{
+						slotOverlays[oi].colorComponentAdjusters.Clear();
+					}
+				}
+			}
+
+			/// <summary>
 			/// Ensures slots with matching overlays will share the same references.
 			/// </summary>
 			public void MergeMatchingOverlays()
@@ -818,6 +871,8 @@ namespace UMA
 			public void ApplyDNA(UMAData umaData, bool fixUpUMADnaToDynamicUMADna = false)
 			{
 				EnsureAllDNAPresent();
+				//clear any color adjusters from all overlays in the recipe
+				umaData.umaRecipe.ClearOverlayColorAdjusters();
 				//DynamicUMADna:: when loading an older recipe that has UMADnaHumanoid/Tutorial into a race that now uses DynamicUmaDna the following wont work
 				//so check that and fix it if it happens
 				if (fixUpUMADnaToDynamicUMADna)

@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using UnityEditor;
 #endif
 using UnityEngine;
+using UnityEngine.Serialization;
+using AdjustmentType = UMA.OverlayData.ColorComponentAdjuster.AdjustmentType;
+
 namespace UMA
 {
 	public class ColorDNAConverterPlugin : DynamicDNAPlugin
@@ -12,9 +15,18 @@ namespace UMA
 		[System.Serializable]
 		public class DNAColorSet
 		{
-			public string overlayEntryName;
-			[Tooltip("Color Channel: For example PBR, 0 = Albedo, 1 = Normal, 2 = Metallic")]
-			public int colorChannel = 0;
+			public enum Mode
+			{
+				Overlay,
+				SharedColor
+			}
+			[Tooltip("A Color DNA Converter can target a specific overlay or a sharedColor")]
+			public Mode mode = Mode.Overlay;
+			[FormerlySerializedAs("overlayEntryName")]
+			public string targetName;
+			[Tooltip("Texture Channel: For example PBR, 0 = Albedo, 1 = Normal, 2 = Metallic")]
+			[FormerlySerializedAs("colorChannel")]
+			public int textureChannel = 0;
 			[Tooltip("Define how you want to change the colors used on this overlay")]
 			public DNAColorModifier colorModifier = new DNAColorModifier();
 			[Tooltip("Define the dna that influence these changes")]
@@ -32,10 +44,74 @@ namespace UMA
 
 			public DNAColorSet(DNAColorSet other)
 			{
-				overlayEntryName = other.overlayEntryName;
-				colorChannel = other.colorChannel;
+				mode = other.mode;
+				targetName = other.targetName;
+				textureChannel = other.textureChannel;
 				colorModifier = new DNAColorModifier(other.colorModifier);
 				modifyingDNA = new DNAEvaluatorList(other.modifyingDNA);
+			}
+
+			public bool EvaluateAndApplyAdjustments(UMADnaBase activeDNA, float masterWeight, List<OverlayData> targetOverlays)
+			{
+				var dnaVal = modifyingDNA.Evaluate(activeDNA);
+				float rAdj = 0f;
+				float gAdj = 0f;
+				float bAdj = 0f;
+				float aAdj = 0f;
+				float rCurr = 0f;
+				float gCurr = 0f;
+				float bCurr = 0f;
+				float aCurr = 0f;
+				OverlayColorData ocd;
+				for (int oi = 0; oi < targetOverlays.Count; oi++)
+				{
+					ocd = targetOverlays[oi].colorData;
+					if (colorModifier.R.enable)
+					{
+						rCurr = colorModifier.R.Additive ? ocd.channelAdditiveMask[textureChannel].r : ocd.channelMask[textureChannel].r;
+						rAdj = colorModifier.R.EvaluateAdjustment(dnaVal, rCurr);
+						if (colorModifier.R.Absolute)
+							rAdj = Mathf.Lerp(rCurr, rAdj, masterWeight);
+						else
+							rAdj = rAdj * masterWeight;
+						if ((colorModifier.R.Absolute && rAdj != 0) || (!colorModifier.R.Absolute && rAdj != rCurr))
+							targetOverlays[oi].colorComponentAdjusters.Add(new OverlayData.ColorComponentAdjuster(textureChannel, 0, rAdj, colorModifier.R.adjustmentType));
+					}
+					if (colorModifier.G.enable)
+					{
+						gCurr = colorModifier.G.Additive ? ocd.channelAdditiveMask[textureChannel].g : ocd.channelMask[textureChannel].g;
+						gAdj = colorModifier.G.EvaluateAdjustment(dnaVal, gCurr);
+						if (colorModifier.G.Absolute)
+							gAdj = Mathf.Lerp(gCurr, gAdj, masterWeight);
+						else
+							gAdj = gAdj * masterWeight;
+						if ((colorModifier.G.Absolute && gAdj != 0) || (!colorModifier.G.Absolute && gAdj != gCurr))
+							targetOverlays[oi].colorComponentAdjusters.Add(new OverlayData.ColorComponentAdjuster(textureChannel, 1, gAdj, colorModifier.G.adjustmentType));
+					}
+					if (colorModifier.B.enable)
+					{
+						bCurr = colorModifier.B.Additive ? ocd.channelAdditiveMask[textureChannel].b : ocd.channelMask[textureChannel].b;
+						bAdj = colorModifier.B.EvaluateAdjustment(dnaVal, bCurr);
+						if (colorModifier.B.Absolute)
+							bAdj = Mathf.Lerp(bCurr, bAdj, masterWeight);
+						else
+							bAdj = bAdj * masterWeight;
+						if ((colorModifier.B.Absolute && bAdj != 0) || (!colorModifier.B.Absolute && bAdj != bCurr))
+							targetOverlays[oi].colorComponentAdjusters.Add(new OverlayData.ColorComponentAdjuster(textureChannel, 2, bAdj, colorModifier.B.adjustmentType));
+					}
+					if (colorModifier.A.enable)
+					{
+						aCurr = colorModifier.A.Additive ? ocd.channelAdditiveMask[textureChannel].a : ocd.channelMask[textureChannel].a;
+						aAdj = colorModifier.A.EvaluateAdjustment(dnaVal, aCurr);
+						if (colorModifier.A.Absolute)
+							aAdj = Mathf.Lerp(aCurr, aAdj, masterWeight);
+						else
+							aAdj = aAdj * masterWeight;
+						if ((colorModifier.A.Absolute && aAdj != 0) || (!colorModifier.A.Absolute && aAdj != aCurr))
+							targetOverlays[oi].colorComponentAdjusters.Add(new OverlayData.ColorComponentAdjuster(textureChannel, 3, aAdj, colorModifier.A.adjustmentType));
+					}
+				}
+				return true;
 			}
 
 			[System.Serializable]
@@ -43,21 +119,38 @@ namespace UMA
 			{
 				[Tooltip("Change this component of the color")]
 				public bool enable = true;
-				[Tooltip("If false the dna value determines how much the current value is changed to the set value. If true the dna value is used *as* the value")]
+				[Tooltip("If Absolute the setting overrides the value of the component of the color. If Adjust, the setting is added to the value of the component of the color. Use BlendFactor to completely fade a texture in and out")]
+				public AdjustmentType adjustmentType = AdjustmentType.Absolute;
+				[Tooltip("If true the evaluated DNA value will be used when setting the color value")]
 				public bool useDNAValue = false;
 				[Tooltip("The value for this component of the color")]
 				[Range(0f, 1f)]
 				public float value;
-				[Tooltip("A multiplier to apply to the evaluated dnaValue")]
+				[Tooltip("The amount to adjust this component of the color by. This can be negative, for example value of -0.5 on the red component would turn an incoming color of (1,1,1,1) into (0.5f,1,1,1)")]
+				[Range(-1f, 1f)]
+				public float adjustValue;
+				[Tooltip("A multiplier to apply to the evaluated dnaValue. This allows you to use the same dna to affect components of the color by different amounts")]
 				public float multiplier = 1f;
+
+				public bool Additive
+				{
+					get { return adjustmentType == AdjustmentType.AbsoluteAdditive || adjustmentType == AdjustmentType.AdjustAdditive; }
+				}
+
+				public bool Absolute
+				{
+					get { return adjustmentType == AdjustmentType.Absolute || adjustmentType == AdjustmentType.AbsoluteAdditive; }
+				}
 
 				public DNAColorComponent() { }
 
 				public DNAColorComponent(DNAColorComponent other)
 				{
 					enable = other.enable;
+					adjustmentType = other.adjustmentType;
 					useDNAValue = other.useDNAValue;
 					value = other.value;
+					adjustValue = other.adjustValue;
 					multiplier = other.multiplier;
 				}
 
@@ -65,14 +158,47 @@ namespace UMA
 				{
 					if (!enable)
 						return current;
-					else if (useDNAValue)
+
+					float newVal = current;
+					if (useDNAValue)
 					{
-						return dnaValue * multiplier;
+						if (adjustmentType == AdjustmentType.Absolute || adjustmentType == AdjustmentType.AbsoluteAdditive)
+							newVal = dnaValue * multiplier;
+						else //AdjustmentType.Adjust
+							newVal = Mathf.Clamp(current + (dnaValue * multiplier), 0, 1f);
 					}
 					else
 					{
-						return Mathf.Lerp(current, value, dnaValue);
+						if (adjustmentType == AdjustmentType.Absolute || adjustmentType == AdjustmentType.AbsoluteAdditive)
+							newVal = value;
+						else //AdjustmentType.Adjust
+							newVal = Mathf.Clamp(current + adjustValue, 0, 1f);
 					}
+					return Mathf.Lerp(current, newVal, dnaValue);
+				}
+
+				public float EvaluateAdjustment(float dnaValue, float currentColor)
+				{
+					if (!enable)
+						return 0f;
+
+					if (useDNAValue)
+					{
+						if (Absolute)
+							return Mathf.Lerp(currentColor, Mathf.Clamp(dnaValue * multiplier, 0f, 1f), Mathf.Clamp(dnaValue, 0f, 1f));
+						else if (adjustmentType == AdjustmentType.BlendFactor)
+							return Mathf.Clamp(dnaValue * multiplier, 0f, 1f);
+						else
+							return Mathf.Lerp(0f, dnaValue * multiplier, Mathf.Abs(dnaValue));
+					}
+					else
+					{
+						if (Absolute)
+							return Mathf.Lerp(currentColor, value, Mathf.Clamp(dnaValue, 0f, 1f));
+						else
+							return Mathf.Lerp(0f, adjustValue, Mathf.Abs(dnaValue));
+					}
+
 				}
 			}
 			[System.Serializable]
@@ -97,9 +223,7 @@ namespace UMA
 
 		public DNAColorSet[] colorSets = new DNAColorSet[0];
 
-		private Dictionary<string, Dictionary<int, Color32>> _changedColors = new Dictionary<string, Dictionary<int, Color32>>();
-
-		private Dictionary<string, OverlayColorData> _referenceColorDatas = new Dictionary<string, OverlayColorData>();
+		private Dictionary<string, Dictionary<int, List<DNAColorSet>>> _compiledModifiers = new Dictionary<string, Dictionary<int, List<DNAColorSet>>>();
 
 		//has dna been applied this cycle
 		[System.NonSerialized]
@@ -152,11 +276,10 @@ namespace UMA
 				umaData.CharacterUpdated.AddListener(ResetOnCharaterUpdated);
 				_listenersAdded = true;
 			}
-			//for color dna it may have been applied by a dna change OR a recipe/texture change so if its already been done dont do it again
+			//for shared color dna it may have been applied by a dna change OR a recipe/texture change so if its already been done dont do it again
 			if (_dnaApplied)
 				return;
 
-			_changedColors.Clear();
 			UMADnaBase activeDNA = umaData.GetDna(dnaTypeHash);
 			if (activeDNA == null)
 			{
@@ -167,123 +290,60 @@ namespace UMA
 			if (masterWeightCalc == 0f)
 				return;
 
-			float[] dnaValues = activeDNA.Values;
-			string[] dnaNames = activeDNA.Names;
+			_compiledModifiers.Clear();
+			CompileModifiers();
 
-			UpdateReferencedColorDatas(umaData.umaRecipe.slotDataList);
+			bool needsUpdate = false;
 
-			for (int i = 0; i < colorSets.Length; i++)
+			foreach (KeyValuePair<string, Dictionary<int, List<DNAColorSet>>> kp in _compiledModifiers)
 			{
-				if (colorSets[i].modifyingDNA.UsedDNANames.Count == 0)
-					continue;
-
-				var dnaVal = colorSets[i].modifyingDNA.Evaluate(activeDNA);
-				bool found = false;
-
-				foreach (SlotData slot in umaData.umaRecipe.slotDataList)
+				var targetOverlays = new List<OverlayData>();
+				for (int i = 0; i < umaData.umaRecipe.slotDataList.Length; i++)
 				{
-					OverlayData overlay = slot.GetOverlay(colorSets[i].overlayEntryName);
-					if (overlay != null)
+					var overlays = umaData.umaRecipe.slotDataList[i].GetOverlayList();
+					for (int oi = 0; oi < overlays.Count; oi++)
 					{
-						found = true;
-
-						//Never change a shared color but store it as a reference
-						if (overlay.colorData.IsASharedColor)
+						if (overlays[oi] != null)
 						{
-							_referenceColorDatas.Add(colorSets[i].overlayEntryName, overlay.colorData);
-							//set the overlay to use an unshared version, so other overlays are not affected
-							overlay.colorData = overlay.colorData.Duplicate();
-							overlay.colorData.name = OverlayColorData.UNSHARED;
+							//we can target specific Overlays or SharedColors now
+							if ((overlays[oi].colorData.IsASharedColor && overlays[oi].colorData.name == kp.Key) || overlays[oi].overlayName == kp.Key)
+							{
+								targetOverlays.Add(overlays[oi]);
+							}
 						}
-
-						Color32 currentColor = overlay.GetColor(colorSets[i].colorChannel);
-
-						//if the overlay originally used a shared color, use its data for setting currentColor
-						if (_referenceColorDatas.ContainsKey(colorSets[i].overlayEntryName))
-						{
-							currentColor = _referenceColorDatas[colorSets[i].overlayEntryName].channelMask[colorSets[i].colorChannel];
-						}
-
-						//If the colour has been overidden this cycle use that instead
-						if (_changedColors.ContainsKey(colorSets[i].overlayEntryName))
-							if (_changedColors[colorSets[i].overlayEntryName].ContainsKey(colorSets[i].colorChannel))
-								currentColor = _changedColors[colorSets[i].overlayEntryName][colorSets[i].colorChannel];
-
-						Color newColor = currentColor;
-						newColor.r = colorSets[i].colorModifier.R.Evaluate(dnaVal, newColor.r);
-						newColor.g = colorSets[i].colorModifier.G.Evaluate(dnaVal, newColor.g);
-						newColor.b = colorSets[i].colorModifier.B.Evaluate(dnaVal, newColor.b);
-						newColor.a = colorSets[i].colorModifier.A.Evaluate(dnaVal, newColor.a);
-
-						newColor = Color.Lerp(currentColor, newColor, masterWeightCalc);
-						Color32 newColor32 = newColor;
-
-						overlay.SetColor(colorSets[i].colorChannel, newColor32);
-
-						if (!_changedColors.ContainsKey(colorSets[i].overlayEntryName))
-						{
-							_changedColors.Add(colorSets[i].overlayEntryName, new Dictionary<int, Color32>());
-						}
-						if (!_changedColors[colorSets[i].overlayEntryName].ContainsKey(colorSets[i].colorChannel))
-						{
-							_changedColors[colorSets[i].overlayEntryName].Add(colorSets[i].colorChannel, newColor32);
-						}
-						else
-						{
-							_changedColors[colorSets[i].overlayEntryName][colorSets[i].colorChannel] = newColor;
-						}
-						break;
 					}
 				}
-				if (found)
+				//loop through each channel we are changing
+				foreach (KeyValuePair<int, List<DNAColorSet>> kpi in kp.Value)
 				{
-					//let generator know we made changes
-					umaData.isTextureDirty = true;
-					umaData.isAtlasDirty = true;
+					for (int i = 0; i < kpi.Value.Count; i++)
+					{
+						if (kpi.Value[i].modifyingDNA.UsedDNANames.Count == 0)
+							continue;
+
+						if (kpi.Value[i].EvaluateAndApplyAdjustments(activeDNA, masterWeightCalc, targetOverlays))
+							needsUpdate = true;
+					}
 				}
-				else
-				{
-					Debug.LogWarning(colorSets[i].overlayEntryName + " was not found on the avatar");
-				}
+			}
+
+			if (needsUpdate)
+			{
+				umaData.isTextureDirty = true;
+				umaData.isAtlasDirty = true;
 			}
 			_dnaApplied = true;
 		}
 
-		/// <summary>
-		/// Updates any previously referenced sharedColors to the latest version and ensures the overlay is using a non-shared version
-		/// </summary>
-		private void UpdateReferencedColorDatas(SlotData[] slotDataList)
+		private void CompileModifiers()
 		{
-			if (_referenceColorDatas.Count > 0)
+			for (int i = 0; i < colorSets.Length; i++)
 			{
-				var updatedRefs = new Dictionary<string, OverlayColorData>();
-				foreach (KeyValuePair<string, OverlayColorData> kp in _referenceColorDatas)
-				{
-					foreach (SlotData slot in slotDataList)
-					{
-						OverlayData overlay = slot.GetOverlay(kp.Key);
-						if (overlay != null)
-						{
-							if (overlay.colorData.IsASharedColor)
-							{
-								//the shared color was recreated on the overlay after a wardrobe change
-								//store and use the new version
-								updatedRefs.Add(kp.Key, overlay.colorData);
-								overlay.colorData = overlay.colorData.Duplicate();
-								overlay.colorData.name = OverlayColorData.UNSHARED;
-							}
-							else
-							{
-								//update the overlay with colors from the reference
-								updatedRefs.Add(kp.Key, kp.Value);
-								overlay.colorData = kp.Value.Duplicate();
-								overlay.colorData.name = OverlayColorData.UNSHARED;
-							}
-							break;
-						}
-					}
-				}
-				_referenceColorDatas = updatedRefs;
+				if (!_compiledModifiers.ContainsKey(colorSets[i].targetName))
+					_compiledModifiers.Add(colorSets[i].targetName, new Dictionary<int, List<DNAColorSet>>());
+				if (!_compiledModifiers[colorSets[i].targetName].ContainsKey(colorSets[i].textureChannel))
+					_compiledModifiers[colorSets[i].targetName].Add(colorSets[i].textureChannel, new List<DNAColorSet>());
+				_compiledModifiers[colorSets[i].targetName][colorSets[i].textureChannel].Add(colorSets[i]);
 			}
 		}
 
@@ -299,7 +359,7 @@ namespace UMA
 				List<DNAColorSet> thisColorSets = importMethod == 0 ? new List<DNAColorSet>(colorSets) : new List<DNAColorSet>();
 				for (int i = 0; i < ((ColorDNAConverterPlugin)pluginToImport).colorSets.Length; i++)
 				{
-					thisColorSets.Add(((ColorDNAConverterPlugin)pluginToImport).colorSets[i]);
+					thisColorSets.Add(new DNAColorSet(((ColorDNAConverterPlugin)pluginToImport).colorSets[i]));
 				}
 				colorSets = thisColorSets.ToArray();
 				return true;
@@ -311,7 +371,18 @@ namespace UMA
 		{
 			if (entry != null)
 			{
-				return new GUIContent(entry.displayName + " Channel: [" + entry.FindPropertyRelative("colorChannel").intValue + "]");
+				List<string> usedColorProps = new List<string>();
+				if (entry.FindPropertyRelative("colorModifier").FindPropertyRelative("R").FindPropertyRelative("enable").boolValue == true)
+					usedColorProps.Add("R");
+				if (entry.FindPropertyRelative("colorModifier").FindPropertyRelative("G").FindPropertyRelative("enable").boolValue == true)
+					usedColorProps.Add("G");
+				if (entry.FindPropertyRelative("colorModifier").FindPropertyRelative("B").FindPropertyRelative("enable").boolValue == true)
+					usedColorProps.Add("B");
+				if (entry.FindPropertyRelative("colorModifier").FindPropertyRelative("A").FindPropertyRelative("enable").boolValue == true)
+					usedColorProps.Add("A");
+				var usedColorComponents = string.Join(", ", usedColorProps.ToArray());
+				usedColorComponents = string.IsNullOrEmpty(usedColorComponents) ? "" : "Channels: [" + usedColorComponents + "]";
+				return new GUIContent("("+ entry.FindPropertyRelative("mode").enumNames[entry.FindPropertyRelative("mode").enumValueIndex] + ") "+ entry.FindPropertyRelative("targetName").stringValue + " - Texture: [" + entry.FindPropertyRelative("textureChannel").intValue + "] "+ usedColorComponents);
 			}
 			return GUIContent.none;
 		}
@@ -320,7 +391,7 @@ namespace UMA
 		{
 			get
 			{
-				return "ColorDNA Converters convert DNA values into color changes on an overlay. You can define which channel on the overlay you wish to affect to achieve things like changing the diffuse color, fading normal maps in and out, making a character more or less metallic and so forth. The changes do not change 'Shared Colors' but if the overlay was using a shared color, any changes to that will be respected.";
+				return "ColorDNA Converters convert DNA values into color changes on an overlay texture. You can define which texture on the overlay you wish to affect to achieve things like changing the diffuse color, fading normal maps in and out, making a character more or less metallic and so forth. The changes do not change 'Shared Colors' but are applied to them at the dna stage.";
 			}
 		}
 

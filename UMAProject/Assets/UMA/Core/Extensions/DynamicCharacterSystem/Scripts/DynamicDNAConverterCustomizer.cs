@@ -784,7 +784,8 @@ namespace UMA.CharacterSystem
 			yield return null;//wait for a frame
 			if (activeUMA)
 			{
-				activeUMA.umaData.Dirty(true, false, false);
+				//dna can change textures now too
+				activeUMA.umaData.Dirty(true, true, false);
 			}
 		}
 		#endregion
