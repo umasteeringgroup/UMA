@@ -31,7 +31,12 @@ namespace UMA
 		/// The behaviour will assign it self to this converter, when this converter is assigned to it, either when ApplyDNAAction is called or the controller is inspected via this Behaviour
 		/// </summary>
 		private DynamicDNAConverterBehaviour _converterBehaviour;
-
+		[System.NonSerialized]
+		private List<DynamicDNAPlugin> _applyDNAPrepassPlugins = new List<DynamicDNAPlugin>();
+		[System.NonSerialized]
+		private List<DynamicDNAPlugin> _applyDNAPlugins = new List<DynamicDNAPlugin>();
+		[System.NonSerialized]
+		private bool _prepared = false;
 
 		public DynamicUMADnaAsset DNAAsset
 		{
@@ -118,17 +123,57 @@ namespace UMA
 
 		#endregion
 
+		public void Prepare()
+		{
+			if (!_prepared)
+			{
+				for (int i = 0; i < _plugins.Count; i++)
+				{
+					if (_plugins[i].ApplyPass == DynamicDNAPlugin.ApplyPassOpts.Standard)
+					{
+						if (!_applyDNAPlugins.Contains(_plugins[i]))
+							_applyDNAPlugins.Add(_plugins[i]);
+					}
+					else if (_plugins[i].ApplyPass == DynamicDNAPlugin.ApplyPassOpts.PrePass)
+					{
+						if (!_applyDNAPrepassPlugins.Contains(_plugins[i]))
+						{
+							_applyDNAPrepassPlugins.Add(_plugins[i]);
+						}
+					}
+				}
+				_prepared = true;
+			}
+		}
+
 		/// <summary>
-		/// Calls ApplyData on all the plugins in this converters '_plugins' list
+		/// Calls ApplyDNA on all the plugins in this converters '_plugins' list that apply dna during the pre-pass
+		/// </summary>
+		/// <param name="umaData">The umaData on the avatar</param>
+		/// <param name="skeleton">The avatars skeleton</param>
+		/// <param name="dnaTypeHash">The dnaTypeHash that this converters behaviour is using</param>
+		public void ApplyDNAPrepass(UMAData umaData, UMASkeleton skeleton, int dnaTypeHash)
+		{
+			if (_applyDNAPrepassPlugins.Count > 0)
+			{
+				for (int i = 0; i < _applyDNAPrepassPlugins.Count; i++)
+				{
+					_applyDNAPrepassPlugins[i].ApplyDNA(umaData, skeleton, dnaTypeHash);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Calls ApplyDNA on all the plugins in this converters '_plugins' list that apply dna at the standard time
 		/// </summary>
 		/// <param name="umaData">The umaData on the avatar</param>
 		/// <param name="skeleton">The avatars skeleton</param>
 		/// <param name="dnaTypeHash">The dnaTypeHash that this converters behaviour is using</param>
 		public void ApplyDNA(UMAData umaData, UMASkeleton skeleton, int dnaTypeHash)
 		{
-			for (int i = 0; i < _plugins.Count; i++)
+			for (int i = 0; i < _applyDNAPlugins.Count; i++)
 			{
-				_plugins[i].ApplyDNA(umaData, skeleton, dnaTypeHash);
+				_applyDNAPlugins[i].ApplyDNA(umaData, skeleton, dnaTypeHash);
 			}
 		}
 
@@ -196,6 +241,7 @@ namespace UMA
 			plugin = CreatePlugin(pluginType, this);
 			if (plugin != null)
 			{
+				_prepared = false;
 				_plugins.Add(plugin);
 #if UNITY_EDITOR
 				EditorUtility.SetDirty(this);
@@ -217,6 +263,7 @@ namespace UMA
 			//if it is DestroyImmediate
 			if (_plugins.Contains(pluginToDelete))
 			{
+				_prepared = false;
 				_plugins.Remove(pluginToDelete);
 				Debug.Log(pluginToDelete.name + " successfully deleted from " + this.name);
 #if UNITY_EDITOR

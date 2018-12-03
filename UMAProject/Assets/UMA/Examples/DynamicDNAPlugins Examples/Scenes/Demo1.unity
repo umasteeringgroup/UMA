@@ -2007,6 +2007,53 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 162476739}
+--- !u!1 &168395970
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 168395972}
+  - component: {fileID: 168395971}
+  m_Layer: 0
+  m_Name: ElfToAlienDirector
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!320 &168395971
+PlayableDirector:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 168395970}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_PlayableAsset: {fileID: 11400000, guid: d2d069900a6c7fe45814b29da58447f0, type: 2}
+  m_InitialState: 1
+  m_WrapMode: 1
+  m_DirectorUpdateMode: 1
+  m_InitialTime: 0
+  m_SceneBindings:
+  - key: {fileID: 114235034068165856, guid: d2d069900a6c7fe45814b29da58447f0, type: 2}
+    value: {fileID: 363062547}
+  m_ExposedReferences:
+    m_References: []
+--- !u!4 &168395972
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 168395970}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.07816884, y: 0.64400065, z: 0.055664062}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 6
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &168779553
 GameObject:
   m_ObjectHideFlags: 0
@@ -4427,7 +4474,7 @@ MonoBehaviour:
   loadBlendShapes: 1
   activeRace:
     name: HumanMaleDCSII
-  defaultChangeRaceOptions: 8
+  defaultChangeRaceOptions: 12
   cacheCurrentState: 1
   rebuildSkeleton: 1
   preloadWardrobeRecipes:
@@ -4518,18 +4565,18 @@ MonoBehaviour:
       channelAdditiveMask:
       - {r: 0, g: 0, b: 0, a: 0}
       - {r: 0, g: 0, b: 0, a: 0}
-      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0.5588235, g: 0.5588235, b: 0.5588235, a: 0.441}
       _name: 
       _color: {r: 0.3529412, g: 0.4156863, b: 0.6392157, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
       valuesConverted: 0
-  loadPathType: 2
+  loadPathType: 4
   loadPath: CharacterRecipes
   loadFilename: 
   loadString: 
   loadFileOnStart: 1
   waitForBundles: 1
-  defaultLoadOptions: 31
+  defaultLoadOptions: 23
   savePathType: 0
   savePath: CharacterRecipes
   saveFilename: 
@@ -13804,7 +13851,7 @@ MonoBehaviour:
   hide: 0
   loadBlendShapes: 1
   activeRace:
-    name: HumanMaleDCS
+    name: HumanFemaleDCS
   defaultChangeRaceOptions: 8
   cacheCurrentState: 1
   rebuildSkeleton: 1
@@ -13897,7 +13944,7 @@ MonoBehaviour:
   loadString: 
   loadFileOnStart: 1
   waitForBundles: 1
-  defaultLoadOptions: 31
+  defaultLoadOptions: 23
   savePathType: 0
   savePath: CharacterRecipes
   saveFilename: 

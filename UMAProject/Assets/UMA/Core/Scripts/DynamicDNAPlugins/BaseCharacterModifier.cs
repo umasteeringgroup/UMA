@@ -387,7 +387,6 @@ namespace UMA
 			float charHeight = newBounds.size.y;
 			float charWidth = newBounds.size.x;
 
-			//FEMALES CALCS ARE TOTALLY FUCKED NOW SOMEHOW, basically miles too wide
 			if (umaData.umaRecipe.raceData.umaTarget == RaceData.UMATarget.Humanoid)
 			{
 				//dont we want to do this regardless of whether we are adjusting or not?

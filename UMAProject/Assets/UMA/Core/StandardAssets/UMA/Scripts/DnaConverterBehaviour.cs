@@ -32,6 +32,11 @@ namespace UMA
 		}
 
 		public delegate void DNAConvertDelegate(UMAData data, UMASkeleton skeleton);
+
+		/// <summary>
+		/// Called on the DNA converter to adjust avatar from DNA values before the main ApplyDNA stage.
+		/// </summary>
+		public DNAConvertDelegate PreApplyDnaAction;
 		/// <summary>
 		/// Called on the DNA converter to adjust avatar from DNA values.
 		/// </summary>

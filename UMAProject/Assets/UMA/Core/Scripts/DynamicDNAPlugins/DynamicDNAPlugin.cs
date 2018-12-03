@@ -39,6 +39,15 @@ namespace UMA
 		//and which at edit time looks after the creation of the Plugin Assets and its own Plugins list
 		//A DynamicDNAConverterAsset is assigned to a DynamicDNAConverterBehaviour which triggers the ApplyDNA action on the DynamicDNAConverterAsset
 
+		/// <summary>
+		/// Does this plugin get applied during the Standard ApplyDNA pass or in the 'Pre Pass'
+		/// </summary>
+		public enum ApplyPassOpts
+		{
+			PrePass,
+			Standard
+		}
+
 		#region ABSTRACT PROPERTIES AND METHODS
 
 		//It is REQUIRED that all DynamicDNAPlugins have these two Propeties and Methods (and thats it!)
@@ -108,7 +117,12 @@ namespace UMA
 
 		#region VIRTUAL PROPERTIES
 
-		//Its is OPTIONAL for any DynamicDNAPlugin to override these methods
+		//Its is OPTIONAL for any DynamicDNAPlugin to override these properties / methods
+
+		/// <summary>
+		/// Does this plugin get applied during the Standard ApplyDNA pass or in the 'Pre Pass'
+		/// </summary>
+		public virtual ApplyPassOpts ApplyPass { get { return ApplyPassOpts.Standard; } }
 
 #if UNITY_EDITOR
 

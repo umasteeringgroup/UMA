@@ -30,6 +30,9 @@ namespace UMA.CharacterSystem
 
 		private Dictionary<string, List<UnityAction<string, float>>> _dnaCallbackDelegates = new Dictionary<string, List<UnityAction<string, float>>>();
 
+		[System.NonSerialized]
+		private bool _prepared = false;
+
 		#endregion
 
 		#region PUBLIC PROPERTIES
@@ -72,6 +75,7 @@ namespace UMA.CharacterSystem
 
 		public DynamicDNAConverterBehaviour()
 		{
+			PreApplyDnaAction = PreApplyDynamicDnaAction;
 			ApplyDnaAction = ApplyDynamicDnaAction;
 			DNAType = typeof(DynamicUMADna);
 		}
@@ -82,7 +86,11 @@ namespace UMA.CharacterSystem
 
 		public override void Prepare()
 		{
-			//nothing to prepare now we dont use the hash list
+			if(_converterController != null && !_prepared)
+			{
+				_converterController.Prepare();
+				_prepared = true;
+			}
 		}
 
 		/// <summary>
@@ -141,6 +149,28 @@ namespace UMA.CharacterSystem
 				}
 			}
 			return removed;
+		}
+
+		/// <summary>
+		/// Applies any dna converters (plugins) in this assets converter controller that are set to apply in the dna 'Pre Pass'
+		/// </summary>
+		/// <param name="umaData"></param>
+		/// <param name="skeleton"></param>
+		/// <param name="dnaTypeHash"></param>
+		public void PreApplyDynamicDnaAction(UMAData umaData, UMASkeleton skeleton)
+		{
+			if (!_prepared)
+				Prepare();
+			UMADnaBase umaDna = umaData.GetDna(DNATypeHash);
+			//Make the DNAAssets match if they dont already, can happen when some parts are in bundles and others arent
+			if (((DynamicUMADnaBase)umaDna).dnaAsset != dnaAsset)
+				((DynamicUMADnaBase)umaDna).dnaAsset = dnaAsset;
+			if (_converterController != null)
+			{
+				//make sure the controller has this as its behaviour because the same controller can be used by lots of behaviours (and they might all use different dna)
+				_converterController.converterBehaviour = this;
+				_converterController.ApplyDNAPrepass(umaData, skeleton, DNATypeHash);
+			}
 		}
 
 		public void ApplyDynamicDnaAction(UMAData umaData, UMASkeleton skeleton)

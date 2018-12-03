@@ -223,14 +223,21 @@ namespace UMA
 
 		public DNAColorSet[] colorSets = new DNAColorSet[0];
 
-		private Dictionary<string, Dictionary<int, List<DNAColorSet>>> _compiledModifiers = new Dictionary<string, Dictionary<int, List<DNAColorSet>>>();
-
 		//has dna been applied this cycle
 		[System.NonSerialized]
-		private bool _dnaApplied = false;
+		private List<GameObject> _dnaAppliedTo = new List<GameObject>();
 		//have we added the extra listeners required by ColorDNA?
+		//private lists in ScriptableObjects seem to need to be explicitly set as non serialized for some reason
 		[System.NonSerialized]
-		private bool _listenersAdded = false;
+		private List<GameObject> _listenersAddedTo = new List<GameObject>();
+
+		public override ApplyPassOpts ApplyPass
+		{
+			get
+			{
+				return ApplyPassOpts.PrePass;
+			}
+		}
 
 		public override Dictionary<string, List<int>> IndexesForDnaNames
 		{
@@ -251,33 +258,23 @@ namespace UMA
 			}
 		}
 
-		private void UpdateOnCharacterBegun(UMAData umaData)
-		{
-			if (!_dnaApplied)
-			{
-				ApplyDNA(umaData, umaData.skeleton, converterController.DNAAsset.dnaTypeHash);
-			}
-			_dnaApplied = true;
-		}
-
 		private void ResetOnCharaterUpdated(UMAData umaData)
 		{
-			_dnaApplied = false;
+			_dnaAppliedTo.Remove(umaData.gameObject);
 		}
 
 		public override void ApplyDNA(UMAData umaData, UMASkeleton skeleton, int dnaTypeHash)
 		{
-			//this needs to sign up to CharacterBegun because not all updates trigger dna changes and we need to update on texture changes too
-			//eli suggested that converters could subscribe to different events 'They could have a chance at each stage, like a skeleton job, a mesh job, a texture job'
-			//so this would be a texture job, but till then...
-			if (!_listenersAdded)
+			//Add the reset listeners if we havent already
+			//we need this because if 'fastGeneration' is false we may still get another loop
+			//and we should not do this again if _dnaAppliedTo contains umaData.gameObject
+			if (!_listenersAddedTo.Contains(umaData.gameObject))
 			{
-				umaData.CharacterBegun.AddListener(UpdateOnCharacterBegun);
 				umaData.CharacterUpdated.AddListener(ResetOnCharaterUpdated);
-				_listenersAdded = true;
+				_listenersAddedTo.Add(umaData.gameObject);
 			}
-			//for shared color dna it may have been applied by a dna change OR a recipe/texture change so if its already been done dont do it again
-			if (_dnaApplied)
+
+			if(_dnaAppliedTo.Contains(umaData.gameObject))
 				return;
 
 			UMADnaBase activeDNA = umaData.GetDna(dnaTypeHash);
@@ -290,41 +287,33 @@ namespace UMA
 			if (masterWeightCalc == 0f)
 				return;
 
-			_compiledModifiers.Clear();
-			CompileModifiers();
-
 			bool needsUpdate = false;
 
-			foreach (KeyValuePair<string, Dictionary<int, List<DNAColorSet>>> kp in _compiledModifiers)
+			for(int i = 0; i < colorSets.Length; i++)
 			{
+				if (colorSets[i].modifyingDNA.UsedDNANames.Count == 0 || string.IsNullOrEmpty(colorSets[i].targetName))
+					continue;
 				var targetOverlays = new List<OverlayData>();
-				for (int i = 0; i < umaData.umaRecipe.slotDataList.Length; i++)
+				for (int si = 0; si < umaData.umaRecipe.slotDataList.Length; si++)
 				{
-					var overlays = umaData.umaRecipe.slotDataList[i].GetOverlayList();
+					var overlays = umaData.umaRecipe.slotDataList[si].GetOverlayList();
 					for (int oi = 0; oi < overlays.Count; oi++)
 					{
 						if (overlays[oi] != null)
 						{
 							//we can target specific Overlays or SharedColors now
-							if ((overlays[oi].colorData.IsASharedColor && overlays[oi].colorData.name == kp.Key) || overlays[oi].overlayName == kp.Key)
+							if ((overlays[oi].colorData.IsASharedColor && overlays[oi].colorData.name == colorSets[i].targetName) || overlays[oi].overlayName == colorSets[i].targetName)
 							{
+								if(!targetOverlays.Contains(overlays[oi]))
 								targetOverlays.Add(overlays[oi]);
 							}
 						}
 					}
 				}
-				//loop through each channel we are changing
-				foreach (KeyValuePair<int, List<DNAColorSet>> kpi in kp.Value)
-				{
-					for (int i = 0; i < kpi.Value.Count; i++)
-					{
-						if (kpi.Value[i].modifyingDNA.UsedDNANames.Count == 0)
-							continue;
-
-						if (kpi.Value[i].EvaluateAndApplyAdjustments(activeDNA, masterWeightCalc, targetOverlays))
-							needsUpdate = true;
-					}
-				}
+				if (targetOverlays.Count == 0)
+					continue;
+				if (colorSets[i].EvaluateAndApplyAdjustments(activeDNA, masterWeightCalc, targetOverlays))
+					needsUpdate = true;
 			}
 
 			if (needsUpdate)
@@ -332,19 +321,7 @@ namespace UMA
 				umaData.isTextureDirty = true;
 				umaData.isAtlasDirty = true;
 			}
-			_dnaApplied = true;
-		}
-
-		private void CompileModifiers()
-		{
-			for (int i = 0; i < colorSets.Length; i++)
-			{
-				if (!_compiledModifiers.ContainsKey(colorSets[i].targetName))
-					_compiledModifiers.Add(colorSets[i].targetName, new Dictionary<int, List<DNAColorSet>>());
-				if (!_compiledModifiers[colorSets[i].targetName].ContainsKey(colorSets[i].textureChannel))
-					_compiledModifiers[colorSets[i].targetName].Add(colorSets[i].textureChannel, new List<DNAColorSet>());
-				_compiledModifiers[colorSets[i].targetName][colorSets[i].textureChannel].Add(colorSets[i]);
-			}
+			_dnaAppliedTo.Add(umaData.gameObject);
 		}
 
 		#region DYNAMICDNAPLUGIN EDITOR OVERRIDES
