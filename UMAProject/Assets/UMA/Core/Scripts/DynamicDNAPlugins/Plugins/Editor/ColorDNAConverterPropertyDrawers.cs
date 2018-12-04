@@ -43,8 +43,8 @@ namespace UMA
 			var adjLabel = EditorGUI.BeginProperty(adjTypeRect, new GUIContent("Adj Type"), adjustmentTypeProp);
 			EditorGUI.PropertyField(adjTypeRect, adjustmentTypeProp, adjLabel);
 			EditorGUI.EndProperty();
-			EditorGUIUtility.labelWidth = 55f;
-			var dnaLabel = EditorGUI.BeginProperty(useDNAValueRect, new GUIContent("Use DNA"), useDNAValueProp);
+			EditorGUIUtility.labelWidth = 65f;
+			var dnaLabel = EditorGUI.BeginProperty(useDNAValueRect, new GUIContent("DNA Value"), useDNAValueProp);
 			EditorGUI.PropertyField(useDNAValueRect, useDNAValueProp, dnaLabel);
 			EditorGUI.EndProperty();
 			EditorGUIUtility.labelWidth = 80f;
@@ -82,6 +82,7 @@ namespace UMA
 			label = EditorGUI.BeginProperty(position, label, property);
 			var foldoutRect = new Rect(position.xMin, position.yMin, EditorGUIUtility.labelWidth, EditorGUIUtility.singleLineHeight);
 			//TODO Figure out how to make the colorpicker useful rather than confusing when channels are set to 'Adjust' modes
+			//Maybe some kind of 'Preview Tool' where you can set the incoming color, a dummy dna value and see the result of the settings
 			//for now I'm gonna disable it
 			/*var colorPickerRect = new Rect(foldoutRect.xMax, position.yMin, position.width - foldoutRect.width, EditorGUIUtility.singleLineHeight);
 			var propRVal = property.FindPropertyRelative("R").FindPropertyRelative("value");

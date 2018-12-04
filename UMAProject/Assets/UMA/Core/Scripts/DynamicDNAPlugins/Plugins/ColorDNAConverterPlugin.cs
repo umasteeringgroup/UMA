@@ -22,6 +22,7 @@ namespace UMA
 			}
 			[Tooltip("A Color DNA Converter can target a specific overlay or a sharedColor")]
 			public Mode mode = Mode.Overlay;
+			[Tooltip("The name of the overlay or shared color to target")]
 			[FormerlySerializedAs("overlayEntryName")]
 			public string targetName;
 			[Tooltip("Texture Channel: For example PBR, 0 = Albedo, 1 = Normal, 2 = Metallic")]
@@ -121,7 +122,7 @@ namespace UMA
 				public bool enable = true;
 				[Tooltip("If Absolute the setting overrides the value of the component of the color. If Adjust, the setting is added to the value of the component of the color. Use BlendFactor to completely fade a texture in and out")]
 				public AdjustmentType adjustmentType = AdjustmentType.Absolute;
-				[Tooltip("If true the evaluated DNA value will be used when setting the color value")]
+				[Tooltip("If true the evaluated DNA value will be used when setting the color value for this component of the color")]
 				public bool useDNAValue = false;
 				[Tooltip("The value for this component of the color")]
 				[Range(0f, 1f)]
@@ -358,7 +359,7 @@ namespace UMA
 				if (entry.FindPropertyRelative("colorModifier").FindPropertyRelative("A").FindPropertyRelative("enable").boolValue == true)
 					usedColorProps.Add("A");
 				var usedColorComponents = string.Join(", ", usedColorProps.ToArray());
-				usedColorComponents = string.IsNullOrEmpty(usedColorComponents) ? "" : "Channels: [" + usedColorComponents + "]";
+				usedColorComponents = string.IsNullOrEmpty(usedColorComponents) ? "" : "Components: [" + usedColorComponents + "]";
 				return new GUIContent("("+ entry.FindPropertyRelative("mode").enumNames[entry.FindPropertyRelative("mode").enumValueIndex] + ") "+ entry.FindPropertyRelative("targetName").stringValue + " - Texture: [" + entry.FindPropertyRelative("textureChannel").intValue + "] "+ usedColorComponents);
 			}
 			return GUIContent.none;
