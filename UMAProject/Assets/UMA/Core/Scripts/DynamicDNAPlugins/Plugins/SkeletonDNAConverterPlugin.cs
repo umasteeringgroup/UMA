@@ -61,6 +61,8 @@ namespace UMA
 		{
 			var umaDna = umaData.GetDna(dnaTypeHash);
 			var masterWeightCalc = masterWeight.GetWeight(umaDna);
+			if (masterWeightCalc == 0f)
+				return;
 			for (int i = 0; i < _skeletonModifiers.Count; i++)
 			{
 				_skeletonModifiers[i].umaDNA = umaDna;
