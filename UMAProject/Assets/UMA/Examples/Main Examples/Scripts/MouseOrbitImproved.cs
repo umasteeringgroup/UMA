@@ -124,7 +124,7 @@ namespace UMA.Examples
                     umaData = target.GetComponent<UMAData>();
                 }
 
-                if (umaData != null && umaData.umaRecipe != null && umaData.umaRecipe.raceData != null && umaData.umaRecipe.raceData.umaTarget == RaceData.UMATarget.Humanoid)
+                if (umaData != null && umaData.umaRecipe != null && umaData.umaRecipe.raceData != null && umaData.umaRecipe.raceData.umaTarget == RaceData.UMATarget.Humanoid && umaData.skeleton != null)
                 {
                     string boneName = umaData.umaRecipe.raceData.TPose.BoneNameFromHumanName(targetStrings[(int)TargetBone]);
                     if (!string.IsNullOrEmpty(boneName))
