@@ -69,4 +69,19 @@ public static class InspectorUtlity
 		}
 		return editors;
 	}
+
+	private static System.Reflection.MethodInfo m_RepaintInspectors = null;
+
+	/// <summary>
+	/// Repaints all Inspector Windows. I some circumstances popup windows dont repaint immediately. Calling this forces them to do so
+	/// </summary>
+	public static void RepaintAllInspectors()
+	{
+		if (m_RepaintInspectors == null)
+		{
+			var inspWin = typeof(Editor).Assembly.GetType("UnityEditor.InspectorWindow");
+			m_RepaintInspectors = inspWin.GetMethod("RepaintAllInspectors", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
+		}
+		m_RepaintInspectors.Invoke(null, null);
+	}
 }

@@ -18,7 +18,7 @@ namespace UMA.Editors
 
 		private GUIContent _propertyLabel;
 
-		private float _padding = 2f;
+		private float _padding = EditorGUIUtility.standardVerticalSpacing;
 
 		private ReorderableList _dnaEvaluatorList;
 
@@ -104,16 +104,21 @@ namespace UMA.Editors
 
 				if(_labelOption == DNAEvaluatorList.ConfigAttribute.LabelOptions.drawExpandedWithLabel 
 					|| _labelOption == DNAEvaluatorList.ConfigAttribute.LabelOptions.drawLabelAsFoldout)
-					h = (EditorGUIUtility.singleLineHeight + (_padding * 3)) * 3;
+					h = (EditorGUIUtility.singleLineHeight + (_padding)) * 3;
 
 				if (dnaEvalListProp.arraySize > 0)
 				{
+					//we only show the aggregation method if there is more than one and that makes the footer higher
+					if(dnaEvalListProp.arraySize > 1)
+					{
+						h += _padding * 3;
+					}
 					for (int i = 0; i < dnaEvalListProp.arraySize; i++)
-						h += EditorGUIUtility.singleLineHeight + (_padding * 2);
+						h += EditorGUIUtility.singleLineHeight + (_padding * 2)+1f;
 				}
 				else
 				{
-					h += EditorGUIUtility.singleLineHeight + (_padding * 2);
+					h += EditorGUIUtility.singleLineHeight + (_padding);
 				}
 				return h;
 			}
@@ -245,7 +250,7 @@ namespace UMA.Editors
 		{
 			_dnaEvaluatorDrawer.DrawLabels = false;
 			var dnaEvalListProp = _dnaEvaluatorList.serializedProperty;
-			var entryRect = new Rect(rect.xMin, rect.yMin + _padding, rect.width, rect.height - _padding);
+			var entryRect = new Rect(rect.xMin, rect.yMin + _padding, rect.width, rect.height );
 			_dnaEvaluatorDrawer.DrawCalcOption = _dnaEvaluatorList.count > 1 ? drawCalcOption : false;
 			_dnaEvaluatorDrawer.DoFieldsInline(entryRect, dnaEvalListProp.GetArrayElementAtIndex(index));
 		}

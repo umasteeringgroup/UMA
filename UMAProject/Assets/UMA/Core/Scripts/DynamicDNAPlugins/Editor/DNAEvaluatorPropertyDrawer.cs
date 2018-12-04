@@ -243,11 +243,14 @@ namespace UMA.Editors
 					dnaNameHashProp.intValue = -1;
 			}
 			EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(dnaNameProp.stringValue));
-			//This field is not registering a change when the graph gets picked grrr
 			EditorGUI.BeginChangeCheck();
 			EditorGUI.PropertyField(evaluatorRect, evaluatorProp, GUIContent.none);
 			if (EditorGUI.EndChangeCheck())
+			{
+				//this happens immediately when the field is changed but it doesn't redraw when its in a popup inspector
+				InspectorUtlity.RepaintAllInspectors();
 				GUI.changed = true;
+			}
 			EditorGUI.PropertyField(multiplierRect, intensityProp, GUIContent.none);
 			EditorGUI.EndDisabledGroup();
 
