@@ -212,9 +212,11 @@ namespace UMA
 				public DNAColorComponent B = new DNAColorComponent();
 				public DNAColorComponent A = new DNAColorComponent();
 
+#pragma warning disable 0414
 				//used in the editor for the preview tools
 				[SerializeField]
 				private float _testDNAVal = 0f;
+#pragma warning restore 0414
 
 				public DNAColorModifier() { }
 
