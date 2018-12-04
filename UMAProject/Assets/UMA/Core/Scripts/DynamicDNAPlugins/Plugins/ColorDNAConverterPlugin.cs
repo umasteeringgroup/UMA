@@ -28,10 +28,10 @@ namespace UMA
 			[Tooltip("Texture Channel: For example PBR, 0 = Albedo, 1 = Normal, 2 = Metallic")]
 			[FormerlySerializedAs("colorChannel")]
 			public int textureChannel = 0;
+			[Tooltip("Define the dna that influence these changes. Note: If no dna is defined nothing will happen!")]
+			public DNAEvaluatorList modifyingDNA = new DNAEvaluatorList();
 			[Tooltip("Define how you want to change the colors used on this overlay")]
 			public DNAColorModifier colorModifier = new DNAColorModifier();
-			[Tooltip("Define the dna that influence these changes")]
-			public DNAEvaluatorList modifyingDNA = new DNAEvaluatorList();
 
 			public List<string> UsedDNANames
 			{
@@ -196,6 +196,8 @@ namespace UMA
 					{
 						if (Absolute)
 							return Mathf.Lerp(currentColor, value, Mathf.Clamp(dnaValue, 0f, 1f));
+						else if (adjustmentType == AdjustmentType.BlendFactor)
+							return Mathf.Lerp(0f, value, Mathf.Abs(dnaValue));
 						else
 							return Mathf.Lerp(0f, adjustValue, Mathf.Abs(dnaValue));
 					}
@@ -209,6 +211,10 @@ namespace UMA
 				public DNAColorComponent G = new DNAColorComponent();
 				public DNAColorComponent B = new DNAColorComponent();
 				public DNAColorComponent A = new DNAColorComponent();
+
+				//used in the editor for the preview tools
+				[SerializeField]
+				private float _testDNAVal = 0f;
 
 				public DNAColorModifier() { }
 
