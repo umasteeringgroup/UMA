@@ -344,6 +344,7 @@ namespace UMA
 			new List<int>(MAX_VERTEX_COUNT),
 			new List<int>(MAX_VERTEX_COUNT),
 			new List<int>(MAX_VERTEX_COUNT * 2),
+			new List<int>(MAX_VERTEX_COUNT * 4),
 		};
 		static int[][] gSubmeshTriArrays;
 		static int[] gSubmeshTriIndices;
