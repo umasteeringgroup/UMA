@@ -372,13 +372,14 @@ namespace UMA
 		/// </summary>
 		/// <param name="nameHash">Name hash.</param>
 		/// <param name="delta">Position delta.</param>
-		public virtual void SetPositionRelative(int nameHash, Vector3 delta)
+		/// <param name="weight">Optionally set how much to apply the new position</param>
+		public virtual void SetPositionRelative(int nameHash, Vector3 delta, float weight = 1f)
 		{
 			BoneData db;
 			if (boneHashData.TryGetValue(nameHash, out db))
 			{
 				db.accessedFrame = frame;
-				db.boneTransform.localPosition = db.boneTransform.localPosition + delta;
+				db.boneTransform.localPosition = db.boneTransform.localPosition + delta * weight;
 			}
 		}
 
@@ -404,15 +405,15 @@ namespace UMA
 		/// </summary>
 		/// <param name="nameHash">Name hash.</param>
 		/// <param name="scale">Scale.</param>
-		public virtual void SetScaleRelative(int nameHash, Vector3 scale)
+		/// <param name="weight">Optionally set how much to apply the new scale</param>
+		public virtual void SetScaleRelative(int nameHash, Vector3 scale, float weight = 1f)
 		{
 			BoneData db;
 			if (boneHashData.TryGetValue(nameHash, out db))
 			{
 				db.accessedFrame = frame;
-				var fullScale = scale;
-				fullScale.Scale(db.boneTransform.localScale);
-				db.boneTransform.localScale = fullScale;
+				scale.Scale(db.boneTransform.localScale);
+				db.boneTransform.localScale = Vector3.Lerp(db.boneTransform.localScale, scale, weight);
 			}
 		}
 

@@ -19,7 +19,7 @@ MonoBehaviour:
     materialPropertyName: _MainTex
     sourceTextureName: 
   - channelType: 1
-    textureFormat: 0
+    textureFormat: 2
     materialPropertyName: _BumpMap
     sourceTextureName: 
   - channelType: 0
@@ -28,6 +28,3 @@ MonoBehaviour:
     sourceTextureName: 
   clothProperties: {fileID: 0}
   RequireSeperateRenderer: 0
-  MipMapBias: 0
-  AnisoLevel: 1
-  MatFilterMode: 1

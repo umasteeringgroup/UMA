@@ -299,22 +299,58 @@ namespace UMA
 
 			public Color GetMultiplier(int overlay, int textureType)
 			{
+				var c = Color.white;
+
 				if (channelMask[overlay] != null && channelMask[overlay].Length > 0)
 				{
-					return channelMask[overlay][textureType];
+					c = channelMask[overlay][textureType];
+					c.r = Mathf.Clamp((c.r + overlayData[overlay].GetComponentAdjustmentsForChannel(c.r, textureType, 0)), 0, 1);
+					c.g = Mathf.Clamp((c.g + overlayData[overlay].GetComponentAdjustmentsForChannel(c.g, textureType, 1)), 0, 1);
+					c.b = Mathf.Clamp((c.b + overlayData[overlay].GetComponentAdjustmentsForChannel(c.b, textureType, 2)), 0, 1);
+					c.a = Mathf.Clamp((c.a + overlayData[overlay].GetComponentAdjustmentsForChannel(c.a, textureType, 3)), 0, 1);
+					return c;
 				}
 				else
 				{
-					if (textureType > 0) return Color.white;
-					if (overlay == 0) return baseColor;
-					return overlayColors[overlay - 1];
+					if (textureType > 0)
+					{
+						c.r = Mathf.Clamp((c.r + overlayData[overlay].GetComponentAdjustmentsForChannel(c.r, textureType, 0)), 0, 1);
+						c.g = Mathf.Clamp((c.g + overlayData[overlay].GetComponentAdjustmentsForChannel(c.g, textureType, 1)), 0, 1);
+						c.b = Mathf.Clamp((c.b + overlayData[overlay].GetComponentAdjustmentsForChannel(c.b, textureType, 2)), 0, 1);
+						c.a = Mathf.Clamp((c.a + overlayData[overlay].GetComponentAdjustmentsForChannel(c.a, textureType, 3)), 0, 1);
+						//return Color.white;
+						return c;
+					}
+					if (overlay == 0)
+					{
+						c = baseColor;
+						c.r = Mathf.Clamp((c.r + overlayData[overlay].GetComponentAdjustmentsForChannel(c.r, textureType, 0)), 0, 1);
+						c.g = Mathf.Clamp((c.g + overlayData[overlay].GetComponentAdjustmentsForChannel(c.g, textureType, 1)), 0, 1);
+						c.b = Mathf.Clamp((c.b + overlayData[overlay].GetComponentAdjustmentsForChannel(c.b, textureType, 2)), 0, 1);
+						c.a = Mathf.Clamp((c.a + overlayData[overlay].GetComponentAdjustmentsForChannel(c.a, textureType, 3)), 0, 1);
+						//return baseColor;
+						return c;
+					}
+					c = overlayColors[overlay - 1];
+					c.r = Mathf.Clamp((c.r + overlayData[overlay].GetComponentAdjustmentsForChannel(c.r, textureType, 0)), 0, 1);
+					c.g = Mathf.Clamp((c.g + overlayData[overlay].GetComponentAdjustmentsForChannel(c.g, textureType, 1)), 0, 1);
+					c.b = Mathf.Clamp((c.b + overlayData[overlay].GetComponentAdjustmentsForChannel(c.b, textureType, 2)), 0, 1);
+					c.a = Mathf.Clamp((c.a + overlayData[overlay].GetComponentAdjustmentsForChannel(c.a, textureType, 3)), 0, 1);
+					//return overlayColors[overlay - 1];
+					return c;
 				}
 			}
 			public Color32 GetAdditive(int overlay, int textureType)
 			{
 				if (channelAdditiveMask[overlay] != null && channelAdditiveMask[overlay].Length > 0)
 				{
-					return channelAdditiveMask[overlay][textureType];
+					var c = channelAdditiveMask[overlay][textureType];
+					c.r = Mathf.Clamp((c.r + overlayData[overlay].GetComponentAdjustmentsForChannel(c.r, textureType, 0, true)), 0, 1);
+					c.g = Mathf.Clamp((c.g + overlayData[overlay].GetComponentAdjustmentsForChannel(c.g, textureType, 1, true)), 0, 1);
+					c.b = Mathf.Clamp((c.b + overlayData[overlay].GetComponentAdjustmentsForChannel(c.b, textureType, 2, true)), 0, 1);
+					c.a = Mathf.Clamp((c.a + overlayData[overlay].GetComponentAdjustmentsForChannel(c.a, textureType, 3, true)), 0, 1);
+					//return channelAdditiveMask[overlay][textureType];
+					return c;
 				}
 				else
 				{
@@ -374,7 +410,10 @@ namespace UMA
 					_umaDna = value;
 				}
 			}
-			protected Dictionary<int, DnaConverterBehaviour.DNAConvertDelegate> umaDnaConverter = new Dictionary<int, DnaConverterBehaviour.DNAConvertDelegate>();
+			//protected Dictionary<int, DnaConverterBehaviour.DNAConvertDelegate> umaDnaConverter = new Dictionary<int, DnaConverterBehaviour.DNAConvertDelegate>();
+			//DynamicDNAPlugins FEATURE: Allow more than one converter to use the same dna
+			protected Dictionary<int, List<DnaConverterBehaviour.DNAConvertDelegate>> umaDNAConverters = new Dictionary<int, List<DnaConverterBehaviour.DNAConvertDelegate>>();
+			protected Dictionary<int, List<DnaConverterBehaviour.DNAConvertDelegate>> umaDNAPreApplyConverters = new Dictionary<int, List<DnaConverterBehaviour.DNAConvertDelegate>>();
 			protected Dictionary<string, int> mergedSharedColors = new Dictionary<string, int>();
 			public List<UMADnaBase> dnaValues = new List<UMADnaBase>();
 			public SlotData[] slotDataList;
@@ -785,6 +824,23 @@ namespace UMA
 			}
 
 			/// <summary>
+			/// Clears any currently applied ColorAdjusters on all overlays
+			/// </summary>
+			public void ClearOverlayColorAdjusters()
+			{
+				for (int i = 0; i < slotDataList.Length; i++)
+				{
+					if (slotDataList[i] == null)
+						continue;
+					List<OverlayData> slotOverlays = slotDataList[i].GetOverlayList();
+					for(int oi= 0; oi < slotOverlays.Count; oi++)
+					{
+						slotOverlays[oi].colorComponentAdjusters.Clear();
+					}
+				}
+			}
+
+			/// <summary>
 			/// Ensures slots with matching overlays will share the same references.
 			/// </summary>
 			public void MergeMatchingOverlays()
@@ -808,38 +864,73 @@ namespace UMA
 			}
 
 #pragma warning disable 618
-			/// <summary>
-			/// Applies each DNA converter to the UMA data and skeleton.
-			/// </summary>
-			/// <param name="umaData">UMA data.</param>
-			/// <param name="fixUpUMADnaToDynamicUMADna"></param>
-			public void ApplyDNA(UMAData umaData, bool fixUpUMADnaToDynamicUMADna = false)
+			public void PreApplyDNA(UMAData umaData, bool fixUpUMADnaToDynamicUMADna = false)
 			{
 				EnsureAllDNAPresent();
 				//DynamicUMADna:: when loading an older recipe that has UMADnaHumanoid/Tutorial into a race that now uses DynamicUmaDna the following wont work
 				//so check that and fix it if it happens
 				if (fixUpUMADnaToDynamicUMADna)
+				{
 					DynamicDNAConverterBehaviourBase.FixUpUMADnaToDynamicUMADna(this);
+				}
+				else
+				{
+					//clear any color adjusters from all overlays in the recipe
+					//Only do this if we havent looped back to fixup dna
+					umaData.umaRecipe.ClearOverlayColorAdjusters();
+				}
 				foreach (var dnaEntry in umaDna)
 				{
-					DnaConverterBehaviour.DNAConvertDelegate dnaConverter;
-					if (umaDnaConverter.TryGetValue(dnaEntry.Key, out dnaConverter))
+					//DynamicDNAPlugins FEATURE: Allow more than one converter to use the same dna
+					List<DnaConverterBehaviour.DNAConvertDelegate> dnaConverters;
+					this.umaDNAPreApplyConverters.TryGetValue(dnaEntry.Key, out dnaConverters);
+
+					if (dnaConverters != null && dnaConverters.Count > 0)
 					{
-						dnaConverter(umaData, umaData.GetSkeleton());
+						for (int i = 0; i < dnaConverters.Count; i++)
+						{
+							dnaConverters[i](umaData, umaData.GetSkeleton());
+						}
 					}
 					else
 					{
 						//DynamicUMADna:: try again this time calling FixUpUMADnaToDynamicUMADna first
 						if (fixUpUMADnaToDynamicUMADna == false)
 						{
-							ApplyDNA(umaData, true);
+							PreApplyDNA(umaData, true);
 							break;
 						}
-						else
+						/*else
 						{
-							if (Debug.isDebugBuild)
-								Debug.LogWarning("Cannot apply dna: " + dnaEntry.Value.GetType().Name + " using key " + dnaEntry.Key);
+						     if (Debug.isDebugBuild)
+						         Debug.LogWarning("Cannot apply dna: " + dnaEntry.Value.GetType().Name + " using key " + dnaEntry.Key);
+						 }*/
+					}
+				}
+			}
+
+			/// <summary>
+			/// Applies each DNA converter to the UMA data and skeleton.
+			/// </summary>
+			/// <param name="umaData">UMA data.</param>
+			public void ApplyDNA(UMAData umaData)
+			{
+				foreach (var dnaEntry in umaDna)
+				{
+					//DynamicDNAPlugins FEATURE: Allow more than one converter to use the same dna
+					List<DnaConverterBehaviour.DNAConvertDelegate> dnaConverters;
+					umaDNAConverters.TryGetValue(dnaEntry.Key, out dnaConverters);
+					if (dnaConverters.Count > 0)
+					{
+						for (int i = 0; i < dnaConverters.Count; i++)
+						{
+							dnaConverters[i](umaData, umaData.GetSkeleton());
 						}
+					}
+					else
+					{
+						if (Debug.isDebugBuild)
+								Debug.LogWarning("Cannot apply dna: " + dnaEntry.Value.GetType().Name + " using key " + dnaEntry.Key);
 					}
 				}
 			}
@@ -859,7 +950,10 @@ namespace UMA
 						//Dynamic DNA Converters return the typehash of their dna asset or 0 if none is assigned- we dont want to include those
 						if (dnaTypeHash == 0)
 						continue;
-						requiredDnas.Add(dnaTypeHash);
+						//DynamicDNAPlugins FEATURE: Allow more than one converter to use the same dna
+						//check the hash isn't already in the list
+						if(!requiredDnas.Contains(dnaTypeHash))
+							requiredDnas.Add(dnaTypeHash);
                         if (!umaDna.ContainsKey(dnaTypeHash))
 						{
 							var dna = converter.DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
@@ -888,7 +982,10 @@ namespace UMA
 						//Dynamic DNA Converters return the typehash of their dna asset or 0 if none is assigned- we dont want to include those
 						if (dnaTypeHash == 0)
 							continue;
-						requiredDnas.Add(dnaTypeHash);
+						//DynamicDNAPlugins FEATURE: Allow more than one converter to use the same dna
+						//check the hash isn't already in the list
+						if (!requiredDnas.Contains(dnaTypeHash))
+							requiredDnas.Add(dnaTypeHash);
 						if (!umaDna.ContainsKey(dnaTypeHash))
 						{
 							var dna = slotData.asset.slotDNA.DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
@@ -906,11 +1003,14 @@ namespace UMA
 							var dna = umaDna[dnaTypeHash];
 							((DynamicUMADnaBase)dna).dnaAsset = ((DynamicDNAConverterBehaviourBase)slotData.asset.slotDNA).dnaAsset;
 						}
-                    }
+						//When dna is added from slots Prepare doesn't seem to get called for some reason
+						slotData.asset.slotDNA.Prepare();
+					}
 				}
-				foreach (int addedDNAHash in umaDnaConverter.Keys)
+				foreach (int addedDNAHash in umaDNAConverters.Keys)
 				{
-					requiredDnas.Add(addedDNAHash);
+					if(!requiredDnas.Contains(addedDNAHash))
+						requiredDnas.Add(addedDNAHash);
 				}
 
 				//now remove any we no longer need
@@ -932,7 +1032,8 @@ namespace UMA
 			/// </summary>
 			public void ClearDNAConverters()
 			{
-				umaDnaConverter.Clear();
+				umaDNAConverters.Clear();
+				umaDNAPreApplyConverters.Clear();
 				if (raceData != null)
 				{
 					foreach (var converter in raceData.dnaConverterList)
@@ -947,16 +1048,7 @@ namespace UMA
 						//Dynamic DNA Converters return the typehash of their dna asset or 0 if none is assigned- we dont want to include those
 						if (converter.DNATypeHash == 0)
 							continue;
-						if (!umaDnaConverter.ContainsKey(converter.DNATypeHash))
-						{
-							umaDnaConverter.Add(converter.DNATypeHash, converter.ApplyDnaAction);
-						}
-						else
-						{
-							//We MUST NOT give DynamicDNA the same hash a UMADnaHumanoid or else we loose the values
-							if (Debug.isDebugBuild)
-								Debug.Log(raceData.raceName + " has multiple dna converters that are trying to use the same dna (" + converter.DNATypeHash + "). This is not allowed.");
-						}
+						AddDNAUpdater(converter);
 					}
 				}
 			}
@@ -970,15 +1062,22 @@ namespace UMA
 				if (dnaConverter == null) return;
 				//DynamicDNAConverter:: We need to SET these values using the TypeHash since 
 				//just getting the hash of the DNAType will set the same value for all instance of a DynamicDNAConverter
-				if (!umaDnaConverter.ContainsKey(dnaConverter.DNATypeHash))
+				//DynamicDNAPlugins FEATURE: Allow more than one converter to use the same dna
+				if (dnaConverter.PreApplyDnaAction != null)
 				{
-					umaDnaConverter.Add(dnaConverter.DNATypeHash, dnaConverter.ApplyDnaAction);
+					if (!umaDNAPreApplyConverters.ContainsKey(dnaConverter.DNATypeHash))
+						umaDNAPreApplyConverters.Add(dnaConverter.DNATypeHash, new List<DnaConverterBehaviour.DNAConvertDelegate>());
+					if (!umaDNAPreApplyConverters[dnaConverter.DNATypeHash].Contains(dnaConverter.PreApplyDnaAction))
+					{
+						umaDNAPreApplyConverters[dnaConverter.DNATypeHash].Add(dnaConverter.PreApplyDnaAction);
+					}
 				}
+				if (!umaDNAConverters.ContainsKey(dnaConverter.DNATypeHash))
+					umaDNAConverters.Add(dnaConverter.DNATypeHash, new List<DnaConverterBehaviour.DNAConvertDelegate>());
+				if (!umaDNAConverters[dnaConverter.DNATypeHash].Contains(dnaConverter.ApplyDnaAction))
+					umaDNAConverters[dnaConverter.DNATypeHash].Add(dnaConverter.ApplyDnaAction);
 				else
-				{
-					if (Debug.isDebugBuild)
-						Debug.Log(raceData.raceName + " has multiple dna converters that are trying to use the same dna ("+ dnaConverter.DNATypeHash+"). This is not allowed.");
-				}
+					Debug.LogWarning("The applyAction for " + dnaConverter.name + " already existed in the list");
 			}
 
 			/// <summary>
@@ -1091,6 +1190,11 @@ namespace UMA
 				CharacterUpdated.Invoke(this);
 			}
 			dirty = false;
+		}
+
+		public void PreApplyDNA()
+		{
+			umaRecipe.PreApplyDNA(this);
 		}
 
 		public void ApplyDNA()

@@ -1700,18 +1700,26 @@ namespace UMA.CharacterSystem
         private void InitializeExpressionPlayer(UMAData umaData)
         {
             this.CharacterUpdated.RemoveListener(InitializeExpressionPlayer);
-            InitializeExpressionPlayer();
+			InitializeExpressionPlayer();
         }
 
-        private void InitializeExpressionPlayer()
+        private void InitializeExpressionPlayer(bool enable = true)
         {
             var thisExpressionPlayer = gameObject.GetComponent<UMAExpressionPlayer>();
             if (thisExpressionPlayer == null)
                 return;
-            if (thisExpressionPlayer.expressionSet == null)
-                return;
-            thisExpressionPlayer.enabled = true;
-            thisExpressionPlayer.Initialize();
+			//turn this off if we are not Humanoid cos it wont work
+			if (umaData.umaRecipe.raceData.umaTarget == RaceData.UMATarget.Humanoid)
+			{
+				if (thisExpressionPlayer.expressionSet == null)
+					return;
+				thisExpressionPlayer.enabled = true;
+				thisExpressionPlayer.Initialize();
+			}
+			else
+			{
+				thisExpressionPlayer.enabled = false;
+			}
         }
 
         /// <summary>

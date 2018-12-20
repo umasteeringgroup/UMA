@@ -19,7 +19,7 @@ MonoBehaviour:
     materialPropertyName: _MainTex
     sourceTextureName: 
   - channelType: 1
-    textureFormat: 0
+    textureFormat: 2
     materialPropertyName: _BumpMap
     sourceTextureName: 
   - channelType: 0

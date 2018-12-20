@@ -865,6 +865,20 @@ MonoBehaviour:
     _Guid: 45c60a52856ef014db9ac30909401956
     IsResource: 0
     IsAssetBundle: 0
+  - _BaseTypeName: SlotDataAsset
+    _Name: ElfEarsMorph
+    _SerializedItem: {fileID: 11400000, guid: 82e2d1671a9ac524d805de01b9408543, type: 2}
+    _Path: Assets/UMA/Examples/DynamicDNAPlugins Examples/Assets/Slots/ElfEarsMorph_Slot.asset
+    _Guid: 82e2d1671a9ac524d805de01b9408543
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: SlotDataAsset
+    _Name: MakeMeFatJeans
+    _SerializedItem: {fileID: 11400000, guid: f1aa0614c0ce2f242a448e8f80248623, type: 2}
+    _Path: Assets/UMA/Examples/DynamicDNAPlugins Examples/Assets/Slots/MakeMeFatJeans.asset
+    _Guid: f1aa0614c0ce2f242a448e8f80248623
+    IsResource: 0
+    IsAssetBundle: 0
   - _BaseTypeName: OverlayDataAsset
     _Name: FemaleLongHair_Overlay
     _SerializedItem: {fileID: 11400000, guid: 304fc44cf9ff5ad428e4802e082702c5, type: 2}
@@ -1666,6 +1680,13 @@ MonoBehaviour:
     _Guid: f7b4c7fd4e2e99844be54c0b6967a79e
     IsResource: 0
     IsAssetBundle: 0
+  - _BaseTypeName: RaceData
+    _Name: DNAConverterControllerExampleRace
+    _SerializedItem: {fileID: 11400000, guid: 47ca517b770126341b0332ab373bc55d, type: 2}
+    _Path: Assets/UMA/Examples/DNAConverterController Examples/Assets/RaceData/DNAConverterControllerExampleRace.asset
+    _Guid: 47ca517b770126341b0332ab373bc55d
+    IsResource: 0
+    IsAssetBundle: 0
   - _BaseTypeName: UMATextRecipe
     _Name: FemaleTallShoes_Black
     _SerializedItem: {fileID: 11400000, guid: f7ff3729dba08b044a2535b32a1251ba, type: 2}
@@ -2339,6 +2360,14 @@ MonoBehaviour:
     _Guid: 3e701a02cd597ad4193792a7a3202dd3
     IsResource: 0
     IsAssetBundle: 0
+  - _BaseTypeName: UMATextRecipe
+    _Name: HumanMaleDCSII Base Recipe
+    _SerializedItem: {fileID: 11400000, guid: 64c6614d653bc0e4d8b0ec1524b409b6, type: 2}
+    _Path: Assets/UMA/Content/UMA_Core/HumanMale/Recipes/BaseRecipes/HumanMaleDCSII
+      Base Recipe.asset
+    _Guid: 64c6614d653bc0e4d8b0ec1524b409b6
+    IsResource: 0
+    IsAssetBundle: 0
   - _BaseTypeName: UMAWardrobeRecipe
     _Name: FemaleTallShoes_Black
     _SerializedItem: {fileID: 11400000, guid: f7ff3729dba08b044a2535b32a1251ba, type: 2}
@@ -2798,6 +2827,27 @@ MonoBehaviour:
     _Guid: 72fba4c50655ea2428415b2a0debc752
     IsResource: 0
     IsAssetBundle: 0
+  - _BaseTypeName: UMAWardrobeRecipe
+    _Name: AlienHeadMorph
+    _SerializedItem: {fileID: 11400000, guid: 4fbbb24f4db92f541a8f8966fbc887e4, type: 2}
+    _Path: Assets/UMA/Examples/DynamicDNAPlugins Examples/Assets/Recipes/WardrobeRecipes/AlienHeadMorph.asset
+    _Guid: 4fbbb24f4db92f541a8f8966fbc887e4
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: UMAWardrobeRecipe
+    _Name: ElfEarsMorph
+    _SerializedItem: {fileID: 11400000, guid: d7f773c6ff9565340b55a7325362b86f, type: 2}
+    _Path: Assets/UMA/Examples/DynamicDNAPlugins Examples/Assets/Recipes/WardrobeRecipes/ElfEarsMorph.asset
+    _Guid: d7f773c6ff9565340b55a7325362b86f
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: UMAWardrobeRecipe
+    _Name: MakeMeFatJeans
+    _SerializedItem: {fileID: 11400000, guid: f57cc3e1432d6994d9ca2cd30f723bd3, type: 2}
+    _Path: Assets/UMA/Examples/DynamicDNAPlugins Examples/Assets/Recipes/WardrobeRecipes/MakeMeFatJeans.asset
+    _Guid: f57cc3e1432d6994d9ca2cd30f723bd3
+    IsResource: 0
+    IsAssetBundle: 0
   - _BaseTypeName: RuntimeAnimatorController
     _Name: UMA_APose_Controller
     _SerializedItem: {fileID: 9100000, guid: 66af5264f1619114db5f72f979ce14bd, type: 2}
@@ -2964,6 +3014,13 @@ MonoBehaviour:
     _SerializedItem: {fileID: 11400000, guid: 534a08ac04adc1849943bde519c8d8f5, type: 2}
     _Path: Assets/UMA/Examples/Blendshape Examples/DNA/BlendNamesDynamicDNA.asset
     _Guid: 534a08ac04adc1849943bde519c8d8f5
+    IsResource: 0
+    IsAssetBundle: 0
+  - _BaseTypeName: DynamicUMADnaAsset
+    _Name: ExampleDNAAsset
+    _SerializedItem: {fileID: 11400000, guid: 51557a0d9997c5945973dff0a2fc7031, type: 2}
+    _Path: Assets/UMA/Examples/DNAConverterController Examples/Assets/DNA/ExampleDNAAsset.asset
+    _Guid: 51557a0d9997c5945973dff0a2fc7031
     IsResource: 0
     IsAssetBundle: 0
 --- !u!1001 &100100000

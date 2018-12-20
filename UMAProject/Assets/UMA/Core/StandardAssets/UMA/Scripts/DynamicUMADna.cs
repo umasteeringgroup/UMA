@@ -157,23 +157,20 @@ namespace UMA
             _values = newValues.ToArray();
         }
 
-        public override float GetValue(string dnaName, bool failSilently = false)
+		public override float GetValue(string dnaName, bool failSilently = false)
         {
             int idx = -1;
-			if(Names.Length > 0 && dnaName != "")
-				for (int i = 0; i < Names.Length; i++)
-				{
-					if (Names[i] == dnaName)
-					{
-						idx = i;
-					}
-				}
-            if (idx == -1 && failSilently == false)
+			//changed to IndexOf because its slightly faster than For loop
+			if (!string.IsNullOrEmpty(dnaName))
+				idx = System.Array.IndexOf(Names, dnaName);
+
+			if (idx == -1 && failSilently == false)
                 throw new System.ArgumentOutOfRangeException();
             else if (idx == -1 && failSilently == true)
                 return 0.5f;
             return GetValue(idx);
         }
+
         public override float GetValue(int idx)
         {
             if (idx < Count)
@@ -185,14 +182,10 @@ namespace UMA
         public override void SetValue(string dnaName, float value)
         {
             int idx = -1;
-            for (int i = 0; i < Names.Length; i++)
-            {
-                if (Names[i] == dnaName)
-                {
-                    idx = i;
-                }
-            }
-            if (idx == -1)
+			//changed to IndexOf because its slightly faster than For loop
+			if (!string.IsNullOrEmpty(dnaName))
+				idx = System.Array.IndexOf(Names, dnaName);
+			if (idx == -1)
                 throw new System.ArgumentOutOfRangeException();
             SetValue(idx, value);
         }
