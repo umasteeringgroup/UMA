@@ -8,12 +8,16 @@ using UMA.CharacterSystem;
 
 namespace UMA
 {
-	//Currently SkeletonModifiers are only updated to use DNAEvaluatorList when they are added to one of these plugins
-	//In future though we should do the update using ISerializationCallbackReciever on the SkeletonModifier class itself
 	public class SkeletonDNAConverterPlugin : DynamicDNAPlugin
 	{
+		#region FIELDS
+
 		[SerializeField]
 		private List<SkeletonModifier> _skeletonModifiers = new List<SkeletonModifier>();
+
+		#endregion
+
+		#region PUBLIC PROPERTIES
 
 		public List<SkeletonModifier> skeletonModifiers
 		{
@@ -21,6 +25,7 @@ namespace UMA
 			set { _skeletonModifiers = value; }
 		}
 
+		#endregion
 
 		#region PUBLIC METHODS
 
@@ -31,7 +36,7 @@ namespace UMA
 
 		#endregion
 
-		#region REQUIRED DYNAMICDNAPLUGIN METHODS
+		#region REQUIRED DYNAMICDNAPLUGIN METHODS PROPERTIES
 
 		/// <summary>
 		/// Returns a dictionary of all the dna names in use by the plugin and the entries in its converter list that reference them
@@ -56,7 +61,12 @@ namespace UMA
 				return dict;
 			}
 		}
-
+		/// <summary>
+		/// Apply the modifiers using the given dna (determined by the typehash)
+		/// </summary>
+		/// <param name="umaData"></param>
+		/// <param name="skeleton"></param>
+		/// <param name="dnaTypeHash"></param>
 		public override void ApplyDNA(UMAData umaData, UMASkeleton skeleton, int dnaTypeHash)
 		{
 			var umaDna = umaData.GetDna(dnaTypeHash);
@@ -109,6 +119,10 @@ namespace UMA
 
 			}
 		}
+
+		#endregion
+
+		#region DYNAMICDNAPLUGIN EDITOR OVERRIDES
 
 #if UNITY_EDITOR
 

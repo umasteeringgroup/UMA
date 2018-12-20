@@ -126,16 +126,19 @@ namespace UMA
 				return dict;
 			}
 		}
-
+		/// <summary>
+		/// Apply the boneposes according to the given dna (determined by the dnaTypeHash)
+		/// </summary>
+		/// <param name="umaData"></param>
+		/// <param name="skeleton"></param>
+		/// <param name="dnaTypeHash"></param>
 		public override void ApplyDNA(UMAData umaData, UMASkeleton skeleton, int dnaTypeHash)
 		{
 			var umaDna = umaData.GetDna(dnaTypeHash);
 			var masterWeightCalc = masterWeight.GetWeight(umaDna);
-			//var weightedDNA = masterWeight.GetWeightedDNA(umaDna);
 			for (int i = 0; i < _poseDNAConverters.Count; i++)
 			{
 				_poseDNAConverters[i].ApplyDNA(umaData, skeleton, dnaTypeHash, masterWeightCalc);
-				//_poseDNAConverters[i].ApplyDNA(umaData, skeleton, weightedDNA);
 			}
 		}
 

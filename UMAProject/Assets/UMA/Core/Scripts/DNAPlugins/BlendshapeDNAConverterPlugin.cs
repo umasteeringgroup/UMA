@@ -63,7 +63,12 @@ namespace UMA
 				return dict;
 			}
 		}
-
+		/// <summary>
+		/// Apply the blendshape modifications according to the given dna (determined by the dnaTypeHash)
+		/// </summary>
+		/// <param name="umaData"></param>
+		/// <param name="skeleton"></param>
+		/// <param name="dnaTypeHash"></param>
 		public override void ApplyDNA(UMAData umaData, UMASkeleton skeleton, int dnaTypeHash)
 		{
 			var umaDna = umaData.GetDna(dnaTypeHash);

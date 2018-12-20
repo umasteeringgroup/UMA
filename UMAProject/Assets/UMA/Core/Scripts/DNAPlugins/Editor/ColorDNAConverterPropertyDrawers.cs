@@ -64,11 +64,6 @@ namespace UMA.Editors
 			EditorGUIUtility.labelWidth = prevLabelWidth;
 			EditorGUI.EndProperty();
 		}
-
-		/*public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
-		{
-			return EditorGUIUtility.singleLineHeight * 2 + EditorGUIUtility.standardVerticalSpacing;
-		}*/
 	}
 
 	[CustomPropertyDrawer(typeof(ColorDNAConverterPlugin.DNAColorSet.DNAColorModifier))]

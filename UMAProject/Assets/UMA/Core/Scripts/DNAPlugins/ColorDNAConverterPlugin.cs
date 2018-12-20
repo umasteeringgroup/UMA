@@ -12,6 +12,191 @@ namespace UMA
 	public class ColorDNAConverterPlugin : DynamicDNAPlugin
 	{
 
+		#region FIELDS
+
+		[FormerlySerializedAs("colorSets")]
+		[SerializeField]
+		public DNAColorSet[] _colorSets = new DNAColorSet[0];
+
+		#endregion
+
+		#region PRIVATE FIELDS
+
+		//has dna been applied this cycle
+		[System.NonSerialized]
+		private List<GameObject> _dnaAppliedTo = new List<GameObject>();
+		//have we added the extra listeners required by ColorDNA?
+		//private lists in ScriptableObjects seem to need to be explicitly set as non serialized for some reason
+		[System.NonSerialized]
+		private List<GameObject> _listenersAddedTo = new List<GameObject>();
+
+		#endregion
+
+		#region PUBLIC PROPERTIES
+
+		public DNAColorSet[] colorSets
+		{
+			get { return _colorSets; }
+			set { _colorSets = value; }
+		}
+
+		public override ApplyPassOpts ApplyPass
+		{
+			get
+			{
+				return ApplyPassOpts.PrePass;
+			}
+		}
+
+		public override Dictionary<string, List<int>> IndexesForDnaNames
+		{
+			get
+			{
+				var dict = new Dictionary<string, List<int>>();
+				for (int i = 0; i < _colorSets.Length; i++)
+				{
+					for (int ci = 0; ci < _colorSets[i].UsedDNANames.Count; ci++)
+					{
+						if (!dict.ContainsKey(_colorSets[i].UsedDNANames[ci]))
+							dict.Add(_colorSets[i].UsedDNANames[ci], new List<int>());
+
+						dict[_colorSets[i].UsedDNANames[ci]].Add(i);
+					}
+				}
+				return dict;
+			}
+		}
+
+		#endregion
+
+		#region PRIVATE METHODS
+
+		private void ResetOnCharaterUpdated(UMAData umaData)
+		{
+			_dnaAppliedTo.Remove(umaData.gameObject);
+		}
+
+		#endregion
+
+		#region REQUIRED DYNAMICDNAPLUGIN METHODS
+
+		public override void ApplyDNA(UMAData umaData, UMASkeleton skeleton, int dnaTypeHash)
+		{
+			//Add the reset listeners if we havent already
+			//we need this because if 'fastGeneration' is false we may still get another loop
+			//and we should not do this again if _dnaAppliedTo contains umaData.gameObject
+			if (!_listenersAddedTo.Contains(umaData.gameObject))
+			{
+				umaData.CharacterUpdated.AddListener(ResetOnCharaterUpdated);
+				_listenersAddedTo.Add(umaData.gameObject);
+			}
+
+			if(_dnaAppliedTo.Contains(umaData.gameObject))
+				return;
+
+			UMADnaBase activeDNA = umaData.GetDna(dnaTypeHash);
+			if (activeDNA == null)
+			{
+				Debug.LogError("Could not get DNA values for: " + this.name);
+				return;
+			}
+			var masterWeightCalc = masterWeight.GetWeight(activeDNA);
+			if (masterWeightCalc == 0f)
+				return;
+
+			bool needsUpdate = false;
+
+			for(int i = 0; i < _colorSets.Length; i++)
+			{
+				if (_colorSets[i].modifyingDNA.UsedDNANames.Count == 0 || string.IsNullOrEmpty(_colorSets[i].targetName))
+					continue;
+				var targetOverlays = new List<OverlayData>();
+				for (int si = 0; si < umaData.umaRecipe.slotDataList.Length; si++)
+				{
+					var overlays = umaData.umaRecipe.slotDataList[si].GetOverlayList();
+					for (int oi = 0; oi < overlays.Count; oi++)
+					{
+						if (overlays[oi] != null)
+						{
+							//we can target specific Overlays or SharedColors now
+							if ((overlays[oi].colorData.IsASharedColor && overlays[oi].colorData.name == _colorSets[i].targetName) || overlays[oi].overlayName == _colorSets[i].targetName)
+							{
+								if(!targetOverlays.Contains(overlays[oi]))
+								targetOverlays.Add(overlays[oi]);
+							}
+						}
+					}
+				}
+				if (targetOverlays.Count == 0)
+					continue;
+				if (_colorSets[i].EvaluateAndApplyAdjustments(activeDNA, masterWeightCalc, targetOverlays))
+					needsUpdate = true;
+			}
+
+			if (needsUpdate)
+			{
+				umaData.isTextureDirty = true;
+				umaData.isAtlasDirty = true;
+			}
+			_dnaAppliedTo.Add(umaData.gameObject);
+		}
+
+		#endregion
+
+		#region DYNAMICDNAPLUGIN EDITOR OVERRIDES
+
+#if UNITY_EDITOR
+
+		//this could be runtime in DynamicDNAPlugin if it was ever needed
+		public override bool ImportSettings(Object pluginToImport, int importMethod)
+		{
+			if (pluginToImport.GetType() == typeof(ColorDNAConverterPlugin))
+			{
+				List<DNAColorSet> thisColorSets = importMethod == 0 ? new List<DNAColorSet>(_colorSets) : new List<DNAColorSet>();
+				for (int i = 0; i < ((ColorDNAConverterPlugin)pluginToImport)._colorSets.Length; i++)
+				{
+					thisColorSets.Add(new DNAColorSet(((ColorDNAConverterPlugin)pluginToImport)._colorSets[i]));
+				}
+				_colorSets = thisColorSets.ToArray();
+				return true;
+			}
+			return false;
+		}
+
+		public override GUIContent GetPluginEntryLabel(SerializedProperty entry, SerializedObject pluginSO, int entryIndex)
+		{
+			if (entry != null)
+			{
+				List<string> usedColorProps = new List<string>();
+				if (entry.FindPropertyRelative("colorModifier").FindPropertyRelative("R").FindPropertyRelative("enable").boolValue == true)
+					usedColorProps.Add("R");
+				if (entry.FindPropertyRelative("colorModifier").FindPropertyRelative("G").FindPropertyRelative("enable").boolValue == true)
+					usedColorProps.Add("G");
+				if (entry.FindPropertyRelative("colorModifier").FindPropertyRelative("B").FindPropertyRelative("enable").boolValue == true)
+					usedColorProps.Add("B");
+				if (entry.FindPropertyRelative("colorModifier").FindPropertyRelative("A").FindPropertyRelative("enable").boolValue == true)
+					usedColorProps.Add("A");
+				var usedColorComponents = string.Join(", ", usedColorProps.ToArray());
+				usedColorComponents = string.IsNullOrEmpty(usedColorComponents) ? "" : "Components: [" + usedColorComponents + "]";
+				return new GUIContent("("+ entry.FindPropertyRelative("mode").enumNames[entry.FindPropertyRelative("mode").enumValueIndex] + ") "+ entry.FindPropertyRelative("targetName").stringValue + " - Texture: [" + entry.FindPropertyRelative("textureChannel").intValue + "] "+ usedColorComponents);
+			}
+			return GUIContent.none;
+		}
+
+		public override string PluginHelp
+		{
+			get
+			{
+				return "ColorDNA Converters convert DNA values into color changes on an overlay texture. You can define which texture on the overlay you wish to affect to achieve things like changing the diffuse color, fading normal maps in and out, making a character more or less metallic and so forth. The changes do not change 'Shared Colors' but are applied to them at the dna stage.";
+			}
+		}
+
+#endif
+
+		#endregion
+
+		#region SPECIAL TYPES
+
 		[System.Serializable]
 		public class DNAColorSet
 		{
@@ -229,159 +414,6 @@ namespace UMA
 				}
 			}
 		}
-
-		public DNAColorSet[] colorSets = new DNAColorSet[0];
-
-		//has dna been applied this cycle
-		[System.NonSerialized]
-		private List<GameObject> _dnaAppliedTo = new List<GameObject>();
-		//have we added the extra listeners required by ColorDNA?
-		//private lists in ScriptableObjects seem to need to be explicitly set as non serialized for some reason
-		[System.NonSerialized]
-		private List<GameObject> _listenersAddedTo = new List<GameObject>();
-
-		public override ApplyPassOpts ApplyPass
-		{
-			get
-			{
-				return ApplyPassOpts.PrePass;
-			}
-		}
-
-		public override Dictionary<string, List<int>> IndexesForDnaNames
-		{
-			get
-			{
-				var dict = new Dictionary<string, List<int>>();
-				for (int i = 0; i < colorSets.Length; i++)
-				{
-					for (int ci = 0; ci < colorSets[i].UsedDNANames.Count; ci++)
-					{
-						if (!dict.ContainsKey(colorSets[i].UsedDNANames[ci]))
-							dict.Add(colorSets[i].UsedDNANames[ci], new List<int>());
-
-						dict[colorSets[i].UsedDNANames[ci]].Add(i);
-					}
-				}
-				return dict;
-			}
-		}
-
-		private void ResetOnCharaterUpdated(UMAData umaData)
-		{
-			_dnaAppliedTo.Remove(umaData.gameObject);
-		}
-
-		public override void ApplyDNA(UMAData umaData, UMASkeleton skeleton, int dnaTypeHash)
-		{
-			//Add the reset listeners if we havent already
-			//we need this because if 'fastGeneration' is false we may still get another loop
-			//and we should not do this again if _dnaAppliedTo contains umaData.gameObject
-			if (!_listenersAddedTo.Contains(umaData.gameObject))
-			{
-				umaData.CharacterUpdated.AddListener(ResetOnCharaterUpdated);
-				_listenersAddedTo.Add(umaData.gameObject);
-			}
-
-			if(_dnaAppliedTo.Contains(umaData.gameObject))
-				return;
-
-			UMADnaBase activeDNA = umaData.GetDna(dnaTypeHash);
-			if (activeDNA == null)
-			{
-				Debug.LogError("Could not get DNA values for: " + this.name);
-				return;
-			}
-			var masterWeightCalc = masterWeight.GetWeight(activeDNA);
-			if (masterWeightCalc == 0f)
-				return;
-
-			bool needsUpdate = false;
-
-			for(int i = 0; i < colorSets.Length; i++)
-			{
-				if (colorSets[i].modifyingDNA.UsedDNANames.Count == 0 || string.IsNullOrEmpty(colorSets[i].targetName))
-					continue;
-				var targetOverlays = new List<OverlayData>();
-				for (int si = 0; si < umaData.umaRecipe.slotDataList.Length; si++)
-				{
-					var overlays = umaData.umaRecipe.slotDataList[si].GetOverlayList();
-					for (int oi = 0; oi < overlays.Count; oi++)
-					{
-						if (overlays[oi] != null)
-						{
-							//we can target specific Overlays or SharedColors now
-							if ((overlays[oi].colorData.IsASharedColor && overlays[oi].colorData.name == colorSets[i].targetName) || overlays[oi].overlayName == colorSets[i].targetName)
-							{
-								if(!targetOverlays.Contains(overlays[oi]))
-								targetOverlays.Add(overlays[oi]);
-							}
-						}
-					}
-				}
-				if (targetOverlays.Count == 0)
-					continue;
-				if (colorSets[i].EvaluateAndApplyAdjustments(activeDNA, masterWeightCalc, targetOverlays))
-					needsUpdate = true;
-			}
-
-			if (needsUpdate)
-			{
-				umaData.isTextureDirty = true;
-				umaData.isAtlasDirty = true;
-			}
-			_dnaAppliedTo.Add(umaData.gameObject);
-		}
-
-		#region DYNAMICDNAPLUGIN EDITOR OVERRIDES
-
-#if UNITY_EDITOR
-
-		//this could be runtime in DynamicDNAPlugin if it was ever needed
-		public override bool ImportSettings(Object pluginToImport, int importMethod)
-		{
-			if (pluginToImport.GetType() == typeof(ColorDNAConverterPlugin))
-			{
-				List<DNAColorSet> thisColorSets = importMethod == 0 ? new List<DNAColorSet>(colorSets) : new List<DNAColorSet>();
-				for (int i = 0; i < ((ColorDNAConverterPlugin)pluginToImport).colorSets.Length; i++)
-				{
-					thisColorSets.Add(new DNAColorSet(((ColorDNAConverterPlugin)pluginToImport).colorSets[i]));
-				}
-				colorSets = thisColorSets.ToArray();
-				return true;
-			}
-			return false;
-		}
-
-		public override GUIContent GetPluginEntryLabel(SerializedProperty entry, SerializedObject pluginSO, int entryIndex)
-		{
-			if (entry != null)
-			{
-				List<string> usedColorProps = new List<string>();
-				if (entry.FindPropertyRelative("colorModifier").FindPropertyRelative("R").FindPropertyRelative("enable").boolValue == true)
-					usedColorProps.Add("R");
-				if (entry.FindPropertyRelative("colorModifier").FindPropertyRelative("G").FindPropertyRelative("enable").boolValue == true)
-					usedColorProps.Add("G");
-				if (entry.FindPropertyRelative("colorModifier").FindPropertyRelative("B").FindPropertyRelative("enable").boolValue == true)
-					usedColorProps.Add("B");
-				if (entry.FindPropertyRelative("colorModifier").FindPropertyRelative("A").FindPropertyRelative("enable").boolValue == true)
-					usedColorProps.Add("A");
-				var usedColorComponents = string.Join(", ", usedColorProps.ToArray());
-				usedColorComponents = string.IsNullOrEmpty(usedColorComponents) ? "" : "Components: [" + usedColorComponents + "]";
-				return new GUIContent("("+ entry.FindPropertyRelative("mode").enumNames[entry.FindPropertyRelative("mode").enumValueIndex] + ") "+ entry.FindPropertyRelative("targetName").stringValue + " - Texture: [" + entry.FindPropertyRelative("textureChannel").intValue + "] "+ usedColorComponents);
-			}
-			return GUIContent.none;
-		}
-
-		public override string PluginHelp
-		{
-			get
-			{
-				return "ColorDNA Converters convert DNA values into color changes on an overlay texture. You can define which texture on the overlay you wish to affect to achieve things like changing the diffuse color, fading normal maps in and out, making a character more or less metallic and so forth. The changes do not change 'Shared Colors' but are applied to them at the dna stage.";
-			}
-		}
-
-#endif
 
 		#endregion
 

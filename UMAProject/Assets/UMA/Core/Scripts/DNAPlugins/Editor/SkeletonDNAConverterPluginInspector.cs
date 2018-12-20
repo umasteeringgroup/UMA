@@ -42,16 +42,7 @@ namespace UMA.Editors
 			_placeholderTextStyle = new GUIStyle(EditorStyles.textArea);
 			_placeholderTextStyle.fontStyle = FontStyle.Italic;
 			_warningIcon = EditorGUIUtility.IconContent("console.warnicon.sml").image;
-			//TODO This wont happen here It will happen during the upgrade process
-			/*for(int i = 0; i < (_target as SkeletonDNAConverterPlugin).skeletonModifiers.Count; i++)
-			{
-				(_target as SkeletonDNAConverterPlugin).skeletonModifiers[i].UpgradeToDNAEvaluators();
-			}*/
 		}
-
-		//Enable Editing of Starting Values and the corresponding 'Reset all Stating Values to Default' should be tool menu options I think
-		//We never wanted users editing starting values anyway because when they do that they are essentially creating a bone Pose 
-		//and its much better for them if thats what they actually do because those are much easier to edit
 
 		protected override GenericMenu GetHeaderToolsMenuOptions(GenericMenu toolsMenu)
 		{
@@ -190,12 +181,6 @@ namespace UMA.Editors
 						for (int mi = 0; mi < mods.arraySize; mi++)
 						{
 							thisMod = mods.GetArrayElementAtIndex(mi);
-							/*modsi = thisMod.FindPropertyRelative("_modifier").enumValueIndex;
-							if (modsi > 3)
-							{
-								if (thisMod.FindPropertyRelative("_DNATypeName").stringValue.IndexOf(elementSearchString, StringComparison.CurrentCultureIgnoreCase) > -1)
-									_continue = false;
-							}*/
 							if (thisMod.FindPropertyRelative("_dnaName").stringValue.IndexOf(elementSearchString, StringComparison.CurrentCultureIgnoreCase) > -1)
 								_continue = false;
 						}
