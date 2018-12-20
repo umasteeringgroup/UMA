@@ -233,16 +233,10 @@ namespace UMA
 				if (baseScaleTrans != null)
 				{
 					var liveScaleResult = _liveScale != -1f ? _liveScale : _scale;
-					//Debug.Log("liveScaleResult " + liveScaleResult);
 					float finalOverallScale = baseScaleTrans.localScale.x * liveScaleResult;//hmm why does this work- its supposed to be +
 					skeleton.SetScale(_scaleBoneHash, new Vector3(finalOverallScale, finalOverallScale, finalOverallScale));
 				}
 			}
-			//hmm we still need to disable this completely for things like eye spacing
-			//BUT slots might need to add to a characters height/mass/radius
-			//Like a character gets a HUGE gun thats a big as they are, then maybe the mass/bounds/radius
-			//need modifying?
-			//so maybe we need an enum 'AdjustBase, ModifyBase, Off'?
 			if (_adjustHeight || _adjustMass || _adjustRadius || _adjustBounds)
 			{
 				var baseRenderer = GetBaseRenderer(umaData);
@@ -300,7 +294,6 @@ namespace UMA
 
 			//somehow the bounds end up beneath the floor i.e. newBounds.center.y - newBounds.extents.y is actually a minus number
 			//tighten bounds fixes this
-			//does this need to be done with the uma in the root?
 			if (_tightenBounds)
 			{
 				Vector3 newCenter = new Vector3(newBounds.center.x, newBounds.center.y, newBounds.center.z);
@@ -389,7 +382,6 @@ namespace UMA
 
 			if (umaData.umaRecipe.raceData.umaTarget == RaceData.UMATarget.Humanoid)
 			{
-				//dont we want to do this regardless of whether we are adjusting or not?
 				//adjusting is only about tweaking the result
 				if (_adjustHeight || _adjustRadius)
 				{

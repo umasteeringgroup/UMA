@@ -9,7 +9,6 @@ namespace UMA
 	[CustomPropertyDrawer(typeof(BaseCharacterModifier),true)]
 	public class BaseCharacterModifierPropertyDrawer : PropertyDrawer
 	{
-		//I want an always expanded attribute here but I'll get to that...
 		BaseCharacterModifier _target;
 
 		private bool _alwaysExpanded = false;
@@ -132,21 +131,16 @@ namespace UMA
 
 				//fieldsRects are whatever is left
 				var scaleFieldsRect = new Rect(scaleLabelRect.xMax, scaleRect.yMin, (position.width / 3) * 2, scaleRect.height);
-				//var scaleFields1LabelRect = new Rect(scaleFieldsRect.xMin, scaleFieldsRect.yMin, 40f, EditorGUIUtility.singleLineHeight);
 				var scaleFields1FieldRect = new Rect(scaleFieldsRect.xMin, scaleFieldsRect.yMin, (scaleFieldsRect.width / 3), EditorGUIUtility.singleLineHeight);
 				var scaleFields2LabelRect = new Rect(scaleFields1FieldRect.xMax, scaleFieldsRect.yMin, 40f, EditorGUIUtility.singleLineHeight);
 				var scaleFields2FieldRect = new Rect(scaleFields2LabelRect.xMax, scaleFieldsRect.yMin, ((scaleFieldsRect.width / 3) * 2) - 40f, EditorGUIUtility.singleLineHeight);
 
 				var heightFieldsRect = new Rect(scaleLabelRect.xMax, heightRect.yMin, (position.width / 3) * 2, scaleRect.height);
-				//var heightFields1LabelRect = new Rect(heightFieldsRect.xMin, heightFieldsRect.yMin, 80f, EditorGUIUtility.singleLineHeight);
 				var heightFields1FieldRect = new Rect(heightFieldsRect.xMin, heightFieldsRect.yMin, ((heightFieldsRect.width / 3) * 2), EditorGUIUtility.singleLineHeight);
-				//var heightFields2LabelRect = new Rect(heightFields1FieldRect.xMax, heightFieldsRect.yMin, 20f, EditorGUIUtility.singleLineHeight);
 				var heightFields2FieldRect = new Rect(heightFields1FieldRect.xMax, heightFieldsRect.yMin, (heightFieldsRect.width / 3), EditorGUIUtility.singleLineHeight);
 
 				var radiusFieldsRect = new Rect(scaleLabelRect.xMax, radiusRect.yMin, (position.width / 3) * 2, scaleRect.height);
-				//var radiusFields1LabelRect = new Rect(radiusFieldsRect.xMin, radiusFieldsRect.yMin, 20f, EditorGUIUtility.singleLineHeight);
 				var radiusFields1FieldRect = new Rect(radiusFieldsRect.xMin, radiusFieldsRect.yMin, (radiusFieldsRect.width / 2), EditorGUIUtility.singleLineHeight);
-				//var radiusFields2LabelRect = new Rect(radiusFields1FieldRect.xMax, radiusFieldsRect.yMin, 20f, EditorGUIUtility.singleLineHeight);
 				var radiusFields2FieldRect = new Rect(radiusFields1FieldRect.xMax, radiusFieldsRect.yMin, (radiusFieldsRect.width / 2), EditorGUIUtility.singleLineHeight);
 
 
@@ -192,10 +186,8 @@ namespace UMA
 				EditorGUI.EndProperty();
 
 				EditorGUI.BeginDisabledGroup(!adjustHeightProp.boolValue);
-				//EditorGUI.LabelField(heightFields1LabelRect, "Head Ratio");
 				EditorGUIUtility.labelWidth = 80f;
 				headRatioProp.floatValue = EditorGUI.FloatField(heightFields1FieldRect, "Head Ratio", headRatioProp.floatValue);
-				//EditorGUI.LabelField(heightFields2LabelRect, " Y ");
 				EditorGUIUtility.labelWidth = 20f;
 				radiusAdjustYProp.floatValue = EditorGUI.FloatField(heightFields2FieldRect, " Y ", radiusAdjustYProp.floatValue);
 				EditorGUI.EndDisabledGroup();
@@ -206,9 +198,7 @@ namespace UMA
 				EditorGUI.BeginDisabledGroup(!adjustRadiusProp.boolValue);
 				var radiusV2 = radiusAdjustProp.vector2Value;
 				EditorGUI.BeginChangeCheck();
-				//EditorGUI.LabelField(radiusFields1LabelRect, "X ");
 				radiusV2.x = EditorGUI.FloatField(radiusFields1FieldRect, "X ", radiusV2.x);
-				//EditorGUI.LabelField(radiusFields2LabelRect, " Z ");
 				radiusV2.y = EditorGUI.FloatField(radiusFields2FieldRect, " Z ", radiusV2.y);
 				if (EditorGUI.EndChangeCheck())
 				{
@@ -236,7 +226,6 @@ namespace UMA
 				EditorGUI.PropertyField(boundsFieldsRect, boundAdjustProp, GUIContent.none);
 				EditorGUI.EndDisabledGroup();
 
-				//I never know if you should do this or not?
 				property.serializedObject.ApplyModifiedProperties();
 
 				EditorGUIUtility.labelWidth = prevlabelWidth;

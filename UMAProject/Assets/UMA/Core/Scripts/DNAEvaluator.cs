@@ -6,7 +6,7 @@ using UMA;
 namespace UMA
 {
 	//A DNAEvaluator performs an math evaluation on an incoming dna value.
-	//All over the place in our code we change the incoming dna value from its standard 0 -> 1 range to a -1 -> 1 range
+	//All over the place in our code we change the incoming dna value from its standard 0 -> 1 range to a -0.5 -> 0.5 range
 	//but then in Morphset new code was needed in order to change the value into a value that could be used for 'PoseOne' or 'PoseZero'
 	//The whole idea of DNAEvaluator (and its corresoponding DNAEvaluationGraph) is to rid us of the need to make new code every time 
 	//we need to perform a different math calculation on a dna value (and to give this flexibility to users as well)
@@ -42,13 +42,12 @@ namespace UMA
 
 		//used at runtime to speed up finding dna values. The first time the evaluator evaluates it uses the dnaName, if the request successfully
 		//returns an index, thereafter the index is used
-		//this doesn't seem to have a massive impact on speed either
+		//this has a minor impact on speed for lookups
 		[System.NonSerialized]
 		private int _lastIndex = -1;
 		
 
 		//if the evaluator fails to evaluate for any reason it returns this value
-		//But should this be 0.5 or should it be 0? I'm using 0.5 because 'failSilently' in DynamicUMADNA returns 0.5 when a name isn't found
 		public static readonly float defaultDNAValue = 0.5f;
 
 		public CalcOption calcOption

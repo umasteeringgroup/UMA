@@ -17,7 +17,7 @@ namespace UMA.Editors
 		[MenuItem("Assets/Create/UMA/DNA/Dynamic DNA Converter Controller")]
 		public static void CreateDynamicDNAConverterController()
 		{
-			DynamicDNAConverterController.CreateDynamicDNAConverterAsset();
+			DynamicDNAConverterController.CreateDynamicDNAConverterControllerAsset();
 		}
 
 		#region FIELDS
@@ -243,27 +243,10 @@ namespace UMA.Editors
 		#endregion
 
 		#region GUI DRAWING METHODS
-		//private void DrawControllersHeader(Rect headerRect, string[] help, ref bool isExpanded)
+
+
 		private void DrawControllersHeader(Rect rect, string[] help, ref bool _isExpanded, ref bool _helpExpanded)
 		{
-			/*var helpIconRect = new Rect(rect.xMax - 20f, rect.yMin, 20f, rect.height);
-			var helpIcon = new GUIContent("","Info");
-			helpIcon.image = _helpIcon;
-			Event current = Event.current;
-			if (current.type == EventType.Repaint)
-			{
-				EditorStyles.toolbar.Draw(rect,GUIContent.none, false, false, false, false);
-			}
-			var labelWidth = EditorStyles.foldout.CalcSize(new GUIContent(_dnaConvertersLabel.ToUpper()));
-			labelWidth.x += 15f;//add the foldout arrow
-			var scopeFoldoutRect = new Rect((rect.xMax / 2f) - (labelWidth.x / 2f) +30f, rect.yMin, ((rect.width /2) + (labelWidth.x / 2f)) - 20f -30f, rect.height);
-			_isExpanded = EditorGUI.Foldout(scopeFoldoutRect, _selfExpanded, _dnaConvertersLabel.ToUpper(), true);
-			_helpExpanded = GUI.Toggle(helpIconRect, _helpExpanded, helpIcon, _helpStyle);
-			if (_helpExpanded)
-			{
-				DrawHelp(help);
-			}*/
-			//GUIHelper.ToolbarStyleFoldout(rect, new GUIContent(_dnaConvertersLabel.ToUpper()), _help, ref _isExpanded, ref _helpExpanded);
 			GUIHelper.ToolbarStyleHeader(rect, new GUIContent(_dnaConvertersLabel.ToUpper()), _help, ref _helpExpanded);
 			_isExpanded = true;
 		}
@@ -462,7 +445,6 @@ namespace UMA.Editors
 
 			if (position == Rect.zero)
 			{
-				//doesnt work in Roerderable list drawer
 				GUILayout.BeginVertical(_pluginChooserAreaStyle);
 				addRect = EditorGUILayout.GetControlRect();
 			}
@@ -484,7 +466,6 @@ namespace UMA.Editors
 			}
 
 			var dropdownLabel = _pluginToAdd != null ? _pluginToAdd.Name : "Add Converters...";
-			//TODO this can just be a popup now we dont need to disable any options if they are already used...
 			if (EditorGUI.DropdownButton(addPopupRect, new GUIContent(dropdownLabel, "Add converters of the selected type to the " + _dnaConvertersLabel + " list"), FocusType.Keyboard))
 			{
 				// create the menu and add items to it
@@ -580,9 +561,6 @@ namespace UMA.Editors
 			if (Application.isPlaying)
 				_livePopupEditor = liveDDCCEditor;
 		}
-
-		//editor gui fields for DNANames popups and bone names popups
-		//these need to live somewhere else really
 
 
 		//Id really like this to show 'Choose DNA Name' in the field and 'None' as the 'Un-Choose' option in the list

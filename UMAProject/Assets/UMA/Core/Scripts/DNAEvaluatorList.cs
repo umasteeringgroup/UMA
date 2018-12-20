@@ -92,37 +92,11 @@ namespace UMA
 		{
 			if(_dnaEvaluators.Count > 0)
 			{
-				/*
-				//This shouldn't be necessary now DNAEvaluator stores its last index
-				List<float> results = new List<float>();
-				//loop the dna to find all the dna name value pairs we need because getting dna by name is slow
-				Dictionary<int, float> incomingValues = new Dictionary<int, float>();
-				//get the incoming values
-				for(int i = 0; i < _dnaEvaluators.Count; i++)
-				{
-					if (!string.IsNullOrEmpty(_dnaEvaluators[i].dnaName))
-					{
-						var _dnaIndex = System.Array.IndexOf(dna.Names, _dnaEvaluators[i].dnaName);
-						if (_dnaIndex > -1)
-						{
-							incomingValues.Add(i, dna.GetValue(_dnaIndex));
-						}
-					}
-				}
-				//evaluate the incoming values
-				for (int i = 0; i < _dnaEvaluators.Count; i++)
-				{
-					if (incomingValues.ContainsKey(i))
-					{
-						results.Add(_dnaEvaluators[i].Evaluate(incomingValues[i]));
-					}
-				}
-				return GetAggregateValue(results);*/
 				return GetAggregateValueNew(dna);
 			}
 			else
 			{
-				return DNAEvaluator.defaultDNAValue;//not sure if this should be 0 or 0.5f yet
+				return DNAEvaluator.defaultDNAValue;
 			}
 		}
 
@@ -221,13 +195,6 @@ namespace UMA
 					result += vals[i];
 				}
 			}
-			/*if(_aggregationMethod == AggregationMethodOpts.CumulativeNormalized)
-			{
-				for (int i = 0; i < vals.Count; i++)
-				{
-					result += (vals[i] - 0.5f);
-				}
-			}*/
 			if(_aggregationMethod == AggregationMethodOpts.Minimum)
 			{
 				if (vals.Count > 0)
@@ -346,18 +313,6 @@ namespace UMA
 			{
 				this.labelOption = labelOption;
 			}
-			//TODO IMPLIMENT THIS
-			//default graph has to be comile time constant if we want to make this possible
-			/*/// <summary>
-			/// 
-			/// </summary>
-			/// <param name="labelOption">How to show the label for the list. If 'drawExpandedNoLabel' the label for the list is shown as the heading for the dnaName field</param>
-			/// <param name="defaultGraph">If set, when a new entry is added to the list using the UI it use the given graph. Use one of the preset properties in DNAEvaluationGraph</param>
-			public ConfigAttribute(LabelOptions labelOption, DNAEvaluationGraph defaultGraph)
-			{
-				this.labelOption = labelOption;
-				this.defaultGraph = defaultGraph;
-			}*/
 		}
 		#endregion
 }

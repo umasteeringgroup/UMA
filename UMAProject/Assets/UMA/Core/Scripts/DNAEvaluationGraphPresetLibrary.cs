@@ -7,7 +7,7 @@ using System.IO;
 #endif
 namespace UMA
 {
-	//This is an editor only asset that stores a list of the available DNAEvaluationGraphs, its similar to an AnimationCurve Preset Library.
+	//This is an editor only asset that stores a list of preset DNAEvaluationGraphs, its similar to an AnimationCurve Preset Library.
 	//A DNAEvaluationGraph field works kind of like an enum of animationCurves and in its popup it shows the presets defined here, 
 	//rather like the 'Options' cog in an AnimationCurve editor. This is to make it possible for the user to easily set 'sane' values for their DNAEvaluationGraphs.
 	//
@@ -143,8 +143,6 @@ namespace UMA
 		public static string GetTooltipFor(DNAEvaluationGraph graph)
 		{
 			var ret = graph.name;
-			//if (DNAEvaluationGraph.Defaults.ContainsKey(graph))
-			//	return (DNAEvaluationGraph.Defaults[graph]);
 			foreach(KeyValuePair<DNAEvaluationGraph, string> kp in DNAEvaluationGraph.Defaults)
 			{
 				if (kp.Key.GraphMatches(graph))

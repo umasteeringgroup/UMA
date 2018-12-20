@@ -160,10 +160,8 @@ namespace UMA.Editors
 			Rect calcOptionRect = Rect.zero;
 			if (_drawCalcOption)
 			{
-				//shouldn't need to add 15f here
 				calcOptionRect = new Rect(position.xMin+15f, position.yMin, _calcOptionWidth, EditorGUIUtility.singleLineHeight);
 				position.xMin = calcOptionRect.xMax;
-				//position.width = position.width - _calcOptionWidth;
 			}
 			var fieldbaseRatio = (position.width - _multiplierLabelWidth) / (_dnaToEvaluatorRatio.x + _dnaToEvaluatorRatio.y);
 			var dnafieldWidth = fieldbaseRatio * _dnaToEvaluatorRatio.x;
@@ -206,7 +204,6 @@ namespace UMA.Editors
 			{
 				calcOptionRect = new Rect(position.xMin, position.yMin, _calcOptionWidth, EditorGUIUtility.singleLineHeight);
 				position.xMin = calcOptionRect.xMax;
-				//position.width = position.width - _calcOptionWidth;
 			}
 			var calcOptionProp = property.FindPropertyRelative(CALCOPTIONPROPERTY);
 			var dnaNameProp = property.FindPropertyRelative(DNANAMEPROPERTY);
@@ -233,7 +230,6 @@ namespace UMA.Editors
 			else
 			{
 				DynamicDNAConverterControllerInspector.DNANamesPopup(dnaNameRect, dnaNameProp, dnaNameProp.stringValue, _dynamicDNAPlugin.converterController.DNAAsset);
-				//_dynamicDNAPlugin.converterController.DNANamesPopup(dnaNameRect, dnaNameProp, dnaNameProp.stringValue);
 			}
 			if (EditorGUI.EndChangeCheck())
 			{
@@ -247,7 +243,6 @@ namespace UMA.Editors
 			EditorGUI.PropertyField(evaluatorRect, evaluatorProp, GUIContent.none);
 			if (EditorGUI.EndChangeCheck())
 			{
-				//this happens immediately when the field is changed but it doesn't redraw when its in a popup inspector
 				InspectorUtlity.RepaintAllInspectors();
 				GUI.changed = true;
 			}
@@ -290,7 +285,6 @@ namespace UMA.Editors
 		/// <param name="property"></param>
 		private void CheckDynamicDNAPlugin(SerializedProperty property)
 		{
-			//property.serializedObject.targetObject is the plugin and this has the dnaAsset assigned to it by the behaviour
 			if (typeof(DynamicDNAPlugin).IsAssignableFrom((property.serializedObject.targetObject).GetType()))
 			{
 				_dynamicDNAPlugin = (DynamicDNAPlugin)property.serializedObject.targetObject;

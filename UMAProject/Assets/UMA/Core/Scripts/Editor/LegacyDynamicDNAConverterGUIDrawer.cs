@@ -22,7 +22,6 @@ namespace UMA.CharacterSystem.Editors
 
 		private string _skelModsTip = "Skeleton Modifiers control how the values of the DNA you set above are applied to the skeleton.  So for example 'Upper Weight' affects the scale of the Spine, breast, belly and shoulder bones in different ways. Add or edit a skeleton modifier in the list below to use a given dna value to modify the skeleton. The 'Value Modifiers' part of a Skeleton Modifier, takes the incoming value, modifies it by the settings and applies it to the bone. The Min and Max values are what that result will be 'clamped' to. Changes to the base 'Value' affect all characters using this converter are are applied regardless of any dna. Consider using a starting 'BonePose' instead for more control.";
 
-		//bool skeletonModifiersExpanded = true;
 		bool skeletonModifiersInfoExpanded = false;
 		bool extraSkelAddDelOptsExpanded = false;
 		bool startingPoseExpanded = false;
@@ -164,10 +163,8 @@ namespace UMA.CharacterSystem.Editors
 			{
 				if (EditorUtility.DisplayDialog("Really Clear All Modifiers?", "This will delete all the skeleton modifiers in the list and cannot be undone. Are you sure?", "Yes", "Cancel"))
 				{
-					//(target as DynamicDNAConverterBehaviour).skeletonModifiers = new List<SkeletonModifier>();
 					skeletonModifiers.arraySize = 0;
 					serializedObject.ApplyModifiedProperties();
-					//serializedObject.Update();
 				}
 			}
 			EditorGUI.EndDisabledGroup();
@@ -191,17 +188,6 @@ namespace UMA.CharacterSystem.Editors
 			EditorGUI.LabelField(addSkelLabel, new GUIContent("Add Modifier", "Add a modifier for the selected bone in the skeleton, that will modify its 'Position', 'Rotation' or 'Scale'"));
 			EditorGUI.indentLevel--;
 			List<string> thisBoneNames = new List<string>(0);
-			//string[] boneNames = new string[0];
-			/*if(minimalMode == false)
-			{
-				bonesInSkeleton = new List<string>( hashNames.ToArray());
-			}
-			else
-			{
-				bonesInSkeleton = new List<string>(umaData.skeleton.BoneNames);
-			}
-			bonesInSkeleton.Sort();*/
-			//Array.Sort(boneNames);
 			thisBoneNames = new List<string>(bonesInSkeleton);
 			thisBoneNames.Insert(0, "Choose Bone");
 
@@ -244,16 +230,6 @@ namespace UMA.CharacterSystem.Editors
 			}
 			if (GUI.Button(addSkelAddBut, "Add It!"))
 			{
-				if (minimalMode)
-				{
-					/*if (!hashes.Contains(addSkelBoneHash))
-					{
-						(target as DynamicDNAConverterBehaviour).hashList.Insert(0, new DynamicDNAConverterBehaviour.HashListItem(addSkelBoneName, addSkelBoneHash));
-						hashList.serializedObject.ApplyModifiedProperties();
-						serializedObject.Update();
-						UpdateHashNames();
-					}*/
-				}
 				(target as DynamicDNAConverterBehaviour).skeletonModifiers.Insert(0, new SkeletonModifier(addSkelBoneName, addSkelBoneHash, (SkeletonModifier.SkeletonPropType)selectedAddProp));
 				serializedObject.ApplyModifiedProperties();
 				serializedObject.Update();
@@ -396,7 +372,6 @@ namespace UMA.CharacterSystem.Editors
 			//we want to discourage users from using the starting values to customise their models (if they have any modifiers set up
 			if (skeletonModifiers.arraySize > 0)
 			{
-				//_skelModPropDrawer.enableSkelModValueEditing = enableSkelModValueEditing = EditorGUILayout.ToggleLeft("Enable editing of starting Value (not reccommended)", enableSkelModValueEditing);
 				//and make it easy to set the starting values back to the defaults
 				GUILayout.BeginHorizontal();
 				GUILayout.Space(EditorGUI.indentLevel * 15);
@@ -454,8 +429,6 @@ namespace UMA.CharacterSystem.Editors
 				//If the asset isn't null and we are in playmode set the context.activeUMA to this umaData for live editing
 				if (bonePoseAsset.objectReferenceValue != null && minimalMode)
 				{
-					//UMA.PoseTools.UMABonePoseInspectorWindow.context.activeUMA = umaData;
-					//UMA.PoseTools.UMABonePoseInspectorWindow.dynamicDNAConverterMode = true;
 					//if there is an UMABonePose popup inspector open set the umaData as its sourceUMA
 					if (UMA.PoseTools.UMABonePoseEditor.livePopupEditor != null)
 					{
@@ -500,38 +473,6 @@ namespace UMA.CharacterSystem.Editors
 						EditorGUILayout.HelpBox("Edit a character that uses this converter in the 'DynamicDna Converter Behaviour Customizer' scene and you can create a StartingPoseAsset automatically here", MessageType.Info);
 					}
 				}
-				//Moved into DNAConverterCustomizer tools
-				/*if (minimalMode && umaData.skeleton != null && bonePoseAsset.objectReferenceValue == null)
-				{
-					EditorGUILayout.Space();
-					EditorGUILayout.LabelField("Create Poses from Current DNA state");
-					EditorGUILayout.HelpBox("Create bone poses from Avatar's current dna modified state. Applies the pose and sets DNA values back to 0. Smaller margin of error equals greater accuracy but more poses to apply on DNA Update.", MessageType.Info);
-					if (thisDDCC != null)
-					{
-						//[Range(0.000005f, 0.0005f)]
-						EditorGUI.BeginChangeCheck();
-						var thisAccuracy = EditorGUILayout.Slider(new GUIContent("Margin Of Error", "The smaller the margin of error, the more accurate the Pose will be, but it will also have more bonePoses to apply when DNA is updated"), thisDDCC.bonePoseAccuracy * 1000, 0.5f, 0.005f);
-						if (EditorGUI.EndChangeCheck())
-						{
-							thisDDCC.bonePoseAccuracy = thisAccuracy / 1000;
-							GUI.changed = false;
-						}
-					}
-					GUILayout.BeginHorizontal();
-					GUILayout.Space(EditorGUI.indentLevel * 20);
-					if (GUILayout.Button("Create Poses"))
-					{
-						if (thisDDCC != null)
-						{
-							if (thisDDCC.CreateBonePosesFromCurrentDna(createBonePoseAssetName))
-							{
-								serializedObject.Update();
-							}
-						}
-					}
-					GUILayout.EndHorizontal();
-
-				}*/
 				EditorGUI.indentLevel--;
 				GUIHelper.EndVerticalPadded(3);
 			}
@@ -605,8 +546,6 @@ namespace UMA.CharacterSystem.Editors
 		private void AddDNAConverterModifiers(DynamicDNAConverterBehaviour tempDNAAsset, int addMethod)
 		{
 			//Do we need to make sure the dna names are there as well? What is there is no dna asset?
-			//Make sure all the bone hashes are there
-			//AddDNAConverterHashes(tempDNAAsset, 0);
 			//now add the modifiers
 			var currentModifiers = addMethod == 0 ? (target as DynamicDNAConverterBehaviour).skeletonModifiers : new List<SkeletonModifier>();
 			for (int i = 0; i < tempDNAAsset.skeletonModifiers.Count; i++)

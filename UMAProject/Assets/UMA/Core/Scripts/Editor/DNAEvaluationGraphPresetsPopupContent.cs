@@ -6,7 +6,7 @@ using UnityEditor;
 namespace UMA.Editors
 {
 	//Draws the popup you see whenever a DNAEvaluationGraph field is clicked.
-	//calls on DNAEvaluationGraphPresets to get the tooltips so these dont have to be stored along with the field
+	//calls on DNAEvaluationGraphPresetLibrary to get the tooltips so these dont have to be stored along with the field
 	public class DNAEvaluationGraphPopupContent : PopupWindowContent
 	{
 

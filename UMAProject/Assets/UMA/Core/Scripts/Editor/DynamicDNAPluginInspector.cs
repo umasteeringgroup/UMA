@@ -146,7 +146,6 @@ namespace UMA.Editors
 
 					//By DNA Entries Background style
 					_reorderableListDefaults = new ReorderableList.Defaults();
-					//_pluginFoldoutBackground = new GUIStyle(_reorderableListDefaults.headerBackground);
 					_pluginFoldoutBackground = new GUIStyle(EditorStyles.toolbar);//use Toolbar now because all the ROLS actually have a header
 					_pluginFoldoutBackground.fixedHeight += 3f;
 					_converterElementsHeaderBackground = new GUIStyle(_reorderableListDefaults.headerBackground);
@@ -232,7 +231,7 @@ namespace UMA.Editors
 				{
 					_converterElementsList.headerHeight += _elementSearchHeight;
 				}
-				//add the fotter height from the plugin- by default this is the height of the ROL +/- buttons
+				//add the footer height from the plugin- by default this is the height of the ROL +/- buttons
 				_converterElementsList.footerHeight = _target.GetListFooterHeight;
 
 				height += _converterElementsList.GetHeight();
@@ -273,7 +272,7 @@ namespace UMA.Editors
 					{
 						_converterElementsList.headerHeight += _elementSearchHeight;
 					}
-					//add the fotter height from the plugin- by default this is the height of the ROL +/- buttons
+					//add the footer height from the plugin- by default this is the height of the ROL +/- buttons
 					_converterElementsList.footerHeight = _target.GetListFooterHeight;
 
 					//Dragging doesnt work if we have filtered the resilts with a search
@@ -320,7 +319,7 @@ namespace UMA.Editors
 					{
 						_converterElementsList.headerHeight += _elementSearchHeight;
 					}
-					//add the fotter height from the plugin- by default this is the height of the ROL +/- buttons
+					//add the footer height from the plugin- by default this is the height of the ROL +/- buttons
 					_converterElementsList.footerHeight = _target.GetListFooterHeight;
 
 					_converterElementsList.draggable = _elementSearchString == "";

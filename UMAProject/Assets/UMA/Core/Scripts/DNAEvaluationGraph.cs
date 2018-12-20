@@ -12,9 +12,8 @@ namespace UMA
 
 	//The incoming dna value is the horizontal axis on the graph and what it returns is the value on the vertical axis at that point.
 	//this class defines the graph class and provides lots of handy defaults in the same way Color does with Color.red, Color.blue etc
-	//Theres a big help thing if you find an instance of DNAEvaluationGraphPresets in the project that hopefully makes it really clear.
+	//Theres loads of help in the instance of DNAEvaluationGraphPresetLibrary in the project that hopefully makes it really clear.
 
-	//TODO Should this be a struct?
 	[System.Serializable]
 	public sealed class DNAEvaluationGraph : System.IEquatable<DNAEvaluationGraph>
 	{
@@ -78,7 +77,6 @@ namespace UMA
 		/// <returns></returns>
 		public bool GraphMatches(AnimationCurve animCurve)
 		{
-			//TODO split Comparer into two so that it uses CurveComparer and compare that
 			//I *think* == on an animationCurve only tells us
 			//if the two instance are the same as one another 
 			//rather than whether two curves have the same keys so...
@@ -214,9 +212,7 @@ namespace UMA
 		//I think so, so I have made another graph that just returns the incoming dna value and called it 'Raw'
 
 		//I have also made a whole Presets thing aswell thats the equivalent to preset colors in the color chooser or preset animation curves with animation curve
-		//Check out DNAEvaluationGraphPresets for this, or an instance of it in the inspector- its like an animationCurve preset library on crack.
-
-		//GRR This isnt the Default calc- default calc is just -0.5
+		//Check out DNAEvaluationGraphPresetLibrary for this, or an instance of it in the inspector- its like an animationCurve preset library on crack.
 
 		/// <summary>
 		/// Performs the default math calculation on the incoming dna value, subtracting 0.5f making its range -0.5f -> 0.5f

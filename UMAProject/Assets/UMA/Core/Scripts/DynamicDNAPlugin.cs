@@ -24,7 +24,7 @@ namespace UMA
 		//But it does expect that a DynamicDNAPlugin contain a list of them and requires one method and one property in order to integrate them into the system.
 
 		//DynamicDNAPlugins only have to derive from DynamicDNAPlugin and they do not need an associated inspector. 
-		//Any new plugins are automatically found and are available in to add to the DynamicDNAConverterAsset via its inspector
+		//Any new plugins are automatically found and are available to add to the DynamicDNAConverterControllerAsset via its inspector
 
 		//DynamicDNAPlugins also have a MasterWeight. Setting this to zero disables the plugin, but the master weight can itself be hooked up to a dna value.
 		//By doing this different characters can control how much a set of Skeleton Modifiers or MorphSets should apply to them in their current state.
@@ -32,12 +32,12 @@ namespace UMA
 
 		//The system also introduces DNAEvaluator, which is a super flexible field that performs math calculations on a dna value using a customizable animation curve.
 		//This is so that there is no need to have any extra behaviours or code in order to interpret dna values in a certain way.
-		//So the user is not overwhelmed by the complexity of using animation curves for math, DNAEvaluator uses DNAEvaluationGraphs which are preset curves
+		//So the user is not overwhelmed by the complexity of using animation curves for math, DNAEvaluator uses DNAEvaluationGraphs which have preset curves
 		//with nice friendly names and tool tips. As coders we can set DNAEvaluationGraph fields to use one of our predefined defaults.
 
-		//DynamicDNAPlugins are assigned to a DynamicDNAConverterAsset which calls ApplyDNA on each plugin in turn at runtime, 
+		//DynamicDNAPlugins are assigned to a DynamicDNAConverterControllerAsset which calls ApplyDNA on each plugin in turn at runtime, 
 		//and which at edit time looks after the creation of the Plugin Assets and its own Plugins list
-		//A DynamicDNAConverterAsset is assigned to a DynamicDNAConverterBehaviour which triggers the ApplyDNA action on the DynamicDNAConverterAsset
+		//A DynamicDNAConverterControllerAsset is assigned to a DynamicDNAConverterBehaviour which triggers the ApplyDNA action on the DynamicDNAConverterControllerAsset
 
 		/// <summary>
 		/// Does this plugin get applied during the Standard ApplyDNA pass or in the 'Pre Pass'
@@ -85,7 +85,7 @@ namespace UMA
 		#region PUPLIC PROPERTIES
 
 		/// <summary>
-		/// The converter asset this plugin has been assigned to. This property is set by the converter when it is inspected or starts
+		/// The converterController asset this plugin has been assigned to. This property is set by the converterBehaviour when it is inspected or starts
 		/// </summary>
 		public DynamicDNAConverterController converterController
 		{
@@ -102,16 +102,6 @@ namespace UMA
 				return null;
 			}
 		}
-
-		/*public UMAData umaData
-		{
-			get
-			{
-				if (_converterAsset != null)
-					return _converterAsset.umaData;
-				return null;
-			}
-		}*/
 
 		#endregion
 
@@ -180,7 +170,7 @@ namespace UMA
 
 		#region VIRTUAL METHODS
 
-		//these all show when anything else gets a DynamicDNAPlugin - they need to be protected but also available to the pluginDrawer..How??
+		//these all show when anything else gets a DynamicDNAPlugin - I'd prefer them to be protaected but also available to the pluginDrawer..How??
 
 #if UNITY_EDITOR
 		/// <summary>
@@ -396,8 +386,6 @@ namespace UMA
 
 		#region SPECIAL TYPES
 
-		//This override is here because I want to make sure all plugins start with a default weight of 1,
-		//I also wanted to make it draw differently and have a method for applying its influence to a whole set of dna
 		[System.Serializable]
 		public class MasterWeight
 		{

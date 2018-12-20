@@ -5,7 +5,6 @@ using UnityEditor;
 
 namespace UMA
 {
-	//this is literally just to put two extra pixels height in for a MasterWeight field- yeah I'm OCD'ing here
 	[CustomPropertyDrawer(typeof(DynamicDNAPlugin.MasterWeight),true)]
 	public class DynamicDNAPluginMasterWeightDrawer : PropertyDrawer
 	{
@@ -50,9 +49,6 @@ namespace UMA
 					var field2Rect = new Rect(typeRect.xMax + 5f, foldoutRect.yMax, rect.width - typeRect.width, EditorGUI.GetPropertyHeight(dnaForWeightProp));
 					EditorGUI.PropertyField(field2Rect, dnaForWeightProp);
 				}
-				//var field1Rect = new Rect(rect.xMin, foldoutRect.yMax + EditorGUIUtility.standardVerticalSpacing, rect.width, EditorGUI.GetPropertyHeight(globalWeightProp));
-				//var field2Rect = new Rect(field1Rect.xMin, field1Rect.yMax, field1Rect.width, EditorGUI.GetPropertyHeight(dnaForWeightProp));
-				
 			}
 
 			DrawCurrentSettingInfo(property, foldoutRect, position);
@@ -96,8 +92,6 @@ namespace UMA
 			}
 			EditorGUI.BeginDisabledGroup(true);
 			EditorGUI.LabelField(foldoutInfoRect, infoText, italicLabel);
-			//Dont do a disabled field because its too confusing
-			//EditorGUI.FloatField(foldoutFieldRect, fieldValue);
 			if (masterWeightTypeProp.enumValueIndex == 0)
 			{
 				EditorGUI.LabelField(foldoutFieldRect, "[" + fieldValue.ToString("0.00") + "]");

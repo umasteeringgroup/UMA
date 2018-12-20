@@ -304,7 +304,7 @@ namespace UMA.CharacterSystem
 			var path = AssetDatabase.GetAssetPath(this.gameObject);
 			path = path.Replace("/" + Path.GetFileName(AssetDatabase.GetAssetPath(this.gameObject)), "");
 			var assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/" + newControllerName + ".asset");
-			newController = DynamicDNAConverterController.CreateDynamicDNAConverterAsset(assetPathAndName, false);
+			newController = DynamicDNAConverterController.CreateDynamicDNAConverterControllerAsset(assetPathAndName, false);
 			if(newController == null)
 			{
 				//bail if the converterController was not created

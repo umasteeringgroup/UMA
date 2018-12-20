@@ -9,26 +9,26 @@ using UMA.CharacterSystem;
 
 namespace UMA
 {
-	//The DynamicDNAConverterAsset looks after a DynamicDNAPlugins list and applies it
-	//You use an asset created from this to create instances of the DynamicDNAPlugins and when you do those are stored inside the instance of this
+	//The DynamicDNAConverterController manages the list Converters (aka DynamicDNAPlugins) the user has decided to use.
+	//It is a Scriptable Object, and as Converters are added to it, it creates instances of those and stores them inside itself
 	//this is so all the assets this needs are packaged up with it UMA3 style.
-	//This asset also calls ApplyDNA on each of the plugins in its list when DynamicDNAConverterBehaviour asks it to.
+	//This asset also calls ApplyDNA on each of the converters when DynamicDNAConverterBehaviour asks it to.
 	[System.Serializable]
 	public class DynamicDNAConverterController : ScriptableObject
 	{
 		/// <summary>
-		/// The List of all the plugins assigned to this Converter
+		/// The List of all the plugins (converters) assigned to this ConverterController
 		/// </summary>
 		[SerializeField]
 		private List<DynamicDNAPlugin> _plugins = new List<DynamicDNAPlugin>();
 
 		/// <summary>
-		/// Contains a list of all the dna names used by all the plugins in this converter
+		/// Contains a list of all the dna names used by all the plugins (converters) assigned to this ConverterController
 		/// </summary>
 		private List<string> _usedDNANames = new List<string>();
 
 		/// <summary>
-		/// The behaviour will assign it self to this converter, when this converter is assigned to it, either when ApplyDNAAction is called or the controller is inspected via this Behaviour
+		/// The behaviour will assign it self to this converterController, when this converterController is assigned to it, either when ApplyDNAAction is called or the controller is inspected via this Behaviour
 		/// </summary>
 		private DynamicDNAConverterBehaviour _converterBehaviour;
 		[System.NonSerialized]
@@ -47,7 +47,6 @@ namespace UMA
 				else
 					return null;
 			}
-			//set { _dnaAsset = value; }
 		}
 
 		public DynamicDNAConverterBehaviour converterBehaviour
@@ -57,7 +56,7 @@ namespace UMA
 		}
 
 		/// <summary>
-		/// Returns the number of plugins assigned to this Converter Asset
+		/// Returns the number of plugins assigned to this ConverterController Asset
 		/// </summary>
 		public int PluginCount
 		{
@@ -147,7 +146,7 @@ namespace UMA
 		}
 
 		/// <summary>
-		/// Calls ApplyDNA on all the plugins in this converters '_plugins' list that apply dna during the pre-pass
+		/// Calls ApplyDNA on all this convertersControllers plugins (aka converters) that apply dna during the pre-pass
 		/// </summary>
 		/// <param name="umaData">The umaData on the avatar</param>
 		/// <param name="skeleton">The avatars skeleton</param>
@@ -164,7 +163,7 @@ namespace UMA
 		}
 
 		/// <summary>
-		/// Calls ApplyDNA on all the plugins in this converters '_plugins' list that apply dna at the standard time
+		/// Calls ApplyDNA on all this convertersControllers plugins (aka converters) that apply dna at the standard time
 		/// </summary>
 		/// <param name="umaData">The umaData on the avatar</param>
 		/// <param name="skeleton">The avatars skeleton</param>
@@ -178,7 +177,7 @@ namespace UMA
 		}
 
 		/// <summary>
-		/// Gets all the used dna names from all the plugins. This can be used to speed up searching the dna for names by string
+		/// Gets all the used dna names from all the plugins (aka converters). This can be used to speed up searching the dna for names by string
 		/// </summary>
 		/// <param name="forceRefresh">Set this to true if you know the dna names used by any of the plugins has been changed at runtime</param>
 		/// <returns></returns>
@@ -191,7 +190,7 @@ namespace UMA
 		}
 
 		/// <summary>
-		/// Gets a plugin from the list of plugins assigned to this converter by index
+		/// Gets a plugin from the list of plugins assigned to this converterController by index
 		/// </summary>
 		public DynamicDNAPlugin GetPlugin(int index)
 		{
@@ -203,7 +202,7 @@ namespace UMA
 		}
 
 		/// <summary>
-		/// Gets a plugin from the list of plugins assigned to this converter by name
+		/// Gets a plugin from the list of plugins assigned to this converterController by name
 		/// </summary>
 		public DynamicDNAPlugin GetPlugin(string name)
 		{
@@ -216,7 +215,7 @@ namespace UMA
 		}
 
 		/// <summary>
-		/// Gets all plugins assigned to this converter that are of the given type
+		/// Gets all plugins assigned to this converterController that are of the given type
 		/// </summary>
 		public List<DynamicDNAPlugin> GetPlugins(System.Type pluginType)
 		{
@@ -230,7 +229,7 @@ namespace UMA
 		}
 
 		/// <summary>
-		/// Creates a plugin of the given type (must descend from DynamicDNAPlugin), adds it to this converters plugins list,  and stores its asset in the given DynamicDNAConverter asset
+		/// Creates a plugin of the given type (must descend from DynamicDNAPlugin), adds it to this converterControllers plugins list,  and stores its asset in the given DynamicDNAConverterController asset
 		/// </summary>
 		/// <param name="pluginType">The type of dna plugin to create (must descend from DynamicDNAPlugin)</param>
 		/// <returns>Returns the created plugin</returns>
@@ -253,7 +252,7 @@ namespace UMA
 		}
 
 		/// <summary>
-		/// Removes the given plugin from this converter, and deletes its asset (in the Editor)
+		/// Removes the given plugin from this converterController, and deletes its asset (in the Editor)
 		/// </summary>
 		/// <param name="pluginToDelete"></param>
 		/// <returns></returns>
@@ -278,8 +277,8 @@ namespace UMA
 		}
 
 		/// <summary>
-		/// At run time this simply clears the plugins list of any empty entries, or null entries, and assigns itself as the converterAsset for the plugin
-		/// At edit time all instantiated plugins inside the given converter are checked to see if they belong in this list and if they are they get added
+		/// At run time this simply clears the plugins list of any empty entries, or null entries, and assigns itself as the converterController for the plugin
+		/// At edit time all instantiated plugins inside the given converterController are checked to see if they belong in this list and if they are they get added
 		/// This can happen when a plugin script is deleted but then restored again (like when working on different branches in sourceControl)
 		/// </summary>
 		public void ValidatePlugins()
@@ -306,7 +305,7 @@ namespace UMA
 			}
 			_plugins = cleanList;
 #if UNITY_EDITOR
-			//if we are in the editor get all the assets inside the given converter asset and check if any of those should be in this list
+			//if we are in the editor get all the assets inside the given converterController asset and check if any of those should be in this list
 			var thisAssets = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(this));
 			for (int i = 0; i < thisAssets.Length; i++)
 			{
@@ -346,7 +345,7 @@ namespace UMA
 		}
 
 		/// <summary>
-		/// Creates a new plugin of the given type and stores it inside the given converters asset
+		/// Creates a new plugin of the given type and stores it inside the given converterController asset
 		/// </summary>
 		/// <returns>Returns the created asset</returns>
 		private static DynamicDNAPlugin CreatePlugin(System.Type pluginType, DynamicDNAConverterController converter)
@@ -359,7 +358,7 @@ namespace UMA
 			}
 			if (converter == null)
 			{
-				Debug.LogWarning("Could not create plugin because no converter was provided to add it to");
+				Debug.LogWarning("Could not create plugin because no converterController was provided to add it to");
 				return null;
 			}
 			if (!DynamicDNAPlugin.IsValidPluginType(pluginType))
@@ -378,7 +377,7 @@ namespace UMA
 		}
 		
 		/// <summary>
-		/// Gets a unique name for a plugin relative to this converter
+		/// Gets a unique name for a plugin relative to this converterController
 		/// </summary>
 		/// <param name="desiredName">The name you'd like</param>
 		public string GetUniquePluginName(string desiredName, DynamicDNAPlugin existingPlugin = null)
@@ -394,11 +393,11 @@ namespace UMA
 
 #if UNITY_EDITOR
 		[UnityEditor.MenuItem("UMA/Create Dynamic DNA Converter Controller")]
-		public static DynamicDNAConverterController CreateDynamicDNAConverterAsset()
+		public static DynamicDNAConverterController CreateDynamicDNAConverterControllerAsset()
 		{
 			return UMA.CustomAssetUtility.CreateAsset<DynamicDNAConverterController>();
 		}
-		public static DynamicDNAConverterController CreateDynamicDNAConverterAsset(string newAssetPath, bool selectCreatedAsset = true, string baseName = "New")
+		public static DynamicDNAConverterController CreateDynamicDNAConverterControllerAsset(string newAssetPath, bool selectCreatedAsset = true, string baseName = "New")
 		{
 			return UMA.CustomAssetUtility.CreateAsset<DynamicDNAConverterController>(newAssetPath, selectCreatedAsset, baseName);
 		}

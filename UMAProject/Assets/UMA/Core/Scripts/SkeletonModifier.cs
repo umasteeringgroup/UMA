@@ -93,7 +93,6 @@ namespace UMA.CharacterSystem
 				{SkeletonPropType.Scale,  new Vector3(1f,0f, 5f) }
 			};
 
-		//These should be methods since they require the umaDNA and masterWeight values to be set/sent
 		[Obsolete("Please use CalculateValueX((UMADnaBase umaDNA) instead")]
 		public Vector3 ValueX
 		{
@@ -141,7 +140,7 @@ namespace UMA.CharacterSystem
 			_valuesY.val.ConvertToDNAEvaluators();
 			_valuesZ.val.ConvertToDNAEvaluators();
 		}
-		//these need to also not apply any actual value overrides if the masterWeight is not 1
+
 		public Vector3 CalculateValueX(UMADnaBase umaDNA)
 		{
 			var resVal = _valuesX.CalculateValue(_umaDNA);
@@ -291,8 +290,6 @@ namespace UMA.CharacterSystem
 							_modifiers[i].modifier == spValModifier.spValModifierType.MultiplyDNA ||
 							_modifiers[i].modifier == spValModifier.spValModifierType.SubtractDNA))
 						{
-							//using the hash vs using the name makes virtually no difference
-							//tempModifierVal = GetUmaDNAValue(_modifiers[i].DNANameHash, umaDNA);
 							tempModifierVal = GetUmaDNAValue(_modifiers[i].DNATypeName, umaDNA);
 							tempModifierVal -= 0.5f;
 							inModifierPair = true;
