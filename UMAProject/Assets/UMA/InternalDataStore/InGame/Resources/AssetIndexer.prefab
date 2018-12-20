@@ -872,6 +872,13 @@ MonoBehaviour:
     _Guid: 82e2d1671a9ac524d805de01b9408543
     IsResource: 0
     IsAssetBundle: 0
+  - _BaseTypeName: SlotDataAsset
+    _Name: MakeMeFatJeans
+    _SerializedItem: {fileID: 11400000, guid: f1aa0614c0ce2f242a448e8f80248623, type: 2}
+    _Path: Assets/UMA/Examples/DynamicDNAPlugins Examples/Assets/Slots/MakeMeFatJeans.asset
+    _Guid: f1aa0614c0ce2f242a448e8f80248623
+    IsResource: 0
+    IsAssetBundle: 0
   - _BaseTypeName: OverlayDataAsset
     _Name: FemaleLongHair_Overlay
     _SerializedItem: {fileID: 11400000, guid: 304fc44cf9ff5ad428e4802e082702c5, type: 2}
@@ -1674,9 +1681,9 @@ MonoBehaviour:
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: RaceData
-    _Name: HumanMaleDCSII
+    _Name: DNAConverterControllerExampleRace
     _SerializedItem: {fileID: 11400000, guid: 47ca517b770126341b0332ab373bc55d, type: 2}
-    _Path: Assets/UMA/Content/UMA_Core/HumanMale/RaceData/Human Male DCSII.asset
+    _Path: Assets/UMA/Examples/DNAConverterController Examples/Assets/RaceData/DNAConverterControllerExampleRace.asset
     _Guid: 47ca517b770126341b0332ab373bc55d
     IsResource: 0
     IsAssetBundle: 0
@@ -2834,6 +2841,13 @@ MonoBehaviour:
     _Guid: d7f773c6ff9565340b55a7325362b86f
     IsResource: 0
     IsAssetBundle: 0
+  - _BaseTypeName: UMAWardrobeRecipe
+    _Name: MakeMeFatJeans
+    _SerializedItem: {fileID: 11400000, guid: f57cc3e1432d6994d9ca2cd30f723bd3, type: 2}
+    _Path: Assets/UMA/Examples/DynamicDNAPlugins Examples/Assets/Recipes/WardrobeRecipes/MakeMeFatJeans.asset
+    _Guid: f57cc3e1432d6994d9ca2cd30f723bd3
+    IsResource: 0
+    IsAssetBundle: 0
   - _BaseTypeName: RuntimeAnimatorController
     _Name: UMA_APose_Controller
     _SerializedItem: {fileID: 9100000, guid: 66af5264f1619114db5f72f979ce14bd, type: 2}
@@ -3003,9 +3017,9 @@ MonoBehaviour:
     IsResource: 0
     IsAssetBundle: 0
   - _BaseTypeName: DynamicUMADnaAsset
-    _Name: DNAPluginsExampleDNAAsset
+    _Name: ExampleDNAAsset
     _SerializedItem: {fileID: 11400000, guid: 51557a0d9997c5945973dff0a2fc7031, type: 2}
-    _Path: Assets/UMA/Examples/DynamicDNAPlugins Examples/Assets/DNA/DNAPluginsExampleDNAAsset.asset
+    _Path: Assets/UMA/Examples/DNAConverterController Examples/Assets/DNA/ExampleDNAAsset.asset
     _Guid: 51557a0d9997c5945973dff0a2fc7031
     IsResource: 0
     IsAssetBundle: 0

@@ -9,7 +9,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 56c6edb17218abd469257d07a2bc5559, type: 3}
-  m_Name: DNAPluginsExampleConverterController
+  m_Name: ExampleConverterController
   m_EditorClassIdentifier: 
   _plugins:
   - {fileID: 114229394160915382}
@@ -1135,7 +1135,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 0.45
             _initialized: 1
           - _calcOption: 0
@@ -1166,7 +1166,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 0.45
             _initialized: 1
           _aggregationMethod: 1
@@ -10337,7 +10337,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 1
             _initialized: 1
           _aggregationMethod: 1
@@ -10377,7 +10377,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 1
             _initialized: 1
           _aggregationMethod: 1
@@ -10417,7 +10417,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 1
             _initialized: 1
           _aggregationMethod: 1
@@ -10594,35 +10594,6 @@ MonoBehaviour:
   - mode: 1
     targetName: Skin
     textureChannel: 0
-    colorModifier:
-      R:
-        enable: 1
-        adjustmentType: 1
-        useDNAValue: 0
-        value: 0.31764707
-        adjustValue: -0.48
-        multiplier: 1
-      G:
-        enable: 1
-        adjustmentType: 1
-        useDNAValue: 0
-        value: 0.75686276
-        adjustValue: -0.07
-        multiplier: 1
-      B:
-        enable: 1
-        adjustmentType: 1
-        useDNAValue: 0
-        value: 0.52156866
-        adjustValue: -0.17
-        multiplier: 1
-      A:
-        enable: 0
-        adjustmentType: 0
-        useDNAValue: 0
-        value: 0
-        adjustValue: 0
-        multiplier: 1
     modifyingDNA:
       _dnaEvaluators:
       - _calcOption: 0
@@ -10657,30 +10628,27 @@ MonoBehaviour:
         _multiplier: 1
         _initialized: 1
       _aggregationMethod: 0
-  - mode: 1
-    targetName: Skin
-    textureChannel: 0
     colorModifier:
       R:
         enable: 1
         adjustmentType: 1
         useDNAValue: 0
-        value: 0.29411766
-        adjustValue: -0.67
+        value: 0.31764707
+        adjustValue: -0.48
         multiplier: 1
       G:
         enable: 1
         adjustmentType: 1
         useDNAValue: 0
-        value: 0.7254902
-        adjustValue: -0.17
+        value: 0.75686276
+        adjustValue: -0.07
         multiplier: 1
       B:
         enable: 1
         adjustmentType: 1
         useDNAValue: 0
-        value: 0.77254903
-        adjustValue: 0.08
+        value: 0.52156866
+        adjustValue: -0.17
         multiplier: 1
       A:
         enable: 0
@@ -10689,6 +10657,10 @@ MonoBehaviour:
         value: 0
         adjustValue: 0
         multiplier: 1
+      _testDNAVal: 0
+  - mode: 1
+    targetName: Skin
+    textureChannel: 0
     modifyingDNA:
       _dnaEvaluators:
       - _calcOption: 0
@@ -10723,146 +10695,78 @@ MonoBehaviour:
         _multiplier: 1
         _initialized: 1
       _aggregationMethod: 0
-  - mode: 0
-    targetName: M_Bod smooth
-    textureChannel: 0
-    colorModifier:
-      R:
-        enable: 0
-        adjustmentType: 0
-        useDNAValue: 0
-        value: 0.31764707
-        adjustValue: 0
-        multiplier: 1
-      G:
-        enable: 0
-        adjustmentType: 0
-        useDNAValue: 0
-        value: 0.75686276
-        adjustValue: 0
-        multiplier: 1
-      B:
-        enable: 0
-        adjustmentType: 0
-        useDNAValue: 0
-        value: 0.52156866
-        adjustValue: 0
-        multiplier: 1
-      A:
-        enable: 1
-        adjustmentType: 4
-        useDNAValue: 1
-        value: 0
-        adjustValue: 0
-        multiplier: 1
-    modifyingDNA:
-      _dnaEvaluators:
-      - _calcOption: 0
-        _dnaName: ElfOrAlien
-        _dnaNameHash: 579259412
-        _evaluator:
-          _name: ZeroZeroOne
-          _graph:
-            serializedVersion: 2
-            m_Curve:
-            - serializedVersion: 2
-              time: 0
-              value: 0
-              inSlope: 0
-              outSlope: 0
-              tangentMode: 0
-            - serializedVersion: 2
-              time: 0.5
-              value: 0
-              inSlope: 0
-              outSlope: 2
-              tangentMode: 0
-            - serializedVersion: 2
-              time: 1
-              value: 1
-              inSlope: 2
-              outSlope: 0
-              tangentMode: 0
-            m_PreInfinity: 2
-            m_PostInfinity: 2
-            m_RotationOrder: 0
-        _multiplier: 1
-        _initialized: 1
-      _aggregationMethod: 0
-  - mode: 0
-    targetName: M_Bod smooth
-    textureChannel: 1
-    colorModifier:
-      R:
-        enable: 0
-        adjustmentType: 0
-        useDNAValue: 0
-        value: 0.31764707
-        adjustValue: 0
-        multiplier: 1
-      G:
-        enable: 0
-        adjustmentType: 0
-        useDNAValue: 0
-        value: 0.75686276
-        adjustValue: 0
-        multiplier: 1
-      B:
-        enable: 0
-        adjustmentType: 0
-        useDNAValue: 0
-        value: 0.52156866
-        adjustValue: 0
-        multiplier: 1
-      A:
-        enable: 1
-        adjustmentType: 4
-        useDNAValue: 1
-        value: 0
-        adjustValue: 0
-        multiplier: 1
-    modifyingDNA:
-      _dnaEvaluators:
-      - _calcOption: 0
-        _dnaName: ElfOrAlien
-        _dnaNameHash: 579259412
-        _evaluator:
-          _name: ZeroZeroOne
-          _graph:
-            serializedVersion: 2
-            m_Curve:
-            - serializedVersion: 2
-              time: 0
-              value: 0
-              inSlope: 0
-              outSlope: 0
-              tangentMode: 0
-            - serializedVersion: 2
-              time: 0.5
-              value: 0
-              inSlope: 0
-              outSlope: 2
-              tangentMode: 0
-            - serializedVersion: 2
-              time: 1
-              value: 1
-              inSlope: 2
-              outSlope: 0
-              tangentMode: 0
-            m_PreInfinity: 2
-            m_PostInfinity: 2
-            m_RotationOrder: 0
-        _multiplier: 1
-        _initialized: 1
-      _aggregationMethod: 0
-  - mode: 1
-    targetName: Skin
-    textureChannel: 0
     colorModifier:
       R:
         enable: 1
         adjustmentType: 1
-        useDNAValue: 1
+        useDNAValue: 0
+        value: 0.29411766
+        adjustValue: -0.67
+        multiplier: 1
+      G:
+        enable: 1
+        adjustmentType: 1
+        useDNAValue: 0
+        value: 0.7254902
+        adjustValue: -0.17
+        multiplier: 1
+      B:
+        enable: 1
+        adjustmentType: 1
+        useDNAValue: 0
+        value: 0.77254903
+        adjustValue: 0.08
+        multiplier: 1
+      A:
+        enable: 0
+        adjustmentType: 0
+        useDNAValue: 0
+        value: 0
+        adjustValue: 0
+        multiplier: 1
+      _testDNAVal: 0
+  - mode: 0
+    targetName: M_Bod smooth
+    textureChannel: 0
+    modifyingDNA:
+      _dnaEvaluators:
+      - _calcOption: 0
+        _dnaName: ElfOrAlien
+        _dnaNameHash: 579259412
+        _evaluator:
+          _name: ZeroZeroOne
+          _graph:
+            serializedVersion: 2
+            m_Curve:
+            - serializedVersion: 2
+              time: 0
+              value: 0
+              inSlope: 0
+              outSlope: 0
+              tangentMode: 0
+            - serializedVersion: 2
+              time: 0.5
+              value: 0
+              inSlope: 0
+              outSlope: 2
+              tangentMode: 0
+            - serializedVersion: 2
+              time: 1
+              value: 1
+              inSlope: 2
+              outSlope: 0
+              tangentMode: 0
+            m_PreInfinity: 2
+            m_PostInfinity: 2
+            m_RotationOrder: 0
+        _multiplier: 1
+        _initialized: 1
+      _aggregationMethod: 0
+    colorModifier:
+      R:
+        enable: 0
+        adjustmentType: 0
+        useDNAValue: 0
         value: 0.31764707
         adjustValue: 0
         multiplier: 1
@@ -10881,12 +10785,83 @@ MonoBehaviour:
         adjustValue: 0
         multiplier: 1
       A:
-        enable: 0
+        enable: 1
         adjustmentType: 4
         useDNAValue: 1
         value: 0
         adjustValue: 0
         multiplier: 1
+      _testDNAVal: 0
+  - mode: 0
+    targetName: M_Bod smooth
+    textureChannel: 1
+    modifyingDNA:
+      _dnaEvaluators:
+      - _calcOption: 0
+        _dnaName: ElfOrAlien
+        _dnaNameHash: 579259412
+        _evaluator:
+          _name: ZeroZeroOne
+          _graph:
+            serializedVersion: 2
+            m_Curve:
+            - serializedVersion: 2
+              time: 0
+              value: 0
+              inSlope: 0
+              outSlope: 0
+              tangentMode: 0
+            - serializedVersion: 2
+              time: 0.5
+              value: 0
+              inSlope: 0
+              outSlope: 2
+              tangentMode: 0
+            - serializedVersion: 2
+              time: 1
+              value: 1
+              inSlope: 2
+              outSlope: 0
+              tangentMode: 0
+            m_PreInfinity: 2
+            m_PostInfinity: 2
+            m_RotationOrder: 0
+        _multiplier: 1
+        _initialized: 1
+      _aggregationMethod: 0
+    colorModifier:
+      R:
+        enable: 0
+        adjustmentType: 0
+        useDNAValue: 0
+        value: 0.31764707
+        adjustValue: 0
+        multiplier: 1
+      G:
+        enable: 0
+        adjustmentType: 0
+        useDNAValue: 0
+        value: 0.75686276
+        adjustValue: 0
+        multiplier: 1
+      B:
+        enable: 0
+        adjustmentType: 0
+        useDNAValue: 0
+        value: 0.52156866
+        adjustValue: 0
+        multiplier: 1
+      A:
+        enable: 1
+        adjustmentType: 4
+        useDNAValue: 1
+        value: 0
+        adjustValue: 0
+        multiplier: 1
+      _testDNAVal: 0
+  - mode: 1
+    targetName: Skin
+    textureChannel: 0
     modifyingDNA:
       _dnaEvaluators:
       - _calcOption: 0
@@ -10921,21 +10896,18 @@ MonoBehaviour:
         _multiplier: 1
         _initialized: 1
       _aggregationMethod: 0
-  - mode: 1
-    targetName: Skin
-    textureChannel: 0
     colorModifier:
       R:
-        enable: 0
+        enable: 1
         adjustmentType: 1
         useDNAValue: 1
         value: 0.31764707
         adjustValue: 0
         multiplier: 1
       G:
-        enable: 1
-        adjustmentType: 1
-        useDNAValue: 1
+        enable: 0
+        adjustmentType: 0
+        useDNAValue: 0
         value: 0.75686276
         adjustValue: 0
         multiplier: 1
@@ -10953,6 +10925,10 @@ MonoBehaviour:
         value: 0
         adjustValue: 0
         multiplier: 1
+      _testDNAVal: 0
+  - mode: 1
+    targetName: Skin
+    textureChannel: 0
     modifyingDNA:
       _dnaEvaluators:
       - _calcOption: 0
@@ -10987,9 +10963,6 @@ MonoBehaviour:
         _multiplier: 1
         _initialized: 1
       _aggregationMethod: 0
-  - mode: 1
-    targetName: Skin
-    textureChannel: 0
     colorModifier:
       R:
         enable: 0
@@ -10999,16 +10972,16 @@ MonoBehaviour:
         adjustValue: 0
         multiplier: 1
       G:
-        enable: 0
+        enable: 1
         adjustmentType: 1
         useDNAValue: 1
         value: 0.75686276
         adjustValue: 0
         multiplier: 1
       B:
-        enable: 1
-        adjustmentType: 1
-        useDNAValue: 1
+        enable: 0
+        adjustmentType: 0
+        useDNAValue: 0
         value: 0.52156866
         adjustValue: 0
         multiplier: 1
@@ -11019,6 +10992,10 @@ MonoBehaviour:
         value: 0
         adjustValue: 0
         multiplier: 1
+      _testDNAVal: 0
+  - mode: 1
+    targetName: Skin
+    textureChannel: 0
     modifyingDNA:
       _dnaEvaluators:
       - _calcOption: 0
@@ -11053,6 +11030,36 @@ MonoBehaviour:
         _multiplier: 1
         _initialized: 1
       _aggregationMethod: 0
+    colorModifier:
+      R:
+        enable: 0
+        adjustmentType: 1
+        useDNAValue: 1
+        value: 0.31764707
+        adjustValue: 0
+        multiplier: 1
+      G:
+        enable: 0
+        adjustmentType: 1
+        useDNAValue: 1
+        value: 0.75686276
+        adjustValue: 0
+        multiplier: 1
+      B:
+        enable: 1
+        adjustmentType: 1
+        useDNAValue: 1
+        value: 0.52156866
+        adjustValue: 0
+        multiplier: 1
+      A:
+        enable: 0
+        adjustmentType: 4
+        useDNAValue: 1
+        value: 0
+        adjustValue: 0
+        multiplier: 1
+      _testDNAVal: 0
 --- !u!114 &114700032911936864
 MonoBehaviour:
   m_ObjectHideFlags: 0

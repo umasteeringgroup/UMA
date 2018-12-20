@@ -16,7 +16,7 @@ MonoBehaviour:
   compatibleRaces:
   - HumanMaleDCS
   - HumanMale
-  - HumanMaleDCSII
+  - DNAConverterControllerExampleRace
   wardrobeRecipeThumbs:
   - race: HumanMaleDCS
     filename: 
@@ -24,7 +24,7 @@ MonoBehaviour:
   - race: HumanMale
     filename: 
     thumb: {fileID: 0}
-  - race: HumanMaleDCSII
+  - race: DNAConverterControllerExampleRace
     filename: 
     thumb: {fileID: 0}
   wardrobeSlot: Ears

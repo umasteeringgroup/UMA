@@ -4473,7 +4473,7 @@ MonoBehaviour:
   hide: 0
   loadBlendShapes: 1
   activeRace:
-    name: HumanMaleDCSII
+    name: DNAConverterControllerExampleRace
   defaultChangeRaceOptions: 12
   cacheCurrentState: 1
   rebuildSkeleton: 1
@@ -5822,7 +5822,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 953513921}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -5877,27 +5877,14 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'In this scene you can see a character which has a single dna name controlling
-    some bonePoses, some blendShapes, some scale and some color
-
-
-    *Change the dna ''ELFORALIEN'' to see the results.*
-
-
-    With current dna all of these need to have different dna assets and different
-    dna converter behaviours, but with DynamicDNAPlugins all these converters can
-    live inside the same ''ConverterController'' (assigned to the behaviour) and thus
-    use the same dna names.
-
-
-    Please inspect the ''DynamicDNAConverterCustomizer'' in the Hierarchy and select
-    the desired converter behaviour from the list at run time to play with the settings.
-    (I still have to sort out ''Undo'' so your changes will stick.)
-
-
-    Notice now most things use a DNAEvaluator field. This is so its no longer necessary
-    to hardcode things like ''PoseOne'' or ''PoseZero'' into a new behaviour when
-    you want to interpret dna differently.'
+  m_Text: "In this scene you can see a character which has a single dna name controlling
+    \ bonePoses, blendShapes, scale, diffuse color and fading a normal map.\n\n*Change
+    the dna 'ELFORALIEN' to see the results.*\n\nBefore UMA 2.8 all of these needed
+    to have different dna assets and different dna converter behaviours, but now all
+    these converters can live inside the same 'ConverterController' (assigned to the
+    behaviour) and thus use the same dna names. \n\nYou can also assign ConverterBehaviours
+    using the new 'ConverterController' to a slots DNA. Check out the 'MakeMeFatJeans'
+    to see an example!\n\nEnable 'ElfToAlienDirector' to see this working with Timeline."
 --- !u!222 &501291009
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -7698,7 +7685,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Multi-Converters Demo
+  m_Text: DynamicDNA ConverterController Demo
 --- !u!222 &756990821
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -9336,8 +9323,8 @@ RectTransform:
   m_LocalScale: {x: 0.95579565, y: 0.95579565, z: 0.95579565}
   m_Children:
   - {fileID: 756990818}
-  - {fileID: 1474145364}
   - {fileID: 501291006}
+  - {fileID: 1474145364}
   m_Father: {fileID: 1820935867}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -14681,7 +14668,7 @@ RectTransform:
   m_Children:
   - {fileID: 1745965399}
   m_Father: {fileID: 953513921}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}

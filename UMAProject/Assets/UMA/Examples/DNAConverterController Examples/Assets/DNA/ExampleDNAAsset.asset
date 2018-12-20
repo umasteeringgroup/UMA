@@ -9,13 +9,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 28add7ad4625f8748a81d045544985b2, type: 3}
-  m_Name: DNAPluginsExampleDNAAsset
+  m_Name: ExampleDNAAsset
   m_EditorClassIdentifier: 
   dnaTypeHash: 1144010748
-  lastKnownAssetPath: Assets/UMA/Examples/DynamicDNAPlugins Examples/Assets/DNA/DNAPluginsExampleDNAAsset.asset
-  lastKnownDuplicateAssetPath: Assets/UMA/Examples/DynamicDNAPlugins Examples/Assets/DNA/DNAPluginsExampleDNAAsset
+  lastKnownAssetPath: Assets/UMA/Examples/DNAConverterController Examples/Assets/DNA/ExampleDNAAsset.asset
+  lastKnownDuplicateAssetPath: Assets/UMA/Examples/DNAConverterController Examples/Assets/DNA/ExampleDNAAsset
     1.asset
-  lastKnownInstanceID: 12004
+  lastKnownInstanceID: 12032
   Names:
   - ElfOrAlien
   - skinGreenness

@@ -10,7 +10,7 @@ GameObject:
   - component: {fileID: 400000}
   - component: {fileID: 11465070}
   m_Layer: 0
-  m_Name: DNAPluginsExampleConverterBehaviour
+  m_Name: ExampleConverterBehaviour
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
