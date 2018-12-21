@@ -42,7 +42,7 @@ RenderSettings:
 --- !u!157 &4
 LightmapSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 9
+  serializedVersion: 11
   m_GIWorkflowMode: 1
   m_GISettings:
     serializedVersion: 2
@@ -54,7 +54,7 @@ LightmapSettings:
     m_EnableBakedLightmaps: 0
     m_EnableRealtimeLightmaps: 1
   m_LightmapEditorSettings:
-    serializedVersion: 8
+    serializedVersion: 9
     m_Resolution: 2
     m_BakeResolution: 16
     m_TextureWidth: 1024
@@ -90,7 +90,7 @@ LightmapSettings:
     m_PVRFilteringAtrousPositionSigmaAO: 1
   m_LightingDataAsset: {fileID: 112000002, guid: cf242a5d6edcf884b842a8831458f16e,
     type: 2}
-  m_ShadowMaskMode: 2
+  m_UseShadowmask: 1
 --- !u!196 &5
 NavMeshSettings:
   serializedVersion: 2
@@ -5073,8 +5073,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1231474037}
   m_HandleRect: {fileID: 1231474036}
   m_Direction: 2
-  m_Value: 0.14438118
-  m_Size: 0.30028653
+  m_Value: 0
+  m_Size: 0.31002864
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -10791,7 +10791,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: 172.21057}
+  m_AnchoredPosition: {x: 0, y: 331.5}
   m_SizeDelta: {x: 175, y: 1745}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &892886713
@@ -10884,7 +10884,6 @@ GameObject:
   - component: {fileID: 898747574}
   - component: {fileID: 898747573}
   - component: {fileID: 898747572}
-  - component: {fileID: 898747578}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -10974,33 +10973,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 15, y: -180, z: 0}
---- !u!114 &898747578
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 898747571}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 34117dad236f34e94aeede23f2028160, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  mouseButtonToUse: 1
-  target: {fileID: 0}
-  distance: 1.5
-  xSpeed: 120
-  ySpeed: 120
-  scrollrate: 3
-  yMinLimit: -20
-  yMaxLimit: 80
-  distanceMin: 0.5
-  distanceMax: 15
-  Offset: {x: 0, y: 0, z: 0}
-  AlwaysOn: 1
-  singleTouchOrbiting: 0
-  pinchToZoom: 0
-  Clip: 0
-  TargetBone: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head
 --- !u!1 &912864643
 GameObject:
   m_ObjectHideFlags: 0
