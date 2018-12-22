@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 namespace UMA
 {
     /// <summary>
@@ -10,15 +11,21 @@ namespace UMA
     	public static void FixUpUMADnaToDynamicUMADna(UMAData.UMARecipe _recipe)
         {
 			var recipeDNA = _recipe.GetAllDna();
-
+			//22/12/2018 we also need to check slots using DynamicDNA
+			var slotDNABehaviours = new Dictionary<int, DnaConverterBehaviour>();
+			foreach(SlotData slot in _recipe.GetAllSlots())
+			{
+				if (slot.asset.slotDNA != null && !slotDNABehaviours.ContainsKey(slot.asset.slotDNA.DNATypeHash))
+					slotDNABehaviours.Add(slot.asset.slotDNA.DNATypeHash, slot.asset.slotDNA);
+			}
 			for (int i = 0; i < recipeDNA.Length; i++)
 			{
+				int dnaToImport = recipeDNA[i].Count;
+				int dnaImported = 0;
 				//if (!_recipe.raceData.raceDictionary.ContainsKey(recipeDNA[i].GetType()))
 				//A RaceData may contain multiple DynamicDnaConverters use GetConverter instead and use the hash
-				if (_recipe.raceData.GetConverter(recipeDNA[i]) == null)
+				if (_recipe.raceData.GetConverter(recipeDNA[i]) == null && !slotDNABehaviours.ContainsKey(recipeDNA[i].DNATypeHash))
 				{
-					int dnaToImport = recipeDNA[i].Count;
-					int dnaImported = 0;
 
 					for (int j = 0; j < recipeDNA.Length; j++)
 					{

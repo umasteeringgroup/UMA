@@ -867,6 +867,7 @@ namespace UMA
 			public void PreApplyDNA(UMAData umaData, bool fixUpUMADnaToDynamicUMADna = false)
 			{
 				EnsureAllDNAPresent();
+				bool fixup = false;
 				//DynamicUMADna:: when loading an older recipe that has UMADnaHumanoid/Tutorial into a race that now uses DynamicUmaDna the following wont work
 				//so check that and fix it if it happens
 				if (fixUpUMADnaToDynamicUMADna)
@@ -897,15 +898,13 @@ namespace UMA
 						//DynamicUMADna:: try again this time calling FixUpUMADnaToDynamicUMADna first
 						if (fixUpUMADnaToDynamicUMADna == false)
 						{
-							PreApplyDNA(umaData, true);
-							break;
+							fixup = true;
 						}
-						/*else
-						{
-						     if (Debug.isDebugBuild)
-						         Debug.LogWarning("Cannot apply dna: " + dnaEntry.Value.GetType().Name + " using key " + dnaEntry.Key);
-						 }*/
 					}
+				}
+				if (fixup)
+				{
+					PreApplyDNA(umaData, true);
 				}
 			}
 
@@ -1024,7 +1023,7 @@ namespace UMA
 				{
 					RemoveDna(keysToRemove[i]);
 				}
-				
+
 			}
 #pragma warning restore 618
 			/// <summary>
@@ -1075,7 +1074,9 @@ namespace UMA
 				if (!umaDNAConverters.ContainsKey(dnaConverter.DNATypeHash))
 					umaDNAConverters.Add(dnaConverter.DNATypeHash, new List<DnaConverterBehaviour.DNAConvertDelegate>());
 				if (!umaDNAConverters[dnaConverter.DNATypeHash].Contains(dnaConverter.ApplyDnaAction))
+				{
 					umaDNAConverters[dnaConverter.DNATypeHash].Add(dnaConverter.ApplyDnaAction);
+				}
 				else
 					Debug.LogWarning("The applyAction for " + dnaConverter.name + " already existed in the list");
 			}
