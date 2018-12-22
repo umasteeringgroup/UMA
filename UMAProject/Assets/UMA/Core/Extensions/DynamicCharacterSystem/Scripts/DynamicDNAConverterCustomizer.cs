@@ -10,6 +10,7 @@ namespace UMA.CharacterSystem
 {
 	public class DynamicDNAConverterCustomizer : MonoBehaviour
 	{
+
 #if UNITY_EDITOR
 		public GameObject dynamicDnaConverterPrefab;//used for saving dnaConverter as new//TODO check this is needed any more since UMAUtils can make/clone a prefab now
 		public RuntimeAnimatorController TposeAnimatorController;
@@ -151,6 +152,12 @@ namespace UMA.CharacterSystem
 				{
 					availableConverters.Add(converter as DynamicDNAConverterBehaviour);
 				}
+			}
+			//slots might also have converters
+			foreach(SlotData slot in umaData.umaRecipe.GetAllSlots())
+			{
+				if (slot.asset.slotDNA != null && slot.asset.slotDNA.GetType() == typeof(DynamicDNAConverterBehaviour))
+					availableConverters.Add(slot.asset.slotDNA as DynamicDNAConverterBehaviour);
 			}
 		}
 

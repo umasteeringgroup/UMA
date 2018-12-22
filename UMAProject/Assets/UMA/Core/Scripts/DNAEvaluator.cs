@@ -48,7 +48,8 @@ namespace UMA
 		
 
 		//if the evaluator fails to evaluate for any reason it returns this value
-		public static readonly float defaultDNAValue = 0.5f;
+		//TODO Double check this doesn't need to return the raw value (i.e. 0.5f)
+		public static readonly float defaultDNAValue = 0f;
 
 		public CalcOption calcOption
 		{
