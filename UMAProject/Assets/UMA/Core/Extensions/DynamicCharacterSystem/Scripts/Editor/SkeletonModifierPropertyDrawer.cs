@@ -179,7 +179,13 @@ namespace UMA.CharacterSystem.Editors
 				}
 				else
 				{
+					//make sure the hash is changed if the name is edited
+					EditorGUI.BeginChangeCheck();
 					EditorGUI.PropertyField(currRect, property.FindPropertyRelative("_hashName"), new GUIContent("Bone Name"));
+					if (EditorGUI.EndChangeCheck())
+					{
+						property.FindPropertyRelative("_hash").intValue = UMAUtils.StringToHash(property.FindPropertyRelative("_hashName").stringValue);
+					}
 				}
 
 				//THE PROPERTY FIELD
@@ -228,6 +234,8 @@ namespace UMA.CharacterSystem.Editors
 				activeTab = GUI.Toolbar(tabsArea, activeTab, tabsLabels, EditorStyles.toolbarButton);
 				if (EditorGUI.EndChangeCheck())
 				{
+					//make sure any focussed text areas dont prevent the tab from switching
+					GUI.FocusControl(null);
 					if (activeTab == 0)
 					{
 						valuesX.isExpanded = true;
