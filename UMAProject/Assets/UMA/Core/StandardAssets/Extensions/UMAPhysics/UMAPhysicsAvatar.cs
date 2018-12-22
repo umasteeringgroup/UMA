@@ -45,6 +45,8 @@ namespace UMA.Dynamics
 		private UMAData _umaData;
 		private GameObject _rootBone;
 		private List<Rigidbody> _rigidbodies = new List<Rigidbody> ();
+
+		public List<BoxCollider> BoxColliders { get { return _BoxColliders; } }
 		private List<BoxCollider> _BoxColliders = new List<BoxCollider> ();
 
 		public List<ClothSphereColliderPair> SphereColliders { get { return _SphereColliders; }}
