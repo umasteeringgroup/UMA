@@ -3324,8 +3324,7 @@ namespace UMA.CharacterSystem
         {
             if (umaData != null)
             {
-				if (umaData.umaGenerator != null)
-					umaData.umaGenerator.removeUMA(umaData);
+                umaData.umaGenerator.removeUMA(umaData);
             }
         }
 
