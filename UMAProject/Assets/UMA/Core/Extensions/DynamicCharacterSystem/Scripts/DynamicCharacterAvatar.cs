@@ -3315,7 +3315,7 @@ namespace UMA.CharacterSystem
 
         #endregion
 
-        #region CLEANUP
+        #region CLEANUP 
 
         /// <summary>
         /// Cleanup UMA system
@@ -3323,8 +3323,9 @@ namespace UMA.CharacterSystem
         public void Cleanup()
         {
             if (umaData != null)
-            {
-                umaData.umaGenerator.removeUMA(umaData);
+            { 
+				if (umaData.umaGenerator != null)
+					umaData.umaGenerator.removeUMA(umaData);
             }
         }
 
