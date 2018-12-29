@@ -334,13 +334,13 @@ namespace UMA.AssetBundles
 			// Build and copy AssetBundles.
 			BuildScript.BuildAssetBundles();
 			//DOS NOTES this was added in the latest pull requests for the original AssetBundleManager not sure why?
-            BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions();
-            buildPlayerOptions.scenes = levels;
-            buildPlayerOptions.locationPathName = outputPath + targetName;
-            buildPlayerOptions.assetBundleManifestPath = GetAssetBundleManifestFilePath();
-            buildPlayerOptions.target = EditorUserBuildSettings.activeBuildTarget;
-            buildPlayerOptions.options = EditorUserBuildSettings.development ? BuildOptions.Development : BuildOptions.None;
-            BuildPipeline.BuildPlayer(buildPlayerOptions);
+			BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions();
+			buildPlayerOptions.scenes = levels;
+			buildPlayerOptions.locationPathName = outputPath + targetName;
+			buildPlayerOptions.assetBundleManifestPath = GetAssetBundleManifestFilePath();
+			buildPlayerOptions.target = EditorUserBuildSettings.activeBuildTarget;
+			buildPlayerOptions.options = EditorUserBuildSettings.development ? BuildOptions.Development : BuildOptions.None;
+			BuildPipeline.BuildPlayer(buildPlayerOptions);
 		}
 
 		public static void BuildStandalonePlayer()
@@ -366,13 +366,13 @@ namespace UMA.AssetBundles
 			BuildScript.CopyAssetBundlesTo(Path.Combine(Application.streamingAssetsPath, Utility.AssetBundlesOutputPath));
 			AssetDatabase.Refresh();
 
-            BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions();
-            buildPlayerOptions.scenes = levels;
-            buildPlayerOptions.locationPathName = outputPath + targetName;
-            buildPlayerOptions.assetBundleManifestPath = GetAssetBundleManifestFilePath();
-            buildPlayerOptions.target = EditorUserBuildSettings.activeBuildTarget;
-            buildPlayerOptions.options = EditorUserBuildSettings.development ? BuildOptions.Development : BuildOptions.None;
-            BuildPipeline.BuildPlayer(buildPlayerOptions);
+			BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions();
+			buildPlayerOptions.scenes = levels;
+			buildPlayerOptions.locationPathName = outputPath + targetName;
+			buildPlayerOptions.assetBundleManifestPath = GetAssetBundleManifestFilePath();
+			buildPlayerOptions.target = EditorUserBuildSettings.activeBuildTarget;
+			buildPlayerOptions.options = EditorUserBuildSettings.development ? BuildOptions.Development : BuildOptions.None;
+			BuildPipeline.BuildPlayer(buildPlayerOptions);
 		}
 		/// <summary>
 		/// Returns true if the build can potentially run on the current machine (a local build)
@@ -401,7 +401,7 @@ namespace UMA.AssetBundles
 #if UNITY_2018_1_OR_NEWER
 				case BuildTarget.StandaloneOSX:
 #else
-                case BuildTarget.StandaloneOSXIntel:
+				case BuildTarget.StandaloneOSXIntel:
 #endif    
 					if (currentEnvironment.IndexOf("OSX") > -1)
 						return true;
@@ -427,7 +427,7 @@ namespace UMA.AssetBundles
 #if UNITY_2018_1_OR_NEWER
 				case BuildTarget.StandaloneOSX:
 #else
-                case BuildTarget.StandaloneOSXIntel:
+				case BuildTarget.StandaloneOSXIntel:
 #endif    
 					return "/test.app";
 				case BuildTarget.WebGL:
