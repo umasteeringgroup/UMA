@@ -28,8 +28,7 @@ namespace UMA.Editors
             }
 
             GameObject tempGameObject = UnityEngine.Object.Instantiate(mesh.transform.parent.gameObject) as GameObject;
-            PrefabUtility.DisconnectPrefabInstance(tempGameObject);
-            var resultingSkinnedMeshes = tempGameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
+			var resultingSkinnedMeshes = tempGameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
             SkinnedMeshRenderer resultingSkinnedMesh = null;
             foreach (var skinnedMesh in resultingSkinnedMeshes)
             {
@@ -116,7 +115,7 @@ namespace UMA.Editors
 			}
 
 			GameObject tempGameObject = UnityEngine.Object.Instantiate(mesh.transform.parent.gameObject) as GameObject;
-			PrefabUtility.DisconnectPrefabInstance(tempGameObject);
+
 			var resultingSkinnedMeshes = tempGameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
 			SkinnedMeshRenderer resultingSkinnedMesh = null;
 			foreach (var skinnedMesh in resultingSkinnedMeshes)

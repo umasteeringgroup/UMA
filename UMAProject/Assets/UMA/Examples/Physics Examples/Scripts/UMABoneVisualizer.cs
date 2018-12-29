@@ -9,6 +9,8 @@ public class UMABoneVisualizer : MonoBehaviour
     public bool DrawAsBones;
     public bool DrawAdjustBones;
     public Mesh BoneMesh;
+	public string Filter;
+	private string lastFilter;
 
     private Transform[] childNodes;
     private Vector3 Scale = new Vector3();
@@ -61,6 +63,7 @@ public class UMABoneVisualizer : MonoBehaviour
         {
             Setup();
         }
+
         if (rootNode != null)
         {
             if (childNodes == null || childNodes.Length == 0)
@@ -88,6 +91,13 @@ public class UMABoneVisualizer : MonoBehaviour
                             continue;
                         }
                     }
+					if (!string.IsNullOrEmpty(Filter))
+					{
+						if (!child.gameObject.name.ToLower().Contains(Filter.ToLower()))
+						{
+							continue;
+						}
+					}
                     if (DrawAsBones && BoneMesh!= null)
                     {
                         float BoneLength = Vector3.Distance(child.position, child.parent.position);
