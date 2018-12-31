@@ -451,7 +451,7 @@ namespace UMA.Editors
 
             Rect selectionRect = new Rect();
 
-            if (Event.current.type == EventType.layout)
+            if (Event.current.type == EventType.Layout)
                 HandleUtility.AddDefaultControl(GUIUtility.GetControlID(GetHashCode(), FocusType.Passive));
 
             if (isSelecting)

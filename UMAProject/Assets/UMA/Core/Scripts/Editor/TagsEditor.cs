@@ -92,7 +92,7 @@ namespace UMA
                     EditorUtility.DisplayProgressBar("UMA Tags","Refreshing AssetDatabase" , 1.0f);
                 }
             }
-            if (Event.current.type == EventType.layout && Cleanup)
+            if (Event.current.type == EventType.Layout && Cleanup)
             {
                 Cleanup = false;
                 AssetDatabase.SaveAssets();
