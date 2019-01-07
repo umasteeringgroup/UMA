@@ -14,7 +14,7 @@ namespace UMA
     public class UMAAssetIndexer : ScriptableObject, ISerializationCallbackReceiver
 	{
 
-#if UNITY_EDITOR
+#if UNITY_EDITOR_OR_HELL_FREEZES_OVER
 		[UnityEditor.MenuItem("Assets/Create/UMA/Misc/AssetIndex")]
 		public static void CreateAssetIndex()
 		{
