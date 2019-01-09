@@ -1,4 +1,6 @@
 using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace UMA
 {
@@ -15,8 +17,12 @@ namespace UMA
 		public Shader dataShader;
 		public Shader cutoutShader;
 		public int textureMergeRectCount;
-
 		public TextureMergeRect[] textureMergeRects;
+
+		public List<UMAPostProcess> diffusePostProcesses = new List<UMAPostProcess>();
+		public List<UMAPostProcess> normalPostProcesses = new List<UMAPostProcess>();
+		public List<UMAPostProcess> dataPostProcesses = new List<UMAPostProcess>();
+
 		[System.Serializable]
 		public struct TextureMergeRect
 		{
@@ -28,6 +34,7 @@ namespace UMA
 		void OnRenderObject()
 		{
 			if (Camera.current != myCamera) return;
+
 			if (textureMergeRects != null)
 			{
 				for (int i = 0; i < textureMergeRectCount; i++)
@@ -44,6 +51,15 @@ namespace UMA
 
 		public void Reset()
 		{
+			foreach (UMAPostProcess process in diffusePostProcesses)
+				process.enabled = false;
+
+			foreach (UMAPostProcess process in normalPostProcesses)
+				process.enabled = false;
+
+			foreach (UMAPostProcess process in dataPostProcesses)
+				process.enabled = false;
+
 			textureMergeRectCount = 0;
 		}
 
@@ -79,12 +95,18 @@ namespace UMA
 			{
 				case UMAMaterial.ChannelType.NormalMap:
 					textureMergeRect.mat.shader = normalShader;
+					foreach (UMAPostProcess process in normalPostProcesses)
+						process.enabled = true;
 					break;
 				case UMAMaterial.ChannelType.Texture:
 					textureMergeRect.mat.shader = dataShader;
+					foreach (UMAPostProcess process in dataPostProcesses)
+						process.enabled = true;
 					break;
 				case UMAMaterial.ChannelType.DiffuseTexture:
 					textureMergeRect.mat.shader = diffuseShader;
+					foreach (UMAPostProcess process in diffusePostProcesses)
+						process.enabled = true;
 					break;
 			}
 			textureMergeRect.mat.SetTexture("_MainTex", source.baseOverlay.textureList[textureType]);
@@ -107,8 +129,8 @@ namespace UMA
 		int height;
 		public void SetupModule(UMAData.GeneratedMaterial atlas, int idx, int textureType)
 		{
-            var atlasElement = atlas.materialFragments[idx];
-            if (atlasElement.isRectShared) return;
+			var atlasElement = atlas.materialFragments[idx];
+			if (atlasElement.isRectShared) return;
 
 			height = Mathf.FloorToInt(atlas.cropResolution.y);
 			SetupModule(atlasElement, textureType);
@@ -144,6 +166,7 @@ namespace UMA
 		{
 			textureMergeRect.rect = overlayRect;
 			textureMergeRect.tex = source.overlays[i2].textureList[textureType];
+
 			if (source.overlays[i2].overlayType == OverlayDataAsset.OverlayType.Normal)
 			{
 				switch (source.slotData.asset.material.channels[textureType].channelType)
