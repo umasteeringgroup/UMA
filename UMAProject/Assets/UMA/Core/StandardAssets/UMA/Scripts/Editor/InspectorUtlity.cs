@@ -62,7 +62,8 @@ public static class InspectorUtlity
 			return null;
 		}
 		var activeEditorTrackerPInfo = inspectorType.GetProperty("tracker", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-		var activeEditorTracker = activeEditorTrackerPInfo.GetGetMethod().Invoke(inspectorWindow, new object[0]);
+		//Unity 2018.3 changed the get method to private so pass true along with the request for it
+		var activeEditorTracker = activeEditorTrackerPInfo.GetGetMethod(true).Invoke(inspectorWindow, new object[0]);
 		if (((ActiveEditorTracker)activeEditorTracker) != null)
 		{
 			editors = ((ActiveEditorTracker)activeEditorTracker).activeEditors;
