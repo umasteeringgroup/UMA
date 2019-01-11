@@ -10,8 +10,15 @@ namespace UMA.Editors
 	{
 		private float enableWidth = 30f;
 		private float adjustTypeWidth = 145f;
+		private List<string> _adjPopupNames = new List<string>();
+		private List<GUIContent> _adjPopupNamesGUI = new List<GUIContent>();
 
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+		{
+			OnGUI(position, property, label, false);
+		}
+
+		public void OnGUI(Rect position, SerializedProperty property, GUIContent label, bool isAlpha)
 		{
 			label = EditorGUI.BeginProperty(position, label, property);
 			var widthMod = position.width;
@@ -39,7 +46,24 @@ namespace UMA.Editors
 			EditorGUI.BeginDisabledGroup(!enableProp.boolValue);
 			EditorGUIUtility.labelWidth = 57f;
 			var adjLabel = EditorGUI.BeginProperty(adjTypeRect, new GUIContent("Adj Type"), adjustmentTypeProp);
-			EditorGUI.PropertyField(adjTypeRect, adjustmentTypeProp, adjLabel);
+			//we only want to show the 'BlendFactor' option in the dropdown if this is the alpha channel
+			//TODO: Is the Alpha channel adjustment type *ever* anything other than 'BlendFactor'? If not, just dont show the dropdown for the channel
+			if(isAlpha)
+				EditorGUI.PropertyField(adjTypeRect, adjustmentTypeProp, adjLabel);
+			else
+			{
+				if (_adjPopupNamesGUI.Count == 0)
+				{
+					_adjPopupNames = new List<string>(adjustmentTypeProp.enumDisplayNames);
+					_adjPopupNames.Remove("Blend Factor");
+					for (int i = 0; i < _adjPopupNames.Count; i++)
+					{
+						_adjPopupNamesGUI.Add(new GUIContent(_adjPopupNames[i]));
+					}
+				}
+				adjLabel.tooltip = "If Absolute the setting overrides the value of the component of the color. If Adjust, the setting is added to the value of the component of the color.";
+				adjustmentTypeProp.enumValueIndex = EditorGUI.Popup(adjTypeRect, adjLabel, adjustmentTypeProp.enumValueIndex, _adjPopupNamesGUI.ToArray());
+			}
 			EditorGUI.EndProperty();
 			EditorGUIUtility.labelWidth = 65f;
 			var dnaLabel = EditorGUI.BeginProperty(useDNAValueRect, new GUIContent("DNA Value"), useDNAValueProp);
@@ -71,7 +95,8 @@ namespace UMA.Editors
 	{
 		private Color _previewColor = Color.white;
 		private Color _resultingColor = Color.white;
-		//draw a foldout for the DNAColorModifier but also draw a color picker there that changes the values of DNAColorModifier
+		private ColorDNAConverterDNAColorComponentDrawer CDCDCCDrawer = new ColorDNAConverterDNAColorComponentDrawer();
+
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
 			label = EditorGUI.BeginProperty(position, label, property);
@@ -84,10 +109,14 @@ namespace UMA.Editors
 				var contentRectB = new Rect(position.xMin, contentRectG.yMax + (EditorGUIUtility.standardVerticalSpacing * 2), position.width, EditorGUIUtility.singleLineHeight *2f);
 				var contentRectA = new Rect(position.xMin, contentRectB.yMax + (EditorGUIUtility.standardVerticalSpacing * 2), position.width, EditorGUIUtility.singleLineHeight *2f);
 				var previewToolsRect = new Rect(position.xMin, contentRectA.yMax + (EditorGUIUtility.standardVerticalSpacing * 2), position.width, EditorGUIUtility.singleLineHeight);
-				EditorGUI.PropertyField(contentRectR, property.FindPropertyRelative("R"));
-				EditorGUI.PropertyField(contentRectG, property.FindPropertyRelative("G"));
-				EditorGUI.PropertyField(contentRectB, property.FindPropertyRelative("B"));
-				EditorGUI.PropertyField(contentRectA, property.FindPropertyRelative("A"));
+				//EditorGUI.PropertyField(contentRectR, property.FindPropertyRelative("R"));
+				CDCDCCDrawer.OnGUI(contentRectR, property.FindPropertyRelative("R"), new GUIContent("R"));
+				//EditorGUI.PropertyField(contentRectG, property.FindPropertyRelative("G"));
+				CDCDCCDrawer.OnGUI(contentRectG, property.FindPropertyRelative("G"), new GUIContent("G"));
+				//EditorGUI.PropertyField(contentRectB, property.FindPropertyRelative("B"));
+				CDCDCCDrawer.OnGUI(contentRectB, property.FindPropertyRelative("B"), new GUIContent("B"));
+				//EditorGUI.PropertyField(contentRectA, property.FindPropertyRelative("A"));
+				CDCDCCDrawer.OnGUI(contentRectA, property.FindPropertyRelative("A"), new GUIContent("A"), true);
 				var _previewProp = property.FindPropertyRelative("_testDNAVal");
 				var expanded = _previewProp.isExpanded;
 				GUIHelper.ToolbarStyleFoldout(previewToolsRect, new GUIContent("Preview Tool", "With the Preview Tool you can see how the above settings will affect a given color when the modifying dna evaluates to the given test value"), ref expanded, EditorStyles.label);
