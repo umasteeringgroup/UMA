@@ -42,7 +42,7 @@ Shader "UMA/NormalPackingShader" {
 #if defined(UNITY_NO_DXT5nm)
 				return half4(r.r, r.g, r.b, 0);
 #else
-				return half4(0, r.y, 0, r.x);
+				return half4(1, r.y, 1, r.x);
 #endif
 			}
 			ENDCG
