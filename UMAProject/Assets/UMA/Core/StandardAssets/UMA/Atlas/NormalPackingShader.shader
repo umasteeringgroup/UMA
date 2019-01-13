@@ -33,10 +33,7 @@ Shader "UMA/NormalPackingShader" {
 
 			half4 frag(v2f_img i) : COLOR
 			{
-				half3 r = tex2D(_MainTex, i.uv);
-
-				//Bring normal back into packed range.
-				r = saturate(r * 0.5 + 0.5);
+				half4 r = tex2D(_MainTex, i.uv);
 
 				//G and A are the important ones. 
 #if defined(UNITY_NO_DXT5nm)
