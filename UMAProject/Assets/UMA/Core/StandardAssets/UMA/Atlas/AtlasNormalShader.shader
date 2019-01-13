@@ -52,14 +52,14 @@ SubShader
 
 		half4 frag(v2f i) : COLOR
 		{
-			half3 n = UnpackNormal(tex2D(_MainTex, i.uv));
+			half4 n = tex2D(_MainTex, i.uv);
 			half4 extra = tex2D(_ExtraTex, i.uv);
-			half4 final;
-			final.r = n.r;
-			final.g = n.g;
-			final.b = n.b;
-			final.a = min(extra.a, _Color.a);
-			return final;
+
+			//swizzle the alpha and red channel, we will swizzle back in the post process SwizzleShader
+			n.r = n.a;
+			n.a = min(extra.a, _Color.a);
+			return n;
+
 		}
 		ENDCG
 	}
