@@ -1,13 +1,13 @@
 ﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
 
 //	============================================================
-//	Name:		NormalPackingShader
+//	Name:		NormalSwizzleShader
 //	Author: 	Kenan Chabuk (@Kenamis)
-//	This works in conjunction with the AtlasNormalShader that unpacks the normal and blends them.
-//	Then this post effect repacks the normal into the packed range for use with standard shaders.
+//	This works in conjunction with the AtlasNormalShader that swizzles the alpha to red channel of the packed normal and blends them.
+//	Then this post effect re-swizzles the normal into the packed format for use with standard shaders.
 //	============================================================
 
-Shader "UMA/NormalPackingShader" {
+Shader "UMA/NormalSwizzleShader" {
 	Properties{
 		_MainTex("Normalmap", 2D) = "bump" {}
 	}
