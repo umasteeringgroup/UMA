@@ -18,6 +18,12 @@ namespace UMA.Timeline
         {
             DynamicCharacterAvatar avatar = playerData as DynamicCharacterAvatar;
 
+            if (avatar == null)
+                return;
+
+            if (string.IsNullOrEmpty(raceToChangeTo))
+                return;
+
             if(avatar.activeRace.name != raceToChangeTo)
                 avatar.ChangeRace(raceToChangeTo);
         }
