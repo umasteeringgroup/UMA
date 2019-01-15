@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 #if UNITY_EDITOR
 using UnityEditor;
 using System.IO;
@@ -12,25 +13,38 @@ namespace UMA
 	//The DynamicDNAConverterController manages the list Converters (aka DynamicDNAPlugins) the user has decided to use.
 	//It is a Scriptable Object, and as Converters are added to it, it creates instances of those and stores them inside itself
 	//this is so all the assets this needs are packaged up with it UMA3 style.
-	//This asset also calls ApplyDNA on each of the converters when DynamicDNAConverterBehaviour asks it to.
+	//This asset reploaces DynamicDNAConverterBehaviour and applies the converters to the avatar
 	[System.Serializable]
-	public class DynamicDNAConverterController : ScriptableObject
+	public class DynamicDNAConverterController : ScriptableObject, IDNAConverter, IDynamicDNAConverter
 	{
+
+		[SerializeField]
+		[Tooltip("A DNA Asset defines the names that will be available to the DNA Converters when modifying the Avatar. Often displayed in the UI as 'sliders'. Click the 'Inspect' button to view the assigned asset")]
+		private DynamicUMADnaAsset _dnaAsset;
+		
 		/// <summary>
 		/// The List of all the plugins (converters) assigned to this ConverterController
 		/// </summary>
 		[SerializeField]
 		private List<DynamicDNAPlugin> _plugins = new List<DynamicDNAPlugin>();
 
+		[SerializeField]
+		[BaseCharacterModifier.Config(true)]//does this stop it drawing the foldout? if so we dont want that here
+		[Tooltip("Overall Modifiers apply to ALL characters that use this converter. You use this to make a Female race shorter than a Male race for example. They can change an entire races base scale, height and radius (used for fitting the collider), its mass, and update its bounds.  Its elements can selectively be enabled and are calculated after all other DNA Converters have made changes to the avatar. Usually you only use these once per race, on the base 'Converter Controller' for the race.")]
+		private BaseCharacterModifier _overallModifiers = new BaseCharacterModifier();
+
 		/// <summary>
 		/// Contains a list of all the dna names used by all the plugins (converters) assigned to this ConverterController
 		/// </summary>
 		private List<string> _usedDNANames = new List<string>();
 
-		/// <summary>
-		/// The behaviour will assign it self to this converterController, when this converterController is assigned to it, either when ApplyDNAAction is called or the controller is inspected via this Behaviour
-		/// </summary>
-		private DynamicDNAConverterBehaviour _converterBehaviour;
+#pragma warning disable 649
+		//only set in the editor
+		[SerializeField]
+		[Tooltip("A 'nice name' to use when Categorizing DNASetters in the UI")]
+		private string _displayValue;
+#pragma warning restore 649
+
 		[System.NonSerialized]
 		private List<DynamicDNAPlugin> _applyDNAPrepassPlugins = new List<DynamicDNAPlugin>();
 		[System.NonSerialized]
@@ -38,21 +52,68 @@ namespace UMA
 		[System.NonSerialized]
 		private bool _prepared = false;
 
+		private Dictionary<string, List<UnityAction<string, float>>> _dnaCallbackDelegates = new Dictionary<string, List<UnityAction<string, float>>>();
+
+		#region IDNAConverter IMPLIMENTATION
+
+		public string DisplayValue
+		{
+			get { return _displayValue; }
+		}
+
+		public System.Type DNAType
+		{
+			get { return typeof(DynamicUMADna); }
+		}
+
+		/// <summary>
+		/// Returns the dnaTypeHash from the assigned dnaAsset or 0 if no dnaAsset is set
+		/// </summary>
+		/// <returns></returns>
+		public int DNATypeHash
+		{
+			get
+			{
+				if (_dnaAsset != null)
+					return _dnaAsset.dnaTypeHash;
+				else
+					Debug.LogWarning(this.name + " did not have a DNA Asset assigned. This is required for DynamicDnaConverterControllers.");
+				return 0;
+			}
+		}
+
+		public DNAConvertDelegate PreApplyDnaAction
+		{
+			get { return ApplyDNAPrepass; }
+		}
+
+		public DNAConvertDelegate ApplyDnaAction
+		{
+			get { return ApplyDNA; }
+		}
+
+		//Prepare should be here too
+
+		#endregion
+
+		#region IDynamicDNAConverter IMPLIMENTATION
+
+		public DynamicUMADnaAsset dnaAsset
+		{
+			get { return DNAAsset; }
+		}
+
+		#endregion
+
 		public DynamicUMADnaAsset DNAAsset
 		{
 			get
 			{
-				if (_converterBehaviour != null)
-					return _converterBehaviour.dnaAsset;
+				if (_dnaAsset != null)
+					return _dnaAsset;
 				else
 					return null;
 			}
-		}
-
-		public DynamicDNAConverterBehaviour converterBehaviour
-		{
-			get { return _converterBehaviour; }
-			set { _converterBehaviour = value; }
 		}
 
 		/// <summary>
@@ -63,64 +124,35 @@ namespace UMA
 			get { return _plugins.Count; }
 		}
 
-		#region BACKWARDS COMPATIBILITY
 
-		//Helper methods to make upgrading easier. DynamicDNAConverterBehaviour used to have its own SkeletonModifiers list and StartingPose so these replicate that functionality
+		public BaseCharacterModifier overallModifiers
+		{
+			get { return _overallModifiers; }
+		}
+
 		/// <summary>
-		/// Gets the first found SkeletonModifiersDNAConverterPlugin in this controllers list and returns its list of SkeletonModifiers. TIP: The controller can have multiple sets of SkeletonModifiers now. Use the GetPlugins methods to get them all.
+		/// Changes the characters base scale at runtime. This is reset per character everyime dna is applied, so its not shared like everything else in overallModifiers is.
+		/// It should only be used by the 'OverallScaleDNAConverterPlugin' or similar
 		/// </summary>
-		public List<SkeletonModifier> SkeletonModifiersFirst
+		public float liveScale
 		{
-			get
-			{
-				if(GetPlugins(typeof(SkeletonDNAConverterPlugin)).Count > 0)
-				{
-					return ((GetPlugins(typeof(SkeletonDNAConverterPlugin))[0]) as SkeletonDNAConverterPlugin).skeletonModifiers;
-				}
-				return new List<SkeletonModifier>();
-			}
-			set
-			{
-				if (GetPlugins(typeof(SkeletonDNAConverterPlugin)).Count > 0)
-				{
-					((GetPlugins(typeof(SkeletonDNAConverterPlugin))[0]) as SkeletonDNAConverterPlugin).skeletonModifiers = value;
-				}
-			}
+			get { return _overallModifiers.liveScale; }
+			set { _overallModifiers.liveScale = value; }
 		}
 
-		public UMA.PoseTools.UMABonePose StartingPoseFirst
+		/// <summary>
+		/// Gets the base scale as set in the 'overall modifiers' section of this converter
+		/// </summary>
+		public float baseScale
 		{
-			get
-			{
-				var bonePosePlugins = GetPlugins(typeof(BonePoseDNAConverterPlugin));
-				if (bonePosePlugins.Count > 0)
-				{
-					for (int i = 0; i < bonePosePlugins.Count; i++)
-					{
-						if ((bonePosePlugins[i] as BonePoseDNAConverterPlugin).StartingPose != null)
-							return (bonePosePlugins[i] as BonePoseDNAConverterPlugin).StartingPose;
-					}
-				}
-				return null;
-			}
-			set
-			{
-				var bonePosePlugins = GetPlugins(typeof(BonePoseDNAConverterPlugin));
-				if (bonePosePlugins.Count > 0)
-				{
-					for (int i = 0; i < bonePosePlugins.Count; i++)
-					{
-						if ((bonePosePlugins[i] as BonePoseDNAConverterPlugin).StartingPose != null)
-						{
-							(bonePosePlugins[i] as BonePoseDNAConverterPlugin).StartingPose = value;
-							return;
-						}
-					}
-				}
-			}
+			get { return _overallModifiers.scale; }
 		}
 
-		#endregion
+		public void ImportConverterBehaviourData(DynamicDNAConverterBehaviour DCB)
+		{
+			_dnaAsset = DCB.dnaAsset;
+			_overallModifiers.ImportSettings(DCB.overallModifiers);
+		}
 
 		public void Prepare()
 		{
@@ -145,19 +177,65 @@ namespace UMA
 			}
 		}
 
+		public bool AddDnaCallbackDelegate(UnityAction<string, float> callback, string targetDnaName)
+		{
+			bool added = false;
+
+			if (!_dnaCallbackDelegates.ContainsKey(targetDnaName))
+				_dnaCallbackDelegates.Add(targetDnaName, new List<UnityAction<string, float>>());
+
+			if (!_dnaCallbackDelegates[targetDnaName].Contains(callback))
+			{
+				_dnaCallbackDelegates[targetDnaName].Add(callback);
+				added = true;
+			}
+			return added;
+		}
+
+		public bool RemoveDnaCallbackDelegate(UnityAction<string, float> callback, string targetDnaName)
+		{
+			bool removed = false;
+
+			if (!_dnaCallbackDelegates.ContainsKey(targetDnaName))
+			{
+				removed = true;
+			}
+			else
+			{
+				if (_dnaCallbackDelegates[targetDnaName].Contains(callback))
+				{
+					_dnaCallbackDelegates[targetDnaName].Remove(callback);
+					removed = true;
+				}
+				if (_dnaCallbackDelegates[targetDnaName].Count == 0)
+				{
+					_dnaCallbackDelegates.Remove(targetDnaName);
+				}
+			}
+			return removed;
+		}
+
 		/// <summary>
 		/// Calls ApplyDNA on all this convertersControllers plugins (aka converters) that apply dna during the pre-pass
 		/// </summary>
 		/// <param name="umaData">The umaData on the avatar</param>
 		/// <param name="skeleton">The avatars skeleton</param>
 		/// <param name="dnaTypeHash">The dnaTypeHash that this converters behaviour is using</param>
-		public void ApplyDNAPrepass(UMAData umaData, UMASkeleton skeleton, int dnaTypeHash)
+		public void ApplyDNAPrepass(UMAData umaData, UMASkeleton skeleton)
 		{
+			if (!_prepared)
+				Prepare();
+
+			UMADnaBase umaDna = umaData.GetDna(DNATypeHash);
+			//Make the DNAAssets match if they dont already, can happen when some parts are in bundles and others arent
+			if (((DynamicUMADnaBase)umaDna).dnaAsset != DNAAsset && DNAAsset != null)
+				((DynamicUMADnaBase)umaDna).dnaAsset = DNAAsset;
+
 			if (_applyDNAPrepassPlugins.Count > 0)
 			{
 				for (int i = 0; i < _applyDNAPrepassPlugins.Count; i++)
 				{
-					_applyDNAPrepassPlugins[i].ApplyDNA(umaData, skeleton, dnaTypeHash);
+					_applyDNAPrepassPlugins[i].ApplyDNA(umaData, skeleton, DNATypeHash);
 				}
 			}
 		}
@@ -168,11 +246,43 @@ namespace UMA
 		/// <param name="umaData">The umaData on the avatar</param>
 		/// <param name="skeleton">The avatars skeleton</param>
 		/// <param name="dnaTypeHash">The dnaTypeHash that this converters behaviour is using</param>
-		public void ApplyDNA(UMAData umaData, UMASkeleton skeleton, int dnaTypeHash)
+		public void ApplyDNA(UMAData umaData, UMASkeleton skeleton)
 		{
+			UMADnaBase umaDna = null;
+			//reset the live scale on the overallModifiers ready for any adjustments any plugins might make
+			liveScale = -1;
+			//fixDNAPrefabs- do we need to deal with 'reset' as dnaconverterBehaviour used to do? If so wouldn't we just apply all the plugins with MasterWeight set to 0?
+			//if (!asReset)
+			//{
+				umaDna = umaData.GetDna(DNATypeHash);
+				//Make the DNAAssets match if they dont already, can happen when some parts are in bundles and others arent
+				if (((DynamicUMADnaBase)umaDna).dnaAsset != DNAAsset)
+					((DynamicUMADnaBase)umaDna).dnaAsset = DNAAsset;
+			//}
 			for (int i = 0; i < _applyDNAPlugins.Count; i++)
 			{
-				_applyDNAPlugins[i].ApplyDNA(umaData, skeleton, dnaTypeHash);
+				_applyDNAPlugins[i].ApplyDNA(umaData, skeleton, DNATypeHash);
+			}
+			_overallModifiers.UpdateCharacter(umaData, skeleton, false);
+			ApplyDnaCallbackDelegates(umaData);
+		}
+
+
+		public void ApplyDnaCallbackDelegates(UMAData umaData)
+		{
+			if (_dnaCallbackDelegates.Count == 0)
+				return;
+			UMADnaBase umaDna;
+			//need to use the typehash
+			umaDna = umaData.GetDna(DNATypeHash);
+			if (umaDna.Count == 0)
+				return;
+			foreach (KeyValuePair<string, List<UnityAction<string, float>>> kp in _dnaCallbackDelegates)
+			{
+				for (int i = 0; i < kp.Value.Count; i++)
+				{
+					kp.Value[i].Invoke(kp.Key, (umaDna as DynamicUMADna).GetValue(kp.Key, true));
+				}
 			}
 		}
 
@@ -246,6 +356,9 @@ namespace UMA
 				EditorUtility.SetDirty(this);
 				AssetDatabase.SaveAssets();
 #endif
+				//ensure the new plugin is added to the _applyPlugins lists
+				if(Application.isPlaying)
+					Prepare();
 				return plugin;
 			}
 			return null;

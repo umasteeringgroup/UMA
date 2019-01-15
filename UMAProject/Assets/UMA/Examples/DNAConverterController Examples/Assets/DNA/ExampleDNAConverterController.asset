@@ -9,14 +9,33 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 56c6edb17218abd469257d07a2bc5559, type: 3}
-  m_Name: ExampleConverterController
+  m_Name: ExampleDNAConverterController
   m_EditorClassIdentifier: 
+  _dnaAsset: {fileID: 11400000, guid: 51557a0d9997c5945973dff0a2fc7031, type: 2}
   _plugins:
   - {fileID: 114229394160915382}
   - {fileID: 114700032911936864}
   - {fileID: 114304921582309874}
   - {fileID: 114812837614320502}
   - {fileID: 114620940923763576}
+  _overallModifiers:
+    _adjustScale: 1
+    _adjustHeight: 1
+    _adjustRadius: 1
+    _adjustMass: 1
+    _updateBounds: 1
+    _tightenBounds: 1
+    _adjustBounds: 1
+    _scale: 0.88
+    _bone: Position
+    _scaleBoneHash: -1084586333
+    _headRatio: 7.5
+    _radiusAdjustY: 0.01
+    _radiusAdjust: {x: 0.17, y: 0}
+    _massAdjust: {x: 42, y: 28, z: 22}
+    _boundsAdjust: {x: -0.36, y: 0.06, z: 0}
+  _overallModifiersEnabled: 1
+  _displayValue: 
 --- !u!114 &114229394160915382
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10590,7 +10609,7 @@ MonoBehaviour:
       _multiplier: 1
       _initialized: 1
   _converterController: {fileID: 11400000}
-  colorSets:
+  _colorSets:
   - mode: 1
     targetName: Skin
     textureChannel: 0
@@ -10634,7 +10653,7 @@ MonoBehaviour:
         adjustmentType: 1
         useDNAValue: 0
         value: 0.31764707
-        adjustValue: -0.48
+        adjustValue: -0.488
         multiplier: 1
       G:
         enable: 1
@@ -10701,7 +10720,7 @@ MonoBehaviour:
         adjustmentType: 1
         useDNAValue: 0
         value: 0.29411766
-        adjustValue: -0.67
+        adjustValue: -0.662
         multiplier: 1
       G:
         enable: 1

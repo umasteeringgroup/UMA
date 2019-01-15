@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Text.RegularExpressions;
+using UnityEngine.Serialization;
 
 namespace UMA
 {
@@ -15,12 +16,45 @@ namespace UMA
 	/// is a way of specifying the values which are actually valid for a race.
 	/// </remarks>
 	[System.Serializable]
-	public class DNARangeAsset : ScriptableObject
+	public class DNARangeAsset : ScriptableObject, ISerializationCallbackReceiver
 	{
+#pragma warning.disable 649
+		//UMA 2.8 FixDNAPrefabs: this needs to use the new DNAConverterField
+		//we need this so we can get the data out of it on deserialize
 		/// <summary>
 		/// The DNA converter for which the ranges apply.
 		/// </summary>
-		public DnaConverterBehaviour dnaConverter;
+		[FormerlySerializedAs("dnaConverter")]
+		[SerializeField]
+		private DnaConverterBehaviour _dnaConverterLegacy;
+#pragma warning restore 649
+
+		[SerializeField]
+		[Tooltip("The DNA converter for which the ranges apply. Accepts a DNAConverterController asset or a legacy DNAConverterBehaviour prefab.")]
+		private DNAConverterField _dnaConverter = new DNAConverterField();
+
+		/// <summary>
+		/// The DNA converter for which the ranges apply.
+		/// </summary>
+		public IDNAConverter dnaConverter
+		{
+			get { return _dnaConverter.Value; }
+			set { _dnaConverter.Value = value; }
+		}
+		//UMA 2.8 FixDNAPrefabs: Swaps the legacy converter (DnaConverterBehaviour Prefab) for the new DNAConverterController
+		/// <summary>
+		/// Replaces a legacy DnaConverterBehaviour Prefab with a new DynamicDNAConverterController
+		/// </summary>
+		/// <returns>returns true if any converters were replaced.</returns>
+		public bool UpgradeFromLegacy(DnaConverterBehaviour oldConverter, DynamicDNAConverterController newConverter)
+		{
+			if (_dnaConverter.Value as Object == oldConverter)//Not sure why I am being told by visualStudio to cast the left side to Object here...
+			{
+				_dnaConverter.Value = newConverter;
+				return true;
+			}
+			return false;
+		}
 
 		/// <summary>
 		/// The mean (average) value for each DNA entry.
@@ -47,8 +81,8 @@ namespace UMA
 				return false;
 
 			if (dnaConverter.DNAType == typeof(DynamicUMADna)) {
-				if (((DynamicDNAConverterBehaviourBase)dnaConverter).dnaAsset.Names.Length > index) {
-					if (Regex.Replace (((DynamicDNAConverterBehaviourBase)dnaConverter).dnaAsset.Names [index], "( )+", "") == Regex.Replace (name, "( )+", ""))
+				if (((IDynamicDNAConverter)dnaConverter).dnaAsset.Names.Length > index) {
+					if (Regex.Replace (((IDynamicDNAConverter)dnaConverter).dnaAsset.Names [index], "( )+", "") == Regex.Replace (name, "( )+", ""))
 						return true;
 				}
 			}
@@ -129,5 +163,25 @@ namespace UMA
 			
 			dna.Values = values;
 		}
+		#region ISERIALIZATIONCALLBACKRECIEVER
+
+		public void OnBeforeSerialize()
+		{
+			//do nothing
+		}
+
+		/// <summary>
+		/// Converts DnaConverterBehaviour _dnaConverterLegacy to  IDNAConverter _dnaConverter to preserve legacy data
+		/// </summary>
+		public void OnAfterDeserialize()
+		{
+			if (_dnaConverterLegacy != null && _dnaConverter.Value == null)
+			{
+				_dnaConverter.Value = _dnaConverterLegacy;
+			}
+			//Clear _dnaConverterLegacy?
+		}
+
+		#endregion
 	}
 }

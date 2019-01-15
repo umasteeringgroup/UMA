@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace UMA
 {
@@ -60,10 +61,44 @@ namespace UMA
 		[UnityEngine.HideInInspector]
 		public int[] animatedBoneHashes = new int[0];
 
+#pragma warning disable 649
+		//UMA2.8+ we need to use DNAConverterField now because that can contain Behaviours and the new controllers
+		//we need this because we need the old data out of it on deserialize
 		/// <summary>
 		/// Optional DNA converter specific to the slot.
 		/// </summary>
-		public DnaConverterBehaviour slotDNA;
+		[FormerlySerializedAs("slotDNA")]
+		[SerializeField]
+		private DnaConverterBehaviour _slotDNALegacy;
+#pragma warning restore 649
+
+		//UMA 2.8 FixDNAPrefabs: this is a new field that can take DNAConverter Prefabs *and* DNAConverterControllers
+		[SerializeField]
+		[Tooltip("Optional DNA converter specific to the slot. Accepts a DNAConverterController asset or a legacy DNAConverterBehaviour prefab.")]
+		private DNAConverterField _slotDNA = new DNAConverterField();
+
+		//UMA 2.8 FixDNAPrefabs: I'm putting the required property for this here because theres no properties anywhere else!
+		public IDNAConverter slotDNA
+		{
+			get { return _slotDNA.Value; }
+			set { _slotDNA.Value = value; }
+		}
+
+		//UMA 2.8 FixDNAPrefabs: Swaps the legacy converter (DnaConverterBehaviour Prefab) for the new DNAConverterController
+		/// <summary>
+		/// Replaces a legacy DnaConverterBehaviour Prefab with a new DynamicDNAConverterController
+		/// </summary>
+		/// <returns>returns true if any converters were replaced.</returns>
+		public bool UpgradeFromLegacy(DnaConverterBehaviour oldConverter, DynamicDNAConverterController newConverter)
+		{
+			if (_slotDNA.Value as Object == oldConverter)//Not sure why I am being told by visualStudio to cast the left side to Object here...
+			{
+				_slotDNA.Value = newConverter;
+				return true;
+			}
+			return false;
+		}
+
 		/// <summary>
 		/// The mesh data.
 		/// </summary>
@@ -144,6 +179,13 @@ namespace UMA
 		public void OnAfterDeserialize()
 		{
 			nameHash = UMAUtils.StringToHash(slotName);
+
+			//UMA 2.8 FixDNAPrefabs: Automatically update the data from the old field to the new one
+			if (_slotDNALegacy != null && _slotDNA.Value == null)
+			{
+				_slotDNA.Value = _slotDNALegacy;
+				//Clear the legacy field?
+			}
 		}
 		public void OnBeforeSerialize() { }
 

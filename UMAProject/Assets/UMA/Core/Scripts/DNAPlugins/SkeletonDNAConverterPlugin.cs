@@ -178,7 +178,8 @@ namespace UMA
 						//hmm this is not always the case because of the backwards compatible property giving us the first found skelModsPlugin aswell
 						//so if there is no converter controller, *then* its legacy- 
 						//or is it? the user could still assign a controller without upgrading and then try and drag the behaviour in here
-						if(DDCB.ConverterController == null)
+						//UMA2.8+ FixDNAPrefabs ConverterController doesn't do this backwards compatibility now
+						//if(DDCB.ConverterController == null)
 							isLegacy = true;
 					}
 				}

@@ -37,7 +37,7 @@ namespace UMA.Editors
 			//base.OnInspectorGUI();
 
 			EditorGUILayout.DelayedTextField(slotName);
-			Editor.DrawPropertiesExcluding(serializedObject, new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "DNAApplied", "CharacterCompleted" });
+			Editor.DrawPropertiesExcluding(serializedObject, new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "DNAApplied", "CharacterCompleted", "_slotDNALegacy" });
 
 			eventsFoldout = EditorGUILayout.Foldout(eventsFoldout, "Slot Events");
 			if (eventsFoldout)

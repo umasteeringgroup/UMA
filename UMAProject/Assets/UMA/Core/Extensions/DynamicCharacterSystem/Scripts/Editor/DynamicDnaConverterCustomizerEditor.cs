@@ -9,7 +9,7 @@ namespace UMA.CharacterSystem.Editors
     public class DynamicDNAConverterCustomizerEditor : Editor
     {
         DynamicDNAConverterCustomizer thisDDCC;
-        Dictionary<DynamicDNAConverterBehaviour, Editor> SDCBs = new Dictionary<DynamicDNAConverterBehaviour, Editor>();
+        Dictionary<IDNAConverter, Editor> SDCBs = new Dictionary<IDNAConverter, Editor>();
 
 		//For BonePose CreationTools
 		string createBonePoseAssetName = "";
@@ -82,13 +82,14 @@ namespace UMA.CharacterSystem.Editors
             }
             if (Application.isPlaying)
             {
-                SerializedProperty availableConvertersProp = serializedObject.FindProperty("availableConverters");
-                SerializedProperty selectedConverterProp = serializedObject.FindProperty("selectedConverter");
+				//UMA 2.8+ FixDNAPrefabs - this is a runtime only list of IDNAConverters now
+                //SerializedProperty availableConvertersProp = serializedObject.FindProperty("availableConverters");
+                //SerializedProperty selectedConverterProp = serializedObject.FindProperty("selectedConverter");
                 List<string> availableConvertersPopup = new List<string>();
                 availableConvertersPopup.Add("None Selected");
                 int selectedConverterIndex = 0;
                 int newSelectedConverterIndex = 0;
-                for (int i = 0; i < availableConvertersProp.arraySize; i++)
+                /*for (int i = 0; i < availableConvertersProp.arraySize; i++)
                 {
                     availableConvertersPopup.Add(availableConvertersProp.GetArrayElementAtIndex(i).objectReferenceValue.name);
                     if (selectedConverterProp.objectReferenceValue != null)
@@ -96,7 +97,15 @@ namespace UMA.CharacterSystem.Editors
                         {
                             selectedConverterIndex = i + 1;
                         }
-                }
+                }*/
+				for(int i = 0; i < thisDDCC.availableConverters.Count; i++)
+				{
+					if (!(thisDDCC.availableConverters[i] is IDynamicDNAConverter))
+						continue;
+					availableConvertersPopup.Add(thisDDCC.availableConverters[i].name);
+					if (thisDDCC.selectedConverter != null && thisDDCC.selectedConverter == thisDDCC.availableConverters[i])
+						selectedConverterIndex = i + 1;
+				}
                 EditorGUILayout.Space();
                 EditorGUI.BeginChangeCheck();
                 newSelectedConverterIndex = EditorGUILayout.Popup("Target UMA Converter", selectedConverterIndex, availableConvertersPopup.ToArray());
@@ -106,18 +115,18 @@ namespace UMA.CharacterSystem.Editors
                     {
                         if (newSelectedConverterIndex == 0)
                         {
-                            selectedConverterProp.objectReferenceValue = null;
+							thisDDCC.selectedConverter = null;
                         }
                         else
                         {
-                            selectedConverterProp.objectReferenceValue = availableConvertersProp.GetArrayElementAtIndex(newSelectedConverterIndex - 1).objectReferenceValue;
+							thisDDCC.selectedConverter = thisDDCC.availableConverters[newSelectedConverterIndex - 1];
                         }
-                        serializedObject.ApplyModifiedProperties();
+                        serializedObject.ApplyModifiedProperties();//Doesn't make sense now?
                         thisDDCC.BackupConverter();
                     }
                 }
             }
-            if (serializedObject.FindProperty("selectedConverter").objectReferenceValue != null)
+            if (thisDDCC.selectedConverter != null)
             {
 				thisDDCC.StartListeningForUndo();
 				//import like this makes no sense now
@@ -150,19 +159,42 @@ namespace UMA.CharacterSystem.Editors
 				*/
                 //
                 Editor thisSDCB;
-                if(SDCBs.TryGetValue((DynamicDNAConverterBehaviour)serializedObject.FindProperty("selectedConverter").objectReferenceValue, out thisSDCB))
+                if(SDCBs.TryGetValue(thisDDCC.selectedConverter, out thisSDCB))
                 {
-                    ((DynamicDNAConverterBehaviourEditor)thisSDCB).initialized = true;
-                }
+					if (thisDDCC.selectedConverter is DynamicDNAConverterBehaviour)
+					{
+						((DynamicDNAConverterBehaviourEditor)thisSDCB).initialized = true;
+					}
+					else if (thisDDCC.selectedConverter is DynamicDNAConverterController)
+					{
+						//Might need UMAData to work
+						//((DynamicDNAConverterControllerInspector)thisSDCB)
+					}
+				}
                 else
                 {
-                    thisSDCB = Editor.CreateEditor((DynamicDNAConverterBehaviour)serializedObject.FindProperty("selectedConverter").objectReferenceValue, typeof(DynamicDNAConverterBehaviourEditor));
-                    SDCBs.Add((DynamicDNAConverterBehaviour)serializedObject.FindProperty("selectedConverter").objectReferenceValue, thisSDCB);
+					if (thisDDCC.selectedConverter is DynamicDNAConverterBehaviour)
+					{
+						thisSDCB = Editor.CreateEditor((thisDDCC.selectedConverter as DynamicDNAConverterBehaviour), typeof(DynamicDNAConverterBehaviourEditor));
+						SDCBs.Add(thisDDCC.selectedConverter, thisSDCB);
+					}
+					else if(thisDDCC.selectedConverter is DynamicDNAConverterController)
+					{
+						thisSDCB = Editor.CreateEditor((thisDDCC.selectedConverter as DynamicDNAConverterController), typeof(DynamicDNAConverterControllerInspector));
+						SDCBs.Add(thisDDCC.selectedConverter, thisSDCB);
+					}
                 }
-                ((DynamicDNAConverterBehaviourEditor)thisSDCB).minimalMode = true;
-                ((DynamicDNAConverterBehaviourEditor)thisSDCB).thisDDCC = thisDDCC;
-                ((DynamicDNAConverterBehaviourEditor)thisSDCB).umaData = thisDDCC.targetUMA.umaData;
-                GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f, 0.3f));
+				if (thisDDCC.selectedConverter is DynamicDNAConverterBehaviour)
+				{
+					((DynamicDNAConverterBehaviourEditor)thisSDCB).thisDDCC = thisDDCC;
+					((DynamicDNAConverterBehaviourEditor)thisSDCB).umaData = thisDDCC.targetUMA.umaData;
+				}
+				else if(thisDDCC.selectedConverter is DynamicDNAConverterController)
+				{
+
+				}
+
+				GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f, 0.3f));
 				EditorGUILayout.LabelField("Edit Values", EditorStyles.boldLabel);
                 EditorGUI.BeginChangeCheck();
                 thisSDCB.OnInspectorGUI();
@@ -170,29 +202,39 @@ namespace UMA.CharacterSystem.Editors
                 {
                     thisDDCC.UpdateUMA();
                 }
-                GUIHelper.EndVerticalPadded(10);
-                GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f, 0.3f));
-				EditorGUILayout.LabelField("Save Values", EditorStyles.boldLabel);
-                Rect thisR = EditorGUILayout.GetControlRect(false);
-                var thisButReset = thisR;
-                var thisButSave = thisR;
-                var thisButSaveNew = thisR;
-                thisButReset.width = thisButSave.width = thisButSaveNew.width = (thisR.width / 3) - 2;
-                thisButSave.x = thisButReset.xMax + 5;
-                thisButSaveNew.x = thisButSave.xMax + 5;
-                if (GUI.Button(thisButReset, new GUIContent("Reset", "Undo your changes to the currently selected converter")))
-                {
-                    thisDDCC.RestoreBackupVersion(serializedObject.FindProperty("selectedConverter").objectReferenceValue.name);
-                }
-                if (GUI.Button(thisButSave, new GUIContent("Save", "Save your changes to the currently selected converter")))
-                {
-                    thisDDCC.SaveChanges();
-                }
-                if (GUI.Button(thisButSaveNew, new GUIContent("Save as New", "Save your changes to a new converter instance")))
-                {
-                    thisDDCC.SaveChangesAsNew();
-                }
-                GUIHelper.EndVerticalPadded(10);
+				GUIHelper.EndVerticalPadded(10);
+
+				//The following only makes sense for DynamicDNAConverterBehaviour right now
+				//But we want to make them both work the same, and work the default Unity way
+				//i.e. now we want to keep the changes by default and revert them if the user requests that
+				//Altho changes to a component DONT get changed permanently in Play mode
+				//and embedding the editor makes it LOOK LIKE we are editing a component
+				if (thisDDCC.selectedConverter is DynamicDNAConverterBehaviour)
+				{
+					
+					GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f, 0.3f));
+					EditorGUILayout.LabelField("Save Values", EditorStyles.boldLabel);
+					Rect thisR = EditorGUILayout.GetControlRect(false);
+					var thisButReset = thisR;
+					var thisButSave = thisR;
+					var thisButSaveNew = thisR;
+					thisButReset.width = thisButSave.width = thisButSaveNew.width = (thisR.width / 3) - 2;
+					thisButSave.x = thisButReset.xMax + 5;
+					thisButSaveNew.x = thisButSave.xMax + 5;
+					if (GUI.Button(thisButReset, new GUIContent("Reset", "Undo your changes to the currently selected converter")))
+					{
+						thisDDCC.RestoreBackupVersion(serializedObject.FindProperty("selectedConverter").objectReferenceValue.name);
+					}
+					if (GUI.Button(thisButSave, new GUIContent("Save", "Save your changes to the currently selected converter")))
+					{
+						thisDDCC.SaveChanges();
+					}
+					if (GUI.Button(thisButSaveNew, new GUIContent("Save as New", "Save your changes to a new converter instance")))
+					{
+						thisDDCC.SaveChangesAsNew();
+					}
+					GUIHelper.EndVerticalPadded(10);
+				}
 				DrawBonePoseCreationTools();
 			}
 			else

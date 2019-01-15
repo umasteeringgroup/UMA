@@ -33,19 +33,22 @@ namespace UMA.CharacterSystem
 		[System.NonSerialized]
 		private bool _prepared = false;
 
+		//UMA2.8+ FixDNAPrefabs Have we nagged the user about upgrading?
+		[System.NonSerialized]
+		private bool _nagged = false;
+
 		#endregion
 
 		#region PUBLIC PROPERTIES
 
-		public DynamicDNAConverterController ConverterController
+		/*public DynamicDNAConverterController ConverterController
 		{
 			get { return _converterController; }
 			set
 			{
 				_converterController = value;
-				_converterController.converterBehaviour = this;
 			}
-		}
+		}*/
 
 		public BaseCharacterModifier overallModifiers
 		{
@@ -167,9 +170,7 @@ namespace UMA.CharacterSystem
 				((DynamicUMADnaBase)umaDna).dnaAsset = dnaAsset;
 			if (_converterController != null)
 			{
-				//make sure the controller has this as its behaviour because the same controller can be used by lots of behaviours (and they might all use different dna)
-				_converterController.converterBehaviour = this;
-				_converterController.ApplyDNAPrepass(umaData, skeleton, DNATypeHash);
+				_converterController.ApplyDNAPrepass(umaData, skeleton/*, DNATypeHash*/);
 			}
 		}
 
@@ -197,9 +198,7 @@ namespace UMA.CharacterSystem
 			//although its only going to be skeletonModifiers with a hardcoded 'value' override that will do anything when dna is null
 			if (_converterController != null)
 			{
-				//make sure the controller has this as its behaviour because the same controller can be used by lots of behaviours (and they might all use different dna)
-				_converterController.converterBehaviour = this;
-				_converterController.ApplyDNA(umaData, skeleton, DNATypeHash);
+				_converterController.ApplyDNA(umaData, skeleton/*, DNATypeHash*/);
 			}
 			else
 			{
@@ -207,10 +206,10 @@ namespace UMA.CharacterSystem
 				if (!asReset)
 				{
 					ApplyStartingPose(skeleton);
-				}			
+				}				
+				_overallModifiers.UpdateCharacter(umaData, skeleton, asReset);
+				ApplyDnaCallbackDelegates(umaData);
 			}
-			_overallModifiers.UpdateCharacter(umaData, skeleton, asReset);
-			ApplyDnaCallbackDelegates(umaData);
 			//st.Stop();
 			//Debug.Log(this.gameObject.name + " ApplyDNA took " + st.Elapsed);
 		}
@@ -280,72 +279,177 @@ namespace UMA.CharacterSystem
 
 		#region BACKUP AND UPGRADE
 
-		public bool BackupAndUpgrade()
+		/// <summary>
+		/// Debugs a nag to the user asking them to upgrade this prefab to a ConverterController
+		/// </summary>
+		/// <param name="utilizingObject">The object using this prefab</param>
+		public void DoUpgradeNag(UnityEngine.Object utilizingObject)
 		{
+			if (_nagged)
+				return;
+			if(_converterController == null)
+			{
+				Debug.LogWarning(utilizingObject.GetType().Name + " " + utilizingObject.name + " was using a legacy DNABehaviourPrefab. Please inspect " + this.gameObject.name + " (click this message to highlight in project) and in the 'Upgrade Available' section click 'Upgrade'", this.gameObject);
+				_nagged = true;
+			}
+			else
+			{
+				Debug.LogWarning(utilizingObject.GetType().Name + " " + utilizingObject.name + " was using a legacy DNABehaviourPrefab but already has an updated ConverterController asset. Please inspect " + this.gameObject.name + " (click this message to highlight in project) and click 'Find and Replace Usage'", this.gameObject);
+				_nagged = true;
+			}
+		}
+
+		/// <summary>
+		/// Upgrades a DynamicDNAConverter Prefab to a new ConverterController asset and replaces any usage of the old asset. Stores the original asset in a relative 'Legacy' folder.
+		/// </summary>
+		/// <returns>Returns the path of the new converterController asset</returns>
+		public DynamicDNAConverterController DoUpgrade()
+		{
+			var newControllerName = this.name.Replace("DynamicDNAConverterBehaviour", "").Replace("DynamicDNAConverter", "").Replace("DNAConverterBehaviour", "").Replace("ConverterBehaviour", "").Replace("Legacy", "");
 			if (_converterController != null)
-				return false;
-			GameObject backup = null;
+			{
+				Debug.LogWarning("Upgrading " + this.gameObject.name + " failed because it already references a previously converted version. If you need to Upgrade again please inspect this assets 'Legacy Settings' and click 'Revert To Legacy Settings'");
+				return null;
+			}
+
 			DynamicDNAConverterController newController = null;
 			DynamicDNAPlugin skelModsPlug = null;
 			DynamicDNAPlugin startingPosePlug = null;
-			//only backup if there is any data to back up
-			if (_skeletonModifiers.Count > 0 || _startingPose != null)
-			{
-				backup = CustomAssetUtility.ClonePrefab(this.gameObject, this.gameObject.name + "BU");
-				if(backup == null)
-				{
-					//bail if we needed a backup but couldn't make one
-					Debug.LogWarning("DynamicDNAConverterBehaviour BackupAndUpgrade failed because it was unable to create a backup of the existing behaviour.");
-					return false;
-				}
-			}
-			var newControllerName = this.name.Replace("DynamicDNAConverterBehaviour", "").Replace("DNAConverterBehaviour", "").Replace("ConverterBehaviour", "");
-			newControllerName += "ConverterController";
+
+			newControllerName += "DNAConverterController";
 			var path = AssetDatabase.GetAssetPath(this.gameObject);
 			path = path.Replace("/" + Path.GetFileName(AssetDatabase.GetAssetPath(this.gameObject)), "");
 			var assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/" + newControllerName + ".asset");
 			newController = DynamicDNAConverterController.CreateDynamicDNAConverterControllerAsset(assetPathAndName, false);
-			if(newController == null)
+			if (newController == null)
 			{
 				//bail if the converterController was not created
 				Debug.LogWarning("DynamicDNAConverterBehaviour BackupAndUpgrade failed because it was unable to create the new ConverterController.");
-				return false;
+				return null;
 			}
+			//Add skeletonModifiers
 			if (_skeletonModifiers.Count > 0)
 			{
 				skelModsPlug = newController.AddPlugin(typeof(SkeletonDNAConverterPlugin));
-				if(!((SkeletonDNAConverterPlugin)skelModsPlug).ImportSettings(this.gameObject, 0))
+				if (!((SkeletonDNAConverterPlugin)skelModsPlug).ImportSettings(this.gameObject, 0))
 				{
-					Debug.LogWarning("Your SkeletonModifiers did not import correctly into the new plugin. Please try importing then manually");//mustnt ever happen
-				}
-				else
-				{
-					_skeletonModifiers.Clear();
+					Debug.LogWarning("Your SkeletonModifiers did not import correctly into the new plugin. Please try importing then manually");
 				}
 			}
-			if(_startingPose != null)
+			//Add startingPose
+			if (_startingPose != null)
 			{
 				startingPosePlug = newController.AddPlugin(typeof(BonePoseDNAConverterPlugin));
-				if(((BonePoseDNAConverterPlugin)startingPosePlug).ImportSettings(this.gameObject, 0))
+				if (((BonePoseDNAConverterPlugin)startingPosePlug).ImportSettings(this.gameObject, 0))
 				{
-					Debug.LogWarning("Your StartingPose did not import correctly into the new plugin. Please try importing it manually");//mustnt ever happen
-				}
-				else
-				{
-					_startingPose = null;
+					Debug.LogWarning("Your StartingPose did not import correctly into the new plugin. Please try importing it manually");
 				}
 			}
+			//Import the rest of our data
+			newController.ImportConverterBehaviourData(this);
+			
 			//Set this last because the backwards compatible public properties get values from it if its set
 			_converterController = newController;
-			_converterController.converterBehaviour = this;
+
 			EditorUtility.SetDirty(newController);
 			if (skelModsPlug != null)
 				EditorUtility.SetDirty(skelModsPlug);
 			if (startingPosePlug != null)
 				EditorUtility.SetDirty(startingPosePlug);
+
+			//Find and replace the usage of this
+			FindAndReplaceUsage(newController);
+
+			//TODO Test currently the editor deals with moving and renaming this- does it have to?
+
+			//If this asset is not inside a 'LegacyDNA' folder move it inside one
+			//We need to keep the old one because downloaded content may still require it
+			//The RaceDatas and SlotDataAssets will warn the user if they are using a legacy DynamicDNAConverterBehaviour
+			var DCBPath = AssetDatabase.GetAssetPath(this);
+			var DCBFilename = System.IO.Path.GetFileName(DCBPath);
+			string moveAssetResult = "";
+			if (DCBPath.IndexOf("LegacyDNA" + "/" + DCBFilename) == -1)
+			{
+				var DCBDir = System.IO.Path.GetDirectoryName(DCBPath);
+				if (!AssetDatabase.IsValidFolder(DCBDir + "/" + "LegacyDNA"))
+					AssetDatabase.CreateFolder(DCBDir, "LegacyDNA");
+				if (DCBFilename.IndexOf("Legacy") == -1)
+				{
+					DCBFilename = System.IO.Path.GetFileNameWithoutExtension(DCBPath) + " Legacy" + System.IO.Path.GetExtension(DCBPath);
+				}
+				moveAssetResult = AssetDatabase.MoveAsset(DCBPath, DCBDir + "/" + "LegacyDNA" + "/" + DCBFilename);
+			}
+			if (!string.IsNullOrEmpty(moveAssetResult))
+			{
+				Debug.LogWarning(moveAssetResult);
+			}
+
 			EditorUtility.SetDirty(this.gameObject);
 			AssetDatabase.SaveAssets();
-			return true;
+			return _converterController;
+		}
+
+		/// <summary>
+		/// Replaces all references to this asset in RaceDatas and SlotDataAssets with a reference to the given DynamicDNAConverterController
+		/// </summary>
+		/// <param name="replacingAsset"></param>
+		public void FindAndReplaceUsage(DynamicDNAConverterController replacingAsset)
+		{
+			string[] raceGuids = AssetDatabase.FindAssets("t:RaceData", null);
+			string[] slotGuids = AssetDatabase.FindAssets("t:SlotDataAsset", null);
+			string[] rangeGuids = AssetDatabase.FindAssets("t:DNARangeAsset", null);
+			int updatedRaces = 0;
+			int updatedSlots = 0;
+			int updatedRanges = 0;
+			//store for found items so we dont gobble memory
+			RaceData foundRace;
+			SlotDataAsset foundSlot;
+			DNARangeAsset foundDNARange;
+			//Find races that need updating
+			for(int i = 0; i < raceGuids.Length; i++)
+			{
+				foundRace = (RaceData)AssetDatabase.LoadAssetAtPath((AssetDatabase.GUIDToAssetPath(raceGuids[i])), typeof(RaceData));
+				if (foundRace)
+				{
+					if(foundRace.UpgradeFromLegacy(this, replacingAsset))
+					{
+						Debug.Log("RaceData: " + foundRace.raceName + " was updated to use new ConverterController " + replacingAsset.name);
+						EditorUtility.SetDirty(foundRace);
+						updatedRaces++;
+					}
+				}
+			}
+			//Find slots that need Updating
+			for (int i = 0; i < slotGuids.Length; i++)
+			{
+				foundSlot = (SlotDataAsset)AssetDatabase.LoadAssetAtPath((AssetDatabase.GUIDToAssetPath(slotGuids[i])), typeof(SlotDataAsset));
+				if (foundSlot)
+				{
+					if (foundSlot.UpgradeFromLegacy(this, replacingAsset))
+					{
+						Debug.Log("SlotData: " + foundSlot.slotName + " was updated to use new ConverterController " + replacingAsset.name);
+						EditorUtility.SetDirty(foundSlot);
+						updatedSlots++;
+					}
+				}
+			}
+			//Find DNARangeAssets that need updating
+			for (int i = 0; i < rangeGuids.Length; i++)
+			{
+				foundDNARange = (DNARangeAsset)AssetDatabase.LoadAssetAtPath((AssetDatabase.GUIDToAssetPath(slotGuids[i])), typeof(DNARangeAsset));
+				if (foundDNARange)
+				{
+					if (foundDNARange.UpgradeFromLegacy(this, replacingAsset))
+					{
+						Debug.Log("DNARangeAsset: " + foundDNARange.name + " was updated to use new ConverterController " + replacingAsset.name);
+						EditorUtility.SetDirty(foundDNARange);
+						updatedRanges++;
+					}
+				}
+			}
+			var processCompleteMessage = updatedRaces+" RaceDatas, " + updatedSlots + " SlotDataAssets, and " + updatedRanges + " DNARangeAssets were updated to use the new controller (" + replacingAsset.name + ")";
+			Debug.Log("DynamicDNAConverterBehaviour FindAndReplaceUsage: " + processCompleteMessage);
+			UnityEditor.EditorUtility.DisplayDialog("Find and Replace Complete!", processCompleteMessage, "Ok, Great");
 		}
 
 		#endregion
@@ -465,21 +569,23 @@ namespace UMA.CharacterSystem
 		[FormerlySerializedAs("boundsAdjust")]
 		public Vector3 boundsAdjust = Vector3.zero;
 
-		[Obsolete("Please inspect this behaviour to 'Upgrade' it. You can then access its skeletonModifiers via this assets 'ConverterController'")]
+		[Obsolete("Please inspect this behaviour to 'Upgrade' it. You can then access skeletonModifiers on the new 'ConverterController'")]
 		public List<SkeletonModifier> skeletonModifiers
 		{
 			get
 			{
-				if (_converterController != null)
-					return _converterController.SkeletonModifiersFirst;
+				//UMA2.8+ FixDNAPrefabs ConverterController is not going to do this backwardsCompatibility
+				/*if (_converterController != null)
+					return _converterController.SkeletonModifiersFirst;*/
 				return _skeletonModifiers;
 			}
 			set
 			{
-				if (_converterController != null)
+				//UMA2.8+ FixDNAPrefabs ConverterController is not going to do this backwardsCompatibility
+				/*if (_converterController != null)
 					_converterController.SkeletonModifiersFirst = value;
-				else
-					_skeletonModifiers = value;
+				else*/
+				_skeletonModifiers = value;
 			}
 		}
 
@@ -487,21 +593,23 @@ namespace UMA.CharacterSystem
 		[FormerlySerializedAs("startingPose")]
 		private UMABonePose _startingPose = null;
 
-		[Obsolete("You can have multiple starting poses now. Please inspect this behaviour 'Upgrade' it. You can then access its starting poses via this assets 'ConverterController'")]
+		[Obsolete("You can have multiple starting poses now. Please inspect this behaviour 'Upgrade' it. You can then access starting poses on the new 'ConverterController'")]
 		public UMABonePose startingPose
 		{
 			get
 			{
-				if (_converterController != null)
-					return _converterController.StartingPoseFirst;
+				//UMA2.8+ FixDNAPrefabs ConverterController is not going to do this backwardsCompatibility
+				/*if (_converterController != null)
+					return _converterController.StartingPoseFirst;*/
 				return _startingPose;
 			}
 			set
 			{
-				if (_converterController != null)
+				//UMA2.8+ FixDNAPrefabs ConverterController is not going to do this backwardsCompatibility
+				/*if (_converterController != null)
 					_converterController.StartingPoseFirst = value;
-				else
-					_startingPose = value;
+				else*/
+				_startingPose = value;
 			}
 		}
 

@@ -58,7 +58,7 @@ namespace UMA.PoseTools
 			}
 			else
 			{
-				DnaConverterBehaviour[] dnaConverters = sourceUMA.umaRecipe.raceData.dnaConverterList;
+				IDNAConverter[] dnaConverters = sourceUMA.umaRecipe.raceData.dnaConverterList;
 				GUIContent[] dnaNames = new GUIContent[dnaConverters.Length];
 				for (int i = 0; i < dnaConverters.Length; i++)
 				{
@@ -118,9 +118,12 @@ namespace UMA.PoseTools
 
 				// Now that StartingPose has been generated
 				// add the active DNA to the pre DNA avatar
-				DnaConverterBehaviour activeConverter = sourceUMA.umaRecipe.raceData.GetConverter(sourceUMA.umaRecipe.GetDna(selectedDNAHash));
-				umaPreDNA.umaRecipe.raceData.dnaConverterList = new DnaConverterBehaviour[1];
-				umaPreDNA.umaRecipe.raceData.dnaConverterList[0] = activeConverter;
+				// UMA2.8+ Lots of converters can use the same DNA now
+				//UMA2.8+ FixDNAPrefabs raceData.GetConverter(s) now returns IDNAConverter([])
+				IDNAConverter[] activeConverters = sourceUMA.umaRecipe.raceData.GetConverters(sourceUMA.umaRecipe.GetDna(selectedDNAHash));
+				//umaPreDNA.umaRecipe.raceData.dnaConverterList = new DnaConverterBehaviour[1];
+				//umaPreDNA.umaRecipe.raceData.dnaConverterList[0] = activeConverter;
+				umaPreDNA.umaRecipe.raceData.dnaConverterList = activeConverters;
 				umaPreDNA.umaRecipe.raceData.UpdateDictionary();
 				umaPreDNA.umaRecipe.EnsureAllDNAPresent();
 				umaPreDNA.Dirty(true, false, true);
@@ -224,11 +227,14 @@ namespace UMA.PoseTools
 
 		protected void SavePoseSet()
 		{
-			DnaConverterBehaviour activeConverter = sourceUMA.umaRecipe.raceData.GetConverter(sourceUMA.umaRecipe.GetDna(selectedDNAHash));
-			folderPath = AssetDatabase.GetAssetPath(outputFolder) + "/" + activeConverter.name;
+			// UMA2.8+ Lots of converters can use the same DNA now
+			//UMA2.8+ FixDNAPrefabs raceData.GetConverter(s) now returns IDNAConverter([])
+			IDNAConverter[] activeConverters = sourceUMA.umaRecipe.raceData.GetConverters(sourceUMA.umaRecipe.GetDna(selectedDNAHash));
+			//Just use the first result?
+			folderPath = AssetDatabase.GetAssetPath(outputFolder) + "/" + activeConverters[0].name;
 			if (!AssetDatabase.IsValidFolder(folderPath))
 			{
-				string folderGUID = AssetDatabase.CreateFolder(AssetDatabase.GetAssetPath(outputFolder), activeConverter.name);
+				string folderGUID = AssetDatabase.CreateFolder(AssetDatabase.GetAssetPath(outputFolder), activeConverters[0].name);
 				folderPath = AssetDatabase.GUIDToAssetPath(folderGUID);
 			}
 
@@ -271,8 +277,9 @@ namespace UMA.PoseTools
 			tempAvatar2.umaData.umaRecipe.raceData.raceName = "Temp DNA Race";
 			tempAvatar2.umaData.umaRecipe.raceData.TPose = sourceUMA.umaRecipe.raceData.TPose;
 			tempAvatar2.umaData.umaRecipe.raceData.umaTarget = sourceUMA.umaRecipe.raceData.umaTarget;
-			tempAvatar2.umaData.umaRecipe.raceData.dnaConverterList = new DnaConverterBehaviour[1];
-			tempAvatar2.umaData.umaRecipe.raceData.dnaConverterList[0] = activeConverter;
+			//tempAvatar2.umaData.umaRecipe.raceData.dnaConverterList = new DnaConverterBehaviour[1];
+			//tempAvatar2.umaData.umaRecipe.raceData.dnaConverterList[0] = activeConverter;
+			tempAvatar2.umaData.umaRecipe.raceData.dnaConverterList = activeConverters;
 			tempAvatar2.umaData.umaRecipe.raceData.UpdateDictionary();
 
 			slotIndex = 0;
