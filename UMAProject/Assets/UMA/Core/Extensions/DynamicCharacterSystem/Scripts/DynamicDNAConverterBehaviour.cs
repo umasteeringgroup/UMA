@@ -305,6 +305,21 @@ namespace UMA.CharacterSystem
 		/// <returns>Returns the path of the new converterController asset</returns>
 		public DynamicDNAConverterController DoUpgrade()
 		{
+			var DCBPath = AssetDatabase.GetAssetPath(this.gameObject);
+
+			//In Unity 2018.3+ this asset may be being inspected in its own Prefab scene (rather than via customizer).
+			//If that is the case we need to get the path differently
+#if UNITY_2018_3_OR_NEWER
+			var prefabStage = UnityEditor.Experimental.SceneManagement.PrefabStageUtility.GetPrefabStage(this.gameObject);
+			if (prefabStage != null)
+				DCBPath = prefabStage.prefabAssetPath;
+#endif
+			if (string.IsNullOrEmpty(DCBPath))
+			{
+				Debug.LogWarning("Upgrade could not be completed. Could not get asset path for the DNAConverterBehaviour to upgrade");
+				return null;
+			}
+
 			var newControllerName = this.name.Replace("DynamicDNAConverterBehaviour", "").Replace("DynamicDNAConverter", "").Replace("DNAConverterBehaviour", "").Replace("ConverterBehaviour", "").Replace("Legacy", "");
 			if (_converterController != null)
 			{
@@ -317,8 +332,8 @@ namespace UMA.CharacterSystem
 			DynamicDNAPlugin startingPosePlug = null;
 
 			newControllerName += "DNAConverterController";
-			var path = AssetDatabase.GetAssetPath(this.gameObject);
-			path = path.Replace("/" + Path.GetFileName(AssetDatabase.GetAssetPath(this.gameObject)), "");
+			var path = DCBPath;
+			path = path.Replace("/" + Path.GetFileName(path), "");
 			var assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/" + newControllerName + ".asset");
 			newController = DynamicDNAConverterController.CreateDynamicDNAConverterControllerAsset(assetPathAndName, false);
 			if (newController == null)
@@ -360,12 +375,9 @@ namespace UMA.CharacterSystem
 			//Find and replace the usage of this
 			FindAndReplaceUsage(newController);
 
-			//TODO Test currently the editor deals with moving and renaming this- does it have to?
-
 			//If this asset is not inside a 'LegacyDNA' folder move it inside one
 			//We need to keep the old one because downloaded content may still require it
 			//The RaceDatas and SlotDataAssets will warn the user if they are using a legacy DynamicDNAConverterBehaviour
-			var DCBPath = AssetDatabase.GetAssetPath(this);
 			var DCBFilename = System.IO.Path.GetFileName(DCBPath);
 			string moveAssetResult = "";
 			if (DCBPath.IndexOf("LegacyDNA" + "/" + DCBFilename) == -1)
@@ -395,6 +407,30 @@ namespace UMA.CharacterSystem
 		/// <param name="replacingAsset"></param>
 		public void FindAndReplaceUsage(DynamicDNAConverterController replacingAsset)
 		{
+			if(replacingAsset == null)
+			{
+				Debug.LogWarning("Could not find and replace usage of the behaviour because nor replacement was supplied");
+				return;
+			}
+			var original = this;
+			//In Unity 2018.3+ this asset may be being inspected in its own Prefab scene (rather than via customizer).
+			//If that is the case 'this' will be a clone rather than the object that is actually assigned to Races/Slots, so...
+#if UNITY_2018_3_OR_NEWER
+			var prefabStage = UnityEditor.Experimental.SceneManagement.PrefabStageUtility.GetPrefabStage(this.gameObject);
+			if (prefabStage != null)
+			{
+				var origGO = (GameObject)AssetDatabase.LoadAssetAtPath(prefabStage.prefabAssetPath, typeof(GameObject));
+				if (origGO != null && origGO.GetComponent<DynamicDNAConverterBehaviour>() != null)
+				{
+					original = origGO.GetComponent<DynamicDNAConverterBehaviour>();
+				}
+			}
+#endif
+			if (original == null)
+			{
+				Debug.LogWarning("Could not find and replace usage of the behaviour because the original could not be determined");
+				return;
+			}
 			string[] raceGuids = AssetDatabase.FindAssets("t:RaceData", null);
 			string[] slotGuids = AssetDatabase.FindAssets("t:SlotDataAsset", null);
 			string[] rangeGuids = AssetDatabase.FindAssets("t:DNARangeAsset", null);
@@ -411,7 +447,7 @@ namespace UMA.CharacterSystem
 				foundRace = (RaceData)AssetDatabase.LoadAssetAtPath((AssetDatabase.GUIDToAssetPath(raceGuids[i])), typeof(RaceData));
 				if (foundRace)
 				{
-					if(foundRace.UpgradeFromLegacy(this, replacingAsset))
+					if(foundRace.UpgradeFromLegacy(original, replacingAsset))
 					{
 						Debug.Log("RaceData: " + foundRace.raceName + " was updated to use new ConverterController " + replacingAsset.name);
 						EditorUtility.SetDirty(foundRace);
@@ -425,7 +461,7 @@ namespace UMA.CharacterSystem
 				foundSlot = (SlotDataAsset)AssetDatabase.LoadAssetAtPath((AssetDatabase.GUIDToAssetPath(slotGuids[i])), typeof(SlotDataAsset));
 				if (foundSlot)
 				{
-					if (foundSlot.UpgradeFromLegacy(this, replacingAsset))
+					if (foundSlot.UpgradeFromLegacy(original, replacingAsset))
 					{
 						Debug.Log("SlotData: " + foundSlot.slotName + " was updated to use new ConverterController " + replacingAsset.name);
 						EditorUtility.SetDirty(foundSlot);
@@ -439,7 +475,7 @@ namespace UMA.CharacterSystem
 				foundDNARange = (DNARangeAsset)AssetDatabase.LoadAssetAtPath((AssetDatabase.GUIDToAssetPath(slotGuids[i])), typeof(DNARangeAsset));
 				if (foundDNARange)
 				{
-					if (foundDNARange.UpgradeFromLegacy(this, replacingAsset))
+					if (foundDNARange.UpgradeFromLegacy(original, replacingAsset))
 					{
 						Debug.Log("DNARangeAsset: " + foundDNARange.name + " was updated to use new ConverterController " + replacingAsset.name);
 						EditorUtility.SetDirty(foundDNARange);

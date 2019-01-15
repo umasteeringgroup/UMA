@@ -100,7 +100,7 @@ namespace UMA.CharacterSystem.Editors
                 }*/
 				for(int i = 0; i < thisDDCC.availableConverters.Count; i++)
 				{
-					if (!(thisDDCC.availableConverters[i] is IDynamicDNAConverter))
+					if (!(thisDDCC.availableConverters[i] is IDynamicDNAConverter) || thisDDCC.availableConverters[i] == null)
 						continue;
 					availableConvertersPopup.Add(thisDDCC.availableConverters[i].name);
 					if (thisDDCC.selectedConverter != null && thisDDCC.selectedConverter == thisDDCC.availableConverters[i])

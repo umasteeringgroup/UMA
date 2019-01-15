@@ -414,15 +414,14 @@ namespace UMA.CharacterSystem.Editors
 
 		private void DoUpgrade()
 		{
-			var DCBPath = AssetDatabase.GetAssetPath(_target);
-			var DCBFilename = System.IO.Path.GetFileName(DCBPath);
+			var originalName = _target.gameObject.name;
 			DynamicDNAConverterController newController = _target.DoUpgrade();
 			if (newController != null)
 			{
 				drawAsLegacy = true;
 
 				EditorGUIUtility.PingObject(newController);
-				EditorUtility.DisplayDialog("Upgrade Complete!", "Your SkeletonModifiers and StartingPose (if set) can now be found in the new 'Converter Controller'. The old "+DCBFilename+" has been stored in a 'LegacyDNA' folder", "Got it!");
+				EditorUtility.DisplayDialog("Upgrade Complete!", "Your SkeletonModifiers and StartingPose (if set) can now be found in the new 'Converter Controller'. The old "+ originalName + " has been stored in a 'LegacyDNA' folder", "Got it!");
 
 				//We need to make the new asset the one that ConverterCustomizer is inspecting if it was inspecting the old one
 				if (thisDDCC != null)
@@ -435,7 +434,7 @@ namespace UMA.CharacterSystem.Editors
 					if (thisDDCC.selectedConverter is DynamicDNAConverterBehaviour && (thisDDCC.selectedConverter as DynamicDNAConverterBehaviour) == _target)
 						thisDDCC.selectedConverter = newController;
 				}
-				//otherwise we need to ping the new controller so it shows in the inspector	
+				//otherwise select the new controller so it shows in the inspector	
 				else
 				{
 					Selection.activeObject = newController;
