@@ -17,6 +17,9 @@ namespace UMA
 		Camera renderCamera;
 		bool fastPath=false;
 
+		Color emptyCameraBG = new Color(0, 0, 0, 0);
+		Color normalCameraBG = Color.grey;
+
 		/// <summary>
 		/// Setup data for atlas building.
 		/// </summary>
@@ -99,6 +102,25 @@ namespace UMA
 					 destinationTexture.filterMode = FilterMode.Point;
 					 destinationTexture.useMipMap = umaGenerator.convertMipMaps && !umaGenerator.convertRenderTexture;
 					 renderCamera = umaGenerator.textureMerge.myCamera;
+
+                    if (slotData.asset.material.channels[textureType].channelType == UMAMaterial.ChannelType.NormalMap)
+                    {
+                        if (QualitySettings.desiredColorSpace == ColorSpace.Linear)
+                        {
+                            //Due to a weird conversion, we need the camera background to be grey in gamme color space.
+                            renderCamera.backgroundColor = normalCameraBG.gamma;
+                        }
+                        else
+                        {
+                            renderCamera.backgroundColor = normalCameraBG;
+                        }                                    
+                    }
+                    else
+                    {
+                        renderCamera.backgroundColor = emptyCameraBG;
+                    }
+                               
+
 					 renderCamera.targetTexture = destinationTexture;
 					 renderCamera.orthographicSize = height >> 1;
 					 var camTransform = renderCamera.GetComponent<Transform>();

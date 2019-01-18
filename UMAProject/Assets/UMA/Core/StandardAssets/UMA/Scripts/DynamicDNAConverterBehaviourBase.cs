@@ -13,9 +13,10 @@ namespace UMA
 			var recipeDNA = _recipe.GetAllDna();
 			//22/12/2018 we also need to check slots using DynamicDNA
 			var slotDNABehaviours = new Dictionary<int, DnaConverterBehaviour>();
-			foreach(SlotData slot in _recipe.GetAllSlots())
+			SlotData[] slots = _recipe.GetAllSlots();
+			foreach(SlotData slot in slots)
 			{
-				if (slot.asset.slotDNA != null && !slotDNABehaviours.ContainsKey(slot.asset.slotDNA.DNATypeHash))
+				if (slot != null && slot.asset.slotDNA != null && !slotDNABehaviours.ContainsKey(slot.asset.slotDNA.DNATypeHash))
 					slotDNABehaviours.Add(slot.asset.slotDNA.DNATypeHash, slot.asset.slotDNA);
 			}
 			for (int i = 0; i < recipeDNA.Length; i++)
