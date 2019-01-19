@@ -9,9 +9,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 27fa8d9aba5f64596aba9f576eea8aa9, type: 3}
-  m_Name: Human Female UMADNAHumanoid Ranges
+  m_Name: Human Female DynamicDNA Ranges
   m_EditorClassIdentifier: 
-  dnaConverter: {fileID: 11400000, guid: 9e2e0dcce00983248a5c1b8107cb1b1d, type: 2}
+  _dnaConverterLegacy: {fileID: 11400000, guid: 9e2e0dcce00983248a5c1b8107cb1b1d,
+    type: 2}
+  _dnaConverter:
+    _converter: {fileID: 11400000, guid: 9d2d3a48c48fa624c900cbb6bd543607, type: 2}
   means:
   - 0.5
   - 0.51551723
@@ -59,6 +62,7 @@ MonoBehaviour:
   - 0.5
   - 0.5
   - 0.5068966
+  - 0.5
   deviations:
   - 0.05
   - 0.021839067
@@ -106,6 +110,7 @@ MonoBehaviour:
   - 0.05
   - 0.05
   - 0.1488506
+  - 0.16
   spreads:
   - 0.15
   - 0.0655172
@@ -153,3 +158,4 @@ MonoBehaviour:
   - 0.15
   - 0.15
   - 0.44655183
+  - 0.5

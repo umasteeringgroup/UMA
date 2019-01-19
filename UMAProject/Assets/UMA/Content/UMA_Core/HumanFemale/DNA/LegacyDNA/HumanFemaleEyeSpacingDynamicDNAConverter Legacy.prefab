@@ -10,7 +10,7 @@ GameObject:
   - component: {fileID: 400000}
   - component: {fileID: 11454462}
   m_Layer: 0
-  m_Name: HumanFemaleEyeSpacingDynamicDNAConverter
+  m_Name: HumanFemaleEyeSpacingDynamicDNAConverter Legacy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -43,7 +43,8 @@ MonoBehaviour:
   _displayValue: 
   dnaTypeHash: 2094876586
   _dnaAsset: {fileID: 11400000, guid: 1ea7a98b5dc54124e89f8ea3297ed602, type: 2}
-  _converterController: {fileID: 0}
+  _converterController: {fileID: 11400000, guid: bc168a1b4b81f974c9427f1133e05d40,
+    type: 2}
   _overallModifiers:
     _adjustScale: 0
     _adjustHeight: 0
