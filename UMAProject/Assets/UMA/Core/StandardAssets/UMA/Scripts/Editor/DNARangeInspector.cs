@@ -111,8 +111,11 @@ namespace UMA.Editors
 			if (EditorGUI.EndChangeCheck())
 			{
 				var converterFieldProp = converterProp.FindPropertyRelative("_converter");
-				if(converterFieldProp.objectReferenceValue != null)
+				if (converterFieldProp.objectReferenceValue != null)
+				{
 					newSource = converterFieldProp.objectReferenceValue as IDNAConverter;
+					dnaRange.dnaConverter = newSource;
+				}
 				GetEntryCount();
 				serializedObject.ApplyModifiedProperties();
 			}
@@ -185,6 +188,8 @@ namespace UMA.Editors
 
 				for (int i = 0; i < entryCount; i++)
 				{
+					if (i > dnaRange.means.Length -1)
+						break;
 					float currentMin = dnaRange.means[i] - dnaRange.spreads[i];
 					float currentMax = dnaRange.means[i] + dnaRange.spreads[i];
 					float min = currentMin;
