@@ -10899,6 +10899,128 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -0.1
       _max: 0.1
+  - _hashName: LeftEye
+    _hash: 27653119
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0
+      _max: 0
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators:
+          - _calcOption: 0
+            _dnaName: eyeSpacing
+            _dnaNameHash: -348141931
+            _evaluator:
+              _name: Default
+              _graph:
+                serializedVersion: 2
+                m_Curve:
+                - serializedVersion: 2
+                  time: 0
+                  value: -0.5
+                  inSlope: 0
+                  outSlope: 1
+                  tangentMode: 0
+                - serializedVersion: 2
+                  time: 0.5
+                  value: 0
+                  inSlope: 1
+                  outSlope: 1
+                  tangentMode: 0
+                - serializedVersion: 2
+                  time: 1
+                  value: 0.5
+                  inSlope: 1
+                  outSlope: 2
+                  tangentMode: 0
+                m_PreInfinity: 2
+                m_PostInfinity: 2
+                m_RotationOrder: 4
+            _multiplier: -0.01
+            _initialized: 1
+          _aggregationMethod: 1
+      _min: -1
+      _max: 1
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0
+      _max: 0
+  - _hashName: RightEye
+    _hash: -2120937982
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0
+      _max: 0
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators:
+          - _calcOption: 0
+            _dnaName: eyeSpacing
+            _dnaNameHash: -348141931
+            _evaluator:
+              _name: Default
+              _graph:
+                serializedVersion: 2
+                m_Curve:
+                - serializedVersion: 2
+                  time: 0
+                  value: -0.5
+                  inSlope: 0
+                  outSlope: 1
+                  tangentMode: 0
+                - serializedVersion: 2
+                  time: 0.5
+                  value: 0
+                  inSlope: 1
+                  outSlope: 1
+                  tangentMode: 0
+                - serializedVersion: 2
+                  time: 1
+                  value: 0.5
+                  inSlope: 1
+                  outSlope: 2
+                  tangentMode: 0
+                m_PreInfinity: 2
+                m_PostInfinity: 2
+                m_RotationOrder: 4
+            _multiplier: 0.01
+            _initialized: 1
+          _aggregationMethod: 1
+      _min: -1
+      _max: 1
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0
+      _max: 0
 --- !u!114 &114935702846578760
 MonoBehaviour:
   m_ObjectHideFlags: 0
