@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Name: HumanMaleDynamicDnaAsset
   m_EditorClassIdentifier: 
   dnaTypeHash: 815443803
-  lastKnownAssetPath: Assets/UMA/Content/UMA/HumanMale/DNA/DynamicDNA/HumanMaleDynamicDnaAsset.asset
-  lastKnownDuplicateAssetPath: Assets/UMA/Content/UMA/HumanMale/DNA/DynamicDNA/HumanMaleDynamicDnaAsset
+  lastKnownAssetPath: Assets/UMA/Content/UMA_Core/HumanMale/DNA/DNANames/HumanMaleDynamicDnaAsset.asset
+  lastKnownDuplicateAssetPath: Assets/UMA/Content/UMA_Core/HumanMale/DNA/DNANames/HumanMaleDynamicDnaAsset
     1.asset
-  lastKnownInstanceID: 11700
+  lastKnownInstanceID: 12022
   Names:
   - skinGreenness
   - skinBlueness
@@ -66,3 +66,4 @@ MonoBehaviour:
   - eyeRotation
   - eyeSize
   - breastSize
+  - eyeSpacing

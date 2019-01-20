@@ -9,9 +9,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 27fa8d9aba5f64596aba9f576eea8aa9, type: 3}
-  m_Name: Human Male UMADNAHumanoid Ranges
+  m_Name: Human Male DynamicDNA Ranges
   m_EditorClassIdentifier: 
-  dnaConverter: {fileID: 11400000, guid: 82b31de417945d14aa3ed485fe933c5d, type: 2}
+  _dnaConverterLegacy: {fileID: 11400000, guid: 82b31de417945d14aa3ed485fe933c5d,
+    type: 2}
+  _dnaConverter:
+    _converter: {fileID: 11400000, guid: 5717b359b1497304e9b48c6d321f6925, type: 2}
   means:
   - 0.5
   - 0.5
