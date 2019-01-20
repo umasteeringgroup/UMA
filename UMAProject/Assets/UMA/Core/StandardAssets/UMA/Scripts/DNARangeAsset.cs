@@ -200,9 +200,12 @@ namespace UMA
 			{
 				names = (dnaConverter.DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase).Names;
 			}
-
-			if (Regex.Replace(names[index], "( )+", "") == Regex.Replace(name, "( )+", ""))
-				return true;
+			//CharacterSystem.DNAEditor.Initialize calls this- who knew?
+			if (index < names.Length)
+			{
+				if (Regex.Replace(names[index], "( )+", "") == Regex.Replace(name, "( )+", ""))
+					return true;
+			}
 
 			return false;
 		}
