@@ -5,12 +5,12 @@ GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Component:
-  - 4: {fileID: 400000}
-  - 114: {fileID: 11465070}
+  - component: {fileID: 400000}
+  - component: {fileID: 11465070}
   m_Layer: 0
-  m_Name: WerewolfSerializedDNAConverterBehaviour
+  m_Name: WerewolfSerializedDNAConverterBehaviour Legacy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -25,10 +25,10 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &11465070
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -40,3498 +40,4171 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2323fdffbbd0f51409581a5ae1bab046, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  DisplayValue: 
+  _displayValue: 
   dnaTypeHash: 374535623
-  dnaAsset: {fileID: 11400000, guid: 66d7e0cf74efb59468c26f6b647b4ae3, type: 2}
-  hashList:
-  - hashName: HeadAdjust
-    hash: -423229038
-  - hashName: NeckAdjust
-    hash: 1605701185
-  - hashName: LeftOuterBreast
-    hash: 361754685
-  - hashName: RightOuterBreast
-    hash: -1043063424
-  - hashName: LeftEye
-    hash: 27653119
-  - hashName: RightEye
-    hash: -2120937982
-  - hashName: LeftEyeAdjust
-    hash: -595031702
-  - hashName: RightEyeAdjust
-    hash: -734071712
-  - hashName: Spine1Adjust
-    hash: 473121629
-  - hashName: SpineAdjust
-    hash: 1842365421
-  - hashName: LowerBackBelly
-    hash: -1421416706
-  - hashName: LowerBackAdjust
-    hash: -1471957022
-  - hashName: LeftTrapezius
-    hash: -1320475381
-  - hashName: RightTrapezius
-    hash: -1174579199
-  - hashName: LeftArmAdjust
-    hash: -270431657
-  - hashName: RightArmAdjust
-    hash: -413665443
-  - hashName: LeftForeArmAdjust
-    hash: 923803339
-  - hashName: RightForeArmAdjust
-    hash: -1195342688
-  - hashName: LeftForeArmTwistAdjust
-    hash: 547566030
-  - hashName: RightForeArmTwistAdjust
-    hash: 758040550
-  - hashName: LeftShoulderAdjust
-    hash: -1372013129
-  - hashName: RightShoulderAdjust
-    hash: 1960302077
-  - hashName: LeftUpLegAdjust
-    hash: 898137571
-  - hashName: RightUpLegAdjust
-    hash: -506228642
-  - hashName: LeftLegAdjust
-    hash: -861926788
-  - hashName: RightLegAdjust
-    hash: -1005160586
-  - hashName: LeftGluteus
-    hash: 2044062440
-  - hashName: RightGluteus
-    hash: -2110033470
-  - hashName: LeftEarAdjust
-    hash: -777059916
-  - hashName: RightEarAdjust
-    hash: -652641090
-  - hashName: NoseBaseAdjust
-    hash: -685367200
-  - hashName: NoseMiddleAdjust
-    hash: -1907186538
-  - hashName: LeftNoseAdjust
-    hash: 623523856
-  - hashName: RightNoseAdjust
-    hash: -973641869
-  - hashName: UpperLipsAdjust
-    hash: -736966710
-  - hashName: MandibleAdjust
-    hash: 691264956
-  - hashName: LeftLowMaxilarAdjust
-    hash: 1385644791
-  - hashName: RightLowMaxilarAdjust
-    hash: 459855613
-  - hashName: LeftCheekAdjust
-    hash: -1371476741
-  - hashName: RightCheekAdjust
-    hash: 2048590150
-  - hashName: LeftLowCheekAdjust
-    hash: -982498292
-  - hashName: RightLowCheekAdjust
-    hash: 530525254
-  - hashName: NoseTopAdjust
-    hash: 1973914600
-  - hashName: LeftEyebrowLowAdjust
-    hash: -87457348
-  - hashName: RightEyebrowLowAdjust
-    hash: -1288301130
-  - hashName: LeftEyebrowMiddleAdjust
-    hash: 1573521115
-  - hashName: RightEyebrowMiddleAdjust
-    hash: 1752310743
-  - hashName: LeftEyebrowUpAdjust
-    hash: -550662924
-  - hashName: RightEyebrowUpAdjust
-    hash: 1241434898
-  - hashName: LipsSuperiorAdjust
-    hash: 1865332640
-  - hashName: LipsInferiorAdjust
-    hash: 1799356466
-  - hashName: LeftLipsSuperiorMiddleAdjust
-    hash: 1940197654
-  - hashName: RightLipsSuperiorMiddleAdjust
-    hash: 1220922885
-  - hashName: LeftLipsInferiorAdjust
-    hash: 1599456840
-  - hashName: RightLipsInferiorAdjust
-    hash: 1389899872
-  - hashName: LeftLipsAdjust
-    hash: -666615888
-  - hashName: RightLipsAdjust
-    hash: 949575891
-  - hashName: Global
-    hash: -274100555
-  - hashName: Position
-    hash: -1084586333
-  - hashName: LowerBack
-    hash: -919067556
-  - hashName: Head
-    hash: 130111906
-  - hashName: LeftArm
-    hash: -343733542
-  - hashName: RightArm
-    hash: 1806956327
-  - hashName: LeftForeArm
-    hash: -1984349568
-  - hashName: RightForeArm
-    hash: 1918345642
-  - hashName: LeftHand
-    hash: -1233783956
-  - hashName: RightHand
-    hash: 1979272496
-  - hashName: LeftFoot
-    hash: 1486391408
-  - hashName: RightFoot
-    hash: -1693174228
-  - hashName: LeftUpLeg
-    hash: 392266736
-  - hashName: RightUpLeg
-    hash: 1971262097
-  - hashName: LeftShoulder
-    hash: 759586984
-  - hashName: RightShoulder
-    hash: -167360539
-  - hashName: Mandible
-    hash: 1574626840
-  skeletonModifiers:
-  - hashName: HeadAdjust
-    hash: -423229038
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers: []
-      min: 1
-      max: 1
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: headWidth
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.3
-      min: 0.5
-      max: 1.6
-    valuesZ:
-      val:
-        value: 1
-        modifiers: []
-      min: 1
-      max: 1
-  - hashName: NeckAdjust
-    hash: 1605701185
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers: []
-      min: 0.6
-      max: 2
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: neckThickness
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.8
-      min: 0.5
-      max: 1.6
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: neckThickness
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1.2
-      min: 0.5
-      max: 1.6
-  - hashName: LeftOuterBreast
-    hash: 361754685
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: breastSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1.5
-        - modifier: 4
-          DNATypeName: upperWeight
-          modifierValue: 1.5
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.1
-      min: 0.6
-      max: 1.5
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: breastSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1.5
-        - modifier: 4
-          DNATypeName: upperWeight
-          modifierValue: 1.5
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.1
-      min: 0.6
-      max: 1.5
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: breastSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1.5
-        - modifier: 4
-          DNATypeName: upperWeight
-          modifierValue: 1.5
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.1
-      min: 0.6
-      max: 1.5
-  - hashName: RightOuterBreast
-    hash: -1043063424
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: breastSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1.5
-        - modifier: 4
-          DNATypeName: upperWeight
-          modifierValue: 1.5
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.1
-      min: 0.6
-      max: 1.5
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: breastSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1.5
-        - modifier: 4
-          DNATypeName: upperWeight
-          modifierValue: 1.5
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.1
-      min: 0.6
-      max: 1.5
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: breastSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1.5
-        - modifier: 4
-          DNATypeName: upperWeight
-          modifierValue: 1.5
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.1
-      min: 0.6
-      max: 1.5
-  - hashName: LeftEye
-    hash: 27653119
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: eyeSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.3
-      min: 0.7
-      max: 1.4
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: eyeSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.3
-      min: 0.7
-      max: 1.4
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: eyeSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.3
-      min: 0.7
-      max: 1.4
-  - hashName: RightEye
-    hash: -2120937982
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: eyeSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.3
-      min: 0.7
-      max: 1.4
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: eyeSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.3
-      min: 0.7
-      max: 1.4
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: eyeSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.3
-      min: 0.7
-      max: 1.4
-  - hashName: LeftEyeAdjust
-    hash: -595031702
-    property: 1
-    valuesX:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: eyeRotation
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 20
-      min: -360
-      max: 360
-    valuesY:
-      val:
-        value: 0
-        modifiers: []
-      min: 0
-      max: 0
-    valuesZ:
-      val:
-        value: 0
-        modifiers: []
-      min: 0
-      max: 0
-  - hashName: RightEyeAdjust
-    hash: -734071712
-    property: 1
-    valuesX:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 5
-          DNATypeName: eyeRotation
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 20
-      min: -360
-      max: 360
-    valuesY:
-      val:
-        value: 0
-        modifiers: []
-      min: 0
-      max: 0
-    valuesZ:
-      val:
-        value: 0
-        modifiers: []
-      min: 0
-      max: 0
-  - hashName: Spine1Adjust
-    hash: 473121629
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers: []
-      min: 0.6
-      max: 2
-    valuesY:
-      val:
-        value: 0.9
-        modifiers:
-        - modifier: 4
-          DNATypeName: upperWeight
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.1
-        - modifier: 4
-          DNATypeName: upperMuscle
-          modifierValue: 0.1
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.5
-      min: 0.45
-      max: 1.5
-    valuesZ:
-      val:
-        value: 0.7
-        modifiers:
-        - modifier: 4
-          DNATypeName: upperWeight
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.45
-        - modifier: 4
-          DNATypeName: upperMuscle
-          modifierValue: 0.45
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.45
-      min: 0.55
-      max: 1.15
-  - hashName: SpineAdjust
-    hash: 1842365421
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers: []
-      min: 0.6
-      max: 2
-    valuesY:
-      val:
-        value: 0.9
-        modifiers:
-        - modifier: 4
-          DNATypeName: upperWeight
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.35
-        - modifier: 4
-          DNATypeName: upperMuscle
-          modifierValue: 0.1
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.45
-      min: 0.75
-      max: 1.35
-    valuesZ:
-      val:
-        value: 0.8
-        modifiers:
-        - modifier: 4
-          DNATypeName: upperWeight
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.35
-        - modifier: 4
-          DNATypeName: upperMuscle
-          modifierValue: 0.45
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.25
-      min: 0.75
-      max: 1.35
-  - hashName: LowerBackBelly
-    hash: -1421416706
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: belly
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1
-      min: 0.35
-      max: 1.75
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: waist
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.35
-      min: 0.35
-      max: 1.75
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: belly
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1.25
-      min: 0.35
-      max: 1.75
-  - hashName: LowerBackAdjust
-    hash: -1471957022
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: upperWeight
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.25
-        - modifier: 4
-          DNATypeName: lowerWeight
-          modifierValue: 0.25
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.15
-      min: 0.85
-      max: 1.5
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: upperWeight
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.25
-        - modifier: 4
-          DNATypeName: lowerWeight
-          modifierValue: 0.25
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.15
-        - modifier: 4
-          DNATypeName: waist
-          modifierValue: 0.15
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.45
-      min: 0.65
-      max: 1.75
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: upperWeight
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.25
-        - modifier: 4
-          DNATypeName: lowerWeight
-          modifierValue: 0.25
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.15
-      min: 0.85
-      max: 1.5
-  - hashName: LeftTrapezius
-    hash: -1320475381
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: upperMuscle
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1.35
-      min: 0.65
-      max: 1.35
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: upperMuscle
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1.35
-      min: 0.65
-      max: 1.35
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: upperMuscle
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1.35
-      min: 0.65
-      max: 1.35
-  - hashName: RightTrapezius
-    hash: -1174579199
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: upperMuscle
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1.35
-      min: 0.65
-      max: 1.35
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: upperMuscle
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1.35
-      min: 0.65
-      max: 1.35
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: upperMuscle
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1.35
-      min: 0.65
-      max: 1.35
-  - hashName: LeftArmAdjust
-    hash: -270431657
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers: []
-      min: 0.6
-      max: 2
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: armWidth
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.65
-      min: 0.65
-      max: 1.65
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: armWidth
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.65
-      min: 0.65
-      max: 1.65
-  - hashName: RightArmAdjust
-    hash: -413665443
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers: []
-      min: 0.6
-      max: 2
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: armWidth
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.65
-      min: 0.65
-      max: 1.65
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: armWidth
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.65
-      min: 0.65
-      max: 1.65
-  - hashName: LeftForeArmAdjust
-    hash: 923803339
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers: []
-      min: 0.6
-      max: 2
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: forearmWidth
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.65
-      min: 0.75
-      max: 1.25
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: forearmWidth
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.65
-      min: 0.75
-      max: 1.25
-  - hashName: RightForeArmAdjust
-    hash: -1195342688
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers: []
-      min: 0.6
-      max: 2
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: forearmWidth
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.65
-      min: 0.75
-      max: 1.25
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: forearmWidth
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.65
-      min: 0.75
-      max: 1.25
-  - hashName: LeftForeArmTwistAdjust
-    hash: 547566030
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers: []
-      min: 0.6
-      max: 2
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: forearmWidth
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.35
-      min: 0.75
-      max: 1.25
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: forearmWidth
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.35
-      min: 0.75
-      max: 1.25
-  - hashName: RightForeArmTwistAdjust
-    hash: 758040550
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers: []
-      min: 0.6
-      max: 2
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: forearmWidth
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.35
-      min: 0.75
-      max: 1.25
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: forearmWidth
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.35
-      min: 0.75
-      max: 1.25
-  - hashName: LeftShoulderAdjust
-    hash: -1372013129
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers: []
-      min: 0.6
-      max: 2
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: upperWeight
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.35
-        - modifier: 4
-          DNATypeName: upperMuscle
-          modifierValue: 0.35
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.55
-      min: 0.75
-      max: 1.25
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: upperWeight
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.35
-        - modifier: 4
-          DNATypeName: upperMuscle
-          modifierValue: 0.35
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.55
-      min: 0.75
-      max: 1.25
-  - hashName: RightShoulderAdjust
-    hash: 1960302077
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers: []
-      min: 0.6
-      max: 2
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: upperWeight
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.35
-        - modifier: 4
-          DNATypeName: upperMuscle
-          modifierValue: 0.35
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.55
-      min: 0.75
-      max: 1.25
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: upperWeight
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.35
-        - modifier: 4
-          DNATypeName: upperMuscle
-          modifierValue: 0.35
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.55
-      min: 0.75
-      max: 1.25
-  - hashName: LeftUpLegAdjust
-    hash: 898137571
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers: []
-      min: 0.6
-      max: 2
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: lowerWeight
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.45
-        - modifier: 4
-          DNATypeName: lowerMuscle
-          modifierValue: 0.35
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.15
-        - modifier: 5
-          DNATypeName: legsSize
-          modifierValue: 0.15
-      min: 0.45
-      max: 1.15
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: lowerWeight
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.45
-        - modifier: 4
-          DNATypeName: lowerMuscle
-          modifierValue: 0.35
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.15
-        - modifier: 5
-          DNATypeName: legsSize
-          modifierValue: 0.15
-      min: 0.45
-      max: 1.15
-  - hashName: RightUpLegAdjust
-    hash: -506228642
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers: []
-      min: 0.6
-      max: 2
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: lowerWeight
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.45
-        - modifier: 4
-          DNATypeName: lowerMuscle
-          modifierValue: 0.35
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.15
-        - modifier: 5
-          DNATypeName: legsSize
-          modifierValue: 0.15
-      min: 0.45
-      max: 1.15
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: lowerWeight
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.45
-        - modifier: 4
-          DNATypeName: lowerMuscle
-          modifierValue: 0.35
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.15
-        - modifier: 5
-          DNATypeName: legsSize
-          modifierValue: 0.15
-      min: 0.45
-      max: 1.15
-  - hashName: LeftLegAdjust
-    hash: -861926788
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers: []
-      min: 0.6
-      max: 2
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: lowerWeight
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.15
-        - modifier: 4
-          DNATypeName: lowerMuscle
-          modifierValue: 0.35
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.95
-        - modifier: 5
-          DNATypeName: legsSize
-          modifierValue: 0.15
-      min: 0.65
-      max: 1.45
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: lowerWeight
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.15
-        - modifier: 4
-          DNATypeName: lowerMuscle
-          modifierValue: 0.35
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.75
-        - modifier: 5
-          DNATypeName: legsSize
-          modifierValue: 0.15
-      min: 0.65
-      max: 1.45
-  - hashName: RightLegAdjust
-    hash: -1005160586
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers: []
-      min: 0.6
-      max: 2
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: lowerWeight
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.15
-        - modifier: 4
-          DNATypeName: lowerMuscle
-          modifierValue: 0.35
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.95
-        - modifier: 5
-          DNATypeName: legsSize
-          modifierValue: 0.15
-      min: 0.65
-      max: 1.45
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: lowerWeight
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.15
-        - modifier: 4
-          DNATypeName: lowerMuscle
-          modifierValue: 0.35
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.75
-        - modifier: 5
-          DNATypeName: legsSize
-          modifierValue: 0.15
-      min: 0.65
-      max: 1.45
-  - hashName: LeftGluteus
-    hash: 2044062440
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: gluteusSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1.35
-      min: 0.25
-      max: 2.35
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: gluteusSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1.35
-      min: 0.25
-      max: 2.35
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: gluteusSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1.35
-      min: 0.25
-      max: 2.35
-  - hashName: RightGluteus
-    hash: -2110033470
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: gluteusSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1.35
-      min: 0.25
-      max: 2.35
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: gluteusSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1.35
-      min: 0.25
-      max: 2.35
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: gluteusSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1.35
-      min: 0.25
-      max: 2.35
-  - hashName: LeftEarAdjust
-    hash: -777059916
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: earsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1
-      min: 0.75
-      max: 1.5
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: earsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1
-      min: 0.75
-      max: 1.5
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: earsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1
-      min: 0.75
-      max: 1.5
-  - hashName: RightEarAdjust
-    hash: -652641090
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: earsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1
-      min: 0.75
-      max: 1.5
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: earsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1
-      min: 0.75
-      max: 1.5
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: earsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1
-      min: 0.75
-      max: 1.5
-  - hashName: LeftEarAdjust
-    hash: -777059916
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: headWidth
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.01
-      min: -0.01
-      max: 0.01
-    valuesY:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: headWidth
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.03
-      min: -0.03
-      max: 0.03
-    valuesZ:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: earsPosition
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.02
-      min: -0.02
-      max: 0.02
-  - hashName: RightEarAdjust
-    hash: -652641090
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: headWidth
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.01
-      min: -0.01
-      max: 0.01
-    valuesY:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: headWidth
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.03
-      min: -0.03
-      max: 0.03
-    valuesZ:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: earsPosition
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.02
-      min: -0.02
-      max: 0.02
-  - hashName: LeftEarAdjust
-    hash: -777059916
-    property: 1
-    valuesX:
-      val:
-        value: 0
-        modifiers: []
-      min: -30
-      max: 80
-    valuesY:
-      val:
-        value: 0
-        modifiers: []
-      min: -30
-      max: 80
-    valuesZ:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: earsRotation
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 40
-      min: -15
-      max: 40
-  - hashName: RightEarAdjust
-    hash: -652641090
-    property: 1
-    valuesX:
-      val:
-        value: 0
-        modifiers: []
-      min: -30
-      max: 80
-    valuesY:
-      val:
-        value: 0
-        modifiers: []
-      min: -30
-      max: 80
-    valuesZ:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: earsRotation
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -40
-      min: -40
-      max: 15
-  - hashName: NoseBaseAdjust
-    hash: -685367200
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: noseSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1.5
-      min: 0.25
-      max: 3
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: noseSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.15
-        - modifier: 4
-          DNATypeName: noseWidth
-          modifierValue: 0.15
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1
-      min: 0.25
-      max: 3
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: noseSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.15
-        - modifier: 4
-          DNATypeName: noseFlatten
-          modifierValue: 0.15
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.75
-      min: 0.25
-      max: 3
-  - hashName: NoseMiddleAdjust
-    hash: -1907186538
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: noseCurve
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1.5
-        - modifier: 4
-          DNATypeName: noseSize
-          modifierValue: 1.5
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1
-      min: 0.5
-      max: 3
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: noseCurve
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.15
-        - modifier: 4
-          DNATypeName: noseSize
-          modifierValue: 0.15
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.25
-        - modifier: 4
-          DNATypeName: noseWidth
-          modifierValue: 0.25
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.5
-      min: 0.5
-      max: 3
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: noseCurve
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.15
-        - modifier: 4
-          DNATypeName: noseSize
-          modifierValue: 0.15
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.1
-      min: 0.5
-      max: 3
-  - hashName: NoseBaseAdjust
-    hash: -685367200
-    property: 1
-    valuesX:
-      val:
-        value: 0
-        modifiers: []
-      min: -30
-      max: 80
-    valuesY:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: noseInclination
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 60
-      min: -60
-      max: 30
-    valuesZ:
-      val:
-        value: 0
-        modifiers: []
-      min: -30
-      max: 80
-  - hashName: NoseBaseAdjust
-    hash: -685367200
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: nosePronounced
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.025
-      min: -0.025
-      max: 0.025
-    valuesY:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-    valuesZ:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: nosePosition
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.025
-      min: -0.025
-      max: 0.025
-  - hashName: NoseMiddleAdjust
-    hash: -1907186538
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: nosePronounced
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.012
-      min: -0.012
-      max: 0.012
-    valuesY:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-    valuesZ:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: nosePosition
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.015
-      min: -0.015
-      max: 0.015
-  - hashName: LeftNoseAdjust
-    hash: 623523856
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: nosePronounced
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.025
-      min: -0.025
-      max: 0.025
-    valuesY:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-    valuesZ:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: nosePosition
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.025
-      min: -0.025
-      max: 0.025
-  - hashName: RightNoseAdjust
-    hash: -973641869
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: nosePronounced
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.025
-      min: -0.025
-      max: 0.025
-    valuesY:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-    valuesZ:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: nosePosition
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.025
-      min: -0.025
-      max: 0.025
-  - hashName: UpperLipsAdjust
-    hash: -736966710
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-    valuesY:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-    valuesZ:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: nosePosition
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.0045
-      min: -0.0045
-      max: 0.0045
-  - hashName: MandibleAdjust
-    hash: 691264956
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: chinPronounced
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.18
-      min: 0.55
-      max: 1.75
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: chinSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1.3
-      min: 0.75
-      max: 1.3
-    valuesZ:
-      val:
-        value: 1
-        modifiers: []
-      min: 0.4
-      max: 1.5
-  - hashName: MandibleAdjust
-    hash: 691264956
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.0125
-      max: 0.0125
-    valuesY:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.0125
-      max: 0.0125
-    valuesZ:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: chinPosition
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.0075
-      min: -0.0075
-      max: 0.0075
-  - hashName: LeftLowMaxilarAdjust
-    hash: 1385644791
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-    valuesY:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: jawsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.025
-      min: -0.025
-      max: 0.025
-    valuesZ:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: jawsPosition
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.03
-      min: -0.03
-      max: 0.03
-  - hashName: RightLowMaxilarAdjust
-    hash: 459855613
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-    valuesY:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: jawsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.025
-      min: -0.025
-      max: 0.025
-    valuesZ:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: jawsPosition
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.03
-      min: -0.03
-      max: 0.03
-  - hashName: LeftCheekAdjust
-    hash: -1371476741
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: cheekSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1.05
-      min: 0.35
-      max: 2.05
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: cheekSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1.05
-      min: 0.35
-      max: 2.05
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: cheekSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1.05
-      min: 0.35
-      max: 2.05
-  - hashName: RightCheekAdjust
-    hash: 2048590150
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: cheekSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1.05
-      min: 0.35
-      max: 2.05
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: cheekSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1.05
-      min: 0.35
-      max: 2.05
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: cheekSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1.05
-      min: 0.35
-      max: 2.05
-  - hashName: LeftCheekAdjust
-    hash: -1371476741
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-    valuesY:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-    valuesZ:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: cheekPosition
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.03
-      min: -0.03
-      max: 0.03
-  - hashName: RightCheekAdjust
-    hash: 2048590150
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-    valuesY:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-    valuesZ:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: cheekPosition
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.03
-      min: -0.03
-      max: 0.03
-  - hashName: LeftLowCheekAdjust
-    hash: -982498292
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: lowCheekPronounced
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.07
-      min: -0.07
-      max: 0.07
-    valuesY:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-    valuesZ:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: lowCheekPosition
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.06
-      min: -0.06
-      max: 0.06
-  - hashName: RightLowCheekAdjust
-    hash: 530525254
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: lowCheekPronounced
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.07
-      min: -0.07
-      max: 0.07
-    valuesY:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-    valuesZ:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: lowCheekPosition
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.06
-      min: -0.06
-      max: 0.06
-  - hashName: NoseTopAdjust
-    hash: 1973914600
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: foreheadSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.015
-      min: -0.025
-      max: 0.005
-    valuesY:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-    valuesZ:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: foreheadPosition
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.02
-        - modifier: 4
-          DNATypeName: foreheadSize
-          modifierValue: -0.02
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.005
-      min: -0.015
-      max: 0.0025
-  - hashName: LeftEyebrowLowAdjust
-    hash: -87457348
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: foreheadSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.015
-      min: -0.025
-      max: 0.005
-    valuesY:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-    valuesZ:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: foreheadPosition
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.02
-        - modifier: 4
-          DNATypeName: foreheadSize
-          modifierValue: -0.02
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.005
-      min: -0.015
-      max: 0.005
-  - hashName: LeftEyebrowMiddleAdjust
-    hash: 1573521115
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: foreheadSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.015
-      min: -0.025
-      max: 0.005
-    valuesY:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-    valuesZ:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: foreheadPosition
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.05
-        - modifier: 4
-          DNATypeName: foreheadSize
-          modifierValue: -0.02
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.005
-      min: -0.025
-      max: 0.005
-  - hashName: LeftEyebrowUpAdjust
-    hash: -550662924
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: foreheadSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.015
-      min: -0.025
-      max: 0.005
-    valuesY:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-    valuesZ:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: foreheadPosition
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.007
-        - modifier: 4
-          DNATypeName: foreheadSize
-          modifierValue: -0.02
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.005
-      min: -0.01
-      max: 0.005
-  - hashName: RightEyebrowLowAdjust
-    hash: -1288301130
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: foreheadSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.015
-      min: -0.025
-      max: 0.005
-    valuesY:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-    valuesZ:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: foreheadPosition
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.02
-        - modifier: 4
-          DNATypeName: foreheadSize
-          modifierValue: -0.02
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.005
-      min: -0.015
-      max: 0.005
-  - hashName: RightEyebrowMiddleAdjust
-    hash: 1752310743
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: foreheadSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.015
-      min: -0.025
-      max: 0.005
-    valuesY:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-    valuesZ:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: foreheadPosition
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.05
-        - modifier: 4
-          DNATypeName: foreheadSize
-          modifierValue: -0.02
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.005
-      min: -0.025
-      max: 0.005
-  - hashName: RightEyebrowUpAdjust
-    hash: 1241434898
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: foreheadSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.015
-      min: -0.025
-      max: 0.005
-    valuesY:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-    valuesZ:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: foreheadPosition
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.007
-        - modifier: 4
-          DNATypeName: foreheadSize
-          modifierValue: -0.02
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.005
-      min: -0.01
-      max: 0.005
-  - hashName: LipsSuperiorAdjust
-    hash: 1865332640
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: lipsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.05
-      min: 1
-      max: 1.05
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: lipsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.9
-      min: 0.65
-      max: 1.5
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: lipsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.9
-      min: 0.65
-      max: 1.5
-  - hashName: LipsInferiorAdjust
-    hash: 1799356466
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: lipsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.05
-      min: 1
-      max: 1.05
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: lipsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1
-      min: 0.65
-      max: 1.5
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: lipsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1
-      min: 0.65
-      max: 1.5
-  - hashName: LeftLipsSuperiorMiddleAdjust
-    hash: 1940197654
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: lipsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.05
-      min: 1
-      max: 1.05
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: lipsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.9
-      min: 0.65
-      max: 1.5
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: lipsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.9
-      min: 0.65
-      max: 1.5
-  - hashName: RightLipsSuperiorMiddleAdjust
-    hash: 1220922885
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: lipsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.05
-      min: 1
-      max: 1.05
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: lipsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.9
-      min: 0.65
-      max: 1.5
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: lipsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.9
-      min: 0.65
-      max: 1.5
-  - hashName: LeftLipsInferiorAdjust
-    hash: 1599456840
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: lipsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.05
-      min: 1
-      max: 1.05
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: lipsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.9
-      min: 0.65
-      max: 1.5
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: lipsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.9
-      min: 0.65
-      max: 1.5
-  - hashName: RightLipsInferiorAdjust
-    hash: 1389899872
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: lipsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.05
-      min: 1
-      max: 1.05
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: lipsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.9
-      min: 0.65
-      max: 1.5
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: lipsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.9
-      min: 0.65
-      max: 1.5
-  - hashName: LipsInferiorAdjust
-    hash: 1799356466
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-    valuesY:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-    valuesZ:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: lipsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.008
-      min: -0.1
-      max: 0.1
-  - hashName: LeftLipsAdjust
-    hash: -666615888
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-    valuesY:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: mouthSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.03
-      min: -0.02
-      max: 0.005
-    valuesZ:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-  - hashName: RightLipsAdjust
-    hash: 949575891
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-    valuesY:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: mouthSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.03
-      min: -0.005
-      max: 0.02
-    valuesZ:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-  - hashName: LeftLipsSuperiorMiddleAdjust
-    hash: 1940197654
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-    valuesY:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: mouthSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.007
-      min: -0.02
-      max: 0.005
-    valuesZ:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-  - hashName: RightLipsSuperiorMiddleAdjust
-    hash: 1220922885
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-    valuesY:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: mouthSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.007
-      min: -0.005
-      max: 0.02
-    valuesZ:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-  - hashName: LeftLipsInferiorAdjust
-    hash: 1599456840
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-    valuesY:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: mouthSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.007
-      min: -0.02
-      max: 0.005
-    valuesZ:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: lipsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.008
-      min: -0.1
-      max: 0.1
-  - hashName: RightLipsInferiorAdjust
-    hash: 1389899872
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers: []
-      min: -0.05
-      max: 0.05
-    valuesY:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: mouthSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.007
-      min: -0.005
-      max: 0.02
-    valuesZ:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: lipsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.008
-      min: -0.1
-      max: 0.1
-  - hashName: Position
-    hash: -1084586333
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: feetSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.2
-      min: -0.15
-      max: 0.0675
-    valuesY:
-      val:
-        value: 0
-        modifiers: []
-      min: -10
-      max: 10
-    valuesZ:
-      val:
-        value: 0
-        modifiers: []
-      min: -10
-      max: 10
-  - hashName: Head
-    hash: 130111906
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: headSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 2
-      min: 0.5
-      max: 2
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: headSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 2
-      min: 0.5
-      max: 2
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: headSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 2
-      min: 0.5
-      max: 2
-  - hashName: LeftArm
-    hash: -343733542
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: armLength
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 2
-      min: 0.5
-      max: 2
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: armLength
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 2
-      min: 0.5
-      max: 2
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: armLength
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 2
-      min: 0.5
-      max: 2
-  - hashName: RightArm
-    hash: 1806956327
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: armLength
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 2
-      min: 0.5
-      max: 2
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: armLength
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 2
-      min: 0.5
-      max: 2
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: armLength
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 2
-      min: 0.5
-      max: 2
-  - hashName: LeftForeArm
-    hash: -1984349568
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: forearmLength
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 2
-      min: 0.5
-      max: 2
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: forearmLength
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 2
-      min: 0.5
-      max: 2
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: forearmLength
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 2
-      min: 0.5
-      max: 2
-  - hashName: RightForeArm
-    hash: 1918345642
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: forearmLength
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 2
-      min: 0.5
-      max: 2
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: forearmLength
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 2
-      min: 0.5
-      max: 2
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: forearmLength
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 2
-      min: 0.5
-      max: 2
-  - hashName: LeftHand
-    hash: -1233783956
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: handsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 2
-      min: 0.5
-      max: 2
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: handsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 2
-      min: 0.5
-      max: 2
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: handsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 2
-      min: 0.5
-      max: 2
-  - hashName: RightHand
-    hash: 1979272496
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: handsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 2
-      min: 0.5
-      max: 2
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: handsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 2
-      min: 0.5
-      max: 2
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: handsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 2
-      min: 0.5
-      max: 2
-  - hashName: LeftFoot
-    hash: 1486391408
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: feetSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 2
-      min: 0.5
-      max: 2
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: feetSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 2
-      min: 0.5
-      max: 2
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: feetSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 2
-      min: 0.5
-      max: 2
-  - hashName: RightFoot
-    hash: -1693174228
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: feetSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 2
-      min: 0.5
-      max: 2
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: feetSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 2
-      min: 0.5
-      max: 2
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: feetSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 2
-      min: 0.5
-      max: 2
-  - hashName: LeftUpLeg
-    hash: 392266736
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers: []
-      min: -10
-      max: 10
-    valuesY:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: legSeparation
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.15
-        - modifier: 4
-          DNATypeName: lowerWeight
-          modifierValue: -0.15
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.035
-        - modifier: 4
-          DNATypeName: legsSize
-          modifierValue: -0.035
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.1
-      min: -0.025
-      max: 0.025
-    valuesZ:
-      val:
-        value: 0
-        modifiers: []
-      min: -10
-      max: 10
-  - hashName: RightUpLeg
-    hash: 1971262097
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers: []
-      min: -10
-      max: 10
-    valuesY:
-      val:
-        value: 0
-        modifiers:
-        - modifier: 4
-          DNATypeName: legSeparation
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.15
-        - modifier: 4
-          DNATypeName: lowerWeight
-          modifierValue: -0.15
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.035
-        - modifier: 4
-          DNATypeName: legsSize
-          modifierValue: -0.035
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.1
-      min: -0.025
-      max: 0.025
-    valuesZ:
-      val:
-        value: 0
-        modifiers: []
-      min: -10
-      max: 10
-  - hashName: LeftShoulder
-    hash: 759586984
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers: []
-      min: -10
-      max: 10
-    valuesY:
-      val:
-        value: 0.003
-        modifiers:
-        - modifier: 4
-          DNATypeName: upperMuscle
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: -0.265
-      min: -0.085
-      max: 0.015
-    valuesZ:
-      val:
-        value: 0
-        modifiers: []
-      min: -10
-      max: 10
-  - hashName: RightShoulder
-    hash: -167360539
-    property: 0
-    valuesX:
-      val:
-        value: 0
-        modifiers: []
-      min: -10
-      max: 10
-    valuesY:
-      val:
-        value: 0.003
-        modifiers:
-        - modifier: 4
-          DNATypeName: upperMuscle
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.265
-      min: -0.015
-      max: 0.085
-    valuesZ:
-      val:
-        value: 0
-        modifiers: []
-      min: -10
-      max: 10
-  - hashName: Mandible
-    hash: 1574626840
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: mandibleSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.35
-      min: 0.35
-      max: 1.35
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: mandibleSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.35
-      min: 0.35
-      max: 1.35
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: mandibleSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 0.35
-      min: 0.35
-      max: 1.35
-  - hashName: Position
-    hash: -1084586333
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: height
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1
-        - modifier: 4
-          DNATypeName: legsSize
-          modifierValue: 1
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1
-      min: 0.5
-      max: 2
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: height
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1
-        - modifier: 4
-          DNATypeName: legsSize
-          modifierValue: 1
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1
-      min: 0.5
-      max: 2
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 4
-          DNATypeName: height
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1
-        - modifier: 4
-          DNATypeName: legsSize
-          modifierValue: 1
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1
-      min: 0.5
-      max: 2
-  - hashName: LowerBack
-    hash: -919067556
-    property: 2
-    valuesX:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 5
-          DNATypeName: legsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1
-      min: 0.5
-      max: 3
-    valuesY:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 5
-          DNATypeName: legsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1
-      min: 0.5
-      max: 3
-    valuesZ:
-      val:
-        value: 1
-        modifiers:
-        - modifier: 5
-          DNATypeName: legsSize
-          modifierValue: 0
-        - modifier: 2
-          DNATypeName: 
-          modifierValue: 1
-      min: 0.5
-      max: 3
-  overallModifiersEnabled: 1
-  overallScale: 0.88
-  heightModifiers: {x: 1, y: 1.2}
-  radiusModifier: 0.28
-  massModifiers: {x: 46, y: 26, z: 26}
-  startingPose: {fileID: 0}
+  _dnaAsset: {fileID: 11400000, guid: 66d7e0cf74efb59468c26f6b647b4ae3, type: 2}
+  _converterController: {fileID: 11400000, guid: 68947ea28222b6642bdc4bf57531f509,
+    type: 2}
+  _overallModifiers:
+    _adjustScale: 1
+    _adjustHeight: 1
+    _adjustRadius: 1
+    _adjustMass: 1
+    _updateBounds: 1
+    _tightenBounds: 1
+    _adjustBounds: 0
+    _scale: 0.88
+    _bone: Position
+    _scaleBoneHash: -1084586333
+    _headRatio: 7.5
+    _radiusAdjustY: 0
+    _radiusAdjust: {x: 0.23, y: 0}
+    _massAdjust: {x: 46, y: 26, z: 26}
+    _boundsAdjust: {x: 0, y: 0, z: 0}
+  _skeletonModifiers:
+  - _hashName: HeadAdjust
+    _hash: -423229038
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 1
+      _max: 1
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: headWidth
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.3
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 1.6
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 1
+      _max: 1
+  - _hashName: NeckAdjust
+    _hash: 1605701185
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.6
+      _max: 2
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: neckThickness
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.8
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 1.6
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: neckThickness
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1.2
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 1.6
+  - _hashName: LeftOuterBreast
+    _hash: 361754685
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: breastSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1.5
+        - _modifier: 4
+          _DNATypeName: upperWeight
+          _modifierValue: 1.5
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.1
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.6
+      _max: 1.5
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: breastSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1.5
+        - _modifier: 4
+          _DNATypeName: upperWeight
+          _modifierValue: 1.5
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.1
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.6
+      _max: 1.5
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: breastSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1.5
+        - _modifier: 4
+          _DNATypeName: upperWeight
+          _modifierValue: 1.5
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.1
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.6
+      _max: 1.5
+  - _hashName: RightOuterBreast
+    _hash: -1043063424
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: breastSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1.5
+        - _modifier: 4
+          _DNATypeName: upperWeight
+          _modifierValue: 1.5
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.1
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.6
+      _max: 1.5
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: breastSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1.5
+        - _modifier: 4
+          _DNATypeName: upperWeight
+          _modifierValue: 1.5
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.1
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.6
+      _max: 1.5
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: breastSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1.5
+        - _modifier: 4
+          _DNATypeName: upperWeight
+          _modifierValue: 1.5
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.1
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.6
+      _max: 1.5
+  - _hashName: LeftEye
+    _hash: 27653119
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: eyeSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.3
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.7
+      _max: 1.4
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: eyeSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.3
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.7
+      _max: 1.4
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: eyeSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.3
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.7
+      _max: 1.4
+  - _hashName: RightEye
+    _hash: -2120937982
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: eyeSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.3
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.7
+      _max: 1.4
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: eyeSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.3
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.7
+      _max: 1.4
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: eyeSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.3
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.7
+      _max: 1.4
+  - _hashName: LeftEyeAdjust
+    _hash: -595031702
+    _property: 1
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: eyeRotation
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 20
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -360
+      _max: 360
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0
+      _max: 0
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0
+      _max: 0
+  - _hashName: RightEyeAdjust
+    _hash: -734071712
+    _property: 1
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 5
+          _DNATypeName: eyeRotation
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 20
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -360
+      _max: 360
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0
+      _max: 0
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0
+      _max: 0
+  - _hashName: Spine1Adjust
+    _hash: 473121629
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.6
+      _max: 2
+    _valuesY:
+      _val:
+        _value: 0.9
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: upperWeight
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.1
+        - _modifier: 4
+          _DNATypeName: upperMuscle
+          _modifierValue: 0.1
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.5
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.45
+      _max: 1.5
+    _valuesZ:
+      _val:
+        _value: 0.7
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: upperWeight
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.45
+        - _modifier: 4
+          _DNATypeName: upperMuscle
+          _modifierValue: 0.45
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.45
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.55
+      _max: 1.15
+  - _hashName: SpineAdjust
+    _hash: 1842365421
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.6
+      _max: 2
+    _valuesY:
+      _val:
+        _value: 0.9
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: upperWeight
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.35
+        - _modifier: 4
+          _DNATypeName: upperMuscle
+          _modifierValue: 0.1
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.45
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.75
+      _max: 1.35
+    _valuesZ:
+      _val:
+        _value: 0.8
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: upperWeight
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.35
+        - _modifier: 4
+          _DNATypeName: upperMuscle
+          _modifierValue: 0.45
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.25
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.75
+      _max: 1.35
+  - _hashName: LowerBackBelly
+    _hash: -1421416706
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: belly
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.35
+      _max: 1.75
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: waist
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.35
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.35
+      _max: 1.75
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: belly
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1.25
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.35
+      _max: 1.75
+  - _hashName: LowerBackAdjust
+    _hash: -1471957022
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: upperWeight
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.25
+        - _modifier: 4
+          _DNATypeName: lowerWeight
+          _modifierValue: 0.25
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.15
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.85
+      _max: 1.5
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: upperWeight
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.25
+        - _modifier: 4
+          _DNATypeName: lowerWeight
+          _modifierValue: 0.25
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.15
+        - _modifier: 4
+          _DNATypeName: waist
+          _modifierValue: 0.15
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.45
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.65
+      _max: 1.75
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: upperWeight
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.25
+        - _modifier: 4
+          _DNATypeName: lowerWeight
+          _modifierValue: 0.25
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.15
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.85
+      _max: 1.5
+  - _hashName: LeftTrapezius
+    _hash: -1320475381
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: upperMuscle
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1.35
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.65
+      _max: 1.35
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: upperMuscle
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1.35
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.65
+      _max: 1.35
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: upperMuscle
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1.35
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.65
+      _max: 1.35
+  - _hashName: RightTrapezius
+    _hash: -1174579199
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: upperMuscle
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1.35
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.65
+      _max: 1.35
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: upperMuscle
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1.35
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.65
+      _max: 1.35
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: upperMuscle
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1.35
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.65
+      _max: 1.35
+  - _hashName: LeftArmAdjust
+    _hash: -270431657
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.6
+      _max: 2
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: armWidth
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.65
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.65
+      _max: 1.65
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: armWidth
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.65
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.65
+      _max: 1.65
+  - _hashName: RightArmAdjust
+    _hash: -413665443
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.6
+      _max: 2
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: armWidth
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.65
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.65
+      _max: 1.65
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: armWidth
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.65
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.65
+      _max: 1.65
+  - _hashName: LeftForeArmAdjust
+    _hash: 923803339
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.6
+      _max: 2
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: forearmWidth
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.65
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.75
+      _max: 1.25
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: forearmWidth
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.65
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.75
+      _max: 1.25
+  - _hashName: RightForeArmAdjust
+    _hash: -1195342688
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.6
+      _max: 2
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: forearmWidth
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.65
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.75
+      _max: 1.25
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: forearmWidth
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.65
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.75
+      _max: 1.25
+  - _hashName: LeftForeArmTwistAdjust
+    _hash: 547566030
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.6
+      _max: 2
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: forearmWidth
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.35
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.75
+      _max: 1.25
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: forearmWidth
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.35
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.75
+      _max: 1.25
+  - _hashName: RightForeArmTwistAdjust
+    _hash: 758040550
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.6
+      _max: 2
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: forearmWidth
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.35
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.75
+      _max: 1.25
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: forearmWidth
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.35
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.75
+      _max: 1.25
+  - _hashName: LeftShoulderAdjust
+    _hash: -1372013129
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.6
+      _max: 2
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: upperWeight
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.35
+        - _modifier: 4
+          _DNATypeName: upperMuscle
+          _modifierValue: 0.35
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.55
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.75
+      _max: 1.25
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: upperWeight
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.35
+        - _modifier: 4
+          _DNATypeName: upperMuscle
+          _modifierValue: 0.35
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.55
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.75
+      _max: 1.25
+  - _hashName: RightShoulderAdjust
+    _hash: 1960302077
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.6
+      _max: 2
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: upperWeight
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.35
+        - _modifier: 4
+          _DNATypeName: upperMuscle
+          _modifierValue: 0.35
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.55
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.75
+      _max: 1.25
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: upperWeight
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.35
+        - _modifier: 4
+          _DNATypeName: upperMuscle
+          _modifierValue: 0.35
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.55
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.75
+      _max: 1.25
+  - _hashName: LeftUpLegAdjust
+    _hash: 898137571
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.6
+      _max: 2
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lowerWeight
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.45
+        - _modifier: 4
+          _DNATypeName: lowerMuscle
+          _modifierValue: 0.35
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.15
+        - _modifier: 5
+          _DNATypeName: legsSize
+          _modifierValue: 0.15
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.45
+      _max: 1.15
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lowerWeight
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.45
+        - _modifier: 4
+          _DNATypeName: lowerMuscle
+          _modifierValue: 0.35
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.15
+        - _modifier: 5
+          _DNATypeName: legsSize
+          _modifierValue: 0.15
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.45
+      _max: 1.15
+  - _hashName: RightUpLegAdjust
+    _hash: -506228642
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.6
+      _max: 2
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lowerWeight
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.45
+        - _modifier: 4
+          _DNATypeName: lowerMuscle
+          _modifierValue: 0.35
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.15
+        - _modifier: 5
+          _DNATypeName: legsSize
+          _modifierValue: 0.15
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.45
+      _max: 1.15
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lowerWeight
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.45
+        - _modifier: 4
+          _DNATypeName: lowerMuscle
+          _modifierValue: 0.35
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.15
+        - _modifier: 5
+          _DNATypeName: legsSize
+          _modifierValue: 0.15
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.45
+      _max: 1.15
+  - _hashName: LeftLegAdjust
+    _hash: -861926788
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.6
+      _max: 2
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lowerWeight
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.15
+        - _modifier: 4
+          _DNATypeName: lowerMuscle
+          _modifierValue: 0.35
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.95
+        - _modifier: 5
+          _DNATypeName: legsSize
+          _modifierValue: 0.15
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.65
+      _max: 1.45
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lowerWeight
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.15
+        - _modifier: 4
+          _DNATypeName: lowerMuscle
+          _modifierValue: 0.35
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.75
+        - _modifier: 5
+          _DNATypeName: legsSize
+          _modifierValue: 0.15
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.65
+      _max: 1.45
+  - _hashName: RightLegAdjust
+    _hash: -1005160586
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.6
+      _max: 2
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lowerWeight
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.15
+        - _modifier: 4
+          _DNATypeName: lowerMuscle
+          _modifierValue: 0.35
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.95
+        - _modifier: 5
+          _DNATypeName: legsSize
+          _modifierValue: 0.15
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.65
+      _max: 1.45
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lowerWeight
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.15
+        - _modifier: 4
+          _DNATypeName: lowerMuscle
+          _modifierValue: 0.35
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.75
+        - _modifier: 5
+          _DNATypeName: legsSize
+          _modifierValue: 0.15
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.65
+      _max: 1.45
+  - _hashName: LeftGluteus
+    _hash: 2044062440
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: gluteusSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1.35
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.25
+      _max: 2.35
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: gluteusSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1.35
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.25
+      _max: 2.35
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: gluteusSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1.35
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.25
+      _max: 2.35
+  - _hashName: RightGluteus
+    _hash: -2110033470
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: gluteusSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1.35
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.25
+      _max: 2.35
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: gluteusSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1.35
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.25
+      _max: 2.35
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: gluteusSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1.35
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.25
+      _max: 2.35
+  - _hashName: LeftEarAdjust
+    _hash: -777059916
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: earsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.75
+      _max: 1.5
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: earsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.75
+      _max: 1.5
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: earsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.75
+      _max: 1.5
+  - _hashName: RightEarAdjust
+    _hash: -652641090
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: earsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.75
+      _max: 1.5
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: earsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.75
+      _max: 1.5
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: earsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.75
+      _max: 1.5
+  - _hashName: LeftEarAdjust
+    _hash: -777059916
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: headWidth
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.01
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.01
+      _max: 0.01
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: headWidth
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.03
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.03
+      _max: 0.03
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: earsPosition
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.02
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.02
+      _max: 0.02
+  - _hashName: RightEarAdjust
+    _hash: -652641090
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: headWidth
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.01
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.01
+      _max: 0.01
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: headWidth
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.03
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.03
+      _max: 0.03
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: earsPosition
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.02
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.02
+      _max: 0.02
+  - _hashName: LeftEarAdjust
+    _hash: -777059916
+    _property: 1
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -30
+      _max: 80
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -30
+      _max: 80
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: earsRotation
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 40
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -15
+      _max: 40
+  - _hashName: RightEarAdjust
+    _hash: -652641090
+    _property: 1
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -30
+      _max: 80
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -30
+      _max: 80
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: earsRotation
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -40
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -40
+      _max: 15
+  - _hashName: NoseBaseAdjust
+    _hash: -685367200
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: noseSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1.5
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.25
+      _max: 3
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: noseSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.15
+        - _modifier: 4
+          _DNATypeName: noseWidth
+          _modifierValue: 0.15
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.25
+      _max: 3
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: noseSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.15
+        - _modifier: 4
+          _DNATypeName: noseFlatten
+          _modifierValue: 0.15
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.75
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.25
+      _max: 3
+  - _hashName: NoseMiddleAdjust
+    _hash: -1907186538
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: noseCurve
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1.5
+        - _modifier: 4
+          _DNATypeName: noseSize
+          _modifierValue: 1.5
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 3
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: noseCurve
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.15
+        - _modifier: 4
+          _DNATypeName: noseSize
+          _modifierValue: 0.15
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.25
+        - _modifier: 4
+          _DNATypeName: noseWidth
+          _modifierValue: 0.25
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.5
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 3
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: noseCurve
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.15
+        - _modifier: 4
+          _DNATypeName: noseSize
+          _modifierValue: 0.15
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.1
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 3
+  - _hashName: NoseBaseAdjust
+    _hash: -685367200
+    _property: 1
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -30
+      _max: 80
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: noseInclination
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 60
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -60
+      _max: 30
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -30
+      _max: 80
+  - _hashName: NoseBaseAdjust
+    _hash: -685367200
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: nosePronounced
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.025
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.025
+      _max: 0.025
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: nosePosition
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.025
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.025
+      _max: 0.025
+  - _hashName: NoseMiddleAdjust
+    _hash: -1907186538
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: nosePronounced
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.012
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.012
+      _max: 0.012
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: nosePosition
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.015
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.015
+      _max: 0.015
+  - _hashName: LeftNoseAdjust
+    _hash: 623523856
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: nosePronounced
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.025
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.025
+      _max: 0.025
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: nosePosition
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.025
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.025
+      _max: 0.025
+  - _hashName: RightNoseAdjust
+    _hash: -973641869
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: nosePronounced
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.025
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.025
+      _max: 0.025
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: nosePosition
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.025
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.025
+      _max: 0.025
+  - _hashName: UpperLipsAdjust
+    _hash: -736966710
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: nosePosition
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.0045
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.0045
+      _max: 0.0045
+  - _hashName: MandibleAdjust
+    _hash: 691264956
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: chinPronounced
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.18
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.55
+      _max: 1.75
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: chinSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1.3
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.75
+      _max: 1.3
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.4
+      _max: 1.5
+  - _hashName: MandibleAdjust
+    _hash: 691264956
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.0125
+      _max: 0.0125
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.0125
+      _max: 0.0125
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: chinPosition
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.0075
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.0075
+      _max: 0.0075
+  - _hashName: LeftLowMaxilarAdjust
+    _hash: 1385644791
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: jawsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.025
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.025
+      _max: 0.025
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: jawsPosition
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.03
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.03
+      _max: 0.03
+  - _hashName: RightLowMaxilarAdjust
+    _hash: 459855613
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: jawsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.025
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.025
+      _max: 0.025
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: jawsPosition
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.03
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.03
+      _max: 0.03
+  - _hashName: LeftCheekAdjust
+    _hash: -1371476741
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: cheekSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1.05
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.35
+      _max: 2.05
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: cheekSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1.05
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.35
+      _max: 2.05
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: cheekSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1.05
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.35
+      _max: 2.05
+  - _hashName: RightCheekAdjust
+    _hash: 2048590150
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: cheekSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1.05
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.35
+      _max: 2.05
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: cheekSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1.05
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.35
+      _max: 2.05
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: cheekSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1.05
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.35
+      _max: 2.05
+  - _hashName: LeftCheekAdjust
+    _hash: -1371476741
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: cheekPosition
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.03
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.03
+      _max: 0.03
+  - _hashName: RightCheekAdjust
+    _hash: 2048590150
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: cheekPosition
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.03
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.03
+      _max: 0.03
+  - _hashName: LeftLowCheekAdjust
+    _hash: -982498292
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lowCheekPronounced
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.07
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.07
+      _max: 0.07
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lowCheekPosition
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.06
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.06
+      _max: 0.06
+  - _hashName: RightLowCheekAdjust
+    _hash: 530525254
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lowCheekPronounced
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.07
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.07
+      _max: 0.07
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lowCheekPosition
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.06
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.06
+      _max: 0.06
+  - _hashName: NoseTopAdjust
+    _hash: 1973914600
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: foreheadSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.015
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.025
+      _max: 0.005
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: foreheadPosition
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.02
+        - _modifier: 4
+          _DNATypeName: foreheadSize
+          _modifierValue: -0.02
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.005
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.015
+      _max: 0.0025
+  - _hashName: LeftEyebrowLowAdjust
+    _hash: -87457348
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: foreheadSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.015
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.025
+      _max: 0.005
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: foreheadPosition
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.02
+        - _modifier: 4
+          _DNATypeName: foreheadSize
+          _modifierValue: -0.02
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.005
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.015
+      _max: 0.005
+  - _hashName: LeftEyebrowMiddleAdjust
+    _hash: 1573521115
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: foreheadSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.015
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.025
+      _max: 0.005
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: foreheadPosition
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.05
+        - _modifier: 4
+          _DNATypeName: foreheadSize
+          _modifierValue: -0.02
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.005
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.025
+      _max: 0.005
+  - _hashName: LeftEyebrowUpAdjust
+    _hash: -550662924
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: foreheadSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.015
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.025
+      _max: 0.005
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: foreheadPosition
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.007
+        - _modifier: 4
+          _DNATypeName: foreheadSize
+          _modifierValue: -0.02
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.005
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.01
+      _max: 0.005
+  - _hashName: RightEyebrowLowAdjust
+    _hash: -1288301130
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: foreheadSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.015
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.025
+      _max: 0.005
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: foreheadPosition
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.02
+        - _modifier: 4
+          _DNATypeName: foreheadSize
+          _modifierValue: -0.02
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.005
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.015
+      _max: 0.005
+  - _hashName: RightEyebrowMiddleAdjust
+    _hash: 1752310743
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: foreheadSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.015
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.025
+      _max: 0.005
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: foreheadPosition
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.05
+        - _modifier: 4
+          _DNATypeName: foreheadSize
+          _modifierValue: -0.02
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.005
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.025
+      _max: 0.005
+  - _hashName: RightEyebrowUpAdjust
+    _hash: 1241434898
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: foreheadSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.015
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.025
+      _max: 0.005
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: foreheadPosition
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.007
+        - _modifier: 4
+          _DNATypeName: foreheadSize
+          _modifierValue: -0.02
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.005
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.01
+      _max: 0.005
+  - _hashName: LipsSuperiorAdjust
+    _hash: 1865332640
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lipsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.05
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 1
+      _max: 1.05
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lipsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.9
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.65
+      _max: 1.5
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lipsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.9
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.65
+      _max: 1.5
+  - _hashName: LipsInferiorAdjust
+    _hash: 1799356466
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lipsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.05
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 1
+      _max: 1.05
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lipsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.65
+      _max: 1.5
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lipsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.65
+      _max: 1.5
+  - _hashName: LeftLipsSuperiorMiddleAdjust
+    _hash: 1940197654
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lipsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.05
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 1
+      _max: 1.05
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lipsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.9
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.65
+      _max: 1.5
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lipsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.9
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.65
+      _max: 1.5
+  - _hashName: RightLipsSuperiorMiddleAdjust
+    _hash: 1220922885
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lipsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.05
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 1
+      _max: 1.05
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lipsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.9
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.65
+      _max: 1.5
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lipsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.9
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.65
+      _max: 1.5
+  - _hashName: LeftLipsInferiorAdjust
+    _hash: 1599456840
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lipsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.05
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 1
+      _max: 1.05
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lipsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.9
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.65
+      _max: 1.5
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lipsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.9
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.65
+      _max: 1.5
+  - _hashName: RightLipsInferiorAdjust
+    _hash: 1389899872
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lipsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.05
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 1
+      _max: 1.05
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lipsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.9
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.65
+      _max: 1.5
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lipsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.9
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.65
+      _max: 1.5
+  - _hashName: LipsInferiorAdjust
+    _hash: 1799356466
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lipsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.008
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.1
+      _max: 0.1
+  - _hashName: LeftLipsAdjust
+    _hash: -666615888
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: mouthSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.03
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.02
+      _max: 0.005
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+  - _hashName: RightLipsAdjust
+    _hash: 949575891
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: mouthSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.03
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.005
+      _max: 0.02
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+  - _hashName: LeftLipsSuperiorMiddleAdjust
+    _hash: 1940197654
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: mouthSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.007
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.02
+      _max: 0.005
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+  - _hashName: RightLipsSuperiorMiddleAdjust
+    _hash: 1220922885
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: mouthSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.007
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.005
+      _max: 0.02
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+  - _hashName: LeftLipsInferiorAdjust
+    _hash: 1599456840
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: mouthSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.007
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.02
+      _max: 0.005
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lipsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.008
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.1
+      _max: 0.1
+  - _hashName: RightLipsInferiorAdjust
+    _hash: 1389899872
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.05
+      _max: 0.05
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: mouthSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.007
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.005
+      _max: 0.02
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: lipsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.008
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.1
+      _max: 0.1
+  - _hashName: Position
+    _hash: -1084586333
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: feetSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.2
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.15
+      _max: 0.0675
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -10
+      _max: 10
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -10
+      _max: 10
+  - _hashName: Head
+    _hash: 130111906
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: headSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 2
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: headSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 2
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: headSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 2
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+  - _hashName: LeftArm
+    _hash: -343733542
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: armLength
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 2
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: armLength
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 2
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: armLength
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 2
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+  - _hashName: RightArm
+    _hash: 1806956327
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: armLength
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 2
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: armLength
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 2
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: armLength
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 2
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+  - _hashName: LeftForeArm
+    _hash: -1984349568
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: forearmLength
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 2
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: forearmLength
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 2
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: forearmLength
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 2
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+  - _hashName: RightForeArm
+    _hash: 1918345642
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: forearmLength
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 2
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: forearmLength
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 2
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: forearmLength
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 2
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+  - _hashName: LeftHand
+    _hash: -1233783956
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: handsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 2
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: handsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 2
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: handsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 2
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+  - _hashName: RightHand
+    _hash: 1979272496
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: handsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 2
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: handsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 2
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: handsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 2
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+  - _hashName: LeftFoot
+    _hash: 1486391408
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: feetSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 2
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: feetSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 2
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: feetSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 2
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+  - _hashName: RightFoot
+    _hash: -1693174228
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: feetSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 2
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: feetSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 2
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: feetSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 2
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+  - _hashName: LeftUpLeg
+    _hash: 392266736
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -10
+      _max: 10
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: legSeparation
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.15
+        - _modifier: 4
+          _DNATypeName: lowerWeight
+          _modifierValue: -0.15
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.035
+        - _modifier: 4
+          _DNATypeName: legsSize
+          _modifierValue: -0.035
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.1
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.025
+      _max: 0.025
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -10
+      _max: 10
+  - _hashName: RightUpLeg
+    _hash: 1971262097
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -10
+      _max: 10
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: legSeparation
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.15
+        - _modifier: 4
+          _DNATypeName: lowerWeight
+          _modifierValue: -0.15
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.035
+        - _modifier: 4
+          _DNATypeName: legsSize
+          _modifierValue: -0.035
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.1
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.025
+      _max: 0.025
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -10
+      _max: 10
+  - _hashName: LeftShoulder
+    _hash: 759586984
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -10
+      _max: 10
+    _valuesY:
+      _val:
+        _value: 0.003
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: upperMuscle
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: -0.265
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.085
+      _max: 0.015
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -10
+      _max: 10
+  - _hashName: RightShoulder
+    _hash: -167360539
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -10
+      _max: 10
+    _valuesY:
+      _val:
+        _value: 0.003
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: upperMuscle
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.265
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.015
+      _max: 0.085
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -10
+      _max: 10
+  - _hashName: Mandible
+    _hash: 1574626840
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: mandibleSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.35
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.35
+      _max: 1.35
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: mandibleSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.35
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.35
+      _max: 1.35
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: mandibleSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 0.35
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.35
+      _max: 1.35
+  - _hashName: Position
+    _hash: -1084586333
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: height
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1
+        - _modifier: 4
+          _DNATypeName: legsSize
+          _modifierValue: 1
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: height
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1
+        - _modifier: 4
+          _DNATypeName: legsSize
+          _modifierValue: 1
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: height
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1
+        - _modifier: 4
+          _DNATypeName: legsSize
+          _modifierValue: 1
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+  - _hashName: LowerBack
+    _hash: -919067556
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 5
+          _DNATypeName: legsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 3
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 5
+          _DNATypeName: legsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 3
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 5
+          _DNATypeName: legsSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: 
+          _modifierValue: 1
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 3
+  overallScale: 1
+  overallScaleBone: 
+  overallScaleBoneHash: -1084586333
+  overallModifiersEnabled: 0
+  radiusAdjust: {x: 0, y: 0}
+  massModifiers: {x: 0, y: 0, z: 0}
+  tightenBounds: 1
+  boundsAdjust: {x: 0, y: 0, z: 0}
+  _startingPose: {fileID: 0}
   startingPoseWeight: 1
 --- !u!1001 &100100000
 Prefab:
