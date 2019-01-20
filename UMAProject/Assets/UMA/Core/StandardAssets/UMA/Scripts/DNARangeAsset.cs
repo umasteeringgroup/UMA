@@ -201,9 +201,10 @@ namespace UMA
 				names = (dnaConverter.DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase).Names;
 			}
 			//CharacterSystem.DNAEditor.Initialize calls this- who knew?
-			if (index < names.Length)
+			if (index < names.Length && names[index] == name)
 			{
-				if (Regex.Replace(names[index], "( )+", "") == Regex.Replace(name, "( )+", ""))
+				//Dont even bother with the Regex
+				//if (Regex.Replace(names[index], "( )+", "") == Regex.Replace(name, "( )+", ""))
 					return true;
 			}
 
@@ -232,7 +233,9 @@ namespace UMA
 
 			for(int i = 0; i < names.Length; i++)
 			{
-				if (Regex.Replace(names[i], "( )+", "") == Regex.Replace(name, "( )+", ""))
+				//Dont bother with the regex
+				//if (Regex.Replace(names[i], "( )+", "") == Regex.Replace(name, "( )+", ""))
+				if(names[i] == name)
 					return true;
 			}
 
@@ -261,7 +264,9 @@ namespace UMA
 
 			for (int i = 0; i < names.Length; i++)
 			{
-				if (Regex.Replace(names[i], "( )+", "") == Regex.Replace(name, "( )+", ""))
+				//Dont bother with the regex
+				//if (Regex.Replace(names[i], "( )+", "") == Regex.Replace(name, "( )+", ""))
+				if(names[i] == name)
 					return i;
 			}
 
