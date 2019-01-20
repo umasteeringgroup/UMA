@@ -167,6 +167,14 @@ namespace UMA
 			bool isLegacy = false;
 			if (pluginToImport.GetType() == this.GetType())
 				importedSkeletonModifiers = (pluginToImport as SkeletonDNAConverterPlugin)._skeletonModifiers;
+			else if(pluginToImport.GetType().IsAssignableFrom(typeof(DynamicDNAConverterController)))
+			{
+				var skelModPlugs = (pluginToImport as DynamicDNAConverterController).GetPlugins(typeof(SkeletonDNAConverterPlugin));
+				if(skelModPlugs.Count > 0)
+				{
+					importedSkeletonModifiers = (skelModPlugs[0] as SkeletonDNAConverterPlugin)._skeletonModifiers;
+				}
+			}
 			else
 			{
 				if (typeof(GameObject).IsAssignableFrom(pluginToImport.GetType()))
@@ -184,11 +192,10 @@ namespace UMA
 					}
 				}
 			}
-
 			if(importedSkeletonModifiers != null)
 			{
-				// add the modifiers
-				var currentModifiers = importMethod != 0 ? _skeletonModifiers : new List<SkeletonModifier>();
+				// add the modifiers- if the import method is Replace this is a new list
+				var currentModifiers = importMethod == 1 ? new List<SkeletonModifier>() : _skeletonModifiers;
 				var incomingModifiers = importedSkeletonModifiers;
 
 				List<string> existingDNANames = new List<string>();
