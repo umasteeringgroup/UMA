@@ -10630,7 +10630,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: -20
             _initialized: 1
           _aggregationMethod: 1
@@ -10753,7 +10753,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 0.04
             _initialized: 1
           _aggregationMethod: 1
@@ -11059,7 +11059,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 0.01
             _initialized: 1
           _aggregationMethod: 1
