@@ -11,7 +11,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 27fa8d9aba5f64596aba9f576eea8aa9, type: 3}
   m_Name: ToonF UMADNARangeAsset
   m_EditorClassIdentifier: 
-  dnaConverter: {fileID: 11432742, guid: c82265195e2de574d968d7bb7a845927, type: 2}
+  _dnaConverterLegacy: {fileID: 11432742, guid: c82265195e2de574d968d7bb7a845927,
+    type: 2}
+  _dnaConverter:
+    _converter: {fileID: 11400000, guid: 9c8919c87b301ab428654b6f23b55863, type: 2}
   means:
   - 0.5
   - 0.5

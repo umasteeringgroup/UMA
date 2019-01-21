@@ -322,10 +322,10 @@ namespace UMA.Editors
 			}
 		}
 
-		public static void ToolbarStyleHeader(Rect rect, GUIContent label, string[] help, ref bool helpExpanded)
+		public static void ToolbarStyleHeader(Rect rect, GUIContent label, string[] help, ref bool helpExpanded, GUIStyle toolbarStyleOverride = null, GUIStyle labelStyleOverride = null)
 		{
-			var toolbarStyle = EditorStyles.toolbar;
-			var labelStyle = EditorStyles.label;
+			var toolbarStyle = toolbarStyleOverride != null ? toolbarStyleOverride : EditorStyles.toolbar;
+			var labelStyle = labelStyleOverride != null ? labelStyleOverride : EditorStyles.label;
 			var helpIconRect = new Rect(rect.xMax - 20f, rect.yMin, 20f, rect.height);
 			var helpGUI = new GUIContent("", "Show Help");
 			helpGUI.image = helpIcon;

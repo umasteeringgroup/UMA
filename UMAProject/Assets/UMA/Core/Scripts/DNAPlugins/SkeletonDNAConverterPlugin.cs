@@ -167,6 +167,14 @@ namespace UMA
 			bool isLegacy = false;
 			if (pluginToImport.GetType() == this.GetType())
 				importedSkeletonModifiers = (pluginToImport as SkeletonDNAConverterPlugin)._skeletonModifiers;
+			else if(pluginToImport.GetType().IsAssignableFrom(typeof(DynamicDNAConverterController)))
+			{
+				var skelModPlugs = (pluginToImport as DynamicDNAConverterController).GetPlugins(typeof(SkeletonDNAConverterPlugin));
+				if(skelModPlugs.Count > 0)
+				{
+					importedSkeletonModifiers = (skelModPlugs[0] as SkeletonDNAConverterPlugin)._skeletonModifiers;
+				}
+			}
 			else
 			{
 				if (typeof(GameObject).IsAssignableFrom(pluginToImport.GetType()))
@@ -178,16 +186,16 @@ namespace UMA
 						//hmm this is not always the case because of the backwards compatible property giving us the first found skelModsPlugin aswell
 						//so if there is no converter controller, *then* its legacy- 
 						//or is it? the user could still assign a controller without upgrading and then try and drag the behaviour in here
-						if(DDCB.ConverterController == null)
+						//UMA2.8+ FixDNAPrefabs ConverterController doesn't do this backwards compatibility now
+						//if(DDCB.ConverterController == null)
 							isLegacy = true;
 					}
 				}
 			}
-
 			if(importedSkeletonModifiers != null)
 			{
-				// add the modifiers
-				var currentModifiers = importMethod != 0 ? _skeletonModifiers : new List<SkeletonModifier>();
+				// add the modifiers- if the import method is Replace this is a new list
+				var currentModifiers = importMethod == 1 ? new List<SkeletonModifier>() : _skeletonModifiers;
 				var incomingModifiers = importedSkeletonModifiers;
 
 				List<string> existingDNANames = new List<string>();

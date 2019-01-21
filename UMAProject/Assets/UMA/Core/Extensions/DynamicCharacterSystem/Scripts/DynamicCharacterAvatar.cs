@@ -1642,10 +1642,12 @@ namespace UMA.CharacterSystem
             {
                 string Category = db.GetType().ToString();
 
-                DnaConverterBehaviour dcb = activeRace.racedata.GetConverter(db);
-                if (dcb != null && (!string.IsNullOrEmpty(dcb.DisplayValue)))
+				//TODO racedata.GetConverter is obsolete because lots of converters can use the same dna names (dnaAsset) now 
+				//I'm just gonna use the first found one- we can do something more advanced if/when we need to
+				IDNAConverter[] dcb = activeRace.racedata.GetConverters(db);
+                if (dcb.Length > 0 && dcb[0] != null && (!string.IsNullOrEmpty(dcb[0].DisplayValue)))
                 {
-                    Category = dcb.DisplayValue;
+                    Category = dcb[0].DisplayValue;
                 }
 
                 for (int i = 0; i < db.Count; i++)

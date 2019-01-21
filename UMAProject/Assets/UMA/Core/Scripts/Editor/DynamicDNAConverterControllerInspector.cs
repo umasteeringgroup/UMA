@@ -40,9 +40,17 @@ namespace UMA.Editors
 		// the type of converter plugin to add (set from the _availablePlugins above)
 		private Type _pluginToAdd;
 
-		private bool _selfExpanded = true;
+		private bool _dnaAssetExpanded = true;
 
-		private bool _helpExpanded = false;
+		private bool _dnaAssetHelpExpanded = false;
+
+		private bool _convertersExpanded = true;
+
+		private bool _convertersHelpExpanded = false;
+
+		private bool _overallModifiersExpanded = true;
+
+		private bool _overallModifiersHelpExpanded = false;
 
 		//if true 'view by dna name' otherwise 'view by converter type'
 		private bool _view;
@@ -162,6 +170,8 @@ namespace UMA.Editors
 
 				_target = target as DynamicDNAConverterController;
 
+				_dnaAsset = _target.DNAAsset;
+
 				InitPlugins();
 			}
 			return _initialized;
@@ -207,11 +217,19 @@ namespace UMA.Editors
 				return;
 			}
 
+			var displayValueProp = serializedObject.FindProperty("_displayValue");
+
+			EditorGUILayout.PropertyField(displayValueProp);
+
+			EditorGUILayout.Space();
+
+			DrawDNAAssetField();
+
 			//Draw the header and help as defined in the scope
 			var controllerHeaderRect = EditorGUILayout.GetControlRect();
-			DrawControllersHeader(controllerHeaderRect, _help, ref _selfExpanded, ref _helpExpanded);
+			DrawControllersHeader(controllerHeaderRect, _help, ref _convertersExpanded, ref _convertersHelpExpanded);
 
-			if (_selfExpanded)
+			if (_convertersExpanded)
 			{
 				//Draw the view tabs for viewing by Modifier or dna name
 				DrawControllersViewTabs();
@@ -238,17 +256,55 @@ namespace UMA.Editors
 
 			EditorGUILayout.Space();
 
+			DrawOverallModifiers();
+
 			serializedObject.ApplyModifiedProperties();
 		}
 		#endregion
 
 		#region GUI DRAWING METHODS
 
+		private void DrawDNAAssetField()
+		{
+			var dnaAssetProp = serializedObject.FindProperty("_dnaAsset");
+			var dnaAssetFoldoutRect = EditorGUILayout.GetControlRect();
+			dnaAssetFoldoutRect.height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+			var dnaAssetLabel = EditorGUI.BeginProperty(dnaAssetFoldoutRect, new GUIContent(dnaAssetProp.displayName), dnaAssetProp);
+
+			dnaAssetLabel.text = dnaAssetLabel.text.ToUpper();
+			GUIHelper.ToolbarStyleFoldout(dnaAssetFoldoutRect, dnaAssetLabel.text.ToUpper(), new string[] { dnaAssetLabel.tooltip }, ref _dnaAssetExpanded, ref _dnaAssetHelpExpanded);
+
+			if (_dnaAssetExpanded)
+			{
+				GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
+				GUILayout.Space(5);
+				EditorGUI.BeginChangeCheck();
+				EditorGUILayout.PropertyField(dnaAssetProp);
+				if (EditorGUI.EndChangeCheck())
+				{
+					if (dnaAssetProp.objectReferenceValue != null)
+						_dnaAsset = dnaAssetProp.objectReferenceValue as DynamicUMADnaAsset;
+					else
+						_dnaAsset = null;
+					//TODO in the ConverterBehaviour editor we cleared the DNA on the avatar.umaData (if we are in play mode and inspecting using customizer)
+					//we could probably do with doing the same here
+					/*
+					 //force the Avatar to update its dna and dnaconverter dictionaries
+						umaData.umaRecipe.ClearDna();
+						umaData.umaRecipe.ClearDNAConverters();
+					*/
+				}
+				GUIHelper.EndVerticalPadded(3);
+			}
+
+			EditorGUILayout.Space();
+		}
 
 		private void DrawControllersHeader(Rect rect, string[] help, ref bool _isExpanded, ref bool _helpExpanded)
 		{
-			GUIHelper.ToolbarStyleHeader(rect, new GUIContent(_dnaConvertersLabel.ToUpper()), _help, ref _helpExpanded);
-			_isExpanded = true;
+			//GUIHelper.ToolbarStyleHeader(rect, new GUIContent(_dnaConvertersLabel.ToUpper()), _help, ref _helpExpanded);
+			GUIHelper.ToolbarStyleFoldout(rect, new GUIContent(_dnaConvertersLabel.ToUpper()), _help, ref _isExpanded, ref _helpExpanded);
+			//_isExpanded = true;
 		}
 
 		private void DrawHelp(string[] help)
@@ -387,6 +443,27 @@ namespace UMA.Editors
 				//TODO after we have drawn all the namesToDraw if there are any inUseNames that have not been drawn, draw those too
 				GUIHelper.EndVerticalPadded(3);
 			}
+		}
+
+		private void DrawOverallModifiers()
+		{
+			var overallModifiersProp = serializedObject.FindProperty("_overallModifiers");
+			var overallModsFoldoutRect = EditorGUILayout.GetControlRect();
+			overallModsFoldoutRect.height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+			var overallModsLabel = EditorGUI.BeginProperty(overallModsFoldoutRect, new GUIContent(overallModifiersProp.displayName), overallModifiersProp);
+
+			overallModsLabel.text = overallModsLabel.text.ToUpper();
+			//TODO Id actually like an import settings thing here now, so that you can import overallModifiers from another converterController or converterBehaviour
+			GUIHelper.ToolbarStyleFoldout(overallModsFoldoutRect, overallModsLabel.text.ToUpper(), new string[] { overallModsLabel.tooltip }, ref _overallModifiersExpanded, ref _overallModifiersHelpExpanded);
+
+			if (_overallModifiersExpanded)
+			{
+				GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
+				GUILayout.Space(5);
+				EditorGUILayout.PropertyField(overallModifiersProp);
+				GUIHelper.EndVerticalPadded(3);
+			}
+
 		}
 
 		#endregion

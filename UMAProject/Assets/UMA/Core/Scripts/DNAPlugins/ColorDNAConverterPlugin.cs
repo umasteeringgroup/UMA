@@ -16,7 +16,7 @@ namespace UMA
 
 		[FormerlySerializedAs("colorSets")]
 		[SerializeField]
-		public DNAColorSet[] _colorSets = new DNAColorSet[0];
+		private DNAColorSet[] _colorSets = new DNAColorSet[0];
 
 		#endregion
 
@@ -101,6 +101,7 @@ namespace UMA
 				return;
 			}
 			var masterWeightCalc = masterWeight.GetWeight(activeDNA);
+
 			if (masterWeightCalc == 0f)
 				return;
 
@@ -291,6 +292,8 @@ namespace UMA
 						aAdj = colorModifier.A.EvaluateAdjustment(dnaVal, aCurr);
 						if (colorModifier.A.Absolute)
 							aAdj = Mathf.Lerp(aCurr, aAdj, masterWeight);
+						else if(colorModifier.A.adjustmentType == AdjustmentType.BlendFactor)//BlendFactor is different and only used on the alpha channel
+							aAdj = Mathf.Lerp(aCurr, aAdj * masterWeight, masterWeight);
 						else
 							aAdj = aAdj * masterWeight;
 						if ((colorModifier.A.Absolute && aAdj != 0) || (!colorModifier.A.Absolute && aAdj != aCurr))

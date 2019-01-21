@@ -85,9 +85,9 @@ namespace UMA.Editors
 
 			EditorGUILayout.Space();
 
-			SerializedProperty dnaConverters = serializedObject.FindProperty("dnaConverterList");
+			SerializedProperty dnaConverterListprop = serializedObject.FindProperty("_dnaConverterList");
 			EditorGUI.BeginChangeCheck();
-			EditorGUILayout.PropertyField(dnaConverters, true);
+			EditorGUILayout.PropertyField(dnaConverterListprop, true);
 			if(EditorGUI.EndChangeCheck()) {
 				serializedObject.ApplyModifiedProperties();
 			}
