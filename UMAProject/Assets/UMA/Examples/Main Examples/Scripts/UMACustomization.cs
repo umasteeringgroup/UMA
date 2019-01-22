@@ -15,6 +15,8 @@ namespace UMA.Examples
         public UMADynamicAvatar umaDynamicAvatar;
         public CameraTrack cameraTrack;
         public MouseOrbitImproved orbitor;
+		public UMADnaTweaker dnaTweakerPrefab;
+		public ScrollRect dnaTweakerScollView;
 
         private UMADnaHumanoid umaDna;
         private UMADnaTutorial umaTutorialDna;
@@ -78,6 +80,7 @@ namespace UMA.Examples
         // get the sliders and store for later use
         void Awake()
         {
+			return;
             HeightSlider = GameObject.Find("HeightSlider").GetComponent<Slider>();
             UpperMuscleSlider = GameObject.Find("UpperMuscleSlider").GetComponent<Slider>();
             UpperWeightSlider = GameObject.Find("UpperWeightSlider").GetComponent<Slider>();
@@ -156,10 +159,10 @@ namespace UMA.Examples
 
         void Update()
         {
-            if (umaTutorialDna != null)
+            /*if (umaTutorialDna != null)
                 EyeSpacingSlider.interactable = true;
             else
-                EyeSpacingSlider.interactable = false;
+                EyeSpacingSlider.interactable = false;*/
 
             // Don't raycast if the editor is open
             if (umaData != null)
@@ -201,8 +204,10 @@ namespace UMA.Examples
             umaDna = umaData.GetDna<UMADnaHumanoid>();
             umaTutorialDna = umaData.GetDna<UMADnaTutorial>();
 
-            SetSliders();
-            SetCamera(true);
+           // SetSliders();
+			SetUpDNASliders();
+
+			SetCamera(true);
         }
 
         // Set the camera target and viewport
@@ -258,6 +263,30 @@ namespace UMA.Examples
                 umaData.Dirty();
             }
         }
+
+		private void SetUpDNASliders()
+		{
+			if (dnaTweakerPrefab == null)
+				return;
+			//clear any sliders that we have
+			Transform[] allChildren = dnaTweakerScollView.content.GetComponentsInChildren<Transform>();//this is fucking deleting itself
+			foreach (Transform child in allChildren)
+			{
+					DestroyImmediate(child.gameObject);
+			}
+			//we only get here if umaData is set so
+			foreach(UMADnaBase dna in umaData.umaRecipe.GetAllDna())
+			{
+				foreach(string dnaName in dna.Names)
+				{
+					var thisTweaker = Instantiate(dnaTweakerPrefab);
+					var tweaker = thisTweaker.GetComponent<UMADnaTweaker>();
+					tweaker.dnaToTweak = dnaName;
+					tweaker.customizer = this;
+					thisTweaker.gameObject.transform.parent = dnaTweakerScollView.content.gameObject.transform;
+				}
+			}
+		}
 
         // Set all of the sliders to the values contained in the UMA Character
         public void SetSliders()

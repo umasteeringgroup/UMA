@@ -11,6 +11,7 @@ namespace UMA.Examples
 
 		public void TweakDNA(float newValue)
 		{
+
 			if (string.IsNullOrEmpty(dnaToTweak))
 				return;
 			if (customizer == null)

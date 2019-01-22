@@ -4547,6 +4547,7 @@ MonoBehaviour:
   umaRecipe: {fileID: 0}
   umaAdditionalRecipes:
   - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
+  - {fileID: 11400000, guid: f36ba6c553c66f747bc69741fa115880, type: 2}
   umaGenerator: {fileID: 0}
   animationController: {fileID: 0}
   CharacterCreated:
@@ -18079,7 +18080,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0.0000076293945, y: 0.00001803392}
+  m_AnchoredPosition: {x: 0.0000076293945, y: 0.000004304226}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &2017232975

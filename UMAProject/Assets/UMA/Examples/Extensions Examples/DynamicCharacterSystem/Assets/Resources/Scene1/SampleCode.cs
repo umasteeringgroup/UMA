@@ -193,13 +193,13 @@ namespace UMA.CharacterSystem.Examples
 
         public void ChangeSex()
         {
-            if (Avatar.activeRace.name == "HumanMaleDCS")
+            if (Avatar.activeRace.name == "HumanMale")
             {
-                Avatar.ChangeRace("HumanFemaleDCS");
+                Avatar.ChangeRace("HumanFemale");
             }
             else
             {
-                Avatar.ChangeRace("HumanMaleDCS");
+                Avatar.ChangeRace("HumanMale");
             }
         }
 
