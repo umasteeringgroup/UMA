@@ -109,7 +109,7 @@ namespace UMA.Examples
 
 			Color HairColor = new Color(Random.Range(0.1f, 0.9f), Random.Range(0.1f, 0.9f), Random.Range(0.1f, 0.9f), 1);
 
-			if (umaData.umaRecipe.raceData.raceName == "HumanMale")
+			if (umaData.umaRecipe.raceData.raceName == "HumanMale" || umaData.umaRecipe.raceData.raceName == "HumanMaleDCS")
 			{
 				int randomResult = 0;
 				//Male Avatar
@@ -280,7 +280,7 @@ namespace UMA.Examples
 
 				umaData.umaRecipe.slotDataList[6] = umaContext.InstantiateSlot("MaleFeet", umaData.umaRecipe.slotDataList[2].GetOverlayList());
 			}
-			else if (umaData.umaRecipe.raceData.raceName == "HumanFemale")
+			else if (umaData.umaRecipe.raceData.raceName == "HumanFemale" || umaData.umaRecipe.raceData.raceName == "HumanFemaleDCS")
 			{
 				int randomResult = 0;
 				//Female Avatar
@@ -438,8 +438,110 @@ namespace UMA.Examples
 				}
 			}
 		}
-
+		//Dont use LegacyDNA here 
 		public static void RandomizeShape(UMAData umaData)
+		{
+			var allDNA = umaData.umaRecipe.GetAllDna();
+			UMADnaBase mainDNA = null;
+			//find the main dna to use
+			foreach(UMADnaBase dna in allDNA)
+			{
+				if(System.Array.IndexOf(dna.Names, "height") > -1)
+				{
+					mainDNA = dna;
+					break;
+				}
+			}
+
+			if (mainDNA != null && mainDNA.GetType() == typeof(DynamicUMADna))
+			{
+				DynamicUMADna umaDna = mainDNA as DynamicUMADna;
+				umaDna.SetValue("height", Random.Range(0.4f, 0.5f));
+				umaDna.SetValue("headSize", Random.Range(0.485f, 0.515f));
+				umaDna.SetValue("headWidth", Random.Range(0.4f, 0.6f));
+
+				umaDna.SetValue("neckThickness", Random.Range(0.495f, 0.51f));
+
+				if (umaData.umaRecipe.raceData.raceName.IndexOf("HumanMale") > -1)
+				{
+					umaDna.SetValue("handsSize", Random.Range(0.485f, 0.515f));
+					umaDna.SetValue("feetSize", Random.Range(0.485f, 0.515f));
+					umaDna.SetValue("legSeparation", Random.Range(0.4f, 0.6f));
+					umaDna.SetValue("waist", 0.5f);
+				}
+				else
+				{
+					umaDna.SetValue("handsSize", Random.Range(0.485f, 0.515f));
+					umaDna.SetValue("feetSize", Random.Range(0.485f, 0.515f));
+					umaDna.SetValue("legSeparation", Random.Range(0.485f, 0.515f));
+					umaDna.SetValue("waist", Random.Range(0.3f, 0.8f));
+				}
+
+				umaDna.SetValue("armLength", Random.Range(0.485f, 0.515f));
+				umaDna.SetValue("forearmLength", Random.Range(0.485f, 0.515f));
+				umaDna.SetValue("armWidth", Random.Range(0.3f, 0.8f));
+				umaDna.SetValue("forearmWidth", Random.Range(0.3f, 0.8f));
+
+				umaDna.SetValue("upperMuscle", Random.Range(0.0f, 1.0f));
+				umaDna.SetValue("upperWeight", Random.Range(-0.2f, 0.2f) + umaDna.GetValue("upperMuscle"));
+				if (umaDna.GetValue("upperWeight") > 1.0) { umaDna.SetValue("upperWeight", 1.0f); }
+				if (umaDna.GetValue("upperWeight") < 0.0) { umaDna.SetValue("upperWeight", 0.0f); }
+
+				umaDna.SetValue("lowerMuscle", Random.Range(-0.2f, 0.2f) + umaDna.GetValue("upperMuscle"));
+				if (umaDna.GetValue("lowerMuscle") > 1.0) { umaDna.SetValue("lowerMuscle", 1.0f); }
+				if (umaDna.GetValue("lowerMuscle") < 0.0) { umaDna.SetValue("lowerMuscle", 0.0f); }
+
+				umaDna.SetValue("lowerWeight", Random.Range(-0.1f, 0.1f) + umaDna.GetValue("upperWeight"));
+				if (umaDna.GetValue("lowerWeight") > 1.0) { umaDna.SetValue("lowerWeight", 1.0f); }
+				if (umaDna.GetValue("lowerWeight") < 0.0) { umaDna.SetValue("lowerWeight", 0.0f); }
+
+				umaDna.SetValue("belly", umaDna.GetValue("upperWeight") * Random.Range(0.0f, 1.0f));
+				umaDna.SetValue("legsSize", Random.Range(0.45f, 0.6f));
+				umaDna.SetValue("gluteusSize", Random.Range(0.4f, 0.6f));
+
+				umaDna.SetValue("earsSize", Random.Range(0.3f, 0.8f));
+				umaDna.SetValue("earsPosition", Random.Range(0.3f, 0.8f));
+				umaDna.SetValue("earsRotation", Random.Range(0.3f, 0.8f));
+
+				umaDna.SetValue("noseSize", Random.Range(0.3f, 0.8f));
+
+				umaDna.SetValue("noseCurve", Random.Range(0.3f, 0.8f));
+				umaDna.SetValue("noseWidth", Random.Range(0.3f, 0.8f));
+				umaDna.SetValue("noseInclination", Random.Range(0.3f, 0.8f));
+				umaDna.SetValue("nosePosition", Random.Range(0.3f, 0.8f));
+				umaDna.SetValue("nosePronounced", Random.Range(0.3f, 0.8f));
+				umaDna.SetValue("noseFlatten", Random.Range(0.3f, 0.8f));
+
+				umaDna.SetValue("chinSize", Random.Range(0.3f, 0.8f));
+				umaDna.SetValue("chinPronounced", Random.Range(0.3f, 0.8f));
+				umaDna.SetValue("chinPosition", Random.Range(0.3f, 0.8f));
+
+				umaDna.SetValue("mandibleSize", Random.Range(0.45f, 0.52f));
+				umaDna.SetValue("jawsSize", Random.Range(0.3f, 0.8f));
+				umaDna.SetValue("jawsPosition", Random.Range(0.3f, 0.8f));
+
+				umaDna.SetValue("cheekSize", Random.Range(0.3f, 0.8f));
+				umaDna.SetValue("cheekPosition", Random.Range(0.3f, 0.8f));
+				umaDna.SetValue("lowCheekPronounced", Random.Range(0.3f, 0.8f));
+				umaDna.SetValue("lowCheekPosition", Random.Range(0.3f, 0.8f));
+
+				umaDna.SetValue("foreheadSize", Random.Range(0.3f, 0.8f));
+				umaDna.SetValue("foreheadPosition", Random.Range(0.15f, 0.65f));
+
+				umaDna.SetValue("lipsSize", Random.Range(0.3f, 0.8f));
+				umaDna.SetValue("mouthSize", Random.Range(0.3f, 0.8f));
+				umaDna.SetValue("eyeRotation", Random.Range(0.3f, 0.8f));
+				umaDna.SetValue("eyeSize", Random.Range(0.3f, 0.8f));
+				umaDna.SetValue("breastSize", Random.Range(0.3f, 0.8f));
+			}
+			else if (mainDNA != null)
+			{
+				RandomizeShapeLegacy(umaData);
+
+			}
+		}
+
+		private static void RandomizeShapeLegacy(UMAData umaData)
 		{
 			UMADnaHumanoid umaDna = umaData.umaRecipe.GetDna<UMADnaHumanoid>();
 			umaDna.height = Random.Range(0.4f, 0.5f);
@@ -481,7 +583,7 @@ namespace UMA.Examples
 			if (umaDna.lowerWeight > 1.0) { umaDna.lowerWeight = 1.0f; }
 			if (umaDna.lowerWeight < 0.0) { umaDna.lowerWeight = 0.0f; }
 
-			umaDna.belly = umaDna.upperWeight * Random.Range(0.0f,1.0f);
+			umaDna.belly = umaDna.upperWeight * Random.Range(0.0f, 1.0f);
 			umaDna.legsSize = Random.Range(0.45f, 0.6f);
 			umaDna.gluteusSize = Random.Range(0.4f, 0.6f);
 
@@ -523,12 +625,12 @@ namespace UMA.Examples
 
 		protected virtual void GenerateUMAShapes()
 		{
-			UMADnaHumanoid umaDna = umaData.umaRecipe.GetDna<UMADnaHumanoid>();
+			/*UMADnaHumanoid umaDna = umaData.umaRecipe.GetDna<UMADnaHumanoid>();
 			if (umaDna ==  null)
 			{
 				umaDna = new UMADnaHumanoid();
 				umaData.umaRecipe.AddDna(umaDna);
-			}
+			}*/
 
 			if (randomDna)
 			{
@@ -569,11 +671,11 @@ namespace UMA.Examples
 			{
 				if (sex == 0)
 				{
-					umaRecipe.SetRace(umaContext.GetRace("HumanMale"));
+					umaRecipe.SetRace(umaContext.GetRace("HumanMaleDCS"));
 				}
 				else
 				{
-					umaRecipe.SetRace(umaContext.GetRace("HumanFemale"));
+					umaRecipe.SetRace(umaContext.GetRace("HumanFemaleDCS"));
 				}
 			}
 
@@ -710,11 +812,11 @@ namespace UMA.Examples
 				{
 					if (Random.value < 0.5f)
 					{
-						umaRecipe.SetRace(umaContext.GetRace("HumanMale"));
+						umaRecipe.SetRace(umaContext.GetRace("HumanMaleDCS"));
 					}
 					else
 					{
-						umaRecipe.SetRace(umaContext.GetRace("HumanFemale"));
+						umaRecipe.SetRace(umaContext.GetRace("HumanFemaleDCS"));
 					}
 				}
 				

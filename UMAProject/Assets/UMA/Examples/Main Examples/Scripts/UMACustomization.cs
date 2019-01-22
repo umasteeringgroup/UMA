@@ -359,5 +359,20 @@ namespace UMA.Examples
         public void OnEyeRotationChange() { if (umaDna != null) umaDna.eyeRotation = EyeRotationSlider.value; UpdateUMAShape(); }
         public void OnLowCheekPositionChange() { if (umaDna != null) umaDna.lowCheekPosition = LowCheekPosSlider.value; UpdateUMAShape(); }
         public void OnEyeSpacingChange() { if (umaTutorialDna != null) umaTutorialDna.eyeSpacing = EyeSpacingSlider.value; UpdateUMAShape(); }
+
+		public void PerformDNAChange(string dnaName, float dnaValue)
+		{
+			if(umaData != null)
+			{
+				foreach(UMADnaBase dna in umaData.umaRecipe.GetAllDna())
+				{
+					if(System.Array.IndexOf(dna.Names, dnaName) > -1)
+					{
+						int index = System.Array.IndexOf(dna.Names, dnaName);
+						dna.SetValue(index, dnaValue);
+					}
+				}
+			}
+		}
     }
 }

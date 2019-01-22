@@ -2942,12 +2942,12 @@ GameObject:
   - component: {fileID: 298461482}
   - component: {fileID: 298461481}
   m_Layer: 0
-  m_Name: HumanFemaleOriginalDNA
+  m_Name: HumanFemaleLegacy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &298461480
 Transform:
   m_ObjectHideFlags: 0
@@ -3200,7 +3200,7 @@ MonoBehaviour:
   hide: 0
   loadBlendShapes: 0
   activeRace:
-    name: HumanFemale
+    name: HumanMaleLegacy
   defaultChangeRaceOptions: 8
   cacheCurrentState: 1
   rebuildSkeleton: 0
@@ -3663,7 +3663,7 @@ GameObject:
   - component: {fileID: 339692542}
   - component: {fileID: 339692541}
   m_Layer: 0
-  m_Name: HumanMaleOriginalDNA
+  m_Name: HumanMaleLegacy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3921,7 +3921,7 @@ MonoBehaviour:
   hide: 0
   loadBlendShapes: 0
   activeRace:
-    name: HumanMaleDCS
+    name: HumanMaleLegacy
   defaultChangeRaceOptions: 8
   cacheCurrentState: 1
   rebuildSkeleton: 0
@@ -10907,7 +10907,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1136855226
 Transform:
   m_ObjectHideFlags: 0
@@ -13836,7 +13836,7 @@ MonoBehaviour:
   hide: 0
   loadBlendShapes: 1
   activeRace:
-    name: HumanFemaleDCS
+    name: HumanFemale
   defaultChangeRaceOptions: 8
   cacheCurrentState: 1
   rebuildSkeleton: 1
@@ -17040,7 +17040,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -11.9999695, y: 112}
+  m_AnchoredPosition: {x: -11.999939, y: 112}
   m_SizeDelta: {x: -152, y: 73}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1684091491

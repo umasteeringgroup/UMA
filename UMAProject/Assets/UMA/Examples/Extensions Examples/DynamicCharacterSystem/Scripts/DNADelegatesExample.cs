@@ -9,8 +9,9 @@ namespace UMA.CharacterSystem.Examples
 	{
 
 		public DynamicCharacterAvatar targetAvatar;
-		[Tooltip("Optional. Specify a DynamicDNAConverter to target. If none set the script will target all converters. It will only affect the ones that operate on the dna names you specify in the code below.")]
-		public DynamicDNAConverterBehaviour targetDNAConverter;
+		//Not actually used
+		//[Tooltip("Optional. Specify a DynamicDNAConverter to target. If none set the script will target all converters. It will only affect the ones that operate on the dna names you specify in the code below.")]
+		//public DynamicDNAConverterBehaviour targetDNAConverter;
 		public DNAPanel delegateDNAEditor;
 
 		RaceData lastRace;

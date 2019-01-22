@@ -44,7 +44,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   masterWeight:
     _masterWeightType: 0
-    _globalWeight: 1
+    _globalWeight: 0.591
     _DNAForWeight:
       _calcOption: 0
       _dnaName: 
@@ -156,7 +156,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 0.3
             _initialized: 1
           _aggregationMethod: 1
@@ -2661,190 +2661,6 @@ MonoBehaviour:
                 m_PostInfinity: 2
                 m_RotationOrder: 4
             _multiplier: 1.3
-            _initialized: 1
-          _aggregationMethod: 1
-      _min: 0.75
-      _max: 2.5
-  - _hashName: LeftForeArmTwistAdjust
-    _hash: 547566030
-    _property: 2
-    _valuesX:
-      _val:
-        _value: 1
-        _modifiers: []
-        _modifyingDNA:
-          _dnaEvaluators:
-          - _calcOption: 0
-            _dnaName: forearmWidth
-            _dnaNameHash: -1006953310
-            _evaluator:
-              _name: Default
-              _graph:
-                serializedVersion: 2
-                m_Curve:
-                - serializedVersion: 2
-                  time: 0
-                  value: -0.5
-                  inSlope: 0
-                  outSlope: 1
-                  tangentMode: 0
-                - serializedVersion: 2
-                  time: 0.5
-                  value: 0
-                  inSlope: 1
-                  outSlope: 1
-                  tangentMode: 0
-                - serializedVersion: 2
-                  time: 1
-                  value: 0.5
-                  inSlope: 1
-                  outSlope: 2
-                  tangentMode: 0
-                m_PreInfinity: 2
-                m_PostInfinity: 2
-                m_RotationOrder: 4
-            _multiplier: 0.7
-            _initialized: 1
-          _aggregationMethod: 1
-      _min: 0.75
-      _max: 2.5
-    _valuesY:
-      _val:
-        _value: 1
-        _modifiers: []
-        _modifyingDNA:
-          _dnaEvaluators: []
-          _aggregationMethod: 1
-      _min: 0.6
-      _max: 2
-    _valuesZ:
-      _val:
-        _value: 1
-        _modifiers: []
-        _modifyingDNA:
-          _dnaEvaluators:
-          - _calcOption: 0
-            _dnaName: forearmWidth
-            _dnaNameHash: -1006953310
-            _evaluator:
-              _name: Default
-              _graph:
-                serializedVersion: 2
-                m_Curve:
-                - serializedVersion: 2
-                  time: 0
-                  value: -0.5
-                  inSlope: 0
-                  outSlope: 1
-                  tangentMode: 0
-                - serializedVersion: 2
-                  time: 0.5
-                  value: 0
-                  inSlope: 1
-                  outSlope: 1
-                  tangentMode: 0
-                - serializedVersion: 2
-                  time: 1
-                  value: 0.5
-                  inSlope: 1
-                  outSlope: 2
-                  tangentMode: 0
-                m_PreInfinity: 2
-                m_PostInfinity: 2
-                m_RotationOrder: 4
-            _multiplier: 0.7
-            _initialized: 1
-          _aggregationMethod: 1
-      _min: 0.75
-      _max: 2.5
-  - _hashName: RightForeArmTwistAdjust
-    _hash: 758040550
-    _property: 2
-    _valuesX:
-      _val:
-        _value: 1
-        _modifiers: []
-        _modifyingDNA:
-          _dnaEvaluators:
-          - _calcOption: 0
-            _dnaName: forearmWidth
-            _dnaNameHash: -1006953310
-            _evaluator:
-              _name: Default
-              _graph:
-                serializedVersion: 2
-                m_Curve:
-                - serializedVersion: 2
-                  time: 0
-                  value: -0.5
-                  inSlope: 0
-                  outSlope: 1
-                  tangentMode: 0
-                - serializedVersion: 2
-                  time: 0.5
-                  value: 0
-                  inSlope: 1
-                  outSlope: 1
-                  tangentMode: 0
-                - serializedVersion: 2
-                  time: 1
-                  value: 0.5
-                  inSlope: 1
-                  outSlope: 2
-                  tangentMode: 0
-                m_PreInfinity: 2
-                m_PostInfinity: 2
-                m_RotationOrder: 4
-            _multiplier: 0.7
-            _initialized: 1
-          _aggregationMethod: 1
-      _min: 0.75
-      _max: 2.5
-    _valuesY:
-      _val:
-        _value: 1
-        _modifiers: []
-        _modifyingDNA:
-          _dnaEvaluators: []
-          _aggregationMethod: 1
-      _min: 0.6
-      _max: 2
-    _valuesZ:
-      _val:
-        _value: 1
-        _modifiers: []
-        _modifyingDNA:
-          _dnaEvaluators:
-          - _calcOption: 0
-            _dnaName: forearmWidth
-            _dnaNameHash: -1006953310
-            _evaluator:
-              _name: Default
-              _graph:
-                serializedVersion: 2
-                m_Curve:
-                - serializedVersion: 2
-                  time: 0
-                  value: -0.5
-                  inSlope: 0
-                  outSlope: 1
-                  tangentMode: 0
-                - serializedVersion: 2
-                  time: 0.5
-                  value: 0
-                  inSlope: 1
-                  outSlope: 1
-                  tangentMode: 0
-                - serializedVersion: 2
-                  time: 1
-                  value: 0.5
-                  inSlope: 1
-                  outSlope: 2
-                  tangentMode: 0
-                m_PreInfinity: 2
-                m_PostInfinity: 2
-                m_RotationOrder: 4
-            _multiplier: 0.7
             _initialized: 1
           _aggregationMethod: 1
       _min: 0.75
@@ -10948,7 +10764,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 0.6
             _initialized: 1
           - _calcOption: 0
@@ -10979,7 +10795,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 1
             _initialized: 1
           _aggregationMethod: 1
