@@ -35,7 +35,11 @@ namespace UMA
             {
                 go.AddComponent(t);
             }
+#if UNITY_2018_3_OR_NEWER
+            PrefabUtility.SaveAsPrefabAsset(go, assetPathAndName );
+#else
             PrefabUtility.CreatePrefab(assetPathAndName, go);
+#endif
             GameObject.DestroyImmediate(go,false);
         }
 
