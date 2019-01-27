@@ -19,6 +19,7 @@ namespace UMA.Editors
         private Vector3 _occluderPosition = Vector3.zero;
         private Vector3 _occluderRotation = new Vector3(270.0f, 0.0f, 0.0f);
         private Vector3 _occluderScale = Vector3.one;
+        private bool bothDirections = false;
 
         private bool isMirroring = false;
         private bool doneEditing = false; //set to true to end editing this objects
@@ -217,6 +218,10 @@ namespace UMA.Editors
                 changed = true;
             }
 
+            bothDirections = EditorGUILayout.Toggle( new GUIContent("RayCast Both Directions", 
+                "Determines whether to raycast only outward along the normal from the source mesh or in both directions.  Both directions can be helpful if the occlusion slot is close to the surface of the source mesh or even slightly under it."),
+                bothDirections);
+
             if (changed)
             {
                 if(_OccluderSlotData)
@@ -227,7 +232,7 @@ namespace UMA.Editors
 
             if (GUILayout.Button(new GUIContent("Raycast Hidden Faces", "Warning! This will clear the current selection.")))
             {
-                RaycastHide();
+                RaycastHide(bothDirections);
             }
             EditorGUI.EndDisabledGroup();
 
@@ -700,7 +705,7 @@ namespace UMA.Editors
             return false;
         }
 
-        private void RaycastHide()
+        private void RaycastHide(bool bothDirections = false)
         {
             if (_Source == null)
                 return;
@@ -738,6 +743,7 @@ namespace UMA.Editors
                 EditorUtility.DisplayProgressBar("Progress", "calculating...", ((float)i / (float)targetVerts.Length));
                     
                 Ray testRay = new Ray(targetVerts[i], targetNorms[i] );
+                Ray oppositeTestRay = new Ray(targetVerts[i], -targetNorms[i]);
                 for (int j = 0; j < occlusionTriangles.Count; j++)
                 {
                     int[] triVerts = occlusionTriangles[j];
@@ -754,6 +760,22 @@ namespace UMA.Editors
                             {
                                 vertexOccluded[i] = true;
                                 break;
+                            }
+                        }
+
+                        if(bothDirections)
+                        {
+                            if (RayTriIntersect(oppositeTestRay,
+                                occlusionVerts[triVerts[k + 0]],
+                                occlusionVerts[triVerts[k + 1]],
+                                occlusionVerts[triVerts[k + 2]],
+                                out dist))
+                            {
+                                if (dist <= _Source.normalsLength)
+                                {
+                                    vertexOccluded[i] = true;
+                                    break;
+                                }
                             }
                         }
                     }

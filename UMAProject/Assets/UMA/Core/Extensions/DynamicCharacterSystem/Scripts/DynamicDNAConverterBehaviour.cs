@@ -380,7 +380,9 @@ namespace UMA.CharacterSystem
 			//The RaceDatas and SlotDataAssets will warn the user if they are using a legacy DynamicDNAConverterBehaviour
 			var DCBFilename = System.IO.Path.GetFileName(DCBPath);
 			string moveAssetResult = "";
+#pragma warning disable 0219
 			string newDCBPath = DCBPath;
+#pragma warning restore
 			if (DCBPath.IndexOf("LegacyDNA" + "/" + DCBFilename) == -1)
 			{
 				var DCBDir = System.IO.Path.GetDirectoryName(DCBPath);

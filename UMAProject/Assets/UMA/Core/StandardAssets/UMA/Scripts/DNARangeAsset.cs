@@ -19,7 +19,7 @@ namespace UMA
 	[System.Serializable]
 	public class DNARangeAsset : ScriptableObject, ISerializationCallbackReceiver
 	{
-#pragma warning.disable 649
+#pragma warning disable 649
 		//UMA 2.8 FixDNAPrefabs: this needs to use the new DNAConverterField
 		//we need this so we can get the data out of it on deserialize
 		/// <summary>
