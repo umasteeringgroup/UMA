@@ -938,6 +938,10 @@ Prefab:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 2}
+      propertyPath: umaAdditionalRecipes.Array.size
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 487678, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 2}
       propertyPath: m_LocalPosition.x
       value: 4.78
@@ -978,6 +982,11 @@ Prefab:
       propertyPath: m_Name
       value: UMADynamicCharacterAvatar (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 2}
+      propertyPath: umaAdditionalRecipes.Array.data[1]
+      value: 
+      objectReference: {fileID: 11400000, guid: b8f097e9dd7c12f41be671d16d75804d,
+        type: 2}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 2}
   m_IsPrefabParent: 0
@@ -1865,7 +1874,7 @@ MonoBehaviour:
   hide: 0
   loadBlendShapes: 0
   activeRace:
-    name: HumanMaleDCS
+    name: HumanMale
   defaultChangeRaceOptions: 8
   cacheCurrentState: 1
   rebuildSkeleton: 0
