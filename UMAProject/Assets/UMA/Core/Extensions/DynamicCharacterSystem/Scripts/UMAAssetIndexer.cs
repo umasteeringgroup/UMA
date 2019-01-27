@@ -102,7 +102,7 @@ namespace UMA
                 {
                     var st = StartTimer();
                     theIndexer = Resources.Load("AssetIndexer") as UMAAssetIndexer;
-					if (theIndexer == null)
+                    if (theIndexer == null)
                     {
                         if (Debug.isDebugBuild)
                         {
