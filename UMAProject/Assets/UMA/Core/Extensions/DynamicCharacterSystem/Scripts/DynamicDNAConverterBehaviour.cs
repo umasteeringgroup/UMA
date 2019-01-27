@@ -380,7 +380,9 @@ namespace UMA.CharacterSystem
 			//The RaceDatas and SlotDataAssets will warn the user if they are using a legacy DynamicDNAConverterBehaviour
 			var DCBFilename = System.IO.Path.GetFileName(DCBPath);
 			string moveAssetResult = "";
-			//string newDCBPath = DCBPath;
+#pragma warning disable 0219
+			string newDCBPath = DCBPath;
+#pragma warning restore
 			if (DCBPath.IndexOf("LegacyDNA" + "/" + DCBFilename) == -1)
 			{
 				var DCBDir = System.IO.Path.GetDirectoryName(DCBPath);
@@ -391,8 +393,8 @@ namespace UMA.CharacterSystem
 					DCBFilename = System.IO.Path.GetFileNameWithoutExtension(DCBPath) + " Legacy" + System.IO.Path.GetExtension(DCBPath);
 				}
 				moveAssetResult = AssetDatabase.MoveAsset(DCBPath, DCBDir + "/" + "LegacyDNA" + "/" + DCBFilename);
-				//if (string.IsNullOrEmpty(moveAssetResult))
-				//	newDCBPath = DCBDir + "/" + "LegacyDNA" + "/" + DCBFilename;
+				if (string.IsNullOrEmpty(moveAssetResult))
+					newDCBPath = DCBDir + "/" + "LegacyDNA" + "/" + DCBFilename;
 			}
 			if (!string.IsNullOrEmpty(moveAssetResult))
 			{
