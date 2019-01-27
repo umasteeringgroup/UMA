@@ -14,7 +14,7 @@ MonoBehaviour:
   data:
     raceID: HumanMale
     slotElements:
-    - Info: 
+    - Info: Eyes
       possibleSlots:
       - slotID: MaleEyes
         useSharedOverlayList: 0
@@ -42,7 +42,7 @@ MonoBehaviour:
             overlayType: 1
       requirement: 
       condition: 
-    - Info: 
+    - Info: Face and Head
       possibleSlots:
       - slotID: MaleFace
         useSharedOverlayList: 0
@@ -177,7 +177,7 @@ MonoBehaviour:
             overlayType: 5
       requirement: 
       condition: 
-    - Info: 
+    - Info: Torso
       possibleSlots:
       - slotID: MaleTorso
         useSharedOverlayList: 0
@@ -232,7 +232,7 @@ MonoBehaviour:
             overlayType: 4
       requirement: 
       condition: 
-    - Info: 
+    - Info: Hands
       possibleSlots:
       - slotID: MaleHands
         useSharedOverlayList: 1
@@ -240,7 +240,7 @@ MonoBehaviour:
         overlayElements: []
       requirement: 
       condition: 
-    - Info: 
+    - Info: Mouth
       possibleSlots:
       - slotID: MaleInnerMouth
         useSharedOverlayList: 0
@@ -258,7 +258,7 @@ MonoBehaviour:
             overlayType: 3
       requirement: 
       condition: 
-    - Info: 
+    - Info: Legs
       possibleSlots:
       - slotID: MaleLegs
         useSharedOverlayList: 1
@@ -290,7 +290,7 @@ MonoBehaviour:
             overlayType: 1
       requirement: 
       condition: 
-    - Info: 
+    - Info: Feet
       possibleSlots:
       - slotID: MaleFeet
         useSharedOverlayList: 1
@@ -298,7 +298,7 @@ MonoBehaviour:
         overlayElements: []
       requirement: 
       condition: 
-    - Info: 
+    - Info: Eyes
       possibleSlots:
       - slotID: MaleHead_Eyes
         useSharedOverlayList: 1
@@ -306,7 +306,7 @@ MonoBehaviour:
         overlayElements: []
       requirement: MaleHead_Head
       condition: 
-    - Info: 
+    - Info: Ears
       possibleSlots:
       - slotID: MaleHead_ElvenEars
         useSharedOverlayList: 0
@@ -328,7 +328,7 @@ MonoBehaviour:
         overlayElements: []
       requirement: MaleHead_Head
       condition: 
-    - Info: 
+    - Info: Mouth
       possibleSlots:
       - slotID: MaleHead_Mouth
         useSharedOverlayList: 1
@@ -336,7 +336,7 @@ MonoBehaviour:
         overlayElements: []
       requirement: MaleHead_Head
       condition: 
-    - Info: 
+    - Info: Nose
       possibleSlots:
       - slotID: MaleHead_PigNose
         useSharedOverlayList: 1
@@ -358,7 +358,7 @@ MonoBehaviour:
         overlayElements: []
       requirement: MaleHead_Head
       condition: 
-    - Info: 
+    - Info: Hair
       possibleSlots:
       - slotID: MaleHair1
         useSharedOverlayList: 0

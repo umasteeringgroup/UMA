@@ -15,8 +15,6 @@ namespace UMA.Examples
         public UMADynamicAvatar umaDynamicAvatar;
         public CameraTrack cameraTrack;
         public MouseOrbitImproved orbitor;
-		public UMADnaTweaker dnaTweakerPrefab;
-		public ScrollRect dnaTweakerScollView;
 
         private UMADnaHumanoid umaDna;
         private UMADnaTutorial umaTutorialDna;
@@ -80,8 +78,13 @@ namespace UMA.Examples
         // get the sliders and store for later use
         void Awake()
         {
-			return;
-            HeightSlider = GameObject.Find("HeightSlider").GetComponent<Slider>();
+			// Find the panels and hide for now
+			DnaPanel = GameObject.Find("DnaEditorPanel");
+
+			if (DnaPanel == null || DnaPanel.activeSelf == false)
+				return;
+
+			HeightSlider = GameObject.Find("HeightSlider").GetComponent<Slider>();
             UpperMuscleSlider = GameObject.Find("UpperMuscleSlider").GetComponent<Slider>();
             UpperWeightSlider = GameObject.Find("UpperWeightSlider").GetComponent<Slider>();
             LowerMuscleSlider = GameObject.Find("LowerMuscleSlider").GetComponent<Slider>();
@@ -129,12 +132,9 @@ namespace UMA.Examples
             EyeSpacingSlider = GameObject.Find("EyeSpaceSlider").GetComponent<Slider>();
             LowCheekPosSlider = GameObject.Find("LowCheekPosSlider").GetComponent<Slider>();
 
-            // Find the panels and hide for now
-            DnaPanel = GameObject.Find("DnaEditorPanel");
-            //        DnaScrollPanel = GameObject.Find("ScrollPanel");
-            DnaPanel.SetActive(false);
+			DnaPanel.SetActive(false);
 
-            var oldUIMask = DnaPanel.GetComponent<Mask>();
+			var oldUIMask = DnaPanel.GetComponent<Mask>();
             if (oldUIMask != null)
             {
                 DestroyImmediate(oldUIMask);
@@ -204,8 +204,11 @@ namespace UMA.Examples
             umaDna = umaData.GetDna<UMADnaHumanoid>();
             umaTutorialDna = umaData.GetDna<UMADnaTutorial>();
 
-           // SetSliders();
-			SetUpDNASliders();
+			if (umaDna != null)
+			{
+				SetSliders();
+			}
+			//SetUpDNASliders();
 
 			SetCamera(true);
         }
@@ -213,6 +216,9 @@ namespace UMA.Examples
         // Set the camera target and viewport
         private void SetCamera(bool show)
         {
+			if (DnaPanel == null)
+				return;
+
             if (show)
             {
                 DnaPanel.SetActive(true);
@@ -264,29 +270,6 @@ namespace UMA.Examples
             }
         }
 
-		private void SetUpDNASliders()
-		{
-			if (dnaTweakerPrefab == null)
-				return;
-			//clear any sliders that we have
-			Transform[] allChildren = dnaTweakerScollView.content.GetComponentsInChildren<Transform>();//this is fucking deleting itself
-			foreach (Transform child in allChildren)
-			{
-					DestroyImmediate(child.gameObject);
-			}
-			//we only get here if umaData is set so
-			foreach(UMADnaBase dna in umaData.umaRecipe.GetAllDna())
-			{
-				foreach(string dnaName in dna.Names)
-				{
-					var thisTweaker = Instantiate(dnaTweakerPrefab);
-					var tweaker = thisTweaker.GetComponent<UMADnaTweaker>();
-					tweaker.dnaToTweak = dnaName;
-					tweaker.customizer = this;
-					thisTweaker.gameObject.transform.parent = dnaTweakerScollView.content.gameObject.transform;
-				}
-			}
-		}
 
         // Set all of the sliders to the values contained in the UMA Character
         public void SetSliders()
