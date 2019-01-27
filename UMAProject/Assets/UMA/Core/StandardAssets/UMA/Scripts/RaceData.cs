@@ -197,11 +197,13 @@ namespace UMA
 			//UMA2.8+ call Prepare() on the elements in _dnaConverterList now.
 			for (int i = 0; i < _dnaConverterList.Count; i++)
 			{
+#if UNITY_EDITOR
 				//Do we do update nagging here?
-				if(_dnaConverterList[i] is UMA.CharacterSystem.DynamicDNAConverterBehaviour)
+				if (_dnaConverterList[i] is UMA.CharacterSystem.DynamicDNAConverterBehaviour)
 				{
 					(_dnaConverterList[i] as UMA.CharacterSystem.DynamicDNAConverterBehaviour).DoUpgradeNag(this);
 				}
+#endif
 				_dnaConverterList[i].Prepare();
 			}
 	    }
