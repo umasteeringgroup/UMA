@@ -14,13 +14,6 @@ namespace UMA
     public class UMAAssetIndexer : ScriptableObject, ISerializationCallbackReceiver
 	{
 
-#if UNITY_EDITOR_OR_HELL_FREEZES_OVER
-		[UnityEditor.MenuItem("Assets/Create/UMA/Misc/AssetIndex")]
-		public static void CreateAssetIndex()
-		{
-			UMA.CustomAssetUtility.CreateAsset<UMAAssetIndexer>();
-		}
-#endif
 		#region constants and static strings
 		public static string SortOrder = "Name";
         public static string[] SortOrders = { "Name", "AssetName" };
@@ -107,24 +100,16 @@ namespace UMA
             {
                 if (theIndex == null || theIndexer == null)
                 {
-#if UNITY_EDITOR
                     var st = StartTimer();
                     theIndexer = Resources.Load("AssetIndexer") as UMAAssetIndexer;
-                   // if (theIndex == null)
-                   // {
-                   //     return null;
-                   // }
-                    //theIndexer = theIndex.GetComponent<UMAAssetIndexer>();
                     if (theIndexer == null)
-                    { 
-                        return null;
+                    {
+                        if (Debug.isDebugBuild)
+                        {
+                            Debug.LogError("Unable to load the AssetIndexer. This item is used to index non-asset bundle resources and is required.");
+                        }
                     }
                     StopTimer(st,"Asset index load");
-#else
-                theIndex = GameObject.Instantiate(Resources.Load<GameObject>("AssetIndexer")) as GameObject;
-                theIndex.hideFlags = HideFlags.HideAndDontSave;
-                theIndexer = theIndex.GetComponent<UMAAssetIndexer>();
-#endif
                 }
                 return theIndexer;
             }

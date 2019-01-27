@@ -147,13 +147,13 @@ namespace UMA
 		{
 			get { return _overallModifiers.scale; }
 		}
-
+#if UNITY_EDITOR
 		public void ImportConverterBehaviourData(DynamicDNAConverterBehaviour DCB)
 		{
 			_dnaAsset = DCB.dnaAsset;
 			_overallModifiers.ImportSettings(DCB.overallModifiers);
 		}
-
+#endif
 		public void Prepare()
 		{
 			if (!_prepared)
