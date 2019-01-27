@@ -220,7 +220,11 @@ namespace UMA.PoseTools
 				morphSet.objectReferenceValue = AssetDatabase.LoadAssetAtPath<MorphSetDnaAsset>(assetPath);
 
 				serializedConverter.ApplyModifiedPropertiesWithoutUndo();
+#if UNITY_2018_3_OR_NEWER
+				PrefabUtility.SaveAsPrefabAsset(tempConverterPrefab, prefabPath);
+#else
 				PrefabUtility.CreatePrefab(prefabPath, tempConverterPrefab);
+#endif
 				DestroyImmediate(tempConverterPrefab, false);
 			}
 		}
