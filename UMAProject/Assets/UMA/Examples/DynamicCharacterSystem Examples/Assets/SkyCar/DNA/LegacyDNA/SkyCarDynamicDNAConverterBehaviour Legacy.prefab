@@ -1,0 +1,277 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &100100000
+Prefab:
+  m_ObjectHideFlags: 1
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications: []
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 0}
+  m_RootGameObject: {fileID: 1370529139428702}
+  m_IsPrefabParent: 1
+--- !u!1 &1370529139428702
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 4120437359793304}
+  - component: {fileID: 114494497545349544}
+  m_Layer: 0
+  m_Name: SkyCarDynamicDNAConverterBehaviour Legacy
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4120437359793304
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1370529139428702}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &114494497545349544
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1370529139428702}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2323fdffbbd0f51409581a5ae1bab046, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _displayValue: 
+  dnaTypeHash: 0
+  _dnaAsset: {fileID: 11400000, guid: 740a415ea7d717e4aaa62c1b2ed6288f, type: 2}
+  _converterController: {fileID: 11400000, guid: bd184bc2491089e47892f9309d136a0e,
+    type: 2}
+  _overallModifiers:
+    _adjustScale: 0
+    _adjustHeight: 1
+    _adjustRadius: 1
+    _adjustMass: 1
+    _updateBounds: 1
+    _tightenBounds: 1
+    _adjustBounds: 0
+    _scale: 1
+    _bone: Position
+    _scaleBoneHash: -1084586333
+    _headRatio: 7.5
+    _radiusAdjustY: 0
+    _radiusAdjust: {x: 0.23, y: 0}
+    _massAdjust: {x: 46, y: 26, z: 26}
+    _boundsAdjust: {x: 0, y: 0, z: 0}
+  _skeletonModifiers:
+  - _hashName: Global
+    _hash: -274100555
+    _property: 0
+    _valuesX:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.1
+      _max: 0.1
+    _valuesY:
+      _val:
+        _value: 0
+        _modifiers: []
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -0.1
+      _max: 0.1
+    _valuesZ:
+      _val:
+        _value: 0
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: WheelSize
+          _modifierValue: 0
+        - _modifier: 2
+          _DNATypeName: WheelSize
+          _modifierValue: 0.35
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: -1
+      _max: 1
+  - _hashName: RearRight
+    _hash: -89877225
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: WheelSize
+          _modifierValue: 0
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: WheelSize
+          _modifierValue: 0
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: WheelSize
+          _modifierValue: 0
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+  - _hashName: FrontRight
+    _hash: 1604555703
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: WheelSize
+          _modifierValue: 0
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: WheelSize
+          _modifierValue: 0
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: WheelSize
+          _modifierValue: 0
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+  - _hashName: RearLeft
+    _hash: 268742794
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: WheelSize
+          _modifierValue: 0
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: WheelSize
+          _modifierValue: 0
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: WheelSize
+          _modifierValue: 0
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+  - _hashName: FrontLeft
+    _hash: 498564013
+    _property: 2
+    _valuesX:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: WheelSize
+          _modifierValue: 0
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+    _valuesY:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: WheelSize
+          _modifierValue: 0
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+    _valuesZ:
+      _val:
+        _value: 1
+        _modifiers:
+        - _modifier: 4
+          _DNATypeName: WheelSize
+          _modifierValue: 0
+        _modifyingDNA:
+          _dnaEvaluators: []
+          _aggregationMethod: 1
+      _min: 0.5
+      _max: 2
+  overallScale: 1
+  overallScaleBone: 
+  overallScaleBoneHash: -1084586333
+  overallModifiersEnabled: 0
+  radiusAdjust: {x: 0, y: 0}
+  massModifiers: {x: 0, y: 0, z: 0}
+  tightenBounds: 1
+  boundsAdjust: {x: 0, y: 0, z: 0}
+  _startingPose: {fileID: 0}
+  startingPoseWeight: 1
