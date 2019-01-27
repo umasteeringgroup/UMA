@@ -35,8 +35,19 @@ namespace UMA.Editors
         {
             GUILayout.Label("UMA Bone Builder");
             GUILayout.Space(20);
+
+            if (Application.isPlaying)
+            {
+                EditorGUILayout.HelpBox("The bone builder should not be used while the scene is running.", MessageType.Info);
+                return;
+            }
            
             newUmaObj = EditorGUILayout.ObjectField ("UMA GameObject  ", umaObject, typeof(GameObject), true) as GameObject;
+
+            //prevent being able to set set a prefab in the bone builder.  It will not work.
+            if (newUmaObj != null && EditorUtility.IsPersistent(newUmaObj))
+                newUmaObj = null;
+
             if (newUmaObj != umaObject)
             {
                 umaObject = newUmaObj;
