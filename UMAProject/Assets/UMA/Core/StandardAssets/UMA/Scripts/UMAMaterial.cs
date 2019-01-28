@@ -13,7 +13,6 @@ namespace UMA
         public MaterialType materialType = MaterialType.Atlas;
         public MaterialChannel[] channels;
         public UMAClothProperties clothProperties;
-        public bool RequireSeperateRenderer;
 
         [Range(-2.0f, 2.0f)]
         public float MipMapBias = 0.0f;

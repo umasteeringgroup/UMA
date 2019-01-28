@@ -35,19 +35,19 @@ namespace UMA
 			scaleFactor = InitialScaleFactor;
 		}
 
-		private UMAData.GeneratedMaterial FindOrCreateGeneratedMaterial(UMAMaterial umaMaterial)
+		private UMAData.GeneratedMaterial FindOrCreateGeneratedMaterial(UMAMaterial umaMaterial, int renderer)
 		{
 			if (umaMaterial.materialType == UMAMaterial.MaterialType.Atlas)
 			{
 				foreach (var atlassedMaterial in atlassedMaterials)
 				{
-					if (atlassedMaterial.umaMaterial == umaMaterial)
+					if (atlassedMaterial.umaMaterial == umaMaterial && atlassedMaterial.renderer == renderer)
 					{
 						return atlassedMaterial;
 					}
 					else
 					{
-						if (atlassedMaterial.umaMaterial.Equals(umaMaterial))
+						if (atlassedMaterial.umaMaterial.Equals(umaMaterial) && atlassedMaterial.renderer == renderer)
 						{
 							return atlassedMaterial;
 						}
@@ -56,10 +56,7 @@ namespace UMA
 			}
 
 			var res = new UMAData.GeneratedMaterial();
-			if (umaMaterial.RequireSeperateRenderer)
-			{
-				res.renderer = rendererCount++;
-			}
+			res.renderer = renderer;
 			res.umaMaterial = umaMaterial;
 			res.material = UnityEngine.Object.Instantiate(umaMaterial.material) as Material;
 			res.material.name = umaMaterial.material.name;
@@ -86,22 +83,7 @@ namespace UMA
 
 			SlotData[] slots = umaData.umaRecipe.slotDataList;
 
-			for (int i = 0; i < slots.Length; i++)
-			{
-				var slot = slots[i];
-				if (slot == null)
-					continue;
-				
-				if ((slot.asset.material != null) && (slot.GetOverlay(0) != null))
-				{
-					if (!slot.asset.material.RequireSeperateRenderer)
-					{
-						// At least one slot that doesn't require a seperate renderer, so we reserve renderer 0 for those.
-						rendererCount = 1;
-						break;
-					}
-				}
-			}
+			List<int> uniqueRenderers = new List<int>();
 
 			for (int i = 0; i < slots.Length; i++)
 			{
@@ -109,7 +91,11 @@ namespace UMA
 				if (slot == null)
 					continue;
 
-				// Let's only add the default overlay if the slot has overlays and NO meshData
+				//Keep a running list of unique RendererHashes from our slots
+				if(!uniqueRenderers.Contains(slot.asset.RendererHash))
+					uniqueRenderers.Add(slot.asset.RendererHash);
+
+				// Let's only add the default overlay if the slot has meshData and NO overlays
                 if ((slot.asset.meshData != null) && (slot.OverlayCount == 0))
 				{
                     if (umaGenerator.defaultOverlaydata != null)
@@ -123,7 +109,7 @@ namespace UMA
 					UMAData.GeneratedMaterial generatedMaterial;
 					if (!generatedMaterialLookup.TryGetValue(overlayList, out generatedMaterial))
 					{
-						generatedMaterial = FindOrCreateGeneratedMaterial(slot.asset.material);
+						generatedMaterial = FindOrCreateGeneratedMaterial(slot.asset.material, uniqueRenderers.IndexOf(slot.asset.RendererHash));
 						generatedMaterialLookup.Add(overlayList, generatedMaterial);
 					}
 
@@ -196,6 +182,8 @@ namespace UMA
 					generatedMaterial.materialFragments.Add(tempMaterialDefinition);
 				}
 			}
+
+			rendererCount = uniqueRenderers.Count;
 
 			packTexture = new MaxRectsBinPack(umaGenerator.atlasResolution, umaGenerator.atlasResolution, false);
 		}
