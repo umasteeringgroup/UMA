@@ -107,6 +107,7 @@ namespace UMA
 				{
 					List<OverlayData> overlayList = slot.GetOverlayList();
 					UMAData.GeneratedMaterial generatedMaterial;
+                    //Improve material lookup to take in to account renderer
 					if (!generatedMaterialLookup.TryGetValue(overlayList, out generatedMaterial))
 					{
 						generatedMaterial = FindOrCreateGeneratedMaterial(slot.asset.material, uniqueRenderers.IndexOf(slot.asset.RendererHash));

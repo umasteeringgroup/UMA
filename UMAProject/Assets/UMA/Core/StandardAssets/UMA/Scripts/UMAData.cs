@@ -26,6 +26,8 @@ namespace UMA
 		private SkinnedMeshRenderer[] renderers;
 		public int rendererCount { get { return renderers == null ? 0 : renderers.Length; } }
 
+        //TODO Feature for getting renderer by name/hash/object
+
 		public SkinnedMeshRenderer GetRenderer(int idx)
 		{
 			return renderers[idx];
