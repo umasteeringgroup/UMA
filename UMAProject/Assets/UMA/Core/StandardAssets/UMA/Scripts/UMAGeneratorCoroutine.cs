@@ -22,7 +22,7 @@ namespace UMA
 		int scaleFactor;
 		MaterialDefinitionComparer comparer = new MaterialDefinitionComparer();
 		List<UMAData.GeneratedMaterial> generatedMaterials;
-		int rendererCount;
+		List<UMARendererAsset> uniqueRenderers = new List<UMARendererAsset>();
 		List<UMAData.GeneratedMaterial> atlassedMaterials = new List<UMAData.GeneratedMaterial>(20);
 		Dictionary<List<OverlayData>, UMAData.GeneratedMaterial> generatedMaterialLookup;
 
@@ -35,19 +35,19 @@ namespace UMA
 			scaleFactor = InitialScaleFactor;
 		}
 
-		private UMAData.GeneratedMaterial FindOrCreateGeneratedMaterial(UMAMaterial umaMaterial, int renderer)
+		private UMAData.GeneratedMaterial FindOrCreateGeneratedMaterial(UMAMaterial umaMaterial, UMARendererAsset renderer = null)
 		{
 			if (umaMaterial.materialType == UMAMaterial.MaterialType.Atlas)
 			{
 				foreach (var atlassedMaterial in atlassedMaterials)
 				{
-					if (atlassedMaterial.umaMaterial == umaMaterial && atlassedMaterial.renderer == renderer)
+					if (atlassedMaterial.umaMaterial == umaMaterial && atlassedMaterial.rendererAsset == renderer)
 					{
 						return atlassedMaterial;
 					}
 					else
 					{
-						if (atlassedMaterial.umaMaterial.Equals(umaMaterial) && atlassedMaterial.renderer == renderer)
+						if (atlassedMaterial.umaMaterial.Equals(umaMaterial) && atlassedMaterial.rendererAsset == renderer)
 						{
 							return atlassedMaterial;
 						}
@@ -56,7 +56,7 @@ namespace UMA
 			}
 
 			var res = new UMAData.GeneratedMaterial();
-			res.renderer = renderer;
+			res.rendererAsset = renderer;
 			res.umaMaterial = umaMaterial;
 			res.material = UnityEngine.Object.Instantiate(umaMaterial.material) as Material;
 			res.material.name = umaMaterial.material.name;
@@ -79,11 +79,9 @@ namespace UMA
 			umaData.CleanTextures();
 			generatedMaterials = new List<UMAData.GeneratedMaterial>(20);
 			atlassedMaterials.Clear();
-			rendererCount = 0;
+			uniqueRenderers.Clear();
 
 			SlotData[] slots = umaData.umaRecipe.slotDataList;
-
-			List<int> uniqueRenderers = new List<int>();
 
 			for (int i = 0; i < slots.Length; i++)
 			{
@@ -92,8 +90,8 @@ namespace UMA
 					continue;
 
 				//Keep a running list of unique RendererHashes from our slots
-				if(!uniqueRenderers.Contains(slot.asset.RendererHash))
-					uniqueRenderers.Add(slot.asset.RendererHash);
+				if(!uniqueRenderers.Contains(slot.asset.rendererAsset))
+					uniqueRenderers.Add(slot.asset.rendererAsset);
 
 				// Let's only add the default overlay if the slot has meshData and NO overlays
                 if ((slot.asset.meshData != null) && (slot.OverlayCount == 0))
@@ -107,10 +105,11 @@ namespace UMA
 				{
 					List<OverlayData> overlayList = slot.GetOverlayList();
 					UMAData.GeneratedMaterial generatedMaterial;
-                    //Improve material lookup to take in to account renderer
+					//TODO Improve material lookup to take in to account renderer
 					if (!generatedMaterialLookup.TryGetValue(overlayList, out generatedMaterial))
 					{
-						generatedMaterial = FindOrCreateGeneratedMaterial(slot.asset.material, uniqueRenderers.IndexOf(slot.asset.RendererHash));
+						//generatedMaterial = FindOrCreateGeneratedMaterial(slot.asset.material, uniqueRenderers.IndexOf(slot.asset.RendererHash));
+						generatedMaterial = FindOrCreateGeneratedMaterial(slot.asset.material, slot.asset.rendererAsset);
 						generatedMaterialLookup.Add(overlayList, generatedMaterial);
 					}
 
@@ -184,8 +183,6 @@ namespace UMA
 				}
 			}
 
-			rendererCount = uniqueRenderers.Count;
-
 			packTexture = new MaxRectsBinPack(umaGenerator.atlasResolution, umaGenerator.atlasResolution, false);
 		}
 
@@ -199,7 +196,7 @@ namespace UMA
 
 		protected override IEnumerator workerMethod()
 		{
-			umaData.generatedMaterials.rendererCount = rendererCount;
+			umaData.generatedMaterials.rendererAssets = uniqueRenderers;
 			umaData.generatedMaterials.materials = generatedMaterials;
 
 			GenerateAtlasData();
@@ -240,7 +237,7 @@ namespace UMA
 					int materialIndex = 0;
 					for (int i = 0; i < atlasses.Count; i++)
 					{
-						if (atlasses[i].renderer == j)
+						if (atlasses[i].rendererAsset == umaData.GetRendererAsset(j))
 						{
 							UMAUtils.DestroySceneObject(mats[materialIndex]);
 							newMats[materialIndex] = atlasses[i].material;
