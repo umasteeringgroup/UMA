@@ -43,12 +43,6 @@ namespace UMA.Editors
 			EditorGUILayout.DelayedTextField(slotName);
 			Editor.DrawPropertiesExcluding(serializedObject, new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "DNAApplied", "CharacterCompleted" });
 
-			EditorGUI.BeginChangeCheck();
-			EditorGUILayout.PropertyField(rendererName);
-			if (EditorGUI.EndChangeCheck())
-				rendererHash.intValue = Animator.StringToHash(rendererName.stringValue);
-			EditorGUILayout.LabelField("Renderer Hash", rendererHash.intValue.ToString());
-
 			eventsFoldout = EditorGUILayout.Foldout(eventsFoldout, "Slot Events");
 			if (eventsFoldout)
 			{

@@ -13,21 +13,7 @@ namespace UMA
 		[System.NonSerialized]
 		public int nameHash;
 
-		public string RendererName
-		{
-			get { return _RendererName; }
-			set { _RendererName = value; _RendererHash = Animator.StringToHash(_RendererName); }
-		}
-		[SerializeField, HideInInspector]
-		private string _RendererName;
-
-		public int RendererHash
-		{
-			get { return _RendererHash; }
-			set { _RendererHash = Animator.StringToHash(_RendererName); }
-		}
-		[SerializeField, HideInInspector]
-		private int _RendererHash;
+		public UMARendererAsset rendererAsset;
 
         #region INameProvider
 
