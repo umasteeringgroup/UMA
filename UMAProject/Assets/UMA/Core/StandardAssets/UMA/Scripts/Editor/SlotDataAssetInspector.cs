@@ -13,8 +13,6 @@ namespace UMA.Editors
 		SerializedProperty SlotAtlassed;
 		SerializedProperty DNAApplied;
 		SerializedProperty CharacterCompleted;
-		SerializedProperty rendererName;
-		SerializedProperty rendererHash;
 
 		private bool eventsFoldout = false;
 
@@ -31,8 +29,6 @@ namespace UMA.Editors
 			SlotAtlassed = serializedObject.FindProperty("SlotAtlassed");
 			DNAApplied = serializedObject.FindProperty("DNAApplied");
 			CharacterCompleted = serializedObject.FindProperty("CharacterCompleted");
-			rendererName = serializedObject.FindProperty("_RendererName");
-			rendererHash = serializedObject.FindProperty("_RendererHash");
 		}
 
 		public override void OnInspectorGUI()
