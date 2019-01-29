@@ -23,14 +23,21 @@ namespace UMA
 	/// </summary>
 	public class UMAData : MonoBehaviour
 	{
+		//TODO improve/cleanup the relationship between renderers and rendererAssets
 		private SkinnedMeshRenderer[] renderers;
+		private UMARendererAsset[] rendererAssets;
 		public int rendererCount { get { return renderers == null ? 0 : renderers.Length; } }
 
-        //TODO Feature for getting renderer by name/hash/object
+		//TODO Feature for getting renderer by name/hash/object
 
 		public SkinnedMeshRenderer GetRenderer(int idx)
 		{
 			return renderers[idx];
+		}
+
+		public UMARendererAsset GetRendererAsset(int idx)
+		{
+			return rendererAssets[idx];
 		}
 
 		public SkinnedMeshRenderer[] GetRenderers()
@@ -41,6 +48,11 @@ namespace UMA
 		public void SetRenderers(SkinnedMeshRenderer[] renderers)
 		{
 			this.renderers = renderers;
+		}
+
+		public void SetRendererAssets(UMARendererAsset[] assets)
+		{
+			rendererAssets = assets;
 		}
 
 		[NonSerialized]
@@ -263,7 +275,7 @@ namespace UMA
 		public class GeneratedMaterials
 		{
 			public List<GeneratedMaterial> materials = new List<GeneratedMaterial>();
-			public int rendererCount;
+			public List<UMARendererAsset> rendererAssets = new List<UMARendererAsset>();
 		}
 
 
@@ -277,7 +289,7 @@ namespace UMA
 			public Vector2 cropResolution;
 			public float resolutionScale;
 			public string[] textureNameList;
-			public int renderer;
+			public UMARendererAsset rendererAsset;
 		}
 
 		[System.Serializable]
