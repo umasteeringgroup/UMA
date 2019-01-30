@@ -55,8 +55,10 @@ SubShader
 			half4 n = tex2D(_MainTex, i.uv);
 			half4 extra = tex2D(_ExtraTex, i.uv);
 
+#if !defined(UNITY_NO_DXT5nm)
 			//swizzle the alpha and red channel, we will swizzle back in the post process SwizzleShader
 			n.r = n.a;
+#endif
 			n.a = min(extra.a, _Color.a);
 			return n;
 
