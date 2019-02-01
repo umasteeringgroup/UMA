@@ -90,8 +90,8 @@ namespace UMA
 					continue;
 
 				//Keep a running list of unique RendererHashes from our slots
-				if(!uniqueRenderers.Contains(slot.asset.rendererAsset))
-					uniqueRenderers.Add(slot.asset.rendererAsset);
+				if(!uniqueRenderers.Contains(slot.rendererAsset))
+					uniqueRenderers.Add(slot.rendererAsset);
 
 				// Let's only add the default overlay if the slot has meshData and NO overlays
                 if ((slot.asset.meshData != null) && (slot.OverlayCount == 0))
@@ -108,8 +108,7 @@ namespace UMA
 					//TODO Improve material lookup to take in to account renderer
 					if (!generatedMaterialLookup.TryGetValue(overlayList, out generatedMaterial))
 					{
-						//generatedMaterial = FindOrCreateGeneratedMaterial(slot.asset.material, uniqueRenderers.IndexOf(slot.asset.RendererHash));
-						generatedMaterial = FindOrCreateGeneratedMaterial(slot.asset.material, slot.asset.rendererAsset);
+						generatedMaterial = FindOrCreateGeneratedMaterial(slot.asset.material, slot.rendererAsset);
 						generatedMaterialLookup.Add(overlayList, generatedMaterial);
 					}
 
