@@ -23,7 +23,7 @@ namespace UMA
 			if (umaData.umaRoot != null)
 			{
 				umaData.CleanMesh(false);
-				if (umaData.rendererCount == umaData.generatedMaterials.rendererAssets.Count)
+				if (umaData.rendererCount == umaData.generatedMaterials.rendererAssets.Count && umaData.AreRenderersEqual(umaData.generatedMaterials.rendererAssets))
 				{
 					renderers = umaData.GetRenderers();
 				}
@@ -39,6 +39,11 @@ namespace UMA
 						if (oldRenderers != null && oldRenderers.Length > i)
 						{
 							renderers[i] = oldRenderers[i];
+							if (umaData.generatedMaterials.rendererAssets[i] != null)
+								umaData.generatedMaterials.rendererAssets[i].ApplySettingsToRenderer(renderers[i]);
+							else
+								umaData.ResetRendererSettings(i);
+
 							continue;
 						}
 						renderers[i] = MakeRenderer(i, globalTransform, umaData.generatedMaterials.rendererAssets[i] );
