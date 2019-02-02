@@ -11,6 +11,17 @@ namespace UMA
 	[Serializable]
 	public class UMAGeneratorCoroutine : WorkerCoroutine
 	{
+		private class GeneratedMaterialLookupKey : IEquatable<GeneratedMaterialLookupKey>
+		{
+			public List<OverlayData> overlayList;
+			public UMARendererAsset rendererAsset;
+
+			public bool Equals(GeneratedMaterialLookupKey other)
+			{
+				return (overlayList == other.overlayList && rendererAsset == other.rendererAsset);
+			}
+		}
+
 		TextureProcessBaseCoroutine textureProcessCoroutine;
 
 		MaxRectsBinPack packTexture;
@@ -24,7 +35,8 @@ namespace UMA
 		List<UMAData.GeneratedMaterial> generatedMaterials;
 		List<UMARendererAsset> uniqueRenderers = new List<UMARendererAsset>();
 		List<UMAData.GeneratedMaterial> atlassedMaterials = new List<UMAData.GeneratedMaterial>(20);
-		Dictionary<List<OverlayData>, UMAData.GeneratedMaterial> generatedMaterialLookup;
+		Dictionary<GeneratedMaterialLookupKey, UMAData.GeneratedMaterial> generatedMaterialLookup;
+
 
 		public void Prepare(UMAGeneratorBase _umaGenerator, UMAData _umaData, TextureProcessBaseCoroutine textureProcessCoroutine, bool updateMaterialList, int InitialScaleFactor)
 		{
@@ -69,7 +81,7 @@ namespace UMA
 		{
 			if (generatedMaterialLookup == null)
 			{
-				generatedMaterialLookup = new Dictionary<List<OverlayData>, UMAData.GeneratedMaterial>(20);
+				generatedMaterialLookup = new Dictionary<GeneratedMaterialLookupKey, UMAData.GeneratedMaterial>(20);
 			}
 			else
 			{
@@ -103,13 +115,17 @@ namespace UMA
                 OverlayData overlay0 = slot.GetOverlay(0);
 				if ((slot.asset.material != null) && (overlay0 != null))
 				{
-					List<OverlayData> overlayList = slot.GetOverlayList();
+					GeneratedMaterialLookupKey lookupKey = new GeneratedMaterialLookupKey
+					{
+						overlayList = slot.GetOverlayList(),
+						rendererAsset = slot.rendererAsset
+					};
+
 					UMAData.GeneratedMaterial generatedMaterial;
-					//TODO Improve material lookup to take in to account renderer
-					if (!generatedMaterialLookup.TryGetValue(overlayList, out generatedMaterial))
+					if (!generatedMaterialLookup.TryGetValue(lookupKey, out generatedMaterial))
 					{
 						generatedMaterial = FindOrCreateGeneratedMaterial(slot.asset.material, slot.rendererAsset);
-						generatedMaterialLookup.Add(overlayList, generatedMaterial);
+						generatedMaterialLookup.Add(lookupKey, generatedMaterial);
 					}
 
 					int validOverlayCount = 0;
@@ -167,7 +183,7 @@ namespace UMA
 						tempMaterialDefinition.channelAdditiveMask[overlayID] = overlay.colorData.channelAdditiveMask;
 					}
 
-					tempMaterialDefinition.overlayList = overlayList;
+					tempMaterialDefinition.overlayList = lookupKey.overlayList;
 					tempMaterialDefinition.isRectShared = false;
 					for (int j = 0; j < generatedMaterial.materialFragments.Count; j++)
 					{
