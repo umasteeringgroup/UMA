@@ -28,8 +28,7 @@ namespace UMA
 		private UMARendererAsset[] rendererAssets;
 		public int rendererCount { get { return renderers == null ? 0 : renderers.Length; } }
 
-		//TODO Feature for getting renderer by name/hash/object
-
+		//TODO Change these get functions to getter properties?
 		public SkinnedMeshRenderer GetRenderer(int idx)
 		{
 			return renderers[idx];
@@ -45,6 +44,11 @@ namespace UMA
 			return renderers;
 		}
 
+		public UMARendererAsset[] GetRendererAssets()
+		{
+			return rendererAssets;
+		}
+
 		public void SetRenderers(SkinnedMeshRenderer[] renderers)
 		{
 			this.renderers = renderers;
@@ -53,6 +57,30 @@ namespace UMA
 		public void SetRendererAssets(UMARendererAsset[] assets)
 		{
 			rendererAssets = assets;
+		}
+
+		public bool AreRenderersEqual( List<UMARendererAsset> rendererList )
+		{
+			if (renderers.Length != rendererList.Count)
+				return false;
+
+			for(int i = 0; i < rendererAssets.Length; i++)
+			{
+				if (rendererAssets[i] != rendererList[i])
+					return false;
+			}
+			return true;
+		}
+
+		public void ResetRendererSettings(int idx)
+		{
+			if (idx < 0 || idx >= renderers.Length)
+				return;
+
+			renderers[idx].updateWhenOffscreen = false;
+			renderers[idx].skinnedMotionVectors = false;
+			renderers[idx].shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+			renderers[idx].receiveShadows = true;
 		}
 
 		[NonSerialized]
