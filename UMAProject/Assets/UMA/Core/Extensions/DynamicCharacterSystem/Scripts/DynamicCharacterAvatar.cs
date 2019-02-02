@@ -781,12 +781,20 @@ namespace UMA.CharacterSystem
         /// <returns></returns>
         public string GetWardrobeItemName(string SlotName)
         {
+            UMATextRecipe utr = GetWardrobeItem(SlotName);
+            if (utr != null) return utr.name;
+
+            return "";
+        }
+
+        public UMATextRecipe GetWardrobeItem(string SlotName)
+        {
             if (WardrobeRecipes.ContainsKey(SlotName))
             {
                 UMATextRecipe utr = WardrobeRecipes[SlotName];
-                if (utr != null) return utr.name;
+                return utr;
             }
-            return "";
+            return null;
         }
 
         /// <summary>
