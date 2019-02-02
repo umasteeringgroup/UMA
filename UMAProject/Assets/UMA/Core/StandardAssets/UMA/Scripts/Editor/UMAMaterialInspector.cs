@@ -54,9 +54,6 @@ namespace UMA.Editors
 
             GUILayout.Space(20);
 
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("clothProperties"), new GUIContent("Cloth Properties","The cloth properties asset to apply to this material.  Use this only if planning to use the cloth component with this material."));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("RequireSeperateRenderer"), new GUIContent("Require Separate Renderer","Toggle this to force UMA to create a new renderer for meshes using this material."));
-
             serializedObject.ApplyModifiedProperties();
         }
 

@@ -11,6 +11,7 @@ namespace UMA
         public bool SkinnedMotionVectors { get { return _SkinnedMotionVectors; } }
         public UnityEngine.Rendering.ShadowCastingMode CastShadows { get { return _CastShadows; } }
         public bool ReceiveShadows { get { return _ReceiveShadows; } }
+        public UMAClothProperties ClothProperties { get { return _ClothProperties; } }
 
         [SerializeField] private string _RendererName;
         [SerializeField] private bool _UpdateWhenOffscreen = false;
@@ -19,6 +20,10 @@ namespace UMA
         [Header("Lighting")]
         [SerializeField] private UnityEngine.Rendering.ShadowCastingMode _CastShadows = UnityEngine.Rendering.ShadowCastingMode.On;
         [SerializeField] private bool _ReceiveShadows = true;
+
+        [Header("Cloth")]
+        [Tooltip("The cloth properties asset to apply to this renderer. Use this only if planning to use the cloth component with this material.")]
+        [SerializeField] private UMAClothProperties _ClothProperties;
 
         public void ApplySettingsToRenderer(SkinnedMeshRenderer smr)
         {

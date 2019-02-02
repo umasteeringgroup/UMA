@@ -229,8 +229,9 @@ namespace UMA
 
 			for (int materialIndex = 0; materialIndex < umaData.generatedMaterials.materials.Count; materialIndex++)
 			{
+				UMARendererAsset rendererAsset = umaData.GetRendererAsset(currentRendererIndex);
 				var generatedMaterial = umaData.generatedMaterials.materials[materialIndex];
-				if (generatedMaterial.rendererAsset != umaData.GetRendererAsset(currentRendererIndex))
+				if (generatedMaterial.rendererAsset != rendererAsset)
 					continue;
 				combinedMaterialList.Add(generatedMaterial.material);
 
@@ -257,9 +258,9 @@ namespace UMA
 					{
 						slotData.asset.SlotAtlassed.Invoke(umaData, slotData, generatedMaterial.material, materialDefinition.atlasRegion);
 					}
-					if (slotData.asset.material.clothProperties != null)
+					if (rendererAsset != null && rendererAsset.ClothProperties != null)
 					{
-						clothProperties = slotData.asset.material.clothProperties;
+						clothProperties = rendererAsset.ClothProperties;
 					}
 				}
 				rendererMaterialIndex++;
