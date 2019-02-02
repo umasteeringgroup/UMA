@@ -791,8 +791,7 @@ namespace UMA.CharacterSystem
         {
             if (WardrobeRecipes.ContainsKey(SlotName))
             {
-                UMATextRecipe utr = WardrobeRecipes[SlotName];
-                return utr;
+                return WardrobeRecipes[SlotName];
             }
             return null;
         }
