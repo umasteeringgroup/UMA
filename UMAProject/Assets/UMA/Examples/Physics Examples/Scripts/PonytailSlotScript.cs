@@ -37,6 +37,8 @@ namespace UMA.Examples
 	    // Setup the anchor, bones and the pendulum
 	    public void OnCharacterUpdated(UMA.UMAData dta)
 	    {
+			CollisionMatrixFixer.FixLayers();
+
 	        umaData = dta;
 	        // Find Anchor Bone
 	        AnchorBone = SetupAnchorBone(AnchorBoneName);
