@@ -11,8 +11,10 @@ namespace UMA
         private string windowTitle = "UMA About";
         private string wikiLink = "http://umadocs.secretanorak.com/doku.php";
         private string githubLink = "https://github.com/umasteeringgroup";
-        private string forumLink = "https://forum.unity.com/threads/uma-unity-multipurpose-avatar-on-the-asset-store.219175/";
+        private string unityThreadLink = "https://forum.unity.com/threads/uma-unity-multipurpose-avatar-on-the-asset-store.219175/";
+        private string umaForumLink = "http://umacommunity.boards.net/forum";
         private string slackLink = "https://uma-community.slack.com";
+        private string discordLink = "https://discord.gg/KdteVKd";
 
         private Vector2 size = new Vector2(400, 300);
 
@@ -65,11 +67,19 @@ namespace UMA
 
             if (GUILayout.Button("Unity Forum Thread"))
             {
-                Application.OpenURL(forumLink);
+                Application.OpenURL(unityThreadLink);
+            }
+            if(GUILayout.Button("UMA Forum"))
+            {
+                Application.OpenURL(umaForumLink);
             }
             if (GUILayout.Button("Slack Channel"))
             {
                 Application.OpenURL(slackLink);
+            }
+            if(GUILayout.Button("Secret Anorak's Discord Channel"))
+            {
+                Application.OpenURL(discordLink);
             }
         }
 
