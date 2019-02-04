@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 namespace UMA.CharacterSystem
 {
@@ -41,6 +40,9 @@ namespace UMA.CharacterSystem
 
             foreach(RendererElement element in RendererElements)
             {
+                if (element.rendererAsset == null)
+                    continue;
+
                 wardrobeSlotAssets.Clear();
 
                 //First, lets collect a list of the slotDataAssets that are present in the wardrobe recipes of the wardrobe slots we've specified
@@ -72,6 +74,7 @@ namespace UMA.CharacterSystem
                     }
                 }
             }
+
             wardrobeSlotAssets.Clear();
         }
     }
