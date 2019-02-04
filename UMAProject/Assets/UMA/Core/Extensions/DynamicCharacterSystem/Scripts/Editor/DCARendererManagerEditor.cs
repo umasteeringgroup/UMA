@@ -16,6 +16,7 @@ namespace UMA.Editors
         List<string> wardrobeOptions = new List<string>();
         List<SlotDataAsset> slotOptions = new List<SlotDataAsset>();
         UMAContext context;
+        RaceData currentRaceData;
 
         void OnEnable()
         {
@@ -25,33 +26,24 @@ namespace UMA.Editors
             DCARendererManager manager = target as DCARendererManager;
             avatar = manager.GetComponent<DynamicCharacterAvatar>();
 
-            wardrobeOptions.Clear();
-            slotOptions.Clear();
-
-            if (avatar != null && avatar.activeRace != null && avatar.activeRace.data != null)
-            {
-                wardrobeOptions.AddRange(avatar.activeRace.data.wardrobeSlots);
-                wardrobeOptions.Insert(0, "Add Wardrobe Slot");
-
-                avatar.activeRace.data.baseRaceRecipe.Load(umaRecipe, context);
-                for(int i = 0; i < umaRecipe.slotDataList.Length; i++)
-                {
-                    if (umaRecipe.slotDataList[i] != null && umaRecipe.slotDataList[i].asset != null)
-                    {
-                        slotOptions.Add(umaRecipe.slotDataList[i].asset);
-                    }
-                }                
-            }
+            UpdateOptions();
         }
 
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
 
+            if (avatar != null && avatar.activeRace != null && avatar.activeRace.data != null)
+            {
+                if (currentRaceData != avatar.activeRace.data)
+                    UpdateOptions();
+            }
+
             GUILayout.Space(10);
             if(GUILayout.Button("Add New Renderer Element"))
             {
                 RendererElements.arraySize++;
+                ClearRendererElement(RendererElements.GetArrayElementAtIndex(RendererElements.arraySize - 1));                
             }
             GUILayout.Space(20);
 
@@ -72,31 +64,41 @@ namespace UMA.Editors
                 GUILayout.Space(10);
 
                 EditorGUI.indentLevel++;
-                EditorGUILayout.PropertyField(RendererElements.GetArrayElementAtIndex(i).FindPropertyRelative("rendererAsset"));
+                SerializedProperty rendererAsset = RendererElements.GetArrayElementAtIndex(i).FindPropertyRelative("rendererAsset");
+                EditorGUILayout.PropertyField(rendererAsset);
                 GUILayout.Space(10);
 
-                EditorGUILayout.BeginHorizontal();
-                int newSlot = EditorGUILayout.Popup(0, SlotOptionsToArray(slotOptions));
-                if(newSlot > 0)
+                if (rendererAsset != null && rendererAsset.objectReferenceValue != null)
                 {
-                    slotAssets.arraySize++;
-                    slotAssets.GetArrayElementAtIndex(slotAssets.arraySize - 1).objectReferenceValue = slotOptions[newSlot-1];
-                }
-
-                int newWardrobe = EditorGUILayout.Popup(0, wardrobeOptions.ToArray());
-                if(newWardrobe > 0)
-                {
-                    if (!ArrayContains(wardrobeSlots, wardrobeOptions[newWardrobe]))
+                    EditorGUILayout.BeginHorizontal();
+                    int newSlot = EditorGUILayout.Popup(0, SlotOptionsToArray(slotOptions));
+                    if (newSlot > 0)
                     {
-                        wardrobeSlots.arraySize++;
-                        wardrobeSlots.GetArrayElementAtIndex(wardrobeSlots.arraySize-1).stringValue = wardrobeOptions[newWardrobe];
+                        slotAssets.arraySize++;
+                        slotAssets.GetArrayElementAtIndex(slotAssets.arraySize - 1).objectReferenceValue = slotOptions[newSlot - 1];
                     }
-                }
-                EditorGUILayout.EndHorizontal();
-                GUILayout.Space(10);
 
-                EditorGUILayout.PropertyField(slotAssets, true);
-                EditorGUILayout.PropertyField(wardrobeSlots, true);
+                    int newWardrobe = EditorGUILayout.Popup(0, wardrobeOptions.ToArray());
+                    if (newWardrobe > 0)
+                    {
+                        if (!ArrayContains(wardrobeSlots, wardrobeOptions[newWardrobe]))
+                        {
+                            wardrobeSlots.arraySize++;
+                            wardrobeSlots.GetArrayElementAtIndex(wardrobeSlots.arraySize - 1).stringValue = wardrobeOptions[newWardrobe];
+                        }
+                    }
+                    EditorGUILayout.EndHorizontal();
+                    GUILayout.Space(10);
+
+                    EditorGUILayout.PropertyField(slotAssets, true);
+                    EditorGUILayout.PropertyField(wardrobeSlots, true);
+                }
+                else
+                {
+                    EditorGUILayout.HelpBox("An UMARendererAsset needs to be assigned!", MessageType.Error);
+                    GUILayout.Space(10);
+                }
+
                 EditorGUI.indentLevel--;
                 EditorGUILayout.EndVertical();
                 GUILayout.Space(10);
@@ -125,6 +127,35 @@ namespace UMA.Editors
                 options[i+1] = assets[i].slotName;
             }
             return options;
+        }
+
+        private void ClearRendererElement(SerializedProperty element)
+        {
+            element.FindPropertyRelative("rendererAsset").objectReferenceValue = null;
+            element.FindPropertyRelative("slotAssets").ClearArray();
+            element.FindPropertyRelative("wardrobeSlots").ClearArray();
+        }
+
+        private void UpdateOptions()
+        {
+            wardrobeOptions.Clear();
+            slotOptions.Clear();
+
+            if (avatar != null && avatar.activeRace != null && avatar.activeRace.data != null)
+            {
+                currentRaceData = avatar.activeRace.data;
+                wardrobeOptions.AddRange(avatar.activeRace.data.wardrobeSlots);
+                wardrobeOptions.Insert(0, "Add Wardrobe Slot");
+
+                avatar.activeRace.data.baseRaceRecipe.Load(umaRecipe, context);
+                for (int i = 0; i < umaRecipe.slotDataList.Length; i++)
+                {
+                    if (umaRecipe.slotDataList[i] != null && umaRecipe.slotDataList[i].asset != null)
+                    {
+                        slotOptions.Add(umaRecipe.slotDataList[i].asset);
+                    }
+                }
+            }
         }
     }
 }
