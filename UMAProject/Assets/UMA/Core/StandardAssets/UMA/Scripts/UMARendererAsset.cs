@@ -15,7 +15,7 @@ namespace UMA
         public bool UpdateWhenOffscreen { get { return _UpdateWhenOffscreen; } }
         public bool SkinnedMotionVectors { get { return _SkinnedMotionVectors; } }
         public MotionVectorGenerationMode MotionVectors { get { return _MotionVectors; } }
-#if UNITY_2017_4_OR_NEWER
+#if UNITY_2017_2_OR_NEWER
         public bool DynamicOccluded { get { return _DynamicOccluded; } }
 #endif
         public UnityEngine.Rendering.ShadowCastingMode CastShadows { get { return _CastShadows; } }
@@ -30,9 +30,9 @@ namespace UMA
         [SerializeField] private int _RendererPriority = 0;
 #endif
         [SerializeField] private bool _UpdateWhenOffscreen = false;
-        [SerializeField] private bool _SkinnedMotionVectors = false;
+        [SerializeField] private bool _SkinnedMotionVectors = true;
         [SerializeField] MotionVectorGenerationMode _MotionVectors = MotionVectorGenerationMode.Object;
-#if UNITY_2017_4_OR_NEWER
+#if UNITY_2017_2_OR_NEWER
         [SerializeField] private bool _DynamicOccluded = true;
 #endif
         [Header("Lighting")]
@@ -56,7 +56,7 @@ namespace UMA
             smr.updateWhenOffscreen = _UpdateWhenOffscreen;
             smr.skinnedMotionVectors = _SkinnedMotionVectors;
             smr.motionVectorGenerationMode = _MotionVectors;
-#if UNITY_2017_4_OR_NEWER
+#if UNITY_2017_2_OR_NEWER
             smr.allowOcclusionWhenDynamic = _DynamicOccluded;
 #endif
             smr.shadowCastingMode = _CastShadows;
@@ -70,9 +70,9 @@ namespace UMA
             renderer.rendererPriority = 0;
 #endif
             renderer.updateWhenOffscreen = false;
-            renderer.skinnedMotionVectors = false;
+            renderer.skinnedMotionVectors = true;
             renderer.motionVectorGenerationMode = MotionVectorGenerationMode.Object;
-#if UNITY_2017_4_OR_NEWER
+#if UNITY_2017_2_OR_NEWER
             renderer.allowOcclusionWhenDynamic = true;
 #endif
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
