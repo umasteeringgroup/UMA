@@ -7,15 +7,28 @@ namespace UMA
     public class UMARendererAsset : ScriptableObject
     {
         public string RendererName { get { return _RendererName; } }
+#if UNITY_2018_3_OR_NEWER
+        public uint RendererLayerMask {  get { return _RendererLayerMask; } }
+        public int RendererPriority { get { return _RendererPriority; } }
+#endif
         public bool UpdateWhenOffscreen { get { return _UpdateWhenOffscreen; } }
         public bool SkinnedMotionVectors { get { return _SkinnedMotionVectors; } }
+        public MotionVectorGenerationMode MotionVectors { get { return _MotionVectors; } }
+        public bool DynamicOccluded { get { return _DynamicOccluded; } }
+
         public UnityEngine.Rendering.ShadowCastingMode CastShadows { get { return _CastShadows; } }
         public bool ReceiveShadows { get { return _ReceiveShadows; } }
         public UMAClothProperties ClothProperties { get { return _ClothProperties; } }
 
         [SerializeField] private string _RendererName;
+#if UNITY_2018_3_OR_NEWER
+        [SerializeField] private uint _RendererLayerMask = 1;
+        [SerializeField] private int _RendererPriority = 0;
+#endif
         [SerializeField] private bool _UpdateWhenOffscreen = false;
         [SerializeField] private bool _SkinnedMotionVectors = false;
+        [SerializeField] MotionVectorGenerationMode _MotionVectors = MotionVectorGenerationMode.Object;
+        [SerializeField] private bool _DynamicOccluded = true;
 
         [Header("Lighting")]
         [SerializeField] private UnityEngine.Rendering.ShadowCastingMode _CastShadows = UnityEngine.Rendering.ShadowCastingMode.On;
@@ -30,10 +43,32 @@ namespace UMA
             if(!string.IsNullOrEmpty(RendererName))
                 smr.name = RendererName;
 
+#if UNITY_2018_3_OR_NEWER
+            smr.renderingLayerMask = _RendererLayerMask;
+            smr.rendererPriority = _RendererPriority;
+#endif
             smr.updateWhenOffscreen = _UpdateWhenOffscreen;
             smr.skinnedMotionVectors = _SkinnedMotionVectors;
+            smr.motionVectorGenerationMode = _MotionVectors;
+            smr.allowOcclusionWhenDynamic = _DynamicOccluded;
+
             smr.shadowCastingMode = _CastShadows;
             smr.receiveShadows = _ReceiveShadows;
+        }
+
+        static public void ResetRenderer(SkinnedMeshRenderer renderer)
+        {
+#if UNITY_2018_3_OR_NEWER
+            renderer.renderingLayerMask = 1;
+            renderer.rendererPriority = 0;
+#endif
+            renderer.updateWhenOffscreen = false;
+            renderer.skinnedMotionVectors = false;
+            renderer.motionVectorGenerationMode = MotionVectorGenerationMode.Object;
+            renderer.allowOcclusionWhenDynamic = true;
+
+            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+            renderer.receiveShadows = true;
         }
 
 #if UNITY_EDITOR
