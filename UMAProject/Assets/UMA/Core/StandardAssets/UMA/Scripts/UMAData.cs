@@ -77,10 +77,7 @@ namespace UMA
 			if (idx < 0 || idx >= renderers.Length)
 				return;
 
-			renderers[idx].updateWhenOffscreen = false;
-			renderers[idx].skinnedMotionVectors = false;
-			renderers[idx].shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
-			renderers[idx].receiveShadows = true;
+			UMARendererAsset.ResetRenderer(renderers[idx]);
 		}
 
 		[NonSerialized]
