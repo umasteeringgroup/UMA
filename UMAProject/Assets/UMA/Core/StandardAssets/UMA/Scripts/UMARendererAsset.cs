@@ -6,6 +6,7 @@ namespace UMA
 {
     public class UMARendererAsset : ScriptableObject
     {
+        #region Public Getter Properties
         public string RendererName { get { return _RendererName; } }
 #if UNITY_2018_3_OR_NEWER
         public uint RendererLayerMask {  get { return _RendererLayerMask; } }
@@ -14,12 +15,15 @@ namespace UMA
         public bool UpdateWhenOffscreen { get { return _UpdateWhenOffscreen; } }
         public bool SkinnedMotionVectors { get { return _SkinnedMotionVectors; } }
         public MotionVectorGenerationMode MotionVectors { get { return _MotionVectors; } }
+#if UNITY_2017_4_OR_NEWER
         public bool DynamicOccluded { get { return _DynamicOccluded; } }
-
+#endif
         public UnityEngine.Rendering.ShadowCastingMode CastShadows { get { return _CastShadows; } }
         public bool ReceiveShadows { get { return _ReceiveShadows; } }
         public UMAClothProperties ClothProperties { get { return _ClothProperties; } }
+        #endregion
 
+        #region Private variables
         [SerializeField] private string _RendererName;
 #if UNITY_2018_3_OR_NEWER
         [SerializeField] private uint _RendererLayerMask = 1;
@@ -28,8 +32,9 @@ namespace UMA
         [SerializeField] private bool _UpdateWhenOffscreen = false;
         [SerializeField] private bool _SkinnedMotionVectors = false;
         [SerializeField] MotionVectorGenerationMode _MotionVectors = MotionVectorGenerationMode.Object;
+#if UNITY_2017_4_OR_NEWER
         [SerializeField] private bool _DynamicOccluded = true;
-
+#endif
         [Header("Lighting")]
         [SerializeField] private UnityEngine.Rendering.ShadowCastingMode _CastShadows = UnityEngine.Rendering.ShadowCastingMode.On;
         [SerializeField] private bool _ReceiveShadows = true;
@@ -37,6 +42,7 @@ namespace UMA
         [Header("Cloth")]
         [Tooltip("The cloth properties asset to apply to this renderer. Use this only if planning to use the cloth component with this material.")]
         [SerializeField] private UMAClothProperties _ClothProperties;
+        #endregion
 
         public void ApplySettingsToRenderer(SkinnedMeshRenderer smr)
         {
@@ -50,8 +56,9 @@ namespace UMA
             smr.updateWhenOffscreen = _UpdateWhenOffscreen;
             smr.skinnedMotionVectors = _SkinnedMotionVectors;
             smr.motionVectorGenerationMode = _MotionVectors;
+#if UNITY_2017_4_OR_NEWER
             smr.allowOcclusionWhenDynamic = _DynamicOccluded;
-
+#endif
             smr.shadowCastingMode = _CastShadows;
             smr.receiveShadows = _ReceiveShadows;
         }
@@ -65,8 +72,9 @@ namespace UMA
             renderer.updateWhenOffscreen = false;
             renderer.skinnedMotionVectors = false;
             renderer.motionVectorGenerationMode = MotionVectorGenerationMode.Object;
+#if UNITY_2017_4_OR_NEWER
             renderer.allowOcclusionWhenDynamic = true;
-
+#endif
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
             renderer.receiveShadows = true;
         }
