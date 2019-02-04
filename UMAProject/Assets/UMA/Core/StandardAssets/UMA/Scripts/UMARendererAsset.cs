@@ -4,6 +4,9 @@ using UnityEngine;
 
 namespace UMA
 {
+    /// <summary>
+    /// This asset stores values to set on a skinned mesh renderer during uma generation.
+    /// </summary>
     public class UMARendererAsset : ScriptableObject
     {
         #region Public Getter Properties
@@ -44,6 +47,10 @@ namespace UMA
         [SerializeField] private UMAClothProperties _ClothProperties;
         #endregion
 
+        /// <summary>
+        /// Sets the Skinned Mesh Renderer to the values on this UMA Renderer Asset.
+        /// </summary>
+        /// <param name="smr"></param>
         public void ApplySettingsToRenderer(SkinnedMeshRenderer smr)
         {
             if(!string.IsNullOrEmpty(RendererName))
@@ -63,6 +70,10 @@ namespace UMA
             smr.receiveShadows = _ReceiveShadows;
         }
 
+        /// <summary>
+        /// Reset the given Skinned Mesh Renderer to default values.
+        /// </summary>
+        /// <param name="renderer"></param>
         static public void ResetRenderer(SkinnedMeshRenderer renderer)
         {
 #if UNITY_2018_3_OR_NEWER
