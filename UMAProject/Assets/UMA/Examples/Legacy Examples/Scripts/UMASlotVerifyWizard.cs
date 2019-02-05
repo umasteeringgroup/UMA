@@ -177,11 +177,14 @@ namespace UMA.Examples
 #if UNITY_EDITOR			
 			if (slotAssetPath.EndsWith(".fbx", System.StringComparison.InvariantCultureIgnoreCase))
 			{
+#if UNITY_2018_3_OR_NEWER
+				PrefabUtility.SaveAsPrefabAsset(SlotGO, AssetDatabase.GenerateUniqueAssetPath(slotAssetPath.Substring(0, slotAssetPath.Length - 4) + ".prefab"));
+#else
 				PrefabUtility.CreatePrefab(AssetDatabase.GenerateUniqueAssetPath(slotAssetPath.Substring(0, slotAssetPath.Length-4)+".prefab"), SlotGO);
+#endif
 			}
 #endif
 		}
 		#endregion
-
 	}
 }
