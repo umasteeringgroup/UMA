@@ -10,7 +10,6 @@ namespace UMA
 	[ExecuteInEditMode]
 	public class TextureMerge : MonoBehaviour
 	{
-		public Camera myCamera;
 		public Material material;
 		public Shader normalShader;
 		public Shader diffuseShader;
@@ -29,24 +28,6 @@ namespace UMA
 			public Material mat;
 			public Texture tex;
 			public Rect rect;
-		}
-
-		void OnRenderObject()
-		{
-			if (Camera.current != myCamera) return;
-
-			if (textureMergeRects != null)
-			{
-				for (int i = 0; i < textureMergeRectCount; i++)
-				{
-					DrawRect(ref textureMergeRects[i]);
-				}
-			}
-		}
-
-		private void DrawRect(ref TextureMergeRect textureMergeRect)
-		{
-			Graphics.DrawTexture(textureMergeRect.rect, textureMergeRect.tex, textureMergeRect.mat);
 		}
 
 		public void Reset()
