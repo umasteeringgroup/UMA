@@ -722,7 +722,11 @@ namespace UMA.CharacterSystem
 				newPrefabConverter.radiusAdjust = selectedDCB.radiusAdjust;
 				newPrefabConverter.massModifiers = selectedDCB.massModifiers;
 			}
+#if UNITY_2018_3_OR_NEWER
+			var newPrefab = PrefabUtility.SaveAsPrefabAsset(thisNewPrefabGO, path);
+#else
 			var newPrefab = PrefabUtility.CreatePrefab(path, thisNewPrefabGO);//couldn't create asset try instantiating first
+#endif
 			if (newPrefab != null)
 			{
 				EditorUtility.SetDirty(newPrefab);
