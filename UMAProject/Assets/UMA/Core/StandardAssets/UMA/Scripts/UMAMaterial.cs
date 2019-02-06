@@ -46,11 +46,11 @@ namespace UMA
         //Needed to have normalMaps have a grey background for proper blending
         static Color[] ChannelBackground =
         {
-            Color.black,
+            new Color(0,0,0,0),
             Color.grey,
-            Color.black,
-            Color.black,
-            Color.black
+            new Color(0,0,0,0),
+            new Color(0,0,0,0),
+            new Color(0,0,0,0)
         };
 
         [Serializable]
