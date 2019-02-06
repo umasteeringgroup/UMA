@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bb565bb3cf87a74589f703e67a3d5f9, type: 3}
+  m_Name: TextureMerger
+  m_EditorClassIdentifier: 
+  myCamera: {fileID: 0}
+  material: {fileID: 0}
+  normalShader: {fileID: 0}
+  diffuseShader: {fileID: 0}
+  dataShader: {fileID: 0}
+  cutoutShader: {fileID: 0}
+  textureMergeRectCount: 0
+  textureMergeRects: []
+  diffusePostProcesses: []
+  normalPostProcesses: []
+  dataPostProcesses: []
