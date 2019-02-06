@@ -91,7 +91,7 @@ namespace UMA
         }
 
 #if UNITY_EDITOR
-        [UnityEditor.MenuItem("Assets/Create/UMA/Misc/Renderer Asset")]
+        [UnityEditor.MenuItem("Assets/Create/UMA/Rendering/Renderer Asset")]
         public static void CreateRendererAsset()
         {
             CustomAssetUtility.CreateAsset<UMARendererAsset>();
