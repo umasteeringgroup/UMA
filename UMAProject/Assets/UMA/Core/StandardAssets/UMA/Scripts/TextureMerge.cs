@@ -85,6 +85,7 @@ namespace UMA
 					}
 					break;
 			}
+			RenderTexture.ReleaseTemporary(source);
 		}
 
 		public void Reset()
