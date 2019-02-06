@@ -11,4 +11,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d798d4649ed1494e9924a7df38fea89, type: 3}
   m_Name: NormalSwizzlePostProcess
   m_EditorClassIdentifier: 
-  shader: {fileID: 0}
+  shader: {fileID: 4800000, guid: 4ba4fc977756a804ca835788b496e3f7, type: 3}
