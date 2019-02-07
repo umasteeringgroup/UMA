@@ -302,7 +302,7 @@ namespace UMA.CharacterSystem
                             //otherwise the component settings have been set up via scripting
                             //so just build
                             SetAnimatorController(true);//may cause downloads to happen- So call BuildCharacterWhenReady() instead
-                            SetExpressionSet(true);
+                            SetExpressionSet();
                             StartCoroutine(BuildCharacterWhenReady());
                         }
                     }
@@ -2239,7 +2239,7 @@ namespace UMA.CharacterSystem
                 if (wasBuildCharacterEnabled)
                 {
                     SetAnimatorController(true);//may cause downloads to happen
-                    SetExpressionSet(true);
+                    SetExpressionSet();
                 }
                 //loading new wardrobe items and animation controllers may have also caused downloads so wait for those- if we are not waiting we will have already created the placeholder avatar above
                 yield return StartCoroutine(UpdateAfterDownloads());
@@ -2304,7 +2304,7 @@ namespace UMA.CharacterSystem
                 BuildCharacter(false);
             }
             SetAnimatorController(true);//may cause downloads to happen
-            SetExpressionSet(true);
+            SetExpressionSet();
             //wait for any downloading assets
             yield return StartCoroutine(UpdateAfterDownloads());
             //shared colors
@@ -3202,7 +3202,7 @@ namespace UMA.CharacterSystem
             UpdateSetSlots();
             if (BuildCharacterEnabled)
             {
-                SetExpressionSet(true);
+                SetExpressionSet();
                 SetAnimatorController(true);
             }
         }
