@@ -11,6 +11,7 @@ namespace UMA
     {
         #region Public Getter Properties
         public string RendererName { get { return _RendererName; } }
+        public int Layer { get { return _Layer; } }
 #if UNITY_2018_3_OR_NEWER
         public uint RendererLayerMask {  get { return _RendererLayerMask; } }
         public int RendererPriority { get { return _RendererPriority; } }
@@ -27,7 +28,10 @@ namespace UMA
         #endregion
 
         #region Private variables
+        [Tooltip("The name that will be given to the object that this renderer will be added to.")]
         [SerializeField] private string _RendererName;
+        [Tooltip("This is the layer that the renderer object will be set to.")]
+        [SerializeField] private int _Layer = 0; //Is this still needed in 2018.3 with RendererLayerMask?
 #if UNITY_2018_3_OR_NEWER
         [SerializeField] private uint _RendererLayerMask = 1;
         [SerializeField] private int _RendererPriority = 0;
@@ -56,6 +60,7 @@ namespace UMA
             if(!string.IsNullOrEmpty(RendererName))
                 smr.name = RendererName;
 
+            smr.gameObject.layer = _Layer;
 #if UNITY_2018_3_OR_NEWER
             smr.renderingLayerMask = _RendererLayerMask;
             smr.rendererPriority = _RendererPriority;
@@ -76,6 +81,7 @@ namespace UMA
         /// <param name="renderer"></param>
         static public void ResetRenderer(SkinnedMeshRenderer renderer)
         {
+            renderer.gameObject.layer = 0;
 #if UNITY_2018_3_OR_NEWER
             renderer.renderingLayerMask = 1;
             renderer.rendererPriority = 0;
