@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace UMA.CharacterSystem
@@ -11,7 +10,7 @@ namespace UMA.CharacterSystem
         [System.Serializable]
         public class RendererElement
         {
-            public UMARendererAsset rendererAsset;
+            public List<UMARendererAsset> rendererAssets = new List<UMARendererAsset>();
             public List<SlotDataAsset> slotAssets = new List<SlotDataAsset>();
             public List<string> wardrobeSlots = new List<string>();
         }
@@ -21,6 +20,7 @@ namespace UMA.CharacterSystem
         private UMAData.UMARecipe umaRecipe = new UMAData.UMARecipe();
         List<SlotDataAsset> wardrobeSlotAssets = new List<SlotDataAsset>();
         private UMAContext context;
+        private List<SlotData> slotsToAdd = new List<SlotData>();
 
         // Use this for initialization
         void Start()
@@ -37,10 +37,11 @@ namespace UMA.CharacterSystem
                 return;
 
             SlotData[] slots = umaData.umaRecipe.slotDataList;
+            slotsToAdd.Clear();
 
             foreach(RendererElement element in RendererElements)
             {
-                if (element.rendererAsset == null)
+                if (element.rendererAssets == null || element.rendererAssets.Count <= 0)
                     continue;
 
                 wardrobeSlotAssets.Clear();
@@ -70,9 +71,28 @@ namespace UMA.CharacterSystem
                 {
                     if (element.slotAssets.Contains(slot.asset) || wardrobeSlotAssets.Contains(slot.asset))
                     {
-                        slot.rendererAsset = element.rendererAsset;
+                        //We check for at least one rendererAsset at the top level for loop.
+                        //Set our existing slot to the first renderer in our renderer list.
+                        slot.rendererAsset = element.rendererAssets[0];
+
+                        //If we have more renderers then make a copy of the SlotData and set that copy's rendererAsset to this item's renderer.
+                        //Add the newly created slots to a running list to combine back with the entire slot list at the end.
+                        for (int i = 1; i < element.rendererAssets.Count; i++)
+                        {
+                            SlotData addSlot = slot.Copy();
+                            addSlot.rendererAsset = element.rendererAssets[i];
+                            slotsToAdd.Add(addSlot);
+                        }                        
                     }
                 }
+            }
+
+            //If we have added Slots, then add the first slots to the list and set the recipe's slots to the new combined list.
+            if(slotsToAdd.Count > 0)
+            {
+                slotsToAdd.AddRange(slots);
+                umaData.umaRecipe.SetSlots(slotsToAdd.ToArray());
+                slotsToAdd.Clear();
             }
 
             wardrobeSlotAssets.Clear();

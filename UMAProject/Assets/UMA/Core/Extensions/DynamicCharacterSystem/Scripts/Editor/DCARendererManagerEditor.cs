@@ -64,42 +64,57 @@ namespace UMA.Editors
                 GUILayout.Space(10);
 
                 EditorGUI.indentLevel++;
-                SerializedProperty rendererAsset = RendererElements.GetArrayElementAtIndex(i).FindPropertyRelative("rendererAsset");
-                EditorGUILayout.PropertyField(rendererAsset);
+                SerializedProperty rendererAssets = RendererElements.GetArrayElementAtIndex(i).FindPropertyRelative("rendererAssets");
+                EditorGUILayout.PropertyField(rendererAssets, true);
                 GUILayout.Space(10);
+                bool disable = false;
 
-                if (rendererAsset != null && rendererAsset.objectReferenceValue != null)
+                if (rendererAssets.arraySize <= 0)
                 {
-                    EditorGUILayout.BeginHorizontal();
-                    int newSlot = EditorGUILayout.Popup(0, SlotOptionsToArray(slotOptions));
-                    if (newSlot > 0)
-                    {
-                        slotAssets.arraySize++;
-                        slotAssets.GetArrayElementAtIndex(slotAssets.arraySize - 1).objectReferenceValue = slotOptions[newSlot - 1];
-                    }
-
-                    int newWardrobe = EditorGUILayout.Popup(0, wardrobeOptions.ToArray());
-                    if (newWardrobe > 0)
-                    {
-                        if (!ArrayContains(wardrobeSlots, wardrobeOptions[newWardrobe]))
-                        {
-                            wardrobeSlots.arraySize++;
-                            wardrobeSlots.GetArrayElementAtIndex(wardrobeSlots.arraySize - 1).stringValue = wardrobeOptions[newWardrobe];
-                        }
-                    }
-                    EditorGUILayout.EndHorizontal();
-                    GUILayout.Space(10);
-
-                    EditorGUILayout.PropertyField(slotAssets, true);
-                    EditorGUILayout.PropertyField(wardrobeSlots, true);
-                }
-                else
-                {
+                    disable = true;
                     EditorGUILayout.HelpBox("An UMARendererAsset needs to be assigned!", MessageType.Error);
                     GUILayout.Space(10);
                 }
 
+                EditorGUILayout.BeginHorizontal();
+                EditorGUI.BeginDisabledGroup(disable);
+                int newSlot = EditorGUILayout.Popup(0, SlotOptionsToArray(slotOptions));
+                if (newSlot > 0)
+                {
+                    slotAssets.arraySize++;
+                    slotAssets.GetArrayElementAtIndex(slotAssets.arraySize - 1).objectReferenceValue = slotOptions[newSlot - 1];
+                }
+
+                int newWardrobe = EditorGUILayout.Popup(0, wardrobeOptions.ToArray());
+                if (newWardrobe > 0)
+                {
+                    if (!ArrayContains(wardrobeSlots, wardrobeOptions[newWardrobe]))
+                    {
+                        wardrobeSlots.arraySize++;
+                        wardrobeSlots.GetArrayElementAtIndex(wardrobeSlots.arraySize - 1).stringValue = wardrobeOptions[newWardrobe];
+                    }
+                }
+                EditorGUI.EndDisabledGroup();
+                EditorGUILayout.EndHorizontal();
+                GUILayout.Space(10);
+
+                EditorGUILayout.PropertyField(slotAssets, true);
+                EditorGUILayout.PropertyField(wardrobeSlots, true);
+
                 EditorGUI.indentLevel--;
+
+                bool unassigned = false;
+                for(int k = 0; k < rendererAssets.arraySize; k++)
+                {
+                    if(rendererAssets.GetArrayElementAtIndex(k).objectReferenceValue == null)
+                    {
+                        unassigned = true;
+                        break;
+                    }
+                }
+                if(unassigned)
+                    EditorGUILayout.HelpBox("There are unassigned UMARendererAssets!", MessageType.Error);
+
                 EditorGUILayout.EndVertical();
                 GUILayout.Space(10);
             }
@@ -131,7 +146,7 @@ namespace UMA.Editors
 
         private void ClearRendererElement(SerializedProperty element)
         {
-            element.FindPropertyRelative("rendererAsset").objectReferenceValue = null;
+            element.FindPropertyRelative("rendererAssets").ClearArray();
             element.FindPropertyRelative("slotAssets").ClearArray();
             element.FindPropertyRelative("wardrobeSlots").ClearArray();
         }
