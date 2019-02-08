@@ -386,7 +386,7 @@ namespace UMA.CharacterSystem
 					{
 						if (smr != null && smr.enabled == hide)
 						{
-							umaData.GetRenderer(0).enabled = !hide;
+							smr.enabled = !hide;
 						}
 					}
                 }
