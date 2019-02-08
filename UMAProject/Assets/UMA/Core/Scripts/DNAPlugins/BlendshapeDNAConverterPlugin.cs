@@ -239,9 +239,7 @@ namespace UMA
 				_liveShapeWeight = _liveShapeWeight * masterWeight;
 
 				//In Unity 2018.3+ blendshapes can have negative values too, so in that case allow the value to go to -1
-#if UNITY_2018_3_OR_NEWER
-				_liveShapeWeight = Mathf.Clamp(_liveShapeWeight, -1f, 1f);
-#else
+#if !UNITY_2018_3_OR_NEWER
 				_liveShapeWeight = Mathf.Clamp(_liveShapeWeight, 0f, 1f);
 #endif
 				umaData.SetBlendShape(_blendshapeToApply, _liveShapeWeight);

@@ -1630,14 +1630,7 @@ namespace UMA
 		/// <param name="allowRebuild">Triggers a rebuild of the uma character if the blendshape is baked</param>
 		public void SetBlendShape(string name, float weight, bool allowRebuild = false)
 		{
-#if UNITY_2018_3_OR_NEWER
-			if (weight < -1.0f || weight > 1.0f)
-			{
-				if (Debug.isDebugBuild)
-					Debug.LogWarning("SetBlendShape: Weight is out of range, clamping...");
-			}
-			weight =  Mathf.Clamp(weight, -1f, 1f);
-#else
+#if !UNITY_2018_3_OR_NEWER
 			if (weight < 0.0f || weight > 1.0f)
 			{
 				if (Debug.isDebugBuild)
