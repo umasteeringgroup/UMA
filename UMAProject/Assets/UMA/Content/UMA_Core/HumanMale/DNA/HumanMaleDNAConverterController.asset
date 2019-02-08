@@ -1100,7 +1100,7 @@ MonoBehaviour:
       _max: 2
     _valuesY:
       _val:
-        _value: 0.9
+        _value: 1
         _modifiers: []
         _modifyingDNA:
           _dnaEvaluators:
@@ -1171,7 +1171,7 @@ MonoBehaviour:
       _max: 1.5
     _valuesZ:
       _val:
-        _value: 0.7
+        _value: 1
         _modifiers: []
         _modifyingDNA:
           _dnaEvaluators:
@@ -1254,7 +1254,7 @@ MonoBehaviour:
       _max: 2
     _valuesY:
       _val:
-        _value: 0.9
+        _value: 1
         _modifiers: []
         _modifyingDNA:
           _dnaEvaluators:
@@ -1325,7 +1325,7 @@ MonoBehaviour:
       _max: 1.35
     _valuesZ:
       _val:
-        _value: 0.8
+        _value: 1
         _modifiers: []
         _modifyingDNA:
           _dnaEvaluators:
@@ -9921,7 +9921,7 @@ MonoBehaviour:
       _max: 10
     _valuesY:
       _val:
-        _value: -0.003
+        _value: 0
         _modifiers: []
         _modifyingDNA:
           _dnaEvaluators:
@@ -9982,7 +9982,7 @@ MonoBehaviour:
       _max: 10
     _valuesY:
       _val:
-        _value: 0.003
+        _value: 0
         _modifiers: []
         _modifyingDNA:
           _dnaEvaluators:
