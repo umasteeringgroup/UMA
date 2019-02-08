@@ -12,7 +12,7 @@ namespace UMA.CharacterSystem.Editors
 	public class DynamicDNAConverterBehaviourEditor : Editor
 	{
 
-		[MenuItem("Assets/Create/UMA/DNA/Dynamic DNA Converter Behaviour")]
+		[MenuItem("Assets/Create/UMA/DNA/Legacy/Dynamic DNA Converter Behaviour")]
 		public static void CreateDynamicDNAConverterBehaviour()
 		{
 			CustomAssetUtility.CreatePrefab("DynamicDNAConverterBehaviour", typeof(DynamicDNAConverterBehaviour));
