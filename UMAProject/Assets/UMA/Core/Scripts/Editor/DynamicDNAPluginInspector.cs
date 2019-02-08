@@ -729,7 +729,7 @@ namespace UMA.Editors
 
 		private void Delete()
 		{
-			if (EditorUtility.DisplayDialog("Delete " + _target.name, "IMPORTANT: ConverterControllers can be shared by multiple ConverterBehaviour prefabs. Deleting " + _target.name + " from it will affect all the converter behaviours that use it. Really delete " + _target.name + "?", "Delete", "Cancel"))
+			if (EditorUtility.DisplayDialog("Delete " + _target.name, "Really delete " + _target.name + "?", "Delete", "Cancel"))
 			{
 				_converter.DeletePlugin(_target);
 			}
