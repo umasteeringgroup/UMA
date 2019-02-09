@@ -382,11 +382,13 @@ namespace UMA.CharacterSystem
 
                 if (umaData.rendererCount > 0)
                 {
-                    SkinnedMeshRenderer smr = umaData.GetRenderer(0);
-                    if (smr != null && smr.enabled == hide)
-                    {
-                        umaData.GetRenderer(0).enabled = !hide;
-                    }
+					foreach(SkinnedMeshRenderer smr in umaData.GetRenderers())
+					{
+						if (smr != null && smr.enabled == hide)
+						{
+							smr.enabled = !hide;
+						}
+					}
                 }
             }
             //This hardly ever happens now since the changeRace/LoadFromString/StartCO methods all yield themselves until asset bundles have been downloaded
