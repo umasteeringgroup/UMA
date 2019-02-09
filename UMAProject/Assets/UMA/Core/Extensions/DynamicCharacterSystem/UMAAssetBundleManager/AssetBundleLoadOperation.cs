@@ -6,6 +6,9 @@ using UnityEngine.iOS;
 #endif
 #if UNITY_EDITOR
 using UnityEditor;
+#if UNITY_2018_3_OR_NEWER
+using UnityEditor.SceneManagement;
+#endif
 #endif
 using System.Collections;
 //added System.IO for loading/saving cached bundleIndexes
@@ -533,9 +536,21 @@ namespace UMA.AssetBundles
 			}
 
 			if (isAdditive)
+			{
+#if UNITY_2018_3_OR_NEWER
+				m_Operation = EditorSceneManager.LoadSceneAsyncInPlayMode(levelPaths[0], new LoadSceneParameters(LoadSceneMode.Additive));
+#else
 				m_Operation = EditorApplication.LoadLevelAdditiveAsyncInPlayMode(levelPaths[0]);
+#endif
+			}
 			else
+			{
+#if UNITY_2018_3_OR_NEWER
+				m_Operation = EditorSceneManager.LoadSceneAsyncInPlayMode(levelPaths[0], new LoadSceneParameters(LoadSceneMode.Single));
+#else
 				m_Operation = EditorApplication.LoadLevelAsyncInPlayMode(levelPaths[0]);
+#endif
+			}
 		}
 
 		public override bool Update()
