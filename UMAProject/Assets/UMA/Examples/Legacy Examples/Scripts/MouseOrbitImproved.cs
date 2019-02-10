@@ -127,8 +127,12 @@ namespace UMA.Examples
                 if (umaData != null && umaData.umaRecipe != null && umaData.umaRecipe.raceData != null && umaData.umaRecipe.raceData.umaTarget == RaceData.UMATarget.Humanoid && umaData.skeleton != null)
                 {
                     string boneName = umaData.umaRecipe.raceData.TPose.BoneNameFromHumanName(targetStrings[(int)TargetBone]);
-                    if (!string.IsNullOrEmpty(boneName))
-                        t = umaData.skeleton.GetBoneGameObject(Animator.StringToHash(boneName)).transform;
+					if (!string.IsNullOrEmpty(boneName))
+					{
+						var bone = umaData.skeleton.GetBoneGameObject(Animator.StringToHash(boneName));
+						if(bone != null)
+							t = bone.transform;
+					}
                 }
 
                 if (t == null)
@@ -171,6 +175,12 @@ namespace UMA.Examples
         {
             TempTransform newTransform = new TempTransform();
             Vector3 tgt = GetTarget(dstTarget);
+
+			//if the target height is less than or equal to 0, it is building or downloading- in this case dont move the camera
+			if(tgt.y <= 0f)
+			{
+				return newTransform;
+			}
 
             //DOS Modified tweaked this to be selectable
             if (Input.GetMouseButton((int)mouseButtonToUse) && Input.touchCount == 0)
