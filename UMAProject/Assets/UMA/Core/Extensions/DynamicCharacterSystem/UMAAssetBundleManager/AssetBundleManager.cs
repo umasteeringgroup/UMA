@@ -593,11 +593,6 @@ namespace UMA.AssetBundles
 			// Load dependencies.
 			if (!isAlreadyProcessed && !isLoadingAssetBundleIndex)
 				LoadDependencies(assetBundleName);
-			else
-			{
-				if (Debug.isDebugBuild)
-					Debug.LogWarning("Did not load deps for  " + assetBundleName + " was already processed " + isAlreadyProcessed);
-			}
 		}
 
 		/// <summary>
