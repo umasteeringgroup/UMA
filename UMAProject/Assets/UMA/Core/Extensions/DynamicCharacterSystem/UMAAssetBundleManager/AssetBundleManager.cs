@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Networking;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -756,7 +757,7 @@ namespace UMA.AssetBundles
 
 				string url = bundleBaseDownloadingURL + assetBundleToGet;
 
-				WWW download = null;
+				UnityWebRequest download = null;
 				// For index assetbundle, always download it as we don't have hash for it.
 				if (isLoadingAssetBundleIndex)
 				{
@@ -768,7 +769,11 @@ namespace UMA.AssetBundles
 					{
 						url = url+ ".json";
 					}
-					download = new WWW(url);
+#if UNITY_2018_1_OR_NEWER
+					download = UnityWebRequestAssetBundle.GetAssetBundle(url);
+#else
+					download = UnityWebRequest.GetAssetBundle(url);
+#endif
 					if (!String.IsNullOrEmpty(download.error) || download == null)
 					{
 						if (!String.IsNullOrEmpty(download.error))
@@ -778,10 +783,15 @@ namespace UMA.AssetBundles
 					}
 				}
 				else
-				{
-					download = WWW.LoadFromCacheOrDownload(url, m_AssetBundleIndex.GetAssetBundleHash(assetBundleToFind), 0);
+				{ 
+#if UNITY_2018_1_OR_NEWER
+					download = UnityWebRequestAssetBundle.GetAssetBundle(url, m_AssetBundleIndex.GetAssetBundleHash(assetBundleToFind), 0);
+#else
+					download = UnityWebRequest.GetAssetBundle(url, m_AssetBundleIndex.GetAssetBundleHash(assetBundleToFind), 0);
+#endif
 				}
-				m_InProgressOperations.Add(new AssetBundleDownloadFromWebOperation(assetBundleToFind/* + encryptedSuffix*/, download, useJsonIndex));
+				download.SendWebRequest();
+			m_InProgressOperations.Add(new AssetBundleDownloadFromWebOperation(assetBundleToFind/* + encryptedSuffix*/, download, useJsonIndex));
 			}
 
 			m_DownloadingBundles.Add(assetBundleToFind);

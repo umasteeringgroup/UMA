@@ -1,4 +1,6 @@
 using UnityEngine;
+//For loading a recipe directly from the web @2465
+using UnityEngine.Networking;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.SceneManagement;//for marking converted colors as needing saving
@@ -2461,9 +2463,9 @@ namespace UMA.CharacterSystem
                     {
                         if (path.Contains("://"))
                         {
-                            WWW www = new WWW(path + loadFilename);
-                            yield return www;
-                            recipeString = www.text;
+							UnityWebRequest www = UnityWebRequest.Get(path + loadFilename);
+							yield return www.SendWebRequest();
+							recipeString = www.downloadHandler.text;
                         }
                         else
                         {
