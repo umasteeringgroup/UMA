@@ -139,7 +139,7 @@
 		"slot": "Hair",
 		"recipe": "ToonHair1"
 	}, {
-		"slot": "FullOutfit",
-		"recipe": "FemaleDancer1"
+		"slot": "WardrobeCollection",
+		"recipe": "ToonDancerCollection"
 	}]
 }
