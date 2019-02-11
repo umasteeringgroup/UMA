@@ -334,7 +334,11 @@ namespace UMA.AssetBundles
 #else
 							m_WWW = UnityWebRequest.GetAssetBundle(m_Url);
 #endif
+#if UNITY_2017_2_OR_NEWER
 							m_WWW.SendWebRequest();
+#else
+							m_WWW.Send();
+#endif
 						}
 
 						if (zeroDownload == 300)//If we are in the editor we can restart the Server and this will make it work
@@ -351,13 +355,17 @@ namespace UMA.AssetBundles
 #else
 							m_WWW = UnityWebRequest.GetAssetBundle(m_Url);
 #endif
+#if UNITY_2017_2_OR_NEWER
 							m_WWW.SendWebRequest();
+#else
+							m_WWW.Send();
+#endif
 							zeroDownload = 0;
 						}
 					}
 					else
 #endif
-					if((downloadProgress == 0 && zeroDownload == 500) || zeroDownload >= Mathf.Clamp((2500 * downloadProgress), 500,2500))//let this number get larger the more has been downloaded (cos its really annoying to be at 98% and have it fail)
+							if((downloadProgress == 0 && zeroDownload == 500) || zeroDownload >= Mathf.Clamp((2500 * downloadProgress), 500,2500))//let this number get larger the more has been downloaded (cos its really annoying to be at 98% and have it fail)
 					{
 						//when we cannot download because WiFi is connected but a hotspot needs authentication
 						//or because the user has run out of mobile data the www class takes a while error out

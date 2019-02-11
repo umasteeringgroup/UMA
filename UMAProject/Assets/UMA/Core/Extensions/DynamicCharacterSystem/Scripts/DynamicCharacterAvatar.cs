@@ -2464,7 +2464,11 @@ namespace UMA.CharacterSystem
                         if (path.Contains("://"))
                         {
 							UnityWebRequest www = UnityWebRequest.Get(path + loadFilename);
+#if UNITY_2017_2_OR_NEWER
 							yield return www.SendWebRequest();
+#else
+							yield return www.Send();
+#endif
 							recipeString = www.downloadHandler.text;
                         }
                         else
