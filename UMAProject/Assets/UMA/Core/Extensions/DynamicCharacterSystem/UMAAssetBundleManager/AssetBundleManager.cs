@@ -785,8 +785,12 @@ namespace UMA.AssetBundles
 					download = UnityWebRequest.GetAssetBundle(url, m_AssetBundleIndex.GetAssetBundleHash(assetBundleToFind), 0);
 #endif
 				}
+#if UNITY_2017_2_OR_NEWER
 				download.SendWebRequest();
-			m_InProgressOperations.Add(new AssetBundleDownloadFromWebOperation(assetBundleToFind/* + encryptedSuffix*/, download, useJsonIndex));
+#else
+				download.Send();
+#endif
+				m_InProgressOperations.Add(new AssetBundleDownloadFromWebOperation(assetBundleToFind/* + encryptedSuffix*/, download, useJsonIndex));
 			}
 
 			m_DownloadingBundles.Add(assetBundleToFind);
