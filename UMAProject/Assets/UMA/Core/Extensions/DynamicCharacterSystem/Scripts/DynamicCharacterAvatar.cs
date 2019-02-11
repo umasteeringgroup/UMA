@@ -6,10 +6,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;//for marking converted colors as needing saving
 #endif
 using UnityEngine.Serialization;//for converting old characterColors.Colors to new colors
-
-#if UNITY_5_5_OR_NEWER
 using UnityEngine.Profiling;
-#endif
 
 using System;
 using System.IO;
