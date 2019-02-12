@@ -1,0 +1,60 @@
+What’s new in 2.8
+
+New Features
+
+Reworked Blendshapes, improved API, optimized.
+Improved performance in expression player.
+Ability to set texture properties on the UMMaterial (aniso level, trilinear filtering, mipmap bias).
+Ability to downsample textures at atlas build time (in UMAMaterial).
+Ability to hide any slot from a wardrobe (not just base slots)
+Improved Physics Avatar.
+UMAMeshData is now clonable
+Fixed issue with removed slots when using MeshHideAssets
+Cleaned up error reporting for duplicate bones
+Support for UWP build using IL2CPP
+Updated queue on hair shader and materials for improved look against skyboxes
+Added Timeline Clips for Race, Colors, DNA, and Wardrobe
+Mouse orbitor now takes a bone to look at (instead of a bone path)
+Unity 2018.3 compatibility
+New Dynamic DNA plugin framework
+New scene with new Dynamic DNA (ElfOrAlien) showing Color DNA, Morph DNA, Bone DNA all in one.
+Added spoiler to Car demo
+DNAConverterController assets now replace the old DNABehaviour prefabs. A single DNA name can now be used to control multiple modifications to the avatar (Blendshapes, BonePoses, fading normal maps, changing colors and more!), Simpler to use and much faster!
+Example scenes have been restructured to be easier to find.
+Global library (UMAAssetIndexer) is now a ScriptableObject.
+Improved raycasting when detecting occluded faces in Mesh Hide Asset editor.
+Various warnings and errors if users do unexpected things (delete global lib, etc)
+Various small fixes on some of the example scenes.
+High poly models now use a bone pose for initial bone positions.
+HumanMale, HumanFemale updated to use DNAConverterControllers. These should be the default races to use now.
+Normal shader updated to combine normals at runtime using RGBA32 textures (default)
+Developers can now add (and sell or distribute) new dna functionality for DNAConverterController using the new DynamicDNAPlugin API
+and many more bug fixes and optimizations
+
+Editor Improvements
+
+Add race updater to update base race overlays to new materials
+New editors for the new DNAConverterController
+UMAGenerator atlas size is now a dropdown list
+Added progress bar when adding items to Global Lib via drag/drop or rebuild.
+Added Re-orderable list to Dynamic DNA
+Lot of enhancements to the Mesh Hide system:
+•	Ability to view and export UV map (With alpha for selected polys)
+•	Ability to select base slots from dropdown.
+•	Symmetry paint mode
+Ability to create wardrobe recipes from hierarchy and slot builder
+Tags editor to mass tag UMA assets (and remove UMA tags)
+Copy/Paste DCA Wardrobe
+Add progress bars to global library
+Added TPose inspector
+Menu item to create Dynamic DNA
+Ability to edit edit multiple SlotdataAsset and OverlayDataAsset in the inspector
+Morph DNA editor added
+Scene Changes
+New DCA Sample accessory mounting scene added
+New Timeline sample scene showing how to morph, recolor, change sex, and change wardrobe.
+Fixed small issue with not found colors in Asset Bundle scene
+Help text added to most scenes
+UNET has been deprecated, so the UNET networking scenes have been removed.
+Minor scene fixes (remove warnings, fix missing prefab, remove extraneous components)
+
