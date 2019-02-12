@@ -6,7 +6,6 @@ using UnityEditor;
 using UnityEditor.SceneManagement;//for marking converted colors as needing saving
 #endif
 using UnityEngine.Serialization;//for converting old characterColors.Colors to new colors
-using UnityEngine.Profiling;
 
 using System;
 using System.IO;
@@ -2722,7 +2721,7 @@ namespace UMA.CharacterSystem
             {
                 umaData.animator = this.gameObject.GetComponent<Animator>();
             }
-            Profiler.BeginSample("Load");
+            UnityEngine.Profiling.Profiler.BeginSample("Load");
 
             this.umaRecipe = umaRecipe;
 
@@ -2791,7 +2790,7 @@ namespace UMA.CharacterSystem
             //Did doing any of that cause more downloads?
             if (FinalRecipeAssetsDownloading())
             {
-                Profiler.EndSample();
+                UnityEngine.Profiling.Profiler.EndSample();
                 return true;
             }
 
@@ -2810,7 +2809,7 @@ namespace UMA.CharacterSystem
             {
                 UpdateSameRace();
             }
-            Profiler.EndSample();
+            UnityEngine.Profiling.Profiler.EndSample();
 
             UpdateAssetBundlesUsedbyCharacter();
 
