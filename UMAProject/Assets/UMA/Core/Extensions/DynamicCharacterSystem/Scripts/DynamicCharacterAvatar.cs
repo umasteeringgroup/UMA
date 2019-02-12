@@ -2721,7 +2721,6 @@ namespace UMA.CharacterSystem
             {
                 umaData.animator = this.gameObject.GetComponent<Animator>();
             }
-            UnityEngine.Profiling.Profiler.BeginSample("Load");
 
             this.umaRecipe = umaRecipe;
 
@@ -2790,7 +2789,6 @@ namespace UMA.CharacterSystem
             //Did doing any of that cause more downloads?
             if (FinalRecipeAssetsDownloading())
             {
-                UnityEngine.Profiling.Profiler.EndSample();
                 return true;
             }
 
@@ -2809,7 +2807,6 @@ namespace UMA.CharacterSystem
             {
                 UpdateSameRace();
             }
-            UnityEngine.Profiling.Profiler.EndSample();
 
             UpdateAssetBundlesUsedbyCharacter();
 
