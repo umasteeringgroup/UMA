@@ -396,7 +396,9 @@ namespace UMA
 		/// </summary>
 		public void ValidatePlugins()
 		{
+#if UNITY_EDITOR
 			bool changed = false;
+#endif
 			var cleanList = new List<DynamicDNAPlugin>();
 			for (int i = 0; i < _plugins.Count; i++)
 			{
