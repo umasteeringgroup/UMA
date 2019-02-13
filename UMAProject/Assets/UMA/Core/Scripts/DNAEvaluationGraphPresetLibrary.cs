@@ -32,10 +32,11 @@ namespace UMA
 
 		[SerializeField]
 		private List<string> _customGraphTooltips = new List<string>();
-
+#if UNITY_EDITOR
 		private static List<DNAEvaluationGraph> _cachedGlobalList = new List<DNAEvaluationGraph>();
 
 		private static List<string> _cachedGlobalTooltips = new List<string>();
+#endif
 
 		/// <summary>
 		/// Returns the default list of graph presets shipped with UMA
