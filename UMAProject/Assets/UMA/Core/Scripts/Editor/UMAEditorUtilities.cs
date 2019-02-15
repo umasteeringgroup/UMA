@@ -39,13 +39,13 @@ namespace UMA
 				FriendlyNames.Add(typeof(DynamicUMADnaAsset), "Dynamic DNA");
 
 				string[] iconTextures = AssetDatabase.FindAssets("t:texture UmaIndex");
-				if (iconTextures == null || iconTextures.Length <= 0)
+				if (iconTextures != null && iconTextures.Length > 0)
 				{
-					Debug.Log("Unable to load texture icon");
+					icon = AssetDatabase.LoadAssetAtPath<Texture2D>(AssetDatabase.GUIDToAssetPath(iconTextures[0]));
 				}
 				else
 				{
-					icon = AssetDatabase.LoadAssetAtPath<Texture2D>(AssetDatabase.GUIDToAssetPath(iconTextures[0]));
+					Debug.Log("Unable to load texture icon");
 				}
 
 				showIndexedTypes = EditorPrefs.GetBool("BoolUMAShowTypes", true);
