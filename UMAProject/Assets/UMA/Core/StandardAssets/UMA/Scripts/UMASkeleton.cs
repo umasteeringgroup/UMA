@@ -151,7 +151,10 @@ namespace UMA
 #endif
 			}
 			else
-				Debug.LogError("AddBonesRecursive: " + transform.name + " already exists in the dictionary!");
+			{
+				if (Debug.isDebugBuild)
+					Debug.LogError("AddBonesRecursive: " + transform.name + " already exists in the dictionary! Consider renaming those bones. For example, `Items` under each hand bone can become `LeftItems` and `RightItems`.");
+			}
 
 			for (int i = 0; i < transform.childCount; i++)
 			{
@@ -202,7 +205,10 @@ namespace UMA
 #endif
 			}
 			else
-				Debug.LogError("AddBone: " + transform.name + " already exists in the dictionary!");
+			{
+				if (Debug.isDebugBuild)
+					Debug.LogError("AddBone: " + transform.name + " already exists in the dictionary! Consider renaming those bones. For example, `Items` under each hand bone can become `LeftItems` and `RightItems`.");
+			}
 		}
 
 		/// <summary>
@@ -229,7 +235,10 @@ namespace UMA
 #endif
 			}
 			else
-				Debug.LogError("AddBone: " + transform.name + " already exists in the dictionary!");
+			{
+				if (Debug.isDebugBuild)
+					Debug.LogError("AddBone: " + transform.name + " already exists in the dictionary! Consider renaming those bones. For example, `Items` under each hand bone can become `LeftItems` and `RightItems`.");
+			}
 		}
 
 		/// <summary>
@@ -363,13 +372,14 @@ namespace UMA
 		/// </summary>
 		/// <param name="nameHash">Name hash.</param>
 		/// <param name="delta">Position delta.</param>
-		public virtual void SetPositionRelative(int nameHash, Vector3 delta)
+		/// <param name="weight">Optionally set how much to apply the new position</param>
+		public virtual void SetPositionRelative(int nameHash, Vector3 delta, float weight = 1f)
 		{
 			BoneData db;
 			if (boneHashData.TryGetValue(nameHash, out db))
 			{
 				db.accessedFrame = frame;
-				db.boneTransform.localPosition = db.boneTransform.localPosition + delta;
+				db.boneTransform.localPosition = db.boneTransform.localPosition + delta * weight;
 			}
 		}
 
@@ -395,15 +405,15 @@ namespace UMA
 		/// </summary>
 		/// <param name="nameHash">Name hash.</param>
 		/// <param name="scale">Scale.</param>
-		public virtual void SetScaleRelative(int nameHash, Vector3 scale)
+		/// <param name="weight">Optionally set how much to apply the new scale</param>
+		public virtual void SetScaleRelative(int nameHash, Vector3 scale, float weight = 1f)
 		{
 			BoneData db;
 			if (boneHashData.TryGetValue(nameHash, out db))
 			{
 				db.accessedFrame = frame;
-				var fullScale = scale;
-				fullScale.Scale(db.boneTransform.localScale);
-				db.boneTransform.localScale = fullScale;
+				scale.Scale(db.boneTransform.localScale);
+				db.boneTransform.localScale = Vector3.Lerp(db.boneTransform.localScale, scale, weight);
 			}
 		}
 
@@ -612,7 +622,7 @@ namespace UMA
 			}
 			else
 			{
-				throw new Exception("Bone not found.");
+				throw new Exception("Bone not found. BoneHash: " + nameHash);
 			}
 		}
 
@@ -674,7 +684,10 @@ namespace UMA
 						entry.accessedFrame = frame;
 					}
 					else
-						Debug.LogError("EnsureBoneHierarchy: " + entry.umaTransform.name + " parent not found in dictionary!");
+					{
+						if (Debug.isDebugBuild)
+							Debug.LogError("EnsureBoneHierarchy: " + entry.umaTransform.name + " parent not found in dictionary!");
+					}
 				}
 			}
 		}

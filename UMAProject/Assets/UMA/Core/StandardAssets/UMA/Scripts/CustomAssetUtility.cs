@@ -35,9 +35,38 @@ namespace UMA
             {
                 go.AddComponent(t);
             }
+#if UNITY_2018_3_OR_NEWER
+            PrefabUtility.SaveAsPrefabAsset(go, assetPathAndName );
+#else
             PrefabUtility.CreatePrefab(assetPathAndName, go);
+#endif
             GameObject.DestroyImmediate(go,false);
         }
+
+		public static GameObject ClonePrefab(GameObject other, string newName = "")
+		{
+			var name = newName != "" ? newName : other.name + " Copy";
+			string path = AssetDatabase.GetAssetPath(other);
+			if (path == "")
+			{
+				path = "Assets";
+			}
+			else if (File.Exists(path))
+			{
+				path = path.Replace("/" + Path.GetFileName(AssetDatabase.GetAssetPath(other)), "");
+			}
+
+			string assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/" + name + ".prefab");
+
+			GameObject go = GameObject.Instantiate(other);
+#if UNITY_2018_3_OR_NEWER
+			var prefab = PrefabUtility.SaveAsPrefabAsset(go, assetPathAndName);
+#else
+			var prefab = PrefabUtility.CreatePrefab(assetPathAndName, go);
+#endif
+			GameObject.DestroyImmediate(go, false);
+			return prefab;
+		}
 
 		/// <summary>
 		/// Creates a new asset of the type T

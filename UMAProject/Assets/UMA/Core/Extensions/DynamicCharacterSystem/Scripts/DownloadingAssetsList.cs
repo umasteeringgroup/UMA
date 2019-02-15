@@ -118,7 +118,8 @@ namespace UMA.CharacterSystem
 				}
 				else
 				{
-					Debug.LogWarning("Could not get TempAsset for " + requiredAssetName);
+					if (Debug.isDebugBuild)
+						Debug.LogWarning("Could not get TempAsset for " + requiredAssetName);
 				}
 			}
 			return thisTempAsset;
@@ -179,7 +180,9 @@ namespace UMA.CharacterSystem
 				}
 				if (!String.IsNullOrEmpty(error))
 				{
-					Debug.LogError(error);
+					if (Debug.isDebugBuild)
+						Debug.LogError(error);
+
 					yield break;
 				}
 			}
@@ -193,7 +196,9 @@ namespace UMA.CharacterSystem
 					var loadedBundleAB = loadedBundle.m_AssetBundle;
 					if (!String.IsNullOrEmpty(error))
 					{
-						Debug.LogError(error);
+						if (Debug.isDebugBuild)
+							Debug.LogError(error);
+
 						yield break;
 					}
 					var assetType = item.tempAsset.GetType();
@@ -204,28 +209,6 @@ namespace UMA.CharacterSystem
 					var itemFilename = AssetBundleManager.AssetBundleIndexObject.GetFilenameFromAssetName(item.containingBundle, item.requiredAssetName, assetType.ToString());
 					if (assetType == typeof(RaceData))
 					{
-						//HACK TO FIX RACEDATA DYNAMICDNACONVERTERS DYNAMICDNA ASSETS CAUSING LOAD FAILURES in UNITY 5.5+
-						//As of Unity 5.5 a bug has reappeared when loading some types of assets that reference assets in other bundles.
-						//AssetBundleManager successfully ensures these required bundles are loaded first, but even so Unity fils to load
-						//the required asset from them in some cases, notably it seems when the required asset is set in the field of a Prefab (like our DNAAssets are)
-						//To fix this generally we could 'LoadAllAssets' from any dependent bundles, but this could incur significant memory overhead
-						//So for now we will just fix this for UMA and hope a patch is forthcoming in a subsequent version of Unity 
-						//FIXED as of Unity5.6.2f1
-#if UNITY_5_6_0 || UNITY_5_6_1
-						if (AssetBundleManager.AssetBundleIndexObject.GetAllDependencies(item.containingBundle).Length > 0)
-						{
-							var allDeps = AssetBundleManager.AssetBundleIndexObject.GetAllDependencies(item.containingBundle);
-							for (int i = 0; i < allDeps.Length; i++)
-							{
-								string depsError = "";
-								LoadedAssetBundle depsBundle = AssetBundleManager.GetLoadedAssetBundle(allDeps[i], out depsError);
-								if (String.IsNullOrEmpty(depsError) && depsBundle != null)
-								{
-									depsBundle.m_AssetBundle.LoadAllAssets<DynamicUMADnaAsset>();
-								}
-							}
-						}
-#endif
 						RaceData actualRace = loadedBundleAB.LoadAsset<RaceData>(itemFilename);
 						UMAContext.Instance.raceLibrary.AddRace(actualRace);
 						UMAContext.Instance.raceLibrary.UpdateDictionary();
@@ -242,7 +225,8 @@ namespace UMA.CharacterSystem
 						}
 						else
 						{
-							Debug.LogWarning("[DynamicAssetLoader] could not add downloaded slot" + item.requiredAssetName);
+							if (Debug.isDebugBuild)
+								Debug.LogWarning("[DynamicAssetLoader] could not add downloaded slot" + item.requiredAssetName);
 						}
 					}
 					else if (assetType == typeof(OverlayDataAsset))
@@ -255,7 +239,8 @@ namespace UMA.CharacterSystem
 						}
 						else
 						{
-							Debug.LogWarning("[DynamicAssetLoader] could not add downloaded overlay" + item.requiredAssetName + " from assetbundle " + item.containingBundle);
+							if (Debug.isDebugBuild)
+								Debug.LogWarning("[DynamicAssetLoader] could not add downloaded overlay" + item.requiredAssetName + " from assetbundle " + item.containingBundle);
 						}
 					}
 					else if (assetType == typeof(UMATextRecipe))
@@ -282,7 +267,8 @@ namespace UMA.CharacterSystem
 					}
 					if (!String.IsNullOrEmpty(error))
 					{
-						Debug.LogError(error);
+						if (Debug.isDebugBuild)
+							Debug.LogError(error);
 					}
 				}
 				downloadingItems.Remove(item);
@@ -383,7 +369,8 @@ namespace UMA.CharacterSystem
 			}
 			else
 			{
-				Debug.Log(assetName + " was not downloading");
+				if (Debug.isDebugBuild)
+					Debug.Log(assetName + " was not downloading");
 			}
 			return progress;
 		}

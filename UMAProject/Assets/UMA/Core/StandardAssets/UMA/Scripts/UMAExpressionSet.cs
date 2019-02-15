@@ -108,7 +108,8 @@ namespace UMA.PoseTools
 								}
 							}
 						}
-						Debug.LogWarning("Couldn't reset bone! " + boneName + " on " + umaname);
+						if (Debug.isDebugBuild)
+							Debug.LogWarning("Couldn't reset bone! " + boneName + " on " + umaname);
 					}
                 }
             }

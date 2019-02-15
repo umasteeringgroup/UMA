@@ -17,6 +17,7 @@ namespace UMA.Editors
 		public bool createRecipe;
 		public bool addToGlobalLibrary;
 		public bool addToLocalLibrary;
+		public bool binarySerialization;
 
 		string GetAssetFolder()
 		{
@@ -66,7 +67,10 @@ namespace UMA.Editors
 			slotFolder = EditorGUILayout.ObjectField("Slot Destination Folder"	, slotFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
 			EnforceFolder(ref slotFolder);
 			RootBone = EditorGUILayout.TextField("Root Bone (ex:'Global')", RootBone);
-			slotName = EditorGUILayout.TextField("Element Name", slotName);
+			slotName = EditorGUILayout.TextField("Slot Name", slotName);
+			binarySerialization = EditorGUILayout.Toggle(new GUIContent("Binary Serialization", "Forces the created Mesh object to be serialized as binary. Recommended for large meshes and blendshapes."), binarySerialization);
+
+			EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
 			EditorGUILayout.BeginHorizontal();
 			createOverlay = EditorGUILayout.Toggle("Create Overlay", createOverlay);
 			EditorGUILayout.LabelField(slotName + "_Overlay");
@@ -103,13 +107,14 @@ namespace UMA.Editors
 							UMAContext.Instance.slotLibrary.AddSlotAsset(sd);
 						}
 					}
+					OverlayDataAsset od = null;
 					if (createOverlay)
 					{
-						CreateOverlay(AssetPath.Replace(sd.name, sd.slotName + "_Overlay"), sd);
+						od = CreateOverlay(AssetPath.Replace(sd.name, sd.slotName + "_Overlay"), sd);
 					}
 					if (createRecipe)
 					{
-						CreateRecipe(AssetPath.Replace(sd.name, sd.slotName + "_Recipe"));
+						CreateRecipe(AssetPath.Replace(sd.name, sd.slotName + "_Recipe"), sd, od);
 					}
 				}
 			}
@@ -122,7 +127,16 @@ namespace UMA.Editors
 
 				if( slotMesh.localBounds.size.x < 0.01f || slotMesh.localBounds.size.y < 0.01f || slotMesh.localBounds.size.z < 0.01f)
 					EditorGUILayout.HelpBox ("This slot's size is very small. It's import scale may be incorrect!", MessageType.Warning);
-			}
+
+                if (slotName == null || slotName == "")
+                {
+                    slotName = slotMesh.name;
+                }
+                if (RootBone == null || RootBone == "")
+                {
+                    RootBone = "Global";
+                }
+            }
 		  
 			GUILayout.Label("", EditorStyles.boldLabel);
 			Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
@@ -146,7 +160,7 @@ namespace UMA.Editors
 			return sd;
 		}
 
-		private void CreateOverlay(string path, SlotDataAsset sd)
+		private OverlayDataAsset CreateOverlay(string path, SlotDataAsset sd)
 		{
 			OverlayDataAsset asset = ScriptableObject.CreateInstance<OverlayDataAsset>();
 			asset.overlayName = slotName + "_Overlay";
@@ -164,20 +178,12 @@ namespace UMA.Editors
 					UMAContext.Instance.overlayLibrary.AddOverlayAsset(asset);
 				}
 			}
+			return asset;
 		}
 
-		private void CreateRecipe(string path)
+		private void CreateRecipe(string path, SlotDataAsset sd, OverlayDataAsset od)
 		{
-			CharacterSystem.UMAWardrobeRecipe asset = ScriptableObject.CreateInstance<CharacterSystem.UMAWardrobeRecipe>();
-			//UMAData ud = new UMAData();
-			//ud.SetSlots()
-			asset.DisplayValue = slotName;
-			AssetDatabase.CreateAsset(asset, path);
-			AssetDatabase.SaveAssets();
-			if (addToGlobalLibrary)
-			{
-				UMAAssetIndexer.Instance.EvilAddAsset(typeof(CharacterSystem.UMAWardrobeRecipe), asset);
-			}
+			UMAEditorUtilities.CreateRecipe(path, sd, od, sd.name, addToGlobalLibrary);
 		}
 
 		private SlotDataAsset CreateSlot_Internal()
@@ -208,7 +214,7 @@ namespace UMA.Editors
 			}
 
 			Debug.Log("Slot Mesh: " + slotMesh.name, slotMesh.gameObject);
-			SlotDataAsset slot = UMASlotProcessingUtil.CreateSlotData(AssetDatabase.GetAssetPath(slotFolder), GetAssetFolder(), GetAssetName(), slotMesh, material, normalReferenceMesh,RootBone);
+			SlotDataAsset slot = UMASlotProcessingUtil.CreateSlotData(AssetDatabase.GetAssetPath(slotFolder), GetAssetFolder(), GetAssetName(), slotMesh, material, normalReferenceMesh,RootBone, binarySerialization);
 			return slot;
 		}
 
@@ -256,7 +262,7 @@ namespace UMA.Editors
 							}
 							if (createRecipe)
 							{
-								CreateRecipe(AssetPath.Replace(sd.name, sd.slotName + "_Recipe"));
+								CreateRecipe(AssetPath.Replace(sd.name, sd.slotName + "_Recipe"), sd, null);
 							}
 						}
 						current++;

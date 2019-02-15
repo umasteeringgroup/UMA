@@ -107,7 +107,8 @@ namespace UMA.AssetBundles
 		{
 			if (password.Length < 16)
 			{
-				Debug.LogWarning("An encryption Key must be 16 characters long or more");
+				if (Debug.isDebugBuild)
+					Debug.LogWarning("An encryption Key must be 16 characters long or more");
 				return false;
 			}
 			else

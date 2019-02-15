@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace UMA
 {
@@ -25,6 +26,12 @@ namespace UMA
 
 		const string proceduralSizeProperty = "$outputsize";
 
+		/// <summary>
+		/// Color Component Adjusters are used by dna to adjust colors independently of shared colors, for things like temporary color effects and fading NormalMaps in and out
+		/// NOTE: this list is cleared at the start of an applyDNA cycle
+		/// </summary>
+		public List<ColorComponentAdjuster> colorComponentAdjusters = new List<ColorComponentAdjuster>();
+
 		// Properties dependant on the underlying asset.
 		public bool isProcedural { get { return asset.material.IsProcedural(); } }
 		public string overlayName { get { return asset.overlayName; } }
@@ -41,7 +48,8 @@ namespace UMA
 				{
 					if ((generatedTextures == null) || (generatedTextures.Length != asset.textureCount))
 					{
-						Debug.LogWarning("Accessing empty texture array on procedural overlay. GenerateProceduralTextures() should have already been called!");
+						if (Debug.isDebugBuild)
+							Debug.LogWarning("Accessing empty texture array on procedural overlay. GenerateProceduralTextures() should have already been called!");
 						GenerateProceduralTextures();
 					}
 
@@ -61,7 +69,8 @@ namespace UMA
 				{
 					if ((generatedTextures == null) || (generatedTextures.Length != asset.textureCount))
 					{
-						Debug.LogWarning("Accessing empty texture array on procedural overlay. GenerateProceduralTextures() should have already been called!");
+						if (Debug.isDebugBuild)
+							Debug.LogWarning("Accessing empty texture array on procedural overlay. GenerateProceduralTextures() should have already been called!");
 						GenerateProceduralTextures();
 					}
 
@@ -87,7 +96,8 @@ namespace UMA
 					}
 					else
 					{
-						Debug.LogWarning("Unable to determine size for procedural material " + material.name);
+						if (Debug.isDebugBuild)
+							Debug.LogWarning("Unable to determine size for procedural material " + material.name);
 						return 0;
 					}
 				}
@@ -143,12 +153,16 @@ namespace UMA
 		{
 			if (asset == null)
 			{
-				Debug.LogError("Overlay Data Asset is NULL!");
+				if (Debug.isDebugBuild)
+					Debug.LogError("Overlay Data Asset is NULL!");
+
 				return;
 			}
 			if (asset.material == null)
 			{
-				Debug.LogError("Error: Materials are missing on Asset: " + asset.name + ". Have you imported all packages?");
+				if (Debug.isDebugBuild)
+					Debug.LogError("Error: Materials are missing on Asset: " + asset.name + ". Have you imported all packages?");
+
 				this.colorData = new OverlayColorData(3); // Don't know. Just create it for standard PBR material size. 
 			}
 			else
@@ -158,12 +172,13 @@ namespace UMA
 			this.asset = asset;
 			this.rect = asset.rect;
 
-			#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
+#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 			if (this.isProcedural)
 			{
 				this.proceduralData = new OverlayProceduralData[0];
 			}
-            #endif
+#endif
+			
 		}
 
 		/// <summary>
@@ -179,14 +194,17 @@ namespace UMA
 			{
 				if (!asset.material.Equals(targetMaterial))
 				{
-					Debug.LogError(string.Format("Overlay '{0}' doesn't have the expected UMA Material: '{1}'", asset.overlayName, targetMaterial.name));
-					valid = false;
+#if UNITY_EDITOR
+                    Debug.LogError(string.Format("Overlay '{0}' doesn't have the expected UMA Material: '{1}'!\nCurrently it has '{2}' at '{3}'", asset.overlayName, targetMaterial.name, asset.material, UnityEditor.AssetDatabase.GetAssetPath(asset)));
+#endif
+                    valid = false;
 				}
 			}
 
 			if (asset.textureCount != targetMaterial.channels.Length)
 			{
-				Debug.LogError(string.Format("Overlay '{0}' doesn't have the right number of channels", asset.overlayName));
+				if (Debug.isDebugBuild)
+					Debug.LogError(string.Format("Overlay '{0}' doesn't have the right number of channels", asset.overlayName));
 				valid = false;
 			}
 			else
@@ -200,7 +218,8 @@ namespace UMA
                 {
                     if ((asset.textureList[i] == null) && (targetMaterial.channels[i].channelType != UMAMaterial.ChannelType.MaterialColor))
                     {
-                        Debug.LogError(string.Format("Overlay '{0}' missing required texture in channel {1}", asset.overlayName, i));
+						if (Debug.isDebugBuild)
+							Debug.LogError(string.Format("Overlay '{0}' missing required texture in channel {1}", asset.overlayName, i));
                         valid = false;
                     }
 
@@ -223,11 +242,55 @@ namespace UMA
 					colorData.channelAdditiveMask[i] = Color.black;
 				}
 
-
-				Debug.LogWarning(string.Format("Overlay '{0}' missing required color data. Resizing and adding defaults", asset.overlayName));
+				if (Debug.isDebugBuild)
+					Debug.LogWarning(string.Format("Overlay '{0}' missing required color data. Resizing and adding defaults", asset.overlayName));
 			}
 
 			return valid;
+		}
+
+		/// <summary>
+		/// Gets the result of all ColorComponentAdjusters that have been added to this overlay, for the given texture, color component, and additiveness
+		/// </summary>
+		/// <param name="inColor">The unadjusted color used by the overlay</param>
+		/// <param name="channel">The affected texture channel to find adjustments for</param>
+		/// <param name="component">The component of the color to find adjustments for (0= r, 1= g, 2= b, 3 = a)</param>
+		/// <param name="additive">Whether adjustments for the additive color are required</param>
+		/// <returns>Returns how much the overlays adjuster want to adjust the given component of the color</returns>
+		public float GetComponentAdjustmentsForChannel(float inColor, int channel, int component, bool additive = false)
+		{
+			var resUnsigned = 0f;
+			var resList = new List<float>();
+			if (colorComponentAdjusters.Count == 0)
+				return resUnsigned;
+			//for each adjuster calculate how much difference it wants to make to the color
+			for (int i = 0; i < colorComponentAdjusters.Count; i++)
+			{
+				if (colorComponentAdjusters[i].channel == channel && colorComponentAdjusters[i].colorComponent == component && colorComponentAdjusters[i].Additive == additive)
+				{
+					if (colorComponentAdjusters[i].adjustmentType == ColorComponentAdjuster.AdjustmentType.Adjust || colorComponentAdjusters[i].adjustmentType == ColorComponentAdjuster.AdjustmentType.AdjustAdditive)
+					{
+						resUnsigned += Mathf.Abs((inColor + colorComponentAdjusters[i].adjustment) - inColor);
+						resList.Add((inColor + colorComponentAdjusters[i].adjustment) - inColor);
+					}
+					else //Absolute/BlendFactor - the adjustment is the color
+					{
+						resUnsigned += Mathf.Abs(colorComponentAdjusters[i].adjustment - inColor);
+						resList.Add(colorComponentAdjusters[i].adjustment - inColor);
+					}
+				}
+			}
+			//Then get the weighted average of all of those results
+			//we cant just get the average because adjusters that are not making any changes should not dilute the effect of the ones that are
+			float weightedAveRes = 0f;
+			if (resUnsigned != 0f)
+			{
+				for (int i = 0; i < resList.Count; i++)
+				{
+					weightedAveRes += resList[i] * (Mathf.Abs(resList[i]) / resUnsigned);
+				}
+			}
+			return weightedAveRes;
 		}
 
 		/// <summary>
@@ -447,6 +510,64 @@ namespace UMA
 		public override int GetHashCode()
 		{
 			return base.GetHashCode();
+		}
+		#endregion
+
+		#region SPECIAL TYPES
+		/// <summary>
+		/// Color Component Adjusters are used by dna to adjust colors independently of shared colors, for things like temporary color effects and fading NormalMaps in and out
+		/// </summary>
+		public class ColorComponentAdjuster
+		{
+			public enum AdjustmentType
+			{
+				Absolute,
+				Adjust,
+				AbsoluteAdditive,
+				AdjustAdditive,
+				BlendFactor
+			}
+			/// <summary>
+			/// the texture channel on the overlay to affect
+			/// </summary>
+			public int channel = 0;
+			/// <summary>
+			/// 0 = r, 1 = g, 2 = b, 3 = a
+			/// </summary>
+			public int colorComponent = 0;
+			/// <summary>
+			/// An adjustment can add or subtract from the component (r,g,b,a) of the color and should be in the range -1f -> 1f.
+			/// If the 'adjustmentType' is set to absolute this should be the absolute value for the color in the range 0f -> 1f.
+			/// </summary>
+			public float adjustment = 0f;
+			/// <summary>
+			/// Adjust will adjust the component of the current color by the adjustment amount. Absolute will set the component of the current color TO the adjustment value
+			/// This can also be set to affect the additive channel if desired.
+			/// Use BlendFactor on the alpha component of a color to completely fade a texture in and out
+			/// </summary>
+			public AdjustmentType adjustmentType = AdjustmentType.Adjust;
+
+			public bool Additive
+			{
+				get { return adjustmentType == AdjustmentType.AbsoluteAdditive || adjustmentType == AdjustmentType.AdjustAdditive; }
+			}
+
+			public ColorComponentAdjuster() { }
+
+			public ColorComponentAdjuster(int channel, int colorComponent, float adjustment, AdjustmentType adjustmentType = AdjustmentType.Adjust)
+			{
+				this.channel = channel;
+				this.colorComponent = colorComponent;
+				this.adjustment = adjustment;
+				this.adjustmentType = adjustmentType;
+			}
+			public ColorComponentAdjuster(ColorComponentAdjuster other)
+			{
+				this.channel = other.channel;
+				this.colorComponent = other.colorComponent;
+				this.adjustment = other.adjustment;
+				this.adjustmentType = other.adjustmentType;
+			}
 		}
 		#endregion
 

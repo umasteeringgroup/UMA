@@ -101,8 +101,10 @@ namespace UMA.AssetBundles
 
 					string[] assetBundleAssetsArray = AssetDatabase.GetAssetPathsFromAssetBundle(bundleName);
 					//If there are no assets added to this bundle show a warning telling the user to remove Unused asset bundle names
-					if (assetBundleAssetsArray == null || assetBundleAssetsArray.Length == 0){
-						Debug.Log(assetBundleNamesArray[i]+" was an empty assetBundle. Please do 'Remove Unused Names' in the 'Asset Labels' section of the Inspector");
+					if (assetBundleAssetsArray == null || assetBundleAssetsArray.Length == 0)
+					{
+						if (Debug.isDebugBuild)
+							Debug.Log(assetBundleNamesArray[i]+" was an empty assetBundle. Please do 'Remove Unused Names' in the 'Asset Labels' section of the Inspector");
 					}
 
 					thisIndex.bundlesIndex.Add(new AssetBundleIndex.AssetBundleIndexList(bundleName));
@@ -232,7 +234,8 @@ namespace UMA.AssetBundles
 				AssetDatabase.DeleteAsset(thisIndexAssetPath);
 				//And remove its assetBundle name from the assetBundleNames
 				AssetDatabase.RemoveAssetBundleName(Utility.GetPlatformName().ToLower() + "index", false);
-				Debug.Log("Asset Bundles built successfully for platform "+Utility.GetPlatformName()+(UMAABMSettings.GetEncryptionEnabled() ? " (Encrypted)!" : "!"));
+				if (Debug.isDebugBuild)
+					Debug.Log("Asset Bundles built successfully for platform "+Utility.GetPlatformName()+(UMAABMSettings.GetEncryptionEnabled() ? " (Encrypted)!" : "!"));
 			}
 			catch (System.Exception e)
 			{
@@ -242,7 +245,8 @@ namespace UMA.AssetBundles
 					AssetDatabase.DeleteAsset(thisEncryptionAssetPath);
 				//And remove its assetBundle name from the assetBundleNames
 				AssetDatabase.RemoveAssetBundleName(Utility.GetPlatformName().ToLower() + "index", false);
-				Debug.LogError("Your AssetBundles did not build properly. Error Message: " + e.Message+" Error Exception: "+e.InnerException+" Error StackTrace: "+e.StackTrace);
+				if (Debug.isDebugBuild)
+					Debug.LogError("Your AssetBundles did not build properly. Error Message: " + e.Message+" Error Exception: "+e.InnerException+" Error StackTrace: "+e.StackTrace);
 			}
 		}
 
@@ -258,7 +262,8 @@ namespace UMA.AssetBundles
 			string[] levels = GetLevelsFromBuildSettings();
 			if (levels.Length == 0)
 			{
-				Debug.LogWarning("There were no Scenes in you Build Settings. Adding the current active Scene.");
+				if (Debug.isDebugBuild)
+					Debug.LogWarning("There were no Scenes in you Build Settings. Adding the current active Scene.");
 				levels = new string[1] { UnityEngine.SceneManagement.SceneManager.GetActiveScene().path };
 			}
 			string targetName = GetBuildTargetName(EditorUserBuildSettings.activeBuildTarget);
@@ -269,7 +274,8 @@ namespace UMA.AssetBundles
 				SimpleWebServer.WriteServerURL();
 			else if (SimpleWebServer.serverStarted && !CanRunLocally(EditorUserBuildSettings.activeBuildTarget))
 			{
-				Debug.LogWarning("Builds for " + EditorUserBuildSettings.activeBuildTarget.ToString() + " cannot access the LocalServer. AssetBundles will be downloaded from the remoteServerUrl's");
+				if (Debug.isDebugBuild)
+					Debug.LogWarning("Builds for " + EditorUserBuildSettings.activeBuildTarget.ToString() + " cannot access the LocalServer. AssetBundles will be downloaded from the remoteServerUrl's");
 			}
 			//BuildOptions
 			BuildOptions option = BuildOptions.None;
@@ -296,7 +302,8 @@ namespace UMA.AssetBundles
 					SimpleWebServer.DestroyServerURLFile();
 
 				string fullPathToBuild = Path.Combine(Directory.GetParent(Application.dataPath).FullName, outputPath);
-				Debug.Log("Built Successful! Build Location: " + fullPathToBuild);
+				if (Debug.isDebugBuild)
+					Debug.Log("Built Successful! Build Location: " + fullPathToBuild);
 				if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.WebGL)
 				{
 					Application.OpenURL(SimpleWebServer.ServerURL + "index.html");
@@ -315,7 +322,8 @@ namespace UMA.AssetBundles
 			string[] levels = GetLevelsFromBuildSettings();
 			if (levels.Length == 0)
 			{
-				Debug.Log("Nothing to build.");
+				if (Debug.isDebugBuild)
+					Debug.Log("Nothing to build.");
 				return;
 			}
 
@@ -326,13 +334,13 @@ namespace UMA.AssetBundles
 			// Build and copy AssetBundles.
 			BuildScript.BuildAssetBundles();
 			//DOS NOTES this was added in the latest pull requests for the original AssetBundleManager not sure why?
-            BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions();
-            buildPlayerOptions.scenes = levels;
-            buildPlayerOptions.locationPathName = outputPath + targetName;
-            buildPlayerOptions.assetBundleManifestPath = GetAssetBundleManifestFilePath();
-            buildPlayerOptions.target = EditorUserBuildSettings.activeBuildTarget;
-            buildPlayerOptions.options = EditorUserBuildSettings.development ? BuildOptions.Development : BuildOptions.None;
-            BuildPipeline.BuildPlayer(buildPlayerOptions);
+			BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions();
+			buildPlayerOptions.scenes = levels;
+			buildPlayerOptions.locationPathName = outputPath + targetName;
+			buildPlayerOptions.assetBundleManifestPath = GetAssetBundleManifestFilePath();
+			buildPlayerOptions.target = EditorUserBuildSettings.activeBuildTarget;
+			buildPlayerOptions.options = EditorUserBuildSettings.development ? BuildOptions.Development : BuildOptions.None;
+			BuildPipeline.BuildPlayer(buildPlayerOptions);
 		}
 
 		public static void BuildStandalonePlayer()
@@ -344,7 +352,8 @@ namespace UMA.AssetBundles
 			string[] levels = GetLevelsFromBuildSettings();
 			if (levels.Length == 0)
 			{
-				Debug.Log("Nothing to build.");
+				if (Debug.isDebugBuild)
+					Debug.Log("Nothing to build.");
 				return;
 			}
 
@@ -357,13 +366,13 @@ namespace UMA.AssetBundles
 			BuildScript.CopyAssetBundlesTo(Path.Combine(Application.streamingAssetsPath, Utility.AssetBundlesOutputPath));
 			AssetDatabase.Refresh();
 
-            BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions();
-            buildPlayerOptions.scenes = levels;
-            buildPlayerOptions.locationPathName = outputPath + targetName;
-            buildPlayerOptions.assetBundleManifestPath = GetAssetBundleManifestFilePath();
-            buildPlayerOptions.target = EditorUserBuildSettings.activeBuildTarget;
-            buildPlayerOptions.options = EditorUserBuildSettings.development ? BuildOptions.Development : BuildOptions.None;
-            BuildPipeline.BuildPlayer(buildPlayerOptions);
+			BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions();
+			buildPlayerOptions.scenes = levels;
+			buildPlayerOptions.locationPathName = outputPath + targetName;
+			buildPlayerOptions.assetBundleManifestPath = GetAssetBundleManifestFilePath();
+			buildPlayerOptions.target = EditorUserBuildSettings.activeBuildTarget;
+			buildPlayerOptions.options = EditorUserBuildSettings.development ? BuildOptions.Development : BuildOptions.None;
+			BuildPipeline.BuildPlayer(buildPlayerOptions);
 		}
 		/// <summary>
 		/// Returns true if the build can potentially run on the current machine (a local build)
@@ -389,11 +398,11 @@ namespace UMA.AssetBundles
 						return true;
 					else
 						return false;
-#if !UNITY_2017_3_OR_NEWER
+#if UNITY_2017_3_OR_NEWER
+				case BuildTarget.StandaloneOSX:
+#else
 				case BuildTarget.StandaloneOSXIntel:
-				case BuildTarget.StandaloneOSXIntel64:
-#endif
-				case BuildTarget.StandaloneOSXUniversal:
+#endif    
 					if (currentEnvironment.IndexOf("OSX") > -1)
 						return true;
 					else
@@ -415,18 +424,19 @@ namespace UMA.AssetBundles
 				case BuildTarget.StandaloneWindows:
 				case BuildTarget.StandaloneWindows64:
 					return "/test.exe";
-#if !UNITY_2017_3_OR_NEWER
+#if UNITY_2017_3_OR_NEWER
+				case BuildTarget.StandaloneOSX:
+#else
 				case BuildTarget.StandaloneOSXIntel:
-				case BuildTarget.StandaloneOSXIntel64:
-#endif
-				case BuildTarget.StandaloneOSXUniversal:
+#endif    
 					return "/test.app";
 				case BuildTarget.WebGL:
 				case BuildTarget.iOS:
 					return "";
 				// Add more build targets for your own.
 				default:
-					Debug.Log("Target not implemented.");
+					if (Debug.isDebugBuild)
+						Debug.Log("Target not implemented.");
 					return null;
 			}
 		}
@@ -442,7 +452,10 @@ namespace UMA.AssetBundles
 			// Setup the source folder for assetbundles.
 			var source = Path.Combine(Path.Combine(System.Environment.CurrentDirectory, Utility.AssetBundlesOutputPath), outputFolder);
 			if (!System.IO.Directory.Exists(source))
-				Debug.Log("No assetBundle output folder, try to build the assetBundles first.");
+			{
+				if (Debug.isDebugBuild)
+					Debug.Log("No assetBundle output folder, try to build the assetBundles first.");
+			}
 
 			// Setup the destination folder for assetbundles.
 			var destination = System.IO.Path.Combine(outputPath, outputFolder);

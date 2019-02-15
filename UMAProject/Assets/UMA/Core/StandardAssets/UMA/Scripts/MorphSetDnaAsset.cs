@@ -28,7 +28,9 @@ namespace UMA
 
 		public int dnaTypeHash;
 
+		[Tooltip("Always apply this bone pose")]
 		public UMABonePose startingPose;
+		[Tooltip("Always apply this blendshape")]
 		public string startingBlendShape;
 
 		public DNAMorphSet[] dnaMorphs;
@@ -42,7 +44,7 @@ namespace UMA
 		}
 
 		#if UNITY_EDITOR
-		[UnityEditor.MenuItem("Assets/Create/UMA/DNA/Morph Set DNA")]
+		[UnityEditor.MenuItem("Assets/Create/UMA/DNA/Legacy/Morph Set DNA")]
 		public static void CreateMorphSetDnaAsset()
 		{
 			UMA.CustomAssetUtility.CreateAsset<MorphSetDnaAsset>();

@@ -35,14 +35,18 @@ namespace UMA
 		{
 			if (morphSet == null)
 			{
-				Debug.LogError("Missing morph set asset for: " + this.name);
+				if (Debug.isDebugBuild)
+					Debug.LogError("Missing morph set asset for: " + this.name);
+
 				return;
 			}
 
 			UMADnaBase activeDNA = data.GetDna(this.dnaTypeHash);
 			if (activeDNA == null)
 			{
-				Debug.LogError("Could not get DNA values for: "+ this.name);
+				if (Debug.isDebugBuild)
+					Debug.LogError("Could not get DNA values for: "+ this.name);
+
 				return;
 			}
 
@@ -62,13 +66,13 @@ namespace UMA
 				{
 					float dnaValue = dnaValues[i];
 					MorphSetDnaAsset.DNAMorphSet morph = morphSet.dnaMorphs[i];
-
 					ApplyMorph(dnaValue, data, skeleton, morph);
 				}
 			}
 			else
 			{
-				Debug.LogWarning("DNA length mismatch, trying names. This is SLOW!");
+				if (Debug.isDebugBuild)
+					Debug.LogWarning("DNA length mismatch, trying names. This is SLOW!");
 				string[] dnaNames = activeDNA.Names;
 				for (int i = 0; i < morphSet.dnaMorphs.Length; i++)
 				{
@@ -97,10 +101,13 @@ namespace UMA
 				if (!String.IsNullOrEmpty(morph.blendShapeOne))
 					data.SetBlendShape(morph.blendShapeOne, morphWeight);
 
-				if(!String.IsNullOrEmpty(morph.blendShapeZero))
+				if (!String.IsNullOrEmpty(morph.blendShapeZero))
 					data.SetBlendShape(morph.blendShapeZero, 0f);
+
+				return;
 			}
-			else if (dnaValue <= 0.4999f)
+
+			if (dnaValue <= 0.4999f)
 			{
 				float morphWeight = (0.5f - dnaValue) * 2f;
 				if (morph.poseZero != null)
@@ -110,7 +117,16 @@ namespace UMA
 
 				if (!String.IsNullOrEmpty(morph.blendShapeOne))
 					data.SetBlendShape(morph.blendShapeOne, 0f);
+
+				return;
 			}
+
+			//if dnaValue == 0.5f
+			if (!String.IsNullOrEmpty(morph.blendShapeOne))
+				data.SetBlendShape(morph.blendShapeOne, 0f);
+
+			if (!String.IsNullOrEmpty(morph.blendShapeZero))
+				data.SetBlendShape(morph.blendShapeZero, 0f);
 		}
 	}
 }

@@ -91,7 +91,8 @@ namespace UMA.CharacterSystem
 			var thisContext = UMAContext.FindInstance();
 			if(thisContext == null)
 			{
-				Debug.LogWarning("Getting the WardrobeSet from a WardrobeCollection requires a valid UMAContext in the scene");
+				if (Debug.isDebugBuild)
+					Debug.LogWarning("Getting the WardrobeSet from a WardrobeCollection requires a valid UMAContext in the scene");
 				return new List<WardrobeSettings>();
 			}
 			var thisRace = (thisContext.raceLibrary as DynamicRaceLibrary).GetRace(race, true);

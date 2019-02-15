@@ -186,7 +186,8 @@ namespace UMA.CharacterSystem
         //we dont seem to be able to use nameHash for some reason so in this case we are screwed- DOES THIS EVER HAPPEN?
         public override OverlayData InstantiateOverlay(int nameHash)
         {
-            Debug.Log("OverlayLibrary tried to InstantiateOverlay using Hash");
+            if (Debug.isDebugBuild)
+                Debug.Log("OverlayLibrary tried to InstantiateOverlay using Hash");
             OverlayData res;
             try
             {
@@ -277,8 +278,10 @@ namespace UMA.CharacterSystem
             return res;
         }
         //we dont seem to be able to use nameHash for some reason so in this case we are screwed- DOES THIS EVER HAPPEN?
-        public override OverlayData InstantiateOverlay(int nameHash, Color color) {
-            Debug.Log("OverlayLibrary tried to InstantiateOverlay using Hash");
+        public override OverlayData InstantiateOverlay(int nameHash, Color color)
+        {
+            if (Debug.isDebugBuild)
+                Debug.Log("OverlayLibrary tried to InstantiateOverlay using Hash");
             OverlayData res;
             try
             {
@@ -344,11 +347,13 @@ namespace UMA.CharacterSystem
             }
             if (originatingAssetBundle == "")
             {
-                Debug.Log(overlayName + " has not been loaded from any AssetBundle");
+                if (Debug.isDebugBuild)
+                    Debug.Log(overlayName + " has not been loaded from any AssetBundle");
             }
             else
             {
-                Debug.Log("originatingAssetBundle for " + overlayName + " was " + originatingAssetBundle);
+                if (Debug.isDebugBuild)
+                    Debug.Log("originatingAssetBundle for " + overlayName + " was " + originatingAssetBundle);
             }
             return originatingAssetBundle;
         }

@@ -18,13 +18,26 @@ MonoBehaviour:
     textureFormat: 0
     materialPropertyName: _MainTex
     sourceTextureName: 
+    Compression: 0
+    DownSample: 0
+    ConvertRenderTexture: 0
   - channelType: 1
     textureFormat: 0
     materialPropertyName: _BumpMap
     sourceTextureName: 
+    Compression: 0
+    DownSample: 0
+    ConvertRenderTexture: 0
   - channelType: 0
     textureFormat: 0
     materialPropertyName: _SpecGlossMap
     sourceTextureName: 
+    Compression: 0
+    DownSample: 0
+    ConvertRenderTexture: 0
   clothProperties: {fileID: 0}
   RequireSeperateRenderer: 0
+  MipMapBias: 0
+  AnisoLevel: 1
+  MatFilterMode: 1
+  Compression: 0

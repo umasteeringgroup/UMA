@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: MakeMeFatJeansPose
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LowerBackAdjust
+    hash: -1471957022
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.075, y: 1.3000001, z: 1.075}
+  - bone: LowerBackBelly
+    hash: -1421416706
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.5000001, y: 1.175, z: 1.6249999}
+  - bone: RightLegAdjust
+    hash: -1005160586
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.176569, z: 1.155186}
+  - bone: LeftLegAdjust
+    hash: -861926788
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1.176569, z: 1.155186}
+  - bone: RightUpLegAdjust
+    hash: -506228642
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 1.15, z: 1.15}
+  - bone: LeftUpLeg
+    hash: 392266736
+    position: {x: 0, y: -0.017500006, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftUpLegAdjust
+    hash: 898137571
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 1.15, z: 1.15}
+  - bone: RightUpLeg
+    hash: 1971262097
+    position: {x: 0, y: 0.017499998, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []

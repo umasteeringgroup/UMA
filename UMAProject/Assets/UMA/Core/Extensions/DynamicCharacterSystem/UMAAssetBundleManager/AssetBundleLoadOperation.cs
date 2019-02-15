@@ -6,6 +6,9 @@ using UnityEngine.iOS;
 #endif
 #if UNITY_EDITOR
 using UnityEditor;
+#if UNITY_2018_3_OR_NEWER
+using UnityEditor.SceneManagement;
+#endif
 #endif
 using System.Collections;
 //added System.IO for loading/saving cached bundleIndexes
@@ -80,7 +83,8 @@ namespace UMA.AssetBundles
 					}
 					catch(System.Exception e)
 					{
-						Debug.LogError("[AssetBundleLoadOperation] could not decrypt " + assetBundleName+ "Error message was "+e.Message+" : "+e.StackTrace);
+						if (Debug.isDebugBuild)
+							Debug.LogError("[AssetBundleLoadOperation] could not decrypt " + assetBundleName+ "Error message was "+e.Message+" : "+e.StackTrace);
 						return false;
 					}
 					bundle.Unload (true);
@@ -249,14 +253,14 @@ namespace UMA.AssetBundles
 
 	public class AssetBundleDownloadFromWebOperation : AssetBundleDownloadOperation
 	{
-		WWW m_WWW;
+		UnityWebRequest m_WWW;
 		string m_Url;
 		int zeroDownload = 0;
 		bool m_isJsonIndex = false;
 		int retryAttempts = 0;
 		int maxRetryAttempts = 5;
 
-		public AssetBundleDownloadFromWebOperation(string assetBundleName, WWW www, bool isJsonIndex = false)
+		public AssetBundleDownloadFromWebOperation(string assetBundleName, UnityWebRequest www, bool isJsonIndex = false)
 			: base(assetBundleName)
 		{
 			if (www == null)
@@ -300,18 +304,18 @@ namespace UMA.AssetBundles
 				//downloadProgress = m_WWW.progress;
 				if (!string.IsNullOrEmpty(m_WWW.error))
 				{
-					Debug.Log("[AssetBundleLoadOperation] download error for "+ m_WWW.url+" : " + m_WWW.error);
+					if (Debug.isDebugBuild)
+						Debug.Log("[AssetBundleLoadOperation] download error for "+ m_WWW.url+" : " + m_WWW.error);
 				}
 				else
 				{
-					//if (m_WWW.progress == 0)
-					if(m_WWW.progress == downloadProgress)
+					if(m_WWW.downloadProgress == downloadProgress)
 					{
 						zeroDownload++;
 					}
 					else
 					{
-						downloadProgress = m_WWW.progress;
+						downloadProgress = m_WWW.downloadProgress;
 						zeroDownload = 0;
                     }
 #if UNITY_EDITOR
@@ -321,27 +325,47 @@ namespace UMA.AssetBundles
 					{
 						if (zeroDownload == 150)
 						{
-							Debug.Log("[AssetBundleLoadOperation] progress was zero for 150 frames restarting dowload");
+							if (Debug.isDebugBuild)
+								Debug.Log("[AssetBundleLoadOperation] progress was zero for 150 frames restarting dowload");
 							m_WWW.Dispose();//sometimes makes a difference when the download fails
 							m_WWW = null;
-							m_WWW = new WWW(m_Url);
+#if UNITY_2018_1_OR_NEWER
+							m_WWW = UnityWebRequestAssetBundle.GetAssetBundle(m_Url);
+#else
+							m_WWW = UnityWebRequest.GetAssetBundle(m_Url);
+#endif
+#if UNITY_2017_2_OR_NEWER
+							m_WWW.SendWebRequest();
+#else
+							m_WWW.Send();
+#endif
 						}
 
 						if (zeroDownload == 300)//If we are in the editor we can restart the Server and this will make it work
 						{
-							Debug.LogWarning("[AssetBundleLoadOperation] progress was zero for 300 frames restarting the server");
+							if (Debug.isDebugBuild)
+								Debug.LogWarning("[AssetBundleLoadOperation] progress was zero for 300 frames restarting the server");
 							//we wont be able to do the following from a build
 							int port = SimpleWebServer.Instance.Port;
 							SimpleWebServer.Start(port);
 							m_WWW.Dispose();
 							m_WWW = null;
-							m_WWW = new WWW(m_Url);
+#if UNITY_2018_1_OR_NEWER
+							m_WWW = UnityWebRequestAssetBundle.GetAssetBundle(m_Url);
+#else
+							m_WWW = UnityWebRequest.GetAssetBundle(m_Url);
+#endif
+#if UNITY_2017_2_OR_NEWER
+							m_WWW.SendWebRequest();
+#else
+							m_WWW.Send();
+#endif
 							zeroDownload = 0;
 						}
 					}
 					else
 #endif
-					if((downloadProgress == 0 && zeroDownload == 500) || zeroDownload >= Mathf.Clamp((2500 * downloadProgress), 500,2500))//let this number get larger the more has been downloaded (cos its really annoying to be at 98% and have it fail)
+							if((downloadProgress == 0 && zeroDownload == 500) || zeroDownload >= Mathf.Clamp((2500 * downloadProgress), 500,2500))//let this number get larger the more has been downloaded (cos its really annoying to be at 98% and have it fail)
 					{
 						//when we cannot download because WiFi is connected but a hotspot needs authentication
 						//or because the user has run out of mobile data the www class takes a while error out
@@ -357,20 +381,30 @@ namespace UMA.AssetBundles
 							}
 							else
 							{
-								//if we have a connection checker and no connection, leave the www alone so it times out on its own
-								Debug.Log("[AssetBundleLoadOperation] progress was zero for "+ zeroDownload+" frames and the ConnectionChecker said there was no Internet Available.");
+                                //if we have a connection checker and no connection, leave the www alone so it times out on its own
+								if (Debug.isDebugBuild)
+									Debug.Log("[AssetBundleLoadOperation] progress was zero for "+ zeroDownload+" frames and the ConnectionChecker said there was no Internet Available.");
 							}
 						}
 						else
-					{
-							Debug.Log("[AssetBundleLoadOperation] progress was zero for " + zeroDownload + " frames restarting dowload");
-						m_WWW.Dispose();
-						m_WWW = null;
+						{
+							if (Debug.isDebugBuild)
+								Debug.Log("[AssetBundleLoadOperation] progress was zero for " + zeroDownload + " frames restarting dowload");
+							m_WWW.Dispose();
+							m_WWW = null;
 							//m_WWW = new WWW(m_Url);//make sure this still caches
 							if (AssetBundleManager.AssetBundleIndexObject != null)
-								m_WWW = WWW.LoadFromCacheOrDownload(m_Url, AssetBundleManager.AssetBundleIndexObject.GetAssetBundleHash(assetBundleName), 0);
+#if UNITY_2018_1_OR_NEWER
+								m_WWW = UnityWebRequestAssetBundle.GetAssetBundle(m_Url, AssetBundleManager.AssetBundleIndexObject.GetAssetBundleHash(assetBundleName), 0);
+#else
+								m_WWW = UnityWebRequest.GetAssetBundle(m_Url, AssetBundleManager.AssetBundleIndexObject.GetAssetBundleHash(assetBundleName), 0);
+#endif
 							else
-						m_WWW = new WWW(m_Url);
+#if UNITY_2018_1_OR_NEWER
+								m_WWW = UnityWebRequestAssetBundle.GetAssetBundle(m_Url);
+#else
+								m_WWW = UnityWebRequest.GetAssetBundle(m_Url);
+#endif
 							//but increment the retry either way so the failed Ui shows sooner
 							retryAttempts++;
 						}
@@ -408,36 +442,39 @@ namespace UMA.AssetBundles
 			   error = m_WWW.error;
 			if (!string.IsNullOrEmpty(error))
 			{
-				Debug.LogWarning("[AssetBundleLoadOperation.AssetBundleDownloadFromWebOperation] URL was "+ m_Url + " error was " + error);
+				if (Debug.isDebugBuild)
+					Debug.LogWarning("[AssetBundleLoadOperation.AssetBundleDownloadFromWebOperation] URL was "+ m_Url + " error was " + error);
 				return;
 			}
 
 			if (!m_isJsonIndex)
 			{
-				bundle = m_WWW.assetBundle;
+				bundle = DownloadHandlerAssetBundle.GetContent(m_WWW);
 				if (bundle == null)
 				{
-					Debug.LogWarning("[AssetBundleLoadOperation.AssetBundleDownloadFromWebOperation] "+assetBundleName+" was not a valid assetBundle");
+					if (Debug.isDebugBuild)
+						Debug.LogWarning("[AssetBundleLoadOperation.AssetBundleDownloadFromWebOperation] "+assetBundleName+" was not a valid assetBundle");
 					m_WWW.Dispose();
 					m_WWW = null;
 				}
 				else if (!WasBundleEncrypted())
 				{
-					assetBundle = new LoadedAssetBundle(m_WWW.assetBundle);
+					assetBundle = new LoadedAssetBundle(bundle);
 					m_WWW.Dispose();
 					m_WWW = null;
 				}
 			}
 			else
 			{
-				string indexData = m_WWW.text;
+				string indexData = m_WWW.downloadHandler.text;
 				if (indexData == "")
 				{
-					Debug.LogWarning("[AssetBundleLoadOperation.AssetBundleDownloadFromWebOperation] The JSON AssetBundleIndex was empty");
+					if (Debug.isDebugBuild)
+						Debug.LogWarning("[AssetBundleLoadOperation.AssetBundleDownloadFromWebOperation] The JSON AssetBundleIndex was empty");
 				}
 				else
 				{
-					assetBundle = new LoadedAssetBundle(m_WWW.text);
+					assetBundle = new LoadedAssetBundle(m_WWW.downloadHandler.text);
 				}
 				m_WWW.Dispose();
 				m_WWW = null;
@@ -481,9 +518,12 @@ namespace UMA.AssetBundles
 
 		protected override void FinishDownload()
 		{
-            bundle = m_Operation.assetBundle;
+			bundle = m_Operation.assetBundle;
 			if (bundle == null)
-				Debug.LogWarning("[AssetBundleLoadOperation.AssetBundleLoadDecrypted] could not create bundle from decrypted bytes for " + assetBundleName);
+			{
+				if (Debug.isDebugBuild)
+					Debug.LogWarning("[AssetBundleLoadOperation.AssetBundleLoadDecrypted] could not create bundle from decrypted bytes for " + assetBundleName);
+			}
 			else
 			{
 				//Debug.Log("[AssetBundleLoadOperation.AssetBundleLoadEncrypted] " + assetBundleName+" loaded from decrypted bytes successfully");
@@ -515,15 +555,27 @@ namespace UMA.AssetBundles
 			{
 				///@TODO: The error needs to differentiate that an asset bundle name doesn't exist
 				//        from that the right scene does not exist in the asset bundle...
-
-				Debug.LogError("There is no scene with name \"" + levelName + "\" in " + assetBundleName);
+				if (Debug.isDebugBuild)
+					Debug.LogError("There is no scene with name \"" + levelName + "\" in " + assetBundleName);
 				return;
 			}
 
 			if (isAdditive)
+			{
+#if UNITY_2018_3_OR_NEWER
+				m_Operation = EditorSceneManager.LoadSceneAsyncInPlayMode(levelPaths[0], new LoadSceneParameters(LoadSceneMode.Additive));
+#else
 				m_Operation = EditorApplication.LoadLevelAdditiveAsyncInPlayMode(levelPaths[0]);
+#endif
+			}
 			else
+			{
+#if UNITY_2018_3_OR_NEWER
+				m_Operation = EditorSceneManager.LoadSceneAsyncInPlayMode(levelPaths[0], new LoadSceneParameters(LoadSceneMode.Single));
+#else
 				m_Operation = EditorApplication.LoadLevelAsyncInPlayMode(levelPaths[0]);
+#endif
+			}
 		}
 
 		public override bool Update()
@@ -595,7 +647,8 @@ namespace UMA.AssetBundles
 			// m_DownloadingError might come from the dependency downloading.
 			if (m_Request == null && !string.IsNullOrEmpty(m_DownloadingError))
 			{
-				Debug.LogError(m_DownloadingError);
+				if (Debug.isDebugBuild)
+					Debug.LogError(m_DownloadingError);
 				return true;
 			}
 
@@ -681,7 +734,8 @@ namespace UMA.AssetBundles
 			// m_DownloadingError might come from the dependency downloading.
 			if (m_Request == null && !string.IsNullOrEmpty(m_DownloadingError))
 			{
-				Debug.LogError(m_DownloadingError);
+				if (Debug.isDebugBuild)
+					Debug.LogError(m_DownloadingError);
 				return true;
 			}
 
@@ -719,7 +773,8 @@ namespace UMA.AssetBundles
 					{
 						if (loadedBundle.m_AssetBundle == null)
 						{
-							Debug.LogWarning("AssetBundle was null for " + m_AssetBundleName);
+							if (Debug.isDebugBuild)
+								Debug.LogWarning("AssetBundle was null for " + m_AssetBundleName);
 							return false;
 						}
 						m_Request = loadedBundle.m_AssetBundle.LoadAssetAsync<AssetBundleIndex>(m_AssetName);
@@ -734,7 +789,8 @@ namespace UMA.AssetBundles
 				if(AssetBundleManager.ConnectionChecker != null && AssetBundleManager.ConnectionChecker.UseBundleIndexCaching == true)
 					if (AssetBundleManager.AssetBundleIndexObject != null)
 					{
-						Debug.Log("Caching downloaded index with Build version " + AssetBundleManager.AssetBundleIndexObject.bundlesPlayerVersion);
+						if (Debug.isDebugBuild)
+							Debug.Log("Caching downloaded index with Build version " + AssetBundleManager.AssetBundleIndexObject.bundlesPlayerVersion);
 						var cachedIndexPath = Path.Combine(Application.persistentDataPath, "cachedBundleIndex");
 						if (!Directory.Exists(cachedIndexPath))
 							Directory.CreateDirectory(cachedIndexPath);
@@ -772,7 +828,8 @@ namespace UMA.AssetBundles
 			cachedIndexPath = Path.Combine(cachedIndexPath, bundleName+".json");
 			if (File.Exists(cachedIndexPath))
 			{
-				Debug.Log("Cached index found for " + cachedIndexPath);
+				if (Debug.isDebugBuild)
+					Debug.Log("Cached index found for " + cachedIndexPath);
 				AssetBundleManager.AssetBundleIndexObject = ScriptableObject.CreateInstance<AssetBundleIndex>();
 				JsonUtility.FromJsonOverwrite(File.ReadAllText(cachedIndexPath), AssetBundleManager.AssetBundleIndexObject);
 				//AssetBundleManager.AssetBundleIndexObject = JsonUtility.FromJson<AssetBundleIndex>(File.ReadAllText(cachedIndexPath));

@@ -10,11 +10,19 @@ namespace UMA.Editors
     {
         private Shader _lastSelectedShader;
         private string[] _shaderProperties;
+        private GUIStyle _centeredStyle;
 
         public override void OnInspectorGUI()
         {
             UMAMaterial source = target as UMAMaterial;
             serializedObject.Update();
+
+            if (_centeredStyle == null)
+            {
+                _centeredStyle = new GUIStyle(GUI.skin.label);
+                _centeredStyle.alignment = TextAnchor.MiddleCenter;
+                _centeredStyle.fontStyle = FontStyle.Bold;
+            }
 
             //base.OnInspectorGUI();
 
@@ -30,6 +38,15 @@ namespace UMA.Editors
 
             EditorGUILayout.PropertyField(serializedObject.FindProperty("material"), new GUIContent( "Material", "The Unity Material to link to."));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("materialType"), new GUIContent( "Material Type", "To atlas or not to atlas- that is the question."));
+
+            GUILayout.Space(20);
+            EditorGUILayout.LabelField("Generated Texture Settings", _centeredStyle);
+            EditorGUILayout.BeginVertical("HelpBox");
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("MipMapBias"), new GUIContent("Mip Map Bias", "Negative values have sharper bias"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("AnisoLevel"), new GUIContent("Aniso Level", "Anisotropic level"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("MatFilterMode"),  new GUIContent("Texture Filter Mode", "Select the filter mode of Point, Bilinear or Trilinear"));
+            //EditorGUILayout.PropertyField(serializedObject.FindProperty("Compression"), new GUIContent("Texture Compression", "Compress the atlas texture to DXT1 or DXT5"));
+            EditorGUILayout.EndVertical();
 
             GUILayout.Space(20);
 
@@ -62,6 +79,15 @@ namespace UMA.Editors
                         EditorGUILayout.PropertyField(channel.FindPropertyRelative("channelType"), new GUIContent("Channel Type", "The channel type. Affects the texture atlassing process."));
                         EditorGUILayout.PropertyField(channel.FindPropertyRelative("textureFormat"), new GUIContent("Texture Format", "Format used for the texture in this channel."));
 
+                        if (channel.FindPropertyRelative("textureFormat") != null && i < ((UMAMaterial)target).channels.Length)
+                        {
+                            RenderTextureFormat format = ((UMAMaterial)target).channels[i].textureFormat;
+                            if (!SystemInfo.SupportsRenderTextureFormat(format))
+                            {
+                                EditorGUILayout.HelpBox("This Texture Format is not supported on this system!", MessageType.Error);
+                            }
+                        }
+
                         EditorGUILayout.BeginHorizontal();
 
                         EditorGUILayout.PropertyField( materialPropertyName, new GUIContent("Material Property Name", "The name of the property this texture corresponds to in the shader used by this material."), GUILayout.MinWidth(300));
@@ -81,6 +107,14 @@ namespace UMA.Editors
                                 EditorGUILayout.HelpBox("This name is not found in the shader! Are you sure it is correct?", MessageType.Warning);
                         }
 
+                        EditorGUILayout.PropertyField(channel.FindPropertyRelative("ConvertRenderTexture"), new GUIContent("Convert RenderTexture", "Convert the Render Texture to a Texture2D (so it can be compressed)"));
+                        SerializedProperty ConvertRenderTextureProperty = channel.FindPropertyRelative("ConvertRenderTexture");
+                        if (ConvertRenderTextureProperty.boolValue == true)
+                        {
+                            EditorGUILayout.PropertyField(channel.FindPropertyRelative("Compression"), new GUIContent("Texture Compression", "Compress the atlas texture to DXT1 or DXT5"));
+                        }
+                        
+                        EditorGUILayout.PropertyField(channel.FindPropertyRelative("DownSample"), new GUIContent("Down Sample", "Decrease size to save texture memory"));
                         EditorGUILayout.PropertyField(channel.FindPropertyRelative("sourceTextureName"), new GUIContent("Source Texture Name", "For use with procedural materials, leave empty otherwise."));
                     }
                     EditorGUI.indentLevel -= 1;

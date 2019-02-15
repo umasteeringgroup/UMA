@@ -1,0 +1,281 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: AlienPose
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightEye
+    hash: -2120937982
+    position: {x: 0, y: 0.0022082515, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.15, y: 1.15, z: 1.15}
+  - bone: NoseMiddleAdjust
+    hash: -1907186538
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.62538564, y: 0.9365127, z: 0.96253854}
+  - bone: LowerBackAdjust
+    hash: -1471957022
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.85, y: 0.6805179, z: 0.85}
+  - bone: LowerBackBelly
+    hash: -1421416706
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.5, y: 0.825, z: 0.375}
+  - bone: LeftShoulderAdjust
+    hash: -1372013129
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 0.75, z: 0.75}
+  - bone: LeftCheekAdjust
+    hash: -1371476741
+    position: {x: 0, y: 0, z: 0.00425877}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.4057662, y: 1.4057662, z: 1.4057662}
+  - bone: LeftTrapezius
+    hash: -1320475381
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 0.65, y: 0.65, z: 0.65}
+  - bone: RightForeArmAdjust
+    hash: -1195342688
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.75, z: 0.75}
+  - bone: RightTrapezius
+    hash: -1174579199
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.65, y: 0.65, z: 0.65}
+  - bone: Position
+    hash: -1084586333
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.1813921, y: 1.1813921, z: 1.1813921}
+  - bone: RightOuterBreast
+    hash: -1043063424
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.6, y: 0.6, z: 0.6}
+  - bone: RightLegAdjust
+    hash: -1005160586
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.65, z: 0.65}
+  - bone: LeftLowCheekAdjust
+    hash: -982498292
+    position: {x: 0.008280935, y: 0, z: 0.015615485}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LowerBack
+    hash: -919067556
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.81072134, y: 0.81072134, z: 0.81072134}
+  - bone: LeftLegAdjust
+    hash: -861926788
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.65, z: 0.65}
+  - bone: LeftEarAdjust
+    hash: -777059916
+    position: {x: 0.0030757794, y: 0.009227338, z: 0.01}
+    rotation: {x: -4.876509e-16, y: -1.8485359e-16, z: -0.10168295, w: 0.99481684}
+    scale: {x: 0.7555151, y: 0.7555151, z: 0.7555151}
+  - bone: NoseBaseAdjust
+    hash: -685367200
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -1.447196e-16, y: 0.1928666, z: -1.8079901e-16, w: 0.98122495}
+    scale: {x: 0.7397418, y: 0.97397417, z: 0.84384495}
+  - bone: LeftLipsAdjust
+    hash: -666615888
+    position: {x: 0, y: -0.0101737315, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightEarAdjust
+    hash: -652641090
+    position: {x: 0.0030757794, y: -0.009227338, z: 0.01}
+    rotation: {x: 4.9561003e-15, y: 3.5943983e-16, z: 0.10168295, w: 0.99481684}
+    scale: {x: 0.7555151, y: 0.7555151, z: 0.7555151}
+  - bone: RightUpLegAdjust
+    hash: -506228642
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 0.5887988, z: 0.5887988}
+  - bone: HeadAdjust
+    hash: -423229038
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.90772665, z: 1}
+  - bone: RightArmAdjust
+    hash: -413665443
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.675, z: 0.675}
+  - bone: LeftArmAdjust
+    hash: -270431657
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.675, z: 0.675}
+  - bone: RightShoulder
+    hash: -167360539
+    position: {x: 0, y: -0.018, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftEye
+    hash: 27653119
+    position: {x: 0, y: -0.0022082515, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.15, y: 1.15, z: 1.15}
+  - bone: Head
+    hash: 130111906
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.1261858, y: 1.1261858, z: 1.1261858}
+  - bone: LeftOuterBreast
+    hash: 361754685
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.6, y: 0.6, z: 0.6}
+  - bone: LeftUpLeg
+    hash: 392266736
+    position: {x: 0, y: 0.02680619, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLowMaxilarAdjust
+    hash: 459855613
+    position: {x: 0, y: 0.0080837775, z: 0.0111201275}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: Spine1Adjust
+    hash: 473121629
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.6666666, z: 0.7857143}
+  - bone: RightLowCheekAdjust
+    hash: 530525254
+    position: {x: 0.008280935, y: 0, z: 0.015615485}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftForeArmTwistAdjust
+    hash: 547566030
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.825, z: 0.825}
+  - bone: MandibleAdjust
+    hash: 691264956
+    position: {x: 0, y: 0, z: -0.00375}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.0752383, y: 0.88722146, z: 1}
+  - bone: RightForeArmTwistAdjust
+    hash: 758040550
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.825, z: 0.825}
+  - bone: LeftShoulder
+    hash: 759586984
+    position: {x: 0, y: 0.018, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftUpLegAdjust
+    hash: 898137571
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 0.5887988, z: 0.5887988}
+  - bone: LeftForeArmAdjust
+    hash: 923803339
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.75, z: 0.75}
+  - bone: RightLipsAdjust
+    hash: 949575891
+    position: {x: 0, y: 0.0101737315, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLipsSuperiorMiddleAdjust
+    hash: 1220922885
+    position: {x: 0, y: 0.0023738707, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.65, z: 0.65}
+  - bone: LeftLowMaxilarAdjust
+    hash: 1385644791
+    position: {x: 0, y: -0.0080837775, z: 0.0111201275}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLipsInferiorAdjust
+    hash: 1389899872
+    position: {x: 0, y: 0.0023738707, z: 0.0032808317}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.65, z: 0.65}
+  - bone: LeftEyebrowMiddleAdjust
+    hash: 1573521115
+    position: {x: -0.003312378, y: 0, z: -0.009385071}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: Mandible
+    hash: 1574626840
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.0552063, y: 1.0552063, z: 1.0552063}
+  - bone: LeftLipsInferiorAdjust
+    hash: 1599456840
+    position: {x: 0, y: -0.0023738707, z: 0.0032808317}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.65, z: 0.65}
+  - bone: NeckAdjust
+    hash: 1605701185
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.6, z: 0.5}
+  - bone: RightEyebrowMiddleAdjust
+    hash: 1752310743
+    position: {x: -0.003312378, y: 0, z: -0.009385071}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LipsInferiorAdjust
+    hash: 1799356466
+    position: {x: 0, y: 0, z: 0.0032808317}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.65, z: 0.65}
+  - bone: SpineAdjust
+    hash: 1842365421
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.8333334, z: 0.9375}
+  - bone: LipsSuperiorAdjust
+    hash: 1865332640
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.65, z: 0.65}
+  - bone: LeftLipsSuperiorMiddleAdjust
+    hash: 1940197654
+    position: {x: 0, y: -0.0023738707, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.65, z: 0.65}
+  - bone: RightShoulderAdjust
+    hash: 1960302077
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 0.75, z: 0.75}
+  - bone: RightUpLeg
+    hash: 1971262097
+    position: {x: 0, y: -0.02680619, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightCheekAdjust
+    hash: 2048590150
+    position: {x: 0, y: 0, z: 0.00425877}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.4057662, y: 1.4057662, z: 1.4057662}
+  tweenPoses: []
+  tweenWeights: []
