@@ -7,7 +7,7 @@ namespace UMA
     public class UmaAboutWindow : EditorWindow 
     {
         public static string umaVersion { get { return _version; } }
-        private static string _version = "2.8.0";
+        private static string _version = "2.8.1";
         private string windowTitle = "UMA About";
         private string wikiLink = "http://umadocs.secretanorak.com/doku.php";
         private string githubLink = "https://github.com/umasteeringgroup";
@@ -85,11 +85,11 @@ namespace UMA
 
         void Initialize()
         {
-            if(_BannerTexture == null)
-                _BannerTexture = AssetDatabase.LoadAssetAtPath<Texture> ("Assets/UMA/InternalDataStore/UmaBanner.png");
+            if (_BannerTexture == null)
+                _BannerTexture = UMAUtils.LoadTextureAsset("UmaBanner");
 
             if (_IconTexture == null)
-                _IconTexture = AssetDatabase.LoadAssetAtPath<Texture>("Assets/UMA/InternalDataStore/UMA32.png");
+                _IconTexture = UMAUtils.LoadTextureAsset("UMA32");
 
             if (!initialized)
             {
