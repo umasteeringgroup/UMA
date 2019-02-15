@@ -4,6 +4,7 @@ using UnityEditor;
 #endif
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.Events;
 using UMA.PoseTools;
 
 namespace UMA.CharacterSystem
@@ -53,6 +54,8 @@ namespace UMA.CharacterSystem
 		//used as the 'epsilon' value when comparing bones during a 'create starting Pose from Current DNA' operation
 		//decent values are between around 0.000005f and 0.0005f
 		public float bonePoseAccuracy = 0.00005f;
+
+		public UnityEvent BonesCreated = new UnityEvent();
 
 		//UndoRedoDelegate
 		void OnUndo()
@@ -442,9 +445,11 @@ namespace UMA.CharacterSystem
 
 			bonePoseSaveName = createdAssetName;
 			//we need to close any dna editing panels because these will need to update after this process completes
-			UMA.CharacterSystem.Examples.TestCustomizerDD[] charCustomizerDDs = FindObjectsOfType<UMA.CharacterSystem.Examples.TestCustomizerDD>();
+			/*UMA.CharacterSystem.Examples.TestCustomizerDD[] charCustomizerDDs = FindObjectsOfType<UMA.CharacterSystem.Examples.TestCustomizerDD>();
 			for (int i = 0; i < charCustomizerDDs.Length; i++)
-				charCustomizerDDs[i].CloseAllPanels();
+				charCustomizerDDs[i].CloseAllPanels();*/
+			if (BonesCreated != null)
+				BonesCreated.Invoke();
 			// Build a temporary version of the Avatar with no DNA to get original state
 			UMADnaBase[] activeDNA = activeUMA.umaData.umaRecipe.GetAllDna();
 			SlotData[] activeSlots = activeUMA.umaData.umaRecipe.GetAllSlots();
