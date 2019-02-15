@@ -27,9 +27,9 @@ namespace UMA
 		{
 			float u1 = Random.value;
 			float u2 = Random.value;
-			
+
 			float rand_std_normal = Mathf.Sqrt(-2.0f * Mathf.Log(u1)) * Mathf.Sin(2.0f * Mathf.PI * u2);
-			
+
 			return mean + dev * rand_std_normal;
 		}
 
@@ -65,6 +65,27 @@ namespace UMA
 			}
 
 			return 0;
+		}
+
+		/// <summary>
+		/// Returns the first found asset.
+		/// </summary>
+		/// <param name="searchName"></param>
+		/// <returns></returns>
+		public static Texture LoadTextureAsset(string searchName)
+		{
+			string search = "t:texture " + searchName;
+			string[] assets = UnityEditor.AssetDatabase.FindAssets(search);
+			if (assets != null && assets.Length > 0)
+			{
+				return UnityEditor.AssetDatabase.LoadAssetAtPath<Texture>(UnityEditor.AssetDatabase.GUIDToAssetPath(assets[0]));
+			}
+			else
+			{
+				if (Debug.isDebugBuild)
+					Debug.LogWarning("Could not load " + searchName);
+			}
+			return null;
 		}
 #endif
 
