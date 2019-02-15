@@ -83,21 +83,38 @@ namespace UMA.Editors
 				else
 					textureChannelCount = _channels.arraySize;
 
-				if (_textureList.arraySize <= 0 || _textureList.arraySize != textureChannelCount)
-					_textureList.arraySize = textureChannelCount;
-
 				EditorGUILayout.PropertyField(_textureList);
 
 				if (_textureList.isExpanded)
 				{
+					EditorGUILayout.PropertyField(_textureList.FindPropertyRelative("Array.size"));
 					EditorGUI.indentLevel++;
 					for (int i = 0; i < _textureList.arraySize; i++)
 					{
-						SerializedProperty channel = _channels.GetArrayElementAtIndex(i);
-						string materialName = channel.FindPropertyRelative("materialPropertyName").stringValue;
-						EditorGUILayout.PropertyField(_textureList.GetArrayElementAtIndex(i), new GUIContent(materialName));
+						SerializedProperty textureElement = _textureList.GetArrayElementAtIndex(i);
+						string materialName = "Unknown";
+
+						if (i < _channels.arraySize)
+						{
+							SerializedProperty channel = _channels.GetArrayElementAtIndex(i);
+							if (channel != null)
+							{
+								SerializedProperty materialPropertyName = channel.FindPropertyRelative("materialPropertyName");
+								if (materialPropertyName != null)
+								{
+									materialName = materialPropertyName.stringValue;
+								}
+							}
+						}
+
+						EditorGUILayout.PropertyField(textureElement, new GUIContent(materialName));
 					}
 					EditorGUI.indentLevel--;
+				}
+
+				if (_textureList.arraySize <= 0 || _textureList.arraySize != textureChannelCount)
+				{
+					EditorGUILayout.HelpBox("Overlay Texture count and UMA Material channel count don't match!", MessageType.Error);
 				}
 
 				if (!_textureList.hasMultipleDifferentValues)
