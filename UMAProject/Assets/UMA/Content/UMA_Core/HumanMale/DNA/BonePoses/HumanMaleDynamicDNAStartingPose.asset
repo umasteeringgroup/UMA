@@ -166,7 +166,7 @@ MonoBehaviour:
     hash: 473121629
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 1}
-    scale: {x: 1, y: 1.0034859, z: 1.0050421}
+    scale: {x: 1, y: 0.9, z: 0.7}
   - bone: RightLowCheekAdjust
     hash: 530525254
     position: {x: -0.00013725698, y: 0, z: 0.015882356}
@@ -221,7 +221,7 @@ MonoBehaviour:
     hash: 1842365421
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 1}
-    scale: {x: 1, y: 1.0037037, z: 1.0026962}
+    scale: {x: 1, y: 0.9, z: 0.8}
   - bone: LipsSuperiorAdjust
     hash: 1865332640
     position: {x: 0, y: 0, z: 0}
@@ -262,5 +262,15 @@ MonoBehaviour:
     position: {x: 0, y: 0, z: 0.00005882442}
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1.0020589, y: 1.0020589, z: 1.0020589}
+  - bone: LeftShoulder
+    hash: 759586984
+    position: {x: 0, y: -0.003, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightShoulder
+    hash: -167360539
+    position: {x: 0, y: 0.003, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
   tweenPoses: []
   tweenWeights: []

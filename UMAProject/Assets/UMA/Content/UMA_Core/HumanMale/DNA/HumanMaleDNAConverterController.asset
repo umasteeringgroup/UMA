@@ -1100,7 +1100,7 @@ MonoBehaviour:
       _max: 2
     _valuesY:
       _val:
-        _value: 0.9
+        _value: 1
         _modifiers: []
         _modifyingDNA:
           _dnaEvaluators:
@@ -1132,7 +1132,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 0.1
             _initialized: 1
           - _calcOption: 0
@@ -1163,7 +1163,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 0.5
             _initialized: 1
           _aggregationMethod: 1
@@ -1171,7 +1171,7 @@ MonoBehaviour:
       _max: 1.5
     _valuesZ:
       _val:
-        _value: 0.7
+        _value: 1
         _modifiers: []
         _modifyingDNA:
           _dnaEvaluators:
@@ -1254,7 +1254,7 @@ MonoBehaviour:
       _max: 2
     _valuesY:
       _val:
-        _value: 0.9
+        _value: 1
         _modifiers: []
         _modifyingDNA:
           _dnaEvaluators:
@@ -1286,7 +1286,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 0.35
             _initialized: 1
           - _calcOption: 0
@@ -1317,7 +1317,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 0.45
             _initialized: 1
           _aggregationMethod: 1
@@ -1325,7 +1325,7 @@ MonoBehaviour:
       _max: 1.35
     _valuesZ:
       _val:
-        _value: 0.8
+        _value: 1
         _modifiers: []
         _modifyingDNA:
           _dnaEvaluators:
@@ -9921,7 +9921,7 @@ MonoBehaviour:
       _max: 10
     _valuesY:
       _val:
-        _value: -0.003
+        _value: 0
         _modifiers: []
         _modifyingDNA:
           _dnaEvaluators:
@@ -9953,7 +9953,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: -0.265
             _initialized: 1
           _aggregationMethod: 1
@@ -9982,7 +9982,7 @@ MonoBehaviour:
       _max: 10
     _valuesY:
       _val:
-        _value: 0.003
+        _value: 0
         _modifiers: []
         _modifyingDNA:
           _dnaEvaluators:
@@ -10014,7 +10014,7 @@ MonoBehaviour:
                   tangentMode: 0
                 m_PreInfinity: 2
                 m_PostInfinity: 2
-                m_RotationOrder: 4
+                m_RotationOrder: 0
             _multiplier: 0.265
             _initialized: 1
           _aggregationMethod: 1
