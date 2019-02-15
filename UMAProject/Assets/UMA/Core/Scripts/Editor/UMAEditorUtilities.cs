@@ -37,14 +37,20 @@ namespace UMA
 				FriendlyNames.Add(typeof(AnimatorController), "Animator Controller");
 				FriendlyNames.Add(typeof(TextAsset), "Text");
 				FriendlyNames.Add(typeof(DynamicUMADnaAsset), "Dynamic DNA");
-				icon = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/UMA/InternalDataStore/UmaIndex.png");
-				showIndexedTypes = EditorPrefs.GetBool("BoolUMAShowTypes", true);
-				showUnindexedTypes = EditorPrefs.GetBool("BoolUMAShowUnindexed", false);
 
-				if (icon == null)
+				string[] iconTextures = AssetDatabase.FindAssets("t:texture UmaIndex");
+				if (iconTextures != null && iconTextures.Length > 0)
+				{
+					icon = AssetDatabase.LoadAssetAtPath<Texture2D>(AssetDatabase.GUIDToAssetPath(iconTextures[0]));
+				}
+				else
 				{
 					Debug.Log("Unable to load texture icon");
 				}
+
+				showIndexedTypes = EditorPrefs.GetBool("BoolUMAShowTypes", true);
+				showUnindexedTypes = EditorPrefs.GetBool("BoolUMAShowUnindexed", false);
+
 				UMAAssetIndexer ai = UMAAssetIndexer.Instance;
 				if (showIndexedTypes)
 				{

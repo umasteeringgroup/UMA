@@ -45,9 +45,47 @@ namespace UMA.CharacterSystem
 		
 		void LoadMesh()
 		{
-			string modelPath = "HumanMale/FBX/Male_Unified.fbx";
-			if(previewModel == PreviewModel.Female) modelPath = "HumanFemale/FBX/Female_Unified.fbx";
-			GameObject model = UnityEditor.AssetDatabase.LoadAssetAtPath("Assets/UMA/Content/UMA_Core/" + modelPath, typeof(GameObject)) as GameObject;
+			//search string finds both male and female!
+			string[] assets = UnityEditor.AssetDatabase.FindAssets("t:Model Male_Unified");
+			string male = "";
+			string female = "";
+			GameObject model = null;
+
+			foreach(string guid in assets)
+			{
+				string thePath = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
+				if (thePath.ToLower().Contains("female"))
+					female = thePath;
+				else
+					male = thePath;
+			}
+
+			if (previewModel == PreviewModel.Male)
+			{
+				if(!string.IsNullOrEmpty(male))
+				{
+					model = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(male);
+				}
+				else
+				{
+					if(Debug.isDebugBuild)
+						Debug.LogWarning("Could not load Male_Unified model for preview!");
+				}
+			}
+
+            if (previewModel == PreviewModel.Female)
+            {
+                if (!string.IsNullOrEmpty(female))
+                {
+                    model = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(female);
+                }
+                else
+                {
+                    if (Debug.isDebugBuild)
+                        Debug.LogWarning("Could not load Female_Unified model for preview!");
+                }
+            }
+
 			if (model != null)
 				previewMesh = model.GetComponentInChildren<SkinnedMeshRenderer>().sharedMesh;
 			else

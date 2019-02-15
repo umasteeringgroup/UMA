@@ -70,9 +70,24 @@ namespace UMA.Editors
                     asset.boneInfo[0].name = name;
                     asset.Serialize();
 	            }
-                if (!Directory.Exists("Assets/UMA/Content/Generated/TPoses"))
-					Directory.CreateDirectory("Assets/UMA/Content/Generated/TPoses");
-				AssetDatabase.CreateAsset(asset, "Assets/UMA/Content/Generated/TPoses/" + name + "_TPose.asset");
+
+				// Default path
+				string path = "Assets/UMA/Content/Generated/TPoses";
+
+				string[] inds = AssetDatabase.FindAssets("AssetIndexer t:umaassetindexer");
+				if (inds.Length > 0)
+				{
+					// If UMA has moved, then move the pose path also.
+					string tpath = AssetDatabase.GUIDToAssetPath(inds[0]);
+					int pos = tpath.IndexOf("UMA/InternalDataStore", System.StringComparison.OrdinalIgnoreCase);
+					string UMABase = tpath.Substring(0, pos) + "/UMA";
+					path = UMABase + "Content/Generated/TPoses";
+				}
+
+
+                if (!Directory.Exists(path))
+					Directory.CreateDirectory(path);
+				AssetDatabase.CreateAsset(asset, path+"/" + name + "_TPose.asset");
 	            EditorUtility.SetDirty(asset);
 	            AssetDatabase.SaveAssets();
 	        }
