@@ -15,7 +15,6 @@ namespace UMA
 		// Use this for initialization
 		void Start()
 		{
-			Debug.Log("RND " + gameObject.name + " Start ");
 			Avatar = gameObject.GetComponent<DynamicCharacterAvatar>();
 			Randomize();
 		}
