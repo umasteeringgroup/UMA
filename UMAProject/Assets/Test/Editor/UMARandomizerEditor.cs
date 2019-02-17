@@ -109,6 +109,15 @@ namespace UMA.Editors
 			rc.ColorTable = (SharedColorTable)EditorGUILayout.ObjectField(rc.ColorTable, typeof(SharedColorTable),false,GUILayout.ExpandWidth(true));
 			EditorGUILayout.EndHorizontal();
 		}
+		public void RandomColorsGUI(RandomAvatar ra,  RandomColors rc)
+		{
+			EditorGUILayout.BeginHorizontal();
+			EditorGUILayout.LabelField("Shared Color", GUILayout.Width(80));
+			EditorGUILayout.LabelField(rc.ColorName, EditorStyles.textField, GUILayout.Width(80));
+			EditorGUILayout.LabelField("Color Table", GUILayout.Width(80));
+			rc.ColorTable = (SharedColorTable)EditorGUILayout.ObjectField(rc.ColorTable, typeof(SharedColorTable), false, GUILayout.ExpandWidth(true));
+			EditorGUILayout.EndHorizontal();
+		}
 
 		public void RandomWardrobeSlotGUI(RandomAvatar ra, RandomWardrobeSlot rws)
 		{
@@ -151,6 +160,19 @@ namespace UMA.Editors
 				}
 
 				ra.Chance = EditorGUILayout.IntSlider("Weighted Chance", ra.Chance, 1, 100);
+
+				if (ra.SharedColors != null && ra.SharedColors.Count > 0)
+				{
+					foreach(RandomColors rc in ra.SharedColors)
+					{
+						RandomColorsGUI(ra, rc);
+					}
+				}
+				else
+				{
+					EditorGUILayout.LabelField("No shared colors found on base race");
+				}
+
 				foreach (RandomWardrobeSlot rws in ra.RandomWardrobeSlots)
 				{
 					RandomWardrobeSlotGUI(ra,rws);
@@ -254,6 +276,7 @@ namespace UMA.Editors
 			return false;
 		}
 
+
 		private RandomAvatar FindAvatar(RaceData raceData)
 		{
 			// Is the current race defined?
@@ -264,8 +287,7 @@ namespace UMA.Editors
 					return ra;
 				}
 			}
-			RandomAvatar rav = new RandomAvatar(raceData.raceName);
-
+			RandomAvatar rav = new RandomAvatar(raceData);
 			currentTarget.RandomAvatars.Add(rav);
 			return rav;
 		}

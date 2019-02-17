@@ -7,16 +7,27 @@ using UnityEngine;
 namespace UMA
 {
 	public class UMARandomAvatar : MonoBehaviour
-	{ 
+	{
 		public UMARandomizer Randomizer;
+		public GameObject prefab;
+		public bool makeChild;
+
 		private DynamicCharacterAvatar Avatar;
-		private Dictionary<string, List<RandomWardrobeSlot>> RandomSlots;
+		private GameObject character;
 
 		// Use this for initialization
 		void Start()
 		{
-			Avatar = gameObject.GetComponent<DynamicCharacterAvatar>();
-			Randomize();
+			if (prefab)
+			{
+				prefab = GameObject.Instantiate(prefab, transform.position, transform.rotation);
+				if (makeChild)
+				{
+					prefab.transform.parent = this.transform;
+				}
+				Avatar = prefab.GetComponent<DynamicCharacterAvatar>();
+			}
+			Randomize(Avatar);
 		}
 
 		public RandomWardrobeSlot GetRandomWardrobe(List<RandomWardrobeSlot> wardrobeSlots)
@@ -44,29 +55,39 @@ namespace UMA
 
 		private void AddRandomSlot(RandomWardrobeSlot uwr)
 		{
-			//DynamicCharacterAvatar.WardrobeRecipeListItem item = new DynamicCharacterAvatar.WardrobeRecipeListItem(uwr.WardrobeSlot);
-			//Avatar.preloadWardrobeRecipes.recipes.Add(item);	
 			Avatar.SetSlot(uwr.WardrobeSlot);
 		    if (uwr.Colors != null)
 			{
 				foreach(RandomColors rc in uwr.Colors)
 				{
-					OverlayColorData ocd = GetRandomColor(rc);
-					Avatar.SetColor(rc.ColorName, ocd,false);
+					if (rc.ColorTable != null)
+					{
+						OverlayColorData ocd = GetRandomColor(rc);
+						Avatar.SetColor(rc.ColorName, ocd, false);
+					}
 				}
 			}
 		}
 
-		public void Randomize()
+		public void Randomize(DynamicCharacterAvatar Avatar)
 		{
 			if (Avatar != null && Randomizer != null)
 			{
-				//Avatar.preloadWardrobeRecipes.recipes.Clear();
-				//Avatar.preloadWardrobeRecipes.loadDefaultRecipes = true;
 				RandomAvatar ra = Randomizer.GetRandomAvatar();
 				Avatar.RacePreset = ra.RaceName;
 				Avatar.BuildCharacterEnabled = true;
 				var RandomSlots = ra.GetRandomSlots();
+
+				if (ra.SharedColors != null && ra.SharedColors.Count > 0)
+				{
+					foreach(RandomColors rc in ra.SharedColors)
+					{
+						if (rc.ColorTable != null)
+						{
+							Avatar.SetColor(rc.ColorName, GetRandomColor(rc), false);
+						}
+					}
+				}
 				foreach (string s in RandomSlots.Keys)
 				{
 					List<RandomWardrobeSlot> RandomWardrobe = RandomSlots[s];
@@ -75,6 +96,5 @@ namespace UMA
 				}
 			}
 		}
-
 	}
 }

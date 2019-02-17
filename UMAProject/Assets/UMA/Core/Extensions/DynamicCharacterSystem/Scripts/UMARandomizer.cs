@@ -46,6 +46,17 @@ namespace UMA
 
 		public int CurrentColor;
 #endif
+		public RandomColors(string name, SharedColorTable sct)
+		{
+#if UNITY_EDITOR
+			CurrentColor = 0;
+			GuiFoldout = true;
+			Delete = false;
+#endif
+			ColorName = name;
+			ColorTable = sct;
+		}
+
 		public RandomColors(RandomWardrobeSlot rws)
 		{
 #if UNITY_EDITOR
@@ -79,7 +90,10 @@ namespace UMA
 			List<string> cols = new List<string>();
 			foreach (UMAPackedRecipeBase.PackedOverlayColorDataV3 pcd in upr.fColors)
 			{
-				cols.Add(pcd.name);
+				if (pcd.name.Trim() != "-")
+				{
+					cols.Add(pcd.name);
+				}
 			}
 			PossibleColors = cols.ToArray();
 #endif
@@ -99,6 +113,8 @@ namespace UMA
 #if UNITY_EDITOR
 		public bool GuiFoldout;
 		public bool Delete;
+		public bool AddColorTable;
+		public string[] PossibleColors;
 #endif
 		public Dictionary<string, List<RandomWardrobeSlot>> GetRandomSlots()
 		{
@@ -115,11 +131,35 @@ namespace UMA
 			return RandomSlots;
 		}
 
-		public RandomAvatar(string raceName)
+		private List<RandomColors> GetColorListForRace(RaceData rc)
 		{
-			RaceName = raceName;
+			UMATextRecipe utr = rc.baseRaceRecipe as UMATextRecipe;
+			UMAPackedRecipeBase.UMAPackRecipe upr = utr.PackedLoad();
+
+			List<string> cols = new List<string>();
+			foreach (UMAPackedRecipeBase.PackedOverlayColorDataV3 pcd in upr.fColors)
+			{
+				if (pcd.name.Trim() != "-")
+				{
+					cols.Add(pcd.name);
+				}
+			}
+
+			List<RandomColors> newColors = new List<RandomColors>();
+			foreach (string s in cols)
+			{
+				RandomColors rcs = new RandomColors(s, null);
+				newColors.Add(rcs);
+			}
+			return newColors;
+		}
+
+		public RandomAvatar(RaceData race)
+		{
+			RaceName = race.raceName;
 			SharedColors = new List<RandomColors>();
 			RandomWardrobeSlots = new List<RandomWardrobeSlot>();
+			SharedColors = GetColorListForRace(race);
 #if UNITY_EDITOR
 			GuiFoldout = true;
 			Delete = false;
