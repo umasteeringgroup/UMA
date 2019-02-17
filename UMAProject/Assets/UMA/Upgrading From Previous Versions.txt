@@ -1,0 +1,7 @@
+Upgrading from previous versions
+
+•	You should remove the previous UMA folder before importing! If this is not possible, at the very least, remove the CORE and EXAMPLES folders.
+•	With the change in type, your global library will need to be rebuilt. 
+•	You can update the old DNAConverterBehaviour prefabs to the new DNAConverterControllers by selecting the warning in the console and following the text directions.
+•	HumanMale and HumanFemale are now using Bone Poses for initial bone morphs. This can cause some slight differences in characters having DNA applied. If you need the old behavior, you should change your race to the "Legacy" version of the races.
+•	Note: Blendshapes do not work correctly on 2018.3 when GPU skinning is enabled. If you need this functionality, please disable GPU skinning in your 2018.3 project until Unity has addressed this bug. Unity will address this bug in the 2019.2 release timeframe.

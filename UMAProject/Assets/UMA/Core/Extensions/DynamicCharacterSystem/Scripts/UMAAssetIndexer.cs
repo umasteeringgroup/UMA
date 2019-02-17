@@ -104,10 +104,12 @@ namespace UMA
                     theIndexer = Resources.Load("AssetIndexer") as UMAAssetIndexer;
                     if (theIndexer == null)
                     {
+/*
                         if (Debug.isDebugBuild)
                         {
                             Debug.LogError("Unable to load the AssetIndexer. This item is used to index non-asset bundle resources and is required.");
                         }
+*/
                     }
                     StopTimer(st,"Asset index load");
                 }

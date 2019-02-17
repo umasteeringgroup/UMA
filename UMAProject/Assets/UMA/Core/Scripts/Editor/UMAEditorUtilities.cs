@@ -14,38 +14,54 @@ namespace UMA
     {
         public static Dictionary<Type, string> FriendlyNames = new Dictionary<Type, string>();
         private static Texture2D icon;
+		private static bool ranOnce = false;
         private static bool showIndexedTypes = false;
         private static bool showUnindexedTypes = true;
 		private const string umaHotkeyWord = "UMA_HOTKEYS";
 
         static UMAEditorUtilities()
         {
-            FriendlyNames.Add(typeof(SlotDataAsset), "Slot");
-            FriendlyNames.Add(typeof(OverlayDataAsset), "Overlay");
-            FriendlyNames.Add(typeof(RaceData), "Race");
-            FriendlyNames.Add(typeof(UMATextRecipe), "Text Recipe");
-            FriendlyNames.Add(typeof(UMAWardrobeRecipe), "Wardrobe Recipe");
-            FriendlyNames.Add(typeof(UMAWardrobeCollection), "Wardrobe Collection");
-            FriendlyNames.Add(typeof(AnimatorController), "Animator Controller");
-            FriendlyNames.Add(typeof(TextAsset), "Text");
-            FriendlyNames.Add(typeof(DynamicUMADnaAsset), "Dynamic DNA");
-            icon = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/UMA/InternalDataStore/UmaIndex.png");
-            showIndexedTypes = EditorPrefs.GetBool("BoolUMAShowTypes", true);
-            showUnindexedTypes = EditorPrefs.GetBool("BoolUMAShowUnindexed", false);
+			EditorApplication.update += RunCallbacks;
+		}
 
-            if (icon == null)
-            {
-                Debug.Log("Unable to load texture icon");
-            }
-            UMAAssetIndexer ai = UMAAssetIndexer.Instance;
-            if (showIndexedTypes)
-            {
-                EditorApplication.projectWindowItemOnGUI += DrawItems;
-            }
-        }
+		private static void RunCallbacks()
+		{
+			if (!ranOnce)
+			{
+				FriendlyNames.Add(typeof(SlotDataAsset), "Slot");
+				FriendlyNames.Add(typeof(OverlayDataAsset), "Overlay");
+				FriendlyNames.Add(typeof(RaceData), "Race");
+				FriendlyNames.Add(typeof(UMATextRecipe), "Text Recipe");
+				FriendlyNames.Add(typeof(UMAWardrobeRecipe), "Wardrobe Recipe");
+				FriendlyNames.Add(typeof(UMAWardrobeCollection), "Wardrobe Collection");
+				FriendlyNames.Add(typeof(AnimatorController), "Animator Controller");
+				FriendlyNames.Add(typeof(TextAsset), "Text");
+				FriendlyNames.Add(typeof(DynamicUMADnaAsset), "Dynamic DNA");
 
+				string[] iconTextures = AssetDatabase.FindAssets("t:texture UmaIndex");
+				if (iconTextures != null && iconTextures.Length > 0)
+				{
+					icon = AssetDatabase.LoadAssetAtPath<Texture2D>(AssetDatabase.GUIDToAssetPath(iconTextures[0]));
+				}
+				else
+				{
+					Debug.Log("Unable to load texture icon");
+				}
 
-        [PreferenceItem("UMA")]
+				showIndexedTypes = EditorPrefs.GetBool("BoolUMAShowTypes", true);
+				showUnindexedTypes = EditorPrefs.GetBool("BoolUMAShowUnindexed", false);
+
+				UMAAssetIndexer ai = UMAAssetIndexer.Instance;
+				if (showIndexedTypes)
+				{
+					EditorApplication.projectWindowItemOnGUI += DrawItems;
+				}
+				ranOnce = true;
+				return;
+			}
+		}
+
+		[PreferenceItem("UMA")]
         public static void PreferencesGUI()
         {
             // Preferences GUI

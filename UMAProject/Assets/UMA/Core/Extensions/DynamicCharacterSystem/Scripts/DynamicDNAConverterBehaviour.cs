@@ -33,9 +33,11 @@ namespace UMA.CharacterSystem
 		[System.NonSerialized]
 		private bool _prepared = false;
 
+#if UNITY_EDITOR
 		//UMA2.8+ FixDNAPrefabs Have we nagged the user about upgrading?
 		[System.NonSerialized]
 		private bool _nagged = false;
+#endif
 
 		#endregion
 

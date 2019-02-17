@@ -22,7 +22,7 @@ MonoBehaviour:
     DownSample: 0
     ConvertRenderTexture: 0
   - channelType: 1
-    textureFormat: 2
+    textureFormat: 0
     materialPropertyName: _BumpMap
     sourceTextureName: 
     Compression: 0

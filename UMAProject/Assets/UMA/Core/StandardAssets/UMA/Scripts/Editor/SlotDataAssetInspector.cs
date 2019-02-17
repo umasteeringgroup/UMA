@@ -36,6 +36,7 @@ namespace UMA.Editors
 			serializedObject.Update();
 			//base.OnInspectorGUI();
 
+			EditorGUI.BeginChangeCheck();
 			EditorGUILayout.DelayedTextField(slotName);
 			Editor.DrawPropertiesExcluding(serializedObject, new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "DNAApplied", "CharacterCompleted", "_slotDNALegacy" });
 
@@ -60,9 +61,7 @@ namespace UMA.Editors
 						{
 							slotDataAsset.animatedBoneHashes[i] = UMASkeleton.StringToHash(slotDataAsset.animatedBoneNames[i]);
 						}
-						//DelayedSave here too?
 						EditorUtility.SetDirty(slotDataAsset);
-						AssetDatabase.SaveAssets();
 					}
 				}
 			}
@@ -80,7 +79,10 @@ namespace UMA.Editors
 			AnimatedBoneDropAreaGUI(boneDropArea);
 
 			serializedObject.ApplyModifiedProperties();
-			AssetDatabase.SaveAssets();
+			if (EditorGUI.EndChangeCheck())
+			{
+				AssetDatabase.SaveAssets();
+			}
         }
 
         private void AnimatedBoneDropAreaGUI(Rect dropArea)

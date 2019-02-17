@@ -1,13 +1,11 @@
 using UnityEngine;
+//For loading a recipe directly from the web @2465
+using UnityEngine.Networking;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.SceneManagement;//for marking converted colors as needing saving
 #endif
 using UnityEngine.Serialization;//for converting old characterColors.Colors to new colors
-
-#if UNITY_5_5_OR_NEWER
-using UnityEngine.Profiling;
-#endif
 
 using System;
 using System.IO;
@@ -302,7 +300,7 @@ namespace UMA.CharacterSystem
                             //otherwise the component settings have been set up via scripting
                             //so just build
                             SetAnimatorController(true);//may cause downloads to happen- So call BuildCharacterWhenReady() instead
-                            SetExpressionSet(true);
+                            SetExpressionSet();
                             StartCoroutine(BuildCharacterWhenReady());
                         }
                     }
@@ -382,11 +380,13 @@ namespace UMA.CharacterSystem
 
                 if (umaData.rendererCount > 0)
                 {
-                    SkinnedMeshRenderer smr = umaData.GetRenderer(0);
-                    if (smr != null && smr.enabled == hide)
-                    {
-                        umaData.GetRenderer(0).enabled = !hide;
-                    }
+					foreach(SkinnedMeshRenderer smr in umaData.GetRenderers())
+					{
+						if (smr != null && smr.enabled == hide)
+						{
+							smr.enabled = !hide;
+						}
+					}
                 }
             }
             //This hardly ever happens now since the changeRace/LoadFromString/StartCO methods all yield themselves until asset bundles have been downloaded
@@ -464,10 +464,44 @@ namespace UMA.CharacterSystem
                 model = customModel;
             else
             {
-                string modelPath = "HumanMale/FBX/Male_Unified.fbx";
+                //search string finds both male and female!
+                string[] assets = UnityEditor.AssetDatabase.FindAssets("t:Model Male_Unified");
+                string male = "";
+                string female = "";
+
+                foreach (string guid in assets)
+                {
+                    string thePath = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
+                    if (thePath.ToLower().Contains("female"))
+                        female = thePath;
+                    else
+                        male = thePath;
+                }
+                if (previewModel == PreviewModel.Male)
+                {
+                    if (!string.IsNullOrEmpty(male))
+                    {
+                        model = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(male);
+                    }
+                    else
+                    {
+                        if (Debug.isDebugBuild)
+                            Debug.LogWarning("Could not load Male_Unified model for preview!");
+                    }
+                }
+
                 if (previewModel == PreviewModel.Female)
-                    modelPath = "HumanFemale/FBX/Female_Unified.fbx";
-                model = UnityEditor.AssetDatabase.LoadAssetAtPath("Assets/UMA/Content/UMA_Core/" + modelPath, typeof(GameObject)) as GameObject;
+                {
+                    if (!string.IsNullOrEmpty(female))
+                    {
+                        model = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(female);
+                    }
+                    else
+                    {
+                        if (Debug.isDebugBuild)
+                            Debug.LogWarning("Could not load Female_Unified model for preview!");
+                    }
+                }
             }
             if (model != null)
                 previewMesh = model.GetComponentInChildren<SkinnedMeshRenderer>().sharedMesh;
@@ -2239,7 +2273,7 @@ namespace UMA.CharacterSystem
                 if (wasBuildCharacterEnabled)
                 {
                     SetAnimatorController(true);//may cause downloads to happen
-                    SetExpressionSet(true);
+                    SetExpressionSet();
                 }
                 //loading new wardrobe items and animation controllers may have also caused downloads so wait for those- if we are not waiting we will have already created the placeholder avatar above
                 yield return StartCoroutine(UpdateAfterDownloads());
@@ -2304,7 +2338,7 @@ namespace UMA.CharacterSystem
                 BuildCharacter(false);
             }
             SetAnimatorController(true);//may cause downloads to happen
-            SetExpressionSet(true);
+            SetExpressionSet();
             //wait for any downloading assets
             yield return StartCoroutine(UpdateAfterDownloads());
             //shared colors
@@ -2459,9 +2493,13 @@ namespace UMA.CharacterSystem
                     {
                         if (path.Contains("://"))
                         {
-                            WWW www = new WWW(path + loadFilename);
-                            yield return www;
-                            recipeString = www.text;
+							UnityWebRequest www = UnityWebRequest.Get(path + loadFilename);
+#if UNITY_2017_2_OR_NEWER
+							yield return www.SendWebRequest();
+#else
+							yield return www.Send();
+#endif
+							recipeString = www.downloadHandler.text;
                         }
                         else
                         {
@@ -2717,7 +2755,6 @@ namespace UMA.CharacterSystem
             {
                 umaData.animator = this.gameObject.GetComponent<Animator>();
             }
-            Profiler.BeginSample("Load");
 
             this.umaRecipe = umaRecipe;
 
@@ -2786,7 +2823,6 @@ namespace UMA.CharacterSystem
             //Did doing any of that cause more downloads?
             if (FinalRecipeAssetsDownloading())
             {
-                Profiler.EndSample();
                 return true;
             }
 
@@ -2805,7 +2841,6 @@ namespace UMA.CharacterSystem
             {
                 UpdateSameRace();
             }
-            Profiler.EndSample();
 
             UpdateAssetBundlesUsedbyCharacter();
 
@@ -3202,7 +3237,7 @@ namespace UMA.CharacterSystem
             UpdateSetSlots();
             if (BuildCharacterEnabled)
             {
-                SetExpressionSet(true);
+                SetExpressionSet();
                 SetAnimatorController(true);
             }
         }

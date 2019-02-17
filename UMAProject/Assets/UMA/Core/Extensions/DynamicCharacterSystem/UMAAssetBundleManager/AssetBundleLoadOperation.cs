@@ -6,6 +6,9 @@ using UnityEngine.iOS;
 #endif
 #if UNITY_EDITOR
 using UnityEditor;
+#if UNITY_2018_3_OR_NEWER
+using UnityEditor.SceneManagement;
+#endif
 #endif
 using System.Collections;
 //added System.IO for loading/saving cached bundleIndexes
@@ -250,14 +253,14 @@ namespace UMA.AssetBundles
 
 	public class AssetBundleDownloadFromWebOperation : AssetBundleDownloadOperation
 	{
-		WWW m_WWW;
+		UnityWebRequest m_WWW;
 		string m_Url;
 		int zeroDownload = 0;
 		bool m_isJsonIndex = false;
 		int retryAttempts = 0;
 		int maxRetryAttempts = 5;
 
-		public AssetBundleDownloadFromWebOperation(string assetBundleName, WWW www, bool isJsonIndex = false)
+		public AssetBundleDownloadFromWebOperation(string assetBundleName, UnityWebRequest www, bool isJsonIndex = false)
 			: base(assetBundleName)
 		{
 			if (www == null)
@@ -306,14 +309,13 @@ namespace UMA.AssetBundles
 				}
 				else
 				{
-					//if (m_WWW.progress == 0)
-					if(m_WWW.progress == downloadProgress)
+					if(m_WWW.downloadProgress == downloadProgress)
 					{
 						zeroDownload++;
 					}
 					else
 					{
-						downloadProgress = m_WWW.progress;
+						downloadProgress = m_WWW.downloadProgress;
 						zeroDownload = 0;
                     }
 #if UNITY_EDITOR
@@ -327,7 +329,16 @@ namespace UMA.AssetBundles
 								Debug.Log("[AssetBundleLoadOperation] progress was zero for 150 frames restarting dowload");
 							m_WWW.Dispose();//sometimes makes a difference when the download fails
 							m_WWW = null;
-							m_WWW = new WWW(m_Url);
+#if UNITY_2018_1_OR_NEWER
+							m_WWW = UnityWebRequestAssetBundle.GetAssetBundle(m_Url);
+#else
+							m_WWW = UnityWebRequest.GetAssetBundle(m_Url);
+#endif
+#if UNITY_2017_2_OR_NEWER
+							m_WWW.SendWebRequest();
+#else
+							m_WWW.Send();
+#endif
 						}
 
 						if (zeroDownload == 300)//If we are in the editor we can restart the Server and this will make it work
@@ -339,13 +350,22 @@ namespace UMA.AssetBundles
 							SimpleWebServer.Start(port);
 							m_WWW.Dispose();
 							m_WWW = null;
-							m_WWW = new WWW(m_Url);
+#if UNITY_2018_1_OR_NEWER
+							m_WWW = UnityWebRequestAssetBundle.GetAssetBundle(m_Url);
+#else
+							m_WWW = UnityWebRequest.GetAssetBundle(m_Url);
+#endif
+#if UNITY_2017_2_OR_NEWER
+							m_WWW.SendWebRequest();
+#else
+							m_WWW.Send();
+#endif
 							zeroDownload = 0;
 						}
 					}
 					else
 #endif
-					if((downloadProgress == 0 && zeroDownload == 500) || zeroDownload >= Mathf.Clamp((2500 * downloadProgress), 500,2500))//let this number get larger the more has been downloaded (cos its really annoying to be at 98% and have it fail)
+							if((downloadProgress == 0 && zeroDownload == 500) || zeroDownload >= Mathf.Clamp((2500 * downloadProgress), 500,2500))//let this number get larger the more has been downloaded (cos its really annoying to be at 98% and have it fail)
 					{
 						//when we cannot download because WiFi is connected but a hotspot needs authentication
 						//or because the user has run out of mobile data the www class takes a while error out
@@ -374,9 +394,17 @@ namespace UMA.AssetBundles
 							m_WWW = null;
 							//m_WWW = new WWW(m_Url);//make sure this still caches
 							if (AssetBundleManager.AssetBundleIndexObject != null)
-								m_WWW = WWW.LoadFromCacheOrDownload(m_Url, AssetBundleManager.AssetBundleIndexObject.GetAssetBundleHash(assetBundleName), 0);
+#if UNITY_2018_1_OR_NEWER
+								m_WWW = UnityWebRequestAssetBundle.GetAssetBundle(m_Url, AssetBundleManager.AssetBundleIndexObject.GetAssetBundleHash(assetBundleName), 0);
+#else
+								m_WWW = UnityWebRequest.GetAssetBundle(m_Url, AssetBundleManager.AssetBundleIndexObject.GetAssetBundleHash(assetBundleName), 0);
+#endif
 							else
-						        m_WWW = new WWW(m_Url);
+#if UNITY_2018_1_OR_NEWER
+								m_WWW = UnityWebRequestAssetBundle.GetAssetBundle(m_Url);
+#else
+								m_WWW = UnityWebRequest.GetAssetBundle(m_Url);
+#endif
 							//but increment the retry either way so the failed Ui shows sooner
 							retryAttempts++;
 						}
@@ -421,7 +449,7 @@ namespace UMA.AssetBundles
 
 			if (!m_isJsonIndex)
 			{
-				bundle = m_WWW.assetBundle;
+				bundle = DownloadHandlerAssetBundle.GetContent(m_WWW);
 				if (bundle == null)
 				{
 					if (Debug.isDebugBuild)
@@ -431,14 +459,14 @@ namespace UMA.AssetBundles
 				}
 				else if (!WasBundleEncrypted())
 				{
-					assetBundle = new LoadedAssetBundle(m_WWW.assetBundle);
+					assetBundle = new LoadedAssetBundle(bundle);
 					m_WWW.Dispose();
 					m_WWW = null;
 				}
 			}
 			else
 			{
-				string indexData = m_WWW.text;
+				string indexData = m_WWW.downloadHandler.text;
 				if (indexData == "")
 				{
 					if (Debug.isDebugBuild)
@@ -446,7 +474,7 @@ namespace UMA.AssetBundles
 				}
 				else
 				{
-					assetBundle = new LoadedAssetBundle(m_WWW.text);
+					assetBundle = new LoadedAssetBundle(m_WWW.downloadHandler.text);
 				}
 				m_WWW.Dispose();
 				m_WWW = null;
@@ -533,9 +561,21 @@ namespace UMA.AssetBundles
 			}
 
 			if (isAdditive)
+			{
+#if UNITY_2018_3_OR_NEWER
+				m_Operation = EditorSceneManager.LoadSceneAsyncInPlayMode(levelPaths[0], new LoadSceneParameters(LoadSceneMode.Additive));
+#else
 				m_Operation = EditorApplication.LoadLevelAdditiveAsyncInPlayMode(levelPaths[0]);
+#endif
+			}
 			else
+			{
+#if UNITY_2018_3_OR_NEWER
+				m_Operation = EditorSceneManager.LoadSceneAsyncInPlayMode(levelPaths[0], new LoadSceneParameters(LoadSceneMode.Single));
+#else
 				m_Operation = EditorApplication.LoadLevelAsyncInPlayMode(levelPaths[0]);
+#endif
+			}
 		}
 
 		public override bool Update()

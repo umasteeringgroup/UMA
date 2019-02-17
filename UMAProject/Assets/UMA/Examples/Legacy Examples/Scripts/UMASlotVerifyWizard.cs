@@ -39,13 +39,31 @@ namespace UMA.Examples
 		public void SelectMaleClick()
 		{
 #if UNITY_EDITOR
-			SetBaseMesh("Assets/UMA/Content/UMA/HumanMale/FBX/Male_Unified.fbx");
+			string[] assets = AssetDatabase.FindAssets("male_unified t:Model");
+			string path="";
+			foreach (string guid in assets)
+			{
+				string thePath = AssetDatabase.GUIDToAssetPath(guid);
+				if (thePath.ToLower().Contains("female"))
+					continue;
+				path = thePath;
+				break;
+			}
+			if (string.IsNullOrEmpty(path))
+			{
+				return;
+			}
+
+			SetBaseMesh(path);
 #endif
 		}
 		public void SelectFemaleClick()
 		{
 #if UNITY_EDITOR
-			SetBaseMesh("Assets/UMA/Content/UMA/HumanFemale/FBX/Female_Unified.fbx");
+			string[] assets = AssetDatabase.FindAssets("female_unified t:Model");
+			if (assets.Length < 1) return;
+			string thePath = AssetDatabase.GUIDToAssetPath(assets[0]);
+			SetBaseMesh(thePath);
 #endif
 		}
 		public void BrowseBaseMeshClick()
@@ -177,11 +195,14 @@ namespace UMA.Examples
 #if UNITY_EDITOR			
 			if (slotAssetPath.EndsWith(".fbx", System.StringComparison.InvariantCultureIgnoreCase))
 			{
+#if UNITY_2018_3_OR_NEWER
+				PrefabUtility.SaveAsPrefabAsset(SlotGO, AssetDatabase.GenerateUniqueAssetPath(slotAssetPath.Substring(0, slotAssetPath.Length - 4) + ".prefab"));
+#else
 				PrefabUtility.CreatePrefab(AssetDatabase.GenerateUniqueAssetPath(slotAssetPath.Substring(0, slotAssetPath.Length-4)+".prefab"), SlotGO);
+#endif
 			}
 #endif
 		}
 		#endregion
-
 	}
 }
