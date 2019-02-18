@@ -38,6 +38,7 @@ namespace UMA.Editors
 			races = Races.ToArray();
 		}
 
+
 		protected bool DropAreaGUI(Rect dropArea)
 		{
 
@@ -161,21 +162,71 @@ namespace UMA.Editors
 
 				ra.Chance = EditorGUILayout.IntSlider("Weighted Chance", ra.Chance, 1, 100);
 
-				if (ra.SharedColors != null && ra.SharedColors.Count > 0)
+				ra.ColorsFoldout = GUIHelper.FoldoutBar(ra.ColorsFoldout, "Colors");
+				if (ra.ColorsFoldout)
 				{
-					foreach(RandomColors rc in ra.SharedColors)
+					GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.75f, 0.75f));
+					if (ra.SharedColors != null && ra.SharedColors.Count > 0)
 					{
-						RandomColorsGUI(ra, rc);
+						foreach (RandomColors rc in ra.SharedColors)
+						{
+							RandomColorsGUI(ra, rc);
+						}
 					}
-				}
-				else
-				{
-					EditorGUILayout.LabelField("No shared colors found on base race");
+					else
+					{
+						EditorGUILayout.LabelField("No shared colors found on base race");
+					}
+					GUIHelper.EndVerticalPadded(10);
 				}
 
-				foreach (RandomWardrobeSlot rws in ra.RandomWardrobeSlots)
+				ra.DnaFoldout = GUIHelper.FoldoutBar(ra.DnaFoldout, "DNA");
+				if (ra.DnaFoldout)
 				{
-					RandomWardrobeSlotGUI(ra,rws);
+					GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.75f, 0.75f));
+					// (popup with DNA names) and "Add" button.
+					EditorGUILayout.BeginHorizontal();
+					ra.SelectedDNA = EditorGUILayout.Popup("DNA", ra.SelectedDNA, ra.PossibleDNA);
+					bool pressed = GUILayout.Button("Add DNA", EditorStyles.miniButton);// GUIStyles.Popup?
+					EditorGUILayout.EndHorizontal();
+					if (pressed)
+					{
+						ra.DNAAdd = ra.PossibleDNA[ra.SelectedDNA];
+					}
+					if (ra.RandomDna.Count == 0)
+					{
+						EditorGUILayout.LabelField("No Random DNA has been added");
+					}
+					else
+					{
+
+						foreach (RandomDNA rd in ra.RandomDna)
+						{
+							EditorGUILayout.BeginHorizontal();
+							EditorGUILayout.LabelField(rd.DnaName, EditorStyles.miniLabel, GUILayout.Width(100));
+							float lastMin = rd.MinValue;
+							float lastMax = rd.MaxValue;
+							EditorGUILayout.MinMaxSlider(ref rd.MinValue, ref rd.MaxValue, 0.0f, 1.0f);
+							if (rd.MinValue != lastMin || rd.MaxValue != lastMax)
+								ra.DnaChanged = true;
+							rd.Delete = GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
+							string vals = rd.MinValue.ToString("N3") +" - " +rd.MaxValue.ToString("N3");
+							EditorGUILayout.LabelField(vals, EditorStyles.miniTextField, GUILayout.Width(80));
+							EditorGUILayout.EndHorizontal();
+						}
+					}
+					GUIHelper.EndVerticalPadded(10);
+
+				}
+				ra.WardrobeFoldout = GUIHelper.FoldoutBar(ra.WardrobeFoldout, "Wardrobe");
+				if (ra.WardrobeFoldout)
+				{
+					GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.75f, 0.75f));
+					foreach (RandomWardrobeSlot rws in ra.RandomWardrobeSlots)
+					{
+						RandomWardrobeSlotGUI(ra, rws);
+					}
+					GUIHelper.EndVerticalPadded(10);
 				}
 				GUIHelper.EndVerticalPadded(10);
 			}
@@ -188,11 +239,11 @@ namespace UMA.Editors
 			{
 				UpdateObject();
 			}
-			currentRace = EditorGUILayout.Popup("Race", currentRace, races);
 
+			currentRace = EditorGUILayout.Popup("First Select Race", currentRace, races);
 			GUILayout.Space(20);
 			Rect updateDropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
-			GUI.Box(updateDropArea, "Drag Wardrobe Recipe(s) for "+ races[currentRace] + " here");
+			GUI.Box(updateDropArea, "Then Drag Wardrobe Recipe(s) for "+ races[currentRace] + " here");
 			GUILayout.Space(10);
 			DropAreaGUI(updateDropArea);
 			GUILayout.Space(10);
@@ -239,6 +290,19 @@ namespace UMA.Editors
 			ChangeCount += currentTarget.RandomAvatars.RemoveAll(x => x.Delete);
 			foreach(RandomAvatar ra in currentTarget.RandomAvatars)
 			{
+				if (!string.IsNullOrEmpty(ra.DNAAdd))
+				{
+					ra.DnaChanged = true;
+					ra.RandomDna.Add(new RandomDNA(ra.DNAAdd));
+					ra.DNAAdd = "";
+				}
+
+				int DNAChangeCount = ra.RandomDna.RemoveAll(x => x.Delete);
+				if (DNAChangeCount > 0)
+				{
+					ra.DnaChanged = true;
+					ChangeCount++;
+				}
 				ChangeCount += ra.SharedColors.RemoveAll(x => x.Delete);
 				ChangeCount += ra.RandomWardrobeSlots.RemoveAll(x => x.Delete);
 				foreach(RandomWardrobeSlot rws in ra.RandomWardrobeSlots)

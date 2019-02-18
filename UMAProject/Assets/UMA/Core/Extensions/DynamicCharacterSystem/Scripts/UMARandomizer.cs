@@ -6,30 +6,21 @@ using UMA.CharacterSystem;
 
 namespace UMA
 {
+	// A Random DNA 
 	[Serializable]
-	public class ColorChannel
+	public class RandomDNA
 	{
-		public Color Multiplier;
-		public Color Additive;
-	}
-
-	// A specific color chance
-	[Serializable]
-	public class RandomColor
-	{
-		public List<ColorChannel> Channels;
-		[Range(1, 100)]
-		public int Chance = 1;
+		public string DnaName;
+		public float MinValue;
+		public float MaxValue;
 #if UNITY_EDITOR
-		public bool GuiFoldout;
 		public bool Delete;
 #endif
-		public RandomColor()
+		public RandomDNA(string name)
 		{
-#if UNITY_EDITOR
-			GuiFoldout = true;
-			Delete = false;
-#endif
+			DnaName = name;
+			MinValue = 0.0f;
+			MaxValue = 1.0f;
 		}
 	}
 
@@ -110,12 +101,32 @@ namespace UMA
 		public int Chance = 1;
 		public List<RandomColors> SharedColors;
 		public List<RandomWardrobeSlot> RandomWardrobeSlots;
+		public List<RandomDNA> RandomDna;
 #if UNITY_EDITOR
 		public bool GuiFoldout;
+		public bool ColorsFoldout;
+		public bool WardrobeFoldout;
+		public bool DnaFoldout;
 		public bool Delete;
 		public bool AddColorTable;
+		public bool DnaChanged;
 		public string[] PossibleColors;
+		public string[] PossibleDNA;
+		public int SelectedDNA;
+		public string DNAAdd;
+		public int DNADel;
+		public RaceData raceData;
 #endif
+		public UMAPredefinedDNA GetRandomDNA()
+		{
+			UMAPredefinedDNA theDNA = new UMAPredefinedDNA();
+			foreach(RandomDNA rd in this.RandomDna)
+			{
+				theDNA.AddDNA(rd.DnaName, UnityEngine.Random.Range(rd.MinValue, rd.MaxValue));
+			}
+			return theDNA;
+		}
+
 		public Dictionary<string, List<RandomWardrobeSlot>> GetRandomSlots()
 		{
 			Dictionary<string, List<RandomWardrobeSlot>> RandomSlots = new Dictionary<string, List<RandomWardrobeSlot>>();
@@ -154,15 +165,43 @@ namespace UMA
 			return newColors;
 		}
 
+#if UNITY_EDITOR
+		public void SetupDNA(RaceData rc)
+		{
+			List<string> DNAList = new List<string>();
+			foreach (IDNAConverter cvt in rc.dnaConverterList)
+			{
+				if (cvt.DNAType == typeof(DynamicUMADna))
+				{
+					DNAList.AddRange(((IDynamicDNAConverter)cvt).dnaAsset.Names);
+				}
+				else
+				{
+					if (cvt is DnaConverterBehaviour)
+					{
+						var legacyDNA = (cvt as DnaConverterBehaviour).DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
+						if (legacyDNA != null)
+						{
+							DNAList.AddRange(legacyDNA.Names);
+						}
+					}
+				}
+			}
+			PossibleDNA = DNAList.ToArray();
+		}
+#endif
 		public RandomAvatar(RaceData race)
 		{
+			raceData = race;
 			RaceName = race.raceName;
 			SharedColors = new List<RandomColors>();
 			RandomWardrobeSlots = new List<RandomWardrobeSlot>();
+			RandomDna = new List<RandomDNA>();
 			SharedColors = GetColorListForRace(race);
 #if UNITY_EDITOR
 			GuiFoldout = true;
 			Delete = false;
+			SetupDNA(race);
 #endif
 		}
 	}

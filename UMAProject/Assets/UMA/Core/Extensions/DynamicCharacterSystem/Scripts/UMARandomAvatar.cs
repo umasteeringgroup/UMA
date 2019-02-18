@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UMA.CharacterSystem;
 using UnityEngine;
 
@@ -8,9 +6,15 @@ namespace UMA
 {
 	public class UMARandomAvatar : MonoBehaviour
 	{
-		public UMARandomizer Randomizer;
+		public List<UMARandomizer> Randomizers;
 		public GameObject prefab;
-		public bool makeChild;
+		public GameObject ParentObject;
+		public bool ShowPlaceholder;
+		public bool GenerateGrid;
+		public int GridXSize = 5;
+		public int GridZSize = 4;
+		public float GridDistance = 1.5f;
+		public bool RandomRotation;
 
 		private DynamicCharacterAvatar Avatar;
 		private GameObject character;
@@ -18,12 +22,48 @@ namespace UMA
 		// Use this for initialization
 		void Start()
 		{
+			if (!GenerateGrid)
+			{
+				if (RandomRotation)
+					GenerateRandomCharacter(transform.position, RandRotation(transform.rotation));
+				else
+					GenerateRandomCharacter(transform.position, transform.rotation);
+			} 
+			else
+			{
+				float xstart = 0-((GridXSize * GridDistance) / 2.0f);
+
+				for (int x=0;x<GridXSize;x++)
+				{
+					float zstart = 0-((GridZSize * GridDistance) / 2.0f);
+					for (int z=0;z<GridZSize;z++)
+					{
+						Vector3 pos = new Vector3(transform.position.x + xstart, transform.position.y, transform.position.z + zstart);
+						if (RandomRotation)
+							GenerateRandomCharacter(pos, RandRotation(transform.rotation));
+						else
+							GenerateRandomCharacter(pos, transform.rotation);
+						zstart += GridDistance;
+					}
+					xstart += GridDistance;
+				}
+			}
+		}
+
+		private Quaternion RandRotation(Quaternion src)
+		{
+			Vector3 Euler = src.eulerAngles;
+			return Quaternion.Euler(Euler.x, Random.Range(0.0f, 359.9f), Euler.z);
+		}
+
+		private void GenerateRandomCharacter(Vector3 Pos, Quaternion Rot)
+		{
 			if (prefab)
 			{
-				prefab = GameObject.Instantiate(prefab, transform.position, transform.rotation);
-				if (makeChild)
+				prefab = GameObject.Instantiate(prefab, Pos, Rot);
+				if (ParentObject != null)
 				{
-					prefab.transform.parent = this.transform;
+					prefab.transform.parent = ParentObject.transform;
 				}
 				Avatar = prefab.GetComponent<DynamicCharacterAvatar>();
 			}
@@ -69,13 +109,39 @@ namespace UMA
 			}
 		}
 
+#if UNITY_EDITOR
+		void OnDrawGizmos()
+		{
+			if (ShowPlaceholder)
+			{
+				Gizmos.DrawCube(transform.position, Vector3.one);
+			}
+		}
+#endif
+
+
 		public void Randomize(DynamicCharacterAvatar Avatar)
 		{
+			UMARandomizer Randomizer = null;
+			if (Randomizers != null)
+			{
+				if (Randomizers.Count == 0)
+					return;
+
+				if (Randomizers.Count == 1)
+					Randomizer = Randomizers[0];
+				else
+				{
+					Randomizer = Randomizers[UnityEngine.Random.Range(0, Randomizers.Count)];
+				}
+			}
 			if (Avatar != null && Randomizer != null)
 			{
 				RandomAvatar ra = Randomizer.GetRandomAvatar();
 				Avatar.RacePreset = ra.RaceName;
 				Avatar.BuildCharacterEnabled = true;
+				var RandomDNA = ra.GetRandomDNA();
+				Avatar.predefinedDNA = RandomDNA;
 				var RandomSlots = ra.GetRandomSlots();
 
 				if (ra.SharedColors != null && ra.SharedColors.Count > 0)

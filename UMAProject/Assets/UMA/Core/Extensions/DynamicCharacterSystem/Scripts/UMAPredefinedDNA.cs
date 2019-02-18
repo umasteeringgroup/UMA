@@ -8,22 +8,22 @@ using UnityEditor; //todo: ifdef this
 namespace UMA
 {
 	[Serializable]
-	public class UMAPreloadDNA
+	public class UMAPredefinedDNA
 	{
 		/// <summary>
 		/// This class is used for preloading DNA on DynamicCharacterAvatars  
 		/// </summary>
 		/// <remarks>
-		/// UMAPreloadDataAsset is assigned to a DynamicCharacterAvatar to allow it to preload DNA when it is built.
-		/// Without this asset, it is not possible to pregenerate random DNA because the DNA is loaded from the Race at build time.
+		/// UMAPredefinedDNA is assigned to a DynamicCharacterAvatar to allow it to preload DNA when it is built.
+		/// Without this, it is not possible to pregenerate random DNA because the DNA is loaded from the Race at build time.
 		/// After the UMAData is created, this DNA will be applied to the UMA as part of the build process, so you don't have
 		/// to build the DCA twice to get randomized data/.
 		/// </remarks>
 		[Serializable]
 	    public class DnaValue
 		{
-			string Name;
-			float Value;
+			public string Name;
+			public float Value;
 			public DnaValue(string name, float value)
 			{
 				Name = name;
