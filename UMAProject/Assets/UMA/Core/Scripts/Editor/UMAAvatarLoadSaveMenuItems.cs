@@ -327,7 +327,7 @@ namespace UMA.Editors
 			   if (UAI.IsIndexedType(type))
 			   {
 				   if(UAI.EvilAddAsset(type, o))
-                        added++;
+						added++;
 			   }
 		   }
 		   UAI.ForceSave();
