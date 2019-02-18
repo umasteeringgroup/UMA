@@ -45,7 +45,8 @@ namespace UMA
 				}
 				else
 				{
-					Debug.Log("Unable to load texture icon");
+					if(Debug.isDebugBuild)
+						Debug.LogWarning("Unable to load texture icon");
 				}
 
 				showIndexedTypes = EditorPrefs.GetBool("BoolUMAShowTypes", true);
