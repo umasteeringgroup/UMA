@@ -326,8 +326,8 @@ namespace UMA.Editors
 			   System.Type type = o.GetType();
 			   if (UAI.IsIndexedType(type))
 			   {
-				   UAI.EvilAddAsset(type, o);
-				   added++;
+				   if(UAI.EvilAddAsset(type, o))
+                        added++;
 			   }
 		   }
 		   UAI.ForceSave();
