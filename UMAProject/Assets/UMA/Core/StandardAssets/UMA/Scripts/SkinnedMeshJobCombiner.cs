@@ -1,10 +1,13 @@
 ﻿using UnityEngine;
 using Unity.Jobs;
 using Unity.Burst;
+using Unity.Mathematics;
 using Unity.Collections;
 using System.Collections;
 using System.Collections.Generic;
 using System;
+
+// using Unity.Collections.LowLevel.Unsafe;
 
 namespace UMA
 {
@@ -14,6 +17,41 @@ namespace UMA
 	public static class SkinnedMeshJobCombiner
 	{
 		public static float elapsedTime = 0f;
+
+		/// <summary>
+		/// Native array adapter.
+		/// </summary>
+		/// <remarks>
+		/// This seems to work in 2018.3 altbhough it's obviously not desirable
+		/// to be using unsafe code. It would be better if the actual source
+		/// data was already in the required format, since it's all read only.
+		/// </remarks>
+		/*
+		public unsafe class NativeArrayAdapter<T> : IDisposable where T : struct
+		{
+			private readonly ulong pinHandle;
+			private readonly AtomicSafetyHandle safetyHandle;
+			public NativeArray<T> nativeArray;
+
+			public NativeArrayAdapter(T[] managedArray)
+			{
+				UnityEngine.Assertions.Assert.IsTrue(UnsafeUtility.IsBlittable<T>());
+
+				void* arrayPtr = UnsafeUtility.PinGCArrayAndGetDataAddress(managedArray, out pinHandle);
+				nativeArray = NativeArrayUnsafeUtility.ConvertExistingDataToNativeArray<T>(arrayPtr, managedArray.Length, Allocator.None);
+
+				safetyHandle = AtomicSafetyHandle.Create();
+				NativeArrayUnsafeUtility.SetAtomicSafetyHandle(ref nativeArray, safetyHandle);
+			}
+
+			public void Dispose()
+			{
+				AtomicSafetyHandle.Release(safetyHandle);
+				UnsafeUtility.ReleaseGCObject(pinHandle);
+				nativeArray = default;
+			}
+		}
+		*/
 
 		/// <summary>
 		/// Container for source mesh data.
@@ -54,14 +92,17 @@ namespace UMA
 		static NativeArray<int> vertexRemaps;
 		static NativeArray<int> rebindIndices;
 		static NativeArray<Matrix4x4> rebindMatrices;
+		//static NativeArray<float4x4> rebindMatrices;
 		static SkinnedMeshJobCombiner ()
 		{
 			vertexRemaps = new NativeArray<int>(UMAMeshData.MAX_VERTEX_COUNT, Allocator.Persistent);
 			rebindIndices = new NativeArray<int>(256, Allocator.Persistent);
 			rebindMatrices = new NativeArray<Matrix4x4>(256, Allocator.Persistent);
+			//rebindMatrices = new NativeArray<float4x4>(256, Allocator.Persistent);
 		}
 
 		// Job rebinding vertices to new bones
+		[BurstCompile]
 		public struct RebindJob : IJob
 		{
 			[ReadOnly]
@@ -75,6 +116,7 @@ namespace UMA
 			public NativeArray<int> bindIndices;
 			[ReadOnly]
 			public NativeArray<Matrix4x4> bindMatrices;
+			//public NativeArray<float4x4> bindMatrices;
 
 			public int index;
 			[WriteOnly]
@@ -91,6 +133,7 @@ namespace UMA
 					if (vertMap[i] < 0) continue;
 
 					Vector3 vertexSrc = vertSource[i];
+					//float4 vertexSrc = new float4(vertSource[i], 1);
 					BoneWeight boneSrc = weightSource[i];
 
 					// THEORY
@@ -104,36 +147,44 @@ namespace UMA
 					// SMR binds and bones built from dictionary order
 
 					// Rebind vertex to new bones
+
 					Vector3 vertex = Vector3.zero;
+					//float4 vertex = float4.zero;
 
 					int boneIndex = boneSrc.boneIndex0;
 					float boneWeight = boneSrc.weight0;
 					weight.boneIndex0 = bindIndices[boneIndex];
 					weight.weight0 = boneWeight;
 					vertex += bindMatrices[boneIndex].MultiplyPoint(vertexSrc) * boneWeight;
+					//vertex += math.mul(bindMatrices[boneIndex], vertexSrc) * boneWeight;
 					boneIndex = boneSrc.boneIndex1;
 					boneWeight = boneSrc.weight1;
 					weight.boneIndex1 = bindIndices[boneIndex];
 					weight.weight1 = boneWeight;
 					vertex += bindMatrices[boneIndex].MultiplyPoint(vertexSrc) * boneWeight;
+					//vertex += math.mul(bindMatrices[boneIndex], vertexSrc) * boneWeight;
 					boneIndex = boneSrc.boneIndex2;
 					boneWeight = boneSrc.weight2;
 					weight.boneIndex2 = bindIndices[boneIndex];
 					weight.weight2 = boneWeight;
 					vertex += bindMatrices[boneIndex].MultiplyPoint(vertexSrc) * boneWeight;
+					//vertex += math.mul(bindMatrices[boneIndex], vertexSrc) * boneWeight;
 					boneIndex = boneSrc.boneIndex3;
 					boneWeight = boneSrc.weight3;
 					weight.boneIndex3 = bindIndices[boneIndex];
 					weight.weight3 = boneWeight;
 					vertex += bindMatrices[boneIndex].MultiplyPoint(vertexSrc) * boneWeight;
+					//vertex += math.mul(bindMatrices[boneIndex], vertexSrc) * boneWeight;
 
 					weights[index] = weight;
 					dest[index++] = vertex;
+					//dest[index++] = vertex.xyz;
 				}
 			}
 		}
 
 		// Job remapping values in a native array
+		[BurstCompile]
 		public struct RemapJob<T> : IJob where T : struct
 		{
 			[ReadOnly]
@@ -157,6 +208,7 @@ namespace UMA
 		}
 
 		// Job filling default values in a native array
+		//[BurstCompile]
 		//public struct FillJob<T> : IJobParallelFor where T : struct
 		//{
 		//	[ReadOnly]
@@ -169,7 +221,7 @@ namespace UMA
 		//		dest[i] = value;
 		//	}
 		//}
-
+		[BurstCompile]
 		public struct FillJob<T> : IJob where T : struct
 		{
 			public int index;
@@ -191,7 +243,7 @@ namespace UMA
 		}
 
 		/// <summary>
-		/// Combi		s a set of meshes into the target mesh.
+		/// Combines a set of meshes into the target mesh.
 		/// </summary>
 		/// <param name="target">Target.</param>
 		/// <param name="sources">Sources.</param>
@@ -269,7 +321,7 @@ namespace UMA
 			int vertexIndex = 0;
 			int blendShapeIndex = 0;
 
-			foreach (var source in sources)
+			foreach (CombineInstance source in sources)
 			{
 				bool has_vertexMask = (source.vertexMask != null);
 				int sourceVertexCount = source.meshData.vertexCount;
@@ -291,6 +343,7 @@ namespace UMA
 					rebindMatrices.Dispose();
 					rebindIndices = new NativeArray<int>(sourceBoneCount, Allocator.Persistent);
 					rebindMatrices = new NativeArray<Matrix4x4>(sourceBoneCount, Allocator.Persistent);
+					//rebindMatrices = new NativeArray<float4x4>(sourceBoneCount, Allocator.Persistent);
 				}
 
 				for (int i = 0; i < sourceBoneCount; i++)
