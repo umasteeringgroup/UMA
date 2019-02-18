@@ -515,7 +515,8 @@ namespace UMA
                     string Path = AssetDatabase.GetAssetPath(ai.Item.GetInstanceID());
                     if (InAssetBundle(Path))
                     {
-                        // Debug.Log("Asset " + ai._Name + "is in Asset Bundle, and was not added to the index.");
+                        if(Debug.isDebugBuild)
+                            Debug.LogWarning("Asset " + ai._Name + "is in an Asset Bundle, and was not added to the index.");
                         return;
                     }
                 }
