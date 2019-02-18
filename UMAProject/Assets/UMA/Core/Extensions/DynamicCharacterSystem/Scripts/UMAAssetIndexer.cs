@@ -491,6 +491,7 @@ namespace UMA
         /// </summary>
         /// <param name="ai"></param>
         /// <param name="SkipBundleCheck"></param>
+        /// <returns>Whether the asset was added or not.</returns>
         private bool AddAssetItem(AssetItem ai, bool SkipBundleCheck = false)
         {
             try
@@ -559,6 +560,7 @@ namespace UMA
         /// </summary>
         /// <param name="type"></param>
         /// <param name="o"></param>
+        /// <returns>Whether the Asset was added or not.</returns>
         public bool EvilAddAsset(System.Type type, Object o)
         {
             AssetItem ai = null;
