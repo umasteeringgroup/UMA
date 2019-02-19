@@ -14,6 +14,7 @@ namespace UMA
 		public int GridXSize = 5;
 		public int GridZSize = 4;
 		public float GridDistance = 1.5f;
+		public float RandomOffset = 0.0f;
 		public bool RandomRotation;
 
 		private DynamicCharacterAvatar Avatar;
@@ -39,6 +40,11 @@ namespace UMA
 					for (int z=0;z<GridZSize;z++)
 					{
 						Vector3 pos = new Vector3(transform.position.x + xstart, transform.position.y, transform.position.z + zstart);
+						if (RandomOffset != 0.0f)
+						{
+							pos.x = pos.x + Random.Range(-RandomOffset, RandomOffset);
+							pos.z = pos.z + Random.Range(-RandomOffset, RandomOffset);
+						}
 						if (RandomRotation)
 							GenerateRandomCharacter(pos, RandRotation(transform.rotation));
 						else
