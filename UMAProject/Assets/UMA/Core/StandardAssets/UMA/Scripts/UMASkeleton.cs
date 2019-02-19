@@ -120,10 +120,28 @@ namespace UMA
 
 					foreach (UMATransform umaBone in meshData.umaBones)
 					{
-						if (!boneDictionary.ContainsKey(umaBone.hash))
+						if (boneDictionary.ContainsKey(umaBone.hash))
+						{
+							BoneData currentBone = boneDictionary[umaBone.hash];
+							if (currentBone.umaTransform.bindToBone == Matrix4x4.zero)
+							{
+								if (umaBone.bindToBone != Matrix4x4.zero)
+								{
+									Debug.Log("FOUND BETTER BIND FOR: " + umaBone.name + " in slot: " + slot.slotName);
+									boneDictionary.Remove(umaBone.hash);
+									AddBone(umaBone);
+								}
+							}
+						}
+						else
 						{
 							AddBone(umaBone);
+							//if (umaBone.bindToBone == Matrix4x4.zero)
+							//{
+							//	Debug.LogWarning("Adding bone with bad skinning data: " + umaBone.name + " in slot: " + slot.slotName);
+							//}
 						}
+
 						if (umaBone.retained)
 						{
 							SetRetainedBone(umaBone.hash);
@@ -255,6 +273,15 @@ namespace UMA
 			BoneData bone;
 			if (boneDictionary.TryGetValue(nameHash, out bone))
 			{
+//#if UNITY_EDITOR
+//				if (bone.umaTransform.bindToBone == Matrix4x4.zero)
+//				{
+//					Debug.LogWarning("Bad bind matrix on bone : " + bone.umaTransform.name);
+//					// This will make the Unity.math matrix class
+//					// fail in the same way as Matrix4x4
+//					bone.umaTransform.bindToBone.m33 = float.NaN;
+//				}
+//#endif
 				return bone.umaTransform.bindToBone;
 			}
 
@@ -340,18 +367,7 @@ namespace UMA
 		{
 			var hash = UMAUtils.StringToHash(transform.name);
 			var parentHash = transform.parent != null ? UMAUtils.StringToHash(transform.parent.name) : 0;
-			BoneData data = new BoneData()
-			{
-				boneTransform = transform,
-				umaTransform = new UMATransform(transform, hash, parentHash)
-			};
-
-			if (!boneDictionary.ContainsKey(hash))
-			{
-				boneDictionary.Add(hash, data);
-			}
-			else
-				Debug.LogError("AddBonesRecursive: " + transform.name + " already exists in the dictionary!");
+			AddBone(transform, hash, parentHash);
 
 			for (int i = 0; i < transform.childCount; i++)
 			{

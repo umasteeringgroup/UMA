@@ -22,7 +22,7 @@ namespace UMA
 		/// Native array adapter.
 		/// </summary>
 		/// <remarks>
-		/// This seems to work in 2018.3 altbhough it's obviously not desirable
+		/// This seems to work in 2018.3 although it's obviously not desirable
 		/// to be using unsafe code. It would be better if the actual source
 		/// data was already in the required format, since it's all read only.
 		/// </remarks>
@@ -91,14 +91,14 @@ namespace UMA
 
 		static NativeArray<int> vertexRemaps;
 		static NativeArray<int> rebindIndices;
-		static NativeArray<Matrix4x4> rebindMatrices;
-		//static NativeArray<float4x4> rebindMatrices;
+		//static NativeArray<Matrix4x4> rebindMatrices;
+		static NativeArray<float4x4> rebindMatrices;
 		static SkinnedMeshJobCombiner ()
 		{
 			vertexRemaps = new NativeArray<int>(UMAMeshData.MAX_VERTEX_COUNT, Allocator.Persistent);
 			rebindIndices = new NativeArray<int>(256, Allocator.Persistent);
-			rebindMatrices = new NativeArray<Matrix4x4>(256, Allocator.Persistent);
-			//rebindMatrices = new NativeArray<float4x4>(256, Allocator.Persistent);
+			//rebindMatrices = new NativeArray<Matrix4x4>(256, Allocator.Persistent);
+			rebindMatrices = new NativeArray<float4x4>(256, Allocator.Persistent);
 		}
 
 		// Job rebinding vertices to new bones
@@ -115,8 +115,8 @@ namespace UMA
 			[ReadOnly]
 			public NativeArray<int> bindIndices;
 			[ReadOnly]
-			public NativeArray<Matrix4x4> bindMatrices;
-			//public NativeArray<float4x4> bindMatrices;
+			//public NativeArray<Matrix4x4> bindMatrices;
+			public NativeArray<float4x4> bindMatrices;
 
 			public int index;
 			[WriteOnly]
@@ -132,8 +132,8 @@ namespace UMA
 				{
 					if (vertMap[i] < 0) continue;
 
-					Vector3 vertexSrc = vertSource[i];
-					//float4 vertexSrc = new float4(vertSource[i], 1);
+					//Vector3 vertexSrc = vertSource[i];
+					float4 vertexSrc = new float4(vertSource[i], 1f);
 					BoneWeight boneSrc = weightSource[i];
 
 					// THEORY
@@ -148,37 +148,37 @@ namespace UMA
 
 					// Rebind vertex to new bones
 
-					Vector3 vertex = Vector3.zero;
-					//float4 vertex = float4.zero;
-
-					int boneIndex = boneSrc.boneIndex0;
-					float boneWeight = boneSrc.weight0;
-					weight.boneIndex0 = bindIndices[boneIndex];
-					weight.weight0 = boneWeight;
-					vertex += bindMatrices[boneIndex].MultiplyPoint(vertexSrc) * boneWeight;
-					//vertex += math.mul(bindMatrices[boneIndex], vertexSrc) * boneWeight;
-					boneIndex = boneSrc.boneIndex1;
-					boneWeight = boneSrc.weight1;
-					weight.boneIndex1 = bindIndices[boneIndex];
-					weight.weight1 = boneWeight;
-					vertex += bindMatrices[boneIndex].MultiplyPoint(vertexSrc) * boneWeight;
-					//vertex += math.mul(bindMatrices[boneIndex], vertexSrc) * boneWeight;
-					boneIndex = boneSrc.boneIndex2;
-					boneWeight = boneSrc.weight2;
-					weight.boneIndex2 = bindIndices[boneIndex];
-					weight.weight2 = boneWeight;
-					vertex += bindMatrices[boneIndex].MultiplyPoint(vertexSrc) * boneWeight;
-					//vertex += math.mul(bindMatrices[boneIndex], vertexSrc) * boneWeight;
-					boneIndex = boneSrc.boneIndex3;
-					boneWeight = boneSrc.weight3;
-					weight.boneIndex3 = bindIndices[boneIndex];
-					weight.weight3 = boneWeight;
-					vertex += bindMatrices[boneIndex].MultiplyPoint(vertexSrc) * boneWeight;
-					//vertex += math.mul(bindMatrices[boneIndex], vertexSrc) * boneWeight;
-
+					weight.weight0 = boneSrc.weight0;			
+					weight.weight1 = boneSrc.weight1;			
+					weight.weight2 = boneSrc.weight2;			
+					weight.weight3 = boneSrc.weight3;			
+					weight.boneIndex0 = bindIndices[boneSrc.boneIndex0];
+					weight.boneIndex1 = bindIndices[boneSrc.boneIndex1];
+					weight.boneIndex2 = bindIndices[boneSrc.boneIndex2];
+					weight.boneIndex3 = bindIndices[boneSrc.boneIndex3];
 					weights[index] = weight;
-					dest[index++] = vertex;
+
+					float4 vertex = float4.zero;
+					vertex += math.mul(vertexSrc, bindMatrices[boneSrc.boneIndex0]) * boneSrc.weight0;
+					vertex += math.mul(vertexSrc, bindMatrices[boneSrc.boneIndex1]) * boneSrc.weight1;
+					vertex += math.mul(vertexSrc, bindMatrices[boneSrc.boneIndex2]) * boneSrc.weight2;
+					vertex += math.mul(vertexSrc, bindMatrices[boneSrc.boneIndex3]) * boneSrc.weight3;
+					dest[index++] = vertex.xyz;
+
+					//float4x4 rebind =
+					//	(bindMatrices[boneSrc.boneIndex0] * boneSrc.weight0) +
+					//	(bindMatrices[boneSrc.boneIndex1] * boneSrc.weight1) +
+					//	(bindMatrices[boneSrc.boneIndex2] * boneSrc.weight2) +
+					//	(bindMatrices[boneSrc.boneIndex3] * boneSrc.weight3);
+					//float4 vertex = math.mul(vertexSrc, rebind);
 					//dest[index++] = vertex.xyz;
+
+					//Vector3 vertex = Vector3.zero;
+					//vertex += bindMatrices[boneSrc.boneIndex0].MultiplyPoint3x4(vertexSrc) * boneSrc.weight0;
+					//vertex += bindMatrices[boneSrc.boneIndex1].MultiplyPoint3x4(vertexSrc) * boneSrc.weight1;
+					//vertex += bindMatrices[boneSrc.boneIndex2].MultiplyPoint3x4(vertexSrc) * boneSrc.weight2;
+					//vertex += bindMatrices[boneSrc.boneIndex3].MultiplyPoint3x4(vertexSrc) * boneSrc.weight3;
+					//dest[index++] = vertex;
 				}
 			}
 		}
@@ -342,14 +342,19 @@ namespace UMA
 					rebindIndices.Dispose();
 					rebindMatrices.Dispose();
 					rebindIndices = new NativeArray<int>(sourceBoneCount, Allocator.Persistent);
-					rebindMatrices = new NativeArray<Matrix4x4>(sourceBoneCount, Allocator.Persistent);
-					//rebindMatrices = new NativeArray<float4x4>(sourceBoneCount, Allocator.Persistent);
+					//rebindMatrices = new NativeArray<Matrix4x4>(sourceBoneCount, Allocator.Persistent);
+					rebindMatrices = new NativeArray<float4x4>(sourceBoneCount, Allocator.Persistent);
 				}
 
 				for (int i = 0; i < sourceBoneCount; i++)
 				{
 					UMATransform bone = source.meshData.umaBones[i];
-					// HACK - needs to include remap to non-retained bones
+					// HACK
+					// This WILL NOT WORK in the case of eliminating a bone
+					// if the bone parent doesn't have a valid bind
+					// maybe those can be built from the child bone
+					// which will have one at some level or wouldn't
+					// require reskinning.
 					rebindIndices[i] = skeleton.GetSkinningIndex(bone.hash);
 					rebindMatrices[i] = skeleton.GetSkinningBindToBone(bone.hash).inverse * bone.bindToBone;
 				}

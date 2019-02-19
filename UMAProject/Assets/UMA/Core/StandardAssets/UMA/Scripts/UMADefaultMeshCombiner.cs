@@ -9,7 +9,11 @@ namespace UMA
 	/// </summary>
 	public class UMADefaultMeshCombiner : UMAMeshCombiner
 	{
+#if USE_JOB_COMBINER
+		protected List<SkinnedMeshJobCombiner.CombineInstance> combinedMeshList;
+#else
 		protected List<SkinnedMeshCombiner.CombineInstance> combinedMeshList;
+#endif
 		protected List<Material> combinedMaterialList;
 
 		UMAData umaData;
@@ -109,7 +113,11 @@ namespace UMA
 			this.umaData = umaData;
 			this.atlasResolution = atlasResolution;
 
+#if USE_JOB_COMBINER
+			combinedMeshList = new List<SkinnedMeshJobCombiner.CombineInstance>(umaData.umaRecipe.slotDataList.Length);
+#else
 			combinedMeshList = new List<SkinnedMeshCombiner.CombineInstance>(umaData.umaRecipe.slotDataList.Length);
+#endif
 			combinedMaterialList = new List<Material>();
 
 			EnsureUMADataSetup(umaData);
@@ -134,13 +142,20 @@ namespace UMA
 				if (combinedMeshList.Count == 1)
 				{
 					// fast track
+#if USE_JOB_COMBINER
+					var tempMesh = SkinnedMeshJobCombiner.ShallowInstanceMesh(combinedMeshList[0].meshData);
+#else
 					var tempMesh = SkinnedMeshCombiner.ShallowInstanceMesh(combinedMeshList[0].meshData);
+#endif
 					tempMesh.ApplyDataToUnityMesh(renderers[currentRendererIndex], umaData.skeleton);
 				}
 				else
 				{
+#if USE_JOB_COMBINER
+					SkinnedMeshJobCombiner.CombineMeshes(umaMesh, combinedMeshList.ToArray(), umaData.skeleton, umaData.blendShapeSettings);
+#else
 					SkinnedMeshCombiner.CombineMeshes(umaMesh, combinedMeshList.ToArray(), umaData.skeleton, umaData.blendShapeSettings);
-
+#endif
 					if (updatedAtlas)
 					{
 						RecalculateUV(umaMesh);
@@ -181,7 +196,11 @@ namespace UMA
 
 		protected void BuildCombineInstances()
 		{
+#if USE_JOB_COMBINER
+			SkinnedMeshJobCombiner.CombineInstance combineInstance;
+#else
 			SkinnedMeshCombiner.CombineInstance combineInstance;
+#endif
 
 			//Since BuildCombineInstances is called within a renderer loop, use a variable to keep track of the materialIndex per renderer
 			int rendererMaterialIndex = 0;
@@ -197,7 +216,11 @@ namespace UMA
 				{
 					var materialDefinition = generatedMaterial.materialFragments[materialDefinitionIndex];
 					var slotData = materialDefinition.slotData;
+#if USE_JOB_COMBINER
+					combineInstance = new SkinnedMeshJobCombiner.CombineInstance();
+#else
 					combineInstance = new SkinnedMeshCombiner.CombineInstance();
+#endif
 					combineInstance.meshData = slotData.asset.meshData;
 
 					//New MeshHiding
