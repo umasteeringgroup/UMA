@@ -101,19 +101,48 @@ namespace UMA
 			rebindMatrices = new NativeArray<float4x4>(256, Allocator.Persistent);
 		}
 
-		// Job rebinding vertices to new bones
+		// Job remapping bone weight array to new binds
 		[BurstCompile]
-		public struct RebindJob : IJob
+		public struct BoneWeightRemapJob : IJob
 		{
 			[ReadOnly]
-			public NativeArray<int> vertMap;
+			public NativeArray<int> map;
 			[ReadOnly]
-			public NativeArray<Vector3> vertSource;
-			[ReadOnly]
-			public NativeArray<UMABoneWeight> weightSource;
-
+			public NativeArray<UMABoneWeight> source;
 			[ReadOnly]
 			public NativeArray<int> bindIndices;
+
+			public int index;
+			[WriteOnly]
+			public NativeArray<UMABoneWeight> dest;
+
+			public void Execute()
+			{
+				for (int i = 0; i < source.Length; i++)
+				{
+					if (map[i] < 0) continue;
+
+					BoneWeight boneWeight = source[i];
+
+					boneWeight.boneIndex0 = bindIndices[boneWeight.boneIndex0];
+					boneWeight.boneIndex1 = bindIndices[boneWeight.boneIndex1];
+					boneWeight.boneIndex2 = bindIndices[boneWeight.boneIndex2];
+					boneWeight.boneIndex3 = bindIndices[boneWeight.boneIndex3];
+					dest[index++] = boneWeight;
+				}
+			}
+		}
+
+		// Job rebinding vertices to new bones
+		[BurstCompile]
+		public struct VertexRebindJob : IJob
+		{
+			[ReadOnly]
+			public NativeArray<int> map;
+			[ReadOnly]
+			public NativeArray<Vector3> source;
+			[ReadOnly]
+			public NativeArray<UMABoneWeight> weights;
 			[ReadOnly]
 			//public NativeArray<Matrix4x4> bindMatrices;
 			public NativeArray<float4x4> bindMatrices;
@@ -121,42 +150,27 @@ namespace UMA
 			public int index;
 			[WriteOnly]
 			public NativeArray<Vector3> dest;
-			[WriteOnly]
-			public NativeArray<UMABoneWeight> weights;
 
 			public void Execute()
 			{
-				UMABoneWeight weight = new UMABoneWeight();
-
-				for (int i = 0; i < vertSource.Length; i++)
+				for (int i = 0; i < source.Length; i++)
 				{
-					if (vertMap[i] < 0) continue;
+					if (map[i] < 0) continue;
 
 					//Vector3 vertexSrc = vertSource[i];
-					float4 vertexSrc = new float4(vertSource[i], 1f);
-					BoneWeight boneSrc = weightSource[i];
+					float4 vertexSrc = new float4(source[i], 1f);
+					BoneWeight boneSrc = weights[i];
 
 					// THEORY
 					// Skeleton has a dictionary of <hash, preservedBoneIndex>
 					// Build a skeleton from preserved transforms
 					// Apply DNA to skeleton
+					// Rebind all the vertices to the preserved transforms
 					// 
-					// UMATransform has a bind matrix
-					// bindRemaps[] = dictionary lookup from current slot skinning (+ inherited ?)
-					// bindTransforms[] = skinningBind.inv * skeleton bone to bone Matrix * slot umaTransoform bind
-					// SMR binds and bones built from dictionary order
+					// bindRemaps[] = dictionary lookup from current slot bone index to final bone index
+					// bindTransforms[] = skinningBind.inv * skeleton bone to bone Matrix * slot bind
 
 					// Rebind vertex to new bones
-
-					weight.weight0 = boneSrc.weight0;			
-					weight.weight1 = boneSrc.weight1;			
-					weight.weight2 = boneSrc.weight2;			
-					weight.weight3 = boneSrc.weight3;			
-					weight.boneIndex0 = bindIndices[boneSrc.boneIndex0];
-					weight.boneIndex1 = bindIndices[boneSrc.boneIndex1];
-					weight.boneIndex2 = bindIndices[boneSrc.boneIndex2];
-					weight.boneIndex3 = bindIndices[boneSrc.boneIndex3];
-					weights[index] = weight;
 
 					float4 vertex = float4.zero;
 					vertex += math.mul(vertexSrc, bindMatrices[boneSrc.boneIndex0]) * boneSrc.weight0;
@@ -328,6 +342,7 @@ namespace UMA
 				int sourceBoneCount = source.meshData.umaBones.Length;
 
 				JobHandle rebindJobHandle = new JobHandle();
+				JobHandle reweightJobHandle = new JobHandle();
 				JobHandle normalJobHandle = new JobHandle();
 				JobHandle tangentJobHandle = new JobHandle();
 				JobHandle uvJobHandle = new JobHandle();
@@ -375,20 +390,28 @@ namespace UMA
 
 				// Apply BAKED blendshape data here
 
-				RebindJob rebind = new RebindJob
+				VertexRebindJob rebind = new VertexRebindJob
 				{
-					vertMap = vertexRemaps,
-					vertSource = source.nativeVertices,
-					weightSource = source.nativeBoneWeights,
-
-					bindIndices = rebindIndices,
+					map = vertexRemaps,
+					source = source.nativeVertices,
+					weights = source.nativeBoneWeights,
 					bindMatrices = rebindMatrices,
 
 					index = vertexIndex,
-					dest = vertices,
-					weights = boneWeights
+					dest = vertices
 				};
 				rebindJobHandle = rebind.Schedule();
+
+				BoneWeightRemapJob reweight = new BoneWeightRemapJob
+				{
+					map = vertexRemaps,
+					source = source.nativeBoneWeights,
+					bindIndices = rebindIndices,
+
+					index = vertexIndex,
+					dest = boneWeights
+				};
+				reweightJobHandle = reweight.Schedule();
 
 				if (has_normals)
 				{
@@ -398,6 +421,7 @@ namespace UMA
 						{
 							map = vertexRemaps,
 							source = source.nativeNormals,
+
 							index = vertexIndex,
 							dest = normals
 						};
@@ -410,6 +434,7 @@ namespace UMA
 							value = Vector3.zero,
 							index = vertexIndex,
 							count = sourceVertexCount,
+
 							dest = normals
 							//dest = normals.Slice(vertexIndex)
 						};
@@ -426,6 +451,7 @@ namespace UMA
 						{
 							map = vertexRemaps,
 							source = source.nativeTangents,
+
 							index = vertexIndex,
 							dest = tangents
 						};
@@ -438,6 +464,7 @@ namespace UMA
 							value = Vector4.zero,
 							index = vertexIndex,
 							count = sourceVertexCount,
+
 							dest = tangents
 							//dest = tangents.Slice(vertexIndex)
 						};
@@ -454,6 +481,7 @@ namespace UMA
 						{
 							map = vertexRemaps,
 							source = source.nativeUV,
+
 							index = vertexIndex,
 							dest = uv
 						};
@@ -466,6 +494,7 @@ namespace UMA
 							value = Vector2.zero,
 							index = vertexIndex,
 							count = sourceVertexCount,
+
 							dest = uv
 							//dest = uv.Slice(vertexIndex)
 						};
@@ -481,6 +510,7 @@ namespace UMA
 						{
 							map = vertexRemaps,
 							source = source.nativeUV2,
+
 							index = vertexIndex,
 							dest = uv2
 						};
@@ -493,6 +523,7 @@ namespace UMA
 							value = Vector2.zero,
 							index = vertexIndex,
 							count = sourceVertexCount,
+
 							dest = uv2
 							//dest = uv2.Slice(vertexIndex)
 						};
@@ -508,6 +539,7 @@ namespace UMA
 						{
 							map = vertexRemaps,
 							source = source.nativeUV3,
+
 							index = vertexIndex,
 							dest = uv3
 						};
@@ -520,6 +552,7 @@ namespace UMA
 							value = Vector2.zero,
 							index = vertexIndex,
 							count = sourceVertexCount,
+
 							dest = uv3
 							//dest = uv3.Slice(vertexIndex)
 						};
@@ -535,6 +568,7 @@ namespace UMA
 						{
 							map = vertexRemaps,
 							source = source.nativeUV3,
+
 							index = vertexIndex,
 							dest = uv4
 						};
@@ -547,6 +581,7 @@ namespace UMA
 							value = Vector2.zero,
 							index = vertexIndex,
 							count = sourceVertexCount,
+
 							dest = uv4
 							//dest = uv4.Slice(vertexIndex)
 						};
@@ -563,6 +598,7 @@ namespace UMA
 						{
 							map = vertexRemaps,
 							source = source.nativeColors32,
+
 							index = vertexIndex,
 							dest = colors32
 						};
@@ -575,6 +611,7 @@ namespace UMA
 							value = Color.white,
 							index = vertexIndex,
 							count = sourceVertexCount,
+
 							dest = colors32
 							//dest = colors32.Slice(vertexIndex)
 						};
@@ -614,6 +651,7 @@ namespace UMA
 				vertexIndex += sourceVertexCount;
 
 				rebindJobHandle.Complete();
+				reweightJobHandle.Complete();
 				normalJobHandle.Complete();
 				tangentJobHandle.Complete();
 				uvJobHandle.Complete();

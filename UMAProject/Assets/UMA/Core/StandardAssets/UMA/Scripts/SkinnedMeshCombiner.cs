@@ -138,36 +138,38 @@ namespace UMA
 
 						// THEORY
 						// Skeleton has a dictionary of <hash, preservedBoneIndex>
-						// Build as skeleton is built from preserved transforms
+						// Build a skeleton is built from preserved transforms
 						// Apply DNA to skeleton
 						// 
 						// UMATransform has a bind matrix
 						// bindRemaps[] = dictionary lookup from current slot skinning (+ inherited ?)
-						// bindTransforms[] = skinningBind.inv * skeleton bone to bone Matrix * slot umaTransofrm bind
+						// bindTransforms[] = skinningBind.inv * skeleton bone to bone Matrix * slot umaTransoform bind
 						// SMR binds and bones built from dictionary order
 
 						// Rebind vertex to new bones
+						// As long as all the bind matrixes are correct
+						// We can use MultiplyPoint3x4
 						int boneIndex = boneSrc.boneIndex0;
 						float boneWeight = boneSrc.weight0;
 						Vector3 vertexDst = Vector3.zero;
 						boneWeights[destIndex].boneIndex0 = rebindIndices[boneIndex];
 						boneWeights[destIndex].weight0 = boneWeight;
-						vertexDst += rebindMatrices[boneIndex].MultiplyPoint(vertexSrc) * boneWeight;
+						vertexDst += rebindMatrices[boneIndex].MultiplyPoint3x4(vertexSrc) * boneWeight;
 						boneIndex = boneSrc.boneIndex1;
 						boneWeight = boneSrc.weight1;
 						boneWeights[destIndex].boneIndex1 = rebindIndices[boneIndex];
 						boneWeights[destIndex].weight1 = boneWeight;
-						vertexDst += rebindMatrices[boneIndex].MultiplyPoint(vertexSrc) * boneWeight;
+						vertexDst += rebindMatrices[boneIndex].MultiplyPoint3x4(vertexSrc) * boneWeight;
 						boneIndex = boneSrc.boneIndex2;
 						boneWeight = boneSrc.weight2;
 						boneWeights[destIndex].boneIndex2 = rebindIndices[boneIndex];
 						boneWeights[destIndex].weight2 = boneWeight;
-						vertexDst += rebindMatrices[boneIndex].MultiplyPoint(vertexSrc) * boneWeight;
+						vertexDst += rebindMatrices[boneIndex].MultiplyPoint3x4(vertexSrc) * boneWeight;
 						boneIndex = boneSrc.boneIndex3;
 						boneWeight = boneSrc.weight3;
 						boneWeights[destIndex].boneIndex3 = rebindIndices[boneIndex];
 						boneWeights[destIndex].weight3 = boneWeight;
-						vertexDst += rebindMatrices[boneIndex].MultiplyPoint(vertexSrc) * boneWeight;
+						vertexDst += rebindMatrices[boneIndex].MultiplyPoint3x4(vertexSrc) * boneWeight;
 						vertices[destIndex++] = vertexDst;
 					}
 				}
