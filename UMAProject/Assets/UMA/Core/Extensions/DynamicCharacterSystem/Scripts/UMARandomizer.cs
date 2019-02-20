@@ -210,9 +210,9 @@ namespace UMA
 	{
 #if UNITY_EDITOR
 #if UMA_HOTKEYS
-        [UnityEditor.MenuItem("Assets/Create/UMA/Misc/UMARandomizer %#h")]
+        [UnityEditor.MenuItem("Assets/Create/UMA/Misc/Randomizer %#h")]
 #else
-		[UnityEditor.MenuItem("Assets/Create/UMA/Misc/UMARandomizer")]
+		[UnityEditor.MenuItem("Assets/Create/UMA/Misc/Randomizer")]
 #endif
 		public static void CreatePreloadAsset()
 		{
