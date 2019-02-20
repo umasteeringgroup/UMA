@@ -179,6 +179,8 @@ MonoBehaviour:
       _color: {r: 0.3529412, g: 0.4156863, b: 0.6392157, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
       valuesConverted: 0
+  predefinedDNA:
+    PreloadValues: []
   loadPathType: 2
   loadPath: CharacterRecipes
   loadFilename: 
@@ -221,7 +223,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53b5d39ea58489b42985b76682b492f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lodDistance: 0
+  lodDistance: 5
   swapSlots: 0
   lodOffset: 0
   maxLOD: 5
