@@ -3902,7 +3902,13 @@ namespace UMA.CharacterSystem
         public float Value; // Current value of the DNA.
         public string Category;
 
-        protected int OwnerIndex;    // position of DNA in index, created at initialization
+        public int OwnerIndex
+		{
+			// position of DNA in index, created at initialization
+			get;
+			private set;
+		}
+
         protected UMADnaBase Owner;  // owning DNA class. Used to set the DNA by index
 
         /// <summary>

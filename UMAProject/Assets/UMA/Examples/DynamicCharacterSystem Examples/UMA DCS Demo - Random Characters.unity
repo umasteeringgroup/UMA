@@ -382,6 +382,7 @@ MonoBehaviour:
   GridXSize: 10
   GridZSize: 20
   GridDistance: 1.5
+  RandomOffset: 0.6
   RandomRotation: 1
 --- !u!1 &807120814
 GameObject:
