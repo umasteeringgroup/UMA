@@ -106,7 +106,7 @@ namespace UMA.CharacterSystem
         [Tooltip("Any colors here are set when the Avatar is first generated and updated as the values are changed using the color sliders")]
         public ColorValueList characterColors = new ColorValueList();
 
-		public UMAPredefinedDNA predefinedDNA;
+        public UMAPredefinedDNA predefinedDNA;
         //Load and Save fields
         //load
         public loadPathTypes loadPathType;
@@ -197,10 +197,10 @@ namespace UMA.CharacterSystem
         //If the want to set the Race when the avatar has built they should use ChangeRace. If they want to set it before they should use RacePreset
         //It could be used to return activeRace.raceData and/or could be made to call the right methods depending on whether the Avatar has been created
         /*RaceData RaceData
-		{
-			get { return base.umaRace; }
-			set { base.umaRace = value; }
-		}*/
+        {
+            get { return base.umaRace; }
+            set { base.umaRace = value; }
+        }*/
         /// <summary>
         /// Set this before initialization to determine the active race. This can be set in the inspector
         /// using the activeRace dropdown.
@@ -381,13 +381,13 @@ namespace UMA.CharacterSystem
 
                 if (umaData.rendererCount > 0)
                 {
-					foreach(SkinnedMeshRenderer smr in umaData.GetRenderers())
-					{
-						if (smr != null && smr.enabled == hide)
-						{
-							smr.enabled = !hide;
-						}
-					}
+                    foreach(SkinnedMeshRenderer smr in umaData.GetRenderers())
+                    {
+                        if (smr != null && smr.enabled == hide)
+                        {
+                            smr.enabled = !hide;
+                        }
+                    }
                 }
             }
             //This hardly ever happens now since the changeRace/LoadFromString/StartCO methods all yield themselves until asset bundles have been downloaded
@@ -1148,7 +1148,7 @@ namespace UMA.CharacterSystem
 #if UNITY_EDITOR
                 thisContext = CreateEditorContext();
 #else
-				return;
+                return;
 #endif
             }
             var thisDCS = thisContext.dynamicCharacterSystem as DynamicCharacterSystem;
@@ -1677,9 +1677,9 @@ namespace UMA.CharacterSystem
             {
                 string Category = db.GetType().ToString();
 
-				//TODO racedata.GetConverter is obsolete because lots of converters can use the same dna names (dnaAsset) now 
-				//I'm just gonna use the first found one- we can do something more advanced if/when we need to
-				IDNAConverter[] dcb = activeRace.racedata.GetConverters(db);
+                //TODO racedata.GetConverter is obsolete because lots of converters can use the same dna names (dnaAsset) now 
+                //I'm just gonna use the first found one- we can do something more advanced if/when we need to
+                IDNAConverter[] dcb = activeRace.racedata.GetConverters(db);
                 if (dcb.Length > 0 && dcb[0] != null && (!string.IsNullOrEmpty(dcb[0].DisplayValue)))
                 {
                     Category = dcb[0].DisplayValue;
@@ -1737,7 +1737,7 @@ namespace UMA.CharacterSystem
         private void InitializeExpressionPlayer(UMAData umaData)
         {
             this.CharacterUpdated.RemoveListener(InitializeExpressionPlayer);
-			InitializeExpressionPlayer();
+            InitializeExpressionPlayer();
         }
 
         private void InitializeExpressionPlayer(bool enable = true)
@@ -1745,18 +1745,18 @@ namespace UMA.CharacterSystem
             var thisExpressionPlayer = gameObject.GetComponent<UMAExpressionPlayer>();
             if (thisExpressionPlayer == null)
                 return;
-			//turn this off if we are not Humanoid cos it wont work
-			if (umaData.umaRecipe.raceData.umaTarget == RaceData.UMATarget.Humanoid)
-			{
-				if (thisExpressionPlayer.expressionSet == null)
-					return;
-				thisExpressionPlayer.enabled = true;
-				thisExpressionPlayer.Initialize();
-			}
-			else
-			{
-				thisExpressionPlayer.enabled = false;
-			}
+            //turn this off if we are not Humanoid cos it wont work
+            if (umaData.umaRecipe.raceData.umaTarget == RaceData.UMATarget.Humanoid)
+            {
+                if (thisExpressionPlayer.expressionSet == null)
+                    return;
+                thisExpressionPlayer.enabled = true;
+                thisExpressionPlayer.Initialize();
+            }
+            else
+            {
+                thisExpressionPlayer.enabled = false;
+            }
         }
 
         /// <summary>
@@ -1822,7 +1822,7 @@ namespace UMA.CharacterSystem
                 if (saveColors)
                     thisDCASA |= SaveOptions.saveColors;
                 /*if (saveAnimator)
-					thisDCASA|= SaveOptions.saveAnimator;*/
+                    thisDCASA|= SaveOptions.saveAnimator;*/
 
                 thisDCASA &= ~SaveOptions.useDefaults;
 
@@ -1918,7 +1918,7 @@ namespace UMA.CharacterSystem
         public void DoSave(bool saveAsAsset = false, string filePath = "", SaveOptions customSaveOptions = SaveOptions.useDefaults)
         {
 #if !UNITY_EDITOR
-			saveAsAsset = false;
+            saveAsAsset = false;
 #endif
             var saveOptionsToUse = customSaveOptions == SaveOptions.useDefaults ? defaultSaveOptions : customSaveOptions;
             Dictionary<string, UMATextRecipe> wardrobeCache = new Dictionary<string, UMATextRecipe>(_wardrobeRecipes);
@@ -1951,7 +1951,7 @@ namespace UMA.CharacterSystem
                     AssetDatabase.SaveAssets();
                 }
 #else
-				FileUtils.WriteAllText(filePath, asset.recipeString);
+                FileUtils.WriteAllText(filePath, asset.recipeString);
 #endif
                 if (Debug.isDebugBuild)
                     Debug.Log("Recipe saved to " + filePath);
@@ -2494,13 +2494,13 @@ namespace UMA.CharacterSystem
                     {
                         if (path.Contains("://"))
                         {
-							UnityWebRequest www = UnityWebRequest.Get(path + loadFilename);
+                            UnityWebRequest www = UnityWebRequest.Get(path + loadFilename);
 #if UNITY_2017_2_OR_NEWER
-							yield return www.SendWebRequest();
+                            yield return www.SendWebRequest();
 #else
-							yield return www.Send();
+                            yield return www.Send();
 #endif
-							recipeString = www.downloadHandler.text;
+                            recipeString = www.downloadHandler.text;
                         }
                         else
                         {
@@ -2543,208 +2543,208 @@ namespace UMA.CharacterSystem
         /// <returns>Can also be used to return an array of additional slots if this avatars flagForReload field is set to true before calling</returns>
         /// <param name="RestoreDNA">If updating the same race set this to true to restore the current DNA.</param>
         public void BuildCharacter(bool RestoreDNA = true)
-		{
-			if (!_buildCharacterEnabled)
-				return;
-			_isFirstSettingsBuild = false;
-			//clear these values each time we build
-			wasCrossCompatibleBuild = false;
-			crossCompatibleRaces.Clear();
+        {
+            if (!_buildCharacterEnabled)
+                return;
+            _isFirstSettingsBuild = false;
+            //clear these values each time we build
+            wasCrossCompatibleBuild = false;
+            crossCompatibleRaces.Clear();
 
-			if (!DynamicAssetLoader.Instance.isInitialized)
-			{
-				StartCoroutine(BuildCharacterWhenReady(RestoreDNA));
-				return;
-			}
-			if (waitForBundles && DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
-			{
-				StartCoroutine(BuildCharacterWhenReady(RestoreDNA));
-				return;
-			}
+            if (!DynamicAssetLoader.Instance.isInitialized)
+            {
+                StartCoroutine(BuildCharacterWhenReady(RestoreDNA));
+                return;
+            }
+            if (waitForBundles && DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
+            {
+                StartCoroutine(BuildCharacterWhenReady(RestoreDNA));
+                return;
+            }
 
-			// clear the hiddenslots and hidden mesh assets
-			// so they can be accumulate anew from the recipe
-			HiddenSlots.Clear();
-			_meshHideDictionary.Clear();
+            // clear the hiddenslots and hidden mesh assets
+            // so they can be accumulate anew from the recipe
+            HiddenSlots.Clear();
+            _meshHideDictionary.Clear();
 
-			UMADnaBase[] CurrentDNA = null;
-			if (umaData != null)
-			{
-				if (umaData.umaRecipe != null)
-				{
-					CurrentDNA = umaData.umaRecipe.GetAllDna();
-				}
-			}
-			if (CurrentDNA == null)
-				RestoreDNA = false;
+            UMADnaBase[] CurrentDNA = null;
+            if (umaData != null)
+            {
+                if (umaData.umaRecipe != null)
+                {
+                    CurrentDNA = umaData.umaRecipe.GetAllDna();
+                }
+            }
+            if (CurrentDNA == null)
+                RestoreDNA = false;
 
-			List<UMAWardrobeRecipe> ReplaceRecipes = new List<UMAWardrobeRecipe>();
-			List<UMARecipeBase> Recipes = new List<UMARecipeBase>();
-			List<string> SuppressSlotsStrings = new List<string>();
-			if ((WardrobeRecipes.Count > 0) && activeRace.racedata != null)
-			{
-				foreach (UMATextRecipe utr in WardrobeRecipes.Values)
-				{
-					if (utr.suppressWardrobeSlots != null)
-					{
-						if (activeRace.name == "" || ((utr.compatibleRaces.Count == 0 || utr.compatibleRaces.Contains(activeRace.name)) || (activeRace.racedata.IsCrossCompatibleWith(utr.compatibleRaces) && activeRace.racedata.wardrobeSlots.Contains(utr.wardrobeSlot))))
-						{
-							if (!SuppressSlotsStrings.Contains(utr.wardrobeSlot))
-							{
-								foreach (string suppressedSlot in utr.suppressWardrobeSlots)
-								{
-									SuppressSlotsStrings.Add(suppressedSlot);
-								}
-							}
-						}
-					}
-				}
+            List<UMAWardrobeRecipe> ReplaceRecipes = new List<UMAWardrobeRecipe>();
+            List<UMARecipeBase> Recipes = new List<UMARecipeBase>();
+            List<string> SuppressSlotsStrings = new List<string>();
+            if ((WardrobeRecipes.Count > 0) && activeRace.racedata != null)
+            {
+                foreach (UMATextRecipe utr in WardrobeRecipes.Values)
+                {
+                    if (utr.suppressWardrobeSlots != null)
+                    {
+                        if (activeRace.name == "" || ((utr.compatibleRaces.Count == 0 || utr.compatibleRaces.Contains(activeRace.name)) || (activeRace.racedata.IsCrossCompatibleWith(utr.compatibleRaces) && activeRace.racedata.wardrobeSlots.Contains(utr.wardrobeSlot))))
+                        {
+                            if (!SuppressSlotsStrings.Contains(utr.wardrobeSlot))
+                            {
+                                foreach (string suppressedSlot in utr.suppressWardrobeSlots)
+                                {
+                                    SuppressSlotsStrings.Add(suppressedSlot);
+                                }
+                            }
+                        }
+                    }
+                }
 
-				foreach (UMATextRecipe utr in WardrobeRecipes.Values)
-				{
-					//Collect all the MeshHideAssets on all the wardrobe recipes
-					if (utr.MeshHideAssets != null && !SuppressSlotsStrings.Contains(utr.wardrobeSlot))
-					{
-						foreach (MeshHideAsset meshHide in utr.MeshHideAssets)
-						{
-							if (meshHide != null && meshHide.asset != null)
-							{
-								if (!_meshHideDictionary.ContainsKey(meshHide.asset))
-								{   //If this meshHide.asset isn't already in the dictionary, then let's add it and start a new list.
-									_meshHideDictionary.Add(meshHide.asset, new List<MeshHideAsset>());
-								}
+                foreach (UMATextRecipe utr in WardrobeRecipes.Values)
+                {
+                    //Collect all the MeshHideAssets on all the wardrobe recipes
+                    if (utr.MeshHideAssets != null && !SuppressSlotsStrings.Contains(utr.wardrobeSlot))
+                    {
+                        foreach (MeshHideAsset meshHide in utr.MeshHideAssets)
+                        {
+                            if (meshHide != null && meshHide.asset != null)
+                            {
+                                if (!_meshHideDictionary.ContainsKey(meshHide.asset))
+                                {   //If this meshHide.asset isn't already in the dictionary, then let's add it and start a new list.
+                                    _meshHideDictionary.Add(meshHide.asset, new List<MeshHideAsset>());
+                                }
 
-								//If this meshHide.asset is already in the dictionary AND the meshHide isn't already in the list, then add it.
-								if (!_meshHideDictionary[meshHide.asset].Contains(meshHide))
-								{
-									_meshHideDictionary[meshHide.asset].Add(meshHide);
-								}
-							}
-						}
-					}
-				}
+                                //If this meshHide.asset is already in the dictionary AND the meshHide isn't already in the list, then add it.
+                                if (!_meshHideDictionary[meshHide.asset].Contains(meshHide))
+                                {
+                                    _meshHideDictionary[meshHide.asset].Add(meshHide);
+                                }
+                            }
+                        }
+                    }
+                }
 
-				foreach (string ws in activeRace.racedata.wardrobeSlots)//this doesn't need to validate racedata- we wouldn't be here if it was null
-				{
-					if (SuppressSlotsStrings.Contains(ws))
-					{
-						continue;
-					}
-					if (WardrobeRecipes.ContainsKey(ws))
-					{
-						UMATextRecipe utr = WardrobeRecipes[ws];
-						//we can use the race data here to filter wardrobe slots
-						//if checking a backwards compatible race we also need to check the race has a compatible wardrobe slot, 
-						//since while a race can be backwards compatible it does not *have* to have all the same wardrobeslots as the race it is compatible with
-						if (activeRace.name == "" || ((utr.compatibleRaces.Count == 0 || utr.compatibleRaces.Contains(activeRace.name)) || (activeRace.racedata.IsCrossCompatibleWith(utr.compatibleRaces) && activeRace.racedata.wardrobeSlots.Contains(utr.wardrobeSlot))))
-						{
-							UMAWardrobeRecipe umr = (utr as UMAWardrobeRecipe);
+                foreach (string ws in activeRace.racedata.wardrobeSlots)//this doesn't need to validate racedata- we wouldn't be here if it was null
+                {
+                    if (SuppressSlotsStrings.Contains(ws))
+                    {
+                        continue;
+                    }
+                    if (WardrobeRecipes.ContainsKey(ws))
+                    {
+                        UMATextRecipe utr = WardrobeRecipes[ws];
+                        //we can use the race data here to filter wardrobe slots
+                        //if checking a backwards compatible race we also need to check the race has a compatible wardrobe slot, 
+                        //since while a race can be backwards compatible it does not *have* to have all the same wardrobeslots as the race it is compatible with
+                        if (activeRace.name == "" || ((utr.compatibleRaces.Count == 0 || utr.compatibleRaces.Contains(activeRace.name)) || (activeRace.racedata.IsCrossCompatibleWith(utr.compatibleRaces) && activeRace.racedata.wardrobeSlots.Contains(utr.wardrobeSlot))))
+                        {
+                            UMAWardrobeRecipe umr = (utr as UMAWardrobeRecipe);
 
-							//check if this recipe is directly or only cross compatible
-							bool utrIsCrossCompatible = (activeRace.racedata.IsCrossCompatibleWith(utr.compatibleRaces) && activeRace.racedata.wardrobeSlots.Contains(utr.wardrobeSlot));
-							if (utrIsCrossCompatible)
-							{
-								//FixCrossCompatibleSlots will be called to remove any slots added by cross compatible recipes that are 'equivalent' according to this races 'Cross Compatibility' settings
-								wasCrossCompatibleBuild = true;
-								for (int ccri = 0; ccri < utr.compatibleRaces.Count; ccri++)
-									if (!crossCompatibleRaces.Contains(utr.compatibleRaces[ccri]))
-										crossCompatibleRaces.Add(utr.compatibleRaces[ccri]);
-							}
+                            //check if this recipe is directly or only cross compatible
+                            bool utrIsCrossCompatible = (activeRace.racedata.IsCrossCompatibleWith(utr.compatibleRaces) && activeRace.racedata.wardrobeSlots.Contains(utr.wardrobeSlot));
+                            if (utrIsCrossCompatible)
+                            {
+                                //FixCrossCompatibleSlots will be called to remove any slots added by cross compatible recipes that are 'equivalent' according to this races 'Cross Compatibility' settings
+                                wasCrossCompatibleBuild = true;
+                                for (int ccri = 0; ccri < utr.compatibleRaces.Count; ccri++)
+                                    if (!crossCompatibleRaces.Contains(utr.compatibleRaces[ccri]))
+                                        crossCompatibleRaces.Add(utr.compatibleRaces[ccri]);
+                            }
 
-							if (umr != null && umr.HasReplaces)
-							{
-								ReplaceRecipes.Add(umr);
-							}
-							else
-							{
-								Recipes.Add(utr);
-							}
-							if (utr.Hides.Count > 0)
-							{
-								foreach (string s in utr.Hides)
-								{
-									HiddenSlots.Add(s);
-									//if the current race is only 'CrossCompatible' with the races this recipe is compatible with
-									//get the equivalent slot from the races crossCompatibility settings so that is hidden too;
-									if (utrIsCrossCompatible)
-									{
-										var equivalentSlot = activeRace.racedata.FindEquivalentSlot(utr.compatibleRaces, s, false);
-										if (!string.IsNullOrEmpty(equivalentSlot))
-											HiddenSlots.Add(equivalentSlot);
-									}
-								}
-							}
-						}
-					}
-				}
-			}
+                            if (umr != null && umr.HasReplaces)
+                            {
+                                ReplaceRecipes.Add(umr);
+                            }
+                            else
+                            {
+                                Recipes.Add(utr);
+                            }
+                            if (utr.Hides.Count > 0)
+                            {
+                                foreach (string s in utr.Hides)
+                                {
+                                    HiddenSlots.Add(s);
+                                    //if the current race is only 'CrossCompatible' with the races this recipe is compatible with
+                                    //get the equivalent slot from the races crossCompatibility settings so that is hidden too;
+                                    if (utrIsCrossCompatible)
+                                    {
+                                        var equivalentSlot = activeRace.racedata.FindEquivalentSlot(utr.compatibleRaces, s, false);
+                                        if (!string.IsNullOrEmpty(equivalentSlot))
+                                            HiddenSlots.Add(equivalentSlot);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
-			foreach (UMATextRecipe utr in umaAdditionalRecipes)
-			{
-				if (utr.Hides.Count > 0)
-				{
-					foreach (string s in utr.Hides)
-					{
-						HiddenSlots.Add(s);
-					}
-				}
-			}
+            foreach (UMATextRecipe utr in umaAdditionalRecipes)
+            {
+                if (utr.Hides.Count > 0)
+                {
+                    foreach (string s in utr.Hides)
+                    {
+                        HiddenSlots.Add(s);
+                    }
+                }
+            }
 
-			//set the expression set to match the new character- needs to happen before load...
-			if (activeRace.racedata != null && !RestoreDNA)
-			{
-				SetAnimatorController();
-				SetExpressionSet();
-			}
+            //set the expression set to match the new character- needs to happen before load...
+            if (activeRace.racedata != null && !RestoreDNA)
+            {
+                SetAnimatorController();
+                SetExpressionSet();
+            }
 
-			// Load all the recipes- if LoadCharacter returns true then loading the recipes caused assets to download- we need to wait and try again after they have finished
-			if (LoadCharacter(umaRecipe, ReplaceRecipes, Recipes.ToArray()))
-			{
-				StartCoroutine(BuildCharacterWhenReady(RestoreDNA));
-				return;
-			}
+            // Load all the recipes- if LoadCharacter returns true then loading the recipes caused assets to download- we need to wait and try again after they have finished
+            if (LoadCharacter(umaRecipe, ReplaceRecipes, Recipes.ToArray()))
+            {
+                StartCoroutine(BuildCharacterWhenReady(RestoreDNA));
+                return;
+            }
 
-			//But the ExpressionPlayer needs to be Initialized AFTER Load
-			if (activeRace.racedata != null && !RestoreDNA)
-			{
-				this.CharacterUpdated.AddListener(InitializeExpressionPlayer);
-			}
+            //But the ExpressionPlayer needs to be Initialized AFTER Load
+            if (activeRace.racedata != null && !RestoreDNA)
+            {
+                this.CharacterUpdated.AddListener(InitializeExpressionPlayer);
+            }
 
-			// Add saved DNA
-			if (RestoreDNA)
-			{
-				umaData.umaRecipe.ClearDna();
-				foreach (UMADnaBase ud in CurrentDNA)
-				{
-					umaData.umaRecipe.AddDna(ud);
-				}
-			}
-		}
+            // Add saved DNA
+            if (RestoreDNA)
+            {
+                umaData.umaRecipe.ClearDna();
+                foreach (UMADnaBase ud in CurrentDNA)
+                {
+                    umaData.umaRecipe.AddDna(ud);
+                }
+            }
+        }
 
-		private void ApplyPredefinedDNA()
-		{
-			if (this.predefinedDNA != null)
-			{
-				var dna = GetDNA();
+        private void ApplyPredefinedDNA()
+        {
+            if (this.predefinedDNA != null)
+            {
+                var dna = GetDNA();
 
-				foreach (UMAPredefinedDNA.DnaValue dv in predefinedDNA.PreloadValues)
-				{
-					if (dna.ContainsKey(dv.Name))
-					{
-						dna[dv.Name].Set(dv.Value);
-					}
-				}
-				this.predefinedDNA = null; // only apply the first time.
-			}
-		}
+                foreach (UMAPredefinedDNA.DnaValue dv in predefinedDNA.PreloadValues)
+                {
+                    if (dna.ContainsKey(dv.Name))
+                    {
+                        dna[dv.Name].Set(dv.Value);
+                    }
+                }
+                this.predefinedDNA = null; // only apply the first time.
+            }
+        }
 
-		/// <summary>
-		/// With a DynamicCharacterAvatar you do not call Load directly. If you want to load an UMATextRecipe directly call ImportSettings(yourUMATextRecipe)
-		/// </summary>
-		/// <param name="umaRecipe"></param>
-		/// <param name="umaAdditionalSerializedRecipes"></param>
-		//We dont really want the *actual* 'Load' method public because we dont want people to see/call that
-		public override void Load(UMARecipeBase umaRecipe, params UMARecipeBase[] umaAdditionalSerializedRecipes)
+        /// <summary>
+        /// With a DynamicCharacterAvatar you do not call Load directly. If you want to load an UMATextRecipe directly call ImportSettings(yourUMATextRecipe)
+        /// </summary>
+        /// <param name="umaRecipe"></param>
+        /// <param name="umaAdditionalSerializedRecipes"></param>
+        //We dont really want the *actual* 'Load' method public because we dont want people to see/call that
+        public override void Load(UMARecipeBase umaRecipe, params UMARecipeBase[] umaAdditionalSerializedRecipes)
         {
             if (Debug.isDebugBuild)
                 Debug.Log(" With a DynamicCharacterAvatar you do not call Load directly. If you want to load an UMATextRecipe directly call ImportSettings(yourUMATextRecipe)");
@@ -2790,9 +2790,9 @@ namespace UMA.CharacterSystem
             RemoveHiddenSlots();
 
             /*if (wasCrossCompatibleBuild)
-			{
-				FixCrossCompatibleSlots();
-			}*/
+            {
+                FixCrossCompatibleSlots();
+            }*/
 
             foreach (UMAWardrobeRecipe umr in Replaces)
             {
@@ -2859,8 +2859,8 @@ namespace UMA.CharacterSystem
             {
                 UpdateSameRace();
             }
-			ApplyPredefinedDNA();
-			UpdateAssetBundlesUsedbyCharacter();
+            ApplyPredefinedDNA();
+            UpdateAssetBundlesUsedbyCharacter();
 
             return false;
         }
@@ -3232,19 +3232,19 @@ namespace UMA.CharacterSystem
             {
                 UpdateAfterDownload();
             }
-			// UpdateAfterDownload.UpdateSetSlots might have also caused downloads to happen
-			//(eg they themselves ref slots/overlays/races that are in other bundles) so check that 
-			//(they will be in requiredAssetsToCheck) and wait
-			if (requiredAssetsToCheck.Count > 0)
+            // UpdateAfterDownload.UpdateSetSlots might have also caused downloads to happen
+            //(eg they themselves ref slots/overlays/races that are in other bundles) so check that 
+            //(they will be in requiredAssetsToCheck) and wait
+            if (requiredAssetsToCheck.Count > 0)
             {
-				//We cant call this Coroutine again from within itself (causes a stackOverflow) so just wait
-				//yield return StartCoroutine(UpdateAfterDownloads());
-				while (DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
-				{
-					yield return null;
-				}
-				UpdateAfterDownload();
-			}
+                //We cant call this Coroutine again from within itself (causes a stackOverflow) so just wait
+                //yield return StartCoroutine(UpdateAfterDownloads());
+                while (DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
+                {
+                    yield return null;
+                }
+                UpdateAfterDownload();
+            }
         }
 
         void UpdateAfterDownload()
@@ -3379,8 +3379,8 @@ namespace UMA.CharacterSystem
         {
             if (umaData != null)
             { 
-				if (umaData.umaGenerator != null)
-					umaData.umaGenerator.removeUMA(umaData);
+                if (umaData.umaGenerator != null)
+                    umaData.umaGenerator.removeUMA(umaData);
             }
         }
 
@@ -3846,46 +3846,46 @@ namespace UMA.CharacterSystem
 
 #if UNITY_EDITOR           
         [ContextMenu("Copy From Current Wardrobe")]
-		void CopyDefaultWardrobe()
-		{
-			string recipeString = JsonUtility.ToJson(new UMATextRecipe.DCSPackRecipe(this, "", "DynamicCharacterAvatar", defaultSaveOptions));
-			EditorGUIUtility.systemCopyBuffer = recipeString;
-			Debug.Log("Copied: " + EditorGUIUtility.systemCopyBuffer);
-		}
+        void CopyDefaultWardrobe()
+        {
+            string recipeString = JsonUtility.ToJson(new UMATextRecipe.DCSPackRecipe(this, "", "DynamicCharacterAvatar", defaultSaveOptions));
+            EditorGUIUtility.systemCopyBuffer = recipeString;
+            Debug.Log("Copied: " + EditorGUIUtility.systemCopyBuffer);
+        }
 
-		[ContextMenu("Paste To Default Wardrobe")]
-		void PasteDefaultWardrobe()
-		{
-			string buffer = EditorGUIUtility.systemCopyBuffer;
-			Debug.Log("Pasting: " + buffer);
+        [ContextMenu("Paste To Default Wardrobe")]
+        void PasteDefaultWardrobe()
+        {
+            string buffer = EditorGUIUtility.systemCopyBuffer;
+            Debug.Log("Pasting: " + buffer);
 
-			UMATextRecipe.DCSPackRecipe copiedList = JsonUtility.FromJson<UMATextRecipe.DCSPackRecipe>(buffer);
+            UMATextRecipe.DCSPackRecipe copiedList = JsonUtility.FromJson<UMATextRecipe.DCSPackRecipe>(buffer);
 
-			ChangeRace(copiedList.race);
+            ChangeRace(copiedList.race);
 
-			if (copiedList.wardrobeSet.Count > 0)
-				preloadWardrobeRecipes.recipes.Clear();
+            if (copiedList.wardrobeSet.Count > 0)
+                preloadWardrobeRecipes.recipes.Clear();
 
-			foreach (WardrobeSettings wardrobe in copiedList.wardrobeSet)
-			{
-				UMATextRecipe recipe = UMAAssetIndexer.Instance.GetAsset<UMATextRecipe>(wardrobe.recipe);
-				if (recipe != null)
-				{
-					WardrobeRecipeListItem item = new WardrobeRecipeListItem(recipe);
-					preloadWardrobeRecipes.recipes.Add(item);
-				}
-			}
+            foreach (WardrobeSettings wardrobe in copiedList.wardrobeSet)
+            {
+                UMATextRecipe recipe = UMAAssetIndexer.Instance.GetAsset<UMATextRecipe>(wardrobe.recipe);
+                if (recipe != null)
+                {
+                    WardrobeRecipeListItem item = new WardrobeRecipeListItem(recipe);
+                    preloadWardrobeRecipes.recipes.Add(item);
+                }
+            }
 
-			if (copiedList.characterColors.Count > 0)
-				characterColors._colors.Clear();
+            if (copiedList.characterColors.Count > 0)
+                characterColors._colors.Clear();
 
-			foreach (UMAPackedRecipeBase.PackedOverlayColorDataV3 color in copiedList.characterColors)
-			{
-				OverlayColorData colorData = new OverlayColorData();
-				color.SetOverlayColorData(colorData);
-				characterColors.SetColor(color.name, colorData);
-			}
-		}
+            foreach (UMAPackedRecipeBase.PackedOverlayColorDataV3 color in copiedList.characterColors)
+            {
+                OverlayColorData colorData = new OverlayColorData();
+                color.SetOverlayColorData(colorData);
+                characterColors.SetColor(color.name, colorData);
+            }
+        }
 #endif
     }
 
@@ -3903,11 +3903,11 @@ namespace UMA.CharacterSystem
         public string Category;
 
         public int OwnerIndex
-		{
-			// position of DNA in index, created at initialization
-			get;
-			private set;
-		}
+        {
+            // position of DNA in index, created at initialization
+            get;
+            private set;
+        }
 
         protected UMADnaBase Owner;  // owning DNA class. Used to set the DNA by index
 
