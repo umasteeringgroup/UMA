@@ -8,6 +8,7 @@ namespace UMA.Examples
 	public class UMASimpleLOD : MonoBehaviour
 	{
 		[Tooltip("The distance to step to another LOD")]
+		[Range(0.01f, 100f)]
 		public float lodDistance;
 
 		[Tooltip("Look for LOD slots in the library.")]
@@ -93,6 +94,13 @@ namespace UMA.Examples
 
 			if (_umaData.umaRecipe == null)
 				return;
+
+			if(lodDistance < 0)
+			{
+				if (Debug.isDebugBuild)
+					Debug.LogWarning("LOD Distance is less than 0!");
+				return;
+			}
 
 			float cameraDistance = (transform.position - _cameraTransform.position).magnitude;
 			float lodDistanceStep = lodDistance;
