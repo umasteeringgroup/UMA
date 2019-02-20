@@ -16,6 +16,7 @@ namespace UMA
 		public float GridDistance = 1.5f;
 		public float RandomOffset = 0.0f;
 		public bool RandomRotation;
+		public string NameBase = "Pat";
 
 		private DynamicCharacterAvatar Avatar;
 		private GameObject character;
@@ -26,14 +27,14 @@ namespace UMA
 			if (!GenerateGrid)
 			{
 				if (RandomRotation)
-					GenerateRandomCharacter(transform.position, RandRotation(transform.rotation));
+					GenerateRandomCharacter(transform.position, RandRotation(transform.rotation),NameBase);
 				else
-					GenerateRandomCharacter(transform.position, transform.rotation);
+					GenerateRandomCharacter(transform.position, transform.rotation, NameBase);
 			} 
 			else
 			{
 				float xstart = 0-((GridXSize * GridDistance) / 2.0f);
-
+				int i = 0;
 				for (int x=0;x<GridXSize;x++)
 				{
 					float zstart = 0-((GridZSize * GridDistance) / 2.0f);
@@ -46,9 +47,11 @@ namespace UMA
 							pos.z = pos.z + Random.Range(-RandomOffset, RandomOffset);
 						}
 						if (RandomRotation)
-							GenerateRandomCharacter(pos, RandRotation(transform.rotation));
+							GenerateRandomCharacter(pos, RandRotation(transform.rotation),NameBase + " "+ i);
 						else
-							GenerateRandomCharacter(pos, transform.rotation);
+							GenerateRandomCharacter(pos, transform.rotation, NameBase + " " + i);
+
+						++i;
 						zstart += GridDistance;
 					}
 					xstart += GridDistance;
@@ -62,16 +65,18 @@ namespace UMA
 			return Quaternion.Euler(Euler.x, Random.Range(0.0f, 359.9f), Euler.z);
 		}
 
-		private void GenerateRandomCharacter(Vector3 Pos, Quaternion Rot)
+
+		public void GenerateRandomCharacter(Vector3 Pos, Quaternion Rot, string Name)
 		{
 			if (prefab)
 			{
-				prefab = GameObject.Instantiate(prefab, Pos, Rot);
+				GameObject go = GameObject.Instantiate(prefab, Pos, Rot);
 				if (ParentObject != null)
 				{
-					prefab.transform.parent = ParentObject.transform;
+					go.transform.parent = ParentObject.transform;
 				}
-				Avatar = prefab.GetComponent<DynamicCharacterAvatar>();
+				Avatar = go.GetComponent<DynamicCharacterAvatar>();
+				go.name = Name;
 			}
 			Randomize(Avatar);
 		}
