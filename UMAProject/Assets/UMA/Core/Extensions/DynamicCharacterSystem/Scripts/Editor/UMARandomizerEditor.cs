@@ -14,7 +14,6 @@ namespace UMA.Editors
 		private string[] races;
 		private List<RaceData> raceDatas;
 		UMARandomizer currentTarget = null;
-		private bool changed = false;
 
 		List<UMAWardrobeRecipe> droppedItems = new List<UMAWardrobeRecipe>();
 
@@ -30,7 +29,6 @@ namespace UMA.Editors
 			foreach (string guid in guids)
 			{
 				string path = AssetDatabase.GUIDToAssetPath(guid);
-				string name = Path.GetFileNameWithoutExtension(path);
 				RaceData rc = AssetDatabase.LoadAssetAtPath<RaceData>(path);
 				raceDatas.Add(rc);
 				Races.Add(rc.raceName);
