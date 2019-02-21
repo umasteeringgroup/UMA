@@ -14,6 +14,9 @@ namespace UMA
 		[System.NonSerialized]
 		public int nameHash;
 
+		public UMARendererAsset RendererAsset { get { return _rendererAsset; } }
+		[SerializeField] private UMARendererAsset _rendererAsset;
+
         #region INameProvider
 
         public string GetAssetName()

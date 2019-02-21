@@ -686,6 +686,13 @@ namespace UMA
 		/// <param name="skeleton">Skeleton.</param>
 		public void ApplyDataToUnityMesh(SkinnedMeshRenderer renderer, UMASkeleton skeleton)
 		{
+			if(renderer == null)
+			{
+				if (Debug.isDebugBuild)
+					Debug.LogError("Renderer is null!");
+				return;
+			}
+
 			CreateTransforms(skeleton);
 
 			Mesh mesh = renderer.sharedMesh;

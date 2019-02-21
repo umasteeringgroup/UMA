@@ -11,6 +11,17 @@ namespace UMA
 	[Serializable]
 	public class UMAGeneratorCoroutine : WorkerCoroutine
 	{
+		private class GeneratedMaterialLookupKey : IEquatable<GeneratedMaterialLookupKey>
+		{
+			public List<OverlayData> overlayList;
+			public UMARendererAsset rendererAsset;
+
+			public bool Equals(GeneratedMaterialLookupKey other)
+			{
+				return (overlayList == other.overlayList && rendererAsset == other.rendererAsset);
+			}
+		}
+
 		TextureProcessBaseCoroutine textureProcessCoroutine;
 
 		MaxRectsBinPack packTexture;
@@ -22,9 +33,10 @@ namespace UMA
 		int scaleFactor;
 		MaterialDefinitionComparer comparer = new MaterialDefinitionComparer();
 		List<UMAData.GeneratedMaterial> generatedMaterials;
-		int rendererCount;
+		List<UMARendererAsset> uniqueRenderers = new List<UMARendererAsset>();
 		List<UMAData.GeneratedMaterial> atlassedMaterials = new List<UMAData.GeneratedMaterial>(20);
-		Dictionary<List<OverlayData>, UMAData.GeneratedMaterial> generatedMaterialLookup;
+		Dictionary<GeneratedMaterialLookupKey, UMAData.GeneratedMaterial> generatedMaterialLookup;
+
 
 		public void Prepare(UMAGeneratorBase _umaGenerator, UMAData _umaData, TextureProcessBaseCoroutine textureProcessCoroutine, bool updateMaterialList, int InitialScaleFactor)
 		{
@@ -35,19 +47,19 @@ namespace UMA
 			scaleFactor = InitialScaleFactor;
 		}
 
-		private UMAData.GeneratedMaterial FindOrCreateGeneratedMaterial(UMAMaterial umaMaterial)
+		private UMAData.GeneratedMaterial FindOrCreateGeneratedMaterial(UMAMaterial umaMaterial, UMARendererAsset renderer = null)
 		{
 			if (umaMaterial.materialType == UMAMaterial.MaterialType.Atlas)
 			{
 				foreach (var atlassedMaterial in atlassedMaterials)
 				{
-					if (atlassedMaterial.umaMaterial == umaMaterial)
+					if (atlassedMaterial.umaMaterial == umaMaterial && atlassedMaterial.rendererAsset == renderer)
 					{
 						return atlassedMaterial;
 					}
 					else
 					{
-						if (atlassedMaterial.umaMaterial.Equals(umaMaterial))
+						if (atlassedMaterial.umaMaterial.Equals(umaMaterial) && atlassedMaterial.rendererAsset == renderer)
 						{
 							return atlassedMaterial;
 						}
@@ -56,10 +68,7 @@ namespace UMA
 			}
 
 			var res = new UMAData.GeneratedMaterial();
-			if (umaMaterial.RequireSeperateRenderer)
-			{
-				res.renderer = rendererCount++;
-			}
+			res.rendererAsset = renderer;
 			res.umaMaterial = umaMaterial;
 			res.material = UnityEngine.Object.Instantiate(umaMaterial.material) as Material;
 			res.material.name = umaMaterial.material.name;
@@ -72,7 +81,7 @@ namespace UMA
 		{
 			if (generatedMaterialLookup == null)
 			{
-				generatedMaterialLookup = new Dictionary<List<OverlayData>, UMAData.GeneratedMaterial>(20);
+				generatedMaterialLookup = new Dictionary<GeneratedMaterialLookupKey, UMAData.GeneratedMaterial>(20);
 			}
 			else
 			{
@@ -82,26 +91,9 @@ namespace UMA
 			umaData.CleanTextures();
 			generatedMaterials = new List<UMAData.GeneratedMaterial>(20);
 			atlassedMaterials.Clear();
-			rendererCount = 0;
+			uniqueRenderers.Clear();
 
 			SlotData[] slots = umaData.umaRecipe.slotDataList;
-
-			for (int i = 0; i < slots.Length; i++)
-			{
-				var slot = slots[i];
-				if (slot == null)
-					continue;
-				
-				if ((slot.asset.material != null) && (slot.GetOverlay(0) != null))
-				{
-					if (!slot.asset.material.RequireSeperateRenderer)
-					{
-						// At least one slot that doesn't require a seperate renderer, so we reserve renderer 0 for those.
-						rendererCount = 1;
-						break;
-					}
-				}
-			}
 
 			for (int i = 0; i < slots.Length; i++)
 			{
@@ -109,8 +101,14 @@ namespace UMA
 				if (slot == null)
 					continue;
 
-				// Let's only add the default overlay if the slot has overlays and NO meshData
-                if ((slot.asset.meshData != null) && (slot.OverlayCount == 0))
+				//Keep a running list of unique RendererHashes from our slots
+				//Null rendererAsset gets added, which is good, it is the default renderer.
+				if(!uniqueRenderers.Contains(slot.rendererAsset))
+					uniqueRenderers.Add(slot.rendererAsset);
+
+				// Let's only add the default overlay if the slot has meshData and NO overlays
+				// This should be able to be removed if default overlay/textures are ever added to uma materials...
+				if ((slot.asset.meshData != null) && (slot.OverlayCount == 0))
 				{
                     if (umaGenerator.defaultOverlaydata != null)
                         slot.AddOverlay(umaGenerator.defaultOverlaydata);
@@ -119,12 +117,17 @@ namespace UMA
                 OverlayData overlay0 = slot.GetOverlay(0);
 				if ((slot.asset.material != null) && (overlay0 != null))
 				{
-					List<OverlayData> overlayList = slot.GetOverlayList();
-					UMAData.GeneratedMaterial generatedMaterial;
-					if (!generatedMaterialLookup.TryGetValue(overlayList, out generatedMaterial))
+					GeneratedMaterialLookupKey lookupKey = new GeneratedMaterialLookupKey
 					{
-						generatedMaterial = FindOrCreateGeneratedMaterial(slot.asset.material);
-						generatedMaterialLookup.Add(overlayList, generatedMaterial);
+						overlayList = slot.GetOverlayList(),
+						rendererAsset = slot.rendererAsset
+					};
+
+					UMAData.GeneratedMaterial generatedMaterial;
+					if (!generatedMaterialLookup.TryGetValue(lookupKey, out generatedMaterial))
+					{
+						generatedMaterial = FindOrCreateGeneratedMaterial(slot.asset.material, slot.rendererAsset);
+						generatedMaterialLookup.Add(lookupKey, generatedMaterial);
 					}
 
 					int validOverlayCount = 0;
@@ -182,7 +185,7 @@ namespace UMA
 						tempMaterialDefinition.channelAdditiveMask[overlayID] = overlay.colorData.channelAdditiveMask;
 					}
 
-					tempMaterialDefinition.overlayList = overlayList;
+					tempMaterialDefinition.overlayList = lookupKey.overlayList;
 					tempMaterialDefinition.isRectShared = false;
 					for (int j = 0; j < generatedMaterial.materialFragments.Count; j++)
 					{
@@ -210,7 +213,7 @@ namespace UMA
 
 		protected override IEnumerator workerMethod()
 		{
-			umaData.generatedMaterials.rendererCount = rendererCount;
+			umaData.generatedMaterials.rendererAssets = uniqueRenderers;
 			umaData.generatedMaterials.materials = generatedMaterials;
 
 			GenerateAtlasData();
@@ -251,7 +254,7 @@ namespace UMA
 					int materialIndex = 0;
 					for (int i = 0; i < atlasses.Count; i++)
 					{
-						if (atlasses[i].renderer == j)
+						if (atlasses[i].rendererAsset == umaData.GetRendererAsset(j))
 						{
 							UMAUtils.DestroySceneObject(mats[materialIndex]);
 							newMats[materialIndex] = atlasses[i].material;
