@@ -9,6 +9,7 @@ namespace UMA
 {
 	public static class UMAPropertyUtility 
 	{
+#if UNITY_EDITOR
 		public static string[] GetShaderPropertyNames(Shader shader, string undefined = "None")
 		{
 			var count = GetShaderPropertyCount(shader);
@@ -20,7 +21,7 @@ namespace UMA
 			}
 			return result;
 		}
-		
+
 		public static int GetShaderPropertyCount(Shader shader)
 		{
 			return shader == null ? 0 : ShaderUtil.GetPropertyCount(shader);
@@ -54,6 +55,7 @@ namespace UMA
 				break;
 			}
 			throw new NotImplementedException();
-		}	
+		}
+#endif
 	}
 }

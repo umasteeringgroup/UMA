@@ -80,7 +80,7 @@ namespace UMA
 		/// Initializes a new UMASkeleton from the recipe in UMAData.
 		/// </summary>
 		/// <param name="umaData">UMAData.</param>
-		public UMASkeleton(UMAData umaData)
+		public UMASkeleton(UMAData umaData, UmaTPose umaTPose = null)
 		{
 			boneDictionary = new SerializedDictionary<int, BoneData>();
 			skinningDictionary = new SerializedDictionary<int, int>();
@@ -123,23 +123,20 @@ namespace UMA
 						if (boneDictionary.ContainsKey(umaBone.hash))
 						{
 							BoneData currentBone = boneDictionary[umaBone.hash];
+							// This won't happen if we recalc the bindToBone matrices
+							// we don't have which seems to work - see SlotDataAsset
 							if (currentBone.umaTransform.bindToBone == Matrix4x4.zero)
 							{
 								if (umaBone.bindToBone != Matrix4x4.zero)
 								{
-									Debug.Log("FOUND BETTER BIND FOR: " + umaBone.name + " in slot: " + slot.slotName);
-									boneDictionary.Remove(umaBone.hash);
-									AddBone(umaBone);
+									//Debug.Log("Found better bind for: " + umaBone.name + " in slot: " + slot.slotName);
+									currentBone.umaTransform.bindToBone = umaBone.bindToBone;
 								}
 							}
 						}
 						else
 						{
 							AddBone(umaBone);
-							//if (umaBone.bindToBone == Matrix4x4.zero)
-							//{
-							//	Debug.LogWarning("Adding bone with bad skinning data: " + umaBone.name + " in slot: " + slot.slotName);
-							//}
 						}
 
 						if (umaBone.retained)
@@ -149,6 +146,16 @@ namespace UMA
 					}
 				}
 			}
+
+			if (umaTPose != null)
+			{
+				for (int i = 0; i < umaTPose.humanBoneInfo.Length; i++)
+				{
+					int hash = umaTPose.humanBoneInfo[i].boneHash;
+					if (hash != 0) SetRetainedBone(hash);
+				}
+			}
+
 			EnsureBoneHierarchy();
 			EndSkeletonUpdate();
 		}
@@ -248,6 +255,127 @@ namespace UMA
 		}
 
 		/// <summary>
+		/// Creates a human (biped) avatar for a UMA character.
+		/// </summary>
+		/// <returns>The human avatar.</returns>
+		/// <param name="umaTPose">UMA TPose.</param>
+		public Avatar CreateAvatar(UmaTPose umaTPose, GameObject root)
+		{
+			HumanDescription description = new HumanDescription();
+			description.armStretch = umaTPose.armStretch;
+			description.feetSpacing = umaTPose.feetSpacing;
+			description.legStretch = umaTPose.legStretch;
+			description.lowerArmTwist = umaTPose.lowerArmTwist;
+			description.lowerLegTwist = umaTPose.lowerLegTwist;
+			description.upperArmTwist = umaTPose.upperArmTwist;
+			description.upperLegTwist = umaTPose.upperLegTwist;
+
+			UmaTPose.HumanBoneInfo[] boneInfo = umaTPose.humanBoneInfo;
+			List<HumanBone> humanBones = new List<HumanBone>(boneInfo.Length);
+			List<SkeletonBone> skeletonBones = new List<SkeletonBone>(boneInfo.Length);
+
+			for (int i = 0; i < boneInfo.Length; i++)
+			{
+				BoneData bone;
+				BoneData parentBone;
+
+				if (boneDictionary.TryGetValue(boneInfo[i].boneHash, out bone))
+				{
+					Transform boneTransform = bone.boneTransform;
+					Transform parentTransform;
+					HumanBone humanBone;
+					SkeletonBone skeletonBone;
+
+					int parentIndex = HumanTrait.GetParentBone(i);
+					if (parentIndex < 0)
+					{
+						// It isn't documented, but the transform structure
+						// between the root game object and the Mecanim bones
+						// MUST be at the beginning of the array
+						parentTransform = boneTransform;
+						while (parentTransform != root.transform)
+						{
+							parentTransform = parentTransform.parent;
+
+							skeletonBone = new SkeletonBone();
+							skeletonBone.name = parentTransform.name;
+							skeletonBone.position = parentTransform.localPosition;
+							skeletonBone.rotation = parentTransform.localRotation;
+							skeletonBone.scale = parentTransform.localScale;
+							skeletonBones.Add(skeletonBone);
+						}
+						// Doesn't seem to be required, but it's tidier
+						skeletonBones.Reverse();
+					}
+					else
+					{
+						// Check for optional Mecanim bones
+						// (or extraneous, but harmless extras)
+						// which must be added to the skeleton
+						int parentHash = bone.umaTransform.parent;
+						while (parentHash != boneInfo[parentIndex].boneHash)
+						{
+							if (!HumanTrait.RequiredBone(parentIndex))
+							{
+								parentIndex = HumanTrait.GetParentBone(parentIndex);
+							}
+							else
+							{
+								if (boneDictionary.TryGetValue(parentHash, out parentBone))
+								{
+									parentTransform = parentBone.boneTransform;
+
+									skeletonBone = new SkeletonBone();
+									skeletonBone.name = parentTransform.name;
+									skeletonBone.position = parentTransform.localPosition;
+									skeletonBone.rotation = parentTransform.localRotation;
+									skeletonBone.scale = parentTransform.localScale;
+									skeletonBones.Add(skeletonBone);
+
+									parentHash = parentBone.umaTransform.parent;
+									//Debug.LogFormat("Missing parent on: {0}. Expected: {1}, Found: {2}",
+										//HumanTrait.BoneName[i], HumanTrait.BoneName[parentIndex], parentTransform.name);
+								}
+							}
+						}
+					}
+
+					humanBone = new HumanBone();
+					humanBone.boneName = boneTransform.name;
+					humanBone.humanName = HumanTrait.BoneName[i];
+					humanBone.limit = boneInfo[i].limit;
+					humanBones.Add(humanBone);
+
+					skeletonBone = new SkeletonBone();
+					skeletonBone.name = boneTransform.name;
+					skeletonBone.position = boneTransform.localPosition;
+					skeletonBone.rotation = boneTransform.localRotation;
+					skeletonBone.scale = boneTransform.localScale;
+					skeletonBones.Add(skeletonBone);
+				}
+				else if (HumanTrait.RequiredBone(i))
+				{
+					Debug.LogError("Missing required bone: " + HumanTrait.BoneName[i]);
+				}
+				else
+				{
+					//Debug.Log("Missing optional bone: " + HumanTrait.BoneName[i]);
+				}
+			}
+
+			description.human = humanBones.ToArray();
+			description.skeleton = skeletonBones.ToArray();
+
+			Avatar avatar = AvatarBuilder.BuildHumanAvatar(root, description);
+			if (!avatar.isValid)
+			{
+				Debug.LogError("Avatar is invalid!");
+			}
+
+			return avatar;
+		}
+
+		/// <summary>
 		/// Gets the index of a retained bone in the skinning array.
 		/// </summary>
 		/// <param name="nameHash">Name hash.</param>
@@ -273,7 +401,6 @@ namespace UMA
 			BoneData bone;
 			if (boneDictionary.TryGetValue(nameHash, out bone))
 			{
-//#if UNITY_EDITOR
 //				if (bone.umaTransform.bindToBone == Matrix4x4.zero)
 //				{
 //					Debug.LogWarning("Bad bind matrix on bone : " + bone.umaTransform.name);
@@ -281,7 +408,7 @@ namespace UMA
 //					// fail in the same way as Matrix4x4
 //					bone.umaTransform.bindToBone.m33 = float.NaN;
 //				}
-//#endif
+
 				return bone.umaTransform.bindToBone;
 			}
 
@@ -305,19 +432,12 @@ namespace UMA
 			return Matrix4x4.identity;
 		}
 
-		// HACK testing
-//		public List<Matrix4x4> hackBinds = new List<Matrix4x4>();
-//		public List<Transform> hackTransforms = new List<Transform>();
-
 		/// <summary>
 		/// Gets the array of skinning binds.
 		/// </summary>
 		public virtual Matrix4x4[] GetSkinningBinds()
 		{
 			EnsureSkinningData();
-
-			// HACK
-//			if (hackBinds.Count > 0) return hackBinds.ToArray();
 
 			return skinningBinds;
 		}
@@ -328,9 +448,6 @@ namespace UMA
 		public virtual Transform[] GetSkinningTransforms()
 		{
 			EnsureSkinningData();
-
-			// HACK
-//			if (hackTransforms.Count > 0) return hackTransforms.ToArray();
 
 			return skinningTransforms;
 		}

@@ -22,6 +22,13 @@ namespace UMA
 			data.SetValue(source);
 		}
 
+		public void SetName(string value)
+		{
+			name = value;
+			data.name = value + "_data";
+		}
+
+#if UNITY_EDITOR
 		public override float GetInspectorHeight()
 		{
 			return data.GetInspectorHeight();
@@ -31,14 +38,6 @@ namespace UMA
 		{
 			data.DrawInspectorProperties(rect, isActive, isFocused);
 		}
-
-		public void SetName(string value)
-		{
-			name = value;
-			data.name = value + "_data";
-		}
-
-#if UNITY_EDITOR
 
 		public void DestroyImmediate()
 		{

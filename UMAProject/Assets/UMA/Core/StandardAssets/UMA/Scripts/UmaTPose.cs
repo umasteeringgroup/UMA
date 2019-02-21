@@ -9,31 +9,50 @@ namespace UMA
 	/// Utility class for avatar setup definitions.
 	/// </summary>
 	[System.Serializable]
-	public class UmaTPose : ScriptableObject 
+	public class UmaTPose : ScriptableObject
 	{
-        [NonSerialized]
-	    public SkeletonBone[] boneInfo;
-        [NonSerialized]
-        public HumanBone[] humanInfo;
 		[NonSerialized]
-		public float armStretch;
+		public SkeletonBone[] boneInfo;
 		[NonSerialized]
-		public float feetSpacing;
+		public HumanBone[] humanInfo;
+
 		[NonSerialized]
-		public float legStretch;
+		public float armStretch = 0f;
 		[NonSerialized]
-		public float lowerArmTwist;
+		public float feetSpacing = 0f;
 		[NonSerialized]
-		public float lowerLegTwist;
+		public float legStretch = 0f;
 		[NonSerialized]
-		public float upperArmTwist;
+		public float lowerArmTwist = 0.2f;
 		[NonSerialized]
-		public float upperLegTwist;
+		public float lowerLegTwist = 1f;
+		[NonSerialized]
+		public float upperArmTwist = 0.5f;
+		[NonSerialized]
+		public float upperLegTwist = 0.1f;
+
 		[NonSerialized]
 		public bool extendedInfo;
 
+		public struct HumanBoneInfo
+		{
+			public HumanLimit limit;
+			public int boneHash;
+		}
+		protected HumanBoneInfo[] _humanBoneInfo;
+		public HumanBoneInfo[] humanBoneInfo
+		{
+			get
+			{
+				if (_humanBoneInfo == null)
+				{
+					DeSerialize();
+				}
+				return _humanBoneInfo;
+			}
+		}
 
-	    public byte[] serializedChunk;
+		public byte[] serializedChunk;
 
 		/// <summary>
 		/// Serialize into the binary format used for Mecanim avatars.
@@ -65,11 +84,22 @@ namespace UMA
 	        serializedChunk = ms.ToArray();
 	    }
 
+		static Dictionary<string, int> humanBoneIndices;
+
 		/// <summary>
 		/// Deserialize from the binary format used by Mecanim avatars.
 		/// </summary>
-	    public void DeSerialize()
+		public void DeSerialize()
 	    {
+			if (humanBoneIndices == null)
+			{
+				humanBoneIndices = new Dictionary<string, int>();
+				for (int i = 0; i < HumanTrait.BoneCount; i++)
+				{
+					humanBoneIndices.Add(HumanTrait.BoneName[i], i);
+				}
+			}
+
 			if (boneInfo == null)
 			{
 				var ms = new MemoryStream(serializedChunk);
@@ -96,6 +126,17 @@ namespace UMA
 					lowerLegTwist = br.ReadSingle();
 					upperArmTwist = br.ReadSingle();
 					upperLegTwist = br.ReadSingle();
+				}
+
+				_humanBoneInfo = new HumanBoneInfo[HumanTrait.BoneCount];
+				for (int i = 0; i < humanInfo.Length; i++)
+				{
+					int index;
+					if (humanBoneIndices.TryGetValue(humanInfo[i].humanName, out index))
+					{
+						_humanBoneInfo[index].limit = humanInfo[i].limit;
+						_humanBoneInfo[index].boneHash = UMAUtils.StringToHash(humanInfo[i].boneName);
+					}
 				}
 			}
 	    }
@@ -212,11 +253,30 @@ namespace UMA
 			humanInfo = null;
 		}
 
+		public HumanDescription CreateHumanDescription()
+		{
+			DeSerialize();
+
+			HumanDescription hd = new HumanDescription();
+			hd.armStretch = armStretch;
+			hd.feetSpacing = feetSpacing;
+			hd.legStretch = legStretch;
+			hd.lowerArmTwist = lowerArmTwist;
+			hd.lowerLegTwist = lowerLegTwist;
+			hd.upperArmTwist = upperArmTwist;
+			hd.upperLegTwist = upperLegTwist;
+
+			hd.human = humanInfo;
+			hd.skeleton = boneInfo;
+
+			return hd;
+		}
+
 		/// <summary>
 		/// Recursively create from animator's transform hierarchy.
 		/// </summary>
 		/// <param name="rootAnimator">Animator.</param>
-	    public void ReadFromTransform(Animator rootAnimator)
+		public void ReadFromTransform(Animator rootAnimator)
 	    {
 	        var boneInfoList = new List<SkeletonBone>();
 	        AddRecursively(boneInfoList, rootAnimator.transform);

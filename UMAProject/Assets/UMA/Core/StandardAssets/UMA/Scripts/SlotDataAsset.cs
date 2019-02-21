@@ -159,25 +159,49 @@ namespace UMA
 
 		// HACK
 		Dictionary<int, UMATransform> umaBones;
-//		Dictionary<int, Matrix4x4> bonesToRoot;
-//		private void CalcBoneToRoot(UMATransform bone)
-//		{
-//			if (bonesToRoot.ContainsKey(bone.hash)) return;
-//
-//			if (!umaBones.ContainsKey(bone.parent))
-//			{
-//				Matrix4x4 boneToRoot = Matrix4x4.TRS(bone.position, bone.rotation, bone.scale).inverse;
-//				bonesToRoot.Add(bone.hash, boneToRoot);
-////				Debug.Log("Top level bone " + umaBones[bone.hash].name + "\n" + boneToRoot);
-//				return;
-//			}
-//
-//			if (!bonesToRoot.ContainsKey(bone.parent))
-//			{
-//				CalcBoneToRoot(umaBones[bone.parent]);
-//			}
-//			bonesToRoot.Add(bone.hash, bonesToRoot[bone.parent] * Matrix4x4.TRS(bone.position, bone.rotation, bone.scale).inverse);
-//		}
+		//		Dictionary<int, Matrix4x4> bonesToRoot;
+		//		private void CalcBoneToRoot(UMATransform bone)
+		//		{
+		//			if (bonesToRoot.ContainsKey(bone.hash)) return;
+		//
+		//			if (!umaBones.ContainsKey(bone.parent))
+		//			{
+		//				Matrix4x4 boneToRoot = Matrix4x4.TRS(bone.position, bone.rotation, bone.scale).inverse;
+		//				bonesToRoot.Add(bone.hash, boneToRoot);
+		////				Debug.Log("Top level bone " + umaBones[bone.hash].name + "\n" + boneToRoot);
+		//				return;
+		//			}
+		//
+		//			if (!bonesToRoot.ContainsKey(bone.parent))
+		//			{
+		//				CalcBoneToRoot(umaBones[bone.parent]);
+		//			}
+		//			bonesToRoot.Add(bone.hash, bonesToRoot[bone.parent] * Matrix4x4.TRS(bone.position, bone.rotation, bone.scale).inverse);
+		//		}
+
+		//Dictionary<int, Matrix4x4> bindsToBone;
+		//private void CalcBindToBone(UMATransform bone)
+		//{
+		//	if (bindsToBone.ContainsKey(bone.hash)) return;
+
+		//	bindsToBone.Add(bone.hash, bone.bindToBone);
+
+		//	if (!bindsToBone.ContainsKey(bone.parent))
+		//	{
+		//		UMATransform parent;
+		//		if (umaBones.TryGetValue(bone.parent, out parent))
+		//		{
+		//			if (parent.bindToBone == Matrix4x4.zero)
+		//			{
+		//				Matrix4x4 childToParent = Matrix4x4.TRS(bone.position, bone.rotation, bone.scale);
+		//				Matrix4x4 bindToBone = childToParent * bone.bindToBone;
+		//				parent.bindToBone = bindToBone;
+		//				CalcBindToBone(parent);
+		//			}
+		//		}
+		//	}
+
+		//}
 
 #endif
 		public void OnAfterDeserialize()
@@ -189,9 +213,10 @@ namespace UMA
 			if ((meshData != null) && (meshData.bindPoses != null))
 			{
 				umaBones = new Dictionary<int, UMATransform>(meshData.umaBones.Length);
-//				bonesToRoot = new Dictionary<int, Matrix4x4>(meshData.umaBones.Length);
+				//bonesToRoot = new Dictionary<int, Matrix4x4>(meshData.umaBones.Length);
+				//bindsToBone = new Dictionary<int, Matrix4x4>(meshData.umaBones.Length);
 
-//				Debug.LogWarning("Hacking UMAMeshData for " + this.GetAssetName());
+				//Debug.LogWarning("Hacking UMAMeshData for " + this.GetAssetName());
 
 				int boneCount = meshData.umaBones.Length;
 				for (int i = 0; i < meshData.umaBones.Length; i++)
@@ -227,6 +252,10 @@ namespace UMA
 					{
 						bone.bindToBone = meshData.bindPoses[i];
 						sortedBones.Add(bone);
+						if (meshData.bindPoses[i] == Matrix4x4.zero)
+						{
+							Debug.LogError("Adding bad bind on bone: " + bone.name + " to slot: " + slotName);
+						}
 					}
 					else
 					{
@@ -251,6 +280,10 @@ namespace UMA
 					{
 						sortedBones.Add(bone);
 					}
+					//else
+					//{
+					//	CalcBindToBone(bone);
+					//}
 				}
 
 				meshData.umaBones = sortedBones.ToArray();
