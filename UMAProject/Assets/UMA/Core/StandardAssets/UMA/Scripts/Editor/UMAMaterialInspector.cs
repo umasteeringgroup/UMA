@@ -54,6 +54,11 @@ namespace UMA.Editors
 
             GUILayout.Space(20);
 
+            if(GUILayout.Button( new GUIContent("Select Matching OverlayDataAssets", "This will select all OverlayDataAssets found in the project that use this UMAMaterial."), GUILayout.Height(40)))
+            {
+                FindMatchingOverlayDataAssets();
+            }
+
             serializedObject.ApplyModifiedProperties();
         }
 
@@ -135,6 +140,35 @@ namespace UMA.Editors
             }
 
             return texProperties.ToArray();
+        }
+
+        private void FindMatchingOverlayDataAssets()
+        {
+            HashSet<Object> selectedAssets = new HashSet<Object>();
+            string[] guids = AssetDatabase.FindAssets("t:OverlayDataAsset");
+
+            //TODO add progress bar.
+            for(int i = 0; i < guids.Length; i++)
+            {
+                OverlayDataAsset overlay = AssetDatabase.LoadAssetAtPath<OverlayDataAsset>(AssetDatabase.GUIDToAssetPath(guids[i]));
+                if (overlay == null)
+                    continue;
+
+                if(UMAMaterial.Equals(overlay.material, target as UMAMaterial))
+                    selectedAssets.Add(overlay);
+            }
+
+            if (selectedAssets.Count > 0)
+            {
+                Debug.Log(selectedAssets.Count + " matching OverlayDataAssets found.");
+                Object[] selected = new Object[selectedAssets.Count];
+                selectedAssets.CopyTo(selected);
+                Selection.objects = selected;
+            }
+            else
+            {
+                EditorUtility.DisplayDialog("None found", "No matching OverlayDataAssets were found.", "OK");
+            }
         }
     }
 }

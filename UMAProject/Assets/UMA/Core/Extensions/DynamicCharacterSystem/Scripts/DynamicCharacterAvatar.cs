@@ -464,10 +464,44 @@ namespace UMA.CharacterSystem
                 model = customModel;
             else
             {
-                string modelPath = "HumanMale/FBX/Male_Unified.fbx";
+                //search string finds both male and female!
+                string[] assets = UnityEditor.AssetDatabase.FindAssets("t:Model Male_Unified");
+                string male = "";
+                string female = "";
+
+                foreach (string guid in assets)
+                {
+                    string thePath = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
+                    if (thePath.ToLower().Contains("female"))
+                        female = thePath;
+                    else
+                        male = thePath;
+                }
+                if (previewModel == PreviewModel.Male)
+                {
+                    if (!string.IsNullOrEmpty(male))
+                    {
+                        model = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(male);
+                    }
+                    else
+                    {
+                        if (Debug.isDebugBuild)
+                            Debug.LogWarning("Could not load Male_Unified model for preview!");
+                    }
+                }
+
                 if (previewModel == PreviewModel.Female)
-                    modelPath = "HumanFemale/FBX/Female_Unified.fbx";
-                model = UnityEditor.AssetDatabase.LoadAssetAtPath("Assets/UMA/Content/UMA_Core/" + modelPath, typeof(GameObject)) as GameObject;
+                {
+                    if (!string.IsNullOrEmpty(female))
+                    {
+                        model = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(female);
+                    }
+                    else
+                    {
+                        if (Debug.isDebugBuild)
+                            Debug.LogWarning("Could not load Female_Unified model for preview!");
+                    }
+                }
             }
             if (model != null)
                 previewMesh = model.GetComponentInChildren<SkinnedMeshRenderer>().sharedMesh;
