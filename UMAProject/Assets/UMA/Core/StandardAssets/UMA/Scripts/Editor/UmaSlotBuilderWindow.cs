@@ -67,7 +67,7 @@ namespace UMA.Editors
 			slotFolder = EditorGUILayout.ObjectField("Slot Destination Folder"	, slotFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
 			EnforceFolder(ref slotFolder);
 			RootBone = EditorGUILayout.TextField("Root Bone (ex:'Global')", RootBone);
-			slotName = EditorGUILayout.TextField("Element Name", slotName);
+			slotName = EditorGUILayout.TextField("Slot Name", slotName);
 			binarySerialization = EditorGUILayout.Toggle(new GUIContent("Binary Serialization", "Forces the created Mesh object to be serialized as binary. Recommended for large meshes and blendshapes."), binarySerialization);
 
 			EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
@@ -127,7 +127,16 @@ namespace UMA.Editors
 
 				if( slotMesh.localBounds.size.x < 0.01f || slotMesh.localBounds.size.y < 0.01f || slotMesh.localBounds.size.z < 0.01f)
 					EditorGUILayout.HelpBox ("This slot's size is very small. It's import scale may be incorrect!", MessageType.Warning);
-			}
+
+                if (slotName == null || slotName == "")
+                {
+                    slotName = slotMesh.name;
+                }
+                if (RootBone == null || RootBone == "")
+                {
+                    RootBone = "Global";
+                }
+            }
 		  
 			GUILayout.Label("", EditorStyles.boldLabel);
 			Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));

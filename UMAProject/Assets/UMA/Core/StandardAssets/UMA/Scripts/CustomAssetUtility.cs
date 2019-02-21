@@ -35,7 +35,11 @@ namespace UMA
             {
                 go.AddComponent(t);
             }
+#if UNITY_2018_3_OR_NEWER
+            PrefabUtility.SaveAsPrefabAsset(go, assetPathAndName );
+#else
             PrefabUtility.CreatePrefab(assetPathAndName, go);
+#endif
             GameObject.DestroyImmediate(go,false);
         }
 
@@ -55,7 +59,11 @@ namespace UMA
 			string assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/" + name + ".prefab");
 
 			GameObject go = GameObject.Instantiate(other);
+#if UNITY_2018_3_OR_NEWER
+			var prefab = PrefabUtility.SaveAsPrefabAsset(go, assetPathAndName);
+#else
 			var prefab = PrefabUtility.CreatePrefab(assetPathAndName, go);
+#endif
 			GameObject.DestroyImmediate(go, false);
 			return prefab;
 		}

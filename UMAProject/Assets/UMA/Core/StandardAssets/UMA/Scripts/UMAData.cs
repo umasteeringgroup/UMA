@@ -449,10 +449,10 @@ namespace UMA
 					_umaDna = value;
 				}
 			}
-			//protected Dictionary<int, DnaConverterBehaviour.DNAConvertDelegate> umaDnaConverter = new Dictionary<int, DnaConverterBehaviour.DNAConvertDelegate>();
+			//protected Dictionary<int, DNAConvertDelegate> umaDnaConverter = new Dictionary<int, DNAConvertDelegate>();
 			//DynamicDNAPlugins FEATURE: Allow more than one converter to use the same dna
-			protected Dictionary<int, List<DnaConverterBehaviour.DNAConvertDelegate>> umaDNAConverters = new Dictionary<int, List<DnaConverterBehaviour.DNAConvertDelegate>>();
-			protected Dictionary<int, List<DnaConverterBehaviour.DNAConvertDelegate>> umaDNAPreApplyConverters = new Dictionary<int, List<DnaConverterBehaviour.DNAConvertDelegate>>();
+			protected Dictionary<int, List<DNAConvertDelegate>> umaDNAConverters = new Dictionary<int, List<DNAConvertDelegate>>();
+			protected Dictionary<int, List<DNAConvertDelegate>> umaDNAPreApplyConverters = new Dictionary<int, List<DNAConvertDelegate>>();
 			protected Dictionary<string, int> mergedSharedColors = new Dictionary<string, int>();
 			public List<UMADnaBase> dnaValues = new List<UMADnaBase>();
 			public SlotData[] slotDataList;
@@ -922,7 +922,7 @@ namespace UMA
 				foreach (var dnaEntry in umaDna)
 				{
 					//DynamicDNAPlugins FEATURE: Allow more than one converter to use the same dna
-					List<DnaConverterBehaviour.DNAConvertDelegate> dnaConverters;
+					List<DNAConvertDelegate> dnaConverters;
 					this.umaDNAPreApplyConverters.TryGetValue(dnaEntry.Key, out dnaConverters);
 
 					if (dnaConverters != null && dnaConverters.Count > 0)
@@ -956,7 +956,7 @@ namespace UMA
 				foreach (var dnaEntry in umaDna)
 				{
 					//DynamicDNAPlugins FEATURE: Allow more than one converter to use the same dna
-					List<DnaConverterBehaviour.DNAConvertDelegate> dnaConverters;
+					List<DNAConvertDelegate> dnaConverters;
 					umaDNAConverters.TryGetValue(dnaEntry.Key, out dnaConverters);
 					if (dnaConverters.Count > 0)
 					{
@@ -997,17 +997,17 @@ namespace UMA
 							var dna = converter.DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
 							dna.DNATypeHash = dnaTypeHash;
 							//DynamicUMADna:: needs the DNAasset from the converter - moved because this might change
-							if (converter is DynamicDNAConverterBehaviourBase)
+							if (converter is IDynamicDNAConverter)
 							{
-								((DynamicUMADnaBase)dna).dnaAsset = ((DynamicDNAConverterBehaviourBase)converter).dnaAsset;
+								((DynamicUMADnaBase)dna).dnaAsset = ((IDynamicDNAConverter)converter).dnaAsset;
 							}
 							umaDna.Add(dnaTypeHash, dna);
 							dnaValues.Add(dna);
 						}
-						else if (converter is DynamicDNAConverterBehaviourBase)
+						else if (converter is IDynamicDNAConverter)
 						{
 							var dna = umaDna[dnaTypeHash];
-							((DynamicUMADnaBase)dna).dnaAsset = ((DynamicDNAConverterBehaviourBase)converter).dnaAsset;
+							((DynamicUMADnaBase)dna).dnaAsset = ((IDynamicDNAConverter)converter).dnaAsset;
 						}
 					}
 				}
@@ -1029,17 +1029,17 @@ namespace UMA
 							var dna = slotData.asset.slotDNA.DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
 							dna.DNATypeHash = dnaTypeHash;
 							//DynamicUMADna:: needs the DNAasset from the converter TODO are there other places where I heed to sort out this slotDNA?
-							if (slotData.asset.slotDNA is DynamicDNAConverterBehaviourBase)
+							if (slotData.asset.slotDNA is IDynamicDNAConverter)
 							{
-								((DynamicUMADnaBase)dna).dnaAsset = ((DynamicDNAConverterBehaviourBase)slotData.asset.slotDNA).dnaAsset;
+								((DynamicUMADnaBase)dna).dnaAsset = ((IDynamicDNAConverter)slotData.asset.slotDNA).dnaAsset;
 							}
 							umaDna.Add(dnaTypeHash, dna);
 							dnaValues.Add(dna);
 						}
-						else if (slotData.asset.slotDNA is DynamicDNAConverterBehaviourBase)
+						else if (slotData.asset.slotDNA is IDynamicDNAConverter)
 						{
 							var dna = umaDna[dnaTypeHash];
-							((DynamicUMADnaBase)dna).dnaAsset = ((DynamicDNAConverterBehaviourBase)slotData.asset.slotDNA).dnaAsset;
+							((DynamicUMADnaBase)dna).dnaAsset = ((IDynamicDNAConverter)slotData.asset.slotDNA).dnaAsset;
 						}
 						//When dna is added from slots Prepare doesn't seem to get called for some reason
 						slotData.asset.slotDNA.Prepare();
@@ -1095,7 +1095,7 @@ namespace UMA
 			/// Adds a DNA converter.
 			/// </summary>
 			/// <param name="dnaConverter">DNA converter.</param>
-			public void AddDNAUpdater(DnaConverterBehaviour dnaConverter)
+			public void AddDNAUpdater(IDNAConverter dnaConverter)
 			{
 				if (dnaConverter == null) return;
 				//DynamicDNAConverter:: We need to SET these values using the TypeHash since 
@@ -1104,20 +1104,20 @@ namespace UMA
 				if (dnaConverter.PreApplyDnaAction != null)
 				{
 					if (!umaDNAPreApplyConverters.ContainsKey(dnaConverter.DNATypeHash))
-						umaDNAPreApplyConverters.Add(dnaConverter.DNATypeHash, new List<DnaConverterBehaviour.DNAConvertDelegate>());
+						umaDNAPreApplyConverters.Add(dnaConverter.DNATypeHash, new List<DNAConvertDelegate>());
 					if (!umaDNAPreApplyConverters[dnaConverter.DNATypeHash].Contains(dnaConverter.PreApplyDnaAction))
 					{
 						umaDNAPreApplyConverters[dnaConverter.DNATypeHash].Add(dnaConverter.PreApplyDnaAction);
 					}
 				}
 				if (!umaDNAConverters.ContainsKey(dnaConverter.DNATypeHash))
-					umaDNAConverters.Add(dnaConverter.DNATypeHash, new List<DnaConverterBehaviour.DNAConvertDelegate>());
+					umaDNAConverters.Add(dnaConverter.DNATypeHash, new List<DNAConvertDelegate>());
 				if (!umaDNAConverters[dnaConverter.DNATypeHash].Contains(dnaConverter.ApplyDnaAction))
 				{
 					umaDNAConverters[dnaConverter.DNATypeHash].Add(dnaConverter.ApplyDnaAction);
 				}
 				else
-					Debug.LogWarning("The applyAction for " + dnaConverter.name + " already existed in the list");
+					Debug.LogWarning("The applyAction for " + dnaConverter + " already existed in the list");
 			}
 
 			/// <summary>
@@ -1669,13 +1669,14 @@ namespace UMA
 		/// <param name="allowRebuild">Triggers a rebuild of the uma character if the blendshape is baked</param>
 		public void SetBlendShape(string name, float weight, bool allowRebuild = false)
 		{
+#if !UNITY_2018_3_OR_NEWER
 			if (weight < 0.0f || weight > 1.0f)
 			{
 				if (Debug.isDebugBuild)
 					Debug.LogWarning("SetBlendShape: Weight is out of range, clamping...");
 			}
-
-			weight = Mathf.Clamp01 (weight);
+			weight = Mathf.Clamp01(weight);
+#endif
 			BlendShapeData data;
 			if (blendShapeSettings.blendShapes.TryGetValue(name, out data))
 			{
@@ -1745,6 +1746,6 @@ namespace UMA
 			return "";
 		}
 			
-		#endregion
+#endregion
 	}
 }

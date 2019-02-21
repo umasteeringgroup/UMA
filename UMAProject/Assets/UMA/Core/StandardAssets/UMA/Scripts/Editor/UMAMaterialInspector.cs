@@ -76,6 +76,15 @@ namespace UMA.Editors
                         EditorGUILayout.PropertyField(channel.FindPropertyRelative("channelType"), new GUIContent("Channel Type", "The channel type. Affects the texture atlassing process."));
                         EditorGUILayout.PropertyField(channel.FindPropertyRelative("textureFormat"), new GUIContent("Texture Format", "Format used for the texture in this channel."));
 
+                        if (channel.FindPropertyRelative("textureFormat") != null && i < ((UMAMaterial)target).channels.Length)
+                        {
+                            RenderTextureFormat format = ((UMAMaterial)target).channels[i].textureFormat;
+                            if (!SystemInfo.SupportsRenderTextureFormat(format))
+                            {
+                                EditorGUILayout.HelpBox("This Texture Format is not supported on this system!", MessageType.Error);
+                            }
+                        }
+
                         EditorGUILayout.BeginHorizontal();
 
                         EditorGUILayout.PropertyField( materialPropertyName, new GUIContent("Material Property Name", "The name of the property this texture corresponds to in the shader used by this material."), GUILayout.MinWidth(300));

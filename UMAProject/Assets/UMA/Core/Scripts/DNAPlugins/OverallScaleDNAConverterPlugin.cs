@@ -59,7 +59,7 @@ namespace UMA
 		/// <param name="dnaTypeHash"></param>
 		public override void ApplyDNA(UMAData umaData, UMASkeleton skeleton, int dnaTypeHash)
 		{
-			if (this.converterController == null || this.converterController.converterBehaviour == null || _overallScaleModifiers.Count == 0)
+			if (this.converterController == null /*|| this.converterController.converterBehaviour == null*/ || _overallScaleModifiers.Count == 0)
 				return;
 			var umaDna = (DynamicUMADnaBase)umaData.GetDna(dnaTypeHash);
 			//master weight determines how much we modify the converters base scale to our new value, 1 its fully overridden, 0 its left as it is
@@ -67,7 +67,7 @@ namespace UMA
 			if (masterWeightCalc == 0f)
 				return;
 
-			float baseScale = this.converterController.converterBehaviour.baseScale;
+			float baseScale = this.converterController.baseScale;
 
 			//Each modifier wants to change the base scale to its overall scale value depending on how stronly its dna(s) are applied
 			//so we need to accumulate the differences each one wants to make rather than the full value
@@ -81,7 +81,7 @@ namespace UMA
 			evaluatedScale = baseScale + evaluatedDiff;
 			//lerp to that result based on the masterWeightCalc
 			float newScale = Mathf.Lerp(baseScale, evaluatedScale, masterWeightCalc);
-			this.converterController.converterBehaviour.liveScale = newScale;
+			this.converterController.liveScale = newScale;
 		}
 
 		#endregion

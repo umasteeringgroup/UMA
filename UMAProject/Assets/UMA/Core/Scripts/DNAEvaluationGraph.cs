@@ -99,8 +99,8 @@ namespace UMA
 					if (this._graph.keys[i].time == animCurve.keys[i].time &&
 						this._graph.keys[i].value == animCurve.keys[i].value &&
 						this._graph.keys[i].inTangent == animCurve.keys[i].inTangent &&
-						this._graph.keys[i].outTangent == animCurve.keys[i].outTangent &&
-						this._graph.keys[i].tangentMode == animCurve.keys[i].tangentMode)
+						this._graph.keys[i].outTangent == animCurve.keys[i].outTangent /*&&
+						this._graph.keys[i].tangentMode == animCurve.keys[i].tangentMode*/)//tangentMode is obsolete outside the editor as of Unity2018
 					{
 						matchingKeys++;
 					}
@@ -182,8 +182,8 @@ namespace UMA
 							if (xo._graph.keys[i].time == yo._graph.keys[i].time &&
 								xo._graph.keys[i].value == yo._graph.keys[i].value &&
 								xo._graph.keys[i].inTangent == yo._graph.keys[i].inTangent &&
-								xo._graph.keys[i].outTangent == yo._graph.keys[i].outTangent &&
-								xo._graph.keys[i].tangentMode == yo._graph.keys[i].tangentMode)
+								xo._graph.keys[i].outTangent == yo._graph.keys[i].outTangent /*&&
+								xo._graph.keys[i].tangentMode == yo._graph.keys[i].tangentMode*/)//tangentMode is obsolete outside the editor as of Unity2018
 							{
 								matchingKeys++;
 							}

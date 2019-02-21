@@ -28,8 +28,7 @@ namespace UMA.Editors
             }
 
             GameObject tempGameObject = UnityEngine.Object.Instantiate(mesh.transform.parent.gameObject) as GameObject;
-            PrefabUtility.DisconnectPrefabInstance(tempGameObject);
-            var resultingSkinnedMeshes = tempGameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
+			var resultingSkinnedMeshes = tempGameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
             SkinnedMeshRenderer resultingSkinnedMesh = null;
             foreach (var skinnedMesh in resultingSkinnedMeshes)
             {
@@ -87,8 +86,11 @@ namespace UMA.Editors
                 }
                 resultingSkinnedMesh.sharedMesh = resultingMesh;
             }
-
+#if UNITY_2018_3_OR_NEWER
+            var skinnedResult = PrefabUtility.SaveAsPrefabAsset(newObject, path + '/' + assetName + "_Skinned.prefab");
+#else
             var skinnedResult = UnityEditor.PrefabUtility.CreatePrefab(path + '/' + assetName + "_Skinned.prefab", newObject);
+#endif
             GameObject.DestroyImmediate(newObject);
 
             var meshgo = skinnedResult.transform.Find(mesh.name);
@@ -116,7 +118,7 @@ namespace UMA.Editors
 			}
 
 			GameObject tempGameObject = UnityEngine.Object.Instantiate(mesh.transform.parent.gameObject) as GameObject;
-			PrefabUtility.DisconnectPrefabInstance(tempGameObject);
+
 			var resultingSkinnedMeshes = tempGameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
 			SkinnedMeshRenderer resultingSkinnedMesh = null;
 			foreach (var skinnedMesh in resultingSkinnedMeshes)
@@ -187,7 +189,11 @@ namespace UMA.Editors
 				resultingSkinnedMesh.sharedMesh = resultingMesh;
 			}
 
+#if UNITY_2018_3_OR_NEWER
+			var skinnedResult = PrefabUtility.SaveAsPrefabAsset(newObject, slotFolder + '/' + assetName + '/' + assetName + "_Skinned.prefab");
+#else
 			var skinnedResult = UnityEditor.PrefabUtility.CreatePrefab(slotFolder + '/' + assetName + '/' + assetName + "_Skinned.prefab", newObject);
+#endif
 			GameObject.DestroyImmediate(newObject);
 
 			var meshgo = skinnedResult.transform.Find(mesh.name);

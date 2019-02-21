@@ -18,14 +18,44 @@ namespace UMA
 			rigid.constraints = RigidbodyConstraints.FreezeRotation;
 			rigid.mass = umaData.characterMass;
 
-			var capsule = umaData.gameObject.GetComponent<CapsuleCollider>();
-			if (capsule == null)
+			CapsuleCollider capsule = umaData.gameObject.GetComponent<CapsuleCollider>();
+			BoxCollider box = umaData.gameObject.GetComponent<BoxCollider>();
+
+			if(umaData.umaRecipe.raceData.umaTarget == RaceData.UMATarget.Humanoid)
 			{
-				capsule = umaData.gameObject.AddComponent<CapsuleCollider>();
+				if (capsule == null)
+				{
+					capsule = umaData.gameObject.AddComponent<CapsuleCollider>();
+				}
+				if( box != null )
+				{
+					Destroy(box);
+				}
+
+				capsule.radius = umaData.characterRadius;
+				capsule.height = umaData.characterHeight;
+				capsule.center = new Vector3(0, capsule.height / 2, 0);
 			}
-			capsule.radius = umaData.characterRadius;
-			capsule.height = umaData.characterHeight;
-			capsule.center = new Vector3(0, capsule.height / 2, 0);
+			else
+			{
+				if (box == null)
+				{
+					box = umaData.gameObject.AddComponent<BoxCollider>();
+				}
+				if(capsule != null)
+				{
+					Destroy(capsule);
+				}
+
+				//with skycar this capsule collider makes no sense so we need the bounds to figure out what the size of the box collider should be
+				//we will assume that renderer 0 is the base renderer
+				var umaRenderer = umaData.GetRenderer(0);
+				if (umaRenderer != null)
+				{
+					box.size = umaRenderer.bounds.size;
+					box.center = umaRenderer.bounds.center;
+				}
+			}
 		}
 	}
 }

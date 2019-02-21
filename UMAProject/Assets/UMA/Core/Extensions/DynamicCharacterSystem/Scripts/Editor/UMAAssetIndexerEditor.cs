@@ -7,11 +7,11 @@ using UnityEngine;
 namespace UMA.CharacterSystem.Editors
 {
 
-	public class UMAAssetIndexerEditor : EditorWindow
+	public class UMAAssetIndexerEditor : EditorWindow 
 	{
 		Dictionary<System.Type, bool> Toggles = new Dictionary<System.Type, bool>();
 		UMAAssetIndexer _UAI;
-		List<Object> AddedDuringGui = new List<Object>();
+		List<Object> AddedDuringGui = new List<Object>();  
 		List<System.Type> AddedTypes = new List<System.Type>();
 		List<AssetItem> DeletedDuringGUI = new List<AssetItem>();
 		List<System.Type> RemovedTypes = new List<System.Type>();
@@ -21,12 +21,12 @@ namespace UMA.CharacterSystem.Editors
 
 		// dictionary of type
 		// contains list of bools
-
+		     
 		public string Filter = "";
 		public bool IncludeText;
 		int NotInBuildCount = 0;
 
-		UMAAssetIndexer UAI
+		UMAAssetIndexer UAI 
 		{
 			get
 			{

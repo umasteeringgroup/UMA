@@ -28,10 +28,12 @@ namespace UMA.CharacterSystem
 		UMAAvatarBase activeUMA;
 		[System.NonSerialized]
 		string activeUMARace;
-		[SerializeField]//Why
-		public List<DynamicDNAConverterBehaviour> availableConverters = new List<DynamicDNAConverterBehaviour>();
-		[SerializeField]//Why
-		public DynamicDNAConverterBehaviour selectedConverter;
+
+		[SerializeField]//Why-Because they need to be available to the editor-this wont work with IDNAConverter tho I dont expect
+		public List<IDNAConverter> availableConverters = new List<IDNAConverter>();
+
+		[SerializeField]//Why-because they need to be available to the editor-this wont work with IDNAConverter tho I dont expect
+		public IDNAConverter selectedConverter;
 
 		GameObject converterBackupsFolder = null;
 
@@ -146,11 +148,11 @@ namespace UMA.CharacterSystem
 			if (activeUMARace == "")
 				activeUMARace = umaData.umaRecipe.raceData.raceName;
 			availableConverters.Clear();
-			foreach (DnaConverterBehaviour converter in umaData.umaRecipe.raceData.dnaConverterList)
+			foreach (IDNAConverter converter in umaData.umaRecipe.raceData.dnaConverterList)
 			{
-				if (converter.GetType() == typeof(DynamicDNAConverterBehaviour))
+				if (converter is IDynamicDNAConverter)
 				{
-					availableConverters.Add(converter as DynamicDNAConverterBehaviour);
+					availableConverters.Add(converter);
 				}
 			}
 			//slots might also have converters
@@ -361,11 +363,15 @@ namespace UMA.CharacterSystem
 
 			if (_applyAndResetOnCreateBP)
 			{
-
-				if (selectedConverter.ConverterController != null)
+				DynamicDNAConverterController converterController = (selectedConverter is DynamicDNAConverterController) ? (selectedConverter as DynamicDNAConverterController) : null;
+				DynamicDNAConverterBehaviour converterBehaviour = (selectedConverter is DynamicDNAConverterBehaviour) ? (selectedConverter as DynamicDNAConverterBehaviour) : null;
+				//UMA2.8+ fixDNAPrefabs Removed the converterBehaviour.ConverterController field, it should be directly assigned to the Races/Slots now
+				//if (converterBehaviour.ConverterController != null)
+				//	converterController = converterBehaviour.ConverterController;
+				if (converterController != null)
 				{
 					//find the first BonePoseDNAConverterPlugin and add the pose to it
-					var existingBPCPs = selectedConverter.ConverterController.GetPlugins(typeof(BonePoseDNAConverterPlugin));
+					var existingBPCPs = converterController.GetPlugins(typeof(BonePoseDNAConverterPlugin));
 					BonePoseDNAConverterPlugin thisBPCP;
 					if (existingBPCPs.Count > 0)
 					{
@@ -382,17 +388,17 @@ namespace UMA.CharacterSystem
 					else
 					{
 						//if there isn't one create it
-						thisBPCP = selectedConverter.ConverterController.AddPlugin(typeof(BonePoseDNAConverterPlugin)) as BonePoseDNAConverterPlugin;
+						thisBPCP = converterController.AddPlugin(typeof(BonePoseDNAConverterPlugin)) as BonePoseDNAConverterPlugin;
 					}
 					thisBPCP.poseDNAConverters.Add(new BonePoseDNAConverterPlugin.BonePoseDNAConverter(bonePose, 1f));
 					Debug.Log(bonePose.name + " added as a starting pose to " + thisBPCP.name);
 				}
-				else
+				else if(converterBehaviour != null)
 				{
 					// Set this asset as the converters pose asset
-					selectedConverter.startingPose = bonePose;
+					converterBehaviour.startingPose = bonePose;
 					//make sure its fully applied
-					selectedConverter.startingPoseWeight = 1f;
+					converterBehaviour.startingPoseWeight = 1f;
 				}
 
 				// Reset all the DNA values for target Avatar to default
@@ -503,17 +509,17 @@ namespace UMA.CharacterSystem
 		/// <param name="converterToBU"></param>
 		public void BackupConverter(DynamicDNAConverterBehaviour converterToBU = null)
 		{
-			if (converterToBU == null)
+			if (converterToBU == null && selectedConverter is DynamicDNAConverterBehaviour)
 			{
-				converterToBU = selectedConverter;
-			}
-			if (converterBackupsFolder == null)
-			{
-				converterBackupsFolder = new GameObject();
-				converterBackupsFolder.name = "CONVERTER BACKUPS DO NOT DELETE";
+				converterToBU = (DynamicDNAConverterBehaviour)selectedConverter;
 			}
 			if (converterToBU != null)
 			{
+				if (converterBackupsFolder == null)
+				{
+					converterBackupsFolder = new GameObject();
+					converterBackupsFolder.name = "CONVERTER BACKUPS DO NOT DELETE";
+				}
 				if (!converterBackups.ContainsKey(converterToBU.name))
 				{
 					var thisConverterBackup = Instantiate<DynamicDNAConverterBehaviour>(converterToBU);
@@ -557,43 +563,43 @@ namespace UMA.CharacterSystem
 				for (int i = 0; i < availableConverters.Count; i++)
 				{
 					DynamicDNAConverterBehaviour buConverter;
-					if (converterBackups.TryGetValue(availableConverters[i].name, out buConverter))
+					if (availableConverters[i] is DynamicDNAConverterBehaviour && converterBackups.TryGetValue(availableConverters[i].name, out buConverter))
 					{
 						if (converterName == "" || converterName == availableConverters[i].name)
 						{
-							availableConverters[i].dnaAsset = buConverter.dnaAsset;
-							if (availableConverters[i].dnaAsset != null)
+							((DynamicDNAConverterBehaviour)availableConverters[i]).dnaAsset = buConverter.dnaAsset;
+							if (((DynamicDNAConverterBehaviour)availableConverters[i]).dnaAsset != null)
 							{
 								string[] buNames;
-								if (dnaAssetNamesBackups.TryGetValue(availableConverters[i].dnaAsset.name, out buNames))
+								if (dnaAssetNamesBackups.TryGetValue(((DynamicDNAConverterBehaviour)availableConverters[i]).dnaAsset.name, out buNames))
 								{
-									availableConverters[i].dnaAsset.Names = buNames;
+									((DynamicDNAConverterBehaviour)availableConverters[i]).dnaAsset.Names = buNames;
 								}
 							}
 							//we need to restore these regardless of whether the converter had a startingPose or not when we started playing
-							if (availableConverters[i].startingPose != null)
+							if (((DynamicDNAConverterBehaviour)availableConverters[i]).startingPose != null)
 							{
 								UMABonePose.PoseBone[] buPoses;
-								if (poseBonesBackups.TryGetValue(availableConverters[i].startingPose.name, out buPoses))
+								if (poseBonesBackups.TryGetValue(((DynamicDNAConverterBehaviour)availableConverters[i]).startingPose.name, out buPoses))
 								{
-									availableConverters[i].startingPose.poses = buPoses;
-									EditorUtility.SetDirty(availableConverters[i].startingPose);
+									((DynamicDNAConverterBehaviour)availableConverters[i]).startingPose.poses = buPoses;
+									EditorUtility.SetDirty(((DynamicDNAConverterBehaviour)availableConverters[i]).startingPose);
 									AssetDatabase.SaveAssets();
 								}
 							}
-							availableConverters[i].startingPose = buConverter.startingPose;
+							((DynamicDNAConverterBehaviour)availableConverters[i]).startingPose = buConverter.startingPose;
 							//
-							availableConverters[i].skeletonModifiers = buConverter.skeletonModifiers;
+							((DynamicDNAConverterBehaviour)availableConverters[i]).skeletonModifiers = buConverter.skeletonModifiers;
 							//availableConverters[i].hashList = buConverter.hashList;
-							availableConverters[i].overallModifiersEnabled = buConverter.overallModifiersEnabled;
+							((DynamicDNAConverterBehaviour)availableConverters[i]).overallModifiersEnabled = buConverter.overallModifiersEnabled;
 							//new
-							availableConverters[i].tightenBounds = buConverter.tightenBounds;
-							availableConverters[i].boundsAdjust = buConverter.boundsAdjust;
+							((DynamicDNAConverterBehaviour)availableConverters[i]).tightenBounds = buConverter.tightenBounds;
+							((DynamicDNAConverterBehaviour)availableConverters[i]).boundsAdjust = buConverter.boundsAdjust;
 							//end new
-							availableConverters[i].overallScale = buConverter.overallScale;
+							((DynamicDNAConverterBehaviour)availableConverters[i]).overallScale = buConverter.overallScale;
 							//availableConverters[i].heightModifiers = buConverter.heightModifiers;
-							availableConverters[i].radiusAdjust = buConverter.radiusAdjust;
-							availableConverters[i].massModifiers = buConverter.massModifiers;
+							((DynamicDNAConverterBehaviour)availableConverters[i]).radiusAdjust = buConverter.radiusAdjust;
+							((DynamicDNAConverterBehaviour)availableConverters[i]).massModifiers = buConverter.massModifiers;
 						}
 					}
 				}
@@ -631,7 +637,8 @@ namespace UMA.CharacterSystem
 					{
 						for (int i = 0; i < availableConverters.Count; i++)
 						{
-							EditorUtility.SetDirty(availableConverters[i]);
+							if(availableConverters[i] is DynamicDNAConverterBehaviour)
+								EditorUtility.SetDirty(((DynamicDNAConverterBehaviour)availableConverters[i]));
 						}
 					}
 					AssetDatabase.SaveAssets();
@@ -644,7 +651,8 @@ namespace UMA.CharacterSystem
 					{
 						for (int i = 0; i < availableConverters.Count; i++)
 						{
-							BackupConverter(availableConverters[i]);
+							if(availableConverters[i] is DynamicDNAConverterBehaviour)
+								BackupConverter(((DynamicDNAConverterBehaviour)availableConverters[i]));
 						}
 					}
 				}
@@ -652,23 +660,26 @@ namespace UMA.CharacterSystem
 				{
 					if (selectedConverter != null)
 					{
-						if (converterBackups.ContainsKey(selectedConverter.name))
+						if ((selectedConverter is DynamicDNAConverterBehaviour))
 						{
-							if (converterBackups[selectedConverter.name].dnaAsset != null)
+							if (converterBackups.ContainsKey(selectedConverter.name))
 							{
-								EditorUtility.SetDirty(converterBackups[selectedConverter.name].dnaAsset);
-								dnaAssetNamesBackups.Remove(converterBackups[selectedConverter.name].dnaAsset.name);
+								if (converterBackups[selectedConverter.name].dnaAsset != null)
+								{
+									EditorUtility.SetDirty(converterBackups[selectedConverter.name].dnaAsset);
+									dnaAssetNamesBackups.Remove(converterBackups[selectedConverter.name].dnaAsset.name);
+								}
+								if (converterBackups[selectedConverter.name].startingPose != null)
+								{
+									EditorUtility.SetDirty(converterBackups[selectedConverter.name].startingPose);
+									poseBonesBackups.Remove(converterBackups[selectedConverter.name].startingPose.name);
+								}
+								EditorUtility.SetDirty((selectedConverter as DynamicDNAConverterBehaviour));
+								AssetDatabase.SaveAssets();
+								Destroy(converterBackups[selectedConverter.name]);
+								converterBackups.Remove(selectedConverter.name);
+								BackupConverter();
 							}
-							if (converterBackups[selectedConverter.name].startingPose != null)
-							{
-								EditorUtility.SetDirty(converterBackups[selectedConverter.name].startingPose);
-								poseBonesBackups.Remove(converterBackups[selectedConverter.name].startingPose.name);
-							}
-							EditorUtility.SetDirty(selectedConverter);
-							AssetDatabase.SaveAssets();
-							Destroy(converterBackups[selectedConverter.name]);
-							converterBackups.Remove(selectedConverter.name);
-							BackupConverter();
 						}
 					}
 				}
@@ -685,11 +696,13 @@ namespace UMA.CharacterSystem
 				Debug.LogWarning("There was no prefab set up in the DynamicDnaConverterCustomizer. This must be set in order to save a new prefab.");
 				return;
 			}
-			if (selectedConverter == null)
+			if (selectedConverter == null || !(selectedConverter is DynamicDNAConverterBehaviour))
 			{
-				Debug.LogWarning("No converter was selected to save!");
+				if(selectedConverter == null)
+					Debug.LogWarning("No converter was selected to save!");
 				return;
 			}
+			var selectedDCB = (selectedConverter as DynamicDNAConverterBehaviour);
 			var fullPath = EditorUtility.SaveFilePanel("Save New DynamicDnaConverterBehaviour", Application.dataPath, "", "prefab");
 			var path = fullPath.Replace(Application.dataPath, "Assets");
 			var filename = System.IO.Path.GetFileNameWithoutExtension(path);
@@ -698,18 +711,22 @@ namespace UMA.CharacterSystem
 			var newPrefabConverter = thisNewPrefabGO.GetComponent<DynamicDNAConverterBehaviour>();
 			if (newPrefabConverter != null)
 			{
-				newPrefabConverter.dnaAsset = selectedConverter.dnaAsset;
-				newPrefabConverter.startingPose = selectedConverter.startingPose;
-				newPrefabConverter.skeletonModifiers = selectedConverter.skeletonModifiers;
+				newPrefabConverter.dnaAsset = selectedDCB.dnaAsset;
+				newPrefabConverter.startingPose = selectedDCB.startingPose;
+				newPrefabConverter.skeletonModifiers = selectedDCB.skeletonModifiers;
 				//Getting Rid Of Hash List
 				//newPrefabConverter.hashList = selectedConverter.hashList;
-				newPrefabConverter.overallModifiersEnabled = selectedConverter.overallModifiersEnabled;
-				newPrefabConverter.overallScale = selectedConverter.overallScale;
+				newPrefabConverter.overallModifiersEnabled = selectedDCB.overallModifiersEnabled;
+				newPrefabConverter.overallScale = selectedDCB.overallScale;
 				//newPrefabConverter.heightModifiers = selectedConverter.heightModifiers;
-				newPrefabConverter.radiusAdjust = selectedConverter.radiusAdjust;
-				newPrefabConverter.massModifiers = selectedConverter.massModifiers;
+				newPrefabConverter.radiusAdjust = selectedDCB.radiusAdjust;
+				newPrefabConverter.massModifiers = selectedDCB.massModifiers;
 			}
+#if UNITY_2018_3_OR_NEWER
+			var newPrefab = PrefabUtility.SaveAsPrefabAsset(thisNewPrefabGO, path);
+#else
 			var newPrefab = PrefabUtility.CreatePrefab(path, thisNewPrefabGO);//couldn't create asset try instantiating first
+#endif
 			if (newPrefab != null)
 			{
 				EditorUtility.SetDirty(newPrefab);
@@ -727,7 +744,7 @@ namespace UMA.CharacterSystem
 		{
 			if (assetFolder == "")
 			{
-				assetFolder = AssetDatabase.GetAssetPath(selectedConverter);
+				assetFolder = AssetDatabase.GetAssetPath(selectedConverter as UnityEngine.Object);
 				assetFolder = assetFolder.Substring(0, assetFolder.LastIndexOf('/'));
 			}
 			if (assetName == "")
@@ -752,7 +769,7 @@ namespace UMA.CharacterSystem
 		{
 			if (assetFolder == "")
 			{
-				assetFolder = AssetDatabase.GetAssetPath(selectedConverter);
+				assetFolder = AssetDatabase.GetAssetPath(selectedConverter as UnityEngine.Object);
 				assetFolder = assetFolder.Substring(0, assetFolder.LastIndexOf('/'));
 			}
 			if (assetName == "")

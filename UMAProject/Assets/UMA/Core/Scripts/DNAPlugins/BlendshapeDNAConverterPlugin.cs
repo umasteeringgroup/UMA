@@ -237,7 +237,11 @@ namespace UMA
 					_liveShapeWeight = _modifyingDNA.Evaluate(activeDNA);
 				}
 				_liveShapeWeight = _liveShapeWeight * masterWeight;
+
+				//In Unity 2018.3+ blendshapes can have negative values too, so in that case allow the value to go to -1
+#if !UNITY_2018_3_OR_NEWER
 				_liveShapeWeight = Mathf.Clamp(_liveShapeWeight, 0f, 1f);
+#endif
 				umaData.SetBlendShape(_blendshapeToApply, _liveShapeWeight);
 			}
 
@@ -257,9 +261,9 @@ namespace UMA
 				umaData.SetBlendShape(_blendshapeToApply, _liveShapeWeight);
 			}
 
-			#endregion
+#endregion
 		}
 
-		#endregion
+#endregion
 	}
 }

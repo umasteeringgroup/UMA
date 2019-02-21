@@ -11,10 +11,11 @@ using UnityEditor.Animations;
 namespace UMA
 {
     [PreferBinarySerialization]
-    public class UMAAssetIndexer : MonoBehaviour, ISerializationCallbackReceiver
-    {
-        #region constants and static strings
-        public static string SortOrder = "Name";
+    public class UMAAssetIndexer : ScriptableObject, ISerializationCallbackReceiver
+	{
+
+		#region constants and static strings
+		public static string SortOrder = "Name";
         public static string[] SortOrders = { "Name", "AssetName" };
         public static Dictionary<string, System.Type> TypeFromString = new Dictionary<string, System.Type>();
         public static Dictionary<string, AssetItem> GuidTypes = new Dictionary<string, AssetItem>();
@@ -99,24 +100,18 @@ namespace UMA
             {
                 if (theIndex == null || theIndexer == null)
                 {
-#if UNITY_EDITOR
                     var st = StartTimer();
-                    theIndex = Resources.Load("AssetIndexer") as GameObject;
-                    if (theIndex == null)
-                    {
-                        return null;
-                    }
-                    theIndexer = theIndex.GetComponent<UMAAssetIndexer>();
+                    theIndexer = Resources.Load("AssetIndexer") as UMAAssetIndexer;
                     if (theIndexer == null)
                     {
-                        return null;
+/*
+                        if (Debug.isDebugBuild)
+                        {
+                            Debug.LogError("Unable to load the AssetIndexer. This item is used to index non-asset bundle resources and is required.");
+                        }
+*/
                     }
                     StopTimer(st,"Asset index load");
-#else
-                theIndex = GameObject.Instantiate(Resources.Load<GameObject>("AssetIndexer")) as GameObject;
-                theIndex.hideFlags = HideFlags.HideAndDontSave;
-                theIndexer = theIndex.GetComponent<UMAAssetIndexer>();
-#endif
                 }
                 return theIndexer;
             }
@@ -191,7 +186,8 @@ namespace UMA
         public void ForceSave()
         {
             var st = StartTimer();
-            EditorUtility.SetDirty(this.gameObject);
+			EditorUtility.SetDirty(this);
+            //EditorUtility.SetDirty(this.gameObject);
             AssetDatabase.SaveAssets();
             StopTimer(st, "ForceSave");
         }
@@ -533,7 +529,6 @@ namespace UMA
             }
             catch (System.Exception ex)
             {
-                if (Debug.isDebugBuild)
                     UnityEngine.Debug.LogWarning("Exception in UMAAssetIndexer.AddAssetItem: " + ex);
             }
         }

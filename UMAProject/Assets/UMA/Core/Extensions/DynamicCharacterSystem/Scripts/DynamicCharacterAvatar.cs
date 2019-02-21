@@ -1,13 +1,11 @@
 using UnityEngine;
+//For loading a recipe directly from the web @2465
+using UnityEngine.Networking;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.SceneManagement;//for marking converted colors as needing saving
 #endif
 using UnityEngine.Serialization;//for converting old characterColors.Colors to new colors
-
-#if UNITY_5_5_OR_NEWER
-using UnityEngine.Profiling;
-#endif
 
 using System;
 using System.IO;
@@ -302,7 +300,7 @@ namespace UMA.CharacterSystem
                             //otherwise the component settings have been set up via scripting
                             //so just build
                             SetAnimatorController(true);//may cause downloads to happen- So call BuildCharacterWhenReady() instead
-                            SetExpressionSet(true);
+                            SetExpressionSet();
                             StartCoroutine(BuildCharacterWhenReady());
                         }
                     }
@@ -382,11 +380,13 @@ namespace UMA.CharacterSystem
 
                 if (umaData.rendererCount > 0)
                 {
-                    SkinnedMeshRenderer smr = umaData.GetRenderer(0);
-                    if (smr != null && smr.enabled == hide)
-                    {
-                        umaData.GetRenderer(0).enabled = !hide;
-                    }
+					foreach(SkinnedMeshRenderer smr in umaData.GetRenderers())
+					{
+						if (smr != null && smr.enabled == hide)
+						{
+							smr.enabled = !hide;
+						}
+					}
                 }
             }
             //This hardly ever happens now since the changeRace/LoadFromString/StartCO methods all yield themselves until asset bundles have been downloaded
@@ -1649,10 +1649,12 @@ namespace UMA.CharacterSystem
             {
                 string Category = db.GetType().ToString();
 
-                DnaConverterBehaviour dcb = activeRace.racedata.GetConverter(db);
-                if (dcb != null && (!string.IsNullOrEmpty(dcb.DisplayValue)))
+				//TODO racedata.GetConverter is obsolete because lots of converters can use the same dna names (dnaAsset) now 
+				//I'm just gonna use the first found one- we can do something more advanced if/when we need to
+				IDNAConverter[] dcb = activeRace.racedata.GetConverters(db);
+                if (dcb.Length > 0 && dcb[0] != null && (!string.IsNullOrEmpty(dcb[0].DisplayValue)))
                 {
-                    Category = dcb.DisplayValue;
+                    Category = dcb[0].DisplayValue;
                 }
 
                 for (int i = 0; i < db.Count; i++)
@@ -2244,7 +2246,7 @@ namespace UMA.CharacterSystem
                 if (wasBuildCharacterEnabled)
                 {
                     SetAnimatorController(true);//may cause downloads to happen
-                    SetExpressionSet(true);
+                    SetExpressionSet();
                 }
                 //loading new wardrobe items and animation controllers may have also caused downloads so wait for those- if we are not waiting we will have already created the placeholder avatar above
                 yield return StartCoroutine(UpdateAfterDownloads());
@@ -2309,7 +2311,7 @@ namespace UMA.CharacterSystem
                 BuildCharacter(false);
             }
             SetAnimatorController(true);//may cause downloads to happen
-            SetExpressionSet(true);
+            SetExpressionSet();
             //wait for any downloading assets
             yield return StartCoroutine(UpdateAfterDownloads());
             //shared colors
@@ -2464,9 +2466,13 @@ namespace UMA.CharacterSystem
                     {
                         if (path.Contains("://"))
                         {
-                            WWW www = new WWW(path + loadFilename);
-                            yield return www;
-                            recipeString = www.text;
+							UnityWebRequest www = UnityWebRequest.Get(path + loadFilename);
+#if UNITY_2017_2_OR_NEWER
+							yield return www.SendWebRequest();
+#else
+							yield return www.Send();
+#endif
+							recipeString = www.downloadHandler.text;
                         }
                         else
                         {
@@ -2722,7 +2728,6 @@ namespace UMA.CharacterSystem
             {
                 umaData.animator = this.gameObject.GetComponent<Animator>();
             }
-            Profiler.BeginSample("Load");
 
             this.umaRecipe = umaRecipe;
 
@@ -2791,7 +2796,6 @@ namespace UMA.CharacterSystem
             //Did doing any of that cause more downloads?
             if (FinalRecipeAssetsDownloading())
             {
-                Profiler.EndSample();
                 return true;
             }
 
@@ -2810,7 +2814,6 @@ namespace UMA.CharacterSystem
             {
                 UpdateSameRace();
             }
-            Profiler.EndSample();
 
             UpdateAssetBundlesUsedbyCharacter();
 
@@ -3207,7 +3210,7 @@ namespace UMA.CharacterSystem
             UpdateSetSlots();
             if (BuildCharacterEnabled)
             {
-                SetExpressionSet(true);
+                SetExpressionSet();
                 SetAnimatorController(true);
             }
         }

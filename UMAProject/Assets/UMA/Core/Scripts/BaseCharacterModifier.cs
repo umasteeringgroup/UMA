@@ -37,11 +37,11 @@ namespace UMA
 
 		[Tooltip("Should the bounds be updated when the dna changes. Turn this on if you are permitting large dna changes on your character.")]
 		[SerializeField]
-		private bool _updateBounds = true;
+		private bool _updateBounds;
 
 		[Tooltip("Checking this will make the bounds tight to the characters head/feet. You can manually adjust the bounds futher using 'Adjust Bounds' below.")]
 		[SerializeField]
-		private bool _tightenBounds = true;
+		private bool _tightenBounds;
 
 		[Tooltip("Manually adds extra padding to the characters bounds")]
 		[SerializeField]
@@ -224,6 +224,29 @@ namespace UMA
 
 		#region PUBLIC METHODS
 
+#if UNITY_EDITOR
+
+		public void ImportSettings(BaseCharacterModifier other)
+		{
+			this._adjustBounds = other._adjustBounds;
+			this._adjustHeight = other._adjustHeight;
+			this._adjustMass = other._adjustMass;
+			this._adjustRadius = other._adjustRadius;
+			this._adjustScale = other.adjustScale;
+			this._bone = other._bone;
+			this._boundsAdjust = other._boundsAdjust;
+			this._headRatio = other._headRatio;
+			this._massAdjust = other._massAdjust;
+			this._radiusAdjust = other._radiusAdjust;
+			this._radiusAdjustY = other._radiusAdjustY;
+			this._scale = other._scale;
+			this._scaleBoneHash = other._scaleBoneHash;
+			this._tightenBounds = other._tightenBounds;
+			this._updateBounds = other._updateBounds;
+		}
+
+
+#endif
 
 		public void UpdateCharacter(UMAData umaData, UMASkeleton skeleton, bool asReset)
 		{

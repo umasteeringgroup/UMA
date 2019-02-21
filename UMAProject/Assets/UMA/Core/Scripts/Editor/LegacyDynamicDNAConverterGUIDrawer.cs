@@ -12,7 +12,7 @@ namespace UMA.CharacterSystem.Editors
 	/// </summary>
 	public class LegacyDynamicDNAConverterGUIDrawer
 	{
-		UnityEngine.Object target;
+		DynamicDNAConverterBehaviour target;
 		SerializedObject serializedObject;
 		private UMAData umaData = null;
 		private DynamicDNAConverterCustomizer thisDDCC = null;
@@ -47,7 +47,7 @@ namespace UMA.CharacterSystem.Editors
 
 		bool initialized = false;
 
-		public void Init(UnityEngine.Object targetDDCB, SerializedObject DDCBSO, UMAData umaData, DynamicDNAConverterCustomizer DDCC, List<string> bonesList, bool minimalMode)
+		public void Init(DynamicDNAConverterBehaviour targetDDCB, SerializedObject DDCBSO, UMAData umaData, DynamicDNAConverterCustomizer DDCC, List<string> bonesList)
 		{
 			if (_skelModPropDrawer == null)
 				_skelModPropDrawer = new SkeletonModifierPropertyDrawer();
@@ -57,7 +57,7 @@ namespace UMA.CharacterSystem.Editors
 			this.umaData = umaData;
 			thisDDCC = DDCC;
 			bonesInSkeleton = bonesList;
-			this.minimalMode = minimalMode;
+			this.minimalMode = thisDDCC != null;
 			UpdateNames();
 			//Style for Tips
 			foldoutTipStyle = new GUIStyle(EditorStyles.foldout);
@@ -69,19 +69,13 @@ namespace UMA.CharacterSystem.Editors
 		public void UpdateNames()
 		{
 			string[] dnaNames = null;
-			SerializedProperty dnaAssetProp = serializedObject.FindProperty("dnaAsset");
-			if (dnaAssetProp != null)
-			{
-				DynamicUMADnaAsset dnaAsset = dnaAssetProp.objectReferenceValue as DynamicUMADnaAsset;
-				if (dnaAsset != null)
-					_skelModPropDrawer.Init(dnaAsset.Names);
-				else
-					_skelModPropDrawer.Init(dnaNames);
-			}
+			DynamicUMADnaAsset dnaAsset = null;
+			if(target != null)
+				dnaAsset = target.dnaAsset;
+			if (dnaAsset != null)
+				_skelModPropDrawer.Init(dnaAsset.Names);
 			else
-			{
 				_skelModPropDrawer.Init(dnaNames);
-			}
 			if (minimalMode)
 				_skelModPropDrawer.bonesInSkeleton = bonesInSkeleton;
 		}
@@ -111,14 +105,16 @@ namespace UMA.CharacterSystem.Editors
 				if (skeletonModifiersInfoExpanded)
 					EditorGUILayout.HelpBox(_skelModsTip, MessageType.Info);
 
-				//If dnaNames is null or empty show a warning
-				bool showDNANamesWarning = false;
+				//If dnaNames is null or empty show a warning 
+				//UMA2.8+ OBSOLETE
+				/*bool showDNANamesWarning = false;
 				if (skeletonModifiers.serializedObject.FindProperty("dnaAsset").objectReferenceValue == null)
 					showDNANamesWarning = true;
 				else if ((skeletonModifiers.serializedObject.FindProperty("dnaAsset").objectReferenceValue as DynamicUMADnaAsset).Names.Length == 0)
 					showDNANamesWarning = true;
 				if (showDNANamesWarning)
-					EditorGUILayout.HelpBox("You need to have your DNA Names set up above in order for the Skeleton Modifiers to make any modifications", MessageType.Warning);
+					EditorGUILayout.HelpBox("You need to have your DNA Names set up above in order for the Skeleton Modifiers to make any modifications", MessageType.Warning);*/
+
 				EditorGUI.indentLevel++;
 				extraSkelAddDelOptsExpanded = EditorGUILayout.Foldout(extraSkelAddDelOptsExpanded, "Add/Delete Modifier Options");
 				EditorGUI.indentLevel--;
