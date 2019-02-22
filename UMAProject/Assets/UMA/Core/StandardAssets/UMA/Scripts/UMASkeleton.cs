@@ -10,20 +10,6 @@ namespace UMA
 	[Serializable]
 	public class UMASkeleton
 	{
-//		public class bindDebug
-//		{
-//			public int hash;
-//			public Matrix4x4 bind;
-//
-//			public bindDebug(int h, Matrix4x4 b)
-//			{
-//				hash = h;
-//				bind = b;
-//			}
-//		}
-//		public List<bindDebug> debugOldBinds = new List<bindDebug>();
-//		public List<bindDebug> debugNewBinds = new List<bindDebug>();
-
 		/// <summary>
 		/// Internal class for storing bone and transform information.
 		/// </summary>
@@ -58,33 +44,37 @@ namespace UMA
 
 		protected SerializedDictionary<int, BoneData> boneDictionary;
 		protected SerializedDictionary<int, int> skinningDictionary;
+		protected bool skinningValid = true;
 
 		protected Matrix4x4[] skinningBinds;
 		protected Transform[] skinningTransforms;
 
-		/// <summary>
-		/// Initializes a new UMASkeleton from a transform hierarchy.
-		/// </summary>
-		/// <param name="umaRenderer">Skinned mesh renderer.</param>
-		public UMASkeleton(SkinnedMeshRenderer umaRenderer)
+		public UMASkeleton()
 		{
-			rootBoneHash = UMAUtils.StringToHash(umaRenderer.rootBone.name);
 			boneDictionary = new SerializedDictionary<int, BoneData>();
 			skinningDictionary = new SerializedDictionary<int, int>();
+		}
+
+		/// <summary>
+		/// Initializes an UMASkeleton from a transform hierarchy.
+		/// </summary>
+		/// <param name="umaRenderer">Skinned mesh renderer.</param>
+		public void Initialize(SkinnedMeshRenderer umaRenderer)
+		{
+			rootBoneHash = UMAUtils.StringToHash(umaRenderer.rootBone.name);
+
 			BeginSkeletonUpdate();
 			AddBonesRecursive(umaRenderer.rootBone);
 			EndSkeletonUpdate();
 		}
 
 		/// <summary>
-		/// Initializes a new UMASkeleton from the recipe in UMAData.
+		/// Initializes an UMASkeleton from the recipe in UMAData.
 		/// </summary>
 		/// <param name="umaData">UMAData.</param>
-		public UMASkeleton(UMAData umaData, UmaTPose umaTPose = null)
+		/// <param name="umaTPose">TPose containing retained bones (optional)</param>
+		public void Initialize(UMAData umaData, UmaTPose umaTPose = null)
 		{
-			boneDictionary = new SerializedDictionary<int, BoneData>();
-			skinningDictionary = new SerializedDictionary<int, int>();
-
 			BeginSkeletonUpdate();
 
 			// HACK this crap needs to go, or at worst be in one place only
@@ -120,19 +110,19 @@ namespace UMA
 
 					foreach (UMATransform umaBone in meshData.umaBones)
 					{
+						 //This won't happen if we recalc the bindToBone matrices
+						 //we don't have which seems to work - see SlotDataAsset
 						if (boneDictionary.ContainsKey(umaBone.hash))
 						{
-							BoneData currentBone = boneDictionary[umaBone.hash];
-							// This won't happen if we recalc the bindToBone matrices
-							// we don't have which seems to work - see SlotDataAsset
-							if (currentBone.umaTransform.bindToBone == Matrix4x4.zero)
-							{
-								if (umaBone.bindToBone != Matrix4x4.zero)
-								{
-									//Debug.Log("Found better bind for: " + umaBone.name + " in slot: " + slot.slotName);
-									currentBone.umaTransform.bindToBone = umaBone.bindToBone;
-								}
-							}
+							//BoneData currentBone = boneDictionary[umaBone.hash];
+							//if (currentBone.umaTransform.bindToBone == Matrix4x4.zero)
+							//{
+							//	if (umaBone.bindToBone != Matrix4x4.zero)
+							//	{
+							//		Debug.Log("Found better bind for: " + umaBone.name + " in slot: " + slot.slotName);
+							//		currentBone.umaTransform = umaBone;
+							//	}
+							//}
 						}
 						else
 						{
@@ -160,10 +150,6 @@ namespace UMA
 			EndSkeletonUpdate();
 		}
 
-		protected UMASkeleton()
-		{
-		}
-
 		/// <summary>
 		/// Marks the skeleton as being updated.
 		/// </summary>
@@ -189,10 +175,26 @@ namespace UMA
 			updating = false;
 		}
 
+		protected void RepairSkinningDictionary()
+		{
+			if (!skinningValid)
+			{
+				int[] hashes = new int[skinningDictionary.Count];
+				skinningDictionary.Keys.CopyTo(hashes, 0);
+				skinningDictionary.Clear();
+				for (int i = 0; i < hashes.Length; i++)
+				{
+					skinningDictionary.Add(hashes[i], i);
+				}
+
+				skinningValid = true;
+			}
+		}
+
 		/// <summary>
 		/// Marks the bone as retained.
 		/// </summary>
-		/// <param name="parentHash">Hash of bone name.</param>
+		/// <param name="nameHash">Hash of bone name.</param>
 		public virtual void SetRetainedBone(int nameHash)
 		{
 			if (!skinningDictionary.ContainsKey(nameHash))
@@ -204,7 +206,7 @@ namespace UMA
 		/// <summary>
 		/// Marks the bone and all parents as retained.
 		/// </summary>
-		/// <param name="parentHash">Hash of bone name.</param>
+		/// <param name="nameHash">Hash of bone name.</param>
 		public virtual void SetRetainedBoneHierachy(int nameHash)
 		{
 			if (!skinningDictionary.ContainsKey(nameHash))
@@ -223,35 +225,35 @@ namespace UMA
 		/// <summary>
 		/// Marks the bone as unretained.
 		/// </summary>
-		/// <param name="parentHash">Hash of bone name.</param>
+		/// <param name="nameHash">Hash of bone name.</param>
 		public virtual void ClearRetainedBone(int nameHash)
 		{
-			// HACK - this is going to break the indices
-//			if (skinningDictionary.ContainsKey(nameHash))
-//			{
-//				skinningDictionary.Remove(nameHash);
-//			}
+			if (skinningDictionary.ContainsKey(nameHash))
+			{
+				skinningDictionary.Remove(nameHash);
+				skinningValid = false;
+			}
 		}
 
 		/// <summary>
 		/// Marks the bone and all children unretained.
 		/// </summary>
-		/// <param name="parentHash">Hash of bone name.</param>
+		/// <param name="nameHash">Hash of bone name.</param>
 		public virtual void ClearRetainedBoneHierachy(int nameHash)
 		{
-			// HACK - this is going to break the indices
-//			if (skinningDictionary.ContainsKey(nameHash))
-//			{
-//				skinningDictionary.Remove(nameHash);
-//
-//				foreach (BoneData bone in boneDictionary.Values)
-//				{
-//					if (bone.umaTransform.parent == nameHash)
-//					{
-//						ClearRetainedBoneHierachy(bone.umaTransform.hash);
-//					}
-//				}
-//			}
+			if (skinningDictionary.ContainsKey(nameHash))
+			{
+				skinningDictionary.Remove(nameHash);
+				skinningValid = false;
+
+				foreach (BoneData bone in boneDictionary.Values)
+				{
+					if (bone.umaTransform.parent == nameHash)
+					{
+						ClearRetainedBoneHierachy(bone.umaTransform.hash);
+					}
+				}
+			}
 		}
 
 		/// <summary>
@@ -278,6 +280,10 @@ namespace UMA
 			{
 				BoneData bone;
 				BoneData parentBone;
+
+				//if (HumanTrait.RequiredBone(i) && !skinningDictionary.ContainsKey(boneInfo[i].boneHash))
+				//{
+				//}
 
 				if (boneDictionary.TryGetValue(boneInfo[i].boneHash, out bone))
 				{
@@ -376,11 +382,41 @@ namespace UMA
 		}
 
 		/// <summary>
+		/// Gets the hash of a retained parent bone in the skeleton.
+		/// </summary>
+		/// <param name="nameHash">Name hash.</param>
+		/// <returns>Hash of the closest retained parent (may be the original)</returns>
+		public virtual int GetSkinningTarget(int nameHash)
+		{
+			if (!skinningValid) RepairSkinningDictionary();
+
+			int hash = nameHash;
+			while (!skinningDictionary.ContainsKey(hash))
+			{
+				BoneData bone;
+				if (boneDictionary.TryGetValue(hash, out bone))
+				{
+					hash = bone.umaTransform.parent;
+				}
+				else
+				{
+					Debug.LogError("Couldn't find bone in skeleton!");
+					return nameHash;
+				}
+			}
+
+			return hash;
+		}
+
+		/// <summary>
 		/// Gets the index of a retained bone in the skinning array.
 		/// </summary>
 		/// <param name="nameHash">Name hash.</param>
+		/// <returns>Index in skinning array of bone</returns>
 		public virtual int GetSkinningIndex(int nameHash)
 		{
+			if (!skinningValid) RepairSkinningDictionary();
+
 			int index;
 			if (!skinningDictionary.TryGetValue(nameHash, out index))
 			{
@@ -401,14 +437,11 @@ namespace UMA
 			BoneData bone;
 			if (boneDictionary.TryGetValue(nameHash, out bone))
 			{
-//				if (bone.umaTransform.bindToBone == Matrix4x4.zero)
-//				{
-//					Debug.LogWarning("Bad bind matrix on bone : " + bone.umaTransform.name);
-//					// This will make the Unity.math matrix class
-//					// fail in the same way as Matrix4x4
-//					bone.umaTransform.bindToBone.m33 = float.NaN;
-//				}
-
+				if (bone.umaTransform.bindToBone == Matrix4x4.zero)
+				{
+					Debug.LogWarning("Skinning with bad data on: " + bone.umaTransform.name);
+					return Matrix4x4.identity;
+				}
 				return bone.umaTransform.bindToBone;
 			}
 
@@ -417,19 +450,37 @@ namespace UMA
 		}
 
 		/// <summary>
-		/// Gets the bind matrix of a retained bone in the skinning array.
+		/// Gets the matrix transferring from original to target bone.
 		/// </summary>
-		/// <param name="nameHash">Name hash.</param>
-		public virtual Matrix4x4 GetSkinningBoneToRoot(int nameHash)
+		/// <param name="bone">Original bone.</param>
+		/// <param name="targetHash">Name hash of target bone.</param>
+		/// <returns>Matrix from original to target</returns>
+		public virtual Matrix4x4 GetSkinningBoneToTarget(UMATransform bone, int targetHash)
 		{
-			BoneData bone;
-			if (boneDictionary.TryGetValue(nameHash, out bone))
+			BoneData newBone;
+			if (boneDictionary.TryGetValue(targetHash, out newBone))
 			{
-				return bone.umaTransform.boneToRoot;
+				return newBone.umaTransform.boneToRoot.inverse * bone.boneToRoot;
 			}
-
-			Debug.LogError("Could not find skinning bone in skeleton!");
-			return Matrix4x4.identity;
+			else
+			{
+				Debug.LogError("Couldn't find skinning target!");
+				return Matrix4x4.identity;
+			}
+			//while (hash != targetHash)
+			//{
+			//	if (boneDictionary.TryGetValue(hash, out newBone))
+			//	{
+			//		Transform trans = newBone.boneTransform;
+			//		matrix = Matrix4x4.TRS(trans.localPosition, trans.localRotation, trans.localScale).inverse * matrix;
+			//		hash = newBone.umaTransform.parent;
+			//	}
+			//	else
+			//	{
+			//		Debug.LogError("Could not find bone in skeleton!");
+			//		return Matrix4x4.identity;
+			//	}
+			//}
 		}
 
 		/// <summary>
@@ -457,6 +508,8 @@ namespace UMA
 		/// </summary>
 		private void EnsureSkinningData()
 		{
+			if (!skinningValid) RepairSkinningDictionary();
+
 			if ((skinningBinds == null) || (skinningBinds.Length != skinningDictionary.Count))
 			{
 				skinningBinds = new Matrix4x4[skinningDictionary.Count];
@@ -469,8 +522,6 @@ namespace UMA
 					{
 						skinningBinds[skinning.Value] = bone.umaTransform.bindToBone;
 						skinningTransforms[skinning.Value] = bone.boneTransform;
-//						Debug.Log("WRONG for "+bone.umaTransform.name+"\n"+bone.umaTransform.bind);
-//						debugNewBinds.Add(new bindDebug(bone.umaTransform.hash, bone.umaTransform.bindToBone));
 					}
 					else
 					{
@@ -535,7 +586,7 @@ namespace UMA
 		/// <summary>
 		/// Adds the transform into the skeleton.
 		/// </summary>
-		/// <param name="transform">Transform.</param>
+		/// <param name="umaTransform">UMA Transform.</param>
 		protected virtual void AddBone(UMATransform umaTransform)
 		{
 			GameObject go = new GameObject(umaTransform.name);

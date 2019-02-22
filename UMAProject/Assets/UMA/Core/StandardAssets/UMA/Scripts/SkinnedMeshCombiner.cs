@@ -10,6 +10,8 @@ namespace UMA
 	/// </summary>
 	public static class SkinnedMeshCombiner
 	{
+		public static float elapsedTime = 0f;
+
 		/// <summary>
 		/// Container for source mesh data.
 		/// </summary>
@@ -49,7 +51,10 @@ namespace UMA
 		{
 			if (blendShapeSettings == null)
 				blendShapeSettings = new UMAData.BlendShapeSettings();
-            
+
+
+			float startTime = Time.realtimeSinceStartup;
+
 			int vertexCount = 0;
 			int bindPoseCount = 0;
 			int transformHierarchyCount = 0;
@@ -95,7 +100,6 @@ namespace UMA
 			Dictionary<Vector3, int> clothVertices = has_clothSkinning ? new Dictionary<Vector3, int>(vertexCount) : null;
 			Dictionary<Vector3, int> localClothVertices = has_clothSkinning ? new Dictionary<Vector3, int>(vertexCount) : null;
 
-			int boneCount = 0;
 			int vertexIndex = 0;
 			int blendShapeIndex = 0;
 
@@ -115,9 +119,10 @@ namespace UMA
 				for (int i = 0; i < sourceBoneCount; i++)
 				{
 					UMATransform bone = source.meshData.umaBones[i];
-					// HACK - needs to include remap to non-retained bones
-					rebindIndices[i] = skeleton.GetSkinningIndex(bone.hash);
-					rebindMatrices[i] = skeleton.GetSkinningBindToBone(bone.hash).inverse * bone.bindToBone;
+					int retargetHash = skeleton.GetSkinningTarget(bone.hash);
+					rebindIndices[i] = skeleton.GetSkinningIndex(retargetHash);
+					Matrix4x4 retargetMatrix = skeleton.GetSkinningBoneToTarget(bone, retargetHash);
+					rebindMatrices[i] = skeleton.GetSkinningBindToBone(bone.hash).inverse * retargetMatrix * bone.bindToBone;
 				}
 
 				destIndex = vertexIndex;
@@ -514,6 +519,9 @@ namespace UMA
 			{
 				Debug.LogError("Combined vertices size didn't match precomputed value!");
 			}
+
+			float combineTime = (Time.realtimeSinceStartup - startTime) * 1000f;
+			elapsedTime += combineTime;
 
 			// fill in new values.
 			target.vertexCount = vertexCount;

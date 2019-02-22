@@ -145,8 +145,9 @@ namespace UMA.Editors
         {
             if (_umaData.skeleton == null) 
             {
-				_umaData.skeleton = new UMASkeleton(_umaData);
-            }
+				_umaData.skeleton = new UMASkeleton();
+				_umaData.skeleton.Initialize(_umaData);
+			}
         }
 
         private void CreateBoneTransforms()

@@ -64,7 +64,8 @@ namespace UMA
 
 			if (umaData.umaRoot == null)
 			{
-				umaData.skeleton = new UMASkeleton(umaData);
+				umaData.skeleton = new UMASkeleton();
+				umaData.skeleton.Initialize(umaData, umaData.umaRecipe.raceData.TPose);
 
 				renderers = new SkinnedMeshRenderer[umaData.generatedMaterials.rendererCount];
 

@@ -172,6 +172,9 @@ namespace UMA
 
 					// Rebind vertex to new bones
 
+					//float4 vertex = math.mul(vertexSrc, bindMatrices[boneSrc.boneIndex0]);
+					//dest[index++] = vertex.xyz;
+
 					float4 vertex = float4.zero;
 					vertex += math.mul(vertexSrc, bindMatrices[boneSrc.boneIndex0]) * boneSrc.weight0;
 					vertex += math.mul(vertexSrc, bindMatrices[boneSrc.boneIndex1]) * boneSrc.weight1;
@@ -277,7 +280,7 @@ namespace UMA
 				source.nativeBoneWeights = new NativeArray<UMABoneWeight>(source.meshData.boneWeights, Allocator.TempJob);
 			}
 
-			Unity.Jobs.LowLevel.Unsafe.JobsUtility.JobDebuggerEnabled = false;
+			//Unity.Jobs.LowLevel.Unsafe.JobsUtility.JobDebuggerEnabled = false;
 
 			float startTime = Time.realtimeSinceStartup;
 
@@ -331,9 +334,7 @@ namespace UMA
 
 			NativeArray<UMABoneWeight> boneWeights = new NativeArray<UMABoneWeight>(vertexCount, Allocator.TempJob);
 
-			int boneCount = 0;
 			int vertexIndex = 0;
-			int blendShapeIndex = 0;
 
 			foreach (CombineInstance source in sources)
 			{
@@ -364,14 +365,14 @@ namespace UMA
 				for (int i = 0; i < sourceBoneCount; i++)
 				{
 					UMATransform bone = source.meshData.umaBones[i];
-					// HACK
-					// This WILL NOT WORK in the case of eliminating a bone
-					// if the bone parent doesn't have a valid bind
-					// maybe those can be built from the child bone
-					// which will have one at some level or wouldn't
-					// require reskinning.
-					rebindIndices[i] = skeleton.GetSkinningIndex(bone.hash);
-					rebindMatrices[i] = skeleton.GetSkinningBindToBone(bone.hash).inverse * bone.bindToBone;
+					int retargetHash = skeleton.GetSkinningTarget(bone.hash);
+
+					Transform targetT = skeleton.GetBoneTransform(retargetHash);
+					Debug.Log("Retargetting: " + bone.name + " --> " + targetT.name);
+
+					rebindIndices[i] = skeleton.GetSkinningIndex(retargetHash);
+					Matrix4x4 retargetMatrix = skeleton.GetSkinningBoneToTarget(bone, retargetHash);
+					rebindMatrices[i] = skeleton.GetSkinningBindToBone(retargetHash).inverse * retargetMatrix * bone.bindToBone;
 				}
 
 				destIndex = vertexIndex;
@@ -668,10 +669,9 @@ namespace UMA
 
 			// fill in new values.
 			target.vertexCount = vertexCount;
-			
+
 			float combineTime = (Time.realtimeSinceStartup - startTime) * 1000f;
 			elapsedTime += combineTime;
-			Debug.Log("Job combine took: " + combineTime + " ms");
 
 			NativeArray<Vector3>.Copy(vertices, target.vertices, vertexCount);
 
