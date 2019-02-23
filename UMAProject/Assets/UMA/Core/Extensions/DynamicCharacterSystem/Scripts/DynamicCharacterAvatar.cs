@@ -106,6 +106,7 @@ namespace UMA.CharacterSystem
         [Tooltip("Any colors here are set when the Avatar is first generated and updated as the values are changed using the color sliders")]
         public ColorValueList characterColors = new ColorValueList();
 
+        public UMAPredefinedDNA predefinedDNA;
         //Load and Save fields
         //load
         public loadPathTypes loadPathType;
@@ -196,10 +197,10 @@ namespace UMA.CharacterSystem
         //If the want to set the Race when the avatar has built they should use ChangeRace. If they want to set it before they should use RacePreset
         //It could be used to return activeRace.raceData and/or could be made to call the right methods depending on whether the Avatar has been created
         /*RaceData RaceData
-		{
-			get { return base.umaRace; }
-			set { base.umaRace = value; }
-		}*/
+        {
+            get { return base.umaRace; }
+            set { base.umaRace = value; }
+        }*/
         /// <summary>
         /// Set this before initialization to determine the active race. This can be set in the inspector
         /// using the activeRace dropdown.
@@ -380,13 +381,13 @@ namespace UMA.CharacterSystem
 
                 if (umaData.rendererCount > 0)
                 {
-					foreach(SkinnedMeshRenderer smr in umaData.GetRenderers())
-					{
-						if (smr != null && smr.enabled == hide)
-						{
-							smr.enabled = !hide;
-						}
-					}
+                    foreach(SkinnedMeshRenderer smr in umaData.GetRenderers())
+                    {
+                        if (smr != null && smr.enabled == hide)
+                        {
+                            smr.enabled = !hide;
+                        }
+                    }
                 }
             }
             //This hardly ever happens now since the changeRace/LoadFromString/StartCO methods all yield themselves until asset bundles have been downloaded
@@ -1147,7 +1148,7 @@ namespace UMA.CharacterSystem
 #if UNITY_EDITOR
                 thisContext = CreateEditorContext();
 #else
-				return;
+                return;
 #endif
             }
             var thisDCS = thisContext.dynamicCharacterSystem as DynamicCharacterSystem;
@@ -1676,9 +1677,9 @@ namespace UMA.CharacterSystem
             {
                 string Category = db.GetType().ToString();
 
-				//TODO racedata.GetConverter is obsolete because lots of converters can use the same dna names (dnaAsset) now 
-				//I'm just gonna use the first found one- we can do something more advanced if/when we need to
-				IDNAConverter[] dcb = activeRace.racedata.GetConverters(db);
+                //TODO racedata.GetConverter is obsolete because lots of converters can use the same dna names (dnaAsset) now 
+                //I'm just gonna use the first found one- we can do something more advanced if/when we need to
+                IDNAConverter[] dcb = activeRace.racedata.GetConverters(db);
                 if (dcb.Length > 0 && dcb[0] != null && (!string.IsNullOrEmpty(dcb[0].DisplayValue)))
                 {
                     Category = dcb[0].DisplayValue;
@@ -1736,7 +1737,7 @@ namespace UMA.CharacterSystem
         private void InitializeExpressionPlayer(UMAData umaData)
         {
             this.CharacterUpdated.RemoveListener(InitializeExpressionPlayer);
-			InitializeExpressionPlayer();
+            InitializeExpressionPlayer();
         }
 
         private void InitializeExpressionPlayer(bool enable = true)
@@ -1744,18 +1745,18 @@ namespace UMA.CharacterSystem
             var thisExpressionPlayer = gameObject.GetComponent<UMAExpressionPlayer>();
             if (thisExpressionPlayer == null)
                 return;
-			//turn this off if we are not Humanoid cos it wont work
-			if (umaData.umaRecipe.raceData.umaTarget == RaceData.UMATarget.Humanoid)
-			{
-				if (thisExpressionPlayer.expressionSet == null)
-					return;
-				thisExpressionPlayer.enabled = true;
-				thisExpressionPlayer.Initialize();
-			}
-			else
-			{
-				thisExpressionPlayer.enabled = false;
-			}
+            //turn this off if we are not Humanoid cos it wont work
+            if (umaData.umaRecipe.raceData.umaTarget == RaceData.UMATarget.Humanoid)
+            {
+                if (thisExpressionPlayer.expressionSet == null)
+                    return;
+                thisExpressionPlayer.enabled = true;
+                thisExpressionPlayer.Initialize();
+            }
+            else
+            {
+                thisExpressionPlayer.enabled = false;
+            }
         }
 
         /// <summary>
@@ -1821,7 +1822,7 @@ namespace UMA.CharacterSystem
                 if (saveColors)
                     thisDCASA |= SaveOptions.saveColors;
                 /*if (saveAnimator)
-					thisDCASA|= SaveOptions.saveAnimator;*/
+                    thisDCASA|= SaveOptions.saveAnimator;*/
 
                 thisDCASA &= ~SaveOptions.useDefaults;
 
@@ -1917,7 +1918,7 @@ namespace UMA.CharacterSystem
         public void DoSave(bool saveAsAsset = false, string filePath = "", SaveOptions customSaveOptions = SaveOptions.useDefaults)
         {
 #if !UNITY_EDITOR
-			saveAsAsset = false;
+            saveAsAsset = false;
 #endif
             var saveOptionsToUse = customSaveOptions == SaveOptions.useDefaults ? defaultSaveOptions : customSaveOptions;
             Dictionary<string, UMATextRecipe> wardrobeCache = new Dictionary<string, UMATextRecipe>(_wardrobeRecipes);
@@ -1950,7 +1951,7 @@ namespace UMA.CharacterSystem
                     AssetDatabase.SaveAssets();
                 }
 #else
-				FileUtils.WriteAllText(filePath, asset.recipeString);
+                FileUtils.WriteAllText(filePath, asset.recipeString);
 #endif
                 if (Debug.isDebugBuild)
                     Debug.Log("Recipe saved to " + filePath);
@@ -2493,13 +2494,13 @@ namespace UMA.CharacterSystem
                     {
                         if (path.Contains("://"))
                         {
-							UnityWebRequest www = UnityWebRequest.Get(path + loadFilename);
+                            UnityWebRequest www = UnityWebRequest.Get(path + loadFilename);
 #if UNITY_2017_2_OR_NEWER
-							yield return www.SendWebRequest();
+                            yield return www.SendWebRequest();
 #else
-							yield return www.Send();
+                            yield return www.Send();
 #endif
-							recipeString = www.downloadHandler.text;
+                            recipeString = www.downloadHandler.text;
                         }
                         else
                         {
@@ -2561,8 +2562,8 @@ namespace UMA.CharacterSystem
                 return;
             }
 
-			// clear the hiddenslots and hidden mesh assets
-			// so they can be accumulate anew from the recipe
+            // clear the hiddenslots and hidden mesh assets
+            // so they can be accumulate anew from the recipe
             HiddenSlots.Clear();
             _meshHideDictionary.Clear();
 
@@ -2720,6 +2721,23 @@ namespace UMA.CharacterSystem
             }
         }
 
+        private void ApplyPredefinedDNA()
+        {
+            if (this.predefinedDNA != null)
+            {
+                var dna = GetDNA();
+
+                foreach (UMAPredefinedDNA.DnaValue dv in predefinedDNA.PreloadValues)
+                {
+                    if (dna.ContainsKey(dv.Name))
+                    {
+                        dna[dv.Name].Set(dv.Value);
+                    }
+                }
+                this.predefinedDNA = null; // only apply the first time.
+            }
+        }
+
         /// <summary>
         /// With a DynamicCharacterAvatar you do not call Load directly. If you want to load an UMATextRecipe directly call ImportSettings(yourUMATextRecipe)
         /// </summary>
@@ -2772,9 +2790,9 @@ namespace UMA.CharacterSystem
             RemoveHiddenSlots();
 
             /*if (wasCrossCompatibleBuild)
-			{
-				FixCrossCompatibleSlots();
-			}*/
+            {
+                FixCrossCompatibleSlots();
+            }*/
 
             foreach (UMAWardrobeRecipe umr in Replaces)
             {
@@ -2841,7 +2859,7 @@ namespace UMA.CharacterSystem
             {
                 UpdateSameRace();
             }
-
+            ApplyPredefinedDNA();
             UpdateAssetBundlesUsedbyCharacter();
 
             return false;
@@ -3214,19 +3232,19 @@ namespace UMA.CharacterSystem
             {
                 UpdateAfterDownload();
             }
-			// UpdateAfterDownload.UpdateSetSlots might have also caused downloads to happen
-			//(eg they themselves ref slots/overlays/races that are in other bundles) so check that 
-			//(they will be in requiredAssetsToCheck) and wait
-			if (requiredAssetsToCheck.Count > 0)
+            // UpdateAfterDownload.UpdateSetSlots might have also caused downloads to happen
+            //(eg they themselves ref slots/overlays/races that are in other bundles) so check that 
+            //(they will be in requiredAssetsToCheck) and wait
+            if (requiredAssetsToCheck.Count > 0)
             {
-				//We cant call this Coroutine again from within itself (causes a stackOverflow) so just wait
-				//yield return StartCoroutine(UpdateAfterDownloads());
-				while (DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
-				{
-					yield return null;
-				}
-				UpdateAfterDownload();
-			}
+                //We cant call this Coroutine again from within itself (causes a stackOverflow) so just wait
+                //yield return StartCoroutine(UpdateAfterDownloads());
+                while (DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
+                {
+                    yield return null;
+                }
+                UpdateAfterDownload();
+            }
         }
 
         void UpdateAfterDownload()
@@ -3361,8 +3379,8 @@ namespace UMA.CharacterSystem
         {
             if (umaData != null)
             { 
-				if (umaData.umaGenerator != null)
-					umaData.umaGenerator.removeUMA(umaData);
+                if (umaData.umaGenerator != null)
+                    umaData.umaGenerator.removeUMA(umaData);
             }
         }
 
@@ -3828,46 +3846,46 @@ namespace UMA.CharacterSystem
 
 #if UNITY_EDITOR           
         [ContextMenu("Copy From Current Wardrobe")]
-		void CopyDefaultWardrobe()
-		{
-			string recipeString = JsonUtility.ToJson(new UMATextRecipe.DCSPackRecipe(this, "", "DynamicCharacterAvatar", defaultSaveOptions));
-			EditorGUIUtility.systemCopyBuffer = recipeString;
-			Debug.Log("Copied: " + EditorGUIUtility.systemCopyBuffer);
-		}
+        void CopyDefaultWardrobe()
+        {
+            string recipeString = JsonUtility.ToJson(new UMATextRecipe.DCSPackRecipe(this, "", "DynamicCharacterAvatar", defaultSaveOptions));
+            EditorGUIUtility.systemCopyBuffer = recipeString;
+            Debug.Log("Copied: " + EditorGUIUtility.systemCopyBuffer);
+        }
 
-		[ContextMenu("Paste To Default Wardrobe")]
-		void PasteDefaultWardrobe()
-		{
-			string buffer = EditorGUIUtility.systemCopyBuffer;
-			Debug.Log("Pasting: " + buffer);
+        [ContextMenu("Paste To Default Wardrobe")]
+        void PasteDefaultWardrobe()
+        {
+            string buffer = EditorGUIUtility.systemCopyBuffer;
+            Debug.Log("Pasting: " + buffer);
 
-			UMATextRecipe.DCSPackRecipe copiedList = JsonUtility.FromJson<UMATextRecipe.DCSPackRecipe>(buffer);
+            UMATextRecipe.DCSPackRecipe copiedList = JsonUtility.FromJson<UMATextRecipe.DCSPackRecipe>(buffer);
 
-			ChangeRace(copiedList.race);
+            ChangeRace(copiedList.race);
 
-			if (copiedList.wardrobeSet.Count > 0)
-				preloadWardrobeRecipes.recipes.Clear();
+            if (copiedList.wardrobeSet.Count > 0)
+                preloadWardrobeRecipes.recipes.Clear();
 
-			foreach (WardrobeSettings wardrobe in copiedList.wardrobeSet)
-			{
-				UMATextRecipe recipe = UMAAssetIndexer.Instance.GetAsset<UMATextRecipe>(wardrobe.recipe);
-				if (recipe != null)
-				{
-					WardrobeRecipeListItem item = new WardrobeRecipeListItem(recipe);
-					preloadWardrobeRecipes.recipes.Add(item);
-				}
-			}
+            foreach (WardrobeSettings wardrobe in copiedList.wardrobeSet)
+            {
+                UMATextRecipe recipe = UMAAssetIndexer.Instance.GetAsset<UMATextRecipe>(wardrobe.recipe);
+                if (recipe != null)
+                {
+                    WardrobeRecipeListItem item = new WardrobeRecipeListItem(recipe);
+                    preloadWardrobeRecipes.recipes.Add(item);
+                }
+            }
 
-			if (copiedList.characterColors.Count > 0)
-				characterColors._colors.Clear();
+            if (copiedList.characterColors.Count > 0)
+                characterColors._colors.Clear();
 
-			foreach (UMAPackedRecipeBase.PackedOverlayColorDataV3 color in copiedList.characterColors)
-			{
-				OverlayColorData colorData = new OverlayColorData();
-				color.SetOverlayColorData(colorData);
-				characterColors.SetColor(color.name, colorData);
-			}
-		}
+            foreach (UMAPackedRecipeBase.PackedOverlayColorDataV3 color in copiedList.characterColors)
+            {
+                OverlayColorData colorData = new OverlayColorData();
+                color.SetOverlayColorData(colorData);
+                characterColors.SetColor(color.name, colorData);
+            }
+        }
 #endif
     }
 
@@ -3884,7 +3902,13 @@ namespace UMA.CharacterSystem
         public float Value; // Current value of the DNA.
         public string Category;
 
-        protected int OwnerIndex;    // position of DNA in index, created at initialization
+        public int OwnerIndex
+        {
+            // position of DNA in index, created at initialization
+            get;
+            private set;
+        }
+
         protected UMADnaBase Owner;  // owning DNA class. Used to set the DNA by index
 
         /// <summary>

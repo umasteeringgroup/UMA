@@ -7,6 +7,8 @@ namespace UMA.Examples
 {
 	public class UMASimpleLOD : MonoBehaviour
 	{
+		[Tooltip("The distance to step to another LOD")]
+		[Range(0.01f, 100f)]
 		public float lodDistance;
 
 		[Tooltip("Look for LOD slots in the library.")]
@@ -15,10 +17,10 @@ namespace UMA.Examples
 		public int lodOffset;
 		[Tooltip("This is the max LOD to search for if the current LOD can't be found.")]
 		public int maxLOD = 5;
-      [Tooltip("The maximum scale reduction (8 means the texture can be reduced in half 8 times)")]
-      public int maxReduction = 8;
+		[Tooltip("The maximum scale reduction (8 means the texture can be reduced in half 8 times)")]
+		public int maxReduction = 8;
 
-      public int CurrentLOD {  get { return _currentLOD - lodOffset; } }
+		public int CurrentLOD {  get { return _currentLOD - lodOffset; } }
 		private int _currentLOD = -1;
 
 		private DynamicCharacterAvatar _avatar;
@@ -92,6 +94,13 @@ namespace UMA.Examples
 
 			if (_umaData.umaRecipe == null)
 				return;
+
+			if(lodDistance < 0)
+			{
+				if (Debug.isDebugBuild)
+					Debug.LogWarning("LOD Distance is less than 0!");
+				return;
+			}
 
 			float cameraDistance = (transform.position - _cameraTransform.position).magnitude;
 			float lodDistanceStep = lodDistance;

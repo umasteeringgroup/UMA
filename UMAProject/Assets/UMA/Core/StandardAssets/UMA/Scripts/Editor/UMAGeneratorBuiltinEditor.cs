@@ -9,6 +9,7 @@ namespace UMA.Editors
 		SerializedProperty textureMergePrefab;
 		SerializedProperty meshCombiner;
 		SerializedProperty InitialScaleFactor;
+		SerializedProperty IterationCount;
 		SerializedProperty fastGeneration;
 		SerializedProperty garbageCollectionRate;
 
@@ -19,6 +20,7 @@ namespace UMA.Editors
 			textureMergePrefab = serializedObject.FindProperty("textureMergePrefab");
 			meshCombiner = serializedObject.FindProperty("meshCombiner");
 			InitialScaleFactor = serializedObject.FindProperty("InitialScaleFactor");
+			IterationCount = serializedObject.FindProperty("IterationCount");
 			fastGeneration = serializedObject.FindProperty("fastGeneration");
 			garbageCollectionRate = serializedObject.FindProperty("garbageCollectionRate");
 		}
@@ -32,6 +34,7 @@ namespace UMA.Editors
 
 			EditorGUILayout.PropertyField(InitialScaleFactor);
 			EditorGUILayout.PropertyField(fastGeneration);
+			EditorGUILayout.PropertyField(IterationCount);
 			EditorGUILayout.PropertyField(garbageCollectionRate);
 
 			GUILayout.Space(20);
