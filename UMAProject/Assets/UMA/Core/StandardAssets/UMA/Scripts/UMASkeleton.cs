@@ -14,7 +14,7 @@ namespace UMA
 		/// Internal class for storing bone and transform information.
 		/// </summary>
 		[Serializable]
-		public class BoneData
+		protected class BoneData
 		{
 			public Transform boneTransform;
 			public UMATransform umaTransform;
@@ -22,8 +22,23 @@ namespace UMA
 			public Vector3 position;
 			public Vector3 scale;
 
-//			[NonSerialized]
-//			public Matrix4x4 localToRoot;
+			public Quaternion dnaRotation;
+			public Vector3 dnaPosition;
+			public Vector3 dnaScale;
+
+			//			[NonSerialized]
+			//			public Matrix4x4 localToRoot;
+
+			// HACK
+			// Make this localToRetained
+			// Then we don't need the other way
+			// and it will be faster to build
+			// and friendlier when there aren't
+			// any Transforms on non-retained
+			[NonSerialized]
+			public int retainedHash;
+			[NonSerialized]
+			public Matrix4x4 localToRetained;
 		}
 
 		public IEnumerable<int> BoneHashes { get { return GetBoneHashes(); } }
@@ -96,6 +111,7 @@ namespace UMA
 				rootBoneHash = UMAUtils.StringToHash(umaData.umaRoot.name);
 				AddBone(newRoot.transform, rootBoneHash, 0);
 				SetRetainedBone(rootBoneHash);
+
 				int globalHash = UMAUtils.StringToHash(newGlobal.name);
 				AddBone(newGlobal.transform, globalHash, rootBoneHash);
 				SetRetainedBone(globalHash);
@@ -110,19 +126,19 @@ namespace UMA
 
 					foreach (UMATransform umaBone in meshData.umaBones)
 					{
-						 //This won't happen if we recalc the bindToBone matrices
-						 //we don't have which seems to work - see SlotDataAsset
+						//This won't happen if we recalc the bindToBone matrices
+						//we don't have which seems to work - see SlotDataAsset
 						if (boneDictionary.ContainsKey(umaBone.hash))
 						{
-							//BoneData currentBone = boneDictionary[umaBone.hash];
-							//if (currentBone.umaTransform.bindToBone == Matrix4x4.zero)
-							//{
-							//	if (umaBone.bindToBone != Matrix4x4.zero)
-							//	{
-							//		Debug.Log("Found better bind for: " + umaBone.name + " in slot: " + slot.slotName);
-							//		currentBone.umaTransform = umaBone;
-							//	}
-							//}
+						//	BoneData currentBone = boneDictionary[umaBone.hash];
+						//	if (currentBone.umaTransform.bindToBone == Matrix4x4.zero)
+						//	{
+						//		if (umaBone.bindToBone != Matrix4x4.zero)
+						//		{
+						//			Debug.Log("Found better bind for: " + umaBone.name + " in slot: " + slot.slotName);
+						//			currentBone.umaTransform = umaBone;
+						//		}
+						//	}
 						}
 						else
 						{
@@ -142,11 +158,15 @@ namespace UMA
 				for (int i = 0; i < umaTPose.humanBoneInfo.Length; i++)
 				{
 					int hash = umaTPose.humanBoneInfo[i].boneHash;
-					if (hash != 0) SetRetainedBone(hash);
+					if (hash != 0)
+					{
+						SetRetainedBone(hash);
+					}
 				}
 			}
 
 			EnsureBoneHierarchy();
+
 			EndSkeletonUpdate();
 		}
 
@@ -165,12 +185,52 @@ namespace UMA
 		{
 			foreach (BoneData bone in boneDictionary.Values)
 			{
-				bone.rotation = bone.boneTransform.localRotation;
-				bone.position = bone.boneTransform.localPosition;
-				bone.scale = bone.boneTransform.localScale;
+				//bone.position = bone.boneTransform.localPosition;
+				//bone.rotation = bone.boneTransform.localRotation;
+				//bone.scale = bone.boneTransform.localScale;
+
+				bone.position = bone.dnaPosition;
+				bone.rotation = bone.dnaRotation;
+				bone.scale = bone.dnaScale;
+				if (bone.boneTransform != null)
+				{
+					bone.boneTransform.localPosition = bone.dnaPosition;
+					bone.boneTransform.localRotation = bone.dnaRotation;
+					bone.boneTransform.localScale = bone.dnaScale;
+				}
+
+				//bone.localToWorld = bone.boneTransform.localToWorldMatrix;
+				//bone.worldToLocal = bone.boneTransform.worldToLocalMatrix;
+
+				//if (bone.boneTransform != null)
+				if (skinningDictionary.ContainsKey(bone.umaTransform.hash))
+				{
+					bone.retainedHash = bone.umaTransform.hash;
+					bone.localToRetained = Matrix4x4.identity;
+				}
+				else
+				{
+					bone.retainedHash = 0;
+					bone.localToRetained = Matrix4x4.TRS(bone.position, bone.rotation, bone.scale);
+				}
 			}
 
-			// HACK need to fix things here???
+			foreach (BoneData bone in boneDictionary.Values)
+			{
+				if (bone.retainedHash == 0)
+				{
+					int parentHash = bone.umaTransform.parent;
+					BoneData parentBone;
+					while (boneDictionary.TryGetValue(parentHash, out parentBone))
+					{
+						bone.localToRetained = parentBone.localToRetained * bone.localToRetained;
+						bone.retainedHash = parentBone.retainedHash;
+						parentHash = parentBone.umaTransform.parent;
+
+						if (bone.retainedHash != 0) break;
+					}
+				}
+			}
 
 			updating = false;
 		}
@@ -197,10 +257,20 @@ namespace UMA
 		/// <param name="nameHash">Hash of bone name.</param>
 		public virtual void SetRetainedBone(int nameHash)
 		{
-			if (!skinningDictionary.ContainsKey(nameHash))
-			{
-				skinningDictionary.Add(nameHash, skinningDictionary.Count);
-			}
+			//BoneData bone;
+			//if (boneDictionary.TryGetValue(nameHash, out bone))
+			//{
+			//	if (!skinningDictionary.ContainsKey(nameHash))
+			//	{
+			//		skinningDictionary.Add(nameHash, skinningDictionary.Count);
+			//	}
+			//	if (bone.boneTransform == null)
+			//	{
+			//		bone.boneTransform = new GameObject(bone.umaTransform.name).transform;
+			//	}
+			//}
+			// HACK doesn't make sense for a floating bone to be retained
+			SetRetainedBoneHierachy(nameHash);
 		}
 
 		/// <summary>
@@ -209,16 +279,20 @@ namespace UMA
 		/// <param name="nameHash">Hash of bone name.</param>
 		public virtual void SetRetainedBoneHierachy(int nameHash)
 		{
-			if (!skinningDictionary.ContainsKey(nameHash))
+			BoneData bone;
+			if (boneDictionary.TryGetValue(nameHash, out bone))
 			{
-				skinningDictionary.Add(nameHash, skinningDictionary.Count);
-
-				BoneData bone = null;
-				boneDictionary.TryGetValue(nameHash, out bone);
-				if (bone != null)
+				if (!skinningDictionary.ContainsKey(nameHash))
 				{
-					SetRetainedBoneHierachy(bone.umaTransform.parent);
+					skinningDictionary.Add(nameHash, skinningDictionary.Count);
 				}
+
+				if (bone.boneTransform == null)
+				{
+					bone.boneTransform = new GameObject(bone.umaTransform.name).transform;
+				}
+
+				SetRetainedBoneHierachy(bone.umaTransform.parent);
 			}
 		}
 
@@ -228,11 +302,24 @@ namespace UMA
 		/// <param name="nameHash">Hash of bone name.</param>
 		public virtual void ClearRetainedBone(int nameHash)
 		{
-			if (skinningDictionary.ContainsKey(nameHash))
-			{
-				skinningDictionary.Remove(nameHash);
-				skinningValid = false;
-			}
+			//if (skinningDictionary.ContainsKey(nameHash))
+			//{
+			//	skinningDictionary.Remove(nameHash);
+			//	skinningValid = false;
+			//}
+
+			//BoneData bone;
+			//if (boneDictionary.TryGetValue(nameHash, out bone))
+			//{
+			//	if (bone.boneTransform != null)
+			//	{
+			//		UMAUtils.DestroySceneObject(bone.boneTransform.gameObject);
+			//		bone.boneTransform = null;
+			//	}
+			//}
+
+			// HACK doesn't make sense for a child bones to be retained
+			ClearRetainedBoneHierachy(nameHash);
 		}
 
 		/// <summary>
@@ -246,11 +333,18 @@ namespace UMA
 				skinningDictionary.Remove(nameHash);
 				skinningValid = false;
 
-				foreach (BoneData bone in boneDictionary.Values)
+				BoneData bone;
+				if (boneDictionary.TryGetValue(nameHash, out bone) && (bone.boneTransform != null))
 				{
-					if (bone.umaTransform.parent == nameHash)
+					UMAUtils.DestroySceneObject(bone.boneTransform.gameObject);
+					bone.boneTransform = null;
+				}
+
+				foreach (BoneData child in boneDictionary.Values)
+				{
+					if (child.umaTransform.parent == nameHash)
 					{
-						ClearRetainedBoneHierachy(bone.umaTransform.hash);
+						ClearRetainedBoneHierachy(child.umaTransform.hash);
 					}
 				}
 			}
@@ -285,7 +379,7 @@ namespace UMA
 				//{
 				//}
 
-				if (boneDictionary.TryGetValue(boneInfo[i].boneHash, out bone))
+				if (boneDictionary.TryGetValue(boneInfo[i].boneHash, out bone) && (bone.boneTransform != null))
 				{
 					Transform boneTransform = bone.boneTransform;
 					Transform parentTransform;
@@ -327,6 +421,7 @@ namespace UMA
 							}
 							else
 							{
+								// HACK - not safe!
 								if (boneDictionary.TryGetValue(parentHash, out parentBone))
 								{
 									parentTransform = parentBone.boneTransform;
@@ -390,22 +485,32 @@ namespace UMA
 		{
 			if (!skinningValid) RepairSkinningDictionary();
 
-			int hash = nameHash;
-			while (!skinningDictionary.ContainsKey(hash))
-			{
-				BoneData bone;
-				if (boneDictionary.TryGetValue(hash, out bone))
-				{
-					hash = bone.umaTransform.parent;
-				}
-				else
-				{
-					Debug.LogError("Couldn't find bone in skeleton!");
-					return nameHash;
-				}
-			}
+			BoneData bone;
 
-			return hash;
+			//int hash = nameHash;
+			//while (!skinningDictionary.ContainsKey(hash))
+			//{
+			//	if (boneDictionary.TryGetValue(hash, out bone))
+			//	{
+			//		hash = bone.umaTransform.parent;
+			//	}
+			//	else
+			//	{
+			//		Debug.LogError("Couldn't find bone in skeleton!");
+			//		return nameHash;
+			//	}
+			//}
+			//return hash;
+
+			if (boneDictionary.TryGetValue(nameHash, out bone))
+			{
+				return bone.retainedHash;
+			}
+			else
+			{
+				Debug.LogError("Couldn't find bone in skeleton!");
+				return 0;
+			}
 		}
 
 		/// <summary>
@@ -437,11 +542,11 @@ namespace UMA
 			BoneData bone;
 			if (boneDictionary.TryGetValue(nameHash, out bone))
 			{
-				if (bone.umaTransform.bindToBone == Matrix4x4.zero)
-				{
-					Debug.LogWarning("Skinning with bad data on: " + bone.umaTransform.name);
-					return Matrix4x4.identity;
-				}
+				//if (bone.umaTransform.bindToBone == Matrix4x4.zero)
+				//{
+				//	Debug.LogWarning("Skinning with bad data on: " + bone.umaTransform.name);
+				//	return Matrix4x4.identity;
+				//}
 				return bone.umaTransform.bindToBone;
 			}
 
@@ -457,30 +562,23 @@ namespace UMA
 		/// <returns>Matrix from original to target</returns>
 		public virtual Matrix4x4 GetSkinningBoneToTarget(UMATransform bone, int targetHash)
 		{
+			BoneData oldBone;
 			BoneData newBone;
-			if (boneDictionary.TryGetValue(targetHash, out newBone))
+
+			if (boneDictionary.TryGetValue(bone.hash, out oldBone) && boneDictionary.TryGetValue(targetHash, out newBone))
 			{
-				return newBone.umaTransform.boneToRoot.inverse * bone.boneToRoot;
+				Matrix4x4 matrix = oldBone.umaTransform.boneToRoot.inverse * bone.boneToRoot;
+
+				if (bone.hash == targetHash) return matrix;
+
+				//return newBone.boneTransform.worldToLocalMatrix * oldBone.boneTransform.localToWorldMatrix * matrix;
+				return oldBone.localToRetained * matrix;
 			}
 			else
 			{
-				Debug.LogError("Couldn't find skinning target!");
+				Debug.LogError("Couldn't find skinning bone!");
 				return Matrix4x4.identity;
 			}
-			//while (hash != targetHash)
-			//{
-			//	if (boneDictionary.TryGetValue(hash, out newBone))
-			//	{
-			//		Transform trans = newBone.boneTransform;
-			//		matrix = Matrix4x4.TRS(trans.localPosition, trans.localRotation, trans.localScale).inverse * matrix;
-			//		hash = newBone.umaTransform.parent;
-			//	}
-			//	else
-			//	{
-			//		Debug.LogError("Could not find bone in skeleton!");
-			//		return Matrix4x4.identity;
-			//	}
-			//}
 		}
 
 		/// <summary>
@@ -518,7 +616,7 @@ namespace UMA
 				foreach (KeyValuePair<int, int> skinning in skinningDictionary)
 				{
 					BoneData bone;
-					if (boneDictionary.TryGetValue(skinning.Key, out bone))
+					if (boneDictionary.TryGetValue(skinning.Key, out bone) && (bone.boneTransform != null))
 					{
 						skinningBinds[skinning.Value] = bone.umaTransform.bindToBone;
 						skinningTransforms[skinning.Value] = bone.boneTransform;
@@ -580,7 +678,12 @@ namespace UMA
 				boneDictionary.Add(hash, newBone);
 			}
 			else
+			{
 				Debug.LogError("AddBone: " + transform.name + " already exists in the dictionary!");
+			}
+
+			// Any bone with a transform will default to retained 
+			SetRetainedBone(hash);
 		}
 
 		/// <summary>
@@ -589,12 +692,12 @@ namespace UMA
 		/// <param name="umaTransform">UMA Transform.</param>
 		protected virtual void AddBone(UMATransform umaTransform)
 		{
-			GameObject go = new GameObject(umaTransform.name);
 			BoneData newBone = new BoneData()
 			{
-				boneTransform = go.transform,
-				umaTransform = umaTransform.Duplicate(),
+				umaTransform = umaTransform.Duplicate()
 			};
+			// HACK
+			//newBone.boneTransform = new GameObject(umaTransform.name).transform;
 
 			if (!boneDictionary.ContainsKey(umaTransform.hash))
 			{
@@ -631,15 +734,17 @@ namespace UMA
 		/// <param name="boneTransform">Bone transform.</param>
 		public virtual bool TryGetBoneTransform(int nameHash, out Transform boneTransform)
 		{
-			BoneData res;
-			if (boneDictionary.TryGetValue(nameHash, out res))
+			BoneData bone;
+			if (boneDictionary.TryGetValue(nameHash, out bone))
 			{
-				boneTransform = res.boneTransform;
-				return true;
+				boneTransform = bone.boneTransform;
+			}
+			else
+			{
+				boneTransform = null;
 			}
 
-			boneTransform = null;
-			return false;
+			return (boneTransform != null);
 		}
 
 		/// <summary>
@@ -649,11 +754,12 @@ namespace UMA
 		/// <param name="nameHash">Name hash.</param>
 		public virtual Transform GetBoneTransform(int nameHash)
 		{
-			BoneData res;
-			if (boneDictionary.TryGetValue(nameHash, out res))
+			BoneData bone;
+			if (boneDictionary.TryGetValue(nameHash, out bone))
 			{
-				return res.boneTransform;
+				return bone.boneTransform;
 			}
+
 			return null;
 		}
 
@@ -664,11 +770,13 @@ namespace UMA
 		/// <param name="nameHash">Name hash.</param>
 		public virtual GameObject GetBoneGameObject(int nameHash)
 		{
-			BoneData res;
-			if (boneDictionary.TryGetValue(nameHash, out res))
+			BoneData bone;
+			if (boneDictionary.TryGetValue(nameHash, out bone))
 			{
-				return res.boneTransform.gameObject;
+				if (bone.boneTransform != null)
+					return bone.boneTransform.gameObject;
 			}
+
 			return null;
 		}
 
@@ -679,16 +787,18 @@ namespace UMA
 				yield return hash;
 			}
 		}
+		// HACK
 		//DynamicUMADna:: a method to return a string of bonenames for use in editor intefaces
 		private string[] GetBoneNames()
 		{
 			string[] boneNames = new string[boneDictionary.Count];
 			int index = 0;
-			foreach (KeyValuePair<int, BoneData> kp in boneDictionary)
+
+			foreach (BoneData bone in boneDictionary.Values)
 			{
-				boneNames[index] = kp.Value.boneTransform.gameObject.name;
-				index++;
+				boneNames[index++] = bone.umaTransform.name;
 			}
+
 			return boneNames;
 		}
 
@@ -697,9 +807,13 @@ namespace UMA
 			BoneData db;
 			if (boneDictionary.TryGetValue(nameHash, out db))
 			{
-				db.boneTransform.localPosition = position;
-				db.boneTransform.localRotation = rotation;
-				db.boneTransform.localScale = scale;
+				//db.boneTransform.localPosition = position;
+				//db.boneTransform.localRotation = rotation;
+				//db.boneTransform.localScale = scale;
+
+				db.dnaPosition = position;
+				db.dnaRotation = rotation;
+				db.dnaScale = scale;
 			}
 			else
 			{
@@ -718,7 +832,9 @@ namespace UMA
 			BoneData db;
 			if (boneDictionary.TryGetValue(nameHash, out db))
 			{
-				db.boneTransform.localPosition = position;
+				//db.boneTransform.localPosition = position;
+
+				db.dnaPosition = position;
 			}
 		}
 
@@ -733,7 +849,9 @@ namespace UMA
 			BoneData db;
 			if (boneDictionary.TryGetValue(nameHash, out db))
 			{
-				db.boneTransform.localPosition = db.boneTransform.localPosition + delta;
+				//db.boneTransform.localPosition = db.boneTransform.localPosition + delta;
+
+				db.dnaPosition += delta;
 			}
 		}
 
@@ -748,7 +866,9 @@ namespace UMA
 			BoneData db;
 			if (boneDictionary.TryGetValue(nameHash, out db))
 			{
-				db.boneTransform.localScale = scale;
+				//db.boneTransform.localScale = scale;
+
+				db.dnaScale = scale;
 			}
 		}
 
@@ -763,9 +883,11 @@ namespace UMA
 			BoneData db;
 			if (boneDictionary.TryGetValue(nameHash, out db))
 			{
-				var fullScale = scale;
-				fullScale.Scale(db.boneTransform.localScale);
-				db.boneTransform.localScale = fullScale;
+				//var fullScale = scale;
+				//fullScale.Scale(db.boneTransform.localScale);
+				//db.boneTransform.localScale = fullScale;
+
+				db.dnaScale.Scale(db.dnaScale);
 			}
 		}
 
@@ -780,7 +902,9 @@ namespace UMA
 			BoneData db;
 			if (boneDictionary.TryGetValue(nameHash, out db))
 			{
-				db.boneTransform.localRotation = rotation;
+				//db.boneTransform.localRotation = rotation;
+
+				db.dnaRotation = rotation;
 			}
 		}
 
@@ -796,8 +920,11 @@ namespace UMA
 			BoneData db;
 			if (boneDictionary.TryGetValue(nameHash, out db))
 			{
-				Quaternion fullRotation = db.boneTransform.localRotation * rotation;
-				db.boneTransform.localRotation = Quaternion.Slerp(db.boneTransform.localRotation, fullRotation, weight);
+				//Quaternion fullRotation = db.boneTransform.localRotation * rotation;
+				//db.boneTransform.localRotation = Quaternion.Slerp(db.boneTransform.localRotation, fullRotation, weight);
+
+				Quaternion fullRotation = db.dnaRotation * rotation;
+				db.dnaRotation = Quaternion.Slerp(db.dnaRotation, fullRotation, weight);
 			}
 		}
 
@@ -815,9 +942,13 @@ namespace UMA
 			BoneData db;
 			if (boneDictionary.TryGetValue(nameHash, out db))
 			{
-				db.boneTransform.localPosition = Vector3.Lerp(db.boneTransform.localPosition, position, weight);
-				db.boneTransform.localRotation = Quaternion.Slerp(db.boneTransform.localRotation, db.boneTransform.localRotation, weight);
-				db.boneTransform.localScale = Vector3.Lerp(db.boneTransform.localScale, scale, weight);
+				//db.boneTransform.localPosition = Vector3.Lerp(db.boneTransform.localPosition, position, weight);
+				//db.boneTransform.localRotation = Quaternion.Slerp(db.boneTransform.localRotation, rotation, weight);
+				//db.boneTransform.localScale = Vector3.Lerp(db.boneTransform.localScale, scale, weight);
+
+				db.dnaPosition = Vector3.Lerp(db.dnaPosition, position, weight);
+				db.dnaRotation = Quaternion.Slerp(db.dnaRotation, rotation, weight);
+				db.dnaScale = Vector3.Lerp(db.dnaScale, scale, weight);
 			}
 		}
 
@@ -835,33 +966,54 @@ namespace UMA
 			BoneData db;
 			if (boneDictionary.TryGetValue(nameHash, out db))
 			{
-				db.boneTransform.localPosition += position * weight;
+				//db.boneTransform.localPosition += position * weight;
+				//if (rotation != Quaternion.identity)
+				//{
+				//	Quaternion fullRotation = db.boneTransform.localRotation * rotation;
+				//	db.boneTransform.localRotation = Quaternion.Slerp(db.boneTransform.localRotation, fullRotation, weight);
+				//}
+				//if (scale != Vector3.one)
+				//{
+				//	var fullScale = scale;
+				//	fullScale.Scale(db.boneTransform.localScale);
+				//	db.boneTransform.localScale = Vector3.Lerp(db.boneTransform.localScale, fullScale, weight);
+				//}
+
+				db.dnaPosition += position * weight;
 				if (rotation != Quaternion.identity)
 				{
-					Quaternion fullRotation = db.boneTransform.localRotation * rotation;
-					db.boneTransform.localRotation = Quaternion.Slerp(db.boneTransform.localRotation, fullRotation, weight);
+					Quaternion fullRotation = db.dnaRotation * rotation;
+					db.dnaRotation = Quaternion.Slerp(db.dnaRotation, fullRotation, weight);
 				}
 				if (scale != Vector3.one)
 				{
-					var fullScale = scale;
-					fullScale.Scale(db.boneTransform.localScale);
-					db.boneTransform.localScale = Vector3.Lerp(db.boneTransform.localScale, fullScale, weight);
+					Vector3 fullScale = scale;
+					fullScale.Scale(db.dnaScale);
+					db.dnaScale = Vector3.Lerp(db.dnaScale, fullScale, weight);
 				}
 			}
 		}
 
 		/// <summary>
-		/// Reset the specified transform to the pre-dna state.
+		/// Reset the specified transform to the pre-DNA state.
 		/// </summary>
 		/// <param name="nameHash">Name hash.</param>
 		public virtual bool Reset(int nameHash)
 		{
 			BoneData db;
-			if (boneDictionary.TryGetValue(nameHash, out db) && (db.boneTransform != null))
+			if (boneDictionary.TryGetValue(nameHash, out db))
 			{
-				db.boneTransform.localPosition = db.umaTransform.position;
-				db.boneTransform.localRotation = db.umaTransform.rotation;
-				db.boneTransform.localScale = db.umaTransform.scale;
+				// HACK ???
+				if (db.boneTransform != null)
+				{
+					db.boneTransform.localPosition = db.umaTransform.position;
+					db.boneTransform.localRotation = db.umaTransform.rotation;
+					db.boneTransform.localScale = db.umaTransform.scale;
+				}
+
+				db.dnaPosition = db.umaTransform.position;
+				db.dnaRotation = db.umaTransform.rotation;
+				db.dnaScale = db.umaTransform.scale;
 
 				return true;
 			}
@@ -870,23 +1022,28 @@ namespace UMA
 		}
 
 		/// <summary>
-		/// Reset all transforms to the pre-dna state.
+		/// Reset all transforms to the pre-DNA state.
 		/// </summary>
 		public virtual void ResetAll()
 		{
 			foreach (BoneData db in boneDictionary.Values)
 			{
+				// HACK ???
 				if (db.boneTransform != null)
 				{
 					db.boneTransform.localPosition = db.umaTransform.position;
 					db.boneTransform.localRotation = db.umaTransform.rotation;
 					db.boneTransform.localScale = db.umaTransform.scale;
 				}
+
+				db.dnaPosition = db.umaTransform.position;
+				db.dnaRotation = db.umaTransform.rotation;
+				db.dnaScale = db.umaTransform.scale;
 			}
 		}
 
 		/// <summary>
-		/// Restore the specified transform to the post-dna state.
+		/// Restore the specified transform to the post-DNA state.
 		/// </summary>
 		/// <param name="nameHash">Name hash.</param>
 		public virtual bool Restore(int nameHash)
@@ -894,9 +1051,13 @@ namespace UMA
 			BoneData db;
 			if (boneDictionary.TryGetValue(nameHash, out db) && (db.boneTransform != null))
 			{
-				db.boneTransform.localPosition = db.position;
-				db.boneTransform.localRotation = db.rotation;
-				db.boneTransform.localScale = db.scale;
+				//db.boneTransform.localPosition = db.position;
+				//db.boneTransform.localRotation = db.rotation;
+				//db.boneTransform.localScale = db.scale;
+
+				db.dnaPosition = db.position;
+				db.dnaRotation = db.rotation;
+				db.dnaScale = db.scale;
 
 				return true;
 			}
@@ -905,7 +1066,7 @@ namespace UMA
 		}
 
 		/// <summary>
-		/// Restore all transforms to the post-dna state.
+		/// Restore all transforms to the post-DNA state.
 		/// </summary>
 		public virtual void RestoreAll()
 		{
@@ -913,13 +1074,19 @@ namespace UMA
 			{
 				if (db.boneTransform != null)
 				{
-					db.boneTransform.localPosition = db.position;
-					db.boneTransform.localRotation = db.rotation;
-					db.boneTransform.localScale = db.scale;
+					//db.boneTransform.localPosition = db.position;
+					//db.boneTransform.localRotation = db.rotation;
+					//db.boneTransform.localScale = db.scale;
+
+					db.dnaPosition = db.position;
+					db.dnaRotation = db.rotation;
+					db.dnaScale = db.scale;
 				}
 			}
 		}
 
+		// HACK
+		/*
 		/// <summary>
 		/// Gets the position of a bone.
 		/// </summary>
@@ -930,25 +1097,8 @@ namespace UMA
 			BoneData db;
 			if (boneDictionary.TryGetValue(nameHash, out db))
 			{
-				return db.boneTransform.localPosition;
-			}
-			else
-			{
-				throw new Exception("Bone not found.");
-			}
-		}
-
-		/// <summary>
-		/// Gets the scale of a bone.
-		/// </summary>
-		/// <returns>The scale.</returns>
-		/// <param name="nameHash">Name hash.</param>
-		public virtual Vector3 GetScale(int nameHash)
-		{
-			BoneData db;
-			if (boneDictionary.TryGetValue(nameHash, out db))
-			{
-				return db.boneTransform.localScale;
+				//return db.boneTransform.localPosition;
+				return db.dnaPosition;
 			}
 			else
 			{
@@ -966,7 +1116,8 @@ namespace UMA
 			BoneData db;
 			if (boneDictionary.TryGetValue(nameHash, out db))
 			{
-				return db.boneTransform.localRotation;
+				//return db.boneTransform.localRotation;
+				return db.dnaRotation;
 			}
 			else
 			{
@@ -974,25 +1125,25 @@ namespace UMA
 			}
 		}
 
-		public virtual Transform[] HashesToTransforms(int[] boneNameHashes)
+		/// <summary>
+		/// Gets the scale of a bone.
+		/// </summary>
+		/// <returns>The scale.</returns>
+		/// <param name="nameHash">Name hash.</param>
+		public virtual Vector3 GetScale(int nameHash)
 		{
-			Transform[] res = new Transform[boneNameHashes.Length];
-			for (int i = 0; i < boneNameHashes.Length; i++)
+			BoneData db;
+			if (boneDictionary.TryGetValue(nameHash, out db))
 			{
-				res[i] = boneDictionary[boneNameHashes[i]].boneTransform;
+				//return db.boneTransform.localScale;
+				return db.dnaScale;
 			}
-			return res;
-		}
-
-		public virtual Transform[] HashesToTransforms(List<int> boneNameHashes)
-		{
-			Transform[] res = new Transform[boneNameHashes.Count];
-			for (int i = 0; i < boneNameHashes.Count; i++)
+			else
 			{
-				res[i] = boneDictionary[boneNameHashes[i]].boneTransform;
+				throw new Exception("Bone not found.");
 			}
-			return res;
 		}
+		*/
 
 		/// <summary>
 		/// Ensures the bone exists in the skeleton.
@@ -1013,21 +1164,38 @@ namespace UMA
 		{
 			foreach (BoneData entry in boneDictionary.Values)
 			{
-				entry.boneTransform.localPosition = entry.umaTransform.position;
-				entry.boneTransform.localRotation = entry.umaTransform.rotation;
-				entry.boneTransform.localScale = entry.umaTransform.scale;
-				if (boneDictionary.ContainsKey(entry.umaTransform.parent))
+				if (boneDictionary.ContainsKey(entry.umaTransform.parent) && (entry.boneTransform != null))
 				{
 					entry.boneTransform.parent = boneDictionary[entry.umaTransform.parent].boneTransform;
 				}
-//				else
-//					Debug.LogError("EnsureBoneHierarchy: " + entry.umaTransform.name + " parent not found in dictionary!");
 			}
+
+			ResetAll();
 		}
 
-		public virtual Quaternion GetTPoseCorrectedRotation(int nameHash, Quaternion tPoseRotation)
-		{
-			return boneDictionary[nameHash].boneTransform.localRotation;
-		}
+		//public virtual Transform[] HashesToTransforms(int[] boneNameHashes)
+		//{
+		//	Transform[] res = new Transform[boneNameHashes.Length];
+		//	for (int i = 0; i < boneNameHashes.Length; i++)
+		//	{
+		//		res[i] = boneDictionary[boneNameHashes[i]].boneTransform;
+		//	}
+		//	return res;
+		//}
+
+		//public virtual Transform[] HashesToTransforms(List<int> boneNameHashes)
+		//{
+		//	Transform[] res = new Transform[boneNameHashes.Count];
+		//	for (int i = 0; i < boneNameHashes.Count; i++)
+		//	{
+		//		res[i] = boneDictionary[boneNameHashes[i]].boneTransform;
+		//	}
+		//	return res;
+		//}
+
+		//public virtual Quaternion GetTPoseCorrectedRotation(int nameHash, Quaternion tPoseRotation)
+		//{
+		//	return boneDictionary[nameHash].boneTransform.localRotation;
+		//}
 	}
 }

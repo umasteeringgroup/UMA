@@ -198,7 +198,8 @@ namespace UMA
 			{
 				case RaceDataAsset.UMATarget.Humanoid:
 					umaTPose.DeSerialize();
-					animator.avatar = CreateAvatar(umaData, umaTPose);
+					//animator.avatar = CreateAvatar(umaData, umaTPose);
+					animator.avatar = umaData.skeleton.CreateAvatar(umaTPose, umaData.gameObject);
 					break;
 				case RaceDataAsset.UMATarget.Generic:
 					animator.avatar = CreateGenericAvatar(umaData);
@@ -241,7 +242,7 @@ namespace UMA
 		{
 			umaTPose.DeSerialize();
 			HumanDescription description = CreateHumanDescription(umaData, umaTPose);
-			//DebugLogHumanAvatar(umaData.gameObject, description);
+			DebugLogHumanAvatar(umaData.gameObject, description);
 			Avatar res = AvatarBuilder.BuildHumanAvatar(umaData.gameObject, description);
 			return res;
 		}
@@ -276,20 +277,13 @@ namespace UMA
 			res.skeleton = umaTPose.boneInfo;
 			res.human = umaTPose.humanInfo;
 
-			SkeletonModifier(umaData, ref res.skeleton, res.human);
+			SkeletonModifier(umaData, ref res.skeleton);
 			return res;
 		}
 
 #pragma warning disable 618
-		private void ModifySkeletonBone(ref SkeletonBone bone, Transform trans)
-		{
-			bone.position = trans.localPosition;
-			bone.rotation = trans.localRotation;
-			bone.scale = trans.localScale;
-		}
-
 		private static List<SkeletonBone> newBones = new List<SkeletonBone>();
-		private static void SkeletonModifier(UMAData umaData, ref SkeletonBone[] bones, HumanBone[] human)
+		private static void SkeletonModifier(UMAData umaData, ref SkeletonBone[] bones)
 		{
 			int missingBoneCount = 0;
 			newBones.Clear();
@@ -328,8 +322,9 @@ namespace UMA
 				if (boneGO != null)
 				{
 					skeletonBone.position = boneGO.transform.localPosition;
+					skeletonBone.rotation = boneGO.transform.localRotation;
+					//skeletonBone.rotation = umaData.skeleton.GetTPoseCorrectedRotation(boneHash, skeletonBone.rotation);
 					skeletonBone.scale = boneGO.transform.localScale;
-					skeletonBone.rotation = umaData.skeleton.GetTPoseCorrectedRotation(boneHash, skeletonBone.rotation);
 					newBones.Add(skeletonBone);
 				}
 				else

@@ -41,6 +41,11 @@ namespace UMA
 		public int parent;
 
 		// HACK - I'm not sure about these
+		// boneToRoot isn't used, ask Joen
+		// bindToBone potentially needs to be valid
+		// up to the "first level" of retained
+		// bones, but currently is only on 
+		// actual skinned bones - update the data
 		public bool retained;
 		public Matrix4x4 bindToBone;
 		public Matrix4x4 boneToRoot;
@@ -300,7 +305,7 @@ namespace UMA
 		/// Does this UMAMeshData own the shared buffers?
 		/// </summary>
 		/// <returns><c>true</c>, if this is the owner of the shared buffers.</returns>
-		private bool OwnSharedBuffers()
+		public bool OwnSharedBuffers()
 		{
 			return (this == bufferLockOwner);
 		}
@@ -516,7 +521,7 @@ namespace UMA
 			clothSkinning = cloth.coefficients;
 			clothSkinningSerialized = new Vector2[clothSkinning.Length];
 			for (int i = 0; i < clothSkinning.Length; i++)
-				SkinnedMeshCombiner.ConvertData(ref clothSkinning[i], ref clothSkinningSerialized[i]);
+				SkinnedMeshJobCombiner.ConvertData(ref clothSkinning[i], ref clothSkinningSerialized[i]);
 		}
 
 		/// <summary>
@@ -526,7 +531,6 @@ namespace UMA
 		/// <param name="bones">Transforms.</param>
 		protected void UpdateBones(Transform rootBone, Transform[] bones)
 		{
-// HACK - no need to sort bones if the combiner doesn't merge lists
 			rootBone = FindRoot(rootBone, bones);
 			
 			var requiredBones = new Dictionary<Transform, UMATransform>();
@@ -548,6 +552,7 @@ namespace UMA
 				}
 			}
 
+			// HACK - no need to sort bones if the combiner doesn't merge lists
 			var sortedBones = new List<UMATransform>(requiredBones.Values);
 			sortedBones.Sort(UMATransform.TransformComparer);
 			umaBones = sortedBones.ToArray();
@@ -602,10 +607,13 @@ namespace UMA
 
 			Mesh mesh = renderer.sharedMesh;
 #if UNITY_EDITOR
+			// This was eleiminated for some reason
+			/*
 			if (UnityEditor.PrefabUtility.IsComponentAddedToPrefabInstance(renderer))
 			{
 				Debug.LogError("Cannot apply changes to prefab!");
 			}
+			*/
 			if (UnityEditor.AssetDatabase.IsSubAsset(mesh))
 			{
 				Debug.LogError("Cannot apply changes to asset mesh!");
@@ -713,7 +721,7 @@ namespace UMA
 		/// Applies the data to a Unity mesh.
 		/// </summary>
 		/// <param name="renderer">Target renderer.</param>
-		// HACK this unsed fun ction keeps up from removing the unused Unity bones array
+		// HACK this unused function keeps us from removing the unused Unity bones array
 		/*
 		public void CopyDataToUnityMesh(SkinnedMeshRenderer renderer)
 		{

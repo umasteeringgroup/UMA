@@ -69,7 +69,7 @@ namespace UMA
 			// later loads a valid scene (and everything breaks)
 			Instance = this;
 
-			#if UNITY_EDITOR
+//#if UNITY_EDITOR
 //			if (raceDictionary == null)
 			{
 				raceDictionary = new RaceAssetDictionary();
@@ -134,7 +134,7 @@ namespace UMA
 			{
 				occlusionDictionary = new OcclusionAssetDictionary();
 			}
-			#endif
+//#endif
 
 			UMAGlobal.Context.AddContext(this, 0);
 		}

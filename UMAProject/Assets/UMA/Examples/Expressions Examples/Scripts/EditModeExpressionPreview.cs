@@ -36,7 +36,8 @@ namespace UMA.PoseTools
 
 			if (skeleton == null)
 			{
-				skeleton = new UMASkeleton(umaRenderer);
+				skeleton = new UMASkeleton();
+				skeleton.Initialize(umaRenderer);
 			}
 
 			expressionSet.RestoreBones(skeleton);

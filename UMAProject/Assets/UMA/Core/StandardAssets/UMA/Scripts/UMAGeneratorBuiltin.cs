@@ -170,7 +170,7 @@ namespace UMA
 				activeGeneratorCoroutine = new UMAGeneratorCoroutine();
 				activeGeneratorCoroutine.Prepare(this, umaData, textureProcessCoroutine, true, InitialScaleFactor);
 
-				while (!activeGeneratorCoroutine.Work()) ;
+				while (!activeGeneratorCoroutine.Work()) { }
 
 				activeGeneratorCoroutine = null;
 				TextureChanged++;
@@ -221,7 +221,9 @@ namespace UMA
 					return false;
 			}
 
-			if (umaData.isMeshDirty)
+			// HACK
+			if ((umaData.isMeshDirty) || (umaData.isShapeDirty))
+				//if (umaData.isMeshDirty)
 			{
 				UpdateUMAMesh(umaData.isAtlasDirty);
 				umaData.isAtlasDirty = false;
@@ -327,10 +329,11 @@ namespace UMA
 		{
 			if (umaData)
 			{
-				umaData.skeleton.ResetAll();
+				// HACK, updating DNA in UpdateUMAMesh
+				//umaData.skeleton.ResetAll();
 				// Put the skeleton into TPose so rotations will be valid for generating avatar
-				umaData.GotoTPose();
-				umaData.ApplyDNA();
+				//umaData.GotoTPose();
+				//umaData.ApplyDNA();
 				umaData.FireDNAAppliedEvents();
 				umaData.skeleton.EndSkeletonUpdate();
 				UpdateAvatar(umaData);

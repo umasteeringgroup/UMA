@@ -1315,12 +1315,12 @@ namespace UMA
 		{
 			if ((umaRecipe.raceData != null) && (umaRecipe.raceData.TPose != null))
 			{
-				var tpose = umaRecipe.raceData.TPose;
+				UmaTPose tpose = umaRecipe.raceData.TPose;
 				tpose.DeSerialize();
 				for (int i = 0; i < tpose.boneInfo.Length; i++)
 				{
-					var bone = tpose.boneInfo[i];
-					var hash = UMAUtils.StringToHash(bone.name);
+					SkeletonBone bone = tpose.boneInfo[i];
+					int hash = UMAUtils.StringToHash(bone.name);
 					if (!skeleton.HasBone(hash)) continue;
 					skeleton.Set(hash, bone.position, bone.scale, bone.rotation);
 				}

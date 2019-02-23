@@ -157,7 +157,7 @@ namespace UMA
 				{
 					if (map[i] < 0) continue;
 
-					//Vector3 vertexSrc = vertSource[i];
+					//Vector3 vertexSrc = source[i];
 					float4 vertexSrc = new float4(source[i], 1f);
 					BoneWeight boneSrc = weights[i];
 
@@ -170,16 +170,16 @@ namespace UMA
 					// bindRemaps[] = dictionary lookup from current slot bone index to final bone index
 					// bindTransforms[] = skinningBind.inv * skeleton bone to bone Matrix * slot bind
 
-					// Rebind vertex to new bones
-
-					//float4 vertex = math.mul(vertexSrc, bindMatrices[boneSrc.boneIndex0]);
-					//dest[index++] = vertex.xyz;
+					// ORDER MATTERS!
+					// Unity.Mathematics includes both
+					// mul(float4, float4x4) and mul(float4x4, float4)
+					// one does what we want, the other is the transpose
 
 					float4 vertex = float4.zero;
-					vertex += math.mul(vertexSrc, bindMatrices[boneSrc.boneIndex0]) * boneSrc.weight0;
-					vertex += math.mul(vertexSrc, bindMatrices[boneSrc.boneIndex1]) * boneSrc.weight1;
-					vertex += math.mul(vertexSrc, bindMatrices[boneSrc.boneIndex2]) * boneSrc.weight2;
-					vertex += math.mul(vertexSrc, bindMatrices[boneSrc.boneIndex3]) * boneSrc.weight3;
+					vertex += math.mul(bindMatrices[boneSrc.boneIndex0], vertexSrc) * boneSrc.weight0;
+					vertex += math.mul(bindMatrices[boneSrc.boneIndex1], vertexSrc) * boneSrc.weight1;
+					vertex += math.mul(bindMatrices[boneSrc.boneIndex2], vertexSrc) * boneSrc.weight2;
+					vertex += math.mul(bindMatrices[boneSrc.boneIndex3], vertexSrc) * boneSrc.weight3;
 					dest[index++] = vertex.xyz;
 
 					//float4x4 rebind =
@@ -187,7 +187,7 @@ namespace UMA
 					//	(bindMatrices[boneSrc.boneIndex1] * boneSrc.weight1) +
 					//	(bindMatrices[boneSrc.boneIndex2] * boneSrc.weight2) +
 					//	(bindMatrices[boneSrc.boneIndex3] * boneSrc.weight3);
-					//float4 vertex = math.mul(vertexSrc, rebind);
+					//float4 vertex = math.mul(rebind, vertexSrc);
 					//dest[index++] = vertex.xyz;
 
 					//Vector3 vertex = Vector3.zero;
@@ -195,6 +195,13 @@ namespace UMA
 					//vertex += bindMatrices[boneSrc.boneIndex1].MultiplyPoint3x4(vertexSrc) * boneSrc.weight1;
 					//vertex += bindMatrices[boneSrc.boneIndex2].MultiplyPoint3x4(vertexSrc) * boneSrc.weight2;
 					//vertex += bindMatrices[boneSrc.boneIndex3].MultiplyPoint3x4(vertexSrc) * boneSrc.weight3;
+					//dest[index++] = vertex;
+
+					//Vector3 vertex = Vector3.zero;
+					//vertex += bindMatrices[boneSrc.boneIndex0].MultiplyPoint(vertexSrc) * boneSrc.weight0;
+					//vertex += bindMatrices[boneSrc.boneIndex1].MultiplyPoint(vertexSrc) * boneSrc.weight1;
+					//vertex += bindMatrices[boneSrc.boneIndex2].MultiplyPoint(vertexSrc) * boneSrc.weight2;
+					//vertex += bindMatrices[boneSrc.boneIndex3].MultiplyPoint(vertexSrc) * boneSrc.weight3;
 					//dest[index++] = vertex;
 				}
 			}
@@ -367,12 +374,12 @@ namespace UMA
 					UMATransform bone = source.meshData.umaBones[i];
 					int retargetHash = skeleton.GetSkinningTarget(bone.hash);
 
-					Transform targetT = skeleton.GetBoneTransform(retargetHash);
-					Debug.Log("Retargetting: " + bone.name + " --> " + targetT.name);
+					//Transform targetT = skeleton.GetBoneTransform(retargetHash);
+					//Debug.Log("Retargetting: " + bone.name + " --> " + targetT.name);
 
 					rebindIndices[i] = skeleton.GetSkinningIndex(retargetHash);
 					Matrix4x4 retargetMatrix = skeleton.GetSkinningBoneToTarget(bone, retargetHash);
-					rebindMatrices[i] = skeleton.GetSkinningBindToBone(retargetHash).inverse * retargetMatrix * bone.bindToBone;
+					rebindMatrices[i] = (skeleton.GetSkinningBindToBone(retargetHash).inverse) * retargetMatrix * bone.bindToBone;
 				}
 
 				destIndex = vertexIndex;
