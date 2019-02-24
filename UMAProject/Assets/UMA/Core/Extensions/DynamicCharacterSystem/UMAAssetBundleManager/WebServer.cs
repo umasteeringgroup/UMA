@@ -70,8 +70,8 @@ namespace UMA.AssetBundles
             {
                 if (context.Request.RawUrl == "/")
                 {
-                    if (Debug.isDebugBuild)
-                        Debug.Log("[WebServer] context.Request.RawUrl");
+					//if (Debug.isDebugBuild)//isDebugBuild can only be called from the main thread
+					Debug.Log("[WebServer] context.Request.RawUrl");
                     context.Response.StatusCode = 200;
                     var process = System.Diagnostics.Process.GetCurrentProcess();
                     string msg = string.Format(@"<html><body><h1>UMA Simple Web Server</h1><table>
@@ -174,18 +174,20 @@ namespace UMA.AssetBundles
             {
 				string serverUrlPath = Path.Combine(UMA.FileUtils.GetInternalDataStoreFolder(false, false), "localServerURL.bytes");
 				UMA.FileUtils.WriteAllText(serverUrlPath, _serverURL);
-                AssetDatabase.Refresh();
+				AssetDatabase.Refresh();
             }
         }
         //but we dont want it hanging around afterwards
         public static void DestroyServerURLFile()
         {
 			string serverUrlPath = Path.Combine(UMA.FileUtils.GetInternalDataStoreFolder(false, false), "localServerURL.bytes");
+			string serverUrlMetaPath = Path.Combine(UMA.FileUtils.GetInternalDataStoreFolder(false, false), "localServerURL.bytes.meta");
+			File.Delete(serverUrlMetaPath);
 			File.Delete(serverUrlPath);
-            AssetDatabase.Refresh();
-        }
+			AssetDatabase.Refresh();
+		}
 #endif
-        //because in the editor we dont want this to return anything
+        //because in the editor we dont want this to set anything
         static void GetServerURL()
         {
             TextAsset urlFile = Resources.Load("localServerURL") as TextAsset;

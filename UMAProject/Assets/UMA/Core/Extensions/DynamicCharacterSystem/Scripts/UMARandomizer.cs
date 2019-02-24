@@ -102,6 +102,7 @@ namespace UMA
 		public List<RandomColors> SharedColors;
 		public List<RandomWardrobeSlot> RandomWardrobeSlots;
 		public List<RandomDNA> RandomDna;
+		public RaceData raceData;
 #if UNITY_EDITOR
 		public bool GuiFoldout;
 		public bool ColorsFoldout;
@@ -115,7 +116,7 @@ namespace UMA
 		public int SelectedDNA;
 		public string DNAAdd;
 		public int DNADel;
-		public RaceData raceData;
+		
 #endif
 		public UMAPredefinedDNA GetRandomDNA()
 		{
