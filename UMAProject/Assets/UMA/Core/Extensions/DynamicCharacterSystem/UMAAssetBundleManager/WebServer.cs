@@ -101,7 +101,7 @@ namespace UMA.AssetBundles
                     else
                     {
                         context.Response.StatusCode = 404;
-                        if (Debug.isDebugBuild)
+                        //if (Debug.isDebugBuild)//isDebugBuild can only be called from the main thread
                             UnityEngine.Debug.LogErrorFormat("Url not served. Have you built your Asset Bundles? Url not served from: {0} '{1}'", context.Request.RawUrl, filePath);
 #if UNITY_EDITOR
                         AssetBundleManager.SimulateOverride = true;
@@ -123,20 +123,20 @@ namespace UMA.AssetBundles
             {
                 if (e.ErrorCode == -2147467259)
                 {
-                    // shutdown, terminate silently
-                    if (Debug.isDebugBuild)
-                        Debug.LogWarning("[Web Server] ErrorCode -2147467259: terminate silently");
+					// shutdown, terminate silently
+					//if (Debug.isDebugBuild)//isDebugBuild can only be called from the main thread
+					Debug.LogWarning("[Web Server] ErrorCode -2147467259: terminate silently");
                     context.Response.Abort();
                     return;
                 }
-                if (Debug.isDebugBuild)
-                    UnityEngine.Debug.LogException(e);
+				// if (Debug.isDebugBuild)//isDebugBuild can only be called from the main thread
+				UnityEngine.Debug.LogException(e);
                 context.Response.Abort();
             }
             catch (Exception e)
             {
-                if (Debug.isDebugBuild)
-                    UnityEngine.Debug.LogException(e);
+				//if (Debug.isDebugBuild)//isDebugBuild can only be called from the main thread
+				UnityEngine.Debug.LogException(e);
                 context.Response.Abort();
             }
         }
