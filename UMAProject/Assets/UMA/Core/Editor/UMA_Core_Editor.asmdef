@@ -1,0 +1,10 @@
+{
+    "name": "UMA_Core_Editor",
+    "references": [
+        "UMA_Core"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": []
+}
