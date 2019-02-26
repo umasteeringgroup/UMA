@@ -10,7 +10,7 @@ namespace UMA
 	/// Contains the immutable data shared between slots of the same type.
 	/// </summary>
 	[System.Serializable]
-	public partial class SlotDataAsset : UMADataAsset, ISerializationCallbackReceiver, INameProvider
+	public partial class SlotDataAsset : UMADataAsset, ISerializationCallbackReceiver
     {
 		public override string umaName
 		{
@@ -26,18 +26,6 @@ namespace UMA
 		[System.NonSerialized]
 		public int nameHash;
 
-        #region INameProvider
-
-        public string GetAssetName()
-        {
-            return slotName;
-        }
-        public int GetNameHash()
-        {
-            return nameHash;
-        }
-
-        #endregion
         /// <summary>
         /// The UMA material.
         /// </summary>
@@ -194,12 +182,10 @@ namespace UMA
 				{
 					if (parent.bindToBone == Matrix4x4.zero)
 					{
-						Matrix4x4 childToParent = Matrix4x4.TRS(bone.position, bone.rotation, bone.scale);
-						Matrix4x4 bindToBone = childToParent * bone.bindToBone;
-						parent.bindToBone = bindToBone;
-						//parent.retained = true;
-						CalcBindToBone(parent);
+						parent.bindToBone = Matrix4x4.TRS(bone.position, bone.rotation, bone.scale) * bone.bindToBone;
 					}
+					//parent.retained = true;
+					CalcBindToBone(parent);
 				}
 			}
 		}
@@ -217,7 +203,7 @@ namespace UMA
 				bonesToRoot = new Dictionary<int, Matrix4x4>(meshData.umaBones.Length);
 				bindsToBone = new Dictionary<int, Matrix4x4>(meshData.umaBones.Length);
 
-				Debug.LogWarning("Hacking UMAMeshData for " + this.GetAssetName());
+				//Debug.LogWarning("Hacking UMAMeshData for " + this.GetAssetName());
 
 				int boneCount = meshData.umaBones.Length;
 				for (int i = 0; i < meshData.umaBones.Length; i++)
@@ -280,20 +266,41 @@ namespace UMA
 					if (sortedBones.Contains(bone))
 					{
 						CalcBindToBone(bone);
+						//bone.retained = true;
 					}
 				}
 				for (int i = 0; i < meshData.umaBones.Length; i++)
 				{
 					UMATransform bone = meshData.umaBones[i];
+					if (bone.bindToBone == Matrix4x4.zero)
+					{
+						Debug.LogFormat("Bone {0} on slot {1} has no bind", bone.name, name);
+					}
 
 					if (!sortedBones.Contains(bone))
 					{
-						sortedBones.Add(bone);
-						CalcBindToBone(bone);
+						//if (bone.retained)
+						{
+							sortedBones.Add(bone);
+							bone.retained = false;
+						}
 					}
 				}
 
-					meshData.umaBones = sortedBones.ToArray();
+				meshData.umaBones = sortedBones.ToArray();
+
+				//if ((meshData.normalTriangles == null) || (meshData.normalTriangles.Length != meshData.vertexCount))
+				//{
+				//	// Calculate all the new normal generating data
+				//	Matrix4x4[] bindsToRoot = new Matrix4x4[meshData.umaBones.Length];
+				//	for (int i = 0; i < bindsToRoot.Length; i++)
+				//	{
+				//		int boneHash = meshData.umaBones[i].hash;
+				//		bindsToRoot[i] = bonesToRoot[boneHash] * bindsToBone[boneHash];
+				//	}
+
+				//	UpdateNormalTriangles(meshData, bindsToRoot);
+				//}
 
 //				for (int i = 0; i < meshData.boneWeights.Length; i++)
 //				{
@@ -335,5 +342,130 @@ namespace UMA
 			slotGroup = source.slotGroup;
 			tags = source.tags;
 		}
+
+		static void UpdateNormalTriangles(UMAMeshData meshData, Matrix4x4[] bindsToRoot)
+		{
+			meshData.normalTriangles = new int[meshData.vertexCount];
+			meshData.normalAdjustments = new Quaternion[meshData.vertexCount];
+
+			// Calculate all the vertices and normals in root space
+			Vector3[] rootVerts = new Vector3[meshData.vertexCount];
+			Vector3[] rootNorms = new Vector3[meshData.vertexCount];
+			for (int i = 0; i < meshData.vertexCount; i++)
+			{
+				Vector3 vertex = meshData.vertices[i];
+				UMABoneWeight weight = meshData.boneWeights[i];
+				rootVerts[i] = Vector3.zero;
+				rootVerts[i] += bindsToRoot[weight.boneIndex0].MultiplyPoint3x4(vertex) * weight.weight0;
+				rootVerts[i] += bindsToRoot[weight.boneIndex1].MultiplyPoint3x4(vertex) * weight.weight1;
+				rootVerts[i] += bindsToRoot[weight.boneIndex2].MultiplyPoint3x4(vertex) * weight.weight2;
+				rootVerts[i] += bindsToRoot[weight.boneIndex3].MultiplyPoint3x4(vertex) * weight.weight3;
+
+				Vector3 normal = meshData.normals[i];
+				rootNorms[i] = Vector3.zero;
+				rootNorms[i] += bindsToRoot[weight.boneIndex0].MultiplyVector(normal) * weight.weight0;
+				rootNorms[i] += bindsToRoot[weight.boneIndex1].MultiplyVector(normal) * weight.weight1;
+				rootNorms[i] += bindsToRoot[weight.boneIndex2].MultiplyVector(normal) * weight.weight2;
+				rootNorms[i] += bindsToRoot[weight.boneIndex3].MultiplyVector(normal) * weight.weight3;
+			}
+
+			// Move the submesh arrays into a single merged array and store the offsets
+			int triangleCount = 0;
+			meshData.submeshIndices = new int[meshData.submeshes.Length];
+			for (int i = 0; i < meshData.submeshes.Length; i++)
+			{
+				meshData.submeshIndices[i] = triangleCount * 3;
+				triangleCount += meshData.submeshes[i].TriangleCount;
+			}
+			if ((meshData.triangles == null) || (meshData.triangles.Length != triangleCount * 3))
+			{
+				meshData.triangles = new int[triangleCount * 3];
+				int index = 0;
+				for (int i = 0; i < meshData.submeshes.Length; i++)
+				{
+					meshData.submeshes[i].triangles.CopyTo(meshData.triangles, index);
+					index += meshData.submeshes[i].TriangleCount * 3;
+				}
+			}
+
+			// Calculate the best triangle for each vertex normal
+			float[] scores = new float[meshData.vertexCount];
+			for (int i = 0; i < meshData.triangles.Length; i += 3)
+			{
+				int index0 = i;
+				Vector3 pt0 = rootVerts[index0];
+				UMABoneWeight weight0 = meshData.boneWeights[index0];
+
+				int index1 = i + 1;
+				Vector3 pt1 = rootVerts[index1];
+				UMABoneWeight weight1 = meshData.boneWeights[index1];
+
+				int index2 = i + 2;
+				Vector3 pt2 = rootVerts[index2];
+				UMABoneWeight weight2 = meshData.boneWeights[index2];
+
+				Vector3 normal = Vector3.Cross((pt0 - pt1), (pt1 - pt2)).normalized;
+
+				float score0_1 = CompareBoneWeights(ref weight0, ref weight1);
+				float score0_2 = CompareBoneWeights(ref weight0, ref weight2);
+				float score1_2 = CompareBoneWeights(ref weight1, ref weight2);
+
+				float score0 = score0_1 + score0_2 + 1f;
+				float score1 = score0_1 + score1_2 + 1f;
+				float score2 = score0_2 + score1_2 + 1f;
+
+				if (score0 > scores[index0])
+				{
+					scores[index0] = score0;
+					meshData.normalTriangles[index0] = i; // NOT the index, all point to first in triangle
+					meshData.normalAdjustments[index0] = Quaternion.FromToRotation(normal, rootNorms[index0]);
+				}
+				if (score1 > scores[index1])
+				{
+					scores[index1] = score1;
+					meshData.normalTriangles[index1] = i; // NOT the index, all point to first in triangle
+					meshData.normalAdjustments[index1] = Quaternion.FromToRotation(normal, rootNorms[index1]);
+				}
+				if (score2 > scores[index2])
+				{
+					scores[index2] = score2;
+					meshData.normalTriangles[index2] = i; // NOT the index, all point to first in triangle
+					meshData.normalAdjustments[index2] = Quaternion.FromToRotation(normal, rootNorms[index2]);
+				}
+			}
+
+			for (int i = 0; i < meshData.vertexCount; i++)
+			{
+				if (scores[i] < Mathf.Epsilon)
+				{
+					Debug.LogWarning("No triangle found for vertex: " + i);
+				}
+			}
+		}
+
+		static float CompareBoneWeights(ref UMABoneWeight weightA, ref UMABoneWeight weightB)
+		{
+			float score = 0;
+
+			if (weightB.boneIndex0 == weightA.boneIndex0) score += (weightA.weight0 * weightB.weight0);
+			if (weightB.boneIndex1 == weightA.boneIndex0) score += (weightA.weight0 * weightB.weight1);
+			if (weightB.boneIndex2 == weightA.boneIndex0) score += (weightA.weight0 * weightB.weight2);
+			if (weightB.boneIndex3 == weightA.boneIndex0) score += (weightA.weight0 * weightB.weight3);
+			if (weightB.boneIndex0 == weightA.boneIndex1) score += (weightA.weight1 * weightB.weight0);
+			if (weightB.boneIndex1 == weightA.boneIndex1) score += (weightA.weight1 * weightB.weight1);
+			if (weightB.boneIndex2 == weightA.boneIndex1) score += (weightA.weight1 * weightB.weight2);
+			if (weightB.boneIndex3 == weightA.boneIndex1) score += (weightA.weight1 * weightB.weight3);
+			if (weightB.boneIndex0 == weightA.boneIndex2) score += (weightA.weight2 * weightB.weight0);
+			if (weightB.boneIndex1 == weightA.boneIndex2) score += (weightA.weight2 * weightB.weight1);
+			if (weightB.boneIndex2 == weightA.boneIndex2) score += (weightA.weight2 * weightB.weight2);
+			if (weightB.boneIndex3 == weightA.boneIndex2) score += (weightA.weight2 * weightB.weight3);
+			if (weightB.boneIndex0 == weightA.boneIndex3) score += (weightA.weight3 * weightB.weight0);
+			if (weightB.boneIndex1 == weightA.boneIndex3) score += (weightA.weight3 * weightB.weight1);
+			if (weightB.boneIndex2 == weightA.boneIndex3) score += (weightA.weight3 * weightB.weight2);
+			if (weightB.boneIndex3 == weightA.boneIndex3) score += (weightA.weight3 * weightB.weight3);
+
+			return score;
+		}
+
 	}
 }

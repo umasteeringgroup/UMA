@@ -229,10 +229,14 @@ namespace UMA
 //		UMASkinningData skinningParent; ??? or hash and lookup during combine ???
 		public Matrix4x4[] bindPoses;
 		public UMATransform[] umaBones;
-//		[NonSerialized]
-//		public Transform[] bones;
-//		[NonSerialized]
-//		public int umaBoneCount;
+		//		[NonSerialized]
+		//		public Transform[] bones;
+		//		[NonSerialized]
+		//		public int umaBoneCount;
+
+		// HACK - testing combiner changes
+		public int[] normalTriangles; // ACTUAL index NOT index/3
+		public Quaternion[] normalAdjustments;
 
 		// HACK - nuke this the second the combiner is fixed
 		public int[] boneNameHashes;
@@ -255,7 +259,14 @@ namespace UMA
 		public UMABlendShape[] blendShapes;
 		public ClothSkinningCoefficient[] clothSkinning;
 		public Vector2[] clothSkinningSerialized;
+
+		// HACK
+		// we can't deal with this in any kind of
+		// job code, so but them in a single array
+		// (should have been already, what were we smoking?)
 		public SubMeshTriangles[] submeshes;
+		public int[] triangles;
+		public int[] submeshIndices;
 
 		public int subMeshCount;
 		public int vertexCount;
@@ -747,14 +758,14 @@ namespace UMA
 		}
 		*/
 
-		private void CreateTransforms(UMASkeleton skeleton)
-		{
-			foreach (UMATransform umaBone in umaBones)
-			{
-				skeleton.EnsureBone(umaBone);
-			}
-			skeleton.EnsureBoneHierarchy();
-		}
+		//private void CreateTransforms(UMASkeleton skeleton)
+		//{
+		//	foreach (UMATransform umaBone in umaBones)
+		//	{
+		//		skeleton.EnsureBone(umaBone);
+		//	}
+		//	skeleton.EnsureBoneHierarchy();
+		//}
 
 		private void ApplySharedBuffers(Mesh mesh)
 		{
@@ -859,11 +870,11 @@ namespace UMA
 		}
 		#endregion
 
-		internal void ReSortUMABones()
-		{
-			var newList = new List<UMATransform>(umaBones);
-			newList.Sort(UMATransform.TransformComparer);
-			umaBones = newList.ToArray();
-		}
+		//internal void ReSortUMABones()
+		//{
+		//	var newList = new List<UMATransform>(umaBones);
+		//	newList.Sort(UMATransform.TransformComparer);
+		//	umaBones = newList.ToArray();
+		//}
 	}
 }
