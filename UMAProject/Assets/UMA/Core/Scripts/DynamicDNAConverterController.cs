@@ -226,8 +226,10 @@ namespace UMA
 			if (!_prepared)
 				Prepare();
 
-			//Add this ApplyOverallModifiers mnethod to this umaDatas CharacterUpdated event so that BaseCharacterModifiers get applied after all ConverterControllers on this character
-			umaData.CharacterUpdated.AddListener(ApplyOverallModifiers);
+			//Add this ApplyHeightMassRadius method to this umaDatas CharacterUpdated event so that HeightMassRadius and bounds BaseCharacterModifiers get applied after all ConverterControllers on this character
+			umaData.OnCharacterBeforeUpdated += ApplyHeightMassRadius;
+			//Add this ApplyAdjustScale method to this umaDatas DnaUpdated event so that we adjust the global scale just after all other dna adjustments
+			umaData.OnCharacterBeforeDnaUpdated += ApplyAdjustScale;
 
 			UMADnaBase umaDna = umaData.GetDna(DNATypeHash);
 			//Make the DNAAssets match if they dont already, can happen when some parts are in bundles and others arent
@@ -274,11 +276,22 @@ namespace UMA
 		/// Applies OverallModifiers after all other dna changes have completed
 		/// </summary>
 		/// <param name="umaData"></param>
-		public void ApplyOverallModifiers(UMAData umaData)
+		public void ApplyAdjustScale(UMAData umaData)
 		{
-			_overallModifiers.UpdateCharacter(umaData, umaData.skeleton, false);
+			_overallModifiers.AdjustScale(umaData.skeleton);
 			//remove this listener from this umaData
-			umaData.CharacterUpdated.RemoveListener(ApplyOverallModifiers);
+			umaData.OnCharacterBeforeDnaUpdated -= ApplyAdjustScale;
+		}
+
+		/// <summary>
+		/// Applies ApplyHeightMassRadius after all other dna changes have completed
+		/// </summary>
+		/// <param name="umaData"></param>
+		public void ApplyHeightMassRadius(UMAData umaData)
+		{
+			_overallModifiers.UpdateCharacterHeightMassRadius(umaData, umaData.skeleton);
+			//remove this listener from this umaData
+			umaData.OnCharacterBeforeUpdated -= ApplyHeightMassRadius;
 		}
 
 		public void ApplyDnaCallbackDelegates(UMAData umaData)
