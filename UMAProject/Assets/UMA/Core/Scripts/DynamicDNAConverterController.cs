@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
@@ -226,6 +226,9 @@ namespace UMA
 			if (!_prepared)
 				Prepare();
 
+			//Add this ApplyOverallModifiers mnethod to this umaDatas CharacterUpdated event so that BaseCharacterModifiers get applied after all ConverterControllers on this character
+			umaData.CharacterUpdated.AddListener(ApplyOverallModifiers);
+
 			UMADnaBase umaDna = umaData.GetDna(DNATypeHash);
 			//Make the DNAAssets match if they dont already, can happen when some parts are in bundles and others arent
 			if (((DynamicUMADnaBase)umaDna).dnaAsset != DNAAsset && DNAAsset != null)
@@ -263,10 +266,20 @@ namespace UMA
 			{
 				_applyDNAPlugins[i].ApplyDNA(umaData, skeleton, DNATypeHash);
 			}
-			_overallModifiers.UpdateCharacter(umaData, skeleton, false);
+			//_overallModifiers.UpdateCharacter(umaData, skeleton, false);
 			ApplyDnaCallbackDelegates(umaData);
 		}
 
+		/// <summary>
+		/// Applies OverallModifiers after all other dna changes have completed
+		/// </summary>
+		/// <param name="umaData"></param>
+		public void ApplyOverallModifiers(UMAData umaData)
+		{
+			_overallModifiers.UpdateCharacter(umaData, umaData.skeleton, false);
+			//remove this listener from this umaData
+			umaData.CharacterUpdated.RemoveListener(ApplyOverallModifiers);
+		}
 
 		public void ApplyDnaCallbackDelegates(UMAData umaData)
 		{
