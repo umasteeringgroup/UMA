@@ -181,6 +181,21 @@ namespace UMA
 		}
 
 		/// <summary>
+		/// Check if the bone exists and is valid.
+		/// </summary>
+		/// <param name="nameHash">the namehash of the bone to check</param>
+		/// <returns>true if the bone exists and is valid</returns>
+		public virtual bool BoneExists(int nameHash)
+		{
+			BoneData db;
+			if (boneHashData.TryGetValue(nameHash, out db))
+			{
+				return db.boneTransform != null;
+			}
+			return false;
+		}
+
+		/// <summary>
 		/// Adds the transform into the skeleton.
 		/// </summary>
 		/// <param name="parentHash">Hash of parent transform name.</param>
@@ -581,6 +596,25 @@ namespace UMA
 			{
 				db.accessedFrame = frame;
 				return db.boneTransform.localPosition;
+			}
+			else
+			{
+				throw new Exception("Bone not found.");
+			}
+		}
+
+		/// <summary>
+		/// Gets the position of a bone.
+		/// </summary>
+		/// <returns>The position.</returns>
+		/// <param name="nameHash">Name hash.</param>
+		public virtual Vector3 GetRelativePosition(int nameHash)
+		{
+			BoneData db;
+			if (boneHashData.TryGetValue(nameHash, out db))
+			{
+				db.accessedFrame = frame;
+				return boneHashData[rootBoneHash].boneTransform.parent.parent.worldToLocalMatrix.MultiplyPoint(db.boneTransform.position);
 			}
 			else
 			{
