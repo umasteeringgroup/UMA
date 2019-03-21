@@ -140,9 +140,20 @@ namespace UMA
 		/// Callback event when character DNA has been updated.
 		/// </summary>
 		public event Action<UMAData> OnCharacterDnaUpdated { add { if (CharacterDnaUpdated == null) CharacterDnaUpdated = new UMADataEvent(); CharacterDnaUpdated.AddListener(new UnityAction<UMAData>(value)); } remove { CharacterDnaUpdated.RemoveListener(new UnityAction<UMAData>(value)); } }
+		/// <summary>
+		/// Callback event used by UMA to make last minute tweaks
+		/// </summary>
+		public event Action<UMAData> OnCharacterBeforeUpdated { add { if (CharacterBeforeUpdated == null) CharacterBeforeUpdated = new UMADataEvent(); CharacterBeforeUpdated.AddListener(new UnityAction<UMAData>(value)); } remove { CharacterBeforeUpdated.RemoveListener(new UnityAction<UMAData>(value)); } }
+		/// <summary>
+		/// Callback event used by UMA to make last minute tweaks
+		/// </summary>
+		public event Action<UMAData> OnCharacterBeforeDnaUpdated { add { if (CharacterBeforeDnaUpdated == null) CharacterBeforeDnaUpdated = new UMADataEvent(); CharacterBeforeDnaUpdated.AddListener(new UnityAction<UMAData>(value)); } remove { CharacterBeforeUpdated.RemoveListener(new UnityAction<UMAData>(value)); } }
+
 		public UMADataEvent CharacterCreated;
 		public UMADataEvent CharacterDestroyed;
 		public UMADataEvent CharacterUpdated;
+		public UMADataEvent CharacterBeforeUpdated;
+		public UMADataEvent CharacterBeforeDnaUpdated;
 		public UMADataEvent CharacterDnaUpdated;
 		public UMADataEvent CharacterBegun;
 
@@ -1178,6 +1189,11 @@ namespace UMA
 		public void FireUpdatedEvent(bool cancelled)
 		{
 			this.cancelled = cancelled;
+			if (CharacterBeforeUpdated != null)
+			{
+				CharacterBeforeUpdated.Invoke(this);
+			}
+
 			if (!this.cancelled && !isOfficiallyCreated)
 			{
 				isOfficiallyCreated = true;
@@ -1523,6 +1539,11 @@ namespace UMA
 		/// </summary>
 		public void FireDNAAppliedEvents()
 		{
+			if (CharacterBeforeDnaUpdated != null)
+			{
+				CharacterBeforeDnaUpdated.Invoke(this);
+			}
+
 			if (CharacterDnaUpdated != null)
 			{
 				CharacterDnaUpdated.Invoke(this);

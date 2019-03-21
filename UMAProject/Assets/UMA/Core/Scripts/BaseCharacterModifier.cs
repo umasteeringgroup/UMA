@@ -248,7 +248,7 @@ namespace UMA
 
 #endif
 
-		public void UpdateCharacter(UMAData umaData, UMASkeleton skeleton, bool asReset)
+		public void AdjustScale(UMASkeleton skeleton)
 		{
 			if (_adjustScale)
 			{
@@ -259,6 +259,10 @@ namespace UMA
 					skeleton.SetScale(_scaleBoneHash, new Vector3(finalOverallScale, finalOverallScale, finalOverallScale));
 				}
 			}
+		}
+
+		public void UpdateCharacterHeightMassRadius(UMAData umaData, UMASkeleton skeleton)
+		{
 			if (_adjustHeight || _adjustMass || _adjustRadius || _adjustBounds)
 			{
 				var baseRenderer = GetBaseRenderer(umaData);
@@ -267,6 +271,12 @@ namespace UMA
 				var newBounds = DoBoundsModifications(baseRenderer, umaData);
 				UpdateCharacterHeightMassRadius(umaData, skeleton, newBounds);
 			}
+		}
+
+		public void UpdateCharacter(UMAData umaData, UMASkeleton skeleton, bool asReset)
+		{
+			AdjustScale(skeleton);
+			UpdateCharacterHeightMassRadius(umaData, skeleton);
 		}
 
 		#endregion
@@ -291,6 +301,7 @@ namespace UMA
 			bool prevColliderEnabled = false;
 			bool prevUpdateWhenOffScreen = false;
 			Bounds newBounds = targetRenderer.bounds;
+			targetRenderer.rootBone = null;
 
 			if (_updateBounds)
 			{
