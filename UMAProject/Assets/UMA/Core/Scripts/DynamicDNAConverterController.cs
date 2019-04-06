@@ -226,11 +226,6 @@ namespace UMA
 			if (!_prepared)
 				Prepare();
 
-			//Add this ApplyHeightMassRadius method to this umaDatas CharacterUpdated event so that HeightMassRadius and bounds BaseCharacterModifiers get applied after all ConverterControllers on this character
-			umaData.OnCharacterBeforeUpdated += ApplyHeightMassRadius;
-			//Add this ApplyAdjustScale method to this umaDatas DnaUpdated event so that we adjust the global scale just after all other dna adjustments
-			umaData.OnCharacterBeforeDnaUpdated += ApplyAdjustScale;
-
 			UMADnaBase umaDna = umaData.GetDna(DNATypeHash);
 			//Make the DNAAssets match if they dont already, can happen when some parts are in bundles and others arent
 			if (((DynamicUMADnaBase)umaDna).dnaAsset != DNAAsset && DNAAsset != null)
@@ -256,6 +251,12 @@ namespace UMA
 			UMADnaBase umaDna = null;
 			//reset the live scale on the overallModifiers ready for any adjustments any plugins might make
 			liveScale = -1;
+			
+			//Add this ApplyHeightMassRadius method to this umaDatas CharacterUpdated event so that HeightMassRadius and bounds BaseCharacterModifiers get applied after all ConverterControllers on this character
+			umaData.OnCharacterBeforeUpdated += ApplyHeightMassRadius;
+			//Add this ApplyAdjustScale method to this umaDatas DnaUpdated event so that we adjust the global scale just after all other dna adjustments
+			umaData.OnCharacterBeforeDnaUpdated += ApplyAdjustScale;
+			
 			//fixDNAPrefabs- do we need to deal with 'reset' as dnaconverterBehaviour used to do? If so wouldn't we just apply all the plugins with MasterWeight set to 0?
 			//if (!asReset)
 			//{
