@@ -575,6 +575,7 @@ namespace UMA
 			len1 += newBones;
 
 			int dest = len1-1;
+
 			while (pos1 >= 0 && pos2 >= 0)
 			{
 				long i = ((long)mergedTransforms[pos1].hash) - ((long)umaTransforms[pos2].hash);
@@ -679,7 +680,7 @@ namespace UMA
 
 				for (int frameIndex = 0; frameIndex < blendShapes[blendShapeIndex].frames.Length; frameIndex++)
 				{
-					blendShapes[blendShapeIndex].frames[frameIndex] = new UMABlendFrame(vertexCount, blendShapeNames[shapeName].hasNormals, blendShapeNames[shapeName].hasNormals);
+					blendShapes[blendShapeIndex].frames[frameIndex] = new UMABlendFrame(vertexCount, blendShapeNames[shapeName].hasNormals, blendShapeNames[shapeName].hasTangents);
 					blendShapes[blendShapeIndex].frames[frameIndex].frameWeight = blendShapeNames[shapeName].frameWeights[frameIndex];
 				}
 
