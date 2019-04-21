@@ -103,8 +103,8 @@ namespace UMA.AssetBundles
 					//If there are no assets added to this bundle show a warning telling the user to remove Unused asset bundle names
 					if (assetBundleAssetsArray == null || assetBundleAssetsArray.Length == 0)
 					{
-						if (Debug.isDebugBuild)
-							Debug.Log(assetBundleNamesArray[i]+" was an empty assetBundle. Please do 'Remove Unused Names' in the 'Asset Labels' section of the Inspector");
+						//if (Debug.isDebugBuild)//isDebugBuild is changed during the build process, this message always need to be logged
+						Debug.Log(assetBundleNamesArray[i]+" was an empty assetBundle. Please do 'Remove Unused Names' in the 'Asset Labels' section of the Inspector");
 					}
 
 					thisIndex.bundlesIndex.Add(new AssetBundleIndex.AssetBundleIndexList(bundleName));
@@ -234,8 +234,8 @@ namespace UMA.AssetBundles
 				AssetDatabase.DeleteAsset(thisIndexAssetPath);
 				//And remove its assetBundle name from the assetBundleNames
 				AssetDatabase.RemoveAssetBundleName(Utility.GetPlatformName().ToLower() + "index", false);
-				if (Debug.isDebugBuild)
-					Debug.Log("Asset Bundles built successfully for platform "+Utility.GetPlatformName()+(UMAABMSettings.GetEncryptionEnabled() ? " (Encrypted)!" : "!"));
+				//if (Debug.isDebugBuild)//isDebugBuild is changed during the build process, this message always need to be logged
+				Debug.Log("Asset Bundles built successfully for platform "+Utility.GetPlatformName()+(UMAABMSettings.GetEncryptionEnabled() ? " (Encrypted)!" : "!"));
 			}
 			catch (System.Exception e)
 			{
@@ -245,8 +245,8 @@ namespace UMA.AssetBundles
 					AssetDatabase.DeleteAsset(thisEncryptionAssetPath);
 				//And remove its assetBundle name from the assetBundleNames
 				AssetDatabase.RemoveAssetBundleName(Utility.GetPlatformName().ToLower() + "index", false);
-				if (Debug.isDebugBuild)
-					Debug.LogError("Your AssetBundles did not build properly. Error Message: " + e.Message+" Error Exception: "+e.InnerException+" Error StackTrace: "+e.StackTrace);
+				//if (Debug.isDebugBuild)//isDebugBuild is changed during the build process, this message always need to be logged
+				Debug.LogError("Your AssetBundles did not build properly. Error Message: " + e.Message+" Error Exception: "+e.InnerException+" Error StackTrace: "+e.StackTrace);
 			}
 		}
 
@@ -262,8 +262,8 @@ namespace UMA.AssetBundles
 			string[] levels = GetLevelsFromBuildSettings();
 			if (levels.Length == 0)
 			{
-				if (Debug.isDebugBuild)
-					Debug.LogWarning("There were no Scenes in you Build Settings. Adding the current active Scene.");
+				//if (Debug.isDebugBuild)//isDebugBuild is changed during the build process, this message always need to be logged
+				Debug.LogWarning("There were no Scenes in you Build Settings. Adding the current active Scene.");
 				levels = new string[1] { UnityEngine.SceneManagement.SceneManager.GetActiveScene().path };
 			}
 			string targetName = GetBuildTargetName(EditorUserBuildSettings.activeBuildTarget);
@@ -274,8 +274,8 @@ namespace UMA.AssetBundles
 				SimpleWebServer.WriteServerURL();
 			else if (SimpleWebServer.serverStarted && !CanRunLocally(EditorUserBuildSettings.activeBuildTarget))
 			{
-				if (Debug.isDebugBuild)
-					Debug.LogWarning("Builds for " + EditorUserBuildSettings.activeBuildTarget.ToString() + " cannot access the LocalServer. AssetBundles will be downloaded from the remoteServerUrl's");
+				//if (Debug.isDebugBuild)//isDebugBuild is changed during the build process, this message always need to be logged
+				Debug.LogWarning("Builds for " + EditorUserBuildSettings.activeBuildTarget.ToString() + " cannot access the LocalServer. AssetBundles will be downloaded from the remoteServerUrl's");
 			}
 			//BuildOptions
 			BuildOptions option = BuildOptions.None;
@@ -295,15 +295,24 @@ namespace UMA.AssetBundles
 			buildPlayerOptions.target = EditorUserBuildSettings.activeBuildTarget;
 			buildPlayerOptions.options = option;
 
-			if (BuildPipeline.BuildPlayer(buildPlayerOptions) == null)
+#if UNITY_2018_1_OR_NEWER
+			UnityEditor.Build.Reporting.BuildReport report = BuildPipeline.BuildPlayer(buildPlayerOptions);
+#else
+			string report = BuildPipeline.BuildPlayer(buildPlayerOptions);
+#endif
+			//always destroy the serverURL file if one was created
+			if (SimpleWebServer.serverStarted && CanRunLocally(EditorUserBuildSettings.activeBuildTarget))
+				SimpleWebServer.DestroyServerURLFile();
+#if UNITY_2018_1_OR_NEWER
+			if (report.summary.result == UnityEditor.Build.Reporting.BuildResult.Succeeded)
 			{
-				//after the build completes destroy the serverURL file
-				if (SimpleWebServer.serverStarted && CanRunLocally(EditorUserBuildSettings.activeBuildTarget))
-					SimpleWebServer.DestroyServerURLFile();
-
+#else
+			if(string.IsNullOrEmpty(report))
+			{
+#endif
 				string fullPathToBuild = Path.Combine(Directory.GetParent(Application.dataPath).FullName, outputPath);
-				if (Debug.isDebugBuild)
-					Debug.Log("Built Successful! Build Location: " + fullPathToBuild);
+				//if (Debug.isDebugBuild)//isDebugBuild is changed during the build process, this message always need to be logged
+				Debug.Log("Build Successful! Build Location: " + fullPathToBuild);
 				if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.WebGL)
 				{
 					Application.OpenURL(SimpleWebServer.ServerURL + "index.html");
@@ -402,7 +411,7 @@ namespace UMA.AssetBundles
 				case BuildTarget.StandaloneOSX:
 #else
 				case BuildTarget.StandaloneOSXIntel:
-#endif    
+#endif
 					if (currentEnvironment.IndexOf("OSX") > -1)
 						return true;
 					else
@@ -428,7 +437,7 @@ namespace UMA.AssetBundles
 				case BuildTarget.StandaloneOSX:
 #else
 				case BuildTarget.StandaloneOSXIntel:
-#endif    
+#endif
 					return "/test.app";
 				case BuildTarget.WebGL:
 				case BuildTarget.iOS:

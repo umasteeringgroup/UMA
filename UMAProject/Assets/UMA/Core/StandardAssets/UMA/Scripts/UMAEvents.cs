@@ -22,6 +22,14 @@ namespace UMA
 				AddListener(target, UnityEventBase.GetValidMethodInfo(target, source.GetPersistentMethodName(i), new Type[] { typeof(UMAData) }));
 			}
 		}
+		public void AddAction(Action<UMAData> action)
+		{
+			this.AddListener(action.Target, action.Method);
+		}
+		public void RemoveAction(Action<UMAData> action)
+		{
+			this.RemoveListener(action.Target, action.Method);
+		}
 	}
 
 	/// <summary>

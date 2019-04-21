@@ -84,7 +84,7 @@ namespace UMA
 		//(not that flagging as [Non-Serialized] helps I now discover...
 
 		[System.NonSerialized]
-		private Dictionary<string, Transform> _mechanimBoneDict = new Dictionary<string, Transform>();
+		private Dictionary<string, int> _mechanimBoneDict = new Dictionary<string, int>();
 
 		[System.NonSerialized]
 		private string _lastRace = null;
@@ -248,18 +248,21 @@ namespace UMA
 
 #endif
 
-		public void UpdateCharacter(UMAData umaData, UMASkeleton skeleton, bool asReset)
+		public void AdjustScale(UMASkeleton skeleton)
 		{
 			if (_adjustScale)
 			{
-				var baseScaleTrans = skeleton.GetBoneTransform(_scaleBoneHash);
-				if (baseScaleTrans != null)
+				if (skeleton.HasBone(scaleBoneHash))
 				{
 					var liveScaleResult = _liveScale != -1f ? _liveScale : _scale;
-					float finalOverallScale = baseScaleTrans.localScale.x * liveScaleResult;//hmm why does this work- its supposed to be +
+					float finalOverallScale = skeleton.GetScale(_scaleBoneHash).x * liveScaleResult;//hmm why does this work- its supposed to be +
 					skeleton.SetScale(_scaleBoneHash, new Vector3(finalOverallScale, finalOverallScale, finalOverallScale));
 				}
 			}
+		}
+
+		public void UpdateCharacterHeightMassRadius(UMAData umaData, UMASkeleton skeleton)
+		{
 			if (_adjustHeight || _adjustMass || _adjustRadius || _adjustBounds)
 			{
 				var baseRenderer = GetBaseRenderer(umaData);
@@ -268,6 +271,12 @@ namespace UMA
 				var newBounds = DoBoundsModifications(baseRenderer, umaData);
 				UpdateCharacterHeightMassRadius(umaData, skeleton, newBounds);
 			}
+		}
+
+		public void UpdateCharacter(UMAData umaData, UMASkeleton skeleton, bool asReset)
+		{
+			AdjustScale(skeleton);
+			UpdateCharacterHeightMassRadius(umaData, skeleton);
 		}
 
 		#endregion
@@ -292,6 +301,7 @@ namespace UMA
 			bool prevColliderEnabled = false;
 			bool prevUpdateWhenOffScreen = false;
 			Bounds newBounds = targetRenderer.bounds;
+			targetRenderer.rootBone = null;
 
 			if (_updateBounds)
 			{
@@ -371,7 +381,7 @@ namespace UMA
 		private void UpdateMechanimBoneDict(UMAData umaData, UMASkeleton skeleton)
 		{
 			//"Head" is obligatory for mechanim so we can check that too to tell us when we have switched back to this race and the skeleton was rebuilt but this Behaviour hadnt been garbage collected yet
-			if ((_lastRace == null || umaData.umaRecipe.raceData.raceName != _lastRace) || (!_mechanimBoneDict.ContainsKey("Head") || _mechanimBoneDict["Head"] == null) && umaData.umaRecipe.raceData.umaTarget == RaceData.UMATarget.Humanoid)
+			if ((_lastRace == null || umaData.umaRecipe.raceData.raceName != _lastRace) || (!_mechanimBoneDict.ContainsKey("Head") || !skeleton.BoneExists(_mechanimBoneDict["Head"])) && umaData.umaRecipe.raceData.umaTarget == RaceData.UMATarget.Humanoid)
 			{
 				_lastRace = umaData.umaRecipe.raceData.raceName;
 
@@ -383,15 +393,15 @@ namespace UMA
 					_lastRace = null;
 					return;
 				}
-				_mechanimBoneDict.Add("Head", skeleton.GetBoneTransform(UMAUtils.StringToHash((Array.Find(umaTPose.humanInfo, entry => entry.humanName == "Head").boneName))));
-				_mechanimBoneDict.Add("LeftEye", skeleton.GetBoneTransform(UMAUtils.StringToHash((Array.Find(umaTPose.humanInfo, entry => entry.humanName == "LeftEye").boneName))));//optionalBone
-				_mechanimBoneDict.Add("RightEye", skeleton.GetBoneTransform(UMAUtils.StringToHash((Array.Find(umaTPose.humanInfo, entry => entry.humanName == "RightEye").boneName))));//optionalBone
-				_mechanimBoneDict.Add("Hips", skeleton.GetBoneTransform(UMAUtils.StringToHash((Array.Find(umaTPose.humanInfo, entry => entry.humanName == "Hips").boneName))));
-				_mechanimBoneDict.Add("Neck", skeleton.GetBoneTransform(UMAUtils.StringToHash((Array.Find(umaTPose.humanInfo, entry => entry.humanName == "Neck").boneName))));//OptionalBone
-				_mechanimBoneDict.Add("LeftUpperArm", skeleton.GetBoneTransform(UMAUtils.StringToHash((Array.Find(umaTPose.humanInfo, entry => entry.humanName == "LeftUpperArm").boneName))));
-				_mechanimBoneDict.Add("RightUpperArm", skeleton.GetBoneTransform(UMAUtils.StringToHash((Array.Find(umaTPose.humanInfo, entry => entry.humanName == "RightUpperArm").boneName))));
-				_mechanimBoneDict.Add("LeftUpperLeg", skeleton.GetBoneTransform(UMAUtils.StringToHash((Array.Find(umaTPose.humanInfo, entry => entry.humanName == "LeftUpperLeg").boneName))));
-				_mechanimBoneDict.Add("RightUpperLeg", skeleton.GetBoneTransform(UMAUtils.StringToHash((Array.Find(umaTPose.humanInfo, entry => entry.humanName == "RightUpperLeg").boneName))));
+				_mechanimBoneDict.Add("Head", UMAUtils.StringToHash((Array.Find(umaTPose.humanInfo, entry => entry.humanName == "Head").boneName)));
+				_mechanimBoneDict.Add("LeftEye", UMAUtils.StringToHash((Array.Find(umaTPose.humanInfo, entry => entry.humanName == "LeftEye").boneName)));//optionalBone
+				_mechanimBoneDict.Add("RightEye", UMAUtils.StringToHash((Array.Find(umaTPose.humanInfo, entry => entry.humanName == "RightEye").boneName)));//optionalBone
+				_mechanimBoneDict.Add("Hips", UMAUtils.StringToHash((Array.Find(umaTPose.humanInfo, entry => entry.humanName == "Hips").boneName)));
+				_mechanimBoneDict.Add("Neck", UMAUtils.StringToHash((Array.Find(umaTPose.humanInfo, entry => entry.humanName == "Neck").boneName)));//OptionalBone
+				_mechanimBoneDict.Add("LeftUpperArm", UMAUtils.StringToHash((Array.Find(umaTPose.humanInfo, entry => entry.humanName == "LeftUpperArm").boneName)));
+				_mechanimBoneDict.Add("RightUpperArm", UMAUtils.StringToHash((Array.Find(umaTPose.humanInfo, entry => entry.humanName == "RightUpperArm").boneName)));
+				_mechanimBoneDict.Add("LeftUpperLeg", UMAUtils.StringToHash((Array.Find(umaTPose.humanInfo, entry => entry.humanName == "LeftUpperLeg").boneName)));
+				_mechanimBoneDict.Add("RightUpperLeg", UMAUtils.StringToHash((Array.Find(umaTPose.humanInfo, entry => entry.humanName == "RightUpperLeg").boneName)));
 			}
 		}
 
@@ -435,10 +445,10 @@ namespace UMA
 						//Classically a human is apprx 7.5 heads tall, but we only know the height to the base of the head bone
 						//usually head bone is actually usually in line with the lips, making the base of the chin, 1/3rd down the neck
 						//so if we have the optional neck bone use that to estimate the base of the chin
-						chinHeight = _mechanimBoneDict["Head"].position.y;
-						if (_mechanimBoneDict["Neck"] != null)
+						chinHeight = skeleton.GetRelativePosition(_mechanimBoneDict["Head"]).y;
+						if (skeleton.BoneExists(_mechanimBoneDict["Neck"]))
 						{
-							chinHeight = _mechanimBoneDict["Neck"].position.y + (((_mechanimBoneDict["Head"].position.y - _mechanimBoneDict["Neck"].position.y) / 3f) * 2f);
+							chinHeight = skeleton.GetRelativePosition(_mechanimBoneDict["Neck"]).y + (((skeleton.GetRelativePosition(_mechanimBoneDict["Head"]).y - skeleton.GetRelativePosition(_mechanimBoneDict["Neck"]).y) / 3f) * 2f);
 						}
 						//apply the headRatio (by default this is 7.5)
 						chinHeight = (chinHeight / 6.5f) * (_headRatio - 1);
@@ -447,16 +457,16 @@ namespace UMA
 						//but bobble headed charcaters (toons), children or dwarves etc have bigger heads proportionally 
 						//so their overall height will greater than (chinHeight / 6.5) * 7.5
 						//If we have the eyes we can use those to calculate the size of the head better because classically the distance from the chin to the eyes will be half the head height
-						if (_mechanimBoneDict["LeftEye"] != null || _mechanimBoneDict["RightEye"] != null)
+						if (skeleton.BoneExists(_mechanimBoneDict["LeftEye"]) || skeleton.BoneExists(_mechanimBoneDict["RightEye"]))
 						{
 							var eyeHeight = 0f;
 							//if we have both eyes get the average
-							if (_mechanimBoneDict["LeftEye"] != null && _mechanimBoneDict["RightEye"] != null)
-								eyeHeight = (_mechanimBoneDict["LeftEye"].position.y + _mechanimBoneDict["RightEye"].position.y) / 2f;
-							else if (_mechanimBoneDict["LeftEye"] != null)
-								eyeHeight = _mechanimBoneDict["LeftEye"].position.y;
-							else if (_mechanimBoneDict["RightEye"] != null)
-								eyeHeight = _mechanimBoneDict["RightEye"].position.y;
+							if (skeleton.BoneExists(_mechanimBoneDict["LeftEye"]) && skeleton.BoneExists(_mechanimBoneDict["RightEye"]))
+								eyeHeight = (skeleton.GetRelativePosition(_mechanimBoneDict["LeftEye"]).y + skeleton.GetRelativePosition(_mechanimBoneDict["RightEye"]).y) / 2f;
+							else if (skeleton.BoneExists(_mechanimBoneDict["LeftEye"]))
+								eyeHeight = skeleton.GetRelativePosition(_mechanimBoneDict["LeftEye"]).y;
+							else if (skeleton.BoneExists(_mechanimBoneDict["RightEye"]))
+								eyeHeight = skeleton.GetRelativePosition(_mechanimBoneDict["RightEye"]).y;
 
 							headHeight = ((eyeHeight - chinHeight) * 2f);
 							//because we do this the actual headRatio doesnt *feel* right
@@ -473,9 +483,9 @@ namespace UMA
 
 					if (_adjustRadius)
 					{
-						float shouldersWidth = Mathf.Abs(_mechanimBoneDict["LeftUpperArm"].position.x - _mechanimBoneDict["RightUpperArm"].position.x);
+						float shouldersWidth = Mathf.Abs(skeleton.GetRelativePosition(_mechanimBoneDict["LeftUpperArm"]).x - skeleton.GetRelativePosition(_mechanimBoneDict["RightUpperArm"]).x);
 						//Also female charcaters tend to have hips wider than their shoulders, so check that
-						float hipsWidth = Mathf.Abs(_mechanimBoneDict["LeftUpperLeg"].position.x - _mechanimBoneDict["RightUpperLeg"].position.x);
+						float hipsWidth = Mathf.Abs(skeleton.GetRelativePosition(_mechanimBoneDict["LeftUpperLeg"]).x - skeleton.GetRelativePosition(_mechanimBoneDict["RightUpperLeg"]).x);
 						//the outerWidth of the hips is larger than this because the thigh muscles are so big so make this 1/3rd bigger
 						hipsWidth = (hipsWidth / 2) * 3;
 
@@ -483,10 +493,10 @@ namespace UMA
 						headWidth = shouldersWidth / 2.75f;
 						//but bobble headed charcaters (toons), children or dwarves etc have bigger heads proportionally and the head can be wider than the shoulders
 						//so if we have eye bones use them to calculate head with
-						if (_mechanimBoneDict["LeftEye"] != null && _mechanimBoneDict["RightEye"] != null)
+						if (skeleton.BoneExists(_mechanimBoneDict["LeftEye"]) && skeleton.BoneExists(_mechanimBoneDict["RightEye"]))
 						{
 							//clasically a face is 5* the width of the eyes where the distance between the pupils is 2 * eye width
-							var eyeWidth = Mathf.Abs(_mechanimBoneDict["LeftEye"].position.x - _mechanimBoneDict["RightEye"].position.x) / 2;
+							var eyeWidth = Mathf.Abs(skeleton.GetRelativePosition(_mechanimBoneDict["LeftEye"]).x - skeleton.GetRelativePosition(_mechanimBoneDict["RightEye"]).x) / 2;
 							headWidth = eyeWidth * 5f;
 						}
 						charWidth = (shouldersWidth > headWidth || hipsWidth > headWidth) ? (shouldersWidth > hipsWidth ? shouldersWidth : hipsWidth) : headWidth;

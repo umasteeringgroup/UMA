@@ -26,6 +26,8 @@ namespace UMA.CharacterSystem.Examples
 
 		public DynamicCharacterAvatar Avatar;
 		public DynamicCharacterSystem characterSystem;
+		//ConverterCustomizer is an editor only tool
+		public DynamicDNAConverterCustomizer converterCustomizer;
 
 		public SharedColorTable GenericColorList;
 		public Sprite genericColorSwatch;
@@ -138,6 +140,24 @@ namespace UMA.CharacterSystem.Examples
 				return;
 			}
 			Avatar.CharacterCreated.AddListener(Init);
+			//converterCustomizer is editor only
+#if UNITY_EDITOR
+			if (converterCustomizer == null)
+			{
+				converterCustomizer = GameObject.FindObjectOfType<DynamicDNAConverterCustomizer>();
+				if (converterCustomizer == null && Debug.isDebugBuild)
+					Debug.LogError("DynamicDNAConverterCustomizer not assigned!");
+			}
+			else
+			{
+				converterCustomizer.BonesCreated.AddListener(BonesCreated);
+			}
+#endif
+		}
+
+		private void BonesCreated()
+		{
+			CloseAllPanels();
 		}
 
 		public void Init(UMA.UMAData umaData)

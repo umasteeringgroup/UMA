@@ -1,0 +1,8 @@
+{
+    "name": "UMA_Content",
+    "references": [
+        "UMA_Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": []
+}
