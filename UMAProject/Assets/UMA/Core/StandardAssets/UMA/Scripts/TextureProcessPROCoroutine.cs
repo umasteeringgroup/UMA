@@ -14,7 +14,11 @@ namespace UMA
 		RenderTexture destinationTexture;
 		Texture[] resultingTextures;
 		UMAGeneratorBase umaGenerator;
+		Camera renderCamera;
 		bool fastPath=false;
+
+		Color emptyCameraBG = new Color(0, 0, 0, 0);
+		Color normalCameraBG = Color.grey;
 
 		/// <summary>
 		/// Setup data for atlas building.
@@ -52,12 +56,6 @@ namespace UMA
 	  protected override IEnumerator workerMethod()
 	  {
 		 var textureMerge = umaGenerator.textureMerge;
-		 if(textureMerge == null)
-		 {
-			if (Debug.isDebugBuild)
-				Debug.LogError("TextureMerge is null!");
-			yield return null;
-		 }
 
 		 for (int atlasIndex = umaData.generatedMaterials.materials.Count - 1; atlasIndex >= 0; atlasIndex--)
 		 {
@@ -96,18 +94,39 @@ namespace UMA
 					 //last element for this textureType
 					 moduleCount = 0;
 
+					 umaGenerator.textureMerge.gameObject.SetActive(true);
+
 					 int width = Mathf.FloorToInt(atlas.cropResolution.x);
 					 int height = Mathf.FloorToInt(atlas.cropResolution.y);
 					 destinationTexture = new RenderTexture(Mathf.FloorToInt(atlas.cropResolution.x * umaData.atlasResolutionScale), Mathf.FloorToInt(atlas.cropResolution.y * umaData.atlasResolutionScale), 0, slotData.asset.material.channels[textureType].textureFormat, RenderTextureReadWrite.Linear);
 					 destinationTexture.filterMode = FilterMode.Point;
 					 destinationTexture.useMipMap = umaGenerator.convertMipMaps && !umaGenerator.convertRenderTexture;
+					 renderCamera = umaGenerator.textureMerge.myCamera;
 
-					 //Draw all the Rects here
-					 textureMerge.DrawAllRects(destinationTexture, UMAMaterial.GetBackgroundColor(slotData.asset.material.channels[textureType].channelType));
+                    if (slotData.asset.material.channels[textureType].channelType == UMAMaterial.ChannelType.NormalMap)
+                    {
+                        if (QualitySettings.desiredColorSpace == ColorSpace.Linear)
+                        {
+                            //Due to a weird conversion, we need the camera background to be grey in gamme color space.
+                            renderCamera.backgroundColor = normalCameraBG.gamma;
+                        }
+                        else
+                        {
+                            renderCamera.backgroundColor = normalCameraBG;
+                        }                                    
+                    }
+                    else
+                    {
+                        renderCamera.backgroundColor = emptyCameraBG;
+                    }
+                               
 
-					 //Post Process
-					 textureMerge.PostProcess(destinationTexture, slotData.asset.material.channels[textureType].channelType);
-
+					 renderCamera.targetTexture = destinationTexture;
+					 renderCamera.orthographicSize = height >> 1;
+					 var camTransform = renderCamera.GetComponent<Transform>();
+					 camTransform.position = new Vector3(width >> 1, height >> 1, 3);
+					 camTransform.rotation = Quaternion.Euler(0, 180, 180);
+					 renderCamera.Render();
 
 					 int DownSample = slotData.asset.material.channels[textureType].DownSample;
 
@@ -120,6 +139,9 @@ namespace UMA
 						destinationTexture.Release();
 						destinationTexture = rt;
 					 }
+
+					 renderCamera.gameObject.SetActive(false);
+					 renderCamera.targetTexture = null;
 
 					 if (umaGenerator.convertRenderTexture || slotData.asset.material.channels[textureType].ConvertRenderTexture)
 					 {
@@ -171,10 +193,12 @@ namespace UMA
 
 						resultingTextures[textureType] = tempTexture as Texture;
 
+						renderCamera.targetTexture = null;
 						RenderTexture.active = null;
 
 						destinationTexture.Release();
 						UnityEngine.GameObject.DestroyImmediate(destinationTexture);
+						umaGenerator.textureMerge.gameObject.SetActive(false);
 						if (!fastPath) yield return 6;
 						tempTexture = resultingTextures[textureType] as Texture2D;
 						tempTexture.Apply();
@@ -200,6 +224,7 @@ namespace UMA
 						atlas.material.SetTexture(slotData.asset.material.channels[textureType].materialPropertyName, destinationTexture);
 					 }
 
+					 umaGenerator.textureMerge.gameObject.SetActive(false);
 					 break;
 				  }
 				  case UMAMaterial.ChannelType.MaterialColor:

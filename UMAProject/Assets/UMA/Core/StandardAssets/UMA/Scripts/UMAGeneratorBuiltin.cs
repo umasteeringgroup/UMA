@@ -17,6 +17,7 @@ namespace UMA
 		private LinkedList<UMAData> cleanUmas = new LinkedList<UMAData>();
 		private LinkedList<UMAData> dirtyUmas = new LinkedList<UMAData>();
 		private UMAGeneratorCoroutine activeGeneratorCoroutine;
+		public Transform textureMergePrefab;
 		public UMAMeshCombiner meshCombiner;
 
         /// <summary>
@@ -67,8 +68,10 @@ namespace UMA
 
 			if (!textureMerge)
 			{
-				if(Debug.isDebugBuild)
-					Debug.LogError("No TextureMerge set!");
+				Transform tempTextureMerger = Instantiate(textureMergePrefab, Vector3.zero, Quaternion.identity) as Transform;
+				textureMerge = tempTextureMerger.GetComponent("TextureMerge") as TextureMerge;
+				textureMerge.transform.parent = transform;
+				textureMerge.gameObject.SetActive(false);
 			}
 
 			//Garbage Collection hack

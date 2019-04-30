@@ -88,6 +88,7 @@ LightmapSettings:
     m_PVRFilteringAtrousPositionSigmaDirect: 0.5
     m_PVRFilteringAtrousPositionSigmaIndirect: 2
     m_PVRFilteringAtrousPositionSigmaAO: 1
+    m_ShowResolutionOverlay: 1
   m_LightingDataAsset: {fileID: 112000002, guid: 180b28226183dcc4c9f138dc7a97312f,
     type: 2}
   m_UseShadowmask: 0
@@ -110,6 +111,8 @@ NavMeshSettings:
     manualTileSize: 0
     tileSize: 256
     accuratePlacement: 0
+    debug:
+      m_Flags: 0
   m_NavMeshData: {fileID: 0}
 --- !u!1 &3261822
 GameObject:
@@ -3557,11 +3560,6 @@ MonoBehaviour:
   converterToImport: {fileID: 0}
   drawBoundsGizmo: 1
   bonePoseAccuracy: 0.00005
-  BonesCreated:
-    m_PersistentCalls:
-      m_Calls: []
-    m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
 --- !u!4 &331623066
 Transform:
   m_ObjectHideFlags: 0
@@ -6007,8 +6005,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-    m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
+    m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
 --- !u!114 &522843122
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7861,8 +7859,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-    m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
+    m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
 --- !u!114 &762829228
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8854,8 +8852,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-    m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
+    m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
 --- !u!114 &852208284
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9897,7 +9895,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Avatar: {fileID: 363062547}
   characterSystem: {fileID: 1367749205}
-  converterCustomizer: {fileID: 331623065}
   GenericColorList: {fileID: 11400000, guid: dcd91d8cb86512549b228ccf32c88e45, type: 2}
   genericColorSwatch: {fileID: 21300000, guid: df24b1b2c8514b34aa75ea459233768b, type: 3}
   genericColorSwatchMetallic: {fileID: 21300000, guid: e104937c2000db14fa56151dcb709a84,
@@ -10140,11 +10137,6 @@ Prefab:
       propertyPath: InitialScaleFactor
       value: 2
       objectReference: {fileID: 0}
-    - target: {fileID: 11400000, guid: f500ac7a6589e8f4199db272256fe996, type: 2}
-      propertyPath: textureMerge
-      value: 
-      objectReference: {fileID: 11400000, guid: 361a3efbdc5be4e4a88d2409551e0c38,
-        type: 2}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: f500ac7a6589e8f4199db272256fe996, type: 2}
   m_IsPrefabParent: 0
@@ -12332,8 +12324,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-    m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
+    m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
 --- !u!114 &1291390721
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13500,11 +13492,11 @@ Camera:
   m_TargetEye: 3
   m_HDR: 0
   m_AllowMSAA: 1
+  m_AllowDynamicResolution: 0
   m_ForceIntoRT: 0
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
-  m_StereoMirrorMode: 0
 --- !u!114 &1378902865
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13562,6 +13554,7 @@ MonoBehaviour:
   m_EventMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  m_MaxRayIntersections: 0
 --- !u!223 &1378902868
 Canvas:
   m_ObjectHideFlags: 0
@@ -15084,6 +15077,8 @@ Texture2D:
   m_ImageContentsHash:
     serializedVersion: 2
     Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
   serializedVersion: 2
   m_Width: 128
   m_Height: 128
@@ -18965,8 +18960,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-    m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
+    m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
 --- !u!114 &1836986557
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20017,6 +20012,7 @@ MeshRenderer:
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
@@ -20032,6 +20028,7 @@ MeshRenderer:
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
+  m_StitchLightmapSeams: 0
   m_SelectedEditorRenderState: 3
   m_MinimumChartSize: 4
   m_AutoUVMaxDistance: 0.5
@@ -20686,8 +20683,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-    m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
+    m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
 --- !u!114 &2117533937
 MonoBehaviour:
   m_ObjectHideFlags: 0

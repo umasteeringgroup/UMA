@@ -8,23 +8,22 @@ namespace UMA
 	/// Utility class that sets up materials for atlasing.
 	/// </summary>
 	[ExecuteInEditMode]
-	[CreateAssetMenu(menuName ="UMA/Rendering/TextureMerge")]
-	public class TextureMerge : ScriptableObject
+	public class TextureMerge : MonoBehaviour
 	{
+		public Camera myCamera;
 		public Material material;
 		public Shader normalShader;
 		public Shader diffuseShader;
 		public Shader dataShader;
 		public Shader cutoutShader;
+		public int textureMergeRectCount;
+		public TextureMergeRect[] textureMergeRects;
 
 		public List<UMAPostProcess> diffusePostProcesses = new List<UMAPostProcess>();
 		public List<UMAPostProcess> normalPostProcesses = new List<UMAPostProcess>();
 		public List<UMAPostProcess> dataPostProcesses = new List<UMAPostProcess>();
 
-		private int textureMergeRectCount;
-		private TextureMergeRect[] textureMergeRects;
-
-		//[System.Serializable] //why was this serializable? the array was public serialized too
+		[System.Serializable]
 		public struct TextureMergeRect
 		{
 			public Material mat;
@@ -32,23 +31,16 @@ namespace UMA
 			public Rect rect;
 		}
 
-		public void DrawAllRects(RenderTexture target, Color background = default(Color))
+		void OnRenderObject()
 		{
+			if (Camera.current != myCamera) return;
+
 			if (textureMergeRects != null)
 			{
-				RenderTexture backup = RenderTexture.active;
-				RenderTexture.active = target;
-				GL.Clear(true, true, background);
-				GL.PushMatrix();
-				GL.LoadPixelMatrix(0, target.width, target.height, 0);
-
 				for (int i = 0; i < textureMergeRectCount; i++)
 				{
 					DrawRect(ref textureMergeRects[i]);
 				}
-
-				GL.PopMatrix();
-				RenderTexture.active = backup;
 			}
 		}
 
@@ -57,39 +49,17 @@ namespace UMA
 			Graphics.DrawTexture(textureMergeRect.rect, textureMergeRect.tex, textureMergeRect.mat);
 		}
 
-		public void PostProcess(RenderTexture destination, UMAMaterial.ChannelType channelType)
-		{
-			var source = RenderTexture.GetTemporary(destination.width, destination.height, 0, destination.format, RenderTextureReadWrite.Linear);
-
-			switch (channelType)
-			{
-				case UMAMaterial.ChannelType.NormalMap:
-					foreach (UMAPostProcess postProcess in normalPostProcesses)
-					{
-						Graphics.Blit(destination, source);
-						postProcess.Process(source, destination);
-					}
-					break;
-				case UMAMaterial.ChannelType.Texture:
-					foreach (UMAPostProcess postProcess in dataPostProcesses)
-					{
-						Graphics.Blit(destination, source);
-						postProcess.Process(source, destination);
-					}
-					break;
-				case UMAMaterial.ChannelType.DiffuseTexture:
-					foreach (UMAPostProcess postProcess in diffusePostProcesses)
-					{
-						Graphics.Blit(destination, source);
-						postProcess.Process(source, destination);
-					}
-					break;
-			}
-			RenderTexture.ReleaseTemporary(source);
-		}
-
 		public void Reset()
 		{
+			foreach (UMAPostProcess process in diffusePostProcesses)
+				process.enabled = false;
+
+			foreach (UMAPostProcess process in normalPostProcesses)
+				process.enabled = false;
+
+			foreach (UMAPostProcess process in dataPostProcesses)
+				process.enabled = false;
+
 			textureMergeRectCount = 0;
 		}
 
@@ -125,12 +95,18 @@ namespace UMA
 			{
 				case UMAMaterial.ChannelType.NormalMap:
 					textureMergeRect.mat.shader = normalShader;
+					foreach (UMAPostProcess process in normalPostProcesses)
+						process.enabled = true;
 					break;
 				case UMAMaterial.ChannelType.Texture:
 					textureMergeRect.mat.shader = dataShader;
+					foreach (UMAPostProcess process in dataPostProcesses)
+						process.enabled = true;
 					break;
 				case UMAMaterial.ChannelType.DiffuseTexture:
 					textureMergeRect.mat.shader = diffuseShader;
+					foreach (UMAPostProcess process in diffusePostProcesses)
+						process.enabled = true;
 					break;
 			}
 			textureMergeRect.mat.SetTexture("_MainTex", source.baseOverlay.textureList[textureType]);
@@ -173,14 +149,14 @@ namespace UMA
 
 			Rect overlayRect;
 
-			if (source.rects[i2].width != 0)
+            if (source.rects[i2].width != 0)
 			{
 				overlayRect = new Rect(atlasRect.xMin + source.rects[i2].x * resolutionScale, atlasRect.yMax - source.rects[i2].y * resolutionScale - source.rects[i2].height * resolutionScale, source.rects[i2].width * resolutionScale, source.rects[i2].height * resolutionScale);
-			}
-			else
-			{
+            }
+            else
+            {
 				overlayRect = atlasRect;
-			}
+            }
 
 			SetupMaterial(ref textureMergeRects[textureMergeRectCount], source, i2, ref overlayRect, textureType);
 			textureMergeRectCount++;
