@@ -305,13 +305,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fitAtlas: 1
-  textureMerge: {fileID: 0}
+  textureMerge: {fileID: 11400000, guid: 361a3efbdc5be4e4a88d2409551e0c38, type: 2}
   convertRenderTexture: 0
   convertMipMaps: 1
   atlasResolution: 4096
   defaultOverlayAsset: {fileID: 11400000, guid: fe30fbf67b51de8499624c6913a39e64,
     type: 2}
-  textureMergePrefab: {fileID: 400002, guid: b67c04ae1c362e94e9e8c5505c381525, type: 2}
   meshCombiner: {fileID: 11456094}
   InitialScaleFactor: 2
   fastGeneration: 1

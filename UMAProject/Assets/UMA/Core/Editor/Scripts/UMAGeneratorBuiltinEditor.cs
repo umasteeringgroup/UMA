@@ -6,7 +6,7 @@ namespace UMA.Editors
 	[CustomEditor(typeof(UMAGeneratorBuiltin))]
 	public class UMAGeneratorBuiltinEditor : UMAGeneratorBaseEditor
 	{
-		SerializedProperty textureMergePrefab;
+		SerializedProperty textureMerge;
 		SerializedProperty meshCombiner;
 		SerializedProperty InitialScaleFactor;
 		SerializedProperty IterationCount;
@@ -17,7 +17,7 @@ namespace UMA.Editors
 		public void OnEnable()
 		{
 			base.OnEnable();
-			textureMergePrefab = serializedObject.FindProperty("textureMergePrefab");
+			textureMerge = serializedObject.FindProperty("textureMerge");
 			meshCombiner = serializedObject.FindProperty("meshCombiner");
 			InitialScaleFactor = serializedObject.FindProperty("InitialScaleFactor");
 			IterationCount = serializedObject.FindProperty("IterationCount");
@@ -39,7 +39,7 @@ namespace UMA.Editors
 
 			GUILayout.Space(20);
 			EditorGUILayout.LabelField("Advanced Configuation", centeredLabel);
-			EditorGUILayout.PropertyField(textureMergePrefab);
+			EditorGUILayout.PropertyField(textureMerge);
 			EditorGUILayout.PropertyField(meshCombiner);
 
 			var generator = target as UMAGeneratorBuiltin;
