@@ -491,7 +491,8 @@ namespace UMA
         /// </summary>
         /// <param name="ai"></param>
         /// <param name="SkipBundleCheck"></param>
-        private void AddAssetItem(AssetItem ai, bool SkipBundleCheck = false)
+        /// <returns>Whether the asset was added or not.</returns>
+        private bool AddAssetItem(AssetItem ai, bool SkipBundleCheck = false)
         {
             try
             {
@@ -501,13 +502,13 @@ namespace UMA
                 if (TypeDic.ContainsKey(ai._Name))
                 {
                     // Debug.Log("Duplicate asset " + ai._Name + " was ignored.");
-                    return;
+                    return false;
                 }
 
                 if (ai._Name.ToLower().Contains((ai._Type.Name + "placeholder").ToLower()))
                 {
                     //Debug.Log("Placeholder asset " + ai._Name + " was ignored. Placeholders are not indexed.");
-                    return;
+                    return false;
                 }
 #if UNITY_EDITOR
                 if (!SkipBundleCheck)
@@ -515,15 +516,16 @@ namespace UMA
                     string Path = AssetDatabase.GetAssetPath(ai.Item.GetInstanceID());
                     if (InAssetBundle(Path))
                     {
-                        // Debug.Log("Asset " + ai._Name + "is in Asset Bundle, and was not added to the index.");
-                        return;
+                        if(Debug.isDebugBuild)
+                            Debug.LogWarning("Asset " + ai._Name + "is in an Asset Bundle, and was not added to the index.");
+                        return false;
                     }
                 }
 #endif
                 TypeDic.Add(ai._Name, ai);
                 if (GuidTypes.ContainsKey(ai._Guid))
                 {
-                    return;
+                    return false;
                 }
                 GuidTypes.Add(ai._Guid, ai);
             }
@@ -531,6 +533,7 @@ namespace UMA
             {
                     UnityEngine.Debug.LogWarning("Exception in UMAAssetIndexer.AddAssetItem: " + ex);
             }
+            return true;
         }
 
 #if UNITY_EDITOR
@@ -557,12 +560,13 @@ namespace UMA
         /// </summary>
         /// <param name="type"></param>
         /// <param name="o"></param>
-        public void EvilAddAsset(System.Type type, Object o)
+        /// <returns>Whether the Asset was added or not.</returns>
+        public bool EvilAddAsset(System.Type type, Object o)
         {
             AssetItem ai = null;
             ai = new AssetItem(type, o);
             ai._Path = AssetDatabase.GetAssetPath(o.GetInstanceID());
-            AddAssetItem(ai);
+            return AddAssetItem(ai);
         }
 
         /// <summary>
