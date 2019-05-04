@@ -1,20 +1,27 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
-public class UMAPostProcess : MonoBehaviour
+namespace UMA
 {
-    public Shader shader;
-
-    Material material;
-
-    void Awake()
+    [CreateAssetMenu(menuName = "UMA/Rendering/PostProcess")]
+    public class UMAPostProcess : ScriptableObject
     {
-        material = new Material(shader);
-    }
+        public Shader shader;
 
-    void OnRenderImage(RenderTexture source, RenderTexture destination)
-    {
-        Graphics.Blit(source, destination, material);
+        Material material;
+
+        public void Process(RenderTexture source, RenderTexture destination)
+        {
+            if (shader == null)
+            {
+                if (Debug.isDebugBuild)
+                    Debug.LogError("UMAPostProcess: " + name + " has no shader assigned!");
+                return;
+            }
+
+            if (material == null)
+                material = new Material(shader);
+
+            Graphics.Blit(source, destination, material);
+        }
     }
 }
