@@ -5,10 +5,10 @@ GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Component:
-  - 4: {fileID: 467116}
-  - 114: {fileID: 11442636}
+  - component: {fileID: 467116}
+  - component: {fileID: 11442636}
   m_Layer: 0
   m_Name: UMAContext
   m_TagString: Untagged
@@ -21,10 +21,10 @@ GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Component:
-  - 4: {fileID: 481658}
-  - 114: {fileID: 11481224}
+  - component: {fileID: 481658}
+  - component: {fileID: 11481224}
   m_Layer: 0
   m_Name: OverlayLibrary
   m_TagString: Untagged
@@ -37,9 +37,9 @@ GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Component:
-  - 4: {fileID: 403108}
+  - component: {fileID: 403108}
   m_Layer: 0
   m_Name: UMA_Demo_Context
   m_TagString: Untagged
@@ -52,10 +52,10 @@ GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Component:
-  - 4: {fileID: 466530}
-  - 114: {fileID: 11422736}
+  - component: {fileID: 466530}
+  - component: {fileID: 11422736}
   m_Layer: 0
   m_Name: UMAGenerator
   m_TagString: Untagged
@@ -68,10 +68,10 @@ GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Component:
-  - 4: {fileID: 436058}
-  - 114: {fileID: 11482786}
+  - component: {fileID: 436058}
+  - component: {fileID: 11482786}
   m_Layer: 0
   m_Name: SlotLibrary
   m_TagString: Untagged
@@ -84,10 +84,10 @@ GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Component:
-  - 4: {fileID: 486734}
-  - 114: {fileID: 11495942}
+  - component: {fileID: 486734}
+  - component: {fileID: 11495942}
   m_Layer: 0
   m_Name: RaceLibrary
   m_TagString: Untagged
@@ -100,10 +100,10 @@ GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Component:
-  - 4: {fileID: 463826}
-  - 114: {fileID: 11477192}
+  - component: {fileID: 463826}
+  - component: {fileID: 11477192}
   m_Layer: 0
   m_Name: UMADefaultMeshCombiner
   m_TagString: Untagged
@@ -120,7 +120,6 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children:
   - {fileID: 467116}
   - {fileID: 466530}
@@ -130,6 +129,7 @@ Transform:
   - {fileID: 481658}
   m_Father: {fileID: 0}
   m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &436058
 Transform:
   m_ObjectHideFlags: 1
@@ -139,10 +139,10 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children: []
   m_Father: {fileID: 403108}
   m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &463826
 Transform:
   m_ObjectHideFlags: 1
@@ -152,10 +152,10 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children: []
   m_Father: {fileID: 403108}
   m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &466530
 Transform:
   m_ObjectHideFlags: 1
@@ -165,10 +165,10 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children: []
   m_Father: {fileID: 403108}
   m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &467116
 Transform:
   m_ObjectHideFlags: 1
@@ -178,10 +178,10 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0.07072538, y: 1.1031593, z: -0.27025867}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children: []
   m_Father: {fileID: 403108}
   m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &481658
 Transform:
   m_ObjectHideFlags: 1
@@ -191,10 +191,10 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children: []
   m_Father: {fileID: 403108}
   m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &486734
 Transform:
   m_ObjectHideFlags: 1
@@ -204,10 +204,10 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children: []
   m_Father: {fileID: 403108}
   m_RootOrder: 3
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &11422736
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -220,15 +220,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fitAtlas: 1
-  textureMerge: {fileID: 0}
+  textureMerge: {fileID: 11400000, guid: d242fc6cda21e9b42b95a0c72bb3bee1, type: 2}
   convertRenderTexture: 0
   convertMipMaps: 1
   atlasResolution: 4096
   defaultOverlayAsset: {fileID: 11400000, guid: fe30fbf67b51de8499624c6913a39e64,
     type: 2}
-  textureMergePrefab: {fileID: 400002, guid: b67c04ae1c362e94e9e8c5505c381525, type: 2}
   meshCombiner: {fileID: 11477192}
   InitialScaleFactor: 2
+  IterationCount: 1
   fastGeneration: 1
   garbageCollectionRate: 8
 --- !u!114 &11442636
@@ -343,7 +343,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: eec31456f04efc743a680d6caf7207e6, type: 2}
   - {fileID: 11400000, guid: 475458bd3c70c4148997ace0f6619dbb, type: 2}
   - {fileID: 11400000, guid: 8a43aa28029a29d42954e05d04d1bec3, type: 2}
-  - {fileID: 11400000, guid: f3796aea3cb214124978cb1945b76001, type: 2}
+  - {fileID: 0}
   - {fileID: 11400000, guid: a209ee514b60b9044bdef1bcbf69967d, type: 2}
   - {fileID: 11400000, guid: 1320201c90abfb148ba70377406b5dc4, type: 2}
   - {fileID: 11400000, guid: f0bcd19507f7b524faee4d30b08d9feb, type: 2}
@@ -410,7 +410,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 6a82f5f7511df8940a287c5d1d34e6ef, type: 2}
   - {fileID: 11400000, guid: bdb13e3982c3e4644b863ae1c9bdafe1, type: 2}
   - {fileID: 11400000, guid: 47737e92a689d49489b317bdd98ff50c, type: 2}
-  - {fileID: 11400000, guid: 72d68f914034a9c4f94c733168884070, type: 2}
+  - {fileID: 0}
   - {fileID: 11400000, guid: 25c63a2415552414fbc33e7a48efc961, type: 2}
   - {fileID: 11400000, guid: 9ddf3b23c4342294988947a71af2d7ab, type: 2}
   - {fileID: 11400000, guid: 1ce0f12b23c3c9941a8f257ae9ddd78f, type: 2}
