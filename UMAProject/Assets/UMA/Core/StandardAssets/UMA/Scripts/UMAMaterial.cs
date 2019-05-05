@@ -37,6 +37,22 @@ namespace UMA
             DiffuseTexture = 4,
         }
 
+		static public Color GetBackgroundColor(ChannelType channelType)
+		{
+			return ChannelBackground[(int)channelType];
+		}
+
+		//The ChannelTypes index into this for it's corresponding background color.
+		//Needed to have normalMaps have a grey background for proper blending
+		static Color[] ChannelBackground =
+		{
+			new Color(0,0,0,0),
+			Color.grey,
+			new Color(0,0,0,0),
+			new Color(0,0,0,0),
+			new Color(0,0,0,0)
+		};
+
         [Serializable]
         public struct MaterialChannel
         {
