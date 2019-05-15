@@ -97,7 +97,13 @@ namespace UMA
 					 moduleCount = 0;
 
 					 int width = Mathf.FloorToInt(atlas.cropResolution.x);
-					 int height = Mathf.FloorToInt(atlas.cropResolution.y);
+					 int height = Mathf.FloorToInt(atlas.cropResolution.y);	
+					 
+					 if (width == 0 || height == 0) 
+					 {
+						 continue;
+					 }
+					 
 					 destinationTexture = new RenderTexture(Mathf.FloorToInt(atlas.cropResolution.x * umaData.atlasResolutionScale), Mathf.FloorToInt(atlas.cropResolution.y * umaData.atlasResolutionScale), 0, slotData.asset.material.channels[textureType].textureFormat, RenderTextureReadWrite.Linear);
 					 destinationTexture.filterMode = FilterMode.Point;
 					 destinationTexture.useMipMap = umaGenerator.convertMipMaps && !umaGenerator.convertRenderTexture;
