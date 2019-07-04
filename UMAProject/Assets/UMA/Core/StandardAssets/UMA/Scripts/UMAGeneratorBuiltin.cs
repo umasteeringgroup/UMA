@@ -33,6 +33,10 @@ namespace UMA
 		/// </summary>
         [Tooltip("Set Fast Generation to true to have the UMA Avatar generated in a single update. Otherwise, generation can span multiple frames.")]
 		public bool fastGeneration = true;
+
+		[Tooltip("Enable Process All Pending to force the generate to process all pending UMA during the next frame")]
+		public bool processAllPending = false;
+
 		private int forceGarbageCollect;
         /// <summary>
         /// Number of character updates before triggering System garbage collect.
@@ -129,7 +133,17 @@ namespace UMA
 			{
 				stopWatch.Reset();
 				stopWatch.Start();
-				for (int i = 0; i < IterationCount; i++)
+				int count = IterationCount;
+
+				// If processAllPending is set, process as many are in the queue right now.
+				// We get the count (and multiply by two for slow gen) in case bad events add more items to the queue.
+				if (processAllPending)
+				{
+					count = umaDirtyList.Count;
+					if (!fastGeneration) count *= 2;
+				}
+
+				for (int i = 0; i < count; i++)
 				{
 					OnDirtyUpdate();
 					if (IsIdle())
