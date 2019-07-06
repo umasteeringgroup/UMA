@@ -17,7 +17,6 @@ namespace UMA
 		private LinkedList<UMAData> cleanUmas = new LinkedList<UMAData>();
 		private LinkedList<UMAData> dirtyUmas = new LinkedList<UMAData>();
 		private UMAGeneratorCoroutine activeGeneratorCoroutine;
-		public Transform textureMergePrefab;
 		public UMAMeshCombiner meshCombiner;
 
         /// <summary>
@@ -25,6 +24,9 @@ namespace UMA
         /// </summary>
         [Tooltip("Increase scale factor to decrease texture usage. A value of 1 means the textures will not be downsampled. Values greater than 1 will result in texture savings. The size of the texture is divided by this value.")]
         public int InitialScaleFactor = 1;
+
+		[Tooltip("Number of iterations to process each frame")]
+		public int IterationCount = 1;
 
 		/// <summary>
 		/// If true, generate in a single update.
@@ -65,10 +67,8 @@ namespace UMA
 
 			if (!textureMerge)
 			{
-				Transform tempTextureMerger = Instantiate(textureMergePrefab, Vector3.zero, Quaternion.identity) as Transform;
-				textureMerge = tempTextureMerger.GetComponent("TextureMerge") as TextureMerge;
-				textureMerge.transform.parent = transform;
-				textureMerge.gameObject.SetActive(false);
+				if (Debug.isDebugBuild)
+					Debug.LogError("No TextureMerge set!");
 			}
 
 			//Garbage Collection hack
@@ -129,7 +129,12 @@ namespace UMA
 			{
 				stopWatch.Reset();
 				stopWatch.Start();
-				OnDirtyUpdate();
+				for (int i = 0; i < IterationCount; i++)
+				{
+					OnDirtyUpdate();
+					if (IsIdle())
+						break;
+				}
 				ElapsedTicks += stopWatch.ElapsedTicks;
 #if UNITY_EDITOR
 				UnityEditor.EditorUtility.SetDirty(this);

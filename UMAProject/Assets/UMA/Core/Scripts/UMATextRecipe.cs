@@ -19,7 +19,7 @@ namespace UMA
 		/// </summary>
 		/// <returns>The packed recipe.</returns>
 		/// <param name="context">Context.</param>
-		public override UMAPackedRecipeBase.UMAPackRecipe PackedLoad(UMAContext context)
+		public override UMAPackedRecipeBase.UMAPackRecipe PackedLoad(UMAContext context = null)
 		{
 			if ((recipeString == null) || (recipeString.Length == 0)) return new UMAPackRecipe();
 				return JsonUtility.FromJson<UMAPackRecipe>(recipeString);

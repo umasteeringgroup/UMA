@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace UMA
 {
-	public class UMAGenerator : UMAGeneratorBuiltin
+	public class UMAGenerator : UMAGeneratorBuiltin 
 	{
 		public override void Awake()
 		{

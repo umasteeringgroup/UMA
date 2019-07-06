@@ -494,7 +494,7 @@ namespace UMA.AssetBundles
 #else
 				Caching.CleanCache();          
 #endif
-				return;
+				GUIUtility.ExitGUI();
 			}
 			EndVerticalPadded(5);
 			EditorGUILayout.Space();
@@ -644,27 +644,23 @@ namespace UMA.AssetBundles
 				EditorGUILayout.HelpBox ("Make a testing Build that uses the Local Server using the button below.", MessageType.Info);
 
 				developmentBuild = EditorGUILayout.Toggle ("Development Build", developmentBuild);
-				if (GUILayout.Button ("Build and Run!")) {
-					BuildScript.BuildAndRunPlayer (developmentBuild);
+				if (GUILayout.Button("Build and Run!"))
+				{
+					BuildScript.BuildAndRunPlayer(developmentBuild);
+					GUIUtility.ExitGUI();
 				}
-				if (!showClearCache || !EnableLocalAssetBundleServer) {//
-					EditorGUI.EndDisabledGroup ();
+				else
+				{
+					if (!showClearCache || !EnableLocalAssetBundleServer)
+					{
+						EditorGUI.EndDisabledGroup();
+					}
 				}
-				EditorGUILayout.Space ();
-				EndVerticalPadded (5);
-
-				EditorGUILayout.Space ();
 			}
-			//END SCROLL VIEW
-			//for some reason when we build or build assetbundles when this window is open we get an error
-			//InvalidOperationException: Operation is not valid due to the current state of the object
-			//so try catch is here as a nasty hack to get rid of it
-			try
-			{
-				EditorGUILayout.EndVertical();
-				EditorGUILayout.EndScrollView();
-			}
-			catch { }
+			EditorGUILayout.Space();
+			EndVerticalPadded(5);
+			EditorGUILayout.EndVertical();
+			EditorGUILayout.EndScrollView();
 
 		}
 
@@ -673,35 +669,20 @@ namespace UMA.AssetBundles
 
 		public static void BeginVerticalPadded(float padding, Color backgroundColor)
 		{
-			//for some reason when we build or build assetbundles when this window is open we get an error
-			//InvalidOperationException: Operation is not valid due to the current state of the object
-			//so try catch is here as a nasty hack to get rid of it
-			try
-			{
-				GUI.color = backgroundColor;
-				GUILayout.BeginHorizontal(EditorStyles.textField);
-				GUI.color = Color.white;
-
-				GUILayout.Space(padding);
-				GUILayout.BeginVertical();
-				GUILayout.Space(padding);
-			}
-			catch { }
+			GUI.color = backgroundColor;
+			GUILayout.BeginHorizontal(EditorStyles.textField);
+			GUI.color = Color.white;
+			GUILayout.Space(padding);
+			GUILayout.BeginVertical();
+			GUILayout.Space(padding);
 		}
 
 		public static void EndVerticalPadded(float padding)
 		{
-			//for some reason when we build or build assetbundles when this window is open we get an error
-			//InvalidOperationException: Operation is not valid due to the current state of the object
-			//so try catch is here as a nasty hack to get rid of it
-			try
-			{
-				GUILayout.Space(padding);
-				GUILayout.EndVertical();
-				GUILayout.Space(padding);
-				GUILayout.EndHorizontal();
-			}
-			catch { }
+			GUILayout.Space(padding);
+			GUILayout.EndVertical();
+			GUILayout.Space(padding);
+			GUILayout.EndHorizontal();
 		}
 
 		public static void BeginVerticalIndented(float indentation, Color backgroundColor)

@@ -1,3 +1,14 @@
+What's new in 2.8.1
+Restructed files and folders.
+Easier to delete examples.
+Added Iterations to UMAGenerator to increase the number of avatars generated per frame.
+Added ASMDEF files to speed compiles. (This is a 2017.3+ feature)
+Various minor fixes and updates (new accessors, build issues fixed, etc).
+Added DCA Randomizer and Random Crowd generator and scene.
+Updated General Documentation.
+Added Content Creation documentation.
+Compatiblity changes for UMA Power Tools 2.8
+
 What’s new in 2.8
 
 New Features

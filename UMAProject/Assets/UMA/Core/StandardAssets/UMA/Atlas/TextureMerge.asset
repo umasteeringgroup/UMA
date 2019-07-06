@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bb565bb3cf87a74589f703e67a3d5f9, type: 3}
+  m_Name: TextureMerge
+  m_EditorClassIdentifier: 
+  material: {fileID: 2100000, guid: 9dcf0ea2079905b4eabed17a904b047c, type: 2}
+  normalShader: {fileID: 4800000, guid: 0c7937a991ef0764fb16577ebf24911e, type: 3}
+  diffuseShader: {fileID: 4800000, guid: ae83be5246f311646b3043ed012d9d64, type: 3}
+  dataShader: {fileID: 4800000, guid: 8179a5383e28f6840a80314368b93979, type: 3}
+  cutoutShader: {fileID: 4800000, guid: 6ec55823d603ee4478b56d3f0d7ce6bb, type: 3}
+  diffusePostProcesses: []
+  normalPostProcesses:
+  - {fileID: 11400000, guid: 45d9ffb21df267d4282b6c9bbc157775, type: 2}
+  dataPostProcesses: []

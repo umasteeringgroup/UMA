@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
@@ -251,6 +251,12 @@ namespace UMA
 			UMADnaBase umaDna = null;
 			//reset the live scale on the overallModifiers ready for any adjustments any plugins might make
 			liveScale = -1;
+			
+			//Add this ApplyHeightMassRadius method to this umaDatas CharacterUpdated event so that HeightMassRadius and bounds BaseCharacterModifiers get applied after all ConverterControllers on this character
+			umaData.OnCharacterBeforeUpdated += ApplyHeightMassRadius;
+			//Add this ApplyAdjustScale method to this umaDatas DnaUpdated event so that we adjust the global scale just after all other dna adjustments
+			umaData.OnCharacterBeforeDnaUpdated += ApplyAdjustScale;
+			
 			//fixDNAPrefabs- do we need to deal with 'reset' as dnaconverterBehaviour used to do? If so wouldn't we just apply all the plugins with MasterWeight set to 0?
 			//if (!asReset)
 			//{
@@ -263,10 +269,31 @@ namespace UMA
 			{
 				_applyDNAPlugins[i].ApplyDNA(umaData, skeleton, DNATypeHash);
 			}
-			_overallModifiers.UpdateCharacter(umaData, skeleton, false);
+			//_overallModifiers.UpdateCharacter(umaData, skeleton, false);
 			ApplyDnaCallbackDelegates(umaData);
 		}
 
+		/// <summary>
+		/// Applies OverallModifiers after all other dna changes have completed
+		/// </summary>
+		/// <param name="umaData"></param>
+		public void ApplyAdjustScale(UMAData umaData)
+		{
+			_overallModifiers.AdjustScale(umaData.skeleton);
+			//remove this listener from this umaData
+			umaData.OnCharacterBeforeDnaUpdated -= ApplyAdjustScale;
+		}
+
+		/// <summary>
+		/// Applies ApplyHeightMassRadius after all other dna changes have completed
+		/// </summary>
+		/// <param name="umaData"></param>
+		public void ApplyHeightMassRadius(UMAData umaData)
+		{
+			_overallModifiers.UpdateCharacterHeightMassRadius(umaData, umaData.skeleton);
+			//remove this listener from this umaData
+			umaData.OnCharacterBeforeUpdated -= ApplyHeightMassRadius;
+		}
 
 		public void ApplyDnaCallbackDelegates(UMAData umaData)
 		{
