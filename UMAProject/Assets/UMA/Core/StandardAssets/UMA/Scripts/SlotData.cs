@@ -32,6 +32,9 @@ namespace UMA
 		//For MeshHide system, this can get added at runtime and is the filtered HideMask that the combiner uses.
 		public BitArray[] meshHideMask;
 
+		//Mutable version pulled off the immutable asset.  This is so we can modify it at runtime if needed.
+		public UMARendererAsset rendererAsset;
+
 		/// <summary>
 		/// Constructor for slot using the given asset.
 		/// </summary>
@@ -40,6 +43,7 @@ namespace UMA
 		{
 			this.asset = asset;
 			overlayScale = asset.overlayScale;
+			rendererAsset = asset.RendererAsset;
 		}
 
         /// <summary>
