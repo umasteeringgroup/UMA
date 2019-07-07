@@ -114,6 +114,10 @@ namespace UMA
 				else
 					return null;
 			}
+			set
+			{
+				_dnaAsset = value;
+			}
 		}
 
 		/// <summary>

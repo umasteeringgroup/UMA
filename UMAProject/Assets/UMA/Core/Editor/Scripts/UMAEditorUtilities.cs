@@ -6,6 +6,7 @@ using UMA.CharacterSystem;
 using UnityEditor.Animations;
 using System.IO;
 using System.Text.RegularExpressions;
+using UMA.PoseTools;
 
 namespace UMA
 {
@@ -202,7 +203,7 @@ namespace UMA
 		/// <param name="od"></param>
 		/// <param name="slotName"></param>
 		/// <param name="addToGlobalLibrary"></param>
-		public static void CreateRecipe(string path, SlotDataAsset sd, OverlayDataAsset od, string slotName, bool addToGlobalLibrary)
+		public static UMAWardrobeRecipe CreateRecipe(string path, SlotDataAsset sd, OverlayDataAsset od, string slotName, bool addToGlobalLibrary)
 		{
 			// Generate an asset in memory
 			UMAWardrobeRecipe asset = ScriptableObject.CreateInstance<CharacterSystem.UMAWardrobeRecipe>();
@@ -225,9 +226,11 @@ namespace UMA
 			{
 				// Add it to the global libary
 				UMAAssetIndexer.Instance.EvilAddAsset(typeof(CharacterSystem.UMAWardrobeRecipe), asset);
+				EditorUtility.SetDirty(UMAAssetIndexer.Instance);
 			}
 			// Inform the asset database a file has changes
 			AssetDatabase.Refresh();
+			return asset;
 		}
 
 		[MenuItem("UMA/Create Wardrobe Recipe from selected slot and overlay")]
@@ -289,7 +292,7 @@ namespace UMA
 		}
 	}
 
-    public static class UMAExtensions
+	public static class UMAExtensions
     {
         public static System.Type[] GetAllDerivedTypes(this System.AppDomain aAppDomain, System.Type aType)
         {
