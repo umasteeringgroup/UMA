@@ -195,8 +195,11 @@ namespace UMA
 					{
 						AnimatorState snapshot = new AnimatorState();
 						snapshot.SaveAnimatorState(animator);
-						UMAUtils.DestroySceneObject(animator.avatar);
-						SetAvatar(umaData, animator);
+						if (!umaData.KeepAvatar || animator.avatar == null)
+						{
+							UMAUtils.DestroySceneObject(animator.avatar);
+							SetAvatar(umaData, animator);
+						}
 						if(animator.runtimeAnimatorController != null)
 							snapshot.RestoreAnimatorState(animator);
 					}
@@ -215,6 +218,8 @@ namespace UMA
 		/// <param name="animator">Animator.</param>
 		public static void SetAvatar(UMAData umaData, Animator animator)
 		{
+			if (umaData.KeepAvatar && animator.avatar != null)
+				return;
 			var umaTPose = umaData.umaRecipe.raceData.TPose;
 
 			switch (umaData.umaRecipe.raceData.umaTarget)
