@@ -92,7 +92,7 @@ namespace UMA.Editors
 			string SkinnedName = path + '/' + assetName + "_Skinned.prefab";
 
 #if UNITY_2018_3_OR_NEWER
-            var skinnedResult = PrefabUtility.SaveAsPrefabAsset(newObject, SkinnedName");
+            var skinnedResult = PrefabUtility.SaveAsPrefabAsset(newObject, SkinnedName);
 #else
 			var skinnedResult = UnityEditor.PrefabUtility.CreatePrefab(SkinnedName, newObject);
 #endif
