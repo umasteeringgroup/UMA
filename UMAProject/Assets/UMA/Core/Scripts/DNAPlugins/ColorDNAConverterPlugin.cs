@@ -137,7 +137,8 @@ namespace UMA
 			if (needsUpdate)
 			{
 				umaData.isTextureDirty = true;
-				umaData.isAtlasDirty = true;
+				//pretty sure this doesn't affect the atlas
+				//umaData.isAtlasDirty = true;
 			}
 			_dnaAppliedTo.Add(umaData.gameObject);
 		}
@@ -250,6 +251,8 @@ namespace UMA
 				float bCurr = 0f;
 				float aCurr = 0f;
 				OverlayColorData ocd;
+				//Color modifiers can be costly so only return true if anything actually changed
+				bool adjusted = false;
 				for (int oi = 0; oi < targetOverlays.Count; oi++)
 				{
 					ocd = targetOverlays[oi].colorData;
@@ -261,8 +264,11 @@ namespace UMA
 							rAdj = Mathf.Lerp(rCurr, rAdj, masterWeight);
 						else
 							rAdj = rAdj * masterWeight;
-						if ((colorModifier.R.Absolute && rAdj != 0) || (!colorModifier.R.Absolute && rAdj != rCurr))
+						if ((colorModifier.R.Absolute && rAdj != 0 && rAdj != rCurr) || (!colorModifier.R.Absolute && rAdj != rCurr))
+						{
 							targetOverlays[oi].colorComponentAdjusters.Add(new OverlayData.ColorComponentAdjuster(textureChannel, 0, rAdj, colorModifier.R.adjustmentType));
+							adjusted = true;
+						}
 					}
 					if (colorModifier.G.enable)
 					{
@@ -272,8 +278,11 @@ namespace UMA
 							gAdj = Mathf.Lerp(gCurr, gAdj, masterWeight);
 						else
 							gAdj = gAdj * masterWeight;
-						if ((colorModifier.G.Absolute && gAdj != 0) || (!colorModifier.G.Absolute && gAdj != gCurr))
+						if ((colorModifier.G.Absolute && gAdj != 0 && gAdj != gCurr) || (!colorModifier.G.Absolute && gAdj != gCurr))
+						{
 							targetOverlays[oi].colorComponentAdjusters.Add(new OverlayData.ColorComponentAdjuster(textureChannel, 1, gAdj, colorModifier.G.adjustmentType));
+							adjusted = true;
+						}
 					}
 					if (colorModifier.B.enable)
 					{
@@ -283,8 +292,11 @@ namespace UMA
 							bAdj = Mathf.Lerp(bCurr, bAdj, masterWeight);
 						else
 							bAdj = bAdj * masterWeight;
-						if ((colorModifier.B.Absolute && bAdj != 0) || (!colorModifier.B.Absolute && bAdj != bCurr))
+						if ((colorModifier.B.Absolute && bAdj != 0 && bAdj != bCurr) || (!colorModifier.B.Absolute && bAdj != bCurr))
+						{
 							targetOverlays[oi].colorComponentAdjusters.Add(new OverlayData.ColorComponentAdjuster(textureChannel, 2, bAdj, colorModifier.B.adjustmentType));
+							adjusted = true;
+						}
 					}
 					if (colorModifier.A.enable)
 					{
@@ -296,11 +308,14 @@ namespace UMA
 							aAdj = Mathf.Lerp(aCurr, aAdj * masterWeight, masterWeight);
 						else
 							aAdj = aAdj * masterWeight;
-						if ((colorModifier.A.Absolute && aAdj != 0) || (!colorModifier.A.Absolute && aAdj != aCurr))
+						if ((colorModifier.A.Absolute && aAdj != 0 && aAdj != aCurr) || (!colorModifier.A.Absolute && aAdj != aCurr))
+						{
 							targetOverlays[oi].colorComponentAdjusters.Add(new OverlayData.ColorComponentAdjuster(textureChannel, 3, aAdj, colorModifier.A.adjustmentType));
+							adjusted = true;
+						}
 					}
 				}
-				return true;
+				return adjusted;
 			}
 
 			[System.Serializable]

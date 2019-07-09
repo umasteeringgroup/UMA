@@ -2997,9 +2997,13 @@ namespace UMA.CharacterSystem
                                     esd.AddOverlay(overlaysToAdd[oi]);
                             }
                         }
-                        if (!HiddenSlots.Contains(sd.slotName))
-                            HiddenSlots.Add(sd.slotName);
-                    }
+						//09072019 if the equivalent slot is the same as the slot we are checking, then the user has added an unnecessary entry to the compatibility settings
+						//but its very easy to do when base races share things like the inner mouth and eyes, so just skip it.
+						if (!HiddenSlots.Contains(sd.slotName) && equivalentSlot != sd.slotName)
+						{
+							HiddenSlots.Add(sd.slotName);
+						}
+					}
                 }
             }
             //if we make this happen after RemoveHiddenSlots() we need to call it again

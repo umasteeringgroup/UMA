@@ -289,14 +289,14 @@ namespace UMA
                 res._values[ii] = bDnaSettings[ii].value * (1f / 255f);
             }
             res.dnaAssetName = bDnaAssetName;
-            //Then set the asset using dnaAsset.set so that everything is validated and any new dna gets added with default values
-            //Usually we need to find the asset because the instance id in the recipe will not be the same in different sessions of Unity
-            if (bDnaAsset == null && bDnaAssetName != "")
-            {
+			//Then set the asset using dnaAsset.set so that everything is validated and any new dna gets added with default values
+			//Usually we need to find the asset because the instance id in the recipe will not be the same in different sessions of Unity
+			if ((bDnaAsset == null && bDnaAssetName != "") || (bDnaAssetName != "" && (bDnaAsset != null && bDnaAsset.name != bDnaAssetName)))
+			{
                 res.FindMissingDnaAsset(bDnaAssetName);
             }
-            else
-            {
+			else if (bDnaAsset != null)
+			{
                 res.dnaAsset = bDnaAsset;
             }
 

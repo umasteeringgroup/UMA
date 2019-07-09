@@ -1056,19 +1056,19 @@ namespace UMA
 			if (uv2 != null)
 			{
 				newMeshData.uv2 = new Vector2[uv2.Length];
-				Array.Copy(uv2, newMeshData.uv, uv2.Length);
+				Array.Copy(uv2, newMeshData.uv2, uv2.Length);
 			}
 
 			if (uv3 != null)
 			{
 				newMeshData.uv3 = new Vector2[uv3.Length];
-				Array.Copy(uv3, newMeshData.uv, uv3.Length);
+				Array.Copy(uv3, newMeshData.uv3, uv3.Length);
 			}
 
 			if (uv4 != null)
 			{
 				newMeshData.uv4 = new Vector2[uv4.Length];
-				Array.Copy(uv4, newMeshData.uv, uv4.Length);
+				Array.Copy(uv4, newMeshData.uv4, uv4.Length);
 			}
 
 			if(blendShapes != null)
