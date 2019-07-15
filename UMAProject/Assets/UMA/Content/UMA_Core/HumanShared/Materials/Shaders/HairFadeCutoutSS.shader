@@ -18,6 +18,7 @@ Shader "UMA/Hair Fade Cutout (Single Sided)"
 		_SmoothnessStrength("Smoothness Strength", Range (0,1)) = 0.5
 		_SmoothnessAdd("Smoothness Add",Range(0,1)) = 0.0
 		_MetallicGlossMap("Metallic Gloss Map", 2D) = "white" {}
+		_FadeFactor("Fade Factor", Range(0,2)) = 2.0
 		[HideInInspector] _texcoord( "", 2D ) = "white" {}
 	}
 
@@ -47,6 +48,7 @@ Shader "UMA/Hair Fade Cutout (Single Sided)"
 		uniform sampler2D _MetallicGlossMap;
 		uniform float4 _MetallicGlossMap_ST;
 		uniform float _MaskClipValue = 0.5;
+		uniform float _FadeFactor;
 
 		void surf( Input i , inout SurfaceOutputStandard o )
 		{
@@ -87,7 +89,7 @@ Shader "UMA/Hair Fade Cutout (Single Sided)"
 			float2 uv_MetallicGlossMap = i.uv_texcoord;// *_MetallicGlossMap_ST.xy + _MetallicGlossMap_ST.zw;
 			o.Metallic = _MetallicAdd + (tex2D(_MetallicGlossMap, uv_MetallicGlossMap).x * _MetallicStrength);
 			o.Smoothness = _SmoothnessAdd + (tex2D(_MetallicGlossMap, uv_MetallicGlossMap).a * _SmoothnessStrength);
-			o.Alpha = tex2DNode1.a;
+			o.Alpha = tex2DNode1.a * _FadeFactor;
 		}
 
 		ENDCG

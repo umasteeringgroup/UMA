@@ -68,13 +68,15 @@ namespace UMA
 			return prefab;
 		}
 
+
+		//public static string GetAssetPathAndName();
 		/// <summary>
 		/// Creates a new asset of the type T
 		/// </summary>
 		/// <param name="newAssetPath">The full path relative to 'Assets' (including extension) where the file should be saved. If empty the path and name are based on the currently selected object and desired type.</param>
 		/// <param name="selectCreatedAsset">If true the created asset will be selected after it is created (and show in the inspector)</param>
 		/// <returns>t</returns>
-		public static T CreateAsset<T>(string newAssetPath = "", bool selectCreatedAsset = true, string baseName = "New") where T : ScriptableObject
+		public static T CreateAsset<T>(string newAssetPath = "", bool selectCreatedAsset = true, string baseName = "New", bool AddTypeToName=true) where T : ScriptableObject
 	    {
 	        T asset = ScriptableObject.CreateInstance<T>();
 
@@ -89,28 +91,45 @@ namespace UMA
 			}
 			else
 			{
-				var path = AssetDatabase.GetAssetPath(Selection.activeObject);
-				if (path == "")
-				{
-					path = "Assets";
-				}
-				else if (File.Exists(path)) // modified this line, folders can have extensions.
-				{
-					path = path.Replace("/" + Path.GetFileName(AssetDatabase.GetAssetPath(Selection.activeObject)), "");
-				}
-
-				var assetName = baseName + " " + typeof(T).Name;
-
-				assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/" + assetName + ".asset");
+				assetPathAndName = GetAssetPathAndName<T>(baseName, AddTypeToName);
 			}
 
-	        AssetDatabase.CreateAsset(asset, assetPathAndName);
+			AssetDatabase.CreateAsset(asset, assetPathAndName);
 
 	        AssetDatabase.SaveAssets();
 			if(selectCreatedAsset)
 				Selection.activeObject = asset;
 			return asset;
 	    }
+
+		/// <summary>
+		/// Generates a path and asset name
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="baseName"></param>
+		/// <param name="AddTypeToName"></param>
+		/// <returns></returns>
+		public static string GetAssetPathAndName<T>(string baseName, bool AddTypeToName) where T : ScriptableObject
+		{
+			string assetPathAndName;
+			var path = AssetDatabase.GetAssetPath(Selection.activeObject);
+			if (path == "")
+			{
+				path = "Assets";
+			}
+			else if (File.Exists(path)) // modified this line, folders can have extensions.
+			{
+				path = path.Replace("/" + Path.GetFileName(AssetDatabase.GetAssetPath(Selection.activeObject)), "");
+			}
+
+			string assetName = baseName;
+
+			if (AddTypeToName)
+				assetName = baseName + " " + typeof(T).Name;
+
+			assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/" + assetName + ".asset");
+			return assetPathAndName;
+		}
 	}
 }
 #endif

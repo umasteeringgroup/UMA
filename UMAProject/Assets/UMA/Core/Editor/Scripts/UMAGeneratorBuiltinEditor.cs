@@ -12,6 +12,7 @@ namespace UMA.Editors
 		SerializedProperty IterationCount;
 		SerializedProperty fastGeneration;
 		SerializedProperty garbageCollectionRate;
+		SerializedProperty processAllPending;
 
 #pragma warning disable 0108
 		public void OnEnable()
@@ -21,6 +22,7 @@ namespace UMA.Editors
 			meshCombiner = serializedObject.FindProperty("meshCombiner");
 			InitialScaleFactor = serializedObject.FindProperty("InitialScaleFactor");
 			IterationCount = serializedObject.FindProperty("IterationCount");
+			processAllPending = serializedObject.FindProperty("processAllPending");
 			fastGeneration = serializedObject.FindProperty("fastGeneration");
 			garbageCollectionRate = serializedObject.FindProperty("garbageCollectionRate");
 		}
@@ -36,7 +38,7 @@ namespace UMA.Editors
 			EditorGUILayout.PropertyField(fastGeneration);
 			EditorGUILayout.PropertyField(IterationCount);
 			EditorGUILayout.PropertyField(garbageCollectionRate);
-
+			EditorGUILayout.PropertyField(processAllPending);
 			GUILayout.Space(20);
 			EditorGUILayout.LabelField("Advanced Configuation", centeredLabel);
 			EditorGUILayout.PropertyField(textureMerge);

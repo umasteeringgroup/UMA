@@ -9,27 +9,25 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f0188188c253e0c4bb9b46e19fa7312e, type: 3}
-  m_Name: MaleBeard1
+  m_Name: TrollHead
   m_EditorClassIdentifier: 
   recipeType: Wardrobe
-  DisplayValue: Devilish Goatee
+  DisplayValue: TrollFace
   compatibleRaces:
-  - HumanMaleDCS
   - HumanMale
   wardrobeRecipeThumbs:
-  - race: HumanMaleDCS
-    filename: 
-    thumb: {fileID: 21300000, guid: 202cec08c39591848ba805b12ad3016e, type: 3}
   - race: HumanMale
     filename: 
     thumb: {fileID: 0}
-  wardrobeSlot: Beard
+  wardrobeSlot: Face
   Hides: []
   suppressWardrobeSlots: []
   activeWardrobeSet: []
   MeshHideAssets: []
   recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"M_High
-    poly Head","scale":100,"copyIdx":-1,"overlays":[{"id":"MaleBeard01","colorIdx":0,"rect":[512,0,1024,512]}]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"TestAroo","scale":100,"copyIdx":-1,"overlays":[]}],"colors":[],"fColors":[{"name":"Hair","colors":[106,79,54,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"","packedDna":[]}'
+    poly Head","scale":100,"copyIdx":-1,"overlays":[{"id":"M_Face_Old","colorIdx":0,"rect":[0,0,0,0]}]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"Trollface_slot","scale":100,"copyIdx":-1,"overlays":[]}],"colors":[],"fColors":[{"name":"Skin","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"","packedDna":[]}'
   PredefinedDNA:
-    PreloadValues: []
+    PreloadValues:
+    - Name: headSize
+      Value: 0.5
   replaces: Nothing

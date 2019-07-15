@@ -73,6 +73,9 @@ namespace UMA.CharacterSystem
         [Tooltip("If true, then the meshcombiner will merge blendshapes found on slots that are part of this umaData")]
         public bool loadBlendShapes = false;
 
+		[Tooltip("If true, will reuse the mecanim avatar if it exists.")]
+		public bool keepAvatar;
+
         //This will generate itself from a list available Races and set itself to the current value of activeRace.name
         [Tooltip("Selects the race to used. When initialized, the Avatar will use the base recipe from the RaceData selected.")]
         public RaceSetter activeRace = new RaceSetter();
@@ -2869,6 +2872,7 @@ namespace UMA.CharacterSystem
             ApplyPredefinedDNA();
             UpdateAssetBundlesUsedbyCharacter();
 
+			umaData.KeepAvatar = keepAvatar;
             return false;
         }
 

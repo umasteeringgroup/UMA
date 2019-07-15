@@ -70,7 +70,7 @@ namespace UMA.CharacterSystem.Editors
 		{
 			serializedObject.Update();
 		   Editor.DrawPropertiesExcluding(serializedObject, new string[] { "hide", "loadBlendShapes","activeRace","defaultChangeRaceOptions","cacheCurrentState", "rebuildSkeleton", "preloadWardrobeRecipes", "raceAnimationControllers",
-				"characterColors","BoundsOffset","_buildCharacterEnabled",
+				"characterColors","BoundsOffset","_buildCharacterEnabled","keepAvatar",
 				/*LoadOtions fields*/ "defaultLoadOptions", "loadPathType", "loadPath", "loadFilename", "loadString", "loadFileOnStart", "waitForBundles", /*"buildAfterLoad",*/
 				/*SaveOptions fields*/ "defaultSaveOptions", "savePathType","savePath", "saveFilename", "makeUniqueFilename","ensureSharedColors", 
 				/*Moved into AdvancedOptions*/"context","umaData","umaRecipe", "umaAdditionalRecipes","umaGenerator", "animationController",
@@ -366,6 +366,7 @@ namespace UMA.CharacterSystem.Editors
 					EditorGUILayout.HelpBox("Build Character Enabled: Builds the character on recipe load or race changed. If you want to load multiple recipes into a character you can disable this and enable it when you are done. By default this should be true.", MessageType.Info);
 				}
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("loadBlendShapes"), new GUIContent("Load BlendShapes"));
+				EditorGUILayout.PropertyField(serializedObject.FindProperty("keepAvatar"), new GUIContent("Keep Avatar"));
 				EditorGUILayout.PropertyField(context);
 				EditorGUILayout.PropertyField(umaData);
 				EditorGUILayout.PropertyField(umaGenerator);

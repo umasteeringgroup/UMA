@@ -203,6 +203,11 @@ namespace UMA
 		public UMASkeleton skeleton;
 
 		/// <summary>
+		/// If true, will not reconstruct the avatar.
+		/// </summary>
+		public bool KeepAvatar;
+
+		/// <summary>
 		/// The approximate height of the character. Calculated by DNA converters.
 		/// </summary>
 		public float characterHeight = 2f;

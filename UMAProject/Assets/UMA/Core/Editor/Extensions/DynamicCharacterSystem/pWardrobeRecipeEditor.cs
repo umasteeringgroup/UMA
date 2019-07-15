@@ -275,7 +275,7 @@ namespace UMA.Editors
 			_compatibleRaceDatas = newDict;
 		}
 		//Avoid calling this all the time because its slow
-		private RaceData GetCompatibleRaceData(string raceName)
+		protected RaceData GetCompatibleRaceData(string raceName)
 		{
 			RaceData foundRace = null;
 			string[] foundRacesStrings = AssetDatabase.FindAssets("t:RaceData");

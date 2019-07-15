@@ -411,11 +411,11 @@ namespace UMA.Editors
 							ocd.name = "";
 
 
-						string NewName = EditorGUILayout.TextField("Name", ocd.name);
+						string NewName = EditorGUILayout.DelayedTextField("Name", ocd.name);
 						if (NewName != ocd.name)
 						{
 							ocd.name = NewName;
-							//changed = true;
+							changed = true;
 						}
 
 						Color NewChannelMask = EditorGUILayout.ColorField("Color Multiplier", ocd.channelMask[0]);
