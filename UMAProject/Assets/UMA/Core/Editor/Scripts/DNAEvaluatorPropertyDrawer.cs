@@ -31,7 +31,7 @@ namespace UMA.Editors
 
 		private float _calcOptionWidth = 25f;
 		private GUIContent _calcOptionHeaderLabel = new GUIContent("\u03A3", "Define how the evaluated value will be combined with the previous Evaluator in the list.");
-		private GUIContent[] _calcOptionMiniLabels = new GUIContent[] { new GUIContent("+", "Add"), new GUIContent("-", "Subtract"), new GUIContent("\u00F7", "Divide"), new GUIContent("\u0078", "Multiply") };
+		private GUIContent[] _calcOptionMiniLabels = new GUIContent[] { new GUIContent("+", "Add"), new GUIContent("-", "Subtract"), new GUIContent("\u0078", "Multiply"), new GUIContent("\u00F7", "Divide") };
 
 		private float _multiplierLabelWidth = 55f;
 		private Vector2 _dnaToEvaluatorRatio = new Vector2(2f, 3f);
