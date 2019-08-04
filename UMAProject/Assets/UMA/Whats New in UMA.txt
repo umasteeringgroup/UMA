@@ -1,3 +1,21 @@
+What's new in 2.8.5
+Renderer Manager - allow you to specify visibility, shadows of specific model parts.
+HDRP and LWRP compatibility. (Note: assets will need to be modified).
+Option on Generator to force all pending UMA's to be built on the next frame.
+Updated Documentation
+Updated hair shaders for Smoother hair blending.
+Two sample wardrobe items that modify the bone pose.
+New menu item to generate all the Controller and Bone Pose DNA for the new Physique slot.
+Various bug fixes/enhancements
+    Character colors not saving in the recipe editor.
+    infrequent DNA obj ref error when switching races.
+	Keep Avatar option
+	Ability to move InternalDataStore folder (name must remain the same, but location can change)
+UMABoneCleaner - cleanup after adding extra bones
+UMA Jiggle slots
+UMA Sway Bone - for ponytails, etc.
+
+
 What's new in 2.8.1
 Restructed files and folders.
 Easier to delete examples.

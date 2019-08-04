@@ -8,7 +8,8 @@ public class UMABoneVisualizer : MonoBehaviour
     public Transform rootNode;
     public bool DrawAsBones;
     public bool DrawAdjustBones;
-    public Mesh BoneMesh;
+	public bool AlwaysDrawGizmos;
+    public Mesh BoneMesh; 
 	public string Filter;
 	private string lastFilter;
 
@@ -54,12 +55,23 @@ public class UMABoneVisualizer : MonoBehaviour
         return null;
     }
 
-    /// <summary>
-    /// Draw the bones
-    /// </summary>
-    void OnDrawGizmosSelected()
-    {
-        if (rootNode == null)
+	private void OnDrawGizmos()
+	{
+		if (AlwaysDrawGizmos)
+			DrawBoneGizmos();
+	}
+
+	/// <summary>
+	/// Draw the bones
+	/// </summary>
+	void OnDrawGizmosSelected()
+	{
+		DrawBoneGizmos();
+	}
+
+	void DrawBoneGizmos()
+	{
+		if (rootNode == null)
         {
             Setup();
         }
