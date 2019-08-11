@@ -10,6 +10,7 @@ namespace UMA.Editors
     public class DCARendererManagerEditor : Editor
     {
         SerializedProperty RendererElements;
+        SerializedProperty showHelp;
 
         DynamicCharacterAvatar avatar;
         UMAData.UMARecipe umaRecipe = new UMAData.UMARecipe();
@@ -21,6 +22,7 @@ namespace UMA.Editors
         void OnEnable()
         {
             RendererElements = serializedObject.FindProperty("RendererElements");
+            showHelp = serializedObject.FindProperty("showHelp");
             context = UMAContext.FindInstance();
 
             DCARendererManager manager = target as DCARendererManager;
@@ -33,6 +35,15 @@ namespace UMA.Editors
         {
             serializedObject.Update();
 
+            GUILayout.Space(10);
+            showHelp.boolValue = EditorGUILayout.Toggle("Show Help", showHelp.boolValue);
+            if (showHelp.boolValue)
+            {
+                EditorGUILayout.HelpBox("This manager will create skinned mesh renderers for each Renderer Asset in each Renderer Element Set." +
+                    "\n\n For each slot Asset listed that is found in the generating UMA, it will be separated onto each RendererAsset listed (so there could be duplicates created for various effects)." +
+                    "\n\n This manager will also look for any slots assigned to any list Wardrobe slots and perform the same separation.", MessageType.Info);
+            }
+
             if (avatar != null && avatar.activeRace != null && avatar.activeRace.data != null)
             {
                 if (currentRaceData != avatar.activeRace.data)
@@ -40,7 +51,7 @@ namespace UMA.Editors
             }
 
             GUILayout.Space(10);
-            if(GUILayout.Button("Add New Renderer Element"))
+            if(GUILayout.Button("Add New Renderer Element Set"))
             {
                 RendererElements.arraySize++;
                 ClearRendererElement(RendererElements.GetArrayElementAtIndex(RendererElements.arraySize - 1));                
