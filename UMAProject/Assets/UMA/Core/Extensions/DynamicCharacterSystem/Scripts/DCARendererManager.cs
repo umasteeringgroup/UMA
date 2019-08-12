@@ -22,6 +22,13 @@ namespace UMA.CharacterSystem
         private UMAContext context;
         private List<SlotData> slotsToAdd = new List<SlotData>();
 
+#pragma warning disable 0414
+        //for use with the editor to save the settings for whether to show the help box or not.
+        //pragma disables the warning for not being used in this class.
+        [SerializeField]
+        private bool showHelp = true; 
+#pragma warning restore 0414
+
         // Use this for initialization
         void Start()
         {
