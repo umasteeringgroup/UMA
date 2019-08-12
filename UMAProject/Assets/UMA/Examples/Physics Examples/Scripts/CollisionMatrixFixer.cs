@@ -7,6 +7,7 @@ namespace UMA.Examples
 	public class CollisionMatrixFixer : MonoBehaviour 
 	{
 		const int _defaultRagdollLayer = 8;
+		const int _noCollisionLayer = 10;
 
 		public static void FixLayers()
 		{
@@ -14,6 +15,7 @@ namespace UMA.Examples
 			{
 				if (i != _defaultRagdollLayer)
 					Physics.IgnoreLayerCollision(_defaultRagdollLayer, i, true);
+				Physics.IgnoreLayerCollision(_noCollisionLayer, i, true);
 			}
 			Physics.IgnoreLayerCollision(_defaultRagdollLayer, _defaultRagdollLayer, false);
 		}

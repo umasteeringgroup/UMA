@@ -1,0 +1,24 @@
+Sample script showing how to update public variables in the UMA_DP3.Jiggles namespace:
+
+using UnityEngine;
+using UMA.DP3.Jiggles;
+
+public class JiggleTest : MonoBehaviour {
+
+	private UMA_JiggleBreasts breastJiggle;
+
+	void Start () {
+		breastJiggle = GetComponent<UMA_JiggleBreasts>();
+	}
+	
+	void Update () {
+		if (Input.GetKeyDown(KeyCode.Space)) {
+			breastJiggle._breastStiffness = 1;
+			// For breast and buttocks where more than one bone is managed you need to call UpdateJiggleBone()
+			// for each bone in the list _jigglers after chaging parameters in code for belly you will not.
+			for (int i = 0; i < breastJiggle._jigglers.Count; i++) {
+				breastJiggle.UpdateJiggleBone(breastJiggle._jigglers[i]);
+			}
+		}
+	}
+}
