@@ -1290,8 +1290,8 @@ namespace UMA
 				if (!KeepAvatar)
 				{
 					if (animator.avatar) UMAUtils.DestroySceneObject(animator.avatar);
+					if (animator) UMAUtils.DestroySceneObject(animator);
 				}
-				if (animator) UMAUtils.DestroySceneObject(animator);
 			}
 		}
 

@@ -15,10 +15,11 @@ namespace UMA.Editors
         public GameObject umaObject;
         public UMARecipeBase baseRecipe;
         public bool removeUMAData = true;
+		public bool saveAvatar = false;
 
         private UMAData _umaData;
         private Animator _animator;
-        private int _umaBoneCount;
+        private int _umaBoneCount; 
         private UMATransform[] _umaBones;
 
         private GameObject newUmaObj = null;
@@ -31,7 +32,26 @@ namespace UMA.Editors
             window.titleContent.text = "Bone Builder";
         }
 
-        void OnGUI()
+		void Awake()
+		{
+			GameObject go = Selection.activeGameObject;
+
+
+			if (go != null)
+			{
+				DynamicCharacterAvatar dca = go.GetComponent<DynamicCharacterAvatar>();
+				if (dca != null)
+				{
+					umaObject = go;
+					_avatar = go.GetComponent<DynamicCharacterAvatar>();
+				}
+			}
+			else
+			{
+			}
+		}
+
+		void OnGUI()
         {
             GUILayout.Label("UMA Bone Builder");
             GUILayout.Space(20);
@@ -51,7 +71,7 @@ namespace UMA.Editors
             if (newUmaObj != umaObject)
             {
                 umaObject = newUmaObj;
-                if(newUmaObj != null)
+                if(newUmaObj != null)    
                     _avatar = umaObject.GetComponent<DynamicCharacterAvatar>();                    
             }
 
@@ -63,9 +83,11 @@ namespace UMA.Editors
             else
                 baseRecipe = null;
             
-            removeUMAData = EditorGUILayout.Toggle(new GUIContent("Remove UMAData", "A recipe and UMAData is created during the bone generation process, checking this will remove it at the end of the process. (Recommended)"), removeUMAData);
 
-            if (GUILayout.Button("Generate Bones"))
+            removeUMAData = EditorGUILayout.Toggle(new GUIContent("Remove UMAData", "A recipe and UMAData is created during the bone generation process, checking this will remove it at the end of the process. (Recommended)"), removeUMAData);
+			saveAvatar = EditorGUILayout.Toggle(new GUIContent("Save Mecanim Avatar", "This will save the Mecanim Avatar generated as an asset."), saveAvatar);
+
+			if (GUILayout.Button("Generate Bones"))
             {
                 if (umaObject == null)
                 {
@@ -131,8 +153,23 @@ namespace UMA.Editors
             if (_animator == null)
                 _animator = umaObject.gameObject.AddComponent<Animator> ();
 
-            UMAGeneratorBase.SetAvatar (_umaData, _animator);
-        }
+			var umaTransform = umaObject.transform;
+			var oldParent = umaTransform.parent;
+			var originalRot = umaTransform.localRotation;
+			var originalPos = umaTransform.localPosition;
+
+			umaTransform.SetParent(null, false);
+			umaTransform.localRotation = Quaternion.identity;
+			umaTransform.localPosition = Vector3.zero;
+
+			UMAGeneratorBase.SetAvatar (_umaData, _animator);
+
+			umaTransform.SetParent(oldParent, false);
+			umaTransform.localRotation = originalRot;
+			umaTransform.localPosition = originalPos;
+
+			AssetDatabase.CreateAsset(_animator.avatar, "Assets/CreatedAvatar.asset");
+		}
 
         private void FindBones()
         {

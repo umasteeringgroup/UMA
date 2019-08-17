@@ -7,7 +7,51 @@ namespace UMA.Editors
 {
    public class UMAAvatarLoadSaveMenuItems : Editor
    {
-	  [MenuItem("UMA/Runtime/Save Selected Avatars generated textures to PNG")]
+		[MenuItem("UMA/Runtime/Save Selected Avatars mecanim Avatar to Asset")]
+		public static void SaveMecanimAvatar()
+		{
+			if (!Application.isPlaying)
+			{
+				EditorUtility.DisplayDialog("Notice", "This function is only available at runtime", "Got it");
+				return;
+			}
+			if (Selection.gameObjects.Length != 1)
+			{
+				EditorUtility.DisplayDialog("Notice", "Only one Avatar can be selected.", "OK");
+				return;
+			}
+
+			var selectedTransform = Selection.gameObjects[0].transform;
+			var avatar = selectedTransform.GetComponent<UMAAvatarBase>();
+
+			if (avatar == null)
+			{
+				EditorUtility.DisplayDialog("Notice", "An Avatar must be selected to use this function", "OK");
+				return;
+			}
+
+			if (avatar.umaData == null)
+			{
+				EditorUtility.DisplayDialog("Notice", "The Avatar must be constructed before using this function", "OK");
+				return;
+			}
+
+			if (avatar.umaData.animator == null)
+			{
+				EditorUtility.DisplayDialog("Notice", "Animator has not been assigned!", "OK");
+				return;
+			}
+			if (avatar.umaData.animator.avatar == null)
+			{
+				EditorUtility.DisplayDialog("Notice", "Mecanim avatar is null!", "OK");
+				return;
+			}
+			AssetDatabase.CreateAsset(avatar.umaData.animator.avatar, "Assets/CreatedAvatar.asset");
+			AssetDatabase.SaveAssets();
+			EditorUtility.DisplayDialog("Saved", "Avatar save to assets as CreatedAvatar", "OK");
+		}
+
+		[MenuItem("UMA/Runtime/Save Selected Avatars generated textures to PNG")]
 	  public static void SaveSelectedAvatarsPNG()
 	  {
 		 if (!Application.isPlaying)
