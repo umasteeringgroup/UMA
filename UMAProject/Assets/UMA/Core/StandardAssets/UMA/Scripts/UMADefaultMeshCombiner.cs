@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace UMA
 {
@@ -286,6 +287,9 @@ namespace UMA
 					continue;
 				}
 
+
+
+
 				for (int materialDefinitionIndex = 0; materialDefinitionIndex < generatedMaterial.materialFragments.Count; materialDefinitionIndex++)
 				{
 					var fragment = generatedMaterial.materialFragments[materialDefinitionIndex];
@@ -297,6 +301,25 @@ namespace UMA
 					float atlasYMin = tempAtlasRect.yMin / atlasResolution;
 					float atlasYMax = tempAtlasRect.yMax / atlasResolution;
 					float atlasYRange = atlasYMax - atlasYMin;
+
+					// code below is for UVs remap based on rel pos in the atlas
+					if (fragment.isRectShared && fragment.slotData.useAtlasOverlay)
+					{
+						var foundRect = fragment.overlayList.FirstOrDefault(szname => fragment.slotData.slotName != null && szname.overlayName.Contains(fragment.slotData.slotName));
+						if (null != foundRect && foundRect.rect != Rect.zero)
+						{
+							var size = foundRect.rect.size * generatedMaterial.resolutionScale;
+							var offsetX = foundRect.rect.x * generatedMaterial.resolutionScale;
+							var offsetY = foundRect.rect.y * generatedMaterial.resolutionScale;
+
+							atlasXMin += (offsetX / generatedMaterial.cropResolution.x);
+							atlasXRange = size.x / generatedMaterial.cropResolution.x;
+
+							atlasYMin += (offsetY / generatedMaterial.cropResolution.y);
+							atlasYRange = size.y / generatedMaterial.cropResolution.y;
+						}
+					}
+
 					while (vertexCount-- > 0)
 					{
 						umaMesh.uv[idx].x = atlasXMin + atlasXRange * umaMesh.uv[idx].x;
