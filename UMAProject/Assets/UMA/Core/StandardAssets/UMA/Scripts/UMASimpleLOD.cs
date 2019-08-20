@@ -67,11 +67,29 @@ namespace UMA.Examples
 
 		public void CharacterCreated(UMAData umaData)
 		{
+			if (!_cameraTransform)
+			{
+				_cameraTransform = Camera.main.transform;
+				if (!_cameraTransform)
+				{
+					Debug.LogError("Unable to find main camera!!!");
+					return;
+				}
+			}
 			initialized = true;
 		}
 
 		public void CharacterBegun(UMAData umaData)
 		{
+			if (!_cameraTransform)
+			{
+				_cameraTransform = Camera.main.transform;
+				if (!_cameraTransform)
+				{
+					Debug.LogError("Unable to find main camera!!!");
+					return;
+				}
+			}
 			initialized = true;
 			PerformLodCheck();
 		}
@@ -100,6 +118,16 @@ namespace UMA.Examples
 				if (Debug.isDebugBuild)
 					Debug.LogWarning("LOD Distance is less than 0!");
 				return;
+			}
+
+			if (!_cameraTransform)
+			{
+				_cameraTransform = Camera.main.transform;
+				if (!_cameraTransform)
+				{
+					Debug.LogError("Unable to find main camera!");
+					return;
+				}
 			}
 
 			float cameraDistance = (transform.position - _cameraTransform.position).magnitude;
