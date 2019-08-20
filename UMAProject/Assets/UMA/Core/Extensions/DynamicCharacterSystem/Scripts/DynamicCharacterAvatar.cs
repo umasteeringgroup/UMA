@@ -320,12 +320,14 @@ namespace UMA.CharacterSystem
         {
             get
             {
-                if (loadString == "" && loadFilename == "" && umaRecipe == null)
-                    return true;
-                else
-                    return false;
-            }
-        }
+				bool startRecipeEmpty = (loadString == "" && loadFilename == "" && umaRecipe == null);
+
+				if (loadFileOnStart && !startRecipeEmpty)
+					return false;
+				else
+					return true;
+			}
+		}
 
         #endregion
 
@@ -2498,7 +2500,8 @@ namespace UMA.CharacterSystem
                     {
                         if (Debug.isDebugBuild)
                             Debug.LogWarning("[CharacterAvatar.DoLoad] No filename specified to load!");
-                        yield break;
+						BuildFromComponentSettingsCO();
+						yield break;
                     }
                     else
                     {
@@ -2514,7 +2517,11 @@ namespace UMA.CharacterSystem
                         }
                         else
                         {
-                            recipeString = FileUtils.ReadAllText(System.IO.Path.Combine(path, loadFilename));
+							string fullpath = System.IO.Path.Combine(path, loadFilename);
+							if (File.Exists(fullpath))
+							{
+								recipeString = FileUtils.ReadAllText(fullpath);
+							}
                         }
                     }
                 }
@@ -2526,9 +2533,10 @@ namespace UMA.CharacterSystem
             }
             else
             {
-                if (Debug.isDebugBuild)
+				if (Debug.isDebugBuild)
                     Debug.LogWarning("[CharacterAvatar.DoLoad] No TextRecipe found with filename " + loadFilename);
-            }
+				BuildFromComponentSettingsCO();
+			}
             yield break;
         }
         #endregion
