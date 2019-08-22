@@ -41,6 +41,11 @@ namespace UMA
 		public UMAMaterial material;
 
 		/// <summary>
+		/// 
+		/// </summary>
+		public bool useAtlasOverlay;
+
+		/// <summary>
 		/// Default overlay scale for slots using the asset.
 		/// </summary>
 		public float overlayScale = 1.0f;

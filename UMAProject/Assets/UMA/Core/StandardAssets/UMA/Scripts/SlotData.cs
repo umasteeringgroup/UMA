@@ -20,6 +20,16 @@ namespace UMA
 		/// </summary>
 		public float overlayScale = 1.0f;
 		/// <summary>
+		/// 
+		/// </summary>
+		public bool useAtlasOverlay
+		{
+			get
+			{
+				return	asset.useAtlasOverlay;
+			}
+		}
+		/// <summary>
 		/// When serializing this recipe should this slot be skipped, useful for scene specific "additional slots"
 		/// </summary>
 		public bool dontSerialize;

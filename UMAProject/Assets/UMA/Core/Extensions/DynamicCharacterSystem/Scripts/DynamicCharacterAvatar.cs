@@ -1,7 +1,7 @@
 using UnityEngine;
 //For loading a recipe directly from the web @2465
 using UnityEngine.Networking;
-#if UNITY_EDITOR
+#if UNITY_EDITOR 
 using UnityEditor;
 using UnityEditor.SceneManagement;//for marking converted colors as needing saving
 #endif
@@ -327,7 +327,7 @@ namespace UMA.CharacterSystem
 				else
 					return true;
 			}
-		}
+        }
 
         #endregion
 
@@ -2501,7 +2501,7 @@ namespace UMA.CharacterSystem
                         if (Debug.isDebugBuild)
                             Debug.LogWarning("[CharacterAvatar.DoLoad] No filename specified to load!");
 						BuildFromComponentSettingsCO();
-						yield break;
+                        yield break;
                     }
                     else
                     {
@@ -2517,11 +2517,7 @@ namespace UMA.CharacterSystem
                         }
                         else
                         {
-							string fullpath = System.IO.Path.Combine(path, loadFilename);
-							if (File.Exists(fullpath))
-							{
-								recipeString = FileUtils.ReadAllText(fullpath);
-							}
+                            recipeString = FileUtils.ReadAllText(System.IO.Path.Combine(path, loadFilename));
                         }
                     }
                 }
@@ -2533,11 +2529,11 @@ namespace UMA.CharacterSystem
             }
             else
             {
-				if (Debug.isDebugBuild)
+                if (Debug.isDebugBuild)
                     Debug.LogWarning("[CharacterAvatar.DoLoad] No TextRecipe found with filename " + loadFilename);
 				BuildFromComponentSettingsCO();
 			}
-            yield break;
+			yield break;
         }
         #endregion
 
