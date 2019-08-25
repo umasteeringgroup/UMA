@@ -176,11 +176,32 @@ namespace UMA
             }
         }
 
+#if UNITY_2018_4_OR_NEWER
+		[MenuItem("UMA/Update asmdef files from project")]
+		public static void FixupAsmdef()
+		{
+			string assetPath = Application.dataPath;
+			string[] files = Directory.GetFiles(assetPath, "*.asmdef20184",SearchOption.AllDirectories);
+			if (files.Length == 0)
+			{
+				EditorUtility.DisplayDialog("Warning","Unable to find asmdef for this version. Have you already ran this?","Guess so");
+				return;
+			}
+			foreach (string s in files)
+			{
+				string newFile = s.Replace(".asmdef20184", ".asmdef");
+				File.Move(s, newFile);
+			}
+			AssetDatabase.Refresh();
+			EditorUtility.DisplayDialog("Completed. Asmdef files are in place.", "OK");
+		}
+#endif
+
 #if UMA_HOTKEYS
 		[MenuItem("UMA/Toggle Hotkeys (enabled)")]
 #else
 		[MenuItem("UMA/Toggle Hotkeys (disabled)")]
-		#endif
+#endif
 		public static void ToggleUMAHotkeys()
 		{
 			string definesString = PlayerSettings.GetScriptingDefineSymbolsForGroup ( EditorUserBuildSettings.selectedBuildTargetGroup );
