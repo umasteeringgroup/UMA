@@ -176,16 +176,14 @@ namespace UMA
             }
         }
 
-#if UNITY_2018_4_OR_NEWER
+#if UNITY_2018_4_OR_NEWER || UNITY_2019_1_OR_NEWER 
 		[MenuItem("UMA/Update asmdef files from project")]
 		public static void FixupAsmdef()
 		{
-#if UNITY_2019_0_OR_NEWER
+#if UNITY_2019_1_OR_NEWER 
 			RenameFiles(".asmdef2019", ".asmdef");
-			RenameFiles(".asmdef2019.meta", ".asmdef.meta");
 #else
 			RenameFiles(".asmdef20184", ".asmdef");
-			RenameFiles(".asmdef20184.meta", ".asmdef.meta");
 #endif
 		}
 
