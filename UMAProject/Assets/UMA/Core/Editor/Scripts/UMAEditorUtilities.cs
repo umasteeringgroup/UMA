@@ -180,20 +180,32 @@ namespace UMA
 		[MenuItem("UMA/Update asmdef files from project")]
 		public static void FixupAsmdef()
 		{
+#if UNITY_2019_0_OR_NEWER
+			RenameFiles(".asmdef2019", ".asmdef");
+			RenameFiles(".asmdef2019.meta", ".asmdef.meta");
+#else
+			RenameFiles(".asmdef20184", ".asmdef");
+			RenameFiles(".asmdef20184.meta", ".asmdef.meta");
+#endif
+		}
+
+		public static void RenameFiles(string oldpattern,string newpattern)
+		{
 			string assetPath = Application.dataPath;
-			string[] files = Directory.GetFiles(assetPath, "*.asmdef20184",SearchOption.AllDirectories);
+			string[] files = Directory.GetFiles(assetPath, "*"+oldpattern, SearchOption.AllDirectories);
+
 			if (files.Length == 0)
 			{
-				EditorUtility.DisplayDialog("Warning","Unable to find asmdef for this version. Have you already ran this?","Guess so");
+				EditorUtility.DisplayDialog("Warning", "Unable to find asmdef for this version. Have you already ran this?", "Guess so");
 				return;
 			}
 			foreach (string s in files)
 			{
-				string newFile = s.Replace(".asmdef20184", ".asmdef");
+				string newFile = s.Replace(oldpattern, newpattern);
 				File.Move(s, newFile);
 			}
 			AssetDatabase.Refresh();
-			EditorUtility.DisplayDialog("Completed. Asmdef files are in place.", "OK");
+			EditorUtility.DisplayDialog("Complete", "Asmdef files are in place.", "OK");
 		}
 #endif
 
