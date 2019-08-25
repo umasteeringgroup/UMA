@@ -42,8 +42,6 @@ namespace UMA.Editors
 			EditorGUILayout.Popup("Recipe Type", 0, new string[] { "Wardrobe" });
 			EditorGUI.EndDisabledGroup();
 
-
-
 			PreRecipeGUI(ref doUpdate);
 
 			hideRaceField = true;
@@ -51,6 +49,7 @@ namespace UMA.Editors
             //slotEditor = new WardrobeRecipeMasterEditor(_recipe, target);
 
             ShowHelp = EditorGUILayout.Toggle("Show Help", ShowHelp);
+
 
             //CompatibleRaces drop area
             if (DrawCompatibleRacesUI(TargetType, ShowHelp)) 
@@ -60,8 +59,10 @@ namespace UMA.Editors
 			if (DrawWardrobeSlotsFields(TargetType, ShowHelp))
 				doUpdate = true;
 
-            
-            //Set this up after the other so we can send the popup data with it
+			if (DrawIncompatibleSlots(ShowHelp))
+				doUpdate = true;
+
+			//Set this up after the other so we can send the popup data with it
 			slotEditor = new WardrobeRecipeMasterEditor(_recipe, generatedBaseSlotOptions, generatedBaseSlotOptionsLabels);
 
 			EditorGUILayout.Space();

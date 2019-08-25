@@ -450,7 +450,7 @@ namespace UMA.Editors
 						}
 					}
 				}
-				GUIHelper.EndVerticalPadded(10);
+				GUIHelper.EndVerticalPadded(3);
 				return changed;
 			}
 			return false;
@@ -753,7 +753,7 @@ namespace UMA.Editors
                 _textureDirty = true;
             }
 
-            GUILayout.Space(20);
+            GUILayout.Space(10);
             Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
             GUI.Box(dropArea, "Drag Slots and Overlays here. Click to Pick");
             if (DropAreaGUI(dropArea))

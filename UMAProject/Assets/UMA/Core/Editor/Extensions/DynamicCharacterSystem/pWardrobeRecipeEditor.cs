@@ -12,6 +12,8 @@ namespace UMA.Editors
 	{
 		private Dictionary<string,RaceData> _compatibleRaceDatas = new Dictionary<string,RaceData>();
 
+		bool showIncompatible;
+		List<UMAWardrobeRecipe> DeletedRecipes = new List<UMAWardrobeRecipe>();
 		int meshHideAssetPickerID = -1;
         int slotHidePickerID = -1;
 
@@ -478,6 +480,62 @@ namespace UMA.Editors
 			return doUpdate;
 		}
 
+		protected virtual bool DrawIncompatibleSlots(bool ShowHelp)
+		{
+			bool doUpdate = false;
+			DeletedRecipes.Clear();
+			UMAWardrobeRecipe uwr = target as UMAWardrobeRecipe;
+
+			if (uwr == null)
+				return false;
+
+
+			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
+			GUILayout.Space(10);
+			showIncompatible = EditorGUILayout.Foldout(showIncompatible, "Incompatible Recipes");
+			GUILayout.EndHorizontal();
+
+			if (showIncompatible)
+			{
+				GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
+				if (GUILayout.Button("Add Incompatible Recipe"))
+				{
+					uwr.IncompatibleRecipes.Add(null);
+					doUpdate = true;
+				}
+
+				for (int i=0;i<uwr.IncompatibleRecipes.Count;i++)
+				{
+					UMAWardrobeRecipe u = uwr.IncompatibleRecipes[i];
+					GUILayout.BeginHorizontal();
+					uwr.IncompatibleRecipes[i] = (UMAWardrobeRecipe)EditorGUILayout.ObjectField(u, typeof(UMAWardrobeRecipe),false);
+					if (u != uwr.IncompatibleRecipes[i])
+					{
+						doUpdate = true;
+					}
+					if (GUILayout.Button("X", EditorStyles.miniButton, GUILayout.Width(24)))
+					{
+						doUpdate = true;
+						DeletedRecipes.Add(u);
+					}
+					GUILayout.EndHorizontal();
+				}
+
+				GUIHelper.EndVerticalPadded(3);
+			}
+
+			if (DeletedRecipes.Count > 0)
+			{
+				uwr.IncompatibleRecipes.Remove(DeletedRecipes[0]);
+			}
+			if (ShowHelp)
+			{
+				EditorGUILayout.HelpBox("Incompatible Wardrobe Recipes are recipes that will not work with this specific recipe. It is up to your application to enforce this.", MessageType.Info);
+			}
+			GUILayout.Space(1);
+			return doUpdate;
+		}
+
 		protected virtual bool DrawWardrobeSlotsFields(Type TargetType, bool ShowHelp = false)
 		{
             #region Setup
@@ -739,7 +797,7 @@ namespace UMA.Editors
 					_textureDirty = true;
 				}
 
-				GUILayout.Space(20);
+				GUILayout.Space(6);
 				Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
 				GUI.Box(dropArea, "Drag Slots and Overlays here. Click to pick");
 				if (DropAreaGUI(dropArea))

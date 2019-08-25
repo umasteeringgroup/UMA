@@ -62,7 +62,6 @@ namespace UMA
 		public static string GetInternalDataStoreFolder(bool fullPath = false, bool editorOnly = true)
 		{
 			var settingsFolderPath = "";
-			string oldFullPath = Path.Combine(Application.dataPath, Path.Combine("UMA", "InternalDataStore"));
 
 			if (string.IsNullOrEmpty(staticFullPath))
 			{
@@ -90,8 +89,6 @@ namespace UMA
 				settingsFolderPath = staticFullPath;
 			else
 				settingsFolderPath = staticRelativePath; 
-
-			string oldsettingsFolderPath = Path.Combine("Assets", Path.Combine("UMA", "InternalDataStore"));
 
 			if (editorOnly)
 			{
