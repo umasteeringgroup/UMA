@@ -180,7 +180,7 @@ namespace UMA
 		[MenuItem("UMA/Update asmdef files from project")]
 		public static void FixupAsmdef()
 		{
-#if UNITY_2019_1_OR_NEWER 
+#if UNITY_2019_1_OR_NEWER  
 			RenameFiles(".asmdef2019", ".asmdef");
 #else
 			RenameFiles(".asmdef20184", ".asmdef");
@@ -208,9 +208,9 @@ namespace UMA
 #endif
 
 #if UMA_HOTKEYS
-		[MenuItem("UMA/Toggle Hotkeys (enabled)")]
+		[MenuItem("UMA/Toggle Hotkeys (enabled)",priority =30)]
 #else
-		[MenuItem("UMA/Toggle Hotkeys (disabled)")]
+		[MenuItem("UMA/Toggle Hotkeys (disabled)", priority = 30)]
 #endif
 		public static void ToggleUMAHotkeys()
 		{

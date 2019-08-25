@@ -623,7 +623,7 @@ namespace UMA.CharacterSystem.Editors
 				GUIHelper.EndVerticalPadded(10);
 			}
 		}
-		[MenuItem ("UMA/Global Library Window")]
+		[MenuItem ("UMA/Global Library Window", priority = 10)]
 		public static void  ShowWindow () 
 		{
 			UMAAssetIndexerEditor window = EditorWindow.GetWindow<UMAAssetIndexerEditor>();

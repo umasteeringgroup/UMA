@@ -25,7 +25,7 @@ namespace UMA.Editors
         private GameObject newUmaObj = null;
         private DynamicCharacterAvatar _avatar = null;
 
-        [MenuItem("UMA/Bone Builder")]
+        [MenuItem("UMA/Bone Builder", priority = 20)]
         public static void OpenUmaTexturePrepareWindow()
         {
             UmaBoneBuilderWindow window = (UmaBoneBuilderWindow)EditorWindow.GetWindow(typeof(UmaBoneBuilderWindow));

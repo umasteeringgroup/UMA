@@ -80,7 +80,7 @@ namespace UMA.Editors
 		 {
 			EditorUtility.DisplayDialog("Warning", "Could not find SkinnedMeshRenderer in Avatar hierarchy", "OK");
 			return;
-		 }
+		 } 
 
 		 string path = EditorUtility.SaveFilePanelInProject("Save Texture(s)", "Texture.png", "png", "Base Filename to save PNG files to.");
 		 if (!string.IsNullOrEmpty(path))
@@ -218,7 +218,7 @@ namespace UMA.Editors
 		 }
 	  }
 
-	  [MenuItem("UMA/Load and Save/Load Selected Avatar(s) txt")]
+	  [MenuItem("UMA/Load and Save/Load Selected Avatar(s) txt", priority = 1)]
 	  public static void LoadSelectedAvatarsTxt()
 	  {
 		 for (int i = 0; i < Selection.gameObjects.Length; i++)
@@ -255,7 +255,7 @@ namespace UMA.Editors
 	  }
 
 
-	   [MenuItem("UMA/Load and Save/Load Selected Avatar(s) assets")]
+	   [MenuItem("UMA/Load and Save/Load Selected Avatar(s) assets", priority = 1)]
 	  public static void LoadSelectedAvatarsAsset()
 	  {
 		 for (int i = 0; i < Selection.gameObjects.Length; i++)

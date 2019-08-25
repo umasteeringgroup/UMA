@@ -7,7 +7,7 @@ namespace UMA.Editors
 {
 	public static class TPoseExtracter
 	{
-	    [MenuItem("UMA/Extract T-Pose")]
+	    [MenuItem("UMA/Extract T-Pose", priority = 30)]
 	    static void ExtractTPose()
 	    {
 			var selectedObjects = Selection.objects;

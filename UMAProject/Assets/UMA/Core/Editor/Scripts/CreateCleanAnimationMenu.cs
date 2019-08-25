@@ -6,7 +6,7 @@ namespace UMA.Editors
 {
 	public class CreateCleanAnimationMenu : MonoBehaviour
 	{
-		[MenuItem("UMA/Create Clean Animation")]
+		[MenuItem("UMA/Animation/Create Clean Animation")]
 		static void CreateCleanAniamtionMenuItem()
 		{
 			foreach(var obj in Selection.objects)
@@ -35,7 +35,7 @@ namespace UMA.Editors
 			}
 		}
 
-		[MenuItem("UMA/Create Non-Scale Animation")]
+		[MenuItem("UMA/Animation/Create Non-Scale Animation")]
 		static void CreateNonScaleAniamtionMenuItem()
 		{
 			foreach (var obj in Selection.objects)
