@@ -17,11 +17,25 @@ namespace UMA.CharacterSystem
 {
     public class DynamicCharacterAvatar : UMAAvatarBase
     {
-        #region Extra Events
-        /// <summary>
-        /// Callback event when the character recipe is updated. Use this to tweak the resulting recipe BEFORE the UMA is actually generated
-        /// </summary>
-        public UMADataEvent RecipeUpdated;
+
+#if UNITY_EDITOR
+		[UnityEditor.MenuItem("GameObject/UMA/Create New Dynamic Character Avatar",false,10)]
+		public static void CreateDynamicCharacterAvatarMenuItem()
+		{
+			var res = new GameObject("New Dynamic Character Avatar");
+			var da = res.AddComponent<DynamicCharacterAvatar>();
+			da.context = UMAContext.FindInstance();
+			da.ChangeRace("HumanMale");
+			da.umaGenerator = Component.FindObjectOfType<UMAGeneratorBase>();
+			UnityEditor.Selection.activeGameObject = res;
+		}
+#endif
+
+		#region Extra Events
+		/// <summary>
+		/// Callback event when the character recipe is updated. Use this to tweak the resulting recipe BEFORE the UMA is actually generated
+		/// </summary>
+		public UMADataEvent RecipeUpdated;
 
         #endregion
 

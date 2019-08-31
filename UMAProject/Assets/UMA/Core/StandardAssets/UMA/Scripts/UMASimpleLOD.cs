@@ -9,7 +9,7 @@ namespace UMA.Examples
 	{
 		[Tooltip("The distance to step to another LOD")]
 		[Range(0.01f, 100f)]
-		public float lodDistance;
+		public float lodDistance = 5.0f;
 
 		[Tooltip("Look for LOD slots in the library.")]
 		public bool swapSlots;
