@@ -1,0 +1,10 @@
+{
+    "name": "UMA_Examples_Editor",
+    "references": [
+        "UMA_Examples"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": []
+}

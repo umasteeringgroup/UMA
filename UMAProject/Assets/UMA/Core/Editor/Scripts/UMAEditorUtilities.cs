@@ -176,11 +176,42 @@ namespace UMA
             }
         }
 
-#if UMA_HOTKEYS
-		[MenuItem("UMA/Toggle Hotkeys (enabled)")]
+#if UNITY_2018_4_OR_NEWER || UNITY_2019_1_OR_NEWER 
+		[MenuItem("UMA/Update asmdef files from project")]
+		public static void FixupAsmdef()
+		{
+#if UNITY_2019_1_OR_NEWER  
+			RenameFiles(".asmdef2019", ".asmdef");
 #else
-		[MenuItem("UMA/Toggle Hotkeys (disabled)")]
-		#endif
+			RenameFiles(".asmdef20184", ".asmdef");
+#endif
+		}
+
+		public static void RenameFiles(string oldpattern,string newpattern)
+		{
+			string assetPath = Application.dataPath;
+			string[] files = Directory.GetFiles(assetPath, "*"+oldpattern, SearchOption.AllDirectories);
+
+			if (files.Length == 0)
+			{
+				EditorUtility.DisplayDialog("Warning", "Unable to find asmdef for this version. Have you already ran this?", "Guess so");
+				return;
+			}
+			foreach (string s in files)
+			{
+				string newFile = s.Replace(oldpattern, newpattern);
+				File.Move(s, newFile);
+			}
+			AssetDatabase.Refresh();
+			EditorUtility.DisplayDialog("Complete", "Asmdef files are in place.", "OK");
+		}
+#endif
+
+#if UMA_HOTKEYS
+		[MenuItem("UMA/Toggle Hotkeys (enabled)",priority =30)]
+#else
+		[MenuItem("UMA/Toggle Hotkeys (disabled)", priority = 30)]
+#endif
 		public static void ToggleUMAHotkeys()
 		{
 			string definesString = PlayerSettings.GetScriptingDefineSymbolsForGroup ( EditorUserBuildSettings.selectedBuildTargetGroup );

@@ -24,7 +24,7 @@ namespace UMA
 			}
 		}
 	#if UNITY_EDITOR
-		[UnityEditor.MenuItem("GameObject/Create Other/UMA/Dynamic Avatar")]
+		[UnityEditor.MenuItem("GameObject/UMA/Create New Dynamic Avatar", false, 10)]
 		static void CreateDynamicAvatarMenuItem()
 		{
 			var res = new GameObject("New Dynamic Avatar");

@@ -183,7 +183,7 @@ namespace UMA.Editors
 		{
 			GUILayout.BeginHorizontal();
 			show = GUILayout.Toggle(show, show ? "\u002d" : "\u002b", EditorStyles.toolbarButton, GUILayout.ExpandWidth(false));
-			//GUILayout.Label(text, EditorStyles.toolbarButton, GUILayout.ExpandWidth(false));
+			GUILayout.Label(text, EditorStyles.toolbarButton, GUILayout.ExpandWidth(false));
 			GUILayout.Label("", EditorStyles.toolbarButton);
 			GUILayout.EndHorizontal();
 

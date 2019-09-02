@@ -29,7 +29,6 @@ MonoBehaviour:
   activeWardrobeSet: []
   MeshHideAssets: []
   recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"M_High
-    poly Head","scale":100,"copyIdx":-1,"overlays":[{"id":"MaleBeard01","colorIdx":0,"rect":[512,0,1024,512]}]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"TestAroo","scale":100,"copyIdx":-1,"overlays":[]}],"colors":[],"fColors":[{"name":"Hair","colors":[106,79,54,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"","packedDna":[]}'
-  PredefinedDNA:
-    PreloadValues: []
+    poly Head","scale":100,"copyIdx":-1,"overlays":[{"id":"MaleBeard01","colorIdx":0,"rect":[512,0,1024,512],"data":[]}]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]}],"colors":[],"fColors":[{"name":"Hair","colors":[106,79,54,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"","packedDna":[]}'
+  IncompatibleRecipes: []
   replaces: Nothing

@@ -330,7 +330,7 @@ namespace UMA.Editors
 			}
 		}
 
-		[MenuItem("UMA/Slot Builder")]
+		[MenuItem("UMA/Slot Builder", priority = 20)]
 		public static void OpenUmaTexturePrepareWindow()
 		{
 			UmaSlotBuilderWindow window = (UmaSlotBuilderWindow)EditorWindow.GetWindow(typeof(UmaSlotBuilderWindow));
