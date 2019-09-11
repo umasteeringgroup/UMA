@@ -547,6 +547,7 @@ namespace UMA.Editors
 			FieldInfo SuppressWardrobeSlotField = TargetType.GetField("suppressWardrobeSlots", BindingFlags.Public | BindingFlags.Instance);
 			FieldInfo HidesField = TargetType.GetField("Hides", BindingFlags.Public | BindingFlags.Instance);
 			FieldInfo DisplayValueField = TargetType.GetField("DisplayValue", BindingFlags.Public | BindingFlags.Instance);
+			FieldInfo UserField = TargetType.GetField("UserField", BindingFlags.Public | BindingFlags.Instance);
 
             // ************************************
             // field values
@@ -566,6 +567,7 @@ namespace UMA.Editors
 			List<string> suppressWardrobeSlot = (List<string>)SuppressWardrobeSlotField.GetValue(target);
 			List<string> hides = (List<string>)HidesField.GetValue(target);
 			string displayValue = (string)DisplayValueField.GetValue(target);
+			string userFieldValue = (string)UserField.GetValue(target);
             #endregion
 
             #region Display Value UI
@@ -581,11 +583,23 @@ namespace UMA.Editors
             {
                 EditorGUILayout.HelpBox("Display Value can be used to store a user-friendly name for this item. It's not used for constructing the character, but it can be used in UI design by accessing the .DisplayValue field on the recipe.", MessageType.Info);
             }
-            #endregion
+			PreviousValue = userFieldValue;
+			userFieldValue = EditorGUILayout.DelayedTextField("User Field", userFieldValue);
+			if (userFieldValue != PreviousValue)
+			{
+				UserField.SetValue(target, userFieldValue);
+				doUpdate = true;
+			}
+			if (ShowHelp)
+			{
+				EditorGUILayout.HelpBox("User Field is ignored by the system. You can use this to store data that can later be used by your application to provide filtering or categorizing, etc.", MessageType.Info);
+			}
 
-            #region Wardrobe Slot UI
-            //wardrobeSlot UI
-            int selectedWardrobeSlotIndex = GenerateWardrobeSlotsEnum(wardrobeSlot, compatibleRaces, false);
+			#endregion
+
+			#region Wardrobe Slot UI
+			//wardrobeSlot UI
+			int selectedWardrobeSlotIndex = GenerateWardrobeSlotsEnum(wardrobeSlot, compatibleRaces, false);
 			string newWardrobeSlot;
 			int newSuppressFlags = 0;
 			List<string> newSuppressWardrobeSlot = new List<string>();
