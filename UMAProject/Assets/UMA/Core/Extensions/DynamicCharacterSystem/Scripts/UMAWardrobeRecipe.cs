@@ -13,6 +13,10 @@ namespace UMA.CharacterSystem
 		[Tooltip("For tracking incompatible items. Not automatic.")]
 		public List<UMAWardrobeRecipe> IncompatibleRecipes = new List<UMAWardrobeRecipe>();
 
+		[SerializeField]
+		[Tooltip("The system does not use this field. Use it for whatever you need.")]
+		public string UserField; 
+
 		#region FIELDS
 		[SerializeField]
 		public string replaces;

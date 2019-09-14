@@ -1,11 +1,18 @@
 <asset>
     <name>UMA 2</name>
     <author>UMA Steering Group</author>
-    <version>2.7.0</version>
+    <version>2.8.5</version>
     <notes>
-	-New Bone Builder utility
-	-New Mesh Hide system
-</notes>
-    <package-uri>http://umawiki.secretanorak.com/Updates/Update.unitypackage</package-uri>
+	-Update bone builder
+	-URP, HDRP Compatibility
+  -Renderer Manager
+  -Updated Hair Shader
+  -New Physique Slot
+  -Bone Cleaner
+  -Sway Bone
+  -Jiggle slots
+  -Mecanim avatars added for sample races
+  -Asmdef update
+  </notes>
     <version-uri>https://raw.githubusercontent.com/umasteeringgroup/UMA/master/UMAProject/Assets/UMA/InternalDataStore/AssetVersion.xml</version-uri>
 </asset>
