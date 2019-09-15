@@ -14,6 +14,9 @@ namespace UMA
 		[System.NonSerialized]
 		public int nameHash;
 
+		public UMARendererAsset RendererAsset { get { return _rendererAsset; } }
+		[SerializeField] private UMARendererAsset _rendererAsset;
+
         #region INameProvider
 
         public string GetAssetName()
@@ -36,6 +39,11 @@ namespace UMA
         /// </remarks>
         [UMAAssetFieldVisible]
 		public UMAMaterial material;
+
+		/// <summary>
+		/// 
+		/// </summary>
+		public bool useAtlasOverlay;
 
 		/// <summary>
 		/// Default overlay scale for slots using the asset.

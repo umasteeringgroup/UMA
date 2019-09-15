@@ -23,12 +23,20 @@ namespace UMA
 	/// </summary>
 	public class UMAData : MonoBehaviour
 	{
+		//TODO improve/cleanup the relationship between renderers and rendererAssets
 		private SkinnedMeshRenderer[] renderers;
+		private UMARendererAsset[] rendererAssets;
 		public int rendererCount { get { return renderers == null ? 0 : renderers.Length; } }
 
+		//TODO Change these get functions to getter properties?
 		public SkinnedMeshRenderer GetRenderer(int idx)
 		{
 			return renderers[idx];
+		}
+
+		public UMARendererAsset GetRendererAsset(int idx)
+		{
+			return rendererAssets[idx];
 		}
 
 		public SkinnedMeshRenderer[] GetRenderers()
@@ -36,9 +44,40 @@ namespace UMA
 			return renderers;
 		}
 
+		public UMARendererAsset[] GetRendererAssets()
+		{
+			return rendererAssets;
+		}
+
 		public void SetRenderers(SkinnedMeshRenderer[] renderers)
 		{
 			this.renderers = renderers;
+		}
+
+		public void SetRendererAssets(UMARendererAsset[] assets)
+		{
+			rendererAssets = assets;
+		}
+
+		public bool AreRenderersEqual( List<UMARendererAsset> rendererList )
+		{
+			if (renderers.Length != rendererList.Count)
+				return false;
+
+			for(int i = 0; i < rendererAssets.Length; i++)
+			{
+				if (rendererAssets[i] != rendererList[i])
+					return false;
+			}
+			return true;
+		}
+
+		public void ResetRendererSettings(int idx)
+		{
+			if (idx < 0 || idx >= renderers.Length)
+				return;
+
+			UMARendererAsset.ResetRenderer(renderers[idx]);
 		}
 
 		[NonSerialized]
@@ -164,6 +203,11 @@ namespace UMA
 		public UMASkeleton skeleton;
 
 		/// <summary>
+		/// If true, will not reconstruct the avatar.
+		/// </summary>
+		public bool KeepAvatar;
+
+		/// <summary>
 		/// The approximate height of the character. Calculated by DNA converters.
 		/// </summary>
 		public float characterHeight = 2f;
@@ -272,7 +316,7 @@ namespace UMA
 		public class GeneratedMaterials
 		{
 			public List<GeneratedMaterial> materials = new List<GeneratedMaterial>();
-			public int rendererCount;
+			public List<UMARendererAsset> rendererAssets = new List<UMARendererAsset>();
 		}
 
 
@@ -286,7 +330,7 @@ namespace UMA
 			public Vector2 cropResolution;
 			public float resolutionScale;
 			public string[] textureNameList;
-			public int renderer;
+			public UMARendererAsset rendererAsset;
 		}
 
 		[System.Serializable]
@@ -1243,8 +1287,11 @@ namespace UMA
 			animationController = null;
 			if (animator != null)
 			{
-				if (animator.avatar) UMAUtils.DestroySceneObject(animator.avatar);
-				if (animator) UMAUtils.DestroySceneObject(animator);
+				if (!KeepAvatar)
+				{
+					if (animator.avatar) UMAUtils.DestroySceneObject(animator.avatar);
+					if (animator) UMAUtils.DestroySceneObject(animator);
+				}
 			}
 		}
 

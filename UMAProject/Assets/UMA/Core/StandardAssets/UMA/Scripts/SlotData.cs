@@ -20,6 +20,16 @@ namespace UMA
 		/// </summary>
 		public float overlayScale = 1.0f;
 		/// <summary>
+		/// 
+		/// </summary>
+		public bool useAtlasOverlay
+		{
+			get
+			{
+				return	asset.useAtlasOverlay;
+			}
+		}
+		/// <summary>
 		/// When serializing this recipe should this slot be skipped, useful for scene specific "additional slots"
 		/// </summary>
 		public bool dontSerialize;
@@ -32,6 +42,9 @@ namespace UMA
 		//For MeshHide system, this can get added at runtime and is the filtered HideMask that the combiner uses.
 		public BitArray[] meshHideMask;
 
+		//Mutable version pulled off the immutable asset.  This is so we can modify it at runtime if needed.
+		public UMARendererAsset rendererAsset;
+
 		/// <summary>
 		/// Constructor for slot using the given asset.
 		/// </summary>
@@ -40,6 +53,7 @@ namespace UMA
 		{
 			this.asset = asset;
 			overlayScale = asset.overlayScale;
+			rendererAsset = asset.RendererAsset;
 		}
 
         /// <summary>

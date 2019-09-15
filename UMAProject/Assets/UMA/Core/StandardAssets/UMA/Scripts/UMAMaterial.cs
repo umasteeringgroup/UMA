@@ -12,8 +12,6 @@ namespace UMA
         public Material material;
         public MaterialType materialType = MaterialType.Atlas;
         public MaterialChannel[] channels;
-        public UMAClothProperties clothProperties;
-        public bool RequireSeperateRenderer;
 
         [Range(-2.0f, 2.0f)]
         public float MipMapBias = 0.0f;
@@ -36,6 +34,22 @@ namespace UMA
             TintedTexture = 3,
             DiffuseTexture = 4,
         }
+
+		static public Color GetBackgroundColor(ChannelType channelType)
+		{
+			return ChannelBackground[(int)channelType];
+		}
+
+		//The ChannelTypes index into this for it's corresponding background color.
+		//Needed to have normalMaps have a grey background for proper blending
+		static Color[] ChannelBackground =
+		{
+			new Color(0,0,0,0),
+			Color.grey,
+			new Color(0,0,0,0),
+			new Color(0,0,0,0),
+			new Color(0,0,0,0)
+		};
 
         [Serializable]
         public struct MaterialChannel
@@ -86,6 +100,8 @@ namespace UMA
             }
             else
             {
+				if (this.material.name != material.material.name)
+					return false;
 				if (this.material.shader != material.material.shader)
 					return false;
                 if (this.material.renderQueue != material.material.renderQueue)
@@ -94,8 +110,6 @@ namespace UMA
 					return false;
 				if (this.channels.Length != material.channels.Length)
 					return false;
-                if (this.clothProperties != material.clothProperties)
-                    return false;
 				for (int i = 0; i < this.channels.Length; i++)
 				{
 					MaterialChannel thisChannel = this.channels[i];

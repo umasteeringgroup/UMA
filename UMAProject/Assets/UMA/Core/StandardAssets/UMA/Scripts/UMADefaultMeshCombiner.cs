@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace UMA
 {
@@ -23,7 +24,7 @@ namespace UMA
 			if (umaData.umaRoot != null)
 			{
 				umaData.CleanMesh(false);
-				if (umaData.rendererCount == umaData.generatedMaterials.rendererCount)
+				if (umaData.rendererCount == umaData.generatedMaterials.rendererAssets.Count && umaData.AreRenderersEqual(umaData.generatedMaterials.rendererAssets))
 				{
 					renderers = umaData.GetRenderers();
 				}
@@ -32,21 +33,26 @@ namespace UMA
 					var oldRenderers = umaData.GetRenderers();
 					var globalTransform = umaData.GetGlobalTransform();
 
-					renderers = new SkinnedMeshRenderer[umaData.generatedMaterials.rendererCount];
+					renderers = new SkinnedMeshRenderer[umaData.generatedMaterials.rendererAssets.Count];
 
-					for (int i = 0; i < umaData.generatedMaterials.rendererCount; i++)
+					for (int i = 0; i < umaData.generatedMaterials.rendererAssets.Count; i++)
 					{
 						if (oldRenderers != null && oldRenderers.Length > i)
 						{
 							renderers[i] = oldRenderers[i];
+							if (umaData.generatedMaterials.rendererAssets[i] != null)
+								umaData.generatedMaterials.rendererAssets[i].ApplySettingsToRenderer(renderers[i]);
+							else
+								umaData.ResetRendererSettings(i);
+
 							continue;
 						}
-						renderers[i] = MakeRenderer(i, globalTransform);
+						renderers[i] = MakeRenderer(i, globalTransform, umaData.generatedMaterials.rendererAssets[i] );
 					}
 
 					if (oldRenderers != null)
 					{
-						for (int i = umaData.generatedMaterials.rendererCount; i < oldRenderers.Length; i++)
+						for (int i = umaData.generatedMaterials.rendererAssets.Count; i < oldRenderers.Length; i++)
 						{
 							Destroy(oldRenderers[i].gameObject);
 							//For cloth, be aware of issue: 845868
@@ -54,6 +60,7 @@ namespace UMA
 						}
 					}
 					umaData.SetRenderers(renderers);
+					umaData.SetRendererAssets(umaData.generatedMaterials.rendererAssets.ToArray());
 				}
 				return;
 			}
@@ -90,13 +97,14 @@ namespace UMA
 
 				umaData.skeleton = new UMASkeleton(globalTransform);
 
-				renderers = new SkinnedMeshRenderer[umaData.generatedMaterials.rendererCount];
+				renderers = new SkinnedMeshRenderer[umaData.generatedMaterials.rendererAssets.Count];
 
-				for (int i = 0; i < umaData.generatedMaterials.rendererCount; i++)
+				for (int i = 0; i < umaData.generatedMaterials.rendererAssets.Count; i++)
 				{
-					renderers[i] = MakeRenderer(i, globalTransform);
+					renderers[i] = MakeRenderer(i, globalTransform, umaData.generatedMaterials.rendererAssets[i]);
 				}
 				umaData.SetRenderers(renderers);
+				umaData.SetRendererAssets(umaData.generatedMaterials.rendererAssets.ToArray());
 			}
 
 			//Clear out old cloth components
@@ -108,7 +116,7 @@ namespace UMA
 			}
 		}
 
-		private SkinnedMeshRenderer MakeRenderer(int i, Transform rootBone)
+		private SkinnedMeshRenderer MakeRenderer(int i, Transform rootBone, UMARendererAsset rendererAsset = null)
 		{
 			GameObject newSMRGO = new GameObject(i == 0 ? "UMARenderer" : ("UMARenderer " + i));
 			newSMRGO.transform.parent = umaData.transform;
@@ -123,6 +131,12 @@ namespace UMA
 			newRenderer.rootBone = rootBone;
 			newRenderer.quality = SkinQuality.Bone4;
 			newRenderer.sharedMesh.name = i == 0 ? "UMAMesh" : ("UMAMesh " + i);
+
+			if(rendererAsset != null)
+			{
+				rendererAsset.ApplySettingsToRenderer(newRenderer);
+			}
+
 			return newRenderer;
 		}
 
@@ -143,7 +157,7 @@ namespace UMA
 			EnsureUMADataSetup(umaData);
 			umaData.skeleton.BeginSkeletonUpdate();
 
-			for (currentRendererIndex = 0; currentRendererIndex < umaData.generatedMaterials.rendererCount; currentRendererIndex++)
+			for (currentRendererIndex = 0; currentRendererIndex < umaData.generatedMaterials.rendererAssets.Count; currentRendererIndex++)
 			{
 				//Move umaMesh creation to with in the renderer loops
 				//May want to make sure to set all it's buffers to null instead of creating a new UMAMeshData
@@ -216,8 +230,9 @@ namespace UMA
 
 			for (int materialIndex = 0; materialIndex < umaData.generatedMaterials.materials.Count; materialIndex++)
 			{
+				UMARendererAsset rendererAsset = umaData.GetRendererAsset(currentRendererIndex);
 				var generatedMaterial = umaData.generatedMaterials.materials[materialIndex];
-				if (generatedMaterial.renderer != currentRendererIndex)
+				if (generatedMaterial.rendererAsset != rendererAsset)
 					continue;
 				combinedMaterialList.Add(generatedMaterial.material);
 
@@ -244,9 +259,9 @@ namespace UMA
 					{
 						slotData.asset.SlotAtlassed.Invoke(umaData, slotData, generatedMaterial.material, materialDefinition.atlasRegion);
 					}
-					if (slotData.asset.material.clothProperties != null)
+					if (rendererAsset != null && rendererAsset.ClothProperties != null)
 					{
-						clothProperties = slotData.asset.material.clothProperties;
+						clothProperties = rendererAsset.ClothProperties;
 					}
 				}
 				rendererMaterialIndex++;
@@ -261,7 +276,7 @@ namespace UMA
 			{
 				var generatedMaterial = umaData.generatedMaterials.materials[materialIndex];
 
-				if (generatedMaterial.renderer != currentRendererIndex)
+				if (generatedMaterial.rendererAsset != umaData.GetRendererAsset(currentRendererIndex))
 					continue;
 				
 				if (generatedMaterial.umaMaterial.materialType != UMAMaterial.MaterialType.Atlas)
@@ -271,6 +286,9 @@ namespace UMA
 					idx += vertexCount;
 					continue;
 				}
+
+
+
 
 				for (int materialDefinitionIndex = 0; materialDefinitionIndex < generatedMaterial.materialFragments.Count; materialDefinitionIndex++)
 				{
@@ -283,6 +301,25 @@ namespace UMA
 					float atlasYMin = tempAtlasRect.yMin / atlasResolution;
 					float atlasYMax = tempAtlasRect.yMax / atlasResolution;
 					float atlasYRange = atlasYMax - atlasYMin;
+
+					// code below is for UVs remap based on rel pos in the atlas
+					if (fragment.isRectShared && fragment.slotData.useAtlasOverlay)
+					{
+						var foundRect = fragment.overlayList.FirstOrDefault(szname => fragment.slotData.slotName != null && szname.overlayName.Contains(fragment.slotData.slotName));
+						if (null != foundRect && foundRect.rect != Rect.zero)
+						{
+							var size = foundRect.rect.size * generatedMaterial.resolutionScale;
+							var offsetX = foundRect.rect.x * generatedMaterial.resolutionScale;
+							var offsetY = foundRect.rect.y * generatedMaterial.resolutionScale;
+
+							atlasXMin += (offsetX / generatedMaterial.cropResolution.x);
+							atlasXRange = size.x / generatedMaterial.cropResolution.x;
+
+							atlasYMin += (offsetY / generatedMaterial.cropResolution.y);
+							atlasYRange = size.y / generatedMaterial.cropResolution.y;
+						}
+					}
+
 					while (vertexCount-- > 0)
 					{
 						umaMesh.uv[idx].x = atlasXMin + atlasXRange * umaMesh.uv[idx].x;

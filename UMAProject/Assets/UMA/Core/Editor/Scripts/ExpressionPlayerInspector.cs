@@ -39,7 +39,7 @@ namespace UMA.PoseTools
 			}
 		}
 
-		[MenuItem("UMA/Pose Tools/Set Clip Generic", true)]
+		[MenuItem("UMA/Pose Tools/Set Clip Generic", true, priority = 1)]
 		static bool ValidateSetClipGeneric()
 		{
 
@@ -61,7 +61,7 @@ namespace UMA.PoseTools
 			return hasLegacyClip;
 		}
 
-		[MenuItem("UMA/Pose Tools/Set Clip Generic")]
+		[MenuItem("UMA/Pose Tools/Set Clip Generic",priority =1)]
 		static void SetClipGeneric()
 		{
 			Object[] objs = Selection.objects;
@@ -77,7 +77,7 @@ namespace UMA.PoseTools
 			}
 		}
 
-		[MenuItem("UMA/Pose Tools/Set Clip Legacy", true)]
+		[MenuItem("UMA/Pose Tools/Set Clip Legacy", true, priority = 1)]
 		static bool ValidateSetClipLegacy()
 		{
 
@@ -100,7 +100,7 @@ namespace UMA.PoseTools
 			return hasGenericClip;
 		}
 
-		[MenuItem("UMA/Pose Tools/Set Clip Legacy")]
+		[MenuItem("UMA/Pose Tools/Set Clip Legacy", priority = 1)]
 		static void SetClipLegacy()
 		{
 			Object[] objs = Selection.objects;

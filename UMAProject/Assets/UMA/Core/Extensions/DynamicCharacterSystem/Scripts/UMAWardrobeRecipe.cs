@@ -1,4 +1,6 @@
-using UnityEngine; 
+using UnityEngine;
+using System.Collections.Generic;
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -7,6 +9,14 @@ namespace UMA.CharacterSystem
 {
 	public partial class UMAWardrobeRecipe : UMATextRecipe
 	{
+		[SerializeField]
+		[Tooltip("For tracking incompatible items. Not automatic.")]
+		public List<UMAWardrobeRecipe> IncompatibleRecipes = new List<UMAWardrobeRecipe>();
+
+		[SerializeField]
+		[Tooltip("The system does not use this field. Use it for whatever you need.")]
+		public string UserField; 
+
 		#region FIELDS
 		[SerializeField]
 		public string replaces;

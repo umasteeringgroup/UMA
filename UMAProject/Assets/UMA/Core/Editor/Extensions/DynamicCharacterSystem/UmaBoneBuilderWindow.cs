@@ -15,23 +15,67 @@ namespace UMA.Editors
         public GameObject umaObject;
         public UMARecipeBase baseRecipe;
         public bool removeUMAData = true;
+		public bool saveAvatar = false;
 
         private UMAData _umaData;
         private Animator _animator;
-        private int _umaBoneCount;
+        private int _umaBoneCount; 
         private UMATransform[] _umaBones;
 
         private GameObject newUmaObj = null;
         private DynamicCharacterAvatar _avatar = null;
 
-        [MenuItem("UMA/Bone Builder")]
+
+		[UnityEditor.MenuItem("GameObject/UMA/Create Rig using Bone Builder", false,10)]
+		[UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Bone Builder")]
+		public static void RunBoneBuilder()
+		{
+			UmaBoneBuilderWindow window = (UmaBoneBuilderWindow)EditorWindow.GetWindow(typeof(UmaBoneBuilderWindow));
+			window.titleContent.text = "Bone Builder";
+		}
+
+		[UnityEditor.MenuItem("GameObject/UMA/Bone Builder",true, 10)]
+		public static bool BoneBuilderValidate()
+		{
+			GameObject go = Selection.activeGameObject;
+			if (go != null)
+			{
+				DynamicCharacterAvatar dca = go.GetComponent<DynamicCharacterAvatar>();
+				if (dca != null)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		[MenuItem("UMA/Bone Builder", priority = 20)]
         public static void OpenUmaTexturePrepareWindow()
         {
             UmaBoneBuilderWindow window = (UmaBoneBuilderWindow)EditorWindow.GetWindow(typeof(UmaBoneBuilderWindow));
             window.titleContent.text = "Bone Builder";
         }
 
-        void OnGUI()
+		void Awake()
+		{
+			GameObject go = Selection.activeGameObject;
+
+
+			if (go != null)
+			{
+				DynamicCharacterAvatar dca = go.GetComponent<DynamicCharacterAvatar>();
+				if (dca != null)
+				{
+					umaObject = go;
+					_avatar = go.GetComponent<DynamicCharacterAvatar>();
+				}
+			}
+			else
+			{
+			}
+		}
+
+		void OnGUI()
         {
             GUILayout.Label("UMA Bone Builder");
             GUILayout.Space(20);
@@ -51,7 +95,7 @@ namespace UMA.Editors
             if (newUmaObj != umaObject)
             {
                 umaObject = newUmaObj;
-                if(newUmaObj != null)
+                if(newUmaObj != null)    
                     _avatar = umaObject.GetComponent<DynamicCharacterAvatar>();                    
             }
 
@@ -63,9 +107,13 @@ namespace UMA.Editors
             else
                 baseRecipe = null;
             
+
             removeUMAData = EditorGUILayout.Toggle(new GUIContent("Remove UMAData", "A recipe and UMAData is created during the bone generation process, checking this will remove it at the end of the process. (Recommended)"), removeUMAData);
 
-            if (GUILayout.Button("Generate Bones"))
+			// Currently, this produces an avatar with it's arms twisted. 
+			// saveAvatar = EditorGUILayout.Toggle(new GUIContent("Save Mecanim Avatar", "This will save the Mecanim Avatar generated as an asset."), saveAvatar);
+			GUILayout.Label("You can save the avatar at runtime using the option on the UMA/Runtime menu.", EditorStyles.wordWrappedMiniLabel);
+			if (GUILayout.Button("Generate Bones"))
             {
                 if (umaObject == null)
                 {
@@ -96,6 +144,7 @@ namespace UMA.Editors
                 InitializeAnimator ();
                 if( removeUMAData ) Cleanup();
                 Debug.Log ("Completed!");
+				this.Close();
             }
         }
 
@@ -127,12 +176,42 @@ namespace UMA.Editors
             if (umaObject == null)
                 return;
 
-            _animator = umaObject.gameObject.GetComponent<Animator> ();
+			UMAContext uc = UMAContext.FindInstance();
+
+			if (uc == null)
+			{
+				return;
+			}
+			UMAGeneratorBase ugb = uc.gameObject.GetComponentInChildren<UMAGeneratorBase>();
+
+			_animator = umaObject.gameObject.GetComponent<Animator> ();
             if (_animator == null)
                 _animator = umaObject.gameObject.AddComponent<Animator> ();
 
-            UMAGeneratorBase.SetAvatar (_umaData, _animator);
-        }
+			var umaTransform = umaObject.transform;
+			var oldParent = umaTransform.parent;
+			var originalRot = umaTransform.localRotation;
+			var originalPos = umaTransform.localPosition;
+
+			umaTransform.SetParent(null, false);
+			umaTransform.localRotation = Quaternion.identity;
+			umaTransform.localPosition = Vector3.zero;
+			_umaData.KeepAvatar = false;
+
+			UMAGeneratorBase.SetAvatar(_umaData, _animator);
+			if (ugb != null)
+			{ 
+				ugb.UpdateAvatar(_umaData);
+			}
+			
+
+			umaTransform.SetParent(oldParent, false);
+			umaTransform.localRotation = originalRot;
+			umaTransform.localPosition = originalPos;
+
+			//if (saveAvatar)
+			//	AssetDatabase.CreateAsset(_animator.avatar, "Assets/CreatedAvatar.asset");
+		}
 
         private void FindBones()
         {

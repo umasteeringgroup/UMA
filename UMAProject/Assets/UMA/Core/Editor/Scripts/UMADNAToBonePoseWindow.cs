@@ -324,7 +324,7 @@ namespace UMA.PoseTools
 			return true;
 		}
 
-		[MenuItem("UMA/Pose Tools/Bone Pose DNA Extractor")]
+		[MenuItem("UMA/Pose Tools/Bone Pose DNA Extractor", priority = 1)]
 		public static void OpenUMADNAToBonePoseWindow()
 		{
 			EditorWindow win = EditorWindow.GetWindow(typeof(UMADNAToBonePoseWindow));

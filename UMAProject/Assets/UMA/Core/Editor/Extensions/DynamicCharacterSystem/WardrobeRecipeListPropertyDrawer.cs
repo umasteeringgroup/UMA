@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEditor;
 using UMA;
+using System.Collections.Generic;
 
 namespace UMA.CharacterSystem.Editors
 {
@@ -28,56 +29,94 @@ namespace UMA.CharacterSystem.Editors
             if (evt.type == EventType.DragPerform)
             {
                 if (dropArea.Contains(evt.mousePosition))
-                {
-                    DragAndDrop.AcceptDrag();
+				{
+					DragAndDrop.AcceptDrag();
 
-                    UnityEngine.Object[] draggedObjects = DragAndDrop.objectReferences as UnityEngine.Object[];
-                    for (int i = 0; i < draggedObjects.Length; i++)
-                    {
-                        if (draggedObjects[i])
-                        {
-                            UMATextRecipe tempRecipeAsset = draggedObjects[i] as UMATextRecipe;
-                            if (tempRecipeAsset && (tempRecipeAsset.recipeType == "Wardrobe" || tempRecipeAsset.recipeType == "WardrobeCollection"))
-                            {
-                                bool needToAddNew = true;
-                                for (int ii = 0; ii < thisRecipesProp.arraySize; ii++)
-                                {
-                                    SerializedProperty thisElement = thisRecipesProp.GetArrayElementAtIndex(ii);
-                                    if (thisElement.FindPropertyRelative("_recipeName").stringValue == tempRecipeAsset.name)
-                                    {
-                                        int compatibleRacesArraySize = tempRecipeAsset.compatibleRaces.Count;
-                                        thisRecipesProp.GetArrayElementAtIndex(ii).FindPropertyRelative("_compatibleRaces").arraySize = compatibleRacesArraySize;
-                                        for (int cr = 0; cr < compatibleRacesArraySize; cr++)
-                                        {
-                                            thisRecipesProp.GetArrayElementAtIndex(ii).FindPropertyRelative("_compatibleRaces").GetArrayElementAtIndex(cr).stringValue = tempRecipeAsset.compatibleRaces[cr];
-                                        }
-                                        needToAddNew = false;
-                                    }
-                                }
-                                if (needToAddNew)
-                                {
-                                    int newArrayElIndex = thisRecipesProp.arraySize;
-                                    thisRecipesProp.InsertArrayElementAtIndex(newArrayElIndex);
-                                    thisRecipesProp.serializedObject.ApplyModifiedProperties();
-                                    thisRecipesProp.GetArrayElementAtIndex(newArrayElIndex).FindPropertyRelative("_recipeName").stringValue = tempRecipeAsset.name;
-                                    int compatibleRacesArraySize = tempRecipeAsset.compatibleRaces.Count;
-                                    thisRecipesProp.GetArrayElementAtIndex(newArrayElIndex).FindPropertyRelative("_compatibleRaces").arraySize = compatibleRacesArraySize;
-                                    for (int cr = 0; cr < compatibleRacesArraySize; cr++)
-                                    {
-                                        thisRecipesProp.GetArrayElementAtIndex(newArrayElIndex).FindPropertyRelative("_compatibleRaces").GetArrayElementAtIndex(cr).stringValue = tempRecipeAsset.compatibleRaces[cr];
-                                    }
-                                    thisRecipesProp.serializedObject.ApplyModifiedProperties();
-                                    GUI.changed = true;
-									changed = true;
-                                }
-                                continue;
-                            }
-                        }
-                    }
-                }
-            }
+					UnityEngine.Object[] draggedObjects = DragAndDrop.objectReferences as UnityEngine.Object[];
+
+					ProcessDropeedRecipes(thisRecipesProp, draggedObjects);
+				}
+			}
         }
-        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+
+		private void ProcessDropeedRecipes(SerializedProperty thisRecipesProp, Object[] draggedObjects)
+		{
+			for (int i = 0; i < draggedObjects.Length; i++)
+			{
+				if (draggedObjects[i])
+				{
+					UMATextRecipe tempRecipeAsset = draggedObjects[i] as UMATextRecipe;
+					if (!tempRecipeAsset)
+					{
+						var path = AssetDatabase.GetAssetPath(draggedObjects[i]);
+						if (System.IO.Directory.Exists(path))
+						{
+							RecursiveScanFoldersForAssets(path, thisRecipesProp);
+						}
+					}
+					if (tempRecipeAsset && (tempRecipeAsset.recipeType == "Wardrobe" || tempRecipeAsset.recipeType == "WardrobeCollection"))
+					{
+						bool needToAddNew = true;
+						for (int ii = 0; ii < thisRecipesProp.arraySize; ii++)
+						{
+							SerializedProperty thisElement = thisRecipesProp.GetArrayElementAtIndex(ii);
+							if (thisElement.FindPropertyRelative("_recipeName").stringValue == tempRecipeAsset.name)
+							{
+								int compatibleRacesArraySize = tempRecipeAsset.compatibleRaces.Count;
+								thisRecipesProp.GetArrayElementAtIndex(ii).FindPropertyRelative("_compatibleRaces").arraySize = compatibleRacesArraySize;
+								for (int cr = 0; cr < compatibleRacesArraySize; cr++)
+								{
+									thisRecipesProp.GetArrayElementAtIndex(ii).FindPropertyRelative("_compatibleRaces").GetArrayElementAtIndex(cr).stringValue = tempRecipeAsset.compatibleRaces[cr];
+								}
+								needToAddNew = false;
+							}
+						}
+						if (needToAddNew)
+						{
+							int newArrayElIndex = thisRecipesProp.arraySize;
+							thisRecipesProp.InsertArrayElementAtIndex(newArrayElIndex);
+							thisRecipesProp.serializedObject.ApplyModifiedProperties();
+							thisRecipesProp.GetArrayElementAtIndex(newArrayElIndex).FindPropertyRelative("_recipeName").stringValue = tempRecipeAsset.name;
+							int compatibleRacesArraySize = tempRecipeAsset.compatibleRaces.Count;
+							thisRecipesProp.GetArrayElementAtIndex(newArrayElIndex).FindPropertyRelative("_compatibleRaces").arraySize = compatibleRacesArraySize;
+							for (int cr = 0; cr < compatibleRacesArraySize; cr++)
+							{
+								thisRecipesProp.GetArrayElementAtIndex(newArrayElIndex).FindPropertyRelative("_compatibleRaces").GetArrayElementAtIndex(cr).stringValue = tempRecipeAsset.compatibleRaces[cr];
+							}
+							thisRecipesProp.serializedObject.ApplyModifiedProperties();
+							GUI.changed = true;
+							changed = true;
+						}
+						continue;
+					}
+				}
+			}
+		}
+
+		protected void RecursiveScanFoldersForAssets(string path, SerializedProperty thisRecipesProp)
+		{
+			List<Object> droppedItems = new List<Object>();
+
+			var assetFiles = System.IO.Directory.GetFiles(path, "*.asset");
+			foreach (var assetFile in assetFiles)
+			{
+				var tempRecipe = AssetDatabase.LoadAssetAtPath(assetFile, typeof(UMAWardrobeRecipe)) as UMAWardrobeRecipe;
+				if (tempRecipe)
+				{
+					droppedItems.Add(tempRecipe);
+				}
+			}
+			if (droppedItems.Count > 0)
+			{
+				ProcessDropeedRecipes(thisRecipesProp, droppedItems.ToArray());
+			}
+			foreach (var subFolder in System.IO.Directory.GetDirectories(path))
+			{
+				RecursiveScanFoldersForAssets(subFolder.Replace('\\', '/'), thisRecipesProp);
+			}
+		}
+
+		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             float h = EditorGUIUtility.singleLineHeight + padding;
             SerializedProperty foldoutProp1 = property.FindPropertyRelative("loadDefaultRecipes");

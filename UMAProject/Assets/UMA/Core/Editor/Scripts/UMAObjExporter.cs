@@ -47,7 +47,7 @@ namespace UMA.Editors
 		}
 
 
-		[MenuItem("UMA/Export OBJ")]
+		[MenuItem("UMA/Export OBJ", priority =1100)]
 		static void ExportSelectionToSeparate()
 		{
 			for (int i = 0; i < Selection.gameObjects.Length; i++)

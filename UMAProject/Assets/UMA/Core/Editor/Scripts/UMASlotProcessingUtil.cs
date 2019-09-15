@@ -56,7 +56,9 @@ namespace UMA.Editors
                 resultingMesh = BuildNewReduceBonesMesh(resultingMesh, usedBonesDictionary);
             }
 
-            AssetDatabase.CreateAsset(resultingMesh, path + '/' + mesh.name + ".asset");
+			string theMesh = path + '/' + mesh.name + ".asset";
+
+			AssetDatabase.CreateAsset(resultingMesh, theMesh );
 
             tempGameObject.name = mesh.transform.parent.gameObject.name;
             Transform[] transformList = tempGameObject.GetComponentsInChildren<Transform>();
@@ -86,10 +88,13 @@ namespace UMA.Editors
                 }
                 resultingSkinnedMesh.sharedMesh = resultingMesh;
             }
+
+			string SkinnedName = path + '/' + assetName + "_Skinned.prefab";
+
 #if UNITY_2018_3_OR_NEWER
-            var skinnedResult = PrefabUtility.SaveAsPrefabAsset(newObject, path + '/' + assetName + "_Skinned.prefab");
+            var skinnedResult = PrefabUtility.SaveAsPrefabAsset(newObject, SkinnedName);
 #else
-            var skinnedResult = UnityEditor.PrefabUtility.CreatePrefab(path + '/' + assetName + "_Skinned.prefab", newObject);
+			var skinnedResult = UnityEditor.PrefabUtility.CreatePrefab(SkinnedName, newObject);
 #endif
             GameObject.DestroyImmediate(newObject);
 
@@ -103,7 +108,9 @@ namespace UMA.Editors
                 slot.meshData.RetrieveDataFromUnityCloth(cloth);
             }
             AssetDatabase.SaveAssets();
-        }
+			AssetDatabase.DeleteAsset(SkinnedName);
+			AssetDatabase.DeleteAsset(theMesh);
+		}
 
 		public static SlotDataAsset CreateSlotData(string slotFolder, string assetFolder, string assetName, SkinnedMeshRenderer mesh, UMAMaterial material, SkinnedMeshRenderer prefabMesh, string rootBone, bool binarySerialization = false)
 		{
@@ -147,17 +154,18 @@ namespace UMA.Editors
 				resultingMesh = BuildNewReduceBonesMesh(resultingMesh, usedBonesDictionary);
 			}
 
+			string theMesh = slotFolder + '/' + assetName + '/' + mesh.name + ".asset";
 			if (binarySerialization)
 			{
 				//Work around for mesh being serialized as project format settings (text) when binary is much faster.
 				//If Unity introduces a way to set mesh as binary serialization then this becomes unnecessary.
 				BinaryAssetWrapper binaryAsset = ScriptableObject.CreateInstance<BinaryAssetWrapper>();
-				AssetDatabase.CreateAsset(binaryAsset, slotFolder + '/' + assetName + '/' + mesh.name + ".asset");
+				AssetDatabase.CreateAsset(binaryAsset, theMesh);
 				AssetDatabase.AddObjectToAsset(resultingMesh, binaryAsset);
 			}
 			else
 			{
-				AssetDatabase.CreateAsset(resultingMesh, slotFolder + '/' + assetName + '/' + mesh.name + ".asset");
+				AssetDatabase.CreateAsset(resultingMesh, theMesh);
 			}
 
 			tempGameObject.name = mesh.transform.parent.gameObject.name;
@@ -189,10 +197,12 @@ namespace UMA.Editors
 				resultingSkinnedMesh.sharedMesh = resultingMesh;
 			}
 
+			string SkinnedName = slotFolder + '/' + assetName + '/' + assetName + "_Skinned.prefab";
+
 #if UNITY_2018_3_OR_NEWER
-			var skinnedResult = PrefabUtility.SaveAsPrefabAsset(newObject, slotFolder + '/' + assetName + '/' + assetName + "_Skinned.prefab");
+			var skinnedResult = PrefabUtility.SaveAsPrefabAsset(newObject, SkinnedName);
 #else
-			var skinnedResult = UnityEditor.PrefabUtility.CreatePrefab(slotFolder + '/' + assetName + '/' + assetName + "_Skinned.prefab", newObject);
+			var skinnedResult = UnityEditor.PrefabUtility.CreatePrefab(SkinnedName, newObject);
 #endif
 			GameObject.DestroyImmediate(newObject);
 
@@ -221,6 +231,8 @@ namespace UMA.Editors
 				AssetDatabase.CreateAsset(additionalSlot, slotFolder + '/' + assetName + '/' + assetName + "_"+ i +"_Slot.asset");
 			}
 			AssetDatabase.SaveAssets();
+			AssetDatabase.DeleteAsset(SkinnedName);
+			AssetDatabase.DeleteAsset(theMesh);
 			return slot;
 		}
 

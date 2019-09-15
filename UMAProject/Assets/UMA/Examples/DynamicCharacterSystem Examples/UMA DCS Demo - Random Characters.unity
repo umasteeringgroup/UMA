@@ -249,7 +249,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11453434, guid: fe29e3c90ef88194184c6f3656db5ec5, type: 2}
       propertyPath: atlasResolution
-      value: 1024
+      value: 2048
       objectReference: {fileID: 0}
     - target: {fileID: 11453434, guid: fe29e3c90ef88194184c6f3656db5ec5, type: 2}
       propertyPath: IterationCount
@@ -261,6 +261,10 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11453434, guid: fe29e3c90ef88194184c6f3656db5ec5, type: 2}
       propertyPath: fastGeneration
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453434, guid: fe29e3c90ef88194184c6f3656db5ec5, type: 2}
+      propertyPath: processAllPending
       value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
@@ -449,7 +453,6 @@ Camera:
   m_TargetEye: 3
   m_HDR: 1
   m_AllowMSAA: 1
-  m_AllowDynamicResolution: 0
   m_ForceIntoRT: 0
   m_OcclusionCulling: 1
   m_StereoConvergence: 10

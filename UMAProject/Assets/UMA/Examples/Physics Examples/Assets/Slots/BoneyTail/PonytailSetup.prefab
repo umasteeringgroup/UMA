@@ -51,6 +51,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2202beb10023a0b45bdde76d479c1308, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  UseSwayBone: 1
   SwingBoneNames:
   - PonyTail3
   - PonyTail4
@@ -58,9 +59,9 @@ MonoBehaviour:
   - PonyTail_End
   AnchorBoneName: PonyTail2
   SwingMass: 0.1
-  SwingDrag: 0.6
-  SwingAngularDrag: 0.6
-  SwingRadius: 0.04
+  SwingDrag: 1
+  SwingAngularDrag: 1
+  SwingRadius: 0.4
   AnchorColliderRadius: 0.09
   AnchorMass: 0
   FreezePositions: 0

@@ -6,6 +6,7 @@ using UMA.CharacterSystem;
 using UnityEditor.Animations;
 using System.IO;
 using System.Text.RegularExpressions;
+using UMA.PoseTools;
 
 namespace UMA
 {
@@ -175,11 +176,42 @@ namespace UMA
             }
         }
 
-#if UMA_HOTKEYS
-		[MenuItem("UMA/Toggle Hotkeys (enabled)")]
+#if UNITY_2018_4_OR_NEWER || UNITY_2019_1_OR_NEWER 
+		[MenuItem("UMA/Update asmdef files from project")]
+		public static void FixupAsmdef()
+		{
+#if UNITY_2019_1_OR_NEWER  
+			RenameFiles(".asmdef2019", ".asmdef");
 #else
-		[MenuItem("UMA/Toggle Hotkeys (disabled)")]
-		#endif
+			RenameFiles(".asmdef20184", ".asmdef");
+#endif
+		}
+
+		public static void RenameFiles(string oldpattern,string newpattern)
+		{
+			string assetPath = Application.dataPath;
+			string[] files = Directory.GetFiles(assetPath, "*"+oldpattern, SearchOption.AllDirectories);
+
+			if (files.Length == 0)
+			{
+				EditorUtility.DisplayDialog("Warning", "Unable to find asmdef for this version. Have you already ran this?", "Guess so");
+				return;
+			}
+			foreach (string s in files)
+			{
+				string newFile = s.Replace(oldpattern, newpattern);
+				File.Move(s, newFile);
+			}
+			AssetDatabase.Refresh();
+			EditorUtility.DisplayDialog("Complete", "Asmdef files are in place.", "OK");
+		}
+#endif
+
+#if UMA_HOTKEYS
+		[MenuItem("UMA/Toggle Hotkeys (enabled)",priority =30)]
+#else
+		[MenuItem("UMA/Toggle Hotkeys (disabled)", priority = 30)]
+#endif
 		public static void ToggleUMAHotkeys()
 		{
 			string definesString = PlayerSettings.GetScriptingDefineSymbolsForGroup ( EditorUserBuildSettings.selectedBuildTargetGroup );
@@ -202,7 +234,7 @@ namespace UMA
 		/// <param name="od"></param>
 		/// <param name="slotName"></param>
 		/// <param name="addToGlobalLibrary"></param>
-		public static void CreateRecipe(string path, SlotDataAsset sd, OverlayDataAsset od, string slotName, bool addToGlobalLibrary)
+		public static UMAWardrobeRecipe CreateRecipe(string path, SlotDataAsset sd, OverlayDataAsset od, string slotName, bool addToGlobalLibrary)
 		{
 			// Generate an asset in memory
 			UMAWardrobeRecipe asset = ScriptableObject.CreateInstance<CharacterSystem.UMAWardrobeRecipe>();
@@ -225,9 +257,11 @@ namespace UMA
 			{
 				// Add it to the global libary
 				UMAAssetIndexer.Instance.EvilAddAsset(typeof(CharacterSystem.UMAWardrobeRecipe), asset);
+				EditorUtility.SetDirty(UMAAssetIndexer.Instance);
 			}
 			// Inform the asset database a file has changes
 			AssetDatabase.Refresh();
+			return asset;
 		}
 
 		[MenuItem("UMA/Create Wardrobe Recipe from selected slot and overlay")]
@@ -289,7 +323,7 @@ namespace UMA
 		}
 	}
 
-    public static class UMAExtensions
+	public static class UMAExtensions
     {
         public static System.Type[] GetAllDerivedTypes(this System.AppDomain aAppDomain, System.Type aType)
         {

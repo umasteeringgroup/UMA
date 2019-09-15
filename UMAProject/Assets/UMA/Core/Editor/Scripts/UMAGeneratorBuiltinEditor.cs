@@ -6,21 +6,23 @@ namespace UMA.Editors
 	[CustomEditor(typeof(UMAGeneratorBuiltin))]
 	public class UMAGeneratorBuiltinEditor : UMAGeneratorBaseEditor
 	{
-		SerializedProperty textureMergePrefab;
+		SerializedProperty textureMerge;
 		SerializedProperty meshCombiner;
 		SerializedProperty InitialScaleFactor;
 		SerializedProperty IterationCount;
 		SerializedProperty fastGeneration;
 		SerializedProperty garbageCollectionRate;
+		SerializedProperty processAllPending;
 
 #pragma warning disable 0108
 		public void OnEnable()
 		{
 			base.OnEnable();
-			textureMergePrefab = serializedObject.FindProperty("textureMergePrefab");
+			textureMerge = serializedObject.FindProperty("textureMerge");
 			meshCombiner = serializedObject.FindProperty("meshCombiner");
 			InitialScaleFactor = serializedObject.FindProperty("InitialScaleFactor");
 			IterationCount = serializedObject.FindProperty("IterationCount");
+			processAllPending = serializedObject.FindProperty("processAllPending");
 			fastGeneration = serializedObject.FindProperty("fastGeneration");
 			garbageCollectionRate = serializedObject.FindProperty("garbageCollectionRate");
 		}
@@ -36,10 +38,10 @@ namespace UMA.Editors
 			EditorGUILayout.PropertyField(fastGeneration);
 			EditorGUILayout.PropertyField(IterationCount);
 			EditorGUILayout.PropertyField(garbageCollectionRate);
-
+			EditorGUILayout.PropertyField(processAllPending);
 			GUILayout.Space(20);
 			EditorGUILayout.LabelField("Advanced Configuation", centeredLabel);
-			EditorGUILayout.PropertyField(textureMergePrefab);
+			EditorGUILayout.PropertyField(textureMerge);
 			EditorGUILayout.PropertyField(meshCombiner);
 
 			var generator = target as UMAGeneratorBuiltin;

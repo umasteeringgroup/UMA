@@ -1,0 +1,86 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56c6edb17218abd469257d07a2bc5559, type: 3}
+  m_Name: TrollFace_Controller DynamicDNAConverterController
+  m_EditorClassIdentifier: 
+  _dnaAsset: {fileID: 11400000, guid: 9ff1e3b652b652842961d0ef1895561b, type: 2}
+  _plugins:
+  - {fileID: 114424828425031690}
+  _overallModifiers:
+    _adjustScale: 0
+    _adjustHeight: 0
+    _adjustRadius: 0
+    _adjustMass: 0
+    _updateBounds: 0
+    _tightenBounds: 0
+    _adjustBounds: 0
+    _scale: 1
+    _bone: Position
+    _scaleBoneHash: -1084586333
+    _headRatio: 7.5
+    _radiusAdjustY: 0.01
+    _radiusAdjust: {x: 0.23, y: 0}
+    _massAdjust: {x: 46, y: 26, z: 26}
+    _boundsAdjust: {x: 0, y: 0, z: 0}
+  _displayValue: 
+--- !u!114 &114424828425031690
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3ac2aa42c9f4de41a32fbd9228196b5, type: 3}
+  m_Name: BonePoseDNAConverters
+  m_EditorClassIdentifier: 
+  masterWeight:
+    _masterWeightType: 0
+    _globalWeight: 1
+    _DNAForWeight:
+      _calcOption: 0
+      _dnaName: 
+      _dnaNameHash: 0
+      _evaluator:
+        _name: Raw
+        _graph:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 2
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 1
+            tangentMode: 0
+          - serializedVersion: 2
+            time: 0.5
+            value: 0.5
+            inSlope: 1
+            outSlope: 1
+            tangentMode: 0
+          - serializedVersion: 2
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 0
+            tangentMode: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+      _multiplier: 1
+      _initialized: 1
+  _converterController: {fileID: 11400000}
+  _poseDNAConverters:
+  - _poseToApply: {fileID: 11400000, guid: 274718c3034acfd42beedcb23814c019, type: 2}
+    _startingPoseWeight: 1
+    _modifyingDNA:
+      _dnaEvaluators: []
+      _aggregationMethod: 0

@@ -1,4 +1,8 @@
 using UnityEngine;
+using UnityEditor.IMGUI.Controls;
+using UMA.CharacterSystem;
+using System;
+using UMA.Editors;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -6,7 +10,91 @@ using System.Collections.Generic;
 
 namespace UMA.PoseTools
 {
-    [CustomEditor(typeof(UMABonePose),true)]
+	public class BoneTreeView : TreeView
+	{
+		public TreeViewItem RootNode;
+		public int NodeCount;
+
+		public BoneTreeView(TreeViewState treeViewState)
+			: base(treeViewState)
+		{
+
+		}
+
+		/*
+		public TreeViewItem FindNode(TreeViewItem root, string Name)
+		{
+			if (root.children == null)
+				return null;
+
+			foreach(TreeViewItem ti in root.children)
+			{
+				if (ti.displayName == Name)
+					return ti;
+			}
+			return null;
+		} */
+
+	    public List<string> GetSelectedBones()
+		{
+			List<string> boneNames = new List<string>();
+			IList<int> boneIDs = GetSelection();
+			if (boneIDs == null) return boneNames;
+			if (boneIDs.Count == 0) return boneNames;
+
+			foreach(int i in boneIDs)
+			{
+				TreeViewItem tvi = FindItem(i, RootNode);
+				if (tvi != null)
+				{
+					boneNames.Add(tvi.displayName);
+				}
+			}
+			return boneNames;
+		}
+
+		public void Initialize(string RootName)
+		{
+			RootNode = new TreeViewItem(0,-1, RootName);
+			NodeCount = 0;
+		}
+
+		/*
+		public void AddBone(string BoneName,int level)
+		{
+			string[] Keywords = BoneName.SplitCamelCase();
+			if (Keywords.Length == 1)
+			{
+				TreeViewItem tv = new TreeViewItem(NodeCount++, 1 , BoneName);
+				RootNode.AddChild(tv);
+				NodeCount++;
+				return;
+			}
+
+			TreeViewItem FirstLevel = FindNode(RootNode,Keywords[0]);
+			if (FirstLevel == null)
+			{
+				FirstLevel = new TreeViewItem(NodeCount++, 1, Keywords[0]);
+				RootNode.AddChild(FirstLevel);
+			}
+
+			TreeViewItem childNode = new TreeViewItem(NodeCount++, 2, BoneName);
+			FirstLevel.AddChild(childNode);
+		}
+		*/
+
+		protected override TreeViewItem BuildRoot()
+		{
+			if (RootNode == null)
+			{
+				RootNode = new TreeViewItem(0,-1, "Root");
+			}
+			SetupDepthsFromParentsAndChildren(RootNode);
+			return RootNode;
+		}
+	}
+
+	[CustomEditor(typeof(UMABonePose),true)]
     public class UMABonePoseEditor : Editor
     {
 		//When an UMABonePose is inspected at runtime (using the 'Inspect' button drawn by the property drawer)
@@ -17,6 +105,8 @@ namespace UMA.PoseTools
 
 		// HACK for testing
 		public UMAData sourceUMA;
+		TreeViewState treeState;
+		BoneTreeView boneTreeView;
 
 		UMABonePose targetPose = null;
 		public UMABonePoseEditorContext context = null;
@@ -52,6 +142,12 @@ namespace UMA.PoseTools
 		private int addBoneIndex = BAD_INDEX;
 		const int minBoneNameLength = 4;
 		private string addBoneName = "";
+		private List<string> addBoneNames = new List<string>();
+		private Vector2 scrollPosition;
+		private string filter = "";
+		private string lastFilter = "";
+		private bool filtered = false;
+
 
 		private static Texture warningIcon;
 //		private static Texture trashIcon;
@@ -98,6 +194,11 @@ namespace UMA.PoseTools
 
 		public void OnEnable()
 		{
+			if (treeState == null)
+				treeState = new TreeViewState();
+
+			boneTreeView = new BoneTreeView(treeState);
+
 			targetPose = target as UMABonePose;
 //			inspectorLocked = ActiveEditorTracker.sharedTracker.isLocked;
 //			ActiveEditorTracker.sharedTracker.isLocked = true;
@@ -163,6 +264,24 @@ namespace UMA.PoseTools
 					if (context.startingPose != null)
 					{
 						context.startingPose.ApplyPose(context.activeUMA.skeleton, context.startingPoseWeight);
+					}
+
+					foreach (IDNAConverter id in context.activeUMA.umaRecipe.raceData.dnaConverterList)
+					{
+						if (id is DynamicDNAConverterController)
+						{
+							DynamicDNAConverterController Dcc = id as DynamicDNAConverterController;
+							List<DynamicDNAPlugin> LBpp = Dcc.GetPlugins(typeof(BonePoseDNAConverterPlugin));
+							foreach(DynamicDNAPlugin ddp in LBpp)
+							{
+								BonePoseDNAConverterPlugin bc = ddp as BonePoseDNAConverterPlugin;
+								foreach(BonePoseDNAConverterPlugin.BonePoseDNAConverter converter in bc.poseDNAConverters)
+								{
+									converter.poseToApply.ApplyPose(context.activeUMA.skeleton, converter.startingPoseWeight);
+								}
+							}
+							Dcc.overallModifiers.UpdateCharacter(context.activeUMA, context.activeUMA.skeleton, false);
+						}
 					}
 
 					if (haveEditTarget)
@@ -364,6 +483,23 @@ namespace UMA.PoseTools
 			DrawSkeletonBones();
 		}
 
+		private void AddABone(SerializedProperty poses, string boneName)
+		{
+			int addedIndex = poses.arraySize;
+			poses.InsertArrayElementAtIndex(addedIndex);
+			var pose = poses.GetArrayElementAtIndex(addedIndex);
+			SerializedProperty bone = pose.FindPropertyRelative("bone");
+			bone.stringValue = boneName;
+			SerializedProperty hash = pose.FindPropertyRelative("hash");
+			hash.intValue = UMASkeleton.StringToHash(boneName);
+			SerializedProperty position = pose.FindPropertyRelative("position");
+			position.vector3Value = Vector3.zero;
+			SerializedProperty rotation = pose.FindPropertyRelative("rotation");
+			rotation.quaternionValue = Quaternion.identity;
+			SerializedProperty scale = pose.FindPropertyRelative("scale");
+			scale.vector3Value = Vector3.one;
+		}
+
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
@@ -371,6 +507,19 @@ namespace UMA.PoseTools
 
 			if (doBoneAdd)
 			{
+				if (addBoneNames!= null && addBoneNames.Count > 0)
+				{
+					foreach(string s in addBoneNames)
+					{
+						AddABone(poses, s);
+					}
+				}
+				else if (!string.IsNullOrEmpty(addBoneName))
+				{
+					AddABone(poses,addBoneName);
+				}
+
+				/*
 				int addedIndex = poses.arraySize;
 				poses.InsertArrayElementAtIndex(addedIndex);
 				var pose = poses.GetArrayElementAtIndex(addedIndex);
@@ -383,13 +532,15 @@ namespace UMA.PoseTools
 				SerializedProperty rotation = pose.FindPropertyRelative("rotation");
 				rotation.quaternionValue = Quaternion.identity;
 				SerializedProperty scale = pose.FindPropertyRelative("scale");
-				scale.vector3Value = Vector3.one;
+				scale.vector3Value = Vector3.one; 
+				*/
 
 				activeBoneIndex = BAD_INDEX;
 				editBoneIndex = BAD_INDEX;
 				mirrorBoneIndex = BAD_INDEX;
 				addBoneIndex = 0;
 				addBoneName = "";
+				addBoneNames.Clear();
 				doBoneAdd = false;
 			}
 			if (doBoneRemove)
@@ -406,6 +557,7 @@ namespace UMA.PoseTools
 			// HACK
 			if (!dynamicDNAConverterMode)
 			{
+				EditorGUILayout.HelpBox("Select a UMA at runtime (DynamicCharacterAvatar, DynamicAvatar, UMAData) to enable editing and addition of new bones.", MessageType.Info);
 				sourceUMA = EditorGUILayout.ObjectField("Source UMA", sourceUMA, typeof(UMAData), true) as UMAData;
 			}
 			else
@@ -424,6 +576,8 @@ namespace UMA.PoseTools
 				if (context.activeUMA != sourceUMA)
 				{
 					context.activeUMA = sourceUMA;
+
+					ReloadFullTree();
 				}
 			}
 			
@@ -531,10 +685,142 @@ namespace UMA.PoseTools
 			GUILayout.Space(addRemovePadding);
 			EditorGUILayout.EndHorizontal();
 
+
+
+			if (boneTreeView.RootNode != null)
+			{
+				EditorGUILayout.BeginHorizontal();
+
+				if (GUILayout.Button("Expand All"))
+				{
+					boneTreeView.ExpandAll();
+				}
+				if (GUILayout.Button("Collapse All"))
+				{
+					boneTreeView.CollapseAll();
+				}
+				if (GUILayout.Button("Select None"))
+				{
+					List<int> noselection = new List<int>();
+					boneTreeView.SetSelection(noselection);
+				}
+				EditorGUI.BeginDisabledGroup(!boneTreeView.HasSelection());
+				if (GUILayout.Button("Add Selected"))
+				{
+					addBoneNames = boneTreeView.GetSelectedBones();
+					doBoneAdd = true;
+				}
+				EditorGUI.EndDisabledGroup();
+				EditorGUILayout.EndHorizontal();
+				
+				EditorGUILayout.BeginHorizontal();
+
+				filter = GUILayout.TextField(filter);
+				if (GUILayout.Button("Filter",GUILayout.Width(80)))
+				{
+					ReloadFilteredTree();
+				}
+				if (GUILayout.Button("Clear", GUILayout.Width(80)))
+				{
+					filter = "";
+					ReloadFullTree();
+				}
+
+				EditorGUILayout.EndHorizontal();
+
+				GUILayout.Space(10);
+				string filterstate = "Bone List (No filter)";
+				if (filtered)
+				{
+					filterstate = "Bone List (filter=\"" + lastFilter + "\")";
+				}
+				EditorGUILayout.LabelField(filterstate, EditorStyles.toolbarButton);
+
+				Rect r = GUILayoutUtility.GetLastRect();
+				scrollPosition = GUILayout.BeginScrollView(scrollPosition, false, true);
+				r.yMin = 0;//r.yMax + 60;
+				r.height = boneTreeView.totalHeight;
+
+				GUILayout.Space(boneTreeView.totalHeight);
+
+				boneTreeView.OnGUI(r);
+				GUILayout.EndScrollView();
+			}
             serializedObject.ApplyModifiedProperties();
         }
 
-        private void PoseBoneDrawer(SerializedProperty property)
+		private void ReloadFilteredTree()
+		{
+			filtered = true;
+			lastFilter = filter;
+			boneTreeView.Initialize("Root");
+
+			var Global = context.activeUMA.umaRoot.transform.Find("Global");
+			if (Global != null)
+			{
+				AddFilteredNodesRecursive(boneTreeView.RootNode, Global, 0, filter);
+			}
+			boneTreeView.Reload();
+			boneTreeView.ExpandAll();
+		}
+
+
+
+		private void ReloadFullTree()
+		{
+			filtered = false;
+			boneTreeView.Initialize("Root");
+
+			var Global = context.activeUMA.umaRoot.transform.Find("Global");
+			if (Global != null)
+			{
+				AddNodeRecursive(boneTreeView.RootNode, Global);
+			}
+			boneTreeView.Reload();
+			ExpandDepthRecursive(boneTreeView.RootNode, 5);
+		}
+
+		private void ExpandDepthRecursive(TreeViewItem theNode, int depth)
+		{
+			if (theNode.depth <= depth)
+			{
+				boneTreeView.SetExpanded(theNode.id, true);
+				if (theNode.children != null)
+				{
+					foreach (TreeViewItem ti in theNode.children)
+					{
+						ExpandDepthRecursive(ti, depth);
+					}
+				}
+			}
+		}
+
+		private void AddNodeRecursive(TreeViewItem rootNode, Transform theTransform,int depth=0)
+		{
+			boneTreeView.NodeCount++;
+			TreeViewItem Node = new TreeViewItem(boneTreeView.NodeCount, depth, theTransform.name);
+			rootNode.AddChild(Node);
+			foreach(Transform t in theTransform)
+			{
+				AddNodeRecursive(Node, t, depth++); 
+			}
+		}
+
+		private void AddFilteredNodesRecursive(TreeViewItem rootNode, Transform theTransform, int depth=0, string Filter="")
+		{
+			boneTreeView.NodeCount++;
+			if (theTransform.name.ToLower().Contains(Filter))
+			{
+				TreeViewItem Node = new TreeViewItem(boneTreeView.NodeCount, depth, theTransform.name);
+				rootNode.AddChild(Node);
+			}
+			foreach (Transform t in theTransform)
+			{
+				AddFilteredNodesRecursive(rootNode, t, depth++, Filter);
+			}
+		}
+
+		private void PoseBoneDrawer(SerializedProperty property)
         {
 			EditorGUI.indentLevel++;
 
@@ -579,6 +865,11 @@ namespace UMA.PoseTools
 				if (GUILayout.Button("Edit", EditorStyles.miniButton, GUILayout.Width(60f)))
 				{
 					editBoneIndex = drawBoneIndex;
+				}
+				if (GUILayout.Button("x",EditorStyles.miniButton,GUILayout.Width(32)))
+				{
+					removeBoneIndex = drawBoneIndex+1;
+					doBoneRemove = true;
 				}
 			}
 			GUI.color = currentColor;

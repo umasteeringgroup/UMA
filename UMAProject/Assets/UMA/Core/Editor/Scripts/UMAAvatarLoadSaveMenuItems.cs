@@ -7,8 +7,59 @@ namespace UMA.Editors
 {
    public class UMAAvatarLoadSaveMenuItems : Editor
    {
-	  [MenuItem("UMA/Runtime/Save Selected Avatars generated textures to PNG")]
-	  public static void SaveSelectedAvatarsPNG()
+		[UnityEditor.MenuItem("GameObject/UMA/Save Mecanim Avatar to Asset (runtime only)")]
+		[MenuItem("UMA/Runtime/Save Selected Avatars Mecanim Avatar to Asset", priority = 1)]
+		public static void SaveMecanimAvatar()
+		{
+			if (!Application.isPlaying)
+			{
+				EditorUtility.DisplayDialog("Notice", "This function is only available at runtime", "Got it");
+				return;
+			}
+			if (Selection.gameObjects.Length != 1)
+			{
+				EditorUtility.DisplayDialog("Notice", "Only one Avatar can be selected.", "OK");
+				return;
+			}
+
+			var selectedTransform = Selection.gameObjects[0].transform;
+			var avatar = selectedTransform.GetComponent<UMAAvatarBase>();
+
+			if (avatar == null)
+			{
+				EditorUtility.DisplayDialog("Notice", "An Avatar must be selected to use this function", "OK");
+				return;
+			}
+
+			if (avatar.umaData == null)
+			{
+				EditorUtility.DisplayDialog("Notice", "The Avatar must be constructed before using this function", "OK");
+				return;
+			}
+
+			if (avatar.umaData.animator == null)
+			{
+				EditorUtility.DisplayDialog("Notice", "Animator has not been assigned!", "OK");
+				return;
+			}
+			if (avatar.umaData.animator.avatar == null)
+			{
+				EditorUtility.DisplayDialog("Notice", "Mecanim avatar is null!", "OK");
+				return;
+			}
+
+			string path = EditorUtility.SaveFilePanelInProject("Save avatar", "CreatedAvatar.asset", "asset", "Save the avatar");
+
+			AssetDatabase.CreateAsset(avatar.umaData.animator.avatar, path);
+			AssetDatabase.SaveAssets();
+
+			EditorUtility.DisplayDialog("Saved", "Avatar save to assets as CreatedAvatar", "OK");
+		}
+
+		[UnityEditor.MenuItem("GameObject/UMA/Save Atlas Textures (runtime only)")]
+		[MenuItem("CONTEXT/DynamicCharacterAvatar/Save Selected Avatars generated textures to PNG",false,10)]
+		[MenuItem("UMA/Runtime/Save Selected Avatar Atlas Textures")]
+		public static void SaveSelectedAvatarsPNG()
 	  {
 		 if (!Application.isPlaying)
 		 {
@@ -36,7 +87,7 @@ namespace UMA.Editors
 		 {
 			EditorUtility.DisplayDialog("Warning", "Could not find SkinnedMeshRenderer in Avatar hierarchy", "OK");
 			return;
-		 }
+		 } 
 
 		 string path = EditorUtility.SaveFilePanelInProject("Save Texture(s)", "Texture.png", "png", "Base Filename to save PNG files to.");
 		 if (!string.IsNullOrEmpty(path))
@@ -102,7 +153,9 @@ namespace UMA.Editors
 		 System.IO.File.WriteAllBytes(textureName, data);
 	  }
 
-	  [MenuItem("UMA/Load and Save/Save Selected Avatar(s) Txt", priority=1)]
+		[UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Save as Character text file (runtime only)")]
+		[UnityEditor.MenuItem("GameObject/UMA/Save as Character Text file (runtime only)")]
+		[MenuItem("UMA/Load and Save/Save Selected Avatar(s) Txt", priority=1)]
 	  public static void SaveSelectedAvatarsTxt()
 	  {
 		 for (int i = 0; i < Selection.gameObjects.Length; i++)
@@ -137,8 +190,10 @@ namespace UMA.Editors
 		 }
 	  }
 
- 
-	   [MenuItem("UMA/Load and Save/Save Selected Avatar(s) asset", priority = 1)]
+
+		[UnityEditor.MenuItem("GameObject/UMA/Save as Character Asset (runtime only)")]
+		[UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Save as Asset (runtime only)")]
+		[MenuItem("UMA/Load and Save/Save Selected Avatar(s) asset", priority = 1)]
 	  public static void SaveSelectedAvatarsAsset()
 	  {
 		 for (int i = 0; i < Selection.gameObjects.Length; i++)
@@ -174,7 +229,9 @@ namespace UMA.Editors
 		 }
 	  }
 
-	  [MenuItem("UMA/Load and Save/Load Selected Avatar(s) txt")]
+		[UnityEditor.MenuItem("GameObject/UMA/Load from Character Text file (runtime only)")]
+		[UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Load Avatar from text file (runtime only)")]
+		[MenuItem("UMA/Load and Save/Load Selected Avatar(s) txt", priority = 1)]
 	  public static void LoadSelectedAvatarsTxt()
 	  {
 		 for (int i = 0; i < Selection.gameObjects.Length; i++)
@@ -210,8 +267,9 @@ namespace UMA.Editors
 		 }
 	  }
 
-
-	   [MenuItem("UMA/Load and Save/Load Selected Avatar(s) assets")]
+		[UnityEditor.MenuItem("GameObject/UMA/Load from Character Asset (runtime only)")]
+		[UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Load Avatar from Asset (runtime only)")]
+		[MenuItem("UMA/Load and Save/Load Selected Avatar(s) assets", priority = 1)]
 	  public static void LoadSelectedAvatarsAsset()
 	  {
 		 for (int i = 0; i < Selection.gameObjects.Length; i++)
@@ -256,8 +314,10 @@ namespace UMA.Editors
 		 }
 	  }
 
-	  //@jaimi this is the equivalent of your previous JSON save but the resulting file does not need a special load method
-	   [MenuItem("UMA/Load and Save/Save DynamicCharacterAvatar(s) txt (optimized)", priority = 1)]
+		//@jaimi this is the equivalent of your previous JSON save but the resulting file does not need a special load method
+		[UnityEditor.MenuItem("GameObject/UMA/Save as Optimized Character Text File (runtime only)")]
+		[UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Save as Optimized Character Text File")]
+		[MenuItem("UMA/Load and Save/Save DynamicCharacterAvatar(s) txt (optimized)", priority = 1)]
 	   public static void SaveSelectedAvatarsDCSTxt()
 	   {
 		   if (!Application.isPlaying)
@@ -285,8 +345,10 @@ namespace UMA.Editors
 			   }
 		   }
 	   }
-	  //@jaimi this is the equivalent of your previous JSON save but the resulting file does not need a special load method and the resulting asset can also be inspected and edited
-	  [MenuItem("UMA/Load and Save/Save DynamicCharacterAvatar(s) asset (optimized)", priority = 1)]
+		//@jaimi this is the equivalent of your previous JSON save but the resulting file does not need a special load method and the resulting asset can also be inspected and edited
+		[UnityEditor.MenuItem("GameObject/UMA/Save as Optimized Character Asset (runtime only)")]
+		[UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Save as Optimized Character Asset File")]
+		[MenuItem("UMA/Load and Save/Save DynamicCharacterAvatar(s) asset (optimized)", priority = 1)]
 	  public static void SaveSelectedAvatarsDCSAsset()
 	  {
 		 if (!Application.isPlaying)

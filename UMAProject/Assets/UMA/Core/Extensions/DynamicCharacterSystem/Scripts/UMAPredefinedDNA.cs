@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System;
 using UnityEngine;
 #if UNITY_EDITOR
@@ -32,6 +33,16 @@ namespace UMA
 		}
 
 		public List<DnaValue> PreloadValues = new List<DnaValue>();
+
+		public void RemoveDNA(string Name)
+		{
+			PreloadValues.RemoveAll(x => x.Name == Name);
+		}
+
+		public void AddRange(UMAPredefinedDNA newDNA)
+		{
+			PreloadValues.AddRange(newDNA.PreloadValues);
+		}
 
 		public void AddDNA(string Name, float Value)
 		{

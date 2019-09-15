@@ -51,6 +51,9 @@ namespace UMA
 			System.IO.Directory.CreateDirectory(path);
 		}
 
+		public static string staticFullPath;
+		public static string staticRelativePath;
+
 		/// <summary>
 		/// Returns the UMAInternalDataStore folder path. Use this to store generated data files that UMA needs, to make it less likely they will be deleted or moved by users.
 		/// </summary>
@@ -59,10 +62,34 @@ namespace UMA
 		public static string GetInternalDataStoreFolder(bool fullPath = false, bool editorOnly = true)
 		{
 			var settingsFolderPath = "";
+
+			if (string.IsNullOrEmpty(staticFullPath))
+			{
+				string tempPath = Path.Combine(Application.dataPath, Path.Combine("UMA", "InternalDataStore"));
+				if (Directory.Exists(tempPath))
+				{
+					staticFullPath = tempPath; 
+				}
+				else
+				{
+					string[] paths = Directory.GetDirectories(Application.dataPath, "InternalDataStore", SearchOption.AllDirectories);
+					if (paths.Length == 1)
+					{
+						staticFullPath = paths[0];
+					}
+					else
+					{
+						Debug.LogError("Unable to find internal data store path or duplicate folders exist!!!");
+					}
+				}
+				staticRelativePath = Path.Combine("Assets", staticFullPath.Substring(Application.dataPath.Length + 1));
+			}
+
 			if (fullPath)
-				settingsFolderPath = Path.Combine(Application.dataPath, Path.Combine("UMA", "InternalDataStore"));
+				settingsFolderPath = staticFullPath;
 			else
-				settingsFolderPath = Path.Combine("Assets", Path.Combine("UMA", "InternalDataStore"));
+				settingsFolderPath = staticRelativePath; 
+
 			if (editorOnly)
 			{
 				settingsFolderPath = Path.Combine(settingsFolderPath, "InEditor");

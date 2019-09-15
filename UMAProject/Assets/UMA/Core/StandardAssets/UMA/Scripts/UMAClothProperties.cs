@@ -15,10 +15,10 @@ namespace UMA
 		#endif
 
 		public float bendingStiffness;
-		//public float clothSolverFrequency;
+		public float clothSolverFrequency;
 		public float collisionMassScale;
 		public float damping;
-		//public bool enableContinuousCollision;
+		public bool enableContinuousCollision;
 		//public bool enableTethers;
 		public float friction;
 		public float sleepThreshold;
@@ -33,10 +33,10 @@ namespace UMA
 		public void ApplyValues(Cloth cloth)
 		{
 			cloth.bendingStiffness = bendingStiffness;
-			//cloth.clothSolverFrequency = clothSolverFrequency;
+			cloth.clothSolverFrequency = clothSolverFrequency;
 			cloth.collisionMassScale = collisionMassScale;
             cloth.damping = damping;
-			//cloth.enableContinuousCollision = enableContinuousCollision;
+			cloth.enableContinuousCollision = enableContinuousCollision;
 			//cloth.enableTethers = enableTethers;
 			cloth.friction = friction;
 			cloth.sleepThreshold = sleepThreshold;
@@ -55,10 +55,10 @@ namespace UMA
 		public void ReadValues(Cloth cloth)
 		{
 			bendingStiffness = cloth.bendingStiffness;
-			//clothSolverFrequency = cloth.clothSolverFrequency;
+			clothSolverFrequency = cloth.clothSolverFrequency;
 			collisionMassScale = cloth.collisionMassScale;
 			damping = cloth.damping;
-			//enableContinuousCollision = cloth.enableContinuousCollision;
+			enableContinuousCollision = cloth.enableContinuousCollision;
 			//enableTethers = cloth.enableTethers;
 			friction = cloth.friction;
 			sleepThreshold = cloth.sleepThreshold;
