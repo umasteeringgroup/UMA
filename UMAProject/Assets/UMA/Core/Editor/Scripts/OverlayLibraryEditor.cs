@@ -160,7 +160,7 @@ namespace UMA.Editors
 							
 							if(compress.boolValue){
 								textureImporter.textureCompression = TextureImporterCompression.CompressedHQ;
-								textureImporter.compressionQuality = (int)UnityEditor.TextureCompressionQuality.Best;                           
+								textureImporter.compressionQuality = 100;                           
 							}else{
 								textureImporter.textureCompression = TextureImporterCompression.Uncompressed;                             
 							}
