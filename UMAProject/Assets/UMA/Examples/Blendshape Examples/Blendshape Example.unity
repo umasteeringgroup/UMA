@@ -464,6 +464,7 @@ MonoBehaviour:
       PublicKeyToken=null
   hide: 0
   loadBlendShapes: 1
+  keepAvatar: 0
   activeRace:
     name: HumanMale
   defaultChangeRaceOptions: 10
@@ -471,7 +472,16 @@ MonoBehaviour:
   rebuildSkeleton: 0
   preloadWardrobeRecipes:
     loadDefaultRecipes: 1
-    recipes: []
+    recipes:
+    - _recipeName: AlienHeadMorph
+      _compatibleRaces:
+      - HumanMale
+      - HumanMaleDCS
+      - DNAConverterControllerExampleRace
+    - _recipeName: BlendShapeRecipe
+      _compatibleRaces:
+      - HumanMaleDCS
+      - HumanMale
   raceAnimationControllers:
     defaultAnimationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343,
       type: 2}
@@ -482,6 +492,8 @@ MonoBehaviour:
     assetBundleNames: 
   characterColors:
     _colors: []
+  predefinedDNA:
+    PreloadValues: []
   loadPathType: 0
   loadPath: 
   loadFilename: 
@@ -2451,7 +2463,6 @@ Camera:
   m_TargetEye: 3
   m_HDR: 0
   m_AllowMSAA: 1
-  m_AllowDynamicResolution: 0
   m_ForceIntoRT: 0
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
@@ -2530,9 +2541,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 2
   m_Convex: 0
-  m_CookingOptions: 14
+  m_InflateMesh: 0
   m_SkinWidth: 0.01
   m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!33 &1687710970
