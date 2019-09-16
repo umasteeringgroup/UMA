@@ -1,4 +1,4 @@
-What's new in 2.8.5
+What's new in 2.9
 Renderer Manager - allow you to specify visibility, shadows of specific model parts.
 Render Manager scene - hides head in world, but not in shadows, reflections
 HDRP and LWRP compatibility. (Note: assets will need to be modified).
@@ -20,6 +20,7 @@ New menu item to extract the Mecanim avatar from a UMA at runtime
 Default Mecanim avatars added race folder
 Experimental - Ability to specify position of overlay in Texture Atlas
 Asmdef files moved to zip. Unzip to assets/UMA.
+
 
 
 What's new in 2.8.1
