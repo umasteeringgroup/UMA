@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEditor;
-//using System.Linq;
 using System.Collections.Generic;
 
 namespace UMA.Editors
@@ -161,7 +160,7 @@ namespace UMA.Editors
 							
 							if(compress.boolValue){
 								textureImporter.textureCompression = TextureImporterCompression.CompressedHQ;
-								textureImporter.compressionQuality = (int)TextureCompressionQuality.Best;                               
+								textureImporter.compressionQuality = (int)UnityEditor.TextureCompressionQuality.Best;                           
 							}else{
 								textureImporter.textureCompression = TextureImporterCompression.Uncompressed;                             
 							}
