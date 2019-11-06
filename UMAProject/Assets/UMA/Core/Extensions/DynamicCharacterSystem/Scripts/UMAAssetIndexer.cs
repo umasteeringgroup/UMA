@@ -1,11 +1,16 @@
 using UnityEngine;
 using System.IO;
+using System.Collections;
 using System.Collections.Generic;
 using UMA.CharacterSystem;
+using UnityEngine.AddressableAssets;
 
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.Animations;
+using UnityEditor.AddressableAssets;
+using UnityEditor.AddressableAssets.Settings;
+using UnityEditor.AddressableAssets.Settings.GroupSchemas;
 #endif
 
 namespace UMA
@@ -13,6 +18,9 @@ namespace UMA
     [PreferBinarySerialization]
     public class UMAAssetIndexer : ScriptableObject, ISerializationCallbackReceiver
 	{
+		public delegate void OnCompleted(bool success, string name, string message);
+		public delegate void OnRaceCompleted(bool success, RaceData theRace, string message);
+		public delegate void OnRecipeCompleted(bool success, UMAWardrobeRecipe theRecipe, string message);
 
 		#region constants and static strings
 		public static string SortOrder = "Name";
@@ -457,18 +465,73 @@ namespace UMA
             return false;
         }
 #endif
-#endregion
+		#endregion
 
-#region Add Remove Assets
-        /// <summary>
-        /// Adds an asset to the index. Does NOT save the asset! you must do that separately.
-        /// </summary>
-        /// <param name="type">System Type of the object to add.</param>
-        /// <param name="name">Name for the object.</param>
-        /// <param name="path">Path to the object.</param>
-        /// <param name="o">The Object to add.</param>
-        /// <param name="skipBundleCheck">Option to skip checking Asset Bundles.</param>
-        public void AddAsset(System.Type type, string name, string path, Object o, bool skipBundleCheck = false)
+		#region Addressables
+
+		public bool PreLoad(string Name, RaceData theRace, OnCompleted Completed )
+		{
+			// deconstruct the rc.BaseRaceRecipe;
+			// Load the DNA, if needed
+			// Load the slots, overlays, textures if needed. 
+			// Addressables.LoadAssetsAsync;//
+			return true;
+		}
+
+		public bool PreLoad(string Name, UMAWardrobeRecipe theRecipe, OnRecipeCompleted Completed)
+		{
+			// deconstruct the rc.BaseRaceRecipe;
+			// Load the DNA, if needed
+			// Load the slots, overlays, textures if needed. 
+			// Addressables.LoadAssetsAsync;//
+			return true;
+		}
+
+#if UNITY_EDITOR
+		public AddressableAssetSettings AddressableSettings;
+
+		private AddressableAssetEntry GetAddressableAssetEntry(AssetItem ai)
+		{
+			if (AddressableSettings == null)
+			{
+				AddressableSettings = AssetDatabase.LoadAssetAtPath<AddressableAssetSettings>("Assets/AddressableAssetsData/AddressableAssetSettings.asset");
+				if (AddressableSettings == null)
+				{
+					return null;
+				}
+			}
+
+			foreach (var group in AddressableSettings.groups)
+			{
+				if (group.HasSchema<PlayerDataGroupSchema>())
+					continue;
+
+				foreach (AddressableAssetEntry e in group.entries)
+				{
+
+					if (e.AssetPath == ai._Path)
+					{
+						return e;
+					}
+				}
+			}
+
+			// Not found
+			return null;
+		}
+#endif
+		#endregion
+
+		#region Add Remove Assets
+		/// <summary>
+		/// Adds an asset to the index. Does NOT save the asset! you must do that separately.
+		/// </summary>
+		/// <param name="type">System Type of the object to add.</param>
+		/// <param name="name">Name for the object.</param>
+		/// <param name="path">Path to the object.</param>
+		/// <param name="o">The Object to add.</param>
+		/// <param name="skipBundleCheck">Option to skip checking Asset Bundles.</param>
+		public void AddAsset(System.Type type, string name, string path, Object o, bool skipBundleCheck = false)
         {
             if (o == null)
             {
@@ -486,13 +549,13 @@ namespace UMA
             AddAssetItem(ai, skipBundleCheck);
         }
 
-        /// <summary>
-        /// Adds an asset to the index. If the name already exists, it is not added. (Should we do this, or replace it?)
-        /// </summary>
-        /// <param name="ai"></param>
-        /// <param name="SkipBundleCheck"></param>
-        /// <returns>Whether the asset was added or not.</returns>
-        private bool AddAssetItem(AssetItem ai, bool SkipBundleCheck = false)
+		/// <summary>
+		/// Adds an asset to the index. If the name already exists, it is not added. (Should we do this, or replace it?)
+		/// </summary>
+		/// <param name="ai"></param>
+		/// <param name="SkipBundleCheck"></param>
+		/// <returns>Whether the asset was added or not.</returns>
+		private bool AddAssetItem(AssetItem ai, bool SkipBundleCheck = false)
         {
             try
             {
@@ -511,7 +574,16 @@ namespace UMA
                     return false;
                 }
 #if UNITY_EDITOR
-                if (!SkipBundleCheck)
+				AddressableAssetEntry ae = GetAddressableAssetEntry(ai);
+				if (ae != null)
+				{
+					ai.AddressableAddress = ae.address;
+					ai.IsAddressable = true;
+					ai.ReferenceCount = 0;
+					ai.AddressableGroup = ae.parentGroup.Name;
+					ai._SerializedItem = null; 
+				}
+				/*if (!SkipBundleCheck)
                 {
                     string Path = AssetDatabase.GetAssetPath(ai.Item.GetInstanceID());
                     if (InAssetBundle(Path))
@@ -520,9 +592,9 @@ namespace UMA
                             Debug.LogWarning("Asset " + ai._Name + "is in an Asset Bundle, and was not added to the index.");
                         return false;
                     }
-                }
+                } */
 #endif
-                TypeDic.Add(ai._Name, ai);
+				TypeDic.Add(ai._Name, ai);
                 if (GuidTypes.ContainsKey(ai._Guid))
                 {
                     return false;
@@ -665,6 +737,24 @@ namespace UMA
 		}
 
 #if UNITY_EDITOR
+
+		//UAI.CleanupAddressables();
+		//		UAI.GenerateAddressables();
+
+		public void CleanupAddressables()
+		{
+
+		}
+
+		public void GenerateAddressables()
+		{
+			EditorUtility.DisplayProgressBar("", "", 100);
+			// 
+			// gather all recipes.
+			// build a list of the assets used by the recipe.
+			// 
+		}
+
 
 		public void RepairAndCleanup()
 		{

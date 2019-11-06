@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: uma-werewolf-wardrobe11
+  m_EditorClassIdentifier: 
+  m_GroupName: uma-werewolf-wardrobe11
+  m_Data:
+    m_SerializedData: []
+  m_GUID: ef266e16454449f499328f52c909fd9d
+  m_SerializeEntries:
+  - m_GUID: 03829bebea1c17748a839acfdcfd6736
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/Werewolf/Wardrobe1/Recipes/Thumbs/WerewolfTShirt.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 0f682667155e8a146931d919a01217ac
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/Werewolf/Wardrobe1/Recipes/Thumbs/TestMaleJeans2.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 194ce0875c0b02b4588472f9c8f8451b
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/Werewolf/Wardrobe1/ProTip-README.txt
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 4fdf4e518ad61b548b3c447664699b2b
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/Werewolf/Wardrobe1/Recipes/WerewolfTShirt.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 7efaede98678e134fa62d68c0ee1cdef
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/Werewolf/Wardrobe1/Textures/WerewolfTeeth_Diffuse.psd
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 8e46551b231290e44b00c11543501fd8
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/Werewolf/Wardrobe1/Textures/MaleShirt01_Normal.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: a04e469a0d80a6742a85658cd80912ab
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/Werewolf/Wardrobe1/Overlays/WerewolfShirt.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: d40bec82ad70824478f3cead70f6cfea
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/Werewolf/Wardrobe1/Textures/MaleShirt01_Albedo.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: f6107ad9de1e9bb4ea74851d9bca7976
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/Werewolf/Wardrobe1/Textures/MaleShirt01_Roughness.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 4d6db484395569547bde0b92830f386e, type: 2}
+    - {fileID: 11400000, guid: 5058a0b07e8b6a14eb82aee4ea42bc95, type: 2}

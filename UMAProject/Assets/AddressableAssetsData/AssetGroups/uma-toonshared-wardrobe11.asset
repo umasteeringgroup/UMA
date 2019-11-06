@@ -1,0 +1,117 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: uma-toonshared-wardrobe11
+  m_EditorClassIdentifier: 
+  m_GroupName: uma-toonshared-wardrobe11
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 2af21ee42c56ce84aa303ba836c1938d
+  m_SerializeEntries:
+  - m_GUID: 0249f199c53d8db419e18d71356d6041
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/Wardrobe1/Textures/Clothes/Sneakers_1_normal.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 1188b9293fdf97e4db4453188e96af2c
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/Wardrobe1/Textures/Hair/Hair_Short_Generic_normal.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 1f2079e30d9e5d04aa5a400a9cebfd70
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/Wardrobe1/Textures/Clothes/Smart_Pants_1_diffuse.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 29644edbda94cd94baecf85f3c7bf194
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/Wardrobe1/Overlays/Hair/Short_Swept_Hair_1.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 2b0bb34dd4b7fc249a3a765b880992ec
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/Wardrobe1/Textures/Clothes/Smart_Pants_1_detail_diffuse.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 58d7ecb23020d4146a31d6e77ff22557
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/Wardrobe1/Overlays/Clothes/Smart_Pants_1.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 6a0307f4a35456d4eb23b5bfcdc948bc
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/Wardrobe1/Textures/Clothes/Jeans_1_normal.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 6da400a63bfedc54dbfadfca5c2b1d2f
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/Wardrobe1/Textures/Clothes/Sneakers_1_detail_diffuse.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 748cbd8fc65e86744ae8c6d358d8d19a
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/Wardrobe1/Textures/Clothes/Smart_Pants_1_normal.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: a5cb9c792e8a0684da24546a08a4ab2a
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/Wardrobe1/Overlays/Clothes/Sneakers_1_detail.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: a783f89daf8c524469e3905b80a396d5
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/Wardrobe1/Textures/Clothes/Sneakers_1_diffuse.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: aed4742a93f4a7c42812545a05bf3fd8
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/Wardrobe1/Recipes/Thumbs/ToonSneakers1.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: b66591cce48d21043a814071716e6281
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/Wardrobe1/Overlays/Clothes/Smart_Pants_1_detail.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: b823480ff505fdd4d9c772cf0702c28c
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/Wardrobe1/Recipes/ToonSneakers1.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: c2dcffc5c4825944f9984661cb51d0c1
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/Wardrobe1/Textures/blank_normal.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: c59f61ec240ce194ea1a7720096a5524
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/Wardrobe1/Textures/Clothes/Jeans_1_detail_diffuse.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: d2f564755f5fb184f9b281447b756f0c
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/Wardrobe1/Textures/blank_diffuse.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: d4fb8d53824407942854d19715bfaf8c
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/Wardrobe1/Textures/Hair/Hair_Short_Generic_diffuse.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: e3c19ea60a30aca45aabae54d1068387
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/Wardrobe1/Slots/Clothes/Shoes_Sneakers_1_Slot.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: e5dd1cd866f75434cac96736c5df9df0
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/Wardrobe1/Textures/Clothes/Jeans_1_diffuse.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: ebe828fad47d6974d98f634f415815f9
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/Wardrobe1/Overlays/Clothes/Jeans_1_detail.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: faede5ef802a4d04080266de31601bc8
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/Wardrobe1/Overlays/Clothes/Sneakers_1.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: fe66eff1c0defe44aa57e93eb152305a
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/Wardrobe1/Overlays/Clothes/Jeans_1.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 05d638a59e76c5c42b48401f25d5ab28, type: 2}
+    - {fileID: 11400000, guid: ac1923247db5c624d8f2d014cc35e39a, type: 2}

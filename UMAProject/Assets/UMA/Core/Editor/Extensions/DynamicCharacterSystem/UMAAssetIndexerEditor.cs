@@ -265,6 +265,14 @@ namespace UMA.CharacterSystem.Editors
 			}
 			GUILayout.EndHorizontal();
 
+			GUILayout.BeginHorizontal();
+			if (GUILayout.Button("Clean and Regenerate UMA Addressables"))
+			{
+				UAI.CleanupAddressables();
+				UAI.GenerateAddressables();
+				Resources.UnloadUnusedAssets();
+			}
+			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
 			if (GUILayout.Button("Add Build References"))
@@ -422,7 +430,12 @@ namespace UMA.CharacterSystem.Editors
                     GUILayout.BeginHorizontal(EditorStyles.textField);
 
                     TypeCheckboxes[CurrentType][CurrentVisibleItem] = EditorGUILayout.Toggle(TypeCheckboxes[CurrentType][CurrentVisibleItem++], GUILayout.Width(20));
-                    if (ai._SerializedItem == null)
+					if (ai.IsAddressable)
+					{
+						lblVal += "<Addressable>";
+						lblBuild = "NF";
+					}
+					else if (ai._SerializedItem == null)
                     {
                         lblVal += "<Not in Build>";
                         lblBuild = "B+";

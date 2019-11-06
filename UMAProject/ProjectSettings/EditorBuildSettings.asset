@@ -43,3 +43,6 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/UMA/Examples/MountingObjects Example/MountingObjectsExampleScene.unity
     guid: 976ccd244cd4e334fa91c7ceabffc2ff
+  m_configObjects:
+    com.unity.addressableassets: {fileID: 11400000, guid: 60c393357e96c774c925b892ac9a64a3,
+      type: 2}

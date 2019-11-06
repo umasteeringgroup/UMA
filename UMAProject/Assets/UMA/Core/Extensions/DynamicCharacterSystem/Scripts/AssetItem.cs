@@ -20,6 +20,11 @@ namespace UMA
 		public string _Guid;
         public bool IsResource;
         public bool IsAssetBundle;
+		public bool IsAddressable;
+		public string AddressableGroup;
+		public string AddressableAddress;
+		public int ReferenceCount;
+
         #endregion
         #region Properties
         public System.Type _Type

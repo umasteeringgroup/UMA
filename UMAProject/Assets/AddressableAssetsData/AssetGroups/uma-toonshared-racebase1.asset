@@ -1,0 +1,425 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: uma-toonshared-racebase1
+  m_EditorClassIdentifier: 
+  m_GroupName: uma-toonshared-racebase1
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 392735d84f45d72488484b669db9210c
+  m_SerializeEntries:
+  - m_GUID: 01a7cd83dd2236b47b7cbf24ba41aa02
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/EyesDown-L.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 02fccf236847a8943ba8fa448bc93ef8
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/UMAMaterials/UMAToon_Diffuse_Normal_Metalic.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 0553395e5d8ee72449eba51a34963588
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/EyesIn-L.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 0a7a841382e3a8a4999a1ef9b0d63547
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/EyesClose-R.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 0aa338fb693805244887798a080ccaf0
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/LowerLipUp-R.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 0ac7f12f779ffc0438add7b9a93d354a
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/MouthRight.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 0d3c64b8359e70b48a315f7d477a2787
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/TongueWide.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 0e7954264ddc98043858c786f551a409
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/UMAMaterials/UMAToon_Mat_Fade_Diffuse_Normal.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 121aa90f1a0180b4fbb9532dc45356b9
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/EyesUp-R.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 13f50a1ac3d64e94aafe5360fbbd173d
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/TongueDown.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 1551afe8a7664da4dacda0108407f834
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/LowerLipUp-L.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 16db7ae13da40aa41a16160b54a40e4b
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/JawRight.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 1724886f53853a445b8d1ed0e2236c18
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/EyesDown-R.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 194ad1566a2925640a7b28d505df3126
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/HeadDown.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 2469186428a54674c9f8148311c38692
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/MouthLeft.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 24d153ff998b87b4a8fd91c38443c278
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/MouthFrown-L.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 286dbed294ef5474aa29c2f4ba0e46ef
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/NeckTiltLeft.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 29b8463aaf78e51408e7456898a4f1e1
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/JawOpen.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 327cefca72bb24f42b4185edd0765490
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/TongueRight.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 33091f5f206ab824489d1940c94539f0
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/UMAMaterials/UMAToon_Fade_Diffuse.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 33c6f38ca686bd34b971cf3849e040a7
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/CheeksPuff-L.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 347d9e2e7deca3e49abfd487b93d7af9
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/UMAMaterials/UMAToon_Mat_Fade_Diffuse_Normal_Metallic.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 357bd0646ea1e454e8f7905eff07c8db
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/BrowsOuterDown-R.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 37d48cfe5b8f41443ba5c8008bcb3544
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/BaseRecipe/BaseTextures/UMA_Toon_Eye_Normal.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 3a59564f297136a47b8434bb04d187c5
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/EyesUp-L.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 3cd3b2786d2f2b744b3ee2a1c8e9e512
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/UpperLipDown-L.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 3de9cf11746a452488f064e51cc9f174
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/MouthWide-R.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 3ff9c3f3d36dd4e458609d4889364845
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/EyesSquint-R.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 408911ea657ce804eb451d8ff74856d8
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/JawClose.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 42ef5a61b54e53a4a8cec7410e1e8d3c
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/Toon
+      Expression Set.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 433d03a92aca69e41b69628b1099dd17
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/EyesOut-L.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 4652d37480c971743a1b555c6e3ea849
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/BaseRecipe/BaseSlots/UMA_Toon_FEET_Slot.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 46a5b48aed322db4a9fb569b3bd3bd6a
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/MouthFrown-R.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 51b0d27e4425be04fb4bfb2ddc585fe7
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/NoseSneer.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 54f2cf09468ac5e458a9a6048da4b166
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/EyesIn-R.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 590e85748f0c2294cb8588e72fdbe0c6
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/EyesSquint-L.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 59475413fe8131c4c93776847243c55d
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/BrowInnerDown.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 5961f08c8d03c204a94898545efca790
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/NeckLeft.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 5a6f1c4aec5ff8c4a946f1e058fc1e0c
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/BrowIn.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 5e7f77c4d63fba248a6c86f9c5a5404b
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/NeckTiltRight.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 66d117af8a8cd854e9554de97b1c8bd1
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/UpperLipUp-L.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 6709cc593c8096a4e9d1e8f21cfcacf5
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/TPoses/UMA_Toon_1.0_UNIFIED_TPose.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 6f1fcccfa84e0954f8d2a913ec640b64
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/UMAMaterials/UMAToon_Mat_Fade_Diffuse.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 7080d046e2722474199df9d2c34995e7
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/TongueOut.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 7c3114546f045254a803184fb8a85a57
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/HeadRight.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 7e8d773ae3567864090a85fa64263b80
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/TongueLeft.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 8415c8a2a03c1594b8bcc3365bfe8d1a
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/UMAMaterials/STARCASTER_Main.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 8931ea7a3391646488478c1b6ed4824b
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/NeckRight.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 8fdf133e9f54f9241b046bd6e8cfce1b
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/UMAMaterials/UMAToon_Mat_Diffuse_Normal_MetallicTest.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 9146cf17df8ae2d4b96d8cd0b8ce43e6
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/UMAMaterials/STARCASTER_Edge.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 91976794324ceeb4798dc98c0f1c67ab
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/BaseRecipe/BaseTextures/UMA_Toon_Body_diffuse.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 9241f0ab120d2034b98e837e695d43e0
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/MouthPucker.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 9259f183d811e5c4e8abc46ba7c5e7ec
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/BaseRecipe/BaseSlots/UMA_Toon_EYES_Slot.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 93ad9ff6ce0982042a9ef1189be6a76d
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/BaseRecipe/BaseTextures/UMA_Toon_InnerMouth_diffuse.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 96ac729ef584939418efbabb91653390
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/UMAMaterials/UMAToon_Fade_Diffuse_Normal.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 99d05b284375ce34ab66904d10dec39f
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/HeadUp.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 9a5b900661649ae458160d5dadc58a4a
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/UpperLipUp-R.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 9b7932385cb02f34296483edbc170111
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/MouthNarrow.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 9c8919c87b301ab428654b6f23b55863
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/DNA/ToonSerializedDNAConverterController.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: a02eee778f9458248b1752331ae07de7
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/BrowsOuterUp-R.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: a256dca2715ddcd499f625adfbd1e612
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/EyesOpen-R.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: a71090d7a6dbcf5488ee2120ca04dca0
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/NeckUp.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: aac8da086dd8f7748ae3dc6b43ce490d
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/BaseRecipe/BaseOverlays/UMA_Toon_InnerMouth.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: ae079dcef805b7c4c9436792fb6f964b
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/BrowsOuterDown-L.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: b2ddaab1cb49a63488b4ff7a4b349869
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/MouthDown.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: b5273c4c1815a1146ba1cdfaa099b122
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/CheeksPuff-R.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: b72491023ba89b14699282485aa9f4e7
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/BrowsOuterUp-L.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: c333cc84c33043148934799689e59d0a
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/BaseRecipe/BaseTextures/UMA_Toon_Eye_diffuse.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: c4c6f18ac02008c438382f7a2ba6ded1
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/LowerLipDown-L.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: c82265195e2de574d968d7bb7a845927
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/DNA/LegacyDNA/ToonSerializedDNAConverterBehaviour
+      Legacy.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: c8eefe7154ae4d74daf76ad509c43a45
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/JawForward.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: c8f199805f591ad46b1289a892804b3d
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/UpperLipDown-R.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: cb7fa8611d08bff438ed1b96f5e44ba0
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/HeadTiltRight.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: ccb8ec1df66b34e40b792c32aaeb996e
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/DNA/ToonDynamicDNAAsset.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: ce8a1c055b54aff47b24b0c99c43bd4a
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/MouthWide-L.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: cf91de1a1497654438142a43a2571afe
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/NeckDown.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: cfe28ca7dc07e7b479409c317f724978
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/BrowInnerUp.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: d1223a866832cc54ebd77e1050763776
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/MouthUp.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: d2cd26ef84b4f674f92df124308bf783
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/UMAMaterials/STARCASTER_Main.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: d3c1dfe0b3c39a640bd2a2aacd9c2325
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/BaseRecipe/BaseOverlays/UMA_Toon_Eyes.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: d458990e57177ba4e98830d5b31854a6
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/EyesOut-R.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: d712f7e01079fca44918b50ce1eb9eb0
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/UMAMaterials/UMAToon_Fade_Diffuse_Normal_Metalic.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: d8c6de23841c3184fbf2bd8a1868d597
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/BaseRecipe/BaseTextures/UMA_Toon_InnerMouth_normal.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: d90214ce209e6134d902051385213fae
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/BaseRecipe/BaseTextures/blank_diffuse
+      1.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: da1df0d6f02575e4c85567ea49044309
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/BaseRecipe/BaseTextures/UMA_Toon_Body_Mask_diffuse.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: da97353143375c248bfbdc4d45951e71
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/TongueUp.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: db8c42856fa764047b3f1ca49e6ef994
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/EyesOpen-L.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: de31573dc57f4cd4a90b0785dc465ed8
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/JawLeft.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: df3452a6006a2d54fb0587d4b2cad909
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/BaseRecipe/BaseTextures/UMA_Toon_Body_metallic.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: e81fb0b8a05fdfe48a4f248a0816e6cb
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/BaseRecipe/BaseSlots/UMA_Toon_HANDS_Slot.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: e88d2ffc653e2c3449864bc12d09602f
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/HeadTiltLeft.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: e939ba481f8daa546aff685cc7c64ed0
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/HeadLeft.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: ea2a05296253f6a4db641b4774f56ccc
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/UMAMaterials/UMAToon_Mat_Diffuse_Normal_Metallic.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: f30132ec8b376fa4d8b125727a218a6f
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/TongueNarrow.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: f3d3ab10c4fb9b748805d896685c7911
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/BaseRecipe/BaseSlots/UMA_Toon_INNERMOUTH_Slot.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: f47823afcb9e35f46958d6d6ae36d824
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/BaseRecipe/BaseTextures/blank_normal
+      1.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: f8639524095142e45bd71dd43b5e5c03
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/UMAMaterials/STARCASTER_Edge.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: fb3d7bf63c116f04f929290e07995a6e
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/EyesClose-L.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: fc0d1fe10b00468419aabb35b21b9197
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonShared/RaceBase/Expressions/ToonPoses/LowerLipDown-R.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 89cd8c2cded16694793f23dc64b8e9bc, type: 2}
+    - {fileID: 11400000, guid: 6b84398bb8e62f8419920d97155fb3eb, type: 2}

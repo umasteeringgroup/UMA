@@ -1,0 +1,118 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: uma-toonfemale-racebase1
+  m_EditorClassIdentifier: 
+  m_GroupName: uma-toonfemale-racebase1
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 141f020d3ac912c4ba97bf675270f218
+  m_SerializeEntries:
+  - m_GUID: 10bbdf805ca24ef42809993e0339cf6d
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonFemale/RaceBase/BaseRecipe/BaseTextures/UMA_Toon_F_Body_normal.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 148c34019fcd2624f8c0c477844cdca8
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonFemale/RaceBase/BaseThumbs/ToonFemaleHeadNone.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 1d5b18e80d2535844879d53c43fe72ef
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonFemale/RaceBase/BaseRecipe/BaseSlots/UMA_Toon_FACE_STARCASTER-Female_Slot.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 1e61bd0784d7bf54285144463dae8a43
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonFemale/RaceBase/BaseThumbs/ToonFemaleChestNone.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 1f56427ed446efb4ab930c97d3076a8e
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonFemale/RaceBase/BaseRecipe/BaseOverlays/UMA_Toon_F_Lashes.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 2559d577715a8a249afdbf5956d8798e
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonFemale/RaceBase/BaseRecipe/BaseTextures/UMA_Toon_F_Lashes_diffuse.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 266be3c01fa540341b3dfe715be68539
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonFemale/RaceBase/BaseRecipe/BaseTextures/UMA_Toon_F_Makeup_diffuse.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 28864c26b3f4bea4bb382e8ca1b60565
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonFemale/RaceBase/BaseRecipe/BaseOverlays/UMA_Toon_F_Body.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 4764780170198534da28345affcd9941
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonFemale/RaceBase/BaseThumbs/ToonFemaleLegsNone.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 5fd5270c8c2ab624caef7289850414e0
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonFemale/RaceBase/BaseRecipe/BaseSlots/UMA_Toon_FACE-Female_Slot.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 7e7237ce6bc9c6946b66dde98daa310b
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonFemale/RaceBase/ToonFemale.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 806b904c74d42ed42841288f771a92f3
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonFemale/RaceBase/BaseThumbs/ToonFemaleOutfitNone.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 878a264f74c65ca42a0931cdc9a75bc7
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonFemale/RaceBase/BaseThumbs/ToonFemaleFeetNone.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 899377113242564478958a9647388a80
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonFemale/RaceBase/BaseRecipe/BaseSlots/UMA_Toon_TORSO-Female_Slot.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 8a5bad3721ee48742ab9520a0afee680
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonFemale/RaceBase/BaseRecipe/BaseSlots/UMA_Toon_LASHES-Female_Slot.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 91e2cbe585e0f6145b24d5c6aaf13e1c
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonFemale/RaceBase/ToonF
+      UMADNARangeAsset.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 931079e0d599ab64881ddfe02608d0fd
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonFemale/RaceBase/BaseThumbs/ToonFemaleHandsNone.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 992f821034971c942b94f8ee7bdf311a
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonFemale/RaceBase/BaseRecipe/FemaleToonBase.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: bb14bc6aea3a71844b8dd956db35ce75
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonFemale/RaceBase/BaseRecipe/BaseOverlays/UMA_Toon_F_Body_Lashes.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: dad7820865c0d3c4a8eac0d511fd9655
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonFemale/RaceBase/BaseRecipe/BaseOverlays/UMA_Toon_F_Body_StarCaster.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: dbb32fec54702ff4ea19bf72301f81e9
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonFemale/RaceBase/BaseThumbs/ToonFemale.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: e8246c94f2a830349a241ed3730f4d46
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonFemale/RaceBase/BaseThumbs/ToonFemaleHeadSkin.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: ff4587ecabedb304595865825949f485
+    m_Address: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/DemoAssetBundles/ToonFemale/RaceBase/BaseRecipe/BaseSlots/UMA_Toon_LEGS-Female_Slot.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: e0dbf4ad76886e249912715e145b8079, type: 2}
+    - {fileID: 11400000, guid: da7ec29e20a77774fbbbb8f3631b7530, type: 2}
