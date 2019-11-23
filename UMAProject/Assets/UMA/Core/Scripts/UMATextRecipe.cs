@@ -37,7 +37,7 @@ namespace UMA
 
 		public override string GetInfo()
 		{
-			return string.Format(this.GetType().ToString() + ", internal storage string Length {0}", recipeString.Length);
+			return string.Format(this.name+" "+this.GetType().ToString() + ", internal storage string Length {0}", recipeString.Length);
 		}
 
 		public override byte[] GetBytes()

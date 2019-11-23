@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UWR_ToonHair1
+  m_EditorClassIdentifier: 
+  m_GroupName: UWR_ToonHair1
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 356982b7b537a874db2308c806279bf0
+  m_SerializeEntries:
+  - m_GUID: 297b82798f9c2de4b891d273268dd65b
+    m_Address: Slt-Hair_Long_Braided_Hair_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ToonHair1
+  - m_GUID: 3a863fa5bebd59041a3f8696d3768d31
+    m_Address: Tex-Hair_Long_Braided_1_diffuse
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ToonHair1
+  - m_GUID: 4f6302b08fbd3fd4abc60ce8e15d57e3
+    m_Address: Ovl-Long_Braided_Hair_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ToonHair1
+  - m_GUID: da079680760bd614d9904591f776b5d1
+    m_Address: Tex-Hair_Long_Braided_1_normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ToonHair1
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 7fa9e5273c0b78948864b2887a95ccb5, type: 2}
+    - {fileID: 11400000, guid: 4276d14aeaa190e46ab4fe8ab12172e3, type: 2}

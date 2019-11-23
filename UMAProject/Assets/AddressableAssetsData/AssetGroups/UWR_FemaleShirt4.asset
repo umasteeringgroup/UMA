@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UWR_FemaleShirt4
+  m_EditorClassIdentifier: 
+  m_GroupName: UWR_FemaleShirt4
+  m_Data:
+    m_SerializedData: []
+  m_GUID: d30391539376add4e89c23f4327b16ac
+  m_SerializeEntries:
+  - m_GUID: 4d2fbc2e8180eb84797f3626dd23187d
+    m_Address: Tex-Female_Tshirt02_diffuse
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleShirt4
+  - m_GUID: 7c7d4dd46aadf264ca87a97b357a238e
+    m_Address: Ovl-FemaleTshirt02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleShirt4
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: ea7981935fe5ab14eb6192c209b4a3de, type: 2}
+    - {fileID: 11400000, guid: 72fd793ac9eb5ff4bb49f1434561506a, type: 2}

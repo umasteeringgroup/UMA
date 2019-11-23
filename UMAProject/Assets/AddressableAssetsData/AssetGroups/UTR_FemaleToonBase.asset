@@ -1,0 +1,100 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UTR_FemaleToonBase
+  m_EditorClassIdentifier: 
+  m_GroupName: UTR_FemaleToonBase
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 8bae8c247bc1b0c4f858cb94590522c8
+  m_SerializeEntries:
+  - m_GUID: 1f56427ed446efb4ab930c97d3076a8e
+    m_Address: Ovl-UMA_Toon_F_Lashes
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleToonBase
+  - m_GUID: 2559d577715a8a249afdbf5956d8798e
+    m_Address: Tex-UMA_Toon_F_Lashes_diffuse
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleToonBase
+  - m_GUID: 37d48cfe5b8f41443ba5c8008bcb3544
+    m_Address: Tex-UMA_Toon_Eye_Normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleToonBase
+  - m_GUID: 4652d37480c971743a1b555c6e3ea849
+    m_Address: Slt-UMA_Toon_FEET
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleToonBase
+  - m_GUID: 5fd5270c8c2ab624caef7289850414e0
+    m_Address: Slt-UMA_Toon_FACE-Female
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleToonBase
+  - m_GUID: 8a5bad3721ee48742ab9520a0afee680
+    m_Address: Slt-UMA_Toon_LASHES-Female
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleToonBase
+  - m_GUID: 9259f183d811e5c4e8abc46ba7c5e7ec
+    m_Address: Slt-UMA_Toon_EYES
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleToonBase
+  - m_GUID: 93ad9ff6ce0982042a9ef1189be6a76d
+    m_Address: Tex-UMA_Toon_InnerMouth_diffuse
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleToonBase
+  - m_GUID: aac8da086dd8f7748ae3dc6b43ce490d
+    m_Address: Ovl-UMA_Toon_InnerMouth
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleToonBase
+  - m_GUID: c333cc84c33043148934799689e59d0a
+    m_Address: Tex-UMA_Toon_Eye_diffuse
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleToonBase
+  - m_GUID: d3c1dfe0b3c39a640bd2a2aacd9c2325
+    m_Address: Ovl-UMA_Toon_Eyes
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleToonBase
+  - m_GUID: d8c6de23841c3184fbf2bd8a1868d597
+    m_Address: Tex-UMA_Toon_InnerMouth_normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleToonBase
+  - m_GUID: e81fb0b8a05fdfe48a4f248a0816e6cb
+    m_Address: Slt-UMA_Toon_HANDS
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleToonBase
+  - m_GUID: f3d3ab10c4fb9b748805d896685c7911
+    m_Address: Slt-UMA_Toon_INNERMOUTH
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleToonBase
+  - m_GUID: ff4587ecabedb304595865825949f485
+    m_Address: Slt-UMA_Toon_LEGS-Female
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleToonBase
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 487994138175393498a3f5b38a91d1b1, type: 2}
+    - {fileID: 11400000, guid: fafdf18ab4620224885fa71986d5e660, type: 2}

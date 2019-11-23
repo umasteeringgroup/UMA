@@ -6,43 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/UMA/Examples/DynamicCharacterSystem Examples/UMA DCS Demo - Using
-      Asset Bundles.unity
-    guid: 7370ad6d6689e1d4baf14c90d4e5e555
-  - enabled: 1
     path: Assets/UMA/Examples/DynamicCharacterSystem Examples/UMA DCS Demo - Simple
       Setup.unity
     guid: 43ce2d3e5bdfc924b84fc85a02c01ca0
-  - enabled: 1
-    path: Assets/UMA/Examples/DynamicCharacterSystem Examples/UMA DCS Demo - UMA Car.unity
-    guid: 7c5b35f2ce1a0454880dac7e000e4f08
-  - enabled: 1
-    path: Assets/UMA/Examples/Legacy Examples/UMA Core Demo - Texture LOD.unity
-    guid: 32efa5b1cfd34f84f9b67fe7a18f6bdb
-  - enabled: 1
-    path: Assets/UMA/Examples/Blendshape Examples/Blendshape Example.unity
-    guid: 8aef57bd40c04a548a58633be2705f36
-  - enabled: 1
-    path: Assets/UMA/Examples/DNAConverterController Examples/DynamicDNAConverterControllerDemo.unity
-    guid: 8832a4fb7b6996e448711f34d83a7323
-  - enabled: 1
-    path: Assets/UMA/Examples/Legacy Examples/UMA Core Demo - Serialized Characters.unity
-    guid: 5ef9057771fe49f4f9c3926c45baf8cc
-  - enabled: 1
-    path: Assets/UMA/Examples/Physics Examples/Cloth Example.unity
-    guid: 877d88a22d59b644b8336dcc052ebd7b
-  - enabled: 1
-    path: Assets/UMA/Examples/Legacy Examples/UMA Core Demo - Crowd Recipes.unity
-    guid: bb05426748b15004ba9d63a26604e0bb
-  - enabled: 1
-    path: Assets/UMA/Examples/Legacy Examples/UMA Core Demo - Crowd.unity
-    guid: 9b44dc91378f85c44903d70e9b805efe
-  - enabled: 1
-    path: Assets/UMA/Examples/Physics Examples/RagdollExample.unity
-    guid: 5cc55c23c33870e49a6f3c5aa01a6ab0
-  - enabled: 1
-    path: Assets/UMA/Examples/MountingObjects Example/MountingObjectsExampleScene.unity
-    guid: 976ccd244cd4e334fa91c7ceabffc2ff
   m_configObjects:
     com.unity.addressableassets: {fileID: 11400000, guid: 60c393357e96c774c925b892ac9a64a3,
       type: 2}

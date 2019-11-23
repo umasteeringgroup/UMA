@@ -364,8 +364,8 @@ namespace UMA.CharacterSystem
         // Use this for initialization
         public override void Start()
         {
-            AddCharacterStateCache("NULL");
-            base.Start();
+            AddCharacterStateCache("NULL"); 
+            base.Start(); 
 
             umaData.blendShapeSettings.ignoreBlendShapes = !loadBlendShapes;
 

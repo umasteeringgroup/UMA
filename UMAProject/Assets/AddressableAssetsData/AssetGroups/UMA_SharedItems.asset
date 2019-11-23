@@ -1,0 +1,672 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UMA_SharedItems
+  m_EditorClassIdentifier: 
+  m_GroupName: UMA_SharedItems
+  m_Data:
+    m_SerializedData: []
+  m_GUID: b2f1ffa878b9e0648b8d29c125d2ae80
+  m_SerializeEntries:
+  - m_GUID: 01c93d5f2b62c7b489b6ce6eec465e64
+    m_Address: Tex-shoes_tall_black_NM
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleTallShoes_Black
+    - FemaleTallShoes_Turquoise
+    - FemaleTallShoes_White
+    - TallShoes_Black_Recipe
+    - TallShoes_Recipe
+  - m_GUID: 0249f199c53d8db419e18d71356d6041
+    m_Address: Tex-Sneakers_1_normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleDancer1
+    - ToonSneakers1
+  - m_GUID: 0bc264c391455944a94d094e18d6cbd0
+    m_Address: Slt-Bottoms_Female_Hot_Pants_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleDancer1
+    - ToonHotPants1
+  - m_GUID: 0ec96409ed505ea41a08ee9f877fb5cc
+    m_Address: Slt-Tops_Female_Halter_Neck_1_TORSO
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleStarDancer1
+    - ToonHalterNeck1
+  - m_GUID: 0f9975fa93cece04f9f2d3455ca86225
+    m_Address: Tex-Fur-normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - WerewolfBase
+    - WerewolfTShirt
+  - m_GUID: 10bbdf805ca24ef42809993e0339cf6d
+    m_Address: Tex-UMA_Toon_F_Body_normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleToonBase
+    - FemaleDancer1
+    - ToonCropTShirt1
+    - ToonHotPants1
+    - FemaleStarDancer1
+    - ToonCapriPants1
+    - ToonHalterNeck1
+  - m_GUID: 135fa583abb9749c6bfec8cd5afa178b
+    m_Address: Tex-MaleJeans01_Roughness
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleJeans
+    - MakeMeFatJeans
+  - m_GUID: 14a815c7716781843bb171b88a227cf4
+    m_Address: Tex-Altar_hood_M
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleRobe Hood
+  - m_GUID: 156f9f45fa760b845b6411b1010bf360
+    m_Address: Slt-UMA_Werewolf_Torso
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - WerewolfBase
+    - WerewolfTShirt
+  - m_GUID: 157a4bd45f8a79447b6d4e320310ded5
+    m_Address: Ovl-MaleShortHair_Overlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleShortHair_Recipe
+    - MilCut
+  - m_GUID: 16c2c8e5305fb47d7bfb5beaed24f6ea
+    m_Address: Tex-Female_Tshirt01_Roughness
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleShirt1
+    - FemaleShirt4
+    - GirlShirt1
+  - m_GUID: 1c93c34e5ba9413419409dce673c4656
+    m_Address: Slt-Shoes_Fancy_Flats_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleStarDancer1
+    - ToonFancyFlats1
+  - m_GUID: 1f2079e30d9e5d04aa5a400a9cebfd70
+    m_Address: Tex-Smart_Pants_1_diffuse
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleStarDancer1
+    - ToonCapriPants1
+  - m_GUID: 1f9225ec4ae59d24482699e1ef27d5e3
+    m_Address: Tex-Crop_TShirt_1_diffuse
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleDancer1
+    - ToonCropTShirt1
+  - m_GUID: 1f951d479297c493296d0a40c193760e
+    m_Address: Tex-Female_Tshirt01_Normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleShirt1
+    - FemaleShirt4
+    - GirlShirt1
+  - m_GUID: 27adb7051154579498a6b0ee107ce813
+    m_Address: Ovl-SkyCarBodyOverlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkyCarBaseRecipe
+    - AntennaRecipe
+    - SpoilerRecipe
+    - StripesRecipe
+  - m_GUID: 27cecc42eea01ba4080fa8703b35100f
+    m_Address: Slt-Toon_Female_Crop_TShirt_1_TORSO
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleDancer1
+    - ToonCropTShirt1
+  - m_GUID: 286bbbe608a2cd14f9500d83fa610076
+    m_Address: Tex-WerewolfBody_Diffuse
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - WerewolfBase
+    - WerewolfTShirt
+  - m_GUID: 28864c26b3f4bea4bb382e8ca1b60565
+    m_Address: Ovl-UMA_Toon_F_Body
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleToonBase
+    - FemaleDancer1
+    - ToonCropTShirt1
+    - ToonHotPants1
+    - FemaleStarDancer1
+    - ToonCapriPants1
+    - ToonHalterNeck1
+  - m_GUID: 29e8046150efa8a4db130043bbab0fde
+    m_Address: Tex-WerewolfClaws_Diffuse
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - WerewolfBase
+  - m_GUID: 2aa0d5cae5c57a146ad6e43889520c12
+    m_Address: Ovl-Fancy_Flats_1_detail
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleStarDancer1
+    - ToonFancyFlats1
+  - m_GUID: 2b0bb34dd4b7fc249a3a765b880992ec
+    m_Address: Tex-Smart_Pants_1_detail_diffuse
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleStarDancer1
+    - ToonCapriPants1
+  - m_GUID: 2c589544d3fa460468f7e50c3a0d8c27
+    m_Address: Tex-ShoulderPad_Roughness
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleChallengerShouderPads
+  - m_GUID: 2e22b2a8a14c8b64488efe3ed35a4b06
+    m_Address: Tex-ponytail01_diffuse
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemalePonyTail_Recipe
+    - BoneyTail_Recipe
+  - m_GUID: 31551ac088496c44e9f4ed99f3cde8e2
+    m_Address: Tex-ShoulderPad_Normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleChallengerShouderPads
+  - m_GUID: 3798f966e3dde084eaa5d60ef5097c2f
+    m_Address: Tex-Gloves_Roughness
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleChallengerGloves
+  - m_GUID: 3c98e6b60315fce40802977b5cd2817f
+    m_Address: Tex-Fancy_Flats_1_normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleStarDancer1
+    - ToonFancyFlats1
+  - m_GUID: 41ad70ca423c43740a5fa85f0ef62442
+    m_Address: Slt-Bottoms_Female_Capri_Pants_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleStarDancer1
+    - ToonCapriPants1
+  - m_GUID: 426bd674b07660049907c2e6fa61b5b1
+    m_Address: Tex-UpperLower_A
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleRobe
+    - ClothRobeRecipe
+  - m_GUID: 475458bd3c70c4148997ace0f6619dbb
+    m_Address: Ovl-MeshHairStd
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleHair3
+    - MaleHair2
+  - m_GUID: 4990462eeb5376a469915d0af3986876
+    m_Address: Ovl-WerewolfBody
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - WerewolfBase
+    - WerewolfTShirt
+  - m_GUID: 4c5c96e8edf9cdc4abf5fed26d977b87
+    m_Address: Slt-FemaleTallShoes
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleTallShoes_Black
+    - FemaleTallShoes_Turquoise
+    - FemaleTallShoes_White
+  - m_GUID: 4de17df5964e4a1419644d12c604a173
+    m_Address: Tex-WerewolfHandsAndFeet_Diffuse
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - WerewolfBase
+  - m_GUID: 567469b0394184aaa99756a0d5bc580f
+    m_Address: Tex-MaleJeans01_Albedo
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleJeans
+    - MakeMeFatJeans
+  - m_GUID: 58d7ecb23020d4146a31d6e77ff22557
+    m_Address: Ovl-Smart_Pants_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleStarDancer1
+    - ToonCapriPants1
+  - m_GUID: 58dd27014d7068843ab43bc57b2b80a9
+    m_Address: Tex-HAIR_Nupgrade
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleHair3
+    - MaleHair2
+  - m_GUID: 5c36f948b8e7aab409933dec824d011d
+    m_Address: Ovl-Crop_TShirt_1_detail
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleDancer1
+    - ToonCropTShirt1
+  - m_GUID: 5f7c268b402a9fe46b8a5c4115e669f7
+    m_Address: Tex-scrunchie
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemalePonyTail_Recipe
+    - BoneyTail_Recipe
+  - m_GUID: 60d0a4f3a2fd41c4eb6136053eeefc44
+    m_Address: Tex-TorsoArmor_Normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleChallengerTorso
+  - m_GUID: 6260dbbbf7d5f0d428c91e7d592438a0
+    m_Address: Tex-Halter_Neck_1_normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleStarDancer1
+    - ToonHalterNeck1
+  - m_GUID: 63212701cc50fca4eac77618947eb849
+    m_Address: Ovl-FemaleTshirt01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleShirt1
+    - GirlShirt1
+  - m_GUID: 65887f0e5072b8b499a7760e4392741d
+    m_Address: Ovl-MaleJeans01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleJeans
+    - MakeMeFatJeans
+  - m_GUID: 664ce06cddaec764a95d67b79505d8dc
+    m_Address: Slt-FemaleTshirt01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleShirt1
+    - FemaleShirt4
+    - GirlShirt1
+  - m_GUID: 6a0307f4a35456d4eb23b5bfcdc948bc
+    m_Address: Tex-Jeans_1_normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleDancer1
+    - ToonHotPants1
+  - m_GUID: 6da400a63bfedc54dbfadfca5c2b1d2f
+    m_Address: Tex-Sneakers_1_detail_diffuse
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleDancer1
+    - ToonSneakers1
+  - m_GUID: 6e36e90783475394baa485bf0bf07514
+    m_Address: Tex-UpperLower_N
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleRobe
+    - ClothRobeRecipe
+  - m_GUID: 70b61d5f511fec649a7f297690b022a1
+    m_Address: Ovl-Fancy_Flats_1_detail1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleStarDancer1
+    - ToonFancyFlats1
+  - m_GUID: 748cbd8fc65e86744ae8c6d358d8d19a
+    m_Address: Tex-Smart_Pants_1_normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleStarDancer1
+    - ToonCapriPants1
+  - m_GUID: 7e0c7da6f160f8746b6dc9ef2b9b3105
+    m_Address: Tex-ChallengerBoot_Roughness
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleChallengerBoots
+  - m_GUID: 88748dee7076a594da2220b822ce685a
+    m_Address: Tex-TorsoArmor_Roughness
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleChallengerTorso
+  - m_GUID: 899377113242564478958a9647388a80
+    m_Address: Slt-UMA_Toon_TORSO-Female
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleToonBase
+    - ToonFemaleUnderwear1
+  - m_GUID: 8ce8f2c72d5601d4881a47725978e325
+    m_Address: Ovl-Halter_Neck_1_detail
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleStarDancer1
+    - ToonHalterNeck1
+  - m_GUID: 91976794324ceeb4798dc98c0f1c67ab
+    m_Address: Tex-UMA_Toon_Body_diffuse
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleToonBase
+    - FemaleDancer1
+    - ToonCropTShirt1
+    - ToonHotPants1
+    - FemaleStarDancer1
+    - ToonCapriPants1
+    - ToonHalterNeck1
+  - m_GUID: 92914de304309e747853a495770218e9
+    m_Address: Tex-HAIR_Dupgrade
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleHair3
+    - MaleHair2
+  - m_GUID: 9486e5d1d37e86246b9bd1e314a8a721
+    m_Address: Tex-SkyCarWheelOcclusion
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkyCarBaseRecipe
+  - m_GUID: 95f37b6e8a50f0c47bec196c4bc2eae2
+    m_Address: Tex-bb_male_hair_UMA Normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleShortHair_Recipe
+    - MilCut
+  - m_GUID: 980fed94abb92aa4cb426647cb125759
+    m_Address: Tex-Gloves_Normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleChallengerGloves
+  - m_GUID: 982377ed10e4ad34ea122aa27345c6b8
+    m_Address: Tex-ChallengerBoot_Normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleChallengerBoots
+  - m_GUID: a0b2da7dcebf2534c9359d5d87fa9d50
+    m_Address: Ovl-Halter_Neck_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleStarDancer1
+    - ToonHalterNeck1
+  - m_GUID: a5cb9c792e8a0684da24546a08a4ab2a
+    m_Address: Ovl-Sneakers_1_detail
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleDancer1
+    - ToonSneakers1
+  - m_GUID: a783f89daf8c524469e3905b80a396d5
+    m_Address: Tex-Sneakers_1_diffuse
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleDancer1
+    - ToonSneakers1
+  - m_GUID: a93b785a7dc7e3f4da5810505cdc19fe
+    m_Address: Tex-Fancy_Flats_1_detail_diffuse
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleStarDancer1
+    - ToonFancyFlats1
+  - m_GUID: aa4234fb16def7748a6476c4cbee204a
+    m_Address: Tex-WerewolfInnerMouth_Normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - WerewolfBase
+  - m_GUID: aacdea98071e35545a73de35b4ad3baf
+    m_Address: Tex-bb_male_hair_UMA
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleShortHair_Recipe
+    - MilCut
+  - m_GUID: ac8ad506ee5f8984d9591dd715ea545f
+    m_Address: Tex-Mystic_hood_N
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleRobe Hood
+  - m_GUID: ad54ecc72b1634b42a6b2ef9c5dbcdfa
+    m_Address: Ovl-TallShoes_White
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleTallShoes_White
+    - TallShoes_Recipe
+  - m_GUID: af58420b18450884782f4761c8f71952
+    m_Address: Tex-SkyCarWheelNormals
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkyCarBaseRecipe
+  - m_GUID: af723046b087198438ac4a32f7c25186
+    m_Address: Ovl-Fancy_Flats_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleStarDancer1
+    - ToonFancyFlats1
+  - m_GUID: afd670bc70f75274eb4fae71aa23eaac
+    m_Address: Slt-Bottoms_Female_Capri_Pants_1_LEGS
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleStarDancer1
+    - ToonCapriPants1
+  - m_GUID: b0c8bd5163af4b64599acdbac2eeb562
+    m_Address: Tex-Crop_TShirt_1_detail_diffuse
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleDancer1
+    - ToonCropTShirt1
+  - m_GUID: b53229351f1835947840963cdd44227e
+    m_Address: Ovl-PonyTail_Scrunchie_Overlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemalePonyTail_Recipe
+    - BoneyTail_Recipe
+  - m_GUID: b66591cce48d21043a814071716e6281
+    m_Address: Ovl-Smart_Pants_1_detail
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleStarDancer1
+    - ToonCapriPants1
+  - m_GUID: b964835c0dfe6674aa52884e63036f69
+    m_Address: Tex-WerewolfBlank_Specular
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - WerewolfBase
+    - WerewolfTShirt
+  - m_GUID: b97f19d37b372b14b894ee308237f40c
+    m_Address: Ovl-Crop_TShirt_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleDancer1
+    - ToonCropTShirt1
+  - m_GUID: ba8d7b4967d3f084b94f53b31d7a5b00
+    m_Address: Slt-Bottoms_Female_Hot_Pants_1_LEGS
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleDancer1
+    - ToonHotPants1
+  - m_GUID: bbcc9fcf1f8a6354d8f7efba8212910c
+    m_Address: Tex-Fancy_Flats_1_detail1_diffuse
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleStarDancer1
+    - ToonFancyFlats1
+  - m_GUID: bd0d469704e7c934ebddc45ece4c1868
+    m_Address: Tex-SkyCarBodyOcclusion
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkyCarBaseRecipe
+    - AntennaRecipe
+    - SpoilerRecipe
+    - StripesRecipe
+  - m_GUID: bfe51f13b8b7f594b8c6a75e30a5bbd5
+    m_Address: Tex-shoes_tall_black_D
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleTallShoes_Black
+    - TallShoes_Black_Recipe
+  - m_GUID: c03cf28ed277e7246a4dfc2e6b550cc1
+    m_Address: Slt-Tops_Female_Halter_Neck_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleStarDancer1
+    - ToonHalterNeck1
+  - m_GUID: c0d19c5bee56d9944a925b825809b07c
+    m_Address: Tex-ponytail01_diffuse GS
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemalePonyTail_Recipe
+    - BoneyTail_Recipe
+  - m_GUID: c23ed23be3c03a942976b1efa504ebb9
+    m_Address: Tex-shoes_tall_white_D
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleTallShoes_White
+    - TallShoes_Recipe
+  - m_GUID: c59f61ec240ce194ea1a7720096a5524
+    m_Address: Tex-Jeans_1_detail_diffuse
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleDancer1
+    - ToonHotPants1
+  - m_GUID: c7fd9103594884fe5baf9fd5c795def4
+    m_Address: Tex-Female_Tshirt01_Albedo
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleShirt1
+    - GirlShirt1
+  - m_GUID: ca20f7bc9c16c314991839b46ccfd3f4
+    m_Address: Slt-Tops_Female_Crop_TShirt_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleDancer1
+    - ToonCropTShirt1
+  - m_GUID: ccdf514727275dc45914627958155442
+    m_Address: Slt-SkyCarBody
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkyCarBaseRecipe
+    - StripesRecipe
+  - m_GUID: cf8631a0e0aefb34aa822421f8d5f826
+    m_Address: Ovl-FemalePonyTail_Overlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemalePonyTail_Recipe
+    - BoneyTail_Recipe
+  - m_GUID: d0a645b3673268b4e9bc730c39750929
+    m_Address: Tex-UpperLower_M
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleRobe
+    - ClothRobeRecipe
+  - m_GUID: d126afbadfdb59f4e9ba1cfb02993951
+    m_Address: Tex-Halter_Neck_1_detail_diffuse
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleStarDancer1
+    - ToonHalterNeck1
+  - m_GUID: d166f91c8264d564e9ffa5ec766bad53
+    m_Address: Tex-shoes_tall_black_SG
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleTallShoes_Black
+    - FemaleTallShoes_Turquoise
+    - FemaleTallShoes_White
+    - TallShoes_Black_Recipe
+    - TallShoes_Recipe
+  - m_GUID: d4ffb7d0ebee510498fba9d50f2296f7
+    m_Address: Tex-SkyCarBodyNormals
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkyCarBaseRecipe
+    - AntennaRecipe
+    - SpoilerRecipe
+    - StripesRecipe
+  - m_GUID: df3452a6006a2d54fb0587d4b2cad909
+    m_Address: Tex-UMA_Toon_Body_metallic
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleToonBase
+    - FemaleDancer1
+    - ToonCropTShirt1
+    - ToonFemaleUnderwear1
+    - ToonHotPants1
+    - FemaleStarDancer1
+    - ToonCapriPants1
+    - ToonFancyFlats1
+    - ToonHalterNeck1
+    - ToonSneakers1
+  - m_GUID: e3c19ea60a30aca45aabae54d1068387
+    m_Address: Slt-Shoes_Sneakers_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleDancer1
+    - ToonSneakers1
+  - m_GUID: e43769dcd6c17f34b8e3c464485721fa
+    m_Address: Tex-Fancy_Flats_1_diffuse
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleStarDancer1
+    - ToonFancyFlats1
+  - m_GUID: e5dd1cd866f75434cac96736c5df9df0
+    m_Address: Tex-Jeans_1_diffuse
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleDancer1
+    - ToonHotPants1
+  - m_GUID: e6c4adce4a1ff84428305e416685ee5e
+    m_Address: Tex-Crop_TShirt_1_normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleDancer1
+    - ToonCropTShirt1
+  - m_GUID: e822c12c3b38e4cbdbb419c94040eab4
+    m_Address: Tex-MaleJeans01_Normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleJeans
+    - MakeMeFatJeans
+  - m_GUID: ebe828fad47d6974d98f634f415815f9
+    m_Address: Ovl-Jeans_1_detail
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleDancer1
+    - ToonHotPants1
+  - m_GUID: f552f5dd25919084fa1077b6df706c9d
+    m_Address: Slt-TallShoes
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - TallShoes_Black_Recipe
+    - TallShoes_Recipe
+  - m_GUID: f8bd3f6c4901d6d4c986bb042def995c
+    m_Address: Ovl-TallShoes_Black
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleTallShoes_Black
+    - TallShoes_Black_Recipe
+  - m_GUID: faede5ef802a4d04080266de31601bc8
+    m_Address: Ovl-Sneakers_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleDancer1
+    - ToonSneakers1
+  - m_GUID: fc084c6e6b4a93c4b84286ff83c4dba6
+    m_Address: Tex-scrunchie GS
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemalePonyTail_Recipe
+    - BoneyTail_Recipe
+  - m_GUID: fc359ce7d2a20044bac14b99072f0e01
+    m_Address: Tex-Halter_Neck_1_diffuse
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleStarDancer1
+    - ToonHalterNeck1
+  - m_GUID: fd983ace9923d5244bf7876fb75df05a
+    m_Address: Ovl-WerewolfHandsAndFeet
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - WerewolfBase
+  - m_GUID: fe66eff1c0defe44aa57e93eb152305a
+    m_Address: Ovl-Jeans_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleDancer1
+    - ToonHotPants1
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: a1673ec1cc889134c9ce86e0f5c8211b, type: 2}
+    - {fileID: 11400000, guid: eb5de625e52138c4c9e68eae98aee158, type: 2}

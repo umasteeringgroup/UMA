@@ -21,6 +21,7 @@ namespace UMA
         public bool IsResource;
         public bool IsAssetBundle;
 		public bool IsAddressable;
+		public bool IsAlwaysLoaded;
 		public string AddressableGroup;
 		public string AddressableAddress;
 		public int ReferenceCount;
@@ -57,7 +58,7 @@ namespace UMA
             {
 #if UNITY_EDITOR
                 if (_SerializedItem != null) return _SerializedItem;
-				CachSerializedItem();
+				CacheSerializedItem();
                 return _SerializedItem;
 #else
                 return _SerializedItem;
@@ -73,7 +74,7 @@ namespace UMA
             }
         }
 
-		public void CachSerializedItem()
+		public void CacheSerializedItem()
 		{
 			#if UNITY_EDITOR		
 			if (_SerializedItem != null) return;

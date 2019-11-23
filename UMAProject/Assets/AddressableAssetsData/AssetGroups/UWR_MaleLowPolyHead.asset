@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UWR_MaleLowPolyHead
+  m_EditorClassIdentifier: 
+  m_GroupName: UWR_MaleLowPolyHead
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 58e458aba5b559049bdac823e68f31be
+  m_SerializeEntries:
+  - m_GUID: b37930fc892ea8f4aa5316c99ad405cd
+    m_Address: Slt-MaleFace
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleLowPolyHead
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 9dc4316797a4aa64b9c6771fdff84c91, type: 2}
+    - {fileID: 11400000, guid: 1480bc1cb59aa7f4eab1fc91ade0b882, type: 2}

@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UTR_HumanFemaleHighPoly
+  m_EditorClassIdentifier: 
+  m_GroupName: UTR_HumanFemaleHighPoly
+  m_Data:
+    m_SerializedData: []
+  m_GUID: dd1c1388bf70fa645912470417aa279e
+  m_SerializeEntries:
+  - m_GUID: 18c5922fb2bcf334fb36963c4168859e
+    m_Address: Slt-FR_High_FemaleInnerMouth
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemaleHighPoly
+  - m_GUID: 1b412947a734f7347a7d7fb3bc3bd7f1
+    m_Address: Slt-FR_High_FemaleFace
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemaleHighPoly
+  - m_GUID: 7ade72c73b264994b9ecae5a125d2e7f
+    m_Address: Slt-FR_High_FemaleTorso
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemaleHighPoly
+  - m_GUID: 810b579078122004a94ac82abc7c2fe5
+    m_Address: Slt-FR_High_FemaleEyes
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemaleHighPoly
+  - m_GUID: 8fff2e38737b1bc42842ab99f23ace26
+    m_Address: Slt-FR_High_FemaleHands
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemaleHighPoly
+  - m_GUID: e2e11d8a75e5b7642847b0f0609aeb11
+    m_Address: Slt-FR_High_FemaleFeet
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemaleHighPoly
+  - m_GUID: e913820d10d545d4caa7b3221853e8d2
+    m_Address: Slt-FR_High_FemaleLegs
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemaleHighPoly
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 210ffda6c6a2ad246b0bfa87318ddc6f, type: 2}
+    - {fileID: 11400000, guid: 0b097fb928809fd44a1b678f30c0644e, type: 2}

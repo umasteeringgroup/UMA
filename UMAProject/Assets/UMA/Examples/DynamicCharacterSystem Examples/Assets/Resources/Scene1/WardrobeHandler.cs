@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 using UMA.CharacterSystem;
 
 namespace UMA.CharacterSystem.Examples
@@ -9,8 +9,29 @@ namespace UMA.CharacterSystem.Examples
         public DynamicCharacterAvatar Avatar;
         public UMATextRecipe Recipe;
         public string Slot;
+		public bool isReady
+		{
+			get
+			{
+				if (Recipe == null)
+					return false;
 
-        public void Setup(DynamicCharacterAvatar avatar, UMATextRecipe recipe, string slot)
+				List<AssetItem> items = UMAAssetIndexer.Instance.GetAssetItems(Recipe);
+
+				foreach(AssetItem item in items)
+				{
+					if (item.IsAddressable && item._SerializedItem == null)
+					{
+						return false;
+					}
+				}
+
+				return true;
+			}
+		}
+
+
+		public void Setup(DynamicCharacterAvatar avatar, UMATextRecipe recipe, string slot)
         {
             Avatar = avatar;
             Recipe = recipe;
@@ -27,15 +48,23 @@ namespace UMA.CharacterSystem.Examples
                 Avatar.ForceUpdate(true, true, true);
                 return;
             }
-            // We have a recipe.
-            // The wardrobe slot is defined in the recipe itself, so setting a recipe is all 
-            // that is needed to "put on" a wardrobe item. 
-            // Any recipe that already exists at that slot will be removed - so, for example,
-            // putting on a shirt will replace the existing shirt if one exists.
-            Avatar.SetSlot(Recipe);
-            // Rebuild the character so its wearing the new wardrobe item.
-            Avatar.BuildCharacter(true);
-            Avatar.ForceUpdate(true, true, true);
+
+			if (isReady)
+			{
+				// We have a recipe.
+				// The wardrobe slot is defined in the recipe itself, so setting a recipe is all 
+				// that is needed to "put on" a wardrobe item. 
+				// Any recipe that already exists at that slot will be removed - so, for example,
+				// putting on a shirt will replace the existing shirt if one exists.
+				Avatar.SetSlot(Recipe);
+				// Rebuild the character so its wearing the new wardrobe item.
+				Avatar.BuildCharacter(true);
+				Avatar.ForceUpdate(true, true, true);
+			}
+			else
+			{
+				UMAAssetIndexer.Instance.PreLoad("UniqueName",Recipe);
+			}
         }
     }
 }

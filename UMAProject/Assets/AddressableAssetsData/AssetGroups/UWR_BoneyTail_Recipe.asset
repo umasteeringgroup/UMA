@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UWR_BoneyTail_Recipe
+  m_EditorClassIdentifier: 
+  m_GroupName: UWR_BoneyTail_Recipe
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 362004102308a794bbb98dcf4663628e
+  m_SerializeEntries:
+  - m_GUID: 34dcbac549d5c964f8c01cb8719d0a99
+    m_Address: Slt-BoneyTail_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - BoneyTail_Recipe
+  - m_GUID: 515a46b056a0d8d4d8fc2de3b7f58d29
+    m_Address: Slt-PhysicsStandard
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - BoneyTail_Recipe
+  - m_GUID: e414c14586660fb46865f0168c8d01dd
+    m_Address: Slt-BoneyTail
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - BoneyTail_Recipe
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 0e682551fdcaf3543ac460787a276f5d, type: 2}
+    - {fileID: 11400000, guid: 4516691778fa0dd4ba2cdff31e77daa5, type: 2}

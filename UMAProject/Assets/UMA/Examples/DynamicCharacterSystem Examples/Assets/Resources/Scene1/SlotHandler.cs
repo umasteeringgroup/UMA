@@ -12,7 +12,8 @@ namespace UMA.CharacterSystem.Examples
         public GameObject WardrobeButtonPrefab;
         public GameObject LabelPrefab;
         public string SlotName;
-
+		private Color32 LoadedColor = new Color32(0, 128, 0, 255);
+		private Color32 UnloadedColor = new Color32(128, 0, 0, 255);
 
 
         public void Setup(DynamicCharacterAvatar avatar, string slotName, GameObject wardrobePanel)
@@ -60,7 +61,27 @@ namespace UMA.CharacterSystem.Examples
             wh.Setup(Avatar, utr, SlotName);
             Text txt = go.GetComponentInChildren<Text>();
             txt.text = theText;
-            go.transform.SetParent(WardrobePanel.transform);
+			if (utr == null)
+			{
+				txt.color = Color.black;
+				txt.text = theText;
+			}
+			else if (!wh.isReady)
+			{
+				txt.color = UnloadedColor;
+				txt.text = "(U) "+theText;
+			}
+			else
+			{
+				txt.text = "(L)"+theText;
+				txt.color = LoadedColor;
+			}
+
+			if (txt.text.Length > 20)
+			{
+				txt.text = txt.text.Substring(0, 20);
+			}
+			go.transform.SetParent(WardrobePanel.transform);
         }
 
         private void Cleanup()

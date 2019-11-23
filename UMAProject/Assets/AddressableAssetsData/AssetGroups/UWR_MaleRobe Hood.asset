@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UWR_MaleRobe Hood
+  m_EditorClassIdentifier: 
+  m_GroupName: UWR_MaleRobe Hood
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 60b82f698f055994eb8b753672d77a32
+  m_SerializeEntries:
+  - m_GUID: 336187aa7b3190f488804be99f650b87
+    m_Address: Tex-Altar_hood_A
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleRobe Hood
+  - m_GUID: 33cad728009b0ab439083a8ddf6a92ba
+    m_Address: Ovl-M_Freebie Robeset Hood
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleRobe Hood
+  - m_GUID: 356925f858219b04797c21d4cb7a43f4
+    m_Address: Slt-M_Freebie Robeset Hood_Slot
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleRobe Hood
+  - m_GUID: 3994de13deb5d5a409b414a7c747d4e3
+    m_Address: Tex-Altar_hood_AC
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleRobe Hood
+  - m_GUID: e37a792c969bb454c804c435f8c1c285
+    m_Address: Ovl-M_Freebie Robeset Hood AC
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleRobe Hood
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: b6ab1c6fff6daa44e94e8977d93281b5, type: 2}
+    - {fileID: 11400000, guid: 59551f7073e8dd447be02f1b0d34965a, type: 2}

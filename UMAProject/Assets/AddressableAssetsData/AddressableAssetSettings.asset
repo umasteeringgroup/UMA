@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_DefaultGroup: 606a0b29146a4ac4da8c5ac23b500d4f
   m_BuildRemoteCatalog: 0
+  m_UniqueBundleIds: 0
   m_RemoteCatalogBuildPath:
     m_Id: 
   m_RemoteCatalogLoadPath:
@@ -22,28 +23,56 @@ MonoBehaviour:
   m_GroupAssets:
   - {fileID: 11400000, guid: c0a6c01536140764f83a79179bbc30f7, type: 2}
   - {fileID: 11400000, guid: 08026b6fa511a8f4aaa3d0c5f97304a0, type: 2}
-  - {fileID: 11400000, guid: b72e42f6858a2b04e88ddc6e99657693, type: 2}
-  - {fileID: 11400000, guid: a9a495f8cb48d7949aaf75ba34e4e1c7, type: 2}
-  - {fileID: 11400000, guid: 0e212ddfaa82bf646b702bb39b40c99c, type: 2}
-  - {fileID: 11400000, guid: bba53a1f5e2a6734ebdecdeed685c8d6, type: 2}
-  - {fileID: 11400000, guid: 772764f391f7a3f45863dc87a70f25ce, type: 2}
-  - {fileID: 11400000, guid: feaf537514c19b54f90d4aa4ed3f0324, type: 2}
-  - {fileID: 11400000, guid: c362dc7f6592fc4449749bdea3d083ff, type: 2}
-  - {fileID: 11400000, guid: 7487285d539028944b0b64dbc81d7085, type: 2}
-  - {fileID: 11400000, guid: 885a4c14c9d5ab14895fbc303d377d42, type: 2}
-  - {fileID: 11400000, guid: 147063d15f6e8bb499f2d8e19d5cd4ed, type: 2}
-  - {fileID: 11400000, guid: 826da47a11e442f4e89e871dc36976c4, type: 2}
-  - {fileID: 11400000, guid: 1a4f1bc3d0393714db9183a3ae3a878c, type: 2}
-  - {fileID: 11400000, guid: c0887cf44f1280946b4cc02e8a34f3a0, type: 2}
-  - {fileID: 11400000, guid: dad3c59630146834fa95fe2287b25e4e, type: 2}
-  - {fileID: 11400000, guid: aa27f87efe419a4438c48d223edd294e, type: 2}
-  - {fileID: 11400000, guid: a465ea7d5dd20af45a072a9f81dde273, type: 2}
-  - {fileID: 11400000, guid: 2b9264763db85fb40819ecb25d5535d9, type: 2}
-  - {fileID: 11400000, guid: 1bc30ee47b4f12f4fb969089500c20c0, type: 2}
-  - {fileID: 11400000, guid: 97b8094b85960ef4ea87ff83d4bb2ee7, type: 2}
-  - {fileID: 11400000, guid: 22b042abfa767734696a2d3f0e3f7d77, type: 2}
-  - {fileID: 11400000, guid: aaddcf20b81b7fe448ccea41bcdfd51b, type: 2}
-  - {fileID: 11400000, guid: 9a59ef2492e9d6840835f3b4304be13d, type: 2}
+  - {fileID: 11400000, guid: c26003e05ab9cf54c9c461b687ff027b, type: 2}
+  - {fileID: 11400000, guid: 05c0e448ed3702e4191553530a9ea670, type: 2}
+  - {fileID: 11400000, guid: 84129e9529b2d1f4da7839aa576fb374, type: 2}
+  - {fileID: 11400000, guid: 680c356a0acd130498cd4b648c3dc0b9, type: 2}
+  - {fileID: 11400000, guid: c3a655ef28c08aa4b98db40a3cfa6430, type: 2}
+  - {fileID: 11400000, guid: b21eb7032b5972841818b78558a678b4, type: 2}
+  - {fileID: 11400000, guid: 5936faf32b4d88040808bbf8fe501767, type: 2}
+  - {fileID: 11400000, guid: d53c6a70b1cba074cad474ed2669b258, type: 2}
+  - {fileID: 11400000, guid: b767205f70a9b1d48a27a8b40427f00e, type: 2}
+  - {fileID: 11400000, guid: d667a67e412ddce4282dd02e2227db89, type: 2}
+  - {fileID: 11400000, guid: 522df0a352c999246a9cbba7d0ff2a20, type: 2}
+  - {fileID: 11400000, guid: 965904cd5dd6c0e4a8bc37f923155d70, type: 2}
+  - {fileID: 11400000, guid: b481341dedac83e46a775dc2e406c41b, type: 2}
+  - {fileID: 11400000, guid: 42b44b775ee54ff4aaae2ca32e27c8b9, type: 2}
+  - {fileID: 11400000, guid: c5ee03d5333a05d4894d3cbd27b5c73c, type: 2}
+  - {fileID: 11400000, guid: a2d5e93514e42bd42a9a36929bf94bf2, type: 2}
+  - {fileID: 11400000, guid: f0984ed14adcaf1449a8bf34bec792fe, type: 2}
+  - {fileID: 11400000, guid: a7a6348163f16654f9723a02328ac402, type: 2}
+  - {fileID: 11400000, guid: 94e0a2fb6a25dc04e84cf69fde46c5a0, type: 2}
+  - {fileID: 11400000, guid: c9e885b3c0ca632459ac0c0cafdbec2d, type: 2}
+  - {fileID: 11400000, guid: 2a414ae592497414b80bfc24cf8d4030, type: 2}
+  - {fileID: 11400000, guid: 66afcfa871732b2459a17bf34fc7c339, type: 2}
+  - {fileID: 11400000, guid: b540e01e61b357c40b9f1cfea7d45242, type: 2}
+  - {fileID: 11400000, guid: 2751954e7e6bc1e41b2b104a10d539b4, type: 2}
+  - {fileID: 11400000, guid: 49e5b06a82f2e41499766e8abeae1255, type: 2}
+  - {fileID: 11400000, guid: 728f5dc072e08e146a31a7416e76c3eb, type: 2}
+  - {fileID: 11400000, guid: 270d0fab4983d1747887be50cf6bd464, type: 2}
+  - {fileID: 11400000, guid: edda3c454e329724b8592af4c6a08bef, type: 2}
+  - {fileID: 11400000, guid: 26196caba68811c4ab6c85cc3ecf1618, type: 2}
+  - {fileID: 11400000, guid: 0eeb140f8f67dcc48b6741b5195abd4e, type: 2}
+  - {fileID: 11400000, guid: 320f5671dcbf5384eab81982e67c2308, type: 2}
+  - {fileID: 11400000, guid: 88e2b302bce03764fb7971a13dcd95d3, type: 2}
+  - {fileID: 11400000, guid: 2ef9798a923ee444aa1f2c86d29e6a16, type: 2}
+  - {fileID: 11400000, guid: 038e3ceb307eaf74a965398bd269d68f, type: 2}
+  - {fileID: 11400000, guid: 24a1b7869a630e2418816c511a4706c5, type: 2}
+  - {fileID: 11400000, guid: 19ea139474ed2c546a4699f827202bef, type: 2}
+  - {fileID: 11400000, guid: 8772480feb10d63429fa70b233a9e7f8, type: 2}
+  - {fileID: 11400000, guid: ca6394baf71d08643ad5852fe1413507, type: 2}
+  - {fileID: 11400000, guid: 828a91b01da78654ba6ce576141c46e2, type: 2}
+  - {fileID: 11400000, guid: 27e42f1abf284494aa88ce49f494b592, type: 2}
+  - {fileID: 11400000, guid: 2836b5b5be01e1444888850a57071dd7, type: 2}
+  - {fileID: 11400000, guid: d80e16302a450bc41ab6567d64eb5b9a, type: 2}
+  - {fileID: 11400000, guid: fd98254eb4798de478c79f38d76dbb1c, type: 2}
+  - {fileID: 11400000, guid: b639dd1cda36d444ba150aac77526473, type: 2}
+  - {fileID: 11400000, guid: e866ac6c8be705a4e933b89687e1e21f, type: 2}
+  - {fileID: 11400000, guid: 1fd82767e1bbc034cb6f65b0763bf7bf, type: 2}
+  - {fileID: 11400000, guid: a291a932ce5d681499c0171fd64a4d52, type: 2}
+  - {fileID: 11400000, guid: 16e0a4dd0246c044aab0b509be5be2a0, type: 2}
+  - {fileID: 11400000, guid: 64e0cd92d2d7b6548bf836effcb70bc9, type: 2}
+  - {fileID: 11400000, guid: d8eeada37a44f3f4b832889c17b52302, type: 2}
   m_BuildSettings:
     m_CompileScriptsInVirtualMode: 0
     m_CleanupStreamingAssetsAfterBuilds: 1
@@ -85,6 +114,103 @@ MonoBehaviour:
   m_LabelTable:
     m_LabelNames:
     - default
+    - FemaleLongHair_Recipe
+    - FemaleTallShoes_Black
+    - FemaleTallShoes_Turquoise
+    - FemaleTallShoes_White
+    - FemalePonyTail_Recipe
+    - FemaleSportPants_Recipe
+    - FemaleTankTop_Recipe
+    - ShavedHead
+    - MaleShortHair_Recipe
+    - MilCut
+    - MaleBeard1
+    - MaleBeard2
+    - MaleBeard3
+    - MaleBrow01
+    - MaleBrow02
+    - MaleFace Old
+    - MaleHair1
+    - MaleHair3
+    - TrollHead
+    - TallShoes_Black_Recipe
+    - TallShoes_Recipe
+    - MaleHoodie_Recipe
+    - MaleSweatPants_Recipe
+    - FemaleHandsMid
+    - FemaleSwappedFace
+    - MaleHandsMid
+    - MaleLowPolyHead
+    - FemaleHair1
+    - FemaleHair2
+    - FemaleHair3
+    - FemalePants1
+    - FemalePants2
+    - FemaleShirt1
+    - FemaleShirt4
+    - GirlShirt1
+    - FemaleShirt2
+    - FemaleShirt3
+    - FemaleUndies
+    - FemaleUndies2
+    - MaleBrowHR
+    - MaleEye1
+    - MaleEye2
+    - MaleEye3
+    - MaleEye4
+    - MaleEye5
+    - MaleGloves
+    - MaleHair2
+    - MaleJeans
+    - MaleJeans 1
+    - MaleShorts1
+    - MaleShorts2
+    - MaleUnderwear
+    - MalePants
+    - MaleRobe
+    - MaleRobe Hood
+    - MaleRobe Shoes
+    - MaleShirt1
+    - MaleShirt2
+    - MaleShirt3
+    - OverweightMale
+    - BlendShapeRecipe
+    - AlienHeadMorph
+    - ElfEarsMorph
+    - MakeMeFatJeans
+    - FemaleDancer1
+    - ToonSneakers1
+    - ToonCropTShirt1
+    - ToonHotPants1
+    - ToonFemaleUnderwear1
+    - ToonHair1
+    - FemaleStarDancer1
+    - ToonCapriPants1
+    - ToonHalterNeck1
+    - ToonFancyFlats1
+    - MaleChallengerBoots
+    - MaleChallengerGloves
+    - MaleChallengerShouderPads
+    - MaleChallengerTorso
+    - WerewolfTShirt
+    - AntennaRecipe
+    - SpoilerRecipe
+    - StripesRecipe
+    - ClothRobeRecipe
+    - BoneyTail_Recipe
+    - HumanFemale Base Recipe
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - HumanFemaleHighPoly
+    - HumanMale Base Recipe
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - DNAConverterControllerExample Base Recipe
+    - HumanMaleHighPoly
+    - FemaleToonBase
+    - WerewolfBase
+    - SkyCarBaseRecipe
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: dcf39f185b7285f46b384b0a25cb6bf7, type: 2}

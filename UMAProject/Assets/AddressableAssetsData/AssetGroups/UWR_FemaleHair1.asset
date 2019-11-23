@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UWR_FemaleHair1
+  m_EditorClassIdentifier: 
+  m_GroupName: UWR_FemaleHair1
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 1f8143b6084b22c4284124577266042c
+  m_SerializeEntries:
+  - m_GUID: 0dfbf95a2c3548040a6cc23330e64d76
+    m_Address: Slt-FemaleLongHair01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleHair1
+  - m_GUID: 1728ae09e26524f7ea24cc5be258747e
+    m_Address: Tex-FemaleLongHair01_Module_Albedo
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleHair1
+  - m_GUID: 25df90b5e017453499c48fdb9051267c
+    m_Address: Ovl-FemaleLongHair01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleHair1
+  - m_GUID: 335dc3fe2bdb9a24ea853d1023a2ab3e
+    m_Address: Ovl-FemaleLongHair01_Module
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleHair1
+  - m_GUID: 51af9d51ef86e4b5b88b109f0acc4faa
+    m_Address: Tex-FemaleLongHair01_Normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleHair1
+  - m_GUID: 733a92cc8c2044955930cab23410903a
+    m_Address: Tex-FemaleLongHair01_Module_Normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleHair1
+  - m_GUID: b8ce21decde314b64bf5c02150bb2963
+    m_Address: Tex-FemaleLongHair01_Albedo
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleHair1
+  - m_GUID: ce2cca2d60a3a964e96c77683b6263db
+    m_Address: Slt-FemaleLongHair01_Module
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleHair1
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 5ec00be37386d934d899fb68e71596c1, type: 2}
+    - {fileID: 11400000, guid: 4cad9cd414001bd4ab026d279db073ba, type: 2}

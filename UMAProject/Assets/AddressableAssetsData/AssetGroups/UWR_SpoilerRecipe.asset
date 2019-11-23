@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UWR_SpoilerRecipe
+  m_EditorClassIdentifier: 
+  m_GroupName: UWR_SpoilerRecipe
+  m_Data:
+    m_SerializedData: []
+  m_GUID: af4275b379c645141a0f2d2778f497a3
+  m_SerializeEntries:
+  - m_GUID: 6e03cfedafaf94f48b148cfe04d24f96
+    m_Address: Slt-SkyCarSpoiler
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SpoilerRecipe
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: b6bd2fae7d4675546a2a5ce156141376, type: 2}
+    - {fileID: 11400000, guid: 2b77217f9f24bb447baae35f5e062041, type: 2}

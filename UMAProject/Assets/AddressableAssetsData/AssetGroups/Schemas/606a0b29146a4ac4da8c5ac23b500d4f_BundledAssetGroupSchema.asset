@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: 606a0b29146a4ac4da8c5ac23b500d4f_BundledAssetGroupSchema
   m_EditorClassIdentifier: 
   m_Group: {fileID: 11400000, guid: 08026b6fa511a8f4aaa3d0c5f97304a0, type: 2}
-  m_Compression: 1
+  m_Compression: 0
   m_IncludeInBuild: 1
   m_BundledAssetProviderType:
     m_AssemblyName: Unity.ResourceManager, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
@@ -33,4 +33,4 @@ MonoBehaviour:
   m_AssetBundleProviderType:
     m_AssemblyName: Unity.ResourceManager, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
     m_ClassName: UnityEngine.ResourceManagement.ResourceProviders.AssetBundleProvider
-  m_BundleNaming: 0
+  m_BundleNaming: 2

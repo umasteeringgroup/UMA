@@ -533,6 +533,7 @@ PlayerSettings:
     2: 
   platformArchitecture: {}
   scriptingBackend:
+    Android: 0
     Metro: 2
     Standalone: 0
     WebGL: 1
@@ -542,7 +543,8 @@ PlayerSettings:
   allowUnsafeCode: 0
   additionalIl2CppArgs: 
   scriptingRuntimeVersion: 1
-  apiCompatibilityLevelPerPlatform: {}
+  apiCompatibilityLevelPerPlatform:
+    Android: 3
   m_RenderingPath: 1
   m_MobileRenderingPath: 1
   metroPackageName: UMA_Unity

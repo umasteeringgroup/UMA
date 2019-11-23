@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UWR_MaleChallengerGloves
+  m_EditorClassIdentifier: 
+  m_GroupName: UWR_MaleChallengerGloves
+  m_Data:
+    m_SerializedData: []
+  m_GUID: ffd8dfa4d4dacb24eaeaa5f998da9831
+  m_SerializeEntries:
+  - m_GUID: 073bb8d1e3dc03140ada534c06d42dff
+    m_Address: Slt-MaleChallengerGloves
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleChallengerGloves
+  - m_GUID: 57540dd689a6efa44b9a5d2c785de92e
+    m_Address: Tex-GlovesMetal_Albedo
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleChallengerGloves
+  - m_GUID: 8e8a11d219efb744e8b7d8886bf4431a
+    m_Address: Tex-GlovesLeather_Albedo
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleChallengerGloves
+  - m_GUID: a460597f78928e04a8db0940885eb72a
+    m_Address: Ovl-ChallengerGlovesLeather
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleChallengerGloves
+  - m_GUID: e84b15df5103d0a419f01ffe3e77fb53
+    m_Address: Ovl-ChallengerGlovesMetal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleChallengerGloves
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: aa942aa03fe74e748b8091b0c0d66de7, type: 2}
+    - {fileID: 11400000, guid: c8fdc60ad8bd3a147a40b34af094f511, type: 2}

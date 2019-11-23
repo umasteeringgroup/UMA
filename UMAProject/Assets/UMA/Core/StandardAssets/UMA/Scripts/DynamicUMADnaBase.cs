@@ -52,6 +52,8 @@ namespace UMA
 			if (DynamicDNADictionary != null)
 				return;
 
+			string umaloc = PlayerPrefs.GetString("RelativeUMA","UMA/");
+
 			DynamicDNADictionary = new Dictionary<string, DynamicUMADnaAsset>();
 #if UNITY_EDITOR
 			var allDNAAssetsGUIDs = UnityEditor.AssetDatabase.FindAssets("t:DynamicUMADnaAsset");
@@ -62,7 +64,8 @@ namespace UMA
 				DynamicDNADictionary.Add(thisDNAAsset.name, thisDNAAsset);
 			}
 #else
-			DynamicUMADnaAsset[] foundAssets = Resources.LoadAll<DynamicUMADnaAsset>("");
+			
+			DynamicUMADnaAsset[] foundAssets = Resources.LoadAll<DynamicUMADnaAsset>(umaloc);
 			for (int i = 0; i < foundAssets.Length; i++)
 			{
 				var thisDNAAsset = foundAssets[i];

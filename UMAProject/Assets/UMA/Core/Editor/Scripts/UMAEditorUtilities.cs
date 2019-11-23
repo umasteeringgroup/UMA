@@ -19,6 +19,8 @@ namespace UMA
         private static bool showIndexedTypes = false;
         private static bool showUnindexedTypes = true;
 		private const string umaHotkeyWord = "UMA_HOTKEYS";
+		private const string umaLocation = "RelativeUMA";
+		private static string DNALocation = "UMA/";
 
         static UMAEditorUtilities()
         {
@@ -69,6 +71,17 @@ namespace UMA
             // Preferences GUI
             bool newshowIndexedTypes = EditorGUILayout.Toggle("Show Indexed Types", showIndexedTypes);
             showUnindexedTypes = EditorGUILayout.Toggle("Also Show Unindexed Types", showUnindexedTypes);
+
+			if (!PlayerPrefs.HasKey(umaLocation))
+			{
+				PlayerPrefs.SetString(umaLocation, DNALocation);
+			}
+			string umaloc = PlayerPrefs.GetString(umaLocation);
+			string newUmaLoc = EditorGUILayout.DelayedTextField("Relative UMA Location", umaloc);
+			if (umaloc != newUmaLoc)
+			{
+				PlayerPrefs.SetString(umaLocation, newUmaLoc);
+			}
 
             // Save the preferences
             if (newshowIndexedTypes != showIndexedTypes)

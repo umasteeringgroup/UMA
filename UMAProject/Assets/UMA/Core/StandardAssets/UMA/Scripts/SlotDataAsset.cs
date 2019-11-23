@@ -15,7 +15,7 @@ namespace UMA
 		public int nameHash;
 
 		public UMARendererAsset RendererAsset { get { return _rendererAsset; } }
-		[SerializeField] private UMARendererAsset _rendererAsset;
+		[SerializeField] private UMARendererAsset _rendererAsset=null;
 
         #region INameProvider
 

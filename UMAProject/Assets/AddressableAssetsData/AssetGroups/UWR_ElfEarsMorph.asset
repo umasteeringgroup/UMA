@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UWR_ElfEarsMorph
+  m_EditorClassIdentifier: 
+  m_GroupName: UWR_ElfEarsMorph
+  m_Data:
+    m_SerializedData: []
+  m_GUID: ef679e9064b0a524ca47250cf6a60396
+  m_SerializeEntries:
+  - m_GUID: 82e2d1671a9ac524d805de01b9408543
+    m_Address: Slt-ElfEarsMorph
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ElfEarsMorph
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 845710b2c7034bd498175b3a219caf10, type: 2}
+    - {fileID: 11400000, guid: 5d9f11179991d244b94d139feb2adcfa, type: 2}
