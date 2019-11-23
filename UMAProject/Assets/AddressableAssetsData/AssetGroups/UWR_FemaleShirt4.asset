@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_FemaleShirt4
   m_Data:
     m_SerializedData: []
-  m_GUID: d30391539376add4e89c23f4327b16ac
+  m_GUID: 8aeb2ac28ed9b004487b210191c1d3aa
   m_SerializeEntries:
   - m_GUID: 4d2fbc2e8180eb84797f3626dd23187d
     m_Address: Tex-Female_Tshirt02_diffuse
@@ -31,5 +31,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: ea7981935fe5ab14eb6192c209b4a3de, type: 2}
-    - {fileID: 11400000, guid: 72fd793ac9eb5ff4bb49f1434561506a, type: 2}
+    - {fileID: 11400000, guid: bc3a7b2593080e0489c0638640a14bfa, type: 2}
+    - {fileID: 11400000, guid: 07cc35f76eee5dc458bea5526755ddee, type: 2}

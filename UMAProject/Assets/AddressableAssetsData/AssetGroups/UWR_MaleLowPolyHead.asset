@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_MaleLowPolyHead
   m_Data:
     m_SerializedData: []
-  m_GUID: 58e458aba5b559049bdac823e68f31be
+  m_GUID: a6e1917789fdd4548a729e62b0fbbab6
   m_SerializeEntries:
   - m_GUID: b37930fc892ea8f4aa5316c99ad405cd
     m_Address: Slt-MaleFace
@@ -26,5 +26,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 9dc4316797a4aa64b9c6771fdff84c91, type: 2}
-    - {fileID: 11400000, guid: 1480bc1cb59aa7f4eab1fc91ade0b882, type: 2}
+    - {fileID: 11400000, guid: b4fc24f18c072464e9a2fc477a0dfaf6, type: 2}
+    - {fileID: 11400000, guid: 5b3a8d4a480c40f4991fc103b83239eb, type: 2}

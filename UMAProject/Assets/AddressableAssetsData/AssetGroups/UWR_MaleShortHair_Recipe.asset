@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_MaleShortHair_Recipe
   m_Data:
     m_SerializedData: []
-  m_GUID: 5df9f50e1616579489ef596247b20c80
+  m_GUID: 1a56f7f862a55ed409399ad56256f3e4
   m_SerializeEntries:
   - m_GUID: 948be3b7076b1194ab1f335624c88fb2
     m_Address: Slt-MaleShortHair
@@ -26,5 +26,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 0c4e6a72d9a6d0248a454a1517d47239, type: 2}
-    - {fileID: 11400000, guid: e0220b42bfa94994cbe73851840a0bcc, type: 2}
+    - {fileID: 11400000, guid: d69cc4b1d72adde408edd52964fe659c, type: 2}
+    - {fileID: 11400000, guid: 196294df406b2ff42b7d3cc5a66620c0, type: 2}

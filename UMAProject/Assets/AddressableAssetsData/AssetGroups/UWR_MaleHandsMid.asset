@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_MaleHandsMid
   m_Data:
     m_SerializedData: []
-  m_GUID: 6c6951c2b4c1e6a4d9d7559a675f83b9
+  m_GUID: 63c7c326ae887cd4097de10ec8746c67
   m_SerializeEntries:
   - m_GUID: 1cb8a895dbe7af3499df9ad078311653
     m_Address: Slt-UMA_Human_Male_Hands_HQ
@@ -26,5 +26,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: aa2c8657e5cf1304abe49a6a6f118b50, type: 2}
-    - {fileID: 11400000, guid: e5eebb4818d43954b9d4696c0636c0fa, type: 2}
+    - {fileID: 11400000, guid: 72c260fd36d0ec3449cbc3cd447e435d, type: 2}
+    - {fileID: 11400000, guid: dd39bd96ffa0cf945980e757d00f9ff2, type: 2}

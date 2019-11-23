@@ -567,6 +567,7 @@ namespace UMA.CharacterSystem.Editors
 					{
 						// Remove orphans here. 
 						// lots/Overlays that are not addressable, and not always.
+						UAI.CleanupOrphans(CurrentType);
 					}
 					EditorGUILayout.EndHorizontal();
 					EditorGUILayout.HelpBox("Removing Orphaned Items should be done AFTER you have marked the Races and Wardrobe items you want to include as 'Always Included', and after you have built Addressable Bundles!", MessageType.Info);

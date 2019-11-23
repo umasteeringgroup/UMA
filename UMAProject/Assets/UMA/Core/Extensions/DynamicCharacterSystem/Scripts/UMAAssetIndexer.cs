@@ -217,7 +217,7 @@ namespace UMA
         /// </summary>
         /// <returns></returns>
         public System.Type[] GetTypes()
-        {
+        { 
             return Types;
         }
 
@@ -551,9 +551,10 @@ namespace UMA
 #endif
 		public UMAContext GetContext()
 		{
-			if (UMAContext.Instance != null)
+			UMAContext instance = UMAContext.FindInstance();
+			if (instance != null)
 			{
-				return UMAContext.Instance;
+				return instance;
 			}
 #if UNITY_EDITOR
 			EditorUMAContext = UMAContext.CreateEditorContext();
@@ -968,7 +969,7 @@ namespace UMA
                     int iPos = Mathf.CeilToInt(pos);
                     EditorUtility.DisplayProgressBar("Generating", "Creating Group: " + uwr.name, iPos);
                     Debug.Log("Generating group: " + uwr.name);
-					string groupName;
+					string groupName; 
 					if (uwr is UMAWardrobeRecipe)
 					{
 						groupName = wprefix + uwr.name;
@@ -1004,6 +1005,26 @@ namespace UMA
 				ForceSave();
 			}
         }
+
+		public void CleanupOrphans(Type type)
+		{
+			var items = GetAssetDictionary(type);
+
+			List<string> toRemove = new List<string>();
+			foreach (KeyValuePair<string, AssetItem> pair in items)
+			{
+				if (pair.Value.IsAddressable ==false && pair.Value.IsAlwaysLoaded == false)
+				{
+					toRemove.Add(pair.Key);
+				}
+			}
+
+			foreach (var key in toRemove)
+			{
+				items.Remove(key);
+			}
+			ForceSave();
+		}
 
 		private void ReleaseReferences(Type type)
 		{

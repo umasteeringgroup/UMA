@@ -15,7 +15,7 @@ namespace UMA
 
 #if UNITY_EDITOR
 		public static GameObject CreateEditorContext()
-		{
+		{ 
 			GameObject EditorUMAContext = null;
 			if (UnityEditor.BuildPipeline.isBuildingPlayer)
 				return null;

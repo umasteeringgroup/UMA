@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_MaleChallengerBoots
   m_Data:
     m_SerializedData: []
-  m_GUID: 348805fa1ab837a419ee4ce11add8205
+  m_GUID: d40d493778eacb94ca03097f873bc887
   m_SerializeEntries:
   - m_GUID: 52356e7a7ac1a79468d88e2b3f918bd6
     m_Address: Ovl-ChallengerBootsLeather
@@ -46,5 +46,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 388693f2ba8415c42895883104b9ea72, type: 2}
-    - {fileID: 11400000, guid: 43cdfb5d8a44de24d9650029ce3412a5, type: 2}
+    - {fileID: 11400000, guid: ba5b79c4dbace0f4ca225f0d3fa77c8e, type: 2}
+    - {fileID: 11400000, guid: aaaa6c5ef1bd66140a466915f6ba173e, type: 2}

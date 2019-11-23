@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UTR_HumanFemaleHighPoly
   m_Data:
     m_SerializedData: []
-  m_GUID: dd1c1388bf70fa645912470417aa279e
+  m_GUID: 1af16d16721397441be82cd4507511f1
   m_SerializeEntries:
   - m_GUID: 18c5922fb2bcf334fb36963c4168859e
     m_Address: Slt-FR_High_FemaleInnerMouth
@@ -56,5 +56,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 210ffda6c6a2ad246b0bfa87318ddc6f, type: 2}
-    - {fileID: 11400000, guid: 0b097fb928809fd44a1b678f30c0644e, type: 2}
+    - {fileID: 11400000, guid: aaf5d3c6caff1ad4083b0e9974f0a606, type: 2}
+    - {fileID: 11400000, guid: 7e82c9002cde74442b80565fe7d2c600, type: 2}

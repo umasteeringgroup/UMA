@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_AntennaRecipe
   m_Data:
     m_SerializedData: []
-  m_GUID: 0ba7d264267b30045821b899b46d4d50
+  m_GUID: bc2be9f5f9a65c64aa3a733bc8102ef9
   m_SerializeEntries:
   - m_GUID: a47975f4a828bdf4194bc7c5c27da7f4
     m_Address: Slt-SkyCarAntenna
@@ -26,5 +26,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: afa945b5a64db794da57904b14758630, type: 2}
-    - {fileID: 11400000, guid: 2795ca7a325140b43a592e8786b13945, type: 2}
+    - {fileID: 11400000, guid: 4b6231051d04bfb40b3f686b122e8568, type: 2}
+    - {fileID: 11400000, guid: 88765beceac562c409e4c6654adfbd15, type: 2}

@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_MalePants
   m_Data:
     m_SerializedData: []
-  m_GUID: 2faafe2189be3d24388b735f28e31907
+  m_GUID: 5d21560ce46a4d94ca2757c0b2c558eb
   m_SerializeEntries:
   - m_GUID: 161a5c050c3f1f74fb47075770f15450
     m_Address: Ovl-Wrapped Pants
@@ -46,5 +46,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 79a8d51b6ad69194f982e2a0ae6dcec7, type: 2}
-    - {fileID: 11400000, guid: 4ed22fb3a4aa01d439529617ebc4a8ba, type: 2}
+    - {fileID: 11400000, guid: 4a74d80178bec1643a018d5bb54b28fb, type: 2}
+    - {fileID: 11400000, guid: f7907d57c62c17f4ea4304f53c25bea4, type: 2}

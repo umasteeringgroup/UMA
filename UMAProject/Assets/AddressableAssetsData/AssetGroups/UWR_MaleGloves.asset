@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_MaleGloves
   m_Data:
     m_SerializedData: []
-  m_GUID: db89c863f53541641b5a4434f9be6e39
+  m_GUID: fed057d205beb3b4ea168b2034e32efb
   m_SerializeEntries:
   - m_GUID: 2bdd7530c4c3080479f05405559b6f67
     m_Address: Slt-_Gloves of Hammer
@@ -46,5 +46,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: dde4ec22bdfa25e42bb4f88329922afa, type: 2}
-    - {fileID: 11400000, guid: 2de2f87cf9cb15b438f6f58a2cc26c2e, type: 2}
+    - {fileID: 11400000, guid: d5a1a7bd729e560489009a72f46781be, type: 2}
+    - {fileID: 11400000, guid: 193ab6f8e77bf5f4da65b1fe872969e4, type: 2}
