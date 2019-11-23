@@ -784,22 +784,16 @@ namespace UMA
 
 					if (ai != null && ai.IsAlwaysLoaded)
 					{
-						ai.CacheSerializedItem();
 						continue;
 					}
-
-					ai._SerializedItem = null;
-
-					// Look up in index. get AssetItem.
-					// If it exists, then if it is "Always Loaded", do not add it to the SlotTracker.
-					// tell the assetitem to cache it.
 
 
 					int slotInstance = sd.asset.GetInstanceID();
 
                     if (!SlotTracker.ContainsKey(slotInstance))
                     {
-                        SlotTracker.Add(slotInstance, new List<UMATextRecipe>());
+						ai.IsAddressable = true;
+						SlotTracker.Add(slotInstance, new List<UMATextRecipe>());
                     }
                     SlotTracker[slotInstance].Add(uwr);
                     if (!AddressLookup.ContainsKey(slotInstance))
@@ -818,11 +812,8 @@ namespace UMA
 
 						if (ai != null && ai.IsAlwaysLoaded)
 						{
-							ai.CacheSerializedItem();
 							continue;
 						}
-						ai._SerializedItem = null;
-
 
 						int OverlayInstance = od.asset.GetInstanceID();
 
@@ -833,7 +824,8 @@ namespace UMA
                         OverlayTracker[OverlayInstance].Add(uwr);
                         if (!AddressLookup.ContainsKey(OverlayInstance))
                         {
-                            AddressLookup.Add(OverlayInstance, "Ovl-" + od.overlayName);
+							ai.IsAddressable = true;
+							AddressLookup.Add(OverlayInstance, "Ovl-" + od.overlayName);
                         }
                         foreach (Texture tx in od.textureArray)
                         {
@@ -906,6 +898,9 @@ namespace UMA
 				OverlayTracker = new Dictionary<int, List<UMATextRecipe>>();
 				TextureTracker = new Dictionary<int, List<UMATextRecipe>>();
 				GroupTracker = new Dictionary<int, AddressableAssetGroup>();
+
+				ClearAddressableFlags(typeof(SlotDataAsset));
+				ClearAddressableFlags(typeof(OverlayDataAsset));
 
 				// Will generate an editor context if needed.
 				UMAContext context = GetContext();
@@ -1042,6 +1037,14 @@ namespace UMA
 			}
 		}
 
+		private void ClearAddressableFlags(Type type)
+		{
+			var items = GetAssetDictionary(type).Values;
+			foreach (AssetItem ai in items)
+			{
+				ai.IsAddressable = false;
+			}
+		}
 
 #endif
 		#endregion

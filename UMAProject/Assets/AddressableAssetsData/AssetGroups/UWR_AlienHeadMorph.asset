@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_AlienHeadMorph
   m_Data:
     m_SerializedData: []
-  m_GUID: 1f30887387465c445a91f30294090039
+  m_GUID: 363aa4c7cba1ac844888a79c9e12e1b3
   m_SerializeEntries:
   - m_GUID: 344a9e3f0f0a6384da7335c405e65999
     m_Address: Slt-MaleAlienHead
@@ -26,5 +26,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 934d2af48ab318742891cb93def2ee42, type: 2}
-    - {fileID: 11400000, guid: e5c3fcf5d5b4dd747875c207ef5de6a5, type: 2}
+    - {fileID: 11400000, guid: aad2f7bfdce0a884a9a4a10d10bcdefd, type: 2}
+    - {fileID: 11400000, guid: 6e5942f9c41143246b999a9b971081db, type: 2}

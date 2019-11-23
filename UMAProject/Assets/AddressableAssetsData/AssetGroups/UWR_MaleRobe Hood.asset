@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_MaleRobe Hood
   m_Data:
     m_SerializedData: []
-  m_GUID: cba128559d1c46c4bb5c0d29f8b2eb3a
+  m_GUID: 0dabee907c316394987bbfd11687ea7b
   m_SerializeEntries:
   - m_GUID: 336187aa7b3190f488804be99f650b87
     m_Address: Tex-Altar_hood_A
@@ -46,5 +46,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 9f790729abaa43a498b631f28ac6fdd4, type: 2}
-    - {fileID: 11400000, guid: d9468580c9297474db931676260dc581, type: 2}
+    - {fileID: 11400000, guid: 48d3f7c562e5613468d43437f0d78fc6, type: 2}
+    - {fileID: 11400000, guid: 2fa74ca244188294695364524fb7a975, type: 2}

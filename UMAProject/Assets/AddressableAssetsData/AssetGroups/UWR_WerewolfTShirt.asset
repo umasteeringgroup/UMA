@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_WerewolfTShirt
   m_Data:
     m_SerializedData: []
-  m_GUID: 6d6422682c2fc9b43a923d43d6b92677
+  m_GUID: d77c8b8ae1703384ba9610429d07512b
   m_SerializeEntries:
   - m_GUID: 8e46551b231290e44b00c11543501fd8
     m_Address: Tex-MaleShirt01_Normal
@@ -41,5 +41,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 855ac0cf7b1e6564db3b75e6bf6e1984, type: 2}
-    - {fileID: 11400000, guid: 7d23d4d6288c89441af8505b2f6993ee, type: 2}
+    - {fileID: 11400000, guid: e2b280663dcb70a42bf4968f2890f5a3, type: 2}
+    - {fileID: 11400000, guid: 624b82004a4dc554297843f16cf34934, type: 2}

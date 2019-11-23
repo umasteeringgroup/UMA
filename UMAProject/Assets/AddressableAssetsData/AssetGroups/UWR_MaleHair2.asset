@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_MaleHair2
   m_Data:
     m_SerializedData: []
-  m_GUID: cc46885b8544966418942c77110fa07c
+  m_GUID: 9f8dfe06215635e46b92f38ee65d37a7
   m_SerializeEntries:
   - m_GUID: b5a79dacb1617ae44a91c53832515bbb
     m_Address: Slt-MaleHair1
@@ -26,5 +26,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 6c7babfe2eb8b954c804ce4fa9c32834, type: 2}
-    - {fileID: 11400000, guid: a47952396745c9744971b9e4bb6a6b20, type: 2}
+    - {fileID: 11400000, guid: 02c77b8918c41494587ff1e7a0ec3ce8, type: 2}
+    - {fileID: 11400000, guid: c0c6e513732e2784596515676e3cfd77, type: 2}

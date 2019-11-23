@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_ToonHair1
   m_Data:
     m_SerializedData: []
-  m_GUID: 8642eef07f902ef46b81036ca7ccaf8e
+  m_GUID: acfcc35c30523db468a3670675c9a87f
   m_SerializeEntries:
   - m_GUID: 297b82798f9c2de4b891d273268dd65b
     m_Address: Slt-Hair_Long_Braided_Hair_1
@@ -41,5 +41,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: e107f1e68a1ed9f43978af20edb6275a, type: 2}
-    - {fileID: 11400000, guid: 040d1d43b67929d40afce2e536550bd9, type: 2}
+    - {fileID: 11400000, guid: 4a864f33d3d2e584e887f2cd02f3610d, type: 2}
+    - {fileID: 11400000, guid: e769956fa43e63e4d9f41d61545ccd3d, type: 2}

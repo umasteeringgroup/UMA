@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_MilCut
   m_Data:
     m_SerializedData: []
-  m_GUID: 7e0bbcd890b58e248b94f852f479327a
+  m_GUID: d65b53c02d306b14586649de30c9d127
   m_SerializeEntries:
   - m_GUID: ccc8f1668f1d19549bf1a2fbb88a4157
     m_Address: Slt-Milcut
@@ -26,5 +26,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 789cb9cd863aa014b986847f4e8eeb62, type: 2}
-    - {fileID: 11400000, guid: 167a50963fb73fe44acaa43dac3110a7, type: 2}
+    - {fileID: 11400000, guid: ea64492ada723a24f99fcaed743dc3d3, type: 2}
+    - {fileID: 11400000, guid: af83ccf7f64c860449d367e304b43db2, type: 2}

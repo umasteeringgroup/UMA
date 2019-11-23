@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_MaleChallengerTorso
   m_Data:
     m_SerializedData: []
-  m_GUID: 3827f3ef0cec50d42b292456f7bd485d
+  m_GUID: fb0c857022f613e45982e7a9c1fd27b5
   m_SerializeEntries:
   - m_GUID: 5e0d6fd5a419c024abb998898b6bce79
     m_Address: Tex-TorsoArmorLeather_Albedo
@@ -46,5 +46,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: cf19ff883ef6d0f47b81978625466ef4, type: 2}
-    - {fileID: 11400000, guid: 95f3b96f2470aa84eab8c3b8240a973f, type: 2}
+    - {fileID: 11400000, guid: 274ec7826ed932d46868748cb9501a4d, type: 2}
+    - {fileID: 11400000, guid: 8f6be17cf5a40d842a8f0dc63134e8bb, type: 2}

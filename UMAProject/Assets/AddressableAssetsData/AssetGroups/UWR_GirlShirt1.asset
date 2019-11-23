@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_GirlShirt1
   m_Data:
     m_SerializedData: []
-  m_GUID: d74f172a144ddde45aa62ac748ab0f11
+  m_GUID: 7e2e1f0f9e060714187342d0406593d4
   m_SerializeEntries:
   - m_GUID: 2c4ecf1627276e74292e6455114acb04
     m_Address: Ovl-GirlShirt01Color
@@ -31,5 +31,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 809a61e0c5dd88a40925ec935639386e, type: 2}
-    - {fileID: 11400000, guid: 9b6228e986104e8439be4fd858121272, type: 2}
+    - {fileID: 11400000, guid: 8332505739156bd41ab95e710c57ccd0, type: 2}
+    - {fileID: 11400000, guid: cc95c3a59815d474292a949a42634227, type: 2}

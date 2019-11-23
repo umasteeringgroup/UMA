@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_MaleChallengerGloves
   m_Data:
     m_SerializedData: []
-  m_GUID: efd581c2820fc704f96edd1a45a745a9
+  m_GUID: fb028a717d5fcb640b93db7367ff08eb
   m_SerializeEntries:
   - m_GUID: 073bb8d1e3dc03140ada534c06d42dff
     m_Address: Slt-MaleChallengerGloves
@@ -46,5 +46,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 235d0e72f232e4f4bb1ed845df943694, type: 2}
-    - {fileID: 11400000, guid: 8e43cd1c622dff342a77b183aafab9e3, type: 2}
+    - {fileID: 11400000, guid: 94fd9c335a93acf4aba01fc9b0827ae5, type: 2}
+    - {fileID: 11400000, guid: f9ac14ae08f0ee9438ac4b6eb641a4d4, type: 2}

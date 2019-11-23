@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_MaleChallengerShouderPads
   m_Data:
     m_SerializedData: []
-  m_GUID: 930f4884be68ce74899982f38a9e8929
+  m_GUID: 26b620205f31dc641a58c0e55239ff74
   m_SerializeEntries:
   - m_GUID: 2b7f847e474a9ce43b6dbb01f4b645d0
     m_Address: Ovl-ChallengerShoulderPadsMetal
@@ -46,5 +46,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 0c1036bc5b95514428bd1ea9a7860d9a, type: 2}
-    - {fileID: 11400000, guid: 3c14b5c8460be274fa0ed2e18cbee61d, type: 2}
+    - {fileID: 11400000, guid: 6e91577ac780dd94581ac99cf818ca58, type: 2}
+    - {fileID: 11400000, guid: 8a215446f0f86ca46bef0d6f7e4ae929, type: 2}
