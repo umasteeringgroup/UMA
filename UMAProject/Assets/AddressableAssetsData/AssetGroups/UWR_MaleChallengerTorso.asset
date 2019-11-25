@@ -15,36 +15,11 @@ MonoBehaviour:
   m_GroupName: UWR_MaleChallengerTorso
   m_Data:
     m_SerializedData: []
-  m_GUID: fb0c857022f613e45982e7a9c1fd27b5
-  m_SerializeEntries:
-  - m_GUID: 5e0d6fd5a419c024abb998898b6bce79
-    m_Address: Tex-TorsoArmorLeather_Albedo
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - MaleChallengerTorso
-  - m_GUID: 734fcc8a0fd1912478c8566fc6eceda7
-    m_Address: Ovl-ChallengerTorsoArmorLeather
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - MaleChallengerTorso
-  - m_GUID: 809c22fcd6389e742a62ec4905d1a101
-    m_Address: Ovl-ChallengerTorsoArmorMetal
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - MaleChallengerTorso
-  - m_GUID: 863f68599d8ad8b4989c7724bb3b8dd1
-    m_Address: Slt-MaleChallengerTorsoArmor
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - MaleChallengerTorso
-  - m_GUID: bccbb38fe3139c444b2999c45952b427
-    m_Address: Tex-TorsoArmorMetal_Albedo
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - MaleChallengerTorso
+  m_GUID: cb1945ee664593249a90356092d1c0a3
+  m_SerializeEntries: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 274ec7826ed932d46868748cb9501a4d, type: 2}
-    - {fileID: 11400000, guid: 8f6be17cf5a40d842a8f0dc63134e8bb, type: 2}
+    - {fileID: 11400000, guid: 11873ba78efc3cd4e986583c57f381d1, type: 2}
+    - {fileID: 11400000, guid: ca57e9a8b86361f46a73510423edcd56, type: 2}

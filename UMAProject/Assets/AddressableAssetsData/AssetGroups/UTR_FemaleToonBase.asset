@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UTR_FemaleToonBase
   m_Data:
     m_SerializedData: []
-  m_GUID: e93650e60c3f2a74db418653389c4ad5
+  m_GUID: 355bd17d0f8f6724d8fabd7cbbe9d18f
   m_SerializeEntries:
   - m_GUID: 1f56427ed446efb4ab930c97d3076a8e
     m_Address: Ovl-UMA_Toon_F_Lashes
@@ -96,5 +96,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 41947a47efeb8064792b1e2247036b9e, type: 2}
-    - {fileID: 11400000, guid: f235b41beb3704944b7d07e30beccc92, type: 2}
+    - {fileID: 11400000, guid: 8409d4e28565c7b4cac840e7687f0734, type: 2}
+    - {fileID: 11400000, guid: 4b270f1c76c28fa4395ae9d33d028912, type: 2}

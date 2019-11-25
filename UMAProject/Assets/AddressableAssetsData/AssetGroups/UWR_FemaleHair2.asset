@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_FemaleHair2
   m_Data:
     m_SerializedData: []
-  m_GUID: 1e7e0c907f0ede248b9c578cf465a2e3
+  m_GUID: 44dcd4e3d9d88654393964599538432f
   m_SerializeEntries:
   - m_GUID: 30819781a55e5b540abd5f8a35901ca2
     m_Address: Ovl-FemaleShortHair01
@@ -41,5 +41,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: b61a230439807d04c9cb9a9a815296e7, type: 2}
-    - {fileID: 11400000, guid: 91fb913dee1938f46880453820e43671, type: 2}
+    - {fileID: 11400000, guid: 1718f372b8c2a06468ecfcbd71b0d98d, type: 2}
+    - {fileID: 11400000, guid: 99162210316a95049a94bf3132f7daed, type: 2}

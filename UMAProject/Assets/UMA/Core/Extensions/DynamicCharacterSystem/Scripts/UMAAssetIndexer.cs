@@ -1,3 +1,6 @@
+//#define TIMEINDEXER
+//#define DBLOGGER
+
 using UnityEngine;
 using System.IO;
 using System.Collections;
@@ -7,12 +10,20 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using System;
 
+
+
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.AddressableAssets.Settings.GroupSchemas;
+#endif
+
+#if DBLOGGER
+using System.Data;
+using MySql.Data;
+using MySql.Data.MySqlClient;
 #endif
 
 namespace UMA
@@ -27,7 +38,8 @@ namespace UMA
         Dictionary<int, AddressableAssetGroup> GroupTracker = new Dictionary<int, AddressableAssetGroup>();
         Dictionary<int, string> AddressLookup = new Dictionary<int, string>();
 #endif
-        public delegate void OnCompleted(bool success, string name, string message);
+		public HashSet<string> Preloads = new HashSet<string>();
+		public delegate void OnCompleted(bool success, string name, string message);
 		public delegate void OnRaceCompleted(bool success, RaceData theRace, string message);
 		public delegate void OnRecipeCompleted(bool success, UMAWardrobeRecipe theRecipe, string message);
 
@@ -85,9 +97,13 @@ namespace UMA
         #region Static Fields
         static GameObject theIndex = null;
         static UMAAssetIndexer theIndexer = null;
-        #endregion
+		#endregion
 
-        public static System.Diagnostics.Stopwatch StartTimer()
+#if DBLOGGER
+		public static MySqlConnection conn;
+#endif
+
+		public static System.Diagnostics.Stopwatch StartTimer()
         {
 #if TIMEINDEXER
             if(Debug.isDebugBuild)
@@ -97,7 +113,7 @@ namespace UMA
 
             return st;
 #else
-            return null;
+			return null;
 #endif
         }
 
@@ -111,11 +127,31 @@ namespace UMA
 #endif
         }
 
-        public static UMAAssetIndexer Instance
+#if DBLOGGER
+		public static void DBLogger(string message)
+		{
+			Debug.Log(message);
+			if (conn == null)
+			{
+				string connstr = "server=mcserver;user=admin;database=AddressableData;port=3306;password=f2672b555bd2fc54c985";
+				conn = new MySqlConnection(connstr);
+			}
+			if (conn == null)
+			{
+				Debug.Log("Unable to log to DB");
+				return;
+			}
+			string sql = "INSERT INTO Country (Name, HeadOfState, Continent) VALUES ('Disneyland','Mickey Mouse', 'North America')";
+			MySqlCommand cmd = new MySqlCommand(sql, conn);
+			cmd.ExecuteNonQuery();
+		}
+#endif
+
+		public static UMAAssetIndexer Instance
         {
             get
             {
-                if (theIndex == null || theIndexer == null)
+				if (theIndex == null || theIndexer == null)
                 {
                     var st = StartTimer();
                     theIndexer = Resources.Load("AssetIndexer") as UMAAssetIndexer;
@@ -357,6 +393,8 @@ namespace UMA
 			{
 				if (slot == null)
 					continue;
+				if (slot.id == null)
+					continue;
 				AssetItem s = GetAssetItem<SlotDataAsset>(slot.id);
 				if (s != null)
 				{
@@ -578,36 +616,52 @@ namespace UMA
 #endif
 		}
 
-		public bool PreLoad(string Name, RaceData theRace, OnCompleted Completed )
+		public AsyncOperationHandle<IList<UnityEngine.Object>> Preload(DynamicCharacterAvatar avatar)
 		{
-			UMAContext context = UMAContext.Instance;
-			if (!context)
+			List<string> keys = new List<string>();
+			//keys.Add(avatar.activeRace.racedata.baseRaceRecipe.name);
+			foreach (var wr in avatar.preloadWardrobeRecipes.recipes)
 			{
-				Debug.LogError("No context to preload!");
-				return false;
+				keys.Add(wr._recipeName);
 			}
-
-			// theRace.baseRaceRecipe
-			// deconstruct the rc.BaseRaceRecipe;
-			// Load the DNA, if needed
-			// Load the slots, overlays, textures if needed. 
-			// Addressables.LoadAssetsAsync;//
-			return true;
+			return LoadLabelList(keys);
 		}
 
-		public bool PreLoad(string Name, string Label, OnRecipeCompleted Completed)
+		public AsyncOperationHandle<IList<UnityEngine.Object>> Preload(RaceData theRace)
 		{
-			return false;
+			return LoadLabel(theRace.baseRaceRecipe.name);
 		}
 
-		public AsyncOperationHandle<IList<UnityEngine.Object>> PreLoad(string Name, UMATextRecipe theRecipe)
+		public AsyncOperationHandle<IList<UnityEngine.Object>> Preload(List<RaceData> theRaces)
 		{
-			List<UMATextRecipe> recipes = new List<UMATextRecipe>();
-			recipes.Add(theRecipe);
-			return PreLoad(Name, recipes);
+			List<string> keys = new List<string>();
+			foreach(RaceData rc in theRaces)
+			{
+				string key = rc.baseRaceRecipe.name;
+
+				if (keys.Contains(key))
+					continue;
+				keys.Add(key);
+			}
+			return LoadLabelList(keys);
 		}
 
-		public AsyncOperationHandle<IList<UnityEngine.Object>> PreLoad(string Name, List<UMATextRecipe> theRecipes)
+		public AsyncOperationHandle<IList<UnityEngine.Object>> LoadLabel(string label)
+		{
+			List<string> keys = new List<string>();
+			keys.Add(label);
+			return LoadLabelList(keys);
+		}
+
+		public AsyncOperationHandle<IList<UnityEngine.Object>> PreLoad(UMATextRecipe theRecipe)
+		{
+			Debug.Log("Preloading: " + theRecipe.name);
+			List<string> keys = new List<string>();
+			keys.Add(theRecipe.name);
+			return LoadLabelList(keys);
+		}
+
+		public AsyncOperationHandle<IList<UnityEngine.Object>> PreLoad(List<UMATextRecipe> theRecipes)
 		{
 			UMAContext context = UMAContext.Instance;
 			if (!context)
@@ -624,11 +678,18 @@ namespace UMA
 				Keys.Add(utr.name);
 			}
 
+			return LoadLabelList(Keys);
+		}
+
+		public AsyncOperationHandle<IList<UnityEngine.Object>> LoadLabelList(List<string> Keys)
+		{
+			foreach(string label in Keys)
+			{
+				Preloads.Add(label);
+			}
+
 			var op = Addressables.LoadAssetsAsync<UnityEngine.Object>(Keys.ToArray(), result =>
 			{
-				/* find it in the global library.
-				 * add the reference
-				 */
 				if (result.GetType() == typeof(SlotDataAsset))
 				{
 					AssetItem ai = GetAssetItem<SlotDataAsset>((result as SlotDataAsset).slotName);
@@ -647,7 +708,7 @@ namespace UMA
 						Debug.Log("Cached Overlay " + ai.EvilName);
 					}
 				}
-			},Addressables.MergeMode.Union);//.Completed += UMAAssetIndexer_Completed;
+			}, Addressables.MergeMode.Union);
 			op.Completed += UMAAssetIndexer_Completed;
 			return op;
 		}
@@ -655,11 +716,6 @@ namespace UMA
 		private void UMAAssetIndexer_Completed(AsyncOperationHandle<IList<UnityEngine.Object>> obj)
 		{
 			Debug.Log("Status is " + obj.Status.ToString());
-		}
-
-		private void OnAssetsCompleted(AsyncOperationHandle<IList<UnityEngine.Object>> obj)
-		{
-			 
 		}
 
 		public void UnloadAll()
@@ -782,38 +838,48 @@ namespace UMA
 
 					AssetItem ai = GetAssetItem<SlotDataAsset>(sd.slotName);
 
-					if (ai != null && ai.IsAlwaysLoaded)
+					if (ai != null && ai.IsAlwaysLoaded == false)
 					{
-						continue;
+						// is this a utility slot? if so, we need to not delete it as an orphan. 
+						if (sd.asset.meshData == null && sd.OverlayCount == 0)
+						{
+							ai.IsAlwaysLoaded = true;
+						}
 					}
 
+					//if (!(ai != null && ai.IsAlwaysLoaded))
+					//{
+						//AddToTracker = false;
+					//}
+					//else
+					//{
+						int slotInstance = sd.asset.GetInstanceID();
 
-					int slotInstance = sd.asset.GetInstanceID();
+						if (!SlotTracker.ContainsKey(slotInstance))
+						{
+							ai.IsAddressable = true;
+							SlotTracker.Add(slotInstance, new List<UMATextRecipe>());
+						}
+						SlotTracker[slotInstance].Add(uwr);
+						if (!AddressLookup.ContainsKey(slotInstance))
+						{
+							AddressLookup.Add(slotInstance, "Slt-" + sd.slotName);
+						}
+					//}
 
-                    if (!SlotTracker.ContainsKey(slotInstance))
-                    {
-						ai.IsAddressable = true;
-						SlotTracker.Add(slotInstance, new List<UMATextRecipe>());
-                    }
-                    SlotTracker[slotInstance].Add(uwr);
-                    if (!AddressLookup.ContainsKey(slotInstance))
-                    {
-                        AddressLookup.Add(slotInstance, "Slt-" + sd.slotName);
-                    }
-                    List<OverlayData> odList = sd.GetOverlayList();
+					List<OverlayData> odList = sd.GetOverlayList();
 
-
-                    foreach (OverlayData od in odList)
+					foreach (OverlayData od in odList)
                     {
                         if (od == null) continue;
 
 
-						ai = GetAssetItem<OverlayDataAsset>(od.overlayName);
+						/* = GetAssetItem<OverlayDataAsset>(od.overlayName);
 
 						if (ai != null && ai.IsAlwaysLoaded)
 						{
 							continue;
-						}
+						}*/
 
 						int OverlayInstance = od.asset.GetInstanceID();
 
@@ -889,16 +955,102 @@ namespace UMA
             }
         }
 
-        public void GenerateAddressables()
+		private void GenerateCollectionLabels()
+		{
+			//**********************************************************************************************
+			//* Add Wardrobe Collections
+			//**********************************************************************************************
+			Type theType = TypeToLookup[typeof(UMAWardrobeCollection)];
+			var wardrobecollections = GetAssetDictionary(theType).Values;
+
+			foreach (AssetItem ai in wardrobecollections)
+			{
+				UMAWardrobeCollection uwc = ai.Item as UMAWardrobeCollection;
+				string Label = uwc.name;
+
+				HashSet<string> collectionRecipes = new HashSet<string>();
+
+				foreach(var recipeName in uwc.arbitraryRecipes)
+				{
+					AddCollectionRecipe(uwc,recipeName);
+				}
+				foreach (var ws in uwc.wardrobeCollection.sets)
+				{
+					foreach (var wsettings in ws.wardrobeSet)
+					{
+						string recipeName = wsettings.recipe;
+						AddCollectionRecipe(uwc, recipeName);
+					}
+				}
+			}
+		}
+
+		private void AddCollectionRecipe(UMAWardrobeCollection uwc, string recipeName)
+		{
+			if (string.IsNullOrEmpty(recipeName))
+				return;
+
+			AssetItem recipeAsset = GetAssetItem<UMAWardrobeRecipe>(recipeName);
+			if (recipeAsset != null)
+			{
+				UMAWardrobeRecipe uwr = recipeAsset.Item as UMAWardrobeRecipe;
+				if (uwr == null)
+				{
+					Debug.Log("Null recipe in wardrobe collection...");
+				}
+				List<AssetItem> items = GetAssetItems(uwr);
+				foreach (AssetItem recipeitem in items)
+				{
+					if (recipeitem.Item is SlotDataAsset)
+					{
+						AddSlotFromCollection(recipeitem.Item as SlotDataAsset, uwc);
+					}
+					if (recipeitem.Item is OverlayDataAsset)
+					{
+						AddOverlayFromCollection(recipeitem.Item as OverlayDataAsset, uwc);
+					}
+				}
+			}
+		}
+
+		private void AddOverlayFromCollection(OverlayDataAsset overlayDataAsset,UMAWardrobeCollection uwc)
+		{
+			if (!OverlayTracker.ContainsKey(overlayDataAsset.GetInstanceID()))
+			{
+				OverlayTracker.Add(overlayDataAsset.GetInstanceID(), new List<UMATextRecipe>());
+			}
+			OverlayTracker[overlayDataAsset.GetInstanceID()].Add(uwc);
+			foreach(Texture tex in overlayDataAsset.textureList)
+			{
+				if (!TextureTracker.ContainsKey(tex.GetInstanceID()))
+				{
+					TextureTracker.Add(tex.GetInstanceID(), new List<UMATextRecipe>());
+				}
+				TextureTracker[tex.GetInstanceID()].Add(uwc);
+			}
+		}
+
+		private void AddSlotFromCollection(SlotDataAsset slotDataAsset, UMAWardrobeCollection uwc)
+		{
+			if (!SlotTracker.ContainsKey(slotDataAsset.GetInstanceID()))
+			{
+				SlotTracker.Add(slotDataAsset.GetInstanceID(), new List<UMATextRecipe>());
+			}
+			SlotTracker[slotDataAsset.GetInstanceID()].Add(uwc);
+		}
+
+		public void GenerateAddressables()
         {
             try
             {
-				// Clear out old data
+				//**********************************************************************************************
+				//*  Clear out the old data
+				//**********************************************************************************************
 				SlotTracker = new Dictionary<int, List<UMATextRecipe>>();
 				OverlayTracker = new Dictionary<int, List<UMATextRecipe>>();
 				TextureTracker = new Dictionary<int, List<UMATextRecipe>>();
 				GroupTracker = new Dictionary<int, AddressableAssetGroup>();
-
+				
 				ClearAddressableFlags(typeof(SlotDataAsset));
 				ClearAddressableFlags(typeof(OverlayDataAsset));
 
@@ -909,19 +1061,20 @@ namespace UMA
                 AddressableAssetGroup sharedGroup = AddressableSettings.CreateGroup("UMA_SharedItems", false, false, true, AddressableSettings.DefaultGroup.Schemas);
                 sharedGroup.GetSchema<BundledAssetGroupSchema>().BundleMode = BundledAssetGroupSchema.BundlePackingMode.PackSeparately;
 
+				List<UMATextRecipe> theRecipes = new List<UMATextRecipe>();
+
+				//**********************************************************************************************
+				//*  Add Races
+				//**********************************************************************************************
+
 				System.Type theType = TypeToLookup[typeof(RaceData)];
 				var races = GetAssetDictionary(theType).Values;
-
-				List<UMATextRecipe> theRecipes = new List<UMATextRecipe>();
 
 				foreach (AssetItem ai in races) 
 				{
 					RaceData race = ai.Item as RaceData;
-					if (!ai.IsAlwaysLoaded)
-					{
-						theRecipes.Add(race.baseRaceRecipe as UMATextRecipe);
-					}
-					else
+					theRecipes.Add(race.baseRaceRecipe as UMATextRecipe);
+					if (ai.IsAlwaysLoaded)
 					{
 						AssetItem recipe = GetAssetItem<UMATextRecipe>(race.baseRaceRecipe.name);
 						recipe.IsAlwaysLoaded = true;
@@ -930,26 +1083,30 @@ namespace UMA
 						foreach(AssetItem recipeitem in recipeItems)
 						{
 							recipeitem.IsAlwaysLoaded = true;
-							recipeitem.CacheSerializedItem();
 						}
 					}
 				}
 
+
+
+
+
+				//**********************************************************************************************
+				//* Add Wardrobe Recipes
+				//**********************************************************************************************
+
 				theType = TypeToLookup[typeof(UMAWardrobeRecipe)];
 				var wardrobe = GetAssetDictionary(theType).Values;
 
-				// List<UMAWardrobeRecipe> wardrobe = GetAllAssets<UMAWardrobeRecipe>();
-
-				foreach(AssetItem ai in wardrobe)
+				foreach (AssetItem ai in wardrobe)
 				{
-					if (!ai.IsAlwaysLoaded)
-					{
-						UMAWardrobeRecipe uwr = ai.Item as UMAWardrobeRecipe;
-						theRecipes.Add(uwr);
-					}
+					UMAWardrobeRecipe uwr = ai.Item as UMAWardrobeRecipe;
+					theRecipes.Add(uwr);
 				}
 
-                GenerateLookups(context, theRecipes);
+				GenerateCollectionLabels();
+
+				GenerateLookups(context, theRecipes);
 
                 float pos = 0.0f;
                 float inc = 1.0f / wardrobe.Count;
@@ -984,13 +1141,10 @@ namespace UMA
                 AddAddressableAssets(OverlayTracker, sharedGroup);
                 AddAddressableAssets(TextureTracker, sharedGroup);
 
-				// TODO: All "IsAlwaysLoaded" should be cached.
-				// everything else should be NULL!!!!
-
 				ReleaseReferences(TypeToLookup[typeof(SlotDataAsset)]);
 				ReleaseReferences(TypeToLookup[typeof(OverlayDataAsset)]);
 
-				CleanupAddressables(true);
+				// CleanupAddressables(true);
 
             }
             finally
@@ -1026,14 +1180,14 @@ namespace UMA
 			var items = GetAssetDictionary(type).Values;
 			foreach(AssetItem ai in items)
 			{
-				if (ai.IsAlwaysLoaded)
-				{
-					ai.CacheSerializedItem();
-				}
-				else
-				{
+				//if (ai.IsAlwaysLoaded)
+				//{
+					//ai.CacheSerializedItem();
+				//}
+				//else
+				//{
 					ai._SerializedItem = null;
-				}
+				//}
 			}
 		}
 

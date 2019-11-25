@@ -19,11 +19,16 @@ namespace UMA.CharacterSystem.Editors
 		public Vector2 scrollPosition = Vector2.zero;
 		delegate void ProcessAssetItem(System.Type type, int i, AssetItem a);
 
+		private enum FilterType { all=0, addressable, notaddressable, always, notalways, hasreference, noreference };
+		private string[] FilterLookup = { "All", "Addressable","Not Addressable", "Always Loaded", "Not Always Loaded", "With References", "Without References" };
 		// dictionary of type
 		// contains list of bools
-		     
+
+		private FilterType MetaFilter = FilterType.all;
 		public string Filter = "";
 		public bool IncludeText;
+
+		int MetaFilterIndex;
 		int NotInBuildCount = 0;
 		int AlwaysLoadedCount = 0;
 		int AddressableCount = 0;
@@ -326,6 +331,10 @@ namespace UMA.CharacterSystem.Editors
 			GUILayout.BeginHorizontal();
 
 			Filter = EditorGUILayout.TextField("Filter Library", Filter);
+
+			MetaFilterIndex = EditorGUILayout.Popup(MetaFilterIndex, FilterLookup,GUILayout.Width(100));
+			MetaFilter = (FilterType)MetaFilterIndex;
+
 			GUI.SetNextControlName("TheDumbUnityBuggyField");
 			if (GUILayout.Button("-", GUILayout.Width(20)))
 			{
@@ -367,8 +376,47 @@ namespace UMA.CharacterSystem.Editors
 			GUILayout.EndHorizontal();
 		}
 
+		public bool IsFiltered(AssetItem ai)
+		{
+			if (MetaFilter == FilterType.addressable)
+			{
+				if (!ai.IsAddressable)
+					return true;
+			}
 
-        public bool ShowArray(System.Type CurrentType, string Filter)
+			if (MetaFilter == FilterType.always)
+			{
+				if (!ai.IsAlwaysLoaded)
+					return true;
+			}
+
+			if (MetaFilter == FilterType.notaddressable)
+			{
+				if (ai.IsAddressable)
+					return true;
+			}
+
+			if (MetaFilter == FilterType.notalways)
+			{
+				if (ai.IsAlwaysLoaded)
+					return true;
+			}
+
+			if (MetaFilter == FilterType.hasreference)
+			{
+				if (ai._SerializedItem == null)
+					return true;
+			} 
+
+			if (MetaFilter == FilterType.noreference)
+			{
+				if (ai._SerializedItem != null)
+					return true;
+			}
+			return false;
+		}
+
+		public bool ShowArray(System.Type CurrentType, string Filter)
         {
             bool HasFilter = false;
             bool NotFound = false;
@@ -397,6 +445,11 @@ namespace UMA.CharacterSystem.Editors
 				Object test = ai._SerializedItem;
 
 				System.Object o = (System.Object)(test);
+
+				if (IsFiltered(ai))
+				{
+					continue;
+				}
 
 				if (ai.IsAddressable) Addressable++;
 				if (ai.IsAlwaysLoaded) AlwaysIncluded++;
@@ -453,7 +506,12 @@ namespace UMA.CharacterSystem.Editors
                     if (HasFilter && (!lblVal.ToLower().Contains(actFilter)))
                         continue;
 
-                    if (ai._Name == "< Not Found!>")
+					if (IsFiltered(ai))
+					{
+						continue;
+					}
+
+					if (ai._Name == "< Not Found!>")
                     {
                         NotFound = true;
                     }

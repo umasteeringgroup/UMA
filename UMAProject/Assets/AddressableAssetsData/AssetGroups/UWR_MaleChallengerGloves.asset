@@ -15,36 +15,11 @@ MonoBehaviour:
   m_GroupName: UWR_MaleChallengerGloves
   m_Data:
     m_SerializedData: []
-  m_GUID: fb028a717d5fcb640b93db7367ff08eb
-  m_SerializeEntries:
-  - m_GUID: 073bb8d1e3dc03140ada534c06d42dff
-    m_Address: Slt-MaleChallengerGloves
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - MaleChallengerGloves
-  - m_GUID: 57540dd689a6efa44b9a5d2c785de92e
-    m_Address: Tex-GlovesMetal_Albedo
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - MaleChallengerGloves
-  - m_GUID: 8e8a11d219efb744e8b7d8886bf4431a
-    m_Address: Tex-GlovesLeather_Albedo
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - MaleChallengerGloves
-  - m_GUID: a460597f78928e04a8db0940885eb72a
-    m_Address: Ovl-ChallengerGlovesLeather
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - MaleChallengerGloves
-  - m_GUID: e84b15df5103d0a419f01ffe3e77fb53
-    m_Address: Ovl-ChallengerGlovesMetal
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - MaleChallengerGloves
+  m_GUID: 23afbeaac844bf74bb0d2db10bee57e9
+  m_SerializeEntries: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 94fd9c335a93acf4aba01fc9b0827ae5, type: 2}
-    - {fileID: 11400000, guid: f9ac14ae08f0ee9438ac4b6eb641a4d4, type: 2}
+    - {fileID: 11400000, guid: 43a2f107900c7604499d15e3415d429e, type: 2}
+    - {fileID: 11400000, guid: c7858e7ac233a9d478b5b0b54c8cb949, type: 2}

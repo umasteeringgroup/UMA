@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UMA_SharedItems
   m_Data:
     m_SerializedData: []
-  m_GUID: cde5b9643302ce546bcf032d77ae5b0f
+  m_GUID: 0f7d19268bbcdd248bc76d8b5573cb29
   m_SerializeEntries:
   - m_GUID: 01c93d5f2b62c7b489b6ce6eec465e64
     m_Address: Tex-shoes_tall_black_NM
@@ -30,18 +30,66 @@ MonoBehaviour:
     m_Address: Tex-Sneakers_1_normal
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonDancerCollection
     - FemaleDancer1
     - ToonSneakers1
+  - m_GUID: 03e5bfa4f7f2fd445974ed61bdf5d9cf
+    m_Address: Ovl-M_Bod Overlay 1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - DNAConverterControllerExample Base Recipe
+    - MaleHandsMid
+  - m_GUID: 073bb8d1e3dc03140ada534c06d42dff
+    m_Address: Slt-MaleChallengerGloves
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ChangerArmorCollection
+    - MaleChallengerGloves
+  - m_GUID: 0b7ed825e2431f54c9f786a489da80bc
+    m_Address: Slt-MaleEyes
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanMale Base Recipe
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - DNAConverterControllerExample Base Recipe
+    - MaleEye1
+    - MaleEye2
+    - MaleEye3
+    - MaleEye4
+    - MaleEye5
+  - m_GUID: 0b80b30d8b2363d4aab8bfcba08a1e6d
+    m_Address: Tex-M_H_face_NOlder
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleFace Old
+    - TrollHead
   - m_GUID: 0bc264c391455944a94d094e18d6cbd0
     m_Address: Slt-Bottoms_Female_Hot_Pants_1
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonDancerCollection
     - FemaleDancer1
     - ToonHotPants1
+  - m_GUID: 0bfd4db5ca8f3f44e912a809539ed57c
+    m_Address: Slt-FemaleEyelashfix
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
   - m_GUID: 0ec96409ed505ea41a08ee9f877fb5cc
     m_Address: Slt-Tops_Female_Halter_Neck_1_TORSO
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonStarDancerCollection
+    - ToonTopsBundle
     - FemaleStarDancer1
     - ToonHalterNeck1
   - m_GUID: 0f9975fa93cece04f9f2d3455ca86225
@@ -50,10 +98,19 @@ MonoBehaviour:
     m_SerializedLabels:
     - WerewolfBase
     - WerewolfTShirt
+  - m_GUID: 106f080ab573748739995b5bcb337cf4
+    m_Address: Tex-FemaleJeans01_Roughness
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemalePants1
+    - FemalePants2
   - m_GUID: 10bbdf805ca24ef42809993e0339cf6d
     m_Address: Tex-UMA_Toon_F_Body_normal
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonDancerCollection
+    - ToonStarDancerCollection
+    - ToonTopsBundle
     - FemaleToonBase
     - FemaleDancer1
     - ToonCropTShirt1
@@ -61,6 +118,17 @@ MonoBehaviour:
     - FemaleStarDancer1
     - ToonCapriPants1
     - ToonHalterNeck1
+  - m_GUID: 12612d61ba9d1ff4d99d71be42fde390
+    m_Address: Tex-M_H_body1_Albedo
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - DNAConverterControllerExample Base Recipe
+    - MaleHandsMid
+    - OverweightMale
   - m_GUID: 135fa583abb9749c6bfec8cd5afa178b
     m_Address: Tex-MaleJeans01_Roughness
     m_ReadOnly: 0
@@ -72,6 +140,21 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - MaleRobe Hood
+  - m_GUID: 155dc30d9ac42485683aee4e736df0db
+    m_Address: Tex-InnerMouth_Roughness
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - DNAConverterControllerExample Base Recipe
+    - FemaleSwappedFace
   - m_GUID: 156f9f45fa760b845b6411b1010bf360
     m_Address: Slt-UMA_Werewolf_Torso
     m_ReadOnly: 0
@@ -91,22 +174,97 @@ MonoBehaviour:
     - FemaleShirt1
     - FemaleShirt4
     - GirlShirt1
+  - m_GUID: 1772139f4a11dce4da29d09459b78880
+    m_Address: Tex-M_H_bod_N
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - DNAConverterControllerExample Base Recipe
+    - MaleHandsMid
+  - m_GUID: 1833c968c357a464ba458590c72194b1
+    m_Address: Tex-F_H_face_Albedo02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - FemaleSwappedFace
+  - m_GUID: 19656603ac354ad4aa0dee0018f7f6d5
+    m_Address: Ovl-F_H_Bod
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - FemaleHandsMid
+  - m_GUID: 19ca51fa9b344074ebeaad4c873fd125
+    m_Address: Ovl-M_Face
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - DNAConverterControllerExample Base Recipe
+    - AlienHeadMorph
+    - ElfEarsMorph
+  - m_GUID: 1b6ada5c5a1cbdd41bb96770d71b16c1
+    m_Address: Ovl-Cap_Rash_Overlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ShavedHead
+    - MilCut
   - m_GUID: 1c93c34e5ba9413419409dce673c4656
     m_Address: Slt-Shoes_Fancy_Flats_1
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonStarDancerCollection
     - FemaleStarDancer1
     - ToonFancyFlats1
+  - m_GUID: 1ce0f12b23c3c9941a8f257ae9ddd78f
+    m_Address: Slt-FemaleInnerMouth
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - FemaleSwappedFace
+  - m_GUID: 1e7ddc02cd51b41488288a4982ca4274
+    m_Address: Slt-FemaleEyes
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+  - m_GUID: 1f1dcad09715f4c269eeb34c63889148
+    m_Address: Tex-MaleShirt01_Roughness
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleShirt1
+    - MaleShirt2
+    - MaleShirt3
   - m_GUID: 1f2079e30d9e5d04aa5a400a9cebfd70
     m_Address: Tex-Smart_Pants_1_diffuse
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonStarDancerCollection
     - FemaleStarDancer1
     - ToonCapriPants1
   - m_GUID: 1f9225ec4ae59d24482699e1ef27d5e3
     m_Address: Tex-Crop_TShirt_1_diffuse
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonDancerCollection
+    - ToonTopsBundle
     - FemaleDancer1
     - ToonCropTShirt1
   - m_GUID: 1f951d479297c493296d0a40c193760e
@@ -116,6 +274,19 @@ MonoBehaviour:
     - FemaleShirt1
     - FemaleShirt4
     - GirlShirt1
+  - m_GUID: 2041a0dad0ad3894ea9590072acacf65
+    m_Address: Slt-MaleLegs
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ChangerArmorCollection
+    - HumanMale Base Recipe
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - DNAConverterControllerExample Base Recipe
+    - MaleJeans 1
+    - MaleShorts1
+    - MaleShorts2
+    - MaleUnderwear
   - m_GUID: 27adb7051154579498a6b0ee107ce813
     m_Address: Ovl-SkyCarBodyOverlay
     m_ReadOnly: 0
@@ -128,6 +299,8 @@ MonoBehaviour:
     m_Address: Slt-Toon_Female_Crop_TShirt_1_TORSO
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonDancerCollection
+    - ToonTopsBundle
     - FemaleDancer1
     - ToonCropTShirt1
   - m_GUID: 286bbbe608a2cd14f9500d83fa610076
@@ -140,6 +313,9 @@ MonoBehaviour:
     m_Address: Ovl-UMA_Toon_F_Body
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonDancerCollection
+    - ToonStarDancerCollection
+    - ToonTopsBundle
     - FemaleToonBase
     - FemaleDancer1
     - ToonCropTShirt1
@@ -156,18 +332,27 @@ MonoBehaviour:
     m_Address: Ovl-Fancy_Flats_1_detail
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonStarDancerCollection
     - FemaleStarDancer1
     - ToonFancyFlats1
   - m_GUID: 2b0bb34dd4b7fc249a3a765b880992ec
     m_Address: Tex-Smart_Pants_1_detail_diffuse
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonStarDancerCollection
     - FemaleStarDancer1
     - ToonCapriPants1
+  - m_GUID: 2b7f847e474a9ce43b6dbb01f4b645d0
+    m_Address: Ovl-ChallengerShoulderPadsMetal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ChangerArmorCollection
+    - MaleChallengerShouderPads
   - m_GUID: 2c589544d3fa460468f7e50c3a0d8c27
     m_Address: Tex-ShoulderPad_Roughness
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ChangerArmorCollection
     - MaleChallengerShouderPads
   - m_GUID: 2e22b2a8a14c8b64488efe3ed35a4b06
     m_Address: Tex-ponytail01_diffuse
@@ -179,22 +364,79 @@ MonoBehaviour:
     m_Address: Tex-ShoulderPad_Normal
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ChangerArmorCollection
     - MaleChallengerShouderPads
+  - m_GUID: 31b625579c8744547b02bdd5c42c557e
+    m_Address: Ovl-Default Eye Adjust
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - DNAConverterControllerExample Base Recipe
+  - m_GUID: 3432e94374a4d304aa97ce0d56a46ff9
+    m_Address: Tex-M_H_bod_Metallic
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - DNAConverterControllerExample Base Recipe
+    - MaleHandsMid
+    - MaleFace Old
+    - OverweightMale
+    - TrollHead
   - m_GUID: 3798f966e3dde084eaa5d60ef5097c2f
     m_Address: Tex-Gloves_Roughness
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ChangerArmorCollection
     - MaleChallengerGloves
+  - m_GUID: 3953e60943b0d9949b9b43a9c53f76b8
+    m_Address: Tex-F_H_bod_Albedo
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - FemaleHandsMid
   - m_GUID: 3c98e6b60315fce40802977b5cd2817f
     m_Address: Tex-Fancy_Flats_1_normal
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonStarDancerCollection
     - FemaleStarDancer1
     - ToonFancyFlats1
+  - m_GUID: 407823accaae39a4a902c6e4b2bfa383
+    m_Address: Slt-F_High poly Eyebrows
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - FemaleSwappedFace
+  - m_GUID: 40aedb735001bc6469dc30694df5a6f8
+    m_Address: Tex-ShoulderPadLeather_Albedo
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ChangerArmorCollection
+    - MaleChallengerShouderPads
   - m_GUID: 41ad70ca423c43740a5fa85f0ef62442
     m_Address: Slt-Bottoms_Female_Capri_Pants_1
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonStarDancerCollection
     - FemaleStarDancer1
     - ToonCapriPants1
   - m_GUID: 426bd674b07660049907c2e6fa61b5b1
@@ -203,12 +445,44 @@ MonoBehaviour:
     m_SerializedLabels:
     - MaleRobe
     - ClothRobeRecipe
+  - m_GUID: 42f076965a3ee0740a6d5977c69601e6
+    m_Address: Tex-Eye_Large_Roughness_Adjust
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleEye1
+    - MaleEye2
+    - MaleEye3
+    - MaleEye4
+    - MaleEye5
+  - m_GUID: 43b1b1d7ba147c648a052d284467dcf7
+    m_Address: Ovl-MaleShirt01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleShirt1
+    - MaleShirt2
+    - MaleShirt3
   - m_GUID: 475458bd3c70c4148997ace0f6619dbb
     m_Address: Ovl-MeshHairStd
     m_ReadOnly: 0
     m_SerializedLabels:
     - FemaleHair3
     - MaleHair2
+  - m_GUID: 4755d55edbb90be4f9de4b4081105c55
+    m_Address: Slt-FemaleHands
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+  - m_GUID: 48f2433eaef670144b5d5270a1f9062e
+    m_Address: Tex-Eye_Normal_Adjust
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleEye1
+    - MaleEye2
+    - MaleEye3
+    - MaleEye4
   - m_GUID: 4990462eeb5376a469915d0af3986876
     m_Address: Ovl-WerewolfBody
     m_ReadOnly: 0
@@ -227,16 +501,81 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - WerewolfBase
+  - m_GUID: 4e443d543c17d314984f1bf934677b05
+    m_Address: Ovl-MaleUnderwear01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ChangerArmorCollection
+    - MaleShorts1
+    - MaleShorts2
+  - m_GUID: 4e9cc6816f5c700409fef511dd2dd2d1
+    m_Address: Slt-FemaleTorso
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - FemaleShirt2
+    - FemaleShirt3
+    - FemaleUndies
+    - FemaleUndies2
+  - m_GUID: 4f8b15f6d0318a24cb5264f835574c0c
+    m_Address: Slt-FemaleFeet
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+  - m_GUID: 503882a1f7789ad42ba44f8c8089aefe
+    m_Address: Tex-F_bod_metallic
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - FemaleHandsMid
+  - m_GUID: 52356e7a7ac1a79468d88e2b3f918bd6
+    m_Address: Ovl-ChallengerBootsLeather
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ChangerArmorCollection
+    - MaleChallengerBoots
   - m_GUID: 567469b0394184aaa99756a0d5bc580f
     m_Address: Tex-MaleJeans01_Albedo
     m_ReadOnly: 0
     m_SerializedLabels:
     - MaleJeans
     - MakeMeFatJeans
+  - m_GUID: 5746c09014733de4bbf208291c61aaea
+    m_Address: Ovl-InnerMouth
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - DNAConverterControllerExample Base Recipe
+    - FemaleSwappedFace
+  - m_GUID: 57540dd689a6efa44b9a5d2c785de92e
+    m_Address: Tex-GlovesMetal_Albedo
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ChangerArmorCollection
+    - MaleChallengerGloves
   - m_GUID: 58d7ecb23020d4146a31d6e77ff22557
     m_Address: Ovl-Smart_Pants_1
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonStarDancerCollection
     - FemaleStarDancer1
     - ToonCapriPants1
   - m_GUID: 58dd27014d7068843ab43bc57b2b80a9
@@ -245,12 +584,34 @@ MonoBehaviour:
     m_SerializedLabels:
     - FemaleHair3
     - MaleHair2
+  - m_GUID: 58e5a93186f923c4ca7910365d807714
+    m_Address: Slt-F_High poly head
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
   - m_GUID: 5c36f948b8e7aab409933dec824d011d
     m_Address: Ovl-Crop_TShirt_1_detail
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonDancerCollection
+    - ToonTopsBundle
     - FemaleDancer1
     - ToonCropTShirt1
+  - m_GUID: 5dcb82ea78983cf4da0c206fc9de96ae
+    m_Address: Slt-MaleChallengerShouderPads
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ChangerArmorCollection
+    - MaleChallengerShouderPads
+  - m_GUID: 5e0d6fd5a419c024abb998898b6bce79
+    m_Address: Tex-TorsoArmorLeather_Albedo
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ChangerArmorCollection
+    - MaleChallengerTorso
   - m_GUID: 5f7c268b402a9fe46b8a5c4115e669f7
     m_Address: Tex-scrunchie
     m_ReadOnly: 0
@@ -261,11 +622,14 @@ MonoBehaviour:
     m_Address: Tex-TorsoArmor_Normal
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ChangerArmorCollection
     - MaleChallengerTorso
   - m_GUID: 6260dbbbf7d5f0d428c91e7d592438a0
     m_Address: Tex-Halter_Neck_1_normal
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonStarDancerCollection
+    - ToonTopsBundle
     - FemaleStarDancer1
     - ToonHalterNeck1
   - m_GUID: 63212701cc50fca4eac77618947eb849
@@ -274,6 +638,31 @@ MonoBehaviour:
     m_SerializedLabels:
     - FemaleShirt1
     - GirlShirt1
+  - m_GUID: 63b4d18e3035f19478f48fc951ba36ca
+    m_Address: Tex-F_H_face_N
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - FemaleSwappedFace
+  - m_GUID: 650280757a94c364c9f19cec1b48670e
+    m_Address: Tex-Male face metallic new
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - DNAConverterControllerExample Base Recipe
+    - ShavedHead
+    - MaleShortHair_Recipe
+    - MilCut
+    - MaleHair1
+    - AlienHeadMorph
+    - ElfEarsMorph
   - m_GUID: 65887f0e5072b8b499a7760e4392741d
     m_Address: Ovl-MaleJeans01
     m_ReadOnly: 0
@@ -287,45 +676,199 @@ MonoBehaviour:
     - FemaleShirt1
     - FemaleShirt4
     - GirlShirt1
+  - m_GUID: 684e665f794940c4687db694443783cf
+    m_Address: Tex-ChallengerBootLeather_Albedo
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ChangerArmorCollection
+    - MaleChallengerBoots
+  - m_GUID: 687094bd323754d0d831e78ebb58962e
+    m_Address: Tex-MaleUnderwear_Roughness
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ChangerArmorCollection
+    - MaleShorts1
+    - MaleShorts2
   - m_GUID: 6a0307f4a35456d4eb23b5bfcdc948bc
     m_Address: Tex-Jeans_1_normal
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonDancerCollection
     - FemaleDancer1
     - ToonHotPants1
+  - m_GUID: 6c28ac0bb8720487d809016aba0fec2b
+    m_Address: Tex-MaleUnderwear_Albedo
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ChangerArmorCollection
+    - MaleShorts1
+    - MaleShorts2
+  - m_GUID: 6c5d912ba8fa77f449e43391d2d87d88
+    m_Address: Slt-MaleChallengerBoots
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ChangerArmorCollection
+    - MaleChallengerBoots
   - m_GUID: 6da400a63bfedc54dbfadfca5c2b1d2f
     m_Address: Tex-Sneakers_1_detail_diffuse
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonDancerCollection
     - FemaleDancer1
     - ToonSneakers1
+  - m_GUID: 6e0514a9d08816744abcfaee972e3c6e
+    m_Address: Tex-MaleUnderwear_Hearts_Albedo
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ChangerArmorCollection
+    - MaleShorts2
   - m_GUID: 6e36e90783475394baa485bf0bf07514
     m_Address: Tex-UpperLower_N
     m_ReadOnly: 0
     m_SerializedLabels:
     - MaleRobe
     - ClothRobeRecipe
+  - m_GUID: 6eccaa33eeb95784cb7384cd762a1d87
+    m_Address: Tex-F_HighPoly_EyeBrow_Normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - FemaleSwappedFace
   - m_GUID: 70b61d5f511fec649a7f297690b022a1
     m_Address: Ovl-Fancy_Flats_1_detail1
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonStarDancerCollection
     - FemaleStarDancer1
     - ToonFancyFlats1
+  - m_GUID: 734fcc8a0fd1912478c8566fc6eceda7
+    m_Address: Ovl-ChallengerTorsoArmorLeather
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ChangerArmorCollection
+    - MaleChallengerTorso
   - m_GUID: 748cbd8fc65e86744ae8c6d358d8d19a
     m_Address: Tex-Smart_Pants_1_normal
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonStarDancerCollection
     - FemaleStarDancer1
     - ToonCapriPants1
+  - m_GUID: 74fbe497c697690488fbdfeee0fae3d6
+    m_Address: Ovl-M_Face_Old
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleFace Old
+    - TrollHead
+  - m_GUID: 77984210ff457ff4f8f1e083bf3e0cbe
+    m_Address: Tex-eye_metallic
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - DNAConverterControllerExample Base Recipe
+  - m_GUID: 78bcc1abec57f9c409e43c37c84b131e
+    m_Address: Slt-MaleTorso
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanMale Base Recipe
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - DNAConverterControllerExample Base Recipe
+    - MaleShirt1
+    - MaleShirt2
+    - MaleShirt3
+    - OverweightMale
+  - m_GUID: 7a994921a3f3b9a49b61907ef28f5066
+    m_Address: Tex-ShoulderPadMetal_Albedo
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ChangerArmorCollection
+    - MaleChallengerShouderPads
+  - m_GUID: 7c94cdeabfed7814d9717b1f8b5a49ba
+    m_Address: Ovl-MaleUnderwear_hearts
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ChangerArmorCollection
+    - MaleShorts2
   - m_GUID: 7e0c7da6f160f8746b6dc9ef2b9b3105
     m_Address: Tex-ChallengerBoot_Roughness
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ChangerArmorCollection
     - MaleChallengerBoots
+  - m_GUID: 7e921b7c55c83334d8e40a5114831db1
+    m_Address: Tex-MaleShirt01Color
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleShirt1
+    - MaleShirt3
+  - m_GUID: 809c22fcd6389e742a62ec4905d1a101
+    m_Address: Ovl-ChallengerTorsoArmorMetal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ChangerArmorCollection
+    - MaleChallengerTorso
+  - m_GUID: 850d610cf1e6f7b4eb4157fc242d5074
+    m_Address: Ovl-ChallengerBootsMetal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ChangerArmorCollection
+    - MaleChallengerBoots
+  - m_GUID: 852f32c994e6fdf47b9ddade245a2d20
+    m_Address: Tex-F_bod_N
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - FemaleHandsMid
+  - m_GUID: 863f68599d8ad8b4989c7724bb3b8dd1
+    m_Address: Slt-MaleChallengerTorsoArmor
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ChangerArmorCollection
+    - MaleChallengerTorso
+  - m_GUID: 87d999979ace13749a6d20c588d07c6d
+    m_Address: Tex-Eye_n
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - DNAConverterControllerExample Base Recipe
+  - m_GUID: 881f10d72572db34cb1150ac3df21a97
+    m_Address: Slt-MaleHands
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanMale Base Recipe
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - DNAConverterControllerExample Base Recipe
   - m_GUID: 88748dee7076a594da2220b822ce685a
     m_Address: Tex-TorsoArmor_Roughness
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ChangerArmorCollection
     - MaleChallengerTorso
   - m_GUID: 899377113242564478958a9647388a80
     m_Address: Slt-UMA_Toon_TORSO-Female
@@ -333,16 +876,39 @@ MonoBehaviour:
     m_SerializedLabels:
     - FemaleToonBase
     - ToonFemaleUnderwear1
+  - m_GUID: 8b9c344b2628b4436a1885febe424947
+    m_Address: Tex-FemaleJeans01_Albedo
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemalePants1
+    - FemalePants2
   - m_GUID: 8ce8f2c72d5601d4881a47725978e325
     m_Address: Ovl-Halter_Neck_1_detail
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonStarDancerCollection
+    - ToonTopsBundle
     - FemaleStarDancer1
     - ToonHalterNeck1
+  - m_GUID: 8da06013380d7c848be2cfa63884557b
+    m_Address: Tex-M_bod smooth_N
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - DNAConverterControllerExample Base Recipe
+    - OverweightMale
+  - m_GUID: 8e8a11d219efb744e8b7d8886bf4431a
+    m_Address: Tex-GlovesLeather_Albedo
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ChangerArmorCollection
+    - MaleChallengerGloves
   - m_GUID: 91976794324ceeb4798dc98c0f1c67ab
     m_Address: Tex-UMA_Toon_Body_diffuse
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonDancerCollection
+    - ToonStarDancerCollection
+    - ToonTopsBundle
     - FemaleToonBase
     - FemaleDancer1
     - ToonCropTShirt1
@@ -361,6 +927,16 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - SkyCarBaseRecipe
+  - m_GUID: 94d4ed1afcae6d24aa8325f9fcda20c4
+    m_Address: Tex-F_H_face_metallic
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - FemaleSwappedFace
   - m_GUID: 95f37b6e8a50f0c47bec196c4bc2eae2
     m_Address: Tex-bb_male_hair_UMA Normal
     m_ReadOnly: 0
@@ -371,34 +947,123 @@ MonoBehaviour:
     m_Address: Tex-Gloves_Normal
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ChangerArmorCollection
     - MaleChallengerGloves
   - m_GUID: 982377ed10e4ad34ea122aa27345c6b8
     m_Address: Tex-ChallengerBoot_Normal
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ChangerArmorCollection
     - MaleChallengerBoots
+  - m_GUID: 98b05b17b4e8ff142b1f16df2ef2315b
+    m_Address: Ovl-Eye Overlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - DNAConverterControllerExample Base Recipe
+  - m_GUID: 9bb596cb1321e414186f972f07e0bc5b
+    m_Address: Tex-M_H_face_Nnew
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - DNAConverterControllerExample Base Recipe
+    - MaleShortHair_Recipe
+    - MilCut
+    - AlienHeadMorph
+    - ElfEarsMorph
+  - m_GUID: 9d3552b8b101043948c0b8cc690ab816
+    m_Address: Tex-InnerMouth_Normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - DNAConverterControllerExample Base Recipe
+    - FemaleSwappedFace
+  - m_GUID: 9efda53d0ad2efb4da46ef74f26564ce
+    m_Address: Ovl-ChallengerShoulderPadsLeather
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ChangerArmorCollection
+    - MaleChallengerShouderPads
   - m_GUID: a0b2da7dcebf2534c9359d5d87fa9d50
     m_Address: Ovl-Halter_Neck_1
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonStarDancerCollection
+    - ToonTopsBundle
     - FemaleStarDancer1
     - ToonHalterNeck1
+  - m_GUID: a3fd3ee4f9e796c469f319488ca1d23c
+    m_Address: Tex-Cap_Shadow
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ShavedHead
+    - MilCut
+    - MaleHair1
+  - m_GUID: a460597f78928e04a8db0940885eb72a
+    m_Address: Ovl-ChallengerGlovesLeather
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ChangerArmorCollection
+    - MaleChallengerGloves
   - m_GUID: a5cb9c792e8a0684da24546a08a4ab2a
     m_Address: Ovl-Sneakers_1_detail
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonDancerCollection
     - FemaleDancer1
     - ToonSneakers1
+  - m_GUID: a61b80b3ef057274e93e5d8c6a2aacec
+    m_Address: Ovl-FemaleEyelash
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
   - m_GUID: a783f89daf8c524469e3905b80a396d5
     m_Address: Tex-Sneakers_1_diffuse
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonDancerCollection
     - FemaleDancer1
     - ToonSneakers1
+  - m_GUID: a7966396fbac7ff4da2b461a89dff690
+    m_Address: Tex-MaleFace_spotty_Albedo
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleFace Old
+    - TrollHead
+  - m_GUID: a79f26acde8ea4a41bd7fa601046a702
+    m_Address: Tex-ChallengerBootMetal_Albedo
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ChangerArmorCollection
+    - MaleChallengerBoots
   - m_GUID: a93b785a7dc7e3f4da5810505cdc19fe
     m_Address: Tex-Fancy_Flats_1_detail_diffuse
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonStarDancerCollection
     - FemaleStarDancer1
     - ToonFancyFlats1
   - m_GUID: aa4234fb16def7748a6476c4cbee204a
@@ -432,18 +1097,22 @@ MonoBehaviour:
     m_Address: Ovl-Fancy_Flats_1
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonStarDancerCollection
     - FemaleStarDancer1
     - ToonFancyFlats1
   - m_GUID: afd670bc70f75274eb4fae71aa23eaac
     m_Address: Slt-Bottoms_Female_Capri_Pants_1_LEGS
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonStarDancerCollection
     - FemaleStarDancer1
     - ToonCapriPants1
   - m_GUID: b0c8bd5163af4b64599acdbac2eeb562
     m_Address: Tex-Crop_TShirt_1_detail_diffuse
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonDancerCollection
+    - ToonTopsBundle
     - FemaleDancer1
     - ToonCropTShirt1
   - m_GUID: b53229351f1835947840963cdd44227e
@@ -456,8 +1125,22 @@ MonoBehaviour:
     m_Address: Ovl-Smart_Pants_1_detail
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonStarDancerCollection
     - FemaleStarDancer1
     - ToonCapriPants1
+  - m_GUID: b6b6f8e091fafc644b63f4064102382a
+    m_Address: Ovl-FemaleJeans01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemalePants1
+    - FemalePants2
+  - m_GUID: b8e56af9c8f384fef8e5a1adc1d1df8c
+    m_Address: Tex-MaleUnderwear_Normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ChangerArmorCollection
+    - MaleShorts1
+    - MaleShorts2
   - m_GUID: b964835c0dfe6674aa52884e63036f69
     m_Address: Tex-WerewolfBlank_Specular
     m_ReadOnly: 0
@@ -468,20 +1151,59 @@ MonoBehaviour:
     m_Address: Ovl-Crop_TShirt_1
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonDancerCollection
+    - ToonTopsBundle
     - FemaleDancer1
     - ToonCropTShirt1
   - m_GUID: ba8d7b4967d3f084b94f53b31d7a5b00
     m_Address: Slt-Bottoms_Female_Hot_Pants_1_LEGS
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonDancerCollection
     - FemaleDancer1
     - ToonHotPants1
+  - m_GUID: bb040a2ea3008406ebd2f1c0f49b31fd
+    m_Address: Tex-FemaleJeans01_Normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemalePants1
+    - FemalePants2
   - m_GUID: bbcc9fcf1f8a6354d8f7efba8212910c
     m_Address: Tex-Fancy_Flats_1_detail1_diffuse
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonStarDancerCollection
     - FemaleStarDancer1
     - ToonFancyFlats1
+  - m_GUID: bc5c8b0d1465e7e4aa513524f4c04b3e
+    m_Address: Tex-Cap_Hair Heightmap
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ShavedHead
+    - MilCut
+    - MaleHair1
+  - m_GUID: bc78262a19833744f9ee5b3389aec814
+    m_Address: Ovl-MaleShirt01Color
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleShirt1
+    - MaleShirt3
+  - m_GUID: bc845162d92a43f4ea04d9bece6f503f
+    m_Address: Ovl-F_HighPoly_EyeBrow
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - FemaleSwappedFace
+  - m_GUID: bccbb38fe3139c444b2999c45952b427
+    m_Address: Tex-TorsoArmorMetal_Albedo
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ChangerArmorCollection
+    - MaleChallengerTorso
   - m_GUID: bd0d469704e7c934ebddc45ece4c1868
     m_Address: Tex-SkyCarBodyOcclusion
     m_ReadOnly: 0
@@ -490,6 +1212,12 @@ MonoBehaviour:
     - AntennaRecipe
     - SpoilerRecipe
     - StripesRecipe
+  - m_GUID: bd12cd8e19c388f43aa93bedfbcb3d95
+    m_Address: Tex-Cap_Hair
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ShavedHead
+    - MilCut
   - m_GUID: bfe51f13b8b7f594b8c6a75e30a5bbd5
     m_Address: Tex-shoes_tall_black_D
     m_ReadOnly: 0
@@ -500,6 +1228,8 @@ MonoBehaviour:
     m_Address: Slt-Tops_Female_Halter_Neck_1
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonStarDancerCollection
+    - ToonTopsBundle
     - FemaleStarDancer1
     - ToonHalterNeck1
   - m_GUID: c0d19c5bee56d9944a925b825809b07c
@@ -508,16 +1238,60 @@ MonoBehaviour:
     m_SerializedLabels:
     - FemalePonyTail_Recipe
     - BoneyTail_Recipe
+  - m_GUID: c0e5deae8a268a8468ef816cb746d8ee
+    m_Address: Tex-Default Eye Adjust_diffuse
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - DNAConverterControllerExample Base Recipe
   - m_GUID: c23ed23be3c03a942976b1efa504ebb9
     m_Address: Tex-shoes_tall_white_D
     m_ReadOnly: 0
     m_SerializedLabels:
     - FemaleTallShoes_White
     - TallShoes_Recipe
+  - m_GUID: c289a7983684638449f8b9adc06dc2b6
+    m_Address: Tex-Eye Overlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - DNAConverterControllerExample Base Recipe
+  - m_GUID: c43977b073daf4f118da38659370f26c
+    m_Address: Tex-InnerMouth_Albedo
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - DNAConverterControllerExample Base Recipe
+    - FemaleSwappedFace
   - m_GUID: c59f61ec240ce194ea1a7720096a5524
     m_Address: Tex-Jeans_1_detail_diffuse
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonDancerCollection
     - FemaleDancer1
     - ToonHotPants1
   - m_GUID: c7fd9103594884fe5baf9fd5c795def4
@@ -530,14 +1304,61 @@ MonoBehaviour:
     m_Address: Slt-Tops_Female_Crop_TShirt_1
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonDancerCollection
+    - ToonTopsBundle
     - FemaleDancer1
     - ToonCropTShirt1
+  - m_GUID: ca5524875bc901b419962c4d50420f2b
+    m_Address: Tex-F_HighPoly_EyeBrow_Albedo
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - FemaleSwappedFace
+  - m_GUID: cb52389a713967d4abc746d610b28acf
+    m_Address: Tex-Cap_Rash
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ShavedHead
+    - MilCut
+  - m_GUID: cc6c17656f669be4bbb2e21d48e57a45
+    m_Address: Slt-MaleInnerMouth
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanMale Base Recipe
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - DNAConverterControllerExample Base Recipe
+  - m_GUID: ccbae4cc71f63224ebf0c8934a2197d4
+    m_Address: Tex-M_H_face_Albedo2
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - DNAConverterControllerExample Base Recipe
+    - AlienHeadMorph
+    - ElfEarsMorph
   - m_GUID: ccdf514727275dc45914627958155442
     m_Address: Slt-SkyCarBody
     m_ReadOnly: 0
     m_SerializedLabels:
     - SkyCarBaseRecipe
     - StripesRecipe
+  - m_GUID: cee8d3f18a3209a4695ef7f0185e176a
+    m_Address: Tex-F_HighPoly_EyeBrow_Metallic
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - FemaleSwappedFace
   - m_GUID: cf8631a0e0aefb34aa822421f8d5f826
     m_Address: Ovl-FemalePonyTail_Overlay
     m_ReadOnly: 0
@@ -550,10 +1371,18 @@ MonoBehaviour:
     m_SerializedLabels:
     - MaleRobe
     - ClothRobeRecipe
+  - m_GUID: d10c6db5c35334a4c87b351ed1e142bf
+    m_Address: Ovl-Cap_Hair_Overlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ShavedHead
+    - MilCut
   - m_GUID: d126afbadfdb59f4e9ba1cfb02993951
     m_Address: Tex-Halter_Neck_1_detail_diffuse
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonStarDancerCollection
+    - ToonTopsBundle
     - FemaleStarDancer1
     - ToonHalterNeck1
   - m_GUID: d166f91c8264d564e9ffa5ec766bad53
@@ -573,10 +1402,23 @@ MonoBehaviour:
     - AntennaRecipe
     - SpoilerRecipe
     - StripesRecipe
+  - m_GUID: d813f8755f9fdee489b781e0d5e404c5
+    m_Address: Ovl-F_H_Head
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - FemaleSwappedFace
   - m_GUID: df3452a6006a2d54fb0587d4b2cad909
     m_Address: Tex-UMA_Toon_Body_metallic
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonDancerCollection
+    - ToonStarDancerCollection
+    - ToonTopsBundle
     - FemaleToonBase
     - FemaleDancer1
     - ToonCropTShirt1
@@ -591,54 +1433,121 @@ MonoBehaviour:
     m_Address: Slt-Shoes_Sneakers_1
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonDancerCollection
     - FemaleDancer1
     - ToonSneakers1
+  - m_GUID: e40f405bbd058a0419b3d09cf94ee7de
+    m_Address: Slt-FemaleLegs
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - FemalePants1
+    - FemalePants2
   - m_GUID: e43769dcd6c17f34b8e3c464485721fa
     m_Address: Tex-Fancy_Flats_1_diffuse
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonStarDancerCollection
     - FemaleStarDancer1
     - ToonFancyFlats1
   - m_GUID: e5dd1cd866f75434cac96736c5df9df0
     m_Address: Tex-Jeans_1_diffuse
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonDancerCollection
     - FemaleDancer1
     - ToonHotPants1
   - m_GUID: e6c4adce4a1ff84428305e416685ee5e
     m_Address: Tex-Crop_TShirt_1_normal
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonDancerCollection
+    - ToonTopsBundle
     - FemaleDancer1
     - ToonCropTShirt1
+  - m_GUID: e7c8290369e5f724e8e185a77240e37e
+    m_Address: Slt-MaleFeet
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanMale Base Recipe
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - DNAConverterControllerExample Base Recipe
   - m_GUID: e822c12c3b38e4cbdbb419c94040eab4
     m_Address: Tex-MaleJeans01_Normal
     m_ReadOnly: 0
     m_SerializedLabels:
     - MaleJeans
     - MakeMeFatJeans
+  - m_GUID: e84b15df5103d0a419f01ffe3e77fb53
+    m_Address: Ovl-ChallengerGlovesMetal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ChangerArmorCollection
+    - MaleChallengerGloves
+  - m_GUID: e9f37d4afd53c5441aed1334c52fa698
+    m_Address: Tex-Eyelash_diffuse
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
   - m_GUID: ebe828fad47d6974d98f634f415815f9
     m_Address: Ovl-Jeans_1_detail
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonDancerCollection
     - FemaleDancer1
     - ToonHotPants1
+  - m_GUID: f37b7c5bd4158be44880557cefabb033
+    m_Address: Ovl-Cap_Shadow_overlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ShavedHead
+    - MilCut
+    - MaleHair1
   - m_GUID: f552f5dd25919084fa1077b6df706c9d
     m_Address: Slt-TallShoes
     m_ReadOnly: 0
     m_SerializedLabels:
     - TallShoes_Black_Recipe
     - TallShoes_Recipe
+  - m_GUID: f57c699e06562b84fb91461077d470a9
+    m_Address: Ovl-M_Bod smooth
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - DNAConverterControllerExample Base Recipe
+    - OverweightMale
+  - m_GUID: f81cce6b25bb84582870e7d712d68918
+    m_Address: Tex-MaleShirt01_Albedo
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleShirt1
+    - MaleShirt2
+    - MaleShirt3
   - m_GUID: f8bd3f6c4901d6d4c986bb042def995c
     m_Address: Ovl-TallShoes_Black
     m_ReadOnly: 0
     m_SerializedLabels:
     - FemaleTallShoes_Black
     - TallShoes_Black_Recipe
+  - m_GUID: f8cf9468b3cf148148dd1f220bda6c17
+    m_Address: Tex-MaleShirt01_Normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleShirt1
+    - MaleShirt2
+    - MaleShirt3
   - m_GUID: faede5ef802a4d04080266de31601bc8
     m_Address: Ovl-Sneakers_1
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonDancerCollection
     - FemaleDancer1
     - ToonSneakers1
   - m_GUID: fc084c6e6b4a93c4b84286ff83c4dba6
@@ -651,6 +1560,8 @@ MonoBehaviour:
     m_Address: Tex-Halter_Neck_1_diffuse
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonStarDancerCollection
+    - ToonTopsBundle
     - FemaleStarDancer1
     - ToonHalterNeck1
   - m_GUID: fd983ace9923d5244bf7876fb75df05a
@@ -662,11 +1573,32 @@ MonoBehaviour:
     m_Address: Ovl-Jeans_1
     m_ReadOnly: 0
     m_SerializedLabels:
+    - ToonDancerCollection
     - FemaleDancer1
     - ToonHotPants1
+  - m_GUID: fe973a02183b3894296cc24e40283fde
+    m_Address: Slt-M_High poly Head
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HumanMale Base Recipe
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - DNAConverterControllerExample Base Recipe
+    - ShavedHead
+    - MaleShortHair_Recipe
+    - MilCut
+    - MaleBeard1
+    - MaleBeard2
+    - MaleBeard3
+    - MaleBrow01
+    - MaleBrow02
+    - MaleFace Old
+    - MaleHair1
+    - MaleHair3
+    - TrollHead
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 44be1a6e2a7117c4da10ec9cc9e679af, type: 2}
-    - {fileID: 11400000, guid: 1289a6e16ede75f46a3dd0b328d02783, type: 2}
+    - {fileID: 11400000, guid: 15524cc03606b0c4d9ea071404835ce8, type: 2}
+    - {fileID: 11400000, guid: 3cf1d0d4f137bb249b0c5ff1af974f8c, type: 2}

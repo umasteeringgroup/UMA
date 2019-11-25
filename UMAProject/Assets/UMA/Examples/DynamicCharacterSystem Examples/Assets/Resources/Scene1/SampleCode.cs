@@ -27,10 +27,30 @@ namespace UMA.CharacterSystem.Examples
         public SharedColorTable EyesColor;
         public SharedColorTable ClothingColor;
 
-        /// <summary>
-        /// Remove any controls from the panels
-        /// </summary>
-        private void Cleanup()
+		public void Start()
+		{
+			UMAAssetIndexer index = UMAAssetIndexer.Instance;
+
+			List<RaceData> races = index.GetAllAssets<RaceData>();
+			var asyncop = UMAAssetIndexer.Instance.Preload(races);
+			asyncop.Completed += Asyncop_Completed;
+		}
+
+		private void Asyncop_Completed(UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<IList<Object>> obj)
+		{
+			UMAAssetIndexer.Instance.Preload(Avatar).Completed += Avatar_Completed;
+		}
+
+		private void Avatar_Completed(UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<IList<Object>> obj)
+		{
+			Avatar.gameObject.SetActive(true);
+			Avatar.BuildCharacter();
+		}
+
+		/// <summary>
+		/// Remove any controls from the panels
+		/// </summary>
+		private void Cleanup()
         {
             GeneralHelpText.SetActive(false);
             DnaHelpText.SetActive(false);

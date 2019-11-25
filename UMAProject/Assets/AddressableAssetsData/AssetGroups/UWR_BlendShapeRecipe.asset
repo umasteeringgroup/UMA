@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_BlendShapeRecipe
   m_Data:
     m_SerializedData: []
-  m_GUID: bc448905d55e91047b5ae662f7b8f847
+  m_GUID: 537b3eb3a86829b4fa0626097202d394
   m_SerializeEntries:
   - m_GUID: 0636d7d4de85e4549873e4a004408958
     m_Address: Tex-MaleFace01_Albedo
@@ -46,5 +46,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 18888ea548ac3464d915dcf46e675901, type: 2}
-    - {fileID: 11400000, guid: e8623d8fd7a1ad0448cf4a0e9edc0b1f, type: 2}
+    - {fileID: 11400000, guid: 606912b028e067f4a8e44203e1fc9bb6, type: 2}
+    - {fileID: 11400000, guid: 836ed1e7c99c27a4b9798c4f28ba1f37, type: 2}

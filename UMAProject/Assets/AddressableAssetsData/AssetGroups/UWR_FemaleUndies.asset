@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UWR_FemaleUndies
+  m_EditorClassIdentifier: 
+  m_GroupName: UWR_FemaleUndies
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 2d2556af20fd76b4f8c8b0f785223ba8
+  m_SerializeEntries:
+  - m_GUID: 612aa5b72e1204f9292868e1a30c7654
+    m_Address: Tex-FemaleUnderwear01_Roughness
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleUndies
+  - m_GUID: 73cf00c391282944c8251cee30c6cb68
+    m_Address: Ovl-FemaleUnderwear02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleUndies
+  - m_GUID: d4fd23d5fee332b4399d10cd666197e7
+    m_Address: Tex-FemaleUnderwear02_diffuse
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleUndies
+  - m_GUID: fc479bbdb9be64a1bb711bd9e259ba5a
+    m_Address: Tex-FemaleUnderwear01_Normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FemaleUndies
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: fbc77026fcb13c34dab6ccd03e487019, type: 2}
+    - {fileID: 11400000, guid: cf50379bca3059c41a810c0e8fa97b46, type: 2}

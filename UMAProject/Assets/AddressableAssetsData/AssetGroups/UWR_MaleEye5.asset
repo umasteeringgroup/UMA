@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UWR_MaleEye5
+  m_EditorClassIdentifier: 
+  m_GroupName: UWR_MaleEye5
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 52d2d08891d968a419d23b843c6baaf5
+  m_SerializeEntries:
+  - m_GUID: 10d1e2ac030a2d54e8dffe526204097f
+    m_Address: Ovl-Eye_Large_Adjust
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleEye5
+  - m_GUID: 190e223f5879e4b4380c617607ce9d3a
+    m_Address: Tex-Eye_Large_Normal_Adjust
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleEye5
+  - m_GUID: 953679261e03f82428f59b24631e30ee
+    m_Address: Tex-Eye_Large_Albedo_Adjust
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleEye5
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: c5b17b6c47a31b54db84a8f4522f9eb4, type: 2}
+    - {fileID: 11400000, guid: b413bb390703a4549b577ee43910091c, type: 2}

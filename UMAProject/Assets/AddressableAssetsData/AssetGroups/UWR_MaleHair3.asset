@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UWR_MaleHair3
+  m_EditorClassIdentifier: 
+  m_GroupName: UWR_MaleHair3
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 023f831d346792c4cbce7461357db8db
+  m_SerializeEntries:
+  - m_GUID: 10329f729c6ed4b4795e6c1986c8a496
+    m_Address: Ovl-MaleHair01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleHair3
+  - m_GUID: 1579cf108bfa04bdca517a8faea7e535
+    m_Address: Tex-MaleHair01_Roughness
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleHair3
+  - m_GUID: 35dac48c1f1be421287397546c4dea8d
+    m_Address: Tex-MaleHair01_Normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleHair3
+  - m_GUID: 84e24145ef85f4d6ebc2f0a2290f19c2
+    m_Address: Tex-MaleHair01_Albedo
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleHair3
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 591dc5c700b09c5429518e7c9c88e712, type: 2}
+    - {fileID: 11400000, guid: 1d624c480dfb16745a24b0e44e83c6fa, type: 2}

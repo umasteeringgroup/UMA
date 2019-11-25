@@ -102,8 +102,8 @@ namespace UMA
             {
 				if (this.material.name != material.material.name)
 					return false;
-				if (this.material.shader != material.material.shader)
-					return false;
+				//if (this.material.shader != material.material.shader)
+				//	return false;
                 if (this.material.renderQueue != material.material.renderQueue)
                     return false;
 				if (this.materialType != material.materialType)

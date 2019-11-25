@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_FemaleTankTop_Recipe
   m_Data:
     m_SerializedData: []
-  m_GUID: bd069700a4e46a54c8f6d80d7503946a
+  m_GUID: 70aaf5dd4def8124b834ca2aac8da4c1
   m_SerializeEntries:
   - m_GUID: 04ca452ebc325384dbd880de14092e76
     m_Address: Ovl-FemaleTankTop_Overlay
@@ -46,5 +46,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: b6cddee73b748ab4a8cbb6cdc9f26bba, type: 2}
-    - {fileID: 11400000, guid: 5be476217b217284181a4dda86750613, type: 2}
+    - {fileID: 11400000, guid: d3e8157060e7c2f4f8f88e27d9e0cbbf, type: 2}
+    - {fileID: 11400000, guid: 88a8b2f0a1c36d948895a93d87bd103d, type: 2}

@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_FemaleHair3
   m_Data:
     m_SerializedData: []
-  m_GUID: 75a80c215385a6944b60eb3d9523bf8b
+  m_GUID: 8acb8ccb633826742a807c4fe49ab78b
   m_SerializeEntries:
   - m_GUID: 911a7511737178d4dbfe1ab52a2d8887
     m_Address: Slt-UMA_fem_hair_1_005
@@ -26,5 +26,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 4768492609d81444fb9d092be83171d7, type: 2}
-    - {fileID: 11400000, guid: 934b9706160ac2e40a045416bfb895b6, type: 2}
+    - {fileID: 11400000, guid: 74bf4199e41aa00449706aa63d8c994c, type: 2}
+    - {fileID: 11400000, guid: 6821021ec41a2c248b48bedfda81d6cf, type: 2}

@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_FemaleLongHair_Recipe
   m_Data:
     m_SerializedData: []
-  m_GUID: 41cab13ef6f500140959b2af65108d1b
+  m_GUID: 6256e4d676090ed4eab2623afb314922
   m_SerializeEntries:
   - m_GUID: 1aadd11c8710fd842821fa962b7d66c4
     m_Address: Slt-FemaleLongHair
@@ -41,5 +41,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 05c295c56daa8be4999180e7d4efcad0, type: 2}
-    - {fileID: 11400000, guid: b52feb92a03a95c4d98eb55f498ec50a, type: 2}
+    - {fileID: 11400000, guid: c3c6ce5054fddb846aaeb15893ab0300, type: 2}
+    - {fileID: 11400000, guid: 216a4e7557d5a2b4699fb41487fd283c, type: 2}

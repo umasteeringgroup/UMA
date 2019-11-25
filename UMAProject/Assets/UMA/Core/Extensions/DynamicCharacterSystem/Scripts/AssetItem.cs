@@ -34,7 +34,17 @@ namespace UMA
             {
                 if (_TheType != null) return _TheType;
 
-                _TheType = UMAAssetIndexer.TypeFromString[_BaseTypeName];
+				if (!UMAAssetIndexer.TypeFromString.ContainsKey(_BaseTypeName))
+				{
+					Debug.Log("unable to find type: " + _BaseTypeName);
+					if (_BaseTypeName.Contains("SlotData"))
+						return typeof(SlotDataAsset);
+					if (_BaseTypeName.Contains("OverlayData"))
+						return typeof(OverlayDataAsset);
+					return typeof(object);
+				}
+
+				_TheType = UMAAssetIndexer.TypeFromString[_BaseTypeName];
                 return _TheType;
             }
         }
@@ -58,7 +68,9 @@ namespace UMA
             {
 #if UNITY_EDITOR
                 if (_SerializedItem != null) return _SerializedItem;
-				CacheSerializedItem();
+
+				if (!IsAddressable)  // this check is so we can test addressables in the editor
+					CacheSerializedItem(); 
                 return _SerializedItem;
 #else
                 return _SerializedItem;
@@ -78,6 +90,7 @@ namespace UMA
 		{
 			#if UNITY_EDITOR		
 			if (_SerializedItem != null) return;
+			if (IsAddressable) return;
 			_SerializedItem = AssetDatabase.LoadAssetAtPath(_Path, _Type);	
 			if (_SerializedItem == null) 
 			{

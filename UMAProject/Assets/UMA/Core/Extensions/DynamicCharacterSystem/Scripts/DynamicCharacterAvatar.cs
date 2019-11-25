@@ -882,6 +882,11 @@ namespace UMA.CharacterSystem
                 return true;
             }
 
+			//TODO:
+			// Check if it's loaded.
+			// If not, add it to the queue.
+			// 
+
             // This is set to not load
             if (utr.wardrobeSlot == "None")
             {

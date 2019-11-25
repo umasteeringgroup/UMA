@@ -15,10 +15,20 @@ MonoBehaviour:
   m_GroupName: UWR_MilCut
   m_Data:
     m_SerializedData: []
-  m_GUID: d65b53c02d306b14586649de30c9d127
+  m_GUID: 2dadb61dc5c173348ba3cb3091cc1895
   m_SerializeEntries:
+  - m_GUID: 48d4f8e0253d2c843a6365a1c560a556
+    m_Address: Ovl-Milcap_Overlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MilCut
   - m_GUID: ccc8f1668f1d19549bf1a2fbb88a4157
     m_Address: Slt-Milcut
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MilCut
+  - m_GUID: e5356b4d449b6dc4087b661ee7e36a01
+    m_Address: Tex-Milcap
     m_ReadOnly: 0
     m_SerializedLabels:
     - MilCut
@@ -26,5 +36,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: ea64492ada723a24f99fcaed743dc3d3, type: 2}
-    - {fileID: 11400000, guid: af83ccf7f64c860449d367e304b43db2, type: 2}
+    - {fileID: 11400000, guid: e9f369b4af2f93d478a45eb4a4652d9f, type: 2}
+    - {fileID: 11400000, guid: 3b754e79be3103f45aeca2e26a2f9a9d, type: 2}

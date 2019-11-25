@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_FemaleSportPants_Recipe
   m_Data:
     m_SerializedData: []
-  m_GUID: 460cb4f2f3f5f5c44844a21094aff3ef
+  m_GUID: 6eac7f2b3d770f9459cc07827a418f8b
   m_SerializeEntries:
   - m_GUID: 1cc8858db5c0c9a48a27dc5797bb3a37
     m_Address: Slt-FemaleSportPants
@@ -46,5 +46,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: b2f421e6f85521545b5a489a4191db3f, type: 2}
-    - {fileID: 11400000, guid: 4ba0ee2b668832944b9ed9cd619ff4e5, type: 2}
+    - {fileID: 11400000, guid: 82dbd2b8e16b01b4b87012e9dc5c6dcb, type: 2}
+    - {fileID: 11400000, guid: 0825ea445f7f86b49be99d78d448eeef, type: 2}

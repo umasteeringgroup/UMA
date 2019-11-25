@@ -12,8 +12,6 @@ namespace UMA.CharacterSystem.Examples
         public GameObject WardrobeButtonPrefab;
         public GameObject LabelPrefab;
         public string SlotName;
-		private Color32 LoadedColor = new Color32(0, 128, 0, 255);
-		private Color32 UnloadedColor = new Color32(128, 0, 0, 255);
 
 
         public void Setup(DynamicCharacterAvatar avatar, string slotName, GameObject wardrobePanel)
@@ -31,7 +29,8 @@ namespace UMA.CharacterSystem.Examples
             Cleanup();
 
             AddLabel(SlotName);
-            AddButton("Remove", SlotName);
+			if (this.SlotName != "WardrobeCollection")
+	           AddButton("Remove", SlotName);
 
             // Find all the wardrobe items for the current slot, and create a button for them.
             foreach (UMATextRecipe utr in SlotRecipes)
@@ -58,29 +57,9 @@ namespace UMA.CharacterSystem.Examples
         {
             GameObject go = GameObject.Instantiate(WardrobeButtonPrefab);
             WardrobeHandler wh = go.GetComponent<WardrobeHandler>();
-            wh.Setup(Avatar, utr, SlotName);
-            Text txt = go.GetComponentInChildren<Text>();
-            txt.text = theText;
-			if (utr == null)
-			{
-				txt.color = Color.black;
-				txt.text = theText;
-			}
-			else if (!wh.isReady)
-			{
-				txt.color = UnloadedColor;
-				txt.text = "(U) "+theText;
-			}
-			else
-			{
-				txt.text = "(L)"+theText;
-				txt.color = LoadedColor;
-			}
+            wh.Setup(Avatar, utr, SlotName,theText);
+			wh.SetColors();
 
-			if (txt.text.Length > 20)
-			{
-				txt.text = txt.text.Substring(0, 20);
-			}
 			go.transform.SetParent(WardrobePanel.transform);
         }
 

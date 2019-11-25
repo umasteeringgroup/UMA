@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_StripesRecipe
   m_Data:
     m_SerializedData: []
-  m_GUID: 775f46a2681ce254bb4c837821880557
+  m_GUID: 9d497499a815f114a92975398adeff01
   m_SerializeEntries:
   - m_GUID: 76ec4c0387ef8564c86bd868e95cbf3d
     m_Address: Tex-SkyCarStripesAlbedo
@@ -31,5 +31,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 14e8fe0bb4f943347a3d787f1cc5067f, type: 2}
-    - {fileID: 11400000, guid: dd02aa374b9fada4ea0b70a109261d57, type: 2}
+    - {fileID: 11400000, guid: f77c24ecacaec834f96e2617b68084d3, type: 2}
+    - {fileID: 11400000, guid: 742358f3463ba9743ade6d651bd5a2c4, type: 2}

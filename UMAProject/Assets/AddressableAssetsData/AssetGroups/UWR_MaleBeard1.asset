@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UWR_MaleBeard1
+  m_EditorClassIdentifier: 
+  m_GroupName: UWR_MaleBeard1
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 2238d6074370f7147b7d369ed8c892df
+  m_SerializeEntries:
+  - m_GUID: 0c49ebdd154238b45bb1a3338a613193
+    m_Address: Ovl-MaleBeard01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleBeard1
+  - m_GUID: 167405fbb227440db83e65ed90b83b7a
+    m_Address: Tex-MaleBeard01_Normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleBeard1
+  - m_GUID: 57c082651ee6c46c49734f31d176ba72
+    m_Address: Tex-MaleBeard01_Albedo
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleBeard1
+  - m_GUID: a68cdc4df5eac4d7fb2382de34391ce9
+    m_Address: Tex-MaleBeard01_Roughness
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleBeard1
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 6488ebf877155244ea5ed5a98463b32b, type: 2}
+    - {fileID: 11400000, guid: 45aede576b1f9b24f95c223583c4a669, type: 2}

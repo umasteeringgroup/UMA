@@ -15,36 +15,11 @@ MonoBehaviour:
   m_GroupName: UWR_MaleChallengerShouderPads
   m_Data:
     m_SerializedData: []
-  m_GUID: 26b620205f31dc641a58c0e55239ff74
-  m_SerializeEntries:
-  - m_GUID: 2b7f847e474a9ce43b6dbb01f4b645d0
-    m_Address: Ovl-ChallengerShoulderPadsMetal
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - MaleChallengerShouderPads
-  - m_GUID: 40aedb735001bc6469dc30694df5a6f8
-    m_Address: Tex-ShoulderPadLeather_Albedo
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - MaleChallengerShouderPads
-  - m_GUID: 5dcb82ea78983cf4da0c206fc9de96ae
-    m_Address: Slt-MaleChallengerShouderPads
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - MaleChallengerShouderPads
-  - m_GUID: 7a994921a3f3b9a49b61907ef28f5066
-    m_Address: Tex-ShoulderPadMetal_Albedo
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - MaleChallengerShouderPads
-  - m_GUID: 9efda53d0ad2efb4da46ef74f26564ce
-    m_Address: Ovl-ChallengerShoulderPadsLeather
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - MaleChallengerShouderPads
+  m_GUID: 3101fe92a95adc84bb8f506ac4c500dc
+  m_SerializeEntries: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 6e91577ac780dd94581ac99cf818ca58, type: 2}
-    - {fileID: 11400000, guid: 8a215446f0f86ca46bef0d6f7e4ae929, type: 2}
+    - {fileID: 11400000, guid: 33bc10d12c909444497dfc76b4bcc743, type: 2}
+    - {fileID: 11400000, guid: 458a381b1e7c2ad40975e73488121ce1, type: 2}
