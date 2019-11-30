@@ -720,7 +720,7 @@ namespace UMA
 
 		public void UnloadAll()
 		{
-
+			//Addressables.Release(
 		}
 
 #if UNITY_EDITOR

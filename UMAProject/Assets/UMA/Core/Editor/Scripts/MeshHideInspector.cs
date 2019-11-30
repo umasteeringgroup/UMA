@@ -74,6 +74,14 @@ namespace UMA.Editors
 				}
 			}
 			EditorGUILayout.LabelField("Slot Name", source.AssetSlotName.ToString());
+			if (source.HasReference)
+			{
+				EditorGUILayout.HelpBox("Warning: This Mesh Hide Asset contains a reference. It should be freed so the referenced asset is not included in the build.", MessageType.Warning);
+				if (GUILayout.Button("Free Reference"))
+				{
+					source.FreeReference();
+				}
+			}
 
 			_autoInitialize = EditorGUILayout.Toggle(new GUIContent("AutoInitialize (recommended)", "Checking this will auto initialize the MeshHideAsset when a slot is added (recommended).  " +
 				"For users that are rebuilding slots that don't change the geometry, the slot reference will be lost but can be reset without losing the existing MeshHide information by unchecking this." ),_autoInitialize);
@@ -158,7 +166,7 @@ namespace UMA.Editors
 
 			if(update)
 			{
-				source.asset = newObj;
+				source.AssetSlotName = newObj.slotName;
 				source.Initialize();
 				UpdateMeshPreview();
 				AssetDatabase.SaveAssets();

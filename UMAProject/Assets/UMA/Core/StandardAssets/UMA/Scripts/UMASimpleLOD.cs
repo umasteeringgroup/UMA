@@ -222,9 +222,9 @@ namespace UMA.Examples
             {
                 foreach (SlotData sd in _umaData.umaRecipe.slotDataList)
                 {
-                    if (_avatar.MeshHideDictionary.ContainsKey(sd.asset))
+                    if (_avatar.MeshHideDictionary.ContainsKey(sd.slotName))
                     {   //If this slotDataAsset is found in the MeshHideDictionary then we need to supply the SlotData with the bitArray.
-                        sd.meshHideMask = MeshHideAsset.GenerateMask(_avatar.MeshHideDictionary[sd.asset]);
+                        sd.meshHideMask = MeshHideAsset.GenerateMask(_avatar.MeshHideDictionary[sd.slotName]);
                     }
                 }
             }
