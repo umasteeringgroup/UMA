@@ -696,6 +696,7 @@ namespace UMA
 					AssetItem ai = GetAssetItem<SlotDataAsset>((result as SlotDataAsset).slotName);
 					if (ai != null)
 					{
+						ai.IsAlwaysLoaded = keepLoaded;
 						ai._SerializedItem = result;
 						Debug.Log("Cached Slot " + ai.EvilName);
 					}
@@ -705,6 +706,8 @@ namespace UMA
 					AssetItem ai = GetAssetItem<OverlayDataAsset>((result as OverlayDataAsset).overlayName);
 					if (ai != null)
 					{
+						if (keepLoaded)
+							ai.IsAlwaysLoaded = keepLoaded; // only set if true, so if any call sets it to always loaded, it is not cleared.
 						ai._SerializedItem = result;
 						Debug.Log("Cached Overlay " + ai.EvilName);
 					}
@@ -729,11 +732,29 @@ namespace UMA
 			{
 				Addressables.Release(ao);
 			}
+			Dictionary<string, AssetItem> SlotDic = GetAssetDictionary(typeof(SlotDataAsset));
+			Dictionary<string, AssetItem> OverlayDic = GetAssetDictionary(typeof(OverlayDataAsset));
+
+			foreach (AssetItem ai in SlotDic.Values)
+			{
+				if (ai._SerializedItem != null && ai.IsAddressable && ai.IsAlwaysLoaded == false)
+				{
+					ai.ReleaseItem();
+				}
+			}
+
+			foreach (AssetItem ai in OverlayDic.Values)
+			{
+				if (ai._SerializedItem != null && ai.IsAddressable && ai.IsAlwaysLoaded == false)
+				{
+					ai.ReleaseItem();
+				}
+			}
 			LoadedItems.Clear();
 			if (forceResourceUnload)
-			{
-				Resources.UnloadUnusedAssets();
-			}
+				{
+					Resources.UnloadUnusedAssets();
+				}
 		}
 
 #if UNITY_EDITOR

@@ -33,14 +33,14 @@ namespace UMA.CharacterSystem.Examples
 
 			// Preload all the races.
 			List<RaceData> races = index.GetAllAssets<RaceData>();
-			var asyncop = UMAAssetIndexer.Instance.Preload(races);
+			var asyncop = UMAAssetIndexer.Instance.Preload(races,true); // Base races will always be loaded.
 			asyncop.Completed += Asyncop_Completed;
 		}
 
 		private void Asyncop_Completed(UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<IList<Object>> obj)
 		{
 			// Preload any default wardrobe items on our avatar, now that the races are preloaded.
-			UMAAssetIndexer.Instance.Preload(Avatar).Completed += Avatar_Completed;
+			UMAAssetIndexer.Instance.Preload(Avatar,true).Completed += Avatar_Completed;
 		}
 
 		private void Avatar_Completed(UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<IList<Object>> obj)
