@@ -47,7 +47,6 @@ namespace UMA.CharacterSystem.Examples
 		{
 			// Ready to go, enable the character and build it.
 			Avatar.gameObject.SetActive(true);
-			Avatar.BuildCharacter();
 		}
 
 		/// <summary>
