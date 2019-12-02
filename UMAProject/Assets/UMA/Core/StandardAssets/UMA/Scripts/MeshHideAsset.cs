@@ -34,10 +34,13 @@ namespace UMA
 			}
 			set
             {
-                if (value != null)
-                    _assetSlotName = value.slotName;
-                else
-                    _assetSlotName = "";
+				if (value != null)
+					_assetSlotName = value.slotName;
+				else
+				{
+					Debug.Log("Cleared Asset Slot Name");
+					_assetSlotName = "";
+				}
             }
         } 
         [SerializeField, HideInInspector]
@@ -214,14 +217,16 @@ namespace UMA
         /// </summary>
         public void OnAfterDeserialize()
         {
-            //We're not logging an error here because we'll get spammed by it for empty/not-set assets.
-            if (_asset == null && string.IsNullOrEmpty(_assetSlotName))
-                return;
+			//We're not logging an error here because we'll get spammed by it for empty/not-set assets.
+			if (_asset == null && string.IsNullOrEmpty(_assetSlotName))
+			{
+				Debug.Log("No reference and no name on MeshHideAsset!");
+				return;
+			}
 
 			if (_asset != null)
 			{
 				_assetSlotName = _asset.slotName;
-				_asset = null;
 			}
             
             if (_serializedFlags == null)

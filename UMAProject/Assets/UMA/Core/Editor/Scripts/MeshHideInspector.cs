@@ -80,6 +80,8 @@ namespace UMA.Editors
 				if (GUILayout.Button("Free Reference"))
 				{
 					source.FreeReference();
+					EditorUtility.SetDirty(source);
+					AssetDatabase.SaveAssets();
 				}
 			}
 
