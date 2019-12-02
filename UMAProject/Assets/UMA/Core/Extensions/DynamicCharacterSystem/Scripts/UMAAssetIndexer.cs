@@ -9,8 +9,7 @@ using UMA.CharacterSystem;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using System;
-
-
+using AsyncOp = UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<System.Collections.Generic.IList<UnityEngine.Object>>;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -39,6 +38,8 @@ namespace UMA
         Dictionary<int, string> AddressLookup = new Dictionary<int, string>();
 #endif
 		public HashSet<string> Preloads = new HashSet<string>();
+		private List<AsyncOp> LoadedItems = new List<AsyncOp>();
+
 		public delegate void OnCompleted(bool success, string name, string message);
 		public delegate void OnRaceCompleted(bool success, RaceData theRace, string message);
 		public delegate void OnRecipeCompleted(bool success, UMAWardrobeRecipe theRecipe, string message);
@@ -616,7 +617,7 @@ namespace UMA
 #endif
 		}
 
-		public AsyncOperationHandle<IList<UnityEngine.Object>> Preload(DynamicCharacterAvatar avatar)
+		public AsyncOperationHandle<IList<UnityEngine.Object>> Preload(DynamicCharacterAvatar avatar, bool keepLoaded = false)
 		{
 			List<string> keys = new List<string>();
 			//keys.Add(avatar.activeRace.racedata.baseRaceRecipe.name);
@@ -624,15 +625,15 @@ namespace UMA
 			{
 				keys.Add(wr._recipeName);
 			}
-			return LoadLabelList(keys);
+			return LoadLabelList(keys,keepLoaded);
 		}
 
-		public AsyncOperationHandle<IList<UnityEngine.Object>> Preload(RaceData theRace)
+		public AsyncOperationHandle<IList<UnityEngine.Object>> Preload(RaceData theRace, bool keepLoaded = false)
 		{
-			return LoadLabel(theRace.baseRaceRecipe.name);
+			return LoadLabel(theRace.baseRaceRecipe.name, keepLoaded);
 		}
 
-		public AsyncOperationHandle<IList<UnityEngine.Object>> Preload(List<RaceData> theRaces)
+		public AsyncOperationHandle<IList<UnityEngine.Object>> Preload(List<RaceData> theRaces, bool keepLoaded = false)
 		{
 			List<string> keys = new List<string>();
 			foreach(RaceData rc in theRaces)
@@ -643,25 +644,25 @@ namespace UMA
 					continue;
 				keys.Add(key);
 			}
-			return LoadLabelList(keys);
+			return LoadLabelList(keys, keepLoaded);
 		}
 
-		public AsyncOperationHandle<IList<UnityEngine.Object>> LoadLabel(string label)
+		public AsyncOperationHandle<IList<UnityEngine.Object>> LoadLabel(string label, bool keepLoaded = false)
 		{
 			List<string> keys = new List<string>();
 			keys.Add(label);
-			return LoadLabelList(keys);
+			return LoadLabelList(keys, keepLoaded);
 		}
 
-		public AsyncOperationHandle<IList<UnityEngine.Object>> PreLoad(UMATextRecipe theRecipe)
+		public AsyncOperationHandle<IList<UnityEngine.Object>> PreLoad(UMATextRecipe theRecipe, bool keepLoaded = false)
 		{
 			Debug.Log("Preloading: " + theRecipe.name);
 			List<string> keys = new List<string>();
 			keys.Add(theRecipe.name);
-			return LoadLabelList(keys);
+			return LoadLabelList(keys, keepLoaded);
 		}
 
-		public AsyncOperationHandle<IList<UnityEngine.Object>> PreLoad(List<UMATextRecipe> theRecipes)
+		public AsyncOperationHandle<IList<UnityEngine.Object>> PreLoad(List<UMATextRecipe> theRecipes, bool keepLoaded = false)
 		{
 			UMAContext context = UMAContext.Instance;
 			if (!context)
@@ -678,10 +679,10 @@ namespace UMA
 				Keys.Add(utr.name);
 			}
 
-			return LoadLabelList(Keys);
+			return LoadLabelList(Keys,keepLoaded);
 		}
 
-		public AsyncOperationHandle<IList<UnityEngine.Object>> LoadLabelList(List<string> Keys)
+		public AsyncOperationHandle<IList<UnityEngine.Object>> LoadLabelList(List<string> Keys, bool keepLoaded)
 		{
 			foreach(string label in Keys)
 			{
@@ -709,18 +710,30 @@ namespace UMA
 					}
 				}
 			}, Addressables.MergeMode.Union);
-			op.Completed += UMAAssetIndexer_Completed;
+			if (!keepLoaded)
+			{
+				LoadedItems.Add(op);
+			}
 			return op;
 		}
 
-		private void UMAAssetIndexer_Completed(AsyncOperationHandle<IList<UnityEngine.Object>> obj)
+		public void Unload(AsyncOperationHandle<IList<UnityEngine.Object>> AssetOperation)
 		{
-			Debug.Log("Status is " + obj.Status.ToString());
+			Addressables.Release(AssetOperation);
+			LoadedItems.Remove(AssetOperation);
 		}
 
-		public void UnloadAll()
+		public void UnloadAll(bool forceResourceUnload)
 		{
-			//Addressables.Release(
+			foreach(AsyncOp ao in LoadedItems)
+			{
+				Addressables.Release(ao);
+			}
+			LoadedItems.Clear();
+			if (forceResourceUnload)
+			{
+				Resources.UnloadUnusedAssets();
+			}
 		}
 
 #if UNITY_EDITOR
