@@ -22,7 +22,7 @@ namespace UMA.CharacterSystem.Examples
 				if (Recipe == null)
 					return false;
 
-				if (UMAAssetIndexer.Instance.Preloads.Contains(Recipe.name)) return true;
+				if (UMAAssetIndexer.Instance.Preloads.ContainsKey(Recipe.name)) return true;
 	
 				return false;
 			}

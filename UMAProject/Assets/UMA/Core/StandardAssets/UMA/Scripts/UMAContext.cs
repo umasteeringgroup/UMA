@@ -79,6 +79,9 @@ namespace UMA
 		/// <param name="name">Name.</param>
 		public RaceData GetRace(string name)
 		{
+#if SUPER_LOGGING
+			Debug.Log("Getting Race: " + name);
+#endif
 			return raceLibrary.GetRace(name);
 		}
 		/// <summary>
@@ -116,6 +119,9 @@ namespace UMA
 		/// <param name="name">Name.</param>
 		public SlotData InstantiateSlot(string name)
 		{
+#if SUPER_LOGGING
+			Debug.Log("Instantiating slot: " + name);
+#endif
 			return slotLibrary.InstantiateSlot(name);
 		}
 
@@ -137,6 +143,9 @@ namespace UMA
 		/// <param name="overlayList">Overlay list.</param>
 		public SlotData InstantiateSlot(string name, List<OverlayData> overlayList)
 		{
+#if SUPER_LOGGING
+			Debug.Log("Instantiating slot: " + name);
+#endif
 			return slotLibrary.InstantiateSlot(name, overlayList);
 		}
 		/// <summary>
@@ -220,6 +229,9 @@ namespace UMA
 		/// <param name="name">Name.</param>
 		public OverlayData InstantiateOverlay(string name)
 		{
+#if SUPER_LOGGING
+			Debug.Log("Instantiating Overlay: " + name);
+#endif
 			return overlayLibrary.InstantiateOverlay(name);
 		}
 		/// <summary>
@@ -240,6 +252,9 @@ namespace UMA
 		/// <param name="color">Color.</param>
 		public OverlayData InstantiateOverlay(string name, Color color)
 		{
+#if SUPER_LOGGING
+			Debug.Log("Instantiating Overlay: " + name);
+#endif
 			return overlayLibrary.InstantiateOverlay(name, color);
 		}
 		/// <summary>
@@ -262,7 +277,7 @@ namespace UMA
 			overlayLibrary.AddOverlayAsset(overlay);
 		}
 
-	#pragma warning restore 618
+#pragma warning restore 618
 		/// <summary>
 		/// Finds the singleton context in the scene.
 		/// </summary>

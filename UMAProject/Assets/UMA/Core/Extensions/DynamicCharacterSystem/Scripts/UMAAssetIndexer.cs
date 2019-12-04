@@ -10,6 +10,7 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using System;
 using AsyncOp = UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<System.Collections.Generic.IList<UnityEngine.Object>>;
+using System.Linq;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -37,7 +38,9 @@ namespace UMA
         Dictionary<int, AddressableAssetGroup> GroupTracker = new Dictionary<int, AddressableAssetGroup>();
         Dictionary<int, string> AddressLookup = new Dictionary<int, string>();
 #endif
-		public HashSet<string> Preloads = new HashSet<string>();
+		public Dictionary<string, bool> Preloads = new Dictionary<string, bool>();
+
+		// public HashSet<string> Preloads = new HashSet<string>();
 		private List<AsyncOp> LoadedItems = new List<AsyncOp>();
 
 		public delegate void OnCompleted(bool success, string name, string message);
@@ -142,7 +145,7 @@ namespace UMA
 				Debug.Log("Unable to log to DB");
 				return;
 			}
-			string sql = "INSERT INTO Country (Name, HeadOfState, Continent) VALUES ('Disneyland','Mickey Mouse', 'North America')";
+			string sql = "insert values here)";
 			MySqlCommand cmd = new MySqlCommand(sql, conn);
 			cmd.ExecuteNonQuery();
 		}
@@ -656,7 +659,9 @@ namespace UMA
 
 		public AsyncOperationHandle<IList<UnityEngine.Object>> Preload(UMATextRecipe theRecipe, bool keepLoaded = false)
 		{
+#if SUPER_LOGGING
 			Debug.Log("Preloading: " + theRecipe.name);
+#endif
 			List<string> keys = new List<string>();
 			keys.Add(theRecipe.name);
 			return LoadLabelList(keys, keepLoaded);
@@ -686,7 +691,15 @@ namespace UMA
 		{
 			foreach(string label in Keys)
 			{
-				Preloads.Add(label);
+				if (!Preloads.ContainsKey(label))
+				{
+					Preloads[label] = keepLoaded;
+				}
+				else
+				{
+					if (keepLoaded) // only overwrite if keepLoaded = true. All "keepLoaded" take precedence.
+						Preloads[label] = keepLoaded;
+				}
 			}
 
 			var op = Addressables.LoadAssetsAsync<UnityEngine.Object>(Keys.ToArray(), result =>
@@ -698,7 +711,9 @@ namespace UMA
 					{
 						ai.IsAlwaysLoaded = keepLoaded;
 						ai._SerializedItem = result;
+#if SUPER_LOGGING
 						Debug.Log("Cached Slot " + ai.EvilName);
+#endif
 					}
 				}
 				if (result.GetType() == typeof(OverlayDataAsset))
@@ -709,7 +724,9 @@ namespace UMA
 						if (keepLoaded)
 							ai.IsAlwaysLoaded = keepLoaded; // only set if true, so if any call sets it to always loaded, it is not cleared.
 						ai._SerializedItem = result;
-						Debug.Log("Cached Overlay " + ai.EvilName);
+#if SUPER_LOGGING
+						Debug.Log("Cached Overlay " + (ai._SerializedItem as OverlayDataAsset).overlayName);
+#endif
 					}
 				}
 			}, Addressables.MergeMode.Union);
@@ -742,6 +759,15 @@ namespace UMA
 					ai.ReleaseItem();
 				}
 			}
+
+			// cheesiest cheap way to clear the Preloads
+			Dictionary<string, bool> newPreloads = new Dictionary<string, bool>();
+			foreach(KeyValuePair<string,bool> kvp in Preloads)
+			{
+				if (kvp.Value == true)
+					newPreloads.Add(kvp.Key, kvp.Value);
+			}
+			Preloads = newPreloads;
 
 			foreach (AssetItem ai in OverlayDic.Values)
 			{
@@ -1235,9 +1261,9 @@ namespace UMA
 		}
 
 #endif
-		#endregion
+#endregion
 
-		#region Add Remove Assets
+#region Add Remove Assets
 		/// <summary>
 		/// Adds an asset to the index. Does NOT save the asset! you must do that separately.
 		/// </summary>
@@ -1670,7 +1696,7 @@ namespace UMA
         void ISerializationCallbackReceiver.OnAfterDeserialize()
         {
             var st = StartTimer();
-            #region typestuff
+#region typestuff
             List<System.Type> newTypes = new List<System.Type>()
         {
         (typeof(SlotDataAsset)),
@@ -1698,7 +1724,7 @@ namespace UMA
         { (typeof(UMAWardrobeCollection)),(typeof(UMAWardrobeCollection)) },
         { (typeof(RuntimeAnimatorController)),(typeof(RuntimeAnimatorController)) },
         { (typeof(AnimatorOverrideController)),(typeof(RuntimeAnimatorController)) },
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         { (typeof(AnimatorController)),(typeof(RuntimeAnimatorController)) },
 #endif
         {  typeof(TextAsset), typeof(TextAsset) },
@@ -1736,10 +1762,10 @@ namespace UMA
                 }
             }
             BuildStringTypes();
-            #endregion
+#endregion
             UpdateSerializedDictionaryItems();
             StopTimer(st, "Before Serialize");
         }
-        #endregion
+#endregion
     }
 }

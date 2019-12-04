@@ -363,7 +363,10 @@ namespace UMA.CharacterSystem
         // Use this for initialization
         public override void Start()
         {
-            AddCharacterStateCache("NULL"); 
+#if SUPER_LOGGING
+			Debug.Log("Start on DynamicCharacterAvatar: " + gameObject.name);
+#endif
+			AddCharacterStateCache("NULL"); 
             base.Start(); 
 
             umaData.blendShapeSettings.ignoreBlendShapes = !loadBlendShapes;
@@ -2576,7 +2579,11 @@ namespace UMA.CharacterSystem
         /// <param name="RestoreDNA">If updating the same race set this to true to restore the current DNA.</param>
         public void BuildCharacter(bool RestoreDNA = true)
         {
-            if (!_buildCharacterEnabled)
+#if SUPER_LOGGING
+			Debug.Log("Building DynamicCharacterAvatar: " + gameObject.name);
+#endif
+
+			if (!_buildCharacterEnabled)
                 return;
             _isFirstSettingsBuild = false;
             //clear these values each time we build
@@ -2792,7 +2799,11 @@ namespace UMA.CharacterSystem
         /// <returns>Returns true if the final recipe load caused more assets to download</returns>
         bool LoadCharacter(UMARecipeBase umaRecipe, List<UMAWardrobeRecipe> Replaces, params UMARecipeBase[] umaAdditionalSerializedRecipes)
         {
-            if (umaRecipe == null)
+#if SUPER_LOGGING
+			Debug.Log("Load Character: " + gameObject.name);
+#endif
+
+			if (umaRecipe == null)
             {
                 return false;
             }

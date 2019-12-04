@@ -123,11 +123,18 @@ namespace UMA
 
 		public void UpdateSameRace()
 		{
+#if SUPER_LOGGING
+			Debug.Log("UpdateSameRace on DynamicCharacterAvatar: " + gameObject.name);
+#endif
 			umaData.Dirty(true, true, true);
 		}
 
 		public void UpdateNewRace()
 		{
+#if SUPER_LOGGING
+			Debug.Log("UpdateNewRace on DynamicCharacterAvatar: " + gameObject.name);
+#endif
+
 			umaRace = umaData.umaRecipe.raceData;
 			if (animationController != null)
 			{
