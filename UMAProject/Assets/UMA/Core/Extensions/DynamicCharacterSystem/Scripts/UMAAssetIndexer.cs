@@ -654,7 +654,7 @@ namespace UMA
 			return LoadLabelList(keys, keepLoaded);
 		}
 
-		public AsyncOperationHandle<IList<UnityEngine.Object>> PreLoad(UMATextRecipe theRecipe, bool keepLoaded = false)
+		public AsyncOperationHandle<IList<UnityEngine.Object>> Preload(UMATextRecipe theRecipe, bool keepLoaded = false)
 		{
 			Debug.Log("Preloading: " + theRecipe.name);
 			List<string> keys = new List<string>();
@@ -662,7 +662,7 @@ namespace UMA
 			return LoadLabelList(keys, keepLoaded);
 		}
 
-		public AsyncOperationHandle<IList<UnityEngine.Object>> PreLoad(List<UMATextRecipe> theRecipes, bool keepLoaded = false)
+		public AsyncOperationHandle<IList<UnityEngine.Object>> Preload(List<UMATextRecipe> theRecipes, bool keepLoaded = false)
 		{
 			UMAContext context = UMAContext.Instance;
 			if (!context)

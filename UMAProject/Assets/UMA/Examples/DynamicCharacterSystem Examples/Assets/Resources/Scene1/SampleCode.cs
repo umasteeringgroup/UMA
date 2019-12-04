@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿// #define PRELOAD_ALL_RACES
+
+using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using UMA.Examples;
@@ -7,7 +9,6 @@ namespace UMA.CharacterSystem.Examples
 {
     public class SampleCode : MonoBehaviour
     {
-
         public DynamicCharacterAvatar Avatar;
         public GameObject SlotPrefab;
         public GameObject WardrobePrefab;
@@ -21,24 +22,38 @@ namespace UMA.CharacterSystem.Examples
         public GameObject ColorsHelpText;
         public GameObject DnaHelpText;
         public GameObject AvatarPrefab;
-        public MouseOrbitImproved Orbiter;
+		public GameObject NoBuildPrefab;
+		public MouseOrbitImproved Orbiter;
         public SharedColorTable HairColor;
         public SharedColorTable SkinColor;
         public SharedColorTable EyesColor;
         public SharedColorTable ClothingColor;
+		public Dropdown RaceDropdown;
+		public GameObject CharacterUI;
+
+		private List<RaceData> races;
 
 		public void Start()
 		{
 			UMAAssetIndexer index = UMAAssetIndexer.Instance;
 
 			// Preload all the races.
-			List<RaceData> races = index.GetAllAssets<RaceData>();
-			var asyncop = UMAAssetIndexer.Instance.Preload(races,true); // Base races will always be loaded.
+			races = index.GetAllAssets<RaceData>();
+
+			RaceDropdown.options.Clear();
+			foreach(RaceData race in races)
+			{
+				RaceDropdown.options.Add(new Dropdown.OptionData(race.raceName));
+			}
+#if PRELOAD_ALL_RACES
+			var asyncop = UMAAssetIndexer.Instance.Preload(races, true); // Base races will always be loaded.
 			asyncop.Completed += Asyncop_Completed;
+#endif
 		}
 
 		private void Asyncop_Completed(UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<IList<Object>> obj)
 		{
+			Debug.Log("Race Preload Completed.");
 			// Preload any default wardrobe items on our avatar, now that the races are preloaded.
 			UMAAssetIndexer.Instance.Preload(Avatar,true).Completed += Avatar_Completed;
 		}
@@ -46,7 +61,10 @@ namespace UMA.CharacterSystem.Examples
 		private void Avatar_Completed(UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<IList<Object>> obj)
 		{
 			// Ready to go, enable the character and build it.
+			Debug.Log("Avatar preload completed.");
 			Avatar.gameObject.SetActive(true);
+			Avatar.BuildCharacterEnabled = true;
+			//Avatar.BuildCharacter();
 		}
 
 		/// <summary>
@@ -63,10 +81,10 @@ namespace UMA.CharacterSystem.Examples
 		/// </summary>
 		private void Cleanup()
         {
-            GeneralHelpText.SetActive(false);
-            DnaHelpText.SetActive(false);
-            WardrobeHelpText.SetActive(false);
-            ColorsHelpText.SetActive(false);
+			if (GeneralHelpText != null) GeneralHelpText.SetActive(false);
+			if (DnaHelpText != null) DnaHelpText.SetActive(false);
+			if (WardrobeHelpText != null) WardrobeHelpText.SetActive(false);
+			if (ColorsHelpText != null) ColorsHelpText.SetActive(false);
 
             foreach (Transform t in SlotPanel.transform)
             {
@@ -222,7 +240,48 @@ namespace UMA.CharacterSystem.Examples
             go.SetActive(true);
         }
 
-        public void ChangeSex()
+
+		public void ChangeRace(int index)
+		{
+
+
+#if !PRELOAD_ALL_RACES
+
+
+			if (Avatar.gameObject.activeSelf)
+			{
+				// Destroy the old one.
+				Debug.Log("Destroying Old Avatar");
+				Avatar.gameObject.SetActive(false);
+				GameObject.Destroy(Avatar.gameObject);
+
+				Debug.Log("Unloading everything (except for 'always loaded' items");
+				// unload everything
+				UMAAssetIndexer.Instance.UnloadAll(true);
+
+				// Create a new avatar
+				Debug.Log("Instantiating nobuild prefab");
+				GameObject go = GameObject.Instantiate(NoBuildPrefab);
+				Avatar = go.GetComponentInChildren<DynamicCharacterAvatar>();
+				Orbiter.target = go.transform;
+			}
+			Debug.Log("Setting the racepreset");
+			string race = RaceDropdown.options[index].text;
+			Avatar.RacePreset = race;
+			// Load just the current race.
+			List<RaceData> preloadRaces = new List<RaceData>();
+			preloadRaces.Add(races[index]);
+			Debug.Log("preloading the races.");
+			var asyncop = UMAAssetIndexer.Instance.Preload(preloadRaces, false); // We are loading and unloading races.
+			asyncop.Completed += Asyncop_Completed;
+#else
+			// Races are all preloaded, so we can just change to it.
+			string race = RaceDropdown.options[index].text;
+			Avatar.ChangeRace(race);
+#endif
+		}
+
+		public void ChangeSex()
         {
             if (Avatar.activeRace.name == "HumanMale")
             {

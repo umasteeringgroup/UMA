@@ -79,7 +79,7 @@ namespace UMA.CharacterSystem.Examples
 			}
 			else
 			{
-				var op = UMAAssetIndexer.Instance.PreLoad(Recipe);
+				var op = UMAAssetIndexer.Instance.Preload(Recipe);
 				op.Completed += Op_Completed;
 			}
         }

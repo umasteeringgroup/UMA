@@ -173,7 +173,7 @@ namespace UMA.CharacterSystem
         //without creating multiple build calls. when you are finished set it to true and the character will build
         [SerializeField]
         [Tooltip("Builds the character on recipe load or race changed. If you want to load multiple recipes into a character you can disable this and enable it when you are done. By default this should be true.")]
-        private bool _buildCharacterEnabled = true;
+        public bool _buildCharacterEnabled = true;
         //everytime an avatar changes race a cache state can (optionally) be created so that when the user 
         //switches between races they do not loose their previous changes to the avatar when it was set to be that race
         private Dictionary<string, string> cacheStates = new Dictionary<string, string>();
