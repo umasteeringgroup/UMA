@@ -557,34 +557,72 @@ namespace UMA
                 return null;
             }
         }
-		public  List<UMARecipeBase> GetRecipesForRaceSlot(string race, string slot)
+
+		public List<UMARecipeBase> GetRecipesForRaceSlot(string race, string slot)
 		{
+			// This will get the aggregate for all compatible races with no duplicates.
+			List<string> recipes = GetRecipeNamesForRaceSlot(race, slot);
+
+			// Build a list of recipes to return.
 			List<UMARecipeBase> results = new List<UMARecipeBase>();
 
-			if (raceRecipes.ContainsKey(race))
+			foreach(string recipeName in recipes)
 			{
-				SlotRecipes sl = raceRecipes[race];
-				if (sl.ContainsKey(slot))
+				UMAWardrobeRecipe uwr = GetAsset<UMAWardrobeRecipe>(recipeName);
+				if (uwr != null)
 				{
-					results.AddRange(sl[slot]);
+					results.Add(uwr);
 				}
 			}
 			return results;
 		}
 
-		public Dictionary<string, List<UMATextRecipe>> GetRecipes(string race)
+
+		private void internalGetRecipes(string race, ref Dictionary<string, HashSet<UMATextRecipe>> results)
 		{
 			if (raceRecipes.ContainsKey(race))
 			{
-				return raceRecipes[race];
+				SlotRecipes sr = raceRecipes[race];
+
+				foreach(KeyValuePair<string,List<UMATextRecipe>> kp in sr)
+				{
+					if (!results.ContainsKey(kp.Key))
+					{
+						results.Add(kp.Key, new HashSet<UMATextRecipe>());
+					}
+					results[kp.Key].UnionWith(kp.Value);
+				}
 			}
-			SlotRecipes sl = new SlotRecipes();
-			return sl;
+			return;
 		}
 
-		public List<string> GetRecipeNamesForRaceSlot(string race, string slot)
+		public Dictionary<string, List<UMATextRecipe>> GetRecipes(string race)
 		{
-			List<string> results = new List<string>();
+			Dictionary<string, HashSet<UMATextRecipe>> aggregate = new Dictionary<string, HashSet<UMATextRecipe>>();
+			
+			internalGetRecipes(race, ref aggregate);
+
+			RaceData rc = GetAsset<RaceData>(race);
+			if (rc != null)
+			{
+				foreach (string CompatRace in rc.GetCrossCompatibleRaces())
+				{
+					internalGetRecipes(CompatRace, ref aggregate);
+				}
+			}
+
+			SlotRecipes results = new SlotRecipes();
+			foreach(KeyValuePair<string, HashSet<UMATextRecipe>> kp in aggregate)
+			{
+				results.Add(kp.Key, kp.Value.ToList());
+			}
+
+			return results;
+		}
+
+		private HashSet<string> internalGetRecipeNamesForRaceSlot(string race, string slot)
+		{
+			HashSet<string> results = new HashSet<string>();
 
 			if (raceRecipes.ContainsKey(race))
 			{
@@ -599,6 +637,24 @@ namespace UMA
 			}
 			return results;
 		}
+
+		public List<string> GetRecipeNamesForRaceSlot(string race, string slot)
+		{
+			// Start with recipes that are directly marked for this race.
+			HashSet<string> results = internalGetRecipeNamesForRaceSlot(race, slot);
+
+			RaceData rc = GetAsset<RaceData>(race);
+			if (rc != null)
+			{
+				foreach(string CompatRace in rc.GetCrossCompatibleRaces())
+				{
+					results.UnionWith(internalGetRecipeNamesForRaceSlot(CompatRace, slot));
+				}
+			}
+
+			return results.ToList();
+		}
+
 
 		/// <summary>
 		/// Checks if the given asset path resides in one of the given folder paths. Returns true if foldersToSearch is null or empty and no check is required

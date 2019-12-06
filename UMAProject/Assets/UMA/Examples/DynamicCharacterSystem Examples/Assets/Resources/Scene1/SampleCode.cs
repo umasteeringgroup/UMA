@@ -64,7 +64,6 @@ namespace UMA.CharacterSystem.Examples
 			Debug.Log("Avatar preload completed.");
 			Avatar.gameObject.SetActive(true);
 			Avatar.BuildCharacterEnabled = true;
-			//Avatar.BuildCharacter();
 		}
 
 		/// <summary>

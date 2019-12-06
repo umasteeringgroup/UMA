@@ -20,6 +20,7 @@ namespace UMA
 		/// </summary>
 		public override void ValidateDictionaries()
 		{
+			UMAAssetIndexer.Instance.RebuildIndex();
 		}
 
 		/// <summary>
