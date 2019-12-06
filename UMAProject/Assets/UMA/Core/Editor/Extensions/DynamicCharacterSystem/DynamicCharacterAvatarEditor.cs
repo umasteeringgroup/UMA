@@ -23,7 +23,7 @@ namespace UMA.CharacterSystem.Editors
 			thisDCA = target as DynamicCharacterAvatar;
 			if (thisDCA.context == null)
 			{
-				thisDCA.context = UMAContext.FindInstance();
+				thisDCA.context = UMAContextBase.FindInstance();
 				if (thisDCA.context == null)
 				{
 					thisDCA.context = thisDCA.CreateEditorContext();
@@ -41,9 +41,8 @@ namespace UMA.CharacterSystem.Editors
 					thisDCA.CreateEditorContext();
 			}
 			_racePropDrawer.thisDCA = thisDCA;
-			_racePropDrawer.thisDynamicRaceLibrary = (DynamicRaceLibrary)thisDCA.context.raceLibrary as DynamicRaceLibrary;
 			_wardrobePropDrawer.thisDCA = thisDCA;
-			_wardrobePropDrawer.thisDCS = (DynamicCharacterSystem)thisDCA.context.dynamicCharacterSystem as DynamicCharacterSystem;
+			//_wardrobePropDrawer.thisDCS = (DynamicCharacterSystem)thisDCA.context.dynamicCharacterSystem as DynamicCharacterSystem;
 			_animatorPropDrawer.thisDCA = thisDCA;
 		}
 

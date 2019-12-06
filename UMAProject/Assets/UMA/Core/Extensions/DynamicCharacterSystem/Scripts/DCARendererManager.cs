@@ -19,7 +19,7 @@ namespace UMA.CharacterSystem
         private DynamicCharacterAvatar avatar;
         private UMAData.UMARecipe umaRecipe = new UMAData.UMARecipe();
         List<SlotDataAsset> wardrobeSlotAssets = new List<SlotDataAsset>();
-        private UMAContext context;
+        private UMAContextBase context;
         private List<SlotData> slotsToAdd = new List<SlotData>();
 
 #pragma warning disable 0414
@@ -34,7 +34,7 @@ namespace UMA.CharacterSystem
         {
             avatar = GetComponent<DynamicCharacterAvatar>();
             avatar.CharacterBegun.AddListener(CharacterBegun);
-            context = UMAContext.FindInstance();
+            context = UMAContextBase.FindInstance();
         }
 
         void CharacterBegun(UMAData umaData)

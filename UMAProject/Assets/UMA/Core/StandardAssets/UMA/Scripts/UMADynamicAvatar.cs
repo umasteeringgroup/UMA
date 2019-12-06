@@ -29,7 +29,7 @@ namespace UMA
 		{
 			var res = new GameObject("New Dynamic Avatar");
 			var da = res.AddComponent<UMADynamicAvatar>();
-			da.context = UMAContext.FindInstance();
+			da.context = UMAContextBase.FindInstance();
 			da.umaGenerator = Component.FindObjectOfType<UMAGeneratorBase>();
 			UnityEditor.Selection.activeGameObject = res;
 		}

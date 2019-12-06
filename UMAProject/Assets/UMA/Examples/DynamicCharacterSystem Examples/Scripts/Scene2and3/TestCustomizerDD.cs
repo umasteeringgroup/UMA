@@ -213,7 +213,7 @@ namespace UMA.CharacterSystem.Examples
 			}
 			changeRaceDropdown.options.Clear();
 			changeRaceDropdown.onValueChanged.RemoveListener(ChangeRace);
-			var raceDropdownOptionsArray = (Avatar.context.raceLibrary as DynamicRaceLibrary).GetAllRacesBase();
+			var raceDropdownOptionsArray = Avatar.context.GetAllRacesBase();
 			raceDropdownOptions = new List<string>();
 			//add the 'NoneSet'
 			raceDropdownOptions.Add("None Set");
@@ -296,7 +296,7 @@ namespace UMA.CharacterSystem.Examples
 				thisRace = RaceToSet;
 				//Force CharacterSystem to find the new race - unless its None Set
 				if(RaceToSet != "None Set")
-					UMAContext.Instance.raceLibrary.GetRace(RaceToSet);
+					UMAContextBase.Instance.GetRace(RaceToSet);
 				DynamicCharacterAvatar.ChangeRaceOptions thisLoadOptions = DynamicCharacterAvatar.ChangeRaceOptions.none;
 				if (_keepDNA || _keepWardrobe || _keepBodyColors)
 				{
@@ -926,13 +926,14 @@ namespace UMA.CharacterSystem.Examples
 					thisLoadableItem.GetComponentInChildren<Text>().text = Path.GetFileNameWithoutExtension(path);
 				}
 			}
-			foreach (KeyValuePair<string, string> kp in (UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem).CharacterRecipes)
+			
+			foreach (string s in UMAContext.Instance.GetRecipeFiles())
 			{
 				GameObject thisLoadableItem = Instantiate(loadableItemPrefab) as GameObject;
 				thisLoadableItem.transform.SetParent(ItemList.content.transform, false);
 				thisLoadableItem.GetComponent<CSLoadableItem>().customizerScript = this;
-				thisLoadableItem.GetComponent<CSLoadableItem>().filename = Path.GetFileNameWithoutExtension(kp.Key);
-				thisLoadableItem.GetComponentInChildren<Text>().text = Path.GetFileNameWithoutExtension(kp.Key);
+				thisLoadableItem.GetComponent<CSLoadableItem>().filename = Path.GetFileNameWithoutExtension(s);
+				thisLoadableItem.GetComponentInChildren<Text>().text = Path.GetFileNameWithoutExtension(s);
 			}
 		}
 
@@ -946,7 +947,7 @@ namespace UMA.CharacterSystem.Examples
 			}
 			else
 			{
-				recipeText = (UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem).CharacterRecipes[filename];
+				recipeText = UMAContext.Instance.GetCharacterRecipe(filename);
 			}
 			if (recipeText != "")
 			{

@@ -5,11 +5,14 @@ using UnityEngine;
 using System.IO;
 using System.Collections;
 using System.Collections.Generic;
+using UMA;
 using UMA.CharacterSystem;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using System;
 using AsyncOp = UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<System.Collections.Generic.IList<UnityEngine.Object>>;
+using SlotRecipes = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<UMA.UMATextRecipe>>;
+using RaceRecipes = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<UMA.UMATextRecipe>>>;
 using System.Linq;
 
 #if UNITY_EDITOR
@@ -39,9 +42,9 @@ namespace UMA
         Dictionary<int, string> AddressLookup = new Dictionary<int, string>();
 #endif
 		public Dictionary<string, bool> Preloads = new Dictionary<string, bool>();
-
-		// public HashSet<string> Preloads = new HashSet<string>();
 		private List<AsyncOp> LoadedItems = new List<AsyncOp>();
+
+		RaceRecipes raceRecipes = new RaceRecipes();
 
 		public delegate void OnCompleted(bool success, string name, string message);
 		public delegate void OnRaceCompleted(bool success, RaceData theRace, string message);
@@ -101,6 +104,8 @@ namespace UMA
         #region Static Fields
         static GameObject theIndex = null;
         static UMAAssetIndexer theIndexer = null;
+
+		
 		#endregion
 
 #if DBLOGGER
@@ -314,19 +319,42 @@ namespace UMA
             IndexedTypeNames.Remove(sType.AssemblyQualifiedName);
             BuildStringTypes();
         }
-#endregion
+		#endregion
 
-#region Access the index
-        /// <summary>
-        /// Return the asset specified, if it exists.
-        /// if it can't be found by name, then we do a scan of the assets to see if 
-        /// we can find the name directly on the object, and return that. 
-        /// We then rebuild the index to make sure it's up to date.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="Name"></param>
-        /// <returns></returns>
-        public AssetItem GetAssetItem<T>(string Name)
+		#region Access the index
+		public bool HasAsset<T>(string Name)
+		{
+			System.Type ot = typeof(T);
+			System.Type theType = TypeToLookup[ot];
+			Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(theType);
+			return TypeDic.ContainsKey(Name);
+		}
+
+		public bool HasAsset<T>(int NameHash)
+		{
+			System.Type ot = typeof(T);
+			System.Type theType = TypeToLookup[ot];
+			Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(theType);
+			
+			// This honestly hurt my heart typing this.
+			// Todo: replace this loop with a dictionary.
+			foreach(string s in TypeDic.Keys)
+			{
+				if (UMAUtils.StringToHash(s) == NameHash) return true;
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// Return the asset specified, if it exists.
+		/// if it can't be found by name, then we do a scan of the assets to see if 
+		/// we can find the name directly on the object, and return that. 
+		/// We then rebuild the index to make sure it's up to date.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="Name"></param>
+		/// <returns></returns>
+		public AssetItem GetAssetItem<T>(string Name)
         {
             System.Type ot = typeof(T);
             System.Type theType = TypeToLookup[ot];
@@ -351,7 +379,7 @@ namespace UMA
 		{
 
 
-			UMAPackedRecipeBase.UMAPackRecipe PackRecipe = recipe.PackedLoad(UMAContext.Instance);
+			UMAPackedRecipeBase.UMAPackRecipe PackRecipe = recipe.PackedLoad(UMAContextBase.Instance);
 
 			var Slots = PackRecipe.slotsV3;
 
@@ -468,7 +496,7 @@ namespace UMA
             return ret;
         }
 
-        public T GetAsset<T>(int nameHash, string[] foldersToSearch = null) where T : UnityEngine.Object
+		public T GetAsset<T>(int nameHash, string[] foldersToSearch = null) where T : UnityEngine.Object
         {
             System.Diagnostics.Stopwatch st = new System.Diagnostics.Stopwatch();
             st.Start();
@@ -529,11 +557,53 @@ namespace UMA
                 return null;
             }
         }
+		public  List<UMARecipeBase> GetRecipesForRaceSlot(string race, string slot)
+		{
+			List<UMARecipeBase> results = new List<UMARecipeBase>();
 
-        /// <summary>
-        /// Checks if the given asset path resides in one of the given folder paths. Returns true if foldersToSearch is null or empty and no check is required
-        /// </summary>
-        private bool AssetFolderCheck(AssetItem itemToCheck, string[] foldersToSearch = null)
+			if (raceRecipes.ContainsKey(race))
+			{
+				SlotRecipes sl = raceRecipes[race];
+				if (sl.ContainsKey(slot))
+				{
+					results.AddRange(sl[slot]);
+				}
+			}
+			return results;
+		}
+
+		public Dictionary<string, List<UMATextRecipe>> GetRecipes(string race)
+		{
+			if (raceRecipes.ContainsKey(race))
+			{
+				return raceRecipes[race];
+			}
+			SlotRecipes sl = new SlotRecipes();
+			return sl;
+		}
+
+		public List<string> GetRecipeNamesForRaceSlot(string race, string slot)
+		{
+			List<string> results = new List<string>();
+
+			if (raceRecipes.ContainsKey(race))
+			{
+				SlotRecipes sr = raceRecipes[race];
+				if (sr.ContainsKey(slot))
+				{
+					foreach(UMAWardrobeRecipe uwr in sr[slot])
+					{
+						results.Add(uwr.name);
+					}
+				}
+			}
+			return results;
+		}
+
+		/// <summary>
+		/// Checks if the given asset path resides in one of the given folder paths. Returns true if foldersToSearch is null or empty and no check is required
+		/// </summary>
+		private bool AssetFolderCheck(AssetItem itemToCheck, string[] foldersToSearch = null)
         {
             if (foldersToSearch == null)
                 return true;
@@ -589,33 +659,33 @@ namespace UMA
 		#region Addressables
 
 #if UNITY_EDITOR
-		GameObject EditorUMAContext;
+		GameObject EditorUMAContextBase;
 #endif
-		public UMAContext GetContext()
+		public UMAContextBase GetContext()
 		{
-			UMAContext instance = UMAContext.FindInstance();
+			UMAContextBase instance = UMAContextBase.FindInstance();
 			if (instance != null)
 			{
 				return instance;
 			}
 #if UNITY_EDITOR
-			EditorUMAContext = UMAContext.CreateEditorContext();
-			return UMAContext.Instance;
+			EditorUMAContextBase = UMAContextBase.CreateEditorContext();
+			return UMAContextBase.Instance;
 #else
 			return null;
 #endif
 		}
 
-		private void DestroyEditorUMAContext()
+		private void DestroyEditorUMAContextBase()
 		{
 #if UNITY_EDITOR
-			if (EditorUMAContext != null)
+			if (EditorUMAContextBase != null)
 			{
-				foreach (Transform child in EditorUMAContext.transform)
+				foreach (Transform child in EditorUMAContextBase.transform)
 				{
 					DestroyImmediate(child.gameObject);
 				}
-				DestroyImmediate(EditorUMAContext);
+				DestroyImmediate(EditorUMAContextBase);
 			}
 #endif
 		}
@@ -669,7 +739,7 @@ namespace UMA
 
 		public AsyncOperationHandle<IList<UnityEngine.Object>> Preload(List<UMATextRecipe> theRecipes, bool keepLoaded = false)
 		{
-			UMAContext context = UMAContext.Instance;
+			UMAContextBase context = UMAContextBase.Instance;
 			if (!context)
 			{
 				Debug.LogError("No context to preload!");
@@ -823,7 +893,7 @@ namespace UMA
 			return null;
 		}
 
-        public UMAData.UMARecipe GetRecipe(UMATextRecipe recipe, UMAContext context)
+        public UMAData.UMARecipe GetRecipe(UMATextRecipe recipe, UMAContextBase context)
         {
             UMAPackedRecipeBase.UMAPackRecipe PackRecipe = recipe.PackedLoad(context);
             UMAData.UMARecipe TempRecipe = UMATextRecipe.UnpackRecipe(PackRecipe, context);
@@ -874,7 +944,7 @@ namespace UMA
             EditorUtility.ClearProgressBar();
         }
 
-        private void GenerateLookups(UMAContext context, List<UMATextRecipe> wardrobe)
+        private void GenerateLookups(UMAContextBase context, List<UMATextRecipe> wardrobe)
         {
             float pos = 0.0f;
             float inc = 1.0f / wardrobe.Count;
@@ -1115,7 +1185,7 @@ namespace UMA
 				ClearAddressableFlags(typeof(OverlayDataAsset));
 
 				// Will generate an editor context if needed.
-				UMAContext context = GetContext();
+				UMAContextBase context = GetContext();
 
                 // Create the shared group that has each item packed separately.
                 AddressableAssetGroup sharedGroup = AddressableSettings.CreateGroup("UMA_SharedItems", false, false, true, AddressableSettings.DefaultGroup.Schemas);
@@ -1210,7 +1280,7 @@ namespace UMA
             finally
             {
                 EditorUtility.ClearProgressBar();
-                DestroyEditorUMAContext();
+                DestroyEditorUMAContextBase();
 				ForceSave();
 			}
         }
@@ -1314,6 +1384,13 @@ namespace UMA
                     //Debug.Log("Placeholder asset " + ai._Name + " was ignored. Placeholders are not indexed.");
                     return false;
                 }
+
+				if (ai._Type == typeof(UMAWardrobeRecipe))
+				{
+					AddToRaceLookup(ai._SerializedItem as UMAWardrobeRecipe);
+				}
+
+
 #if UNITY_EDITOR
 				AddressableAssetEntry ae = GetAddressableAssetEntry(ai);
 				if (ae != null)
@@ -1324,16 +1401,6 @@ namespace UMA
 					ai.AddressableGroup = ae.parentGroup.Name;
 					ai._SerializedItem = null; 
 				}
-				/*if (!SkipBundleCheck)
-                {
-                    string Path = AssetDatabase.GetAssetPath(ai.Item.GetInstanceID());
-                    if (InAssetBundle(Path))
-                    {
-                        if(Debug.isDebugBuild)
-                            Debug.LogWarning("Asset " + ai._Name + "is in an Asset Bundle, and was not added to the index.");
-                        return false;
-                    }
-                } */
 #endif
 				TypeDic.Add(ai._Name, ai);
                 if (GuidTypes.ContainsKey(ai._Guid))
@@ -1349,9 +1416,33 @@ namespace UMA
             return true;
         }
 
+		/// <summary>
+		/// If we added a new AssetItem that is a Wardrobe Recipe, then it needs to be added to the tables.
+		/// </summary>
+		/// <param name="uwr"></param>
+		private void AddToRaceLookup(UMAWardrobeRecipe uwr)
+		{
+			foreach (string raceName in uwr.compatibleRaces)
+			{
+				if (!raceRecipes.ContainsKey(raceName))
+				{
+					raceRecipes.Add(raceName, new SlotRecipes());
+				}
+				SlotRecipes sl = raceRecipes[raceName];
+				if (!sl.ContainsKey(uwr.wardrobeSlot))
+				{
+					sl.Add(uwr.wardrobeSlot, new List<UMATextRecipe>());
+				}
+				List<UMATextRecipe> recipes = sl[uwr.wardrobeSlot];
+				if (recipes.Contains(uwr)) // I'm hoping this function isn't called much outside of updates, editor.
+					continue;
+				recipes.Add(uwr);
+			}
+		}
+
 #if UNITY_EDITOR
 
-        public AssetItem FromGuid(string GUID)
+		public AssetItem FromGuid(string GUID)
         {
             if (GuidTypes.ContainsKey(GUID))
             {
@@ -1391,13 +1482,24 @@ namespace UMA
         {
             System.Type theType = TypeToLookup[type];
             Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(theType);
-            if (TypeDic.ContainsKey(Name))
+			if (TypeDic.ContainsKey(Name))
             {
-                AssetItem ai = TypeDic[Name];
-                TypeDic.Remove(Name);
+				AssetItem ai = TypeDic[Name];
+				TypeDic.Remove(Name);
                 GuidTypes.Remove(Name);
-            }
-        }
+				if (theType == typeof(UMAWardrobeRecipe))
+				{
+					// remove it from the race lookup.
+					foreach (SlotRecipes sl in raceRecipes.Values)
+					{
+						foreach (List<UMATextRecipe> recipes in sl.Values)
+						{
+							recipes.Remove(ai.Item as UMATextRecipe);
+						}
+					}
+				}
+			}
+		}
 #endif
 #endregion
 
@@ -1422,12 +1524,63 @@ namespace UMA
                     continue;
                 AddAssetItem(ai, true);
             }
+
+			// rebuild the RaceRecipes
+			RebuildRaceRecipes();
         }
-        /// <summary>
-        /// Creates a lookup dictionary for a list. Used when reloading after deserialization
-        /// </summary>
-        /// <param name="type"></param>
-        private void CreateLookupDictionary(System.Type type)
+
+		private void RebuildRaceRecipes()
+		{
+			//Dictionary<string, RaceData> RaceLookup = new Dictionary<string, RaceData>();
+
+			List<RaceData> races = GetAllAssets<RaceData>();
+
+			/// Build Race Recipes and RaceLookup
+			raceRecipes.Clear();
+			/*foreach(RaceData race in races)
+			{
+				if (race == null)
+				{
+					Debug.Log("Found null race...");
+					continue;
+				}
+				if (race.raceName == null)
+				{
+					Debug.Log("Null name on race?????");
+					continue;
+				}
+				Debug.Log("Race name " + race.raceName);
+				RaceLookup.Add(race.raceName, race);
+				raceRecipes.Add(race.raceName, new SlotRecipes());
+			}*/
+
+			/// Add all the directly assigned items. 
+			var wardrobe = GetAllAssets<UMAWardrobeRecipe>();
+
+			foreach(UMAWardrobeRecipe uwr in wardrobe)
+			{
+				foreach(string racename in uwr.compatibleRaces)
+				{
+				
+					if (!raceRecipes.ContainsKey(racename))
+					{
+						raceRecipes.Add(racename, new SlotRecipes());
+					}
+					SlotRecipes sl = raceRecipes[racename];
+					if (!sl.ContainsKey(uwr.wardrobeSlot))
+					{
+						sl.Add(uwr.wardrobeSlot, new List<UMATextRecipe>());
+					}
+					sl[uwr.wardrobeSlot].Add(uwr);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Creates a lookup dictionary for a list. Used when reloading after deserialization
+		/// </summary>
+		/// <param name="type"></param>
+		private void CreateLookupDictionary(System.Type type)
         {
             Dictionary<string, AssetItem> dic = new Dictionary<string, AssetItem>();
             if (TypeLookup.ContainsKey(type))

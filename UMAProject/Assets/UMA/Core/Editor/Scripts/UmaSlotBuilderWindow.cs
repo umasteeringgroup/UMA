@@ -16,7 +16,6 @@ namespace UMA.Editors
 		public bool createOverlay;
 		public bool createRecipe;
 		public bool addToGlobalLibrary;
-		public bool addToLocalLibrary;
 		public bool binarySerialization;
 
 		string GetAssetFolder()
@@ -80,13 +79,7 @@ namespace UMA.Editors
 			EditorGUILayout.LabelField(slotName + "_Recipe");
 			EditorGUILayout.EndHorizontal();
 			addToGlobalLibrary = EditorGUILayout.Toggle("Add To Global Library", addToGlobalLibrary);
-			if (UMAContext.Instance != null)
-			{
-				if (UMAContext.Instance.slotLibrary != null)
-				{
-					addToLocalLibrary = EditorGUILayout.Toggle("Add to Scene Library", addToLocalLibrary);
-				}
-			}
+
 
 			if (GUILayout.Button("Create Slot"))
 			{
@@ -99,13 +92,6 @@ namespace UMA.Editors
 					if (addToGlobalLibrary)
 					{
 						UMAAssetIndexer.Instance.EvilAddAsset(typeof(SlotDataAsset), sd);
-					}
-					if (addToLocalLibrary && UMAContext.Instance != null)
-					{
-						if (UMAContext.Instance.slotLibrary != null)
-						{
-							UMAContext.Instance.slotLibrary.AddSlotAsset(sd);
-						}
 					}
 					OverlayDataAsset od = null;
 					if (createOverlay)
@@ -170,13 +156,6 @@ namespace UMA.Editors
 			if (addToGlobalLibrary)
 			{
 				UMAAssetIndexer.Instance.EvilAddAsset(typeof(OverlayDataAsset), asset);
-			}
-			if (addToLocalLibrary && UMAContext.Instance != null)
-			{
-				if (UMAContext.Instance.overlayLibrary != null)
-				{
-					UMAContext.Instance.overlayLibrary.AddOverlayAsset(asset);
-				}
 			}
 			return asset;
 		}

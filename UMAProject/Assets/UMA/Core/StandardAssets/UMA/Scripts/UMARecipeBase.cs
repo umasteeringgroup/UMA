@@ -14,13 +14,13 @@ namespace UMA
 		/// </summary>
 		/// <param name="umaRecipe">UMA recipe.</param>
 		/// <param name="context">Context.</param>
-		public abstract void Load(UMAData.UMARecipe umaRecipe, UMAContext context);
+		public abstract void Load(UMAData.UMARecipe umaRecipe, UMAContextBase context);
 		/// <summary>
 		/// Save data from the specified umaRecipe.
 		/// </summary>
 		/// <param name="umaRecipe">UMA recipe.</param>
 		/// <param name="context">Context.</param>
-		public abstract void Save(UMAData.UMARecipe umaRecipe, UMAContext context);
+		public abstract void Save(UMAData.UMARecipe umaRecipe, UMAContextBase context);
 		public abstract string GetInfo();
 		public abstract byte[] GetBytes();
 		public abstract void SetBytes(byte[] data);
@@ -33,7 +33,7 @@ namespace UMA
 	#if UNITY_EDITOR
 
 		//This is used as a base for UMATextRecipe to override, because we cannt get what we need from this assembly- but the method needs to exist here to work in RecipeEditor
-		public virtual UMAContext CreateEditorContext()
+		public virtual UMAContextBase CreateEditorContext()
 		{
 			return null;
 		}
@@ -43,7 +43,7 @@ namespace UMA
 		/// </summary>
 		/// <returns>The cached recipe.</returns>
 		/// <param name="context">Context.</param>
-		public UMAData.UMARecipe GetCachedRecipe(UMAContext context)
+		public UMAData.UMARecipe GetCachedRecipe(UMAContextBase context)
 		{
 			if (!cached)
 			{

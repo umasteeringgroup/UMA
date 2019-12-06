@@ -260,7 +260,7 @@ namespace UMA
 				mySlot.AddOverlay(myOverlay);
 			}
 			recipe.SetSlot(0, mySlot);
-			asset.Save(recipe, UMAContext.Instance);
+			asset.Save(recipe, UMAContextBase.Instance);
 			asset.DisplayValue = slotName;
 
 			// Write the asset to disk

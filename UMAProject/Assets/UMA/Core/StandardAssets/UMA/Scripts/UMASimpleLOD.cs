@@ -191,9 +191,9 @@ namespace UMA.Examples
 					bool slotFound = false;
 					for (int k = (currentLevel - lodOffset); k >= 0; k--)
 					{
-						if (slotName != slot.slotName && UMAContext.Instance.HasSlot(slotName))
+						if (slotName != slot.slotName && UMAContextBase.Instance.HasSlot(slotName))
 						{
-							_umaData.umaRecipe.slotDataList[i] = UMAContext.Instance.InstantiateSlot(slotName, slot.GetOverlayList());
+							_umaData.umaRecipe.slotDataList[i] = UMAContextBase.Instance.InstantiateSlot(slotName, slot.GetOverlayList());
 							slotFound = true;
 							changedSlots = true;
 							break;
@@ -204,9 +204,9 @@ namespace UMA.Examples
 					{
 						for(int k = (currentLevel - lodOffset) + 1; k <= maxLOD; k++)
 						{
-							if (slotName != slot.slotName && UMAContext.Instance.HasSlot(slotName))
+							if (slotName != slot.slotName && UMAContextBase.Instance.HasSlot(slotName))
 							{
-								_umaData.umaRecipe.slotDataList[i] = UMAContext.Instance.InstantiateSlot(slotName, slot.GetOverlayList());
+								_umaData.umaRecipe.slotDataList[i] = UMAContextBase.Instance.InstantiateSlot(slotName, slot.GetOverlayList());
 								slotFound = true;
 								changedSlots = true;
 								break;

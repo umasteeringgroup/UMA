@@ -24,7 +24,7 @@ namespace UMA.CharacterSystem
 		{
 			var res = new GameObject("New Dynamic Character Avatar");
 			var da = res.AddComponent<DynamicCharacterAvatar>();
-			da.context = UMAContext.FindInstance();
+			da.context = UMAContextBase.FindInstance();
 			da.ChangeRace("HumanMale");
 			da.umaGenerator = Component.FindObjectOfType<UMAGeneratorBase>();
 			UnityEditor.Selection.activeGameObject = res;
@@ -179,7 +179,7 @@ namespace UMA.CharacterSystem
         private Dictionary<string, string> cacheStates = new Dictionary<string, string>();
         //the wardrobe slots that are hidden by the avatars current wardrobe
         private List<string> HiddenSlots = new List<string>();//why was this HashSet list is faster for our purposes (http://stackoverflow.com/questions/150750/hashset-vs-list-performance)
-                                                              //a list of downloading assets that the avatar can check the download status of.
+        //a list of downloading assets that the avatar can check the download status of.
         private List<string> requiredAssetsToCheck = new List<string>();
         //This is so we know if whether to use the 'default' settings as set in the componnt by colors/defaultRecipes/loadString/umaRecipe
         //or if an external script has already overridden these and so we should just build with the settings as they are (i.e. just call BuildCharacter)
@@ -198,7 +198,7 @@ namespace UMA.CharacterSystem
 		public Dictionary<string, List<MeshHideAsset>> MeshHideDictionary { get; } = new Dictionary<string, List<MeshHideAsset>>();
 
 #if UNITY_EDITOR
-		private GameObject EditorUMAContext = null;
+		private GameObject EditorUMAContextBase = null;
 
         private PreviewModel lastPreviewModel;
         private GameObject lastCustomModel;
@@ -232,6 +232,7 @@ namespace UMA.CharacterSystem
                 activeRace.name = value;
             }
         }
+
         /// <summary>
         /// This returns all the recipes for the current race of the avatar.
         /// </summary>
@@ -244,10 +245,12 @@ namespace UMA.CharacterSystem
                 //b) DCS will use that placeholder race to find the (backwards)compatible recipes for this race even before the raceData has finished downloading
                 //when a race is added to the dictionary the recipes associated with it include the backwards compatible ones
                 //when a new recipe is added from a download, when it is downloaded it gets added to the backwardsCompatible and compatible races it is for.
-                (context.raceLibrary).GetRace(activeRace.name);
-                return (context.dynamicCharacterSystem as DynamicCharacterSystem).Recipes[activeRace.name];
+
+                context.GetRace(activeRace.name);
+                return context.GetRecipes(activeRace.name);
             }
         }
+
         //CurrentWardrobeSlots - if the race was in an asset bundle and has not finished downloading we will not have accurate data for this
         public List<string> CurrentWardrobeSlots
         {
@@ -351,10 +354,10 @@ namespace UMA.CharacterSystem
         public void Awake()
         {
 #if UNITY_EDITOR
-            EditorUMAContext = GameObject.Find("UMAEditorContext");
-            if (EditorUMAContext != null)
+            EditorUMAContextBase = GameObject.Find("UMAEditorContext");
+            if (EditorUMAContextBase != null)
             {
-                EditorUMAContext.hideFlags = HideFlags.DontSave | HideFlags.NotEditable;
+                EditorUMAContextBase.hideFlags = HideFlags.DontSave | HideFlags.NotEditable;
                 EditorApplication.update -= CheckEditorContextNeeded;
                 EditorApplication.update += CheckEditorContextNeeded;
             }
@@ -411,34 +414,37 @@ namespace UMA.CharacterSystem
                     }
                 }
             }
-            //This hardly ever happens now since the changeRace/LoadFromString/StartCO methods all yield themselves until asset bundles have been downloaded
-            if (requiredAssetsToCheck.Count > 0 && !waitForBundles && BuildCharacterEnabled)
-            {
-                if (DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck) == false)
-                {
-                    if (Debug.isDebugBuild)
-                        Debug.Log("Update did build");
-                    UpdateAfterDownload();
-                    //actually we dont know in this case if we are restoring DNA or not
-                    //but a placeholder race should only have been used if defaultLoadOptions.waitForBundles is false
-                    //so we can atleast assume we dont want to restore the dna from that
-                    _isFirstSettingsBuild = false;
-                    BuildCharacter(waitForBundles);
-                }
-            }
+			if (DynamicAssetLoader.Instance != null)
+			{
+				//This hardly ever happens now since the changeRace/LoadFromString/StartCO methods all yield themselves until asset bundles have been downloaded
+				if (requiredAssetsToCheck.Count > 0 && !waitForBundles && BuildCharacterEnabled)
+				{
+					if (DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck) == false)
+					{
+						if (Debug.isDebugBuild)
+							Debug.Log("Update did build");
+						UpdateAfterDownload();
+						//actually we dont know in this case if we are restoring DNA or not
+						//but a placeholder race should only have been used if defaultLoadOptions.waitForBundles is false
+						//so we can atleast assume we dont want to restore the dna from that
+						_isFirstSettingsBuild = false;
+						BuildCharacter(waitForBundles);
+					}
+				}
+			}
         }
 
         void OnDisable()
         {
 #if UNITY_EDITOR
-            DestroyEditorUMAContext();
+            DestroyEditorUMAContextBase();
 #endif
         }
 
         void OnDestroy()
         {
 #if UNITY_EDITOR
-            DestroyEditorUMAContext();
+            DestroyEditorUMAContextBase();
 #endif
             Cleanup();
         }
@@ -532,34 +538,49 @@ namespace UMA.CharacterSystem
 
         IEnumerator BuildFromComponentSettingsCO()
         {
-            //we cannot do anthing until this is DynamicAssetLoader.Instance.isInitialized, otherwise the dynamicLibraries will not find anything from AssetBundles
-            //if you are not using assetbundles, this wait will be non-existant otherwise it will be until the AssetBundleIndex has downloaded
-            while (!DynamicAssetLoader.Instance.isInitialized)
-            {
-                yield return null;
-            }
+			if (DynamicAssetLoader.Instance != null)
+			{
+				//we cannot do anthing until this is DynamicAssetLoader.Instance.isInitialized, otherwise the dynamicLibraries will not find anything from AssetBundles
+				//if you are not using assetbundles, this wait will be non-existant otherwise it will be until the AssetBundleIndex has downloaded
+				while (!DynamicAssetLoader.Instance.isInitialized)
+				{
+					yield return null;
+				}
+			}
             SetActiveRace();//This may cause a race to download. We can either bloat the AssetBundleIndex with virtually all the data in a RaceData OR we have to wait for it
-                            //if we are not waiting for bundles before building, build the placeholder avatar now
-            if (!waitForBundles && DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
-            {
-                BuildCharacter(false);
-            }
-            bool needsUpdate = false;
-            while (DynamicAssetLoader.Instance.downloadingAssetsContains(activeRace.name))
-            {
-                needsUpdate = true;
-                yield return null;
-            }
-            if (needsUpdate)
-            {
-                activeRace.data = context.raceLibrary.GetRace(activeRace.name);
-                umaRecipe = activeRace.data.baseRaceRecipe;
-            }
-            //If the UmaRecipe is still after that null, bail - we cant go any further (and SetStartingRace will have shown an error)
-            if (umaRecipe == null)
-            {
-                yield break;
-            }
+							//if we are not waiting for bundles before building, build the placeholder avatar now
+			if (DynamicAssetLoader.Instance != null)
+			{
+
+				if (!waitForBundles && DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
+				{
+					BuildCharacter(false);
+				}
+			}
+			else
+			{
+				BuildCharacter(false);
+			}
+			if (DynamicAssetLoader.Instance != null)
+			{
+				bool needsUpdate = false;
+				while (DynamicAssetLoader.Instance.downloadingAssetsContains(activeRace.name))
+				{
+					needsUpdate = true;
+					yield return null;
+				}
+				if (needsUpdate)
+				{
+					activeRace.data = context.GetRace(activeRace.name);
+					umaRecipe = activeRace.data.baseRaceRecipe;
+				}
+
+				//If the UmaRecipe is still after that null, bail - we cant go any further (and SetStartingRace will have shown an error)
+				if (umaRecipe == null)
+				{
+					yield break;
+				}
+			}
             //If the user set up the component on Awake via scripting they may already have set the wardrobe so check that WardrobeRecipes is empty before doing LoadDefaultWardrobe
             if (WardrobeRecipes.Count == 0)
                 LoadDefaultWardrobe(true);//this may cause downloads to happen
@@ -612,7 +633,7 @@ namespace UMA.CharacterSystem
             else if (activeRace.name != "")
             {
                 //This only happens when the Avatar itself has an active race set to be one that is in an assetbundle
-                activeRace.data = context.raceLibrary.GetRace(activeRace.name);// this will trigger a download if the race is in an asset bundle and return a temp asset
+                activeRace.data = context.GetRace(activeRace.name);// this will trigger a download if the race is in an asset bundle and return a temp asset
                 if (activeRace.racedata != null)
                 {
                     umaRecipe = activeRace.racedata.baseRaceRecipe;
@@ -624,11 +645,14 @@ namespace UMA.CharacterSystem
                 if (Debug.isDebugBuild)
                     Debug.LogWarning("[SetActiveRace] could not find baseRaceRecipe for the race " + activeRace.name + ". Have you set one in the raceData?");
             }
-            if (DynamicAssetLoader.Instance.downloadingAssetsContains(activeRace.name))
-            {
-                if (!requiredAssetsToCheck.Contains(activeRace.name))
-                    requiredAssetsToCheck.Add(activeRace.name);
-            }
+			if (DynamicAssetLoader.Instance != null)
+			{
+				if (DynamicAssetLoader.Instance.downloadingAssetsContains(activeRace.name))
+				{
+					if (!requiredAssetsToCheck.Contains(activeRace.name))
+						requiredAssetsToCheck.Add(activeRace.name);
+				}
+			}
         }
         /// <summary>
         /// Change the race of the Avatar, optionally overriding the 'onChangeRace' settings in the avatar component itself
@@ -639,7 +663,7 @@ namespace UMA.CharacterSystem
         {
             RaceData thisRace = null;
             if (racename != "None Set")
-                thisRace = (context.raceLibrary as DynamicRaceLibrary).GetRace(racename);
+                thisRace = context.GetRace(racename);
             ChangeRace(thisRace, customChangeRaceOptions);
         }
 
@@ -784,19 +808,25 @@ namespace UMA.CharacterSystem
                                 if (!WardrobeRecipes.ContainsKey(recipe._recipe.wardrobeSlot))
                                 {
                                     SetSlot(recipe._recipe);
-                                    if (!requiredAssetsToCheck.Contains(recipe._recipeName) && DynamicAssetLoader.Instance.downloadingAssetsContains(recipe._recipeName))
-                                    {
-                                        requiredAssetsToCheck.Add(recipe._recipeName);
-                                    }
+									if (DynamicAssetLoader.Instance != null)
+									{
+										if (!requiredAssetsToCheck.Contains(recipe._recipeName) && DynamicAssetLoader.Instance.downloadingAssetsContains(recipe._recipeName))
+										{
+											requiredAssetsToCheck.Add(recipe._recipeName);
+										}
+									}
                                 }
                             }
                             else
                             {
                                 SetSlot(recipe._recipe);
-                                if (!requiredAssetsToCheck.Contains(recipe._recipeName) && DynamicAssetLoader.Instance.downloadingAssetsContains(recipe._recipeName))
-                                {
-                                    requiredAssetsToCheck.Add(recipe._recipeName);
-                                }
+								if (DynamicAssetLoader.Instance != null)
+								{
+									if (!requiredAssetsToCheck.Contains(recipe._recipeName) && DynamicAssetLoader.Instance.downloadingAssetsContains(recipe._recipeName))
+									{
+										requiredAssetsToCheck.Add(recipe._recipeName);
+									}
+								}
                             }
                         }
                     }
@@ -812,7 +842,7 @@ namespace UMA.CharacterSystem
         public UMATextRecipe FindSlotRecipe(string Slotname, string Recipename)
         {
             //This line is here to ensure DCS downloads a recipe if it needs to do that.
-            (context.dynamicCharacterSystem as DynamicCharacterSystem).GetRecipe(Recipename);
+            context.GetRecipe(Recipename,true);
 
             var recipes = AvailableRecipes;
 
@@ -866,10 +896,14 @@ namespace UMA.CharacterSystem
             {
                 _wardrobeRecipes.Add(thisRecipeSlot, utr);
             }
-            if (!requiredAssetsToCheck.Contains(utr.name) && DynamicAssetLoader.Instance.downloadingAssetsContains(utr.name))
-            {
-                requiredAssetsToCheck.Add(utr.name);
-            }
+			if (DynamicAssetLoader.Instance != null)
+			{
+
+				if (!requiredAssetsToCheck.Contains(utr.name) && DynamicAssetLoader.Instance.downloadingAssetsContains(utr.name))
+				{
+					requiredAssetsToCheck.Add(utr.name);
+				}
+			}
         }
 
         /// <summary>
@@ -984,6 +1018,27 @@ namespace UMA.CharacterSystem
 
         public void LoadWardrobeCollection(UMAWardrobeCollection uwr)
         {
+			if (DynamicAssetLoader.Instance == null)
+			{
+				//If there is already a WardrobeCollection belonging to this group applied to the Avatar, unload and remove it
+				if (_wardrobeCollections.ContainsKey(uwr.wardrobeSlot))
+				{
+					UnloadWardrobeCollectionGroup(uwr.wardrobeSlot);
+				}
+				_wardrobeCollections.Add(uwr.wardrobeSlot, uwr);
+				var thisSettings = uwr.GetUniversalPackRecipe(this, context);
+				//if there is a wardrobe set for this race treat this like a 'FullOutfit'
+				if (thisSettings.wardrobeSet.Count > 0)
+				{
+					LoadWardrobeSet(thisSettings.wardrobeSet, false);
+					if (thisSettings.sharedColorCount > 0)
+					{
+						ImportSharedColors(thisSettings.sharedColors, LoadOptions.loadWardrobeColors);
+					}
+				}
+				return;
+			}
+
             if (!DynamicAssetLoader.Instance.downloadingAssetsContains(uwr.name))
             {
                 //if this WardrobeCollection was added when it was downloading, checdk it actually has sets, otherwise it shouldn't be here- TODO check if this ever happens
@@ -1175,7 +1230,7 @@ namespace UMA.CharacterSystem
             List<WardrobeRecipeListItem> validDefaultRecipes = preloadWardrobeRecipes.Validate(true, activeRace.name, activeRace.racedata);
             fallbackSet = fallbackSet ?? new List<WardrobeSettings>();
             //to get the recipes from the fallbackSet we need DCS
-            var thisContext = UMAContext.FindInstance();
+            var thisContext = UMAContextBase.FindInstance();
             if (thisContext == null)
             {
 #if UNITY_EDITOR
@@ -1184,7 +1239,7 @@ namespace UMA.CharacterSystem
                 return;
 #endif
             }
-            var thisDCS = thisContext.dynamicCharacterSystem as DynamicCharacterSystem;
+            //var thisDCS = thisContext.dynamicCharacterSystem as DynamicCharacterSystem;
             Dictionary<string, UMATextRecipe> wrBU = new Dictionary<string, UMATextRecipe>(_wardrobeRecipes);
             ClearWardrobeCollectionsRecipes();
             ClearSlots();
@@ -1220,13 +1275,16 @@ namespace UMA.CharacterSystem
                                     {
                                         if (!newWardrobeRecipes.ContainsKey(aWardrobeSet[acri].slot))
                                         {
-                                            var thisWCRecipe = thisDCS.GetRecipe(aWardrobeSet[acri].recipe);
+                                            var thisWCRecipe = UMAContext.Instance.GetRecipe(aWardrobeSet[acri].recipe,false);
                                             newWardrobeRecipes.Add(aWardrobeSet[acri].slot, thisWCRecipe);
-                                            //do the downloading check
-                                            if (!requiredAssetsToCheck.Contains(thisWCRecipe.name) && DynamicAssetLoader.Instance.downloadingAssetsContains(thisWCRecipe.name))
-                                            {
-                                                requiredAssetsToCheck.Add(thisWCRecipe.name);
-                                            }
+											//do the downloading check
+											if (DynamicAssetLoader.Instance != null)
+											{
+												if (!requiredAssetsToCheck.Contains(thisWCRecipe.name) && DynamicAssetLoader.Instance.downloadingAssetsContains(thisWCRecipe.name))
+												{
+													requiredAssetsToCheck.Add(thisWCRecipe.name);
+												}
+											}
                                         }
                                     }
                                 }
@@ -1272,12 +1330,15 @@ namespace UMA.CharacterSystem
                 {
                     if (!newWardrobeRecipes.ContainsKey(fallbackSet[i].slot))
                     {
-                        var fbRecipe = thisDCS.GetRecipe(fallbackSet[i].recipe);
+                        var fbRecipe = UMAContext.Instance.GetRecipe(fallbackSet[i].recipe,false);
                         newWardrobeRecipes.Add(fallbackSet[i].slot, fbRecipe);
-                        if (!requiredAssetsToCheck.Contains(fbRecipe.name) && DynamicAssetLoader.Instance.downloadingAssetsContains(fbRecipe.name))
-                        {
-                            requiredAssetsToCheck.Add(fbRecipe.name);
-                        }
+						if (DynamicAssetLoader.Instance != null)
+						{
+							if (!requiredAssetsToCheck.Contains(fbRecipe.name) && DynamicAssetLoader.Instance.downloadingAssetsContains(fbRecipe.name))
+							{
+								requiredAssetsToCheck.Add(fbRecipe.name);
+							}
+						}
                     }
                 }
             }
@@ -1352,9 +1413,12 @@ namespace UMA.CharacterSystem
             {
                 foreach (UMAWardrobeCollection uwr in _wardrobeCollections.Values)
                 {
-                    //dont do anything to collections that are downloading
-                    if (DynamicAssetLoader.Instance.downloadingAssetsContains(uwr.name))
-                        continue;
+					//dont do anything to collections that are downloading
+					if (DynamicAssetLoader.Instance != null)
+					{
+						if (DynamicAssetLoader.Instance.downloadingAssetsContains(uwr.name))
+							continue;
+					}
                     var collectionSet = uwr.GetRacesWardrobeSet(activeRace.racedata);
                     if (collectionSet.Count > 0)
                     {
@@ -1814,10 +1878,13 @@ namespace UMA.CharacterSystem
                 if (thisAnimator != null)
                 {
                     thisAnimator.runtimeAnimatorController = controllerToUse;
-                    if (!requiredAssetsToCheck.Contains(controllerToUse.name) && DynamicAssetLoader.Instance.downloadingAssetsContains(controllerToUse.name))
-                    {
-                        requiredAssetsToCheck.Add(controllerToUse.name);
-                    }
+					if (DynamicAssetLoader.Instance != null)
+					{
+						if (!requiredAssetsToCheck.Contains(controllerToUse.name) && DynamicAssetLoader.Instance.downloadingAssetsContains(controllerToUse.name))
+						{
+							requiredAssetsToCheck.Add(controllerToUse.name);
+						}
+					}
                 }
             }
             else
@@ -2228,10 +2295,13 @@ namespace UMA.CharacterSystem
             _isFirstSettingsBuild = false;
             var prevDna = new UMADnaBase[0];
             bool needsUpdate = false;//gets set to true if anything caused downloads that we actually waited for
-            while (!DynamicAssetLoader.Instance.isInitialized)
-            {
-                yield return null;
-            }
+			if (DynamicAssetLoader.Instance != null)
+			{
+				while (!DynamicAssetLoader.Instance.isInitialized)
+				{
+					yield return null;
+				}
+			}
             if (umaGenerator == null)
             {
                 umaGenerator = UMAGenerator.FindInstance();
@@ -2263,23 +2333,30 @@ namespace UMA.CharacterSystem
             //this will be null for old UMA recipes without any wardrobe
             if (settingsToLoad.wardrobeSet != null)
             {
-                //if we are not waiting for asset bundles we can build the placeholder avatar
-                if (!waitForBundles && DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
-                {
-                    BuildCharacter(false);
-                }
-                //before we can do anything with wardrobe we need to have the actual racedata downloaded so we know the wardrobe slots
-                needsUpdate = false;
-                while (DynamicAssetLoader.Instance.downloadingAssetsContains(activeRace.name))
-                {
-                    needsUpdate = true;
-                    yield return null;
-                }
-                if (needsUpdate)
-                {
-                    activeRace.data = context.raceLibrary.GetRace(activeRace.name);
-                    umaRecipe = activeRace.data.baseRaceRecipe;
-                }
+				//if we are not waiting for asset bundles we can build the placeholder avatar
+				if (DynamicAssetLoader.Instance != null)
+				{
+					if (!waitForBundles && DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
+					{
+						BuildCharacter(false);
+					}
+				}
+				if (DynamicAssetLoader.Instance != null)
+				{
+
+					//before we can do anything with wardrobe we need to have the actual racedata downloaded so we know the wardrobe slots
+					needsUpdate = false;
+					while (DynamicAssetLoader.Instance.downloadingAssetsContains(activeRace.name))
+					{
+						needsUpdate = true;
+						yield return null;
+					}
+					if (needsUpdate)
+					{
+						activeRace.data = context.GetRace(activeRace.name);
+						umaRecipe = activeRace.data.baseRaceRecipe;
+					}
+				}
                 //if we are loading wardrobe override everything that was previously set (by the default wardrobe or any previous user modifications)
                 //sending an empty wardrobe set will clear the current wardrobe. If preLoadDefaultWardrobe is true and the wardrobe is empty LoadDefaultWardrobe gets called
                 if (thisLoadOptions.HasFlagSet(LoadOptions.loadWardrobe))//sending an empty wardrobe set will clear the current wardrobe
@@ -2366,11 +2443,14 @@ namespace UMA.CharacterSystem
             UMATextRecipe.UnpackRecipe(umaData.umaRecipe, settingsToLoad, context);
             //
             ClearSlots();//old umas dont have any wardrobe
-                         //old style recipes may still have had assets in an asset bundle. So if we are showing a placeholder rather than waiting...
-            if (!waitForBundles && DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
-            {
-                BuildCharacter(false);
-            }
+						 //old style recipes may still have had assets in an asset bundle. So if we are showing a placeholder rather than waiting...
+			if (DynamicAssetLoader.Instance != null)
+			{
+				if (!waitForBundles && DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
+				{
+					BuildCharacter(false);
+				}
+			}
             SetAnimatorController(true);//may cause downloads to happen
             SetExpressionSet();
             //wait for any downloading assets
@@ -2460,7 +2540,6 @@ namespace UMA.CharacterSystem
                 loadPathType = loadPathTypes.FileSystem;
             }
 #endif
-            var thisDCS = context.dynamicCharacterSystem as DynamicCharacterSystem;
             if (loadPathType == loadPathTypes.CharacterSystem)
             {
                 UMAAssetIndexer UAI = UMAAssetIndexer.Instance;
@@ -2477,10 +2556,13 @@ namespace UMA.CharacterSystem
                     {
                         recipeString = (ai.Item as TextAsset).text;
                     }
-                    if (thisDCS.CharacterRecipes.ContainsKey(loadFilename.Trim()))
-                    {
-                        thisDCS.CharacterRecipes.TryGetValue(loadFilename.Trim(), out recipeString);
-                    }
+
+					recipeString = UMAContext.Instance.GetCharacterRecipe(loadFilename.Trim());
+					// 
+                    //if (thisDCS.CharacterRecipes.ContainsKey(loadFilename.Trim()))
+                    //{
+                    //    thisDCS.CharacterRecipes.TryGetValue(loadFilename.Trim(), out recipeString);
+                    //}
                 }
             }
             if (loadPathType == loadPathTypes.FileSystem)
@@ -2564,11 +2646,15 @@ namespace UMA.CharacterSystem
 
         IEnumerator BuildCharacterWhenReady(bool RestoreDNA = true)
         {
-            while (!DynamicAssetLoader.Instance.isInitialized)
-            {
-                yield return null;
-            }
-            yield return StartCoroutine(UpdateAfterDownloads());
+			if (DynamicAssetLoader.Instance != null)
+			{
+
+				while (!DynamicAssetLoader.Instance.isInitialized)
+				{
+					yield return null;
+				}
+				yield return StartCoroutine(UpdateAfterDownloads());
+			}
             BuildCharacter(RestoreDNA);
         }
 
@@ -2590,17 +2676,19 @@ namespace UMA.CharacterSystem
             wasCrossCompatibleBuild = false;
             crossCompatibleRaces.Clear();
 
-            if (!DynamicAssetLoader.Instance.isInitialized)
-            {
-                StartCoroutine(BuildCharacterWhenReady(RestoreDNA));
-                return;
-            }
-            if (waitForBundles && DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
-            {
-                StartCoroutine(BuildCharacterWhenReady(RestoreDNA));
-                return;
-            }
-
+			if (DynamicAssetLoader.Instance != null)
+			{
+				if (!DynamicAssetLoader.Instance.isInitialized)
+				{
+					StartCoroutine(BuildCharacterWhenReady(RestoreDNA));
+					return;
+				}
+				if (waitForBundles && DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
+				{
+					StartCoroutine(BuildCharacterWhenReady(RestoreDNA));
+					return;
+				}
+			}
             // clear the hiddenslots and hidden mesh assets
             // so they can be accumulate anew from the recipe
             HiddenSlots.Clear();
@@ -2911,7 +2999,12 @@ namespace UMA.CharacterSystem
 
         bool FinalRecipeAssetsDownloading()
         {
-            bool requiresWaiting = false;
+			if (DynamicAssetLoader.Instance == null)
+			{
+				return false;
+			}
+
+			bool requiresWaiting = false;
             if (DynamicAssetLoader.Instance.downloadingAssets.downloadingItems.Count > 0)
             {
                 var finalSlots = umaData.umaRecipe.GetAllSlots();
@@ -3170,31 +3263,31 @@ namespace UMA.CharacterSystem
 
         #endregion
 
-        #region UMACONTEXT RELATED
+        #region UMAContextBase RELATED
 
-        //If the user inspects a DCA when there is no UMAContext in the scene it will blow up because RaceSetter needs one in order to find all the available races
+        //If the user inspects a DCA when there is no UMAContextBase in the scene it will blow up because RaceSetter needs one in order to find all the available races
         //and the Default Wardrobe and Race animators need one in order to assess whether the assets will be available at run time so create one on the fly like UMATextRecipe does
 #if UNITY_EDITOR
         /// <summary>
-        /// Creates a temporary UMAContext for use when editing DynamicCharacterAvatars when the open Scene does not have an UMAContext or libraries set up
+        /// Creates a temporary UMAContextBase for use when editing DynamicCharacterAvatars when the open Scene does not have an UMAContextBase or libraries set up
         /// </summary>
-        public UMAContext CreateEditorContext()
+        public UMAContextBase CreateEditorContext()
         {
-            EditorUMAContext = UMAContext.CreateEditorContext();
+            EditorUMAContextBase = UMAContextBase.CreateEditorContext();
             EditorApplication.update -= CheckEditorContextNeeded;
             EditorApplication.update += CheckEditorContextNeeded;
-            return UMAContext.Instance;
+            return UMAContextBase.Instance;
         }
 
-        private void DestroyEditorUMAContext()
+        private void DestroyEditorUMAContextBase()
         {
-            if (EditorUMAContext != null)
+            if (EditorUMAContextBase != null)
             {
-                foreach (Transform child in EditorUMAContext.transform)
+                foreach (Transform child in EditorUMAContextBase.transform)
                 {
                     DestroyImmediate(child.gameObject);
                 }
-                DestroyImmediate(EditorUMAContext);
+                DestroyImmediate(EditorUMAContextBase);
                 EditorApplication.update -= CheckEditorContextNeeded;
                 if (Debug.isDebugBuild)
                     Debug.Log("UMAEditorContext was removed");
@@ -3203,13 +3296,13 @@ namespace UMA.CharacterSystem
 
         public void CheckEditorContextNeeded()
         {
-            if (EditorUMAContext != null)
+            if (EditorUMAContextBase != null)
             {
-                if (EditorUMAContext.GetComponentInChildren<UMAContext>() != null || EditorUMAContext.GetComponent<UMAContext>() != null)
+                if (EditorUMAContextBase.GetComponentInChildren<UMAContextBase>() != null || EditorUMAContextBase.GetComponent<UMAContextBase>() != null)
                 {
                     if (this == null || gameObject == null || Selection.activeGameObject == null || Selection.activeGameObject != gameObject)
                     {
-                        DestroyEditorUMAContext();
+                        DestroyEditorUMAContextBase();
                     }
                 }
             }
@@ -3233,17 +3326,16 @@ namespace UMA.CharacterSystem
             //that has a chest slot and a legs slot, which chest slot should show? I think WardrobeRecipes should take priority
             //BUT at this point what will we have if things were downloading?
             Dictionary<string, UMATextRecipe> newWardrobeRecipes = new Dictionary<string, UMATextRecipe>();
-            var thisDCS = context.dynamicCharacterSystem as DynamicCharacterSystem;
             //because of WardrobeCollections we may need a more robust system here? maybe a 'placeholder' bool?
             foreach (KeyValuePair<string, UMATextRecipe> kp in _wardrobeRecipes)
             {
                 if (!newWardrobeRecipes.ContainsKey(kp.Key))
                 {
-                    newWardrobeRecipes.Add(kp.Key, thisDCS.GetRecipe(kp.Value.name, false));
+                    newWardrobeRecipes.Add(kp.Key, UMAContext.Instance.GetRecipe(kp.Value.name, false));
                 }
                 else
                 {
-                    newWardrobeRecipes[kp.Key] = thisDCS.GetRecipe(kp.Value.name, false);
+                    newWardrobeRecipes[kp.Key] = UMAContext.Instance.GetRecipe(kp.Value.name, false);
                 }
             }
             _wardrobeRecipes = newWardrobeRecipes;
@@ -3253,7 +3345,7 @@ namespace UMA.CharacterSystem
                 Dictionary<string, UMAWardrobeCollection> newWardrobeCollections = new Dictionary<string, UMAWardrobeCollection>();
                 foreach (UMAWardrobeCollection uwr in _wardrobeCollections.Values)
                 {
-                    newWardrobeCollections.Add(uwr.wardrobeSlot, (thisDCS.GetRecipe(uwr.name, false) as UMAWardrobeCollection));
+                    newWardrobeCollections.Add(uwr.wardrobeSlot, (UMAContext.Instance.GetRecipe(uwr.name, false) as UMAWardrobeCollection));
                     var collectionSet = newWardrobeCollections[uwr.wardrobeSlot].GetRacesWardrobeSet(activeRace.racedata);
                     if (collectionSet.Count > 0)
                     {
@@ -3270,35 +3362,39 @@ namespace UMA.CharacterSystem
 
         IEnumerator UpdateAfterDownloads()
         {
-            bool needsUpdate = false;
-            while (DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
-            {
-                needsUpdate = true;
-                yield return null;
-            }
-            if (needsUpdate)
-            {
-                UpdateAfterDownload();
-            }
-            // UpdateAfterDownload.UpdateSetSlots might have also caused downloads to happen
-            //(eg they themselves ref slots/overlays/races that are in other bundles) so check that 
-            //(they will be in requiredAssetsToCheck) and wait
-            if (requiredAssetsToCheck.Count > 0)
-            {
-                //We cant call this Coroutine again from within itself (causes a stackOverflow) so just wait
-                //yield return StartCoroutine(UpdateAfterDownloads());
-                while (DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
-                {
-                    yield return null;
-                }
-                UpdateAfterDownload();
-            }
+			if (DynamicAssetLoader.Instance != null)
+			{
+
+				bool needsUpdate = false;
+				while (DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
+				{
+					needsUpdate = true;
+					yield return null;
+				}
+				if (needsUpdate)
+				{
+					UpdateAfterDownload();
+				}
+				// UpdateAfterDownload.UpdateSetSlots might have also caused downloads to happen
+				//(eg they themselves ref slots/overlays/races that are in other bundles) so check that 
+				//(they will be in requiredAssetsToCheck) and wait
+				if (requiredAssetsToCheck.Count > 0)
+				{
+					//We cant call this Coroutine again from within itself (causes a stackOverflow) so just wait
+					//yield return StartCoroutine(UpdateAfterDownloads());
+					while (DynamicAssetLoader.Instance.downloadingAssetsContains(requiredAssetsToCheck))
+					{
+						yield return null;
+					}
+					UpdateAfterDownload();
+				}
+			}
         }
 
         void UpdateAfterDownload()
         {
             requiredAssetsToCheck.Clear();
-            activeRace.data = context.raceLibrary.GetRace(activeRace.name);
+            activeRace.data = context.GetRace(activeRace.name);
             umaRecipe = activeRace.data.baseRaceRecipe;
             UpdateSetSlots();
             if (BuildCharacterEnabled)
@@ -3318,101 +3414,105 @@ namespace UMA.CharacterSystem
             assetBundlesUsedbyCharacter.Clear();
             if (umaData != null)
             {
-                var raceLibraryDict = ((DynamicRaceLibrary)context.raceLibrary as DynamicRaceLibrary).assetBundlesUsedDict;
-                var slotLibraryDict = ((DynamicSlotLibrary)context.slotLibrary as DynamicSlotLibrary).assetBundlesUsedDict;
-                var overlayLibraryDict = ((DynamicOverlayLibrary)context.overlayLibrary as DynamicOverlayLibrary).assetBundlesUsedDict;
-                var characterSystemDict = ((DynamicCharacterSystem)context.dynamicCharacterSystem as DynamicCharacterSystem).assetBundlesUsedDict;
-                var raceAnimatorsDict = raceAnimationControllers.assetBundlesUsedDict;
-                if (raceLibraryDict.Count > 0)
-                {
-                    foreach (KeyValuePair<string, List<string>> kp in raceLibraryDict)
-                    {
-                        if (!assetBundlesUsedbyCharacter.Contains(kp.Key))
-                            if (kp.Value.Contains(activeRace.name))
-                            {
-                                assetBundlesUsedbyCharacter.Add(kp.Key);
-                            }
-                    }
-                }
-                var activeSlots = umaData.umaRecipe.GetAllSlots();
-                if (slotLibraryDict.Count > 0)
-                {
-                    foreach (SlotData slot in activeSlots)
-                    {
-                        if (slot != null)
-                        {
-                            foreach (KeyValuePair<string, List<string>> kp in slotLibraryDict)
-                            {
-                                if (!assetBundlesUsedbyCharacter.Contains(kp.Key))
-                                    if (kp.Value.Contains(slot.asset.name))
-                                    {
-                                        if (verbose)
-                                            assetBundlesUsedbyCharacter.Add(kp.Key + " (Slot:" + slot.asset.name + ")");
-                                        else
-                                            assetBundlesUsedbyCharacter.Add(kp.Key);
-                                    }
-                            }
-                        }
-                    }
-                }
-                if (overlayLibraryDict.Count > 0)
-                {
-                    foreach (SlotData slot in activeSlots)
-                    {
-                        if (slot != null)
-                        {
-                            var overLaysinSlot = slot.GetOverlayList();
-                            foreach (OverlayData overlay in overLaysinSlot)
-                            {
-                                foreach (KeyValuePair<string, List<string>> kp in overlayLibraryDict)
-                                {
-                                    if (!assetBundlesUsedbyCharacter.Contains(kp.Key))
-                                        if (kp.Value.Contains(overlay.asset.name))
-                                        {
-                                            if (verbose)
-                                                assetBundlesUsedbyCharacter.Add(kp.Key + " (Overlay:" + overlay.asset.name + ")");
-                                            else
-                                                assetBundlesUsedbyCharacter.Add(kp.Key);
-                                        }
-                                }
-                            }
-                        }
-                    }
-                }
-                if (characterSystemDict.Count > 0)
-                {
-                    foreach (KeyValuePair<string, UMATextRecipe> recipe in WardrobeRecipes)
-                    {
-                        foreach (KeyValuePair<string, List<string>> kp in characterSystemDict)
-                        {
-                            if (!assetBundlesUsedbyCharacter.Contains(kp.Key))
-                                if (kp.Value.Contains(recipe.Key))
-                                {
-                                    assetBundlesUsedbyCharacter.Add(kp.Key);
-                                }
-                        }
-                    }
-                }
-                string specificRaceAnimator = "";
-                foreach (RaceAnimator raceAnimator in raceAnimationControllers.animators)
-                {
-                    if (raceAnimator.raceName == activeRace.name && raceAnimator.animatorController != null)
-                    {
-                        specificRaceAnimator = raceAnimator.animatorControllerName;
-                        break;
-                    }
-                }
-                if (raceAnimatorsDict.Count > 0 && specificRaceAnimator != "")
-                {
-                    foreach (KeyValuePair<string, List<string>> kp in raceAnimatorsDict)
-                    {
-                        if (!assetBundlesUsedbyCharacter.Contains(kp.Key))
-                            if (kp.Value.Contains(specificRaceAnimator))
-                            {
-                                assetBundlesUsedbyCharacter.Add(kp.Key);
-                            }
-                    }
-                }
+				if (UMAContext.Instance is UMAContext)
+				{
+					UMAContext context = UMAContext.Instance as UMAContext;
+					var raceLibraryDict = ((DynamicRaceLibrary)context.raceLibrary as DynamicRaceLibrary).assetBundlesUsedDict;
+					var slotLibraryDict = ((DynamicSlotLibrary)context.slotLibrary as DynamicSlotLibrary).assetBundlesUsedDict;
+					var overlayLibraryDict = ((DynamicOverlayLibrary)context.overlayLibrary as DynamicOverlayLibrary).assetBundlesUsedDict;
+					var characterSystemDict = ((DynamicCharacterSystem)context.dynamicCharacterSystem as DynamicCharacterSystem).assetBundlesUsedDict;
+					var raceAnimatorsDict = raceAnimationControllers.assetBundlesUsedDict;
+					if (raceLibraryDict.Count > 0)
+					{
+						foreach (KeyValuePair<string, List<string>> kp in raceLibraryDict)
+						{
+							if (!assetBundlesUsedbyCharacter.Contains(kp.Key))
+								if (kp.Value.Contains(activeRace.name))
+								{
+									assetBundlesUsedbyCharacter.Add(kp.Key);
+								}
+						}
+					}
+					var activeSlots = umaData.umaRecipe.GetAllSlots();
+					if (slotLibraryDict.Count > 0)
+					{
+						foreach (SlotData slot in activeSlots)
+						{
+							if (slot != null)
+							{
+								foreach (KeyValuePair<string, List<string>> kp in slotLibraryDict)
+								{
+									if (!assetBundlesUsedbyCharacter.Contains(kp.Key))
+										if (kp.Value.Contains(slot.asset.name))
+										{
+											if (verbose)
+												assetBundlesUsedbyCharacter.Add(kp.Key + " (Slot:" + slot.asset.name + ")");
+											else
+												assetBundlesUsedbyCharacter.Add(kp.Key);
+										}
+								}
+							}
+						}
+					}
+					if (overlayLibraryDict.Count > 0)
+					{
+						foreach (SlotData slot in activeSlots)
+						{
+							if (slot != null)
+							{
+								var overLaysinSlot = slot.GetOverlayList();
+								foreach (OverlayData overlay in overLaysinSlot)
+								{
+									foreach (KeyValuePair<string, List<string>> kp in overlayLibraryDict)
+									{
+										if (!assetBundlesUsedbyCharacter.Contains(kp.Key))
+											if (kp.Value.Contains(overlay.asset.name))
+											{
+												if (verbose)
+													assetBundlesUsedbyCharacter.Add(kp.Key + " (Overlay:" + overlay.asset.name + ")");
+												else
+													assetBundlesUsedbyCharacter.Add(kp.Key);
+											}
+									}
+								}
+							}
+						}
+					}
+					if (characterSystemDict.Count > 0)
+					{
+						foreach (KeyValuePair<string, UMATextRecipe> recipe in WardrobeRecipes)
+						{
+							foreach (KeyValuePair<string, List<string>> kp in characterSystemDict)
+							{
+								if (!assetBundlesUsedbyCharacter.Contains(kp.Key))
+									if (kp.Value.Contains(recipe.Key))
+									{
+										assetBundlesUsedbyCharacter.Add(kp.Key);
+									}
+							}
+						}
+					}
+					string specificRaceAnimator = "";
+					foreach (RaceAnimator raceAnimator in raceAnimationControllers.animators)
+					{
+						if (raceAnimator.raceName == activeRace.name && raceAnimator.animatorController != null)
+						{
+							specificRaceAnimator = raceAnimator.animatorControllerName;
+							break;
+						}
+					}
+					if (raceAnimatorsDict.Count > 0 && specificRaceAnimator != "")
+					{
+						foreach (KeyValuePair<string, List<string>> kp in raceAnimatorsDict)
+						{
+							if (!assetBundlesUsedbyCharacter.Contains(kp.Key))
+								if (kp.Value.Contains(specificRaceAnimator))
+								{
+									assetBundlesUsedbyCharacter.Add(kp.Key);
+								}
+						}
+					}
+				}
             }
         }
 
@@ -3484,15 +3584,15 @@ namespace UMA.CharacterSystem
 
             void Validate()
             {
-                var thisContext = UMAContext.FindInstance();
+                var thisContext = UMAContextBase.FindInstance();
                 if (thisContext == null)
                 {
                     if (Debug.isDebugBuild)
-                        Debug.LogWarning("UMAContext was missing this is required in scenes that use UMA. Please add the UMA_DCS prefab to the scene");
+                        Debug.LogWarning("UMAContextBase was missing this is required in scenes that use UMA. Please add the UMA_DCS prefab to the scene");
                     return;
                 }
-                var thisDynamicRaceLibrary = (DynamicRaceLibrary)thisContext.raceLibrary as DynamicRaceLibrary;
-                foreach (RaceData race in thisDynamicRaceLibrary.GetAllRaces())
+				var races = UMAContext.Instance.GetAllRaces();
+                foreach (RaceData race in races)
                 {
                     if (race.raceName == this.name)
                     {
@@ -3538,14 +3638,12 @@ namespace UMA.CharacterSystem
             public List<WardrobeRecipeListItem> Validate(bool allowDownloadables = false, string raceName = "", RaceData race = null)
             {
                 List<WardrobeRecipeListItem> validRecipes = new List<WardrobeRecipeListItem>();
-                var thisContext = UMAContext.FindInstance();
+                var thisContext = UMAContextBase.FindInstance();
                 if (thisContext == null)
                 {
                     return validRecipes;
                 }
-                var thisDCS = thisContext.dynamicCharacterSystem as DynamicCharacterSystem;
-                if (thisDCS != null)
-                {
+
                     foreach (WardrobeRecipeListItem WLIRecipe in recipes)
                     {
                         //this needs to also check backwards compatible races so need the racedata, so send it or request it?
@@ -3553,7 +3651,7 @@ namespace UMA.CharacterSystem
                         {
                             if (allowDownloadables)
                             {
-                                WLIRecipe._recipe = thisDCS.GetRecipe(WLIRecipe._recipeName);
+                                WLIRecipe._recipe = UMAContext.Instance.GetRecipe(WLIRecipe._recipeName,false);
                                 if (WLIRecipe._recipe != null)
                                 {
                                     WLIRecipe._compatibleRaces = new List<string>(WLIRecipe._recipe.compatibleRaces);
@@ -3563,26 +3661,15 @@ namespace UMA.CharacterSystem
                             }
                             else
                             {
-                                if (thisDCS.RecipeIndex.ContainsKey(WLIRecipe._recipeName))
+                                if (UMAContext.Instance.HasRecipe(WLIRecipe._recipeName))
                                 {
-                                    bool recipeFound = false;
-                                    recipeFound = thisDCS.RecipeIndex.TryGetValue(WLIRecipe._recipeName, out WLIRecipe._recipe);
-                                    if (recipeFound)
-                                    {
-                                        WLIRecipe._compatibleRaces = new List<string>(WLIRecipe._recipe.compatibleRaces);
-                                        validRecipes.Add(WLIRecipe);
-                                    }
-
+									WLIRecipe._recipe = UMAContext.Instance.GetRecipe(WLIRecipe._recipeName, false);
+							        WLIRecipe._compatibleRaces = new List<string>(WLIRecipe._recipe.compatibleRaces);
+                                    validRecipes.Add(WLIRecipe);
                                 }
                             }
                         }
                     }
-                }
-                else
-                {
-                    if (Debug.isDebugBuild)
-                        Debug.LogWarning("There was no DynamicCharacterSystem set up in UMAContext");
-                }
                 return validRecipes;
             }
         }
@@ -3626,10 +3713,13 @@ namespace UMA.CharacterSystem
             }
             public void FindAnimatorByName(string animatorName)
             {
-                bool dalDebugSetting = DynamicAssetLoader.Instance.debugOnFail;
-                DynamicAssetLoader.Instance.debugOnFail = false;
-                DynamicAssetLoader.Instance.AddAssets<RuntimeAnimatorController>(ref assetBundlesUsedDict, dynamicallyAddFromResources, dynamicallyAddFromAssetBundles, true, assetBundleNames, resourcesFolderPath, null, animatorName, SetFoundAnimators);
-                DynamicAssetLoader.Instance.debugOnFail = dalDebugSetting;
+				if (DynamicAssetLoader.Instance != null)
+				{
+					bool dalDebugSetting = DynamicAssetLoader.Instance.debugOnFail;
+					DynamicAssetLoader.Instance.debugOnFail = false;
+					DynamicAssetLoader.Instance.AddAssets<RuntimeAnimatorController>(ref assetBundlesUsedDict, dynamicallyAddFromResources, dynamicallyAddFromAssetBundles, true, assetBundleNames, resourcesFolderPath, null, animatorName, SetFoundAnimators);
+					DynamicAssetLoader.Instance.debugOnFail = dalDebugSetting;
+				}
             }
 
             private void SetFoundAnimators(RuntimeAnimatorController[] foundControllers)

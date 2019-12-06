@@ -22,20 +22,12 @@ namespace UMA.Editors
 		private bool _autoInitialize = true;
 
 		private int selectedRaceIndex = 0;
-		private DynamicRaceLibrary thisDynamicRaceLibrary;
 		private List<RaceData> foundRaces = new List<RaceData>();
 		private List<string> foundRaceNames = new List<string>();
 
 		void OnEnable()
 		{
 			MeshHideAsset source = target as MeshHideAsset;
-
-			if (thisDynamicRaceLibrary == null)
-			{
-				UMAContext context = UMAContext.FindInstance();
-				if(context != null)
-					thisDynamicRaceLibrary = context.raceLibrary as DynamicRaceLibrary;
-			}
 
 			SetRaceLists();
 
@@ -102,7 +94,7 @@ namespace UMA.Editors
 			else
 			{
 				UMAData.UMARecipe baseRecipe = new UMAData.UMARecipe();
-				foundRaces[selectedRaceIndex].baseRaceRecipe.Load(baseRecipe, UMAContext.FindInstance());
+				foundRaces[selectedRaceIndex].baseRaceRecipe.Load(baseRecipe, UMAContextBase.FindInstance());
 
 				foreach(SlotData sd in baseRecipe.slotDataList)
 				{
@@ -449,10 +441,7 @@ namespace UMA.Editors
 
 		public void SetRaceLists()
 		{
-			if (thisDynamicRaceLibrary == null)
-				return;
-
-			RaceData[] raceDataArray = thisDynamicRaceLibrary.GetAllRaces();
+			RaceData[] raceDataArray = UMAContext.Instance.GetAllRaces();
 			foundRaces.Clear();
 			foundRaceNames.Clear();
 			foundRaces.Add(null);

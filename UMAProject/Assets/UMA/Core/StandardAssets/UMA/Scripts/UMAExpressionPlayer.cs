@@ -181,9 +181,10 @@ namespace UMA.PoseTools
 			}
 		}
 
-		const float eyeMovementRange = 30f;
-		const float mutualGazeRange = 0.10f;
-		const float MinSaccadeDelay = 0.25f;
+		public float eyeMovementRange = 30f;
+		public float mutualGazeRange = 0.10f;
+		public float MinSaccadeDelay = 0.25f;
+		public float MaxSaccadeMagnitude = 15f;
 
 		protected void UpdateSaccades()
 		{
@@ -210,7 +211,7 @@ namespace UMA.PoseTools
 						break;
 				}
 
-				float saccadeMagnitude = Random.Range(0.01f, 15f);
+				float saccadeMagnitude = Random.Range(0.01f, MaxSaccadeMagnitude);
 				float saccadeDistance = (-6.9f / eyeMovementRange) * Mathf.Log(saccadeMagnitude / 15.7f);
 				saccadeDuration = 0.021f + 0.0022f * saccadeDistance * eyeMovementRange;
 				saccadeProgress = 0f;
