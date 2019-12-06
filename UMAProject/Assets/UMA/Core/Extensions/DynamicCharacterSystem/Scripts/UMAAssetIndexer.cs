@@ -749,7 +749,11 @@ namespace UMA
 		public AsyncOperationHandle<IList<UnityEngine.Object>> Preload(DynamicCharacterAvatar avatar, bool keepLoaded = false)
 		{
 			List<string> keys = new List<string>();
-			//keys.Add(avatar.activeRace.racedata.baseRaceRecipe.name);
+			RaceData race = GetAsset<RaceData>(avatar.activeRace.name);
+			if (race != null)
+			{
+				keys.Add(race.baseRaceRecipe.name);
+			}
 			foreach (var wr in avatar.preloadWardrobeRecipes.recipes)
 			{
 				keys.Add(wr._recipeName);
@@ -1330,7 +1334,7 @@ namespace UMA
 				ReleaseReferences(TypeToLookup[typeof(SlotDataAsset)]);
 				ReleaseReferences(TypeToLookup[typeof(OverlayDataAsset)]);
 
-				// CleanupAddressables(true);
+				CleanupAddressables(true);
 
             }
             finally
