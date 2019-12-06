@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UTR_WerewolfBase
   m_Data:
     m_SerializedData: []
-  m_GUID: a45f67fc1bee41d40bac8376535ea146
+  m_GUID: 07fa46f81a8ac1745918772b57f2c244
   m_SerializeEntries:
   - m_GUID: 0b1e4f14e3922614c95b147bed97cf3a
     m_Address: Ovl-WerewolfEyes
@@ -111,5 +111,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 499d552546693e3488df98b3edd2e366, type: 2}
-    - {fileID: 11400000, guid: e84ccfd198d68a6468b5d60057f2287d, type: 2}
+    - {fileID: 11400000, guid: 5fb25a87e62e5a34a9da8c49ad95eedd, type: 2}
+    - {fileID: 11400000, guid: c8fbfe8e7dbaf7f46a87b1e34e164370, type: 2}

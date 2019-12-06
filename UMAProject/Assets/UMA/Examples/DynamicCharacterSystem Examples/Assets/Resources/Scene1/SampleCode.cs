@@ -55,7 +55,7 @@ namespace UMA.CharacterSystem.Examples
 		{
 			Debug.Log("Race Preload Completed.");
 			// Preload any default wardrobe items on our avatar, now that the races are preloaded.
-			UMAAssetIndexer.Instance.Preload(Avatar,true).Completed += Avatar_Completed;
+			UMAAssetIndexer.Instance.Preload(Avatar,false).Completed += Avatar_Completed;
 		}
 
 		private void Avatar_Completed(UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<IList<Object>> obj)

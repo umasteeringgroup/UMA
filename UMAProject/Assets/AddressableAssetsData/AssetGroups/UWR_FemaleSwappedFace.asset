@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_FemaleSwappedFace
   m_Data:
     m_SerializedData: []
-  m_GUID: 3459ac68b9987994d90185a1263bb621
+  m_GUID: 87ad01eefde8bc34a8a0c111860f034f
   m_SerializeEntries:
   - m_GUID: 25c63a2415552414fbc33e7a48efc961
     m_Address: Slt-FemaleHead_Mouth
@@ -46,5 +46,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: fcf11a1288ed75d45b197953dc2d4268, type: 2}
-    - {fileID: 11400000, guid: 81157787bb4e36b47845ed386de251f2, type: 2}
+    - {fileID: 11400000, guid: 7dc08ff93dff1174ba70127513d85f16, type: 2}
+    - {fileID: 11400000, guid: 411508c88414c3840ac1dd9cc51205e9, type: 2}

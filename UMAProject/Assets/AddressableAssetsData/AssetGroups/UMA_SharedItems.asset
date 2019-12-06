@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UMA_SharedItems
   m_Data:
     m_SerializedData: []
-  m_GUID: 0f7d19268bbcdd248bc76d8b5573cb29
+  m_GUID: 6865aed84ddacef428738b7ea79bbf19
   m_SerializeEntries:
   - m_GUID: 01c93d5f2b62c7b489b6ce6eec465e64
     m_Address: Tex-shoes_tall_black_NM
@@ -1600,5 +1600,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 15524cc03606b0c4d9ea071404835ce8, type: 2}
-    - {fileID: 11400000, guid: 3cf1d0d4f137bb249b0c5ff1af974f8c, type: 2}
+    - {fileID: 11400000, guid: 1f9ab090f822d9f42af37f6527c09a05, type: 2}
+    - {fileID: 11400000, guid: 58422ba56a15ff346801a193614fd2bc, type: 2}

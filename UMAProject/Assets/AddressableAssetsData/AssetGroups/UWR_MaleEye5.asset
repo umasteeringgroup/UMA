@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_MaleEye5
   m_Data:
     m_SerializedData: []
-  m_GUID: 52d2d08891d968a419d23b843c6baaf5
+  m_GUID: 669375309af0d274f971f6caeedacf8b
   m_SerializeEntries:
   - m_GUID: 10d1e2ac030a2d54e8dffe526204097f
     m_Address: Ovl-Eye_Large_Adjust
@@ -36,5 +36,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: c5b17b6c47a31b54db84a8f4522f9eb4, type: 2}
-    - {fileID: 11400000, guid: b413bb390703a4549b577ee43910091c, type: 2}
+    - {fileID: 11400000, guid: 84c2cdecaf1975a4ab26bfa0b1c9b220, type: 2}
+    - {fileID: 11400000, guid: e66bca0cd4e5a954087dc1e9b44ffc94, type: 2}

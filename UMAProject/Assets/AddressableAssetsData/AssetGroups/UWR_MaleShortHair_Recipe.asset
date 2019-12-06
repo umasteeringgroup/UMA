@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_MaleShortHair_Recipe
   m_Data:
     m_SerializedData: []
-  m_GUID: f67be594f805f434da5e33eef7436b3b
+  m_GUID: 25fc5868325b4ef4488bd10f4cfcfaf9
   m_SerializeEntries:
   - m_GUID: 8af03ab249b1fbe4eab78d12fc87a911
     m_Address: Tex-MainCap
@@ -36,5 +36,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 49f36807871bdf34b8c4abb6482e1a6e, type: 2}
-    - {fileID: 11400000, guid: 00c1fa0f8c0af464fb1fc697212cdfb9, type: 2}
+    - {fileID: 11400000, guid: cf7f2002976d4174ca1e8ba21cc9d248, type: 2}
+    - {fileID: 11400000, guid: 22d027bef4784cd4e9e329b234db8c5b, type: 2}

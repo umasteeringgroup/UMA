@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_MilCut
   m_Data:
     m_SerializedData: []
-  m_GUID: 2dadb61dc5c173348ba3cb3091cc1895
+  m_GUID: 001adbf1e8261b5449b127a860acd406
   m_SerializeEntries:
   - m_GUID: 48d4f8e0253d2c843a6365a1c560a556
     m_Address: Ovl-Milcap_Overlay
@@ -36,5 +36,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: e9f369b4af2f93d478a45eb4a4652d9f, type: 2}
-    - {fileID: 11400000, guid: 3b754e79be3103f45aeca2e26a2f9a9d, type: 2}
+    - {fileID: 11400000, guid: 947150d45ae8fa44dac7e74dbb4efe44, type: 2}
+    - {fileID: 11400000, guid: 1874dcf437bf6d045a7412b707b3cd68, type: 2}

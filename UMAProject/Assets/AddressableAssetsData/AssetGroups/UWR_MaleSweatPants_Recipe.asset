@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_MaleSweatPants_Recipe
   m_Data:
     m_SerializedData: []
-  m_GUID: 5fdcf24a967dcf34d97c7a732af29512
+  m_GUID: 8416e84c2ebc5e04b9761236efd9640a
   m_SerializeEntries:
   - m_GUID: 048d03b875302a3449e9c7af9097c814
     m_Address: Ovl-MaleSweatPants_Overlay
@@ -46,5 +46,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 5b643224e8903354cb34686c350f18d1, type: 2}
-    - {fileID: 11400000, guid: fd07f2b8259bd9e449d2e4042350adb9, type: 2}
+    - {fileID: 11400000, guid: a1b4fa1774fb2d545a3ae62fcaa4e8a5, type: 2}
+    - {fileID: 11400000, guid: 30f2742894b97b542bef2dda506d810a, type: 2}

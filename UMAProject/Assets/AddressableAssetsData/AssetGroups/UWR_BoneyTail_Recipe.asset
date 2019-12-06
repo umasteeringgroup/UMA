@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_BoneyTail_Recipe
   m_Data:
     m_SerializedData: []
-  m_GUID: 84a1dcab4ffa4ce48a7c3a3a2cd7cc5e
+  m_GUID: 9fc74bc4bdc22ea489b303cf2d5fba7f
   m_SerializeEntries:
   - m_GUID: 34dcbac549d5c964f8c01cb8719d0a99
     m_Address: Slt-BoneyTail_1
@@ -36,5 +36,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 9139a54edd63ebd43a9939e2736d1cdc, type: 2}
-    - {fileID: 11400000, guid: d3aa4bad1a4e37a42b470466d8063cb6, type: 2}
+    - {fileID: 11400000, guid: 771cbb78cc763e1438661e5eb723d551, type: 2}
+    - {fileID: 11400000, guid: e3e3e10dc57a10345801b4d0f823046c, type: 2}

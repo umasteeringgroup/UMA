@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_ClothRobeRecipe
   m_Data:
     m_SerializedData: []
-  m_GUID: 73677227a7a44804d8ac709ba7fe5235
+  m_GUID: 6ff56b81d783d034ba931cc6840566df
   m_SerializeEntries:
   - m_GUID: 4d98ac0c301fa0d4c83550c332d2321a
     m_Address: Ovl-ClothRobeNonSimulatedOverlay
@@ -41,5 +41,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: b0e28b2c76b503d49bbf5cf68edac705, type: 2}
-    - {fileID: 11400000, guid: fa89a9a7708cc264c9f4e4a10764004e, type: 2}
+    - {fileID: 11400000, guid: fa4de875010f6a246a6e519ce68f15d9, type: 2}
+    - {fileID: 11400000, guid: 0cf57181b32d5f845bef8874365068bc, type: 2}

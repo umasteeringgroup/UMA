@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_MaleHoodie_Recipe
   m_Data:
     m_SerializedData: []
-  m_GUID: 688f7480f2d583b49a722cef0c10381c
+  m_GUID: 35ad5507dbd6b394fa7e5e9d3901704f
   m_SerializeEntries:
   - m_GUID: 049023c663609fb4b995c6206aa43ca7
     m_Address: Slt-MaleHoodie
@@ -46,5 +46,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 98227f0ddc7092243a4274edc5d84d37, type: 2}
-    - {fileID: 11400000, guid: 9090163e2e2705f47a97475c3cbb5f54, type: 2}
+    - {fileID: 11400000, guid: bb312790408754941b6df49defea3f01, type: 2}
+    - {fileID: 11400000, guid: 7566d3fdf70b4ef4ea0539560a78934c, type: 2}

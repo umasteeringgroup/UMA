@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_MaleUnderwear
   m_Data:
     m_SerializedData: []
-  m_GUID: 39466146a96d2014f9f2ae649e807402
+  m_GUID: 68f6d92f68405aa40b29ffdf99d464c8
   m_SerializeEntries:
   - m_GUID: 0b387c31f41888947aa0ffb2fbbd848b
     m_Address: Tex-M_H_Underwear_Metallic
@@ -41,5 +41,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 061c6f7d645eace47ae821716566d7b3, type: 2}
-    - {fileID: 11400000, guid: 6bcd064c09bd4e247bd6b20b0b7c1f88, type: 2}
+    - {fileID: 11400000, guid: 0017e00fb76fa254ebecbed44e1f7512, type: 2}
+    - {fileID: 11400000, guid: e21acf99ec8456a4cbb35c748dbfe72f, type: 2}

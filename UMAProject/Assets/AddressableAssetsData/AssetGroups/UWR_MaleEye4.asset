@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_MaleEye4
   m_Data:
     m_SerializedData: []
-  m_GUID: 01069de83a0098a48a86e4328eb24267
+  m_GUID: 32354db280309514f8bea7418c22b8a6
   m_SerializeEntries:
   - m_GUID: 76a2d7b941eeeda4ba2df5ea0e2fb266
     m_Address: Ovl-Cat_eye_Alternate_adjust
@@ -31,5 +31,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 23671b1b25fe56547aa154788c821c80, type: 2}
-    - {fileID: 11400000, guid: fae9afd1767dfa24caeb496ad72be9ce, type: 2}
+    - {fileID: 11400000, guid: e4d61991404b62845b52b2c2ffa781c4, type: 2}
+    - {fileID: 11400000, guid: 69a911a1e450c7e42a165efac39d7a93, type: 2}

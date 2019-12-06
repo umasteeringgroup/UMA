@@ -149,16 +149,16 @@ namespace UMA
                 return o.name;
             }
         }
-        #endregion
-        #region Methods (edit time)
+		#endregion
+		public void ReleaseItem()
+		{
+			_SerializedItem = null;
+		}
+
+		#region Methods (edit time)
 #if UNITY_EDITOR
 
-        public void ReleaseItem()
-        {
-            _SerializedItem = null;
-        }
-
-        public string ToString(string SortOrder)
+		public string ToString(string SortOrder)
         {
             if (SortOrder == "AssetName")
                 return _AssetBaseName;

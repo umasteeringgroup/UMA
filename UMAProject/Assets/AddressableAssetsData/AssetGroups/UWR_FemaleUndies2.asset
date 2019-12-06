@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_FemaleUndies2
   m_Data:
     m_SerializedData: []
-  m_GUID: 8179efb46bdac51419d3b4b12f593ec2
+  m_GUID: fb8b75b7ba776074685b83422d75df10
   m_SerializeEntries:
   - m_GUID: 2b3d17febfc1bf64f938a02e581c33f9
     m_Address: Tex-Underwear_Albedo
@@ -41,5 +41,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 61156885bce91024baf8d002d1cefae2, type: 2}
-    - {fileID: 11400000, guid: 77da23cc3ece0594ca0cad80cb45bb4b, type: 2}
+    - {fileID: 11400000, guid: 4f1ac8f62767178469e6114c536ee995, type: 2}
+    - {fileID: 11400000, guid: 6afab94d58b29cd46b1ae753d5a9fdd5, type: 2}

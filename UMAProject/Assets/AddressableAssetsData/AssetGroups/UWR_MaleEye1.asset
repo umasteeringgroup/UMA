@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_MaleEye1
   m_Data:
     m_SerializedData: []
-  m_GUID: ee100b2a93d6d1646ac7b248788f4947
+  m_GUID: 3a38ae20f3dec3c49b7d0a7b2a0b5404
   m_SerializeEntries:
   - m_GUID: 40b53c0fadbef334ca1842707ed2929a
     m_Address: Ovl-Alligator_eye_adjust
@@ -31,5 +31,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 0d8ff8bd3e5b91c449836e3305160d96, type: 2}
-    - {fileID: 11400000, guid: b8637e64fab06f2468f4dbbad24b930f, type: 2}
+    - {fileID: 11400000, guid: 632e8a63b499f15419017ee56eb8857d, type: 2}
+    - {fileID: 11400000, guid: 2c6e764af69c9744da014911b0c0e7ca, type: 2}

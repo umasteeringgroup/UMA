@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_MaleJeans 1
   m_Data:
     m_SerializedData: []
-  m_GUID: bb1105b44014c444fb2fb07a8a422019
+  m_GUID: 09a230d082a913445a1540fa67369700
   m_SerializeEntries:
   - m_GUID: 55c307f00e33a424ea317251a9ba1363
     m_Address: Tex-M_Pants_00_Normal
@@ -41,5 +41,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 33fe07cd96d1c654b9a3ae04ab0f98dd, type: 2}
-    - {fileID: 11400000, guid: 60695edb5b49544428e642889123ccb8, type: 2}
+    - {fileID: 11400000, guid: 820d7f09c28ce9b4889859fdbaa84f0b, type: 2}
+    - {fileID: 11400000, guid: 32994adb15d68284f9b20b7f60fb255e, type: 2}

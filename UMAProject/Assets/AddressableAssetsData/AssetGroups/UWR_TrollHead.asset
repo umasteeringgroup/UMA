@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_TrollHead
   m_Data:
     m_SerializedData: []
-  m_GUID: 751c4e1420a49cf4880da389f0f6ee87
+  m_GUID: c3cf70fbb85088c4ea67497b5765fab5
   m_SerializeEntries:
   - m_GUID: 7035932bba9111c4991e2489ca9b744b
     m_Address: Slt-Trollface_slot
@@ -26,5 +26,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 33df705b9582ccb4d96eebf86b7b1ff8, type: 2}
-    - {fileID: 11400000, guid: 75059784a1122e64193fdc497eee17c6, type: 2}
+    - {fileID: 11400000, guid: c08e3a32eeabc974d9614fafdca40d14, type: 2}
+    - {fileID: 11400000, guid: 09c1250502bcfc04386eae663bd48aa6, type: 2}
