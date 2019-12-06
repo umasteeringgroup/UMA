@@ -207,16 +207,12 @@ namespace UMA.CharacterSystem.Editors
 				return true;
 			bool found = false;
 			bool searchResources = true;
-			bool searchAssetBundles = true;
 			string resourcesFolderPath = "";
-			string assetBundlesToSearch = "";
 			RuntimeAnimatorController defaultController = null;
 			if (thisDCA != null)
 			{
 				searchResources = thisDCA.raceAnimationControllers.dynamicallyAddFromResources;
-				searchAssetBundles = thisDCA.raceAnimationControllers.dynamicallyAddFromAssetBundles;
 				resourcesFolderPath = thisDCA.raceAnimationControllers.resourcesFolderPath;
-				assetBundlesToSearch = thisDCA.raceAnimationControllers.assetBundleNames;
 				defaultController = thisDCA.raceAnimationControllers.defaultAnimationController != null ? thisDCA.raceAnimationControllers.defaultAnimationController : (thisDCA.animationController != null ? thisDCA.animationController : null);
 			}
 			if (defaultController)
@@ -228,7 +224,7 @@ namespace UMA.CharacterSystem.Editors
             }
 			var dalDebug = DynamicAssetLoader.Instance.debugOnFail;
 			DynamicAssetLoader.Instance.debugOnFail = false;
-			found = DynamicAssetLoader.Instance.AddAssets<RuntimeAnimatorController>(searchResources, searchAssetBundles, true, assetBundlesToSearch, resourcesFolderPath, null, racName, null);
+			found = DynamicAssetLoader.Instance.AddAssets<RuntimeAnimatorController>(searchResources, true, true, "", resourcesFolderPath, null, racName, null);
 			DynamicAssetLoader.Instance.debugOnFail = dalDebug;
 			return found;
 		}

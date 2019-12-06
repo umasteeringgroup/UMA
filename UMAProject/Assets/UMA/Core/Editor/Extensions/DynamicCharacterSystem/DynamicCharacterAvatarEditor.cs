@@ -11,7 +11,6 @@ namespace UMA.CharacterSystem.Editors
 	{
 		public bool showHelp = false;
 		public bool showWardrobe = false;
-		public bool showAssetBundles = false;
 
 		protected DynamicCharacterAvatar thisDCA;
 		protected RaceSetterPropertyDrawer _racePropDrawer = new RaceSetterPropertyDrawer();
@@ -421,31 +420,6 @@ namespace UMA.CharacterSystem.Editors
 						GUILayout.EndHorizontal();
 					}
                     EditorGUI.indentLevel--;
-					EditorGUI.EndDisabledGroup();
-				}
-
-				showAssetBundles = EditorGUILayout.Foldout(showAssetBundles, "Used Asset Bundles");
-				if (showAssetBundles)
-				{
-					EditorGUILayout.LabelField("AssetBundles used by Avatar");
-					string assetBundlesUsed = "";
-					if (thisDCA.assetBundlesUsedbyCharacter.Count == 0)
-					{
-						assetBundlesUsed = "None";
-					}
-					else
-					{
-						for (int i = 0; i < thisDCA.assetBundlesUsedbyCharacter.Count; i++)
-						{
-							assetBundlesUsed = assetBundlesUsed + thisDCA.assetBundlesUsedbyCharacter[i];
-							if (i < (thisDCA.assetBundlesUsedbyCharacter.Count - 1))
-							assetBundlesUsed = assetBundlesUsed + "\n";
-						}
-					}
-					EditorGUI.BeginDisabledGroup(true);
-					EditorGUI.indentLevel++;
-					EditorGUILayout.TextArea(assetBundlesUsed);
-					EditorGUI.indentLevel--;
 					EditorGUI.EndDisabledGroup();
 				}
 			}
