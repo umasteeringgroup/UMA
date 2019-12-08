@@ -131,6 +131,7 @@ namespace UMA.CharacterSystem
         public string loadFilename;
         public string loadString;
         public bool loadFileOnStart;
+		private bool isAddressableSystem;
 
         [EnumFlags]
         public LoadOptions defaultLoadOptions = LoadOptions.loadRace | LoadOptions.loadDNA | LoadOptions.loadWardrobe | LoadOptions.loadBodyColors | LoadOptions.loadWardrobeColors;
@@ -342,8 +343,11 @@ namespace UMA.CharacterSystem
 
         public void Awake()
         {
+			isAddressableSystem = false;
+
+			if (UMAContext.FindInstance() is UMAGlobalContext) isAddressableSystem = true;
 #if UNITY_EDITOR
-            EditorUMAContextBase = GameObject.Find("UMAEditorContext");
+			EditorUMAContextBase = GameObject.Find("UMAEditorContext");
             if (EditorUMAContextBase != null)
             {
                 EditorUMAContextBase.hideFlags = HideFlags.DontSave | HideFlags.NotEditable;
@@ -2453,7 +2457,7 @@ namespace UMA.CharacterSystem
         /// </summary>
         /// <returns>Can also be used to return an array of additional slots if this avatars flagForReload field is set to true before calling</returns>
         /// <param name="RestoreDNA">If updating the same race set this to true to restore the current DNA.</param>
-        public void BuildCharacter(bool RestoreDNA = true)
+        public void BuildCharacter(bool RestoreDNA = true, bool skipBundleCheck=false)
         {
 #if SUPER_LOGGING
 			Debug.Log("Building DynamicCharacterAvatar: " + gameObject.name);
@@ -2461,6 +2465,14 @@ namespace UMA.CharacterSystem
 
 			if (!_buildCharacterEnabled)
                 return;
+
+			if (!skipBundleCheck && isAddressableSystem)
+			{
+				var op = UMAAssetIndexer.Instance.Preload(this);
+				op.Completed += BuildWhenReady;
+				return;
+			}
+
             _isFirstSettingsBuild = false;
             //clear these values each time we build
             wasCrossCompatibleBuild = false;
@@ -2625,7 +2637,12 @@ namespace UMA.CharacterSystem
             }
         }
 
-        private void ApplyPredefinedDNA()
+		private void BuildWhenReady(UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<IList<UnityEngine.Object>> obj)
+		{
+			BuildCharacter(true, true);
+		}
+
+		private void ApplyPredefinedDNA()
         {
             if (this.predefinedDNA != null)
             {
