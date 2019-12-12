@@ -26,6 +26,9 @@ namespace UMA
 		public string AddressableAddress;
 		public int ReferenceCount;
 
+		[System.NonSerialized]
+		private Object _editorCachedItem;
+
         #endregion
         #region Properties
         public System.Type _Type
@@ -69,8 +72,19 @@ namespace UMA
 #if UNITY_EDITOR
                 if (_SerializedItem != null) return _SerializedItem;
 
-				if (!IsAddressable)  // this check is so we can test addressables in the editor
-					CacheSerializedItem(); 
+				if (IsAddressable)  // this check is so we can test addressables in the editor
+				{
+					if (Application.isPlaying)
+						return null;
+					if (_editorCachedItem == null)
+					{
+						_editorCachedItem = GetItem();
+					}
+					// _editorCachedItem is never saved.
+					return _editorCachedItem;
+				}
+	 
+				CacheSerializedItem(); 
                 return _SerializedItem;
 #else
                 return _SerializedItem;
@@ -86,13 +100,10 @@ namespace UMA
             }
         }
 
-		public void CacheSerializedItem()
+		private Object GetItem()
 		{
-			#if UNITY_EDITOR		
-			if (_SerializedItem != null) return;
-			if (IsAddressable) return;
-			_SerializedItem = AssetDatabase.LoadAssetAtPath(_Path, _Type);	
-			if (_SerializedItem == null) 
+			Object itemObject = AssetDatabase.LoadAssetAtPath(_Path, _Type);
+			if (itemObject == null)
 			{
 				// uhoh. It's gone.
 				if (!string.IsNullOrEmpty(_Guid))
@@ -101,23 +112,34 @@ namespace UMA
 					_Path = AssetDatabase.GUIDToAssetPath(_Guid);
 					if (!string.IsNullOrEmpty(_Path))
 					{
-						_SerializedItem = AssetDatabase.LoadAssetAtPath(_Path,_Type);
+						itemObject = AssetDatabase.LoadAssetAtPath(_Path, _Type);
 					}
 				}
 				// No guid, or couldn't even find by GUID.
 				// Let's search for it?
-				if (_SerializedItem == null)
+				if (itemObject == null)
 				{
 					string s = _Type.Name;
-					string[] guids = AssetDatabase.FindAssets(_Name+ " t:" + s);
+					string[] guids = AssetDatabase.FindAssets(_Name + " t:" + s);
 					if (guids.Length > 0)
 					{
 						_Guid = guids[0];
 						_Path = AssetDatabase.GUIDToAssetPath(_Guid);
-						_SerializedItem = AssetDatabase.LoadAssetAtPath(_Path, _Type);
+						itemObject = AssetDatabase.LoadAssetAtPath(_Path, _Type);
 					}
 				}
 			}
+			return itemObject;
+		}
+
+		public void CacheSerializedItem()
+		{
+			#if UNITY_EDITOR		
+			if (_SerializedItem != null) return;
+
+			//if (IsAddressable) return;
+
+			_SerializedItem = GetItem();
 			#endif
 		}
 
