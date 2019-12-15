@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_OverweightMale
   m_Data:
     m_SerializedData: []
-  m_GUID: f8f62f4cb727d7943a6c107bb116997e
+  m_GUID: 4ac381f929132f14c8c4ff7e623fef18
   m_SerializeEntries:
   - m_GUID: a6cf693702694d2448630418e711ffe6
     m_Address: Slt-OverweightMale_Slot
@@ -26,5 +26,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 0425f5c62b3245c4c95d67df7bcb8fe9, type: 2}
-    - {fileID: 11400000, guid: 92e90216c59b1f04fb9f2f10e5830323, type: 2}
+    - {fileID: 11400000, guid: b1ded1ae31d7ff24eb54631dda349e8c, type: 2}
+    - {fileID: 11400000, guid: c0600c2cac7cb3c41b130e4497ddf302, type: 2}

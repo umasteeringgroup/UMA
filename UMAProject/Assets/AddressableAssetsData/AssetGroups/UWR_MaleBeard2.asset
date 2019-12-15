@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_MaleBeard2
   m_Data:
     m_SerializedData: []
-  m_GUID: d4bf3d13555efbb41994a2800d11470d
+  m_GUID: cd3e8cdc435120044b117588ebf27966
   m_SerializeEntries:
   - m_GUID: 20989ab7f7fcc4fd29424f7ca3ad427f
     m_Address: Tex-MaleBeard02_Roughness
@@ -41,5 +41,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 907b82e210b5caa48b1ebf4128cf05df, type: 2}
-    - {fileID: 11400000, guid: 790b9e9f015d98c43bb21f481e191465, type: 2}
+    - {fileID: 11400000, guid: 466494e195da29f409f2ef4e281c80de, type: 2}
+    - {fileID: 11400000, guid: 93fad9048dafa344786ca8b3fe3738d3, type: 2}

@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_MaleBrow02
   m_Data:
     m_SerializedData: []
-  m_GUID: 55d2b077fd9698545817a3e8dca7018a
+  m_GUID: 992e0aedbb6e41d4198ae28de0331463
   m_SerializeEntries:
   - m_GUID: 72c3d07bd6a0b475d845f7f308b83ce8
     m_Address: Tex-MaleEyebrow02_Roughness
@@ -41,5 +41,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 9ffe0ca0c42873c4a97ca08fda501dde, type: 2}
-    - {fileID: 11400000, guid: 6895c0da171c5a943bd69a159d6b5e6f, type: 2}
+    - {fileID: 11400000, guid: f4d1b21b766fe98418e51a99b25ffdc5, type: 2}
+    - {fileID: 11400000, guid: 56b2b38fdf208ef4ea3fbfc053ec367d, type: 2}

@@ -273,18 +273,7 @@ namespace UMA.CharacterSystem.Editors
 			}
 			GUILayout.EndHorizontal();
 
-			GUILayout.BeginHorizontal();
-			if (GUILayout.Button("Clean/Regenerate Addressables"))
-			{
-				UAI.CleanupAddressables();
-				UAI.GenerateAddressables();
-				Resources.UnloadUnusedAssets();
-			}
-            if (GUILayout.Button("Delete Empty"))
-            {
-				UAI.CleanupAddressables(true);
-            }
-            GUILayout.EndHorizontal();
+
 
 			GUILayout.BeginHorizontal();
 			if (GUILayout.Button("Add Build References"))
@@ -307,6 +296,37 @@ namespace UMA.CharacterSystem.Editors
 				UAI.Clear();
 			}
 			GUILayout.EndHorizontal();
+
+
+
+			GUIHelper.BeginVerticalPadded(5, new Color(0.65f, 0.65f, 0.65f));
+			GUILayout.Label("Addressables");
+			GUILayout.Space(10);
+
+			GUILayout.BeginHorizontal();
+			if (GUILayout.Button("Re/Generate Groups"))
+			{
+				UAI.CleanupAddressables();
+				UAI.GenerateAddressables();
+				Resources.UnloadUnusedAssets();
+			}
+			if (GUILayout.Button("Delete Empty Groups"))
+			{
+				UAI.CleanupAddressables(true);
+			}
+			GUILayout.EndHorizontal();
+			GUILayout.BeginHorizontal();
+			if (GUILayout.Button("Remove Addressables"))
+			{
+				UAI.CleanupAddressables(false, true);
+			}
+			if (GUILayout.Button("Force Add Refs (bad!)"))
+			{
+				UAI.AddReferences(true);
+				Resources.UnloadUnusedAssets();
+			}
+			GUILayout.EndHorizontal();
+			GUIHelper.EndVerticalPadded(5.0f);
 
 			GUILayout.BeginHorizontal();
 			if (GUILayout.Button("Collapse All"))

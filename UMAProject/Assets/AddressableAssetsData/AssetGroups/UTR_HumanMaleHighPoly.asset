@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UTR_HumanMaleHighPoly
   m_Data:
     m_SerializedData: []
-  m_GUID: 5357ccd3012d8434d9ea544677d89153
+  m_GUID: 5758bfaf646496143b66679542dd2ccc
   m_SerializeEntries:
   - m_GUID: 208231186809c1c41994c39b4bd03d4c
     m_Address: Slt-FR_High_MaleFace
@@ -56,5 +56,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 3576fa68f28f8c8439235ff73d5decb7, type: 2}
-    - {fileID: 11400000, guid: f298baca249d0de4b82a78042929aa2b, type: 2}
+    - {fileID: 11400000, guid: 545e50311e48918499ad85fc58ab2b38, type: 2}
+    - {fileID: 11400000, guid: ac082b273d76093418e32e4a9598a4fa, type: 2}

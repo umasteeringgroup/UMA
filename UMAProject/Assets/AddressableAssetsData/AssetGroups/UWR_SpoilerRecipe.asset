@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_SpoilerRecipe
   m_Data:
     m_SerializedData: []
-  m_GUID: 4166f47fc1114f042ba0724ad1470411
+  m_GUID: 18739aca0b1e11044bb4b72198e0641e
   m_SerializeEntries:
   - m_GUID: 6e03cfedafaf94f48b148cfe04d24f96
     m_Address: Slt-SkyCarSpoiler
@@ -26,5 +26,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 2830a37a4cf81944f9e163449c290b96, type: 2}
-    - {fileID: 11400000, guid: 3901379808aa46d4e9310ef882bf12a6, type: 2}
+    - {fileID: 11400000, guid: 32a13395ab21cab419674086e44f65e8, type: 2}
+    - {fileID: 11400000, guid: 1c9a7504f3a82804aa00875995c06575, type: 2}

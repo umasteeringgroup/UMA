@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_FemaleUndies
   m_Data:
     m_SerializedData: []
-  m_GUID: 223cfeec43ce1db449621f2930eed262
+  m_GUID: 87268243d8ddc92479c2d99e25c446ae
   m_SerializeEntries:
   - m_GUID: 612aa5b72e1204f9292868e1a30c7654
     m_Address: Tex-FemaleUnderwear01_Roughness
@@ -41,5 +41,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 495bbfc5843ca834ead9ffac545f47f2, type: 2}
-    - {fileID: 11400000, guid: d8a512426884d0b4ab98571fe7fd8b5e, type: 2}
+    - {fileID: 11400000, guid: 814cbf753093e8c4991abac388ab762a, type: 2}
+    - {fileID: 11400000, guid: 6d95bc6a515c1d04e99f1f979d03d63d, type: 2}

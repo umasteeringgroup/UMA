@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_MaleJeans
   m_Data:
     m_SerializedData: []
-  m_GUID: 6b4b3fbded100fc47aa5103caa4322d1
+  m_GUID: f19d7e489ba2f5c4a921447c56413285
   m_SerializeEntries:
   - m_GUID: db59a2fec12e144498fed4c62c157859
     m_Address: Slt-MaleJeans02
@@ -26,5 +26,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: fba01af49433656469716901d3223340, type: 2}
-    - {fileID: 11400000, guid: 5b6167e0a20acce44afc1ca97785d9fe, type: 2}
+    - {fileID: 11400000, guid: a10bb66c5cb0d9142ad228ba26c2902d, type: 2}
+    - {fileID: 11400000, guid: 3e8b16221461aed4abecaf164addd137, type: 2}

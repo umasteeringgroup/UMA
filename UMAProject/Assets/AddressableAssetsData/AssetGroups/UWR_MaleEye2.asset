@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_MaleEye2
   m_Data:
     m_SerializedData: []
-  m_GUID: ef409d79ffa1c914db21539a02fbb055
+  m_GUID: 2b06d3d549adaf343be9bdde26d8e809
   m_SerializeEntries:
   - m_GUID: 230f3456aa1955640ad2f638e4dca4c7
     m_Address: Tex-Aligator_Eye_Alternate_Albedo_Adjust
@@ -31,5 +31,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 58a15e84844772c40aa3c838704a34c5, type: 2}
-    - {fileID: 11400000, guid: b0a970d4ad6f2ec4ca2a98ef484abf98, type: 2}
+    - {fileID: 11400000, guid: 20bfcc1be20e9a5448c82f12cfe3f6f9, type: 2}
+    - {fileID: 11400000, guid: 335b4d1bb14d4884caab2780e2318c06, type: 2}

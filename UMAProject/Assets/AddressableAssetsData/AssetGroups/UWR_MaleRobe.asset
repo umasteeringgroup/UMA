@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_MaleRobe
   m_Data:
     m_SerializedData: []
-  m_GUID: 03de099746a698e46b85e76915de222f
+  m_GUID: 28ce41ce06c81d64dbd43ffcfdfd0de7
   m_SerializeEntries:
   - m_GUID: 42352aba049ed6d4494cafe7e3bbadc0
     m_Address: Ovl-M_Freebie Robeset Robe AC
@@ -41,5 +41,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: b90b4cd35734c9a45887f2dbc944bc7b, type: 2}
-    - {fileID: 11400000, guid: 2b54cfd4502da084a978c7cbab8316d2, type: 2}
+    - {fileID: 11400000, guid: 5834596e0468865498ee2c280c3aa7d3, type: 2}
+    - {fileID: 11400000, guid: 2bebb55113da74e449fc85d5c3d7547c, type: 2}

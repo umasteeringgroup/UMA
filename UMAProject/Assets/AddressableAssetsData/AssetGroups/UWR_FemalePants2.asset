@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_FemalePants2
   m_Data:
     m_SerializedData: []
-  m_GUID: 5f028479a07cd54439a9a7d142861135
+  m_GUID: ea9d8afe3162fac4e803b061593a7a24
   m_SerializeEntries:
   - m_GUID: 959afba629a4847498616df7ba10a543
     m_Address: Ovl-FemaleJeans02
@@ -31,5 +31,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: fda51f26fa3565a4bbede047b4454a9e, type: 2}
-    - {fileID: 11400000, guid: 7ea7248bb73a2114bb449453da648290, type: 2}
+    - {fileID: 11400000, guid: aa4b2082b03ac6f498c507bd8b305c40, type: 2}
+    - {fileID: 11400000, guid: 5ef1204925b82c241a189e22e50b870e, type: 2}

@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_MaleRobe Shoes
   m_Data:
     m_SerializedData: []
-  m_GUID: baaec6669374efc46b564341fd38c3da
+  m_GUID: a19919a2264c62e43baef244646b30f9
   m_SerializeEntries:
   - m_GUID: 04c319227d59d73439289200f697f339
     m_Address: Tex-Boots_N
@@ -46,5 +46,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 16c13b625ea8c6046b3029e024420fe5, type: 2}
-    - {fileID: 11400000, guid: 0ebd7052cc43efa4d8b95d740052799b, type: 2}
+    - {fileID: 11400000, guid: 8afbdd7acee4d4744a72f94762637eb9, type: 2}
+    - {fileID: 11400000, guid: 51cd66057cbd83946a5187279122c967, type: 2}

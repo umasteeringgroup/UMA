@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UTR_SkyCarBaseRecipe
   m_Data:
     m_SerializedData: []
-  m_GUID: a931436d2c8ab2149a716b149653c2f6
+  m_GUID: 0091b1f868cc63147b18e621087a5416
   m_SerializeEntries:
   - m_GUID: 230ec082a97430c4da05bcd1157f7b44
     m_Address: Slt-SkyCarHubCaps
@@ -71,5 +71,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 2af27990ad28dd9488d652ee67ad29d3, type: 2}
-    - {fileID: 11400000, guid: a2aa3ef881faa394c95ada46ce9af88c, type: 2}
+    - {fileID: 11400000, guid: 5f72c27e2218d3840bb57e120ba40ad5, type: 2}
+    - {fileID: 11400000, guid: c7c6c97f9822cd142a875601214ce082, type: 2}

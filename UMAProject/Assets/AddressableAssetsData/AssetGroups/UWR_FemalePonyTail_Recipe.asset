@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_FemalePonyTail_Recipe
   m_Data:
     m_SerializedData: []
-  m_GUID: 4e37d497c13cfc248be5a10a9ee77588
+  m_GUID: 7fb92f5571f40df4b8f130f2e9411b7e
   m_SerializeEntries:
   - m_GUID: 7a03e04a4f448b74ebf93711f9f15a86
     m_Address: Slt-FemalePonyTail_1
@@ -31,5 +31,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 2c7248c824bb2494da713909cbaa2caa, type: 2}
-    - {fileID: 11400000, guid: cbabf12f72447c84492b6eb8f53a83cb, type: 2}
+    - {fileID: 11400000, guid: b7f2f811553b23b4bac001b2b2ee6943, type: 2}
+    - {fileID: 11400000, guid: e1933795b06538b44a252ae8e6c1ab5e, type: 2}

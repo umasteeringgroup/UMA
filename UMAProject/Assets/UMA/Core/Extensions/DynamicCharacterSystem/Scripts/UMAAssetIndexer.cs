@@ -968,7 +968,7 @@ namespace UMA
 			return false;
 		}
 
-        public void CleanupAddressables(bool OnlyEmpty = false)
+        public void CleanupAddressables(bool OnlyEmpty = false, bool RemoveFlags = false)
         {
             // delete all UMA groups
             // RemoveGroup.
@@ -1001,7 +1001,19 @@ namespace UMA
                 AddressableSettings.RemoveGroup(group);
                 pos += inc;
             }
-            EditorUtility.ClearProgressBar();
+
+			if (RemoveFlags)
+			{
+				UpdateSerializedList();
+				foreach (AssetItem ai in SerializedItems)
+				{
+					ai.IsAddressable = false;
+					ai.IsAlwaysLoaded = false;
+				}
+				UpdateSerializedDictionaryItems();
+				ForceSave();
+			}
+			EditorUtility.ClearProgressBar();
         }
 
         private void GenerateLookups(UMAContextBase context, List<UMATextRecipe> wardrobe)

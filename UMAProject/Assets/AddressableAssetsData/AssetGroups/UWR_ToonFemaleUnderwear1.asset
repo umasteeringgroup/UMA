@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: UWR_ToonFemaleUnderwear1
   m_Data:
     m_SerializedData: []
-  m_GUID: e51b98785f9a097489642b30b10b26db
+  m_GUID: 7f0307bbec092f041b57c99d7d6fb178
   m_SerializeEntries:
   - m_GUID: 0a1598e00e920e74aa5e584ae49f7c25
     m_Address: Tex-Female_Underwear_diffuse
@@ -36,5 +36,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 9325399c02d82d6438c2471b989f3d67, type: 2}
-    - {fileID: 11400000, guid: e715ada4c7f635144a854b9a5ce26223, type: 2}
+    - {fileID: 11400000, guid: 906b606d4729b594ba9d8401378fdc97, type: 2}
+    - {fileID: 11400000, guid: 55ca9c6e7ce010642b250ebfeba41c28, type: 2}
