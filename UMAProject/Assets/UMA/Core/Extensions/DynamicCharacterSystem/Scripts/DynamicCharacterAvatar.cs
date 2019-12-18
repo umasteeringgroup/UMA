@@ -1361,12 +1361,22 @@ namespace UMA.CharacterSystem
             }
         }
 
-        /// <summary>
-        /// Remove a previously added color
-        /// </summary>
-        /// <param name="Name"></param>
-        /// <param name="UpdateTexture"></param>
-        public void ClearColor(string Name, bool Update = true)
+		public void SetRawColor(string Name, OverlayColorData colorData, bool UpdateTexture = true)
+		{
+			characterColors.SetRawColor(Name, colorData);
+			if (UpdateTexture)
+			{
+				UpdateColors();
+				ForceUpdate(false, UpdateTexture, false);
+			}
+		}
+
+		/// <summary>
+		/// Remove a previously added color
+		/// </summary>
+		/// <param name="Name"></param>
+		/// <param name="UpdateTexture"></param>
+		public void ClearColor(string Name, bool Update = true)
         {
             characterColors.RemoveColor(Name);  
             if (Update)
@@ -1391,9 +1401,7 @@ namespace UMA.CharacterSystem
                     OverlayColorData c;
                     if (characterColors.GetColor(ucd.name, out c))
                     {
-                        ucd.color = c.color;
-                        if (ucd.channelAdditiveMask.Length >= 3 && c.channelAdditiveMask.Length >= 3)
-                            ucd.channelAdditiveMask[2] = c.channelAdditiveMask[2];
+						ucd.AssignFrom(c);
                     }
                     else
                     {
@@ -3338,6 +3346,8 @@ namespace UMA.CharacterSystem
             [FormerlySerializedAs("MetallicGloss")]
             [SerializeField]
             private Color _metallicGloss = new Color(0, 0, 0, 0);
+			[SerializeField]
+			private bool Raw;
 
             public bool valuesConverted = false;
 
@@ -3556,7 +3566,21 @@ namespace UMA.CharacterSystem
                 }
             }
 
-            public void RemoveColor(string name)
+			public void SetRawColor(string name, OverlayColorData c)
+			{
+				ColorValue cv = GetColorValue(name);
+				if (cv != null)
+				{
+					cv.AssignFrom(c);
+				}
+				else
+				{
+					Colors.Add(new ColorValue(name, c));
+				}
+			}
+
+
+			public void RemoveColor(string name)
             {
                 List<ColorValue> newColors = new List<ColorValue>();
 
