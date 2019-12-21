@@ -2132,8 +2132,12 @@ namespace UMA.CharacterSystem
         /// </summary>
         /// <param name="settingsToLoad"></param>
         /// <param name="customLoadOptions"></param>
-        public void LoadFromRecipeString(string settingsToLoad, LoadOptions customLoadOptions = LoadOptions.useDefaults)
+        public void LoadFromRecipeString(string settingsToLoad, LoadOptions customLoadOptions = LoadOptions.useDefaults, bool ClearWardrobe = false)
         {
+			if (ClearWardrobe)
+			{
+				this._wardrobeRecipes.Clear();
+			}
             ImportSettings(UMATextRecipe.PackedLoadDCS(context, settingsToLoad), customLoadOptions);
         }
         public void ImportSettings(UMATextRecipe.DCSUniversalPackRecipe settingsToLoad, LoadOptions customLoadOptions = LoadOptions.useDefaults)
