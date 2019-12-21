@@ -2476,7 +2476,7 @@ namespace UMA.CharacterSystem
 
 			if (!skipBundleCheck && isAddressableSystem)
 			{
-				var op = UMAAssetIndexer.Instance.Preload(this);
+				var op = UMAAssetIndexer.Instance.PreloadWardrobe(this);
 				op.Completed += BuildWhenReady;
 				return;
 			}

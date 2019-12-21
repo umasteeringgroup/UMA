@@ -529,7 +529,7 @@ PlayerSettings:
   webGLLinkerTarget: 1
   webGLThreadsSupport: 0
   scriptingDefineSymbols:
-    1: SUPER_LOGGING
+    1: NOTSUPER_LOGGING
     2: 
   platformArchitecture: {}
   scriptingBackend:

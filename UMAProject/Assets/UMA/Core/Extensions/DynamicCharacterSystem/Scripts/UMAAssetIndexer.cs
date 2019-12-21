@@ -746,18 +746,50 @@ namespace UMA
 #endif
 		}
 
-		public AsyncOperationHandle<IList<UnityEngine.Object>> Preload(DynamicCharacterAvatar avatar, bool keepLoaded = false)
+		public AsyncOperationHandle<IList<UnityEngine.Object>> PreloadWardrobe(DynamicCharacterAvatar avatar, bool keepLoaded = false)
 		{
 			List<string> keys = new List<string>();
 			RaceData race = GetAsset<RaceData>(avatar.activeRace.name);
+
+			// preload the race
 			if (race != null)
 			{
 				keys.Add(race.baseRaceRecipe.name);
 			}
+
+			// preload any assigned recipes.
+			foreach (var wr in avatar.WardrobeRecipes.Values)
+			{
+				keys.Add(wr.name);
+			}
+
+			return LoadLabelList(keys, keepLoaded);
+		}
+
+
+		public AsyncOperationHandle<IList<UnityEngine.Object>> Preload(DynamicCharacterAvatar avatar, bool keepLoaded = false)
+		{
+			List<string> keys = new List<string>();
+			RaceData race = GetAsset<RaceData>(avatar.activeRace.name);
+			
+			// preload the race
+			if (race != null)
+			{
+				keys.Add(race.baseRaceRecipe.name);
+			}
+
+			// preload the preloadrecipes... do we need this?
 			foreach (var wr in avatar.preloadWardrobeRecipes.recipes)
 			{
 				keys.Add(wr._recipeName);
 			}
+
+			// preload any assigned recipes.
+			foreach (var wr in avatar.WardrobeRecipes.Values)
+			{
+				keys.Add(wr.name);
+			}
+
 			return LoadLabelList(keys,keepLoaded);
 		}
 

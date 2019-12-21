@@ -92,6 +92,7 @@ namespace UMA
 			private int[] stateHashes = new int[0];
 			private float[] stateTimes = new float[0];
 			AnimatorControllerParameter[] parameters;
+			private Dictionary<int, float> layerWeights = new Dictionary<int, float>();
 
 			public void SaveAnimatorState(Animator animator)
 			{
@@ -99,12 +100,14 @@ namespace UMA
 				stateHashes = new int[layerCount];
 				stateTimes = new float[layerCount];
 				parameters = new AnimatorControllerParameter[animator.parameterCount];
+				layerWeights.Clear();
 
 				for (int i = 0; i < layerCount; i++)
 				{
 					var state = animator.GetCurrentAnimatorStateInfo(i);
 					stateHashes[i] = state.fullPathHash;
 					stateTimes[i] = Mathf.Max(0, state.normalizedTime + Time.deltaTime / state.length);
+					layerWeights.Add(i, animator.GetLayerWeight(i));
 				}
 
 				Array.Copy(animator.parameters, parameters, animator.parameterCount);
@@ -133,6 +136,10 @@ namespace UMA
 					for (int i = 0; i < animator.layerCount; i++)
 					{
 						animator.Play(stateHashes[i], i, stateTimes[i]);
+						if (i < layerWeights.Count)
+						{
+							animator.SetLayerWeight(i, layerWeights[i]);
+						}
 					}
 				}
 
