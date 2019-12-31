@@ -2158,7 +2158,7 @@ namespace UMA.CharacterSystem
             var wasBuildCharacterEnabled = _buildCharacterEnabled;
             _isFirstSettingsBuild = false;
             var prevDna = new UMADnaBase[0];
-            bool needsUpdate = false;//gets set to true if anything caused downloads that we actually waited for
+
             if (umaGenerator == null)
             {
                 umaGenerator = UMAGenerator.FindInstance();
@@ -2480,7 +2480,7 @@ namespace UMA.CharacterSystem
 
 			if (!skipBundleCheck && isAddressableSystem)
 			{
-				var op = UMAAssetIndexer.Instance.PreloadWardrobe(this);
+				var op = UMAAssetIndexer.Instance.Preload(this);
 				op.Completed += BuildWhenReady;
 				return;
 			}
@@ -2650,8 +2650,23 @@ namespace UMA.CharacterSystem
         }
 
 		private void BuildWhenReady(UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<IList<UnityEngine.Object>> obj)
-		{
-			BuildCharacter(true, true);
+        {
+            try
+            {
+                //Debug.Log("status is: " + obj.Status);
+                //foreach(UnityEngine.Object o in obj.Result)
+                //{
+                //    Debug.Log("Loaded " + o.name);
+                //}
+                if (obj.IsDone)
+                {
+                    BuildCharacter(true, true);
+                }
+            }
+            catch(Exception ex)
+            {
+                Debug.LogException(ex, this);
+            }
 		}
 
 		private void ApplyPredefinedDNA()

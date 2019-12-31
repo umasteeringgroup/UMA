@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UTR_MaleOutfit1
+  m_EditorClassIdentifier: 
+  m_GroupName: UTR_MaleOutfit1
+  m_Data:
+    m_SerializedData: []
+  m_GUID: be01acce2ec834e488d1c0dce0f0a77d
+  m_SerializeEntries:
+  - m_GUID: 2efa54ed9091b2045a5d323cec2550cc
+    m_Address: Slt-MaleJeans01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MaleOutfit1
+    m_mainAssetType: 
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: c18a328d495d060408ddca0f4e05be98, type: 2}
+    - {fileID: 11400000, guid: 649f5c6ffd58be54a9bde37f51aae484, type: 2}

@@ -347,6 +347,7 @@ namespace UMA.CharacterSystem.Editors
 			//{
 			//	UAI.ForceSave();
 			//}
+
 			UAI.AutoUpdate = EditorGUILayout.Toggle("Process Updates", UAI.AutoUpdate);
 			GUILayout.BeginHorizontal();
 
@@ -375,7 +376,9 @@ namespace UMA.CharacterSystem.Editors
 			{
 				if (t != typeof(AnimatorController) && t!= typeof(AnimatorOverrideController)) // Somewhere, a kitten died because I typed that.
 				{
-					if (ShowArray(t, Filter))
+					bool err = false;
+					err = ShowArray(t, Filter);
+					if (err)
 					{
 						HasErrors = true;
 						ErrorTypes += t.Name +" ";
@@ -436,6 +439,18 @@ namespace UMA.CharacterSystem.Editors
 			return false;
 		}
 
+
+		private const int ToggleWidth = 20;
+		private const int NameWidth = 0;        // this should expand
+		private const int InBuildWidth = 35;    // has REF
+		private const int AddressableWidth = 35;
+		private const int GroupWidth = 130;     // group it's in
+		private const int LabelsWidth = 200;
+		private const int AlwaysFlagWidth = 40;
+		private const int InspectButtonWidth = 20;
+		private const int BuildButtonWidth = 35;
+		private const int RemoveButtonWidth = 20;
+
 		public bool ShowArray(System.Type CurrentType, string Filter)
         {
             bool HasFilter = false;
@@ -459,6 +474,9 @@ namespace UMA.CharacterSystem.Editors
 			int AlwaysIncluded = 0;
 			int LocalItems = 0;
             int VisibleItems = 0;
+
+			// Show header
+			// Show each item.
             foreach (AssetItem ai in Items)
             {
 				LocalItems++;
@@ -518,7 +536,13 @@ namespace UMA.CharacterSystem.Editors
                 }
                 GUILayout.EndHorizontal();
 
-                int CurrentVisibleItem = 0;
+				// HEADER
+				GUILayout.BeginHorizontal();
+
+				GUILayout.EndHorizontal();
+				// END HEADER
+
+				int CurrentVisibleItem = 0;
                 foreach (AssetItem ai in Items)
                 {
                     string lblBuild = "B-";

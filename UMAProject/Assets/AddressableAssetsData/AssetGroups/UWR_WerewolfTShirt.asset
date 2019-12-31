@@ -15,31 +15,35 @@ MonoBehaviour:
   m_GroupName: UWR_WerewolfTShirt
   m_Data:
     m_SerializedData: []
-  m_GUID: 1301c2d09563cdd4d9dacd9aa7f2c8e0
+  m_GUID: c2a482b84651b1e45a93fa80faf376f5
   m_SerializeEntries:
   - m_GUID: 8e46551b231290e44b00c11543501fd8
     m_Address: Tex-MaleShirt01_Normal
     m_ReadOnly: 0
     m_SerializedLabels:
     - WerewolfTShirt
+    m_mainAssetType: 
   - m_GUID: a04e469a0d80a6742a85658cd80912ab
     m_Address: Ovl-WerewolfShirt
     m_ReadOnly: 0
     m_SerializedLabels:
     - WerewolfTShirt
+    m_mainAssetType: 
   - m_GUID: d40bec82ad70824478f3cead70f6cfea
     m_Address: Tex-MaleShirt01_Albedo
     m_ReadOnly: 0
     m_SerializedLabels:
     - WerewolfTShirt
+    m_mainAssetType: 
   - m_GUID: f6107ad9de1e9bb4ea74851d9bca7976
     m_Address: Tex-MaleShirt01_Roughness
     m_ReadOnly: 0
     m_SerializedLabels:
     - WerewolfTShirt
+    m_mainAssetType: 
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: b982c41fe66212e42871a5c25ba54c40, type: 2}
-    - {fileID: 11400000, guid: 1c91f82b1cd9d3e4b8c19e20c13b46ae, type: 2}
+    - {fileID: 11400000, guid: 614f20ec6dcdb9b4fa56398ba597127b, type: 2}
+    - {fileID: 11400000, guid: 5b86b63324163204f8c9f1fc43847d3c, type: 2}

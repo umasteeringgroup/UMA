@@ -15,21 +15,23 @@ MonoBehaviour:
   m_GroupName: UWR_StripesRecipe
   m_Data:
     m_SerializedData: []
-  m_GUID: a50f208154396244eaf3c296fc6d82af
+  m_GUID: cc0c17440f79e8e4d970e6ec4e92a1e8
   m_SerializeEntries:
   - m_GUID: 76ec4c0387ef8564c86bd868e95cbf3d
     m_Address: Tex-SkyCarStripesAlbedo
     m_ReadOnly: 0
     m_SerializedLabels:
     - StripesRecipe
+    m_mainAssetType: 
   - m_GUID: c494b917f233f9e42a6e34e169909743
     m_Address: Ovl-SkyCarStripesOverlay
     m_ReadOnly: 0
     m_SerializedLabels:
     - StripesRecipe
+    m_mainAssetType: 
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 88d100c2c9722ad47a36bce05dba4e0d, type: 2}
-    - {fileID: 11400000, guid: 43ba1383ea245a1488c9df1d27b985d1, type: 2}
+    - {fileID: 11400000, guid: 0574cac6075dffd4cbafaa0883747ded, type: 2}
+    - {fileID: 11400000, guid: 8898deff963df0c44942116226001b27, type: 2}

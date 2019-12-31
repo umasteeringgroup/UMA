@@ -15,31 +15,35 @@ MonoBehaviour:
   m_GroupName: UWR_MaleRobe
   m_Data:
     m_SerializedData: []
-  m_GUID: 28ce41ce06c81d64dbd43ffcfdfd0de7
+  m_GUID: 9a0b28bd206f2bb45b40c8675c2222c8
   m_SerializeEntries:
   - m_GUID: 42352aba049ed6d4494cafe7e3bbadc0
     m_Address: Ovl-M_Freebie Robeset Robe AC
     m_ReadOnly: 0
     m_SerializedLabels:
     - MaleRobe
+    m_mainAssetType: 
   - m_GUID: 8aae7e72162c0c74b9326dbca416651a
     m_Address: Slt-M_Freebie Robeset Robe_Slot
     m_ReadOnly: 0
     m_SerializedLabels:
     - MaleRobe
+    m_mainAssetType: 
   - m_GUID: c901b9f1e6dc2dd4190fe7ae4272a633
     m_Address: Ovl-M_Freebie Robeset Robe
     m_ReadOnly: 0
     m_SerializedLabels:
     - MaleRobe
+    m_mainAssetType: 
   - m_GUID: eaf8fd484647df74aa468bd607b8e6e8
     m_Address: Tex-UpperLower_AC
     m_ReadOnly: 0
     m_SerializedLabels:
     - MaleRobe
+    m_mainAssetType: 
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 5834596e0468865498ee2c280c3aa7d3, type: 2}
-    - {fileID: 11400000, guid: 2bebb55113da74e449fc85d5c3d7547c, type: 2}
+    - {fileID: 11400000, guid: 5cebd77b7e8f1754d8c2d2ddad2fa732, type: 2}
+    - {fileID: 11400000, guid: 0bb28f3f50d30a84cbb7c419f7231e58, type: 2}

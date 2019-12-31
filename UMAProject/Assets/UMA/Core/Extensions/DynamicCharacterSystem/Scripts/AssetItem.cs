@@ -24,6 +24,7 @@ namespace UMA
 		public bool IsAlwaysLoaded;
 		public string AddressableGroup;
 		public string AddressableAddress;
+        public string AddressableLabels;
 		public int ReferenceCount;
 
 		[System.NonSerialized]
@@ -102,6 +103,7 @@ namespace UMA
 
 		private Object GetItem()
 		{
+#if UNITY_EDITOR
 			Object itemObject = AssetDatabase.LoadAssetAtPath(_Path, _Type);
 			if (itemObject == null)
 			{
@@ -129,18 +131,21 @@ namespace UMA
 					}
 				}
 			}
+#else
+			Object itemObject = null;
+#endif
 			return itemObject;
 		}
 
 		public void CacheSerializedItem()
 		{
-			#if UNITY_EDITOR		
+#if UNITY_EDITOR
 			if (_SerializedItem != null) return;
 
 			//if (IsAddressable) return;
 
 			_SerializedItem = GetItem();
-			#endif
+#endif
 		}
 
         public string EvilName
@@ -171,13 +176,13 @@ namespace UMA
                 return o.name;
             }
         }
-		#endregion
+#endregion
 		public void ReleaseItem()
 		{
 			_SerializedItem = null;
 		}
 
-		#region Methods (edit time)
+#region Methods (edit time)
 #if UNITY_EDITOR
 
 		public string ToString(string SortOrder)
@@ -237,8 +242,8 @@ namespace UMA
         }
 
 #endif
-        #endregion
-        #region Constructors
+#endregion
+#region Constructors
         public AssetItem(System.Type Type, string Name, string Path, Object Item)
         {
             if (Type == null) return;
@@ -247,9 +252,9 @@ namespace UMA
             _Name = Name;
             _SerializedItem = Item;
             _Path = Path;
-			#if UNITY_EDITOR
+#if UNITY_EDITOR
 			_Guid = AssetDatabase.AssetPathToGUID(_Path);
-			#endif
+#endif
         }
         public AssetItem(System.Type Type, Object Item)
         {
@@ -263,6 +268,6 @@ namespace UMA
             _SerializedItem = Item;
             _Name = EvilName;
         }
-        #endregion
+#endregion
     }
 }

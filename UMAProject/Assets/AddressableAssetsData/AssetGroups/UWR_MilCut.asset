@@ -15,26 +15,29 @@ MonoBehaviour:
   m_GroupName: UWR_MilCut
   m_Data:
     m_SerializedData: []
-  m_GUID: ec6f56d96aff05b42abc33b317ecced3
+  m_GUID: 04c9045b89c4a164a97074c7c7c2c84a
   m_SerializeEntries:
   - m_GUID: 48d4f8e0253d2c843a6365a1c560a556
     m_Address: Ovl-Milcap_Overlay
     m_ReadOnly: 0
     m_SerializedLabels:
     - MilCut
+    m_mainAssetType: 
   - m_GUID: ccc8f1668f1d19549bf1a2fbb88a4157
     m_Address: Slt-Milcut
     m_ReadOnly: 0
     m_SerializedLabels:
     - MilCut
+    m_mainAssetType: 
   - m_GUID: e5356b4d449b6dc4087b661ee7e36a01
     m_Address: Tex-Milcap
     m_ReadOnly: 0
     m_SerializedLabels:
     - MilCut
+    m_mainAssetType: 
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 29b002d2e104e5e448d7677b1a0681e1, type: 2}
-    - {fileID: 11400000, guid: 1d6c1f76fa81f6949a1b66ac3a94db76, type: 2}
+    - {fileID: 11400000, guid: 72c57756222720b4aa862f6ef6994d06, type: 2}
+    - {fileID: 11400000, guid: 89d09f497a4e4704d90414399be2ab47, type: 2}

@@ -15,36 +15,35 @@ MonoBehaviour:
   m_GroupName: UWR_BlendShapeRecipe
   m_Data:
     m_SerializedData: []
-  m_GUID: e48660c3a5c67364c826f3db52fb69e4
+  m_GUID: a802597a6d72f37479480c405f69e67a
   m_SerializeEntries:
   - m_GUID: 0636d7d4de85e4549873e4a004408958
     m_Address: Tex-MaleFace01_Albedo
     m_ReadOnly: 0
     m_SerializedLabels:
     - BlendShapeRecipe
-  - m_GUID: 36832eb4f58c963418b5be22d9a7eafb
-    m_Address: Slt-MaleEarsMorph
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - BlendShapeRecipe
+    m_mainAssetType: 
   - m_GUID: 930ed1f344d4641f79c5f7d2a22c03f3
     m_Address: Tex-MaleFace01_Roughness
     m_ReadOnly: 0
     m_SerializedLabels:
     - BlendShapeRecipe
+    m_mainAssetType: 
   - m_GUID: 95bfee1fde083402fb8a5855e122807d
     m_Address: Tex-MaleFace01_Normal
     m_ReadOnly: 0
     m_SerializedLabels:
     - BlendShapeRecipe
+    m_mainAssetType: 
   - m_GUID: a60d5c517fee0ce48b5b59b9ed45861e
     m_Address: Ovl-MaleHead01
     m_ReadOnly: 0
     m_SerializedLabels:
     - BlendShapeRecipe
+    m_mainAssetType: 
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: ce68ecb4feac17243a87987cf3b03161, type: 2}
-    - {fileID: 11400000, guid: e05d8804ba19f5e41a4a739dcdeb6a84, type: 2}
+    - {fileID: 11400000, guid: b970a5a0582d61245b30869427de66bb, type: 2}
+    - {fileID: 11400000, guid: 2b37ed60a66b40645b5d4c37492c033f, type: 2}

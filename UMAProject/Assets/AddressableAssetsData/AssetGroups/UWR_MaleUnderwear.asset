@@ -15,31 +15,35 @@ MonoBehaviour:
   m_GroupName: UWR_MaleUnderwear
   m_Data:
     m_SerializedData: []
-  m_GUID: 88e3ed139c9232d45a4eee5c60c2180e
+  m_GUID: 213cb0a2f3b336447a970072302a71c6
   m_SerializeEntries:
   - m_GUID: 0b387c31f41888947aa0ffb2fbbd848b
     m_Address: Tex-M_H_Underwear_Metallic
     m_ReadOnly: 0
     m_SerializedLabels:
     - MaleUnderwear
+    m_mainAssetType: 
   - m_GUID: 32afddac09b8ce5479274e5822dbb54d
     m_Address: Tex-M_H_Underwear_N
     m_ReadOnly: 0
     m_SerializedLabels:
     - MaleUnderwear
+    m_mainAssetType: 
   - m_GUID: 42a14c30761d02648aee3c20858ffdae
     m_Address: Tex-M_H_Underwear_Albedo
     m_ReadOnly: 0
     m_SerializedLabels:
     - MaleUnderwear
+    m_mainAssetType: 
   - m_GUID: 4e3423fc7dbaee44397ec91baa5ce828
     m_Address: Ovl-M_Underwear
     m_ReadOnly: 0
     m_SerializedLabels:
     - MaleUnderwear
+    m_mainAssetType: 
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 2bcbd6b8c2fe925429e97f1709ca19d1, type: 2}
-    - {fileID: 11400000, guid: 8b7c21b420ad1334ea90d3e9636884ca, type: 2}
+    - {fileID: 11400000, guid: 83b1ff7722e507a45bcfe5b8afccd0f7, type: 2}
+    - {fileID: 11400000, guid: 6b19d2f8290fd0e4da6413a24f11ebf6, type: 2}

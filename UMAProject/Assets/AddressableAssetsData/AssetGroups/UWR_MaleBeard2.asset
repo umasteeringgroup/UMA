@@ -15,31 +15,35 @@ MonoBehaviour:
   m_GroupName: UWR_MaleBeard2
   m_Data:
     m_SerializedData: []
-  m_GUID: cd3e8cdc435120044b117588ebf27966
+  m_GUID: b530b0e1614229b4ab66289923df8dc1
   m_SerializeEntries:
   - m_GUID: 20989ab7f7fcc4fd29424f7ca3ad427f
     m_Address: Tex-MaleBeard02_Roughness
     m_ReadOnly: 0
     m_SerializedLabels:
     - MaleBeard2
+    m_mainAssetType: 
   - m_GUID: 43f2ca917c7784aaebd610597a5b03a4
     m_Address: Tex-MaleBeard02_Normal
     m_ReadOnly: 0
     m_SerializedLabels:
     - MaleBeard2
+    m_mainAssetType: 
   - m_GUID: 50fd7bdf5bb124084af695f5f932709b
     m_Address: Tex-MaleBeard02_Albedo
     m_ReadOnly: 0
     m_SerializedLabels:
     - MaleBeard2
+    m_mainAssetType: 
   - m_GUID: c4542d0190eae184d8f1e1e277208fd7
     m_Address: Ovl-MaleBeard02
     m_ReadOnly: 0
     m_SerializedLabels:
     - MaleBeard2
+    m_mainAssetType: 
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 466494e195da29f409f2ef4e281c80de, type: 2}
-    - {fileID: 11400000, guid: 93fad9048dafa344786ca8b3fe3738d3, type: 2}
+    - {fileID: 11400000, guid: 167fb2efb478e3542a16e1b14d05ce85, type: 2}
+    - {fileID: 11400000, guid: 2fb36a48c6aab0943940aeadd9f84f93, type: 2}

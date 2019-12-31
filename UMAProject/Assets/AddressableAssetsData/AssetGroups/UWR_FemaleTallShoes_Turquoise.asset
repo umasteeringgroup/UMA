@@ -15,21 +15,23 @@ MonoBehaviour:
   m_GroupName: UWR_FemaleTallShoes_Turquoise
   m_Data:
     m_SerializedData: []
-  m_GUID: 1ea4e387e66164448b98909843b34c7a
+  m_GUID: 17a659faba5bb0f448157f9a5c97145e
   m_SerializeEntries:
   - m_GUID: 2f1c6f0526831c24b8b081fbf978e3ac
     m_Address: Tex-shoes_tall_turquoise_D
     m_ReadOnly: 0
     m_SerializedLabels:
     - FemaleTallShoes_Turquoise
+    m_mainAssetType: 
   - m_GUID: 907de3008710e7f41b1ff076aac06cf2
     m_Address: Ovl-TallShoes_Turquoise
     m_ReadOnly: 0
     m_SerializedLabels:
     - FemaleTallShoes_Turquoise
+    m_mainAssetType: 
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 89965b7a925be25488c75a4c87f59c0c, type: 2}
-    - {fileID: 11400000, guid: bda1a3b63d388ee44b8a5109a9c1f1be, type: 2}
+    - {fileID: 11400000, guid: 8abc49f6f2c413847a500307c13f5f1a, type: 2}
+    - {fileID: 11400000, guid: 96f1be4c64bdd324cb52c5d1270c3a2a, type: 2}

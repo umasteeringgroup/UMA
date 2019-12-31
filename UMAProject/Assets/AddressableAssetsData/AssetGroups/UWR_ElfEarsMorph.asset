@@ -15,16 +15,17 @@ MonoBehaviour:
   m_GroupName: UWR_ElfEarsMorph
   m_Data:
     m_SerializedData: []
-  m_GUID: 63c0857a38bf04f4eb5a0fd984dc86e2
+  m_GUID: cb4cc8e0b41f8bd4b8edd6115c1eb951
   m_SerializeEntries:
   - m_GUID: 82e2d1671a9ac524d805de01b9408543
     m_Address: Slt-ElfEarsMorph
     m_ReadOnly: 0
     m_SerializedLabels:
     - ElfEarsMorph
+    m_mainAssetType: 
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 2af11b92199ee924ba9e0fbe488e880d, type: 2}
-    - {fileID: 11400000, guid: 6d874aefdaac1dc418e35026a1673eba, type: 2}
+    - {fileID: 11400000, guid: 962cd9ab0d53dcd4da02356db4f53e6c, type: 2}
+    - {fileID: 11400000, guid: 194db5060ce883b4092c65d9d8e6ca50, type: 2}

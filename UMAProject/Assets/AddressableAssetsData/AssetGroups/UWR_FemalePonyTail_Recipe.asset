@@ -15,21 +15,23 @@ MonoBehaviour:
   m_GroupName: UWR_FemalePonyTail_Recipe
   m_Data:
     m_SerializedData: []
-  m_GUID: 7fb92f5571f40df4b8f130f2e9411b7e
+  m_GUID: f87617328c3f67944a804a9b7c0aec0d
   m_SerializeEntries:
   - m_GUID: 7a03e04a4f448b74ebf93711f9f15a86
     m_Address: Slt-FemalePonyTail_1
     m_ReadOnly: 0
     m_SerializedLabels:
     - FemalePonyTail_Recipe
+    m_mainAssetType: 
   - m_GUID: 8f4fa762be2c12049baf6abfea653205
     m_Address: Slt-FemalePonyTail
     m_ReadOnly: 0
     m_SerializedLabels:
     - FemalePonyTail_Recipe
+    m_mainAssetType: 
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: b7f2f811553b23b4bac001b2b2ee6943, type: 2}
-    - {fileID: 11400000, guid: e1933795b06538b44a252ae8e6c1ab5e, type: 2}
+    - {fileID: 11400000, guid: fd9bf6c601c854240a49ae743e334f73, type: 2}
+    - {fileID: 11400000, guid: aa037ca4b3e454d44b4e7a0a488761c5, type: 2}

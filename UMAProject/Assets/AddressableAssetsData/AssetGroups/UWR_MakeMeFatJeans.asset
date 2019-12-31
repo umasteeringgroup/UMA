@@ -15,16 +15,17 @@ MonoBehaviour:
   m_GroupName: UWR_MakeMeFatJeans
   m_Data:
     m_SerializedData: []
-  m_GUID: 1bc5d8b5c27d51144930940e26d29238
+  m_GUID: 6d18afe653a411a48be6f465e28831b9
   m_SerializeEntries:
   - m_GUID: f1aa0614c0ce2f242a448e8f80248623
     m_Address: Slt-MakeMeFatJeans
     m_ReadOnly: 0
     m_SerializedLabels:
     - MakeMeFatJeans
+    m_mainAssetType: 
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 21d52c8c2f9e7d043aed4650b24b97d1, type: 2}
-    - {fileID: 11400000, guid: 91325ecf161c9d04087559e915bb2b10, type: 2}
+    - {fileID: 11400000, guid: c47fb7aad4d4fae42abda7111487c118, type: 2}
+    - {fileID: 11400000, guid: f7f3216640a802845b6155b256eb5e9a, type: 2}

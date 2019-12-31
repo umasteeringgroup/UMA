@@ -15,36 +15,41 @@ MonoBehaviour:
   m_GroupName: UWR_MaleRobe Hood
   m_Data:
     m_SerializedData: []
-  m_GUID: f8037cc4ab258c94091c4490a54d5535
+  m_GUID: e8a9753ed129a4c46bd9356bc085f913
   m_SerializeEntries:
   - m_GUID: 336187aa7b3190f488804be99f650b87
     m_Address: Tex-Altar_hood_A
     m_ReadOnly: 0
     m_SerializedLabels:
     - MaleRobe Hood
+    m_mainAssetType: 
   - m_GUID: 33cad728009b0ab439083a8ddf6a92ba
     m_Address: Ovl-M_Freebie Robeset Hood
     m_ReadOnly: 0
     m_SerializedLabels:
     - MaleRobe Hood
+    m_mainAssetType: 
   - m_GUID: 356925f858219b04797c21d4cb7a43f4
     m_Address: Slt-M_Freebie Robeset Hood_Slot
     m_ReadOnly: 0
     m_SerializedLabels:
     - MaleRobe Hood
+    m_mainAssetType: 
   - m_GUID: 3994de13deb5d5a409b414a7c747d4e3
     m_Address: Tex-Altar_hood_AC
     m_ReadOnly: 0
     m_SerializedLabels:
     - MaleRobe Hood
+    m_mainAssetType: 
   - m_GUID: e37a792c969bb454c804c435f8c1c285
     m_Address: Ovl-M_Freebie Robeset Hood AC
     m_ReadOnly: 0
     m_SerializedLabels:
     - MaleRobe Hood
+    m_mainAssetType: 
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 078e36c6e29b21e4b8fcc36ff62a9d10, type: 2}
-    - {fileID: 11400000, guid: bdf3c5172561ff64aa8ad36eb31a278a, type: 2}
+    - {fileID: 11400000, guid: 7c8605f3bd739b54c8df4d7de4490425, type: 2}
+    - {fileID: 11400000, guid: e910cbe6be774f048910e04be673fa70, type: 2}

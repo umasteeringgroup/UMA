@@ -9,7 +9,22 @@ namespace UMA
 	/// </summary>
 	public abstract class UMAContextBase : MonoBehaviour
 	{
-		public static UMAContextBase Instance;
+		private static UMAContextBase _instance;
+		public static UMAContextBase Instance
+		{
+			get
+			{
+				if (_instance == null)
+				{
+					_instance = GameObject.FindObjectOfType<UMAContextBase>();
+				}
+				return _instance;
+			}
+			set
+			{
+				_instance = value;
+			}
+		}
 
 #pragma warning disable 618
 		public abstract void Start();

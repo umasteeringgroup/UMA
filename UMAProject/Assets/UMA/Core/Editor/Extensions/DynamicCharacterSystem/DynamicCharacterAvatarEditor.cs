@@ -189,7 +189,7 @@ namespace UMA.CharacterSystem.Editors
 				if (n_origArraySize > 0)
 				{
 					for(int i = 0; i < n_origArraySize; i++)
-					{
+					{  
 						EditorGUILayout.PropertyField(newCharacterColors.GetArrayElementAtIndex(i));
 					}
 				}

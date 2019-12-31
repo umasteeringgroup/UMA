@@ -36,19 +36,23 @@ namespace UMA.CharacterSystem.Examples
 		public void Start()
 		{
 			UMAAssetIndexer index = UMAAssetIndexer.Instance;
+            races = index.GetAllAssets<RaceData>();
 
-			// Preload all the races.
-			races = index.GetAllAssets<RaceData>();
+            // Preload all the races.
+            if (RaceDropdown != null)
+            {
 
-			RaceDropdown.options.Clear();
-			foreach(RaceData race in races)
-			{
-				RaceDropdown.options.Add(new Dropdown.OptionData(race.raceName));
-			}
-#if PRELOAD_ALL_RACES
-			var asyncop = UMAAssetIndexer.Instance.Preload(races, true); // Base races will always be loaded.
-			asyncop.Completed += Asyncop_Completed;
-#endif
+                RaceDropdown.options.Clear();
+                foreach (RaceData race in races)
+                {
+                    RaceDropdown.options.Add(new Dropdown.OptionData(race.raceName));
+                }
+            }
+            else
+            {
+                var asyncop = UMAAssetIndexer.Instance.Preload(races, true); // Base races will always be loaded.
+                asyncop.Completed += Asyncop_Completed;
+            }
 		}
 
 		private void Asyncop_Completed(UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<IList<Object>> obj)

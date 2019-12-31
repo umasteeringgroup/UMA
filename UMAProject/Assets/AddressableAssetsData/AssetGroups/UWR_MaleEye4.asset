@@ -15,21 +15,23 @@ MonoBehaviour:
   m_GroupName: UWR_MaleEye4
   m_Data:
     m_SerializedData: []
-  m_GUID: 988ac15941d6d6f4e802d830828f8056
+  m_GUID: 7a51f625652b6d44cab537dc64fea798
   m_SerializeEntries:
   - m_GUID: 76a2d7b941eeeda4ba2df5ea0e2fb266
     m_Address: Ovl-Cat_eye_Alternate_adjust
     m_ReadOnly: 0
     m_SerializedLabels:
     - MaleEye4
+    m_mainAssetType: 
   - m_GUID: eeab9a37ed522ff46bf429d021f78862
     m_Address: Tex-Cat_Eye_Alternate_Albedo_Adjust
     m_ReadOnly: 0
     m_SerializedLabels:
     - MaleEye4
+    m_mainAssetType: 
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 966f6165c0e78e84c97b0385bd16dffa, type: 2}
-    - {fileID: 11400000, guid: 9de976def9c26fe4bb81dd60a5e24ae8, type: 2}
+    - {fileID: 11400000, guid: bb966f2f6cd443d488043ddf67bc74a7, type: 2}
+    - {fileID: 11400000, guid: 40141415770d1554580dcbb883359ef8, type: 2}

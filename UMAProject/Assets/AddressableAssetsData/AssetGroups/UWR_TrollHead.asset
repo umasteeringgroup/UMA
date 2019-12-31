@@ -15,16 +15,17 @@ MonoBehaviour:
   m_GroupName: UWR_TrollHead
   m_Data:
     m_SerializedData: []
-  m_GUID: 390e647c48327564c979cbb9b07bb767
+  m_GUID: dabf89f9398ee91498eea60635faec41
   m_SerializeEntries:
   - m_GUID: 7035932bba9111c4991e2489ca9b744b
     m_Address: Slt-Trollface_slot
     m_ReadOnly: 0
     m_SerializedLabels:
     - TrollHead
+    m_mainAssetType: 
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 36e64ade495aac443ab0db95ef2bf716, type: 2}
-    - {fileID: 11400000, guid: f575c3c07e9a00442b4aa791ae041001, type: 2}
+    - {fileID: 11400000, guid: 87e8167990fb00c4893745e71cf83b8e, type: 2}
+    - {fileID: 11400000, guid: bb2647b322e6a274b8fde56755f81182, type: 2}

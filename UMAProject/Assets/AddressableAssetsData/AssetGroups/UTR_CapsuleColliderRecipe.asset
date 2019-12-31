@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UTR_CapsuleColliderRecipe
+  m_EditorClassIdentifier: 
+  m_GroupName: UTR_CapsuleColliderRecipe
+  m_Data:
+    m_SerializedData: []
+  m_GUID: fcbccc815cbb2b24a824c6e0785c837b
+  m_SerializeEntries:
+  - m_GUID: 04442629189f10a48bc3238f44aa9856
+    m_Address: Slt-CapsuleCollider
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - CapsuleColliderRecipe
+    m_mainAssetType: 
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 47917c3c783bc314caa070d25b81cf78, type: 2}
+    - {fileID: 11400000, guid: 66b99b647b1d4a14c968753ae6d3b159, type: 2}

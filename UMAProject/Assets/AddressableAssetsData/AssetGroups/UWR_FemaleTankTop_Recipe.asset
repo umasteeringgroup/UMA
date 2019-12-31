@@ -15,36 +15,41 @@ MonoBehaviour:
   m_GroupName: UWR_FemaleTankTop_Recipe
   m_Data:
     m_SerializedData: []
-  m_GUID: 66bb14abd69e835428c0e4212ea05769
+  m_GUID: ba7f660793a8d5a479cf46fe78571578
   m_SerializeEntries:
   - m_GUID: 04ca452ebc325384dbd880de14092e76
     m_Address: Ovl-FemaleTankTop_Overlay
     m_ReadOnly: 0
     m_SerializedLabels:
     - FemaleTankTop_Recipe
+    m_mainAssetType: 
   - m_GUID: 1ba77895e57dcc6438cc8fde32b11cec
     m_Address: Tex-tanktop_yellow_NM
     m_ReadOnly: 0
     m_SerializedLabels:
     - FemaleTankTop_Recipe
+    m_mainAssetType: 
   - m_GUID: 7c1d306047bbbad4f8f0734b1adde5e8
     m_Address: Tex-tanktop_yellow_SG
     m_ReadOnly: 0
     m_SerializedLabels:
     - FemaleTankTop_Recipe
+    m_mainAssetType: 
   - m_GUID: 94f99e723e34b534b8527d832351596b
     m_Address: Tex-tanktop_yellow_D
     m_ReadOnly: 0
     m_SerializedLabels:
     - FemaleTankTop_Recipe
+    m_mainAssetType: 
   - m_GUID: e5af6f0e864cd3d46b3c4f61535aa584
     m_Address: Slt-FemaleTankTop
     m_ReadOnly: 0
     m_SerializedLabels:
     - FemaleTankTop_Recipe
+    m_mainAssetType: 
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: b0915d8db1ef5894aa2159beba399bff, type: 2}
-    - {fileID: 11400000, guid: 5f0f2eea376429f48a66326dc42518bb, type: 2}
+    - {fileID: 11400000, guid: 4732cd8595200154bb7e789b39cea280, type: 2}
+    - {fileID: 11400000, guid: 047a3039c200ed648b0da811b7ae59ed, type: 2}

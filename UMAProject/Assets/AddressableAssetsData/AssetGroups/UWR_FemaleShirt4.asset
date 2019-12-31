@@ -15,21 +15,23 @@ MonoBehaviour:
   m_GroupName: UWR_FemaleShirt4
   m_Data:
     m_SerializedData: []
-  m_GUID: 4588c0d0df6146e42be47103fb32b834
+  m_GUID: 627f5bce2490de64f85fd5ebee823d99
   m_SerializeEntries:
   - m_GUID: 4d2fbc2e8180eb84797f3626dd23187d
     m_Address: Tex-Female_Tshirt02_diffuse
     m_ReadOnly: 0
     m_SerializedLabels:
     - FemaleShirt4
+    m_mainAssetType: 
   - m_GUID: 7c7d4dd46aadf264ca87a97b357a238e
     m_Address: Ovl-FemaleTshirt02
     m_ReadOnly: 0
     m_SerializedLabels:
     - FemaleShirt4
+    m_mainAssetType: 
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: d8486e90a5ea8cb4ab199de090af7f48, type: 2}
-    - {fileID: 11400000, guid: 3872e79fb86ab544383eabb0f7793cdf, type: 2}
+    - {fileID: 11400000, guid: 427b49668a871d745b42a943848b094b, type: 2}
+    - {fileID: 11400000, guid: 3baa4c6834a06984fb638936e8c7896d, type: 2}

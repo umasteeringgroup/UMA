@@ -15,26 +15,29 @@ MonoBehaviour:
   m_GroupName: UWR_MaleEye5
   m_Data:
     m_SerializedData: []
-  m_GUID: 0503286841f9407429af51cf0065edd7
+  m_GUID: a326e30bd4fe85243bbb073a87cb4add
   m_SerializeEntries:
   - m_GUID: 10d1e2ac030a2d54e8dffe526204097f
     m_Address: Ovl-Eye_Large_Adjust
     m_ReadOnly: 0
     m_SerializedLabels:
     - MaleEye5
+    m_mainAssetType: 
   - m_GUID: 190e223f5879e4b4380c617607ce9d3a
     m_Address: Tex-Eye_Large_Normal_Adjust
     m_ReadOnly: 0
     m_SerializedLabels:
     - MaleEye5
+    m_mainAssetType: 
   - m_GUID: 953679261e03f82428f59b24631e30ee
     m_Address: Tex-Eye_Large_Albedo_Adjust
     m_ReadOnly: 0
     m_SerializedLabels:
     - MaleEye5
+    m_mainAssetType: 
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 745b03ddda4b5c74cbdea64e65b2d802, type: 2}
-    - {fileID: 11400000, guid: 587eb5aef8a06a648aeedf882d11972e, type: 2}
+    - {fileID: 11400000, guid: 8fc9f7f1c6f1f274bb3e9b6b4fa05ff8, type: 2}
+    - {fileID: 11400000, guid: db85cd269ded5884698caa5a31180f6d, type: 2}

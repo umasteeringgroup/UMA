@@ -15,36 +15,41 @@ MonoBehaviour:
   m_GroupName: UWR_MalePants
   m_Data:
     m_SerializedData: []
-  m_GUID: 20c8533470ce34e4785fa2b2510f053a
+  m_GUID: 4ce27f8934540ec408817517579999a6
   m_SerializeEntries:
   - m_GUID: 161a5c050c3f1f74fb47075770f15450
     m_Address: Ovl-Wrapped Pants
     m_ReadOnly: 0
     m_SerializedLabels:
     - MalePants
+    m_mainAssetType: 
   - m_GUID: 8af4a60576514c7478104a0a50713222
     m_Address: Slt-M_Wrapped Pants
     m_ReadOnly: 0
     m_SerializedLabels:
     - MalePants
+    m_mainAssetType: 
   - m_GUID: b85870f311375784c81d78b529cc6146
     m_Address: Tex-Lower_M
     m_ReadOnly: 0
     m_SerializedLabels:
     - MalePants
+    m_mainAssetType: 
   - m_GUID: ef1e1998915393648808208e87e5cc1f
     m_Address: Tex-Lower_A
     m_ReadOnly: 0
     m_SerializedLabels:
     - MalePants
+    m_mainAssetType: 
   - m_GUID: f1ee058b12e74a645a810b248c336ed2
     m_Address: Tex-Lower_N
     m_ReadOnly: 0
     m_SerializedLabels:
     - MalePants
+    m_mainAssetType: 
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: a4856f3c5a997eb4c864c504b464833f, type: 2}
-    - {fileID: 11400000, guid: 2e53685fbbc13e84ead89981aa04a957, type: 2}
+    - {fileID: 11400000, guid: 6e0febe0d73f7d24682119444e6638ae, type: 2}
+    - {fileID: 11400000, guid: a5fea603b213a6344946062ed5fe6237, type: 2}
