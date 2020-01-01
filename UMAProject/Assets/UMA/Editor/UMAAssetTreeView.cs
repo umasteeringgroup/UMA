@@ -15,6 +15,7 @@ namespace UMA.Controls
 		const float kRowHeights = 20f;
 		const float kToggleWidth = 18f;
 		public bool showControls = true;
+		public AssetIndexerWindow owningWindow;
 
 		enum AssetColumns
 		{
@@ -147,7 +148,7 @@ namespace UMA.Controls
 			switch (sortOption)
 			{
 				case SortOption.Name:
-					return myTypes.Order(l => l.data.ai.EvilName, ascending);
+					return myTypes.Order(l => l.data.name, ascending);
 				case SortOption.Group:
 					return myTypes.Order(l => l.data.ai.AddressableGroup, ascending);
 				default:
@@ -159,15 +160,18 @@ namespace UMA.Controls
 			return myTypes.Order(l => l.data.name, ascending);
 		}
 		#endregion
-		public UMAAssetTreeView(TreeViewState state, MultiColumnHeader multiColumnHeader, TreeModel<AssetTreeElement> model) : base(state, multiColumnHeader, model)
+		public UMAAssetTreeView(AssetIndexerWindow owner, TreeViewState state, MultiColumnHeader multiColumnHeader, TreeModel<AssetTreeElement> model) : base(state, multiColumnHeader, model)
         {
+			owningWindow = owner;
 			rowHeight = kRowHeights;
 			columnIndexForTreeFoldouts = 1;
 			showAlternatingRowBackgrounds = true;
 			showBorder = true;
 			customFoldoutYOffset = (kRowHeights - EditorGUIUtility.singleLineHeight) * 0.5f; // center foldout in the row since we also center content. See RowGUI
 			extraSpaceBeforeIconAndLabel = kToggleWidth;
-			multiColumnHeader.sortingChanged += OnSortingChanged;
+			//multiColumnHeader.sortingChanged += OnSortingChanged;
+			//	var myColumnHeader = (MyMultiColumnHeader)treeView.multiColumnHeader;
+			//this.multiColumnHeader.mode = MyMultiColumnHeader.Mode.MinimumHeaderWithoutSorting;
 			Reload();
 		}
 
@@ -182,6 +186,8 @@ namespace UMA.Controls
 		}
 		void HeaderCellGUI(Rect cellRect, TreeViewItem<AssetTreeElement> item, AssetColumns column, ref RowGUIArgs args)
 		{
+			AssetTreeElement ate = item.data;
+
 			switch (column)
 			{
 				case AssetColumns.Selection:
@@ -206,13 +212,13 @@ namespace UMA.Controls
 
 				case AssetColumns.Always:
 				{
-					// show the number checked
+					GUI.Label(cellRect, ate.Keepcount.ToString());
 				}
 				break;
 
 				case AssetColumns.HasReferences:
 				{
-					// show the number checked
+					GUI.Label(cellRect, ate.HasRefCount.ToString());
 				}
 				break;
 
@@ -229,7 +235,7 @@ namespace UMA.Controls
 
 				case AssetColumns.IsAddressable:
 				{
-					// show the number addressable
+					GUI.Label(cellRect, ate.IsAddrCount.ToString());
 				}
 				break;
 
@@ -326,7 +332,24 @@ namespace UMA.Controls
 					break;
 
 				case AssetColumns.Labels:
-					EditorGUI.LabelField(cellRect, ai.AddressableLabels);
+				{
+					if (!string.IsNullOrEmpty(ai.AddressableLabels))
+					{
+						Rect Button = new Rect(cellRect);
+						Button.width = 32;
+						Button.height -= 2;
+
+						if (GUI.Button(Button,"View", EditorStyles.toolbarButton))
+						{
+							List<string> labels = new List<string>();
+							labels.AddRange(ai.AddressableLabels.Split(';'));
+							DisplayListWindow.ShowDialog("Addressable Labels", owningWindow.position, labels);
+						}
+						cellRect.x += 32;
+						cellRect.width -= 32;
+						EditorGUI.LabelField(cellRect, ai.AddressableLabels);
+					}
+				}
 					break;
 
 				case AssetColumns.Buttons:
@@ -335,7 +358,7 @@ namespace UMA.Controls
 					Rect ButtonRect = new Rect(cellRect);
 					ButtonRect.width = BtnWidth;
 
-					if(GUI.Button(ButtonRect,"Inspect"))
+					if(GUI.Button(ButtonRect,"Inspect",EditorStyles.toolbarButton))
 					{
 						UnityEngine.Object o = AssetDatabase.LoadMainAssetAtPath(ai._Path);
 						InspectorUtlity.InspectTarget(o);
@@ -343,7 +366,7 @@ namespace UMA.Controls
 					ButtonRect.x = ButtonRect.x + BtnWidth;
 					if (item.data.ai._SerializedItem == null)
 					{
-						if(GUI.Button(ButtonRect, "Add Ref"))
+						if(GUI.Button(ButtonRect, "Add Ref", EditorStyles.toolbarButton))
 						{
 							ai.CacheSerializedItem();
 							Repaint();
@@ -351,7 +374,7 @@ namespace UMA.Controls
 					}
 					else
 					{
-						if(GUI.Button(ButtonRect, "Rmv Ref"))
+						if(GUI.Button(ButtonRect, "Rmv Ref",EditorStyles.toolbarButton))
 						{
 							ai.ReleaseItem();
 							Repaint();
@@ -359,9 +382,16 @@ namespace UMA.Controls
 					}
 					ButtonRect.x = ButtonRect.x + BtnWidth;
 					ButtonRect.width = kToggleWidth;
-					if(GUI.Button(ButtonRect, "X"))
+					if(GUI.Button(ButtonRect, "X",EditorStyles.toolbarButton))
 					{
-						// todo: remove this item
+						// remove from index.
+						// remove from tree.
+
+						List<AssetTreeElement> RemoveMe = new List<AssetTreeElement>();
+						UMAAssetIndexer.Instance.RemoveAsset(ai._Type, ai._Name);
+						RemoveMe.Add(item.data);
+						this.treeModel.RemoveElements(RemoveMe);
+						owningWindow.RecountTypes();
 						Repaint();
 					}
 				}
@@ -522,7 +552,7 @@ namespace UMA.Controls
 					width = 45,
 					minWidth = 45,
 					maxWidth = 45,
-					autoResize = true,
+					autoResize = false,
 					allowToggleVisibility = true
 				},
 				new MultiColumnHeaderState.Column
@@ -531,10 +561,10 @@ namespace UMA.Controls
 					headerTextAlignment = TextAlignment.Center,
 					sortedAscending = true,
 					sortingArrowAlignment = TextAlignment.Left,
-					width = 180,
-					minWidth = 180,
-					maxWidth = 180,
-					autoResize = true
+					width = 140,
+					minWidth = 140,
+					maxWidth = 140,
+					autoResize = false
 				}
 			};
 			Assert.AreEqual(columns.Length, System.Enum.GetValues(typeof(AssetColumns)).Length, "Number of columns should match number of enum values: You probably forgot to update one of them.");

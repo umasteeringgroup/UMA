@@ -1711,7 +1711,6 @@ namespace UMA
 
 		private void RebuildRaceRecipes()
 		{
-            Debug.Log("Loading Race Recipes");
 			//Dictionary<string, RaceData> RaceLookup = new Dictionary<string, RaceData>();
 
 			List<RaceData> races = GetAllAssets<RaceData>();
