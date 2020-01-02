@@ -1512,18 +1512,83 @@ namespace UMA
 		}
 
 #endif
-#endregion
+        #endregion
 
-#region Add Remove Assets
-		/// <summary>
-		/// Adds an asset to the index. Does NOT save the asset! you must do that separately.
-		/// </summary>
-		/// <param name="type">System Type of the object to add.</param>
-		/// <param name="name">Name for the object.</param>
-		/// <param name="path">Path to the object.</param>
-		/// <param name="o">The Object to add.</param>
-		/// <param name="skipBundleCheck">Option to skip checking Asset Bundles.</param>
-		public void AddAsset(System.Type type, string name, string path, UnityEngine.Object o, bool skipBundleCheck = false)
+        #region Add Remove Assets
+
+#if UNITY_EDITOR
+
+        public void AddIfIndexed(UnityEngine.Object o)
+        {
+            System.Type type = o.GetType();
+            if (IsIndexedType(type))
+            {
+                EvilAddAsset(type, o);
+            }
+        }
+
+        public void RemoveIfIndexed(UnityEngine.Object o)
+        {
+            // Warning: This does stuff. Don't remove this, we need the evilname lookup.
+            AssetItem ai = new AssetItem(o.GetType(), o);
+            RemoveAsset(ai._Type, ai._Name);
+        }
+
+        public void RecursiveScanFoldersForAssets(string path)
+        {
+            var assetFiles = System.IO.Directory.GetFiles(path);
+
+            foreach (var assetFile in assetFiles)
+            {
+                string Extension = System.IO.Path.GetExtension(assetFile).ToLower();
+                if (Extension == ".asset" || Extension == ".controller" || Extension == ".txt")
+                {
+                    UnityEngine.Object o = AssetDatabase.LoadMainAssetAtPath(assetFile);
+
+                    if (o)
+                    {
+                        AddIfIndexed(o);
+                    }
+                }
+            }
+            foreach (var subFolder in System.IO.Directory.GetDirectories(path))
+            {
+                RecursiveScanFoldersForAssets(subFolder.Replace('\\', '/'));
+            }
+        }
+        
+        public void RecursiveScanFoldersForRemovingAssets(string path)
+        {
+            var assetFiles = System.IO.Directory.GetFiles(path);
+
+            foreach (var assetFile in assetFiles)
+            {
+                string Extension = System.IO.Path.GetExtension(assetFile).ToLower();
+                if (Extension == ".asset" || Extension == ".controller" || Extension == ".txt")
+                {
+                    UnityEngine.Object o = AssetDatabase.LoadMainAssetAtPath(assetFile);
+
+                    if (o)
+                    {
+                        RemoveIfIndexed(o);
+                    }
+                }
+            }
+            foreach (var subFolder in System.IO.Directory.GetDirectories(path))
+            {
+                RecursiveScanFoldersForRemovingAssets(subFolder.Replace('\\', '/'));
+            }
+        }
+#endif
+        /// <summary>
+        /// Adds an asset to the index. Does NOT save the asset! you must do that separately.
+        /// </summary>
+        /// <param name="type">System Type of the object to add.</param>
+        /// <param name="name">Name for the object.</param>
+        /// <param name="path">Path to the object.</param>
+        /// <param name="o">The Object to add.</param>
+        /// <param name="skipBundleCheck">Option to skip checking Asset Bundles.</param>
+        public void AddAsset(System.Type type, string name, string path, UnityEngine.Object o, bool skipBundleCheck = false)
         {
             if (o == null)
             {
@@ -1579,10 +1644,15 @@ namespace UMA
 					ai.AddressableAddress = ae.address;
 					ai.IsAddressable = true;
 					ai.AddressableGroup = ae.parentGroup.Name;
-					ai._SerializedItem = null; 
-				}
+					ai._SerializedItem = null;
+                    ai.AddressableLabels = "";
+                    foreach (string s in ae.labels)
+                    {
+                        ai.AddressableLabels += s + ";";
+                    }
+                }
 #endif
-				TypeDic.Add(ai._Name, ai);
+                TypeDic.Add(ai._Name, ai);
                 if (GuidTypes.ContainsKey(ai._Guid))
                 {
                     return false;

@@ -247,7 +247,20 @@ namespace UMA.Controls
 
 				case AssetColumns.Buttons:
 				{
-						
+
+					string QualifiedName = item.data.type.AssemblyQualifiedName;
+					if (UMAAssetIndexer.Instance.IsAdditionalIndexedType(QualifiedName))
+					{
+						if (GUI.Button(cellRect, "Remove this Type", EditorStyles.toolbarButton))
+						{
+							UMAAssetIndexer.Instance.RemoveType(item.data.type);
+							List<AssetTreeElement> RemoveMe = new List<AssetTreeElement>();
+							RemoveMe.Add(item.data);
+							this.treeModel.RemoveElements(RemoveMe);
+						}
+					}
+					//string QualifiedName = sType.AssemblyQualifiedName;
+					//if (!IsAdditionalIndexedType(QualifiedName)) return;
 				}
 				break;
 			}
@@ -354,7 +367,7 @@ namespace UMA.Controls
 
 				case AssetColumns.Buttons:
 				{
-					float BtnWidth = (cellRect.width/2)- kToggleWidth;
+					float BtnWidth = (cellRect.width/2)- (kToggleWidth * 2);
 					Rect ButtonRect = new Rect(cellRect);
 					ButtonRect.width = BtnWidth;
 
@@ -380,7 +393,16 @@ namespace UMA.Controls
 							Repaint();
 						}
 					}
+
 					ButtonRect.x = ButtonRect.x + BtnWidth;
+					ButtonRect.width = 32;
+					if (GUI.Button(ButtonRect,"Ping", EditorStyles.toolbarButton))
+					{
+						UnityEngine.Object o = AssetDatabase.LoadMainAssetAtPath(ai._Path);
+						EditorGUIUtility.PingObject(o);
+					}
+
+					ButtonRect.x = ButtonRect.x + 32;
 					ButtonRect.width = kToggleWidth;
 					if(GUI.Button(ButtonRect, "X",EditorStyles.toolbarButton))
 					{
@@ -392,6 +414,7 @@ namespace UMA.Controls
 						RemoveMe.Add(item.data);
 						this.treeModel.RemoveElements(RemoveMe);
 						owningWindow.RecountTypes();
+						RecalcTypeChecks(element.type);
 						Repaint();
 					}
 				}
@@ -421,22 +444,25 @@ namespace UMA.Controls
 			Repaint();
 		}
 
-		private void RecalcTypeChecks(Type type)
+		public void RecalcTypeChecks(Type type = null)
 		{
 			foreach(AssetTreeElement ate in treeModel.root.children)
 			{
-				if (ate.type == type)
+				if (type == null || ate.type == type)
 				{
 					int count = 0;
 					int checkedcount = 0;
-					foreach(AssetTreeElement child in ate.children)
+					if (ate.hasChildren)
 					{
-						count++;
-						if (child.Checked)
+						foreach (AssetTreeElement child in ate.children)
 						{
-							checkedcount++;
-						}
+							count++;
+							if (child.Checked)
+							{
+								checkedcount++;
+							}
 
+						}
 					}
 					if (checkedcount == 0)
 					{
@@ -561,9 +587,9 @@ namespace UMA.Controls
 					headerTextAlignment = TextAlignment.Center,
 					sortedAscending = true,
 					sortingArrowAlignment = TextAlignment.Left,
-					width = 140,
-					minWidth = 140,
-					maxWidth = 140,
+					width = 170,
+					minWidth = 170,
+					maxWidth = 170,
 					autoResize = false
 				}
 			};

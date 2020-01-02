@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEditor.Callbacks;
@@ -18,6 +19,8 @@ namespace UMA.Controls
 		GenericMenu _FileMenu;
 		GenericMenu _AddressablesMenu;
 		GenericMenu _ItemsMenu;
+		bool ShowUtilities;
+		UMAMaterial Replacement;
 
 		private GenericMenu FileMenu
 		{
@@ -60,8 +63,9 @@ namespace UMA.Controls
 		UMAAssetIndexer _UAI;
 		int LoadedItems = 0;
 
-		enum eLoaded { All, Addressable, NonAddressable, Keep, Refs, NoRefs };
-		string[] LoadedValues = { "All", "Addressable Only","Non-Addressable Only", "Keep Loaded","With References", "Non-Addressable Without References" };
+		enum eLoaded { All, Addressable, NonAddressable, Keep, Refs, NoRefs, SelectedOnly };
+		string[] LoadedValues = { "All", "Addressable Only","Non-Addressable Only", "Keep Loaded","With References", "Non-Addressable Without References","Currently Selected Items" };
+		public List<AssetItem> LoadOnly = new List<AssetItem>();
 
 		enum eShowTypes { All, WithItems};
 		string[] ShowTypes = { "All Types", "Only Types with Children" };
@@ -93,6 +97,13 @@ namespace UMA.Controls
 		{
 			// the menu item is marked as selected if it matches the current value of m_Color
 			menu.AddItem(new GUIContent(menuPath), false, function);
+		}
+
+		// a method to simplify adding menu items
+		void AddMenuItemWithCallbackParm(GenericMenu menu, string menuPath, GenericMenu.MenuFunction2 function, System.Object o)
+		{
+			// the menu item is marked as selected if it matches the current value of m_Color
+			menu.AddItem(new GUIContent(menuPath), false, function, o);
 		}
 
 		private void SetupMenus()
@@ -143,6 +154,14 @@ namespace UMA.Controls
 				RecountTypes();
 				Repaint();
 			});
+			FileMenu.AddSeparator("");
+			AddMenuItemWithCallback(FileMenu, "Toggle Utilities Panel", () =>
+			{
+				ShowUtilities = ! ShowUtilities;
+				Repaint();
+			});
+			FileMenu.AddSeparator("");
+
 			AddMenuItemWithCallback(FileMenu, "Empty Index", () => 
 			{ 
 				UAI.Clear();
@@ -195,6 +214,49 @@ namespace UMA.Controls
 			// ***********************************************************************************
 			// Items Menu items
 			// ***********************************************************************************
+			AddMenuItemWithCallback(ItemsMenu, "Select All", () =>
+			{
+				var treeElements = new List<AssetTreeElement>();
+				TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
+				foreach(AssetTreeElement ate in treeElements)
+				{
+					ate.Checked = true;
+				}
+				treeView.RecalcTypeChecks();
+				Repaint();
+				return;
+			});
+
+			AddMenuItemWithCallback(ItemsMenu, "Clear Selection", () =>
+			{
+				var treeElements = new List<AssetTreeElement>();
+				TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
+				foreach (AssetTreeElement ate in treeElements)
+				{
+					ate.Checked = false;
+				}
+				treeView.RecalcTypeChecks();
+				Repaint();
+				return;
+			});
+
+			foreach (RaceData rc in UAI.GetAllAssets<RaceData>())
+			{
+				AddMenuItemWithCallbackParm(ItemsMenu, "Select Slots + Overlays By Race/" + rc.raceName, SelectByRace, rc);
+			}
+
+			foreach (RaceData rc in UAI.GetAllAssets<RaceData>())
+			{
+				AddMenuItemWithCallbackParm(ItemsMenu, "Select Slots By Race/" + rc.raceName, SelectSlotsByRace, rc);
+			}
+
+			foreach (RaceData rc in UAI.GetAllAssets<RaceData>())
+			{
+				AddMenuItemWithCallbackParm(ItemsMenu, "Select Overlays By Race/" + rc.raceName, SelectOverlaysByRace, rc);
+			}
+
+			ItemsMenu.AddSeparator("");
+
 			AddMenuItemWithCallback(ItemsMenu, "Remove Selected", () => 
 			{
 				RemoveSelected();
@@ -209,6 +271,82 @@ namespace UMA.Controls
 				Repaint();
 				return; 
 			});
+
+
+
+		}
+
+		void SetItemMaterial(AssetItem ai)
+		{
+			if (ai._Type == typeof(SlotDataAsset))
+			{
+				(ai.Item as SlotDataAsset).material = Replacement;
+				EditorUtility.SetDirty(ai.Item);
+			}
+			if (ai._Type == typeof(OverlayDataAsset))
+			{
+				(ai.Item as OverlayDataAsset).material = Replacement;
+				EditorUtility.SetDirty(ai.Item);
+			}
+		}
+
+		void UpdateMaterials()
+		{
+			var treeElements = new List<AssetTreeElement>();
+			TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
+
+			foreach (AssetTreeElement ate in treeElements)
+			{
+				if (ate.ai != null && ate.Checked)
+				{
+					SetItemMaterial(ate.ai);
+				}
+			}
+		}
+		void SelectByAssetItems(List<AssetItem> items)
+		{
+			var treeElements = new List<AssetTreeElement>();
+			TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
+
+			foreach(AssetTreeElement ate in treeElements)
+			{
+				if (ate.ai != null && items.Contains(ate.ai))
+				{
+					ate.Checked = true;
+				}
+			}
+			treeView.RecalcTypeChecks();
+		}
+
+		void SelectByRace(object Race)
+		{
+			RaceData rc = Race as RaceData;
+			Debug.Log("Selecting for race: " + rc.raceName);
+
+			List<AssetItem> recipeItems = UAI.GetAssetItems(rc.baseRaceRecipe as UMAPackedRecipeBase);
+
+			SelectByAssetItems(recipeItems);
+		}
+
+		void SelectSlotsByRace(object Race)
+		{
+			RaceData rc = Race as RaceData;
+			Debug.Log("Selecting for race: " + rc.raceName);
+
+			List<AssetItem> recipeItems = UAI.GetAssetItems(rc.baseRaceRecipe as UMAPackedRecipeBase);
+
+			recipeItems = recipeItems.Where(x => x._Type == typeof(SlotDataAsset)).ToList();
+			SelectByAssetItems(recipeItems);
+		}
+
+		void SelectOverlaysByRace(object Race)
+		{
+			RaceData rc = Race as RaceData;
+			Debug.Log("Selecting for race: " + rc.raceName);
+
+			List<AssetItem> recipeItems = UAI.GetAssetItems(rc.baseRaceRecipe as UMAPackedRecipeBase);
+			recipeItems = recipeItems.Where(x => x._Type == typeof(OverlayDataAsset)).ToList();
+			SelectByAssetItems(recipeItems);
 		}
 
 		public void RecountTypes()
@@ -271,6 +409,7 @@ namespace UMA.Controls
 			}
 			EditorUtility.DisplayProgressBar("Saving Assets", "Save Assets to Disk", 1.0f);
 			AssetDatabase.SaveAssets();
+			EditorUtility.ClearProgressBar();
 		}
 
 		private void RemoveSelected()
@@ -305,16 +444,38 @@ namespace UMA.Controls
 			}
 			EditorUtility.DisplayProgressBar("Removing Assets", "Save Index to Disk", 1.0f);
 			UAI.ForceSave();
+			EditorUtility.ClearProgressBar();
+
 		}
 
 		Rect multiColumnTreeViewRect
 		{
-			get { return new Rect(10, 46, position.width - 20, position.height - 90); }
+			get 
+			{
+				if (ShowUtilities)
+				{
+					return new Rect(10, 66, position.width - 20, position.height - 110);
+				}
+				else
+				{
+					return new Rect(10, 46, position.width - 20, position.height - 90);
+				}
+			}
 		}
 
 		Rect toolbarRect
 		{
-			get { return new Rect(10f, 23f, position.width - 20f, 20f); }
+			get 
+			{
+				if (ShowUtilities)
+				{
+					return new Rect(10f, 43f, position.width - 20f, 20f);
+				}
+				else
+				{
+					return new Rect(10f, 23f, position.width - 20f, 20f);
+				}
+			}
 		}
 		Rect menubarRect
 		{
@@ -325,6 +486,47 @@ namespace UMA.Controls
 		{
 			get { return new Rect( 10f, position.height - 42f, position.width - 20f, 40f); }
 		}
+
+		Rect AddPadRect
+		{
+			get 
+			{
+				Rect toolbar = bottomToolbarRect;
+				float DropWidth = toolbar.width / 3.0f;
+
+				toolbar.x += 2;
+				toolbar.width = DropWidth - 4;
+				return toolbar;
+			}
+		}
+
+		Rect RemovePadRect
+		{
+			get 
+			{
+				Rect toolbar = bottomToolbarRect;
+				float DropWidth = toolbar.width / 3.0f;
+
+				toolbar.x += 2 + DropWidth;
+				toolbar.width = DropWidth - 4;
+				return toolbar;
+			}
+		}
+
+		Rect AddTypePadRect
+		{
+			get
+			{
+				Rect toolbar = bottomToolbarRect;
+				float DropWidth = toolbar.width / 3.0f;
+
+				toolbar.x += 2 + (DropWidth * 2);
+				toolbar.width = DropWidth - 4;
+				return toolbar;
+			}
+		}
+
+
 
 		public UMAAssetTreeView treeView
 		{
@@ -374,6 +576,13 @@ namespace UMA.Controls
 					return ai.IsAddressable;
 				case eLoaded.NonAddressable:
 					return !ai.IsAddressable;
+				case eLoaded.SelectedOnly:
+				{
+					if (LoadOnly.Contains(ai))
+						return true;
+					else
+						return false;
+				}
 				case eLoaded.NoRefs:
 				{
 					if (ai._SerializedItem == null && ai.IsAddressable == false)
@@ -430,19 +639,129 @@ namespace UMA.Controls
 						}
 					}
 
-					if (typesToShow == eShowTypes.WithItems && ElementsToLoad.Count < 1)
+					if (ElementsToLoad.Count < 1)
 					{
-						continue;
+						if (typesToShow == eShowTypes.WithItems || itemstoload == eLoaded.SelectedOnly)
+							continue;
 					}
 
 					treeElements.Add(ate);
 					treeElements.AddRange(ElementsToLoad);
 				}
 			}
+			LoadOnly.Clear();
 			return treeElements;
 			// generate some test data
 			//return MyTreeElementGenerator.GenerateRandomTree(130); 
 		}
+
+		#region DragDrop
+		private void DragDropAdd(Rect dropArea)
+		{
+
+			var evt = Event.current;
+
+			if (evt.type == EventType.DragUpdated)
+			{
+				if (dropArea.Contains(evt.mousePosition))
+				{
+					DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+				}
+			}
+
+			if (evt.type == EventType.DragPerform)
+			{
+				if (dropArea.Contains(evt.mousePosition))
+				{
+					DragAndDrop.AcceptDrag();
+					UnityEngine.Object[] draggedObjects = DragAndDrop.objectReferences as UnityEngine.Object[];
+					for (int i = 0; i < draggedObjects.Length; i++)
+					{
+						if (draggedObjects[i])
+						{
+							m_Initialized = false; // need to reload when we're done.
+
+							UAI.AddIfIndexed(draggedObjects[i]);
+
+							var path = AssetDatabase.GetAssetPath(draggedObjects[i]);
+							if (System.IO.Directory.Exists(path))
+							{
+								UAI.RecursiveScanFoldersForAssets(path);
+							}
+						}
+					}
+				}
+			}
+		}
+		private void DragDropRemove(Rect dropArea)
+		{
+
+			var evt = Event.current;
+
+			if (evt.type == EventType.DragUpdated)
+			{
+				if (dropArea.Contains(evt.mousePosition))
+				{
+					DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+				}
+			}
+
+			if (evt.type == EventType.DragPerform)
+			{
+				if (dropArea.Contains(evt.mousePosition))
+				{
+					DragAndDrop.AcceptDrag();
+					UnityEngine.Object[] draggedObjects = DragAndDrop.objectReferences as UnityEngine.Object[];
+					for (int i = 0; i < draggedObjects.Length; i++)
+					{
+						if (draggedObjects[i])
+						{
+							m_Initialized = false; // need to reload when we're done.
+							UAI.RemoveIfIndexed(draggedObjects[i]);
+
+							var path = AssetDatabase.GetAssetPath(draggedObjects[i]);
+							if (System.IO.Directory.Exists(path))
+							{
+								UAI.RecursiveScanFoldersForRemovingAssets(path);
+							}
+						}
+					}
+				}
+			}
+		}
+
+
+		private void DragDropType(Rect dropArea)
+		{
+			var evt = Event.current;
+
+			if (evt.type == EventType.DragUpdated)
+			{
+				if (dropArea.Contains(evt.mousePosition))
+				{
+					DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+				}
+			}
+
+			if (evt.type == EventType.DragPerform)
+			{
+				if (dropArea.Contains(evt.mousePosition))
+				{
+					DragAndDrop.AcceptDrag();
+					m_Initialized = false;
+					UnityEngine.Object[] draggedObjects = DragAndDrop.objectReferences as UnityEngine.Object[];
+					for (int i = 0; i < draggedObjects.Length; i++)
+					{
+						if (draggedObjects[i])
+						{
+							System.Type sType = draggedObjects[i].GetType();
+							UAI.AddType(sType);
+						}
+					}
+				}
+			}
+		}
+		#endregion
 
 		void OnGUI ()
 		{
@@ -495,9 +814,37 @@ namespace UMA.Controls
 				treeView.ExpandAll();
 			}
 
-			rect.x += 430;
-			rect.width -= 430;
-			GUI.Box(rect, "", EditorStyles.toolbar);
+			MenuRect.x += 100;
+			MenuRect.width = 100;
+
+			bool newShowUtilities = GUI.Toggle(MenuRect, ShowUtilities, "Show Utilities", EditorStyles.toolbarButton);
+
+			if (newShowUtilities != ShowUtilities)
+			{
+				ShowUtilities = newShowUtilities;
+				Repaint();
+			}
+
+			Rect FillRect = new Rect(rect);
+			FillRect.x += 530;
+			FillRect.width -= 530;
+			GUI.Box(FillRect, "", EditorStyles.toolbar);
+
+			if (ShowUtilities)
+			{
+				rect.y += rect.height;
+				GUI.Box(rect, "");
+				GUILayout.BeginArea(rect);
+				GUILayout.BeginHorizontal();
+				if (GUILayout.Button("Apply UMAMaterials to Selection",GUILayout.Width(259)))
+				{
+					UpdateMaterials();
+					AssetDatabase.SaveAssets();
+				}
+				Replacement = EditorGUILayout.ObjectField("",Replacement, typeof(UMAMaterial), false, GUILayout.Width(250)) as UMAMaterial;
+				GUILayout.EndHorizontal();
+				GUILayout.EndArea();
+			}
 		}
 
 		void SearchBar (Rect rect)
@@ -509,6 +856,20 @@ namespace UMA.Controls
 			if (newLoadedItems != LoadedItems)
 			{
 				LoadedItems = newLoadedItems;
+				if ((eLoaded) LoadedItems == eLoaded.SelectedOnly)
+				{
+					LoadOnly.Clear();
+					var treeElements = new List<AssetTreeElement>();
+					TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
+					foreach(AssetTreeElement ate in treeElements)
+					{
+						if (ate.ai != null && ate.Checked)
+						{
+							LoadOnly.Add(ate.ai);
+						}
+					}
+					treeView.ExpandAll();
+				}
 				m_Initialized = false;
 				Repaint();
 			}
@@ -535,55 +896,17 @@ namespace UMA.Controls
 
 		void BottomToolBar (Rect rect)
 		{
-			float DropWidth = rect.width / 3.0f;
-
-			Rect DropArea = new Rect(rect);
-
 			GUIStyle DropBox = new GUIStyle(EditorStyles.helpBox);
 			DropBox.padding.left += 3;
 			DropBox.padding.right += 3;
 			DropBox.alignment = TextAnchor.MiddleCenter;
-			DropArea.width = DropWidth;
 
-			Rect Box = new Rect(DropArea);
-			Box.x += 2;
-			Box.width -= 4;
-			GUI.Box(Box, "Drag indexable assets here to ADD them to the index.", DropBox);
-
-			DropArea.x += DropWidth;
-			Box = new Rect(DropArea);
-			Box.x += 2;
-			Box.width -= 4;
-			GUI.Box(Box, "Drag indexable assets here to REMOVE them from the index.", DropBox);
-
-			DropArea.x += DropWidth;
-			Box = new Rect(DropArea);
-			Box.x += 2;
-			Box.width -= 4;
-			GUI.Box(Box, "Drag an item here to start indexing that type of item.", DropBox);
-
-
-			/*
-			GUILayout.BeginArea (rect);
-
-			using (new EditorGUILayout.HorizontalScope ())
-			{
-
-				var style = "miniButton";
-				if (GUILayout.Button("Expand All", style))
-				{
-					treeView.ExpandAll ();
-				}
-
-				if (GUILayout.Button("Collapse All", style))
-				{
-					treeView.CollapseAll ();
-				}
-
-				GUILayout.FlexibleSpace();
-			}
-
-			GUILayout.EndArea(); */
+			GUI.Box(AddPadRect, "Drag indexable assets here to ADD them to the index.", DropBox);
+			GUI.Box(RemovePadRect, "Drag indexable assets here to REMOVE them from the index.", DropBox);
+			GUI.Box(AddTypePadRect, "Drag an asset here to start indexing that type of asset.", DropBox);
+			DragDropAdd(AddPadRect);
+			DragDropRemove(RemovePadRect);
+			DragDropType(AddTypePadRect);
 		}
 	}
 
