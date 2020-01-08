@@ -31,6 +31,7 @@ namespace UMA
 		{
 			if (!ranOnce)
 			{
+				FriendlyNames = new Dictionary<Type, string>();
 				FriendlyNames.Add(typeof(SlotDataAsset), "Slot");
 				FriendlyNames.Add(typeof(OverlayDataAsset), "Overlay");
 				FriendlyNames.Add(typeof(RaceData), "Race");

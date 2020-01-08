@@ -195,6 +195,7 @@ namespace UMA
                 {
                     var st = StartTimer();
                     theIndexer = Resources.Load("AssetIndexer") as UMAAssetIndexer;
+                    theIndexer.UpdateSerializedDictionaryItems();
                     theIndexer.RebuildRaceRecipes();
                     if (theIndexer == null)
                     {
@@ -850,12 +851,14 @@ namespace UMA
 			// preload any assigned recipes.
 			foreach (var wr in avatar.WardrobeRecipes.Values)
 			{
-				keys.Add(wr.name);
+                if (wr != null)
+    				keys.Add(wr.name);
 			}
 
 			foreach(var tr in avatar.umaAdditionalRecipes)
 			{
-				keys.Add(tr.name);
+                if (tr != null)
+				    keys.Add(tr.name);
 			}
 
 			return LoadLabelList(keys,keepLoaded);
@@ -1041,7 +1044,9 @@ namespace UMA
             {
                 if (_AddressableSettings == null)
                 {
+                    Debug.Log("Loading addressable Settings");
                     _AddressableSettings = AssetDatabase.LoadAssetAtPath<AddressableAssetSettings>("Assets/AddressableAssetsData/AddressableAssetSettings.asset");
+                    Debug.Log("Loaded.");
                 }
                 return _AddressableSettings;
             }
@@ -1701,6 +1706,7 @@ namespace UMA
 
 
 #if UNITY_EDITOR
+                Debug.Log("Getting asset entry");
 				AddressableAssetEntry ae = GetAddressableAssetEntry(ai);
 				if (ae != null)
 				{
@@ -1825,13 +1831,14 @@ namespace UMA
         /// Updates the dictionaries from this list.
         /// Used when restoring items after modification, or after deserialization.
         /// </summary>
-        private void UpdateSerializedDictionaryItems()
+        public void UpdateSerializedDictionaryItems()
         {
             GuidTypes = new Dictionary<string, AssetItem>();
             foreach (System.Type type in Types)
             {
                 CreateLookupDictionary(type);
             }
+            Debug.Log("Adding Items");
             foreach (AssetItem ai in SerializedItems)
             {
                 // We null things out when we want to delete them. This prevents it from going back into 
@@ -2212,8 +2219,10 @@ namespace UMA
                 }
             }
             BuildStringTypes();
-#endregion
-            UpdateSerializedDictionaryItems();
+            #endregion
+            //Debug.Log("Updating serialized items...");
+            //UpdateSerializedDictionaryItems();
+            //Debug.Log("Completed update of serialized Items");
             StopTimer(st, "Before Serialize");
         }
 #endregion
