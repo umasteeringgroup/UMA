@@ -12,6 +12,7 @@ using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using UMA.PoseTools;//so we can set the expression set based on the race
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace UMA.CharacterSystem
 {
@@ -132,6 +133,7 @@ namespace UMA.CharacterSystem
         public string loadString;
         public bool loadFileOnStart;
 		private bool isAddressableSystem;
+        private bool isCaching = false;
 
         [EnumFlags]
         public LoadOptions defaultLoadOptions = LoadOptions.loadRace | LoadOptions.loadDNA | LoadOptions.loadWardrobe | LoadOptions.loadBodyColors | LoadOptions.loadWardrobeColors;
@@ -345,7 +347,15 @@ namespace UMA.CharacterSystem
         {
 			isAddressableSystem = false;
 
-			if (UMAContext.FindInstance() is UMAGlobalContext) isAddressableSystem = true;
+            if (UMAContext.FindInstance() is UMAGlobalContext)
+            {
+                isAddressableSystem = true;
+                UMAGeneratorGLib glib = UMAContext.Instance.GetComponentInChildren<UMAGeneratorGLib>();
+                if (glib != null)
+                {
+                    isCaching = glib.EnableCacheCleanup;
+                }
+            }
 #if UNITY_EDITOR
 			EditorUMAContextBase = GameObject.Find("UMAEditorContext");
             if (EditorUMAContextBase != null)
@@ -2482,7 +2492,10 @@ namespace UMA.CharacterSystem
 			{
 				var op = UMAAssetIndexer.Instance.Preload(this);
 				op.Completed += BuildWhenReady;
-				return;
+#if SUPER_LOGGING
+                Debug.Log("Buildcharacter waiting for preload...");
+#endif
+                return;
 			}
 
             _isFirstSettingsBuild = false;
@@ -2989,9 +3002,66 @@ namespace UMA.CharacterSystem
             }
         }
 
-        public void ForceUpdate(bool DnaDirty, bool TextureDirty = false, bool MeshDirty = false)
+      
+        private struct UpdateArgs
         {
+            public bool dNADirty;
+            public bool textureDirty;
+            public bool meshDirty;
+        };
+
+        [NonSerialized]
+        private Dictionary<AsyncOperationHandle, UpdateArgs> UpdateList = new Dictionary<AsyncOperationHandle, UpdateArgs>();
+
+        public void ForceUpdate(bool DnaDirty, bool TextureDirty = false, bool MeshDirty = false, bool skipBundleCheck = false)
+        {
+            if (!skipBundleCheck && isCaching)
+            {
+                BuildCharacter();
+
+                /*
+                Debug.Log("Scheduling Force...");
+                var op = UMAAssetIndexer.Instance.Preload(this);
+                UpdateArgs ua = new UpdateArgs();
+                ua.dNADirty = DnaDirty;
+                ua.textureDirty = TextureDirty;
+                ua.meshDirty = MeshDirty;
+                UpdateList.Add(op, ua);
+                op.Completed += UpdateWhenReady;
+                */
+                return;
+            }
+            Debug.Log("Setting UMA dirty");
             umaData.Dirty(DnaDirty, TextureDirty, MeshDirty);
+        }
+
+        private void UpdateWhenReady(AsyncOperationHandle<IList<UnityEngine.Object>> obj)
+        {
+            if (obj.IsDone)
+            {
+               /* Dictionary<string, SlotDataAsset> Lookup = new Dictionary<string, SlotDataAsset>();
+
+                foreach(UnityEngine.Object o in obj)
+                {
+                    // Add the slot to the dictionary. 
+                   
+                }
+
+                SlotData[] slots = umaData.umaRecipe.slotDataList;
+
+                for (int i= 0;  i < slots.Length;  i++)
+                {
+
+                    slots[i] = new SlotData(theSlot);
+                }
+
+                UpdateArgs ua = UpdateList[obj];
+   
+                FixupRecipe();
+
+                ForceUpdate(ua.dNADirty,ua.textureDirty,ua.meshDirty, true);
+                UpdateList.Remove(obj); */
+            }
         }
 
         //@jaimi not sure what calls this. Generator maybe?

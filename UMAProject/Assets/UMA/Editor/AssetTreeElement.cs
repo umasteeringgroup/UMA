@@ -24,8 +24,7 @@ namespace UMA.Controls
 		public int HasRefCount;
 		public int IsAddrCount;
 		public int Keepcount;
-		// maybe?
-		public int SelectedCount;
+
 
 		// detail item
 		public AssetItem ai;

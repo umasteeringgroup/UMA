@@ -1,7 +1,20 @@
 Upgrading from previous versions
 
-•	You should remove the previous UMA folder before importing! If this is not possible, at the very least, remove the CORE and EXAMPLES folders.
-•	With the change in type, your global library will need to be rebuilt. 
-•	You can update the old DNAConverterBehaviour prefabs to the new DNAConverterControllers by selecting the warning in the console and following the text directions.
-•	HumanMale and HumanFemale are now using Bone Poses for initial bone morphs. This can cause some slight differences in characters having DNA applied. If you need the old behavior, you should change your race to the "Legacy" version of the races.
-•	Note: Blendshapes do not work correctly on 2018.3 when GPU skinning is enabled. If you need this functionality, please disable GPU skinning in your 2018.3 project until Unity has addressed this bug. Unity will address this bug in the 2019.2 release timeframe.
+You should remove the previous UMA folder before importing! If this is not possible, at the very least, remove the CORE and EXAMPLES folders.
+
+To use this version of UMA, you must have the Addressables package 1.5.0 or later installed from the package manager.
+
+Old asset bundles will NOT work in this version. You must switch to the Addressable Bundles.
+
+To upgrade a project:
+
+1. Install Addressables 1.5.0 or greater
+2. Import the new UMA 2.10 
+3. In your scene, delete the UMA_DCS prefab.
+4. Add the UMA_GLIB prefab from the "UMA/Getting Started" folder
+5. On the UMA Generator, make sure "Enable Cache Cleanup" is OFF.
+6. Open the Addressable groups window and dock it. (Windows/AssetManagement/Addressables/Groups)
+7. Edit the default settings in the default group as needed. These settings will be used for the generated groups.
+
+. Open the new "Global Library (Experimental)" window. This is the new global library.
+. Select the "(Re)Generate Groups" option from the Addressables menu in the Global Library. 

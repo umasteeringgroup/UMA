@@ -26,7 +26,6 @@ namespace UMA.Controls
 		public event Action treeChanged;
 
 		public TreeModel<T> treeModel { get { return m_TreeModel; } }
-		public event Action<IList<TreeViewItem>>  beforeDroppingDraggedItems;
 
 
 		public TreeViewWithTreeModel (TreeViewState state, TreeModel<T> model) : base (state)

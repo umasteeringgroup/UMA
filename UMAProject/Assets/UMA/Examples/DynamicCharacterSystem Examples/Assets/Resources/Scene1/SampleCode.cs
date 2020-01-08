@@ -57,7 +57,7 @@ namespace UMA.CharacterSystem.Examples
 
 		private void Asyncop_Completed(UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<IList<Object>> obj)
 		{
-			Debug.Log("Race Preload Completed.");
+			//Debug.Log("Race Preload Completed.");
 			// Preload any default wardrobe items on our avatar, now that the races are preloaded.
 			UMAAssetIndexer.Instance.Preload(Avatar,false).Completed += Avatar_Completed;
 		}
@@ -65,7 +65,7 @@ namespace UMA.CharacterSystem.Examples
 		private void Avatar_Completed(UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<IList<Object>> obj)
 		{
 			// Ready to go, enable the character and build it.
-			Debug.Log("Avatar preload completed.");
+			//Debug.Log("Avatar preload completed.");
 			Avatar.gameObject.SetActive(true);
 			Avatar.BuildCharacterEnabled = true;
 		}
@@ -254,27 +254,27 @@ namespace UMA.CharacterSystem.Examples
 			if (Avatar.gameObject.activeSelf)
 			{
 				// Destroy the old one.
-				Debug.Log("Destroying Old Avatar");
+				//Debug.Log("Destroying Old Avatar");
 				Avatar.gameObject.SetActive(false);
 				GameObject.Destroy(Avatar.gameObject);
 
-				Debug.Log("Unloading everything (except for 'always loaded' items");
+				//Debug.Log("Unloading everything (except for 'always loaded' items");
 				// unload everything
 				UMAAssetIndexer.Instance.UnloadAll(true);
 
 				// Create a new avatar
-				Debug.Log("Instantiating nobuild prefab");
+				//Debug.Log("Instantiating nobuild prefab");
 				GameObject go = GameObject.Instantiate(NoBuildPrefab);
 				Avatar = go.GetComponentInChildren<DynamicCharacterAvatar>();
 				Orbiter.target = go.transform;
 			}
-			Debug.Log("Setting the racepreset");
+
 			string race = RaceDropdown.options[index].text;
 			Avatar.RacePreset = race;
 			// Load just the current race.
 			List<RaceData> preloadRaces = new List<RaceData>();
 			preloadRaces.Add(races[index]);
-			Debug.Log("preloading the races.");
+
 			var asyncop = UMAAssetIndexer.Instance.Preload(preloadRaces, false); // We are loading and unloading races.
 			asyncop.Completed += Asyncop_Completed;
 #else

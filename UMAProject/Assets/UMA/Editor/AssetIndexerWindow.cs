@@ -12,9 +12,12 @@ namespace UMA.Controls
 {
 	class AssetIndexerWindow : EditorWindow
 	{
+		[NonSerialized] private float UtilityPanelHeight = 20.0f;
 		[NonSerialized] bool m_Initialized;
 		[SerializeField] TreeViewState m_TreeViewState; // Serialized in the window layout file so it survives assembly reloading
 		[SerializeField] MultiColumnHeaderState m_MultiColumnHeaderState;
+		public UMAAssetTreeView treeView { get; private set; }
+
 		#region Menus
 		GenericMenu _FileMenu;
 		GenericMenu _AddressablesMenu;
@@ -70,9 +73,7 @@ namespace UMA.Controls
 		enum eShowTypes { All, WithItems};
 		string[] ShowTypes = { "All Types", "Only Types with Children" };
 		int ShowIndex = 0;
-		
-		UMAAssetTreeView m_TreeView;
- 
+
 		UMAAssetIndexer UAI
 		{
 			get
@@ -86,12 +87,15 @@ namespace UMA.Controls
 		{
 			var window = GetWindow<AssetIndexerWindow>();
 			window.SetupMenus();
-			window.titleContent = new GUIContent("Global Library");
+			Texture icon = AssetDatabase.LoadAssetAtPath<Texture>("Assets/UMA/InternalDataStore/UMA32.png");
+		
+			window.titleContent = new GUIContent("UMA 2.10 Global Library", icon);
 			window.Focus();
 			window.Repaint();
 			return window;
 		}
 
+		#region utility functions
 		// a method to simplify adding menu items
 		void AddMenuItemWithCallback(GenericMenu menu, string menuPath, GenericMenu.MenuFunction function)
 		{
@@ -448,13 +452,16 @@ namespace UMA.Controls
 
 		}
 
+		#endregion
+
+		#region GUI Rectangles
 		Rect multiColumnTreeViewRect
 		{
 			get 
 			{
 				if (ShowUtilities)
 				{
-					return new Rect(10, 66, position.width - 20, position.height - 110);
+					return new Rect(10, 46 + UtilityPanelHeight, position.width - 20, position.height - (90+ UtilityPanelHeight));
 				}
 				else
 				{
@@ -469,7 +476,7 @@ namespace UMA.Controls
 			{
 				if (ShowUtilities)
 				{
-					return new Rect(10f, 43f, position.width - 20f, 20f);
+					return new Rect(10f, 23f+ UtilityPanelHeight, position.width - 20f, 20f);
 				}
 				else
 				{
@@ -525,14 +532,9 @@ namespace UMA.Controls
 				return toolbar;
 			}
 		}
+		#endregion
 
-
-
-		public UMAAssetTreeView treeView
-		{
-			get { return m_TreeView; }
-		}
-
+		#region GUI
 		void InitIfNeeded ()
 		{
 			if (!m_Initialized)
@@ -555,10 +557,10 @@ namespace UMA.Controls
 
 				var treeModel = new TreeModel<AssetTreeElement>(GetData());
 				
-				m_TreeView = new UMAAssetTreeView(this, m_TreeViewState, multiColumnHeader, treeModel);
+				treeView = new UMAAssetTreeView(this, m_TreeViewState, multiColumnHeader, treeModel);
 
 				m_SearchField = new SearchField();
-				m_SearchField.downOrUpArrowKeyPressed += m_TreeView.SetFocusAndEnsureSelectedItem;
+				m_SearchField.downOrUpArrowKeyPressed += treeView.SetFocusAndEnsureSelectedItem;
 
 				m_Initialized = true;
 			}
@@ -891,7 +893,7 @@ namespace UMA.Controls
 
 		void DoTreeView (Rect rect)
 		{
-			m_TreeView.OnGUI(rect);
+			treeView.OnGUI(rect);
 		}
 
 		void BottomToolBar (Rect rect)
@@ -908,6 +910,7 @@ namespace UMA.Controls
 			DragDropRemove(RemovePadRect);
 			DragDropType(AddTypePadRect);
 		}
+		#endregion
 	}
 
 

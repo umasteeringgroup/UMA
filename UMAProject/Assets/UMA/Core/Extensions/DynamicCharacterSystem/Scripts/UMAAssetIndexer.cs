@@ -34,6 +34,36 @@ namespace UMA
     [PreferBinarySerialization]
     public class UMAAssetIndexer : ScriptableObject, ISerializationCallbackReceiver
 	{
+        public static float DefaultLife = 5.0f;
+        private class CachedOp
+        {
+            public AsyncOp Operation;
+            public float OperationTime;
+            public float Life; // life in seconds
+            public string Info;
+
+            public CachedOp(AsyncOp op, string info, float OpLife = 0.0f)
+            {
+                if (OpLife == 0.0f) OpLife = DefaultLife;
+                Operation = op;
+                OperationTime = Time.time;
+                Life = OpLife;
+                Info = info;
+            }
+
+            public bool Expired
+            {
+                get
+                {
+                    if (Time.time - OperationTime > Life)
+                    {
+                        return true;
+                    }
+                    return false;
+                }
+            }
+        }
+
 #if UNITY_EDITOR
         Dictionary<int, List<UMATextRecipe>> SlotTracker = new Dictionary<int, List<UMATextRecipe>>();
         Dictionary<int, List<UMATextRecipe>> OverlayTracker = new Dictionary<int, List<UMATextRecipe>>();
@@ -42,9 +72,11 @@ namespace UMA
         Dictionary<int, string> AddressLookup = new Dictionary<int, string>();
 #endif
 		public Dictionary<string, bool> Preloads = new Dictionary<string, bool>();
-		private List<AsyncOp> LoadedItems = new List<AsyncOp>();
 
-		RaceRecipes raceRecipes = new RaceRecipes();
+        // private List<AsyncOp> LoadedItems = new List<AsyncOp>();
+        private List<CachedOp> LoadedItems = new List<CachedOp>();
+
+        RaceRecipes raceRecipes = new RaceRecipes();
 
 		public delegate void OnCompleted(bool success, string name, string message);
 		public delegate void OnRaceCompleted(bool success, RaceData theRace, string message);
@@ -176,6 +208,28 @@ namespace UMA
                     StopTimer(st,"Asset index load");
                 }
                 return theIndexer;
+            }
+        }
+
+        private HashSet<CachedOp> Cleanup = new HashSet<CachedOp>();
+        public void CheckCache()
+        {
+            Cleanup.Clear();
+
+            for(int i=0;i<LoadedItems.Count;i++)
+            {
+                CachedOp c = LoadedItems[i]; 
+                if (c.Expired)
+                {
+                    Debug.Log("Cleaning up: " + c.Info);
+                    Addressables.Release(c.Operation);
+                    Cleanup.Add(c); 
+                }
+            }
+            if (Cleanup.Count > 0)
+            {
+                Debug.Log("Freeing " + Cleanup.Count + " Items");
+                LoadedItems.RemoveAll(x => Cleanup.Contains(x));
             }
         }
 
@@ -918,7 +972,10 @@ namespace UMA
 			}, Addressables.MergeMode.Union);
 			if (!keepLoaded)
 			{
-				LoadedItems.Add(op);
+                string info = "";
+                foreach (string s in Keys)
+                    info += Keys + "; ";
+				LoadedItems.Add(new CachedOp(op,info));
 			}
 			return op;
 		}
@@ -926,14 +983,14 @@ namespace UMA
 		public void Unload(AsyncOperationHandle<IList<UnityEngine.Object>> AssetOperation)
 		{
 			Addressables.Release(AssetOperation);
-			LoadedItems.Remove(AssetOperation);
-		}
+			LoadedItems.RemoveAll(x => x.Operation.Equals(AssetOperation));
+        }
 
 		public void UnloadAll(bool forceResourceUnload)
 		{
-			foreach(AsyncOp ao in LoadedItems)
+            foreach(CachedOp op in LoadedItems)
 			{
-				Addressables.Release(ao);
+				Addressables.Release(op.Operation);
 			}
 			Dictionary<string, AssetItem> SlotDic = GetAssetDictionary(typeof(SlotDataAsset));
 			Dictionary<string, AssetItem> OverlayDic = GetAssetDictionary(typeof(OverlayDataAsset));
@@ -946,6 +1003,12 @@ namespace UMA
 				}
 			}
 
+            // Preloads is tracking if a loaded item is "keep" or not.
+            // After freeing everything, we really only need to know about the "keeps".
+            // This is necessary, because it's possible to request to "keep" something in one call
+            // and NOT keep it in another call. In this case, the previous "Keep" needs to be kept, so
+            // we can honor the keep. 
+            //
 			// cheesiest cheap way to clear the Preloads
 			Dictionary<string, bool> newPreloads = new Dictionary<string, bool>();
 			foreach(KeyValuePair<string,bool> kvp in Preloads)

@@ -69,7 +69,6 @@ namespace UMA.CharacterSystem.Examples
             {
                 Avatar.ClearSlot(Slot);
                 Avatar.BuildCharacter(true);
-                Avatar.ForceUpdate(true, true, true);
                 return;
             }
 
@@ -94,7 +93,7 @@ namespace UMA.CharacterSystem.Examples
 			Avatar.SetSlot(Recipe);
 			// Rebuild the character so its wearing the new wardrobe item.
 			Avatar.BuildCharacter(true);
-			Avatar.ForceUpdate(true, true, true);
+			// Avatar.ForceUpdate(true, true, true);
 		}
 
 		private void Op_Completed(UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<IList<Object>> obj)

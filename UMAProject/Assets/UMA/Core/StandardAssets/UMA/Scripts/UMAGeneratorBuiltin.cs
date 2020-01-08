@@ -85,7 +85,7 @@ namespace UMA
 			}
 		}
 
-		void Update()
+		public virtual void Update()
 		{
 			if (CheckRenderTextures())
 				return; // if render textures needs rebuild we'll not do anything else
@@ -363,6 +363,7 @@ namespace UMA
 		{
 			if (umaToAdd)
 			{
+				Debug.Log("Adding Dirty UMA");
                 // guard against duplicates
                 if (!updatePending(umaToAdd))
                 {

@@ -97,7 +97,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8850468075112510012}
-  - component: {fileID: 8850468075123534056}
+  - component: {fileID: 2754613956854059695}
   m_Layer: 0
   m_Name: UMAGenerator
   m_TagString: Untagged
@@ -119,7 +119,7 @@ Transform:
   m_Father: {fileID: 6782112333398131214}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8850468075123534056
+--- !u!114 &2754613956854059695
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -128,19 +128,19 @@ MonoBehaviour:
   m_GameObject: {fileID: 8850468075112456404}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b41d019fd27682f4fa2cadfe47b38e0a, type: 3}
+  m_Script: {fileID: 11500000, guid: 0db3c08a98ce12b42985298d82533201, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   fitAtlas: 1
   textureMerge: {fileID: 11400000, guid: d242fc6cda21e9b42b95a0c72bb3bee1, type: 2}
   convertRenderTexture: 0
   convertMipMaps: 1
-  atlasResolution: 4096
-  defaultOverlayAsset: {fileID: 11400000, guid: fe30fbf67b51de8499624c6913a39e64,
-    type: 2}
+  atlasResolution: 0
+  defaultOverlayAsset: {fileID: 0}
   meshCombiner: {fileID: 8850468075123533132}
   InitialScaleFactor: 2
   IterationCount: 1
   fastGeneration: 1
   processAllPending: 0
   garbageCollectionRate: 8
+  CachedItemsLife: 3
