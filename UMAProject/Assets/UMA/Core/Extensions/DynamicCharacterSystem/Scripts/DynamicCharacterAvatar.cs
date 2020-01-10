@@ -13,6 +13,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UMA.PoseTools;//so we can set the expression set based on the race
 using UnityEngine.ResourceManagement.AsyncOperations;
+using AsyncOp = UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<System.Collections.Generic.IList<UnityEngine.Object>>;
 
 namespace UMA.CharacterSystem
 {
@@ -134,6 +135,7 @@ namespace UMA.CharacterSystem
         public bool loadFileOnStart;
 		private bool isAddressableSystem;
         private bool isCaching = false;
+        private AsyncOp LastOp;
 
         [EnumFlags]
         public LoadOptions defaultLoadOptions = LoadOptions.loadRace | LoadOptions.loadDNA | LoadOptions.loadWardrobe | LoadOptions.loadBodyColors | LoadOptions.loadWardrobeColors;
@@ -2492,8 +2494,8 @@ namespace UMA.CharacterSystem
 
 			if (!skipBundleCheck && isAddressableSystem)
 			{
-				var op = UMAAssetIndexer.Instance.Preload(this);
-				op.Completed += BuildWhenReady;
+				AsyncOp Op = UMAAssetIndexer.Instance.Preload(this);
+				Op.Completed += BuildWhenReady;
 #if SUPER_LOGGING
                 Debug.Log("Buildcharacter waiting for preload...");
 #endif
@@ -2664,17 +2666,19 @@ namespace UMA.CharacterSystem
             }
         }
 
-		private void BuildWhenReady(UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<IList<UnityEngine.Object>> obj)
+		private void BuildWhenReady(AsyncOp Op)
         {
             try
             {
-                //Debug.Log("status is: " + obj.Status);
-                //foreach(UnityEngine.Object o in obj.Result)
-                //{
-                //    Debug.Log("Loaded " + o.name);
-                //}
-                if (obj.IsDone)
+                if (Op.IsDone)
                 {
+                    // Release the last one if we have one.
+                    if (LastOp.IsValid())
+                    {
+                        UMAAssetIndexer.Instance.Unload(LastOp);
+                    }
+                    // Record this so we can release it later.
+                    LastOp = Op;
                     BuildCharacter(true, true);
                 }
             }

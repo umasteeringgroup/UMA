@@ -830,8 +830,8 @@ namespace UMA
 			return LoadLabelList(keys, keepLoaded);
 		}
 
-
-		public AsyncOperationHandle<IList<UnityEngine.Object>> Preload(DynamicCharacterAvatar avatar, bool keepLoaded = false)
+       
+        public AsyncOperationHandle<IList<UnityEngine.Object>> Preload(DynamicCharacterAvatar avatar, bool keepLoaded = false)
 		{
 			List<string> keys = new List<string>();
 			RaceData race = GetAsset<RaceData>(avatar.activeRace.name);
