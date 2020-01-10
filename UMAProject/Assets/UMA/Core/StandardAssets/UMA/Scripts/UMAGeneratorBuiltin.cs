@@ -363,7 +363,6 @@ namespace UMA
 		{
 			if (umaToAdd)
 			{
-				Debug.Log("Adding Dirty UMA");
                 // guard against duplicates
                 if (!updatePending(umaToAdd))
                 {

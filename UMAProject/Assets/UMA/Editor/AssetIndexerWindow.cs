@@ -702,6 +702,7 @@ namespace UMA.Controls
 							}
 						}
 					}
+					UAI.ForceSave();
 				}
 			}
 		}
@@ -738,6 +739,7 @@ namespace UMA.Controls
 							}
 						}
 					}
+					UAI.ForceSave();
 				}
 			}
 		}
@@ -770,6 +772,7 @@ namespace UMA.Controls
 							UAI.AddType(sType);
 						}
 					}
+					UAI.ForceSave();
 				}
 			}
 		}

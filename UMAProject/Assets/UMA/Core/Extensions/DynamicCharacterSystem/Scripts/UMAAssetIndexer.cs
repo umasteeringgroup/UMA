@@ -842,12 +842,6 @@ namespace UMA
 				keys.Add(race.baseRaceRecipe.name);
 			}
 
-			// preload the preloadrecipes... do we need this?
-			//foreach (var wr in avatar.preloadWardrobeRecipes.recipes)
-			//{
-			//	Debug.Log("Adding Preload recipe: " + wr._recipeName);
-			//	keys.Add(wr._recipeName);
-			//}
 
 			// preload any assigned recipes.
 			foreach (var wr in avatar.WardrobeRecipes.Values)
