@@ -617,6 +617,8 @@ namespace UMA.CharacterSystem
                 activeRace.name = "";
                 return;
             }
+
+
             if (activeRace.racedata == null)
                 actuallyChangeRace = true;
             else if (activeRace.name != race.raceName)
@@ -3003,7 +3005,7 @@ namespace UMA.CharacterSystem
         }
 
       
-        private struct UpdateArgs
+        /*private struct UpdateArgs
         {
             public bool dNADirty;
             public bool textureDirty;
@@ -3011,7 +3013,7 @@ namespace UMA.CharacterSystem
         };
 
         [NonSerialized]
-        private Dictionary<AsyncOperationHandle, UpdateArgs> UpdateList = new Dictionary<AsyncOperationHandle, UpdateArgs>();
+        private Dictionary<AsyncOperationHandle, UpdateArgs> UpdateList = new Dictionary<AsyncOperationHandle, UpdateArgs>();*/
 
         public void ForceUpdate(bool DnaDirty, bool TextureDirty = false, bool MeshDirty = false, bool skipBundleCheck = false)
         {

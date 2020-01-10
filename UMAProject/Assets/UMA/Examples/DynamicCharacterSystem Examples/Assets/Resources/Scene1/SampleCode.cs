@@ -64,17 +64,19 @@ namespace UMA.CharacterSystem.Examples
 
 		private void Avatar_Completed(UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<IList<Object>> obj)
 		{
-			// Ready to go, enable the character and build it.
-			//Debug.Log("Avatar preload completed.");
-			Avatar.gameObject.SetActive(true);
-			Avatar.BuildCharacterEnabled = true;
-		}
+            // Ready to go, enable the character and build it.
+            //Debug.Log("Avatar preload completed.");
+            Avatar.gameObject.SetActive(true);
+            // Avatar.BuildCharacter();
+            Avatar.BuildCharacterEnabled = true;
+            //  Avatar.ChangeRace(Avatar.RacePreset);
+        }
 
-		/// <summary>
-		/// Unloads all loaded items.
-		/// </summary>
-		/// <param name="force"></param>
-		public void UnloadAllItems(bool force)
+        /// <summary>
+        /// Unloads all loaded items.
+        /// </summary>
+        /// <param name="force"></param>
+        public void UnloadAllItems(bool force)
 		{
 			UMAAssetIndexer.Instance.UnloadAll(force);
 		}
@@ -246,45 +248,70 @@ namespace UMA.CharacterSystem.Examples
 
 		public void ChangeRace(int index)
 		{
+			if (Avatar.gameObject.activeSelf)
+			{
+                UMAAssetIndexer.Instance.UnloadAll(true);
+
+                string race = RaceDropdown.options[index].text;
+                Avatar.ChangeRace(race);
+            }
+            else
+            {
+                string race = RaceDropdown.options[index].text;
+                Avatar.RacePreset = race;
+            }
 
 
+            // Load just the current race.
+            /* List<RaceData> preloadRaces = new List<RaceData>();
+			preloadRaces.Add(races[index]);
+
+			var asyncop = UMAAssetIndexer.Instance.Preload(preloadRaces, false); // We are loading and unloading races. */
+
+            var asyncop = UMAAssetIndexer.Instance.Preload(Avatar, false);
+            asyncop.Completed += Avatar_Completed;
+		}
+
+        public void ChangeRaceOld(int index)
+        {
 #if !PRELOAD_ALL_RACES
 
 
-			if (Avatar.gameObject.activeSelf)
-			{
-				// Destroy the old one.
-				//Debug.Log("Destroying Old Avatar");
-				Avatar.gameObject.SetActive(false);
-				GameObject.Destroy(Avatar.gameObject);
+            if (Avatar.gameObject.activeSelf)
+            {
+                    // Destroy the old one.
+                    //Debug.Log("Destroying Old Avatar");
+                    Avatar.gameObject.SetActive(false);
+                    GameObject.Destroy(Avatar.gameObject);
 
-				//Debug.Log("Unloading everything (except for 'always loaded' items");
-				// unload everything
-				UMAAssetIndexer.Instance.UnloadAll(true);
+                    //Debug.Log("Unloading everything (except for 'always loaded' items");
+                    // unload everything
+                    UMAAssetIndexer.Instance.UnloadAll(true);
 
-				// Create a new avatar
-				//Debug.Log("Instantiating nobuild prefab");
-				GameObject go = GameObject.Instantiate(NoBuildPrefab);
-				Avatar = go.GetComponentInChildren<DynamicCharacterAvatar>();
-				Orbiter.target = go.transform;
-			}
+                    // Create a new avatar
+                    //Debug.Log("Instantiating nobuild prefab");
+                    GameObject go = GameObject.Instantiate(NoBuildPrefab);
+                    Avatar = go.GetComponentInChildren<DynamicCharacterAvatar>();
+                    Orbiter.target = go.transform; 
+            }
 
-			string race = RaceDropdown.options[index].text;
-			Avatar.RacePreset = race;
-			// Load just the current race.
-			List<RaceData> preloadRaces = new List<RaceData>();
-			preloadRaces.Add(races[index]);
+            string race = RaceDropdown.options[index].text;
+            Avatar.RacePreset = race;
 
-			var asyncop = UMAAssetIndexer.Instance.Preload(preloadRaces, false); // We are loading and unloading races.
-			asyncop.Completed += Asyncop_Completed;
+            // Load just the current race.
+            List<RaceData> preloadRaces = new List<RaceData>();
+            preloadRaces.Add(races[index]);
+
+            var asyncop = UMAAssetIndexer.Instance.Preload(preloadRaces, false); // We are loading and unloading races.
+            asyncop.Completed += Asyncop_Completed;
 #else
 			// Races are all preloaded, so we can just change to it.
 			string race = RaceDropdown.options[index].text;
 			Avatar.ChangeRace(race);
 #endif
-		}
+        }
 
-		public void ChangeSex()
+        public void ChangeSex()
         {
             if (Avatar.activeRace.name == "HumanMale")
             {

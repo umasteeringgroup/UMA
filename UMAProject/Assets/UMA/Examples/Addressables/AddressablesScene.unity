@@ -3423,7 +3423,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 0, y: -0.000008046538}
+  m_AnchoredPosition: {x: 0, y: -0.000017123435}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1670445105
@@ -3904,7 +3904,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1645511933}
   m_Direction: 2
   m_Value: 0
-  m_Size: 1
+  m_Size: 0.9999999
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -4649,10 +4649,45 @@ PrefabInstance:
       propertyPath: characterColors._colors.Array.data[5]._color.a
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 8963538791368871902, guid: cae428fba8fb3054ab2b41480e34379f,
+        type: 3}
+      propertyPath: defaultLoadOptions
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 8963538791368871902, guid: cae428fba8fb3054ab2b41480e34379f,
+        type: 3}
+      propertyPath: cacheCurrentState
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8963538791368871902, guid: cae428fba8fb3054ab2b41480e34379f,
+        type: 3}
+      propertyPath: defaultChangeRaceOptions
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8963538791368871902, guid: cae428fba8fb3054ab2b41480e34379f,
+        type: 3}
+      propertyPath: hide
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8963538791368871902, guid: cae428fba8fb3054ab2b41480e34379f,
+        type: 3}
+      propertyPath: _buildCharacterEnabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8963538791368871902, guid: cae428fba8fb3054ab2b41480e34379f,
+        type: 3}
+      propertyPath: saveFilename
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 8963538792093576476, guid: cae428fba8fb3054ab2b41480e34379f,
         type: 3}
       propertyPath: m_Name
       value: UMADynamicCharacterAvatar
+      objectReference: {fileID: 0}
+    - target: {fileID: 8963538792093576476, guid: cae428fba8fb3054ab2b41480e34379f,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: cae428fba8fb3054ab2b41480e34379f, type: 3}

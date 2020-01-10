@@ -229,7 +229,7 @@ namespace UMA.CharacterSystem.Editors
 				SerializedProperty defaultLoadOptions = serializedObject.FindProperty("defaultLoadOptions");
 				SerializedProperty defaultSaveOptions = serializedObject.FindProperty("defaultSaveOptions");
 				//extra LoadSave Options in addition to flags
-				SerializedProperty waitForBundles = serializedObject.FindProperty("waitForBundles");
+				//SerializedProperty waitForBundles = serializedObject.FindProperty("waitForBundles");
 				SerializedProperty makeUniqueFilename = serializedObject.FindProperty("makeUniqueFilename");
 				SerializedProperty ensureSharedColors = serializedObject.FindProperty("ensureSharedColors");
 
@@ -263,7 +263,7 @@ namespace UMA.CharacterSystem.Editors
 					//waitForBundles.boolValue = EditorGUILayout.ToggleLeft(new GUIContent(waitForBundles.displayName, waitForBundles.tooltip), waitForBundles.boolValue);
 					//buildAfterLoad.boolValue = EditorGUILayout.ToggleLeft(new GUIContent(buildAfterLoad.displayName, buildAfterLoad.tooltip), buildAfterLoad.boolValue);
 					//just drawing these as propertyFields because the toolTip on toggle left doesn't work
-					EditorGUILayout.PropertyField(waitForBundles);
+					//EditorGUILayout.PropertyField(waitForBundles);
 					EditorGUI.indentLevel--;
 				}
 				EditorGUI.indentLevel--;

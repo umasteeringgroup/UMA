@@ -14,6 +14,7 @@ using AsyncOp = UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHan
 using SlotRecipes = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<UMA.UMATextRecipe>>;
 using RaceRecipes = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<UMA.UMATextRecipe>>>;
 using System.Linq;
+using System.Text;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -1045,7 +1046,9 @@ namespace UMA
                 if (_AddressableSettings == null)
                 {
                     Debug.Log("Loading addressable Settings");
-                    _AddressableSettings = AssetDatabase.LoadAssetAtPath<AddressableAssetSettings>("Assets/AddressableAssetsData/AddressableAssetSettings.asset");
+                    string[] Settings = AssetDatabase.FindAssets("AddressableAssetSettings");
+                    string path = AssetDatabase.GUIDToAssetPath(Settings[0]);
+                    _AddressableSettings = AssetDatabase.LoadAssetAtPath<AddressableAssetSettings>(path);
                     Debug.Log("Loaded.");
                 }
                 return _AddressableSettings;
@@ -1247,6 +1250,17 @@ namespace UMA
             }
         }
 
+        private void AddItemToSharedGroup(string GUID,string Address, List<string> labels, AddressableAssetGroup sharedGroup)
+        {
+            AddressableAssetEntry ae = AddressableSettings.CreateOrMoveEntry(GUID, sharedGroup, false, true);
+            ae.SetAddress(Address);
+
+            foreach (string s in labels)
+            {
+                ae.SetLabel(s, true, true, true);
+            }
+        }
+
         private void AddAddressableAssets(Dictionary<int, List<UMATextRecipe>> tracker, AddressableAssetGroup sharedGroup)
         {
             float pos = 0.0f;
@@ -1373,7 +1387,139 @@ namespace UMA
 			SlotTracker[slotDataAsset.GetInstanceID()].Add(uwc);
 		}
 
-		public void GenerateAddressables()
+        /// <summary>
+        /// Get all the UMATextRecipes/UMWardrobeRecipes
+        /// </summary>
+        /// <returns></returns>
+        private List<UMATextRecipe> GetAddressableRecipes()
+        {
+
+            List<UMATextRecipe> theRecipes = new List<UMATextRecipe>();
+            Type theType;
+            //**********************************************************************************************
+            //* Add Wardrobe Recipes
+            //**********************************************************************************************
+
+            theType = TypeToLookup[typeof(UMAWardrobeRecipe)];
+            var wardrobe = GetAssetDictionary(theType).Values;
+
+            foreach (AssetItem ai in wardrobe)
+            {
+                UMAWardrobeRecipe uwr = ai.Item as UMAWardrobeRecipe;
+                theRecipes.Add(uwr);
+            }
+
+            theType = TypeToLookup[typeof(UMATextRecipe)];
+            var trecipes = GetAssetDictionary(theType).Values;
+
+            foreach (AssetItem ai in trecipes)
+            {
+                UMATextRecipe utr = ai.Item as UMATextRecipe;
+                theRecipes.Add(utr);
+            }
+            return theRecipes;
+        }
+
+        public void GenerateSingleGroup()
+        {
+            // Find what recipe everything is in.
+            // label everything with that recipe.
+            // dictionary<asset,recipes>
+            // 
+            try
+            {
+                foreach (Type t in GetTypes())
+                {
+                    ClearAddressableFlags(t);
+                }
+                List<UMATextRecipe> theRecipes = GetAddressableRecipes();
+
+                // Find Labels.
+                Dictionary<AssetItem, List<string>> theItems = new Dictionary<AssetItem, List<string>>();
+
+                float pos = 0.0f;
+                float inc = 1.0f / theRecipes.Count;
+                foreach (UMATextRecipe uwr in theRecipes)
+                {
+                    EditorUtility.DisplayProgressBar("Generating", "processing recipe: " + uwr.name, pos);
+                    List<AssetItem> items = GetAssetItems(uwr);
+                    foreach (AssetItem ai in items)
+                    {
+                        if (theItems.ContainsKey(ai) == false)
+                        {
+                            theItems.Add(ai, new List<string>());
+                        }
+                        theItems[ai].Add(uwr.name);
+                    }
+                    pos += inc;
+                }
+                /// Add to group
+                /// add labels
+                /// Finalize
+
+                // Create the shared group that has each item packed separately.
+                AddressableAssetGroup sharedGroup = AddressableSettings.CreateGroup("UMA_SharedItems", false, false, true, AddressableSettings.DefaultGroup.Schemas);
+                sharedGroup.GetSchema<BundledAssetGroupSchema>().BundleMode = BundledAssetGroupSchema.BundlePackingMode.PackSeparately;
+
+                pos = 0.0f;
+                inc = 1.0f / theItems.Count;
+
+                StringBuilder sb = new StringBuilder();
+                foreach (AssetItem ai in theItems.Keys)
+                {
+                    ai.IsAddressable = true;
+                    ai.AddressableAddress = ai._Type.Name + "-" + ai.EvilName;
+                    ai.AddressableGroup = sharedGroup.name;
+                    EditorUtility.DisplayProgressBar("Generating", "Processing Asset: " + ai.Item.name, pos);
+
+                    sb.Clear();
+                    foreach (string s in theItems[ai])
+                    {
+                        sb.Append(s);
+                        sb.Append(';'); 
+                    }
+                    ai.AddressableLabels = sb.ToString(); 
+
+                    bool found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(ai.Item.GetInstanceID(), out string itemGUID, out long localID);
+
+                    AddItemToSharedGroup(itemGUID, ai.AddressableAddress, theItems[ai], sharedGroup);
+                    if (ai._Type == typeof(OverlayDataAsset))
+                    {
+                        OverlayDataAsset od = ai.Item as OverlayDataAsset;
+                        foreach (Texture tex in od.textureList)
+                        {
+                            if (tex == null) continue;
+                            if (tex as Texture2D == null)
+                            {
+                                Debug.Log("Texture is not Texture2D!!! " + tex.name);
+                                continue;
+                            }
+                            string Address = "Texture2D-" + tex.name+"-"+tex.GetInstanceID();
+
+                            found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(tex.GetInstanceID(), out string texGUID, out long texlocalID);
+                            if (found)
+                            {
+                                AddItemToSharedGroup(texGUID, Address, theItems[ai], sharedGroup);
+                            }
+                        }
+                    }
+                    pos += inc;
+                }
+
+                UpdateAssetItems();
+
+                ReleaseReferences(TypeToLookup[typeof(SlotDataAsset)]);
+                ReleaseReferences(TypeToLookup[typeof(OverlayDataAsset)]);
+
+                CleanupAddressables(true);
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+            }
+        }
+
+        public void GenerateAddressables()
         {
             try
             {
@@ -1423,36 +1569,14 @@ namespace UMA
 
 
 
-
-
-				//**********************************************************************************************
-				//* Add Wardrobe Recipes
-				//**********************************************************************************************
-
-				theType = TypeToLookup[typeof(UMAWardrobeRecipe)];
-				var wardrobe = GetAssetDictionary(theType).Values;
-
-				foreach (AssetItem ai in wardrobe)
-				{
-					UMAWardrobeRecipe uwr = ai.Item as UMAWardrobeRecipe;
-					theRecipes.Add(uwr);
-				}
-
-				theType = TypeToLookup[typeof(UMATextRecipe)];
-				var trecipes = GetAssetDictionary(theType).Values;
-
-				foreach (AssetItem ai in trecipes)
-				{
-					UMATextRecipe utr = ai.Item as UMATextRecipe;
-					theRecipes.Add(utr);
-				}
+                theRecipes = GetAddressableRecipes();
 
 				GenerateCollectionLabels();
 
 				GenerateLookups(context, theRecipes);
 
                 float pos = 0.0f;
-                float inc = 1.0f / wardrobe.Count;
+                float inc = 1.0f / theRecipes.Count;
 
 				const string tprefix = "UTR_";
 				const string wprefix = "UWR_";
@@ -1576,6 +1700,9 @@ namespace UMA
 			foreach (AssetItem ai in items)
 			{
 				ai.IsAddressable = false;
+                ai.AddressableAddress = "";
+                ai.AddressableLabels = "";
+                ai.ReleaseItem();
 			}
 		}
 
@@ -1706,7 +1833,7 @@ namespace UMA
 
 
 #if UNITY_EDITOR
-                Debug.Log("Getting asset entry");
+                // Debug.Log("Getting asset entry");
 				AddressableAssetEntry ae = GetAddressableAssetEntry(ai);
 				if (ae != null)
 				{
@@ -1838,7 +1965,7 @@ namespace UMA
             {
                 CreateLookupDictionary(type);
             }
-            Debug.Log("Adding Items");
+//             Debug.Log("Adding Items");
             foreach (AssetItem ai in SerializedItems)
             {
                 // We null things out when we want to delete them. This prevents it from going back into 

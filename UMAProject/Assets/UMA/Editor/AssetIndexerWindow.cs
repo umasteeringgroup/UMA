@@ -176,7 +176,7 @@ namespace UMA.Controls
 			// ***********************************************************************************
 			// Addressables Menu items
 			// ***********************************************************************************
-			AddMenuItemWithCallback(AddressablesMenu, "(Re)Generate Groups", () => 
+			AddMenuItemWithCallback(AddressablesMenu, "Generate Groups (optimized)", () => 
 			{
 				UAI.CleanupAddressables();
 				UAI.GenerateAddressables();
@@ -184,6 +184,16 @@ namespace UMA.Controls
 				m_Initialized = false;
 				Repaint();
 			});
+
+			AddMenuItemWithCallback(AddressablesMenu, "Generate Shared Group (fast)", () =>
+			{
+				UAI.CleanupAddressables();
+				UAI.GenerateSingleGroup();
+				Resources.UnloadUnusedAssets();
+				m_Initialized = false;
+				Repaint();
+			});
+
 			AddMenuItemWithCallback(AddressablesMenu, "Remove Addressables", () => 
 			{ 
 				UAI.CleanupAddressables(false, true);
