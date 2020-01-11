@@ -2494,7 +2494,7 @@ namespace UMA.CharacterSystem
 			if (!skipBundleCheck && isAddressableSystem)
 			{
                 var theOp = UMAAssetIndexer.Instance.Preload(this);
-                LoadedHandles.Enqueue(theOp.DebugAcquire());
+                LoadedHandles.Enqueue(theOp);
                 theOp.Completed += BuildWhenReady;
 #if SUPER_LOGGING
                 Debug.Log("Buildcharacter waiting for preload...");

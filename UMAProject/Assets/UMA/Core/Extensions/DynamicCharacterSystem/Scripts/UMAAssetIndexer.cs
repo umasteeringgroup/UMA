@@ -967,7 +967,7 @@ namespace UMA
 					}
 				}
 			}, Addressables.MergeMode.Union);
-            op.debugAcquired = true;
+
 			if (!keepLoaded)
 			{
                 string info = "";
