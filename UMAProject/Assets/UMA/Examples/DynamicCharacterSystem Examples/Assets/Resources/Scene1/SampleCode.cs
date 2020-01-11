@@ -30,6 +30,7 @@ namespace UMA.CharacterSystem.Examples
         public SharedColorTable ClothingColor;
 		public Dropdown RaceDropdown;
 		public GameObject CharacterUI;
+        public bool PreloadAndUnload;
 
 		private List<RaceData> races;
 
@@ -250,7 +251,10 @@ namespace UMA.CharacterSystem.Examples
 		{
 			if (Avatar.gameObject.activeSelf)
 			{
-                UMAAssetIndexer.Instance.UnloadAll(true);
+                if (PreloadAndUnload)
+                {
+                    UMAAssetIndexer.Instance.UnloadAll(true);
+                }
 
                 string race = RaceDropdown.options[index].text;
                 Avatar.ChangeRace(race);
@@ -261,15 +265,16 @@ namespace UMA.CharacterSystem.Examples
                 Avatar.RacePreset = race;
             }
 
-
-            // Load just the current race.
-            /* List<RaceData> preloadRaces = new List<RaceData>();
-			preloadRaces.Add(races[index]);
-
-			var asyncop = UMAAssetIndexer.Instance.Preload(preloadRaces, false); // We are loading and unloading races. */
-
-            var asyncop = UMAAssetIndexer.Instance.Preload(Avatar, false);
-            asyncop.Completed += Avatar_Completed;
+            if (PreloadAndUnload)
+            {
+                var asyncop = UMAAssetIndexer.Instance.Preload(Avatar, false);
+                asyncop.Completed += Avatar_Completed;
+            }
+            else
+            {
+                Avatar.gameObject.SetActive(true);
+                Avatar.BuildCharacterEnabled = true;
+            }
 		}
 
         public void ChangeRaceOld(int index)

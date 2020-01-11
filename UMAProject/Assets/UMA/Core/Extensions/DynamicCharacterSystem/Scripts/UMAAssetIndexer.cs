@@ -807,23 +807,17 @@ namespace UMA
 			List<string> keys = new List<string>();
 			RaceData race = GetAsset<RaceData>(avatar.activeRace.name);
 
-			// preload the race
-			if (race != null)
-			{
-				keys.Add(race.baseRaceRecipe.name);
-			}
-
 			// preload any assigned recipes.
 			foreach (var wr in avatar.WardrobeRecipes.Values) 
 			{
-				Debug.Log("Adding Wardrobe recipe: " + wr.name);
+				//Debug.Log("Adding Wardrobe recipe: " + wr.name);
 				keys.Add(wr.name);
 			}
 
 			// preload utility recipes
 			foreach (var tr in avatar.umaAdditionalRecipes)
 			{
-				Debug.Log("Adding additional recipe: " + tr.name);
+				//Debug.Log("Adding additional recipe: " + tr.name);
 				keys.Add(tr.name);
 			}
 
@@ -917,7 +911,9 @@ namespace UMA
 
 		public AsyncOperationHandle<IList<UnityEngine.Object>> LoadLabelList(List<string> Keys, bool keepLoaded)
 		{
+//#if SUPER_LOGGING
             string labels = "";
+//#endif
             foreach (string label in Keys)
 			{
 				if (!Preloads.ContainsKey(label))
@@ -929,21 +925,24 @@ namespace UMA
 					if (keepLoaded) // only overwrite if keepLoaded = true. All "keepLoaded" take precedence.
 						Preloads[label] = keepLoaded;
 				}
+//#if SUPER_LOGGING
                 labels += "'" + label + "';";
+//#endif
 			}
 
-#if SUPER_LOGGING
+//#if SUPER_LOGGING
             Debug.Log("Loading Labels: " + labels);
-#endif
+//#endif
 			var op = Addressables.LoadAssetsAsync<UnityEngine.Object>(Keys.ToArray(), result =>
 			{
+
                 // Debug.Log("Result type is " + result.GetType().ToString());
 				if (result.GetType() == typeof(SlotDataAsset))
 				{
 					AssetItem ai = GetAssetItem<SlotDataAsset>((result as SlotDataAsset).slotName);
 					if (ai != null)
 					{
-						ai.IsAlwaysLoaded = keepLoaded;
+						if (keepLoaded) ai.IsAlwaysLoaded = keepLoaded;
 						ai._SerializedItem = result;
 #if SUPER_LOGGING
 						Debug.Log("Cached Slot " + ai.EvilName);
@@ -968,6 +967,7 @@ namespace UMA
 					}
 				}
 			}, Addressables.MergeMode.Union);
+            op.debugAcquired = true;
 			if (!keepLoaded)
 			{
                 string info = "";
@@ -978,15 +978,25 @@ namespace UMA
 			return op;
 		}
 
-		public void Unload(AsyncOperationHandle<IList<UnityEngine.Object>> AssetOperation)
+		public void Unload(AsyncOperationHandle AssetOperation)
 		{
+            Debug.Log("Unloading AsyncOperationHandle in Indexer.Unload()");
 			Addressables.Release(AssetOperation);
-			LoadedItems.RemoveAll(x => x.Operation.Equals(AssetOperation));
+			//LoadedItems.RemoveAll(x => x.Operation.Equals(AssetOperation));
         }
 
-		public void UnloadAll(bool forceResourceUnload)
+        public void Unload(AsyncOperationHandle<IList<UnityEngine.Object>> AssetOperation)
+        {
+            Debug.Log("Unloading AsyncOperationHandle<> in Indexer.Unload()");
+            Addressables.Release(AssetOperation);
+            LoadedItems.RemoveAll(x => x.Operation.Equals(AssetOperation));
+        }
+
+        public void UnloadAll(bool forceResourceUnload)
 		{
-            foreach(CachedOp op in LoadedItems)
+            Debug.Log("Unloading ALL AsyncOperationHandle in Indexer.UnloadAll()");
+
+            foreach (CachedOp op in LoadedItems)
 			{
 				Addressables.Release(op.Operation);
 			}
@@ -1701,9 +1711,9 @@ namespace UMA
 		}
 
 #endif
-        #endregion
+#endregion
 
-        #region Add Remove Assets
+#region Add Remove Assets
 
 #if UNITY_EDITOR
 
@@ -1984,9 +1994,9 @@ namespace UMA
 
 			foreach(UMAWardrobeRecipe uwr in wardrobe)
 			{
+                if (!uwr) continue;
 				foreach(string racename in uwr.compatibleRaces)
 				{
-
 					if (!raceRecipes.ContainsKey(racename))
 					{
 						raceRecipes.Add(racename, new SlotRecipes());
@@ -2340,7 +2350,7 @@ namespace UMA
                 }
             }
             BuildStringTypes();
-            #endregion
+#endregion
             //Debug.Log("Updating serialized items...");
             //UpdateSerializedDictionaryItems();
             //Debug.Log("Completed update of serialized Items");

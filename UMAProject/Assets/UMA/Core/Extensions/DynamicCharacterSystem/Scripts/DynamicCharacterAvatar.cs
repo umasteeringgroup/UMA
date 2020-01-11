@@ -19,7 +19,7 @@ namespace UMA.CharacterSystem
 {
     public class DynamicCharacterAvatar : UMAAvatarBase
     {
-
+        public float DelayUnload = 2.0f;
 #if UNITY_EDITOR
 		[UnityEditor.MenuItem("GameObject/UMA/Create New Dynamic Character Avatar",false,10)]
 		public static void CreateDynamicCharacterAvatarMenuItem()
@@ -135,8 +135,7 @@ namespace UMA.CharacterSystem
         public bool loadFileOnStart;
 		private bool isAddressableSystem;
         private bool isCaching = false;
-        private AsyncOp LastOp;
-
+        private Queue<AsyncOp> LoadedHandles = new Queue<AsyncOp>();
         [EnumFlags]
         public LoadOptions defaultLoadOptions = LoadOptions.loadRace | LoadOptions.loadDNA | LoadOptions.loadWardrobe | LoadOptions.loadBodyColors | LoadOptions.loadWardrobeColors;
 
@@ -2494,8 +2493,9 @@ namespace UMA.CharacterSystem
 
 			if (!skipBundleCheck && isAddressableSystem)
 			{
-				AsyncOp Op = UMAAssetIndexer.Instance.Preload(this);
-				Op.Completed += BuildWhenReady;
+                var theOp = UMAAssetIndexer.Instance.Preload(this);
+                LoadedHandles.Enqueue(theOp.DebugAcquire());
+                theOp.Completed += BuildWhenReady;
 #if SUPER_LOGGING
                 Debug.Log("Buildcharacter waiting for preload...");
 #endif
@@ -2657,7 +2657,7 @@ namespace UMA.CharacterSystem
 
             // Add saved DNA
             if (RestoreDNA)
-            {
+            { 
                 umaData.umaRecipe.ClearDna();
                 foreach (UMADnaBase ud in CurrentDNA)
                 {
@@ -2672,14 +2672,36 @@ namespace UMA.CharacterSystem
             {
                 if (Op.IsDone)
                 {
-                    // Release the last one if we have one.
-                    if (LastOp.IsValid())
-                    {
-                        UMAAssetIndexer.Instance.Unload(LastOp);
+                    /*
+                    if (LastOps.Count > 1) 
+                    { 
+                        if (DelayUnload > 0.0f)
+                        {
+                            StartCoroutine(CleanupAfterDelay());
+                        }
+                        else
+                        {
+                           OpSaver lastop = LastOps.Dequeue();
+                           UMAAssetIndexer.Instance.Unload(lastop.theOp);
+                        }
                     }
-                    // Record this so we can release it later.
-                    LastOp = Op;
+                    */
                     BuildCharacter(true, true);
+                    if (LoadedHandles.Count > 1)
+                    {
+                        if (DelayUnload > 0.0f)
+                        {
+                            StartCoroutine(CleanupAfterDelay());
+                        }
+                        else
+                        {
+                            AsyncOp aoh = LoadedHandles.Dequeue();
+                            if (aoh.IsValid())
+                            {
+                                UnityEngine.AddressableAssets.Addressables.Release(aoh);
+                            }
+                        }
+                    }
                 }
             }
             catch(Exception ex)
@@ -2688,7 +2710,21 @@ namespace UMA.CharacterSystem
             }
 		}
 
-		private void ApplyPredefinedDNA()
+        /// <summary>
+        /// This function will delay the unload
+        /// </summary>
+        /// <returns></returns>
+        IEnumerator CleanupAfterDelay( )
+        {
+            yield return new WaitForSeconds(DelayUnload);
+            AsyncOp theOp = LoadedHandles.Dequeue();
+            if (theOp.IsValid())
+            {
+                UMAAssetIndexer.Instance.Unload(theOp);
+            }
+        } 
+
+        private void ApplyPredefinedDNA()
         {
             if (this.predefinedDNA != null)
             {
@@ -2704,7 +2740,7 @@ namespace UMA.CharacterSystem
                 this.predefinedDNA = null; // only apply the first time.
             }
         }
-
+         
         /// <summary>
         /// With a DynamicCharacterAvatar you do not call Load directly. If you want to load an UMATextRecipe directly call ImportSettings(yourUMATextRecipe)
         /// </summary>
