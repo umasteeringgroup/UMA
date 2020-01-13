@@ -636,10 +636,10 @@ namespace UMA.Controls
 
 						if (ShouldLoad(itemstoload, ai))
 						{
-							AssetTreeElement atai = new AssetTreeElement(ai.EvilName, 1, ++totalitems);
+							AssetTreeElement atai = new AssetTreeElement(ai._Name, 1, ++totalitems);
 							atai.ai = ai;
 							atai.index = i;
-							atai.type = t;
+							atai.type = t; 
 							ElementsToLoad.Add(atai);
 
 							if (ai._SerializedItem != null)

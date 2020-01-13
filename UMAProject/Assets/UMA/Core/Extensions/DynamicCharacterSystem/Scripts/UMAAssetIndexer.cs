@@ -911,9 +911,9 @@ namespace UMA
 
 		public AsyncOperationHandle<IList<UnityEngine.Object>> LoadLabelList(List<string> Keys, bool keepLoaded)
 		{
-//#if SUPER_LOGGING
+#if SUPER_LOGGING
             string labels = "";
-//#endif
+#endif
             foreach (string label in Keys)
 			{
 				if (!Preloads.ContainsKey(label))
@@ -925,48 +925,18 @@ namespace UMA
 					if (keepLoaded) // only overwrite if keepLoaded = true. All "keepLoaded" take precedence.
 						Preloads[label] = keepLoaded;
 				}
-//#if SUPER_LOGGING
+#if SUPER_LOGGING
                 labels += "'" + label + "';";
-//#endif
+#endif
 			}
 
-//#if SUPER_LOGGING
+#if SUPER_LOGGING
             Debug.Log("Loading Labels: " + labels);
-//#endif
+#endif
 			var op = Addressables.LoadAssetsAsync<UnityEngine.Object>(Keys.ToArray(), result =>
-			{
-
-                // Debug.Log("Result type is " + result.GetType().ToString());
-				if (result.GetType() == typeof(SlotDataAsset))
-				{
-					AssetItem ai = GetAssetItem<SlotDataAsset>((result as SlotDataAsset).slotName);
-					if (ai != null)
-					{
-						if (keepLoaded) ai.IsAlwaysLoaded = keepLoaded;
-						ai._SerializedItem = result;
-#if SUPER_LOGGING
-						Debug.Log("Cached Slot " + ai.EvilName);
-#endif
-					}
-                    else
-                    {
-                        Debug.Log("Unable to find slot: " + ai.EvilName);
-                    }
-				}
-				if (result.GetType() == typeof(OverlayDataAsset))
-				{
-					AssetItem ai = GetAssetItem<OverlayDataAsset>((result as OverlayDataAsset).overlayName);
-					if (ai != null)
-					{
-						if (keepLoaded)
-							ai.IsAlwaysLoaded = keepLoaded; // only set if true, so if any call sets it to always loaded, it is not cleared.
-						ai._SerializedItem = result;
-#if SUPER_LOGGING
-						Debug.Log("Cached Overlay " + (ai._SerializedItem as OverlayDataAsset).overlayName);
-#endif
-					}
-				}
-			}, Addressables.MergeMode.Union);
+            {
+                ProcessAddressableUpdates(keepLoaded, result);
+            }, Addressables.MergeMode.Union);
 
 			if (!keepLoaded)
 			{
@@ -978,16 +948,57 @@ namespace UMA
 			return op;
 		}
 
-		public void Unload(AsyncOperationHandle AssetOperation)
-		{
-            Debug.Log("Unloading AsyncOperationHandle in Indexer.Unload()");
-			Addressables.Release(AssetOperation);
-			//LoadedItems.RemoveAll(x => x.Operation.Equals(AssetOperation));
+        public void ProcessAddressableUpdates(bool keepLoaded, UnityEngine.Object result)
+        {
+
+            // Debug.Log("Result type is " + result.GetType().ToString());
+            if (result.GetType() == typeof(SlotDataAsset))
+            {
+                AssetItem ai = GetAssetItem<SlotDataAsset>((result as SlotDataAsset).slotName);
+                if (ai != null)
+                {
+                    if (keepLoaded) ai.IsAlwaysLoaded = keepLoaded;
+                    ai._SerializedItem = result;
+#if SUPER_LOGGING
+						Debug.Log("Cached Slot " + ai.EvilName);
+#endif
+                }
+                else
+                {
+                    Debug.Log("Unable to find slot: " + ai.EvilName);
+                }
+            }
+            if (result.GetType() == typeof(OverlayDataAsset))
+            {
+                AssetItem ai = GetAssetItem<OverlayDataAsset>((result as OverlayDataAsset).overlayName);
+                if (ai != null)
+                {
+                    if (keepLoaded)
+                        ai.IsAlwaysLoaded = keepLoaded; // only set if true, so if any call sets it to always loaded, it is not cleared.
+                    ai._SerializedItem = result;
+#if SUPER_LOGGING
+						Debug.Log("Cached Overlay " + (ai._SerializedItem as OverlayDataAsset).overlayName);
+#endif
+                }
+                else
+                {
+                    ai = new AssetItem(result.GetType(),result);
+                    ai.IsAddressable = true;
+                    ai.IsAlwaysLoaded = keepLoaded;
+                    AddAssetItem(ai);
+                }
+            }
         }
 
         public void Unload(AsyncOperationHandle<IList<UnityEngine.Object>> AssetOperation)
         {
+#if SUPER_LOGGING
             Debug.Log("Unloading AsyncOperationHandle<> in Indexer.Unload()");
+#endif
+            foreach(UnityEngine.Object obj in AssetOperation.Result)
+            {
+                ReleaseReference(obj);
+            }
             Addressables.Release(AssetOperation);
             LoadedItems.RemoveAll(x => x.Operation.Equals(AssetOperation));
         }
@@ -1049,11 +1060,11 @@ namespace UMA
             {
                 if (_AddressableSettings == null)
                 {
-                    Debug.Log("Loading addressable Settings");
+                    //Debug.Log("Loading addressable Settings");
                     string[] Settings = AssetDatabase.FindAssets("AddressableAssetSettings");
                     string path = AssetDatabase.GUIDToAssetPath(Settings[0]);
                     _AddressableSettings = AssetDatabase.LoadAssetAtPath<AddressableAssetSettings>(path);
-                    Debug.Log("Loaded.");
+                    //Debug.Log("Loaded.");
                 }
                 return _AddressableSettings;
             }
@@ -1728,9 +1739,7 @@ namespace UMA
 
         public void RemoveIfIndexed(UnityEngine.Object o)
         {
-            // Warning: This does stuff. Don't remove this, we need the evilname lookup.
-            AssetItem ai = new AssetItem(o.GetType(), o);
-            RemoveAsset(ai._Type, ai._Name);
+            RemoveAsset(o.GetType(), AssetItem.GetEvilName(o));
         }
 
         public void RecursiveScanFoldersForAssets(string path)
@@ -1815,8 +1824,21 @@ namespace UMA
         {
             try
             {
+                if (!TypeToLookup.ContainsKey(ai._Type))
+                {
+                    Debug.LogError("Unable to get Lookup Type for Type: " + ai._Type.ToString() + " for Object " + ai._Name);
+                    return false;
+                }
+
                 System.Type theType = TypeToLookup[ai._Type];
                 Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(theType);
+
+                if (TypeDic == null)
+                {
+                    Debug.Log("Unable to add asset item!. Unable to get Type Dictionary of type " + theType.ToString() + "For object " + ai._Name);
+                    return false;
+                }
+
                 // Get out if we already have it.
                 if (TypeDic.ContainsKey(ai._Name))
                 {
@@ -1926,6 +1948,31 @@ namespace UMA
             return AddAssetItem(ai);
         }
 
+
+        /// <summary>
+        /// Removes an asset from the index
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="Name"></param>
+        public void ReleaseReference (UnityEngine.Object obj)
+        {
+            string Name = AssetItem.GetEvilName(obj);
+
+            // Leave if this is an unreferenced type - for example, a texture (etc).
+            // This can happen because these are referenced by the Overlay.
+            if (!TypeToLookup.ContainsKey(obj.GetType()))
+                return;
+
+            System.Type theType = TypeToLookup[obj.GetType()];
+
+            Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(theType);
+
+            if (TypeDic.ContainsKey(Name))
+            {
+                AssetItem ai = TypeDic[Name];
+                ai.ReleaseItem();
+            }
+        }
         /// <summary>
         /// Removes an asset from the index
         /// </summary>
@@ -2042,11 +2089,11 @@ namespace UMA
                 	Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(type);
                 	foreach (AssetItem ai in TypeDic.Values)
                 	{
-                    	// Don't add asset bundle or resource items to index. They are loaded on demand.
-                    	if (ai.IsAssetBundle == false && ai.IsResource == false)
-                    	{
-                       		SerializedItems.Add(ai);
-                    	}
+                        if (ai.IsAddressable)
+                        {
+                            ai._SerializedItem = null;
+                        }
+                      	SerializedItems.Add(ai);
                 	}
 				}
             }
@@ -2189,7 +2236,7 @@ namespace UMA
         /// picked up by garbage collection.
         /// This also makes working with the index much faster.
         /// </summary>
-        public void ClearReferences()
+        public void ClearReferences() 
         {
             // Rebuild the tables
             UpdateSerializedList();
@@ -2199,6 +2246,7 @@ namespace UMA
             }
             UpdateSerializedDictionaryItems();
             ForceSave();
+            Resources.UnloadUnusedAssets();
         }
 
         /// <summary>

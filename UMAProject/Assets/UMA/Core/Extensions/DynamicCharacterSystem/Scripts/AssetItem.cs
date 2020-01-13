@@ -79,6 +79,7 @@ namespace UMA
 						return null;
 					if (_editorCachedItem == null)
 					{
+                        Debug.Log("Getting editor cached item: " + _Name);
 						_editorCachedItem = GetItem();
 					}
 					// _editorCachedItem is never saved.
@@ -141,39 +142,45 @@ namespace UMA
 		{
 #if UNITY_EDITOR
 			if (_SerializedItem != null) return;
-
+#if SUPER_LOGGING
+            Debug.Log("Loading item in AssetItem: " + _Name);
+#endif
 			//if (IsAddressable) return;
 
 			_SerializedItem = GetItem();
 #endif
-		}
+        }
+
+        public static string GetEvilName(Object o)
+        {
+            if (!o)
+            {
+                return "<Not Found!>";
+            }
+            if (o is SlotDataAsset)
+            {
+                SlotDataAsset sd = o as SlotDataAsset;
+                return sd.slotName;
+            }
+            if (o is OverlayDataAsset)
+            {
+                OverlayDataAsset od = o as OverlayDataAsset;
+                return od.overlayName;
+            }
+            if (o is RaceData)
+            {
+                return (o as RaceData).raceName;
+            }
+
+            return o.name;
+        }
 
         public string EvilName
         {
             get
             {
                 Object o = Item;
-
-                if (!o)
-                {
-                    return "<Not Found!>";
-                }
-                if (o is SlotDataAsset)
-                {
-                    SlotDataAsset sd = o as SlotDataAsset;
-                    return sd.slotName;
-                }
-                if (o is OverlayDataAsset)
-                {
-                    OverlayDataAsset od = o as OverlayDataAsset;
-                    return od.overlayName;
-                }
-                if (o is RaceData)
-                {
-                    return (o as RaceData).raceName;
-                }
-
-                return o.name;
+                return GetEvilName(o);
             }
         }
 #endregion
