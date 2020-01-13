@@ -28,7 +28,7 @@ namespace UMA
 		public int ReferenceCount;
 
 		[System.NonSerialized]
-		private Object _editorCachedItem;
+		public Object _editorCachedItem;
 
         #endregion
         #region Properties
@@ -184,10 +184,33 @@ namespace UMA
             }
         }
 #endregion
+
+        public void AddReference()
+        {
+            ReferenceCount++;
+        }
+
+        public void FreeReference()
+        {
+            ReferenceCount = 0;
+            _SerializedItem = null;
+        }
+
 		public void ReleaseItem()
 		{
-			_SerializedItem = null;
-		}
+            if (IsAddressable)
+            {
+                ReferenceCount--;
+                if (ReferenceCount < 1)
+                {
+                    FreeReference();
+                }
+            }
+            else
+            {
+                FreeReference();
+            }
+        }
 
 #region Methods (edit time)
 #if UNITY_EDITOR

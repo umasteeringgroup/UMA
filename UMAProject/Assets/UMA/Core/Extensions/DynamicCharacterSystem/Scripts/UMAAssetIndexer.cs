@@ -965,8 +965,12 @@ namespace UMA
                 }
                 else
                 {
-                    Debug.Log("Unable to find slot: " + ai.EvilName);
+                    ai = new AssetItem(result.GetType(), result);
+                    ai.IsAddressable = true;
+                    ai.IsAlwaysLoaded = keepLoaded;
+                    AddAssetItem(ai);
                 }
+                ai.AddReference();
             }
             if (result.GetType() == typeof(OverlayDataAsset))
             {
@@ -987,6 +991,7 @@ namespace UMA
                     ai.IsAlwaysLoaded = keepLoaded;
                     AddAssetItem(ai);
                 }
+                ai.AddReference();
             }
         }
 
@@ -1019,6 +1024,7 @@ namespace UMA
 				if (ai._SerializedItem != null && ai.IsAddressable && ai.IsAlwaysLoaded == false)
 				{
 					ai.ReleaseItem();
+                    ai.ReferenceCount = 0;
 				}
 			}
 
@@ -1042,6 +1048,7 @@ namespace UMA
 				if (ai._SerializedItem != null && ai.IsAddressable && ai.IsAlwaysLoaded == false)
 				{
 					ai.ReleaseItem();
+                    ai.ReferenceCount = 0;
 				}
 			}
 			LoadedItems.Clear();
@@ -1717,9 +1724,10 @@ namespace UMA
 				ai.IsAddressable = false;
                 ai.AddressableAddress = "";
                 ai.AddressableLabels = "";
-                ai.ReleaseItem();
-			}
-		}
+                ai._SerializedItem = null;
+                ai._editorCachedItem = null;
+            }
+        }
 
 #endif
 #endregion
@@ -2243,6 +2251,8 @@ namespace UMA
             foreach (AssetItem ai in SerializedItems)
             {
                 ai.ReleaseItem();
+                ai._SerializedItem = null;
+                ai.ReferenceCount = 0;
             }
             UpdateSerializedDictionaryItems();
             ForceSave();

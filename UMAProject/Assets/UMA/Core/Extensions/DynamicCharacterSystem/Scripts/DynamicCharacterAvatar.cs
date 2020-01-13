@@ -2672,20 +2672,6 @@ namespace UMA.CharacterSystem
             {
                 if (Op.IsDone)
                 {
-                    /*
-                    if (LastOps.Count > 1) 
-                    { 
-                        if (DelayUnload > 0.0f)
-                        {
-                            StartCoroutine(CleanupAfterDelay());
-                        }
-                        else
-                        {
-                           OpSaver lastop = LastOps.Dequeue();
-                           UMAAssetIndexer.Instance.Unload(lastop.theOp);
-                        }
-                    }
-                    */
                     BuildCharacter(true, true);
                     if (LoadedHandles.Count > 1)
                     {
@@ -2695,11 +2681,7 @@ namespace UMA.CharacterSystem
                         }
                         else
                         {
-                            AsyncOp aoh = LoadedHandles.Dequeue();
-                            if (aoh.IsValid())
-                            {
-                                UnityEngine.AddressableAssets.Addressables.Release(aoh);
-                            }
+                            UnloadOldestQueuedHandle();
                         }
                     }
                 }
@@ -2710,6 +2692,15 @@ namespace UMA.CharacterSystem
             }
 		}
 
+        private void UnloadOldestQueuedHandle()
+        {
+            AsyncOp aoh = LoadedHandles.Dequeue();
+            if (aoh.IsValid())
+            {
+                UnityEngine.AddressableAssets.Addressables.Release(aoh);
+            }
+        }
+
         /// <summary>
         /// This function will delay the unload
         /// </summary>
@@ -2717,11 +2708,7 @@ namespace UMA.CharacterSystem
         IEnumerator CleanupAfterDelay( )
         {
             yield return new WaitForSeconds(DelayUnload);
-            AsyncOp theOp = LoadedHandles.Dequeue();
-            if (theOp.IsValid())
-            {
-                UMAAssetIndexer.Instance.Unload(theOp);
-            }
+            UnloadOldestQueuedHandle();
         } 
 
         private void ApplyPredefinedDNA()
@@ -3279,6 +3266,12 @@ namespace UMA.CharacterSystem
         /// </summary>
         public void Cleanup()
         {
+            // Unload any items to free memory.
+            while(LoadedHandles.Count > 0)
+            {
+                UnloadOldestQueuedHandle();
+            }
+
             if (umaData != null)
             { 
                 if (umaData.umaGenerator != null)
