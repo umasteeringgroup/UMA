@@ -212,17 +212,24 @@ namespace UMA.Controls
 				Resources.UnloadUnusedAssets();
 				Repaint();
 			});
+
 			AddMenuItemWithCallback(AddressablesMenu, "Remove Orphaned Slots", () => 
-			{ 
-				UAI.CleanupOrphans(typeof(SlotDataAsset));
-				m_Initialized = false;
-				Repaint();
+			{
+				if (EditorUtility.DisplayDialog("Warning!", "You *must* build the addressable groups, and mark any slots you want to keep as 'keep' before running this!", "OK", "Cancel"))
+				{
+					UAI.CleanupOrphans(typeof(SlotDataAsset));
+					m_Initialized = false;
+					Repaint();
+				}
 			});
 			AddMenuItemWithCallback(AddressablesMenu, "Remove Orphaned Overlays", () => 
-			{ 
-				UAI.CleanupOrphans( typeof(OverlayDataAsset) );
-				m_Initialized = false;
-				Repaint();
+			{
+				if (EditorUtility.DisplayDialog("Warning!", "You *must* build the addressable groups, and mark any slots you want to keep as 'keep' before running this!", "OK", "Cancel"))
+				{
+					UAI.CleanupOrphans(typeof(OverlayDataAsset));
+					m_Initialized = false;
+					Repaint();
+				}
 			});
 
 			// ***********************************************************************************
@@ -268,6 +275,22 @@ namespace UMA.Controls
 			{
 				AddMenuItemWithCallbackParm(ItemsMenu, "Select Overlays By Race/" + rc.raceName, SelectOverlaysByRace, rc);
 			}
+
+			ItemsMenu.AddSeparator("");
+
+			AddMenuItemWithCallback(ItemsMenu, "Add Keep Flag to Selected Items", () =>
+			{
+				MarkKeep(true);
+				Repaint();
+				return;
+			});
+
+			AddMenuItemWithCallback(ItemsMenu, "Clear Keep Flag from Selected Items", () =>
+			{
+				MarkKeep(false);
+				Repaint();
+				return;
+			});
 
 			ItemsMenu.AddSeparator("");
 
@@ -317,6 +340,23 @@ namespace UMA.Controls
 				}
 			}
 		}
+
+		void MarkKeep(bool Keep)
+		{
+			var treeElements = new List<AssetTreeElement>();
+			TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
+
+			foreach (AssetTreeElement tr in treeElements)
+			{
+				if (tr.ai != null && tr.Checked)
+				{
+					tr.ai.IsAlwaysLoaded = Keep;
+				}
+			}
+			UMAAssetIndexer.Instance.ForceSave();
+			RecountTypes();
+		}
+
 		void SelectByAssetItems(List<AssetItem> items)
 		{
 			var treeElements = new List<AssetTreeElement>();

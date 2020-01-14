@@ -3660,6 +3660,7 @@ namespace UMA.CharacterSystem
                 return false;
             }
 
+
             public void SetColor(string name, Color c)
             {
                 ColorValue cv = GetColorValue(name);

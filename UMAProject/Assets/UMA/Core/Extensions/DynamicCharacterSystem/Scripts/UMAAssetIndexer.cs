@@ -305,7 +305,6 @@ namespace UMA
         {
             var st = StartTimer();
 			EditorUtility.SetDirty(this);
-            //EditorUtility.SetDirty(this.gameObject);
             AssetDatabase.SaveAssets();
             StopTimer(st, "ForceSave");
         }

@@ -305,7 +305,12 @@ namespace UMA.Controls
 				{
 					cellRect.x += kCheckboxOffset;
 					cellRect.width -= kCheckboxOffset;
-					EditorGUI.Toggle(cellRect, ai.IsAlwaysLoaded);
+					bool clicked = EditorGUI.Toggle(cellRect, ai.IsAlwaysLoaded);
+					if (clicked != ai.IsAlwaysLoaded)
+					{
+						ai.IsAlwaysLoaded = clicked;
+						UMAAssetIndexer.Instance.ForceSave();
+					}
 				}
 				break;
 
