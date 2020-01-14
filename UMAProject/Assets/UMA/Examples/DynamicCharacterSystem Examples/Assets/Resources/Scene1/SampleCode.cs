@@ -246,8 +246,15 @@ namespace UMA.CharacterSystem.Examples
             go.SetActive(true);
         }
 
+        public void SetRawColorTest()
+        {
+            OverlayColorData ColorData = Avatar.GetColor("HairColor");
+            ColorData.channelMask[0] = new Color(1f, 1f, 1f, 1f);
+            ColorData.channelAdditiveMask[0] = new Color(1f, 0f, 0f, 0f);
+            Avatar.SetRawColor("HairColor", ColorData, true);
+        }
 
-		public void ChangeRace(int index)
+            public void ChangeRace(int index)
 		{
 			if (Avatar.gameObject.activeSelf)
 			{
