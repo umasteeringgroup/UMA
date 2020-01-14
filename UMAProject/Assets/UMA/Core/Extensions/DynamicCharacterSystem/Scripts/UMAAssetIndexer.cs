@@ -1922,9 +1922,35 @@ namespace UMA
 			}
 		}
 
+        /// <summary>
+        /// releases an asset an asset reference
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="Name"></param>
+        public void ReleaseReference(UnityEngine.Object obj)
+        {
+            string Name = AssetItem.GetEvilName(obj);
+
+            // Leave if this is an unreferenced type - for example, a texture (etc).
+            // This can happen because these are referenced by the Overlay.
+            if (!TypeToLookup.ContainsKey(obj.GetType()))
+                return;
+
+            System.Type theType = TypeToLookup[obj.GetType()];
+
+            Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(theType);
+
+            if (TypeDic.ContainsKey(Name))
+            {
+                AssetItem ai = TypeDic[Name];
+                ai.ReleaseItem();
+            }
+        }
+
+
 #if UNITY_EDITOR
 
-		public AssetItem FromGuid(string GUID)
+        public AssetItem FromGuid(string GUID)
         {
             if (GuidTypes.ContainsKey(GUID))
             {
@@ -1956,30 +1982,6 @@ namespace UMA
         }
 
 
-        /// <summary>
-        /// Removes an asset from the index
-        /// </summary>
-        /// <param name="type"></param>
-        /// <param name="Name"></param>
-        public void ReleaseReference (UnityEngine.Object obj)
-        {
-            string Name = AssetItem.GetEvilName(obj);
-
-            // Leave if this is an unreferenced type - for example, a texture (etc).
-            // This can happen because these are referenced by the Overlay.
-            if (!TypeToLookup.ContainsKey(obj.GetType()))
-                return;
-
-            System.Type theType = TypeToLookup[obj.GetType()];
-
-            Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(theType);
-
-            if (TypeDic.ContainsKey(Name))
-            {
-                AssetItem ai = TypeDic[Name];
-                ai.ReleaseItem();
-            }
-        }
         /// <summary>
         /// Removes an asset from the index
         /// </summary>
