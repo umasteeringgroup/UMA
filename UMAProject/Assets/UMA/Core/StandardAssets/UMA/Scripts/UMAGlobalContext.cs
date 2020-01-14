@@ -285,6 +285,18 @@ namespace UMA
 			UMAAssetIndexer.Instance.AddAsset(typeof(OverlayDataAsset), overlay.overlayName, "", overlay);
 		}
 
+		// Get all DNA
+		public override List<DynamicUMADnaAsset> GetAllDNA()
+		{
+			return UMAAssetIndexer.Instance.GetAllAssets<DynamicUMADnaAsset>();
+		}
+
+		// Get a DNA Asset By Name
+		public override DynamicUMADnaAsset GetDNA(string Name)
+		{
+			return UMAAssetIndexer.Instance.GetAsset<DynamicUMADnaAsset>(Name);
+		}
+
 		public override void AddRecipe(UMATextRecipe recipe)
 		{
 			UMAAssetIndexer.Instance.AddAsset(typeof(UMATextRecipe), recipe.name, "", recipe);

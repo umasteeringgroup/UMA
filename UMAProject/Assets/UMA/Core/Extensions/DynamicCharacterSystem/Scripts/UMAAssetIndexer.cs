@@ -133,6 +133,8 @@ namespace UMA
         (typeof(DynamicUMADnaAsset)),
         (typeof(TextAsset))
     };
+
+        public string umaBaseName = "UMA_Base";
         #endregion
         #region Static Fields
         static UMAAssetIndexer theIndexer = null;
@@ -1275,7 +1277,7 @@ namespace UMA
         {
             AddressableAssetEntry ae = AddressableSettings.CreateOrMoveEntry(GUID, sharedGroup, false, true);
             ae.SetAddress(Address);
-
+            ae.SetLabel(umaBaseName, true, true, true);
             foreach (string s in labels)
             {
                 ae.SetLabel(s, true, true, true);
@@ -1315,6 +1317,7 @@ namespace UMA
                     // modify ae here as needed...
                     ae.SetAddress(AddressLookup[kp.Key]);
 					AssetReference ar = new AssetReference(ae.guid);
+                    ae.SetLabel(umaBaseName,true,true,true);
                     // get the name here
                     foreach (UMATextRecipe uwr in kp.Value)
                     {

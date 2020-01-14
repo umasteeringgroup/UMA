@@ -72,10 +72,10 @@ MonoBehaviour:
     - FemaleTallShoes_White
     - FemalePonyTail_Recipe
     - FemaleSportPants_Recipe
+    - MilCut
     - FemaleTankTop_Recipe
     - ShavedHead
     - MaleShortHair_Recipe
-    - MilCut
     - MaleBeard1
     - MaleBeard2
     - MaleBeard3
@@ -195,6 +195,7 @@ MonoBehaviour:
     - JiggleBellyRecipe
     - JiggleBreastsRecipe
     - JiggleButtRecipe
+    - UMA_Base
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: dcf39f185b7285f46b384b0a25cb6bf7, type: 2}

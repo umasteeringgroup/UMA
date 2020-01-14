@@ -194,6 +194,12 @@ namespace UMA
 		/// <param name="overlay">New overlay asset.</param>
 		public abstract void AddOverlayAsset(OverlayDataAsset overlay);
 
+		// Get all DNA
+		public abstract List<DynamicUMADnaAsset> GetAllDNA();
+
+		// Get a DNA Asset By Name
+		public abstract DynamicUMADnaAsset GetDNA(string Name);
+
 		public abstract void AddRecipe(UMATextRecipe recipe);
 
 		public abstract bool HasRecipe(string Name);
