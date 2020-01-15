@@ -79,7 +79,7 @@ namespace UMA
 						return null;
 					if (_editorCachedItem == null)
 					{
-                        Debug.Log("Getting editor cached item: " + _Name);
+                        // Debug.Log("Getting editor cached item: " + _Name);
 						_editorCachedItem = GetItem();
 					}
 					// _editorCachedItem is never saved.

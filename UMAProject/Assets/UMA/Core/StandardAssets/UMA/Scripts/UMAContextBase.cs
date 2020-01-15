@@ -200,6 +200,10 @@ namespace UMA
 		// Get a DNA Asset By Name
 		public abstract DynamicUMADnaAsset GetDNA(string Name);
 
+		public abstract RuntimeAnimatorController GetAnimatorController(string Name);
+
+		public abstract List<RuntimeAnimatorController> GetAllAnimatorControllers();
+
 		public abstract void AddRecipe(UMATextRecipe recipe);
 
 		public abstract bool HasRecipe(string Name);
@@ -293,13 +297,9 @@ namespace UMA
 				var thisUMAContextBaseGO = new GameObject();
 				thisUMAContextBaseGO.name = "UMAContext";
 				thisUMAContextBaseGO.transform.parent = EditorUMAContextBase.transform;
-				thisUMAContextBase = thisUMAContextBaseGO.AddComponent<UMAContext>();
+				thisUMAContextBase = thisUMAContextBaseGO.AddComponent<UMAGlobalContext>();
 				UMAContextBase.Instance = thisUMAContextBase;
 			}
-			//we need to add the libraries as components of the game object too
-			//and then set THOSE components to the UMAContextBase component
-			var thisDAL = thisUMAContextBase.gameObject.AddComponent<DynamicAssetLoader>();
-			DynamicAssetLoader.Instance = thisDAL;
 			return EditorUMAContextBase;
 		}
 #endif

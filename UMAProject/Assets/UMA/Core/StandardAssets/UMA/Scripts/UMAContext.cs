@@ -327,6 +327,17 @@ namespace UMA
 		{
 			return UMAAssetIndexer.Instance.GetAsset<DynamicUMADnaAsset>(Name);
 		}
+
+		public override RuntimeAnimatorController GetAnimatorController(string Name)
+		{
+			return UMAAssetIndexer.Instance.GetAsset<RuntimeAnimatorController>(Name);
+		}
+
+		public override List<RuntimeAnimatorController> GetAllAnimatorControllers()
+		{
+			return UMAAssetIndexer.Instance.GetAllAssets<RuntimeAnimatorController>();
+		}
+
 		public override void AddRecipe(UMATextRecipe recipe)
 		{
 			dynamicCharacterSystem.AddRecipe(recipe);

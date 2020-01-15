@@ -176,10 +176,7 @@ namespace UMA.CharacterSystem.Editors
                     var recipeName = thisElement.FindPropertyRelative("_recipeName").stringValue;
 
 					recipeIsLive = UMAContext.Instance.HasRecipe(recipeName);
-					/*
-                    if (DynamicAssetLoader.Instance)
-                        recipeIsLive = CheckRecipeAvailability(recipeName);
-					*/
+
                     if (!recipeIsLive)
                         valR.width = valR.width - 25f;
                     EditorGUI.TextField(valR, recipeName + " (" + compatibleRaces + ")");
@@ -196,8 +193,6 @@ namespace UMA.CharacterSystem.Editors
 							//the _recipe value is no longer serialized so we need to get it from AssetDatabase
 							if (foundRecipe != null)
 								UMAAssetIndexer.Instance.EvilAddAsset(foundRecipe.GetType(), foundRecipe);
-							else
-								UMAAssetIndexerEditor.ShowWindow();
 						}
 					}
                     if (GUI.Button(valRBut, "X"))
@@ -219,32 +214,7 @@ namespace UMA.CharacterSystem.Editors
         /// <param name="recipeName"></param>
         /// <returns></returns>
 		/// 
-		/*
-        private bool CheckRecipeAvailability(string recipeName)
-        {
-            if (Application.isPlaying)
-                return true;
-            bool searchResources = true;
-            bool searchAssetBundles = true;
-            string resourcesFolderPath = "";
-            string assetBundlesToSearch = "";
 
-			if (UMAContext.Instance.HasRecipe(recipeName))
-            //if (thisDCS != null)
-            //{
-            //   searchResources = thisDCS.dynamicallyAddFromResources;
-            //    searchAssetBundles = thisDCS.dynamicallyAddFromAssetBundles;
-            //    resourcesFolderPath = thisDCS.resourcesRecipesFolder;
-            //    assetBundlesToSearch = thisDCS.assetBundlesForRecipesToSearch;
-            //}
-            bool found = false;
-            DynamicAssetLoader.Instance.debugOnFail = false;
-            found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeRecipe>(searchResources, searchAssetBundles, true, assetBundlesToSearch, resourcesFolderPath, null, recipeName, null);
-            if (!found)
-                found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeCollection>(searchResources, searchAssetBundles, true, assetBundlesToSearch, resourcesFolderPath, null, recipeName, null);
-            DynamicAssetLoader.Instance.debugOnFail = true;
-            return found;
-        } */
 		private UMARecipeBase FindMissingRecipe(string recipeName)
 		{
 			UMARecipeBase foundRecipe = null;

@@ -934,40 +934,6 @@ namespace UMA.CharacterSystem
 				}
 			}
 			return;
-
-			/*
-            if (!DynamicAssetLoader.Instance.downloadingAssetsContains(uwr.name))
-            {
-                //if this WardrobeCollection was added when it was downloading, checdk it actually has sets, otherwise it shouldn't be here- TODO check if this ever happens
-                if (uwr.wardrobeCollection.sets.Count == 0)
-                {
-                    if (_wardrobeCollections.ContainsValue(uwr))
-                    {
-                        _wardrobeCollections.Remove(uwr.wardrobeSlot);
-                    }
-                    return;
-                }
-                //If there is already a WardrobeCollection belonging to this group applied to the Avatar, unload and remove it
-                if (_wardrobeCollections.ContainsKey(uwr.wardrobeSlot))
-                {
-                    UnloadWardrobeCollectionGroup(uwr.wardrobeSlot);
-                }
-                _wardrobeCollections.Add(uwr.wardrobeSlot, uwr);
-                var thisSettings = uwr.GetUniversalPackRecipe(this, context);
-                //if there is a wardrobe set for this race treat this like a 'FullOutfit'
-                if (thisSettings.wardrobeSet.Count > 0)
-                {
-                    LoadWardrobeSet(thisSettings.wardrobeSet, false);
-                    if (thisSettings.sharedColorCount > 0)
-                    {
-                        ImportSharedColors(thisSettings.sharedColors, LoadOptions.loadWardrobeColors);
-                    }
-                }
-            }
-            else //make sure the downloading collection is still added to _wardrobeCollections, otherwise it wont be processed in UpdateAfterDownload -> UpdateSetSlots
-            {
-                _wardrobeCollections.Add(uwr.wardrobeSlot, uwr);
-            } */
 		}
 
         /// <summary>

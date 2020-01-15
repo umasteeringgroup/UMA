@@ -102,8 +102,6 @@ namespace UMA.CharacterSystem.Editors
 						}
 						else
 						{
-							if (DynamicAssetLoader.Instance)
-							{
 								if (!CheckAnimatorAvailability(thisAnimatorName))
 								{
 									var warningRect = new Rect((removeR.xMin - 20f), removeR.yMin, 20f, removeR.height);
@@ -116,11 +114,8 @@ namespace UMA.CharacterSystem.Editors
 										var thisAnimator = FindMissingAnimator(thisAnimatorName);
 										if (thisAnimator != null)
 											UMAAssetIndexer.Instance.EvilAddAsset(thisAnimator.GetType(), thisAnimator);
-										else
-											UMAAssetIndexerEditor.ShowWindow();
 									}
 								}
-							}
 							EditorGUI.BeginDisabledGroup(true);
 							EditorGUI.TextField(aFieldR, thisAnimtorProp.FindPropertyRelative("animatorControllerName").stringValue);
 							EditorGUI.EndDisabledGroup();
@@ -205,10 +200,23 @@ namespace UMA.CharacterSystem.Editors
 		{
 			if (Application.isPlaying)
 				return true;
-			bool found = false;
-			bool searchResources = true;
-			string resourcesFolderPath = "";
+
+			if (UMAAssetIndexer.Instance.GetAssetDictionary(typeof(RuntimeAnimatorController)).ContainsKey(racName))
+			{
+				return true;
+			}
+
 			RuntimeAnimatorController defaultController = null;
+			if (thisDCA != null)
+			{
+				defaultController = thisDCA.raceAnimationControllers.defaultAnimationController != null ? thisDCA.raceAnimationControllers.defaultAnimationController : (thisDCA.animationController != null ? thisDCA.animationController : null);
+				if (defaultController.name == racName)
+					return true;
+			}
+
+			return false;
+			/* bool searchResources = true;
+			string resourcesFolderPath = "";
 			if (thisDCA != null)
 			{
 				searchResources = thisDCA.raceAnimationControllers.dynamicallyAddFromResources;
@@ -224,9 +232,9 @@ namespace UMA.CharacterSystem.Editors
             }
 			var dalDebug = DynamicAssetLoader.Instance.debugOnFail;
 			DynamicAssetLoader.Instance.debugOnFail = false;
-			found = DynamicAssetLoader.Instance.AddAssets<RuntimeAnimatorController>(searchResources, true, true, "", resourcesFolderPath, null, racName, null);
+			bool found = DynamicAssetLoader.Instance.AddAssets<RuntimeAnimatorController>(searchResources, true, true, "", resourcesFolderPath, null, racName, null);
 			DynamicAssetLoader.Instance.debugOnFail = dalDebug;
-			return found;
+			return found;*/
 		}
 
 		private RuntimeAnimatorController FindMissingAnimator(string animatorName)
