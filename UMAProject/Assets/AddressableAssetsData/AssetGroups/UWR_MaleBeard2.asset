@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UWR_MaleBeard2
+  m_EditorClassIdentifier: 
+  m_GroupName: UWR_MaleBeard2
+  m_Data:
+    m_SerializedData: []
+  m_GUID: fd3a46cb64a35e841a12729b8959f15d
+  m_SerializeEntries:
+  - m_GUID: 20989ab7f7fcc4fd29424f7ca3ad427f
+    m_Address: Tex-MaleBeard02_Roughness
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBeard2
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 43f2ca917c7784aaebd610597a5b03a4
+    m_Address: Tex-MaleBeard02_Normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBeard2
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 50fd7bdf5bb124084af695f5f932709b
+    m_Address: Tex-MaleBeard02_Albedo
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBeard2
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: c4542d0190eae184d8f1e1e277208fd7
+    m_Address: Ovl-MaleBeard02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBeard2
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: c46e4ddee0531ac42ac156b8addf9347, type: 2}
+    - {fileID: 11400000, guid: ff246d939aa563d428b3b74a36a54b67, type: 2}

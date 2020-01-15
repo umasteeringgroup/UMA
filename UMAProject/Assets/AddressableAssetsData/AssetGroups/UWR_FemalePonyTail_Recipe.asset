@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UWR_FemalePonyTail_Recipe
+  m_EditorClassIdentifier: 
+  m_GroupName: UWR_FemalePonyTail_Recipe
+  m_Data:
+    m_SerializedData: []
+  m_GUID: cb34110cc66274141bab2b72b6e6e48c
+  m_SerializeEntries:
+  - m_GUID: 7a03e04a4f448b74ebf93711f9f15a86
+    m_Address: Slt-FemalePonyTail_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemalePonyTail_Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 8f4fa762be2c12049baf6abfea653205
+    m_Address: Slt-FemalePonyTail
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemalePonyTail_Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 136f79743d511504396aa7133c3feaff, type: 2}
+    - {fileID: 11400000, guid: 998dc269ed133aa4690697c7f7149567, type: 2}

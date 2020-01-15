@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UWR_MaleChallengerTorso
+  m_EditorClassIdentifier: 
+  m_GroupName: UWR_MaleChallengerTorso
+  m_Data:
+    m_SerializedData: []
+  m_GUID: e119c651d1e3f024fac8130242ff7efe
+  m_SerializeEntries:
+  - m_GUID: 5e0d6fd5a419c024abb998898b6bce79
+    m_Address: Tex-TorsoArmorLeather_Albedo
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerTorso
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 734fcc8a0fd1912478c8566fc6eceda7
+    m_Address: Ovl-ChallengerTorsoArmorLeather
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerTorso
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 809c22fcd6389e742a62ec4905d1a101
+    m_Address: Ovl-ChallengerTorsoArmorMetal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerTorso
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 863f68599d8ad8b4989c7724bb3b8dd1
+    m_Address: Slt-MaleChallengerTorsoArmor
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerTorso
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: bccbb38fe3139c444b2999c45952b427
+    m_Address: Tex-TorsoArmorMetal_Albedo
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerTorso
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 1a0d07d753c9be9409e2259042d73125, type: 2}
+    - {fileID: 11400000, guid: fcb164af8764eb64cbf659f4d93851ef, type: 2}

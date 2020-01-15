@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UWR_StripesRecipe
+  m_EditorClassIdentifier: 
+  m_GroupName: UWR_StripesRecipe
+  m_Data:
+    m_SerializedData: []
+  m_GUID: e4134ad3d2cc613498e2e918dc0b5e11
+  m_SerializeEntries:
+  - m_GUID: 76ec4c0387ef8564c86bd868e95cbf3d
+    m_Address: Tex-SkyCarStripesAlbedo
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - StripesRecipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: c494b917f233f9e42a6e34e169909743
+    m_Address: Ovl-SkyCarStripesOverlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - StripesRecipe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 266e7e463bbc5e1428e9fc08180785ec, type: 2}
+    - {fileID: 11400000, guid: 1becaf2eef63f5242aad1f9b193ad132, type: 2}

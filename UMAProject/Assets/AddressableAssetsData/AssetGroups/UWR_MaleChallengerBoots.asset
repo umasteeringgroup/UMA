@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UWR_MaleChallengerBoots
+  m_EditorClassIdentifier: 
+  m_GroupName: UWR_MaleChallengerBoots
+  m_Data:
+    m_SerializedData: []
+  m_GUID: b3bea7f4212343c46b1ce6ebea645f65
+  m_SerializeEntries:
+  - m_GUID: 52356e7a7ac1a79468d88e2b3f918bd6
+    m_Address: Ovl-ChallengerBootsLeather
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerBoots
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 684e665f794940c4687db694443783cf
+    m_Address: Tex-ChallengerBootLeather_Albedo
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerBoots
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 6c5d912ba8fa77f449e43391d2d87d88
+    m_Address: Slt-MaleChallengerBoots
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerBoots
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 850d610cf1e6f7b4eb4157fc242d5074
+    m_Address: Ovl-ChallengerBootsMetal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerBoots
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: a79f26acde8ea4a41bd7fa601046a702
+    m_Address: Tex-ChallengerBootMetal_Albedo
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerBoots
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 47295be78b3cc3a40b3d546adea6804d, type: 2}
+    - {fileID: 11400000, guid: 03bce49d538c19f48ac418f0f2af8914, type: 2}

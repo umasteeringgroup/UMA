@@ -1289,40 +1289,50 @@ namespace UMA
             float pos = 0.0f;
             float inc = 1.0f / tracker.Keys.Count;
 
-            // Go through the assets, and add them to the groups.
+            // Go through the each item, and add them to the groups (denoted by the list of recipes).
+            // if an item is in 1 group, then it goes in that group.
+            // if it's in more than 1 group, then it goes into the shared group.
+            // if it's not in any group... not sure how we got there, but it does nothing.
             foreach (KeyValuePair<int, List<UMATextRecipe>> kp in tracker)
             {
-                int iPos = Mathf.CeilToInt(pos);
-                pos += inc;
-                bool found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(kp.Key, out string GUID, out long localid);
-
-                if (found)
+                try
                 {
-                    EditorUtility.DisplayProgressBar("Generating", "Adding Asset " + GUID, iPos);
-                    AddressableAssetEntry ae = null;
+                    int iPos = Mathf.CeilToInt(pos);
+                    pos += inc;
+                    bool found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(kp.Key, out string GUID, out long localid);
 
-                    switch (kp.Value.Count)
+                    if (found)
                     {
-                        case 0:
-                            Debug.LogWarning("Warning: No wardrobe found for item: " + kp.Key);
-                            continue;
-                        case 1:
-                            ae = AddressableSettings.CreateOrMoveEntry(GUID, GroupTracker[kp.Value[0].GetInstanceID()], false, true);
-                            break;
-                        default:
-                            ae = AddressableSettings.CreateOrMoveEntry(GUID, sharedGroup, false, true);
-                            break;
-                    }
+                        EditorUtility.DisplayProgressBar("Generating", "Adding Asset " + GUID, iPos);
+                        AddressableAssetEntry ae = null;
 
-                    // modify ae here as needed...
-                    ae.SetAddress(AddressLookup[kp.Key]);
-					AssetReference ar = new AssetReference(ae.guid);
-                    ae.SetLabel(umaBaseName,true,true,true);
-                    // get the name here
-                    foreach (UMATextRecipe uwr in kp.Value)
-                    {
-                        ae.SetLabel(uwr.name, true, true, true);
+                        switch (kp.Value.Count)
+                        {
+                            case 0:
+                                Debug.LogWarning("Warning: No wardrobe found for item: " + kp.Key);
+                                continue;
+                            case 1:
+                                ae = AddressableSettings.CreateOrMoveEntry(GUID, GroupTracker[kp.Value[0].GetInstanceID()], false, true);
+                                break;
+                            default:
+                                ae = AddressableSettings.CreateOrMoveEntry(GUID, sharedGroup, false, true);
+                                break;
+                        }
+
+                        // modify ae here as needed...
+                        ae.SetAddress(AddressLookup[kp.Key]);
+                        AssetReference ar = new AssetReference(ae.guid);
+                        ae.SetLabel(umaBaseName, true, true, true);
+                        // get the name here
+                        foreach (UMATextRecipe uwr in kp.Value)
+                        {
+                            ae.SetLabel(uwr.name, true, true, true);
+                        }
                     }
+                }
+                catch(Exception ex)
+                {
+                    Debug.LogException(ex);
                 }
             }
         }
@@ -1369,6 +1379,7 @@ namespace UMA
 				if (uwr == null)
 				{
 					Debug.Log("Null recipe in wardrobe collection...");
+                    return;
 				}
 				List<AssetItem> items = GetAssetItems(uwr);
 				foreach (AssetItem recipeitem in items)
@@ -1430,7 +1441,10 @@ namespace UMA
             foreach (AssetItem ai in wardrobe)
             {
                 UMAWardrobeRecipe uwr = ai.Item as UMAWardrobeRecipe;
-                theRecipes.Add(uwr);
+                if (uwr != null)
+                {
+                    theRecipes.Add(uwr);
+                }
             }
 
             theType = TypeToLookup[typeof(UMATextRecipe)];
@@ -1439,7 +1453,10 @@ namespace UMA
             foreach (AssetItem ai in trecipes)
             {
                 UMATextRecipe utr = ai.Item as UMATextRecipe;
-                theRecipes.Add(utr);
+                if (utr != null)
+                {
+                    theRecipes.Add(utr);
+                }
             }
             return theRecipes;
         }
@@ -1510,6 +1527,11 @@ namespace UMA
                     if (ai._Type == typeof(OverlayDataAsset))
                     {
                         OverlayDataAsset od = ai.Item as OverlayDataAsset;
+                        if (od == null)
+                        {
+                            Debug.Log("Invalid overlay in recipe: " + ai._Name + ". Skipping.");
+                            continue;
+                        }
                         foreach (Texture tex in od.textureList)
                         {
                             if (tex == null) continue;
@@ -1577,6 +1599,15 @@ namespace UMA
 				foreach (AssetItem ai in races) 
 				{
 					RaceData race = ai.Item as RaceData;
+                    if (race == null)
+                    {
+                        Debug.Log("Invalid race found!");
+                        continue;
+                    }
+                    if (race.baseRaceRecipe as UMATextRecipe == null)
+                    {
+                        Debug.Log("Invalid base race recipe on race: " + race.raceName);
+                    }
 					theRecipes.Add(race.baseRaceRecipe as UMATextRecipe);
 					if (ai.IsAlwaysLoaded)
 					{

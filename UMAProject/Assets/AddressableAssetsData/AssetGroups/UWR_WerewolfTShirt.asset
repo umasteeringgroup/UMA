@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UWR_WerewolfTShirt
+  m_EditorClassIdentifier: 
+  m_GroupName: UWR_WerewolfTShirt
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 6b0d5c8d3d3f2c04f874800d0507ef94
+  m_SerializeEntries:
+  - m_GUID: 8e46551b231290e44b00c11543501fd8
+    m_Address: Tex-MaleShirt01_Normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - WerewolfTShirt
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: a04e469a0d80a6742a85658cd80912ab
+    m_Address: Ovl-WerewolfShirt
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - WerewolfTShirt
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: d40bec82ad70824478f3cead70f6cfea
+    m_Address: Tex-MaleShirt01_Albedo
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - WerewolfTShirt
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: f6107ad9de1e9bb4ea74851d9bca7976
+    m_Address: Tex-MaleShirt01_Roughness
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - WerewolfTShirt
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 2f88ca668291c3f40aa5f7f3a78e94f4, type: 2}
+    - {fileID: 11400000, guid: 1996625772ad9114da979a3103e1228b, type: 2}

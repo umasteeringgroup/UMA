@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UWR_MaleBrowHR
+  m_EditorClassIdentifier: 
+  m_GroupName: UWR_MaleBrowHR
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 8fcfd125fc055534f8d48620ca5b8f6f
+  m_SerializeEntries:
+  - m_GUID: 29a929c318e07dd409a59412bc7d4cdc
+    m_Address: Ovl-M_Eyebrow
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBrowHR
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 5dd4cac4095bd014795faab9a4ae996e
+    m_Address: Tex-M_eyebrows_M
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBrowHR
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 8b232fbd9c99b3149bc6c4f6cb7afb7d
+    m_Address: Slt-M_Eyebrow
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBrowHR
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: a95e1c99f10e90e41bbe23ac6303418b
+    m_Address: Tex-M_Eyebrows_A
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBrowHR
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: b9570a0908de1e045991045ea1849ea0
+    m_Address: Tex-M_Eyebrows_N
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBrowHR
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 8d2043ccc39bab240a8be9116169fb3e, type: 2}
+    - {fileID: 11400000, guid: fd1357ef716024344a37b03b759f4090, type: 2}

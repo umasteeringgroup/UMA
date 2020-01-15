@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UTR_Troll
+  m_EditorClassIdentifier: 
+  m_GroupName: UTR_Troll
+  m_Data:
+    m_SerializedData: []
+  m_GUID: b610a9ae7e0e39843a18002bcaac8732
+  m_SerializeEntries:
+  - m_GUID: 158625e1782339b47ab36baa044aa6bb
+    m_Address: Slt-MaleHead_Head
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Troll
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 2ea0c2632af00954d80449e69aae3961
+    m_Address: Slt-MaleHead_ElvenEars
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Troll
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 498d55a6668af824ca9b8a1fab1764da
+    m_Address: Slt-MaleHead_Mouth
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Troll
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 66dc6991ea490104ca812bba7bae9524
+    m_Address: Slt-MaleHead_Nose
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Troll
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 8a26b0d5108b3df40afa563c81076268
+    m_Address: Slt-MaleHead_Eyes
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Troll
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 5303c1cf69e753d419b6050c2ae34f4a, type: 2}
+    - {fileID: 11400000, guid: f9c828e76dce5284990d110634917448, type: 2}

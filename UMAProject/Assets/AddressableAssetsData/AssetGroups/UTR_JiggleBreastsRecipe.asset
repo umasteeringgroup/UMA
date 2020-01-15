@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UTR_JiggleBreastsRecipe
+  m_EditorClassIdentifier: 
+  m_GroupName: UTR_JiggleBreastsRecipe
+  m_Data:
+    m_SerializedData: []
+  m_GUID: b575ff1380d9b6f468b1b2882e4bd6bc
+  m_SerializeEntries:
+  - m_GUID: 4c8093fd4489d1d46a72b9e5165f8106
+    m_Address: Slt-JiggleBreasts
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - JiggleBreastsRecipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 1fad42bc5a7a3364ea739aa2d742cdd6, type: 2}
+    - {fileID: 11400000, guid: fc13177b98fd0d348be051e4c1fdd73b, type: 2}

@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UTR_ForearmTwistRecipe
+  m_EditorClassIdentifier: 
+  m_GroupName: UTR_ForearmTwistRecipe
+  m_Data:
+    m_SerializedData: []
+  m_GUID: e941ea626d9be52468096cdc3de1018a
+  m_SerializeEntries:
+  - m_GUID: 98c6dc40a5e2e4f3f92aabfafaf67c78
+    m_Address: Slt-ForearmTwist
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - ForearmTwistRecipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 5a6262fdc086e66459397688f9965200, type: 2}
+    - {fileID: 11400000, guid: 10e06ef712363974fa8305c8a269cb04, type: 2}

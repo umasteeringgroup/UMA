@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UWR_FemaleTankTop_Recipe
+  m_EditorClassIdentifier: 
+  m_GroupName: UWR_FemaleTankTop_Recipe
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 28a35dc63a2cde948ae87c55963699f5
+  m_SerializeEntries:
+  - m_GUID: 04ca452ebc325384dbd880de14092e76
+    m_Address: Ovl-FemaleTankTop_Overlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleTankTop_Recipe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 1ba77895e57dcc6438cc8fde32b11cec
+    m_Address: Tex-tanktop_yellow_NM
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleTankTop_Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 7c1d306047bbbad4f8f0734b1adde5e8
+    m_Address: Tex-tanktop_yellow_SG
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleTankTop_Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 94f99e723e34b534b8527d832351596b
+    m_Address: Tex-tanktop_yellow_D
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleTankTop_Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: e5af6f0e864cd3d46b3c4f61535aa584
+    m_Address: Slt-FemaleTankTop
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleTankTop_Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: cc858897dd12cb84094dec370aaa1870, type: 2}
+    - {fileID: 11400000, guid: 4daf48cd21bf930489eeb0f5e6d76c9a, type: 2}
