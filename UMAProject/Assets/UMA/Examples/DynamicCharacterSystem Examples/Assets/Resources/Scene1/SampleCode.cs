@@ -73,6 +73,16 @@ namespace UMA.CharacterSystem.Examples
             //  Avatar.ChangeRace(Avatar.RacePreset);
         }
 
+
+        public void SliderChange(float value)
+        {
+            int index = System.Convert.ToInt32(value);
+            List<UMATextRecipe> theRecipes = Avatar.AvailableRecipes["Legs"];
+            Avatar.SetSlot(theRecipes[index]);
+            Avatar.BuildCharacter();
+        }
+
+
         /// <summary>
         /// Unloads all loaded items.
         /// </summary>
