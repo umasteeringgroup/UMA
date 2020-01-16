@@ -159,15 +159,6 @@ namespace UMA.CharacterSystem.Editors
 				valR = new Rect (valR.xMin, valR.yMax + padding, valR.width, EditorGUIUtility.singleLineHeight);
 				EditorGUI.PropertyField (valR,property.FindPropertyRelative ("resourcesFolderPath"), new GUIContent("Global Library Folder Filter"));
 				valR = new Rect (valR.xMin, valR.yMax + padding, valR.width, EditorGUIUtility.singleLineHeight);
-				var dynamicallyAddFromAssetBundles = property.FindPropertyRelative ("dynamicallyAddFromAssetBundles").boolValue;
-				EditorGUI.BeginChangeCheck();
-				dynamicallyAddFromAssetBundles = EditorGUI.ToggleLeft(valR,"Dynamically Add from Asset Bundles", dynamicallyAddFromAssetBundles);
-				if(EditorGUI.EndChangeCheck()){
-					property.FindPropertyRelative ("dynamicallyAddFromAssetBundles").boolValue = dynamicallyAddFromAssetBundles;
-					property.serializedObject.ApplyModifiedProperties ();
-				}
-				valR = new Rect (valR.xMin, valR.yMax + padding, valR.width, EditorGUIUtility.singleLineHeight);
-				EditorGUI.PropertyField (valR,property.FindPropertyRelative ("assetBundleNames"), new GUIContent("AssetBundles to Search"));
 				EditorGUI.indentLevel--;
 			}
 			EditorGUI.EndProperty ();
@@ -215,26 +206,6 @@ namespace UMA.CharacterSystem.Editors
 			}
 
 			return false;
-			/* bool searchResources = true;
-			string resourcesFolderPath = "";
-			if (thisDCA != null)
-			{
-				searchResources = thisDCA.raceAnimationControllers.dynamicallyAddFromResources;
-				resourcesFolderPath = thisDCA.raceAnimationControllers.resourcesFolderPath;
-				defaultController = thisDCA.raceAnimationControllers.defaultAnimationController != null ? thisDCA.raceAnimationControllers.defaultAnimationController : (thisDCA.animationController != null ? thisDCA.animationController : null);
-			}
-			if (defaultController)
-				if (defaultController.name == racName)
-					return true;
-            if (UMAAssetIndexer.Instance.GetAssetDictionary(typeof(RuntimeAnimatorController)).ContainsKey(racName))
-            {
-                return true;
-            }
-			var dalDebug = DynamicAssetLoader.Instance.debugOnFail;
-			DynamicAssetLoader.Instance.debugOnFail = false;
-			bool found = DynamicAssetLoader.Instance.AddAssets<RuntimeAnimatorController>(searchResources, true, true, "", resourcesFolderPath, null, racName, null);
-			DynamicAssetLoader.Instance.debugOnFail = dalDebug;
-			return found;*/
 		}
 
 		private RuntimeAnimatorController FindMissingAnimator(string animatorName)
