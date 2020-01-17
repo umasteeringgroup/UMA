@@ -57,9 +57,6 @@ namespace UMA
 		/// <param name="name">Name.</param>
 		public override RaceData GetRace(string name)
 		{
-#if SUPER_LOGGING
-			Debug.Log("Getting Race: " + name);
-#endif
 			return UMAAssetIndexer.Instance.GetAsset<RaceData>(name);
 		}
 		/// <summary>

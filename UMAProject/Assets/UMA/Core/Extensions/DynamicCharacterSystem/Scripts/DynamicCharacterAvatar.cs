@@ -2457,7 +2457,7 @@ namespace UMA.CharacterSystem
 			if (!_buildCharacterEnabled)
                 return;
 
-			if (!skipBundleCheck && isAddressableSystem)
+	/*		if (!skipBundleCheck && isAddressableSystem)
 			{
                 var theOp = UMAAssetIndexer.Instance.Preload(this);
                 LoadedHandles.Enqueue(theOp);
@@ -2466,7 +2466,7 @@ namespace UMA.CharacterSystem
                 Debug.Log("Buildcharacter waiting for preload...");
 #endif
                 return;
-			}
+			} */
 
             _isFirstSettingsBuild = false;
             //clear these values each time we build
@@ -2608,12 +2608,7 @@ namespace UMA.CharacterSystem
                 SetExpressionSet();
             }
 
-            // Load all the recipes- if LoadCharacter returns true then loading the recipes caused assets to download- we need to wait and try again after they have finished
-            if (LoadCharacter(umaRecipe, ReplaceRecipes, Recipes.ToArray()))
-            {
-                BuildCharacter(RestoreDNA);
-                return;
-            }
+            LoadCharacter(umaRecipe, ReplaceRecipes, Recipes, false);
 
             //But the ExpressionPlayer needs to be Initialized AFTER Load
             if (activeRace.racedata != null && !RestoreDNA)
@@ -2658,6 +2653,48 @@ namespace UMA.CharacterSystem
             }
 		}
 
+        private class BuildSave
+        {
+            public UMARecipeBase _umaRecipe;
+            public List<UMAWardrobeRecipe> _Replaces;
+            public List<UMARecipeBase> _umaAdditionalSerializedRecipes;
+            public BuildSave(UMARecipeBase umaRecipe, List<UMAWardrobeRecipe> Replaces, List<UMARecipeBase> umaAdditionalSerializedRecipes)
+            {
+                _umaRecipe = umaRecipe;
+                _Replaces = Replaces;
+                _umaAdditionalSerializedRecipes = umaAdditionalSerializedRecipes;
+            }
+        }
+
+        Dictionary<AsyncOp, BuildSave> LoadQueue = new Dictionary<AsyncOp, BuildSave>();
+
+        private void LoadWhenReady(AsyncOp Op)
+        {
+            try
+            {
+                if (Op.IsDone)
+                {
+                    BuildSave bs = LoadQueue[Op];
+                    LoadCharacter(bs._umaRecipe, bs._Replaces, bs._umaAdditionalSerializedRecipes, true);
+                    LoadQueue.Remove(Op);
+                    if (LoadedHandles.Count > 1)
+                    {
+                        if (DelayUnload > 0.0f)
+                        {
+                            StartCoroutine(CleanupAfterDelay());
+                        }
+                        else
+                        {
+                            UnloadOldestQueuedHandle();
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex, this);
+            }
+        }
         private void UnloadOldestQueuedHandle()
         {
             AsyncOp aoh = LoadedHandles.Dequeue();
@@ -2714,16 +2751,31 @@ namespace UMA.CharacterSystem
         /// <param name="Replaces"></param>
         /// <param name="umaAdditionalSerializedRecipes"></param>
         /// <returns>Returns true if the final recipe load caused more assets to download</returns>
-        bool LoadCharacter(UMARecipeBase umaRecipe, List<UMAWardrobeRecipe> Replaces, params UMARecipeBase[] umaAdditionalSerializedRecipes)
+        void LoadCharacter(UMARecipeBase umaRecipe, List<UMAWardrobeRecipe> Replaces, List<UMARecipeBase> umaAdditionalSerializedRecipes, bool skipBundleCheck )
         {
-#if SUPER_LOGGING
-			Debug.Log("Load Character: " + gameObject.name);
-#endif
 
-			if (umaRecipe == null)
+            if (!skipBundleCheck && isAddressableSystem)
             {
-                return false;
+                /* Load every recipe into a class and save it         */
+                /* Stick it in a dictionary, keyed on the AsyncOp     */
+                /* So we can look it up when LoadWhenReady is called. */
+                /* LoadWhenReady will plug in the saved values        */
+                /* and call this function again, telling it to skip   */
+                /* bundle checking                                    */
+
+                var theOp = UMAAssetIndexer.Instance.Preload(this);
+                LoadedHandles.Enqueue(theOp);
+                LoadQueue.Add(theOp,new BuildSave( umaRecipe,Replaces,umaAdditionalSerializedRecipes));
+                theOp.Completed += LoadWhenReady;
+#if SUPER_LOGGING
+                Debug.Log("LoadCharacter waiting for preload...");
+#endif
+                return;
             }
+
+#if SUPER_LOGGING
+                Debug.Log("Load Character: " + gameObject.name);
+#endif
             if (umaData == null)
             {
                 Initialize();
@@ -2734,7 +2786,7 @@ namespace UMA.CharacterSystem
                 umaData.animator = this.gameObject.GetComponent<Animator>();
             }
 
-            this.umaRecipe = umaRecipe;
+            this.umaRecipe = umaRecipe; //??? This seems to be pulling the recipe from the character, and then resetting it to itself.
 
             umaRecipe.Load(umaData.umaRecipe, context);
 
@@ -2749,16 +2801,10 @@ namespace UMA.CharacterSystem
 
             RemoveHiddenSlots();
 
-            /*if (wasCrossCompatibleBuild)
-            {
-                FixCrossCompatibleSlots();
-            }*/
-
             foreach (UMAWardrobeRecipe umr in Replaces)
             {
                 ReplaceSlot(umr);
             }
-
 
             foreach (SlotData sd in umaData.umaRecipe.slotDataList)
             {
@@ -2798,12 +2844,6 @@ namespace UMA.CharacterSystem
             //New event that allows for tweaking the resulting recipe before the character is actually generated
             RecipeUpdated.Invoke(umaData);
 
-            //Did doing any of that cause more downloads?
-            if (FinalRecipeAssetsDownloading())
-            {
-                return true;
-            }
-
             if (umaRace != umaData.umaRecipe.raceData)
             {
                 if (rebuildSkeleton)
@@ -2821,7 +2861,6 @@ namespace UMA.CharacterSystem
             }
             ApplyPredefinedDNA();
 			umaData.KeepAvatar = keepAvatar;
-            return false;
         }
 
         bool FinalRecipeAssetsDownloading()
@@ -2859,7 +2898,7 @@ namespace UMA.CharacterSystem
                 gameObject.GetComponent<UMAExpressionPlayer>().enabled = false;
         }
 
-        public void AddAdditionalSerializedRecipes(UMARecipeBase[] umaAdditionalSerializedRecipes)
+        public void AddAdditionalSerializedRecipes(List<UMARecipeBase> umaAdditionalSerializedRecipes)
         {
             if (umaAdditionalSerializedRecipes != null)
             {
