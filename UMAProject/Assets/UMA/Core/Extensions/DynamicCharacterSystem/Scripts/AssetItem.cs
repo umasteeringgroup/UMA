@@ -75,8 +75,6 @@ namespace UMA
 
 				if (IsAddressable)  // this check is so we can test addressables in the editor
 				{
-					if (Application.isPlaying)
-						return null;
 					if (_editorCachedItem == null)
 					{
                         // Debug.Log("Getting editor cached item: " + _Name);
