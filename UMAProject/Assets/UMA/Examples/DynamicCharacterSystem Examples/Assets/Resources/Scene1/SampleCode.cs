@@ -74,6 +74,12 @@ namespace UMA.CharacterSystem.Examples
             //  Avatar.ChangeRace(Avatar.RacePreset);
         }
 
+        public void PreloadDNA()
+        {
+            Avatar.predefinedDNA = new UMAPredefinedDNA();
+            Avatar.predefinedDNA.AddDNA("feetSize", 1.0f);
+            Avatar.BuildCharacter(true);
+        }
 
         public void SliderChange(float value)
         {
