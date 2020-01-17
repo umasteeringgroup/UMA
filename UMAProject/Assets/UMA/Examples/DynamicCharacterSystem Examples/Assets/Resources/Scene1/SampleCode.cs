@@ -31,6 +31,7 @@ namespace UMA.CharacterSystem.Examples
 		public Dropdown RaceDropdown;
 		public GameObject CharacterUI;
         public bool PreloadAndUnload;
+        public Slider TestSlider;
 
 		private List<RaceData> races;
 
@@ -78,6 +79,12 @@ namespace UMA.CharacterSystem.Examples
         {
             int index = System.Convert.ToInt32(value);
             List<UMATextRecipe> theRecipes = Avatar.AvailableRecipes["Legs"];
+            if (theRecipes.Count == 0) return;
+            if (theRecipes.Count >= TestSlider.maxValue) 
+                TestSlider.maxValue = theRecipes.Count - 1;
+            if (index > (theRecipes.Count - 1))
+                index = theRecipes.Count - 1;
+
             Avatar.SetSlot(theRecipes[index]);
             Avatar.BuildCharacter();
         }

@@ -29,8 +29,9 @@ namespace UMA
 
 		protected UMAData.UMARecipe umaRecipe;
 		protected bool cached = false;
+		public string label;
 
-	#if UNITY_EDITOR
+#if UNITY_EDITOR
 
 		//This is used as a base for UMATextRecipe to override, because we cannt get what we need from this assembly- but the method needs to exist here to work in RecipeEditor
 		public virtual UMAContextBase CreateEditorContext()

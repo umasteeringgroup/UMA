@@ -803,7 +803,15 @@ namespace UMA
 #endif
 		}
 
-		public AsyncOperationHandle<IList<UnityEngine.Object>> PreloadWardrobe(DynamicCharacterAvatar avatar, bool keepLoaded = false)
+        public string GetLabel(UMARecipeBase recipe)
+        {
+            if (!String.IsNullOrEmpty(recipe.label))
+                return recipe.label;
+
+            return recipe.name;
+        }
+
+        public AsyncOperationHandle<IList<UnityEngine.Object>> PreloadWardrobe(DynamicCharacterAvatar avatar, bool keepLoaded = false)
 		{
 			List<string> keys = new List<string>();
 			RaceData race = GetAsset<RaceData>(avatar.activeRace.name);
@@ -811,15 +819,16 @@ namespace UMA
 			// preload any assigned recipes.
 			foreach (var wr in avatar.WardrobeRecipes.Values) 
 			{
-				//Debug.Log("Adding Wardrobe recipe: " + wr.name);
-				keys.Add(wr.name);
+                //Debug.Log("Adding Wardrobe recipe: " + wr.name);
+                if (wr != null)
+                    keys.Add(GetLabel(wr));
 			}
 
 			// preload utility recipes
 			foreach (var tr in avatar.umaAdditionalRecipes)
 			{
-				//Debug.Log("Adding additional recipe: " + tr.name);
-				keys.Add(tr.name);
+                if (tr != null)
+			        keys.Add(GetLabel(tr));
 			}
 
 			return LoadLabelList(keys, keepLoaded);
@@ -834,7 +843,8 @@ namespace UMA
 			// preload the race
 			if (race != null)
 			{
-				keys.Add(race.baseRaceRecipe.name);
+                if (race.baseRaceRecipe != null)
+                    keys.Add(GetLabel(race.baseRaceRecipe));
 			}
 
 
@@ -842,13 +852,13 @@ namespace UMA
 			foreach (var wr in avatar.WardrobeRecipes.Values)
 			{
                 if (wr != null)
-    				keys.Add(wr.name);
-			}
+                    keys.Add(GetLabel(wr));
+            }
 
-			foreach(var tr in avatar.umaAdditionalRecipes)
+            foreach (var tr in avatar.umaAdditionalRecipes)
 			{
                 if (tr != null)
-				    keys.Add(tr.name);
+				    keys.Add(GetLabel(tr));
 			}
 
 			return LoadLabelList(keys,keepLoaded);
@@ -856,7 +866,7 @@ namespace UMA
 
 		public AsyncOperationHandle<IList<UnityEngine.Object>> Preload(RaceData theRace, bool keepLoaded = false)
 		{
-			return LoadLabel(theRace.baseRaceRecipe.name, keepLoaded);
+			return LoadLabel(GetLabel(theRace.baseRaceRecipe), keepLoaded);
 		}
 
 		public AsyncOperationHandle<IList<UnityEngine.Object>> Preload(List<RaceData> theRaces, bool keepLoaded = false)
@@ -864,7 +874,7 @@ namespace UMA
 			List<string> keys = new List<string>();
 			foreach(RaceData rc in theRaces)
 			{
-				string key = rc.baseRaceRecipe.name;
+				string key = GetLabel(rc.baseRaceRecipe);
 
 				if (keys.Contains(key))
 					continue;
@@ -886,7 +896,7 @@ namespace UMA
 			Debug.Log("Preloading: " + theRecipe.name);
 #endif
 			List<string> keys = new List<string>();
-			keys.Add(theRecipe.name);
+			keys.Add(GetLabel(theRecipe));
 			return LoadLabelList(keys, keepLoaded);
 		}
 
@@ -904,7 +914,7 @@ namespace UMA
 
 			foreach (UMATextRecipe utr in theRecipes)
 			{
-				Keys.Add(utr.name);
+				Keys.Add(GetLabel(utr));
 			}
 
 			return LoadLabelList(Keys,keepLoaded);
@@ -1326,7 +1336,7 @@ namespace UMA
                         // get the name here
                         foreach (UMATextRecipe uwr in kp.Value)
                         {
-                            ae.SetLabel(uwr.name, true, true, true);
+                            ae.SetLabel(GetLabel(uwr), true, true, true);
                         }
                     }
                 }
@@ -1490,7 +1500,7 @@ namespace UMA
                         {
                             theItems.Add(ai, new List<string>());
                         }
-                        theItems[ai].Add(uwr.name);
+                        theItems[ai].Add(GetLabel(uwr));
                     }
                     pos += inc;
                 }
