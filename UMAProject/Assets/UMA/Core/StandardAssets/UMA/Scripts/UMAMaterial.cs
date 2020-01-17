@@ -20,6 +20,10 @@ namespace UMA
         public FilterMode MatFilterMode = FilterMode.Bilinear;
         public CompressionSettings Compression = CompressionSettings.None;
 
+        [Tooltip("If this is checked, the currently assigned color will be used as the background color so edges aren't darkened.")]
+        public bool MaskWithCurrentColor;
+        [Tooltip("The current color is multiplied by this color to determine the masking color when 'MaskWithCurrentColor' is checked.")]
+        public Color maskMultiplier = Color.white;
         public enum MaterialType
         {
             Atlas = 1,

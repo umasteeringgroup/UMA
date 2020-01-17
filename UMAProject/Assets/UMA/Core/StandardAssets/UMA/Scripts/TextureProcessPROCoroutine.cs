@@ -109,23 +109,25 @@ namespace UMA
 							destinationTexture.filterMode = FilterMode.Point;
 							destinationTexture.useMipMap = umaGenerator.convertMipMaps && !umaGenerator.convertRenderTexture;
 							//Draw all the Rects here
-							// 
 
 							Color backgroundColor;
+							UMAMaterial.ChannelType channelType = slotData.asset.material.channels[textureType].channelType;
 
-	  						if (slotData.asset.material.channels[textureType].channelType == UMAMaterial.ChannelType.DiffuseTexture || slotData.asset.material.channels[textureType].channelType == UMAMaterial.ChannelType.TintedTexture)	
+							if (slotData.asset.material.MaskWithCurrentColor && (channelType == UMAMaterial.ChannelType.DiffuseTexture || channelType == UMAMaterial.ChannelType.Texture || channelType == UMAMaterial.ChannelType.TintedTexture))
 							{
-								backgroundColor = umaGenerator.textureMerge.camBackgroundColor;
+								backgroundColor = slotData.asset.material.maskMultiplier * textureMerge.camBackgroundColor;
 							}
 							else
+							{
 								backgroundColor = UMAMaterial.GetBackgroundColor(slotData.asset.material.channels[textureType].channelType);
+							}
 
 
 							textureMerge.DrawAllRects(destinationTexture, width, height, backgroundColor);
 
 							//PostProcess
 							textureMerge.PostProcess(destinationTexture, slotData.asset.material.channels[textureType].channelType);
-
+							 
 							int DownSample = slotData.asset.material.channels[textureType].DownSample;
 							if (DownSample != 0)
 							{

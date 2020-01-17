@@ -20,6 +20,7 @@ namespace UMA.CharacterSystem
     public class DynamicCharacterAvatar : UMAAvatarBase
     {
         public float DelayUnload = 2.0f;
+        public bool BundleCheck = true;
 #if UNITY_EDITOR
 		[UnityEditor.MenuItem("GameObject/UMA/Create New Dynamic Character Avatar",false,10)]
 		public static void CreateDynamicCharacterAvatarMenuItem()
@@ -314,7 +315,7 @@ namespace UMA.CharacterSystem
                             //so just build
                             SetAnimatorController(true);//may cause downloads to happen- So call BuildCharacterWhenReady() instead
                             SetExpressionSet();
-                            BuildCharacter();
+                            BuildCharacter(true,!BundleCheck);
                         }
                     }
                 }
@@ -529,7 +530,7 @@ namespace UMA.CharacterSystem
                 LoadDefaultWardrobe();
             SetExpressionSet();
             SetAnimatorController(true);
-            BuildCharacter(false);
+            BuildCharacter(false, !BundleCheck);
         }
 
         void BuildFromStartingFileOrRecipe()
@@ -1360,7 +1361,7 @@ namespace UMA.CharacterSystem
             characterColors.RemoveColor(Name);  
             if (Update)
             {
-                BuildCharacter();
+                BuildCharacter(true,!BundleCheck);
             }
         }
 
@@ -2206,7 +2207,7 @@ namespace UMA.CharacterSystem
 
                 if (wasBuildCharacterEnabled)
                 {
-                    BuildCharacter(false);
+                    BuildCharacter(false,!BundleCheck);
                 }
                 //
                 if (thisLoadOptions.HasFlagSet(LoadOptions.loadDNA) && settingsToLoad.packedDna.Count > 0)
@@ -2457,17 +2458,6 @@ namespace UMA.CharacterSystem
 			if (!_buildCharacterEnabled)
                 return;
 
-	/*		if (!skipBundleCheck && isAddressableSystem)
-			{
-                var theOp = UMAAssetIndexer.Instance.Preload(this);
-                LoadedHandles.Enqueue(theOp);
-                theOp.Completed += BuildWhenReady;
-#if SUPER_LOGGING
-                Debug.Log("Buildcharacter waiting for preload...");
-#endif
-                return;
-			} */
-
             _isFirstSettingsBuild = false;
             //clear these values each time we build
             wasCrossCompatibleBuild = false;
@@ -2592,6 +2582,7 @@ namespace UMA.CharacterSystem
 
             foreach (UMATextRecipe utr in umaAdditionalRecipes)
             {
+                if (!utr) return;
                 if (utr.Hides.Count > 0)
                 {
                     foreach (string s in utr.Hides)
@@ -3049,23 +3040,6 @@ namespace UMA.CharacterSystem
 
         public void ForceUpdate(bool DnaDirty, bool TextureDirty = false, bool MeshDirty = false, bool skipBundleCheck = false)
         {
-            if (!skipBundleCheck && isCaching)
-            {
-                BuildCharacter();
-
-                /*
-                Debug.Log("Scheduling Force...");
-                var op = UMAAssetIndexer.Instance.Preload(this);
-                UpdateArgs ua = new UpdateArgs();
-                ua.dNADirty = DnaDirty;
-                ua.textureDirty = TextureDirty;
-                ua.meshDirty = MeshDirty;
-                UpdateList.Add(op, ua);
-                op.Completed += UpdateWhenReady;
-                */
-                return;
-            }
-            Debug.Log("Setting UMA dirty");
             umaData.Dirty(DnaDirty, TextureDirty, MeshDirty);
         }
 
