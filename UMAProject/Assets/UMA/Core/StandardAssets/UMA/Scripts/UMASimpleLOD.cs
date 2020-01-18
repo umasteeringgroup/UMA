@@ -216,9 +216,11 @@ namespace UMA.Examples
 				}
 			}
 
-            //Reprocess mesh hide assets
-            //Eventually, make this a function in DCA (UpdateMeshHideMasks) and replace correspond code in DCA.LoadCharacter too
-            if (_avatar != null && changedSlots)
+
+			// TEST!
+			// In theory, we shouldn't need to do this anymore, because the Masks are now calculated when the mesh is generated
+			// TEST THIS OUT!!!
+            /*if (_avatar != null && changedSlots)
             {
                 foreach (SlotData sd in _umaData.umaRecipe.slotDataList)
                 {
@@ -227,7 +229,7 @@ namespace UMA.Examples
                         sd.meshHideMask = MeshHideAsset.GenerateMask(_avatar.MeshHideDictionary[sd.slotName]);
                     }
                 }
-            }
+            } */
 #if UNITY_EDITOR
             UnityEditor.EditorUtility.SetDirty(_umaData);
 #endif

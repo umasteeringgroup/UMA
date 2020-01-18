@@ -137,6 +137,8 @@ namespace UMA.CharacterSystem
 		private bool isAddressableSystem;
         private bool isCaching = false;
         private Queue<AsyncOp> LoadedHandles = new Queue<AsyncOp>();
+        //public Dictionary<string, List<MeshHideAsset>> MeshHideDictionary { get; } = new Dictionary<string, List<MeshHideAsset>>();
+
         [EnumFlags]
         public LoadOptions defaultLoadOptions = LoadOptions.loadRace | LoadOptions.loadDNA | LoadOptions.loadWardrobe | LoadOptions.loadBodyColors | LoadOptions.loadWardrobeColors;
 
@@ -180,7 +182,6 @@ namespace UMA.CharacterSystem
         //switches between races they do not loose their previous changes to the avatar when it was set to be that race
         private Dictionary<string, string> cacheStates = new Dictionary<string, string>();
         //the wardrobe slots that are hidden by the avatars current wardrobe
-        private List<string> HiddenSlots = new List<string>();//why was this HashSet list is faster for our purposes (http://stackoverflow.com/questions/150750/hashset-vs-list-performance)
         //a list of downloading assets that the avatar can check the download status of.
         private List<string> requiredAssetsToCheck = new List<string>();
         //This is so we know if whether to use the 'default' settings as set in the componnt by colors/defaultRecipes/loadString/umaRecipe
@@ -197,7 +198,7 @@ namespace UMA.CharacterSystem
         //This is reset at the beginning of every build operation
         private List<string> crossCompatibleRaces = new List<string>();
 
-		public Dictionary<string, List<MeshHideAsset>> MeshHideDictionary { get; } = new Dictionary<string, List<MeshHideAsset>>();
+		// public Dictionary<string, List<MeshHideAsset>> MeshHideDictionary { get; } = new Dictionary<string, List<MeshHideAsset>>();
 
 #if UNITY_EDITOR
 		private GameObject EditorUMAContextBase = null;
@@ -2458,6 +2459,8 @@ namespace UMA.CharacterSystem
 			if (!_buildCharacterEnabled)
                 return;
 
+            List<string> HiddenSlots = new List<string>();//why was this HashSet list is faster for our purposes (http://stackoverflow.com/questions/150750/hashset-vs-list-performance)
+
             _isFirstSettingsBuild = false;
             //clear these values each time we build
             wasCrossCompatibleBuild = false;
@@ -2466,8 +2469,10 @@ namespace UMA.CharacterSystem
             // clear the hiddenslots and hidden mesh assets
             // so they can be accumulate anew from the recipe
             HiddenSlots.Clear();
-            MeshHideDictionary.Clear();
 
+            // MeshHideDictionary.Clear();
+            Dictionary<string, List<MeshHideAsset>> MeshHideDictionary = new Dictionary<string, List<MeshHideAsset>>();
+            
             UMADnaBase[] CurrentDNA = null;
             if (umaData != null)
             {
@@ -2592,30 +2597,7 @@ namespace UMA.CharacterSystem
                 }
             }
 
-            //set the expression set to match the new character- needs to happen before load...
-            if (activeRace.racedata != null && !RestoreDNA)
-            {
-                SetAnimatorController();
-                SetExpressionSet();
-            }
-
-            LoadCharacter(umaRecipe, ReplaceRecipes, Recipes, false);
-
-            //But the ExpressionPlayer needs to be Initialized AFTER Load
-            if (activeRace.racedata != null && !RestoreDNA)
-            {
-                this.CharacterUpdated.AddListener(InitializeExpressionPlayer);
-            }
-
-            // Add saved DNA
-            if (RestoreDNA)
-            { 
-                umaData.umaRecipe.ClearDna();
-                foreach (UMADnaBase ud in CurrentDNA)
-                {
-                    umaData.umaRecipe.AddDna(ud);
-                }
-            }
+        LoadCharacter(umaRecipe, ReplaceRecipes, Recipes,umaAdditionalRecipes, MeshHideDictionary, HiddenSlots,CurrentDNA,  RestoreDNA, false);
         }
 
 		private void BuildWhenReady(AsyncOp Op)
@@ -2649,11 +2631,22 @@ namespace UMA.CharacterSystem
             public UMARecipeBase _umaRecipe;
             public List<UMAWardrobeRecipe> _Replaces;
             public List<UMARecipeBase> _umaAdditionalSerializedRecipes;
-            public BuildSave(UMARecipeBase umaRecipe, List<UMAWardrobeRecipe> Replaces, List<UMARecipeBase> umaAdditionalSerializedRecipes)
+            public UMARecipeBase[] _AdditionalRecipes;
+            public List<string> _hiddenSlots;
+            public bool _restoreDNA;
+            public UMADnaBase[] _currentDNA;
+            public Dictionary<string, List<MeshHideAsset>> _MeshHideDictionary;
+
+            public BuildSave(UMARecipeBase umaRecipe, List<UMAWardrobeRecipe> Replaces, List<UMARecipeBase> umaAdditionalSerializedRecipes, UMARecipeBase[] AdditionalRecipes, Dictionary<string, List<MeshHideAsset>> MeshHideDictionary, List<string> hiddenSlots, UMADnaBase[] CurrentDNA, bool restoreDNA)
             {
                 _umaRecipe = umaRecipe;
                 _Replaces = Replaces;
                 _umaAdditionalSerializedRecipes = umaAdditionalSerializedRecipes;
+                _hiddenSlots = hiddenSlots;
+                _restoreDNA = restoreDNA;
+                _currentDNA = CurrentDNA;
+                _AdditionalRecipes = AdditionalRecipes;
+                _MeshHideDictionary = MeshHideDictionary;
             }
         }
 
@@ -2666,7 +2659,7 @@ namespace UMA.CharacterSystem
                 if (Op.IsDone)
                 {
                     BuildSave bs = LoadQueue[Op];
-                    LoadCharacter(bs._umaRecipe, bs._Replaces, bs._umaAdditionalSerializedRecipes, true);
+                    LoadCharacter(bs._umaRecipe, bs._Replaces, bs._umaAdditionalSerializedRecipes,bs._AdditionalRecipes, bs._MeshHideDictionary, bs._hiddenSlots,bs._currentDNA, bs._restoreDNA, true);
                     LoadQueue.Remove(Op);
                     if (LoadedHandles.Count > 1)
                     {
@@ -2742,7 +2735,7 @@ namespace UMA.CharacterSystem
         /// <param name="Replaces"></param>
         /// <param name="umaAdditionalSerializedRecipes"></param>
         /// <returns>Returns true if the final recipe load caused more assets to download</returns>
-        void LoadCharacter(UMARecipeBase umaRecipe, List<UMAWardrobeRecipe> Replaces, List<UMARecipeBase> umaAdditionalSerializedRecipes, bool skipBundleCheck )
+        void LoadCharacter(UMARecipeBase umaRecipe, List<UMAWardrobeRecipe> Replaces, List<UMARecipeBase> umaAdditionalSerializedRecipes, UMARecipeBase[] AdditionalRecipes, Dictionary<string, List<MeshHideAsset>> MeshHideDictionary, List<string> hiddenSlots, UMADnaBase[] CurrentDNA, bool restoreDNA, bool skipBundleCheck )
         {
 
             if (!skipBundleCheck && isAddressableSystem)
@@ -2756,12 +2749,19 @@ namespace UMA.CharacterSystem
 
                 var theOp = UMAAssetIndexer.Instance.Preload(this);
                 LoadedHandles.Enqueue(theOp);
-                LoadQueue.Add(theOp,new BuildSave( umaRecipe,Replaces,umaAdditionalSerializedRecipes));
+                LoadQueue.Add(theOp,new BuildSave( umaRecipe,Replaces,umaAdditionalSerializedRecipes,AdditionalRecipes, MeshHideDictionary, hiddenSlots,CurrentDNA, restoreDNA));
                 theOp.Completed += LoadWhenReady;
 #if SUPER_LOGGING
                 Debug.Log("LoadCharacter waiting for preload...");
 #endif
                 return;
+            }
+
+            //set the expression set to match the new character- needs to happen before load...
+            if (activeRace.racedata != null && !restoreDNA)
+            {
+                SetAnimatorController();
+                SetExpressionSet();
             }
 
 #if SUPER_LOGGING
@@ -2780,17 +2780,18 @@ namespace UMA.CharacterSystem
             this.umaRecipe = umaRecipe; //??? This seems to be pulling the recipe from the character, and then resetting it to itself.
 
             umaRecipe.Load(umaData.umaRecipe, context);
+            umaData.umaRecipe.MeshHideDictionary = MeshHideDictionary;
 
-            umaData.AddAdditionalRecipes(umaAdditionalRecipes, context);
+            umaData.AddAdditionalRecipes(AdditionalRecipes, context);
             AddAdditionalSerializedRecipes(umaAdditionalSerializedRecipes);
 
             //not sure if we do this first or not
             if (wasCrossCompatibleBuild)
             {
-                FixCrossCompatibleSlots();
+                FixCrossCompatibleSlots(hiddenSlots);
             }
 
-            RemoveHiddenSlots();
+            RemoveHiddenSlots(hiddenSlots);
 
             foreach (UMAWardrobeRecipe umr in Replaces)
             {
@@ -2800,10 +2801,10 @@ namespace UMA.CharacterSystem
             foreach (SlotData sd in umaData.umaRecipe.slotDataList)
             {
                 //Add MeshHideAsset here
-                if (MeshHideDictionary.ContainsKey(sd.slotName))
-                {   //If this slotDataAsset is found in the MeshHideDictionary then we need to supply the SlotData with the bitArray.
-                    sd.meshHideMask = MeshHideAsset.GenerateMask( MeshHideDictionary[sd.slotName] );
-                }
+               // if (MeshHideDictionary.ContainsKey(sd.slotName))
+               // {   //If this slotDataAsset is found in the MeshHideDictionary then we need to supply the SlotData with the bitArray.
+               //     sd.meshHideMask = MeshHideAsset.GenerateMask( MeshHideDictionary[sd.slotName] );
+               // }
                 
                 if (sd.OverlayCount > 1)
                 {
@@ -2852,6 +2853,21 @@ namespace UMA.CharacterSystem
             }
             ApplyPredefinedDNA();
 			umaData.KeepAvatar = keepAvatar;
+            //But the ExpressionPlayer needs to be Initialized AFTER Load
+            if (activeRace.racedata != null && !restoreDNA)
+            {
+                this.CharacterUpdated.AddListener(InitializeExpressionPlayer);
+            }
+
+            // Add saved DNA
+            if (restoreDNA)
+            {
+                umaData.umaRecipe.ClearDna();
+                foreach (UMADnaBase ud in CurrentDNA)
+                {
+                    umaData.umaRecipe.AddDna(ud);
+                }
+            }
         }
 
         bool FinalRecipeAssetsDownloading()
@@ -2908,7 +2924,7 @@ namespace UMA.CharacterSystem
         /// will be removed and its overlays applied to the equivalent slot in the base mesh, if overlays are defined as matching. Otherwise the overlays will not
         /// be applied and a warning will be shown.
         /// </summary>
-        void FixCrossCompatibleSlots()
+        void FixCrossCompatibleSlots(List<string> hiddenSlots)
         {
             var recipeSlots = umaData.umaRecipe.slotDataList;
             string equivalentSlot = "";
@@ -2952,15 +2968,15 @@ namespace UMA.CharacterSystem
                         }
 						//09072019 if the equivalent slot is the same as the slot we are checking, then the user has added an unnecessary entry to the compatibility settings
 						//but its very easy to do when base races share things like the inner mouth and eyes, so just skip it.
-						if (!HiddenSlots.Contains(sd.slotName) && equivalentSlot != sd.slotName)
+						if (!hiddenSlots.Contains(sd.slotName) && equivalentSlot != sd.slotName)
 						{
-							HiddenSlots.Add(sd.slotName);
+							hiddenSlots.Add(sd.slotName);
 						}
 					}
                 }
             }
             //if we make this happen after RemoveHiddenSlots() we need to call it again
-            RemoveHiddenSlots();
+            RemoveHiddenSlots(hiddenSlots);
         }
 
         void ReplaceSlot(UMAWardrobeRecipe Replacer)
@@ -3000,14 +3016,14 @@ namespace UMA.CharacterSystem
             }
         }
 
-        void RemoveHiddenSlots()
+        void RemoveHiddenSlots(List<string> hiddenSlots)
         {
             List<SlotData> NewSlots = new List<SlotData>();
             foreach (SlotData sd in umaData.umaRecipe.slotDataList)
             {
                 if (sd == null)
                     continue;
-                if (!HiddenSlots.Contains(sd.asset.slotName))
+                if (!hiddenSlots.Contains(sd.asset.slotName))
                 {
                     NewSlots.Add(sd);
                 }

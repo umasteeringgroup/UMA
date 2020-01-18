@@ -21,6 +21,11 @@ namespace UMA
 
 		protected void EnsureUMADataSetup(UMAData umaData)
 		{
+			if (umaData.umaRecipe != null)
+			{
+				umaData.umaRecipe.UpdateMeshHideMasks();
+			}
+
 			if (umaData.umaRoot != null)
 			{
 				umaData.CleanMesh(false);

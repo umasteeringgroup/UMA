@@ -473,6 +473,20 @@ namespace UMA
 			public List<UMADnaBase> dnaValues = new List<UMADnaBase>();
 			public SlotData[] slotDataList;
 			public OverlayColorData[] sharedColors;
+			public Dictionary<string, List<MeshHideAsset>> MeshHideDictionary { get; set; } = new Dictionary<string, List<MeshHideAsset>>();
+
+			public void UpdateMeshHideMasks()
+			{
+				foreach (SlotData sd in slotDataList)
+				{
+					if (!sd) continue;
+					//Add MeshHideAsset here
+					if (MeshHideDictionary.ContainsKey(sd.slotName))
+					{   //If this slotDataAsset is found in the MeshHideDictionary then we need to supply the SlotData with the bitArray.
+						sd.meshHideMask = MeshHideAsset.GenerateMask(MeshHideDictionary[sd.slotName]);
+					}
+				}
+			}
 
 			public bool Validate()
 			{

@@ -226,6 +226,7 @@ namespace UMA
 			CleanBackUpTextures();
 			UpdateUV();
 
+/* Procedural textures currently do not work.
 			// HACK - is this the right place?
 			SlotData[] slots = umaData.umaRecipe.slotDataList;
 			for (int i = 0; i < slots.Length; i++)
@@ -233,7 +234,6 @@ namespace UMA
 				var slot = slots[i];
 				if (slot == null)
 					continue;
-
 #if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 				for (int j = 1; j < slot.OverlayCount; j++)
 				{
@@ -243,7 +243,7 @@ namespace UMA
 				}
 #endif
 			}
-
+*/
 			if (updateMaterialList)
 			{
 				for (int j = 0; j < umaData.rendererCount; j++)
