@@ -459,7 +459,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 305676970}
   m_Direction: 0
   m_Value: 0
-  m_Size: 0.99999994
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -745,18 +745,6 @@ PrefabInstance:
       propertyPath: m_RootOrder
       value: 4
       objectReference: {fileID: 0}
-    - target: {fileID: 11499522, guid: aa98a532010e36d4bbae850b44215885, type: 3}
-      propertyPath: avatarToPhoto
-      value: 
-      objectReference: {fileID: 893401642}
-    - target: {fileID: 11499522, guid: aa98a532010e36d4bbae850b44215885, type: 3}
-      propertyPath: dimAllButTarget
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 11499522, guid: aa98a532010e36d4bbae850b44215885, type: 3}
-      propertyPath: autoPhotosEnabled
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 449708, guid: aa98a532010e36d4bbae850b44215885, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.00148
@@ -768,6 +756,18 @@ PrefabInstance:
     - target: {fileID: 449708, guid: aa98a532010e36d4bbae850b44215885, type: 3}
       propertyPath: m_LocalPosition.z
       value: -1.632
+      objectReference: {fileID: 0}
+    - target: {fileID: 11499522, guid: aa98a532010e36d4bbae850b44215885, type: 3}
+      propertyPath: avatarToPhoto
+      value: 
+      objectReference: {fileID: 893401642}
+    - target: {fileID: 11499522, guid: aa98a532010e36d4bbae850b44215885, type: 3}
+      propertyPath: dimAllButTarget
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11499522, guid: aa98a532010e36d4bbae850b44215885, type: 3}
+      propertyPath: autoPhotosEnabled
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: aa98a532010e36d4bbae850b44215885, type: 3}
@@ -4227,7 +4227,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  context: {fileID: 0}
+  context: {fileID: 1416281470}
   umaData: {fileID: 0}
   umaRecipe: {fileID: 0}
   umaAdditionalRecipes:
@@ -4260,6 +4260,8 @@ MonoBehaviour:
   CharacterDnaUpdated:
     m_PersistentCalls:
       m_Calls: []
+  DelayUnload: 2
+  BundleCheck: 1
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -4289,7 +4291,7 @@ MonoBehaviour:
       - HumanFemaleDCS
       - HumanFemale
   raceAnimationControllers:
-    defaultAnimationController: {fileID: 9100000, guid: ae859d58fdf844b73863d3833f955cdf,
+    defaultAnimationController: {fileID: 9100000, guid: b4357ee1f94b2474bb1ce0e93e509d83,
       type: 2}
     animators:
     - raceName: ToonFemale
@@ -4320,6 +4322,7 @@ MonoBehaviour:
       _name: 
       _color: {r: 0.3529412, g: 0.21568629, b: 0.14117648, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
       valuesConverted: 0
     - name: Eyes
       channelMask:
@@ -4333,6 +4336,7 @@ MonoBehaviour:
       _name: 
       _color: {r: 0.28627452, g: 0.40784317, b: 1, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
       valuesConverted: 0
     - name: Skin
       channelMask:
@@ -4346,6 +4350,7 @@ MonoBehaviour:
       _name: 
       _color: {r: 0.9450981, g: 0.91372555, b: 0.7686275, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
       valuesConverted: 0
     - name: Pants1
       channelMask:
@@ -4359,6 +4364,7 @@ MonoBehaviour:
       _name: 
       _color: {r: 0.3529412, g: 0.4156863, b: 0.6392157, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
       valuesConverted: 0
   predefinedDNA:
     PreloadValues: []
@@ -4402,6 +4408,16 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2754613956854059695, guid: a54fde34eec40964b94d71ee0aba9889,
+        type: 3}
+      propertyPath: atlasResolution
+      value: 4096
+      objectReference: {fileID: 0}
+    - target: {fileID: 2754613956854059695, guid: a54fde34eec40964b94d71ee0aba9889,
+        type: 3}
+      propertyPath: InitialScaleFactor
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6782112333398131213, guid: a54fde34eec40964b94d71ee0aba9889,
         type: 3}
       propertyPath: m_Name
@@ -6448,7 +6464,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Avatar: {fileID: 893401642}
-  characterSystem: {fileID: 0}
   converterCustomizer: {fileID: 0}
   GenericColorList: {fileID: 11400000, guid: dcd91d8cb86512549b228ccf32c88e45, type: 2}
   genericColorSwatch: {fileID: 21300000, guid: df24b1b2c8514b34aa75ea459233768b, type: 3}
@@ -6490,6 +6505,7 @@ MonoBehaviour:
   _loadWardrobe: 1
   _loadBodyColors: 1
   _loadWardrobeColors: 1
+  Context: {fileID: 1416281470}
 --- !u!1 &1327886464
 GameObject:
   m_ObjectHideFlags: 0
@@ -6751,7 +6767,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 0, y: 11.45}
+  m_AnchoredPosition: {x: 0, y: 11.450012}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &1407162102
@@ -6964,6 +6980,51 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1412197963}
   m_CullTransparentMesh: 0
+--- !u!1 &1416281469 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6782112333398131213, guid: a54fde34eec40964b94d71ee0aba9889,
+    type: 3}
+  m_PrefabInstance: {fileID: 903218709}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1416281470 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6782112333398131215, guid: a54fde34eec40964b94d71ee0aba9889,
+    type: 3}
+  m_PrefabInstance: {fileID: 903218709}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1416281469}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fd2661724b5ab24ea2d5da16a31cb27, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1416281472
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1416281469}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 409628cd109625147b251fadade19431, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dynamicDnaConverterPrefab: {fileID: 1326423178}
+  TposeAnimatorController: {fileID: 9100000, guid: 831b46c503d9add42b15044ab2bac737,
+    type: 2}
+  AposeAnimatorController: {fileID: 9100000, guid: 66af5264f1619114db5f72f979ce14bd,
+    type: 2}
+  MovementAnimatorController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343,
+    type: 2}
+  targetUMA: {fileID: 893401642}
+  guideUMA: {fileID: 0}
+  converterToImport: {fileID: 0}
+  drawBoundsGizmo: 1
+  bonePoseAccuracy: 0.00005
+  BonesCreated:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &1449896413
 GameObject:
   m_ObjectHideFlags: 0
@@ -8833,8 +8894,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 386.2887, y: 0}
-  m_SizeDelta: {x: 732.5774, y: 0}
+  m_AnchoredPosition: {x: 406.9734, y: 0}
+  m_SizeDelta: {x: 773.9468, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &1803720561
 MonoBehaviour:
@@ -9408,7 +9469,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 102905476}
   m_Direction: 2
   m_Value: 0
-  m_Size: 0.99999994
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -10049,7 +10110,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 87, y: 11.45}
+  m_AnchoredPosition: {x: 87, y: 11.450012}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!1 &2017232973

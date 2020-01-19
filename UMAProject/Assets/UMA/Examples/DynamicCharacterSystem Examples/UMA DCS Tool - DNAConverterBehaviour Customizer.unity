@@ -3042,6 +3042,8 @@ MonoBehaviour:
   CharacterDnaUpdated:
     m_PersistentCalls:
       m_Calls: []
+  DelayUnload: 2
+  BundleCheck: 1
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -3094,6 +3096,7 @@ MonoBehaviour:
       _name: 
       _color: {r: 0.3529412, g: 0.21568629, b: 0.14117648, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
       valuesConverted: 0
     - name: Eyes
       channelMask:
@@ -3107,6 +3110,7 @@ MonoBehaviour:
       _name: 
       _color: {r: 0.28627452, g: 0.40784317, b: 1, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
       valuesConverted: 0
     - name: Skin
       channelMask:
@@ -3120,6 +3124,7 @@ MonoBehaviour:
       _name: 
       _color: {r: 0.9450981, g: 0.91372555, b: 0.7686275, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
       valuesConverted: 0
     - name: Pants1
       channelMask:
@@ -3133,6 +3138,7 @@ MonoBehaviour:
       _name: 
       _color: {r: 0.3529412, g: 0.4156863, b: 0.6392157, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
       valuesConverted: 0
   predefinedDNA:
     PreloadValues: []
@@ -3781,6 +3787,8 @@ MonoBehaviour:
   CharacterDnaUpdated:
     m_PersistentCalls:
       m_Calls: []
+  DelayUnload: 2
+  BundleCheck: 1
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -3833,6 +3841,7 @@ MonoBehaviour:
       _name: 
       _color: {r: 0.3529412, g: 0.21568629, b: 0.14117648, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
       valuesConverted: 0
     - name: Eyes
       channelMask:
@@ -3846,6 +3855,7 @@ MonoBehaviour:
       _name: 
       _color: {r: 0.28627452, g: 0.40784317, b: 1, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
       valuesConverted: 0
     - name: Skin
       channelMask:
@@ -3859,6 +3869,7 @@ MonoBehaviour:
       _name: 
       _color: {r: 0.9450981, g: 0.91372555, b: 0.7686275, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
       valuesConverted: 0
     - name: Pants1
       channelMask:
@@ -3872,6 +3883,7 @@ MonoBehaviour:
       _name: 
       _color: {r: 0.3529412, g: 0.4156863, b: 0.6392157, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
       valuesConverted: 0
   predefinedDNA:
     PreloadValues: []
@@ -4140,7 +4152,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 968063932}
   m_Direction: 2
   m_Value: 0
-  m_Size: 0.99999994
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -4338,6 +4350,8 @@ MonoBehaviour:
   CharacterDnaUpdated:
     m_PersistentCalls:
       m_Calls: []
+  DelayUnload: 2
+  BundleCheck: 1
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -4390,6 +4404,7 @@ MonoBehaviour:
       _name: 
       _color: {r: 0.3529412, g: 0.21568629, b: 0.14117648, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
       valuesConverted: 0
     - name: Eyes
       channelMask:
@@ -4403,6 +4418,7 @@ MonoBehaviour:
       _name: 
       _color: {r: 0.28627452, g: 0.40784317, b: 1, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
       valuesConverted: 0
     - name: Skin
       channelMask:
@@ -4416,6 +4432,7 @@ MonoBehaviour:
       _name: 
       _color: {r: 0.9450981, g: 0.91372555, b: 0.7686275, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
       valuesConverted: 0
     - name: Pants1
       channelMask:
@@ -4429,6 +4446,7 @@ MonoBehaviour:
       _name: 
       _color: {r: 0.3529412, g: 0.4156863, b: 0.6392157, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
       valuesConverted: 0
   predefinedDNA:
     PreloadValues: []
@@ -6787,7 +6805,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 109731252}
   m_Direction: 0
   m_Value: 0
-  m_Size: 0.99999994
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -9617,7 +9635,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Avatar: {fileID: 363062547}
-  characterSystem: {fileID: 0}
   converterCustomizer: {fileID: 331623065}
   GenericColorList: {fileID: 11400000, guid: dcd91d8cb86512549b228ccf32c88e45, type: 2}
   genericColorSwatch: {fileID: 21300000, guid: df24b1b2c8514b34aa75ea459233768b, type: 3}
@@ -9659,6 +9676,7 @@ MonoBehaviour:
   _loadWardrobe: 1
   _loadBodyColors: 1
   _loadWardrobeColors: 1
+  Context: {fileID: 0}
 --- !u!1 &1017643406
 GameObject:
   m_ObjectHideFlags: 0
@@ -10867,6 +10885,8 @@ MonoBehaviour:
   CharacterDnaUpdated:
     m_PersistentCalls:
       m_Calls: []
+  DelayUnload: 2
+  BundleCheck: 1
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -10919,6 +10939,7 @@ MonoBehaviour:
       _name: 
       _color: {r: 0.3529412, g: 0.21568629, b: 0.14117648, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
       valuesConverted: 0
     - name: Eyes
       channelMask:
@@ -10932,6 +10953,7 @@ MonoBehaviour:
       _name: 
       _color: {r: 0.28627452, g: 0.40784317, b: 1, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
       valuesConverted: 0
     - name: Skin
       channelMask:
@@ -10945,6 +10967,7 @@ MonoBehaviour:
       _name: 
       _color: {r: 0.9450981, g: 0.91372555, b: 0.7686275, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
       valuesConverted: 0
     - name: Pants1
       channelMask:
@@ -10958,6 +10981,7 @@ MonoBehaviour:
       _name: 
       _color: {r: 0.3529412, g: 0.4156863, b: 0.6392157, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
       valuesConverted: 0
   predefinedDNA:
     PreloadValues: []
@@ -13604,6 +13628,8 @@ MonoBehaviour:
   CharacterDnaUpdated:
     m_PersistentCalls:
       m_Calls: []
+  DelayUnload: 2
+  BundleCheck: 1
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -13656,6 +13682,7 @@ MonoBehaviour:
       _name: 
       _color: {r: 0.3529412, g: 0.21568629, b: 0.14117648, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
       valuesConverted: 0
     - name: Eyes
       channelMask:
@@ -13669,6 +13696,7 @@ MonoBehaviour:
       _name: 
       _color: {r: 0.28627452, g: 0.40784317, b: 1, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
       valuesConverted: 0
     - name: Skin
       channelMask:
@@ -13682,6 +13710,7 @@ MonoBehaviour:
       _name: 
       _color: {r: 0.9450981, g: 0.91372555, b: 0.7686275, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
       valuesConverted: 0
     - name: Pants1
       channelMask:
@@ -13695,6 +13724,7 @@ MonoBehaviour:
       _name: 
       _color: {r: 0.3529412, g: 0.4156863, b: 0.6392157, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
       valuesConverted: 0
   predefinedDNA:
     PreloadValues: []
@@ -17758,6 +17788,30 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1159510547}
     m_Modifications:
+    - target: {fileID: 145244, guid: 68893f484c4e79346a304ad639af5d3a, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 11434484, guid: 68893f484c4e79346a304ad639af5d3a, type: 3}
+      propertyPath: m_Value
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 22408144, guid: 68893f484c4e79346a304ad639af5d3a, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 22442952, guid: 68893f484c4e79346a304ad639af5d3a, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 22442952, guid: 68893f484c4e79346a304ad639af5d3a, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 22442952, guid: 68893f484c4e79346a304ad639af5d3a, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: -17
+      objectReference: {fileID: 0}
     - target: {fileID: 22453876, guid: 68893f484c4e79346a304ad639af5d3a, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -17830,36 +17884,12 @@ PrefabInstance:
       propertyPath: m_Pivot.y
       value: 0.5
       objectReference: {fileID: 0}
-    - target: {fileID: 145244, guid: 68893f484c4e79346a304ad639af5d3a, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 22492748, guid: 68893f484c4e79346a304ad639af5d3a, type: 3}
       propertyPath: m_AnchorMax.x
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 22492748, guid: 68893f484c4e79346a304ad639af5d3a, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 22442952, guid: 68893f484c4e79346a304ad639af5d3a, type: 3}
-      propertyPath: m_AnchorMax.x
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 22442952, guid: 68893f484c4e79346a304ad639af5d3a, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 22442952, guid: 68893f484c4e79346a304ad639af5d3a, type: 3}
-      propertyPath: m_SizeDelta.x
-      value: -17
-      objectReference: {fileID: 0}
-    - target: {fileID: 22408144, guid: 68893f484c4e79346a304ad639af5d3a, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 11434484, guid: 68893f484c4e79346a304ad639af5d3a, type: 3}
-      propertyPath: m_Value
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 22494694, guid: 68893f484c4e79346a304ad639af5d3a, type: 3}
@@ -18124,6 +18154,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2754613956854059695, guid: a54fde34eec40964b94d71ee0aba9889,
+        type: 3}
+      propertyPath: atlasResolution
+      value: 4096
+      objectReference: {fileID: 0}
     - target: {fileID: 6782112333398131213, guid: a54fde34eec40964b94d71ee0aba9889,
         type: 3}
       propertyPath: m_Name

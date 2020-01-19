@@ -665,6 +665,7 @@ namespace UMA.Examples
 			{
 				int randomResult = Random.Range(0, randomPool.Length);
 				race = randomPool[randomResult].data;
+				string theRaceId = race.raceID;
 				umaRecipe.SetRace(UMAContextBase.GetRace(race.raceID));
 			}
 			else
