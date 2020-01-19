@@ -12,8 +12,10 @@ using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using UMA.PoseTools;//so we can set the expression set based on the race
+#if UMA_ADDRESSABLES
 using UnityEngine.ResourceManagement.AsyncOperations;
 using AsyncOp = UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<System.Collections.Generic.IList<UnityEngine.Object>>;
+#endif
 
 namespace UMA.CharacterSystem
 {
@@ -34,15 +36,15 @@ namespace UMA.CharacterSystem
 		}
 #endif
 
-		#region Extra Events
+#region Extra Events
 		/// <summary>
 		/// Callback event when the character recipe is updated. Use this to tweak the resulting recipe BEFORE the UMA is actually generated
 		/// </summary>
 		public UMADataEvent RecipeUpdated;
 
-        #endregion
+#endregion
 
-        #region ENUMS 
+#region ENUMS 
         [Flags]
         public enum ChangeRaceOptions
         {
@@ -78,9 +80,9 @@ namespace UMA.CharacterSystem
 
         public enum savePathTypes { persistentDataPath, Resources, FileSystem };
 
-        #endregion
+#endregion
 
-        #region PUBLIC FIELDS
+#region PUBLIC FIELDS
 
         //because the character might need to be preloaded, we may want everything required to create it to happen
         //but for it to still not be shown immediately or you may want to hide it anyway
@@ -134,11 +136,12 @@ namespace UMA.CharacterSystem
         public string loadFilename;
         public string loadString;
         public bool loadFileOnStart;
-		private bool isAddressableSystem;
-        private bool isCaching = false;
-        private Queue<AsyncOp> LoadedHandles = new Queue<AsyncOp>();
-        //public Dictionary<string, List<MeshHideAsset>> MeshHideDictionary { get; } = new Dictionary<string, List<MeshHideAsset>>();
 
+#if UMA_ADDRESSABLES
+        private bool isCaching = false;
+		private bool isAddressableSystem;
+        private Queue<AsyncOp> LoadedHandles = new Queue<AsyncOp>();
+#endif
         [EnumFlags]
         public LoadOptions defaultLoadOptions = LoadOptions.loadRace | LoadOptions.loadDNA | LoadOptions.loadWardrobe | LoadOptions.loadBodyColors | LoadOptions.loadWardrobeColors;
 
@@ -170,9 +173,9 @@ namespace UMA.CharacterSystem
         [Tooltip("What color to give the placeholder.")]
         public Color previewColor = Color.grey;
 #endif
-        #endregion
+#endregion
 
-        #region PRIVATE FIELDS 
+#region PRIVATE FIELDS 
         //Is building the character enabled? Disable this to make multiple changes to the avatar that will be built
         //without creating multiple build calls. when you are finished set it to true and the character will build
         [SerializeField]
@@ -208,9 +211,9 @@ namespace UMA.CharacterSystem
         private Material mat;
         private Mesh previewMesh;
 #endif
-        #endregion
+#endregion
 
-        #region PROPERTIES 
+#region PROPERTIES 
         //this previously get/set the base.umaRace value - but we dont want anyone to do that. because set wont actually change the race of the avatar 
         //and the value for get is only correct after the avatar has been built- not while we are generating the actual settings before we call 'Load'
         //If the want to set the Race when the avatar has built they should use ChangeRace. If they want to set it before they should use RacePreset
@@ -340,15 +343,16 @@ namespace UMA.CharacterSystem
 			}
         }
 
-        #endregion
+#endregion
 
-        #region METHODS 
+#region METHODS 
 
-        #region Start Update and Inititalization
+#region Start Update and Inititalization
 
         public void Awake()
         {
-			isAddressableSystem = false;
+#if UMA_ADDRESSABLES
+            isAddressableSystem = false;
 
             if (UMAContext.FindInstance() is UMAGlobalContext)
             {
@@ -359,8 +363,9 @@ namespace UMA.CharacterSystem
                     isCaching = glib.EnableCacheCleanup;
                 }
             }
+#endif
 #if UNITY_EDITOR
-			EditorUMAContextBase = GameObject.Find("UMAEditorContext");
+            EditorUMAContextBase = GameObject.Find("UMAEditorContext");
             if (EditorUMAContextBase != null)
             {
                 EditorUMAContextBase.hideFlags = HideFlags.DontSave | HideFlags.NotEditable;
@@ -546,9 +551,9 @@ namespace UMA.CharacterSystem
             }
         }
 
-        #endregion
+#endregion
 
-        #region SETTINGS MODIFICATION (RACE RELATED)
+#region SETTINGS MODIFICATION (RACE RELATED)
 
         /// <summary>
         /// Sets the starting race of the avatar based on the value of the 'activeRace'. 
@@ -706,9 +711,9 @@ namespace UMA.CharacterSystem
             }
         }
 
-        #endregion
+#endregion
 
-        #region SETTINGS MODIFICATION (WARDROBE RELATED)
+#region SETTINGS MODIFICATION (WARDROBE RELATED)
 
         /// <summary>
         /// Loads the default wardobe items set in 'defaultWardrobeRecipes' in the CharacterAvatar itself onto the Avatar's base race recipe. Use this to make a naked avatar always have underwear or a set of clothes for example
@@ -1291,9 +1296,9 @@ namespace UMA.CharacterSystem
             }
         }
 
-        #endregion
+#endregion
 
-        #region SETTINGS MODIFICATION (COLORS RELATED)
+#region SETTINGS MODIFICATION (COLORS RELATED)
 
         /// <summary>
         /// Gets the color from the current characterColors.
@@ -1585,9 +1590,9 @@ namespace UMA.CharacterSystem
             return newSharedColors;
         }
 
-        #endregion
+#endregion
 
-        #region SETTINGS MODIFICATION (DNA RELATED)
+#region SETTINGS MODIFICATION (DNA RELATED)
 
         private void TryImportDNAValues(UMADnaBase[] prevDna)
         {
@@ -1650,9 +1655,9 @@ namespace UMA.CharacterSystem
             return umaData.GetAllDna();
         }
 
-        #endregion
+#endregion
 
-        #region SETTINGS MODIFICATION (ANIMATION RELATED)
+#region SETTINGS MODIFICATION (ANIMATION RELATED)
 
         /// <summary>
         /// Sets the Expression set for the Avatar based on the Avatars set race.
@@ -1739,9 +1744,9 @@ namespace UMA.CharacterSystem
                 umaData.transform.localRotation = originalRot;
         }
 
-        #endregion
+#endregion
 
-        #region SETTINGS EXPORT (SAVE)
+#region SETTINGS EXPORT (SAVE)
 
         /// <summary>
         /// Helper method for getting the required DCA.SaveOptions flags. Set all to false for DCA.SaveOptions.UseDefaults
@@ -1771,7 +1776,7 @@ namespace UMA.CharacterSystem
             }
         }
 
-        #region PARTIAL EXPORT - HelperMethods
+#region PARTIAL EXPORT - HelperMethods
 
         public string GetCurrentWardrobeRecipe(string recipeName = "", bool includeColors = false, params string[] slotsToSave)
         {
@@ -1812,9 +1817,9 @@ namespace UMA.CharacterSystem
             return JsonUtility.ToJson(DCSModel);
         }
 
-        #endregion
+#endregion
 
-        #region FULL EXPORT
+#region FULL EXPORT
         /// <summary>
         /// Returns the UMATextRecipe string with the addition of the Avatars current WardrobeSet.
         /// </summary>
@@ -1990,11 +1995,11 @@ namespace UMA.CharacterSystem
                 return "";
             }
         }
-        #endregion
+#endregion
 
-        #endregion
+#endregion
 
-        #region SETTINGS IMPORT (LOAD)
+#region SETTINGS IMPORT (LOAD)
 
         /// <summary>
         /// Helper method for getting the required DCA.LoadOptions flags. Set all to false for DCA.LoadOptions.UseDefaults
@@ -2026,7 +2031,7 @@ namespace UMA.CharacterSystem
             }
         }
 
-        #region PARTIAL IMPORT - HelperMethods
+#region PARTIAL IMPORT - HelperMethods
 
         //DOS 11012017 changed the following so that they dont load race- if you want to load the race call LoadFromRecipeString directly with the appropriate flags
         public void LoadWardrobeFromRecipeString(string recipeString, bool loadColors = true, bool clearExisting = false)
@@ -2046,9 +2051,9 @@ namespace UMA.CharacterSystem
             LoadFromRecipeString(recipeString, GetLoadOptionsFlags(false, true, false, false, false));
         }
 
-        #endregion
+#endregion
 
-        #region FULL CHARACTER IMPORT
+#region FULL CHARACTER IMPORT
 
         /// <summary>
         /// Sets the recipe string that will be loaded when the Avatar starts. If trying to load a recipe after the character has been created use 'LoadFromRecipeString'
@@ -2439,11 +2444,11 @@ namespace UMA.CharacterSystem
 			}
 			yield break;
         }
-        #endregion
+#endregion
 
-        #endregion
+#endregion
 
-        #region CHARACTER FINAL ASSEMBLY
+#region CHARACTER FINAL ASSEMBLY
 
         /// <summary>
         /// Builds the character by combining the Avatar's raceData.baseRecipe with the any wardrobe recipes that have been applied to the avatar.
@@ -2600,32 +2605,7 @@ namespace UMA.CharacterSystem
         LoadCharacter(umaRecipe, ReplaceRecipes, Recipes,umaAdditionalRecipes, MeshHideDictionary, HiddenSlots,CurrentDNA,  RestoreDNA, false);
         }
 
-		private void BuildWhenReady(AsyncOp Op)
-        {
-            try
-            {
-                if (Op.IsDone)
-                {
-                    BuildCharacter(true, true);
-                    if (LoadedHandles.Count > 1)
-                    {
-                        if (DelayUnload > 0.0f)
-                        {
-                            StartCoroutine(CleanupAfterDelay());
-                        }
-                        else
-                        {
-                            UnloadOldestQueuedHandle();
-                        }
-                    }
-                }
-            }
-            catch(Exception ex)
-            {
-                Debug.LogException(ex, this);
-            }
-		}
-
+#if UMA_ADDRESSABLES
         private class BuildSave
         {
             public UMARecipeBase _umaRecipe;
@@ -2697,7 +2677,7 @@ namespace UMA.CharacterSystem
             yield return new WaitForSeconds(DelayUnload);
             UnloadOldestQueuedHandle();
         } 
-
+#endif
         private void ApplyPredefinedDNA()
         {
             if (this.predefinedDNA != null)
@@ -2737,7 +2717,7 @@ namespace UMA.CharacterSystem
         /// <returns>Returns true if the final recipe load caused more assets to download</returns>
         void LoadCharacter(UMARecipeBase umaRecipe, List<UMAWardrobeRecipe> Replaces, List<UMARecipeBase> umaAdditionalSerializedRecipes, UMARecipeBase[] AdditionalRecipes, Dictionary<string, List<MeshHideAsset>> MeshHideDictionary, List<string> hiddenSlots, UMADnaBase[] CurrentDNA, bool restoreDNA, bool skipBundleCheck )
         {
-
+#if UMA_ADDRESSABLES
             if (!skipBundleCheck && isAddressableSystem)
             {
                 /* Load every recipe into a class and save it         */
@@ -2756,7 +2736,7 @@ namespace UMA.CharacterSystem
 #endif
                 return;
             }
-
+#endif
             //set the expression set to match the new character- needs to happen before load...
             if (activeRace.racedata != null && !restoreDNA)
             {
@@ -3059,35 +3039,6 @@ namespace UMA.CharacterSystem
             umaData.Dirty(DnaDirty, TextureDirty, MeshDirty);
         }
 
-        private void UpdateWhenReady(AsyncOperationHandle<IList<UnityEngine.Object>> obj)
-        {
-            if (obj.IsDone)
-            {
-               /* Dictionary<string, SlotDataAsset> Lookup = new Dictionary<string, SlotDataAsset>();
-
-                foreach(UnityEngine.Object o in obj)
-                {
-                    // Add the slot to the dictionary. 
-                   
-                }
-
-                SlotData[] slots = umaData.umaRecipe.slotDataList;
-
-                for (int i= 0;  i < slots.Length;  i++)
-                {
-
-                    slots[i] = new SlotData(theSlot);
-                }
-
-                UpdateArgs ua = UpdateList[obj];
-   
-                FixupRecipe();
-
-                ForceUpdate(ua.dNADirty,ua.textureDirty,ua.meshDirty, true);
-                UpdateList.Remove(obj); */
-            }
-        }
-
         //@jaimi not sure what calls this. Generator maybe?
         public void AvatarCreated()
         {
@@ -3140,9 +3091,9 @@ namespace UMA.CharacterSystem
             }
         }
 
-        #endregion
+#endregion
 
-        #region UMAContextBase RELATED
+#region UMAContextBase RELATED
 
         //If the user inspects a DCA when there is no UMAContextBase in the scene it will blow up because RaceSetter needs one in order to find all the available races
         //and the Default Wardrobe and Race animators need one in order to assess whether the assets will be available at run time so create one on the fly like UMATextRecipe does
@@ -3192,9 +3143,9 @@ namespace UMA.CharacterSystem
         }
 #endif
 
-        #endregion
+#endregion
 
-        #region ASSETBUNDLES RELATED
+#region ASSETBUNDLES RELATED
 
         /// <summary>
         /// Use when temporary wardrobe recipes have been used while the real ones have been downloading. Will replace the temp textrecipes with the downloaded ones.
@@ -3252,9 +3203,9 @@ namespace UMA.CharacterSystem
                 SetAnimatorController(true);
             }
         }
-        #endregion
+#endregion
 
-        #region CLEANUP 
+#region CLEANUP 
 
         /// <summary>
         /// Cleanup UMA system
@@ -3262,11 +3213,12 @@ namespace UMA.CharacterSystem
         public void Cleanup()
         {
             // Unload any items to free memory.
+#if UMA_ADDRESSABLES
             while(LoadedHandles.Count > 0)
             {
                 UnloadOldestQueuedHandle();
             }
-
+#endif
             if (umaData != null)
             { 
                 if (umaData.umaGenerator != null)
@@ -3287,11 +3239,11 @@ namespace UMA.CharacterSystem
             }
             return false;
         }
-        #endregion
+#endregion
 
-        #endregion
+#endregion
 
-        #region SPECIALTYPES // these types should only be needed by DynamicCharacterAvatar
+#region SPECIALTYPES // these types should only be needed by DynamicCharacterAvatar
 
         [Serializable]
         public class RaceSetter
@@ -3585,7 +3537,7 @@ namespace UMA.CharacterSystem
                 set { _colors = value; }
             }
 
-            #region CONSTRUCTOR
+#region CONSTRUCTOR
 
             /// <summary>
             /// The default Constructor adds a delegate to EditorApplication.update which checks if any of the ColorValues were updated from old values to new values and marks the scene as dirty
@@ -3608,7 +3560,7 @@ namespace UMA.CharacterSystem
                 Colors = colorValueList;
             }
 
-            #endregion
+#endregion
 
 
             private ColorValue GetColorValue(string name)
@@ -3714,7 +3666,7 @@ namespace UMA.CharacterSystem
             }
         }
 
-#if UNITY_EDITOR           
+#if UNITY_EDITOR
         [ContextMenu("Copy From Current Wardrobe")]
         void CopyDefaultWardrobe()
         {
@@ -3759,9 +3711,9 @@ namespace UMA.CharacterSystem
 #endif
     }
 
-    #endregion
+#endregion
 
-    #region DNASETTER
+#region DNASETTER
     /// <summary>
     /// A DnaSetter is used to set a specific piece of DNA on the avatar
     /// that it is pulled from.
@@ -3825,5 +3777,5 @@ namespace UMA.CharacterSystem
             return Owner.GetValue(OwnerIndex);
         }
     }
-    #endregion
+#endregion
 }

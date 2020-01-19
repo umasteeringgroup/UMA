@@ -298,7 +298,7 @@ namespace UMA.CharacterSystem.Editors
 			GUILayout.EndHorizontal();
 
 
-
+#if UMA_ADDRESSABLES
 			GUIHelper.BeginVerticalPadded(5, new Color(0.65f, 0.65f, 0.65f));
 			GUILayout.Label("Addressables");
 			GUILayout.Space(10);
@@ -320,6 +320,7 @@ namespace UMA.CharacterSystem.Editors
 			{
 				UAI.CleanupAddressables(false, true);
 			}
+#endif
 			if (GUILayout.Button("Force Add Refs (bad!)"))
 			{
 				UAI.AddReferences(true);
@@ -664,6 +665,7 @@ namespace UMA.CharacterSystem.Editors
                         ProcessItems(CurrentType, TypeCheckboxes[CurrentType], HasFilter, actFilter, Items, SetItemMaterial);
                     }
                     EditorGUILayout.EndHorizontal();
+#if UMA_ADDRESSABLES
 					EditorGUILayout.BeginHorizontal();
 					if (GUILayout.Button("Remove Orphaned Items"))
 					{
@@ -673,6 +675,7 @@ namespace UMA.CharacterSystem.Editors
 					}
 					EditorGUILayout.EndHorizontal();
 					EditorGUILayout.HelpBox("Removing Orphaned Items should be done AFTER you have marked the Races and Wardrobe items you want to include as 'Always Included', and after you have built Addressable Bundles!", MessageType.Info);
+#endif               
 				}
 				GUIHelper.EndVerticalPadded(5);
 

@@ -19,12 +19,16 @@ namespace UMA.CharacterSystem.Examples
 		{
 			get
 			{
+#if UMA_ADDRESSABLES
 				if (Recipe == null)
 					return false;
 
 				if (UMAAssetIndexer.Instance.Preloads.ContainsKey(Recipe.name)) return true;
 	
 				return false;
+#else
+				return true;
+#endif
 			}
 		}
 		public void SetColors()
@@ -71,7 +75,7 @@ namespace UMA.CharacterSystem.Examples
                 Avatar.BuildCharacter(true);
                 return;
             }
-
+#if UMA_ADDRESSABLES
 			if (isReady)
 			{
 				SetRecipe();
@@ -81,7 +85,10 @@ namespace UMA.CharacterSystem.Examples
 				var op = UMAAssetIndexer.Instance.Preload(Recipe);
 				op.Completed += Op_Completed;
 			}
-        }
+#else
+			SetRecipe();
+#endif
+		}
 
 		private void SetRecipe()
 		{
@@ -96,10 +103,12 @@ namespace UMA.CharacterSystem.Examples
 			// Avatar.ForceUpdate(true, true, true);
 		}
 
+#if UMA_ADDRESSABLES
 		private void Op_Completed(UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<IList<Object>> obj)
 		{
 			SetColors();
 			SetRecipe();
 		}
+#endif
 	}
 }

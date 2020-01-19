@@ -18,11 +18,13 @@ namespace UMA
 		public override void Update()
 		{
 			base.Update();
+#if UMA_ADDRESSABLES
 			if (EnableCacheCleanup)
 			{
 				UMAAssetIndexer.DefaultLife = CachedItemsLife;
 				UMAAssetIndexer.Instance.CheckCache();
 			}
+#endif
 		}
 	}
 }

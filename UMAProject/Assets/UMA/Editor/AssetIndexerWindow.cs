@@ -173,6 +173,7 @@ namespace UMA.Controls
 				Repaint();
 			});
 
+#if UMA_ADDRESSABLES
 			// ***********************************************************************************
 			// Addressables Menu items
 			// ***********************************************************************************
@@ -231,7 +232,7 @@ namespace UMA.Controls
 					Repaint();
 				}
 			});
-
+#endif
 			// ***********************************************************************************
 			// Items Menu items
 			// ***********************************************************************************
@@ -502,9 +503,9 @@ namespace UMA.Controls
 
 		}
 
-		#endregion
+#endregion
 
-		#region GUI Rectangles
+#region GUI Rectangles
 		Rect multiColumnTreeViewRect
 		{
 			get 
@@ -582,9 +583,9 @@ namespace UMA.Controls
 				return toolbar;
 			}
 		}
-		#endregion
+#endregion
 
-		#region GUI
+#region GUI
 		void InitIfNeeded ()
 		{
 			if (!m_Initialized)
@@ -707,7 +708,7 @@ namespace UMA.Controls
 			//return MyTreeElementGenerator.GenerateRandomTree(130); 
 		}
 
-		#region DragDrop
+#region DragDrop
 		private void DragDropAdd(Rect dropArea)
 		{
 
@@ -816,7 +817,7 @@ namespace UMA.Controls
 				}
 			}
 		}
-		#endregion
+#endregion
 
 		void OnGUI ()
 		{
@@ -963,7 +964,7 @@ namespace UMA.Controls
 			DragDropRemove(RemovePadRect);
 			DragDropType(AddTypePadRect);
 		}
-		#endregion
+#endregion
 	}
 
 

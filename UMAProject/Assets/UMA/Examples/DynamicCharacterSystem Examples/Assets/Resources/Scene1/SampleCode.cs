@@ -39,7 +39,7 @@ namespace UMA.CharacterSystem.Examples
 		{
 			UMAAssetIndexer index = UMAAssetIndexer.Instance;
             races = index.GetAllAssets<RaceData>();
-
+#if UMA_ADDRESSABLES
             // Preload all the races.
             if (RaceDropdown != null)
             {
@@ -55,9 +55,21 @@ namespace UMA.CharacterSystem.Examples
                 var asyncop = UMAAssetIndexer.Instance.Preload(races, true); // Base races will always be loaded.
                 asyncop.Completed += Asyncop_Completed;
             }
-		}
+#else
+            if (RaceDropdown != null)
+            {
 
-		private void Asyncop_Completed(UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<IList<Object>> obj)
+                RaceDropdown.options.Clear();
+                foreach (RaceData race in races)
+                {
+                    RaceDropdown.options.Add(new Dropdown.OptionData(race.raceName));
+                }
+            }
+#endif
+        }
+
+#if UMA_ADDRESSABLES
+        private void Asyncop_Completed(UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<IList<Object>> obj)
 		{
 			//Debug.Log("Race Preload Completed.");
 			// Preload any default wardrobe items on our avatar, now that the races are preloaded.
@@ -78,8 +90,9 @@ namespace UMA.CharacterSystem.Examples
         {
             Avatar.predefinedDNA = new UMAPredefinedDNA();
             Avatar.predefinedDNA.AddDNA("feetSize", 1.0f);
-            Avatar.BuildCharacter(true);
+            Avatar.BuildCharacter(false);
         }
+#endif
 
         public void SliderChange(float value)
         {
@@ -102,7 +115,10 @@ namespace UMA.CharacterSystem.Examples
         /// <param name="force"></param>
         public void UnloadAllItems(bool force)
 		{
+#if UMA_ADDRESSABLES
 			UMAAssetIndexer.Instance.UnloadAll(force);
+#endif
+            Resources.UnloadUnusedAssets();
 		}
 
 		/// <summary>
@@ -256,15 +272,15 @@ namespace UMA.CharacterSystem.Examples
             float z = Random.Range(1.0f, 12.0f);
             GameObject go = GameObject.Instantiate(AvatarPrefab);
             DynamicCharacterAvatar dca = go.GetComponent<DynamicCharacterAvatar>();
-    #if false
+#if false
             // this shows how to load it from a string at initialization
             TextAsset t = Resources.Load<TextAsset>("CharacterRecipes/Bob");
             dca.Preload(t.text);
-    #else
+#else
             // this shows how to load it from a resource file at initialization
             dca.loadPathType = DynamicCharacterAvatar.loadPathTypes.CharacterSystem;
             dca.loadFilename = files[Random.Range(0, 3)];
-    #endif
+#endif
             go.transform.localPosition = new Vector3(x, 0, z);
             go.SetActive(true);
         }
@@ -277,15 +293,16 @@ namespace UMA.CharacterSystem.Examples
             Avatar.SetRawColor("HairColor", ColorData, true);
         }
 
-            public void ChangeRace(int index)
+        public void ChangeRace(int index)
 		{
 			if (Avatar.gameObject.activeSelf)
 			{
+#if UMA_ADDRESSABLES
                 if (PreloadAndUnload)
                 {
                     UMAAssetIndexer.Instance.UnloadAll(true);
                 }
-
+#endif
                 string race = RaceDropdown.options[index].text;
                 Avatar.ChangeRace(race);
             }
@@ -294,7 +311,7 @@ namespace UMA.CharacterSystem.Examples
                 string race = RaceDropdown.options[index].text;
                 Avatar.RacePreset = race;
             }
-
+#if UMA_ADDRESSABLES
             if (PreloadAndUnload)
             {
                 var asyncop = UMAAssetIndexer.Instance.Preload(Avatar, false);
@@ -305,44 +322,9 @@ namespace UMA.CharacterSystem.Examples
                 Avatar.gameObject.SetActive(true);
                 Avatar.BuildCharacterEnabled = true;
             }
-		}
-
-        public void ChangeRaceOld(int index)
-        {
-#if !PRELOAD_ALL_RACES
-
-
-            if (Avatar.gameObject.activeSelf)
-            {
-                    // Destroy the old one.
-                    //Debug.Log("Destroying Old Avatar");
-                    Avatar.gameObject.SetActive(false);
-                    GameObject.Destroy(Avatar.gameObject);
-
-                    //Debug.Log("Unloading everything (except for 'always loaded' items");
-                    // unload everything
-                    UMAAssetIndexer.Instance.UnloadAll(true);
-
-                    // Create a new avatar
-                    //Debug.Log("Instantiating nobuild prefab");
-                    GameObject go = GameObject.Instantiate(NoBuildPrefab);
-                    Avatar = go.GetComponentInChildren<DynamicCharacterAvatar>();
-                    Orbiter.target = go.transform; 
-            }
-
-            string race = RaceDropdown.options[index].text;
-            Avatar.RacePreset = race;
-
-            // Load just the current race.
-            List<RaceData> preloadRaces = new List<RaceData>();
-            preloadRaces.Add(races[index]);
-
-            var asyncop = UMAAssetIndexer.Instance.Preload(preloadRaces, false); // We are loading and unloading races.
-            asyncop.Completed += Asyncop_Completed;
 #else
-			// Races are all preloaded, so we can just change to it.
-			string race = RaceDropdown.options[index].text;
-			Avatar.ChangeRace(race);
+            Avatar.gameObject.SetActive(true);
+            Avatar.BuildCharacterEnabled = true;
 #endif
         }
 

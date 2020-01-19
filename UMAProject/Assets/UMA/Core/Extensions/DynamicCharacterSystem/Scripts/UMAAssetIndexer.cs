@@ -3,14 +3,15 @@
 
 using UnityEngine;
 using System.IO;
-using System.Collections;
+using System;
 using System.Collections.Generic;
-using UMA;
 using UMA.CharacterSystem;
+
+#if UMA_ADDRESSABLES
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using System;
 using AsyncOp = UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<System.Collections.Generic.IList<UnityEngine.Object>>;
+#endif
 using SlotRecipes = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<UMA.UMATextRecipe>>;
 using RaceRecipes = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<UMA.UMATextRecipe>>>;
 using System.Linq;
@@ -19,9 +20,11 @@ using System.Text;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.Animations;
+#if UMA_ADDRESSABLES
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.AddressableAssets.Settings.GroupSchemas;
+#endif
 #endif
 
 #if DBLOGGER
@@ -36,6 +39,7 @@ namespace UMA
     public class UMAAssetIndexer : ScriptableObject, ISerializationCallbackReceiver
 	{
         public static float DefaultLife = 5.0f;
+#if UMA_ADDRESSABLES
         private class CachedOp
         {
             public AsyncOp Operation;
@@ -64,7 +68,8 @@ namespace UMA
                 }
             }
         }
-
+#endif
+#if UMA_ADDRESSABLES
 #if UNITY_EDITOR
         Dictionary<int, List<UMATextRecipe>> SlotTracker = new Dictionary<int, List<UMATextRecipe>>();
         Dictionary<int, List<UMATextRecipe>> OverlayTracker = new Dictionary<int, List<UMATextRecipe>>();
@@ -72,24 +77,19 @@ namespace UMA
         Dictionary<int, AddressableAssetGroup> GroupTracker = new Dictionary<int, AddressableAssetGroup>();
         Dictionary<int, string> AddressLookup = new Dictionary<int, string>();
 #endif
-		public Dictionary<string, bool> Preloads = new Dictionary<string, bool>();
-
-        // private List<AsyncOp> LoadedItems = new List<AsyncOp>();
+        public Dictionary<string, bool> Preloads = new Dictionary<string, bool>();
         private List<CachedOp> LoadedItems = new List<CachedOp>();
+#endif
 
         RaceRecipes raceRecipes = new RaceRecipes();
 
-		public delegate void OnCompleted(bool success, string name, string message);
-		public delegate void OnRaceCompleted(bool success, RaceData theRace, string message);
-		public delegate void OnRecipeCompleted(bool success, UMAWardrobeRecipe theRecipe, string message);
-
-		#region constants and static strings
+#region constants and static strings
 		public static string SortOrder = "Name";
         public static string[] SortOrders = { "Name", "AssetName" };
         public static Dictionary<string, System.Type> TypeFromString = new Dictionary<string, System.Type>();
         public static Dictionary<string, AssetItem> GuidTypes = new Dictionary<string, AssetItem>();
-        #endregion
-        #region Fields
+#endregion
+#region Fields
         public bool AutoUpdate;
 
         private Dictionary<System.Type, System.Type> TypeToLookup = new Dictionary<System.Type, System.Type>()
@@ -135,12 +135,12 @@ namespace UMA
     };
 
         public string umaBaseName = "UMA_Base";
-        #endregion
-        #region Static Fields
+#endregion
+#region Static Fields
         static UMAAssetIndexer theIndexer = null;
 
 		
-		#endregion
+#endregion
 
 #if DBLOGGER
 		public static MySqlConnection conn;
@@ -200,21 +200,13 @@ namespace UMA
                     theIndexer = Resources.Load("AssetIndexer") as UMAAssetIndexer;
                     theIndexer.UpdateSerializedDictionaryItems();
                     theIndexer.RebuildRaceRecipes();
-                    if (theIndexer == null)
-                    {
-/*
-                        if (Debug.isDebugBuild)
-                        {
-                            Debug.LogError("Unable to load the AssetIndexer. This item is used to index non-asset bundle resources and is required.");
-                        }
-*/
-                    }
                     StopTimer(st,"Asset index load");
                 }
                 return theIndexer;
             }
         }
 
+#if UMA_ADDRESSABLES
         private HashSet<CachedOp> Cleanup = new HashSet<CachedOp>();
         public void CheckCache()
         {
@@ -236,7 +228,7 @@ namespace UMA
                 LoadedItems.RemoveAll(x => Cleanup.Contains(x));
             }
         }
-
+#endif
 #if UNITY_EDITOR
         public void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
@@ -376,9 +368,9 @@ namespace UMA
             IndexedTypeNames.Remove(sType.AssemblyQualifiedName);
             BuildStringTypes();
         }
-		#endregion
+#endregion
 
-		#region Access the index
+#region Access the index
 		public bool HasAsset<T>(string Name)
 		{
 			System.Type ot = typeof(T);
@@ -767,9 +759,9 @@ namespace UMA
             return false;
         }
 #endif
-		#endregion
+#endregion
 
-		#region Addressables
+#region Addressables
 
 #if UNITY_EDITOR
 		GameObject EditorUMAContextBase;
@@ -803,6 +795,7 @@ namespace UMA
 #endif
 		}
 
+#if UMA_ADDRESSABLES
         public string GetLabel(UMARecipeBase recipe)
         {
             if (!String.IsNullOrEmpty(recipe.label))
@@ -1773,9 +1766,10 @@ namespace UMA
         }
 
 #endif
+#endif
 #endregion
 
-#region Add Remove Assets
+        #region Add Remove Assets
 
 #if UNITY_EDITOR
 
@@ -1910,6 +1904,7 @@ namespace UMA
 
 
 #if UNITY_EDITOR
+#if UMA_ADDRESSABLES
                 // Debug.Log("Getting asset entry");
 				AddressableAssetEntry ae = GetAddressableAssetEntry(ai);
 				if (ae != null)
@@ -1924,6 +1919,7 @@ namespace UMA
                         ai.AddressableLabels += s + ";";
                     }
                 }
+#endif
 #endif
                 TypeDic.Add(ai._Name, ai);
                 if (GuidTypes.ContainsKey(ai._Guid))
