@@ -786,7 +786,7 @@ namespace UMA.CharacterSystem.Editors
 				GUIHelper.EndVerticalPadded(10);
 			}
 		}
-		[MenuItem ("UMA/Global Library Window", priority = 10)]
+		[MenuItem ("UMA/Old Global Window (Deprecated)", priority = 9990)]
 		public static void  ShowWindow () 
 		{
 			UMAAssetIndexerEditor window = EditorWindow.GetWindow<UMAAssetIndexerEditor>();

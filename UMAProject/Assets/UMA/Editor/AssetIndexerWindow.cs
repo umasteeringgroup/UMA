@@ -82,7 +82,7 @@ namespace UMA.Controls
 			}
 		}
 
-		[MenuItem("UMA/Global Library (experimental)")]
+		[MenuItem("UMA/Global Library", priority = 99)]
 		public static AssetIndexerWindow GetWindow ()
 		{
 			var window = GetWindow<AssetIndexerWindow>();
