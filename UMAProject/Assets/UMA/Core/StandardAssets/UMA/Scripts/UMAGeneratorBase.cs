@@ -197,6 +197,10 @@ namespace UMA
 						SetAvatar(umaData, animator);
 						animator.runtimeAnimatorController = umaData.animationController;
 						umaData.animator = animator;
+
+						umaTransform.SetParent(oldParent, false);
+						umaTransform.localRotation = originalRot;
+						umaTransform.localPosition = originalPos;
 					}
 					else
 					{
@@ -207,13 +211,14 @@ namespace UMA
 							UMAUtils.DestroySceneObject(animator.avatar);
 							SetAvatar(umaData, animator);
 						}
-						if(animator.runtimeAnimatorController != null)
+
+						umaTransform.SetParent(oldParent, false);
+						umaTransform.localRotation = originalRot;
+						umaTransform.localPosition = originalPos;
+
+						if (animator.runtimeAnimatorController != null)
 							snapshot.RestoreAnimatorState(animator);
 					}
-
-					umaTransform.SetParent(oldParent, false);
-					umaTransform.localRotation = originalRot;
-					umaTransform.localPosition = originalPos;
 				}
 			}
 		}
