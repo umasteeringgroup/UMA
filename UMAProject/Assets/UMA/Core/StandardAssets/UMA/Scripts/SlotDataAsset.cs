@@ -41,6 +41,13 @@ namespace UMA
 		public UMAMaterial material;
 
 		/// <summary>
+		/// This SlotDataAsset will not be included after this LOD level.
+		/// Set high by default so behavior is the same.
+		/// </summary>
+		[Tooltip("If you are using an LOD system, this is the maximum LOD that this slot will be displayed. After that, it will be discarded during mesh generation. a value of -1 will never be dropped.")]
+		public int maxLOD=-1;
+
+		/// <summary>
 		/// 
 		/// </summary>
 		public bool useAtlasOverlay;

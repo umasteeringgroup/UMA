@@ -17841,6 +17841,11 @@ PrefabInstance:
       propertyPath: m_RootOrder
       value: 7
       objectReference: {fileID: 0}
+    - target: {fileID: 11482786, guid: 440aba8ed985a409db71f0649af3ce11, type: 3}
+      propertyPath: slotElementList.Array.data[47]
+      value: 
+      objectReference: {fileID: 11400000, guid: 58e5a93186f923c4ca7910365d807714,
+        type: 2}
     - target: {fileID: 11495942, guid: 440aba8ed985a409db71f0649af3ce11, type: 3}
       propertyPath: raceElementList.Array.size
       value: 2

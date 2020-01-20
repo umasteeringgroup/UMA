@@ -13,6 +13,7 @@ namespace UMA.Editors
 		SerializedProperty SlotAtlassed;
 		SerializedProperty DNAApplied;
 		SerializedProperty CharacterCompleted;
+		SerializedProperty MaxLOD;
 
 		private bool eventsFoldout = false;
 
@@ -29,6 +30,7 @@ namespace UMA.Editors
 			SlotAtlassed = serializedObject.FindProperty("SlotAtlassed");
 			DNAApplied = serializedObject.FindProperty("DNAApplied");
 			CharacterCompleted = serializedObject.FindProperty("CharacterCompleted");
+			MaxLOD = serializedObject.FindProperty("maxLOD");
 		}
 
 		public override void OnInspectorGUI()

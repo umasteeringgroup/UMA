@@ -225,7 +225,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.000030517578, y: 0}
+  m_AnchoredPosition: {x: -0.0000076293945, y: 0.000022888184}
   m_SizeDelta: {x: -20, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &32637369
@@ -5418,6 +5418,30 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 637182895}
     m_Modifications:
+    - target: {fileID: 145244, guid: 68893f484c4e79346a304ad639af5d3a, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 11434484, guid: 68893f484c4e79346a304ad639af5d3a, type: 3}
+      propertyPath: m_Value
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 22408144, guid: 68893f484c4e79346a304ad639af5d3a, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 22442952, guid: 68893f484c4e79346a304ad639af5d3a, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 22442952, guid: 68893f484c4e79346a304ad639af5d3a, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 22442952, guid: 68893f484c4e79346a304ad639af5d3a, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: -17
+      objectReference: {fileID: 0}
     - target: {fileID: 22453876, guid: 68893f484c4e79346a304ad639af5d3a, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -5490,36 +5514,12 @@ PrefabInstance:
       propertyPath: m_Pivot.y
       value: 0.5
       objectReference: {fileID: 0}
-    - target: {fileID: 145244, guid: 68893f484c4e79346a304ad639af5d3a, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 22492748, guid: 68893f484c4e79346a304ad639af5d3a, type: 3}
       propertyPath: m_AnchorMax.x
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 22492748, guid: 68893f484c4e79346a304ad639af5d3a, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 22442952, guid: 68893f484c4e79346a304ad639af5d3a, type: 3}
-      propertyPath: m_AnchorMax.x
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 22442952, guid: 68893f484c4e79346a304ad639af5d3a, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 22442952, guid: 68893f484c4e79346a304ad639af5d3a, type: 3}
-      propertyPath: m_SizeDelta.x
-      value: -17
-      objectReference: {fileID: 0}
-    - target: {fileID: 22408144, guid: 68893f484c4e79346a304ad639af5d3a, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 11434484, guid: 68893f484c4e79346a304ad639af5d3a, type: 3}
-      propertyPath: m_Value
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 22494694, guid: 68893f484c4e79346a304ad639af5d3a, type: 3}
@@ -9223,7 +9223,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  context: {fileID: 0}
+  context: {fileID: 1110869793}
   umaData: {fileID: 0}
   umaRecipe: {fileID: 0}
   umaAdditionalRecipes:
@@ -9256,6 +9256,8 @@ MonoBehaviour:
   CharacterDnaUpdated:
     m_PersistentCalls:
       m_Calls: []
+  DelayUnload: 2
+  BundleCheck: 1
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -9321,6 +9323,7 @@ MonoBehaviour:
       _name: 
       _color: {r: 0.3529412, g: 0.21568629, b: 0.14117648, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
       valuesConverted: 0
     - name: Eyes
       channelMask:
@@ -9334,6 +9337,7 @@ MonoBehaviour:
       _name: 
       _color: {r: 0.28627452, g: 0.40784317, b: 1, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
       valuesConverted: 0
     - name: Skin
       channelMask:
@@ -9347,6 +9351,7 @@ MonoBehaviour:
       _name: 
       _color: {r: 0.9450981, g: 0.91372555, b: 0.7686275, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
       valuesConverted: 0
     - name: Pants1
       channelMask:
@@ -9360,6 +9365,7 @@ MonoBehaviour:
       _name: 
       _color: {r: 0.3529412, g: 0.4156863, b: 0.6392157, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
       valuesConverted: 0
   predefinedDNA:
     PreloadValues: []
@@ -9843,6 +9849,14 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1693580478}
     m_Modifications:
+    - target: {fileID: 114528, guid: 59a872e482e7cd24d8d7c8d249a77b6c, type: 2}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 11435246, guid: 59a872e482e7cd24d8d7c8d249a77b6c, type: 2}
+      propertyPath: m_Color.a
+      value: 0.622
+      objectReference: {fileID: 0}
     - target: {fileID: 22495172, guid: 59a872e482e7cd24d8d7c8d249a77b6c, type: 2}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -9914,14 +9928,6 @@ PrefabInstance:
     - target: {fileID: 22495172, guid: 59a872e482e7cd24d8d7c8d249a77b6c, type: 2}
       propertyPath: m_Pivot.y
       value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 114528, guid: 59a872e482e7cd24d8d7c8d249a77b6c, type: 2}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 11435246, guid: 59a872e482e7cd24d8d7c8d249a77b6c, type: 2}
-      propertyPath: m_Color.a
-      value: 0.622
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 59a872e482e7cd24d8d7c8d249a77b6c, type: 2}
@@ -11271,6 +11277,18 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a54fde34eec40964b94d71ee0aba9889, type: 3}
+--- !u!114 &1110869793 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6782112333398131215, guid: a54fde34eec40964b94d71ee0aba9889,
+    type: 3}
+  m_PrefabInstance: {fileID: 1110869792}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fd2661724b5ab24ea2d5da16a31cb27, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1155800161
 GameObject:
   m_ObjectHideFlags: 0
@@ -11757,8 +11775,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 409490924}
   m_HandleRect: {fileID: 409490923}
   m_Direction: 2
-  m_Value: 0
-  m_Size: 1
+  m_Value: 1
+  m_Size: 0.99999976
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -12989,7 +13007,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Avatar: {fileID: 893401642}
-  characterSystem: {fileID: 0}
   converterCustomizer: {fileID: 0}
   GenericColorList: {fileID: 11400000, guid: dcd91d8cb86512549b228ccf32c88e45, type: 2}
   genericColorSwatch: {fileID: 21300000, guid: df24b1b2c8514b34aa75ea459233768b, type: 3}
@@ -13031,6 +13048,7 @@ MonoBehaviour:
   _loadWardrobe: 1
   _loadBodyColors: 1
   _loadWardrobeColors: 1
+  Context: {fileID: 0}
 --- !u!1 &1327886464
 GameObject:
   m_ObjectHideFlags: 0
@@ -18545,8 +18563,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 55821117}
   m_HandleRect: {fileID: 55821116}
   m_Direction: 0
-  m_Value: 0
-  m_Size: 0.9386126
+  m_Value: 1
+  m_Size: 0.9999999
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:

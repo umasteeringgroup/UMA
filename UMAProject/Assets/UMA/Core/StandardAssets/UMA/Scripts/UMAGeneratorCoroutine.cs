@@ -102,6 +102,10 @@ namespace UMA
 				if (slot == null)
 					continue;
 
+				if (slot.MaxLod >= 0 && umaData.umaRecipe.CurrentLOD > slot.MaxLod)
+				{
+					continue;
+				}
 				//Keep a running list of unique RendererHashes from our slots
 				//Null rendererAsset gets added, which is good, it is the default renderer.
 				if(!uniqueRenderers.Contains(slot.rendererAsset))

@@ -19,8 +19,11 @@ namespace UMA.Examples
 		public int maxLOD = 5;
 		[Tooltip("The maximum scale reduction (8 means the texture can be reduced in half 8 times)")]
 		public int maxReduction = 8;
+		[Tooltip("Allow the system to drop slots based on the SlotDataAsset MaxLOD")]
+		public bool useSlotDropping;
 
-		public int CurrentLOD {  get { return _currentLOD - lodOffset; } }
+
+		public int CurrentLOD { get { return _currentLOD - lodOffset; } }
 		private int _currentLOD = -1;
 
 		private DynamicCharacterAvatar _avatar;
@@ -45,7 +48,7 @@ namespace UMA.Examples
 		public void Awake()
 		{
 			_currentLOD = -1;
-      }
+		}
 
 		public void OnEnable()
 		{
@@ -96,10 +99,10 @@ namespace UMA.Examples
 
 		public void Update()
 		{
-            if (!initialized)
-                return;
+			if (!initialized)
+				return;
 
-            PerformLodCheck();
+			PerformLodCheck();
 		}
 
 		private void PerformLodCheck()
@@ -113,7 +116,7 @@ namespace UMA.Examples
 			if (_umaData.umaRecipe == null)
 				return;
 
-			if(lodDistance < 0)
+			if (lodDistance < 0)
 			{
 				if (Debug.isDebugBuild)
 					Debug.LogWarning("LOD Distance is less than 0!");
@@ -135,9 +138,9 @@ namespace UMA.Examples
 			float atlasResolutionScale = 1f;
 
 			int currentLevel = 0;
-         float maxReductionf = 1.0f / maxReduction;
+			float maxReductionf = 1.0f / maxReduction;
 
-         while (lodDistance != 0 && cameraDistance > lodDistanceStep)
+			while (lodDistance != 0 && cameraDistance > lodDistanceStep)
 			{
 				lodDistanceStep *= 2;
 				atlasResolutionScale *= 0.5f;
@@ -145,12 +148,12 @@ namespace UMA.Examples
 			}
 			_currentLOD = currentLevel;
 
-         if (atlasResolutionScale < maxReductionf)
-         {
-            atlasResolutionScale = maxReductionf;
-         }
+			if (atlasResolutionScale < maxReductionf)
+			{
+				atlasResolutionScale = maxReductionf;
+			}
 
-         if (_umaData.atlasResolutionScale != atlasResolutionScale)
+			if (_umaData.atlasResolutionScale != atlasResolutionScale)
 			{
 				_umaData.atlasResolutionScale = atlasResolutionScale;
 				bool changedSlots = ProcessRecipe(currentLevel);
@@ -158,15 +161,25 @@ namespace UMA.Examples
 			}
 			else
 			{
-				if(_umaData.isMeshDirty)
+				if (_umaData.isMeshDirty)
 				{
 					ProcessRecipe(currentLevel);
 				}
+			}
+			if (useSlotDropping)
+			{
+				_umaData.umaRecipe.CurrentLOD = _currentLOD;
+			}
+			else
+			{
+				_umaData.umaRecipe.CurrentLOD = 0;
 			}
 		}
 
 		private bool ProcessRecipe(int currentLevel)
 		{
+			return false;
+
 			bool changedSlots = false;
 
 			if (_umaData.umaRecipe.slotDataList == null)
@@ -177,6 +190,23 @@ namespace UMA.Examples
 				var slot = _umaData.umaRecipe.slotDataList[i];
 				if (slot != null)
 				{
+					if (useSlotDropping)
+					{
+						// mark the slots as dirty if one is over the limit.
+						if (_currentLOD > slot.MaxLod && !slot.AlreadyDropped)
+						{
+							// Only trigger this the first time, so we only force a rebuild
+							// once (or possibly later if slots change...)
+							slot.AlreadyDropped = true;
+							changedSlots = true;
+						}
+						else
+						{
+							slot.AlreadyDropped = false;
+						}
+						
+					}
+
 					var slotName = slot.slotName;
 					var lodIndex = slotName.IndexOf("_LOD");
 					if (lodIndex >= 0)
@@ -200,9 +230,9 @@ namespace UMA.Examples
 						}
 					}
 					//If slot still not found when searching down lods, then let's trying searching up lods
-					if(!slotFound)
+					if (!slotFound)
 					{
-						for(int k = (currentLevel - lodOffset) + 1; k <= maxLOD; k++)
+						for (int k = (currentLevel - lodOffset) + 1; k <= maxLOD; k++)
 						{
 							if (slotName != slot.slotName && UMAContextBase.Instance.HasSlot(slotName))
 							{
@@ -215,23 +245,8 @@ namespace UMA.Examples
 					}
 				}
 			}
-
-
-			// TEST!
-			// In theory, we shouldn't need to do this anymore, because the Masks are now calculated when the mesh is generated
-			// TEST THIS OUT!!!
-            /*if (_avatar != null && changedSlots)
-            {
-                foreach (SlotData sd in _umaData.umaRecipe.slotDataList)
-                {
-                    if (_avatar.MeshHideDictionary.ContainsKey(sd.slotName))
-                    {   //If this slotDataAsset is found in the MeshHideDictionary then we need to supply the SlotData with the bitArray.
-                        sd.meshHideMask = MeshHideAsset.GenerateMask(_avatar.MeshHideDictionary[sd.slotName]);
-                    }
-                }
-            } */
 #if UNITY_EDITOR
-            UnityEditor.EditorUtility.SetDirty(_umaData);
+			UnityEditor.EditorUtility.SetDirty(_umaData);
 #endif
 			return changedSlots;
 		}

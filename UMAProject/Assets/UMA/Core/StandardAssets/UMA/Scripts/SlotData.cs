@@ -29,6 +29,20 @@ namespace UMA
 				return	asset.useAtlasOverlay;
 			}
 		}
+
+		/// <summary>
+		/// The Maximum LOD that this is displayed on.
+		/// </summary>
+		public int MaxLod
+		{
+			get
+			{
+				return asset.maxLOD;
+			}
+		}
+
+		public bool AlreadyDropped;
+
 		/// <summary>
 		/// When serializing this recipe should this slot be skipped, useful for scene specific "additional slots"
 		/// </summary>

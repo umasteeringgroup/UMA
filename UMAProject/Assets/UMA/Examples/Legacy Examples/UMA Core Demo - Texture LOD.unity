@@ -293,6 +293,11 @@ PrefabInstance:
       propertyPath: InitialScaleFactor
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 11482786, guid: 440aba8ed985a409db71f0649af3ce11, type: 3}
+      propertyPath: slotElementList.Array.data[47]
+      value: 
+      objectReference: {fileID: 11400000, guid: 58e5a93186f923c4ca7910365d807714,
+        type: 2}
     - target: {fileID: 11495942, guid: 440aba8ed985a409db71f0649af3ce11, type: 3}
       propertyPath: raceElementList.Array.size
       value: 2
@@ -1093,7 +1098,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   randomPool:
   - {fileID: 11400000, guid: 4336d3ff5c1716d4caf03877c7945a05, type: 2}
-  - {fileID: 11400000, guid: d440c1731c681494f91616a7a1a9ca5d, type: 2}
   generator: {fileID: 658673605}
   umaData: {fileID: 0}
   UMAContextBase: {fileID: 726245600}
@@ -1136,7 +1140,7 @@ MonoBehaviour:
   range: 24
   lodDistance: 5
   LODDisplayPrefab: {fileID: 121262, guid: eff4c96d93cf04cdcb2e6cafb3d27b14, type: 3}
-  swapSlots: 1
+  swapSlots: 0
   lodOffset: 0
 --- !u!4 &784184758
 Transform:
@@ -2510,6 +2514,97 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1367316494}
   m_CullTransparentMesh: 0
+--- !u!1 &1420095638
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1420095641}
+  - component: {fileID: 1420095640}
+  - component: {fileID: 1420095639}
+  m_Layer: 0
+  m_Name: UMACrowd (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!114 &1420095639
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1420095638}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 37a769e699322244b868b985627af359, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  characterCount: 150
+  range: 24
+  lodDistance: 5
+  LODDisplayPrefab: {fileID: 121262, guid: eff4c96d93cf04cdcb2e6cafb3d27b14, type: 3}
+  swapSlots: 0
+  lodOffset: 0
+--- !u!114 &1420095640
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1420095638}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bde407db6d587ca4096a04837fd051dd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  randomPool:
+  - {fileID: 11400000, guid: 4336d3ff5c1716d4caf03877c7945a05, type: 2}
+  - {fileID: 11400000, guid: d440c1731c681494f91616a7a1a9ca5d, type: 2}
+  generator: {fileID: 658673605}
+  umaData: {fileID: 0}
+  UMAContextBase: {fileID: 726245600}
+  animationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
+  atlasResolutionScale: 1
+  generateUMA: 0
+  generateLotsUMA: 0
+  hideWhileGeneratingLots: 0
+  stressTest: 0
+  umaCrowdSize: {x: 1, y: 1}
+  randomDna: 1
+  additionalRecipes: []
+  space: 1
+  zeroPoint: {fileID: 0}
+  SkinColors: {fileID: 11400000, guid: 99f90943dc4fd7041b9a31535442ad56, type: 2}
+  HairColors: {fileID: 11400000, guid: e7303e8210acb45ef8d3f465731d2e94, type: 2}
+  keywords: []
+  CharacterCreated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDestroyed:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!4 &1420095641
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1420095638}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 8
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1421448183
 GameObject:
   m_ObjectHideFlags: 0
