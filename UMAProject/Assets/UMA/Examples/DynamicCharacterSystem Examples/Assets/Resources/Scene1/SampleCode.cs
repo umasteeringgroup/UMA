@@ -52,8 +52,11 @@ namespace UMA.CharacterSystem.Examples
             }
             else
             {
-                var asyncop = UMAAssetIndexer.Instance.Preload(races, true); // Base races will always be loaded.
-                asyncop.Completed += Asyncop_Completed;
+                if (PreloadAndUnload)
+                {
+                    var asyncop = UMAAssetIndexer.Instance.Preload(races, true); // Base races will always be loaded.
+                    asyncop.Completed += Asyncop_Completed;
+                }
             }
 #else
             if (RaceDropdown != null)

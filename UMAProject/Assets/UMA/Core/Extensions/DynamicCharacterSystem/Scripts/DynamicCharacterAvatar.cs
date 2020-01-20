@@ -2602,7 +2602,7 @@ namespace UMA.CharacterSystem
                 }
             }
 
-        LoadCharacter(umaRecipe, ReplaceRecipes, Recipes,umaAdditionalRecipes, MeshHideDictionary, HiddenSlots,CurrentDNA,  RestoreDNA, false);
+        LoadCharacter(umaRecipe, ReplaceRecipes, Recipes,umaAdditionalRecipes, MeshHideDictionary, HiddenSlots,CurrentDNA,  RestoreDNA, !BundleCheck);
         }
 
 #if UMA_ADDRESSABLES
