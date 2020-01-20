@@ -101,14 +101,16 @@ namespace UMA
 				SlotData slot = slots[i];
 				if (slot == null)
 					continue;
-
 				if (slot.MaxLod >= 0 && umaData.umaRecipe.CurrentLOD > slot.MaxLod)
 				{
+					slot.SkippedThisFrame = true;
 					continue;
 				}
+				slot.SkippedThisFrame = false;
+
 				//Keep a running list of unique RendererHashes from our slots
 				//Null rendererAsset gets added, which is good, it is the default renderer.
-				if(!uniqueRenderers.Contains(slot.rendererAsset))
+				if (!uniqueRenderers.Contains(slot.rendererAsset))
 					uniqueRenderers.Add(slot.rendererAsset);
 
 				// Let's only add the default overlay if the slot has meshData and NO overlays
@@ -230,24 +232,7 @@ namespace UMA
 			CleanBackUpTextures();
 			UpdateUV();
 
-/* Procedural textures currently do not work.
-			// HACK - is this the right place?
-			SlotData[] slots = umaData.umaRecipe.slotDataList;
-			for (int i = 0; i < slots.Length; i++)
-			{
-				var slot = slots[i];
-				if (slot == null)
-					continue;
-#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
-				for (int j = 1; j < slot.OverlayCount; j++)
-				{
-					OverlayData overlay = slot.GetOverlay(j);
-					if ((overlay != null) && (overlay.isProcedural))
-						overlay.ReleaseProceduralTextures();
-				}
-#endif
-			}
-*/
+			// Procedural textures were done here 
 			if (updateMaterialList)
 			{
 				for (int j = 0; j < umaData.rendererCount; j++)
