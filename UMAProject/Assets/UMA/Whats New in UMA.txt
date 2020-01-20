@@ -21,6 +21,7 @@ UMAMaterial Changes
    This improves the look of hair greatly (gets rid of banding on the edges)
 Added Animation Clip Target Renamer to help with renaming targets for UMAs when the animation is broken
 Reworked compatible races recipe loading, so they are figured out in the index at startup
+Fixed various overlays that were missing textures or had the wrong count.
 Context changes
     Created a new UMAGlobalContext context that pulls everything from the global library. 
     (This removes the need for the various libraries - racelibrary, slotlibrary, etc.)
