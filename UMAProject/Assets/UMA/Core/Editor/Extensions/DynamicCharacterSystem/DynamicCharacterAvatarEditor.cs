@@ -67,7 +67,7 @@ namespace UMA.CharacterSystem.Editors
 		public override void OnInspectorGUI()
 		{
 			serializedObject.Update();
-		   Editor.DrawPropertiesExcluding(serializedObject, new string[] { "hide", "loadBlendShapes","activeRace","defaultChangeRaceOptions","cacheCurrentState", "rebuildSkeleton", "preloadWardrobeRecipes", "raceAnimationControllers",
+			Editor.DrawPropertiesExcluding(serializedObject, new string[] { "hide","BundleCheck", "loadBlendShapes","activeRace","defaultChangeRaceOptions","cacheCurrentState", "rebuildSkeleton", "preloadWardrobeRecipes", "raceAnimationControllers",
 				"characterColors","BoundsOffset","_buildCharacterEnabled","keepAvatar",
 				/*LoadOtions fields*/ "defaultLoadOptions", "loadPathType", "loadPath", "loadFilename", "loadString", "loadFileOnStart", "waitForBundles", /*"buildAfterLoad",*/
 				/*SaveOptions fields*/ "defaultSaveOptions", "savePathType","savePath", "saveFilename", "makeUniqueFilename","ensureSharedColors", 
@@ -82,6 +82,13 @@ namespace UMA.CharacterSystem.Editors
 			SerializedProperty umaRecipe = serializedObject.FindProperty("umaRecipe");
 			SerializedProperty umaAdditionalRecipes = serializedObject.FindProperty("umaAdditionalRecipes");
 			SerializedProperty animationController = serializedObject.FindProperty("animationController");
+
+			EditorGUI.BeginChangeCheck();
+			EditorGUILayout.PropertyField(serializedObject.FindProperty("BundleCheck"));
+			if (EditorGUI.EndChangeCheck())
+			{
+				serializedObject.ApplyModifiedProperties();
+			}
 
 			EditorGUI.BeginChangeCheck();
 			showHelp = EditorGUILayout.Toggle("Show Help", showHelp);
