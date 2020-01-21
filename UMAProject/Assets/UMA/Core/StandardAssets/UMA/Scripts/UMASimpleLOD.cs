@@ -21,10 +21,13 @@ namespace UMA.Examples
 		public int maxReduction = 8;
 		[Tooltip("Allow the system to drop slots based on the SlotDataAsset MaxLOD")]
 		public bool useSlotDropping;
+		[Tooltip("How much of a movement buffer before triggering an LOD change again. This is to stop thrashing at edges 4.99->5.0->4.99, etc")]
+		public float BufferZone = 0.5f;
 
 
 		public int CurrentLOD { get { return _currentLOD - lodOffset; } }
 		private int _currentLOD = -1;
+		private float lastDist = 0.0f;
 
 		private DynamicCharacterAvatar _avatar;
 		private UMAData _umaData;
@@ -146,7 +149,14 @@ namespace UMA.Examples
 				atlasResolutionScale *= 0.5f;
 				++currentLevel;
 			}
-			_currentLOD = currentLevel;
+			if (_currentLOD != currentLevel)
+			{
+				if (Mathf.Abs(cameraDistance - lastDist) > BufferZone)
+				{
+					lastDist = cameraDistance;
+					_currentLOD = currentLevel;
+				}
+			}
 
 			if (atlasResolutionScale < maxReductionf)
 			{
@@ -163,23 +173,16 @@ namespace UMA.Examples
 			{
 				if (_umaData.isMeshDirty)
 				{
-					ProcessRecipe(currentLevel);
+					if (ProcessRecipe(currentLevel))
+					{
+						_umaData.Dirty(true, true, true);
+					}
 				}
-			}
-			if (useSlotDropping)
-			{
-				_umaData.umaRecipe.CurrentLOD = _currentLOD;
-			}
-			else
-			{
-				_umaData.umaRecipe.CurrentLOD = 0;
 			}
 		}
 
 		private bool ProcessRecipe(int currentLevel)
 		{
-			return false;
-
 			bool changedSlots = false;
 
 			if (_umaData.umaRecipe.slotDataList == null)
@@ -193,16 +196,23 @@ namespace UMA.Examples
 					if (useSlotDropping)
 					{
 						// mark the slots as dirty if one is over the limit.
-						if (_currentLOD > slot.MaxLod && !slot.AlreadyDropped)
+						if (slot.MaxLod > -1 && _currentLOD > slot.MaxLod)
 						{
 							// Only trigger this the first time, so we only force a rebuild
 							// once (or possibly later if slots change...)
-							slot.AlreadyDropped = true;
-							changedSlots = true;
+							if (!slot.Suppressed)
+							{
+								changedSlots = true;
+							}
+							slot.Suppressed = true;
 						}
 						else
 						{
-							slot.AlreadyDropped = false;
+							if (slot.Suppressed)
+							{
+								changedSlots = true;
+							}
+							slot.Suppressed = false;
 						}
 						
 					}

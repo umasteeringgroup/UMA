@@ -475,7 +475,6 @@ namespace UMA
 			public OverlayColorData[] sharedColors;
 			public Dictionary<string, List<MeshHideAsset>> MeshHideDictionary { get; set; } = new Dictionary<string, List<MeshHideAsset>>();
 
-			public int CurrentLOD = 0;
 			public void UpdateMeshHideMasks()
 			{
 				foreach (SlotData sd in slotDataList)

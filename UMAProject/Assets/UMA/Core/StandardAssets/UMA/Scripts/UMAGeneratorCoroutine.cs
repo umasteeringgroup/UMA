@@ -101,13 +101,9 @@ namespace UMA
 			{
 				SlotData slot = slots[i];
 				if (slot == null)
+					continue; 
+				if (slot.Suppressed)
 					continue;
-				if (slot.MaxLod >= 0 && umaData.umaRecipe.CurrentLOD > slot.MaxLod)
-				{
-					slot.SkippedThisFrame = true;
-					continue;
-				}
-				slot.SkippedThisFrame = false;
 
 				//Keep a running list of unique RendererHashes from our slots
 				//Null rendererAsset gets added, which is good, it is the default renderer.

@@ -4640,7 +4640,9 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Preload DNA
+  m_Text: 'Preload Recipes
+
+'
 --- !u!222 &1626311741
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -4851,7 +4853,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0.0000062320664}
+  m_AnchoredPosition: {x: 0, y: -0.000015846184}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1670445105
@@ -5436,12 +5438,12 @@ GameObject:
   - component: {fileID: 1873711527}
   - component: {fileID: 1873711526}
   m_Layer: 5
-  m_Name: UnloadAllForceCleanup (2)
+  m_Name: Preload Recipes
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1873711525
 RectTransform:
   m_ObjectHideFlags: 0
@@ -6609,7 +6611,7 @@ PrefabInstance:
     - target: {fileID: 8963538792093576476, guid: cae428fba8fb3054ab2b41480e34379f,
         type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: cae428fba8fb3054ab2b41480e34379f, type: 3}

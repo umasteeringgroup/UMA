@@ -424,10 +424,38 @@ namespace UMA
             return null;
         }
 
-		public List<AssetItem> GetAssetItems(UMAPackedRecipeBase recipe)
+        /// <summary>
+        /// Return the asset specified, if it exists.
+        /// if it can't be found by name, then we do a scan of the assets to see if 
+        /// we can find the name directly on the object, and return that. 
+        /// We then rebuild the index to make sure it's up to date.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="Name"></param>
+        /// <returns></returns>
+        public AssetItem GetAssetItemForObject(UnityEngine.Object o)
+        {
+            System.Type ot = o.GetType();
+            System.Type theType = TypeToLookup[ot];
+            Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(theType);
+
+            string Name = AssetItem.GetEvilName(o);
+
+            if (TypeDic.ContainsKey(Name))
+            {
+                return TypeDic[Name];
+            }
+            return null;
+        }
+
+
+        public List<AssetItem> GetAssetItems(UMAPackedRecipeBase recipe)
 		{
 
-
+            if (recipe is UMAWardrobeCollection)
+            {
+                return new List<AssetItem>();
+            }
 			UMAPackedRecipeBase.UMAPackRecipe PackRecipe = recipe.PackedLoad(UMAContextBase.Instance);
 
 			var Slots = PackRecipe.slotsV3;
@@ -954,8 +982,31 @@ namespace UMA
 
         public void ProcessAddressableUpdates(bool keepLoaded, UnityEngine.Object result)
         {
+            if (!IsIndexedType(result.GetType())) // JRRM
+                return;
 
-            // Debug.Log("Result type is " + result.GetType().ToString());
+            AssetItem resultItem = GetAssetItemForObject(result);
+            if (resultItem == null)
+            {
+                AssetItem ai = new AssetItem(result.GetType(), result);
+                ai.IsAddressable = true;
+                ai.IsAlwaysLoaded = keepLoaded;
+                AddAssetItem(ai);
+                ai.AddReference();
+            }
+            else
+            {
+                if (keepLoaded) resultItem.IsAlwaysLoaded = keepLoaded;
+                resultItem._SerializedItem = result;
+                resultItem.AddReference();
+            }
+
+            if (result is UMAWardrobeRecipe)
+            {
+                AddRaceRecipe(result as UMAWardrobeRecipe);
+            }
+
+            /*
             if (result.GetType() == typeof(SlotDataAsset))
             {
                 AssetItem ai = GetAssetItem<SlotDataAsset>((result as SlotDataAsset).slotName);
@@ -976,7 +1027,7 @@ namespace UMA
                 }
                 ai.AddReference();
             }
-            if (result.GetType() == typeof(OverlayDataAsset))
+            else if (result.GetType() == typeof(OverlayDataAsset))
             {
                 AssetItem ai = GetAssetItem<OverlayDataAsset>((result as OverlayDataAsset).overlayName);
                 if (ai != null)
@@ -997,6 +1048,7 @@ namespace UMA
                 }
                 ai.AddReference();
             }
+            */
         }
 
         public void Unload(AsyncOperationHandle<IList<UnityEngine.Object>> AssetOperation)
@@ -1177,7 +1229,7 @@ namespace UMA
 			EditorUtility.ClearProgressBar();
         }
 
-        private void GenerateLookups(UMAContextBase context, List<UMATextRecipe> wardrobe)
+        private void GenerateLookups(UMAContextBase context, List<AssetItem> wardrobe)
         {
             float pos = 0.0f;
             float inc = 1.0f / wardrobe.Count;
@@ -1185,8 +1237,9 @@ namespace UMA
             // Get the slots, overlays, textures.
             // calculate the number of references for each of them.
             // Map the usage 
-            foreach (UMATextRecipe uwr in wardrobe)
+            foreach (AssetItem recipeItem in wardrobe)
             {
+                UMATextRecipe uwr = recipeItem.Item as UMATextRecipe;
                 int iPos = Mathf.CeilToInt(pos);
                 EditorUtility.DisplayProgressBar("Generating", "Calculating Usage: " + uwr.name, iPos);
 
@@ -1429,10 +1482,10 @@ namespace UMA
         /// Get all the UMATextRecipes/UMWardrobeRecipes
         /// </summary>
         /// <returns></returns>
-        private List<UMATextRecipe> GetAddressableRecipes()
+        private List<AssetItem> GetAddressableRecipes()
         {
 
-            List<UMATextRecipe> theRecipes = new List<UMATextRecipe>();
+            List<AssetItem> theRecipes = new List<AssetItem>();
             Type theType;
             //**********************************************************************************************
             //* Add Wardrobe Recipes
@@ -1446,7 +1499,7 @@ namespace UMA
                 UMAWardrobeRecipe uwr = ai.Item as UMAWardrobeRecipe;
                 if (uwr != null)
                 {
-                    theRecipes.Add(uwr);
+                    theRecipes.Add(ai);
                 }
             }
 
@@ -1458,13 +1511,26 @@ namespace UMA
                 UMATextRecipe utr = ai.Item as UMATextRecipe;
                 if (utr != null)
                 {
-                    theRecipes.Add(utr);
+                    theRecipes.Add(ai);
                 }
             }
+
+            theType = TypeToLookup[typeof(UMAWardrobeCollection)];
+            var wcrecipes = GetAssetDictionary(theType).Values;
+
+            foreach (AssetItem ai in wcrecipes)
+            {
+                UMATextRecipe utr = ai.Item as UMATextRecipe;
+                if (utr != null)
+                {
+                    theRecipes.Add(ai);
+                }
+            }
+
             return theRecipes;
         }
 
-        public void GenerateSingleGroup()
+        public void GenerateSingleGroup(bool IncludeRecipes = false)
         {
             // Find what recipe everything is in.
             // label everything with that recipe.
@@ -1476,15 +1542,16 @@ namespace UMA
                 {
                     ClearAddressableFlags(t);
                 }
-                List<UMATextRecipe> theRecipes = GetAddressableRecipes();
+                List<AssetItem> theRecipes = GetAddressableRecipes();
 
                 // Find Labels.
                 Dictionary<AssetItem, List<string>> theItems = new Dictionary<AssetItem, List<string>>();
 
                 float pos = 0.0f;
                 float inc = 1.0f / theRecipes.Count;
-                foreach (UMATextRecipe uwr in theRecipes)
+                foreach (AssetItem RecipeItem in theRecipes)
                 {
+                    UMATextRecipe uwr = RecipeItem.Item as UMATextRecipe;
                     EditorUtility.DisplayProgressBar("Generating", "processing recipe: " + uwr.name, pos);
                     List<AssetItem> items = GetAssetItems(uwr);
                     foreach (AssetItem ai in items)
@@ -1495,11 +1562,17 @@ namespace UMA
                         }
                         theItems[ai].Add(GetLabel(uwr));
                     }
+                    if (IncludeRecipes)
+                    {
+                        if (theItems.ContainsKey(RecipeItem) == false)
+                        {
+                            theItems.Add(RecipeItem, new List<string>());
+                        }
+                        theItems[RecipeItem].Add(GetLabel(uwr));
+                        theItems[RecipeItem].Add("UMA_Recipes");
+                    }
                     pos += inc;
                 }
-                /// Add to group
-                /// add labels
-                /// Finalize
 
                 // Create the shared group that has each item packed separately.
                 AddressableAssetGroup sharedGroup = AddressableSettings.CreateGroup("UMA_SharedItems", false, false, true, AddressableSettings.DefaultGroup.Schemas);
@@ -1557,9 +1630,11 @@ namespace UMA
 
                 UpdateAssetItems();
 
-                ReleaseReferences(TypeToLookup[typeof(SlotDataAsset)]);
-                ReleaseReferences(TypeToLookup[typeof(OverlayDataAsset)]);
-
+                foreach (Type t in TypeToLookup.Values)
+                {
+                    ReleaseReferences(t);
+                }
+ 
                 CleanupAddressables(true);
             }
             finally
@@ -1627,11 +1702,11 @@ namespace UMA
 
 
 
-                theRecipes = GetAddressableRecipes();
+                var theRecipeItems = GetAddressableRecipes();
 
-				GenerateCollectionLabels();
+                GenerateCollectionLabels();
 
-				GenerateLookups(context, theRecipes);
+				GenerateLookups(context, theRecipeItems);
 
                 float pos = 0.0f;
                 float inc = 1.0f / theRecipes.Count;
@@ -1640,9 +1715,9 @@ namespace UMA
 				const string wprefix = "UWR_";
 
 				// Create the Addressable groups
-				foreach (UMATextRecipe uwr in theRecipes)
+				foreach (AssetItem recipeItem in theRecipeItems)
                 {
-					
+                    UMATextRecipe uwr = recipeItem.Item as UMATextRecipe;
                     int iPos = Mathf.CeilToInt(pos);
                     EditorUtility.DisplayProgressBar("Generating", "Creating Group: " + uwr.name, iPos);
                     Debug.Log("Generating group: " + uwr.name);
@@ -1904,6 +1979,10 @@ namespace UMA
 
 
 #if UNITY_EDITOR
+                if (ai.IsAddressable)
+                {
+                    ai._SerializedItem = null;
+                }
 #if UMA_ADDRESSABLES
                 // Debug.Log("Getting asset entry");
 				AddressableAssetEntry ae = GetAddressableAssetEntry(ai);
@@ -2076,6 +2155,52 @@ namespace UMA
             }
         }
 
+        class recipeEqualityComparer : IEqualityComparer<UMAWardrobeRecipe>
+        {
+            public bool Equals(UMAWardrobeRecipe b1, UMAWardrobeRecipe b2)
+            {
+                if (b2 == null && b1 == null)
+                    return true;
+                else if (b1 == null || b2 == null)
+                    return false;
+                else if (b1.name == b2.name)
+                    return true;
+                else
+                    return false;
+            }
+
+            public int GetHashCode(UMAWardrobeRecipe bx)
+            {
+                return bx.GetHashCode();
+            }
+        }
+
+        private recipeEqualityComparer req;
+        
+        private void AddRaceRecipe(UMAWardrobeRecipe uwr)
+        {
+            if (!uwr) return;
+           // if (req == null)
+           //     req = new recipeEqualityComparer();
+
+            foreach (string racename in uwr.compatibleRaces)
+            {
+                if (!raceRecipes.ContainsKey(racename))
+                {
+                    raceRecipes.Add(racename, new SlotRecipes());
+                }
+                SlotRecipes sl = raceRecipes[racename];
+                if (!sl.ContainsKey(uwr.wardrobeSlot))
+                {
+                    sl.Add(uwr.wardrobeSlot, new List<UMATextRecipe>());
+                }
+                if (!sl[uwr.wardrobeSlot].Contains(uwr))//, req))
+                {
+                    sl[uwr.wardrobeSlot].Add(uwr);
+                }
+            }
+        }
+
 		private void RebuildRaceRecipes()
 		{
 			//Dictionary<string, RaceData> RaceLookup = new Dictionary<string, RaceData>();
@@ -2090,20 +2215,7 @@ namespace UMA
 
 			foreach(UMAWardrobeRecipe uwr in wardrobe)
 			{
-                if (!uwr) continue;
-				foreach(string racename in uwr.compatibleRaces)
-				{
-					if (!raceRecipes.ContainsKey(racename))
-					{
-						raceRecipes.Add(racename, new SlotRecipes());
-					}
-					SlotRecipes sl = raceRecipes[racename];
-					if (!sl.ContainsKey(uwr.wardrobeSlot))
-					{
-						sl.Add(uwr.wardrobeSlot, new List<UMATextRecipe>());
-					}
-					sl[uwr.wardrobeSlot].Add(uwr);
-				}
+                AddRaceRecipe(uwr);
 			}
 		}
 

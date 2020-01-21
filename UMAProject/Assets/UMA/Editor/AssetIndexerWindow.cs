@@ -195,6 +195,15 @@ namespace UMA.Controls
 				Repaint();
 			});
 
+			AddMenuItemWithCallback(AddressablesMenu, "Generate Shared Group (incl recipes)", () =>
+			{
+				UAI.CleanupAddressables();
+				UAI.GenerateSingleGroup(true);
+				Resources.UnloadUnusedAssets();
+				m_Initialized = false;
+				Repaint();
+			});
+
 			AddMenuItemWithCallback(AddressablesMenu, "Remove Addressables", () => 
 			{ 
 				UAI.CleanupAddressables(false, true);

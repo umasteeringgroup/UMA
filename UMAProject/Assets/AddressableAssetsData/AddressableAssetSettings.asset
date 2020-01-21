@@ -197,6 +197,9 @@ MonoBehaviour:
     - UMA_Base
     - Wolfie
     - MaleAnkles_Recipe
+    - UMA_Recipes
+    - GirlBaseAsDNA
+    - MaleBase
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: dcf39f185b7285f46b384b0a25cb6bf7, type: 2}

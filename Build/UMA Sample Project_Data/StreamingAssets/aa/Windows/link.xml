@@ -1,40 +1,44 @@
 <linker>
   <assembly fullname="UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-    <type fullname="UnityEngine.Texture2D" preserve="all" />
     <type fullname="UnityEngine.Material" preserve="all" />
+    <type fullname="UnityEngine.Texture2D" preserve="all" />
+    <type fullname="UnityEngine.Shader" preserve="all" />
+    <type fullname="UnityEngine.Sprite" preserve="all" />
     <type fullname="UnityEngine.GameObject" preserve="all" />
     <type fullname="UnityEngine.Transform" preserve="all" />
-    <type fullname="UnityEngine.Shader" preserve="all" />
   </assembly>
   <assembly fullname="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
     <type fullname="UMA.SlotDataAsset" preserve="all" />
     <type fullname="UMA.UMAMaterial" preserve="all" />
     <type fullname="UMA.OverlayDataAsset" preserve="all" />
-    <type fullname="UMA.CapsuleColliderSlotScript" preserve="all" />
-    <type fullname="UMA.Examples.LocomotionSlotScript" preserve="all" />
-    <type fullname="UMA.Examples.UMA_JiggleBelly" preserve="all" />
+    <type fullname="UMA.CharacterSystem.UMAWardrobeRecipe" preserve="all" />
+    <type fullname="UMA.MeshHideAsset" preserve="all" />
     <type fullname="UMA.DynamicDNAConverterController" preserve="all" />
     <type fullname="UMA.MorphSetDnaAsset" preserve="all" />
     <type fullname="UMA.MorphSetDnaConverterBehaviour" preserve="all" />
     <type fullname="UMA.BlendshapeDNAConverterPlugin" preserve="all" />
     <type fullname="UMA.DynamicUMADnaAsset" preserve="all" />
-    <type fullname="UMA.Examples.UMA_JiggleBreasts" preserve="all" />
-    <type fullname="UMA.UMAPhysicsSlotDefinition" preserve="all" />
-    <type fullname="UMA.Dynamics.UMAPhysicsElement" preserve="all" />
-    <type fullname="UMA.UMAClothProperties" preserve="all" />
-    <type fullname="UMA.UMARendererAsset" preserve="all" />
-    <type fullname="UMA.Examples.UMA_JiggleButt" preserve="all" />
-    <type fullname="UMA.ForearmTwistSlotScript" preserve="all" />
     <type fullname="UMA.PoseTools.UMABonePose" preserve="all" />
     <type fullname="UMA.BonePoseDNAConverterPlugin" preserve="all" />
+    <type fullname="UMA.UMAClothProperties" preserve="all" />
+    <type fullname="UMA.UMARendererAsset" preserve="all" />
     <type fullname="UMA.Examples.PonytailSlotScript" preserve="all" />
+    <type fullname="UMA.UMAPhysicsSlotDefinition" preserve="all" />
+    <type fullname="UMA.Dynamics.UMAPhysicsElement" preserve="all" />
+    <type fullname="UMA.UMATextRecipe" preserve="all" />
+    <type fullname="UMA.CapsuleColliderSlotScript" preserve="all" />
     <type fullname="UMA.PoseTools.ExpressionSlotScript" preserve="all" />
+    <type fullname="UMA.ForearmTwistSlotScript" preserve="all" />
+    <type fullname="UMA.Examples.LocomotionSlotScript" preserve="all" />
+    <type fullname="UMA.CharacterSystem.UMAWardrobeCollection" preserve="all" />
+    <type fullname="UMA.Examples.UMA_JiggleBelly" preserve="all" />
+    <type fullname="UMA.Examples.UMA_JiggleBreasts" preserve="all" />
+    <type fullname="UMA.Examples.UMA_JiggleButt" preserve="all" />
   </assembly>
   <assembly fullname="UnityEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
     <type fullname="UnityEditor.MonoScript" preserve="all" />
   </assembly>
   <assembly fullname="Unity.ResourceManager, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null" preserve="all">
-    <type fullname="UnityEngine.ResourceManagement.ResourceProviders.LegacyResourcesProvider" preserve="all" />
     <type fullname="UnityEngine.ResourceManagement.ResourceProviders.AssetBundleProvider" preserve="all" />
     <type fullname="UnityEngine.ResourceManagement.ResourceProviders.BundledAssetProvider" preserve="all" />
     <type fullname="UnityEngine.ResourceManagement.ResourceProviders.InstanceProvider" preserve="all" />

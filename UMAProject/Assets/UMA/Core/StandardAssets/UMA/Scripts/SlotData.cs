@@ -41,8 +41,7 @@ namespace UMA
 			}
 		}
 
-		public bool AlreadyDropped;
-		public bool SkippedThisFrame;
+		public bool Suppressed; 
 
 		/// <summary>
 		/// When serializing this recipe should this slot be skipped, useful for scene specific "additional slots"

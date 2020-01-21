@@ -41,6 +41,12 @@ namespace UMA.CharacterSystem.Examples
             races = index.GetAllAssets<RaceData>();
 #if UMA_ADDRESSABLES
             // Preload all the races.
+            List<string> labels = new List<string>();
+            labels.Add("UMA_Recipes");
+
+            var recipeOp = UMAAssetIndexer.Instance.LoadLabelList(labels, true); // Load the recipes!
+            recipeOp.Completed += Recipes_Loaded;
+
             if (RaceDropdown != null)
             {
 
@@ -59,6 +65,7 @@ namespace UMA.CharacterSystem.Examples
                 }
             }
 #else
+            Avatar.gameObject.SetActive(true);
             if (RaceDropdown != null)
             {
 
@@ -72,14 +79,19 @@ namespace UMA.CharacterSystem.Examples
         }
 
 #if UMA_ADDRESSABLES
-        private void Asyncop_Completed(UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<IList<Object>> obj)
+        private void Recipes_Loaded(UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<IList<Object>> obj)
 		{
-			//Debug.Log("Race Preload Completed.");
-			// Preload any default wardrobe items on our avatar, now that the races are preloaded.
-			UMAAssetIndexer.Instance.Preload(Avatar,false).Completed += Avatar_Completed;
+            Debug.Log("Recipes loaded: " + obj.Status.ToString());
+            Avatar.gameObject.SetActive(true);
 		}
 
-		private void Avatar_Completed(UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<IList<Object>> obj)
+        private void Asyncop_Completed(UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<IList<Object>> obj)
+        {
+            //Debug.Log("Race Preload Completed.");
+            // Preload any default wardrobe items on our avatar, now that the races are preloaded.
+            UMAAssetIndexer.Instance.Preload(Avatar, false).Completed += Avatar_Completed;
+        }
+        private void Avatar_Completed(UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<IList<Object>> obj)
 		{
             // Ready to go, enable the character and build it.
             //Debug.Log("Avatar preload completed.");
