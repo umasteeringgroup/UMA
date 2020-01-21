@@ -5,6 +5,7 @@ Support for Addressables
   Automated cleanup of slots/overlays/textures
   Significantly reduced memory overhead
   Build requests are queued up with all relevant data
+  Added recipes to Addressables. If you do this, you must load them before access (they are all labelled by recipe and with 'UMA_Recipe')
 New global library window
   New functions to mark items by various parameters
   New Addressables Menu to generate items
