@@ -2211,10 +2211,14 @@ namespace UMA.CharacterSystem
                 umaData.umaRecipe.sharedColors = ImportSharedColors(settingsToLoad.sharedColors, thisLoadOptions);
                 UpdateColors();//updateColors is called by LoadCharacter which is called by BuildCharacter- but we may not be Building
 
-                if (wasBuildCharacterEnabled)
-                {
-                    BuildCharacter(false,!BundleCheck);
-                }
+                // TODO: this was moved to after the DNA was added.
+                //       I'm not sure how it worked before. Still
+                //       I'm leaving this here so later on if something happens
+                //       because of this, we'll know where it was.
+                //if (wasBuildCharacterEnabled)
+                //{
+                //    BuildCharacter(false,!BundleCheck);
+                //}
                 //
                 if (thisLoadOptions.HasFlagSet(LoadOptions.loadDNA) && settingsToLoad.packedDna.Count > 0)
                 {
@@ -2228,6 +2232,14 @@ namespace UMA.CharacterSystem
                 {
                     TryImportDNAValues(prevDna);
                 }
+
+                // This was before the DNA was set. I'm 
+                // not sure how it worked that way.
+                if (wasBuildCharacterEnabled)
+                {
+                    BuildCharacter(true, !BundleCheck);
+                }
+
                 if (cacheCurrentState)
                 {
                     AddCharacterStateCache();
@@ -3288,6 +3300,10 @@ namespace UMA.CharacterSystem
 				var races = UMAContext.Instance.GetAllRaces();
                 foreach (RaceData race in races)
                 {
+                    if (race == null)
+                    {
+                        continue;
+                    }
                     if (race.raceName == this.name)
                     {
                         _data = race;
