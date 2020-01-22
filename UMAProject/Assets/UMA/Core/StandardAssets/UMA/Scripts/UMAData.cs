@@ -557,6 +557,14 @@ namespace UMA
 				}
 				return dnaValues.ToArray();
 			}
+			public UMADnaBase[] GetDefinedDna()
+			{
+				if ((dnaValues == null) || dnaValues.Count == 0)
+				{
+					return new UMADnaBase[0];
+				}
+				return dnaValues.ToArray();
+			}
 
 			/// <summary>
 			/// Adds the DNA specified.

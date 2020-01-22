@@ -29,6 +29,7 @@ namespace UMA.Examples
         public float distanceMax = 15f;
         public Vector3 Offset;
         public bool AlwaysOn = false;
+        public float ZoomSensitivity = 1.0f;
 
         [Tooltip("use this to enable the user to orbit the camera around the character on touchscreen devices")]
         public bool singleTouchOrbiting = true;
@@ -188,16 +189,19 @@ namespace UMA.Examples
                 x += Input.GetAxis("Mouse X") * xSpeed * 0.04f;
                 y -= Input.GetAxis("Mouse Y") * ySpeed * 0.02f;
             }
-            else if (Input.touchCount == 1 && EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId) == false)
+            else if (Input.touchCount == 1)
             {
-                Touch touchZero = Input.GetTouch(0);
-                x += touchZero.deltaPosition.x * (xSpeed / 5)/* * distance */ * 0.04f;
-                y -= touchZero.deltaPosition.y * (ySpeed / 5) * 0.02f;
+                if (AlwaysOn || EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId) == false)
+                {
+                    Touch touchZero = Input.GetTouch(0);
+                    x += touchZero.deltaPosition.x * (xSpeed / 5)/* * distance */ * 0.04f;
+                    y -= touchZero.deltaPosition.y * (ySpeed / 5) * 0.02f;
+                }
             }
 
             if (EventSystem.current.currentSelectedGameObject == null || AlwaysOn == true)
             {
-                if (Input.touchCount == 2)
+                if (Input.touchCount == 2 && pinchToZoom)
                 {
                     // Store both touches.
                     Touch touchZero = Input.GetTouch(0);
@@ -212,7 +216,7 @@ namespace UMA.Examples
                     float touchDeltaMag = (touchZero.position - touchOne.position).magnitude;
 
                     // Find the difference in the distances between each frame. Flip it so it goes the right way
-                    float deltaMagnitudeDiff = (prevTouchDeltaMag - touchDeltaMag) * -1;
+                    float deltaMagnitudeDiff = ((prevTouchDeltaMag - touchDeltaMag) * -1) * ZoomSensitivity;
                     distance = Mathf.Clamp(distance - (deltaMagnitudeDiff / 10) * (scrollrate / 10), distanceMin, distanceMax);
                 }
                 else

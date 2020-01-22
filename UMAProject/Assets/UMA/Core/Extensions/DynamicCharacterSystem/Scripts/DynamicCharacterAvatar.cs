@@ -2495,7 +2495,7 @@ namespace UMA.CharacterSystem
             {
                 if (umaData.umaRecipe != null)
                 {
-                    CurrentDNA = umaData.umaRecipe.GetAllDna();
+                    CurrentDNA = umaData.umaRecipe.GetDefinedDna();
                 }
             }
             if (CurrentDNA == null)
