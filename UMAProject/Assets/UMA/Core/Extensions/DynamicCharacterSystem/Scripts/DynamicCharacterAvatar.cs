@@ -2504,6 +2504,8 @@ namespace UMA.CharacterSystem
             List<UMAWardrobeRecipe> ReplaceRecipes = new List<UMAWardrobeRecipe>();
             List<UMARecipeBase> Recipes = new List<UMARecipeBase>();
             List<string> SuppressSlotsStrings = new List<string>();
+            List<string> HideTags = new List<string>();
+
             if ((WardrobeRecipes.Count > 0) && activeRace.racedata != null)
             {
                 foreach (UMATextRecipe utr in WardrobeRecipes.Values)
@@ -2525,6 +2527,11 @@ namespace UMA.CharacterSystem
 
                 foreach (UMATextRecipe utr in WardrobeRecipes.Values)
                 {
+                    //Collect all HideTags
+                    if (utr.HideTags.Count > 0)
+                    {
+                        HideTags.AddRange(utr.HideTags);
+                    }
                     //Collect all the MeshHideAssets on all the wardrobe recipes
                     if (utr.MeshHideAssets != null && !SuppressSlotsStrings.Contains(utr.wardrobeSlot))
                     {
@@ -2614,7 +2621,7 @@ namespace UMA.CharacterSystem
                 }
             }
 
-        LoadCharacter(umaRecipe, ReplaceRecipes, Recipes,umaAdditionalRecipes, MeshHideDictionary, HiddenSlots,CurrentDNA,  RestoreDNA, !BundleCheck);
+        LoadCharacter(umaRecipe, ReplaceRecipes, Recipes,umaAdditionalRecipes, MeshHideDictionary, HiddenSlots, HideTags, CurrentDNA,  RestoreDNA, !BundleCheck);
         }
 
 #if UMA_ADDRESSABLES
@@ -2628,8 +2635,9 @@ namespace UMA.CharacterSystem
             public bool _restoreDNA;
             public UMADnaBase[] _currentDNA;
             public Dictionary<string, List<MeshHideAsset>> _MeshHideDictionary;
+            public List<string> _HideTags;
 
-            public BuildSave(UMARecipeBase umaRecipe, List<UMAWardrobeRecipe> Replaces, List<UMARecipeBase> umaAdditionalSerializedRecipes, UMARecipeBase[] AdditionalRecipes, Dictionary<string, List<MeshHideAsset>> MeshHideDictionary, List<string> hiddenSlots, UMADnaBase[] CurrentDNA, bool restoreDNA)
+            public BuildSave(UMARecipeBase umaRecipe, List<UMAWardrobeRecipe> Replaces, List<UMARecipeBase> umaAdditionalSerializedRecipes, UMARecipeBase[] AdditionalRecipes, Dictionary<string, List<MeshHideAsset>> MeshHideDictionary, List<string> hiddenSlots, List<string> HideTags, UMADnaBase[] CurrentDNA, bool restoreDNA)
             {
                 _umaRecipe = umaRecipe;
                 _Replaces = Replaces;
@@ -2639,6 +2647,7 @@ namespace UMA.CharacterSystem
                 _currentDNA = CurrentDNA;
                 _AdditionalRecipes = AdditionalRecipes;
                 _MeshHideDictionary = MeshHideDictionary;
+                _HideTags = HideTags;
             }
         }
 
@@ -2651,7 +2660,7 @@ namespace UMA.CharacterSystem
                 if (Op.IsDone)
                 {
                     BuildSave bs = LoadQueue[Op];
-                    LoadCharacter(bs._umaRecipe, bs._Replaces, bs._umaAdditionalSerializedRecipes,bs._AdditionalRecipes, bs._MeshHideDictionary, bs._hiddenSlots,bs._currentDNA, bs._restoreDNA, true);
+                    LoadCharacter(bs._umaRecipe, bs._Replaces, bs._umaAdditionalSerializedRecipes,bs._AdditionalRecipes, bs._MeshHideDictionary, bs._hiddenSlots,bs._HideTags, bs._currentDNA, bs._restoreDNA, true);
                     LoadQueue.Remove(Op);
                     if (LoadedHandles.Count > 1)
                     {
@@ -2727,7 +2736,7 @@ namespace UMA.CharacterSystem
         /// <param name="Replaces"></param>
         /// <param name="umaAdditionalSerializedRecipes"></param>
         /// <returns>Returns true if the final recipe load caused more assets to download</returns>
-        void LoadCharacter(UMARecipeBase umaRecipe, List<UMAWardrobeRecipe> Replaces, List<UMARecipeBase> umaAdditionalSerializedRecipes, UMARecipeBase[] AdditionalRecipes, Dictionary<string, List<MeshHideAsset>> MeshHideDictionary, List<string> hiddenSlots, UMADnaBase[] CurrentDNA, bool restoreDNA, bool skipBundleCheck )
+        void LoadCharacter(UMARecipeBase umaRecipe, List<UMAWardrobeRecipe> Replaces, List<UMARecipeBase> umaAdditionalSerializedRecipes, UMARecipeBase[] AdditionalRecipes, Dictionary<string, List<MeshHideAsset>> MeshHideDictionary, List<string> hiddenSlots, List<string> HideTags, UMADnaBase[] CurrentDNA, bool restoreDNA, bool skipBundleCheck )
         {
 #if UMA_ADDRESSABLES
             if (!skipBundleCheck && isAddressableSystem)
@@ -2741,7 +2750,7 @@ namespace UMA.CharacterSystem
 
                 var theOp = UMAAssetIndexer.Instance.Preload(this);
                 LoadedHandles.Enqueue(theOp);
-                LoadQueue.Add(theOp,new BuildSave( umaRecipe,Replaces,umaAdditionalSerializedRecipes,AdditionalRecipes, MeshHideDictionary, hiddenSlots,CurrentDNA, restoreDNA));
+                LoadQueue.Add(theOp,new BuildSave( umaRecipe,Replaces,umaAdditionalSerializedRecipes,AdditionalRecipes, MeshHideDictionary, hiddenSlots, HideTags, CurrentDNA, restoreDNA));
                 theOp.Completed += LoadWhenReady;
 #if SUPER_LOGGING
                 Debug.Log("LoadCharacter waiting for preload...");
@@ -2783,7 +2792,7 @@ namespace UMA.CharacterSystem
                 FixCrossCompatibleSlots(hiddenSlots);
             }
 
-            RemoveHiddenSlots(hiddenSlots);
+            ProcessHiddenSlots(hiddenSlots, HideTags);
 
             foreach (UMAWardrobeRecipe umr in Replaces)
             {
@@ -3008,6 +3017,24 @@ namespace UMA.CharacterSystem
             }
         }
 
+        void ProcessHiddenSlots(List<string> hiddenSlots, List<string> hideTags = null)
+        {
+            List<SlotData> NewSlots = new List<SlotData>();
+            foreach (SlotData sd in umaData.umaRecipe.slotDataList)
+            {
+                if (sd == null)
+                    continue;
+                if (sd.HasTag(hideTags))
+                    continue;
+                if (!hiddenSlots.Contains(sd.asset.slotName))
+                {
+                    if (hideTags != null)
+                        NewSlots.Add(sd);
+                }
+            }
+            umaData.umaRecipe.slotDataList = NewSlots.ToArray();
+        }
+
         void RemoveHiddenSlots(List<string> hiddenSlots)
         {
             List<SlotData> NewSlots = new List<SlotData>();
@@ -3015,6 +3042,7 @@ namespace UMA.CharacterSystem
             {
                 if (sd == null)
                     continue;
+                
                 if (!hiddenSlots.Contains(sd.asset.slotName))
                 {
                     NewSlots.Add(sd);
@@ -3035,16 +3063,6 @@ namespace UMA.CharacterSystem
             }
         }
 
-      
-        /*private struct UpdateArgs
-        {
-            public bool dNADirty;
-            public bool textureDirty;
-            public bool meshDirty;
-        };
-
-        [NonSerialized]
-        private Dictionary<AsyncOperationHandle, UpdateArgs> UpdateList = new Dictionary<AsyncOperationHandle, UpdateArgs>();*/
 
         public void ForceUpdate(bool DnaDirty, bool TextureDirty = false, bool MeshDirty = false, bool skipBundleCheck = false)
         {
@@ -3052,6 +3070,7 @@ namespace UMA.CharacterSystem
         }
 
         //@jaimi not sure what calls this. Generator maybe?
+        //@david - I can't find anything calling it
         public void AvatarCreated()
         {
             ApplyBounds();

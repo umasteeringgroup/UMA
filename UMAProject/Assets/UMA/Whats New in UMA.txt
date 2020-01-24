@@ -32,7 +32,7 @@ LOD Improvements
     Added "Maximum LOD Level" to SlotDataAsset, and Suppressed flag to SlotData for use by LOD systems
     Added "Use Slot Dropping" to UMASimpleLOD, this will suppress slots based on the fields above.
     By default, the eyebrows, eyelashes, and Inner Mouth are set to drop after LOD 0. Eyes are set to drop after LOD 1.
-
+Ability to hide slots by Slot tag.
 Various bug fixes
     Fixed various overlays that were missing textures or had the wrong count
     Fixed some scenes that had broken over time

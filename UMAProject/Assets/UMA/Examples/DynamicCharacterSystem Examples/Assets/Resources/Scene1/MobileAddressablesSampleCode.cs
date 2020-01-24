@@ -8,7 +8,7 @@ using UnityEngine.AddressableAssets;
 
 namespace UMA.CharacterSystem.Examples
 {
-    public class SampleCode : MonoBehaviour
+    public class MobileAddressablesSampleCode : MonoBehaviour
     {
         public DynamicCharacterAvatar Avatar;
         public GameObject SlotPrefab;

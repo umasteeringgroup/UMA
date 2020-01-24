@@ -76,7 +76,8 @@ namespace UMA.CharacterSystem.Examples
                 return;
             }
 #if UMA_ADDRESSABLES
-			if (isReady)
+			SetRecipe();
+/*			if (isReady)
 			{
 				SetRecipe();
 			}
@@ -84,7 +85,7 @@ namespace UMA.CharacterSystem.Examples
 			{
 				var op = UMAAssetIndexer.Instance.Preload(Recipe);
 				op.Completed += Op_Completed;
-			}
+			} */
 #else
 			SetRecipe();
 #endif

@@ -70,6 +70,34 @@ namespace UMA
 			rendererAsset = asset.RendererAsset;
 		}
 
+		public bool HasTag(List<string> tags)
+		{
+			if (tags == null || asset.tags == null)
+				return false;
+			// this feels like it would be better in a dictionary or hashtable
+			// but I doubt there will be more than 1 tag, so we will go with this
+			foreach (string s in asset.tags)
+			{
+				if (tags.Contains(s)) return true;
+			}
+			return false;
+		}
+
+
+
+		public bool HasTag(string tag)
+		{
+			if (asset.tags == null)
+				return false;
+			// this feels like it would be better in a dictionary or hashtable
+			// but I doubt there will be more than 1 tag, so we will go with this
+			foreach(string s in asset.tags)
+			{
+				if (s == tag) return true;
+			}
+			return false;
+		}
+
         /// <summary>
         /// Property to return overlay hash so it is visible in debugger.
         /// </summary>

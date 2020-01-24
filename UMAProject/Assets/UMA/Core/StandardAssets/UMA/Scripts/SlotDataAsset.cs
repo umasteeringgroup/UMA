@@ -130,8 +130,8 @@ namespace UMA
 		/// </summary>
 		public string slotGroup;
 		/// <summary>
-		/// Use this to identify what kind of overlays fit this slotData
-		/// Eg. BaseMeshSkin, BaseMeshOverlays, GenericPlateArmor01
+		/// This can be used for hiding, matching etc. 
+		/// It's used by the DynamicCharacterSystem to hide slots by tag.
 		/// </summary>
 		public string[] tags;
 

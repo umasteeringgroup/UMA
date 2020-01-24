@@ -26,6 +26,9 @@ namespace UMA
 		public List<string> Hides = new List<string>();
 
 		[SerializeField]
+		public List<string> HideTags = new List<string>();
+
+		[SerializeField]
 		public List<string> suppressWardrobeSlots = new List<string>();
 
 		[SerializeField]

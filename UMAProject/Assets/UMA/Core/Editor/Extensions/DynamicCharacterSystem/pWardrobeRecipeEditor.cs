@@ -5,6 +5,7 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 using UMA.CharacterSystem;
+using UnityEditorInternal;
 
 namespace UMA.Editors
 {
@@ -536,6 +537,24 @@ namespace UMA.Editors
 			return doUpdate;
 		}
 
+		private bool ShowHidetags;
+		private ReorderableList hideTagsList;
+		private bool hideTagsListInitialized = false;
+		private void InitHideTagsList()
+		{
+			var HideTagsProperty = serializedObject.FindProperty("HideTags");
+			hideTagsList = new ReorderableList(serializedObject, HideTagsProperty, true, true, true, true);
+			hideTagsList.drawHeaderCallback = (Rect rect) => {
+				EditorGUI.LabelField(rect, "Hide Tags");
+			};
+			hideTagsList.drawElementCallback = (Rect rect, int index, bool isActive, bool isFocused) => {
+				var element = hideTagsList.serializedProperty.GetArrayElementAtIndex(index);
+				rect.y += 2;
+				element.stringValue = EditorGUI.TextField(new Rect(rect.x + 10, rect.y, rect.width - 10, EditorGUIUtility.singleLineHeight), element.stringValue);
+			};
+			hideTagsListInitialized = true;
+		}
+
 		protected virtual bool DrawWardrobeSlotsFields(Type TargetType, bool ShowHelp = false)
 		{
             #region Setup
@@ -594,7 +613,6 @@ namespace UMA.Editors
 			{
 				EditorGUILayout.HelpBox("User Field is ignored by the system. You can use this to store data that can later be used by your application to provide filtering or categorizing, etc.", MessageType.Info);
 			}
-
 			#endregion
 
 			#region Wardrobe Slot UI
@@ -689,7 +707,7 @@ namespace UMA.Editors
 			}
 			else
 				EditorGUILayout.Popup("Hides Base Slots(s)", 0, new string[1] {"Nothing"} );
-
+			
             GUILayout.Space(8);
             if (GUILayout.Button("Select",GUILayout.MaxWidth(64), GUILayout.MaxHeight(16)))
             {
@@ -765,11 +783,33 @@ namespace UMA.Editors
             {
                 EditorGUILayout.HelpBox("MeshHideAssets: This is a list of advanced mesh hiding assets to hide their corresponding slot meshes on a per triangle basis.", MessageType.Info);
             }
-            #endregion
+			#endregion
 
-            #region Update
-            //Update the values
-            if (newWardrobeSlot != wardrobeSlot)
+			#region HideTags UI
+			if (!hideTagsListInitialized)
+			{
+				InitHideTagsList();
+			}
+			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
+			GUILayout.Space(10);
+			ShowHidetags = EditorGUILayout.Foldout(ShowHidetags, "Tags to Hide");
+			GUILayout.EndHorizontal();
+			if (ShowHidetags)
+			{
+
+				EditorGUI.BeginChangeCheck();
+				hideTagsList.DoLayoutList();
+				if (EditorGUI.EndChangeCheck())
+				{
+					serializedObject.ApplyModifiedProperties();
+					doUpdate = true;
+				}
+			}
+			#endregion
+
+			#region Update
+			//Update the values
+			if (newWardrobeSlot != wardrobeSlot)
 			{
 				WardrobeSlotField.SetValue(target, newWardrobeSlot);
 				doUpdate = true;
