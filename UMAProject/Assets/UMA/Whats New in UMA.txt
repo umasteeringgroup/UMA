@@ -34,6 +34,7 @@ LOD Improvements
     By default, the eyebrows, eyelashes, and Inner Mouth are set to drop after LOD 0. Eyes are set to drop after LOD 1.
 Ability to hide slots by Slot tag.
 Verify button in Slot Builder Window will detect UV Coordinates that are out of range.
+Added Elf male and Elf female races with base race recipes.
 Various bug fixes
     Fixed various overlays that were missing textures or had the wrong count
     Fixed some scenes that had broken over time
