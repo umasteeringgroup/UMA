@@ -11,7 +11,13 @@ namespace UMA.Editors
         private Shader _lastSelectedShader;
         private string[] _shaderProperties;
         private GUIStyle _centeredStyle;
+        private SerializedProperty _shaderParms;
 
+        private bool shaderParmsFoldout = false;
+        public void OnEnable()
+        {
+            _shaderParms = serializedObject.FindProperty("shaderParms");
+        }
         public override void OnInspectorGUI()
         {
             UMAMaterial source = target as UMAMaterial;
@@ -49,6 +55,15 @@ namespace UMA.Editors
             EditorGUILayout.PropertyField(serializedObject.FindProperty("maskMultiplier"), new GUIContent("Mask Multiplier", "When Masking with current color, the current color is multiplied by this color."));
             //EditorGUILayout.PropertyField(serializedObject.FindProperty("Compression"), new GUIContent("Texture Compression", "Compress the atlas texture to DXT1 or DXT5"));
             EditorGUILayout.EndVertical();
+
+            GUILayout.Space(20f);
+            shaderParmsFoldout = EditorGUILayout.Foldout(shaderParmsFoldout, "Shader Parameter Mapping");
+            if (shaderParmsFoldout)
+            {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(_shaderParms, true);
+                EditorGUI.indentLevel--;
+            }
 
             GUILayout.Space(20);
 

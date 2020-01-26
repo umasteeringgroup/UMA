@@ -77,7 +77,6 @@ namespace UMA
 			atlassedMaterials.Add(res);
 			generatedMaterials.Add(res);
 
-			// 
 			return res;
 		}
 
@@ -206,6 +205,32 @@ namespace UMA
 				}
 			}
 
+			//****************************************************
+			//* Set parameters based on shader parameter mapping
+			//****************************************************
+			for (int i=0;i<generatedMaterials.Count;i++)
+			{
+				UMAData.GeneratedMaterial ugm = generatedMaterials[i];
+				if (ugm.umaMaterial.shaderParms != null)
+				{
+					for(int j=0;j<ugm.umaMaterial.shaderParms.Length;j++)
+					{
+						UMAMaterial.ShaderParms parm = ugm.umaMaterial.shaderParms[j];
+						if (ugm.material.HasProperty(parm.ParameterName))
+						{
+							foreach (OverlayColorData ocd in umaData.umaRecipe.sharedColors)
+							{
+								if (ocd.name == parm.ColorName)
+								{
+									ugm.material.SetColor(parm.ParameterName, ocd.color);
+									break;
+								}
+							}
+						}
+					}
+
+				}
+			}
 			packTexture = new MaxRectsBinPack(umaGenerator.atlasResolution, umaGenerator.atlasResolution, false);
 		}
 

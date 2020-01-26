@@ -38,6 +38,7 @@ Verify button in Slot Builder Window will detect UV Coordinates that are out of 
 Added Elf male and Elf female races with base race recipes.
 CollisionMatrixFixer will read the current layermask settings for Ragdoll and NoCollisions, and use those if found.
 Added "AutoSetLayers" property to UMAPhysicsAvatar. When set, the player layer will be the current gameobject layer, and the Ragdoll layer will be read from the layermask settings.
+Added Shader Parameter Mapping to UMAMaterial - UMAMaterials can now map shared colors to color properties in the generated material. Useful for shaders that have extra color parms (like skin & hair shaders).
 Various bug fixes
     Fixed various overlays that were missing textures or had the wrong count
     Fixed some scenes that had broken over time

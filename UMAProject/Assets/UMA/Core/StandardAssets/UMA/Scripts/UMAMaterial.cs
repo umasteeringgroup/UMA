@@ -8,6 +8,13 @@ namespace UMA
     /// </summary>
     public class UMAMaterial : ScriptableObject
     {
+        [Serializable]
+        public class ShaderParms
+        {
+            public string ParameterName;
+            public string ColorName;
+        }
+
         public enum CompressionSettings { None, Fast, HighQuality };
         public Material material;
         public MaterialType materialType = MaterialType.Atlas;
@@ -19,6 +26,10 @@ namespace UMA
         public int AnisoLevel = 1;
         public FilterMode MatFilterMode = FilterMode.Bilinear;
         public CompressionSettings Compression = CompressionSettings.None;
+
+
+        [Tooltip("Shader parms can be used to pass colors to shaders. Each entry represents a parameter name and a color name. If neither exists, it is ignored.")]
+        public ShaderParms[] shaderParms;
 
         [Tooltip("If this is checked, the currently assigned color will be used as the background color so edges aren't darkened.")]
         public bool MaskWithCurrentColor;
