@@ -33,8 +33,11 @@ LOD Improvements
     Added "Use Slot Dropping" to UMASimpleLOD, this will suppress slots based on the fields above.
     By default, the eyebrows, eyelashes, and Inner Mouth are set to drop after LOD 0. Eyes are set to drop after LOD 1.
 Ability to hide slots by Slot tag.
+Added support for 32 bit index buffers (large meshes). To enable, add UMA_32BITBUFFERS to the player defines.
 Verify button in Slot Builder Window will detect UV Coordinates that are out of range.
 Added Elf male and Elf female races with base race recipes.
+CollisionMatrixFixer will read the current layermask settings for Ragdoll and NoCollisions, and use those if found.
+Added "AutoSetLayers" property to UMAPhysicsAvatar. When set, the player layer will be the current gameobject layer, and the Ragdoll layer will be read from the layermask settings.
 Various bug fixes
     Fixed various overlays that were missing textures or had the wrong count
     Fixed some scenes that had broken over time

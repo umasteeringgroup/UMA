@@ -179,8 +179,13 @@ namespace UMA.Editors
 				return;
 			}
 
-			if( _meshPreview == null )
+			if (_meshPreview == null)
+			{
 				_meshPreview = new Mesh();
+#if UMA_32BITBUFFERS
+				_meshPreview.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+#endif
+			}
 
 			UpdateMeshData( source.triangleFlags);
 

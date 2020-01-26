@@ -76,6 +76,8 @@ namespace UMA
 			res.material.CopyPropertiesFromMaterial(umaMaterial.material);
 			atlassedMaterials.Add(res);
 			generatedMaterials.Add(res);
+
+			// 
 			return res;
 		}
 
