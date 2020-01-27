@@ -324,7 +324,7 @@ namespace UMA
 			/// <param name="umaMaterial">Matching UMAMaterial to search for.</param>
 			/// <param name="textureChannel">Texture channel in the UMAMaterial to find the texture on.</param>
 			/// <returns></returns>
-			public Texture GetTexture(UMAMaterial umaMaterial, int textureChannel)
+			public List<Texture> GetTexture(UMAMaterial umaMaterial, int textureChannel)
 			{
 				if (umaMaterial == null)
 					return null;
@@ -332,18 +332,20 @@ namespace UMA
 				if (textureChannel < 0 || textureChannel > umaMaterial.channels.Length)
 					return null;
 
+				List<Texture> textures = new List<Texture>();
+
 				foreach (GeneratedMaterial generatedMaterial in materials)
 				{
 					if (generatedMaterial.umaMaterial.Equals(umaMaterial))
 					{
 						if (textureChannel < generatedMaterial.resultingAtlasList.Length)
 						{
-							return generatedMaterial.resultingAtlasList[textureChannel];
+							textures.Add(generatedMaterial.resultingAtlasList[textureChannel]);
 						}
 					}
 				}
 
-				return null;
+				return textures;
 			}
 		}
 
