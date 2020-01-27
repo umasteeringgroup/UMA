@@ -191,7 +191,10 @@ namespace UMA
 						   tempTexture.Compress(slotData.asset.material.channels[textureType].Compression == UMAMaterial.CompressionSettings.HighQuality);
 						}
 						resultingTextures[textureType] = tempTexture;
-						atlas.material.SetTexture(slotData.asset.material.channels[textureType].materialPropertyName, tempTexture);
+						if (!slotData.asset.material.channels[textureType].NonShaderTexture)
+						{
+							atlas.material.SetTexture(slotData.asset.material.channels[textureType].materialPropertyName, tempTexture);
+						}
 						#endregion
 					 }
 					 else
@@ -201,13 +204,17 @@ namespace UMA
 						destinationTexture.filterMode = slotData.asset.material.MatFilterMode;
 						destinationTexture.wrapMode = TextureWrapMode.Repeat;
 						resultingTextures[textureType] = destinationTexture;
-						atlas.material.SetTexture(slotData.asset.material.channels[textureType].materialPropertyName, destinationTexture);
+						if (!slotData.asset.material.channels[textureType].NonShaderTexture)
+						{
+							atlas.material.SetTexture(slotData.asset.material.channels[textureType].materialPropertyName, destinationTexture);
+						}
 					 }
 
 					 break;
 				  }
 				  case UMAMaterial.ChannelType.MaterialColor:
 				  {
+					 if (slotData.asset.material.channels[textureType].NonShaderTexture) break;
 					 atlas.material.SetColor(slotData.asset.material.channels[textureType].materialPropertyName, atlas.materialFragments[0].baseColor);
 					 break;
 				  }
@@ -221,11 +228,14 @@ namespace UMA
 						{
 						   if (fragment.baseOverlay.textureList[j] != null)
 						   {
-							  atlas.material.SetTexture(slotData.asset.material.channels[j].materialPropertyName, fragment.baseOverlay.textureList[j]);
-							  if (j == 0)
-							  {
-								 atlas.material.color = fragment.baseColor;
-							  }
+								if (!slotData.asset.material.channels[textureType].NonShaderTexture)
+								{
+									atlas.material.SetTexture(slotData.asset.material.channels[j].materialPropertyName, fragment.baseOverlay.textureList[j]);
+								}
+								if (j == 0)
+								{
+									atlas.material.color = fragment.baseColor;
+								}
 						   }
 						}
 						foreach (var overlay in fragment.overlays)
@@ -234,7 +244,10 @@ namespace UMA
 						   {
 							  if (overlay.textureList[j] != null)
 							  {
-								 atlas.material.SetTexture(slotData.asset.material.channels[j].materialPropertyName, overlay.textureList[j]);
+								if (!slotData.asset.material.channels[textureType].NonShaderTexture)
+								{
+									atlas.material.SetTexture(slotData.asset.material.channels[j].materialPropertyName, overlay.textureList[j]);
+								}
 							  }
 						   }
 						}

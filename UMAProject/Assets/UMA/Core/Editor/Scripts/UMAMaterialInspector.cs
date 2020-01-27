@@ -102,10 +102,11 @@ namespace UMA.Editors
                         }
                         EditorGUILayout.EndHorizontal();
 
+                        SerializedProperty NonShaderProperty = channel.FindPropertyRelative("NonShaderTexture");
                         UMAMaterial source = target as UMAMaterial;
                         if( source.material != null )
                         {
-                            if (!source.material.HasProperty(materialPropertyName.stringValue))
+                            if (!source.material.HasProperty(materialPropertyName.stringValue) && !NonShaderProperty.boolValue)
                                 EditorGUILayout.HelpBox("This name is not found in the shader! Are you sure it is correct?", MessageType.Warning);
                         }
 
@@ -118,6 +119,13 @@ namespace UMA.Editors
                         
                         EditorGUILayout.PropertyField(channel.FindPropertyRelative("DownSample"), new GUIContent("Down Sample", "Decrease size to save texture memory"));
                         EditorGUILayout.PropertyField(channel.FindPropertyRelative("sourceTextureName"), new GUIContent("Source Texture Name", "For use with procedural materials, leave empty otherwise."));
+
+                        EditorGUILayout.PropertyField(NonShaderProperty, new GUIContent("NonShader Texture", "For having a texture get merged by the UMA texture merging process but not used in a shader. E.G. Pixel/UV based ID lookup. The Material Property Name should be empty when this is true."));
+                        if(NonShaderProperty.boolValue && !string.IsNullOrEmpty(materialPropertyName.stringValue))
+                        {
+                            EditorGUILayout.HelpBox("A NonShader Texture shouldn't have a Material Property Name value.", MessageType.Warning);
+                        }
+
                     }
                     EditorGUI.indentLevel -= 1;
                 }

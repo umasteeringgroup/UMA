@@ -317,6 +317,34 @@ namespace UMA
 		{
 			public List<GeneratedMaterial> materials = new List<GeneratedMaterial>();
 			public List<UMARendererAsset> rendererAssets = new List<UMARendererAsset>();
+
+			/// <summary>
+			/// Gets the generated texture on the UMA matching umaMaterial and in the textureChannel.
+			/// </summary>
+			/// <param name="umaMaterial">Matching UMAMaterial to search for.</param>
+			/// <param name="textureChannel">Texture channel in the UMAMaterial to find the texture on.</param>
+			/// <returns></returns>
+			public Texture GetTexture(UMAMaterial umaMaterial, int textureChannel)
+			{
+				if (umaMaterial == null)
+					return null;
+
+				if (textureChannel < 0 || textureChannel > umaMaterial.channels.Length)
+					return null;
+
+				foreach (GeneratedMaterial generatedMaterial in materials)
+				{
+					if (generatedMaterial.umaMaterial.Equals(umaMaterial))
+					{
+						if (textureChannel < generatedMaterial.resultingAtlasList.Length)
+						{
+							return generatedMaterial.resultingAtlasList[textureChannel];
+						}
+					}
+				}
+
+				return null;
+			}
 		}
 
 

@@ -62,6 +62,7 @@ namespace UMA
             [Range(0,4)]
             public int DownSample;
             public bool ConvertRenderTexture;
+            public bool NonShaderTexture;
        }
 
 #if UNITY_EDITOR
