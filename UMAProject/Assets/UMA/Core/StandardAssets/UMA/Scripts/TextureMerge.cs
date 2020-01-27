@@ -58,6 +58,7 @@ namespace UMA
 
 		private void DrawRect(ref TextureMergeRect textureMergeRect)
 		{
+			//TODO JRRM: add an event here and let the end user modify the textureMertRect.tex if needed.
 			Graphics.DrawTexture(textureMergeRect.rect, textureMergeRect.tex, textureMergeRect.mat);
 		}
 

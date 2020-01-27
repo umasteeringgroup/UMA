@@ -760,24 +760,68 @@ namespace UMA.Editors
 			//EditorGUIUtility.LookLikeInspector();
 			SerializedProperty meshHides = serializedObject.FindProperty ("MeshHideAssets");
 			EditorGUI.BeginChangeCheck();
-			EditorGUILayout.BeginHorizontal();
-			if(GUILayout.Button("+", GUILayout.MaxWidth(30)))
+			if(GUILayout.Button("Add Mesh Hide Asset"))
 			{
 				meshHideAssetPickerID = EditorGUIUtility.GetControlID(FocusType.Passive) + 100;
 				EditorGUIUtility.ShowObjectPicker<MeshHideAsset>(null, false, "", meshHideAssetPickerID);
 			}
-			GUILayout.Space(10);
+			UMAWardrobeRecipe recipe = target as UMAWardrobeRecipe;
 			if (Event.current.commandName == "ObjectSelectorUpdated" && EditorGUIUtility.GetObjectPickerControlID() == meshHideAssetPickerID)
 			{
-				meshHides.InsertArrayElementAtIndex(0);
-				SerializedProperty element = meshHides.GetArrayElementAtIndex(0);
-				element.objectReferenceValue = EditorGUIUtility.GetObjectPickerObject();
-				meshHideAssetPickerID = -1;
+				bool found = false;
+				if (recipe != null)
+				{
+					MeshHideAsset mha = EditorGUIUtility.GetObjectPickerObject() as MeshHideAsset;
+					if (mha != null)
+					{
+						foreach(MeshHideAsset theAsset in recipe.MeshHideAssets)
+						{
+							if (theAsset.GetInstanceID() == mha.GetInstanceID())
+							{
+								found = true;
+								break;
+							}
+						}
+					}
+					if (!found)
+					{
+						recipe.MeshHideAssets.Add(mha);
+						EditorUtility.SetDirty(target);
+						AssetDatabase.SaveAssets();
+						Repaint();
+						/*
+						meshHides.InsertArrayElementAtIndex(0);
+						SerializedProperty element = meshHides.GetArrayElementAtIndex(0);
+						element.objectReferenceValue = EditorGUIUtility.GetObjectPickerObject();
+						meshHideAssetPickerID = -1;
+						Repaint();
+						*/
+					}
+				}
 			}
-			EditorGUILayout.PropertyField(meshHides, true);
-			EditorGUILayout.EndHorizontal();
+			EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+			MeshHideAsset deleteme = null;
+
+			foreach (MeshHideAsset mha in recipe.MeshHideAssets)
+			{
+				EditorGUILayout.BeginHorizontal();
+				EditorGUILayout.LabelField(mha.name + " (" + mha.AssetSlotName + ")");
+				if (GUILayout.Button("X",GUILayout.Width(20.0f)))
+				{
+					deleteme = mha;
+				}
+				EditorGUILayout.EndHorizontal();
+			}
+			EditorGUILayout.EndVertical();
+			if (deleteme != null)
+			{
+				recipe.MeshHideAssets.Remove(deleteme);
+				EditorUtility.SetDirty(target);
+				AssetDatabase.SaveAssets();
+			}
+			// EditorGUILayout.PropertyField(meshHides, true);
 			if (EditorGUI.EndChangeCheck())
-				serializedObject.ApplyModifiedProperties();
+			serializedObject.ApplyModifiedProperties();
             //EditorGUIUtility.LookLikeControls();
             if(ShowHelp)
             {
