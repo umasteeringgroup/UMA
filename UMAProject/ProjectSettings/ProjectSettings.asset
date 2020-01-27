@@ -622,7 +622,7 @@ PlayerSettings:
   webGLLinkerTarget: 1
   webGLThreadsSupport: 0
   scriptingDefineSymbols:
-    1: NOTSUPER_LOGGING;UMA_ADDRESSABLES
+    1: NOTSUPER_LOGGING;UMA_ADDRESSABLES;UMA_32BITBUFFERS
     2: 
     7: UMA_ADDRESSABLES
   platformArchitecture: {}
