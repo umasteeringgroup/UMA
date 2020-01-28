@@ -170,7 +170,12 @@ namespace UMA.CharacterSystem
 		public DCSUniversalPackRecipe GetUniversalPackRecipe(DynamicCharacterAvatar dca, UMAContextBase context)
 		{
 			var thisPackRecipe = PackedLoadDCSInternal(context);
-			var setToUse = GetRacesWardrobeSet(dca.activeRace.racedata);
+			RaceData race = dca.activeRace.racedata;
+			if (dca.activeRace.racedata == null)
+			{
+				race = dca.activeRace.data;
+			}
+			var setToUse = GetRacesWardrobeSet(race);
             thisPackRecipe.wardrobeSet = setToUse;
 			thisPackRecipe.race = dca.activeRace.name;
 			return thisPackRecipe;

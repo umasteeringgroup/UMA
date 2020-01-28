@@ -33,6 +33,7 @@ namespace UMA.CharacterSystem.Examples
 		public GameObject CharacterUI;
         public bool PreloadAndUnload;
         public Slider TestSlider;
+        public UMAWardrobeCollection CollectionToAdd;
 
 		private List<RaceData> races;
 
@@ -298,6 +299,19 @@ namespace UMA.CharacterSystem.Examples
 
         public SharedColorTable SkinColors;
         public SharedColorTable HairColors;
+
+        public void CreateFromPrefab()
+        {
+            float x = Random.Range(-8.0f, 8.0f);
+            float z = Random.Range(1.0f, 12.0f);
+            GameObject go = GameObject.Instantiate(AvatarPrefab);
+            DynamicCharacterAvatar dca = go.GetComponent<DynamicCharacterAvatar>();
+            dca.SetSlot(CollectionToAdd);
+            go.transform.localPosition = new Vector3(x, 0, z);
+            go.SetActive(true);
+        }
+
+
 
         public void DynamicCreateClick()
         {

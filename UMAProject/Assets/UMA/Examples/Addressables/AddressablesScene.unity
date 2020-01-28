@@ -728,6 +728,7 @@ MonoBehaviour:
   CharacterUI: {fileID: 1412454642}
   PreloadAndUnload: 0
   TestSlider: {fileID: 1731809558}
+  CollectionToAdd: {fileID: 11400000, guid: 00c480d122a58b34abe5e5db996961e1, type: 2}
   SkinColors: {fileID: 11400000, guid: 77bea8d4eaa1f0b47acb6086897c8337, type: 2}
   HairColors: {fileID: 11400000, guid: 898c61493a044a84b8c916c7d4f12480, type: 2}
 --- !u!4 &222486132
@@ -2169,7 +2170,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Destroy Avatar
+  m_Text: Create Prefab
 --- !u!222 &828518169
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -4114,7 +4115,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 222486131}
-        m_MethodName: DestroyAvatar
+        m_MethodName: CreateFromPrefab
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

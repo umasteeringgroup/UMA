@@ -40,8 +40,6 @@ MonoBehaviour:
   AnisoLevel: 1
   MatFilterMode: 1
   Compression: 0
-  shaderParms:
-  - ParameterName: _Color
-    ColorName: Skin
+  shaderParms: []
   MaskWithCurrentColor: 0
   maskMultiplier: {r: 1, g: 1, b: 1, a: 1}

@@ -142,6 +142,8 @@ namespace UMA.CharacterSystem
 		private bool isAddressableSystem;
         private Queue<AsyncOp> LoadedHandles = new Queue<AsyncOp>();
 #endif
+
+        //public int 
         [EnumFlags]
         public LoadOptions defaultLoadOptions = LoadOptions.loadRace | LoadOptions.loadDNA | LoadOptions.loadWardrobe | LoadOptions.loadBodyColors | LoadOptions.loadWardrobeColors;
 
@@ -246,6 +248,10 @@ namespace UMA.CharacterSystem
         {
             get
             {
+                if (context == null)
+                {
+                    context = UMAContext.Instance;
+                }
                 return context.GetRecipes(activeRace.name);
             }
         }
@@ -1222,7 +1228,7 @@ namespace UMA.CharacterSystem
         /// <param name="clearExisting">Defaults to false. Set to true to clear the existing wardrobe recipes.</param>
         public void LoadWardrobeSet(List<WardrobeSettings> wardrobeSet, bool clearExisting = false)
         {
-            _isFirstSettingsBuild = false;
+            // _isFirstSettingsBuild = false;
             if (clearExisting || wardrobeSet.Count == 0)
                 _wardrobeRecipes.Clear();
             if (wardrobeSet.Count > 0)
