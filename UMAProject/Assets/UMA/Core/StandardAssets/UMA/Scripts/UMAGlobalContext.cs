@@ -311,7 +311,10 @@ namespace UMA
 
 		public override UMATextRecipe GetRecipe(string filename, bool dynamicallyAdd = true)
 		{
-			return UMAAssetIndexer.Instance.GetAsset<UMAWardrobeRecipe>(filename);
+			UMATextRecipe recipe = UMAAssetIndexer.Instance.GetAsset<UMAWardrobeRecipe>(filename);
+			if (recipe == null)
+				recipe = UMAAssetIndexer.Instance.GetAsset<UMAWardrobeCollection>(filename);
+			return recipe;
 		}
 
 		public override UMARecipeBase GetBaseRecipe(string filename, bool dynamicallyAdd)
@@ -335,7 +338,10 @@ namespace UMA
 
 		public override bool HasRecipe(string Name)
 		{
-			return UMAAssetIndexer.Instance.HasAsset<UMAWardrobeRecipe>(Name);
+			bool found = UMAAssetIndexer.Instance.HasAsset<UMAWardrobeRecipe>(Name);
+			if (!found)
+				found = UMAAssetIndexer.Instance.HasAsset<UMAWardrobeCollection>(Name);
+			return found;
 		}
 
 		/// <summary>

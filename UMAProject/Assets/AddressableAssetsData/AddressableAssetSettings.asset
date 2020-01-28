@@ -200,6 +200,8 @@ MonoBehaviour:
     - UMA_Recipes
     - GirlBaseAsDNA
     - MaleBase
+    - ElfMale Base Recipe
+    - Elf Female Base Race Recipe
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: dcf39f185b7285f46b384b0a25cb6bf7, type: 2}
