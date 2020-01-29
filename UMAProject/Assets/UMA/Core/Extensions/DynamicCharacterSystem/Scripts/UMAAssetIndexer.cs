@@ -1,5 +1,5 @@
 //#define TIMEINDEXER
-//#define DBLOGGER
+
 
 using UnityEngine;
 using System.IO;
@@ -25,12 +25,6 @@ using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.AddressableAssets.Settings.GroupSchemas;
 #endif
-#endif
-
-#if DBLOGGER
-using System.Data;
-using MySql.Data;
-using MySql.Data.MySqlClient;
 #endif
 
 namespace UMA
@@ -142,10 +136,6 @@ namespace UMA
 		
 #endregion
 
-#if DBLOGGER
-		public static MySqlConnection conn;
-#endif
-
 		public static System.Diagnostics.Stopwatch StartTimer()
         {
 #if TIMEINDEXER
@@ -169,26 +159,6 @@ namespace UMA
             return;
 #endif
         }
-
-#if DBLOGGER
-		public static void DBLogger(string message)
-		{
-			Debug.Log(message);
-			if (conn == null)
-			{
-				string connstr = "server=mcserver;user=admin;database=AddressableData;port=3306;password=f2672b555bd2fc54c985";
-				conn = new MySqlConnection(connstr);
-			}
-			if (conn == null)
-			{
-				Debug.Log("Unable to log to DB");
-				return;
-			}
-			string sql = "insert values here)";
-			MySqlCommand cmd = new MySqlCommand(sql, conn);
-			cmd.ExecuteNonQuery();
-		}
-#endif
 
 		public static UMAAssetIndexer Instance
         {

@@ -200,6 +200,11 @@ namespace UMA
                 ReferenceCount--;
                 if (ReferenceCount < 1)
                 {
+                    if (ReferenceCount < 0)
+                    {
+                        Debug.LogError("Reference count is negative on AssetItem " + this._Name + " of Type " + this._TheType+". This should not happen.");
+                        return;
+                    }
                     FreeReference();
                 }
             }

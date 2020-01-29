@@ -44,7 +44,7 @@ Various bug fixes & changes
     Fixed some scenes that had broken over time
     Sometimes a shader would not be compiled correctly.
     Reworked recipe editor and disallowed duplicate mesh hide assets.
-
+    Fixed bug where you couldn't add a Wardrobe Collection using SetSlot before Start() was called on the DCA.
 
 What's new in 2.9
 Renderer Manager - allow you to specify visibility, shadows of specific model parts.
