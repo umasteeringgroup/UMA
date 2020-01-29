@@ -19,7 +19,7 @@ namespace UMA.CharacterSystem
 	{
 
 		[SerializeField]
-		private DynamicDNAConverterController _converterController;
+		private DynamicDNAConverterController _converterController=null;
 
 		[SerializeField]
 		[BaseCharacterModifier.Config(true)]

@@ -20,7 +20,7 @@ namespace UMA.Editors
 
         protected GUIStyle centeredLabel;
 
-        public void OnEnable()
+        public virtual void OnEnable()
         {
             fitAtlas = serializedObject.FindProperty("fitAtlas");
             convertRenderTexture = serializedObject.FindProperty("convertRenderTexture");

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-namespace UMA.Editors
+namespace UMA.Editors 
 {
     [CustomEditor(typeof(UMAGenerator))]
     public class UMAGeneratorEditor : UMAGeneratorBuiltinEditor
@@ -14,3 +14,4 @@ namespace UMA.Editors
         }
     }
 }
+

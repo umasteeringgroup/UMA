@@ -29,7 +29,8 @@ namespace UMA.Dynamics
 
 		[Tooltip("Set this to snap the Avatar to the position of it's hip after ragdoll is finished")]
 		public bool UpdateTransformAfterRagdoll = true;
-
+		[Tooltip("Check this to set the player layer to the current layer, and read the 'ragdoll' layer from the settings")]
+		public bool AutoSetLayers = false;
 		[Tooltip("Layer to set the ragdoll colliders on. See layer based collision")]
 		public int ragdollLayer = 8;
 		[Tooltip("Layer to set the player collider on. See layer based collision")]
@@ -79,6 +80,16 @@ namespace UMA.Dynamics
 		// Use this for initialization
 		void Start () 
 		{
+			if (AutoSetLayers)
+			{
+				playerLayer = gameObject.layer;
+				ragdollLayer = LayerMask.NameToLayer("Ragdoll");
+			}
+			else
+			{
+				gameObject.layer = playerLayer;
+			}
+
 			_avatar = GetComponent<DynamicCharacterAvatar>();
 			//Using DCS
 			if (_avatar != null)
@@ -99,8 +110,6 @@ namespace UMA.Dynamics
 					_umaData.CharacterUpdated.AddListener(OnCharacterUpdatedCallback);
 				}
 			}
-
-			gameObject.layer = playerLayer;
 
 			if (!Physics.GetIgnoreLayerCollision(ragdollLayer, playerLayer))
 			{

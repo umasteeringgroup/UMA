@@ -5,7 +5,7 @@ namespace UMA.CharacterSystem
 {
 	public class DynamicCharacterSystemBase : MonoBehaviour
 	{
-		//just here really so that there is something that can be assigned in UMAContext. 
+		//just here really so that there is something that can be assigned in UMAContextBase. 
 		//We can make some methods available here tho
 		public virtual void Awake() { }
 

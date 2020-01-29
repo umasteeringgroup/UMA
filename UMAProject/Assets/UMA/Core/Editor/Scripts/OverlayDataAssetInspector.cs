@@ -25,7 +25,6 @@ namespace UMA.Editors
 
 		private bool additionalFoldout = false;
 
-
 		void OnEnable()
 		{
 			_overlayName = serializedObject.FindProperty("overlayName");
@@ -50,7 +49,6 @@ namespace UMA.Editors
 			if (doSave && Time.realtimeSinceStartup > (lastActionTime + 0.5f))
 			{
 				doSave = false;
-				Debug.Log("Saved OverlayDataAsset lastActionTime = " + lastActionTime + " realTime = " + Time.realtimeSinceStartup);
 				lastActionTime = Time.realtimeSinceStartup;
 				EditorUtility.SetDirty(target);
 				AssetDatabase.SaveAssets();

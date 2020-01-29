@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
 
-namespace UMA.CharacterSystem.Editors
+namespace UMA.CharacterSystem.Editors 
 {
 
 	public class UMAAssetIndexerEditor : EditorWindow 
@@ -19,12 +19,20 @@ namespace UMA.CharacterSystem.Editors
 		public Vector2 scrollPosition = Vector2.zero;
 		delegate void ProcessAssetItem(System.Type type, int i, AssetItem a);
 
+		private enum FilterType { all=0, addressable, notaddressable, always, notalways, hasreference, noreference };
+		private string[] FilterLookup = { "All", "Addressable","Not Addressable", "Always Loaded", "Not Always Loaded", "With References", "Without References" };
 		// dictionary of type
 		// contains list of bools
-		     
+
+		private FilterType MetaFilter = FilterType.all;
 		public string Filter = "";
 		public bool IncludeText;
+
+		int MetaFilterIndex;
 		int NotInBuildCount = 0;
+		int AlwaysLoadedCount = 0;
+		int AddressableCount = 0;
+		int ItemCount = 0;
 
 		UMAAssetIndexer UAI 
 		{
@@ -266,10 +274,16 @@ namespace UMA.CharacterSystem.Editors
 			GUILayout.EndHorizontal();
 
 
+
 			GUILayout.BeginHorizontal();
 			if (GUILayout.Button("Add Build References"))
 			{
 				UAI.AddReferences();
+				Resources.UnloadUnusedAssets();
+			}
+			if (GUILayout.Button("Force Add Refs"))
+			{
+				UAI.AddReferences(true);
 				Resources.UnloadUnusedAssets();
 			}
 			if (GUILayout.Button("Clear References"))
@@ -282,6 +296,38 @@ namespace UMA.CharacterSystem.Editors
 				UAI.Clear();
 			}
 			GUILayout.EndHorizontal();
+
+
+#if UMA_ADDRESSABLES
+			GUIHelper.BeginVerticalPadded(5, new Color(0.65f, 0.65f, 0.65f));
+			GUILayout.Label("Addressables");
+			GUILayout.Space(10);
+
+			GUILayout.BeginHorizontal();
+			if (GUILayout.Button("Re/Generate Groups"))
+			{
+				UAI.CleanupAddressables();
+				UAI.GenerateAddressables();
+				Resources.UnloadUnusedAssets();
+			}
+			if (GUILayout.Button("Delete Empty Groups"))
+			{
+				UAI.CleanupAddressables(true);
+			}
+			GUILayout.EndHorizontal();
+			GUILayout.BeginHorizontal();
+			if (GUILayout.Button("Remove Addressables"))
+			{
+				UAI.CleanupAddressables(false, true);
+			}
+#endif
+			if (GUILayout.Button("Force Add Refs (bad!)"))
+			{
+				UAI.AddReferences(true);
+				Resources.UnloadUnusedAssets();
+			}
+			GUILayout.EndHorizontal();
+			GUIHelper.EndVerticalPadded(5.0f);
 
 			GUILayout.BeginHorizontal();
 			if (GUILayout.Button("Collapse All"))
@@ -302,10 +348,15 @@ namespace UMA.CharacterSystem.Editors
 			//{
 			//	UAI.ForceSave();
 			//}
+
 			UAI.AutoUpdate = EditorGUILayout.Toggle("Process Updates", UAI.AutoUpdate);
 			GUILayout.BeginHorizontal();
 
 			Filter = EditorGUILayout.TextField("Filter Library", Filter);
+
+			MetaFilterIndex = EditorGUILayout.Popup(MetaFilterIndex, FilterLookup,GUILayout.Width(100));
+			MetaFilter = (FilterType)MetaFilterIndex;
+
 			GUI.SetNextControlName("TheDumbUnityBuggyField");
 			if (GUILayout.Button("-", GUILayout.Width(20)))
 			{
@@ -318,33 +369,90 @@ namespace UMA.CharacterSystem.Editors
 			bool HasErrors = false;
 			string ErrorTypes = "";
 			NotInBuildCount = 0;
+			AlwaysLoadedCount = 0;
+			AddressableCount = 0;
+			ItemCount = 0;
 
 			foreach (System.Type t in Types)
 			{
 				if (t != typeof(AnimatorController) && t!= typeof(AnimatorOverrideController)) // Somewhere, a kitten died because I typed that.
 				{
-					if (ShowArray(t, Filter))
+					bool err = false;
+					err = ShowArray(t, Filter);
+					if (err)
 					{
 						HasErrors = true;
 						ErrorTypes += t.Name +" ";
 					}
 				}
 			}
-			string bldMessage = "(" + NotInBuildCount + ") Item(s) not in build";
+
+			string bldMessage = string.Format("Items:{0} Always:{1} NotIncluded:{2} Addressable:{3}", ItemCount, AlwaysLoadedCount, NotInBuildCount, AddressableCount);
 			GUILayout.BeginHorizontal();
 			if (HasErrors)
 			{
-				GUILayout.Label(ErrorTypes + "Have error items! "+bldMessage);
+				GUILayout.Label(ErrorTypes + " Have error items! "+bldMessage);
 			}
 			else
 			{
-				GUILayout.Label("All items appear OK. " +bldMessage);
+				GUILayout.Label("No errors. " +bldMessage);
 			}
 			GUILayout.EndHorizontal();
 		}
 
+		public bool IsFiltered(AssetItem ai)
+		{
+			if (MetaFilter == FilterType.addressable)
+			{
+				if (!ai.IsAddressable)
+					return true;
+			}
 
-        public bool ShowArray(System.Type CurrentType, string Filter)
+			if (MetaFilter == FilterType.always)
+			{
+				if (!ai.IsAlwaysLoaded)
+					return true;
+			}
+
+			if (MetaFilter == FilterType.notaddressable)
+			{
+				if (ai.IsAddressable)
+					return true;
+			}
+
+			if (MetaFilter == FilterType.notalways)
+			{
+				if (ai.IsAlwaysLoaded)
+					return true;
+			}
+
+			if (MetaFilter == FilterType.hasreference)
+			{
+				if (ai._SerializedItem == null)
+					return true;
+			} 
+
+			if (MetaFilter == FilterType.noreference)
+			{
+				if (ai._SerializedItem != null)
+					return true;
+			}
+			return false;
+		}
+
+
+		private const int ToggleWidth = 20;
+		private const int NameWidth = 0;        // this should expand
+		private const int InBuildWidth = 35;    // has REF
+		private const int AddressableWidth = 35;
+		private const int GroupWidth = 130;     // group it's in
+		private const int LabelsWidth = 200;
+		private const int AlwaysFlagWidth = 40;
+		private const int InspectButtonWidth = 20;
+		private const int BuildButtonWidth = 35;
+		private const int RemoveButtonWidth = 20;
+
+		public bool ShowArray(System.Type CurrentType, string Filter)
         {
             bool HasFilter = false;
             bool NotFound = false;
@@ -363,10 +471,28 @@ namespace UMA.CharacterSystem.Editors
             Items.AddRange(TypeDic.Values);
 
             int NotInBuild = 0;
+			int Addressable = 0;
+			int AlwaysIncluded = 0;
+			int LocalItems = 0;
             int VisibleItems = 0;
+
+			// Show header
+			// Show each item.
             foreach (AssetItem ai in Items)
             {
-                if (ai._SerializedItem == null)
+				LocalItems++;
+				Object test = ai._SerializedItem;
+
+				System.Object o = (System.Object)(test);
+
+				if (IsFiltered(ai))
+				{
+					continue;
+				}
+
+				if (ai.IsAddressable) Addressable++;
+				if (ai.IsAlwaysLoaded) AlwaysIncluded++;
+				if (o == null && ai.IsAddressable == false)
                 {
                     NotInBuild++;
                 }
@@ -384,10 +510,14 @@ namespace UMA.CharacterSystem.Editors
                 TypeCheckboxes[CurrentType].AddRange(new bool[VisibleItems]);
             }
 
+			ItemCount += LocalItems;
             NotInBuildCount += NotInBuild;
+			AlwaysLoadedCount += AlwaysIncluded;
+			AddressableCount += Addressable;
+
             GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
             GUILayout.Space(10);
-            Toggles[CurrentType] = EditorGUILayout.Foldout(Toggles[CurrentType], CurrentType.Name + ":  " + VisibleItems + "/" + TypeDic.Count + " Item(s). " + NotInBuild + " Not in build.");
+            Toggles[CurrentType] = EditorGUILayout.Foldout(Toggles[CurrentType], CurrentType.Name + ":  " + VisibleItems + "/" + TypeDic.Count + " Item(s). " + NotInBuild + " missing. "+Addressable+" Addressable. "+AlwaysIncluded+" Always In Resources");
             GUILayout.EndHorizontal();
 
 
@@ -407,7 +537,13 @@ namespace UMA.CharacterSystem.Editors
                 }
                 GUILayout.EndHorizontal();
 
-                int CurrentVisibleItem = 0;
+				// HEADER
+				GUILayout.BeginHorizontal();
+
+				GUILayout.EndHorizontal();
+				// END HEADER
+
+				int CurrentVisibleItem = 0;
                 foreach (AssetItem ai in Items)
                 {
                     string lblBuild = "B-";
@@ -415,27 +551,42 @@ namespace UMA.CharacterSystem.Editors
                     if (HasFilter && (!lblVal.ToLower().Contains(actFilter)))
                         continue;
 
-                    if (ai._Name == "< Not Found!>")
+					if (IsFiltered(ai))
+					{
+						continue;
+					}
+
+					if (ai._Name == "< Not Found!>")
                     {
                         NotFound = true;
                     }
                     GUILayout.BeginHorizontal(EditorStyles.textField);
 
+
                     TypeCheckboxes[CurrentType][CurrentVisibleItem] = EditorGUILayout.Toggle(TypeCheckboxes[CurrentType][CurrentVisibleItem++], GUILayout.Width(20));
-                    if (ai._SerializedItem == null)
+					if (ai.IsAddressable)
+					{
+						lblVal += "<Addressable>";
+						lblBuild = "NF";
+					}
+					else if (ai._SerializedItem == null)
                     {
                         lblVal += "<Not in Build>";
                         lblBuild = "B+";
                     }
 
-                    if (GUILayout.Button(lblVal, EditorStyles.label))
+
+					if (GUILayout.Button(lblVal, EditorStyles.label))
                     {
                         Object o = AssetDatabase.LoadMainAssetAtPath(ai._Path);
                         EditorGUIUtility.PingObject(o);
                         Selection.activeObject = o;
                     }
 
-                    if (GUILayout.Button("I", GUILayout.Width(20.0f)))
+					GUILayout.Label("Always ", GUILayout.Width(60.0f));
+					ai.IsAlwaysLoaded = EditorGUILayout.Toggle(ai.IsAlwaysLoaded, GUILayout.Width(20));
+
+					if (GUILayout.Button("I", GUILayout.Width(20.0f)))
                     {
                         Object o = AssetDatabase.LoadMainAssetAtPath(ai._Path);
                         InspectorUtlity.InspectTarget(o);
@@ -445,7 +596,7 @@ namespace UMA.CharacterSystem.Editors
                         if (ai._SerializedItem == null)
                         {
                             if (!ai.IsAssetBundle)
-                                ai.CachSerializedItem();
+                                ai.CacheSerializedItem();
                         }
                         else
                         {
@@ -486,7 +637,8 @@ namespace UMA.CharacterSystem.Editors
                 }
                 EditorGUILayout.EndHorizontal();
                 EditorGUILayout.BeginHorizontal();
-                if (GUILayout.Button("Remove Checked"))
+
+				if (GUILayout.Button("Remove Checked"))
                 {
                     ProcessItems(CurrentType, TypeCheckboxes[CurrentType], HasFilter, actFilter, Items, RemoveChecked);
                 }
@@ -513,8 +665,19 @@ namespace UMA.CharacterSystem.Editors
                         ProcessItems(CurrentType, TypeCheckboxes[CurrentType], HasFilter, actFilter, Items, SetItemMaterial);
                     }
                     EditorGUILayout.EndHorizontal();
-                }
-                GUIHelper.EndVerticalPadded(5);
+#if UMA_ADDRESSABLES
+					EditorGUILayout.BeginHorizontal();
+					if (GUILayout.Button("Remove Orphaned Items"))
+					{
+						// Remove orphans here. 
+						// lots/Overlays that are not addressable, and not always.
+						UAI.CleanupOrphans(CurrentType);
+					}
+					EditorGUILayout.EndHorizontal();
+					EditorGUILayout.HelpBox("Removing Orphaned Items should be done AFTER you have marked the Races and Wardrobe items you want to include as 'Always Included', and after you have built Addressable Bundles!", MessageType.Info);
+#endif               
+				}
+				GUIHelper.EndVerticalPadded(5);
 
 
                 GUIHelper.EndVerticalPadded(5);
@@ -623,7 +786,7 @@ namespace UMA.CharacterSystem.Editors
 				GUIHelper.EndVerticalPadded(10);
 			}
 		}
-		[MenuItem ("UMA/Global Library Window", priority = 10)]
+		[MenuItem ("UMA/Old Global Window (Deprecated)", priority = 9990)]
 		public static void  ShowWindow () 
 		{
 			UMAAssetIndexerEditor window = EditorWindow.GetWindow<UMAAssetIndexerEditor>();

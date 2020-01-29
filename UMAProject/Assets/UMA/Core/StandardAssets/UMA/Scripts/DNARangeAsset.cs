@@ -282,6 +282,43 @@ namespace UMA
 			return true;
 		}
 
+
+		public Dictionary<string, DnaSetter> GetDNA(UMAData umaData, IDNAConverter dcb, string[] dbNames)
+		{
+			Dictionary<string, DnaSetter> dna = new Dictionary<string, DnaSetter>();
+
+			foreach (UMADnaBase db in umaData.GetAllDna())
+			{
+				string Category = dcb.DisplayValue; 
+
+				if (dbNames.Length == 0)
+				{
+					Debug.Break();
+				}
+				for (int i = 0; i < db.Count; i++)
+				{
+					if (dna.ContainsKey(dbNames[i]))
+					{
+						dna[db.Names[i]] = new DnaSetter(dbNames[i], db.Values[i], i, db, Category);
+					}
+					else
+					{
+						try
+						{
+							dna.Add(dbNames[i], new DnaSetter(dbNames[i], db.Values[i], i, db, Category));
+						}
+						catch(System.Exception ex)
+						{
+							Debug.LogException(ex);
+						}
+					}
+				}
+			}
+			return dna;
+		}
+
+		private string[] dnaNames = { };
+
 		/// <summary>
 		/// Uniformly randomizes each value in the DNA.
 		/// </summary>
@@ -290,29 +327,18 @@ namespace UMA
 		{
 			if (dnaConverter == null)
 				return;
-			
+
 			UMADnaBase dna = data.GetDna(dnaConverter.DNATypeHash);
 			if (dna == null)
 				return;
 
 			int entryCount = dna.Count;
-			if (means.Length != entryCount)
+
+
+			for(int i=0;i<means.Length;i++)
 			{
-				if (Debug.isDebugBuild)
-					Debug.LogWarning("Range settings out of sync with DNA, cannot apply!");
-
-				return;
+				dna.SetValue(i, means[i] + (Random.value - 0.5f) * spreads[i]);
 			}
-
-			if ((values == null) || (values.Length != entryCount))
-				values = new float[entryCount];
-
-			for (int i = 0; i < entryCount; i++)
-			{
-				values[i] = means[i] + (Random.value - 0.5f) * spreads[i];
-			}
-
-			dna.Values = values;
 		}
 
 		/// <summary>
@@ -329,20 +355,14 @@ namespace UMA
 				return;
 			
 			int entryCount = dna.Count;
-			if (means.Length != entryCount)
-			{
-				if (Debug.isDebugBuild)
-					Debug.LogWarning("Range settings out of sync with DNA, cannot apply!");
-
-				return;
-			}
 			
 			if (values == null)
 				values = new float[entryCount];
 			
 			for (int i = 0; i < entryCount; i++)
 			{
-				values[i] = UMAUtils.GaussianRandom(means[i], deviations[i]);
+				if (i < means.Length)
+					values[i] = UMAUtils.GaussianRandom(means[i], deviations[i]);
 			}
 			
 			dna.Values = values;

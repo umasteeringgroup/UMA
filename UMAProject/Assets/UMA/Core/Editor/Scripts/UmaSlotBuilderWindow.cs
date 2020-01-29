@@ -16,8 +16,8 @@ namespace UMA.Editors
 		public bool createOverlay;
 		public bool createRecipe;
 		public bool addToGlobalLibrary;
-		public bool addToLocalLibrary;
 		public bool binarySerialization;
+		public string errmsg = "";
 
 		string GetAssetFolder()
 		{
@@ -62,7 +62,12 @@ namespace UMA.Editors
 			GUILayout.Label("UMA Slot Builder");
 			GUILayout.Space(20);
 			normalReferenceMesh = EditorGUILayout.ObjectField("Seams Mesh (Optional)  ", normalReferenceMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
-			slotMesh = EditorGUILayout.ObjectField("Slot Mesh  ", slotMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
+			var newslotMesh = EditorGUILayout.ObjectField("Slot Mesh  ", slotMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
+			if (newslotMesh != slotMesh)
+			{
+				errmsg = "";
+				slotMesh = newslotMesh;
+			}
 			slotMaterial = EditorGUILayout.ObjectField("UMAMaterial	 ", slotMaterial, typeof(UMAMaterial), false) as UMAMaterial;
 			slotFolder = EditorGUILayout.ObjectField("Slot Destination Folder"	, slotFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
 			EnforceFolder(ref slotFolder);
@@ -80,12 +85,34 @@ namespace UMA.Editors
 			EditorGUILayout.LabelField(slotName + "_Recipe");
 			EditorGUILayout.EndHorizontal();
 			addToGlobalLibrary = EditorGUILayout.Toggle("Add To Global Library", addToGlobalLibrary);
-			if (UMAContext.Instance != null)
+
+			if (GUILayout.Button("Verify Slot"))
 			{
-				if (UMAContext.Instance.slotLibrary != null)
+				if (slotMesh == null)
 				{
-					addToLocalLibrary = EditorGUILayout.Toggle("Add to Scene Library", addToLocalLibrary);
+					errmsg = "Slot is null.";
 				}
+				else
+				{
+					Vector2[] uv = slotMesh.sharedMesh.uv;
+					foreach(Vector2 v in uv)
+					{
+						if (v.x > 1.0f || v.x < 0.0f || v.y > 1.0f || v.y < 0.0f)
+						{
+							errmsg = "UV Coordinates are out of range and will likely have issues with atlassed materials. Textures should not be tiled unless using non-atlassed materials.";
+							break;
+						}
+					}
+					if (string.IsNullOrEmpty(errmsg))
+					{
+						errmsg = "No errors found";
+					}
+				}
+			}
+
+			if (!string.IsNullOrEmpty(errmsg))
+			{
+				EditorGUILayout.HelpBox(errmsg, MessageType.Warning);
 			}
 
 			if (GUILayout.Button("Create Slot"))
@@ -99,13 +126,6 @@ namespace UMA.Editors
 					if (addToGlobalLibrary)
 					{
 						UMAAssetIndexer.Instance.EvilAddAsset(typeof(SlotDataAsset), sd);
-					}
-					if (addToLocalLibrary && UMAContext.Instance != null)
-					{
-						if (UMAContext.Instance.slotLibrary != null)
-						{
-							UMAContext.Instance.slotLibrary.AddSlotAsset(sd);
-						}
 					}
 					OverlayDataAsset od = null;
 					if (createOverlay)
@@ -121,7 +141,7 @@ namespace UMA.Editors
 
 
 			if (slotMesh != null )
-			{
+			{   
 				if( slotMesh.localBounds.size.x > 10.0f || slotMesh.localBounds.size.y > 10.0f || slotMesh.localBounds.size.z > 10.0f)
 					EditorGUILayout.HelpBox ("This slot's size is very large. It's import scale may be incorrect!", MessageType.Warning);
 
@@ -170,13 +190,6 @@ namespace UMA.Editors
 			if (addToGlobalLibrary)
 			{
 				UMAAssetIndexer.Instance.EvilAddAsset(typeof(OverlayDataAsset), asset);
-			}
-			if (addToLocalLibrary && UMAContext.Instance != null)
-			{
-				if (UMAContext.Instance.overlayLibrary != null)
-				{
-					UMAContext.Instance.overlayLibrary.AddOverlayAsset(asset);
-				}
 			}
 			return asset;
 		}

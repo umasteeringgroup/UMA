@@ -9,7 +9,7 @@ namespace UMA.Examples
 {
 	public class UMARecipeCrowd : MonoBehaviour
 	{
-		public UMAContext context;
+		public UMAContextBase context;
 		public UMAGeneratorBase generator;
 		public RuntimeAnimatorController animationController;
 
@@ -226,7 +226,7 @@ namespace UMA.Examples
 		}
 
 	#if UNITY_EDITOR
-		protected void SaveRecipe(UMAData umaData, UMAContext context)
+		protected void SaveRecipe(UMAData umaData, UMAContextBase context)
 		{
 			string assetPath = AssetDatabase.GenerateUniqueAssetPath(Path.Combine(saveFolderPath, umaData.umaRecipe.raceData.raceName + ".asset"));
 			var asset = ScriptableObject.CreateInstance<UMATextRecipe>();

@@ -1,0 +1,4887 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UMA_SharedItems
+  m_EditorClassIdentifier: 
+  m_GroupName: UMA_SharedItems
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 050329ab8bf1c194489c166a15c7ab18
+  m_SerializeEntries:
+  - m_GUID: 01c93d5f2b62c7b489b6ce6eec465e64
+    m_Address: Texture2D-shoes_tall_black_NM-17276
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleTallShoes_Black
+    - TallShoes_Black_Recipe
+    - FemaleTallShoes_Turquoise
+    - FemaleTallShoes_White
+    - TallShoes_Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 0249f199c53d8db419e18d71356d6041
+    m_Address: Texture2D-Sneakers_1_normal-15214
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleDancer1
+    - ToonSneakers1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 0295a68ebb3f445488d01e1e501afe45
+    m_Address: SlotDataAsset-FemaleFeetGuide
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - GirlBaseGuide
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 03e5bfa4f7f2fd445974ed61bdf5d9cf
+    m_Address: OverlayDataAsset-M_Bod Overlay 1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleAnkles_Recipe
+    - MaleHandsMid
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - Puck
+    - PuckDCS
+    - DNAConverterControllerExample Base Recipe
+    - Harold
+    - Sven
+    - Troll
+    - ElfMale Base Recipe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 04442629189f10a48bc3238f44aa9856
+    m_Address: SlotDataAsset-CapsuleCollider
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - CapsuleColliderRecipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 048d03b875302a3449e9c7af9097c814
+    m_Address: OverlayDataAsset-MaleSweatPants_Overlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleSweatPants_Recipe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 049023c663609fb4b995c6206aa43ca7
+    m_Address: SlotDataAsset-MaleHoodie
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleHoodie_Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 04c319227d59d73439289200f697f339
+    m_Address: Texture2D-Boots_N-12544
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleRobe Shoes
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 04ca452ebc325384dbd880de14092e76
+    m_Address: OverlayDataAsset-FemaleTankTop_Overlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleTankTop_Recipe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 05de8749b00df4f3ca59b5b090da0348
+    m_Address: Texture2D-MaleBody02_Normal-15118
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBase2
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 060710660a79b9549b07a47ba0c1fbe2
+    m_Address: OverlayDataAsset-Body Hair
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Puck
+    - PuckDCS
+    - Harold
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 0636d7d4de85e4549873e4a004408958
+    m_Address: Texture2D-MaleFace01_Albedo-13532
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - BlendShapeRecipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 073bb8d1e3dc03140ada534c06d42dff
+    m_Address: SlotDataAsset-MaleChallengerGloves
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerGloves
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 07908c48b4fc24542bd91f7d94e4a4f7
+    m_Address: OverlayDataAsset-GuideMeshOverlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleToonBaseGuide
+    - GirlBaseGuide
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 080febfeb9fabef40869c10c29e7b808
+    m_Address: SlotDataAsset-UMA_Toon_HANDS_Guide
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleToonBaseGuide
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 09a1dfc8fbb1147c2afb36b5c2ba8ebd
+    m_Address: Texture2D-MaleBeard03_Normal-14980
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBeard3
+    - Harold
+    - MaleBeard
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 0b1e4f14e3922614c95b147bed97cf3a
+    m_Address: OverlayDataAsset-WerewolfEyes
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Wolfie
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 0b387c31f41888947aa0ffb2fbbd848b
+    m_Address: Texture2D-M_H_Underwear_Metallic-12222
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleUnderwear
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 0b7ed825e2431f54c9f786a489da80bc
+    m_Address: SlotDataAsset-MaleEyes
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleEye1
+    - MaleEye2
+    - MaleEye3
+    - MaleEye4
+    - MaleEye5
+    - HumanMale Base Recipe
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - Puck
+    - PuckDCS
+    - DNAConverterControllerExample Base Recipe
+    - Harold
+    - Sven
+    - Troll
+    - MaleBase2
+    - ElfMale Base Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 0b80b30d8b2363d4aab8bfcba08a1e6d
+    m_Address: Texture2D-M_H_face_NOlder-16406
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleFace Old
+    - TrollHead
+    - Troll
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 0bc264c391455944a94d094e18d6cbd0
+    m_Address: SlotDataAsset-Bottoms_Female_Hot_Pants_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleDancer1
+    - ToonHotPants1
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 0bfd4db5ca8f3f44e912a809539ed57c
+    m_Address: SlotDataAsset-FemaleEyelashfix
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - KimCardassian
+    - Shelly
+    - Elf Female Base Race Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 0c49ebdd154238b45bb1a3338a613193
+    m_Address: OverlayDataAsset-MaleBeard01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBeard1
+    - Sven
+    - MaleBeard
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 0c812749c2cd1a541b79b1fe749694c2
+    m_Address: OverlayDataAsset-WerewolfTeeth
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Wolfie
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 0dfbf95a2c3548040a6cc23330e64d76
+    m_Address: SlotDataAsset-FemaleLongHair01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleHair1
+    - KimCardassian
+    - FemaleHair
+    - FemaleHairLong
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 0ec96409ed505ea41a08ee9f877fb5cc
+    m_Address: SlotDataAsset-Tops_Female_Halter_Neck_1_TORSO
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleStarDancer1
+    - ToonHalterNeck1
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 0f78229f3dbb8e34f904840f3db74e72
+    m_Address: OverlayDataAsset-MaleBeard03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBeard3
+    - Harold
+    - MaleBeard
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 0f9975fa93cece04f9f2d3455ca86225
+    m_Address: Texture2D-Fur-normal-15742
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - WerewolfTShirt
+    - Wolfie
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 0fbc0a0bbfb29084bbeafb0876b6e28b
+    m_Address: SlotDataAsset-Locomotion
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - LocomotionRecipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 10329f729c6ed4b4795e6c1986c8a496
+    m_Address: OverlayDataAsset-MaleHair01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleHair3
+    - Harold
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 106f080ab573748739995b5bcb337cf4
+    m_Address: Texture2D-FemaleJeans01_Roughness-15366
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemalePants1
+    - FemalePants2
+    - KimCardassian
+    - Shelly
+    - FemaleOutfit1
+    - FemaleOutfit2
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 10bbdf805ca24ef42809993e0339cf6d
+    m_Address: Texture2D-UMA_Toon_F_Body_normal-11994
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleDancer1
+    - ToonCropTShirt1
+    - ToonHotPants1
+    - FemaleStarDancer1
+    - ToonCapriPants1
+    - ToonHalterNeck1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 10d1e2ac030a2d54e8dffe526204097f
+    m_Address: OverlayDataAsset-Eye_Large_Adjust
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleEye5
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 1233ce5e6d66f7043ae6942431739351
+    m_Address: OverlayDataAsset-MaleHead02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBase2
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 12612d61ba9d1ff4d99d71be42fde390
+    m_Address: Texture2D-M_H_body1_Albedo-12292
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleAnkles_Recipe
+    - MaleHandsMid
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - Puck
+    - PuckDCS
+    - DNAConverterControllerExample Base Recipe
+    - Harold
+    - Sven
+    - Troll
+    - ElfMale Base Recipe
+    - OverweightMale
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 1320201c90abfb148ba70377406b5dc4
+    m_Address: OverlayDataAsset-Skin patches Face
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Troll
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 133f9784d2074834f813b737cda61b09
+    m_Address: Texture2D-Skin patches_Albedo-13434
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Troll
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 135fa583abb9749c6bfec8cd5afa178b
+    m_Address: Texture2D-MaleJeans01_Roughness-12996
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleJeans
+    - MakeMeFatJeans
+    - Sven
+    - MaleOutfit1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 14a815c7716781843bb171b88a227cf4
+    m_Address: Texture2D-Altar_hood_M-14550
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleRobe Hood
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 14b95a97d992339419108e1bfb596c42
+    m_Address: SlotDataAsset-JiggleBelly
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - JiggleBellyRecipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 155dc30d9ac42485683aee4e736df0db
+    m_Address: Texture2D-InnerMouth_Roughness-16408
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleSwappedFace
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - Puck
+    - PuckDCS
+    - DNAConverterControllerExample Base Recipe
+    - Harold
+    - KimCardassian
+    - Shelly
+    - Sven
+    - Troll
+    - MaleBase2
+    - Elf Female Base Race Recipe
+    - ElfMale Base Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 156f9f45fa760b845b6411b1010bf360
+    m_Address: SlotDataAsset-UMA_Werewolf_Torso
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - WerewolfTShirt
+    - Wolfie
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 1579cf108bfa04bdca517a8faea7e535
+    m_Address: Texture2D-MaleHair01_Roughness-11728
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleHair3
+    - Harold
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 157a4bd45f8a79447b6d4e320310ded5
+    m_Address: OverlayDataAsset-MaleShortHair_Overlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleShortHair_Recipe
+    - MilCut
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 158625e1782339b47ab36baa044aa6bb
+    m_Address: SlotDataAsset-MaleHead_Head
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Troll
+    - ElfMale Base Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 161a5c050c3f1f74fb47075770f15450
+    m_Address: OverlayDataAsset-Wrapped Pants
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MalePants
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 167405fbb227440db83e65ed90b83b7a
+    m_Address: Texture2D-MaleBeard01_Normal-16054
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBeard1
+    - Sven
+    - MaleBeard
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 16acca487b4d8154a88319dd7da1c38e
+    m_Address: Texture2D-guideMesh_diffuse-14746
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleToonBaseGuide
+    - GirlBaseGuide
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 16c2c8e5305fb47d7bfb5beaed24f6ea
+    m_Address: Texture2D-Female_Tshirt01_Roughness-13894
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleShirt1
+    - GirlShirt1
+    - FemaleOutfit2
+    - FemaleShirt4
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 1728ae09e26524f7ea24cc5be258747e
+    m_Address: Texture2D-FemaleLongHair01_Module_Albedo-15048
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleHair1
+    - KimCardassian
+    - FemaleHairLong
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 1772139f4a11dce4da29d09459b78880
+    m_Address: Texture2D-M_H_bod_N-17336
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleAnkles_Recipe
+    - MaleHandsMid
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - Puck
+    - PuckDCS
+    - DNAConverterControllerExample Base Recipe
+    - Harold
+    - Sven
+    - Troll
+    - ElfMale Base Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 1833c968c357a464ba458590c72194b1
+    m_Address: Texture2D-F_H_face_Albedo02-14778
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleSwappedFace
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - KimCardassian
+    - Shelly
+    - Elf Female Base Race Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 18c5922fb2bcf334fb36963c4168859e
+    m_Address: SlotDataAsset-FR_High_FemaleInnerMouth
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - HumanFemaleHighPoly
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 190e223f5879e4b4380c617607ce9d3a
+    m_Address: Texture2D-Eye_Large_Normal_Adjust-17200
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleEye5
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 19656603ac354ad4aa0dee0018f7f6d5
+    m_Address: OverlayDataAsset-F_H_Bod
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleHandsMid
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - KimCardassian
+    - Shelly
+    - Elf Female Base Race Recipe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 19ca51fa9b344074ebeaad4c873fd125
+    m_Address: OverlayDataAsset-M_Face
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - AlienHeadMorph
+    - ElfEarsMorph
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - Puck
+    - PuckDCS
+    - DNAConverterControllerExample Base Recipe
+    - Harold
+    - Sven
+    - ElfMale Base Recipe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 1aadd11c8710fd842821fa962b7d66c4
+    m_Address: SlotDataAsset-FemaleLongHair
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleLongHair_Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 1b0f505392468b84f949f004a8c95b7e
+    m_Address: Texture2D-sweatpants_black_NM-12940
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleSweatPants_Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 1b412947a734f7347a7d7fb3bc3bd7f1
+    m_Address: SlotDataAsset-FR_High_FemaleFace
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - HumanFemaleHighPoly
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 1b65939acf545fa4ca745cd3ab30d156
+    m_Address: Texture2D-guideMesh_roughness-15570
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleToonBaseGuide
+    - GirlBaseGuide
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 1b6ada5c5a1cbdd41bb96770d71b16c1
+    m_Address: OverlayDataAsset-Cap_Rash_Overlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - ShavedHead
+    - MilCut
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 1ba77895e57dcc6438cc8fde32b11cec
+    m_Address: Texture2D-tanktop_yellow_NM-13778
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleTankTop_Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 1c93c34e5ba9413419409dce673c4656
+    m_Address: SlotDataAsset-Shoes_Fancy_Flats_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleStarDancer1
+    - ToonFancyFlats1
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 1cb8a895dbe7af3499df9ad078311653
+    m_Address: SlotDataAsset-UMA_Human_Male_Hands_HQ
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleHandsMid
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 1cc8858db5c0c9a48a27dc5797bb3a37
+    m_Address: SlotDataAsset-FemaleSportPants
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleSportPants_Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 1ce0f12b23c3c9941a8f257ae9ddd78f
+    m_Address: SlotDataAsset-FemaleInnerMouth
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleSwappedFace
+    - HumanFemale Base Recipe
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - KimCardassian
+    - Shelly
+    - Elf Female Base Race Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 1e7ddc02cd51b41488288a4982ca4274
+    m_Address: SlotDataAsset-FemaleEyes
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - HumanFemale Base Recipe
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - KimCardassian
+    - Shelly
+    - Elf Female Base Race Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 1f1dcad09715f4c269eeb34c63889148
+    m_Address: Texture2D-MaleShirt01_Roughness-12062
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleShirt1
+    - MaleShirt2
+    - MaleShirt3
+    - MaleOutfit1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 1f2079e30d9e5d04aa5a400a9cebfd70
+    m_Address: Texture2D-Smart_Pants_1_diffuse-13132
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleStarDancer1
+    - ToonCapriPants1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 1f9225ec4ae59d24482699e1ef27d5e3
+    m_Address: Texture2D-Crop_TShirt_1_diffuse-16366
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleDancer1
+    - ToonCropTShirt1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 1f951d479297c493296d0a40c193760e
+    m_Address: Texture2D-Female_Tshirt01_Normal-14394
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleShirt1
+    - GirlShirt1
+    - FemaleOutfit2
+    - FemaleShirt4
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 1fe00846603bd4330bd52516d41f35d7
+    m_Address: Texture2D-FemaleShirt02_Roughness-14026
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleShirt3
+    - FemaleOutfit1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 2041a0dad0ad3894ea9590072acacf65
+    m_Address: SlotDataAsset-MaleLegs
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleJeans 1
+    - MaleShorts1
+    - MaleShorts2
+    - MaleUnderwear
+    - HumanMale Base Recipe
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - Puck
+    - PuckDCS
+    - DNAConverterControllerExample Base Recipe
+    - Harold
+    - Troll
+    - MaleBase2
+    - ElfMale Base Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 208231186809c1c41994c39b4bd03d4c
+    m_Address: SlotDataAsset-FR_High_MaleFace
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - HumanMaleHighPoly
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 20989ab7f7fcc4fd29424f7ca3ad427f
+    m_Address: Texture2D-MaleBeard02_Roughness-14528
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBeard2
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 230ec082a97430c4da05bcd1157f7b44
+    m_Address: SlotDataAsset-SkyCarHubCaps
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - SkyCarBaseRecipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 230f3456aa1955640ad2f638e4dca4c7
+    m_Address: Texture2D-Aligator_Eye_Alternate_Albedo_Adjust-14046
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleEye2
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 2418efa90464f40258e3c2bc6b8bbb24
+    m_Address: Texture2D-FemaleEyebrow01_Albedo-15248
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Shelly
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 25c63a2415552414fbc33e7a48efc961
+    m_Address: SlotDataAsset-FemaleHead_Mouth
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleSwappedFace
+    - Shelly
+    - Elf Female Base Race Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 25df90b5e017453499c48fdb9051267c
+    m_Address: OverlayDataAsset-FemaleLongHair01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleHair1
+    - KimCardassian
+    - FemaleHair
+    - FemaleHairLong
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 27adb7051154579498a6b0ee107ce813
+    m_Address: OverlayDataAsset-SkyCarBodyOverlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - AntennaRecipe
+    - SpoilerRecipe
+    - StripesRecipe
+    - SkyCarBaseRecipe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 27cecc42eea01ba4080fa8703b35100f
+    m_Address: SlotDataAsset-Toon_Female_Crop_TShirt_1_TORSO
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleDancer1
+    - ToonCropTShirt1
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 286bbbe608a2cd14f9500d83fa610076
+    m_Address: Texture2D-WerewolfBody_Diffuse-14238
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - WerewolfTShirt
+    - Wolfie
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 28864c26b3f4bea4bb382e8ca1b60565
+    m_Address: OverlayDataAsset-UMA_Toon_F_Body
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleDancer1
+    - ToonCropTShirt1
+    - ToonHotPants1
+    - FemaleStarDancer1
+    - ToonCapriPants1
+    - ToonHalterNeck1
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 297b82798f9c2de4b891d273268dd65b
+    m_Address: SlotDataAsset-Hair_Long_Braided_Hair_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - ToonHair1
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 299a1aaa3a52c449b867854894068469
+    m_Address: Texture2D-MaleEyebrow01_Roughness-15616
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBrow01
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 29a929c318e07dd409a59412bc7d4cdc
+    m_Address: OverlayDataAsset-M_Eyebrow
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBrowHR
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 29e8046150efa8a4db130043bbab0fde
+    m_Address: Texture2D-WerewolfClaws_Diffuse-12270
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Wolfie
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 2a92ffae2d2dfc64ea79f231d8a844dd
+    m_Address: Texture2D-Skin patches face_Albedo-16994
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Troll
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 2aa0d5cae5c57a146ad6e43889520c12
+    m_Address: OverlayDataAsset-Fancy_Flats_1_detail
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleStarDancer1
+    - ToonFancyFlats1
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 2b0bb34dd4b7fc249a3a765b880992ec
+    m_Address: Texture2D-Smart_Pants_1_detail_diffuse-16508
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleStarDancer1
+    - ToonCapriPants1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 2b3d17febfc1bf64f938a02e581c33f9
+    m_Address: Texture2D-Underwear_Albedo-17102
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleUndies2
+    - FemaleUnderwear
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 2b7f847e474a9ce43b6dbb01f4b645d0
+    m_Address: OverlayDataAsset-ChallengerShoulderPadsMetal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerShouderPads
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 2bdd7530c4c3080479f05405559b6f67
+    m_Address: SlotDataAsset-_Gloves of Hammer
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleGloves
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 2be54f8bb776cf440b3f9cc8d1fa9b31
+    m_Address: SlotDataAsset-MaleSweatPants
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleSweatPants_Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 2c4ecf1627276e74292e6455114acb04
+    m_Address: OverlayDataAsset-GirlShirt01Color
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - GirlShirt1
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 2c589544d3fa460468f7e50c3a0d8c27
+    m_Address: Texture2D-ShoulderPad_Roughness-13236
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerShouderPads
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 2c830213a9d6eef409a4b7ce0e388acf
+    m_Address: OverlayDataAsset-Cat_eye_adjust
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleEye3
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 2c8de979750364ca1977014b515c2628
+    m_Address: Texture2D-MaleFace02_Albedo-15184
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBase2
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 2e22b2a8a14c8b64488efe3ed35a4b06
+    m_Address: Texture2D-ponytail01_diffuse-14852
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemalePonyTail_Recipe
+    - BoneyTail_Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 2ea0c2632af00954d80449e69aae3961
+    m_Address: SlotDataAsset-MaleHead_ElvenEars
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Troll
+    - ElfMale Base Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 2ef21f95dae467b4788ba5a084b94b9d
+    m_Address: OverlayDataAsset-FemaleShirt01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleShirt2
+    - KimCardassian
+    - Shelly
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 2efa54ed9091b2045a5d323cec2550cc
+    m_Address: SlotDataAsset-MaleJeans01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleOutfit1
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 2f1c6f0526831c24b8b081fbf978e3ac
+    m_Address: Texture2D-shoes_tall_turquoise_D-13602
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleTallShoes_Turquoise
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 304fc44cf9ff5ad428e4802e082702c5
+    m_Address: OverlayDataAsset-FemaleLongHair_Overlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleLongHair_Recipe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 30819781a55e5b540abd5f8a35901ca2
+    m_Address: OverlayDataAsset-FemaleShortHair01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleHair2
+    - Shelly
+    - FemaleHairShort
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 31551ac088496c44e9f4ed99f3cde8e2
+    m_Address: Texture2D-ShoulderPad_Normal-12054
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerShouderPads
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 31b625579c8744547b02bdd5c42c557e
+    m_Address: OverlayDataAsset-Default Eye Adjust
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - DNAConverterControllerExample Base Recipe
+    - KimCardassian
+    - Shelly
+    - Elf Female Base Race Recipe
+    - ElfMale Base Recipe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 31cf36859719a2f48a69d117beecec43
+    m_Address: Texture2D-SkyCarWindowsAlbedo-13752
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - SkyCarBaseRecipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 32afddac09b8ce5479274e5822dbb54d
+    m_Address: Texture2D-M_H_Underwear_N-16272
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleUnderwear
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 335dc3fe2bdb9a24ea853d1023a2ab3e
+    m_Address: OverlayDataAsset-FemaleLongHair01_Module
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleHair1
+    - KimCardassian
+    - FemaleHairLong
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 336187aa7b3190f488804be99f650b87
+    m_Address: Texture2D-Altar_hood_A-15614
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleRobe Hood
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 33cad728009b0ab439083a8ddf6a92ba
+    m_Address: OverlayDataAsset-M_Freebie Robeset Hood
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleRobe Hood
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 3432e94374a4d304aa97ce0d56a46ff9
+    m_Address: Texture2D-M_H_bod_Metallic-12926
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleAnkles_Recipe
+    - MaleHandsMid
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - Puck
+    - PuckDCS
+    - DNAConverterControllerExample Base Recipe
+    - Harold
+    - Sven
+    - Troll
+    - ElfMale Base Recipe
+    - MaleFace Old
+    - TrollHead
+    - OverweightMale
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 344a9e3f0f0a6384da7335c405e65999
+    m_Address: SlotDataAsset-MaleAlienHead
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - AlienHeadMorph
+    - Puck
+    - PuckDCS
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 34dcbac549d5c964f8c01cb8719d0a99
+    m_Address: SlotDataAsset-BoneyTail_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - BoneyTail_Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 356925f858219b04797c21d4cb7a43f4
+    m_Address: SlotDataAsset-M_Freebie Robeset Hood_Slot
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleRobe Hood
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 356ec1d28bd925b498e3fd04cc23502c
+    m_Address: SlotDataAsset-UMA_Toon_FEET_Guide
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleToonBaseGuide
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 35891113f5f78994585351984f148ffe
+    m_Address: SlotDataAsset-FR_High_MaleFeet
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - HumanMaleHighPoly
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 35dac48c1f1be421287397546c4dea8d
+    m_Address: Texture2D-MaleHair01_Normal-16222
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleHair3
+    - Harold
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 35e12337b6ca744e195cc19adc2fb8bf
+    m_Address: Texture2D-FemaleEyebrow01_Roughness-14346
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Shelly
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 36832eb4f58c963418b5be22d9a7eafb
+    m_Address: SlotDataAsset-MaleEarsMorph
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - BlendShapeRecipe
+    - Puck
+    - PuckDCS
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 3693609360e037e40a7784ab3308e7c0
+    m_Address: OverlayDataAsset-ElvenEars-1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Shelly
+    - Troll
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 37077d9ba1fa448b59a8e443ba69aa50
+    m_Address: Texture2D-MaleFace02_Normal-15968
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBase2
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 3798f966e3dde084eaa5d60ef5097c2f
+    m_Address: Texture2D-Gloves_Roughness-14080
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerGloves
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 37b21ad4181b04663a487f015301ffb8
+    m_Address: Texture2D-FemaleEyebrow01_Normal-13538
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Shelly
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 37b2f1c9a46954b6ba54d1d8eed46c72
+    m_Address: Texture2D-Lipstick01_Albedo-15274
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - KimCardassian
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 37b88890478ef4d08b54beb0ff34b132
+    m_Address: Texture2D-FemaleUnderwear01_Albedo-12006
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - KimCardassian
+    - FemaleOutfit1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 3953e60943b0d9949b9b43a9c53f76b8
+    m_Address: Texture2D-F_H_bod_Albedo-15038
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleHandsMid
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - KimCardassian
+    - Shelly
+    - Elf Female Base Race Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 3994de13deb5d5a409b414a7c747d4e3
+    m_Address: Texture2D-Altar_hood_AC-12876
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleRobe Hood
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 39d12a19876b9c04abd2cd624b34d920
+    m_Address: Texture2D-Eye_Albedo_Adjust-15072
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Puck
+    - PuckDCS
+    - Harold
+    - Sven
+    - Troll
+    - MaleBase2
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 3a2c1f4009edc2343a2e2da1342f64e2
+    m_Address: SlotDataAsset-UMA_Toon_LASHES-Female-Guide
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleToonBaseGuide
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 3a301cdd355272946a7fcf42c36e2337
+    m_Address: SlotDataAsset-UMA_Werewolf_Hands
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Wolfie
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 3a863fa5bebd59041a3f8696d3768d31
+    m_Address: Texture2D-Hair_Long_Braided_1_diffuse-13810
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - ToonHair1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 3c98e6b60315fce40802977b5cd2817f
+    m_Address: Texture2D-Fancy_Flats_1_normal-14170
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleStarDancer1
+    - ToonFancyFlats1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 3e2301213b719e549ad53ae013abcde2
+    m_Address: OverlayDataAsset-FemaleEyebrow01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Shelly
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 3e66e606ba1f54a5cb5a32696fbd1144
+    m_Address: Texture2D-MaleBody02_Albedo-13938
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBase2
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 401116460650f2e4986f84a0df3e5ec4
+    m_Address: Texture2D-WerewolfClaws_Normal-14022
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Wolfie
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 407823accaae39a4a902c6e4b2bfa383
+    m_Address: SlotDataAsset-F_High poly Eyebrows
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleSwappedFace
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - KimCardassian
+    - Elf Female Base Race Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 407eef4d2f8612444bdf249bedb33cce
+    m_Address: SlotDataAsset-UMA_Werewolf_Feet
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Wolfie
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 40aedb735001bc6469dc30694df5a6f8
+    m_Address: Texture2D-ShoulderPadLeather_Albedo-12986
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerShouderPads
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 40b53c0fadbef334ca1842707ed2929a
+    m_Address: OverlayDataAsset-Alligator_eye_adjust
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleEye1
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 41ad70ca423c43740a5fa85f0ef62442
+    m_Address: SlotDataAsset-Bottoms_Female_Capri_Pants_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleStarDancer1
+    - ToonCapriPants1
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 41c114273632845418c2782ce5be2634
+    m_Address: SlotDataAsset-UMA_Toon_INNERMOUTH_Guide
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleToonBaseGuide
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 42352aba049ed6d4494cafe7e3bbadc0
+    m_Address: OverlayDataAsset-M_Freebie Robeset Robe AC
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleRobe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 426bd674b07660049907c2e6fa61b5b1
+    m_Address: Texture2D-UpperLower_A-13414
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleRobe
+    - ClothRobeRecipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 42a14c30761d02648aee3c20858ffdae
+    m_Address: Texture2D-M_H_Underwear_Albedo-11770
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleUnderwear
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 42f076965a3ee0740a6d5977c69601e6
+    m_Address: Texture2D-Eye_Large_Roughness_Adjust-14130
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleEye1
+    - MaleEye2
+    - MaleEye3
+    - MaleEye4
+    - MaleEye5
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 434a9341d6f18de4cbe5a6bff89d3f0d
+    m_Address: OverlayDataAsset-MaleHair02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleHair
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 43a9f716de9d9934a8e076e3ece50af8
+    m_Address: Texture2D-SkyCarTiresAlbedo-13958
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - SkyCarBaseRecipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 43b1b1d7ba147c648a052d284467dcf7
+    m_Address: OverlayDataAsset-MaleShirt01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleShirt1
+    - MaleShirt2
+    - MaleShirt3
+    - MaleOutfit1
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 43f2ca917c7784aaebd610597a5b03a4
+    m_Address: Texture2D-MaleBeard02_Normal-12350
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBeard2
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 4501438dad3be4b0eb284c1b215742e0
+    m_Address: Texture2D-FemaleShirt02_Normal-16596
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleShirt3
+    - FemaleOutfit1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 454cabd70f40e964cb305d827f400774
+    m_Address: SlotDataAsset-FemaleHandsGuide
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - GirlBaseGuide
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 45b6d4db30ba89c4fbc26dbc580b78ad
+    m_Address: SlotDataAsset-MaleAnkles
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleAnkles_Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 45c60a52856ef014db9ac30909401956
+    m_Address: SlotDataAsset-SkyCarSuspension
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - SkyCarBaseRecipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 46906d9a196de0a4c88a8fe830ab7aed
+    m_Address: SlotDataAsset-UMA_Toon_TORSO-Female-Guide
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleToonBaseGuide
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 46dbf384459064a7d8cd188b79cc0ad8
+    m_Address: Texture2D-MaleBody02_Roughness-13428
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBase2
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 46ef3ad9d85e747fa8c358dcc3165385
+    m_Address: Texture2D-MaleEyebrow01_Albedo-15312
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBrow01
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 4708a9c854404ac48b9f7e39847a91db
+    m_Address: OverlayDataAsset-M_Freebie Robeset Boots
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleRobe Shoes
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 475458bd3c70c4148997ace0f6619dbb
+    m_Address: OverlayDataAsset-MeshHairStd
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleHair3
+    - MaleHair2
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 4755d55edbb90be4f9de4b4081105c55
+    m_Address: SlotDataAsset-FemaleHands
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - HumanFemale Base Recipe
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - KimCardassian
+    - Shelly
+    - Elf Female Base Race Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 47737e92a689d49489b317bdd98ff50c
+    m_Address: SlotDataAsset-FemaleHead_Head
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleSwappedFace
+    - Shelly
+    - Elf Female Base Race Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 48a01bab7f0078a49a6375335b25a2ac
+    m_Address: SlotDataAsset-UMA_Toon_EYES_Guide
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleToonBaseGuide
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 48d4f8e0253d2c843a6365a1c560a556
+    m_Address: OverlayDataAsset-Milcap_Overlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MilCut
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 48f2433eaef670144b5d5270a1f9062e
+    m_Address: Texture2D-Eye_Normal_Adjust-16844
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleEye1
+    - MaleEye2
+    - MaleEye3
+    - MaleEye4
+    - Puck
+    - PuckDCS
+    - Harold
+    - Sven
+    - Troll
+    - MaleBase2
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 498d55a6668af824ca9b8a1fab1764da
+    m_Address: SlotDataAsset-MaleHead_Mouth
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Troll
+    - ElfMale Base Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 4990462eeb5376a469915d0af3986876
+    m_Address: OverlayDataAsset-WerewolfBody
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - WerewolfTShirt
+    - Wolfie
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 4abeb20a4257e8b4f837411cb588f6ca
+    m_Address: SlotDataAsset-FemaleTorsoGuide
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - GirlBaseGuide
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 4c5c96e8edf9cdc4abf5fed26d977b87
+    m_Address: SlotDataAsset-FemaleTallShoes
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleTallShoes_Black
+    - FemaleTallShoes_Turquoise
+    - FemaleTallShoes_White
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 4c8093fd4489d1d46a72b9e5165f8106
+    m_Address: SlotDataAsset-JiggleBreasts
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - JiggleBreastsRecipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 4d2fbc2e8180eb84797f3626dd23187d
+    m_Address: Texture2D-Female_Tshirt02_diffuse-16832
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleShirt4
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 4d98ac0c301fa0d4c83550c332d2321a
+    m_Address: OverlayDataAsset-ClothRobeNonSimulatedOverlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - ClothRobeRecipe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 4de17df5964e4a1419644d12c604a173
+    m_Address: Texture2D-WerewolfHandsAndFeet_Diffuse-13920
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Wolfie
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 4e3423fc7dbaee44397ec91baa5ce828
+    m_Address: OverlayDataAsset-M_Underwear
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleUnderwear
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 4e443d543c17d314984f1bf934677b05
+    m_Address: OverlayDataAsset-MaleUnderwear01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleShorts1
+    - MaleShorts2
+    - Puck
+    - PuckDCS
+    - Harold
+    - Troll
+    - MaleUnderwear
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 4e85a43fe17f4e041b0a7fc0915b59fe
+    m_Address: SlotDataAsset-FR_High_MaleEyes
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - HumanMaleHighPoly
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 4e9cc6816f5c700409fef511dd2dd2d1
+    m_Address: SlotDataAsset-FemaleTorso
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleShirt2
+    - FemaleShirt3
+    - FemaleUndies
+    - FemaleUndies2
+    - HumanFemale Base Recipe
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - KimCardassian
+    - Shelly
+    - FemaleOutfit1
+    - FemaleUnderwear
+    - Elf Female Base Race Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 4f6302b08fbd3fd4abc60ce8e15d57e3
+    m_Address: OverlayDataAsset-Long_Braided_Hair_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - ToonHair1
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 4f8b15f6d0318a24cb5264f835574c0c
+    m_Address: SlotDataAsset-FemaleFeet
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - HumanFemale Base Recipe
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - KimCardassian
+    - Shelly
+    - Elf Female Base Race Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 503882a1f7789ad42ba44f8c8089aefe
+    m_Address: Texture2D-F_bod_metallic-12360
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleHandsMid
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - KimCardassian
+    - Shelly
+    - Elf Female Base Race Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 50fd7bdf5bb124084af695f5f932709b
+    m_Address: Texture2D-MaleBeard02_Albedo-17436
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBeard2
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 51041aef9944341459aa02cfd65199cf
+    m_Address: Texture2D-FemaleShirt01_Albedo-17464
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleShirt2
+    - KimCardassian
+    - Shelly
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 515a46b056a0d8d4d8fc2de3b7f58d29
+    m_Address: SlotDataAsset-PhysicsStandard
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - BoneyTail_Recipe
+    - PhysicsStandardRecipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 51af9d51ef86e4b5b88b109f0acc4faa
+    m_Address: Texture2D-FemaleLongHair01_Normal-12260
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleHair1
+    - KimCardassian
+    - FemaleHair
+    - FemaleHairLong
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 52356e7a7ac1a79468d88e2b3f918bd6
+    m_Address: OverlayDataAsset-ChallengerBootsLeather
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerBoots
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 52ecbbea436af6c4596d67e66a65d7ef
+    m_Address: OverlayDataAsset-FemaleSportPants_Overlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleSportPants_Recipe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 55c307f00e33a424ea317251a9ba1363
+    m_Address: Texture2D-M_Pants_00_Normal-12098
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleJeans 1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 567469b0394184aaa99756a0d5bc580f
+    m_Address: Texture2D-MaleJeans01_Albedo-12038
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleJeans
+    - MakeMeFatJeans
+    - Sven
+    - MaleOutfit1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 5746c09014733de4bbf208291c61aaea
+    m_Address: OverlayDataAsset-InnerMouth
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleSwappedFace
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - Puck
+    - PuckDCS
+    - DNAConverterControllerExample Base Recipe
+    - Harold
+    - KimCardassian
+    - Shelly
+    - Sven
+    - Troll
+    - MaleBase2
+    - Elf Female Base Race Recipe
+    - ElfMale Base Recipe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 57540dd689a6efa44b9a5d2c785de92e
+    m_Address: Texture2D-GlovesMetal_Albedo-14218
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerGloves
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 57c082651ee6c46c49734f31d176ba72
+    m_Address: Texture2D-MaleBeard01_Albedo-13704
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBeard1
+    - Sven
+    - MaleBeard
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 58b1e7b20f864d843b70ebcc09e4bd3f
+    m_Address: Texture2D-sportwear_pants_granit_D-12716
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleSportPants_Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 58d7ecb23020d4146a31d6e77ff22557
+    m_Address: OverlayDataAsset-Smart_Pants_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleStarDancer1
+    - ToonCapriPants1
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 58dd27014d7068843ab43bc57b2b80a9
+    m_Address: Texture2D-HAIR_Nupgrade-12140
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleHair3
+    - MaleHair2
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 58e5a93186f923c4ca7910365d807714
+    m_Address: SlotDataAsset-F_High poly head
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - HumanFemale Base Recipe
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 58f931091c1c4f24c93d1d911b8c032b
+    m_Address: SlotDataAsset-UMA_Werewolf_Teeth
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Wolfie
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 59a279fd7048eff45b387293668ddff7
+    m_Address: Texture2D-Gloves Of Hammer_normal-16772
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleGloves
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 5a63f3d521484f345b330eaa6ddd496e
+    m_Address: OverlayDataAsset-EyeOverlayAdjust
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Puck
+    - PuckDCS
+    - Harold
+    - Sven
+    - Troll
+    - MaleBase2
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 5ab9cab67c9728b42a2ef6bd5f13cf4f
+    m_Address: SlotDataAsset-ClothRobeSimulated
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - ClothRobeRecipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 5b355e75d31e28542827674f1716b072
+    m_Address: Texture2D-hoodie_blue_D-13740
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleHoodie_Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 5baae6388af63c0448e6d614fa7586b3
+    m_Address: SlotDataAsset-FemaleShortHair01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleHair2
+    - Shelly
+    - FemaleHairShort
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 5c36f948b8e7aab409933dec824d011d
+    m_Address: OverlayDataAsset-Crop_TShirt_1_detail
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleDancer1
+    - ToonCropTShirt1
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 5dcb82ea78983cf4da0c206fc9de96ae
+    m_Address: SlotDataAsset-MaleChallengerShouderPads
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerShouderPads
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 5dd4cac4095bd014795faab9a4ae996e
+    m_Address: Texture2D-M_eyebrows_M-13510
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBrowHR
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 5e0d6fd5a419c024abb998898b6bce79
+    m_Address: Texture2D-TorsoArmorLeather_Albedo-13882
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerTorso
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 5f7c268b402a9fe46b8a5c4115e669f7
+    m_Address: Texture2D-scrunchie-15940
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemalePonyTail_Recipe
+    - BoneyTail_Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 60d0a4f3a2fd41c4eb6136053eeefc44
+    m_Address: Texture2D-TorsoArmor_Normal-13158
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerTorso
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 612aa5b72e1204f9292868e1a30c7654
+    m_Address: Texture2D-FemaleUnderwear01_Roughness-14524
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleUndies
+    - Shelly
+    - KimCardassian
+    - FemaleOutfit1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 61ff84e89ca1f5c41856a75449025092
+    m_Address: OverlayDataAsset-FemaleShirt02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleShirt3
+    - FemaleOutfit1
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 620d3b0eb54754f4c8b43738f43f79be
+    m_Address: Texture2D-sportwear_pants_granit_NM-16796
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleSportPants_Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 6260dbbbf7d5f0d428c91e7d592438a0
+    m_Address: Texture2D-Halter_Neck_1_normal-16008
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleStarDancer1
+    - ToonHalterNeck1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 63212701cc50fca4eac77618947eb849
+    m_Address: OverlayDataAsset-FemaleTshirt01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleShirt1
+    - GirlShirt1
+    - FemaleOutfit2
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 63b4d18e3035f19478f48fc951ba36ca
+    m_Address: Texture2D-F_H_face_N-16940
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleSwappedFace
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - KimCardassian
+    - Shelly
+    - Elf Female Base Race Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 650280757a94c364c9f19cec1b48670e
+    m_Address: Texture2D-Male face metallic new-13720
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - ShavedHead
+    - MilCut
+    - MaleHair1
+    - MaleShortHair_Recipe
+    - AlienHeadMorph
+    - ElfEarsMorph
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - Puck
+    - PuckDCS
+    - DNAConverterControllerExample Base Recipe
+    - Harold
+    - Sven
+    - ElfMale Base Recipe
+    - Troll
+    - MaleHair
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 65887f0e5072b8b499a7760e4392741d
+    m_Address: OverlayDataAsset-MaleJeans01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleJeans
+    - MakeMeFatJeans
+    - Sven
+    - MaleOutfit1
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 664ce06cddaec764a95d67b79505d8dc
+    m_Address: SlotDataAsset-FemaleTshirt01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleShirt1
+    - FemaleShirt4
+    - GirlShirt1
+    - FemaleOutfit2
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 66d6b2f3a4f1dab4981dee867adc657f
+    m_Address: Texture2D-Cat_Eye_Albedo_Adjust-13152
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleEye3
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 66dc6991ea490104ca812bba7bae9524
+    m_Address: SlotDataAsset-MaleHead_Nose
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Troll
+    - ElfMale Base Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 672ff22b18b5252489801090dc0e68a8
+    m_Address: SlotDataAsset-FemaleInnerMouthGuide
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - GirlBaseGuide
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 684e665f794940c4687db694443783cf
+    m_Address: Texture2D-ChallengerBootLeather_Albedo-17268
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerBoots
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 687094bd323754d0d831e78ebb58962e
+    m_Address: Texture2D-MaleUnderwear_Roughness-16654
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleShorts1
+    - MaleShorts2
+    - Puck
+    - PuckDCS
+    - Harold
+    - Troll
+    - MaleUnderwear
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 6959357426ec445caa2327a5eae3609c
+    m_Address: Texture2D-MaleFace02_Roughness-13410
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBase2
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 6983e35cf69d99344a0b8749f659e87e
+    m_Address: Texture2D-sweatpants_black_SG-16152
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleSweatPants_Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 6a0307f4a35456d4eb23b5bfcdc948bc
+    m_Address: Texture2D-Jeans_1_normal-13572
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleDancer1
+    - ToonHotPants1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 6a82f5f7511df8940a287c5d1d34e6ef
+    m_Address: SlotDataAsset-FemaleHead_ElvenEars
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleSwappedFace
+    - Shelly
+    - Elf Female Base Race Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 6c28ac0bb8720487d809016aba0fec2b
+    m_Address: Texture2D-MaleUnderwear_Albedo-15778
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleShorts1
+    - MaleShorts2
+    - Puck
+    - PuckDCS
+    - Harold
+    - Troll
+    - MaleUnderwear
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 6c5d912ba8fa77f449e43391d2d87d88
+    m_Address: SlotDataAsset-MaleChallengerBoots
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerBoots
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 6d301faaa0fe52d44863f9834e825dce
+    m_Address: Texture2D-M_H_body hair_Met-15618
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Puck
+    - PuckDCS
+    - Harold
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 6da400a63bfedc54dbfadfca5c2b1d2f
+    m_Address: Texture2D-Sneakers_1_detail_diffuse-14138
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleDancer1
+    - ToonSneakers1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 6e03cfedafaf94f48b148cfe04d24f96
+    m_Address: SlotDataAsset-SkyCarSpoiler
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - SpoilerRecipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 6e0514a9d08816744abcfaee972e3c6e
+    m_Address: Texture2D-MaleUnderwear_Hearts_Albedo-15242
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleShorts2
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 6e36e90783475394baa485bf0bf07514
+    m_Address: Texture2D-UpperLower_N-14294
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleRobe
+    - ClothRobeRecipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 6eccaa33eeb95784cb7384cd762a1d87
+    m_Address: Texture2D-F_HighPoly_EyeBrow_Normal-12912
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleSwappedFace
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - KimCardassian
+    - Elf Female Base Race Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 6f177e950d553e04381fda817cf2ac51
+    m_Address: SlotDataAsset-FR_High_MaleInnerMouth
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - HumanMaleHighPoly
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 70b61d5f511fec649a7f297690b022a1
+    m_Address: OverlayDataAsset-Fancy_Flats_1_detail1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleStarDancer1
+    - ToonFancyFlats1
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 7175f4c977569f748a2c19a6c9f2ab10
+    m_Address: OverlayDataAsset-FemaleLipstick01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - KimCardassian
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 72c3d07bd6a0b475d845f7f308b83ce8
+    m_Address: Texture2D-MaleEyebrow02_Roughness-15914
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBrow02
+    - Harold
+    - Sven
+    - Troll
+    - MaleBase2
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 733a92cc8c2044955930cab23410903a
+    m_Address: Texture2D-FemaleLongHair01_Module_Normal-16300
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleHair1
+    - KimCardassian
+    - FemaleHairLong
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 734fcc8a0fd1912478c8566fc6eceda7
+    m_Address: OverlayDataAsset-ChallengerTorsoArmorLeather
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerTorso
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 73cf00c391282944c8251cee30c6cb68
+    m_Address: OverlayDataAsset-FemaleUnderwear02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleUndies
+    - Shelly
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 7432026abcc621b4f9b72ce698b0e1c3
+    m_Address: SlotDataAsset-FemaleEyelashGuide
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - GirlBaseGuide
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 748cbd8fc65e86744ae8c6d358d8d19a
+    m_Address: Texture2D-Smart_Pants_1_normal-17326
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleStarDancer1
+    - ToonCapriPants1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 74fbe497c697690488fbdfeee0fae3d6
+    m_Address: OverlayDataAsset-M_Face_Old
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleFace Old
+    - TrollHead
+    - Troll
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 76a2d7b941eeeda4ba2df5ea0e2fb266
+    m_Address: OverlayDataAsset-Cat_eye_Alternate_adjust
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleEye4
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 76ec4c0387ef8564c86bd868e95cbf3d
+    m_Address: Texture2D-SkyCarStripesAlbedo-12850
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - StripesRecipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 77984210ff457ff4f8f1e083bf3e0cbe
+    m_Address: Texture2D-eye_metallic-11712
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - Puck
+    - PuckDCS
+    - DNAConverterControllerExample Base Recipe
+    - Harold
+    - KimCardassian
+    - Shelly
+    - Sven
+    - Troll
+    - MaleBase2
+    - Elf Female Base Race Recipe
+    - ElfMale Base Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 77a1606bb44cacf46b25dcf362209aa5
+    m_Address: OverlayDataAsset-MaleEyebrow01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBrow01
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 787a82edd719cfd4ebccca55cc7e20b9
+    m_Address: Texture2D-Eye_Roughness_Adjust-16742
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Puck
+    - PuckDCS
+    - Harold
+    - Sven
+    - Troll
+    - MaleBase2
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 78bcc1abec57f9c409e43c37c84b131e
+    m_Address: SlotDataAsset-MaleTorso
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleShirt1
+    - MaleShirt2
+    - MaleShirt3
+    - OverweightMale
+    - HumanMale Base Recipe
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - Puck
+    - PuckDCS
+    - DNAConverterControllerExample Base Recipe
+    - Harold
+    - Sven
+    - Troll
+    - MaleBase2
+    - MaleOutfit1
+    - MaleUnderwear
+    - ElfMale Base Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 7a03e04a4f448b74ebf93711f9f15a86
+    m_Address: SlotDataAsset-FemalePonyTail_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemalePonyTail_Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 7a994921a3f3b9a49b61907ef28f5066
+    m_Address: Texture2D-ShoulderPadMetal_Albedo-12194
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerShouderPads
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 7ade72c73b264994b9ecae5a125d2e7f
+    m_Address: SlotDataAsset-FR_High_FemaleTorso
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - HumanFemaleHighPoly
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 7bcacfd71f5474a338dfc4c337634d17
+    m_Address: Texture2D-MaleEyebrow02_Albedo-14590
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBrow02
+    - Harold
+    - Sven
+    - Troll
+    - MaleBase2
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 7c1d306047bbbad4f8f0734b1adde5e8
+    m_Address: Texture2D-tanktop_yellow_SG-11814
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleTankTop_Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 7c7d4dd46aadf264ca87a97b357a238e
+    m_Address: OverlayDataAsset-FemaleTshirt02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleShirt4
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 7c94cdeabfed7814d9717b1f8b5a49ba
+    m_Address: OverlayDataAsset-MaleUnderwear_hearts
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleShorts2
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 7da5b5d1c7acd544aa8fdfc92b6777a4
+    m_Address: Texture2D-Boots_A-12416
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleRobe Shoes
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 7e0c7da6f160f8746b6dc9ef2b9b3105
+    m_Address: Texture2D-ChallengerBoot_Roughness-14150
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerBoots
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 7e3217f7c0af3aa489cb18e2de8ac888
+    m_Address: SlotDataAsset-FR_High_MaleLegs
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - HumanMaleHighPoly
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 7e921b7c55c83334d8e40a5114831db1
+    m_Address: Texture2D-MaleShirt01Color-16208
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleShirt1
+    - MaleShirt3
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 7efaede98678e134fa62d68c0ee1cdef
+    m_Address: Texture2D-WerewolfTeeth_Diffuse-15340
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Wolfie
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 7f44023a3b32c334aaa4ad226e0a2627
+    m_Address: Texture2D-Aligator_Eye_Albedo_Adjust-15434
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleEye1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 809c22fcd6389e742a62ec4905d1a101
+    m_Address: OverlayDataAsset-ChallengerTorsoArmorMetal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerTorso
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 80d4afcf85a004dd79839a02960813a7
+    m_Address: Texture2D-Lipstick01_Normal-17412
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - KimCardassian
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 80ee1b872a449f044bc52611682b7698
+    m_Address: OverlayDataAsset-MaleBody02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBase2
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 810b579078122004a94ac82abc7c2fe5
+    m_Address: SlotDataAsset-FR_High_FemaleEyes
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - HumanFemaleHighPoly
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 82e2d1671a9ac524d805de01b9408543
+    m_Address: SlotDataAsset-ElfEarsMorph
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - ElfEarsMorph
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 8330dd99316da2b45a5b8f209f6ac121
+    m_Address: SlotDataAsset-JiggleButt
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - JiggleButtRecipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 84e24145ef85f4d6ebc2f0a2290f19c2
+    m_Address: Texture2D-MaleHair01_Albedo-13674
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleHair3
+    - Harold
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 84e4a0928a4444695b168e428c5f2c14
+    m_Address: Texture2D-ElvenEars_Roughness-12670
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Shelly
+    - Troll
+    - Elf Female Base Race Recipe
+    - ElfMale Base Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 850d610cf1e6f7b4eb4157fc242d5074
+    m_Address: OverlayDataAsset-ChallengerBootsMetal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerBoots
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 852f32c994e6fdf47b9ddade245a2d20
+    m_Address: Texture2D-F_bod_N-15276
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleHandsMid
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - KimCardassian
+    - Shelly
+    - Elf Female Base Race Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 8583b6d72b2766c40a789f2f24e2de26
+    m_Address: OverlayDataAsset-Gloves of Hammer Overlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleGloves
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 863f68599d8ad8b4989c7724bb3b8dd1
+    m_Address: SlotDataAsset-MaleChallengerTorsoArmor
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerTorso
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 869cee25167e44f42907bc39ae048a4a
+    m_Address: SlotDataAsset-UMA_Human_Female_Hands_HQ
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleHandsMid
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 87159d60593530742850bb892db2c4d5
+    m_Address: Texture2D-guideMesh_normal-11826
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleToonBaseGuide
+    - GirlBaseGuide
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 87d999979ace13749a6d20c588d07c6d
+    m_Address: Texture2D-Eye_n-14486
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - Puck
+    - PuckDCS
+    - DNAConverterControllerExample Base Recipe
+    - Harold
+    - KimCardassian
+    - Shelly
+    - Sven
+    - Troll
+    - MaleBase2
+    - Elf Female Base Race Recipe
+    - ElfMale Base Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 881f10d72572db34cb1150ac3df21a97
+    m_Address: SlotDataAsset-MaleHands
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - HumanMale Base Recipe
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - Puck
+    - PuckDCS
+    - DNAConverterControllerExample Base Recipe
+    - Harold
+    - Sven
+    - Troll
+    - MaleBase2
+    - ElfMale Base Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 88748dee7076a594da2220b822ce685a
+    m_Address: Texture2D-TorsoArmor_Roughness-17088
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerTorso
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 8a26b0d5108b3df40afa563c81076268
+    m_Address: SlotDataAsset-MaleHead_Eyes
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Troll
+    - ElfMale Base Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 8a43aa28029a29d42954e05d04d1bec3
+    m_Address: OverlayDataAsset-FemaleUnderwear-2
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleUndies2
+    - FemaleUnderwear
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 8a5180017cd948840b5bed6f25bddf43
+    m_Address: Texture2D-sportwear_pants_granit_SG-12120
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleSportPants_Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 8aae7e72162c0c74b9326dbca416651a
+    m_Address: SlotDataAsset-M_Freebie Robeset Robe_Slot
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleRobe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 8af03ab249b1fbe4eab78d12fc87a911
+    m_Address: Texture2D-MainCap-12718
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleShortHair_Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 8af4a60576514c7478104a0a50713222
+    m_Address: SlotDataAsset-M_Wrapped Pants
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MalePants
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 8b232fbd9c99b3149bc6c4f6cb7afb7d
+    m_Address: SlotDataAsset-M_Eyebrow
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBrowHR
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 8b9c344b2628b4436a1885febe424947
+    m_Address: Texture2D-FemaleJeans01_Albedo-15850
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemalePants1
+    - FemalePants2
+    - KimCardassian
+    - Shelly
+    - FemaleOutfit1
+    - FemaleOutfit2
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 8c601176f98bef942b8787fe6421b0f4
+    m_Address: SlotDataAsset-FemaleFace
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - KimCardassian
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 8ce8f2c72d5601d4881a47725978e325
+    m_Address: OverlayDataAsset-Halter_Neck_1_detail
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleStarDancer1
+    - ToonHalterNeck1
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 8da06013380d7c848be2cfa63884557b
+    m_Address: Texture2D-M_bod smooth_N-12858
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - OverweightMale
+    - DNAConverterControllerExample Base Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 8e355a06d2222734f92344952e5cc8e5
+    m_Address: SlotDataAsset-SkyCarMudGuards
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - SkyCarBaseRecipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 8e3e85822505e47619ce96f92fcdb1d0
+    m_Address: Texture2D-FemaleShortHair01_Albedo-12652
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleHair2
+    - Shelly
+    - FemaleHairShort
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 8e46551b231290e44b00c11543501fd8
+    m_Address: Texture2D-MaleShirt01_Normal-15786
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - WerewolfTShirt
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 8e8a11d219efb744e8b7d8886bf4431a
+    m_Address: Texture2D-GlovesLeather_Albedo-12756
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerGloves
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 8f4fa762be2c12049baf6abfea653205
+    m_Address: SlotDataAsset-FemalePonyTail
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemalePonyTail_Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 8fff2e38737b1bc42842ab99f23ace26
+    m_Address: SlotDataAsset-FR_High_FemaleHands
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - HumanFemaleHighPoly
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 907de3008710e7f41b1ff076aac06cf2
+    m_Address: OverlayDataAsset-TallShoes_Turquoise
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleTallShoes_Turquoise
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 911a7511737178d4dbfe1ab52a2d8887
+    m_Address: SlotDataAsset-UMA_fem_hair_1_005
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleHair3
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 917d126d626e02c408f7cb57bd44e83b
+    m_Address: SlotDataAsset-UMA_Toon_LEGS-Female-Guide
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleToonBaseGuide
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 918d60411c30c47e59854a524de4961d
+    m_Address: Texture2D-ElvenEars_Albedo-12230
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Elf Female Base Race Recipe
+    - ElfMale Base Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 91976794324ceeb4798dc98c0f1c67ab
+    m_Address: Texture2D-UMA_Toon_Body_diffuse-13448
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleDancer1
+    - ToonCropTShirt1
+    - ToonHotPants1
+    - FemaleStarDancer1
+    - ToonCapriPants1
+    - ToonHalterNeck1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 924a80f8f77a64ed5866ccb2880fdd7a
+    m_Address: Texture2D-FemaleShirt01_Normal-15018
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleShirt2
+    - KimCardassian
+    - Shelly
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 92914de304309e747853a495770218e9
+    m_Address: Texture2D-HAIR_Dupgrade-13138
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleHair3
+    - MaleHair2
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 930ed1f344d4641f79c5f7d2a22c03f3
+    m_Address: Texture2D-MaleFace01_Roughness-13150
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - BlendShapeRecipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 9486e5d1d37e86246b9bd1e314a8a721
+    m_Address: Texture2D-SkyCarWheelOcclusion-12418
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - SkyCarBaseRecipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 948be3b7076b1194ab1f335624c88fb2
+    m_Address: SlotDataAsset-MaleShortHair
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleShortHair_Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 94d4ed1afcae6d24aa8325f9fcda20c4
+    m_Address: Texture2D-F_H_face_metallic-15388
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleSwappedFace
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - KimCardassian
+    - Shelly
+    - Elf Female Base Race Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 94f99e723e34b534b8527d832351596b
+    m_Address: Texture2D-tanktop_yellow_D-12640
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleTankTop_Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 953679261e03f82428f59b24631e30ee
+    m_Address: Texture2D-Eye_Large_Albedo_Adjust-13984
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleEye5
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 959afba629a4847498616df7ba10a543
+    m_Address: OverlayDataAsset-FemaleJeans02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemalePants2
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 95bfee1fde083402fb8a5855e122807d
+    m_Address: Texture2D-MaleFace01_Normal-17164
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - BlendShapeRecipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 95f37b6e8a50f0c47bec196c4bc2eae2
+    m_Address: Texture2D-bb_male_hair_UMA Normal-16912
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleShortHair_Recipe
+    - MilCut
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 980fed94abb92aa4cb426647cb125759
+    m_Address: Texture2D-Gloves_Normal-13470
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerGloves
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 982377ed10e4ad34ea122aa27345c6b8
+    m_Address: Texture2D-ChallengerBoot_Normal-16748
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerBoots
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 98b05b17b4e8ff142b1f16df2ef2315b
+    m_Address: OverlayDataAsset-Eye Overlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - Puck
+    - PuckDCS
+    - DNAConverterControllerExample Base Recipe
+    - Harold
+    - KimCardassian
+    - Shelly
+    - Sven
+    - Troll
+    - MaleBase2
+    - Elf Female Base Race Recipe
+    - ElfMale Base Recipe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 98c6dc40a5e2e4f3f92aabfafaf67c78
+    m_Address: SlotDataAsset-ForearmTwist
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - ForearmTwistRecipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 9bb596cb1321e414186f972f07e0bc5b
+    m_Address: Texture2D-M_H_face_Nnew-16018
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleShortHair_Recipe
+    - MilCut
+    - AlienHeadMorph
+    - ElfEarsMorph
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - Puck
+    - PuckDCS
+    - DNAConverterControllerExample Base Recipe
+    - Harold
+    - Sven
+    - ElfMale Base Recipe
+    - Troll
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 9d3552b8b101043948c0b8cc690ab816
+    m_Address: Texture2D-InnerMouth_Normal-14870
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleSwappedFace
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - Puck
+    - PuckDCS
+    - DNAConverterControllerExample Base Recipe
+    - Harold
+    - KimCardassian
+    - Shelly
+    - Sven
+    - Troll
+    - MaleBase2
+    - Elf Female Base Race Recipe
+    - ElfMale Base Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 9ddf3b23c4342294988947a71af2d7ab
+    m_Address: SlotDataAsset-FemaleHead_Nose
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleSwappedFace
+    - Shelly
+    - Elf Female Base Race Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 9e01d57b8b3d1a34ea24022a589d3ac7
+    m_Address: Texture2D-M_Pants_01_Albedo-15918
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleJeans 1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 9e54abd995fa77947ab57e75d12fe27b
+    m_Address: SlotDataAsset-FemaleLegsGuide
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - GirlBaseGuide
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 9e73f83b679477241bb3714a0071641f
+    m_Address: SlotDataAsset-UMA_Toon_FACE-Female-Guide
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleToonBaseGuide
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 9efda53d0ad2efb4da46ef74f26564ce
+    m_Address: OverlayDataAsset-ChallengerShoulderPadsLeather
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerShouderPads
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: 9f8517ff4e839574d90631d851147e81
+    m_Address: OverlayDataAsset-MaleHoodie_Overlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleHoodie_Recipe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: a04e469a0d80a6742a85658cd80912ab
+    m_Address: OverlayDataAsset-WerewolfShirt
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - WerewolfTShirt
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: a0554501454a6ba40a5eff3443477dc4
+    m_Address: SlotDataAsset-M_Freebie Robeset Boots_Slot
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleRobe Shoes
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: a0b2da7dcebf2534c9359d5d87fa9d50
+    m_Address: OverlayDataAsset-Halter_Neck_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleStarDancer1
+    - ToonHalterNeck1
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: a1f6d7f6fcaea8d469a6eadc4c9e5a07
+    m_Address: Texture2D-Gloves Of Hammer_albedo-14254
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleGloves
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: a209ee514b60b9044bdef1bcbf69967d
+    m_Address: OverlayDataAsset-Skin Patches
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Troll
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: a2cfb51958276a643b9e80a541702b9d
+    m_Address: SlotDataAsset-UMA_Werewolf_InnerMouth
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Wolfie
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: a3787093e63eb3a449d40959588abcb7
+    m_Address: SlotDataAsset-SkyCarTires
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - SkyCarBaseRecipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: a3fd3ee4f9e796c469f319488ca1d23c
+    m_Address: Texture2D-Cap_Shadow-13562
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - ShavedHead
+    - MilCut
+    - MaleHair1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: a460597f78928e04a8db0940885eb72a
+    m_Address: OverlayDataAsset-ChallengerGlovesLeather
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerGloves
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: a47975f4a828bdf4194bc7c5c27da7f4
+    m_Address: SlotDataAsset-SkyCarAntenna
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - AntennaRecipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: a5cb9c792e8a0684da24546a08a4ab2a
+    m_Address: OverlayDataAsset-Sneakers_1_detail
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleDancer1
+    - ToonSneakers1
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: a60d5c517fee0ce48b5b59b9ed45861e
+    m_Address: OverlayDataAsset-MaleHead01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - BlendShapeRecipe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: a61b80b3ef057274e93e5d8c6a2aacec
+    m_Address: OverlayDataAsset-FemaleEyelash
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - KimCardassian
+    - Shelly
+    - Elf Female Base Race Recipe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: a68cdc4df5eac4d7fb2382de34391ce9
+    m_Address: Texture2D-MaleBeard01_Roughness-16514
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBeard1
+    - Sven
+    - MaleBeard
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: a6cf693702694d2448630418e711ffe6
+    m_Address: SlotDataAsset-OverweightMale_Slot
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - OverweightMale
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: a783f89daf8c524469e3905b80a396d5
+    m_Address: Texture2D-Sneakers_1_diffuse-16622
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleDancer1
+    - ToonSneakers1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: a7966396fbac7ff4da2b461a89dff690
+    m_Address: Texture2D-MaleFace_spotty_Albedo-14128
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleFace Old
+    - TrollHead
+    - Troll
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: a79f26acde8ea4a41bd7fa601046a702
+    m_Address: Texture2D-ChallengerBootMetal_Albedo-16256
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerBoots
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: a9078ecde5d32ff4ea9686f5a144824c
+    m_Address: Texture2D-ElvenEars_Albedo - Body 1-16718
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Shelly
+    - Troll
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: a93b785a7dc7e3f4da5810505cdc19fe
+    m_Address: Texture2D-Fancy_Flats_1_detail_diffuse-15498
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleStarDancer1
+    - ToonFancyFlats1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: a95e1c99f10e90e41bbe23ac6303418b
+    m_Address: Texture2D-M_Eyebrows_A-15228
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBrowHR
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: a9f7a20701f900842ac7bd4925c82642
+    m_Address: Texture2D-M_H_body hair_n-14280
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Puck
+    - PuckDCS
+    - Harold
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: aa4234fb16def7748a6476c4cbee204a
+    m_Address: Texture2D-WerewolfInnerMouth_Normal-16048
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Wolfie
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: aa8d990ec3c557445ada4c167873bec5
+    m_Address: OverlayDataAsset-Maincap_Overlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleShortHair_Recipe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: aacdea98071e35545a73de35b4ad3baf
+    m_Address: Texture2D-bb_male_hair_UMA-14842
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleShortHair_Recipe
+    - MilCut
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: ac8ad506ee5f8984d9591dd715ea545f
+    m_Address: Texture2D-Mystic_hood_N-13936
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleRobe Hood
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: ad54ecc72b1634b42a6b2ef9c5dbcdfa
+    m_Address: OverlayDataAsset-TallShoes_White
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleTallShoes_White
+    - TallShoes_Recipe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: af58420b18450884782f4761c8f71952
+    m_Address: Texture2D-SkyCarWheelNormals-15754
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - SkyCarBaseRecipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: af723046b087198438ac4a32f7c25186
+    m_Address: OverlayDataAsset-Fancy_Flats_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleStarDancer1
+    - ToonFancyFlats1
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: afd670bc70f75274eb4fae71aa23eaac
+    m_Address: SlotDataAsset-Bottoms_Female_Capri_Pants_1_LEGS
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleStarDancer1
+    - ToonCapriPants1
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: afecbdb8f051eff408e0749bb6a44bf1
+    m_Address: OverlayDataAsset-ElvenEars
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Elf Female Base Race Recipe
+    - ElfMale Base Recipe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: b0011be19d5b59d479de0f82c00d7991
+    m_Address: Texture2D-sweatpants_black_D-12454
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleSweatPants_Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: b01f10afaca2142209e116e496a8d621
+    m_Address: Texture2D-MaleBeard03_Roughness-17350
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBeard3
+    - Harold
+    - MaleBeard
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: b0c8bd5163af4b64599acdbac2eeb562
+    m_Address: Texture2D-Crop_TShirt_1_detail_diffuse-12262
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleDancer1
+    - ToonCropTShirt1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: b0ee18ecb3eb22847b9dafe3ac63c42a
+    m_Address: OverlayDataAsset-WerewolfClaws
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Wolfie
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: b1e94d3cf1101164fa077e48b9276643
+    m_Address: SlotDataAsset-UMA_Werewolf_Eyes
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Wolfie
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: b37930fc892ea8f4aa5316c99ad405cd
+    m_Address: SlotDataAsset-MaleFace
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleLowPolyHead
+    - Harold
+    - Sven
+    - MaleBase2
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: b41339c2249f3471b9594014b47be252
+    m_Address: Texture2D-MaleBody01_Roughness-12738
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleJeans 1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: b53229351f1835947840963cdd44227e
+    m_Address: OverlayDataAsset-PonyTail_Scrunchie_Overlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemalePonyTail_Recipe
+    - BoneyTail_Recipe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: b5a79dacb1617ae44a91c53832515bbb
+    m_Address: SlotDataAsset-MaleHair1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleHair2
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: b66591cce48d21043a814071716e6281
+    m_Address: OverlayDataAsset-Smart_Pants_1_detail
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleStarDancer1
+    - ToonCapriPants1
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: b6b6f8e091fafc644b63f4064102382a
+    m_Address: OverlayDataAsset-FemaleJeans01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemalePants1
+    - FemalePants2
+    - KimCardassian
+    - Shelly
+    - FemaleOutfit1
+    - FemaleOutfit2
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: b706faed77ffcb0478cdcadd59d9a3b5
+    m_Address: Texture2D-GirlShirt01Colorb-16756
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - GirlShirt1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: b82880277d5904090a09b94c18c79d66
+    m_Address: Texture2D-ElvenEars_Normal-14324
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Shelly
+    - Troll
+    - Elf Female Base Race Recipe
+    - ElfMale Base Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: b85870f311375784c81d78b529cc6146
+    m_Address: Texture2D-Lower_M-13146
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MalePants
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: b8ce21decde314b64bf5c02150bb2963
+    m_Address: Texture2D-FemaleLongHair01_Albedo-17052
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleHair1
+    - KimCardassian
+    - FemaleHair
+    - FemaleHairLong
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: b8e56af9c8f384fef8e5a1adc1d1df8c
+    m_Address: Texture2D-MaleUnderwear_Normal-15344
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleShorts1
+    - MaleShorts2
+    - Puck
+    - PuckDCS
+    - Harold
+    - Troll
+    - MaleUnderwear
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: b9570a0908de1e045991045ea1849ea0
+    m_Address: Texture2D-M_Eyebrows_N-15044
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBrowHR
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: b964835c0dfe6674aa52884e63036f69
+    m_Address: Texture2D-WerewolfBlank_Specular-16150
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - WerewolfTShirt
+    - Wolfie
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: b97f19d37b372b14b894ee308237f40c
+    m_Address: OverlayDataAsset-Crop_TShirt_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleDancer1
+    - ToonCropTShirt1
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: b9f364617ec125b429878e948302cbc1
+    m_Address: Texture2D-hoodie_blue_SG-12272
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleHoodie_Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: ba8d7b4967d3f084b94f53b31d7a5b00
+    m_Address: SlotDataAsset-Bottoms_Female_Hot_Pants_1_LEGS
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleDancer1
+    - ToonHotPants1
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: bb040a2ea3008406ebd2f1c0f49b31fd
+    m_Address: Texture2D-FemaleJeans01_Normal-16830
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemalePants1
+    - FemalePants2
+    - KimCardassian
+    - Shelly
+    - FemaleOutfit1
+    - FemaleOutfit2
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: bbcc9fcf1f8a6354d8f7efba8212910c
+    m_Address: Texture2D-Fancy_Flats_1_detail1_diffuse-17410
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleStarDancer1
+    - ToonFancyFlats1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: bc5c8b0d1465e7e4aa513524f4c04b3e
+    m_Address: Texture2D-Cap_Hair Heightmap-16422
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - ShavedHead
+    - MilCut
+    - MaleHair1
+    - MaleHair
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: bc5ef2dcc0274644bb1733e78ad1514d
+    m_Address: SlotDataAsset-PhysicsHD
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - PhysicsHDRecipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: bc78262a19833744f9ee5b3389aec814
+    m_Address: OverlayDataAsset-MaleShirt01Color
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleShirt1
+    - MaleShirt3
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: bc845162d92a43f4ea04d9bece6f503f
+    m_Address: OverlayDataAsset-F_HighPoly_EyeBrow
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleSwappedFace
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - KimCardassian
+    - Elf Female Base Race Recipe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: bccbb38fe3139c444b2999c45952b427
+    m_Address: Texture2D-TorsoArmorMetal_Albedo-17320
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerTorso
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: bd0d469704e7c934ebddc45ece4c1868
+    m_Address: Texture2D-SkyCarBodyOcclusion-14482
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - AntennaRecipe
+    - SpoilerRecipe
+    - StripesRecipe
+    - SkyCarBaseRecipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: bd12cd8e19c388f43aa93bedfbcb3d95
+    m_Address: Texture2D-Cap_Hair-16954
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - ShavedHead
+    - MilCut
+    - MaleHair
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: bdb13e3982c3e4644b863ae1c9bdafe1
+    m_Address: SlotDataAsset-FemaleHead_Eyes
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleSwappedFace
+    - Shelly
+    - Elf Female Base Race Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: bfe51f13b8b7f594b8c6a75e30a5bbd5
+    m_Address: Texture2D-shoes_tall_black_D-12878
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleTallShoes_Black
+    - TallShoes_Black_Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: c03cf28ed277e7246a4dfc2e6b550cc1
+    m_Address: SlotDataAsset-Tops_Female_Halter_Neck_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleStarDancer1
+    - ToonHalterNeck1
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: c0d19c5bee56d9944a925b825809b07c
+    m_Address: Texture2D-ponytail01_diffuse GS-15876
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemalePonyTail_Recipe
+    - BoneyTail_Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: c0e5deae8a268a8468ef816cb746d8ee
+    m_Address: Texture2D-Default Eye Adjust_diffuse-16990
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - DNAConverterControllerExample Base Recipe
+    - KimCardassian
+    - Shelly
+    - Elf Female Base Race Recipe
+    - ElfMale Base Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: c1d782df9dd936a4db81356428f06892
+    m_Address: OverlayDataAsset-SkyCarTiresOverlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - SkyCarBaseRecipe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: c23ed23be3c03a942976b1efa504ebb9
+    m_Address: Texture2D-shoes_tall_white_D-15828
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleTallShoes_White
+    - TallShoes_Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: c289a7983684638449f8b9adc06dc2b6
+    m_Address: Texture2D-Eye Overlay-14836
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - Puck
+    - PuckDCS
+    - DNAConverterControllerExample Base Recipe
+    - Harold
+    - KimCardassian
+    - Shelly
+    - Sven
+    - Troll
+    - MaleBase2
+    - Elf Female Base Race Recipe
+    - ElfMale Base Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: c2e4d8519bc924f4fb3588b0a2840f59
+    m_Address: Texture2D-M_H_body hair-12252
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Puck
+    - PuckDCS
+    - Harold
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: c43977b073daf4f118da38659370f26c
+    m_Address: Texture2D-InnerMouth_Albedo-12034
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleSwappedFace
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - Puck
+    - PuckDCS
+    - DNAConverterControllerExample Base Recipe
+    - Harold
+    - KimCardassian
+    - Shelly
+    - Sven
+    - Troll
+    - MaleBase2
+    - Elf Female Base Race Recipe
+    - ElfMale Base Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: c4542d0190eae184d8f1e1e277208fd7
+    m_Address: OverlayDataAsset-MaleBeard02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBeard2
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: c494b917f233f9e42a6e34e169909743
+    m_Address: OverlayDataAsset-SkyCarStripesOverlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - StripesRecipe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: c54cc1e518fd68d45ba30c894675836b
+    m_Address: Texture2D-WerewolfInnerMouth_Diffuse-13890
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Wolfie
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: c59b45917b12a5548bd5f02fa00d8cdc
+    m_Address: Texture2D-bb_female_hair_UMA Normal-12344
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleLongHair_Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: c59f61ec240ce194ea1a7720096a5524
+    m_Address: Texture2D-Jeans_1_detail_diffuse-16352
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleDancer1
+    - ToonHotPants1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: c6358aa8f36b22846bb85f26a30e8c6a
+    m_Address: SlotDataAsset-FR_High_MaleTorso
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - HumanMaleHighPoly
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: c662a8e1a30a94847a6763f577caf198
+    m_Address: Texture2D-FemaleJeans02_diffuseCheckerOverlay-12446
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemalePants2
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: c687228326f23f84c9271513f3a10dbe
+    m_Address: SlotDataAsset-FR_High_MaleHands
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - HumanMaleHighPoly
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: c693d553f21b346c896e6f293d09ee5f
+    m_Address: Texture2D-MaleEyebrow02_Normal-12942
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBrow02
+    - Harold
+    - Sven
+    - Troll
+    - MaleBase2
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: c7fd9103594884fe5baf9fd5c795def4
+    m_Address: Texture2D-Female_Tshirt01_Albedo-12828
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleShirt1
+    - GirlShirt1
+    - FemaleOutfit2
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: c822ebdcf1e9f4ea3ba74f8d9103876b
+    m_Address: Texture2D-MaleBeard03_Albedo-16348
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBeard3
+    - Harold
+    - MaleBeard
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: c901b9f1e6dc2dd4190fe7ae4272a633
+    m_Address: OverlayDataAsset-M_Freebie Robeset Robe
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleRobe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: ca20f7bc9c16c314991839b46ccfd3f4
+    m_Address: SlotDataAsset-Tops_Female_Crop_TShirt_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleDancer1
+    - ToonCropTShirt1
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: ca5524875bc901b419962c4d50420f2b
+    m_Address: Texture2D-F_HighPoly_EyeBrow_Albedo-14462
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleSwappedFace
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - KimCardassian
+    - Elf Female Base Race Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: caea7f4665259e949a142041d05e3d94
+    m_Address: OverlayDataAsset-WerewolfInnerMouth
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Wolfie
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: cb52389a713967d4abc746d610b28acf
+    m_Address: Texture2D-Cap_Rash-15598
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - ShavedHead
+    - MilCut
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: cc6c17656f669be4bbb2e21d48e57a45
+    m_Address: SlotDataAsset-MaleInnerMouth
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - HumanMale Base Recipe
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - Puck
+    - PuckDCS
+    - DNAConverterControllerExample Base Recipe
+    - Harold
+    - Sven
+    - Troll
+    - MaleBase2
+    - ElfMale Base Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: ccbae4cc71f63224ebf0c8934a2197d4
+    m_Address: Texture2D-M_H_face_Albedo2-16304
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - AlienHeadMorph
+    - ElfEarsMorph
+    - HumanMale Base Recipe
+    - HumanMaleHighPoly
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - Puck
+    - PuckDCS
+    - DNAConverterControllerExample Base Recipe
+    - Harold
+    - Sven
+    - ElfMale Base Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: ccc8f1668f1d19549bf1a2fbb88a4157
+    m_Address: SlotDataAsset-Milcut
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MilCut
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: ccdf514727275dc45914627958155442
+    m_Address: SlotDataAsset-SkyCarBody
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - StripesRecipe
+    - SkyCarBaseRecipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: cda4a55bec197c646a1e3e11583d7ef4
+    m_Address: SlotDataAsset-UMA_Werewolf_Claws
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Wolfie
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: cda7e080be988c44ab8341720f86d6cd
+    m_Address: OverlayDataAsset-Alligator_eye_Alternate_adjust
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleEye2
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: ce2cca2d60a3a964e96c77683b6263db
+    m_Address: SlotDataAsset-FemaleLongHair01_Module
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleHair1
+    - KimCardassian
+    - FemaleHairLong
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: cf8631a0e0aefb34aa822421f8d5f826
+    m_Address: OverlayDataAsset-FemalePonyTail_Overlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemalePonyTail_Recipe
+    - BoneyTail_Recipe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: d0a645b3673268b4e9bc730c39750929
+    m_Address: Texture2D-UpperLower_M-13056
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleRobe
+    - ClothRobeRecipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: d0dc50436d1fb0a49b53658adecaacf9
+    m_Address: SlotDataAsset-FemaleEyesGuide
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - GirlBaseGuide
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: d0de49c6701b6fb468994f0dfc267dc9
+    m_Address: SlotDataAsset-ClothRobeNonSimulated
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - ClothRobeRecipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: d0f7dbe2fc5d2564e903f99bd19fa89b
+    m_Address: OverlayDataAsset-MaleJeans02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleJeans 1
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: d10c6db5c35334a4c87b351ed1e142bf
+    m_Address: OverlayDataAsset-Cap_Hair_Overlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - ShavedHead
+    - MilCut
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: d126afbadfdb59f4e9ba1cfb02993951
+    m_Address: Texture2D-Halter_Neck_1_detail_diffuse-15638
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleStarDancer1
+    - ToonHalterNeck1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: d166f91c8264d564e9ffa5ec766bad53
+    m_Address: Texture2D-shoes_tall_black_SG-16088
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleTallShoes_Black
+    - TallShoes_Black_Recipe
+    - FemaleTallShoes_Turquoise
+    - FemaleTallShoes_White
+    - TallShoes_Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: d262af4b07475c448abbc6ec5e59b135
+    m_Address: SlotDataAsset-FemaleFaceGuide
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - GirlBaseGuide
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: d40bec82ad70824478f3cead70f6cfea
+    m_Address: Texture2D-MaleShirt01_Albedo-12662
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - WerewolfTShirt
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: d4fd23d5fee332b4399d10cd666197e7
+    m_Address: Texture2D-FemaleUnderwear02_diffuse-13870
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleUndies
+    - Shelly
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: d4ffb7d0ebee510498fba9d50f2296f7
+    m_Address: Texture2D-SkyCarBodyNormals-12060
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - AntennaRecipe
+    - SpoilerRecipe
+    - StripesRecipe
+    - SkyCarBaseRecipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: d5f6390fe392d644697f86246391cb8c
+    m_Address: SlotDataAsset-UMA_Werewolf_Legs
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Wolfie
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: d813f8755f9fdee489b781e0d5e404c5
+    m_Address: OverlayDataAsset-F_H_Head
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleSwappedFace
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - KimCardassian
+    - Shelly
+    - Elf Female Base Race Recipe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: da079680760bd614d9904591f776b5d1
+    m_Address: Texture2D-Hair_Long_Braided_1_normal-11860
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - ToonHair1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: db33892a815794c3b8b84adeb8b84bbd
+    m_Address: Texture2D-Lipstick01_Roughness-15408
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - KimCardassian
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: db59a2fec12e144498fed4c62c157859
+    m_Address: SlotDataAsset-MaleJeans02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleJeans
+    - Sven
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: df3452a6006a2d54fb0587d4b2cad909
+    m_Address: Texture2D-UMA_Toon_Body_metallic-14140
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleDancer1
+    - ToonSneakers1
+    - ToonCropTShirt1
+    - ToonHotPants1
+    - FemaleStarDancer1
+    - ToonCapriPants1
+    - ToonHalterNeck1
+    - ToonFancyFlats1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: e06be47adf242924c9fff2c65c65ad5c
+    m_Address: OverlayDataAsset-ClothRobeSimulatedOverlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - ClothRobeRecipe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: e17ed6a342f054b4ab8f3dd2fdea7fa1
+    m_Address: OverlayDataAsset-SkyCarWindowsOverlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - SkyCarBaseRecipe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: e28d4e605f134d64d85651d9ef714272
+    m_Address: Texture2D-Underwear_Met-11828
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleUndies2
+    - FemaleUnderwear
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: e2e11d8a75e5b7642847b0f0609aeb11
+    m_Address: SlotDataAsset-FR_High_FemaleFeet
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - HumanFemaleHighPoly
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: e34f21c5ee4ec464db3ca6478b4ab34c
+    m_Address: Texture2D-WerewolfTeeth_Normal-13840
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Wolfie
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: e37a792c969bb454c804c435f8c1c285
+    m_Address: OverlayDataAsset-M_Freebie Robeset Hood AC
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleRobe Hood
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: e3c19ea60a30aca45aabae54d1068387
+    m_Address: SlotDataAsset-Shoes_Sneakers_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleDancer1
+    - ToonSneakers1
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: e40f405bbd058a0419b3d09cf94ee7de
+    m_Address: SlotDataAsset-FemaleLegs
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemalePants1
+    - FemalePants2
+    - HumanFemale Base Recipe
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - KimCardassian
+    - Shelly
+    - FemaleOutfit1
+    - FemaleOutfit2
+    - FemaleUnderwear
+    - Elf Female Base Race Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: e414c14586660fb46865f0168c8d01dd
+    m_Address: SlotDataAsset-BoneyTail
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - BoneyTail_Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: e43769dcd6c17f34b8e3c464485721fa
+    m_Address: Texture2D-Fancy_Flats_1_diffuse-16346
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleStarDancer1
+    - ToonFancyFlats1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: e4ad8f2fd2835dd44a82065d7c918327
+    m_Address: Texture2D-Underwear_n-17194
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleUndies2
+    - FemaleUnderwear
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: e51f46710c96a924aa03b2f4dd7bfe7a
+    m_Address: SlotDataAsset-UMA_Werewolf_Face
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Wolfie
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: e5356b4d449b6dc4087b661ee7e36a01
+    m_Address: Texture2D-Milcap-16512
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MilCut
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: e5af6f0e864cd3d46b3c4f61535aa584
+    m_Address: SlotDataAsset-FemaleTankTop
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleTankTop_Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: e5dd1cd866f75434cac96736c5df9df0
+    m_Address: Texture2D-Jeans_1_diffuse-14990
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleDancer1
+    - ToonHotPants1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: e6c4adce4a1ff84428305e416685ee5e
+    m_Address: Texture2D-Crop_TShirt_1_normal-17048
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleDancer1
+    - ToonCropTShirt1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: e7b8e0cbb5d59684fa2c2dc87d360ea8
+    m_Address: OverlayDataAsset-SkyCarHubCapsOverlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - SkyCarBaseRecipe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: e7c8290369e5f724e8e185a77240e37e
+    m_Address: SlotDataAsset-MaleFeet
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - HumanMale Base Recipe
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - Puck
+    - PuckDCS
+    - DNAConverterControllerExample Base Recipe
+    - Harold
+    - Sven
+    - Troll
+    - MaleBase2
+    - ElfMale Base Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: e822c12c3b38e4cbdbb419c94040eab4
+    m_Address: Texture2D-MaleJeans01_Normal-16094
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleJeans
+    - MakeMeFatJeans
+    - Sven
+    - MaleOutfit1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: e84b15df5103d0a419f01ffe3e77fb53
+    m_Address: OverlayDataAsset-ChallengerGlovesMetal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleChallengerGloves
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: e913820d10d545d4caa7b3221853e8d2
+    m_Address: SlotDataAsset-FR_High_FemaleLegs
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - HumanFemaleHighPoly
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: e970401c4b067436eb4d65221b225e12
+    m_Address: Texture2D-FemaleShirt02_Albedo-16078
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleShirt3
+    - FemaleOutfit1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: e9f37d4afd53c5441aed1334c52fa698
+    m_Address: Texture2D-Eyelash_diffuse-15474
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - HumanFemale Base Recipe
+    - HumanFemaleHighPoly
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - KimCardassian
+    - Shelly
+    - Elf Female Base Race Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: eaf53a24ac371704ba0e3ceaa664b056
+    m_Address: Texture2D-WerewolfHead_Diffuse-13216
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Wolfie
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: eaf8fd484647df74aa468bd607b8e6e8
+    m_Address: Texture2D-UpperLower_AC-14750
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleRobe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: ebe828fad47d6974d98f634f415815f9
+    m_Address: OverlayDataAsset-Jeans_1_detail
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleDancer1
+    - ToonHotPants1
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: ed01fc2bc40214a999a5fe8e51ddbae4
+    m_Address: Texture2D-MaleEyebrow01_Normal-15824
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBrow01
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: edcf92bdef3d2e04c980749f7d702647
+    m_Address: SlotDataAsset-Expressions
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - ExpressionsRecipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: eea2e3c934a89a549bcc3dc6427c16ad
+    m_Address: OverlayDataAsset-MaleEyebrow02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleBrow02
+    - Harold
+    - Sven
+    - Troll
+    - MaleBase2
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: eeab9a37ed522ff46bf429d021f78862
+    m_Address: Texture2D-Cat_Eye_Alternate_Albedo_Adjust-14360
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleEye4
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: ef1e1998915393648808208e87e5cc1f
+    m_Address: Texture2D-Lower_A-14840
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MalePants
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: f1aa0614c0ce2f242a448e8f80248623
+    m_Address: SlotDataAsset-MakeMeFatJeans
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MakeMeFatJeans
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: f1ee058b12e74a645a810b248c336ed2
+    m_Address: Texture2D-Lower_N-15938
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MalePants
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: f37b7c5bd4158be44880557cefabb033
+    m_Address: OverlayDataAsset-Cap_Shadow_overlay
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - ShavedHead
+    - MilCut
+    - MaleHair1
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: f3ed1216fb09ee24f83e35b72805413f
+    m_Address: OverlayDataAsset-FemaleUnderwear01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - KimCardassian
+    - FemaleOutfit1
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: f4efbb243ca57b3448809bfbb51735dc
+    m_Address: Texture2D-bb_female_hair_UMA-13222
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleLongHair_Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: f54931e1e771ca24382d9c4cad4eee92
+    m_Address: Texture2D-Boots_M-12432
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleRobe Shoes
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: f552f5dd25919084fa1077b6df706c9d
+    m_Address: SlotDataAsset-TallShoes
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - TallShoes_Black_Recipe
+    - TallShoes_Recipe
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: f5781018af67cdf4098e88b819136bb3
+    m_Address: Texture2D-Gloves Of Hammer_metallic-14658
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleGloves
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: f57c699e06562b84fb91461077d470a9
+    m_Address: OverlayDataAsset-M_Bod smooth
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - OverweightMale
+    - DNAConverterControllerExample Base Recipe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: f6107ad9de1e9bb4ea74851d9bca7976
+    m_Address: Texture2D-MaleShirt01_Roughness-15314
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - WerewolfTShirt
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: f6144f3f9b3aeee4884f86cf9ff32816
+    m_Address: OverlayDataAsset-WerewolfHead
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Wolfie
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: f81cce6b25bb84582870e7d712d68918
+    m_Address: Texture2D-MaleShirt01_Albedo-15912
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleShirt1
+    - MaleShirt2
+    - MaleShirt3
+    - MaleOutfit1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: f8bd3f6c4901d6d4c986bb042def995c
+    m_Address: OverlayDataAsset-TallShoes_Black
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleTallShoes_Black
+    - TallShoes_Black_Recipe
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: f8cf9468b3cf148148dd1f220bda6c17
+    m_Address: Texture2D-MaleShirt01_Normal-14774
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleShirt1
+    - MaleShirt2
+    - MaleShirt3
+    - MaleOutfit1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: f8f534d6cc7e94676b6d85fb0b9c3360
+    m_Address: Texture2D-FemaleShortHair01_Normal-14208
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleHair2
+    - Shelly
+    - FemaleHairShort
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: faede5ef802a4d04080266de31601bc8
+    m_Address: OverlayDataAsset-Sneakers_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleDancer1
+    - ToonSneakers1
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: fc084c6e6b4a93c4b84286ff83c4dba6
+    m_Address: Texture2D-scrunchie GS-16914
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemalePonyTail_Recipe
+    - BoneyTail_Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: fc359ce7d2a20044bac14b99072f0e01
+    m_Address: Texture2D-Halter_Neck_1_diffuse-14604
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleStarDancer1
+    - ToonHalterNeck1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: fc479bbdb9be64a1bb711bd9e259ba5a
+    m_Address: Texture2D-FemaleUnderwear01_Normal-16680
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleUndies
+    - Shelly
+    - KimCardassian
+    - FemaleOutfit1
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: fd983ace9923d5244bf7876fb75df05a
+    m_Address: OverlayDataAsset-WerewolfHandsAndFeet
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - Wolfie
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: fe50b68bbb8220541867e2e66e7f1cad
+    m_Address: Texture2D-SkyCarHubCapsAlbedo-15942
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - SkyCarBaseRecipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: fe66eff1c0defe44aa57e93eb152305a
+    m_Address: OverlayDataAsset-Jeans_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleDancer1
+    - ToonHotPants1
+    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: fe973a02183b3894296cc24e40283fde
+    m_Address: SlotDataAsset-M_High poly Head
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - ShavedHead
+    - MaleShortHair_Recipe
+    - MilCut
+    - MaleBeard1
+    - MaleBeard2
+    - MaleBeard3
+    - MaleBrow01
+    - MaleBrow02
+    - MaleFace Old
+    - MaleHair1
+    - MaleHair3
+    - TrollHead
+    - HumanMale Base Recipe
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - DNAConverterControllerExample Base Recipe
+    - MaleBeard
+    - MaleHair
+    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  - m_GUID: fedd0d9f46c6540e78e8d6f9311eb0e0
+    m_Address: Texture2D-FemaleShirt01_Roughness-17344
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - FemaleShirt2
+    - KimCardassian
+    - Shelly
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: ff42db7e5f734e144aea90312006e5db
+    m_Address: Texture2D-hoodie_blue_NM-16934
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UMA_Base
+    - MaleHoodie_Recipe
+    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 5278a4398e650f34cb1a8ff8e6b10c2c, type: 2}
+    - {fileID: 11400000, guid: e6752475b375db44cb149291a8a50523, type: 2}

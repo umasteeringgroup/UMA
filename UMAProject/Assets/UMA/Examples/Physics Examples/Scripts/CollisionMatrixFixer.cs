@@ -6,8 +6,8 @@ namespace UMA.Examples
 {
 	public class CollisionMatrixFixer : MonoBehaviour 
 	{
-		const int _defaultRagdollLayer = 8;
-		const int _noCollisionLayer = 10;
+		static int _defaultRagdollLayer = 8;
+		static int _noCollisionLayer = 10;
 
 		public static void FixLayers()
 		{
@@ -22,7 +22,12 @@ namespace UMA.Examples
 
 		// Use this for initialization
 		void Start ()
-		{ 
+		{
+			_defaultRagdollLayer = LayerMask.NameToLayer("Ragdoll");
+			_noCollisionLayer = LayerMask.NameToLayer("NoCollisions");
+			// if not found, use the defaults.
+			if (_defaultRagdollLayer == -1) _defaultRagdollLayer = 8;
+			if (_noCollisionLayer == -1) _noCollisionLayer = 10;
 			FixLayers();
 		}
 	}

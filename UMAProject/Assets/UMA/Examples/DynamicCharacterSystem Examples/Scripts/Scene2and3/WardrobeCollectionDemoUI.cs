@@ -73,20 +73,17 @@ namespace UMA.CharacterSystem.Examples
 					return;
 				}
 				//if not show a message otherwise load the recipe
-				var thisContext = thisCustomizer.Avatar.context != null ? thisCustomizer.Avatar.context : UMAContext.FindInstance();
+				var thisContext = thisCustomizer.Avatar.context != null ? thisCustomizer.Avatar.context : UMAContextBase.FindInstance();
 				if (thisContext != null)
 				{
-					var thisDCS = (thisContext.dynamicCharacterSystem as DynamicCharacterSystem);
-					if (thisDCS != null)
-					{
-						thisDCS.GetRecipe(collectionName, true);
+						// make sure it's downloaded... probably don't need this now.
+						UMAContext.Instance.GetRecipe(collectionName, true);
 						//if there is actually a 'FullOutfit' defined for the current avatar(i.e. the WardrobeSet for this race is not empty) load it
 						if (thisUWC.wardrobeCollection[thisCustomizer.Avatar.activeRace.name].Count > 0)
 						{
 							thisCustomizer.Avatar.SetSlot(thisUWC);
 							thisCustomizer.Avatar.BuildCharacter(true);
 						}
-					}
 				}
 				onLoadCollection.Invoke();
 				//if this was not a recipe that will actually load a FullOutfit onto this race, show a message saying the assets have been added to the library

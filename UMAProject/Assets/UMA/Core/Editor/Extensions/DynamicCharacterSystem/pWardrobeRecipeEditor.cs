@@ -5,6 +5,7 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 using UMA.CharacterSystem;
+using UnityEditorInternal;
 
 namespace UMA.Editors
 {
@@ -209,7 +210,7 @@ namespace UMA.Editors
 				{
 					if (thisBaseRecipes[i] != null)
 					{
-						UMAData.UMARecipe thisBaseRecipe = thisBaseRecipes[i].GetCachedRecipe(UMAContext.Instance);
+						UMAData.UMARecipe thisBaseRecipe = thisBaseRecipes[i].GetCachedRecipe(UMAContextBase.Instance);
 						SlotData[] thisSlots = thisBaseRecipe.GetAllSlots();
 						foreach (SlotData slot in thisSlots)
 						{
@@ -391,7 +392,7 @@ namespace UMA.Editors
 							butIndex.width = (addButsRect.width / 3f)*2;
                             if (GUI.Button(butScene,"Add to Scene Only", EditorStyles.miniButton))
 							{
-								UMAContext.Instance.AddRace(_compatibleRaceDatas[compatibleRaces[i]]);
+								UMAContextBase.Instance.AddRace(_compatibleRaceDatas[compatibleRaces[i]]);
 							}
 							if (GUI.Button(butIndex,"Add to Global Index (Recommended)", EditorStyles.miniButton))
 							{
@@ -536,6 +537,24 @@ namespace UMA.Editors
 			return doUpdate;
 		}
 
+		private bool ShowHidetags;
+		private ReorderableList hideTagsList;
+		private bool hideTagsListInitialized = false;
+		private void InitHideTagsList()
+		{
+			var HideTagsProperty = serializedObject.FindProperty("HideTags");
+			hideTagsList = new ReorderableList(serializedObject, HideTagsProperty, true, true, true, true);
+			hideTagsList.drawHeaderCallback = (Rect rect) => {
+				EditorGUI.LabelField(rect, "Hide Tags");
+			};
+			hideTagsList.drawElementCallback = (Rect rect, int index, bool isActive, bool isFocused) => {
+				var element = hideTagsList.serializedProperty.GetArrayElementAtIndex(index);
+				rect.y += 2;
+				element.stringValue = EditorGUI.TextField(new Rect(rect.x + 10, rect.y, rect.width - 10, EditorGUIUtility.singleLineHeight), element.stringValue);
+			};
+			hideTagsListInitialized = true;
+		}
+
 		protected virtual bool DrawWardrobeSlotsFields(Type TargetType, bool ShowHelp = false)
 		{
             #region Setup
@@ -594,7 +613,6 @@ namespace UMA.Editors
 			{
 				EditorGUILayout.HelpBox("User Field is ignored by the system. You can use this to store data that can later be used by your application to provide filtering or categorizing, etc.", MessageType.Info);
 			}
-
 			#endregion
 
 			#region Wardrobe Slot UI
@@ -689,7 +707,7 @@ namespace UMA.Editors
 			}
 			else
 				EditorGUILayout.Popup("Hides Base Slots(s)", 0, new string[1] {"Nothing"} );
-
+			
             GUILayout.Space(8);
             if (GUILayout.Button("Select",GUILayout.MaxWidth(64), GUILayout.MaxHeight(16)))
             {
@@ -742,34 +760,100 @@ namespace UMA.Editors
 			//EditorGUIUtility.LookLikeInspector();
 			SerializedProperty meshHides = serializedObject.FindProperty ("MeshHideAssets");
 			EditorGUI.BeginChangeCheck();
-			EditorGUILayout.BeginHorizontal();
-			if(GUILayout.Button("+", GUILayout.MaxWidth(30)))
+			if(GUILayout.Button("Add Mesh Hide Asset"))
 			{
 				meshHideAssetPickerID = EditorGUIUtility.GetControlID(FocusType.Passive) + 100;
 				EditorGUIUtility.ShowObjectPicker<MeshHideAsset>(null, false, "", meshHideAssetPickerID);
 			}
-			GUILayout.Space(10);
+			UMAWardrobeRecipe recipe = target as UMAWardrobeRecipe;
 			if (Event.current.commandName == "ObjectSelectorUpdated" && EditorGUIUtility.GetObjectPickerControlID() == meshHideAssetPickerID)
 			{
-				meshHides.InsertArrayElementAtIndex(0);
-				SerializedProperty element = meshHides.GetArrayElementAtIndex(0);
-				element.objectReferenceValue = EditorGUIUtility.GetObjectPickerObject();
-				meshHideAssetPickerID = -1;
+				bool found = false;
+				if (recipe != null)
+				{
+					MeshHideAsset mha = EditorGUIUtility.GetObjectPickerObject() as MeshHideAsset;
+					if (mha != null)
+					{
+						foreach(MeshHideAsset theAsset in recipe.MeshHideAssets)
+						{
+							if (theAsset.GetInstanceID() == mha.GetInstanceID())
+							{
+								found = true;
+								break;
+							}
+						}
+					}
+					if (!found)
+					{
+						recipe.MeshHideAssets.Add(mha);
+						EditorUtility.SetDirty(target);
+						AssetDatabase.SaveAssets();
+						Repaint();
+						/*
+						meshHides.InsertArrayElementAtIndex(0);
+						SerializedProperty element = meshHides.GetArrayElementAtIndex(0);
+						element.objectReferenceValue = EditorGUIUtility.GetObjectPickerObject();
+						meshHideAssetPickerID = -1;
+						Repaint();
+						*/
+					}
+				}
 			}
-			EditorGUILayout.PropertyField(meshHides, true);
-			EditorGUILayout.EndHorizontal();
+			EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+			MeshHideAsset deleteme = null;
+
+			foreach (MeshHideAsset mha in recipe.MeshHideAssets)
+			{
+				EditorGUILayout.BeginHorizontal();
+				EditorGUILayout.LabelField(mha.name + " (" + mha.AssetSlotName + ")");
+				if (GUILayout.Button("X",GUILayout.Width(20.0f)))
+				{
+					deleteme = mha;
+				}
+				EditorGUILayout.EndHorizontal();
+			}
+			EditorGUILayout.EndVertical();
+			if (deleteme != null)
+			{
+				recipe.MeshHideAssets.Remove(deleteme);
+				EditorUtility.SetDirty(target);
+				AssetDatabase.SaveAssets();
+			}
+			// EditorGUILayout.PropertyField(meshHides, true);
 			if (EditorGUI.EndChangeCheck())
-				serializedObject.ApplyModifiedProperties();
+			serializedObject.ApplyModifiedProperties();
             //EditorGUIUtility.LookLikeControls();
             if(ShowHelp)
             {
                 EditorGUILayout.HelpBox("MeshHideAssets: This is a list of advanced mesh hiding assets to hide their corresponding slot meshes on a per triangle basis.", MessageType.Info);
             }
-            #endregion
+			#endregion
 
-            #region Update
-            //Update the values
-            if (newWardrobeSlot != wardrobeSlot)
+			#region HideTags UI
+			if (!hideTagsListInitialized)
+			{
+				InitHideTagsList();
+			}
+			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
+			GUILayout.Space(10);
+			ShowHidetags = EditorGUILayout.Foldout(ShowHidetags, "Tags to Hide");
+			GUILayout.EndHorizontal();
+			if (ShowHidetags)
+			{
+
+				EditorGUI.BeginChangeCheck();
+				hideTagsList.DoLayoutList();
+				if (EditorGUI.EndChangeCheck())
+				{
+					serializedObject.ApplyModifiedProperties();
+					doUpdate = true;
+				}
+			}
+			#endregion
+
+			#region Update
+			//Update the values
+			if (newWardrobeSlot != wardrobeSlot)
 			{
 				WardrobeSlotField.SetValue(target, newWardrobeSlot);
 				doUpdate = true;
@@ -839,7 +923,7 @@ namespace UMA.Editors
 							var slotName = _baseSlotOptions[baseAdded - 1];
 							LastSlot = slotName;
 							//we know there should be one because we created a virtual one when we unpacked the recipe if it didn't exist
-							var context = UMAContext.FindInstance();
+							var context = UMAContextBase.FindInstance();
 							var slotToAdd = context.InstantiateSlot(slotName);
 							_recipe.MergeSlot(slotToAdd, false);
 							changed |= true;

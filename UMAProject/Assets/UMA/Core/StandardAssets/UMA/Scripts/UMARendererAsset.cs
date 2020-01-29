@@ -29,7 +29,7 @@ namespace UMA
 
         #region Private variables
         [Tooltip("The name that will be given to the object that this renderer will be added to.")]
-        [SerializeField] private string _RendererName;
+        [SerializeField] private string _RendererName="";
         [Tooltip("This is the layer that the renderer object will be set to.")]
         [SerializeField] private int _Layer = 0; //Is this still needed in 2018.3 with RendererLayerMask?
 #if UNITY_2018_3_OR_NEWER
@@ -48,7 +48,7 @@ namespace UMA
 
         [Header("Cloth")]
         [Tooltip("The cloth properties asset to apply to this renderer. Use this only if planning to use the cloth component with this material.")]
-        [SerializeField] private UMAClothProperties _ClothProperties;
+        [SerializeField] private UMAClothProperties _ClothProperties = null;
         #endregion
 
         /// <summary>

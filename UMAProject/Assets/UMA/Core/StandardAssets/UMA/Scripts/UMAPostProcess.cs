@@ -20,7 +20,9 @@ namespace UMA
 
             if (material == null)
                 material = new Material(shader);
-
+#if UNITY_ANDROID || UMA_IOS
+            destination.DiscardContents();
+#endif
             Graphics.Blit(source, destination, material);
         }
     }
