@@ -220,10 +220,54 @@ namespace UMA
 
 							break;
 						}
-						case UMAMaterial.ChannelType.MaterialColor:
+
+						resultingTextures[textureType] = tempTexture;
+						if (!slotData.asset.material.channels[textureType].NonShaderTexture)
 						{
-							atlas.material.SetColor(slotData.asset.material.channels[textureType].materialPropertyName, atlas.materialFragments[0].baseColor);
-							break;
+							atlas.material.SetTexture(slotData.asset.material.channels[textureType].materialPropertyName, tempTexture);
+						}
+						#endregion
+					 }
+					 else
+					 {
+						destinationTexture.anisoLevel = slotData.asset.material.AnisoLevel;
+						destinationTexture.mipMapBias = slotData.asset.material.MipMapBias;
+						destinationTexture.filterMode = slotData.asset.material.MatFilterMode;
+						destinationTexture.wrapMode = TextureWrapMode.Repeat;
+						resultingTextures[textureType] = destinationTexture;
+						if (!slotData.asset.material.channels[textureType].NonShaderTexture)
+						{
+							atlas.material.SetTexture(slotData.asset.material.channels[textureType].materialPropertyName, destinationTexture);
+						}
+					 }
+
+					 break;
+				  }
+				  case UMAMaterial.ChannelType.MaterialColor:
+				  {
+					 if (slotData.asset.material.channels[textureType].NonShaderTexture) break;
+					 atlas.material.SetColor(slotData.asset.material.channels[textureType].materialPropertyName, atlas.materialFragments[0].baseColor);
+					 break;
+				  }
+				  case UMAMaterial.ChannelType.TintedTexture:
+				  {
+					 for (int i = 0; i < atlas.materialFragments.Count; i++)
+					 {
+						var fragment = atlas.materialFragments[i];
+						if (fragment.isRectShared) continue;
+						for (int j = 0; j < fragment.baseOverlay.textureList.Length; j++)
+						{
+						   if (fragment.baseOverlay.textureList[j] != null)
+						   {
+								if (!slotData.asset.material.channels[textureType].NonShaderTexture)
+								{
+									atlas.material.SetTexture(slotData.asset.material.channels[j].materialPropertyName, fragment.baseOverlay.textureList[j]);
+								}
+								if (j == 0)
+								{
+									atlas.material.color = fragment.baseColor;
+								}
+						   }
 						}
 						case UMAMaterial.ChannelType.TintedTexture:
 						{
@@ -247,8 +291,11 @@ namespace UMA
 									for (int j = 0; j < overlay.textureList.Length; j++)
 									{
 										if (overlay.textureList[j] != null)
-										{
-											atlas.material.SetTexture(slotData.asset.material.channels[j].materialPropertyName, overlay.textureList[j]);
+	  									{
+								      if (!slotData.asset.material.channels[textureType].NonShaderTexture)
+								      {
+									        atlas.material.SetTexture(slotData.asset.material.channels[j].materialPropertyName, overlay.textureList[j]);
+								      }                    
 										}
 									}
 								}
