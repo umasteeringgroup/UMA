@@ -54,7 +54,6 @@ namespace UMA.CharacterSystem.Examples
 		List<UMATextRecipe> wardrobeRecipeToPhoto = new List<UMATextRecipe>();
 		Dictionary<int, Dictionary<int, Color>> originalColors = new Dictionary<int, Dictionary<int, Color>>();
 
-		DynamicCharacterSystem dcs;
 		bool basePhotoTaken;
 
 		void Start()
@@ -81,7 +80,6 @@ namespace UMA.CharacterSystem.Examples
 					doingTakePhoto = false;
 					return;
 				}
-				dcs = UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem;
 				if (!autoPhotosEnabled)
 				{
 					bool canPhoto = SetBestRenderTexture();
@@ -100,7 +98,7 @@ namespace UMA.CharacterSystem.Examples
 				}
 				else
 				{
-					Dictionary<string, List<UMATextRecipe>> recipesToPhoto = dcs.Recipes[avatarToPhoto.activeRace.name];
+					Dictionary<string, List<UMATextRecipe>> recipesToPhoto = UMAContext.Instance.GetRecipes(avatarToPhoto.activeRace.name);
 					basePhotoTaken = false;
 					StartCoroutine(TakePhotosCoroutine(recipesToPhoto));
 				}

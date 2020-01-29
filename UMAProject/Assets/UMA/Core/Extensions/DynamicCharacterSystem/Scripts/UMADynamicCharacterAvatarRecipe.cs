@@ -68,7 +68,7 @@ namespace UMA.CharacterSystem
 		/// <summary>
 		/// NOTE: Use GetUniversalPackRecipe to get a recipe that includes a wardrobeSet. Load this Recipe's recipeString into the specified UMAData.UMARecipe.
 		/// </summary>
-		public override void Load(UMA.UMAData.UMARecipe umaRecipe, UMAContext context)
+		public override void Load(UMA.UMAData.UMARecipe umaRecipe, UMAContextBase context)
 		{
 			if ((recipeString != null) && (recipeString.Length > 0))
 			{

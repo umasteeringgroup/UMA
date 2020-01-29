@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace UMA
 {
@@ -177,6 +178,16 @@ namespace UMA
 		public override int GetHashCode()
 		{
 			return base.GetHashCode();
+		}
+
+		public void SetChannels(int channels)
+		{
+			EnsureChannels(channels);
+			if (channelMask.Length > channels)
+			{
+				Array.Resize(ref channelMask, channels);
+				Array.Resize(ref channelAdditiveMask, channels);
+			}
 		}
 
         public void EnsureChannels(int channels)

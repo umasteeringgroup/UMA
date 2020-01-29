@@ -315,7 +315,11 @@ namespace UMA
 		private static UMAMeshData bufferLockOwner = null;
 		private static bool buffersInitialized = false;
 		private static bool haveBackingArrays = false;
+#if UMA_32BITBUFFERS
+		const int MAX_VERTEX_COUNT = 262144;
+#else
 		const int MAX_VERTEX_COUNT = 65534;
+#endif
 		static List<Vector3> gVertices = new List<Vector3>(MAX_VERTEX_COUNT);
 		static Vector3[] gVerticesArray;
 		static List<Vector3> gNormals = new List<Vector3>(MAX_VERTEX_COUNT);
@@ -549,7 +553,7 @@ namespace UMA
 			}
 
 			//Create the blendshape data on the slot asset from the unity mesh
-			#region Blendshape
+#region Blendshape
 			blendShapes = new UMABlendShape[sharedMesh.blendShapeCount];
 
 			Vector3[] deltaVertices;
@@ -593,7 +597,7 @@ namespace UMA
 
 				}
 			}
-			#endregion
+#endregion
 		}
 
 		/// <summary>
@@ -758,7 +762,7 @@ namespace UMA
 			}
 
 			//Apply the blendshape data from the slot asset back to the combined UMA unity mesh.
-			#region Blendshape
+#region Blendshape
 			mesh.ClearBlendShapes();
 			if (blendShapes != null && blendShapes.Length > 0 ) 
 			{
@@ -791,7 +795,7 @@ namespace UMA
 					}
 				}
 			}
-			#endregion
+#endregion
 
 			mesh.RecalculateBounds();
 			renderer.bones = bones != null ? bones : skeleton.HashesToTransforms(boneNameHashes);
@@ -944,7 +948,7 @@ namespace UMA
 			}
 		}
 
-		#region operator ==, != and similar HACKS, seriously.....
+#region operator ==, != and similar HACKS, seriously.....
 		public static implicit operator bool(UMAMeshData obj)
 		{
 			return ((System.Object)obj) != null && obj.vertexCount != 0;
@@ -988,7 +992,7 @@ namespace UMA
 		{
 			return base.GetHashCode();
 		}
-		#endregion
+#endregion
 
 		internal void ReSortUMABones()
 		{

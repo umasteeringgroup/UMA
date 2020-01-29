@@ -151,6 +151,9 @@ namespace UMA
             }
 
             _sharedMesh = new Mesh();
+#if UMA_32BITBUFFERS
+				_sharedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+#endif
             _sharedMesh.subMeshCount = meshData.subMeshCount;
             _sharedMesh.vertices = meshData.vertices;
             _sharedMesh.normals = meshData.normals;
@@ -312,7 +315,12 @@ namespace UMA
                 return;;
 
             if (_occlusionMesh == null)
+            {
                 _occlusionMesh = new Mesh();
+#if UMA_32BITBUFFERS
+				_occlusionMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+#endif
+            }
             else
                 _occlusionMesh.Clear();
             

@@ -1,14 +1,14 @@
 using UnityEngine;
 using System.Collections.Generic;
+using UMA.CharacterSystem;
 
 namespace UMA
 {
 	/// <summary>
-	/// Gloal container for various UMA objects in the scene. Marked as partial so the developer can add to this if necessary
+	/// Gloal container for various UMA objects in the scene.
 	/// </summary>
-	public partial class UMAContext : MonoBehaviour
+	public class UMAContext : UMAContextBase
 	{
-		public static UMAContext Instance;
 		/// <summary>
 		/// The race library.
 		/// </summary>
@@ -22,8 +22,10 @@ namespace UMA
 		/// </summary>
 		public OverlayLibraryBase overlayLibrary;
 
-	#pragma warning disable 618
-		public void Start()
+		public UMA.CharacterSystem.DynamicCharacterSystem dynamicCharacterSystem;
+
+#pragma warning disable 618
+		public override void Start()
 		{
 			if (!slotLibrary)
 			{
@@ -37,7 +39,7 @@ namespace UMA
 			{
 				overlayLibrary = GameObject.Find("OverlayLibrary").GetComponent<OverlayLibraryBase>();
 			}
-			// Note: Removed null check so that this is always assigned if you have a UMAContext in your scene
+			// Note: Removed null check so that this is always assigned if you have a UMAContextBase in your scene
 			// This will avoid those occasions where someone drops in a bogus context in a test scene, and then 
 			// later loads a valid scene (and everything breaks)
 			Instance = this;
@@ -46,11 +48,16 @@ namespace UMA
 		/// <summary>
 		/// Validates the library contents.
 		/// </summary>
-		public void ValidateDictionaries()
+		public override void ValidateDictionaries()
 		{
 			slotLibrary.ValidateDictionary();
 			raceLibrary.ValidateDictionary();
 			overlayLibrary.ValidateDictionary();
+			if (dynamicCharacterSystem != null)
+			{
+				dynamicCharacterSystem.Refresh(false);
+				dynamicCharacterSystem.RefreshRaceKeys();
+			}
 		}
 
 		/// <summary>
@@ -58,7 +65,7 @@ namespace UMA
 		/// </summary>
 		/// <returns>The race.</returns>
 		/// <param name="name">Name.</param>
-		public RaceData HasRace(string name)
+		public override RaceData HasRace(string name)
 		{
 			return raceLibrary.HasRace(name);
 		}
@@ -67,9 +74,17 @@ namespace UMA
 		/// </summary>
 		/// <returns>The race.</returns>
 		/// <param name="nameHash">Name hash.</param>
-		public RaceData HasRace(int nameHash)
+		public override RaceData HasRace(int nameHash)
 		{
 			return raceLibrary.HasRace(nameHash);
+		}
+
+		public override void EnsureRaceKey(string name)
+		{
+			if (dynamicCharacterSystem != null)
+			{
+				dynamicCharacterSystem.EnsureRaceKey(name);
+			}
 		}
 
 		/// <summary>
@@ -77,8 +92,11 @@ namespace UMA
 		/// </summary>
 		/// <returns>The race.</returns>
 		/// <param name="name">Name.</param>
-		public RaceData GetRace(string name)
+		public override RaceData GetRace(string name)
 		{
+#if SUPER_LOGGING
+			Debug.Log("Getting Race: " + name);
+#endif
 			return raceLibrary.GetRace(name);
 		}
 		/// <summary>
@@ -86,8 +104,17 @@ namespace UMA
 		/// </summary>
 		/// <returns>The race.</returns>
 		/// <param name="nameHash">Name hash.</param>
-		public RaceData GetRace(int nameHash)
+		public override RaceData GetRace(int nameHash)
 		{
+			return raceLibrary.GetRace(nameHash);
+		}
+
+		public override RaceData GetRaceWithUpdate(int nameHash, bool allowUpdate)
+		{
+			if (raceLibrary is DynamicRaceLibrary)
+			{
+				return (raceLibrary as DynamicRaceLibrary).GetRace(nameHash, allowUpdate);
+			}
 			return raceLibrary.GetRace(nameHash);
 		}
 
@@ -95,18 +122,33 @@ namespace UMA
 		/// Array of all races in the context.
 		/// </summary>
 		/// <returns>The array of race data.</returns>
-		public RaceData[] GetAllRaces()
+		public override RaceData[] GetAllRaces()
 		{
 			return raceLibrary.GetAllRaces();
 		}
+
+		public override RaceData[] GetAllRacesBase()
+		{
+			if (raceLibrary is DynamicRaceLibrary)
+			{
+				return (raceLibrary as DynamicRaceLibrary).GetAllRacesBase();
+			}
+			return raceLibrary.GetAllRaces();
+		}
+
 
 		/// <summary>
 		/// Add a race to the context.
 		/// </summary>
 		/// <param name="race">New race.</param>
-		public void AddRace(RaceData race)
+		public override void AddRace(RaceData race)
 		{
 			raceLibrary.AddRace(race);
+			raceLibrary.UpdateDictionary();
+			if (dynamicCharacterSystem != null)
+			{
+				dynamicCharacterSystem.RefreshRaceKeys();
+			}
 		}
 
 		/// <summary>
@@ -114,8 +156,11 @@ namespace UMA
 		/// </summary>
 		/// <returns>The slot.</returns>
 		/// <param name="name">Name.</param>
-		public SlotData InstantiateSlot(string name)
+		public override SlotData InstantiateSlot(string name)
 		{
+#if SUPER_LOGGING
+			Debug.Log("Instantiating slot: " + name);
+#endif
 			return slotLibrary.InstantiateSlot(name);
 		}
 
@@ -124,7 +169,7 @@ namespace UMA
 		/// </summary>
 		/// <returns>The slot.</returns>
 		/// <param name="nameHash">Name hash.</param>
-		public SlotData InstantiateSlot(int nameHash)
+		public override SlotData InstantiateSlot(int nameHash)
 		{
 			return slotLibrary.InstantiateSlot(nameHash);
 		}
@@ -135,8 +180,11 @@ namespace UMA
 		/// <returns>The slot.</returns>
 		/// <param name="name">Name.</param>
 		/// <param name="overlayList">Overlay list.</param>
-		public SlotData InstantiateSlot(string name, List<OverlayData> overlayList)
+		public override SlotData InstantiateSlot(string name, List<OverlayData> overlayList)
 		{
+#if SUPER_LOGGING
+			Debug.Log("Instantiating slot: " + name);
+#endif
 			return slotLibrary.InstantiateSlot(name, overlayList);
 		}
 		/// <summary>
@@ -145,7 +193,7 @@ namespace UMA
 		/// <returns>The slot.</returns>
 		/// <param name="nameHash">Name hash.</param>
 		/// <param name="overlayList">Overlay list.</param>
-		public SlotData InstantiateSlot(int nameHash, List<OverlayData> overlayList)
+		public override SlotData InstantiateSlot(int nameHash, List<OverlayData> overlayList)
 		{
 			return slotLibrary.InstantiateSlot(nameHash, overlayList);
 		}
@@ -155,7 +203,7 @@ namespace UMA
 		/// </summary>
 		/// <returns><c>True</c> if the slot exists in this context.</returns>
 		/// <param name="name">Name.</param>
-		public bool HasSlot(string name)
+		public override bool HasSlot(string name)
 		{
 			if (slotLibrary.HasSlot(name))
 				return true;
@@ -172,7 +220,7 @@ namespace UMA
 		/// </summary>
 		/// <returns><c>True</c> if the slot exists in this context.</returns>
 		/// <param name="nameHash">Name hash.</param>
-		public bool HasSlot(int nameHash)
+		public override bool HasSlot(int nameHash)
 		{
 			if (slotLibrary.HasSlot(nameHash))
 				return true;
@@ -189,7 +237,7 @@ namespace UMA
 		/// Add a slot asset to the context.
 		/// </summary>
 		/// <param name="slot">New slot asset.</param>
-		public void AddSlotAsset(SlotDataAsset slot)
+		public override void AddSlotAsset(SlotDataAsset slot)
 		{
 			slotLibrary.AddSlotAsset(slot);
 		}
@@ -199,7 +247,7 @@ namespace UMA
 		/// </summary>
 		/// <returns><c>True</c> if the overlay exists in this context.</returns>
 		/// <param name="name">Name.</param>
-		public bool HasOverlay(string name)
+		public override bool HasOverlay(string name)
 		{
 			return overlayLibrary.HasOverlay(name);
 		}
@@ -208,7 +256,7 @@ namespace UMA
 		/// </summary>
 		/// <returns><c>True</c> if the overlay exists in this context.</returns>
 		/// <param name="nameHash">Name hash.</param>
-		public bool HasOverlay(int nameHash)
+		public override bool HasOverlay(int nameHash)
 		{ 
 			return overlayLibrary.HasOverlay(nameHash);
 		}
@@ -218,8 +266,11 @@ namespace UMA
 		/// </summary>
 		/// <returns>The overlay.</returns>
 		/// <param name="name">Name.</param>
-		public OverlayData InstantiateOverlay(string name)
+		public override OverlayData InstantiateOverlay(string name)
 		{
+#if SUPER_LOGGING
+			Debug.Log("Instantiating Overlay: " + name);
+#endif
 			return overlayLibrary.InstantiateOverlay(name);
 		}
 		/// <summary>
@@ -227,7 +278,7 @@ namespace UMA
 		/// </summary>
 		/// <returns>The overlay.</returns>
 		/// <param name="nameHash">Name hash.</param>
-		public OverlayData InstantiateOverlay(int nameHash)
+		public override OverlayData InstantiateOverlay(int nameHash)
 		{
 			return overlayLibrary.InstantiateOverlay(nameHash);
 		}
@@ -238,8 +289,11 @@ namespace UMA
 		/// <returns>The overlay.</returns>
 		/// <param name="name">Name.</param>
 		/// <param name="color">Color.</param>
-		public OverlayData InstantiateOverlay(string name, Color color)
+		public override OverlayData InstantiateOverlay(string name, Color color)
 		{
+#if SUPER_LOGGING
+			Debug.Log("Instantiating Overlay: " + name);
+#endif
 			return overlayLibrary.InstantiateOverlay(name, color);
 		}
 		/// <summary>
@@ -248,7 +302,7 @@ namespace UMA
 		/// <returns>The overlay.</returns>
 		/// <param name="nameHash">Name hash.</param>
 		/// <param name="color">Color.</param>
-		public OverlayData InstantiateOverlay(int nameHash, Color color)
+		public override OverlayData InstantiateOverlay(int nameHash, Color color)
 		{
 			return overlayLibrary.InstantiateOverlay(nameHash, color);
 		}
@@ -257,29 +311,92 @@ namespace UMA
 		/// Add an overlay asset to the context.
 		/// </summary>
 		/// <param name="overlay">New overlay asset.</param>
-		public void AddOverlayAsset(OverlayDataAsset overlay)
+		public override void AddOverlayAsset(OverlayDataAsset overlay)
 		{
 			overlayLibrary.AddOverlayAsset(overlay);
 		}
 
-	#pragma warning restore 618
-		/// <summary>
-		/// Finds the singleton context in the scene.
-		/// </summary>
-		/// <returns>The UMA context.</returns>
-		public static UMAContext FindInstance()
+		// Get all DNA
+		public override List<DynamicUMADnaAsset> GetAllDNA()
 		{
-			if (Instance == null)
-			{
-				var contextGO = GameObject.Find("UMAContext");
-				if (contextGO != null)
-					Instance = contextGO.GetComponent<UMAContext>();
-			}
-			if (Instance == null)
-			{
-				Instance = Component.FindObjectOfType<UMAContext>();
-			}
-			return Instance;	
+			return UMAAssetIndexer.Instance.GetAllAssets<DynamicUMADnaAsset>();
+		}
+
+		// Get a DNA Asset By Name
+		public override DynamicUMADnaAsset GetDNA(string Name)
+		{
+			return UMAAssetIndexer.Instance.GetAsset<DynamicUMADnaAsset>(Name);
+		}
+
+		public override RuntimeAnimatorController GetAnimatorController(string Name)
+		{
+			return UMAAssetIndexer.Instance.GetAsset<RuntimeAnimatorController>(Name);
+		}
+
+		public override List<RuntimeAnimatorController> GetAllAnimatorControllers()
+		{
+			return UMAAssetIndexer.Instance.GetAllAssets<RuntimeAnimatorController>();
+		}
+
+		public override void AddRecipe(UMATextRecipe recipe)
+		{
+			dynamicCharacterSystem.AddRecipe(recipe);
+		}
+
+		public override UMATextRecipe GetRecipe(string filename, bool dynamicallyAdd = true)
+		{
+			return dynamicCharacterSystem.GetRecipe(filename, dynamicallyAdd);
+		}
+
+		public override UMARecipeBase GetBaseRecipe(string filename, bool dynamicallyAdd)
+		{
+			return GetRecipe(filename, dynamicallyAdd);
+		}
+
+		public override string GetCharacterRecipe(string filename)
+		{
+			if (dynamicCharacterSystem.CharacterRecipes.ContainsKey(filename))
+				return dynamicCharacterSystem.CharacterRecipes[filename];
+			return "";
+		}
+
+		public override List<string> GetRecipeFiles()
+		{
+			List<string> keys = new List<string>();
+			keys.AddRange(dynamicCharacterSystem.CharacterRecipes.Keys);
+			return keys;
+		}
+
+		public override bool HasRecipe(string Name)
+		{
+			if (dynamicCharacterSystem == null)
+				return false;
+			return dynamicCharacterSystem.RecipeIndex.ContainsKey(Name);
+		}
+
+		/// <summary>
+		/// This checks through everything, not just the currently loaded index.
+		/// </summary>
+		/// <param name="recipeName"></param>
+		/// <returns></returns>
+		public override bool CheckRecipeAvailability(string recipeName)
+		{
+			return dynamicCharacterSystem.CheckRecipeAvailability(recipeName);
+		}
+
+		public override List<string> GetRecipeNamesForRaceSlot(string race, string slot)
+		{
+			return dynamicCharacterSystem.GetRecipeNamesForRaceSlot(race, slot);
+		}
+
+		public override List<UMARecipeBase> GetRecipesForRaceSlot(string race, string slot)
+		{
+			return dynamicCharacterSystem.GetRecipesForRaceSlot(race, slot);
+		}
+
+		public override Dictionary<string, List<UMATextRecipe>> GetRecipes(string raceName)
+		{
+			return dynamicCharacterSystem.Recipes[raceName];
 		}
 	}
 }

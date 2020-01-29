@@ -210,10 +210,7 @@ namespace UMA.CharacterSystem
 					if (assetType == typeof(RaceData))
 					{
 						RaceData actualRace = loadedBundleAB.LoadAsset<RaceData>(itemFilename);
-						UMAContext.Instance.raceLibrary.AddRace(actualRace);
-						UMAContext.Instance.raceLibrary.UpdateDictionary();
-						//Refresh DCS so that anything that this race is cross compatible with gets added to its list of available recipes
-						(UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem).RefreshRaceKeys();
+						UMAContextBase.Instance.AddRace(actualRace);
 					}
 					else if (assetType == typeof(SlotDataAsset))
 					{
@@ -221,7 +218,7 @@ namespace UMA.CharacterSystem
 						thisSlot = loadedBundleAB.LoadAsset<SlotDataAsset>(itemFilename);
 						if (thisSlot != null)
 						{
-							UMAContext.Instance.slotLibrary.AddSlotAsset(thisSlot);
+							UMAContextBase.Instance.AddSlotAsset(thisSlot);
 						}
 						else
 						{
@@ -235,7 +232,7 @@ namespace UMA.CharacterSystem
 						thisOverlay = loadedBundleAB.LoadAsset<OverlayDataAsset>(itemFilename);
 						if (thisOverlay != null)
 						{
-							UMAContext.Instance.overlayLibrary.AddOverlayAsset(thisOverlay);
+							UMAContextBase.Instance.AddOverlayAsset(thisOverlay);
 						}
 						else
 						{
@@ -246,12 +243,12 @@ namespace UMA.CharacterSystem
 					else if (assetType == typeof(UMATextRecipe))
 					{
 						UMATextRecipe downloadedRecipe = loadedBundleAB.LoadAsset<UMATextRecipe>(itemFilename);
-						(UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem).AddRecipe(downloadedRecipe);
+						UMAContextBase.Instance.AddRecipe(downloadedRecipe);
 					}
 					else if (assetType == typeof(UMAWardrobeRecipe))
 					{
 						UMAWardrobeRecipe downloadedRecipe = loadedBundleAB.LoadAsset<UMAWardrobeRecipe>(itemFilename);
-						(UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem).AddRecipe(downloadedRecipe);
+						UMAContextBase.Instance.AddRecipe(downloadedRecipe);
 					}
 					else if (item.dynamicCallback.Count > 0)
 					{

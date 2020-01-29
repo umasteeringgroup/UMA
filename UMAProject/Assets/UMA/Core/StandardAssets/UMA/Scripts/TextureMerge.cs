@@ -17,6 +17,9 @@ namespace UMA
 		public Shader dataShader;
 		public Shader cutoutShader;
 
+		[System.NonSerialized] 
+		public Color camBackgroundColor = new Color(0, 0, 0, 0);
+
 		public List<UMAPostProcess> diffusePostProcesses = new List<UMAPostProcess>();
 		public List<UMAPostProcess> normalPostProcesses = new List<UMAPostProcess>();
 		public List<UMAPostProcess> dataPostProcesses = new List<UMAPostProcess>();
@@ -55,6 +58,7 @@ namespace UMA
 
 		private void DrawRect(ref TextureMergeRect textureMergeRect)
 		{
+			//TODO JRRM: add an event here and let the end user modify the textureMertRect.tex if needed.
 			Graphics.DrawTexture(textureMergeRect.rect, textureMergeRect.tex, textureMergeRect.mat);
 		}
 
@@ -120,6 +124,9 @@ namespace UMA
 
 		private void SetupMaterial(ref TextureMergeRect textureMergeRect, UMAData.MaterialFragment source, int textureType)
 		{
+			camBackgroundColor = source.GetMultiplier(0, textureType);
+			camBackgroundColor.a = 0.0f;
+
 			textureMergeRect.tex = source.baseOverlay.textureList[textureType];
 
 			switch (source.slotData.asset.material.channels[textureType].channelType)

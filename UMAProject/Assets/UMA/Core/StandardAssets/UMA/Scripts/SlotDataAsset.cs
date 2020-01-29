@@ -7,7 +7,7 @@ namespace UMA
 	/// Contains the immutable data shared between slots of the same type.
 	/// </summary>
 	[System.Serializable]
-	[PreferBinarySerialization]
+	[PreferBinarySerialization] 
 	public partial class SlotDataAsset : ScriptableObject, ISerializationCallbackReceiver, INameProvider
     {
 		public string slotName;
@@ -15,7 +15,7 @@ namespace UMA
 		public int nameHash;
 
 		public UMARendererAsset RendererAsset { get { return _rendererAsset; } }
-		[SerializeField] private UMARendererAsset _rendererAsset;
+		[SerializeField] private UMARendererAsset _rendererAsset=null;
 
         #region INameProvider
 
@@ -39,6 +39,13 @@ namespace UMA
         /// </remarks>
         [UMAAssetFieldVisible]
 		public UMAMaterial material;
+
+		/// <summary>
+		/// This SlotDataAsset will not be included after this LOD level.
+		/// Set high by default so behavior is the same.
+		/// </summary>
+		[Tooltip("If you are using an LOD system, this is the maximum LOD that this slot will be displayed. After that, it will be discarded during mesh generation. a value of -1 will never be dropped.")]
+		public int maxLOD=-1;
 
 		/// <summary>
 		/// 
@@ -123,8 +130,8 @@ namespace UMA
 		/// </summary>
 		public string slotGroup;
 		/// <summary>
-		/// Use this to identify what kind of overlays fit this slotData
-		/// Eg. BaseMeshSkin, BaseMeshOverlays, GenericPlateArmor01
+		/// This can be used for hiding, matching etc. 
+		/// It's used by the DynamicCharacterSystem to hide slots by tag.
 		/// </summary>
 		public string[] tags;
 

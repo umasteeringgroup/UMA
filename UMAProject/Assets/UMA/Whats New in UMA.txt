@@ -1,3 +1,51 @@
+What's new in 2.10
+Minimum supported version is 2018.4
+Support for Addressables
+  Automated generation of addressables groups
+  Automated cleanup of slots/overlays/textures
+  Significantly reduced memory overhead
+  Build requests are queued up with all relevant data
+  Added recipes to Addressables. If you do this, you must load them before access (they are all labelled by recipe and with 'UMA_Recipe')
+New global library window
+  New functions to mark items by various parameters
+  New Addressables Menu to generate items
+  New Ability to remove unused slots/overlays using the addressable groups
+  New Ability to remove items from library by dropping a folder onto the lib
+Added a label field to recipes to allow the user to override addressable label names
+Moved Mesh Hide mask creation to mesh building, to address sync issues
+Updated DNA checks to pull from global library instead of searching resources. Fixes an issue on android
+When the animator is rebuilt, the layer weights are saved and restored now
+LoadFromRecipeString now has a flag to clear the existing wardrobe when loading
+Added SetRawColor function (and code) so you can pass in an OverlayColorData and the sytem won't monkey with it
+UMAMaterial Changes
+   Added checkbox to use the overlay multiplier color as the background for alpha blended overlays. 
+   Added a multiplier to allow adjusting that color. 
+   This improves the look of hair (gets rid of banding on the edges)
+Added Animation Clip Target Renamer to help with renaming targets for UMAs when the animation is broken
+Reworked compatible races recipe loading, so they are figured out in the index at startup
+Context changes
+    Created a new UMAGlobalContext context that pulls everything from the global library. 
+    (This removes the need for the various libraries - racelibrary, slotlibrary, etc.)
+    All access to UMA data now goes through the contexts.
+    Created new prefab UMA_GLIB using the global context. It is recommended to switch to this version in 2.10.
+LOD Improvements
+    Added "Maximum LOD Level" to SlotDataAsset, and Suppressed flag to SlotData for use by LOD systems
+    Added "Use Slot Dropping" to UMASimpleLOD, this will suppress slots based on the fields above.
+    By default, the eyebrows, eyelashes, and Inner Mouth are set to drop after LOD 0. Eyes are set to drop after LOD 1.
+Ability to hide slots by Slot tag.
+Added support for 32 bit index buffers (large meshes). To enable, add UMA_32BITBUFFERS to the player defines. This is experimental at this time.
+Verify button in Slot Builder Window will detect UV Coordinates that are out of range.
+Added Elf male and Elf female races with base race recipes.
+CollisionMatrixFixer will read the current layermask settings for Ragdoll and NoCollisions, and use those if found.
+Added "AutoSetLayers" property to UMAPhysicsAvatar. When set, the player layer will be the current gameobject layer, and the Ragdoll layer will be read from the layermask settings.
+Added Shader Parameter Mapping to UMAMaterial - UMAMaterials can now map shared colors to color properties in the generated material. Useful for shaders that have extra color parms (like skin & hair shaders).
+Various bug fixes & changes
+    Fixed various overlays that were missing textures or had the wrong count
+    Fixed some scenes that had broken over time
+    Sometimes a shader would not be compiled correctly.
+    Reworked recipe editor and disallowed duplicate mesh hide assets.
+    Fixed bug where you couldn't add a Wardrobe Collection using SetSlot before Start() was called on the DCA.
+
 What's new in 2.9
 Renderer Manager - allow you to specify visibility, shadows of specific model parts.
 Render Manager scene - hides head in world, but not in shadows, reflections

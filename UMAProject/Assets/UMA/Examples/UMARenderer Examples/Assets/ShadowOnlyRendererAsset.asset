@@ -3,8 +3,9 @@
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -13,9 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _RendererName: SecondHead
   _Layer: 31
-  _UpdateWhenOffscreen: 0
+  _RendererLayerMask: 1
+  _RendererPriority: 0
+  _UpdateWhenOffscreen: 1
   _SkinnedMotionVectors: 1
   _MotionVectors: 1
+  _DynamicOccluded: 1
   _CastShadows: 3
   _ReceiveShadows: 1
   _ClothProperties: {fileID: 0}

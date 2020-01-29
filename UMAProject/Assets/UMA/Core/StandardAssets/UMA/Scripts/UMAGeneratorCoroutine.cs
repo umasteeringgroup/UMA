@@ -72,8 +72,11 @@ namespace UMA
 			res.umaMaterial = umaMaterial;
 			res.material = UnityEngine.Object.Instantiate(umaMaterial.material) as Material;
 			res.material.name = umaMaterial.material.name;
+			res.material.shader = Shader.Find(res.material.shader.name);
+			res.material.CopyPropertiesFromMaterial(umaMaterial.material);
 			atlassedMaterials.Add(res);
 			generatedMaterials.Add(res);
+
 			return res;
 		}
 
@@ -99,11 +102,13 @@ namespace UMA
 			{
 				SlotData slot = slots[i];
 				if (slot == null)
+					continue; 
+				if (slot.Suppressed)
 					continue;
 
 				//Keep a running list of unique RendererHashes from our slots
 				//Null rendererAsset gets added, which is good, it is the default renderer.
-				if(!uniqueRenderers.Contains(slot.rendererAsset))
+				if (!uniqueRenderers.Contains(slot.rendererAsset))
 					uniqueRenderers.Add(slot.rendererAsset);
 
 				// Let's only add the default overlay if the slot has meshData and NO overlays
@@ -200,6 +205,32 @@ namespace UMA
 				}
 			}
 
+			//****************************************************
+			//* Set parameters based on shader parameter mapping
+			//****************************************************
+			for (int i=0;i<generatedMaterials.Count;i++)
+			{
+				UMAData.GeneratedMaterial ugm = generatedMaterials[i];
+				if (ugm.umaMaterial.shaderParms != null)
+				{
+					for(int j=0;j<ugm.umaMaterial.shaderParms.Length;j++)
+					{
+						UMAMaterial.ShaderParms parm = ugm.umaMaterial.shaderParms[j];
+						if (ugm.material.HasProperty(parm.ParameterName))
+						{
+							foreach (OverlayColorData ocd in umaData.umaRecipe.sharedColors)
+							{
+								if (ocd.name == parm.ColorName)
+								{
+									ugm.material.SetColor(parm.ParameterName, ocd.color);
+									break;
+								}
+							}
+						}
+					}
+
+				}
+			}
 			packTexture = new MaxRectsBinPack(umaGenerator.atlasResolution, umaGenerator.atlasResolution, false);
 		}
 
@@ -225,24 +256,7 @@ namespace UMA
 			CleanBackUpTextures();
 			UpdateUV();
 
-			// HACK - is this the right place?
-			SlotData[] slots = umaData.umaRecipe.slotDataList;
-			for (int i = 0; i < slots.Length; i++)
-			{
-				var slot = slots[i];
-				if (slot == null)
-					continue;
-
-#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
-				for (int j = 1; j < slot.OverlayCount; j++)
-				{
-					OverlayData overlay = slot.GetOverlay(j);
-					if ((overlay != null) && (overlay.isProcedural))
-						overlay.ReleaseProceduralTextures();
-				}
-#endif
-			}
-
+			// Procedural textures were done here 
 			if (updateMaterialList)
 			{
 				for (int j = 0; j < umaData.rendererCount; j++)

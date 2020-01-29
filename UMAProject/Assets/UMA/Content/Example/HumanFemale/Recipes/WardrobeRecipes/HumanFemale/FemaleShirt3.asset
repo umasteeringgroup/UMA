@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0188188c253e0c4bb9b46e19fa7312e, type: 3}
+  m_Name: FemaleShirt3
+  m_EditorClassIdentifier: 
+  label: 
+  recipeType: Wardrobe
+  DisplayValue: Shirt 3
+  compatibleRaces:
+  - HumanFemaleDCS
+  - HumanFemale
+  wardrobeRecipeThumbs:
+  - race: HumanFemaleDCS
+    filename: 
+    thumb: {fileID: 21300000, guid: 80812688103605b4685bdcf1ada34910, type: 3}
+  - race: HumanFemale
+    filename: 
+    thumb: {fileID: 21300000, guid: 80812688103605b4685bdcf1ada34910, type: 3}
+  wardrobeSlot: Chest
+  Hides: []
+  suppressWardrobeSlots: []
+  activeWardrobeSet: []
+  MeshHideAssets: []
+  AddressableLabel: 
+  recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"FemaleTorso","scale":100,"copyIdx":-1,"overlays":[{"id":"FemaleShirt02","colorIdx":0,"rect":[0,1024,2048,1024]}]}],"colors":[],"fColors":[{"name":"Shirt","colors":[54,146,97,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"","packedDna":[]}'
+  IncompatibleRecipes: []
+  UserField: 
+  replaces: Nothing

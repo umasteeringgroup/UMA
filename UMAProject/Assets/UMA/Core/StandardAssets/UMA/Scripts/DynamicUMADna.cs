@@ -208,30 +208,10 @@ namespace UMA
 			InitializeDynamicDNADictionary();
 			if (DynamicDNADictionary.TryGetValue(dnaAssetName, out _dnaAsset))
 				return;
-			//if we are in the editor and the application is not running find the Asset using AssetDatabase
-#if UNITY_EDITOR
-				if (!Application.isPlaying)
-			{
-				var allDNAAssetsGUIDs = AssetDatabase.FindAssets("t:DynamicUMADnaAsset");
-				for (int i = 0; i < allDNAAssetsGUIDs.Length; i++)
-				{
-					var thisDNAPath = AssetDatabase.GUIDToAssetPath(allDNAAssetsGUIDs[i]);
-					var thisDNA = AssetDatabase.LoadAssetAtPath<DynamicUMADnaAsset>(thisDNAPath);
-					if (thisDNA.name == dnaAssetName)
-					{
-						//Debug.Log("DynamicUMADna found  " + _dnaAssetName + " from AssetDatabase");
-						SetMissingDnaAsset(new DynamicUMADnaAsset[1] { thisDNA });
-						break;
-					}
-				}
-				//This just makes it super slow *every* time a recipe is loaded
-				//Resources.UnloadUnusedAssets();
-				return;
-			}
-#endif
-			didDnaAssetUpdate = false;
-			didDnaAssetUpdate = DynamicAssetLoader.Instance.AddAssets<UMA.DynamicUMADnaAsset>(true, true, true, "", "", null, dnaAssetName, SetMissingDnaAsset);
-			if (didDnaAssetUpdate == false)
+
+            _dnaAsset = UMAContext.Instance.GetDNA(dnaAssetName);
+
+			if (!_dnaAsset)
 			{
 				if (Debug.isDebugBuild)
 					Debug.LogWarning("DynamicUMADna could not find DNAAsset " + dnaAssetName + "!");

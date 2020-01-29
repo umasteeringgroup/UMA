@@ -1,0 +1,223 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 468a46d0ae32c3544b7d98094e6448a9, type: 3}
+  m_Name: AddressableAssetSettings
+  m_EditorClassIdentifier: 
+  m_DefaultGroup: 7790adaaedd42364286d52cd19534dbc
+  m_BuildRemoteCatalog: 0
+  m_DisableCatalogUpdateOnStart: 0
+  m_UniqueBundleIds: 0
+  m_RemoteCatalogBuildPath:
+    m_Id: 
+  m_RemoteCatalogLoadPath:
+    m_Id: 
+  m_overridePlayerVersion: 
+  m_GroupAssets:
+  - {fileID: 11400000, guid: 7184ee6cc40e7294f98220e94dee68eb, type: 2}
+  - {fileID: 11400000, guid: c26003e05ab9cf54c9c461b687ff027b, type: 2}
+  m_BuildSettings:
+    m_CompileScriptsInVirtualMode: 0
+    m_CleanupStreamingAssetsAfterBuilds: 1
+    m_LogResourceManagerExceptions: 1
+    m_BundleBuildPath: Temp/com.unity.addressables/AssetBundles
+  m_ProfileSettings:
+    m_Profiles:
+    - m_InheritedParent: 
+      m_Id: af759e6a6a52df94f99900ad0d052b46
+      m_ProfileName: Default
+      m_Values:
+      - m_Id: 221f359b4ab5b3e4bac55d0a45daa07b
+        m_Value: '[UnityEditor.EditorUserBuildSettings.activeBuildTarget]'
+      - m_Id: 56de8cbdc7a78e7468e4f84000fc5421
+        m_Value: '[UnityEngine.AddressableAssets.Addressables.BuildPath]/[BuildTarget]'
+      - m_Id: bd787a308360af042b51070945ff3dab
+        m_Value: '{UnityEngine.AddressableAssets.Addressables.RuntimePath}/[BuildTarget]'
+      - m_Id: 2119c969153ba344abf33afe8f685fe6
+        m_Value: ServerData/[BuildTarget]
+      - m_Id: 535b7b31210e5524299e96b752b5c51d
+        m_Value: http://localhost/[BuildTarget]
+    m_ProfileEntryNames:
+    - m_Id: 221f359b4ab5b3e4bac55d0a45daa07b
+      m_Name: BuildTarget
+      m_InlineUsage: 0
+    - m_Id: 56de8cbdc7a78e7468e4f84000fc5421
+      m_Name: LocalBuildPath
+      m_InlineUsage: 0
+    - m_Id: bd787a308360af042b51070945ff3dab
+      m_Name: LocalLoadPath
+      m_InlineUsage: 0
+    - m_Id: 2119c969153ba344abf33afe8f685fe6
+      m_Name: RemoteBuildPath
+      m_InlineUsage: 0
+    - m_Id: 535b7b31210e5524299e96b752b5c51d
+      m_Name: RemoteLoadPath
+      m_InlineUsage: 0
+    m_ProfileVersion: 1
+  m_LabelTable:
+    m_LabelNames:
+    - default
+    - FemaleLongHair_Recipe
+    - FemaleTallShoes_Black
+    - FemaleTallShoes_Turquoise
+    - FemaleTallShoes_White
+    - FemalePonyTail_Recipe
+    - FemaleSportPants_Recipe
+    - MilCut
+    - FemaleTankTop_Recipe
+    - ShavedHead
+    - MaleShortHair_Recipe
+    - MaleBeard1
+    - MaleBeard2
+    - MaleBeard3
+    - MaleBrow01
+    - MaleBrow02
+    - MaleFace Old
+    - MaleHair1
+    - MaleHair3
+    - TrollHead
+    - TallShoes_Black_Recipe
+    - TallShoes_Recipe
+    - MaleHoodie_Recipe
+    - MaleSweatPants_Recipe
+    - FemaleHandsMid
+    - FemaleSwappedFace
+    - MaleHandsMid
+    - MaleLowPolyHead
+    - FemaleHair1
+    - FemaleHair2
+    - FemaleHair3
+    - FemalePants1
+    - FemalePants2
+    - FemaleShirt1
+    - FemaleShirt4
+    - GirlShirt1
+    - FemaleShirt2
+    - FemaleShirt3
+    - FemaleUndies
+    - FemaleUndies2
+    - MaleBrowHR
+    - MaleEye1
+    - MaleEye2
+    - MaleEye3
+    - MaleEye4
+    - MaleEye5
+    - MaleGloves
+    - MaleHair2
+    - MaleJeans
+    - MaleJeans 1
+    - MaleShorts1
+    - MaleShorts2
+    - MaleUnderwear
+    - MalePants
+    - MaleRobe
+    - MaleRobe Hood
+    - MaleRobe Shoes
+    - MaleShirt1
+    - MaleShirt2
+    - MaleShirt3
+    - OverweightMale
+    - BlendShapeRecipe
+    - AlienHeadMorph
+    - ElfEarsMorph
+    - MakeMeFatJeans
+    - FemaleDancer1
+    - ToonSneakers1
+    - ToonCropTShirt1
+    - ToonHotPants1
+    - ToonFemaleUnderwear1
+    - ToonHair1
+    - FemaleStarDancer1
+    - ToonCapriPants1
+    - ToonHalterNeck1
+    - ToonFancyFlats1
+    - MaleChallengerBoots
+    - MaleChallengerGloves
+    - MaleChallengerShouderPads
+    - MaleChallengerTorso
+    - WerewolfTShirt
+    - AntennaRecipe
+    - SpoilerRecipe
+    - StripesRecipe
+    - ClothRobeRecipe
+    - BoneyTail_Recipe
+    - HumanFemale Base Recipe
+    - HumanGirl Base Recipe
+    - HumanFemaleDCS Base Recipe
+    - HumanFemaleLegacy Base Recipe
+    - HumanFemaleHighPoly
+    - HumanMale Base Recipe
+    - HumanMaleDCS Base Recipe
+    - HumanMaleLegacy Base Recipe
+    - DNAConverterControllerExample Base Recipe
+    - HumanMaleHighPoly
+    - FemaleToonBase
+    - WerewolfBase
+    - SkyCarBaseRecipe
+    - ToonDancerCollection
+    - ToonTopsBundle
+    - ToonStarDancerCollection
+    - ChangerArmorCollection
+    - Puck
+    - PuckDCS
+    - Harold
+    - Troll
+    - MaleBase2
+    - KimCardassian
+    - Shelly
+    - FemaleOutfit1
+    - FemaleOutfit2
+    - FemaleUnderwear
+    - Sven
+    - MaleOutfit1
+    - MaleBeard
+    - MaleHair
+    - FemaleHair
+    - FemaleHairLong
+    - FemaleHairShort
+    - PhysicsStandardRecipe
+    - CapsuleColliderRecipe
+    - ExpressionsRecipe
+    - ForearmTwistRecipe
+    - LocomotionRecipe
+    - PhysicsHDRecipe
+    - FemaleToonBaseGuide
+    - GirlBaseGuide
+    - JiggleBellyRecipe
+    - JiggleBreastsRecipe
+    - JiggleButtRecipe
+    - UMA_Base
+    - Wolfie
+    - MaleAnkles_Recipe
+    - UMA_Recipes
+    - GirlBaseAsDNA
+    - MaleBase
+    - ElfMale Base Recipe
+    - Elf Female Base Race Recipe
+  m_SchemaTemplates: []
+  m_GroupTemplateObjects:
+  - {fileID: 11400000, guid: dcf39f185b7285f46b384b0a25cb6bf7, type: 2}
+  m_InitializationObjects: []
+  m_CertificateHandlerType:
+    m_AssemblyName: 
+    m_ClassName: 
+  m_ActivePlayerDataBuilderIndex: 3
+  m_DataBuilders:
+  - {fileID: 11400000, guid: 782f07aaf63dfff41b98d0846f9e9f5d, type: 2}
+  - {fileID: 11400000, guid: 340f133d1bf4296429e7e89272e9ca2d, type: 2}
+  - {fileID: 11400000, guid: a66145bd5cf546e43b0cce8f479ae05b, type: 2}
+  - {fileID: 11400000, guid: 8b8611d630b2cb64eaa07595bdf4aed5, type: 2}
+  m_ActiveProfileId: af759e6a6a52df94f99900ad0d052b46
+  m_HostingServicesManager:
+    m_HostingServiceInfos: []
+    m_Settings: {fileID: 11400000}
+    m_NextInstanceId: 0
+    m_RegisteredServiceTypeRefs: []

@@ -473,6 +473,20 @@ namespace UMA
 			public List<UMADnaBase> dnaValues = new List<UMADnaBase>();
 			public SlotData[] slotDataList;
 			public OverlayColorData[] sharedColors;
+			public Dictionary<string, List<MeshHideAsset>> MeshHideDictionary { get; set; } = new Dictionary<string, List<MeshHideAsset>>();
+
+			public void UpdateMeshHideMasks()
+			{
+				foreach (SlotData sd in slotDataList)
+				{
+					if (!sd) continue;
+					//Add MeshHideAsset here
+					if (MeshHideDictionary.ContainsKey(sd.slotName))
+					{   //If this slotDataAsset is found in the MeshHideDictionary then we need to supply the SlotData with the bitArray.
+						sd.meshHideMask = MeshHideAsset.GenerateMask(MeshHideDictionary[sd.slotName]);
+					}
+				}
+			}
 
 			public bool Validate()
 			{
@@ -538,6 +552,14 @@ namespace UMA
 			public UMADnaBase[] GetAllDna()
 			{
 				if ((raceData == null) || (slotDataList == null))
+				{
+					return new UMADnaBase[0];
+				}
+				return dnaValues.ToArray();
+			}
+			public UMADnaBase[] GetDefinedDna()
+			{
+				if ((dnaValues == null) || dnaValues.Count == 0)
 				{
 					return new UMADnaBase[0];
 				}
@@ -1607,7 +1629,7 @@ namespace UMA
 		/// </summary>
 		/// <param name="umaAdditionalRecipes">Additional recipes.</param>
 		/// <param name="context">Context.</param>
-		public void AddAdditionalRecipes(UMARecipeBase[] umaAdditionalRecipes, UMAContext context)
+		public void AddAdditionalRecipes(UMARecipeBase[] umaAdditionalRecipes, UMAContextBase context)
 		{
 			if (umaAdditionalRecipes != null)
 			{

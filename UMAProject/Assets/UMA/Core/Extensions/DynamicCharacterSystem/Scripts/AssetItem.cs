@@ -20,6 +20,16 @@ namespace UMA
 		public string _Guid;
         public bool IsResource;
         public bool IsAssetBundle;
+		public bool IsAddressable;
+		public bool IsAlwaysLoaded;
+		public string AddressableGroup;
+		public string AddressableAddress;
+        public string AddressableLabels;
+		public int ReferenceCount;
+
+		[System.NonSerialized]
+		public Object _editorCachedItem;
+
         #endregion
         #region Properties
         public System.Type _Type
@@ -28,7 +38,17 @@ namespace UMA
             {
                 if (_TheType != null) return _TheType;
 
-                _TheType = UMAAssetIndexer.TypeFromString[_BaseTypeName];
+				if (!UMAAssetIndexer.TypeFromString.ContainsKey(_BaseTypeName))
+				{
+					Debug.Log("unable to find type: " + _BaseTypeName);
+					if (_BaseTypeName.Contains("SlotData"))
+						return typeof(SlotDataAsset);
+					if (_BaseTypeName.Contains("OverlayData"))
+						return typeof(OverlayDataAsset);
+					return typeof(object);
+				}
+
+				_TheType = UMAAssetIndexer.TypeFromString[_BaseTypeName];
                 return _TheType;
             }
         }
@@ -52,7 +72,18 @@ namespace UMA
             {
 #if UNITY_EDITOR
                 if (_SerializedItem != null) return _SerializedItem;
-				CachSerializedItem();
+
+				if (IsAddressable)  // this check is so we can test addressables in the editor
+				{
+					if (_editorCachedItem == null)
+					{
+						_editorCachedItem = GetItem();
+					}
+					// _editorCachedItem is never saved.
+					return _editorCachedItem;
+				}
+	 
+				CacheSerializedItem(); 
                 return _SerializedItem;
 #else
                 return _SerializedItem;
@@ -68,12 +99,11 @@ namespace UMA
             }
         }
 
-		public void CachSerializedItem()
+		private Object GetItem()
 		{
-			#if UNITY_EDITOR		
-			if (_SerializedItem != null) return;
-			_SerializedItem = AssetDatabase.LoadAssetAtPath(_Path, _Type);	
-			if (_SerializedItem == null) 
+#if UNITY_EDITOR
+			Object itemObject = AssetDatabase.LoadAssetAtPath(_Path, _Type);
+			if (itemObject == null)
 			{
 				// uhoh. It's gone.
 				if (!string.IsNullOrEmpty(_Guid))
@@ -82,64 +112,112 @@ namespace UMA
 					_Path = AssetDatabase.GUIDToAssetPath(_Guid);
 					if (!string.IsNullOrEmpty(_Path))
 					{
-						_SerializedItem = AssetDatabase.LoadAssetAtPath(_Path,_Type);
+						itemObject = AssetDatabase.LoadAssetAtPath(_Path, _Type);
 					}
 				}
 				// No guid, or couldn't even find by GUID.
 				// Let's search for it?
-				if (_SerializedItem == null)
+				if (itemObject == null)
 				{
 					string s = _Type.Name;
-					string[] guids = AssetDatabase.FindAssets(_Name+ " t:" + s);
+					string[] guids = AssetDatabase.FindAssets(_Name + " t:" + s);
 					if (guids.Length > 0)
 					{
 						_Guid = guids[0];
 						_Path = AssetDatabase.GUIDToAssetPath(_Guid);
-						_SerializedItem = AssetDatabase.LoadAssetAtPath(_Path, _Type);
+						itemObject = AssetDatabase.LoadAssetAtPath(_Path, _Type);
 					}
 				}
 			}
-			#endif
+#else
+			Object itemObject = null;
+#endif
+			return itemObject;
 		}
+
+		public void CacheSerializedItem()
+		{
+#if UNITY_EDITOR
+			if (_SerializedItem != null) return;
+#if SUPER_LOGGING
+            Debug.Log("Loading item in AssetItem: " + _Name);
+#endif
+			//if (IsAddressable) return;
+
+			_SerializedItem = GetItem();
+#endif
+        }
+
+        public static string GetEvilName(Object o)
+        {
+            if (!o)
+            {
+                return "<Not Found!>";
+            }
+            if (o is SlotDataAsset)
+            {
+                SlotDataAsset sd = o as SlotDataAsset;
+                return sd.slotName;
+            }
+            if (o is OverlayDataAsset)
+            {
+                OverlayDataAsset od = o as OverlayDataAsset;
+                return od.overlayName;
+            }
+            if (o is RaceData)
+            {
+                return (o as RaceData).raceName;
+            }
+
+            return o.name;
+        }
 
         public string EvilName
         {
             get
             {
                 Object o = Item;
-
-                if (!o)
-                {
-                    return "<Not Found!>";
-                }
-                if (o is SlotDataAsset)
-                {
-                    SlotDataAsset sd = o as SlotDataAsset;
-                    return sd.slotName;
-                }
-                if (o is OverlayDataAsset)
-                {
-                    OverlayDataAsset od = o as OverlayDataAsset;
-                    return od.overlayName;
-                }
-                if (o is RaceData)
-                {
-                    return (o as RaceData).raceName;
-                }
-
-                return o.name;
+                return GetEvilName(o);
             }
         }
-        #endregion
-        #region Methods (edit time)
-#if UNITY_EDITOR
+#endregion
 
-        public void ReleaseItem()
+        public void AddReference()
         {
+            ReferenceCount++;
+        }
+
+        public void FreeReference()
+        {
+            ReferenceCount = 0;
             _SerializedItem = null;
         }
 
-        public string ToString(string SortOrder)
+		public void ReleaseItem()
+		{
+            if (IsAddressable)
+            {
+                ReferenceCount--;
+                if (ReferenceCount < 1)
+                {
+                    if (ReferenceCount < 0)
+                    {
+                        Debug.LogError("Reference count is negative on AssetItem " + this._Name + " of Type " + this._TheType+". This should not happen.");
+                        return;
+                    }
+                    FreeReference();
+                }
+            }
+            else
+            {
+                FreeReference();
+            }
+        }
+
+#region Methods (edit time)
+#if UNITY_EDITOR
+
+		public string ToString(string SortOrder)
         {
             if (SortOrder == "AssetName")
                 return _AssetBaseName;
@@ -196,8 +274,8 @@ namespace UMA
         }
 
 #endif
-        #endregion
-        #region Constructors
+#endregion
+#region Constructors
         public AssetItem(System.Type Type, string Name, string Path, Object Item)
         {
             if (Type == null) return;
@@ -206,9 +284,9 @@ namespace UMA
             _Name = Name;
             _SerializedItem = Item;
             _Path = Path;
-			#if UNITY_EDITOR
+#if UNITY_EDITOR
 			_Guid = AssetDatabase.AssetPathToGUID(_Path);
-			#endif
+#endif
         }
         public AssetItem(System.Type Type, Object Item)
         {
@@ -222,6 +300,6 @@ namespace UMA
             _SerializedItem = Item;
             _Name = EvilName;
         }
-        #endregion
+#endregion
     }
 }

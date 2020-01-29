@@ -21,6 +21,11 @@ namespace UMA
 
 		protected void EnsureUMADataSetup(UMAData umaData)
 		{
+			if (umaData.umaRecipe != null)
+			{
+				umaData.umaRecipe.UpdateMeshHideMasks();
+			}
+
 			if (umaData.umaRoot != null)
 			{
 				umaData.CleanMesh(false);
@@ -128,6 +133,9 @@ namespace UMA
 			var newRenderer = newSMRGO.AddComponent<SkinnedMeshRenderer>();
 			newRenderer.enabled = false;
 			newRenderer.sharedMesh = new Mesh();
+#if UMA_32BITBUFFERS
+			newRenderer.sharedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+#endif
 			newRenderer.rootBone = rootBone;
 			newRenderer.quality = SkinQuality.Bone4;
 			newRenderer.sharedMesh.name = i == 0 ? "UMAMesh" : ("UMAMesh " + i);
