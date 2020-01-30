@@ -15,10 +15,10 @@ MonoBehaviour:
   m_GroupName: UMA_SharedItems
   m_Data:
     m_SerializedData: []
-  m_GUID: 050329ab8bf1c194489c166a15c7ab18
+  m_GUID: 379c6ae86173b6949a068594808d7730
   m_SerializeEntries:
   - m_GUID: 01c93d5f2b62c7b489b6ce6eec465e64
-    m_Address: Texture2D-shoes_tall_black_NM-17276
+    m_Address: Texture2D-shoes_tall_black_NM-17080
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -30,7 +30,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 0249f199c53d8db419e18d71356d6041
-    m_Address: Texture2D-Sneakers_1_normal-15214
+    m_Address: Texture2D-Sneakers_1_normal-15022
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -91,7 +91,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 04c319227d59d73439289200f697f339
-    m_Address: Texture2D-Boots_N-12544
+    m_Address: Texture2D-Boots_N-12356
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -107,7 +107,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 05de8749b00df4f3ca59b5b090da0348
-    m_Address: Texture2D-MaleBody02_Normal-15118
+    m_Address: Texture2D-MaleBody02_Normal-14926
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -125,7 +125,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 0636d7d4de85e4549873e4a004408958
-    m_Address: Texture2D-MaleFace01_Albedo-13532
+    m_Address: Texture2D-MaleFace01_Albedo-13342
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -158,7 +158,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 09a1dfc8fbb1147c2afb36b5c2ba8ebd
-    m_Address: Texture2D-MaleBeard03_Normal-14980
+    m_Address: Texture2D-MaleBeard03_Normal-14786
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -167,16 +167,8 @@ MonoBehaviour:
     - MaleBeard
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
-  - m_GUID: 0b1e4f14e3922614c95b147bed97cf3a
-    m_Address: OverlayDataAsset-WerewolfEyes
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
   - m_GUID: 0b387c31f41888947aa0ffb2fbbd848b
-    m_Address: Texture2D-M_H_Underwear_Metallic-12222
+    m_Address: Texture2D-M_H_Underwear_Metallic-12036
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -207,7 +199,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 0b80b30d8b2363d4aab8bfcba08a1e6d
-    m_Address: Texture2D-M_H_face_NOlder-16406
+    m_Address: Texture2D-M_H_face_NOlder-16212
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -250,14 +242,6 @@ MonoBehaviour:
     - MaleBeard
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
-  - m_GUID: 0c812749c2cd1a541b79b1fe749694c2
-    m_Address: OverlayDataAsset-WerewolfTeeth
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
   - m_GUID: 0dfbf95a2c3548040a6cc23330e64d76
     m_Address: SlotDataAsset-FemaleLongHair01
     m_ReadOnly: 0
@@ -289,12 +273,11 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 0f9975fa93cece04f9f2d3455ca86225
-    m_Address: Texture2D-Fur-normal-15742
+    m_Address: Texture2D-Fur-normal-15550
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
     - WerewolfTShirt
-    - Wolfie
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 0fbc0a0bbfb29084bbeafb0876b6e28b
@@ -315,7 +298,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 106f080ab573748739995b5bcb337cf4
-    m_Address: Texture2D-FemaleJeans01_Roughness-15366
+    m_Address: Texture2D-FemaleJeans01_Roughness-15174
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -328,7 +311,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 10bbdf805ca24ef42809993e0339cf6d
-    m_Address: Texture2D-UMA_Toon_F_Body_normal-11994
+    m_Address: Texture2D-UMA_Toon_F_Body_normal-11808
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -357,7 +340,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 12612d61ba9d1ff4d99d71be42fde390
-    m_Address: Texture2D-M_H_body1_Albedo-12292
+    m_Address: Texture2D-M_H_body1_Albedo-12106
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -386,7 +369,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 133f9784d2074834f813b737cda61b09
-    m_Address: Texture2D-Skin patches_Albedo-13434
+    m_Address: Texture2D-Skin patches_Albedo-13244
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -394,7 +377,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 135fa583abb9749c6bfec8cd5afa178b
-    m_Address: Texture2D-MaleJeans01_Roughness-12996
+    m_Address: Texture2D-MaleJeans01_Roughness-12806
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -405,7 +388,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 14a815c7716781843bb171b88a227cf4
-    m_Address: Texture2D-Altar_hood_M-14550
+    m_Address: Texture2D-Altar_hood_M-14358
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -421,7 +404,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 155dc30d9ac42485683aee4e736df0db
-    m_Address: Texture2D-InnerMouth_Roughness-16408
+    m_Address: Texture2D-InnerMouth_Roughness-16214
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -454,11 +437,10 @@ MonoBehaviour:
     m_SerializedLabels:
     - UMA_Base
     - WerewolfTShirt
-    - Wolfie
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 1579cf108bfa04bdca517a8faea7e535
-    m_Address: Texture2D-MaleHair01_Roughness-11728
+    m_Address: Texture2D-MaleHair01_Roughness-11542
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -493,7 +475,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 167405fbb227440db83e65ed90b83b7a
-    m_Address: Texture2D-MaleBeard01_Normal-16054
+    m_Address: Texture2D-MaleBeard01_Normal-15860
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -503,7 +485,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 16acca487b4d8154a88319dd7da1c38e
-    m_Address: Texture2D-guideMesh_diffuse-14746
+    m_Address: Texture2D-guideMesh_diffuse-14552
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -512,7 +494,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 16c2c8e5305fb47d7bfb5beaed24f6ea
-    m_Address: Texture2D-Female_Tshirt01_Roughness-13894
+    m_Address: Texture2D-Female_Tshirt01_Roughness-13704
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -523,7 +505,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 1728ae09e26524f7ea24cc5be258747e
-    m_Address: Texture2D-FemaleLongHair01_Module_Albedo-15048
+    m_Address: Texture2D-FemaleLongHair01_Module_Albedo-14854
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -533,7 +515,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 1772139f4a11dce4da29d09459b78880
-    m_Address: Texture2D-M_H_bod_N-17336
+    m_Address: Texture2D-M_H_bod_N-17140
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -553,7 +535,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 1833c968c357a464ba458590c72194b1
-    m_Address: Texture2D-F_H_face_Albedo02-14778
+    m_Address: Texture2D-F_H_face_Albedo02-14584
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -577,7 +559,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 190e223f5879e4b4380c617607ce9d3a
-    m_Address: Texture2D-Eye_Large_Normal_Adjust-17200
+    m_Address: Texture2D-Eye_Large_Normal_Adjust-17004
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -628,7 +610,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 1b0f505392468b84f949f004a8c95b7e
-    m_Address: Texture2D-sweatpants_black_NM-12940
+    m_Address: Texture2D-sweatpants_black_NM-12750
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -644,7 +626,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 1b65939acf545fa4ca745cd3ab30d156
-    m_Address: Texture2D-guideMesh_roughness-15570
+    m_Address: Texture2D-guideMesh_roughness-15378
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -662,7 +644,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 1ba77895e57dcc6438cc8fde32b11cec
-    m_Address: Texture2D-tanktop_yellow_NM-13778
+    m_Address: Texture2D-tanktop_yellow_NM-13588
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -724,7 +706,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 1f1dcad09715f4c269eeb34c63889148
-    m_Address: Texture2D-MaleShirt01_Roughness-12062
+    m_Address: Texture2D-MaleShirt01_Roughness-11876
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -735,7 +717,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 1f2079e30d9e5d04aa5a400a9cebfd70
-    m_Address: Texture2D-Smart_Pants_1_diffuse-13132
+    m_Address: Texture2D-Smart_Pants_1_diffuse-12942
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -744,7 +726,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 1f9225ec4ae59d24482699e1ef27d5e3
-    m_Address: Texture2D-Crop_TShirt_1_diffuse-16366
+    m_Address: Texture2D-Crop_TShirt_1_diffuse-16172
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -753,7 +735,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 1f951d479297c493296d0a40c193760e
-    m_Address: Texture2D-Female_Tshirt01_Normal-14394
+    m_Address: Texture2D-Female_Tshirt01_Normal-14204
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -764,7 +746,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 1fe00846603bd4330bd52516d41f35d7
-    m_Address: Texture2D-FemaleShirt02_Roughness-14026
+    m_Address: Texture2D-FemaleShirt02_Roughness-13836
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -802,7 +784,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 20989ab7f7fcc4fd29424f7ca3ad427f
-    m_Address: Texture2D-MaleBeard02_Roughness-14528
+    m_Address: Texture2D-MaleBeard02_Roughness-14336
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -818,7 +800,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 230f3456aa1955640ad2f638e4dca4c7
-    m_Address: Texture2D-Aligator_Eye_Alternate_Albedo_Adjust-14046
+    m_Address: Texture2D-Aligator_Eye_Alternate_Albedo_Adjust-13856
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -826,7 +808,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 2418efa90464f40258e3c2bc6b8bbb24
-    m_Address: Texture2D-FemaleEyebrow01_Albedo-15248
+    m_Address: Texture2D-FemaleEyebrow01_Albedo-15056
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -875,12 +857,11 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 286bbbe608a2cd14f9500d83fa610076
-    m_Address: Texture2D-WerewolfBody_Diffuse-14238
+    m_Address: Texture2D-WerewolfBody_Diffuse-14048
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
     - WerewolfTShirt
-    - Wolfie
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 28864c26b3f4bea4bb382e8ca1b60565
@@ -905,7 +886,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 299a1aaa3a52c449b867854894068469
-    m_Address: Texture2D-MaleEyebrow01_Roughness-15616
+    m_Address: Texture2D-MaleEyebrow01_Roughness-15424
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -920,16 +901,8 @@ MonoBehaviour:
     - MaleBrowHR
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
-  - m_GUID: 29e8046150efa8a4db130043bbab0fde
-    m_Address: Texture2D-WerewolfClaws_Diffuse-12270
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
-      Culture=neutral, PublicKeyToken=null
   - m_GUID: 2a92ffae2d2dfc64ea79f231d8a844dd
-    m_Address: Texture2D-Skin patches face_Albedo-16994
+    m_Address: Texture2D-Skin patches face_Albedo-16798
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -946,7 +919,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 2b0bb34dd4b7fc249a3a765b880992ec
-    m_Address: Texture2D-Smart_Pants_1_detail_diffuse-16508
+    m_Address: Texture2D-Smart_Pants_1_detail_diffuse-16314
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -955,7 +928,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 2b3d17febfc1bf64f938a02e581c33f9
-    m_Address: Texture2D-Underwear_Albedo-17102
+    m_Address: Texture2D-Underwear_Albedo-16906
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -996,7 +969,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 2c589544d3fa460468f7e50c3a0d8c27
-    m_Address: Texture2D-ShoulderPad_Roughness-13236
+    m_Address: Texture2D-ShoulderPad_Roughness-13046
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1012,7 +985,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 2c8de979750364ca1977014b515c2628
-    m_Address: Texture2D-MaleFace02_Albedo-15184
+    m_Address: Texture2D-MaleFace02_Albedo-14992
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1020,7 +993,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 2e22b2a8a14c8b64488efe3ed35a4b06
-    m_Address: Texture2D-ponytail01_diffuse-14852
+    m_Address: Texture2D-ponytail01_diffuse-14658
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1056,7 +1029,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 2f1c6f0526831c24b8b081fbf978e3ac
-    m_Address: Texture2D-shoes_tall_turquoise_D-13602
+    m_Address: Texture2D-shoes_tall_turquoise_D-13412
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1082,7 +1055,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 31551ac088496c44e9f4ed99f3cde8e2
-    m_Address: Texture2D-ShoulderPad_Normal-12054
+    m_Address: Texture2D-ShoulderPad_Normal-11868
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1111,7 +1084,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 31cf36859719a2f48a69d117beecec43
-    m_Address: Texture2D-SkyCarWindowsAlbedo-13752
+    m_Address: Texture2D-SkyCarWindowsAlbedo-13562
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1119,7 +1092,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 32afddac09b8ce5479274e5822dbb54d
-    m_Address: Texture2D-M_H_Underwear_N-16272
+    m_Address: Texture2D-M_H_Underwear_N-16078
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1137,7 +1110,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 336187aa7b3190f488804be99f650b87
-    m_Address: Texture2D-Altar_hood_A-15614
+    m_Address: Texture2D-Altar_hood_A-15422
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1153,7 +1126,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 3432e94374a4d304aa97ce0d56a46ff9
-    m_Address: Texture2D-M_H_bod_Metallic-12926
+    m_Address: Texture2D-M_H_bod_Metallic-12736
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1218,7 +1191,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 35dac48c1f1be421287397546c4dea8d
-    m_Address: Texture2D-MaleHair01_Normal-16222
+    m_Address: Texture2D-MaleHair01_Normal-16028
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1227,7 +1200,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 35e12337b6ca744e195cc19adc2fb8bf
-    m_Address: Texture2D-FemaleEyebrow01_Roughness-14346
+    m_Address: Texture2D-FemaleEyebrow01_Roughness-14156
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1254,7 +1227,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 37077d9ba1fa448b59a8e443ba69aa50
-    m_Address: Texture2D-MaleFace02_Normal-15968
+    m_Address: Texture2D-MaleFace02_Normal-15774
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1262,7 +1235,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 3798f966e3dde084eaa5d60ef5097c2f
-    m_Address: Texture2D-Gloves_Roughness-14080
+    m_Address: Texture2D-Gloves_Roughness-13890
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1270,7 +1243,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 37b21ad4181b04663a487f015301ffb8
-    m_Address: Texture2D-FemaleEyebrow01_Normal-13538
+    m_Address: Texture2D-FemaleEyebrow01_Normal-13348
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1278,7 +1251,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 37b2f1c9a46954b6ba54d1d8eed46c72
-    m_Address: Texture2D-Lipstick01_Albedo-15274
+    m_Address: Texture2D-Lipstick01_Albedo-15082
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1286,7 +1259,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 37b88890478ef4d08b54beb0ff34b132
-    m_Address: Texture2D-FemaleUnderwear01_Albedo-12006
+    m_Address: Texture2D-FemaleUnderwear01_Albedo-11820
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1295,7 +1268,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 3953e60943b0d9949b9b43a9c53f76b8
-    m_Address: Texture2D-F_H_bod_Albedo-15038
+    m_Address: Texture2D-F_H_bod_Albedo-14844
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1311,7 +1284,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 3994de13deb5d5a409b414a7c747d4e3
-    m_Address: Texture2D-Altar_hood_AC-12876
+    m_Address: Texture2D-Altar_hood_AC-12686
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1319,7 +1292,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 39d12a19876b9c04abd2cd624b34d920
-    m_Address: Texture2D-Eye_Albedo_Adjust-15072
+    m_Address: Texture2D-Eye_Albedo_Adjust-14880
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1339,16 +1312,8 @@ MonoBehaviour:
     - FemaleToonBaseGuide
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
-  - m_GUID: 3a301cdd355272946a7fcf42c36e2337
-    m_Address: SlotDataAsset-UMA_Werewolf_Hands
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
   - m_GUID: 3a863fa5bebd59041a3f8696d3768d31
-    m_Address: Texture2D-Hair_Long_Braided_1_diffuse-13810
+    m_Address: Texture2D-Hair_Long_Braided_1_diffuse-13620
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1356,7 +1321,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 3c98e6b60315fce40802977b5cd2817f
-    m_Address: Texture2D-Fancy_Flats_1_normal-14170
+    m_Address: Texture2D-Fancy_Flats_1_normal-13980
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1373,19 +1338,11 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 3e66e606ba1f54a5cb5a32696fbd1144
-    m_Address: Texture2D-MaleBody02_Albedo-13938
+    m_Address: Texture2D-MaleBody02_Albedo-13748
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
     - MaleBase2
-    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
-      Culture=neutral, PublicKeyToken=null
-  - m_GUID: 401116460650f2e4986f84a0df3e5ec4
-    m_Address: Texture2D-WerewolfClaws_Normal-14022
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 407823accaae39a4a902c6e4b2bfa383
@@ -1403,16 +1360,8 @@ MonoBehaviour:
     - Elf Female Base Race Recipe
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
-  - m_GUID: 407eef4d2f8612444bdf249bedb33cce
-    m_Address: SlotDataAsset-UMA_Werewolf_Feet
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
   - m_GUID: 40aedb735001bc6469dc30694df5a6f8
-    m_Address: Texture2D-ShoulderPadLeather_Albedo-12986
+    m_Address: Texture2D-ShoulderPadLeather_Albedo-12796
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1453,7 +1402,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 426bd674b07660049907c2e6fa61b5b1
-    m_Address: Texture2D-UpperLower_A-13414
+    m_Address: Texture2D-UpperLower_A-13224
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1462,7 +1411,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 42a14c30761d02648aee3c20858ffdae
-    m_Address: Texture2D-M_H_Underwear_Albedo-11770
+    m_Address: Texture2D-M_H_Underwear_Albedo-11584
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1470,7 +1419,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 42f076965a3ee0740a6d5977c69601e6
-    m_Address: Texture2D-Eye_Large_Roughness_Adjust-14130
+    m_Address: Texture2D-Eye_Large_Roughness_Adjust-13940
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1490,7 +1439,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 43a9f716de9d9934a8e076e3ece50af8
-    m_Address: Texture2D-SkyCarTiresAlbedo-13958
+    m_Address: Texture2D-SkyCarTiresAlbedo-13768
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1509,7 +1458,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 43f2ca917c7784aaebd610597a5b03a4
-    m_Address: Texture2D-MaleBeard02_Normal-12350
+    m_Address: Texture2D-MaleBeard02_Normal-12164
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1517,7 +1466,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 4501438dad3be4b0eb284c1b215742e0
-    m_Address: Texture2D-FemaleShirt02_Normal-16596
+    m_Address: Texture2D-FemaleShirt02_Normal-16402
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1558,7 +1507,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 46dbf384459064a7d8cd188b79cc0ad8
-    m_Address: Texture2D-MaleBody02_Roughness-13428
+    m_Address: Texture2D-MaleBody02_Roughness-13238
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1566,7 +1515,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 46ef3ad9d85e747fa8c358dcc3165385
-    m_Address: Texture2D-MaleEyebrow01_Albedo-15312
+    m_Address: Texture2D-MaleEyebrow01_Albedo-15120
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1631,7 +1580,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 48f2433eaef670144b5d5270a1f9062e
-    m_Address: Texture2D-Eye_Normal_Adjust-16844
+    m_Address: Texture2D-Eye_Normal_Adjust-16650
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1662,7 +1611,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - UMA_Base
     - WerewolfTShirt
-    - Wolfie
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 4abeb20a4257e8b4f837411cb588f6ca
@@ -1692,7 +1640,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 4d2fbc2e8180eb84797f3626dd23187d
-    m_Address: Texture2D-Female_Tshirt02_diffuse-16832
+    m_Address: Texture2D-Female_Tshirt02_diffuse-16638
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1707,14 +1655,6 @@ MonoBehaviour:
     - ClothRobeRecipe
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
-  - m_GUID: 4de17df5964e4a1419644d12c604a173
-    m_Address: Texture2D-WerewolfHandsAndFeet_Diffuse-13920
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
-      Culture=neutral, PublicKeyToken=null
   - m_GUID: 4e3423fc7dbaee44397ec91baa5ce828
     m_Address: OverlayDataAsset-M_Underwear
     m_ReadOnly: 0
@@ -1788,7 +1728,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 503882a1f7789ad42ba44f8c8089aefe
-    m_Address: Texture2D-F_bod_metallic-12360
+    m_Address: Texture2D-F_bod_metallic-12174
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1804,7 +1744,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 50fd7bdf5bb124084af695f5f932709b
-    m_Address: Texture2D-MaleBeard02_Albedo-17436
+    m_Address: Texture2D-MaleBeard02_Albedo-17240
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1812,7 +1752,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 51041aef9944341459aa02cfd65199cf
-    m_Address: Texture2D-FemaleShirt01_Albedo-17464
+    m_Address: Texture2D-FemaleShirt01_Albedo-17268
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1831,7 +1771,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 51af9d51ef86e4b5b88b109f0acc4faa
-    m_Address: Texture2D-FemaleLongHair01_Normal-12260
+    m_Address: Texture2D-FemaleLongHair01_Normal-12074
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1858,7 +1798,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 55c307f00e33a424ea317251a9ba1363
-    m_Address: Texture2D-M_Pants_00_Normal-12098
+    m_Address: Texture2D-M_Pants_00_Normal-11912
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1866,7 +1806,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 567469b0394184aaa99756a0d5bc580f
-    m_Address: Texture2D-MaleJeans01_Albedo-12038
+    m_Address: Texture2D-MaleJeans01_Albedo-11852
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1905,7 +1845,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 57540dd689a6efa44b9a5d2c785de92e
-    m_Address: Texture2D-GlovesMetal_Albedo-14218
+    m_Address: Texture2D-GlovesMetal_Albedo-14028
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1913,7 +1853,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 57c082651ee6c46c49734f31d176ba72
-    m_Address: Texture2D-MaleBeard01_Albedo-13704
+    m_Address: Texture2D-MaleBeard01_Albedo-13514
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1923,7 +1863,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 58b1e7b20f864d843b70ebcc09e4bd3f
-    m_Address: Texture2D-sportwear_pants_granit_D-12716
+    m_Address: Texture2D-sportwear_pants_granit_D-12528
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1940,7 +1880,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 58dd27014d7068843ab43bc57b2b80a9
-    m_Address: Texture2D-HAIR_Nupgrade-12140
+    m_Address: Texture2D-HAIR_Nupgrade-11954
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1959,16 +1899,8 @@ MonoBehaviour:
     - HumanFemaleLegacy Base Recipe
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
-  - m_GUID: 58f931091c1c4f24c93d1d911b8c032b
-    m_Address: SlotDataAsset-UMA_Werewolf_Teeth
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
   - m_GUID: 59a279fd7048eff45b387293668ddff7
-    m_Address: Texture2D-Gloves Of Hammer_normal-16772
+    m_Address: Texture2D-Gloves Of Hammer_normal-16578
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -1997,7 +1929,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 5b355e75d31e28542827674f1716b072
-    m_Address: Texture2D-hoodie_blue_D-13740
+    m_Address: Texture2D-hoodie_blue_D-13550
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2032,7 +1964,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 5dd4cac4095bd014795faab9a4ae996e
-    m_Address: Texture2D-M_eyebrows_M-13510
+    m_Address: Texture2D-M_eyebrows_M-13320
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2040,7 +1972,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 5e0d6fd5a419c024abb998898b6bce79
-    m_Address: Texture2D-TorsoArmorLeather_Albedo-13882
+    m_Address: Texture2D-TorsoArmorLeather_Albedo-13692
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2048,7 +1980,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 5f7c268b402a9fe46b8a5c4115e669f7
-    m_Address: Texture2D-scrunchie-15940
+    m_Address: Texture2D-scrunchie-15746
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2057,7 +1989,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 60d0a4f3a2fd41c4eb6136053eeefc44
-    m_Address: Texture2D-TorsoArmor_Normal-13158
+    m_Address: Texture2D-TorsoArmor_Normal-12968
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2065,7 +1997,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 612aa5b72e1204f9292868e1a30c7654
-    m_Address: Texture2D-FemaleUnderwear01_Roughness-14524
+    m_Address: Texture2D-FemaleUnderwear01_Roughness-14332
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2085,7 +2017,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 620d3b0eb54754f4c8b43738f43f79be
-    m_Address: Texture2D-sportwear_pants_granit_NM-16796
+    m_Address: Texture2D-sportwear_pants_granit_NM-16602
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2093,7 +2025,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 6260dbbbf7d5f0d428c91e7d592438a0
-    m_Address: Texture2D-Halter_Neck_1_normal-16008
+    m_Address: Texture2D-Halter_Neck_1_normal-15814
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2112,7 +2044,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 63b4d18e3035f19478f48fc951ba36ca
-    m_Address: Texture2D-F_H_face_N-16940
+    m_Address: Texture2D-F_H_face_N-16746
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2128,7 +2060,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 650280757a94c364c9f19cec1b48670e
-    m_Address: Texture2D-Male face metallic new-13720
+    m_Address: Texture2D-Male face metallic new-13530
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2175,7 +2107,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 66d6b2f3a4f1dab4981dee867adc657f
-    m_Address: Texture2D-Cat_Eye_Albedo_Adjust-13152
+    m_Address: Texture2D-Cat_Eye_Albedo_Adjust-12962
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2200,7 +2132,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 684e665f794940c4687db694443783cf
-    m_Address: Texture2D-ChallengerBootLeather_Albedo-17268
+    m_Address: Texture2D-ChallengerBootLeather_Albedo-17072
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2208,7 +2140,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 687094bd323754d0d831e78ebb58962e
-    m_Address: Texture2D-MaleUnderwear_Roughness-16654
+    m_Address: Texture2D-MaleUnderwear_Roughness-16460
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2222,7 +2154,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 6959357426ec445caa2327a5eae3609c
-    m_Address: Texture2D-MaleFace02_Roughness-13410
+    m_Address: Texture2D-MaleFace02_Roughness-13220
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2230,7 +2162,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 6983e35cf69d99344a0b8749f659e87e
-    m_Address: Texture2D-sweatpants_black_SG-16152
+    m_Address: Texture2D-sweatpants_black_SG-15958
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2238,7 +2170,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 6a0307f4a35456d4eb23b5bfcdc948bc
-    m_Address: Texture2D-Jeans_1_normal-13572
+    m_Address: Texture2D-Jeans_1_normal-13382
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2257,7 +2189,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 6c28ac0bb8720487d809016aba0fec2b
-    m_Address: Texture2D-MaleUnderwear_Albedo-15778
+    m_Address: Texture2D-MaleUnderwear_Albedo-15584
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2279,7 +2211,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 6d301faaa0fe52d44863f9834e825dce
-    m_Address: Texture2D-M_H_body hair_Met-15618
+    m_Address: Texture2D-M_H_body hair_Met-15426
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2289,7 +2221,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 6da400a63bfedc54dbfadfca5c2b1d2f
-    m_Address: Texture2D-Sneakers_1_detail_diffuse-14138
+    m_Address: Texture2D-Sneakers_1_detail_diffuse-13948
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2306,7 +2238,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 6e0514a9d08816744abcfaee972e3c6e
-    m_Address: Texture2D-MaleUnderwear_Hearts_Albedo-15242
+    m_Address: Texture2D-MaleUnderwear_Hearts_Albedo-15050
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2314,7 +2246,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 6e36e90783475394baa485bf0bf07514
-    m_Address: Texture2D-UpperLower_N-14294
+    m_Address: Texture2D-UpperLower_N-14104
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2323,7 +2255,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 6eccaa33eeb95784cb7384cd762a1d87
-    m_Address: Texture2D-F_HighPoly_EyeBrow_Normal-12912
+    m_Address: Texture2D-F_HighPoly_EyeBrow_Normal-12722
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2363,7 +2295,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 72c3d07bd6a0b475d845f7f308b83ce8
-    m_Address: Texture2D-MaleEyebrow02_Roughness-15914
+    m_Address: Texture2D-MaleEyebrow02_Roughness-15720
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2375,7 +2307,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 733a92cc8c2044955930cab23410903a
-    m_Address: Texture2D-FemaleLongHair01_Module_Normal-16300
+    m_Address: Texture2D-FemaleLongHair01_Module_Normal-16106
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2410,7 +2342,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 748cbd8fc65e86744ae8c6d358d8d19a
-    m_Address: Texture2D-Smart_Pants_1_normal-17326
+    m_Address: Texture2D-Smart_Pants_1_normal-17130
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2437,7 +2369,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 76ec4c0387ef8564c86bd868e95cbf3d
-    m_Address: Texture2D-SkyCarStripesAlbedo-12850
+    m_Address: Texture2D-SkyCarStripesAlbedo-12660
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2445,7 +2377,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 77984210ff457ff4f8f1e083bf3e0cbe
-    m_Address: Texture2D-eye_metallic-11712
+    m_Address: Texture2D-eye_metallic-11526
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2480,7 +2412,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 787a82edd719cfd4ebccca55cc7e20b9
-    m_Address: Texture2D-Eye_Roughness_Adjust-16742
+    m_Address: Texture2D-Eye_Roughness_Adjust-16548
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2525,7 +2457,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 7a994921a3f3b9a49b61907ef28f5066
-    m_Address: Texture2D-ShoulderPadMetal_Albedo-12194
+    m_Address: Texture2D-ShoulderPadMetal_Albedo-12008
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2541,7 +2473,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 7bcacfd71f5474a338dfc4c337634d17
-    m_Address: Texture2D-MaleEyebrow02_Albedo-14590
+    m_Address: Texture2D-MaleEyebrow02_Albedo-14398
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2553,7 +2485,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 7c1d306047bbbad4f8f0734b1adde5e8
-    m_Address: Texture2D-tanktop_yellow_SG-11814
+    m_Address: Texture2D-tanktop_yellow_SG-11628
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2577,7 +2509,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 7da5b5d1c7acd544aa8fdfc92b6777a4
-    m_Address: Texture2D-Boots_A-12416
+    m_Address: Texture2D-Boots_A-12230
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2585,7 +2517,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 7e0c7da6f160f8746b6dc9ef2b9b3105
-    m_Address: Texture2D-ChallengerBoot_Roughness-14150
+    m_Address: Texture2D-ChallengerBoot_Roughness-13960
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2601,7 +2533,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 7e921b7c55c83334d8e40a5114831db1
-    m_Address: Texture2D-MaleShirt01Color-16208
+    m_Address: Texture2D-MaleShirt01Color-16014
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2609,16 +2541,8 @@ MonoBehaviour:
     - MaleShirt3
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
-  - m_GUID: 7efaede98678e134fa62d68c0ee1cdef
-    m_Address: Texture2D-WerewolfTeeth_Diffuse-15340
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
-      Culture=neutral, PublicKeyToken=null
   - m_GUID: 7f44023a3b32c334aaa4ad226e0a2627
-    m_Address: Texture2D-Aligator_Eye_Albedo_Adjust-15434
+    m_Address: Texture2D-Aligator_Eye_Albedo_Adjust-15242
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2634,7 +2558,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 80d4afcf85a004dd79839a02960813a7
-    m_Address: Texture2D-Lipstick01_Normal-17412
+    m_Address: Texture2D-Lipstick01_Normal-17216
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2674,7 +2598,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 84e24145ef85f4d6ebc2f0a2290f19c2
-    m_Address: Texture2D-MaleHair01_Albedo-13674
+    m_Address: Texture2D-MaleHair01_Albedo-13484
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2683,7 +2607,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 84e4a0928a4444695b168e428c5f2c14
-    m_Address: Texture2D-ElvenEars_Roughness-12670
+    m_Address: Texture2D-ElvenEars_Roughness-12482
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2702,7 +2626,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 852f32c994e6fdf47b9ddade245a2d20
-    m_Address: Texture2D-F_bod_N-15276
+    m_Address: Texture2D-F_bod_N-15084
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2742,7 +2666,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 87159d60593530742850bb892db2c4d5
-    m_Address: Texture2D-guideMesh_normal-11826
+    m_Address: Texture2D-guideMesh_normal-11640
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2751,7 +2675,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 87d999979ace13749a6d20c588d07c6d
-    m_Address: Texture2D-Eye_n-14486
+    m_Address: Texture2D-Eye_n-14294
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2796,7 +2720,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 88748dee7076a594da2220b822ce685a
-    m_Address: Texture2D-TorsoArmor_Roughness-17088
+    m_Address: Texture2D-TorsoArmor_Roughness-16892
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2822,7 +2746,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 8a5180017cd948840b5bed6f25bddf43
-    m_Address: Texture2D-sportwear_pants_granit_SG-12120
+    m_Address: Texture2D-sportwear_pants_granit_SG-11934
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2838,7 +2762,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 8af03ab249b1fbe4eab78d12fc87a911
-    m_Address: Texture2D-MainCap-12718
+    m_Address: Texture2D-MainCap-12530
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2862,7 +2786,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 8b9c344b2628b4436a1885febe424947
-    m_Address: Texture2D-FemaleJeans01_Albedo-15850
+    m_Address: Texture2D-FemaleJeans01_Albedo-15656
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2892,7 +2816,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 8da06013380d7c848be2cfa63884557b
-    m_Address: Texture2D-M_bod smooth_N-12858
+    m_Address: Texture2D-M_bod smooth_N-12668
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2909,7 +2833,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 8e3e85822505e47619ce96f92fcdb1d0
-    m_Address: Texture2D-FemaleShortHair01_Albedo-12652
+    m_Address: Texture2D-FemaleShortHair01_Albedo-12464
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2919,7 +2843,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 8e46551b231290e44b00c11543501fd8
-    m_Address: Texture2D-MaleShirt01_Normal-15786
+    m_Address: Texture2D-MaleShirt01_Normal-15592
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2927,7 +2851,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 8e8a11d219efb744e8b7d8886bf4431a
-    m_Address: Texture2D-GlovesLeather_Albedo-12756
+    m_Address: Texture2D-GlovesLeather_Albedo-12568
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2975,7 +2899,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 918d60411c30c47e59854a524de4961d
-    m_Address: Texture2D-ElvenEars_Albedo-12230
+    m_Address: Texture2D-ElvenEars_Albedo-12044
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2984,7 +2908,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 91976794324ceeb4798dc98c0f1c67ab
-    m_Address: Texture2D-UMA_Toon_Body_diffuse-13448
+    m_Address: Texture2D-UMA_Toon_Body_diffuse-13258
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -2997,7 +2921,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 924a80f8f77a64ed5866ccb2880fdd7a
-    m_Address: Texture2D-FemaleShirt01_Normal-15018
+    m_Address: Texture2D-FemaleShirt01_Normal-14824
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3007,7 +2931,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 92914de304309e747853a495770218e9
-    m_Address: Texture2D-HAIR_Dupgrade-13138
+    m_Address: Texture2D-HAIR_Dupgrade-12948
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3016,7 +2940,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 930ed1f344d4641f79c5f7d2a22c03f3
-    m_Address: Texture2D-MaleFace01_Roughness-13150
+    m_Address: Texture2D-MaleFace01_Roughness-12960
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3024,7 +2948,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 9486e5d1d37e86246b9bd1e314a8a721
-    m_Address: Texture2D-SkyCarWheelOcclusion-12418
+    m_Address: Texture2D-SkyCarWheelOcclusion-12232
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3040,7 +2964,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 94d4ed1afcae6d24aa8325f9fcda20c4
-    m_Address: Texture2D-F_H_face_metallic-15388
+    m_Address: Texture2D-F_H_face_metallic-15196
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3056,7 +2980,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 94f99e723e34b534b8527d832351596b
-    m_Address: Texture2D-tanktop_yellow_D-12640
+    m_Address: Texture2D-tanktop_yellow_D-12452
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3064,7 +2988,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 953679261e03f82428f59b24631e30ee
-    m_Address: Texture2D-Eye_Large_Albedo_Adjust-13984
+    m_Address: Texture2D-Eye_Large_Albedo_Adjust-13794
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3080,7 +3004,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 95bfee1fde083402fb8a5855e122807d
-    m_Address: Texture2D-MaleFace01_Normal-17164
+    m_Address: Texture2D-MaleFace01_Normal-16968
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3088,7 +3012,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 95f37b6e8a50f0c47bec196c4bc2eae2
-    m_Address: Texture2D-bb_male_hair_UMA Normal-16912
+    m_Address: Texture2D-bb_male_hair_UMA Normal-16718
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3097,7 +3021,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 980fed94abb92aa4cb426647cb125759
-    m_Address: Texture2D-Gloves_Normal-13470
+    m_Address: Texture2D-Gloves_Normal-13280
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3105,7 +3029,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 982377ed10e4ad34ea122aa27345c6b8
-    m_Address: Texture2D-ChallengerBoot_Normal-16748
+    m_Address: Texture2D-ChallengerBoot_Normal-16554
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3148,7 +3072,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 9bb596cb1321e414186f972f07e0bc5b
-    m_Address: Texture2D-M_H_face_Nnew-16018
+    m_Address: Texture2D-M_H_face_Nnew-15824
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3170,7 +3094,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: 9d3552b8b101043948c0b8cc690ab816
-    m_Address: Texture2D-InnerMouth_Normal-14870
+    m_Address: Texture2D-InnerMouth_Normal-14676
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3208,7 +3132,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 9e01d57b8b3d1a34ea24022a589d3ac7
-    m_Address: Texture2D-M_Pants_01_Albedo-15918
+    m_Address: Texture2D-M_Pants_01_Albedo-15724
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3273,7 +3197,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: a1f6d7f6fcaea8d469a6eadc4c9e5a07
-    m_Address: Texture2D-Gloves Of Hammer_albedo-14254
+    m_Address: Texture2D-Gloves Of Hammer_albedo-14064
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3288,14 +3212,6 @@ MonoBehaviour:
     - Troll
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
-  - m_GUID: a2cfb51958276a643b9e80a541702b9d
-    m_Address: SlotDataAsset-UMA_Werewolf_InnerMouth
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
   - m_GUID: a3787093e63eb3a449d40959588abcb7
     m_Address: SlotDataAsset-SkyCarTires
     m_ReadOnly: 0
@@ -3305,7 +3221,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: a3fd3ee4f9e796c469f319488ca1d23c
-    m_Address: Texture2D-Cap_Shadow-13562
+    m_Address: Texture2D-Cap_Shadow-13372
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3363,7 +3279,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: a68cdc4df5eac4d7fb2382de34391ce9
-    m_Address: Texture2D-MaleBeard01_Roughness-16514
+    m_Address: Texture2D-MaleBeard01_Roughness-16320
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3381,7 +3297,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: a783f89daf8c524469e3905b80a396d5
-    m_Address: Texture2D-Sneakers_1_diffuse-16622
+    m_Address: Texture2D-Sneakers_1_diffuse-16428
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3390,7 +3306,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: a7966396fbac7ff4da2b461a89dff690
-    m_Address: Texture2D-MaleFace_spotty_Albedo-14128
+    m_Address: Texture2D-MaleFace_spotty_Albedo-13938
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3400,7 +3316,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: a79f26acde8ea4a41bd7fa601046a702
-    m_Address: Texture2D-ChallengerBootMetal_Albedo-16256
+    m_Address: Texture2D-ChallengerBootMetal_Albedo-16062
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3408,7 +3324,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: a9078ecde5d32ff4ea9686f5a144824c
-    m_Address: Texture2D-ElvenEars_Albedo - Body 1-16718
+    m_Address: Texture2D-ElvenEars_Albedo - Body 1-16524
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3417,7 +3333,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: a93b785a7dc7e3f4da5810505cdc19fe
-    m_Address: Texture2D-Fancy_Flats_1_detail_diffuse-15498
+    m_Address: Texture2D-Fancy_Flats_1_detail_diffuse-15306
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3426,7 +3342,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: a95e1c99f10e90e41bbe23ac6303418b
-    m_Address: Texture2D-M_Eyebrows_A-15228
+    m_Address: Texture2D-M_Eyebrows_A-15036
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3434,21 +3350,13 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: a9f7a20701f900842ac7bd4925c82642
-    m_Address: Texture2D-M_H_body hair_n-14280
+    m_Address: Texture2D-M_H_body hair_n-14090
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
     - Puck
     - PuckDCS
     - Harold
-    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
-      Culture=neutral, PublicKeyToken=null
-  - m_GUID: aa4234fb16def7748a6476c4cbee204a
-    m_Address: Texture2D-WerewolfInnerMouth_Normal-16048
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: aa8d990ec3c557445ada4c167873bec5
@@ -3460,7 +3368,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: aacdea98071e35545a73de35b4ad3baf
-    m_Address: Texture2D-bb_male_hair_UMA-14842
+    m_Address: Texture2D-bb_male_hair_UMA-14648
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3469,7 +3377,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: ac8ad506ee5f8984d9591dd715ea545f
-    m_Address: Texture2D-Mystic_hood_N-13936
+    m_Address: Texture2D-Mystic_hood_N-13746
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3486,7 +3394,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: af58420b18450884782f4761c8f71952
-    m_Address: Texture2D-SkyCarWheelNormals-15754
+    m_Address: Texture2D-SkyCarWheelNormals-15560
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3521,7 +3429,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: b0011be19d5b59d479de0f82c00d7991
-    m_Address: Texture2D-sweatpants_black_D-12454
+    m_Address: Texture2D-sweatpants_black_D-12268
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3529,7 +3437,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: b01f10afaca2142209e116e496a8d621
-    m_Address: Texture2D-MaleBeard03_Roughness-17350
+    m_Address: Texture2D-MaleBeard03_Roughness-17154
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3539,7 +3447,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: b0c8bd5163af4b64599acdbac2eeb562
-    m_Address: Texture2D-Crop_TShirt_1_detail_diffuse-12262
+    m_Address: Texture2D-Crop_TShirt_1_detail_diffuse-12076
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3547,22 +3455,6 @@ MonoBehaviour:
     - ToonCropTShirt1
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
-  - m_GUID: b0ee18ecb3eb22847b9dafe3ac63c42a
-    m_Address: OverlayDataAsset-WerewolfClaws
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
-  - m_GUID: b1e94d3cf1101164fa077e48b9276643
-    m_Address: SlotDataAsset-UMA_Werewolf_Eyes
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
   - m_GUID: b37930fc892ea8f4aa5316c99ad405cd
     m_Address: SlotDataAsset-MaleFace
     m_ReadOnly: 0
@@ -3575,7 +3467,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: b41339c2249f3471b9594014b47be252
-    m_Address: Texture2D-MaleBody01_Roughness-12738
+    m_Address: Texture2D-MaleBody01_Roughness-12550
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3622,7 +3514,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: b706faed77ffcb0478cdcadd59d9a3b5
-    m_Address: Texture2D-GirlShirt01Colorb-16756
+    m_Address: Texture2D-GirlShirt01Colorb-16562
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3630,7 +3522,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: b82880277d5904090a09b94c18c79d66
-    m_Address: Texture2D-ElvenEars_Normal-14324
+    m_Address: Texture2D-ElvenEars_Normal-14134
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3641,7 +3533,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: b85870f311375784c81d78b529cc6146
-    m_Address: Texture2D-Lower_M-13146
+    m_Address: Texture2D-Lower_M-12956
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3649,7 +3541,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: b8ce21decde314b64bf5c02150bb2963
-    m_Address: Texture2D-FemaleLongHair01_Albedo-17052
+    m_Address: Texture2D-FemaleLongHair01_Albedo-16856
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3660,7 +3552,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: b8e56af9c8f384fef8e5a1adc1d1df8c
-    m_Address: Texture2D-MaleUnderwear_Normal-15344
+    m_Address: Texture2D-MaleUnderwear_Normal-15152
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3674,7 +3566,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: b9570a0908de1e045991045ea1849ea0
-    m_Address: Texture2D-M_Eyebrows_N-15044
+    m_Address: Texture2D-M_Eyebrows_N-14850
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3682,12 +3574,11 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: b964835c0dfe6674aa52884e63036f69
-    m_Address: Texture2D-WerewolfBlank_Specular-16150
+    m_Address: Texture2D-WerewolfBlank_Specular-15956
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
     - WerewolfTShirt
-    - Wolfie
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: b97f19d37b372b14b894ee308237f40c
@@ -3700,7 +3591,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: b9f364617ec125b429878e948302cbc1
-    m_Address: Texture2D-hoodie_blue_SG-12272
+    m_Address: Texture2D-hoodie_blue_SG-12086
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3717,7 +3608,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: bb040a2ea3008406ebd2f1c0f49b31fd
-    m_Address: Texture2D-FemaleJeans01_Normal-16830
+    m_Address: Texture2D-FemaleJeans01_Normal-16636
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3730,7 +3621,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: bbcc9fcf1f8a6354d8f7efba8212910c
-    m_Address: Texture2D-Fancy_Flats_1_detail1_diffuse-17410
+    m_Address: Texture2D-Fancy_Flats_1_detail1_diffuse-17214
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3739,7 +3630,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: bc5c8b0d1465e7e4aa513524f4c04b3e
-    m_Address: Texture2D-Cap_Hair Heightmap-16422
+    m_Address: Texture2D-Cap_Hair Heightmap-16228
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3782,7 +3673,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: bccbb38fe3139c444b2999c45952b427
-    m_Address: Texture2D-TorsoArmorMetal_Albedo-17320
+    m_Address: Texture2D-TorsoArmorMetal_Albedo-17124
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3790,7 +3681,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: bd0d469704e7c934ebddc45ece4c1868
-    m_Address: Texture2D-SkyCarBodyOcclusion-14482
+    m_Address: Texture2D-SkyCarBodyOcclusion-14290
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3801,7 +3692,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: bd12cd8e19c388f43aa93bedfbcb3d95
-    m_Address: Texture2D-Cap_Hair-16954
+    m_Address: Texture2D-Cap_Hair-16760
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3821,7 +3712,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: bfe51f13b8b7f594b8c6a75e30a5bbd5
-    m_Address: Texture2D-shoes_tall_black_D-12878
+    m_Address: Texture2D-shoes_tall_black_D-12688
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3839,7 +3730,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: c0d19c5bee56d9944a925b825809b07c
-    m_Address: Texture2D-ponytail01_diffuse GS-15876
+    m_Address: Texture2D-ponytail01_diffuse GS-15682
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3848,7 +3739,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: c0e5deae8a268a8468ef816cb746d8ee
-    m_Address: Texture2D-Default Eye Adjust_diffuse-16990
+    m_Address: Texture2D-Default Eye Adjust_diffuse-16794
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3877,7 +3768,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: c23ed23be3c03a942976b1efa504ebb9
-    m_Address: Texture2D-shoes_tall_white_D-15828
+    m_Address: Texture2D-shoes_tall_white_D-15634
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3886,7 +3777,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: c289a7983684638449f8b9adc06dc2b6
-    m_Address: Texture2D-Eye Overlay-14836
+    m_Address: Texture2D-Eye Overlay-14642
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3913,7 +3804,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: c2e4d8519bc924f4fb3588b0a2840f59
-    m_Address: Texture2D-M_H_body hair-12252
+    m_Address: Texture2D-M_H_body hair-12066
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3923,7 +3814,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: c43977b073daf4f118da38659370f26c
-    m_Address: Texture2D-InnerMouth_Albedo-12034
+    m_Address: Texture2D-InnerMouth_Albedo-11848
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3966,16 +3857,8 @@ MonoBehaviour:
     - StripesRecipe
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
-  - m_GUID: c54cc1e518fd68d45ba30c894675836b
-    m_Address: Texture2D-WerewolfInnerMouth_Diffuse-13890
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
-      Culture=neutral, PublicKeyToken=null
   - m_GUID: c59b45917b12a5548bd5f02fa00d8cdc
-    m_Address: Texture2D-bb_female_hair_UMA Normal-12344
+    m_Address: Texture2D-bb_female_hair_UMA Normal-12158
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -3983,7 +3866,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: c59f61ec240ce194ea1a7720096a5524
-    m_Address: Texture2D-Jeans_1_detail_diffuse-16352
+    m_Address: Texture2D-Jeans_1_detail_diffuse-16158
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4000,7 +3883,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: c662a8e1a30a94847a6763f577caf198
-    m_Address: Texture2D-FemaleJeans02_diffuseCheckerOverlay-12446
+    m_Address: Texture2D-FemaleJeans02_diffuseCheckerOverlay-12260
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4016,7 +3899,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: c693d553f21b346c896e6f293d09ee5f
-    m_Address: Texture2D-MaleEyebrow02_Normal-12942
+    m_Address: Texture2D-MaleEyebrow02_Normal-12752
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4028,7 +3911,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: c7fd9103594884fe5baf9fd5c795def4
-    m_Address: Texture2D-Female_Tshirt01_Albedo-12828
+    m_Address: Texture2D-Female_Tshirt01_Albedo-12640
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4038,7 +3921,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: c822ebdcf1e9f4ea3ba74f8d9103876b
-    m_Address: Texture2D-MaleBeard03_Albedo-16348
+    m_Address: Texture2D-MaleBeard03_Albedo-16154
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4065,7 +3948,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: ca5524875bc901b419962c4d50420f2b
-    m_Address: Texture2D-F_HighPoly_EyeBrow_Albedo-14462
+    m_Address: Texture2D-F_HighPoly_EyeBrow_Albedo-14270
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4079,16 +3962,8 @@ MonoBehaviour:
     - Elf Female Base Race Recipe
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
-  - m_GUID: caea7f4665259e949a142041d05e3d94
-    m_Address: OverlayDataAsset-WerewolfInnerMouth
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
   - m_GUID: cb52389a713967d4abc746d610b28acf
-    m_Address: Texture2D-Cap_Rash-15598
+    m_Address: Texture2D-Cap_Rash-15406
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4115,7 +3990,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: ccbae4cc71f63224ebf0c8934a2197d4
-    m_Address: Texture2D-M_H_face_Albedo2-16304
+    m_Address: Texture2D-M_H_face_Albedo2-16110
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4150,14 +4025,6 @@ MonoBehaviour:
     - SkyCarBaseRecipe
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
-  - m_GUID: cda4a55bec197c646a1e3e11583d7ef4
-    m_Address: SlotDataAsset-UMA_Werewolf_Claws
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
   - m_GUID: cda7e080be988c44ab8341720f86d6cd
     m_Address: OverlayDataAsset-Alligator_eye_Alternate_adjust
     m_ReadOnly: 0
@@ -4186,7 +4053,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: d0a645b3673268b4e9bc730c39750929
-    m_Address: Texture2D-UpperLower_M-13056
+    m_Address: Texture2D-UpperLower_M-12866
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4228,7 +4095,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: d126afbadfdb59f4e9ba1cfb02993951
-    m_Address: Texture2D-Halter_Neck_1_detail_diffuse-15638
+    m_Address: Texture2D-Halter_Neck_1_detail_diffuse-15446
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4237,7 +4104,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: d166f91c8264d564e9ffa5ec766bad53
-    m_Address: Texture2D-shoes_tall_black_SG-16088
+    m_Address: Texture2D-shoes_tall_black_SG-15894
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4257,7 +4124,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: d40bec82ad70824478f3cead70f6cfea
-    m_Address: Texture2D-MaleShirt01_Albedo-12662
+    m_Address: Texture2D-MaleShirt01_Albedo-12474
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4265,7 +4132,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: d4fd23d5fee332b4399d10cd666197e7
-    m_Address: Texture2D-FemaleUnderwear02_diffuse-13870
+    m_Address: Texture2D-FemaleUnderwear02_diffuse-13680
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4274,7 +4141,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: d4ffb7d0ebee510498fba9d50f2296f7
-    m_Address: Texture2D-SkyCarBodyNormals-12060
+    m_Address: Texture2D-SkyCarBodyNormals-11874
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4284,14 +4151,6 @@ MonoBehaviour:
     - SkyCarBaseRecipe
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
-  - m_GUID: d5f6390fe392d644697f86246391cb8c
-    m_Address: SlotDataAsset-UMA_Werewolf_Legs
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
   - m_GUID: d813f8755f9fdee489b781e0d5e404c5
     m_Address: OverlayDataAsset-F_H_Head
     m_ReadOnly: 0
@@ -4309,7 +4168,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: da079680760bd614d9904591f776b5d1
-    m_Address: Texture2D-Hair_Long_Braided_1_normal-11860
+    m_Address: Texture2D-Hair_Long_Braided_1_normal-11674
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4317,7 +4176,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: db33892a815794c3b8b84adeb8b84bbd
-    m_Address: Texture2D-Lipstick01_Roughness-15408
+    m_Address: Texture2D-Lipstick01_Roughness-15216
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4334,7 +4193,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: df3452a6006a2d54fb0587d4b2cad909
-    m_Address: Texture2D-UMA_Toon_Body_metallic-14140
+    m_Address: Texture2D-UMA_Toon_Body_metallic-13950
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4365,7 +4224,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: e28d4e605f134d64d85651d9ef714272
-    m_Address: Texture2D-Underwear_Met-11828
+    m_Address: Texture2D-Underwear_Met-11642
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4381,14 +4240,6 @@ MonoBehaviour:
     - HumanFemaleHighPoly
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
-  - m_GUID: e34f21c5ee4ec464db3ca6478b4ab34c
-    m_Address: Texture2D-WerewolfTeeth_Normal-13840
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
-      Culture=neutral, PublicKeyToken=null
   - m_GUID: e37a792c969bb454c804c435f8c1c285
     m_Address: OverlayDataAsset-M_Freebie Robeset Hood AC
     m_ReadOnly: 0
@@ -4434,7 +4285,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: e43769dcd6c17f34b8e3c464485721fa
-    m_Address: Texture2D-Fancy_Flats_1_diffuse-16346
+    m_Address: Texture2D-Fancy_Flats_1_diffuse-16152
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4443,7 +4294,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: e4ad8f2fd2835dd44a82065d7c918327
-    m_Address: Texture2D-Underwear_n-17194
+    m_Address: Texture2D-Underwear_n-16998
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4451,16 +4302,8 @@ MonoBehaviour:
     - FemaleUnderwear
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
-  - m_GUID: e51f46710c96a924aa03b2f4dd7bfe7a
-    m_Address: SlotDataAsset-UMA_Werewolf_Face
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
   - m_GUID: e5356b4d449b6dc4087b661ee7e36a01
-    m_Address: Texture2D-Milcap-16512
+    m_Address: Texture2D-Milcap-16318
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4476,7 +4319,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: e5dd1cd866f75434cac96736c5df9df0
-    m_Address: Texture2D-Jeans_1_diffuse-14990
+    m_Address: Texture2D-Jeans_1_diffuse-14796
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4485,7 +4328,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: e6c4adce4a1ff84428305e416685ee5e
-    m_Address: Texture2D-Crop_TShirt_1_normal-17048
+    m_Address: Texture2D-Crop_TShirt_1_normal-16852
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4520,7 +4363,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: e822c12c3b38e4cbdbb419c94040eab4
-    m_Address: Texture2D-MaleJeans01_Normal-16094
+    m_Address: Texture2D-MaleJeans01_Normal-15900
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4547,7 +4390,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: e970401c4b067436eb4d65221b225e12
-    m_Address: Texture2D-FemaleShirt02_Albedo-16078
+    m_Address: Texture2D-FemaleShirt02_Albedo-15884
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4556,7 +4399,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: e9f37d4afd53c5441aed1334c52fa698
-    m_Address: Texture2D-Eyelash_diffuse-15474
+    m_Address: Texture2D-Eyelash_diffuse-15282
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4570,16 +4413,8 @@ MonoBehaviour:
     - Elf Female Base Race Recipe
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
-  - m_GUID: eaf53a24ac371704ba0e3ceaa664b056
-    m_Address: Texture2D-WerewolfHead_Diffuse-13216
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
-      Culture=neutral, PublicKeyToken=null
   - m_GUID: eaf8fd484647df74aa468bd607b8e6e8
-    m_Address: Texture2D-UpperLower_AC-14750
+    m_Address: Texture2D-UpperLower_AC-14556
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4596,7 +4431,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: ed01fc2bc40214a999a5fe8e51ddbae4
-    m_Address: Texture2D-MaleEyebrow01_Normal-15824
+    m_Address: Texture2D-MaleEyebrow01_Normal-15630
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4624,7 +4459,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: eeab9a37ed522ff46bf429d021f78862
-    m_Address: Texture2D-Cat_Eye_Alternate_Albedo_Adjust-14360
+    m_Address: Texture2D-Cat_Eye_Alternate_Albedo_Adjust-14170
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4632,7 +4467,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: ef1e1998915393648808208e87e5cc1f
-    m_Address: Texture2D-Lower_A-14840
+    m_Address: Texture2D-Lower_A-14646
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4648,7 +4483,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: f1ee058b12e74a645a810b248c336ed2
-    m_Address: Texture2D-Lower_N-15938
+    m_Address: Texture2D-Lower_N-15744
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4675,7 +4510,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: f4efbb243ca57b3448809bfbb51735dc
-    m_Address: Texture2D-bb_female_hair_UMA-13222
+    m_Address: Texture2D-bb_female_hair_UMA-13032
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4683,7 +4518,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: f54931e1e771ca24382d9c4cad4eee92
-    m_Address: Texture2D-Boots_M-12432
+    m_Address: Texture2D-Boots_M-12246
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4700,7 +4535,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: f5781018af67cdf4098e88b819136bb3
-    m_Address: Texture2D-Gloves Of Hammer_metallic-14658
+    m_Address: Texture2D-Gloves Of Hammer_metallic-14464
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4717,23 +4552,15 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: f6107ad9de1e9bb4ea74851d9bca7976
-    m_Address: Texture2D-MaleShirt01_Roughness-15314
+    m_Address: Texture2D-MaleShirt01_Roughness-15122
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
     - WerewolfTShirt
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
-  - m_GUID: f6144f3f9b3aeee4884f86cf9ff32816
-    m_Address: OverlayDataAsset-WerewolfHead
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
   - m_GUID: f81cce6b25bb84582870e7d712d68918
-    m_Address: Texture2D-MaleShirt01_Albedo-15912
+    m_Address: Texture2D-MaleShirt01_Albedo-15718
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4753,7 +4580,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: f8cf9468b3cf148148dd1f220bda6c17
-    m_Address: Texture2D-MaleShirt01_Normal-14774
+    m_Address: Texture2D-MaleShirt01_Normal-14580
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4764,7 +4591,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: f8f534d6cc7e94676b6d85fb0b9c3360
-    m_Address: Texture2D-FemaleShortHair01_Normal-14208
+    m_Address: Texture2D-FemaleShortHair01_Normal-14018
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4783,7 +4610,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: fc084c6e6b4a93c4b84286ff83c4dba6
-    m_Address: Texture2D-scrunchie GS-16914
+    m_Address: Texture2D-scrunchie GS-16720
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4792,7 +4619,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: fc359ce7d2a20044bac14b99072f0e01
-    m_Address: Texture2D-Halter_Neck_1_diffuse-14604
+    m_Address: Texture2D-Halter_Neck_1_diffuse-14412
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4801,7 +4628,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: fc479bbdb9be64a1bb711bd9e259ba5a
-    m_Address: Texture2D-FemaleUnderwear01_Normal-16680
+    m_Address: Texture2D-FemaleUnderwear01_Normal-16486
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4811,16 +4638,8 @@ MonoBehaviour:
     - FemaleOutfit1
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
-  - m_GUID: fd983ace9923d5244bf7876fb75df05a
-    m_Address: OverlayDataAsset-WerewolfHandsAndFeet
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
   - m_GUID: fe50b68bbb8220541867e2e66e7f1cad
-    m_Address: Texture2D-SkyCarHubCapsAlbedo-15942
+    m_Address: Texture2D-SkyCarHubCapsAlbedo-15748
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4862,7 +4681,7 @@ MonoBehaviour:
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: fedd0d9f46c6540e78e8d6f9311eb0e0
-    m_Address: Texture2D-FemaleShirt01_Roughness-17344
+    m_Address: Texture2D-FemaleShirt01_Roughness-17148
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4872,7 +4691,7 @@ MonoBehaviour:
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: ff42db7e5f734e144aea90312006e5db
-    m_Address: Texture2D-hoodie_blue_NM-16934
+    m_Address: Texture2D-hoodie_blue_NM-16740
     m_ReadOnly: 0
     m_SerializedLabels:
     - UMA_Base
@@ -4883,5 +4702,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 5278a4398e650f34cb1a8ff8e6b10c2c, type: 2}
-    - {fileID: 11400000, guid: e6752475b375db44cb149291a8a50523, type: 2}
+    - {fileID: 11400000, guid: 590bc64fe350722479ba8e97143b503c, type: 2}
+    - {fileID: 11400000, guid: 5a59312348cab0645a4d0a3e2087329b, type: 2}

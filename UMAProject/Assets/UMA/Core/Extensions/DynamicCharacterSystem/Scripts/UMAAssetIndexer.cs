@@ -1183,7 +1183,12 @@ namespace UMA
                 EditorUtility.DisplayProgressBar("Cleanup", "Removing " + group.Name, iPos);
                 if (group.name.Contains("UMA_Shared"))
                 {
-                    group.entries.Clear();
+                    List<AddressableAssetEntry> ItemsToClear = new List<AddressableAssetEntry>();
+                    ItemsToClear.AddRange(group.entries);
+                    foreach(AddressableAssetEntry ae in ItemsToClear)
+                    {
+                        group.RemoveAssetEntry(ae);
+                    }
                 }
                 else
                 {
@@ -1558,8 +1563,12 @@ namespace UMA
                 }
 
                 // Create the shared group that has each item packed separately.
-                AddressableAssetGroup sharedGroup = AddressableSettings.CreateGroup("UMA_SharedItems", false, false, true, AddressableSettings.DefaultGroup.Schemas);
-                sharedGroup.GetSchema<BundledAssetGroupSchema>().BundleMode = BundledAssetGroupSchema.BundlePackingMode.PackSeparately;
+                AddressableAssetGroup sharedGroup = AddressableSettings.FindGroup("UMA_SharedItems");
+                if (sharedGroup == null)
+                {
+                    sharedGroup = AddressableSettings.CreateGroup("UMA_SharedItems", false, false, true, AddressableSettings.DefaultGroup.Schemas);
+                    sharedGroup.GetSchema<BundledAssetGroupSchema>().BundleMode = BundledAssetGroupSchema.BundlePackingMode.PackSeparately;
+                }
 
                 pos = 0.0f;
                 inc = 1.0f / theItems.Count;

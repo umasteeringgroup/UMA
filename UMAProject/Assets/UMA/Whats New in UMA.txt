@@ -6,6 +6,7 @@ Support for Addressables
   Significantly reduced memory overhead
   Build requests are queued up with all relevant data
   Added recipes to Addressables. If you do this, you must load them before access (they are all labelled by recipe and with 'UMA_Recipe')
+  Will now Keep shared group on regeneration. 
 New global library window
   New functions to mark items by various parameters
   New Addressables Menu to generate items
@@ -40,6 +41,7 @@ CollisionMatrixFixer will read the current layermask settings for Ragdoll and No
 Added "AutoSetLayers" property to UMAPhysicsAvatar. When set, the player layer will be the current gameobject layer, and the Ragdoll layer will be read from the layermask settings.
 Added Shader Parameter Mapping to UMAMaterial - UMAMaterials can now map shared colors to color properties in the generated material. Useful for shaders that have extra color parms (like skin & hair shaders).
 Added "AtlasResolutionScale" to DynamicCharacterAvatar. Using this, you can lower the atlas resolution for specific avatars, for example ones used for icons, etc. Warning: UMASimpleLOD can override this, so don't use in conjunction with that component.
+Added "Resources Only" flag to UMA recipes. Checking this will skip adding this recipe, and it's slots, overlays and textures to Addressabe groups.
 Various bug fixes & changes
     Fixed various overlays that were missing textures or had the wrong count
     Fixed some scenes that had broken over time
