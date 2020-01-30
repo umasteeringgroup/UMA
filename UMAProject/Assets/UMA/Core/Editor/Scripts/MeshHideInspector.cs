@@ -446,17 +446,21 @@ namespace UMA.Editors
 
 		public void SetRaceLists()
 		{
-			RaceData[] raceDataArray = UMAContext.Instance.GetAllRaces();
-			foundRaces.Clear();
-			foundRaceNames.Clear();
-			foundRaces.Add(null);
-			foundRaceNames.Add("None Set");
-			foreach (RaceData race in raceDataArray)
+			UMAContextBase ubc = UMAContext.Instance;
+			if (ubc != null)
 			{
-				if (race != null && race.raceName != "RaceDataPlaceholder")
+				RaceData[] raceDataArray = ubc.GetAllRaces();
+				foundRaces.Clear();
+				foundRaceNames.Clear();
+				foundRaces.Add(null);
+				foundRaceNames.Add("None Set");
+				foreach (RaceData race in raceDataArray)
 				{
-					foundRaces.Add(race);
-					foundRaceNames.Add(race.raceName);
+					if (race != null && race.raceName != "RaceDataPlaceholder")
+					{
+						foundRaces.Add(race);
+						foundRaceNames.Add(race.raceName);
+					}
 				}
 			}
 		}
