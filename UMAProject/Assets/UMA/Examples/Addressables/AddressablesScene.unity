@@ -1498,6 +1498,11 @@ PrefabInstance:
       propertyPath: saveFilename
       value: 
       objectReference: {fileID: 0}
+    - target: {fileID: 8963538791368871902, guid: cae428fba8fb3054ab2b41480e34379f,
+        type: 3}
+      propertyPath: activeRace.name
+      value: HumanFemale
+      objectReference: {fileID: 0}
     - target: {fileID: 8963538792093576476, guid: cae428fba8fb3054ab2b41480e34379f,
         type: 3}
       propertyPath: m_Name
@@ -3388,6 +3393,11 @@ PrefabInstance:
         type: 3}
       propertyPath: saveFilename
       value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 8963538791368871902, guid: cae428fba8fb3054ab2b41480e34379f,
+        type: 3}
+      propertyPath: activeRace.name
+      value: HumanMale
       objectReference: {fileID: 0}
     - target: {fileID: 8963538792093576476, guid: cae428fba8fb3054ab2b41480e34379f,
         type: 3}
@@ -6822,7 +6832,7 @@ PrefabInstance:
     - target: {fileID: 8963538791368871902, guid: cae428fba8fb3054ab2b41480e34379f,
         type: 3}
       propertyPath: activeRace.name
-      value: HumanMale
+      value: HumanFemale
       objectReference: {fileID: 0}
     - target: {fileID: 8963538791368871902, guid: cae428fba8fb3054ab2b41480e34379f,
         type: 3}
