@@ -142,8 +142,10 @@ namespace UMA.CharacterSystem
 		private bool isAddressableSystem;
         private Queue<AsyncOp> LoadedHandles = new Queue<AsyncOp>();
 #endif
+        [Tooltip("Change to lower this specific DCA's atlas resolution. Leave 1.0f for resolution to be automatic.")]
+        [Range(0.0f,1.0f)]
+        public float AtlasResolutionScale = 1.0f; 
 
-        //public int 
         [EnumFlags]
         public LoadOptions defaultLoadOptions = LoadOptions.loadRace | LoadOptions.loadDNA | LoadOptions.loadWardrobe | LoadOptions.loadBodyColors | LoadOptions.loadWardrobeColors;
 
@@ -2778,6 +2780,12 @@ namespace UMA.CharacterSystem
             {
                 Initialize();
             }
+            // Set the current resolution scale if defined on the DCA.
+            if (AtlasResolutionScale != 1.0f)
+            {
+                umaData.atlasResolutionScale = this.AtlasResolutionScale;
+            }
+
             //set the umaData.animator if we have an animator already
             if (this.gameObject.GetComponent<Animator>())
             {

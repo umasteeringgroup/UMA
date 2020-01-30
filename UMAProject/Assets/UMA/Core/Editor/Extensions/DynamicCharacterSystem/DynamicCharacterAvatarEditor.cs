@@ -73,7 +73,7 @@ namespace UMA.CharacterSystem.Editors
 				/*SaveOptions fields*/ "defaultSaveOptions", "savePathType","savePath", "saveFilename", "makeUniqueFilename","ensureSharedColors", 
 				/*Moved into AdvancedOptions*/"context","umaData","umaRecipe", "umaAdditionalRecipes","umaGenerator", "animationController",
 				/*Moved into CharacterEvents*/"CharacterCreated", "CharacterBegun", "CharacterUpdated", "CharacterDestroyed", "CharacterDnaUpdated", "RecipeUpdated",
-				/*PlaceholderOptions fields*/"showPlaceholder", "previewModel", "customModel", "customRotation", "previewColor"});
+				/*PlaceholderOptions fields*/"showPlaceholder", "previewModel", "customModel", "customRotation", "previewColor", "AtlasResolutionScale"});
 
 			//The base DynamicAvatar properties- get these early because changing the race changes someof them
 			SerializedProperty context = serializedObject.FindProperty("context");
@@ -347,6 +347,8 @@ namespace UMA.CharacterSystem.Editors
 			{
 				EditorGUI.BeginChangeCheck();
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("hide"));
+				EditorGUILayout.PropertyField(serializedObject.FindProperty("AtlasResolutionScale"));
+
 				if (EditorGUI.EndChangeCheck())
 				{
 					serializedObject.ApplyModifiedProperties();
