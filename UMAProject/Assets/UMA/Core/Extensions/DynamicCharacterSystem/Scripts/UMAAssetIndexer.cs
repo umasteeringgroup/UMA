@@ -1181,7 +1181,14 @@ namespace UMA
             {
                 int iPos = Mathf.CeilToInt(pos);
                 EditorUtility.DisplayProgressBar("Cleanup", "Removing " + group.Name, iPos);
-                AddressableSettings.RemoveGroup(group);
+                if (group.name.Contains("UMA_Shared"))
+                {
+                    group.entries.Clear();
+                }
+                else
+                {
+                    AddressableSettings.RemoveGroup(group);
+                }
                 pos += inc;
             }
 
@@ -1469,6 +1476,8 @@ namespace UMA
                 UMAWardrobeRecipe uwr = ai.Item as UMAWardrobeRecipe;
                 if (uwr != null)
                 {
+                    if (uwr.resourcesOnly)
+                        continue;
                     theRecipes.Add(ai);
                 }
             }
@@ -1481,6 +1490,8 @@ namespace UMA
                 UMATextRecipe utr = ai.Item as UMATextRecipe;
                 if (utr != null)
                 {
+                    if (utr.resourcesOnly)
+                        continue;
                     theRecipes.Add(ai);
                 }
             }
@@ -1493,6 +1504,8 @@ namespace UMA
                 UMATextRecipe utr = ai.Item as UMATextRecipe;
                 if (utr != null)
                 {
+                    if (utr.resourcesOnly)
+                        continue;
                     theRecipes.Add(ai);
                 }
             }

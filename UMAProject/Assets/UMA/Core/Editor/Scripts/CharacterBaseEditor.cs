@@ -1914,6 +1914,14 @@ namespace UMA.Editors
 					_needsUpdate = true;
 					_forceUpdate = true;
 				}
+				GUIContent ToggleContent = new GUIContent("Resources Only", "When checked, This recipe will be skipped when generating Addressable Groups. This can result in duplicate assets.");
+				bool theResourcesOnlyFlag = EditorGUILayout.Toggle(ToggleContent, theRecipe.resourcesOnly);
+				if (theResourcesOnlyFlag != theRecipe.resourcesOnly)
+				{
+					theRecipe.resourcesOnly = theResourcesOnlyFlag;
+					_needsUpdate = true;
+					_forceUpdate = true;
+				}
 			}
 			if (_errorMessage != null)
 			{

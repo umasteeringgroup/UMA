@@ -30,6 +30,8 @@ namespace UMA
 		protected UMAData.UMARecipe umaRecipe;
 		protected bool cached = false;
 		public string label;
+		[Tooltip("This will be skipped when generating Addressable Groups. This can result in duplicate assets.")]
+		public bool resourcesOnly;
 
 #if UNITY_EDITOR
 
