@@ -59,7 +59,6 @@ namespace UMA
 				yield return null;
 			}
 
-
 			for (int atlasIndex = umaData.generatedMaterials.materials.Count - 1; atlasIndex >= 0; atlasIndex--)
 			{
 				var atlas = umaData.generatedMaterials.materials[atlasIndex];
@@ -104,8 +103,8 @@ namespace UMA
 							{
 								continue;
 							}
-							destinationTexture = new RenderTexture(Mathf.FloorToInt(atlas.cropResolution.x * umaData.atlasResolutionScale), Mathf.FloorToInt(atlas.cropResolution.y * umaData.atlasResolutionScale), 0, slotData.asset.material.channels[textureType].textureFormat, RenderTextureReadWrite.Linear);
 
+							destinationTexture = new RenderTexture(Mathf.FloorToInt(atlas.cropResolution.x * umaData.atlasResolutionScale), Mathf.FloorToInt(atlas.cropResolution.y * umaData.atlasResolutionScale), 0, slotData.asset.material.channels[textureType].textureFormat, RenderTextureReadWrite.Linear);
 							destinationTexture.filterMode = FilterMode.Point;
 							destinationTexture.useMipMap = umaGenerator.convertMipMaps && !umaGenerator.convertRenderTexture;
 							//Draw all the Rects here
@@ -127,7 +126,7 @@ namespace UMA
 
 							//PostProcess
 							textureMerge.PostProcess(destinationTexture, slotData.asset.material.channels[textureType].channelType);
-							 
+
 							int DownSample = slotData.asset.material.channels[textureType].DownSample;
 							if (DownSample != 0)
 							{
@@ -205,7 +204,10 @@ namespace UMA
 									tempTexture.Compress(slotData.asset.material.channels[textureType].Compression == UMAMaterial.CompressionSettings.HighQuality);
 								}
 								resultingTextures[textureType] = tempTexture;
-								atlas.material.SetTexture(slotData.asset.material.channels[textureType].materialPropertyName, tempTexture);
+								if (!slotData.asset.material.channels[textureType].NonShaderTexture)
+								{
+									atlas.material.SetTexture(slotData.asset.material.channels[textureType].materialPropertyName, tempTexture);
+								}
 								#endregion
 							}
 							else
@@ -215,7 +217,10 @@ namespace UMA
 								destinationTexture.filterMode = slotData.asset.material.MatFilterMode;
 								destinationTexture.wrapMode = TextureWrapMode.Repeat;
 								resultingTextures[textureType] = destinationTexture;
-								atlas.material.SetTexture(slotData.asset.material.channels[textureType].materialPropertyName, destinationTexture);
+								if (!slotData.asset.material.channels[textureType].NonShaderTexture)
+								{
+									atlas.material.SetTexture(slotData.asset.material.channels[textureType].materialPropertyName, destinationTexture);
+								}
 							}
 
 							break;
@@ -224,6 +229,7 @@ namespace UMA
 						resultingTextures[textureType] = tempTexture;
 						if (!slotData.asset.material.channels[textureType].NonShaderTexture)
 						{
+<<<<<<< Updated upstream
 							atlas.material.SetTexture(slotData.asset.material.channels[textureType].materialPropertyName, tempTexture);
 						}
 						#endregion
@@ -268,6 +274,11 @@ namespace UMA
 									atlas.material.color = fragment.baseColor;
 								}
 						   }
+=======
+							if (slotData.asset.material.channels[textureType].NonShaderTexture) break;
+							atlas.material.SetColor(slotData.asset.material.channels[textureType].materialPropertyName, atlas.materialFragments[0].baseColor);
+							break;
+>>>>>>> Stashed changes
 						}
 						case UMAMaterial.ChannelType.TintedTexture:
 						{
@@ -279,7 +290,10 @@ namespace UMA
 								{
 									if (fragment.baseOverlay.textureList[j] != null)
 									{
-										atlas.material.SetTexture(slotData.asset.material.channels[j].materialPropertyName, fragment.baseOverlay.textureList[j]);
+										if (!slotData.asset.material.channels[textureType].NonShaderTexture)
+										{
+											atlas.material.SetTexture(slotData.asset.material.channels[j].materialPropertyName, fragment.baseOverlay.textureList[j]);
+										}
 										if (j == 0)
 										{
 											atlas.material.color = fragment.baseColor;
@@ -291,11 +305,19 @@ namespace UMA
 									for (int j = 0; j < overlay.textureList.Length; j++)
 									{
 										if (overlay.textureList[j] != null)
+<<<<<<< Updated upstream
 	  									{
 								      if (!slotData.asset.material.channels[textureType].NonShaderTexture)
 								      {
 									        atlas.material.SetTexture(slotData.asset.material.channels[j].materialPropertyName, overlay.textureList[j]);
 								      }                    
+=======
+										{
+											if (!slotData.asset.material.channels[textureType].NonShaderTexture)
+											{
+												atlas.material.SetTexture(slotData.asset.material.channels[j].materialPropertyName, overlay.textureList[j]);
+											}
+>>>>>>> Stashed changes
 										}
 									}
 								}
