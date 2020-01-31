@@ -23,6 +23,7 @@ namespace UMA.CharacterSystem
     {
         public float DelayUnload = 2.0f;
         public bool BundleCheck = true;
+        public bool KeepAnimatorController = false;
 #if UNITY_EDITOR
 		[UnityEditor.MenuItem("GameObject/UMA/Create New Dynamic Character Avatar",false,10)]
 		public static void CreateDynamicCharacterAvatarMenuItem()
@@ -393,6 +394,14 @@ namespace UMA.CharacterSystem
 
             umaData.blendShapeSettings.ignoreBlendShapes = !loadBlendShapes;
 
+            if (animationController == null)
+            {
+                Animator a = GetComponent<Animator>();
+                if (a)
+                {
+                    animationController = a.runtimeAnimatorController;
+                }
+            }
             //if the animator has been set the 'old' way respect that...
             if (raceAnimationControllers.defaultAnimationController == null && animationController != null)
             {
@@ -1722,8 +1731,15 @@ namespace UMA.CharacterSystem
         /// </summary>
         public void SetAnimatorController(bool addAnimator = false)
         {
+            if (KeepAnimatorController == true && animationController != null)
+                return;
+
             RuntimeAnimatorController controllerToUse = raceAnimationControllers.GetAnimatorForRace(activeRace.name);
 
+            if (controllerToUse == null)
+            {
+                Debug.LogError("Unable to find animator! This will not be good.");
+            }
             //changing the animationController in 5.6 resets the rotation of this game object
             //so store the rotation and set it back
             var originalRot = Quaternion.identity;
@@ -1745,6 +1761,7 @@ namespace UMA.CharacterSystem
             {
                 if (thisAnimator != null)
                 {
+                    Debug.LogWarning("Nulling out runtimeanimator Controller");
                     thisAnimator.runtimeAnimatorController = null;
                 }
             }
@@ -3234,20 +3251,6 @@ namespace UMA.CharacterSystem
                 _wardrobeCollections = newWardrobeCollections;
             }
         }
-
-
-        void ZUpdateAfterDownload()
-        {
-            requiredAssetsToCheck.Clear();
-            activeRace.data = context.GetRace(activeRace.name);
-            umaRecipe = activeRace.data.baseRaceRecipe;
-            UpdateSetSlots();
-            if (BuildCharacterEnabled)
-            {
-                SetExpressionSet();
-                SetAnimatorController(true);
-            }
-        }
 #endregion
 
 #region CLEANUP 
@@ -3445,7 +3448,9 @@ namespace UMA.CharacterSystem
 							animators[i].animatorController = UMAAssetIndexer.Instance.GetAsset<RuntimeAnimatorController>(animators[i].animatorControllerName);
                         }
                         if (animators[i].animatorController != null)
+                        {
                             controllerToUse = animators[i].animatorController;
+                        }
                         break;
                     }
                 }

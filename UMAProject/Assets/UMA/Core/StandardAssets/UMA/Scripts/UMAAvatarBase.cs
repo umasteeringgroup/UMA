@@ -139,7 +139,6 @@ namespace UMA
 			if (animationController != null)
 			{
 				umaData.animationController = animationController;
-	//				umaData.animator.runtimeAnimatorController = animationController;
 			}
 			umaData.umaGenerator = umaGenerator;
 
