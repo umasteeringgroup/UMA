@@ -617,7 +617,7 @@ PlayerSettings:
   webGLModulesDirectory: 
   webGLTemplate: APPLICATION:Default
   webGLAnalyzeBuildSize: 0
-  webGLUseEmbeddedResources: 0
+  webGLUseEmbeddedResources: 1
   webGLCompressionFormat: 2
   webGLLinkerTarget: 1
   webGLThreadsSupport: 0

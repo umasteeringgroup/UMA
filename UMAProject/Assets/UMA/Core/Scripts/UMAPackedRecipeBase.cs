@@ -203,13 +203,14 @@ namespace UMA
 		{
 			public string id;
 			public int colorIdx;
-			public int[] rect;
-			#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
+			// public int[] rect;
+			public float[] rect;
+#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 			public PackedOverlaySubstanceData[] data;
-            #endif
+#endif
 		}
 
-		#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
+#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 		[System.Serializable]
 		public class PackedOverlaySubstanceData
 		{
@@ -338,7 +339,7 @@ namespace UMA
 				}
 			}
 		}
-        #endif
+#endif
 
 		[System.Serializable]
 		public class PackedOverlayColorDataV3
@@ -634,13 +635,19 @@ namespace UMA
 
 						OverlayData overlayData = umaRecipe.slotDataList[i].GetOverlay(overlayIdx);
 						tempPackedOverlay.id = overlayData.overlayName;
-						tempPackedOverlay.rect = new int[4];
-						tempPackedOverlay.rect[0] = Mathf.FloorToInt(overlayData.rect.x);
-						tempPackedOverlay.rect[1] = Mathf.FloorToInt(overlayData.rect.y);
-						tempPackedOverlay.rect[2] = Mathf.FloorToInt(overlayData.rect.width);
-						tempPackedOverlay.rect[3] = Mathf.FloorToInt(overlayData.rect.height);
-
-						#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
+						/*
+												tempPackedOverlay.rect = new int[4];
+												tempPackedOverlay.rect[0] = Mathf.FloorToInt(overlayData.rect.x);
+												tempPackedOverlay.rect[1] = Mathf.FloorToInt(overlayData.rect.y);
+												tempPackedOverlay.rect[2] = Mathf.FloorToInt(overlayData.rect.width);
+												tempPackedOverlay.rect[3] = Mathf.FloorToInt(overlayData.rect.height);
+						*/
+						tempPackedOverlay.rect = new float[4];
+						tempPackedOverlay.rect[0] = overlayData.rect.x;
+						tempPackedOverlay.rect[1] = overlayData.rect.y;
+						tempPackedOverlay.rect[2] = overlayData.rect.width;
+						tempPackedOverlay.rect[3] = overlayData.rect.height;
+#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 						if (overlayData.isProcedural && (overlayData.proceduralData != null))
 						{
 							tempPackedOverlay.data = new PackedOverlaySubstanceData[overlayData.proceduralData.Length];
@@ -649,7 +656,7 @@ namespace UMA
 								tempPackedOverlay.data[dataIdx] = new PackedOverlaySubstanceData(overlayData.proceduralData[dataIdx]);
 							}
 						}
-                        #endif
+#endif
 
 						OverlayColorData colorData = overlayData.colorData;
 						int colorIndex = -1;
