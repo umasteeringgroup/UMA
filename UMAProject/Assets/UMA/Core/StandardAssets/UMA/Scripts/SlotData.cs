@@ -315,7 +315,7 @@ namespace UMA
 						for (int i = 0; i < asset.material.channels.Length; i++)
 						{
 							var channel = asset.material.channels[i];
-							if (!asset.material.material.HasProperty(channel.materialPropertyName))
+							if (!channel.NonShaderTexture && !asset.material.material.HasProperty(channel.materialPropertyName))
 							{
 								if (Debug.isDebugBuild)
 									Debug.LogError(string.Format("Slot '{0}' Material Channel {1} refers to material property '{2}' but no such property exists.", asset.slotName, i, channel.materialPropertyName), asset);
@@ -345,7 +345,7 @@ namespace UMA
 					for (int i = 0; i < asset.material.channels.Length; i++)
 					{
 						var channel = asset.material.channels[i];
-						if (!asset.material.material.HasProperty(channel.materialPropertyName))
+						if (!channel.NonShaderTexture && !asset.material.material.HasProperty(channel.materialPropertyName))
 						{
 							if (Debug.isDebugBuild)
 								Debug.LogError(string.Format("Slot '{0}' Material Channel {1} refers to material property '{2}' but no such property exists.", asset.slotName, i, channel.materialPropertyName), asset);
