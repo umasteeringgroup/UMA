@@ -86,6 +86,7 @@ namespace UMA
                         case UMAMaterial.ChannelType.Texture:
                         case UMAMaterial.ChannelType.DiffuseTexture:
                         case UMAMaterial.ChannelType.NormalMap:
+                        case UMAMaterial.ChannelType.DetailNormalMap:
                         {
                             textureMerge.Reset();
                             for (int i = 0; i < atlas.materialFragments.Count; i++)
