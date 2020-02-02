@@ -17,10 +17,7 @@ SubShader
 {
 	Tags {"Queue"="Transparent" "IgnoreProjector"="True" "RenderType"="Transparent"}
 
-	GrabPass
-    {
-        "_PreviousNormal"
-    }
+	GrabPass { }
 
 	Pass
 	{
@@ -39,11 +36,12 @@ SubShader
 		float4 _AdditiveColor;
 		sampler2D _MainTex;
 		sampler2D _ExtraTex;
-		sampler2D _PreviousNormal;
+		sampler2D _GrabTexture;
 
 		struct v2f {
 			float4  pos : SV_POSITION;
 			float2  uv : TEXCOORD0;
+			float4  grabPos : TEXCOORD1;
 		};
 
 		float4 _MainTex_ST;
@@ -53,6 +51,7 @@ SubShader
 			v2f o;
 			o.pos = UnityObjectToClipPos(v.vertex);
 			o.uv = TRANSFORM_TEX(v.texcoord, _MainTex);
+			o.grabPos = ComputeGrabScreenPos(o.pos);
 			return o;
 		}
 
@@ -61,7 +60,7 @@ SubShader
 		half4 frag(v2f i) : COLOR
 		{
 		    // Get previous normal map from grab pass,
-			half4 previous = tex2D(_PreviousNormal, i.uv);
+			half4 previous = tex2Dproj(_GrabTexture, i.grabPos);
 		    // Get current texture and mask textures
 			half4 current = tex2D(_MainTex, i.uv);
 			half4 extra = tex2D(_ExtraTex, i.uv);
