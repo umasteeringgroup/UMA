@@ -56,17 +56,27 @@ SubShader
 			return o;
 		}
 
+        // This atlas shader has Blend mode Off
+        // It grabs from previous texture and outputs the merged normal map
 		half4 frag(v2f i) : COLOR
 		{
+		    // Get previous normal map from grab pass,
 			half4 previous = tex2D(_PreviousNormal, i.uv);
+		    // Get current texture and mask textures
 			half4 current = tex2D(_MainTex, i.uv);
 			half4 extra = tex2D(_ExtraTex, i.uv);
+            
+            // Unpack previous and current textures with alpha from color/mask as strength
             half3 pn = half3(previous.wy * 2 - 1, 0);
             pn.z = sqrt(1 - saturate(dot(pn.xy, pn.xy)));
             half3 n = half3(current.wy * 2 - 1, 0);
             n.xy *= min(extra.a, _Color.a);
             n.z = sqrt(1 - saturate(dot(n.xy, n.xy)));
+            
+            // Blend them as current normal map being detail on previous one
             half3 blended = BlendNormals(pn, n);
+            
+            // Re-pack blended normal into texture and return.
 #if defined(UNITY_NO_DXT5nm)
 			return half4((blended.xyz + 1) / 2, 1);
 #else
