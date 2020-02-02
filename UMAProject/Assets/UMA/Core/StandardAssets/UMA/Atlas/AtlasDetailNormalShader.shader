@@ -77,15 +77,11 @@ SubShader
             half3 blended = BlendNormals(pn, n);
             
             // Re-pack blended normal into texture and return.
-#if defined(UNITY_NO_DXT5nm)
-			return half4((blended.xyz + 1) / 2, 1);
-#else
 			half4 packednormal;
 			packednormal.wy = (blended.xy + 1) / 2;
 			packednormal.x = 1;
 			packednormal.z = 1;
 			return packednormal;
-#endif
 		}
 		ENDCG
 	}
