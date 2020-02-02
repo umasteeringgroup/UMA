@@ -34,6 +34,17 @@ namespace UMA
 			return renderers[idx];
 		}
 
+		public int GetRendererIndex(SkinnedMeshRenderer renderer)
+		{
+			for(int i = 0; i < renderers.Length; i++)
+			{
+				if (renderer == renderers[i])
+					return i;
+			}
+
+			return -1;
+		}
+
 		public UMARendererAsset GetRendererAsset(int idx)
 		{
 			return rendererAssets[idx];
@@ -319,12 +330,12 @@ namespace UMA
 			public List<UMARendererAsset> rendererAssets = new List<UMARendererAsset>();
 
 			/// <summary>
-			/// Gets the generated texture on the UMA matching umaMaterial and in the textureChannel.
+			/// Gets the generated textures on the UMA matching umaMaterial and in the textureChannel.
 			/// </summary>
 			/// <param name="umaMaterial">Matching UMAMaterial to search for.</param>
 			/// <param name="textureChannel">Texture channel in the UMAMaterial to find the texture on.</param>
 			/// <returns></returns>
-			public List<Texture> GetTexture(UMAMaterial umaMaterial, int textureChannel)
+			public List<Texture> GetTextures(UMAMaterial umaMaterial, int textureChannel)
 			{
 				if (umaMaterial == null)
 					return null;
@@ -346,6 +357,39 @@ namespace UMA
 				}
 
 				return textures;
+			}
+
+			/// <summary>
+			/// Gets the Generated texture on the UMA matching the RendererAsset, Material, and textureChannel.
+			/// </summary>
+			/// <param name="rendererAsset"></param>
+			/// <param name="material"></param>
+			/// <param name="textureChannel"></param>
+			/// <returns></returns>
+			public Texture GetTexture(UMARendererAsset rendererAsset, Material material, int textureChannel)
+			{
+				foreach (GeneratedMaterial generatedMaterial in materials)
+				{
+					if(rendererAsset == null && generatedMaterial.rendererAsset == null && generatedMaterial.material.Equals(material))
+					{
+						if (textureChannel < generatedMaterial.resultingAtlasList.Length)
+						{
+							return generatedMaterial.resultingAtlasList[textureChannel];
+						}
+					}
+
+					if(rendererAsset != null)
+					{
+						if(rendererAsset == generatedMaterial.rendererAsset && generatedMaterial.material.Equals(material))
+						{
+							if (textureChannel < generatedMaterial.resultingAtlasList.Length)
+							{
+								return generatedMaterial.resultingAtlasList[textureChannel];
+							}
+						}
+					}
+				}
+				return null;
 			}
 		}
 
