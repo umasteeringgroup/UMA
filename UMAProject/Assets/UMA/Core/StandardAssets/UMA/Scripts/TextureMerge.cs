@@ -16,6 +16,7 @@ namespace UMA
 		public Shader diffuseShader;
 		public Shader dataShader;
 		public Shader cutoutShader;
+		public Shader detailNormalShader;
 
 		[System.NonSerialized] 
 		public Color camBackgroundColor = new Color(0, 0, 0, 0);
@@ -23,6 +24,7 @@ namespace UMA
 		public List<UMAPostProcess> diffusePostProcesses = new List<UMAPostProcess>();
 		public List<UMAPostProcess> normalPostProcesses = new List<UMAPostProcess>();
 		public List<UMAPostProcess> dataPostProcesses = new List<UMAPostProcess>();
+		public List<UMAPostProcess> detailNormalPostProcesses = new List<UMAPostProcess>();
 
 		private int textureMergeRectCount;
 		private TextureMergeRect[] textureMergeRects;
@@ -89,6 +91,13 @@ namespace UMA
 						postProcess.Process(source, destination);
 					}
 					break;
+				case UMAMaterial.ChannelType.DetailNormalMap:
+					foreach (UMAPostProcess postProcess in detailNormalPostProcesses)
+					{
+						Graphics.Blit(destination, source);
+						postProcess.Process(source, destination);
+					}
+					break;
 			}
 			RenderTexture.ReleaseTemporary(source);
 		}
@@ -139,6 +148,9 @@ namespace UMA
 					break;
 				case UMAMaterial.ChannelType.DiffuseTexture:
 					textureMergeRect.mat.shader = diffuseShader;
+					break;
+				case UMAMaterial.ChannelType.DetailNormalMap:
+					textureMergeRect.mat.shader = detailNormalShader;
 					break;
 			}
 			textureMergeRect.mat.SetTexture("_MainTex", source.baseOverlay.textureList[textureType]);
@@ -211,6 +223,9 @@ namespace UMA
 						break;
 					case UMAMaterial.ChannelType.DiffuseTexture:
 						textureMergeRect.mat.shader = diffuseShader;
+						break;
+					case UMAMaterial.ChannelType.DetailNormalMap:
+						textureMergeRect.mat.shader = detailNormalShader;
 						break;
 				}
 				textureMergeRect.mat.SetTexture("_MainTex", source.overlays[i2].textureList[textureType]);
