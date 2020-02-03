@@ -54,9 +54,28 @@ SubShader
 			o.grabPos = ComputeGrabScreenPos(o.pos);
 			return o;
 		}
+		
+		inline half3 UNPACK_WITH_WEIGHT_INTERNAL(half4 tobeUnpacked, float weight) {
+		    half3 result = half3(tobeUnpacked.wy * 2 - 1, 1);
+            result.xy *= weight;
+            result.z = sqrt(1 - saturate(dot(result.xy, result.xy)));
+            return normalize(result);
+	    }
+		
+		inline half3 UNPACK_INTERNAL(half4 tobeUnpacked) {
+		    return UNPACK_WITH_WEIGHT_INTERNAL(tobeUnpacked, 1);
+	    }
+	    
+	    inline float4 PACK_INTERNAL(half3 unpacked) {
+	        half4 packednormal;
+			packednormal.wy = (unpacked.xy + 1) / 2;
+			packednormal.x = 1;
+			packednormal.z = 1;
+			return packednormal;
+	    }
 
         // This atlas shader has Blend mode Off
-        // It grabs from previous texture and outputs the merged normal map
+        // It grabs from previous texture and outputs the detail merged normal map
 		half4 frag(v2f i) : COLOR
 		{
 		    // Get previous normal map from grab pass,
@@ -65,22 +84,15 @@ SubShader
 			half4 current = tex2D(_MainTex, i.uv);
 			half4 extra = tex2D(_ExtraTex, i.uv);
             
-            // Unpack previous and current textures with alpha from color/mask as strength
-            half3 pn = half3(previous.wy * 2 - 1, 0);
-            pn.z = sqrt(1 - saturate(dot(pn.xy, pn.xy)));
-            half3 n = half3(current.wy * 2 - 1, 0);
-            n.xy *= min(extra.a, _Color.a);
-            n.z = sqrt(1 - saturate(dot(n.xy, n.xy)));
+            // Unpack "previous texture" and "current texture with alpha from color/mask as strength"
+            half3 pn = UNPACK_INTERNAL(previous);
+            half3 n = UNPACK_WITH_WEIGHT_INTERNAL(current, min(extra.a, _Color.a));
             
             // Blend them as current normal map being detail on previous one
             half3 blended = BlendNormals(pn, n);
             
             // Re-pack blended normal into texture and return.
-			half4 packednormal;
-			packednormal.wy = (blended.xy + 1) / 2;
-			packednormal.x = 1;
-			packednormal.z = 1;
-			return packednormal;
+            return PACK_INTERNAL(blended);
 		}
 		ENDCG
 	}
