@@ -214,6 +214,16 @@ PrefabInstance:
     - target: {fileID: 2754613956854059695, guid: a54fde34eec40964b94d71ee0aba9889,
         type: 3}
       propertyPath: InitialScaleFactor
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2754613956854059695, guid: a54fde34eec40964b94d71ee0aba9889,
+        type: 3}
+      propertyPath: atlasResolution
+      value: 2048
+      objectReference: {fileID: 0}
+    - target: {fileID: 2754613956854059695, guid: a54fde34eec40964b94d71ee0aba9889,
+        type: 3}
+      propertyPath: processAllPending
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6782112333398131213, guid: a54fde34eec40964b94d71ee0aba9889,
@@ -404,7 +414,7 @@ MonoBehaviour:
   GridXSize: 10
   GridZSize: 20
   GridDistance: 1.5
-  RandomOffset: 0.6
+  RandomOffset: 0
   RandomRotation: 1
   NameBase: Pat
 --- !u!1 &807120814

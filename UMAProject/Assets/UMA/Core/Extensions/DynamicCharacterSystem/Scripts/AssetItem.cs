@@ -12,18 +12,34 @@ namespace UMA
 #endif
     {
         #region Fields
+        const string AddressableFolder = "UMA/";
         private System.Type _TheType;
         public string _BaseTypeName;
         public string _Name;
         public Object _SerializedItem;
         public string _Path;
 		public string _Guid;
+        public string _Address;
         public bool IsResource;
         public bool IsAssetBundle;
 		public bool IsAddressable;
 		public bool IsAlwaysLoaded;
 		public string AddressableGroup;
-		public string AddressableAddress;
+		public string AddressableAddress
+        {
+            get
+            {
+                if (IsAddressable && string.IsNullOrEmpty(_Address))
+                {
+                   return AddressableFolder + _Type.Name + "-" + EvilName;
+                }
+                return _Address;
+            }
+            set
+            {
+                _Address = value;
+            }
+        }
         public string AddressableLabels;
 		public int ReferenceCount;
 

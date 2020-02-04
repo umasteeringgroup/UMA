@@ -65,6 +65,7 @@ namespace UMA.Controls
 		SearchField m_SearchField;
 		UMAAssetIndexer _UAI;
 		int LoadedItems = 0;
+		public HashSet<string> LoadedLabels = new HashSet<string>();
 
 		enum eLoaded { All, Addressable, NonAddressable, Keep, Refs, NoRefs, SelectedOnly };
 		string[] LoadedValues = { "All", "Addressable Only","Non-Addressable Only", "Keep Loaded","With References", "Non-Addressable Without References","Currently Selected Items" };
@@ -657,6 +658,8 @@ namespace UMA.Controls
 		
 		IList<AssetTreeElement> GetData ()
 		{
+			LoadedLabels = new HashSet<string>();
+
 			eLoaded itemstoload = (eLoaded)LoadedItems;
 			eShowTypes typesToShow = (eShowTypes)ShowIndex;
 			int totalitems = 0;
@@ -684,6 +687,7 @@ namespace UMA.Controls
 					{
 						AssetItem ai = items[i];
 
+						AddLabels(ai);
 						if (ShouldLoad(itemstoload, ai))
 						{
 							AssetTreeElement atai = new AssetTreeElement(ai._Name, 1, ++totalitems);
@@ -717,7 +721,22 @@ namespace UMA.Controls
 			//return MyTreeElementGenerator.GenerateRandomTree(130); 
 		}
 
-#region DragDrop
+		private void AddLabels(AssetItem ai)
+		{
+			if (!string.IsNullOrEmpty(ai.AddressableLabels))
+			{
+				string[] labels = ai.AddressableLabels.Split(';');
+				foreach(string s in labels)
+				{
+					if (!string.IsNullOrWhiteSpace(s))
+					{
+						LoadedLabels.Add(s);
+					}
+				}
+			}
+		}
+
+		#region DragDrop
 		private void DragDropAdd(Rect dropArea)
 		{
 
@@ -906,7 +925,7 @@ namespace UMA.Controls
 					UpdateMaterials();
 					AssetDatabase.SaveAssets();
 				}
-				Replacement = EditorGUILayout.ObjectField("",Replacement, typeof(UMAMaterial), false, GUILayout.Width(250)) as UMAMaterial;
+				Replacement = EditorGUILayout.ObjectField("", Replacement, typeof(UMAMaterial), false, GUILayout.Width(250)) as UMAMaterial;
 				GUILayout.EndHorizontal();
 				GUILayout.EndArea();
 			}

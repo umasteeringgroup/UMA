@@ -33,6 +33,7 @@ namespace UMA
     public class UMAAssetIndexer : ScriptableObject, ISerializationCallbackReceiver
 	{
         public static float DefaultLife = 5.0f;
+        const string SharedGroupName = "UMA_SharedItems";
 #if UMA_ADDRESSABLES
         private class CachedOp
         {
@@ -796,10 +797,7 @@ namespace UMA
 #if UMA_ADDRESSABLES
         public string GetLabel(UMARecipeBase recipe)
         {
-            if (!String.IsNullOrEmpty(recipe.label))
-                return recipe.label;
-
-            return recipe.name;
+            return recipe.AssignedLabel;
         }
 
         public AsyncOperationHandle<IList<UnityEngine.Object>> PreloadWardrobe(DynamicCharacterAvatar avatar, bool keepLoaded = false)
@@ -1181,7 +1179,7 @@ namespace UMA
             {
                 int iPos = Mathf.CeilToInt(pos);
                 EditorUtility.DisplayProgressBar("Cleanup", "Removing " + group.Name, iPos);
-                if (group.name.Contains("UMA_Shared"))
+                if (group.name.Contains(SharedGroupName))
                 {
                     List<AddressableAssetEntry> ItemsToClear = new List<AddressableAssetEntry>();
                     ItemsToClear.AddRange(group.entries);
@@ -1518,6 +1516,111 @@ namespace UMA
             return theRecipes;
         }
 
+
+        private void AddAssetItemToGroup(AddressableAssetGroup theGroup, AssetItem theItem, string Address, string Label)
+        {
+            bool found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(theItem.Item.GetInstanceID(), out string itemGUID, out long localID);
+            if (found)
+            {
+                AddressableAssetEntry ae = AddressableSettings.CreateOrMoveEntry(itemGUID, theGroup, false, true);
+                ae.SetAddress(Address);
+                ae.labels.Add(Label);
+            }
+        }
+        private void AddItemToGroup(AddressableAssetGroup theGroup, UnityEngine.Object theItem, string Address, string Label)
+        {
+            bool found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(theItem.GetInstanceID(), out string itemGUID, out long localID);
+            if (found)
+            {
+                AddressableAssetEntry ae = AddressableSettings.CreateOrMoveEntry(itemGUID, theGroup, false, true);
+                ae.SetAddress(Address);
+                ae.labels.Add(Label);
+            }
+        }
+
+        public bool AddRecipeGroup(UMATextRecipe recipe)
+        {
+            List<AssetItem> items = GetAssetItems(recipe);
+
+            List<AssetItem> UniqueItems = new List<AssetItem>();
+            foreach(AssetItem ai in items)
+            {
+                if (ai.IsAddressable)
+                {
+                    AddressableAssetEntry ae = GetAddressableAssetEntry(ai);
+                    if (ae != null && ae.parentGroup.Name == SharedGroupName)
+                    {
+                        continue;
+                    }
+                    UniqueItems.Add(ai);
+                }
+            }
+
+            if (UniqueItems.Count == 0)
+            {
+                return false;
+            }
+
+            // create the group.
+            // add the non-unique items to the group
+            // Set the addressable stuff;
+            AddressableAssetGroup theGroup = AddressableSettings.FindGroup(recipe.name);
+            if (theGroup != null)
+            {
+                AddressableSettings.RemoveGroup(theGroup);
+            }
+            theGroup = AddressableSettings.CreateGroup(recipe.name, false, false, true, AddressableSettings.DefaultGroup.Schemas);
+            theGroup.GetSchema<BundledAssetGroupSchema>().BundleMode = BundledAssetGroupSchema.BundlePackingMode.PackTogether;
+
+            /*  if (theGroup == null)
+             {
+                 theGroup = AddressableSettings.CreateGroup(recipe.name, false, false, true, AddressableSettings.DefaultGroup.Schemas);
+                 theGroup.GetSchema<BundledAssetGroupSchema>().BundleMode = BundledAssetGroupSchema.BundlePackingMode.PackTogether;
+             }
+             else
+             {
+                 List<AddressableAssetEntry> theEntries = new List<AddressableAssetEntry>();
+                 theEntries.AddRange(theGroup.entries);
+
+                 foreach (AddressableAssetEntry ae in theEntries)
+                 {
+                     theGroup.RemoveAssetEntry(ae);
+                 }
+             } */
+
+            foreach (AssetItem ai in UniqueItems)
+            {
+                ai.AddressableAddress = ""; // let the system assign it.
+                ai.IsAddressable = true;
+                ai.AddressableGroup = recipe.name;
+                ai._SerializedItem = null;
+                ai.AddressableLabels = recipe.AssignedLabel;
+
+                AddAssetItemToGroup(theGroup, ai, recipe.name, recipe.AssignedLabel);
+                if (ai._Type == typeof(OverlayDataAsset))
+                {
+                    OverlayDataAsset od = ai.Item as OverlayDataAsset;
+                    if (od == null) continue;
+
+                    foreach (Texture tex in od.textureList)
+                    {
+                        if (tex == null) continue;
+                        if (tex as Texture2D == null) continue;
+
+                        string Address = "Texture2D-" + tex.name + "-" + tex.GetInstanceID();
+
+                        bool found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(tex.GetInstanceID(), out string texGUID, out long texlocalID);
+                        if (found)
+                        {
+                            AddItemToGroup(theGroup, tex, Address, recipe.AssignedLabel);
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+
+
         public void GenerateSingleGroup(bool IncludeRecipes = false)
         {
             // Find what recipe everything is in.
@@ -1563,10 +1666,10 @@ namespace UMA
                 }
 
                 // Create the shared group that has each item packed separately.
-                AddressableAssetGroup sharedGroup = AddressableSettings.FindGroup("UMA_SharedItems");
+                AddressableAssetGroup sharedGroup = AddressableSettings.FindGroup(SharedGroupName);
                 if (sharedGroup == null)
                 {
-                    sharedGroup = AddressableSettings.CreateGroup("UMA_SharedItems", false, false, true, AddressableSettings.DefaultGroup.Schemas);
+                    sharedGroup = AddressableSettings.CreateGroup(SharedGroupName, false, false, true, AddressableSettings.DefaultGroup.Schemas);
                     sharedGroup.GetSchema<BundledAssetGroupSchema>().BundleMode = BundledAssetGroupSchema.BundlePackingMode.PackSeparately;
                 }
 
@@ -1577,7 +1680,7 @@ namespace UMA
                 foreach (AssetItem ai in theItems.Keys)
                 {
                     ai.IsAddressable = true;
-                    ai.AddressableAddress = ai._Type.Name + "-" + ai.EvilName;
+                    ai.AddressableAddress = ""; // let the system assign it if we are generating.
                     ai.AddressableGroup = sharedGroup.name;
                     EditorUtility.DisplayProgressBar("Generating", "Processing Asset: " + ai.Item.name, pos);
 
@@ -1654,7 +1757,7 @@ namespace UMA
 				UMAContextBase context = GetContext();
 
                 // Create the shared group that has each item packed separately.
-                AddressableAssetGroup sharedGroup = AddressableSettings.CreateGroup("UMA_SharedItems", false, false, true, AddressableSettings.DefaultGroup.Schemas);
+                AddressableAssetGroup sharedGroup = AddressableSettings.CreateGroup(SharedGroupName, false, false, true, AddressableSettings.DefaultGroup.Schemas);
                 sharedGroup.GetSchema<BundledAssetGroupSchema>().BundleMode = BundledAssetGroupSchema.BundlePackingMode.PackSeparately;
 
 				List<UMATextRecipe> theRecipes = new List<UMATextRecipe>();

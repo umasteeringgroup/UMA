@@ -266,6 +266,14 @@ namespace UMA.Controls
 			}
 		}
 
+		bool isRecipe(AssetItem ai)
+		{
+			if (ai._Type.IsSubclassOf(typeof(UMARecipeBase)))
+			{
+				return true; 
+			}
+			return false;
+		}
 
 		void CellGUI(Rect cellRect, TreeViewItem<AssetTreeElement> item, AssetColumns column, ref RowGUIArgs args)
 		{
@@ -372,7 +380,7 @@ namespace UMA.Controls
 
 				case AssetColumns.Buttons:
 				{
-					float BtnWidth = (cellRect.width/2)- (kToggleWidth * 2);
+					float BtnWidth = (cellRect.width/3)- (kToggleWidth * 2);
 					Rect ButtonRect = new Rect(cellRect);
 					ButtonRect.width = BtnWidth;
 
@@ -399,7 +407,37 @@ namespace UMA.Controls
 						}
 					}
 
-					ButtonRect.x = ButtonRect.x + BtnWidth;
+#if UMA_ADDRESSABLES
+#endif
+					if (ai.Item is UMATextRecipe)
+					{
+						UMATextRecipe recipe = ai.Item as UMATextRecipe;
+
+						if (owningWindow.LoadedLabels.Contains(recipe.AssignedLabel))
+						{
+							ButtonRect.x = ButtonRect.x + ButtonRect.width;
+							ButtonRect.width = 100;
+
+							if (GUI.Button(ButtonRect, "Rebuild Group", EditorStyles.toolbarButton))
+							{
+								UMAAssetIndexer.Instance.AddRecipeGroup(recipe);
+								owningWindow.LoadedLabels.Add(recipe.AssignedLabel);
+							}
+						}
+						else
+						{
+							ButtonRect.x = ButtonRect.x + ButtonRect.width;
+							ButtonRect.width = 100;
+
+							if (GUI.Button(ButtonRect, "Make Addressable", EditorStyles.toolbarButton))
+							{
+								UMAAssetIndexer.Instance.AddRecipeGroup(recipe);
+								owningWindow.LoadedLabels.Add(recipe.AssignedLabel);
+							}
+						}
+					}
+
+					ButtonRect.x = ButtonRect.x + ButtonRect.width;
 					ButtonRect.width = 32;
 					if (GUI.Button(ButtonRect,"Ping", EditorStyles.toolbarButton))
 					{
@@ -535,9 +573,9 @@ namespace UMA.Controls
 					headerTextAlignment = TextAlignment.Center,
 					sortedAscending = true,
 					sortingArrowAlignment = TextAlignment.Left,
-					width = 45,
-					minWidth = 45,
-					maxWidth = 45,
+					width = 40,
+					minWidth = 40,
+					maxWidth = 40,
 					autoResize = true
 				},
 				new MultiColumnHeaderState.Column
@@ -546,9 +584,9 @@ namespace UMA.Controls
 					headerTextAlignment = TextAlignment.Center,
 					sortedAscending = true,
 					sortingArrowAlignment = TextAlignment.Left,
-					width = 45,
-					minWidth = 45,
-					maxWidth = 45,
+					width = 40,
+					minWidth = 40,
+					maxWidth = 40,
 					autoResize = true
 				},
 
@@ -558,7 +596,7 @@ namespace UMA.Controls
 					headerTextAlignment = TextAlignment.Left,
 					sortedAscending = true,
 					sortingArrowAlignment = TextAlignment.Left,
-					width = 135,
+					width = 125,
 					minWidth = 60,
 					autoResize = true,
 					allowToggleVisibility = true
@@ -569,7 +607,7 @@ namespace UMA.Controls
 					headerTextAlignment = TextAlignment.Left,
 					sortedAscending = true,
 					sortingArrowAlignment = TextAlignment.Left,
-					width = 200,
+					width = 125,
 					minWidth = 60,
 					autoResize = true,
 					allowToggleVisibility = true
@@ -580,9 +618,9 @@ namespace UMA.Controls
 					headerTextAlignment = TextAlignment.Center,
 					sortedAscending = true,
 					sortingArrowAlignment = TextAlignment.Left,
-					width = 45,
-					minWidth = 45,
-					maxWidth = 45,
+					width = 40,
+					minWidth = 40,
+					maxWidth = 40,
 					autoResize = false,
 					allowToggleVisibility = true
 				},
@@ -592,9 +630,9 @@ namespace UMA.Controls
 					headerTextAlignment = TextAlignment.Center,
 					sortedAscending = true,
 					sortingArrowAlignment = TextAlignment.Left,
-					width = 170,
-					minWidth = 170,
-					maxWidth = 170,
+					width = 280,
+					minWidth = 280,
+					maxWidth = 280,
 					autoResize = false
 				}
 			};

@@ -15,33 +15,20 @@ MonoBehaviour:
   m_GroupName: Built In Data
   m_Data:
     m_SerializedData: []
-  m_GUID: fe5143d8052f0544ab1e4d96646f9358
+  m_GUID: 85530f630be86e64aa238ffc35b7fec2
   m_SerializeEntries:
   - m_GUID: EditorSceneList
     m_Address: EditorSceneList
     m_ReadOnly: 1
     m_SerializedLabels: []
-    <BundleFileId>k__BackingField: 
-    <IsInResources>k__BackingField: 0
-    <IsInSceneList>k__BackingField: 0
-    <IsSubAsset>k__BackingField: 0
-    m_CheckedIsScene: 0
-    m_IsScene: 0
     m_mainAssetType: 
-    m_cachedAssetPath: 
   - m_GUID: Resources
     m_Address: Resources
     m_ReadOnly: 1
     m_SerializedLabels: []
-    <BundleFileId>k__BackingField: 
-    <IsInResources>k__BackingField: 0
-    <IsInSceneList>k__BackingField: 0
-    <IsSubAsset>k__BackingField: 0
-    m_CheckedIsScene: 0
-    m_IsScene: 0
     m_mainAssetType: 
-    m_cachedAssetPath: 
   m_ReadOnly: 1
   m_Settings: {fileID: 11400000, guid: 9deb40ce588dd634ab0228fd25894fb7, type: 2}
   m_SchemaSet:
-    m_Schemas: []
+    m_Schemas:
+    - {fileID: 11400000, guid: bf4b3a1b3401dd64ba44522ab6487395, type: 2}

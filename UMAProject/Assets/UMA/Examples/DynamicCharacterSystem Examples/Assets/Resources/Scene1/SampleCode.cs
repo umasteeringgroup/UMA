@@ -4,7 +4,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using UMA.Examples;
+#if UMA_ADDRESSABLES
 using UnityEngine.AddressableAssets;
+#endif
 
 namespace UMA.CharacterSystem.Examples
 {
