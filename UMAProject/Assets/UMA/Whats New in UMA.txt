@@ -7,6 +7,8 @@ Support for Addressables
   Build requests are queued up with all relevant data
   Added recipes to Addressables. If you do this, you must load them before access (they are all labelled by recipe and with 'UMA_Recipe')
   Will now Keep shared group on regeneration. 
+  Can now filter on non-added recipes.
+  Can now individually choose to add a recipe to addressables, or to update a recipe. 
 New global library window
   New functions to mark items by various parameters
   New Addressables Menu to generate items
@@ -44,6 +46,8 @@ Added "AtlasResolutionScale" to DynamicCharacterAvatar. Using this, you can lowe
 Added "Resources Only" flag to UMA recipes. Checking this will skip adding this recipe, and it's slots, overlays and textures to Addressabe groups.
 New Menuitem on UMA Menu: "WebGL/Enable Embedded Resources". This will turn on embedded resources in WebGL, allowing UMA to work right in WebGL.
 Overlay coordinates can now be specified in UV range (0..1) in addition to absolute range. This should make it much easier to handle Unity converting textures to square on mobile, or the need to resize textures for performance.
+New Detail Normal map texture channel type, allows combining of normal maps in UMAMaterials.
+New Non-Shader texture channel type, allows a texture to be accumulated on the atlas, but not sent to a material. 
 Various bug fixes & changes
     Fixed various overlays that were missing textures or had the wrong count
     Fixed some scenes that had broken over time

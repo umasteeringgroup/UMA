@@ -416,9 +416,9 @@ namespace UMA.Controls
 						if (owningWindow.LoadedLabels.Contains(recipe.AssignedLabel))
 						{
 							ButtonRect.x = ButtonRect.x + ButtonRect.width;
-							ButtonRect.width = 100;
+							ButtonRect.width = 110;
 
-							if (GUI.Button(ButtonRect, "Rebuild Group", EditorStyles.toolbarButton))
+							if (GUI.Button(ButtonRect, "Update Groups", EditorStyles.toolbarButton))
 							{
 								UMAAssetIndexer.Instance.AddRecipeGroup(recipe);
 								owningWindow.LoadedLabels.Add(recipe.AssignedLabel);
@@ -427,7 +427,7 @@ namespace UMA.Controls
 						else
 						{
 							ButtonRect.x = ButtonRect.x + ButtonRect.width;
-							ButtonRect.width = 100;
+							ButtonRect.width = 110;
 
 							if (GUI.Button(ButtonRect, "Make Addressable", EditorStyles.toolbarButton))
 							{

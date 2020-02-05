@@ -67,8 +67,8 @@ namespace UMA.Controls
 		int LoadedItems = 0;
 		public HashSet<string> LoadedLabels = new HashSet<string>();
 
-		enum eLoaded { All, Addressable, NonAddressable, Keep, Refs, NoRefs, SelectedOnly };
-		string[] LoadedValues = { "All", "Addressable Only","Non-Addressable Only", "Keep Loaded","With References", "Non-Addressable Without References","Currently Selected Items" };
+		enum eLoaded { All, Addressable, NonAddressable, Keep, Refs, NoRefs, NoGroups, SelectedOnly };
+		string[] LoadedValues = { "All", "Addressable Only","Non-Addressable Only", "Keep Loaded","With References", "Non-Addressable Without References","Recipes not added to groups","Currently Selected Items" };
 		public List<AssetItem> LoadOnly = new List<AssetItem>();
 
 		enum eShowTypes { All, WithItems};
@@ -144,6 +144,7 @@ namespace UMA.Controls
 				Resources.UnloadUnusedAssets();
 				m_Initialized = false;
 				Repaint();
+				EditorUtility.DisplayDialog("Repair", "AssetIndex successfully repaired", "OK");
 			});
 			AddMenuItemWithCallback(FileMenu, "Add Build refs to all non-addressables", () => 
 			{
@@ -639,6 +640,18 @@ namespace UMA.Controls
 					return ai.IsAddressable;
 				case eLoaded.NonAddressable:
 					return !ai.IsAddressable;
+				case eLoaded.NoGroups:
+				{
+					if (ai.Item is UMARecipeBase)
+					{
+						UMARecipeBase ubr = ai.Item as UMARecipeBase;
+						if( !LoadedLabels.Contains(ubr.AssignedLabel))
+						{
+							return true;
+						}
+					}
+					return false;
+				}
 				case eLoaded.SelectedOnly:
 				{
 					if (LoadOnly.Contains(ai))
@@ -655,8 +668,8 @@ namespace UMA.Controls
 			}
 			return true;
 		}
-		
-		IList<AssetTreeElement> GetData ()
+
+		IList<AssetTreeElement> GetData()
 		{
 			LoadedLabels = new HashSet<string>();
 
@@ -671,7 +684,28 @@ namespace UMA.Controls
 
 			System.Type[] Types = UAI.GetTypes();
 
-			foreach(System.Type t in Types)
+
+			// Preprocess to get labels (we need to filter on them later).
+			foreach (System.Type t in Types)
+			{
+				if (t != typeof(AnimatorController) && t != typeof(AnimatorOverrideController)) // Somewhere, a kitten died because I typed that.
+				{
+					Dictionary<string, AssetItem> TypeDic = UAI.GetAssetDictionary(t);
+					AssetItem[] items = new AssetItem[TypeDic.Values.Count];
+					TypeDic.Values.CopyTo(items, 0);
+
+					List<AssetTreeElement> ElementsToLoad = new List<AssetTreeElement>();
+					for (int i = 0; i < TypeDic.Values.Count; i++)
+					{
+						AssetItem ai = items[i];
+						AddLabels(ai);
+					}
+				}
+			}
+
+
+
+			foreach (System.Type t in Types)
 			{
 				if (t != typeof(AnimatorController) && t != typeof(AnimatorOverrideController)) // Somewhere, a kitten died because I typed that.
 				{
@@ -686,14 +720,12 @@ namespace UMA.Controls
 					for (int i = 0; i < TypeDic.Values.Count; i++)
 					{
 						AssetItem ai = items[i];
-
-						AddLabels(ai);
 						if (ShouldLoad(itemstoload, ai))
 						{
 							AssetTreeElement atai = new AssetTreeElement(ai._Name, 1, ++totalitems);
 							atai.ai = ai;
 							atai.index = i;
-							atai.type = t; 
+							atai.type = t;
 							ElementsToLoad.Add(atai);
 
 							if (ai._SerializedItem != null)
@@ -934,7 +966,7 @@ namespace UMA.Controls
 		void SearchBar (Rect rect)
 		{
 			Rect DropDown = new Rect(rect);
-			DropDown.width = 64;
+			DropDown.width = 150;
 
 			int newLoadedItems = EditorGUI.Popup(DropDown, LoadedItems, LoadedValues);
 			if (newLoadedItems != LoadedItems)
@@ -958,7 +990,8 @@ namespace UMA.Controls
 				Repaint();
 			}
 
-			DropDown.x += 64;
+			DropDown.x += DropDown.width;
+			DropDown.width = 110;
 
 			int newShowIndex = EditorGUI.Popup(DropDown, ShowIndex, ShowTypes);
 			if (newShowIndex != ShowIndex)
@@ -968,8 +1001,8 @@ namespace UMA.Controls
 				Repaint();
 			}
 
-			rect.x += 128;
-			rect.width -= 128;
+			rect.x = DropDown.x+DropDown.width;
+			rect.width -= rect.x;
 			treeView.searchString = m_SearchField.OnGUI (rect, treeView.searchString);
 		}
 

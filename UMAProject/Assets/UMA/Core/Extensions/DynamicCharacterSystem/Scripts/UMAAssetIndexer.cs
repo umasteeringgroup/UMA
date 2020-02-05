@@ -2507,6 +2507,17 @@ namespace UMA
             Resources.UnloadUnusedAssets();
         }
 
+        public string GetAddressableLabels(AddressableAssetEntry ae)
+        {
+            string retval = "";
+
+            foreach(string s in ae.labels)
+            {
+                retval += s + ";";
+            }
+            return retval;
+        }
+
         /// <summary>
         /// Repairs the index. Removes anything that it cannot find.
         /// </summary>
@@ -2518,6 +2529,29 @@ namespace UMA
             for (int i = 0; i < SerializedItems.Count; i++)
             {
                 AssetItem ai = SerializedItems[i];
+#if UMA_ADDRESSABLES
+                AddressableAssetEntry ae = GetAddressableAssetEntry(ai);
+                if (ae != null)
+                {
+                    ai.IsAddressable = true;
+                    ai.AddressableLabels = GetAddressableLabels(ae);
+                    ai.AddressableAddress = ae.address;
+                    ai.AddressableGroup = ae.parentGroup.name;
+                }
+                else
+                {
+                    ai.IsAddressable = false;
+                    ai.AddressableLabels = "";
+                    ai.AddressableGroup = "";
+                    ai.AddressableAddress = "";
+                }
+#else
+                ai.IsAddressable = false;
+                ai._editorCachedItem = null;
+                ai.AddressableLabels = "";
+                ai.AddressableGroup = "";
+                ai.AddressableAddress = "";
+#endif
                 if (!ai.IsAssetBundle)
                 {
 					// If we already have a reference to the item, let's verify that everything is correct on it.

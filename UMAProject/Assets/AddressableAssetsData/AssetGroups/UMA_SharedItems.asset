@@ -167,14 +167,6 @@ MonoBehaviour:
     - MaleBeard
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
-  - m_GUID: 0b1e4f14e3922614c95b147bed97cf3a
-    m_Address: UMA/OverlayDataAsset-WerewolfEyes
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
   - m_GUID: 0b387c31f41888947aa0ffb2fbbd848b
     m_Address: UMA/Texture2D-M_H_Underwear_Metallic-12228
     m_ReadOnly: 0
@@ -250,14 +242,6 @@ MonoBehaviour:
     - MaleBeard
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
-  - m_GUID: 0c812749c2cd1a541b79b1fe749694c2
-    m_Address: UMA/OverlayDataAsset-WerewolfTeeth
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
   - m_GUID: 0dfbf95a2c3548040a6cc23330e64d76
     m_Address: UMA/SlotDataAsset-FemaleLongHair01
     m_ReadOnly: 0
@@ -288,15 +272,6 @@ MonoBehaviour:
     - MaleBeard
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
-  - m_GUID: 0f9975fa93cece04f9f2d3455ca86225
-    m_Address: UMA/Texture2D-Fur-normal-15742
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - WerewolfTShirt
-    - Wolfie
-    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
-      Culture=neutral, PublicKeyToken=null
   - m_GUID: 0fbc0a0bbfb29084bbeafb0876b6e28b
     m_Address: UMA/SlotDataAsset-Locomotion
     m_ReadOnly: 0
@@ -448,15 +423,6 @@ MonoBehaviour:
     - ElfMale Base Recipe
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
-  - m_GUID: 156f9f45fa760b845b6411b1010bf360
-    m_Address: UMA/SlotDataAsset-UMA_Werewolf_Torso
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - WerewolfTShirt
-    - Wolfie
-    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
   - m_GUID: 1579cf108bfa04bdca517a8faea7e535
     m_Address: UMA/Texture2D-MaleHair01_Roughness-11734
     m_ReadOnly: 0
@@ -874,15 +840,6 @@ MonoBehaviour:
     - ToonCropTShirt1
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
-  - m_GUID: 286bbbe608a2cd14f9500d83fa610076
-    m_Address: UMA/Texture2D-WerewolfBody_Diffuse-14242
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - WerewolfTShirt
-    - Wolfie
-    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
-      Culture=neutral, PublicKeyToken=null
   - m_GUID: 28864c26b3f4bea4bb382e8ca1b60565
     m_Address: UMA/OverlayDataAsset-UMA_Toon_F_Body
     m_ReadOnly: 0
@@ -920,14 +877,6 @@ MonoBehaviour:
     - MaleBrowHR
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
-  - m_GUID: 29e8046150efa8a4db130043bbab0fde
-    m_Address: UMA/Texture2D-WerewolfClaws_Diffuse-12276
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
-      Culture=neutral, PublicKeyToken=null
   - m_GUID: 2a92ffae2d2dfc64ea79f231d8a844dd
     m_Address: UMA/Texture2D-Skin patches face_Albedo-16990
     m_ReadOnly: 0
@@ -1339,14 +1288,6 @@ MonoBehaviour:
     - FemaleToonBaseGuide
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
-  - m_GUID: 3a301cdd355272946a7fcf42c36e2337
-    m_Address: UMA/SlotDataAsset-UMA_Werewolf_Hands
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
   - m_GUID: 3a863fa5bebd59041a3f8696d3768d31
     m_Address: UMA/Texture2D-Hair_Long_Braided_1_diffuse-13816
     m_ReadOnly: 0
@@ -1380,14 +1321,6 @@ MonoBehaviour:
     - MaleBase2
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
-  - m_GUID: 401116460650f2e4986f84a0df3e5ec4
-    m_Address: UMA/Texture2D-WerewolfClaws_Normal-14028
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
-      Culture=neutral, PublicKeyToken=null
   - m_GUID: 407823accaae39a4a902c6e4b2bfa383
     m_Address: UMA/SlotDataAsset-F_High poly Eyebrows
     m_ReadOnly: 0
@@ -1401,14 +1334,6 @@ MonoBehaviour:
     - HumanFemaleLegacy Base Recipe
     - KimCardassian
     - Elf Female Base Race Recipe
-    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
-  - m_GUID: 407eef4d2f8612444bdf249bedb33cce
-    m_Address: UMA/SlotDataAsset-UMA_Werewolf_Feet
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 40aedb735001bc6469dc30694df5a6f8
@@ -1656,15 +1581,6 @@ MonoBehaviour:
     - ElfMale Base Recipe
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
-  - m_GUID: 4990462eeb5376a469915d0af3986876
-    m_Address: UMA/OverlayDataAsset-WerewolfBody
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - WerewolfTShirt
-    - Wolfie
-    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
   - m_GUID: 4abeb20a4257e8b4f837411cb588f6ca
     m_Address: UMA/SlotDataAsset-FemaleTorsoGuide
     m_ReadOnly: 0
@@ -1707,14 +1623,6 @@ MonoBehaviour:
     - ClothRobeRecipe
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
-  - m_GUID: 4de17df5964e4a1419644d12c604a173
-    m_Address: UMA/Texture2D-WerewolfHandsAndFeet_Diffuse-13926
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
-      Culture=neutral, PublicKeyToken=null
   - m_GUID: 4e3423fc7dbaee44397ec91baa5ce828
     m_Address: UMA/OverlayDataAsset-M_Underwear
     m_ReadOnly: 0
@@ -1957,14 +1865,6 @@ MonoBehaviour:
     - HumanGirl Base Recipe
     - HumanFemaleDCS Base Recipe
     - HumanFemaleLegacy Base Recipe
-    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
-  - m_GUID: 58f931091c1c4f24c93d1d911b8c032b
-    m_Address: UMA/SlotDataAsset-UMA_Werewolf_Teeth
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: 59a279fd7048eff45b387293668ddff7
@@ -2609,14 +2509,6 @@ MonoBehaviour:
     - MaleShirt3
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
-  - m_GUID: 7efaede98678e134fa62d68c0ee1cdef
-    m_Address: UMA/Texture2D-WerewolfTeeth_Diffuse-15340
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
-      Culture=neutral, PublicKeyToken=null
   - m_GUID: 7f44023a3b32c334aaa4ad226e0a2627
     m_Address: UMA/Texture2D-Aligator_Eye_Albedo_Adjust-15434
     m_ReadOnly: 0
@@ -3247,14 +3139,6 @@ MonoBehaviour:
     - MaleHoodie_Recipe
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
-  - m_GUID: a04e469a0d80a6742a85658cd80912ab
-    m_Address: UMA/OverlayDataAsset-WerewolfShirt
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - WerewolfTShirt
-    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
   - m_GUID: a0554501454a6ba40a5eff3443477dc4
     m_Address: UMA/SlotDataAsset-M_Freebie Robeset Boots_Slot
     m_ReadOnly: 0
@@ -3287,14 +3171,6 @@ MonoBehaviour:
     - UMA_Base
     - Troll
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
-  - m_GUID: a2cfb51958276a643b9e80a541702b9d
-    m_Address: UMA/SlotDataAsset-UMA_Werewolf_InnerMouth
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: a3787093e63eb3a449d40959588abcb7
     m_Address: UMA/SlotDataAsset-SkyCarTires
@@ -3443,14 +3319,6 @@ MonoBehaviour:
     - Harold
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
-  - m_GUID: aa4234fb16def7748a6476c4cbee204a
-    m_Address: UMA/Texture2D-WerewolfInnerMouth_Normal-16046
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
-      Culture=neutral, PublicKeyToken=null
   - m_GUID: aa8d990ec3c557445ada4c167873bec5
     m_Address: UMA/OverlayDataAsset-Maincap_Overlay
     m_ReadOnly: 0
@@ -3547,22 +3415,6 @@ MonoBehaviour:
     - ToonCropTShirt1
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
-  - m_GUID: b0ee18ecb3eb22847b9dafe3ac63c42a
-    m_Address: UMA/OverlayDataAsset-WerewolfClaws
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
-  - m_GUID: b1e94d3cf1101164fa077e48b9276643
-    m_Address: UMA/SlotDataAsset-UMA_Werewolf_Eyes
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
   - m_GUID: b37930fc892ea8f4aa5316c99ad405cd
     m_Address: UMA/SlotDataAsset-MaleFace
     m_ReadOnly: 0
@@ -3679,15 +3531,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - UMA_Base
     - MaleBrowHR
-    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
-      Culture=neutral, PublicKeyToken=null
-  - m_GUID: b964835c0dfe6674aa52884e63036f69
-    m_Address: UMA/Texture2D-WerewolfBlank_Specular-16148
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - WerewolfTShirt
-    - Wolfie
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: b97f19d37b372b14b894ee308237f40c
@@ -3966,14 +3809,6 @@ MonoBehaviour:
     - StripesRecipe
     m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
-  - m_GUID: c54cc1e518fd68d45ba30c894675836b
-    m_Address: UMA/Texture2D-WerewolfInnerMouth_Diffuse-13896
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
-      Culture=neutral, PublicKeyToken=null
   - m_GUID: c59b45917b12a5548bd5f02fa00d8cdc
     m_Address: UMA/Texture2D-bb_female_hair_UMA Normal-12350
     m_ReadOnly: 0
@@ -4079,14 +3914,6 @@ MonoBehaviour:
     - Elf Female Base Race Recipe
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
-  - m_GUID: caea7f4665259e949a142041d05e3d94
-    m_Address: UMA/OverlayDataAsset-WerewolfInnerMouth
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
   - m_GUID: cb52389a713967d4abc746d610b28acf
     m_Address: UMA/Texture2D-Cap_Rash-15598
     m_ReadOnly: 0
@@ -4148,14 +3975,6 @@ MonoBehaviour:
     - UMA_Base
     - StripesRecipe
     - SkyCarBaseRecipe
-    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
-  - m_GUID: cda4a55bec197c646a1e3e11583d7ef4
-    m_Address: UMA/SlotDataAsset-UMA_Werewolf_Claws
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   - m_GUID: cda7e080be988c44ab8341720f86d6cd
@@ -4284,14 +4103,6 @@ MonoBehaviour:
     - SkyCarBaseRecipe
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
-  - m_GUID: d5f6390fe392d644697f86246391cb8c
-    m_Address: UMA/SlotDataAsset-UMA_Werewolf_Legs
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
   - m_GUID: d813f8755f9fdee489b781e0d5e404c5
     m_Address: UMA/OverlayDataAsset-F_H_Head
     m_ReadOnly: 0
@@ -4381,14 +4192,6 @@ MonoBehaviour:
     - HumanFemaleHighPoly
     m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
-  - m_GUID: e34f21c5ee4ec464db3ca6478b4ab34c
-    m_Address: UMA/Texture2D-WerewolfTeeth_Normal-13846
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
-      Culture=neutral, PublicKeyToken=null
   - m_GUID: e37a792c969bb454c804c435f8c1c285
     m_Address: UMA/OverlayDataAsset-M_Freebie Robeset Hood AC
     m_ReadOnly: 0
@@ -4451,14 +4254,6 @@ MonoBehaviour:
     - FemaleUnderwear
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
-  - m_GUID: e51f46710c96a924aa03b2f4dd7bfe7a
-    m_Address: UMA/SlotDataAsset-UMA_Werewolf_Face
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UMA.SlotDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
   - m_GUID: e5356b4d449b6dc4087b661ee7e36a01
     m_Address: UMA/Texture2D-Milcap-16510
     m_ReadOnly: 0
@@ -4568,14 +4363,6 @@ MonoBehaviour:
     - KimCardassian
     - Shelly
     - Elf Female Base Race Recipe
-    m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
-      Culture=neutral, PublicKeyToken=null
-  - m_GUID: eaf53a24ac371704ba0e3ceaa664b056
-    m_Address: UMA/Texture2D-WerewolfHead_Diffuse-13222
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   - m_GUID: eaf8fd484647df74aa468bd607b8e6e8
@@ -4724,14 +4511,6 @@ MonoBehaviour:
     - WerewolfTShirt
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
-  - m_GUID: f6144f3f9b3aeee4884f86cf9ff32816
-    m_Address: UMA/OverlayDataAsset-WerewolfHead
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
   - m_GUID: f81cce6b25bb84582870e7d712d68918
     m_Address: UMA/Texture2D-MaleShirt01_Albedo-15910
     m_ReadOnly: 0
@@ -4811,14 +4590,6 @@ MonoBehaviour:
     - FemaleOutfit1
     m_mainAssetType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
-  - m_GUID: fd983ace9923d5244bf7876fb75df05a
-    m_Address: UMA/OverlayDataAsset-WerewolfHandsAndFeet
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - UMA_Base
-    - Wolfie
-    m_mainAssetType: UMA.OverlayDataAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
   - m_GUID: fe50b68bbb8220541867e2e66e7f1cad
     m_Address: UMA/Texture2D-SkyCarHubCapsAlbedo-15940
     m_ReadOnly: 0
