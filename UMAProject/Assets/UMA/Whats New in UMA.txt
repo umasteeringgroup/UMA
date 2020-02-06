@@ -1,7 +1,8 @@
 What's new in 2.10 
 Minimum supported version is 2018.4
 Support for Addressables
-  Automated generation of addressables groups
+  Automated generation of addressables groups (including LOD slots)
+  Automated labelling of indexed items by recipe (including LOD slots)
   Automated cleanup of slots/overlays/textures
   Significantly reduced memory overhead
   Build requests are queued up with all relevant data
@@ -16,7 +17,7 @@ New global library window
   New Ability to remove items from library by dropping a folder onto the lib
   Repair function will now attempt to repair addressable item groups and labels
 Added a label field to recipes to allow the user to override addressable label names
-Moved Mesh Hide mask creation to mesh building, to address sync issues
+Moved Mesh  Hide mask creation to mesh building, to address sync issues
 Updated DNA checks to pull from global library instead of searching resources. Fixes an issue on android
 When the animator is rebuilt, the layer weights are saved and restored now
 LoadFromRecipeString now has a flag to clear the existing wardrobe when loading

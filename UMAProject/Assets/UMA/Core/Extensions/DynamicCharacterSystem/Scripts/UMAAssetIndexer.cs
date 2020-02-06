@@ -1570,7 +1570,7 @@ namespace UMA
 
         public bool AddRecipeGroup(UMATextRecipe recipe)
         {
-            List<AssetItem> items = GetAssetItems(recipe,true);
+            List<AssetItem> items = GetAssetItems(recipe, true);
 
             List<AssetItem> UniqueItems = new List<AssetItem>();
             foreach(AssetItem ai in items)
@@ -1817,7 +1817,7 @@ namespace UMA
 						AssetItem recipe = GetAssetItem<UMATextRecipe>(race.baseRaceRecipe.name);
 						recipe.IsAlwaysLoaded = true;
 
-						List<AssetItem> recipeItems = GetAssetItems(race.baseRaceRecipe as UMAPackedRecipeBase,true);
+						List<AssetItem> recipeItems = GetAssetItems(race.baseRaceRecipe as UMAPackedRecipeBase, true);
 						foreach(AssetItem recipeitem in recipeItems)
 						{
 							recipeitem.IsAlwaysLoaded = true;
@@ -1827,15 +1827,7 @@ namespace UMA
 
 
 
-                v
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                ar theRecipeItems = GetAddressableRecipes();
+                var theRecipeItems = GetAddressableRecipes();
 
                 GenerateCollectionLabels();
 
