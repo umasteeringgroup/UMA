@@ -52,19 +52,25 @@ namespace UMA
         {
             get
             {
-                if (_TheType != null) return _TheType;
+                if (_TheType != null && _TheType != typeof(UnityEngine.Object)) 
+                    return _TheType;
 
-				if (!UMAAssetIndexer.TypeFromString.ContainsKey(_BaseTypeName))
-				{
-					Debug.Log("unable to find type: " + _BaseTypeName);
-					if (_BaseTypeName.Contains("SlotData"))
-						return typeof(SlotDataAsset);
-					if (_BaseTypeName.Contains("OverlayData"))
-						return typeof(OverlayDataAsset);
-					return typeof(object);
-				}
-
-				_TheType = UMAAssetIndexer.TypeFromString[_BaseTypeName];
+                if (!UMAAssetIndexer.TypeFromString.ContainsKey(_BaseTypeName))
+                {
+                    Debug.Log("unable to find type: " + _BaseTypeName);
+                    if (_BaseTypeName.Contains("SlotData"))
+                        _TheType = typeof(SlotDataAsset);
+                    else if (_BaseTypeName.Contains("OverlayData"))
+                        _TheType = typeof(OverlayDataAsset);
+                    else if (_BaseTypeName.Contains("Animator"))  // for some reason the animatorcontrollers were blowing up in 2019.3
+                        _TheType = typeof(RuntimeAnimatorController);
+                    else if (_BaseTypeName.Contains("RaceData"))
+                        _TheType = typeof(RaceData);
+                }
+                else
+                {
+                    _TheType = UMAAssetIndexer.TypeFromString[_BaseTypeName];
+                }
                 return _TheType;
             }
         }

@@ -1738,7 +1738,15 @@ namespace UMA.CharacterSystem
 
             if (controllerToUse == null)
             {
-                Debug.LogError("Unable to find animator! This will not be good.");
+                List<string> compat = activeRace.data.GetCrossCompatibleRaces();
+                foreach(string s in compat)
+                {
+                    controllerToUse = raceAnimationControllers.GetAnimatorForRace(s);
+                    if (controllerToUse)
+                        break;
+                }
+                if (controllerToUse == null)
+                    Debug.LogError("Unable to find animator! This will not be good.");
             }
             //changing the animationController in 5.6 resets the rotation of this game object
             //so store the rotation and set it back

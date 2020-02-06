@@ -54,6 +54,7 @@ Various bug fixes & changes
     Sometimes a shader would not be compiled correctly.
     Reworked recipe editor and disallowed duplicate mesh hide assets.
     Fixed bug where you couldn't add a Wardrobe Collection using SetSlot before Start() was called on the DCA.
+    Fixed bug in 2019.3 where it was not finding the type for RuntimeAnimatorController in build.
 
 What's new in 2.9
 Renderer Manager - allow you to specify visibility, shadows of specific model parts.

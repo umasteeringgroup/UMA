@@ -420,7 +420,7 @@ namespace UMA
         }
 
 
-        public List<AssetItem> GetAssetItems(UMAPackedRecipeBase recipe)
+        public List<AssetItem> GetAssetItems(UMAPackedRecipeBase recipe, bool LookForLODs = false)
 		{
 
             if (recipe is UMAWardrobeCollection)
@@ -432,7 +432,7 @@ namespace UMA
 			var Slots = PackRecipe.slotsV3;
 
 			if (Slots == null)
-				return GetAssetItemsV2(PackRecipe);
+				return GetAssetItemsV2(PackRecipe, LookForLODs);
 
 			List<AssetItem> returnval = new List<AssetItem>();
 
@@ -458,7 +458,7 @@ namespace UMA
 			return returnval;
 		}
 
-		private List<AssetItem> GetAssetItemsV2(UMAPackedRecipeBase.UMAPackRecipe PackRecipe)
+		private List<AssetItem> GetAssetItemsV2(UMAPackedRecipeBase.UMAPackRecipe PackRecipe, bool LookForLods)
 		{
 			List<AssetItem> returnval = new List<AssetItem>();
 
@@ -2498,9 +2498,7 @@ namespace UMA
             UpdateSerializedList();
             foreach (AssetItem ai in SerializedItems)
             {
-                ai.ReleaseItem();
-                ai._SerializedItem = null;
-                ai.ReferenceCount = 0;
+                ai.FreeReference();
             }
             UpdateSerializedDictionaryItems();
             ForceSave();

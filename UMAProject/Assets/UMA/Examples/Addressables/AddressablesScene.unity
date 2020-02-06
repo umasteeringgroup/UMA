@@ -6041,7 +6041,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1645511933}
   m_Direction: 2
   m_Value: 0
-  m_Size: 0.99999994
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -6458,7 +6458,7 @@ PrefabInstance:
     - target: {fileID: 8963538791368871902, guid: cae428fba8fb3054ab2b41480e34379f,
         type: 3}
       propertyPath: raceAnimationControllers.animators.Array.size
-      value: 0
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 8963538791368871902, guid: cae428fba8fb3054ab2b41480e34379f,
         type: 3}
@@ -6889,12 +6889,12 @@ PrefabInstance:
     - target: {fileID: 8963538791368871902, guid: cae428fba8fb3054ab2b41480e34379f,
         type: 3}
       propertyPath: raceAnimationControllers.animators.Array.data[0].animatorControllerName
-      value: Locomotion
+      value: IdleTest-w-head
       objectReference: {fileID: 0}
     - target: {fileID: 8963538791368871902, guid: cae428fba8fb3054ab2b41480e34379f,
         type: 3}
       propertyPath: raceAnimationControllers.animators.Array.data[1].raceName
-      value: 
+      value: HumanFemale
       objectReference: {fileID: 0}
     - target: {fileID: 8963538791368871902, guid: cae428fba8fb3054ab2b41480e34379f,
         type: 3}
@@ -6909,7 +6909,7 @@ PrefabInstance:
     - target: {fileID: 8963538791368871902, guid: cae428fba8fb3054ab2b41480e34379f,
         type: 3}
       propertyPath: raceAnimationControllers.animators.Array.data[1].animatorControllerName
-      value: 
+      value: UMA_APose_Controller
       objectReference: {fileID: 0}
     - target: {fileID: 8963538791368871902, guid: cae428fba8fb3054ab2b41480e34379f,
         type: 3}
@@ -6919,12 +6919,17 @@ PrefabInstance:
     - target: {fileID: 8963538791368871902, guid: cae428fba8fb3054ab2b41480e34379f,
         type: 3}
       propertyPath: KeepAnimatorController
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8963538791368871902, guid: cae428fba8fb3054ab2b41480e34379f,
         type: 3}
       propertyPath: keepAvatar
-      value: 1
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8963538791368871902, guid: cae428fba8fb3054ab2b41480e34379f,
+        type: 3}
+      propertyPath: raceAnimationControllers.resourcesFolderPath
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 8963538792093576476, guid: cae428fba8fb3054ab2b41480e34379f,
         type: 3}
