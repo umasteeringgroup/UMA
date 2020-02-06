@@ -430,12 +430,11 @@ namespace UMA
             }
 			UMAPackedRecipeBase.UMAPackRecipe PackRecipe = recipe.PackedLoad(UMAContextBase.Instance);
 
-			var pSlots = PackRecipe.slotsV3;
+			var Slots = PackRecipe.slotsV3;
 
-			if (pSlots == null)
+			if (Slots == null)
 				return GetAssetItemsV2(PackRecipe, LookForLODs);
 
-            List<UMAPackedRecipeBase.PackedSlotDataV3> Slots = new List<UMAPackedRecipeBase.PackedSlotDataV3>();
             Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(typeof(SlotDataAsset));
             List<AssetItem> returnval = new List<AssetItem>();
 
@@ -466,7 +465,7 @@ namespace UMA
                             {
                                 AssetItem lodSlot = GetAssetItem<SlotDataAsset>(slod);
                                 returnval.Add(lodSlot);
-                            }
+                            } 
                         }
                     }
                 }
