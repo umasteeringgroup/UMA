@@ -1907,7 +1907,7 @@ namespace UMA.Editors
 			if (target as UMATextRecipe != null)
 			{
 				UMATextRecipe theRecipe = target as UMATextRecipe;
-				string newLabel = EditorGUILayout.TextField("Addressable Label", theRecipe.label);
+				string newLabel = EditorGUILayout.TextField("Alt Addressable Label", theRecipe.label);
 				if (newLabel != theRecipe.label)
 				{
 					theRecipe.label = newLabel;

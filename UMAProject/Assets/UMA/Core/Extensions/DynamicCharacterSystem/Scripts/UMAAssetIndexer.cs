@@ -12,6 +12,7 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using AsyncOp = UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<System.Collections.Generic.IList<UnityEngine.Object>>;
 #endif
+using PackSlot = UMA.UMAPackedRecipeBase.PackedSlotDataV3;
 using SlotRecipes = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<UMA.UMATextRecipe>>;
 using RaceRecipes = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<UMA.UMATextRecipe>>>;
 using System.Linq;
@@ -429,31 +430,46 @@ namespace UMA
             }
 			UMAPackedRecipeBase.UMAPackRecipe PackRecipe = recipe.PackedLoad(UMAContextBase.Instance);
 
-			var Slots = PackRecipe.slotsV3;
+			var pSlots = PackRecipe.slotsV3;
 
-			if (Slots == null)
+			if (pSlots == null)
 				return GetAssetItemsV2(PackRecipe, LookForLODs);
 
-			List<AssetItem> returnval = new List<AssetItem>();
+            List<UMAPackedRecipeBase.PackedSlotDataV3> Slots = new List<UMAPackedRecipeBase.PackedSlotDataV3>();
+            Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(typeof(SlotDataAsset));
+            List<AssetItem> returnval = new List<AssetItem>();
 
 			foreach (var slot in Slots)
 			{
-				if (slot == null)
-					continue;
 				AssetItem s = GetAssetItem<SlotDataAsset>(slot.id);
 				if (s != null)
 				{
-					returnval.Add(s);
-					var overlays = slot.overlays;
-					foreach(var overlay in overlays)
-					{
-						AssetItem o = GetAssetItem<OverlayDataAsset>(overlay.id);
-						if (o != null)
-						{
-							returnval.Add(o);
-						}
-					}
-				}
+                    returnval.Add(s);
+                    string LodIndicator = slot.id.Trim() + "_LOD";
+
+                    if (slot.overlays != null)
+                    {
+                        foreach (var overlay in slot.overlays)
+                        {
+                            AssetItem o = GetAssetItem<OverlayDataAsset>(overlay.id);
+                            if (o != null)
+                            {
+                                returnval.Add(o);
+                            }
+                        }
+                    }
+                    if (LookForLODs)
+                    {
+                        foreach (string slod in TypeDic.Keys)
+                        {
+                            if (slod.StartsWith(LodIndicator))
+                            {
+                                AssetItem lodSlot = GetAssetItem<SlotDataAsset>(slod);
+                                returnval.Add(lodSlot);
+                            }
+                        }
+                    }
+                }
 			}
 			return returnval;
 		}
@@ -462,20 +478,23 @@ namespace UMA
 		{
 			List<AssetItem> returnval = new List<AssetItem>();
 
-			var Slots = PackRecipe.slotsV2;
+            var Slots = PackRecipe.slotsV2;
 
 			if (Slots == null)
 			{
 				return returnval;
 			}
 
-			foreach (var slot in Slots)
+            Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(typeof(SlotDataAsset));
+
+            foreach (var slot in Slots)
 			{
 				if (slot == null)
 					continue;
-				if (slot.id == null)
+				if (string.IsNullOrEmpty(slot.id))
 					continue;
-				AssetItem s = GetAssetItem<SlotDataAsset>(slot.id);
+                string LodIndicator = slot.id.Trim() + "_LOD";
+                AssetItem s = GetAssetItem<SlotDataAsset>(slot.id);
 				if (s != null)
 				{
 					returnval.Add(s);
@@ -489,6 +508,17 @@ namespace UMA
 						}
 					}
 				}
+                if (LookForLods)
+                {
+                    foreach (string slod in TypeDic.Keys)
+                    {
+                        if (slod.StartsWith(LodIndicator))
+                        {
+                            AssetItem lodSlot = GetAssetItem<SlotDataAsset>(slod);
+                            returnval.Add(lodSlot);
+                        }
+                    }
+                }
 			}
 			return returnval;
 		}
@@ -1417,7 +1447,7 @@ namespace UMA
 					Debug.Log("Null recipe in wardrobe collection...");
                     return;
 				}
-				List<AssetItem> items = GetAssetItems(uwr);
+				List<AssetItem> items = GetAssetItems(uwr,true);
 				foreach (AssetItem recipeitem in items)
 				{
 					if (recipeitem.Item is SlotDataAsset)
@@ -1540,7 +1570,7 @@ namespace UMA
 
         public bool AddRecipeGroup(UMATextRecipe recipe)
         {
-            List<AssetItem> items = GetAssetItems(recipe);
+            List<AssetItem> items = GetAssetItems(recipe,true);
 
             List<AssetItem> UniqueItems = new List<AssetItem>();
             foreach(AssetItem ai in items)
@@ -1644,7 +1674,7 @@ namespace UMA
                 {
                     UMATextRecipe uwr = RecipeItem.Item as UMATextRecipe;
                     EditorUtility.DisplayProgressBar("Generating", "processing recipe: " + uwr.name, pos);
-                    List<AssetItem> items = GetAssetItems(uwr);
+                    List<AssetItem> items = GetAssetItems(uwr,true);
                     foreach (AssetItem ai in items)
                     {
                         if (theItems.ContainsKey(ai) == false)
@@ -1787,7 +1817,7 @@ namespace UMA
 						AssetItem recipe = GetAssetItem<UMATextRecipe>(race.baseRaceRecipe.name);
 						recipe.IsAlwaysLoaded = true;
 
-						List<AssetItem> recipeItems = GetAssetItems(race.baseRaceRecipe as UMAPackedRecipeBase);
+						List<AssetItem> recipeItems = GetAssetItems(race.baseRaceRecipe as UMAPackedRecipeBase,true);
 						foreach(AssetItem recipeitem in recipeItems)
 						{
 							recipeitem.IsAlwaysLoaded = true;
@@ -1797,7 +1827,15 @@ namespace UMA
 
 
 
-                var theRecipeItems = GetAddressableRecipes();
+                v
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                ar theRecipeItems = GetAddressableRecipes();
 
                 GenerateCollectionLabels();
 
@@ -2401,13 +2439,9 @@ namespace UMA
 						UnityEngine.Object o = AssetDatabase.LoadAssetAtPath(assetPath, CurrentType);
                         if (o != null)
                         {
-							if (o.GetType() == typeof(UMAWardrobeRecipe))
-							{
-								if (CurrentType == typeof(UMATextRecipe))
-									continue;
-								//if ((o as UMATextRecipe).recipeType == "Wardrobe")
-								//	continue;
-							}
+                            if (o.GetType() == typeof(UMAWardrobeRecipe) && CurrentType == typeof(UMATextRecipe)) continue;
+                            if (o.GetType() == typeof(UMAWardrobeCollection) && CurrentType == typeof(UMATextRecipe)) continue;
+                            if (o.GetType() == typeof(UMAWardrobeCollection) && CurrentType == typeof(UMAWardrobeRecipe)) continue;
                             AssetItem ai = new AssetItem(CurrentType, o);
                             AddAssetItem(ai);
                         }

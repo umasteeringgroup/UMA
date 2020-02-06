@@ -1,4 +1,4 @@
-What's new in 2.10
+What's new in 2.10 
 Minimum supported version is 2018.4
 Support for Addressables
   Automated generation of addressables groups
@@ -14,6 +14,7 @@ New global library window
   New Addressables Menu to generate items
   New Ability to remove unused slots/overlays using the addressable groups
   New Ability to remove items from library by dropping a folder onto the lib
+  Repair function will now attempt to repair addressable item groups and labels
 Added a label field to recipes to allow the user to override addressable label names
 Moved Mesh Hide mask creation to mesh building, to address sync issues
 Updated DNA checks to pull from global library instead of searching resources. Fixes an issue on android
@@ -48,6 +49,7 @@ New Menuitem on UMA Menu: "WebGL/Enable Embedded Resources". This will turn on e
 Overlay coordinates can now be specified in UV range (0..1) in addition to absolute range. This should make it much easier to handle Unity converting textures to square on mobile, or the need to resize textures for performance.
 New Detail Normal map texture channel type, allows combining of normal maps in UMAMaterials.
 New Non-Shader texture channel type, allows a texture to be accumulated on the atlas, but not sent to a material. 
+The first RuntimeAnimatorController for compatible races will now be added if a race specific controller is not found.
 Various bug fixes & changes
     Fixed various overlays that were missing textures or had the wrong count
     Fixed some scenes that had broken over time
@@ -55,6 +57,7 @@ Various bug fixes & changes
     Reworked recipe editor and disallowed duplicate mesh hide assets.
     Fixed bug where you couldn't add a Wardrobe Collection using SetSlot before Start() was called on the DCA.
     Fixed bug in 2019.3 where it was not finding the type for RuntimeAnimatorController in build.
+    Fixed bug where WardrobeCollections would end up indexed in multiple places
 
 What's new in 2.9
 Renderer Manager - allow you to specify visibility, shadows of specific model parts.
