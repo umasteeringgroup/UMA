@@ -2529,7 +2529,7 @@ namespace UMA
             ForceSave();
             Resources.UnloadUnusedAssets();
         }
-
+#if UMA_ADDRESSABLES
         public string GetAddressableLabels(AddressableAssetEntry ae)
         {
             string retval = "";
@@ -2540,7 +2540,7 @@ namespace UMA
             }
             return retval;
         }
-
+#endif
         /// <summary>
         /// Repairs the index. Removes anything that it cannot find.
         /// </summary>

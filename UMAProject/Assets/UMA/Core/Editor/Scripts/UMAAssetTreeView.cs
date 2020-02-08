@@ -408,7 +408,7 @@ namespace UMA.Controls
 					}
 
 #if UMA_ADDRESSABLES
-#endif
+
 					if (ai.Item is UMATextRecipe)
 					{
 						UMATextRecipe recipe = ai.Item as UMATextRecipe;
@@ -436,7 +436,7 @@ namespace UMA.Controls
 							}
 						}
 					}
-
+#endif
 					ButtonRect.x = ButtonRect.x + ButtonRect.width;
 					ButtonRect.width = 32;
 					if (GUI.Button(ButtonRect,"Ping", EditorStyles.toolbarButton))
