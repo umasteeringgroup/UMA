@@ -628,7 +628,7 @@ PlayerSettings:
     1: NOTSUPER_LOGGING;UMA_32BITBUFFERS;UMA_ADDRESSABLES
     2: 
     7: UMA_ADDRESSABLES
-    13: UMA_ADDRESSABLES;SUPER_LOGGINGCOLLECTIONS
+    13: UMA_ADDRESSABLES
   platformArchitecture: {}
   scriptingBackend:
     Android: 0
