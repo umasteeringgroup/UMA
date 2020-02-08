@@ -12,7 +12,7 @@ namespace UMA
 #endif
     {
         #region Fields
-        const string AddressableFolder = "UMA/";
+        public const string AddressableFolder = "UMA/";
         private System.Type _TheType;
         public string _BaseTypeName;
         public string _Name;

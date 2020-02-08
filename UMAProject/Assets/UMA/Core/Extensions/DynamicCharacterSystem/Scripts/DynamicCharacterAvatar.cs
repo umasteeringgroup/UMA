@@ -780,9 +780,19 @@ namespace UMA.CharacterSystem
 
         public UMATextRecipe FindSlotRecipe(string Slotname, string Recipename)
         {
+#if SUPER_LOGGINGCOLLECTIONS
+            Debug.Log("Looking for Available recipes for wardrobe slot: " + Slotname);
+#endif
+
             var recipes = AvailableRecipes;
 
-            if (recipes.ContainsKey(Slotname) != true) return null;
+            if (recipes.ContainsKey(Slotname) != true)
+            {
+#if SUPER_LOGGINGCOLLECTIONS
+                Debug.Log("Available Recipes does not contain Slot: " +Slotname);
+#endif
+                return null;
+            }
 
             List<UMATextRecipe> SlotRecipes = recipes[Slotname];
 
@@ -790,8 +800,17 @@ namespace UMA.CharacterSystem
             {
                 UMATextRecipe utr = SlotRecipes[i];
                 if (utr.name == Recipename)
+                {
+#if SUPER_LOGGINGCOLLECTIONS
+                    Debug.Log("Found recipe "+Recipename+" for slot "+Slotname);
+#endif
                     return utr;
+                }
             }
+#if SUPER_LOGGINGCOLLECTIONS
+            Debug.Log("Available Recipes does not contain Recipe: "+Recipename+" for slot "+ Slotname);
+#endif
+
             return null;
         }
 
@@ -842,6 +861,9 @@ namespace UMA.CharacterSystem
         {
             if (utr is UMAWardrobeCollection)
             {
+#if SUPER_LOGGINGCOLLECTIONS
+                Debug.Log("Loading wardrobe collection: " + utr.name);
+#endif                
                 LoadWardrobeCollection((utr as UMAWardrobeCollection));
                 return true;
             }
@@ -927,14 +949,21 @@ namespace UMA.CharacterSystem
         public void LoadWardrobeCollection(string collectionName)
         {
             UMATextRecipe utr = FindSlotRecipe("WardrobeCollection", collectionName);
+
             if (!utr || !(utr is UMAWardrobeCollection))
             {
                 //Dont show a warning. When editing the avatar wardrobe collections stay in the list until the avatar is saved (or RemoveUnusedCollections is called)
                 //so that switching back to the race that does use the collection causes it to load again
                 //Debug.LogWarning("Unable to find a WardrobeCollection for collectionName " + collectionName);
+#if SUPER_LOGGINGCOLLECTIONS
+                Debug.Log("Unable to find slot recipe!"+collectionName);
+#endif
             }
             else
             {
+#if SUPER_LOGGINGCOLLECTIONS
+                Debug.Log("Calling LoadWardrobeCollection for collection " + utr.name);
+#endif
                 LoadWardrobeCollection((utr as UMAWardrobeCollection));
             }
         }
@@ -944,20 +973,41 @@ namespace UMA.CharacterSystem
 			//If there is already a WardrobeCollection belonging to this group applied to the Avatar, unload and remove it
 			if (_wardrobeCollections.ContainsKey(uwr.wardrobeSlot))
 			{
-				UnloadWardrobeCollectionGroup(uwr.wardrobeSlot);
+#if SUPER_LOGGINGCOLLECTIONS
+                Debug.Log("Unloading old wardrobe collection: " + uwr.wardrobeSlot);
+#endif
+                UnloadWardrobeCollectionGroup(uwr.wardrobeSlot);
 			}
-			_wardrobeCollections.Add(uwr.wardrobeSlot, uwr);
-			var thisSettings = uwr.GetUniversalPackRecipe(this, context);
-			//if there is a wardrobe set for this race treat this like a 'FullOutfit'
-			if (thisSettings.wardrobeSet.Count > 0)
-			{
-				LoadWardrobeSet(thisSettings.wardrobeSet, false);
-				if (thisSettings.sharedColorCount > 0)
-				{
-					ImportSharedColors(thisSettings.sharedColors, LoadOptions.loadWardrobeColors);
-				}
-			}
-			return;
+#if SUPER_LOGGINGCOLLECTIONS
+            Debug.Log("Adding to slot: " + uwr.wardrobeSlot);
+#endif
+            _wardrobeCollections.Add(uwr.wardrobeSlot, uwr);
+#if SUPER_LOGGINGCOLLECTIONS
+            Debug.Log("Unpacking Collection");
+#endif
+
+            var thisSettings = uwr.GetUniversalPackRecipe(this, context);
+            //if there is a wardrobe set for this race treat this like a 'FullOutfit'
+            if (thisSettings.wardrobeSet.Count > 0)
+            {
+#if SUPER_LOGGINGCOLLECTIONS
+                Debug.Log("Unpacking slot return "+thisSettings.wardrobeSet.Count+" items");
+#endif
+
+                LoadWardrobeSet(thisSettings.wardrobeSet, false);
+                if (thisSettings.sharedColorCount > 0)
+                {
+                    ImportSharedColors(thisSettings.sharedColors, LoadOptions.loadWardrobeColors);
+                }
+            }
+#if SUPER_LOGGINGCOLLECTIONS
+            else
+            {
+                Debug.Log("Unpacking slot return 0 items.");
+            }
+#endif
+
+            return;
 		}
 
         /// <summary>
@@ -1241,7 +1291,12 @@ namespace UMA.CharacterSystem
         {
             // _isFirstSettingsBuild = false;
             if (clearExisting || wardrobeSet.Count == 0)
+            {
+#if SUPER_LOGGINGCOLLECTIONS
+                Debug.Log("Clearing recipes for set");
+#endif
                 _wardrobeRecipes.Clear();
+            }
             if (wardrobeSet.Count > 0)
             {
                 //we have to do WardrobeCollections first because they may only be partially applied
@@ -1249,24 +1304,49 @@ namespace UMA.CharacterSystem
                 {
                     if (ws.slot == "WardrobeCollection")
                     {
+#if SUPER_LOGGINGCOLLECTIONS
+                        Debug.Log("Slot is Wardrobe Collection.");
+#endif
+
                         if (string.IsNullOrEmpty(ws.recipe))
                         {
+#if SUPER_LOGGINGCOLLECTIONS
+                            Debug.Log("Recipe is empty. Skipping");
+#endif
                             continue;
                         }
+#if SUPER_LOGGINGCOLLECTIONS
+                        Debug.Log("Loading the recipe: "+ws.recipe);
+#endif
+
                         LoadWardrobeCollection(ws.recipe);
                     }
                 }
                 foreach (WardrobeSettings ws in wardrobeSet)
                 {
+#if SUPER_LOGGINGCOLLECTIONS
+                    Debug.Log("Processing Wardrobeset " + ws.slot);
+#endif
+
                     if (ws.slot != "WardrobeCollection")
                     {
+
+#if SUPER_LOGGINGCOLLECTIONS
+                        Debug.Log("Processing Wardrobeset " + ws.slot);
+#endif
                         if (!string.IsNullOrEmpty(ws.recipe))
+                        {
+#if SUPER_LOGGINGCOLLECTIONS
+                            Debug.Log("Setting slot " + ws.slot + " to "+ ws.recipe);
+#endif
                             SetSlot(ws.slot, ws.recipe);
+                        }
                         else
+                        {
                             ClearSlot(ws.slot);
+                        }
                     }
                 }
-
             }
         }
         /// <summary>

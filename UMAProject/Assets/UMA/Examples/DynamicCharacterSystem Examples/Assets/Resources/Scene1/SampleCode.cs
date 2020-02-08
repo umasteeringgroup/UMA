@@ -299,6 +299,20 @@ namespace UMA.CharacterSystem.Examples
             }
         }
 
+        public void DumpData()
+        {
+#if UMA_ADDRESSABLES
+           foreach (var r in Addressables.ResourceLocators)
+            {
+                Debug.Log("Resource locator r = " + r.LocatorId);
+                foreach(var k in r.Keys)
+                {
+                    Debug.Log(k.ToString());
+                }
+            }
+#endif
+        }
+
         public SharedColorTable SkinColors;
         public SharedColorTable HairColors;
 

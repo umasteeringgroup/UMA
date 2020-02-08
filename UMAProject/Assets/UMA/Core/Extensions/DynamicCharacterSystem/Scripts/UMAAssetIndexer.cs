@@ -1745,7 +1745,7 @@ namespace UMA
                             found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(tex.GetInstanceID(), out string texGUID, out long texlocalID);
                             if (found)
                             {
-                                AddItemToSharedGroup(texGUID, Address, theItems[ai], sharedGroup);
+                                AddItemToSharedGroup(texGUID, AssetItem.AddressableFolder+Address, theItems[ai], sharedGroup);
                             }
                         }
                     }
