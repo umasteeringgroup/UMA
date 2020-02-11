@@ -1798,16 +1798,76 @@ namespace UMA
             bool OK = plugin.Prepare();
             if (!OK) return;
 
+            foreach (Type t in GetTypes())
+            {
+                ClearAddressableFlags(t);
+            }
+
+            AddressableAssetGroup sharedGroup = AddressableSettings.FindGroup(SharedGroupName);
+            if (sharedGroup == null)
+            {
+                sharedGroup = AddressableSettings.CreateGroup(SharedGroupName, false, false, true, AddressableSettings.DefaultGroup.Schemas);
+                sharedGroup.GetSchema<BundledAssetGroupSchema>().BundleMode = BundledAssetGroupSchema.BundlePackingMode.PackSeparately;
+            }
+
             var items = GetAddressableRecipes();
             foreach(AssetItem ai in items)
             {
                 plugin.ProcessRecipe(ai.Item as UMAPackedRecipeBase);
             }
 
+            StringBuilder sb = new StringBuilder();
+
             UpdateSerializedList();
             foreach(AssetItem ai in SerializedItems)
             {
-                plugin.ProcessItem(ai);
+                List<string> labels = plugin.ProcessItem(ai);
+                if (labels != null && labels.Count > 0)
+                {
+                    bool found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(ai.Item.GetInstanceID(), out string itemGUID, out long localID);
+                    if (found)
+                    {
+                        ai.IsAddressable = true;
+                        ai.AddressableAddress = ""; // let the system assign it if we are generating.
+                        ai.AddressableGroup = sharedGroup.name;
+
+                        AddItemToSharedGroup(itemGUID, ai.AddressableAddress, labels, sharedGroup);
+                        if (ai._Type == typeof(OverlayDataAsset))
+                        {
+                            OverlayDataAsset od = ai.Item as OverlayDataAsset;
+                            if (od == null)
+                            {
+                                Debug.Log("Invalid overlay in recipe: " + ai._Name + ". Skipping.");
+                                continue;
+                            }
+                            foreach (Texture tex in od.textureList)
+                            {
+                                if (tex == null) continue;
+                                if (tex as Texture2D == null)
+                                {
+                                    Debug.Log("Texture is not Texture2D!!! " + tex.name);
+                                    continue;
+                                }
+                                string Address = "Texture2D-" + tex.name + "-" + tex.GetInstanceID();
+
+                                found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(tex.GetInstanceID(), out string texGUID, out long texlocalID);
+                                if (found)
+                                {
+                                    AddItemToSharedGroup(texGUID, AssetItem.AddressableFolder + Address, labels, sharedGroup);
+                                }
+                            }
+                        }
+
+                        sb.Clear();
+                        foreach (string s in labels)
+                        {
+                            // add the label to the item
+                            sb.Append(s);
+                            sb.Append(';');
+                        }
+                        ai.AddressableLabels = sb.ToString();
+                    }
+                }
             }
 
             plugin.Complete();
