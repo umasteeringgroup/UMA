@@ -22,7 +22,7 @@ namespace UMA.Controls
 			Selection,
 			Name,
 			Type,
-			HasReferences,
+			/* HasReferences, */
 			IsAddressable,
 			Group,
 			Labels,
@@ -216,12 +216,12 @@ namespace UMA.Controls
 				}
 				break;
 
-				case AssetColumns.HasReferences:
+/*				case AssetColumns.HasReferences:
 				{
 					GUI.Label(cellRect, ate.HasRefCount.ToString());
 				}
 				break;
-
+*/
 				case AssetColumns.Name:
 				{
 					Rect toggleRect = cellRect;
@@ -321,7 +321,7 @@ namespace UMA.Controls
 					}
 				}
 				break;
-
+/*
 				case AssetColumns.HasReferences:
 				{
 					cellRect.x += kCheckboxOffset;
@@ -329,7 +329,7 @@ namespace UMA.Controls
 					EditorGUI.Toggle(cellRect, ai._SerializedItem != null);
 				}
 				break;
-
+*/
 				case AssetColumns.Name:
 				{
 					// Do toggle
@@ -389,6 +389,7 @@ namespace UMA.Controls
 						UnityEngine.Object o = AssetDatabase.LoadMainAssetAtPath(ai._Path);
 						InspectorUtlity.InspectTarget(o);
 					}
+					/*
 					ButtonRect.x = ButtonRect.x + BtnWidth;
 					if (item.data.ai._SerializedItem == null)
 					{
@@ -406,7 +407,7 @@ namespace UMA.Controls
 							Repaint();
 						}
 					}
-
+					*/
 #if UMA_ADDRESSABLES
 
 					if (ai.Item is UMATextRecipe)
@@ -567,7 +568,7 @@ namespace UMA.Controls
 					autoResize = false,
 					allowToggleVisibility = false
 				},
-				new MultiColumnHeaderState.Column
+/*				new MultiColumnHeaderState.Column
 				{
 					headerContent = new GUIContent("Ref", "Do we have a build reference?"),
 					headerTextAlignment = TextAlignment.Center,
@@ -577,7 +578,7 @@ namespace UMA.Controls
 					minWidth = 40,
 					maxWidth = 40,
 					autoResize = true
-				},
+				}, */
 				new MultiColumnHeaderState.Column
 				{
 					headerContent = new GUIContent("Adr", "Is this addressable?"),

@@ -178,6 +178,11 @@ namespace UMA
             }
         }
 
+        public Type GetRuntimeType(Type type)
+        {
+            return TypeToLookup[type];
+        }
+
 #if UMA_ADDRESSABLES
         private HashSet<CachedOp> Cleanup = new HashSet<CachedOp>();
         public void CheckCache()
@@ -1266,7 +1271,7 @@ namespace UMA
 					if (ai != null && ai.IsAlwaysLoaded == false)
 					{
 						// is this a utility slot? if so, we need to not delete it as an orphan. 
-						if (sd.asset.meshData == null && sd.OverlayCount == 0)
+						if (sd.asset.isUtilitySlot)
 						{
 							ai.IsAlwaysLoaded = true;
 						}
@@ -1338,7 +1343,7 @@ namespace UMA
             }
         }
 
-        private void AddItemToSharedGroup(string GUID,string Address, List<string> labels, AddressableAssetGroup sharedGroup)
+        public void AddItemToSharedGroup(string GUID,string Address, List<string> labels, AddressableAssetGroup sharedGroup)
         {
             AddressableAssetEntry ae = AddressableSettings.CreateOrMoveEntry(GUID, sharedGroup, false, true);
             ae.SetAddress(Address);
@@ -1509,7 +1514,14 @@ namespace UMA
                 if (uwr != null)
                 {
                     if (uwr.resourcesOnly)
+                    {
+                        var items = GetAssetItems(uwr);
+                        foreach(AssetItem resourceItem in items)
+                        {
+                            resourceItem.IsResource = true;
+                        }
                         continue;
+                    }
                     theRecipes.Add(ai);
                 }
             }
@@ -1523,7 +1535,14 @@ namespace UMA
                 if (utr != null)
                 {
                     if (utr.resourcesOnly)
+                    {
+                        var items = GetAssetItems(utr);
+                        foreach (AssetItem resourceItem in items)
+                        {
+                            resourceItem.IsResource = true;
+                        }
                         continue;
+                    }
                     theRecipes.Add(ai);
                 }
             }
@@ -1537,7 +1556,14 @@ namespace UMA
                 if (utr != null)
                 {
                     if (utr.resourcesOnly)
+                    {
+                        var items = GetAssetItems(utr);
+                        foreach (AssetItem resourceItem in items)
+                        {
+                            resourceItem.IsResource = true;
+                        }
                         continue;
+                    }
                     theRecipes.Add(ai);
                 }
             }
@@ -1752,7 +1778,7 @@ namespace UMA
                     pos += inc;
                 }
 
-                UpdateAssetItems();
+                AssignAddressableInformation();
 
                 foreach (Type t in TypeToLookup.Values)
                 {
@@ -1765,6 +1791,26 @@ namespace UMA
             {
                 EditorUtility.ClearProgressBar();
             }
+        }
+
+        public void GenerateAddressables(IUMAAddressablePlugin plugin)
+        {
+            bool OK = plugin.Prepare();
+            if (!OK) return;
+
+            var items = GetAddressableRecipes();
+            foreach(AssetItem ai in items)
+            {
+                plugin.ProcessRecipe(ai.Item as UMAPackedRecipeBase);
+            }
+
+            UpdateSerializedList();
+            foreach(AssetItem ai in SerializedItems)
+            {
+                plugin.ProcessItem(ai);
+            }
+
+            plugin.Finalize();
         }
 
         public void GenerateAddressables()
@@ -1870,7 +1916,7 @@ namespace UMA
                 AddAddressableAssets(OverlayTracker, sharedGroup);
                 AddAddressableAssets(TextureTracker, sharedGroup);
 
-                UpdateAssetItems();
+                AssignAddressableInformation();
 
 				ReleaseReferences(TypeToLookup[typeof(SlotDataAsset)]);
 				ReleaseReferences(TypeToLookup[typeof(OverlayDataAsset)]);
@@ -1886,7 +1932,7 @@ namespace UMA
 			}
         }
 
-        private void UpdateAssetItems()
+        public void AssignAddressableInformation()
         {
             UpdateSerializedList();
             foreach (AssetItem ai in SerializedItems)
@@ -1935,7 +1981,7 @@ namespace UMA
 			ForceSave();
 		}
 
-		private void ReleaseReferences(Type type)
+		public void ReleaseReferences(Type type)
 		{
 			var items = GetAssetDictionary(type).Values;
 			foreach(AssetItem ai in items)
@@ -1951,7 +1997,7 @@ namespace UMA
 			}
 		}
 
-		private void ClearAddressableFlags(Type type)
+		public void ClearAddressableFlags(Type type)
 		{
 			var items = GetAssetDictionary(type).Values;
 			foreach (AssetItem ai in items)
@@ -2500,9 +2546,9 @@ namespace UMA
 				{
 					ai.CacheSerializedItem();
 				}
-				else//if (IsRemoveableItem(ai))
+				else
 				{
-					ai._SerializedItem = null;
+                    ai.FreeReference();
 				}
             }
 			if (!force)

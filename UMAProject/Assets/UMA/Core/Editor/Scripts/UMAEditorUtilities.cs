@@ -20,6 +20,10 @@ namespace UMA
         private static bool showUnindexedTypes = true;
 		private const string umaHotkeyWord = "UMA_HOTKEYS";
 		private const string umaLocation = "RelativeUMA";
+		private const string DefineSymbol_32BitBuffers = "UMA_32BITBUFFERS";
+		private const string DefineSymbol_Addressables = "UMA_ADDRESSABLES";
+		public const string ConfigToggle_UseSharedGroup = "UMA_ADDRESSABLES_USE_SHARED_GROUP";
+		public const string ConfigToggle_ArchiveGroups = "UMA_ADDRESSABLES_ARCHIVE_ASSETBUNDLE_GROUPS";
 		private static string DNALocation = "UMA/";
 
         static UMAEditorUtilities()
@@ -96,11 +100,64 @@ namespace UMA
             }
 
 
+
+			EditorGUI.BeginChangeCheck();
+			var defineSymbols = new HashSet<string>(PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup).Split(';'));
+			DefineSymbolToggle(defineSymbols, DefineSymbol_32BitBuffers, "Use 32bit buffers", "This allows meshes bigger than 64k vertices");
+			DefineSymbolToggle(defineSymbols, DefineSymbol_Addressables, "Use Addressables", "This activates the code that loads from asset bundles using addressables");
+			if (EditorGUI.EndChangeCheck())
+			{
+				PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, string.Join(";", defineSymbols));
+			}
+
+			GUI.enabled =
+#if UMA_ADDRESSABLES
+				true;
+#else
+				false;
+#endif
+			ConfigToggle(ConfigToggle_UseSharedGroup, "Use Shared Group", "Add all Addressables to the same Shared Group.", true);
+			ConfigToggle(ConfigToggle_ArchiveGroups, "Archive Groups", "For now just copies the assetbundles into folders with the group name.", false);
+
+			GUI.enabled = true;
             if (GUI.changed)
             {
                 EditorApplication.RepaintProjectWindow();
             }
         }
+
+		private static void ConfigToggle(string toggleId, string text, string tooltip, bool defaultValue)
+		{
+			var toggle = GetConfigValue(toggleId, defaultValue);
+			if (EditorGUILayout.Toggle(new GUIContent(text, tooltip), toggle) != toggle)
+			{
+				SetConfigValue(toggleId, !toggle);
+			}
+		}
+
+		private static void SetConfigValue(string toggleId, bool value)
+		{
+			//TODO: obviously not the right place!
+			EditorPrefs.SetBool(toggleId, value);
+		}
+
+		public static bool GetConfigValue(string toggleId, bool defaultValue)
+		{
+			//TODO: obviously not the right place!
+			return EditorPrefs.GetBool(toggleId, defaultValue);
+		}
+
+		private static void DefineSymbolToggle(HashSet<string> defineSymbols, string defineSymbol, string text, string tooltip)
+		{
+			if (EditorGUILayout.Toggle(new GUIContent(text, tooltip), defineSymbols.Contains(defineSymbol)))
+			{
+				defineSymbols.Add(defineSymbol);
+			}
+			else
+			{
+				defineSymbols.Remove(defineSymbol);
+			}
+		}
 
         private static void DrawItems(string guid, Rect selectionRect)
         {

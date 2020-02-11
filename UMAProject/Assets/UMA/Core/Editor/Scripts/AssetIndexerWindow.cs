@@ -18,6 +18,8 @@ namespace UMA.Controls
 		[SerializeField] MultiColumnHeaderState m_MultiColumnHeaderState;
 		public UMAAssetTreeView treeView { get; private set; }
 
+		List<IUMAAddressablePlugin> addressablePlugins = new List<IUMAAddressablePlugin>();
+
 		#region Menus
 		GenericMenu _FileMenu;
 		GenericMenu _AddressablesMenu;
@@ -83,13 +85,27 @@ namespace UMA.Controls
 			}
 		}
 
+		/// <summary>
+		/// Returns a list of all AddressablePlugins
+		/// </summary>
+		/// <returns></returns>
+		public static List<Type> GetAddressablePlugins()
+		{
+			return AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes())
+				 .Where(x => typeof(IUMAAddressablePlugin).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract)
+				 .Select(x => x).ToList();
+		}
+
 		[MenuItem("UMA/Global Library", priority = 99)]
 		public static AssetIndexerWindow GetWindow ()
 		{
 			var window = GetWindow<AssetIndexerWindow>();
+			/* add any additional generators */
+			window.AddPlugins(GetAddressablePlugins());
+			/* Setup the window menus */
 			window.SetupMenus();
+
 			Texture icon = AssetDatabase.LoadAssetAtPath<Texture>("Assets/UMA/InternalDataStore/UMA32.png");
-		
 			window.titleContent = new GUIContent("UMA 2.10 Global Library", icon);
 			window.Focus();
 			window.Repaint();
@@ -97,6 +113,18 @@ namespace UMA.Controls
 		}
 
 		#region utility functions
+
+		
+
+		void AddPlugins(List<Type> PluginTypes)
+		{
+			addressablePlugins = new List<IUMAAddressablePlugin>();
+			foreach(Type t in PluginTypes)
+			{
+				addressablePlugins.Add((IUMAAddressablePlugin)Activator.CreateInstance(t));
+			}
+		}
+
 		// a method to simplify adding menu items
 		void AddMenuItemWithCallback(GenericMenu menu, string menuPath, GenericMenu.MenuFunction function)
 		{
@@ -146,7 +174,7 @@ namespace UMA.Controls
 				Repaint();
 				EditorUtility.DisplayDialog("Repair", "AssetIndex successfully repaired", "OK");
 			});
-			AddMenuItemWithCallback(FileMenu, "Add Build refs to all non-addressables", () => 
+			/* AddMenuItemWithCallback(FileMenu, "Add Build refs to all non-addressables", () => 
 			{
 				UAI.AddReferences();
 				RecountTypes();
@@ -159,7 +187,7 @@ namespace UMA.Controls
 				Resources.UnloadUnusedAssets();
 				RecountTypes();
 				Repaint();
-			});
+			}); */
 			FileMenu.AddSeparator("");
 			AddMenuItemWithCallback(FileMenu, "Toggle Utilities Panel", () =>
 			{
@@ -176,6 +204,16 @@ namespace UMA.Controls
 			});
 
 #if UMA_ADDRESSABLES
+
+			foreach(IUMAAddressablePlugin plugin in addressablePlugins)
+			{
+				AddMenuItemWithCallbackParm(AddressablesMenu, "Generators/"+plugin.Menu, (object o) =>
+				{
+					IUMAAddressablePlugin addrplug = o as IUMAAddressablePlugin;
+					UAI.GenerateAddressables(addrplug);
+				},plugin);
+			}
+
 			// ***********************************************************************************
 			// Addressables Menu items
 			// ***********************************************************************************
@@ -216,14 +254,14 @@ namespace UMA.Controls
 			{
 				UAI.CleanupAddressables(true);
 			});
-
+			/*
 			AddMenuItemWithCallback(AddressablesMenu, "Force Add Refs (Bad!!)", () => 
 			{
 				UAI.AddReferences(true);
 				RecountTypes();
 				Resources.UnloadUnusedAssets();
 				Repaint();
-			});
+			}); */
 
 			AddMenuItemWithCallback(AddressablesMenu, "Remove Orphaned Slots", () => 
 			{

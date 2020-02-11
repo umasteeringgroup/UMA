@@ -8,7 +8,7 @@ namespace UMA
     [System.Serializable]
     public class AssetItem
 #if UNITY_EDITOR
-        : System.IEquatable<AssetItem>, System.IComparable<AssetItem>
+        : System.IEquatable<AssetItem>, System.IComparable<AssetItem>, ISerializationCallbackReceiver
 #endif
     {
         #region Fields
@@ -44,7 +44,7 @@ namespace UMA
 		public int ReferenceCount;
 
 		[System.NonSerialized]
-		public Object _editorCachedItem;
+		public System.WeakReference<Object> _editorCachedItem;
 
         #endregion
         #region Properties
@@ -95,7 +95,7 @@ namespace UMA
 #if UNITY_EDITOR
                 if (_SerializedItem != null) return _SerializedItem;
 
-				if (IsAddressable)  // this check is so we can test addressables in the editor
+/*				if (IsAddressable)  // this check is so we can test addressables in the editor
 				{
 					if (_editorCachedItem == null)
 					{
@@ -103,9 +103,26 @@ namespace UMA
 					}
 					// _editorCachedItem is never saved.
 					return _editorCachedItem;
-				}
-	 
-				CacheSerializedItem(); 
+				} */
+                if (IsAddressable)  // this check is so we can test addressables in the editor
+                {
+                    Object result;
+                    if (_editorCachedItem == null)
+                    {
+                        result = GetItem();
+                        _editorCachedItem = new System.WeakReference<Object>(result);
+                        return result;
+                    }
+                    if (!_editorCachedItem.TryGetTarget(out result))
+                    {
+                        result = GetItem();
+                        _editorCachedItem = new System.WeakReference<Object>(result);
+                        return result;
+                    }
+                    return result;
+                }
+
+                CacheSerializedItem(); 
                 return _SerializedItem;
 #else
                 return _SerializedItem;
@@ -295,9 +312,25 @@ namespace UMA
             return this._Name.CompareTo(other._Name);
         }
 
+        public void OnBeforeSerialize()
+        {
+            if (IsAddressable)
+            {
+                _SerializedItem = null;
+            }
+        }
+
+        public void OnAfterDeserialize()
+        {
+            if (IsAddressable)
+            {
+                _SerializedItem = null;
+            }
+        }
+
 #endif
-#endregion
-#region Constructors
+        #endregion
+        #region Constructors
         public AssetItem(System.Type Type, string Name, string Path, Object Item)
         {
             if (Type == null) return;
