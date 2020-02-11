@@ -22,7 +22,7 @@ namespace UMA.Controls
 			Selection,
 			Name,
 			Type,
-			/* HasReferences, */
+			IsResource,
 			IsAddressable,
 			Group,
 			Labels,
@@ -216,12 +216,12 @@ namespace UMA.Controls
 				}
 				break;
 
-/*				case AssetColumns.HasReferences:
+				case AssetColumns.IsResource:
 				{
-					GUI.Label(cellRect, ate.HasRefCount.ToString());
+					GUI.Label(cellRect, ate.IsResourceCount.ToString());
 				}
 				break;
-*/
+
 				case AssetColumns.Name:
 				{
 					Rect toggleRect = cellRect;
@@ -321,15 +321,15 @@ namespace UMA.Controls
 					}
 				}
 				break;
-/*
-				case AssetColumns.HasReferences:
+
+				case AssetColumns.IsResource:
 				{
 					cellRect.x += kCheckboxOffset;
 					cellRect.width -= kCheckboxOffset;
-					EditorGUI.Toggle(cellRect, ai._SerializedItem != null);
+					EditorGUI.Toggle(cellRect, ai.IsResource);
 				}
 				break;
-*/
+
 				case AssetColumns.Name:
 				{
 					// Do toggle
@@ -568,9 +568,9 @@ namespace UMA.Controls
 					autoResize = false,
 					allowToggleVisibility = false
 				},
-/*				new MultiColumnHeaderState.Column
+ 				new MultiColumnHeaderState.Column
 				{
-					headerContent = new GUIContent("Ref", "Do we have a build reference?"),
+					headerContent = new GUIContent("Resx", "Is this in resources?"),
 					headerTextAlignment = TextAlignment.Center,
 					sortedAscending = true,
 					sortingArrowAlignment = TextAlignment.Left,
@@ -578,7 +578,7 @@ namespace UMA.Controls
 					minWidth = 40,
 					maxWidth = 40,
 					autoResize = true
-				}, */
+				}, 
 				new MultiColumnHeaderState.Column
 				{
 					headerContent = new GUIContent("Adr", "Is this addressable?"),

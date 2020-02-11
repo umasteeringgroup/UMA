@@ -2028,7 +2028,7 @@ namespace UMA
 			List<string> toRemove = new List<string>();
 			foreach (KeyValuePair<string, AssetItem> pair in items)
 			{
-				if (pair.Value.IsAddressable ==false && pair.Value.IsAlwaysLoaded == false)
+				if (pair.Value.IsAddressable ==false && pair.Value.IsResource == false)
 				{
 					toRemove.Add(pair.Key);
 				}

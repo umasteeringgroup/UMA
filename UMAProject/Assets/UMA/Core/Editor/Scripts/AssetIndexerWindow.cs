@@ -462,7 +462,7 @@ namespace UMA.Controls
 			foreach(TreeElement t in treeView.treeModel.root.children)
 			{
 				AssetTreeElement ate = t as AssetTreeElement;
-				ate.HasRefCount = 0;
+				ate.IsResourceCount = 0;
 				ate.IsAddrCount = 0;
 				ate.Keepcount = 0;
 				if (t.hasChildren)
@@ -470,8 +470,8 @@ namespace UMA.Controls
 					foreach (TreeElement c in t.children)
 					{
 						AssetItem ai = (c as AssetTreeElement).ai;
-						if (ai._SerializedItem != null)
-							ate.HasRefCount++;
+						if (ai.IsResource)
+							ate.IsResourceCount++;
 						if (ai.IsAlwaysLoaded)
 							ate.Keepcount++;
 						if (ai.IsAddressable)
@@ -766,8 +766,8 @@ namespace UMA.Controls
 							atai.type = t;
 							ElementsToLoad.Add(atai);
 
-							if (ai._SerializedItem != null)
-								ate.HasRefCount++;
+							if (ai.IsResource)
+								ate.IsResourceCount++;
 							if (ai.IsAlwaysLoaded)
 								ate.Keepcount++;
 							if (ai.IsAddressable)

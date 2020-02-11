@@ -20,7 +20,7 @@ namespace UMA.Controls
 		public Amount AmountChecked;
 		public System.Type type;
 		public int index;
-		public int HasRefCount;
+		public int IsResourceCount;
 		public int IsAddrCount;
 		public int Keepcount;
 
