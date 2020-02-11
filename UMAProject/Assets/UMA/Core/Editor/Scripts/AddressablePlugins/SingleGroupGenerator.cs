@@ -22,7 +22,7 @@ public class SingleGroupGenerator : IUMAAddressablePlugin
         }
     }
 
-    public void Finalize()
+    public void Complete()
     {
         try
         {

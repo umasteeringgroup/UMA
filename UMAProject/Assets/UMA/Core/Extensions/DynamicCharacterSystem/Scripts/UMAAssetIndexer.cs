@@ -1810,7 +1810,7 @@ namespace UMA
                 plugin.ProcessItem(ai);
             }
 
-            plugin.Finalize();
+            plugin.Complete();
         }
 
         public void GenerateAddressables()

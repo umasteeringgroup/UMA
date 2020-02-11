@@ -34,5 +34,5 @@ public interface IUMAAddressablePlugin
     /// Finalize is called after every recipe and every item has been processed.
     /// </summary>
     /// <returns></returns>
-    void Finalize();
+    void Complete();
 }
