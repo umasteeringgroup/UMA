@@ -130,7 +130,7 @@ public class SingleGroupGenerator : IUMAAddressablePlugin
         }
 
         Recipes = new List<UMAPackedRecipeBase>();
-        return true; 
+        return true;
     }
 
     public List<string> ProcessItem(AssetItem ai)

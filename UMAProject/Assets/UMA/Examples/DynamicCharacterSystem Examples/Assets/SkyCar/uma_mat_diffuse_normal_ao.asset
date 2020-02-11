@@ -3,8 +3,9 @@
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -18,13 +19,30 @@ MonoBehaviour:
     textureFormat: 0
     materialPropertyName: _MainTex
     sourceTextureName: 
+    Compression: 0
+    DownSample: 0
+    ConvertRenderTexture: 0
+    NonShaderTexture: 0
   - channelType: 1
     textureFormat: 0
     materialPropertyName: _BumpMap
     sourceTextureName: 
+    Compression: 0
+    DownSample: 0
+    ConvertRenderTexture: 0
+    NonShaderTexture: 0
   - channelType: 0
     textureFormat: 0
     materialPropertyName: _OcclusionMap
     sourceTextureName: 
-  clothProperties: {fileID: 0}
-  RequireSeperateRenderer: 0
+    Compression: 0
+    DownSample: 0
+    ConvertRenderTexture: 0
+    NonShaderTexture: 0
+  MipMapBias: 0
+  AnisoLevel: 1
+  MatFilterMode: 1
+  Compression: 0
+  shaderParms: []
+  MaskWithCurrentColor: 0
+  maskMultiplier: {r: 1, g: 1, b: 1, a: 1}

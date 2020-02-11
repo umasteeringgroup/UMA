@@ -1,6 +1,10 @@
 {
     "name": "UMA_Core",
-    "references": [],
+    "references": [
+        "Unity.Addressables",
+        "Unity.ResourceManager",
+        "Unity.Addressables.Editor"
+    ],
     "optionalUnityReferences": [],
     "includePlatforms": [],
     "excludePlatforms": [],
