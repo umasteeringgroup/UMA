@@ -12,6 +12,8 @@ public class SingleGroupGenerator : IUMAAddressablePlugin
 {
     public UMAAssetIndexer Index;
     List<UMAPackedRecipeBase> Recipes;
+    Dictionary<AssetItem, List<string>> AddressableItems = new Dictionary<AssetItem, List<string>>();
+
     const string SharedGroupName = "UMA_SharedItems";
 
     public string Menu
@@ -26,7 +28,11 @@ public class SingleGroupGenerator : IUMAAddressablePlugin
     {
         try
         {
-            Dictionary<AssetItem, List<string>> theItems = new Dictionary<AssetItem, List<string>>();
+            bool IncludeRecipes = UMAEditorUtilities.GetConfigValue(UMAEditorUtilities.ConfigToggle_IncludeRecipes, false);
+            bool IncludeOthers = UMAEditorUtilities.GetConfigValue(UMAEditorUtilities.ConfigToggle_IncludeOther, false);
+            string DefaultAddressableLabel = UMAEditorUtilities.GetDefaultAddressableLabel();
+
+
 
             float pos = 0.0f;
             float inc = 1.0f / Recipes.Count;
@@ -36,14 +42,36 @@ public class SingleGroupGenerator : IUMAAddressablePlugin
                 List<AssetItem> items = Index.GetAssetItems(uwr, true);
                 foreach (AssetItem ai in items)
                 {
-                    if (theItems.ContainsKey(ai) == false)
+                    if (AddressableItems.ContainsKey(ai) == false)
                     {
-                        theItems.Add(ai, new List<string>());
+                        AddressableItems.Add(ai, new List<string>());
+                        AddressableItems[ai].Add(DefaultAddressableLabel);
                     }
-                    theItems[ai].Add(uwr.AssignedLabel);
+                    AddressableItems[ai].Add(uwr.AssignedLabel);
+                }
+                if (IncludeRecipes)
+                {
+                    AssetItem RecipeItem = UMAAssetIndexer.Instance.GetRecipeItem(uwr);
+                    if (AddressableItems.ContainsKey(RecipeItem) == false)
+                    {
+                        AddressableItems.Add(RecipeItem, new List<string>());
+                        AddressableItems[RecipeItem].Add(DefaultAddressableLabel);
+                    }
+                    AddressableItems[RecipeItem].Add(uwr.AssignedLabel);
+                    AddressableItems[RecipeItem].Add("UMA_Recipes");
                 }
                 pos += inc;
             }
+
+
+            if (IncludeOthers)
+            {
+                AddAssetItems(typeof(RaceData), DefaultAddressableLabel);
+                AddAssetItems(typeof(RuntimeAnimatorController), DefaultAddressableLabel);
+                AddAssetItems(typeof(TextAsset), DefaultAddressableLabel);
+                AddAssetItems(typeof(DynamicUMADnaAsset), DefaultAddressableLabel);
+            }
+
 
             // Create the shared group that has each item packed separately.
             AddressableAssetGroup sharedGroup = Index.AddressableSettings.FindGroup(SharedGroupName);
@@ -54,10 +82,10 @@ public class SingleGroupGenerator : IUMAAddressablePlugin
             }
 
             pos = 0.0f;
-            inc = 1.0f / theItems.Count;
+            inc = 1.0f / AddressableItems.Count;
 
             StringBuilder sb = new StringBuilder();
-            foreach (AssetItem ai in theItems.Keys)
+            foreach (AssetItem ai in AddressableItems.Keys)
             {
                 ai.IsAddressable = true;
                 ai.AddressableAddress = ""; // let the system assign it if we are generating.
@@ -65,7 +93,7 @@ public class SingleGroupGenerator : IUMAAddressablePlugin
                 EditorUtility.DisplayProgressBar("Generating", "Processing Asset: " + ai.Item.name, pos);
 
                 sb.Clear();
-                foreach (string s in theItems[ai])
+                foreach (string s in AddressableItems[ai])
                 {
                     sb.Append(s);
                     sb.Append(';');
@@ -74,7 +102,7 @@ public class SingleGroupGenerator : IUMAAddressablePlugin
 
                 bool found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(ai.Item.GetInstanceID(), out string itemGUID, out long localID);
 
-                Index.AddItemToSharedGroup(itemGUID, ai.AddressableAddress, theItems[ai], sharedGroup);
+                Index.AddItemToSharedGroup(itemGUID, ai.AddressableAddress, AddressableItems[ai], sharedGroup);
                 if (ai._Type == typeof(OverlayDataAsset))
                 {
                     OverlayDataAsset od = ai.Item as OverlayDataAsset;
@@ -96,7 +124,7 @@ public class SingleGroupGenerator : IUMAAddressablePlugin
                         found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(tex.GetInstanceID(), out string texGUID, out long texlocalID);
                         if (found)
                         {
-                            Index.AddItemToSharedGroup(texGUID, AssetItem.AddressableFolder + Address, theItems[ai], sharedGroup);
+                            Index.AddItemToSharedGroup(texGUID, AssetItem.AddressableFolder + Address, AddressableItems[ai], sharedGroup);
                         }
                     }
                 }
@@ -147,5 +175,15 @@ public class SingleGroupGenerator : IUMAAddressablePlugin
     public void ProcessRecipe(UMAPackedRecipeBase recipe)
     {
         Recipes.Add(recipe);
+    }
+
+    private void AddAssetItems(Type t, string DefaultLabel)
+    {
+        List<AssetItem> Items = UMAAssetIndexer.Instance.GetAssetItems(t);
+        foreach(AssetItem item in Items)
+        {
+            AddressableItems.Add(item, new List<string>());
+            AddressableItems[item].Add(DefaultLabel);
+        }
     }
 }

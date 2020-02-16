@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 #if UMA_ADDRESSABLES
@@ -30,12 +31,20 @@ public class Preloader : MonoBehaviour
 void Update()
     {
         LoadingSlider.value = op.PercentComplete;
+        Text t = LoadingSlider.gameObject.GetComponentInChildren<Text>();
+        t.text = op.Status.ToString();
     }
-    private void Op_Completed(AsyncOperationHandle obj)
+
+private void Op_Completed(AsyncOperationHandle obj)
     {
         if (obj.Status == AsyncOperationStatus.Succeeded)
         {
             LoadingSlider.gameObject.SetActive(false);
+        }
+        else
+        {
+            Text t = LoadingSlider.gameObject.GetComponentInChildren<Text>();
+            t.text = obj.Status.ToString();
         }
     }
 #endif

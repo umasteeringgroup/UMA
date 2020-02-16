@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 468a46d0ae32c3544b7d98094e6448a9, type: 3}
   m_Name: AddressableAssetSettings
   m_EditorClassIdentifier: 
-  m_DefaultGroup: c26d4e44a7d63b945af91048081af100
+  m_DefaultGroup: 56641476a04aeda4a9bc1afadf396c8f
   m_BuildRemoteCatalog: 0
   m_DisableCatalogUpdateOnStart: 0
   m_UniqueBundleIds: 0
@@ -33,33 +33,33 @@ MonoBehaviour:
   m_ProfileSettings:
     m_Profiles:
     - m_InheritedParent: 
-      m_Id: cd6e409033219c44a925bb1c169c04d6
+      m_Id: 5478535d37c84b5459f75c4651d8ab29
       m_ProfileName: Default
       m_Values:
-      - m_Id: 39057b3f7e17aec46a21c1b66faa8ea9
+      - m_Id: f23dccfbcb698b44282495d2655ff368
         m_Value: '[UnityEditor.EditorUserBuildSettings.activeBuildTarget]'
-      - m_Id: 4c48f5c25ace6ff4f952cd09f0905a0c
-        m_Value: '[UnityEngine.AddressableAssets.Addressables.BuildPath]'
-      - m_Id: 78756b767659f224bb2e938e2d3c28c4
+      - m_Id: c573ddfbe3000af49a319ec515c84202
+        m_Value: '[UnityEngine.AddressableAssets.Addressables.BuildPath]/[BuildTarget]'
+      - m_Id: 7aac6dd416e7a3449ae8ac6fecd4990c
         m_Value: '{UnityEngine.AddressableAssets.Addressables.RuntimePath}/[BuildTarget]'
-      - m_Id: c7ded56ce580bca4d951aae3cfe92198
+      - m_Id: ad611909a226d3a42a3db14ab6f54e3b
         m_Value: ServerData/[BuildTarget]
-      - m_Id: c3da08459c554d9418a173c79810798d
+      - m_Id: 52906ecad896afb40a07371f48266ef0
         m_Value: http://localhost/[BuildTarget]
     m_ProfileEntryNames:
-    - m_Id: 39057b3f7e17aec46a21c1b66faa8ea9
+    - m_Id: f23dccfbcb698b44282495d2655ff368
       m_Name: BuildTarget
       m_InlineUsage: 0
-    - m_Id: 4c48f5c25ace6ff4f952cd09f0905a0c
+    - m_Id: c573ddfbe3000af49a319ec515c84202
       m_Name: LocalBuildPath
       m_InlineUsage: 0
-    - m_Id: 78756b767659f224bb2e938e2d3c28c4
+    - m_Id: 7aac6dd416e7a3449ae8ac6fecd4990c
       m_Name: LocalLoadPath
       m_InlineUsage: 0
-    - m_Id: c7ded56ce580bca4d951aae3cfe92198
+    - m_Id: ad611909a226d3a42a3db14ab6f54e3b
       m_Name: RemoteBuildPath
       m_InlineUsage: 0
-    - m_Id: c3da08459c554d9418a173c79810798d
+    - m_Id: 52906ecad896afb40a07371f48266ef0
       m_Name: RemoteLoadPath
       m_InlineUsage: 0
     m_ProfileVersion: 1
@@ -97,16 +97,17 @@ MonoBehaviour:
     - MaleHair
     - MaleAnkles_Recipe
     - MaleHandsMid
+    - ElfMale Base Recipe
     - HumanMaleHighPoly
     - Puck
     - PuckDCS
     - Harold
     - Sven
     - Troll
-    - ElfMale Base Recipe
     - MaleHoodie_Recipe
     - MaleSweatPants_Recipe
     - FemaleHandsMid
+    - Elf Female Base Race Recipe
     - HumanFemale Base Recipe
     - HumanFemaleHighPoly
     - HumanGirl Base Recipe
@@ -114,7 +115,6 @@ MonoBehaviour:
     - HumanFemaleLegacy Base Recipe
     - KimCardassian
     - Shelly
-    - Elf Female Base Race Recipe
     - FemaleSwappedFace
     - MaleBase2
     - MaleLowPolyHead
@@ -169,6 +169,8 @@ MonoBehaviour:
     - FemaleStarDancer1
     - ToonCapriPants1
     - ToonHalterNeck1
+    - FemaleToonBase
+    - ToonFemaleUnderwear1
     - ToonHair1
     - ToonFancyFlats1
     - MaleChallengerBoots
@@ -193,8 +195,15 @@ MonoBehaviour:
     - JiggleBellyRecipe
     - JiggleBreastsRecipe
     - JiggleButtRecipe
-    - FemaleToonBase
-    - ToonFemaleUnderwear1
+    - UMA_Default
+    - UMA_Recipes
+    - GirlBaseAsDNA
+    - MaleBase
+    - RobeCollection
+    - ToonDancerCollection
+    - ToonStarDancerCollection
+    - ToonTopsBundle
+    - ChangerArmorCollection
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: dcf39f185b7285f46b384b0a25cb6bf7, type: 2}
@@ -208,7 +217,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 340f133d1bf4296429e7e89272e9ca2d, type: 2}
   - {fileID: 11400000, guid: a66145bd5cf546e43b0cce8f479ae05b, type: 2}
   - {fileID: 11400000, guid: 8b8611d630b2cb64eaa07595bdf4aed5, type: 2}
-  m_ActiveProfileId: cd6e409033219c44a925bb1c169c04d6
+  m_ActiveProfileId: 5478535d37c84b5459f75c4651d8ab29
   m_HostingServicesManager:
     m_HostingServiceInfos: []
     m_Settings: {fileID: 11400000}

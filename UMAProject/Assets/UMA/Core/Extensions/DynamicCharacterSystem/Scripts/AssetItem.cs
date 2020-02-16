@@ -106,7 +106,9 @@ namespace UMA
 				} */
                 if (IsAddressable)  // this check is so we can test addressables in the editor
                 {
-                    Object result;
+                    //Object result;
+                    return GetItem();
+                    /*
                     if (_editorCachedItem == null)
                     {
                         result = GetItem();
@@ -119,7 +121,7 @@ namespace UMA
                         _editorCachedItem = new System.WeakReference<Object>(result);
                         return result;
                     }
-                    return result;
+                    return result;*/
                 }
 
                 CacheSerializedItem(); 

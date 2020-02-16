@@ -557,7 +557,27 @@ namespace UMA
             }
         }
 
+        public List<AssetItem> GetAssetItems<T>()
+        {
+            List<AssetItem> Items = new List<AssetItem>();
+            System.Type ot = typeof(T);
+            System.Type theType = TypeToLookup[ot];
 
+            Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(theType);
+            Items.AddRange(TypeDic.Values);
+
+            return Items;
+        }
+        public List<AssetItem> GetAssetItems(Type t)
+        {
+            List<AssetItem> Items = new List<AssetItem>();
+            System.Type theType = TypeToLookup[t];
+
+            Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(theType);
+            Items.AddRange(TypeDic.Values);
+
+            return Items;
+        }
 
         public List<T> GetAllAssets<T>(string[] foldersToSearch = null) where T : UnityEngine.Object
         {
@@ -878,11 +898,14 @@ namespace UMA
                     keys.Add(GetLabel(wr));
             }
 
-            foreach (var tr in avatar.umaAdditionalRecipes)
-			{
-                if (tr != null)
-				    keys.Add(GetLabel(tr));
-			}
+            if (avatar.umaAdditionalRecipes != null)
+            {
+                foreach (var tr in avatar.umaAdditionalRecipes)
+                {
+                    if (tr != null)
+                        keys.Add(GetLabel(tr));
+                }
+            }
 
 			return LoadLabelList(keys,keepLoaded);
 		}
@@ -1159,6 +1182,17 @@ namespace UMA
 			// Not found
 			return null;
 		}
+
+        public AssetItem GetRecipeItem(UMAPackedRecipeBase recipe)
+        {
+            if (recipe is UMAWardrobeCollection)
+                return GetAssetItem<UMAWardrobeCollection>(recipe.name);
+            if (recipe is UMAWardrobeRecipe)
+                return GetAssetItem<UMAWardrobeRecipe>(recipe.name);
+            if (recipe is UMATextRecipe)
+                return GetAssetItem<UMATextRecipe>(recipe.name);
+            return null;
+        }
 
         public UMAData.UMARecipe GetRecipe(UMATextRecipe recipe, UMAContextBase context)
         {
@@ -1652,7 +1686,7 @@ namespace UMA
                 ai.AddressableLabels = recipe.AssignedLabel;
 
                 AddAssetItemToGroup(theGroup, ai, recipe.name, recipe.AssignedLabel);
-                if (ai._Type == typeof(OverlayDataAsset))
+                if (IsOverlayItem(ai))
                 {
                     OverlayDataAsset od = ai.Item as OverlayDataAsset;
                     if (od == null) continue;
@@ -1675,6 +1709,10 @@ namespace UMA
             return true;
         }
 
+        private static bool IsOverlayItem(AssetItem ai)
+        {
+            return ai._Type == typeof(OverlayDataAsset);
+        }
 
         public void GenerateSingleGroup(bool IncludeRecipes = false)
         {
@@ -1750,7 +1788,7 @@ namespace UMA
                     bool found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(ai.Item.GetInstanceID(), out string itemGUID, out long localID);
 
                     AddItemToSharedGroup(itemGUID, ai.AddressableAddress, theItems[ai], sharedGroup);
-                    if (ai._Type == typeof(OverlayDataAsset))
+                    if (IsOverlayItem(ai))
                     {
                         OverlayDataAsset od = ai.Item as OverlayDataAsset;
                         if (od == null)
@@ -1832,7 +1870,7 @@ namespace UMA
                         ai.AddressableGroup = sharedGroup.name;
 
                         AddItemToSharedGroup(itemGUID, ai.AddressableAddress, labels, sharedGroup);
-                        if (ai._Type == typeof(OverlayDataAsset))
+                        if (IsOverlayItem(ai))
                         {
                             OverlayDataAsset od = ai.Item as OverlayDataAsset;
                             if (od == null)
@@ -2514,7 +2552,7 @@ namespace UMA
                 System.Type CurrentType = TypeFromString[s];
                 if (!includeText)
                 {
-                    if (CurrentType == typeof(TextAsset))
+                    if (IsText(CurrentType))
                     {
                         continue;
                     }
@@ -2536,9 +2574,7 @@ namespace UMA
 						UnityEngine.Object o = AssetDatabase.LoadAssetAtPath(assetPath, CurrentType);
                         if (o != null)
                         {
-                            if (o.GetType() == typeof(UMAWardrobeRecipe) && CurrentType == typeof(UMATextRecipe)) continue;
-                            if (o.GetType() == typeof(UMAWardrobeCollection) && CurrentType == typeof(UMATextRecipe)) continue;
-                            if (o.GetType() == typeof(UMAWardrobeCollection) && CurrentType == typeof(UMAWardrobeRecipe)) continue;
+                            if (SkipDuplicateType(o, CurrentType)) continue;
                             AssetItem ai = new AssetItem(CurrentType, o);
                             AddAssetItem(ai);
                         }
@@ -2562,10 +2598,23 @@ namespace UMA
             ForceSave();
         }
 
+        private static bool IsText(Type CurrentType)
+        {
+            return CurrentType == typeof(TextAsset);
+        }
+
+        private bool SkipDuplicateType(UnityEngine.Object o, Type currentType)
+        {
+            if (o.GetType() == typeof(UMAWardrobeRecipe) && currentType == typeof(UMATextRecipe)) return true;
+            if (o.GetType() == typeof(UMAWardrobeCollection) && currentType == typeof(UMATextRecipe)) return true;
+            if (o.GetType() == typeof(UMAWardrobeCollection) && currentType == typeof(UMAWardrobeRecipe)) return true;
+            return false;
+        }
+
         /// <summary>
         /// Clears the index
         /// </summary>
-		public void Clear(bool forceSave = true)
+        public void Clear(bool forceSave = true)
         {
             // Rebuild the tables
             GuidTypes.Clear();

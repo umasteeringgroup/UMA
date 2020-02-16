@@ -100,8 +100,7 @@ namespace UMA.Controls
 		public static AssetIndexerWindow GetWindow ()
 		{
 			var window = GetWindow<AssetIndexerWindow>();
-			/* add any additional generators */
-			window.AddPlugins(GetAddressablePlugins());
+
 			/* Setup the window menus */
 			window.SetupMenus();
 
@@ -141,9 +140,12 @@ namespace UMA.Controls
 
 		private void SetupMenus()
 		{
+
 			_FileMenu = new GenericMenu();
 			_AddressablesMenu = new GenericMenu();
 			_ItemsMenu = new GenericMenu();
+
+			AddPlugins(GetAddressablePlugins());
 
 			// ***********************************************************************************
 			// File Menu items
@@ -211,13 +213,18 @@ namespace UMA.Controls
 				{
 					IUMAAddressablePlugin addrplug = o as IUMAAddressablePlugin;
 					UAI.GenerateAddressables(addrplug);
+					Resources.UnloadUnusedAssets();
+					m_Initialized = false;
+					Repaint();
 				},plugin);
 			}
+
+			AddressablesMenu.AddSeparator("Generators/");
 
 			// ***********************************************************************************
 			// Addressables Menu items
 			// ***********************************************************************************
-			AddMenuItemWithCallback(AddressablesMenu, "Generate Groups (optimized)", () => 
+			AddMenuItemWithCallback(AddressablesMenu, "Generators/Generate Groups (optimized)", () => 
 			{
 				UAI.CleanupAddressables();
 				UAI.GenerateAddressables();
@@ -226,16 +233,16 @@ namespace UMA.Controls
 				Repaint();
 			});
 
-			AddMenuItemWithCallback(AddressablesMenu, "Generate Shared Group (fast)", () =>
+			/* AddMenuItemWithCallback(AddressablesMenu, "Generators/Generate Shared Group (fast)", () =>
 			{
 				UAI.CleanupAddressables();
 				UAI.GenerateSingleGroup();
 				Resources.UnloadUnusedAssets();
 				m_Initialized = false;
 				Repaint();
-			});
+			}); */
 
-			AddMenuItemWithCallback(AddressablesMenu, "Generate Shared Group (incl recipes)", () =>
+			AddMenuItemWithCallback(AddressablesMenu, "Generators/Generate Shared Group (incl recipes)", () =>
 			{
 				UAI.CleanupAddressables();
 				UAI.GenerateSingleGroup(true);
@@ -254,6 +261,7 @@ namespace UMA.Controls
 			{
 				UAI.CleanupAddressables(true);
 			});
+
 			/*
 			AddMenuItemWithCallback(AddressablesMenu, "Force Add Refs (Bad!!)", () => 
 			{

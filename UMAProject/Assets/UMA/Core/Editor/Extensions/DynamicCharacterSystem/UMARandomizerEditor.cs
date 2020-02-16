@@ -24,15 +24,7 @@ namespace UMA.Editors
 			List<string> Races = new List<string>();
 			raceDatas = new List<RaceData>();
 
-			string[] guids = AssetDatabase.FindAssets("t:racedata");
-
-			foreach (string guid in guids)
-			{
-				string path = AssetDatabase.GUIDToAssetPath(guid);
-				RaceData rc = AssetDatabase.LoadAssetAtPath<RaceData>(path);
-				raceDatas.Add(rc);
-				Races.Add(rc.raceName);
-			}
+			raceDatas = UMAAssetIndexer.Instance.GetAllAssets<RaceData>();
 			races = Races.ToArray();
 		}
 

@@ -723,6 +723,10 @@ namespace UMA.Editors
 				GUIHelper.EndVerticalPadded(10);
 			}
 
+			if (newRace != null)
+			{
+				Debug.Break();
+			}
 
 			if (_recipe.raceData != newRace)
 			{

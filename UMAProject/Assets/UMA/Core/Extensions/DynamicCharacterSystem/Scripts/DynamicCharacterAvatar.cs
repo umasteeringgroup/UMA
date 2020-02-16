@@ -2722,14 +2722,17 @@ namespace UMA.CharacterSystem
                 }
             }
 
-            foreach (UMATextRecipe utr in umaAdditionalRecipes)
+            if (umaAdditionalRecipes != null)
             {
-                if (!utr) return;
-                if (utr.Hides.Count > 0)
+                foreach (UMATextRecipe utr in umaAdditionalRecipes)
                 {
-                    foreach (string s in utr.Hides)
+                    if (!utr) return;
+                    if (utr.Hides.Count > 0)
                     {
-                        HiddenSlots.Add(s);
+                        foreach (string s in utr.Hides)
+                        {
+                            HiddenSlots.Add(s);
+                        }
                     }
                 }
             }
@@ -2903,7 +2906,8 @@ namespace UMA.CharacterSystem
             umaData.umaRecipe.MeshHideDictionary = MeshHideDictionary;
 
             umaData.AddAdditionalRecipes(AdditionalRecipes, context);
-            AddAdditionalSerializedRecipes(umaAdditionalSerializedRecipes);
+            if (umaAdditionalSerializedRecipes != null)
+                AddAdditionalSerializedRecipes(umaAdditionalSerializedRecipes);
 
             //not sure if we do this first or not
             if (wasCrossCompatibleBuild)
@@ -2954,7 +2958,7 @@ namespace UMA.CharacterSystem
             UpdateColors();
 
             //New event that allows for tweaking the resulting recipe before the character is actually generated
-            RecipeUpdated.Invoke(umaData);
+            if (RecipeUpdated != null) RecipeUpdated.Invoke(umaData);
 
             if (umaRace != umaData.umaRecipe.raceData)
             {
@@ -2976,7 +2980,7 @@ namespace UMA.CharacterSystem
             //But the ExpressionPlayer needs to be Initialized AFTER Load
             if (activeRace.racedata != null && !restoreDNA)
             {
-                this.CharacterUpdated.AddListener(InitializeExpressionPlayer);
+                if (CharacterUpdated != null) this.CharacterUpdated.AddListener(InitializeExpressionPlayer);
             }
 
             // Add saved DNA

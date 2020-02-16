@@ -280,7 +280,10 @@ namespace UMA.Editors
 		//Avoid calling this all the time because its slow
 		protected RaceData GetCompatibleRaceData(string raceName)
 		{
-			RaceData foundRace = null;
+			/* RaceData foundRace = null; */
+			return UMAAssetIndexer.Instance.GetAsset<RaceData>(raceName);
+
+			/* 
 			string[] foundRacesStrings = AssetDatabase.FindAssets("t:RaceData");
 			for (int i = 0; i < foundRacesStrings.Length; i++)
 			{
@@ -291,7 +294,7 @@ namespace UMA.Editors
 					break;
 				}
 			}
-			return foundRace;
+			return foundRace; */
 		}
 
 		protected virtual bool DrawCompatibleRacesUI(Type TargetType, bool ShowHelp = false)

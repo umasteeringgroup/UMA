@@ -9,9 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b1487f5d688e4f94f828f879d599dbdc, type: 3}
-  m_Name: 85530f630be86e64aa238ffc35b7fec2_PlayerDataGroupSchema
+  m_Script: {fileID: 11500000, guid: 5834b5087d578d24c926ce20cd31e6d6, type: 3}
+  m_Name: 56641476a04aeda4a9bc1afadf396c8f_ContentUpdateGroupSchema
   m_EditorClassIdentifier: 
   m_Group: {fileID: 0}
-  m_IncludeResourcesFolders: 1
-  m_IncludeBuildSettingsScenes: 1
+  m_StaticContent: 0
