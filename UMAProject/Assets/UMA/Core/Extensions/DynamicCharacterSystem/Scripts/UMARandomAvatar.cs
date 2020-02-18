@@ -106,7 +106,6 @@ namespace UMA
 
 		private void AddRandomSlot(RandomWardrobeSlot uwr)
 		{
-			Debug.Log("Adding slot: " + uwr.WardrobeSlot.name);
 			Avatar.SetSlot(uwr.WardrobeSlot);
 		    if (uwr.Colors != null)
 			{

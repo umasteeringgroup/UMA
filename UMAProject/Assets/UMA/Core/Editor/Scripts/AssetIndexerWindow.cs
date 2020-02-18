@@ -433,18 +433,13 @@ namespace UMA.Controls
 		void SelectByRace(object Race)
 		{
 			RaceData rc = Race as RaceData;
-			Debug.Log("Selecting for race: " + rc.raceName);
-
 			List<AssetItem> recipeItems = UAI.GetAssetItems(rc.baseRaceRecipe as UMAPackedRecipeBase);
-
 			SelectByAssetItems(recipeItems);
 		}
 
 		void SelectSlotsByRace(object Race)
 		{
 			RaceData rc = Race as RaceData;
-			Debug.Log("Selecting for race: " + rc.raceName);
-
 			List<AssetItem> recipeItems = UAI.GetAssetItems(rc.baseRaceRecipe as UMAPackedRecipeBase);
 
 			recipeItems = recipeItems.Where(x => x._Type == typeof(SlotDataAsset)).ToList();
@@ -454,8 +449,6 @@ namespace UMA.Controls
 		void SelectOverlaysByRace(object Race)
 		{
 			RaceData rc = Race as RaceData;
-			Debug.Log("Selecting for race: " + rc.raceName);
-
 			List<AssetItem> recipeItems = UAI.GetAssetItems(rc.baseRaceRecipe as UMAPackedRecipeBase);
 			recipeItems = recipeItems.Where(x => x._Type == typeof(OverlayDataAsset)).ToList();
 			SelectByAssetItems(recipeItems);

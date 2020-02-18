@@ -18,8 +18,9 @@ public class Preloader : MonoBehaviour
     void Start()
     {
 #if UMA_ADDRESSABLES
-        op = Addressables.DownloadDependenciesAsync(Labels, Addressables.MergeMode.Union, false);
+        AsyncOperationHandle op = Addressables.DownloadDependenciesAsync(Labels, Addressables.MergeMode.Union, false);
         op.Completed += Op_Completed;
+        //await op.Task;
 #else
         Debug.Log("Addressables is not defined.");
         Text t = LoadingSlider.gameObject.GetComponentInChildren<Text>();

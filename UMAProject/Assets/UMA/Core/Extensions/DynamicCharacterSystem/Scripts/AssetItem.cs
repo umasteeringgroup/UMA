@@ -57,7 +57,6 @@ namespace UMA
 
                 if (!UMAAssetIndexer.TypeFromString.ContainsKey(_BaseTypeName))
                 {
-                    Debug.Log("unable to find type: " + _BaseTypeName);
                     if (_BaseTypeName.Contains("SlotData"))
                         _TheType = typeof(SlotDataAsset);
                     else if (_BaseTypeName.Contains("OverlayData"))
@@ -95,33 +94,15 @@ namespace UMA
 #if UNITY_EDITOR
                 if (_SerializedItem != null) return _SerializedItem;
 
-/*				if (IsAddressable)  // this check is so we can test addressables in the editor
-				{
-					if (_editorCachedItem == null)
-					{
-						_editorCachedItem = GetItem();
-					}
-					// _editorCachedItem is never saved.
-					return _editorCachedItem;
-				} */
-                if (IsAddressable)  // this check is so we can test addressables in the editor
+                // Items that are addressable should not be cached.
+                // but the editors still need them, so we'll load them from
+                // the assetdatabase as needed.
+                if (IsAddressable)   
                 {
-                    //Object result;
-                    return GetItem();
-                    /*
-                    if (_editorCachedItem == null)
-                    {
-                        result = GetItem();
-                        _editorCachedItem = new System.WeakReference<Object>(result);
-                        return result;
-                    }
-                    if (!_editorCachedItem.TryGetTarget(out result))
-                    {
-                        result = GetItem();
-                        _editorCachedItem = new System.WeakReference<Object>(result);
-                        return result;
-                    }
-                    return result;*/
+                    if (Application.isPlaying)
+                        return null;
+                    else
+                        return GetItem();
                 }
 
                 CacheSerializedItem(); 

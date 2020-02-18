@@ -135,6 +135,7 @@ namespace UMA
 			{
 				PlayerPrefs.SetString(umaDefaultLabelKey, newUmaLabel);
 			}
+			GUILayout.Label("Note: If you include recipes or other items, you will need to manually load them using LoadLabelList!", EditorStyles.miniLabel);
 			ConfigToggle(ConfigToggle_IncludeRecipes, "Include Recipes", "Include recipes in shared group generation", false);
 			ConfigToggle(ConfigToggle_IncludeOther, "Include all other types", "Include all other types in index in shared group generation", false);
 
