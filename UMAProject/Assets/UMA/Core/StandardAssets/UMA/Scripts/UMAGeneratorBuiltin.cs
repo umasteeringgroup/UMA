@@ -213,9 +213,9 @@ namespace UMA
 					meshCombiner.Preprocess(umaData);
 				}
 				umaData.FireCharacterBegunEvents();
+				PreApply(umaData);
 			}
 
-			PreApply(umaData);
 
 			if (umaData.isTextureDirty)
 			{
