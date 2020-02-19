@@ -145,6 +145,7 @@ public class SingleGroupGenerator : IUMAAddressablePlugin
         finally
         {
             EditorUtility.ClearProgressBar();
+            UMAAssetIndexer.Instance.ForceSave();
         }
     }
 

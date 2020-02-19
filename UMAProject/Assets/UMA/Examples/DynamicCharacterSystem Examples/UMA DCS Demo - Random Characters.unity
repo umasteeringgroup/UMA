@@ -214,12 +214,12 @@ PrefabInstance:
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a,
         type: 3}
       propertyPath: GridXSize
-      value: 10
+      value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a,
         type: 3}
       propertyPath: GridZSize
-      value: 20
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a,
         type: 3}

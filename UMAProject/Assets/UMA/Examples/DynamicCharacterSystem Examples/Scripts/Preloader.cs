@@ -18,7 +18,7 @@ public class Preloader : MonoBehaviour
     void Start()
     {
 #if UMA_ADDRESSABLES
-        AsyncOperationHandle op = Addressables.DownloadDependenciesAsync(Labels, Addressables.MergeMode.Union, false);
+        op = Addressables.DownloadDependenciesAsync(Labels, Addressables.MergeMode.Union, false);
         op.Completed += Op_Completed;
         //await op.Task;
 #else

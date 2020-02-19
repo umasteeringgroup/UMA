@@ -15,6 +15,7 @@ using UMA.PoseTools;//so we can set the expression set based on the race
 #if UMA_ADDRESSABLES
 using UnityEngine.ResourceManagement.AsyncOperations;
 using AsyncOp = UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<System.Collections.Generic.IList<UnityEngine.Object>>;
+using System.Threading.Tasks;
 #endif
 
 namespace UMA.CharacterSystem
@@ -613,10 +614,27 @@ namespace UMA.CharacterSystem
         /// <param name="customChangeRaceOptions">flags for the race change options</param>
         public void ChangeRace(string racename, ChangeRaceOptions customChangeRaceOptions = ChangeRaceOptions.useDefaults)
         {
+            // never been built, just use the race preset.
+            if (activeRace.racedata == null)
+            {
+                RacePreset = racename;
+                return;
+            }
             RaceData thisRace = null;
             if (racename != "None Set")
                 thisRace = context.GetRace(racename);
             ChangeRace(thisRace, customChangeRaceOptions);
+        }
+
+        public void ChangeRaceData(string raceName)
+        {
+            if (activeRace.racedata == null)
+            {
+                RacePreset = raceName;
+                return;
+            }
+            this.activeRace.name = raceName;
+            SetActiveRace();
         }
 
         /// <summary>
@@ -2569,25 +2587,29 @@ namespace UMA.CharacterSystem
 			}
 			yield break;
         }
-#endregion
+        #endregion
 
-#endregion
+        #endregion
 
-#region CHARACTER FINAL ASSEMBLY
+        #region CHARACTER FINAL ASSEMBLY
+     
 
         /// <summary>
         /// Builds the character by combining the Avatar's raceData.baseRecipe with the any wardrobe recipes that have been applied to the avatar.
         /// </summary>
         /// <returns>Can also be used to return an array of additional slots if this avatars flagForReload field is set to true before calling</returns>
         /// <param name="RestoreDNA">If updating the same race set this to true to restore the current DNA.</param>
-        public void BuildCharacter(bool RestoreDNA = true, bool skipBundleCheck=false)
+        public void BuildCharacter(bool RestoreDNA = true, bool skipBundleCheck = false)
         {
 #if SUPER_LOGGING
 			Debug.Log("Building DynamicCharacterAvatar: " + gameObject.name);
 #endif
 
-			if (!_buildCharacterEnabled)
-                return;
+            if (activeRace.racedata == null)
+            {
+                activeRace.SetRaceData();
+            }
+            umaRecipe = activeRace.racedata.baseRaceRecipe;
 
             List<string> HiddenSlots = new List<string>();//why was this HashSet list is faster for our purposes (http://stackoverflow.com/questions/150750/hashset-vs-list-performance)
 
@@ -2602,7 +2624,7 @@ namespace UMA.CharacterSystem
 
             // MeshHideDictionary.Clear();
             Dictionary<string, List<MeshHideAsset>> MeshHideDictionary = new Dictionary<string, List<MeshHideAsset>>();
-            
+
             UMADnaBase[] CurrentDNA = null;
             if (umaData != null)
             {
@@ -2726,18 +2748,20 @@ namespace UMA.CharacterSystem
             {
                 foreach (UMATextRecipe utr in umaAdditionalRecipes)
                 {
-                    if (!utr) return;
-                    if (utr.Hides.Count > 0)
+                    if (utr)
                     {
-                        foreach (string s in utr.Hides)
+                        if (utr.Hides.Count > 0)
                         {
-                            HiddenSlots.Add(s);
+                            foreach (string s in utr.Hides)
+                            {
+                                HiddenSlots.Add(s);
+                            }
                         }
                     }
                 }
             }
-
-        LoadCharacter(umaRecipe, ReplaceRecipes, Recipes,umaAdditionalRecipes, MeshHideDictionary, HiddenSlots, HideTags, CurrentDNA,  RestoreDNA, !BundleCheck);
+            Debug.Log("BuildCharacter Completed. Calling LoadCharacter.");
+            LoadCharacter(umaRecipe, ReplaceRecipes, Recipes, umaAdditionalRecipes, MeshHideDictionary, HiddenSlots, HideTags, CurrentDNA, RestoreDNA, !BundleCheck);
         }
 
 #if UMA_ADDRESSABLES
@@ -2775,6 +2799,7 @@ namespace UMA.CharacterSystem
             {
                 if (Op.IsDone)
                 {
+                    Debug.Log("Op is completed. Continuing.");
                     BuildSave bs = LoadQueue[Op];
                     LoadCharacter(bs._umaRecipe, bs._Replaces, bs._umaAdditionalSerializedRecipes,bs._AdditionalRecipes, bs._MeshHideDictionary, bs._hiddenSlots,bs._HideTags, bs._currentDNA, bs._restoreDNA, true);
                     LoadQueue.Remove(Op);
@@ -2789,6 +2814,10 @@ namespace UMA.CharacterSystem
                             UnloadOldestQueuedHandle();
                         }
                     }
+                }
+                else
+                {
+                    Debug.Log("Op is bad!");
                 }
             }
             catch (Exception ex)
@@ -2852,7 +2881,7 @@ namespace UMA.CharacterSystem
         /// <param name="Replaces"></param>
         /// <param name="umaAdditionalSerializedRecipes"></param>
         /// <returns>Returns true if the final recipe load caused more assets to download</returns>
-        void LoadCharacter(UMARecipeBase umaRecipe, List<UMAWardrobeRecipe> Replaces, List<UMARecipeBase> umaAdditionalSerializedRecipes, UMARecipeBase[] AdditionalRecipes, Dictionary<string, List<MeshHideAsset>> MeshHideDictionary, List<string> hiddenSlots, List<string> HideTags, UMADnaBase[] CurrentDNA, bool restoreDNA, bool skipBundleCheck )
+        private void LoadCharacter(UMARecipeBase umaRecipe, List<UMAWardrobeRecipe> Replaces, List<UMARecipeBase> umaAdditionalSerializedRecipes, UMARecipeBase[] AdditionalRecipes, Dictionary<string, List<MeshHideAsset>> MeshHideDictionary, List<string> hiddenSlots, List<string> HideTags, UMADnaBase[] CurrentDNA, bool restoreDNA, bool skipBundleCheck )
         {
 #if UMA_ADDRESSABLES
             if (!skipBundleCheck && isAddressableSystem)
@@ -3400,7 +3429,7 @@ namespace UMA.CharacterSystem
             {
                 get
                 {
-                    Validate();
+                    SetRaceData();
                     return _data;
                 }
                 set
@@ -3416,28 +3445,16 @@ namespace UMA.CharacterSystem
                 get { return _data; }
             }
 
-            void Validate()
+            public void SetRaceData()
             {
-                var thisContext = UMAContextBase.FindInstance();
+                UMAContextBase thisContext = UMAContext.Instance;
                 if (thisContext == null)
                 {
                     if (Debug.isDebugBuild)
                         Debug.LogWarning("UMAContextBase was missing this is required in scenes that use UMA. Please add the UMA_DCS prefab to the scene");
                     return;
                 }
-				var races = UMAContext.Instance.GetAllRaces();
-                foreach (RaceData race in races)
-                {
-                    if (race == null)
-                    {
-                        continue;
-                    }
-                    if (race.raceName == this.name)
-                    {
-                        _data = race;
-                        break;
-                    }
-                }
+                _data = thisContext.GetRace(name);
             }
         }
 

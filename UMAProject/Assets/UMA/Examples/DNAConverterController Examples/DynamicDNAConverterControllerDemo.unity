@@ -3094,6 +3094,7 @@ MonoBehaviour:
       m_Calls: []
   DelayUnload: 2
   BundleCheck: 1
+  KeepAnimatorController: 0
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -3197,6 +3198,7 @@ MonoBehaviour:
   loadFilename: 
   loadString: 
   loadFileOnStart: 1
+  AtlasResolutionScale: 1
   defaultLoadOptions: 31
   savePathType: 0
   savePath: CharacterRecipes
@@ -3839,6 +3841,7 @@ MonoBehaviour:
       m_Calls: []
   DelayUnload: 2
   BundleCheck: 1
+  KeepAnimatorController: 0
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -3942,6 +3945,7 @@ MonoBehaviour:
   loadFilename: 
   loadString: 
   loadFileOnStart: 1
+  AtlasResolutionScale: 1
   defaultLoadOptions: 31
   savePathType: 0
   savePath: CharacterRecipes
@@ -4367,7 +4371,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  context: {fileID: 0}
+  context: {fileID: 1826789987}
   umaData: {fileID: 0}
   umaRecipe: {fileID: 0}
   umaAdditionalRecipes:
@@ -4402,6 +4406,7 @@ MonoBehaviour:
       m_Calls: []
   DelayUnload: 2
   BundleCheck: 1
+  KeepAnimatorController: 0
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -4426,10 +4431,6 @@ MonoBehaviour:
       _compatibleRaces:
       - HumanFemaleDCS
       - HumanFemale
-    - _recipeName: MaleUnderwear
-      _compatibleRaces:
-      - HumanMale
-      - HumanMaleDCS
     - _recipeName: FemaleUndies2
       _compatibleRaces:
       - HumanFemaleDCS
@@ -4515,6 +4516,7 @@ MonoBehaviour:
   loadFilename: 
   loadString: 
   loadFileOnStart: 1
+  AtlasResolutionScale: 1
   defaultLoadOptions: 23
   savePathType: 0
   savePath: CharacterRecipes
@@ -11172,6 +11174,7 @@ MonoBehaviour:
       m_Calls: []
   DelayUnload: 2
   BundleCheck: 1
+  KeepAnimatorController: 0
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -11275,6 +11278,7 @@ MonoBehaviour:
   loadFilename: 
   loadString: 
   loadFileOnStart: 1
+  AtlasResolutionScale: 1
   defaultLoadOptions: 31
   savePathType: 0
   savePath: CharacterRecipes
@@ -13916,6 +13920,7 @@ MonoBehaviour:
       m_Calls: []
   DelayUnload: 2
   BundleCheck: 1
+  KeepAnimatorController: 0
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -14019,6 +14024,7 @@ MonoBehaviour:
   loadFilename: 
   loadString: 
   loadFileOnStart: 1
+  AtlasResolutionScale: 1
   defaultLoadOptions: 23
   savePathType: 0
   savePath: CharacterRecipes
@@ -21211,6 +21217,11 @@ PrefabInstance:
     - target: {fileID: 6782112333398131214, guid: a54fde34eec40964b94d71ee0aba9889,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7066486438860346000, guid: a54fde34eec40964b94d71ee0aba9889,
+        type: 3}
+      propertyPath: fastGeneration
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
