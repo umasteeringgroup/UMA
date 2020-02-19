@@ -2065,7 +2065,7 @@ namespace UMA
         public bool EvilAddAsset(System.Type type, UnityEngine.Object o)
         {
             AssetItem ai = null;
-            ai = new AssetItem(type, o);
+            ai = new AssetItem(TypeToLookup[type], o);
             ai._Path = AssetDatabase.GetAssetPath(o.GetInstanceID());
             return AddAssetItem(ai);
         }
