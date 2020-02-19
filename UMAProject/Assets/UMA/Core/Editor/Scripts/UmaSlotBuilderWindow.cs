@@ -18,6 +18,8 @@ namespace UMA.Editors
 		public bool addToGlobalLibrary;
 		public bool binarySerialization;
 		public string errmsg = "";
+		public List<string> Tags = new List<string>();
+		public bool showTags;
 
 		string GetAssetFolder()
 		{
@@ -56,7 +58,6 @@ namespace UMA.Editors
 			}
 		}
 
-
 		void OnGUI()
 		{
 			GUILayout.Label("UMA Slot Builder");
@@ -68,12 +69,60 @@ namespace UMA.Editors
 				errmsg = "";
 				slotMesh = newslotMesh;
 			}
+
+
 			slotMaterial = EditorGUILayout.ObjectField("UMAMaterial	 ", slotMaterial, typeof(UMAMaterial), false) as UMAMaterial;
 			slotFolder = EditorGUILayout.ObjectField("Slot Destination Folder"	, slotFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
 			EnforceFolder(ref slotFolder);
-			RootBone = EditorGUILayout.TextField("Root Bone (ex:'Global')", RootBone);
+			// RootBone = EditorGUILayout.TextField("Root Bone (ex:'Global')", RootBone);
 			slotName = EditorGUILayout.TextField("Slot Name", slotName);
 			binarySerialization = EditorGUILayout.Toggle(new GUIContent("Binary Serialization", "Forces the created Mesh object to be serialized as binary. Recommended for large meshes and blendshapes."), binarySerialization);
+
+			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
+			GUILayout.Space(10);
+			showTags = EditorGUILayout.Foldout(showTags, "Tags");
+			GUILayout.EndHorizontal();
+			if (showTags)
+			{
+				GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+				// Draw the button area
+				GUILayout.BeginHorizontal();
+				if (GUILayout.Button("Add Tag", GUILayout.Width(80)))
+				{
+					Tags.Add("");
+					Repaint();
+				}
+				 
+				GUILayout.Label(Tags.Count + " Tags defined");
+				GUILayout.EndHorizontal();
+
+				if (Tags.Count == 0)
+				{
+					GUILayout.Label("No tags defined", EditorStyles.helpBox);
+				}
+				else
+				{
+					int del = -1;
+
+					for (int i = 0; i < Tags.Count; i++)
+					{
+						GUILayout.BeginHorizontal();
+						Tags[i] = GUILayout.TextField(Tags[i]);
+						if(GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false)))
+						{
+							del = i;
+						}
+						GUILayout.EndHorizontal();
+					}
+					if (del >= 0)
+					{
+						Tags.RemoveAt(del);
+						Repaint();
+					}
+				}
+				// Draw the tags (or "No tags defined");
+				GUIHelper.EndVerticalPadded(10);
+			}
 
 			EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
 			EditorGUILayout.BeginHorizontal();
@@ -176,7 +225,7 @@ namespace UMA.Editors
 			}
 
 			SlotDataAsset sd = CreateSlot_Internal();
-
+			
 			return sd;
 		}
 
@@ -228,6 +277,7 @@ namespace UMA.Editors
 
 			Debug.Log("Slot Mesh: " + slotMesh.name, slotMesh.gameObject);
 			SlotDataAsset slot = UMASlotProcessingUtil.CreateSlotData(AssetDatabase.GetAssetPath(slotFolder), GetAssetFolder(), GetAssetName(), slotMesh, material, normalReferenceMesh,RootBone, binarySerialization);
+			slot.tags = Tags.ToArray();
 			return slot;
 		}
 

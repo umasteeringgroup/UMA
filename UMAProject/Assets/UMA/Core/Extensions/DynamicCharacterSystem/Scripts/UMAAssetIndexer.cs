@@ -1182,6 +1182,47 @@ namespace UMA
 			// Not found
 			return null;
 		}
+        private AddressableAssetEntry GetAddressableAssetEntry(AssetItem ai, out AddressableAssetGroup assetgroup)
+        {
+            assetgroup = null;
+
+            if (AddressableSettings == null)
+            {
+                return null;
+            }
+
+            foreach (var group in AddressableSettings.groups)
+            {
+                if (group.HasSchema<PlayerDataGroupSchema>())
+                    continue;
+
+                foreach (AddressableAssetEntry e in group.entries)
+                {
+                    if (e.AssetPath == ai._Path)
+                    {
+                        assetgroup = group;
+                        return e;
+                    }
+                }
+            }
+
+            // Not found
+            return null;
+        }
+
+        /// <summary>
+        /// Removes the assent entry, if it exists
+        /// </summary>
+        /// <param name="ai"></param>
+        private void ClearAddressableAssetEntry(AssetItem ai)
+        {
+            AddressableAssetEntry ae = GetAddressableAssetEntry(ai, out AddressableAssetGroup group);
+            if (group != null)
+            {
+                group.RemoveAssetEntry(ae);
+            }
+        }
+
 
         public AssetItem GetRecipeItem(UMAPackedRecipeBase recipe)
         {
@@ -2100,11 +2141,14 @@ namespace UMA
 			var items = GetAssetDictionary(type).Values;
 			foreach (AssetItem ai in items)
 			{
+                if (ai.IsAddressable)
+                {
+                    ClearAddressableAssetEntry(ai);
+                }
 				ai.IsAddressable = false;
                 ai.AddressableAddress = "";
                 ai.AddressableLabels = "";
                 ai._SerializedItem = null;
-                ai._editorCachedItem = null;
             }
         }
 

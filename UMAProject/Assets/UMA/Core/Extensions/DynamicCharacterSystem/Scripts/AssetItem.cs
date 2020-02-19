@@ -43,9 +43,6 @@ namespace UMA
         public string AddressableLabels;
 		public int ReferenceCount;
 
-		[System.NonSerialized]
-		public System.WeakReference<Object> _editorCachedItem;
-
         #endregion
         #region Properties
         public System.Type _Type

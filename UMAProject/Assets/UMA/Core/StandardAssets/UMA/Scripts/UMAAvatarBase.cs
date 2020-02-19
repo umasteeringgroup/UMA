@@ -61,6 +61,7 @@ namespace UMA
 				if (umaData == null)
 				{
 					umaData = gameObject.AddComponent<UMAData>();
+					umaData.umaRecipe = new UMAData.UMARecipe(); // TEST JRRM
 					if (umaGenerator != null && !umaGenerator.gameObject.activeInHierarchy)
 					{
 						if (Debug.isDebugBuild)
