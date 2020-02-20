@@ -19,7 +19,6 @@ MonoBehaviour:
   cutoutShader: {fileID: 4800000, guid: 6ec55823d603ee4478b56d3f0d7ce6bb, type: 3}
   detailNormalShader: {fileID: 4800000, guid: e5ba71eed666aef459dbb1dce2bc3d2f, type: 3}
   diffusePostProcesses: []
-  normalPostProcesses:
-  - {fileID: 11400000, guid: 45d9ffb21df267d4282b6c9bbc157775, type: 2}
+  normalPostProcesses: []
   dataPostProcesses: []
   detailNormalPostProcesses: []

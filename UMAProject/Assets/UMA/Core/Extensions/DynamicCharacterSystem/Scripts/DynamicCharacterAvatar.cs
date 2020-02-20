@@ -2760,7 +2760,6 @@ namespace UMA.CharacterSystem
                     }
                 }
             }
-            Debug.Log("BuildCharacter Completed. Calling LoadCharacter.");
             LoadCharacter(umaRecipe, ReplaceRecipes, Recipes, umaAdditionalRecipes, MeshHideDictionary, HiddenSlots, HideTags, CurrentDNA, RestoreDNA, !BundleCheck);
         }
 
@@ -2799,7 +2798,6 @@ namespace UMA.CharacterSystem
             {
                 if (Op.IsDone)
                 {
-                    Debug.Log("Op is completed. Continuing.");
                     BuildSave bs = LoadQueue[Op];
                     LoadCharacter(bs._umaRecipe, bs._Replaces, bs._umaAdditionalSerializedRecipes,bs._AdditionalRecipes, bs._MeshHideDictionary, bs._hiddenSlots,bs._HideTags, bs._currentDNA, bs._restoreDNA, true);
                     LoadQueue.Remove(Op);
@@ -2814,10 +2812,6 @@ namespace UMA.CharacterSystem
                             UnloadOldestQueuedHandle();
                         }
                     }
-                }
-                else
-                {
-                    Debug.Log("Op is bad!");
                 }
             }
             catch (Exception ex)
@@ -3216,7 +3210,7 @@ namespace UMA.CharacterSystem
         }
 
 
-        public void ForceUpdate(bool DnaDirty, bool TextureDirty = false, bool MeshDirty = false, bool skipBundleCheck = false)
+        public void ForceUpdate(bool DnaDirty, bool TextureDirty = false, bool MeshDirty = false)
         {
             umaData.Dirty(DnaDirty, TextureDirty, MeshDirty);
         }
