@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
+  m_IndirectSpecularColor: {r: 0.14203726, g: 0.14901726, b: 0.16841246, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &4
 LightmapSettings:
@@ -88,7 +88,7 @@ LightmapSettings:
     m_PVRFilteringAtrousPositionSigmaIndirect: 2
     m_PVRFilteringAtrousPositionSigmaAO: 1
     m_ShowResolutionOverlay: 1
-  m_LightingDataAsset: {fileID: 112000002, guid: 180b28226183dcc4c9f138dc7a97312f,
+  m_LightingDataAsset: {fileID: 112000000, guid: 6f69512662f472446aa6e656534b8cda,
     type: 2}
   m_UseShadowmask: 0
 --- !u!196 &5
@@ -4483,13 +4483,13 @@ MonoBehaviour:
       valuesConverted: 0
     - name: Skin
       channelMask:
-      - {r: 0.9450981, g: 0.91372555, b: 0.7686275, a: 1}
+      - {r: 0.8962264, g: 0.85671455, b: 0.7905393, a: 1}
       - {r: 1, g: 1, b: 1, a: 1}
       - {r: 1, g: 1, b: 1, a: 1}
       channelAdditiveMask:
       - {r: 0, g: 0, b: 0, a: 0}
       - {r: 0, g: 0, b: 0, a: 0}
-      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0.0627451, g: 0, b: 0, a: 0.24313726}
       _name: 
       _color: {r: 0.9450981, g: 0.91372555, b: 0.7686275, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
@@ -21223,6 +21223,11 @@ PrefabInstance:
         type: 3}
       propertyPath: fastGeneration
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7066486438860346000, guid: a54fde34eec40964b94d71ee0aba9889,
+        type: 3}
+      propertyPath: InitialScaleFactor
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a54fde34eec40964b94d71ee0aba9889, type: 3}

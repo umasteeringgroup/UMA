@@ -25,6 +25,10 @@ namespace UMA.Editors
 			raceDatas = new List<RaceData>();
 
 			raceDatas = UMAAssetIndexer.Instance.GetAllAssets<RaceData>();
+			foreach(RaceData race in raceDatas)
+			{
+				Races.Add(race.name);
+			}
 			races = Races.ToArray();
 		}
 
