@@ -2947,12 +2947,6 @@ namespace UMA.CharacterSystem
 
             foreach (SlotData sd in umaData.umaRecipe.slotDataList)
             {
-                //Add MeshHideAsset here
-               // if (MeshHideDictionary.ContainsKey(sd.slotName))
-               // {   //If this slotDataAsset is found in the MeshHideDictionary then we need to supply the SlotData with the bitArray.
-               //     sd.meshHideMask = MeshHideAsset.GenerateMask( MeshHideDictionary[sd.slotName] );
-               // }
-                
                 if (sd.OverlayCount > 1)
                 {
                     List<OverlayData> Overlays = sd.GetOverlayList();
@@ -2977,7 +2971,6 @@ namespace UMA.CharacterSystem
                     sd.UpdateOverlayList(SortedOverlays);
                 }
             }
-
             UpdateColors();
 
             //New event that allows for tweaking the resulting recipe before the character is actually generated
@@ -3041,13 +3034,6 @@ namespace UMA.CharacterSystem
             umaData.umaRecipe.sharedColors = new OverlayColorData[0];
             animationController = null;
 
-            /*
-            *For now, we are not going to clean this up as it resets the avatar rotation, but only in Unity 5.5 +
-            if (gameObject.GetComponent<Animator>())
-            {
-                gameObject.GetComponent<Animator>().runtimeAnimatorController = null;
-            }
-            */
             if (gameObject.GetComponent<UMAExpressionPlayer>())
                 gameObject.GetComponent<UMAExpressionPlayer>().enabled = false;
         }

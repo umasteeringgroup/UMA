@@ -26,7 +26,9 @@ namespace UMA
 		{
 			get
 			{
-				return	asset.useAtlasOverlay;
+				if (asset != null)
+					return	asset.useAtlasOverlay;
+				return false;
 			}
 		}
 
@@ -47,7 +49,15 @@ namespace UMA
 		/// When serializing this recipe should this slot be skipped, useful for scene specific "additional slots"
 		/// </summary>
 		public bool dontSerialize;
-		public string slotName { get { return asset.slotName; } }
+		public string slotName 
+		{ 
+			get 
+			{ 
+				if (asset != null)
+					return asset.slotName;
+				return "";
+			} 
+		}
 		/// <summary>
 		/// list of overlays used to texture the slot.
 		/// </summary>
@@ -68,6 +78,12 @@ namespace UMA
 			this.asset = asset;
 			overlayScale = asset.overlayScale;
 			rendererAsset = asset.RendererAsset;
+		}
+
+		public SlotData()
+		{
+			overlayScale = 1.0f;
+			rendererAsset = null;
 		}
 
 		public bool HasTag(List<string> tags)
@@ -130,10 +146,10 @@ namespace UMA
 			return res;
 		}
 
-		public int GetTextureChannelCount(UMAGeneratorBase generator)
+	/*	public int GetTextureChannelCount(UMAGeneratorBase generator)
 		{
 			return asset.GetTextureChannelCount(generator);
-		}
+		} */
 
 		public bool RemoveOverlay(params string[] names)
 		{
@@ -294,6 +310,9 @@ namespace UMA
 		internal bool Validate()
 		{
 			bool valid = true;
+			if (asset == null)
+				return true;
+
 			if (asset.meshData != null)
 			{
 				if (asset.material == null)

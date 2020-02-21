@@ -2769,7 +2769,6 @@ namespace UMA
                 }
 #else
                 ai.IsAddressable = false;
-                ai._editorCachedItem = null;
                 ai.AddressableLabels = "";
                 ai.AddressableGroup = "";
                 ai.AddressableAddress = "";
