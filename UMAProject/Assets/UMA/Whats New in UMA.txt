@@ -57,6 +57,7 @@ New Detail Normal map texture channel type, allows combining of normal maps in U
 New Non-Shader texture channel type, allows a texture to be accumulated on the atlas, but not sent to a material. 
 The first RuntimeAnimatorController for compatible races will now be added if a race specific controller is not found.
 You can now pass a constructed DynamicCharacterAvatar to the UMARandomAvatar.Randomize() function to regenerate it randomly.
+New scene ("OverlayAligner") to convert and adjust overlay coordinates visually. 
 Various bug fixes & changes
     Fixed various overlays that were missing textures or had the wrong count
     Fixed some scenes that had broken over time

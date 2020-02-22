@@ -29,7 +29,14 @@ namespace UMA
 		private OverlayData BaseOverlay = null;
 		private Dictionary<int, OverlayData> AdditionalOverlays = new Dictionary<int, OverlayData>();
 
+
 		private void OnEnable()
+		{
+			Initiailize();
+			ProcessCurrentOverlays();
+		}
+
+		private void Initiailize(bool retry = true)
 		{
 			overlayViewer = serializedObject.targetObject as OverlayViewer;
 			TempUMAData = overlayViewer.gameObject.GetComponent<UMAData>();
@@ -75,9 +82,8 @@ namespace UMA
 			overlayDataList.onChangedCallback = (ReorderableList list) =>
 			{
 				SelectNewOverlay(list.index);
-				ProcessCurrentOverlays();
+				ProcessCurrentOverlays(retry);
 			};
-			ProcessCurrentOverlays();
 		}
 
 		private void SetupGenerator()
@@ -118,7 +124,7 @@ namespace UMA
 		}
 
 
-		public void ProcessCurrentOverlays()
+		public void ProcessCurrentOverlays(bool retry = true)
 		{
 
 			if (baseOverlayProperty == null)
@@ -158,9 +164,18 @@ namespace UMA
 			textureProcessCoroutine = new TextureProcessPROCoroutine();
 			textureProcessCoroutine.Prepare(TempUMAData, TempUMAData.umaGenerator);
 			activeGeneratorCoroutine.Prepare(TempUMAData.umaGenerator, TempUMAData, textureProcessCoroutine, false, 1);
-			bool workDone = activeGeneratorCoroutine.Work();
-			//Debug.Log("Workdone is " + workDone);
-			rawImage.material = TempUMAData.generatedMaterials.materials[0].material;
+			try
+			{
+				bool workDone = activeGeneratorCoroutine.Work();
+				//Debug.Log("Workdone is " + workDone);
+				rawImage.material = TempUMAData.generatedMaterials.materials[0].material;
+			}
+			catch(Exception ex)
+			{
+				Debug.Log("Something has gone wrong. Reinitializing. Text of error was: "+ex.Message);
+				if (retry)
+					Initiailize(false);
+			}
 		}
 
 	public override void OnInspectorGUI()
@@ -171,6 +186,16 @@ namespace UMA
 			{
 				SelectedOverlay = currentOverlayProperty.objectReferenceValue as OverlayDataAsset;
 			}
+
+			if (overlayViewer.AnnoyingPanel.activeSelf)
+			{
+				if (GUILayout.Button("Begin"))
+				{
+					overlayViewer.AnnoyingPanel.SetActive(false);
+				}
+				EditorGUILayout.LabelField("Press the begin button to hide the annoying panel and start editing", EditorStyles.helpBox);
+			}
+
 
 			EditorGUI.BeginChangeCheck();
 			EditorGUILayout.PropertyField(baseOverlayProperty);
@@ -239,7 +264,14 @@ namespace UMA
 					ProcessCurrentOverlays();
 				}
 			}
-
+			if (GUILayout.Button("Save"))
+			{
+				OverlayDataAsset ovl = currentOverlayProperty.objectReferenceValue as OverlayDataAsset;
+				ovl.rect = overlayEditor.Overlay.rect;
+				EditorUtility.SetDirty(ovl);
+				AssetDatabase.SaveAssets();
+				EditorUtility.DisplayDialog("Message","Overlay Saved","OK");
+			}
 		}
 	}
 }

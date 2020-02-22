@@ -240,7 +240,7 @@ namespace UMA.Controls
 				Resources.UnloadUnusedAssets();
 				m_Initialized = false;
 				Repaint();
-			}); */
+			});
 
 			AddMenuItemWithCallback(AddressablesMenu, "Generators/Generate Shared Group (incl recipes)", () =>
 			{
@@ -249,7 +249,7 @@ namespace UMA.Controls
 				Resources.UnloadUnusedAssets();
 				m_Initialized = false;
 				Repaint();
-			});
+			}); */
 
 			AddMenuItemWithCallback(AddressablesMenu, "Remove Addressables", () => 
 			{ 

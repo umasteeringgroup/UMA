@@ -13,6 +13,7 @@ namespace UMA
         public OverlayDataAsset BaseOverlay;
         public List<OverlayDataAsset> Overlays = new List<OverlayDataAsset>();
         public RawImage ImageViewer;
+        public GameObject AnnoyingPanel;
 
         // Start is called before the first frame update
         void Start()
