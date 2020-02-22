@@ -256,21 +256,20 @@ namespace UMA
 			}
 			else
 			{
-				EditorGUILayout.LabelField("Press Save or edits will be lost!", EditorStyles.helpBox);
 				OverlayDataAsset ovl = currentOverlayProperty.objectReferenceValue as OverlayDataAsset;
-				EditorGUILayout.LabelField("Selected Overlay: "+ovl.overlayName);
+				EditorGUILayout.LabelField("Selected Overlay: " + ovl.overlayName);
 				if (overlayEditor.OnGUI())
 				{
 					ProcessCurrentOverlays();
 				}
-			}
-			if (GUILayout.Button("Save"))
-			{
-				OverlayDataAsset ovl = currentOverlayProperty.objectReferenceValue as OverlayDataAsset;
-				ovl.rect = overlayEditor.Overlay.rect;
-				EditorUtility.SetDirty(ovl);
-				AssetDatabase.SaveAssets();
-				EditorUtility.DisplayDialog("Message","Overlay Saved","OK");
+				EditorGUILayout.LabelField("Press Save or edits will be lost!", EditorStyles.helpBox);
+				if (GUILayout.Button("Save"))
+				{
+					ovl.rect = overlayEditor.Overlay.rect;
+					EditorUtility.SetDirty(ovl);
+					AssetDatabase.SaveAssets();
+					EditorUtility.DisplayDialog("Message", "Overlay '" + ovl.overlayName + "' Saved", "OK");
+				}
 			}
 		}
 	}
