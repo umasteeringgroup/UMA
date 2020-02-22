@@ -76,8 +76,15 @@ namespace UMA
 		public SlotData(SlotDataAsset asset)
 		{
 			this.asset = asset;
-			overlayScale = asset.overlayScale;
-			rendererAsset = asset.RendererAsset;
+			if (asset)
+			{
+				overlayScale = asset.overlayScale;
+				rendererAsset = asset.RendererAsset;
+			}
+			else
+			{
+				overlayScale = 1.0f;
+			}
 		}
 
 		public SlotData()

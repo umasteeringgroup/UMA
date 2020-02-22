@@ -28,6 +28,7 @@ namespace UMA
 		public const string ConfigToggle_UseSharedGroup = "UMA_ADDRESSABLES_USE_SHARED_GROUP";
 		public const string ConfigToggle_ArchiveGroups = "UMA_ADDRESSABLES_ARCHIVE_ASSETBUNDLE_GROUPS";
 
+		public const string ConfigToggle_AddCollectionLabels = "UMA_SHAREDGROUP_ADDCOLLECTIONLABELS";
 		public const string ConfigToggle_IncludeRecipes = "UMA_SHAREDGROUP_INCLUDERECIPES";
 		public const string ConfigToggle_IncludeOther = "UMA_SHAREDGROUP_INCLUDEOTHERINDEXED";
 		private static string DNALocation = "UMA/";
@@ -126,9 +127,12 @@ namespace UMA
 			ConfigToggle(ConfigToggle_ArchiveGroups, "Archive Groups", "For now just copies the assetbundles into folders with the group name.", false);
 
 			GUILayout.Space(10.0f);
+
+			
 			GUILayout.Label("Shared Group Generation", EditorStyles.boldLabel);
 			GUILayout.Label("By default, Slots, Overlays and Textures are included.",EditorStyles.miniLabel);
 
+			ConfigToggle(ConfigToggle_AddCollectionLabels, "Add Collection Labels","Scan through Wardrobe Collections for recipes, and also label them with the collection label", false);
 			string currentLabel = PlayerPrefs.GetString(umaDefaultLabelKey, umaDefaultLabel);
 			string newUmaLabel = EditorGUILayout.DelayedTextField("Default UMA Label", currentLabel);
 			if (newUmaLabel != umaDefaultLabel)

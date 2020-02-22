@@ -4,11 +4,13 @@ using System.Collections.Generic;
 using System.Text;
 using UMA;
 using UnityEditor;
-using UnityEditor.AddressableAssets.Settings;
-using UnityEditor.AddressableAssets.Settings.GroupSchemas;
 using UnityEngine;
+using UMA.CharacterSystem;
 
 #if UMA_ADDRESSABLES
+using UnityEditor.AddressableAssets.Settings;
+using UnityEditor.AddressableAssets.Settings.GroupSchemas;
+
 
 namespace UMA
 {
@@ -17,6 +19,7 @@ namespace UMA
         public UMAAssetIndexer Index;
         List<UMAPackedRecipeBase> Recipes;
         Dictionary<AssetItem, List<string>> AddressableItems = new Dictionary<AssetItem, List<string>>();
+        Dictionary<string, List<string>> RecipeExtraLabels = new Dictionary<string, List<string>>();
 
         const string SharedGroupName = "UMA_SharedItems";
 
@@ -36,12 +39,37 @@ namespace UMA
                 bool IncludeOthers = UMAEditorUtilities.GetConfigValue(UMAEditorUtilities.ConfigToggle_IncludeOther, false);
                 string DefaultAddressableLabel = UMAEditorUtilities.GetDefaultAddressableLabel();
 
-
+                RecipeExtraLabels = new Dictionary<string, List<string>>();
+                
+                if (UMAEditorUtilities.GetConfigValue(UMAEditorUtilities.ConfigToggle_AddCollectionLabels, false))
+                {
+                    var WardrobeCollections = UMAAssetIndexer.Instance.GetAllAssets<UMAWardrobeCollection>();
+                    foreach (var wc in WardrobeCollections)
+                    {
+                        string label = wc.AssignedLabel;
+                        List<string> recipes = wc.wardrobeCollection.GetAllRecipeNamesInCollection();
+                        foreach (string recipe in recipes)
+                        {
+                            if (RecipeExtraLabels.ContainsKey(recipe) == false)
+                            {
+                                RecipeExtraLabels.Add(recipe, new List<string>());
+                            }
+                            RecipeExtraLabels[recipe].Add(label);
+                        }
+                    }
+                }
 
                 float pos = 0.0f;
                 float inc = 1.0f / Recipes.Count;
                 foreach (UMAPackedRecipeBase uwr in Recipes)
                 {
+                    List<string> ExtraLabels = new List<string>();
+
+                    if (RecipeExtraLabels.ContainsKey(uwr.name))
+                    {
+                        ExtraLabels = RecipeExtraLabels[uwr.name];
+                    }
+
                     EditorUtility.DisplayProgressBar("Generating", "processing recipe: " + uwr.name, pos);
                     List<AssetItem> items = Index.GetAssetItems(uwr, true);
                     foreach (AssetItem ai in items)
@@ -52,6 +80,7 @@ namespace UMA
                             AddressableItems[ai].Add(DefaultAddressableLabel);
                         }
                         AddressableItems[ai].Add(uwr.AssignedLabel);
+                        AddressableItems[ai].AddRange(ExtraLabels);
                     }
                     if (IncludeRecipes)
                     {
@@ -63,6 +92,7 @@ namespace UMA
                         }
                         AddressableItems[RecipeItem].Add(uwr.AssignedLabel);
                         AddressableItems[RecipeItem].Add("UMA_Recipes");
+                        AddressableItems[RecipeItem].AddRange(ExtraLabels);
                     }
                     pos += inc;
                 }

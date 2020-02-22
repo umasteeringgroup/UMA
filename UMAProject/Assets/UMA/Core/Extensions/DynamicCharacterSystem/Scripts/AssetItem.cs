@@ -233,10 +233,26 @@ namespace UMA
             }
         }
 
-#region Methods (edit time)
+        public bool IsOverlayDataAsset
+        {
+            get
+            {
+                return _Type == typeof(OverlayDataAsset);
+            }
+        }
+
+        public bool IsSlotDataAsset
+        {
+            get
+            {
+                return _Type == typeof(SlotDataAsset);
+            }
+        }
+
+        #region Methods (edit time)
 #if UNITY_EDITOR
 
-		public string ToString(string SortOrder)
+        public string ToString(string SortOrder)
         {
             if (SortOrder == "AssetName")
                 return _AssetBaseName;

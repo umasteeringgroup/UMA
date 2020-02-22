@@ -425,6 +425,16 @@ namespace UMA
             return null;
         }
 
+        
+        public List<AssetItem> GetAssetItems(string recipe, bool LookForLODs = false)
+        {
+            AssetItem ai = GetAssetItem<UMAWardrobeRecipe>(recipe);
+            if (ai != null)
+            {
+                return GetAssetItems(ai.Item as UMAWardrobeRecipe, LookForLODs);
+            }
+            return new List<AssetItem>();
+        }
 
         public List<AssetItem> GetAssetItems(UMAPackedRecipeBase recipe, bool LookForLODs = false)
 		{
@@ -1415,6 +1425,16 @@ namespace UMA
                     }
                 }
                 pos += inc;
+            }
+        }
+
+        public void AssignLabel(AssetItem ai, string Label)
+        {
+            AddressableAssetEntry ae = GetAddressableAssetEntry(ai);
+            if (ae != null)
+            {
+                if (ae.labels.Contains(Label)) return;
+                ae.SetLabel(Label, true, true, true);
             }
         }
 

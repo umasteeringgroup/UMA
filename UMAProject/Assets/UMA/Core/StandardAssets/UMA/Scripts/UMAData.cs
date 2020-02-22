@@ -227,14 +227,21 @@ namespace UMA
 
 		void Awake()
 		{
-			firstBake = true;
-
 			if (!umaGenerator)
 			{
 				var generatorGO = GameObject.Find("UMAGenerator");
 				if (generatorGO == null) return;
 				umaGenerator = generatorGO.GetComponent<UMAGeneratorBase>();
 			}
+			Initialize(umaGenerator);
+		}
+
+		public void Initialize(UMAGeneratorBase generator)
+		{
+			firstBake = true;
+
+			if (umaGenerator == null)
+				umaGenerator = generator;
 
 			if (umaRecipe == null)
 			{
@@ -248,8 +255,6 @@ namespace UMA
 
 		public void SetupOnAwake()
 		{
-			//umaRoot = gameObject;
-			//animator = umaRoot.GetComponent<Animator>();
 			animator = gameObject.GetComponent<Animator>();
 		}
 

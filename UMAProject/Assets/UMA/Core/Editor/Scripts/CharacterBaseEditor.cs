@@ -1242,8 +1242,11 @@ namespace UMA.Editors
 		private readonly UMAData.UMARecipe _recipe;
 		protected readonly SlotData _slotData;
 		private readonly OverlayData _overlayData;
+		private OverlayDataAsset _baseOverlayData;
 		private readonly TextureEditor[] _textures;
 		private ColorEditor[] _colors;
+		private bool isUV = false;
+
 #if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 		private ProceduralPropertyEditor[] _properties;
 		private ProceduralPropertyDescription[] _descriptions;
@@ -1263,15 +1266,21 @@ namespace UMA.Editors
 			OverlayExpanded.Add(overlayName, true);
 		}
 
-		public OverlayEditor(UMAData.UMARecipe recipe, SlotData slotData, OverlayData overlayData)
+		public OverlayEditor(UMAData.UMARecipe recipe, SlotData slotData, OverlayData overlayData, OverlayDataAsset baseOverlayDataAsset=null)
 		{
 			_recipe = recipe;
 			_overlayData = overlayData;
 			_slotData = slotData;
+			_baseOverlayData = baseOverlayDataAsset;
 			EnsureEntry((overlayData.overlayName));
 
+			if ((_overlayData.rect.x <= 1.0f) && (_overlayData.rect.y <= 1.0f) && (_overlayData.rect.width <= 1.0f) && (_overlayData.rect.height <= 1.0f))
+			{
+				isUV = true;
+			}
+
 			// Sanity check the colors
-			if (_recipe.sharedColors == null)
+				if (_recipe.sharedColors == null)
 				_recipe.sharedColors = new OverlayColorData[0];
 			else
 			{
@@ -1450,13 +1459,43 @@ namespace UMA.Editors
 			// Edit the rect
 			GUILayout.BeginHorizontal();
 			GUILayout.Label("Rect");
+			if (!isUV && _baseOverlayData != null)
+			{
+				if (GUILayout.Button("Convert to UV"))
+				{
+					_overlayData.rect.x /= _baseOverlayData.textureList[0].width;
+					_overlayData.rect.width /= _baseOverlayData.textureList[0].width;
+					_overlayData.rect.y /= _baseOverlayData.textureList[0].height;
+					_overlayData.rect.height /= _baseOverlayData.textureList[0].height;
+					isUV = true;
+				}
+			}
+			GUILayout.EndHorizontal();
+
 			Rect Save = _overlayData.rect;
-			_overlayData.rect = EditorGUILayout.RectField(_overlayData.rect);
+			if (!isUV)
+			{
+				_overlayData.rect = EditorGUILayout.RectField(_overlayData.rect);
+			}
+			else
+			{
+				GUILayout.BeginHorizontal(); // x,y
+				EditorGUILayout.LabelField("X:", GUILayout.Width(24));
+				_overlayData.rect.x = EditorGUILayout.Slider( _overlayData.rect.x*100.0f, 0.0f, 100.0f)/100.0f;
+				EditorGUILayout.LabelField("Y:", GUILayout.Width(24));
+				_overlayData.rect.y = EditorGUILayout.Slider( _overlayData.rect.y * 100.0f, 0.0f, 100.0f)/100.0f;
+				GUILayout.EndHorizontal();
+				GUILayout.BeginHorizontal(); // w,h
+				EditorGUILayout.LabelField("W:", GUILayout.Width(24));
+				_overlayData.rect.width = EditorGUILayout.Slider( _overlayData.rect.width * 100.0f, 0.0f, 100.0f)/100.0f;
+				EditorGUILayout.LabelField("H:", GUILayout.Width(24));
+				_overlayData.rect.height = EditorGUILayout.Slider(_overlayData.rect.height * 100.0f, 0.0f, 100.0f) /100.0f;
+				GUILayout.EndHorizontal();
+			}
 			if (Save.x != _overlayData.rect.x || Save.y != _overlayData.rect.y || Save.width != _overlayData.rect.width || Save.height != _overlayData.rect.height)
 			{
 				changed = true;
 			}
-			GUILayout.EndHorizontal();
 
 #if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 			// Edit the procedural properties

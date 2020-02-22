@@ -8,6 +8,8 @@ namespace UMA
 {
     public class OverlayViewer : MonoBehaviour
     {
+        public TextureMerge TextureMergePrefab;
+        public SlotDataAsset SlotDataAsset;
         public OverlayDataAsset BaseOverlay;
         public List<OverlayDataAsset> Overlays = new List<OverlayDataAsset>();
         public RawImage ImageViewer;
