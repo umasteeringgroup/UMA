@@ -168,11 +168,11 @@ namespace UMA
             {
 				if (theIndexer == null)
                 {
-                    var st = StartTimer();
+                    //var st = StartTimer();
                     theIndexer = Resources.Load("AssetIndexer") as UMAAssetIndexer;
                     theIndexer.UpdateSerializedDictionaryItems();
                     theIndexer.RebuildRaceRecipes();
-                    StopTimer(st,"Asset index load");
+                    //StopTimer(st,"Asset index load");
                 }
                 return theIndexer;
             }
@@ -654,7 +654,7 @@ namespace UMA
             return null;
         }
 
-        public T GetAsset<T>(string name, string[] foldersToSearch = null) where T : UnityEngine.Object
+        public T GetAsset<T>(string name, string[] foldersToSearch) where T : UnityEngine.Object
         {
             var thisAssetItem = GetAssetItem<T>(name);
             if (thisAssetItem != null)
@@ -670,7 +670,19 @@ namespace UMA
             }
         }
 
-		public List<UMARecipeBase> GetRecipesForRaceSlot(string race, string slot)
+        public T GetAsset<T>(string name) where T : UnityEngine.Object
+        {
+            var thisAssetItem = GetAssetItem<T>(name);
+            if (thisAssetItem != null)
+            {
+                return (thisAssetItem.Item as T);
+            }
+            else
+            {
+                return null;
+            }
+        }
+        public List<UMARecipeBase> GetRecipesForRaceSlot(string race, string slot)
 		{
 			// This will get the aggregate for all compatible races with no duplicates.
 			List<string> recipes = GetRecipeNamesForRaceSlot(race, slot);
@@ -1002,7 +1014,7 @@ namespace UMA
 #endif
 			var op = Addressables.LoadAssetsAsync<UnityEngine.Object>(Keys.ToArray(), result =>
             {
-                ProcessAddressableUpdates(keepLoaded, result);
+                ProcessNewItem(result, true, keepLoaded);
             }, Addressables.MergeMode.Union);
 
 			if (!keepLoaded)
@@ -1015,7 +1027,7 @@ namespace UMA
 			return op;
 		}
 
-        public void ProcessAddressableUpdates(bool keepLoaded, UnityEngine.Object result)
+        public void ProcessNewItem(UnityEngine.Object result, bool isAddressable, bool keepLoaded)
         {
             if (!IsIndexedType(result.GetType())) // JRRM
                 return;
@@ -1024,7 +1036,7 @@ namespace UMA
             if (resultItem == null)
             {
                 AssetItem ai = new AssetItem(result.GetType(), result);
-                ai.IsAddressable = true;
+                ai.IsAddressable = isAddressable;
                 ai.IsAlwaysLoaded = keepLoaded;
                 AddAssetItem(ai);
                 ai.AddReference();

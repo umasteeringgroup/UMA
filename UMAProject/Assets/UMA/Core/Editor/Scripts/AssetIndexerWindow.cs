@@ -69,8 +69,8 @@ namespace UMA.Controls
 		int LoadedItems = 0;
 		public HashSet<string> LoadedLabels = new HashSet<string>();
 
-		enum eLoaded { All, Addressable, NonAddressable, Keep, Refs, NoRefs, NoGroups, SelectedOnly };
-		string[] LoadedValues = { "All", "Addressable Only","Non-Addressable Only", "Keep Loaded","With References", "Non-Addressable Without References","Recipes not added to groups","Currently Selected Items" };
+		enum eLoaded { All, Addressable, NonAddressable, Keep, Resx, NoGroups, SelectedOnly };
+		string[] LoadedValues = { "All", "Addressable Only","Non-Addressable Only", "Keep Loaded","In Resources","Recipes not added to groups","Currently Selected Items" };
 		public List<AssetItem> LoadOnly = new List<AssetItem>();
 
 		enum eShowTypes { All, WithItems};
@@ -671,8 +671,8 @@ namespace UMA.Controls
 		{
 			switch(itemsToLoad)
 			{
-				case eLoaded.Refs:
-					return (ai._SerializedItem != null) ;
+				case eLoaded.Resx:
+					return (ai.IsResource || (ai.IsAddressable == false)) ;
 				case eLoaded.Keep:
 					return ai.IsAlwaysLoaded;
 				case eLoaded.Addressable:
@@ -697,12 +697,6 @@ namespace UMA.Controls
 						return true;
 					else
 						return false;
-				}
-				case eLoaded.NoRefs:
-				{
-					if (ai._SerializedItem == null && ai.IsAddressable == false)
-						return true;
-					return false;
 				}
 			}
 			return true;
