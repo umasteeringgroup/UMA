@@ -232,12 +232,6 @@ namespace UMA.Editors
 				return true;
 			}
 
-			string path = AssetDatabase.GetAssetPath(_raceData);
-			if (UMAAssetIndexer.Instance.InAssetBundle(path))
-			{
-				return true;
-			}
-
 			return false;
 		}
 	}

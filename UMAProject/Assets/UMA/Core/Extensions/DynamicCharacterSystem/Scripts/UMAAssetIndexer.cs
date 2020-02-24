@@ -239,14 +239,6 @@ namespace UMA
                 if (ItemsByPath.ContainsKey(OldPath))
                 {
                     changed = true;
-                    // If they moved it into an Asset Bundle folder, then we need to "unindex" it.
-                    if (InAssetBundleFolder(NewPath))
-                    {
-                        // Null it out, so we don't add it to the index...
-                        ItemsByPath[OldPath] = null;
-                        continue;
-                    }
-                    // 
                     ItemsByPath[OldPath]._Path = NewPath;
                 }
             }
@@ -779,6 +771,22 @@ namespace UMA
 			return results.ToList();
 		}
 
+        /// <summary>
+        /// Load all items from the asset bundle into the index.
+        /// </summary>
+        /// <param name="ab"></param>
+        public void AddFromAssetBundle(AssetBundle ab)
+        {
+            foreach(Type t in Types)
+            {
+                var objs = ab.LoadAllAssets(t);
+                
+                foreach(UnityEngine.Object o in objs)
+                {
+                    ProcessNewItem(o, false, false);
+                }
+            }
+        }
 
 		/// <summary>
 		/// Checks if the given asset path resides in one of the given folder paths. Returns true if foldersToSearch is null or empty and no check is required
@@ -797,43 +805,6 @@ namespace UMA
             return false;
         }
 
-#if UNITY_EDITOR
-        /// <summary>
-        /// Check to see if something is an an assetbundle. If so, don't add it
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        public bool InAssetBundle(string path)
-        {
-            // path = System.IO.Path.GetDirectoryName(path);
-            string[] assetBundleNames = AssetDatabase.GetAllAssetBundleNames();
-            List<string> pathsInBundle;
-            for (int i = 0; i < assetBundleNames.Length; i++)
-            {
-                pathsInBundle = new List<string>(AssetDatabase.GetAssetPathsFromAssetBundle(assetBundleNames[i]));
-                if (pathsInBundle.Contains(path))
-                    return true;
-            }
-            return false;
-        }
-
-        public bool InAssetBundleFolder(string path)
-        {
-            path = System.IO.Path.GetDirectoryName(path);
-            string[] assetBundleNames = AssetDatabase.GetAllAssetBundleNames();
-            List<string> pathsInBundle;
-            for (int i = 0; i < assetBundleNames.Length; i++)
-            {
-                pathsInBundle = new List<string>(AssetDatabase.GetAssetPathsFromAssetBundle(assetBundleNames[i]));
-                foreach (string s in pathsInBundle)
-                {
-                    if (System.IO.Path.GetDirectoryName(s) == path)
-                        return true;
-                }
-            }
-            return false;
-        }
-#endif
 #endregion
 
 #region Addressables
@@ -1026,6 +997,7 @@ namespace UMA
 			}
 			return op;
 		}
+#endif
 
         public void ProcessNewItem(UnityEngine.Object result, bool isAddressable, bool keepLoaded)
         {
@@ -1052,52 +1024,9 @@ namespace UMA
             {
                 AddRaceRecipe(result as UMAWardrobeRecipe);
             }
-
-            /*
-            if (result.GetType() == typeof(SlotDataAsset))
-            {
-                AssetItem ai = GetAssetItem<SlotDataAsset>((result as SlotDataAsset).slotName);
-                if (ai != null)
-                {
-                    if (keepLoaded) ai.IsAlwaysLoaded = keepLoaded;
-                    ai._SerializedItem = result;
-#if SUPER_LOGGING
-						Debug.Log("Cached Slot " + ai.EvilName);
-#endif
-                }
-                else
-                {
-                    ai = new AssetItem(result.GetType(), result);
-                    ai.IsAddressable = true;
-                    ai.IsAlwaysLoaded = keepLoaded;
-                    AddAssetItem(ai);
-                }
-                ai.AddReference();
-            }
-            else if (result.GetType() == typeof(OverlayDataAsset))
-            {
-                AssetItem ai = GetAssetItem<OverlayDataAsset>((result as OverlayDataAsset).overlayName);
-                if (ai != null)
-                {
-                    if (keepLoaded)
-                        ai.IsAlwaysLoaded = keepLoaded; // only set if true, so if any call sets it to always loaded, it is not cleared.
-                    ai._SerializedItem = result;
-#if SUPER_LOGGING
-						Debug.Log("Cached Overlay " + (ai._SerializedItem as OverlayDataAsset).overlayName);
-#endif
-                }
-                else
-                {
-                    ai = new AssetItem(result.GetType(),result);
-                    ai.IsAddressable = true;
-                    ai.IsAlwaysLoaded = keepLoaded;
-                    AddAssetItem(ai);
-                }
-                ai.AddReference();
-            }
-            */
         }
 
+#if UMA_ADDRESSABLES
         public void Unload(AsyncOperationHandle<IList<UnityEngine.Object>> AssetOperation)
         {
 #if SUPER_LOGGING
@@ -2186,7 +2115,7 @@ namespace UMA
 
 #endif
 #endif
-#endregion
+        #endregion
 
         #region Add Remove Assets
 

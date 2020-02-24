@@ -542,7 +542,6 @@ namespace UMA.Editors
 			{
 				if (dropArea.Contains(evt.mousePosition))
 				{
-					Debug.Log("Show Slot Picker window");
 					_slotPickerID = EditorGUIUtility.GetControlID(new GUIContent("slotObjectPicker"), FocusType.Passive);
 					EditorGUIUtility.ShowObjectPicker<SlotDataAsset>(null, false, "", _slotPickerID);
 					Event.current.Use();//stops the Mismatched LayoutGroup errors
@@ -554,7 +553,6 @@ namespace UMA.Editors
 				SlotDataAsset tempSlotDataAsset = EditorGUIUtility.GetObjectPickerObject() as SlotDataAsset;
 				if (tempSlotDataAsset)
 				{
-					Debug.Log("Slot Picked " + tempSlotDataAsset.slotName);
 					LastSlot = tempSlotDataAsset.slotName;
 					AddSlotDataAsset(tempSlotDataAsset);
 					pickedCount++;
@@ -663,12 +661,6 @@ namespace UMA.Editors
 				return true;
 			}
 
-			string path = AssetDatabase.GetAssetPath(_raceData);
-			if (UMAAssetIndexer.Instance.InAssetBundle(path))
-			{
-				return true;
-			}
-
 			return false;
 		}
 
@@ -721,11 +713,6 @@ namespace UMA.Editors
 				GUIHelper.BeginVerticalPadded(10, new Color(0.55f, 0.25f, 0.25f));
 				GUILayout.Label("Warning: No race data is set!");
 				GUIHelper.EndVerticalPadded(10);
-			}
-
-			if (newRace != null)
-			{
-				Debug.Break();
 			}
 
 			if (_recipe.raceData != newRace)
@@ -1059,12 +1046,6 @@ namespace UMA.Editors
 				return true;
 			}
 
-			string path = AssetDatabase.GetAssetPath(_slotData.asset);
-			if (UMAAssetIndexer.Instance.InAssetBundle(path))
-			{
-				return true;
-			}
-
 			return false;
 		}
 
@@ -1373,13 +1354,7 @@ namespace UMA.Editors
 				return true;
 			}
 
-			string path = AssetDatabase.GetAssetPath(_overlayData.asset);
-			if (UMAAssetIndexer.Instance.InAssetBundle(path))
-			{
-				return true;
-			}
-
-			return false;
+		return false;
 		}
 
 		public bool OnGUI()
