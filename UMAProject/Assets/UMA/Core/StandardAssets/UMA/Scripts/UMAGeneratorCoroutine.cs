@@ -72,7 +72,9 @@ namespace UMA
 			res.umaMaterial = umaMaterial;
 			res.material = UnityEngine.Object.Instantiate(umaMaterial.material) as Material;
 			res.material.name = umaMaterial.material.name;
-			//res.material.shader = Shader.Find(res.material.shader.name);
+#if UNITY_WEBGL
+			res.material.shader = Shader.Find(res.material.shader.name);
+#endif
 			res.material.CopyPropertiesFromMaterial(umaMaterial.material);
 			atlassedMaterials.Add(res);
 			generatedMaterials.Add(res);
@@ -161,10 +163,10 @@ namespace UMA
 						if (overlay != null)
 						{
 							validOverlayCount++;
-							#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
+#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 							if (overlay.isProcedural)
 								overlay.GenerateProceduralTextures();
-                            #endif
+#endif
 						}
 					}
 
