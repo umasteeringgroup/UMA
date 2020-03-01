@@ -13,6 +13,18 @@ namespace UMA
 	/// </summary>
 	public static class SkinnedMeshCombiner
 	{
+#if UNITY_2019_3_OR_NEWER
+		static SkinnedMeshCombiner()
+		{
+			AppDomain.CurrentDomain.DomainUnload += CurrentDomain_DomainUnload;
+		}
+
+		private static void CurrentDomain_DomainUnload(object sender, EventArgs e)
+		{
+			if (nativeBoneWeights.IsCreated) nativeBoneWeights.Dispose();
+		}
+#endif
+
 		/// <summary>
 		/// Container for source mesh data.
 		/// </summary>
@@ -246,10 +258,10 @@ namespace UMA
 							if (!blendShapeSettings.loadAllBlendShapes && !blendShapeSettings.blendShapes.ContainsKey(shapeName))
 								continue;
 
-							#region BlendShape Baking
+#region BlendShape Baking
 							if(BakeBlendShape(blendShapeSettings.blendShapes, source.meshData.blendShapes[shapeIndex], ref vertexIndex, vertices, normals, tangents, has_normals, has_tangents))
 								continue; //If we baked this blendshape, then continue to the next one and skip adding the regular blendshape.
-							#endregion
+#endregion
 							
 							//If our dictionary contains the shape name, which it should
 							if (blendShapeNames.ContainsKey(shapeName))
@@ -362,7 +374,7 @@ namespace UMA
 			target.vertices = vertices;
 #if UNITY_2019_3_OR_NEWER
 			target.unityBoneWeights = nativeBoneWeights.GetSubArray(0, vertexCount).ToArray();
-#else			
+#else
 			target.unityBoneWeights = boneWeights;
 #endif
 			target.bindPoses = bindPoses.ToArray();
@@ -787,7 +799,7 @@ namespace UMA
 			dest.boneIndex3 = boneMapping[source.boneIndex3];
 		}
 		
-#if UNITY_2019_3_OR_NEWER		
+#if UNITY_2019_3_OR_NEWER
 		private struct BoneWeightProxy
 		{
 			public float m_Weight0;
