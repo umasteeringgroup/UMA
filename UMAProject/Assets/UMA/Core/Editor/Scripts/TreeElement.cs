@@ -5,7 +5,10 @@ using UnityEngine;
 
 namespace UMA.Controls
 {
-
+	/// <summary>
+	/// This is the base clas for tree elements. To use this, derive your own type of element from 
+	/// this class. See AssetTreeElement as used in the global library.
+	/// </summary>
 	[Serializable]
 	public class TreeElement
 	{

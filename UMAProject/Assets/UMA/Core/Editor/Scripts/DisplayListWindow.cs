@@ -6,6 +6,10 @@ using UnityEditor.Callbacks;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
+/// <summary>
+/// DisplayListWindow is a generic dialog window that can be used to display a list of strings. 
+/// To Use, call DisplayListWindow.ShowDialog("title", Pos, StringList);
+/// </summary>
 public class DisplayListWindow : EditorWindow
 {
 	static Vector2 winsize = new Vector2(200, 300);

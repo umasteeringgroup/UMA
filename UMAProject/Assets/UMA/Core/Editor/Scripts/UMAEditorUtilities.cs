@@ -111,11 +111,18 @@ namespace UMA
 			EditorGUI.BeginChangeCheck();
 			var defineSymbols = new HashSet<string>(PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup).Split(';'));
 			DefineSymbolToggle(defineSymbols, DefineSymbol_32BitBuffers, "Use 32bit buffers", "This allows meshes bigger than 64k vertices");
-			DefineSymbolToggle(defineSymbols, DefineSymbol_Addressables, "Use Addressables", "This activates the code that loads from asset bundles using addressables");
+			GUILayout.BeginHorizontal();
+			DefineSymbolToggle(defineSymbols, DefineSymbol_Addressables, "Use Addressables", "This activates the code that loads from asset bundles using addressables. Toggling this will cause a recompile.");
+			GUILayout.Label("Toggling will cause a recompile");
+			GUILayout.EndHorizontal();
+#if !UMA_ADDRESSABLES
+			GUILayout.Label("Addressables package MUST be installed before enabling this option!",EditorStyles.boldLabel);
+#endif
 			if (EditorGUI.EndChangeCheck())
 			{
 				PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, string.Join(";", defineSymbols));
 			}
+
 
 			GUI.enabled =
 #if UMA_ADDRESSABLES
@@ -123,13 +130,22 @@ namespace UMA
 #else
 				false;
 #endif
-			ConfigToggle(ConfigToggle_UseSharedGroup, "Use Shared Group", "Add all Addressables to the same Shared Group.", true);
-			ConfigToggle(ConfigToggle_ArchiveGroups, "Archive Groups", "For now just copies the assetbundles into folders with the group name.", false);
 
-			GUILayout.Space(10.0f);
-
+#if UMA_ADDRESSABLES
+			EditorGUILayout.Space();
+			EditorGUILayout.LabelField("Addressables Options",EditorStyles.boldLabel);
+			EditorGUILayout.Space();
+#else
+			EditorGUILayout.Space();
+			EditorGUILayout.LabelField("Addressables Options (Not Enabled)", EditorStyles.boldLabel);
+			EditorGUILayout.Space();
+#endif
+			// No longer needed... This is now down using different plugins.
+			//ConfigToggle(ConfigToggle_UseSharedGroup, "Use Shared Group", "Add all Addressables to the same Shared Group.", true);
+			// This is managed by the addressables system
+			//ConfigToggle(ConfigToggle_ArchiveGroups, "Archive Groups", "For now just copies the assetbundles into folders with the group name.", false);
 			
-			GUILayout.Label("Shared Group Generation", EditorStyles.boldLabel);
+			GUILayout.Label("Shared Group Generation");
 			GUILayout.Label("By default, Slots, Overlays and Textures are included.",EditorStyles.miniLabel);
 
 			ConfigToggle(ConfigToggle_AddCollectionLabels, "Add Collection Labels","Scan through Wardrobe Collections for recipes, and also label them with the collection label", false);
@@ -143,7 +159,6 @@ namespace UMA
 			ConfigToggle(ConfigToggle_IncludeRecipes, "Include Recipes", "Include recipes in shared group generation", false);
 			ConfigToggle(ConfigToggle_IncludeOther, "Include all other types", "Include all other types in index in shared group generation", false);
 
-
 			GUI.enabled = true;
             if (GUI.changed)
             {
@@ -154,6 +169,11 @@ namespace UMA
 		public static string GetDefaultAddressableLabel()
 		{
 			return PlayerPrefs.GetString(umaDefaultLabelKey,umaDefaultLabel);
+		}
+
+		public static bool IsAddressable()
+		{
+			return GetConfigValue(DefineSymbol_Addressables, false);
 		}
 
 		private static void ConfigToggle(string toggleId, string text, string tooltip, bool defaultValue)
@@ -277,11 +297,11 @@ namespace UMA
             }
         }
 
-#if UNITY_2018_4_OR_NEWER || UNITY_2019_1_OR_NEWER 
+#if UNITY_2018_4_OR_NEWER || UNITY_2019_1_OR_NEWER
 		[MenuItem("UMA/Update asmdef files from project")]
 		public static void FixupAsmdef()
 		{
-#if UNITY_2019_1_OR_NEWER  
+#if UNITY_2019_1_OR_NEWER
 			RenameFiles(".asmdef2019", ".asmdef");
 #else
 			RenameFiles(".asmdef20184", ".asmdef");

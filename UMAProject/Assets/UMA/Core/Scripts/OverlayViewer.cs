@@ -6,6 +6,10 @@ using UnityEngine.UI;
 
 namespace UMA
 {
+    /// <summary>
+    /// This class is used by the OverlayEditor to set parameters for viewing overlays in the scene view.
+    /// See the OverlayAligner scene for an example of both.
+    /// </summary>
     public class OverlayViewer : MonoBehaviour
     {
         public TextureMerge TextureMergePrefab;

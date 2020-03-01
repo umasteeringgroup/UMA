@@ -6,9 +6,10 @@ using UnityEditor;
 namespace UMA.Controls
 {
 
-	// TreeElementUtility and TreeElement are useful helper classes for backend tree data structures.
-	// See tests at the bottom for examples of how to use.
-
+	/// <summary>
+	/// TreeElementUtility and TreeElement are useful helper classes for backend tree data structures.
+	/// This is used by the global library, but can be used for any tree view.
+	/// </summary>
 	public static class TreeElementUtility
 	{
 		public static void TreeToList<T>(T root, IList<T> result) where T : TreeElement

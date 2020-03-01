@@ -74,7 +74,11 @@ namespace UMA.Editors
 			slotMaterial = EditorGUILayout.ObjectField("UMAMaterial	 ", slotMaterial, typeof(UMAMaterial), false) as UMAMaterial;
 			slotFolder = EditorGUILayout.ObjectField("Slot Destination Folder"	, slotFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
 			EnforceFolder(ref slotFolder);
+			//
+			// For now, we will disable this option.
+			// It doesn't work in most cases.
 			// RootBone = EditorGUILayout.TextField("Root Bone (ex:'Global')", RootBone);
+			// 
 			slotName = EditorGUILayout.TextField("Slot Name", slotName);
 			binarySerialization = EditorGUILayout.Toggle(new GUIContent("Binary Serialization", "Forces the created Mesh object to be serialized as binary. Recommended for large meshes and blendshapes."), binarySerialization);
 
