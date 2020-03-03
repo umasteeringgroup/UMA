@@ -2763,6 +2763,7 @@ namespace UMA
             }
 
             UpdateSerializedDictionaryItems();
+            RebuildRaceRecipes();
             ForceSave();
         }
 
