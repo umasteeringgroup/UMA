@@ -24,6 +24,11 @@ namespace UMA
 		// Use this for initialization
 		void Start()
 		{
+			if (ParentObject == null)
+			{
+				ParentObject = this.gameObject;
+			}
+
 			if (!GenerateGrid)
 			{
 				if (RandomRotation)
