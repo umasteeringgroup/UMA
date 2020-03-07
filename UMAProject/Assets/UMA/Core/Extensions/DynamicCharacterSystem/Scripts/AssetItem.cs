@@ -233,6 +233,18 @@ namespace UMA
             }
         }
 
+        public bool IsLoaded
+        {
+            get
+            {
+                if (IsAddressable)
+                {
+                    return _SerializedItem != null;
+                }
+                return true;
+            }
+        }
+
         public bool IsOverlayDataAsset
         {
             get

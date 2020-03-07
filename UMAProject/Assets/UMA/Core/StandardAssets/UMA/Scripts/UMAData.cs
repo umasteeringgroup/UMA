@@ -198,8 +198,28 @@ namespace UMA
 
 		public GameObject umaRoot;
 
-		public UMARecipe umaRecipe;
-		public Animator animator;
+		
+			[UnityEngine.Serialization.FormerlySerializedAs("umaRecipe")]
+			public UMARecipe _umaRecipe;
+			public UMARecipe umaRecipe
+			{
+				get
+				{
+					return umaOverrideRecipe != null ? umaOverrideRecipe : _umaRecipe;
+				}
+				set
+				{
+					_umaRecipe = value;
+				}
+			}
+
+			/// <summary>
+			/// This field is intended for LOD systems to override what actually gets built. 
+			/// </summary>
+			[NonSerialized]
+			public UMARecipe umaOverrideRecipe;
+
+			public Animator animator;
 		public UMASkeleton skeleton;
 
 		/// <summary>
@@ -243,9 +263,9 @@ namespace UMA
 			if (umaGenerator == null)
 				umaGenerator = generator;
 
-			if (umaRecipe == null)
+			if (_umaRecipe == null)
 			{
-				umaRecipe = new UMARecipe();
+				_umaRecipe = new UMARecipe();
 			}
 			else
 			{
@@ -285,7 +305,7 @@ namespace UMA
 				valid = false;
 			}
 
-			if (umaRecipe == null)
+			if (_umaRecipe == null)
 			{
 				if (Debug.isDebugBuild)
 					Debug.LogError("UMA data missing required recipe!");

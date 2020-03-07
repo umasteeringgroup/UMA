@@ -742,7 +742,7 @@ namespace UMA.CharacterSystem
                     _wardrobeRecipes.Clear();
                 }
                 //by setting 'ForceDCSLoad' to true the loaded race will always be loaded like a new uma rather than the old uma way
-                StartCoroutine(ImportSettingsCO(UMATextRecipe.PackedLoadDCS(context, (race.baseRaceRecipe as UMATextRecipe).recipeString), thisLoadFlags, true));
+                ImportSettings(UMATextRecipe.PackedLoadDCS(context, (race.baseRaceRecipe as UMATextRecipe).recipeString), thisLoadFlags, true);
             }
         }
 
@@ -906,6 +906,9 @@ namespace UMA.CharacterSystem
                 internalSetSlot(utr, utr.wardrobeSlot);
                 return true;
             }
+
+            if (activeRace.racedata == null)
+                activeRace.SetRaceData();
 
             // If it's for this race, or the race is compatible with another race
             if (utr.compatibleRaces.Contains(activeRace.name) || activeRace.racedata.IsCrossCompatibleWith(utr.compatibleRaces))
@@ -1849,10 +1852,11 @@ namespace UMA.CharacterSystem
             //changing the animationController in 5.6 resets the rotation of this game object
             //so store the rotation and set it back
             var originalRot = Quaternion.identity;
+            animationController = controllerToUse;
+
             if (umaData != null)
                 originalRot = umaData.transform.localRotation;
 
-            animationController = controllerToUse;
             var thisAnimator = gameObject.GetComponent<Animator>();
             if (controllerToUse != null)
             {
@@ -1872,7 +1876,10 @@ namespace UMA.CharacterSystem
                 }
             }
             if (umaData != null)
+            {
                 umaData.transform.localRotation = originalRot;
+                umaData.animationController = thisAnimator.runtimeAnimatorController;
+            }
         }
 
 #endregion
@@ -2257,12 +2264,8 @@ namespace UMA.CharacterSystem
 			}
             ImportSettings(UMATextRecipe.PackedLoadDCS(context, settingsToLoad), customLoadOptions);
         }
-        public void ImportSettings(UMATextRecipe.DCSUniversalPackRecipe settingsToLoad, LoadOptions customLoadOptions = LoadOptions.useDefaults)
-        {
-            StartCoroutine(ImportSettingsCO(settingsToLoad, customLoadOptions));
-        }
 
-        IEnumerator ImportSettingsCO(UMATextRecipe.DCSUniversalPackRecipe settingsToLoad, LoadOptions customLoadOptions = LoadOptions.useDefaults, bool forceDCSLoad = false)
+        bool ImportSettings(UMATextRecipe.DCSUniversalPackRecipe settingsToLoad, LoadOptions customLoadOptions = LoadOptions.useDefaults, bool forceDCSLoad = false)
         {
             var thisLoadOptions = customLoadOptions == LoadOptions.useDefaults ? defaultLoadOptions : customLoadOptions;
             //When ChangeRace calls this, it calls it with forceDCSLoad to be true so we need settingsToLoad.wardrobeSet fixed if its null
@@ -2294,14 +2297,14 @@ namespace UMA.CharacterSystem
                 {
                     if (Debug.isDebugBuild)
                         Debug.LogError("The sent recipe did not have an assigned Race. Avatar could not be created from the recipe");
-                    yield break;
+                    return false;
                 }
                 activeRace.name = settingsToLoad.race;
                 SetActiveRace();
                 //If the UmaRecipe is still after that null, bail - we cant go any further (and SetStartingRace will have shown an error)
                 if (umaRecipe == null)
                 {
-                    yield break;
+                    return false;
                 }
             }
             //this will be null for old UMA recipes without any wardrobe
@@ -2380,7 +2383,7 @@ namespace UMA.CharacterSystem
             {
                 ImportOldUma(settingsToLoad, thisLoadOptions, wasBuildCharacterEnabled);
             }
-
+            return true;
         }
         /// <summary>
         /// Do not call this directly use LoadFromRecipe(yourOldUMArecipe instead)
@@ -2437,7 +2440,7 @@ namespace UMA.CharacterSystem
         /// </summary>
         public void DoLoad()
         {
-            StartCoroutine(GetRecipeStringToLoad());
+            GetRecipeStringToLoad();
         }
 
         public void LoadFromAssetFile(string Name)
@@ -2447,7 +2450,7 @@ namespace UMA.CharacterSystem
             if (ai != null)
             {
                 string recipeString = (ai.Item as UMATextRecipe).recipeString;
-                StartCoroutine(ProcessRecipeString(recipeString));
+                LoadFromRecipeString(recipeString);
                 return;
             }
             if (Debug.isDebugBuild)
@@ -2461,20 +2464,14 @@ namespace UMA.CharacterSystem
             if (ai != null)
             {
                 string recipeString = (ai.Item as TextAsset).text;
-                StartCoroutine(ProcessRecipeString(recipeString));
+                LoadFromRecipeString(recipeString);
                 return;
             }
             if (Debug.isDebugBuild)
                 Debug.LogWarning("Asset '" + Name + "' Not found in Global Index");
         }
 
-        IEnumerator ProcessRecipeString(string recipeString)
-        {
-            LoadFromRecipeString(recipeString);
-            yield break;
-        }
-
-        IEnumerator GetRecipeStringToLoad()
+        void GetRecipeStringToLoad()
         {
             string path = "";
             string recipeString = "";
@@ -2520,7 +2517,10 @@ namespace UMA.CharacterSystem
                 if (Application.isEditor)
                 {
                     path = EditorUtility.OpenFilePanel("Load saved Avatar", Application.dataPath, "txt");
-                    if (string.IsNullOrEmpty(path)) yield break;
+                    if (string.IsNullOrEmpty(path))
+                    {
+                        return;
+                    }
                     recipeString = FileUtils.ReadAllText(path);
                     path = "";
                 }
@@ -2553,19 +2553,13 @@ namespace UMA.CharacterSystem
                         if (Debug.isDebugBuild)
                             Debug.LogWarning("[CharacterAvatar.DoLoad] No filename specified to load!");
 						BuildFromComponentSettings();
-                        yield break;
+                        return;
                     }
                     else
                     {
                         if (path.Contains("://"))
                         {
-                            UnityWebRequest www = UnityWebRequest.Get(path + loadFilename);
-#if UNITY_2017_2_OR_NEWER
-                            yield return www.SendWebRequest();
-#else
-                            yield return www.Send();
-#endif
-                            recipeString = www.downloadHandler.text;
+                            StartCoroutine(DoWebLoad(path));
                         }
                         else
                         {
@@ -2577,7 +2571,6 @@ namespace UMA.CharacterSystem
             if (recipeString != "")
             {
                 LoadFromRecipeString(recipeString);
-                yield break;
             }
             else
             {
@@ -2585,10 +2578,19 @@ namespace UMA.CharacterSystem
                     Debug.LogWarning("[CharacterAvatar.DoLoad] No TextRecipe found with filename " + loadFilename);
 				BuildFromComponentSettings();
 			}
-			yield break;
+        }
+
+        IEnumerator DoWebLoad(string path)
+        {
+            UnityWebRequest www = UnityWebRequest.Get(path + loadFilename);
+#if UNITY_2017_2_OR_NEWER
+            yield return www.SendWebRequest();
+#else
+            yield return www.Send();
+#endif
+            LoadFromRecipeString(www.downloadHandler.text);
         }
         #endregion
-
         #endregion
 
         #region CHARACTER FINAL ASSEMBLY
@@ -3431,7 +3433,7 @@ namespace UMA.CharacterSystem
                 if (thisContext == null)
                 {
                     if (Debug.isDebugBuild)
-                        Debug.LogWarning("UMAContextBase was missing this is required in scenes that use UMA. Please add the UMA_DCS prefab to the scene");
+                        Debug.LogWarning("UMAContextBase was missing this is required in scenes that use UMA. Please add the UMA_GLIB prefab to the scene");
                     return;
                 }
                 _data = thisContext.GetRace(name);

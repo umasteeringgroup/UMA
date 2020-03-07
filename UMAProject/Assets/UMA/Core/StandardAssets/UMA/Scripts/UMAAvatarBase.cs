@@ -127,6 +127,10 @@ namespace UMA
 #if SUPER_LOGGING
 			Debug.Log("UpdateSameRace on DynamicCharacterAvatar: " + gameObject.name);
 #endif
+			if (animationController != null)
+			{
+				umaData.animationController = animationController;
+			}
 			umaData.Dirty(true, true, true);
 		}
 
