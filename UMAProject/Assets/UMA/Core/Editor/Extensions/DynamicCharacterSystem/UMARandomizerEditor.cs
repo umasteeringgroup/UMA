@@ -259,6 +259,11 @@ namespace UMA.Editors
 			{
 				RandomAvatarGUI(ra);
 			}
+			if (GUI.changed)
+			{
+				EditorUtility.SetDirty(currentTarget);
+				AssetDatabase.SaveAssets();
+			}
 		}
 
 	
@@ -303,6 +308,7 @@ namespace UMA.Editors
 					ra.DnaChanged = true;
 					ra.RandomDna.Add(new RandomDNA(ra.DNAAdd));
 					ra.DNAAdd = "";
+					ChangeCount++;
 				}
 
 				int DNAChangeCount = ra.RandomDna.RemoveAll(x => x.Delete);
@@ -320,6 +326,7 @@ namespace UMA.Editors
 					{
 						rws.Colors.Add(new RandomColors(rws));
 						rws.AddColorTable = false;
+						ChangeCount++;
 					}
 				}
 			}

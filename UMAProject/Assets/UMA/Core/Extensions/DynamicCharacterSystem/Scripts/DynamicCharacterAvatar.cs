@@ -272,7 +272,9 @@ namespace UMA.CharacterSystem
         {
             get
             {
-                return umaData.umaRecipe.sharedColors;
+                if (umaData != null)
+                    return umaData.umaRecipe.sharedColors;
+                return new OverlayColorData[0];
             }
         }
         public List<ColorValue> ActiveColors
