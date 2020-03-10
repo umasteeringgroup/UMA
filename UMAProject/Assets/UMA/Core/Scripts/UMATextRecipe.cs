@@ -48,8 +48,22 @@ namespace UMA
 		{
 			recipeString = System.Text.Encoding.UTF8.GetString(data); 	
 		}
-		
-		#if UNITY_EDITOR
+
+		public UMAData.UMARecipe GetUMARecipe()
+		{
+			return GetCachedRecipe(UMAContext.Instance);
+		}
+
+		public OverlayColorData[] SharedColors
+		{
+			get
+			{
+				var recipe = GetCachedRecipe(UMAContext.Instance);
+				return recipe.sharedColors;
+			}
+		}
+
+#if UNITY_EDITOR
 		[UnityEditor.MenuItem("Assets/Create/UMA/Core/Text Recipe")]
 		public static void CreateTextRecipeAsset()
 		{

@@ -59,10 +59,14 @@ namespace UMA
 		/// <param name="context">Context.</param>
 		public UMAData.UMARecipe GetCachedRecipe(UMAContextBase context)
 		{
-			if (!cached)
+			if (!cached || umaRecipe == null)
 			{
 				umaRecipe = new UMAData.UMARecipe();
 				Load(umaRecipe, context);
+#if !UNITY_EDITOR
+				// do not cache in the editor
+				cached = true;
+#endif
 			}
 
 			return umaRecipe;

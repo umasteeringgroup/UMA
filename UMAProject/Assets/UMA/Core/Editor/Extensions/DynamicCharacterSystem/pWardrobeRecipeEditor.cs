@@ -40,7 +40,8 @@ namespace UMA.Editors
 				{
 					AddRaceDataAsset(tempRaceDataAsset, compatibleRaces);
 				}
-				Event.current.Use();//stops the Mismatched LayoutGroup errors
+				if (evt.type != EventType.Layout)
+					Event.current.Use();//stops the Mismatched LayoutGroup errors
 				return;
 			}
 			if (evt.type == EventType.DragUpdated)
