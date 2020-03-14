@@ -46,6 +46,7 @@ namespace UMA
                     var WardrobeCollections = UMAAssetIndexer.Instance.GetAllAssets<UMAWardrobeCollection>();
                     foreach (var wc in WardrobeCollections)
                     {
+                        if (wc == null) continue;
                         string label = wc.AssignedLabel;
                         List<string> recipes = wc.wardrobeCollection.GetAllRecipeNamesInCollection();
                         foreach (string recipe in recipes)

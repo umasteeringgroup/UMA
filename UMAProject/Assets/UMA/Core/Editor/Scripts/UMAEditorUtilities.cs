@@ -379,12 +379,15 @@ namespace UMA
 				bool matModified = false;
 				string path = AssetDatabase.GUIDToAssetPath(guid);
 				UMAMaterial umat = AssetDatabase.LoadAssetAtPath<UMAMaterial>(path);
-				for (int i = 0; i < umat.channels.Length; i++)
+				if (umat.material.shader.name.ToLower().StartsWith("standard") || umat.material.shader.name.ToLower().Contains("lit"))
 				{
-					if (umat.channels[i].materialPropertyName == From)
+					for (int i = 0; i < umat.channels.Length; i++)
 					{
-						umat.channels[i].materialPropertyName = To;
-						matModified = true;
+						if (umat.channels[i].materialPropertyName == From)
+						{
+							umat.channels[i].materialPropertyName = To;
+							matModified = true;
+						}
 					}
 				}
 				if (matModified)
