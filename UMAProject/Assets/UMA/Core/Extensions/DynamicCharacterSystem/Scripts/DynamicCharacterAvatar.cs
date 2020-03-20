@@ -2904,7 +2904,7 @@ namespace UMA.CharacterSystem
             //set the expression set to match the new character- needs to happen before load...
             if (activeRace.racedata != null && !restoreDNA)
             {
-                SetAnimatorController();
+                SetAnimatorController(true);
                 SetExpressionSet();
             }
 

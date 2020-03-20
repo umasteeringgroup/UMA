@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7a834b471b2a70f46be58ea3025b119f, type: 3}
-  m_Name: RandomPeople
+  m_Name: RandomPeople 1
   m_EditorClassIdentifier: 
   RandomAvatars:
   - RaceName: HumanFemale
@@ -450,7 +450,22 @@ MonoBehaviour:
       - Hair
     - WardrobeSlot: {fileID: 11400000, guid: 1df4eb647357a74498fa7e6b4672ad8d, type: 2}
       Chance: 1
-      Colors: []
+      Colors:
+      - ColorName: Hair
+        ColorTable: {fileID: 11400000, guid: 919f053338460244f8cad6f535b25680, type: 2}
+        GuiFoldout: 1
+        Delete: 0
+        CurrentColor: 0
+      - ColorName: Hair
+        ColorTable: {fileID: 11400000, guid: e7303e8210acb45ef8d3f465731d2e94, type: 2}
+        GuiFoldout: 1
+        Delete: 0
+        CurrentColor: 0
+      - ColorName: Hair
+        ColorTable: {fileID: 0}
+        GuiFoldout: 1
+        Delete: 0
+        CurrentColor: 0
       GuiFoldout: 1
       Delete: 0
       AddColorTable: 0
@@ -459,17 +474,12 @@ MonoBehaviour:
     - WardrobeSlot: {fileID: 11400000, guid: f47ce9b8a0d9ecd48a39ef3f5c2447a6, type: 2}
       Chance: 1
       Colors:
-      - ColorName: Shirt
-        ColorTable: {fileID: 11400000, guid: 9d6638c0673482444a53d5dd707c3acc, type: 2}
-        GuiFoldout: 1
-        Delete: 0
-        CurrentColor: 0
       - ColorName: ShirtAccent
         ColorTable: {fileID: 11400000, guid: c767f9efa84cf40269e4475b89bb952d, type: 2}
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 1
-      GuiFoldout: 1
+      GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
       PossibleColors:
@@ -710,49 +720,17 @@ MonoBehaviour:
       PossibleColors:
       - Undies
     RandomDna:
-    - DnaName: height
-      MinValue: 0.4054054
-      MaxValue: 0.5945946
-      Delete: 0
-    - DnaName: upperMuscle
-      MinValue: 0
-      MaxValue: 0.9009009
-      Delete: 0
-    - DnaName: belly
-      MinValue: 0
-      MaxValue: 0.8648649
-      Delete: 0
-    - DnaName: waist
-      MinValue: 0
-      MaxValue: 0.8288288
-      Delete: 0
-    - DnaName: earsSize
-      MinValue: 0.054054055
-      MaxValue: 0.6036036
-      Delete: 0
-    - DnaName: noseCurve
+    - DnaName: cheekPosition
       MinValue: 0
       MaxValue: 1
       Delete: 0
-    - DnaName: noseWidth
+    - DnaName: legSeparation
       MinValue: 0
       MaxValue: 1
-      Delete: 0
-    - DnaName: noseFlatten
-      MinValue: 0.21621622
-      MaxValue: 0.8558558
-      Delete: 0
-    - DnaName: chinSize
-      MinValue: 0
-      MaxValue: 1
-      Delete: 0
-    - DnaName: jawsSize
-      MinValue: 0.3243243
-      MaxValue: 0.6216216
       Delete: 0
     raceData: {fileID: 11400000, guid: 62688b7aa02fbc544916e522fcc239c7, type: 2}
     GuiFoldout: 1
-    ColorsFoldout: 1
+    ColorsFoldout: 0
     WardrobeFoldout: 1
     DnaFoldout: 1
     Delete: 0
@@ -810,6 +788,6 @@ MonoBehaviour:
     - eyeSize
     - breastSize
     - eyeSpacing
-    SelectedDNA: 39
+    SelectedDNA: 13
     DNAAdd: 
     DNADel: 0

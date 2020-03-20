@@ -146,8 +146,6 @@ namespace UMA.CharacterSystem.Examples
 			if (converterCustomizer == null)
 			{
 				converterCustomizer = GameObject.FindObjectOfType<DynamicDNAConverterCustomizer>();
-				if (converterCustomizer == null && Debug.isDebugBuild)
-					Debug.LogError("DynamicDNAConverterCustomizer not assigned!");
 			}
 			else
 			{

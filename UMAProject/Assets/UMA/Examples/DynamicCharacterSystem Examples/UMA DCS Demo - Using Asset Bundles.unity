@@ -896,7 +896,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 305676970}
   m_Direction: 0
   m_Value: 1
-  m_Size: 1
+  m_Size: 0.99999994
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -12492,7 +12492,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4611a00ffa690654fa047ba4017fe56c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Avatar: {fileID: 0}
+  Avatar: {fileID: 893401642}
   converterCustomizer: {fileID: 0}
   GenericColorList: {fileID: 11400000, guid: dcd91d8cb86512549b228ccf32c88e45, type: 2}
   genericColorSwatch: {fileID: 21300000, guid: df24b1b2c8514b34aa75ea459233768b, type: 3}
@@ -16303,7 +16303,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1228950123}
   m_Direction: 2
   m_Value: 0.9999999
-  m_Size: 0.36476192
+  m_Size: 0.3118447
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -19624,7 +19624,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0.0000076293945, y: -0.0000010333296}
+  m_AnchoredPosition: {x: 0.0000076293945, y: -0.00002814734}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &2017232975
