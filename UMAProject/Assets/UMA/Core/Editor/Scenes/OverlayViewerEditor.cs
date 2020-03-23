@@ -8,7 +8,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 namespace UMA
-{
+{ 
 	/// <summary>
 	/// This editor is used for the UI in the inspector to edit overlays. It uses the OverlayViewer component.
 	/// </summary>
@@ -35,11 +35,11 @@ namespace UMA
 
 		private void OnEnable()
 		{
-			Initiailize();
+			Initialize();
 			ProcessCurrentOverlays();
 		}
 
-		private void Initiailize(bool retry = true)
+		private void Initialize(bool retry = true)
 		{
 			overlayViewer = serializedObject.targetObject as OverlayViewer;
 			TempUMAData = overlayViewer.gameObject.GetComponent<UMAData>();
@@ -96,6 +96,7 @@ namespace UMA
 			ugb.convertRenderTexture = false;
 			ugb.fitAtlas = true;
 			ugb.textureMerge = overlayViewer.TextureMergePrefab;
+			ugb.textureMerge.RefreshMaterials();
 		}
 
 		private void SelectNewOverlay(int index)
@@ -177,7 +178,7 @@ namespace UMA
 			{
 				Debug.Log("Something has gone wrong. Reinitializing. Text of error was: "+ex.Message);
 				if (retry)
-					Initiailize(false);
+					Initialize(false);
 			}
 		}
 

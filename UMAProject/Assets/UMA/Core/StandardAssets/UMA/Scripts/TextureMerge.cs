@@ -12,7 +12,7 @@ namespace UMA
     public class TextureMerge : ScriptableObject
 	{
 		public Material material;
-		public Shader normalShader;
+		public Shader normalShader; 
 		public Shader diffuseShader;
 		public Shader dataShader;
 		public Shader cutoutShader;
@@ -37,7 +37,19 @@ namespace UMA
 			public Rect rect;
 		}
 
-		public void DrawAllRects(RenderTexture target, int width, int height, Color background = default(Color))
+		public void RefreshMaterials()
+		{
+			if (textureMergeRects != null)
+			{
+				for (int i = 0; i < textureMergeRects.Length; i++)
+				{
+					if (textureMergeRects[i].mat == null)
+						textureMergeRects[i].mat = new Material(material);
+				}
+			}
+		}
+
+			public void DrawAllRects(RenderTexture target, int width, int height, Color background = default(Color))
 		{
 			if (textureMergeRects != null)
 			{
