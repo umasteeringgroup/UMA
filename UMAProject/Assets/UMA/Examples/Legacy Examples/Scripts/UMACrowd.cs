@@ -747,7 +747,7 @@ namespace UMA.Examples
 
 		private void AddAdditionalSlots()
 		{
-			umaData.AddAdditionalRecipes(additionalRecipes, UMAContextBase.FindInstance());
+			umaData.AddAdditionalRecipes(additionalRecipes, UMAContextBase.Instance);
 		}
 
 		public void ReplaceAll()

@@ -52,7 +52,7 @@ namespace UMA
 		{
 			if (context == null)
 			{
-				context = UMAContextBase.FindInstance();
+				context = UMAContextBase.Instance;
 			}
 
 			if (umaData == null)

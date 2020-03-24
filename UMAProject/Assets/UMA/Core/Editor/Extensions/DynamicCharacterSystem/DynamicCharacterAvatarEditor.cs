@@ -22,7 +22,7 @@ namespace UMA.CharacterSystem.Editors
 			thisDCA = target as DynamicCharacterAvatar;
 			if (thisDCA.context == null)
 			{
-				thisDCA.context = UMAContextBase.FindInstance();
+				thisDCA.context = UMAContextBase.Instance;
 				if (thisDCA.context == null)
 				{
 					thisDCA.context = thisDCA.CreateEditorContext();

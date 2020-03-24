@@ -38,7 +38,7 @@ namespace UMA.Editors
 
 		void Refresh()
 		{
-			Context = UMAContextBase.FindInstance();
+			Context = UMAContextBase.Instance;
 			if( Context == null)
 			{
 				EditorUtility.DisplayDialog("Error", "There is no UMA Context in the current scene!", "OK");

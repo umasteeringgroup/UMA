@@ -165,8 +165,6 @@ namespace UMA.CharacterSystem
 					if (!editorAddedAssets.Contains(race))
 					{
 						editorAddedAssets.Add(race);
-						if (UMAContextBase.Instance == null)
-							UMAContextBase.FindInstance();
 						if (UMAContextBase.Instance != null)
 						{
 							UMAContext.Instance.ValidateDictionaries();
@@ -180,8 +178,6 @@ namespace UMA.CharacterSystem
 			//Ensure the new races have keys in the DCS dictionary
 			if (currentNumRaces != raceElementList.Length && Application.isPlaying)
 			{
-				if (UMAContextBase.Instance == null)
-					UMAContextBase.FindInstance();
 				if (UMAContextBase.Instance != null)
 				{
 					UMAContextBase.Instance.ValidateDictionaries();

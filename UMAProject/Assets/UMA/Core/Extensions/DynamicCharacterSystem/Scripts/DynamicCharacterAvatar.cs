@@ -31,7 +31,7 @@ namespace UMA.CharacterSystem
 		{
 			var res = new GameObject("New Dynamic Character Avatar");
 			var da = res.AddComponent<DynamicCharacterAvatar>();
-			da.context = UMAContextBase.FindInstance();
+			da.context = UMAContextBase.Instance;
 			da.ChangeRace("HumanMale");
 			da.umaGenerator = Component.FindObjectOfType<UMAGeneratorBase>();
 			UnityEditor.Selection.activeGameObject = res;
@@ -763,7 +763,7 @@ namespace UMA.CharacterSystem
             if (!preloadWardrobeRecipes.loadDefaultRecipes && preloadWardrobeRecipes.recipes.Count == 0)
                 return;
 
-            List<WardrobeRecipeListItem> validRecipes = preloadWardrobeRecipes.Validate(false, activeRace.name, activeRace.racedata);
+            List<WardrobeRecipeListItem> validRecipes = preloadWardrobeRecipes.GetRecipesForRace(activeRace.name, activeRace.racedata);
             if (validRecipes.Count > 0)
             {
                 foreach (WardrobeRecipeListItem recipe in validRecipes)
@@ -1187,10 +1187,10 @@ namespace UMA.CharacterSystem
         void ApplyCurrentWardrobeToNewRace(List<WardrobeSettings> fallbackSet = null)
         {
             var newWardrobeRecipes = new Dictionary<string, UMATextRecipe>();
-            List<WardrobeRecipeListItem> validDefaultRecipes = preloadWardrobeRecipes.Validate(true, activeRace.name, activeRace.racedata);
+            List<WardrobeRecipeListItem> validDefaultRecipes = preloadWardrobeRecipes.GetRecipesForRace(activeRace.name, activeRace.racedata);
             fallbackSet = fallbackSet ?? new List<WardrobeSettings>();
             //to get the recipes from the fallbackSet we need DCS
-            var thisContext = UMAContextBase.FindInstance();
+            var thisContext = UMAContextBase.Instance;
             if (thisContext == null)
             {
 #if UNITY_EDITOR
@@ -3474,41 +3474,28 @@ namespace UMA.CharacterSystem
             public bool loadDefaultRecipes = true;
             public List<WardrobeRecipeListItem> recipes = new List<WardrobeRecipeListItem>();
 
-            public List<WardrobeRecipeListItem> Validate(bool allowDownloadables = false, string raceName = "", RaceData race = null)
+            public List<WardrobeRecipeListItem> GetRecipesForRace(string raceName = "", RaceData race = null)
             {
                 List<WardrobeRecipeListItem> validRecipes = new List<WardrobeRecipeListItem>();
-                var thisContext = UMAContextBase.FindInstance();
-                if (thisContext == null)
+                if (UMAContextBase.Instance == null)
                 {
                     return validRecipes;
                 }
 
-                    foreach (WardrobeRecipeListItem WLIRecipe in recipes)
+                foreach (WardrobeRecipeListItem WLIRecipe in recipes)
+                {
+                    if (WLIRecipe._recipe == null && UMAContextBase.Instance.HasRecipe(WLIRecipe._recipeName))
                     {
-                        //this needs to also check backwards compatible races so need the racedata, so send it or request it?
-                        if ((raceName == "" || (WLIRecipe._compatibleRaces.Contains(raceName) || (race != null && race.IsCrossCompatibleWith(WLIRecipe._compatibleRaces)))))
-                        {
-                            if (allowDownloadables)
-                            {
-                                WLIRecipe._recipe = UMAContext.Instance.GetRecipe(WLIRecipe._recipeName,false);
-                                if (WLIRecipe._recipe != null)
-                                {
-                                    WLIRecipe._compatibleRaces = new List<string>(WLIRecipe._recipe.compatibleRaces);
-                                    validRecipes.Add(WLIRecipe);
-                                }
-
-                            }
-                            else
-                            {
-                                if (UMAContext.Instance.HasRecipe(WLIRecipe._recipeName))
-                                {
-									WLIRecipe._recipe = UMAContext.Instance.GetRecipe(WLIRecipe._recipeName, false);
-							        WLIRecipe._compatibleRaces = new List<string>(WLIRecipe._recipe.compatibleRaces);
-                                    validRecipes.Add(WLIRecipe);
-                                }
-                            }
-                        }
+                        WLIRecipe._recipe = UMAContextBase.Instance.GetRecipe(WLIRecipe._recipeName, false);
                     }
+                    if (WLIRecipe._recipe == null) continue;
+
+                    WLIRecipe._compatibleRaces = new List<string>(WLIRecipe._recipe.compatibleRaces);
+                    if (raceName == "" || WLIRecipe._recipe.compatibleRaces.Contains(raceName) || (race != null && race.IsCrossCompatibleWith(WLIRecipe._recipe.compatibleRaces)))
+                    {
+                       validRecipes.Add(WLIRecipe);
+                    }
+                }
                 return validRecipes;
             }
         }

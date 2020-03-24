@@ -84,7 +84,7 @@ namespace UMA.CharacterSystem
 
 		public List<WardrobeSettings> GetRacesWardrobeSet(string race)
 		{
-			var thisContext = UMAContextBase.FindInstance();
+			var thisContext = UMAContextBase.Instance;
 			if(thisContext == null)
 			{
 				if (Debug.isDebugBuild)

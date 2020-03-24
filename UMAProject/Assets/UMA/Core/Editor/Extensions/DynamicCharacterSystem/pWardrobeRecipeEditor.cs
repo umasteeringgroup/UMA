@@ -927,7 +927,7 @@ namespace UMA.Editors
 							var slotName = _baseSlotOptions[baseAdded - 1];
 							LastSlot = slotName;
 							//we know there should be one because we created a virtual one when we unpacked the recipe if it didn't exist
-							var context = UMAContextBase.FindInstance();
+							var context = UMAContextBase.Instance;
 							var slotToAdd = context.InstantiateSlot(slotName);
 							_recipe.MergeSlot(slotToAdd, false);
 							changed |= true;

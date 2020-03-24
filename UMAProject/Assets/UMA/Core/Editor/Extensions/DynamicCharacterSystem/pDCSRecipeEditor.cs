@@ -45,7 +45,7 @@ namespace UMA.Editors
 					warningIcon = EditorGUIUtility.FindTexture("console.warnicon.sml");
 				}
 				bool changed = false;
-				var context = UMAContextBase.FindInstance();
+				var context = UMAContextBase.Instance;
 				if (context == null)
 				{
 					var _errorMessage = "Editing a recipe requires a loaded scene with a valid UMAContextBase.";
@@ -146,7 +146,7 @@ namespace UMA.Editors
 				if (_race != null)
 					if (_race.wardrobeSlots.Count > 0)
 					{
-						var context = UMAContextBase.FindInstance();
+						var context = UMAContextBase.Instance;
 						if (context == null)
 						{
 							var _errorMessage = "Editing a recipe requires a loaded scene with a valid UMAContextBase.";
@@ -335,7 +335,7 @@ namespace UMA.Editors
 			{
 				bool changed = false;
 				var thisUmaDataRecipe = new UMAData.UMARecipe();
-				var context = UMAContextBase.FindInstance();
+				var context = UMAContextBase.Instance;
 				if (context == null)
 					return false;
 				var thisWardrobeRecipe = context.GetBaseRecipe(sourceRecipeName,true);
@@ -489,7 +489,7 @@ namespace UMA.Editors
 			}
 			private void UpdateBackwardsCompatibleData()
 			{
-				var context = UMAContextBase.FindInstance();
+				var context = UMAContextBase.Instance;
 				if (context == null)
 				{
 					var _errorMessage = "Editing a recipe requires a loaded scene with a valid UMAContextBase.";

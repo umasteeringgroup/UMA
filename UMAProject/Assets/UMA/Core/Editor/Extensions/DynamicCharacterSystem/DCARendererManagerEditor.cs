@@ -23,7 +23,7 @@ namespace UMA.Editors
         {
             RendererElements = serializedObject.FindProperty("RendererElements");
             showHelp = serializedObject.FindProperty("showHelp");
-            context = UMAContextBase.FindInstance();
+            context = UMAContextBase.Instance;
 
             DCARendererManager manager = target as DCARendererManager;
             avatar = manager.GetComponent<DynamicCharacterAvatar>();

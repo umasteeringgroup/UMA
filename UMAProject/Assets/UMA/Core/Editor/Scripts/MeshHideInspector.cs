@@ -94,7 +94,7 @@ namespace UMA.Editors
 			else
 			{
 				UMAData.UMARecipe baseRecipe = new UMAData.UMARecipe();
-				foundRaces[selectedRaceIndex].baseRaceRecipe.Load(baseRecipe, UMAContextBase.FindInstance());
+				foundRaces[selectedRaceIndex].baseRaceRecipe.Load(baseRecipe, UMAContextBase.Instance);
 
 				foreach(SlotData sd in baseRecipe.slotDataList)
 				{

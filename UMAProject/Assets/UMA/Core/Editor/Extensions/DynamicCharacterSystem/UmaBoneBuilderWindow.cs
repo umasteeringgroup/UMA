@@ -167,7 +167,7 @@ namespace UMA.Editors
             if ( _umaData.umaRecipe == null)
                 _umaData.umaRecipe = new UMAData.UMARecipe ();
 
-            baseRecipe.Load(_umaData.umaRecipe, UMAContextBase.FindInstance());
+            baseRecipe.Load(_umaData.umaRecipe, UMAContextBase.Instance);
             Debug.Log ("UMAData initialization successful!");
         }
 
@@ -176,7 +176,7 @@ namespace UMA.Editors
             if (umaObject == null)
                 return;
 
-			UMAContextBase uc = UMAContextBase.FindInstance();
+			UMAContextBase uc = UMAContextBase.Instance;
 
 			if (uc == null)
 			{

@@ -814,7 +814,7 @@ namespace UMA
 #endif
 		public UMAContextBase GetContext()
 		{
-			UMAContextBase instance = UMAContextBase.FindInstance();
+			UMAContextBase instance = UMAContextBase.Instance;
 			if (instance != null)
 			{
 				return instance;
