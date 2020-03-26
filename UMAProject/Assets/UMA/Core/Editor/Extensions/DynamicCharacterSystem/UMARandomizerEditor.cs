@@ -174,8 +174,6 @@ namespace UMA.Editors
 					GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.75f, 0.75f));
 					if (ra.SharedColors != null && ra.SharedColors.Count > 0)
 					{
-						RandomColors delcolor = null;
-						
 						foreach (RandomColors rc in ra.SharedColors)
 						{
 							RandomColorsGUI(ra, rc);

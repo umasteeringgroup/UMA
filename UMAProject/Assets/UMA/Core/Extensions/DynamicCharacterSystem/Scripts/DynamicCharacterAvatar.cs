@@ -2504,13 +2504,10 @@ namespace UMA.CharacterSystem
                     {
                         recipeString = (ai.Item as TextAsset).text;
                     }
-
-					recipeString = UMAContext.Instance.GetCharacterRecipe(loadFilename.Trim());
-					// 
-                    //if (thisDCS.CharacterRecipes.ContainsKey(loadFilename.Trim()))
-                    //{
-                    //    thisDCS.CharacterRecipes.TryGetValue(loadFilename.Trim(), out recipeString);
-                    //}
+                    else
+                    {
+                        recipeString = UMAContext.Instance.GetCharacterRecipe(loadFilename.Trim());
+                    }
                 }
             }
             if (loadPathType == loadPathTypes.FileSystem)
@@ -2542,7 +2539,7 @@ namespace UMA.CharacterSystem
                     for (int i = 0; i < textFiles.Length; i++)
                     {
                         if (textFiles[i].name == loadFilename.Trim() || textFiles[i].name.ToLower() == loadFilename.Trim())
-                        {
+                        { 
                             recipeString = textFiles[i].text;
                         }
                     }
