@@ -418,19 +418,24 @@ namespace UMA.CharacterSystem.Editors
 				showWardrobe = EditorGUILayout.Foldout(showWardrobe, "Current Wardrobe");
 				if (showWardrobe)
 				{
-					EditorGUI.BeginDisabledGroup(true);
+
 					EditorGUI.indentLevel++;
 					Dictionary<string, UMATextRecipe> currentWardrobe = thisDCA.WardrobeRecipes;
 
 					foreach (KeyValuePair<string, UMATextRecipe> item in currentWardrobe)
 					{
 						GUILayout.BeginHorizontal();
+						EditorGUI.BeginDisabledGroup(true);
 						EditorGUILayout.LabelField(item.Key,GUILayout.Width(88.0f));
 						EditorGUILayout.TextField(item.Value.DisplayValue+" ("+item.Value.name+")");
+						EditorGUI.EndDisabledGroup();
+						if (GUILayout.Button("Inspect", EditorStyles.toolbarButton,GUILayout.Width(40)))
+						{
+							InspectorUtlity.InspectTarget(item.Value);
+						}
 						GUILayout.EndHorizontal();
 					}
                     EditorGUI.indentLevel--;
-					EditorGUI.EndDisabledGroup();
 				}
 			}
 		}

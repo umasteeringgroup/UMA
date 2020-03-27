@@ -2673,7 +2673,7 @@ namespace UMA.CharacterSystem
                     {
                         foreach (MeshHideAsset meshHide in utr.MeshHideAssets)
                         {
-                            if (meshHide != null && meshHide.asset != null)
+                            if (meshHide != null)
                             {
                                 if (!MeshHideDictionary.ContainsKey(meshHide.AssetSlotName))
                                 {   //If this meshHide.asset isn't already in the dictionary, then let's add it and start a new list.
@@ -2804,7 +2804,7 @@ namespace UMA.CharacterSystem
                     LoadQueue.Remove(Op);
                     if (LoadedHandles.Count > 1)
                     {
-                        if (DelayUnload > 0.0f)
+                        if (gameObject.activeInHierarchy && DelayUnload > 0.0f) //VES changed from if (DelayUnload > 0.0f)
                         {
                             StartCoroutine(CleanupAfterDelay());
                         }
