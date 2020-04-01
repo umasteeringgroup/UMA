@@ -59,6 +59,7 @@ The first RuntimeAnimatorController for compatible races will now be added if a 
 You can now pass a constructed DynamicCharacterAvatar to the UMARandomAvatar.Randomize() function to regenerate it randomly.
 New scene ("OverlayAligner") to convert and adjust overlay coordinates visually. 
 Performance improvements - up to a 5% increase in speed when building under 2019.3 due to boneweight optimizations.
+Added support for more than 32 wardrobe slots (problem with Masked Field editor)
 Various bug fixes & changes
     Fixed various overlays that were missing textures or had the wrong count
     Fixed some scenes that had broken over time
