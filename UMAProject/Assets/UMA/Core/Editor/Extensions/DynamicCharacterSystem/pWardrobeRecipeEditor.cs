@@ -17,6 +17,7 @@ namespace UMA.Editors
 		List<UMAWardrobeRecipe> DeletedRecipes = new List<UMAWardrobeRecipe>();
 		int meshHideAssetPickerID = -1;
         int slotHidePickerID = -1;
+		int selectedsuppressed = -1;
 
 		// Drop area for compatible Races
 		private void CompatibleRacesDropArea(Rect dropArea, List<string> compatibleRaces)
@@ -542,6 +543,7 @@ namespace UMA.Editors
 		}
 
 		private bool ShowHidetags;
+		private bool ShowSuppressSlots;
 		private ReorderableList hideTagsList;
 		private bool hideTagsListInitialized = false;
 		private void InitHideTagsList()
@@ -561,21 +563,21 @@ namespace UMA.Editors
 
 		protected virtual bool DrawWardrobeSlotsFields(Type TargetType, bool ShowHelp = false)
 		{
-            #region Setup
-            bool doUpdate = false;
-            //Field Infos
-            FieldInfo ReplacesField = TargetType.GetField("replaces", BindingFlags.Public | BindingFlags.Instance);
-            FieldInfo CompatibleRacesField = TargetType.GetField("compatibleRaces", BindingFlags.Public | BindingFlags.Instance);
+			#region Setup
+			bool doUpdate = false;
+			//Field Infos
+			FieldInfo ReplacesField = TargetType.GetField("replaces", BindingFlags.Public | BindingFlags.Instance);
+			FieldInfo CompatibleRacesField = TargetType.GetField("compatibleRaces", BindingFlags.Public | BindingFlags.Instance);
 			FieldInfo WardrobeSlotField = TargetType.GetField("wardrobeSlot", BindingFlags.Public | BindingFlags.Instance);
 			FieldInfo SuppressWardrobeSlotField = TargetType.GetField("suppressWardrobeSlots", BindingFlags.Public | BindingFlags.Instance);
 			FieldInfo HidesField = TargetType.GetField("Hides", BindingFlags.Public | BindingFlags.Instance);
 			FieldInfo DisplayValueField = TargetType.GetField("DisplayValue", BindingFlags.Public | BindingFlags.Instance);
 			FieldInfo UserField = TargetType.GetField("UserField", BindingFlags.Public | BindingFlags.Instance);
 
-            // ************************************
-            // field values
-            // ************************************
-            string replaces = "";
+			// ************************************
+			// field values
+			// ************************************
+			string replaces = "";
 			if (ReplacesField != null)
 			{
 				object o = ReplacesField.GetValue(target);
@@ -585,27 +587,27 @@ namespace UMA.Editors
 				}
 			}
 
-            List<string> compatibleRaces = (List<string>)CompatibleRacesField.GetValue(target);
+			List<string> compatibleRaces = (List<string>)CompatibleRacesField.GetValue(target);
 			string wardrobeSlot = (string)WardrobeSlotField.GetValue(target);
 			List<string> suppressWardrobeSlot = (List<string>)SuppressWardrobeSlotField.GetValue(target);
 			List<string> hides = (List<string>)HidesField.GetValue(target);
 			string displayValue = (string)DisplayValueField.GetValue(target);
 			string userFieldValue = (string)UserField.GetValue(target);
-            #endregion
+			#endregion
 
-            #region Display Value UI
-            //displayValue UI
-            string PreviousValue = displayValue;
+			#region Display Value UI
+			//displayValue UI
+			string PreviousValue = displayValue;
 			displayValue = EditorGUILayout.DelayedTextField("Display Value", displayValue);
 			if (displayValue != PreviousValue)
 			{
 				DisplayValueField.SetValue(target, displayValue);
 				doUpdate = true;
 			}
-            if (ShowHelp)
-            {
-                EditorGUILayout.HelpBox("Display Value can be used to store a user-friendly name for this item. It's not used for constructing the character, but it can be used in UI design by accessing the .DisplayValue field on the recipe.", MessageType.Info);
-            }
+			if (ShowHelp)
+			{
+				EditorGUILayout.HelpBox("Display Value can be used to store a user-friendly name for this item. It's not used for constructing the character, but it can be used in UI design by accessing the .DisplayValue field on the recipe.", MessageType.Info);
+			}
 			PreviousValue = userFieldValue;
 			userFieldValue = EditorGUILayout.DelayedTextField("User Field", userFieldValue);
 			if (userFieldValue != PreviousValue)
@@ -645,13 +647,14 @@ namespace UMA.Editors
 				}
 				newWardrobeSlot = generatedWardrobeSlotOptions.Count > 0 ? generatedWardrobeSlotOptions[selectedWardrobeSlotIndex] : "None";
 			}
-            if (ShowHelp)
-            {
-                EditorGUILayout.HelpBox("Wardrobe Slot: This assigns the recipe to a Wardrobe Slot. The wardrobe slots are defined on the race. Characters can have only one recipe per Wardrobe Slot at a time, so for example, adding a 'beard' recipe to a character will replace the existing 'beard' if there is one", MessageType.Info);
-            }
-            #endregion
+			if (ShowHelp)
+			{
+				EditorGUILayout.HelpBox("Wardrobe Slot: This assigns the recipe to a Wardrobe Slot. The wardrobe slots are defined on the race. Characters can have only one recipe per Wardrobe Slot at a time, so for example, adding a 'beard' recipe to a character will replace the existing 'beard' if there is one", MessageType.Info);
+			}
+			#endregion
 
-            #region Suppress UI
+			#region Suppress UI
+			/*
             //SuppressedSlots UI
             int suppressFlags = 0;
 			for (int i = 0; i < generatedWardrobeSlotOptions.Count; i++)
@@ -676,16 +679,17 @@ namespace UMA.Editors
 				EditorGUILayout.TextField(swsl2Result);
 				GUI.enabled = true;
 			}
-            if (ShowHelp)
-            {
-                EditorGUILayout.HelpBox("Suppress: This will stop a different wardrobe slot from displaying. For example, if you have a full-length robe assigned to a 'chest' wardrobe slot, you would want to suppress whatever is assigned to the 'legs' wardrobe slot, so they don't poke through. This is typically used for dresses, robes, and other items that cover multiple body areas.", MessageType.Info);
-            }
-            #endregion
+			*/
+			if (ShowHelp)
+			{
+				EditorGUILayout.HelpBox("Suppress: This will stop a different wardrobe slot from displaying. For example, if you have a full-length robe assigned to a 'chest' wardrobe slot, you would want to suppress whatever is assigned to the 'legs' wardrobe slot, so they don't poke through. This is typically used for dresses, robes, and other items that cover multiple body areas.", MessageType.Info);
+			}
+			#endregion
 
-            #region Hides UI
-            //Hides UI
-            EditorGUILayout.BeginHorizontal();
-            GenerateBaseSlotsEnum(compatibleRaces, false, hides);
+			#region Hides UI
+			//Hides UI
+			EditorGUILayout.BeginHorizontal();
+			GenerateBaseSlotsEnum(compatibleRaces, false, hides);
 			int hiddenBaseFlags = 0;
 			List<string> newHides = new List<string>();
 			for (int i = 0; i < generatedBaseSlotOptions.Count; i++)
@@ -710,39 +714,39 @@ namespace UMA.Editors
 				}
 			}
 			else
-				EditorGUILayout.Popup("Hides Base Slots(s)", 0, new string[1] {"Nothing"} );
-			
-            GUILayout.Space(8);
-            if (GUILayout.Button("Select",GUILayout.MaxWidth(64), GUILayout.MaxHeight(16)))
-            {
-                slotHidePickerID = EditorGUIUtility.GetControlID(FocusType.Passive) + 101;
-                EditorGUIUtility.ShowObjectPicker<SlotDataAsset>(null, false, "", slotHidePickerID);
-            }
-            if (Event.current.commandName == "ObjectSelectorUpdated" && EditorGUIUtility.GetObjectPickerControlID() == slotHidePickerID)
-            {
-                SlotDataAsset sda = EditorGUIUtility.GetObjectPickerObject() as SlotDataAsset;
-                newHides.Add(sda.slotName);
-                Event.current.Use();
-                GenerateBaseSlotsEnum(compatibleRaces, true, hides);
-            }
+				EditorGUILayout.Popup("Hides Base Slots(s)", 0, new string[1] { "Nothing" });
 
-            EditorGUILayout.EndHorizontal();
-            if (newHides.Count > 1)
-            {
-                GUI.enabled = false;
-                string newHidesResult = String.Join(", ", newHides.ToArray());
-                EditorGUILayout.TextField(newHidesResult);
-                GUI.enabled = true;
-            }
+			GUILayout.Space(8);
+			if (GUILayout.Button("Select", GUILayout.MaxWidth(64), GUILayout.MaxHeight(16)))
+			{
+				slotHidePickerID = EditorGUIUtility.GetControlID(FocusType.Passive) + 101;
+				EditorGUIUtility.ShowObjectPicker<SlotDataAsset>(null, false, "", slotHidePickerID);
+			}
+			if (Event.current.commandName == "ObjectSelectorUpdated" && EditorGUIUtility.GetObjectPickerControlID() == slotHidePickerID)
+			{
+				SlotDataAsset sda = EditorGUIUtility.GetObjectPickerObject() as SlotDataAsset;
+				newHides.Add(sda.slotName);
+				Event.current.Use();
+				GenerateBaseSlotsEnum(compatibleRaces, true, hides);
+			}
 
-            if (ShowHelp)
-            {
-                EditorGUILayout.HelpBox("Hides: This is used to hide parts of the base recipe. For example, if you create gloves, you may want to hide the 'hands', so you don't get poke-through", MessageType.Info);
-            }
-            #endregion
+			EditorGUILayout.EndHorizontal();
+			if (newHides.Count > 1)
+			{
+				GUI.enabled = false;
+				string newHidesResult = String.Join(", ", newHides.ToArray());
+				EditorGUILayout.TextField(newHidesResult);
+				GUI.enabled = true;
+			}
 
-            #region Replaces UI
-            if (ReplacesField != null)
+			if (ShowHelp)
+			{
+				EditorGUILayout.HelpBox("Hides: This is used to hide parts of the base recipe. For example, if you create gloves, you may want to hide the 'hands', so you don't get poke-through", MessageType.Info);
+			}
+			#endregion
+
+			#region Replaces UI
+			if (ReplacesField != null)
 			{
 				List<string> ReplacesSlots = new List<string>(generatedBaseSlotOptions);
 				ReplacesSlots.Insert(0, "Nothing");
@@ -754,17 +758,17 @@ namespace UMA.Editors
 				ReplacesField.SetValue(target, ReplacesSlots[selectedIndex]);
 			}
 
-            if (ShowHelp)
-            {
-                EditorGUILayout.HelpBox("Replaces: This is used to replace part of the base recipe while keeping it's overlays. For example, if you want to replace the head from the base race recipe with a High Poly head, you would 'replace' the head, not hide it. Only one slot can be replaced, and the recipe should only contain one slot.", MessageType.Info);
-            }
-            #endregion
+			if (ShowHelp)
+			{
+				EditorGUILayout.HelpBox("Replaces: This is used to replace part of the base recipe while keeping it's overlays. For example, if you want to replace the head from the base race recipe with a High Poly head, you would 'replace' the head, not hide it. Only one slot can be replaced, and the recipe should only contain one slot.", MessageType.Info);
+			}
+			#endregion
 
-            #region MeshHideArray
+			#region MeshHideArray
 			//EditorGUIUtility.LookLikeInspector();
-			SerializedProperty meshHides = serializedObject.FindProperty ("MeshHideAssets");
+			SerializedProperty meshHides = serializedObject.FindProperty("MeshHideAssets");
 			EditorGUI.BeginChangeCheck();
-			if(GUILayout.Button("Add Mesh Hide Asset"))
+			if (GUILayout.Button("Add Mesh Hide Asset"))
 			{
 				meshHideAssetPickerID = EditorGUIUtility.GetControlID(FocusType.Passive) + 100;
 				EditorGUIUtility.ShowObjectPicker<MeshHideAsset>(null, false, "", meshHideAssetPickerID);
@@ -778,7 +782,7 @@ namespace UMA.Editors
 					MeshHideAsset mha = EditorGUIUtility.GetObjectPickerObject() as MeshHideAsset;
 					if (mha != null)
 					{
-						foreach(MeshHideAsset theAsset in recipe.MeshHideAssets)
+						foreach (MeshHideAsset theAsset in recipe.MeshHideAssets)
 						{
 							if (theAsset.GetInstanceID() == mha.GetInstanceID())
 							{
@@ -805,18 +809,33 @@ namespace UMA.Editors
 			}
 			EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 			MeshHideAsset deleteme = null;
+			bool deleteNulls = false;
 
 			foreach (MeshHideAsset mha in recipe.MeshHideAssets)
 			{
 				EditorGUILayout.BeginHorizontal();
-				EditorGUILayout.LabelField(mha.name + " (" + mha.AssetSlotName + ")");
-				if (GUILayout.Button("X",GUILayout.Width(20.0f)))
+				if (mha != null)
 				{
-					deleteme = mha;
+					EditorGUILayout.LabelField(mha.name + " (" + mha.AssetSlotName + ")");
+					if (GUILayout.Button("X", GUILayout.Width(20.0f)))
+					{
+						deleteme = mha;
+					}
+				}
+				else
+				{
+					deleteNulls = true;
 				}
 				EditorGUILayout.EndHorizontal();
 			}
 			EditorGUILayout.EndVertical();
+
+			if (deleteNulls == true)
+			{
+				recipe.MeshHideAssets.RemoveAll(x => x == null);
+				EditorUtility.SetDirty(target);
+				AssetDatabase.SaveAssets();
+			}
 			if (deleteme != null)
 			{
 				recipe.MeshHideAssets.Remove(deleteme);
@@ -825,12 +844,77 @@ namespace UMA.Editors
 			}
 			// EditorGUILayout.PropertyField(meshHides, true);
 			if (EditorGUI.EndChangeCheck())
-			serializedObject.ApplyModifiedProperties();
-            //EditorGUIUtility.LookLikeControls();
-            if(ShowHelp)
-            {
-                EditorGUILayout.HelpBox("MeshHideAssets: This is a list of advanced mesh hiding assets to hide their corresponding slot meshes on a per triangle basis.", MessageType.Info);
-            }
+				serializedObject.ApplyModifiedProperties();
+			//EditorGUIUtility.LookLikeControls();
+			if (ShowHelp)
+			{
+				EditorGUILayout.HelpBox("MeshHideAssets: This is a list of advanced mesh hiding assets to hide their corresponding slot meshes on a per triangle basis.", MessageType.Info);
+			}
+			#endregion
+
+			#region New Suppress UI
+			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
+			GUILayout.Space(10);
+			ShowSuppressSlots = EditorGUILayout.Foldout(ShowSuppressSlots, "Wardrobe Slots to Suppress");
+			GUILayout.EndHorizontal();
+			bool suppressChanged = false;
+			if (ShowSuppressSlots)
+			{
+				string suppressdelete = "";
+				GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+				foreach (string s in suppressWardrobeSlot)
+				{
+					EditorGUILayout.BeginHorizontal();
+					GUILayout.Label(s);
+					if (GUILayout.Button("X", EditorStyles.miniButton, GUILayout.Width(24)))
+					{
+						suppressdelete = s;
+					}
+
+					EditorGUILayout.EndHorizontal();
+				}
+				GUILayout.BeginHorizontal();
+				selectedsuppressed = EditorGUILayout.Popup("Add Wardrobe Slot", selectedsuppressed, generatedWardrobeSlotOptions.ToArray());
+				if (GUILayout.Button("Add Slot", EditorStyles.miniButton, GUILayout.Width(80)))
+				{
+					if (selectedsuppressed >= 0)
+					{
+						string newSlot = generatedWardrobeSlotOptions[selectedsuppressed];
+						if (!suppressWardrobeSlot.Contains(newSlot))
+						{
+							suppressWardrobeSlot.Add(newSlot);
+							suppressChanged = true;
+						}
+					}
+				}
+				GUILayout.EndHorizontal();
+				if (suppressdelete != "")
+				{
+					suppressWardrobeSlot.Remove(suppressdelete);
+					suppressdelete = "";
+					suppressChanged = true;
+				}
+
+				// start box
+				// loop through suppressWardrobeSlot
+				//    draw item, + "[X]" button.
+				//    if (x button); add to delete list
+				// end loop
+				// show add dropdown/ popup
+				// if selected from add dropdown
+				//    add to list;
+				// end;
+				// if any items to delete
+				//    delete from list
+				//    clear delete list
+				// end
+				// end box
+				GUIHelper.EndVerticalPadded(10);
+				// Information: 
+				// current list is suppressWardrobeSlot;
+				// updated list is newSuppressWardrobeSlot;
+				// available items are: generatedWardrobeSlotOptions
+			}
 			#endregion
 
 			#region HideTags UI
@@ -838,6 +922,7 @@ namespace UMA.Editors
 			{
 				InitHideTagsList();
 			}
+
 			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
 			GUILayout.Space(10);
 			ShowHidetags = EditorGUILayout.Foldout(ShowHidetags, "Tags to Hide");
@@ -862,9 +947,9 @@ namespace UMA.Editors
 				WardrobeSlotField.SetValue(target, newWardrobeSlot);
 				doUpdate = true;
 			}
-			if (!AreListsEqual<string>(newSuppressWardrobeSlot, suppressWardrobeSlot))
+			if (suppressChanged)
 			{
-				SuppressWardrobeSlotField.SetValue(target, newSuppressWardrobeSlot);
+				SuppressWardrobeSlotField.SetValue(target, suppressWardrobeSlot);
 				doUpdate = true;
 			}
 			if (!AreListsEqual<string>(newHides, hides))
@@ -872,9 +957,9 @@ namespace UMA.Editors
 				HidesField.SetValue(target, newHides);
 				doUpdate = true;
 			}
-            #endregion
+			#endregion
 
-            return doUpdate;
+			return doUpdate;
 		}
 		/// <summary>
 		/// And editor for a WardrobeRecipe that shows sharedColors and Slots but hides the 'raceData' field (because WardrobeRecipes have a 'compatibleRaces' list)
