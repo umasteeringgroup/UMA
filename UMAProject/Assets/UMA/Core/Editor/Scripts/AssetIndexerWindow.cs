@@ -321,17 +321,12 @@ namespace UMA.Controls
 
 			foreach (RaceData rc in UAI.GetAllAssets<RaceData>())
 			{
-				AddMenuItemWithCallbackParm(ItemsMenu, "Select Slots + Overlays By Race/" + rc.raceName, SelectByRace, rc);
-			}
-
-			foreach (RaceData rc in UAI.GetAllAssets<RaceData>())
-			{
-				AddMenuItemWithCallbackParm(ItemsMenu, "Select Slots By Race/" + rc.raceName, SelectSlotsByRace, rc);
-			}
-
-			foreach (RaceData rc in UAI.GetAllAssets<RaceData>())
-			{
-				AddMenuItemWithCallbackParm(ItemsMenu, "Select Overlays By Race/" + rc.raceName, SelectOverlaysByRace, rc);
+				if (rc != null)
+				{
+					AddMenuItemWithCallbackParm(ItemsMenu, "Select Slots + Overlays By Race/" + rc.raceName, SelectByRace, rc);
+					AddMenuItemWithCallbackParm(ItemsMenu, "Select Slots By Race/" + rc.raceName, SelectSlotsByRace, rc);
+					AddMenuItemWithCallbackParm(ItemsMenu, "Select Overlays By Race/" + rc.raceName, SelectOverlaysByRace, rc);
+				}
 			}
 
 			ItemsMenu.AddSeparator("");

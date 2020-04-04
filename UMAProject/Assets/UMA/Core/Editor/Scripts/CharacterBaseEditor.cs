@@ -1373,11 +1373,12 @@ namespace UMA.Editors
 			}
 
 			OverlayExpanded[_overlayData.overlayName] = _foldout;
+			Delete = delete;
 
 			if (!_foldout)
 				return false;
 
-			Delete = delete;
+
 
 
 			GUIHelper.BeginHorizontalPadded(10, Color.white);
