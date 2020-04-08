@@ -52,7 +52,11 @@ namespace UMA
 
 							continue;
 						}
-						renderers[i] = MakeRenderer(i, globalTransform, umaData.generatedMaterials.rendererAssets[i] );
+						UMARendererAsset rendererAsset = umaData.generatedMaterials.rendererAssets[i];
+						if (rendererAsset == null)
+							rendererAsset = umaData.defaultRendererAsset;
+
+						renderers[i] = MakeRenderer(i, globalTransform, rendererAsset);
 					}
 
 					if (oldRenderers != null)
@@ -106,7 +110,11 @@ namespace UMA
 
 				for (int i = 0; i < umaData.generatedMaterials.rendererAssets.Count; i++)
 				{
-					renderers[i] = MakeRenderer(i, globalTransform, umaData.generatedMaterials.rendererAssets[i]);
+					UMARendererAsset rendererAsset = umaData.generatedMaterials.rendererAssets[i];
+					if (rendererAsset == null)
+						rendererAsset = umaData.defaultRendererAsset;
+
+					renderers[i] = MakeRenderer(i, globalTransform, rendererAsset);
 				}
 				umaData.SetRenderers(renderers);
 				umaData.SetRendererAssets(umaData.generatedMaterials.rendererAssets.ToArray());

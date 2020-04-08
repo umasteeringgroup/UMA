@@ -625,7 +625,7 @@ namespace UMA.Editors
 			//wardrobeSlot UI
 			int selectedWardrobeSlotIndex = GenerateWardrobeSlotsEnum(wardrobeSlot, compatibleRaces, false);
 			string newWardrobeSlot;
-			int newSuppressFlags = 0;
+
 			List<string> newSuppressWardrobeSlot = new List<string>();
 			if (selectedWardrobeSlotIndex == -1)
 			{

@@ -393,7 +393,7 @@ namespace UMA.CharacterSystem
 			Debug.Log("Start on DynamicCharacterAvatar: " + gameObject.name);
 #endif
 			AddCharacterStateCache("NULL"); 
-            base.Start(); 
+            base.Start();
 
             umaData.blendShapeSettings.ignoreBlendShapes = !loadBlendShapes;
 
@@ -2912,6 +2912,8 @@ namespace UMA.CharacterSystem
             {
                 Initialize();
             }
+            umaData.defaultRendererAsset = defaultRendererAsset;
+
             // Set the current resolution scale if defined on the DCA.
             if (AtlasResolutionScale != 1.0f)
             {
@@ -3204,10 +3206,11 @@ namespace UMA.CharacterSystem
 
         //@jaimi not sure what calls this. Generator maybe?
         //@david - I can't find anything calling it
-        public void AvatarCreated()
+        public void AvatarCreated(UMAData uMAData)
         {
             ApplyBounds();
         }
+
         public void ApplyBounds()
         {
             SkinnedMeshRenderer smr = this.gameObject.GetComponentInChildren<SkinnedMeshRenderer>();

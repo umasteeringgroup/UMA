@@ -46,6 +46,8 @@ namespace UMA.Dynamics
 		private UMAData _umaData;
 		private GameObject _rootBone;
 		private List<Rigidbody> _rigidbodies = new List<Rigidbody> ();
+		private List<bool> SaveRagdollStates = new List<bool>();
+
 
 		public List<BoxCollider> BoxColliders { get { return _BoxColliders; } }
 		private List<BoxCollider> _BoxColliders = new List<BoxCollider> ();
@@ -199,7 +201,9 @@ namespace UMA.Dynamics
 					Debug.LogError ("CreatePhysicsObjects: umaData is null!");
 				return;
 			}
-			
+
+			SetRendereroffscreenStates();
+
 			//Don't update if we already have a rigidbody on the root bone?
 			if ( _rootBone && _rootBone.GetComponent<Rigidbody> () )
 				return;
@@ -363,7 +367,7 @@ namespace UMA.Dynamics
 			}
 			else 
 			{
-				if( onRagdollEnded != null )
+				if ( onRagdollEnded != null )
 					onRagdollEnded.Invoke ();
 			}
 				
@@ -441,6 +445,27 @@ namespace UMA.Dynamics
 			}
 		}
 
+		private void SetRendereroffscreenStates()
+		{
+			if (_umaData != null)
+			{
+				SkinnedMeshRenderer[] renderers = _umaData.GetRenderers();
+				if (renderers != null)
+				{
+					if (SaveRagdollStates.Count != renderers.Length)
+					{
+						SaveRagdollStates = new List<bool>(renderers.Length);
+					}
+
+					for(int i = 0; i < renderers.Length; i++)
+					{
+						SkinnedMeshRenderer smr = renderers[i];
+						SaveRagdollStates[i] = smr.updateWhenOffscreen;
+					}
+				}
+			}
+		}
+
 		private void SetUpdateWhenOffscreen(bool flag)
 		{
 			if (_umaData != null) 
@@ -448,8 +473,20 @@ namespace UMA.Dynamics
 				SkinnedMeshRenderer[] renderers = _umaData.GetRenderers ();
 				if (renderers != null) 
 				{
-					foreach (SkinnedMeshRenderer renderer in renderers)
-						renderer.updateWhenOffscreen = flag;
+					// if we've saved the states, we can't just turn it off. might be on by default.
+					if (SaveRagdollStates.Count == renderers.Length && !flag)
+					{
+						for (int i = 0; i < renderers.Length; i++)
+						{
+							SkinnedMeshRenderer smr = renderers[i];
+							smr.updateWhenOffscreen = SaveRagdollStates[i];
+						}
+					}
+					else
+					{
+						foreach (SkinnedMeshRenderer renderer in renderers)
+							renderer.updateWhenOffscreen = flag;
+					}
 				}
 			}
 		}

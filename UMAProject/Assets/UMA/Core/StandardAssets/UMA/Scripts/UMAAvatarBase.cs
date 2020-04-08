@@ -10,6 +10,8 @@ namespace UMA
 	{
 		public UMAContextBase context;
 		public UMAData umaData;
+		public UMARendererAsset defaultRendererAsset; // this can be null if no default renderers need to be applied.
+
 		/// <summary>
 		/// The serialized basic UMA recipe.
 		/// </summary>

@@ -26,6 +26,8 @@ namespace UMA
 		//TODO improve/cleanup the relationship between renderers and rendererAssets
 		private SkinnedMeshRenderer[] renderers;
 		private UMARendererAsset[] rendererAssets;
+		public UMARendererAsset defaultRendererAsset { get; set; }
+
 		public int rendererCount { get { return renderers == null ? 0 : renderers.Length; } }
 
 		//TODO Change these get functions to getter properties?
