@@ -67,7 +67,7 @@ namespace UMA.CharacterSystem
 			}
 			if (context == null)
 			{
-				context = UMAContextBase.FindInstance();
+				context = UMAContextBase.Instance;
 			}
 			isInitializing = true;
 

@@ -34,7 +34,7 @@ namespace UMA.CharacterSystem
 		{
 			avatar = GetComponent<DynamicCharacterAvatar>();
 			avatar.CharacterBegun.AddListener(CharacterBegun);
-			context = UMAContextBase.FindInstance();
+			context = UMAContextBase.Instance;
 		}
 
 		void CharacterBegun(UMAData umaData)

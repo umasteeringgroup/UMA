@@ -48,6 +48,7 @@ namespace UMA
             MaterialColor = 2,
             TintedTexture = 3,
             DiffuseTexture = 4,
+            DetailNormalMap = 5,
         }
 
 		static public Color GetBackgroundColor(ChannelType channelType)
@@ -63,7 +64,8 @@ namespace UMA
 			Color.grey,
 			new Color(0,0,0,0),
 			new Color(0,0,0,0),
-			new Color(0,0,0,0)
+			new Color(0,0,0,0),
+			new Color(1,0.5f,1,0.5f)
 		};
 
         [Serializable]

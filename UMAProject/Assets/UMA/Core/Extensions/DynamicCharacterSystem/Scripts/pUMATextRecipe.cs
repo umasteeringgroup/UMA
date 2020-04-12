@@ -37,10 +37,11 @@ namespace UMA
         [SerializeField]
         public List<MeshHideAsset> MeshHideAssets = new List<MeshHideAsset>();
 
-        [SerializeField]
-        public string AddressableLabel;
+       // [SerializeField]
+		//public string AddressableLabel;
 
-	#if UNITY_EDITOR
+
+#if UNITY_EDITOR
 		/// <summary>
 		/// Converts this recipe to the given child type. Used by RecipeEditor to convert old recipes
 		/// </summary>

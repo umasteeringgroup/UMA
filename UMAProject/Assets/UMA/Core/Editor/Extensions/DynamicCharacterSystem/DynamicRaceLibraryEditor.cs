@@ -42,7 +42,6 @@ namespace UMA.CharacterSystem.Editors
                 {
                     if (raceInBundleToFind != "")
                     {
-                        Debug.Log("Trying");
                         raceLibrary.GetOriginatingAssetBundle(raceInBundleToFind);
                     }
                 }

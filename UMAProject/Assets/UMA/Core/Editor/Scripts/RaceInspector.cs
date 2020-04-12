@@ -344,7 +344,7 @@ namespace UMA.Editors
 					baseSlotsList.Clear();
 					baseSlotsNamesList.Clear();
 					//editing a race will require a context too because we need to get the base recipes and their slots
-					if (UMAContextBase.FindInstance() == null)
+					if (UMAContextBase.Instance == null)
 					{
 						EditorUMAContextBase = UMAContextBase.CreateEditorContext();
 					}

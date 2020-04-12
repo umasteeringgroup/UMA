@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
+  m_IndirectSpecularColor: {r: 0.14203726, g: 0.14901726, b: 0.16841246, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &4
 LightmapSettings:
@@ -88,7 +88,7 @@ LightmapSettings:
     m_PVRFilteringAtrousPositionSigmaIndirect: 2
     m_PVRFilteringAtrousPositionSigmaAO: 1
     m_ShowResolutionOverlay: 1
-  m_LightingDataAsset: {fileID: 112000002, guid: 180b28226183dcc4c9f138dc7a97312f,
+  m_LightingDataAsset: {fileID: 112000000, guid: 6f69512662f472446aa6e656534b8cda,
     type: 2}
   m_UseShadowmask: 0
 --- !u!196 &5
@@ -3094,6 +3094,7 @@ MonoBehaviour:
       m_Calls: []
   DelayUnload: 2
   BundleCheck: 1
+  KeepAnimatorController: 0
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -3197,6 +3198,7 @@ MonoBehaviour:
   loadFilename: 
   loadString: 
   loadFileOnStart: 1
+  AtlasResolutionScale: 1
   defaultLoadOptions: 31
   savePathType: 0
   savePath: CharacterRecipes
@@ -3839,6 +3841,7 @@ MonoBehaviour:
       m_Calls: []
   DelayUnload: 2
   BundleCheck: 1
+  KeepAnimatorController: 0
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -3942,6 +3945,7 @@ MonoBehaviour:
   loadFilename: 
   loadString: 
   loadFileOnStart: 1
+  AtlasResolutionScale: 1
   defaultLoadOptions: 31
   savePathType: 0
   savePath: CharacterRecipes
@@ -4367,7 +4371,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  context: {fileID: 0}
+  context: {fileID: 1826789987}
   umaData: {fileID: 0}
   umaRecipe: {fileID: 0}
   umaAdditionalRecipes:
@@ -4402,6 +4406,7 @@ MonoBehaviour:
       m_Calls: []
   DelayUnload: 2
   BundleCheck: 1
+  KeepAnimatorController: 0
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -4426,10 +4431,6 @@ MonoBehaviour:
       _compatibleRaces:
       - HumanFemaleDCS
       - HumanFemale
-    - _recipeName: MaleUnderwear
-      _compatibleRaces:
-      - HumanMale
-      - HumanMaleDCS
     - _recipeName: FemaleUndies2
       _compatibleRaces:
       - HumanFemaleDCS
@@ -4482,13 +4483,13 @@ MonoBehaviour:
       valuesConverted: 0
     - name: Skin
       channelMask:
-      - {r: 0.9450981, g: 0.91372555, b: 0.7686275, a: 1}
+      - {r: 0.8962264, g: 0.85671455, b: 0.7905393, a: 1}
       - {r: 1, g: 1, b: 1, a: 1}
       - {r: 1, g: 1, b: 1, a: 1}
       channelAdditiveMask:
       - {r: 0, g: 0, b: 0, a: 0}
       - {r: 0, g: 0, b: 0, a: 0}
-      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0.0627451, g: 0, b: 0, a: 0.24313726}
       _name: 
       _color: {r: 0.9450981, g: 0.91372555, b: 0.7686275, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
@@ -4515,6 +4516,7 @@ MonoBehaviour:
   loadFilename: 
   loadString: 
   loadFileOnStart: 1
+  AtlasResolutionScale: 1
   defaultLoadOptions: 23
   savePathType: 0
   savePath: CharacterRecipes
@@ -11172,6 +11174,7 @@ MonoBehaviour:
       m_Calls: []
   DelayUnload: 2
   BundleCheck: 1
+  KeepAnimatorController: 0
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -11275,6 +11278,7 @@ MonoBehaviour:
   loadFilename: 
   loadString: 
   loadFileOnStart: 1
+  AtlasResolutionScale: 1
   defaultLoadOptions: 31
   savePathType: 0
   savePath: CharacterRecipes
@@ -13916,6 +13920,7 @@ MonoBehaviour:
       m_Calls: []
   DelayUnload: 2
   BundleCheck: 1
+  KeepAnimatorController: 0
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -14019,6 +14024,7 @@ MonoBehaviour:
   loadFilename: 
   loadString: 
   loadFileOnStart: 1
+  AtlasResolutionScale: 1
   defaultLoadOptions: 23
   savePathType: 0
   savePath: CharacterRecipes
@@ -21212,6 +21218,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7066486438860346000, guid: a54fde34eec40964b94d71ee0aba9889,
+        type: 3}
+      propertyPath: fastGeneration
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7066486438860346000, guid: a54fde34eec40964b94d71ee0aba9889,
+        type: 3}
+      propertyPath: InitialScaleFactor
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a54fde34eec40964b94d71ee0aba9889, type: 3}

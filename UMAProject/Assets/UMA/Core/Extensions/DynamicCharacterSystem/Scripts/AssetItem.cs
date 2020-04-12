@@ -8,27 +8,40 @@ namespace UMA
     [System.Serializable]
     public class AssetItem
 #if UNITY_EDITOR
-        : System.IEquatable<AssetItem>, System.IComparable<AssetItem>
+        : System.IEquatable<AssetItem>, System.IComparable<AssetItem>, ISerializationCallbackReceiver
 #endif
     {
         #region Fields
+        public const string AddressableFolder = "UMA/";
         private System.Type _TheType;
         public string _BaseTypeName;
         public string _Name;
         public Object _SerializedItem;
         public string _Path;
 		public string _Guid;
+        public string _Address;
         public bool IsResource;
         public bool IsAssetBundle;
 		public bool IsAddressable;
 		public bool IsAlwaysLoaded;
 		public string AddressableGroup;
-		public string AddressableAddress;
+		public string AddressableAddress
+        {
+            get
+            {
+                if (IsAddressable && string.IsNullOrEmpty(_Address))
+                {
+                   return AddressableFolder + _Type.Name + "-" + EvilName;
+                }
+                return _Address;
+            }
+            set
+            {
+                _Address = value;
+            }
+        }
         public string AddressableLabels;
 		public int ReferenceCount;
-
-		[System.NonSerialized]
-		public Object _editorCachedItem;
 
         #endregion
         #region Properties
@@ -36,19 +49,24 @@ namespace UMA
         {
             get
             {
-                if (_TheType != null) return _TheType;
+                if (_TheType != null && _TheType != typeof(UnityEngine.Object)) 
+                    return _TheType;
 
-				if (!UMAAssetIndexer.TypeFromString.ContainsKey(_BaseTypeName))
-				{
-					Debug.Log("unable to find type: " + _BaseTypeName);
-					if (_BaseTypeName.Contains("SlotData"))
-						return typeof(SlotDataAsset);
-					if (_BaseTypeName.Contains("OverlayData"))
-						return typeof(OverlayDataAsset);
-					return typeof(object);
-				}
-
-				_TheType = UMAAssetIndexer.TypeFromString[_BaseTypeName];
+                if (!UMAAssetIndexer.TypeFromString.ContainsKey(_BaseTypeName))
+                {
+                    if (_BaseTypeName.Contains("SlotData"))
+                        _TheType = typeof(SlotDataAsset);
+                    else if (_BaseTypeName.Contains("OverlayData"))
+                        _TheType = typeof(OverlayDataAsset);
+                    else if (_BaseTypeName.Contains("Animator"))  // for some reason the animatorcontrollers were blowing up in 2019.3
+                        _TheType = typeof(RuntimeAnimatorController);
+                    else if (_BaseTypeName.Contains("RaceData"))
+                        _TheType = typeof(RaceData);
+                }
+                else
+                {
+                    _TheType = UMAAssetIndexer.TypeFromString[_BaseTypeName];
+                }
                 return _TheType;
             }
         }
@@ -73,17 +91,18 @@ namespace UMA
 #if UNITY_EDITOR
                 if (_SerializedItem != null) return _SerializedItem;
 
-				if (IsAddressable)  // this check is so we can test addressables in the editor
-				{
-					if (_editorCachedItem == null)
-					{
-						_editorCachedItem = GetItem();
-					}
-					// _editorCachedItem is never saved.
-					return _editorCachedItem;
-				}
-	 
-				CacheSerializedItem(); 
+                // Items that are addressable should not be cached.
+                // but the editors still need them, so we'll load them from
+                // the assetdatabase as needed.
+                if (IsAddressable)   
+                {
+                    if (Application.isPlaying)
+                        return null;
+                    else
+                        return GetItem();
+                }
+
+                CacheSerializedItem(); 
                 return _SerializedItem;
 #else
                 return _SerializedItem;
@@ -214,10 +233,38 @@ namespace UMA
             }
         }
 
-#region Methods (edit time)
+        public bool IsLoaded
+        {
+            get
+            {
+                if (IsAddressable)
+                {
+                    return _SerializedItem != null;
+                }
+                return true;
+            }
+        }
+
+        public bool IsOverlayDataAsset
+        {
+            get
+            {
+                return _Type == typeof(OverlayDataAsset);
+            }
+        }
+
+        public bool IsSlotDataAsset
+        {
+            get
+            {
+                return _Type == typeof(SlotDataAsset);
+            }
+        }
+
+        #region Methods (edit time)
 #if UNITY_EDITOR
 
-		public string ToString(string SortOrder)
+        public string ToString(string SortOrder)
         {
             if (SortOrder == "AssetName")
                 return _AssetBaseName;
@@ -273,9 +320,25 @@ namespace UMA
             return this._Name.CompareTo(other._Name);
         }
 
+        public void OnBeforeSerialize()
+        {
+            if (IsAddressable)
+            {
+                _SerializedItem = null;
+            }
+        }
+
+        public void OnAfterDeserialize()
+        {
+            if (IsAddressable)
+            {
+                _SerializedItem = null;
+            }
+        }
+
 #endif
-#endregion
-#region Constructors
+        #endregion
+        #region Constructors
         public AssetItem(System.Type Type, string Name, string Path, Object Item)
         {
             if (Type == null) return;

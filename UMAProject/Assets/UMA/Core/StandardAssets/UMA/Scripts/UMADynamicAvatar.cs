@@ -13,6 +13,12 @@ namespace UMA
 			base.Start();
 			if (loadOnStart)
 			{
+				DynamicLoad();
+			}
+		}
+
+		public void DynamicLoad()
+		{
 				if (umaAdditionalRecipes == null || umaAdditionalRecipes.Length == 0)
 				{
 					Load(umaRecipe);
@@ -22,7 +28,7 @@ namespace UMA
 					Load(umaRecipe, umaAdditionalRecipes);
 				}
 			}
-		}
+
 	#if UNITY_EDITOR
 		[UnityEditor.MenuItem("GameObject/UMA/Create New Dynamic Avatar", false, 10)]
 		static void CreateDynamicAvatarMenuItem()

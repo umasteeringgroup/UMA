@@ -22,7 +22,7 @@ namespace UMA.CharacterSystem.Editors
 			thisDCA = target as DynamicCharacterAvatar;
 			if (thisDCA.context == null)
 			{
-				thisDCA.context = UMAContextBase.FindInstance();
+				thisDCA.context = UMAContextBase.Instance;
 				if (thisDCA.context == null)
 				{
 					thisDCA.context = thisDCA.CreateEditorContext();
@@ -68,12 +68,12 @@ namespace UMA.CharacterSystem.Editors
 		{
 			serializedObject.Update();
 			Editor.DrawPropertiesExcluding(serializedObject, new string[] { "hide","BundleCheck", "loadBlendShapes","activeRace","defaultChangeRaceOptions","cacheCurrentState", "rebuildSkeleton", "preloadWardrobeRecipes", "raceAnimationControllers",
-				"characterColors","BoundsOffset","_buildCharacterEnabled","keepAvatar",
+				"characterColors","BoundsOffset","_buildCharacterEnabled","keepAvatar","KeepAnimatorController",
 				/*LoadOtions fields*/ "defaultLoadOptions", "loadPathType", "loadPath", "loadFilename", "loadString", "loadFileOnStart", "waitForBundles", /*"buildAfterLoad",*/
 				/*SaveOptions fields*/ "defaultSaveOptions", "savePathType","savePath", "saveFilename", "makeUniqueFilename","ensureSharedColors", 
 				/*Moved into AdvancedOptions*/"context","umaData","umaRecipe", "umaAdditionalRecipes","umaGenerator", "animationController",
 				/*Moved into CharacterEvents*/"CharacterCreated", "CharacterBegun", "CharacterUpdated", "CharacterDestroyed", "CharacterDnaUpdated", "RecipeUpdated",
-				/*PlaceholderOptions fields*/"showPlaceholder", "previewModel", "customModel", "customRotation", "previewColor"});
+				/*PlaceholderOptions fields*/"showPlaceholder", "previewModel", "customModel", "customRotation", "previewColor", "AtlasResolutionScale"});
 
 			//The base DynamicAvatar properties- get these early because changing the race changes someof them
 			SerializedProperty context = serializedObject.FindProperty("context");
@@ -347,6 +347,8 @@ namespace UMA.CharacterSystem.Editors
 			{
 				EditorGUI.BeginChangeCheck();
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("hide"));
+				EditorGUILayout.PropertyField(serializedObject.FindProperty("AtlasResolutionScale"));
+
 				if (EditorGUI.EndChangeCheck())
 				{
 					serializedObject.ApplyModifiedProperties();
@@ -372,6 +374,7 @@ namespace UMA.CharacterSystem.Editors
 				}
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("loadBlendShapes"), new GUIContent("Load BlendShapes"));
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("keepAvatar"), new GUIContent("Keep Avatar"));
+				EditorGUILayout.PropertyField(serializedObject.FindProperty("KeepAnimatorController"), new GUIContent("Keep Animator Controller"));
 				EditorGUILayout.PropertyField(context);
 				EditorGUILayout.PropertyField(umaData);
 				EditorGUILayout.PropertyField(umaGenerator);
@@ -415,19 +418,24 @@ namespace UMA.CharacterSystem.Editors
 				showWardrobe = EditorGUILayout.Foldout(showWardrobe, "Current Wardrobe");
 				if (showWardrobe)
 				{
-					EditorGUI.BeginDisabledGroup(true);
+
 					EditorGUI.indentLevel++;
 					Dictionary<string, UMATextRecipe> currentWardrobe = thisDCA.WardrobeRecipes;
 
 					foreach (KeyValuePair<string, UMATextRecipe> item in currentWardrobe)
 					{
 						GUILayout.BeginHorizontal();
+						EditorGUI.BeginDisabledGroup(true);
 						EditorGUILayout.LabelField(item.Key,GUILayout.Width(88.0f));
 						EditorGUILayout.TextField(item.Value.DisplayValue+" ("+item.Value.name+")");
+						EditorGUI.EndDisabledGroup();
+						if (GUILayout.Button("Inspect", EditorStyles.toolbarButton,GUILayout.Width(40)))
+						{
+							InspectorUtlity.InspectTarget(item.Value);
+						}
 						GUILayout.EndHorizontal();
 					}
                     EditorGUI.indentLevel--;
-					EditorGUI.EndDisabledGroup();
 				}
 			}
 		}

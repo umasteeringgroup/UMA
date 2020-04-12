@@ -10,6 +10,8 @@ namespace UMA
 	{
 		public UMAContextBase context;
 		public UMAData umaData;
+		public UMARendererAsset defaultRendererAsset; // this can be null if no default renderers need to be applied.
+
 		/// <summary>
 		/// The serialized basic UMA recipe.
 		/// </summary>
@@ -52,7 +54,7 @@ namespace UMA
 		{
 			if (context == null)
 			{
-				context = UMAContextBase.FindInstance();
+				context = UMAContextBase.Instance;
 			}
 
 			if (umaData == null)
@@ -61,6 +63,7 @@ namespace UMA
 				if (umaData == null)
 				{
 					umaData = gameObject.AddComponent<UMAData>();
+					umaData.umaRecipe = new UMAData.UMARecipe(); // TEST JRRM
 					if (umaGenerator != null && !umaGenerator.gameObject.activeInHierarchy)
 					{
 						if (Debug.isDebugBuild)
@@ -126,6 +129,10 @@ namespace UMA
 #if SUPER_LOGGING
 			Debug.Log("UpdateSameRace on DynamicCharacterAvatar: " + gameObject.name);
 #endif
+			if (animationController != null)
+			{
+				umaData.animationController = animationController;
+			}
 			umaData.Dirty(true, true, true);
 		}
 
@@ -139,7 +146,6 @@ namespace UMA
 			if (animationController != null)
 			{
 				umaData.animationController = animationController;
-	//				umaData.animator.runtimeAnimatorController = animationController;
 			}
 			umaData.umaGenerator = umaGenerator;
 

@@ -72,12 +72,33 @@ namespace UMA
 			res.umaMaterial = umaMaterial;
 			res.material = UnityEngine.Object.Instantiate(umaMaterial.material) as Material;
 			res.material.name = umaMaterial.material.name;
+#if UNITY_WEBGL
 			res.material.shader = Shader.Find(res.material.shader.name);
+#endif
 			res.material.CopyPropertiesFromMaterial(umaMaterial.material);
 			atlassedMaterials.Add(res);
 			generatedMaterials.Add(res);
 
 			return res;
+		}
+
+		protected bool IsUVCoordinates(Rect r)
+		{
+			if (r.width == 0.0f || r.height == 0.0f)
+				return false;
+
+			if (r.width <= 1.0f && r.height <= 1.0f)
+				return true;
+			return false;
+		}
+
+		protected Rect ScaleToBase(Rect r, Texture BaseTexture)
+		{
+			if (!BaseTexture) return r;
+			float w = BaseTexture.width;
+			float h = BaseTexture.height;
+
+			return new Rect(r.x * w, r.y * h, r.width * w, r.height * h);
 		}
 
 		protected override void Start()
@@ -142,10 +163,10 @@ namespace UMA
 						if (overlay != null)
 						{
 							validOverlayCount++;
-							#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
+#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 							if (overlay.isProcedural)
 								overlay.GenerateProceduralTextures();
-                            #endif
+#endif
 						}
 					}
 
@@ -177,7 +198,15 @@ namespace UMA
 						if (overlay == null)
 							continue;
 
-						tempMaterialDefinition.rects[overlayID] = overlay.rect;
+						if (IsUVCoordinates(overlay.rect))
+						{
+							tempMaterialDefinition.rects[overlayID] = ScaleToBase(overlay.rect, overlay0.textureArray[0]);
+							
+						}
+						else
+						{
+							tempMaterialDefinition.rects[overlayID] = overlay.rect; // JRRM: Convert here into base overlay coordinates?
+						}
 						tempMaterialDefinition.overlays[overlayID] = new UMAData.textureData();
 						tempMaterialDefinition.overlays[overlayID].textureList = overlay.textureArray;
 						tempMaterialDefinition.overlays[overlayID].alphaTexture = overlay.alphaMask;

@@ -9,5 +9,5 @@ EditorBuildSettings:
     path: Assets/UMA/Examples/Addressables/AddressablesScene.unity
     guid: 223ba86cee7348847906802e88a29bfb
   m_configObjects:
-    com.unity.addressableassets: {fileID: 11400000, guid: 60c393357e96c774c925b892ac9a64a3,
+    com.unity.addressableassets: {fileID: 11400000, guid: 36e698608dccc894285266b983284446,
       type: 2}

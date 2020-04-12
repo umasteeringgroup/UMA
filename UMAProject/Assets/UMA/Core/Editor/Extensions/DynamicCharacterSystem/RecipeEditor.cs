@@ -90,7 +90,7 @@ namespace UMA.Editors
                 var umaRecipeBase = target as UMARecipeBase;
                 if (umaRecipeBase != null)
                 {
-					var context = UMAContextBase.FindInstance();
+					var context = UMAContextBase.Instance;
 					//create a virtual UMAContextBase if we dont have one and we have DCS
 					if (context == null || context.gameObject.name == "UMAEditorContext")
 					{
@@ -147,7 +147,7 @@ namespace UMA.Editors
         protected override void DoUpdate()
         {
             var recipeBase = (UMARecipeBase)target;
-            recipeBase.Save(_recipe, UMAContextBase.FindInstance());
+            recipeBase.Save(_recipe, UMAContextBase.Instance);
             EditorUtility.SetDirty(recipeBase);
             AssetDatabase.SaveAssets();
             // AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(recipeBase));
@@ -228,12 +228,6 @@ namespace UMA.Editors
 
 			AssetItem ai = UMAAssetIndexer.Instance.GetAssetItem<RaceData>(_raceData.raceName);
 			if (ai != null)
-			{
-				return true;
-			}
-
-			string path = AssetDatabase.GetAssetPath(_raceData);
-			if (UMAAssetIndexer.Instance.InAssetBundle(path))
 			{
 				return true;
 			}

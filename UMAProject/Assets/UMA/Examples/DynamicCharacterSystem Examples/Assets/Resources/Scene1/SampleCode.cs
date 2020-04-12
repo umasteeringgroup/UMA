@@ -4,7 +4,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using UMA.Examples;
+#if UMA_ADDRESSABLES
 using UnityEngine.AddressableAssets;
+#endif
 
 namespace UMA.CharacterSystem.Examples
 {
@@ -295,6 +297,20 @@ namespace UMA.CharacterSystem.Examples
                 txt.text = s;
                 go.transform.SetParent(SlotPanel.transform);
             }
+        }
+
+        public void DumpData()
+        {
+#if UMA_ADDRESSABLES
+           foreach (var r in Addressables.ResourceLocators)
+            {
+                Debug.Log("Resource locator r = " + r.LocatorId);
+                foreach(var k in r.Keys)
+                {
+                    Debug.Log(k.ToString());
+                }
+            }
+#endif
         }
 
         public SharedColorTable SkinColors;

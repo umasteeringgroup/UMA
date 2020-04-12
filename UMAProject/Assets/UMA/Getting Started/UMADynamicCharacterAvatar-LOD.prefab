@@ -3,9 +3,10 @@
 --- !u!1 &153068
 GameObject:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 5
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
   m_Component:
   - component: {fileID: 487678}
   - component: {fileID: 11453600}
@@ -20,9 +21,10 @@ GameObject:
   m_IsActive: 1
 --- !u!4 &487678
 Transform:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 153068}
   m_LocalRotation: {x: 0, y: 1, z: 0, w: -0.00000016292068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -33,9 +35,10 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: -180, z: 0}
 --- !u!114 &11453600
 MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 153068}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -52,8 +55,6 @@ MonoBehaviour:
   CharacterCreated:
     m_PersistentCalls:
       m_Calls: []
-    m_TypeName: UMA.UMADataEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
   CharacterBegun:
     m_PersistentCalls:
       m_Calls:
@@ -68,30 +69,24 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-    m_TypeName: UMA.UMADataEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
   CharacterDestroyed:
     m_PersistentCalls:
       m_Calls: []
-    m_TypeName: UMA.UMADataEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
   CharacterUpdated:
     m_PersistentCalls:
       m_Calls: []
-    m_TypeName: UMA.UMADataEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
   CharacterDnaUpdated:
     m_PersistentCalls:
       m_Calls: []
-    m_TypeName: UMA.UMADataEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
+  DelayUnload: 2
+  BundleCheck: 1
+  KeepAnimatorController: 0
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
-    m_TypeName: UMA.UMADataEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
   hide: 0
   loadBlendShapes: 0
+  keepAvatar: 0
   activeRace:
     name: HumanMale
   defaultChangeRaceOptions: 8
@@ -123,8 +118,6 @@ MonoBehaviour:
       animatorController: {fileID: 0}
     dynamicallyAddFromResources: 0
     resourcesFolderPath: 
-    dynamicallyAddFromAssetBundles: 1
-    assetBundleNames: 
   characterColors:
     _colors:
     - name: Hair
@@ -139,6 +132,7 @@ MonoBehaviour:
       _name: 
       _color: {r: 0.3529412, g: 0.21568629, b: 0.14117648, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
       valuesConverted: 0
     - name: Eyes
       channelMask:
@@ -152,6 +146,7 @@ MonoBehaviour:
       _name: 
       _color: {r: 0.28627452, g: 0.40784317, b: 1, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
       valuesConverted: 0
     - name: Skin
       channelMask:
@@ -165,6 +160,7 @@ MonoBehaviour:
       _name: 
       _color: {r: 0.9632353, g: 0.82158303, b: 0.82158303, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
       valuesConverted: 0
     - name: Pants1
       channelMask:
@@ -178,15 +174,18 @@ MonoBehaviour:
       _name: 
       _color: {r: 0.3529412, g: 0.4156863, b: 0.6392157, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
       valuesConverted: 0
   predefinedDNA:
-    PreloadValues: []
+    PreloadValues:
+    - Name: MuscleTones
+      Value: 1
   loadPathType: 2
   loadPath: CharacterRecipes
   loadFilename: 
   loadString: 
   loadFileOnStart: 1
-  waitForBundles: 0
+  AtlasResolutionScale: 1
   defaultLoadOptions: 31
   savePathType: 0
   savePath: CharacterRecipes
@@ -201,38 +200,12 @@ MonoBehaviour:
   customRotation: {x: 0, y: 0, z: 0}
   previewColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   _buildCharacterEnabled: 1
---- !u!1001 &100100000
-Prefab:
-  m_ObjectHideFlags: 1
-  serializedVersion: 2
-  m_Modification:
-    m_TransformParent: {fileID: 0}
-    m_Modifications: []
-    m_RemovedComponents: []
-  m_ParentPrefab: {fileID: 0}
-  m_RootGameObject: {fileID: 153068}
-  m_IsPrefabParent: 1
---- !u!114 &114169318936026688
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 153068}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 53b5d39ea58489b42985b76682b492f6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  lodDistance: 5
-  swapSlots: 0
-  lodOffset: 0
-  maxLOD: 5
-  maxReduction: 8
 --- !u!114 &114399585086637844
 MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 153068}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -299,6 +272,23 @@ MonoBehaviour:
             m_StringArgument: 
             m_BoolArgument: 1
           m_CallState: 2
-      m_TypeName: UnityEngine.EventSystems.EventTrigger+TriggerEvent, UnityEngine.UI,
-        Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
   delegates: []
+--- !u!114 &114169318936026688
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 153068}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53b5d39ea58489b42985b76682b492f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  lodDistance: 5
+  swapSlots: 0
+  lodOffset: 0
+  maxLOD: 5
+  maxReduction: 8
+  useSlotDropping: 0
+  BufferZone: 0.5

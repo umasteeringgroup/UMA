@@ -26,6 +26,8 @@ namespace UMA
 		//TODO improve/cleanup the relationship between renderers and rendererAssets
 		private SkinnedMeshRenderer[] renderers;
 		private UMARendererAsset[] rendererAssets;
+		public UMARendererAsset defaultRendererAsset { get; set; }
+
 		public int rendererCount { get { return renderers == null ? 0 : renderers.Length; } }
 
 		//TODO Change these get functions to getter properties?
@@ -209,8 +211,28 @@ namespace UMA
 
 		public GameObject umaRoot;
 
-		public UMARecipe umaRecipe;
-		public Animator animator;
+		
+			[UnityEngine.Serialization.FormerlySerializedAs("umaRecipe")]
+			public UMARecipe _umaRecipe;
+			public UMARecipe umaRecipe
+			{
+				get
+				{
+					return umaOverrideRecipe != null ? umaOverrideRecipe : _umaRecipe;
+				}
+				set
+				{
+					_umaRecipe = value;
+				}
+			}
+
+			/// <summary>
+			/// This field is intended for LOD systems to override what actually gets built. 
+			/// </summary>
+			[NonSerialized]
+			public UMARecipe umaOverrideRecipe;
+
+			public Animator animator;
 		public UMASkeleton skeleton;
 
 		/// <summary>
@@ -238,18 +260,25 @@ namespace UMA
 
 		void Awake()
 		{
-			firstBake = true;
-
 			if (!umaGenerator)
 			{
 				var generatorGO = GameObject.Find("UMAGenerator");
 				if (generatorGO == null) return;
 				umaGenerator = generatorGO.GetComponent<UMAGeneratorBase>();
 			}
+			Initialize(umaGenerator);
+		}
 
-			if (umaRecipe == null)
+		public void Initialize(UMAGeneratorBase generator)
+		{
+			firstBake = true;
+
+			if (umaGenerator == null)
+				umaGenerator = generator;
+
+			if (_umaRecipe == null)
 			{
-				umaRecipe = new UMARecipe();
+				_umaRecipe = new UMARecipe();
 			}
 			else
 			{
@@ -259,8 +288,6 @@ namespace UMA
 
 		public void SetupOnAwake()
 		{
-			//umaRoot = gameObject;
-			//animator = umaRoot.GetComponent<Animator>();
 			animator = gameObject.GetComponent<Animator>();
 		}
 
@@ -291,7 +318,7 @@ namespace UMA
 				valid = false;
 			}
 
-			if (umaRecipe == null)
+			if (_umaRecipe == null)
 			{
 				if (Debug.isDebugBuild)
 					Debug.LogError("UMA data missing required recipe!");
@@ -1386,7 +1413,7 @@ namespace UMA
 				if (!KeepAvatar)
 				{
 					if (animator.avatar) UMAUtils.DestroySceneObject(animator.avatar);
-					if (animator) UMAUtils.DestroySceneObject(animator);
+					// if (animator) UMAUtils.DestroySceneObject(animator);
 				}
 			}
 		}

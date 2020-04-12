@@ -29,7 +29,20 @@ namespace UMA
 
 		protected UMAData.UMARecipe umaRecipe;
 		protected bool cached = false;
-		public string label;
+		public string label;   
+		public string AssignedLabel
+		{
+			get
+			{
+				if (string.IsNullOrEmpty(label))
+					return name;
+				else
+					return label;
+			}
+		}
+		[Tooltip("This will be skipped when generating Addressable Groups. This can result in duplicate assets.")]
+		public bool resourcesOnly;
+
 
 #if UNITY_EDITOR
 
@@ -46,10 +59,14 @@ namespace UMA
 		/// <param name="context">Context.</param>
 		public UMAData.UMARecipe GetCachedRecipe(UMAContextBase context)
 		{
-			if (!cached)
+			if (!cached || umaRecipe == null)
 			{
 				umaRecipe = new UMAData.UMARecipe();
 				Load(umaRecipe, context);
+#if !UNITY_EDITOR
+				// do not cache in the editor
+				cached = true;
+#endif
 			}
 
 			return umaRecipe;

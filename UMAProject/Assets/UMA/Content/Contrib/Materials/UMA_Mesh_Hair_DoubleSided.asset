@@ -22,6 +22,7 @@ MonoBehaviour:
     Compression: 0
     DownSample: 0
     ConvertRenderTexture: 0
+    NonShaderTexture: 0
   - channelType: 1
     textureFormat: 0
     materialPropertyName: _BumpMap
@@ -29,9 +30,11 @@ MonoBehaviour:
     Compression: 0
     DownSample: 0
     ConvertRenderTexture: 0
+    NonShaderTexture: 0
   MipMapBias: 0
   AnisoLevel: 1
   MatFilterMode: 1
   Compression: 0
+  shaderParms: []
   MaskWithCurrentColor: 1
   maskMultiplier: {r: 0.3773585, g: 0.3773585, b: 0.3773585, a: 1}
