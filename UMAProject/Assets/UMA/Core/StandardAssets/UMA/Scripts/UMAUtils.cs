@@ -137,9 +137,40 @@ namespace UMA
 			return "";
 		}
 
-		public static void DestroySceneObject(UnityEngine.Object obj)
+		public static void DestroyAvatar(Avatar obj)
+		{
+			int DestroyInstance = obj.GetInstanceID();
+			if (obj is Avatar && !UMAGeneratorBase.CreatedAvatars.Contains(DestroyInstance))
+			{
+				return;
+			}
+
+			UMAGeneratorBase.CreatedAvatars.Remove(DestroyInstance);
+
+#if UNITY_EDITOR
+			if (Application.isPlaying)
+			{
+				UnityEngine.Object.Destroy(obj);
+			}
+			else
+			{
+				UnityEngine.Object.DestroyImmediate(obj, false);
+			}
+#else
+			UnityEngine.Object.Destroy(obj);
+#endif
+		}
+
+	public static void DestroySceneObject(UnityEngine.Object obj)
 		{
 #if UNITY_EDITOR
+			int DestroyInstance = obj.GetInstanceID();
+			if (obj is Avatar && !UMAGeneratorBase.CreatedAvatars.Contains(DestroyInstance))
+			{
+				return;	
+			}
+
+
 			if (Application.isPlaying)
 			{
 				UnityEngine.Object.Destroy(obj);

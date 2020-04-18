@@ -28,6 +28,8 @@ namespace UMA
 			get { return _defaultOverlayData; }
 		}
 
+		public static HashSet<int> CreatedAvatars = new HashSet<int>();
+
         /// <summary>
         /// returns true if the UMAData is in the update queue.
         /// Note that this will return false if the UMA is currently being processed!
@@ -208,7 +210,7 @@ namespace UMA
 						snapshot.SaveAnimatorState(animator);
 						if (!umaData.KeepAvatar || animator.avatar == null)
 						{
-							UMAUtils.DestroySceneObject(animator.avatar);
+							UMAUtils.DestroyAvatar(animator.avatar);
 							SetAvatar(umaData, animator);
 						}
 
@@ -230,8 +232,6 @@ namespace UMA
 		/// <param name="animator">Animator.</param>
 		public static void SetAvatar(UMAData umaData, Animator animator)
 		{
-			if (umaData.KeepAvatar && animator.avatar != null)
-				return;
 			var umaTPose = umaData.umaRecipe.raceData.TPose;
 
 			switch (umaData.umaRecipe.raceData.umaTarget)
@@ -289,6 +289,7 @@ namespace UMA
 			HumanDescription description = CreateHumanDescription(umaData, umaTPose);
 			//DebugLogHumanAvatar(umaData.gameObject, description);
 			Avatar res = AvatarBuilder.BuildHumanAvatar(umaData.gameObject, description);
+			CreatedAvatars.Add(res.GetInstanceID());
 			res.name = umaData.name;
 			return res;
 		}
@@ -302,6 +303,7 @@ namespace UMA
 		{
 			Avatar res = AvatarBuilder.BuildGenericAvatar(umaData.gameObject, umaData.umaRecipe.GetRace().genericRootMotionTransformName);
 			res.name = umaData.name;
+			CreatedAvatars.Add(res.GetInstanceID());
 			return res;
 		}
 
