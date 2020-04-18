@@ -139,6 +139,8 @@ namespace UMA
 
 		public static void DestroyAvatar(Avatar obj)
 		{
+			if (obj == null)
+				return;
 			int DestroyInstance = obj.GetInstanceID();
 			if (obj is Avatar && !UMAGeneratorBase.CreatedAvatars.Contains(DestroyInstance))
 			{
