@@ -222,7 +222,7 @@ namespace UMA.Editors
 		{
 			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
 			GUILayout.Space(10);
-			foldout = EditorGUILayout.Foldout(foldout, content);
+			foldout = EditorGUILayout.Foldout(foldout, content,true);
 			delete = GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
 			GUILayout.EndHorizontal();
 		}
@@ -231,7 +231,7 @@ namespace UMA.Editors
 		{
 			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
 			GUILayout.Space(10);
-			bool nfoldout = EditorGUILayout.Foldout(foldout, content);
+			bool nfoldout = EditorGUILayout.Foldout(foldout, content,true);
 			GUILayout.EndHorizontal();
 			return nfoldout;
 		}
@@ -239,7 +239,7 @@ namespace UMA.Editors
 		{
 			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
 			GUILayout.Space(10);
-			foldout = EditorGUILayout.Foldout(foldout, content);
+			foldout = EditorGUILayout.Foldout(foldout, content,true);
 			pressed = GUILayout.Button(button, EditorStyles.miniButton, GUILayout.ExpandWidth(false));
 			delete = GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
 			GUILayout.EndHorizontal();
@@ -249,7 +249,7 @@ namespace UMA.Editors
 		{
 			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
 			GUILayout.Space(10);
-			foldout = EditorGUILayout.Foldout(foldout, content);
+			foldout = EditorGUILayout.Foldout(foldout, content, true);
 
 			move = 0;
 			if (GUILayout.Button("\u25B2", EditorStyles.miniButton, GUILayout.ExpandWidth(false))) move--;
@@ -264,7 +264,7 @@ namespace UMA.Editors
 		{
 			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
 			GUILayout.Space(10);
-			foldout = EditorGUILayout.Foldout(foldout, content);
+			foldout = EditorGUILayout.Foldout(foldout, content,true);
 
 			move = 0;
 			if (GUILayout.Button("\u25B2", EditorStyles.miniButton, GUILayout.ExpandWidth(false))) move--;

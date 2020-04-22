@@ -12,6 +12,8 @@ namespace UMA.Editors
         private string[] _shaderProperties;
         private GUIStyle _centeredStyle;
         private SerializedProperty _shaderParms;
+        private bool[] channelExpanded = new bool[3];
+        private bool channelListExpanded = true;
 
         private bool shaderParmsFoldout = false;
         public void OnEnable()
@@ -57,7 +59,7 @@ namespace UMA.Editors
             EditorGUILayout.EndVertical();
 
             GUILayout.Space(20f);
-            shaderParmsFoldout = EditorGUILayout.Foldout(shaderParmsFoldout, "Shader Parameter Mapping");
+            shaderParmsFoldout = EditorGUILayout.Foldout(shaderParmsFoldout, "Shader Parameter Mapping",true);
             if (shaderParmsFoldout)
             {
                 EditorGUI.indentLevel++;
@@ -82,19 +84,28 @@ namespace UMA.Editors
         //Maybe eventually we can use the new IMGUI classes once older unity version are no longer supported.
         private void DrawChannelList(SerializedProperty list)
         {
-            EditorGUILayout.PropertyField(list, new GUIContent("Texture Channels","List of texture channels to be used in this material."));
-            EditorGUI.indentLevel += 1;
-            if (list.isExpanded)
+            // EditorGUILayout.PropertyField(list, new GUIContent("Texture Channels", "List of texture channels to be used in this material."));
+            channelListExpanded = GUIHelper.FoldoutBar(channelListExpanded, "Texture Channels");
+            if (channelListExpanded)
             {
+                GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
                 EditorGUILayout.PropertyField(list.FindPropertyRelative("Array.size"));
+                if (channelExpanded.Length != list.arraySize )
+                {
+                    channelExpanded = new bool[list.arraySize];
+                }
+
                 for (int i = 0; i < list.arraySize; i++)
                 {
                     SerializedProperty channel = list.GetArrayElementAtIndex(i);
                     SerializedProperty materialPropertyName = channel.FindPropertyRelative("materialPropertyName");//Let's get this eary to be able to use it in the element header.
-                    EditorGUILayout.PropertyField(channel, new GUIContent("Channel " + i + ": " + materialPropertyName.stringValue));
-                    EditorGUI.indentLevel += 1;
-                    if (channel.isExpanded)
-                    {                     
+                                                                                                                   // EditorGUILayout.PropertyField(channel, new GUIContent("Channel " + i + ": " + materialPropertyName.stringValue));
+                                                                                                                   // EditorGUILayout.LabelField(new GUIContent("Channel " + i + ": " + materialPropertyName.stringValue),EditorStyles.toolbar);
+
+                    channelExpanded[i] = GUIHelper.FoldoutBar(channelExpanded[i],"Channel " + i + ": " + materialPropertyName.stringValue);
+                    if (channelExpanded[i])
+                    {
+                        GUIHelper.BeginVerticalPadded(10, new Color(0.85f, 0.85f, 0.85f));
                         EditorGUILayout.PropertyField(channel.FindPropertyRelative("channelType"), new GUIContent("Channel Type", "The channel type. Affects the texture atlassing process."));
                         EditorGUILayout.PropertyField(channel.FindPropertyRelative("textureFormat"), new GUIContent("Texture Format", "Format used for the texture in this channel."));
 
@@ -142,12 +153,12 @@ namespace UMA.Editors
                         {
                             EditorGUILayout.HelpBox("A NonShader Texture shouldn't have a Material Property Name value.", MessageType.Warning);
                         }
-
+                        GUIHelper.EndVerticalPadded(10);
                     }
-                    EditorGUI.indentLevel -= 1;
+                    GUILayout.Space(8);
                 }
+                GUIHelper.EndVerticalPadded(10);
             }
-            EditorGUI.indentLevel -= 1;
         }
 
         private static string[] FindTexProperties( Shader shader)

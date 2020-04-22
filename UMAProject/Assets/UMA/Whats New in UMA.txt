@@ -1,6 +1,10 @@
 What's new in 2.10 
+
 Minimum supported version is 2018.4
 Requires .Net 4.X compatibility in player settings. 
+
+Important: In this version, the DynamicAssetLoader is only kept for compatiblity with old projects. To use Asset Bundles, you should either use Addressables, or manually download them and load them into the library.
+
 Support for Addressables
   Automated generation of addressables groups (including LOD slots)
   Automated labelling of indexed items by recipe (including LOD slots)
@@ -12,6 +16,7 @@ Support for Addressables
   Can now filter on non-added recipes.
   Can now individually choose to add a recipe to addressables, or to update a recipe. 
   Plugin system to customize how addressables are generated.
+
 New global library window
   New functions to mark items by various parameters
   New Addressables Menu to generate items
@@ -61,6 +66,14 @@ New scene ("OverlayAligner") to convert and adjust overlay coordinates visually.
 Performance improvements - up to a 5% increase in speed when building under 2019.3 due to boneweight optimizations.
 Added support for more than 32 wardrobe slots (problem with Masked Field editor)
 Added DefaultRendererAsset property to DynamicCharacterAvatar. This lets you set "UpdateWhenOffscreen", the renderer name, etc, for the default renderer. If you don't add a DCA Renderer Manager, or setup a Renderer Asset for a slot, this one will be used to set renderer properties.
+Standard Races now use mecanim-friendly avatars by default
+
+New "How To" scenes
+ * How to construct a DCA from scratch
+ * How to construct and load a DCA from a prefab
+ * How to load and save a DCA to a string
+ * How to use a slider to control DNA
+
 Various bug fixes & changes
     Fixed various overlays that were missing textures or had the wrong count
     Fixed some scenes that had broken over time
@@ -69,6 +82,10 @@ Various bug fixes & changes
     Fixed bug where you couldn't add a Wardrobe Collection using SetSlot before Start() was called on the DCA.
     Fixed bug in 2019.3 where it was not finding the type for RuntimeAnimatorController in build.
     Fixed bug where WardrobeCollections would end up indexed in multiple places
+    If you supply an avatar and animator from the project, it will no longer attempt to delete the avatar when changing the race
+
+Many more bugs/fixes/updates. 
+
 
 What's new in 2.9
 Renderer Manager - allow you to specify visibility, shadows of specific model parts.

@@ -46,7 +46,7 @@ namespace UMA.Dynamics
 		private UMAData _umaData;
 		private GameObject _rootBone;
 		private List<Rigidbody> _rigidbodies = new List<Rigidbody> ();
-		private List<bool> SaveRagdollStates = new List<bool>();
+		private bool[] SaveRagdollStates = new bool[0];
 
 
 		public List<BoxCollider> BoxColliders { get { return _BoxColliders; } }
@@ -452,9 +452,9 @@ namespace UMA.Dynamics
 				SkinnedMeshRenderer[] renderers = _umaData.GetRenderers();
 				if (renderers != null)
 				{
-					if (SaveRagdollStates.Count != renderers.Length)
+					if (SaveRagdollStates.Length != renderers.Length)
 					{
-						SaveRagdollStates = new List<bool>(renderers.Length);
+						SaveRagdollStates = new bool[renderers.Length];
 					}
 
 					for(int i = 0; i < renderers.Length; i++)
@@ -474,7 +474,7 @@ namespace UMA.Dynamics
 				if (renderers != null) 
 				{
 					// if we've saved the states, we can't just turn it off. might be on by default.
-					if (SaveRagdollStates.Count == renderers.Length && !flag)
+					if (SaveRagdollStates.Length == renderers.Length && !flag)
 					{
 						for (int i = 0; i < renderers.Length; i++)
 						{
