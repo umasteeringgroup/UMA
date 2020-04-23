@@ -24,6 +24,7 @@ namespace UMA.Editors
 		private SerializedProperty _occlusionEntries;
 
 		private bool additionalFoldout = false;
+		private bool textureFoldout = false;
 
 		void OnEnable()
 		{
@@ -82,12 +83,12 @@ namespace UMA.Editors
 				else
 					textureChannelCount = _channels.arraySize;
 
-				EditorGUILayout.PropertyField(_textureList);
+				textureFoldout = GUIHelper.FoldoutBar(textureFoldout, "Texture Channels");
 
-				if (_textureList.isExpanded)
+				if (textureFoldout)
 				{
+					GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
 					EditorGUILayout.PropertyField(_textureList.FindPropertyRelative("Array.size"));
-					EditorGUI.indentLevel++;
 					for (int i = 0; i < _textureList.arraySize; i++)
 					{
 						SerializedProperty textureElement = _textureList.GetArrayElementAtIndex(i);
@@ -108,7 +109,7 @@ namespace UMA.Editors
 
 						EditorGUILayout.PropertyField(textureElement, new GUIContent(materialName));
 					}
-					EditorGUI.indentLevel--;
+					GUIHelper.EndVerticalPadded(10);
 				}
 
 				if (_textureList.arraySize <= 0 || _textureList.arraySize != textureChannelCount)
@@ -132,15 +133,14 @@ namespace UMA.Editors
 				EditorGUILayout.HelpBox("No UMA Material selected!", MessageType.Warning);
 
 			GUILayout.Space(20f);
-			additionalFoldout = EditorGUILayout.Foldout(additionalFoldout, "Additional Parameters");
-
+			additionalFoldout = GUIHelper.FoldoutBar(additionalFoldout, "Additional Parameters");
 			if (additionalFoldout)
 			{
-				EditorGUI.indentLevel++;
+				GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
 				EditorGUILayout.PropertyField(_alphaMask);
 				EditorGUILayout.PropertyField(_tags, true);
 				EditorGUILayout.PropertyField(_occlusionEntries, true);
-				EditorGUI.indentLevel--;
+				GUIHelper.EndVerticalPadded(10);
 			}
 
 			serializedObject.ApplyModifiedProperties();
