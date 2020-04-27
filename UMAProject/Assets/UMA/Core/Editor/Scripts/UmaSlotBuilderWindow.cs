@@ -16,8 +16,10 @@ namespace UMA.Editors
 		public bool createOverlay;
 		public bool createRecipe;
 		public bool addToGlobalLibrary;
-		public bool addToLocalLibrary;
 		public bool binarySerialization;
+		public string errmsg = "";
+		public List<string> Tags = new List<string>();
+		public bool showTags;
 
 		string GetAssetFolder()
 		{
@@ -56,19 +58,75 @@ namespace UMA.Editors
 			}
 		}
 
-
 		void OnGUI()
 		{
 			GUILayout.Label("UMA Slot Builder");
 			GUILayout.Space(20);
 			normalReferenceMesh = EditorGUILayout.ObjectField("Seams Mesh (Optional)  ", normalReferenceMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
-			slotMesh = EditorGUILayout.ObjectField("Slot Mesh  ", slotMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
+			var newslotMesh = EditorGUILayout.ObjectField("Slot Mesh  ", slotMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
+			if (newslotMesh != slotMesh)
+			{
+				errmsg = "";
+				slotMesh = newslotMesh;
+			}
+
+
 			slotMaterial = EditorGUILayout.ObjectField("UMAMaterial	 ", slotMaterial, typeof(UMAMaterial), false) as UMAMaterial;
 			slotFolder = EditorGUILayout.ObjectField("Slot Destination Folder"	, slotFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
 			EnforceFolder(ref slotFolder);
-			RootBone = EditorGUILayout.TextField("Root Bone (ex:'Global')", RootBone);
+			//
+			// For now, we will disable this option.
+			// It doesn't work in most cases.
+			// RootBone = EditorGUILayout.TextField("Root Bone (ex:'Global')", RootBone);
+			// 
 			slotName = EditorGUILayout.TextField("Slot Name", slotName);
 			binarySerialization = EditorGUILayout.Toggle(new GUIContent("Binary Serialization", "Forces the created Mesh object to be serialized as binary. Recommended for large meshes and blendshapes."), binarySerialization);
+
+			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
+			GUILayout.Space(10);
+			showTags = EditorGUILayout.Foldout(showTags, "Tags");
+			GUILayout.EndHorizontal();
+			if (showTags)
+			{
+				GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+				// Draw the button area
+				GUILayout.BeginHorizontal();
+				if (GUILayout.Button("Add Tag", GUILayout.Width(80)))
+				{
+					Tags.Add("");
+					Repaint();
+				}
+				 
+				GUILayout.Label(Tags.Count + " Tags defined");
+				GUILayout.EndHorizontal();
+
+				if (Tags.Count == 0)
+				{
+					GUILayout.Label("No tags defined", EditorStyles.helpBox);
+				}
+				else
+				{
+					int del = -1;
+
+					for (int i = 0; i < Tags.Count; i++)
+					{
+						GUILayout.BeginHorizontal();
+						Tags[i] = GUILayout.TextField(Tags[i]);
+						if(GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false)))
+						{
+							del = i;
+						}
+						GUILayout.EndHorizontal();
+					}
+					if (del >= 0)
+					{
+						Tags.RemoveAt(del);
+						Repaint();
+					}
+				}
+				// Draw the tags (or "No tags defined");
+				GUIHelper.EndVerticalPadded(10);
+			}
 
 			EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
 			EditorGUILayout.BeginHorizontal();
@@ -80,12 +138,34 @@ namespace UMA.Editors
 			EditorGUILayout.LabelField(slotName + "_Recipe");
 			EditorGUILayout.EndHorizontal();
 			addToGlobalLibrary = EditorGUILayout.Toggle("Add To Global Library", addToGlobalLibrary);
-			if (UMAContext.Instance != null)
+
+			if (GUILayout.Button("Verify Slot"))
 			{
-				if (UMAContext.Instance.slotLibrary != null)
+				if (slotMesh == null)
 				{
-					addToLocalLibrary = EditorGUILayout.Toggle("Add to Scene Library", addToLocalLibrary);
+					errmsg = "Slot is null.";
 				}
+				else
+				{
+					Vector2[] uv = slotMesh.sharedMesh.uv;
+					foreach(Vector2 v in uv)
+					{
+						if (v.x > 1.0f || v.x < 0.0f || v.y > 1.0f || v.y < 0.0f)
+						{
+							errmsg = "UV Coordinates are out of range and will likely have issues with atlassed materials. Textures should not be tiled unless using non-atlassed materials.";
+							break;
+						}
+					}
+					if (string.IsNullOrEmpty(errmsg))
+					{
+						errmsg = "No errors found";
+					}
+				}
+			}
+
+			if (!string.IsNullOrEmpty(errmsg))
+			{
+				EditorGUILayout.HelpBox(errmsg, MessageType.Warning);
 			}
 
 			if (GUILayout.Button("Create Slot"))
@@ -99,13 +179,6 @@ namespace UMA.Editors
 					if (addToGlobalLibrary)
 					{
 						UMAAssetIndexer.Instance.EvilAddAsset(typeof(SlotDataAsset), sd);
-					}
-					if (addToLocalLibrary && UMAContext.Instance != null)
-					{
-						if (UMAContext.Instance.slotLibrary != null)
-						{
-							UMAContext.Instance.slotLibrary.AddSlotAsset(sd);
-						}
 					}
 					OverlayDataAsset od = null;
 					if (createOverlay)
@@ -121,7 +194,7 @@ namespace UMA.Editors
 
 
 			if (slotMesh != null )
-			{
+			{   
 				if( slotMesh.localBounds.size.x > 10.0f || slotMesh.localBounds.size.y > 10.0f || slotMesh.localBounds.size.z > 10.0f)
 					EditorGUILayout.HelpBox ("This slot's size is very large. It's import scale may be incorrect!", MessageType.Warning);
 
@@ -156,7 +229,7 @@ namespace UMA.Editors
 			}
 
 			SlotDataAsset sd = CreateSlot_Internal();
-
+			
 			return sd;
 		}
 
@@ -170,13 +243,6 @@ namespace UMA.Editors
 			if (addToGlobalLibrary)
 			{
 				UMAAssetIndexer.Instance.EvilAddAsset(typeof(OverlayDataAsset), asset);
-			}
-			if (addToLocalLibrary && UMAContext.Instance != null)
-			{
-				if (UMAContext.Instance.overlayLibrary != null)
-				{
-					UMAContext.Instance.overlayLibrary.AddOverlayAsset(asset);
-				}
 			}
 			return asset;
 		}
@@ -215,6 +281,7 @@ namespace UMA.Editors
 
 			Debug.Log("Slot Mesh: " + slotMesh.name, slotMesh.gameObject);
 			SlotDataAsset slot = UMASlotProcessingUtil.CreateSlotData(AssetDatabase.GetAssetPath(slotFolder), GetAssetFolder(), GetAssetName(), slotMesh, material, normalReferenceMesh,RootBone, binarySerialization);
+			slot.tags = Tags.ToArray();
 			return slot;
 		}
 

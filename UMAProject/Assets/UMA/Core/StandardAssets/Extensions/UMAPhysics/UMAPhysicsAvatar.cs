@@ -29,7 +29,8 @@ namespace UMA.Dynamics
 
 		[Tooltip("Set this to snap the Avatar to the position of it's hip after ragdoll is finished")]
 		public bool UpdateTransformAfterRagdoll = true;
-
+		[Tooltip("Check this to set the player layer to the current layer, and read the 'ragdoll' layer from the settings")]
+		public bool AutoSetLayers = false;
 		[Tooltip("Layer to set the ragdoll colliders on. See layer based collision")]
 		public int ragdollLayer = 8;
 		[Tooltip("Layer to set the player collider on. See layer based collision")]
@@ -45,6 +46,8 @@ namespace UMA.Dynamics
 		private UMAData _umaData;
 		private GameObject _rootBone;
 		private List<Rigidbody> _rigidbodies = new List<Rigidbody> ();
+		private bool[] SaveRagdollStates = new bool[0];
+
 
 		public List<BoxCollider> BoxColliders { get { return _BoxColliders; } }
 		private List<BoxCollider> _BoxColliders = new List<BoxCollider> ();
@@ -79,6 +82,16 @@ namespace UMA.Dynamics
 		// Use this for initialization
 		void Start () 
 		{
+			if (AutoSetLayers)
+			{
+				playerLayer = gameObject.layer;
+				ragdollLayer = LayerMask.NameToLayer("Ragdoll");
+			}
+			else
+			{
+				gameObject.layer = playerLayer;
+			}
+
 			_avatar = GetComponent<DynamicCharacterAvatar>();
 			//Using DCS
 			if (_avatar != null)
@@ -99,8 +112,6 @@ namespace UMA.Dynamics
 					_umaData.CharacterUpdated.AddListener(OnCharacterUpdatedCallback);
 				}
 			}
-
-			gameObject.layer = playerLayer;
 
 			if (!Physics.GetIgnoreLayerCollision(ragdollLayer, playerLayer))
 			{
@@ -190,7 +201,9 @@ namespace UMA.Dynamics
 					Debug.LogError ("CreatePhysicsObjects: umaData is null!");
 				return;
 			}
-			
+
+			SetRendereroffscreenStates();
+
 			//Don't update if we already have a rigidbody on the root bone?
 			if ( _rootBone && _rootBone.GetComponent<Rigidbody> () )
 				return;
@@ -354,7 +367,7 @@ namespace UMA.Dynamics
 			}
 			else 
 			{
-				if( onRagdollEnded != null )
+				if ( onRagdollEnded != null )
 					onRagdollEnded.Invoke ();
 			}
 				
@@ -432,6 +445,27 @@ namespace UMA.Dynamics
 			}
 		}
 
+		private void SetRendereroffscreenStates()
+		{
+			if (_umaData != null)
+			{
+				SkinnedMeshRenderer[] renderers = _umaData.GetRenderers();
+				if (renderers != null)
+				{
+					if (SaveRagdollStates.Length != renderers.Length)
+					{
+						SaveRagdollStates = new bool[renderers.Length];
+					}
+
+					for(int i = 0; i < renderers.Length; i++)
+					{
+						SkinnedMeshRenderer smr = renderers[i];
+						SaveRagdollStates[i] = smr.updateWhenOffscreen;
+					}
+				}
+			}
+		}
+
 		private void SetUpdateWhenOffscreen(bool flag)
 		{
 			if (_umaData != null) 
@@ -439,8 +473,20 @@ namespace UMA.Dynamics
 				SkinnedMeshRenderer[] renderers = _umaData.GetRenderers ();
 				if (renderers != null) 
 				{
-					foreach (SkinnedMeshRenderer renderer in renderers)
-						renderer.updateWhenOffscreen = flag;
+					// if we've saved the states, we can't just turn it off. might be on by default.
+					if (SaveRagdollStates.Length == renderers.Length && !flag)
+					{
+						for (int i = 0; i < renderers.Length; i++)
+						{
+							SkinnedMeshRenderer smr = renderers[i];
+							smr.updateWhenOffscreen = SaveRagdollStates[i];
+						}
+					}
+					else
+					{
+						foreach (SkinnedMeshRenderer renderer in renderers)
+							renderer.updateWhenOffscreen = flag;
+					}
 				}
 			}
 		}

@@ -14,7 +14,6 @@ namespace UMA.CharacterSystem.Examples
         public string SlotName;
 
 
-
         public void Setup(DynamicCharacterAvatar avatar, string slotName, GameObject wardrobePanel)
         {
             Avatar = avatar;
@@ -30,7 +29,8 @@ namespace UMA.CharacterSystem.Examples
             Cleanup();
 
             AddLabel(SlotName);
-            AddButton("Remove", SlotName);
+			if (this.SlotName != "WardrobeCollection")
+	           AddButton("Remove", SlotName);
 
             // Find all the wardrobe items for the current slot, and create a button for them.
             foreach (UMATextRecipe utr in SlotRecipes)
@@ -57,10 +57,10 @@ namespace UMA.CharacterSystem.Examples
         {
             GameObject go = GameObject.Instantiate(WardrobeButtonPrefab);
             WardrobeHandler wh = go.GetComponent<WardrobeHandler>();
-            wh.Setup(Avatar, utr, SlotName);
-            Text txt = go.GetComponentInChildren<Text>();
-            txt.text = theText;
-            go.transform.SetParent(WardrobePanel.transform);
+            wh.Setup(Avatar, utr, SlotName,theText);
+			wh.SetColors();
+
+			go.transform.SetParent(WardrobePanel.transform);
         }
 
         private void Cleanup()

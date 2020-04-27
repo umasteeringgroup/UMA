@@ -23,26 +23,49 @@ namespace UMA
         [SerializeField]
         public SlotDataAsset asset
         {
-            get{ return _asset; }
-            set
+            get
+			{
+				if (_asset != null)
+				{
+					_assetSlotName = _asset.slotName;
+					_asset = null;
+				}
+				return UMAAssetIndexer.Instance.GetAsset<SlotDataAsset>(_assetSlotName);
+			}
+			set
             {
-                _asset = value;
-                if (_asset != null)
-                    _assetSlotName = _asset.slotName;
-                else
-                    _assetSlotName = "";
+				if (value != null)
+					_assetSlotName = value.slotName;
+				else
+				{
+					Debug.Log("Cleared Asset Slot Name");
+					_assetSlotName = "";
+				}
             }
-        }
+        } 
         [SerializeField, HideInInspector]
         private SlotDataAsset _asset;
 
+		public bool HasReference
+		{
+			get { return _asset != null;  }
+		}
+
         public string AssetSlotName
         {
-            get { return _assetSlotName; }
+            get {
+				if (string.IsNullOrEmpty(_assetSlotName))
+				{
+					if (_asset != null)
+					{
+						_assetSlotName = _asset.slotName;
+					}
+				}
+				return _assetSlotName; 
+				}
             set
             {
                 _assetSlotName = value;
-                _asset = UMAAssetIndexer.Instance.GetAsset<SlotDataAsset>(_assetSlotName);
             }
         }
         [SerializeField, HideInInspector]
@@ -84,11 +107,26 @@ namespace UMA
             }
         }
 
-        /// <summary>
-        /// Gets the total triangle count in the multidimensional triangleFlags.
-        /// </summary>
-        /// <value>The triangle count.</value>
-        public int TriangleCount 
+		/// <summary>
+		/// If this contains a reference to an asset, it is freed.
+		/// This asset reference is no longer needed, and 
+		/// forces the asset to be included in the build.
+		/// It is kept only for upgrading from earlier UMA versions
+		/// </summary>
+		public void FreeReference()
+		{
+			if (_asset != null)
+			{
+				_assetSlotName = _asset.slotName;
+				_asset = null;
+			}
+		}
+
+		/// <summary>
+		/// Gets the total triangle count in the multidimensional triangleFlags.
+		/// </summary>
+		/// <value>The triangle count.</value>
+		public int TriangleCount 
         { 
             get 
             {
@@ -147,6 +185,7 @@ namespace UMA
         /// </summary>
         public void OnBeforeSerialize()
         {
+			// _asset = null; // Let's not save this!
             if (_triangleFlags == null)
                 return;
             
@@ -172,14 +211,23 @@ namespace UMA
             }
         }
 
+
         /// <summary>
         /// Custom deserialization to write the boolean array to the BitArray.
         /// </summary>
         public void OnAfterDeserialize()
         {
-            //We're not logging an error here because we'll get spammed by it for empty/not-set assets.
-            if (_asset == null)
-                return;
+			//We're not logging an error here because we'll get spammed by it for empty/not-set assets.
+			if (_asset == null && string.IsNullOrEmpty(_assetSlotName))
+			{
+				Debug.Log("No reference and no name on MeshHideAsset!");
+				return;
+			}
+
+			if (_asset != null)
+			{
+				_assetSlotName = _asset.slotName;
+			}
             
             if (_serializedFlags == null)
                 return;
@@ -201,19 +249,21 @@ namespace UMA
         [ExecuteInEditMode]
         public void Initialize()
         {
-            if (_asset == null)
+			SlotDataAsset slot = asset;
+
+            if (slot == null)
             {
                 _triangleFlags = null;
                 return;
             }
 
-            if (_asset.meshData == null)
+            if (slot.meshData == null)
                 return;
 
-            _triangleFlags = new BitArray[asset.meshData.subMeshCount];
-            for (int i = 0; i < asset.meshData.subMeshCount; i++)
+            _triangleFlags = new BitArray[slot.meshData.subMeshCount];
+            for (int i = 0; i < slot.meshData.subMeshCount; i++)
             {
-                _triangleFlags[i] = new BitArray(asset.meshData.submeshes[i].triangles.Length / 3);
+                _triangleFlags[i] = new BitArray(slot.meshData.submeshes[i].triangles.Length / 3);
             }
         }
 

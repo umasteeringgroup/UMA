@@ -280,7 +280,7 @@ namespace UMA.CharacterSystem
                 warningType = "info";
 #endif
                 AssetBundleManager.SimulateOverride = true;
-                var context = UMAContext.FindInstance();
+                UMAContext context = UMAContextBase.FindInstance() as UMAContext;
                 if (context != null)
                 {
                     if ((context.dynamicCharacterSystem != null && (context.dynamicCharacterSystem as DynamicCharacterSystem).dynamicallyAddFromAssetBundles)
@@ -600,9 +600,9 @@ namespace UMA.CharacterSystem
                 }
             }
             DynamicCharacterSystem thisDCS = null;
-            if (UMAContext.Instance != null)
+            if (UMAContextBase.Instance != null)
             {
-                thisDCS = UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem;
+				thisDCS = ((UMAContext)UMAContextBase.Instance).dynamicCharacterSystem;
             }
             if (thisDCS != null)
             {
@@ -1219,18 +1219,21 @@ namespace UMA.CharacterSystem
             //10012017 Only do this if thisDCS.addAllRecipesFromDownloadedBundles is true
             if (currentSimulatedDownloadedBundlesCount != simulatedDownloadedBundles.Count /*&& typeof(T) != typeof(RaceData)*/ && assetName != "")
             {
-                var thisDCS = UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem;
-                if (thisDCS != null)
-                {
-                    if (thisDCS.addAllRecipesFromDownloadedBundles)
-                    {
-                        //but it only needs to add stuff from the bundles that were added
-                        for (int i = currentSimulatedDownloadedBundlesCount; i < simulatedDownloadedBundles.Count; i++)
-                        {
-                            thisDCS.Refresh(false, simulatedDownloadedBundles[i]);
-                        }
-                    }
-                }
+				if (UMAContext.Instance is UMAContext)
+				{
+					var thisDCS = (UMAContextBase.Instance as UMAContext).dynamicCharacterSystem as DynamicCharacterSystem;
+					if (thisDCS != null)
+					{
+						if (thisDCS.addAllRecipesFromDownloadedBundles)
+						{
+							//but it only needs to add stuff from the bundles that were added
+							for (int i = currentSimulatedDownloadedBundlesCount; i < simulatedDownloadedBundles.Count; i++)
+							{
+								thisDCS.Refresh(false, simulatedDownloadedBundles[i]);
+							}
+						}
+					}
+				}
             }
             UMAAssetIndexer.StopTimer(st, "SimulateAddAssetsFromAssetBundlesNew Type=" + typeof(T).Name);
             return assetFound;
@@ -1253,29 +1256,32 @@ namespace UMA.CharacterSystem
                 bundleAlreadySimulated = false;
             }
             var allAssetBundlePaths = AssetDatabase.GetAssetPathsFromAssetBundle(assetBundleToLoad);
-            //We need to add the recipes from the bundle to DCS, other assets add them selves as they are requested by the recipes
-            var thisDCS = UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem;
-            bool dcsNeedsRefresh = false;
-            if (thisDCS)
-            {
-                if (thisDCS.addAllRecipesFromDownloadedBundles)
-                {
-                    for (int i = 0; i < allAssetBundlePaths.Length; i++)
-                    {
-                        UnityEngine.Object obj = AssetDatabase.LoadMainAssetAtPath(allAssetBundlePaths[i]);
-                        if (obj.GetType() == typeof(UMATextRecipe))
-                        {
-                            if (bundleAlreadySimulated == false)
-                                dcsNeedsRefresh = true;
-                            break;
-                        }
-                    }
-                    if (dcsNeedsRefresh)
-                    {
-                        thisDCS.Refresh(false, assetBundleToLoad);
-                    }
-                }
-            }
+			//We need to add the recipes from the bundle to DCS, other assets add them selves as they are requested by the recipes
+			if (UMAContext.Instance is UMAContext)
+			{
+				var thisDCS = (UMAContextBase.Instance as UMAContext).dynamicCharacterSystem as DynamicCharacterSystem;
+				bool dcsNeedsRefresh = false;
+				if (thisDCS)
+				{
+					if (thisDCS.addAllRecipesFromDownloadedBundles)
+					{
+						for (int i = 0; i < allAssetBundlePaths.Length; i++)
+						{
+							UnityEngine.Object obj = AssetDatabase.LoadMainAssetAtPath(allAssetBundlePaths[i]);
+							if (obj.GetType() == typeof(UMATextRecipe))
+							{
+								if (bundleAlreadySimulated == false)
+									dcsNeedsRefresh = true;
+								break;
+							}
+						}
+						if (dcsNeedsRefresh)
+						{
+							thisDCS.Refresh(false, assetBundleToLoad);
+						}
+					}
+				}
+			}
         }
 #endif
         /// <summary>

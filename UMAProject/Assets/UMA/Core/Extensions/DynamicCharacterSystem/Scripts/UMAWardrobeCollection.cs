@@ -54,26 +54,22 @@ namespace UMA.CharacterSystem
 		/// </summary>
 		public void EnsureLocalAvailability(string forRace = "")
 		{
-			var thisDCS = (UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem);
-			if (thisDCS == null)
-				return;
-				
 			//Ensure WardrobeCollection items
 			var thisRecipeNames = wardrobeCollection.GetAllRecipeNamesInCollection(forRace);
 			if (thisRecipeNames.Count > 0)
 			{
 				//we maybe adding recipes for races we have not downloaded yet so make sure DCS has a place for them in its index
 				if (forRace != "")
-					thisDCS.EnsureRaceKey(forRace);
+					UMAContext.Instance.EnsureRaceKey(forRace);
 				else
 					foreach (string race in compatibleRaces)
 					{
-						thisDCS.EnsureRaceKey(race);
+						UMAContext.Instance.EnsureRaceKey(race);
 					}
 
 				for (int i = 0; i < thisRecipeNames.Count; i++)
 				{
-					thisDCS.GetRecipe(thisRecipeNames[i], true);
+					UMAContext.Instance.GetRecipe(thisRecipeNames[i], true);
 				}
 			}
 			//Ensure Arbitrary Items
@@ -81,21 +77,21 @@ namespace UMA.CharacterSystem
 			{
 				for (int i = 0; i < arbitraryRecipes.Count; i++)
 				{
-					thisDCS.GetRecipe(arbitraryRecipes[i], true);
+					UMAContext.Instance.GetRecipe(arbitraryRecipes[i], true);
 				}
 			}
 		}
 
 		public List<WardrobeSettings> GetRacesWardrobeSet(string race)
 		{
-			var thisContext = UMAContext.FindInstance();
+			var thisContext = UMAContextBase.Instance;
 			if(thisContext == null)
 			{
 				if (Debug.isDebugBuild)
-					Debug.LogWarning("Getting the WardrobeSet from a WardrobeCollection requires a valid UMAContext in the scene");
+					Debug.LogWarning("Getting the WardrobeSet from a WardrobeCollection requires a valid UMAContextBase in the scene");
 				return new List<WardrobeSettings>();
 			}
-			var thisRace = (thisContext.raceLibrary as DynamicRaceLibrary).GetRace(race, true);
+			var thisRace = UMAContext.Instance.GetRace(race);
 			return GetRacesWardrobeSet(thisRace);
 		}
 		/// <summary>
@@ -171,10 +167,15 @@ namespace UMA.CharacterSystem
 		/// Gets a DCSUnversalPackRecipeModel that has the wardrobeSet set to be the set in this collection for the given race of the sent avatar
 		/// Or if this recipe is cross compatible returns the wardrobe set for the first matched cross compatible race
 		/// </summary>
-		public DCSUniversalPackRecipe GetUniversalPackRecipe(DynamicCharacterAvatar dca, UMAContext context)
+		public DCSUniversalPackRecipe GetUniversalPackRecipe(DynamicCharacterAvatar dca, UMAContextBase context)
 		{
 			var thisPackRecipe = PackedLoadDCSInternal(context);
-			var setToUse = GetRacesWardrobeSet(dca.activeRace.racedata);
+			RaceData race = dca.activeRace.racedata;
+			if (dca.activeRace.racedata == null)
+			{
+				race = dca.activeRace.data;
+			}
+			var setToUse = GetRacesWardrobeSet(race);
             thisPackRecipe.wardrobeSet = setToUse;
 			thisPackRecipe.race = dca.activeRace.name;
 			return thisPackRecipe;
@@ -184,7 +185,7 @@ namespace UMA.CharacterSystem
 		/// <summary>
 		/// NOTE: Use GetUniversalPackRecipe to get a recipe that includes a wardrobeSet. Load this Recipe's recipeString into the specified UMAData.UMARecipe.
 		/// </summary>
-		public override void Load(UMA.UMAData.UMARecipe umaRecipe, UMAContext context)
+		public override void Load(UMA.UMAData.UMARecipe umaRecipe, UMAContextBase context)
 		{
 			if ((recipeString != null) && (recipeString.Length > 0))
 			{

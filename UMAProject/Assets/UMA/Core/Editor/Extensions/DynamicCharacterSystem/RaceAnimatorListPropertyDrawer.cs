@@ -102,8 +102,6 @@ namespace UMA.CharacterSystem.Editors
 						}
 						else
 						{
-							if (DynamicAssetLoader.Instance)
-							{
 								if (!CheckAnimatorAvailability(thisAnimatorName))
 								{
 									var warningRect = new Rect((removeR.xMin - 20f), removeR.yMin, 20f, removeR.height);
@@ -116,11 +114,8 @@ namespace UMA.CharacterSystem.Editors
 										var thisAnimator = FindMissingAnimator(thisAnimatorName);
 										if (thisAnimator != null)
 											UMAAssetIndexer.Instance.EvilAddAsset(thisAnimator.GetType(), thisAnimator);
-										else
-											UMAAssetIndexerEditor.ShowWindow();
 									}
 								}
-							}
 							EditorGUI.BeginDisabledGroup(true);
 							EditorGUI.TextField(aFieldR, thisAnimtorProp.FindPropertyRelative("animatorControllerName").stringValue);
 							EditorGUI.EndDisabledGroup();
@@ -164,15 +159,6 @@ namespace UMA.CharacterSystem.Editors
 				valR = new Rect (valR.xMin, valR.yMax + padding, valR.width, EditorGUIUtility.singleLineHeight);
 				EditorGUI.PropertyField (valR,property.FindPropertyRelative ("resourcesFolderPath"), new GUIContent("Global Library Folder Filter"));
 				valR = new Rect (valR.xMin, valR.yMax + padding, valR.width, EditorGUIUtility.singleLineHeight);
-				var dynamicallyAddFromAssetBundles = property.FindPropertyRelative ("dynamicallyAddFromAssetBundles").boolValue;
-				EditorGUI.BeginChangeCheck();
-				dynamicallyAddFromAssetBundles = EditorGUI.ToggleLeft(valR,"Dynamically Add from Asset Bundles", dynamicallyAddFromAssetBundles);
-				if(EditorGUI.EndChangeCheck()){
-					property.FindPropertyRelative ("dynamicallyAddFromAssetBundles").boolValue = dynamicallyAddFromAssetBundles;
-					property.serializedObject.ApplyModifiedProperties ();
-				}
-				valR = new Rect (valR.xMin, valR.yMax + padding, valR.width, EditorGUIUtility.singleLineHeight);
-				EditorGUI.PropertyField (valR,property.FindPropertyRelative ("assetBundleNames"), new GUIContent("AssetBundles to Search"));
 				EditorGUI.indentLevel--;
 			}
 			EditorGUI.EndProperty ();
@@ -205,32 +191,21 @@ namespace UMA.CharacterSystem.Editors
 		{
 			if (Application.isPlaying)
 				return true;
-			bool found = false;
-			bool searchResources = true;
-			bool searchAssetBundles = true;
-			string resourcesFolderPath = "";
-			string assetBundlesToSearch = "";
+
+			if (UMAAssetIndexer.Instance.GetAssetDictionary(typeof(RuntimeAnimatorController)).ContainsKey(racName))
+			{
+				return true;
+			}
+
 			RuntimeAnimatorController defaultController = null;
 			if (thisDCA != null)
 			{
-				searchResources = thisDCA.raceAnimationControllers.dynamicallyAddFromResources;
-				searchAssetBundles = thisDCA.raceAnimationControllers.dynamicallyAddFromAssetBundles;
-				resourcesFolderPath = thisDCA.raceAnimationControllers.resourcesFolderPath;
-				assetBundlesToSearch = thisDCA.raceAnimationControllers.assetBundleNames;
 				defaultController = thisDCA.raceAnimationControllers.defaultAnimationController != null ? thisDCA.raceAnimationControllers.defaultAnimationController : (thisDCA.animationController != null ? thisDCA.animationController : null);
-			}
-			if (defaultController)
 				if (defaultController.name == racName)
 					return true;
-            if (UMAAssetIndexer.Instance.GetAssetDictionary(typeof(RuntimeAnimatorController)).ContainsKey(racName))
-            {
-                return true;
-            }
-			var dalDebug = DynamicAssetLoader.Instance.debugOnFail;
-			DynamicAssetLoader.Instance.debugOnFail = false;
-			found = DynamicAssetLoader.Instance.AddAssets<RuntimeAnimatorController>(searchResources, searchAssetBundles, true, assetBundlesToSearch, resourcesFolderPath, null, racName, null);
-			DynamicAssetLoader.Instance.debugOnFail = dalDebug;
-			return found;
+			}
+
+			return false;
 		}
 
 		private RuntimeAnimatorController FindMissingAnimator(string animatorName)

@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEditor;
 using UMA;
 using UMA.CharacterSystem;
+using System.Collections.Generic;
 
 namespace UMA.Editors
 {
@@ -190,6 +191,43 @@ namespace UMA.Editors
 		 }
 	  }
 
+
+		[UnityEditor.MenuItem("GameObject/UMA/Show Mesh Info (runtime only)")]
+		public static void ShowSelectedAvatarStats()
+		{
+			if (Selection.gameObjects.Length == 1)
+			{
+				var selectedTransform = Selection.gameObjects[0].transform;
+				var avatar = selectedTransform.GetComponent<UMAAvatarBase>();
+				while (avatar == null && selectedTransform.parent != null)
+				{
+					selectedTransform = selectedTransform.parent;
+					avatar = selectedTransform.GetComponent<UMAAvatarBase>();
+				}
+				if (avatar != null)
+				{
+					SkinnedMeshRenderer sk = avatar.gameObject.GetComponentInChildren<SkinnedMeshRenderer>();
+					if (sk != null)
+					{
+						List<string> info = new List<string>
+					{
+						sk.gameObject.name,
+						"Mesh index type: " + sk.sharedMesh.indexFormat.ToString(),
+						"VertexLength: " + sk.sharedMesh.vertices.Length,
+						"Submesh Count: " + sk.sharedMesh.subMeshCount
+					};
+						for (int i = 0; i < sk.sharedMesh.subMeshCount; i++)
+						{
+							int[] tris = sk.sharedMesh.GetTriangles(i);
+							info.Add("Submesh " + i + " Tri count: " + tris.Length);
+						}
+						Rect R = new Rect(200.0f, 200.0f, 300.0f, 600.0f);
+						DisplayListWindow.ShowDialog("Mesh Info", R, info);
+					}
+				}
+			}
+
+		}
 
 		[UnityEditor.MenuItem("GameObject/UMA/Save as Character Asset (runtime only)")]
 		[UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Save as Asset (runtime only)")]

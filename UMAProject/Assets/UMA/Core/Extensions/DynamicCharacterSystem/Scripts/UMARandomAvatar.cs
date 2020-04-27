@@ -18,12 +18,17 @@ namespace UMA
 		public bool RandomRotation;
 		public string NameBase = "Pat";
 
-		private DynamicCharacterAvatar Avatar;
+		private DynamicCharacterAvatar RandomAvatar;
 		private GameObject character;
 
 		// Use this for initialization
 		void Start()
 		{
+			if (ParentObject == null)
+			{
+				ParentObject = this.gameObject;
+			}
+
 			if (!GenerateGrid)
 			{
 				if (RandomRotation)
@@ -75,10 +80,11 @@ namespace UMA
 				{
 					go.transform.parent = ParentObject.transform;
 				}
-				Avatar = go.GetComponent<DynamicCharacterAvatar>();
+				RandomAvatar = go.GetComponent<DynamicCharacterAvatar>();
 				go.name = Name;
 			}
-			Randomize(Avatar);
+			Randomize(RandomAvatar);
+			RandomAvatar.BuildCharacter();
 		}
 
 		public RandomWardrobeSlot GetRandomWardrobe(List<RandomWardrobeSlot> wardrobeSlots)
@@ -104,7 +110,7 @@ namespace UMA
 			return rc.ColorTable.colors[inx];
 		}
 
-		private void AddRandomSlot(RandomWardrobeSlot uwr)
+		private void AddRandomSlot(DynamicCharacterAvatar Avatar, RandomWardrobeSlot uwr)
 		{
 			Avatar.SetSlot(uwr.WardrobeSlot);
 		    if (uwr.Colors != null)
@@ -149,8 +155,8 @@ namespace UMA
 			if (Avatar != null && Randomizer != null)
 			{
 				RandomAvatar ra = Randomizer.GetRandomAvatar();
-				Avatar.RacePreset = ra.RaceName;
-				Avatar.BuildCharacterEnabled = true;
+				Avatar.ChangeRaceData(ra.RaceName);
+				//Avatar.BuildCharacterEnabled = true;
 				var RandomDNA = ra.GetRandomDNA();
 				Avatar.predefinedDNA = RandomDNA;
 				var RandomSlots = ra.GetRandomSlots();
@@ -169,7 +175,7 @@ namespace UMA
 				{
 					List<RandomWardrobeSlot> RandomWardrobe = RandomSlots[s];
 					RandomWardrobeSlot uwr = GetRandomWardrobe(RandomWardrobe);
-					AddRandomSlot(uwr);
+					AddRandomSlot(Avatar,uwr);
 				}
 			}
 		}

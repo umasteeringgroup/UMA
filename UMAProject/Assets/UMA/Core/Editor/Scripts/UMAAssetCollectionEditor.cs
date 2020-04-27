@@ -9,7 +9,7 @@ namespace UMA.Editors
 	{
 		public override void OnInspectorGUI()
 		{
-			var context = UMAContext.FindInstance();
+			var context = UMAContextBase.Instance;
 			EditorGUI.BeginDisabledGroup(context == null);
 			if (GUILayout.Button("Add to Scene Context"))
 			{

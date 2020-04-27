@@ -85,7 +85,7 @@ namespace UMA
 			}
 		}
 
-		void Update()
+		public virtual void Update()
 		{
 			if (CheckRenderTextures())
 				return; // if render textures needs rebuild we'll not do anything else
@@ -213,9 +213,9 @@ namespace UMA
 					meshCombiner.Preprocess(umaData);
 				}
 				umaData.FireCharacterBegunEvents();
+				PreApply(umaData);
 			}
 
-			PreApply(umaData);
 
 			if (umaData.isTextureDirty)
 			{
@@ -280,12 +280,6 @@ namespace UMA
 
 		public virtual void OnDirtyUpdate()
 		{
-			//var DirtyStopwatch = new System.Diagnostics.Stopwatch();
-			//DirtyStopwatch.Start();
-			//var charName = "";
-			//if (umaDirtyList[0] != null)
-			//	charName = umaDirtyList[0].gameObject.name;
-
 			try
 			{
 				if (HandleDirtyUpdate(umaDirtyList[0]))
@@ -304,7 +298,7 @@ namespace UMA
 			catch (Exception ex)
 			{
 				if (Debug.isDebugBuild)
-					UnityEngine.Debug.LogWarning("Exception in UMAGeneratorBuiltin.OnDirtyUpdate: " + ex);
+					UnityEngine.Debug.LogException(ex);
 			}
 			//anything more than 166,000 is too long (166,000 is 1 frame @ 60fps)
 			//the demo alien is about 65,000 on average- this is a big chunk of the available time though and my machine is fast

@@ -85,6 +85,9 @@ namespace UMA
 
 		public override SlotData InstantiateSlot(string name)
 		{
+#if SUPER_LOGGING
+			Debug.Log("Instantiating slot: " + name);
+#endif
 			var res = Internal_InstantiateSlot(UMAUtils.StringToHash(name));
 			if (res == null)
 			{
@@ -104,6 +107,9 @@ namespace UMA
 
 		public override SlotData InstantiateSlot(string name, List<OverlayData> overlayList)
 		{
+#if SUPER_LOGGING
+			Debug.Log("Instantiating slot: " + name);
+#endif
 			var res = Internal_InstantiateSlot(UMAUtils.StringToHash(name));
 			if (res == null)
 			{

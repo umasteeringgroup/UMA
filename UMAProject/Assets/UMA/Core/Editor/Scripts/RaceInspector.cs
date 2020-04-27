@@ -23,8 +23,8 @@ namespace UMA.Editors
 		//Instead what we really want to do is set a short delay on saving so that the asset doesn't save while the user is typing in a field
 		private float lastActionTime = 0;
 		private bool doSave = false;
-		//pRaceInspector needs to get unpacked UMATextRecipes so we might need a virtual UMAContext
-		GameObject EditorUMAContext;
+		//pRaceInspector needs to get unpacked UMATextRecipes so we might need a virtual UMAContextBase
+		GameObject EditorUMAContextBase;
 
 		#region DCS variables
 		private ReorderableList wardrobeSlotList;
@@ -44,8 +44,8 @@ namespace UMA.Editors
 		void OnDestroy()
 		{
 			EditorApplication.update -= DoDelayedSave;
-			if (EditorUMAContext != null)
-				DestroyEditorUMAContext();
+			if (EditorUMAContextBase != null)
+				DestroyEditorUMAContextBase();
 
 		}
 
@@ -60,15 +60,15 @@ namespace UMA.Editors
 			}
 		}
 
-		private void DestroyEditorUMAContext()
+		private void DestroyEditorUMAContextBase()
 		{
-			if (EditorUMAContext != null)
+			if (EditorUMAContextBase != null)
 			{
-				foreach (Transform child in EditorUMAContext.transform)
+				foreach (Transform child in EditorUMAContextBase.transform)
 				{
 					DestroyImmediate(child.gameObject);
 				}
-				DestroyImmediate(EditorUMAContext);
+				DestroyImmediate(EditorUMAContextBase);
 			}
 		}
 
@@ -344,11 +344,11 @@ namespace UMA.Editors
 					baseSlotsList.Clear();
 					baseSlotsNamesList.Clear();
 					//editing a race will require a context too because we need to get the base recipes and their slots
-					if (UMAContext.FindInstance() == null)
+					if (UMAContextBase.Instance == null)
 					{
-						EditorUMAContext = UMAContext.CreateEditorContext();
+						EditorUMAContextBase = UMAContextBase.CreateEditorContext();
 					}
-					UMAData.UMARecipe thisBaseRecipe = (baseRaceRecipe.objectReferenceValue as UMARecipeBase).GetCachedRecipe(UMAContext.Instance);
+					UMAData.UMARecipe thisBaseRecipe = (baseRaceRecipe.objectReferenceValue as UMARecipeBase).GetCachedRecipe(UMAContextBase.Instance);
 					SlotData[] thisBaseSlots = thisBaseRecipe.GetAllSlots();
 					foreach (SlotData slot in thisBaseSlots)
 					{
@@ -445,7 +445,7 @@ namespace UMA.Editors
 					{
 						var ccSlotsList = new List<SlotData>();
 						var ccSlotsNamesList = new List<string>();
-						UMAData.UMARecipe ccBaseRecipe = ccRaceData.baseRaceRecipe.GetCachedRecipe(UMAContext.Instance);
+						UMAData.UMARecipe ccBaseRecipe = ccRaceData.baseRaceRecipe.GetCachedRecipe(UMAContextBase.Instance);
 						SlotData[] ccBaseSlots = ccBaseRecipe.GetAllSlots();
 						foreach (SlotData slot in ccBaseSlots)
 						{

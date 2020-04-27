@@ -1,0 +1,69 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 28add7ad4625f8748a81d045544985b2, type: 3}
+  m_Name: HumanFemaleDNA 1
+  m_EditorClassIdentifier: 
+  dnaTypeHash: 1932961400
+  lastKnownAssetPath: Assets/UMA/Content/Core/HumanFemale/DNA/DNANames/HumanFemaleDNA
+    1.asset
+  lastKnownDuplicateAssetPath: Assets/UMA/Content/Core/HumanFemale/DNA/DNANames/HumanFemaleDNA
+    2.asset
+  lastKnownInstanceID: 30892
+  Names:
+  - height
+  - headSize
+  - headWidth
+  - neckThickness
+  - armLength
+  - forearmLength
+  - armWidth
+  - forearmWidth
+  - handsSize
+  - feetSize
+  - legSeparation
+  - upperMuscle
+  - lowerMuscle
+  - upperWeight
+  - lowerWeight
+  - legsSize
+  - belly
+  - waist
+  - gluteusSize
+  - earsSize
+  - earsPosition
+  - earsRotation
+  - noseSize
+  - noseCurve
+  - noseWidth
+  - noseInclination
+  - nosePosition
+  - nosePronounced
+  - noseFlatten
+  - chinSize
+  - chinPronounced
+  - chinPosition
+  - mandibleSize
+  - jawsSize
+  - jawsPosition
+  - cheekSize
+  - cheekPosition
+  - lowCheekPronounced
+  - lowCheekPosition
+  - foreheadSize
+  - foreheadPosition
+  - lipsSize
+  - mouthSize
+  - eyeRotation
+  - eyeSize
+  - breastSize
+  - breastCleavage
+  - eyeSpacing

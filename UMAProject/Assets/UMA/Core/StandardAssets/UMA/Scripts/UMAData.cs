@@ -26,12 +26,25 @@ namespace UMA
 		//TODO improve/cleanup the relationship between renderers and rendererAssets
 		private SkinnedMeshRenderer[] renderers;
 		private UMARendererAsset[] rendererAssets;
+		public UMARendererAsset defaultRendererAsset { get; set; }
+
 		public int rendererCount { get { return renderers == null ? 0 : renderers.Length; } }
 
 		//TODO Change these get functions to getter properties?
 		public SkinnedMeshRenderer GetRenderer(int idx)
 		{
 			return renderers[idx];
+		}
+
+		public int GetRendererIndex(SkinnedMeshRenderer renderer)
+		{
+			for(int i = 0; i < renderers.Length; i++)
+			{
+				if (renderer == renderers[i])
+					return i;
+			}
+
+			return -1;
 		}
 
 		public UMARendererAsset GetRendererAsset(int idx)
@@ -198,8 +211,28 @@ namespace UMA
 
 		public GameObject umaRoot;
 
-		public UMARecipe umaRecipe;
-		public Animator animator;
+		
+			[UnityEngine.Serialization.FormerlySerializedAs("umaRecipe")]
+			public UMARecipe _umaRecipe;
+			public UMARecipe umaRecipe
+			{
+				get
+				{
+					return umaOverrideRecipe != null ? umaOverrideRecipe : _umaRecipe;
+				}
+				set
+				{
+					_umaRecipe = value;
+				}
+			}
+
+			/// <summary>
+			/// This field is intended for LOD systems to override what actually gets built. 
+			/// </summary>
+			[NonSerialized]
+			public UMARecipe umaOverrideRecipe;
+
+			public Animator animator;
 		public UMASkeleton skeleton;
 
 		/// <summary>
@@ -227,18 +260,25 @@ namespace UMA
 
 		void Awake()
 		{
-			firstBake = true;
-
 			if (!umaGenerator)
 			{
 				var generatorGO = GameObject.Find("UMAGenerator");
 				if (generatorGO == null) return;
 				umaGenerator = generatorGO.GetComponent<UMAGeneratorBase>();
 			}
+			Initialize(umaGenerator);
+		}
 
-			if (umaRecipe == null)
+		public void Initialize(UMAGeneratorBase generator)
+		{
+			firstBake = true;
+
+			if (umaGenerator == null)
+				umaGenerator = generator;
+
+			if (_umaRecipe == null)
 			{
-				umaRecipe = new UMARecipe();
+				_umaRecipe = new UMARecipe();
 			}
 			else
 			{
@@ -248,8 +288,6 @@ namespace UMA
 
 		public void SetupOnAwake()
 		{
-			//umaRoot = gameObject;
-			//animator = umaRoot.GetComponent<Animator>();
 			animator = gameObject.GetComponent<Animator>();
 		}
 
@@ -280,7 +318,7 @@ namespace UMA
 				valid = false;
 			}
 
-			if (umaRecipe == null)
+			if (_umaRecipe == null)
 			{
 				if (Debug.isDebugBuild)
 					Debug.LogError("UMA data missing required recipe!");
@@ -317,6 +355,69 @@ namespace UMA
 		{
 			public List<GeneratedMaterial> materials = new List<GeneratedMaterial>();
 			public List<UMARendererAsset> rendererAssets = new List<UMARendererAsset>();
+
+			/// <summary>
+			/// Gets the generated textures on the UMA matching umaMaterial and in the textureChannel.
+			/// </summary>
+			/// <param name="umaMaterial">Matching UMAMaterial to search for.</param>
+			/// <param name="textureChannel">Texture channel in the UMAMaterial to find the texture on.</param>
+			/// <returns></returns>
+			public List<Texture> GetTextures(UMAMaterial umaMaterial, int textureChannel)
+			{
+				if (umaMaterial == null)
+					return null;
+
+				if (textureChannel < 0 || textureChannel > umaMaterial.channels.Length)
+					return null;
+
+				List<Texture> textures = new List<Texture>();
+
+				foreach (GeneratedMaterial generatedMaterial in materials)
+				{
+					if (generatedMaterial.umaMaterial.Equals(umaMaterial))
+					{
+						if (textureChannel < generatedMaterial.resultingAtlasList.Length)
+						{
+							textures.Add(generatedMaterial.resultingAtlasList[textureChannel]);
+						}
+					}
+				}
+
+				return textures;
+			}
+
+			/// <summary>
+			/// Gets the Generated texture on the UMA matching the RendererAsset, Material, and textureChannel.
+			/// </summary>
+			/// <param name="rendererAsset"></param>
+			/// <param name="material"></param>
+			/// <param name="textureChannel"></param>
+			/// <returns></returns>
+			public Texture GetTexture(UMARendererAsset rendererAsset, Material material, int textureChannel)
+			{
+				foreach (GeneratedMaterial generatedMaterial in materials)
+				{
+					if(rendererAsset == null && generatedMaterial.rendererAsset == null && generatedMaterial.material.Equals(material))
+					{
+						if (textureChannel < generatedMaterial.resultingAtlasList.Length)
+						{
+							return generatedMaterial.resultingAtlasList[textureChannel];
+						}
+					}
+
+					if(rendererAsset != null)
+					{
+						if(rendererAsset == generatedMaterial.rendererAsset && generatedMaterial.material.Equals(material))
+						{
+							if (textureChannel < generatedMaterial.resultingAtlasList.Length)
+							{
+								return generatedMaterial.resultingAtlasList[textureChannel];
+							}
+						}
+					}
+				}
+				return null;
+			}
 		}
 
 
@@ -473,6 +574,20 @@ namespace UMA
 			public List<UMADnaBase> dnaValues = new List<UMADnaBase>();
 			public SlotData[] slotDataList;
 			public OverlayColorData[] sharedColors;
+			public Dictionary<string, List<MeshHideAsset>> MeshHideDictionary { get; set; } = new Dictionary<string, List<MeshHideAsset>>();
+
+			public void UpdateMeshHideMasks()
+			{
+				foreach (SlotData sd in slotDataList)
+				{
+					if (!sd) continue;
+					//Add MeshHideAsset here
+					if (MeshHideDictionary.ContainsKey(sd.slotName))
+					{   //If this slotDataAsset is found in the MeshHideDictionary then we need to supply the SlotData with the bitArray.
+						sd.meshHideMask = MeshHideAsset.GenerateMask(MeshHideDictionary[sd.slotName]);
+					}
+				}
+			}
 
 			public bool Validate()
 			{
@@ -538,6 +653,14 @@ namespace UMA
 			public UMADnaBase[] GetAllDna()
 			{
 				if ((raceData == null) || (slotDataList == null))
+				{
+					return new UMADnaBase[0];
+				}
+				return dnaValues.ToArray();
+			}
+			public UMADnaBase[] GetDefinedDna()
+			{
+				if ((dnaValues == null) || dnaValues.Count == 0)
 				{
 					return new UMADnaBase[0];
 				}
@@ -1289,8 +1412,7 @@ namespace UMA
 			{
 				if (!KeepAvatar)
 				{
-					if (animator.avatar) UMAUtils.DestroySceneObject(animator.avatar);
-					if (animator) UMAUtils.DestroySceneObject(animator);
+					if (animator.avatar) UMAUtils.DestroyAvatar(animator.avatar);
 				}
 			}
 		}
@@ -1607,7 +1729,7 @@ namespace UMA
 		/// </summary>
 		/// <param name="umaAdditionalRecipes">Additional recipes.</param>
 		/// <param name="context">Context.</param>
-		public void AddAdditionalRecipes(UMARecipeBase[] umaAdditionalRecipes, UMAContext context)
+		public void AddAdditionalRecipes(UMARecipeBase[] umaAdditionalRecipes, UMAContextBase context)
 		{
 			if (umaAdditionalRecipes != null)
 			{

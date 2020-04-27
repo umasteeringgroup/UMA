@@ -8,6 +8,13 @@ namespace UMA
     /// </summary>
     public class UMAMaterial : ScriptableObject
     {
+        [Serializable]
+        public class ShaderParms
+        {
+            public string ParameterName;
+            public string ColorName;
+        }
+
         public enum CompressionSettings { None, Fast, HighQuality };
         public Material material;
         public MaterialType materialType = MaterialType.Atlas;
@@ -20,6 +27,14 @@ namespace UMA
         public FilterMode MatFilterMode = FilterMode.Bilinear;
         public CompressionSettings Compression = CompressionSettings.None;
 
+
+        [Tooltip("Shader parms can be used to pass colors to shaders. Each entry represents a parameter name and a color name. If neither exists, it is ignored.")]
+        public ShaderParms[] shaderParms;
+
+        [Tooltip("If this is checked, the currently assigned color will be used as the background color so edges aren't darkened.")]
+        public bool MaskWithCurrentColor;
+        [Tooltip("The current color is multiplied by this color to determine the masking color when 'MaskWithCurrentColor' is checked.")]
+        public Color maskMultiplier = Color.white;
         public enum MaterialType
         {
             Atlas = 1,
@@ -33,6 +48,7 @@ namespace UMA
             MaterialColor = 2,
             TintedTexture = 3,
             DiffuseTexture = 4,
+            DetailNormalMap = 5,
         }
 
 		static public Color GetBackgroundColor(ChannelType channelType)
@@ -48,7 +64,8 @@ namespace UMA
 			Color.grey,
 			new Color(0,0,0,0),
 			new Color(0,0,0,0),
-			new Color(0,0,0,0)
+			new Color(0,0,0,0),
+			new Color(1,0.5f,1,0.5f)
 		};
 
         [Serializable]
@@ -62,6 +79,7 @@ namespace UMA
             [Range(0,4)]
             public int DownSample;
             public bool ConvertRenderTexture;
+            public bool NonShaderTexture;
        }
 
 #if UNITY_EDITOR
@@ -102,8 +120,8 @@ namespace UMA
             {
 				if (this.material.name != material.material.name)
 					return false;
-				if (this.material.shader != material.material.shader)
-					return false;
+				//if (this.material.shader != material.material.shader)
+				//	return false;
                 if (this.material.renderQueue != material.material.renderQueue)
                     return false;
 				if (this.materialType != material.materialType)

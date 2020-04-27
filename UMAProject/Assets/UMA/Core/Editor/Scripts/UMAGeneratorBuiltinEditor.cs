@@ -15,7 +15,7 @@ namespace UMA.Editors
 		SerializedProperty processAllPending;
 
 #pragma warning disable 0108
-		public void OnEnable()
+		public override void OnEnable()
 		{
 			base.OnEnable();
 			textureMerge = serializedObject.FindProperty("textureMerge");

@@ -66,6 +66,9 @@ namespace UMA.Editors
 					if (path.Length != 0)
 					{
 						var staticMesh = new Mesh();
+#if UMA_32BITBUFFERS
+				staticMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+#endif
 						avatar.umaData.GetRenderer(0).BakeMesh(staticMesh);
 						FileUtils.WriteAllText(path, MeshToString(staticMesh, avatar.umaData.GetRenderer(0).sharedMaterials));
 						UMAUtils.DestroySceneObject(staticMesh);

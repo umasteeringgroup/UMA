@@ -18,7 +18,20 @@ namespace UMA
 		private static bool ranOnce = false;
         private static bool showIndexedTypes = false;
         private static bool showUnindexedTypes = true;
+		public  static string umaDefaultLabel = "UMA_Default";
+
+		private const string umaDefaultLabelKey = "UMA_DEFAULTLABEL";
 		private const string umaHotkeyWord = "UMA_HOTKEYS";
+		private const string umaLocation = "RelativeUMA";
+		private const string DefineSymbol_32BitBuffers = "UMA_32BITBUFFERS";
+		private const string DefineSymbol_Addressables = "UMA_ADDRESSABLES";
+		public const string ConfigToggle_UseSharedGroup = "UMA_ADDRESSABLES_USE_SHARED_GROUP";
+		public const string ConfigToggle_ArchiveGroups = "UMA_ADDRESSABLES_ARCHIVE_ASSETBUNDLE_GROUPS";
+
+		public const string ConfigToggle_AddCollectionLabels = "UMA_SHAREDGROUP_ADDCOLLECTIONLABELS";
+		public const string ConfigToggle_IncludeRecipes = "UMA_SHAREDGROUP_INCLUDERECIPES";
+		public const string ConfigToggle_IncludeOther = "UMA_SHAREDGROUP_INCLUDEOTHERINDEXED";
+		private static string DNALocation = "UMA/";
 
         static UMAEditorUtilities()
         {
@@ -29,6 +42,7 @@ namespace UMA
 		{
 			if (!ranOnce)
 			{
+				FriendlyNames = new Dictionary<Type, string>();
 				FriendlyNames.Add(typeof(SlotDataAsset), "Slot");
 				FriendlyNames.Add(typeof(OverlayDataAsset), "Overlay");
 				FriendlyNames.Add(typeof(RaceData), "Race");
@@ -68,7 +82,18 @@ namespace UMA
         {
             // Preferences GUI
             bool newshowIndexedTypes = EditorGUILayout.Toggle("Show Indexed Types", showIndexedTypes);
-            showUnindexedTypes = EditorGUILayout.Toggle("Also Show Unindexed Types", showUnindexedTypes);
+            showUnindexedTypes = EditorGUILayout.Toggle("Show Unindexed Types", showUnindexedTypes);
+
+			if (!PlayerPrefs.HasKey(umaLocation))
+			{
+				PlayerPrefs.SetString(umaLocation, DNALocation);
+			}
+			string umaloc = PlayerPrefs.GetString(umaLocation);
+			string newUmaLoc = EditorGUILayout.DelayedTextField("Relative UMA Location", umaloc);
+			if (umaloc != newUmaLoc)
+			{
+				PlayerPrefs.SetString(umaLocation, newUmaLoc);
+			}
 
             // Save the preferences
             if (newshowIndexedTypes != showIndexedTypes)
@@ -82,11 +107,107 @@ namespace UMA
             }
 
 
+
+			EditorGUI.BeginChangeCheck();
+			var defineSymbols = new HashSet<string>(PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup).Split(';'));
+			DefineSymbolToggle(defineSymbols, DefineSymbol_32BitBuffers, "Use 32bit buffers", "This allows meshes bigger than 64k vertices");
+			GUILayout.BeginHorizontal();
+			DefineSymbolToggle(defineSymbols, DefineSymbol_Addressables, "Use Addressables", "This activates the code that loads from asset bundles using addressables. Toggling this will cause a recompile.");
+			GUILayout.Label("Toggling will cause a recompile");
+			GUILayout.EndHorizontal();
+#if !UMA_ADDRESSABLES
+			GUILayout.Label("Addressables package MUST be installed before enabling this option!",EditorStyles.boldLabel);
+#endif
+			if (EditorGUI.EndChangeCheck())
+			{
+				PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, string.Join(";", defineSymbols));
+			}
+
+
+			GUI.enabled =
+#if UMA_ADDRESSABLES
+				true;
+#else
+				false;
+#endif
+
+#if UMA_ADDRESSABLES
+			EditorGUILayout.Space();
+			EditorGUILayout.LabelField("Addressables Options",EditorStyles.boldLabel);
+			EditorGUILayout.Space();
+#else
+			EditorGUILayout.Space();
+			EditorGUILayout.LabelField("Addressables Options (Not Enabled)", EditorStyles.boldLabel);
+			EditorGUILayout.Space();
+#endif
+			// No longer needed... This is now down using different plugins.
+			//ConfigToggle(ConfigToggle_UseSharedGroup, "Use Shared Group", "Add all Addressables to the same Shared Group.", true);
+			// This is managed by the addressables system
+			//ConfigToggle(ConfigToggle_ArchiveGroups, "Archive Groups", "For now just copies the assetbundles into folders with the group name.", false);
+			
+			GUILayout.Label("Shared Group Generation");
+			GUILayout.Label("By default, Slots, Overlays and Textures are included.",EditorStyles.miniLabel);
+
+			ConfigToggle(ConfigToggle_AddCollectionLabels, "Add Collection Labels","Scan through Wardrobe Collections for recipes, and also label them with the collection label", false);
+			string currentLabel = PlayerPrefs.GetString(umaDefaultLabelKey, umaDefaultLabel);
+			string newUmaLabel = EditorGUILayout.DelayedTextField("Default UMA Label", currentLabel);
+			if (newUmaLabel != umaDefaultLabel)
+			{
+				PlayerPrefs.SetString(umaDefaultLabelKey, newUmaLabel);
+			}
+			GUILayout.Label("Note: If you include recipes or other items, you will need to manually load them using LoadLabelList!", EditorStyles.miniLabel);
+			ConfigToggle(ConfigToggle_IncludeRecipes, "Include Recipes", "Include recipes in shared group generation", false);
+			ConfigToggle(ConfigToggle_IncludeOther, "Include all other types", "Include all other types in index in shared group generation", false);
+
+			GUI.enabled = true;
             if (GUI.changed)
             {
                 EditorApplication.RepaintProjectWindow();
             }
         }
+
+		public static string GetDefaultAddressableLabel()
+		{
+			return PlayerPrefs.GetString(umaDefaultLabelKey,umaDefaultLabel);
+		}
+
+		public static bool IsAddressable()
+		{
+			return GetConfigValue(DefineSymbol_Addressables, false);
+		}
+
+		private static void ConfigToggle(string toggleId, string text, string tooltip, bool defaultValue)
+		{
+			var toggle = GetConfigValue(toggleId, defaultValue);
+			if (EditorGUILayout.Toggle(new GUIContent(text, tooltip), toggle) != toggle)
+			{
+				SetConfigValue(toggleId, !toggle);
+			}
+		}
+
+		private static void SetConfigValue(string toggleId, bool value)
+		{
+			//TODO: obviously not the right place!
+			EditorPrefs.SetBool(toggleId, value);
+		}
+
+		public static bool GetConfigValue(string toggleId, bool defaultValue)
+		{
+			//TODO: obviously not the right place!
+			return EditorPrefs.GetBool(toggleId, defaultValue);
+		}
+
+		private static void DefineSymbolToggle(HashSet<string> defineSymbols, string defineSymbol, string text, string tooltip)
+		{
+			if (EditorGUILayout.Toggle(new GUIContent(text, tooltip), defineSymbols.Contains(defineSymbol)))
+			{
+				defineSymbols.Add(defineSymbol);
+			}
+			else
+			{
+				defineSymbols.Remove(defineSymbol);
+			}
+		}
 
         private static void DrawItems(string guid, Rect selectionRect)
         {
@@ -176,11 +297,11 @@ namespace UMA
             }
         }
 
-#if UNITY_2018_4_OR_NEWER || UNITY_2019_1_OR_NEWER 
+#if UNITY_2018_4_OR_NEWER || UNITY_2019_1_OR_NEWER
 		[MenuItem("UMA/Update asmdef files from project")]
 		public static void FixupAsmdef()
 		{
-#if UNITY_2019_1_OR_NEWER  
+#if UNITY_2019_1_OR_NEWER
 			RenameFiles(".asmdef2019", ".asmdef");
 #else
 			RenameFiles(".asmdef20184", ".asmdef");
@@ -206,6 +327,82 @@ namespace UMA
 			EditorUtility.DisplayDialog("Complete", "Asmdef files are in place.", "OK");
 		}
 #endif
+
+
+		[MenuItem("UMA/SRP/Convert to URP (LWRP)")]
+		static void ConvertToURP()
+		{
+			if (EditorUtility.DisplayDialog("Convert?", "Convert UMA Materials from Standard to URP. You should run the Unity option to convert your project to URP/LWRP in addition to running this option. Continue?", "OK", "Cancel"))
+			{
+				if (ConvertUMAMaterials("_MainTex", "_BaseMap"))
+				{
+					EditorUtility.DisplayDialog("Convert",
+						"UMAMaterials converted. You will need to run the unity URP (LWRP) conversion utility to convert your materials if you have not already done this.", "OK");
+				}
+				else
+				{
+					EditorUtility.DisplayDialog("Convert", "No UMAMaterials needed to be converted.", "OK");
+				}
+
+			}
+		}
+
+		[MenuItem("UMA/SRP/Convert to Standard from URP (LWRP)")]
+		static void ConvertToStandard()
+		{
+			if (EditorUtility.DisplayDialog("Convert?", "Convert UMAMaterials to Standard from URP. You will need to manually fix the template materials. Continue?", "OK", "Cancel"))
+			{
+				if (ConvertUMAMaterials("_BaseMap", "_MainTex"))
+				{
+					EditorUtility.DisplayDialog("Convert", "UMAMaterials converted. You will need to manually fix the template materials by changing them to use the correct shaders if you modified them.", "OK");
+				}
+				else
+				{
+					EditorUtility.DisplayDialog("Convert", "No UMAMaterials needed to be converted.", "OK");
+				}
+			}
+		}
+
+		/// <summary>
+		/// Convertes all UMAMaterial channel Material Property names if they match.
+		/// </summary>
+		/// <param name="From"></param>
+		/// <param name="To"></param>
+		/// <returns></returns>
+		static bool ConvertUMAMaterials(string From, string To)
+		{
+			string[] guids = AssetDatabase.FindAssets("t:UMAMaterial");
+
+			int dirtycount = 0;
+			foreach (string guid in guids)
+			{
+				bool matModified = false;
+				string path = AssetDatabase.GUIDToAssetPath(guid);
+				UMAMaterial umat = AssetDatabase.LoadAssetAtPath<UMAMaterial>(path);
+				if (umat.material.shader.name.ToLower().StartsWith("standard") || umat.material.shader.name.ToLower().Contains("lit"))
+				{
+					for (int i = 0; i < umat.channels.Length; i++)
+					{
+						if (umat.channels[i].materialPropertyName == From)
+						{
+							umat.channels[i].materialPropertyName = To;
+							matModified = true;
+						}
+					}
+				}
+				if (matModified)
+				{
+					dirtycount++;
+					EditorUtility.SetDirty(umat);
+				}
+			}
+			if (dirtycount > 0)
+			{
+				AssetDatabase.SaveAssets();
+				return true;
+			}
+			return false;
+		}
 
 #if UMA_HOTKEYS
 		[MenuItem("UMA/Toggle Hotkeys (enabled)",priority =30)]
@@ -247,7 +444,7 @@ namespace UMA
 				mySlot.AddOverlay(myOverlay);
 			}
 			recipe.SetSlot(0, mySlot);
-			asset.Save(recipe, UMAContext.Instance);
+			asset.Save(recipe, UMAContextBase.Instance);
 			asset.DisplayValue = slotName;
 
 			// Write the asset to disk

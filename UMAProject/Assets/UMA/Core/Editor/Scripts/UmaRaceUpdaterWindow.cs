@@ -31,14 +31,14 @@ namespace UMA.Editors
 		public RaceData Race;
 		public UMAMaterial Material;
 		private UMAData.UMARecipe Recipe;
-		private UMAContext Context;
+		private UMAContextBase Context;
 		private List<CheckedSlot> Slots = new List<CheckedSlot>();
 
 		//private List<CheckedMaterial> Materials = new List<CheckedMaterial>();
 
 		void Refresh()
 		{
-			Context = UMAContext.FindInstance();
+			Context = UMAContextBase.Instance;
 			if( Context == null)
 			{
 				EditorUtility.DisplayDialog("Error", "There is no UMA Context in the current scene!", "OK");

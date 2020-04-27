@@ -91,6 +91,9 @@ namespace UMA
 
 		public override OverlayData InstantiateOverlay(string name)
 		{
+#if SUPER_LOGGING
+			Debug.Log("Instantiating overlay: " + name);
+#endif
 			var res = Internal_InstantiateOverlay(UMAUtils.StringToHash(name));
 			if (res == null)
 			{
@@ -111,6 +114,9 @@ namespace UMA
 
 		public override OverlayData InstantiateOverlay(string name, Color color)
 		{
+#if SUPER_LOGGING
+			Debug.Log("Instantiating overlay: " + name);
+#endif
 			var res = Internal_InstantiateOverlay(UMAUtils.StringToHash(name));
 			if (res == null)
 			{

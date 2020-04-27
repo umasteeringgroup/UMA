@@ -1,13 +1,17 @@
-﻿using UnityEngine;
+﻿// #define PRELOAD_ALL_RACES
+
+using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using UMA.Examples;
+#if UMA_ADDRESSABLES
+using UnityEngine.AddressableAssets;
+#endif
 
 namespace UMA.CharacterSystem.Examples
 {
     public class SampleCode : MonoBehaviour
     {
-
         public DynamicCharacterAvatar Avatar;
         public GameObject SlotPrefab;
         public GameObject WardrobePrefab;
@@ -21,21 +25,148 @@ namespace UMA.CharacterSystem.Examples
         public GameObject ColorsHelpText;
         public GameObject DnaHelpText;
         public GameObject AvatarPrefab;
-        public MouseOrbitImproved Orbiter;
+		public GameObject NoBuildPrefab;
+		public MouseOrbitImproved Orbiter;
         public SharedColorTable HairColor;
         public SharedColorTable SkinColor;
         public SharedColorTable EyesColor;
         public SharedColorTable ClothingColor;
+		public Dropdown RaceDropdown;
+		public GameObject CharacterUI;
+        public bool PreloadAndUnload;
+        public Slider TestSlider;
+        public UMAWardrobeCollection CollectionToAdd;
+
+		private List<RaceData> races;
+
+		public void Start()
+		{
+			UMAAssetIndexer index = UMAAssetIndexer.Instance;
+            races = index.GetAllAssets<RaceData>();
+#if UMA_ADDRESSABLES
+            // Preload all the races.
+            List<string> labels = new List<string>();
+            labels.Add("UMA_Recipes");
+
+            // Because of a bug in the current addressables implementation (crashes if you pass a
+            // label that doesn't exist), we'll need to check first to see if they are there.
+            // If so, they'll need to be loaded first, so they can be sorted into the availablerecipes. 
+            // Your app will know this in advance, and know whether to just call 
+            // LoadLabelList. 
+            // But since we don't know that for this sample, we'll check for resource locators, which
+            // doesn't crash.
+
+            var op = Addressables.LoadResourceLocationsAsync("UMA_Recipes");
+
+            if (op.Result != null && op.Result.Count > 1)
+            {
+                var recipeOp = UMAAssetIndexer.Instance.LoadLabelList(labels, true); // Load the recipes!
+                recipeOp.Completed += Recipes_Loaded;
+            }
+
+            if (RaceDropdown != null)
+            {
+
+                RaceDropdown.options.Clear();
+                foreach (RaceData race in races)
+                {
+                    RaceDropdown.options.Add(new Dropdown.OptionData(race.raceName));
+                }
+            }
+            else
+            {
+                if (PreloadAndUnload)
+                {
+                    var asyncop = UMAAssetIndexer.Instance.Preload(races, true); // Base races will always be loaded.
+                    asyncop.Completed += Asyncop_Completed;
+                }
+            }
+#else
+            Avatar.gameObject.SetActive(true);
+            if (RaceDropdown != null)
+            {
+
+                RaceDropdown.options.Clear();
+                foreach (RaceData race in races)
+                {
+                    RaceDropdown.options.Add(new Dropdown.OptionData(race.raceName));
+                }
+            }
+#endif
+        }
+
+#if UMA_ADDRESSABLES
+        private void Recipes_Loaded(UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<IList<Object>> obj)
+		{
+            Debug.Log("Recipes loaded: " + obj.Status.ToString());
+            Avatar.gameObject.SetActive(true);
+		}
+
+        private void Asyncop_Completed(UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<IList<Object>> obj)
+        {
+            //Debug.Log("Race Preload Completed.");
+            // Preload any default wardrobe items on our avatar, now that the races are preloaded.
+            UMAAssetIndexer.Instance.Preload(Avatar, false).Completed += Avatar_Completed;
+        }
+        private void Avatar_Completed(UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<IList<Object>> obj)
+		{
+            // Ready to go, enable the character and build it.
+            //Debug.Log("Avatar preload completed.");
+            Avatar.gameObject.SetActive(true);
+            // Avatar.BuildCharacter();
+            Avatar.BuildCharacterEnabled = true;
+            //  Avatar.ChangeRace(Avatar.RacePreset);
+        }
+
+        public void DestroyAvatar()
+        {
+            Destroy(Avatar.gameObject);
+        }
+
+        public void PreloadDNA()
+        {
+            Avatar.predefinedDNA = new UMAPredefinedDNA();
+            Avatar.predefinedDNA.AddDNA("feetSize", 1.0f);
+            Avatar.BuildCharacter(false);
+        }
+#endif
+
+        public void SliderChange(float value)
+        {
+            int index = System.Convert.ToInt32(value);
+            List<UMATextRecipe> theRecipes = Avatar.AvailableRecipes["Legs"];
+            if (theRecipes.Count == 0) return;
+            if (theRecipes.Count >= TestSlider.maxValue) 
+                TestSlider.maxValue = theRecipes.Count - 1;
+            if (index > (theRecipes.Count - 1))
+                index = theRecipes.Count - 1;
+
+            Avatar.SetSlot(theRecipes[index]);
+            Avatar.BuildCharacter();
+        }
+
 
         /// <summary>
-        /// Remove any controls from the panels
+        /// Unloads all loaded items.
         /// </summary>
-        private void Cleanup()
+        /// <param name="force"></param>
+        public void UnloadAllItems(bool force)
+		{
+#if UMA_ADDRESSABLES
+			UMAAssetIndexer.Instance.UnloadAll(force);
+#endif
+            Resources.UnloadUnusedAssets();
+		}
+
+		/// <summary>
+		/// Remove any controls from the panels
+		/// </summary>
+		private void Cleanup()
         {
-            GeneralHelpText.SetActive(false);
-            DnaHelpText.SetActive(false);
-            WardrobeHelpText.SetActive(false);
-            ColorsHelpText.SetActive(false);
+			if (GeneralHelpText != null) GeneralHelpText.SetActive(false);
+			if (DnaHelpText != null) DnaHelpText.SetActive(false);
+			if (WardrobeHelpText != null) WardrobeHelpText.SetActive(false);
+			if (ColorsHelpText != null) ColorsHelpText.SetActive(false);
 
             foreach (Transform t in SlotPanel.transform)
             {
@@ -168,8 +299,35 @@ namespace UMA.CharacterSystem.Examples
             }
         }
 
+        public void DumpData()
+        {
+#if UMA_ADDRESSABLES
+           foreach (var r in Addressables.ResourceLocators)
+            {
+                Debug.Log("Resource locator r = " + r.LocatorId);
+                foreach(var k in r.Keys)
+                {
+                    Debug.Log(k.ToString());
+                }
+            }
+#endif
+        }
+
         public SharedColorTable SkinColors;
         public SharedColorTable HairColors;
+
+        public void CreateFromPrefab()
+        {
+            float x = Random.Range(-8.0f, 8.0f);
+            float z = Random.Range(1.0f, 12.0f);
+            GameObject go = GameObject.Instantiate(AvatarPrefab);
+            DynamicCharacterAvatar dca = go.GetComponent<DynamicCharacterAvatar>();
+            dca.SetSlot(CollectionToAdd);
+            go.transform.localPosition = new Vector3(x, 0, z);
+            go.SetActive(true);
+        }
+
+
 
         public void DynamicCreateClick()
         {
@@ -178,17 +336,60 @@ namespace UMA.CharacterSystem.Examples
             float z = Random.Range(1.0f, 12.0f);
             GameObject go = GameObject.Instantiate(AvatarPrefab);
             DynamicCharacterAvatar dca = go.GetComponent<DynamicCharacterAvatar>();
-    #if false
+#if false
             // this shows how to load it from a string at initialization
             TextAsset t = Resources.Load<TextAsset>("CharacterRecipes/Bob");
             dca.Preload(t.text);
-    #else
+#else
             // this shows how to load it from a resource file at initialization
             dca.loadPathType = DynamicCharacterAvatar.loadPathTypes.CharacterSystem;
             dca.loadFilename = files[Random.Range(0, 3)];
-    #endif
+#endif
             go.transform.localPosition = new Vector3(x, 0, z);
             go.SetActive(true);
+        }
+
+        public void SetRawColorTest()
+        {
+            OverlayColorData ColorData = Avatar.GetColor("HairColor");
+            ColorData.channelMask[0] = new Color(1f, 1f, 1f, 1f);
+            ColorData.channelAdditiveMask[0] = new Color(1f, 0f, 0f, 0f);
+            Avatar.SetRawColor("HairColor", ColorData, true);
+        }
+
+        public void ChangeRace(int index)
+		{
+			if (Avatar.gameObject.activeSelf)
+			{
+#if UMA_ADDRESSABLES
+                if (PreloadAndUnload)
+                {
+                    UMAAssetIndexer.Instance.UnloadAll(true);
+                }
+#endif
+                string race = RaceDropdown.options[index].text;
+                Avatar.ChangeRace(race);
+            }
+            else
+            {
+                string race = RaceDropdown.options[index].text;
+                Avatar.RacePreset = race;
+            }
+#if UMA_ADDRESSABLES
+            if (PreloadAndUnload)
+            {
+                var asyncop = UMAAssetIndexer.Instance.Preload(Avatar, false);
+                asyncop.Completed += Avatar_Completed;
+            }
+            else
+            {
+                Avatar.gameObject.SetActive(true);
+                Avatar.BuildCharacterEnabled = true;
+            }
+#else
+            Avatar.gameObject.SetActive(true);
+            Avatar.BuildCharacterEnabled = true;
+#endif
         }
 
         public void ChangeSex()

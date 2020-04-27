@@ -53,22 +53,37 @@ namespace UMA
 				return;
 
 			DynamicDNADictionary = new Dictionary<string, DynamicUMADnaAsset>();
-#if UNITY_EDITOR
-			var allDNAAssetsGUIDs = UnityEditor.AssetDatabase.FindAssets("t:DynamicUMADnaAsset");
-			for (int i = 0; i < allDNAAssetsGUIDs.Length; i++)
+
+			List<DynamicUMADnaAsset> AllDNA = UMAContext.Instance.GetAllDNA();
+			foreach (DynamicUMADnaAsset uda in AllDNA)
 			{
-				var thisDNAPath = UnityEditor.AssetDatabase.GUIDToAssetPath(allDNAAssetsGUIDs [i]);
-				var thisDNAAsset = UnityEditor.AssetDatabase.LoadAssetAtPath<DynamicUMADnaAsset>(thisDNAPath);
-				DynamicDNADictionary.Add(thisDNAAsset.name, thisDNAAsset);
+				DynamicDNADictionary.Add(uda.name, uda);
 			}
-#else
-			DynamicUMADnaAsset[] foundAssets = Resources.LoadAll<DynamicUMADnaAsset>("");
-			for (int i = 0; i < foundAssets.Length; i++)
-			{
-				var thisDNAAsset = foundAssets[i];
-				DynamicDNADictionary.Add(thisDNAAsset.name, thisDNAAsset);
-			}
-#endif
+
+			return;
+
+			/*
+						string umaloc = PlayerPrefs.GetString("RelativeUMA","UMA/");
+
+						DynamicDNADictionary = new Dictionary<string, DynamicUMADnaAsset>();
+			#if UNITY_EDITOR
+						var allDNAAssetsGUIDs = UnityEditor.AssetDatabase.FindAssets("t:DynamicUMADnaAsset");
+						for (int i = 0; i < allDNAAssetsGUIDs.Length; i++)
+						{
+							var thisDNAPath = UnityEditor.AssetDatabase.GUIDToAssetPath(allDNAAssetsGUIDs [i]);
+							var thisDNAAsset = UnityEditor.AssetDatabase.LoadAssetAtPath<DynamicUMADnaAsset>(thisDNAPath);
+							DynamicDNADictionary.Add(thisDNAAsset.name, thisDNAAsset);
+						}
+			#else
+
+						DynamicUMADnaAsset[] foundAssets = Resources.LoadAll<DynamicUMADnaAsset>(umaloc);
+						for (int i = 0; i < foundAssets.Length; i++)
+						{
+							var thisDNAAsset = foundAssets[i];
+							DynamicDNADictionary.Add(thisDNAAsset.name, thisDNAAsset);
+						}
+			#endif
+			*/
 		}
 
 		public static void DefineDynamicDNAType(DynamicUMADnaAsset asset)
@@ -111,6 +126,13 @@ namespace UMA
 		/// <param name="dnaAssetName"></param>
 		public virtual void FindMissingDnaAsset(string dnaAssetName)
 		{
+			_dnaAsset = UMAContext.Instance.GetDNA(dnaAssetName);
+			if (_dnaAsset == null)
+			{
+				if (Debug.isDebugBuild)
+					Debug.LogWarning("DynamicUMADnaBase could not find DNAAsset " + dnaAssetName + "!");
+			}
+			/*
 			InitializeDynamicDNADictionary();
 
 			if (!DynamicDNADictionary.TryGetValue(dnaAssetName, out _dnaAsset))
@@ -118,6 +140,7 @@ namespace UMA
 				if (Debug.isDebugBuild)
 					Debug.LogWarning("DynamicUMADnaBase could not find DNAAsset " + dnaAssetName + "!");
 			}
+			*/
 		}
 
 		public virtual void SetMissingDnaAsset(DynamicUMADnaAsset[] foundAssets)

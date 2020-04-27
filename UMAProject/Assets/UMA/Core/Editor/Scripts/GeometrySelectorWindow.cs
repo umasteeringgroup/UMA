@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEditor;
 using UnityEngine.SceneManagement;
 using UnityEditor.SceneManagement;
@@ -538,6 +538,10 @@ namespace UMA.Editors
                 if (isSelecting)
                 {
                     isSelecting = false;
+                    Rect screenSelectionRect = new Rect();
+                    screenSelectionRect.min = HandleUtility.GUIPointToScreenPixelCoordinate(new Vector2(selectionRect.xMin, selectionRect.yMax));
+                    screenSelectionRect.max = HandleUtility.GUIPointToScreenPixelCoordinate(new Vector2(selectionRect.xMax, selectionRect.yMin));
+
 
                     int[] triangles = _Source.meshAsset.asset.meshData.submeshes[0].triangles;
                     for(int i = 0; i < triangles.Length; i+=3 )
@@ -558,9 +562,8 @@ namespace UMA.Editors
                             centerNormal += normal;
 
                             vertex = SceneView.currentDrawingSceneView.camera.WorldToScreenPoint(vertex);
-                            vertex.y = SceneView.currentDrawingSceneView.camera.pixelHeight - vertex.y;
 
-                            if (selectionRect.Contains( vertex ))
+                            if (screenSelectionRect.Contains( vertex ))
                             {
                                 if (backfaceCull)
                                 {
@@ -575,8 +578,7 @@ namespace UMA.Editors
                         center = center / 3;
                         centerNormal = centerNormal / 3;
                         center = SceneView.currentDrawingSceneView.camera.WorldToScreenPoint(center);
-                        center.y = SceneView.currentDrawingSceneView.camera.pixelHeight - center.y;
-                        if (selectionRect.Contains(center))
+                        if (screenSelectionRect.Contains(center))
                         {
                             if (backfaceCull)
                             {

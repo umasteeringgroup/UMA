@@ -32,7 +32,7 @@ namespace UMA.CharacterSystem
 		[Tooltip("If true will automatically scan and add all UMATextRecipes from any downloaded bundles.")]
 		public bool addAllRecipesFromDownloadedBundles = true;
 		[HideInInspector]
-		public UMAContext context;
+		public UMAContextBase context;
 		//This is a ditionary of asset bundles that were loaded into the library. This can be queried to store a list of active assetBundles that might be useful to preload etc
 		public Dictionary<string, List<string>> assetBundlesUsedDict = new Dictionary<string, List<string>>();
 		[System.NonSerialized]
@@ -67,12 +67,12 @@ namespace UMA.CharacterSystem
 			}
 			if (context == null)
 			{
-				context = UMAContext.FindInstance();
+				context = UMAContextBase.Instance;
 			}
 			isInitializing = true;
 
 			Recipes.Clear();
-			var possibleRaces = (context.raceLibrary as DynamicRaceLibrary).GetAllRaces();
+			var possibleRaces = context.GetAllRaces();
 			for (int i = 0; i < possibleRaces.Length; i++)
 			{
 				//we need to check that this is not null- the user may not have downloaded it yet
@@ -121,7 +121,7 @@ namespace UMA.CharacterSystem
 				Refresh(false, "");
 				return;
 			}
-			var possibleRaces = (context.raceLibrary as DynamicRaceLibrary).GetAllRacesBase();
+			var possibleRaces = context.GetAllRacesBase();
 			for (int i = 0; i < possibleRaces.Length; i++)
 			{
 				if (!Recipes.ContainsKey(possibleRaces[i].raceName) && possibleRaces[i].raceName != "RaceDataPlaceholder")
@@ -156,11 +156,11 @@ namespace UMA.CharacterSystem
 			RaceData[] possibleRaces = new RaceData[0];
 			if (forceUpdateRaceLibrary)
 			{
-				possibleRaces = context.raceLibrary.GetAllRaces();//if any new races are added by this then RaceLibrary will Re-Trigger this if there was anything new so dont do anything else
+				possibleRaces = context.GetAllRaces();//if any new races are added by this then RaceLibrary will Re-Trigger this if there was anything new so dont do anything else
 			}
 			else
 			{
-				possibleRaces = (context.raceLibrary as DynamicRaceLibrary).GetAllRacesBase();
+				possibleRaces = context.GetAllRacesBase();
 				for (int i = 0; i < possibleRaces.Length; i++)
 				{
 					//we need to check that this is not null- the user may not have downloaded it yet
@@ -346,7 +346,7 @@ namespace UMA.CharacterSystem
 						{
 							//here we also need to check that the race itself has a wardrobe slot that matches the one in the compatible race
 							//11012017 Dont trigger backwards compatible races to download
-							RaceData raceKeyRace = (context.raceLibrary as DynamicRaceLibrary).GetRace(racekey, false);
+							RaceData raceKeyRace = context.GetRace(racekey);
 							if (raceKeyRace == null)
 								continue;
 							if (raceKeyRace.IsCrossCompatibleWith(u.compatibleRaces[i]) && (raceKeyRace.wardrobeSlots.Contains(thisWardrobeSlot) || thisWardrobeSlot == "WardrobeCollection"))

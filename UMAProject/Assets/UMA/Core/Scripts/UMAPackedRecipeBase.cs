@@ -14,20 +14,20 @@ namespace UMA
 		/// </summary>
 		/// <param name="umaRecipe">UMA recipe.</param>
 		/// <param name="context">Context.</param>
-		public override void Load(UMA.UMAData.UMARecipe umaRecipe, UMAContext context)
+		public override void Load(UMA.UMAData.UMARecipe umaRecipe, UMAContextBase context)
 		{
 			var packedRecipe = PackedLoad(context);
 			UnpackRecipe(umaRecipe, packedRecipe, context);
 		}
 
-		public static UMAData.UMARecipe UnpackRecipe(UMAPackRecipe umaPackRecipe, UMAContext context)
+		public static UMAData.UMARecipe UnpackRecipe(UMAPackRecipe umaPackRecipe, UMAContextBase context)
 		{
 			UMAData.UMARecipe umaRecipe = new UMAData.UMARecipe();
 			UnpackRecipe(umaRecipe, umaPackRecipe, context);
 			return umaRecipe;
 		}
 
-		public static void UnpackRecipe(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContext context)
+		public static void UnpackRecipe(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContextBase context)
 		{
 			switch (umaPackRecipe.version)
 			{
@@ -54,7 +54,7 @@ namespace UMA
 		/// </summary>
 		/// <param name="umaRecipe">UMA recipe.</param>
 		/// <param name="context">Context.</param>
-		public override void Save(UMA.UMAData.UMARecipe umaRecipe, UMAContext context)
+		public override void Save(UMA.UMAData.UMARecipe umaRecipe, UMAContextBase context)
 		{
 			umaRecipe.MergeMatchingOverlays();
 			var packedRecipe = PackRecipeV3(umaRecipe);
@@ -66,14 +66,14 @@ namespace UMA
 		/// </summary>
 		/// <returns>The UMAPackRecipe.</returns>
 		/// <param name="context">Context.</param>
-		public abstract UMAPackRecipe PackedLoad(UMAContext context);
+		public abstract UMAPackRecipe PackedLoad(UMAContextBase context);
 
 		/// <summary>
 		/// Serialize the packed recipe.
 		/// </summary>
 		/// <param name="packedRecipe">Packed recipe.</param>
 		/// <param name="context">Context.</param>
-		public abstract void PackedSave(UMAPackRecipe packedRecipe, UMAContext context);
+		public abstract void PackedSave(UMAPackRecipe packedRecipe, UMAContextBase context);
 
 		#region Packing Related
 
@@ -203,13 +203,14 @@ namespace UMA
 		{
 			public string id;
 			public int colorIdx;
-			public int[] rect;
-			#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
+			// public int[] rect;
+			public float[] rect;
+#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 			public PackedOverlaySubstanceData[] data;
-            #endif
+#endif
 		}
 
-		#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
+#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 		[System.Serializable]
 		public class PackedOverlaySubstanceData
 		{
@@ -338,7 +339,7 @@ namespace UMA
 				}
 			}
 		}
-        #endif
+#endif
 
 		[System.Serializable]
 		public class PackedOverlayColorDataV3
@@ -634,13 +635,19 @@ namespace UMA
 
 						OverlayData overlayData = umaRecipe.slotDataList[i].GetOverlay(overlayIdx);
 						tempPackedOverlay.id = overlayData.overlayName;
-						tempPackedOverlay.rect = new int[4];
-						tempPackedOverlay.rect[0] = Mathf.FloorToInt(overlayData.rect.x);
-						tempPackedOverlay.rect[1] = Mathf.FloorToInt(overlayData.rect.y);
-						tempPackedOverlay.rect[2] = Mathf.FloorToInt(overlayData.rect.width);
-						tempPackedOverlay.rect[3] = Mathf.FloorToInt(overlayData.rect.height);
-
-						#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
+						/*
+												tempPackedOverlay.rect = new int[4];
+												tempPackedOverlay.rect[0] = Mathf.FloorToInt(overlayData.rect.x);
+												tempPackedOverlay.rect[1] = Mathf.FloorToInt(overlayData.rect.y);
+												tempPackedOverlay.rect[2] = Mathf.FloorToInt(overlayData.rect.width);
+												tempPackedOverlay.rect[3] = Mathf.FloorToInt(overlayData.rect.height);
+						*/
+						tempPackedOverlay.rect = new float[4];
+						tempPackedOverlay.rect[0] = overlayData.rect.x;
+						tempPackedOverlay.rect[1] = overlayData.rect.y;
+						tempPackedOverlay.rect[2] = overlayData.rect.width;
+						tempPackedOverlay.rect[3] = overlayData.rect.height;
+#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 						if (overlayData.isProcedural && (overlayData.proceduralData != null))
 						{
 							tempPackedOverlay.data = new PackedOverlaySubstanceData[overlayData.proceduralData.Length];
@@ -649,7 +656,7 @@ namespace UMA
 								tempPackedOverlay.data[dataIdx] = new PackedOverlaySubstanceData(overlayData.proceduralData[dataIdx]);
 							}
 						}
-                        #endif
+#endif
 
 						OverlayColorData colorData = overlayData.colorData;
 						int colorIndex = -1;
@@ -684,7 +691,7 @@ namespace UMA
 			return umaPackRecipe;
 		}
 
-		public static bool UnpackRecipeVersion1(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContext context)
+		public static bool UnpackRecipeVersion1(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContextBase context)
 		{
 			if (!UMAPackRecipe.ArrayHasData(umaPackRecipe.packedSlotDataList))
 				return false;
@@ -791,14 +798,14 @@ namespace UMA
 			return UnpackedDNA;
 		}
 
-		public static UMAData.UMARecipe UnpackRecipeVersion2(UMAPackRecipe umaPackRecipe, UMAContext context)
+		public static UMAData.UMARecipe UnpackRecipeVersion2(UMAPackRecipe umaPackRecipe, UMAContextBase context)
 		{
 			UMAData.UMARecipe umaRecipe = new UMAData.UMARecipe();
 			UnpackRecipeVersion2(umaRecipe, umaPackRecipe, context);
 			return umaRecipe;
 		}
 
-		public static void UnpackRecipeVersion2(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContext context)
+		public static void UnpackRecipeVersion2(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContextBase context)
 		{
 			umaRecipe.slotDataList = new SlotData[umaPackRecipe.slotsV2.Length];
 			umaRecipe.SetRace(context.GetRace(umaPackRecipe.race));
@@ -882,14 +889,14 @@ namespace UMA
 			}
 		}
 
-		public static UMAData.UMARecipe UnpackRecipeVersion3(UMAPackRecipe umaPackRecipe, UMAContext context)
+		public static UMAData.UMARecipe UnpackRecipeVersion3(UMAPackRecipe umaPackRecipe, UMAContextBase context)
 		{
 			UMAData.UMARecipe umaRecipe = new UMAData.UMARecipe();
 			UnpackRecipeVersion3(umaRecipe, umaPackRecipe, context);
 			return umaRecipe;
 		}
 
-		public static void UnpackRecipeVersion3(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContext context)
+		public static void UnpackRecipeVersion3(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContextBase context)
 		{
 			umaRecipe.slotDataList = new SlotData[umaPackRecipe.slotsV3.Length];
 			umaRecipe.SetRace(context.GetRace(umaPackRecipe.race));

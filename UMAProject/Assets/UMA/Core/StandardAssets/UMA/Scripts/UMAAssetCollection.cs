@@ -11,7 +11,7 @@ namespace UMA
         public SlotDataAsset[] slotData;
         public OverlayDataAsset[] overlayData;
 
-		public virtual void AddToContext(UMAContext context)
+		public virtual void AddToContext(UMAContextBase context)
 		{
 			if (context == null)
 				return;

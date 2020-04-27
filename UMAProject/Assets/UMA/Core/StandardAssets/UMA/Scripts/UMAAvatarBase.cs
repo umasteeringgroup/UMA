@@ -8,8 +8,10 @@ namespace UMA
 	/// </summary>
 	public abstract class UMAAvatarBase : MonoBehaviour
 	{
-		public UMAContext context;
+		public UMAContextBase context;
 		public UMAData umaData;
+		public UMARendererAsset defaultRendererAsset; // this can be null if no default renderers need to be applied.
+
 		/// <summary>
 		/// The serialized basic UMA recipe.
 		/// </summary>
@@ -52,7 +54,7 @@ namespace UMA
 		{
 			if (context == null)
 			{
-				context = UMAContext.FindInstance();
+				context = UMAContextBase.Instance;
 			}
 
 			if (umaData == null)
@@ -61,6 +63,7 @@ namespace UMA
 				if (umaData == null)
 				{
 					umaData = gameObject.AddComponent<UMAData>();
+					umaData.umaRecipe = new UMAData.UMARecipe(); // TEST JRRM
 					if (umaGenerator != null && !umaGenerator.gameObject.activeInHierarchy)
 					{
 						if (Debug.isDebugBuild)
@@ -123,16 +126,26 @@ namespace UMA
 
 		public void UpdateSameRace()
 		{
+#if SUPER_LOGGING
+			Debug.Log("UpdateSameRace on DynamicCharacterAvatar: " + gameObject.name);
+#endif
+			if (animationController != null)
+			{
+				umaData.animationController = animationController;
+			}
 			umaData.Dirty(true, true, true);
 		}
 
 		public void UpdateNewRace()
 		{
+#if SUPER_LOGGING
+			Debug.Log("UpdateNewRace on DynamicCharacterAvatar: " + gameObject.name);
+#endif
+
 			umaRace = umaData.umaRecipe.raceData;
 			if (animationController != null)
 			{
 				umaData.animationController = animationController;
-	//				umaData.animator.runtimeAnimatorController = animationController;
 			}
 			umaData.umaGenerator = umaGenerator;
 

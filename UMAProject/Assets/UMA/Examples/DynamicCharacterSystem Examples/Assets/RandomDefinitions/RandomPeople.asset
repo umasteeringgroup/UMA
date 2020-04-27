@@ -3,8 +3,9 @@
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -346,6 +347,7 @@ MonoBehaviour:
       MinValue: 0.4375
       MaxValue: 0.6041666
       Delete: 0
+    raceData: {fileID: 11400000, guid: f8fea6f0ee17b3f42a4ae6cfb627bab3, type: 2}
     GuiFoldout: 0
     ColorsFoldout: 0
     WardrobeFoldout: 0
@@ -406,7 +408,6 @@ MonoBehaviour:
     SelectedDNA: 2
     DNAAdd: 
     DNADel: 0
-    raceData: {fileID: 11400000, guid: f8fea6f0ee17b3f42a4ae6cfb627bab3, type: 2}
   - RaceName: HumanMale
     Chance: 1
     SharedColors:
@@ -450,7 +451,7 @@ MonoBehaviour:
     - WardrobeSlot: {fileID: 11400000, guid: 1df4eb647357a74498fa7e6b4672ad8d, type: 2}
       Chance: 1
       Colors: []
-      GuiFoldout: 0
+      GuiFoldout: 1
       Delete: 0
       AddColorTable: 0
       PossibleColors:
@@ -749,6 +750,7 @@ MonoBehaviour:
       MinValue: 0.3243243
       MaxValue: 0.6216216
       Delete: 0
+    raceData: {fileID: 11400000, guid: 62688b7aa02fbc544916e522fcc239c7, type: 2}
     GuiFoldout: 1
     ColorsFoldout: 1
     WardrobeFoldout: 1
@@ -811,4 +813,3 @@ MonoBehaviour:
     SelectedDNA: 39
     DNAAdd: 
     DNADel: 0
-    raceData: {fileID: 11400000, guid: 62688b7aa02fbc544916e522fcc239c7, type: 2}

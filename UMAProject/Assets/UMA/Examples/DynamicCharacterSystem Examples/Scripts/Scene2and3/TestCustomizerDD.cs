@@ -25,7 +25,7 @@ namespace UMA.CharacterSystem.Examples
 		}
 
 		public DynamicCharacterAvatar Avatar;
-		public DynamicCharacterSystem characterSystem;
+		//public DynamicCharacterSystem characterSystem;
 		//ConverterCustomizer is an editor only tool
 		public DynamicDNAConverterCustomizer converterCustomizer;
 
@@ -62,6 +62,7 @@ namespace UMA.CharacterSystem.Examples
 		public bool _loadWardrobe = true;
 		public bool _loadBodyColors = true;
 		public bool _loadWardrobeColors = true;
+		public UMAContextBase Context;
 
 		public bool LoadRace
 		{
@@ -145,8 +146,6 @@ namespace UMA.CharacterSystem.Examples
 			if (converterCustomizer == null)
 			{
 				converterCustomizer = GameObject.FindObjectOfType<DynamicDNAConverterCustomizer>();
-				if (converterCustomizer == null && Debug.isDebugBuild)
-					Debug.LogError("DynamicDNAConverterCustomizer not assigned!");
 			}
 			else
 			{
@@ -213,7 +212,7 @@ namespace UMA.CharacterSystem.Examples
 			}
 			changeRaceDropdown.options.Clear();
 			changeRaceDropdown.onValueChanged.RemoveListener(ChangeRace);
-			var raceDropdownOptionsArray = (Avatar.context.raceLibrary as DynamicRaceLibrary).GetAllRacesBase();
+			var raceDropdownOptionsArray = Avatar.context.GetAllRacesBase();
 			raceDropdownOptions = new List<string>();
 			//add the 'NoneSet'
 			raceDropdownOptions.Add("None Set");
@@ -296,7 +295,7 @@ namespace UMA.CharacterSystem.Examples
 				thisRace = RaceToSet;
 				//Force CharacterSystem to find the new race - unless its None Set
 				if(RaceToSet != "None Set")
-					UMAContext.Instance.raceLibrary.GetRace(RaceToSet);
+					UMAContextBase.Instance.GetRace(RaceToSet);
 				DynamicCharacterAvatar.ChangeRaceOptions thisLoadOptions = DynamicCharacterAvatar.ChangeRaceOptions.none;
 				if (_keepDNA || _keepWardrobe || _keepBodyColors)
 				{
@@ -316,10 +315,14 @@ namespace UMA.CharacterSystem.Examples
 		public void InitializeWardrobeDropDowns()
 		{
 			List<string> slotsFromAllRaces = new List<string>();
-			foreach (string race in characterSystem.Recipes.Keys)
+
+			List<RaceData> races = UMAAssetIndexer.Instance.GetAllAssets<RaceData>();
+			foreach (RaceData rd in races)
 			{
+				string race = rd.raceName;
 				int i = 0;
-				foreach (string slot in characterSystem.Recipes[race].Keys)
+				var recipes = UMAAssetIndexer.Instance.GetRecipes(race);
+				foreach (string slot in recipes.Keys)
 				{
 					if (!slotsFromAllRaces.Contains(slot) && ((limitWardrobeOptions.Count == 0 || limitWardrobeOptions.Contains(slot)) && !hideWardrobeOptions.Contains(slot)))
 					{
@@ -350,6 +353,7 @@ namespace UMA.CharacterSystem.Examples
 		{
 			if (Avatar != null)
 				thisRace = Avatar.activeRace.name;
+			var raceRecipes = UMAAssetIndexer.Instance.GetRecipes(thisRace);
 			InitializeWardrobeDropDowns();
 			foreach (Transform child in wardrobeDropdownPanel.transform)
 			{
@@ -367,7 +371,7 @@ namespace UMA.CharacterSystem.Examples
 				{
 					showOption = true;
 				}
-				if (characterSystem.Recipes.ContainsKey(thisRace) && characterSystem.Recipes[thisRace].ContainsKey(thisSlot) && showOption)
+				if (raceRecipes.ContainsKey(thisSlot) && showOption)
 				{
 					if (thisSlot == "WardrobeCollection")
 					{
@@ -377,7 +381,7 @@ namespace UMA.CharacterSystem.Examples
 					{
 						thisDD.options.Clear();
 						thisDD.onValueChanged.RemoveAllListeners();
-						var wardrobeOptions = new List<UMATextRecipe>(characterSystem.Recipes[thisRace][thisSlot]);
+						var wardrobeOptions = new List<UMATextRecipe>(raceRecipes[thisSlot]);
 						var thisUnsetThumb = Avatar.activeRace.racedata.raceThumbnails.GetThumbFor(thisSlot);
 						var thisUnsetOption = new Dropdown.OptionData();
 						thisUnsetOption.text = thisSlot == "Face" ? "Standard" : "None";
@@ -399,9 +403,9 @@ namespace UMA.CharacterSystem.Examples
 								var recipeSlotName = kp.Value.wardrobeSlot;
 								if (recipeSlotName == thisSlot && kp.Value.compatibleRaces.Contains(thisRace))
 								{
-									for (int ri = 0; ri < characterSystem.Recipes[thisRace][recipeSlotName].Count; ri++)
+									for (int ri = 0; ri < raceRecipes[recipeSlotName].Count; ri++)
 									{
-										if (characterSystem.Recipes[thisRace][recipeSlotName][ri].name == kp.Value.name)
+										if (raceRecipes[recipeSlotName][ri].name == kp.Value.name)
 										{
 											//we could do alot more checks here to check equalness if this is the only way to make this work...
 											selected = ri + 1;
@@ -412,7 +416,7 @@ namespace UMA.CharacterSystem.Examples
 								else if (recipeSlotName == thisSlot && (Avatar.activeRace.racedata.IsCrossCompatibleWith(kp.Value.compatibleRaces) && Avatar.activeRace.racedata.wardrobeSlots.Contains(thisSlot)))
 								{
 									//for cross compatible Races- races can be cross compatible with other races (set in the Race itself) and this enables one race to wear anothers wardrobe (if that race has the same wardrobe slots)
-									selected = (characterSystem.Recipes[thisRace][recipeSlotName].FindIndex(s => s.Equals(kp.Value)) + 1);
+									selected = (raceRecipes[recipeSlotName].FindIndex(s => s.Equals(kp.Value)) + 1);
 									thisDDRecipe = kp.Value;
 								}
 							}
@@ -449,10 +453,11 @@ namespace UMA.CharacterSystem.Examples
 
 		private void SetUpWardrobeCollectionDropdown(Transform childGO, Dropdown thisDD)
 		{
+			var raceRecipes = UMAAssetIndexer.Instance.GetRecipes(thisRace);
 			var thisSlot = "WardrobeCollection";
 			thisDD.options.Clear();
 			thisDD.onValueChanged.RemoveAllListeners();
-			var wardrobeOptions = new List<UMATextRecipe>(characterSystem.Recipes[thisRace][thisSlot]);
+			var wardrobeOptions = new List<UMATextRecipe>(raceRecipes[thisSlot]);
 			var thisUnsetThumb = Avatar.activeRace.racedata.raceThumbnails.GetThumbFor(thisSlot);
 			var thisDummyOption = new Dropdown.OptionData();
 			thisDummyOption.text = "Dummy";
@@ -724,6 +729,7 @@ namespace UMA.CharacterSystem.Examples
 		/// <param name="fSlotNumber">Id number slot to change</param>
 		public void SetSlot(string slotToChange, float fSlotNumber)
 		{
+			var raceRecipes = UMAAssetIndexer.Instance.GetRecipes(thisRace);
 			if (slotToChange == "WardrobeCollection")
 			{
 				SetWardrobeCollectionSlot(slotToChange, fSlotNumber);
@@ -735,7 +741,7 @@ namespace UMA.CharacterSystem.Examples
 				UMATextRecipe tr = null;
 				if (slotNumber >= 0)
 				{
-					tr = characterSystem.Recipes[thisRace][slotToChange][slotNumber];
+					tr = raceRecipes[slotToChange][slotNumber];
 					Avatar.SetSlot(tr);
 				}
 				else
@@ -751,10 +757,11 @@ namespace UMA.CharacterSystem.Examples
 
 		public void SetWardrobeCollectionSlot(string slotToChange, float fSlotNumber)
 		{
+			var raceRecipes = UMAAssetIndexer.Instance.GetRecipes(thisRace);
 			int slotNumber = ((int)fSlotNumber) - 1;
 			if (slotNumber >= 0)
 			{
-				var wc = characterSystem.Recipes[thisRace][slotToChange][slotNumber];
+				var wc = raceRecipes[slotToChange][slotNumber];
 				if (Avatar.GetWardrobeCollection(wc.name))
 				{
 					Avatar.UnloadWardrobeCollection(wc.name);
@@ -926,13 +933,14 @@ namespace UMA.CharacterSystem.Examples
 					thisLoadableItem.GetComponentInChildren<Text>().text = Path.GetFileNameWithoutExtension(path);
 				}
 			}
-			foreach (KeyValuePair<string, string> kp in (UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem).CharacterRecipes)
+			
+			foreach (string s in UMAContext.Instance.GetRecipeFiles())
 			{
 				GameObject thisLoadableItem = Instantiate(loadableItemPrefab) as GameObject;
 				thisLoadableItem.transform.SetParent(ItemList.content.transform, false);
 				thisLoadableItem.GetComponent<CSLoadableItem>().customizerScript = this;
-				thisLoadableItem.GetComponent<CSLoadableItem>().filename = Path.GetFileNameWithoutExtension(kp.Key);
-				thisLoadableItem.GetComponentInChildren<Text>().text = Path.GetFileNameWithoutExtension(kp.Key);
+				thisLoadableItem.GetComponent<CSLoadableItem>().filename = Path.GetFileNameWithoutExtension(s);
+				thisLoadableItem.GetComponentInChildren<Text>().text = Path.GetFileNameWithoutExtension(s);
 			}
 		}
 
@@ -946,7 +954,7 @@ namespace UMA.CharacterSystem.Examples
 			}
 			else
 			{
-				recipeText = (UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem).CharacterRecipes[filename];
+				recipeText = UMAContext.Instance.GetCharacterRecipe(filename);
 			}
 			if (recipeText != "")
 			{

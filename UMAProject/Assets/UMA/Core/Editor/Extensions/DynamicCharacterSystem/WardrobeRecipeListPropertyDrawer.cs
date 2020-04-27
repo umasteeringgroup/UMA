@@ -10,7 +10,7 @@ namespace UMA.CharacterSystem.Editors
     public class WardrobeRecipeListPropertyDrawer : PropertyDrawer
     {
         float padding = 2f;
-        public DynamicCharacterSystem thisDCS;
+        // public DynamicCharacterSystem thisDCS;
         public DynamicCharacterAvatar thisDCA;
 		public bool changed = false;
         Texture warningIcon;
@@ -155,7 +155,7 @@ namespace UMA.CharacterSystem.Editors
                 warningStyle.fixedHeight = warningIcon.height + 4f;
                 warningStyle.contentOffset = new Vector2(0, -2f);
                 //can we make these validate to the compatible races is upto date?
-                thisDCA.preloadWardrobeRecipes.Validate();
+                thisDCA.preloadWardrobeRecipes.GetRecipesForRace();
                 for (int i = 0; i < thisRecipesProp.arraySize; i++)
                 {
                     var valRBut = new Rect((textFieldWidth + 18f), (valR.yMax + padding), 20f, EditorGUIUtility.singleLineHeight);
@@ -174,8 +174,9 @@ namespace UMA.CharacterSystem.Editors
                     }
                     var recipeIsLive = true;
                     var recipeName = thisElement.FindPropertyRelative("_recipeName").stringValue;
-                    if (DynamicAssetLoader.Instance)
-                        recipeIsLive = CheckRecipeAvailability(recipeName);
+
+					recipeIsLive = UMAContext.Instance.HasRecipe(recipeName);
+
                     if (!recipeIsLive)
                         valR.width = valR.width - 25f;
                     EditorGUI.TextField(valR, recipeName + " (" + compatibleRaces + ")");
@@ -192,8 +193,6 @@ namespace UMA.CharacterSystem.Editors
 							//the _recipe value is no longer serialized so we need to get it from AssetDatabase
 							if (foundRecipe != null)
 								UMAAssetIndexer.Instance.EvilAddAsset(foundRecipe.GetType(), foundRecipe);
-							else
-								UMAAssetIndexerEditor.ShowWindow();
 						}
 					}
                     if (GUI.Button(valRBut, "X"))
@@ -214,29 +213,8 @@ namespace UMA.CharacterSystem.Editors
         /// </summary>
         /// <param name="recipeName"></param>
         /// <returns></returns>
-        private bool CheckRecipeAvailability(string recipeName)
-        {
-            if (Application.isPlaying)
-                return true;
-            bool searchResources = true;
-            bool searchAssetBundles = true;
-            string resourcesFolderPath = "";
-            string assetBundlesToSearch = "";
-            if (thisDCS != null)
-            {
-                searchResources = thisDCS.dynamicallyAddFromResources;
-                searchAssetBundles = thisDCS.dynamicallyAddFromAssetBundles;
-                resourcesFolderPath = thisDCS.resourcesRecipesFolder;
-                assetBundlesToSearch = thisDCS.assetBundlesForRecipesToSearch;
-            }
-            bool found = false;
-            DynamicAssetLoader.Instance.debugOnFail = false;
-            found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeRecipe>(searchResources, searchAssetBundles, true, assetBundlesToSearch, resourcesFolderPath, null, recipeName, null);
-            if (!found)
-                found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeCollection>(searchResources, searchAssetBundles, true, assetBundlesToSearch, resourcesFolderPath, null, recipeName, null);
-            DynamicAssetLoader.Instance.debugOnFail = true;
-            return found;
-        }
+		/// 
+
 		private UMARecipeBase FindMissingRecipe(string recipeName)
 		{
 			UMARecipeBase foundRecipe = null;

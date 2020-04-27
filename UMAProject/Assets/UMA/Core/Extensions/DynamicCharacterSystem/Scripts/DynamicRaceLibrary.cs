@@ -165,13 +165,10 @@ namespace UMA.CharacterSystem
 					if (!editorAddedAssets.Contains(race))
 					{
 						editorAddedAssets.Add(race);
-						if (UMAContext.Instance == null)
-							UMAContext.FindInstance();
-						if (UMAContext.Instance != null)
-							if (UMAContext.Instance.dynamicCharacterSystem != null)
-							{
-								(UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem).Refresh(false);
-							}
+						if (UMAContextBase.Instance != null)
+						{
+							UMAContext.Instance.ValidateDictionaries();
+						}
 					}
 				}
 				else
@@ -181,11 +178,9 @@ namespace UMA.CharacterSystem
 			//Ensure the new races have keys in the DCS dictionary
 			if (currentNumRaces != raceElementList.Length && Application.isPlaying)
 			{
-				if (UMAContext.Instance == null)
-					UMAContext.FindInstance();
-				if (UMAContext.Instance != null && UMAContext.Instance.dynamicCharacterSystem != null)
+				if (UMAContextBase.Instance != null)
 				{
-					(UMAContext.Instance.dynamicCharacterSystem as DynamicCharacterSystem).RefreshRaceKeys();
+					UMAContextBase.Instance.ValidateDictionaries();
 				}
 			}
 			//This doesn't actually seem to do anything apart from slow things down

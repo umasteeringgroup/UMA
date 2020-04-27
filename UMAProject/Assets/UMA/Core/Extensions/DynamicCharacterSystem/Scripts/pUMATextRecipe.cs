@@ -26,6 +26,9 @@ namespace UMA
 		public List<string> Hides = new List<string>();
 
 		[SerializeField]
+		public List<string> HideTags = new List<string>();
+
+		[SerializeField]
 		public List<string> suppressWardrobeSlots = new List<string>();
 
 		[SerializeField]
@@ -34,7 +37,11 @@ namespace UMA
         [SerializeField]
         public List<MeshHideAsset> MeshHideAssets = new List<MeshHideAsset>();
 
-	#if UNITY_EDITOR
+       // [SerializeField]
+		//public string AddressableLabel;
+
+
+#if UNITY_EDITOR
 		/// <summary>
 		/// Converts this recipe to the given child type. Used by RecipeEditor to convert old recipes
 		/// </summary>
@@ -70,13 +77,13 @@ namespace UMA
 
 #if UNITY_EDITOR
 		/// <summary>
-		/// Creates a temporary UMAContext for use when editing recipes when the open Scene does not have an UMAContext or libraries set up
+		/// Creates a temporary UMAContextBase for use when editing recipes when the open Scene does not have an UMAContextBase or libraries set up
 		/// </summary>
 		/// 
-		public override UMAContext CreateEditorContext()
+		public override UMAContextBase CreateEditorContext()
 		{
-			UMAContext.CreateEditorContext();
-			return UMAContext.Instance;
+			UMAContextBase.CreateEditorContext();
+			return UMAContextBase.Instance;
 		}
 #endif
 
@@ -157,7 +164,7 @@ namespace UMA
 		/// </summary>
 		/// <param name="umaRecipe">UMA recipe.</param>
 		/// <param name="context">Context.</param>
-		public override void Load(UMA.UMAData.UMARecipe umaRecipe, UMAContext context = null)
+		public override void Load(UMA.UMAData.UMARecipe umaRecipe, UMAContextBase context = null)
 		{
 			//This check can be removed in future- If we set the recipeType properly from now on we should not need to do this check
 			var typeInRecipe = GetRecipesType(recipeString);
@@ -188,7 +195,7 @@ namespace UMA
 		/// </summary>
 		/// <param name="context"></param>
 		/// <returns></returns>
-		protected DCSUniversalPackRecipe PackedLoadDCSInternal(UMAContext context/*, string recipeToUnpack*/)
+		protected DCSUniversalPackRecipe PackedLoadDCSInternal(UMAContextBase context/*, string recipeToUnpack*/)
 		{
 			return PackedLoadDCS(context, recipeString, this);
 		}
@@ -200,7 +207,7 @@ namespace UMA
 		/// <param name="recipeToUnpack"></param>
 		/// <param name="targetUTR">If set the wardrobeSet (if it exists) and the recipeType will assigned to UMATextRecipe assets fields (used by the Recipe Editor)</param>
 		/// <returns></returns>
-		public static DCSUniversalPackRecipe PackedLoadDCS(UMAContext context, string recipeToUnpack, UMATextRecipe targetUTR = null)
+		public static DCSUniversalPackRecipe PackedLoadDCS(UMAContextBase context, string recipeToUnpack, UMATextRecipe targetUTR = null)
 		{
 			if ((recipeToUnpack == null) || (recipeToUnpack.Length == 0))
 				return new DCSUniversalPackRecipe();
@@ -235,7 +242,7 @@ namespace UMA
 		/// <summary>
 		/// Saves a 'Standard' UMATextRecipe. If saving a DynamicCharacterAvatar as 'Backwards Compatible' this will save a recipe that has slots/overlay data AND a wardrobe set
 		/// </summary>
-		public void Save(UMAData.UMARecipe umaRecipe, UMAContext context, Dictionary<string, UMATextRecipe> wardrobeRecipes, bool backwardsCompatible = true)
+		public void Save(UMAData.UMARecipe umaRecipe, UMAContextBase context, Dictionary<string, UMATextRecipe> wardrobeRecipes, bool backwardsCompatible = true)
 		{
 			if (wardrobeRecipes.Count > 0)
 				activeWardrobeSet = GenerateWardrobeSet(wardrobeRecipes);
@@ -244,7 +251,7 @@ namespace UMA
 		}
 
 		//This is used when an inspected recipe asset is saved
-		public override void Save(UMAData.UMARecipe umaRecipe, UMAContext context)
+		public override void Save(UMAData.UMARecipe umaRecipe, UMAContextBase context)
 		{
 			if (recipeType == "Wardrobe")//Wardrobe Recipes can save the standard UMA way- they dont have WardrobeSets- although the recipe string wont have a packedRecipeType field
 			{

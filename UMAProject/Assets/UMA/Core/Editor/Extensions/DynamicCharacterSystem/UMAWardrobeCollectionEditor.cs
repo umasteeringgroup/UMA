@@ -167,10 +167,10 @@ namespace UMA.Editors
 
 			public override bool OnGUI(string targetName, ref bool _dnaDirty, ref bool _textureDirty, ref bool _meshDirty)
 			{
-				var context = UMAContext.FindInstance();
+				var context = UMAContextBase.Instance;
 				if (context == null)
 				{
-					var _errorMessage = "Editing a recipe requires a loaded scene with a valid UMAContext.";
+					var _errorMessage = "Editing a recipe requires a loaded scene with a valid UMAContextBase.";
 					Debug.LogWarning(_errorMessage);
 					return false;
 				}
@@ -197,7 +197,7 @@ namespace UMA.Editors
 						}
 						for (int i = 0; i < _compatibleRaces.Count; i++)
 						{
-							var thisRace = context.raceLibrary.GetRace(_compatibleRaces[i]);
+							var thisRace = context.GetRace(_compatibleRaces[i]);
 							if (thisRace != null)
 							{
 								GUILayout.BeginHorizontal(EditorStyles.toolbarButton);

@@ -50,7 +50,7 @@ namespace UMA.Examples
 		/// </summary>
 		/// <param name="umaRecipe">UMA recipe.</param>
 		/// <param name="context">Context.</param>
-		public void FillUMARecipe(UMAData.UMARecipe umaRecipe, UMAContext context)
+		public void FillUMARecipe(UMAData.UMARecipe umaRecipe, UMAContextBase context)
 		{
 			if (raceData == null)
 			{
@@ -100,7 +100,7 @@ namespace UMA.Examples
 			}
 		}
 
-		private void IncludeRecipe(UMARecipeBase recipe, UMAData.UMARecipe umaRecipe, UMAContext context, bool dontSerialize)
+		private void IncludeRecipe(UMARecipeBase recipe, UMAData.UMARecipe umaRecipe, UMAContextBase context, bool dontSerialize)
 		{
 			UMAData.UMARecipe cachedRecipe = recipe.GetCachedRecipe(context);
 			umaRecipe.Merge(cachedRecipe, dontSerialize);

@@ -37,7 +37,6 @@ namespace UMA.CharacterSystem.Examples
             else
             {
                 Avatar.SetColor(ColorName, ColorValue);
-                Avatar.UpdateColors(true);
             }
         }
     }

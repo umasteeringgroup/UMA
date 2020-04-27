@@ -26,14 +26,38 @@ namespace UMA
 		{
 			get
 			{
-				return	asset.useAtlasOverlay;
+				if (asset != null)
+					return	asset.useAtlasOverlay;
+				return false;
 			}
 		}
+
+		/// <summary>
+		/// The Maximum LOD that this is displayed on.
+		/// </summary>
+		public int MaxLod
+		{
+			get
+			{
+				return asset.maxLOD;
+			}
+		}
+
+		public bool Suppressed; 
+
 		/// <summary>
 		/// When serializing this recipe should this slot be skipped, useful for scene specific "additional slots"
 		/// </summary>
 		public bool dontSerialize;
-		public string slotName { get { return asset.slotName; } }
+		public string slotName 
+		{ 
+			get 
+			{ 
+				if (asset != null)
+					return asset.slotName;
+				return "";
+			} 
+		}
 		/// <summary>
 		/// list of overlays used to texture the slot.
 		/// </summary>
@@ -52,8 +76,49 @@ namespace UMA
 		public SlotData(SlotDataAsset asset)
 		{
 			this.asset = asset;
-			overlayScale = asset.overlayScale;
-			rendererAsset = asset.RendererAsset;
+			if (asset)
+			{
+				overlayScale = asset.overlayScale;
+				rendererAsset = asset.RendererAsset;
+			}
+			else
+			{
+				overlayScale = 1.0f;
+			}
+		}
+
+		public SlotData()
+		{
+			overlayScale = 1.0f;
+			rendererAsset = null;
+		}
+
+		public bool HasTag(List<string> tags)
+		{
+			if (tags == null || asset.tags == null)
+				return false;
+			// this feels like it would be better in a dictionary or hashtable
+			// but I doubt there will be more than 1 tag, so we will go with this
+			foreach (string s in asset.tags)
+			{
+				if (tags.Contains(s)) return true;
+			}
+			return false;
+		}
+
+
+
+		public bool HasTag(string tag)
+		{
+			if (asset.tags == null)
+				return false;
+			// this feels like it would be better in a dictionary or hashtable
+			// but I doubt there will be more than 1 tag, so we will go with this
+			foreach(string s in asset.tags)
+			{
+				if (s == tag) return true;
+			}
+			return false;
 		}
 
         /// <summary>
@@ -88,10 +153,10 @@ namespace UMA
 			return res;
 		}
 
-		public int GetTextureChannelCount(UMAGeneratorBase generator)
+	/*	public int GetTextureChannelCount(UMAGeneratorBase generator)
 		{
 			return asset.GetTextureChannelCount(generator);
-		}
+		} */
 
 		public bool RemoveOverlay(params string[] names)
 		{
@@ -252,6 +317,9 @@ namespace UMA
 		internal bool Validate()
 		{
 			bool valid = true;
+			if (asset == null)
+				return true;
+
 			if (asset.meshData != null)
 			{
 				if (asset.material == null)
@@ -273,7 +341,7 @@ namespace UMA
 						for (int i = 0; i < asset.material.channels.Length; i++)
 						{
 							var channel = asset.material.channels[i];
-							if (!asset.material.material.HasProperty(channel.materialPropertyName))
+							if (!channel.NonShaderTexture && !asset.material.material.HasProperty(channel.materialPropertyName))
 							{
 								if (Debug.isDebugBuild)
 									Debug.LogError(string.Format("Slot '{0}' Material Channel {1} refers to material property '{2}' but no such property exists.", asset.slotName, i, channel.materialPropertyName), asset);
@@ -303,7 +371,7 @@ namespace UMA
 					for (int i = 0; i < asset.material.channels.Length; i++)
 					{
 						var channel = asset.material.channels[i];
-						if (!asset.material.material.HasProperty(channel.materialPropertyName))
+						if (!channel.NonShaderTexture && !asset.material.material.HasProperty(channel.materialPropertyName))
 						{
 							if (Debug.isDebugBuild)
 								Debug.LogError(string.Format("Slot '{0}' Material Channel {1} refers to material property '{2}' but no such property exists.", asset.slotName, i, channel.materialPropertyName), asset);

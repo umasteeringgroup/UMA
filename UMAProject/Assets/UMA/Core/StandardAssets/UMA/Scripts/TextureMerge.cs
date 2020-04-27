@@ -12,14 +12,19 @@ namespace UMA
     public class TextureMerge : ScriptableObject
 	{
 		public Material material;
-		public Shader normalShader;
+		public Shader normalShader; 
 		public Shader diffuseShader;
 		public Shader dataShader;
 		public Shader cutoutShader;
+		public Shader detailNormalShader;
+
+		[System.NonSerialized] 
+		public Color camBackgroundColor = new Color(0, 0, 0, 0);
 
 		public List<UMAPostProcess> diffusePostProcesses = new List<UMAPostProcess>();
 		public List<UMAPostProcess> normalPostProcesses = new List<UMAPostProcess>();
 		public List<UMAPostProcess> dataPostProcesses = new List<UMAPostProcess>();
+		public List<UMAPostProcess> detailNormalPostProcesses = new List<UMAPostProcess>();
 
 		private int textureMergeRectCount;
 		private TextureMergeRect[] textureMergeRects;
@@ -32,7 +37,19 @@ namespace UMA
 			public Rect rect;
 		}
 
-		public void DrawAllRects(RenderTexture target, int width, int height, Color background = default(Color))
+		public void RefreshMaterials()
+		{
+			if (textureMergeRects != null)
+			{
+				for (int i = 0; i < textureMergeRects.Length; i++)
+				{
+					if (textureMergeRects[i].mat == null)
+						textureMergeRects[i].mat = new Material(material);
+				}
+			}
+		}
+
+			public void DrawAllRects(RenderTexture target, int width, int height, Color background = default(Color))
 		{
 			if (textureMergeRects != null)
 			{
@@ -55,6 +72,7 @@ namespace UMA
 
 		private void DrawRect(ref TextureMergeRect textureMergeRect)
 		{
+			//TODO JRRM: add an event here and let the end user modify the textureMertRect.tex if needed.
 			Graphics.DrawTexture(textureMergeRect.rect, textureMergeRect.tex, textureMergeRect.mat);
 		}
 
@@ -80,6 +98,13 @@ namespace UMA
 					break;
 				case UMAMaterial.ChannelType.DiffuseTexture:
 					foreach (UMAPostProcess postProcess in diffusePostProcesses)
+					{
+						Graphics.Blit(destination, source);
+						postProcess.Process(source, destination);
+					}
+					break;
+				case UMAMaterial.ChannelType.DetailNormalMap:
+					foreach (UMAPostProcess postProcess in detailNormalPostProcesses)
 					{
 						Graphics.Blit(destination, source);
 						postProcess.Process(source, destination);
@@ -120,6 +145,9 @@ namespace UMA
 
 		private void SetupMaterial(ref TextureMergeRect textureMergeRect, UMAData.MaterialFragment source, int textureType)
 		{
+			camBackgroundColor = source.GetMultiplier(0, textureType);
+			camBackgroundColor.a = 0.0f;
+
 			textureMergeRect.tex = source.baseOverlay.textureList[textureType];
 
 			switch (source.slotData.asset.material.channels[textureType].channelType)
@@ -132,6 +160,9 @@ namespace UMA
 					break;
 				case UMAMaterial.ChannelType.DiffuseTexture:
 					textureMergeRect.mat.shader = diffuseShader;
+					break;
+				case UMAMaterial.ChannelType.DetailNormalMap:
+					textureMergeRect.mat.shader = detailNormalShader;
 					break;
 			}
 			textureMergeRect.mat.SetTexture("_MainTex", source.baseOverlay.textureList[textureType]);
@@ -204,6 +235,9 @@ namespace UMA
 						break;
 					case UMAMaterial.ChannelType.DiffuseTexture:
 						textureMergeRect.mat.shader = diffuseShader;
+						break;
+					case UMAMaterial.ChannelType.DetailNormalMap:
+						textureMergeRect.mat.shader = detailNormalShader;
 						break;
 				}
 				textureMergeRect.mat.SetTexture("_MainTex", source.overlays[i2].textureList[textureType]);

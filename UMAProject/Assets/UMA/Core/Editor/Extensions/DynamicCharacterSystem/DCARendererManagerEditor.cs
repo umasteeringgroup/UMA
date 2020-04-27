@@ -16,14 +16,14 @@ namespace UMA.Editors
         UMAData.UMARecipe umaRecipe = new UMAData.UMARecipe();
         List<string> wardrobeOptions = new List<string>();
         List<SlotDataAsset> slotOptions = new List<SlotDataAsset>();
-        UMAContext context;
+        UMAContextBase context;
         RaceData currentRaceData;
 
         void OnEnable()
         {
             RendererElements = serializedObject.FindProperty("RendererElements");
             showHelp = serializedObject.FindProperty("showHelp");
-            context = UMAContext.FindInstance();
+            context = UMAContextBase.Instance;
 
             DCARendererManager manager = target as DCARendererManager;
             avatar = manager.GetComponent<DynamicCharacterAvatar>();

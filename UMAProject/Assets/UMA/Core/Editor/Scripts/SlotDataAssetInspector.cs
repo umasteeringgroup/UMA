@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
+using UnityEditorInternal;
 
 namespace UMA.Editors
 {
@@ -13,6 +14,9 @@ namespace UMA.Editors
 		SerializedProperty SlotAtlassed;
 		SerializedProperty DNAApplied;
 		SerializedProperty CharacterCompleted;
+		SerializedProperty MaxLOD;
+		private ReorderableList tagList;
+		private bool tagListInitialized = false;
 
 		private bool eventsFoldout = false;
 
@@ -22,6 +26,11 @@ namespace UMA.Editors
         	CustomAssetUtility.CreateAsset<SlotDataAsset>("", true, "Custom");
         }
 
+		private void OnDestroy()
+		{
+			AssetDatabase.SaveAssets();
+		}
+
 		void OnEnable()
 		{
 			slotName = serializedObject.FindProperty("slotName");
@@ -29,17 +38,37 @@ namespace UMA.Editors
 			SlotAtlassed = serializedObject.FindProperty("SlotAtlassed");
 			DNAApplied = serializedObject.FindProperty("DNAApplied");
 			CharacterCompleted = serializedObject.FindProperty("CharacterCompleted");
+			MaxLOD = serializedObject.FindProperty("maxLOD");
 		}
-
+		private void InitTagList()
+		{
+			var HideTagsProperty = serializedObject.FindProperty("tags");
+			tagList = new ReorderableList(serializedObject, HideTagsProperty, true, true, true, true);
+			tagList.drawHeaderCallback = (Rect rect) => 
+			{
+				EditorGUI.LabelField(rect, "Tags");
+			};
+			tagList.drawElementCallback = (Rect rect, int index, bool isActive, bool isFocused) => 
+			{
+				var element = tagList.serializedProperty.GetArrayElementAtIndex(index);
+				rect.y += 2;
+				element.stringValue = EditorGUI.TextField(new Rect(rect.x + 10, rect.y, rect.width - 10, EditorGUIUtility.singleLineHeight), element.stringValue);
+			};
+			tagListInitialized = true;
+		}
 		public override void OnInspectorGUI()
         {
+			if (!tagListInitialized)
+			{
+				InitTagList();
+			}
 			serializedObject.Update();
-			//base.OnInspectorGUI();
 
 			EditorGUI.BeginChangeCheck();
 			EditorGUILayout.DelayedTextField(slotName);
-			Editor.DrawPropertiesExcluding(serializedObject, new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "DNAApplied", "CharacterCompleted", "_slotDNALegacy" });
-
+			Editor.DrawPropertiesExcluding(serializedObject, new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "DNAApplied", "CharacterCompleted", "_slotDNALegacy","tags" });
+			tagList.DoLayoutList();
+			
 			eventsFoldout = EditorGUILayout.Foldout(eventsFoldout, "Slot Events");
 			if (eventsFoldout)
 			{
@@ -48,6 +77,7 @@ namespace UMA.Editors
 				EditorGUILayout.PropertyField(DNAApplied);
 				EditorGUILayout.PropertyField(CharacterCompleted);
 			}
+
 
 			foreach (var t in targets)
 			{
@@ -81,7 +111,7 @@ namespace UMA.Editors
 			serializedObject.ApplyModifiedProperties();
 			if (EditorGUI.EndChangeCheck())
 			{
-				AssetDatabase.SaveAssets();
+				EditorUtility.SetDirty(target);
 			}
         }
 

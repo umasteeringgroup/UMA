@@ -28,6 +28,8 @@ namespace UMA
 			get { return _defaultOverlayData; }
 		}
 
+		public static HashSet<int> CreatedAvatars = new HashSet<int>();
+
         /// <summary>
         /// returns true if the UMAData is in the update queue.
         /// Note that this will return false if the UMA is currently being processed!
@@ -92,6 +94,7 @@ namespace UMA
 			private int[] stateHashes = new int[0];
 			private float[] stateTimes = new float[0];
 			AnimatorControllerParameter[] parameters;
+			private Dictionary<int, float> layerWeights = new Dictionary<int, float>();
 
 			public void SaveAnimatorState(Animator animator)
 			{
@@ -99,12 +102,14 @@ namespace UMA
 				stateHashes = new int[layerCount];
 				stateTimes = new float[layerCount];
 				parameters = new AnimatorControllerParameter[animator.parameterCount];
+				layerWeights.Clear();
 
 				for (int i = 0; i < layerCount; i++)
 				{
 					var state = animator.GetCurrentAnimatorStateInfo(i);
 					stateHashes[i] = state.fullPathHash;
 					stateTimes[i] = Mathf.Max(0, state.normalizedTime + Time.deltaTime / state.length);
+					layerWeights.Add(i, animator.GetLayerWeight(i));
 				}
 
 				Array.Copy(animator.parameters, parameters, animator.parameterCount);
@@ -133,6 +138,10 @@ namespace UMA
 					for (int i = 0; i < animator.layerCount; i++)
 					{
 						animator.Play(stateHashes[i], i, stateTimes[i]);
+						if (i < layerWeights.Count)
+						{
+							animator.SetLayerWeight(i, layerWeights[i]);
+						}
 					}
 				}
 
@@ -190,6 +199,10 @@ namespace UMA
 						SetAvatar(umaData, animator);
 						animator.runtimeAnimatorController = umaData.animationController;
 						umaData.animator = animator;
+
+						umaTransform.SetParent(oldParent, false);
+						umaTransform.localRotation = originalRot;
+						umaTransform.localPosition = originalPos;
 					}
 					else
 					{
@@ -197,16 +210,17 @@ namespace UMA
 						snapshot.SaveAnimatorState(animator);
 						if (!umaData.KeepAvatar || animator.avatar == null)
 						{
-							UMAUtils.DestroySceneObject(animator.avatar);
+							UMAUtils.DestroyAvatar(animator.avatar);
 							SetAvatar(umaData, animator);
 						}
-						if(animator.runtimeAnimatorController != null)
+
+						umaTransform.SetParent(oldParent, false);
+						umaTransform.localRotation = originalRot;
+						umaTransform.localPosition = originalPos;
+
+						if (animator.runtimeAnimatorController != null)
 							snapshot.RestoreAnimatorState(animator);
 					}
-
-					umaTransform.SetParent(oldParent, false);
-					umaTransform.localRotation = originalRot;
-					umaTransform.localPosition = originalPos;
 				}
 			}
 		}
@@ -218,8 +232,6 @@ namespace UMA
 		/// <param name="animator">Animator.</param>
 		public static void SetAvatar(UMAData umaData, Animator animator)
 		{
-			if (umaData.KeepAvatar && animator.avatar != null)
-				return;
 			var umaTPose = umaData.umaRecipe.raceData.TPose;
 
 			switch (umaData.umaRecipe.raceData.umaTarget)
@@ -277,6 +289,7 @@ namespace UMA
 			HumanDescription description = CreateHumanDescription(umaData, umaTPose);
 			//DebugLogHumanAvatar(umaData.gameObject, description);
 			Avatar res = AvatarBuilder.BuildHumanAvatar(umaData.gameObject, description);
+			CreatedAvatars.Add(res.GetInstanceID());
 			res.name = umaData.name;
 			return res;
 		}
@@ -290,6 +303,7 @@ namespace UMA
 		{
 			Avatar res = AvatarBuilder.BuildGenericAvatar(umaData.gameObject, umaData.umaRecipe.GetRace().genericRootMotionTransformName);
 			res.name = umaData.name;
+			CreatedAvatars.Add(res.GetInstanceID());
 			return res;
 		}
 

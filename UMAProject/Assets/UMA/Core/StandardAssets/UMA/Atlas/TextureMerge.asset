@@ -3,8 +3,9 @@
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -16,7 +17,9 @@ MonoBehaviour:
   diffuseShader: {fileID: 4800000, guid: ae83be5246f311646b3043ed012d9d64, type: 3}
   dataShader: {fileID: 4800000, guid: 8179a5383e28f6840a80314368b93979, type: 3}
   cutoutShader: {fileID: 4800000, guid: 6ec55823d603ee4478b56d3f0d7ce6bb, type: 3}
+  detailNormalShader: {fileID: 4800000, guid: e5ba71eed666aef459dbb1dce2bc3d2f, type: 3}
   diffusePostProcesses: []
   normalPostProcesses:
   - {fileID: 11400000, guid: 45d9ffb21df267d4282b6c9bbc157775, type: 2}
   dataPostProcesses: []
+  detailNormalPostProcesses: []

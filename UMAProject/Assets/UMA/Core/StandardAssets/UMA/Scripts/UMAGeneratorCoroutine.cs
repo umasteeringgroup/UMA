@@ -72,9 +72,33 @@ namespace UMA
 			res.umaMaterial = umaMaterial;
 			res.material = UnityEngine.Object.Instantiate(umaMaterial.material) as Material;
 			res.material.name = umaMaterial.material.name;
+#if UNITY_WEBGL
+			res.material.shader = Shader.Find(res.material.shader.name);
+#endif
+			res.material.CopyPropertiesFromMaterial(umaMaterial.material);
 			atlassedMaterials.Add(res);
 			generatedMaterials.Add(res);
+
 			return res;
+		}
+
+		protected bool IsUVCoordinates(Rect r)
+		{
+			if (r.width == 0.0f || r.height == 0.0f)
+				return false;
+
+			if (r.width <= 1.0f && r.height <= 1.0f)
+				return true;
+			return false;
+		}
+
+		protected Rect ScaleToBase(Rect r, Texture BaseTexture)
+		{
+			if (!BaseTexture) return r;
+			float w = BaseTexture.width;
+			float h = BaseTexture.height;
+
+			return new Rect(r.x * w, r.y * h, r.width * w, r.height * h);
 		}
 
 		protected override void Start()
@@ -99,11 +123,13 @@ namespace UMA
 			{
 				SlotData slot = slots[i];
 				if (slot == null)
+					continue; 
+				if (slot.Suppressed)
 					continue;
 
 				//Keep a running list of unique RendererHashes from our slots
 				//Null rendererAsset gets added, which is good, it is the default renderer.
-				if(!uniqueRenderers.Contains(slot.rendererAsset))
+				if (!uniqueRenderers.Contains(slot.rendererAsset))
 					uniqueRenderers.Add(slot.rendererAsset);
 
 				// Let's only add the default overlay if the slot has meshData and NO overlays
@@ -137,10 +163,10 @@ namespace UMA
 						if (overlay != null)
 						{
 							validOverlayCount++;
-							#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
+#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 							if (overlay.isProcedural)
 								overlay.GenerateProceduralTextures();
-                            #endif
+#endif
 						}
 					}
 
@@ -172,7 +198,15 @@ namespace UMA
 						if (overlay == null)
 							continue;
 
-						tempMaterialDefinition.rects[overlayID] = overlay.rect;
+						if (IsUVCoordinates(overlay.rect))
+						{
+							tempMaterialDefinition.rects[overlayID] = ScaleToBase(overlay.rect, overlay0.textureArray[0]);
+							
+						}
+						else
+						{
+							tempMaterialDefinition.rects[overlayID] = overlay.rect; // JRRM: Convert here into base overlay coordinates?
+						}
 						tempMaterialDefinition.overlays[overlayID] = new UMAData.textureData();
 						tempMaterialDefinition.overlays[overlayID].textureList = overlay.textureArray;
 						tempMaterialDefinition.overlays[overlayID].alphaTexture = overlay.alphaMask;
@@ -200,6 +234,32 @@ namespace UMA
 				}
 			}
 
+			//****************************************************
+			//* Set parameters based on shader parameter mapping
+			//****************************************************
+			for (int i=0;i<generatedMaterials.Count;i++)
+			{
+				UMAData.GeneratedMaterial ugm = generatedMaterials[i];
+				if (ugm.umaMaterial.shaderParms != null)
+				{
+					for(int j=0;j<ugm.umaMaterial.shaderParms.Length;j++)
+					{
+						UMAMaterial.ShaderParms parm = ugm.umaMaterial.shaderParms[j];
+						if (ugm.material.HasProperty(parm.ParameterName))
+						{
+							foreach (OverlayColorData ocd in umaData.umaRecipe.sharedColors)
+							{
+								if (ocd.name == parm.ColorName)
+								{
+									ugm.material.SetColor(parm.ParameterName, ocd.color);
+									break;
+								}
+							}
+						}
+					}
+
+				}
+			}
 			packTexture = new MaxRectsBinPack(umaGenerator.atlasResolution, umaGenerator.atlasResolution, false);
 		}
 
@@ -225,24 +285,7 @@ namespace UMA
 			CleanBackUpTextures();
 			UpdateUV();
 
-			// HACK - is this the right place?
-			SlotData[] slots = umaData.umaRecipe.slotDataList;
-			for (int i = 0; i < slots.Length; i++)
-			{
-				var slot = slots[i];
-				if (slot == null)
-					continue;
-
-#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
-				for (int j = 1; j < slot.OverlayCount; j++)
-				{
-					OverlayData overlay = slot.GetOverlay(j);
-					if ((overlay != null) && (overlay.isProcedural))
-						overlay.ReleaseProceduralTextures();
-				}
-#endif
-			}
-
+			// Procedural textures were done here 
 			if (updateMaterialList)
 			{
 				for (int j = 0; j < umaData.rendererCount; j++)

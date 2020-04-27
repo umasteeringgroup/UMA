@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac718b8ce852d1445b8fbe5c323134ac, type: 3}
+  m_Name: UMA_Diffuse_Normal_Specular_Occlusion
+  m_EditorClassIdentifier: 
+  material: {fileID: 2100000, guid: b0aee38a443313348936284665aef607, type: 2}
+  materialType: 1
+  channels:
+  - channelType: 4
+    textureFormat: 0
+    materialPropertyName: _MainTex
+    sourceTextureName: 
+    Compression: 0
+    DownSample: 0
+    ConvertRenderTexture: 0
+    NonShaderTexture: 0
+  - channelType: 1
+    textureFormat: 0
+    materialPropertyName: _BumpMap
+    sourceTextureName: 
+    Compression: 0
+    DownSample: 0
+    ConvertRenderTexture: 0
+    NonShaderTexture: 0
+  - channelType: 0
+    textureFormat: 0
+    materialPropertyName: _SpecGlossMap
+    sourceTextureName: 
+    Compression: 0
+    DownSample: 0
+    ConvertRenderTexture: 0
+    NonShaderTexture: 0
+  - channelType: 0
+    textureFormat: 0
+    materialPropertyName: _OcclusionMap
+    sourceTextureName: 
+    Compression: 0
+    DownSample: 0
+    ConvertRenderTexture: 0
+    NonShaderTexture: 0
+  MipMapBias: 0
+  AnisoLevel: 1
+  MatFilterMode: 1
+  Compression: 0
+  shaderParms: []
+  MaskWithCurrentColor: 0
+  maskMultiplier: {r: 1, g: 1, b: 1, a: 1}

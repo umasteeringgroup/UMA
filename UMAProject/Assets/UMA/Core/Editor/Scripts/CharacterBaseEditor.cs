@@ -460,10 +460,10 @@ namespace UMA.Editors
 
 	public class SlotMasterEditor
 	{
-        // the last slot dropped. Must live between instances.
-        public static string LastSlot="";
-        // track open/closed here. Must live between instances.
-        public static Dictionary<string, bool> OpenSlots = new Dictionary<string, bool>();
+		// the last slot dropped. Must live between instances.
+		public static string LastSlot = "";
+		// track open/closed here. Must live between instances.
+		public static Dictionary<string, bool> OpenSlots = new Dictionary<string, bool>();
 
 		//DOS Changed this to protected so childs can inherit
 		protected readonly UMAData.UMARecipe _recipe;
@@ -474,29 +474,29 @@ namespace UMA.Editors
 		//an Id for the 'ClickToPick' slot picker
 		protected static int _slotPickerID = -1;
 
-        protected List<SlotDataAsset> DraggedSlots = new List<SlotDataAsset>();
-        protected List<OverlayDataAsset> DraggedOverlays = new List<OverlayDataAsset>();
+		protected List<SlotDataAsset> DraggedSlots = new List<SlotDataAsset>();
+		protected List<OverlayDataAsset> DraggedOverlays = new List<OverlayDataAsset>();
 
-        /// <summary>
-        /// Add the drag and drop files to the recipe.
-        /// if any overlays are dropped, they are added to the first slot that was dropped.
-        /// if no slots were dropped, they are added to the first slot in the recipe.
-        /// </summary>
-        protected void AddDraggedFiles()
-        {
-            SlotData FirstSlot = null;
+		/// <summary>
+		/// Add the drag and drop files to the recipe.
+		/// if any overlays are dropped, they are added to the first slot that was dropped.
+		/// if no slots were dropped, they are added to the first slot in the recipe.
+		/// </summary>
+		protected void AddDraggedFiles()
+		{
+			SlotData FirstSlot = null;
 
-            // Add the slots.
-            // if there are overlays, well, no way to really know where they go, so add them to the first slot.
-            foreach (SlotDataAsset sd in DraggedSlots)
-            {
-                SlotData slot = new SlotData(sd);
-                slot = _recipe.MergeSlot(slot, false);
-                if (FirstSlot == null)
-                {
-                    FirstSlot = slot;
-                }
-            }
+			// Add the slots.
+			// if there are overlays, well, no way to really know where they go, so add them to the first slot.
+			foreach (SlotDataAsset sd in DraggedSlots)
+			{
+				SlotData slot = new SlotData(sd);
+				slot = _recipe.MergeSlot(slot, false);
+				if (FirstSlot == null)
+				{
+					FirstSlot = slot;
+				}
+			}
 			DraggedSlots.Clear();
 
 			if (DraggedOverlays.Count > 0)
@@ -527,12 +527,12 @@ namespace UMA.Editors
 						Debug.LogWarning("No slot found to apply overlay!");
 					}
 				}
-                DraggedOverlays.Clear();
-            }
-        }
+				DraggedOverlays.Clear();
+			}
+		}
 
-        //DOS Changed this to protected so childs can inherit
-        protected bool DropAreaGUI(Rect dropArea)
+		//DOS Changed this to protected so childs can inherit
+		protected bool DropAreaGUI(Rect dropArea)
 		{
 			var evt = Event.current;
 			int pickedCount = 0;
@@ -542,11 +542,10 @@ namespace UMA.Editors
 			{
 				if (dropArea.Contains(evt.mousePosition))
 				{
-					Debug.Log("Show Slot Picker window");
 					_slotPickerID = EditorGUIUtility.GetControlID(new GUIContent("slotObjectPicker"), FocusType.Passive);
 					EditorGUIUtility.ShowObjectPicker<SlotDataAsset>(null, false, "", _slotPickerID);
 					Event.current.Use();//stops the Mismatched LayoutGroup errors
-					//return false;//true/false notsure
+										//return false;//true/false notsure
 				}
 			}
 			if (evt.commandName == "ObjectSelectorUpdated" && EditorGUIUtility.GetObjectPickerControlID() == _slotPickerID)
@@ -554,7 +553,6 @@ namespace UMA.Editors
 				SlotDataAsset tempSlotDataAsset = EditorGUIUtility.GetObjectPickerObject() as SlotDataAsset;
 				if (tempSlotDataAsset)
 				{
-					Debug.Log("Slot Picked " + tempSlotDataAsset.slotName);
 					LastSlot = tempSlotDataAsset.slotName;
 					AddSlotDataAsset(tempSlotDataAsset);
 					pickedCount++;
@@ -589,15 +587,15 @@ namespace UMA.Editors
 							SlotDataAsset tempSlotDataAsset = draggedObjects[i] as SlotDataAsset;
 							if (tempSlotDataAsset)
 							{
-                                LastSlot = tempSlotDataAsset.slotName;
-                                DraggedSlots.Add(tempSlotDataAsset);
+								LastSlot = tempSlotDataAsset.slotName;
+								DraggedSlots.Add(tempSlotDataAsset);
 								// AddSlotDataAsset(tempSlotDataAsset);
 								continue;
 							}
-                            if (draggedObjects[i] is OverlayDataAsset)
-                            {
-                                DraggedOverlays.Add(draggedObjects[i] as OverlayDataAsset);
-                            }
+							if (draggedObjects[i] is OverlayDataAsset)
+							{
+								DraggedOverlays.Add(draggedObjects[i] as OverlayDataAsset);
+							}
 
 							var path = AssetDatabase.GetAssetPath(draggedObjects[i]);
 							if (System.IO.Directory.Exists(path))
@@ -608,7 +606,7 @@ namespace UMA.Editors
 					}
 					if (DraggedSlots.Count > 0 || DraggedOverlays.Count > 0)
 					{
-                        AddDraggedFiles();
+						AddDraggedFiles();
 						return true;
 					}
 				}
@@ -634,15 +632,15 @@ namespace UMA.Editors
 				var tempSlotDataAsset = AssetDatabase.LoadAssetAtPath(assetFile, typeof(SlotDataAsset)) as SlotDataAsset;
 				if (tempSlotDataAsset)
 				{
-                    DraggedSlots.Add(tempSlotDataAsset);
+					DraggedSlots.Add(tempSlotDataAsset);
 					//AddSlotDataAsset(tempSlotDataAsset);
 				}
-                var tempOverlayDataAsset = AssetDatabase.LoadAssetAtPath<OverlayDataAsset>(assetFile);
-                if (tempOverlayDataAsset)
-                {
-                    DraggedOverlays.Add(tempOverlayDataAsset as OverlayDataAsset);
-                }
-            }
+				var tempOverlayDataAsset = AssetDatabase.LoadAssetAtPath<OverlayDataAsset>(assetFile);
+				if (tempOverlayDataAsset)
+				{
+					DraggedOverlays.Add(tempOverlayDataAsset as OverlayDataAsset);
+				}
+			}
 			foreach (var subFolder in System.IO.Directory.GetDirectories(path))
 			{
 				RecursiveScanFoldersForAssets(subFolder.Replace('\\', '/'));
@@ -651,20 +649,14 @@ namespace UMA.Editors
 
 		protected bool RaceInIndex(RaceData _raceData)
 		{
-			if (UMAContext.Instance != null)
+			if (UMAContextBase.Instance != null)
 			{
-				if (UMAContext.Instance.HasRace(_raceData.raceName) != null)
+				if (UMAContextBase.Instance.HasRace(_raceData.raceName) != null)
 					return true;
-            }
+			}
 
 			AssetItem ai = UMAAssetIndexer.Instance.GetAssetItem<RaceData>(_raceData.raceName);
 			if (ai != null)
-			{
-				return true;
-			}
-
-			string path = AssetDatabase.GetAssetPath(_raceData);
-			if (UMAAssetIndexer.Instance.InAssetBundle(path))
 			{
 				return true;
 			}
@@ -692,43 +684,42 @@ namespace UMA.Editors
 
 			if (_slotEditors.Count > 1)
 			{
-                // Don't juggle the order - this way, they're in the order they're in the file, or dropped in.
-                List<SlotEditor> sortedSlots = new List<SlotEditor>(_slotEditors);
-                sortedSlots.Sort(SlotEditor.comparer);
-        
+				// Don't juggle the order - this way, they're in the order they're in the file, or dropped in.
+				List<SlotEditor> sortedSlots = new List<SlotEditor>(_slotEditors);
+				sortedSlots.Sort(SlotEditor.comparer);
 
-                // previous code didn't work when there were only two slots
-                for (int i=1;i<sortedSlots.Count;i++)
-                {
-                    List<OverlayData> CurrentOverlays = sortedSlots[i].GetOverlays();
-                    List<OverlayData> PreviousOverlays = sortedSlots[i-1].GetOverlays();
 
-                    if (CurrentOverlays == PreviousOverlays)
-                    {
-                        sortedSlots[i].sharedOverlays = true;
-				    }
-			    }
-            }
+				// previous code didn't work when there were only two slots
+				for (int i = 1; i < sortedSlots.Count; i++)
+				{
+					List<OverlayData> CurrentOverlays = sortedSlots[i].GetOverlays();
+					List<OverlayData> PreviousOverlays = sortedSlots[i - 1].GetOverlays();
+
+					if (CurrentOverlays == PreviousOverlays)
+					{
+						sortedSlots[i].sharedOverlays = true;
+					}
+				}
+			}
 		}
-        //DOS made this virtual so children can override
-        public virtual bool OnGUI(string targetName, ref bool _dnaDirty, ref bool _textureDirty, ref bool _meshDirty)
-        {
-            bool changed = false;
+		//DOS made this virtual so children can override
+		public virtual bool OnGUI(string targetName, ref bool _dnaDirty, ref bool _textureDirty, ref bool _meshDirty)
+		{
+			bool changed = false;
 
-            RaceData newRace = (RaceData)EditorGUILayout.ObjectField("RaceData", _recipe.raceData, typeof(RaceData), false);
-            if (_recipe.raceData == null)
-            {
-                GUIHelper.BeginVerticalPadded(10, new Color(0.55f, 0.25f, 0.25f));
-                GUILayout.Label("Warning: No race data is set!");
-                GUIHelper.EndVerticalPadded(10);
-            }
+			RaceData newRace = (RaceData)EditorGUILayout.ObjectField("RaceData", _recipe.raceData, typeof(RaceData), false);
+			if (_recipe.raceData == null)
+			{
+				GUIHelper.BeginVerticalPadded(10, new Color(0.55f, 0.25f, 0.25f));
+				GUILayout.Label("Warning: No race data is set!");
+				GUIHelper.EndVerticalPadded(10);
+			}
 
-
-            if (_recipe.raceData != newRace)
-            {
+			if (_recipe.raceData != newRace)
+			{
 				_recipe.SetRace(newRace);
-                changed = true;
-            }
+				changed = true;
+			}
 
 			if (_recipe.raceData != null && !RaceInIndex(_recipe.raceData))
 			{
@@ -737,7 +728,7 @@ namespace UMA.Editors
 				GUILayout.BeginHorizontal();
 				if (GUILayout.Button("Add to Scene Only"))
 				{
-					UMAContext.Instance.AddRace(_recipe.raceData);
+					UMAContextBase.Instance.AddRace(_recipe.raceData);
 				}
 				if (GUILayout.Button("Add to Global Index (Recommended)"))
 				{
@@ -748,34 +739,34 @@ namespace UMA.Editors
 			}
 
 			if (_sharedColorsEditor.OnGUI(_recipe))
-            {
-                changed = true;
-                _textureDirty = true;
-            }
+			{
+				changed = true;
+				_textureDirty = true;
+			}
 
-            GUILayout.Space(10);
-            Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
-            GUI.Box(dropArea, "Drag Slots and Overlays here. Click to Pick");
-            if (DropAreaGUI(dropArea))
-            {
-                changed |= true;
-                _dnaDirty |= true;
-                _textureDirty |= true;
-                _meshDirty |= true;
-            }
+			GUILayout.Space(10);
+			Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
+			GUI.Box(dropArea, "Drag Slots and Overlays here. Click to Pick");
+			if (DropAreaGUI(dropArea))
+			{
+				changed |= true;
+				_dnaDirty |= true;
+				_textureDirty |= true;
+				_meshDirty |= true;
+			}
 			GUILayout.Space(10);
 
 			var baseSlotsList = new List<SlotData>();
 			var baseSlotsNamesList = new List<string>() { "None" };
 			if (_recipe.raceData != null)
 			{
-				if(_recipe.raceData.baseRaceRecipe != null)
+				if (_recipe.raceData.baseRaceRecipe != null)
 				{
 					//check this recipe is NOT the actual race base recipe
 					if (_recipe.raceData.baseRaceRecipe.name != targetName)
 					{
 						//we dont want to show this if this IS the base recipe
-						UMAData.UMARecipe thisBaseRecipe = _recipe.raceData.baseRaceRecipe.GetCachedRecipe(UMAContext.Instance);
+						UMAData.UMARecipe thisBaseRecipe = _recipe.raceData.baseRaceRecipe.GetCachedRecipe(UMAContextBase.Instance);
 						SlotData[] thisBaseSlots = thisBaseRecipe.GetAllSlots();
 						foreach (SlotData slot in thisBaseSlots)
 						{
@@ -810,74 +801,74 @@ namespace UMA.Editors
 
 			var added = (SlotDataAsset)EditorGUILayout.ObjectField("Add Slot", null, typeof(SlotDataAsset), false);
 
-            if (added != null)
-            {
+			if (added != null)
+			{
 				LastSlot = added.slotName;
 				var slot = new SlotData(added);
-                _recipe.MergeSlot(slot, false);
-                changed |= true;
-                _dnaDirty |= true;
-                _textureDirty |= true;
-                _meshDirty |= true;
-            }
-
-			GUILayout.Space(20);
-
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Clear"))
-			{
-                _recipe.slotDataList = new SlotData[0];
+				_recipe.MergeSlot(slot, false);
 				changed |= true;
 				_dnaDirty |= true;
 				_textureDirty |= true;
 				_meshDirty |= true;
 			}
-            if (GUILayout.Button("Remove Nulls"))
-            {
-                var newList = new List<SlotData>(_recipe.slotDataList.Length);
-                foreach (var slotData in _recipe.slotDataList)
-                {
-                    if (slotData != null) newList.Add(slotData);
-                }
-                _recipe.slotDataList = newList.ToArray();
-                changed |= true;
-                _dnaDirty |= true;
-                _textureDirty |= true;
-                _meshDirty |= true;
-            }
-            GUILayout.EndHorizontal();
 
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Collapse All"))
-            {
-                CollapseAll();
-            }
-            if (GUILayout.Button("Expand All"))
-            {
-                ExpandAll();
-            }
-            GUILayout.EndHorizontal();
+			GUILayout.Space(20);
 
-            GUILayout.BeginHorizontal();
-            if(GUILayout.Button("Select All Slots")) 
-            {
-                SelectAllSlots();
-            }
-            if(GUILayout.Button("Select All Overlays"))
-            {
-                SelectAllOverlays();
-            }
-            GUILayout.EndHorizontal();
+			GUILayout.BeginHorizontal();
+			if (GUILayout.Button("Clear"))
+			{
+				_recipe.slotDataList = new SlotData[0];
+				changed |= true;
+				_dnaDirty |= true;
+				_textureDirty |= true;
+				_meshDirty |= true;
+			}
+			if (GUILayout.Button("Remove Nulls"))
+			{
+				var newList = new List<SlotData>(_recipe.slotDataList.Length);
+				foreach (var slotData in _recipe.slotDataList)
+				{
+					if (slotData != null) newList.Add(slotData);
+				}
+				_recipe.slotDataList = newList.ToArray();
+				changed |= true;
+				_dnaDirty |= true;
+				_textureDirty |= true;
+				_meshDirty |= true;
+			}
+			GUILayout.EndHorizontal();
 
-            if (LastSlot != "")
-            {
-                if (OpenSlots.ContainsKey(LastSlot))
-                {
-                    CollapseAll();
-                    OpenSlots[LastSlot] = true;
-                    LastSlot = "";
-                }
-            }
+			GUILayout.BeginHorizontal();
+			if (GUILayout.Button("Collapse All"))
+			{
+				CollapseAll();
+			}
+			if (GUILayout.Button("Expand All"))
+			{
+				ExpandAll();
+			}
+			GUILayout.EndHorizontal();
+
+			GUILayout.BeginHorizontal();
+			if (GUILayout.Button("Select All Slots"))
+			{
+				SelectAllSlots();
+			}
+			if (GUILayout.Button("Select All Overlays"))
+			{
+				SelectAllOverlays();
+			}
+			GUILayout.EndHorizontal();
+
+			if (LastSlot != "")
+			{
+				if (OpenSlots.ContainsKey(LastSlot))
+				{
+					CollapseAll();
+					OpenSlots[LastSlot] = true;
+					LastSlot = "";
+				}
+			}
 
 			//check the slotEditors are uptodate with the slots in the recipe
 			//They can get out of sync happen in the UMAData component when DCS modifies the recipe
@@ -932,60 +923,60 @@ namespace UMA.Editors
 			return changed;
 		}
 
-        private static void ExpandAll()
-        {
-            List<string> keys = new List<string>(OpenSlots.Keys);
-            foreach (string s in keys)
-            {
-                OpenSlots[s] = true;
-            }
-        }
+		private static void ExpandAll()
+		{
+			List<string> keys = new List<string>(OpenSlots.Keys);
+			foreach (string s in keys)
+			{
+				OpenSlots[s] = true;
+			}
+		}
 
-        private static void CollapseAll()
-        {
-            List<string> keys = new List<string>(OpenSlots.Keys);
-            foreach (string s in keys)
+		private static void CollapseAll()
+		{
+			List<string> keys = new List<string>(OpenSlots.Keys);
+			foreach (string s in keys)
 
-            {
-                OpenSlots[s] = false;
-            }
-        }
+			{
+				OpenSlots[s] = false;
+			}
+		}
 
-        protected void SelectAllSlots()
-        {
-            List<Object> slots = new List<Object>();
-            foreach (var slotData in _recipe.slotDataList)
-            {
-                if (slotData != null)
-                {
-                    slots.Add(slotData.asset);
-                }
-            }
-            Selection.objects = slots.ToArray();
-        }
+		protected void SelectAllSlots()
+		{
+			List<Object> slots = new List<Object>();
+			foreach (var slotData in _recipe.slotDataList)
+			{
+				if (slotData != null)
+				{
+					slots.Add(slotData.asset);
+				}
+			}
+			Selection.objects = slots.ToArray();
+		}
 
-        protected void SelectAllOverlays()
-        {
-            HashSet<Object> overlays = new HashSet<Object>();
-            foreach (var slotData in _recipe.slotDataList)
-            {
-                if (slotData != null)
-                {
-                    List<OverlayData> overlayData = slotData.GetOverlayList();
-                    foreach (var overlay in overlayData)
-                    {
-                        if(overlay != null)
-                        {
-                            overlays.Add(overlay.asset);
-                        }
-                    }
-                }
-            }
-            Object[] newSelection = new Object[overlays.Count];
-            overlays.CopyTo(newSelection);
-            Selection.objects = newSelection;
-        }
-    }
+		protected void SelectAllOverlays()
+		{
+			HashSet<Object> overlays = new HashSet<Object>();
+			foreach (var slotData in _recipe.slotDataList)
+			{
+				if (slotData != null)
+				{
+					List<OverlayData> overlayData = slotData.GetOverlayList();
+					foreach (var overlay in overlayData)
+					{
+						if (overlay != null)
+						{
+							overlays.Add(overlay.asset);
+						}
+					}
+				}
+			}
+			Object[] newSelection = new Object[overlays.Count];
+			overlays.CopyTo(newSelection);
+			Selection.objects = newSelection;
+		}
+	}
 
 	public class SlotEditor
 	{
@@ -995,25 +986,25 @@ namespace UMA.Editors
 		private readonly List<OverlayEditor> _overlayEditors = new List<OverlayEditor>();
 		private readonly string _name;
 
-        public SlotData Slot { get { return _slotData; } }
+		public SlotData Slot { get { return _slotData; } }
 
 		public bool Delete { get; private set; }
 
-        public bool FoldOut
-        {
-            get
-            {
-                if (! SlotMasterEditor.OpenSlots.ContainsKey(_slotData.slotName))
-                   SlotMasterEditor.OpenSlots.Add(_slotData.slotName, true);
-                return SlotMasterEditor.OpenSlots[_slotData.slotName];
-            }
-            set
-            {
-                if (!SlotMasterEditor.OpenSlots.ContainsKey(_slotData.slotName))
-                    SlotMasterEditor.OpenSlots.Add(_slotData.slotName, true);
-                SlotMasterEditor.OpenSlots[_slotData.slotName] = value;
-            }
-        }
+		public bool FoldOut
+		{
+			get
+			{
+				if (!SlotMasterEditor.OpenSlots.ContainsKey(_slotData.slotName))
+					SlotMasterEditor.OpenSlots.Add(_slotData.slotName, true);
+				return SlotMasterEditor.OpenSlots[_slotData.slotName];
+			}
+			set
+			{
+				if (!SlotMasterEditor.OpenSlots.ContainsKey(_slotData.slotName))
+					SlotMasterEditor.OpenSlots.Add(_slotData.slotName, true);
+				SlotMasterEditor.OpenSlots[_slotData.slotName] = value;
+			}
+		}
 
 		public bool sharedOverlays = false;
 		public int idx;
@@ -1041,9 +1032,9 @@ namespace UMA.Editors
 
 		private bool InIndex(SlotData _slotData)
 		{
-			if (UMAContext.Instance != null)
+			if (UMAContextBase.Instance != null)
 			{
-				if (UMAContext.Instance.HasSlot(_slotData.asset.slotName))
+				if (UMAContextBase.Instance.HasSlot(_slotData.asset.slotName))
 				{
 					return true;
 				}
@@ -1051,12 +1042,6 @@ namespace UMA.Editors
 
 			AssetItem ai = UMAAssetIndexer.Instance.GetAssetItem<SlotDataAsset>(_slotData.asset.slotName);
 			if (ai != null)
-			{
-				return true;
-			}
-
-			string path = AssetDatabase.GetAssetPath(_slotData.asset);
-			if (UMAAssetIndexer.Instance.InAssetBundle(path))
 			{
 				return true;
 			}
@@ -1070,39 +1055,39 @@ namespace UMA.Editors
 			bool select;
 			bool _foldOut = FoldOut;
 
-			GUIHelper.FoldoutBarButton(ref _foldOut, _name + "      (" + _slotData.asset.name + ")","inspect", out select, out delete);
+			GUIHelper.FoldoutBarButton(ref _foldOut, _name + "      (" + _slotData.asset.name + ")", "inspect", out select, out delete);
 
-            FoldOut = _foldOut;
+			FoldOut = _foldOut;
 
-            // Set this before exiting.
-            Delete = delete;
-             
-            if (select)
-            {
-                EditorGUIUtility.PingObject(_slotData.asset.GetInstanceID());
-                InspectorUtlity.InspectTarget(_slotData.asset);
-            }
+			// Set this before exiting.
+			Delete = delete;
+
+			if (select)
+			{
+				EditorGUIUtility.PingObject(_slotData.asset.GetInstanceID());
+				InspectorUtlity.InspectTarget(_slotData.asset);
+			}
 
 			if (!FoldOut)
 				return false;
-			
 
-            bool changed = false;
+
+			bool changed = false;
 
 			GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
 
 			if (!InIndex(_slotData))
 			{
-				EditorGUILayout.HelpBox("Slot "+_slotData.asset.name+" is not indexed!", MessageType.Error);
+				EditorGUILayout.HelpBox("Slot " + _slotData.asset.name + " is not indexed!", MessageType.Error);
 
 				GUILayout.BeginHorizontal();
 				if (GUILayout.Button("Add to Scene Only"))
 				{
-					UMAContext.Instance.AddSlotAsset(_slotData.asset);
+					UMAContextBase.Instance.AddSlotAsset(_slotData.asset);
 				}
 				if (GUILayout.Button("Add to Global Index (Recommended)"))
 				{
-					UMAAssetIndexer.Instance.EvilAddAsset(typeof(SlotDataAsset),_slotData.asset);
+					UMAAssetIndexer.Instance.EvilAddAsset(typeof(SlotDataAsset), _slotData.asset);
 					UMAAssetIndexer.Instance.ForceSave();
 				}
 				GUILayout.EndHorizontal();
@@ -1206,15 +1191,15 @@ namespace UMA.Editors
 
 			return changed;
 		}
-        public static NameSorter sorter = new NameSorter();
-        public class NameSorter : IComparer<SlotEditor>
-        {
-            public int Compare(SlotEditor x, SlotEditor y)
-            {
-                return String.Compare(x._slotData.slotName, y._slotData.slotName);
-            }
-        }
-        public static Comparer comparer = new Comparer();
+		public static NameSorter sorter = new NameSorter();
+		public class NameSorter : IComparer<SlotEditor>
+		{
+			public int Compare(SlotEditor x, SlotEditor y)
+			{
+				return String.Compare(x._slotData.slotName, y._slotData.slotName);
+			}
+		}
+		public static Comparer comparer = new Comparer();
 		public class Comparer : IComparer<SlotEditor>
 		{
 			public int Compare(SlotEditor x, SlotEditor y)
@@ -1234,12 +1219,20 @@ namespace UMA.Editors
 
 	public class OverlayEditor
 	{
-		public static Dictionary<string, bool> OverlayExpanded = new Dictionary<string, bool>();		
+		public static Dictionary<string, bool> OverlayExpanded = new Dictionary<string, bool>();
 		private readonly UMAData.UMARecipe _recipe;
 		protected readonly SlotData _slotData;
 		private readonly OverlayData _overlayData;
+		private OverlayDataAsset _baseOverlayData;
 		private readonly TextureEditor[] _textures;
 		private ColorEditor[] _colors;
+		private bool isUV = false;
+
+		public OverlayData Overlay
+		{
+			get { return _overlayData; }
+		}
+
 #if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 		private ProceduralPropertyEditor[] _properties;
 		private ProceduralPropertyDescription[] _descriptions;
@@ -1259,15 +1252,21 @@ namespace UMA.Editors
 			OverlayExpanded.Add(overlayName, true);
 		}
 
-		public OverlayEditor(UMAData.UMARecipe recipe, SlotData slotData, OverlayData overlayData)
+		public OverlayEditor(UMAData.UMARecipe recipe, SlotData slotData, OverlayData overlayData, OverlayDataAsset baseOverlayDataAsset=null)
 		{
 			_recipe = recipe;
 			_overlayData = overlayData;
 			_slotData = slotData;
+			_baseOverlayData = baseOverlayDataAsset;
 			EnsureEntry((overlayData.overlayName));
 
+			if ((_overlayData.rect.x <= 1.0f) && (_overlayData.rect.y <= 1.0f) && (_overlayData.rect.width <= 1.0f) && (_overlayData.rect.height <= 1.0f))
+			{
+				isUV = true;
+			}
+
 			// Sanity check the colors
-			if (_recipe.sharedColors == null)
+				if (_recipe.sharedColors == null)
 				_recipe.sharedColors = new OverlayColorData[0];
 			else
 			{
@@ -1313,7 +1312,7 @@ namespace UMA.Editors
 			{
 				_properties = null;
 			}
-            #endif
+#endif
 
 			BuildColorEditors();
 
@@ -1341,9 +1340,9 @@ namespace UMA.Editors
 
 		private bool InIndex(OverlayData _overlayData)
 		{
-			if (UMAContext.Instance != null)
+			if (UMAContextBase.Instance != null)
 			{
-				if (UMAContext.Instance.HasOverlay(_overlayData.overlayName))
+				if (UMAContextBase.Instance.HasOverlay(_overlayData.overlayName))
 				{
 					return true;
 				}
@@ -1355,13 +1354,7 @@ namespace UMA.Editors
 				return true;
 			}
 
-			string path = AssetDatabase.GetAssetPath(_overlayData.asset);
-			if (UMAAssetIndexer.Instance.InAssetBundle(path))
-			{
-				return true;
-			}
-
-			return false;
+		return false;
 		}
 
 		public bool OnGUI()
@@ -1371,7 +1364,7 @@ namespace UMA.Editors
 
 			_foldout = OverlayExpanded[_overlayData.overlayName];
 
-			GUIHelper.FoldoutBarButton(ref _foldout, _overlayData.asset.overlayName + "("+_overlayData.asset.material.name+")", "inspect",out select, out move, out delete);
+			GUIHelper.FoldoutBarButton(ref _foldout, _overlayData.asset.overlayName + "(" + _overlayData.asset.material.name + ")", "inspect", out select, out move, out delete);
 
 			if (select)
 			{
@@ -1380,11 +1373,12 @@ namespace UMA.Editors
 			}
 
 			OverlayExpanded[_overlayData.overlayName] = _foldout;
+			Delete = delete;
 
 			if (!_foldout)
 				return false;
 
-			Delete = delete;
+
 
 
 			GUIHelper.BeginHorizontalPadded(10, Color.white);
@@ -1392,67 +1386,97 @@ namespace UMA.Editors
 
 
 
-            if (!InIndex(_overlayData))
-            {
-                EditorGUILayout.HelpBox("Overlay " + _overlayData.asset.name + " is not indexed!", MessageType.Error);
-                GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Add to Scene Only"))
-                {
-                    UMAContext.Instance.AddOverlayAsset(_overlayData.asset);
+			if (!InIndex(_overlayData))
+			{
+				EditorGUILayout.HelpBox("Overlay " + _overlayData.asset.name + " is not indexed!", MessageType.Error);
+				GUILayout.BeginHorizontal();
+				if (GUILayout.Button("Add to Scene Only"))
+				{
+					UMAContextBase.Instance.AddOverlayAsset(_overlayData.asset);
 
-                }
-                if (GUILayout.Button("Add to Global Index"))
-                {
-                    UMAAssetIndexer.Instance.EvilAddAsset(typeof(OverlayDataAsset), _overlayData.asset);
-                    UMAAssetIndexer.Instance.ForceSave();
-                }
-                GUILayout.EndHorizontal();
-            }
+				}
+				if (GUILayout.Button("Add to Global Index"))
+				{
+					UMAAssetIndexer.Instance.EvilAddAsset(typeof(OverlayDataAsset), _overlayData.asset);
+					UMAAssetIndexer.Instance.ForceSave();
+				}
+				GUILayout.EndHorizontal();
+			}
 
-            if ((_overlayData.asset.material.IsProcedural() == false) && (_overlayData.asset.material != _slotData.asset.material))
-            {
-                if (_overlayData.asset.material.channels.Length == _slotData.asset.material.channels.Length)
-                {
-                    EditorGUILayout.HelpBox("Material " + _overlayData.asset.material.name + " does not match slot material: " + _slotData.asset.material.name, MessageType.Error);
-                    if (GUILayout.Button("Copy Slot Material to Overlay"))
-                    {
-                        _overlayData.asset.material = _slotData.asset.material;
-                        EditorUtility.SetDirty(_overlayData.asset);
-                        AssetDatabase.SaveAssets();
-                    }
-                }
-                else
-                {
-                    EditorGUILayout.HelpBox("Material " + _overlayData.asset.material.name + " does not match slot material: " + _slotData.asset.material.name + " and Channel count is not the same. Overlay must be removed or fixed manually", MessageType.Error);
-                }
-                if (GUILayout.Button("Select Slot in Project"))
-                {
-                    // find the asset.
-                    // select it in the project.
-                    Selection.activeObject = _slotData.asset;
-                }
+			if ((_overlayData.asset.material.name != _slotData.asset.material.name))
+			{
+				if (_overlayData.asset.material.channels.Length == _slotData.asset.material.channels.Length)
+				{
+					EditorGUILayout.HelpBox("Material " + _overlayData.asset.material.name + " does not match slot material: " + _slotData.asset.material.name, MessageType.Error);
+					if (GUILayout.Button("Copy Slot Material to Overlay"))
+					{
+						_overlayData.asset.material = _slotData.asset.material;
+						EditorUtility.SetDirty(_overlayData.asset);
+						AssetDatabase.SaveAssets();
+					}
+				}
+				else
+				{
+					EditorGUILayout.HelpBox("Material " + _overlayData.asset.material.name + " does not match slot material: " + _slotData.asset.material.name + " and Channel count is not the same. Overlay must be removed or fixed manually", MessageType.Error);
+				}
+				if (GUILayout.Button("Select Slot in Project"))
+				{
+					// find the asset.
+					// select it in the project.
+					Selection.activeObject = _slotData.asset;
+				}
 
-                if (GUILayout.Button("Select Overlay in Project"))
-                {
-                    // find the asset.
-                    // select it in the project.
-                    Selection.activeObject = _overlayData.asset;
-                }
-            }
+				if (GUILayout.Button("Select Overlay in Project"))
+				{
+					// find the asset.
+					// select it in the project.
+					Selection.activeObject = _overlayData.asset;
+				}
+			}
 
-            // Edit the colors
-            bool changed = OnColorGUI();
+			// Edit the colors
+			bool changed = OnColorGUI();
 
-            // Edit the rect
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Rect");
-            Rect Save = _overlayData.rect;
-            _overlayData.rect = EditorGUILayout.RectField(_overlayData.rect);
-            if (Save.x != _overlayData.rect.x || Save.y != _overlayData.rect.y || Save.width != _overlayData.rect.width || Save.height != _overlayData.rect.height)
-            {
-                changed = true;
-            }
-            GUILayout.EndHorizontal();
+			// Edit the rect
+			GUILayout.BeginHorizontal();
+			GUILayout.Label("Rect");
+			if (!isUV && _baseOverlayData != null)
+			{
+				if (GUILayout.Button("Convert to UV"))
+				{
+					_overlayData.rect.x /= _baseOverlayData.textureList[0].width;
+					_overlayData.rect.width /= _baseOverlayData.textureList[0].width;
+					_overlayData.rect.y /= _baseOverlayData.textureList[0].height;
+					_overlayData.rect.height /= _baseOverlayData.textureList[0].height;
+					isUV = true;
+				}
+			}
+			GUILayout.EndHorizontal();
+
+			Rect Save = _overlayData.rect;
+			if (!isUV)
+			{
+				_overlayData.rect = EditorGUILayout.RectField(_overlayData.rect);
+			}
+			else
+			{
+				GUILayout.BeginHorizontal(); // x,y
+				EditorGUILayout.LabelField("X:", GUILayout.Width(24));
+				_overlayData.rect.x = EditorGUILayout.Slider( _overlayData.rect.x*100.0f, 0.0f, 100.0f)/100.0f;
+				EditorGUILayout.LabelField("Y:", GUILayout.Width(24));
+				_overlayData.rect.y = EditorGUILayout.Slider( _overlayData.rect.y * 100.0f, 0.0f, 100.0f)/100.0f;
+				GUILayout.EndHorizontal();
+				GUILayout.BeginHorizontal(); // w,h
+				EditorGUILayout.LabelField("W:", GUILayout.Width(24));
+				_overlayData.rect.width = EditorGUILayout.Slider( _overlayData.rect.width * 100.0f, 0.0f, 100.0f)/100.0f;
+				EditorGUILayout.LabelField("H:", GUILayout.Width(24));
+				_overlayData.rect.height = EditorGUILayout.Slider(_overlayData.rect.height * 100.0f, 0.0f, 100.0f) /100.0f;
+				GUILayout.EndHorizontal();
+			}
+			if (Save.x != _overlayData.rect.x || Save.y != _overlayData.rect.y || Save.width != _overlayData.rect.width || Save.height != _overlayData.rect.height)
+			{
+				changed = true;
+			}
 
 #if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 			// Edit the procedural properties
@@ -1525,7 +1549,7 @@ namespace UMA.Editors
 				EditorGUI.indentLevel--;
 				GUILayout.EndVertical();
 			}
-            #endif      
+#endif
 
 			// Edit the textures
 			GUILayout.Label("Textures");
@@ -1548,7 +1572,7 @@ namespace UMA.Editors
 			bool changed = false;
 			int currentsharedcol = 0;
 			string[] sharednames = new string[_recipe.sharedColors.Length];
-			
+
 			//DOS 13012016 if we also check here that _recipe.sharedColors still contains 
 			//the desired ocd then we can save the collection when colors are deleted
 			if (_overlayData.colorData.IsASharedColor && _recipe.HasSharedColor(_overlayData.colorData))
@@ -1813,7 +1837,7 @@ namespace UMA.Editors
 			return changed;
 		}
 	}
-    #endif
+#endif
 
 	public abstract class CharacterBaseEditor : Editor
 	{
@@ -1821,12 +1845,12 @@ namespace UMA.Editors
 		{
 		 "DNA", "Slots"
 	  };
-        public static bool _AutomaticUpdates = true;
-        protected Vector2 scrollPosition;
+		public static bool _AutomaticUpdates = true;
+		protected Vector2 scrollPosition;
 		protected string _description;
 		protected string _errorMessage;
 		protected bool _needsUpdate;
-        protected bool _forceUpdate;
+		protected bool _forceUpdate;
 		protected bool _dnaDirty;
 		protected bool _textureDirty;
 		protected bool _meshDirty;
@@ -1850,23 +1874,23 @@ namespace UMA.Editors
 			return true;
 		}
 
-        public virtual void OnEnable()
-        {
-            _needsUpdate = false;
-            _forceUpdate = false;
-        }
+		public virtual void OnEnable()
+		{
+			_needsUpdate = false;
+			_forceUpdate = false;
+		}
 
-        public virtual void OnDisable()
-        {
-            if (_needsUpdate)
-            {
-                if (EditorUtility.DisplayDialog("Unsaved Changes", "Save changes made to the recipe?", "Save", "Discard"))
-                    DoUpdate();
-                
-                _needsUpdate = false;
-                _forceUpdate = false;
-            }                
-        }
+		public virtual void OnDisable()
+		{
+			if (_needsUpdate)
+			{
+				if (EditorUtility.DisplayDialog("Unsaved Changes", "Save changes made to the recipe?", "Save", "Discard"))
+					DoUpdate();
+
+				_needsUpdate = false;
+				_forceUpdate = false;
+			}
+		}
 
 		/// <summary>
 		/// Override PreInspectorGUI in any derived editors to allow editing of new properties added to recipes.
@@ -1889,19 +1913,40 @@ namespace UMA.Editors
 		public override void OnInspectorGUI()
 		{
 			GUILayout.Label(_description);
-      _AutomaticUpdates = GUILayout.Toggle(_AutomaticUpdates, "Automatic Updates");
-      _forceUpdate = false;
+			_AutomaticUpdates = GUILayout.Toggle(_AutomaticUpdates, "Automatic Updates");
+			_forceUpdate = false;
 
-      if (!_AutomaticUpdates)
-      {
-          if(GUILayout.Button("Save Recipe"))
-          {
-              _needsUpdate = true;
-              _forceUpdate = true;
-          }
-      }
-			scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUIStyle.none , GUILayout.MinHeight(600), GUILayout.MaxHeight(3000));
+			if (!_AutomaticUpdates)
+			{
+				if (GUILayout.Button("Save Recipe"))
+				{
+					_needsUpdate = true;
+					_forceUpdate = true;
+				}
+			}
 
+
+			scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUIStyle.none, GUILayout.MinHeight(600), GUILayout.MaxHeight(3000));
+
+			if (target as UMATextRecipe != null)
+			{
+				UMATextRecipe theRecipe = target as UMATextRecipe;
+				string newLabel = EditorGUILayout.TextField("Alt Addressable Label", theRecipe.label);
+				if (newLabel != theRecipe.label)
+				{
+					theRecipe.label = newLabel;
+					_needsUpdate = true;
+					_forceUpdate = true;
+				}
+				GUIContent ToggleContent = new GUIContent("Resources Only", "When checked, This recipe will be skipped when generating Addressable Groups. This can result in duplicate assets.");
+				bool theResourcesOnlyFlag = EditorGUILayout.Toggle(ToggleContent, theRecipe.resourcesOnly);
+				if (theResourcesOnlyFlag != theRecipe.resourcesOnly)
+				{
+					theRecipe.resourcesOnly = theResourcesOnlyFlag;
+					_needsUpdate = true;
+					_forceUpdate = true;
+				}
+			}
 			if (_errorMessage != null)
 			{
 				EditorGUILayout.HelpBox("The Recipe Editor could not be drawn correctly because the libraries could not find some of the required Assets. The error message was...", MessageType.Warning);
@@ -1910,15 +1955,15 @@ namespace UMA.Editors
 				EditorGUILayout.HelpBox("You can either continue editing this recipe (in which case it will only contain the slots and overlays you see below) or you can fix the missing asset and come back to this recipe after (in which case it will contain everything the recipe had originally)", MessageType.Info);
 				EditorGUILayout.Space();
 				editBustedRecipe = editBustedRecipe == null ? false : editBustedRecipe;
-				if(GUILayout.Button("Enable Editing"))
+				if (GUILayout.Button("Enable Editing"))
 				{
 					editBustedRecipe = true;
 				}
 				EditorGUILayout.Space();
 				//we dont want the user to edit the recipe at all in this case because if they do it will be saved incompletely
-				//010212016 BUT we do need to output something else it looks like it doesn't work and you CAN still legitimately make NEW recipes even if the scene has no UMAContext
+				//010212016 BUT we do need to output something else it looks like it doesn't work and you CAN still legitimately make NEW recipes even if the scene has no UMAContextBase
 				//return;
-				//TODO If we can find out if the recipe has a string and we DONT have an UMAContext we could disable editing (so the user doesn't screw up their recipes
+				//TODO If we can find out if the recipe has a string and we DONT have an UMAContextBase we could disable editing (so the user doesn't screw up their recipes
 			}
 			EditorGUI.BeginDisabledGroup((editBustedRecipe == false ? true : false));
 
@@ -1935,10 +1980,10 @@ namespace UMA.Editors
 					Rebuild();
 				}
 
-                if (PreInspectorGUI())
-                {
-                    _needsUpdate = true;
-                }
+				if (PreInspectorGUI())
+				{
+					_needsUpdate = true;
+				}
 
 				if (ToolbarGUI())
 				{
@@ -1950,11 +1995,11 @@ namespace UMA.Editors
 					_needsUpdate = true;
 				}
 
-                if ((_AutomaticUpdates && _needsUpdate) || _forceUpdate)
+				if ((_AutomaticUpdates && _needsUpdate) || _forceUpdate)
 				{
 					DoUpdate();
-                    _needsUpdate = false;
-                    _forceUpdate = false;
+					_needsUpdate = false;
+					_forceUpdate = false;
 				}
 			}
 			catch (UMAResourceNotFoundException e)
@@ -1967,7 +2012,7 @@ namespace UMA.Editors
 			}
 			//end the busted Recipe disabled group if we had it
 			EditorGUI.EndDisabledGroup();
-            GUILayout.EndScrollView();
+			GUILayout.EndScrollView();
 		}
 
 		protected abstract void DoUpdate();
@@ -1994,14 +2039,14 @@ namespace UMA.Editors
 			_toolbarIndex = GUILayout.Toolbar(_toolbarIndex, toolbar);
 			_LastToolBar = _toolbarIndex;
 			if (dnaEditor != null && slotEditor != null)
-			switch (_toolbarIndex)
-			{
-				case 0:
-					if (!dnaEditor.IsValid) return false;
-					return dnaEditor.OnGUI(ref _dnaDirty, ref _textureDirty, ref _meshDirty);
-				case 1:
-					return slotEditor.OnGUI(target.name, ref _dnaDirty, ref _textureDirty, ref _meshDirty);
-			}
+				switch (_toolbarIndex)
+				{
+					case 0:
+						if (!dnaEditor.IsValid) return false;
+						return dnaEditor.OnGUI(ref _dnaDirty, ref _textureDirty, ref _meshDirty);
+					case 1:
+						return slotEditor.OnGUI(target.name, ref _dnaDirty, ref _textureDirty, ref _meshDirty);
+				}
 
 			return false;
 		}
