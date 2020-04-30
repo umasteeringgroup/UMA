@@ -68,7 +68,7 @@ namespace UMA
 				showUnindexedTypes = EditorPrefs.GetBool("BoolUMAShowUnindexed", false);
 
 				UMAAssetIndexer ai = UMAAssetIndexer.Instance;
-				if (showIndexedTypes)
+				if (showIndexedTypes && ai != null)
 				{
 					EditorApplication.projectWindowItemOnGUI += DrawItems;
 				}

@@ -170,6 +170,8 @@ namespace UMA
                 {
                     //var st = StartTimer();
                     theIndexer = Resources.Load("AssetIndexer") as UMAAssetIndexer;
+                    if (theIndexer == null)
+                        return null;
                     theIndexer.UpdateSerializedDictionaryItems();
                     theIndexer.RebuildRaceRecipes();
                     //StopTimer(st,"Asset index load");
@@ -2272,13 +2274,14 @@ namespace UMA
                     }
                 }
 #endif
-#endif
-                TypeDic.Add(ai._Name, ai);
                 if (GuidTypes.ContainsKey(ai._Guid))
                 {
                     return false;
                 }
                 GuidTypes.Add(ai._Guid, ai);
+#endif
+
+                TypeDic.Add(ai._Name, ai);
             }
             catch (System.Exception ex)
             {
