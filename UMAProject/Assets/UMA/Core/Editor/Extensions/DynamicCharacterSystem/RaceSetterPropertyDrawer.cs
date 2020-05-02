@@ -90,5 +90,5 @@ namespace UMA.CharacterSystem.Editors
 			EditorGUI.EndProperty();
 		}
 	}
-	#endif
 }
+#endif

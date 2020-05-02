@@ -64,5 +64,5 @@ namespace UMA.Editors
 			}
 		}
 	}
-	#endif
 }
+#endif
