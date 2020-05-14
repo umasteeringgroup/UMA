@@ -135,13 +135,14 @@ namespace UMA
 			EditorGUILayout.Space();
 			EditorGUILayout.LabelField("Addressables Options",EditorStyles.boldLabel);
 			EditorGUILayout.Space();
+
+			// ask here for the 
 #else
 			EditorGUILayout.Space();
 			EditorGUILayout.LabelField("Addressables Options (Not Enabled)", EditorStyles.boldLabel);
 			EditorGUILayout.Space();
 #endif
-			// No longer needed... This is now down using different plugins.
-			//ConfigToggle(ConfigToggle_UseSharedGroup, "Use Shared Group", "Add all Addressables to the same Shared Group.", true);
+			ConfigToggle(ConfigToggle_UseSharedGroup, "Use Shared Group", "Add all Addressables to the same Shared Group.", true);
 			// This is managed by the addressables system
 			//ConfigToggle(ConfigToggle_ArchiveGroups, "Archive Groups", "For now just copies the assetbundles into folders with the group name.", false);
 			
@@ -169,6 +170,12 @@ namespace UMA
 		public static string GetDefaultAddressableLabel()
 		{
 			return PlayerPrefs.GetString(umaDefaultLabelKey,umaDefaultLabel);
+		}
+
+
+		public static bool UseSharedGroupConfigured()
+		{
+			return GetConfigValue(ConfigToggle_UseSharedGroup, true);
 		}
 
 		public static bool IsAddressable()

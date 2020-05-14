@@ -9,6 +9,8 @@ using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 using UMA;
+using UMA.Controls;
+using UnityEditor.VersionControl;
 
 namespace UMA.Editors
 {
@@ -1863,6 +1865,7 @@ namespace UMA.Editors
 		protected int _toolbarIndex = _LastToolBar;
 		protected DNAMasterEditor dnaEditor;
 		protected SlotMasterEditor slotEditor;
+		protected bool InitialResourcesOnlyFlag;
 
 		protected bool NeedsReenable()
 		{
@@ -1878,6 +1881,8 @@ namespace UMA.Editors
 		{
 			_needsUpdate = false;
 			_forceUpdate = false;
+			UMATextRecipe theRecipe = target as UMATextRecipe;
+			InitialResourcesOnlyFlag = theRecipe.resourcesOnly;
 		}
 
 		public virtual void OnDisable()
@@ -1931,6 +1936,7 @@ namespace UMA.Editors
 			if (target as UMATextRecipe != null)
 			{
 				UMATextRecipe theRecipe = target as UMATextRecipe;
+#if UMA_ADDRESSABLES
 				string newLabel = EditorGUILayout.TextField("Alt Addressable Label", theRecipe.label);
 				if (newLabel != theRecipe.label)
 				{
@@ -1938,14 +1944,32 @@ namespace UMA.Editors
 					_needsUpdate = true;
 					_forceUpdate = true;
 				}
-				GUIContent ToggleContent = new GUIContent("Resources Only", "When checked, This recipe will be skipped when generating Addressable Groups. This can result in duplicate assets.");
-				bool theResourcesOnlyFlag = EditorGUILayout.Toggle(ToggleContent, theRecipe.resourcesOnly);
-				if (theResourcesOnlyFlag != theRecipe.resourcesOnly)
+				// GUIContent ToggleContent = new GUIContent("Resources Only", "When checked, This recipe will be skipped when generating Addressable Groups. This can result in duplicate assets.");
+				if (theRecipe.resourcesOnly)
 				{
-					theRecipe.resourcesOnly = theResourcesOnlyFlag;
-					_needsUpdate = true;
-					_forceUpdate = true;
+					GUILayout.Label("RESOURCES ONLY: TRUE");
+					EditorGUILayout.HelpBox("Removing the Resources Only flag will instruct UMA to include this in the addressable groups. You will need to regenerate the groups, and rebuild the addressable bundles.", MessageType.Info);
+					if (GUILayout.Button("Remove Resources Only flag"))
+					{
+						theRecipe.resourcesOnly = false;
+						DoUpdate();
+						RebuildIfNeeded();
+						/* Here: Ask to rebuild the groups using the default group builder */
+					}
 				}
+				else
+				{
+					GUILayout.Label("RESOURCES ONLY: FALSE");
+					EditorGUILayout.HelpBox("Making this Resources Only will remove this recipe, and the items contained in it, from the addressable groups. This can take a few moments. Addressable bundles will need to be rebuilt after this is toggled.", MessageType.Info);
+					if (GUILayout.Button("Make this Resources Only"))
+					{
+						theRecipe.resourcesOnly = true;
+						DoUpdate();
+						/* Here: Ask to rebuild the groups using the default group builder */
+						RebuildIfNeeded();
+					}
+				}
+#endif
 			}
 			if (_errorMessage != null)
 			{
@@ -2013,6 +2037,29 @@ namespace UMA.Editors
 			//end the busted Recipe disabled group if we had it
 			EditorGUI.EndDisabledGroup();
 			GUILayout.EndScrollView();
+		}
+
+		private void RebuildIfNeeded()
+		{
+			List<Type> PluginTypes = AssetIndexerWindow.GetAddressablePlugins();
+
+			if (EditorUtility.DisplayDialog("UMA System Request", "The Addressable groups should be recalculated after setting this. Do it now? This is recommended.", "Recalculate", "Do it later"))
+			{
+				//TODO: Need to support possible additions to plugin types.
+				if (PluginTypes.Count == 1 && UMAEditorUtilities.UseSharedGroupConfigured())
+				{
+
+					IUMAAddressablePlugin addrplug = (IUMAAddressablePlugin)Activator.CreateInstance(PluginTypes[0]);
+					UMAAssetIndexer.Instance.GenerateAddressables(addrplug);
+					Resources.UnloadUnusedAssets();
+				}
+				else
+				{
+					UMAAssetIndexer.Instance.CleanupAddressables();
+					UMAAssetIndexer.Instance.GenerateAddressables();
+					Resources.UnloadUnusedAssets();
+				}
+			}
 		}
 
 		protected abstract void DoUpdate();

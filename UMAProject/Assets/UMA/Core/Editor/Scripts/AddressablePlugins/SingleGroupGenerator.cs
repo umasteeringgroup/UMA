@@ -210,6 +210,8 @@ namespace UMA
         /// <param name="recipe"></param>
         public void ProcessRecipe(UMAPackedRecipeBase recipe)
         {
+            if (recipe.resourcesOnly)
+                return;
             Recipes.Add(recipe);
         }
 
