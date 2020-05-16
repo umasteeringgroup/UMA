@@ -31,10 +31,23 @@ namespace UMA
             }
         }
 
+        public void LogText(string text)
+        {
+#if SUPER_LOGGING
+            string filePath = System.IO.Path.Combine(Application.dataPath, "Generatelog.txt");
+            System.IO.File.AppendAllText(filePath, text+Environment.NewLine);
+#endif
+        }
+
         public void Complete()
         {
             try
             {
+                LogText("");
+                LogText("****************************************************");
+                LogText("Generating from recipes: " + DateTime.Now.ToString());
+                LogText("****************************************************");
+                LogText("");
                 bool IncludeRecipes = UMAEditorUtilities.GetConfigValue(UMAEditorUtilities.ConfigToggle_IncludeRecipes, false);
                 bool IncludeOthers = UMAEditorUtilities.GetConfigValue(UMAEditorUtilities.ConfigToggle_IncludeOther, false);
                 string DefaultAddressableLabel = UMAEditorUtilities.GetDefaultAddressableLabel();
@@ -71,7 +84,10 @@ namespace UMA
                         ExtraLabels = RecipeExtraLabels[uwr.name];
                     }
 
-                    EditorUtility.DisplayProgressBar("Generating", "processing recipe: " + uwr.name, pos);
+                    LogText("");
+                    LogText("Processing recipe: " + uwr.name + " Label: " + uwr.AssignedLabel);
+
+                    EditorUtility.DisplayProgressBar("Generating", "processing recipe: " + uwr.name , pos);
                     List<AssetItem> items = Index.GetAssetItems(uwr, true);
                     foreach (AssetItem ai in items)
                     {
@@ -154,7 +170,8 @@ namespace UMA
                                 Debug.Log("Texture is not Texture2D!!! " + tex.name);
                                 continue;
                             }
-                            string Address = "Texture2D-" + tex.name + "-" + tex.GetInstanceID();
+                            string path = AssetDatabase.GetAssetPath(tex.GetInstanceID());
+                            string Address = "Texture2D-" + tex.name + "-" + path.GetHashCode();
 
                             found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(tex.GetInstanceID(), out string texGUID, out long texlocalID);
                             if (found)
@@ -186,8 +203,9 @@ namespace UMA
 
         public bool Prepare()
         {
-            Index = UMAAssetIndexer.Instance;
 
+            Index = UMAAssetIndexer.Instance;
+            Index.CleanupAddressables(false, true);
             foreach (Type t in Index.GetTypes())
             {
                 Index.ClearAddressableFlags(t);

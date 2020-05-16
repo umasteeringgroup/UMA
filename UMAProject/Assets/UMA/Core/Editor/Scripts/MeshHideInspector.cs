@@ -5,6 +5,7 @@ using UnityEditor.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
 using UMA.CharacterSystem;
+using ICSharpCode.NRefactory.Ast;
 
 namespace UMA.Editors
 {
@@ -305,14 +306,29 @@ namespace UMA.Editors
 				{
 					si.mode = sc.isLoaded ? OpenSceneMode.Additive : OpenSceneMode.AdditiveWithoutLoading;
 				}
-				currentscenes.Add(si);
+				currentscenes.Add(si); 
 			}
 
-			Scene s = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
+			Scene s = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 			EditorSceneManager.SetActiveScene(s);
 			GameObject obj = EditorUtility.CreateGameObjectWithHideFlags("GeometrySelector", HideFlags.DontSaveInEditor); 
 			GeometrySelector geometry = obj.AddComponent<GeometrySelector>();
 
+			GameObject[] gos = s.GetRootGameObjects();
+			if (gos != null) 
+			{
+				Debug.Log("Found game objects! "); 
+				foreach(GameObject go in gos)       
+				{
+					Debug.Log("GameObject: " + go.name);
+					Component mo = go.GetComponent("Fog");
+					if (mo != null)
+					{
+						Debug.Log("Destroying da fog");
+						GameObject.Destroy(mo);
+					}
+				}
+			}
 			if (geometry != null)
 			{
 				Selection.activeGameObject = obj;
