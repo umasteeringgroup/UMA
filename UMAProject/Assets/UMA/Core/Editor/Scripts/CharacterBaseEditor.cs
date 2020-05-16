@@ -2039,6 +2039,7 @@ namespace UMA.Editors
 			GUILayout.EndScrollView();
 		}
 
+#if UMA_ADDRESSABLES
 		private void RebuildIfNeeded()
 		{
 			List<Type> PluginTypes = AssetIndexerWindow.GetAddressablePlugins();
@@ -2061,7 +2062,7 @@ namespace UMA.Editors
 				}
 			}
 		}
-
+#endif
 		protected abstract void DoUpdate();
 
 		protected virtual void Rebuild()

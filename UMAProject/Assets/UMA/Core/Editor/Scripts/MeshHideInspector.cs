@@ -5,7 +5,6 @@ using UnityEditor.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
 using UMA.CharacterSystem;
-using ICSharpCode.NRefactory.Ast;
 
 namespace UMA.Editors
 {
