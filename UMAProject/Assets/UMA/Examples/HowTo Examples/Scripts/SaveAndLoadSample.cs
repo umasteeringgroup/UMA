@@ -10,6 +10,7 @@ public class SaveAndLoadSample : MonoBehaviour
     public DynamicCharacterAvatar Avatar;
     public UMARandomAvatar Randomizer;
     public Button LoadButton;
+    public bool useAvatarDefinition;
 
     public string saveString;
     
@@ -21,7 +22,14 @@ public class SaveAndLoadSample : MonoBehaviour
 
     public void SaveUMA()
     {
-        saveString = Avatar.GetCurrentRecipe();
+        if (useAvatarDefinition)
+        {
+            saveString = Avatar.GetAvatarDefinitionString(true);
+        }
+        else
+        {
+            saveString = Avatar.GetCurrentRecipe();
+        }
         LoadButton.interactable = true;
     }
 
@@ -29,6 +37,14 @@ public class SaveAndLoadSample : MonoBehaviour
     {
         if (string.IsNullOrEmpty(saveString))
             return;
-        Avatar.LoadFromRecipeString(saveString);
+        if (useAvatarDefinition)
+        {
+            Avatar.LoadAvatarDefinition(saveString);
+            Avatar.BuildCharacter();
+        }
+        else
+        {
+            Avatar.LoadFromRecipeString(saveString);
+        }
     }
 }
