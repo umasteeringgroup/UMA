@@ -571,9 +571,171 @@ namespace UMA.CharacterSystem
             }
         }
 
-#endregion
+        #endregion
+        #region AVATAR Definition
 
-#region SETTINGS MODIFICATION (RACE RELATED)
+        private bool isDefaultDna(float val)
+        {
+            // Because of the way text recipes store DNA, 
+            // they are not exact.
+            if (val >= 0.4999f && val < 0.502f) return true;
+            return false;
+        }
+        public AvatarDefinition GetAvatarDefinition(bool skipDefaults)
+        {
+            // *****************************************************
+            // Get Wardrobe
+            // *****************************************************
+            List<string> Wardrobe = new List<string>();
+            foreach (UMATextRecipe utr in WardrobeRecipes.Values)
+            {
+                Wardrobe.Add(utr.name);
+            }
+
+            // *****************************************************
+            // Get DNA
+            // *****************************************************
+            List<DnaDef> Dna = new List<DnaDef>();
+            var CurrentDNA = GetDNA().Values;
+
+            foreach(DnaSetter d in CurrentDNA)
+            {
+                if (isDefaultDna(d.Value) && skipDefaults) continue;
+                DnaDef def = new DnaDef(d.Name, d.Value);
+                Dna.Add(def);
+            }
+
+            // *****************************************************
+            // Get Colors
+            // *****************************************************
+            List<SharedColorDef> Colors = new List<SharedColorDef>();
+
+            var CurrentColors = characterColors.Colors;
+
+            foreach(var col in CurrentColors)
+            {
+                SharedColorDef scd = new SharedColorDef(col.name,col.channelCount);
+                List<ColorDef> colorchannels = new List<ColorDef>();
+
+                for (int i=0; i<col.channelCount;i++)
+                {
+                    if (col.isDefault(i)) continue;
+                    Color Mask = col.channelMask[i];
+                    Color Additive = col.channelAdditiveMask[i];
+                    colorchannels.Add(new ColorDef(i, ColorDef.ToUInt(Mask), ColorDef.ToUInt(Additive)));
+                }
+                if (colorchannels.Count > 0)
+                {
+                    scd.SetChannels(colorchannels.ToArray());
+                    Colors.Add(scd);
+                }
+            }
+
+            // Save the Avatar def.
+            AvatarDefinition adf = new AvatarDefinition(); 
+            adf.RaceName = this.activeRace.name;
+            adf.Wardrobe = Wardrobe.ToArray();
+            adf.Dna = Dna.ToArray();
+            adf.Colors = Colors.ToArray();
+            return adf;
+        }
+
+        public string GetAvatarDefinitionString(bool skipDefaults)
+        {
+            AvatarDefinition adf = GetAvatarDefinition(skipDefaults);
+            return JsonUtility.ToJson(adf);
+        }
+
+        private void LoadColors(AvatarDefinition adf)
+        {
+            foreach(SharedColorDef sc in adf.Colors)
+            {
+                if (characterColors.GetColor(sc.name, out OverlayColorData ocd))
+                {
+                    ocd.EnsureChannels(sc.count);
+                    foreach(ColorDef def in sc.channels)
+                    {
+                        ocd.channelMask[def.chan] = ColorDef.ToColor(def.mCol);
+                        ocd.channelAdditiveMask[def.chan] = ColorDef.ToColor(def.aCol);
+                    }
+                }
+                else
+                {
+                    OverlayColorData nocd = new OverlayColorData(sc.count);
+                    foreach (ColorDef def in sc.channels)
+                    {
+                        nocd.channelMask[def.chan] = ColorDef.ToColor(def.mCol);
+                        nocd.channelAdditiveMask[def.chan] = ColorDef.ToColor(def.aCol);
+                    }
+                    characterColors.SetRawColor(sc.name, nocd);
+                }
+            }
+        }
+
+        private void LoadWardrobe(AvatarDefinition adf, bool loadDefaultWardobe)
+        {
+            if (loadDefaultWardobe)
+                LoadDefaultWardrobe();
+
+            var recipes = UMAContextBase.Instance.GetRecipes(adf.RaceName);
+            foreach(string s in adf.Wardrobe)
+            {
+               UMATextRecipe utr = UMAContextBase.Instance.GetRecipe(s,false);
+               if (utr != null)
+                {
+                    SetSlot(utr);
+                }
+            }
+        }
+
+        private void PreloadAvatarDefinition(AvatarDefinition adf, bool loadDefaultWardrobe, bool resetDNA)
+        {
+            RacePreset = adf.RaceName;
+            LoadColors(adf);
+            LoadWardrobe(adf, loadDefaultWardrobe);
+
+            if (resetDNA)
+                predefinedDNA = new UMAPredefinedDNA();
+            foreach(var d in adf.Dna)
+            {
+                predefinedDNA.AddDNA(d.Name, d.Value);
+            }
+        }
+
+        public void LoadAvatarDefinition(AvatarDefinition adf, bool loadDefaultWardrobe=false, bool ResetDNA=true)
+        {
+            if (umaData == null)
+            {
+                PreloadAvatarDefinition(adf, loadDefaultWardrobe,ResetDNA);
+                return;
+            }
+
+            activeRace.name = adf.RaceName;
+            activeRace.SetRaceData();
+
+            LoadColors(adf);
+            WardrobeRecipes.Clear();
+            LoadWardrobe(adf, loadDefaultWardrobe);
+
+            var AllDNA = GetDNA();
+
+            foreach(DnaDef d in adf.Dna)
+            {
+                if (AllDNA.ContainsKey(d.Name))
+                {
+                    AllDNA[d.Name].Set(d.Value);
+                }
+            }
+        }
+
+        public void LoadAvatarDefinition(string adfstring, bool loadDefaultWardrobe=false, bool ResetDNA=true)
+        {
+            AvatarDefinition adf = JsonUtility.FromJson<AvatarDefinition>(adfstring);
+            LoadAvatarDefinition(adf,loadDefaultWardrobe,ResetDNA);
+        }
+        #endregion
+
+        #region SETTINGS MODIFICATION (RACE RELATED)
 
         /// <summary>
         /// Sets the starting race of the avatar based on the value of the 'activeRace'. 
@@ -762,6 +924,9 @@ namespace UMA.CharacterSystem
 
             if (!preloadWardrobeRecipes.loadDefaultRecipes && preloadWardrobeRecipes.recipes.Count == 0)
                 return;
+
+            if (activeRace.racedata == null)
+                activeRace.SetRaceData();
 
             List<WardrobeRecipeListItem> validRecipes = preloadWardrobeRecipes.GetRecipesForRace(activeRace.name, activeRace.racedata);
             if (validRecipes.Count > 0)
