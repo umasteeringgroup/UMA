@@ -4,6 +4,7 @@ using UMA.CharacterSystem;
 using UMA;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Runtime.Serialization.Formatters.Binary;
 
 public class SaveAndLoadSample : MonoBehaviour
 {
@@ -11,8 +12,16 @@ public class SaveAndLoadSample : MonoBehaviour
     public UMARandomAvatar Randomizer;
     public Button LoadButton;
     public bool useAvatarDefinition;
+    public bool useCompressedString;
 
     public string saveString;
+    public string avatarString;
+    public string compressedString;
+    public int saveStringSize;
+    public int avatarStringSize;
+    public int compressedStringSize;
+    public int asciiStringSize;
+    public int binarySize;
     
     public void GenerateANewUMA()
     {
@@ -22,14 +31,16 @@ public class SaveAndLoadSample : MonoBehaviour
 
     public void SaveUMA()
     {
-        if (useAvatarDefinition)
-        {
-            saveString = Avatar.GetAvatarDefinitionString(true);
-        }
-        else
-        {
-            saveString = Avatar.GetCurrentRecipe();
-        }
+        avatarString = Avatar.GetAvatarDefinitionString(true);
+        saveString = Avatar.GetCurrentRecipe();
+        compressedString = Avatar.GetAvatarDefinition(true).ToCompressedString();
+        asciiStringSize = Avatar.GetAvatarDefinition(true).ToASCIIString().Length;
+
+        binarySize = BinaryDefinition.ToBinary(new BinaryFormatter(), Avatar.GetAvatarDefinition(true)).Length;
+        saveStringSize = saveString.Length * 2;
+        avatarStringSize = avatarString.Length * 2;
+        compressedStringSize = compressedString.Length * 2; // utf-16
+
         LoadButton.interactable = true;
     }
 
@@ -39,7 +50,13 @@ public class SaveAndLoadSample : MonoBehaviour
             return;
         if (useAvatarDefinition)
         {
-            Avatar.LoadAvatarDefinition(saveString);
+            Avatar.LoadAvatarDefinition(avatarString);
+            Avatar.BuildCharacter();
+        }
+        else if (useCompressedString)
+        {
+            AvatarDefinition adf = AvatarDefinition.FromCompressedString(compressedString);
+            Avatar.LoadAvatarDefinition(adf);
             Avatar.BuildCharacter();
         }
         else

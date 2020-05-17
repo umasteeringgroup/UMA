@@ -648,11 +648,23 @@ namespace UMA.CharacterSystem
 
         private void LoadColors(AvatarDefinition adf)
         {
+            if (adf.Colors == null)
+                return;
+
             foreach(SharedColorDef sc in adf.Colors)
             {
                 if (characterColors.GetColor(sc.name, out OverlayColorData ocd))
                 {
+                    if (sc.channels == null) continue;
+
+                    // Make sure it's in the default state.
                     ocd.EnsureChannels(sc.count);
+                    for (int i = 0; i < ocd.channelCount; i++)
+                    {
+                        ocd.channelMask[i] = Color.white;
+                        ocd.channelAdditiveMask[i] = new Color(0, 0, 0, 0);
+                    }
+
                     foreach(ColorDef def in sc.channels)
                     {
                         ocd.channelMask[def.chan] = ColorDef.ToColor(def.mCol);
@@ -677,6 +689,9 @@ namespace UMA.CharacterSystem
             if (loadDefaultWardobe)
                 LoadDefaultWardrobe();
 
+            if (adf.Wardrobe == null)
+                return;
+
             var recipes = UMAContextBase.Instance.GetRecipes(adf.RaceName);
             foreach(string s in adf.Wardrobe)
             {
@@ -694,11 +709,19 @@ namespace UMA.CharacterSystem
             LoadColors(adf);
             LoadWardrobe(adf, loadDefaultWardrobe);
 
+            PreloadDNA(adf, resetDNA);
+        }
+
+        private void PreloadDNA(AvatarDefinition adf, bool resetDNA)
+        {
             if (resetDNA)
                 predefinedDNA = new UMAPredefinedDNA();
-            foreach(var d in adf.Dna)
+            if (adf.Dna != null)
             {
-                predefinedDNA.AddDNA(d.Name, d.Value);
+                foreach (var d in adf.Dna)
+                {
+                    predefinedDNA.AddDNA(d.Name, d.Value);
+                }
             }
         }
 
@@ -710,28 +733,30 @@ namespace UMA.CharacterSystem
                 return;
             }
 
-            activeRace.name = adf.RaceName;
-            activeRace.SetRaceData();
+            if (adf.RaceName != null)
+            {
+                activeRace.name = adf.RaceName;
+                activeRace.SetRaceData();
+            }
 
             LoadColors(adf);
             WardrobeRecipes.Clear();
             LoadWardrobe(adf, loadDefaultWardrobe);
-
-            var AllDNA = GetDNA();
-
-            foreach(DnaDef d in adf.Dna)
-            {
-                if (AllDNA.ContainsKey(d.Name))
-                {
-                    AllDNA[d.Name].Set(d.Value);
-                }
-            }
+            PreloadDNA(adf, ResetDNA);
         }
 
         public void LoadAvatarDefinition(string adfstring, bool loadDefaultWardrobe=false, bool ResetDNA=true)
         {
-            AvatarDefinition adf = JsonUtility.FromJson<AvatarDefinition>(adfstring);
-            LoadAvatarDefinition(adf,loadDefaultWardrobe,ResetDNA);
+            if (adfstring.StartsWith("AA*"))
+            {
+                AvatarDefinition adf = AvatarDefinition.FromCompressedString(adfstring);
+                LoadAvatarDefinition(adf, loadDefaultWardrobe, ResetDNA);
+            }
+            else
+            {
+                AvatarDefinition adf = JsonUtility.FromJson<AvatarDefinition>(adfstring);
+                LoadAvatarDefinition(adf, loadDefaultWardrobe, ResetDNA);
+            }
         }
         #endregion
 
