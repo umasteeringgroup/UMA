@@ -122,9 +122,9 @@ public struct AvatarDefinition
                 {
                     theString.Append(c.chan);
                     theString.Append(',');
-                    theString.Append(c.mCol);
+                    theString.Append(c.mCol.ToString("X"));
                     theString.Append(',');
-                    theString.Append(c.aCol);
+                    theString.Append(c.aCol.ToString("X"));
                     theString.Append(';');
                 }
                 theString.Append("\n");
@@ -193,7 +193,7 @@ public struct AvatarDefinition
                                     {
                                         splitter[0] = ',';
                                         string[] vals = c.Split(splitter, StringSplitOptions.RemoveEmptyEntries);
-                                        ColorDef cdef = new ColorDef(Convert.ToInt32(vals[0]), Convert.ToUInt32(vals[1]), Convert.ToUInt32(vals[2]));
+                                        ColorDef cdef = new ColorDef(Convert.ToInt32(vals[0]), Convert.ToUInt32(vals[1],16), Convert.ToUInt32(vals[2],16));
                                         theColors.Add(cdef);
                                     }
                                 }

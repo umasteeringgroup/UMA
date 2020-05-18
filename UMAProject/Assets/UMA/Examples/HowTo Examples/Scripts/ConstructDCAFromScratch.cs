@@ -17,11 +17,19 @@ public class ConstructDCAFromScratch : MonoBehaviour
     [TextArea(3,12)]
     public string AvatarDef;
 
+    [TextArea(3, 12)]
+    public string OldRecipe1;
+
+    [TextArea(3, 12)]
+    public string OldRecipe2;
+
     // Start is called before the first frame update
     void Start()
     {
         GameObject go = new GameObject();
         var DCA = go.AddComponent<DynamicCharacterAvatar>();
+        ConstructADCAFromAString(OldRecipe1, new Vector3(0.5f, 0.5f, 1.0f));
+        ConstructADCAFromAString(OldRecipe2, new Vector3(1.0f, 0.5f, 2.0f));
         if (LoadFromAvatarDef)
         {
             DCA.raceAnimationControllers.defaultAnimationController = raceController;
@@ -54,11 +62,16 @@ public class ConstructDCAFromScratch : MonoBehaviour
         // Set any predefined wardrobe items.
         go.transform.position = new Vector3(0f, 0.5f, 0f);
         go.SetActive(true);
+
     }
 
-    // Update is called once per frame
-    void Update()
+    public void ConstructADCAFromAString(string Recipe, Vector3 pos)
     {
-        
+        GameObject go = new GameObject();
+        var DCA = go.AddComponent<DynamicCharacterAvatar>();
+        DCA.raceAnimationControllers.defaultAnimationController = raceController;
+        DCA.SetLoadString(Recipe);
+        go.transform.position = pos;
+        go.SetActive(true);
     }
 }
