@@ -2994,13 +2994,14 @@ namespace UMA.CharacterSystem
                     LoadQueue.Remove(Op);
                     if (LoadedHandles.Count > 1)
                     {
+                        AsyncOp OldOp = LoadedHandles.Dequeue();
                         if (gameObject.activeInHierarchy && DelayUnload > 0.0f) //VES changed from if (DelayUnload > 0.0f)
                         {
-                            StartCoroutine(CleanupAfterDelay());
+                            StartCoroutine(CleanupAfterDelay(OldOp));
                         }
                         else
                         {
-                            UnloadOldestQueuedHandle();
+                            UnloadOldestQueuedHandle(OldOp);
                         }
                     }
                 }
@@ -3010,12 +3011,13 @@ namespace UMA.CharacterSystem
                 Debug.LogException(ex, this);
             }
         }
-        private void UnloadOldestQueuedHandle()
+        private void UnloadOldestQueuedHandle(AsyncOp Op)
         {
-            AsyncOp aoh = LoadedHandles.Dequeue();
-            if (aoh.IsValid())
+            if (Op.IsValid())
             {
-                UnityEngine.AddressableAssets.Addressables.Release(aoh);
+                // Todo: Should we call AssetIndexer.Instance.Unload(Op) instead?
+                //       Unity seems to handle this OK with it's internal reference counting.
+                UnityEngine.AddressableAssets.Addressables.Release(Op);
             }
         }
 
@@ -3023,10 +3025,10 @@ namespace UMA.CharacterSystem
         /// This function will delay the unload
         /// </summary>
         /// <returns></returns>
-        IEnumerator CleanupAfterDelay( )
+        IEnumerator CleanupAfterDelay(AsyncOp Op)
         {
             yield return new WaitForSeconds(DelayUnload);
-            UnloadOldestQueuedHandle();
+            UnloadOldestQueuedHandle(Op);
         } 
 #endif
         private void ApplyPredefinedDNA()
@@ -3035,7 +3037,7 @@ namespace UMA.CharacterSystem
             {
                 var dna = GetDNA();
 
-                foreach (UMAPredefinedDNA.DnaValue dv in predefinedDNA.PreloadValues)
+                foreach (DnaValue dv in predefinedDNA.PreloadValues)
                 {
                     if (dna.ContainsKey(dv.Name))
                     {
@@ -3559,7 +3561,8 @@ namespace UMA.CharacterSystem
 #if UMA_ADDRESSABLES
             while(LoadedHandles.Count > 0)
             {
-                UnloadOldestQueuedHandle();
+                AsyncOp Op = LoadedHandles.Dequeue();
+                UnloadOldestQueuedHandle(Op);
             }
 #endif
             if (umaData != null)

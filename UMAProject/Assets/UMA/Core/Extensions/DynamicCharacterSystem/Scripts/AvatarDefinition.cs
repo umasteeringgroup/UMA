@@ -5,8 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
+using UMA;
 using UMA.CharacterSystem;
 using UnityEngine;
+using UnityEngine.Assertions.Must;
+using UnityScript.Macros;
 
 [Serializable]
 public struct ColorDef
@@ -80,6 +83,10 @@ public struct DnaDef
         {
             return ((float)val) / 10000;
         }
+        set
+        {
+            val = Convert.ToInt16(value * 10000);
+        }
     }
 }
 
@@ -90,6 +97,93 @@ public struct AvatarDefinition
     public string[] Wardrobe;
     public SharedColorDef[] Colors;
     public DnaDef[] Dna;
+
+    #region Setters
+    public void SetColors(OverlayColorData[] CurrentColors)
+    {
+        List<SharedColorDef> newColors = new List<SharedColorDef>();
+
+        foreach (var col in CurrentColors)
+        {
+            SharedColorDef scd = new SharedColorDef(col.name, col.channelCount);
+            List<ColorDef> colorchannels = new List<ColorDef>();
+
+            for (int i = 0; i < col.channelCount; i++)
+            {
+                if (col.isDefault(i)) continue;
+                Color Mask = col.channelMask[i];
+                Color Additive = col.channelAdditiveMask[i];
+                colorchannels.Add(new ColorDef(i, ColorDef.ToUInt(Mask), ColorDef.ToUInt(Additive)));
+            }
+            if (colorchannels.Count > 0)
+            {
+                scd.SetChannels(colorchannels.ToArray());
+                newColors.Add(scd);
+            }
+        }
+        Colors = newColors.ToArray();
+    }
+
+    public void SetDefaultColors(string[] colorNames, uint[] colors)
+    {
+        if (colorNames.Length != colors.Length)
+        {
+            Debug.LogError("Color lengths must match");
+            return;
+        }
+        List<SharedColorDef> sharedcolors = new List<SharedColorDef>();
+        for (int i=0;i<colorNames.Length;i++)
+        {
+            SharedColorDef scd = new SharedColorDef(colorNames[i], 1);
+            ColorDef col = new ColorDef(1, colors[i], 0);
+            scd.channels = new ColorDef[1];
+            scd.channels[0] = col;
+        }
+        Colors = sharedcolors.ToArray();
+    }
+
+    public void SetDNA(UMAPredefinedDNA dna)
+    {
+        List<DnaDef> defs = new List<DnaDef>();
+        foreach(var d in dna.PreloadValues)
+        {
+            defs.Add(new DnaDef(d.Name, d.Value));
+        }
+        Dna = defs.ToArray();
+    }
+
+    // No Garbage Version
+    public void SetDNA(DnaValue[] dna)
+    {
+        Dna = new DnaDef[dna.Length];
+        for (int i=0;i<dna.Length;i++)
+        {
+            Dna[i].Name = dna[i].Name;
+            Dna[i].Value = dna[i].Value;
+            // Dna[i] = new DnaDef(dna[i].Name, dna[i].Value);
+        }
+    }
+
+    public void SetDNA(string[] names, float[] values)
+    {
+        if (names.Length != values.Length)
+        {
+            Debug.LogError("SetDNA: length of names and values must match.");
+            return;
+        }
+
+        Dna = new DnaDef[names.Length];
+        for (int i = 0; i < names.Length; i++)
+        {
+            Dna[i].Name = names[i];
+            Dna[i].Value = values[i];
+            // Dna[i] = new DnaDef(dna[i].Name, dna[i].Value);
+        }
+    }
+
+    #endregion
+
+
     public string ToCompressedString()
     {
         StringBuilder theString = new StringBuilder();
@@ -141,14 +235,13 @@ public struct AvatarDefinition
             {
                 theString.Append(d.Name);
                 theString.Append('=');
-                theString.Append(d.val);
+                theString.Append(d.val.ToString("X"));
                 theString.Append(';');
             }
             theString.Append("\n");
         }
         return theString.ToString();
     }
-
 
     public static AvatarDefinition FromCompressedString(string compressed)
     {
@@ -228,7 +321,7 @@ public struct AvatarDefinition
                             string[] dnaval = d.Split(splitter, StringSplitOptions.RemoveEmptyEntries);
                             if (dnaval.Length > 1)
                             {
-                                DnaDef newDna = new DnaDef(dnaval[0], Convert.ToInt32(dnaval[1]));
+                                DnaDef newDna = new DnaDef(dnaval[0], Convert.ToInt32(dnaval[1],16));
                                 theDna.Add(newDna);
                             }
                         }

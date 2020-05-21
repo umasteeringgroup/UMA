@@ -62,7 +62,6 @@ public class ConstructDCAFromScratch : MonoBehaviour
         // Set any predefined wardrobe items.
         go.transform.position = new Vector3(0f, 0.5f, 0f);
         go.SetActive(true);
-
     }
 
     public void ConstructADCAFromAString(string Recipe, Vector3 pos)
