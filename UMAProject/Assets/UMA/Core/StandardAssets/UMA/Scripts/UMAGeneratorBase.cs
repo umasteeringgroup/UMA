@@ -96,8 +96,10 @@ namespace UMA
 			AnimatorControllerParameter[] parameters;
 			private Dictionary<int, float> layerWeights = new Dictionary<int, float>();
 
-			public void SaveAnimatorState(Animator animator)
+			public void SaveAnimatorState(Animator animator, UMAData umaData)
 			{
+				umaData.FireAnimatorStateSavedEvent();
+
 				int layerCount = animator.layerCount;
 				stateHashes = new int[layerCount];
 				stateTimes = new float[layerCount];
@@ -131,7 +133,7 @@ namespace UMA
 				}
 			}
 
-			public void RestoreAnimatorState(Animator animator)
+			public void RestoreAnimatorState(Animator animator, UMAData umaData)
 			{
 				if (animator.layerCount == stateHashes.Length)
 				{
@@ -163,6 +165,8 @@ namespace UMA
 						}
 					}
 				}
+
+				umaData.FireAnimatorStateRestoredEvent();
 
                 if (animator.enabled == true)
 				    animator.Update(Time.deltaTime);
@@ -207,7 +211,7 @@ namespace UMA
 					else
 					{
 						AnimatorState snapshot = new AnimatorState();
-						snapshot.SaveAnimatorState(animator);
+						snapshot.SaveAnimatorState(animator,umaData);
 						if (!umaData.KeepAvatar || animator.avatar == null)
 						{
 							UMAUtils.DestroyAvatar(animator.avatar);
@@ -219,7 +223,7 @@ namespace UMA
 						umaTransform.localPosition = originalPos;
 
 						if (animator.runtimeAnimatorController != null)
-							snapshot.RestoreAnimatorState(animator);
+							snapshot.RestoreAnimatorState(animator,umaData);
 					}
 				}
 			}

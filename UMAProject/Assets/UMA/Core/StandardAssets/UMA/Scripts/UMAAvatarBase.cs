@@ -46,6 +46,9 @@ namespace UMA
 		/// </summary>
 		public UMADataEvent CharacterDnaUpdated;
 
+		public UMADataEvent AnimatorStateSaved;
+		public UMADataEvent AnimatorStateRestored;
+
 		public virtual void Start()
 		{
 			Initialize();
@@ -84,6 +87,8 @@ namespace UMA
 			if (CharacterDestroyed != null) umaData.CharacterDestroyed = CharacterDestroyed;
 			if (CharacterUpdated != null) umaData.CharacterUpdated = CharacterUpdated;
 			if (CharacterDnaUpdated != null) umaData.CharacterDnaUpdated = CharacterDnaUpdated;
+			if (AnimatorStateSaved != null) umaData.AnimatorStateSaved = AnimatorStateSaved;
+			if (AnimatorStateRestored != null) umaData.AnimatorStateRestored = AnimatorStateRestored;
 		}
 
 		/// <summary>

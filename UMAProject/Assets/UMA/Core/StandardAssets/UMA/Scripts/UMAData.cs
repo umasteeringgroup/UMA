@@ -201,6 +201,9 @@ namespace UMA
 		/// </summary>
 		public event Action<UMAData> OnCharacterBeforeDnaUpdated { add { if (CharacterBeforeDnaUpdated == null) CharacterBeforeDnaUpdated = new UMADataEvent(); CharacterBeforeDnaUpdated.AddAction(value);} remove { CharacterBeforeDnaUpdated.RemoveAction(value); } }
 
+		public event Action<UMAData> OnAnimatorStateSaved { add { if (AnimatorStateSaved == null) AnimatorStateSaved = new UMADataEvent(); AnimatorStateSaved.AddAction(value); } remove { AnimatorStateSaved.RemoveAction(value); } }
+		public event Action<UMAData> OnAnimatorStateRestored { add { if (AnimatorStateRestored == null) AnimatorStateRestored = new UMADataEvent(); AnimatorStateRestored.AddAction(value); } remove { AnimatorStateRestored.RemoveAction(value); } }
+
 		public UMADataEvent CharacterCreated;
 		public UMADataEvent CharacterDestroyed;
 		public UMADataEvent CharacterUpdated;
@@ -208,6 +211,8 @@ namespace UMA
 		public UMADataEvent CharacterBeforeDnaUpdated;
 		public UMADataEvent CharacterDnaUpdated;
 		public UMADataEvent CharacterBegun;
+		public UMADataEvent AnimatorStateSaved;
+		public UMADataEvent AnimatorStateRestored;
 
 		public GameObject umaRoot;
 
@@ -1331,6 +1336,30 @@ namespace UMA
 			public Vector3 originalBoneScale;
 			public Vector3 originalBonePosition;
 			public Quaternion originalBoneRotation;
+		}
+
+		/// <summary>
+		/// Fire the Animator State Saved event.
+		/// This happens before the Animator State is saved.
+		/// </summary>
+		public void FireAnimatorStateSavedEvent()
+		{
+			if (AnimatorStateSaved != null)
+			{
+				AnimatorStateSaved.Invoke(this);
+			}
+		}
+
+		/// <summary>
+		/// Fire the Animator State Restored event.
+		/// This happens after the Animator State is restored.
+		/// </summary>
+		public void FireAnimatorStateRestoredEvent()
+		{
+			if (AnimatorStateRestored != null)
+			{
+				AnimatorStateRestored.Invoke(this);
+			}
 		}
 
 		/// <summary>
