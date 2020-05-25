@@ -2051,13 +2051,13 @@ namespace UMA.Editors
 				{
 
 					IUMAAddressablePlugin addrplug = (IUMAAddressablePlugin)Activator.CreateInstance(PluginTypes[0]);
-					UMAAssetIndexer.Instance.GenerateAddressables(addrplug);
+					UMAAddressablesSupport.Instance.GenerateAddressables(addrplug);
 					Resources.UnloadUnusedAssets();
 				}
 				else
 				{
-					UMAAssetIndexer.Instance.CleanupAddressables();
-					UMAAssetIndexer.Instance.GenerateAddressables();
+					UMAAddressablesSupport.Instance.CleanupAddressables();
+					UMAAddressablesSupport.Instance.GenerateAddressables();
 					Resources.UnloadUnusedAssets();
 				}
 			}

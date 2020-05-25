@@ -305,14 +305,10 @@ namespace UMA
         }
 
 #if UNITY_2018_4_OR_NEWER || UNITY_2019_1_OR_NEWER
-		[MenuItem("UMA/Update asmdef files from project")]
+		[MenuItem("UMA/Activate ASMDEF files")]
 		public static void FixupAsmdef()
 		{
-#if UNITY_2019_1_OR_NEWER
-			RenameFiles(".asmdef2019", ".asmdef");
-#else
-			RenameFiles(".asmdef20184", ".asmdef");
-#endif
+			RenameFiles(".asmdeftemp", ".asmdef");
 		}
 
 		public static void RenameFiles(string oldpattern,string newpattern)

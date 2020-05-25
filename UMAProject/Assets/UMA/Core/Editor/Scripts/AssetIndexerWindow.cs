@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEditor.Callbacks;
@@ -59,10 +60,17 @@ namespace UMA.Controls
 				{
 					SetupMenus();
 				}
+#if UMA_ADDRESSABLES
+				//  Rebuild menus if addressables changed.
+				if (_AddressablesMenu.GetItemCount() == 1)
+				{
+					SetupMenus();
+				}
+#endif
 				return _AddressablesMenu;
 			}
 		}
-		#endregion
+#endregion
 
 		SearchField m_SearchField;
 		UMAAssetIndexer _UAI;
@@ -111,7 +119,7 @@ namespace UMA.Controls
 			return window;
 		}
 
-		#region utility functions
+#region utility functions
 
 		
 
@@ -212,7 +220,7 @@ namespace UMA.Controls
 				AddMenuItemWithCallbackParm(AddressablesMenu, "Generators/"+plugin.Menu, (object o) =>
 				{
 					IUMAAddressablePlugin addrplug = o as IUMAAddressablePlugin;
-					UAI.GenerateAddressables(addrplug);
+					UMAAddressablesSupport.Instance.GenerateAddressables(addrplug);
 					Resources.UnloadUnusedAssets();
 					m_Initialized = false;
 					Repaint();
@@ -226,8 +234,8 @@ namespace UMA.Controls
 			// ***********************************************************************************
 			AddMenuItemWithCallback(AddressablesMenu, "Generators/Generate Groups (optimized)", () => 
 			{
-				UAI.CleanupAddressables();
-				UAI.GenerateAddressables();
+				UMAAddressablesSupport.Instance.CleanupAddressables();
+				UMAAddressablesSupport.Instance.GenerateAddressables();
 				Resources.UnloadUnusedAssets();
 				m_Initialized = false;
 				Repaint();
@@ -252,14 +260,14 @@ namespace UMA.Controls
 			}); */
 
 			AddMenuItemWithCallback(AddressablesMenu, "Remove Addressables", () => 
-			{ 
-				UAI.CleanupAddressables(false, true);
+			{
+				UMAAddressablesSupport.Instance.CleanupAddressables(false, true);
 				m_Initialized = false;
 				Repaint();
 			});
 			AddMenuItemWithCallback(AddressablesMenu, "Delete Empty Groups", () => 
 			{
-				UAI.CleanupAddressables(true);
+				UMAAddressablesSupport.Instance.CleanupAddressables(true);
 			});
 
 			/*
@@ -275,16 +283,28 @@ namespace UMA.Controls
 			{
 				if (EditorUtility.DisplayDialog("Warning!", "You *must* build the addressable groups, and mark any slots you want to keep as 'keep' before running this!", "OK", "Cancel"))
 				{
-					UAI.CleanupOrphans(typeof(SlotDataAsset));
+					UMAAddressablesSupport.Instance.CleanupOrphans(typeof(SlotDataAsset));
 					m_Initialized = false;
 					Repaint();
 				}
 			});
 			AddMenuItemWithCallback(AddressablesMenu, "Remove Orphaned Overlays", () => 
 			{
-				if (EditorUtility.DisplayDialog("Warning!", "You *must* build the addressable groups, and mark any slots you want to keep as 'keep' before running this!", "OK", "Cancel"))
+				if (EditorUtility.DisplayDialog("Warning!", "You *must* build the addressable groups, and mark any slots you want to keep as 'keep' before running this.", "OK", "Cancel"))
 				{
-					UAI.CleanupOrphans(typeof(OverlayDataAsset));
+					UMAAddressablesSupport.Instance.CleanupOrphans(typeof(OverlayDataAsset));
+					m_Initialized = false;
+					Repaint();
+				}
+			});
+#else
+			AddMenuItemWithCallback(AddressablesMenu, "Enable Addressables (Package must be installed first)", () =>
+			{
+				if (EditorUtility.DisplayDialog("Warning!", "The Addressables Package must be installed first before enabling Addressables support in UMA. Enabling addressables will trigger a recompile during which the library will be unavailable.", "OK", "Cancel"))
+				{
+					var defineSymbols = new HashSet<string>(PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup).Split(';'));
+					defineSymbols.Add("UMA_ADDRESSABLES");
+					PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, string.Join(";", defineSymbols));
 					m_Initialized = false;
 					Repaint();
 				}
@@ -796,7 +816,7 @@ namespace UMA.Controls
 			}
 		}
 
-		#region DragDrop
+#region DragDrop
 		private void DragDropAdd(Rect dropArea)
 		{
 
@@ -907,8 +927,22 @@ namespace UMA.Controls
 		}
 #endregion
 
+		float lastFrameTime = 0;
+
+		private string dots = "";
 		void OnGUI ()
 		{
+			if (EditorApplication.isCompiling)
+			{
+				dots += ".";
+				if (dots.Length > 20)
+						dots = "";
+				GUILayout.Space(30);
+				EditorGUILayout.LabelField("    Compile in progress  "+dots);
+				System.Threading.Thread.Sleep(100);
+				Repaint();
+				return;
+			}
 			InitIfNeeded();
 
 			MenuBar(menubarRect);
@@ -916,8 +950,16 @@ namespace UMA.Controls
 			DoTreeView (multiColumnTreeViewRect);
 			BottomToolBar (bottomToolbarRect);
 		}
+
+
 		void MenuBar(Rect rect)
 		{
+#if UMA_ADDRESSABLES
+			if (AddressablesMenu.GetItemCount() == 1)
+			{
+				SetupMenus();
+			}
+#endif
 			Rect MenuRect = new Rect(rect);
 			MenuRect.width = 60;
 

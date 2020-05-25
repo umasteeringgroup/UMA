@@ -3,15 +3,15 @@
     "references": [
         "UMA_Core",
         "Unity.Addressables",
-        "Unity.ResourceManager",
-        "Unity.Addressables.Editor"
+        "Unity.ResourceManager"
     ],
-    "optionalUnityReferences": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": []
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }

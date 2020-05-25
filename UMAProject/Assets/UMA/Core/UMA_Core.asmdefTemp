@@ -1,9 +1,11 @@
 {
     "name": "UMA_Core",
     "references": [
-        "GUID:f06555f75b070af458a003d92f9efb00"
+        "Unity.Timeline",
+        "Unity.ResourceManager",
+        "Unity.Addressables",
+        "Addressable_Editor"
     ],
-    "optionalUnityReferences": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

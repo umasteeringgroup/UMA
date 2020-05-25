@@ -125,10 +125,10 @@ namespace UMA
 
 
                 // Create the shared group that has each item packed separately.
-                AddressableAssetGroup sharedGroup = Index.AddressableSettings.FindGroup(SharedGroupName);
+                AddressableAssetGroup sharedGroup = AddressableUtility.AddressableSettings.FindGroup(SharedGroupName);
                 if (sharedGroup == null)
                 {
-                    sharedGroup = Index.AddressableSettings.CreateGroup(SharedGroupName, false, false, true, Index.AddressableSettings.DefaultGroup.Schemas);
+                    sharedGroup = AddressableUtility.AddressableSettings.CreateGroup(SharedGroupName, false, false, true,AddressableUtility.AddressableSettings.DefaultGroup.Schemas);
                     sharedGroup.GetSchema<BundledAssetGroupSchema>().BundleMode = BundledAssetGroupSchema.BundlePackingMode.PackSeparately;
                 }
 
@@ -153,7 +153,7 @@ namespace UMA
 
                     bool found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(ai.Item.GetInstanceID(), out string itemGUID, out long localID);
 
-                    Index.AddItemToSharedGroup(itemGUID, ai.AddressableAddress, AddressableItems[ai], sharedGroup);
+                    UMAAddressablesSupport.Instance.AddItemToSharedGroup(itemGUID, ai.AddressableAddress, AddressableItems[ai], sharedGroup);
                     if (ai._Type == typeof(OverlayDataAsset))
                     {
                         OverlayDataAsset od = ai.Item as OverlayDataAsset;
@@ -176,23 +176,23 @@ namespace UMA
                             found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(tex.GetInstanceID(), out string texGUID, out long texlocalID);
                             if (found)
                             {
-                                Index.AddItemToSharedGroup(texGUID, AssetItem.AddressableFolder + Address, AddressableItems[ai], sharedGroup);
+                                UMAAddressablesSupport.Instance.AddItemToSharedGroup(texGUID, AssetItem.AddressableFolder + Address, AddressableItems[ai], sharedGroup);
                             }
                         }
                     }
                     pos += inc;
                 }
 
-                Index.AssignAddressableInformation();
+                UMAAddressablesSupport.Instance.AssignAddressableInformation();
 
                 Type[] types = Index.GetTypes();
 
                 foreach (Type t in types)
                 {
-                    Index.ReleaseReferences(t);
+                    UMAAddressablesSupport.Instance.ReleaseReferences(t);
                 }
 
-                Index.CleanupAddressables(true);
+                UMAAddressablesSupport.Instance.CleanupAddressables(true);
             }
             finally
             {
@@ -205,10 +205,10 @@ namespace UMA
         {
 
             Index = UMAAssetIndexer.Instance;
-            Index.CleanupAddressables(false, true);
+            UMAAddressablesSupport.Instance.CleanupAddressables(false, true);
             foreach (Type t in Index.GetTypes())
             {
-                Index.ClearAddressableFlags(t);
+                UMAAddressablesSupport.Instance.ClearAddressableFlags(t);
             }
 
             Recipes = new List<UMAPackedRecipeBase>();
