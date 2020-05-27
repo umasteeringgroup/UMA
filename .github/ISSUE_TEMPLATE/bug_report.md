@@ -13,6 +13,7 @@ A clear and concise description of what the bug is.
 **Environment (please complete the following information):**
  - Unity Version:
  - UMA Version:
+ - Rendering Pipeline:
  - Platform Build (if not editor):
 
 **To Reproduce**
