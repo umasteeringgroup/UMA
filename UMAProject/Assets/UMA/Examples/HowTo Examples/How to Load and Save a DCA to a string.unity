@@ -896,7 +896,7 @@ MonoBehaviour:
   Avatar: {fileID: 1493261713}
   Randomizer: {fileID: 868086842}
   LoadButton: {fileID: 885478365}
-  useAvatarDefinition: 0
+  useAvatarDefinition: 1
   useCompressedString: 0
   saveString: 
   avatarString: 
