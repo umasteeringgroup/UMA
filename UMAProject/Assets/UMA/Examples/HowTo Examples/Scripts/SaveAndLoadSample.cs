@@ -51,7 +51,7 @@ public class SaveAndLoadSample : MonoBehaviour
         if (useAvatarDefinition)
         {
             Avatar.LoadAvatarDefinition(avatarString);
-            Avatar.BuildCharacter();
+            Avatar.BuildCharacter(false); // We must not restore the old DNA
         }
         else if (useCompressedString)
         {
