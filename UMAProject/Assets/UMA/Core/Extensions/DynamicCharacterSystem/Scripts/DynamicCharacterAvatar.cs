@@ -348,7 +348,7 @@ namespace UMA.CharacterSystem
             {
 				bool startRecipeEmpty = (loadString == "" && loadFilename == "" && umaRecipe == null);
 
-				if (loadFileOnStart && !startRecipeEmpty)
+				if (loadFileOnStart || !startRecipeEmpty) // was &&
 					return false;
 				else
 					return true;
