@@ -308,7 +308,7 @@ namespace UMA
 		[MenuItem("UMA/Activate ASMDEF files")]
 		public static void FixupAsmdef()
 		{
-			RenameFiles(".asmdeftemp", ".asmdef");
+			RenameFiles(".asmdefTemp", ".asmdef");
 		}
 
 		public static void RenameFiles(string oldpattern,string newpattern)
@@ -324,6 +324,11 @@ namespace UMA
 			foreach (string s in files)
 			{
 				string newFile = s.Replace(oldpattern, newpattern);
+				if (newFile == s)
+                {
+					// 
+					newFile = s.ToLower().Replace(oldpattern.ToLower(), newpattern.ToLower());
+                }
 				File.Move(s, newFile);
 			}
 			AssetDatabase.Refresh();
