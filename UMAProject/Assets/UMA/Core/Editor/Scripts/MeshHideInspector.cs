@@ -114,6 +114,10 @@ namespace UMA.Editors
 			{
 				EditorGUILayout.LabelField("Triangle Indices Count: " + source.TriangleCount);
 				EditorGUILayout.LabelField("Submesh Count: " + source.SubmeshCount);
+				if (source.asset != null)
+				{
+					EditorGUILayout.LabelField("Current Submesh: " + source.asset.subMeshIndex);
+				}
 				EditorGUILayout.LabelField("Hidden Triangle Count: " + source.HiddenCount);
 			}
 			else
@@ -337,8 +341,8 @@ namespace UMA.Editors
 				geometry.restoreScenes = currentscenes;
 				geometry.InitializeFromMeshData(source.asset.meshData);
 
-				//temporary, only works on submesh 0
-				geometry.selectedTriangles = new BitArray(source.triangleFlags[0]);
+
+				geometry.selectedTriangles = new BitArray(source.triangleFlags[source.asset.subMeshIndex]);
 
 				geometry.UpdateSelectionMesh();
 				SceneView.FrameLastActiveSceneView();

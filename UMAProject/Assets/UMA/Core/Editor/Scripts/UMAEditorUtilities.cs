@@ -530,7 +530,24 @@ namespace UMA
 
 	public static class UMAExtensions
     {
-        public static System.Type[] GetAllDerivedTypes(this System.AppDomain aAppDomain, System.Type aType)
+		public static void Fill(this bool[] array, bool value, int count = 0, int threshold = 32)
+		{
+			if (threshold <= 0)
+				throw new ArgumentException("threshold");
+
+			if (count == 0) count = array.Length;
+
+			int current_size = 0, keep_looping_up_to = Math.Min(count, threshold);
+
+			while (current_size < keep_looping_up_to)
+				array[current_size++] = value;
+
+			for (int at_least_half = (count + 1) >> 1; current_size < at_least_half; current_size <<= 1)
+				Array.Copy(array, 0, array, current_size, current_size);
+
+			Array.Copy(array, 0, array, current_size, count - current_size);
+		}
+		public static System.Type[] GetAllDerivedTypes(this System.AppDomain aAppDomain, System.Type aType)
         {
             var result = new List<System.Type>();
             var assemblies = aAppDomain.GetAssemblies();

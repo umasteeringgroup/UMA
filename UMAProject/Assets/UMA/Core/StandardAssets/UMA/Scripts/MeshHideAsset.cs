@@ -297,7 +297,8 @@ namespace UMA
         [ExecuteInEditMode]
         public void SaveSelection( BitArray selection )
         {
-            if (selection.Count != _triangleFlags[0].Count)
+            int submesh = asset.subMeshIndex;
+            if (selection.Count != _triangleFlags[submesh].Count)
             {
                 if (Debug.isDebugBuild)
                     Debug.Log("SaveSelection: counts don't match!");
@@ -306,9 +307,9 @@ namespace UMA
             }
 
             //Only works for submesh 0 for now
-            _triangleFlags[0].SetAll(false);
-            if (selection.Length == _triangleFlags[0].Length)
-                _triangleFlags[0] = new BitArray(selection);
+            _triangleFlags[submesh].SetAll(false);
+            if (selection.Length == _triangleFlags[submesh].Length)
+                _triangleFlags[submesh] = new BitArray(selection);
             else
             {
                 if (Debug.isDebugBuild)

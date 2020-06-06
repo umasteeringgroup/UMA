@@ -83,9 +83,11 @@ namespace UMA
             gameObject.transform.hideFlags = HideFlags.NotEditable | HideFlags.HideInInspector;
 
             if (selectedTriangles == null)
-                selectedTriangles = new BitArray(_sharedMesh.triangles.Length / 3);
-                
-            if( !gameObject.GetComponent<MeshFilter>())
+            {
+                 selectedTriangles = new BitArray(_sharedMesh.triangles.Length / 3);
+            }
+
+            if ( !gameObject.GetComponent<MeshFilter>())
             {
                 MeshFilter meshFilter = gameObject.AddComponent<MeshFilter>();
                 meshFilter.mesh = _sharedMesh;
@@ -154,7 +156,7 @@ namespace UMA
 #if UMA_32BITBUFFERS
 				_sharedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
 #endif
-            _sharedMesh.subMeshCount = meshData.subMeshCount;
+            _sharedMesh.subMeshCount = 1; // we're only copying the current submesh
             _sharedMesh.vertices = meshData.vertices;
             _sharedMesh.normals = meshData.normals;
             _sharedMesh.tangents = meshData.tangents;
@@ -164,9 +166,7 @@ namespace UMA
             _sharedMesh.uv4 = meshData.uv4;
             _sharedMesh.colors32 = meshData.colors32;
 
-            for (int i = 0; i < meshData.subMeshCount; i++)
-                _sharedMesh.SetTriangles(meshData.submeshes[i].triangles, i);
-
+            _sharedMesh.SetTriangles(meshData.submeshes[meshAsset.asset.subMeshIndex].triangles, 0);
             Initialize();
         }
 
@@ -284,7 +284,7 @@ namespace UMA
             CreateOcclusionMesh(meshHide.asset.meshData);
 
             int[] triangles = _occlusionMesh.GetTriangles(0);
-            BitArray bitArray = meshHide.triangleFlags[0];
+            BitArray bitArray = meshHide.triangleFlags[meshHide.asset.subMeshIndex];
             List<int> newTriangles = new List<int>();
 
             if((bitArray.Length * 3) != triangles.Length)
