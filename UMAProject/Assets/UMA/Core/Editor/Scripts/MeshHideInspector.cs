@@ -317,21 +317,6 @@ namespace UMA.Editors
 			GameObject obj = EditorUtility.CreateGameObjectWithHideFlags("GeometrySelector", HideFlags.DontSaveInEditor); 
 			GeometrySelector geometry = obj.AddComponent<GeometrySelector>();
 
-			GameObject[] gos = s.GetRootGameObjects();
-			if (gos != null) 
-			{
-				Debug.Log("Found game objects! "); 
-				foreach(GameObject go in gos)       
-				{
-					Debug.Log("GameObject: " + go.name);
-					Component mo = go.GetComponent("Fog");
-					if (mo != null)
-					{
-						Debug.Log("Destroying da fog");
-						GameObject.Destroy(mo);
-					}
-				}
-			}
 			if (geometry != null)
 			{
 				Selection.activeGameObject = obj;

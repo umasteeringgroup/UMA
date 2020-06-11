@@ -1271,11 +1271,14 @@ namespace UMA
                     ai.AddressableLabels = ainfo.AddressableLabels;
                 }
 #endif
-                if (GuidTypes.ContainsKey(ai._Guid))
+                if (!string.IsNullOrEmpty(ai._Guid))
                 {
-                    return false;
+                    if (GuidTypes.ContainsKey(ai._Guid))
+                    {
+                        return false;
+                    }
+                    GuidTypes.Add(ai._Guid, ai);
                 }
-                GuidTypes.Add(ai._Guid, ai);
 #endif
 
                 TypeDic.Add(ai._Name, ai);

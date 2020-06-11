@@ -524,10 +524,6 @@ namespace UMA.Editors
 
                 if (triangleHit >= 0)
                 {
-                    if (triangleHit >= _Source.selectedTriangles.Length)
-                    {
-                        Debug.Log("Hit tri: " + triangleHit);
-                    }
                     _Source.selectedTriangles[triangleHit] = !_Source.selectedTriangles[triangleHit];
                     if (isMirroring && mirrorHit != -1)
                     {

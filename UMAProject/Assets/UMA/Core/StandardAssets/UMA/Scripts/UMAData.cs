@@ -865,7 +865,7 @@ namespace UMA
 			/// </summary>
 			/// <param name="slot">Slot.</param>
 			/// <param name="dontSerialize">If set to <c>true</c> slot will not be serialized.</param>
-			public SlotData MergeSlot(SlotData slot, bool dontSerialize)
+			public SlotData MergeSlot(SlotData slot, bool dontSerialize, bool mergeMatchingOverlays = true)
 			{
 				if ((slot == null) || (slot.asset == null))
 					return null;
@@ -934,7 +934,10 @@ namespace UMA
 					}
 				}
 				slotDataList[insertIndex] = slotCopy;
-				MergeMatchingOverlays();
+				if (mergeMatchingOverlays)
+				{
+					MergeMatchingOverlays();
+				}
                 return slotCopy;
 			}
 
@@ -1265,7 +1268,7 @@ namespace UMA
 			/// </summary>
 			/// <param name="recipe">Recipe.</param>
 			/// <param name="dontSerialize">If set to <c>true</c> recipe will not be serialized.</param>
-			public void Merge(UMARecipe recipe, bool dontSerialize)
+			public void Merge(UMARecipe recipe, bool dontSerialize, bool mergeMatchingOverlays = true)
 			{
 				if (recipe == null)
 					return;
@@ -1322,7 +1325,7 @@ namespace UMA
 				{
 					for (int i = 0; i < recipe.slotDataList.Length; i++)
 					{
-						MergeSlot(recipe.slotDataList[i], dontSerialize);
+						MergeSlot(recipe.slotDataList[i], dontSerialize, mergeMatchingOverlays);
 					}
 				}
 			}
@@ -1758,14 +1761,14 @@ namespace UMA
 		/// </summary>
 		/// <param name="umaAdditionalRecipes">Additional recipes.</param>
 		/// <param name="context">Context.</param>
-		public void AddAdditionalRecipes(UMARecipeBase[] umaAdditionalRecipes, UMAContextBase context)
+		public void AddAdditionalRecipes(UMARecipeBase[] umaAdditionalRecipes, UMAContextBase context, bool mergeMatchingOverlays=true)
 		{
 			if (umaAdditionalRecipes != null)
 			{
 				foreach (var umaAdditionalRecipe in umaAdditionalRecipes)
 				{
 					UMARecipe cachedRecipe = umaAdditionalRecipe.GetCachedRecipe(context);
-					umaRecipe.Merge(cachedRecipe, true);
+					umaRecipe.Merge(cachedRecipe, true, mergeMatchingOverlays);
 				}
 			}
 		}

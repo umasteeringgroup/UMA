@@ -1064,6 +1064,17 @@ namespace UMA.CharacterSystem
         }
 
         /// <summary>
+        /// This function will ADD a wardrobe recipe to a slot.
+        /// This is useful for accumulating overlays, etc.
+        /// </summary>
+        /// <param name="utr"></param>
+        /// <param name="RecipeSlot"></param>
+        public void AppendSlot(UMAWardrobeRecipe utr, string RecipeSlot)
+        {
+
+        }
+
+        /// <summary>
         /// Sets the avatars wardrobe slot to use the given wardrobe recipe (not to be mistaken with an UMA SlotDataAsset)
         /// </summary>
         /// <param name="utr">The WardrobeRecipe it WardrobeCollection to add to the Avatar</param>
@@ -2604,7 +2615,7 @@ namespace UMA.CharacterSystem
             umaData.umaRecipe.sharedColors = ImportSharedColors(settingsToLoad.sharedColors, thisLoadOptions);
             UpdateColors();
             //additionalRecipes
-            umaData.AddAdditionalRecipes(umaAdditionalRecipes, context);
+            umaData.AddAdditionalRecipes(umaAdditionalRecipes, context,false);
             //UMAs unpacking sets the DNA
             //but we can still try to set it back if thats what we want
             if (prevDna.Length > 0 && !thisLoadOptions.HasFlagSet(LoadOptions.loadDNA) && wasBuildCharacterEnabled)
@@ -3123,7 +3134,7 @@ namespace UMA.CharacterSystem
             umaRecipe.Load(umaData.umaRecipe, context);
             umaData.umaRecipe.MeshHideDictionary = MeshHideDictionary;
 
-            umaData.AddAdditionalRecipes(AdditionalRecipes, context);
+            umaData.AddAdditionalRecipes(AdditionalRecipes, context, false);
             if (umaAdditionalSerializedRecipes != null)
                 AddAdditionalSerializedRecipes(umaAdditionalSerializedRecipes);
 
@@ -3240,7 +3251,7 @@ namespace UMA.CharacterSystem
                 foreach (var umaAdditionalRecipe in umaAdditionalSerializedRecipes)
                 {
                     UMAData.UMARecipe cachedRecipe = umaAdditionalRecipe.GetCachedRecipe(context);
-                    umaData.umaRecipe.Merge(cachedRecipe, false);
+                    umaData.umaRecipe.Merge(cachedRecipe, false, true);
                 }
             }
         }

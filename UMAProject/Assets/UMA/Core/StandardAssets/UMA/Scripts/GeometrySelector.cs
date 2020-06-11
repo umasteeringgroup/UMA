@@ -76,8 +76,19 @@ namespace UMA
 
             if (meshAsset != null)
             {
-                if (meshAsset.asset.meshData.rootBoneHash == UMAUtils.StringToHash("Global"))
+                UMAMeshData meshData = meshAsset.asset.meshData;
+
+                /* Todo: figure out how to get the races root bone orientation
+                Transform root = meshData.rootBone;
+                if (root == null)
+                {
+                    SkeletonTools.RecursiveFindBone(meshData.bones[0],"Global");
+                }
+                */
+                if (meshData.rootBoneHash == UMAUtils.StringToHash("Global"))
+                {
                     gameObject.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
+                }
             }
 
             gameObject.transform.hideFlags = HideFlags.NotEditable | HideFlags.HideInInspector;
