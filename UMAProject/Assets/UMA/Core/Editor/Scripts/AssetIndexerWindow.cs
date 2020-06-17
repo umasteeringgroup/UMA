@@ -175,6 +175,14 @@ namespace UMA.Controls
 				m_Initialized = false;
 				Repaint();
 			});
+			AddMenuItemWithCallback(FileMenu, "Cleanup References", () =>
+			{
+				UAI.UpdateReferences();
+				Resources.UnloadUnusedAssets();
+				m_Initialized = false;
+				Repaint();
+				EditorUtility.DisplayDialog("Repair", "References cleaned", "OK");
+			});
 
 			AddMenuItemWithCallback(FileMenu, "Repair and remove invalid items", () => 
 			{

@@ -1663,17 +1663,13 @@ namespace UMA
         /// When building, Unity needs the references to the items because we 
         /// cannot demand load them without the AssetDatabase.
         /// </summary>
-        public void AddReferences(bool force = false)
+        public void UpdateReferences()
         {
             // Rebuild the tables
             UpdateSerializedList();
             foreach (AssetItem ai in SerializedItems)
             {
-				if (force)
-				{
-					ai.CacheSerializedItem();
-				}
-				else if (!ai.IsAddressable)
+                if (!ai.IsAddressable)
 				{
 					ai.CacheSerializedItem();
 				}
@@ -1682,10 +1678,7 @@ namespace UMA
                     ai.FreeReference();
 				}
             }
-			if (!force)
-			{
-				UpdateSerializedDictionaryItems();
-			}
+			// UpdateSerializedDictionaryItems();
             ForceSave();
         }
 
@@ -1761,6 +1754,7 @@ namespace UMA
                             // null it out, so it doesn't get added back.
                             SerializedItems[i] = null;
                         }
+                        ai.FreeReference();
                     }
                 }
             }
@@ -1771,12 +1765,12 @@ namespace UMA
         }
 
 #endif
-        /// <summary>
-        /// returns the entire lookup dictionary for a specific type.
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public Dictionary<string, AssetItem> GetAssetDictionary(System.Type type)
+            /// <summary>
+            /// returns the entire lookup dictionary for a specific type.
+            /// </summary>
+            /// <param name="type"></param>
+            /// <returns></returns>
+            public Dictionary<string, AssetItem> GetAssetDictionary(System.Type type)
         {
             System.Type LookupType = TypeToLookup[type];
             if (TypeLookup.ContainsKey(LookupType) == false)

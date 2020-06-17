@@ -162,6 +162,7 @@ namespace UMA
                             Debug.Log("Invalid overlay in recipe: " + ai._Name + ". Skipping.");
                             continue;
                         }
+#if INCL_TEXTURE2D
                         foreach (Texture tex in od.textureList)
                         {
                             if (tex == null) continue;
@@ -179,6 +180,7 @@ namespace UMA
                                 UMAAddressablesSupport.Instance.AddItemToSharedGroup(texGUID, AssetItem.AddressableFolder + Address, AddressableItems[ai], sharedGroup);
                             }
                         }
+#endif
                     }
                     pos += inc;
                 }
