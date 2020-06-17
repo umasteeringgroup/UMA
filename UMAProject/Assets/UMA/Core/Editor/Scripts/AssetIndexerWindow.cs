@@ -217,7 +217,7 @@ namespace UMA.Controls
 
 			foreach(IUMAAddressablePlugin plugin in addressablePlugins)
 			{
-				AddMenuItemWithCallbackParm(AddressablesMenu, "Generators/"+plugin.Menu, (object o) =>
+				AddMenuItemWithCallbackParm(_AddressablesMenu, "Generators/"+plugin.Menu, (object o) =>
 				{
 					IUMAAddressablePlugin addrplug = o as IUMAAddressablePlugin;
 					UMAAddressablesSupport.Instance.GenerateAddressables(addrplug);
@@ -227,12 +227,12 @@ namespace UMA.Controls
 				},plugin);
 			}
 
-			AddressablesMenu.AddSeparator("Generators/");
+			_AddressablesMenu.AddSeparator("Generators/");
 
 			// ***********************************************************************************
 			// Addressables Menu items
 			// ***********************************************************************************
-			AddMenuItemWithCallback(AddressablesMenu, "Generators/Generate Groups (optimized)", () => 
+			AddMenuItemWithCallback(_AddressablesMenu, "Generators/Generate Groups (optimized)", () => 
 			{
 				UMAAddressablesSupport.Instance.CleanupAddressables();
 				UMAAddressablesSupport.Instance.GenerateAddressables();
@@ -259,13 +259,13 @@ namespace UMA.Controls
 				Repaint();
 			}); */
 
-			AddMenuItemWithCallback(AddressablesMenu, "Remove Addressables", () => 
+			AddMenuItemWithCallback(_AddressablesMenu, "Remove Addressables", () => 
 			{
 				UMAAddressablesSupport.Instance.CleanupAddressables(false, true);
 				m_Initialized = false;
 				Repaint();
 			});
-			AddMenuItemWithCallback(AddressablesMenu, "Delete Empty Groups", () => 
+			AddMenuItemWithCallback(_AddressablesMenu, "Delete Empty Groups", () => 
 			{
 				UMAAddressablesSupport.Instance.CleanupAddressables(true);
 			});
@@ -279,7 +279,7 @@ namespace UMA.Controls
 				Repaint();
 			}); */
 
-			AddMenuItemWithCallback(AddressablesMenu, "Remove Orphaned Slots", () => 
+			AddMenuItemWithCallback(_AddressablesMenu, "Remove Orphaned Slots", () => 
 			{
 				if (EditorUtility.DisplayDialog("Warning!", "You *must* build the addressable groups, and mark any slots you want to keep as 'keep' before running this!", "OK", "Cancel"))
 				{
@@ -288,7 +288,7 @@ namespace UMA.Controls
 					Repaint();
 				}
 			});
-			AddMenuItemWithCallback(AddressablesMenu, "Remove Orphaned Overlays", () => 
+			AddMenuItemWithCallback(_AddressablesMenu, "Remove Orphaned Overlays", () => 
 			{
 				if (EditorUtility.DisplayDialog("Warning!", "You *must* build the addressable groups, and mark any slots you want to keep as 'keep' before running this.", "OK", "Cancel"))
 				{
@@ -298,7 +298,7 @@ namespace UMA.Controls
 				}
 			});
 #else
-			AddMenuItemWithCallback(AddressablesMenu, "Enable Addressables (Package must be installed first)", () =>
+			AddMenuItemWithCallback(_AddressablesMenu, "Enable Addressables (Package must be installed first)", () =>
 			{
 				if (EditorUtility.DisplayDialog("Warning!", "The Addressables Package must be installed first before enabling Addressables support in UMA. Enabling addressables will trigger a recompile during which the library will be unavailable.", "OK", "Cancel"))
 				{
