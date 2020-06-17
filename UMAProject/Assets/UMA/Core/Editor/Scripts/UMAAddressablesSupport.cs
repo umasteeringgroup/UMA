@@ -521,22 +521,6 @@ namespace UMA
             theGroup = AddressableUtility.AddressableSettings.CreateGroup(recipe.name, false, false, true, AddressableUtility.AddressableSettings.DefaultGroup.Schemas);
             theGroup.GetSchema<BundledAssetGroupSchema>().BundleMode = BundledAssetGroupSchema.BundlePackingMode.PackTogether;
 
-            /*  if (theGroup == null)
-             {
-                 theGroup = AddressableSettings.CreateGroup(recipe.name, false, false, true, AddressableSettings.DefaultGroup.Schemas);
-                 theGroup.GetSchema<BundledAssetGroupSchema>().BundleMode = BundledAssetGroupSchema.BundlePackingMode.PackTogether;
-             }
-             else
-             {
-                 List<AddressableAssetEntry> theEntries = new List<AddressableAssetEntry>();
-                 theEntries.AddRange(theGroup.entries);
-
-                 foreach (AddressableAssetEntry ae in theEntries)
-                 {
-                     theGroup.RemoveAssetEntry(ae);
-                 }
-             } */
-
             foreach (AssetItem ai in UniqueItems)
             {
                 ai.AddressableAddress = ""; // let the system assign it.
@@ -546,6 +530,7 @@ namespace UMA
                 ai.AddressableLabels = recipe.AssignedLabel;
 
                 AddAssetItemToGroup(theGroup, ai, recipe.name, recipe.AssignedLabel);
+#if INCL_TEXTURES
                 if (IsOverlayItem(ai))
                 {
                     OverlayDataAsset od = ai.Item as OverlayDataAsset;
@@ -565,6 +550,7 @@ namespace UMA
                         }
                     }
                 }
+#endif
             }
             return true;
         }
@@ -572,123 +558,6 @@ namespace UMA
         private static bool IsOverlayItem(AssetItem ai)
         {
             return ai._Type == typeof(OverlayDataAsset);
-        }
-
-        public void GenerateSingleGroup(bool IncludeRecipes = false)
-        {
-            // Find what recipe everything is in.
-            // label everything with that recipe.
-            // dictionary<asset,recipes>
-            // 
-            try
-            {
-                foreach (Type t in UMAAssetIndexer.Instance.GetTypes())
-                {
-                    ClearAddressableFlags(t);
-                }
-                List<AssetItem> theRecipes = GetAddressableRecipes();
-
-                // Find Labels.
-                Dictionary<AssetItem, List<string>> theItems = new Dictionary<AssetItem, List<string>>();
-
-                float pos = 0.0f;
-                float inc = 1.0f / theRecipes.Count;
-                foreach (AssetItem RecipeItem in theRecipes)
-                {
-                    UMATextRecipe uwr = RecipeItem.Item as UMATextRecipe;
-                    EditorUtility.DisplayProgressBar("Generating", "processing recipe: " + uwr.name, pos);
-                    List<AssetItem> items = UMAAssetIndexer.Instance.GetAssetItems(uwr, true);
-                    foreach (AssetItem ai in items)
-                    {
-                        if (theItems.ContainsKey(ai) == false)
-                        {
-                            theItems.Add(ai, new List<string>());
-                        }
-                        theItems[ai].Add(UMAAssetIndexer.Instance.GetLabel(uwr));
-                    }
-                    if (IncludeRecipes)
-                    {
-                        if (theItems.ContainsKey(RecipeItem) == false)
-                        {
-                            theItems.Add(RecipeItem, new List<string>());
-                        }
-                        theItems[RecipeItem].Add(UMAAssetIndexer.Instance.GetLabel(uwr));
-                        theItems[RecipeItem].Add("UMA_Recipes");
-                    }
-                    pos += inc;
-                }
-
-                // Create the shared group that has each item packed separately.
-                AddressableAssetGroup sharedGroup = AddressableUtility.AddressableSettings.FindGroup(SharedGroupName);
-                if (sharedGroup == null)
-                {
-                    sharedGroup = AddressableUtility.AddressableSettings.CreateGroup(SharedGroupName, false, false, true, AddressableUtility.AddressableSettings.DefaultGroup.Schemas);
-                    sharedGroup.GetSchema<BundledAssetGroupSchema>().BundleMode = BundledAssetGroupSchema.BundlePackingMode.PackSeparately;
-                }
-
-                pos = 0.0f;
-                inc = 1.0f / theItems.Count;
-
-                StringBuilder sb = new StringBuilder();
-                foreach (AssetItem ai in theItems.Keys)
-                {
-                    ai.IsAddressable = true;
-                    ai.AddressableAddress = ""; // let the system assign it if we are generating.
-                    ai.AddressableGroup = sharedGroup.name;
-                    EditorUtility.DisplayProgressBar("Generating", "Processing Asset: " + ai.Item.name, pos);
-
-                    sb.Clear();
-                    foreach (string s in theItems[ai])
-                    {
-                        sb.Append(s);
-                        sb.Append(';');
-                    }
-                    ai.AddressableLabels = sb.ToString();
-
-                    bool found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(ai.Item.GetInstanceID(), out string itemGUID, out long localID);
-
-                    AddItemToSharedGroup(itemGUID, ai.AddressableAddress, theItems[ai], sharedGroup);
-                    if (IsOverlayItem(ai))
-                    {
-                        OverlayDataAsset od = ai.Item as OverlayDataAsset;
-                        if (od == null)
-                        {
-                            Debug.Log("Invalid overlay in recipe: " + ai._Name + ". Skipping.");
-                            continue;
-                        }
-                        foreach (Texture tex in od.textureList)
-                        {
-                            if (tex == null) continue;
-                            if (tex as Texture2D == null)
-                            {
-                                Debug.Log("Texture is not Texture2D!!! " + tex.name);
-                                continue;
-                            }
-                            string Address = "Texture2D-" + tex.name + "-" + tex.GetInstanceID();
-
-                            found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(tex.GetInstanceID(), out string texGUID, out long texlocalID);
-                            if (found)
-                            {
-                                AddItemToSharedGroup(texGUID, AssetItem.AddressableFolder + Address, theItems[ai], sharedGroup);
-                            }
-                        }
-                    }
-                    pos += inc;
-                }
-
-                AssignAddressableInformation();
-
-                foreach (Type t in UMAAssetIndexer.Instance.GetIndexedTypeValues())
-                {
-                    ReleaseReferences(t);
-                }
-
-                CleanupAddressables(true);
-            }
-            finally
-            {
-                EditorUtility.ClearProgressBar();
-            }
         }
 
         public void GenerateAddressables(IUMAAddressablePlugin plugin)
@@ -730,6 +599,7 @@ namespace UMA
                         ai.AddressableGroup = sharedGroup.name;
 
                         AddItemToSharedGroup(itemGUID, ai.AddressableAddress, labels, sharedGroup);
+#if INCL_TEXTURES
                         if (IsOverlayItem(ai))
                         {
                             OverlayDataAsset od = ai.Item as OverlayDataAsset;
@@ -755,7 +625,7 @@ namespace UMA
                                 }
                             }
                         }
-
+#endif
                         sb.Clear();
                         foreach (string s in labels)
                         {
@@ -972,5 +842,5 @@ namespace UMA
         }
 #endif
 #endif
-    }
+                    }
 }
