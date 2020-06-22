@@ -76,7 +76,7 @@ namespace UMA
             public string materialPropertyName;
 			public string sourceTextureName;
             public CompressionSettings Compression;
-            [Range(0,4)]
+            [Range(1,128)]
             public int DownSample;
             public bool ConvertRenderTexture;
             public bool NonShaderTexture;
