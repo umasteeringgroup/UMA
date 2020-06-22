@@ -64,8 +64,13 @@ namespace UMA
 				umaRecipe = new UMAData.UMARecipe();
 				Load(umaRecipe, context);
 #if !UNITY_EDITOR
+#if UMA_ADDRESSABLES
+				// don't cache addressables, as they can be unloaded.
+				cached = false;
+#else
 				// do not cache in the editor
 				cached = true;
+#endif
 #endif
 			}
 

@@ -472,7 +472,10 @@ namespace UMA
 				return false;
 
 			float weight = blendShapes[currentShape.shapeName].value * 100.0f;
-			if (weight <= 0f) return true; // Baking in nothing, so skip it entirely
+			
+			// Allow < 0 weights.
+			// if (weight <= 0f) return true; // Baking in nothing, so skip it entirely
+			if (Mathf.Abs(weight) <= Mathf.Epsilon) return true;
 
 			// Let's find the frame this weight is in
 			int frameIndex;

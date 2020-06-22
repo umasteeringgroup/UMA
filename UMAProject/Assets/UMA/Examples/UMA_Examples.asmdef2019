@@ -1,8 +1,0 @@
-{
-    "name": "UMA_Examples",
-    "references": [
-        "UMA_Core"
-    ],
-    "includePlatforms": [],
-    "excludePlatforms": []
-}

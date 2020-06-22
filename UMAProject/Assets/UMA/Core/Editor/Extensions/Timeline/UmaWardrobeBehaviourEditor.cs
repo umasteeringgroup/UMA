@@ -10,8 +10,8 @@ namespace UMA.Editors
     {
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            int fieldCount = 3;
-            return fieldCount * EditorGUIUtility.singleLineHeight;
+            int fieldCount = 25; // todo: get this dynamically
+            return fieldCount * EditorGUIUtility.singleLineHeight * EditorGUIUtility.pixelsPerPoint;
         }
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)

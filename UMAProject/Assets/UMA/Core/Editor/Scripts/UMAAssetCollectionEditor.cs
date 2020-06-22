@@ -1,5 +1,5 @@
-﻿#if UNITY_EDITOR
-using UnityEngine;
+﻿using UnityEngine;
+#if UNITY_EDITOR
 using UnityEditor;
 
 namespace UMA.Editors
@@ -27,5 +27,5 @@ namespace UMA.Editors
 			UMA.CustomAssetUtility.CreateAsset<UMAAssetCollection>();
 		}
 	}
-	#endif
 }
+#endif

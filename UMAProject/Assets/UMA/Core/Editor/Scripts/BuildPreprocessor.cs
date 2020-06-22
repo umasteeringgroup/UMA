@@ -11,6 +11,6 @@ public class BuildPreprocessor : IPreprocessBuildWithReport
 
     public void OnPreprocessBuild(BuildReport report)
     {
-        UMAAssetIndexer.Instance.AddReferences();
+        UMAAssetIndexer.Instance.UpdateReferences();
     }
 }

@@ -9,6 +9,18 @@ using UnityEditor; //todo: ifdef this
 namespace UMA
 {
 	[Serializable]
+	public class DnaValue
+	{
+		public string Name;
+		public float Value;
+		public DnaValue(string name, float value)
+		{
+			Name = name;
+			Value = value;
+		}
+	}
+
+	[Serializable]
 	public class UMAPredefinedDNA
 	{
 		/// <summary>
@@ -20,17 +32,6 @@ namespace UMA
 		/// After the UMAData is created, this DNA will be applied to the UMA as part of the build process, so you don't have
 		/// to build the DCA twice to get randomized data/.
 		/// </remarks>
-		[Serializable]
-	    public class DnaValue
-		{
-			public string Name;
-			public float Value;
-			public DnaValue(string name, float value)
-			{
-				Name = name;
-				Value = value;
-			}
-		}
 
 		public List<DnaValue> PreloadValues = new List<DnaValue>();
 

@@ -348,7 +348,7 @@ namespace UMA.CharacterSystem
             {
 				bool startRecipeEmpty = (loadString == "" && loadFilename == "" && umaRecipe == null);
 
-				if (loadFileOnStart && !startRecipeEmpty)
+				if (loadFileOnStart && !startRecipeEmpty) // was &&
 					return false;
 				else
 					return true;
@@ -571,9 +571,196 @@ namespace UMA.CharacterSystem
             }
         }
 
-#endregion
+        #endregion
+        #region AVATAR Definition
 
-#region SETTINGS MODIFICATION (RACE RELATED)
+        private bool isDefaultDna(float val)
+        {
+            // Because of the way text recipes store DNA, 
+            // they are not exact.
+            if (val >= 0.4999f && val < 0.502f) return true;
+            return false;
+        }
+        public AvatarDefinition GetAvatarDefinition(bool skipDefaults)
+        {
+            // *****************************************************
+            // Get Wardrobe
+            // *****************************************************
+            List<string> Wardrobe = new List<string>();
+            foreach (UMATextRecipe utr in WardrobeRecipes.Values)
+            {
+                Wardrobe.Add(utr.name);
+            }
+
+            // *****************************************************
+            // Get DNA
+            // *****************************************************
+            List<DnaDef> Dna = new List<DnaDef>();
+            var CurrentDNA = GetDNA().Values;
+
+            foreach(DnaSetter d in CurrentDNA)
+            {
+                if (isDefaultDna(d.Value) && skipDefaults) continue;
+                DnaDef def = new DnaDef(d.Name, d.Value);
+                Dna.Add(def);
+            }
+
+            // *****************************************************
+            // Get Colors
+            // *****************************************************
+            List<SharedColorDef> Colors = new List<SharedColorDef>();
+
+            var CurrentColors = characterColors.Colors;
+
+            foreach(var col in CurrentColors)
+            {
+                SharedColorDef scd = new SharedColorDef(col.name,col.channelCount);
+                List<ColorDef> colorchannels = new List<ColorDef>();
+
+                for (int i=0; i<col.channelCount;i++)
+                {
+                    if (col.isDefault(i)) continue;
+                    Color Mask = col.channelMask[i];
+                    Color Additive = col.channelAdditiveMask[i];
+                    colorchannels.Add(new ColorDef(i, ColorDef.ToUInt(Mask), ColorDef.ToUInt(Additive)));
+                }
+                if (colorchannels.Count > 0)
+                {
+                    scd.SetChannels(colorchannels.ToArray());
+                    Colors.Add(scd);
+                }
+            }
+
+            // Save the Avatar def.
+            AvatarDefinition adf = new AvatarDefinition(); 
+            adf.RaceName = this.activeRace.name;
+            adf.Wardrobe = Wardrobe.ToArray();
+            adf.Dna = Dna.ToArray();
+            adf.Colors = Colors.ToArray();
+            return adf;
+        }
+
+        public string GetAvatarDefinitionString(bool skipDefaults)
+        {
+            AvatarDefinition adf = GetAvatarDefinition(skipDefaults);
+            return JsonUtility.ToJson(adf);
+        }
+
+        private void LoadColors(AvatarDefinition adf)
+        {
+            if (adf.Colors == null)
+                return;
+
+            foreach(SharedColorDef sc in adf.Colors)
+            {
+                if (characterColors.GetColor(sc.name, out OverlayColorData ocd))
+                {
+                    if (sc.channels == null) continue;
+
+                    // Make sure it's in the default state.
+                    ocd.EnsureChannels(sc.count);
+                    for (int i = 0; i < ocd.channelCount; i++)
+                    {
+                        ocd.channelMask[i] = Color.white;
+                        ocd.channelAdditiveMask[i] = new Color(0, 0, 0, 0);
+                    }
+
+                    foreach(ColorDef def in sc.channels)
+                    {
+                        ocd.channelMask[def.chan] = ColorDef.ToColor(def.mCol);
+                        ocd.channelAdditiveMask[def.chan] = ColorDef.ToColor(def.aCol);
+                    }
+                }
+                else
+                {
+                    OverlayColorData nocd = new OverlayColorData(sc.count);
+                    foreach (ColorDef def in sc.channels)
+                    {
+                        nocd.channelMask[def.chan] = ColorDef.ToColor(def.mCol);
+                        nocd.channelAdditiveMask[def.chan] = ColorDef.ToColor(def.aCol);
+                    }
+                    characterColors.SetRawColor(sc.name, nocd);
+                }
+            }
+        }
+
+        private void LoadWardrobe(AvatarDefinition adf, bool loadDefaultWardobe)
+        {
+            if (loadDefaultWardobe)
+                LoadDefaultWardrobe();
+
+            if (adf.Wardrobe == null)
+                return;
+
+            var recipes = UMAContextBase.Instance.GetRecipes(adf.RaceName);
+            foreach(string s in adf.Wardrobe)
+            {
+               UMATextRecipe utr = UMAContextBase.Instance.GetRecipe(s,false);
+               if (utr != null)
+                {
+                    SetSlot(utr);
+                }
+            }
+        }
+
+        private void PreloadAvatarDefinition(AvatarDefinition adf, bool loadDefaultWardrobe, bool resetDNA)
+        {
+            RacePreset = adf.RaceName;
+            LoadColors(adf);
+            LoadWardrobe(adf, loadDefaultWardrobe);
+
+            PreloadDNA(adf, resetDNA);
+        }
+
+        private void PreloadDNA(AvatarDefinition adf, bool resetDNA)
+        {
+            if (resetDNA)
+                predefinedDNA = new UMAPredefinedDNA();
+            if (adf.Dna != null)
+            {
+                foreach (var d in adf.Dna)
+                {
+                    predefinedDNA.AddDNA(d.Name, d.Value);
+                }
+            }
+        }
+
+        public void LoadAvatarDefinition(AvatarDefinition adf, bool loadDefaultWardrobe=false, bool ResetDNA=true)
+        {
+            if (umaData == null)
+            {
+                PreloadAvatarDefinition(adf, loadDefaultWardrobe,ResetDNA);
+                return;
+            }
+
+            if (adf.RaceName != null)
+            {
+                activeRace.name = adf.RaceName;
+                activeRace.SetRaceData();
+            }
+
+            LoadColors(adf);
+            WardrobeRecipes.Clear();
+            LoadWardrobe(adf, loadDefaultWardrobe);
+            PreloadDNA(adf, ResetDNA);
+        }
+
+        public void LoadAvatarDefinition(string adfstring, bool loadDefaultWardrobe=false, bool ResetDNA=true)
+        {
+            if (adfstring.StartsWith("AA*"))
+            {
+                AvatarDefinition adf = AvatarDefinition.FromCompressedString(adfstring);
+                LoadAvatarDefinition(adf, loadDefaultWardrobe, ResetDNA);
+            }
+            else
+            {
+                AvatarDefinition adf = JsonUtility.FromJson<AvatarDefinition>(adfstring);
+                LoadAvatarDefinition(adf, loadDefaultWardrobe, ResetDNA);
+            }
+        }
+        #endregion
+
+        #region SETTINGS MODIFICATION (RACE RELATED)
 
         /// <summary>
         /// Sets the starting race of the avatar based on the value of the 'activeRace'. 
@@ -763,6 +950,9 @@ namespace UMA.CharacterSystem
             if (!preloadWardrobeRecipes.loadDefaultRecipes && preloadWardrobeRecipes.recipes.Count == 0)
                 return;
 
+            if (activeRace.racedata == null)
+                activeRace.SetRaceData();
+
             List<WardrobeRecipeListItem> validRecipes = preloadWardrobeRecipes.GetRecipesForRace(activeRace.name, activeRace.racedata);
             if (validRecipes.Count > 0)
             {
@@ -871,6 +1061,17 @@ namespace UMA.CharacterSystem
             {
                 _wardrobeRecipes.Add(thisRecipeSlot, utr);
             }
+        }
+
+        /// <summary>
+        /// This function will ADD a wardrobe recipe to a slot.
+        /// This is useful for accumulating overlays, etc.
+        /// </summary>
+        /// <param name="utr"></param>
+        /// <param name="RecipeSlot"></param>
+        public void AppendSlot(UMAWardrobeRecipe utr, string RecipeSlot)
+        {
+
         }
 
         /// <summary>
@@ -2414,7 +2615,7 @@ namespace UMA.CharacterSystem
             umaData.umaRecipe.sharedColors = ImportSharedColors(settingsToLoad.sharedColors, thisLoadOptions);
             UpdateColors();
             //additionalRecipes
-            umaData.AddAdditionalRecipes(umaAdditionalRecipes, context);
+            umaData.AddAdditionalRecipes(umaAdditionalRecipes, context,false);
             //UMAs unpacking sets the DNA
             //but we can still try to set it back if thats what we want
             if (prevDna.Length > 0 && !thisLoadOptions.HasFlagSet(LoadOptions.loadDNA) && wasBuildCharacterEnabled)
@@ -2804,13 +3005,14 @@ namespace UMA.CharacterSystem
                     LoadQueue.Remove(Op);
                     if (LoadedHandles.Count > 1)
                     {
+                        AsyncOp OldOp = LoadedHandles.Dequeue();
                         if (gameObject.activeInHierarchy && DelayUnload > 0.0f) //VES changed from if (DelayUnload > 0.0f)
                         {
-                            StartCoroutine(CleanupAfterDelay());
+                            StartCoroutine(CleanupAfterDelay(OldOp));
                         }
                         else
                         {
-                            UnloadOldestQueuedHandle();
+                            UnloadOldestQueuedHandle(OldOp);
                         }
                     }
                 }
@@ -2820,12 +3022,13 @@ namespace UMA.CharacterSystem
                 Debug.LogException(ex, this);
             }
         }
-        private void UnloadOldestQueuedHandle()
+        private void UnloadOldestQueuedHandle(AsyncOp Op)
         {
-            AsyncOp aoh = LoadedHandles.Dequeue();
-            if (aoh.IsValid())
+            if (Op.IsValid())
             {
-                UnityEngine.AddressableAssets.Addressables.Release(aoh);
+                // Todo: Should we call AssetIndexer.Instance.Unload(Op) instead?
+                //       Unity seems to handle this OK with it's internal reference counting.
+                UnityEngine.AddressableAssets.Addressables.Release(Op);
             }
         }
 
@@ -2833,10 +3036,10 @@ namespace UMA.CharacterSystem
         /// This function will delay the unload
         /// </summary>
         /// <returns></returns>
-        IEnumerator CleanupAfterDelay( )
+        IEnumerator CleanupAfterDelay(AsyncOp Op)
         {
             yield return new WaitForSeconds(DelayUnload);
-            UnloadOldestQueuedHandle();
+            UnloadOldestQueuedHandle(Op);
         } 
 #endif
         private void ApplyPredefinedDNA()
@@ -2845,7 +3048,7 @@ namespace UMA.CharacterSystem
             {
                 var dna = GetDNA();
 
-                foreach (UMAPredefinedDNA.DnaValue dv in predefinedDNA.PreloadValues)
+                foreach (DnaValue dv in predefinedDNA.PreloadValues)
                 {
                     if (dna.ContainsKey(dv.Name))
                     {
@@ -2931,7 +3134,7 @@ namespace UMA.CharacterSystem
             umaRecipe.Load(umaData.umaRecipe, context);
             umaData.umaRecipe.MeshHideDictionary = MeshHideDictionary;
 
-            umaData.AddAdditionalRecipes(AdditionalRecipes, context);
+            umaData.AddAdditionalRecipes(AdditionalRecipes, context, false);
             if (umaAdditionalSerializedRecipes != null)
                 AddAdditionalSerializedRecipes(umaAdditionalSerializedRecipes);
 
@@ -3048,7 +3251,7 @@ namespace UMA.CharacterSystem
                 foreach (var umaAdditionalRecipe in umaAdditionalSerializedRecipes)
                 {
                     UMAData.UMARecipe cachedRecipe = umaAdditionalRecipe.GetCachedRecipe(context);
-                    umaData.umaRecipe.Merge(cachedRecipe, false);
+                    umaData.umaRecipe.Merge(cachedRecipe, false, true);
                 }
             }
         }
@@ -3369,7 +3572,8 @@ namespace UMA.CharacterSystem
 #if UMA_ADDRESSABLES
             while(LoadedHandles.Count > 0)
             {
-                UnloadOldestQueuedHandle();
+                AsyncOp Op = LoadedHandles.Dequeue();
+                UnloadOldestQueuedHandle(Op);
             }
 #endif
             if (umaData != null)

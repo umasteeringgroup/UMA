@@ -1,0 +1,17 @@
+{
+    "name": "UMA_Core",
+    "references": [
+        "Unity.Timeline",
+        "Unity.ResourceManager",
+        "Unity.Addressables",
+        "Addressable_Editor"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}

@@ -521,6 +521,7 @@ namespace UMA.Editors
                 int mirrorHit = -1;
 
                 int triangleHit = RayPick(isMirroring,out mirrorHit);
+
                 if (triangleHit >= 0)
                 {
                     _Source.selectedTriangles[triangleHit] = !_Source.selectedTriangles[triangleHit];
