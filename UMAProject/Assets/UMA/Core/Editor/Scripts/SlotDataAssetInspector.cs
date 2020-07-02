@@ -28,7 +28,7 @@ namespace UMA.Editors
 
 		private void OnDestroy()
 		{
-			AssetDatabase.SaveAssets();
+			// AssetDatabase.SaveAssets();
 		}
 
 		void OnEnable()
@@ -91,6 +91,7 @@ namespace UMA.Editors
 						{
 							slotDataAsset.animatedBoneHashes[i] = UMASkeleton.StringToHash(slotDataAsset.animatedBoneNames[i]);
 						}
+						GUI.changed = true;
 						EditorUtility.SetDirty(slotDataAsset);
 					}
 				}
@@ -112,6 +113,7 @@ namespace UMA.Editors
 			if (EditorGUI.EndChangeCheck())
 			{
 				EditorUtility.SetDirty(target);
+				AssetDatabase.SaveAssets();
 			}
         }
 
@@ -132,6 +134,7 @@ namespace UMA.Editors
                 {
                     Debug.Log("Updating SlotDataAsset with SkinnedMeshRenderer...");
                     UpdateSlotData(skinnedMesh);
+					GUI.changed = true;
                     Debug.Log("Update Complete!");
                 }
                 else
