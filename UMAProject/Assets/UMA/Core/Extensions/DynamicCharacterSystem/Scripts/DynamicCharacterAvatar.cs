@@ -581,8 +581,19 @@ namespace UMA.CharacterSystem
             if (val >= 0.4999f && val < 0.502f) return true;
             return false;
         }
-        public AvatarDefinition GetAvatarDefinition(bool skipDefaults)
+
+
+        public AvatarDefinition GetAvatarDefinition(bool skipRaceDefaults)
         {
+            RaceData r = activeRace.data;
+
+            Dictionary<string, DnaSetter> DefaultRaceDNA = new Dictionary<string, DnaSetter>();
+            if (skipRaceDefaults)
+            {
+                UMAData.UMARecipe recipe = r.baseRaceRecipe.GetCachedRecipe(UMAContextBase.Instance);
+                DefaultRaceDNA = GetDNA(recipe);
+            }
+
             // *****************************************************
             // Get Wardrobe
             // *****************************************************
@@ -600,9 +611,19 @@ namespace UMA.CharacterSystem
 
             foreach(DnaSetter d in CurrentDNA)
             {
-                if (isDefaultDna(d.Value) && skipDefaults) continue;
-                DnaDef def = new DnaDef(d.Name, d.Value);
-                Dna.Add(def);
+                if (skipRaceDefaults)
+                {
+                    if (DefaultRaceDNA.ContainsKey(d.Name) && d.Value != DefaultRaceDNA[d.Name].Value)
+                    {
+                        DnaDef def = new DnaDef(d.Name, d.Value);
+                        Dna.Add(def);
+                    }
+                }
+                else
+                {
+                    DnaDef def = new DnaDef(d.Name, d.Value);
+                    Dna.Add(def);
+                }
             }
 
             // *****************************************************
@@ -1934,17 +1955,27 @@ namespace UMA.CharacterSystem
                 }
             }
         }
+
+
+
         /// <summary>
         /// Get all of the DNA for the current character, and return it as a list of DnaSetters.
         /// Each DnaSetter will track the DNABase that it came from, and the character that it is attached
         /// to. To modify the DNA on the character, use the Set function on the Setter.
         /// </summary>
         /// <returns></returns>
-        public Dictionary<string, DnaSetter> GetDNA()
+        public Dictionary<string, DnaSetter> GetDNA(UMAData.UMARecipe recipe = null)
         {
             Dictionary<string, DnaSetter> dna = new Dictionary<string, DnaSetter>();
 
-            foreach (UMADnaBase db in umaData.GetAllDna())
+            UMADnaBase[] dnaBase = umaData.GetAllDna();
+
+            if (recipe == null)
+                dnaBase = umaData.GetAllDna();
+            else
+                dnaBase = recipe.GetAllDna();
+
+            foreach (UMADnaBase db in dnaBase)
             {
                 string Category = db.GetType().ToString();
 

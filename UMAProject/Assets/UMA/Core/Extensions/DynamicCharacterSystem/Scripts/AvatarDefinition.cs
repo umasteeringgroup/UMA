@@ -1,4 +1,5 @@
-﻿using System;
+﻿using JetBrains.Annotations;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -10,6 +11,7 @@ using UMA.CharacterSystem;
 using UnityEngine;
 using UnityEngine.Assertions.Must;
 using UnityScript.Macros;
+
 
 [Serializable]
 public struct ColorDef
@@ -160,7 +162,6 @@ public struct AvatarDefinition
         {
             Dna[i].Name = dna[i].Name;
             Dna[i].Value = dna[i].Value;
-            // Dna[i] = new DnaDef(dna[i].Name, dna[i].Value);
         }
     }
 
@@ -177,21 +178,20 @@ public struct AvatarDefinition
         {
             Dna[i].Name = names[i];
             Dna[i].Value = values[i];
-            // Dna[i] = new DnaDef(dna[i].Name, dna[i].Value);
         }
     }
 
     #endregion
 
 
-    public string ToCompressedString()
+    public string ToCompressedString(string seperator = "\n")
     {
         StringBuilder theString = new StringBuilder();
         theString.Append("AA*");
-        theString.Append("\n");
+        theString.Append(seperator);
         theString.Append("R:");
         theString.Append(RaceName);
-        theString.Append("\n");
+        theString.Append(seperator);
         if (Wardrobe != null)
         {
             theString.Append("W:");
@@ -200,7 +200,7 @@ public struct AvatarDefinition
                 theString.Append(w);
                 theString.Append(",");
             }
-            theString.Append("\n");
+            theString.Append(seperator);
         }
 
         if (Colors != null)
@@ -224,7 +224,7 @@ public struct AvatarDefinition
                     }
                     theString.Append(';');
                 }
-                theString.Append("\n");
+                theString.Append(seperator);
             }
         }
 
@@ -238,16 +238,17 @@ public struct AvatarDefinition
                 theString.Append(d.val.ToString("X"));
                 theString.Append(';');
             }
-            theString.Append("\n");
+            theString.Append(seperator);
         }
         return theString.ToString();
     }
 
-    public static AvatarDefinition FromCompressedString(string compressed)
+    public static AvatarDefinition FromCompressedString(string compressed,char seperator='\n')
     {
         char[] splitter = new char[1];
         AvatarDefinition adf = new AvatarDefinition();
-        string[] SplitLines = compressed.Split('\n');
+        splitter[0] = seperator;
+        string[] SplitLines = compressed.Split(splitter);
         List<SharedColorDef> Colors = new List<SharedColorDef>();
 
         foreach (string s in SplitLines)
@@ -312,7 +313,7 @@ public struct AvatarDefinition
                     // Unpack DNA
                     splitter[0] = ';';
                     string[] Dna = s.Substring(2).Trim().Split(splitter, StringSplitOptions.RemoveEmptyEntries);
-                    if (Dna.Length > 1)
+                    if (Dna.Length > 0)
                     {
                         List<DnaDef> theDna = new List<DnaDef>();
                         foreach (string d in Dna)

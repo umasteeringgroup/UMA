@@ -33,7 +33,7 @@ public class SaveAndLoadSample : MonoBehaviour
     {
         avatarString = Avatar.GetAvatarDefinitionString(true);
         saveString = Avatar.GetCurrentRecipe();
-        compressedString = Avatar.GetAvatarDefinition(true).ToCompressedString();
+        compressedString = Avatar.GetAvatarDefinition(true).ToCompressedString("|");
         asciiStringSize = Avatar.GetAvatarDefinition(true).ToASCIIString().Length;
 
         binarySize = BinaryDefinition.ToBinary(new BinaryFormatter(), Avatar.GetAvatarDefinition(true)).Length;
@@ -47,17 +47,17 @@ public class SaveAndLoadSample : MonoBehaviour
     public void LoadUMA()
     {
         if (string.IsNullOrEmpty(saveString))
-            return;
-        if (useAvatarDefinition)
+            return; 
+        if (useCompressedString)
+        {
+            AvatarDefinition adf = AvatarDefinition.FromCompressedString(compressedString, '|');
+            Avatar.LoadAvatarDefinition(adf);
+            Avatar.BuildCharacter(false); // don't restore old DNA...
+        }
+        else if (useAvatarDefinition)
         {
             Avatar.LoadAvatarDefinition(avatarString);
             Avatar.BuildCharacter(false); // We must not restore the old DNA
-        }
-        else if (useCompressedString)
-        {
-            AvatarDefinition adf = AvatarDefinition.FromCompressedString(compressedString);
-            Avatar.LoadAvatarDefinition(adf);
-            Avatar.BuildCharacter();
         }
         else
         {
