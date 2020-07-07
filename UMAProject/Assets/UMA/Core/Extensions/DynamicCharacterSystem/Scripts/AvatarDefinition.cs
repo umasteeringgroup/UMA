@@ -313,7 +313,7 @@ public struct AvatarDefinition
                     // Unpack DNA
                     splitter[0] = ';';
                     string[] Dna = s.Substring(2).Trim().Split(splitter, StringSplitOptions.RemoveEmptyEntries);
-                    if (Dna.Length > 1)
+                    if (Dna.Length > 0)
                     {
                         List<DnaDef> theDna = new List<DnaDef>();
                         foreach (string d in Dna)
