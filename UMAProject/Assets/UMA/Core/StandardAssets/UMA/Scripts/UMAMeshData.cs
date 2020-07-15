@@ -198,6 +198,9 @@ namespace UMA
 		}
 		public static BoneWeight[] Convert(UMABoneWeight[] boneWeights)
 		{
+			if (boneWeights == null)
+				return new BoneWeight[0];
+
 			var res = new BoneWeight[boneWeights.Length];
 			for (int i = 0; i < boneWeights.Length; i++)
 			{
