@@ -12,6 +12,7 @@ using System.Collections.Generic;
 public class UMAAnimationPathRenamer : EditorWindow
 {
 	private string prependPath;
+	private string from, to;
 	private int removeLeft = 0;
 	private Vector2 scrollPosition = new Vector2();
 	public List<AnimationClip> selectedClips = new List<AnimationClip>();
@@ -38,6 +39,7 @@ public class UMAAnimationPathRenamer : EditorWindow
 			foreach (EditorCurveBinding curveBinding in curveBindings)
 			{
 				RemapperCurveData cd = new RemapperCurveData();
+				cd.theClip = clip;
 				cd.Binding = curveBinding;
 				cd.OldPath = curveBinding.path + "";
 				cd.NewPath = curveBinding.path + "";
@@ -66,13 +68,14 @@ public class UMAAnimationPathRenamer : EditorWindow
 
 	void OnGUIShowTargetsList()
 	{
+		float labelWidth = EditorGUIUtility.labelWidth;
 
 		if (CurveDatasList.Count == 0)
 			Initialize();
 
 		foreach (List<RemapperCurveData> oneCurveData in CurveDatasList)
 		{
-			List<string> unique = new List<string>();
+			HashSet<string> unique = new HashSet<string>();
 			List<RemapperCurveData> uniqueCurveDatas = new List<RemapperCurveData>();
 			foreach (RemapperCurveData remap in oneCurveData)
 			{
@@ -87,8 +90,10 @@ public class UMAAnimationPathRenamer : EditorWindow
 			{
 				EditorGUILayout.Space();
 				EditorGUIUtility.labelWidth = 250;
-
-				for (int i = 0; i < uniqueCurveDatas.Count; i++)
+				EditorGUILayout.BeginHorizontal();
+				EditorGUILayout.LabelField("Clip: " + uniqueCurveDatas[0].theClip.name + " Unique Paths");
+				EditorGUILayout.EndHorizontal();
+ 				for (int i = 0; i < uniqueCurveDatas.Count; i++)
 				{
 					string newName = EditorGUILayout.TextField(uniqueCurveDatas[i].OldPath, uniqueCurveDatas[i].NewPath);
 
@@ -106,8 +111,7 @@ public class UMAAnimationPathRenamer : EditorWindow
 				}
 			}
 		}
-
-
+		EditorGUIUtility.labelWidth = labelWidth;
 	}
 
 	private void RenameTargets()
@@ -131,15 +135,13 @@ public class UMAAnimationPathRenamer : EditorWindow
 			}
 		}
 
-
-
-
 		Clear();
 		Initialize();
 	}
 
 	public class RemapperCurveData
 	{
+		public AnimationClip theClip;
 		public EditorCurveBinding Binding;
 		public AnimationCurve Curve;
 		public string OldPath;
@@ -167,7 +169,24 @@ public class UMAAnimationPathRenamer : EditorWindow
 		{
 			foreach (RemapperCurveData remCurveData in oneCurveData)
 			{
-				string newName = remCurveData.NewPath.Substring(removeLeft);
+				string newName = "";
+
+				if (remCurveData.NewPath.Length < removeLeft)
+				{
+					newName = remCurveData.NewPath.Substring(removeLeft);
+				}
+				remCurveData.NewPath = newName;
+			}
+		}
+	}
+
+	void Replace(string oldstr, string newstr)
+	{
+		foreach (List<RemapperCurveData> oneCurveData in CurveDatasList)
+		{
+			foreach (RemapperCurveData remCurveData in oneCurveData)
+			{
+				string newName = remCurveData.NewPath.Replace(oldstr, newstr);
 				remCurveData.NewPath = newName;
 			}
 		}
@@ -176,6 +195,10 @@ public class UMAAnimationPathRenamer : EditorWindow
 
 	void OnGUI()
 	{
+		float labelWidth = EditorGUIUtility.labelWidth;
+
+		EditorGUIUtility.labelWidth = 100;
+
 		scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition,
 			GUILayout.Width(position.width), GUILayout.Height(position.height)); // Scroll //
 
@@ -206,7 +229,6 @@ public class UMAAnimationPathRenamer : EditorWindow
 					Initialize();
 				}
 			}
-
 			else
 			{
 				return;
@@ -215,32 +237,50 @@ public class UMAAnimationPathRenamer : EditorWindow
 			if (GUILayout.Button("Remove", GUILayout.ExpandWidth(false)))
 			{
 				selectedClips.RemoveAt(i);
+				Clear();
 				Initialize();
 			}
-
 			GUILayout.EndHorizontal();
 		}
 
 		EditorGUILayout.Space();
 
+		EditorGUILayout.BeginHorizontal();
 		prependPath = EditorGUILayout.TextField("Prepend Path", prependPath);
-		if (GUILayout.Button("Add"))
+		if (GUILayout.Button("Add", GUILayout.Width(80)))
 		{
 			Clear();
 			Initialize();
 			Add();
 			prependPath = "";
 		}
+		EditorGUILayout.EndHorizontal();
 
+
+		EditorGUILayout.BeginHorizontal();
 		removeLeft = EditorGUILayout.IntField("Remove at Start", removeLeft);
-		if (GUILayout.Button("Remove"))
+		if (GUILayout.Button("Remove",GUILayout.Width(80)))
 		{
 			Clear();
 			Initialize();
 			Remove();
 			removeLeft = 0;
 		}
+		EditorGUILayout.EndHorizontal();
 
+		EditorGUILayout.BeginHorizontal();
+		EditorGUILayout.LabelField("From", GUILayout.Width(100));
+		from = EditorGUILayout.TextField(from);
+		EditorGUILayout.LabelField("To ===>", GUILayout.Width(100));
+		to = EditorGUILayout.TextField(to);
+		if (GUILayout.Button("Replace", GUILayout.Width(80)))
+		{
+			Clear();
+			Initialize();
+			Replace(from, to);
+			removeLeft = 0;
+		}
+		EditorGUILayout.EndHorizontal();
 
 		EditorGUILayout.BeginHorizontal();
 		GUILayout.FlexibleSpace();
@@ -260,12 +300,9 @@ public class UMAAnimationPathRenamer : EditorWindow
 			RenameTargets();
 		}
 		EditorGUILayout.EndHorizontal();
-
-
 		EditorGUILayout.EndScrollView();
 
-
-
+		EditorGUIUtility.labelWidth = labelWidth;
 	}
 
 
@@ -276,12 +313,13 @@ public class UMAAnimationPathRenamer : EditorWindow
 
 		EditorGUILayout.Space();
 
-		Rect drop_area = GUILayoutUtility.GetRect(0.0f, 20.0f, GUILayout.ExpandWidth(true));
+		Rect drop_area = GUILayoutUtility.GetRect(0.0f, 40.0f, GUILayout.ExpandWidth(true));
 		drop_area.x += 15;
 		drop_area.width -= (15 + 18);
 		GUIStyle estilo = new GUIStyle(GUI.skin.box);
 		estilo.normal.textColor = Color.black;
-		GUI.Box(drop_area, "Drag Here", estilo);
+		estilo.alignment = TextAnchor.MiddleCenter;
+		GUI.Box(drop_area, "To start, drag broken animation clips here. Then choose the operations below to update the paths.", estilo);
 
 		EditorGUILayout.Space();
 
@@ -303,7 +341,7 @@ public class UMAAnimationPathRenamer : EditorWindow
 						AnimationClip draggedAnimation = (AnimationClip)dragged_object;
 						selectedClips.Add(draggedAnimation);
 					}
-
+					Clear();
 					Initialize();
 				}
 				break;

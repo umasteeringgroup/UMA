@@ -421,7 +421,7 @@ namespace UMA.Controls
 
 							if (GUI.Button(ButtonRect, "Update Groups", EditorStyles.toolbarButton))
 							{
-								UMAAssetIndexer.Instance.AddRecipeGroup(recipe);
+								UMAAddressablesSupport.Instance.AddRecipeGroup(recipe);
 								owningWindow.LoadedLabels.Add(recipe.AssignedLabel);
 							}
 						}
@@ -432,7 +432,7 @@ namespace UMA.Controls
 
 							if (GUI.Button(ButtonRect, "Make Addressable", EditorStyles.toolbarButton))
 							{
-								UMAAssetIndexer.Instance.AddRecipeGroup(recipe);
+								UMAAddressablesSupport.Instance.AddRecipeGroup(recipe);
 								owningWindow.LoadedLabels.Add(recipe.AssignedLabel);
 							}
 						}

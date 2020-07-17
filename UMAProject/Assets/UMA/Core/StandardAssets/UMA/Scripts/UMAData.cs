@@ -201,6 +201,9 @@ namespace UMA
 		/// </summary>
 		public event Action<UMAData> OnCharacterBeforeDnaUpdated { add { if (CharacterBeforeDnaUpdated == null) CharacterBeforeDnaUpdated = new UMADataEvent(); CharacterBeforeDnaUpdated.AddAction(value);} remove { CharacterBeforeDnaUpdated.RemoveAction(value); } }
 
+		public event Action<UMAData> OnAnimatorStateSaved { add { if (AnimatorStateSaved == null) AnimatorStateSaved = new UMADataEvent(); AnimatorStateSaved.AddAction(value); } remove { AnimatorStateSaved.RemoveAction(value); } }
+		public event Action<UMAData> OnAnimatorStateRestored { add { if (AnimatorStateRestored == null) AnimatorStateRestored = new UMADataEvent(); AnimatorStateRestored.AddAction(value); } remove { AnimatorStateRestored.RemoveAction(value); } }
+
 		public UMADataEvent CharacterCreated;
 		public UMADataEvent CharacterDestroyed;
 		public UMADataEvent CharacterUpdated;
@@ -208,6 +211,8 @@ namespace UMA
 		public UMADataEvent CharacterBeforeDnaUpdated;
 		public UMADataEvent CharacterDnaUpdated;
 		public UMADataEvent CharacterBegun;
+		public UMADataEvent AnimatorStateSaved;
+		public UMADataEvent AnimatorStateRestored;
 
 		public GameObject umaRoot;
 
@@ -860,7 +865,7 @@ namespace UMA
 			/// </summary>
 			/// <param name="slot">Slot.</param>
 			/// <param name="dontSerialize">If set to <c>true</c> slot will not be serialized.</param>
-			public SlotData MergeSlot(SlotData slot, bool dontSerialize)
+			public SlotData MergeSlot(SlotData slot, bool dontSerialize, bool mergeMatchingOverlays = true)
 			{
 				if ((slot == null) || (slot.asset == null))
 					return null;
@@ -929,7 +934,10 @@ namespace UMA
 					}
 				}
 				slotDataList[insertIndex] = slotCopy;
-				MergeMatchingOverlays();
+				if (mergeMatchingOverlays)
+				{
+					MergeMatchingOverlays();
+				}
                 return slotCopy;
 			}
 
@@ -1260,7 +1268,7 @@ namespace UMA
 			/// </summary>
 			/// <param name="recipe">Recipe.</param>
 			/// <param name="dontSerialize">If set to <c>true</c> recipe will not be serialized.</param>
-			public void Merge(UMARecipe recipe, bool dontSerialize)
+			public void Merge(UMARecipe recipe, bool dontSerialize, bool mergeMatchingOverlays = true)
 			{
 				if (recipe == null)
 					return;
@@ -1317,7 +1325,7 @@ namespace UMA
 				{
 					for (int i = 0; i < recipe.slotDataList.Length; i++)
 					{
-						MergeSlot(recipe.slotDataList[i], dontSerialize);
+						MergeSlot(recipe.slotDataList[i], dontSerialize, mergeMatchingOverlays);
 					}
 				}
 			}
@@ -1331,6 +1339,30 @@ namespace UMA
 			public Vector3 originalBoneScale;
 			public Vector3 originalBonePosition;
 			public Quaternion originalBoneRotation;
+		}
+
+		/// <summary>
+		/// Fire the Animator State Saved event.
+		/// This happens before the Animator State is saved.
+		/// </summary>
+		public void FireAnimatorStateSavedEvent()
+		{
+			if (AnimatorStateSaved != null)
+			{
+				AnimatorStateSaved.Invoke(this);
+			}
+		}
+
+		/// <summary>
+		/// Fire the Animator State Restored event.
+		/// This happens after the Animator State is restored.
+		/// </summary>
+		public void FireAnimatorStateRestoredEvent()
+		{
+			if (AnimatorStateRestored != null)
+			{
+				AnimatorStateRestored.Invoke(this);
+			}
 		}
 
 		/// <summary>
@@ -1729,14 +1761,14 @@ namespace UMA
 		/// </summary>
 		/// <param name="umaAdditionalRecipes">Additional recipes.</param>
 		/// <param name="context">Context.</param>
-		public void AddAdditionalRecipes(UMARecipeBase[] umaAdditionalRecipes, UMAContextBase context)
+		public void AddAdditionalRecipes(UMARecipeBase[] umaAdditionalRecipes, UMAContextBase context, bool mergeMatchingOverlays=true)
 		{
 			if (umaAdditionalRecipes != null)
 			{
 				foreach (var umaAdditionalRecipe in umaAdditionalRecipes)
 				{
 					UMARecipe cachedRecipe = umaAdditionalRecipe.GetCachedRecipe(context);
-					umaRecipe.Merge(cachedRecipe, true);
+					umaRecipe.Merge(cachedRecipe, true, mergeMatchingOverlays);
 				}
 			}
 		}

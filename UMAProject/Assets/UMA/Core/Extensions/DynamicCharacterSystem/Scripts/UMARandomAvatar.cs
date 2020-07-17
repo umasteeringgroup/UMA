@@ -139,6 +139,9 @@ namespace UMA
 
 		public void Randomize(DynamicCharacterAvatar Avatar)
 		{
+			// Must clear that out!
+			Avatar.WardrobeRecipes.Clear();
+
 			UMARandomizer Randomizer = null;
 			if (Randomizers != null)
 			{
