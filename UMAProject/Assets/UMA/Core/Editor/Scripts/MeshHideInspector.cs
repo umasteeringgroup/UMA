@@ -266,20 +266,31 @@ namespace UMA.Editors
 				GameObject.DestroyImmediate(GameObject.Find("GeometrySelector").gameObject);
 			}
 
-			int saveChoice = EditorUtility.DisplayDialogComplex("Open Mesh Hide Editor", "Opening the Mesh Hide Editor will close all scenes and create a new blank scene. Any current scene changes will be lost unless saved.", "Save and Continue", "Continue without saving", "Cancel");
+			bool hasDirtyScenes = false;
 
-			switch(saveChoice)
+			for (int i = 0; i < EditorSceneManager.sceneCount; i++)
 			{
-				case 0: // Save and continue
+				Scene sc = EditorSceneManager.GetSceneAt(i);
+				if (sc.isDirty)
+					hasDirtyScenes = true;
+			}
+			if (hasDirtyScenes)
+			{
+				int saveChoice = EditorUtility.DisplayDialogComplex("Modified scenes detected", "Opening the Mesh Hide Editor will close all scenes and create a new blank scene. Any current scene changes will be lost unless saved.", "Save and Continue", "Continue without saving", "Cancel");
+
+				switch (saveChoice)
+				{
+					case 0: // Save and continue
 					{
 						if (!EditorSceneManager.SaveOpenScenes())
 							return;
 						break;
 					}
-				case 1: // don't save and continue
-					break;
-				case 2: // cancel
-					return;
+					case 1: // don't save and continue
+						break;
+					case 2: // cancel
+						return;
+				}
 			}
 
 			SceneView sceneView = SceneView.lastActiveSceneView;
@@ -312,7 +323,11 @@ namespace UMA.Editors
 				currentscenes.Add(si); 
 			}
 
+#if UNITY_2019_1_OR_NEWER
 			Scene s = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+#else
+			Scene s = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
+#endif
 			EditorSceneManager.SetActiveScene(s);
 			GameObject obj = EditorUtility.CreateGameObjectWithHideFlags("GeometrySelector", HideFlags.DontSaveInEditor); 
 			GeometrySelector geometry = obj.AddComponent<GeometrySelector>();
@@ -324,6 +339,15 @@ namespace UMA.Editors
 
 				geometry.meshAsset = source;
 				geometry.restoreScenes = currentscenes;
+				geometry.currentSceneView = sceneView;
+
+#if UNITY_2019_1_OR_NEWER
+				geometry.SceneviewLightingState = sceneView.sceneLighting;
+				sceneView.sceneLighting = false;
+#else
+				geometry.SceneviewLightingState = sceneView.m_SceneLighting;
+				sceneView.m_SceneLighting = false;
+#endif
 				geometry.InitializeFromMeshData(source.asset.meshData);
 
 
