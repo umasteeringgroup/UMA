@@ -53,6 +53,26 @@ public class UMAMountObject : MonoBehaviour
         return true;
     }
 
+    /// <summary>
+    /// If a mount point already exists for a prefab, this function will change the mount info for that prefab to the given mountInfo
+    /// </summary>
+    /// <param name="newInfo"></param>
+    public void ChangeMountInfo(mountInfo newInfo)
+    {
+        int index = -1;
+        if (nameMap.TryGetValue(newInfo.objPrefab.name, out index))
+        {
+            mountInfos[index] = newInfo;
+        }
+        else
+        {
+            if (Debug.isDebugBuild)
+            {
+                Debug.LogWarning("ObjPrefab doesnt exist: " + mountInfos[index].objPrefab.name);
+            }
+        }
+    }
+
     public void MountObject(string name)
     {
         if (nameMap.ContainsKey(name))
