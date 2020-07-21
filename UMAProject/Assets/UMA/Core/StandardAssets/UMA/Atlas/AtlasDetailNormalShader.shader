@@ -55,23 +55,38 @@ SubShader
 			return o;
 		}
 		
-		inline half3 UNPACK_WITH_WEIGHT_INTERNAL(half4 tobeUnpacked, float weight) {
-		    half3 result = half3(tobeUnpacked.wy * 2 - 1, 1);
-            result.xy *= weight;
-            result.z = sqrt(1 - saturate(dot(result.xy, result.xy)));
-            return normalize(result);
-	    }
+		half3 UNPACK_WITH_WEIGHT_INTERNAL(half4 packednormal, half bumpScale)
+        {
+            #if defined(UNITY_NO_DXT5nm)
+                half3 normal = half3(packednormal.xy * 2 - 1, 1);
+                normal.xy *= bumpScale;
+                normal.z = sqrt(1 - saturate(dot(normal.xy, normal.xy)));
+                return normalize(normal);
+            #else
+                half3 result = half3(packednormal.wy * 2 - 1, 1);
+                result.xy *= bumpScale;
+                result.z = sqrt(1 - saturate(dot(result.xy, result.xy)));
+                return normalize(result);
+            #endif
+        }
 		
 		inline half3 UNPACK_INTERNAL(half4 tobeUnpacked) {
 		    return UNPACK_WITH_WEIGHT_INTERNAL(tobeUnpacked, 1);
 	    }
 	    
 	    inline float4 PACK_INTERNAL(half3 unpacked) {
-	        half4 packednormal;
-			packednormal.wy = (unpacked.xy + 1) / 2;
-			packednormal.x = 1;
-			packednormal.z = 1;
-			return packednormal;
+			#if defined(UNITY_NO_DXT5nm)
+			    half4 packednormal;
+			    packednormal.xyz = (unpacked.xyz + 1) / 2;
+			    packednormal.w = 1;
+                return packednormal;
+            #else
+                half4 packednormal;
+                packednormal.wy = (unpacked.xy + 1) / 2;
+                packednormal.x = 1;
+                packednormal.z = 1;
+                return packednormal;
+            #endif
 	    }
 
         // This atlas shader has Blend mode Off
