@@ -65,7 +65,7 @@ namespace UMA
 			new Color(0,0,0,0),
 			new Color(0,0,0,0),
 			new Color(0,0,0,0),
-			new Color(1,0.5f,1,0.5f)
+			new Color(0.5f,0.5f,1,0.5f)
 		};
 
         [Serializable]
