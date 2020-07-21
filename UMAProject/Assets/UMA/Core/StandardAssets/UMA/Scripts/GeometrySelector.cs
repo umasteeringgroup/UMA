@@ -60,6 +60,9 @@ namespace UMA
             public OpenSceneMode mode;
         }
 
+        public UnityEditor.SceneView currentSceneView;
+        public bool SceneviewLightingState;
+
         public List<SceneInfo> restoreScenes;
 #endif
 

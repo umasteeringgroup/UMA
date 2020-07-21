@@ -57,7 +57,10 @@ namespace UMA
 			List<DynamicUMADnaAsset> AllDNA = UMAContext.Instance.GetAllDNA();
 			foreach (DynamicUMADnaAsset uda in AllDNA)
 			{
-				DynamicDNADictionary.Add(uda.name, uda);
+				if (uda != null)
+				{
+					DynamicDNADictionary.Add(uda.name, uda);
+				}
 			}
 
 			return;
