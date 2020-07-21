@@ -108,9 +108,12 @@ namespace UMA
 		{
 			foreach (var bd in boneHashData.Values)
 			{
-				bd.rotation = bd.boneTransform.localRotation;
-				bd.position = bd.boneTransform.localPosition;
-				bd.scale = bd.boneTransform.localScale;
+				if (bd != null)
+				{
+					bd.rotation = bd.boneTransform.localRotation;
+					bd.position = bd.boneTransform.localPosition;
+					bd.scale = bd.boneTransform.localScale;
+				}
 			}
 			updating = false;
 		}

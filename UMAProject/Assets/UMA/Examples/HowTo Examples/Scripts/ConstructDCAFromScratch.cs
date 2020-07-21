@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using UMA;
 using UMA.CharacterSystem;
 using UnityEngine;
 
@@ -52,8 +53,15 @@ public class ConstructDCAFromScratch : MonoBehaviour
             DCA.SetColor("Hair", hairColor);
         }
 
+        DCA.CharacterCreated = new UMADataEvent();
+        DCA.CharacterCreated.AddListener(IsCreated);
         // Set any predefined wardrobe items.
         go.transform.position = new Vector3(0f, 0.5f, 0f);
         go.SetActive(true);
+    }
+
+    public void IsCreated(UMAData u)
+    {
+        Debug.Log("Is Created!");
     }
 }

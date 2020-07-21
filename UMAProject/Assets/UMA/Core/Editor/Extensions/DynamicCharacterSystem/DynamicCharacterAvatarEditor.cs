@@ -71,7 +71,7 @@ namespace UMA.CharacterSystem.Editors
 				"characterColors","BoundsOffset","_buildCharacterEnabled","keepAvatar","KeepAnimatorController",
 				/*LoadOtions fields*/ "defaultLoadOptions", "loadPathType", "loadPath", "loadFilename", "loadString", "loadFileOnStart", "waitForBundles", /*"buildAfterLoad",*/
 				/*SaveOptions fields*/ "defaultSaveOptions", "savePathType","savePath", "saveFilename", "makeUniqueFilename","ensureSharedColors", 
-				/*Moved into AdvancedOptions*/"context","umaData","umaRecipe", "umaAdditionalRecipes","umaGenerator", "animationController",
+				/*Moved into AdvancedOptions*/"context","umaData","umaRecipe", "umaAdditionalRecipes","umaGenerator", "animationController", "defaultRendererAsset",
 				/*Moved into CharacterEvents*/"CharacterCreated", "CharacterBegun", "CharacterUpdated", "CharacterDestroyed", "CharacterDnaUpdated", "RecipeUpdated", "AnimatorStateSaved", "AnimatorStateRestored",
 				/*PlaceholderOptions fields*/"showPlaceholder", "previewModel", "customModel", "customRotation", "previewColor", "AtlasResolutionScale"});
 
@@ -352,6 +352,7 @@ namespace UMA.CharacterSystem.Editors
 				EditorGUI.BeginChangeCheck();
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("hide"));
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("AtlasResolutionScale"));
+				EditorGUILayout.PropertyField(serializedObject.FindProperty("defaultRendererAsset"));
 
 				if (EditorGUI.EndChangeCheck())
 				{
