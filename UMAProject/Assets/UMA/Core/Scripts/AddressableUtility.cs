@@ -1,8 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+#if UNITY_EDITOR
 using UnityEditor;
 #if UMA_ADDRESSABLES
-#if UMA_ASMDEF
+#if !UMA_ASMDEF
 using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.AddressableAssets.Settings.GroupSchemas;
 using UnityEditor.VersionControl;
@@ -116,5 +117,6 @@ public class AddressableUtility
     }
 }
 }
+#endif
 #endif
 #endif
