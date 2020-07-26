@@ -105,7 +105,10 @@ namespace UMA
                                 continue;
                             }
 
-                            destinationTexture = new RenderTexture(Mathf.FloorToInt(atlas.cropResolution.x * umaData.atlasResolutionScale), Mathf.FloorToInt(atlas.cropResolution.y * umaData.atlasResolutionScale), 0, slotData.asset.material.channels[textureType].textureFormat, RenderTextureReadWrite.Linear);
+                            //this should be restricted to >= 1 but 0 was allowed before and projects may have the umaMaterial value serialized to 0.
+                            float downSample = (slotData.asset.material.channels[textureType].DownSample == 0) ? 1f : (1f / slotData.asset.material.channels[textureType].DownSample);
+
+                            destinationTexture = new RenderTexture(Mathf.FloorToInt(atlas.cropResolution.x * umaData.atlasResolutionScale * downSample), Mathf.FloorToInt(atlas.cropResolution.y * umaData.atlasResolutionScale * downSample), 0, slotData.asset.material.channels[textureType].textureFormat, RenderTextureReadWrite.Linear);
                             destinationTexture.filterMode = FilterMode.Point;
                             destinationTexture.useMipMap = umaGenerator.convertMipMaps && !umaGenerator.convertRenderTexture;
                             //Draw all the Rects here
@@ -127,17 +130,6 @@ namespace UMA
 
                             //PostProcess
                             textureMerge.PostProcess(destinationTexture, slotData.asset.material.channels[textureType].channelType);
-
-                            int DownSample = slotData.asset.material.channels[textureType].DownSample;
-                            if (DownSample != 0)
-                            {
-                                int newW = width >> DownSample;
-                                int newH = height >> DownSample;
-
-                                RenderTexture rt = ResizeRenderTexture(destinationTexture, newW, newH, FilterMode.Bilinear);
-                                destinationTexture.Release();
-                                destinationTexture = rt;
-                            }
 
                             if (umaGenerator.convertRenderTexture || slotData.asset.material.channels[textureType].ConvertRenderTexture)
                             {

@@ -71,8 +71,8 @@ namespace UMA.CharacterSystem.Editors
 				"characterColors","BoundsOffset","_buildCharacterEnabled","keepAvatar","KeepAnimatorController",
 				/*LoadOtions fields*/ "defaultLoadOptions", "loadPathType", "loadPath", "loadFilename", "loadString", "loadFileOnStart", "waitForBundles", /*"buildAfterLoad",*/
 				/*SaveOptions fields*/ "defaultSaveOptions", "savePathType","savePath", "saveFilename", "makeUniqueFilename","ensureSharedColors", 
-				/*Moved into AdvancedOptions*/"context","umaData","umaRecipe", "umaAdditionalRecipes","umaGenerator", "animationController",
-				/*Moved into CharacterEvents*/"CharacterCreated", "CharacterBegun", "CharacterUpdated", "CharacterDestroyed", "CharacterDnaUpdated", "RecipeUpdated",
+				/*Moved into AdvancedOptions*/"context","umaData","umaRecipe", "umaAdditionalRecipes","umaGenerator", "animationController", "defaultRendererAsset",
+				/*Moved into CharacterEvents*/"CharacterCreated", "CharacterBegun", "CharacterUpdated", "CharacterDestroyed", "CharacterDnaUpdated", "RecipeUpdated", "AnimatorStateSaved", "AnimatorStateRestored",
 				/*PlaceholderOptions fields*/"showPlaceholder", "previewModel", "customModel", "customRotation", "previewColor", "AtlasResolutionScale"});
 
 			//The base DynamicAvatar properties- get these early because changing the race changes someof them
@@ -327,6 +327,8 @@ namespace UMA.CharacterSystem.Editors
 				SerializedProperty CharacterDestroyed= serializedObject.FindProperty("CharacterDestroyed");
 				SerializedProperty CharacterDnaUpdated = serializedObject.FindProperty ("CharacterDnaUpdated");
 				SerializedProperty RecipeUpdated = serializedObject.FindProperty("RecipeUpdated");
+				SerializedProperty AnimatorSaved = serializedObject.FindProperty("AnimatorStateSaved");
+				SerializedProperty AnimatorRestored = serializedObject.FindProperty("AnimatorStateRestored");
 
 				EditorGUILayout.PropertyField(CharacterBegun);
 				EditorGUILayout.PropertyField(CharacterCreated);
@@ -334,6 +336,8 @@ namespace UMA.CharacterSystem.Editors
 				EditorGUILayout.PropertyField(CharacterDestroyed);
 				EditorGUILayout.PropertyField (CharacterDnaUpdated);
 				EditorGUILayout.PropertyField(RecipeUpdated);
+				EditorGUILayout.PropertyField(AnimatorSaved);
+				EditorGUILayout.PropertyField(AnimatorRestored);
 			}
 			if (EditorGUI.EndChangeCheck())
 			{
@@ -348,6 +352,7 @@ namespace UMA.CharacterSystem.Editors
 				EditorGUI.BeginChangeCheck();
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("hide"));
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("AtlasResolutionScale"));
+				EditorGUILayout.PropertyField(serializedObject.FindProperty("defaultRendererAsset"));
 
 				if (EditorGUI.EndChangeCheck())
 				{

@@ -252,5 +252,5 @@ namespace UMA.CharacterSystem.Editors
 			return foundRecipe;
 		}
 	}
-    #endif
 }
+#endif

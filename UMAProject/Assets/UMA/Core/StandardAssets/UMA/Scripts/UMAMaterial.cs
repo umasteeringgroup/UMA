@@ -65,7 +65,7 @@ namespace UMA
 			new Color(0,0,0,0),
 			new Color(0,0,0,0),
 			new Color(0,0,0,0),
-			new Color(1,0.5f,1,0.5f)
+			new Color(0.5f,0.5f,1,0.5f)
 		};
 
         [Serializable]
@@ -76,7 +76,7 @@ namespace UMA
             public string materialPropertyName;
 			public string sourceTextureName;
             public CompressionSettings Compression;
-            [Range(0,4)]
+            [Range(1,128)]
             public int DownSample;
             public bool ConvertRenderTexture;
             public bool NonShaderTexture;

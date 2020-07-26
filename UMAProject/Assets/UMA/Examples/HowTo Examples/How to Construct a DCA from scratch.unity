@@ -229,6 +229,36 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 53a236a7ccb00374dbbed2f13dc8509d, type: 2}
   - {fileID: 11400000, guid: d40e65714e237a3499a2eada8f3411c6, type: 2}
   hairColor: {r: 1, g: 0, b: 0, a: 1}
+  LoadFromAvatarDef: 1
+  AvatarDef: 'AA*
+
+    R:HumanFemale
+
+    W:FemaleShirt3,FemaleTallShoes_White,FemaleHair2,FemaleSportPants_Recipe,FemaleUndies,
+
+    C:Hair,3=0,FF2D1010;
+
+    C:Eyes,3=0,FF46FF1D;2,FFFFFFFF,9A221F1F;
+
+    C:Skin,3=0,FFFFE5E6;
+
+    C:Pants1,3=0,FF376AB9;
+
+    C:Undies,3=2,FFFFFFFF,80BFBFBF;
+
+    C:Shirt,3=0,FFFBFBFB;2,FFFFFFFF,85FFFFFF;
+
+    C:Pants,3=0,FF1C1A18;
+
+    C:Pants Accent,3=0,FFD39E65;2,FFFFFFFF,9A221F1F;
+
+    C:Lipstick,3=0,FFFF0000;2,FFFFFFFF,92880000;
+
+    C:Shirt1,3=0,FFE43737;
+
+    D:height=1726;headWidth=176A;upperWeight=1335;lowerWeight=1651;legsSize=137A;belly=1B5B;noseSize=154C;noseCurve=1D4C;noseInclination=ED8;nosePosition=158B;nosePronounced=FDC;noseFlatten=1111;chinSize=1414;chinPronounced=1D16;chinPosition=160E;mandibleSize=11F8;cheekSize=19A4;lowCheekPronounced=97F;lipsSize=E64;mouthSize=1C5D;eyeRotation=228D;eyeSize=1D8D;breastSize=578;breastCleavage=1E64;eyeSpacing=1B07;
+
+'
 --- !u!4 &721198592
 Transform:
   m_ObjectHideFlags: 0

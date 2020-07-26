@@ -363,7 +363,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 487678, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 487678, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
       propertyPath: m_LocalPosition.z
@@ -896,7 +896,16 @@ MonoBehaviour:
   Avatar: {fileID: 1493261713}
   Randomizer: {fileID: 868086842}
   LoadButton: {fileID: 885478365}
+  useAvatarDefinition: 1
+  useCompressedString: 0
   saveString: 
+  avatarString: 
+  compressedString: 
+  saveStringSize: 0
+  avatarStringSize: 0
+  compressedStringSize: 0
+  asciiStringSize: 0
+  binarySize: 0
 --- !u!4 &1182666962
 Transform:
   m_ObjectHideFlags: 0

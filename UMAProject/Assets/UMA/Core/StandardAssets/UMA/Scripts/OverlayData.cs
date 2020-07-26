@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace UMA
 {
@@ -431,17 +432,30 @@ namespace UMA
 			colorData.EnsureChannels(channels);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Equivalent(OverlayData overlay1, OverlayData overlay2)
 		{
 			if (overlay1)
 			{
 				if (overlay2)
 				{
+					if ((overlay1.asset != overlay2.asset) ||
+						(overlay1.rect != overlay2.rect) ||
+						(overlay1.colorData != overlay2.colorData))
+                    {
+						return false;
+                    }
+					return true;
+				}
+				return false;
+				/*
+				if (overlay2)
+				{
 					return ((overlay1.asset == overlay2.asset) &&
 							(overlay1.rect == overlay2.rect) &&
 							(overlay1.colorData == overlay2.colorData));
 				}
-				return false;
+				return false; */
 			}
 			return !((bool)overlay2);
 		}

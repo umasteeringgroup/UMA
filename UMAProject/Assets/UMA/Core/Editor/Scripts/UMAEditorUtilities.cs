@@ -25,6 +25,7 @@ namespace UMA
 		private const string umaLocation = "RelativeUMA";
 		private const string DefineSymbol_32BitBuffers = "UMA_32BITBUFFERS";
 		private const string DefineSymbol_Addressables = "UMA_ADDRESSABLES";
+		private const string DefineSymbol_AsmDef = "UMA_ASMDEF";
 		public const string ConfigToggle_UseSharedGroup = "UMA_ADDRESSABLES_USE_SHARED_GROUP";
 		public const string ConfigToggle_ArchiveGroups = "UMA_ADDRESSABLES_ARCHIVE_ASSETBUNDLE_GROUPS";
 
@@ -68,7 +69,7 @@ namespace UMA
 				showUnindexedTypes = EditorPrefs.GetBool("BoolUMAShowUnindexed", false);
 
 				UMAAssetIndexer ai = UMAAssetIndexer.Instance;
-				if (showIndexedTypes)
+				if (showIndexedTypes && ai != null)
 				{
 					EditorApplication.projectWindowItemOnGUI += DrawItems;
 				}
@@ -109,12 +110,32 @@ namespace UMA
 
 
 			EditorGUI.BeginChangeCheck();
+			EditorGUILayout.Space();
+			GUILayout.BeginHorizontal();
+			EditorGUILayout.LabelField("Build Options", EditorStyles.boldLabel);
+			EditorGUILayout.LabelField("Toggling build options will cause a recompile", EditorStyles.miniLabel);
+			GUILayout.EndHorizontal();
+
+			EditorGUILayout.Space();
+
 			var defineSymbols = new HashSet<string>(PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup).Split(';'));
 			DefineSymbolToggle(defineSymbols, DefineSymbol_32BitBuffers, "Use 32bit buffers", "This allows meshes bigger than 64k vertices");
-			GUILayout.BeginHorizontal();
-			DefineSymbolToggle(defineSymbols, DefineSymbol_Addressables, "Use Addressables", "This activates the code that loads from asset bundles using addressables. Toggling this will cause a recompile.");
-			GUILayout.Label("Toggling will cause a recompile");
-			GUILayout.EndHorizontal();
+			DefineSymbolToggle(defineSymbols, DefineSymbol_Addressables, "Use Addressables", "This activates the code that loads from asset bundles using addressables.");
+
+			bool prevuseAsmDef = IsAsmdef(defineSymbols, DefineSymbol_AsmDef);
+			bool useAsmDef = DefineSymbolToggle(defineSymbols, DefineSymbol_AsmDef, "Use Asmdef", "This activates the internal ASMDEF for UMA.");
+			if (prevuseAsmDef != useAsmDef)
+			{
+				if (useAsmDef)
+				{
+					EnableAsmdef();
+				}
+				else
+				{
+					DisableAsmDef();
+				}
+			}
+
 #if !UMA_ADDRESSABLES
 			GUILayout.Label("Addressables package MUST be installed before enabling this option!",EditorStyles.boldLabel);
 #endif
@@ -135,13 +156,14 @@ namespace UMA
 			EditorGUILayout.Space();
 			EditorGUILayout.LabelField("Addressables Options",EditorStyles.boldLabel);
 			EditorGUILayout.Space();
+
+			// ask here for the 
 #else
 			EditorGUILayout.Space();
 			EditorGUILayout.LabelField("Addressables Options (Not Enabled)", EditorStyles.boldLabel);
 			EditorGUILayout.Space();
 #endif
-			// No longer needed... This is now down using different plugins.
-			//ConfigToggle(ConfigToggle_UseSharedGroup, "Use Shared Group", "Add all Addressables to the same Shared Group.", true);
+			ConfigToggle(ConfigToggle_UseSharedGroup, "Use Shared Group", "Add all Addressables to the same Shared Group.", true);
 			// This is managed by the addressables system
 			//ConfigToggle(ConfigToggle_ArchiveGroups, "Archive Groups", "For now just copies the assetbundles into folders with the group name.", false);
 			
@@ -171,9 +193,20 @@ namespace UMA
 			return PlayerPrefs.GetString(umaDefaultLabelKey,umaDefaultLabel);
 		}
 
+
+		public static bool UseSharedGroupConfigured()
+		{
+			return GetConfigValue(ConfigToggle_UseSharedGroup, true);
+		}
+
 		public static bool IsAddressable()
 		{
 			return GetConfigValue(DefineSymbol_Addressables, false);
+		}
+
+		public static bool IsAsmdef(HashSet<string> defineSymbols, string Symbol)
+        {
+			return (defineSymbols.Contains(Symbol));
 		}
 
 		private static void ConfigToggle(string toggleId, string text, string tooltip, bool defaultValue)
@@ -197,15 +230,17 @@ namespace UMA
 			return EditorPrefs.GetBool(toggleId, defaultValue);
 		}
 
-		private static void DefineSymbolToggle(HashSet<string> defineSymbols, string defineSymbol, string text, string tooltip)
+		private static bool DefineSymbolToggle(HashSet<string> defineSymbols, string defineSymbol, string text, string tooltip)
 		{
 			if (EditorGUILayout.Toggle(new GUIContent(text, tooltip), defineSymbols.Contains(defineSymbol)))
 			{
 				defineSymbols.Add(defineSymbol);
+				return true;
 			}
 			else
 			{
 				defineSymbols.Remove(defineSymbol);
+				return false;
 			}
 		}
 
@@ -298,33 +333,38 @@ namespace UMA
         }
 
 #if UNITY_2018_4_OR_NEWER || UNITY_2019_1_OR_NEWER
-		[MenuItem("UMA/Update asmdef files from project")]
-		public static void FixupAsmdef()
+		public static void EnableAsmdef()
 		{
-#if UNITY_2019_1_OR_NEWER
-			RenameFiles(".asmdef2019", ".asmdef");
-#else
-			RenameFiles(".asmdef20184", ".asmdef");
-#endif
+			RenameFiles(".asmdefTemp", ".asmdef", "Asmdef files are in place.", "Unable to find asmdefTemp files. Have you already ran this?");
 		}
 
-		public static void RenameFiles(string oldpattern,string newpattern)
+		public static void DisableAsmDef()
 		{
-			string assetPath = Application.dataPath;
+			RenameFiles(".asmdef", ".asmdefTemp", "Asmdef files are removed.", "Unable to find asmdef files. Have you already ran this?");
+		}
+
+		public static void RenameFiles(string oldpattern,string newpattern, string completeMessage, string notFoundMessage)
+		{
+			string assetPath = Path.Combine(Application.dataPath, "UMA");
 			string[] files = Directory.GetFiles(assetPath, "*"+oldpattern, SearchOption.AllDirectories);
 
 			if (files.Length == 0)
 			{
-				EditorUtility.DisplayDialog("Warning", "Unable to find asmdef for this version. Have you already ran this?", "Guess so");
+				EditorUtility.DisplayDialog("Warning", notFoundMessage , "Guess so");
 				return;
 			}
 			foreach (string s in files)
 			{
 				string newFile = s.Replace(oldpattern, newpattern);
+				if (newFile == s)
+                {
+					// 
+					newFile = s.ToLower().Replace(oldpattern.ToLower(), newpattern.ToLower());
+                }
 				File.Move(s, newFile);
 			}
 			AssetDatabase.Refresh();
-			EditorUtility.DisplayDialog("Complete", "Asmdef files are in place.", "OK");
+			EditorUtility.DisplayDialog("Complete",completeMessage , "OK");
 		}
 #endif
 
@@ -522,7 +562,24 @@ namespace UMA
 
 	public static class UMAExtensions
     {
-        public static System.Type[] GetAllDerivedTypes(this System.AppDomain aAppDomain, System.Type aType)
+		public static void Fill(this bool[] array, bool value, int count = 0, int threshold = 32)
+		{
+			if (threshold <= 0)
+				throw new ArgumentException("threshold");
+
+			if (count == 0) count = array.Length;
+
+			int current_size = 0, keep_looping_up_to = Math.Min(count, threshold);
+
+			while (current_size < keep_looping_up_to)
+				array[current_size++] = value;
+
+			for (int at_least_half = (count + 1) >> 1; current_size < at_least_half; current_size <<= 1)
+				Array.Copy(array, 0, array, current_size, current_size);
+
+			Array.Copy(array, 0, array, current_size, count - current_size);
+		}
+		public static System.Type[] GetAllDerivedTypes(this System.AppDomain aAppDomain, System.Type aType)
         {
             var result = new List<System.Type>();
             var assemblies = aAppDomain.GetAssemblies();
