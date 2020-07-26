@@ -1,3 +1,46 @@
+What's new in 2.10.1
+
+This is a bugfix update, with only a few new features.
+
+New features
+   AvatarDefinition class added.
+   Created to allow the creation/update of avatars without generating in UMA.
+   Updated Save And Load sample scene to optionally use the new AvatarDefinition
+   SecretHair added
+   Added support for submeshes other than 0 in MeshHideAssets
+   New events on DCA for AnimatorSaved/AnimatorRestored
+   Added features to Animation Target Renamer
+
+Fixes/Updates
+
+Addressables
+   Caching would cause addressable items to fail after the second load of a recipe.
+   ASMDef function moved to preferences, fix for broken asmdef with addressables.
+   Fixed possible timing issues in DelayUnload functionality when events are out of order, or new builds happen too fast.
+
+
+Global Library
+   Addressables Group Generator was adding textures twice. Fixed.
+   AssetBundle add function would get an error when loading at runtime.
+   Missed freeing a reference on the item when released.
+   Added Menu Item to cleanup references if you somehow got them while switching to addressables.
+   Fixed lockup bug in some cases while drawing menu items and turning addressables on/off.
+   Fixed AssetItem GUID references at runtime (only needed at edit time)
+   Fixed various bugs with missing types, null checks, etc.
+
+Misc Fixes
+   Unable to set the default renderer options in some versions of Unity. 
+   Checks for nulls in some cases where items were removed, but not from lookup tables.
+   Fix AssetDB v2 crash issue when inspecting SlotDataAsset
+   Optimized the loading of overlays from recipes when having a large number in a recipe.
+   Wardrobe Editor was clipping the content incorrectly in 2019.3+
+   Negative Blendshapes can now bake correctly
+   Fix for MeshHideAsset editor scene in HDRP, 2019.3+
+
+
+
+
+
 What's new in 2.10 
 
 Minimum supported version is 2018.4
