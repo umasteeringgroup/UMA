@@ -1,16 +1,10 @@
-﻿using JetBrains.Annotations;
-using System;
-using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using UMA;
-using UMA.CharacterSystem;
 using UnityEngine;
-using UnityEngine.Assertions.Must;
-using UnityScript.Macros;
 
 
 [Serializable]
