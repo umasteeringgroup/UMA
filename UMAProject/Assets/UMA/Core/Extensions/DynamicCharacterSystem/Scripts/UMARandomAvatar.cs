@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UMA.CharacterSystem;
 using UnityEngine;
 
@@ -82,8 +82,11 @@ namespace UMA
 				}
 				RandomAvatar = go.GetComponent<DynamicCharacterAvatar>();
 				go.name = Name;
-			}
-			Randomize(RandomAvatar);
+#if MIRROR
+                Mirror.NetworkServer.Spawn(go, gameObject); //ADDED BY DX4D
+#endif
+            }
+            Randomize(RandomAvatar);
 			RandomAvatar.BuildCharacter();
 		}
 
