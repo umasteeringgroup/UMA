@@ -181,6 +181,7 @@ namespace UMA
             _sharedMesh.colors32 = meshData.colors32;
 
             _sharedMesh.SetTriangles(meshData.submeshes[meshAsset.asset.subMeshIndex].triangles, 0);
+            _sharedMesh.RecalculateBounds();
             Initialize();
         }
 

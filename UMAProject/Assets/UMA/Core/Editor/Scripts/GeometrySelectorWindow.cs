@@ -71,11 +71,19 @@ namespace UMA.Editors
             Tools.current = Tool.None;
             Tools.hidden = true;
             EditorApplication.LockReloadAssemblies();
+            SceneView.onSceneGUIDelegate += this.OnSceneGUI;
+        }
+
+        private void OnDisable()
+        {
+            SceneView.onSceneGUIDelegate -= this.OnSceneGUI;
+            Cleanup();
         }
 
         private void OnDestroy()
         {
             Cleanup();
+
         }
 
         private void Cleanup()
@@ -439,7 +447,7 @@ namespace UMA.Editors
                 SceneView.FrameLastActiveSceneView();            
         }
 
-        void OnSceneGUI()
+        void OnSceneGUI(SceneView scene)
         {
             const float WindowHeight = 140;
             const float WindowWidth = 380;
