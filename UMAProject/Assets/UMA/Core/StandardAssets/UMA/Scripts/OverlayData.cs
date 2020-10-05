@@ -211,6 +211,8 @@ namespace UMA
 		{
 			bool valid = true;
 
+			Validate();
+
 			if (asset.material.name != targetMaterial.name)
 			{
 				if (asset.material != targetMaterial)
