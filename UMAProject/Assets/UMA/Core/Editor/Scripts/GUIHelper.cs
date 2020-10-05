@@ -245,6 +245,7 @@ namespace UMA.Editors
 			GUILayout.EndHorizontal();
 		}
 
+
 		public static void FoldoutBarButton(ref bool foldout, string content, string button, out bool pressed, out int move, out bool delete)
 		{
 			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);

@@ -83,6 +83,21 @@ namespace UMA
 		private DNAConverterList _dnaConverterList = new DNAConverterList();
 
 
+		public List<string> GetDNANames()
+		{
+			List<string> Names = new List<string>();
+
+			foreach(IDNAConverter converter in dnaConverterList)
+            {
+				if (converter is IDynamicDNAConverter)
+				{
+					var asset = ((IDynamicDNAConverter)converter).dnaAsset;
+					Names.AddRange(asset.Names);
+				}
+			}
+			return Names;
+		}
+
 		/// <summary>
 		/// Returns the list of DNA Converters that this race uses. These are usually DynamicDNAConverterController assets
 		/// </summary>

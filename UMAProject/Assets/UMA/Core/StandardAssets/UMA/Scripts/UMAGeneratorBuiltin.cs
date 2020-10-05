@@ -45,6 +45,9 @@ namespace UMA
         public int garbageCollectionRate = 8;
 		private System.Diagnostics.Stopwatch stopWatch = new System.Diagnostics.Stopwatch();
 
+		[Tooltip("Fast Mesh Generation (no combining)")]
+		public bool fastMesh;
+
 		[NonSerialized]
 		public long ElapsedTicks;
 		[NonSerialized]
@@ -196,6 +199,75 @@ namespace UMA
 			}
 		}
 
+
+		public bool GenerateSingleUMA(UMAData data)
+		{
+			if (data == null)
+				return true;
+
+			data.umaGenerator = this;
+			bool oldFastGen = fastGeneration;
+			FreezeTime = true;
+			umaData = data;
+
+			if (!umaData.Validate())
+				return true;
+
+			if (meshCombiner != null)
+			{
+				meshCombiner.Preprocess(umaData);
+			}
+			umaData.FireCharacterBegunEvents();
+			PreApply(umaData);
+
+
+			if (umaData.isTextureDirty)
+			{
+				TextureProcessPROCoroutine textureProcessCoroutine;
+				textureProcessCoroutine = new TextureProcessPROCoroutine();
+				textureProcessCoroutine.Prepare(data, this);
+
+				activeGeneratorCoroutine = new UMAGeneratorCoroutine();
+				activeGeneratorCoroutine.Prepare(this, umaData, textureProcessCoroutine, !umaData.isMeshDirty, InitialScaleFactor);
+
+				activeGeneratorCoroutine.Work();
+				activeGeneratorCoroutine = null;
+				umaData.isTextureDirty = false;
+				umaData.isAtlasDirty |= umaData.isMeshDirty;
+				TextureChanged++;
+			}
+
+			if (umaData.isMeshDirty)
+			{
+				UpdateUMAMesh(umaData.isAtlasDirty);
+				umaData.isAtlasDirty = false;
+				umaData.isMeshDirty = false;
+				SlotsChanged++;
+				forceGarbageCollect++;
+			}
+
+			if (umaData.isShapeDirty)
+			{
+				if (!umaData.skeleton.isUpdating)
+				{
+					umaData.skeleton.BeginSkeletonUpdate();
+				}
+				UpdateUMABody(umaData);
+				umaData.isShapeDirty = false;
+				DnaChanged++;
+			}
+			else if (umaData.skeleton.isUpdating)
+			{
+				umaData.skeleton.EndSkeletonUpdate();
+			}
+
+			umaData.Show();
+			fastGeneration = oldFastGen;
+			FreezeTime = false;
+			return true;
+		}
+
+
 		public virtual bool HandleDirtyUpdate(UMAData data)
 		{
 			if (data == null)
@@ -247,16 +319,24 @@ namespace UMA
 				}
 			}
 
-			if (umaData.isMeshDirty)
-			{
-				UpdateUMAMesh(umaData.isAtlasDirty);
-				umaData.isAtlasDirty = false;
-				umaData.isMeshDirty = false;
-				SlotsChanged++;
-				forceGarbageCollect++;
 
-				if (!fastGeneration)
-					return false;
+			if (fastMesh)
+            {
+				// each slot is a mesh that shares the bones. 
+            }
+			else
+			{
+				if (umaData.isMeshDirty)
+				{
+					UpdateUMAMesh(umaData.isAtlasDirty);
+					umaData.isAtlasDirty = false;
+					umaData.isMeshDirty = false;
+					SlotsChanged++;
+					forceGarbageCollect++;
+
+					if (!fastGeneration)
+						return false;
+				}
 			}
 
 			if (umaData.isShapeDirty) 
@@ -365,6 +445,11 @@ namespace UMA
                 }
 			}
 		}
+
+		public void Clear()
+        {
+			umaDirtyList.Clear();
+        }
 
 		/// <inheritdoc/>
 		public override bool IsIdle()

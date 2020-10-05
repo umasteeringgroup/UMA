@@ -41,6 +41,7 @@ namespace UMA
         {
             source.filterMode = filter;
             RenderTexture rt = new RenderTexture(newWidth, newHeight, 0, source.format, RenderTextureReadWrite.Linear);
+            rt.name = "Resized Render Texture...";
 
             rt.filterMode = FilterMode.Point;
 
@@ -52,6 +53,7 @@ namespace UMA
         protected override IEnumerator workerMethod()
         {
             var textureMerge = umaGenerator.textureMerge;
+            textureMerge.RefreshMaterials(); 
             if (textureMerge == null)
             {
                 if (Debug.isDebugBuild)
@@ -111,6 +113,7 @@ namespace UMA
                             destinationTexture = new RenderTexture(Mathf.FloorToInt(atlas.cropResolution.x * umaData.atlasResolutionScale * downSample), Mathf.FloorToInt(atlas.cropResolution.y * umaData.atlasResolutionScale * downSample), 0, slotData.asset.material.channels[textureType].textureFormat, RenderTextureReadWrite.Linear);
                             destinationTexture.filterMode = FilterMode.Point;
                             destinationTexture.useMipMap = umaGenerator.convertMipMaps && !umaGenerator.convertRenderTexture;
+                            destinationTexture.name = slotData.asset.material.name + "-Chan " + textureType;
                             //Draw all the Rects here
 
                             Color backgroundColor;
@@ -127,7 +130,7 @@ namespace UMA
 
 
                             textureMerge.DrawAllRects(destinationTexture, width, height, backgroundColor);
-
+                            
                             //PostProcess
                             textureMerge.PostProcess(destinationTexture, slotData.asset.material.channels[textureType].channelType);
 
@@ -144,8 +147,10 @@ namespace UMA
                                 if (xblocks == 0 || yblocks == 0 || fastPath)
                                 {
                                     RenderTexture.active = destinationTexture;
+                                    //Debug.Log("CVT-FP Activated " + destinationTexture.name);
                                     tempTexture.ReadPixels(new Rect(0, 0, destinationTexture.width, destinationTexture.height), 0, 0, umaGenerator.convertMipMaps);
                                     RenderTexture.active = null;
+                                   // Debug.Log("CVT-FP Cleared " + destinationTexture.name);
                                 }
                                 else
                                 {
@@ -157,8 +162,10 @@ namespace UMA
                                             for (int y = 0; y < yblocks; y++)
                                             {
                                                 RenderTexture.active = destinationTexture;
+                                               // Debug.Log("CVT-SP OGL Activated " + destinationTexture.name+" "+x+" "+y);
                                                 tempTexture.ReadPixels(new Rect(x * 512, y * 512, 512, 512), x * 512, y * 512, umaGenerator.convertMipMaps);
                                                 RenderTexture.active = null;
+                                               // Debug.Log("CVT-SP OGL Cleared " + destinationTexture.name + " " + x + " " + y);
                                                 yield return 8;
                                             }
                                         }
@@ -169,9 +176,11 @@ namespace UMA
                                         {
                                             for (int y = 0; y < yblocks; y++)
                                             {
+                                               // Debug.Log("CVT-SP NOTOGL Activated " + destinationTexture.name + " " + x + " " + y);
                                                 RenderTexture.active = destinationTexture;
                                                 tempTexture.ReadPixels(new Rect(x * 512, destinationTexture.height - 512 - y * 512, 512, 512), x * 512, y * 512, umaGenerator.convertMipMaps);
                                                 RenderTexture.active = null;
+                                             //   Debug.Log("CVT-SP NOTOGL Cleared " + destinationTexture.name + " " + x + " " + y);
                                                 yield return 8;
                                             }
                                         }
@@ -182,6 +191,7 @@ namespace UMA
                                 resultingTextures[textureType] = tempTexture as Texture;
 
                                 RenderTexture.active = null;
+                                //Debug.Log("CVT Final Cleared " + destinationTexture.name);
 
                                 destinationTexture.Release();
                                 UnityEngine.GameObject.DestroyImmediate(destinationTexture);

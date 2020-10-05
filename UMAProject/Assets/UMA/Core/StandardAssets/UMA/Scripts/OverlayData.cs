@@ -159,17 +159,9 @@ namespace UMA
 
 				return;
 			}
-			if (asset.material == null)
-			{
-				if (Debug.isDebugBuild)
-					Debug.LogError("Error: Materials are missing on Asset: " + asset.name + ". Have you imported all packages?");
 
-				this.colorData = new OverlayColorData(3); // Don't know. Just create it for standard PBR material size. 
-			}
-			else
-			{
-				this.colorData = new OverlayColorData(asset.material.channels.Length);
-			}
+			Validate();
+
 			this.asset = asset;
 			this.rect = asset.rect;
 
@@ -182,6 +174,34 @@ namespace UMA
 			
 		}
 
+
+		public void Validate()
+        {
+			if (asset == null)
+            {
+				return;
+            }
+			if (asset.material == null)
+			{
+				asset.material = UMAAssetIndexer.Instance.GetAsset<UMAMaterial>(asset.materialName);
+				if (asset.material == null)
+				{
+					this.colorData = new OverlayColorData(3); // Don't know. Just create it for standard PBR material size. 
+				}
+				else
+				{
+					this.colorData = new OverlayColorData(asset.material.channels.Length);
+				}
+			}
+			else
+            {
+				if (!colorData)
+                {
+					this.colorData = new OverlayColorData(asset.material.channels.Length);
+				}
+			}
+		}
+
 		/// <summary>
 		/// Validate the OverlayData against the requirements of a particular UMAMaterial.
 		/// </summary>
@@ -191,14 +211,17 @@ namespace UMA
 		{
 			bool valid = true;
 
-			if (asset.material != targetMaterial)
+			if (asset.material.name != targetMaterial.name)
 			{
-				if (!asset.material.Equals(targetMaterial))
+				if (asset.material != targetMaterial)
 				{
+					if (!asset.material.Equals(targetMaterial))
+					{
 #if UNITY_EDITOR
-                    Debug.LogError(string.Format("Overlay '{0}' doesn't have the expected UMA Material: '{1}'!\nCurrently it has '{2}' at '{3}'", asset.overlayName, targetMaterial.name, asset.material, UnityEditor.AssetDatabase.GetAssetPath(asset)));
+						Debug.LogError(string.Format("Overlay '{0}' doesn't have the expected UMA Material: '{1}'!\nCurrently it has '{2}' at '{3}'", asset.overlayName, targetMaterial.name, asset.material, UnityEditor.AssetDatabase.GetAssetPath(asset)));
 #endif
-                    valid = false;
+						valid = false;
+					}
 				}
 			}
 

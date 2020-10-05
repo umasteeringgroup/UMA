@@ -161,6 +161,7 @@ namespace UMA.Controls
 			AddMenuItemWithCallback(FileMenu, "Rebuild From Project", () => 
 			{
 				UAI.Clear();
+				UAI.BuildStringTypes();
 				UAI.AddEverything(false);
 				Resources.UnloadUnusedAssets();
 				m_Initialized = false;
@@ -170,6 +171,7 @@ namespace UMA.Controls
 			AddMenuItemWithCallback(FileMenu, "Rebuild From Project (include text assets)", () =>
 			{
 				UAI.Clear();
+				UAI.BuildStringTypes();
 				UAI.AddEverything(true);
 				Resources.UnloadUnusedAssets();
 				m_Initialized = false;
@@ -186,6 +188,7 @@ namespace UMA.Controls
 
 			AddMenuItemWithCallback(FileMenu, "Repair and remove invalid items", () => 
 			{
+				UAI.BuildStringTypes();
 				UAI.RepairAndCleanup();
 				Resources.UnloadUnusedAssets();
 				m_Initialized = false;
@@ -246,6 +249,23 @@ namespace UMA.Controls
 				UMAAddressablesSupport.Instance.GenerateAddressables();
 				Resources.UnloadUnusedAssets();
 				m_Initialized = false;
+				Repaint();
+			});
+
+			AddMenuItemWithCallback(_AddressablesMenu, "Generators/Generate Single Group (Final Build)", () =>
+			{
+				UMAAddressablesSupport.Instance.CleanupAddressables();
+				SingleGroupGenerator sgs = new SingleGroupGenerator();
+				sgs.ClearMaterials = true;
+				UMAAddressablesSupport.Instance.GenerateAddressables(sgs);
+				Resources.UnloadUnusedAssets();
+				m_Initialized = false;
+				Repaint();
+			});
+
+			AddMenuItemWithCallback(_AddressablesMenu, "Generators/Postbuild Material Fixup", () =>
+			{
+				UMAAssetIndexer.Instance.PostBuildMaterialFixup();
 				Repaint();
 			});
 
@@ -934,8 +954,6 @@ namespace UMA.Controls
 			}
 		}
 #endregion
-
-		float lastFrameTime = 0;
 
 		private string dots = "";
 		void OnGUI ()

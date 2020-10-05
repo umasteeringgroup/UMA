@@ -87,7 +87,8 @@ namespace UMA
         { (typeof(AnimatorController)),(typeof(RuntimeAnimatorController)) },
 #endif
         {  typeof(TextAsset), typeof(TextAsset) },
-        { (typeof(DynamicUMADnaAsset)), (typeof(DynamicUMADnaAsset)) }
+        { (typeof(DynamicUMADnaAsset)), (typeof(DynamicUMADnaAsset)) },
+        {(typeof(UMAMaterial)), (typeof(UMAMaterial)) }
         };
 
 
@@ -112,7 +113,8 @@ namespace UMA
         (typeof(AnimatorController)),
 #endif
         (typeof(DynamicUMADnaAsset)),
-        (typeof(TextAsset))
+        (typeof(TextAsset)),
+        (typeof(UMAMaterial))
     };
 
 
@@ -120,10 +122,10 @@ namespace UMA
 #region Static Fields
         static UMAAssetIndexer theIndexer = null;
 
-		
-#endregion
 
-		public static System.Diagnostics.Stopwatch StartTimer()
+        #endregion
+
+        public static System.Diagnostics.Stopwatch StartTimer()
         {
 #if TIMEINDEXER
             if(Debug.isDebugBuild)
@@ -1051,8 +1053,77 @@ namespace UMA
             {
                 AddRaceRecipe(result as UMAWardrobeRecipe);
             }
+            else if (result is SlotDataAsset)
+            {
+                SlotDataAsset sd = result as SlotDataAsset;
+                if (sd.material == null)
+                {
+                    if (!string.IsNullOrEmpty(sd.materialName))
+                    {
+                        sd.material = Instance.GetAsset<UMAMaterial>(sd.materialName);
+                    }
+                }
+            }
+            else if (result is OverlayDataAsset)
+            {
+                OverlayDataAsset od = result as OverlayDataAsset;
+                if (od.material == null)
+                {
+                    if (!string.IsNullOrEmpty(od.materialName))
+                    {
+                        od.material = Instance.GetAsset<UMAMaterial>(od.materialName);
+                    }
+                }
+            }
         }
 
+        public void PostBuildMaterialFixup()
+        {
+#if UNITY_EDITOR
+            var slots = GetAllAssets<SlotDataAsset>();
+            var overlays = GetAllAssets<OverlayDataAsset>();
+            foreach(SlotDataAsset sd in slots)
+            {
+                if (sd.material == null)
+                {
+                    if (!string.IsNullOrEmpty(sd.materialName))
+                    {
+                        sd.material = Instance.GetAsset<UMAMaterial>(sd.materialName);
+
+                        if (sd.material == null)
+                        {
+                            Debug.LogWarning("Unable to find material '" + sd.materialName + "' for slot: " + sd.name);
+                        }
+                        EditorUtility.SetDirty(sd);
+                    }
+                    else
+                    {
+                        Debug.LogWarning("Material name is null on slot: " + sd.name);
+                    }
+                }
+            }
+            foreach (OverlayDataAsset od in overlays)
+            {
+                if (od.material == null)
+                {
+                    if (!string.IsNullOrEmpty(od.materialName))
+                    {
+                        od.material = Instance.GetAsset<UMAMaterial>(od.materialName);
+                        if (od.material == null)
+                        {
+                            Debug.LogWarning("Unable to find material '" + od.materialName + "' for overlay: " + od.name);
+                        }
+                        EditorUtility.SetDirty(od);
+                    }
+                    else
+                    {
+                        Debug.LogWarning("Material name is null on overlay: " + od.name);
+                    }
+                }
+            }
+            ForceSave();
+#endif
+        }
 #if UMA_ADDRESSABLES
         public void Unload(AsyncOperationHandle<IList<UnityEngine.Object>> AssetOperation)
         {
@@ -1554,7 +1625,7 @@ namespace UMA
         /// <summary>
         /// Builds a list of types and a string to look them up.
         /// </summary>
-		private void BuildStringTypes()
+		public void BuildStringTypes()
 		{
 			TypeFromString.Clear();
 			foreach (System.Type st in Types)
@@ -1819,7 +1890,8 @@ namespace UMA
         (typeof(AnimatorController)),
 #endif
         (typeof(DynamicUMADnaAsset)),
-        (typeof(TextAsset))
+        (typeof(TextAsset)),
+        (typeof(UMAMaterial))
         };
 
             TypeToLookup = new Dictionary<System.Type, System.Type>()
@@ -1836,7 +1908,8 @@ namespace UMA
         { (typeof(AnimatorController)),(typeof(RuntimeAnimatorController)) },
 #endif
         {  typeof(TextAsset), typeof(TextAsset) },
-        { (typeof(DynamicUMADnaAsset)), (typeof(DynamicUMADnaAsset)) }
+        { (typeof(DynamicUMADnaAsset)), (typeof(DynamicUMADnaAsset)) },
+        { (typeof(UMAMaterial)),(typeof(UMAMaterial)) }
         };
 
             List<string> invalidTypeNames = new List<string>();

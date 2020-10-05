@@ -32,6 +32,7 @@ namespace UMA
 		public const string ConfigToggle_AddCollectionLabels = "UMA_SHAREDGROUP_ADDCOLLECTIONLABELS";
 		public const string ConfigToggle_IncludeRecipes = "UMA_SHAREDGROUP_INCLUDERECIPES";
 		public const string ConfigToggle_IncludeOther = "UMA_SHAREDGROUP_INCLUDEOTHERINDEXED";
+		public const string ConfigToggle_StripUmaMaterials = "UMA_SHAREDGROUP_STRIPUMAMATERIALS";
 		private static string DNALocation = "UMA/";
 
         static UMAEditorUtilities()
@@ -168,7 +169,8 @@ namespace UMA
 			//ConfigToggle(ConfigToggle_ArchiveGroups, "Archive Groups", "For now just copies the assetbundles into folders with the group name.", false);
 			
 			GUILayout.Label("Shared Group Generation");
-			GUILayout.Label("By default, Slots, Overlays and Textures are included.",EditorStyles.miniLabel);
+			GUILayout.Label("By default, Slots and Overlays (with their Texture references) are included.",EditorStyles.miniLabel);
+
 
 			ConfigToggle(ConfigToggle_AddCollectionLabels, "Add Collection Labels","Scan through Wardrobe Collections for recipes, and also label them with the collection label", false);
 			string currentLabel = PlayerPrefs.GetString(umaDefaultLabelKey, umaDefaultLabel);
@@ -178,6 +180,7 @@ namespace UMA
 				PlayerPrefs.SetString(umaDefaultLabelKey, newUmaLabel);
 			}
 			GUILayout.Label("Note: If you include recipes or other items, you will need to manually load them using LoadLabelList!", EditorStyles.miniLabel);
+			ConfigToggle(ConfigToggle_StripUmaMaterials, "Strip UMAMaterials", "In some versions of Unity, using an SRP can cause each bundle to include the compiled shaders. This will stop that from happening.", false);
 			ConfigToggle(ConfigToggle_IncludeRecipes, "Include Recipes", "Include recipes in shared group generation", false);
 			ConfigToggle(ConfigToggle_IncludeOther, "Include all other types", "Include all other types in index in shared group generation", false);
 
@@ -198,6 +201,12 @@ namespace UMA
 		{
 			return GetConfigValue(ConfigToggle_UseSharedGroup, true);
 		}
+
+
+		public static bool StripUMAMaterials()
+        {
+			return GetConfigValue(ConfigToggle_StripUmaMaterials, false);
+        }
 
 		public static bool IsAddressable()
 		{
@@ -430,6 +439,18 @@ namespace UMA
 						}
 					}
 				}
+				if (umat.material.shader.name.ToLower().StartsWith("hair fade"))
+                {
+					umat.material.shader = Shader.Find("Universal Render Pipeline/Nature/SpeedTree8");
+					if (umat.material.name.ToLower().Contains("single"))
+                    {
+						umat.material.SetInt("_TwoSided", 2);
+                    }
+					else
+                    {
+						umat.material.SetInt("_TwoSided", 0);
+					}
+                }
 				if (matModified)
 				{
 					dirtycount++;

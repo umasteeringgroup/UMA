@@ -1322,6 +1322,7 @@ namespace UMA.Editors
 
 		private void BuildColorEditors()
 		{
+			_overlayData.Validate();
 			_colors = new ColorEditor[_overlayData.colorData.channelMask.Length * 2];
 
 			for (int i = 0; i < _overlayData.colorData.channelMask.Length; i++)
@@ -1404,6 +1405,8 @@ namespace UMA.Editors
 				}
 				GUILayout.EndHorizontal();
 			}
+
+			_overlayData.Validate();
 
 			if ((_overlayData.asset.material.name != _slotData.asset.material.name))
 			{
@@ -1870,6 +1873,8 @@ namespace UMA.Editors
 		protected bool NeedsReenable()
 		{
 			if (dnaEditor == null || dnaEditor.NeedsReenable())
+				return true;
+			if (dnaEditor.IsValid == false)
 				return true;
 			if (_oldTarget == target)
 				return false;

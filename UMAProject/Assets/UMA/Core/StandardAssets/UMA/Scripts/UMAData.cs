@@ -1466,6 +1466,10 @@ namespace UMA
 							if (tempTexture is RenderTexture)
 							{
 								RenderTexture tempRenderTexture = tempTexture as RenderTexture;
+								if (RenderTexture.active == tempRenderTexture)
+                                {
+									Debug.Log("RenderTexture is ACTIVE!!!! Name = " + tempRenderTexture.name);
+                                }
 								tempRenderTexture.Release();
 								UMAUtils.DestroySceneObject(tempRenderTexture);
 							}
@@ -1489,6 +1493,8 @@ namespace UMA
 			for(int j = 0; j < rendererCount; j++)
 			{
 				var renderer = GetRenderer(j);
+				if (renderer == null)
+					continue;
 				var mats = renderer.sharedMaterials;
 				for (int i = 0; i < mats.Length; i++)
 				{

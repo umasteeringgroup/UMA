@@ -38,7 +38,14 @@ namespace UMA
         /// and colors to the various material properties.
         /// </remarks>
         [UMAAssetFieldVisible]
+		[SerializeField]
 		public UMAMaterial material;
+
+		/// <summary>
+		/// materialName is used to save the name of the material, but ONLY if we have cleared the material when building bundles.
+		/// You can't count on this field to contain a value unless it was set during the cleanup phase by the indexer!
+		/// </summary>
+		public string materialName;
 
 		/// <summary>
 		/// This SlotDataAsset will not be included after this LOD level.
@@ -114,6 +121,11 @@ namespace UMA
 				return false;
 			}
 		}
+
+		public void LoadFromIndex()
+        {
+			material = UMAAssetIndexer.Instance.GetAsset<UMAMaterial>(materialName);
+        }
 
 		//UMA 2.8 FixDNAPrefabs: Swaps the legacy converter (DnaConverterBehaviour Prefab) for the new DNAConverterController
 		/// <summary>
@@ -226,7 +238,11 @@ namespace UMA
 				//Clear the legacy field?
 			}
 		}
-		public void OnBeforeSerialize() { }
+
+		public void OnBeforeSerialize() 
+		{ 
+
+		}
 
 		public void Assign(SlotDataAsset source)
 		{

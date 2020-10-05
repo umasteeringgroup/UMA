@@ -18,12 +18,15 @@ namespace UMA
                 return;
             }
 
+            // RenderTexture.active is set here, and sometimes left active.
+            RenderTexture backup = RenderTexture.active;
             if (material == null)
                 material = new Material(shader);
 #if UNITY_ANDROID || UMA_IOS
             destination.DiscardContents();
 #endif
             Graphics.Blit(source, destination, material);
+            RenderTexture.active = backup;
         }
     }
 }

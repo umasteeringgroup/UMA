@@ -13,6 +13,7 @@ namespace UMA.Editors
 		SerializedProperty fastGeneration;
 		SerializedProperty garbageCollectionRate;
 		SerializedProperty processAllPending;
+		SerializedProperty fastMesh;
 
 #pragma warning disable 0108
 		public override void OnEnable()
@@ -25,6 +26,7 @@ namespace UMA.Editors
 			processAllPending = serializedObject.FindProperty("processAllPending");
 			fastGeneration = serializedObject.FindProperty("fastGeneration");
 			garbageCollectionRate = serializedObject.FindProperty("garbageCollectionRate");
+			fastMesh = serializedObject.FindProperty("fastMesh");
 		}
 #pragma warning restore 0108
 
@@ -40,7 +42,8 @@ namespace UMA.Editors
 			EditorGUILayout.PropertyField(garbageCollectionRate);
 			EditorGUILayout.PropertyField(processAllPending);
 			GUILayout.Space(20);
-			EditorGUILayout.LabelField("Advanced Configuation", centeredLabel);
+			EditorGUILayout.LabelField("Advanced Configuration", centeredLabel);
+			EditorGUILayout.PropertyField(fastMesh);
 			EditorGUILayout.PropertyField(textureMerge);
 			EditorGUILayout.PropertyField(meshCombiner);
 

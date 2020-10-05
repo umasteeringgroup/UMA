@@ -43,6 +43,18 @@ namespace UMA
 			}
 		}
 
+		/*
+		public UMAMaterial material
+        {
+			get
+            {
+				if (asset.material != null)
+					return asset.material;
+				
+
+            }
+        }*/
+
 		public bool Suppressed; 
 
 		/// <summary>
@@ -121,34 +133,35 @@ namespace UMA
 			return false;
 		}
 
-		private Int64 overlayHash;
+		/*
+				private Int64 overlayHash;
 
-/*		public void CalculateOverlayHash()
-        {
-			overlayHash = 0;
+				public void CalculateOverlayHash()
+				{
+					overlayHash = 0;
 
-			foreach(OverlayData od in overlayList)
-            {
-				var toverlayHash = od.asset.GetHashCode();
-				var trecthash = od.rect.GetHashCode();
-				var tcolorhash = od.colorData.GetHashCode();
+					foreach(OverlayData od in overlayList)
+					{
+						var toverlayHash = od.asset.GetHashCode();
+						var trecthash = od.rect.GetHashCode();
+						var tcolorhash = od.colorData.GetHashCode();
 
-				return ((overlay1.asset == overlay2.asset) &&
-						(overlay1.rect == overlay2.rect) &&
-						(overlay1.colorData == overlay2.colorData));
-			}
-        } */
+						return ((overlay1.asset == overlay2.asset) &&
+								(overlay1.rect == overlay2.rect) &&
+								(overlay1.colorData == overlay2.colorData));
+					}
+				} 
 
-        /// <summary>
-        /// Property to return overlay hash so it is visible in debugger.
-        /// </summary>
-        public int OverlayHash
+		/// <summary>
+		/// Property to return overlay hash so it is visible in debugger.
+		/// </summary>
+		public int OverlayHash
         {
             get
             {
 				return (int) overlayHash;//GetOverlayList().GetHashCode();
             }
-        }
+        }*/
 
 		/// <summary>
 		/// Deep copy of the SlotData.
@@ -340,6 +353,11 @@ namespace UMA
 
 			if (asset.meshData != null)
 			{
+				if (asset.material == null)
+                {
+					asset.material = UMAAssetIndexer.Instance.GetAsset<UMAMaterial>(asset.materialName);
+                }
+
 				if (asset.material == null)
 				{
 					if (Debug.isDebugBuild)
