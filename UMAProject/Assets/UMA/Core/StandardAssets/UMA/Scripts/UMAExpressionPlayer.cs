@@ -10,6 +10,7 @@ namespace UMA.PoseTools
 	/// <summary>
 	/// UMA specific expression player.
 	/// </summary>
+	[ExecuteInEditMode]
 	public class UMAExpressionPlayer : ExpressionPlayer
 	{
 		/// <summary>
