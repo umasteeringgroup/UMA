@@ -552,7 +552,7 @@ namespace UMA.CharacterSystem
                 mat.hideFlags = HideFlags.HideAndDontSave;
             }
 
-            if (showPlaceholder)
+            if (showPlaceholder && editorTimeGeneration==false)
             {
                 // Check for mesh Change
                 if (!previewMesh || lastPreviewModel != previewModel || customModel != lastCustomModel)
