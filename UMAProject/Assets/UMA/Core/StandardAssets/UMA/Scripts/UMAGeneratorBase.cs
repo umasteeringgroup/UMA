@@ -95,6 +95,7 @@ namespace UMA
 		public class AnimatorState
 		{
 			public bool FreezeTime;
+			private bool wasInitialized;
 			private int[] stateHashes = new int[0];
 			private float[] stateTimes = new float[0];
 			AnimatorControllerParameter[] parameters;
@@ -104,95 +105,97 @@ namespace UMA
 			{
 				umaData.FireAnimatorStateSavedEvent();
 
-				if (animator.runtimeAnimatorController != null)
+				int layerCount = 0;
+				if (animator.isInitialized)
 				{
-					int layerCount = animator.layerCount;
-					stateHashes = new int[layerCount];
-					stateTimes = new float[layerCount];
-					parameters = new AnimatorControllerParameter[animator.parameterCount];
-					layerWeights.Clear();
+					layerCount = animator.layerCount;
+				}
+				stateHashes = new int[layerCount];
+				stateTimes = new float[layerCount];
+				parameters = new AnimatorControllerParameter[animator.parameterCount];
+				layerWeights.Clear();
 
-					for (int i = 0; i < layerCount; i++)
-					{
-						var state = animator.GetCurrentAnimatorStateInfo(i);
-						stateHashes[i] = state.fullPathHash;
+				for (int i = 0; i < layerCount; i++)
+				{
+					var state = animator.GetCurrentAnimatorStateInfo(i);
+					stateHashes[i] = state.fullPathHash;
 #if UNITY_EDITOR
-						float time = state.normalizedTime;
-						if (!FreezeTime)
-						{
-							time += Time.deltaTime / state.length;
+					float time = state.normalizedTime;
+					if (!FreezeTime)
+					{
+						time += Time.deltaTime / state.length;
 
-						}
+					}
 #else
 					float time = state.normalizedTime + Time.deltaTime / state.length;
 #endif
-						stateTimes[i] = Mathf.Max(0, time);
-						layerWeights.Add(i, animator.GetLayerWeight(i));
-					}
+					stateTimes[i] = Mathf.Max(0, time);
+					layerWeights.Add(i, animator.GetLayerWeight(i));
+				}
 
-					Array.Copy(animator.parameters, parameters, animator.parameterCount);
+				Array.Copy(animator.parameters, parameters, animator.parameterCount);
 
-					foreach (AnimatorControllerParameter param in parameters)
+				foreach (AnimatorControllerParameter param in parameters)
+				{
+					switch (param.type)
 					{
-						switch (param.type)
-						{
-							case AnimatorControllerParameterType.Bool:
-								param.defaultBool = animator.GetBool(param.nameHash);
-								break;
-							case AnimatorControllerParameterType.Float:
-								param.defaultFloat = animator.GetFloat(param.nameHash);
-								break;
-							case AnimatorControllerParameterType.Int:
-								param.defaultInt = animator.GetInteger(param.nameHash);
-								break;
-						}
+						case AnimatorControllerParameterType.Bool:
+							param.defaultBool = animator.GetBool(param.nameHash);
+							break;
+						case AnimatorControllerParameterType.Float:
+							param.defaultFloat = animator.GetFloat(param.nameHash);
+							break;
+						case AnimatorControllerParameterType.Int:
+							param.defaultInt = animator.GetInteger(param.nameHash);
+							break;
 					}
 				}
 			}
 
 			public void RestoreAnimatorState(Animator animator, UMAData umaData)
 			{
-				if (animator.layerCount == stateHashes.Length)
-				{
-					for (int i = 0; i < animator.layerCount; i++)
+
+					if (animator.layerCount == stateHashes.Length)
 					{
-						animator.Play(stateHashes[i], i, stateTimes[i]);
-						if (i < layerWeights.Count)
+						for (int i = 0; i < animator.layerCount; i++)
 						{
-							animator.SetLayerWeight(i, layerWeights[i]);
+							animator.Play(stateHashes[i], i, stateTimes[i]);
+							if (i < layerWeights.Count)
+							{
+								animator.SetLayerWeight(i, layerWeights[i]);
+							}
 						}
 					}
-				}
 
-				foreach(AnimatorControllerParameter param in parameters)
-				{
-					if (!animator.IsParameterControlledByCurve(param.nameHash))
-                	{
-						switch(param.type)
+					foreach (AnimatorControllerParameter param in parameters)
+					{
+						if (!animator.IsParameterControlledByCurve(param.nameHash))
 						{
-							case AnimatorControllerParameterType.Bool:
-								animator.SetBool(param.nameHash, param.defaultBool);
-								break;
-							case AnimatorControllerParameterType.Float:
-								animator.SetFloat(param.nameHash, param.defaultFloat);
-								break;
-							case AnimatorControllerParameterType.Int:
-								animator.SetInteger(param.nameHash, param.defaultInt);
-								break;
+							switch (param.type)
+							{
+								case AnimatorControllerParameterType.Bool:
+									animator.SetBool(param.nameHash, param.defaultBool);
+									break;
+								case AnimatorControllerParameterType.Float:
+									animator.SetFloat(param.nameHash, param.defaultFloat);
+									break;
+								case AnimatorControllerParameterType.Int:
+									animator.SetInteger(param.nameHash, param.defaultInt);
+									break;
+							}
 						}
 					}
-				}
 
-				umaData.FireAnimatorStateRestoredEvent();
+					umaData.FireAnimatorStateRestoredEvent();
 #if UNITY_EDITOR
-				if (FreezeTime || animator.enabled == false)
-				{
-					animator.Update(0);
-				}
-				else
-				{
-					animator.Update(Time.deltaTime);
-				}
+					if (FreezeTime || animator.enabled == false)
+					{
+						animator.Update(0);
+					}
+					else
+					{
+						animator.Update(Time.deltaTime);
+					}
 
 #else
 				if (animator.enabled == true)
@@ -201,7 +204,7 @@ namespace UMA
 				    animator.Update(0);
 
 #endif
-            }
+			}
 		}
 
 		/// <summary>

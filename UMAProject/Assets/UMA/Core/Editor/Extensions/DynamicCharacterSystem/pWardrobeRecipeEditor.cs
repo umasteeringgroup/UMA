@@ -186,6 +186,35 @@ namespace UMA.Editors
 			return selectedIndex;
 		}
 
+
+		private List<string> GetSlotNames(UMAPackedRecipeBase recipe)
+        {
+			List<string> theSlots = new List<string>();
+			UMAPackedRecipeBase.UMAPackRecipe PackRecipe =recipe.PackedLoad(UMAContextBase.Instance);
+
+			if (PackRecipe.slotsV2 != null)
+			{
+				foreach (var s2 in PackRecipe.slotsV2)
+				{
+					if (!string.IsNullOrEmpty(s2.id))
+					{
+						theSlots.Add(s2.id);
+					}
+				}
+			}
+			if (PackRecipe.slotsV3 != null)
+            {
+				foreach (var s3 in PackRecipe.slotsV3)
+				{
+					if (!string.IsNullOrEmpty(s3.id))
+					{
+						theSlots.Add(s3.id);
+					}
+				}
+			}
+
+			return theSlots;
+        }
 		//generate an option list for the BaseSlots that are available to hide for each race so we can make this a mask field too
 		private void GenerateBaseSlotsEnum(List<string> compatibleRaces, bool forceUpdate = false, List<string> hides = null)
 		{
@@ -212,6 +241,22 @@ namespace UMA.Editors
 				{
 					if (thisBaseRecipes[i] != null)
 					{
+						List<string> slots = GetSlotNames((thisBaseRecipes[i] as UMAPackedRecipeBase));
+						foreach(string slotName in slots)
+                        {
+							if (!generatedBaseSlotOptions.Contains(slotName))
+							{
+								generatedBaseSlotOptions.Add(slotName);
+								Unfound.Remove(slotName);
+							}
+							if (!slotsRacesDict.ContainsKey(slotName))
+							{
+								slotsRacesDict.Add(slotName, new List<string>());
+							}
+							slotsRacesDict[slotName].Add(compatibleRaces[i]);
+						}
+
+						/*
 						UMAData.UMARecipe thisBaseRecipe = thisBaseRecipes[i].GetCachedRecipe(UMAContextBase.Instance);
 						SlotData[] thisSlots = thisBaseRecipe.GetAllSlots();
 						foreach (SlotData slot in thisSlots)
@@ -230,6 +275,7 @@ namespace UMA.Editors
 								slotsRacesDict[slot.asset.slotName].Add(compatibleRaces[i]);
 							}
 						}
+						*/
 					}
 				}
 
@@ -284,19 +330,6 @@ namespace UMA.Editors
 		{
 			/* RaceData foundRace = null; */
 			return UMAAssetIndexer.Instance.GetAsset<RaceData>(raceName);
-
-			/* 
-			string[] foundRacesStrings = AssetDatabase.FindAssets("t:RaceData");
-			for (int i = 0; i < foundRacesStrings.Length; i++)
-			{
-				RaceData thisFoundRace = AssetDatabase.LoadAssetAtPath<RaceData>(AssetDatabase.GUIDToAssetPath(foundRacesStrings[i]));
-				if (thisFoundRace.raceName == raceName)
-				{
-					foundRace = thisFoundRace;
-					break;
-				}
-			}
-			return foundRace; */
 		}
 
 		protected virtual bool DrawCompatibleRacesUI(Type TargetType, bool ShowHelp = false)

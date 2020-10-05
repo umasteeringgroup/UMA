@@ -16,6 +16,7 @@ namespace UMA.CharacterSystem.Editors
 		static bool defaultOpen = false;
         Texture warningIcon;
 		int wardrobeRecipePickerID = -1;
+        bool recipesIndexed = false;
 
 		//Make a drop area for wardrobe recipes
 		private void DropAreaGUI(Rect dropArea, SerializedProperty thisRecipesProp)
@@ -34,13 +35,16 @@ namespace UMA.CharacterSystem.Editors
 			}
 			if (evt.commandName == "ObjectSelectorUpdated" && EditorGUIUtility.GetObjectPickerControlID() == wardrobeRecipePickerID)
 			{
-				//RaceData tempRaceDataAsset = EditorGUIUtility.GetObjectPickerObject() as RaceData;
-				//if (tempRaceDataAsset)
-				//{
-				//	AddRaceDataAsset(tempRaceDataAsset, compatibleRaces);
-				//}
 				UMAWardrobeRecipe uwr = EditorGUIUtility.GetObjectPickerObject() as UMAWardrobeRecipe;
-				AddRecipe(thisRecipesProp, uwr);
+                recipesIndexed = false;
+				if (AddRecipe(thisRecipesProp, uwr))
+                {
+                    if (recipesIndexed)
+                    {
+                        recipesIndexed = false;
+                        UMAContextBase.Instance.ValidateDictionaries();
+                    }
+                }
 				if (evt.type != EventType.Layout)
 					Event.current.Use();//stops the Mismatched LayoutGroup errors
 				return;
@@ -68,6 +72,7 @@ namespace UMA.CharacterSystem.Editors
 
 		private void ProcessDropeedRecipes(SerializedProperty thisRecipesProp, Object[] draggedObjects)
 		{
+            recipesIndexed = false;
 			for (int i = 0; i < draggedObjects.Length; i++)
 			{
 				if (draggedObjects[i])
@@ -88,9 +93,14 @@ namespace UMA.CharacterSystem.Editors
                     }
                 }
 			}
+            if (recipesIndexed)
+            {
+                recipesIndexed = false;
+                UMAContextBase.Instance.ValidateDictionaries();
+            }
 		}
 
-        private void AddRecipe(SerializedProperty thisRecipesProp, UMATextRecipe tempRecipeAsset)
+        private bool AddRecipe(SerializedProperty thisRecipesProp, UMATextRecipe tempRecipeAsset)
         {
             bool needToAddNew = true;
             for (int ii = 0; ii < thisRecipesProp.arraySize; ii++)
@@ -109,6 +119,11 @@ namespace UMA.CharacterSystem.Editors
             }
             if (needToAddNew)
             {
+                if (!UMAContextBase.Instance.HasRecipe(tempRecipeAsset.name))
+                {
+                    UMAContextBase.Instance.AddRecipe(tempRecipeAsset);
+                    recipesIndexed = true;
+                }
                 int newArrayElIndex = thisRecipesProp.arraySize;
                 thisRecipesProp.InsertArrayElementAtIndex(newArrayElIndex);
                 thisRecipesProp.serializedObject.ApplyModifiedProperties();
@@ -122,7 +137,9 @@ namespace UMA.CharacterSystem.Editors
                 thisRecipesProp.serializedObject.ApplyModifiedProperties();
                 GUI.changed = true;
                 changed = true;
+                return true;
             }
+            return false;
         }
 
         protected void RecursiveScanFoldersForAssets(string path, SerializedProperty thisRecipesProp)

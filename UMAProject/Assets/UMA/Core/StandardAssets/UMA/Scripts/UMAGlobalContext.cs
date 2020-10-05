@@ -21,6 +21,7 @@ namespace UMA
 		public override void ValidateDictionaries()
 		{
 			UMAAssetIndexer.Instance.RebuildIndex();
+			UMAAssetIndexer.Instance.ForceSave();
 		}
 
 		/// <summary>
@@ -306,7 +307,7 @@ namespace UMA
 
 		public override void AddRecipe(UMATextRecipe recipe)
 		{
-			UMAAssetIndexer.Instance.AddAsset(typeof(UMATextRecipe), recipe.name, "", recipe);
+			UMAAssetIndexer.Instance.AddAsset(recipe.GetType(), recipe.name, "", recipe);
 		}
 
 		public override UMATextRecipe GetRecipe(string filename, bool dynamicallyAdd = true)
