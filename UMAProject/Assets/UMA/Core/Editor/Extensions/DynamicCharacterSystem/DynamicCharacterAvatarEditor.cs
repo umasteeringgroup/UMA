@@ -242,14 +242,17 @@ namespace UMA.CharacterSystem.Editors
 				if (EditorGUI.EndChangeCheck())
                 {
 					serializedObject.ApplyModifiedProperties();
-					if (thisDCA.editorTimeGeneration)
-                    {
-						GenerateSingleUMA();
-                    }
-					else
-                    {
-						CleanupGeneratedData();
-                    }
+					if (thisDCA.gameObject.scene != default)
+					{
+						if (thisDCA.editorTimeGeneration)
+						{
+							GenerateSingleUMA();
+						}
+						else
+						{
+							CleanupGeneratedData();
+						}
+					}
 				}
 
 				//******************************************************************
