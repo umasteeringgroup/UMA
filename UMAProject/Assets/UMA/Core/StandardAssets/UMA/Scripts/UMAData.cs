@@ -24,6 +24,7 @@ namespace UMA
 	public class UMAData : MonoBehaviour
 	{
 		//TODO improve/cleanup the relationship between renderers and rendererAssets
+		[SerializeField]
 		private SkinnedMeshRenderer[] renderers;
 		private UMARendererAsset[] rendererAssets;
 		public UMARendererAsset defaultRendererAsset { get; set; }

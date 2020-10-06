@@ -368,7 +368,28 @@ namespace UMA.CharacterSystem
 
         public void Awake()
         {
-            lastHide = !hide;
+            UMAData ud = GetComponent<UMAData>();
+            if (ud != null)
+            {
+#if SUPER_LOGGING
+                Debug.Log("Destroying UMAData on " + gameObject.name);
+#endif
+                // cleanup any edit-time umaData
+                DestroyImmediate(ud);
+                umaData = null;
+                /// Having UMA's visible in the editor comes at a cost.
+                /// Have to clean up from edit time stuff.
+                if (editorTimeGeneration && Application.isPlaying)
+                {
+                    List<GameObject> Cleaners = GetRenderers(gameObject);
+                    Hide();
+                    foreach (GameObject go in Cleaners)
+                    {
+                        DestroyImmediate(go);
+                    }
+                } 
+            }
+
 #if UMA_ADDRESSABLES
             isAddressableSystem = false;
 
@@ -395,15 +416,8 @@ namespace UMA.CharacterSystem
         // Use this for initialization
         public override void Start()
         {
-            UMAData ud = GetComponent<UMAData>();
-            if (ud != null)
-            {
-#if SUPER_LOGGING
-                Debug.Log("Destroying UMAData on " + gameObject.name);
-#endif
-                DestroyImmediate(ud);
-                umaData = null;
-            }
+            lastHide = !hide;
+
 #if SUPER_LOGGING
 			Debug.Log("Start on DynamicCharacterAvatar: " + gameObject.name);
 #endif
@@ -4190,7 +4204,6 @@ namespace UMA.CharacterSystem
             }
             else
             {
-               // Debug.Log("deserialized... with umaData");
 
             }
 #endif
