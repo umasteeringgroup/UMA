@@ -85,7 +85,7 @@ namespace UMA.PoseTools
 
 		void Update()
 		{
-			if (!initialized)
+			if (!initialized || umaData == null)
 			{
 				Initialize();
 				return;

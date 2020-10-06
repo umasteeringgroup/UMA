@@ -10,6 +10,9 @@ namespace UMA
 {
     public partial class RaceData
     {
+		[Tooltip("This should be set to true for Blender FBX models")]
+		public bool FixupRotations = true;
+
 		[Tooltip("UMA Text recipe that holds the slots and overlays that are the default set up for this race.")]
 		public UMARecipeBase baseRaceRecipe;
 		[Tooltip("Wardobe slots that wardrobe recipes can be assigned to.")]

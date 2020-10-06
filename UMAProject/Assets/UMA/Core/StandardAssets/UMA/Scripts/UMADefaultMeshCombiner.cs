@@ -88,7 +88,14 @@ namespace UMA
 					newRoot.layer = umaData.gameObject.layer;
 					newRoot.transform.parent = umaData.transform;
 					newRoot.transform.localPosition = Vector3.zero;
-					newRoot.transform.localRotation = Quaternion.Euler(270f, 0, 0f);
+					if (umaData.umaRecipe.raceData.FixupRotations)
+					{
+						newRoot.transform.localRotation = Quaternion.Euler(270f, 0, 0f);
+					}
+					else
+                    {
+						newRoot.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
+					}
 					newRoot.transform.localScale = Vector3.one;
 					umaData.umaRoot = newRoot;
 				}
@@ -99,8 +106,14 @@ namespace UMA
 					GameObject newGlobal = new GameObject("Global");
 					newGlobal.transform.parent = umaData.umaRoot.transform;
 					newGlobal.transform.localPosition = Vector3.zero;
-					newGlobal.transform.localRotation = Quaternion.Euler(90f, 90f, 0f);  
-
+					if (umaData.umaRecipe.raceData.FixupRotations)
+					{
+						newGlobal.transform.localRotation = Quaternion.Euler(90f, 90f, 0f);
+					}
+					else
+                    {
+						newGlobal.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
+					}
 					globalTransform = newGlobal.transform;
 				}
 
