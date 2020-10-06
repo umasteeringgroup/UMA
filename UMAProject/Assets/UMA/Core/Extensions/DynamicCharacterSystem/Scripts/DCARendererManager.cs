@@ -16,6 +16,9 @@ namespace UMA.CharacterSystem
 		}
 		public List<RendererElement> RendererElements = new List<RendererElement>();
 
+        bool lastState;
+        public bool state;
+
 		private DynamicCharacterAvatar avatar;
 		private UMAData.UMARecipe umaRecipe = new UMAData.UMARecipe();
 		List<SlotDataAsset> wardrobeSlotAssets = new List<SlotDataAsset>();
@@ -37,8 +40,18 @@ namespace UMA.CharacterSystem
 			context = UMAContextBase.Instance;
 		}
 
+        private void Update()
+        {
+            if (state != lastState)
+            {
+                lastState = state;
+                avatar.BuildCharacter();
+            }
+        }
+
 		void CharacterBegun(UMAData umaData)
 		{
+            if (!state) return;
 			//If mesh is not dirty then we haven't changed slots.
 			if (!umaData.isMeshDirty)
 				return;

@@ -585,6 +585,8 @@ namespace UMA.CharacterSystem.Editors
 				SerializedProperty RecipeUpdated = serializedObject.FindProperty("RecipeUpdated");
 				SerializedProperty AnimatorSaved = serializedObject.FindProperty("AnimatorStateSaved");
 				SerializedProperty AnimatorRestored = serializedObject.FindProperty("AnimatorStateRestored");
+				SerializedProperty WardrobeAdded = serializedObject.FindProperty("WardrobeAdded");
+				SerializedProperty WardrobeRemoved = serializedObject.FindProperty("WardrobeRemoved");
 
 				EditorGUILayout.PropertyField(CharacterBegun);
 				EditorGUILayout.PropertyField(CharacterCreated);
@@ -594,6 +596,8 @@ namespace UMA.CharacterSystem.Editors
 				EditorGUILayout.PropertyField(RecipeUpdated);
 				EditorGUILayout.PropertyField(AnimatorSaved);
 				EditorGUILayout.PropertyField(AnimatorRestored);
+				EditorGUILayout.PropertyField(WardrobeAdded);
+				EditorGUILayout.PropertyField(WardrobeRemoved);
 			}
 			if (EditorGUI.EndChangeCheck())
 			{

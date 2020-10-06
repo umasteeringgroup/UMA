@@ -44,10 +44,12 @@ namespace UMA.CharacterSystem
         /// Callback event when the character recipe is updated. Use this to tweak the resulting recipe BEFORE the UMA is actually generated
         /// </summary>
         public UMADataEvent RecipeUpdated;
+        public UMADataWardrobeEvent WardrobeAdded;
+        public UMADataWardrobeEvent WardrobeRemoved;
 
-#endregion
+        #endregion
 
-#region ENUMS 
+        #region ENUMS 
         [Flags]
         public enum ChangeRaceOptions
         {
@@ -1169,11 +1171,15 @@ namespace UMA.CharacterSystem
         {
             if (_wardrobeRecipes.ContainsKey(thisRecipeSlot))
             {
+                //New event that allows for tweaking the resulting recipe before the character is actually generated
+                if (WardrobeRemoved != null) WardrobeRemoved.Invoke(umaData, _wardrobeRecipes[thisRecipeSlot] as UMAWardrobeRecipe);
                 _wardrobeRecipes[thisRecipeSlot] = utr;
+                if (WardrobeAdded != null) WardrobeAdded.Invoke(umaData, utr as UMAWardrobeRecipe);
             }
             else
             {
                 _wardrobeRecipes.Add(thisRecipeSlot, utr);
+                if (WardrobeAdded != null) WardrobeAdded.Invoke(umaData, utr as UMAWardrobeRecipe);
             }
         }
 

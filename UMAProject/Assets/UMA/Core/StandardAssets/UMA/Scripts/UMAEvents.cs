@@ -1,4 +1,5 @@
 ﻿using System;
+using UMA.CharacterSystem;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -69,4 +70,20 @@ namespace UMA
 			}
 		}
     }
+
+	[Serializable]
+	public class UMADataWardrobeEvent : UnityEvent<UMAData, UMAWardrobeRecipe>
+	{
+		public UMADataWardrobeEvent()
+		{
+		}
+		public UMADataWardrobeEvent(UMADataSlotMaterialRectEvent source)
+		{
+			for (int i = 0; i < source.GetPersistentEventCount(); i++)
+			{
+				var target = source.GetPersistentTarget(i);
+				AddListener(target, UnityEventBase.GetValidMethodInfo(target, source.GetPersistentMethodName(i), new Type[] { typeof(UMAData), typeof(UMAWardrobeRecipe) }));
+			}
+		}
+	}
 }

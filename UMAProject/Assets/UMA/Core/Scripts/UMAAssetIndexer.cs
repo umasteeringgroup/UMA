@@ -172,6 +172,22 @@ namespace UMA
             return TypeToLookup[type];
         }
 
+        public string SaveIndexItems()
+        {
+            string theJson = "";
+            // Flatten asset items.
+            // save to json string?
+            return theJson;
+        }
+
+        public bool RestoreIndexItems(string json)
+        {
+            // clear index items
+            // load flattened array from json string
+            // rebuild
+            return true;
+        }
+
 #if UMA_ADDRESSABLES
         private HashSet<CachedOp> Cleanup = new HashSet<CachedOp>();
         public void CheckCache()

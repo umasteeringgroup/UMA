@@ -79,8 +79,28 @@ namespace UMA
 			}
 		}
 
+#if UNITY_2018_3_OR_NEWER
+		private class MyPrefSettingsProvider : SettingsProvider
+		{
+			public MyPrefSettingsProvider(string path, SettingsScope scopes = SettingsScope.User)
+			: base(path, scopes)
+			{ }
+
+			public override void OnGUI(string searchContext)
+			{
+				PreferencesGUI();
+			}
+		}
+
+		[SettingsProvider]
+		static SettingsProvider MyNewPrefCode()
+		{
+			return new MyPrefSettingsProvider("Preferences/UMA");
+		}
+#else
 		[PreferenceItem("UMA")]
-        public static void PreferencesGUI()
+#endif
+		public static void PreferencesGUI()
         {
             // Preferences GUI
             bool newshowIndexedTypes = EditorGUILayout.Toggle("Show Indexed Types", showIndexedTypes);
