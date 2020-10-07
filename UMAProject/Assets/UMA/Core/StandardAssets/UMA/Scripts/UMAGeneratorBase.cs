@@ -19,6 +19,8 @@ namespace UMA
 		public bool convertMipMaps;
         [Tooltip("Initial size of the texture atlas (square)")]
 		public int atlasResolution;
+		[Tooltip("In Editor Initial size of the texture atlas (square)")]
+		public int editorAtlasResolution = 1024;
 		[Tooltip("The default overlay to display if a slot has meshData and no overlays assigned")]
 		public OverlayDataAsset defaultOverlayAsset;
 

@@ -188,7 +188,7 @@ namespace UMA.CharacterSystem.Editors
 				/*LoadOtions fields*/ "defaultLoadOptions", "loadPathType", "loadPath", "loadFilename", "loadString", "loadFileOnStart", "waitForBundles", /*"buildAfterLoad",*/
 				/*SaveOptions fields*/ "defaultSaveOptions", "savePathType","savePath", "saveFilename", "makeUniqueFilename","ensureSharedColors", 
 				/*Moved into AdvancedOptions*/"context","umaData","umaRecipe", "umaAdditionalRecipes","umaGenerator", "animationController", "defaultRendererAsset",
-				/*Moved into CharacterEvents*/"CharacterCreated", "CharacterBegun", "CharacterUpdated", "CharacterDestroyed", "CharacterDnaUpdated", "RecipeUpdated", "AnimatorStateSaved", "AnimatorStateRestored",
+				/*Moved into CharacterEvents*/"CharacterCreated", "CharacterBegun", "CharacterUpdated", "CharacterDestroyed", "CharacterDnaUpdated", "RecipeUpdated", "AnimatorStateSaved", "AnimatorStateRestored","WardrobeAdded","WardrobeRemoved",
 				/*PlaceholderOptions fields*/"showPlaceholder", "previewModel", "customModel", "customRotation", "previewColor", "AtlasResolutionScale","DelayUnload","predefinedDNA"});
 
 			//The base DynamicAvatar properties- get these early because changing the race changes someof them
@@ -751,7 +751,6 @@ namespace UMA.CharacterSystem.Editors
 				}
 				else
 				{
-					ugb.FreezeTime = true;
 
 					DynamicCharacterAvatar dca = target as DynamicCharacterAvatar;
 
@@ -765,10 +764,22 @@ namespace UMA.CharacterSystem.Editors
 					dca.predefinedDNA = dna;
 
 					bool oldFastGen = ugb.fastGeneration;
+					int oldScaleFactor = ugb.InitialScaleFactor;
+					int oldAtlasResolution = ugb.atlasResolution;
+
+					ugb.FreezeTime = true;
 					ugb.fastGeneration = true;
+					ugb.InitialScaleFactor = ugb.editorInitialScaleFactor;
+					ugb.atlasResolution = ugb.editorAtlasResolution;
+
 					ugb.GenerateSingleUMA(dca.umaData);
+					
 					ugb.fastGeneration = oldFastGen;
 					ugb.FreezeTime = false;
+					ugb.InitialScaleFactor = oldScaleFactor;
+					ugb.atlasResolution = oldAtlasResolution;
+
+
 				}
 			}
 

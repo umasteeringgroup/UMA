@@ -371,11 +371,28 @@ namespace UMA.CharacterSystem
         public void Awake()
         {
             UMAData ud = GetComponent<UMAData>();
+
+           //if (editorTimeGeneration)
+            //{
+             //   BuildCharacterEnabled = false;
+              //  ForceUpdate(false, true, false); // force texture rebuild NOW
+            //}
+            
             if (ud != null)
             {
 #if SUPER_LOGGING
                 Debug.Log("Destroying UMAData on " + gameObject.name);
 #endif
+
+                // TODO:
+                // If umaData is valid.
+                //    hook up renderers, if they're not there...
+                //    if textures are render textures and render textures are valid
+                //       hook up render textures
+                //    if have an animator, and animator and avatar is valid
+                //       hook up avatar and animator
+                //    
+
                 // cleanup any edit-time umaData
                 DestroyImmediate(ud);
                 umaData = null;
@@ -389,7 +406,8 @@ namespace UMA.CharacterSystem
                     {
                         DestroyImmediate(go);
                     }
-                } 
+                }
+
             }
 
 #if UMA_ADDRESSABLES
@@ -513,10 +531,20 @@ namespace UMA.CharacterSystem
                 predefinedDNA = dna;
 
                 bool oldFastGen = ugb.fastGeneration;
+                int oldScaleFactor = ugb.InitialScaleFactor;
+                int oldAtlasResolution = ugb.atlasResolution;
+
+                ugb.FreezeTime = true;
                 ugb.fastGeneration = true;
+                ugb.InitialScaleFactor = ugb.editorInitialScaleFactor;
+                ugb.atlasResolution = ugb.editorAtlasResolution;
+
                 ugb.GenerateSingleUMA(umaData);
+
                 ugb.fastGeneration = oldFastGen;
                 ugb.FreezeTime = false;
+                ugb.InitialScaleFactor = oldScaleFactor;
+                ugb.atlasResolution = oldAtlasResolution;
             }
         }
 #endif

@@ -19,11 +19,16 @@ namespace UMA
 		private UMAGeneratorCoroutine activeGeneratorCoroutine;
 		public UMAMeshCombiner meshCombiner;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        [Tooltip("Increase scale factor to decrease texture usage. A value of 1 means the textures will not be downsampled. Values greater than 1 will result in texture savings. The size of the texture is divided by this value.")]
+		/// <summary>
+		/// 
+		/// </summary>
+		[Range(1.0f, 16.0f)]
+		[Tooltip("Increase scale factor to decrease texture usage. A value of 1 means the textures will not be downsampled. Values greater than 1 will result in texture savings. The size of the texture is divided by this value.")]
         public int InitialScaleFactor = 1;
+
+		[Range(1.0f,16.0f)]
+		[Tooltip("Scale factor for edit-time builds. Increase scale factor to decrease texture usage. A value of 1 means the textures will not be downsampled. Values greater than 1 will result in texture savings. The size of the texture is divided by this value.")]
+		public int editorInitialScaleFactor = 4;
 
 		[Tooltip("Number of iterations to process each frame")]
 		public int IterationCount = 1;
@@ -42,7 +47,8 @@ namespace UMA
         /// Number of character updates before triggering System garbage collect.
         /// </summary>
         [Tooltip("Number of character updates before triggering garbage collection.")]
-        public int garbageCollectionRate = 8;
+		[Range(0.0f, 128.0f)]
+		public int garbageCollectionRate = 8;
 		private System.Diagnostics.Stopwatch stopWatch = new System.Diagnostics.Stopwatch();
 
 		[Tooltip("Fast Mesh Generation (no combining)")]
