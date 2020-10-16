@@ -756,6 +756,12 @@ namespace UMA.CharacterSystem.Editors
 
 					CleanupGeneratedData();
 
+					dca.activeRace.SetRaceData();
+					if (dca.activeRace.racedata == null)
+                    {
+						return;
+                    }
+
 					dca.LoadDefaultWardrobe();
 
 					// save the predefined DNA...

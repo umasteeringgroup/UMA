@@ -231,21 +231,30 @@ namespace UMA.CharacterSystem.Editors
                         }
                     }
                     var recipeIsLive = true;
-					// var _recipe = thisElement.FindPropertyRelative("_recipe").objectReferenceValue;// as UMATextRecipe;
+                    // var _recipe = thisElement.FindPropertyRelative("_recipe").objectReferenceValue;// as UMATextRecipe;
 
+                    string recipeName = "";
 					var recipe = thisDCA.preloadWardrobeRecipes.recipes[i];
-					string recipeslot = recipe._recipe.wardrobeSlot;
-					var recipeName = thisElement.FindPropertyRelative("_recipeName").stringValue;
+                    if (recipe != null)
+                    {
+                        string recipeslot = recipe._recipe.wardrobeSlot;
+                        recipeName = thisElement.FindPropertyRelative("_recipeName").stringValue;
 
-					recipeIsLive = UMAContext.Instance.HasRecipe(recipeName);
+                        recipeIsLive = UMAContext.Instance.HasRecipe(recipeName);
 
-                    if (!recipeIsLive)
-                        valR.width = valR.width - 25f;
-                    
-					EditorGUI.TextField(valR, "["+recipeslot+"] "+recipeName + " (" + compatibleRaces + ")");
+                        if (!recipeIsLive)
+                            valR.width = valR.width - 25f;
+
+                        EditorGUI.TextField(valR, "[" + recipeslot + "] " + recipeName + " (" + compatibleRaces + ")");
+                    }
+                    else
+                    {
+                        EditorGUI.TextField(valR, "Recipe is null.");
+                    }
+
 
                     EditorGUI.EndDisabledGroup();
-                    if (!recipeIsLive)
+                    if (!recipeIsLive && recipe != null)
                     {
                         var warningRect = new Rect((valRBut.xMin - 25f), valRBut.yMin, 20f, valRBut.height);
 						var warningGUIContent = new GUIContent("", recipeName + " was not Live. If the asset is in an assetBundle make sure the DynamicCharacterSystem is set to Add assets from assetBundles otherwise click this button to add it to the Global Library.");

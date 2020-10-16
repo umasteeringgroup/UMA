@@ -11,7 +11,7 @@ namespace UMA
 	public class UMADefaultMeshCombiner : UMAMeshCombiner
 	{
 		protected List<SkinnedMeshCombiner.CombineInstance> combinedMeshList;
-		protected List<Material> combinedMaterialList;
+		protected List<UMAData.GeneratedMaterial> combinedMaterialList;
 
 		UMAData umaData;
 		int atlasResolution;
@@ -181,7 +181,7 @@ namespace UMA
 			this.atlasResolution = atlasResolution;
 
 			combinedMeshList = new List<SkinnedMeshCombiner.CombineInstance>(umaData.umaRecipe.slotDataList.Length);
-			combinedMaterialList = new List<Material>();
+			combinedMaterialList = new List<UMAData.GeneratedMaterial>();
 
 			EnsureUMADataSetup(umaData);
 			umaData.skeleton.BeginSkeletonUpdate();
@@ -232,7 +232,12 @@ namespace UMA
 					UMAUtils.DestroySceneObject(cloth);
 				}
 
-				var materials = combinedMaterialList.ToArray();
+				Material[] materials = new Material[combinedMaterialList.Count];
+				for(int i=0;i<combinedMaterialList.Count;i++)
+                {
+					materials[i] = combinedMaterialList[i].material;
+					combinedMaterialList[i].skinnedMeshRenderer = renderers[currentRendererIndex];
+				}
 				renderers[currentRendererIndex].sharedMaterials = materials;
 				umaMesh.ReleaseSharedBuffers();
 			}
@@ -263,7 +268,8 @@ namespace UMA
 				var generatedMaterial = umaData.generatedMaterials.materials[materialIndex];
 				if (generatedMaterial.rendererAsset != rendererAsset)
 					continue;
-				combinedMaterialList.Add(generatedMaterial.material);
+				combinedMaterialList.Add(generatedMaterial);
+				generatedMaterial.materialIndex = materialIndex;
 
 				for (int materialDefinitionIndex = 0; materialDefinitionIndex < generatedMaterial.materialFragments.Count; materialDefinitionIndex++)
 				{

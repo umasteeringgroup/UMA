@@ -41,7 +41,7 @@ namespace UMA
         {
             source.filterMode = filter;
             RenderTexture rt = new RenderTexture(newWidth, newHeight, 0, source.format, RenderTextureReadWrite.Linear);
-            rt.name = "Resized Render Texture...";
+            rt.name = "Resized Render Texture..." + Time.frameCount;
 
             rt.filterMode = FilterMode.Point;
 
@@ -63,23 +63,23 @@ namespace UMA
 
             for (int atlasIndex = umaData.generatedMaterials.materials.Count - 1; atlasIndex >= 0; atlasIndex--)
             {
-                var atlas = umaData.generatedMaterials.materials[atlasIndex];
+                var generatedMaterial = umaData.generatedMaterials.materials[atlasIndex];
 
                 //Rendering Atlas
                 int moduleCount = 0;
 
                 //Process all necessary TextureModules
-                for (int i = 0; i < atlas.materialFragments.Count; i++)
+                for (int i = 0; i < generatedMaterial.materialFragments.Count; i++)
                 {
-                    if (!atlas.materialFragments[i].isRectShared)
+                    if (!generatedMaterial.materialFragments[i].isRectShared)
                     {
                         moduleCount++;
-                        moduleCount = moduleCount + atlas.materialFragments[i].overlays.Length;
+                        moduleCount = moduleCount + generatedMaterial.materialFragments[i].overlays.Length;
                     }
                 }
                 textureMerge.EnsureCapacity(moduleCount);
 
-                var slotData = atlas.materialFragments[0].slotData;
+                var slotData = generatedMaterial.materialFragments[0].slotData;
                 resultingTextures = new Texture[slotData.asset.material.channels.Length];
                 for (int textureType = slotData.asset.material.channels.Length - 1; textureType >= 0; textureType--)
                 {
@@ -91,16 +91,16 @@ namespace UMA
                         case UMAMaterial.ChannelType.DetailNormalMap:
                         {
                             textureMerge.Reset();
-                            for (int i = 0; i < atlas.materialFragments.Count; i++)
+                            for (int i = 0; i < generatedMaterial.materialFragments.Count; i++)
                             {
-                                textureMerge.SetupModule(atlas, i, textureType);
+                                textureMerge.SetupModule(generatedMaterial, i, textureType);
                             }
 
                             //last element for this textureType
                             moduleCount = 0;
 
-                            int width = Mathf.FloorToInt(atlas.cropResolution.x);
-                            int height = Mathf.FloorToInt(atlas.cropResolution.y);
+                            int width = Mathf.FloorToInt(generatedMaterial.cropResolution.x);
+                            int height = Mathf.FloorToInt(generatedMaterial.cropResolution.y);
 
                             if (width == 0 || height == 0)
                             {
@@ -110,10 +110,11 @@ namespace UMA
                             //this should be restricted to >= 1 but 0 was allowed before and projects may have the umaMaterial value serialized to 0.
                             float downSample = (slotData.asset.material.channels[textureType].DownSample == 0) ? 1f : (1f / slotData.asset.material.channels[textureType].DownSample);
 
-                            destinationTexture = new RenderTexture(Mathf.FloorToInt(atlas.cropResolution.x * umaData.atlasResolutionScale * downSample), Mathf.FloorToInt(atlas.cropResolution.y * umaData.atlasResolutionScale * downSample), 0, slotData.asset.material.channels[textureType].textureFormat, RenderTextureReadWrite.Linear);
+                            destinationTexture = new RenderTexture(Mathf.FloorToInt(generatedMaterial.cropResolution.x * umaData.atlasResolutionScale * downSample), Mathf.FloorToInt(generatedMaterial.cropResolution.y * umaData.atlasResolutionScale * downSample), 0, slotData.asset.material.channels[textureType].textureFormat, RenderTextureReadWrite.Linear);
                             destinationTexture.filterMode = FilterMode.Point;
                             destinationTexture.useMipMap = umaGenerator.convertMipMaps && !umaGenerator.convertRenderTexture;
-                            destinationTexture.name = slotData.asset.material.name + "-Chan " + textureType;
+                            destinationTexture.name = slotData.asset.material.name + " Chan " + textureType + " frame: " + Time.frameCount;
+                            
                             //Draw all the Rects here
 
                             Color backgroundColor;
@@ -209,7 +210,7 @@ namespace UMA
                                 resultingTextures[textureType] = tempTexture;
                                 if (!slotData.asset.material.channels[textureType].NonShaderTexture)
                                 {
-                                    atlas.material.SetTexture(slotData.asset.material.channels[textureType].materialPropertyName, tempTexture);
+                                    generatedMaterial.material.SetTexture(slotData.asset.material.channels[textureType].materialPropertyName, tempTexture);
                                 }
                                 #endregion
                             }
@@ -222,7 +223,7 @@ namespace UMA
                                 resultingTextures[textureType] = destinationTexture;
                                 if (!slotData.asset.material.channels[textureType].NonShaderTexture)
                                 {
-                                    atlas.material.SetTexture(slotData.asset.material.channels[textureType].materialPropertyName, destinationTexture);
+                                    generatedMaterial.material.SetTexture(slotData.asset.material.channels[textureType].materialPropertyName, destinationTexture);
                                 }
                             }
 
@@ -231,14 +232,14 @@ namespace UMA
                         case UMAMaterial.ChannelType.MaterialColor:
                         {
                             if (slotData.asset.material.channels[textureType].NonShaderTexture) break;
-                            atlas.material.SetColor(slotData.asset.material.channels[textureType].materialPropertyName, atlas.materialFragments[0].baseColor);
+                            generatedMaterial.material.SetColor(slotData.asset.material.channels[textureType].materialPropertyName, generatedMaterial.materialFragments[0].baseColor);
                             break;
                         }
                         case UMAMaterial.ChannelType.TintedTexture:
                         {
-                            for (int i = 0; i < atlas.materialFragments.Count; i++)
+                            for (int i = 0; i < generatedMaterial.materialFragments.Count; i++)
                             {
-                                var fragment = atlas.materialFragments[i];
+                                var fragment = generatedMaterial.materialFragments[i];
                                 if (fragment.isRectShared) continue;
                                 for (int j = 0; j < fragment.baseOverlay.textureList.Length; j++)
                                 {
@@ -246,23 +247,24 @@ namespace UMA
                                     {
                                         if (!slotData.asset.material.channels[textureType].NonShaderTexture)
                                         {
-                                            atlas.material.SetTexture(slotData.asset.material.channels[j].materialPropertyName, fragment.baseOverlay.textureList[j]);
+                                            generatedMaterial.material.SetTexture(slotData.asset.material.channels[j].materialPropertyName, fragment.baseOverlay.textureList[j]);
                                         }
                                         if (j == 0)
                                         {
-                                            atlas.material.color = fragment.baseColor;
+                                            generatedMaterial.material.color = fragment.baseColor;
                                         }
                                     }
                                 }
                                 foreach (var overlay in fragment.overlays)
                                 {
+                                    if (generatedMaterial.textureNameList == null)
                                     for (int j = 0; j < overlay.textureList.Length; j++)
                                     {
                                         if (overlay.textureList[j] != null)
                                         {
                                             if (!slotData.asset.material.channels[textureType].NonShaderTexture)
                                             {
-                                                atlas.material.SetTexture(slotData.asset.material.channels[j].materialPropertyName, overlay.textureList[j]);
+                                                generatedMaterial.material.SetTexture(slotData.asset.material.channels[j].materialPropertyName, overlay.textureList[j]);
                                             }
                                         }
                                     }
@@ -272,10 +274,10 @@ namespace UMA
                         }
                     }
                 }
-                atlas.resultingAtlasList = resultingTextures;
+                generatedMaterial.resultingAtlasList = resultingTextures;
             }
         }
-
+        
         private bool IsOpenGL()
         {
             var graphicsDeviceVersion = SystemInfo.graphicsDeviceVersion;

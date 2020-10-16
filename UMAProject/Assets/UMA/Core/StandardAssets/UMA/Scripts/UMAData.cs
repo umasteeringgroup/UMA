@@ -34,7 +34,9 @@ namespace UMA
 		//TODO Change these get functions to getter properties?
 		public SkinnedMeshRenderer GetRenderer(int idx)
 		{
-			return renderers[idx];
+			if (renderers != null && idx < renderers.Length)
+				return renderers[idx];
+			return null;
 		}
 
 		public int GetRendererIndex(SkinnedMeshRenderer renderer)
@@ -438,6 +440,8 @@ namespace UMA
 			public float resolutionScale;
 			public string[] textureNameList;
 			public UMARendererAsset rendererAsset;
+			public SkinnedMeshRenderer skinnedMeshRenderer;
+			public int materialIndex;
 		}
 
 		[System.Serializable]
