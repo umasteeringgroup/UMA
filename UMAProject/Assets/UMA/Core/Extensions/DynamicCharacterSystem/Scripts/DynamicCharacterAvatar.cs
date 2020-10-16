@@ -21,7 +21,7 @@ using System.Threading.Tasks;
 namespace UMA.CharacterSystem
 {
     [ExecuteInEditMode]
-    public class DynamicCharacterAvatar : UMAAvatarBase, ISerializationCallbackReceiver
+    public class DynamicCharacterAvatar : UMAAvatarBase 
     {
         public float DelayUnload = 2.0f;
         public bool BundleCheck = true;
@@ -370,29 +370,12 @@ namespace UMA.CharacterSystem
 
         public void Awake()
         {
+#if UNITY_EDITOR
+            // Cleanup from any edit-time uma generation
             UMAData ud = GetComponent<UMAData>();
 
-           //if (editorTimeGeneration)
-            //{
-             //   BuildCharacterEnabled = false;
-              //  ForceUpdate(false, true, false); // force texture rebuild NOW
-            //}
-            
             if (ud != null)
             {
-#if SUPER_LOGGING
-                Debug.Log("Destroying UMAData on " + gameObject.name);
-#endif
-
-                // TODO:
-                // If umaData is valid.
-                //    hook up renderers, if they're not there...
-                //    if textures are render textures and render textures are valid
-                //       hook up render textures
-                //    if have an animator, and animator and avatar is valid
-                //       hook up avatar and animator
-                //    
-
                 // cleanup any edit-time umaData
                 DestroyImmediate(ud);
                 umaData = null;
@@ -407,8 +390,8 @@ namespace UMA.CharacterSystem
                         DestroyImmediate(go);
                     }
                 }
-
             }
+#endif
 
 #if UMA_ADDRESSABLES
             isAddressableSystem = false;
@@ -478,6 +461,7 @@ namespace UMA.CharacterSystem
                     }
                 }
             }
+#if UNITY_EDITOR
             else
             {
                 if (editorTimeGeneration)
@@ -485,6 +469,7 @@ namespace UMA.CharacterSystem
                     GenerateSingleUMA();
                 }
             }
+#endif
         }
 
 #if UNITY_EDITOR
@@ -4221,27 +4206,6 @@ namespace UMA.CharacterSystem
             }
         }
 
-        void ISerializationCallbackReceiver.OnBeforeSerialize()
-        {
-            return;
-        }
-
-        void ISerializationCallbackReceiver.OnAfterDeserialize()
-        {
-#if UNITY_EDITOR
-            if (!editorTimeGeneration)
-                return;
-
-            if (umaData == null)
-            {
-               // Debug.Log("deserialized... null umaData");
-            }
-            else
-            {
-
-            }
-#endif
-        }
 #endif
     }
 
