@@ -21,9 +21,7 @@ namespace UMA
 		public override void ValidateDictionaries()
 		{
 			UMAAssetIndexer.Instance.RebuildIndex();
-#if UNITY_EDITOR
 			UMAAssetIndexer.Instance.ForceSave();
-#endif
 		}
 
 		/// <summary>
