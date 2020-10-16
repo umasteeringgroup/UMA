@@ -21,7 +21,7 @@ using System.Threading.Tasks;
 namespace UMA.CharacterSystem
 {
     [ExecuteInEditMode]
-    public class DynamicCharacterAvatar : UMAAvatarBase, ISerializationCallbackReceiver
+    public class DynamicCharacterAvatar : UMAAvatarBase
     {
         public float DelayUnload = 2.0f;
         public bool BundleCheck = true;
@@ -396,6 +396,7 @@ namespace UMA.CharacterSystem
                 // cleanup any edit-time umaData
                 DestroyImmediate(ud);
                 umaData = null;
+#if UNITY_EDITOR
                 /// Having UMA's visible in the editor comes at a cost.
                 /// Have to clean up from edit time stuff.
                 if (editorTimeGeneration && Application.isPlaying)
@@ -407,6 +408,7 @@ namespace UMA.CharacterSystem
                         DestroyImmediate(go);
                     }
                 }
+#endif
 
             }
 
@@ -478,6 +480,7 @@ namespace UMA.CharacterSystem
                     }
                 }
             }
+#if UNITY_EDITOR
             else
             {
                 if (editorTimeGeneration)
@@ -485,6 +488,7 @@ namespace UMA.CharacterSystem
                     GenerateSingleUMA();
                 }
             }
+#endif
         }
 
 #if UNITY_EDITOR
@@ -4219,28 +4223,6 @@ namespace UMA.CharacterSystem
                 color.SetOverlayColorData(colorData);
                 characterColors.SetColor(color.name, colorData);
             }
-        }
-
-        void ISerializationCallbackReceiver.OnBeforeSerialize()
-        {
-            return;
-        }
-
-        void ISerializationCallbackReceiver.OnAfterDeserialize()
-        {
-#if UNITY_EDITOR
-            if (!editorTimeGeneration)
-                return;
-
-            if (umaData == null)
-            {
-               // Debug.Log("deserialized... null umaData");
-            }
-            else
-            {
-
-            }
-#endif
         }
 #endif
     }
