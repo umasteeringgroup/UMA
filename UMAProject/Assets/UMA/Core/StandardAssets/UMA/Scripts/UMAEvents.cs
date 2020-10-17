@@ -77,12 +77,27 @@ namespace UMA
 		public UMADataWardrobeEvent()
 		{
 		}
-		public UMADataWardrobeEvent(UMADataSlotMaterialRectEvent source)
+		public UMADataWardrobeEvent(UMADataWardrobeEvent source)
 		{
 			for (int i = 0; i < source.GetPersistentEventCount(); i++)
 			{
 				var target = source.GetPersistentTarget(i);
 				AddListener(target, UnityEventBase.GetValidMethodInfo(target, source.GetPersistentMethodName(i), new Type[] { typeof(UMAData), typeof(UMAWardrobeRecipe) }));
+			}
+		}
+	}
+
+	public class UMARandomAvatarEvent: UnityEvent<GameObject, GameObject>
+    {
+		public UMARandomAvatarEvent()
+		{
+		}
+		public UMARandomAvatarEvent(UMARandomAvatarEvent source)
+		{
+			for (int i = 0; i < source.GetPersistentEventCount(); i++)
+			{
+				var target = source.GetPersistentTarget(i);
+				AddListener(target, UnityEventBase.GetValidMethodInfo(target, source.GetPersistentMethodName(i), new Type[] { typeof(GameObject), typeof(GameObject) }));
 			}
 		}
 	}

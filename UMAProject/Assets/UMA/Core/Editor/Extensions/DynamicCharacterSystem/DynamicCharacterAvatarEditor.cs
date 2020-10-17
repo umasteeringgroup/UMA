@@ -369,22 +369,14 @@ namespace UMA.CharacterSystem.Editors
 							EditorUtility.DisplayDialog("Error", "Predefined DNA Already contains DNA: " + theDna, "OK");
 						}
 						else
-						{
-							float value = 0.5f;
-							if (thisDCA.umaData != null)
-							{
-								var characterDNA = thisDCA.GetDNA();
-								if (characterDNA != null)
-								{
-									if (characterDNA.ContainsKey(theDna))
-									{
-										value = characterDNA[theDna].Value;
-									}
-								}
-							}
-							thisDCA.predefinedDNA.AddDNA(theDna, value);
-						}
-					}
+                        {
+                            AddSingleDNA(theDna);
+                        }
+                    }
+					if (GUILayout.Button("Add All"))
+                    {
+						
+                    }
 					GUILayout.EndHorizontal();
 
 					if (thisDCA.predefinedDNA != null)
@@ -744,6 +736,13 @@ namespace UMA.CharacterSystem.Editors
 				if (thisDCA.editorTimeGeneration == false)
 					return;
 
+				// Don't generate UMAs from project prefabs.
+				if (PrefabUtility.GetPrefabInstanceStatus(thisDCA.gameObject) == PrefabInstanceStatus.NotAPrefab && PrefabUtility.GetPrefabAssetType(thisDCA.gameObject) != PrefabAssetType.NotAPrefab)
+				{
+					Debug.Log("This is a game object in the project view.");
+					return;
+				}
+
 				UMAGenerator ugb = UMAContext.Instance.gameObject.GetComponentInChildren<UMAGenerator>();
 				if (ugb == null)
 				{
@@ -802,5 +801,23 @@ namespace UMA.CharacterSystem.Editors
 				thisDCA.ClearSlots();
 			}
 		}
+
+        private void AddSingleDNA(string theDna)
+        {
+            float value = 0.5f;
+			// todo: Get DNA from base race recipe, and 
+            if (thisDCA.umaData != null)
+            {
+                var characterDNA = thisDCA.GetDNA();
+                if (characterDNA != null)
+                {
+                    if (characterDNA.ContainsKey(theDna))
+                    {
+                        value = characterDNA[theDna].Value;
+                    }
+                }
+            }
+            thisDCA.predefinedDNA.AddDNA(theDna, value);
+        }
     }
 }
