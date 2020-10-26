@@ -3,7 +3,11 @@
 //	Author: 	Eli Curtz
 //	Copyright:	(c) 2013 Eli Curtz
 //	============================================================
+using System.Collections.Generic;
 using UMA.CharacterSystem;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 using UnityEngine;
 
 namespace UMA.PoseTools
@@ -11,28 +15,116 @@ namespace UMA.PoseTools
 	/// <summary>
 	/// UMA specific expression player.
 	/// </summary>
-	public class UMADynamicExpressionPlayer : ExpressionPlayer
+	public class UMADynamicExpressionPlayer : MonoBehaviour
 	{
+		public enum MecanimJoint : int
+		{
+			None = 0,
+			Head = 1,
+			Neck = 2,
+			Jaw = 4,
+			Eye = 8,
+		};
+
+		[System.Serializable]
+		public class Expression
+		{
+			public string poseName;
+			public MecanimJoint overrideBone;
+			[Range(0.0f, 1.0f)]
+			public float value = 0.0f;
+			[Range(0.0f, 1.0f)]
+			public float defaultValue = 0.5f;
+			bool isBlink;
+			bool isLeftEyeInOut;
+			bool isLeftEyeUpDown;
+			bool isRightEyeInOut;
+			bool isRightEyeUpDown;
+		}
+
+		public List<Expression> Expressions;
+
 		/// <summary>
 		/// The expression set containing poses used for animation.
 		/// </summary>
-		public UMAExpressionSet expressionSet;
+		public UMADynamicExpressionSet expressionSet;
 		public float minWeight = 0f;
-		
+		public DynamicCharacterAvatar avatar;
+
+		#region Bone Setup
+		/// <summary>
+		/// Bone setup not relying up mecanim humanid
+		/// </summary>
 		public bool GenericRig = false;
 		public string GenericJawBone = "jaw";
 		public string GenericHeadBone = "head";
 		public string GenericNeckBone = "neck";
-
-		public DynamicCharacterAvatar avatar;
-
-
-		[System.NonSerialized]
-		public UMAData umaData;
-
 		private int jawHash = 0;
 		private int neckHash = 0;
 		private int headHash = 0;
+        #endregion
+
+        #region Eyes
+        /// <summary>
+        /// Enable procedural blinking.
+        /// </summary>
+        /// <remarks>
+        /// Randomly blink at intervals ranging between minBlinkDelay
+        /// and maxBlinkDelay. Only recommended if the animation does
+        /// not already contain blink data.
+        /// </remarks>
+        public bool enableBlinking = false;
+		public float blinkDuration = 0.15f;
+		public float minBlinkDelay = 3f;
+		public float maxBlinkDelay = 15f;
+		protected float blinkDelay = 0f;
+
+
+		/// <summary>
+		/// Enable procedural saccades.
+		/// </summary>
+		/// <remarks>
+		/// Saccades (tiny rapid eye movements) will be procedurally
+		/// generated. Only recommended if the eyes are being controlled
+		/// by IK or tracking rather than high resolution animated data.
+		/// </remarks>
+		public bool enableSaccades = false;
+		protected float saccadeDelay = 5f;
+		protected float saccadeDuration = 0f;
+		protected float saccadeProgress = 1f;
+		protected Vector2 saccadeTarget;
+		protected Vector2 saccadeTargetPrev;
+
+		/// <summary>
+		/// Procedural eye mode
+		/// </summary>
+		public enum GazeMode : int
+		{
+			None = 0,
+			Acquiring = 1,
+			Following = 2,
+			Speaking = 3,
+			Listening = 4
+		};
+
+		/// <summary>
+		/// The position which the eyes are focused on or moving toward.
+		/// </summary>
+		public Vector3 gazeTarget;
+		public float gazeWeight = 0f;
+		public GazeMode gazeMode = GazeMode.None;
+		#endregion
+
+		#region Animation Overrides
+		public bool overrideMecanimEyes = true;
+		public bool overrideMecanimJaw = true;
+		public bool overrideMecanimNeck = false;
+		public bool overrideMecanimHead = false;
+        #endregion
+
+        [System.NonSerialized]
+		public UMAData umaData;
+
 
 		private bool initialized = false;
 		[System.NonSerialized]
@@ -64,7 +156,7 @@ namespace UMA.PoseTools
             {
 				if (avatar.activeRace.data != null)
 				{
-					expressionSet = avatar.activeRace.racedata.expressionSet;
+					//expressionSet = avatar.activeRace.racedata.expressionSet;
 				}
             }
 			if (expressionSet != null)
@@ -234,7 +326,7 @@ namespace UMA.PoseTools
 
 			for (int i = 0; i < values.Length; i++)
 			{
-				if ((MecanimAlternate[i] & mecanimMask) != MecanimJoint.None)
+				if ((Expressions[i].overrideBone & mecanimMask) != MecanimJoint.None)
 				{
 					continue;
 				}
@@ -324,25 +416,25 @@ namespace UMA.PoseTools
 				float progressRate = 1.5f - 3f * Mathf.Pow(saccadeProgress - 0.5f, 2);
 				saccadeProgress += timeProgress * progressRate;
 
-				leftEyeIn_Out = Mathf.Lerp(saccadeTargetPrev.x, saccadeTarget.x, saccadeProgress);
-				leftEyeUp_Down = Mathf.Lerp(saccadeTargetPrev.y, saccadeTarget.y, saccadeProgress);
-				rightEyeIn_Out = Mathf.Lerp(-saccadeTargetPrev.x, -saccadeTarget.x, saccadeProgress);
-				rightEyeUp_Down = Mathf.Lerp(saccadeTargetPrev.y, saccadeTarget.y, saccadeProgress);
+				//leftEyeIn_Out = Mathf.Lerp(saccadeTargetPrev.x, saccadeTarget.x, saccadeProgress);
+				//leftEyeUp_Down = Mathf.Lerp(saccadeTargetPrev.y, saccadeTarget.y, saccadeProgress);
+				//rightEyeIn_Out = Mathf.Lerp(-saccadeTargetPrev.x, -saccadeTarget.x, saccadeProgress);
+				//rightEyeUp_Down = Mathf.Lerp(saccadeTargetPrev.y, saccadeTarget.y, saccadeProgress);
 			} else
 			{
-				leftEyeIn_Out = saccadeTarget.x;
-				leftEyeUp_Down = saccadeTarget.y;
-				rightEyeIn_Out = -saccadeTarget.x;
-				rightEyeUp_Down = saccadeTarget.y;
+				//leftEyeIn_Out = saccadeTarget.x;
+				//leftEyeUp_Down = saccadeTarget.y;
+				//rightEyeIn_Out = -saccadeTarget.x;
+				//rightEyeUp_Down = saccadeTarget.y;
 			}
 		}
 
 		protected void UpdateBlinking()
 		{
-			if (leftEyeOpen_Close < -1f)
-				leftEyeOpen_Close = 0f;
-			if (rightEyeOpen_Close < -1f)
-				rightEyeOpen_Close = 0f;
+			//if (leftEyeOpen_Close < -1f)
+			//	leftEyeOpen_Close = 0f;
+			//if (rightEyeOpen_Close < -1f)
+			//	rightEyeOpen_Close = 0f;
 
 			blinkDelay -= Time.deltaTime;
 			if (blinkDelay < blinkDuration)
@@ -369,11 +461,117 @@ namespace UMA.PoseTools
 						blinkDelay = blinkDuration;
 				} else
 				{
-					leftEyeOpen_Close = -1.01f;
-					rightEyeOpen_Close = -1.01f;
+					//leftEyeOpen_Close = -1.01f;
+					//rightEyeOpen_Close = -1.01f;
 				}
 			}
 		}
 
+		private float[] valueArray = new float[0];
+
+		public float[] Values
+		{
+			get
+			{
+				if (valueArray.Length != Expressions.Count)
+				{
+					valueArray = new float[Expressions.Count];
+				}
+
+				for (int i = 0; i < Expressions.Count; i++)
+				{
+					valueArray[i] = Expressions[i].value;
+				}
+				return valueArray;
+			}
+			set
+			{
+				if (value.Length > Expressions.Count) return;
+
+				for (int i = 0; i < value.Length; i++)
+				{
+					Expressions[i].value = value[i];
+				}
+			}
+		}
+
+#if UNITY_EDITOR
+		/// <summary>
+		/// Name of the primary (positive values) pose. Editor only.
+		/// </summary>
+		/// <returns>The pose name.</returns>
+		/// <param name="index">Index.</param>
+		public string PrimaryPoseName(int index)
+		{
+			string name = ObjectNames.NicifyVariableName(Expressions[index].poseName);
+			int underscore = name.IndexOf('_');
+
+			if (underscore < 0)
+				return name;
+
+			return name.Substring(0, underscore);
+		}
+
+		/// <summary>
+		/// Name of the inverse (negative values) pose. Editor only.
+		/// </summary>
+		/// <returns>The pose name.</returns>
+		/// <param name="index">Index.</param>
+		public string InversePoseName(int index)
+		{
+			string name = ObjectNames.NicifyVariableName(Expressions[index].poseName);
+			int underscore = name.IndexOf('_');
+
+			if (underscore < 0)
+				return null;
+
+			int space = name.LastIndexOf(' ', underscore);
+			return name.Substring(0, space + 1) + name.Substring(underscore + 1);
+		}
+
+		/// <summary>
+		/// Saves the expression to an animation clip.
+		/// </summary>
+		/// <param name="assetPath">Path for the new animation clip.</param>
+		public void SaveExpressionClip(string assetPath)
+		{
+			AnimationClip clip = new AnimationClip();
+
+			Animation anim = gameObject.GetComponent<Animation>();
+			bool legacyAnimation = (anim != null);
+			if (legacyAnimation)
+			{
+				clip.legacy = true;
+			}
+			float[] values = Values;
+			for (int i = 0; i < Expressions.Count; i++)
+			{
+				string pose = Expressions[i].poseName;
+				float value = values[i];
+				if (value != 0f)
+				{
+					AnimationCurve curve = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(1f, value), new Keyframe(2f, 0f));
+
+					EditorCurveBinding binding = new EditorCurveBinding();
+					binding.propertyName = pose;
+					binding.type = typeof(ExpressionPlayer);
+					AnimationUtility.SetEditorCurve(clip, binding, curve);
+				}
+			}
+
+			if ((assetPath != null) && (assetPath.EndsWith(".anim")))
+			{
+				AssetDatabase.CreateAsset(clip, assetPath);
+
+				if (legacyAnimation)
+				{
+					anim.AddClip(clip, clip.name);
+					anim.clip = clip;
+				}
+
+				AssetDatabase.SaveAssets();
+			}
+		}
+#endif
 	}
 }
