@@ -1435,7 +1435,11 @@ namespace UMA
 				CleanTextures();
 				CleanMesh(true);
 				CleanAvatar();
-				UMAUtils.DestroySceneObject(umaRoot);
+				// Edit time UMAs
+				if (!Application.isPlaying)
+				{
+					UMAUtils.DestroySceneObject(umaRoot);
+				}
 			}
 		}
 
