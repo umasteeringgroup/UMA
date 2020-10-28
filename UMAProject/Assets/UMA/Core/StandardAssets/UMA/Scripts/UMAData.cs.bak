@@ -1458,11 +1458,7 @@ namespace UMA
 			{
 				if (!KeepAvatar)
 				{
-					if (animator.avatar)
-					{
-						UMAUtils.DestroyAvatar(animator.avatar);
-						animator.avatar = null;
-					}
+					if (animator.avatar) UMAUtils.DestroyAvatar(animator.avatar);
 				}
 			}
 		}

@@ -141,6 +141,7 @@ namespace UMA
 				BaseOverlay = new OverlayData(overlayDataAsset);
 			}
 
+			BaseOverlay.Validate();
 			OverlayViewer viewerobj = serializedObject.targetObject as OverlayViewer;
 
 			List<OverlayData> od = new List<OverlayData>();

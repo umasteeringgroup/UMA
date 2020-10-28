@@ -383,11 +383,6 @@ namespace UMA.CharacterSystem
                 /// Have to clean up from edit time stuff.
                 if (editorTimeGeneration && Application.isPlaying)
                 {
-                        /* if (ud.umaRoot != null)
-                        {
-                            DestroyImmediate(ud.umaRoot);
-                            ud.umaRoot = null;
-                        } */
                     List<GameObject> Cleaners = GetRenderers(gameObject);
                         Hide(false);
                     foreach (GameObject go in Cleaners)
@@ -395,8 +390,7 @@ namespace UMA.CharacterSystem
                         DestroyImmediate(go);
                     }
                 }
-                    DestroyImmediate(ud);
-                    umaData = null;
+                    ud.umaRoot = null;
                 }
             }
 #endif
@@ -3377,10 +3371,14 @@ namespace UMA.CharacterSystem
             {
                 if (rebuildSkeleton)
                 {
+                    DestroyImmediate(umaData.umaRoot,false);
+                    /*
                     foreach (Transform child in gameObject.transform)
                     {
                         UMAUtils.DestroySceneObject(child.gameObject);
                     }
+                    */
+                    umaData.umaRoot = null;
                 }
                 UpdateNewRace();
             }
