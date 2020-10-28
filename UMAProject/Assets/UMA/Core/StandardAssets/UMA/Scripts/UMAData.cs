@@ -269,6 +269,11 @@ namespace UMA
 		void Awake()
 		{
 			if (!umaGenerator)
+            {
+				if (UMAContextBase.Instance != null)
+				umaGenerator = UMAContextBase.Instance.gameObject.GetComponent<UMAGeneratorBase>();
+            }
+			if (!umaGenerator)
 			{
 				var generatorGO = GameObject.Find("UMAGenerator");
 				if (generatorGO == null) return;
@@ -1436,7 +1441,7 @@ namespace UMA
 				CleanMesh(true);
 				CleanAvatar();
 				// Edit time UMAs
-				if (!Application.isPlaying)
+				if (Application.isPlaying)
 				{
 					UMAUtils.DestroySceneObject(umaRoot);
 				}
