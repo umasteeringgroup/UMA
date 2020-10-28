@@ -417,6 +417,7 @@ namespace UMA.CharacterSystem
                 EditorApplication.update += CheckEditorContextNeeded;
             }
 #endif
+            this.context = UMAContextBase.Instance;
         }
         // Use this for initialization
         public override void Start()
@@ -3371,14 +3372,18 @@ namespace UMA.CharacterSystem
             {
                 if (rebuildSkeleton)
                 {
+                    // New Way
                     DestroyImmediate(umaData.umaRoot,false);
+                    umaData.umaRoot = null;
+                    // New Way end
+
+                    // Old Way
                     /*
                     foreach (Transform child in gameObject.transform)
                     {
                         UMAUtils.DestroySceneObject(child.gameObject);
-                    }
-                    */
-                    umaData.umaRoot = null;
+                    }*/
+                    // Old way end
                 }
                 UpdateNewRace();
             }

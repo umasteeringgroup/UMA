@@ -1435,11 +1435,11 @@ namespace UMA
 				}
 				isOfficiallyCreated = false;
 			}
+			CleanTextures();
+			CleanMesh(true);
+			CleanAvatar();
 			if (umaRoot != null)
 			{
-				CleanTextures();
-				CleanMesh(true);
-				CleanAvatar();
 				// Edit time UMAs
 				if (Application.isPlaying)
 				{

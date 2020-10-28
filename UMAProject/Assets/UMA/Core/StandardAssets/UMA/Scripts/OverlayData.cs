@@ -160,10 +160,10 @@ namespace UMA
 				return;
 			}
 
-			Validate();
-
 			this.asset = asset;
 			this.rect = asset.rect;
+
+			Validate();
 
 #if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 			if (this.isProcedural)
@@ -171,7 +171,7 @@ namespace UMA
 				this.proceduralData = new OverlayProceduralData[0];
 			}
 #endif
-			
+
 		}
 
 

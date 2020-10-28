@@ -26,6 +26,101 @@ namespace UMA
 				umaData.umaRecipe.UpdateMeshHideMasks();
 			}
 
+#if true
+			#region SetupSkeleton
+			if (umaData.umaRoot == null)
+			{
+				Transform rootTransform = umaData.gameObject.transform.Find("Root");
+				if (rootTransform)
+				{
+					umaData.umaRoot = rootTransform.gameObject;
+				}
+				else
+				{
+					GameObject newRoot = new GameObject("Root");
+					//make root of the UMAAvatar respect the layer setting of the UMAAvatar so cameras can just target this layer
+					newRoot.layer = umaData.gameObject.layer;
+					newRoot.transform.parent = umaData.transform;
+					newRoot.transform.localPosition = Vector3.zero;
+					if (umaData.umaRecipe.raceData.FixupRotations)
+					{
+						newRoot.transform.localRotation = Quaternion.Euler(270f, 0, 0f);
+					}
+					else
+					{
+						newRoot.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
+					}
+					newRoot.transform.localScale = Vector3.one;
+					umaData.umaRoot = newRoot;
+				}
+
+				Transform globalTransform = umaData.umaRoot.transform.Find("Global");
+				if (!globalTransform)
+				{
+					GameObject newGlobal = new GameObject("Global");
+					newGlobal.transform.parent = umaData.umaRoot.transform;
+					newGlobal.transform.localPosition = Vector3.zero;
+					if (umaData.umaRecipe.raceData.FixupRotations)
+					{
+						newGlobal.transform.localRotation = Quaternion.Euler(90f, 90f, 0f);
+					}
+					else
+					{
+						newGlobal.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
+					}
+					globalTransform = newGlobal.transform;
+				}
+				umaData.skeleton = new UMASkeleton(globalTransform);
+			}
+			#endregion
+			if (umaData.umaRoot != null)
+			{
+				umaData.CleanMesh(false);
+				if (umaData.rendererCount == umaData.generatedMaterials.rendererAssets.Count && umaData.AreRenderersEqual(umaData.generatedMaterials.rendererAssets))
+				{
+					renderers = umaData.GetRenderers();
+				}
+				else
+				{
+					var oldRenderers = umaData.GetRenderers();
+					var globalTransform = umaData.GetGlobalTransform();
+
+					renderers = new SkinnedMeshRenderer[umaData.generatedMaterials.rendererAssets.Count];
+
+					for (int i = 0; i < umaData.generatedMaterials.rendererAssets.Count; i++)
+					{
+						if (oldRenderers != null && oldRenderers.Length > i)
+						{
+							renderers[i] = oldRenderers[i];
+							if (umaData.generatedMaterials.rendererAssets[i] != null)
+								umaData.generatedMaterials.rendererAssets[i].ApplySettingsToRenderer(renderers[i]);
+							else
+								umaData.ResetRendererSettings(i);
+
+							continue;
+						}
+						UMARendererAsset rendererAsset = umaData.generatedMaterials.rendererAssets[i];
+						if (rendererAsset == null)
+							rendererAsset = umaData.defaultRendererAsset;
+
+						renderers[i] = MakeRenderer(i, globalTransform, rendererAsset);
+					}
+
+					if (oldRenderers != null)
+					{
+						for (int i = umaData.generatedMaterials.rendererAssets.Count; i < oldRenderers.Length; i++)
+						{
+							DestroyImmediate(oldRenderers[i].gameObject);
+							//For cloth, be aware of issue: 845868
+							//https://issuetracker.unity3d.com/issues/cloth-repeatedly-destroying-objects-with-cloth-components-causes-a-crash-in-unity-cloth-updatenormals
+						}
+					}
+					umaData.SetRenderers(renderers);
+					umaData.SetRendererAssets(umaData.generatedMaterials.rendererAssets.ToArray());
+				}
+				return;
+			}
+#else
 			if (umaData.umaRoot != null)
 			{
 				umaData.CleanMesh(false);
@@ -76,7 +171,8 @@ namespace UMA
 
 			if (umaData.umaRoot == null)
 			{
-				Transform rootTransform = umaData.gameObject.transform.Find("Root");
+			#region SetupSkeleton
+                Transform rootTransform = umaData.gameObject.transform.Find("Root");
 				if (rootTransform)
 				{
 					umaData.umaRoot = rootTransform.gameObject;
@@ -118,8 +214,8 @@ namespace UMA
 				}
 
 				umaData.skeleton = new UMASkeleton(globalTransform);
-
-				renderers = new SkinnedMeshRenderer[umaData.generatedMaterials.rendererAssets.Count];
+			#endregion
+                renderers = new SkinnedMeshRenderer[umaData.generatedMaterials.rendererAssets.Count];
 
 				for (int i = 0; i < umaData.generatedMaterials.rendererAssets.Count; i++)
 				{
@@ -132,7 +228,7 @@ namespace UMA
 				umaData.SetRenderers(renderers);
 				umaData.SetRendererAssets(umaData.generatedMaterials.rendererAssets.ToArray());
 			}
-
+#endif
 			//Clear out old cloth components
 			for (int i = 0; i < umaData.rendererCount; i++)
 			{
