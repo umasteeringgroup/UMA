@@ -22,7 +22,7 @@ namespace UMA.Editors
 
         void OnEnable()
         {
-            State = serializedObject.FindProperty("state");
+            State = serializedObject.FindProperty("RenderersEnabled");
 
             RendererElements = serializedObject.FindProperty("RendererElements");
             showHelp = serializedObject.FindProperty("showHelp");
@@ -39,7 +39,7 @@ namespace UMA.Editors
             serializedObject.Update();
 
             GUILayout.Space(10);
-            State.boolValue = EditorGUILayout.Toggle("State", State.boolValue);
+            State.boolValue = EditorGUILayout.Toggle("Renderers Enabled", State.boolValue);
             showHelp.boolValue = EditorGUILayout.Toggle("Show Help", showHelp.boolValue);
             if (showHelp.boolValue)
             {

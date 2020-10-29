@@ -17,7 +17,8 @@ namespace UMA.CharacterSystem
 		public List<RendererElement> RendererElements = new List<RendererElement>();
 
         bool lastState;
-        public bool state;
+
+        public bool RenderersEnabled = true;
 
 		private DynamicCharacterAvatar avatar;
 		private UMAData.UMARecipe umaRecipe = new UMAData.UMARecipe();
@@ -42,16 +43,16 @@ namespace UMA.CharacterSystem
 
         private void Update()
         {
-            if (state != lastState)
+            if (RenderersEnabled != lastState)
             {
-                lastState = state;
+                lastState = RenderersEnabled;
                 avatar.BuildCharacter();
             }
         }
 
 		void CharacterBegun(UMAData umaData)
 		{
-            if (!state) return;
+            if (!RenderersEnabled) return;
 			//If mesh is not dirty then we haven't changed slots.
 			if (!umaData.isMeshDirty)
 				return;
