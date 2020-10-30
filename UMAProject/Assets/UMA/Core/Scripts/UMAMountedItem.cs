@@ -23,14 +23,19 @@ public class UMAMountedItem : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        Initialize();
+    }
+
+    private bool Initialize()
+    {
         avatar = GetComponentInParent<DynamicCharacterAvatar>();
         if (avatar == null)
         {
             if (Debug.isDebugBuild)
             {
-                Debug.LogError("Unable to find parent for mounted item on bone: "+BoneName);
+                Debug.LogError("Unable to find parent for mounted item on bone: " + BoneName);
             }
-            return;
+            return false;
         }
         avatar.CharacterUpdated.AddListener(new UnityAction<UMAData>(CharacterUpdated));
 #if UNITY_EDITOR
@@ -40,12 +45,12 @@ public class UMAMountedItem : MonoBehaviour
             SetMountTransform();
         }
 #endif
+        return true;
     }
 
 #if UNITY_EDITOR
     public Transform FindOrCreateMountpoint()
     {
-        Debug.Log("setting mountpoint");
         Transform BoneTransform = SkeletonTools.RecursiveFindBone(avatar.gameObject.transform, BoneName);
         return CreateMountpoint(BoneTransform, avatar.gameObject.layer);
     }
@@ -89,9 +94,17 @@ public class UMAMountedItem : MonoBehaviour
 
     void LateUpdate()
     {
-        // get the worldpos/orientation of the mounted object.
-        // copy to this object.
-        SetMountTransform();
+        if (avatar == null)
+        {
+            if (!Initialize())
+                return;
+        }
+        if (MountPoint != null)
+        {
+            // get the worldpos/orientation of the mounted object.
+            // copy to this object.
+            SetMountTransform();
+        }
     }
 
     private void SetMountTransform()

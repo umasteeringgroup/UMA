@@ -71,8 +71,6 @@ namespace UMA
         public static Dictionary<string, AssetItem> GuidTypes = new Dictionary<string, AssetItem>();
 #endregion
 #region Fields
-        public bool AutoUpdate;
-
         protected Dictionary<System.Type, System.Type> TypeToLookup = new Dictionary<System.Type, System.Type>()
         {
         { (typeof(SlotDataAsset)),(typeof(SlotDataAsset)) },
@@ -166,7 +164,55 @@ namespace UMA
                 return theIndexer;
             }
         }
-  
+
+#if UNITY_EDITOR
+        public struct IndexBackup
+        {
+            public DateTime BackupTime;
+            public AssetItem[] Items;
+        }
+
+        public string Backup()
+        {
+            try
+            {
+                RepairAndCleanup();
+
+                IndexBackup backup = new IndexBackup();
+                backup.BackupTime = DateTime.Now;
+                backup.Items = UpdateSerializedList().ToArray();
+
+                return JsonUtility.ToJson(backup);
+            }
+            catch(Exception ex)
+            {
+                Debug.LogException(ex);
+                return "";
+            }
+        }
+
+        public bool Restore(string s, bool quiet=false)
+        {
+            try
+            {
+                IndexBackup restore = JsonUtility.FromJson<IndexBackup>(s);
+                SerializedItems.Clear();
+                SerializedItems.AddRange(restore.Items);
+                if (!quiet) EditorUtility.DisplayProgressBar("Restore", "Restoring index", 0.33f);
+                UpdateSerializedDictionaryItems();
+                if (!quiet) EditorUtility.DisplayProgressBar("Restore", "Restoring index", 0.66f);
+                RepairAndCleanup();
+                if (!quiet) EditorUtility.DisplayProgressBar("Restore", "Restoring index", 1.0f);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+                return false;
+            }
+        }
+#endif
+
         public Type GetRuntimeType(Type type)
         {
             return TypeToLookup[type];
@@ -214,10 +260,6 @@ namespace UMA
 #if UNITY_EDITOR
         public void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
-            if (!AutoUpdate)
-            {
-                return;
-            }
             bool changed = false;
 
             // Build a dictionary of the items by path.

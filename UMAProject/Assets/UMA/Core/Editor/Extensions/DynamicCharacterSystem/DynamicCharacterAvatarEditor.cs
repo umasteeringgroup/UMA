@@ -11,10 +11,18 @@ namespace UMA.CharacterSystem.Editors
 	[CustomEditor(typeof(DynamicCharacterAvatar), true)]
 	public partial class DynamicCharacterAvatarEditor : Editor
 	{
+		[Serializable]
+		public class UMAPreset
+        {
+			public UMAPredefinedDNA PredefinedDNA;
+			public DynamicCharacterAvatar.WardrobeRecipeList DefaultWardrobe;
+			public DynamicCharacterAvatar.ColorValueList DefaultColors;
+		}
+
 		/// <summary>
 		/// Utility class to store data about active animator.
 		/// </summary>
-		public class AnimatorState
+		/*public class AnimatorState
 		{
 			private int[] stateHashes = new int[0];
 			private float[] stateTimes = new float[0];
@@ -89,7 +97,7 @@ namespace UMA.CharacterSystem.Editors
 					}
 				}
 			}
-		}
+		} */
 		
 		public static bool showHelp = false;
 		public static bool showWardrobe = false;
@@ -230,37 +238,64 @@ namespace UMA.CharacterSystem.Editors
             {
 				BeginVerticalPadded();
 
-			/*	
-				if (GUILayout.Button("Build Character Now"))
-				{
-					GenerateSingleUMA();
-				}
-			*/
-
+				EditorGUILayout.BeginHorizontal();
+				if (GUILayout.Button("Save Preset"))
+                {
+					string fileName = EditorUtility.SaveFilePanel("Save Preset", "", "DCAPreset", "umapreset");
+					if (!string.IsNullOrEmpty(fileName))
+                    {
+						try
+						{
+							UMAPreset prs = new UMAPreset();
+							prs.DefaultColors = thisDCA.characterColors;
+							prs.PredefinedDNA = thisDCA.predefinedDNA;
+							prs.DefaultWardrobe = thisDCA.preloadWardrobeRecipes;
+							string presetstring = JsonUtility.ToJson(prs);
+							System.IO.File.WriteAllText(fileName, presetstring);
+						}
+						catch(Exception ex)
+                        {
+							Debug.LogException(ex);
+							EditorUtility.DisplayDialog("Error", "Error writing preset file: " + ex.Message,"OK");
+                        }
+                    }
+                }
+				if (GUILayout.Button("Load Preset"))
+                {
+					string fileName = EditorUtility.OpenFilePanel("Load Preset", "", "umapreset");
+					if (!string.IsNullOrEmpty(fileName))
+                    {
+						try
+                        {
+							string presetstring = System.IO.File.ReadAllText(fileName);
+							UMAPreset prs = JsonUtility.FromJson<UMAPreset>(presetstring);
+							thisDCA.preloadWardrobeRecipes = prs.DefaultWardrobe;
+							thisDCA.predefinedDNA = prs.PredefinedDNA;
+							thisDCA.characterColors = prs.DefaultColors;
+							UpdateCharacter();
+                        }
+						catch(Exception ex)
+                        {
+							Debug.LogException(ex);
+							EditorUtility.DisplayDialog("Error", "Error writing preset file: " + ex.Message, "OK");
+						}
+					}
+                }
+				EditorGUILayout.EndHorizontal();
 				EditorGUI.BeginChangeCheck();
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("editorTimeGeneration"));
 				if (EditorGUI.EndChangeCheck())
                 {
-					serializedObject.ApplyModifiedProperties();
-					if (thisDCA.gameObject.scene != default)
-					{
-						if (thisDCA.editorTimeGeneration)
-						{
-							GenerateSingleUMA();
-						}
-						else
-						{
-							CleanupGeneratedData();
-						}
-					}
-				}
+                    serializedObject.ApplyModifiedProperties();
+                    UpdateCharacter();
+                }
 
-				//******************************************************************
-				// Preload wardrobe
-				//Other DCA propertyDrawers
-				//in order for the "preloadWardrobeRecipes" prop to properly check if it can load the recipies it gets assigned to it
-				//it needs to know that its part of this DCA
-				SerializedProperty thisPreloadWardrobeRecipes = serializedObject.FindProperty("preloadWardrobeRecipes");
+                //******************************************************************
+                // Preload wardrobe
+                //Other DCA propertyDrawers
+                //in order for the "preloadWardrobeRecipes" prop to properly check if it can load the recipies it gets assigned to it
+                //it needs to know that its part of this DCA
+                SerializedProperty thisPreloadWardrobeRecipes = serializedObject.FindProperty("preloadWardrobeRecipes");
 				Rect pwrCurrentRect = EditorGUILayout.GetControlRect(false, _wardrobePropDrawer.GetPropertyHeight(thisPreloadWardrobeRecipes, GUIContent.none));
 				_wardrobePropDrawer.OnGUI(pwrCurrentRect, thisPreloadWardrobeRecipes, new GUIContent(thisPreloadWardrobeRecipes.displayName));
 				if (showHelp)
@@ -800,7 +835,22 @@ namespace UMA.CharacterSystem.Editors
 				thisDCA.umaData = null;
 				thisDCA.ClearSlots();
 			}
-		}
+
+            void UpdateCharacter()
+            {
+                if (thisDCA.gameObject.scene != default)
+                {
+                    if (thisDCA.editorTimeGeneration)
+                    {
+                        GenerateSingleUMA();
+                    }
+                    else
+                    {
+                        CleanupGeneratedData();
+                    }
+                }
+            }
+        }
 
         private void AddSingleDNA(string theDna)
         {

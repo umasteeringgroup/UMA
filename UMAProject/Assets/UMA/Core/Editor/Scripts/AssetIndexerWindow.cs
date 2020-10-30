@@ -145,7 +145,7 @@ namespace UMA.Controls
 			// the menu item is marked as selected if it matches the current value of m_Color
 			menu.AddItem(new GUIContent(menuPath), false, function, o);
 		}
-
+ 
 		private void SetupMenus()
 		{
 
@@ -222,6 +222,53 @@ namespace UMA.Controls
 				UAI.Clear();
 				m_Initialized = false;
 				Repaint();
+			});
+
+
+			AddMenuItemWithCallback(FileMenu, "Backup Index", () =>
+			{
+				// string index = UAI.Backup();
+				string filename = EditorUtility.SaveFilePanel("Backup Index", "", "librarybackup", "bak");
+				if (!string.IsNullOrEmpty(filename))
+				{
+					try
+					{
+						string backup = UAI.Backup();
+						System.IO.File.WriteAllText(filename, backup);
+						backup = "";
+					}
+					catch (Exception ex)
+                    {
+						Debug.LogException(ex);
+						EditorUtility.DisplayDialog("Error", "Error writing backup: " + ex.Message,"OK");
+                    }
+				}
+			});
+
+			AddMenuItemWithCallback(FileMenu, "Restore Index", () =>
+			{
+				string filename = EditorUtility.OpenFilePanel("Restore", "", "bak");
+				if (!string.IsNullOrEmpty(filename))
+				{
+					try
+					{
+						string backup = System.IO.File.ReadAllText(filename);
+						EditorUtility.DisplayProgressBar("Restore", "Restoring index", 0);
+						if (!UAI.Restore(backup))
+						{
+							EditorUtility.DisplayDialog("Error", "Unable to restore index. Please review the console for more information.", "OK");
+						}
+						backup = "";
+					}
+					catch (Exception ex)
+					{
+						Debug.LogException(ex);
+						EditorUtility.DisplayDialog("Error", "Error writing backup: " + ex.Message, "OK");
+					}
+					EditorUtility.ClearProgressBar();
+					m_Initialized = false;
+					Repaint();
+				}
 			});
 
 #if UMA_ADDRESSABLES

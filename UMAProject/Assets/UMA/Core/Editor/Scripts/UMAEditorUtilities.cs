@@ -33,6 +33,7 @@ namespace UMA
 		public const string ConfigToggle_IncludeRecipes = "UMA_SHAREDGROUP_INCLUDERECIPES";
 		public const string ConfigToggle_IncludeOther = "UMA_SHAREDGROUP_INCLUDEOTHERINDEXED";
 		public const string ConfigToggle_StripUmaMaterials = "UMA_SHAREDGROUP_STRIPUMAMATERIALS";
+		public const string ConfigToggle_PostProcessAllAssets = "UMA_POSTPROCESS_ALL_ASSETS";
 		private static string DNALocation = "UMA/";
 
         static UMAEditorUtilities()
@@ -128,7 +129,7 @@ namespace UMA
                     EditorApplication.projectWindowItemOnGUI -= DrawItems;
             }
 
-
+			ConfigToggle(ConfigToggle_PostProcessAllAssets, "Postprocess All Assets", "When assets in unity are moved, this will fix their paths in the index. This can be very slow.", false);
 
 			EditorGUI.BeginChangeCheck();
 			EditorGUILayout.Space();
@@ -227,6 +228,10 @@ namespace UMA
         {
 			return GetConfigValue(ConfigToggle_StripUmaMaterials, false);
         }
+		public static bool PostProcessAllAssets()
+		{
+			return GetConfigValue(ConfigToggle_PostProcessAllAssets, false);
+		}
 
 		public static bool IsAddressable()
 		{
