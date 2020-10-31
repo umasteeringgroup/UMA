@@ -3330,7 +3330,8 @@ namespace UMA.CharacterSystem
                 FixCrossCompatibleSlots(hiddenSlots);
             }
 
-            ProcessHiddenSlots(hiddenSlots, HideTags);
+            // Wildcard Slots -- renamed
+            PostProcessSlots(hiddenSlots, HideTags);
 
             foreach (UMAWardrobeRecipe umr in Replaces)
             {
@@ -3391,6 +3392,7 @@ namespace UMA.CharacterSystem
             {
                 UpdateSameRace();
             }
+
             ApplyPredefinedDNA();
 			umaData.KeepAvatar = keepAvatar;
             //But the ExpressionPlayer needs to be Initialized AFTER Load
@@ -3520,6 +3522,7 @@ namespace UMA.CharacterSystem
             RemoveHiddenSlots(hiddenSlots);
         }
 
+
         void ReplaceSlot(UMAWardrobeRecipe Replacer)
         {
             //we need to check if *this* recipe is directly or only cross compatible with this race
@@ -3557,21 +3560,57 @@ namespace UMA.CharacterSystem
             }
         }
 
-        void ProcessHiddenSlots(List<string> hiddenSlots, List<string> hideTags = null)
+        /// <summary>
+        /// JRM - Renamed from ProcessHiddenSlots for Wildcards
+        ///     - This is the only function changed for Wildcards
+        /// </summary>
+        /// <param name="hiddenSlots"></param>
+        /// <param name="hideTags"></param>
+        void PostProcessSlots(List<string> hiddenSlots, List<string> hideTags = null)
         {
+            List<SlotData> WildCards = new List<SlotData>();
+
             List<SlotData> NewSlots = new List<SlotData>();
             foreach (SlotData sd in umaData.umaRecipe.slotDataList)
             {
-                if (sd == null)
+                if (sd == null || sd.asset == null)
                     continue;
                 if (sd.HasTag(hideTags))
                     continue;
                 if (!hiddenSlots.Contains(sd.asset.slotName))
                 {
-                    if (hideTags != null)
+                    if (sd.asset.isWildCardSlot)
+                    {
+                        if (sd.tags != null)
+                        {
+                            bool MatchedRace = false;
+                            bool MustMatch = false;
+
+                            foreach (string s in sd.tags)
+                            {
+                               if (s.StartsWith("MatchesRace:"))
+                                {
+                                    MustMatch = true;
+                                    if (s.Contains(":"+activeRace.racedata.name))
+                                    {
+                                        MatchedRace = true;
+                                    }
+                                }
+                            }
+                            if (MustMatch == false || MatchedRace == true)
+                            {
+                                WildCards.Add(sd);
+                            }
+                        }
+                    }
+                    else
+                    {
                         NewSlots.Add(sd);
+                    }
                 }
             }
+
+            
             umaData.umaRecipe.slotDataList = NewSlots.ToArray();
         }
 

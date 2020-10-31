@@ -1667,14 +1667,17 @@ namespace UMA
 				if (type == TypeToLookup[type])
 				{
                 	Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(type);
-                	foreach (AssetItem ai in TypeDic.Values)
-                	{
-                        if (ai.IsAddressable)
+                    if (TypeDic != null)
+                    {
+                        foreach (AssetItem ai in TypeDic.Values)
                         {
-                            ai._SerializedItem = null;
+                            if (ai.IsAddressable)
+                            {
+                                ai._SerializedItem = null;
+                            }
+                            SerializedItems.Add(ai);
                         }
-                      	SerializedItems.Add(ai);
-                	}
+                    }
 				}
             }
             return SerializedItems;

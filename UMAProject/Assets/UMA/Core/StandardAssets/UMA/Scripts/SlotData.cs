@@ -19,6 +19,12 @@ namespace UMA
 		/// Adjusts the resolution of slot overlays.
 		/// </summary>
 		public float overlayScale = 1.0f;
+
+		/// <summary>
+		/// This instance specific tags. Loaded from the recipe, or from the asset at assignment time.
+		/// </summary>
+		public string[] tags;
+
 		/// <summary>
 		/// 
 		/// </summary>
@@ -90,11 +96,13 @@ namespace UMA
 			this.asset = asset;
 			if (asset)
 			{
+				tags = asset.tags;
 				overlayScale = asset.overlayScale;
 				rendererAsset = asset.RendererAsset;
 			}
 			else
 			{
+				tags = new string[0];
 				overlayScale = 1.0f;
 			}
 		}
@@ -105,15 +113,15 @@ namespace UMA
 			rendererAsset = null;
 		}
 
-		public bool HasTag(List<string> tags)
+		public bool HasTag(List<string> tagList)
 		{
-			if (tags == null || asset.tags == null)
+			if (tagList == null || tags == null)
 				return false;
 			// this feels like it would be better in a dictionary or hashtable
 			// but I doubt there will be more than 1 tag, so we will go with this
-			foreach (string s in asset.tags)
+			foreach (string s in tags)
 			{
-				if (tags.Contains(s)) return true;
+				if (tagList.Contains(s)) return true;
 			}
 			return false;
 		}
@@ -122,11 +130,11 @@ namespace UMA
 
 		public bool HasTag(string tag)
 		{
-			if (asset.tags == null)
+			if (tags == null)
 				return false;
 			// this feels like it would be better in a dictionary or hashtable
 			// but I doubt there will be more than 1 tag, so we will go with this
-			foreach(string s in asset.tags)
+			foreach(string s in tags)
 			{
 				if (s == tag) return true;
 			}
@@ -184,10 +192,6 @@ namespace UMA
 			return res;
 		}
 
-	/*	public int GetTextureChannelCount(UMAGeneratorBase generator)
-		{
-			return asset.GetTextureChannelCount(generator);
-		} */
 
 		public bool RemoveOverlay(params string[] names)
 		{
@@ -348,6 +352,12 @@ namespace UMA
 		internal bool Validate()
 		{
 			bool valid = true;
+
+			if (tags == null)
+            {
+				tags = new string[0];
+            }
+
 			if (asset == null)
 				return true;
 

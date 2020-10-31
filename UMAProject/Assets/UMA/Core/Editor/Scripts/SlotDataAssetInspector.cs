@@ -26,6 +26,17 @@ namespace UMA.Editors
         	CustomAssetUtility.CreateAsset<SlotDataAsset>("", true, "Custom");
         }
 
+		[MenuItem("Assets/Create/UMA/Core/Wildcard Slot Asset")]
+		public static void CreateWildcardSlotAssetMenuItem()
+		{
+			SlotDataAsset wildcard = CustomAssetUtility.CreateAsset<SlotDataAsset>("", true, "Wildcard",true);
+			wildcard.isWildCardSlot = true;
+			wildcard.slotName = "WildCard";
+			EditorUtility.SetDirty(wildcard);
+			AssetDatabase.SaveAssets();
+			EditorUtility.DisplayDialog("UMA", "Wildcard slot created. You should first change the SlotName in the inspector, and then add it to the global library or to a scene library", "OK");
+		}
+
 		private void OnDestroy()
 		{
 			// AssetDatabase.SaveAssets();
@@ -66,7 +77,12 @@ namespace UMA.Editors
 
 			EditorGUI.BeginChangeCheck();
 			EditorGUILayout.DelayedTextField(slotName);
-			Editor.DrawPropertiesExcluding(serializedObject, new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "DNAApplied", "CharacterCompleted", "_slotDNALegacy","tags" });
+			if ((target as SlotDataAsset).isWildCardSlot)
+			{
+				EditorGUILayout.HelpBox("This is a wildcard slot", MessageType.Info);
+			}
+			
+			Editor.DrawPropertiesExcluding(serializedObject, new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "DNAApplied", "CharacterCompleted", "_slotDNALegacy","tags","isWildCard" });
 			tagList.DoLayoutList();
 			
 			eventsFoldout = EditorGUILayout.Foldout(eventsFoldout, "Slot Events");
@@ -97,18 +113,20 @@ namespace UMA.Editors
 				}
 			}
 
-            GUILayout.Space(20);
-            Rect updateDropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
-            GUI.Box(updateDropArea, "Drag SkinnedMeshRenderers here to update the slot meshData.");
-            GUILayout.Space(10);
-            UpdateSlotDropAreaGUI(updateDropArea);
+			if (!(target as SlotDataAsset).isWildCardSlot)
+			{
+				GUILayout.Space(20);
+				Rect updateDropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
+				GUI.Box(updateDropArea, "Drag SkinnedMeshRenderers here to update the slot meshData.");
+				GUILayout.Space(10);
+				UpdateSlotDropAreaGUI(updateDropArea);
 
-			GUILayout.Space(10);
-			Rect boneDropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
-			GUI.Box(boneDropArea, "Drag Bone Transforms here to add their names to the Animated Bone Names.\nSo the power tools will preserve them!");
-			GUILayout.Space(10);
-			AnimatedBoneDropAreaGUI(boneDropArea);
-
+				GUILayout.Space(10);
+				Rect boneDropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
+				GUI.Box(boneDropArea, "Drag Bone Transforms here to add their names to the Animated Bone Names.\nSo the power tools will preserve them!");
+				GUILayout.Space(10);
+				AnimatedBoneDropAreaGUI(boneDropArea);
+			}
 			serializedObject.ApplyModifiedProperties();
 			if (EditorGUI.EndChangeCheck())
 			{

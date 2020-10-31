@@ -99,6 +99,9 @@ namespace UMA
 		[Tooltip("Optional DNA converter specific to the slot. Accepts a DNAConverterController asset or a legacy DNAConverterBehaviour prefab.")]
 		private DNAConverterField _slotDNA = new DNAConverterField();
 
+		[Tooltip("If isWildCardSlot = true, then the overlays on this slot are applied to any slot or overlay with a matching tag when the recipe is built. This is used in Wardrobe Recipes to apply overlays to other slots.")]
+		public bool isWildCardSlot;
+
 		//UMA 2.8 FixDNAPrefabs: I'm putting the required property for this here because theres no properties anywhere else!
 		public IDNAConverter slotDNA
 		{

@@ -87,32 +87,27 @@ namespace UMA.PoseTools
                 {
 					if (Debug.isDebugBuild)
                     {
-						Debug.Log("Jaw bone not found, but jaw override is requested.");
+						Debug.Log("Jaw bone not found, but jaw override is requested. This will be ignored in a production build.");
                     }
+					overrideMecanimJaw = false;
 					return;
                 }
 				if (overrideMecanimNeck && neck == null)
 				{
 					if (Debug.isDebugBuild)
 					{
-						Debug.Log("Neck bone not found, but neck override is requested.");
+						Debug.Log("Neck bone not found, but neck override is requested. This will be ignored in a production build.");
 					}
+					overrideMecanimNeck = false;
 					return;
 				}
 				if (overrideMecanimHead && head == null)
 				{
 					if (Debug.isDebugBuild)
 					{
-						Debug.Log("Head bone not found, but head override is requested.");
+						Debug.Log("Head bone not found, but head override is requested. This will be ignored in a production build.");
 					}
-					return;
-				}
-				if (overrideMecanimJaw && jaw == null)
-				{
-					if (Debug.isDebugBuild)
-					{
-						Debug.Log("Jaw bone not found, but jaw override is requested.");
-					}
+					overrideMecanimHead = false;
 					return;
 				}
 				initialized = true;

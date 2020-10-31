@@ -11,6 +11,9 @@ DynamicCharacterAvatar
 UMAMountedItem
   New object to make mounting simpler. Add this to an object you want to make mountable. Specify the bone you want to attach it to, and any offset/rotation. Will automatically attach and process, and survive rebuilds.
 
+SlotData
+  New: Wildcard slots. This is a type of utility slots that can be added to recipes, which allows you to place overlays onto slots (or other overlays) based on tag. So you can place an 
+       overlay onto a "Torso" without knowing the actual slot ID, just the tag. This allows you to reuse recipes for slots that have the same UV coordinates.
 Slotbuilder
   Made blender slot rotation fixup optional.
 

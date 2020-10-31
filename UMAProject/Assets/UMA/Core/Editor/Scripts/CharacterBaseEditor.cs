@@ -459,6 +459,79 @@ namespace UMA.Editors
 		}
 	}
 
+	public static class TagsEditor
+	{
+		const string focusctrl = "TheButtonThatNeedsToFocusSoTheTextInTheTextBoxDisappears";
+		public static string DoTagsGUI(ref string[] tags, ref bool Changed, string TempTag)
+        {
+			GUIHelper.BeginVerticalPadded(10, new Color(0.65f, 0.675f, 1f));
+			GUILayout.Label("Tags");
+			//EditorGUILayout.HelpBox("Tags GUI here...", MessageType.Info);
+			if (tags == null)
+            {
+				tags = new string[0];
+            }
+			GUILayout.BeginHorizontal();
+			TempTag = EditorGUILayout.TextField(TempTag, GUILayout.ExpandWidth(true));
+			GUI.SetNextControlName(focusctrl);
+			if (GUILayout.Button("X",GUILayout.Width(16)))
+            {
+				TempTag = "";
+				GUI.FocusControl(focusctrl);
+            }
+			if (GUILayout.Button("Add Tag"))
+            {
+				if (!string.IsNullOrWhiteSpace(TempTag))
+				{
+					var foos = new List<string>(tags);
+					foos.Add(TempTag);
+					tags = foos.ToArray();
+					Changed = true;
+				}
+			}
+			GUILayout.EndHorizontal();
+
+			DoTagsDisplay(ref tags, ref Changed);
+			GUIHelper.EndVerticalPadded(10);
+			return TempTag;
+		}
+		public static void DoWildcardTagsGUI(ref string[] tags, ref bool Changed)
+		{
+			EditorGUILayout.HelpBox("Wildcard Tags GUI here...",MessageType.Info);
+			if (tags == null)
+			{
+				tags = new string[0];
+			}
+			DoTagsDisplay(ref tags, ref Changed);
+			// select race, or any
+			// enter tag, press button to add.
+			// show all tags, with an X at the end to delete it.
+		}
+
+		public static int DoTagsDisplay(ref string[] tags, ref bool changed)
+        {
+			int deleted = -1;
+
+			for (int i=0;i < tags.Length; i++)
+			{
+				GUILayout.BeginHorizontal();
+				GUILayout.Label(tags[i], EditorStyles.textField, GUILayout.ExpandWidth(true));
+				if (GUILayout.Button("X", GUILayout.Width(16)))
+                {
+					deleted = i;
+                }
+				GUILayout.EndHorizontal();
+			}
+			if (deleted > -1)
+            {
+				var foos = new List<string>(tags);
+				foos.RemoveAt(deleted);
+				tags = foos.ToArray();
+				changed = true;
+			}
+			return -1;
+        }
+	}
 
 	public class SlotMasterEditor
 	{
@@ -980,8 +1053,11 @@ namespace UMA.Editors
 		}
 	}
 
+
 	public class SlotEditor
 	{
+		public static Dictionary<string, string> TemporarySlotTags = new Dictionary<string, string>();
+
 		private readonly UMAData.UMARecipe _recipe;
 		private readonly SlotData _slotData;
 		private readonly List<OverlayData> _overlayData = new List<OverlayData>();
@@ -1094,6 +1170,22 @@ namespace UMA.Editors
 				}
 				GUILayout.EndHorizontal();
 			}
+
+			#region TAGS EDITOR
+			if (_slotData.asset.isWildCardSlot)
+            {
+				TagsEditor.DoWildcardTagsGUI(ref _slotData.tags, ref changed);
+
+			}
+			else
+            {
+				if (!TemporarySlotTags.ContainsKey(_slotData.slotName))
+                {
+					TemporarySlotTags.Add(_slotData.slotName, "");
+                }
+				TemporarySlotTags[_slotData.slotName] = TagsEditor.DoTagsGUI(ref _slotData.tags, ref changed, TemporarySlotTags[_slotData.slotName]);
+			}
+			#endregion
 
 			if (sharedOverlays)
 			{
