@@ -9,6 +9,8 @@ namespace UMA.Editors
 	[CanEditMultipleObjects]
 	public class SlotDataAssetInspector : Editor
 	{
+		static string[] RegularSlotFields = new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "DNAApplied", "CharacterCompleted", "_slotDNALegacy","tags","isWildCardSlot","Races"};
+		static string[] WildcardSlotFields = new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "tags", "isWildCardSlot", "Races", "_rendererAsset", "maxLOD", "useAtlasOverlay", "overlayScale", "animatedBoneNames", "_slotDNA", "meshData", "subMeshIndex", };
 		SerializedProperty slotName;
 		SerializedProperty CharacterBegun;
 		SerializedProperty SlotAtlassed;
@@ -51,13 +53,20 @@ namespace UMA.Editors
 			CharacterCompleted = serializedObject.FindProperty("CharacterCompleted");
 			MaxLOD = serializedObject.FindProperty("maxLOD");
 		}
-		private void InitTagList()
+		private void InitTagList(SlotDataAsset _slotDataAsset)
 		{
 			var HideTagsProperty = serializedObject.FindProperty("tags");
 			tagList = new ReorderableList(serializedObject, HideTagsProperty, true, true, true, true);
 			tagList.drawHeaderCallback = (Rect rect) => 
 			{
-				EditorGUI.LabelField(rect, "Tags");
+				if (_slotDataAsset.isWildCardSlot)
+				{
+					EditorGUI.LabelField(rect, "Match the following tags:");
+				}
+				else
+				{
+					EditorGUI.LabelField(rect, "Tags");
+				}
 			};
 			tagList.drawElementCallback = (Rect rect, int index, bool isActive, bool isFocused) => 
 			{
@@ -69,9 +78,10 @@ namespace UMA.Editors
 		}
 		public override void OnInspectorGUI()
         {
+			SlotDataAsset _slotDataAsset = target as SlotDataAsset;
 			if (!tagListInitialized)
 			{
-				InitTagList();
+				InitTagList(_slotDataAsset);
 			}
 			serializedObject.Update();
 
@@ -82,15 +92,22 @@ namespace UMA.Editors
 				EditorGUILayout.HelpBox("This is a wildcard slot", MessageType.Info);
 			}
 			
-			Editor.DrawPropertiesExcluding(serializedObject, new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "DNAApplied", "CharacterCompleted", "_slotDNALegacy","tags","isWildCard" });
+			if (_slotDataAsset.isWildCardSlot)
+				Editor.DrawPropertiesExcluding(serializedObject,WildcardSlotFields);
+			else
+				Editor.DrawPropertiesExcluding(serializedObject, RegularSlotFields);
+			GUILayout.Space(10);
 			tagList.DoLayoutList();
 			
 			eventsFoldout = EditorGUILayout.Foldout(eventsFoldout, "Slot Events");
 			if (eventsFoldout)
 			{
 				EditorGUILayout.PropertyField(CharacterBegun);
-				EditorGUILayout.PropertyField(SlotAtlassed);
-				EditorGUILayout.PropertyField(DNAApplied);
+				if (!_slotDataAsset.isWildCardSlot)
+				{
+					EditorGUILayout.PropertyField(SlotAtlassed);
+					EditorGUILayout.PropertyField(DNAApplied);
+				}
 				EditorGUILayout.PropertyField(CharacterCompleted);
 			}
 

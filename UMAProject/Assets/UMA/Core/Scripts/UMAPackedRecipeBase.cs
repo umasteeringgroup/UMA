@@ -197,6 +197,7 @@ namespace UMA
 			public int copyIdx = -1;
 			public PackedOverlayDataV3[] overlays;
 			public string[] Tags; // Any recipe specific tags.
+			public string[] Races;
 		}
 
 		[System.Serializable]
@@ -612,6 +613,7 @@ namespace UMA
 					tempPackedSlotData.id = umaRecipe.slotDataList[i].asset.slotName;
 					tempPackedSlotData.scale = Mathf.FloorToInt(umaRecipe.slotDataList[i].overlayScale * 100);
 					tempPackedSlotData.Tags = umaRecipe.slotDataList[i].tags;
+					tempPackedSlotData.Races = umaRecipe.slotDataList[i].Races;
 
 					bool copiedOverlays = false;
 					for (int i2 = 0; i2 < i; i2++)
@@ -929,6 +931,10 @@ namespace UMA
                     {
 						tempSlotData.tags = packedSlot.Tags;
 					}
+					if (packedSlot.Races != null)
+                    {
+						tempSlotData.Races = packedSlot.Races;
+                    }
 					tempSlotData.overlayScale = packedSlot.scale * 0.01f;
                     umaRecipe.slotDataList[i] = tempSlotData;
 

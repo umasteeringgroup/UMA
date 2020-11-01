@@ -237,7 +237,11 @@ namespace UMA.CharacterSystem.Editors
 					var recipe = thisDCA.preloadWardrobeRecipes.recipes[i];
                     if (recipe != null)
                     {
-                        string recipeslot = recipe._recipe.wardrobeSlot;
+                        string recipeslot = "unknown";
+                        if (recipe._recipe != null)
+                        {
+                            recipeslot = recipe._recipe.wardrobeSlot;
+                        }
                         recipeName = thisElement.FindPropertyRelative("_recipeName").stringValue;
 
                         recipeIsLive = UMAContext.Instance.HasRecipe(recipeName);

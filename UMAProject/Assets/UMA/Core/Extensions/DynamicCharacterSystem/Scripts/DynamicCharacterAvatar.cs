@@ -3568,7 +3568,7 @@ namespace UMA.CharacterSystem
         /// <param name="hideTags"></param>
         void PostProcessSlots(List<string> hiddenSlots, List<string> hideTags = null)
         {
-            List<SlotData> WildCards = new List<SlotData>();
+            List<SlotData> WildCards = null;// = new List<SlotData>();
 
             List<SlotData> NewSlots = new List<SlotData>();
             foreach (SlotData sd in umaData.umaRecipe.slotDataList)
@@ -3581,26 +3581,26 @@ namespace UMA.CharacterSystem
                 {
                     if (sd.asset.isWildCardSlot)
                     {
-                        if (sd.tags != null)
+                        if (sd.Races.Length > 0)
                         {
-                            bool MatchedRace = false;
-                            bool MustMatch = false;
-
-                            foreach (string s in sd.tags)
+                            foreach(string s in sd.Races)
                             {
-                               if (s.StartsWith("MatchesRace:"))
+                                if (s == activeRace.racedata.raceName)
                                 {
-                                    MustMatch = true;
-                                    if (s.Contains(":"+activeRace.racedata.name))
-                                    {
-                                        MatchedRace = true;
-                                    }
+                                    // if we have races defined,
+                                    // then only process them if the race matches.
+                                    if (WildCards == null)
+                                        WildCards = new List<SlotData>();
+                                    WildCards.Add(sd);
+                                    break;
                                 }
                             }
-                            if (MustMatch == false || MatchedRace == true)
-                            {
-                                WildCards.Add(sd);
-                            }
+                        }
+                        else
+                        {
+                            if (WildCards == null)
+                                WildCards = new List<SlotData>();
+                            WildCards.Add(sd);
                         }
                     }
                     else
@@ -3610,6 +3610,23 @@ namespace UMA.CharacterSystem
                 }
             }
 
+            /* process newSlots. Add any overlays to the *first* matching slot.*/
+            if (WildCards != null && WildCards.Count > 0)
+            {
+                foreach (SlotData wc in WildCards)
+                {
+                    foreach (SlotData sd in NewSlots)
+                    {
+                        if (sd.tags != null && sd.tags.Length > 0)
+                        {
+                            if (sd.HasTag(wc.tags))
+                            {
+                                sd.AddOverlayList(wc.GetOverlayList());
+                            }
+                        }
+                    }
+                }
+            }
             
             umaData.umaRecipe.slotDataList = NewSlots.ToArray();
         }

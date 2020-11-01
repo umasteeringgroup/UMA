@@ -166,6 +166,9 @@ namespace UMA
 		/// </summary>
 		public string[] tags;
 
+		// Wildcard slot race matches
+		public string[] Races;
+
 		/// <summary>
 		/// Callback event when character update begins.
 		/// </summary>
@@ -259,6 +262,7 @@ namespace UMA
 			subMeshIndex = source.subMeshIndex;
 			slotGroup = source.slotGroup;
 			tags = source.tags;
+			Races = source.Races;
 		}
 	}
 }

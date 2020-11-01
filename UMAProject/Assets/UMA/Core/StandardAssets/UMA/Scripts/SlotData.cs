@@ -25,6 +25,8 @@ namespace UMA
 		/// </summary>
 		public string[] tags;
 
+		public string[] Races;
+
 		/// <summary>
 		/// 
 		/// </summary>
@@ -97,6 +99,7 @@ namespace UMA
 			if (asset)
 			{
 				tags = asset.tags;
+				Races = asset.Races;
 				overlayScale = asset.overlayScale;
 				rendererAsset = asset.RendererAsset;
 			}
@@ -105,6 +108,8 @@ namespace UMA
 				tags = new string[0];
 				overlayScale = 1.0f;
 			}
+			if (Races == null)
+				Races = new string[0];
 		}
 
 		public SlotData()
@@ -126,6 +131,22 @@ namespace UMA
 			return false;
 		}
 
+		public bool HasTag(string[] tagList)
+		{
+			if (tagList == null || tags == null)
+				return false;
+			// this feels like it would be better in a dictionary or hashtable
+			// but I doubt there will be more than 1 tag, so we will go with this
+			foreach (string s in tags)
+			{
+				for(int i=0;i<tagList.Length;i++)
+                {
+					
+					if (tagList[i] == s) return true;
+				}
+			}
+			return false;
+		}
 
 
 		public bool HasTag(string tag)
@@ -189,6 +210,8 @@ namespace UMA
 				}
 			}
 
+			res.Races = Races;
+			res.tags = tags;
 			return res;
 		}
 
@@ -340,6 +363,15 @@ namespace UMA
 				overlayList.Add(overlayData);
 		}
 
+		public void AddOverlayList(List<OverlayData> newOverlays)
+		{
+			if (overlayList == null)
+            {
+				overlayList = new List<OverlayData>();
+            }
+			if (newOverlays != null)
+				overlayList.AddRange(newOverlays);
+		}
 		/// <summary>
 		/// Gets the complete list of overlays.
 		/// </summary>
