@@ -459,6 +459,119 @@ namespace UMA.Editors
 		}
 	}
 
+	public static class TagsEditor
+	{
+		public static string[] RaceNames = null;
+
+		const string focusctrl = "TheButtonThatNeedsToFocusSoTheTextInTheTextBoxDisappears";
+		public static string DoTagsGUI(ref bool Changed, string TempTag, SlotData slotData)
+        {
+			GUIHelper.BeginVerticalPadded(10, new Color(0.65f, 0.675f, 1f));
+			if (slotData.asset.isWildCardSlot)
+			{
+				GUILayout.Label("Match Tags:");
+			}
+			else
+			{
+				GUILayout.Label("Tags");
+			}
+			//EditorGUILayout.HelpBox("Tags GUI here...", MessageType.Info);
+			if (slotData.tags == null)
+            {
+				slotData.tags = new string[0];
+            }
+			if (slotData.Races == null)
+            {
+				slotData.Races = new string[0];
+            }
+			GUILayout.BeginHorizontal();
+			TempTag = EditorGUILayout.TextField(TempTag, GUILayout.ExpandWidth(true));
+			GUI.SetNextControlName(focusctrl);
+			if (GUILayout.Button("X",GUILayout.Width(16)))
+            {
+				TempTag = "";
+				GUI.FocusControl(focusctrl);
+            }
+			if (GUILayout.Button("Add Tag"))
+            {
+				if (!string.IsNullOrWhiteSpace(TempTag))
+				{
+					var tagList = new List<string>(slotData.tags);
+					if (!tagList.Contains(TempTag))
+					{
+						tagList.Add(TempTag);
+						slotData.tags = tagList.ToArray();
+						Changed = true;
+					}
+				}
+			}
+			GUILayout.EndHorizontal();
+
+			DoTagsDisplay(ref slotData.tags, ref Changed);
+			if (slotData.asset.isWildCardSlot)
+            {
+				GUILayout.Space(10);
+				GUILayout.Label("Match Races:");
+				// do the race matches here.
+				if (RaceNames == null)
+                {
+					List<string> theRaceNames = new List<string>();
+					RaceData[] races = UMAContextBase.Instance.GetAllRaces();
+					foreach(RaceData race in races)
+                    {
+						theRaceNames.Add(race.raceName);
+                    }
+					RaceNames = theRaceNames.ToArray();
+                }
+				GUILayout.BeginHorizontal();
+				if (!SlotEditor.SelectedRace.ContainsKey(slotData.slotName))
+					SlotEditor.SelectedRace.Add(slotData.slotName, 0);
+
+				SlotEditor.SelectedRace[slotData.slotName]=EditorGUILayout.Popup(SlotEditor.SelectedRace[slotData.slotName], RaceNames, GUILayout.ExpandWidth(true));
+				if (GUILayout.Button("Add Race"))
+                {
+					// Add the selected race name if it's not already there.
+					string theRace = RaceNames[SlotEditor.SelectedRace[slotData.slotName]];
+					List<string> Races = new List<string>(slotData.Races);
+					if (!Races.Contains(theRace))
+                    {
+						Races.Add(theRace);
+						slotData.Races = Races.ToArray();
+						Changed = true;
+                    }
+                }
+				GUILayout.EndHorizontal();
+
+				DoTagsDisplay(ref slotData.Races, ref Changed);
+			}
+			GUIHelper.EndVerticalPadded(10);
+			return TempTag;
+		}
+
+		public static int DoTagsDisplay(ref string[] tags, ref bool changed)
+        {
+			int deleted = -1;
+
+			for (int i=0;i < tags.Length; i++)
+			{
+				GUILayout.BeginHorizontal();
+				GUILayout.Label(tags[i], EditorStyles.textField, GUILayout.ExpandWidth(true));
+				if (GUILayout.Button("X", GUILayout.Width(16)))
+                {
+					deleted = i;
+                }
+				GUILayout.EndHorizontal();
+			}
+			if (deleted > -1)
+            {
+				var tagList = new List<string>(tags);
+				tagList.RemoveAt(deleted);
+				tags = tagList.ToArray();
+				changed = true;
+			}
+			return -1;
+        }
+	}
 
 	public class SlotMasterEditor
 	{
@@ -980,8 +1093,12 @@ namespace UMA.Editors
 		}
 	}
 
+
 	public class SlotEditor
 	{
+		public static Dictionary<string, string> TemporarySlotTags = new Dictionary<string, string>();
+		public static Dictionary<string, int> SelectedRace = new Dictionary<string, int>();
+
 		private readonly UMAData.UMARecipe _recipe;
 		private readonly SlotData _slotData;
 		private readonly List<OverlayData> _overlayData = new List<OverlayData>();
@@ -1094,6 +1211,14 @@ namespace UMA.Editors
 				}
 				GUILayout.EndHorizontal();
 			}
+
+			#region TAGS EDITOR
+			if (!TemporarySlotTags.ContainsKey(_slotData.slotName))
+			{
+				TemporarySlotTags.Add(_slotData.slotName, "");
+			}
+			TemporarySlotTags[_slotData.slotName] = TagsEditor.DoTagsGUI(ref changed, TemporarySlotTags[_slotData.slotName],_slotData);
+			#endregion
 
 			if (sharedOverlays)
 			{
@@ -1322,6 +1447,7 @@ namespace UMA.Editors
 
 		private void BuildColorEditors()
 		{
+			_overlayData.Validate();
 			_colors = new ColorEditor[_overlayData.colorData.channelMask.Length * 2];
 
 			for (int i = 0; i < _overlayData.colorData.channelMask.Length; i++)
@@ -1405,34 +1531,39 @@ namespace UMA.Editors
 				GUILayout.EndHorizontal();
 			}
 
-			if ((_overlayData.asset.material.name != _slotData.asset.material.name))
-			{
-				if (_overlayData.asset.material.channels.Length == _slotData.asset.material.channels.Length)
-				{
-					EditorGUILayout.HelpBox("Material " + _overlayData.asset.material.name + " does not match slot material: " + _slotData.asset.material.name, MessageType.Error);
-					if (GUILayout.Button("Copy Slot Material to Overlay"))
-					{
-						_overlayData.asset.material = _slotData.asset.material;
-						EditorUtility.SetDirty(_overlayData.asset);
-						AssetDatabase.SaveAssets();
-					}
-				}
-				else
-				{
-					EditorGUILayout.HelpBox("Material " + _overlayData.asset.material.name + " does not match slot material: " + _slotData.asset.material.name + " and Channel count is not the same. Overlay must be removed or fixed manually", MessageType.Error);
-				}
-				if (GUILayout.Button("Select Slot in Project"))
-				{
-					// find the asset.
-					// select it in the project.
-					Selection.activeObject = _slotData.asset;
-				}
+			_overlayData.Validate();
 
-				if (GUILayout.Button("Select Overlay in Project"))
+			if (_slotData.asset.material == null)
+			{
+				if ((_overlayData.asset.material.name != _slotData.asset.material.name))
 				{
-					// find the asset.
-					// select it in the project.
-					Selection.activeObject = _overlayData.asset;
+					if (_overlayData.asset.material.channels.Length == _slotData.asset.material.channels.Length)
+					{
+						EditorGUILayout.HelpBox("Material " + _overlayData.asset.material.name + " does not match slot material: " + _slotData.asset.material.name, MessageType.Error);
+						if (GUILayout.Button("Copy Slot Material to Overlay"))
+						{
+							_overlayData.asset.material = _slotData.asset.material;
+							EditorUtility.SetDirty(_overlayData.asset);
+							AssetDatabase.SaveAssets();
+						}
+					}
+					else
+					{
+						EditorGUILayout.HelpBox("Material " + _overlayData.asset.material.name + " does not match slot material: " + _slotData.asset.material.name + " and Channel count is not the same. Overlay must be removed or fixed manually", MessageType.Error);
+					}
+					if (GUILayout.Button("Select Slot in Project"))
+					{
+						// find the asset.
+						// select it in the project.
+						Selection.activeObject = _slotData.asset;
+					}
+
+					if (GUILayout.Button("Select Overlay in Project"))
+					{
+						// find the asset.
+						// select it in the project.
+						Selection.activeObject = _overlayData.asset;
+					}
 				}
 			}
 
@@ -1870,6 +2001,8 @@ namespace UMA.Editors
 		protected bool NeedsReenable()
 		{
 			if (dnaEditor == null || dnaEditor.NeedsReenable())
+				return true;
+			if (dnaEditor.IsValid == false)
 				return true;
 			if (_oldTarget == target)
 				return false;

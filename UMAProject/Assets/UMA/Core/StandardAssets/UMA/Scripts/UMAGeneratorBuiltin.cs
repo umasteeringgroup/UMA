@@ -19,11 +19,16 @@ namespace UMA
 		private UMAGeneratorCoroutine activeGeneratorCoroutine;
 		public UMAMeshCombiner meshCombiner;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        [Tooltip("Increase scale factor to decrease texture usage. A value of 1 means the textures will not be downsampled. Values greater than 1 will result in texture savings. The size of the texture is divided by this value.")]
+		/// <summary>
+		/// 
+		/// </summary>
+		[Range(1.0f, 16.0f)]
+		[Tooltip("Increase scale factor to decrease texture usage. A value of 1 means the textures will not be downsampled. Values greater than 1 will result in texture savings. The size of the texture is divided by this value.")]
         public int InitialScaleFactor = 1;
+
+		[Range(1.0f,16.0f)]
+		[Tooltip("Scale factor for edit-time builds. Increase scale factor to decrease texture usage. A value of 1 means the textures will not be downsampled. Values greater than 1 will result in texture savings. The size of the texture is divided by this value.")]
+		public int editorInitialScaleFactor = 4;
 
 		[Tooltip("Number of iterations to process each frame")]
 		public int IterationCount = 1;
@@ -42,8 +47,12 @@ namespace UMA
         /// Number of character updates before triggering System garbage collect.
         /// </summary>
         [Tooltip("Number of character updates before triggering garbage collection.")]
-        public int garbageCollectionRate = 8;
+		[Range(0.0f, 128.0f)]
+		public int garbageCollectionRate = 8;
 		private System.Diagnostics.Stopwatch stopWatch = new System.Diagnostics.Stopwatch();
+
+		[Tooltip("Fast Mesh Generation (no combining)")]
+		public bool fastMesh;
 
 		[NonSerialized]
 		public long ElapsedTicks;
@@ -196,6 +205,75 @@ namespace UMA
 			}
 		}
 
+
+		public bool GenerateSingleUMA(UMAData data)
+		{
+			if (data == null)
+				return true;
+
+			data.umaGenerator = this;
+			bool oldFastGen = fastGeneration;
+			FreezeTime = true;
+			umaData = data;
+
+			if (!umaData.Validate())
+				return true;
+
+			if (meshCombiner != null)
+			{
+				meshCombiner.Preprocess(umaData);
+			}
+			umaData.FireCharacterBegunEvents();
+			PreApply(umaData);
+
+
+			if (umaData.isTextureDirty)
+			{
+				TextureProcessPROCoroutine textureProcessCoroutine;
+				textureProcessCoroutine = new TextureProcessPROCoroutine();
+				textureProcessCoroutine.Prepare(data, this);
+
+				activeGeneratorCoroutine = new UMAGeneratorCoroutine();
+				activeGeneratorCoroutine.Prepare(this, umaData, textureProcessCoroutine, !umaData.isMeshDirty, InitialScaleFactor);
+
+				activeGeneratorCoroutine.Work();
+				activeGeneratorCoroutine = null;
+				umaData.isTextureDirty = false;
+				umaData.isAtlasDirty |= umaData.isMeshDirty;
+				TextureChanged++;
+			}
+
+			if (umaData.isMeshDirty)
+			{
+				UpdateUMAMesh(umaData.isAtlasDirty);
+				umaData.isAtlasDirty = false;
+				umaData.isMeshDirty = false;
+				SlotsChanged++;
+				forceGarbageCollect++;
+			}
+
+			if (umaData.isShapeDirty)
+			{
+				if (!umaData.skeleton.isUpdating)
+				{
+					umaData.skeleton.BeginSkeletonUpdate();
+				}
+				UpdateUMABody(umaData);
+				umaData.isShapeDirty = false;
+				DnaChanged++;
+			}
+			else if (umaData.skeleton.isUpdating)
+			{
+				umaData.skeleton.EndSkeletonUpdate();
+			}
+
+			umaData.Show();
+			fastGeneration = oldFastGen;
+			FreezeTime = false;
+			return true;
+		}
+
+
 		public virtual bool HandleDirtyUpdate(UMAData data)
 		{
 			if (data == null)
@@ -247,16 +325,24 @@ namespace UMA
 				}
 			}
 
-			if (umaData.isMeshDirty)
-			{
-				UpdateUMAMesh(umaData.isAtlasDirty);
-				umaData.isAtlasDirty = false;
-				umaData.isMeshDirty = false;
-				SlotsChanged++;
-				forceGarbageCollect++;
 
-				if (!fastGeneration)
-					return false;
+			if (fastMesh)
+            {
+				// each slot is a mesh that shares the bones. 
+            }
+			else
+			{
+				if (umaData.isMeshDirty)
+				{
+					UpdateUMAMesh(umaData.isAtlasDirty);
+					umaData.isAtlasDirty = false;
+					umaData.isMeshDirty = false;
+					SlotsChanged++;
+					forceGarbageCollect++;
+
+					if (!fastGeneration)
+						return false;
+				}
 			}
 
 			if (umaData.isShapeDirty) 
@@ -365,6 +451,11 @@ namespace UMA
                 }
 			}
 		}
+
+		public void Clear()
+        {
+			umaDirtyList.Clear();
+        }
 
 		/// <inheritdoc/>
 		public override bool IsIdle()

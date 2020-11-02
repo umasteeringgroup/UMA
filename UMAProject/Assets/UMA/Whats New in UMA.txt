@@ -1,3 +1,37 @@
+Whats new in 2.11
+
+DynamicCharacterAvatar
+  UMA characters are now visible at edit time (can be disabled)
+  Made an edit time DNA editor, combined with colors and wardrobe under "customization".
+  Added UpdateBounds() function.
+  Added load/save preset in the editor.
+  Default colors are now white/black for the various colors on the race.
+  New events: WardrobeAdded and WardrobeRemoved. 
+
+UMAMountedItem
+  New object to make mounting simpler. Add this to an object you want to make mountable. Specify the bone you want to attach it to, and any offset/rotation. Will automatically attach and process, and survive rebuilds.
+
+SlotData
+  New: Wildcard slots. This is a type of utility slots that can be added to recipes, which allows you to place overlays onto slots (or other overlays) based on tag. So you can place an 
+       overlay onto a "Torso" without knowing the actual slot ID, just the tag. This allows you to reuse recipes for slots that have the same UV coordinates.
+Slotbuilder
+  Made blender slot rotation fixup optional.
+
+
+Global Library
+  Functions (and menu items) to backup and restore the Global Library.
+  Made the Build Preprocessor optional (off by default)
+
+Misc
+  Fixed some possible warnings during overlay generation.
+  Fixed race loading in editor so it does not need to instantiate the race to get slots
+  Lot of minor issues where assumptions were made in code that occasionally weren't true.
+  URP conversion option will convert hair to use Speedtree8 shader
+
+DCARendererManager
+  Added option EnableRenderers to turn on/off the renderer manager for toggling between first and third person.
+
+
 What's new in 2.10.1
 
 This is a bugfix update, with only a few new features.

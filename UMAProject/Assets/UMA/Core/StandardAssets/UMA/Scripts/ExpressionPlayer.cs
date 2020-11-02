@@ -5,6 +5,7 @@
 //	============================================================
 
 using UnityEngine;
+using System.Collections.Generic;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -72,6 +73,20 @@ namespace UMA.PoseTools
 			Speaking = 3,
 			Listening = 4
 		};
+
+		[System.Serializable]
+		public class Expression
+        {
+			public string poseName;
+			public MecanimJoint overrideBone;
+			[Range(0.0f, 1.0f)]
+			public float value = 0.0f;
+			[Range(0.0f, 1.0f)]
+			public float defaultValue = 0.5f;
+        }
+
+	
+		public List<Expression> Expressions;
 
 		public const int PoseCount = 36;
 		/// <summary>

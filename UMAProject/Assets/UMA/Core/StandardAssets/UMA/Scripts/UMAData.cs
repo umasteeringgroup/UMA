@@ -24,6 +24,7 @@ namespace UMA
 	public class UMAData : MonoBehaviour
 	{
 		//TODO improve/cleanup the relationship between renderers and rendererAssets
+		[SerializeField]
 		private SkinnedMeshRenderer[] renderers;
 		private UMARendererAsset[] rendererAssets;
 		public UMARendererAsset defaultRendererAsset { get; set; }
@@ -33,7 +34,9 @@ namespace UMA
 		//TODO Change these get functions to getter properties?
 		public SkinnedMeshRenderer GetRenderer(int idx)
 		{
-			return renderers[idx];
+			if (renderers != null && idx < renderers.Length)
+				return renderers[idx];
+			return null;
 		}
 
 		public int GetRendererIndex(SkinnedMeshRenderer renderer)
@@ -266,6 +269,11 @@ namespace UMA
 		void Awake()
 		{
 			if (!umaGenerator)
+            {
+				if (UMAContextBase.Instance != null)
+				umaGenerator = UMAContextBase.Instance.gameObject.GetComponent<UMAGeneratorBase>();
+            }
+			if (!umaGenerator)
 			{
 				var generatorGO = GameObject.Find("UMAGenerator");
 				if (generatorGO == null) return;
@@ -437,6 +445,8 @@ namespace UMA
 			public float resolutionScale;
 			public string[] textureNameList;
 			public UMARendererAsset rendererAsset;
+			public SkinnedMeshRenderer skinnedMeshRenderer;
+			public int materialIndex;
 		}
 
 		[System.Serializable]
@@ -1425,12 +1435,16 @@ namespace UMA
 				}
 				isOfficiallyCreated = false;
 			}
+			CleanTextures();
+			CleanMesh(true);
+			CleanAvatar();
 			if (umaRoot != null)
 			{
-				CleanTextures();
-				CleanMesh(true);
-				CleanAvatar();
-				UMAUtils.DestroySceneObject(umaRoot);
+				// Edit time UMAs
+				if (Application.isPlaying)
+				{
+					UMAUtils.DestroySceneObject(umaRoot);
+				}
 			}
 		}
 
@@ -1444,7 +1458,11 @@ namespace UMA
 			{
 				if (!KeepAvatar)
 				{
-					if (animator.avatar) UMAUtils.DestroyAvatar(animator.avatar);
+					if (animator.avatar)
+					{
+						UMAUtils.DestroyAvatar(animator.avatar);
+						animator.avatar = null;
+					}
 				}
 			}
 		}
@@ -1466,6 +1484,10 @@ namespace UMA
 							if (tempTexture is RenderTexture)
 							{
 								RenderTexture tempRenderTexture = tempTexture as RenderTexture;
+								if (RenderTexture.active == tempRenderTexture)
+                                {
+									Debug.Log("RenderTexture is ACTIVE!!!! Name = " + tempRenderTexture.name);
+                                }
 								tempRenderTexture.Release();
 								UMAUtils.DestroySceneObject(tempRenderTexture);
 							}
@@ -1489,6 +1511,8 @@ namespace UMA
 			for(int j = 0; j < rendererCount; j++)
 			{
 				var renderer = GetRenderer(j);
+				if (renderer == null)
+					continue;
 				var mats = renderer.sharedMaterials;
 				for (int i = 0; i < mats.Length; i++)
 				{

@@ -10,6 +10,7 @@ namespace UMA.PoseTools
 	/// <summary>
 	/// UMA specific expression player.
 	/// </summary>
+	[ExecuteInEditMode]
 	public class UMAExpressionPlayer : ExpressionPlayer
 	{
 		/// <summary>
@@ -64,19 +65,50 @@ namespace UMA.PoseTools
 
 			if ((expressionSet != null) && (umaData != null) && (umaData.skeleton != null))
 			{
+				Transform jaw = null;
+				Transform neck = null;
+				Transform head = null;
+
 				if (umaData.animator != null)
 				{
-					Transform jaw = umaData.animator.GetBoneTransform(HumanBodyBones.Jaw);
+					jaw = umaData.animator.GetBoneTransform(HumanBodyBones.Jaw);
 					if (jaw != null)
 						jawHash = UMAUtils.StringToHash(jaw.name);
 
-					Transform neck = umaData.animator.GetBoneTransform(HumanBodyBones.Neck);
+					neck = umaData.animator.GetBoneTransform(HumanBodyBones.Neck);
 					if (neck != null)
 						neckHash = UMAUtils.StringToHash(neck.name);
 
-					Transform head = umaData.animator.GetBoneTransform(HumanBodyBones.Head);
+					head = umaData.animator.GetBoneTransform(HumanBodyBones.Head);
 					if (head != null)
 						headHash = UMAUtils.StringToHash(head.name);
+				}
+				if (overrideMecanimJaw && jaw == null)
+                {
+					if (Debug.isDebugBuild)
+                    {
+						Debug.Log("Jaw bone not found, but jaw override is requested. This will be ignored in a production build.");
+                    }
+					overrideMecanimJaw = false;
+					return;
+                }
+				if (overrideMecanimNeck && neck == null)
+				{
+					if (Debug.isDebugBuild)
+					{
+						Debug.Log("Neck bone not found, but neck override is requested. This will be ignored in a production build.");
+					}
+					overrideMecanimNeck = false;
+					return;
+				}
+				if (overrideMecanimHead && head == null)
+				{
+					if (Debug.isDebugBuild)
+					{
+						Debug.Log("Head bone not found, but head override is requested. This will be ignored in a production build.");
+					}
+					overrideMecanimHead = false;
+					return;
 				}
 				initialized = true;
 			}
@@ -84,7 +116,7 @@ namespace UMA.PoseTools
 
 		void Update()
 		{
-			if (!initialized)
+			if (!initialized || umaData == null)
 			{
 				Initialize();
 				return;

@@ -11,6 +11,7 @@ namespace UMA.Editors
     {
         SerializedProperty RendererElements;
         SerializedProperty showHelp;
+        SerializedProperty State;
 
         DynamicCharacterAvatar avatar;
         UMAData.UMARecipe umaRecipe = new UMAData.UMARecipe();
@@ -21,6 +22,8 @@ namespace UMA.Editors
 
         void OnEnable()
         {
+            State = serializedObject.FindProperty("RenderersEnabled");
+
             RendererElements = serializedObject.FindProperty("RendererElements");
             showHelp = serializedObject.FindProperty("showHelp");
             context = UMAContextBase.Instance;
@@ -36,6 +39,7 @@ namespace UMA.Editors
             serializedObject.Update();
 
             GUILayout.Space(10);
+            State.boolValue = EditorGUILayout.Toggle("Renderers Enabled", State.boolValue);
             showHelp.boolValue = EditorGUILayout.Toggle("Show Help", showHelp.boolValue);
             if (showHelp.boolValue)
             {

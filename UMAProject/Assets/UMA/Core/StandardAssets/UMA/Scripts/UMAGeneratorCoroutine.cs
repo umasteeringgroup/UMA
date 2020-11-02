@@ -301,6 +301,8 @@ namespace UMA
 						{
 							UMAUtils.DestroySceneObject(mats[materialIndex]);
 							newMats[materialIndex] = atlasses[i].material;
+							atlasses[i].skinnedMeshRenderer = renderer;
+							atlasses[i].materialIndex = materialIndex;
 							materialIndex++;
 						}
 					}
@@ -393,8 +395,8 @@ namespace UMA
 				{
 					if (umaGenerator.fitAtlas)
 					{
-						if (Debug.isDebugBuild)
-							Debug.LogWarning("Atlas resolution is too small, Textures will be reduced.", umaData.gameObject);
+						//if (Debug.isDebugBuild) // JRRM : re-enable this
+						//	Debug.LogWarning("Atlas resolution is too small, Textures will be reduced.", umaData.gameObject);
 						return false;
 					}
 					else

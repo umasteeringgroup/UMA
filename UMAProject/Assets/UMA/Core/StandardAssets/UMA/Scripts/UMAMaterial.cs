@@ -112,6 +112,15 @@ namespace UMA
         /// <returns></returns>
         public bool Equals(UMAMaterial material)
         {
+            if (this.name == material.name)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+            /*
             if (this.GetInstanceID() == material.GetInstanceID())
             {
                 return true;
@@ -140,6 +149,7 @@ namespace UMA
 
 				return true;
             }
+            */
         }
 
     }

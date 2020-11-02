@@ -20,7 +20,7 @@ public class UMADynamicBoneJiggle : MonoBehaviour
 
 	public void AddJiggle(UMAData umaData)
 	{
-		Transform rootBone = umaData.gameObject.transform.FindDeepChild(jiggleBoneName);
+		Transform rootBone = SkeletonTools.RecursiveFindBone(umaData.umaRoot.transform, jiggleBoneName);
 		UMABoneCleaner cleaner = umaData.gameObject.GetComponent<UMABoneCleaner>();
 		
 		if(rootBone != null)
@@ -55,7 +55,7 @@ public class UMADynamicBoneJiggle : MonoBehaviour
 
 			foreach (string exception in exceptions)
 			{
-				exclusionList.Add(umaData.gameObject.transform.FindDeepChild(exception));
+				exclusionList.Add(SkeletonTools.RecursiveFindBone(umaData.gameObject.transform,exception));
 			}
 
 			jiggleBone.Exclusions = exclusionList;

@@ -71,11 +71,27 @@ namespace UMA.Editors
             Tools.current = Tool.None;
             Tools.hidden = true;
             EditorApplication.LockReloadAssemblies();
+#if UNITY_2019_1_OR_NEWER
+            SceneView.duringSceneGui += this.OnSceneGUI;
+#else
+            SceneView.onSceneGUIDelegate += this.OnSceneGUI;
+#endif
+        }
+
+        private void OnDisable()
+        {
+#if UNITY_2019_1_OR_NEWER
+            SceneView.duringSceneGui -= this.OnSceneGUI;
+#else
+            SceneView.onSceneGUIDelegate -= this.OnSceneGUI;
+#endif
+            Cleanup();
         }
 
         private void OnDestroy()
         {
             Cleanup();
+
         }
 
         private void Cleanup()
@@ -439,7 +455,7 @@ namespace UMA.Editors
                 SceneView.FrameLastActiveSceneView();            
         }
 
-        void OnSceneGUI()
+        void OnSceneGUI(SceneView scene)
         {
             const float WindowHeight = 140;
             const float WindowWidth = 380;

@@ -166,6 +166,8 @@ namespace UMA
 	public static void DestroySceneObject(UnityEngine.Object obj)
 		{
 #if UNITY_EDITOR
+			if (obj == null)
+				return;
 			int DestroyInstance = obj.GetInstanceID();
 			if (obj is Avatar && !UMAGeneratorBase.CreatedAvatars.Contains(DestroyInstance))
 			{

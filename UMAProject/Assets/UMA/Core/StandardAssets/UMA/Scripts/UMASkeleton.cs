@@ -108,7 +108,7 @@ namespace UMA
 		{
 			foreach (var bd in boneHashData.Values)
 			{
-				if (bd != null)
+				if (bd != null && bd.boneTransform != null)
 				{
 					bd.rotation = bd.boneTransform.localRotation;
 					bd.position = bd.boneTransform.localPosition;
@@ -116,6 +116,7 @@ namespace UMA
 				}
 			}
 			updating = false;
+			
 		}
 
 		public virtual void SetAnimatedBone(int nameHash)

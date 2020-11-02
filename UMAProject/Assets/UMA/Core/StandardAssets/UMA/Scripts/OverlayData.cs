@@ -159,19 +159,11 @@ namespace UMA
 
 				return;
 			}
-			if (asset.material == null)
-			{
-				if (Debug.isDebugBuild)
-					Debug.LogError("Error: Materials are missing on Asset: " + asset.name + ". Have you imported all packages?");
 
-				this.colorData = new OverlayColorData(3); // Don't know. Just create it for standard PBR material size. 
-			}
-			else
-			{
-				this.colorData = new OverlayColorData(asset.material.channels.Length);
-			}
 			this.asset = asset;
 			this.rect = asset.rect;
+
+			Validate();
 
 #if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 			if (this.isProcedural)
@@ -179,7 +171,35 @@ namespace UMA
 				this.proceduralData = new OverlayProceduralData[0];
 			}
 #endif
-			
+
+		}
+
+
+		public void Validate()
+        {
+			if (asset == null)
+            {
+				return;
+            }
+			if (asset.material == null)
+			{
+				asset.material = UMAAssetIndexer.Instance.GetAsset<UMAMaterial>(asset.materialName);
+				if (asset.material == null)
+				{
+					this.colorData = new OverlayColorData(3); // Don't know. Just create it for standard PBR material size. 
+				}
+				else
+				{
+					this.colorData = new OverlayColorData(asset.material.channels.Length);
+				}
+			}
+			else
+            {
+				if (!colorData)
+                {
+					this.colorData = new OverlayColorData(asset.material.channels.Length);
+				}
+			}
 		}
 
 		/// <summary>
@@ -191,14 +211,19 @@ namespace UMA
 		{
 			bool valid = true;
 
-			if (asset.material != targetMaterial)
+			Validate();
+
+			if (asset.material.name != targetMaterial.name)
 			{
-				if (!asset.material.Equals(targetMaterial))
+				if (asset.material != targetMaterial)
 				{
+					if (!asset.material.Equals(targetMaterial))
+					{
 #if UNITY_EDITOR
-                    Debug.LogError(string.Format("Overlay '{0}' doesn't have the expected UMA Material: '{1}'!\nCurrently it has '{2}' at '{3}'", asset.overlayName, targetMaterial.name, asset.material, UnityEditor.AssetDatabase.GetAssetPath(asset)));
+						Debug.LogError(string.Format("Overlay '{0}' doesn't have the expected UMA Material: '{1}'!\nCurrently it has '{2}' at '{3}'", asset.overlayName, targetMaterial.name, asset.material, UnityEditor.AssetDatabase.GetAssetPath(asset)));
 #endif
-                    valid = false;
+						valid = false;
+					}
 				}
 			}
 

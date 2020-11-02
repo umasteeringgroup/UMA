@@ -53,8 +53,13 @@ namespace UMA
 		{
 			if (textureMergeRects != null)
 			{
+				//if (RenderTexture.active != null)
+				//{
+				//	Debug.Log("DAR Saving Render Texture: " + RenderTexture.active.name);
+				//}
 				RenderTexture backup = RenderTexture.active;
 				RenderTexture.active = target;
+				//Debug.Log("DAR Activated " + target.name + " frame "+Time.frameCount);
 				GL.Clear(true, true, background);
 				GL.PushMatrix();
 				//the matrix needs to be in the original atlas dimensions because the textureMergeRects are in that space.
@@ -67,6 +72,7 @@ namespace UMA
 
 				GL.PopMatrix();
 				RenderTexture.active = backup;
+				//Debug.Log("DAR Cleared " + target.name+" frame "+Time.frameCount);
 			}
 		}
 

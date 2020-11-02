@@ -19,8 +19,13 @@ namespace UMA
 		public bool convertMipMaps;
         [Tooltip("Initial size of the texture atlas (square)")]
 		public int atlasResolution;
+		[Tooltip("In Editor Initial size of the texture atlas (square)")]
+		public int editorAtlasResolution = 1024;
 		[Tooltip("The default overlay to display if a slot has meshData and no overlays assigned")]
 		public OverlayDataAsset defaultOverlayAsset;
+
+		[NonSerialized]
+		public bool FreezeTime;
 
 		protected OverlayData _defaultOverlayData;
 		public OverlayData defaultOverlaydata
@@ -91,6 +96,8 @@ namespace UMA
 		/// </summary>
 		public class AnimatorState
 		{
+			public bool FreezeTime;
+			private bool wasInitialized;
 			private int[] stateHashes = new int[0];
 			private float[] stateTimes = new float[0];
 			AnimatorControllerParameter[] parameters;
@@ -100,7 +107,11 @@ namespace UMA
 			{
 				umaData.FireAnimatorStateSavedEvent();
 
-				int layerCount = animator.layerCount;
+				int layerCount = 0;
+				if (animator.isInitialized)
+				{
+					layerCount = animator.layerCount;
+				}
 				stateHashes = new int[layerCount];
 				stateTimes = new float[layerCount];
 				parameters = new AnimatorControllerParameter[animator.parameterCount];
@@ -110,15 +121,25 @@ namespace UMA
 				{
 					var state = animator.GetCurrentAnimatorStateInfo(i);
 					stateHashes[i] = state.fullPathHash;
-					stateTimes[i] = Mathf.Max(0, state.normalizedTime + Time.deltaTime / state.length);
+#if UNITY_EDITOR
+					float time = state.normalizedTime;
+					if (!FreezeTime)
+					{
+						time += Time.deltaTime / state.length;
+
+					}
+#else
+					float time = state.normalizedTime + Time.deltaTime / state.length;
+#endif
+					stateTimes[i] = Mathf.Max(0, time);
 					layerWeights.Add(i, animator.GetLayerWeight(i));
 				}
 
 				Array.Copy(animator.parameters, parameters, animator.parameterCount);
 
-				foreach(AnimatorControllerParameter param in parameters)
+				foreach (AnimatorControllerParameter param in parameters)
 				{
-					switch(param.type)
+					switch (param.type)
 					{
 						case AnimatorControllerParameterType.Bool:
 							param.defaultBool = animator.GetBool(param.nameHash);
@@ -135,44 +156,57 @@ namespace UMA
 
 			public void RestoreAnimatorState(Animator animator, UMAData umaData)
 			{
-				if (animator.layerCount == stateHashes.Length)
-				{
-					for (int i = 0; i < animator.layerCount; i++)
+
+					if (animator.layerCount == stateHashes.Length)
 					{
-						animator.Play(stateHashes[i], i, stateTimes[i]);
-						if (i < layerWeights.Count)
+						for (int i = 0; i < animator.layerCount; i++)
 						{
-							animator.SetLayerWeight(i, layerWeights[i]);
+							animator.Play(stateHashes[i], i, stateTimes[i]);
+							if (i < layerWeights.Count)
+							{
+								animator.SetLayerWeight(i, layerWeights[i]);
+							}
 						}
 					}
-				}
 
-				foreach(AnimatorControllerParameter param in parameters)
-				{
-					if (!animator.IsParameterControlledByCurve(param.nameHash))
-                	{
-						switch(param.type)
+					foreach (AnimatorControllerParameter param in parameters)
+					{
+						if (!animator.IsParameterControlledByCurve(param.nameHash))
 						{
-							case AnimatorControllerParameterType.Bool:
-								animator.SetBool(param.nameHash, param.defaultBool);
-								break;
-							case AnimatorControllerParameterType.Float:
-								animator.SetFloat(param.nameHash, param.defaultFloat);
-								break;
-							case AnimatorControllerParameterType.Int:
-								animator.SetInteger(param.nameHash, param.defaultInt);
-								break;
+							switch (param.type)
+							{
+								case AnimatorControllerParameterType.Bool:
+									animator.SetBool(param.nameHash, param.defaultBool);
+									break;
+								case AnimatorControllerParameterType.Float:
+									animator.SetFloat(param.nameHash, param.defaultFloat);
+									break;
+								case AnimatorControllerParameterType.Int:
+									animator.SetInteger(param.nameHash, param.defaultInt);
+									break;
+							}
 						}
 					}
-				}
 
-				umaData.FireAnimatorStateRestoredEvent();
+					umaData.FireAnimatorStateRestoredEvent();
+#if UNITY_EDITOR
+					if (FreezeTime || animator.enabled == false)
+					{
+						animator.Update(0);
+					}
+					else
+					{
+						animator.Update(Time.deltaTime);
+					}
 
-                if (animator.enabled == true)
+#else
+				if (animator.enabled == true)
 				    animator.Update(Time.deltaTime);
-                else
-                    animator.Update(0);
-            }
+				else
+				    animator.Update(0);
+
+#endif
+			}
 		}
 
 		/// <summary>
@@ -211,6 +245,9 @@ namespace UMA
 					else
 					{
 						AnimatorState snapshot = new AnimatorState();
+#if UNITY_EDITOR
+						snapshot.FreezeTime = FreezeTime;
+#endif
 						snapshot.SaveAnimatorState(animator,umaData);
 						if (!umaData.KeepAvatar || animator.avatar == null)
 						{

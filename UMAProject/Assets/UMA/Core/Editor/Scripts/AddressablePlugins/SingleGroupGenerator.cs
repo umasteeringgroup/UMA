@@ -16,6 +16,7 @@ namespace UMA
 {
     public class SingleGroupGenerator : IUMAAddressablePlugin
     {
+        public bool ClearMaterials; // should be set when generating during the build process, so the materials are cleared in the bundles
         public UMAAssetIndexer Index;
         List<UMAPackedRecipeBase> Recipes;
         Dictionary<AssetItem, List<string>> AddressableItems = new Dictionary<AssetItem, List<string>>();
@@ -41,6 +42,7 @@ namespace UMA
 
         public void Complete()
         {
+            bool stripUmaMaterials = UMAEditorUtilities.StripUMAMaterials();
             try
             {
                 LogText("");
@@ -154,6 +156,25 @@ namespace UMA
                     bool found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(ai.Item.GetInstanceID(), out string itemGUID, out long localID);
 
                     UMAAddressablesSupport.Instance.AddItemToSharedGroup(itemGUID, ai.AddressableAddress, AddressableItems[ai], sharedGroup);
+
+                    if (ai._Type == typeof(SlotDataAsset) && stripUmaMaterials)
+                    {
+                        SlotDataAsset sda = ai.Item as SlotDataAsset;
+                        if (sda == null)
+                        {
+                            Debug.Log("Invalid Slotdata in recipe: " + ai._Name + ". Skipping.");
+                            continue;
+                        }
+                        if (sda.material != null)
+                        {
+                            if (ClearMaterials)
+                            {
+                                sda.materialName = sda.material.name;
+                                sda.material = null;
+                                EditorUtility.SetDirty(sda);
+                            }
+                        }
+                    }
                     if (ai._Type == typeof(OverlayDataAsset))
                     {
                         OverlayDataAsset od = ai.Item as OverlayDataAsset;
@@ -161,6 +182,15 @@ namespace UMA
                         {
                             Debug.Log("Invalid overlay in recipe: " + ai._Name + ". Skipping.");
                             continue;
+                        }
+                        if (od.material != null)
+                        {
+                            if (ClearMaterials)
+                            {
+                                od.materialName = od.material.name;
+                                od.material = null;
+                                EditorUtility.SetDirty(od);
+                            }
                         }
 #if INCL_TEXTURE2D
                         foreach (Texture tex in od.textureList)

@@ -8,10 +8,10 @@ namespace UMA
 	/// <summary>
 	/// Default mesh combiner for UMA UMAMeshdata from slots.
 	/// </summary>
-	public class UMADefaultMeshCombiner : UMAMeshCombiner
+	public class UMAFastMeshCombiner : UMAMeshCombiner
 	{
 		protected List<SkinnedMeshCombiner.CombineInstance> combinedMeshList;
-		protected List<UMAData.GeneratedMaterial> combinedMaterialList;
+		protected List<Material> combinedMaterialList;
 
 		UMAData umaData;
 		int atlasResolution;
@@ -26,54 +26,6 @@ namespace UMA
 				umaData.umaRecipe.UpdateMeshHideMasks();
 			}
 
-			#region SetupSkeleton
-			// First, ensure that the skeleton is setup, and if not,
-			// then generate the root, global and set it up.
-			if (umaData.umaRoot == null)
-			{
-				Transform rootTransform = umaData.gameObject.transform.Find("Root");
-				if (rootTransform)
-				{
-					umaData.umaRoot = rootTransform.gameObject;
-				}
-				else
-				{
-					GameObject newRoot = new GameObject("Root");
-					//make root of the UMAAvatar respect the layer setting of the UMAAvatar so cameras can just target this layer
-					newRoot.layer = umaData.gameObject.layer;
-					newRoot.transform.parent = umaData.transform;
-					newRoot.transform.localPosition = Vector3.zero;
-					if (umaData.umaRecipe.raceData.FixupRotations)
-					{
-						newRoot.transform.localRotation = Quaternion.Euler(270f, 0, 0f);
-					}
-					else
-					{
-						newRoot.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
-					}
-					newRoot.transform.localScale = Vector3.one;
-					umaData.umaRoot = newRoot;
-				}
-
-				Transform globalTransform = umaData.umaRoot.transform.Find("Global");
-				if (!globalTransform)
-				{
-					GameObject newGlobal = new GameObject("Global");
-					newGlobal.transform.parent = umaData.umaRoot.transform;
-					newGlobal.transform.localPosition = Vector3.zero;
-					if (umaData.umaRecipe.raceData.FixupRotations)
-					{
-						newGlobal.transform.localRotation = Quaternion.Euler(90f, 90f, 0f);
-					}
-					else
-					{
-						newGlobal.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
-					}
-					globalTransform = newGlobal.transform;
-				}
-				umaData.skeleton = new UMASkeleton(globalTransform);
-			}
-			#endregion
 			if (umaData.umaRoot != null)
 			{
 				umaData.CleanMesh(false);
@@ -111,7 +63,7 @@ namespace UMA
 					{
 						for (int i = umaData.generatedMaterials.rendererAssets.Count; i < oldRenderers.Length; i++)
 						{
-							DestroyImmediate(oldRenderers[i].gameObject);
+							DestroyImmediate(oldRenderers[i].gameObject);   
 							//For cloth, be aware of issue: 845868
 							//https://issuetracker.unity3d.com/issues/cloth-repeatedly-destroying-objects-with-cloth-components-causes-a-crash-in-unity-cloth-updatenormals
 						}
@@ -120,6 +72,52 @@ namespace UMA
 					umaData.SetRendererAssets(umaData.generatedMaterials.rendererAssets.ToArray());
 				}
 				return;
+			}
+
+			if (umaData.umaRoot == null)
+			{
+				Transform rootTransform = umaData.gameObject.transform.Find("Root");
+				if (rootTransform)
+				{
+					umaData.umaRoot = rootTransform.gameObject;
+				}
+				else
+				{
+					GameObject newRoot = new GameObject("Root");
+					//make root of the UMAAvatar respect the layer setting of the UMAAvatar so cameras can just target this layer
+					newRoot.layer = umaData.gameObject.layer;
+					newRoot.transform.parent = umaData.transform;
+					newRoot.transform.localPosition = Vector3.zero;
+					newRoot.transform.localRotation = Quaternion.Euler(270f, 0, 0f);
+					newRoot.transform.localScale = Vector3.one;
+					umaData.umaRoot = newRoot;
+				}
+
+				Transform globalTransform = umaData.umaRoot.transform.Find("Global");
+				if (!globalTransform)
+				{
+					GameObject newGlobal = new GameObject("Global");
+					newGlobal.transform.parent = umaData.umaRoot.transform;
+					newGlobal.transform.localPosition = Vector3.zero;
+					newGlobal.transform.localRotation = Quaternion.Euler(90f, 90f, 0f);  
+
+					globalTransform = newGlobal.transform;
+				}
+
+				umaData.skeleton = new UMASkeleton(globalTransform);
+
+				renderers = new SkinnedMeshRenderer[umaData.generatedMaterials.rendererAssets.Count];
+
+				for (int i = 0; i < umaData.generatedMaterials.rendererAssets.Count; i++)
+				{
+					UMARendererAsset rendererAsset = umaData.generatedMaterials.rendererAssets[i];
+					if (rendererAsset == null)
+						rendererAsset = umaData.defaultRendererAsset;
+
+					renderers[i] = MakeRenderer(i, globalTransform, rendererAsset);
+				}
+				umaData.SetRenderers(renderers);
+				umaData.SetRendererAssets(umaData.generatedMaterials.rendererAssets.ToArray());
 			}
 
 			//Clear out old cloth components
@@ -170,7 +168,7 @@ namespace UMA
 			this.atlasResolution = atlasResolution;
 
 			combinedMeshList = new List<SkinnedMeshCombiner.CombineInstance>(umaData.umaRecipe.slotDataList.Length);
-			combinedMaterialList = new List<UMAData.GeneratedMaterial>();
+			combinedMaterialList = new List<Material>();
 
 			EnsureUMADataSetup(umaData);
 			umaData.skeleton.BeginSkeletonUpdate();
@@ -191,6 +189,9 @@ namespace UMA
 
 				BuildCombineInstances();
 
+
+
+				/*
 				if (combinedMeshList.Count == 1)
 				{
 					// fast track
@@ -208,6 +209,7 @@ namespace UMA
 
 					umaMesh.ApplyDataToUnityMesh(renderers[currentRendererIndex], umaData.skeleton);
 				}
+				*/
 				var cloth = renderers[currentRendererIndex].GetComponent<Cloth>();
 				if (clothProperties != null)
 				{
@@ -221,12 +223,7 @@ namespace UMA
 					UMAUtils.DestroySceneObject(cloth);
 				}
 
-				Material[] materials = new Material[combinedMaterialList.Count];
-				for(int i=0;i<combinedMaterialList.Count;i++)
-                {
-					materials[i] = combinedMaterialList[i].material;
-					combinedMaterialList[i].skinnedMeshRenderer = renderers[currentRendererIndex];
-				}
+				var materials = combinedMaterialList.ToArray();
 				renderers[currentRendererIndex].sharedMaterials = materials;
 				umaMesh.ReleaseSharedBuffers();
 			}
@@ -257,8 +254,7 @@ namespace UMA
 				var generatedMaterial = umaData.generatedMaterials.materials[materialIndex];
 				if (generatedMaterial.rendererAsset != rendererAsset)
 					continue;
-				combinedMaterialList.Add(generatedMaterial);
-				generatedMaterial.materialIndex = materialIndex;
+				combinedMaterialList.Add(generatedMaterial.material);
 
 				for (int materialDefinitionIndex = 0; materialDefinitionIndex < generatedMaterial.materialFragments.Count; materialDefinitionIndex++)
 				{

@@ -58,56 +58,60 @@ namespace UMA.Editors
 		}
 
 		[UnityEditor.MenuItem("GameObject/UMA/Save Atlas Textures (runtime only)")]
-		[MenuItem("CONTEXT/DynamicCharacterAvatar/Save Selected Avatars generated textures to PNG",false,10)]
+		[MenuItem("CONTEXT/DynamicCharacterAvatar/Save Selected Avatars generated textures to PNG", false, 10)]
 		[MenuItem("UMA/Runtime/Save Selected Avatar Atlas Textures")]
 		public static void SaveSelectedAvatarsPNG()
-	  {
-		 if (!Application.isPlaying)
-		 {
-			EditorUtility.DisplayDialog("Notice", "This function is only available at runtime", "Got it");
-			return;
-		 }
-
-		 if (Selection.gameObjects.Length != 1)
-		 {
-			EditorUtility.DisplayDialog("Notice", "Only one Avatar can be selected.", "OK");
-			return;
-		 }
-
-		 var selectedTransform = Selection.gameObjects[0].transform;
-		 var avatar = selectedTransform.GetComponent<UMAAvatarBase>();
-
-		 if (avatar == null)
-		 {
-			EditorUtility.DisplayDialog("Notice", "An Avatar must be selected to use this function", "OK");
-			return;
-		 }
-
-		 SkinnedMeshRenderer smr = avatar.gameObject.GetComponentInChildren<SkinnedMeshRenderer>();
-		 if (smr == null)
-		 {
-			EditorUtility.DisplayDialog("Warning", "Could not find SkinnedMeshRenderer in Avatar hierarchy", "OK");
-			return;
-		 } 
-
-		 string path = EditorUtility.SaveFilePanelInProject("Save Texture(s)", "Texture.png", "png", "Base Filename to save PNG files to.");
-		 if (!string.IsNullOrEmpty(path))
-		 {
-			string basename = System.IO.Path.GetFileNameWithoutExtension(path);
-			string pathname = System.IO.Path.GetDirectoryName(path);
-			// save the diffuse texture
-			for (int i = 0; i < smr.materials.Length; i++)
+		{
+			if (!Application.isPlaying)
 			{
-			   string PathBase = System.IO.Path.Combine(pathname, basename + "_material_" + i.ToString());
-			   string DiffuseName = PathBase + "_Diffuse.PNG";
-			   string NormalName = PathBase + "_Normal.PNG";
-			   Texture diff = smr.materials[i].GetTexture("_MainTex");
-			   if (diff != null) SaveTexture(diff, DiffuseName);
-			   Texture bmp = smr.materials[i].GetTexture("_BumpMap");
-			   if (bmp != null) SaveTexture(bmp, NormalName);
+				EditorUtility.DisplayDialog("Notice", "This function is only available at runtime", "Got it");
+				return;
 			}
-		 }
-	  }
+
+			if (Selection.gameObjects.Length != 1)
+			{
+				EditorUtility.DisplayDialog("Notice", "Only one Avatar can be selected.", "OK");
+				return;
+			}
+
+			var selectedTransform = Selection.gameObjects[0].transform;
+			var avatar = selectedTransform.GetComponent<UMAAvatarBase>();
+
+			if (avatar == null)
+			{
+				EditorUtility.DisplayDialog("Notice", "An Avatar must be selected to use this function", "OK");
+				return;
+			}
+
+			SkinnedMeshRenderer smr = avatar.gameObject.GetComponentInChildren<SkinnedMeshRenderer>();
+			if (smr == null)
+			{
+				EditorUtility.DisplayDialog("Warning", "Could not find SkinnedMeshRenderer in Avatar hierarchy", "OK");
+				return;
+			}
+
+			string path = EditorUtility.SaveFilePanelInProject("Save Texture(s)", "Texture.png", "png", "Base Filename to save PNG files to.");
+			if (!string.IsNullOrEmpty(path))
+			{
+				string basename = System.IO.Path.GetFileNameWithoutExtension(path);
+				string pathname = System.IO.Path.GetDirectoryName(path);
+				// save the diffuse texture
+				for (int i = 0; i < smr.materials.Length; i++)
+				{
+					Material mat = smr.materials[i];
+					string PathBase = System.IO.Path.Combine(pathname, basename + "_material_" + i.ToString());
+
+					string[] texNames = mat.GetTexturePropertyNames();
+
+					foreach(string tex in texNames)
+                    {
+						string texname = PathBase + tex + ".PNG";
+						Texture texture = mat.GetTexture(tex);
+						if (texture != null) SaveTexture(texture, texname);
+					}
+				}
+			}
+		}
 
 	  private static void SaveTexture(Texture texture, string diffuseName)
 	  {
@@ -150,8 +154,15 @@ namespace UMA.Editors
 
 	  private static void SaveTexture2D(Texture2D texture, string textureName)
 	  {
-		 byte[] data = texture.EncodeToPNG();
-		 System.IO.File.WriteAllBytes(textureName, data);
+			if (texture.isReadable)
+			{
+				byte[] data = texture.EncodeToPNG();
+				System.IO.File.WriteAllBytes(textureName, data);
+			}
+			else
+            {
+				Debug.LogError("Texture: " + texture.name + " is not readable. Skipping.");
+            }
 	  }
 
 		[UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Save as Character text file (runtime only)")]

@@ -62,6 +62,12 @@ namespace UMA
 		public UMAMaterial material;
 
 		/// <summary>
+		/// materialName is used to save the name of the material, but ONLY if we have cleared the material when building bundles.
+		/// You can't count on this field to contain a value unless it was set during the cleanup phase by the indexer!
+		/// </summary>
+		public string materialName;
+
+		/// <summary>
 		/// This overlay was auto generated as a LOD overlay based on another overlay.
 		/// </summary>
 		[SerializeField]
@@ -158,8 +164,10 @@ namespace UMA
 		{
 			nameHash = UMAUtils.StringToHash(overlayName);
 		}
-		public void OnBeforeSerialize()	{ }
 
+		public void OnBeforeSerialize()
+		{
+		}
 		public Texture GetAlphaMask()
 		{
 			return alphaMask != null ? alphaMask : textureList[0];

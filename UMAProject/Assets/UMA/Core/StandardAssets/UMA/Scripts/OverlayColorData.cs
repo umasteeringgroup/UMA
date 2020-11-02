@@ -11,6 +11,9 @@ namespace UMA
 	[System.Serializable]
 	public class OverlayColorData : System.IEquatable<OverlayColorData>
 	{
+		public static int currentinstance = 0;
+		[NonSerialized]
+		public int instance;
 		public static Color EmptyAdditive = new Color(0, 0, 0, 0);
 
 		public const string UNSHARED = "-";
@@ -39,6 +42,7 @@ namespace UMA
 		/// </summary>
 		public OverlayColorData()
 		{
+			instance = currentinstance++;
 		}
 
 		/// <summary>
