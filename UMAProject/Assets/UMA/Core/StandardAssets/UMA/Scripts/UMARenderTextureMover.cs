@@ -127,21 +127,21 @@ public class UMARenderTextureMover : MonoBehaviour
 
         int width = rts.renderTexture.width;
         int height = rts.renderTexture.height;
-
+        /*
         for (int i=0; i< rts.renderTexture.mipmapCount; i++)
         {
             arrayLen += width * height * 4;
             width >>= 1;
             height >>= 1;
-        }
+        }*/
 
         DestinationTextureHolder dtex = new DestinationTextureHolder();
 
         dtex.CompleteArray = new NativeArray<uint>(arrayLen, Allocator.Persistent);
-        dtex.mipCount = rts.renderTexture.mipmapCount;
+/*        dtex.mipCount = rts.renderTexture.mipmapCount; */
         dtex.MipConverted = new bool[dtex.mipCount + 1];
         dtex.isDisposed = false;
-
+        /*
         for (int i = 0; i < rts.renderTexture.mipmapCount; i++)
         {
             AsyncGPUReadbackRequest agr = AsyncGPUReadback.Request(rts.renderTexture, i, TextureFormat.ARGB32, OnCompleteReadback);
@@ -151,7 +151,7 @@ public class UMARenderTextureMover : MonoBehaviour
             rbt.umaData = umaData;
             rbt.texAccumulator = dtex;
             trackedItems.Add(agr, rbt);
-        }
+        } */
     }
 
    void Cleanup(ReadBackTracker rbt)
@@ -168,7 +168,7 @@ public class UMARenderTextureMover : MonoBehaviour
     }
 
     void OnCompleteReadback(AsyncGPUReadbackRequest request)
-    {
+    {/*
         if (request.hasError)
         {
             Debug.Log("GPU readback error detected.");
@@ -228,5 +228,6 @@ public class UMARenderTextureMover : MonoBehaviour
         }
         // File.WriteAllBytes("test.png", ImageConversion.EncodeToPNG(tex));
         // Destroy(tex);
+        */
     }
 }
