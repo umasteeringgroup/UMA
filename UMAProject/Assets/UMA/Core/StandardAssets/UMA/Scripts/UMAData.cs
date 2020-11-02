@@ -1791,8 +1791,11 @@ namespace UMA
 			{
 				foreach (var umaAdditionalRecipe in umaAdditionalRecipes)
 				{
-					UMARecipe cachedRecipe = umaAdditionalRecipe.GetCachedRecipe(context);
-					umaRecipe.Merge(cachedRecipe, true, mergeMatchingOverlays);
+					if (umaAdditionalRecipe != null)
+					{
+						UMARecipe cachedRecipe = umaAdditionalRecipe.GetCachedRecipe(context);
+						umaRecipe.Merge(cachedRecipe, true, mergeMatchingOverlays);
+					}
 				}
 			}
 		}
