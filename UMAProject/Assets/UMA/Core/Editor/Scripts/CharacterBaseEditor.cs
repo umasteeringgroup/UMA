@@ -1533,7 +1533,7 @@ namespace UMA.Editors
 
 			_overlayData.Validate();
 
-			if (_slotData.asset.material == null)
+			if (_slotData.asset.material != null)
 			{
 				if ((_overlayData.asset.material.name != _slotData.asset.material.name))
 				{
