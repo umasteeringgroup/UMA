@@ -227,12 +227,37 @@ namespace UMA
 			UnityEditor.EditorUtility.SetDirty(this);
 #endif
 		}
-#if UNITY_EDITOR
-		
-		public void UpdateMeshData()
+
+
+        public void OnEnable()
+        {
+			if (meshData == null)
+				return;
+
+			if (meshData.LoadedBoneweights)
+            {
+				// already loaded. just return.
+				return;
+            }
+			if (meshData.SerializedBoneWeights != null && meshData.SerializedBoneWeights.Length > 0)
+            {
+				meshData.LoadVariableBoneWeights();
+            }
+			else if (meshData.boneWeights != null && meshData.boneWeights.Length > 0)
+			{
+				meshData.LoadBoneWeights();
+			}
+		}
+
+        public void OnDisable()
+        {
+			meshData.FreeBoneWeights();
+        }
+
+        public void UpdateMeshData()
 		{
 		}
-#endif
+
 		public void OnAfterDeserialize()
 		{
 			nameHash = UMAUtils.StringToHash(slotName);

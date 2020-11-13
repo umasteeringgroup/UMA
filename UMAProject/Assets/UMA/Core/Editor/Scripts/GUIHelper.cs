@@ -88,10 +88,13 @@ namespace UMA.Editors
 			}
 		}
 
-		public static void BeginVerticalPadded(float padding, Color backgroundColor)
+		public static void BeginVerticalPadded(float padding, Color backgroundColor, GUIStyle theStyle = null)
 		{
+			if (theStyle == null)
+				theStyle = EditorStyles.textField;
+
 			GUI.color = backgroundColor;
-			GUILayout.BeginHorizontal(EditorStyles.textField);
+			GUILayout.BeginHorizontal(theStyle);
 			GUI.color = Color.white;
 
 			GUILayout.Space(padding);

@@ -1570,6 +1570,27 @@ namespace UMA.Editors
 			// Edit the colors
 			bool changed = OnColorGUI();
 
+
+			// Edit the transformations
+			bool originalInstanceTransformed = _overlayData.instanceTransformed;
+			float originalRotation = _overlayData.Rotation;
+			Vector3 originalScale = _overlayData.Scale;
+
+			_overlayData.instanceTransformed = GUILayout.Toggle(_overlayData.instanceTransformed, "Transform");
+			if (_overlayData.instanceTransformed)
+			{
+				GUIHelper.BeginVerticalPadded(5, new Color(1, 1, 1, 1));
+				EditorGUILayout.HelpBox("Warning: scaling and/rotation could result in writing outside the bounds of the texture on the atlas. Be sure to use only in safe areas.", MessageType.Info);
+				_overlayData.Rotation = EditorGUILayout.FloatField("Rotation", _overlayData.Rotation);
+				_overlayData.Scale = EditorGUILayout.Vector3Field("Scale", _overlayData.Scale);
+				GUIHelper.EndVerticalPadded(5);
+			}
+
+			if (_overlayData.instanceTransformed != originalInstanceTransformed) changed = true;
+			if (_overlayData.Rotation != originalRotation) changed = true;
+			if (_overlayData.Scale != originalScale) changed = true;
+
+
 			// Edit the rect
 			GUILayout.BeginHorizontal();
 			GUILayout.Label("Rect");
@@ -1585,6 +1606,7 @@ namespace UMA.Editors
 				}
 			}
 			GUILayout.EndHorizontal();
+
 
 			Rect Save = _overlayData.rect;
 			if (!isUV)
@@ -1610,6 +1632,8 @@ namespace UMA.Editors
 			{
 				changed = true;
 			}
+
+
 
 #if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 			// Edit the procedural properties

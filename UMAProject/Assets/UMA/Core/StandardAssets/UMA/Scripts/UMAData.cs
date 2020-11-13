@@ -26,7 +26,7 @@ namespace UMA
 		//TODO improve/cleanup the relationship between renderers and rendererAssets
 		[SerializeField]
 		private SkinnedMeshRenderer[] renderers;
-		private UMARendererAsset[] rendererAssets;
+		private UMARendererAsset[] rendererAssets = new UMARendererAsset[0];
 		public UMARendererAsset defaultRendererAsset { get; set; }
 
 		public int rendererCount { get { return renderers == null ? 0 : renderers.Length; } }
@@ -80,6 +80,10 @@ namespace UMA
 			if (renderers.Length != rendererList.Count)
 				return false;
 
+			if (rendererAssets == null)
+            {
+				return false;
+            }
 			for(int i = 0; i < rendererAssets.Length; i++)
 			{
 				if (rendererAssets[i] != rendererList[i])

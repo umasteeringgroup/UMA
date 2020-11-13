@@ -8,6 +8,11 @@ namespace UMA
 	/// </summary>
 	public class ForearmTwistSlotScript : MonoBehaviour 
 	{
+		public string LeftHandBoneName = "LeftHand";
+		public string RightHandBoneName = "RightHand";
+		public string LeftForeArmTwistBoneName = "LeftForeArmTwist";
+		public string RightForeArmTwistBoneName = "RightForeArmTwist";
+
 		static int leftHandHash;
 		static int rightHandHash;
 		static int leftTwistHash;
@@ -18,10 +23,10 @@ namespace UMA
 		{
 			if (!hashesFound)
 			{
-				leftHandHash = UMAUtils.StringToHash("LeftHand");
-				rightHandHash = UMAUtils.StringToHash("RightHand");
-				leftTwistHash = UMAUtils.StringToHash("LeftForeArmTwist");
-				rightTwistHash = UMAUtils.StringToHash("RightForeArmTwist");
+				leftHandHash = UMAUtils.StringToHash(LeftHandBoneName);
+				rightHandHash = UMAUtils.StringToHash(RightHandBoneName);
+				leftTwistHash = UMAUtils.StringToHash(LeftForeArmTwistBoneName);
+				rightTwistHash = UMAUtils.StringToHash(RightForeArmTwistBoneName);
 				hashesFound = true;
 			}
 

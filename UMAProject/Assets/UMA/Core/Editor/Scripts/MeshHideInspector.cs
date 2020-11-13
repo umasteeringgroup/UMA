@@ -432,7 +432,7 @@ namespace UMA.Editors
 				UpdateMeshPreview();
 		}
 
-		void OnDestroy()
+		void OnDisable()
 		{
 			if( _previewRenderUtility != null )
 				_previewRenderUtility.Cleanup();
