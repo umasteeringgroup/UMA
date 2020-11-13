@@ -82,7 +82,7 @@ namespace UMA
 				//check skeleton has the bone we want to change
 				if (!skeleton.HasBone(thisHash))
 				{
-					Debug.LogWarning("You were trying to apply skeleton modifications to a bone that didn't exist (" + _skeletonModifiers[i].hashName + ") on " + umaData.gameObject.name);
+					//Debug.LogWarning("You were trying to apply skeleton modifications to a bone that didn't exist (" + _skeletonModifiers[i].hashName + ") on " + umaData.gameObject.name);
 					continue;
 				}
 

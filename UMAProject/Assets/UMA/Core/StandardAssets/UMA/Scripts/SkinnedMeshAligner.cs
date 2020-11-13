@@ -53,63 +53,46 @@ namespace UMA
 	            sourceIndex++;
 	        }
 	        dataMesh.bindposes = destDataBindPoses;
-	        var dataWeights = dataMesh.boneWeights;
+	        var dataWeights = dataMesh.GetAllBoneWeights();
 	        var dataVertices = dataMesh.vertices;
             var dataNormals = dataMesh.normals;
-            sourceIndex = 0;
-	//        Vector3 oldPos = Vector3.zero;
-	//        Vector3 oldPosT = Vector3.zero;
-	        foreach (var boneweight in dataWeights)
-	        {
-	            Vector3 oldV = dataVertices[sourceIndex];
-	            Vector3 newV = Vector3.zero;
-                Vector3 oldN = dataNormals[sourceIndex];
-                Vector3 newN = Vector3.zero;
-                Matrix4x4 temp;
-	            if (boneTransforms.TryGetValue(boneweight.boneIndex0, out temp))
-	            {
-	                newV += temp.MultiplyPoint(oldV) * boneweight.weight0;
-                    newN += temp.MultiplyVector(oldN) * boneweight.weight0;
-                }
-	            else
-	            {
-	                newV += oldV * boneweight.weight0;
-                    newN += oldN * boneweight.weight0;
-                }
-	            if (boneTransforms.TryGetValue(boneweight.boneIndex1, out temp))
-	            {
-	                newV += temp.MultiplyPoint(oldV) * boneweight.weight1;
-                    newN += temp.MultiplyVector(oldN) * boneweight.weight1;
-                }
-	            else
-	            {
-	                newV += oldV * boneweight.weight1;
-                    newN += oldN * boneweight.weight1;
-                }
-	            if (boneTransforms.TryGetValue(boneweight.boneIndex2, out temp))
-	            {
-	                newV += temp.MultiplyPoint(oldV) * boneweight.weight2;
-                    newN += temp.MultiplyVector(oldN) * boneweight.weight2;
-                }
-	            else
-	            {
-	                newV += oldV * boneweight.weight2;
-                    newN += oldN * boneweight.weight2;
-                }
-	            if (boneTransforms.TryGetValue(boneweight.boneIndex3, out temp))
-	            {
-	                newV += temp.MultiplyPoint(oldV) * boneweight.weight3;
-                    newN += temp.MultiplyVector(oldN) * boneweight.weight3;
-                }
-	            else
-	            {
-	                newV += oldV * boneweight.weight3;
-                    newN += oldN * boneweight.weight3;
-                }
-	            dataVertices[sourceIndex] = newV;
-                dataNormals[sourceIndex] = newN;
-                sourceIndex++;
-	        }
+			// Get the number of bone weights per vertex
+			var bonesPerVertex = dataMesh.GetBonesPerVertex();
+
+			sourceIndex = 0;
+			//        Vector3 oldPos = Vector3.zero;
+			//        Vector3 oldPosT = Vector3.zero;
+			// Iterate over the vertices
+			int bonesIndex = 0;
+			for (var vertIndex = 0; vertIndex < dataMesh.vertexCount; vertIndex++)
+			{
+				Vector3 oldV = dataVertices[sourceIndex];
+				Vector3 newV = Vector3.zero;
+				Vector3 oldN = dataNormals[sourceIndex];
+				Vector3 newN = Vector3.zero;
+				var numberOfBonesForThisVertex = bonesPerVertex[vertIndex];
+
+				Matrix4x4 temp;
+				// For each vertex, iterate over the array of bones the correct number of times
+				for (var i = 0; i < numberOfBonesForThisVertex; i++)
+				{
+					BoneWeight1 boneweight = dataWeights[bonesIndex];
+					if (boneTransforms.TryGetValue(boneweight.boneIndex, out temp))
+					{
+						newV += temp.MultiplyPoint(oldV) * boneweight.weight;
+						newN += temp.MultiplyVector(oldN) * boneweight.weight;
+					}
+					else
+					{
+						newV += oldV * boneweight.weight;
+						newN += oldN * boneweight.weight;
+					}
+					bonesIndex++;
+				}
+				dataVertices[sourceIndex] = newV;
+				dataNormals[sourceIndex] = newN;
+				sourceIndex++;
+			}
 	        dataMesh.vertices = dataVertices;
             dataMesh.normals = dataNormals;
         }

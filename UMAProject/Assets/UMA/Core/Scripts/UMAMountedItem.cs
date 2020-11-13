@@ -16,6 +16,9 @@ public class UMAMountedItem : MonoBehaviour
     public Vector3 Position;
     public Quaternion Orientation;
 
+    [Tooltip("If true the object will scale to bone DNA")]
+    public bool setScale = true;
+
     private int BoneHash;
     private DynamicCharacterAvatar avatar;
     private Transform MountPoint;  // This is the mount point we create/update.
@@ -112,9 +115,15 @@ public class UMAMountedItem : MonoBehaviour
        // Debug.Log("Setting mount transform");
         if (MountPoint != null)
         {
-         //   Debug.Log("copying");
-            this.gameObject.transform.position = MountPoint.position;
-            this.gameObject.transform.rotation = MountPoint.rotation;
+            Vector3 globalScale = avatar.gameObject.transform.lossyScale;
+
+            transform.position = MountPoint.position;
+            transform.rotation = MountPoint.rotation;
+            if (setScale == true)
+            {
+                MountPoint.localScale = MountPoint.parent.localScale;
+                transform.localScale = MountPoint.localScale;
+            }
         }
     }
 }

@@ -171,10 +171,11 @@ namespace UMA.CharacterSystem
         //
         [HideInInspector]
 
+
 #if UNITY_EDITOR
+
         [Tooltip("Use editor time generation")]
         public bool editorTimeGeneration = true;
-
         [Tooltip("Show placeholder model or not.")]
         public bool showPlaceholder = true;
         public enum PreviewModel { Male, Female, Custom }
@@ -374,25 +375,38 @@ namespace UMA.CharacterSystem
             // Cleanup from any edit-time uma generation
             if (Application.isPlaying)
             {
-            UMAData ud = GetComponent<UMAData>();
+                UMAData ud = GetComponent<UMAData>();
 
-            if (ud != null)
-            {
-                // cleanup any edit-time umaData
-                /// Having UMA's visible in the editor comes at a cost.
-                /// Have to clean up from edit time stuff.
-                if (editorTimeGeneration && Application.isPlaying)
+                if (ud != null)
                 {
-                    List<GameObject> Cleaners = GetRenderers(gameObject);
-                        Hide(false);
-                    foreach (GameObject go in Cleaners)
+                    // cleanup any edit-time umaData
+                    /// Having UMA's visible in the editor comes at a cost.
+                    /// Have to clean up from edit time stuff.
+                    if (editorTimeGeneration && Application.isPlaying)
                     {
-                        DestroyImmediate(go);
+                        List<GameObject> Cleaners = GetRenderers(gameObject);
+                        Hide(false);
+                        foreach (GameObject go in Cleaners)
+                        {
+                            DestroyImmediate(go);
+                        }
                     }
-                }
                     ud.umaRoot = null;
                 }
             }
+#else
+           UMAData ud = GetComponent<UMAData>();
+
+           if (ud != null)
+           {
+               List<GameObject> Cleaners = GetRenderers(gameObject);
+               Hide(false);
+               foreach (GameObject go in Cleaners)
+               {
+                   DestroyImmediate(go);
+               }
+           }
+           ud.umaRoot = null;
 #endif
 
 #if UMA_ADDRESSABLES
@@ -475,7 +489,7 @@ namespace UMA.CharacterSystem
 #endif
         }
 
-#if UNITY_EDITOR
+
         List<GameObject> GetRenderers(GameObject parent)
         {
             List<GameObject> objs = new List<GameObject>();
@@ -487,6 +501,7 @@ namespace UMA.CharacterSystem
             return objs;
         }
 
+#if UNITY_EDITOR
         public void GenerateSingleUMA()
         {
             UMAGenerator ugb = UMAContext.Instance.gameObject.GetComponentInChildren<UMAGenerator>();

@@ -114,6 +114,15 @@ namespace UMA
 		[System.NonSerialized]
 		public OverlayColorData colorData;
 
+		/// <summary>
+		/// Is this instance of an overlay transformed?
+		/// Be very careful! improper use could result in overflowing the texture on the atlas!
+		/// </summary>
+		public bool instanceTransformed;
+		public Vector3 Scale;
+		[Range(0.0f,360.0f)]
+		public float Rotation;
+
 		#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 		public class OverlayProceduralData
 		{
@@ -137,6 +146,9 @@ namespace UMA
 		{
 			var res = new OverlayData(asset);
 			res.rect = rect;
+			res.instanceTransformed = instanceTransformed;
+			res.Rotation = Rotation;
+			res.Scale = Scale;
 			if (colorData != null)
 				res.colorData = colorData.Duplicate();
 			return res;

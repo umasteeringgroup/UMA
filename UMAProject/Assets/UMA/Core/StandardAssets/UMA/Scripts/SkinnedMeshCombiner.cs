@@ -20,15 +20,21 @@ namespace UMA
 		}
 
 		private static void CurrentDomain_DomainUnload(object sender, EventArgs e)
-		{
-			if (nativeBoneWeights.IsCreated) nativeBoneWeights.Dispose();
-		}
+        {
+            CleanupNativeArrays();
+        }
+
+        private static void CleanupNativeArrays()
+        {
+            if (nativeBoneWeights.IsCreated) nativeBoneWeights.Dispose();
+            if (nativeBonesPerVertex.IsCreated) nativeBonesPerVertex.Dispose();
+        }
 #endif
 
-		/// <summary>
-		/// Container for source mesh data.
-		/// </summary>
-		public class CombineInstance
+        /// <summary>
+        /// Container for source mesh data.
+        /// </summary>
+        public class CombineInstance
 		{
 			public UMAMeshData meshData;
 			public int[] targetSubmeshIndices;
@@ -63,9 +69,10 @@ namespace UMA
 		static Dictionary<int, BoneIndexEntry> bonesCollection;
 		static List<Matrix4x4> bindPoses;
 		static List<int> bonesList;
-#if UNITY_2019_3_OR_NEWER
-		static NativeArray<BoneWeight> nativeBoneWeights;
-#endif
+
+		static NativeArray<BoneWeight1> nativeBoneWeights;
+		static NativeArray<byte> nativeBonesPerVertex;
+
 		/// <summary>
 		/// Combines a set of meshes into the target mesh.
 		/// </summary>
@@ -76,7 +83,8 @@ namespace UMA
 		{
 			if (blendShapeSettings == null)
 				blendShapeSettings = new BlendShapeSettings();
-            
+
+			int boneWeightCount = 0;
 			int vertexCount = 0;
 			int bindPoseCount = 0;
 			int transformHierarchyCount = 0;
@@ -85,7 +93,7 @@ namespace UMA
 			MeshComponents meshComponents = MeshComponents.none;
 			int subMeshCount = FindTargetSubMeshCount(sources);
 			var subMeshTriangleLength = new int[subMeshCount];
-			AnalyzeSources(sources, subMeshTriangleLength, ref vertexCount, ref bindPoseCount, ref transformHierarchyCount, ref meshComponents);
+			AnalyzeSources(sources, subMeshTriangleLength, ref vertexCount, ref boneWeightCount, ref bindPoseCount, ref transformHierarchyCount, ref meshComponents);
 
 			if(!blendShapeSettings.ignoreBlendShapes)
 				AnalyzeBlendShapeSources(sources, blendShapeSettings, ref meshComponents, out blendShapeNames);
@@ -109,16 +117,15 @@ namespace UMA
 				has_blendShapes = false;
 			bool has_clothSkinning = (meshComponents & MeshComponents.has_clothSkinning) != MeshComponents.none;
 
-#if UNITY_2019_3_OR_NEWER
-			if (nativeBoneWeights.Length < vertexCount)
-			{
-				if (nativeBoneWeights.IsCreated) nativeBoneWeights.Dispose();
 
-				nativeBoneWeights = new NativeArray<BoneWeight>(vertexCount, Allocator.Persistent);
+			if (nativeBoneWeights.Length < boneWeightCount || nativeBonesPerVertex.Length < vertexCount)
+			{
+				CleanupNativeArrays();
+
+				nativeBoneWeights = new NativeArray<BoneWeight1>(boneWeightCount, Allocator.Persistent);
+				nativeBonesPerVertex = new NativeArray<byte>(vertexCount, Allocator.Persistent);
 			}
-#else
-			BoneWeight[] boneWeights = EnsureArrayLength(target.unityBoneWeights, vertexCount);			
-#endif
+
 			Vector3[] vertices = EnsureArrayLength(target.vertices, vertexCount);
 			Vector3[] normals = has_normals ? EnsureArrayLength(target.normals, vertexCount) : null;
 			Vector4[] tangents = has_tangents ? EnsureArrayLength(target.tangents, vertexCount) : null;
@@ -141,6 +148,7 @@ namespace UMA
 				MergeSortedTransforms(umaTransforms, ref boneCount, source.meshData.umaBones);
 			}
 			int vertexIndex = 0;
+			int boneWeightIndex = 0;
 
 			if (bonesCollection == null)
 				bonesCollection = new Dictionary<int, BoneIndexEntry>(boneCount);
@@ -155,14 +163,13 @@ namespace UMA
 			else
 				bonesList.Clear();
 
+			target.SlotName = "Combined: ";
 			foreach (var source in sources)
 			{
+				// JRRM - this must go 
+				target.SlotName += source.meshData.SlotName + ", ";
 				int sourceVertexCount = source.meshData.vertices.Length;
-#if UNITY_2019_3_OR_NEWER
-				BuildBoneWeights(source.meshData.boneWeights, 0, nativeBoneWeights, vertexIndex, sourceVertexCount, source.meshData.boneNameHashes, source.meshData.bindPoses, bonesCollection, bindPoses, bonesList);
-#else
-				BuildBoneWeights(source.meshData.boneWeights, 0, boneWeights, vertexIndex, sourceVertexCount, source.meshData.boneNameHashes, source.meshData.bindPoses, bonesCollection, bindPoses, bonesList);
-#endif
+				BuildBoneWeights(source.meshData, nativeBoneWeights, nativeBonesPerVertex, vertexIndex, boneWeightIndex, sourceVertexCount, source.meshData.boneNameHashes, source.meshData.bindPoses, bonesCollection, bindPoses, bonesList);
 				Array.Copy(source.meshData.vertices, 0, vertices, vertexIndex, sourceVertexCount);
 
 				if (has_normals)
@@ -361,6 +368,7 @@ namespace UMA
 				}
 
 				vertexIndex += sourceVertexCount;
+				boneWeightIndex += source.meshData.unityBoneWeights.Length;
 			}
 
 			if (vertexCount != vertexIndex)
@@ -372,11 +380,9 @@ namespace UMA
 			// fill in new values.
 			target.vertexCount = vertexCount;
 			target.vertices = vertices;
-#if UNITY_2019_3_OR_NEWER
-			target.unityBoneWeights = nativeBoneWeights.GetSubArray(0, vertexCount).ToArray();
-#else
-			target.unityBoneWeights = boneWeights;
-#endif
+			target.unityBoneWeights = nativeBoneWeights.GetSubArray(0, boneWeightIndex);
+			target.unityBonesPerVertex = nativeBonesPerVertex.GetSubArray(0, vertexCount);
+
 			target.bindPoses = bindPoses.ToArray();
 			target.normals = normals;
 			target.tangents = tangents;
@@ -411,7 +417,8 @@ namespace UMA
 			var target = new UMAMeshData();
 			target.bindPoses = source.bindPoses;
 			target.boneNameHashes = source.boneNameHashes;
-			target.unityBoneWeights = UMABoneWeight.Convert(source.boneWeights);
+			target.unityBoneWeights = source.unityBoneWeights;
+			target.unityBonesPerVertex = source.unityBonesPerVertex;
 			target.colors32 = source.colors32;
 			target.normals = source.normals;
 			target.rootBoneHash = source.rootBoneHash;
@@ -426,6 +433,9 @@ namespace UMA
 			target.vertexCount = source.vertexCount;
 			target.vertices = source.vertices;
 			target.blendShapes = source.blendShapes;
+			target.SlotName = source.SlotName + " (shallow copy)";
+			target.SerializedBonesPerVertex = source.SerializedBonesPerVertex;
+			target.SerializedBoneWeights = source.SerializedBoneWeights;
 
 			if (triangleMask != null)
 			{
@@ -725,7 +735,7 @@ namespace UMA
 			}
 		}
 
-		private static void AnalyzeSources(CombineInstance[] sources, int[] subMeshTriangleLength, ref int vertexCount, ref int bindPoseCount, ref int transformHierarchyCount, ref MeshComponents meshComponents)
+		private static void AnalyzeSources(CombineInstance[] sources, int[] subMeshTriangleLength, ref int vertexCount, ref int boneweightcount, ref int bindPoseCount, ref int transformHierarchyCount, ref MeshComponents meshComponents)
 		{
 			for (int i = 0; i < subMeshTriangleLength.Length; i++)
 			{
@@ -734,6 +744,7 @@ namespace UMA
 
 			foreach (var source in sources)
 			{
+				boneweightcount += source.meshData.unityBoneWeights.Length;
 				vertexCount += source.meshData.vertices.Length;
 				bindPoseCount += source.meshData.bindPoses.Length;
 				transformHierarchyCount += source.meshData.umaBones.Length;
@@ -775,35 +786,52 @@ namespace UMA
 			return highestTargetIndex + 1;
 		}
 
-		private static void BuildBoneWeights(UMABoneWeight[] source, int sourceIndex, BoneWeight[] dest, int destIndex, int count, int[] bones, Matrix4x4[] bindPoses, Dictionary<int, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<int> bonesList)
+
+		/*private static void BuildBoneWeights(NativeArray<BoneWeight1> source, NativeArray<BoneWeight1> dest, int destIndex, int destBoneweightIndex, int count, int[] bones, Matrix4x4[] bindPoses, Dictionary<int, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<int> bonesList)
 		{
 			int[] boneMapping = new int[bones.Length];
+
 			for (int i = 0; i < boneMapping.Length; i++)
 			{
 				boneMapping[i] = TranslateBoneIndex(i, bones, bindPoses, bonesCollection, bindPosesList, bonesList);
 			}
 
-			while (count-- > 0)
+			NativeArray<BoneWeight1>.Copy(source, 0, dest, destBoneweightIndex, source.Length);
+			BoneWeight1 b = new BoneWeight1();
+			for (int i=0;i<source.Length;i++)
+            {
+				b.boneIndex = boneMapping[source[i].boneIndex];
+				b.weight = source[i].weight;
+
+				dest[i + destBoneweightIndex] = b;
+            }
+		} */
+
+		private static void BuildBoneWeights(UMAMeshData data, NativeArray<BoneWeight1> dest, NativeArray<byte> destBonesPerVertex, int destIndex, int destBoneweightIndex, int count, int[] bones, Matrix4x4[] bindPoses, Dictionary<int, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<int> bonesList)
+		{
+			NativeArray<byte> sourceBonesPerIndex = data.unityBonesPerVertex;
+
+			int[] boneMapping = new int[bones.Length];
+
+			for (int i = 0; i < boneMapping.Length; i++)
 			{
-				TranslateBoneWeight(ref source[sourceIndex++], ref dest[destIndex++], boneMapping);
+				boneMapping[i] = TranslateBoneIndex(i, bones, bindPoses, bonesCollection, bindPosesList, bonesList);
+			}
+
+			NativeArray<byte>.Copy(data.unityBonesPerVertex,0,destBonesPerVertex,destIndex,data.unityBonesPerVertex.Length);
+			NativeArray<BoneWeight1>.Copy(data.unityBoneWeights, 0, dest, destBoneweightIndex, data.unityBoneWeights.Length);
+			BoneWeight1 b = new BoneWeight1();
+			for (int i = 0; i < data.unityBoneWeights.Length; i++)
+			{
+				b.boneIndex = boneMapping[data.unityBoneWeights[i].boneIndex];
+				b.weight = data.unityBoneWeights[i].weight;
+
+				dest[i + destBoneweightIndex] = b;
 			}
 		}
 
-		private static void TranslateBoneWeight(ref UMABoneWeight source, ref BoneWeight dest, int[] boneMapping)
-		{
-			dest.weight0 = source.weight0;
-			dest.weight1 = source.weight1;
-			dest.weight2 = source.weight2;
-			dest.weight3 = source.weight3;
-
-			dest.boneIndex0 = boneMapping[source.boneIndex0];
-			dest.boneIndex1 = boneMapping[source.boneIndex1];
-			dest.boneIndex2 = boneMapping[source.boneIndex2];
-			dest.boneIndex3 = boneMapping[source.boneIndex3];
-		}
-		
 #if UNITY_2019_3_OR_NEWER
-		private struct BoneWeightProxy
+		/* private struct BoneWeightProxy
 		{
 			public float m_Weight0;
 			public float m_Weight1;
@@ -861,7 +889,7 @@ namespace UMA
 				weightProxy.SetData(ref source[sourceIndex++]);
 				proxyDest[destIndex++] = weightProxy;
 			}
-		}
+		} */
 #endif
 
 

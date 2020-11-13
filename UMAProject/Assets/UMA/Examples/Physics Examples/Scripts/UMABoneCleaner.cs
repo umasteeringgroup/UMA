@@ -19,12 +19,12 @@ namespace UMA
 		public void Awake()
 		{
 			avatar = gameObject.GetComponentInChildren<DynamicCharacterAvatar>();
-			avatar.RecipeUpdated.AddListener(CleanBones);
+			avatar.CharacterBegun.AddListener(CleanBones);
 		}
 
 		protected void OnDisable()
 		{
-			avatar.RecipeUpdated.RemoveListener(CleanBones);
+			avatar.CharacterBegun.RemoveListener(CleanBones);
 		}
 	
 		public void CleanBones(UMAData umaData)

@@ -207,6 +207,9 @@ namespace UMA
 			public int colorIdx;
 			// public int[] rect;
 			public float[] rect;
+			public bool isTransformed;
+			public Vector3 scale;
+			public float rotation;
 #if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 			public PackedOverlaySubstanceData[] data;
 #endif
@@ -651,6 +654,11 @@ namespace UMA
 						tempPackedOverlay.rect[1] = overlayData.rect.y;
 						tempPackedOverlay.rect[2] = overlayData.rect.width;
 						tempPackedOverlay.rect[3] = overlayData.rect.height;
+						tempPackedOverlay.isTransformed = overlayData.instanceTransformed;
+						tempPackedOverlay.scale = overlayData.Scale;
+						tempPackedOverlay.rotation = overlayData.Rotation;
+
+
 #if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 						if (overlayData.isProcedural && (overlayData.proceduralData != null))
 						{
@@ -662,7 +670,7 @@ namespace UMA
 						}
 #endif
 
-						OverlayColorData colorData = overlayData.colorData;
+		OverlayColorData colorData = overlayData.colorData;
 						int colorIndex = -1;
 						int cIndex = 0;
 						foreach (OverlayColorData cData in colorEntries)
@@ -950,7 +958,11 @@ namespace UMA
                                 packedOverlay.rect[2],
                                 packedOverlay.rect[3]);
 
-                            if (packedOverlay.colorIdx < umaPackRecipe.sharedColorCount)
+							overlayData.instanceTransformed = packedOverlay.isTransformed;
+							overlayData.Scale = packedOverlay.scale;
+							overlayData.Rotation = packedOverlay.rotation;
+
+							if (packedOverlay.colorIdx < umaPackRecipe.sharedColorCount)
                             {
                                 overlayData.colorData = umaRecipe.sharedColors[packedOverlay.colorIdx];
                             }

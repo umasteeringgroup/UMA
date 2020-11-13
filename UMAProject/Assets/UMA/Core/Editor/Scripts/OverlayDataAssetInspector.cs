@@ -126,7 +126,7 @@ namespace UMA.Editors
 							allValid = false;
 					}
 					if (!allValid)
-						EditorGUILayout.HelpBox("Not all textures in Texture List set!", MessageType.Error);
+						EditorGUILayout.HelpBox("Not all textures in Texture List set. This overlay will only work as an additional overlay in a recipe", MessageType.Warning);
 				}
 			}
 			else
