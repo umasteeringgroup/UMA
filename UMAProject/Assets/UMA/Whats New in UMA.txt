@@ -31,6 +31,15 @@ Misc
 DCARendererManager
   Added option EnableRenderers to turn on/off the renderer manager for toggling between first and third person.
 
+Alpha 2
+  Added scaling to UMAMountedItem
+  Forearm Twist slot script will now let you set the names of the bones
+  Fixed issue in randomizer that would cause it to break
+  Added support for more than 4 boneweights. Can now use as many boneweights as you like. 
+  Reworked the SkinnedMeshCombiner to use the new boneweights, resulting in a 30-40% overall speed improvement when building.
+  Added ability to transform (scale and rotate) an overlay in a recipe.
+  Fixed error in build when edit-time UMA's were used in scene.
+
 
 What's new in 2.10.1
 
