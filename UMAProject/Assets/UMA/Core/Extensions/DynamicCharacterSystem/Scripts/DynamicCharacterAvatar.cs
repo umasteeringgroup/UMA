@@ -545,7 +545,7 @@ namespace UMA.CharacterSystem
         private void CleanupGeneratedData()
         {
             List<GameObject> Cleaners = GetRenderers(gameObject);
-            Hide();
+            Hide(false);
             foreach (GameObject go in Cleaners)
             {
                 DestroyImmediate(go);

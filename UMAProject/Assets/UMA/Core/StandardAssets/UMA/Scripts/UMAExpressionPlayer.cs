@@ -32,6 +32,7 @@ namespace UMA.PoseTools
 		public bool logResetErrors;
 
 		public bool useDisableDistance = false;
+		public bool processing = false;
 		public float disableDistance = 10f;
 		private Transform _mainCameraTransform;
 
@@ -42,80 +43,98 @@ namespace UMA.PoseTools
 		}
 
 		public void Initialize()
-		{
-			blinkDelay = Random.Range(minBlinkDelay, maxBlinkDelay);
+        {
+            blinkDelay = Random.Range(minBlinkDelay, maxBlinkDelay);
 
-			if(Camera.main != null)
-				_mainCameraTransform = Camera.main.transform;
+            if (Camera.main != null)
+                _mainCameraTransform = Camera.main.transform;
 
-			if (umaData == null)
-			{
-				// Find the UMAData, which could be up or down the hierarchy
-				umaData = gameObject.GetComponentInChildren<UMAData>();
-				if (umaData == null)
-				{
-					umaData = gameObject.GetComponentInParent<UMAData>();
-				}
-				if (umaData == null)
-				{
-					if (Debug.isDebugBuild)
-						Debug.LogError("Couldn't locate UMAData component");
-				}
-			}
-
-			if ((expressionSet != null) && (umaData != null) && (umaData.skeleton != null))
-			{
-				Transform jaw = null;
-				Transform neck = null;
-				Transform head = null;
-
-				if (umaData.animator != null)
-				{
-					jaw = umaData.animator.GetBoneTransform(HumanBodyBones.Jaw);
-					if (jaw != null)
-						jawHash = UMAUtils.StringToHash(jaw.name);
-
-					neck = umaData.animator.GetBoneTransform(HumanBodyBones.Neck);
-					if (neck != null)
-						neckHash = UMAUtils.StringToHash(neck.name);
-
-					head = umaData.animator.GetBoneTransform(HumanBodyBones.Head);
-					if (head != null)
-						headHash = UMAUtils.StringToHash(head.name);
-				}
-				if (overrideMecanimJaw && jaw == null)
+            if (umaData == null)
+            {
+                // Find the UMAData, which could be up or down the hierarchy
+                umaData = gameObject.GetComponentInChildren<UMAData>();
+                if (umaData == null)
                 {
-					if (Debug.isDebugBuild)
-                    {
-						Debug.Log("Jaw bone not found, but jaw override is requested. This will be ignored in a production build.");
-                    }
-					overrideMecanimJaw = false;
-					return;
+                    umaData = gameObject.GetComponentInParent<UMAData>();
                 }
-				if (overrideMecanimNeck && neck == null)
-				{
-					if (Debug.isDebugBuild)
-					{
-						Debug.Log("Neck bone not found, but neck override is requested. This will be ignored in a production build.");
-					}
-					overrideMecanimNeck = false;
-					return;
-				}
-				if (overrideMecanimHead && head == null)
-				{
-					if (Debug.isDebugBuild)
-					{
-						Debug.Log("Head bone not found, but head override is requested. This will be ignored in a production build.");
-					}
-					overrideMecanimHead = false;
-					return;
-				}
-				initialized = true;
-			}
-		}
+                if (umaData == null)
+                {
+                    //if (Debug.isDebugBuild)
+                    //	Debug.LogError("Couldn't locate UMAData component");
+                    return;
+                }
+				umaData.CharacterBegun.AddListener(CharacterBegun);
+                umaData.OnCharacterUpdated += UmaData_OnCharacterUpdated;
+            }
 
-		void Update()
+            SetupBones();
+			initialized = true;
+        }
+
+        private void CharacterBegun(UMAData umaData)
+        {
+			processing = false;
+        }
+
+        private void SetupBones()
+        {
+            if ((expressionSet != null) && (umaData != null) && (umaData.skeleton != null))
+            {
+                Transform jaw = null;
+                Transform neck = null;
+                Transform head = null;
+
+                if (umaData.animator != null)
+                {
+                    jaw = umaData.animator.GetBoneTransform(HumanBodyBones.Jaw);
+                    if (jaw != null)
+                        jawHash = UMAUtils.StringToHash(jaw.name);
+
+                    neck = umaData.animator.GetBoneTransform(HumanBodyBones.Neck);
+                    if (neck != null)
+                        neckHash = UMAUtils.StringToHash(neck.name);
+
+                    head = umaData.animator.GetBoneTransform(HumanBodyBones.Head);
+                    if (head != null)
+                        headHash = UMAUtils.StringToHash(head.name);
+                }
+                if (overrideMecanimJaw && jaw == null)
+                {
+                    if (Debug.isDebugBuild)
+                    {
+                        Debug.Log("Jaw bone not found, but jaw override is requested. This will be ignored in a production build.");
+                    }
+                    overrideMecanimJaw = false;
+                }
+                if (overrideMecanimNeck && neck == null)
+                {
+                    if (Debug.isDebugBuild)
+                    {
+                        Debug.Log("Neck bone not found, but neck override is requested. This will be ignored in a production build.");
+                    }
+                    overrideMecanimNeck = false;
+                }
+                if (overrideMecanimHead && head == null)
+                {
+                    if (Debug.isDebugBuild)
+                    {
+                        Debug.Log("Head bone not found, but head override is requested. This will be ignored in a production build.");
+                    }
+                    overrideMecanimHead = false;
+                }
+            }
+        }
+
+        private void UmaData_OnCharacterUpdated(UMAData obj)
+        {
+			SetupBones();
+			processing = true;
+        }
+
+        void Update()
 		{
+			if (!processing)
+				return;
 			if (!initialized || umaData == null)
 			{
 				Initialize();
@@ -129,8 +148,15 @@ namespace UMA.PoseTools
 			Quaternion headRotation = Quaternion.identity;
 			Quaternion neckRotation = Quaternion.identity;
 
-			try { headRotation = umaData.skeleton.GetRotation(headHash); }
-			catch(System.Exception) { Debug.LogError("GetRotation: Head Bone not found!"); }
+			try 
+			{ 
+				headRotation = umaData.skeleton.GetRotation(headHash); 
+			}
+			catch(System.Exception ex) 
+			{
+				Debug.LogException(ex);
+				Debug.LogError("GetRotation: Head Bone not found!"); 
+			}
 
 			try { neckRotation = umaData.skeleton.GetRotation(neckHash); }
 			catch(System.Exception) { Debug.LogError("GetRotation: Neck Bone not found!"); }
@@ -155,6 +181,9 @@ namespace UMA.PoseTools
 
 		void LateUpdate()
 		{
+			if (!processing)
+				return;
+
 			if (!initialized)
 				return;
 

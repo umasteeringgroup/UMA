@@ -71,16 +71,21 @@ namespace UMA
 
 		#region PRIVATE METHODS
 
-		private void ResetOnCharaterUpdated(UMAData umaData)
+		public void ResetOnCharaterUpdated(UMAData umaData)
 		{
 			_dnaAppliedTo.Remove(umaData.gameObject);
 		}
 
-		#endregion
+        #endregion
 
-		#region REQUIRED DYNAMICDNAPLUGIN METHODS
+        #region REQUIRED DYNAMICDNAPLUGIN METHODS
+        public override void Reset()
+        {
+			_dnaAppliedTo.Clear();
+			base.Reset();
+        }
 
-		public override void ApplyDNA(UMAData umaData, UMASkeleton skeleton, int dnaTypeHash)
+        public override void ApplyDNA(UMAData umaData, UMASkeleton skeleton, int dnaTypeHash)
 		{
 			//Add the reset listeners if we havent already
 			//we need this because if 'fastGeneration' is false we may still get another loop

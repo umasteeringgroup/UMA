@@ -328,6 +328,10 @@ namespace UMA
 			if (boneHashData.TryGetValue(nameHash, out res))
 			{
 				res.accessedFrame = frame;
+				if (res.boneTransform == null)
+                {
+					return null;
+                }
 				return res.boneTransform.gameObject;
 			}
 			return null;

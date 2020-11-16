@@ -226,7 +226,6 @@ namespace UMA
 			umaData.FireCharacterBegunEvents();
 			PreApply(umaData);
 
-
 			if (umaData.isTextureDirty)
 			{
 				TextureProcessPROCoroutine textureProcessCoroutine;

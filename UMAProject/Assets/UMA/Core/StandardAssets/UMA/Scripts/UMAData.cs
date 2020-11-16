@@ -1091,6 +1091,7 @@ namespace UMA
 				}
 			}
 
+
 			/// <summary>
 			/// Applies each DNA converter to the UMA data and skeleton.
 			/// </summary>

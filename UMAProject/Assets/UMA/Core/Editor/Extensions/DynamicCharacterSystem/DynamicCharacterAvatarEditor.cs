@@ -410,7 +410,10 @@ namespace UMA.CharacterSystem.Editors
                     }
 					if (GUILayout.Button("Add All"))
                     {
-						
+						foreach(string s in rawcachedRaceDNA)
+                        {
+							AddSingleDNA(s);
+                        }
                     }
 					GUILayout.EndHorizontal();
 
@@ -812,6 +815,9 @@ namespace UMA.CharacterSystem.Editors
 					ugb.InitialScaleFactor = ugb.editorInitialScaleFactor;
 					ugb.atlasResolution = ugb.editorAtlasResolution;
 
+
+					dca.activeRace.racedata.ResetDNA();
+
 					ugb.GenerateSingleUMA(dca.umaData);
 					
 					ugb.fastGeneration = oldFastGen;
@@ -855,7 +861,7 @@ namespace UMA.CharacterSystem.Editors
         private void AddSingleDNA(string theDna)
         {
             float value = 0.5f;
-			// todo: Get DNA from base race recipe, and 
+
             if (thisDCA.umaData != null)
             {
                 var characterDNA = thisDCA.GetDNA();

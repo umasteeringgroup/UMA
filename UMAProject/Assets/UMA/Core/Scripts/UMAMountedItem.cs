@@ -55,6 +55,13 @@ public class UMAMountedItem : MonoBehaviour
     public Transform FindOrCreateMountpoint()
     {
         Transform BoneTransform = SkeletonTools.RecursiveFindBone(avatar.gameObject.transform, BoneName);
+        foreach (Transform child in BoneTransform)
+        {
+            if (child.name == ID)
+            {
+                return child;
+            }
+        }
         return CreateMountpoint(BoneTransform, avatar.gameObject.layer);
     }
 #endif
