@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Collections;
 using System;
-using UnityEngine.Experimental.Rendering;
 
 namespace UMA
 {
@@ -112,7 +111,6 @@ namespace UMA
                             float downSample = (slotData.asset.material.channels[textureType].DownSample == 0) ? 1f : (1f / slotData.asset.material.channels[textureType].DownSample);
 
                             destinationTexture = new RenderTexture(Mathf.FloorToInt(generatedMaterial.cropResolution.x * umaData.atlasResolutionScale * downSample), Mathf.FloorToInt(generatedMaterial.cropResolution.y * umaData.atlasResolutionScale * downSample), 0, slotData.asset.material.channels[textureType].textureFormat, RenderTextureReadWrite.Linear);
-                            destinationTexture.graphicsFormat = GraphicsFormat.R16G16B16A16_SFloat;
                             destinationTexture.filterMode = FilterMode.Point;
                             destinationTexture.useMipMap = umaGenerator.convertMipMaps && !umaGenerator.convertRenderTexture;
                             destinationTexture.name = slotData.asset.material.name + " Chan " + textureType + " frame: " + Time.frameCount;
