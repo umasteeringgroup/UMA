@@ -74,6 +74,7 @@ namespace UMA
 			}
 		}
 
+
 		/// <summary>
 		/// Initializes a new UMASkeleton from a transform hierarchy.
 		/// </summary>
@@ -366,6 +367,9 @@ namespace UMA
 				db.boneTransform.localPosition = position;
 				db.boneTransform.localRotation = rotation;
 				db.boneTransform.localScale = scale;
+				db.umaTransform.rotation = rotation;
+				db.umaTransform.position = position;
+				db.umaTransform.scale = scale;
 			}
 			else
 			{

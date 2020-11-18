@@ -475,7 +475,7 @@ namespace UMA
 			for (int atlasIndex = 0; atlasIndex < umaAtlasList.materials.Count; atlasIndex++)
 			{
 				var material = umaAtlasList.materials[atlasIndex];
-				if (material.umaMaterial.materialType == UMAMaterial.MaterialType.NoAtlas)
+				if (material.umaMaterial.materialType != UMAMaterial.MaterialType.Atlas)
 					continue;
 
 				Vector2 finalAtlasAspect = new Vector2(umaGenerator.atlasResolution / material.cropResolution.x, umaGenerator.atlasResolution / material.cropResolution.y);

@@ -39,6 +39,7 @@ namespace UMA
         {
             Atlas = 1,
             NoAtlas = 2,
+            UseExistingTexture = 4
         }
 
         public enum ChannelType

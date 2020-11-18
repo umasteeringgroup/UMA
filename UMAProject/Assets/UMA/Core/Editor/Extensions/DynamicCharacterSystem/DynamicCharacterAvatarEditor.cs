@@ -412,8 +412,11 @@ namespace UMA.CharacterSystem.Editors
                     {
 						foreach(string s in rawcachedRaceDNA)
                         {
-							AddSingleDNA(s);
-                        }
+							if (!thisDCA.predefinedDNA.ContainsName(s))
+							{
+								AddSingleDNA(s);
+							}
+						}
                     }
 					GUILayout.EndHorizontal();
 
@@ -424,7 +427,7 @@ namespace UMA.CharacterSystem.Editors
 						foreach (var pd in thisDCA.predefinedDNA.PreloadValues)
 						{
 							GUILayout.BeginHorizontal();
-							GUILayout.Label(pd.Name, GUILayout.Width(100));
+							GUILayout.Label(ObjectNames.NicifyVariableName(pd.Name), GUILayout.Width(100));
 							pd.Value = GUILayout.HorizontalSlider(pd.Value, 0.0f, 1.0f);
 
 							bool delete = GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
