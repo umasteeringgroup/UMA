@@ -22,4 +22,5 @@ MonoBehaviour:
   normalPostProcesses:
   - {fileID: 11400000, guid: 45d9ffb21df267d4282b6c9bbc157775, type: 2}
   dataPostProcesses: []
-  detailNormalPostProcesses: []
+  detailNormalPostProcesses:
+  - {fileID: 11400000, guid: 6723c87feec7dbc49914728f5b571b02, type: 2}
