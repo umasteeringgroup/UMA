@@ -91,7 +91,7 @@ namespace UMA.Editors
 			{
 				EditorGUILayout.HelpBox("This is a wildcard slot", MessageType.Info);
 			}
-			
+			 
 			if (_slotDataAsset.isWildCardSlot)
 				Editor.DrawPropertiesExcluding(serializedObject,WildcardSlotFields);
 			else
@@ -102,11 +102,11 @@ namespace UMA.Editors
 			eventsFoldout = EditorGUILayout.Foldout(eventsFoldout, "Slot Events");
 			if (eventsFoldout)
 			{
-				EditorGUILayout.PropertyField(CharacterBegun);
+				EditorGUILayout.PropertyField(CharacterBegun);   
 				if (!_slotDataAsset.isWildCardSlot)
 				{
 					EditorGUILayout.PropertyField(SlotAtlassed);
-					EditorGUILayout.PropertyField(DNAApplied);
+					EditorGUILayout.PropertyField(DNAApplied); 
 				}
 				EditorGUILayout.PropertyField(CharacterCompleted);
 			}

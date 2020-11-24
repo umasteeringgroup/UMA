@@ -20,6 +20,7 @@ namespace UMA
 	public partial class RaceData : ScriptableObject, INameProvider, ISerializationCallbackReceiver
 	{
 	    public string raceName;
+		public List<string> KeepBoneNames = new List<string>();
 
         #region INameProvider
         public string GetAssetName()

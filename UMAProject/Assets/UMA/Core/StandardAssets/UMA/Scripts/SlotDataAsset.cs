@@ -199,7 +199,12 @@ namespace UMA
             
 		}
 
-		public int GetTextureChannelCount(UMAGeneratorBase generator)
+        public void OnDestroy()
+        {
+			meshData.FreeBoneWeights();
+        }
+
+        public int GetTextureChannelCount(UMAGeneratorBase generator)
 		{
 			return material.channels.Length;
 		}

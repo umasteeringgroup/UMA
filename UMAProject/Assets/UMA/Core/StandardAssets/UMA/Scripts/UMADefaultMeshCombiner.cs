@@ -147,7 +147,7 @@ namespace UMA
 			newRenderer.sharedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
 #endif
 			newRenderer.rootBone = rootBone;
-			newRenderer.quality = SkinQuality.Bone4;
+			newRenderer.quality = SkinQuality.Auto;
 			newRenderer.sharedMesh.name = i == 0 ? "UMAMesh" : ("UMAMesh " + i);
 
 			if(rendererAsset != null)

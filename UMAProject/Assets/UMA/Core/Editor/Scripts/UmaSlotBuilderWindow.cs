@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
+using UMA.CharacterSystem;
 
 namespace UMA.Editors
 {
@@ -21,6 +22,7 @@ namespace UMA.Editors
 		public string errmsg = "";
 		public List<string> Tags = new List<string>();
 		public bool showTags;
+		public bool nameAfterMaterial=true;
 
 		string GetAssetFolder()
 		{
@@ -34,6 +36,20 @@ namespace UMA.Editors
 
 		string GetAssetName()
 		{
+			int index = slotName.LastIndexOf('/');
+			if (index > 0)
+			{
+				return slotName.Substring(index + 1);
+			}
+			return slotName;
+		}
+
+		string GetSlotName(SkinnedMeshRenderer smr)
+		{
+			if (nameAfterMaterial)
+			{
+				return smr.sharedMaterial.name.ToTitleCase();
+			}
 			int index = slotName.LastIndexOf('/');
 			if (index > 0)
 			{
@@ -232,6 +248,7 @@ namespace UMA.Editors
 			GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.85f, 1f), EditorStyles.helpBox);
 			GUILayout.Label("Automatic Drag and Drop processing", EditorStyles.boldLabel);
 			Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
+			nameAfterMaterial = GUILayout.Toggle(nameAfterMaterial, "Name slot by material");
 			Color save = GUI.color;
 			GUI.color = Color.white;
             GUI.Box(dropArea, "Drag FBX GameObject or meshes here to generate all slots and overlays for the GameObject");
@@ -302,7 +319,7 @@ namespace UMA.Editors
 			}
 
 			Debug.Log("Slot Mesh: " + slotMesh.name, slotMesh.gameObject);
-			SlotDataAsset slot = UMASlotProcessingUtil.CreateSlotData(AssetDatabase.GetAssetPath(slotFolder), GetAssetFolder(), GetAssetName(), slotMesh, material, normalReferenceMesh,RootBone, binarySerialization);
+			SlotDataAsset slot = UMASlotProcessingUtil.CreateSlotData(AssetDatabase.GetAssetPath(slotFolder), GetAssetFolder(), GetAssetName(),GetSlotName(slotMesh),nameAfterMaterial, slotMesh, material, normalReferenceMesh,RootBone, binarySerialization);
 			slot.tags = Tags.ToArray();
 			return slot;
 		}
@@ -361,7 +378,12 @@ namespace UMA.Editors
 			}
 		}
 
-		private void RecurseObject(Object obj, HashSet<SkinnedMeshRenderer> meshes)
+        private string AsciiName(string name)
+        {
+			return name.ToTitleCase();
+        }
+
+        private void RecurseObject(Object obj, HashSet<SkinnedMeshRenderer> meshes)
 		{
 			GameObject go = obj as GameObject;
 			if (go != null)
