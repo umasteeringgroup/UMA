@@ -54,7 +54,7 @@ namespace UMA.Editors
 
 			//CountBoneweights(resultingMesh);
 
-            var usedBonesDictionary = CompileUsedBonesDictionary(resultingMesh);
+            var usedBonesDictionary = CompileUsedBonesDictionary(resultingMesh, new List<int>());
             if (usedBonesDictionary.Count != resultingSkinnedMesh.bones.Length)
             {
                 resultingMesh = BuildNewReduceBonesMesh(resultingMesh, usedBonesDictionary);
@@ -121,7 +121,7 @@ namespace UMA.Editors
 		}
 
 
-		public static SlotDataAsset CreateSlotData(string slotFolder, string assetFolder, string assetName, string slotName,bool nameByMaterial,  SkinnedMeshRenderer slotMesh, UMAMaterial material, SkinnedMeshRenderer seamsMesh, string rootBone, bool binarySerialization = false)
+		public static SlotDataAsset CreateSlotData(string slotFolder, string assetFolder, string assetName, string slotName, bool nameByMaterial, SkinnedMeshRenderer slotMesh, UMAMaterial material, SkinnedMeshRenderer seamsMesh, List<string> KeepList, string rootBone, bool binarySerialization = false)
 		{
 			if (!System.IO.Directory.Exists(slotFolder + '/' + assetFolder))
 			{
@@ -146,6 +146,22 @@ namespace UMA.Editors
 				}
 			}
 
+			Transform[] bones = resultingSkinnedMesh.bones;
+			List<int> KeepBoneIndexes = new List<int>();
+
+			for(int i=0;i<bones.Length;i++)
+            {
+				Transform t = bones[i];
+				foreach(string keep in KeepList)
+                {
+					if (t.name.Contains(keep))
+                    {
+						KeepBoneIndexes.Add(i);
+						break; // only add to keeplist once.
+                    }
+                }
+            }
+
 			Mesh resultingMesh;
 			if (seamsMesh != null)
 			{
@@ -160,7 +176,7 @@ namespace UMA.Editors
 				//CountBoneweights(resultingMesh);
 			}
 
-			var usedBonesDictionary = CompileUsedBonesDictionary(resultingMesh);
+			var usedBonesDictionary = CompileUsedBonesDictionary(resultingMesh,KeepBoneIndexes);
 			if (usedBonesDictionary.Count != resultingSkinnedMesh.bones.Length)
 			{
 				resultingMesh = BuildNewReduceBonesMesh(resultingMesh, usedBonesDictionary);
@@ -265,12 +281,12 @@ namespace UMA.Editors
 			return slot;
 		}
 
-		public static void OptimizeSlotDataMesh(SkinnedMeshRenderer smr)
+		public static void OptimizeSlotDataMesh(SkinnedMeshRenderer smr, List<int> KeepBonesList)
 		{
 			if (smr == null) return;
 			var mesh = smr.sharedMesh;
 
-			var usedBonesDictionary = CompileUsedBonesDictionary(mesh);
+			var usedBonesDictionary = CompileUsedBonesDictionary(mesh,KeepBonesList);
 			var smrOldBones = smr.bones.Length;
 			if (usedBonesDictionary.Count != smrOldBones)
 			{
@@ -335,17 +351,25 @@ namespace UMA.Editors
 			return res;
 		}
 
-		private static Dictionary<int, int> CompileUsedBonesDictionary(Mesh resultingMesh)
+		private static Dictionary<int, int> CompileUsedBonesDictionary(Mesh resultingMesh, List<int> keepBones)
 		{
 			var usedBones = new Dictionary<int, int>();
 			var boneWeights = resultingMesh.GetAllBoneWeights();
+
+			foreach(int boneIndex in keepBones)
+            {
+				usedBones.Add(boneIndex, usedBones.Count);
+			}
 			for (int i = 0; i < boneWeights.Length; i++)
 			{
+				
 				BoneWeight1 boneWeight = boneWeights[i];
 				if (boneWeight.weight > 0 && !usedBones.ContainsKey(boneWeight.boneIndex))
 				{
 					usedBones.Add(boneWeight.boneIndex, usedBones.Count);
 				}
+
+
 			}
 			return usedBones;
 		}

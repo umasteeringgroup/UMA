@@ -818,7 +818,10 @@ namespace UMA
 				boneMapping[i] = TranslateBoneIndex(i, bones, bindPoses, bonesCollection, bindPosesList, bonesList);
 			}
 
-			NativeArray<byte>.Copy(data.unityBonesPerVertex,0,destBonesPerVertex,destIndex,data.unityBonesPerVertex.Length);
+			int sourcecount = sourceBonesPerIndex.Length;
+			int destcount = destBonesPerVertex.Length; // should be 0.
+
+			NativeArray<byte>.Copy(sourceBonesPerIndex, 0,destBonesPerVertex,destIndex, sourceBonesPerIndex.Length);
 			NativeArray<BoneWeight1>.Copy(data.unityBoneWeights, 0, dest, destBoneweightIndex, data.unityBoneWeights.Length);
 			BoneWeight1 b = new BoneWeight1();
 			for (int i = 0; i < data.unityBoneWeights.Length; i++)
