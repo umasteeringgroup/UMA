@@ -137,6 +137,9 @@ namespace UMA
 
 		private void AddBonesRecursive(Transform transform)
 		{
+			if (transform.tag == UMAContextBase.IgnoreTag)
+				return;
+
 			var hash = UMAUtils.StringToHash(transform.name);
 			var parentHash = transform.parent != null ? UMAUtils.StringToHash(transform.parent.name) : 0;
 			BoneData data = new BoneData()

@@ -216,12 +216,28 @@ namespace UMA.CharacterSystem.Editors
 			_racePropDrawer.OnGUI(currentRect, thisRaceSetter, new GUIContent(thisRaceSetter.displayName));
 			if (EditorGUI.EndChangeCheck())
 			{
-				thisDCA.ChangeRace((string)thisRaceSetter.FindPropertyRelative("name").stringValue, DynamicCharacterAvatar.ChangeRaceOptions.useDefaults, true);
-				//Changing the race may cause umaRecipe, animationController to change so forcefully update these too
-				umaRecipe.objectReferenceValue = thisDCA.umaRecipe;
-				animationController.objectReferenceValue = thisDCA.animationController;
-				serializedObject.ApplyModifiedProperties();
-				GenerateSingleUMA();
+				bool okToProcess = true;
+				// check to see if we changed it while playing, and if so, don't do it again.
+				if (Application.isPlaying)
+                {
+					if (thisDCA.activeRace.data != null)
+                    {
+						if (thisDCA.activeRace.data.raceName == (string)thisRaceSetter.FindPropertyRelative("name").stringValue)
+                        {
+							okToProcess = false;
+                        }
+                    }
+                }
+
+				if (okToProcess)
+				{
+					thisDCA.ChangeRace((string)thisRaceSetter.FindPropertyRelative("name").stringValue, DynamicCharacterAvatar.ChangeRaceOptions.useDefaults, true);
+					//Changing the race may cause umaRecipe, animationController to change so forcefully update these too
+					umaRecipe.objectReferenceValue = thisDCA.umaRecipe;
+					animationController.objectReferenceValue = thisDCA.animationController;
+					serializedObject.ApplyModifiedProperties();
+					GenerateSingleUMA();
+				}
 			}
 			if (showHelp)
 			{
@@ -821,14 +837,18 @@ namespace UMA.CharacterSystem.Editors
 
 					dca.activeRace.racedata.ResetDNA();
 
-					ugb.GenerateSingleUMA(dca.umaData);
+					ugb.GenerateSingleUMA(dca.umaData,false);
 					
 					ugb.fastGeneration = oldFastGen;
 					ugb.FreezeTime = false;
 					ugb.InitialScaleFactor = oldScaleFactor;
 					ugb.atlasResolution = oldAtlasResolution;
 
-
+					var mountedItems = dca.gameObject.GetComponentsInChildren<UMAMountedItem>();
+					foreach (var mi in mountedItems)
+                    {
+						mi.ResetMountPoint();
+                    }
 				}
 			}
 

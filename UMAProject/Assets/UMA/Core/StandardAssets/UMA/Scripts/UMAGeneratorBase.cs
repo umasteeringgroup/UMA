@@ -23,6 +23,8 @@ namespace UMA
 		public int editorAtlasResolution = 1024;
 		[Tooltip("The default overlay to display if a slot has meshData and no overlays assigned")]
 		public OverlayDataAsset defaultOverlayAsset;
+		[Tooltip("UMA will ignore items with this tag when rebuilding the skeleton.")]
+		public string ignoreTag = "UMAIgnore";
 
 		[NonSerialized]
 		public bool FreezeTime;

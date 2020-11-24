@@ -15,6 +15,7 @@ public class UMAMountedItem : MonoBehaviour
     public string ID;  
     public Vector3 Position;
     public Quaternion Orientation;
+    public string IgnoreTag = "UMAIgnore";
 
     [Tooltip("If true the object will scale to bone DNA")]
     public bool setScale = true;
@@ -22,11 +23,13 @@ public class UMAMountedItem : MonoBehaviour
     private int BoneHash;
     private DynamicCharacterAvatar avatar;
     private Transform MountPoint;  // This is the mount point we create/update.
+    private UMAData lastUmaData;
 
     // Start is called before the first frame update
     void Start()
     {
         Initialize();
+        gameObject.tag = IgnoreTag;
     }
 
     private bool Initialize()
@@ -55,6 +58,8 @@ public class UMAMountedItem : MonoBehaviour
     public Transform FindOrCreateMountpoint()
     {
         Transform BoneTransform = SkeletonTools.RecursiveFindBone(avatar.gameObject.transform, BoneName);
+        if (BoneTransform == null)
+            return null;
         foreach (Transform child in BoneTransform)
         {
             if (child.name == ID)
@@ -66,8 +71,22 @@ public class UMAMountedItem : MonoBehaviour
     }
 #endif
 
+    public void ResetMountPoint()
+    {
+        MountPoint = FindOrCreateMountpoint(avatar.umaData);
+        SetMountTransform();
+    }
+
     public Transform FindOrCreateMountpoint(UMAData umaData)
     {
+        if (string.IsNullOrEmpty(BoneName))
+        {
+            return null;
+        }
+        if (umaData == null || umaData.skeleton == null)
+        {
+            return null;
+        }
         BoneHash = UMAUtils.StringToHash(BoneName);
         Transform BoneTransform = umaData.skeleton.GetBoneTransform(BoneHash);
         if (BoneTransform == null)
@@ -78,11 +97,19 @@ public class UMAMountedItem : MonoBehaviour
         {
             if (child.name == ID)
             {
+                UpdateMountPoint(child);
                 return child;
             }
         }
 
         return CreateMountpoint(BoneTransform, umaData.gameObject.layer);
+    }
+
+    private void UpdateMountPoint(Transform newRoot)
+    {
+        newRoot.transform.localPosition = Position;
+        newRoot.transform.localRotation = Orientation;
+        newRoot.transform.localScale = Vector3.one;
     }
 
     private Transform CreateMountpoint(Transform BoneTransform, int Layer)
@@ -100,6 +127,7 @@ public class UMAMountedItem : MonoBehaviour
     {
         // Debug.Log("Getting bone info");
         MountPoint = FindOrCreateMountpoint(umaData);
+        lastUmaData = umaData;
     }
 
     void LateUpdate()
@@ -114,6 +142,14 @@ public class UMAMountedItem : MonoBehaviour
             // get the worldpos/orientation of the mounted object.
             // copy to this object.
             SetMountTransform();
+        }
+        else
+        {
+            if (lastUmaData != null)
+            {
+                FindOrCreateMountpoint(lastUmaData);
+                SetMountTransform();
+            }
         }
     }
 

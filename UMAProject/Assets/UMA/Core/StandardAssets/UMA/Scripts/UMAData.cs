@@ -103,6 +103,9 @@ namespace UMA
 		[NonSerialized]
 		public bool firstBake;
 
+		[NonSerialized]
+		public bool RebuildSkeleton;
+
 		public UMAGeneratorBase umaGenerator;
 
 		[NonSerialized]

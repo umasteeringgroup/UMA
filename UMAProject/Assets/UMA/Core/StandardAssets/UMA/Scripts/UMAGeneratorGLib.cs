@@ -15,9 +15,9 @@ namespace UMA
 			base.Awake();
 		}
 
-		public override void Update()
+		public override void LateUpdate()
 		{
-			base.Update();
+			base.LateUpdate();
 #if UMA_ADDRESSABLES
 			if (EnableCacheCleanup)
 			{

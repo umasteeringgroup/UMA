@@ -149,7 +149,9 @@ namespace UMA.PoseTools
 			Quaternion neckRotation = Quaternion.identity;
 
 			try 
-			{ 
+			{
+				if (umaData.skeleton.GetBoneGameObject(headHash) == null)
+					return;
 				headRotation = umaData.skeleton.GetRotation(headHash); 
 			}
 			catch(System.Exception ex) 
@@ -158,7 +160,12 @@ namespace UMA.PoseTools
 				Debug.LogError("GetRotation: Head Bone not found!"); 
 			}
 
-			try { neckRotation = umaData.skeleton.GetRotation(neckHash); }
+			try 
+			{
+				if (umaData.skeleton.GetBoneGameObject(neckHash) == null)
+					return;
+				neckRotation = umaData.skeleton.GetRotation(neckHash); 
+			}
 			catch(System.Exception) { Debug.LogError("GetRotation: Neck Bone not found!"); }
 
 			// Need to reset bones here if we want Mecanim animation

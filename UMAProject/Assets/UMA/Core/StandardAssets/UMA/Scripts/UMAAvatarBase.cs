@@ -152,6 +152,7 @@ namespace UMA
 			{
 				umaData.animationController = animationController;
 			}
+
 			umaData.umaGenerator = umaGenerator;
 
 			umaData.Dirty(true, true, true);

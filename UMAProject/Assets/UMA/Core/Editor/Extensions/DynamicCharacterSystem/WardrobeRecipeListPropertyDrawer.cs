@@ -261,7 +261,7 @@ namespace UMA.CharacterSystem.Editors
                     if (!recipeIsLive && recipe != null)
                     {
                         var warningRect = new Rect((valRBut.xMin - 25f), valRBut.yMin, 20f, valRBut.height);
-						var warningGUIContent = new GUIContent("", recipeName + " was not Live. If the asset is in an assetBundle make sure the DynamicCharacterSystem is set to Add assets from assetBundles otherwise click this button to add it to the Global Library.");
+						var warningGUIContent = new GUIContent("", recipeName + " was not Live. Click this button to add it to the Global Library.");
 						warningGUIContent.image = warningIcon;
 						//show a warning icon if the added recipe is not available from the global index (or assetBundles)
 						var foundRecipe = FindMissingRecipe(recipeName);

@@ -291,10 +291,6 @@ namespace UMA
 			{
 				string Category = dcb.DisplayValue; 
 
-				if (dbNames.Length == 0)
-				{
-					Debug.Break();
-				}
 				for (int i = 0; i < db.Count; i++)
 				{
 					if (dna.ContainsKey(dbNames[i]))

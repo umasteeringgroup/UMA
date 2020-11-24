@@ -140,6 +140,8 @@ namespace UMA
 
 			EditorGUILayout.Space();
 
+			bool prevAddressables = IsAddressable();
+
 			var defineSymbols = new HashSet<string>(PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup).Split(';'));
 			DefineSymbolToggle(defineSymbols, DefineSymbol_32BitBuffers, "Use 32bit buffers", "This allows meshes bigger than 64k vertices");
 			DefineSymbolToggle(defineSymbols, DefineSymbol_Addressables, "Use Addressables", "This activates the code that loads from asset bundles using addressables.");
@@ -158,7 +160,12 @@ namespace UMA
 				}
 			}
 
+
+
+
+
 #if !UMA_ADDRESSABLES
+
 			GUILayout.Label("Addressables package MUST be installed before enabling this option!",EditorStyles.boldLabel);
 #endif
 			if (EditorGUI.EndChangeCheck())
@@ -175,6 +182,12 @@ namespace UMA
 #endif
 
 #if UMA_ADDRESSABLES
+
+			if (IsAddressable() == false && prevAddressables == true)
+            {
+				UMAAddressablesSupport.Instance.CleanupAddressables(false, true);
+            }
+
 			EditorGUILayout.Space();
 			EditorGUILayout.LabelField("Addressables Options",EditorStyles.boldLabel);
 			EditorGUILayout.Space();

@@ -3,8 +3,9 @@
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -15,13 +16,13 @@ MonoBehaviour:
   boneName: Spine1
   mass: 3
   colliders:
-  - colliderType: 0
+  - colliderType: 2
     colliderCentre: {x: -0.09, y: 0, z: 0.04}
-    boxDimensions: {x: 0.18, y: 0.32, z: 0.35}
+    boxDimensions: {x: 0.18, y: 0.32, z: 0.24}
     sphereRadius: 0
-    capsuleRadius: 0
-    capsuleheight: 0
-    capsuleAlignment: 0
+    capsuleRadius: 0.024
+    capsuleHeight: 0.32
+    capsuleAlignment: 1
   parentBone: Hips
   axis: {x: 0, y: 0, z: 0}
   swingAxis: {x: 0, y: 0, z: 1}

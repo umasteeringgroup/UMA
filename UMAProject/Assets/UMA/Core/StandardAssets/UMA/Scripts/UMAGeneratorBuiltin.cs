@@ -51,8 +51,8 @@ namespace UMA
 		public int garbageCollectionRate = 8;
 		private System.Diagnostics.Stopwatch stopWatch = new System.Diagnostics.Stopwatch();
 
-		[Tooltip("Fast Mesh Generation (no combining)")]
-		public bool fastMesh;
+		[Tooltip("Generates a single UMA immediately with no coroutines. This is the fastest possible path.")]
+		public bool NoCoroutines=true;
 
 		[NonSerialized]
 		public long ElapsedTicks;
@@ -94,7 +94,7 @@ namespace UMA
 			}
 		}
 
-		public virtual void Update()
+		public virtual void LateUpdate()
 		{
 			if (CheckRenderTextures())
 				return; // if render textures needs rebuild we'll not do anything else
@@ -138,6 +138,7 @@ namespace UMA
 
 		public override void Work()
 		{
+			UMAContextBase.IgnoreTag = ignoreTag;
 			if (!IsIdle())
 			{
 				stopWatch.Reset();
@@ -206,13 +207,13 @@ namespace UMA
 		}
 
 
-		public bool GenerateSingleUMA(UMAData data)
+		public bool GenerateSingleUMA(UMAData data, bool fireEvents)
 		{
+			UMAContextBase.IgnoreTag = ignoreTag;
 			if (data == null)
 				return true;
 
 			data.umaGenerator = this;
-			bool oldFastGen = fastGeneration;
 			FreezeTime = true;
 			umaData = data;
 
@@ -228,15 +229,8 @@ namespace UMA
 
 			if (umaData.isTextureDirty)
 			{
-				TextureProcessPROCoroutine textureProcessCoroutine;
-				textureProcessCoroutine = new TextureProcessPROCoroutine();
-				textureProcessCoroutine.Prepare(data, this);
-
-				activeGeneratorCoroutine = new UMAGeneratorCoroutine();
-				activeGeneratorCoroutine.Prepare(this, umaData, textureProcessCoroutine, !umaData.isMeshDirty, InitialScaleFactor);
-
-				activeGeneratorCoroutine.Work();
-				activeGeneratorCoroutine = null;
+				UMAGeneratorPro ugp = new UMAGeneratorPro();
+				ugp.ProcessTexture(this, umaData, !umaData.isMeshDirty, InitialScaleFactor);
 				umaData.isTextureDirty = false;
 				umaData.isAtlasDirty |= umaData.isMeshDirty;
 				TextureChanged++;
@@ -266,6 +260,82 @@ namespace UMA
 				umaData.skeleton.EndSkeletonUpdate();
 			}
 
+			umaData.dirty = false;
+			if (fireEvents)
+            {
+				UMAReady();
+			}
+			else
+            {
+				umaData.Show();
+            }
+			FreezeTime = false;
+			return true;
+		}
+
+
+		public bool OldGenerateSingleUMA(UMAData data)
+		{
+			UMAContextBase.IgnoreTag = ignoreTag;
+			if (data == null)
+				return true;
+
+			data.umaGenerator = this;
+			bool oldFastGen = fastGeneration;
+			FreezeTime = true;
+			umaData = data;
+
+			if (!umaData.Validate())
+				return true;
+
+			if (meshCombiner != null)
+			{
+				meshCombiner.Preprocess(umaData);
+			}
+			umaData.FireCharacterBegunEvents();
+			PreApply(umaData);
+
+			if (umaData.isTextureDirty)
+			{
+					TextureProcessPROCoroutine textureProcessCoroutine;
+					textureProcessCoroutine = new TextureProcessPROCoroutine();
+					textureProcessCoroutine.Prepare(data, this);
+				
+				activeGeneratorCoroutine = new UMAGeneratorCoroutine();
+				activeGeneratorCoroutine.Prepare(this, umaData, textureProcessCoroutine, !umaData.isMeshDirty, InitialScaleFactor);
+
+				activeGeneratorCoroutine.Work();
+				activeGeneratorCoroutine = null;
+				umaData.isTextureDirty = false;
+				umaData.isAtlasDirty |= umaData.isMeshDirty;
+				TextureChanged++;
+			}
+
+			if (umaData.isMeshDirty)
+			{
+				UpdateUMAMesh(umaData.isAtlasDirty);
+				umaData.isAtlasDirty = false;
+				umaData.isMeshDirty = false;
+				SlotsChanged++;
+				forceGarbageCollect++;
+			}
+
+			if (umaData.isShapeDirty)
+			{
+				if (!umaData.skeleton.isUpdating)
+				{
+					umaData.skeleton.BeginSkeletonUpdate();
+				}
+				UpdateUMABody(umaData);
+				umaData.isShapeDirty = false;
+				DnaChanged++;
+			}
+
+			if (umaData.skeleton.isUpdating)
+			{
+				umaData.skeleton.EndSkeletonUpdate();
+			}
+
 			umaData.Show();
 			fastGeneration = oldFastGen;
 			FreezeTime = false;
@@ -275,6 +345,7 @@ namespace UMA
 
 		public virtual bool HandleDirtyUpdate(UMAData data)
 		{
+			UMAContextBase.IgnoreTag = ignoreTag;
 			if (data == null)
 				return true;
 
@@ -325,26 +396,24 @@ namespace UMA
 			}
 
 
-			if (fastMesh)
-            {
-				// each slot is a mesh that shares the bones. 
-            }
-			else
+			if (umaData.isMeshDirty)
 			{
-				if (umaData.isMeshDirty)
-				{
-					UpdateUMAMesh(umaData.isAtlasDirty);
-					umaData.isAtlasDirty = false;
-					umaData.isMeshDirty = false;
-					SlotsChanged++;
-					forceGarbageCollect++;
+				if (umaData.RebuildSkeleton)
+                {
+					DestroyImmediate(umaData.umaRoot, false);
+					umaData.umaRoot = null;
+                }
+				UpdateUMAMesh(umaData.isAtlasDirty);
+				umaData.isAtlasDirty = false;
+				umaData.isMeshDirty = false;
+				SlotsChanged++;
+				forceGarbageCollect++;
 
-					if (!fastGeneration)
-						return false;
-				}
+				if (!fastGeneration)
+					return false;
 			}
 
-			if (umaData.isShapeDirty) 
+			if (umaData.isShapeDirty)
 			{
 				if (!umaData.skeleton.isUpdating)
 				{
@@ -353,7 +422,7 @@ namespace UMA
 				UpdateUMABody(umaData);
 				umaData.isShapeDirty = false;
 				DnaChanged++;
-			} 
+			}
 			else if (umaData.skeleton.isUpdating)
 			{
 				umaData.skeleton.EndSkeletonUpdate();
@@ -367,6 +436,20 @@ namespace UMA
 		{
 			try
 			{
+				if (NoCoroutines)
+                {
+					UMAData umaData = umaDirtyList[0];
+					if (umaData.RebuildSkeleton)
+                    {
+						DestroyImmediate(umaData.umaRoot, false);
+						umaData.umaRoot = null;
+					}
+					GenerateSingleUMA(umaDirtyList[0],true);
+					umaDirtyList.RemoveAt(0);
+					umaData.MoveToList(cleanUmas);
+					umaData = null;
+					return;
+                }
 				if (HandleDirtyUpdate(umaDirtyList[0]))
 				{
 					umaDirtyList.RemoveAt(0);
@@ -385,12 +468,6 @@ namespace UMA
 				if (Debug.isDebugBuild)
 					UnityEngine.Debug.LogException(ex);
 			}
-			//anything more than 166,000 is too long (166,000 is 1 frame @ 60fps)
-			//the demo alien is about 65,000 on average- this is a big chunk of the available time though and my machine is fast
-			//Human Male DCS using pre plugins dna is about 45,000 on average but then its only doing 'skeletonModifiers' and 1 bonepose
-			//where as elfOrAlien demo is doing SkeletonModifiers + 3 BonePoses + 2 Blendshapes + 7 ColorDNAs
-			//if(charName != "")
-			//Debug.Log(charName + " DirtyUpdate took " + DirtyStopwatch.ElapsedTicks);
 		}
 
 		private void UpdateUMAMesh(bool updatedAtlas)

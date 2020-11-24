@@ -9,6 +9,8 @@ namespace UMA
 	/// </summary>
 	public abstract class UMAContextBase : MonoBehaviour
 	{
+		public static string IgnoreTag;
+
 		private static UMAContextBase _instance;
 		public static UMAContextBase Instance
 		{

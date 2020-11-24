@@ -438,6 +438,10 @@ namespace UMA.CharacterSystem
         {
             lastHide = !hide;
 
+            if (umaGenerator == null)
+            {
+                umaGenerator = UMAContextBase.Instance.GetComponent<UMAGeneratorBase>();
+            }
 #if SUPER_LOGGING
 			Debug.Log("Start on DynamicCharacterAvatar: " + gameObject.name);
 #endif
@@ -532,7 +536,7 @@ namespace UMA.CharacterSystem
                 ugb.InitialScaleFactor = ugb.editorInitialScaleFactor;
                 ugb.atlasResolution = ugb.editorAtlasResolution;
 
-                ugb.GenerateSingleUMA(umaData);
+                ugb.GenerateSingleUMA(umaData,false); // don't fire completed events in the editor
 
                 ugb.fastGeneration = oldFastGen;
                 ugb.FreezeTime = false;
@@ -980,18 +984,23 @@ namespace UMA.CharacterSystem
         /// </summary>
         /// <param name="racename">race to change to</param>
         /// <param name="customChangeRaceOptions">flags for the race change options</param>
-        public void ChangeRace(string racename, ChangeRaceOptions customChangeRaceOptions = ChangeRaceOptions.useDefaults,bool ForceChange = false)
+        public bool ChangeRace(string racename, ChangeRaceOptions customChangeRaceOptions = ChangeRaceOptions.useDefaults,bool ForceChange = false)
         {
             // never been built, just use the race preset.
             if (activeRace.racedata == null)
             {
                 RacePreset = racename;
-                return;
+                return true;
+            }
+            if (UpdatePending())
+            {
+                return false;
             }
             RaceData thisRace = null;
             if (racename != "None Set")
                 thisRace = context.GetRace(racename);
             ChangeRace(thisRace, customChangeRaceOptions, ForceChange);
+            return true;
         }
 
         public void ChangeRaceData(string raceName)
@@ -3386,25 +3395,29 @@ namespace UMA.CharacterSystem
 
             if (umaRace != umaData.umaRecipe.raceData)
             {
-                if (rebuildSkeleton)
+              /*if (rebuildSkeleton)
                 {
-                    // New Way
+                    
+                    // Old New Way
                     DestroyImmediate(umaData.umaRoot,false);
                     umaData.umaRoot = null;
                     // New Way end
 
                     // Old Way
-                    /*
-                    foreach (Transform child in gameObject.transform)
-                    {
-                        UMAUtils.DestroySceneObject(child.gameObject);
-                    }*/
+                    //
+                    //foreach (Transform child in gameObject.transform)
+                    //{
+                    //    UMAUtils.DestroySceneObject(child.gameObject);
+                    //}
                     // Old way end
-                }
+                } */
+                // new way
+                umaData.RebuildSkeleton = rebuildSkeleton;
                 UpdateNewRace();
             }
             else
             {
+                umaData.RebuildSkeleton = false;
                 UpdateSameRace();
             }
 
@@ -3865,6 +3878,10 @@ namespace UMA.CharacterSystem
         {
             if (umaData != null)
             {
+                if (umaData == null)
+                    return false;
+                if (umaData.umaGenerator == null)
+                    return false;
                 return umaData.umaGenerator.updatePending(umaData);
             }
             return false;

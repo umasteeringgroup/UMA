@@ -13,7 +13,7 @@ namespace UMA.Editors
 		SerializedProperty fastGeneration;
 		SerializedProperty garbageCollectionRate;
 		SerializedProperty processAllPending;
-		SerializedProperty fastMesh;
+		SerializedProperty NoCoroutines;
 		SerializedProperty EditorInitialScaleFactor;
 		SerializedProperty editorAtlasResolution;
 
@@ -28,7 +28,7 @@ namespace UMA.Editors
 			processAllPending = serializedObject.FindProperty("processAllPending");
 			fastGeneration = serializedObject.FindProperty("fastGeneration");
 			garbageCollectionRate = serializedObject.FindProperty("garbageCollectionRate");
-			fastMesh = serializedObject.FindProperty("fastMesh");
+			NoCoroutines = serializedObject.FindProperty("NoCoroutines");
 			EditorInitialScaleFactor = serializedObject.FindProperty("editorInitialScaleFactor");
 			editorAtlasResolution = serializedObject.FindProperty("editorAtlasResolution");
 
@@ -55,7 +55,7 @@ namespace UMA.Editors
 			GUILayout.Space(20);
 			EditorGUILayout.HelpBox("Edit time generation options. Keep the atlas size down and the scale factor high to address possible problems loading large scene files.", MessageType.None);
 			EditorGUILayout.LabelField("Advanced Configuration", centeredLabel);
-			EditorGUILayout.PropertyField(fastMesh);
+			EditorGUILayout.PropertyField(NoCoroutines);
 			EditorGUILayout.PropertyField(textureMerge);
 			EditorGUILayout.PropertyField(meshCombiner);
 

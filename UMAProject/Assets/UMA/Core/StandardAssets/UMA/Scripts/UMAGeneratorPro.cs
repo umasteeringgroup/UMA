@@ -8,8 +8,7 @@ namespace UMA
 	/// <summary>
 	/// Utility class for generating texture atlases
 	/// </summary>
-	[Serializable]
-	public class UMAGeneratorCoroutine : WorkerCoroutine
+	public class UMAGeneratorPro
 	{
 		private class GeneratedMaterialLookupKey : IEquatable<GeneratedMaterialLookupKey>
 		{
@@ -22,7 +21,7 @@ namespace UMA
 			}
 		}
 
-		TextureProcessBaseCoroutine textureProcessCoroutine;
+		TextureProcessPRO textureProcesser;
 
 		MaxRectsBinPack packTexture;
 
@@ -37,15 +36,6 @@ namespace UMA
 		List<UMAData.GeneratedMaterial> atlassedMaterials = new List<UMAData.GeneratedMaterial>(20);
 		Dictionary<GeneratedMaterialLookupKey, UMAData.GeneratedMaterial> generatedMaterialLookup;
 
-
-		public void Prepare(UMAGeneratorBase _umaGenerator, UMAData _umaData, TextureProcessBaseCoroutine textureProcessCoroutine, bool updateMaterialList, int InitialScaleFactor)
-		{
-			umaGenerator = _umaGenerator;
-			umaData = _umaData;
-			this.textureProcessCoroutine = textureProcessCoroutine;
-			this.updateMaterialList = updateMaterialList;
-			scaleFactor = InitialScaleFactor;
-		}
 
 		private UMAData.GeneratedMaterial FindOrCreateGeneratedMaterial(UMAMaterial umaMaterial, UMARendererAsset renderer = null)
 		{
@@ -101,7 +91,7 @@ namespace UMA
 			return new Rect(r.x * w, r.y * h, r.width * w, r.height * h);
 		}
 
-		protected override void Start()
+		protected void Start()
 		{
 			if (generatedMaterialLookup == null)
 			{
@@ -271,16 +261,23 @@ namespace UMA
 			}
 		}
 
-		protected override IEnumerator workerMethod()
+		public void ProcessTexture(UMAGeneratorBase _umaGenerator, UMAData _umaData, bool updateMaterialList, int InitialScaleFactor)
 		{
+			umaGenerator = _umaGenerator;
+			umaData = _umaData;
+			this.updateMaterialList = updateMaterialList;
+			scaleFactor = InitialScaleFactor;
+			textureProcesser = new TextureProcessPRO();
+
+			Start();
+
 			umaData.generatedMaterials.rendererAssets = uniqueRenderers;
 			umaData.generatedMaterials.materials = generatedMaterials;
 
 			GenerateAtlasData();
 			OptimizeAtlas();
 
-			textureProcessCoroutine.Prepare(umaData, umaGenerator);
-			yield return textureProcessCoroutine;
+			textureProcesser.ProcessTexture(_umaData,_umaGenerator);
 
 			CleanBackUpTextures();
 			UpdateUV();
@@ -293,7 +290,7 @@ namespace UMA
 					var renderer = umaData.GetRenderer(j);
 					var mats = renderer.sharedMaterials;
 					var newMats = new Material[mats.Length];
-					var atlasses = umaData.generatedMaterials.materials;
+					var atlasses = umaData.generatedMaterials.materials;	
 					int materialIndex = 0;
 					for (int i = 0; i < atlasses.Count; i++)
 					{
@@ -311,10 +308,6 @@ namespace UMA
 			}
 		}
 
-		protected override void Stop()
-		{
-
-		}
 
 		private void CleanBackUpTextures()
 		{

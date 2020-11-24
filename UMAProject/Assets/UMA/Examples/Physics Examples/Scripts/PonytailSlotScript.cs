@@ -22,6 +22,7 @@ namespace UMA.Examples
 	    public float AnchorMass = 0.0f;                              // Mass of Anchor Bone
 	    public bool FreezePositions = false;                         // Set constraints on the rigidbody to only allow rotations.
 	    public Vector3 AnchorOffset = new Vector3(0.06f, 0f, -0.09f);// Offset of the anchor collider
+		public int BoneLayer = 8;                                    // The layer to add to the bone.
 
 	    // The following are properties for the Pendulum.
 	    public float MinGlobalForce = 0.1f;                          // The smallest amoount of force applied during movement
@@ -135,6 +136,7 @@ namespace UMA.Examples
 
 	                SphereCollider sc = t.gameObject.AddComponent<SphereCollider>();
 	                sc.radius = SwingRadius;
+					sc.gameObject.layer = BoneLayer;
 
 	                CharacterJoint c = t.gameObject.AddComponent<CharacterJoint>();
 

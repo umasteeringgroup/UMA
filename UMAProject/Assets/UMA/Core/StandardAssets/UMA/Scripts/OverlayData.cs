@@ -225,7 +225,15 @@ namespace UMA
 
 			Validate();
 
-			if (asset.material.name != targetMaterial.name)
+			if (asset.material == null)
+            {
+#if UNITY_EDITOR
+				Debug.LogError(string.Format("Overlay '{0}' doesn't have a UMA Material assigned. {1}", asset.overlayName, UnityEditor.AssetDatabase.GetAssetPath(asset)));
+#endif
+				return false;
+			}
+
+			if ((asset.material != null) && (asset.material.name != targetMaterial.name))
 			{
 				if (asset.material != targetMaterial)
 				{
