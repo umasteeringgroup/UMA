@@ -40,6 +40,16 @@ Alpha 2
   Added ability to transform (scale and rotate) an overlay in a recipe.
   Fixed error in build when edit-time UMA's were used in scene.
 
+Alpha 3
+  New faster build method without coroutines ("No coroutines" on generator).
+  Skeleton is now removed during racechange in generator, not build process.
+  Can now specify bones to keep when building slots. (for mount points, etc)
+  On UMAMountedItem, will not set an ignore layer on itself, so it doesn't get deleted in some cases
+  Numerous bug fixes
+  Please note: to see speed gains, you must build your application. They may not be evident in the editor.
+
+
+
 
 What's new in 2.10.1
 

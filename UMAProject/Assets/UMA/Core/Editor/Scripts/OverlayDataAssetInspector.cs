@@ -112,7 +112,7 @@ namespace UMA.Editors
 					GUIHelper.EndVerticalPadded(10);
 				}
 
-				if (_textureList.arraySize <= 0 || _textureList.arraySize != textureChannelCount)
+				if ( _textureList.arraySize != textureChannelCount)
 				{
 					EditorGUILayout.HelpBox("Overlay Texture count and UMA Material channel count don't match!", MessageType.Error);
 				}

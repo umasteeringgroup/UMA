@@ -95,6 +95,14 @@ namespace UMA.CharacterSystem.Examples
 #endif
         }
 
+        private void Update()
+        {
+            if (Input.GetKey(KeyCode.C))
+            {
+                ChangeSex();
+            }
+        }
+
 #if UMA_ADDRESSABLES
         private void Recipes_Loaded(UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<IList<Object>> obj)
 		{

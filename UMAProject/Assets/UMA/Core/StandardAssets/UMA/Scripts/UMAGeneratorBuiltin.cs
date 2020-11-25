@@ -94,7 +94,7 @@ namespace UMA
 			}
 		}
 
-		public virtual void LateUpdate()
+		public virtual void Update()
 		{
 			if (CheckRenderTextures())
 				return; // if render textures needs rebuild we'll not do anything else

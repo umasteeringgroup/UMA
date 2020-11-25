@@ -18,9 +18,17 @@ namespace UMA
 
 		public const string UNSHARED = "-";
 		public string name;
-		public Color[] channelMask;
-		public Color[] channelAdditiveMask;
-		public Color color { get { return channelMask[0]; } set { channelMask[0] = value; } }
+		public Color[] channelMask = new Color[0];
+		public Color[] channelAdditiveMask = new Color[0];
+		public Color color 
+		{ 
+			get 
+			{
+				if (channelMask.Length < 1)
+					return Color.white;
+				return channelMask[0]; 
+			} 
+			set { channelMask[0] = value; } }
 		public int channelCount { get { return channelMask.Length; } }
 		public bool isDefault(int Channel)
 		{
@@ -67,6 +75,7 @@ namespace UMA
 		{
 			var res = new OverlayColorData();
 			res.name = name;
+ 
 			res.channelMask = new Color[channelMask.Length];
 			for (int i = 0; i < channelMask.Length; i++)
 			{
