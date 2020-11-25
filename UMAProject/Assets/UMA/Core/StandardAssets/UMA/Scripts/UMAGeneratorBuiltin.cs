@@ -402,6 +402,7 @@ namespace UMA
                 {
 					DestroyImmediate(umaData.umaRoot, false);
 					umaData.umaRoot = null;
+					umaData.RebuildSkeleton = false;
                 }
 				UpdateUMAMesh(umaData.isAtlasDirty);
 				umaData.isAtlasDirty = false;
@@ -443,6 +444,7 @@ namespace UMA
                     {
 						DestroyImmediate(umaData.umaRoot, false);
 						umaData.umaRoot = null;
+						umaData.RebuildSkeleton = false;
 					}
 					GenerateSingleUMA(umaDirtyList[0],true);
 					umaDirtyList.RemoveAt(0);
