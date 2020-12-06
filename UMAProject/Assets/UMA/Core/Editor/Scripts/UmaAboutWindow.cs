@@ -100,7 +100,7 @@ namespace UMA
                 titleContent.image = _IconTexture;
 
                 initialized = true;
-
+                centeredStyle = new GUIStyle(EditorStyles.label);
                 centeredStyle.alignment = TextAnchor.MiddleCenter;
             }                
         }

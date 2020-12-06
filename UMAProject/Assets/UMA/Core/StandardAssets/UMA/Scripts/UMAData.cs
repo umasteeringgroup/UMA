@@ -471,6 +471,7 @@ namespace UMA
 			public OverlayData[] overlayData;
 			public Rect atlasRegion;
 			public bool isRectShared;
+			public bool isNoTextures;
 			public List<OverlayData> overlayList;
 			public MaterialFragment rectFragment;
 			public textureData baseOverlay;

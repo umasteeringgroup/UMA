@@ -23,7 +23,7 @@ namespace UMA.Editors
             _recipe = _umaData.umaRecipe;
 			if (_recipe == null || _recipe.raceData == null)
             {				
-                _errorMessage = "UMA Data not loaded.";
+                _errorMessage = "Recipe data has not been generated.";
             } 
             else
             {

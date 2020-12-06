@@ -9,7 +9,7 @@ namespace UMA
 	/// Overlay color data.
 	/// </summary>
 	[System.Serializable]
-	public class OverlayColorData : System.IEquatable<OverlayColorData>
+	public class OverlayColorData :  System.IEquatable<OverlayColorData>
 	{
 		public static int currentinstance = 0;
 		[NonSerialized]
@@ -20,15 +20,22 @@ namespace UMA
 		public string name;
 		public Color[] channelMask = new Color[0];
 		public Color[] channelAdditiveMask = new Color[0];
-		public Color color 
-		{ 
-			get 
+		public UMAMaterialPropertyBlock PropertyBlock; // may be null.
+
+		public Color color
+		{
+			get
 			{
 				if (channelMask.Length < 1)
 					return Color.white;
-				return channelMask[0]; 
-			} 
-			set { channelMask[0] = value; } }
+				return channelMask[0];
+			}
+			set
+			{
+				if (channelMask.Length > 0)
+					channelMask[0] = value;
+			}
+		}
 		public int channelCount { get { return channelMask.Length; } }
 		public bool isDefault(int Channel)
 		{
@@ -86,6 +93,19 @@ namespace UMA
 			{
 				res.channelAdditiveMask[i] = channelAdditiveMask[i];
 			}
+			if (PropertyBlock != null)
+            {
+				res.PropertyBlock = new UMAMaterialPropertyBlock();
+				res.PropertyBlock.shaderProperties = new List<UMAProperty>(PropertyBlock.shaderProperties.Count);
+				for(int i=0;i<PropertyBlock.shaderProperties.Count;i++)
+                {
+					UMAProperty up = PropertyBlock.shaderProperties[i];
+					if (up != null)
+					{
+						res.PropertyBlock.shaderProperties.Add(up.Clone());
+					}
+                }
+            }
 			return res;
 		}
 
@@ -101,6 +121,48 @@ namespace UMA
             return false;
          }
       }
+
+
+		public bool isValid
+        {
+			get
+            {
+				return PropertyBlock == null && channelMask.Length == 0;
+            }
+        }
+
+		public bool HasColors
+        {
+			get
+            {
+				return channelMask.Length > 0;
+            }
+        }
+
+		public bool HasProperties
+        {
+			get
+            {
+				if (PropertyBlock == null) return false;
+				return PropertyBlock.shaderProperties.Count > 0;
+            }
+        }
+
+		public bool isOnlyColors
+        {
+			get
+            {
+				return PropertyBlock == null && channelMask.Length > 0;
+            }
+        }
+
+		public bool isOnlyProperties
+        {
+			get
+            {
+				return PropertyBlock != null && channelMask.Length > 0;
+            }
+        }
 
 		/// <summary>
 		/// Does the OverlayColorData have a valid name?
@@ -287,6 +349,17 @@ namespace UMA
 			for (int i = 0; i < src.channelAdditiveMask.Length; i++)
 			{
 				channelAdditiveMask[i] = src.channelAdditiveMask[i];
+			}
+
+			PropertyBlock = new UMAMaterialPropertyBlock();
+			if (src.PropertyBlock != null)
+			{
+				PropertyBlock.shaderProperties = new List<UMAProperty>(src.PropertyBlock.shaderProperties.Count);
+				for (int i = 0; i < src.PropertyBlock.shaderProperties.Count; i++)
+				{
+					UMAProperty up = src.PropertyBlock.shaderProperties[i];
+					PropertyBlock.shaderProperties.Add(up.Clone());
+				}
 			}
 		}
 	}

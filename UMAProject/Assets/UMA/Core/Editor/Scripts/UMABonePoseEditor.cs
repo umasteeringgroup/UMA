@@ -147,6 +147,7 @@ namespace UMA.PoseTools
 		private string filter = "";
 		private string lastFilter = "";
 		private bool filtered = false;
+		private string highlight = "";
 
 
 		private static Texture warningIcon;
@@ -627,10 +628,28 @@ namespace UMA.PoseTools
 				addBoneOptions = addList.ToArray();
 			}
 
+			if (editBoneIndex != BAD_INDEX)
+			{
+				SerializedProperty editBone = poses.GetArrayElementAtIndex(editBoneIndex);
+				string boneName = editBone.stringValue;
+				string mirrorBoneName = "";
+				if (boneName.StartsWith("Left"))
+                {
+					mirrorBoneName = boneName.Replace("Left", "Right");
+					//mirrorBoneIndex = FindMirrorBone(mirrorName);
+                }
+				if (boneName.StartsWith("Right"))
+                {
+					mirrorBoneName = boneName.Replace("Right", "Left");
+					//mirrorBoneIndex = FindMirrorBone(mirrorName);
+				}
+			}
+
 			// List of existing bones
 			poses.isExpanded = EditorGUILayout.Foldout(poses.isExpanded, "Pose Bones ("+poses.arraySize+")");
 			if (poses.isExpanded)
 			{
+				highlight = EditorGUILayout.TextField("Highlight bones containing: ", highlight);
 				for (int i = 0; i < poses.arraySize; i++)
 				{
 					SerializedProperty pose = poses.GetArrayElementAtIndex(i);
@@ -838,6 +857,13 @@ namespace UMA.PoseTools
 			EditorGUILayout.BeginHorizontal();
 			bone.isExpanded = EditorGUILayout.Foldout(bone.isExpanded, boneGUIContent);
 			Color currentColor = GUI.color;
+			if (!string.IsNullOrWhiteSpace(highlight))
+            {
+				if (bone.stringValue.ToLower().Contains(highlight.ToLower()))
+                {
+					GUI.color = Color.yellow * 0.7f ;
+                }
+            }
 			if (drawBoneIndex == editBoneIndex)
 			{
 				GUI.color = Color.green;

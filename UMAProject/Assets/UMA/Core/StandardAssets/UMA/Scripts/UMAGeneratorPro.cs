@@ -14,9 +14,35 @@ namespace UMA
 		{
 			public List<OverlayData> overlayList;
 			public UMARendererAsset rendererAsset;
+			//public string slotname;
 
-			public bool Equals(GeneratedMaterialLookupKey other)
+            public override int GetHashCode()
+            {
+				if (overlayList != null)
+					return overlayList.GetHashCode();
+				return base.GetHashCode();
+            }
+
+            public bool Equals(GeneratedMaterialLookupKey other)
 			{
+				/*Debug.Log("comparing to slot: " + slotname);
+				if (rendererAsset != null)
+                {
+					if (rendererAsset != other.rendererAsset)
+                    {
+						Debug.Log("Renderer assets do not match");
+						return false;
+                    }
+                }
+				if (overlayList != null)
+                {
+					if (overlayList != other.overlayList)
+                    {
+						Debug.Log("Overlay lists do not match");
+						return false;
+                    }
+                } 
+				return true; */
 				return (overlayList == other.overlayList && rendererAsset == other.rendererAsset);
 			}
 		}
@@ -159,26 +185,32 @@ namespace UMA
 #endif
 						}
 					}
-
 					UMAData.MaterialFragment tempMaterialDefinition = new UMAData.MaterialFragment();
 					tempMaterialDefinition.baseOverlay = new UMAData.textureData();
-					tempMaterialDefinition.baseOverlay.textureList = overlay0.textureArray;
-					tempMaterialDefinition.baseOverlay.alphaTexture = overlay0.alphaMask;
-					tempMaterialDefinition.baseOverlay.overlayType = overlay0.overlayType;
 
 					tempMaterialDefinition.umaMaterial = slot.asset.material;
-					tempMaterialDefinition.baseColor = overlay0.colorData.color;
-					tempMaterialDefinition.size = overlay0.pixelCount;
+					if (overlay0.isEmpty)
+					{
+						tempMaterialDefinition.isNoTextures = true;
+					}
+					else
+					{
+						tempMaterialDefinition.baseOverlay.textureList = overlay0.textureArray;
+						tempMaterialDefinition.baseOverlay.alphaTexture = overlay0.alphaMask;
+						tempMaterialDefinition.baseOverlay.overlayType = overlay0.overlayType;
+						tempMaterialDefinition.baseColor = overlay0.colorData.color;
+						tempMaterialDefinition.size = overlay0.pixelCount;
 
-					tempMaterialDefinition.overlays = new UMAData.textureData[validOverlayCount - 1];
-					tempMaterialDefinition.overlayColors = new Color32[validOverlayCount - 1];
-					tempMaterialDefinition.rects = new Rect[validOverlayCount - 1];
-					tempMaterialDefinition.overlayData = new OverlayData[validOverlayCount];
-					tempMaterialDefinition.channelMask = new Color[validOverlayCount][];
-					tempMaterialDefinition.channelAdditiveMask = new Color[validOverlayCount][];
-					tempMaterialDefinition.overlayData[0] = slot.GetOverlay(0);
-					tempMaterialDefinition.channelMask[0] = slot.GetOverlay(0).colorData.channelMask;
-					tempMaterialDefinition.channelAdditiveMask[0] = slot.GetOverlay(0).colorData.channelAdditiveMask;
+						tempMaterialDefinition.overlays = new UMAData.textureData[validOverlayCount - 1];
+						tempMaterialDefinition.overlayColors = new Color32[validOverlayCount - 1];
+						tempMaterialDefinition.rects = new Rect[validOverlayCount - 1];
+						tempMaterialDefinition.overlayData = new OverlayData[validOverlayCount];
+						tempMaterialDefinition.channelMask = new Color[validOverlayCount][];
+						tempMaterialDefinition.channelAdditiveMask = new Color[validOverlayCount][];
+						tempMaterialDefinition.overlayData[0] = slot.GetOverlay(0);
+						tempMaterialDefinition.channelMask[0] = slot.GetOverlay(0).colorData.channelMask;
+						tempMaterialDefinition.channelAdditiveMask[0] = slot.GetOverlay(0).colorData.channelAdditiveMask;
+					}
 					tempMaterialDefinition.slotData = slot;
 
 					int overlayID = 0;
@@ -230,8 +262,33 @@ namespace UMA
 			for (int i=0;i<generatedMaterials.Count;i++)
 			{
 				UMAData.GeneratedMaterial ugm = generatedMaterials[i];
+				for (int j = 0; j < ugm.materialFragments.Count; j++)
+				{
+					UMAData.MaterialFragment matfrag = ugm.materialFragments[j];
+					// Shader parameters from the shared colors are only pulled from the first overlay.
+					// this is so we don't have conflicting overlays.
+					// TODO: if we pulled from all of them, it would be a little slower, but it could allow for us to have overlays override some
+					// parameters. 
+					if (matfrag.overlayData != null && matfrag.overlayData.Length > 0)
+					{
+						OverlayData od = matfrag.overlayData[0];
+						if (od.colorData.HasProperties)
+						{
+							foreach (var s in od.colorData.PropertyBlock.shaderProperties)
+							{
+								if (ugm.material.HasProperty(s.name))
+								{
+									s.Apply(ugm.material);
+								}
+							}
+						}
+					}
+				}
+
 				if (ugm.umaMaterial.shaderParms != null)
 				{
+
+					// Set Shader properties from shared colors
 					for(int j=0;j<ugm.umaMaterial.shaderParms.Length;j++)
 					{
 						UMAMaterial.ShaderParms parm = ugm.umaMaterial.shaderParms[j];
@@ -376,7 +433,10 @@ namespace UMA
 				var tempMaterialDef = material.materialFragments[atlasElementIndex];
 				if (tempMaterialDef.isRectShared)
 					continue;
-				
+
+				if (tempMaterialDef.isNoTextures)
+					continue;
+		
 				int width = Mathf.FloorToInt(tempMaterialDef.baseOverlay.textureList[0].width * material.resolutionScale * tempMaterialDef.slotData.overlayScale);
 				int height = Mathf.FloorToInt(tempMaterialDef.baseOverlay.textureList[0].height * material.resolutionScale * tempMaterialDef.slotData.overlayScale);
 				

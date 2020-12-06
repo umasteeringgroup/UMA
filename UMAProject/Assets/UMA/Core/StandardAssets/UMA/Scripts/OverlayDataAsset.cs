@@ -41,7 +41,7 @@ namespace UMA
 		/// Array of textures required for the overlay material.
 		/// </summary>
 		[Tooltip("Array of textures required for the overlay material.")]
-		public Texture[] textureList;
+		public Texture[] textureList = new Texture[0];
 		/// <summary>
 		/// Use this to identify what kind of overlay this is and what it fits
 		/// Eg. BaseMeshSkin, BaseMeshOverlays, GenericPlateArmor01

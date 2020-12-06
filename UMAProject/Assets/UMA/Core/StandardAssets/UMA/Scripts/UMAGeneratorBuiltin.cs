@@ -217,6 +217,14 @@ namespace UMA
 			FreezeTime = true;
 			umaData = data;
 
+			if (umaData.RebuildSkeleton)
+			{
+				DestroyImmediate(umaData.umaRoot, false);
+				umaData.umaRoot = null;
+				umaData.RebuildSkeleton = false;
+				umaData.isShapeDirty = true;
+			}
+
 			if (!umaData.Validate())
 				return true;
 
@@ -273,76 +281,6 @@ namespace UMA
 			return true;
 		}
 
-
-		public bool OldGenerateSingleUMA(UMAData data)
-		{
-			UMAContextBase.IgnoreTag = ignoreTag;
-			if (data == null)
-				return true;
-
-			data.umaGenerator = this;
-			bool oldFastGen = fastGeneration;
-			FreezeTime = true;
-			umaData = data;
-
-			if (!umaData.Validate())
-				return true;
-
-			if (meshCombiner != null)
-			{
-				meshCombiner.Preprocess(umaData);
-			}
-			umaData.FireCharacterBegunEvents();
-			PreApply(umaData);
-
-			if (umaData.isTextureDirty)
-			{
-					TextureProcessPROCoroutine textureProcessCoroutine;
-					textureProcessCoroutine = new TextureProcessPROCoroutine();
-					textureProcessCoroutine.Prepare(data, this);
-				
-				activeGeneratorCoroutine = new UMAGeneratorCoroutine();
-				activeGeneratorCoroutine.Prepare(this, umaData, textureProcessCoroutine, !umaData.isMeshDirty, InitialScaleFactor);
-
-				activeGeneratorCoroutine.Work();
-				activeGeneratorCoroutine = null;
-				umaData.isTextureDirty = false;
-				umaData.isAtlasDirty |= umaData.isMeshDirty;
-				TextureChanged++;
-			}
-
-			if (umaData.isMeshDirty)
-			{
-				UpdateUMAMesh(umaData.isAtlasDirty);
-				umaData.isAtlasDirty = false;
-				umaData.isMeshDirty = false;
-				SlotsChanged++;
-				forceGarbageCollect++;
-			}
-
-			if (umaData.isShapeDirty)
-			{
-				if (!umaData.skeleton.isUpdating)
-				{
-					umaData.skeleton.BeginSkeletonUpdate();
-				}
-				UpdateUMABody(umaData);
-				umaData.isShapeDirty = false;
-				DnaChanged++;
-			}
-
-			if (umaData.skeleton.isUpdating)
-			{
-				umaData.skeleton.EndSkeletonUpdate();
-			}
-
-			umaData.Show();
-			fastGeneration = oldFastGen;
-			FreezeTime = false;
-			return true;
-		}
-
-
 		public virtual bool HandleDirtyUpdate(UMAData data)
 		{
 			UMAContextBase.IgnoreTag = ignoreTag;
@@ -362,6 +300,13 @@ namespace UMA
 				}
 				umaData.FireCharacterBegunEvents();
 				PreApply(umaData);
+			}
+			if (umaData.RebuildSkeleton)
+			{
+				DestroyImmediate(umaData.umaRoot, false);
+				umaData.umaRoot = null;
+				umaData.RebuildSkeleton = false;
+				umaData.isShapeDirty = true;
 			}
 
 
@@ -398,12 +343,6 @@ namespace UMA
 
 			if (umaData.isMeshDirty)
 			{
-				if (umaData.RebuildSkeleton)
-                {
-					DestroyImmediate(umaData.umaRoot, false);
-					umaData.umaRoot = null;
-					umaData.RebuildSkeleton = false;
-                }
 				UpdateUMAMesh(umaData.isAtlasDirty);
 				umaData.isAtlasDirty = false;
 				umaData.isMeshDirty = false;
@@ -445,6 +384,7 @@ namespace UMA
 						DestroyImmediate(umaData.umaRoot, false);
 						umaData.umaRoot = null;
 						umaData.RebuildSkeleton = false;
+						umaData.isShapeDirty = true;
 					}
 					GenerateSingleUMA(umaDirtyList[0],true);
 					umaDirtyList.RemoveAt(0);

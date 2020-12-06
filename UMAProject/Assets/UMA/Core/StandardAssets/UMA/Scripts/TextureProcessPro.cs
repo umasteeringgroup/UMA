@@ -64,7 +64,7 @@ namespace UMA
                 //Process all necessary TextureModules
                 for (int i = 0; i < generatedMaterial.materialFragments.Count; i++)
                 {
-                    if (!generatedMaterial.materialFragments[i].isRectShared)
+                    if (!generatedMaterial.materialFragments[i].isRectShared && !generatedMaterial.materialFragments[i].isNoTextures)
                     {
                         moduleCount++;
                         moduleCount = moduleCount + generatedMaterial.materialFragments[i].overlays.Length;

@@ -177,18 +177,26 @@ namespace UMA
 					tempMaterialDefinition.baseOverlay.overlayType = overlay0.overlayType;
 
 					tempMaterialDefinition.umaMaterial = slot.asset.material;
-					tempMaterialDefinition.baseColor = overlay0.colorData.color;
-					tempMaterialDefinition.size = overlay0.pixelCount;
+					if (overlay0.isEmpty)
+                    {
+						tempMaterialDefinition.isNoTextures = true;
+						tempMaterialDefinition.overlayData[0] = slot.GetOverlay(0);
+					}
+					else
+					{
+						tempMaterialDefinition.baseColor = overlay0.colorData.color;
+						tempMaterialDefinition.size = overlay0.pixelCount;
 
-					tempMaterialDefinition.overlays = new UMAData.textureData[validOverlayCount - 1];
-					tempMaterialDefinition.overlayColors = new Color32[validOverlayCount - 1];
-					tempMaterialDefinition.rects = new Rect[validOverlayCount - 1];
-					tempMaterialDefinition.overlayData = new OverlayData[validOverlayCount];
-					tempMaterialDefinition.channelMask = new Color[validOverlayCount][];
-					tempMaterialDefinition.channelAdditiveMask = new Color[validOverlayCount][];
-					tempMaterialDefinition.overlayData[0] = slot.GetOverlay(0);
-					tempMaterialDefinition.channelMask[0] = slot.GetOverlay(0).colorData.channelMask;
-					tempMaterialDefinition.channelAdditiveMask[0] = slot.GetOverlay(0).colorData.channelAdditiveMask;
+						tempMaterialDefinition.overlays = new UMAData.textureData[validOverlayCount - 1];
+						tempMaterialDefinition.overlayColors = new Color32[validOverlayCount - 1];
+						tempMaterialDefinition.rects = new Rect[validOverlayCount - 1];
+						tempMaterialDefinition.overlayData = new OverlayData[validOverlayCount];
+						tempMaterialDefinition.channelMask = new Color[validOverlayCount][];
+						tempMaterialDefinition.channelAdditiveMask = new Color[validOverlayCount][];
+						tempMaterialDefinition.overlayData[0] = slot.GetOverlay(0);
+						tempMaterialDefinition.channelMask[0] = slot.GetOverlay(0).colorData.channelMask;
+						tempMaterialDefinition.channelAdditiveMask[0] = slot.GetOverlay(0).colorData.channelAdditiveMask;
+					}
 					tempMaterialDefinition.slotData = slot;
 
 					int overlayID = 0;

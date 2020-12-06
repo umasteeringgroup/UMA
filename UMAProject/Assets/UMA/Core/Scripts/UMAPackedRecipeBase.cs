@@ -352,11 +352,13 @@ namespace UMA
 			public string name;
 			// Put everything in one array
 			public short[] colors;
+			public string[] ShaderParms;
 
 			public PackedOverlayColorDataV3()
 			{
 				name = "";
 				colors = new short[0];
+				ShaderParms = new string[0];
 			}
 
 			public PackedOverlayColorDataV3(OverlayColorData colorData)
@@ -381,6 +383,18 @@ namespace UMA
 						colors[colorIndex++] = (short)Mathf.FloorToInt(additiveMaskColor.a * 255f);
 					}
 				}
+				if (colorData.HasProperties)
+                {
+					ShaderParms = new string[colorData.PropertyBlock.shaderProperties.Count];
+					for (int i= 0; i < colorData.PropertyBlock.shaderProperties.Count; i++)
+                    {
+						UMAProperty up = colorData.PropertyBlock.shaderProperties[i];
+						if (up != null)
+						{
+							ShaderParms[i] = up.ToString();
+						}
+                    }
+                }
 			}
 
 			public void SetOverlayColorData(OverlayColorData overlayColorData)
@@ -402,6 +416,15 @@ namespace UMA
 						overlayColorData.channelAdditiveMask[channel].g = colors[colorIndex++] / 255f;
 						overlayColorData.channelAdditiveMask[channel].b = colors[colorIndex++] / 255f;
 						overlayColorData.channelAdditiveMask[channel].a = colors[colorIndex++] / 255f;
+					}
+					overlayColorData.PropertyBlock = null;
+					if (ShaderParms.Length > 0)
+                    {
+						overlayColorData.PropertyBlock = new UMAMaterialPropertyBlock();
+						for(int i=0;i<ShaderParms.Length;i++)
+                        {
+							overlayColorData.PropertyBlock.shaderProperties.Add(UMAProperty.FromString(ShaderParms[i]));
+                        }
 					}
 				}
 			}

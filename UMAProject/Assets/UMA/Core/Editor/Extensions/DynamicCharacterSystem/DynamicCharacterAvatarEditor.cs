@@ -18,86 +18,6 @@ namespace UMA.CharacterSystem.Editors
 			public DynamicCharacterAvatar.WardrobeRecipeList DefaultWardrobe;
 			public DynamicCharacterAvatar.ColorValueList DefaultColors;
 		}
-
-		/// <summary>
-		/// Utility class to store data about active animator.
-		/// </summary>
-		/*public class AnimatorState
-		{
-			private int[] stateHashes = new int[0];
-			private float[] stateTimes = new float[0];
-			AnimatorControllerParameter[] parameters;
-			private Dictionary<int, float> layerWeights = new Dictionary<int, float>();
-
-			public void SaveAnimatorState(Animator animator)
-			{
-				int layerCount = animator.layerCount;
-				stateHashes = new int[layerCount];
-				stateTimes = new float[layerCount];
-				parameters = new AnimatorControllerParameter[animator.parameterCount];
-				layerWeights.Clear();
-
-				for (int i = 0; i < layerCount; i++)
-				{
-					var state = animator.GetCurrentAnimatorStateInfo(i);
-					stateHashes[i] = state.fullPathHash;
-					stateTimes[i] = state.normalizedTime;
-					layerWeights.Add(i, animator.GetLayerWeight(i));
-				}
-
-				Array.Copy(animator.parameters, parameters, animator.parameterCount);
-
-				foreach (AnimatorControllerParameter param in parameters)
-				{
-					switch (param.type)
-					{
-						case AnimatorControllerParameterType.Bool:
-							param.defaultBool = animator.GetBool(param.nameHash);
-							break;
-						case AnimatorControllerParameterType.Float:
-							param.defaultFloat = animator.GetFloat(param.nameHash);
-							break;
-						case AnimatorControllerParameterType.Int:
-							param.defaultInt = animator.GetInteger(param.nameHash);
-							break;
-					}
-				}
-			}
-
-			public void RestoreAnimatorState(Animator animator)
-			{
-				if (animator.layerCount == stateHashes.Length)
-				{
-					for (int i = 0; i < animator.layerCount; i++)
-					{
-						animator.Play(stateHashes[i], i, stateTimes[i]);
-						if (i < layerWeights.Count)
-						{
-							animator.SetLayerWeight(i, layerWeights[i]);
-						}
-					}
-				}
-
-				foreach (AnimatorControllerParameter param in parameters)
-				{
-					if (!animator.IsParameterControlledByCurve(param.nameHash))
-					{
-						switch (param.type)
-						{
-							case AnimatorControllerParameterType.Bool:
-								animator.SetBool(param.nameHash, param.defaultBool);
-								break;
-							case AnimatorControllerParameterType.Float:
-								animator.SetFloat(param.nameHash, param.defaultFloat);
-								break;
-							case AnimatorControllerParameterType.Int:
-								animator.SetInteger(param.nameHash, param.defaultInt);
-								break;
-						}
-					}
-				}
-			}
-		} */
 		
 		public static bool showHelp = false;
 		public static bool showWardrobe = false;
@@ -138,7 +58,6 @@ namespace UMA.CharacterSystem.Editors
 			}
 			_racePropDrawer.thisDCA = thisDCA;
 			_wardrobePropDrawer.thisDCA = thisDCA;
-			//_wardrobePropDrawer.thisDCS = (DynamicCharacterSystem)thisDCA.context.dynamicCharacterSystem as DynamicCharacterSystem;
 			_animatorPropDrawer.thisDCA = thisDCA;
 		}
 
@@ -166,7 +85,6 @@ namespace UMA.CharacterSystem.Editors
 			if (EditorGUIUtility.isProSkin)
 			{
 				GUIHelper.BeginVerticalPadded(10, new Color(1.3f, 1.4f, 1.5f));
-				//GUIHelper.BeginVerticalPadded(10, new Color(0.35f, 0.35f, 0.4f));
 			}
 			else
 			{
@@ -790,11 +708,16 @@ namespace UMA.CharacterSystem.Editors
 
 			void GenerateSingleUMA()
 			{
+				if (Application.isPlaying)
+					return;
+
 				if (thisDCA.editorTimeGeneration == false)
 					return;
 
+				// Debug.Log("prefab instance asset type: " + PrefabUtility.GetPrefabInstanceStatus(thisDCA.gameObject) + ", asset type: " + PrefabUtility.GetPrefabAssetType(thisDCA.gameObject));
+
 				// Don't generate UMAs from project prefabs.
-				if (PrefabUtility.GetPrefabInstanceStatus(thisDCA.gameObject) == PrefabInstanceStatus.NotAPrefab && PrefabUtility.GetPrefabAssetType(thisDCA.gameObject) != PrefabAssetType.NotAPrefab)
+				if (!thisDCA.gameObject.activeInHierarchy)//PrefabUtility.GetPrefabInstanceStatus(thisDCA.gameObject) == PrefabInstanceStatus.NotAPrefab && PrefabUtility.GetPrefabAssetType(thisDCA.gameObject) != PrefabAssetType.NotAPrefab)
 				{
 					Debug.Log("This is a game object in the project view.");
 					return;
@@ -854,6 +777,8 @@ namespace UMA.CharacterSystem.Editors
 
 			void CleanupGeneratedData()
 			{
+				if (Application.isPlaying)
+					return;
 				List<GameObject> Cleaners = GetRenderers(thisDCA.gameObject);
 				thisDCA.Hide();
 				foreach (GameObject go in Cleaners)

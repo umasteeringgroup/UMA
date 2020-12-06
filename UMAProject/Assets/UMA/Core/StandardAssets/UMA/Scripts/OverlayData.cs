@@ -33,6 +33,16 @@ namespace UMA
 		/// </summary>
 		public List<ColorComponentAdjuster> colorComponentAdjusters = new List<ColorComponentAdjuster>();
 
+		/// <summary>
+		/// Empty overlays do not get added to an atlas. 
+		/// But their meshes do get combined, and properties on the
+		/// shader do get set. 
+		/// </summary>
+		public bool isEmpty
+        {
+			get { return asset.textureCount == 0; }
+        }
+
 		// Properties dependant on the underlying asset.
 		public bool isProcedural { get { return asset.material.IsProcedural(); } }
 		public string overlayName { get { return asset.overlayName; } }
@@ -86,7 +96,7 @@ namespace UMA
 		{
 			get
 			{
-				#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
+#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 				if (this.isProcedural)
 				{
 					ProceduralMaterial material = asset.material.material as ProceduralMaterial;
@@ -102,8 +112,10 @@ namespace UMA
 						return 0;
 					}
 				}
-                #endif
+#endif
 
+				if (asset.textureList == null || asset.textureList.Length == 0 || asset.textureList[0] == null)
+					return 0;
 				return asset.textureList[0].width * asset.textureList[0].height;
 			}
 		}
@@ -112,7 +124,7 @@ namespace UMA
 		/// Color data for material channels.
 		/// </summary>
 		[System.NonSerialized]
-		public OverlayColorData colorData;
+		public OverlayColorData colorData = new OverlayColorData(1);
 
 		/// <summary>
 		/// Is this instance of an overlay transformed?
@@ -193,6 +205,7 @@ namespace UMA
             {
 				return;
             }
+			if (isEmpty)  return;
 			if (asset.material == null)
 			{
 				asset.material = UMAAssetIndexer.Instance.GetAsset<UMAMaterial>(asset.materialName);
@@ -246,6 +259,9 @@ namespace UMA
 					}
 				}
 			}
+
+			if (isEmpty)
+				return true;
 
 			if (asset.textureCount != targetMaterial.channels.Length)
 			{

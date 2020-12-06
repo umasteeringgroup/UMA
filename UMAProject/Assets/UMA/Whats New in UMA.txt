@@ -48,8 +48,12 @@ Alpha 3
   Numerous bug fixes
   Please note: to see speed gains, you must build your application. They may not be evident in the editor.
 
-
-
+Alpha 4
+  Removed deprecated UMAGenratorGlib;
+  Added ability to change color channel length on shared colors in recipe editor.
+  Added ability Property Blocks to Overlay Colors (shared colors). Now you can set floats, vectors, ints, colors, matrixes, etc.
+  Made it possible to have Overlays with no texture channels (these overlays can be modified with material property blocks).
+  Reworked the bone cleaner to make it more robust
 
 What's new in 2.10.1
 

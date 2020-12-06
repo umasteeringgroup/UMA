@@ -90,7 +90,6 @@ namespace UMA
 			UMA.CustomAssetUtility.CreateAsset<UMAMaterial>();
 		}
 #endif
-
 		/// <summary>
 		/// Is the UMAMaterial based on a procedural material (substance)?
 		/// </summary>

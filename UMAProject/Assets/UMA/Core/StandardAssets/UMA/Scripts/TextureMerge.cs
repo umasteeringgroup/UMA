@@ -173,6 +173,8 @@ namespace UMA
 
 		private void SetupMaterial(ref TextureMergeRect textureMergeRect, UMAData.MaterialFragment source, int textureType)
 		{
+			if (source.isNoTextures)
+				return;
 			camBackgroundColor = source.GetMultiplier(0, textureType);
 			camBackgroundColor.a = 0.0f;
 
@@ -201,10 +203,13 @@ namespace UMA
 
 		public void SetupModule(UMAData.MaterialFragment source, int textureType)
 		{
-			textureMergeRects[textureMergeRectCount].rect = source.atlasRegion;
-			textureMergeRects[textureMergeRectCount].rect.y = height - textureMergeRects[textureMergeRectCount].rect.y - textureMergeRects[textureMergeRectCount].rect.height;
-			atlasRect = textureMergeRects[textureMergeRectCount].rect;
-			SetupMaterial(ref textureMergeRects[textureMergeRectCount], source, textureType);
+			if (!source.isNoTextures)
+			{
+				textureMergeRects[textureMergeRectCount].rect = source.atlasRegion;
+				textureMergeRects[textureMergeRectCount].rect.y = height - textureMergeRects[textureMergeRectCount].rect.y - textureMergeRects[textureMergeRectCount].rect.height;
+				atlasRect = textureMergeRects[textureMergeRectCount].rect;
+				SetupMaterial(ref textureMergeRects[textureMergeRectCount], source, textureType);
+			}
 			textureMergeRectCount++;
 		}
 
@@ -230,6 +235,7 @@ namespace UMA
 		{
 			if (source.overlays[OverlayIndex] == null) return;
 			if (source.overlays[OverlayIndex].textureList[textureType] == null) return;
+			if (source.isNoTextures) return;
 
 			Rect overlayRect;
 

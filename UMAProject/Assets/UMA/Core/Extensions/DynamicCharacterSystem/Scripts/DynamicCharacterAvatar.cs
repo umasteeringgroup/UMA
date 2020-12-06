@@ -168,9 +168,6 @@ namespace UMA.CharacterSystem
         public SaveOptions defaultSaveOptions = SaveOptions.saveDNA | SaveOptions.saveWardrobe | SaveOptions.saveColors | SaveOptions.saveAnimator;
         //
         public Vector3 BoundsOffset;
-        //
-        [HideInInspector]
-
 
 #if UNITY_EDITOR
 
@@ -415,11 +412,6 @@ namespace UMA.CharacterSystem
             if (UMAContext.FindInstance() is UMAGlobalContext)
             {
                 isAddressableSystem = true;
-                UMAGeneratorGLib glib = UMAContext.Instance.GetComponentInChildren<UMAGeneratorGLib>();
-                if (glib != null)
-                {
-                    isCaching = glib.EnableCacheCleanup;
-                }
             }
 #endif
 #if UNITY_EDITOR
@@ -4285,11 +4277,11 @@ namespace UMA.CharacterSystem
                 List<ColorValue> newColors = new List<ColorValue>();
 
                 foreach (ColorValue cv in Colors)
-                {
+                { 
                     if (cv.Name != name)
                         newColors.Add(cv);
                 }
-
+                 
                 Colors = newColors;
             }
         }
